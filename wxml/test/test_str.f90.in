@@ -1,0 +1,16 @@
+program short_test
+
+  use xmlf90_wxml, only : str
+
+  call internal()
+
+  contains
+    subroutine internal()
+      character(len=len(str(TESTINPUT))) :: s
+      s = str(TESTINPUT)
+      write(*,'(a)') s
+    end subroutine internal
+
+end program short_test
+
+  

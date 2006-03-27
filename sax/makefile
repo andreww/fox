@@ -1,0 +1,45 @@
+#
+default: install
+#
+OBJFILES= m_debug.o m_buffer.o m_elstack.o m_dictionary.o m_io.o \
+          m_reader.o m_converters.o m_charset.o  m_entities.o \
+          m_xml_error.o  m_fsm.o  m_xml_parser.o xmlf90_sax.o
+#
+LIBRARY=libxmlf90_sax.a
+INCFLAGS=
+#
+
+m_reader.o: m_io.o m_debug.o
+m_elstack.o: m_buffer.o
+m_dictionary.o: m_buffer.o
+m_entities.o: m_buffer.o m_xml_error.o
+m_converters.o: m_debug.o
+m_fsm.o: m_buffer.o m_dictionary.o m_charset.o m_entities.o m_elstack.o
+m_xml_error.o: m_elstack.o
+m_xml_parser.o: m_buffer.o m_elstack.o m_reader.o m_fsm.o m_dictionary.o \
+                m_debug.o m_xml_error.o
+#
+xmlf90_sax.o: m_dictionary.o m_xml_parser.o m_converters.o m_xml_error.o
+
+#
+#---------NOTHING SHOULD NEED TO BE CHANGED BELOW THIS LINE-----
+#
+include ../arch.make
+
+# Uncomment one of the following lines for debugging/profiling support
+#
+#FFLAGS=$(FFLAGS_DEBUG)
+#FFLAGS=$(FFLAGS_PROFILE)
+#FFLAGS=$(FFLAGS_CHECK)
+#
+CP=cp -p
+install: $(OBJFILES)
+	@echo "  ==> Updating $(LIBRARY) with $(OBJFILES)"
+	@$(AR) $(ARFLAGS_EXTRA) cru $(LIBRARY) $(OBJFILES)
+	@$(RANLIB) $(LIBRARY)
+	$(CP) $(LIBRARY) $(LIB_DIR) 
+	for i in *.$(MOD_EXT) ; do  \
+           $(CP) $$i $(MOD_DIR);done
+#
+clean:
+	rm -f *.o  *.$(MOD_EXT) $(LIBRARY)

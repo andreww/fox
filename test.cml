@@ -1,0 +1,89 @@
+
+<cml xmlns="http://www.xml-cml.org/schema"
+ xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+ xmlns:dc="http://purl.org/dc/elements/1.1/title">
+<parameter name="inputSize">
+<scalar dataType="xsd:string">True
+</scalar>
+</parameter>
+<parameter name="inputSize">
+<scalar dataType="xsd:boolean">true
+</scalar>
+</parameter>
+<parameter name="inputSize">
+<scalar dataType="xsd:integer">3
+</scalar>
+</parameter>
+<parameter name="inputSize">
+<scalar dataType="xsd:float">3.00000000000
+</scalar>
+</parameter>
+<parameter name="inputSize">
+<scalar dataType="xsd:double">3.00000000000
+</scalar>
+</parameter>
+<property title="inputSize">
+<scalar dataType="xsd:string">True
+</scalar>
+</property>
+<property title="inputSize">
+<scalar dataType="xsd:boolean">true
+</scalar>
+</property>
+<property title="inputSize">
+<scalar dataType="xsd:integer">3
+</scalar>
+</property>
+<property title="inputSize">
+<scalar dataType="xsd:double">3.00000000000
+</scalar>
+</property>
+<property title="inputSize">
+<scalar dataType="xsd:float">3.00000000000
+</scalar>
+</property>
+<property title="inputArray">
+<array size="2" dataType="xsd:string" delimiter=" ">one two
+</array>
+</property>
+<property title="inputArray">
+<array size="2" dataType="xsd:boolean" delimiter=" ">true false
+</array>
+</property>
+<property title="inputArray">
+<array size="2" dataType="xsd:double" delimiter=" ">1 2
+</array>
+</property>
+<property title="inputArray">
+<array size="2" dataType="xsd:float" delimiter=" ">1.00000000000 2.00000000000
+</array>
+</property>
+<property title="inputArray">
+<array size="2" dataType="xsd:double" delimiter=" ">1.00000000000 2.00000000000
+</array>
+</property>
+<molecule>
+<atomArray>
+<atom elementType="Ca" x3="0.00000000000" y3="0.00000000000" z3="0.00000000000"/>
+<atom elementType="Si" x3="0.500000000000" y3="0.500000000000"
+ z3="0.500000000000"/>
+<atom elementType="O" x3="0.400000000000" y3="0.400000000000"
+ z3="0.400000000000"/>
+</atomArray>
+</molecule>
+<molecule>
+<atomArray>
+<atom elementType="Ca" xyz3="0.00000000000 0.00000000000 0.00000000000"/>
+<atom elementType="Si" xyz3="0.500000000000 0.500000000000 0.500000000000"/>
+<atom elementType="O" xyz3="0.400000000000 0.400000000000 0.400000000000"/>
+</atomArray>
+</molecule>
+<molecule>
+<atomArray>
+<atom elementType="Ca" xyz3="0.000000      0.000000      0.000000     "/>
+<atom elementType="Si" xyz3="0.500000       0.500000       0.500000      "/>
+<atom elementType="O" xyz3="0.400000       0.400000       0.400000      "/>
+</atomArray>
+</molecule>
+<metadata name="dc:contributor" content="xmlf90-1.9 (http://www.eminerals.org)"/>
+</cml>

@@ -1,0 +1,7 @@
+Things to do:
+
+* Make buffer pseudo-dynamical to avoid limitations.
+* Insert code to deal with XML declarations (really processing instructions)
+  which are not of the form
+  
+ <?name  pseudo_att_name="pseudo_att_value" .... ?>
