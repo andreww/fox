@@ -4,10 +4,12 @@ module m_wcml_core
   use xmlf90_wxml, only: xml_NewElement, xml_AddPcData, xml_AddAttribute
   use xmlf90_wxml, only: xml_EndElement
   use m_wcml_stml, only: stmAddValue
-  
-!  use m_wcml_coma
 
-  PRIVATE
+  use m_wcml_coma
+  
+  implicit none
+
+  private
 
   integer, parameter ::  sp = selected_real_kind(6,30)
   integer, parameter ::  dp = selected_real_kind(14,100)
@@ -154,10 +156,10 @@ CONTAINS
     character(len=*), intent(in) :: nsURI
 ! FIXME this should be updated if we ever do proper NS handling
 ! in wxml
-    if (currentTag(xf) /= 'cml') &
-      call wxml_abort('Attempt to add namespace in wrong place')
+    !if (get_top_elstack(xf%stack) /= 'cml') &
+! call wxml_abort('Attempt to add namespace in wrong place')
 
-    call xml_AddAttribute(xf, 'xmlns:'ns, nsURI)
+    call xml_AddAttribute(xf, 'xmlns:'//ns, nsURI)
 
   end subroutine cmlAddNamespace
 
@@ -1453,7 +1455,6 @@ CONTAINS
     call xml_NewElement(xf, 'length')
     call xml_AddAttribute(xf, 'id', id)
     call xml_AddAttribute(xf, 'atomRefs2', adjustl(trim(atomRef1))//' '//adjustl(trim(atomRef2)))
-    call xml_AddAttribute(xf, 'atomRefs2', temp)
     call xml_AddPcdata(xf, length, fmt)
     call xml_EndElement(xf, 'length')
 

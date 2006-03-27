@@ -6,7 +6,7 @@ OBJFILES=xmlf90_wcml.o m_wcml_coma.o m_wcml_core.o m_wcml_stml.o m_wcml_property
 LIBRARY=libxmlf90_wcml.a
 INCFLAGS=$(MOD_PREFIX)../objs/finclude
 #
-m_wcml_core.o: m_wcml_stml.o
+m_wcml_core.o: m_wcml_stml.o m_wcml_coma.o
 m_wcml_coma.o: m_wcml_stml.o
 m_wcml_property.o: m_wcml_stml.o
 xmlf90_wcml.o: m_wcml_core.o m_wcml_coma.o m_wcml_stml.o m_wcml_property.o

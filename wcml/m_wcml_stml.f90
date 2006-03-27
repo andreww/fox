@@ -5,8 +5,6 @@ module m_wcml_stml
   use xmlf90_wxml, only: xml_NewElement, xml_AddPcData, xml_AddAttribute
   use xmlf90_wxml, only: xml_EndElement
 
-  use m_wcml, only : m_wcml_attributes
-
   implicit none
 
   private
@@ -67,6 +65,15 @@ contains
   ! =================================================
   ! STMML convenience routines
   ! =================================================
+
+!FIXME TOHW temp fix until we move stuff about ..
+
+  subroutine cmlAddAttribute(xf, attr, valu)
+    type(xmlf_t), intent(inout):: xf
+    character(len=*), intent(in) :: attr, valu
+
+    call xml_AddAttribute(xf, attr, valu)
+  end subroutine cmlAddAttribute
   
   ! -------------------------------------------------
   ! outputs STMML scalar in xml channel

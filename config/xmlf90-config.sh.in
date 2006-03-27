@@ -42,11 +42,11 @@ while test $# -gt 0; do
 	;;
 
     --fcflags)
-       	echo @FC_MOD_FLAG@$(@CYGPATH_W@ $moddir)
+       	echo @FC_MOD_FLAG@\"$(@CYGPATH_W@ $moddir)\"
        	;;
 
     --libs)
-	echo -L$(@CYGPATH_W@ $libdir) -lxmlf90_wcml -lxmlf90_wxml -lfsys
+	echo -L\"$(@CYGPATH_W@ $libdir)\" -lxmlf90_wcml -lxmlf90_wxml -lfsys
        	;;
 
     *)

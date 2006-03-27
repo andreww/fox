@@ -1,7 +1,10 @@
 #
 # Example of Makefile for integration of XML package
 #
-default: dom_example sax_example wxml_example wcml_example
+default: objsdir dom_example sax_example wxml_example wcml_example
+#
+objsdir:
+	mkdir -p objs/lib objs/finclude
 #
 check: dom_check sax_check wxml_check wcml_check
 #

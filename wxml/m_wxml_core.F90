@@ -54,6 +54,7 @@ type, public :: xmlf_t
 end type xmlf_t
 
 public :: xml_OpenFile, xml_NewElement, xml_EndElement, xml_Close
+!public :: xml_CurrentElement
 public :: xml_AddXMLDeclaration
 public :: xml_AddXMLStylesheet
 public :: xml_AddXMLPI
@@ -439,6 +440,19 @@ type(xmlf_t), intent(inout)   :: xf
   deallocate(xf%filename)
 
 end subroutine xml_Close
+
+!function xml_CurrentElement(xf) result(element)
+!  type(xmlf_t), intent(in) :: xf
+!  character(len=merge(size(xf%stack%stack(xf%stack%n_items)%data), 0, elstack%n_items > 0)) :: item
+
+  !Return current element context.
+
+!  integer   :: n
+
+!  n = xf%stack%n_items
+!  item = transfer(elstack%stack(n)%data, item)
+
+!end function xmL_CurrenElement
 
 !==================================================================
 !-------------------------------------------------------------------
