@@ -75,9 +75,6 @@ case $FC_ID in
      ;;
 
   Nag)
-     # This is a hack - we should test for these next two
-     FCFLAGS="$FCFLAGS -mismatch -kind=byte"
-     FFLAGS_MPI="-kind=byte -mismatch"
      FFLAGS_DEBUG="-C=all -g -gline -nan"
      DEFS="$DEFS __NAG__"
      SYS=nag

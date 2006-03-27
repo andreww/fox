@@ -24,7 +24,6 @@ MOD_PREFIX=@FC_MOD_FLAG@
 LIB_PREFIX=-L
 #
 MOD_EXT=@FC_MODEXT@
-MOD_UPPERCASE=@FC_MOD_UPPERCASE@ 
 
 #INCFLAGS must be set by the user makefile
 
