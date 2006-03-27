@@ -1,6 +1,7 @@
 module m_wxml_elstack
 
 use m_wxml_error
+use m_pxf_abort_flush
 
 implicit none
 
@@ -70,13 +71,18 @@ end subroutine reset_elstack
 subroutine resize_elstack(elstack)
   type(elstack_t), intent(inout)  :: elstack
   type(elstack_item), pointer, dimension(:) :: temp
-  integer :: s
+  integer :: i, s, dataLength
 
-  s = size(elstack%stack)
+  s = ubound(elstack%stack, 1)
 
   temp=>elstack%stack
   allocate(elstack%stack(nint(s*STACK_SIZE_MULT)))
-  elstack%stack(:s) = temp
+  do i = 1, s
+    dataLength = size(temp(i)%data)
+    allocate(elstack%stack(i)%data(dataLength)) 
+    elstack%stack(i)%data = temp(i)%data
+    deallocate(temp(i)%data)
+  enddo
   deallocate(temp)
 
 end subroutine resize_elstack
@@ -105,10 +111,10 @@ type(elstack_t), intent(inout)  :: elstack
 integer :: n
 
 n = elstack%n_items
+n = n + 1
 if (n == size(elstack%stack)) then
   call resize_elstack(elstack)
 endif
-n = n + 1
 allocate(elstack%stack(n)%data(len(item)))
 elstack%stack(n)%data = transfer(item, elstack%stack(n)%data)
 elstack%n_items = n
@@ -143,9 +149,10 @@ character(len=merge(size(elstack%stack(elstack%n_items)%data), 0, elstack%n_item
 integer   :: n
 
 n = elstack%n_items
-!if (n == 0) then
-!  call wxml_error("Element stack empty")
-!endif
+
+if (n == 0) then
+  call wxml_error("Element stack empty")
+endif
 item = transfer(elstack%stack(n)%data, item)
 
 end function get_top_elstack

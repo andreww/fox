@@ -6,7 +6,7 @@ use m_wxml_array_str, only: assign_str_to_array
 use m_wxml_escape, only: check_Name
 use m_wxml_elstack
 use m_wxml_dictionary
-use m_wxml_text, only : xml_Encode, len_escaping_markup, str
+use m_wxml_text, only : len_escaping_markup, str
 
 use pxf, only: pxfabort
 
@@ -54,7 +54,6 @@ type, public :: xmlf_t
 end type xmlf_t
 
 public :: xml_OpenFile, xml_NewElement, xml_EndElement, xml_Close
-!public :: xml_CurrentElement
 public :: xml_AddXMLDeclaration
 public :: xml_AddXMLStylesheet
 public :: xml_AddXMLPI
@@ -170,7 +169,7 @@ subroutine xml_AddXMLDeclaration(xf,encoding)
     call wxml_error("Tried to put XML declaration in wrong place")
 
   if (present(encoding)) then
-    call add_to_buffer('<?xml version="1.0" encoding="'//xml_Encode(encoding)//'"?>', xf%buffer)
+    call add_to_buffer('<?xml version="1.0" encoding="'//encoding//'"?>', xf%buffer)
   else
     call add_to_buffer('<?xml version="1.0" ?>', xf%buffer)
   endif
@@ -401,6 +400,10 @@ subroutine xml_EndElement(xf,name)
 
   if (get_top_elstack(xf%stack) /= name) &
     call wxml_fatal(xf, 'Trying to close '//name//' but '//get_top_elstack(xf%stack)//' is open.') 
+  call devnull(pop_elstack(xf%stack))
+  if (is_empty(xf%stack)) then
+    xf%state_1 = WXML_STATE_1_AFTER_ROOT
+  endif
 
   select case (xf%state_2)
   case (WXML_STATE_2_INSIDE_ELEMENT)
@@ -413,11 +416,6 @@ subroutine xml_EndElement(xf,name)
     call wxml_error("Cannot close element here")
   end select
   xf%state_2 = WXML_STATE_2_OUTSIDE_TAG
-
-  call devnull(pop_elstack(xf%stack))
-  if (is_empty(xf%stack)) then
-    xf%state_1 = WXML_STATE_1_AFTER_ROOT
-  endif
 
 end subroutine xml_EndElement
 
@@ -440,19 +438,6 @@ type(xmlf_t), intent(inout)   :: xf
   deallocate(xf%filename)
 
 end subroutine xml_Close
-
-!function xml_CurrentElement(xf) result(element)
-!  type(xmlf_t), intent(in) :: xf
-!  character(len=merge(size(xf%stack%stack(xf%stack%n_items)%data), 0, elstack%n_items > 0)) :: item
-
-  !Return current element context.
-
-!  integer   :: n
-
-!  n = xf%stack%n_items
-!  item = transfer(elstack%stack(n)%data, item)
-
-!end function xmL_CurrenElement
 
 !==================================================================
 !-------------------------------------------------------------------
