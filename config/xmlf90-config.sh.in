@@ -1,8 +1,8 @@
 #! /bin/sh
 
 comp_prefix=@prefix@
-moddir=${comp_prefix}/finclude
-libdir=${comp_prefix}/lib
+moddir=$comp_prefix/finclude
+libdir=$comp_prefix/lib
 version=@version@
 
 usage()
@@ -25,9 +25,6 @@ if test $# -eq 0; then
     usage 1
 fi
 
-fcflags=false
-libs=false
-
 while test $# -gt 0; do
     case "$1" in
     -*=*) optarg=`echo "$1" | sed 's/[-_a-zA-Z0-9]*=//'` ;;
@@ -45,11 +42,11 @@ while test $# -gt 0; do
 	;;
 
     --fcflags)
-       	echo @FC_MOD_FLAG@${moddir}
+       	echo @FC_MOD_FLAG@$(@CYGPATH_W@ $moddir)
        	;;
 
     --libs)
-	echo -L${libdir} -lxmlf90_wcml -lxmlf90_wxml -lfsys
+	echo -L$(@CYGPATH_W@ $libdir) -lxmlf90_wcml -lxmlf90_wxml -lfsys
        	;;
 
     *)

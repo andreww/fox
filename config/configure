@@ -275,7 +275,7 @@ PACKAGE_BUGREPORT='wdpgaara@lg.ehu.es'
 
 ac_unique_file="config.sub"
 ac_default_prefix=`pwd`/objs
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os host host_cpu host_vendor host_os FC FCFLAGS LDFLAGS ac_ct_FC EXEEXT OBJEXT FCFLAGS_fixed_f FCFLAGS_free_f90 FPP FPPFLAGS FPPFLAGS_fixed_F FPPFLAGS_DEF CC CFLAGS CPPFLAGS ac_ct_CC CPP FPPDIRECT_TRUE FPPDIRECT_FALSE FPP_MAKE_FLAGS FPP_PREPROCESS_EXT FPP_COMPILE_EXT FPP_OUTPUT FPPFLAGS_free_F90 F_RULE F90_RULE RANLIB ac_ct_RANLIB SIESTA_ARCH FFLAGS_MPI SYS SP_KIND DP_KIND FC_MOD_FLAG FC_MODEXT FC_MODUPPERCASE FFLAGS LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os host host_cpu host_vendor host_os FC FCFLAGS LDFLAGS ac_ct_FC EXEEXT OBJEXT FCFLAGS_fixed_f FCFLAGS_free_f90 FPP FPPFLAGS FPPFLAGS_fixed_F FPPFLAGS_DEF CC CFLAGS CPPFLAGS ac_ct_CC CPP FPPDIRECT_TRUE FPPDIRECT_FALSE FPP_MAKE_FLAGS FPP_PREPROCESS_EXT FPP_COMPILE_EXT FPP_OUTPUT FPPFLAGS_free_F90 F_RULE F90_RULE RANLIB ac_ct_RANLIB SIESTA_ARCH FFLAGS_MPI SYS SP_KIND DP_KIND CYGPATH_W FC_MOD_FLAG FC_MODEXT FC_MODUPPERCASE FFLAGS LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -5745,6 +5745,18 @@ for i in $DEFS; do
 done
 
 
+ # test whether we have cygpath
+ if test -z "$CYGPATH_W"; then
+   if (cygpath --version) >/dev/null 2>/dev/null; then
+     CYGPATH_W='cygpath -w'
+   else
+     CYGPATH_W=echo
+   fi
+ fi
+
+
+
+
 
 
           ac_cv_fc_mod_path_flag=no
@@ -6568,6 +6580,7 @@ s,@FFLAGS_MPI@,$FFLAGS_MPI,;t t
 s,@SYS@,$SYS,;t t
 s,@SP_KIND@,$SP_KIND,;t t
 s,@DP_KIND@,$DP_KIND,;t t
+s,@CYGPATH_W@,$CYGPATH_W,;t t
 s,@FC_MOD_FLAG@,$FC_MOD_FLAG,;t t
 s,@FC_MODEXT@,$FC_MODEXT,;t t
 s,@FC_MODUPPERCASE@,$FC_MODUPPERCASE,;t t
