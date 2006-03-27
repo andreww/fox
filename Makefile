@@ -69,7 +69,7 @@ clean: dom_lib_clean sax_lib_clean wxml_lib_clean wcml_lib_clean fsys_lib_clean
 	rm -f *.o dom_example sax_example wxml_example wcml_example simple.xml output.xml *.*d *.a
 	rm -f objs/lib/* objs/finclude/*
 
-veryclean: clean
+distclean: clean
 	(cd sax ; $(MAKE) clean)
 	(cd wxml ; $(MAKE) clean)
 	(cd wcml ; $(MAKE) clean)
