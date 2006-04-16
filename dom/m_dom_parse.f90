@@ -1,7 +1,7 @@
 module m_dom_parse
 
   use m_dom_types, only: fNode, fDocumentNode, getnumberofallocatednodes
-  use m_dom_types, only: createnode, DOCUMENT_NODE
+  use m_dom_types, only: createnode, DOCUMENT_NODE, destroynode
   use m_dom_document, only: createdocument
   use m_dom_document, only: createcomment
   use m_dom_document, only: createcdatasection
@@ -26,7 +26,7 @@ module m_dom_parse
   
   private
 
-  public :: parsefile
+  public :: parsefile, destroyDocument
 
   type(fDocumentNode), pointer, private, save  :: mainDoc => null()
   type(fNode), pointer, private, save  :: main => null()
@@ -137,7 +137,6 @@ CONTAINS
 
 
 
-
 !***************************************************
 !   PUBLIC PROCEDURES
 !***************************************************
@@ -171,8 +170,8 @@ CONTAINS
     endif
     
     call xml_parse(fxml,  &
-         begin_element_handler=begin_element_handler, &
          start_document_handler=start_document_handler, &
+         begin_element_handler=begin_element_handler, &
          end_element_handler=end_element_handler, &
          pcdata_chunk_handler=pcdata_chunk_handler, &
          comment_handler=comment_handler, &
@@ -186,6 +185,12 @@ CONTAINS
     parsefile => mainDoc
 
   end function parsefile
+
+  subroutine destroyDocument()
+    call destroyNode(main)
+    deallocate(mainDoc)
+    nullify(current)
+  end subroutine destroyDocument
 
 
 END MODULE m_dom_parse

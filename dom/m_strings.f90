@@ -4,7 +4,7 @@ module m_strings
   private
 
   type string
-    character, pointer :: s(:)
+    character, pointer :: s(:) => null()
   end type string
 
   interface operator(+)
@@ -56,7 +56,7 @@ contains
 
   subroutine unstring(s)
     type(string) :: s
-    deallocate(s%s)
+    if (associated(s%s)) deallocate(s%s)
   end subroutine unstring
 
   function add_vs_vs (s1, s2) result (s12)

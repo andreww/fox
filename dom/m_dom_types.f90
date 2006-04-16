@@ -219,6 +219,9 @@ CONTAINS
        if (associated(np%attributes)) call destroyNamedNodeMap(np%attributes)
        call unstring(np%nodeName)
        call unstring(np%nodeValue)
+       call unstring(np%namespaceURI)
+       call unstring(np%prefix)
+       call unstring(np%localName)
        if (associated(np%previousSibling)) & 
                 np%previousSibling%nextSibling => np%nextSibling
        if (associated(np%nextSibling)) & 
