@@ -110,6 +110,8 @@ end function xml_char_count
 
 recursive subroutine xml_parse(fxml, begin_element_handler,    &
                            end_element_handler,      &
+                           start_prefix_handler,     &
+                           end_prefix_handler,       &
                            pcdata_chunk_handler,     &
                            comment_handler,          &
                            xml_declaration_handler,  &
@@ -126,6 +128,8 @@ type(xml_t), intent(inout), target  :: fxml
 
 optional                            :: begin_element_handler
 optional                            :: end_element_handler
+optional                            :: start_prefix_handler
+optional                            :: end_prefix_handler
 optional                            :: pcdata_chunk_handler
 optional                            :: comment_handler
 optional                            :: xml_declaration_handler
@@ -152,6 +156,15 @@ interface
    character(len=*), intent(in)     :: localName
    character(len=*), intent(in)     :: name
    end subroutine end_element_handler
+
+   subroutine start_prefix_handler(namespaceURI, prefix)
+   character(len=*), intent(in) :: namespaceURI
+   character(len=*), intent(in) :: prefix
+ end subroutine start_prefix_handler
+
+   subroutine end_prefix_handler(prefix)
+   character(len=*), intent(in) :: prefix
+ end subroutine end_prefix_handler
 
    subroutine pcdata_chunk_handler(chunk)
    character(len=*), intent(in) :: chunk
@@ -206,6 +219,7 @@ integer              :: signal
 type(buffer_t)       :: name, oldname, dummy
 
 logical              :: have_begin_handler, have_end_handler, &
+                        have_start_prefix_handler, have_end_prefix_handler, &
                         have_pcdata_handler, have_comment_handler, &
                         have_xml_declaration_handler, &
                         have_sgml_declaration_handler, &
@@ -221,6 +235,8 @@ type(fsm_t), pointer         :: fx
 
 have_begin_handler = present(begin_element_handler)
 have_end_handler = present(end_element_handler)
+have_start_prefix_handler = present(start_prefix_handler)
+have_end_prefix_handler = present(end_prefix_handler)
 have_pcdata_handler = present(pcdata_chunk_handler)
 have_comment_handler = present(comment_handler)
 have_xml_declaration_handler = present(xml_declaration_handler)

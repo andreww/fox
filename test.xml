@@ -28,7 +28,7 @@ and some cdata sections inside to make it more interesting. How about this
 
 <single what="An 'empty' tag" />
 
-<tag which="has" a="lot" no="really" loads="and" loads="of" a="t" t="r" i="b" u="t" e="s" in="it"/>
+<tag which="has" a="lot" no="really" loads="o" fa="t" t="r" i="b" u="t" e="s" in="it"/>
 
 <misc disposition="throw_away" with_entity="&quot;you&quot;"
          other_att = 'single quotes to enclose "Oh!"...'  >

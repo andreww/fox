@@ -37,14 +37,15 @@ module m_dom_parse
 
 CONTAINS
 
-  subroutine begin_element_handler(name,attrs)
-
+  subroutine begin_element_handler(URI, localname, name,attrs)
+    character(len=*),   intent(in) :: URI
+    character(len=*),   intent(in) :: localname
     character(len=*),   intent(in) :: name
+
     type(dictionary_t), intent(in) :: attrs
    
     type(fnode), pointer :: temp
     character(len=400)   :: attr_name, attr_value
-    type(string)         :: prefix, localname
     integer              :: status
     integer              :: i
 
@@ -59,35 +60,24 @@ CONTAINS
     do i = 1, len(attrs)
        call get_key(attrs, i, attr_name, status)
        call get_value(attrs, attr_name, attr_value, status)
-
-       call decomposeQname(trim(attr_name), prefix, localname)
-       if (localname == 'xmlns') then
-         if (dom_debug) print*,'Adding new default namespace:', trim(attr_value) 
-         call nsPrefixAppend(nsDict, '', trim(attr_value), current)
-       elseif (prefix == 'xmlns') then
-         if (dom_debug) print*,'Adding new namespace prefix ', stringify(localname), ':', trim(attr_value)
-         call nsPrefixAppend(nsDict, stringify(localname), trim(attr_value), current)
-       else
-         if (dom_debug) print *, "Adding attribute: ", &
-           trim(attr_name), ":",trim(attr_value)
-         call setAttribute(current,attr_name,attr_value)
-       endif
+       if (dom_debug) print *, "Adding attribute: ", &
+         trim(attr_name), ":",trim(attr_value)
+       call setAttribute(current,attr_name,attr_value)
     enddo
 
-    call decomposeQname(name, prefix, localname)
-    current % namespaceURI = currentNamespaceURI(nsDict, prefix)
+    current % namespaceURI = URI
     if (current % namespaceURI == '') then
       ! this prefix is not bound to a URI - element localname is full name
-      current % localname = name
-    else
-      current % localname = localname
     endif
+    current % localname = localname
 
   end subroutine begin_element_handler
 
 !---------------------------------------------------------
 
-  subroutine end_element_handler(name)
+  subroutine end_element_handler(URI, localName, name)
+    character(len=*), intent(in)     :: URI
+    character(len=*), intent(in)     :: localname
     character(len=*), intent(in)     :: name
 
 !!AG for IBM    type(fnode), pointer :: np
@@ -95,7 +85,6 @@ CONTAINS
     if (dom_debug) print *, "End of element: ", name
 !!AG for IBM    np => getParentNode(current)
 !!AG for IBM    current => np
-    call nsClear(nsDict, current)
     current => getParentNode(current)
   end subroutine end_element_handler
 

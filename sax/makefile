@@ -11,7 +11,7 @@ INCFLAGS=
 
 m_reader.o: m_io.o m_debug.o
 m_elstack.o: m_buffer.o
-m_dictionary.o: m_array_str.o
+m_dictionary.o: m_array_str.o m_xml_error.o
 m_entities.o: m_buffer.o m_xml_error.o
 m_converters.o: m_debug.o
 m_fsm.o: m_buffer.o m_dictionary.o m_charset.o m_entities.o m_elstack.o

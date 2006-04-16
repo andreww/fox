@@ -1,6 +1,7 @@
 module m_sax_namespaces
 
   use m_dictionary, only : dictionary_t, get_key, get_value, len
+  use m_xml_error, only : general_error, SEVERE_ERROR_CODE
 
   implicit none
   private
@@ -57,6 +58,7 @@ contains
           URIlength = len(get_value(atts, i))
           allocate(URI(URIlength))
           URI = transfer(get_value(atts, i), URI)
+          call checkURI(URI)
           call addDefaultNS(nsDict, URI, ix)
           deallocate(URI)
           !TOHW call startNamespaceMapping
@@ -65,6 +67,7 @@ contains
           URIlength = len(get_value(atts, i))
           allocate(URI(URIlength))
           URI = transfer(get_value(atts, i), URI)
+          call checkURI(URI)
           xmlnsLength = len(get_key(atts, i))
           allocate(xmlnsfull(xmlnsLength))
           allocate(prefix(xmlnsLength - 6))
@@ -124,8 +127,7 @@ contains
     integer :: l_s, i
 
     if (ubound(urilist1,1) < l_m .or. ubound(urilist2,1) < l_m) then
-       ! FIXMETOHW call an error somehow
-       continue
+       call general_error('Internal error in m_sax_namespaces:copyURIMapping',SEVERE_ERROR_CODE)
     endif
     ! Now copy all defaults across ...
     do i = 0, l_m
@@ -300,8 +302,7 @@ contains
           call removePrefix(nsDict, p_i)
        endif
     else
-       !FIXME TOHW
-       !call error somehow
+       call general_error('Internal error in m_sax_namespaces:removePrefixedNS',SEVERE_ERROR_CODE)
     endif
     
   end subroutine removePrefixedNS
@@ -474,24 +475,6 @@ contains
     enddo
   end function getPrefixIndex
 
-!!$  pure function getURIofPrefixedNS(nsDict, prefix) result(uri)
-!!$    type(namespaceDictionary), intent(in) :: nsDict
-!!$    character, dimension(:), intent(in) :: prefix
-!!$    character(len=size( &
-!!$              nsDict%prefixes( &
-!!$           getPrefixIndex(nsDict,prefix) &
-!!$                             ) &
-!!$                     %urilist( &
-!!$           size(nsDict%prefixes(getPrefixIndex(nsDict,prefix))%urilist) &
-!!$                             ) & 
-!!$                      %uri)) :: URI
-!!$    integer :: p_i, l_m
-!!$    p_i = getPrefixIndex(nsDict, prefix)
-!!$    l_m = size(nsDict%prefixes(p_i)%urilist)
-!!$    uri = transfer(nsDict%prefixes(p_i)%urilist(l_m), uri)
-!!$
-!!$  end function getURIofPrefixedNS
-
   pure function getURIofPrefixedNS(nsDict, prefix) result(uri)
     type(namespaceDictionary), intent(in) :: nsDict
     character, dimension(:), intent(in) :: prefix
@@ -509,5 +492,13 @@ contains
     uri = 'pqr'
 
   end function getURIofPrefixedNS
+
+
+  subroutine checkURI(URI)
+    character, dimension(:) :: URI
+
+    !FIXMETOHW check that the string is a valid URI
+
+  end subroutine checkURI
 
 end module m_sax_namespaces
