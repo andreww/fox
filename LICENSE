@@ -1,7 +1,7 @@
 Copyright (c) 2003, 2004, Alberto Garcia (SAX, SAXPATH, WXML, Overall design)
 (c) 2003, 2004, Jon Wakelin, Alberto Garcia (DOM subsystem)
 (c) 2003, 2004, Jon Wakelin (CML writing subsystem)
-(c) 2005, 2006, Toby White (assorted fixes, namespace support, XPATH)
+(c) 2005, 2006, Toby White (general overhaul, configure magic, namespace support, XPATH)
 
 All rights reserved.
 

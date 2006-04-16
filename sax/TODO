@@ -13,3 +13,6 @@ Things to do:
 * rename everything sax-specific to have sax in the name
 * make sure and use implicit none/private everywhere
 * make sure and explicitly declare all USEd symbols
+* proper checking for QNames in tag & attribute names
+* namespace support for attributes
+* prefix mapping callbacks.

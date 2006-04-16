@@ -1,14 +1,7 @@
-XMLF90 package with modular components.
+XMLF90 package
 
-Example of integration into larger code.
+Quick start:
 
-Getting started quickly.
+1. Type "config/configure" to generate the compiler information
 
-1. Get the source directories (this will pull in the sax, wxml, fsys,
-and config modules)
-
-baz build-config xmlf90.config       
-
-2. Type "config/configure" to generate the compiler information
-
-3. Type "make"
+2. Type "make"

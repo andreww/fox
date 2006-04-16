@@ -177,7 +177,7 @@ end subroutine print_elstack
 !-------------------------------------------------------------
 function get_elstack_signature(elstack) result(string)
 type(elstack_t), intent(in)   :: elstack
-!FIXMETOHWcharacter(len=sum(size(elstack%stack(:elstack%n_items)%data))+elstack%n_items) :: string
+!FIXME TOHW character(len=sum(size(elstack%stack(:elstack%n_items)%data))+elstack%n_items) :: string
 character(len=200) :: string
 integer   :: i, length, j
 

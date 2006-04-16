@@ -234,7 +234,7 @@ contains
     !endif
 
     n = n + 1
-    call flush(6)
+    call pxfflush(6)
     allocate(dict%items(n)%key(len(key)))
     call assign_str_to_array(dict%items(n)%key,key)
     dict%number_of_items = n

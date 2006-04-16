@@ -456,7 +456,7 @@ contains
           print*, nsdict%prefixes(i)%urilist(j)%ix, nsdict%prefixes(i)%urilist(j)%URI
        enddo
     enddo
-    call flush(6)
+    call pxfflush(6)
   end subroutine dumpnsdict
 
   pure function getURIofDefaultNS(nsDict) result(uri)

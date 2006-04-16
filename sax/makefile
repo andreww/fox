@@ -7,7 +7,7 @@ OBJFILES= m_debug.o m_buffer.o m_elstack.o m_dictionary.o m_io.o \
           xmlf90_sax.o
 #
 LIBRARY=libxmlf90_sax.a
-INCFLAGS=
+INCFLAGS=$(MOD_PREFIX)../objs/finclude
 #
 
 m_reader.o: m_io.o m_debug.o
