@@ -1,5 +1,6 @@
 module m_sax_namespaces
 
+  use m_array_str, only : compare_array_str
   use m_dictionary, only : dictionary_t, get_key, get_value, len
   use m_xml_error, only : general_error, SEVERE_ERROR_CODE
 
@@ -266,7 +267,7 @@ contains
     
     p_i = 0
     do i = 1, l_p
-       if (all(nsDict%prefixes(l_p)%prefix == prefix)) then
+       if (compare_array_str(nsDict%prefixes(l_p)%prefix, prefix)) then
           p_i = i
           exit
        endif
@@ -289,7 +290,7 @@ contains
     
     p_i = 0
     do i = 1, l_p
-       if (all(nsDict%prefixes(l_p)%prefix == prefix)) then
+       if (compare_array_str(nsDict%prefixes(l_p)%prefix, prefix)) then
           p_i = i
           exit
        endif
@@ -454,7 +455,7 @@ contains
 
     force = .false.
     do i = 1, ubound(nsDict%prefixes, 1)
-       if (all(nsDict%prefixes(i)%prefix == prefix)) &
+       if (compare_array_str(nsDict%prefixes(i)%prefix, prefix)) &
             force = .true.
     enddo
 
@@ -468,7 +469,7 @@ contains
     integer :: i
     p = 0
     do i = 1, ubound(nsDict%prefixes, 1)
-       if (all(nsDict%prefixes(i)%prefix == prefix)) then
+       if (compare_array_str(nsDict%prefixes(i)%prefix, prefix)) then
           p = i
           exit
        endif

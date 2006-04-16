@@ -16,7 +16,7 @@
     </blah>
   </pqr:preamble>
 
-<p:title>Mary had a &lt;little&gt; lamb who liked standard entities</p:title>
+<title>Mary had a &lt;little&gt; lamb who liked standard entities</title>
 
 <text>This is some text, with character references (&#x4F; &#87;)
 and some cdata sections inside to make it more interesting. How about this
