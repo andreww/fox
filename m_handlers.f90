@@ -52,15 +52,16 @@ write(unit=*,fmt="(a)",advance="no") trim(chunk)
 end subroutine pcdata_chunk_handler
 
 !--------------------------------------------------
-subroutine empty_element_handler(name,attributes)
+subroutine empty_element_handler(URI, localname, name,attributes)
+character(len=*), intent(in)   :: URI
+character(len=*), intent(in)   :: localname
 character(len=*), intent(in)   :: name
 type(dictionary_t), intent(in) :: attributes
 
-write(unit=*,fmt="(2a)") ">>Empty Element: ", name
+write(unit=*,fmt="(4a)") ">>Begin Empty Element: {", URI, "}", localname
 write(unit=*,fmt="(a,i2,a)") "--- ", len(attributes), " attributes:"
 call print_dict(attributes)
-write(unit=*,fmt="(2a)") ">>-------------End Empty Element: ", trim(name)
-
+write(unit=*,fmt="(4a)") ">>End Empty Element: {", URI, "}", localname
 end subroutine empty_element_handler
 
 !--------------------------------------------------

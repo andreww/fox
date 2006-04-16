@@ -197,8 +197,10 @@ interface
    logical, intent(out) :: code
    end subroutine signal_handler
 
-   subroutine empty_element_handler(name,attributes)
+   subroutine empty_element_handler(URI, localname, name,attributes)
    use m_dictionary
+   character(len=*), intent(in)     :: URI
+   character(len=*), intent(in)     :: localname
    character(len=*), intent(in)     :: name
    type(dictionary_t), intent(in)   :: attributes
    end subroutine empty_element_handler
@@ -386,13 +388,14 @@ do
             call checkNamespaces(fx%attributes, fx%nsDict, len_elstack(fx%element_stack))
             if (have_empty_handler) then
                if (fx%debug) print *, "--> calling empty_element_handler."
-               call empty_element_handler(str(name),fx%attributes)
+               call empty_element_handler(getURIofQName(fxml, str(name)), &
+                                          getlocalNameofQName(str(name)), &
+                                          str(name), fx%attributes)
                call checkEndNamespaces(fx%nsDict, len_elstack(fx%element_stack))
                call pop_elstack(fx%element_stack,dummy)
             else
                if (have_begin_handler) then
                   if (fx%debug) print *, "--> calling begin_element_handler..."
-                  stop
                   call begin_element_handler(getURIofQName(fxml, str(name)), &
                                              getlocalNameofQName(str(name)), &
                                              str(name), fx%attributes)
