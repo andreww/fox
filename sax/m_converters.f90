@@ -2,6 +2,7 @@ module m_converters
 
 use m_debug
 
+implicit none
 private
 !
 ! Takes a string and turns it into useful data structures,

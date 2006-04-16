@@ -2,6 +2,7 @@ module m_charset
 !
 ! One-byte only, sorry
 !
+implicit none
 private
 
 integer, parameter, private  :: small_int = selected_int_kind(1)

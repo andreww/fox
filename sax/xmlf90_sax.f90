@@ -13,6 +13,7 @@ use m_sax_parser
 use m_converters
 use m_sax_error
 
+implicit none
 public
 
 end module xmlf90_sax

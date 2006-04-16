@@ -531,7 +531,7 @@ subroutine xml_path(fxml,path)
   type(xml_t), intent(in) :: fxml
   character(len=*), intent(out)  :: path
   
-  call get_elstack_signature(fxml%fx%element_stack,path)
+  call get_elstack_signature(fxml%fx%element_stack, path)
   
 end subroutine xml_path
 
@@ -543,7 +543,7 @@ subroutine xml_mark_path(fxml,path)
   type(xml_t), intent(inout) :: fxml
   character(len=*), intent(out)  :: path
   
-  call get_elstack_signature(fxml%fx%element_stack,fxml%path_mark)
+  call get_elstack_signature(fxml%fx%element_stack, fxml%path_mark)
   path = fxml%path_mark
   
 end subroutine xml_mark_path

@@ -2,6 +2,7 @@ module m_reader
 
 use m_io
 
+implicit none
 private
 
 integer, parameter, public              :: BUFFER_NOT_CONNECTED = -2048

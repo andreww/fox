@@ -1,5 +1,7 @@
 module m_io
 
+implicit none
+private
 !
 ! Basic  I/O tools
 !

@@ -2,6 +2,7 @@ module m_elstack
 
 use m_buffer
 
+implicit none
 private
 
 !

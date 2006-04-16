@@ -1,5 +1,8 @@
 module m_buffer
 
+implicit none
+private
+
 !
 ! At this point we use a fixed-size buffer. 
 ! Note however that buffer overflows will only be
