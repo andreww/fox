@@ -7,6 +7,9 @@ module m_sax_namespaces
   implicit none
   private
 
+  character(len=*), parameter :: invalidNS = '::INVALID::'
+  ! an invalid URI name to indicate a namespace error.
+
   type URIMapping
     character, dimension(:), pointer :: URI
     integer :: ix ! link back to node depth
@@ -31,6 +34,8 @@ module m_sax_namespaces
   !the list of default namespaces in force; prefix a
   !list of all prefixes in force.
 
+  public :: invalidNS
+
   public :: initNamespaceDictionary
   public :: destroyNamespaceDictionary
   public :: namespaceDictionary
@@ -40,6 +45,7 @@ module m_sax_namespaces
   interface getnamespaceURI
      module procedure getURIofDefaultNS, getURIofPrefixedNS
   end interface
+
 
 contains
 
@@ -105,11 +111,15 @@ contains
 
     allocate(nsDict%defaults(0:0))
     allocate(nsDict%defaults(0)%URI(0))
+    !The 0th element of the defaults NS is the empty namespace
     
     allocate(nsDict%prefixes(0:0))
     allocate(nsDict%prefixes(0)%prefix(0))
     allocate(nsDict%prefixes(0)%urilist(0:0))
-    allocate(nsDict%prefixes(0)%urilist(0)%URI(0))
+    allocate(nsDict%prefixes(0)%urilist(0)%URI(len(invalidNS)))
+    nsDict%prefixes(0)%urilist(0)%URI = &
+         transfer(invalidNS, nsDict%prefixes(0)%urilist(0)%URI)
+    
     
   end subroutine initNamespaceDictionary
 

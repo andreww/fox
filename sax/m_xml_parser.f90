@@ -9,7 +9,7 @@ use m_reader
 use m_fsm
 use m_dictionary, only : dictionary_t
 use m_debug
-use m_sax_namespaces, only : nameSpaceDictionary, checkNamespaces, getnamespaceURI, checkEndNamespaces
+use m_sax_namespaces, only : nameSpaceDictionary, checkNamespaces, getnamespaceURI, checkEndNamespaces, invalidNS
 use m_xml_error
 use m_elstack          ! For element nesting checks
 
@@ -27,7 +27,6 @@ private
       character(len=200)   :: path_mark
 end type xml_t
 
-!
 public :: xml_parse
 public :: open_xmlfile, close_xmlfile
 public :: endfile_xmlfile, rewind_xmlfile
@@ -291,9 +290,6 @@ do
          if (fx%context == OPENING_TAG) then
             name = fx%element_name
 
-            !TOHWFIXME decompose into prefix + localname
-            ! map prefix to URI
-
             if (fx%debug) print *, "We have found an opening tag"
             if (fx%root_element_seen) then
                if (name .equal. fx%root_element_name) then
@@ -322,7 +318,7 @@ do
             endif
             call push_elstack(name,fx%element_stack)
             call checkNamespaces(fx%attributes, fx%nsDict, len_elstack(fx%element_stack))
-            if (len(getURIofQName(fxml,str(name)))==0) then
+            if (getURIofQName(fxml,str(name))==invalidNS) then
                ! no namespace was found for the current element
                call build_error_info(error_info, &
                     "No namespace mapped to prefix at", &
@@ -334,7 +330,6 @@ do
                endif
             endif
             if (have_begin_handler) then 
-               !FIXME check for broken namespace
                call begin_element_handler(getURIofQName(fxml, str(name)), &
                                           getlocalNameofQName(str(name)), &
                                           str(name), fx%attributes)
@@ -380,12 +375,48 @@ do
             name = fx%element_name
 
             if (fx%debug) print *, "We have found a single (empty) tag: ", &
-                                str(name)
+                 str(name)
+            if (fx%root_element_seen) then
+               if (name .equal. fx%root_element_name) then
+                  call build_error_info(error_info, &
+                  "Duplicate root element: " // str(name), &
+                  line(fb),column(fb),fx%element_stack,SEVERE_ERROR_CODE)
+                  if (have_error_handler) then
+                     call error_handler(error_info)
+                  else
+                     call default_error_handler(error_info)
+                  endif
+               endif
+               if (is_empty(fx%element_stack)) then
+                  call build_error_info(error_info, &
+                  "Opening tag beyond root context: " // str(name), &
+                  line(fb),column(fb),fx%element_stack,SEVERE_ERROR_CODE)
+                  if (have_error_handler) then
+                     call error_handler(error_info)
+                  else
+                     call default_error_handler(error_info)
+                  endif
+               endif
+            else
+               fx%root_element_name = name
+               fx%root_element_seen = .true.
+            endif
             !
             ! Push name on to stack to reveal true xpath
             !
             call push_elstack(name,fx%element_stack)
             call checkNamespaces(fx%attributes, fx%nsDict, len_elstack(fx%element_stack))
+            if (getURIofQName(fxml,str(name))==invalidNS) then
+               ! no namespace was found for the current element
+               call build_error_info(error_info, &
+                    "No namespace mapped to prefix at", &
+                    line(fb),column(fb),fx%element_stack,SEVERE_ERROR_CODE)
+               if (have_error_handler) then
+                  call error_handler(error_info)
+               else
+                  call default_error_handler(error_info)
+               endif
+            endif
             if (have_empty_handler) then
                if (fx%debug) print *, "--> calling empty_element_handler."
                call empty_element_handler(getURIofQName(fxml, str(name)), &

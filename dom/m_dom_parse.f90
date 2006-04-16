@@ -12,10 +12,6 @@ module m_dom_parse
   use m_dom_element, only: setattribute
   use m_dom_debug, only: dom_debug
 
-!!$  use m_dom_namespaces, only : nsDictionary, nsPrefixAppend
-!!$  use m_dom_namespaces, only : nsClear, currentNamespaceURI
-!!$  use m_dom_namespaces, only : decomposeQname
-
   use xmlf90_sax, only: xml_parse, xml_t, dictionary_t, len
   use xmlf90_sax, only: open_xmlfile, close_xmlfile
   use xmlf90_sax, only: get_key, get_value
@@ -129,6 +125,7 @@ CONTAINS
 !---------------------------------------------------------
 
   subroutine start_document_handler
+    print*,'allocating mainDoc'
     allocate(mainDoc)
     main => createNode()
     main % nodeType = DOCUMENT_NODE
@@ -183,7 +180,8 @@ CONTAINS
 
     call createDocument(mainDoc, main)
     parsefile => mainDoc
+    mainDoc => null()
 
   end function parsefile
 
-END MODULE m_dom_parse
+end module m_dom_parse

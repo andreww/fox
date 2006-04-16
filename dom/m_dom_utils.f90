@@ -117,7 +117,6 @@ CONTAINS
     case (ELEMENT_NODE)
       
       nsURI = node % namespaceURI
-      print*,'nsURI ', nns, ' ',stringify(nsURI)
       if (nsURI == '') then
         s = getNodeName(node)
       else
@@ -130,7 +129,6 @@ CONTAINS
           else
             prefix = 'ns' + stringify(nns)
           endif
-          print*,'adding key: ',  nns, stringify(nsURI), stringify(prefix)
           call addKey(simpleDict,nsURI,prefix)
         endif
         if (prefix == '') then
@@ -139,8 +137,6 @@ CONTAINS
           s = prefix + ':' + node % localName
         endif
       endif
-      print*,'aa ', s%s(:)
-      print*,'bb ', stringify(s)
       call xml_NewElement(xf,stringify(s))
       if (nsURI /= '') then
         if (prefix == '') then

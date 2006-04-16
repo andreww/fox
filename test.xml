@@ -7,6 +7,7 @@
 <!-- Test of XML parsing 
       Alberto Garcia, May-June 2003 -->
 
+<blah/>
 
 <test xmlns="http://www.uszla.me.uk/namespaces/test" xmlns:pqr="http://sjkldhf" version   =  "0.1">
   <pqr:preamble>A small file exercising all the features

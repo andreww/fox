@@ -47,7 +47,7 @@ end subroutine end_element_handler
 subroutine pcdata_chunk_handler(chunk)
 character(len=*), intent(in) :: chunk
 
-write(unit=*,fmt="(a)",advance="no") trim(chunk)
+write(unit=*,fmt="(a)",advance="no") chunk
 
 end subroutine pcdata_chunk_handler
 
@@ -69,7 +69,7 @@ subroutine comment_handler(comment)
 character(len=*), intent(in) :: comment
 
 write(unit=*,fmt="(a)") ">>Comment: "
-write(unit=*,fmt="(a)") trim(comment)
+write(unit=*,fmt="(a)") comment
 
 end subroutine comment_handler
 
@@ -90,7 +90,7 @@ subroutine sgml_declaration_handler(sgmldecl)
 character(len=*), intent(in) :: sgmldecl
 !
 write(unit=*,fmt="(a)") ">>SGML declaration: "
-write(unit=*,fmt="(a)") trim(sgmldecl)
+write(unit=*,fmt="(a)") sgmldecl
 
 end subroutine sgml_declaration_handler
 !--------------------------------------------------

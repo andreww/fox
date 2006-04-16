@@ -1,3 +1,0 @@
-Basically, provide a fortran.mk that knows about compilation rules,
-and somehow provide MOD_DIR and LIB_DIR to the src/makefile, to tell it
-where to put the library and module files.
