@@ -1,214 +1,290 @@
 module m_dictionary
 
-use m_buffer
-private
-!
-! A very rough implementation for now
-! It uses fixed-length buffers for key/value pairs,
-! and the maximum number of dictionary items is hardwired.
+  !use m_wxml_escape, only : check_Name
+  !use m_wxml_error,  only : wxml_fatal
+  use m_array_str, only : assign_str_to_array, assign_array_to_str
 
-integer, parameter, private    :: MAX_ITEMS = 64
-type, public :: dictionary_t
-   private
-   integer                               :: number_of_items
-   type(buffer_t), dimension(MAX_ITEMS)  :: key
-   type(buffer_t), dimension(MAX_ITEMS)  :: value
-end type dictionary_t
+  implicit none
+  private
+  
+  !Initial length of dictionary
+  integer, parameter, private    :: DICT_INIT_LEN = 10 
+  !Multiplier if we need to extend it.
+  real, parameter, private       :: DICT_LEN_MULT = 1.5
 
-!
-! Building procedures
-!
-public  :: add_key_to_dict, add_value_to_dict, init_dict, reset_dict
+  type dict_item
+     character(len=1), pointer, dimension(:) :: key
+     character(len=1), pointer, dimension(:) :: value
+  end type dict_item
+  
+  type dictionary_t
+     private
+     integer                                :: number_of_items ! = 0
+     type(dict_item), dimension(:), pointer :: items
+  end type dictionary_t
 
-!
-! Query and extraction procedures
-!
-public  :: len
-interface len
-   module procedure number_of_entries
-end interface
-public  :: number_of_entries
-public  :: get_key
-public  :: get_value
-public  :: has_key
-public  :: print_dict
-!
-public  :: get_name
+  public :: dictionary_t
 
-interface get_name
-   module procedure get_key
-end interface
+  ! Building procedures
+  
+  public :: init_dict
+  public :: reset_dict
+  public :: add_item_to_dict
+  public :: destroy_dict
+  !these last two only because SAX needs them
+  public :: add_key_to_dict
+  public :: add_value_to_dict
+ 
+  ! Query and extraction procedures
+  
+  public  :: len
+  public  :: get_key 
+  public  :: get_value
+  public  :: has_key
+  public  :: print_dict
+  !
+  interface len
+     module procedure number_of_entries
+  end interface
+  interface get_value
+     module procedure get_value_by_key, get_value_by_index
+  end interface
+  
+contains
 
-interface get_value
-   module procedure sax_get_value_qname
-   module procedure sax_get_value_i
-end interface
-private :: sax_get_value_qname, sax_get_value_i
+  !------------------------------------------------------
+  function number_of_entries(dict) result(n)
+    type(dictionary_t), intent(in)   :: dict
+    integer                          :: n
+    
+    n = dict%number_of_items
+    
+  end function number_of_entries
+  
+  !------------------------------------------------------
+  function has_key(dict,key) result(found)
+    type(dictionary_t), intent(in)   :: dict
+    character(len=*), intent(in)     :: key
+    logical                          :: found
+    
+    integer  ::  i
+    found = .false.
+    do  i = 1, dict%number_of_items
+       if (key == transfer(dict%items(i)%key,key)) then
+          found = .true.
+          exit
+       endif
+    enddo
+  end function has_key
+  
+  pure function get_key_index(dict,key) result(ind)
+    type(dictionary_t), intent(in)   :: dict
+    character(len=*), intent(in)     :: key
+    integer                          :: ind
+    
+    integer  ::  i
+    ind = 0
+    do  i = 1, dict%number_of_items
+       if (key == transfer(dict%items(i)%key,key)) then
+          ind = i
+          exit
+       endif
+    enddo
+  end function get_key_index
+  
+  !------------------------------------------------------
+  function get_value_by_key(dict,key,status) result(value)
+    type(dictionary_t), intent(in)       :: dict
+    character(len=*), intent(in)              :: key
+    integer, optional, intent(out)            :: status
+    character(len = merge(size(dict%items(get_key_index(dict, key))%value), 0, (get_key_index(dict, key) > 0))) :: value
+    !
+    integer  :: i
+    
+    if (present(status)) status = -1
+    do  i = 1, dict%number_of_items
+       if (key == transfer(dict%items(i)%key, key)) then
+          call assign_array_to_str(value,dict%items(i)%value)
+          if (present(status)) status = 0
+          exit
+       endif
+    enddo
 
-CONTAINS
+  end function get_value_by_key
+  
+  function get_value_by_index(dict,i,status) result(value)
+    type(dictionary_t), intent(in)       :: dict
+    integer, intent(in)                       :: i
+    integer, optional, intent(out)            :: status
+    character(len = merge(size(dict%items(i)%value), 0, (i>0 .and. i<=dict%number_of_items))) :: value
+    
+    if (i>0 .and. i<=dict%number_of_items) then
+       call assign_array_to_str(value,dict%items(i)%value)
+       if (present(status)) status = 0
+    else
+       if (present(status)) status = -1
+    endif
+    
+  end function get_value_by_index
+  
+  function get_key(dict, i, status) result(key)
+    !
+    ! return the ith key
+    !
+    type(dictionary_t), intent(in)       :: dict
+    integer, intent(in)                       :: i
+    integer, optional, intent(out)            :: status
+    character(len = merge(size(dict%items(i)%key), 0, (i>0 .and. i<=dict%number_of_items))) :: key
+    
+    if (i>0 .and. i<=dict%number_of_items)then
+       call assign_array_to_str(key,dict%items(i)%key)
+       if (present(status)) status = 0
+    else
+       if (present(status)) status = -1
+    endif
+    
+  end function get_key
+  
+  subroutine add_item_to_dict(dict, key, value)
+    
+    type(dictionary_t), intent(inout) :: dict
+    character(len=*), intent(in)          :: key
+    character(len=*), intent(in)          :: value
+    
+    integer  :: n
+    
+    if (has_key(dict, key)) then
+       !TOHW FIXME raise error
+       continue
+    endif
+    
+    n = dict%number_of_items
+    if (n == size(dict%items)) then
+       call resize_dict(dict)
+    endif
+    
+    !if (.not.check_Name(key)) then
+    !  call wxml_fatal('attribute name is invalid')
+    !endif
+    
+    n = n + 1
+    allocate(dict%items(n)%key(len(key)))
+    call assign_str_to_array(dict%items(n)%key,key)
+    allocate(dict%items(n)%value(len(value)))
+    call assign_str_to_array(dict%items(n)%value,value)
+    
+    dict%number_of_items = n
+    
+  end subroutine add_item_to_dict
+  
+  subroutine add_key_to_dict(dict, key)
+    type(dictionary_t), intent(inout) :: dict
+    character(len=*), intent(in)      :: key
 
-!------------------------------------------------------
-function number_of_entries(dict) result(n)
-type(dictionary_t), intent(in)   :: dict
-integer                          :: n
+    integer  :: n
 
-n = dict%number_of_items
+    if (has_key(dict, key)) then
+       !TOHW FIXME raise error
+       continue
+    endif
 
-end function number_of_entries
+    n = dict%number_of_items
+    if (n == size(dict%items)) then
+       call resize_dict(dict)
+    endif
 
-!------------------------------------------------------
-function has_key(dict,key) result(found)
-type(dictionary_t), intent(in)   :: dict
-character(len=*), intent(in)     :: key
-logical                          :: found
+    !if (.not.check_Name(key)) then
+    !  call wxml_fatal('attribute name is invalid')
+    !endif
 
-integer  :: n, i
-found = .false.
-n = dict%number_of_items
-do  i = 1, n
-      if (dict%key(i) .EQUAL. key) then
-         found = .true.
-         exit
-      endif
-enddo
-end function has_key
+    n = n + 1
+    allocate(dict%items(n)%key(len(key)))
+    call assign_str_to_array(dict%items(n)%key,key)
+    dict%number_of_items = n
+  end subroutine add_key_to_dict
 
-!------------------------------------------------------
-subroutine sax_get_value_qname(dict,key,value,status)
-type(dictionary_t), intent(in)            :: dict
-character(len=*), intent(in)              :: key
-character(len=*), intent(out)             :: value
-integer, intent(out)                      :: status
-!
-integer  :: n, i, ls
+  subroutine add_value_to_dict(dict, value)
+    type(dictionary_t), intent(inout) :: dict
+    character(len=*), intent(in)      :: value
 
-ls = len(value)
+    integer  :: n
+    n = dict%number_of_items
 
-status = -1
-n = dict%number_of_items
-do  i = 1, n
-      if (dict%key(i) .EQUAL. key) then
-         value = str(dict%value(i))
-         if (len(dict%value(i)) > ls) then
-            status = -10
-         else
-            status = 0
-         endif
-         RETURN
-      endif
-enddo
+    allocate(dict%items(n)%value(len(value)))
+    call assign_str_to_array(dict%items(n)%value,value)
+  end subroutine add_value_to_dict
+  !------------------------------------------------------
+  subroutine init_dict(dict)
+    type(dictionary_t), intent(out)   :: dict
+    
+    integer :: i
+    
+    allocate(dict%items(DICT_INIT_LEN))
+    do i = 1, DICT_INIT_LEN
+       nullify(dict%items(i)%key)
+       nullify(dict%items(i)%value)
+    enddo
+    
+    dict % number_of_items = 0
+    
+  end subroutine init_dict
 
-end subroutine sax_get_value_qname
+  subroutine resize_dict(dict)
+    type(dictionary_t), intent(inout) :: dict
+    type(dictionary_t) :: tempDict
+    integer :: i, l_d_new, l_d_old
 
-subroutine sax_get_value_i(dict,i,value,status)
-type(dictionary_t), intent(in)            :: dict
-integer,          intent(in)              :: i
-character(len=*), intent(out)             :: value
-integer,          intent(out)             :: status
+    l_d_old = size(dict%items)
+    allocate(tempDict%items(l_d_old))
+    do i = 1, l_d_old
+       tempDict%items(i)%key => dict%items(i)%key
+       tempDict%items(i)%value => dict%items(i)%value
+    enddo
+    deallocate(dict%items)
+    l_d_new = l_d_old * DICT_LEN_MULT
+    allocate(dict%items(l_d_new))
+    do i = 1, l_d_old
+       dict%items(i)%key => tempDict%items(i)%key
+       dict%items(i)%value => tempDict%items(i)%value
+    enddo
+    deallocate(tempDict%items)
 
-integer :: ls
-ls = len(value)
+  end subroutine resize_dict
 
-if (i <= dict%number_of_items) then
-      value = str(dict%value(i))
-      if (len(dict%value(i)) > ls) then
-         status = -10
-      else
-         status = 0
-      endif
-else
-   value = ""
-   status = -1
-endif
-
-end subroutine sax_get_value_i
-
-
-!------------------------------------------------------
-subroutine get_key(dict,i,key,status)
-!
-! Get the i'th key
-!
-type(dictionary_t), intent(in)            :: dict
-integer, intent(in)                       :: i
-character(len=*), intent(out)             :: key
-integer, intent(out)                      :: status
-
-if (i <= dict%number_of_items) then
-      key = str(dict%key(i))
-      status = 0
-else
-      key = ""
-      status = -1
-endif
-
-end subroutine get_key
-
-!------------------------------------------------------
-subroutine add_key_to_dict(key,dict)
-type(buffer_t), intent(in)          :: key
-type(dictionary_t), intent(inout)   :: dict
-
-integer  :: n
-
-n = dict%number_of_items
-if (n == MAX_ITEMS) then
-      write(unit=0,fmt=*) "Dictionary capacity exceeded ! size= ", max_items
-      RETURN
-endif
-
-n = n + 1
-dict%key(n) = key
-dict%number_of_items = n
-
-end subroutine add_key_to_dict
-
-!------------------------------------------------------
-! Assumes we build the dictionary in an orderly fashion,
-! so one adds first the key and then immediately afterwards the value.
-!
-subroutine add_value_to_dict(value,dict)
-type(buffer_t), intent(in)          :: value
-type(dictionary_t), intent(inout)   :: dict
-
-integer  :: n
-
-n = dict%number_of_items
-dict%value(n) = value
-
-end subroutine add_value_to_dict
-
-!------------------------------------------------------
-subroutine init_dict(dict)
-type(dictionary_t), intent(inout)   :: dict
-
-integer  :: i
-
-dict%number_of_items = 0
-do i=1, MAX_ITEMS                      ! To avoid "undefined" status
-   call init_buffer(dict%key(i))       ! (Fortran90 restriction)
-   call init_buffer(dict%value(i))
-enddo
-end subroutine init_dict
-!------------------------------------------------------
-subroutine reset_dict(dict)
-type(dictionary_t), intent(inout)   :: dict
-
-dict%number_of_items = 0
-
-end subroutine reset_dict
-
-!------------------------------------------------------
-subroutine print_dict(dict)
-type(dictionary_t), intent(in)   :: dict
-
-integer  :: i
-
-do i = 1, dict%number_of_items
-      print *, trim(str(dict%key(i))), " = ", trim(str(dict%value(i)))
-enddo
-
-end subroutine print_dict
-
-
+  subroutine destroy_dict(dict)
+    type(dictionary_t), intent(inout) :: dict
+    integer :: i
+    do i = 1, dict%number_of_items
+       deallocate(dict%items(i)%key)
+       deallocate(dict%items(i)%value)
+    enddo
+    deallocate(dict%items)
+  end subroutine destroy_dict
+  
+  !------------------------------------------------------
+  subroutine reset_dict(dict)
+    type(dictionary_t), intent(inout)   :: dict
+    
+    integer :: i
+    do i = 1, dict%number_of_items
+       deallocate(dict%items(i)%key)
+       deallocate(dict%items(i)%value)
+    enddo
+    
+    dict%number_of_items = 0
+    
+  end subroutine reset_dict
+  
+  !------------------------------------------------------
+  subroutine print_dict(dict)
+    type(dictionary_t), intent(in)   :: dict
+    
+    integer  :: i
+    
+    do i = 1, dict%number_of_items
+       print *, dict%items(i)%key, " = ", dict%items(i)%value
+    enddo
+    
+  end subroutine print_dict
+  
 end module m_dictionary

@@ -9,9 +9,12 @@
 
 
 <test xmlns="http://www.uszla.me.uk/namespaces/test" xmlns:pqr="http://sjkldhf" version   =  "0.1">
-<pqr:preamble>A small file exercising all the features
+  <pqr:preamble>A small file exercising all the features
           in the parser...
-</pqr:preamble>
+    <blah xmlns="http://www.uszla.me.uk/nsother">
+      <pqr:ppp xmlns:pqr="http://lalala"/>
+    </blah>
+  </pqr:preamble>
 
 <title>Mary had a &lt;little&gt; lamb who liked standard entities</title>
 
@@ -24,6 +27,8 @@ and some cdata sections inside to make it more interesting. How about this
 </text>
 
 <single what="An 'empty' tag" />
+
+<tag which="has" a="lot" no="really" loads="and" loads="of" a="t" t="r" i="b" u="t" e="s" in="it"/>
 
 <misc disposition="throw_away" with_entity="&quot;you&quot;"
          other_att = 'single quotes to enclose "Oh!"...'  >

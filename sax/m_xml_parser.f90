@@ -7,11 +7,14 @@ module m_xml_parser
 use m_buffer
 use m_reader
 use m_fsm
-use m_dictionary
+use m_dictionary, only : dictionary_t
 use m_debug
+use m_sax_namespaces, only : nameSpaceDictionary, checkNamespaces, getnamespaceURI, checkEndNamespaces
 use m_xml_error
 use m_elstack          ! For element nesting checks
-!
+
+implicit none
+
 private
 
 !
@@ -70,7 +73,7 @@ subroutine close_xmlfile(fxml)
   type(xml_t), intent(inout) :: fxml
   
   call close_file_buffer(fxml%fb)
-  call reset_fsm(fxml%fx)         ! just in case
+  call destroy_fsm(fxml%fx) 
   fxml%path_mark = ""             ! ""
 
 end subroutine close_xmlfile
@@ -136,13 +139,17 @@ optional                            :: start_document_handler
 optional                            :: end_document_handler
 
 interface
-   subroutine begin_element_handler(name,attributes)
+   subroutine begin_element_handler(namespaceURI, localName, name, attributes)
    use m_dictionary
+   character(len=*), intent(in)     :: namespaceUri
+   character(len=*), intent(in)     :: localName
    character(len=*), intent(in)     :: name
    type(dictionary_t), intent(in)   :: attributes
    end subroutine begin_element_handler
 
-   subroutine end_element_handler(name)
+   subroutine end_element_handler(namespaceURI, localName, name)
+   character(len=*), intent(in)     :: namespaceURI
+   character(len=*), intent(in)     :: localName
    character(len=*), intent(in)     :: name
    end subroutine end_element_handler
 
@@ -266,6 +273,9 @@ do
          if (fx%context == OPENING_TAG) then
             name = fx%element_name
 
+            !TOHWFIXME decompose into prefix + localname
+            ! map prefix to URI
+
             if (fx%debug) print *, "We have found an opening tag"
             if (fx%root_element_seen) then
                if (name .equal. fx%root_element_name) then
@@ -293,8 +303,12 @@ do
                fx%root_element_seen = .true.
             endif
             call push_elstack(name,fx%element_stack)
-            if (have_begin_handler) &
-                call begin_element_handler(str(name),fx%attributes)
+            call checkNamespaces(fx%attributes, fx%nsDict, len_elstack(fx%element_stack))
+            if (have_begin_handler) then 
+               call begin_element_handler(getURIofQName(fxml, str(name)), &
+                                          getlocalNameofQName(str(name)), &
+                                          str(name), fx%attributes)
+            endif
 
          else if (fx%context == CLOSING_TAG) then
             name = fx%element_name
@@ -313,9 +327,13 @@ do
             else
                call get_top_elstack(fx%element_stack,oldname)
                if (oldname .equal. name) then
+                  call checkEndNamespaces(fx%nsDict, len_elstack(fx%element_stack))
                   call pop_elstack(fx%element_stack,oldname)
-                  if (have_end_handler) call end_element_handler(str(name))
-!!                  call pop_elstack(fx%element_stack,oldname)
+                  if (have_end_handler) then
+                     call end_element_handler(getURIofQName(fxml, str(name)), &
+                                              getlocalnameofQName(str(name)), &
+                                              str(name))
+                  endif
                else
                   call build_error_info(error_info, &
                        "Nesting error: End tag: " // str(name) //  &
@@ -337,19 +355,27 @@ do
             ! Push name on to stack to reveal true xpath
             !
             call push_elstack(name,fx%element_stack)
+            call checkNamespaces(fx%attributes, fx%nsDict, len_elstack(fx%element_stack))
             if (have_empty_handler) then
                if (fx%debug) print *, "--> calling empty_element_handler."
                call empty_element_handler(str(name),fx%attributes)
+               call checkEndNamespaces(fx%nsDict, len_elstack(fx%element_stack))
                call pop_elstack(fx%element_stack,dummy)
             else
                if (have_begin_handler) then
                   if (fx%debug) print *, "--> calling begin_element_handler..."
-                  call begin_element_handler(str(name),fx%attributes)
+                  stop
+                  call begin_element_handler(getURIofQName(fxml, str(name)), &
+                                             getlocalNameofQName(str(name)), &
+                                             str(name), fx%attributes)
                endif
+               call checkEndNamespaces(fx%nsDict, len_elstack(fx%element_stack))
                call pop_elstack(fx%element_stack,dummy)
                if (have_end_handler) then
                   if (fx%debug) print *, "--> ... and end_element_handler."
-                  call end_element_handler(str(name))
+                  call end_element_handler(getURIofQName(fxml, str(name)), &
+                                           getlocalNameofQName(str(name)), &
+                                           str(name))
                endif
             endif
 !!            call pop_elstack(fx%element_stack,dummy)
@@ -485,6 +511,48 @@ subroutine xml_attributes(fxml,attributes)
   attributes = fxml%fx%attributes
   
 end subroutine xml_attributes
+
+  function getURIofQName(fxml, qname) result(URI)
+    type(xml_t), intent(in) :: fxml
+    character(len=*), intent(in) :: qName
+    character(len=URIlength(fxml, qname)) :: URI
+    
+    integer :: n
+    character, dimension(:), allocatable :: prefix
+    n = index(QName, ':')
+    if (n > 0) then
+       allocate(prefix(n-1))
+       prefix = transfer(QName(1:n-1), prefix)
+       URI = getnamespaceURI(fxml%fx%nsDict, prefix)
+       deallocate(prefix)
+    else
+       URI = getnamespaceURI(fxml%fx%nsDict)
+    endif
+  end function getURIofQName
+  
+  pure function URIlength(fxml, qname) result(l_u)
+    type(xml_t), intent(in) :: fxml
+    character(len=*), intent(in) :: qName
+    integer :: l_u
+    integer :: n
+    character, dimension(:), allocatable :: prefix
+    n = index(QName, ':')
+    if (n > 0) then
+       allocate(prefix(n-1))
+       prefix = transfer(QName(1:n-1), prefix)
+       l_u = len(getnamespaceURI(fxml%fx%nsDict, prefix))
+       deallocate(prefix)
+    else
+       l_u = len(getnamespaceURI(fxml%fx%nsDict))
+    endif
+  end function URIlength
+
+  function getLocalNameofQName(qname) result(localName)
+    character(len=*), intent(in) :: qName
+    character(len=len(QName)-index(QName,':')) :: localName
+    
+    localName = QName(index(QName,':')+1:)
+  end function getLocalNameofQName
 
 end module m_xml_parser
 

@@ -18,6 +18,7 @@ end type elstack_t
 public  :: push_elstack, pop_elstack, reset_elstack, print_elstack
 public  :: init_elstack
 public  :: get_top_elstack, is_empty, get_elstack_signature
+public  :: len_elstack
 
 interface is_empty
       module procedure is_empty_elstack
@@ -26,6 +27,11 @@ private :: is_empty_elstack
 
 CONTAINS
 
+  function len_elstack(elstack) result(n)
+    type(elstack_t), intent(in) :: elstack
+    integer :: n
+    n = elstack%n_items
+  end function len_elstack
 !-----------------------------------------------------------------
 subroutine init_elstack(elstack)
 type(elstack_t), intent(inout)  :: elstack

@@ -26,6 +26,8 @@ use m_handlers      ! Defines begin_element, end_element, pcdata_chunk, etc
                verbose = .false., &
                empty_element_handler = empty_element_handler)
 
+  call close_xmlfile(fxml)
+
 end program example
 
 

@@ -22,20 +22,24 @@ public :: empty_element_handler
 
 CONTAINS  !=============================================================
 
-subroutine begin_element_handler(name,attributes)
+subroutine begin_element_handler(URI, localname, name,attributes)
+character(len=*), intent(in)   :: URI
+character(len=*), intent(in)   :: localname
 character(len=*), intent(in)   :: name
 type(dictionary_t), intent(in) :: attributes
 
-write(unit=*,fmt="(2a)") ">>Begin Element: ", name
+write(unit=*,fmt="(4a)") ">>Begin Element: {", URI, "}", localname
 write(unit=*,fmt="(a,i2,a)") "--- ", len(attributes), " attributes:"
 call print_dict(attributes)
 end subroutine begin_element_handler
 
 !--------------------------------------------------
-subroutine end_element_handler(name)
+subroutine end_element_handler(URI, localname, name)
+character(len=*), intent(in)     :: URI
+character(len=*), intent(in)     :: localname
 character(len=*), intent(in)     :: name
 
-  write(unit=*,fmt="(/,2a)") ">>-------------End Element: ", trim(name)
+write(unit=*,fmt="(4a)") ">>End Element: {", URI, "}", localname
 
 end subroutine end_element_handler
 

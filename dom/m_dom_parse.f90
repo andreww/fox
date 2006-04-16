@@ -18,7 +18,7 @@ module m_dom_parse
 
   use xmlf90_sax, only: xml_parse, xml_t, dictionary_t, len
   use xmlf90_sax, only: open_xmlfile, close_xmlfile
-  use xmlf90_sax, only: get_name, get_value
+  use xmlf90_sax, only: get_key, get_value
 
   use m_strings, only : string, stringify, assignment(=), operator(==)
 
@@ -57,7 +57,7 @@ CONTAINS
 !   Add attributes
 !
     do i = 1, len(attrs)
-       call get_name(attrs, i, attr_name, status)
+       call get_key(attrs, i, attr_name, status)
        call get_value(attrs, attr_name, attr_value, status)
 
        call decomposeQname(trim(attr_name), prefix, localname)

@@ -1,18 +1,22 @@
 module m_fsm
-!
+
 use m_buffer
-use m_dictionary
 use m_charset
+use m_dictionary
 use m_entities
 use m_elstack
+use m_sax_namespaces, only : namespaceDictionary, initNamespaceDictionary, &
+     destroyNamespaceDictionary
 
+implicit none
 private
 
 type, public :: fsm_t
       !
       ! Contains information about the "finite state machine"
       ! Some of the components (marked *) could at this point be made into
-      ! saved module variables.
+      ! saved module variables. TOHW which would of course prevent parsing
+      ! more than one document at once, so let's not.
       ! 
       !
       integer              :: state
@@ -24,6 +28,7 @@ type, public :: fsm_t
       type(buffer_t)       :: tmpbuf                !*
       type(buffer_t)       :: element_name
       type(dictionary_t)   :: attributes
+      type(namespaceDictionary) :: nsDict
       type(buffer_t)       :: pcdata
       logical              :: entities_in_pcdata
       logical              :: entities_in_attributes
@@ -34,7 +39,7 @@ type, public :: fsm_t
       logical              :: debug
 end type fsm_t
 
-public :: init_fsm, reset_fsm, evolve_fsm
+public :: init_fsm, reset_fsm, destroy_fsm, evolve_fsm
 
 !
 ! State parameters
@@ -109,6 +114,7 @@ type(fsm_t), intent(inout)   :: fx
  call init_buffer(fx%pcdata)
  call init_buffer(fx%root_element_name)
  call init_dict(fx%attributes)
+ call initNamespaceDictionary(fx%nsDict)
 end subroutine init_fsm
 !------------------------------------------------------------
 subroutine reset_fsm(fx) 
@@ -125,7 +131,25 @@ type(fsm_t), intent(inout)   :: fx
  call reset_buffer(fx%pcdata)
  call reset_buffer(fx%root_element_name)
  call reset_dict(fx%attributes)
+ call destroyNamespaceDictionary(fx%nsDict)
+ call initNamespaceDictionary(fx%nsDict)
 end subroutine reset_fsm
+
+subroutine destroy_fsm(fx) 
+type(fsm_t), intent(inout)   :: fx
+
+ fx%state = INIT
+ fx%context = NULL_CONTEXT
+ call reset_elstack(fx%element_stack)
+ fx%action = ""
+ fx%root_element_seen = .false.
+ call reset_buffer(fx%buffer)
+ call reset_buffer(fx%element_name)
+ call reset_buffer(fx%pcdata)
+ call reset_buffer(fx%root_element_name)
+ call destroy_dict(fx%attributes)
+ call destroyNamespaceDictionary(fx%nsDict)
+end subroutine destroy_fsm
 
 !------------------------------------------------------------
 subroutine evolve_fsm(fx,c,signal)
@@ -393,12 +417,12 @@ select case(fx%state)
       else if (c .in. whitespace) then
          fx%state = SPACE_BEFORE_EQUAL  
          if (fx%debug) fx%action = ("Whitespace after attr. name (specs?)")
-         call add_key_to_dict(fx%buffer,fx%attributes)
+         call add_key_to_dict(fx%attributes, str(fx%buffer))
          call reset_buffer(fx%buffer)
       else if ( c == "=" ) then
          fx%state = EQUAL
          if (fx%debug) fx%action = ("End of attr. name")
-         call add_key_to_dict(fx%buffer,fx%attributes)
+         call add_key_to_dict(fx%attributes, str(fx%buffer))
          call reset_buffer(fx%buffer)
       else if (c .in. name_chars) then
          if (fx%debug) fx%action = ("Reading attribute name chars")
@@ -454,9 +478,9 @@ select case(fx%state)
          if (fx%entities_in_attributes) then
             call entity_filter(fx%buffer,fx%tmpbuf)
             fx%entities_in_attributes = .false.
-            call add_value_to_dict(fx%tmpbuf,fx%attributes)
+            call add_value_to_dict(fx%attributes, str(fx%tmpbuf))
          else
-            call add_value_to_dict(fx%buffer,fx%attributes)
+            call add_value_to_dict(fx%attributes, str(fx%buffer))
          endif
          call reset_buffer(fx%buffer)
       else if (c == "<") then
@@ -476,9 +500,9 @@ select case(fx%state)
          if (fx%entities_in_attributes) then
             call entity_filter(fx%buffer,fx%tmpbuf)
             fx%entities_in_attributes = .false.
-            call add_value_to_dict(fx%tmpbuf,fx%attributes)
+            call add_value_to_dict(fx%attributes, str(fx%tmpbuf))
          else
-            call add_value_to_dict(fx%buffer,fx%attributes)
+            call add_value_to_dict(fx%attributes, str(fx%buffer))
          endif
          call reset_buffer(fx%buffer)
       else if (c == "<") then
