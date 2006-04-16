@@ -12,9 +12,9 @@ module m_dom_parse
   use m_dom_element, only: setattribute
   use m_dom_debug, only: dom_debug
 
-  use m_dom_namespaces, only : nsDictionary, nsPrefixAppend
-  use m_dom_namespaces, only : nsClear, currentNamespaceURI
-  use m_dom_namespaces, only : decomposeQname
+!!$  use m_dom_namespaces, only : nsDictionary, nsPrefixAppend
+!!$  use m_dom_namespaces, only : nsClear, currentNamespaceURI
+!!$  use m_dom_namespaces, only : decomposeQname
 
   use xmlf90_sax, only: xml_parse, xml_t, dictionary_t, len
   use xmlf90_sax, only: open_xmlfile, close_xmlfile
@@ -32,7 +32,7 @@ module m_dom_parse
   type(fNode), pointer, private, save  :: main => null()
   type(fNode), pointer, private, save  :: current => null()
 
-  type(nsDictionary), save :: nsDict
+  !type(nsDictionary), save :: nsDict
 
 
 CONTAINS
@@ -49,7 +49,7 @@ CONTAINS
     integer              :: status
     integer              :: i
 
-    if (dom_debug) print *, "Adding node for element: ", name
+    if (dom_debug) write(*,'(4a)'), "Adding node for element: {",URI,'}', localname
 
     temp => createElement(mainDoc, name)
     current => appendChild(current,temp)
@@ -58,11 +58,9 @@ CONTAINS
 !   Add attributes
 !
     do i = 1, len(attrs)
-       call get_key(attrs, i, attr_name, status)
-       call get_value(attrs, attr_name, attr_value, status)
        if (dom_debug) print *, "Adding attribute: ", &
-         trim(attr_name), ":",trim(attr_value)
-       call setAttribute(current,attr_name,attr_value)
+         get_key(attrs, i), ":",get_value(attrs, i)
+       call setAttribute(current,get_key(attrs, i),get_value(attrs, i))
     enddo
 
     current % namespaceURI = URI
@@ -82,7 +80,7 @@ CONTAINS
 
 !!AG for IBM    type(fnode), pointer :: np
 
-    if (dom_debug) print *, "End of element: ", name
+    if (dom_debug) write(*,'(4a)'), "Ending node for element: {",URI,'}', localname
 !!AG for IBM    np => getParentNode(current)
 !!AG for IBM    current => np
     current => getParentNode(current)
