@@ -16,7 +16,7 @@
     </blah>
   </pqr:preamble>
 
-<title>Mary had a &lt;little&gt; lamb who liked standard entities</title>
+<p:title>Mary had a &lt;little&gt; lamb who liked standard entities</p:title>
 
 <text>This is some text, with character references (&#x4F; &#87;)
 and some cdata sections inside to make it more interesting. How about this
@@ -30,7 +30,7 @@ and some cdata sections inside to make it more interesting. How about this
 
 <tag which="has" a="lot" no="really" loads="o" fa="t" t="r" i="b" u="t" e="s" in="it"/>
 
-<misc disposition="throw_away" with_entity="&quot;you&quot;"
+<pqr:misc disposition="throw_away" with_entity="&quot;you&quot;"
          other_att = 'single quotes to enclose "Oh!"...'  >
 In the next pcdata chunk there is an unknown entity
 1.24 &notknown;3.45
@@ -43,7 +43,7 @@ Offending reference: &#3456;
 
 2.454 9.455
 <![CDATA[ <<<<< some hairy cdata!>>>]]]<<<>!?  ]]>
-</misc>
+</pqr:misc>
 </test>
 
 

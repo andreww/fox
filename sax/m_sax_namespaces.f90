@@ -488,8 +488,8 @@ contains
                       %uri)) :: URI
     integer :: p_i, l_m
     p_i = getPrefixIndex(nsDict, prefix)
-    l_m = size(nsDict%prefixes(p_i)%urilist)
-    uri = 'pqr'
+    l_m = ubound(nsDict%prefixes(p_i)%urilist, 1)
+    uri = transfer(nsDict%prefixes(p_i)%urilist(l_m)%URI,uri)
 
   end function getURIofPrefixedNS
 

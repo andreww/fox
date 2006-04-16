@@ -320,7 +320,19 @@ do
             endif
             call push_elstack(name,fx%element_stack)
             call checkNamespaces(fx%attributes, fx%nsDict, len_elstack(fx%element_stack))
+            if (len(getURIofQName(fxml,str(name)))==0) then
+               ! no namespace was found for the current element
+               call build_error_info(error_info, &
+                    "No namespace mapped to prefix at", &
+                    line(fb),column(fb),fx%element_stack,SEVERE_ERROR_CODE)
+               if (have_error_handler) then
+                  call error_handler(error_info)
+               else
+                  call default_error_handler(error_info)
+               endif
+            endif
             if (have_begin_handler) then 
+               !FIXME check for broken namespace
                call begin_element_handler(getURIofQName(fxml, str(name)), &
                                           getlocalNameofQName(str(name)), &
                                           str(name), fx%attributes)
@@ -528,7 +540,7 @@ subroutine xml_attributes(fxml,attributes)
   
 end subroutine xml_attributes
 
-  function getURIofQName(fxml, qname) result(URI)
+  pure function getURIofQName(fxml, qname) result(URI)
     type(xml_t), intent(in) :: fxml
     character(len=*), intent(in) :: qName
     character(len=URIlength(fxml, qname)) :: URI
@@ -544,6 +556,7 @@ end subroutine xml_attributes
     else
        URI = getnamespaceURI(fxml%fx%nsDict)
     endif
+
   end function getURIofQName
   
   pure function URIlength(fxml, qname) result(l_u)
@@ -563,7 +576,7 @@ end subroutine xml_attributes
     endif
   end function URIlength
 
-  function getLocalNameofQName(qname) result(localName)
+  pure function getLocalNameofQName(qname) result(localName)
     character(len=*), intent(in) :: qName
     character(len=len(QName)-index(QName,':')) :: localName
     
