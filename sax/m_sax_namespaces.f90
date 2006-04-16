@@ -1,7 +1,7 @@
 module m_sax_namespaces
 
   use m_array_str, only : compare_array_str
-  use m_dictionary, only : dictionary_t, get_key, get_value, len
+  use m_dictionary, only : dictionary_t, get_key, get_value, remove_key, len
   use m_xml_error, only : general_error, SEVERE_ERROR_CODE
 
   implicit none
@@ -44,7 +44,7 @@ module m_sax_namespaces
 contains
 
   subroutine checkNamespaces(atts, nsDict, ix)
-    type(dictionary_t), intent(in) :: atts
+    type(dictionary_t), intent(inout) :: atts
     type(namespaceDictionary), intent(inout) :: nsDict
     integer, intent(in) :: ix ! depth of nesting of current element.
 
@@ -52,7 +52,13 @@ contains
     character, dimension(:), allocatable :: prefix, xmlnsfull, URI
     integer :: i, xmlnsLength, URIlength
 
-    do i = 1, len(atts)
+    !Check for namespaces; *and* remove xmlns references from 
+    !the attributes dictionary.
+
+    ! we can't do a simple loop across the attributes,
+    ! because we need to remove some as we go along ...
+    i = 1
+    do while (i <= len(atts))
        xmlns = get_key(atts, i)
        if (xmlns == 'xmlns ') then
           !Default namespace is being set
@@ -62,6 +68,7 @@ contains
           call checkURI(URI)
           call addDefaultNS(nsDict, URI, ix)
           deallocate(URI)
+          call remove_key(atts, i)
           !TOHW call startNamespaceMapping
        elseif (xmlns == 'xmlns:') then
           !Prefixed namespace is being set
@@ -78,6 +85,10 @@ contains
           !TOHW call startNamespaceMapping
           deallocate(xmlnsfull)
           deallocate(prefix)
+          call remove_key(atts, i)
+       else
+          ! we only uncrement if we haven't removed a key
+          i = i+1
        endif
     enddo
 

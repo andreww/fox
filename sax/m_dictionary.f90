@@ -41,6 +41,7 @@ module m_dictionary
   public  :: len
   public  :: get_key 
   public  :: get_value
+  public  :: remove_key
   public  :: has_key
   public  :: print_dict
   !
@@ -49,6 +50,9 @@ module m_dictionary
   end interface
   interface get_value
      module procedure get_value_by_key, get_value_by_index
+  end interface
+  interface remove_key
+     module procedure remove_key_by_index
   end interface
   
 contains
@@ -112,6 +116,39 @@ contains
     enddo
 
   end function get_value_by_key
+
+  subroutine remove_key_by_index(dict, key, status)
+    type(dictionary_t), intent(inout)       :: dict
+    integer, intent(in)                     :: key
+    integer, optional, intent(out)          :: status
+    
+    integer :: i
+    type(dict_item), dimension(dict%number_of_items-1) :: tempDict
+
+    if (i<0 .or. i>dict%number_of_items) then
+       if (present(status)) status = 0
+    else
+       if (present(status)) status = 1
+    endif
+
+    do i = 1, key-1
+       tempDict(i)%key => dict%items(i)%key
+       tempDict(i)%value => dict%items(i)%value
+    enddo
+    deallocate(dict%items(i)%key)
+    deallocate(dict%items(i)%value)
+    do i = key+1, dict%number_of_items
+       tempDict(i-1)%key => dict%items(i)%key
+       tempDict(i-1)%value => dict%items(i)%value
+    enddo
+    !NB we don't resize here, because dictionaries only get
+    !resized with MULT and LEN and stuff here.
+    dict%number_of_items = dict%number_of_items - 1
+    do i = 1, dict%number_of_items
+       dict%items(i)%key => tempDict(i)%key
+       dict%items(i)%value => tempDict(i)%value
+    enddo
+  end subroutine remove_key_by_index
   
   function get_value_by_index(dict,i,status) result(value)
     type(dictionary_t), intent(in)       :: dict
@@ -197,6 +234,7 @@ contains
     !endif
 
     n = n + 1
+    call flush(6)
     allocate(dict%items(n)%key(len(key)))
     call assign_str_to_array(dict%items(n)%key,key)
     dict%number_of_items = n
@@ -230,23 +268,21 @@ contains
 
   subroutine resize_dict(dict)
     type(dictionary_t), intent(inout) :: dict
-    type(dictionary_t) :: tempDict
+    type(dict_item), dimension(size(dict%items)) :: tempDict
     integer :: i, l_d_new, l_d_old
 
     l_d_old = size(dict%items)
-    allocate(tempDict%items(l_d_old))
     do i = 1, l_d_old
-       tempDict%items(i)%key => dict%items(i)%key
-       tempDict%items(i)%value => dict%items(i)%value
+       tempDict(i)%key => dict%items(i)%key
+       tempDict(i)%value => dict%items(i)%value
     enddo
     deallocate(dict%items)
     l_d_new = l_d_old * DICT_LEN_MULT
     allocate(dict%items(l_d_new))
     do i = 1, l_d_old
-       dict%items(i)%key => tempDict%items(i)%key
-       dict%items(i)%value => tempDict%items(i)%value
+       dict%items(i)%key => tempDict(i)%key
+       dict%items(i)%value => tempDict(i)%value
     enddo
-    deallocate(tempDict%items)
 
   end subroutine resize_dict
 
