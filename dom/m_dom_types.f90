@@ -87,18 +87,6 @@
     type(fDOMImplementation), pointer ::  implementation;
     type(fNode), pointer ::               documentElement;
 !--
-    type(string)         :: nodeName    
-    type(string)         :: nodeValue   
-    integer              :: nc              = 0 
-    integer              :: nodeType        = 0
-    type(fnode), pointer :: parentNode      => null()
-    type(fnode), pointer :: firstChild      => null()
-    type(fnode), pointer :: lastChild       => null()
-    type(fnode), pointer :: previousSibling => null()
-    type(fnode), pointer :: nextSibling     => null()
-    type(fDocumentNode), pointer :: ownerDocument   => null()
-    type(fnamedNodeMap), pointer :: attributes => null()
-    type(fnodeList), pointer :: childNodes  => null()
   end type fDocumentNode
 
   !-----------------------------------------------------------
@@ -204,6 +192,8 @@ CONTAINS
        p => p%next
        call destroyNode(ghost)      ! We might not want to really destroy
     enddo
+    deallocate(nodelist%head)
+    deallocate(nodelist)
   end subroutine destroyNodeList
 
   recursive subroutine destroyNode(node)

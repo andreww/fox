@@ -90,17 +90,12 @@ CONTAINS
   subroutine serialize_doc_node(startNode, fname)
     type(fDocumentNode), pointer :: startNode   
     character(len=*), intent(in) :: fname
-    type(fnode), pointer :: child
 
     type(xmlf_t)  :: xf
 
     call xml_OpenFile(fname,xf)
     call xml_AddXMLDeclaration(xf)
-    child => startNode%firstChild
-    do while (associated(child))
-      call dump_xml(xf, child)
-      child => child % nextSibling
-    enddo
+    call dump_xml(xf, startNode%documentElement)
     call xml_Close(xf)
   end subroutine serialize_doc_node
 

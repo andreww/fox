@@ -12,7 +12,7 @@ implicit none
 
   call serialize(document, "out.xml")
 
-  call destroyDocument()
+  call destroyDocument(document)
 
 end program example
 

@@ -26,7 +26,7 @@ module m_dom_parse
   
   private
 
-  public :: parsefile, destroyDocument
+  public :: parsefile
 
   type(fDocumentNode), pointer, private, save  :: mainDoc => null()
   type(fNode), pointer, private, save  :: main => null()
@@ -185,12 +185,5 @@ CONTAINS
     parsefile => mainDoc
 
   end function parsefile
-
-  subroutine destroyDocument()
-    call destroyNode(main)
-    deallocate(mainDoc)
-    nullify(current)
-  end subroutine destroyDocument
-
 
 END MODULE m_dom_parse

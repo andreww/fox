@@ -25,7 +25,7 @@ private
   type(elstack_item), pointer, dimension(:) :: stack
 end type elstack_t
 
-public  :: push_elstack, pop_elstack, init_elstack, reset_elstack, print_elstack
+public  :: push_elstack, pop_elstack, init_elstack, destroy_elstack, reset_elstack, print_elstack
 public  :: get_top_elstack, is_empty, get_elstack_signature
 public  :: len
 
@@ -54,15 +54,21 @@ subroutine init_elstack(elstack)
 
 end subroutine init_elstack
 
+subroutine destroy_elstack(elstack)
+  type(elstack_t), intent(inout)  :: elstack
+  integer :: i
+  do i = 0, elstack % n_items
+    deallocate(elstack%stack(i)%data)
+  enddo
+  deallocate(elstack%stack)
+end subroutine destroy_elstack
+
 !-----------------------------------------------------------------
 subroutine reset_elstack(elstack)
   type(elstack_t), intent(inout)  :: elstack
   integer :: i
 
-  do i = 1, size(elstack%stack)
-    deallocate(elstack%stack(i)%data)
-  enddo
-  deallocate(elstack%stack)
+  call destroy_elstack(elstack)
   call init_elstack(elstack)
 
 end subroutine reset_elstack
@@ -70,20 +76,19 @@ end subroutine reset_elstack
 !-----------------------------------------------------------------
 subroutine resize_elstack(elstack)
   type(elstack_t), intent(inout)  :: elstack
-  type(elstack_item), pointer, dimension(:) :: temp
+  type(elstack_item), dimension(0:ubound(elstack%stack,1)) :: temp
   integer :: i, s, dataLength
 
   s = ubound(elstack%stack, 1)
 
-  temp=>elstack%stack
-  allocate(elstack%stack(nint(s*STACK_SIZE_MULT)))
-  do i = 1, s
-    dataLength = size(temp(i)%data)
-    allocate(elstack%stack(i)%data(dataLength)) 
-    elstack%stack(i)%data = temp(i)%data
-    deallocate(temp(i)%data)
+  do i = 0, s
+     temp(i)%data => elstack%stack(i)%data
   enddo
-  deallocate(temp)
+  deallocate(elstack%stack)
+  allocate(elstack%stack(0:nint(s*STACK_SIZE_MULT)))
+  do i = 0, s
+     elstack%stack(i)%data => temp(i)%data
+  enddo
 
 end subroutine resize_elstack
 

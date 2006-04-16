@@ -435,6 +435,9 @@ type(xmlf_t), intent(inout)   :: xf
   write(unit=xf%lun,fmt="(a)") char(xf%buffer)
   close(unit=xf%lun)
 
+  call reset_dict(xf%dict)
+  call destroy_elstack(xf%stack)
+
   deallocate(xf%filename)
 
 end subroutine xml_Close

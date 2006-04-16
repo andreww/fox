@@ -1,6 +1,6 @@
 module m_dom_document
 
-use m_dom_types, only: fnode,  createNode, &
+use m_dom_types, only: fnode,  createNode, destroyNode, &
      DOCUMENT_NODE, DOCUMENT_FRAGMENT_NODE, &
      TEXT_NODE, ATTRIBUTE_NODE, ELEMENT_NODE, &
      COMMENT_NODE, CDATA_SECTION_NODE
@@ -22,6 +22,7 @@ private
   ! METHODS FOR DOCUMENT NODES
   !-------------------------------------------------------   
   public :: createDocument
+  public :: destroyDocument
   public :: createElement
   public :: createDocumentFragment
   public :: createTextNode
@@ -60,7 +61,6 @@ CONTAINS
     allocate(doc)
     doc % doctype => null()
 
-    doc % childNodes => getChildNodes(main)
     child => main % firstChild
     do while (associated(child))
       if (child % nodeType == ELEMENT_NODE) then
@@ -76,12 +76,17 @@ CONTAINS
       call dom_error('createDocument', NOT_FOUND_ERR, "No documentElement found.")
     endif
 
-    doc % nodeType = DOCUMENT_NODE
-    doc % firstChild => doc % childNodes % head % node
-    doc % lastChild => doc % childNodes % tail % node
-    doc % ownerDocument => doc
-    
   end subroutine createDocument
+
+!FIXMETOHW I think I got documentNodes & head nodes mixed up here.
+  subroutine destroyDocument(doc)
+    type(fDocumentNode), pointer :: doc
+
+    call destroyNode(doc % documentElement)
+    deallocate(doc)
+
+  end subroutine destroyDocument
+    
 
 !-------------------------------------------------------------------
   function createDocumentFragment(doc)

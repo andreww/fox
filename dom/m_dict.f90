@@ -65,6 +65,7 @@ module m_dict
           deallocate(dict%dict)
           allocate(dict%dict(n+1))
           dict%dict(:n) = tempdict
+          deallocate(tempdict)
           n = n+1
         endif
       else
