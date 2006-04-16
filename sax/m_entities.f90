@@ -7,19 +7,20 @@ module m_entities
 !    2. Character entities  (but only within the range of the char intrinsic)
 !
 use m_buffer
-use m_xml_error
+use m_sax_error, only : general_error, SEVERE_ERROR_CODE, WARNING_CODE
+implicit none
 private
 
-integer, parameter, private      :: MAX_REPLACEMENT_SIZE = 200
+integer, parameter :: MAX_REPLACEMENT_SIZE = 200
 !
-type, private :: entity_t
+type :: entity_t
  character(len=40)                     :: code
  character(len=MAX_REPLACEMENT_SIZE)   :: replacement
 end type entity_t
 
-integer, parameter, private                          ::  N_ENTITIES  = 5
+integer, parameter  ::  N_ENTITIES  = 5
 
-type(entity_t), private, dimension(N_ENTITIES), save :: predefined_ent =  &
+type(entity_t), dimension(N_ENTITIES), save :: predefined_ent =  &
       (/                  &
       entity_t("gt",">"), &
       entity_t("lt","<"),  &

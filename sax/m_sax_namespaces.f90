@@ -2,7 +2,7 @@ module m_sax_namespaces
 
   use m_array_str, only : compare_array_str
   use m_dictionary, only : dictionary_t, get_key, get_value, remove_key, len
-  use m_xml_error, only : general_error, SEVERE_ERROR_CODE
+  use m_sax_error, only : general_error, SEVERE_ERROR_CODE
 
   implicit none
   private

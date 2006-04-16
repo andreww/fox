@@ -3,7 +3,8 @@ default: install
 #
 OBJFILES= m_debug.o m_buffer.o m_elstack.o m_dictionary.o m_io.o \
           m_reader.o m_converters.o m_charset.o  m_entities.o m_array_str.o\
-          m_sax_namespaces.o m_xml_error.o  m_fsm.o  m_xml_parser.o xmlf90_sax.o
+          m_sax_namespaces.o m_sax_error.o m_sax_fsm.o m_sax_parser.o \
+          xmlf90_sax.o
 #
 LIBRARY=libxmlf90_sax.a
 INCFLAGS=
@@ -11,15 +12,15 @@ INCFLAGS=
 
 m_reader.o: m_io.o m_debug.o
 m_elstack.o: m_buffer.o
-m_dictionary.o: m_array_str.o m_xml_error.o
-m_entities.o: m_buffer.o m_xml_error.o
+m_dictionary.o: m_array_str.o m_sax_error.o
+m_entities.o: m_buffer.o m_sax_error.o
 m_converters.o: m_debug.o
-m_fsm.o: m_buffer.o m_dictionary.o m_charset.o m_entities.o m_elstack.o
-m_xml_error.o: m_elstack.o
-m_xml_parser.o: m_buffer.o m_elstack.o m_reader.o m_fsm.o m_dictionary.o \
-                m_debug.o m_xml_error.o
+m_sax_fsm.o: m_buffer.o m_dictionary.o m_charset.o m_entities.o m_elstack.o
+m_sax_error.o: m_elstack.o
+m_sax_parser.o: m_buffer.o m_elstack.o m_reader.o m_sax_fsm.o m_dictionary.o \
+                m_debug.o m_sax_error.o
 #
-xmlf90_sax.o: m_dictionary.o m_xml_parser.o m_converters.o m_xml_error.o
+xmlf90_sax.o: m_dictionary.o m_sax_parser.o m_converters.o m_sax_error.o
 
 #
 #---------NOTHING SHOULD NEED TO BE CHANGED BELOW THIS LINE-----

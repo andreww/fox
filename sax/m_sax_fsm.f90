@@ -1,4 +1,4 @@
-module m_fsm
+module m_sax_fsm
 
 use m_buffer
 use m_charset
@@ -805,17 +805,4 @@ if (fx%state == ERROR) signal  = EXCEPTION
 
 end subroutine evolve_fsm
 
-end module m_fsm
-
-
-
-
-
-
-
-
-
-
-
-
-
+end module m_sax_fsm

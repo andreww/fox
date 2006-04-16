@@ -9,9 +9,9 @@ module xmlf90_sax
 ! m_xml_error is necessary in order to use a custom error handler.
 !
 use m_dictionary
-use m_xml_parser
+use m_sax_parser
 use m_converters
-use m_xml_error
+use m_sax_error
 
 public
 
