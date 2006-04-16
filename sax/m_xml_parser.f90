@@ -357,13 +357,13 @@ do
             else
                call get_top_elstack(fx%element_stack,oldname)
                if (oldname .equal. name) then
-                  call checkEndNamespaces(fx%nsDict, len_elstack(fx%element_stack))
-                  call pop_elstack(fx%element_stack,oldname)
                   if (have_end_handler) then
                      call end_element_handler(getURIofQName(fxml, str(name)), &
                                               getlocalnameofQName(str(name)), &
                                               str(name))
                   endif
+                  call checkEndNamespaces(fx%nsDict, len_elstack(fx%element_stack))
+                  call pop_elstack(fx%element_stack,oldname)
                else
                   call build_error_info(error_info, &
                        "Nesting error: End tag: " // str(name) //  &
@@ -400,14 +400,14 @@ do
                                              getlocalNameofQName(str(name)), &
                                              str(name), fx%attributes)
                endif
-               call checkEndNamespaces(fx%nsDict, len_elstack(fx%element_stack))
-               call pop_elstack(fx%element_stack,dummy)
                if (have_end_handler) then
                   if (fx%debug) print *, "--> ... and end_element_handler."
                   call end_element_handler(getURIofQName(fxml, str(name)), &
                                            getlocalNameofQName(str(name)), &
                                            str(name))
                endif
+               call checkEndNamespaces(fx%nsDict, len_elstack(fx%element_stack))
+               call pop_elstack(fx%element_stack,dummy)
             endif
 !!            call pop_elstack(fx%element_stack,dummy)
 
