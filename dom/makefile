@@ -16,13 +16,12 @@ OBJFILES= m_strings.o \
 	  m_dom_text.o \
           m_dom_parse.o \
 	  m_dom_utils.o \
-	  m_dom_namespaces.o \
 	  xmlf90_dom.o
 #
 LIBRARY=libxmlf90_dom.a
 INCFLAGS=$(MOD_PREFIX)../objs/finclude
 #
-m_dom_document.o: m_dom_namespaces.o m_dom_types.o
+m_dom_document.o: m_dom_types.o
 m_dom_nodelist.o: m_dom_types.o
 m_dom_namednodemap.o:  m_dom_types.o
 m_dom_node.o:  m_dom_types.o m_dom_nodelist.o m_dom_namednodemap.o \

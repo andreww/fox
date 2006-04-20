@@ -139,7 +139,7 @@ endif
 ! can be tuned for performance.
 
 if(repl) then
-  open(unit=xf%lun, file=filename, form="formatted", status="replace", &
+  open(unit=xf%lun, file=filename, form="formatted", status="unknown", &
        action="write", position="rewind", recl=xml_recl)
 else 
   open(unit=xf%lun, file=filename, form="formatted", status="old", &

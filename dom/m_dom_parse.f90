@@ -62,6 +62,7 @@ CONTAINS
     current % namespaceURI = URI
     if (current % namespaceURI == '') then
       ! this prefix is not bound to a URI - element localname is full name
+      continue
     endif
     current % localname = localname
 

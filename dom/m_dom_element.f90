@@ -18,7 +18,6 @@ use m_dom_namednodemap, only: removenameditem
 use m_dom_namednodemap, only: setnameditem
 use m_dom_namednodemap, only: getnameditem
 
-use m_dom_namespaces, only : decomposeQname
 use m_dom_document, only: createattribute
 use m_dom_debug, only: dom_debug
 
@@ -183,9 +182,6 @@ CONTAINS
     type(fnode), pointer      :: newattr
 
     type(string) :: prefix, localname
-    call decomposeQname(name, prefix, localname)
-
-    !if (prefix == 'xmlns'
 
     newattr => createAttribute(element % ownerDocument, name)
     call setValue(newattr,value)

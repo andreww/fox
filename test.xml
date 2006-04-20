@@ -10,7 +10,7 @@
 <test xmlns="http://www.uszla.me.uk/namespaces/test" xmlns:pqr="http://sjkldhf" version   =  "0.1">
   <pqr:preamble>A small file exercising all the features
           in the parser...
-    <blah xmlns="http://www.uszla.me.uk/nsother">
+    <blah xmlns="http://www.uszla.me.uk/nsother" pqr:attr="namespaced attribute">
       <pqr:ppp xmlns:pqr="http://lalala"/>
     </blah>
   </pqr:preamble>
@@ -29,7 +29,7 @@ and some cdata sections inside to make it more interesting. How about this
 
 <tag which="has" a="lot" no="really" loads="o" fa="t" t="r" i="b" u="t" e="s" in="it"/>
 
-<pqr:misc disposition="throw_away" with_entity="&quot;you&quot;"
+<pqr:misc pqr:disposition="throw_away" with_entity="&quot;you&quot;"
          other_att = 'single quotes to enclose "Oh!"...'  >
 In the next pcdata chunk there is an unknown entity
 1.24 &notknown;3.45

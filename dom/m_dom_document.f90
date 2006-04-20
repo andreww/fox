@@ -8,8 +8,6 @@ use m_dom_types, only : fDocumentType, fDocumentNode
 
 use m_dom_node, only : getChildNodes
 
-use m_dom_namespaces, only : decomposeQName
-
 use m_dom_error, only : NOT_FOUND_ERR, dom_error
 
 use m_strings, only: string, assignment(=)
@@ -181,8 +179,6 @@ CONTAINS
     createElementNS % nodeType = ELEMENT_NODE
     createElementNS % ownerDocument => doc
     createElementNS % namespaceURI = namespaceURI
-    call decomposeQName(qualifiedName, &
-      createElementNS % prefix, createElementNS % localName)
   
   end function createElementNS
   
@@ -196,8 +192,6 @@ CONTAINS
     createAttributeNS % nodeType = ATTRIBUTE_NODE
     createAttributeNS % ownerDocument => doc
     createAttributeNS % namespaceURI = namespaceURI
-    call decomposeQName(qualifiedName, &
-      createAttributeNS % prefix, createAttributeNS % localName)
     
   end function createAttributeNS
 

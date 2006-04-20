@@ -2,6 +2,7 @@ module m_sax_namespaces
 
   use m_array_str, only : compare_array_str
   use m_dictionary, only : dictionary_t, get_key, get_value, remove_key, len
+  use m_dictionary, only : set_nsURI, set_localName
   use m_sax_error, only : general_error, SEVERE_ERROR_CODE
 
   implicit none
@@ -46,7 +47,6 @@ module m_sax_namespaces
      module procedure getURIofDefaultNS, getURIofPrefixedNS
   end interface
 
-
 contains
 
   subroutine checkNamespaces(atts, nsDict, ix)
@@ -55,8 +55,8 @@ contains
     integer, intent(in) :: ix ! depth of nesting of current element.
 
     character(len=6) :: xmlns
-    character, dimension(:), allocatable :: prefix, xmlnsfull, URI
-    integer :: i, xmlnsLength, URIlength
+    character, dimension(:), allocatable :: prefix, QName, URI
+    integer :: i, j, n, xmlnsLength, URIlength
 
     !Check for namespaces; *and* remove xmlns references from 
     !the attributes dictionary.
@@ -83,19 +83,44 @@ contains
           URI = transfer(get_value(atts, i), URI)
           call checkURI(URI)
           xmlnsLength = len(get_key(atts, i))
-          allocate(xmlnsfull(xmlnsLength))
+          allocate(QName(xmlnsLength))
           allocate(prefix(xmlnsLength - 6))
-          xmlnsfull = transfer(get_key(atts, i), xmlnsfull)
-          prefix = xmlnsfull(7:)
+          QName = transfer(get_key(atts, i), QName)
+          prefix = QName(7:)
           call addPrefixedNS(nsDict, prefix, URI, ix)
           !TOHW call startNamespaceMapping
-          deallocate(xmlnsfull)
+          deallocate(QName)
           deallocate(prefix)
           call remove_key(atts, i)
        else
           ! we only uncrement if we haven't removed a key
           i = i+1
        endif
+    enddo
+
+    ! having done that, now resolve all attribute namespaces:
+    do i = 1, len(atts)
+       ! get name
+       allocate(QName(len(get_key(atts, i))))
+       QName = transfer(get_key(atts,i), QName)
+       n = 0
+       do j = 1, size(QName)
+          if (QName(j) == ':') then
+             n = j
+             exit
+          endif
+       enddo
+       if (n > 0) then
+          allocate(prefix(n-1))
+          prefix = transfer(QName(1:n-1), prefix)
+          print*,'nsURI',getnamespaceURI(nsDict, prefix)
+          call set_nsURI(atts, i, getnamespaceURI(nsDict, prefix))
+          deallocate(prefix)
+       else
+          call set_nsURI(atts, i, '') ! no such thing as a default namespace on attributes
+       endif
+       call set_localName(atts, i, QName(n+1:))
+       deallocate(QName)
     enddo
 
   end subroutine checkNamespaces
@@ -138,6 +163,7 @@ contains
        enddo
        deallocate(nsDict%prefixes(i)%urilist)
     enddo
+    deallocate(nsDict%prefixes(0)%prefix)
     deallocate(nsDict%prefixes)
   end subroutine destroyNamespaceDictionary
 
@@ -146,7 +172,7 @@ contains
     type(URIMapping), dimension(0:), intent(inout) :: urilist1
     type(URIMapping), dimension(0:), intent(inout) :: urilist2
     integer, intent(in):: l_m
-    integer :: l_s, i
+    integer :: i
 
     if (ubound(urilist1,1) < l_m .or. ubound(urilist2,1) < l_m) then
        call general_error('Internal error in m_sax_namespaces:copyURIMapping',SEVERE_ERROR_CODE)
@@ -168,12 +194,7 @@ contains
     integer, intent(in) :: ix
 
     type(URIMapping), dimension(:), allocatable :: tempMap
-    integer :: l_m
-
-    character, dimension(:), allocatable :: tempString
-    integer :: l_s
-
-    integer :: i, j
+    integer :: l_m, l_s
 
     l_m = ubound(nsDict%defaults,1)
     allocate(tempMap(0:l_m))
@@ -200,12 +221,7 @@ contains
     integer, intent(in) :: ix
 
     type(URIMapping), dimension(:), allocatable :: tempMap
-    integer :: l_m
-
-    character, dimension(:), allocatable :: tempString
-    integer :: l_s
-
-    integer :: i, j
+    integer :: l_m, l_s
 
     l_m = ubound(nsPrefix%urilist,1)
     allocate(tempMap(0:l_m))
@@ -231,11 +247,6 @@ contains
     type(URIMapping), dimension(:), allocatable :: tempMap
     integer :: l_m
 
-    character, dimension(:), allocatable :: tempString
-    integer :: l_s
-
-    integer :: i, j
-
     l_m = ubound(nsDict%defaults,1)
     allocate(tempMap(0:l_m-1))
     ! Now copy all defaults across ...
@@ -256,11 +267,6 @@ contains
 
     type(URIMapping), dimension(:), allocatable :: tempMap
     integer :: l_m
-
-    character, dimension(:), allocatable :: tempString
-    integer :: l_s
-
-    integer :: i, j
 
     l_m = ubound(nsPrefix%urilist,1)
     allocate(tempMap(0:l_m-1))
@@ -332,7 +338,7 @@ contains
   subroutine addPrefix(nsDict, prefix)
     type(namespaceDictionary), intent(inout) :: nsDict
     character, dimension(:), intent(in) :: prefix
-    integer :: l_p, l_m, p_i
+    integer :: l_p
 
     type(prefixMapping), dimension(:), pointer :: tempPrefixMap
 
@@ -373,10 +379,9 @@ contains
   subroutine removePrefix(nsDict, i_p)
     type(namespaceDictionary), intent(inout) :: nsDict
     integer, intent(in) :: i_p
-    integer :: l_p, l_m, p_i
+    integer :: l_p
 
     type(prefixMapping), dimension(:), pointer :: tempPrefixMap
-    type(URIMapping), dimension(:), pointer :: tempURIMap
 
     integer :: i
 
@@ -394,6 +399,7 @@ contains
        tempPrefixMap(i)%prefix => nsDict%prefixes(i)%prefix
        tempPrefixMap(i)%urilist => nsDict%prefixes(i)%urilist
     enddo
+    deallocate(nsDict%prefixes(i_p)%urilist(0)%URI)
     deallocate(nsDict%prefixes(i_p)%urilist)
     deallocate(nsDict%prefixes(i_p)%prefix)
     !this subroutine will only get called if the urilist is already
@@ -456,7 +462,7 @@ contains
           print*, nsdict%prefixes(i)%urilist(j)%ix, nsdict%prefixes(i)%urilist(j)%URI
        enddo
     enddo
-    call pxfflush(6)
+    !call pxfflush(6)
   end subroutine dumpnsdict
 
   pure function getURIofDefaultNS(nsDict) result(uri)
@@ -520,7 +526,9 @@ contains
     character, dimension(:) :: URI
 
     !FIXMETOHW check that the string is a valid URI
+    !TOHW actually, namespaces 1.1 says just a valid QName
 
   end subroutine checkURI
+
 
 end module m_sax_namespaces
