@@ -6,7 +6,7 @@ module m_sax_parser
 
 use m_buffer
 use m_reader
-use m_dictionary, only : dictionary_t
+use FoX_common, only : dictionary_t
 use m_debug
 use m_sax_fsm, only : fsm_t, init_fsm, reset_fsm, destroy_fsm, evolve_fsm
 use m_sax_fsm, only : END_OF_TAG, OPENING_TAG, SINGLE_TAG, CDATA_SECTION_TAG
@@ -122,7 +122,6 @@ recursive subroutine xml_parse(fxml, begin_element_handler,    &
                            error_handler,            &
                            signal_handler,           &
                            verbose,                  &
-                           empty_element_handler,    &
                            start_document_handler,   & 
                            end_document_handler)   
 
@@ -140,13 +139,12 @@ optional                            :: cdata_section_handler
 optional                            :: error_handler
 optional                            :: signal_handler
 logical, intent(in), optional       :: verbose
-optional                            :: empty_element_handler
 optional                            :: start_document_handler
 optional                            :: end_document_handler
 
 interface
    subroutine begin_element_handler(namespaceURI, localName, name, attributes)
-   use m_dictionary
+   use FoX_common
    character(len=*), intent(in)     :: namespaceUri
    character(len=*), intent(in)     :: localName
    character(len=*), intent(in)     :: name
@@ -162,11 +160,11 @@ interface
    subroutine start_prefix_handler(namespaceURI, prefix)
    character(len=*), intent(in) :: namespaceURI
    character(len=*), intent(in) :: prefix
- end subroutine start_prefix_handler
+   end subroutine start_prefix_handler
 
    subroutine end_prefix_handler(prefix)
    character(len=*), intent(in) :: prefix
- end subroutine end_prefix_handler
+   end subroutine end_prefix_handler
 
    subroutine pcdata_chunk_handler(chunk)
    character(len=*), intent(in) :: chunk
@@ -177,7 +175,7 @@ interface
    end subroutine comment_handler
 
    subroutine xml_declaration_handler(name,attributes)
-   use m_dictionary
+   use FoX_common
    character(len=*), intent(in)     :: name
    type(dictionary_t), intent(in)   :: attributes
    end subroutine xml_declaration_handler
@@ -199,14 +197,6 @@ interface
    logical, intent(out) :: code
    end subroutine signal_handler
 
-   subroutine empty_element_handler(URI, localname, name,attributes)
-   use m_dictionary
-   character(len=*), intent(in)     :: URI
-   character(len=*), intent(in)     :: localname
-   character(len=*), intent(in)     :: name
-   type(dictionary_t), intent(in)   :: attributes
-   end subroutine empty_element_handler
-
    subroutine start_document_handler()   
    end subroutine start_document_handler 
 
@@ -227,7 +217,7 @@ logical              :: have_begin_handler, have_end_handler, &
                         have_pcdata_handler, have_comment_handler, &
                         have_xml_declaration_handler, &
                         have_sgml_declaration_handler, &
-                        have_cdata_section_handler, have_empty_handler, &
+                        have_cdata_section_handler, &
                         have_error_handler, have_signal_handler, &
                         have_start_document_handler, have_end_document_handler
 
@@ -248,7 +238,6 @@ have_sgml_declaration_handler = present(sgml_declaration_handler)
 have_cdata_section_handler = present(cdata_section_handler)
 have_error_handler = present(error_handler)
 have_signal_handler = present(signal_handler)
-have_empty_handler = present(empty_element_handler)
 have_start_document_handler = present(start_document_handler)  
 have_end_document_handler = present(end_document_handler)      
 
@@ -420,30 +409,20 @@ do
                   call default_error_handler(error_info)
                endif
             endif
-            if (have_empty_handler) then
-               if (fx%debug) print *, "--> calling empty_element_handler."
-               call empty_element_handler(getURIofQName(fxml, str(name)), &
+            if (have_begin_handler) then
+               if (fx%debug) print *, "--> calling begin_element_handler..."
+               call begin_element_handler(getURIofQName(fxml, str(name)), &
                                           getlocalNameofQName(str(name)), &
                                           str(name), fx%attributes)
-               call checkEndNamespaces(fx%nsDict, len_elstack(fx%element_stack))
-               call pop_elstack(fx%element_stack,dummy)
-            else
-               if (have_begin_handler) then
-                  if (fx%debug) print *, "--> calling begin_element_handler..."
-                  call begin_element_handler(getURIofQName(fxml, str(name)), &
-                                             getlocalNameofQName(str(name)), &
-                                             str(name), fx%attributes)
-               endif
-               if (have_end_handler) then
-                  if (fx%debug) print *, "--> ... and end_element_handler."
-                  call end_element_handler(getURIofQName(fxml, str(name)), &
-                                           getlocalNameofQName(str(name)), &
-                                           str(name))
-               endif
-               call checkEndNamespaces(fx%nsDict, len_elstack(fx%element_stack))
-               call pop_elstack(fx%element_stack,dummy)
             endif
-!!            call pop_elstack(fx%element_stack,dummy)
+            if (have_end_handler) then
+               if (fx%debug) print *, "--> ... and end_element_handler."
+               call end_element_handler(getURIofQName(fxml, str(name)), &
+                                        getlocalNameofQName(str(name)), &
+                                        str(name))
+            endif
+            call checkEndNamespaces(fx%nsDict, len_elstack(fx%element_stack))
+            call pop_elstack(fx%element_stack,dummy)
 
          else if (fx%context == CDATA_SECTION_TAG) then
 

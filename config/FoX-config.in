@@ -1,0 +1,101 @@
+#! /bin/sh
+
+comp_prefix=@prefix@
+moddir=$comp_prefix/finclude
+libdir=$comp_prefix/lib
+version=@version@
+
+usage()
+{
+    cat <<EOF
+Usage: FoX-config [OPTION]
+
+Known values for OPTION are:
+
+  --libs		print library linking information
+  --fcflags		print pre-processor and compiler flags
+  --help		display this help and exit
+  --version		display version information
+EOF
+
+    exit $1
+}
+
+if test $# -eq 0; then
+    usage 1
+fi
+
+while test $# -gt 0; do
+    case "$1" in
+    -*=*) optarg=`echo "$1" | sed 's/[-_a-zA-Z0-9]*=//'` ;;
+    *) optarg= ;;
+    esac
+
+    case "$1" in
+    --version)
+	echo ${version}
+	exit 0
+	;;
+
+    --help)
+	usage 0
+	;;
+
+    --fcflags)
+        FLAGS=FC
+       	;;
+
+    --libs)
+        FLAGS=LD
+       	;;
+
+    --wxml)
+        MODULES="$MODULES wxml fsys"
+        ;;
+    --wcml)
+        MODULES="$MODULES wcml wxml fsys"
+        ;;
+    --sax)
+        MODULES="$MODULES sax"
+        ;;
+    --dom)
+        MODULES="$MODULES dom sax wxml fsys"
+        ;;
+
+    *)
+	usage
+	exit 1
+	;;
+    esac
+    shift
+done
+
+if [[ $MODULES = *fsys* ]]; then
+  LIBS=-lfsys
+fi
+if [[ $MODULES = *wxml* ]]; then
+  LIBS="-lFoX_wxml $LIBS"
+fi
+if [[ $MODULES = *wcml* ]]; then
+  LIBS="-lFoX_wcml $LIBS"
+fi
+if [[ $MODULES = *sax* ]]; then
+  LIBS="-lFoX_sax $LIBS"
+fi
+if [[ $MODULES = *dom* ]]; then
+  LIBS="-lFoX_dom $LIBS"
+fi
+if [ -z "$LIBS" ]; then
+  LIBS="-lFoX_dom -lFoX_sax -lFoX_wcml -lFoX_wxml -lfsys"
+fi
+
+case $FLAGS in
+  FC)
+    echo @FC_MOD_FLAG@\"$(@CYGPATH_W@ $moddir)\"
+    ;;
+  LD)
+    echo -L\"$(@CYGPATH_W@ $libdir)\" $LIBS
+    ;;
+esac 
+
+exit 0

@@ -1,11 +1,11 @@
-program example
-!
-! Example driver for a stand-alone parsing of an xml document
-!
-use xmlf90_sax
-use pxf, only: pxfabort
+program sax_example
+  !
+  ! Example driver for a stand-alone parsing of an xml document
+  !
+  use FoX_sax
+  use pxf
 
-use m_handlers      ! Defines begin_element, end_element, pcdata_chunk, etc
+  use m_handlers      ! Defines begin_element, end_element, pcdata_chunk, etc
 
   integer :: iostat
   type(xml_t)  :: fxml
@@ -23,23 +23,8 @@ use m_handlers      ! Defines begin_element, end_element, pcdata_chunk, etc
                comment_handler = comment_handler, &
                xml_declaration_handler = xml_declaration_handler, &
                sgml_declaration_handler = sgml_declaration_handler, &
-               verbose = .false., &
-               empty_element_handler = empty_element_handler)
+               verbose = .false.)
 
   call close_xmlfile(fxml)
 
-end program example
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+end program sax_example

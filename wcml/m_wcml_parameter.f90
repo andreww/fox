@@ -1,8 +1,8 @@
 module m_wcml_parameter
 
-  use xmlf90_wxml, only: xmlf_t
-  use xmlf90_wxml, only: xml_NewElement, xml_AddAttribute
-  use xmlf90_wxml, only: xml_EndElement
+  use FoX_wxml, only: xmlf_t
+  use FoX_wxml, only: xml_NewElement, xml_AddAttribute
+  use FoX_wxml, only: xml_EndElement
   use m_wcml_stml, only: stmAddValue
 
   implicit none

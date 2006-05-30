@@ -1,8 +1,8 @@
 module m_wcml_core
 
-  use xmlf90_wxml, only: xmlf90_version, xmlf_t, str
-  use xmlf90_wxml, only: xml_NewElement, xml_AddPcData, xml_AddAttribute
-  use xmlf90_wxml, only: xml_EndElement
+  use FoX_wxml, only: FoX_version, xmlf_t, str
+  use FoX_wxml, only: xml_NewElement, xml_AddPcData, xml_AddAttribute
+  use FoX_wxml, only: xml_EndElement
   use m_wcml_stml, only: stmAddValue
   
 !  use m_wcml_coma
@@ -143,7 +143,7 @@ CONTAINS
   subroutine cmlEndCml(xf)
     type(xmlf_t), intent(inout) :: xf
 
-    call cmlAddMetadata(xf, name='dc:contributor', content='xmlf90-'//xmlf90_version//' (http://www.eminerals.org)')
+    call cmlAddMetadata(xf, name='dc:contributor', content='FoX-'//FoX_version//' (http://www.eminerals.org)')
     call xml_EndElement(xf, 'cml')
 
   end subroutine cmlEndCml

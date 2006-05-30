@@ -2,9 +2,9 @@ module m_wcml_coma
   ! Implements routines relating to the (currently unfinished)
   ! CML Condensed Matter schema
 
-  use xmlf90_wxml, only: xmlf_t
-  use xmlf90_wxml, only: xml_NewElement, xml_AddAttribute
-  use xmlf90_wxml, only: xml_EndElement, xml_AddPcData
+  use FoX_wxml, only: xmlf_t
+  use FoX_wxml, only: xml_NewElement, xml_AddAttribute
+  use FoX_wxml, only: xml_EndElement, xml_AddPcData
   use m_wcml_stml, only: stmAddValue
   use m_wxml_error
   

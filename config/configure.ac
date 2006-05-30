@@ -1,4 +1,4 @@
-AC_INIT([generic],[1.0],[wdpgaara@lg.ehu.es])
+AC_INIT([FoX],[2.0],[tow21@cam.ac.uk])
 AC_CONFIG_SRCDIR([config.sub])
 dnl
 dnl All macros are kept in Src/m4:
@@ -130,6 +130,7 @@ AC_SUBST(FCFLAGS)
 AC_SUBST(LDFLAGS)
 dnl
 AC_CONFIG_FILES([arch.make])
-AC_CONFIG_FILES([xmlf90-config.sh])
+AC_CONFIG_FILES([FoX-config])
 AC_OUTPUT
+chmod +x FoX-config
 dnl

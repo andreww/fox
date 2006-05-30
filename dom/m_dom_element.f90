@@ -40,6 +40,7 @@ end interface getElementById
   public :: getAttribute
   public :: getAttributeNode
   public :: setAttribute
+  public :: setAttributeNS
   public :: setAttributeNode
   public :: removeAttribute
   public :: normalize       !--- combines adjacent text nodes ---!
@@ -185,6 +186,24 @@ CONTAINS
 
     newattr => createAttribute(element % ownerDocument, name)
     call setValue(newattr,value)
+    call setAttributeNode(element,newattr)
+
+  end subroutine setAttribute
+  subroutine setAttributeNS(element, name, value, nsURI, localname)
+    type(fnode), pointer :: element
+    character(len=*), intent(in) :: name
+    character(len=*), intent(in) :: value
+    character(len=*), intent(in) :: nsURI
+    character(len=*), intent(in) :: localName
+
+    type(fnode), pointer      :: newattr
+
+    type(string) :: prefix, localname
+
+    newattr => createAttribute(element % ownerDocument, name)
+    call setValue(newattr,value)
+    call setnsURI(newattr, nsURI)
+    call setlocalName(newattr, localName)
     call setAttributeNode(element,newattr)
 
   end subroutine setAttribute

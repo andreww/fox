@@ -1,9 +1,9 @@
 module m_wcml_stml
 
-  use xmlf90_wxml, only: xmlf_t
-  use xmlf90_wxml, only: str
-  use xmlf90_wxml, only: xml_NewElement, xml_AddPcData, xml_AddAttribute
-  use xmlf90_wxml, only: xml_EndElement
+  use FoX_wxml, only: xmlf_t
+  use FoX_wxml, only: str
+  use FoX_wxml, only: xml_NewElement, xml_AddPcData, xml_AddAttribute
+  use FoX_wxml, only: xml_EndElement
 
   implicit none
 

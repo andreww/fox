@@ -1,10 +1,13 @@
 module m_dom_document
 
+use m_dom_documenttype, only : fDocumentType
+use m_dom_documenttype, only : createDocumentType, destroyDocumentType
+
 use m_dom_types, only: fnode,  createNode, destroyNode, &
      DOCUMENT_NODE, DOCUMENT_FRAGMENT_NODE, &
      TEXT_NODE, ATTRIBUTE_NODE, ELEMENT_NODE, &
      COMMENT_NODE, CDATA_SECTION_NODE
-use m_dom_types, only : fDocumentType, fDocumentNode
+use m_dom_types, only : fDocument
 
 use m_dom_node, only : getChildNodes
 
@@ -16,19 +19,19 @@ implicit none
 
 private
 
-  !-------------------------------------------------------  
-  ! METHODS FOR DOCUMENT NODES
-  !-------------------------------------------------------   
+! from DOMImplementation
   public :: createDocument
   public :: destroyDocument
+
+! from DOMDocument
   public :: createElement
   public :: createDocumentFragment
   public :: createTextNode
   public :: createComment
   public :: createCdataSection
-!  public :: createProcessingInstruction
+  public :: createProcessingInstruction
   public :: createAttribute
-!  public :: createEntityReference
+  public :: createEntityReference
 !  public :: getElementsByTagName
 !  public :: importNode
   public :: createElementNS
@@ -41,54 +44,70 @@ CONTAINS
   ! METHODS FOR DOCUMENT NODES
   !-----------------------------------------------------------
 
+  !This function is part of m_dom_implementation but has
+  !been transplanted here for reasons of inheritance.
 
-  function createDocumentType(qualifiedName, publicID, systemID)
-    type(fDocumentType), pointer :: createDocumentType
-    type(string), intent(in) :: qualifiedName, publicID, systemID
-
-    createDocumentType => null()
-  end function createDocumentType
-
-  subroutine createDocument(doc, main) 
-    type(fDocumentNode), pointer :: doc
-    type(fNode), pointer :: main
+  
+  function createDocument(namespaceURI, qualifiedName, docType) result(doc)
+    character(len=*), intent(in) :: namespaceURI
+    character(len=*), intent(in) :: qualifiedName
     type(fDocumentType), pointer :: docType
+    type(fDocument), pointer :: doc
+    
+    !DOM implementation ...
+    doc%documentType => docType
+    
+  !   !FIXME
+  end function createDocument
+
+  subroutine attachDocumentElement(doc, main) 
+    type(fDocument), pointer :: doc
+    type(fNode), pointer :: main
 
     type(fnode), pointer :: child
-    
-    allocate(doc)
-    doc % doctype => null()
 
-    child => main % firstChild
-    do while (associated(child))
-      if (child % nodeType == ELEMENT_NODE) then
-        doc % documentElement => child
-        exit
-      endif
-      child => child % nextSibling
-    enddo
-    if (associated(doc % documentElement)) then
-      !if (parsefile % documentElement % namespaceURI == 'http://www.w3.org/1999/xhtml' ) then
-      continue
-    else
-      call dom_error('createDocument', NOT_FOUND_ERR, "No documentElement found.")
+    if (.not.associated(doc%docType)) then
+       !FIXME error out
     endif
+
+    if (.not.child % nodeType == ELEMENT_NODE) then
+       !FIXME error out
+    endif
+    
+    doc%documentElement => main
+
+    !if (associated(doc % documentElement)) then
+      !if (parsefile % documentElement % namespaceURI == 'http://www.w3.org/1999/xhtml' ) then
+    !  continue
+    !else
+    !  call dom_error('createDocument', NOT_FOUND_ERR, "No documentElement found.")
+   ! endif
 
   end subroutine createDocument
 
 !FIXMETOHW I think I got documentNodes & head nodes mixed up here.
   subroutine destroyDocument(doc)
-    type(fDocumentNode), pointer :: doc
-
+    type(fDocument), pointer :: doc
+    
     call destroyNode(doc % documentElement)
     deallocate(doc)
 
   end subroutine destroyDocument
-    
 
-!-------------------------------------------------------------------
+  function createElement(doc, tagName)
+    type(fDocument), pointer :: doc
+    character(len=*), intent(in) :: tagName
+    type(fnode), pointer :: createElement
+  
+    createElement => createNode()
+    createElement % nodeName = tagName
+    createElement % nodeType = ELEMENT_NODE
+    createElement % ownerDocument => doc
+  
+  end function createElement
+    
   function createDocumentFragment(doc)
-    type(fDocumentNode), pointer :: doc
+    type(fDocument), pointer :: doc
     type(fnode), pointer :: createDocumentFragment
     
     createDocumentFragment => createNode()
@@ -97,9 +116,9 @@ CONTAINS
     createDocumentFragment % ownerDocument => doc
     
   end function createDocumentFragment
-!-------------------------------------------------------------------
+
   function createTextNode(doc, data)
-    type(fDocumentNode), pointer :: doc
+    type(fDocument), pointer :: doc
     character(len=*), intent(in) :: data
     type(fnode), pointer :: createTextNode
     
@@ -111,38 +130,8 @@ CONTAINS
     
   end function createTextNode
 
-  !-----------------------------------------------------------
-
-  function createAttribute(doc, name)
-    type(fDocumentNode), pointer :: doc
-    character(len=*), intent(in) :: name
-    type(fnode), pointer :: createAttribute
-  
-    createAttribute => createNode()
-    createAttribute % nodeName = name
-    createAttribute % nodeType = ATTRIBUTE_NODE
-    createAttribute % ownerDocument => doc
-  
-  end function createAttribute
-
-  !-----------------------------------------------------------
-
-  function createElement(doc, tagName)
-    type(fDocumentNode), pointer :: doc
-    character(len=*), intent(in) :: tagName
-    type(fnode), pointer :: createElement
-  
-    createElement => createNode()
-    createElement % nodeName = tagName
-    createElement % nodeType = ELEMENT_NODE
-    createElement % ownerDocument => doc
-  
-  end function createElement
-
-  !-----------------------------------------------------------
-
   function createComment(doc, data)
-    type(fDocumentNode), pointer :: doc
+    type(fDocument), pointer :: doc
     character(len=*), intent(in) :: data
     type(fnode), pointer :: createComment
   
@@ -154,10 +143,8 @@ CONTAINS
   
   end function createComment
 
-  !-----------------------------------------------------------
-
   function createCdataSection(doc, data)
-    type(fDocumentNode), pointer :: doc
+    type(fDocument), pointer :: doc
     character(len=*), intent(in) :: data
     type(fnode), pointer :: createCdataSection
   
@@ -169,8 +156,61 @@ CONTAINS
   
   end function createCdataSection
 
+  function createProcessingInstruction(doc, target, data)
+    type(fDocument), pointer :: doc
+    character(len=*), intent(in) :: target
+    character(len=*), intent(in) :: data
+
+    createProcessingInstruction => createNode()
+    createProcessingInstruction % nodeName = target
+    createProcessingInstruction % nodeValue = data
+    createProcessingInstruction % nodeType = PROCESSING_INSTRUCTION_NODE
+    createProcesssingInstruction % ownerDocument => doc
+    
+  end function createProcessingInstruction
+
+  function createAttribute(doc, name)
+    type(fDocument), pointer :: doc
+    character(len=*), intent(in) :: name
+    type(fnode), pointer :: createAttribute
+  
+    createAttribute => createNode()
+    createAttribute % nodeName = name
+    createAttribute % nodeType = ATTRIBUTE_NODE
+    createAttribute % ownerDocument => doc
+  
+  end function createAttribute
+
+  function createEntityReference(doc, name)
+    type(fDocument), pointer :: doc
+    character(len=*), intent(in) :: name
+    type(fnode), pointer :: createEntityReference  
+
+    createEntityReference => createNode()
+    createEntityReference % nodeName = name
+    createAttribute % nodeType = ENTITY_REFERENCE_NODE
+    createAttribute % ownerDocument => doc
+
+  end function createEntityReference
+
+  !where does this live? In somewhere that has namednodemaps ...
+  !function getElementsByTagName(doc, tagname)
+  !  type(fDocument), pointer :: doc
+  !  character(len=*), intent(in) :: tagname!
+  !
+  !  blah
+  !end function getElementsByTagName
+
+  !function importNode(doc, importedNode, deep)
+  !  type(fDocument), pointer :: doc
+  !  type(fNode), pointer :: importedNode
+  !  logical :: deep
+
+    !FIXME
+  !end function importNode
+
   function createElementNS(doc, namespaceURI, qualifiedName)
-    type(fDocumentNode), pointer :: doc
+    type(fDocument), pointer :: doc
     type(string), intent(in) :: namespaceURI, qualifiedName
     type(fnode), pointer :: createElementNS
   
@@ -183,7 +223,7 @@ CONTAINS
   end function createElementNS
   
   function createAttributeNS(doc, namespaceURI,  qualifiedname)
-    type(fDocumentNode), pointer :: doc
+    type(fDocument), pointer :: doc
     type(string), intent(in) :: namespaceURI, qualifiedName
     type(fnode), pointer :: createAttributeNS
   
@@ -194,6 +234,5 @@ CONTAINS
     createAttributeNS % namespaceURI = namespaceURI
     
   end function createAttributeNS
-
 
 end module m_dom_document

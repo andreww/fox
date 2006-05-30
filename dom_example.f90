@@ -2,7 +2,7 @@ program example
 !
 ! Example driver for a stand-alone parsing of an xml document
 !
-use xmlf90_dom, only : fDocumentNode, parsefile, serialize, destroyDocument
+use FoX_dom, only : fDocumentNode, parsefile, serialize, destroyDocument
 
 implicit none
 

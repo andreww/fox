@@ -14,8 +14,6 @@ module m_dictionary
   real, parameter, private       :: DICT_LEN_MULT = 1.5
 
   type dict_item
-     character(len=1), pointer, dimension(:) :: nsURI
-     character(len=1), pointer, dimension(:) :: localName
      character(len=1), pointer, dimension(:) :: key
      character(len=1), pointer, dimension(:) :: value
   end type dict_item
@@ -37,7 +35,7 @@ module m_dictionary
   !these last two only because SAX needs them
   public :: add_key_to_dict
   public :: add_value_to_dict
-
+ 
   ! Query and extraction procedures
   
   public  :: len
@@ -46,14 +44,7 @@ module m_dictionary
   public  :: remove_key
   public  :: has_key
   public  :: print_dict
-
-  ! Namespaces
-  public :: get_nsURI
-  public :: get_localName
-  public :: set_nsURI
-  public :: set_localName
-  
- 
+  !
   interface len
      module procedure number_of_entries
   end interface
@@ -62,20 +53,6 @@ module m_dictionary
   end interface
   interface remove_key
      module procedure remove_key_by_index
-  end interface
-
-  interface get_nsURI
-     module procedure get_nsURI_by_index
-  end interface
-  interface get_localName
-     module procedure get_localName_by_index
-  end interface
-  interface set_nsURI
-     module procedure set_nsURI_by_index
-  end interface
-  interface set_localName
-     module procedure set_localName_by_index_s
-     module procedure set_localName_by_index_vs
   end interface
   
 contains
@@ -157,18 +134,12 @@ contains
     do i = 1, key-1
        tempDict(i)%key => dict%items(i)%key
        tempDict(i)%value => dict%items(i)%value
-       tempDict(i)%nsURI => dict%items(i)%nsURI
-       tempDict(i)%localName => dict%items(i)%localName
     enddo
     deallocate(dict%items(i)%key)
     deallocate(dict%items(i)%value)
-    deallocate(dict%items(i)%nsURI)
-    deallocate(dict%items(i)%localName)
     do i = key+1, dict%number_of_items
        tempDict(i-1)%key => dict%items(i)%key
        tempDict(i-1)%value => dict%items(i)%value
-       tempDict(i-1)%nsURI => dict%items(i)%nsURI
-       tempDict(i-1)%localName => dict%items(i)%localName
     enddo
     !NB we don't resize here, because dictionaries only get
     !resized with MULT and LEN and stuff here.
@@ -176,8 +147,6 @@ contains
     do i = 1, dict%number_of_items
        dict%items(i)%key => tempDict(i)%key
        dict%items(i)%value => tempDict(i)%value
-       dict%items(i)%nsURI => tempDict(i)%nsURI
-       dict%items(i)%localName => tempDict(i)%localName
     enddo
   end subroutine remove_key_by_index
   
@@ -240,8 +209,6 @@ contains
     call assign_str_to_array(dict%items(n)%key,key)
     allocate(dict%items(n)%value(len(value)))
     call assign_str_to_array(dict%items(n)%value,value)
-    allocate(dict%items(n)%nsURI(0))
-    allocate(dict%items(n)%localName(0))
     
     dict%number_of_items = n
     
@@ -267,7 +234,7 @@ contains
     !endif
 
     n = n + 1
-    !call pxfflush(6)
+    call pxfflush(6)
     allocate(dict%items(n)%key(len(key)))
     call assign_str_to_array(dict%items(n)%key,key)
     dict%number_of_items = n
@@ -282,82 +249,7 @@ contains
 
     allocate(dict%items(n)%value(len(value)))
     call assign_str_to_array(dict%items(n)%value,value)
-    allocate(dict%items(n)%nsURI(0))
-    allocate(dict%items(n)%localName(0))
   end subroutine add_value_to_dict
-
-  subroutine set_nsURI_by_index(dict, i, nsURI)
-    type(dictionary_t), intent(inout) :: dict
-    integer, intent(in) :: i
-    character(len=*) :: nsURI
-
-    if (associated(dict%items(i)%nsURI)) &
-         deallocate(dict%items(i)%nsURI)
-    allocate(dict%items(i)%nsURI(len(nsURI)))
-    dict%items(i)%nsURI = transfer(nsURI, dict%items(i)%nsURI)
-  end subroutine set_nsURI_by_index
-
-  subroutine set_localName_by_index_s(dict, i, localName)
-    type(dictionary_t), intent(inout) :: dict
-    integer, intent(in) :: i
-    character(len=*) :: localName
-
-    if (associated(dict%items(i)%localName)) &
-         deallocate(dict%items(i)%localName)
-    allocate(dict%items(i)%localName(len(localName)))
-    dict%items(i)%localName = transfer(localName, dict%items(i)%localName)
-  end subroutine set_localName_by_index_s
-
-  subroutine set_localName_by_index_vs(dict, i, localName)
-    type(dictionary_t), intent(inout) :: dict
-    integer, intent(in) :: i
-    character(len=1), dimension(:) :: localName
-
-    if (associated(dict%items(i)%localName)) &
-         deallocate(dict%items(i)%localName)
-    allocate(dict%items(i)%localName(size(localName)))
-    dict%items(i)%localName = localName
-  end subroutine set_localName_by_index_vs
-
-  pure function get_nsURI_by_index(dict, i) result(nsURI)
-    type(dictionary_t), intent(in) :: dict
-    integer, intent(in) :: i
-    character(len=size(dict%items(i)%nsURI)) :: nsURI
-    
-    nsURI = transfer(dict%items(i)%nsURI, nsURI)
-  end function get_nsURI_by_index
-
-  pure function get_localName_by_index(dict, i) result(localName)
-    type(dictionary_t), intent(in) :: dict
-    integer, intent(in) :: i
-    character(len=size(dict%items(i)%localName)) :: localName
-    
-    localName = transfer(dict%items(i)%localName, localName)
-  end function get_localName_by_index
-    
-  pure function get_nsURI_by_keyname(dict, keyname) result(nsURI)
-    type(dictionary_t), intent(in) :: dict
-    character(len=*), intent(in) :: keyname
-    character(len=merge(size(dict%items(get_key_index(dict, keyname))%nsURI), 0, (get_key_index(dict, keyname) > 0))) :: nsURI
-    integer :: i
-
-    i=get_key_index(dict, keyname)
-    nsURI = transfer(dict%items(i)%nsURI, nsURI)
-
-  end function get_nsURI_by_keyname
-
-  pure function get_localName_by_keyname(dict, keyname) result(localName)
-    type(dictionary_t), intent(in) :: dict
-    character(len=*), intent(in) :: keyname
-    character(len=merge(size(dict%items(get_key_index(dict, keyname))%localName), &
-         0, (get_key_index(dict, keyname) > 0))) :: localName
-    integer :: i
-
-    i=get_key_index(dict, keyname)
-    localName = transfer(dict%items(i)%localName, localName)
-
-  end function get_localName_by_keyname
-
   !------------------------------------------------------
   subroutine init_dict(dict)
     type(dictionary_t), intent(out)   :: dict
@@ -368,8 +260,6 @@ contains
     do i = 1, DICT_INIT_LEN
        nullify(dict%items(i)%key)
        nullify(dict%items(i)%value)
-       nullify(dict%items(i)%nsURI)
-       nullify(dict%items(i)%localName)
     enddo
     
     dict % number_of_items = 0
@@ -385,8 +275,6 @@ contains
     do i = 1, l_d_old
        tempDict(i)%key => dict%items(i)%key
        tempDict(i)%value => dict%items(i)%value
-       tempDict(i)%nsURI => dict%items(i)%nsURI
-       tempDict(i)%localName => dict%items(i)%localName
     enddo
     deallocate(dict%items)
     l_d_new = l_d_old * DICT_LEN_MULT
@@ -394,8 +282,6 @@ contains
     do i = 1, l_d_old
        dict%items(i)%key => tempDict(i)%key
        dict%items(i)%value => tempDict(i)%value
-       dict%items(i)%nsURI => tempDict(i)%nsURI
-       dict%items(i)%localName => tempDict(i)%localName
     enddo
 
   end subroutine resize_dict
@@ -406,8 +292,6 @@ contains
     do i = 1, dict%number_of_items
        deallocate(dict%items(i)%key)
        deallocate(dict%items(i)%value)
-       deallocate(dict%items(i)%nsURI)
-       deallocate(dict%items(i)%localName)
     enddo
     deallocate(dict%items)
   end subroutine destroy_dict
@@ -420,8 +304,6 @@ contains
     do i = 1, dict%number_of_items
        deallocate(dict%items(i)%key)
        deallocate(dict%items(i)%value)
-       deallocate(dict%items(i)%nsURI)
-       deallocate(dict%items(i)%localName)
     enddo
     
     dict%number_of_items = 0
@@ -435,7 +317,7 @@ contains
     integer  :: i
     
     do i = 1, dict%number_of_items
-       print*, dict%items(i)%key, " = {", dict%items(i)%nsURI, '}', dict%items(i)%localName
+       print *, dict%items(i)%key, " = ", dict%items(i)%value
     enddo
     
   end subroutine print_dict

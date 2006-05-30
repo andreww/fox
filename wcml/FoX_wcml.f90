@@ -1,4 +1,4 @@
-module xmlf90_wcml
+module FoX_wcml
 
   use m_wcml_core
   use m_wcml_coma
@@ -7,4 +7,4 @@ module xmlf90_wcml
 
   public
 
-end module xmlf90_wcml
+end module FoX_wcml

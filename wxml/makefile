@@ -3,12 +3,12 @@ default: install
 #
 OBJFILES= m_wxml_buffer.o m_wxml_array_str.o m_wxml_dictionary.o m_wxml_elstack.o \
           m_wxml_text.o m_wxml_escape.o  m_wxml_core.o \
-          m_wxml_overloads.o xmlf90_wxml.o m_wxml_error.o
+          m_wxml_overloads.o FoX_wxml.o m_wxml_error.o
 #
-LIBRARY=libxmlf90_wxml.a
+LIBRARY=libFoX_wxml.a
 INCFLAGS=$(MOD_PREFIX)../objs/finclude
 #
-xmlf90_wxml.o: m_wxml_core.o m_wxml_overloads.o m_wxml_text.o
+FoX_wxml.o: m_wxml_core.o m_wxml_overloads.o m_wxml_text.o
 m_wxml_buffer.o: m_wxml_error.o m_wxml_escape.o
 m_wxml_core.o: m_wxml_buffer.o m_wxml_dictionary.o m_wxml_elstack.o
 m_wxml_core.o: m_wxml_escape.o m_wxml_array_str.o

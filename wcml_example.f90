@@ -1,7 +1,7 @@
  program wcml_example
 
-   use xmlf90_wxml
-   use xmlf90_wcml
+   use FoX_wxml
+   use FoX_wcml
 
   integer,  parameter ::  sp = selected_real_kind(6,30)
   integer,  parameter ::  dp = selected_real_kind(14,100)

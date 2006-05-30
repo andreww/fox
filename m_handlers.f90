@@ -1,6 +1,7 @@
 module m_handlers
 
-use xmlf90_sax
+use FoX_common
+use FoX_sax
 
 private
 
@@ -18,7 +19,6 @@ private
 !
 public :: begin_element_handler, end_element_handler, pcdata_chunk_handler
 public :: comment_handler, xml_declaration_handler, sgml_declaration_handler
-public :: empty_element_handler
 
 CONTAINS  !=============================================================
 
@@ -50,19 +50,6 @@ character(len=*), intent(in) :: chunk
 write(unit=*,fmt="(a)",advance="no") chunk
 
 end subroutine pcdata_chunk_handler
-
-!--------------------------------------------------
-subroutine empty_element_handler(URI, localname, name,attributes)
-character(len=*), intent(in)   :: URI
-character(len=*), intent(in)   :: localname
-character(len=*), intent(in)   :: name
-type(dictionary_t), intent(in) :: attributes
-
-write(unit=*,fmt="(4a)") ">>Begin Empty Element: {", URI, "}", localname
-write(unit=*,fmt="(a,i2,a)") "--- ", len(attributes), " attributes:"
-call print_dict(attributes)
-write(unit=*,fmt="(4a)") ">>End Empty Element: {", URI, "}", localname
-end subroutine empty_element_handler
 
 !--------------------------------------------------
 subroutine comment_handler(comment)

@@ -14,15 +14,15 @@ module m_dom_utils
   use m_strings, only: string, stringify, operator(==), operator(/=), assignment(=), operator(+)
   use m_dict, only : dictionary, addKey, getValue, hasKey
 
-  use xmlf90_wxml, only: xmlf_t
-  use xmlf90_wxml, only: xml_OpenFile, xml_Close
-  use xmlf90_wxml, only: xml_AddXMLDeclaration
-  use xmlf90_wxml, only: xml_AddAttribute
-  use xmlf90_wxml, only: xml_AddPcdata
-  use xmlf90_wxml, only: xml_NewElement
-  use xmlf90_wxml, only: xml_EndElement
-  use xmlf90_wxml, only: xml_AddCdataSection
-  use xmlf90_wxml, only: xml_AddComment
+  use FoX_wxml, only: xmlf_t
+  use FoX_wxml, only: xml_OpenFile, xml_Close
+  use FoX_wxml, only: xml_AddXMLDeclaration
+  use FoX_wxml, only: xml_AddAttribute
+  use FoX_wxml, only: xml_AddPcdata
+  use FoX_wxml, only: xml_NewElement
+  use FoX_wxml, only: xml_EndElement
+  use FoX_wxml, only: xml_AddCdataSection
+  use FoX_wxml, only: xml_AddComment
 
   implicit none
 

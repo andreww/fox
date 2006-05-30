@@ -20,7 +20,7 @@ integer, parameter ::  dp = selected_real_kind(14,100)
 
 private
 
-character(len=*), public, parameter :: xmlf90_version = '1.9'
+character(len=*), public, parameter :: FoX_version = '2.0'
 
 !Output State Machines
 ! status wrt root element:

@@ -1,9 +1,9 @@
 module m_sax_namespaces
 
-  use m_array_str, only : compare_array_str
-  use m_dictionary, only : dictionary_t, get_key, get_value, remove_key, len
-  use m_dictionary, only : set_nsURI, set_localName
-  use m_sax_error, only : general_error, SEVERE_ERROR_CODE
+  use m_common_array_str, only : compare_array_str
+  use FoX_common, only : dictionary_t, get_key, get_value, remove_key, len
+  use FoX_common, only : set_nsURI, set_localName
+  use m_common_error, only : general_error, SEVERE_ERROR_CODE
 
   implicit none
   private

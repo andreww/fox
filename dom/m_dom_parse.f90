@@ -12,9 +12,9 @@ module m_dom_parse
   use m_dom_element, only: setattribute
   use m_dom_debug, only: dom_debug
 
-  use xmlf90_sax, only: xml_parse, xml_t, dictionary_t, len
-  use xmlf90_sax, only: open_xmlfile, close_xmlfile
-  use xmlf90_sax, only: get_key, get_value
+  use FoX_sax, only: xml_parse, xml_t, dictionary_t, len
+  use FoX_sax, only: open_xmlfile, close_xmlfile
+  use FoX_sax, only: get_key, get_value
 
   use m_strings, only : string, stringify, assignment(=), operator(==)
 
@@ -48,6 +48,7 @@ CONTAINS
     if (dom_debug) write(*,'(4a)'), "Adding node for element: {",URI,'}', localname
 
     temp => createElement(mainDoc, name)
+    temp => createElementNS(mainDoc, name, URI, localName)
     current => appendChild(current,temp)
 
 !
@@ -56,7 +57,7 @@ CONTAINS
     do i = 1, len(attrs)
        if (dom_debug) print *, "Adding attribute: ", &
          get_key(attrs, i), ":",get_value(attrs, i)
-       call setAttribute(current,get_key(attrs, i),get_value(attrs, i))
+       call setAttributeNS(current,get_key(attrs, i),get_value(attrs, i), get_nsURI(attrs, i), get_localName(attrs, i))
     enddo
 
     current % namespaceURI = URI

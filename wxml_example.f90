@@ -1,6 +1,6 @@
 program wxml_example
 
-use xmlf90_wxml
+use FoX_wxml
 
 type(xmlf_t) :: xf
 

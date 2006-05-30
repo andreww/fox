@@ -68,36 +68,11 @@
      logical :: HTML
   end type fDOMImplementation
 
-
-  !-----------------------------------------------------------
-  !  DocType
-  !----------------------------------------------------------- 
-  type, public :: fDocumentType
-     type(string)        :: name
-     type(fNamedNodeMap), pointer :: entities
-     type(fNamedNodeMap), pointer :: notations
-     type(string) :: publicID
-     type(string) :: systemID
-     type(string) :: internalSubset
-  end type fDocumentType
-
-  
-  type, public :: fDocumentNode
+  type, public :: fDocument
     type(fDocumentType), pointer ::       doctype;
-    type(fDOMImplementation), pointer ::  implementation;
+!    type(fDOMImplementation), pointer ::  implementation;
     type(fNode), pointer ::               documentElement;
-!--
-  end type fDocumentNode
-
-  !-----------------------------------------------------------
-  !  DOMString 
-  !-----------------------------------------------------------
-  !  See the m_strings module
-
-
-
-
-
+ end type fDocument
 
 
 !========================================================================

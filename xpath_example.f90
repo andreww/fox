@@ -2,8 +2,8 @@ program xpath_example
 
   ! example driver for querying a document using xpath
   
-  use xmlf90_dom, only : fDocumentNode, parsefile, serialize, destroyDocument, dict
-  use xmlf90_xpath, only : xpath_query
+  use FoX_dom, only : fDocumentNode, parsefile, serialize, destroyDocument, dict
+  use FoX_xpath, only : xpath_query
 
   implicit none
 
