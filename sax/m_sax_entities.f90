@@ -1,4 +1,4 @@
-module m_entities
+module m_sax_entities
 !
 ! Entity management
 !
@@ -6,7 +6,7 @@ module m_entities
 !    1. The five standard entities (gt,lt,amp,apos,quot)
 !    2. Character entities  (but only within the range of the char intrinsic)
 !
-use m_buffer
+use m_sax_buffer
 use m_sax_error, only : general_error, SEVERE_ERROR_CODE, WARNING_CODE
 implicit none
 private
@@ -129,9 +129,4 @@ enddo
 
 end subroutine entity_filter
 
-end module m_entities
-
-
-
-
-
+end module m_sax_entities

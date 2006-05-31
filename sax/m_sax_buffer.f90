@@ -1,4 +1,4 @@
-module m_buffer
+module m_sax_buffer
 
 implicit none
 private
@@ -189,11 +189,4 @@ length = buffer%size
 end function buffer_length
 
 
-end module m_buffer
-
-
-
-
-
-
-
+end module m_sax_buffer

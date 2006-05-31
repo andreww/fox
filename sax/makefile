@@ -1,27 +1,13 @@
 #
 default: install
 #
-OBJFILES= m_debug.o m_buffer.o m_elstack.o m_dictionary.o m_io.o \
-          m_reader.o m_converters.o m_charset.o  m_entities.o m_array_str.o\
+OBJFILES= m_sax_debug.o m_sax_buffer.o m_sax_elstack.o m_sax_io.o \
+          m_sax_reader.o m_sax_converters.o m_sax_charset.o m_sax_entities.o\
           m_sax_namespaces.o m_sax_error.o m_sax_fsm.o m_sax_parser.o \
           FoX_sax.o
 #
 LIBRARY=libFoX_sax.a
 INCFLAGS=$(MOD_PREFIX)../objs/finclude
-#
-
-m_reader.o: m_io.o m_debug.o
-m_elstack.o: m_buffer.o
-m_dictionary.o: m_array_str.o m_sax_error.o
-m_entities.o: m_buffer.o m_sax_error.o
-m_converters.o: m_debug.o
-m_sax_fsm.o: m_buffer.o m_dictionary.o m_charset.o m_entities.o m_elstack.o
-m_sax_error.o: m_elstack.o
-m_sax_parser.o: m_buffer.o m_elstack.o m_reader.o m_sax_fsm.o m_dictionary.o \
-                m_debug.o m_sax_error.o
-#
-FoX_sax.o: m_dictionary.o m_sax_parser.o m_converters.o m_sax_error.o
-
 #
 #---------NOTHING SHOULD NEED TO BE CHANGED BELOW THIS LINE-----
 #
@@ -44,3 +30,14 @@ install: $(OBJFILES)
 #
 clean:
 	rm -f *.o  *.$(MOD_EXT) $(LIBRARY)
+# DO NOT DELETE THIS LINE - used by make depend
+FoX_sax.o: m_sax_converters.o m_sax_error.o m_sax_parser.o
+m_sax_converters.o: m_sax_debug.o
+m_sax_elstack.o: m_sax_buffer.o
+m_sax_entities.o: m_sax_buffer.o m_sax_error.o
+m_sax_error.o: m_sax_elstack.o
+m_sax_fsm.o: m_sax_buffer.o m_sax_charset.o m_sax_elstack.o m_sax_entities.o
+m_sax_fsm.o: m_sax_namespaces.o
+m_sax_parser.o: m_sax_buffer.o m_sax_debug.o m_sax_elstack.o m_sax_error.o
+m_sax_parser.o: m_sax_fsm.o m_sax_namespaces.o m_sax_reader.o
+m_sax_reader.o: m_sax_io.o

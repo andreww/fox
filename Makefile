@@ -44,7 +44,7 @@ wcml_lib: wxml_lib
 wcml_lib_clean: 
 	(cd wcml; $(MAKE) clean)
 #
-common_lib:
+common_lib: fsys_lib
 	(cd common; $(MAKE))
 common_lib_clean:
 	(cd common; $(MAKE) clean)

@@ -1,4 +1,4 @@
-module m_io
+module m_sax_io
 
 implicit none
 private
@@ -84,13 +84,4 @@ close(unit=lun,status="delete")
 end subroutine find_eor_eof
 
 ! ----------------------------------------------------------------------
-end module m_io
-
-
-
-
-
-
-
-
-
+end module m_sax_io

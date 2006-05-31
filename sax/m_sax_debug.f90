@@ -1,8 +1,8 @@
-module m_debug
+module m_sax_debug
 
 implicit none
 private
 
 logical, public, save   :: debug = .false.
 
-end module m_debug
+end module m_sax_debug

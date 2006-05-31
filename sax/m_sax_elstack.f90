@@ -1,6 +1,6 @@
-module m_elstack
+module m_sax_elstack
 
-use m_buffer
+use m_sax_buffer
 
 implicit none
 private
@@ -152,9 +152,4 @@ enddo
 
 end subroutine get_elstack_signature
 
-end module m_elstack
-
-
-
-
-
+end module m_sax_elstack

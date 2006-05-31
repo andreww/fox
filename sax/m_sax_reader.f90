@@ -1,6 +1,6 @@
-module m_reader
+module m_sax_reader
 
-use m_io
+use m_sax_io
 
 implicit none
 private
@@ -287,13 +287,4 @@ enddo
 
 end subroutine sync_file
 
-end module m_reader
-
-
-
-
-
-
-
-
-
+end module m_sax_reader

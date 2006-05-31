@@ -1,10 +1,10 @@
 module m_sax_fsm
 
 use FoX_common 
-use m_buffer
-use m_charset
-use m_entities
-use m_elstack
+use m_sax_buffer
+use m_sax_charset
+use m_sax_entities
+use m_sax_elstack
 use m_sax_namespaces, only : namespaceDictionary, initNamespaceDictionary, &
      destroyNamespaceDictionary
 
