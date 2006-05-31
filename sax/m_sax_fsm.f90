@@ -1,7 +1,7 @@
 module m_sax_fsm
 
 use FoX_common 
-use m_sax_buffer
+use m_common_buffer
 use m_sax_charset
 use m_sax_entities
 use m_sax_elstack
@@ -109,10 +109,10 @@ type(fsm_t), intent(inout)   :: fx
  fx%entities_in_pcdata = .false.
  fx%entities_in_attributes = .false.
  fx%action = ""
- call init_buffer(fx%buffer)
- call init_buffer(fx%element_name)
- call init_buffer(fx%pcdata)
- call init_buffer(fx%root_element_name)
+ call reset_buffer(fx%buffer)
+ call reset_buffer(fx%element_name)
+ call reset_buffer(fx%pcdata)
+ call reset_buffer(fx%root_element_name)
  call init_dict(fx%attributes)
  call initNamespaceDictionary(fx%nsDict)
 end subroutine init_fsm

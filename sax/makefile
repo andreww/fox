@@ -1,7 +1,7 @@
 #
 default: install
 #
-OBJFILES= m_sax_debug.o m_sax_buffer.o m_sax_elstack.o m_sax_io.o \
+OBJFILES= m_sax_debug.o m_sax_elstack.o m_sax_io.o \
           m_sax_reader.o m_sax_converters.o m_sax_charset.o m_sax_entities.o\
           m_sax_namespaces.o m_sax_error.o m_sax_fsm.o m_sax_parser.o \
           FoX_sax.o
@@ -33,11 +33,10 @@ clean:
 # DO NOT DELETE THIS LINE - used by make depend
 FoX_sax.o: m_sax_converters.o m_sax_error.o m_sax_parser.o
 m_sax_converters.o: m_sax_debug.o
-m_sax_elstack.o: m_sax_buffer.o
-m_sax_entities.o: m_sax_buffer.o m_sax_error.o
+m_sax_entities.o: m_sax_error.o
 m_sax_error.o: m_sax_elstack.o
-m_sax_fsm.o: m_sax_buffer.o m_sax_charset.o m_sax_elstack.o m_sax_entities.o
+m_sax_fsm.o: m_sax_charset.o m_sax_elstack.o m_sax_entities.o
 m_sax_fsm.o: m_sax_namespaces.o
-m_sax_parser.o: m_sax_buffer.o m_sax_debug.o m_sax_elstack.o m_sax_error.o
-m_sax_parser.o: m_sax_fsm.o m_sax_namespaces.o m_sax_reader.o
+m_sax_parser.o: m_sax_debug.o m_sax_elstack.o m_sax_error.o m_sax_fsm.o
+m_sax_parser.o: m_sax_namespaces.o m_sax_reader.o
 m_sax_reader.o: m_sax_io.o

@@ -5,7 +5,7 @@ module m_sax_parser
 !
 
 use FoX_common, only : dictionary_t
-use m_sax_buffer
+use m_common_buffer
 use m_sax_reader
 use m_sax_debug
 use m_sax_fsm, only : fsm_t, init_fsm, reset_fsm, destroy_fsm, evolve_fsm

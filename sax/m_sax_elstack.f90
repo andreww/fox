@@ -1,6 +1,6 @@
 module m_sax_elstack
 
-use m_sax_buffer
+use m_common_buffer
 
 implicit none
 private
@@ -41,7 +41,7 @@ integer :: i
 
 elstack%n_items = 0
 do i = 1, STACK_SIZE                   ! to avoid "undefined status"
-      call init_buffer(elstack%data(i))
+      call reset_buffer(elstack%data(i))
 enddo
 end subroutine init_elstack
 

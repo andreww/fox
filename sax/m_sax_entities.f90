@@ -6,7 +6,7 @@ module m_sax_entities
 !    1. The five standard entities (gt,lt,amp,apos,quot)
 !    2. Character entities  (but only within the range of the char intrinsic)
 !
-use m_sax_buffer
+use m_common_buffer
 use m_sax_error, only : general_error, SEVERE_ERROR_CODE, WARNING_CODE
 implicit none
 private

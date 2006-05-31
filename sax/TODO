@@ -16,3 +16,5 @@ Things to do:
 * proper checking for QNames in tag & attribute names
 * namespace support for attributes
 * prefix mapping callbacks.
+
+* check input/output uses of buffer

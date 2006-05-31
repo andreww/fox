@@ -1,7 +1,8 @@
 #
 default: install
 #
-OBJFILES=m_common_attrs.o m_common_array_str.o m_common_error.o FoX_common.o
+OBJFILES=m_common_array_str.o m_common_attrs.o m_common_buffer.o \
+         m_common_error.o FoX_common.o
 #
 LIBRARY=libFoX_common.a
 INCFLAGS=$(MOD_PREFIX)../objs/finclude
@@ -31,3 +32,4 @@ clean:
 # DO NOT DELETE THIS LINE - used by make depend
 FoX_common.o: m_common_attrs.o
 m_common_attrs.o: m_common_array_str.o m_common_error.o
+m_common_buffer.o: m_common_error.o
