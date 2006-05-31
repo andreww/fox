@@ -2,7 +2,7 @@ module m_sax_error
 !
 ! Error handling
 !
-use m_sax_elstack
+use m_common_elstack
 private
 
 type, public  :: sax_error_t

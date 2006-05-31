@@ -40,6 +40,7 @@ public :: add_to_buffer
 public :: print_buffer, str, char, len
 public :: operator (.equal.)
 public :: buffer_to_character
+public :: buffer_to_chararray
 public :: buffer_nearly_full, reset_buffer
 
 !----------------------------------------------------------------
@@ -200,6 +201,13 @@ character(len=*), intent(out)       :: str
 
 str = buffer%str(1:buffer%size)
 end subroutine buffer_to_character
+!----------------------------------------------------------------
+function buffer_to_chararray(buffer) result(str)
+type(buffer_t), intent(in)               :: buffer
+character(len=1), dimension(buffer%size) :: str
+
+str = transfer(buffer, str)
+end function buffer_to_chararray
 !----------------------------------------------------------------
 function buffer_nearly_full(buffer) result(warn)
 type(buffer_t), intent(in)          :: buffer

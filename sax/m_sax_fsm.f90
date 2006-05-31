@@ -4,7 +4,7 @@ use FoX_common
 use m_common_buffer
 use m_sax_charset
 use m_sax_entities
-use m_sax_elstack
+use m_common_elstack
 use m_sax_namespaces, only : namespaceDictionary, initNamespaceDictionary, &
      destroyNamespaceDictionary
 
@@ -140,7 +140,7 @@ type(fsm_t), intent(inout)   :: fx
 
  fx%state = INIT
  fx%context = NULL_CONTEXT
- call reset_elstack(fx%element_stack)
+ call destroy_elstack(fx%element_stack)
  fx%action = ""
  fx%root_element_seen = .false.
  call reset_buffer(fx%buffer)

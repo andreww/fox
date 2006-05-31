@@ -5,7 +5,9 @@ module m_sax_parser
 !
 
 use FoX_common, only : dictionary_t
+use m_common_array_str, only : str_vs, vs_str
 use m_common_buffer
+use m_common_elstack          ! For element nesting checks
 use m_sax_reader
 use m_sax_debug
 use m_sax_fsm, only : fsm_t, init_fsm, reset_fsm, destroy_fsm, evolve_fsm
@@ -14,7 +16,6 @@ use m_sax_fsm, only : CLOSING_TAG, COMMENT_TAG, SGML_DECLARATION_TAG, XML_DECLAR
 use m_sax_fsm, only : CHUNK_OF_PCDATA, QUIET, EXCEPTION
 use m_sax_namespaces, only : checkNamespaces, getnamespaceURI, checkEndNamespaces, invalidNS
 use m_sax_error, only : sax_error_t, build_error_info, WARNING_CODE, SEVERE_ERROR_CODE, default_error_handler
-use m_sax_elstack          ! For element nesting checks
 
 implicit none
 
@@ -205,12 +206,12 @@ interface
 
 end interface
 
-character(len=1)     :: c
-integer              :: iostat
+character(len=1)       :: c
+integer                :: iostat
 
-integer              :: signal
+integer                :: signal, dummy
 
-type(buffer_t)       :: name, oldname, dummy
+character, allocatable :: name(:), oldname(:)
 
 logical              :: have_begin_handler, have_end_handler, &
                         have_start_prefix_handler, have_end_prefix_handler, &
@@ -275,18 +276,22 @@ do
 
       if (fx%debug) print *, c, " ::: ", trim(fx%action)
 
+      if(allocated(name)) deallocate(name)
+      if(allocated(oldname)) deallocate(oldname)
+
       if (signal == END_OF_TAG) then
          !
          ! We decide whether we have ended an opening tag or a closing tag
          !
          if (fx%context == OPENING_TAG) then
-            name = fx%element_name
+            allocate(name(len(fx%element_name)))
+            name = vs_str(str(fx%element_name))
 
             if (fx%debug) print *, "We have found an opening tag"
             if (fx%root_element_seen) then
-               if (name .equal. fx%root_element_name) then
+               if (str_vs(name) == str(fx%root_element_name)) then
                   call build_error_info(error_info, &
-                  "Duplicate root element: " // str(name), &
+                  "Duplicate root element: " // str_vs(name), &
                   line(fb),column(fb),fx%element_stack,SEVERE_ERROR_CODE)
                   if (have_error_handler) then
                      call error_handler(error_info)
@@ -296,7 +301,7 @@ do
                endif
                if (is_empty(fx%element_stack)) then
                   call build_error_info(error_info, &
-                  "Opening tag beyond root context: " // str(name), &
+                  "Opening tag beyond root context: " // str_vs(name), &
                   line(fb),column(fb),fx%element_stack,SEVERE_ERROR_CODE)
                   if (have_error_handler) then
                      call error_handler(error_info)
@@ -305,12 +310,13 @@ do
                   endif
                endif
             else
-               fx%root_element_name = name
+               call reset_buffer(fx%root_element_name)
+               call add_to_buffer(str_vs(name), fx%root_element_name)
                fx%root_element_seen = .true.
             endif
-            call push_elstack(name,fx%element_stack)
-            call checkNamespaces(fx%attributes, fx%nsDict, len_elstack(fx%element_stack))
-            if (getURIofQName(fxml,str(name))==invalidNS) then
+            call push_elstack(str_vs(name),fx%element_stack)
+            call checkNamespaces(fx%attributes, fx%nsDict, len(fx%element_stack))
+            if (getURIofQName(fxml,str_vs(name))==invalidNS) then
                ! no namespace was found for the current element
                call build_error_info(error_info, &
                     "No namespace mapped to prefix at", &
@@ -322,18 +328,19 @@ do
                endif
             endif
             if (have_begin_handler) then 
-               call begin_element_handler(getURIofQName(fxml, str(name)), &
-                                          getlocalNameofQName(str(name)), &
-                                          str(name), fx%attributes)
+               call begin_element_handler(getURIofQName(fxml, str_vs(name)), &
+                                          getlocalNameofQName(str_vs(name)), &
+                                          str_vs(name), fx%attributes)
             endif
 
          else if (fx%context == CLOSING_TAG) then
-            name = fx%element_name
+            allocate(name(len(fx%element_name)))
+            name = vs_str(str(fx%element_name))
          
             if (fx%debug) print *, "We have found a closing tag"
             if (is_empty(fx%element_stack)) then
                call build_error_info(error_info, &
-                  "Nesting error: End tag: " // str(name) //  &
+                  "Nesting error: End tag: " // str_vs(name) //  &
                   " does not match -- too many end tags", &
                   line(fb),column(fb),fx%element_stack,SEVERE_ERROR_CODE)
                if (have_error_handler) then
@@ -342,19 +349,21 @@ do
                   call default_error_handler(error_info)
                endif
             else
-               call get_top_elstack(fx%element_stack,oldname)
-               if (oldname .equal. name) then
+               allocate(oldname(len(get_top_elstack(fx%element_stack))))
+               oldname = vs_str(get_top_elstack(fx%element_stack))
+               if (all(oldname == name)) then
                   if (have_end_handler) then
-                     call end_element_handler(getURIofQName(fxml, str(name)), &
-                                              getlocalnameofQName(str(name)), &
-                                              str(name))
+                     call end_element_handler(getURIofQName(fxml, str_vs(name)), &
+                                              getlocalnameofQName(str_vs(name)), &
+                                              str_vs(name))
                   endif
-                  call checkEndNamespaces(fx%nsDict, len_elstack(fx%element_stack))
-                  call pop_elstack(fx%element_stack,oldname)
+                  call checkEndNamespaces(fx%nsDict, len(fx%element_stack))
+                  allocate(oldname(len(get_top_elstack(fx%element_stack))))
+                  oldname = vs_str(pop_elstack(fx%element_stack))
                else
                   call build_error_info(error_info, &
-                       "Nesting error: End tag: " // str(name) //  &
-                       ". Expecting end of : " // str(oldname), &
+                       "Nesting error: End tag: " // str_vs(name) //  &
+                       ". Expecting end of : " // str_vs(oldname), &
                        line(fb),column(fb),fx%element_stack,SEVERE_ERROR_CODE)
                   if (have_error_handler) then
                      call error_handler(error_info)
@@ -364,14 +373,15 @@ do
                endif
             endif
          else if (fx%context == SINGLE_TAG) then
-            name = fx%element_name
+            allocate(name(len(fx%element_name)))
+            name = buffer_to_chararray(fx%element_name)
 
             if (fx%debug) print *, "We have found a single (empty) tag: ", &
-                 str(name)
+                 str_vs(name)
             if (fx%root_element_seen) then
-               if (name .equal. fx%root_element_name) then
+               if (str_vs(name) == str(fx%root_element_name)) then
                   call build_error_info(error_info, &
-                  "Duplicate root element: " // str(name), &
+                  "Duplicate root element: " // str_vs(name), &
                   line(fb),column(fb),fx%element_stack,SEVERE_ERROR_CODE)
                   if (have_error_handler) then
                      call error_handler(error_info)
@@ -381,7 +391,7 @@ do
                endif
                if (is_empty(fx%element_stack)) then
                   call build_error_info(error_info, &
-                  "Opening tag beyond root context: " // str(name), &
+                  "Opening tag beyond root context: " // str_vs(name), &
                   line(fb),column(fb),fx%element_stack,SEVERE_ERROR_CODE)
                   if (have_error_handler) then
                      call error_handler(error_info)
@@ -390,15 +400,16 @@ do
                   endif
                endif
             else
-               fx%root_element_name = name
+               call reset_buffer(fx%root_element_name)
+               call add_to_buffer(str_vs(name), fx%root_element_name)
                fx%root_element_seen = .true.
             endif
             !
             ! Push name on to stack to reveal true xpath
             !
-            call push_elstack(name,fx%element_stack)
-            call checkNamespaces(fx%attributes, fx%nsDict, len_elstack(fx%element_stack))
-            if (getURIofQName(fxml,str(name))==invalidNS) then
+            call push_elstack(str_vs(name),fx%element_stack)
+            call checkNamespaces(fx%attributes, fx%nsDict, len(fx%element_stack))
+            if (getURIofQName(fxml,str_vs(name))==invalidNS) then
                ! no namespace was found for the current element
                call build_error_info(error_info, &
                     "No namespace mapped to prefix at", &
@@ -411,18 +422,18 @@ do
             endif
             if (have_begin_handler) then
                if (fx%debug) print *, "--> calling begin_element_handler..."
-               call begin_element_handler(getURIofQName(fxml, str(name)), &
-                                          getlocalNameofQName(str(name)), &
-                                          str(name), fx%attributes)
+               call begin_element_handler(getURIofQName(fxml, str_vs(name)), &
+                                          getlocalNameofQName(str_vs(name)), &
+                                          str_vs(name), fx%attributes)
             endif
             if (have_end_handler) then
                if (fx%debug) print *, "--> ... and end_element_handler."
-               call end_element_handler(getURIofQName(fxml, str(name)), &
-                                        getlocalNameofQName(str(name)), &
-                                        str(name))
+               call end_element_handler(getURIofQName(fxml, str_vs(name)), &
+                                        getlocalNameofQName(str_vs(name)), &
+                                        str_vs(name))
             endif
-            call checkEndNamespaces(fx%nsDict, len_elstack(fx%element_stack))
-            call pop_elstack(fx%element_stack,dummy)
+            call checkEndNamespaces(fx%nsDict, len(fx%element_stack))
+            dummy = len(pop_elstack(fx%element_stack))
 
          else if (fx%context == CDATA_SECTION_TAG) then
 
@@ -454,9 +465,10 @@ do
          else if (fx%context == XML_DECLARATION_TAG) then
 
             if (fx%debug) print *, "We found an XML declaration"
-            name = fx%element_name
+            allocate(name(len(fx%element_name)))
+            name = buffer_to_chararray(fx%element_name)
             if (have_xml_declaration_handler)  &
-                      call xml_declaration_handler(str(name),fx%attributes)
+                      call xml_declaration_handler(str_vs(name),fx%attributes)
 
          else
 
@@ -510,7 +522,7 @@ subroutine xml_path(fxml,path)
   type(xml_t), intent(in) :: fxml
   character(len=*), intent(out)  :: path
   
-  call get_elstack_signature(fxml%fx%element_stack, path)
+  path = get_elstack_signature(fxml%fx%element_stack)
   
 end subroutine xml_path
 
@@ -522,7 +534,7 @@ subroutine xml_mark_path(fxml,path)
   type(xml_t), intent(inout) :: fxml
   character(len=*), intent(out)  :: path
   
-  call get_elstack_signature(fxml%fx%element_stack, fxml%path_mark)
+  fxml%path_mark = get_elstack_signature(fxml%fx%element_stack)
   path = fxml%path_mark
   
 end subroutine xml_mark_path
