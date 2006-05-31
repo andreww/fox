@@ -16,7 +16,7 @@ end type sax_error_t
 integer, public             ::  sax_stderr = 0    ! Unit for error info
 integer, public, parameter  ::  SEVERE_ERROR_CODE=0, WARNING_CODE=1
 
-public  :: build_error_info, default_error_handler, general_error
+public  :: build_error_info, default_error_handler
 public  :: set_sax_stderr
 
 CONTAINS
@@ -66,22 +66,6 @@ else if (error_info%severity == WARNING_CODE)  then
 endif
 
 end subroutine default_error_handler
-
-subroutine general_error(msg,code)
-character(len=*), intent(in)     :: msg
-integer, intent(in)              :: code
-!
-
-if (code == SEVERE_ERROR_CODE)  then
-   write(unit=sax_stderr,fmt="(2a)") "** Error: ", msg
-   STOP
-else if (code == WARNING_CODE)  then
-   write(unit=sax_stderr,fmt="(2a)") "** Warning: ", msg
-else
-   stop "wrong error code"
-endif
-
-end subroutine general_error
 
 !-------------------------------------------------------------------------
 subroutine set_sax_stderr(unit)

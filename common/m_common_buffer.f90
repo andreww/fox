@@ -1,6 +1,6 @@
 module m_common_buffer
 
-use m_common_error
+use m_common_error, only : FoX_error
 
 implicit none
 private
@@ -110,7 +110,7 @@ buffer%size = buffer%size + 1
 n = buffer%size
 
 if (n > MAX_BUFF_SIZE) then
-  call general_error("Buffer overflow: long unbroken string of pcdata or attribute value...",0)
+  call FoX_error("Buffer overflow: long unbroken string of pcdata or attribute value...")
 endif
 
 buffer%str(n:n) = c
@@ -129,7 +129,7 @@ buffer%size = buffer%size + len_s
 n = buffer%size
 
 if (n> MAX_BUFF_SIZE) then
-  call general_error("Buffer overflow: long unbroken string of pcdata or attribute value.",0)
+  call FoX_error("Buffer overflow: long unbroken string of pcdata or attribute value.")
 endif
 
 buffer%str(last_pos+1:n) = s

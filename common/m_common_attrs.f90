@@ -1,9 +1,8 @@
 module m_common_attrs
 
   !use m_wxml_escape, only : check_Name
-  !use m_wxml_error,  only : wxml_fatal
   use m_common_array_str, only : assign_str_to_array, assign_array_to_str
-  use m_common_error, only : general_error, SEVERE_ERROR_CODE
+  use m_common_error, only : FoX_error
 
   implicit none
   private
@@ -223,7 +222,7 @@ contains
     integer  :: n
     
     if (has_key(dict, key)) then
-       call general_error('Duplicate attribute',SEVERE_ERROR_CODE)
+       call Fox_Error('Duplicate attribute')
     endif
     
     n = dict%number_of_items
@@ -254,7 +253,7 @@ contains
     integer  :: n
 
     if (has_key(dict, key)) then
-       call general_error('Duplicate attribute',SEVERE_ERROR_CODE)
+       call FoX_error('Duplicate attribute')
     endif
 
     n = dict%number_of_items

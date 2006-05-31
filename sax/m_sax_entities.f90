@@ -7,7 +7,7 @@ module m_sax_entities
 !    2. Character entities  (but only within the range of the char intrinsic)
 !
 use m_common_buffer
-use m_sax_error, only : general_error, SEVERE_ERROR_CODE, WARNING_CODE
+use m_common_error, only : FoX_error, FoX_warning
 implicit none
 private
 
@@ -104,19 +104,19 @@ do
    if (c == "&") then
       if (i+1 > len1) then
          message=  " Unmatched & in entity reference"
-         call general_error(trim(message),SEVERE_ERROR_CODE)
+         call FoX_error(message)
          return
       endif
       k = index(s1(i+1:),";")
       if (k == 0) then
          message=  " Unmatched & in entity reference"
-         call general_error(trim(message),SEVERE_ERROR_CODE)
+         call FoX_error(message)
          return
       endif
       call code_to_str(s1(i+1:i+k-1),repl,status)
       if (status /= 0) then
          message= "Ignored unknown entity: &" // s1(i+1:i+k-1) // ";"
-         call general_error(trim(message),WARNING_CODE)
+         call FoX_warning(message)
       else
          call add_to_buffer(trim(repl),buf2)
       endif

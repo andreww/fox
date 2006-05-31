@@ -3,7 +3,7 @@ module m_sax_namespaces
   use m_common_array_str, only : compare_array_str
   use FoX_common, only : dictionary_t, get_key, get_value, remove_key, len
   use FoX_common, only : set_nsURI, set_localName
-  use m_common_error, only : general_error, SEVERE_ERROR_CODE
+  use m_common_error, only : FoX_error
 
   implicit none
   private
@@ -175,7 +175,7 @@ contains
     integer :: i
 
     if (ubound(urilist1,1) < l_m .or. ubound(urilist2,1) < l_m) then
-       call general_error('Internal error in m_sax_namespaces:copyURIMapping',SEVERE_ERROR_CODE)
+       call FoX_error('Internal error in m_sax_namespaces:copyURIMapping')
     endif
     ! Now copy all defaults across ...
     do i = 0, l_m
@@ -330,7 +330,7 @@ contains
           call removePrefix(nsDict, p_i)
        endif
     else
-       call general_error('Internal error in m_sax_namespaces:removePrefixedNS',SEVERE_ERROR_CODE)
+       call FoX_error('Internal error in m_sax_namespaces:removePrefixedNS')
     endif
     
   end subroutine removePrefixedNS
