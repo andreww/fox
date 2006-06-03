@@ -677,6 +677,7 @@ select case(fx%state)
          if (fx%debug) fx%action = ("End of pcdata -- Starting tag")
          if (fx%entities_in_pcdata) then
             call entity_filter(fx%buffer,fx%tmpbuf)
+            allocate(fx%pcdata(len(fx%tmpbuf)))
             fx%pcdata = buffer_to_chararray(fx%tmpbuf)
             fx%entities_in_pcdata = .false.
          else
@@ -694,6 +695,7 @@ select case(fx%state)
          call add_to_buffer(c,fx%buffer)
          if (fx%entities_in_pcdata) then
             call entity_filter(fx%buffer,fx%tmpbuf)
+            allocate(fx%pcdata(len(fx%tmpbuf)))
             fx%pcdata = buffer_to_chararray(fx%tmpbuf)
             fx%entities_in_pcdata = .false.
          else
@@ -714,6 +716,7 @@ select case(fx%state)
                if (fx%debug) fx%action = ("Resetting almost full PCDATA buffer")
                if (fx%entities_in_pcdata) then
                   call entity_filter(fx%buffer,fx%tmpbuf)
+                  allocate(fx%pcdata(len(fx%tmpbuf)))
                   fx%pcdata = buffer_to_chararray(fx%tmpbuf)
                   fx%entities_in_pcdata = .false.
                else
@@ -742,6 +745,7 @@ select case(fx%state)
          call add_to_buffer(c,fx%buffer)
          if (fx%entities_in_pcdata) then
             call entity_filter(fx%buffer,fx%tmpbuf)
+            allocate(fx%pcdata(len(fx%tmpbuf)))
             fx%pcdata = buffer_to_chararray(fx%tmpbuf)
             fx%entities_in_pcdata = .false.
          else
@@ -763,6 +767,7 @@ select case(fx%state)
                if (fx%debug) fx%action = ("Resetting almost full PCDATA buffer")
                if (fx%entities_in_pcdata) then
                   call entity_filter(fx%buffer,fx%tmpbuf)
+                  allocate(fx%pcdata(len(fx%tmpbuf)))
                   fx%pcdata = buffer_to_chararray(fx%tmpbuf)
                   fx%entities_in_pcdata = .false.
                else
