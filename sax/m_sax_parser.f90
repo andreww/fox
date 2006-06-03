@@ -441,10 +441,10 @@ do
                    "... Warning: CDATA section outside element context"
             else
                if (have_cdata_section_handler) then
-                  call cdata_section_handler(str(fx%pcdata))
+                  call cdata_section_handler(str_vs(fx%pcdata))
                else
                   if (have_pcdata_handler) &
-                   call pcdata_chunk_handler(str(fx%pcdata))
+                   call pcdata_chunk_handler(str_vs(fx%pcdata))
                endif
             endif
 
@@ -452,13 +452,13 @@ do
 
             if (fx%debug) print *, "We found a comment tag"
             if (have_comment_handler)  &
-                 call comment_handler(str(fx%pcdata))
+                 call comment_handler(str_vs(fx%pcdata))
 
          else if (fx%context == SGML_DECLARATION_TAG) then
 
             if (fx%debug) print *, "We found an sgml declaration"
             if (have_sgml_declaration_handler)  &
-                      call sgml_declaration_handler(str(fx%pcdata))
+                      call sgml_declaration_handler(str_vs(fx%pcdata))
 
          else if (fx%context == XML_DECLARATION_TAG) then
 
@@ -490,7 +490,7 @@ do
                endif
          else
             if (have_pcdata_handler) &
-                 call pcdata_chunk_handler(str(fx%pcdata))
+                 call pcdata_chunk_handler(str_vs(fx%pcdata))
          endif
 
       else if (signal == EXCEPTION) then

@@ -29,7 +29,7 @@ type, public :: fsm_t
       type(buffer_t)       :: element_name
       type(dictionary_t)   :: attributes
       type(namespaceDictionary) :: nsDict
-      type(buffer_t)       :: pcdata
+      character, dimension(:), pointer :: pcdata
       logical              :: entities_in_pcdata
       logical              :: entities_in_attributes
       type(elstack_t)      :: element_stack
@@ -111,7 +111,7 @@ type(fsm_t), intent(inout)   :: fx
  fx%action = ""
  call reset_buffer(fx%buffer)
  call reset_buffer(fx%element_name)
- call reset_buffer(fx%pcdata)
+ nullify(fx%pcdata)
  nullify(fx%root_element_name)
  call init_dict(fx%attributes)
  call initNamespaceDictionary(fx%nsDict)
@@ -128,7 +128,9 @@ type(fsm_t), intent(inout)   :: fx
  fx%root_element_seen = .false.
  call reset_buffer(fx%buffer)
  call reset_buffer(fx%element_name)
- call reset_buffer(fx%pcdata)
+ if (associated(fx%pcdata)) deallocate(fx%pcdata)
+ nullify(fx%pcdata)
+ if (associated(fx%root_element_name)) deallocate(fx%root_element_name)
  nullify(fx%root_element_name)
  call reset_dict(fx%attributes)
  call destroyNamespaceDictionary(fx%nsDict)
@@ -145,7 +147,7 @@ type(fsm_t), intent(inout)   :: fx
  fx%root_element_seen = .false.
  call reset_buffer(fx%buffer)
  call reset_buffer(fx%element_name)
- call reset_buffer(fx%pcdata)
+ if (associated(fx%pcdata)) deallocate(fx%pcdata)
  if (associated(fx%root_element_name)) deallocate(fx%root_element_name)
  call destroy_dict(fx%attributes)
  call destroyNamespaceDictionary(fx%nsDict)
@@ -160,11 +162,13 @@ type(fsm_t), intent(inout)      :: fx    ! Internal state
 character(len=1), intent(in)    :: c
 integer, intent(out)            :: signal
 
-!
 ! Reset signal
 !
 signal = QUIET
-!
+
+! Reset pcdata
+if (associated(fx%pcdata)) deallocate(fx%pcdata)
+call reset_buffer(fx%tmpbuf)
 
 if (.not. (c .in. valid_chars)) then
 !
@@ -278,8 +282,10 @@ select case(fx%state)
          fx%state = END_TAG_MARKER
          signal = END_OF_TAG
          if (fx%debug) fx%action = ("End of CDATA section")
-         fx%pcdata = fx%buffer    ! Not quite the same behavior
-                                  ! as pcdata... (not filtered)
+         allocate(fx%pcdata(len(fx%buffer)))
+         fx%pcdata = buffer_to_chararray(fx%buffer)
+                ! Not quite the same behavior
+                ! as pcdata... (not filtered)
          call reset_buffer(fx%buffer)
       else
          fx%state = IN_CDATA_SECTION
@@ -306,7 +312,9 @@ select case(fx%state)
                fx%state = END_TAG_MARKER
                signal  = END_OF_TAG
                if (fx%debug) fx%action = ("Ending SGML declaration tag")
-               fx%pcdata = fx%buffer       ! Same behavior as pcdata
+               allocate(fx%pcdata(len(fx%buffer)))
+               fx%pcdata = buffer_to_chararray(fx%buffer)
+                      ! Same behavior as pcdata
                call reset_buffer(fx%buffer)
             else
                fx%state = ERROR
@@ -641,7 +649,9 @@ select case(fx%state)
          fx%state = END_TAG_MARKER
          signal  = END_OF_TAG
          if (fx%debug) fx%action = ("End of Comment")
-         fx%pcdata = fx%buffer                  ! Same behavior as pcdata
+         allocate(fx%pcdata(len(fx%buffer)))
+         fx%pcdata = buffer_to_chararray(fx%buffer)
+                ! Same behavior as pcdata
          call reset_buffer(fx%buffer)
       else
          fx%state = ERROR
@@ -666,10 +676,12 @@ select case(fx%state)
          signal = CHUNK_OF_PCDATA
          if (fx%debug) fx%action = ("End of pcdata -- Starting tag")
          if (fx%entities_in_pcdata) then
-            call entity_filter(fx%buffer,fx%pcdata)
+            call entity_filter(fx%buffer,fx%tmpbuf)
+            fx%pcdata = buffer_to_chararray(fx%tmpbuf)
             fx%entities_in_pcdata = .false.
          else
-            fx%pcdata = fx%buffer
+            allocate(fx%pcdata(len(fx%buffer)))
+            fx%pcdata = buffer_to_chararray(fx%buffer)
          endif
          call reset_buffer(fx%buffer)
       else if (c == ">") then
@@ -681,10 +693,12 @@ select case(fx%state)
          if (fx%debug) fx%action = ("Resetting PCDATA buffer at newline")
          call add_to_buffer(c,fx%buffer)
          if (fx%entities_in_pcdata) then
-            call entity_filter(fx%buffer,fx%pcdata)
+            call entity_filter(fx%buffer,fx%tmpbuf)
+            fx%pcdata = buffer_to_chararray(fx%tmpbuf)
             fx%entities_in_pcdata = .false.
          else
-            fx%pcdata = fx%buffer
+            allocate(fx%pcdata(len(fx%buffer)))
+            fx%pcdata = buffer_to_chararray(fx%buffer)
          endif
          call reset_buffer(fx%buffer)
       else
@@ -699,10 +713,12 @@ select case(fx%state)
                signal = CHUNK_OF_PCDATA
                if (fx%debug) fx%action = ("Resetting almost full PCDATA buffer")
                if (fx%entities_in_pcdata) then
-                  call entity_filter(fx%buffer,fx%pcdata)
+                  call entity_filter(fx%buffer,fx%tmpbuf)
+                  fx%pcdata = buffer_to_chararray(fx%tmpbuf)
                   fx%entities_in_pcdata = .false.
                else
-                  fx%pcdata = fx%buffer
+                  allocate(fx%pcdata(len(fx%buffer)))
+                  fx%pcdata = buffer_to_chararray(fx%buffer)
                endif
                call reset_buffer(fx%buffer)
             endif
@@ -725,10 +741,12 @@ select case(fx%state)
          if (fx%debug) fx%action = ("Resetting PCDATA buffer at repeated newline")
          call add_to_buffer(c,fx%buffer)
          if (fx%entities_in_pcdata) then
-            call entity_filter(fx%buffer,fx%pcdata)
+            call entity_filter(fx%buffer,fx%tmpbuf)
+            fx%pcdata = buffer_to_chararray(fx%tmpbuf)
             fx%entities_in_pcdata = .false.
          else
-            fx%pcdata = fx%buffer
+            allocate(fx%pcdata(len(fx%buffer)))
+            fx%pcdata = buffer_to_chararray(fx%buffer)
          endif
          call reset_buffer(fx%buffer)
       else
@@ -744,10 +762,12 @@ select case(fx%state)
                signal = CHUNK_OF_PCDATA
                if (fx%debug) fx%action = ("Resetting almost full PCDATA buffer")
                if (fx%entities_in_pcdata) then
-                  call entity_filter(fx%buffer,fx%pcdata)
+                  call entity_filter(fx%buffer,fx%tmpbuf)
+                  fx%pcdata = buffer_to_chararray(fx%tmpbuf)
                   fx%entities_in_pcdata = .false.
                else
-                  fx%pcdata = fx%buffer
+                  allocate(fx%pcdata(len(fx%buffer)))
+                  fx%pcdata = buffer_to_chararray(fx%buffer)
                endif
                call reset_buffer(fx%buffer)
             endif
