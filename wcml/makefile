@@ -1,15 +1,15 @@
 #
 default: install
 #
-OBJFILES=xmlf90_wcml.o m_wcml_coma.o m_wcml_core.o m_wcml_stml.o m_wcml_property.o
+OBJFILES=FoX_wcml.o m_wcml_coma.o m_wcml_core.o m_wcml_stml.o m_wcml_property.o
 #
-LIBRARY=libxmlf90_wcml.a
+LIBRARY=libFoX_wcml.a
 INCFLAGS=$(MOD_PREFIX)../objs/finclude
 #
 m_wcml_core.o: m_wcml_stml.o m_wcml_coma.o
 m_wcml_coma.o: m_wcml_stml.o
 m_wcml_property.o: m_wcml_stml.o
-xmlf90_wcml.o: m_wcml_core.o m_wcml_coma.o m_wcml_stml.o m_wcml_property.o
+FoX_wcml.o: m_wcml_core.o m_wcml_coma.o m_wcml_stml.o m_wcml_property.o
 
 #
 #---------NOTHING SHOULD NEED TO BE CHANGED BELOW THIS LINE-----

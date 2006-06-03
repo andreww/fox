@@ -1,5 +1,4 @@
 module m_sax_parser
-
 !
 ! Basic module to parse XML in the SAX spirit.
 !
@@ -289,7 +288,7 @@ do
 
             if (fx%debug) print *, "We have found an opening tag"
             if (fx%root_element_seen) then
-               if (str_vs(name) == str(fx%root_element_name)) then
+               if (str_vs(name) == str_vs(fx%root_element_name)) then
                   call build_error_info(error_info, &
                   "Duplicate root element: " // str_vs(name), &
                   line(fb),column(fb),fx%element_stack,SEVERE_ERROR_CODE)
@@ -310,8 +309,8 @@ do
                   endif
                endif
             else
-               call reset_buffer(fx%root_element_name)
-               call add_to_buffer(str_vs(name), fx%root_element_name)
+               allocate(fx%root_element_name(size(name)))
+               fx%root_element_name = name
                fx%root_element_seen = .true.
             endif
             call push_elstack(str_vs(name),fx%element_stack)
@@ -378,7 +377,7 @@ do
             if (fx%debug) print *, "We have found a single (empty) tag: ", &
                  str_vs(name)
             if (fx%root_element_seen) then
-               if (str_vs(name) == str(fx%root_element_name)) then
+               if (str_vs(name) == str_vs(fx%root_element_name)) then
                   call build_error_info(error_info, &
                   "Duplicate root element: " // str_vs(name), &
                   line(fb),column(fb),fx%element_stack,SEVERE_ERROR_CODE)
@@ -399,8 +398,8 @@ do
                   endif
                endif
             else
-               call reset_buffer(fx%root_element_name)
-               call add_to_buffer(str_vs(name), fx%root_element_name)
+               allocate(fx%root_element_name(size(name)))
+               fx%root_element_name = name
                fx%root_element_seen = .true.
             endif
             !

@@ -35,7 +35,7 @@ sax_lib: common_lib fsys_lib
 sax_lib_clean:
 	(cd sax; $(MAKE) clean)
 #
-wxml_lib: fsys_lib
+wxml_lib: common_lib fsys_lib 
 	(cd wxml; $(MAKE))
 wxml_lib_clean:
 	(cd wxml; $(MAKE) clean)
@@ -50,7 +50,7 @@ common_lib: fsys_lib
 common_lib_clean:
 	(cd common; $(MAKE) clean)
 #
-fsys_lib:
+fsys_lib: objsdir
 	(cd fsys; $(MAKE))
 fsys_lib_clean:
 	(cd fsys; $(MAKE) clean)

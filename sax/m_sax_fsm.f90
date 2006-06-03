@@ -34,7 +34,7 @@ type, public :: fsm_t
       logical              :: entities_in_attributes
       type(elstack_t)      :: element_stack
       logical              :: root_element_seen
-      type(buffer_t)       :: root_element_name
+      character, dimension(:), pointer :: root_element_name
       character(len=150)   :: action
       logical              :: debug
 end type fsm_t
@@ -112,7 +112,7 @@ type(fsm_t), intent(inout)   :: fx
  call reset_buffer(fx%buffer)
  call reset_buffer(fx%element_name)
  call reset_buffer(fx%pcdata)
- call reset_buffer(fx%root_element_name)
+ nullify(fx%root_element_name)
  call init_dict(fx%attributes)
  call initNamespaceDictionary(fx%nsDict)
 end subroutine init_fsm
@@ -129,7 +129,7 @@ type(fsm_t), intent(inout)   :: fx
  call reset_buffer(fx%buffer)
  call reset_buffer(fx%element_name)
  call reset_buffer(fx%pcdata)
- call reset_buffer(fx%root_element_name)
+ nullify(fx%root_element_name)
  call reset_dict(fx%attributes)
  call destroyNamespaceDictionary(fx%nsDict)
  call initNamespaceDictionary(fx%nsDict)
@@ -146,7 +146,7 @@ type(fsm_t), intent(inout)   :: fx
  call reset_buffer(fx%buffer)
  call reset_buffer(fx%element_name)
  call reset_buffer(fx%pcdata)
- call reset_buffer(fx%root_element_name)
+ if (associated(fx%root_element_name)) deallocate(fx%root_element_name)
  call destroy_dict(fx%attributes)
  call destroyNamespaceDictionary(fx%nsDict)
 end subroutine destroy_fsm

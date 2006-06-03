@@ -150,14 +150,18 @@ function get_top_elstack(elstack) result(item)
 type(elstack_t), intent(in)        :: elstack
 character(len=merge(size(elstack%stack(elstack%n_items)%data), 0, elstack%n_items > 0)) :: item 
 
-integer   :: n
+integer   :: i, n
 
 n = elstack%n_items
 
 if (n == 0) then
   call FoX_error("Element stack empty")
 endif
-item = transfer(elstack%stack(n)%data, item)
+item=""
+do i=1, len(item)
+   item(i:i)=elstack%stack(n)%data(i)
+enddo
+!item = transfer(elstack%stack(n)%data, item)
 
 end function get_top_elstack
 
