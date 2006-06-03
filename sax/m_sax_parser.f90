@@ -358,8 +358,7 @@ do
                                               str_vs(name))
                   endif
                   call checkEndNamespaces(fx%nsDict, len(fx%element_stack))
-                  allocate(oldname(len(get_top_elstack(fx%element_stack))))
-                  oldname = vs_str(pop_elstack(fx%element_stack))
+                  dummy = len(pop_elstack(fx%element_stack))
                else
                   call build_error_info(error_info, &
                        "Nesting error: End tag: " // str_vs(name) //  &

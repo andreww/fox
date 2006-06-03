@@ -205,8 +205,11 @@ end subroutine buffer_to_character
 function buffer_to_chararray(buffer) result(str)
 type(buffer_t), intent(in)               :: buffer
 character(len=1), dimension(buffer%size) :: str
+integer :: i
 
-str = transfer(buffer, str)
+do i = 1, buffer%size
+  str(i) = buffer%str(i:i)
+enddo
 end function buffer_to_chararray
 !----------------------------------------------------------------
 function buffer_nearly_full(buffer) result(warn)
