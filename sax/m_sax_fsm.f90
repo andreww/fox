@@ -26,7 +26,7 @@ type, public :: fsm_t
       character(len=1)     :: quote_char            !*
       type(buffer_t)       :: buffer                !*
       type(buffer_t)       :: tmpbuf                !*
-      type(buffer_t)       :: element_name
+      character, dimension(:), pointer :: element_name
       type(dictionary_t)   :: attributes
       type(namespaceDictionary) :: nsDict
       character, dimension(:), pointer :: pcdata
@@ -110,7 +110,7 @@ type(fsm_t), intent(inout)   :: fx
  fx%entities_in_attributes = .false.
  fx%action = ""
  call reset_buffer(fx%buffer)
- call reset_buffer(fx%element_name)
+ nullify(fx%element_name)
  nullify(fx%pcdata)
  nullify(fx%root_element_name)
  call init_dict(fx%attributes)
@@ -127,7 +127,8 @@ type(fsm_t), intent(inout)   :: fx
  fx%action = ""
  fx%root_element_seen = .false.
  call reset_buffer(fx%buffer)
- call reset_buffer(fx%element_name)
+ if (associated(fx%element_name)) deallocate(fx%element_name)
+ nullify(fx%element_name)
  if (associated(fx%pcdata)) deallocate(fx%pcdata)
  nullify(fx%pcdata)
  if (associated(fx%root_element_name)) deallocate(fx%root_element_name)
@@ -146,7 +147,7 @@ type(fsm_t), intent(inout)   :: fx
  fx%action = ""
  fx%root_element_seen = .false.
  call reset_buffer(fx%buffer)
- call reset_buffer(fx%element_name)
+ if (associated(fx%element_name)) deallocate(fx%element_name)
  if (associated(fx%pcdata)) deallocate(fx%pcdata)
  if (associated(fx%root_element_name)) deallocate(fx%root_element_name)
  call destroy_dict(fx%attributes)
@@ -380,8 +381,9 @@ select case(fx%state)
          fx%state = END_TAG_MARKER
          signal  = END_OF_TAG
          if (fx%debug) fx%action = ("Ending tag")
-!         call set_element_name(fx%buffer,fx%element)
-         fx%element_name = fx%buffer
+if (associated(fx%element_name)) deallocate(fx%element_name)
+         allocate(fx%element_name(len(fx%buffer)))
+         fx%element_name = buffer_to_chararray(fx%buffer)
          call reset_buffer(fx%buffer)
          call reset_dict(fx%attributes)
       else if (c == "/") then
@@ -392,16 +394,18 @@ select case(fx%state)
             fx%state = SINGLETAG_MARKER
             fx%context = SINGLE_TAG
             if (fx%debug) fx%action = ("Almost ending single tag")
-!            call set_element_name(fx%buffer,fx%element)
-            fx%element_name = fx%buffer
+if (associated(fx%element_name)) deallocate(fx%element_name)
+            allocate(fx%element_name(len(fx%buffer)))
+            fx%element_name = buffer_to_chararray(fx%buffer)
             call reset_buffer(fx%buffer)
             call reset_dict(fx%attributes)
          endif
       else if (c .in. whitespace) then
          fx%state = WHITESPACE_IN_TAG
          if (fx%debug) fx%action = ("Ending name chars")
-!            call set_element_name(fx%buffer,fx%element)
-         fx%element_name = fx%buffer
+if (associated(fx%element_name)) deallocate(fx%element_name)
+         allocate(fx%element_name(len(fx%buffer)))
+         fx%element_name = buffer_to_chararray(fx%buffer)
          call reset_buffer(fx%buffer)
          call reset_dict(fx%attributes)
       else if (c .in. name_chars) then

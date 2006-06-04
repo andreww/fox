@@ -5,7 +5,6 @@ module m_sax_parser
 
 use FoX_common, only : dictionary_t
 use m_common_array_str, only : str_vs, vs_str
-use m_common_buffer
 use m_common_elstack          ! For element nesting checks
 use m_sax_reader
 use m_sax_debug
@@ -76,7 +75,7 @@ subroutine close_xmlfile(fxml)
   
   call close_file_buffer(fxml%fb)
   call destroy_fsm(fxml%fx) 
-  fxml%path_mark = ""             ! ""
+  fxml%path_mark = ""
 
 end subroutine close_xmlfile
 
@@ -283,8 +282,8 @@ do
          ! We decide whether we have ended an opening tag or a closing tag
          !
          if (fx%context == OPENING_TAG) then
-            allocate(name(len(fx%element_name)))
-            name = vs_str(str(fx%element_name))
+            allocate(name(size(fx%element_name)))
+            name = fx%element_name
 
             if (fx%debug) print *, "We have found an opening tag"
             if (fx%root_element_seen) then
@@ -333,8 +332,8 @@ do
             endif
 
          else if (fx%context == CLOSING_TAG) then
-            allocate(name(len(fx%element_name)))
-            name = vs_str(str(fx%element_name))
+            allocate(name(size(fx%element_name)))
+            name = fx%element_name
          
             if (fx%debug) print *, "We have found a closing tag"
             if (is_empty(fx%element_stack)) then
@@ -371,8 +370,8 @@ do
                endif
             endif
          else if (fx%context == SINGLE_TAG) then
-            allocate(name(len(fx%element_name)))
-            name = buffer_to_chararray(fx%element_name)
+            allocate(name(size(fx%element_name)))
+            name = fx%element_name
 
             if (fx%debug) print *, "We have found a single (empty) tag: ", &
                  str_vs(name)
@@ -463,8 +462,8 @@ do
          else if (fx%context == XML_DECLARATION_TAG) then
 
             if (fx%debug) print *, "We found an XML declaration"
-            allocate(name(len(fx%element_name)))
-            name = buffer_to_chararray(fx%element_name)
+            allocate(name(size(fx%element_name)))
+            name = fx%element_name
             if (have_xml_declaration_handler)  &
                       call xml_declaration_handler(str_vs(name),fx%attributes)
 
@@ -554,7 +553,7 @@ subroutine xml_name(fxml,name)
   type(xml_t), intent(in) :: fxml
   character(len=*), intent(out)  :: name
   
-  name = str(fxml%fx%element_name)
+  name = str_vs(fxml%fx%element_name)
   
 end subroutine xml_name
 !-----------------------------------------
