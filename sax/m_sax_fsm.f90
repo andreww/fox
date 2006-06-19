@@ -1,7 +1,8 @@
 module m_sax_fsm
 
-use FoX_common 
+use FoX_common
 use m_common_buffer
+use m_common_error, only : FoX_error
 use m_sax_charset
 use m_sax_entities
 use m_common_elstack
@@ -826,7 +827,7 @@ if (associated(fx%element_name)) deallocate(fx%element_name)
 
  case (ERROR)
 
-      stop "Cannot continue after parsing errors!"
+    call FoX_error("Cannot continue after parsing errors!")
 
  end select
 

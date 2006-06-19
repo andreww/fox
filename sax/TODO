@@ -7,14 +7,10 @@ Things to do:
  <?name  pseudo_att_name="pseudo_att_value" .... ?>
 
 * check for all hard-coded limitations
-* share dictionary, elstack, etc between here & wxml.
-* use fsys/pxf where approriate
-* share error-handling where appropriate
-* rename everything sax-specific to have sax in the name
-* make sure and use implicit none/private everywhere
+* make sure and use implicit none/private everywhere DONE
 * make sure and explicitly declare all USEd symbols
 * proper checking for QNames in tag & attribute names
-* namespace support for attributes
+* namespace support for attributes DONE
 * prefix mapping callbacks.
 
 * check input/output uses of buffer

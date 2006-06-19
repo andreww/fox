@@ -1,8 +1,10 @@
 module m_sax_debug
 
-implicit none
-private
+  implicit none
+  private
 
-logical, public, save   :: debug = .true.
+  logical, save   :: debug = .true.
+
+  public :: debug
 
 end module m_sax_debug

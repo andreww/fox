@@ -5,55 +5,58 @@ module m_sax_charset
 implicit none
 private
 
-integer, parameter, private  :: small_int = selected_int_kind(1)
+integer, parameter :: small_int = selected_int_kind(1)
 
 !--------------------------------------------------------------------------
-type, public :: charset_t
+type charset_t
 ! private
       integer(kind=small_int), dimension(0:255) :: mask
 end type charset_t
 
-
-public  :: operator(.in.), operator(+)
-public  :: assignment(=)
-public  :: print_charset, reset_charset
-
 interface operator(.in.)
-      module procedure belongs
+  module procedure belongs
 end interface
-private :: belongs
 
 interface assignment(=)
       module procedure set_string_to_charset, set_codes_to_charset
 end interface
-private ::  set_string_to_charset, set_codes_to_charset
 
 interface operator(+)
       module procedure add_string_to_charset, &
                        add_code_to_charset, add_codes_to_charset
 end interface
-private :: add_string_to_charset, add_code_to_charset, add_codes_to_charset
 
 !--------------------------------------------------------------------------
 
-character(len=*), parameter, private :: &
+character(len=*), parameter :: &
             lowercase = "abcdefghijklmnopqrstuvwxyz",  & 
             uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ", &
             digits    = "0123456789"
 
-integer, parameter, public   :: SPACE           = 32
-integer, parameter, public   :: NEWLINE         = 10
-integer, parameter, public   :: CARRIAGE_RETURN = 13
-integer, parameter, public   :: TAB             =  9
+integer, parameter :: SPACE           = 32
+integer, parameter :: NEWLINE         = 10
+integer, parameter :: CARRIAGE_RETURN = 13
+integer, parameter :: TAB             =  9
 
-type(charset_t), public    :: initial_name_chars
-type(charset_t), public    :: name_chars
-type(charset_t), public    :: whitespace
-type(charset_t), public    :: valid_chars
-type(charset_t), public    :: uppercase_chars
+type(charset_t) :: initial_name_chars
+type(charset_t) :: name_chars
+type(charset_t) :: whitespace
+type(charset_t) :: valid_chars
+type(charset_t) :: uppercase_chars
 
 public  :: setup_xml_charsets
 
+
+public :: charset_t
+public :: operator(.in.), operator(+)
+public :: assignment(=)
+public :: print_charset, reset_charset
+
+public :: initial_name_chars
+public :: name_chars
+public :: valid_chars
+public :: whitespace
+public :: uppercase_chars
 
 CONTAINS !==========================================================
 

@@ -1,9 +1,8 @@
 module m_sax_error
-!
-! Error handling
-!
-use m_common_elstack
-private
+
+  use m_common_elstack, only : elstack_t, print_elstack
+  implicit none
+  private
 
 type, public  :: sax_error_t
       character(len=100)  :: message

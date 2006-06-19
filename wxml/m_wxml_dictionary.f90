@@ -1,13 +1,13 @@
 module m_wxml_dictionary
 
+  use m_common_array_str
   use m_wxml_escape, only : check_Name
   use m_wxml_error,  only : wxml_fatal
-  use m_wxml_array_str
 
   implicit none
 
-private
-!
+  private
+
 integer, parameter, private    :: MAX_ITEMS = 30
 
 type, private :: dict_item

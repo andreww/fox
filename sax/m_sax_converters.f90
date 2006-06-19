@@ -1,6 +1,6 @@
 module m_sax_converters
 
-use m_sax_debug
+use m_sax_debug, only : debug
 
 implicit none
 private

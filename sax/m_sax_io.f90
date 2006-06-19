@@ -1,5 +1,6 @@
 module m_sax_io
 
+use m_common_error, only : FoX_error
 implicit none
 private
 !
@@ -54,11 +55,11 @@ character(len=1)  :: c
 
 call get_unit(lun,iostat)
 
-if (iostat /= 0) stop "Out of unit numbers"
+if (iostat /= 0) call FoX_error("Out of unit numbers")
 
 open(unit=lun,status="scratch",form="formatted", &
      action="readwrite",position="rewind",iostat=iostat)
-if (iostat /= 0)   stop "Cannot open test file"
+if (iostat /= 0) call FoX_error("Cannot open test file")
 
 write(unit=lun,fmt=*)  "a"
 write(unit=lun,fmt=*)  "b"

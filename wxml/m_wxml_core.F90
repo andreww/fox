@@ -1,10 +1,11 @@
 module m_wxml_core
 
-use m_wxml_buffer
-use m_wxml_array_str, only: assign_array_to_str
-use m_wxml_array_str, only: assign_str_to_array
-use m_wxml_escape, only: check_Name
-use m_wxml_elstack
+use m_common_array_str, only: assign_array_to_str
+use m_common_array_str, only: assign_str_to_array
+use m_common_elstack
+use m_common_buffer
+use m_wxml_error
+use m_wxml_escape, only: check_Name, escape_string
 use m_wxml_dictionary
 use m_wxml_text, only : len_escaping_markup, str
 
@@ -341,7 +342,7 @@ subroutine xml_AddPcdata_Ch(xf,pcdata,space,line_feed)
   endif
   if (advance_space) call add_to_buffer(" ",xf%buffer)
 
-  call add_to_buffer_escaping_markup(pcdata, xf%buffer)
+  call add_to_buffer(escape_String(pcdata), xf%buffer)
 
 end subroutine xml_AddPcdata_Ch
 
@@ -542,7 +543,7 @@ do i = 1, len(xf%dict)
    call add_to_buffer(get_key(xf%dict, i), xf%buffer)
    call add_to_buffer("=", xf%buffer)
    call add_to_buffer("""",xf%buffer)
-   call add_to_buffer_escaping_markup(get_value(xf%dict, i), xf%buffer)
+   call add_to_buffer(escape_string(get_value(xf%dict, i)), xf%buffer)
    call add_to_buffer("""", xf%buffer)
 enddo
 

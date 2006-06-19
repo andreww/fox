@@ -7,7 +7,7 @@ module m_sax_entities
 !    2. Character entities  (but only within the range of the char intrinsic)
 !
 use m_common_buffer
-use m_common_error, only : FoX_error, FoX_warning
+use m_common_error, only : FoX_warning, FoX_error
 implicit none
 private
 

@@ -1,5 +1,5 @@
 #
-# Example of Makefile for integration of XML package
+#!/bin/make
 #
 #default: objsdir dom_example sax_example wxml_example wcml_example
 default: objsdir wxml_example wcml_example
@@ -11,13 +11,6 @@ check: dom_check sax_check wxml_check wcml_check
 #
 include arch.make
 #---------------------------
-DOM_LIB=dom/libFoX_dom.a
-SAX_LIB=sax/libFoX_sax.a
-WXML_LIB=wxml/libFoX_wxml.a
-WCML_LIB=wcml/libFoX_wcml.a
-COMMON_LIB=common/libFoX_common.a
-FSYS_LIB=fsys/libfsys.a
-
 INCFLAGS=-Iobjs/finclude
 #
 DOM_OBJS=dom_example.o
@@ -55,23 +48,25 @@ fsys_lib: objsdir
 fsys_lib_clean:
 	(cd fsys; $(MAKE) clean)
 #
-dom_example: dom_lib $(DOM_OBJS)
-	$(FC) $(LDFLAGS) -o $@ $(DOM_OBJS) $(DOM_LIB) $(SAX_LIB) $(WXML_LIB) $(FSYS_LIB)
+dom_example: dom_lib dom_example.o
+	$(FC) -o $@ dom_example.o $$(./FoX-config --libs --dom)
 #
-sax_example: sax_lib $(SAX_OBJS)
-	$(FC) $(LDFLAGS) -o $@ $(SAX_OBJS) $(SAX_LIB) $(COMMON_LIB) $(FSYS_LIB)
+sax_example.o: m_handlers.o
+sax_example: sax_lib m_handlers.o sax_example.o
+	$(FC) -o $@ sax_example.o m_handlers.o $$(./FoX-config --libs --sax)
 #
-wxml_example: wxml_lib $(WXML_OBJS)
-	$(FC) $(LDFLAGS) -o $@ $(WXML_OBJS) $(WXML_LIB) $(COMMON_LIB) $(FSYS_LIB)
+wxml_example: wxml_lib wxml_example.o 
+	$(FC) -o $@ wxml_example.o $$(./FoX-config --libs --wxml)
 #
-wcml_example: wcml_lib  $(WCML_OBJS)
-	$(FC) $(LDFLAGS) -o $@ $(WCML_OBJS) $(WCML_LIB) $(WXML_LIB) $(FSYS_LIB)
+wcml_example: wcml_lib wcml_example.o 
+	$(FC) -o $@ wcml_example.o $$(./FoX-config --libs --wcml)
 #
 dom_check:
 sax_check:
 wcml_check:
 wxml_check:
 	(cd wxml/test;./run_tests.sh)
+
 clean: dom_lib_clean sax_lib_clean wxml_lib_clean wcml_lib_clean common_lib_clean fsys_lib_clean
 	rm -f *.o dom_example sax_example wxml_example wcml_example simple.xml output.xml *.*d *.a
 	rm -f objs/lib/* objs/finclude/*
