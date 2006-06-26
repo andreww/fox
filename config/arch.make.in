@@ -1,5 +1,5 @@
 .SUFFIXES:
-.SUFFIXES: .f .F .o .a .f90 .F90 .f95 .F95
+.SUFFIXES: .f .F .o .a .f90 .F90 .f95 .F95 .exe
 
 compile_prefix=@prefix@
 LIB_DIR=$(compile_prefix)/lib

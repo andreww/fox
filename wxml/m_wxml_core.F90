@@ -4,6 +4,7 @@ module m_wxml_core
   use m_common_array_str, only: assign_str_to_array
   use m_common_elstack
   use m_common_error, only: FoX_warning_base, FoX_error_base, FoX_fatal_base
+  use m_common_io, only : get_unit
   use m_common_buffer
   use m_common_attrs
   use m_wxml_escape, only: check_Name, escape_string, escape_string_len
@@ -468,29 +469,6 @@ type(xmlf_t), intent(inout)   :: xf
 end subroutine xml_Close
 
 !==================================================================
-!-------------------------------------------------------------------
-subroutine get_unit(lun,iostat)
-
-! Get an available Fortran unit number
-
-integer, intent(out)  :: lun
-integer, intent(out)  :: iostat
-
-integer :: i
-logical :: unit_used
-
-do i = 10, 99
-   lun = i
-   inquire(unit=lun,opened=unit_used)
-   if (.not. unit_used) then
-      iostat = 0
-      return
-   endif
-enddo
-iostat = -1
-lun = -1
-end subroutine get_unit
-
 !----------------------------------------------------------
 subroutine add_eol(xf)
 type(xmlf_t), intent(inout)   :: xf

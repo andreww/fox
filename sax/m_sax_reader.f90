@@ -1,9 +1,9 @@
 module m_sax_reader
 
-use m_sax_io
+  use m_common_io, only: setup_io, io_eor, io_eof
 
-implicit none
-private
+  implicit none
+  private
 
 integer, parameter, public              :: BUFFER_NOT_CONNECTED = -2048
 integer, private, parameter             :: MAXLENGTH = 1024
