@@ -3,9 +3,9 @@ module m_wxml_core
 use m_common_array_str, only: assign_array_to_str
 use m_common_array_str, only: assign_str_to_array
 use m_common_elstack
+use m_common_error, only: FoX_warning_base, FoX_error_base, FoX_fatal_base
 use m_common_buffer
 use m_common_attrs
-use m_wxml_error
 use m_wxml_escape, only: check_Name, escape_string, escape_string_len
 use m_wxml_text, only: str
 
@@ -75,21 +75,16 @@ interface xml_AddPseudoAttribute
 end interface
  
 !public :: xml_AddArray
-!interface xml_AddArray
-!   module procedure  xml_AddArray_integer,  &
-!                xml_AddArray_real_dp, xml_AddArray_real_sp
-!end interface
-!private :: xml_AddArray_integer,  xml_AddArray_real_dp, xml_AddArray_real_sp
 
 !overload error handlers to allow file info
 interface wxml_warning
-  module procedure wxml_warning_xf
+  module procedure wxml_warning_xf, FoX_warning_base
 end interface
 interface wxml_error
-  module procedure wxml_error_xf
+  module procedure wxml_error_xf, FoX_error_base
 end interface
 interface wxml_fatal
-  module procedure wxml_fatal_xf
+  module procedure wxml_fatal_xf, FoX_fatal_base
 end interface
 
 !
@@ -547,53 +542,6 @@ do i = 1, len(xf%dict)
 enddo
 
 end subroutine write_attributes
-
-! Fairly sure the below is nonsense.
-! comment out & see what breaks.
-!---------------------------------------------------------------
-!    subroutine xml_AddArray_integer(xf,a,format)
-!      type(xmlf_t), intent(inout)         :: xf
-!      integer, intent(in), dimension(:)   :: a
-!      character(len=*), intent(in), optional  :: format
-!
-!      call close_start_tag(xf,">")
-!      if (len(xf%buffer) > 0) call dump_buffer(xf,lf=.true.)
-!      if (present(format)) then
-!         write(xf%lun,format) a
-!      else
-!         write(xf%lun,"(6(i12))") a
-!      endif
-!    end subroutine xml_AddArray_integer
-
-!-------------------------------------------------------------------
-!    subroutine xml_AddArray_real_dp(xf,a,format)
-!      type(xmlf_t), intent(inout)         :: xf
-!      real(kind=dp), intent(in), dimension(:)   :: a
-!      character(len=*), intent(in), optional  :: format
-!
-!      call close_start_tag(xf,">")
-!      if (len(xf%buffer) > 0) call dump_buffer(xf,lf=.true.)
-!      if (present(format)) then
-!         write(xf%lun,format) a
-!      else
-!         write(xf%lun,"(4(es20.12))") a
-!      endif
-!    end subroutine xml_AddArray_real_dp
-!
-!------------------------------------------------------------------
-!    subroutine xml_AddArray_real_sp(xf,a,format)
-!      type(xmlf_t), intent(inout)         :: xf
-!      real(kind=sp), intent(in), dimension(:)   :: a
-!      character(len=*), intent(in), optional  :: format
-!
-!      call close_start_tag(xf,">")
-!      if (len(xf%buffer) > 0) call dump_buffer(xf,lf=.true.)
-!      if (present(format)) then
-!         write(xf%lun,format) a
-!      else
-!         write(xf%lun,"(4(es20.12))") a
-!      endif
-!    end subroutine xml_AddArray_real_sp
 
 !---------------------------------------------------------
 ! Error handling/trapping routines:
