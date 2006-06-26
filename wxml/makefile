@@ -1,8 +1,7 @@
 #
 default: install
 #
-OBJFILES= m_wxml_array_str.o \
-          m_wxml_text.o m_wxml_escape.o m_wxml_core.o \
+OBJFILES= m_wxml_text.o m_wxml_escape.o m_wxml_core.o \
           m_wxml_overloads.o FoX_wxml.o m_wxml_error.o
 #
 LIBRARY=libFoX_wxml.a
