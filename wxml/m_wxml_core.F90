@@ -1,106 +1,106 @@
 module m_wxml_core
 
-use m_common_array_str, only: assign_array_to_str
-use m_common_array_str, only: assign_str_to_array
-use m_common_elstack
-use m_common_error, only: FoX_warning_base, FoX_error_base, FoX_fatal_base
-use m_common_buffer
-use m_common_attrs
-use m_wxml_escape, only: check_Name, escape_string, escape_string_len
-use m_wxml_text, only: str
+  use m_common_array_str, only: assign_array_to_str
+  use m_common_array_str, only: assign_str_to_array
+  use m_common_elstack
+  use m_common_error, only: FoX_warning_base, FoX_error_base, FoX_fatal_base
+  use m_common_buffer
+  use m_common_attrs
+  use m_wxml_escape, only: check_Name, escape_string, escape_string_len
+  use m_wxml_text, only: str
 
-use pxf, only: pxfabort
+  use pxf, only: pxfabort
 
-implicit none
+  implicit none
+  private
 
-logical, parameter  :: pcdata_advance_line_default = .false.
-logical, parameter  :: pcdata_advance_space_default = .false.
+  logical, parameter  :: pcdata_advance_line_default = .false.
+  logical, parameter  :: pcdata_advance_space_default = .false.
 
-integer, parameter ::  sp = selected_real_kind(6,30)
-integer, parameter ::  dp = selected_real_kind(14,100)
+  integer, parameter ::  sp = selected_real_kind(6,30)
+  integer, parameter ::  dp = selected_real_kind(14,100)
 
-private
+  character(len=*), parameter :: FoX_version = '2.0'
 
-character(len=*), public, parameter :: FoX_version = '2.0'
-
-!Output State Machines
-! status wrt root element:
-integer, parameter :: WXML_STATE_1_JUST_OPENED = 0 
-  !File is just opened, nothing written to it yet.
-integer, parameter :: WXML_STATE_1_BEFORE_ROOT = 1
+  !Output State Machines
+  ! status wrt root element:
+  integer, parameter :: WXML_STATE_1_JUST_OPENED = 0 
+  !File is just opened, nothing written to it yet. 
+  integer, parameter :: WXML_STATE_1_BEFORE_ROOT = 1
   !File has been opened, something has been written, but no root element yet.
-integer, parameter :: WXML_STATE_1_DURING_ROOT = 2
+  integer, parameter :: WXML_STATE_1_DURING_ROOT = 2
   !The root element has been opened but not closed
-integer, parameter :: WXML_STATE_1_AFTER_ROOT = 3
+  integer, parameter :: WXML_STATE_1_AFTER_ROOT = 3
   !The root element has been opened but not closed
 
-! status wrt tags:
-integer, parameter :: WXML_STATE_2_OUTSIDE_TAG= 0
+  ! status wrt tags:
+  integer, parameter :: WXML_STATE_2_OUTSIDE_TAG= 0
   !We are not within a tag.
-integer, parameter :: WXML_STATE_2_INSIDE_PI = 1
+  integer, parameter :: WXML_STATE_2_INSIDE_PI = 1
   !We are inside a Processing Instruction tag
-integer, parameter :: WXML_STATE_2_INSIDE_ELEMENT = 2
+  integer, parameter :: WXML_STATE_2_INSIDE_ELEMENT = 2
   !We are in inside an element tag.
 
 
-type, public :: xmlf_t
-   character, pointer      :: filename(:)
-   integer                 :: lun
-   type(buffer_t)          :: buffer
-   type(elstack_t)         :: stack
-   type(dictionary_t)      :: dict
-   integer                 :: state_1
-   integer                 :: state_2
-   logical                 :: indenting_requested
-end type xmlf_t
+  type xmlf_t
+    character, pointer      :: filename(:)
+    integer                 :: lun
+    type(buffer_t)          :: buffer
+    type(elstack_t)         :: stack
+    type(dictionary_t)      :: dict
+    integer                 :: state_1
+    integer                 :: state_2
+    logical                 :: indenting_requested
+  end type xmlf_t
 
-public :: xml_OpenFile
-public :: xml_NewElement
-public :: xml_EndElement
-public :: xml_Close
-public :: xml_AddXMLDeclaration
-public :: xml_AddXMLStylesheet
-public :: xml_AddXMLPI
-public :: xml_AddComment
-public :: xml_AddCharacters
-public :: xml_AddTextSection
-public :: xml_AddPcdata
-public :: xml_AddAttribute
-public :: xml_AddPseudoAttribute
+  public :: FoX_version
+  public :: xmlf_t
+
+  public :: xml_OpenFile
+  public :: xml_NewElement
+  public :: xml_EndElement
+  public :: xml_Close
+  public :: xml_AddXMLDeclaration
+  public :: xml_AddXMLStylesheet
+  public :: xml_AddXMLPI
+  public :: xml_AddComment
+  public :: xml_AddCharacters
+  public :: xml_AddTextSection
+  public :: xml_AddPcdata
+  public :: xml_AddAttribute
+  public :: xml_AddPseudoAttribute
  
-interface xml_AddPcdata
-  module procedure xml_AddPcdata_Ch
-end interface
-interface xml_AddAttribute
-  module procedure xml_AddAttribute_Ch
-end interface
-interface xml_AddPseudoAttribute
-  module procedure xml_AddPseudoAttribute_Ch
-end interface
+  interface xml_AddPcdata
+    module procedure xml_AddPcdata_Ch
+  end interface
+  interface xml_AddAttribute
+    module procedure xml_AddAttribute_Ch
+  end interface
+  interface xml_AddPseudoAttribute
+    module procedure xml_AddPseudoAttribute_Ch
+  end interface
  
-!public :: xml_AddArray
+  !public :: xml_AddArray
 
-!overload error handlers to allow file info
-interface wxml_warning
-  module procedure wxml_warning_xf, FoX_warning_base
-end interface
-interface wxml_error
-  module procedure wxml_error_xf, FoX_error_base
-end interface
-interface wxml_fatal
-  module procedure wxml_fatal_xf, FoX_fatal_base
-end interface
+  !overload error handlers to allow file info
+  interface wxml_warning
+    module procedure wxml_warning_xf, FoX_warning_base
+  end interface
+  interface wxml_error
+    module procedure wxml_error_xf, FoX_error_base
+  end interface
+  interface wxml_fatal
+    module procedure wxml_fatal_xf, FoX_fatal_base
+  end interface
 
-!
-! Heuristic (approximate) target for justification of output
-! Large unbroken pcdatas will go beyond this limit
-! 
-integer, parameter  :: COLUMNS = 80
+  ! Heuristic (approximate) target for justification of output
+  ! Large unbroken pcdatas will go beyond this limit
+  integer, parameter  :: COLUMNS = 80
 
-! TOHW - This is the longest string that may be output without
-! a newline. The buffer must not be larger than this, but its size 
-! can be tuned for performance.
-integer, parameter  :: xml_recl = 4096
+  ! TOHW - This is the longest string that may be output without
+  ! a newline. The buffer must not be larger than this, but its size 
+  ! can be tuned for performance.
+  integer, parameter  :: xml_recl = 4096
 
 contains
 
