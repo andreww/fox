@@ -101,20 +101,26 @@ integer, parameter  :: xml_recl = 4096
 CONTAINS
 
 !-------------------------------------------------------------------
-subroutine xml_OpenFile(filename, xf, indent, channel, replace)
+subroutine xml_OpenFile(filename, xf, indent, channel, replace, addDecl)
 character(len=*), intent(in)  :: filename
 type(xmlf_t), intent(inout)   :: xf
 logical, intent(in), optional :: indent
 integer, intent(in), optional :: channel
-logical, intent(in), optional :: replace  
+logical, intent(in), optional :: replace
+logical, intent(in), optional :: addDecl
 
 integer :: iostat
-logical :: repl
+logical :: repl, decl
 
 if (present(replace)) then
        repl = replace
 else
        repl = .true.
+endif
+if (present(addDecl)) then
+       decl = addDecl
+else
+       decl = .true.
 endif
 
 allocate(xf%filename(len(filename)))
@@ -155,25 +161,37 @@ xf%indenting_requested = .false.
 if (present(indent)) then
    xf%indenting_requested = indent
 endif
+
+if (decl) then
+  call xml_AddXMLDeclaration(xf,encoding='UTF-8')
+endif
+
 end subroutine xml_OpenFile
 
-!-------------------------------------------------------------------
-subroutine xml_AddXMLDeclaration(xf,encoding)
+
+subroutine xml_AddXMLDeclaration(xf, encoding, standalone)
   type(xmlf_t), intent(inout)   :: xf
   character(len=*), intent(in), optional :: encoding
+  logical, intent(in), optional :: standalone
 
   if (xf%state_1 /= WXML_STATE_1_JUST_OPENED) &
     call wxml_error("Tried to put XML declaration in wrong place")
 
-  if (present(encoding)) then
-    call add_to_buffer('<?xml version="1.0" encoding="'//encoding//'"?>', xf%buffer)
-  else
-    call add_to_buffer('<?xml version="1.0" ?>', xf%buffer)
+  call xml_AddXMLPI(xf, "xml")
+  call xml_AddPseudoAttribute(xf, "version", "1.0")
+  if (present(encoding)) &
+    call xml_AddPseudoAttribute(xf, "encoding", encoding)
+  if (present(standalone)) then
+    if (standalone) then
+      call xml_AddPseudoAttribute(xf, "standalone", "yes")
+    else
+      call xml_AddPseudoAttribute(xf, "standalone", "no")
+    endif
   endif
   xf%state_1 = WXML_STATE_1_BEFORE_ROOT
 end subroutine xml_AddXMLDeclaration
 
-!-------------------------------------------------------------------
+
 subroutine xml_AddXMLStylesheet(xf, href, type, title, media, charset, alternate)
   type(xmlf_t), intent(inout)   :: xf
   character(len=*), intent(in) :: href
@@ -205,17 +223,20 @@ subroutine xml_AddXMLStylesheet(xf, href, type, title, media, charset, alternate
 
 end subroutine xml_AddXMLStylesheet
 
-!-------------------------------------------------------------------
+
 subroutine xml_AddXMLPI(xf, name, data)
-type(xmlf_t), intent(inout)   :: xf
-character(len=*), intent(in) :: name
-character(len=*), intent(in), optional :: data
+  type(xmlf_t), intent(inout)            :: xf
+  character(len=*), intent(in)           :: name
+  character(len=*), intent(in), optional :: data
 
   call close_start_tag(xf)
-  call add_eol(xf)
-  call add_to_buffer("<?" // name, xf%buffer)
-  if (xf%state_1 == WXML_STATE_1_JUST_OPENED) &
+  if (xf%state_1 == WXML_STATE_1_JUST_OPENED) then
     xf%state_1 = WXML_STATE_1_BEFORE_ROOT
+  else
+    call add_eol(xf)
+  endif
+
+  call add_to_buffer("<?" // name, xf%buffer)
   if (present(data)) then
     if (index(data, '?>') > 0) &
       call wxml_error("Tried to output invalid PI data")
@@ -229,11 +250,9 @@ character(len=*), intent(in), optional :: data
 end subroutine xml_AddXMLPI
 
 
-!-------------------------------------------------------------------
 subroutine xml_AddComment(xf,comment)
   type(xmlf_t), intent(inout)   :: xf
   character(len=*), intent(in)  :: comment
-
 
   if (index(comment,'--') > 0 .or. comment(len(comment):) == '-') &
     call wxml_error("Tried to output invalid comment")

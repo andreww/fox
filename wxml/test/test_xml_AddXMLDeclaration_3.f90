@@ -8,7 +8,7 @@ program test
   type(xmlf_t) :: xf
 
   call xml_OpenFile(filename, xf, addDecl=.false.)
-  call xml_AddXMLDeclaration(xf)
+  call xml_AddXMLDeclaration(xf, standalone=.true.)
   call xml_Close(xf)
 
 end program test
