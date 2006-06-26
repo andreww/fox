@@ -135,9 +135,11 @@ contains
     character(len=*), intent(in), optional :: ref
     character(len=*), intent(in), optional :: units        ! units (default = none)
 
-    call stmAddString(xf, str(value), id, title, dictref, &
-                      'xsd:boolean', convention, &
-                      errorValue, errorBasis, min, max, ref, units)
+    call stmAddString(xf=xf, value=str(value), id=id, title=title, &
+                      dictRef=dictref, dataType='xsd:boolean', &
+                      convention=convention, errorValue=errorValue, &
+                      errorBasis=errorBasis, min=min, max=max, ref=ref, &
+                      units=units)
 
   end subroutine stmAddLogical
 
@@ -157,14 +159,16 @@ contains
     character(len=*), intent(in), optional :: ref
     character(len=*), intent(in), optional :: units        ! units (default = none)
 
-    call stmAddString(xf, str(value), id, title, dictref, &
-                     'xsd:integer', convention,  &
-                     errorValue, errorBasis, min, max, ref, units)
+    call stmAddString(xf=xf, value=str(value), id=id, title=title, &
+                      dictRef=dictref, dataType='xsd:integer', &
+                      convention=convention, errorValue=errorValue, &
+                      errorBasis=errorBasis, min=min, max=max, ref=ref, &
+                      units=units)
 
   end subroutine stmAddInteger
 
   subroutine stmAddFloatDP(xf, value, id, title, dictref, &
-       convention, errorValue, errorBasis, min, max, units, fmt)
+       convention, errorValue, errorBasis, min, max, ref, units, fmt)
 
     type(xmlf_t),     intent(inout)        :: xf
     real(kind=dp),    intent(in)           :: value        ! the value to be output
@@ -176,23 +180,28 @@ contains
     character(len=*), intent(in), optional :: errorBasis
     character(len=*), intent(in), optional :: min
     character(len=*), intent(in), optional :: max
+    character(len=*), intent(in), optional :: ref
     character(len=*), intent(in), optional :: units        ! units
     character(len=*), intent(in), optional :: fmt 
 
     if (present(fmt)) then
-       call stmAddString(xf, str(value,fmt), id, title, dictref, &
-                         'xsd:float', convention,       &
-                         errorValue, errorBasis, min, max, units)
+       call stmAddString(xf=xf, value=str(value, fmt), id=id, title=title, &
+                      dictRef=dictref, dataType='xsd:double', &
+                      convention=convention, errorValue=errorValue, &
+                      errorBasis=errorBasis, min=min, max=max, ref=ref, &
+                      units=units)
     else
-       call stmAddString(xf, str(value), id, title, dictref,     &
-                         'xsd:float', convention,       &
-                         errorValue, errorBasis, min, max, units)
+       call stmAddString(xf=xf, value=str(value, fmt), id=id, title=title, &
+                      dictRef=dictref, dataType='xsd:double', &
+                      convention=convention, errorValue=errorValue, &
+                      errorBasis=errorBasis, min=min, max=max, ref=ref, &
+                      units=units)
     endif
 
   end subroutine stmAddFloatDP
 
   subroutine stmAddFloatSP(xf, value, id, title, dictref, &
-       convention, errorValue, errorBasis, min, max, units, fmt)
+       convention, errorValue, errorBasis, min, max, ref, units, fmt)
 
     type(xmlf_t),  intent(inout)            :: xf
     real(kind=sp), intent(in)               :: value        ! the value to be output
@@ -205,16 +214,21 @@ contains
     character(len=*), intent(in), optional :: errorBasis
     character(len=*), intent(in), optional :: min
     character(len=*), intent(in), optional :: max
+    character(len=*), intent(in), optional :: ref
     character(len=*), intent(in), optional :: fmt 
 
     if (present(fmt)) then
-       call stmAddString(xf, str(value,fmt), id, title, dictref, &
-                         'xsd:double', convention,      &
-                         errorValue, errorBasis, min, max, units)
+       call stmAddString(xf=xf, value=str(value, fmt), id=id, title=title, &
+                      dictRef=dictref, dataType='xsd:float', &
+                      convention=convention, errorValue=errorValue, &
+                      errorBasis=errorBasis, min=min, max=max, ref=ref, &
+                      units=units)
     else
-       call stmAddString(xf, str(value), id, title, dictref,     &
-                         'xsd:double', convention,      &
-                         errorValue, errorBasis, min, max, units)
+       call stmAddString(xf=xf, value=str(value, fmt), id=id, title=title, &
+                      dictRef=dictref, dataType='xsd:float', &
+                      convention=convention, errorValue=errorValue, &
+                      errorBasis=errorBasis, min=min, max=max, ref=ref, &
+                      units=units)
     endif
 
   end subroutine stmAddFloatSP
@@ -243,7 +257,7 @@ contains
     if (present(dictref)) call xml_AddAttribute(xf, 'dictRef', dictref)
     if (present(dataType))    call xml_AddAttribute(xf, 'dataType', dataType)
     if (present(ref))    call xml_AddAttribute(xf, 'ref', ref)
-    if (present(units))    call xml_AddAttribute(xf, 'ref', units)
+    if (present(units))    call xml_AddAttribute(xf, 'units', units)
     if (present(delim)) then
       call xml_AddAttribute(xf, 'delimiter', delim)
     else
