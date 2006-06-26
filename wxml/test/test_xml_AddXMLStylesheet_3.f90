@@ -1,7 +1,7 @@
 program test
 
-  use xmlf90_wxml, only : xmlf_t, xml_OpenFile, xml_Close
-  use xmlf90_wxml, only : xml_AddXMLStylesheet
+  use FoX_wxml, only : xmlf_t, xml_OpenFile, xml_Close
+  use FoX_wxml, only : xml_AddXMLStylesheet
   implicit none
 
   character(len=*), parameter :: filename = 'test.xml'

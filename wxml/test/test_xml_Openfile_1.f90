@@ -1,6 +1,6 @@
 program test_xml_Openfile
 
-  use xmlf90_wxml
+  use FoX_wxml
   implicit none
 
   character(len=*), parameter :: filename = 'test.xml'

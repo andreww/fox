@@ -1,6 +1,6 @@
 #!/bin/sh -e
 
-INCFLAGS=`sh ../../xmlf90-config.sh --fcflags`
+INCFLAGS=`../../FoX-config --fcflags --wxml`
 
 rm -f test.xml
 make test_xml_Openfile_1.exe
@@ -50,8 +50,8 @@ rm -f test.xml
 
 # check that we replace existing file by default
 echo TESTINPUT > test.xml
-make test_xml_Openfile_1
-./test_xml_OpenFile_1
+make test_xml_Openfile_1.exe
+./test_xml_OpenFile_1.exe
 if grep -v TESTINPUT test.xml >/dev/null; then
    PASSED=yes
 else

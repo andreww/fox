@@ -1,6 +1,6 @@
 program short_test
 
-  use xmlf90_wxml, only : str
+  use FoX_wxml, only : str
 
   call internal()
 

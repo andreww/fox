@@ -1,9 +1,12 @@
 #!/bin/sh -e
 
-export INCFLAGS=`sh ../../xmlf90-config.sh --fcflags`
+export INCFLAGS=`../../FoX-config --fcflags --wxml`
 make clean
 rm -f passed.score failed.score
 rm -f tests.out failed.out
+
+echo "Testing XML File creation"
+./test_xml_openFile.sh
 
 echo "Testing XML Stylesheet"
 ./test_xml_AddXMLStylesheet.sh
@@ -11,8 +14,10 @@ echo "Testing XML Stylesheet"
 echo "Testing XML Declaration"
 ./test_xml_AddXMLDeclaration.sh
 
-echo "Testing XML File creation"
-./test_xml_openFile.sh
+exit
+
+#Cannot do tests below until we have well-specified
+#numerical output
 
 echo "Testing integer to string conversion"
 

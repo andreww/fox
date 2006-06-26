@@ -1,9 +1,7 @@
 include ../../arch.make
 
-INCFLAGS=$(MOD_PREFIX)../../objs/finclude
-
-.o.exe:
-	$(FC) $(LDFLAGS) -o $@ $< `sh ../../xmlf90-config.sh --libs`
+.f90.exe:
+	$(FC) $(FFLAGS) $(INCFLAGS) $(LDFLAGS) $(FCFLAGS_free_f90) -o $@ $< `../../FoX-config --libs --wxml`
 	
 clean:
 	rm -f *.o *.exe
