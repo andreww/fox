@@ -4,9 +4,9 @@ use m_common_array_str, only: assign_array_to_str
 use m_common_array_str, only: assign_str_to_array
 use m_common_elstack
 use m_common_buffer
+use m_common_attrs
 use m_wxml_error
 use m_wxml_escape, only: check_Name, escape_string
-use m_wxml_dictionary
 use m_wxml_text, only : len_escaping_markup, str
 
 use pxf, only: pxfabort
@@ -48,7 +48,7 @@ type, public :: xmlf_t
    integer                 :: lun
    type(buffer_t)          :: buffer
    type(elstack_t)         :: stack
-   type(wxml_dictionary_t) :: dict
+   type(dictionary_t)      :: dict
    integer                 :: state_1
    integer                 :: state_2
    logical                 :: indenting_requested
@@ -436,7 +436,7 @@ type(xmlf_t), intent(inout)   :: xf
   write(unit=xf%lun,fmt="(a)") char(xf%buffer)
   close(unit=xf%lun)
 
-  call reset_dict(xf%dict)
+  call destroy_dict(xf%dict)
   call destroy_elstack(xf%stack)
 
   deallocate(xf%filename)

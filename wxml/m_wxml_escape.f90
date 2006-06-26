@@ -47,7 +47,7 @@ contains
 
     integer :: c, i
 
-    c = 0
+    c = 1
     do i = 1, len(str)
       select case(str(i:i))
       case ('&')
