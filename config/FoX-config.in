@@ -50,16 +50,16 @@ while test $# -gt 0; do
        	;;
 
     --wxml)
-        MODULES="$MODULES wxml fsys"
+        MODULES="$MODULES wxml common fsys"
         ;;
     --wcml)
-        MODULES="$MODULES wcml wxml fsys"
+        MODULES="$MODULES wcml wxml common fsys"
         ;;
     --sax)
-        MODULES="$MODULES sax"
+        MODULES="$MODULES sax common fsys"
         ;;
     --dom)
-        MODULES="$MODULES dom sax wxml fsys"
+        MODULES="$MODULES dom sax wxml common fsys"
         ;;
 
     *)
@@ -72,6 +72,9 @@ done
 
 if [[ $MODULES = *fsys* ]]; then
   LIBS=-lfsys
+fi
+if [[ $MODULES = *common* ]]; then
+  LIBS="-lFoX_common $LIBS"
 fi
 if [[ $MODULES = *wxml* ]]; then
   LIBS="-lFoX_wxml $LIBS"
@@ -86,15 +89,15 @@ if [[ $MODULES = *dom* ]]; then
   LIBS="-lFoX_dom $LIBS"
 fi
 if [ -z "$LIBS" ]; then
-  LIBS="-lFoX_dom -lFoX_sax -lFoX_wcml -lFoX_wxml -lfsys"
+  LIBS="-lFoX_dom -lFoX_sax -lFoX_wcml -lFoX_wxml -lFoX_common -lfsys"
 fi
 
 case $FLAGS in
   FC)
-    echo @FC_MOD_FLAG@\"$(@CYGPATH_W@ $moddir)\"
+    echo @FC_MOD_FLAG@"$(@CYGPATH_W@ $moddir)"
     ;;
   LD)
-    echo -L\"$(@CYGPATH_W@ $libdir)\" $LIBS
+    echo -L"$(@CYGPATH_W@ $libdir)" $LIBS
     ;;
 esac 
 
