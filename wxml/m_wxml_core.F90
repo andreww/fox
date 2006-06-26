@@ -64,7 +64,6 @@ module m_wxml_core
   public :: xml_AddXMLStylesheet
   public :: xml_AddXMLPI
   public :: xml_AddComment
-  public :: xml_AddCharacters
   public :: xml_AddTextSection
   public :: xml_AddPcdata
   public :: xml_AddAttribute
@@ -272,30 +271,6 @@ subroutine xml_AddComment(xf,comment)
 end subroutine xml_AddComment
 
 
-subroutine xml_AddCharacters(xf, chars, parsed)
-  type(xmlf_t), intent(inout)   :: xf
-  character(len=*), intent(in)  :: chars
-  logical, intent(in), optional :: parsed
-
-  logical :: pc
-
-  if (present(parsed)) then
-    pc = parsed
-  else
-    pc = .true.
-  endif
-
-  if (pc) then
-    call add_to_buffer(escape_String(chars), xf%buffer)
-  else
-    if (index(chars,']]>') > 0) &
-      call wxml_error("Tried to output invalid CDATA")
-    call add_to_buffer("<![CDATA["//chars//"]]>", xf%buffer)
-  endif
-
-end subroutine xml_AddCharacters
-
-
 subroutine xml_NewElement(xf,name)
 type(xmlf_t), intent(inout)   :: xf
 character(len=*), intent(in)  :: name
@@ -332,7 +307,8 @@ subroutine xml_AddTextSection(xf, chars, parsed)
 
   logical :: pc
 
-  if (xf%state_2 /= WXML_STATE_2_INSIDE_ELEMENT) &
+  if (xf%state_2 /= WXML_STATE_2_INSIDE_ELEMENT .and. &
+      xf%state_2 /= WXML_STATE_2_OUTSIDE_TAG)         &
     call wxml_fatal("Tried to add text section in wrong place.")
 
   if (present(parsed)) then
