@@ -29,6 +29,5 @@ clean:
 	rm -f *.o  *.$(MOD_EXT) $(LIBRARY)
 # DO NOT DELETE THIS LINE - used by make depend
 FoX_wxml.o: m_wxml_core.o m_wxml_overloads.o m_wxml_text.o
-m_wxml_core.o: m_wxml_array_str.o m_wxml_escape.o
-m_wxml_core.o: m_wxml_text.o
+m_wxml_core.o: m_wxml_error.o m_wxml_escape.o m_wxml_text.o
 m_wxml_overloads.o: m_wxml_core.o m_wxml_text.o

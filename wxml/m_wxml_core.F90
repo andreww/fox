@@ -6,8 +6,8 @@ use m_common_elstack
 use m_common_buffer
 use m_common_attrs
 use m_wxml_error
-use m_wxml_escape, only: check_Name, escape_string
-use m_wxml_text, only : len_escaping_markup, str
+use m_wxml_escape, only: check_Name, escape_string, escape_string_len
+use m_wxml_text, only: str
 
 use pxf, only: pxfabort
 
@@ -58,19 +58,20 @@ public :: xml_OpenFile, xml_NewElement, xml_EndElement, xml_Close
 public :: xml_AddXMLDeclaration
 public :: xml_AddXMLStylesheet
 public :: xml_AddXMLPI
-public :: xml_AddComment, xml_AddCdataSection
+public :: xml_AddComment
+public :: xml_AddCdataSection
 public :: xml_AddPcdata
-public ::  xml_AddAttribute
-public ::  xml_AddPseudoAttribute
+public :: xml_AddAttribute
+public :: xml_AddPseudoAttribute
+ 
 interface xml_AddPcdata
   module procedure xml_AddPcdata_Ch
 end interface
- 
 interface xml_AddAttribute
   module procedure xml_AddAttribute_Ch
 end interface
 interface xml_AddPseudoAttribute
-  module procedure xml_AddPseudoAttribute_Ch, xml_AddPseudoAttribute_Int
+  module procedure xml_AddPseudoAttribute_Ch
 end interface
  
 !public :: xml_AddArray
@@ -334,7 +335,7 @@ subroutine xml_AddPcdata_Ch(xf,pcdata,space,line_feed)
     advance_space = .false.
   else
     if (xf%indenting_requested) then
-      if ((len(xf%buffer) + len_escaping_markup(pcdata) + 1) > COLUMNS ) then
+      if ((len(xf%buffer) + escape_string_len(pcdata) + 1) > COLUMNS ) then
         call add_eol(xf)
         advance_space = .false.
       endif
@@ -345,6 +346,22 @@ subroutine xml_AddPcdata_Ch(xf,pcdata,space,line_feed)
   call add_to_buffer(escape_String(pcdata), xf%buffer)
 
 end subroutine xml_AddPcdata_Ch
+
+subroutine xml_AddAttribute_Ch(xf,name,value)
+  type(xmlf_t), intent(inout)   :: xf
+  character(len=*), intent(in)  :: name
+  character(len=*), intent(in)  :: value
+
+  if (xf%state_2 /= WXML_STATE_2_INSIDE_ELEMENT) &
+    call wxml_error(xf, "attributes outside element content")
+
+  if (has_key(xf%dict,name)) then
+    call wxml_error(xf, "duplicate att name")
+  endif
+
+  call add_item_to_dict(xf%dict, name, value)
+
+end subroutine xml_AddAttribute_Ch
 
 subroutine xml_AddPseudoAttribute_Ch(xf, name, value)
   type(xmlf_t), intent(inout)   :: xf
@@ -361,38 +378,20 @@ subroutine xml_AddPseudoAttribute_Ch(xf, name, value)
 
 end subroutine xml_AddPseudoAttribute_Ch
 
-subroutine xml_AddPseudoAttribute_Int(xf, name, value)
-  type(xmlf_t), intent(inout)  :: xf
-  character(len=*), intent(in) :: name
-  integer, intent(in)          :: value
+subroutine xml_AddArray_Ch(xf, array)
+  type(xmlf_t), intent(inout) :: xf
+  character(len=*), dimension(:), intent(in) :: array
 
-  if (xf%state_2 /= WXML_STATE_2_INSIDE_PI) &
-     call wxml_fatal("PI pseudo-attribute outside PI")
+  integer :: i,n
+  !If appropriate
 
-  if (has_key(xf%dict,name)) &
-     call wxml_error(xf, "duplicate PI pseudo-attribute name")
-  
-  call add_item_to_dict(xf%dict, name, str(value))
+  n = size(array)
+  do i = 1, n-1
+    call add_to_buffer(array(i)//' ', xf%buffer)
+  enddo
+  call add_to_buffer(array(n), xf%buffer)
 
-end subroutine xml_AddPseudoAttribute_Int
-
-
-!-------------------------------------------------------------------
-subroutine xml_AddAttribute_Ch(xf,name,value)
-  type(xmlf_t), intent(inout)   :: xf
-  character(len=*), intent(in)  :: name
-  character(len=*), intent(in)  :: value
-
-  if (xf%state_2 /= WXML_STATE_2_INSIDE_ELEMENT) &
-    call wxml_error(xf, "attributes outside element content")
-
-  if (has_key(xf%dict,name)) then
-    call wxml_error(xf, "duplicate att name")
-  endif
-
-  call add_item_to_dict(xf%dict, name, value)
-
-end subroutine xml_AddAttribute_Ch
+end subroutine xml_AddArray_Ch  
 
 !-----------------------------------------------------------
 subroutine xml_EndElement(xf,name)
@@ -537,7 +536,7 @@ if (xf%state_2 /= WXML_STATE_2_INSIDE_PI .and. &
   call wxml_fatal("Internal library error")
 
 do i = 1, len(xf%dict)
-   size = len(get_key(xf%dict, i)) + len_escaping_markup(get_value(xf%dict, i)) + 4
+   size = len(get_key(xf%dict, i)) + escape_string_len(get_value(xf%dict, i)) + 4
    if ((len(xf%buffer) + size) > COLUMNS) call add_eol(xf)
    call add_to_buffer(" ", xf%buffer)
    call add_to_buffer(get_key(xf%dict, i), xf%buffer)

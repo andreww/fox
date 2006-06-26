@@ -10,6 +10,7 @@ module m_wxml_escape
 
   public :: check_Name
   public :: escape_string
+  public :: escape_string_len
 
   character(len=*), parameter :: LETTER = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
   character(len=*), parameter :: DIGIT  = '1234567890'

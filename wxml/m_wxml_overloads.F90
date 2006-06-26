@@ -7,14 +7,10 @@ module m_wxml_overloads
   use m_wxml_core, only: xml_AddPseudoAttribute_Ch => xml_AddPseudoAttribute
 
   implicit none
+  private
 
   integer, parameter ::  sp = selected_real_kind(6,30)
   integer, parameter ::  dp = selected_real_kind(14,100)
-
-  private
-
-  public :: xml_AddPcdata
-  public :: xml_AddAttribute
 
   interface xml_AddPcData
      module procedure xml_AddPcdata_SP
@@ -37,7 +33,11 @@ module m_wxml_overloads
      module procedure xml_AddPseudoAttribute_Log
   end interface
 
-CONTAINS
+  public :: xml_AddPcdata
+  public :: xml_AddAttribute
+  public :: xml_AddPseudoAttribute
+
+contains
 
   !-------------------------------------------------------------------
 

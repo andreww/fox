@@ -1,23 +1,22 @@
 module m_wxml_text
 
-implicit none
-!
-integer, private, parameter ::  sp = selected_real_kind(6,30)
-integer, private, parameter ::  dp = selected_real_kind(14,100)
-!
-private
-public :: str
-public :: xml_Encode
-public :: len_escaping_markup
+  implicit none
+  private
 
-interface str
-   module procedure  str_integer_fmt, str_integer, &
-                     str_logical_fmt, str_logical, &
-                     str_real_dp_no_fmt, str_real_dp_with_fmt, &
-                     str_real_sp_no_fmt, str_real_sp_with_fmt
-end interface
+  integer, parameter ::  sp = selected_real_kind(6,30)
+  integer, parameter ::  dp = selected_real_kind(14,100)
 
-CONTAINS
+  interface str
+    module procedure  str_integer_fmt, str_integer, &
+                      str_logical_fmt, str_logical, &
+                      str_real_dp_no_fmt, str_real_dp_with_fmt, &
+                      str_real_sp_no_fmt, str_real_sp_with_fmt
+  end interface
+
+  public :: str
+
+contains 
+
 #ifndef PGF90
       elemental &
 #endif
@@ -194,63 +193,5 @@ CONTAINS
         s = adjustl(s)
         n = len_trim(s)
       end function str_real_sp_len
-
-#ifndef PGF90
-      pure &
-#endif 
-      function xml_Encode(str) result (enc_str)
-        character(len=*), intent(in) :: str
-        character(len=len_escaping_markup(str)) :: enc_str
-
-        character :: c
-        integer :: i, p
-
-	p = 1
-        do i = 1, len(str)
-          c = str(i:i)
-          select case (c)
-          case ('<')
-            enc_str(p:p+3) = '&lt;'
-            p = p+4
-          case ('&')
-            enc_str(p:p+4) = '&amp;'
-            p = p+5
-          case ('"')
-            enc_str(p:p+5) = '&quot;'
-            p = p+6
-          case ("'")
-            enc_str(p:p+5) = '&apos;'
-            p = p+6
-          case default
-            enc_str(p:p) = c
-            p = p+1
-          end select
-        enddo
-
-      end function xml_Encode 
-      
-#ifndef PGF90
-      elemental &
-#endif 
-      function len_escaping_markup(str) result(p)
-        character(len=*), intent(in) :: str
-        integer :: p
-        integer :: i
-
-        p = len(str)
-        do i = 1, len(str)
-          select case (str(i:i))
-          case ('<')
-            p = p + 4
-          case ('&')
-            p = p + 5
-          case ('"')
-            p = p + 6
-          case ("'")
-            p = p + 6
-          end select
-        enddo
-
-      end function len_escaping_markup
 
 end module m_wxml_text
