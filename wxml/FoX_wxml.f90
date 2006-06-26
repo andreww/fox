@@ -18,7 +18,8 @@ module FoX_wxml
   public :: xml_AddXMLStylesheet
   public :: xml_AddXMLPI
   public :: xml_AddComment
-  public :: xml_AddCdataSection
+  public :: xml_AddCharacters
+  public :: xml_AddTextSection
 
   public :: xml_AddPcdata
   public :: xml_AddAttribute

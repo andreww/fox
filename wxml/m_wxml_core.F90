@@ -54,12 +54,16 @@ type, public :: xmlf_t
    logical                 :: indenting_requested
 end type xmlf_t
 
-public :: xml_OpenFile, xml_NewElement, xml_EndElement, xml_Close
+public :: xml_OpenFile
+public :: xml_NewElement
+public :: xml_EndElement
+public :: xml_Close
 public :: xml_AddXMLDeclaration
 public :: xml_AddXMLStylesheet
 public :: xml_AddXMLPI
 public :: xml_AddComment
-public :: xml_AddCdataSection
+public :: xml_AddCharacters
+public :: xml_AddTextSection
 public :: xml_AddPcdata
 public :: xml_AddAttribute
 public :: xml_AddPseudoAttribute
@@ -98,7 +102,7 @@ integer, parameter  :: COLUMNS = 80
 ! can be tuned for performance.
 integer, parameter  :: xml_recl = 4096
 
-CONTAINS
+contains
 
 !-------------------------------------------------------------------
 subroutine xml_OpenFile(filename, xf, indent, channel, replace, addDecl)
@@ -267,26 +271,31 @@ subroutine xml_AddComment(xf,comment)
 
 end subroutine xml_AddComment
 
-!NB No necessity for a processor to output CDATA on request;
-! it is at the discretion of the processor whether character 
-! data is CDATA or PCDATA. Therefore don't bother.
-!-------------------------------------------------------------------
-subroutine xml_AddCdataSection(xf,cdata)
-type(xmlf_t), intent(inout)   :: xf
-character(len=*), intent(in)  :: cdata
-!
-if (index(cdata,']]>') > 0) &
-   call wxml_error("Tried to output invalid CDATA")
-!
-!TOHW FIXMW state machine
-!
-!call close_start_tag(xf)
-!call add_to_buffer("<![CDATA[", xf%buffer)
-!call add_to_buffer(cdata, xf%buffer)
-!@call add_to_buffer("]]>", xf%buffer)
-end subroutine xml_AddCdataSection
 
-!-------------------------------------------------------------------
+subroutine xml_AddCharacters(xf, chars, parsed)
+  type(xmlf_t), intent(inout)   :: xf
+  character(len=*), intent(in)  :: chars
+  logical, intent(in), optional :: parsed
+
+  logical :: pc
+
+  if (present(parsed)) then
+    pc = parsed
+  else
+    pc = .true.
+  endif
+
+  if (pc) then
+    call add_to_buffer(escape_String(chars), xf%buffer)
+  else
+    if (index(chars,']]>') > 0) &
+      call wxml_error("Tried to output invalid CDATA")
+    call add_to_buffer("<![CDATA["//chars//"]]>", xf%buffer)
+  endif
+
+end subroutine xml_AddCharacters
+
+
 subroutine xml_NewElement(xf,name)
 type(xmlf_t), intent(inout)   :: xf
 character(len=*), intent(in)  :: name
@@ -314,7 +323,36 @@ character(len=*), intent(in)  :: name
   call reset_dict(xf%dict)
 
 end subroutine xml_NewElement
-!-------------------------------------------------------------------
+
+
+subroutine xml_AddTextSection(xf, chars, parsed)
+  type(xmlf_t), intent(inout)   :: xf
+  character(len=*), intent(in)  :: chars
+  logical, intent(in), optional :: parsed
+
+  logical :: pc
+
+  if (xf%state_2 /= WXML_STATE_2_INSIDE_ELEMENT) &
+    call wxml_fatal("Tried to add text section in wrong place.")
+
+  if (present(parsed)) then
+    pc = parsed
+  else
+    pc = .true.
+  endif
+
+  call close_start_tag(xf)
+  
+  if (pc) then
+    call add_to_buffer(escape_String(chars), xf%buffer)
+  else
+    if (index(chars,']]>') > 0) &
+      call wxml_error("Tried to output invalid CDATA")
+    call add_to_buffer("<![CDATA["//chars//"]]>", xf%buffer)
+  endif
+end subroutine xml_AddTextSection
+
+  
 subroutine xml_AddPcdata_Ch(xf,pcdata,space,line_feed)
   type(xmlf_t), intent(inout)   :: xf
   character(len=*), intent(in)  :: pcdata
@@ -323,12 +361,7 @@ subroutine xml_AddPcdata_Ch(xf,pcdata,space,line_feed)
 
   logical :: advance_line , advance_space
 
-!TOHW FIXME we should never do this inside an
-! element but I think we might.
-! also we might want to output CDATA if there's too
-! much quoting going on??
-! Rename to CharData?
-
+!FIXME here
   if (xf%state_1 /= WXML_STATE_1_DURING_ROOT) &
     call wxml_error("Cannot output character data here.")
 
@@ -361,6 +394,7 @@ subroutine xml_AddPcdata_Ch(xf,pcdata,space,line_feed)
 
 end subroutine xml_AddPcdata_Ch
 
+
 subroutine xml_AddAttribute_Ch(xf,name,value)
   type(xmlf_t), intent(inout)   :: xf
   character(len=*), intent(in)  :: name
@@ -377,6 +411,7 @@ subroutine xml_AddAttribute_Ch(xf,name,value)
 
 end subroutine xml_AddAttribute_Ch
 
+
 subroutine xml_AddPseudoAttribute_Ch(xf, name, value)
   type(xmlf_t), intent(inout)   :: xf
   character(len=*), intent(in)  :: name
@@ -391,6 +426,7 @@ subroutine xml_AddPseudoAttribute_Ch(xf, name, value)
   call add_item_to_dict(xf%dict, name, value)
 
 end subroutine xml_AddPseudoAttribute_Ch
+
 
 subroutine xml_AddArray_Ch(xf, array)
   type(xmlf_t), intent(inout) :: xf
@@ -407,7 +443,7 @@ subroutine xml_AddArray_Ch(xf, array)
 
 end subroutine xml_AddArray_Ch  
 
-!-----------------------------------------------------------
+
 subroutine xml_EndElement(xf,name)
   type(xmlf_t), intent(inout)   :: xf
   character(len=*), intent(in)  :: name
@@ -433,7 +469,6 @@ subroutine xml_EndElement(xf,name)
 
 end subroutine xml_EndElement
 
-!----------------------------------------------------------------
 
 subroutine xml_Close(xf)
 type(xmlf_t), intent(inout)   :: xf
