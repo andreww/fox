@@ -7,7 +7,8 @@ module m_sax_dtd
 
   use m_common_array_str, only : str_vs, vs_str
   use m_common_error, only: FoX_error
-  use m_sax_entities, only: entity_list, add_char_entity, init_entity_list, destroy_entity_list
+  use m_sax_entities, only: entity_list, add_char_entity, init_entity_list, destroy_entity_list, &
+    code_to_string
 
   implicit none
   private
@@ -55,6 +56,7 @@ module m_sax_dtd
     integer :: curr_pos
     logical :: external_found
     logical :: parameter_entity
+    logical :: internal_subset
   end type dtd_parser
 
   public :: parse_dtd
@@ -86,6 +88,7 @@ contains
     parse_state%dtd_state = DTD_INIT
     parse_state%curr_pos = 1
     parse_state%external_found = .false.
+    parse_state%internal_subset = .false.
   end subroutine init_dtd_parser
 
   subroutine destroy_dtd_parser(parse_state)
@@ -163,6 +166,7 @@ contains
         endif
         if (str_vs(parse_state%token) == "[") then
           parse_state%dtd_state = DTD_INTERNAL
+          parse_state%internal_subset = .false.
           if (debug) print*,'Internal subset found'
         else
           call FoX_error("Invalid DTD found")
@@ -376,6 +380,8 @@ contains
   subroutine tokenize_dtd(parse_state)
     type(dtd_parser), intent(inout) :: parse_state
 
+    character(len=1), allocatable, dimension(:) :: PEref, PEexpanded, dtdtmp
+
     integer :: c, cp, cp1
 
     deallocate(parse_state%token)
@@ -471,6 +477,25 @@ contains
       allocate(parse_state%token(cp+1))
       parse_state%token = parse_state%dtd(c:c+cp)
       parse_state%curr_pos = c + cp + 1
+      return
+      
+    elseif (parse_state%dtd(c) == "%") then
+      cp = index(str_vs(parse_state%dtd(c+1:)), ';')
+      if (cp == 0) &
+        call FoX_error("Unterminated PE reference")
+      allocate(PEref(cp))
+      PEref = parse_state%dtd(c+1:c+cp)
+      allocate(PEexpanded(len(code_to_string(parse_state%pe_list, PEref))))
+      PEexpanded = code_to_string(parse_state%pe_list, PEref)
+      allocate(dtdtmp(size(parse_state%dtd) - cp - 2 + size(PEexpanded)))
+      dtdtmp(:c-1) = dtd(:c-1)
+      dtdtmp(c:c+size(PEexpanded)) = PEexpanded
+      dtdtmp(c+size(PEexpanded):) = dtd(c+cp+2:)
+      deallocate(parse_state%dtd)
+      allocate(parse_state%dtd(size(dtdtmp)))
+      parse_state%dtd = dtdtmp
+      allocate(parse_state%token(1))
+      parse_state%token = " " !this should trigger nothing in the parser, so reparsing will occur.
       return
 
     elseif (all(parse_state%dtd(c:c+6) == vs_str('DOCTYPE')))then
