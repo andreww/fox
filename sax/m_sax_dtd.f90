@@ -8,7 +8,7 @@ module m_sax_dtd
   use m_common_array_str, only : str_vs, vs_str
   use m_common_error, only: FoX_error
   use m_sax_entities, only: entity_list, add_char_entity, init_entity_list, destroy_entity_list, &
-    code_to_string
+    code_to_str, code_to_str_len
 
   implicit none
   private
@@ -121,6 +121,14 @@ contains
 
     do 
       call tokenize_dtd(parse_state)
+
+      print*, 'token found!'
+      print'(3a)', '|', str_vs(parse_state%token), '|'
+
+      if (parse_state%token(1) == ' ') then
+        !we just did a PE replacement
+        cycle
+      endif
 
       if (size(parse_state%token) == 0) then
         select case(parse_state%dtd_state)
@@ -382,7 +390,7 @@ contains
 
     character(len=1), allocatable, dimension(:) :: PEref, PEexpanded, dtdtmp
 
-    integer :: c, cp, cp1
+    integer :: c, cp, cp1, n
 
     deallocate(parse_state%token)
     c = parse_state%curr_pos
@@ -480,22 +488,34 @@ contains
       return
       
     elseif (parse_state%dtd(c) == "%") then
+      if (verify(parse_state%dtd(c+1), spaces) == 0) then
+        allocate(parse_state%token(1))
+        parse_state%token(1) = "%"
+        parse_state%curr_pos = c + 1
+        return
+      endif
+      ! We have a PE we need to replace. Is it registered?
       cp = index(str_vs(parse_state%dtd(c+1:)), ';')
       if (cp == 0) &
         call FoX_error("Unterminated PE reference")
       allocate(PEref(cp))
       PEref = parse_state%dtd(c+1:c+cp)
-      allocate(PEexpanded(len(code_to_string(parse_state%pe_list, PEref))))
-      PEexpanded = code_to_string(parse_state%pe_list, PEref)
-      allocate(dtdtmp(size(parse_state%dtd) - cp - 2 + size(PEexpanded)))
-      dtdtmp(:c-1) = dtd(:c-1)
-      dtdtmp(c:c+size(PEexpanded)) = PEexpanded
-      dtdtmp(c+size(PEexpanded):) = dtd(c+cp+2:)
+      n = code_to_str_len(parse_state%pe_list, str_vs(PEref))
+      if (n == 0) &
+        call FoX_error("Unregistered PE")
+      ! Yes, we must rewrite the DTD string.
+      allocate(PEexpanded(n))
+      PEexpanded = code_to_str(parse_state%pe_list, str_vs(PEref))
+      allocate(dtdtmp(size(parse_state%dtd) - cp - 2 + n))
+      dtdtmp(:c-1) = parse_state%dtd(:c-1)
+      dtdtmp(c:c+n-1) = PEexpanded
+      dtdtmp(c+n:) = parse_state%dtd(c+cp+2:)
       deallocate(parse_state%dtd)
       allocate(parse_state%dtd(size(dtdtmp)))
       parse_state%dtd = dtdtmp
       allocate(parse_state%token(1))
-      parse_state%token = " " !this should trigger nothing in the parser, so reparsing will occur.
+      parse_state%token = " " 
+      !this should trigger nothing in the parser, so reparsing will occur.
       return
 
     elseif (all(parse_state%dtd(c:c+6) == vs_str('DOCTYPE')))then

@@ -93,14 +93,14 @@ equal = .true.
 
 end function compare_vs_vs
 
-  function str_vs(vs) result(s)
+  pure function str_vs(vs) result(s)
     character, dimension(:), intent(in) :: vs
     character(len=size(vs)) :: s
 
     s = transfer(vs, s)
   end function str_vs
 
-  function vs_str(s) result(vs)
+  pure function vs_str(s) result(vs)
     character(len=*), intent(in) :: s
     character, dimension(len(s)) :: vs
 

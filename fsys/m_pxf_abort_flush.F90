@@ -66,7 +66,7 @@ end subroutine pxfflush
 ! on every platform I've tried it with. Just in case it doesn't (it need
 ! not even stop execution) a stop is given to force termination.
 
-subroutine pxfabort()
+pure subroutine pxfabort()
 #ifdef __NAG__
   use f90_unix_proc, only : abort
 #endif
@@ -86,8 +86,6 @@ subroutine pxfabort()
   i=>null()
   Print*,i
 #endif
-
-  stop
 
 end subroutine pxfabort
 

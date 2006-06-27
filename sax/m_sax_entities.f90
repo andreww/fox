@@ -9,10 +9,9 @@ module m_sax_entities
 use m_common_array_str, only: str_vs, vs_str
 use m_common_buffer
 use m_common_error, only : FoX_warning, FoX_error
+use m_common_format, only : str_to_int_10, str_to_int_16
 implicit none
 private
-
-integer, parameter :: MAX_REPLACEMENT_SIZE = 200
 
 type entity_t
   character(len=1), dimension(:), pointer :: code
@@ -24,9 +23,12 @@ type entity_list
   type(entity_t), dimension(:), pointer :: list
 end type entity_list
 
-integer, parameter  ::  N_ENTITIES  = 5
+character(len=*), parameter :: digits = "0123456789"
+character(len=*), parameter :: hexdigits = "0123456789abcdefABCDEF"
 
 public :: code_to_str , entity_filter
+public :: code_to_str_len
+public :: code_registered
 
 public :: entity_list
 public :: init_entity_list
@@ -36,41 +38,35 @@ public :: add_char_entity
 
 contains
 
-  subroutine init_entity_list(ents)
+  subroutine init_entity_list(ents, standard)
     type(entity_list), intent(out) :: ents
+    logical, optional :: standard
 
     allocate(ents%list(0))
+
+    if (present(standard)) then
+      if (.not.standard) then
+        return
+      endif
+    endif
     call add_char_entity(ents, "gt", ">")
     call add_char_entity(ents, "lt", "<")
     call add_char_entity(ents, "apos", "'")
     call add_char_entity(ents, "quot", '"')
     call add_char_entity(ents, "amp", "&")
+
   end subroutine init_entity_list
 
 
-  subroutine reset_entity_list(ents)
+  subroutine reset_entity_list(ents, standard)
     type(entity_list), intent(inout) :: ents
+    logical, optional :: standard
 
     type(entity_list) :: ents_tmp
     integer :: i, n
 
-    n = size(ents%list)
-    
-    allocate(ents_tmp%list(n))
-    do i = 1, 5
-      ents_tmp%list(i)%code => ents%list(i)%code
-      ents_tmp%list(i)%repl => ents%list(i)%repl
-    enddo
-    do i = 6, n
-      deallocate(ents%list(i)%code)
-      deallocate(ents%list(i)%repl)
-    enddo
-    deallocate(ents%list)
-    allocate(ents%list(5))
-    do i = 1, 5
-      ents%list(i)%code => ents_tmp%list(i)%code
-      ents%list(i)%repl => ents_tmp%list(i)%repl
-    enddo
+    call destroy_entity_list(ents)
+    call init_entity_list(ents, standard)
 
   end subroutine reset_entity_list
 
@@ -110,29 +106,77 @@ contains
       ents%list(i)%code => ents_tmp%list(i)%code
       ents%list(i)%repl => ents_tmp%list(i)%repl
     enddo
+    deallocate(ents_tmp%list)
     allocate(ents%list(i)%code(len(code)))
     allocate(ents%list(i)%repl(len(repl)))
     ents%list(i)%code = vs_str(code)
     ents%list(i)%repl = vs_str(repl)
   end subroutine add_char_entity
 
-
-  subroutine code_to_str(ents, code, str, status)
-    type(entity_list), intent(inout) :: ents
+  
+  pure function code_registered(ents, code) result(p)
+    type(entity_list), intent(in) :: ents
     character(len=*), intent(in)  :: code
-    character(len=*), intent(out) :: str
-    integer, intent(out)          :: status         
+    logical :: p
+
     integer :: i
 
-    integer   :: number, ll
-    character(len=4)  :: fmtstr
+    p = .false.
 
-    status = -1
+    if (len(code) > 1) then
+      if (code(1:1) == "#") then
+        if (code(2:2) == "x") then
+          if (len(code) > 2) p = (verify(code(3:), hexdigits) == 0)
+        else
+          p = (verify(code(2:), digits) == 0)
+        endif
+      endif
+    endif
+        
     do i = 1, size(ents%list)
       if (code == str_vs(ents%list(i)%code)) then
-         str = str_vs(ents%list(i)%repl)
-         status = 0
-         return
+        p = .true.
+        return
+      endif
+    enddo
+
+  end function code_registered
+
+  pure function code_to_str_len(ents, code) result(n)
+    type(entity_list), intent(in) :: ents
+    character(len=*), intent(in)  :: code
+    integer :: n
+
+    integer :: i
+
+    if (.not.code_registered(ents, code)) then
+      n = 0
+      return
+    endif
+
+    if (code(1:1) == "#") then
+      n = 1
+    endif
+
+    do i = 1, size(ents%list)
+      if (code == str_vs(ents%list(i)%code)) then
+        n = size(ents%list(i)%repl)
+        return
+      endif
+    enddo
+  end function code_to_str_len
+
+  function code_to_str(ents, code) result(repl)
+    type(entity_list), intent(in) :: ents
+    character(len=*), intent(in)  :: code
+    character(len=code_to_str_len(ents, code)) :: repl
+
+    integer :: number, i
+
+    do i = 1, size(ents%list)
+      if (code == str_vs(ents%list(i)%code)) then
+        repl = str_vs(ents%list(i)%repl)
+        return
       endif
     enddo
 
@@ -140,21 +184,16 @@ contains
     ! char intrinsic !!)
     if (code(1:1) == "#") then
       if (code(2:2) == "x") then       ! hex character reference
-        ll = len_trim(code(3:))
-        write(unit=fmtstr,fmt="(a2,i1,a1)") "(Z", ll,")"
-        read(unit=code(3:),fmt=fmtstr) number
-        str = char(number)
-        status = 0
-        return
+        number = str_to_int_16(code(3:))   
+        repl = char(number)
       else                             ! decimal character reference
-        read(unit=code(2:),fmt=*) number
-        str = char(number)
-        status = 0
-        return
+        number = str_to_int_10(code(3:))   
+        repl = char(number)
       endif
     endif
 
-  end subroutine code_to_str
+  end function code_to_str
+    
 
   subroutine entity_filter(ents, buf1, buf2)
     type(entity_list), intent(inout) :: ents
@@ -165,10 +204,8 @@ contains
     integer :: i, k, len1
     character(len=MAX_BUFF_SIZE)           :: s1
     character(len=1)                       :: c
-    character(len=MAX_REPLACEMENT_SIZE)    :: repl
 
-    character(len=120)                     :: message
-    integer                                :: status
+    integer                                :: n
 
     call buffer_to_character(buf1,s1)        !! Avoid allocation of temporary
     len1 = len(buf1)
@@ -182,22 +219,19 @@ contains
       c = s1(i:i)
       if (c == "&") then
         if (i+1 > len1) then
-          message=  " Unmatched & in entity reference"
-          call FoX_error(message)
+          call FoX_error("Unmatched & in entity reference")
           return
         endif
         k = index(s1(i+1:),";")
         if (k == 0) then
-          message=  " Unmatched & in entity reference"
-          call FoX_error(message)
+          call FoX_error("Unmatched & in entity reference")
           return
         endif
-        call code_to_str(ents, s1(i+1:i+k-1),repl,status)
-        if (status /= 0) then
-          message= "Ignored unknown entity: &" // s1(i+1:i+k-1) // ";"
-          call FoX_warning(message)
+        n = code_to_str_len(ents, s1(i+1:i+k-1))
+        if (n > 0) then
+          call add_to_buffer(code_to_str(ents, s1(i+1:i+k-1)), buf2)
         else
-          call add_to_buffer(trim(repl),buf2)
+          call FoX_warning("Ignored unknown entity: &" // s1(i+1:i+k-1) // ";")
         endif
         i  = i + k + 1
       else
