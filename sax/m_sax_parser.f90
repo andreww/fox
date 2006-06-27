@@ -448,8 +448,8 @@ do
 
          else if (fx%context == SGML_DECLARATION_TAG) then
 
-            if (fx%debug) print *, "We found an sgml declaration"
-            call parse_dtd(fx%entities, str_vs(fx%pcdata))
+            if (fx%debug) print *, "We found a DTD"
+            call parse_dtd(str_vs(fx%pcdata))
 
          else if (fx%context == XML_DECLARATION_TAG) then
 
