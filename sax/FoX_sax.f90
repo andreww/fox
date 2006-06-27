@@ -33,7 +33,6 @@ public :: xml_t
 !public :: comment_handler
 !public :: xml_declaration_handler
 !public :: cdata_section_handler
-!public :: sgml_declaration_handler
 !public :: error_handler
 !public :: signal_handler
 !public :: empty_element_handler

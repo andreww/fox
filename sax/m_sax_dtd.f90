@@ -232,6 +232,7 @@ contains
     integer :: code_1, code_2, repl_1, repl_2
 
 ! FIXME we need to check what sort of entity it is first.
+! FIXME we also need to do some entity-expansion here or hereabouts
 
     if (decl(1:6) == "ENTITY") then
       ! we deal with it
