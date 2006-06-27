@@ -14,8 +14,8 @@ module m_sax_dtd
 
   character(len=*), parameter :: spaces = " "//achar(9)//achar(10)//achar(13)
 
-  character(len=*), parameter :: lowerCase = "abcdefghijklmopqrstuvwxyz"
-  character(len=*), parameter :: upperCase = "ABCDEFGHIJKLMNOPRSTUVWXYZ"
+  character(len=*), parameter :: lowerCase = "abcdefghijklmnopqrstuvwxyz"
+  character(len=*), parameter :: upperCase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
   character(len=*), parameter :: digits = "0123456789"
   character(len=*), parameter :: NameChars = lowerCase//upperCase//digits//".-_:"
 
@@ -24,10 +24,11 @@ module m_sax_dtd
   integer, parameter :: DTD_INIT                  = 0
   integer, parameter :: DTD_DOCTYPE               = 1
   integer, parameter :: DTD_DOCTYPE_FOUND         = 2
-  integer, parameter :: DTD_DOCTYPE_PUBLIC                = 3
-  integer, parameter :: DTD_DOCTYPE_SYSTEM                = 4
+  integer, parameter :: DTD_DOCTYPE_PUBLIC        = 3
+  integer, parameter :: DTD_DOCTYPE_SYSTEM        = 4
   integer, parameter :: DTD_INTERNAL              = 5
   integer, parameter :: DTD_DECLARATION           = 6
+  integer, parameter :: DTD_IGNORE_DECLARATION    = 7
   integer, parameter :: DTD_ENTITY                = 8
   integer, parameter :: DTD_ENTITY_NAME           = 9
   integer, parameter :: DTD_ENTITY_DEF            = 10
@@ -46,6 +47,8 @@ module m_sax_dtd
     character(len=1), dimension(:), pointer :: SystemId
     character(len=1), dimension(:), pointer :: entityName
     character(len=1), dimension(:), pointer :: entityContent
+    character(len=1), dimension(:), pointer :: entityPublicId
+    character(len=1), dimension(:), pointer :: entitySystemId
     character(len=1), dimension(:), pointer :: NdataValue
     type(entity_list) :: pe_list
     integer :: dtd_state
@@ -75,6 +78,8 @@ contains
     nullify(parse_state%SystemId)
     nullify(parse_state%entityName)
     nullify(parse_state%entityContent)
+    nullify(parse_state%entityPublicID)
+    nullify(parse_state%entitySystemId)
     nullify(parse_state%ndataValue)
     call init_entity_list(parse_state%pe_list)
 
@@ -93,6 +98,8 @@ contains
     if (associated(parse_state%SystemId)) deallocate(parse_state%SystemId)
     if (associated(parse_state%entityName)) deallocate(parse_state%entityName)
     if (associated(parse_state%entityContent)) deallocate(parse_state%entityContent)
+    if (associated(parse_state%entityPublicId)) deallocate(parse_state%entityPublicId)
+    if (associated(parse_state%entitySystemId)) deallocate(parse_state%entitySystemId)
     if (associated(parse_state%NdataValue)) deallocate(parse_state%NdataValue)
 
     call destroy_entity_list(parse_state%pe_list)
@@ -111,9 +118,6 @@ contains
 
     do 
       call tokenize_dtd(parse_state)
-
-      print'(a)','found token:'
-      print'(3a)', '|',str_vs(parse_state%token),'|'
 
       if (size(parse_state%token) == 0) then
         select case(parse_state%dtd_state)
@@ -140,7 +144,6 @@ contains
       case (DTD_DOCTYPE)
         allocate(parse_state%docTypeName(size(parse_state%token)))
         parse_state%docTypeName = parse_state%token
-        print'(3a)', '!', str_vs(parse_state%docTypeName), '!'
         if (verify(str_vs(parse_state%docTypeName), NameChars) /= 0) &
           call FoX_error("Invalid DOCTYPE Name")
         parse_state%dtd_state = DTD_DOCTYPE_FOUND
@@ -173,7 +176,6 @@ contains
           parse_state%token(size(parse_state%token)) == '"')) then
           allocate(parse_state%PublicId(size(parse_state%token) - 2))
           parse_state%PublicId = parse_state%token(2:size(parse_state%token)-1)
-          print'(3a)', '|', str_vs(parse_state%PublicId), '|'
           if (verify(str_vs(parse_state%PublicId), PubIdChars) /= 0) &
             call FoX_error("Invalid PUBLIC ID")
         else
@@ -183,8 +185,6 @@ contains
         if (debug) print*,'PUBLIC ID found'
         
       case (DTD_DOCTYPE_SYSTEM)
-        allocate(parse_state%SystemId(size(parse_state%token)))
-        parse_state%PublicId = parse_state%token
         if ((parse_state%token(1) == "'" .and. &
           parse_state%token(size(parse_state%token)) == "'") &
           .or. &
@@ -200,20 +200,20 @@ contains
         if (debug) print*,'SYSTEM ID found'
         
       case (DTD_INTERNAL)
-        if (all(parse_state%token(:2) == (/'<','?'/))) then
-          !handle PI
-          if (debug) print*,'PI found'
-          continue
-        elseif (all(parse_state%token(:2) == (/'<','!','-','-'/))) then
-          !handle comment
-          if (debug) print*,'Comment found'
-          continue
-        elseif (str_vs(parse_state%token) == "<!") then
+        if (str_vs(parse_state%token) == "<!") then
           parse_state%dtd_state = DTD_DECLARATION
           if (debug) print*,'DTD Declaration found'
         elseif (str_vs(parse_state%token) == "]") then
           parse_state%dtd_state = DTD_DONE
           if (debug) print*,'DTD internal subset ended'
+        elseif (all(parse_state%token(:2) == (/'<','?'/))) then
+          !handle PI
+          if (debug) print*,'PI found'
+          continue
+        elseif (all(parse_state%token(:4) == (/'<','!','-','-'/))) then
+          !handle comment
+          if (debug) print*,'Comment found'
+          continue
         else
           call FoX_error("Broken internal DTD")
         endif
@@ -221,16 +221,19 @@ contains
       case (DTD_DECLARATION)
         if (str_vs(parse_state%token) == "ENTITY") then
           parse_state%dtd_state = DTD_ENTITY
-          if (debug) print*,'DTD ENTITY ended'
+          if (debug) print*,'DTD ENTITY started'
         elseif (str_vs(parse_state%token) == "ELEMENT") then
           continue ! unhandled FIXME
-          if (debug) print*,'DTD ELEMENT ended'
+          parse_state%dtd_state = DTD_IGNORE_DECLARATION
+          if (debug) print*,'DTD ELEMENT started'
         elseif (str_vs(parse_state%token) == "ATTLIST") then
           continue ! unhandled FIXME
-          if (debug) print*,'DTD ATTLIST ended'
+          parse_state%dtd_state = DTD_IGNORE_DECLARATION
+          if (debug) print*,'DTD ATTLIST started'
         elseif (str_vs(parse_state%token) == "NOTATION") then
           continue ! unhandled FIXME
-          if (debug) print*,'DTD NOTATION ended'
+          parse_state%dtd_state = DTD_IGNORE_DECLARATION
+          if (debug) print*,'DTD NOTATION started'
         else
           call FoX_error("Broken internal DTD declaration")
         endif
@@ -238,8 +241,11 @@ contains
       case (DTD_ENTITY)
         if (str_vs(parse_state%token) == '%') then
           parse_state%parameter_entity = .true.
+          parse_state%dtd_state = DTD_ENTITY_NAME
+          if (debug) print*,'DTD Parameter ENTITY found'
         else
           parse_state%parameter_entity = .false.
+          if (associated(parse_state%entityName)) deallocate(parse_state%entityName)
           allocate(parse_state%entityName(size(parse_state%token)))
           parse_state%entityName = parse_state%token
           if (verify(str_vs(parse_state%entityName), NameChars) /= 0) &
@@ -247,10 +253,9 @@ contains
           parse_state%dtd_state = DTD_ENTITY_DEF
           if (debug) print*,'DTD ENTITY Name found'
         endif
-        parse_state%dtd_state = DTD_ENTITY_NAME
-        if (debug) print*,'DTD Parameter ENTITY found'
         
       case (DTD_ENTITY_NAME)
+        if (associated(parse_state%entityName)) deallocate(parse_state%entityName)
         allocate(parse_state%entityName(size(parse_state%token)))
         parse_state%entityName = parse_state%token
         if (verify(str_vs(parse_state%entityName), NameChars) /= 0) &
@@ -271,7 +276,8 @@ contains
             .or. &
             (parse_state%token(1) == '"' .and. &
             parse_state%token(size(parse_state%token)) == '"')) then
-            allocate(parse_state%entityContent(size(parse_state%PublicId) - 2))
+            if (associated(parse_state%entityContent)) deallocate(parse_state%entityContent)
+            allocate(parse_state%entityContent(size(parse_state%token) - 2))
             parse_state%entityContent = parse_state%token(2:size(parse_state%token)-1)
             if (debug) print*,'DTD ENTITY content found'
             if (parse_state%parameter_entity) then
@@ -286,8 +292,8 @@ contains
           else
             call FoX_error("Badly quoted ENTITY content")
           endif
+          parse_state%dtd_state = DTD_DECLARATION_DONE
         endif
-        parse_state%dtd_state = DTD_DECLARATION_DONE
         
       case (DTD_ENTITY_PUBLIC)
         if ((parse_state%token(1) == "'" .and. &
@@ -295,9 +301,10 @@ contains
           .or. &
           (parse_state%token(1) == '"' .and. &
           parse_state%token(size(parse_state%token)) == '"')) then
-          allocate(parse_state%PublicId(size(parse_state%PublicId) - 2))
-          parse_state%PublicId = parse_state%token(2:size(parse_state%token)-1)
-          if (verify(str_vs(parse_state%PublicId), PubIdChars) /= 0) &
+          if (associated(parse_state%entityPublicId)) deallocate(parse_state%entityPublicId)
+          allocate(parse_state%entityPublicId(size(parse_state%token) - 2))
+          parse_state%entityPublicId = parse_state%token(2:size(parse_state%token)-1)
+          if (verify(str_vs(parse_state%entityPublicId), PubIdChars) /= 0) &
             call FoX_error("Invalid ENTITY PUBLIC ID")
         else
           call FoX_error("Badly quoted ENTITY PUBLIC ref")
@@ -306,15 +313,14 @@ contains
         if (debug) print*,'DTD ENTITY PUBLIC ID found'
         
       case (DTD_ENTITY_SYSTEM)
-        allocate(parse_state%SystemId(size(parse_state%token)))
-        parse_state%PublicId = parse_state%token
         if ((parse_state%token(1) == "'" .and. &
           parse_state%token(size(parse_state%token)) == "'") &
           .or. &
           (parse_state%token(1) == '"' .and. &
           parse_state%token(size(parse_state%token)) == '"')) then
-          allocate(parse_state%SystemId(size(parse_state%SystemId) - 2))
-          parse_state%SystemId = parse_state%token(2:size(parse_state%token)-1)
+          if (associated(parse_state%entitySystemId)) deallocate(parse_state%entitySystemId)
+          allocate(parse_state%entitySystemId(size(parse_state%token) - 2))
+          parse_state%entitySystemId = parse_state%token(2:size(parse_state%token)-1)
         else
           call FoX_error("Badly quoted ENTITY SYSTEM ref")
         endif
@@ -325,6 +331,9 @@ contains
         if (str_vs(parse_state%token) == "NDATA") then
           parse_state%dtd_state = DTD_ENTITY_NDATA_VALUE
           if (debug) print*,'DTD ENTITY NDATA keyword found'
+        elseif (str_vs(parse_state%token) == ">") then
+          parse_state%dtd_state = DTD_INTERNAL
+          if (debug) print*,'DTD DECLARATION finished'
         else
           call FoX_error("Garbage found after ENTITY SYSTEM ref")
         endif
@@ -336,6 +345,12 @@ contains
           call FoX_error("Invalid NDATA value")
         parse_state%dtd_state = DTD_DECLARATION_DONE
         if (debug) print*,'DTD ENTITY NDATA value found'
+
+      case (DTD_IGNORE_DECLARATION)
+        if (str_vs(parse_state%token) == ">") then
+          parse_state%dtd_state = DTD_INTERNAL
+          if (debug) print*,'DTD DECLARATION finished'
+        endif
         
       case (DTD_DECLARATION_DONE)
         if (str_vs(parse_state%token) == ">") then
@@ -365,8 +380,6 @@ contains
 
     deallocate(parse_state%token)
     c = parse_state%curr_pos
-    print'(a)','tokenizing'
-    print'(a)',str_vs(parse_state%dtd(c:))
     cp = verify(str_vs(parse_state%dtd(c:)), spaces)
     if (cp == 0) then
       !nothing left but spaces
@@ -374,71 +387,76 @@ contains
       return
       
     elseif (cp == 1) then
-      ! no spaces here, must be a bracket
-      if (parse_state%dtd(c) == '[') then
-        allocate(parse_state%token(1))
-        parse_state%token = '['
-        parse_state%curr_pos = c + 1
-        return
-
-      elseif (parse_state%dtd(c) == ']') then
-        allocate(parse_state%token(1))
-        parse_state%token = ']'
-        parse_state%curr_pos = c + 1
-        return
-
-      elseif (all(parse_state%dtd(c:c+1) == (/'<','!','-','-'/))) then
-        !it's a comment ... dealt with below
+      ! no spaces here, only the following tokens allowed:
+      if (parse_state%dtd(c) == '[')  then
         continue
-
+      elseif (parse_state%dtd(c) == ']') then
+        continue
       elseif (all(parse_state%dtd(c:c+1) == (/'<','!'/))) then
-        allocate(parse_state%token(2))
-        parse_state%token = (/'<','!'/)
-        parse_state%curr_pos = c + 2
-        return
-        
+        continue
       elseif (all(parse_state%dtd(c:c+1) == (/'<','?'/))) then
-        !it's a PI ... dealt with below
-
+        continue
       elseif (parse_state%dtd(c) == '>') then
-        allocate(parse_state%token(1))
-        parse_state%token = '>'
-        parse_state%curr_pos = c + 1
-        return
-
+        continue
       elseif (all(parse_state%dtd(c:c+6) == vs_str('DOCTYPE')))then
-        allocate(parse_state%token(7))
-        parse_state%token = parse_state%dtd(c:c+6)
-        parse_state%curr_pos = c + 7
-        return
-
+        continue
+      elseif (all(parse_state%dtd(c:c+5) == vs_str('ENTITY')))then
+        continue
+      elseif (all(parse_state%dtd(c:c+6) == vs_str('NOTATION')))then
+        continue
+      elseif (all(parse_state%dtd(c:c+6) == vs_str('ELEMENT')))then
+        continue
+      elseif (all(parse_state%dtd(c:c+6) == vs_str('ATTLIST')))then
+        continue
       else
         call FoX_error("Tokenizing failed")
       endif
     endif
 
     c = c + cp - 1
-    print'(a)','no, actually tokenizing'
-    print'(a)',str_vs(parse_state%dtd(c:))
-    if (all(parse_state%dtd(c:c+1) == (/'<','!','-','-'/))) then
+    if (parse_state%dtd(c) == '[') then
+      allocate(parse_state%token(1))
+      parse_state%token = '['
+      parse_state%curr_pos = c + 1
+      return
+      
+    elseif (parse_state%dtd(c) == ']') then
+      allocate(parse_state%token(1))
+      parse_state%token = ']'
+      parse_state%curr_pos = c + 1
+      return
+      
+    elseif (all(parse_state%dtd(c:c+3) == (/'<','!','-','-'/))) then
       !it's a comment ...
-      cp1 = index(str_vs(parse_state%dtd(c:)), '--')
-      cp = index(str_vs(parse_state%dtd(c:)), '-->')
+      cp1 = index(str_vs(parse_state%dtd(c+3:)), '--')
+      cp = index(str_vs(parse_state%dtd(c+3:)), '-->')
       if (cp1 < cp) then
         call FoX_error("Invalid comment in DTD")
       else
-        allocate(parse_state%token(cp+3))
-        parse_state%token = parse_state%dtd(c:cp+2)
-        parse_state%curr_pos = c + cp + 2
+        allocate(parse_state%token(cp+6))
+        parse_state%token = parse_state%dtd(c:cp+5)
+        parse_state%curr_pos = c + cp + 5
       endif
       return
 
+    elseif (all(parse_state%dtd(c:c+1) == (/'<','!'/))) then
+      allocate(parse_state%token(2))
+      parse_state%token = (/'<','!'/)
+      parse_state%curr_pos = c + 2
+      return
+      
     elseif (all(parse_state%dtd(c:c+1) == (/'<','?'/))) then
       !it's a PI ...
       cp = index(str_vs(parse_state%dtd(c:)), '?>')
       allocate(parse_state%token(cp+2))
       parse_state%token = parse_state%dtd(c:cp+1)
       parse_state%curr_pos = c + cp + 1
+      return
+
+    elseif (parse_state%dtd(c) == '>') then
+      allocate(parse_state%token(1))
+      parse_state%token = '>'
+      parse_state%curr_pos = c + 1
       return
 
     elseif (parse_state%dtd(c) == '"') then
@@ -455,9 +473,17 @@ contains
       parse_state%curr_pos = c + cp + 1
       return
 
+    elseif (all(parse_state%dtd(c:c+6) == vs_str('DOCTYPE')))then
+      allocate(parse_state%token(7))
+      parse_state%token = parse_state%dtd(c:c+6)
+      parse_state%curr_pos = c + 7
+      return
+
     else
-      cp = scan(str_vs(parse_state%dtd(c:)), spaces)
-      if (cp == 0) cp = size(parse_state%dtd) - c + 1
+      cp = index(str_vs(parse_state%dtd(c:)), '>')
+      cp1 = scan(str_vs(parse_state%dtd(c:)), spaces)
+      if (cp1 == 0) cp1 = size(parse_state%dtd) - c + 1
+      if (cp1 < cp) cp = cp1
       allocate(parse_state%token(cp-1))
       parse_state%token = parse_state%dtd(c:c+cp-2)
       parse_state%curr_pos = c + cp - 1
