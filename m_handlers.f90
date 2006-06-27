@@ -18,7 +18,7 @@ private
 ! to numerical arrays, and to populate specific data structures.
 !
 public :: begin_element_handler, end_element_handler, pcdata_chunk_handler
-public :: comment_handler, xml_declaration_handler, sgml_declaration_handler
+public :: comment_handler, xml_declaration_handler
 
 CONTAINS  !=============================================================
 
@@ -71,16 +71,6 @@ type(dictionary_t), intent(in) :: attributes
  call print_dict(attributes)
 
 end subroutine xml_declaration_handler
-
-!--------------------------------------------------
-subroutine sgml_declaration_handler(sgmldecl)
-character(len=*), intent(in) :: sgmldecl
-!
-write(unit=*,fmt="(a)") ">>SGML declaration: "
-write(unit=*,fmt="(a)") sgmldecl
-
-end subroutine sgml_declaration_handler
-!--------------------------------------------------
 
 end module m_handlers
 

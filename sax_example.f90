@@ -22,7 +22,6 @@ program sax_example
                pcdata_chunk_handler = pcdata_chunk_handler, &
                comment_handler = comment_handler, &
                xml_declaration_handler = xml_declaration_handler, &
-               sgml_declaration_handler = sgml_declaration_handler, &
                verbose = .false.)
 
   call close_xmlfile(fxml)
