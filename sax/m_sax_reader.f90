@@ -1,6 +1,6 @@
 module m_sax_reader
 
-  use m_common_io, only: setup_io, io_eor, io_eof
+  use m_common_io, only: setup_io, io_eor, io_eof, get_unit
 
   implicit none
   private

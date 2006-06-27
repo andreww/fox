@@ -6,6 +6,7 @@ module m_sax_parser
 use FoX_common, only : dictionary_t
 use m_common_array_str, only : str_vs, vs_str
 use m_common_elstack          ! For element nesting checks
+use m_sax_dtd, only : parse_dtd
 use m_sax_reader
 use m_sax_debug
 use m_sax_fsm, only : fsm_t, init_fsm, reset_fsm, destroy_fsm, evolve_fsm
@@ -48,7 +49,7 @@ subroutine open_xmlfile(fname,fxml,iostat,record_size)
   call open_file(fname,fxml%fb,iostat,record_size)
   call init_fsm(fxml%fx)
   fxml%path_mark = ""
-  
+
 end subroutine open_xmlfile
 !-------------------------------------------------------------------------
 
@@ -456,8 +457,9 @@ do
          else if (fx%context == SGML_DECLARATION_TAG) then
 
             if (fx%debug) print *, "We found an sgml declaration"
-            if (have_sgml_declaration_handler)  &
-                      call sgml_declaration_handler(str_vs(fx%pcdata))
+            call parse_dtd(fx%entities, str_vs(fx%pcdata))
+            !if (have_sgml_declaration_handler)  &
+            !          call sgml_declaration_handler(str_vs(fx%pcdata))
 
          else if (fx%context == XML_DECLARATION_TAG) then
 

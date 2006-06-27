@@ -36,6 +36,7 @@ type, public :: fsm_t
       type(elstack_t)      :: element_stack
       logical              :: root_element_seen
       character, dimension(:), pointer :: root_element_name
+      type(entity_list)    :: entities
       character(len=150)   :: action
       logical              :: debug
 end type fsm_t
@@ -116,6 +117,7 @@ type(fsm_t), intent(inout)   :: fx
  nullify(fx%root_element_name)
  call init_dict(fx%attributes)
  call initNamespaceDictionary(fx%nsDict)
+ call init_entity_list(fx%entities)
 end subroutine init_fsm
 !------------------------------------------------------------
 subroutine reset_fsm(fx) 
@@ -137,6 +139,7 @@ type(fsm_t), intent(inout)   :: fx
  call reset_dict(fx%attributes)
  call destroyNamespaceDictionary(fx%nsDict)
  call initNamespaceDictionary(fx%nsDict)
+ call reset_entity_list(fx%entities)
 end subroutine reset_fsm
 
 subroutine destroy_fsm(fx) 
@@ -153,6 +156,7 @@ type(fsm_t), intent(inout)   :: fx
  if (associated(fx%root_element_name)) deallocate(fx%root_element_name)
  call destroy_dict(fx%attributes)
  call destroyNamespaceDictionary(fx%nsDict)
+ call destroy_entity_list(fx%entities)
 end subroutine destroy_fsm
 
 !------------------------------------------------------------
@@ -233,12 +237,17 @@ select case(fx%state)
          fx%state = BANG_HYPHEN
          if (fx%debug) fx%action = ("Almost ready to start comment ")
       else if (c .in. uppercase_chars) then
-         fx%state = IN_SGML_DECLARATION
-         fx%nlts = 0
-         fx%nbrackets = 0
-         if (fx%debug) fx%action = ("SGML declaration ")
-         fx%context = SGML_DECLARATION_TAG
-         call add_to_buffer(c,fx%buffer)
+         if (fx%root_element_seen) then
+           fx%state = ERROR
+           fx%action = "DTD found after root element"
+         else
+           fx%state = IN_SGML_DECLARATION
+           fx%nlts = 0
+           fx%nbrackets = 0
+           if (fx%debug) fx%action = ("SGML declaration ")
+           fx%context = SGML_DECLARATION_TAG
+           call add_to_buffer(c,fx%buffer)
+         endif
       else if (c == "[") then
          fx%state = CDATA_PREAMBLE
          if (fx%debug) fx%action = ("Declaration with [ ")
@@ -489,7 +498,7 @@ if (associated(fx%element_name)) deallocate(fx%element_name)
          fx%state = END_QUOTE
          if (fx%debug) fx%action = ("Emtpy attribute value...")
          if (fx%entities_in_attributes) then
-            call entity_filter(fx%buffer,fx%tmpbuf)
+            call entity_filter(fx%entities, fx%buffer,fx%tmpbuf)
             fx%entities_in_attributes = .false.
             call add_value_to_dict(fx%attributes, str(fx%tmpbuf))
          else
@@ -511,7 +520,7 @@ if (associated(fx%element_name)) deallocate(fx%element_name)
          fx%state = END_QUOTE
          if (fx%debug) fx%action = ("End of attribute value")
          if (fx%entities_in_attributes) then
-            call entity_filter(fx%buffer,fx%tmpbuf)
+            call entity_filter(fx%entities, fx%buffer,fx%tmpbuf)
             fx%entities_in_attributes = .false.
             call add_value_to_dict(fx%attributes, str(fx%tmpbuf))
          else
@@ -681,7 +690,7 @@ if (associated(fx%element_name)) deallocate(fx%element_name)
          signal = CHUNK_OF_PCDATA
          if (fx%debug) fx%action = ("End of pcdata -- Starting tag")
          if (fx%entities_in_pcdata) then
-            call entity_filter(fx%buffer,fx%tmpbuf)
+            call entity_filter(fx%entities, fx%buffer,fx%tmpbuf)
             allocate(fx%pcdata(len(fx%tmpbuf)))
             fx%pcdata = buffer_to_chararray(fx%tmpbuf)
             fx%entities_in_pcdata = .false.
@@ -699,7 +708,7 @@ if (associated(fx%element_name)) deallocate(fx%element_name)
          if (fx%debug) fx%action = ("Resetting PCDATA buffer at newline")
          call add_to_buffer(c,fx%buffer)
          if (fx%entities_in_pcdata) then
-            call entity_filter(fx%buffer,fx%tmpbuf)
+            call entity_filter(fx%entities, fx%buffer,fx%tmpbuf)
             allocate(fx%pcdata(len(fx%tmpbuf)))
             fx%pcdata = buffer_to_chararray(fx%tmpbuf)
             fx%entities_in_pcdata = .false.
@@ -720,7 +729,7 @@ if (associated(fx%element_name)) deallocate(fx%element_name)
                signal = CHUNK_OF_PCDATA
                if (fx%debug) fx%action = ("Resetting almost full PCDATA buffer")
                if (fx%entities_in_pcdata) then
-                  call entity_filter(fx%buffer,fx%tmpbuf)
+                  call entity_filter(fx%entities, fx%buffer,fx%tmpbuf)
                   allocate(fx%pcdata(len(fx%tmpbuf)))
                   fx%pcdata = buffer_to_chararray(fx%tmpbuf)
                   fx%entities_in_pcdata = .false.
@@ -749,7 +758,7 @@ if (associated(fx%element_name)) deallocate(fx%element_name)
          if (fx%debug) fx%action = ("Resetting PCDATA buffer at repeated newline")
          call add_to_buffer(c,fx%buffer)
          if (fx%entities_in_pcdata) then
-            call entity_filter(fx%buffer,fx%tmpbuf)
+            call entity_filter(fx%entities, fx%buffer,fx%tmpbuf)
             allocate(fx%pcdata(len(fx%tmpbuf)))
             fx%pcdata = buffer_to_chararray(fx%tmpbuf)
             fx%entities_in_pcdata = .false.
@@ -771,7 +780,7 @@ if (associated(fx%element_name)) deallocate(fx%element_name)
                signal = CHUNK_OF_PCDATA
                if (fx%debug) fx%action = ("Resetting almost full PCDATA buffer")
                if (fx%entities_in_pcdata) then
-                  call entity_filter(fx%buffer,fx%tmpbuf)
+                  call entity_filter(fx%entities, fx%buffer,fx%tmpbuf)
                   allocate(fx%pcdata(len(fx%tmpbuf)))
                   fx%pcdata = buffer_to_chararray(fx%tmpbuf)
                   fx%entities_in_pcdata = .false.
