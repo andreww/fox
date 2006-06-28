@@ -7,9 +7,9 @@ module m_sax_entities
 !    2. Character entities  (but only within the range of the char intrinsic)
 !
 use m_common_array_str, only: str_vs, vs_str
-use m_common_buffer
 use m_common_error, only : FoX_warning, FoX_error
 use m_common_format, only : str_to_int_10, str_to_int_16
+
 implicit none
 private
 
@@ -26,9 +26,12 @@ end type entity_list
 character(len=*), parameter :: digits = "0123456789"
 character(len=*), parameter :: hexdigits = "0123456789abcdefABCDEF"
 
-public :: code_to_str , entity_filter
+public :: code_to_str
 public :: code_to_str_len
 public :: code_registered
+
+public :: entity_filter_len
+public :: entity_filter
 
 public :: entity_list
 public :: init_entity_list
@@ -92,6 +95,10 @@ contains
 
     type(entity_list) :: ents_tmp
     integer :: i, n
+
+    print*,'new entity:'
+    print*,code
+    print*, repl
 
     n = size(ents%list)
     
@@ -187,7 +194,7 @@ contains
         number = str_to_int_16(code(3:))   
         repl = char(number)
       else                             ! decimal character reference
-        number = str_to_int_10(code(3:))   
+        number = str_to_int_10(code(2:))
         repl = char(number)
       endif
     endif
@@ -195,51 +202,76 @@ contains
   end function code_to_str
     
 
-  subroutine entity_filter(ents, buf1, buf2)
-    type(entity_list), intent(inout) :: ents
-    type(buffer_t), intent(in)    :: buf1
-    type(buffer_t), intent(out)   :: buf2
+  pure function entity_filter_len(ents, str) result(n)
+    type(entity_list), intent(in) :: ents
+    character(len=*), intent(in) :: str
+    integer :: n
 
-    ! Replaces entity references by their value
-    integer :: i, k, len1
-    character(len=MAX_BUFF_SIZE)           :: s1
-    character(len=1)                       :: c
-
-    integer                                :: n
-
-    call buffer_to_character(buf1,s1)        !! Avoid allocation of temporary
-    len1 = len(buf1)
+    integer :: i, i2, j, k
+    
+    n = 0
 
     i = 1
-
-    call reset_buffer(buf2)
-
+    i2 = 1
     do
-      if (i > len1) exit
-      c = s1(i:i)
-      if (c == "&") then
-        if (i+1 > len1) then
-          call FoX_error("Unmatched & in entity reference")
-          return
+      if (i > len(str)) exit
+      if (str(i:i) == "&") then
+        if (i+1 > len(str)) then
+          exit
         endif
-        k = index(s1(i+1:),";")
+        k = index(str(i+1:),";")
+        if (k == 0) then
+          exit
+        endif
+        j = code_to_str_len(ents, str(i+1:i+k-1))
+        i  = i + k + 1
+        i2 = i2 + j
+      else
+        i = i + 1
+        i2 = i2 + 1
+      endif
+    enddo
+    
+    n = i2 - 1
+
+  end function entity_filter_len
+
+  function entity_filter(ents, str) result(str2)
+    type(entity_list), intent(in) :: ents
+    character(len=*), intent(in) :: str
+    character(len=entity_filter_len(ents, str)) :: str2
+
+    integer :: i, i2, j, k, n
+
+    n = len(str2)
+
+    i = 1
+    i2 = 1
+    do
+      if (i > len(str)) exit
+      if (str(i:i) == "&") then
+        if (i+1 > len(str)) then
+          call FoX_error("Unmatched & in entity reference")
+        endif
+        k = index(str(i+1:),";")
         if (k == 0) then
           call FoX_error("Unmatched & in entity reference")
-          return
         endif
-        n = code_to_str_len(ents, s1(i+1:i+k-1))
-        if (n > 0) then
-          call add_to_buffer(code_to_str(ents, s1(i+1:i+k-1)), buf2)
+        j = code_to_str_len(ents, str(i+1:i+k-1))
+        if (j > 0 .and. n > 0) then
+          str2(i2:i2+j-1) = code_to_str(ents, str(i+1:i+k-1))
         else
-          call FoX_warning("Ignored unknown entity: &" // s1(i+1:i+k-1) // ";")
+          call FoX_warning("Ignored unknown entity: &" // str(i+1:i+k-1) // ";")
         endif
         i  = i + k + 1
+        i2 = i2 + j
       else
-        call add_to_buffer(c,buf2)
+        if (n > 0) str2(i2:i2) = str(i:i)
         i = i + 1
+        i2 = i2 + 1
       endif
     enddo
 
-  end subroutine entity_filter
+  end function entity_filter
 
 end module m_sax_entities

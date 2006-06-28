@@ -8,7 +8,7 @@ module m_sax_dtd
   use m_common_array_str, only : str_vs, vs_str
   use m_common_error, only: FoX_error
   use m_sax_entities, only: entity_list, add_char_entity, init_entity_list, destroy_entity_list, &
-    code_to_str, code_to_str_len
+    code_to_str, code_to_str_len, entity_filter, entity_filter_len
 
   implicit none
   private
@@ -113,7 +113,7 @@ contains
   subroutine parse_dtd(dtd)
     character(len=*), intent(in):: dtd
 
-    integer :: c, i, cp
+    integer :: c, i, cp, n
 
     type(dtd_parser) :: parse_state
 
@@ -122,15 +122,9 @@ contains
     do 
       call tokenize_dtd(parse_state)
 
-      print*, 'token found!'
-      print'(3a)', '|', str_vs(parse_state%token), '|'
+      n = size(parse_state%token)
 
-      if (parse_state%token(1) == ' ') then
-        !we just did a PE replacement
-        cycle
-      endif
-
-      if (size(parse_state%token) == 0) then
+      if (n == 0) then
         select case(parse_state%dtd_state)
         case (DTD_DOCTYPE_FOUND, &
               DTD_DOCTYPE, &
@@ -141,6 +135,10 @@ contains
         case default
           call FoX_error("Unfinished DTD")
         end select
+
+      elseif (parse_state%token(1) == ' ') then
+        !we just did a PE replacement
+        cycle
       endif
 
       select case (parse_state%dtd_state)
@@ -153,7 +151,7 @@ contains
         endif
         
       case (DTD_DOCTYPE)
-        allocate(parse_state%docTypeName(size(parse_state%token)))
+        allocate(parse_state%docTypeName(n))
         parse_state%docTypeName = parse_state%token
         if (verify(str_vs(parse_state%docTypeName), NameChars) /= 0) &
           call FoX_error("Invalid DOCTYPE Name")
@@ -182,12 +180,12 @@ contains
         
       case (DTD_DOCTYPE_PUBLIC)
         if ((parse_state%token(1) == "'" .and. &
-          parse_state%token(size(parse_state%token)) == "'") &
+          parse_state%token(n) == "'") &
           .or. &
           (parse_state%token(1) == '"' .and. &
-          parse_state%token(size(parse_state%token)) == '"')) then
-          allocate(parse_state%PublicId(size(parse_state%token) - 2))
-          parse_state%PublicId = parse_state%token(2:size(parse_state%token)-1)
+          parse_state%token(n) == '"')) then
+          allocate(parse_state%PublicId(n - 2))
+          parse_state%PublicId = parse_state%token(2:n-1)
           if (verify(str_vs(parse_state%PublicId), PubIdChars) /= 0) &
             call FoX_error("Invalid PUBLIC ID")
         else
@@ -198,12 +196,12 @@ contains
         
       case (DTD_DOCTYPE_SYSTEM)
         if ((parse_state%token(1) == "'" .and. &
-          parse_state%token(size(parse_state%token)) == "'") &
+          parse_state%token(n) == "'") &
           .or. &
           (parse_state%token(1) == '"' .and. &
-          parse_state%token(size(parse_state%token)) == '"')) then
-          allocate(parse_state%SystemId(size(parse_state%token) - 2))
-          parse_state%SystemId = parse_state%token(2:size(parse_state%token)-1)
+          parse_state%token(n) == '"')) then
+          allocate(parse_state%SystemId(n - 2))
+          parse_state%SystemId = parse_state%token(2:n-1)
         else
           call FoX_error("Badly quoted SYSTEM ref")
         endif
@@ -258,7 +256,7 @@ contains
         else
           parse_state%parameter_entity = .false.
           if (associated(parse_state%entityName)) deallocate(parse_state%entityName)
-          allocate(parse_state%entityName(size(parse_state%token)))
+          allocate(parse_state%entityName(n))
           parse_state%entityName = parse_state%token
           if (verify(str_vs(parse_state%entityName), NameChars) /= 0) &
             call FoX_error("Invalid Entity Name")
@@ -268,7 +266,7 @@ contains
         
       case (DTD_ENTITY_NAME)
         if (associated(parse_state%entityName)) deallocate(parse_state%entityName)
-        allocate(parse_state%entityName(size(parse_state%token)))
+        allocate(parse_state%entityName(n))
         parse_state%entityName = parse_state%token
         if (verify(str_vs(parse_state%entityName), NameChars) /= 0) &
           call FoX_error("Invalid Entity Name")
@@ -284,20 +282,19 @@ contains
           if (debug) print*,'DTD ENTITY SYSTEM keyword found'
         else
           if ((parse_state%token(1) == "'" .and. &
-            parse_state%token(size(parse_state%token)) == "'") &
+            parse_state%token(n) == "'") &
             .or. &
             (parse_state%token(1) == '"' .and. &
-            parse_state%token(size(parse_state%token)) == '"')) then
+            parse_state%token(n) == '"')) then
             if (associated(parse_state%entityContent)) deallocate(parse_state%entityContent)
-            allocate(parse_state%entityContent(size(parse_state%token) - 2))
-            parse_state%entityContent = parse_state%token(2:size(parse_state%token)-1)
             if (debug) print*,'DTD ENTITY content found'
+            print*, str_vs(parse_state%token(2:n-1))
             if (parse_state%parameter_entity) then
               call add_char_entity(parse_state%pe_list, &
                 str_vs(parse_state%entityName), &
-                str_vs(parse_state%entityContent))
+                entity_filter(parse_state%pe_list, &
+                               str_vs(parse_state%token(2:n-1))))
               deallocate(parse_state%entityName)
-              deallocate(parse_state%entityContent)
             else
               continue !FIXME
             endif
@@ -309,13 +306,13 @@ contains
         
       case (DTD_ENTITY_PUBLIC)
         if ((parse_state%token(1) == "'" .and. &
-          parse_state%token(size(parse_state%token)) == "'") &
+          parse_state%token(n) == "'") &
           .or. &
           (parse_state%token(1) == '"' .and. &
-          parse_state%token(size(parse_state%token)) == '"')) then
+          parse_state%token(n) == '"')) then
           if (associated(parse_state%entityPublicId)) deallocate(parse_state%entityPublicId)
-          allocate(parse_state%entityPublicId(size(parse_state%token) - 2))
-          parse_state%entityPublicId = parse_state%token(2:size(parse_state%token)-1)
+          allocate(parse_state%entityPublicId(n-2))
+          parse_state%entityPublicId = parse_state%token(2:n-1)
           if (verify(str_vs(parse_state%entityPublicId), PubIdChars) /= 0) &
             call FoX_error("Invalid ENTITY PUBLIC ID")
         else
@@ -326,13 +323,13 @@ contains
         
       case (DTD_ENTITY_SYSTEM)
         if ((parse_state%token(1) == "'" .and. &
-          parse_state%token(size(parse_state%token)) == "'") &
+          parse_state%token(n) == "'") &
           .or. &
           (parse_state%token(1) == '"' .and. &
-          parse_state%token(size(parse_state%token)) == '"')) then
+          parse_state%token(n) == '"')) then
           if (associated(parse_state%entitySystemId)) deallocate(parse_state%entitySystemId)
-          allocate(parse_state%entitySystemId(size(parse_state%token) - 2))
-          parse_state%entitySystemId = parse_state%token(2:size(parse_state%token)-1)
+          allocate(parse_state%entitySystemId(n-2))
+          parse_state%entitySystemId = parse_state%token(2:n-1)
         else
           call FoX_error("Badly quoted ENTITY SYSTEM ref")
         endif
@@ -351,7 +348,7 @@ contains
         endif
         
       case (DTD_ENTITY_NDATA_VALUE)
-        allocate(parse_state%NdataValue(size(parse_state%token)))
+        allocate(parse_state%NdataValue(n))
         parse_state%NdataValue = parse_state%token
         if (verify(str_vs(parse_state%NdataValue), NameChars) /= 0) &
           call FoX_error("Invalid NDATA value")
@@ -394,6 +391,11 @@ contains
 
     deallocate(parse_state%token)
     c = parse_state%curr_pos
+    if (c > size(parse_state%dtd)) then
+      allocate(parse_state%token(0))
+      return
+    endif
+       
     cp = verify(str_vs(parse_state%dtd(c:)), spaces)
     if (cp == 0) then
       !nothing left but spaces
@@ -428,6 +430,7 @@ contains
     endif
 
     c = c + cp - 1
+    ! The first five only need the first character, we know it exists:
     if (parse_state%dtd(c) == '[') then
       allocate(parse_state%token(1))
       parse_state%token = '['
@@ -439,33 +442,6 @@ contains
       parse_state%token = ']'
       parse_state%curr_pos = c + 1
       return
-      
-    elseif (all(parse_state%dtd(c:c+3) == (/'<','!','-','-'/))) then
-      !it's a comment ...
-      cp1 = index(str_vs(parse_state%dtd(c+3:)), '--')
-      cp = index(str_vs(parse_state%dtd(c+3:)), '-->')
-      if (cp1 < cp) then
-        call FoX_error("Invalid comment in DTD")
-      else
-        allocate(parse_state%token(cp+6))
-        parse_state%token = parse_state%dtd(c:cp+5)
-        parse_state%curr_pos = c + cp + 5
-      endif
-      return
-
-    elseif (all(parse_state%dtd(c:c+1) == (/'<','!'/))) then
-      allocate(parse_state%token(2))
-      parse_state%token = (/'<','!'/)
-      parse_state%curr_pos = c + 2
-      return
-      
-    elseif (all(parse_state%dtd(c:c+1) == (/'<','?'/))) then
-      !it's a PI ...
-      cp = index(str_vs(parse_state%dtd(c:)), '?>')
-      allocate(parse_state%token(cp+2))
-      parse_state%token = parse_state%dtd(c:cp+1)
-      parse_state%curr_pos = c + cp + 1
-      return
 
     elseif (parse_state%dtd(c) == '>') then
       allocate(parse_state%token(1))
@@ -474,7 +450,9 @@ contains
       return
 
     elseif (parse_state%dtd(c) == '"') then
-      cp = index(str_vs(parse_state%dtd(c+1:)), '"') 
+      cp = index(str_vs(parse_state%dtd(c+1:)), '"')
+      if (cp == 0) &
+        call FoX_error("Unmatched "" in DTD")
       allocate(parse_state%token(cp+1))
       parse_state%token = parse_state%dtd(c:c+cp)
       parse_state%curr_pos = c + cp  + 1
@@ -482,12 +460,20 @@ contains
 
     elseif (parse_state%dtd(c) == "'") then
       cp = index(str_vs(parse_state%dtd(c+1:)), "'") 
+      if (cp == 0) &
+        call FoX_error("Unmatched ' in DTD")
       allocate(parse_state%token(cp+1))
       parse_state%token = parse_state%dtd(c:c+cp)
       parse_state%curr_pos = c + cp + 1
       return
-      
+
     elseif (parse_state%dtd(c) == "%") then
+      if (c+1 > size(parse_state%dtd)) then
+        allocate(parse_state%token(1))
+        parse_state%token(1) = "%"
+        parse_state%curr_pos = c + 1
+        return
+      endif
       if (verify(parse_state%dtd(c+1), spaces) == 0) then
         allocate(parse_state%token(1))
         parse_state%token(1) = "%"
@@ -498,43 +484,71 @@ contains
       cp = index(str_vs(parse_state%dtd(c+1:)), ';')
       if (cp == 0) &
         call FoX_error("Unterminated PE reference")
-      allocate(PEref(cp))
-      PEref = parse_state%dtd(c+1:c+cp)
+      allocate(PEref(cp-1))
+      PEref = parse_state%dtd(c+1:c+cp-1)
       n = code_to_str_len(parse_state%pe_list, str_vs(PEref))
       if (n == 0) &
         call FoX_error("Unregistered PE")
       ! Yes, we must rewrite the DTD string.
       allocate(PEexpanded(n))
-      PEexpanded = code_to_str(parse_state%pe_list, str_vs(PEref))
-      allocate(dtdtmp(size(parse_state%dtd) - cp - 2 + n))
+      PEexpanded = vs_str(code_to_str(parse_state%pe_list, str_vs(PEref)))
+      allocate(dtdtmp(size(parse_state%dtd) - cp - 1 + n))
       dtdtmp(:c-1) = parse_state%dtd(:c-1)
       dtdtmp(c:c+n-1) = PEexpanded
-      dtdtmp(c+n:) = parse_state%dtd(c+cp+2:)
+      dtdtmp(c+n:) = parse_state%dtd(c+cp+1:)
       deallocate(parse_state%dtd)
       allocate(parse_state%dtd(size(dtdtmp)))
       parse_state%dtd = dtdtmp
+      deallocate(dtdtmp)
       allocate(parse_state%token(1))
       parse_state%token = " " 
       !this should trigger nothing in the parser, so reparsing will occur.
       return
-
-    elseif (all(parse_state%dtd(c:c+6) == vs_str('DOCTYPE')))then
-      allocate(parse_state%token(7))
-      parse_state%token = parse_state%dtd(c:c+6)
-      parse_state%curr_pos = c + 7
-      return
-
-    else
-      cp = index(str_vs(parse_state%dtd(c:)), '>')
-      cp1 = scan(str_vs(parse_state%dtd(c:)), spaces)
-      if (cp1 == 0) cp1 = size(parse_state%dtd) - c + 1
-      if (cp1 < cp) cp = cp1
-      allocate(parse_state%token(cp-1))
-      parse_state%token = parse_state%dtd(c:c+cp-2)
-      parse_state%curr_pos = c + cp - 1
-      return
-
     endif
+
+    if (c+3 <= size(parse_state%dtd)) then
+      if (all(parse_state%dtd(c:c+3) == (/'<','!','-','-'/))) then
+        !it's a comment ...
+        cp1 = index(str_vs(parse_state%dtd(c+3:)), '--')
+        cp = index(str_vs(parse_state%dtd(c+3:)), '-->')
+        if (cp1 < cp) then
+          call FoX_error("Invalid comment in DTD")
+        elseif (cp == 0) then
+          call FoX_error("Unterminate comment in DTD")
+        else
+          allocate(parse_state%token(cp+6))
+          parse_state%token = parse_state%dtd(c:cp+5)
+          parse_state%curr_pos = c + cp + 5
+        endif
+        return
+      endif
+    endif
+      
+    if (c+1 <= size(parse_state%dtd)) then
+      if (all(parse_state%dtd(c:c+1) == (/'<','!'/))) then
+        allocate(parse_state%token(2))
+        parse_state%token = (/'<','!'/)
+        parse_state%curr_pos = c + 2
+        return
+      
+      elseif (all(parse_state%dtd(c:c+1) == (/'<','?'/))) then
+        !it's a PI ...
+        cp = index(str_vs(parse_state%dtd(c:)), '?>')
+        if (cp == 0) &
+          call FoX_error("Unterminated PI in DTD")
+        allocate(parse_state%token(cp+2))
+        parse_state%token = parse_state%dtd(c:cp+1)
+        parse_state%curr_pos = c + cp + 1
+        return
+      endif
+    endif
+    
+    !Otherwise just grab the next word
+    cp = scan(str_vs(parse_state%dtd(c:)), spaces//'>')
+    allocate(parse_state%token(cp-1))
+    parse_state%token = parse_state%dtd(c:c+cp-2)
+    parse_state%curr_pos = c + cp - 1
+    return
 
   end subroutine tokenize_dtd
 
