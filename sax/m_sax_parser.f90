@@ -117,7 +117,6 @@ recursive subroutine xml_parse(fxml, begin_element_handler,    &
                            pcdata_chunk_handler,     &
                            comment_handler,          &
                            xml_declaration_handler,  &
-                           cdata_section_handler,    &
                            error_handler,            &
                            signal_handler,           &
                            verbose,                  &
@@ -133,7 +132,6 @@ optional                            :: end_prefix_handler
 optional                            :: pcdata_chunk_handler
 optional                            :: comment_handler
 optional                            :: xml_declaration_handler
-optional                            :: cdata_section_handler
 optional                            :: error_handler
 optional                            :: signal_handler
 logical, intent(in), optional       :: verbose
@@ -178,10 +176,6 @@ interface
    type(dictionary_t), intent(in)   :: attributes
    end subroutine xml_declaration_handler
 
-   subroutine cdata_section_handler(cdata)
-   character(len=*), intent(in) :: cdata
-   end subroutine cdata_section_handler
-
    subroutine error_handler(error_info)
    use m_sax_error
    type(sax_error_t), intent(in)            :: error_info
@@ -210,7 +204,6 @@ logical              :: have_begin_handler, have_end_handler, &
                         have_start_prefix_handler, have_end_prefix_handler, &
                         have_pcdata_handler, have_comment_handler, &
                         have_xml_declaration_handler, &
-                        have_cdata_section_handler, &
                         have_error_handler, have_signal_handler, &
                         have_start_document_handler, have_end_document_handler
 
@@ -227,7 +220,6 @@ have_end_prefix_handler = present(end_prefix_handler)
 have_pcdata_handler = present(pcdata_chunk_handler)
 have_comment_handler = present(comment_handler)
 have_xml_declaration_handler = present(xml_declaration_handler)
-have_cdata_section_handler = present(cdata_section_handler)
 have_error_handler = present(error_handler)
 have_signal_handler = present(signal_handler)
 have_start_document_handler = present(start_document_handler)  
@@ -432,12 +424,8 @@ do
                if (fx%debug) print *, &
                    "... Warning: CDATA section outside element context"
             else
-               if (have_cdata_section_handler) then
-                  call cdata_section_handler(str_vs(fx%pcdata))
-               else
-                  if (have_pcdata_handler) &
-                   call pcdata_chunk_handler(str_vs(fx%pcdata))
-               endif
+              if (have_pcdata_handler) &
+                call pcdata_chunk_handler(str_vs(fx%pcdata))
             endif
 
          else if (fx%context == COMMENT_TAG) then
