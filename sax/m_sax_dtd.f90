@@ -1,14 +1,15 @@
 module m_sax_dtd
 
   !Handling the Document Type Definition
-  !Only very limited: just internal entities;
-  !no external entities
+  !Fairly limited: just internal entities;
+  !no external entities are read.
   !And certainly no validation.
 
   use m_common_array_str, only : str_vs, vs_str
   use m_common_error, only: FoX_error
-  use m_sax_entities, only: entity_list, add_char_entity, init_entity_list, destroy_entity_list, &
-    code_to_str, code_to_str_len, entity_filter, entity_filter_len
+  use m_sax_entities, only: entity_list, add_char_entity, &
+       init_entity_list, destroy_entity_list, copy_entity_list, print_entity_list,&
+       code_to_str, code_to_str_len, entity_filter, entity_filter_len
 
   implicit none
   private
@@ -52,6 +53,7 @@ module m_sax_dtd
     character(len=1), dimension(:), pointer :: entitySystemId
     character(len=1), dimension(:), pointer :: NdataValue
     type(entity_list) :: pe_list
+    type(entity_list) :: ie_list
     integer :: dtd_state
     integer :: curr_pos
     logical :: external_found
@@ -65,9 +67,10 @@ module m_sax_dtd
 
 contains
 
-  subroutine init_dtd_parser(parse_state, dtd)
+  subroutine init_dtd_parser(parse_state, dtd, ents)
     type(dtd_parser), intent(out) :: parse_state
     character(len=*), intent(in) :: dtd
+    type(entity_list), intent(in), optional :: ents
 
     nullify(parse_state%dtd)
     allocate(parse_state%dtd(len(dtd)))
@@ -83,7 +86,12 @@ contains
     nullify(parse_state%entityPublicID)
     nullify(parse_state%entitySystemId)
     nullify(parse_state%ndataValue)
-    call init_entity_list(parse_state%pe_list)
+    call init_entity_list(parse_state%pe_list, PE=.true.)
+    if (present(ents)) then
+      parse_state%ie_list = copy_entity_list(ents)
+    else
+      call init_entity_list(parse_state%ie_list, PE=.false.)
+    endif
 
     parse_state%dtd_state = DTD_INIT
     parse_state%curr_pos = 1
@@ -106,18 +114,20 @@ contains
     if (associated(parse_state%NdataValue)) deallocate(parse_state%NdataValue)
 
     call destroy_entity_list(parse_state%pe_list)
+    call destroy_entity_list(parse_state%ie_list)
 
   end subroutine destroy_dtd_parser
 
 
-  subroutine parse_dtd(dtd)
+  subroutine parse_dtd(dtd, ents)
     character(len=*), intent(in):: dtd
+    type(entity_list), intent(inout) :: ents
 
     integer :: c, i, cp, n
 
     type(dtd_parser) :: parse_state
 
-    call init_dtd_parser(parse_state, dtd)
+    call init_dtd_parser(parse_state, dtd, ents)
 
     do 
       call tokenize_dtd(parse_state)
@@ -130,6 +140,8 @@ contains
               DTD_DOCTYPE, &
               DTD_DONE)
           if (debug) print*,'DTD parsed successfully'
+          call destroy_entity_list(ents)
+          ents = copy_entity_list(parse_state%ie_list)
           call destroy_dtd_parser(parse_state)
           return
         case default
@@ -292,11 +304,15 @@ contains
             if (parse_state%parameter_entity) then
               call add_char_entity(parse_state%pe_list, &
                 str_vs(parse_state%entityName), &
-                entity_filter(parse_state%pe_list, &
+                entity_filter(parse_state%ie_list, &
                                str_vs(parse_state%token(2:n-1))))
               deallocate(parse_state%entityName)
             else
-              continue !FIXME
+              call add_char_entity(parse_state%ie_list, &
+                str_vs(parse_state%entityName), &
+                entity_filter(parse_state%pe_list, &
+                               str_vs(parse_state%token(2:n-1))))
+              deallocate(parse_state%entityName)
             endif
           else
             call FoX_error("Badly quoted ENTITY content")

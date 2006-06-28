@@ -21,6 +21,7 @@ end type entity_t
 type entity_list
   private
   type(entity_t), dimension(:), pointer :: list
+  logical :: PE
 end type entity_list
 
 character(len=*), parameter :: digits = "0123456789"
@@ -37,39 +38,35 @@ public :: entity_list
 public :: init_entity_list
 public :: reset_entity_list
 public :: destroy_entity_list
+public :: print_entity_list
+public :: copy_entity_list
 public :: add_char_entity
 
 contains
 
-  subroutine init_entity_list(ents, standard)
+  subroutine init_entity_list(ents, PE)
     type(entity_list), intent(out) :: ents
-    logical, optional :: standard
+    logical :: PE
 
     allocate(ents%list(0))
 
-    if (present(standard)) then
-      if (.not.standard) then
-        return
-      endif
+    ents%PE = PE
+    if (PE) then
+      call add_char_entity(ents, "gt", ">")
+      call add_char_entity(ents, "lt", "<")
+      call add_char_entity(ents, "apos", "'")
+      call add_char_entity(ents, "quot", '"')
+      call add_char_entity(ents, "amp", "&")
     endif
-    call add_char_entity(ents, "gt", ">")
-    call add_char_entity(ents, "lt", "<")
-    call add_char_entity(ents, "apos", "'")
-    call add_char_entity(ents, "quot", '"')
-    call add_char_entity(ents, "amp", "&")
 
   end subroutine init_entity_list
 
 
-  subroutine reset_entity_list(ents, standard)
+  subroutine reset_entity_list(ents)
     type(entity_list), intent(inout) :: ents
-    logical, optional :: standard
-
-    type(entity_list) :: ents_tmp
-    integer :: i, n
 
     call destroy_entity_list(ents)
-    call init_entity_list(ents, standard)
+    call init_entity_list(ents, ents%PE)
 
   end subroutine reset_entity_list
 
@@ -87,6 +84,40 @@ contains
     deallocate(ents%list)
   end subroutine destroy_entity_list
 
+
+  function copy_entity_list(ents) result(ents2)
+    type(entity_list), intent(in) :: ents
+    type(entity_list) :: ents2
+
+    integer :: i, n
+
+    ents2%PE = ents%PE
+    n = size(ents%list)
+    allocate(ents2%list(n))
+    do i = 1, n
+      allocate(ents2%list(i)%code(size(ents%list(i)%code)))
+      ents2%list(i)%code = ents%list(i)%code
+      allocate(ents2%list(i)%repl(size(ents%list(i)%repl)))
+      ents2%list(i)%repl = ents%list(i)%repl
+    enddo
+
+  end function copy_entity_list
+
+
+  subroutine print_entity_list(ents)
+    type(entity_list), intent(inout) :: ents
+
+    integer :: i, n
+
+    n = size(ents%list)
+    print*, '>ENTITYLIST'
+    do i = 1, n
+      print'(a)', ents%list(i)%code
+      print'(a)', ents%list(i)%repl
+    enddo
+    print*, '<ENTITYLIST'
+    deallocate(ents%list)    
+  end subroutine print_entity_list
 
   subroutine add_char_entity(ents, code, repl)
     type(entity_list), intent(inout) :: ents
@@ -130,16 +161,18 @@ contains
 
     p = .false.
 
-    if (len(code) > 1) then
-      if (code(1:1) == "#") then
-        if (code(2:2) == "x") then
-          if (len(code) > 2) p = (verify(code(3:), hexdigits) == 0)
-        else
-          p = (verify(code(2:), digits) == 0)
+    if (.not.ents%PE) then
+      if (len(code) > 1) then
+        if (code(1:1) == "#") then
+          if (code(2:2) == "x") then
+            if (len(code) > 2) p = (verify(code(3:), hexdigits) == 0)
+          else
+            p = (verify(code(2:), digits) == 0)
+          endif
         endif
       endif
     endif
-        
+ 
     do i = 1, size(ents%list)
       if (code == str_vs(ents%list(i)%code)) then
         p = .true.
@@ -161,8 +194,10 @@ contains
       return
     endif
 
-    if (code(1:1) == "#") then
-      n = 1
+    if (.not.ents%PE) then
+      if (code(1:1) == "#") then
+        n = 1
+      endif
     endif
 
     do i = 1, size(ents%list)
@@ -187,15 +222,17 @@ contains
       endif
     enddo
 
-    ! Replace character references  (but only within the range of the
-    ! char intrinsic !!)
-    if (code(1:1) == "#") then
-      if (code(2:2) == "x") then       ! hex character reference
-        number = str_to_int_16(code(3:))   
-        repl = char(number)
-      else                             ! decimal character reference
-        number = str_to_int_10(code(2:))
-        repl = char(number)
+    if (.not.ents%PE) then
+      ! Replace character references  (but only within the range of the
+      ! char intrinsic !!)
+      if (code(1:1) == "#") then
+        if (code(2:2) == "x") then       ! hex character reference
+          number = str_to_int_16(code(3:))   
+          repl = char(number)
+        else                             ! decimal character reference
+          number = str_to_int_10(code(2:))
+          repl = char(number)
+        endif
       endif
     endif
 

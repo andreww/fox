@@ -118,7 +118,7 @@ type(fsm_t), intent(inout)   :: fx
  nullify(fx%root_element_name)
  call init_dict(fx%attributes)
  call initNamespaceDictionary(fx%nsDict)
- call init_entity_list(fx%entities)
+ call init_entity_list(fx%entities, PE=.false.)
 end subroutine init_fsm
 !------------------------------------------------------------
 subroutine reset_fsm(fx) 
