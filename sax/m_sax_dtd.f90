@@ -7,7 +7,7 @@ module m_sax_dtd
 
   use m_common_array_str, only : str_vs, vs_str
   use m_common_error, only: FoX_error
-  use m_sax_entities, only: entity_list, add_char_entity, &
+  use m_sax_entities, only: entity_list, add_internal_entity, add_external_entity, &
        init_entity_list, destroy_entity_list, copy_entity_list, print_entity_list,&
        code_to_str, code_to_str_len, entity_filter, entity_filter_len
 
@@ -53,7 +53,7 @@ module m_sax_dtd
     character(len=1), dimension(:), pointer :: entitySystemId
     character(len=1), dimension(:), pointer :: NdataValue
     type(entity_list) :: pe_list
-    type(entity_list) :: ie_list
+    type(entity_list) :: entity_list
     integer :: dtd_state
     integer :: curr_pos
     logical :: external_found
@@ -78,19 +78,19 @@ contains
 
     allocate(parse_state%token(0))
 
-    nullify(parse_state%docTypeName)
-    nullify(parse_state%PublicID)
-    nullify(parse_state%SystemId)
-    nullify(parse_state%entityName)
-    nullify(parse_state%entityContent)
-    nullify(parse_state%entityPublicID)
-    nullify(parse_state%entitySystemId)
-    nullify(parse_state%ndataValue)
+    allocate(parse_state%docTypeName(0))
+    allocate(parse_state%PublicID(0))
+    allocate(parse_state%SystemId(0))
+    allocate(parse_state%entityName(0))
+    allocate(parse_state%entityContent(0))
+    allocate(parse_state%entityPublicID(0))
+    allocate(parse_state%entitySystemId(0))
+    allocate(parse_state%ndataValue(0))
     call init_entity_list(parse_state%pe_list, PE=.true.)
     if (present(ents)) then
-      parse_state%ie_list = copy_entity_list(ents)
+      parse_state%entity_list = copy_entity_list(ents)
     else
-      call init_entity_list(parse_state%ie_list, PE=.false.)
+      call init_entity_list(parse_state%entity_list, PE=.false.)
     endif
 
     parse_state%dtd_state = DTD_INIT
@@ -114,7 +114,7 @@ contains
     if (associated(parse_state%NdataValue)) deallocate(parse_state%NdataValue)
 
     call destroy_entity_list(parse_state%pe_list)
-    call destroy_entity_list(parse_state%ie_list)
+    call destroy_entity_list(parse_state%entity_list)
 
   end subroutine destroy_dtd_parser
 
@@ -141,7 +141,7 @@ contains
               DTD_DONE)
           if (debug) print*,'DTD parsed successfully'
           call destroy_entity_list(ents)
-          ents = copy_entity_list(parse_state%ie_list)
+          ents = copy_entity_list(parse_state%entity_list)
           call destroy_dtd_parser(parse_state)
           return
         case default
@@ -163,6 +163,7 @@ contains
         endif
         
       case (DTD_DOCTYPE)
+        deallocate(parse_state%docTypeName)
         allocate(parse_state%docTypeName(n))
         parse_state%docTypeName = parse_state%token
         if (verify(str_vs(parse_state%docTypeName), NameChars) /= 0) &
@@ -196,6 +197,7 @@ contains
           .or. &
           (parse_state%token(1) == '"' .and. &
           parse_state%token(n) == '"')) then
+          deallocate(parse_state%PublicId)
           allocate(parse_state%PublicId(n - 2))
           parse_state%PublicId = parse_state%token(2:n-1)
           if (verify(str_vs(parse_state%PublicId), PubIdChars) /= 0) &
@@ -212,6 +214,7 @@ contains
           .or. &
           (parse_state%token(1) == '"' .and. &
           parse_state%token(n) == '"')) then
+          deallocate(parse_state%SystemId)
           allocate(parse_state%SystemId(n - 2))
           parse_state%SystemId = parse_state%token(2:n-1)
         else
@@ -267,7 +270,7 @@ contains
           if (debug) print*,'DTD Parameter ENTITY found'
         else
           parse_state%parameter_entity = .false.
-          if (associated(parse_state%entityName)) deallocate(parse_state%entityName)
+          deallocate(parse_state%entityName)
           allocate(parse_state%entityName(n))
           parse_state%entityName = parse_state%token
           if (verify(str_vs(parse_state%entityName), NameChars) /= 0) &
@@ -277,7 +280,7 @@ contains
         endif
         
       case (DTD_ENTITY_NAME)
-        if (associated(parse_state%entityName)) deallocate(parse_state%entityName)
+        deallocate(parse_state%entityName)
         allocate(parse_state%entityName(n))
         parse_state%entityName = parse_state%token
         if (verify(str_vs(parse_state%entityName), NameChars) /= 0) &
@@ -298,21 +301,22 @@ contains
             .or. &
             (parse_state%token(1) == '"' .and. &
             parse_state%token(n) == '"')) then
-            if (associated(parse_state%entityContent)) deallocate(parse_state%entityContent)
             if (debug) print*,'DTD ENTITY content found'
             print*, str_vs(parse_state%token(2:n-1))
             if (parse_state%parameter_entity) then
-              call add_char_entity(parse_state%pe_list, &
+              call add_internal_entity(parse_state%pe_list, &
                 str_vs(parse_state%entityName), &
-                entity_filter(parse_state%ie_list, &
-                               str_vs(parse_state%token(2:n-1))))
+                entity_filter(parse_state%entity_list, &
+                               str_vs(parse_state%token(2:n-1)))) 
               deallocate(parse_state%entityName)
+              allocate(parse_state%entityName(0))
             else
-              call add_char_entity(parse_state%ie_list, &
+              call add_internal_entity(parse_state%entity_list, &
                 str_vs(parse_state%entityName), &
                 entity_filter(parse_state%pe_list, &
                                str_vs(parse_state%token(2:n-1))))
               deallocate(parse_state%entityName)
+              allocate(parse_state%entityName(0))
             endif
           else
             call FoX_error("Badly quoted ENTITY content")
@@ -326,7 +330,7 @@ contains
           .or. &
           (parse_state%token(1) == '"' .and. &
           parse_state%token(n) == '"')) then
-          if (associated(parse_state%entityPublicId)) deallocate(parse_state%entityPublicId)
+          deallocate(parse_state%entityPublicId)
           allocate(parse_state%entityPublicId(n-2))
           parse_state%entityPublicId = parse_state%token(2:n-1)
           if (verify(str_vs(parse_state%entityPublicId), PubIdChars) /= 0) &
@@ -343,7 +347,7 @@ contains
           .or. &
           (parse_state%token(1) == '"' .and. &
           parse_state%token(n) == '"')) then
-          if (associated(parse_state%entitySystemId)) deallocate(parse_state%entitySystemId)
+          deallocate(parse_state%entitySystemId)
           allocate(parse_state%entitySystemId(n-2))
           parse_state%entitySystemId = parse_state%token(2:n-1)
         else
@@ -357,6 +361,10 @@ contains
           parse_state%dtd_state = DTD_ENTITY_NDATA_VALUE
           if (debug) print*,'DTD ENTITY NDATA keyword found'
         elseif (str_vs(parse_state%token) == ">") then
+          call add_external_entity(parse_state%entity_list, &
+               str_vs(parse_state%entityname), &
+               str_vs(parse_state%entityPublicId), &
+               str_vs(parse_state%entitySystemId))
           parse_state%dtd_state = DTD_INTERNAL
           if (debug) print*,'DTD DECLARATION finished'
         else
@@ -364,10 +372,16 @@ contains
         endif
         
       case (DTD_ENTITY_NDATA_VALUE)
+        deallocate(parse_state%NdataValue)
         allocate(parse_state%NdataValue(n))
         parse_state%NdataValue = parse_state%token
         if (verify(str_vs(parse_state%NdataValue), NameChars) /= 0) &
           call FoX_error("Invalid NDATA value")
+        call add_external_entity(parse_state%entity_list, &
+             str_vs(parse_state%entityname), &
+             str_vs(parse_state%entityPublicId), &
+             str_vs(parse_state%entitySystemId), &
+             str_vs(parse_state%NdataValue))
         parse_state%dtd_state = DTD_DECLARATION_DONE
         if (debug) print*,'DTD ENTITY NDATA value found'
 

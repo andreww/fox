@@ -1,46 +1,58 @@
 module m_sax_entities
-!
-! Entity management
-!
-! It deals with: 
-!    1. The five standard entities (gt,lt,amp,apos,quot)
-!    2. Character entities  (but only within the range of the char intrinsic)
-!
-use m_common_array_str, only: str_vs, vs_str
-use m_common_error, only : FoX_warning, FoX_error
-use m_common_format, only : str_to_int_10, str_to_int_16
 
-implicit none
-private
+  ! Entity management
 
-type entity_t
-  character(len=1), dimension(:), pointer :: code
-  character(len=1), dimension(:), pointer :: repl
-end type entity_t
+  ! It deals with: 
+  !    1. The five standard entities (gt,lt,amp,apos,quot)
+  !    2. Character entities  (but only within the range of the char intrinsic)
+  !    3. Parameter entities
+  !    4. Internal entities
+  ! In addition, it has the capacity to make lists of
+  !    1. External parsed entities
+  !    2. External unparsed entities
+  ! Though nothing is done with them currently elsewhere in FoX.
 
-type entity_list
+  use m_common_array_str, only: str_vs, vs_str
+  use m_common_error, only : FoX_warning, FoX_error
+  use m_common_format, only : str_to_int_10, str_to_int_16
+
+  implicit none
   private
-  type(entity_t), dimension(:), pointer :: list
-  logical :: PE
-end type entity_list
 
-character(len=*), parameter :: digits = "0123456789"
-character(len=*), parameter :: hexdigits = "0123456789abcdefABCDEF"
+  type entity_t
+    character(len=1), dimension(:), pointer :: code
+    logical :: internal
+    logical :: parsed
+    character(len=1), dimension(:), pointer :: repl
+    character(len=1), dimension(:), pointer :: publicId
+    character(len=1), dimension(:), pointer :: systemId
+   character(len=1), dimension(:), pointer :: notation
+  end type entity_t
 
-public :: code_to_str
-public :: code_to_str_len
-public :: code_registered
+  type entity_list
+    private
+    type(entity_t), dimension(:), pointer :: list
+    logical :: PE
+  end type entity_list
 
-public :: entity_filter_len
-public :: entity_filter
+  character(len=*), parameter :: digits = "0123456789"
+  character(len=*), parameter :: hexdigits = "0123456789abcdefABCDEF"
 
-public :: entity_list
-public :: init_entity_list
-public :: reset_entity_list
-public :: destroy_entity_list
-public :: print_entity_list
-public :: copy_entity_list
-public :: add_char_entity
+  public :: code_to_str
+  public :: code_to_str_len
+  public :: code_registered
+
+  public :: entity_filter_len
+  public :: entity_filter
+
+  public :: entity_list
+  public :: init_entity_list
+  public :: reset_entity_list
+  public :: destroy_entity_list
+  public :: print_entity_list
+  public :: copy_entity_list
+  public :: add_internal_entity
+  public :: add_external_entity
 
 contains
 
@@ -52,11 +64,11 @@ contains
 
     ents%PE = PE
     if (PE) then
-      call add_char_entity(ents, "gt", ">")
-      call add_char_entity(ents, "lt", "<")
-      call add_char_entity(ents, "apos", "'")
-      call add_char_entity(ents, "quot", '"')
-      call add_char_entity(ents, "amp", "&")
+      call add_entity(ents, "gt", ">", "", "", "", internal=.true., parsed=.true.)
+      call add_entity(ents, "lt", "<", "", "", "", internal=.true., parsed=.true.)
+      call add_entity(ents, "apos", "'", "", "", "", internal=.true., parsed=.true.)
+      call add_entity(ents, "quot", '"', "", "", "", internal=.true., parsed=.true.)
+      call add_entity(ents, "amp", "&", "", "", "", internal=.true., parsed=.true.)
     endif
 
   end subroutine init_entity_list
@@ -80,6 +92,9 @@ contains
     do i = 1, n
       deallocate(ents%list(i)%code)
       deallocate(ents%list(i)%repl)
+      deallocate(ents%list(i)%publicId)
+      deallocate(ents%list(i)%systemId)
+      deallocate(ents%list(i)%notation)
     enddo
     deallocate(ents%list)
   end subroutine destroy_entity_list
@@ -99,6 +114,12 @@ contains
       ents2%list(i)%code = ents%list(i)%code
       allocate(ents2%list(i)%repl(size(ents%list(i)%repl)))
       ents2%list(i)%repl = ents%list(i)%repl
+      allocate(ents2%list(i)%publicId(size(ents%list(i)%publicId)))
+      ents2%list(i)%publicId = ents%list(i)%publicId
+      allocate(ents2%list(i)%systemId(size(ents%list(i)%systemId)))
+      ents2%list(i)%systemId = ents%list(i)%systemId
+      allocate(ents2%list(i)%notation(size(ents%list(i)%notation)))
+      ents2%list(i)%notation = ents%list(i)%notation
     enddo
 
   end function copy_entity_list
@@ -112,46 +133,127 @@ contains
     n = size(ents%list)
     print*, '>ENTITYLIST'
     do i = 1, n
-      print'(a)', ents%list(i)%code
-      print'(a)', ents%list(i)%repl
+      print'(a)', str_vs(ents%list(i)%code)
+      print'(a)', str_vs(ents%list(i)%repl)
+      print'(a)', str_vs(ents%list(i)%publicId)
+      print'(a)', str_vs(ents%list(i)%systemId)
+      print'(a)', str_vs(ents%list(i)%notation)
     enddo
     print*, '<ENTITYLIST'
     deallocate(ents%list)    
   end subroutine print_entity_list
 
-  subroutine add_char_entity(ents, code, repl)
+
+  subroutine add_entity(ents, code, repl, publicId, systemId, notation, internal, parsed)
     type(entity_list), intent(inout) :: ents
     character(len=*), intent(in) :: code
     character(len=*), intent(in) :: repl
+    character(len=*), intent(in) :: publicId
+    character(len=*), intent(in) :: systemId
+    character(len=*), intent(in) :: notation
+    logical, intent(in) :: internal
+    logical, intent(in) :: parsed
 
     type(entity_list) :: ents_tmp
     integer :: i, n
 
+    ! This should only ever be called by add_internal_entity or add_external_entity
+    ! below, so we don't bother sanity-checking input.
+
     print*,'new entity:'
     print*,code
-    print*, repl
+    print*,repl
+    print*,publicId
+    print*,systemId
+    print*,notation
 
     n = size(ents%list)
+    !Are we redefining an existing entity?
+    do i = 1, n
+      if (len(code) == size(ents%list(i)%code)) then
+        if (code == str_vs(ents%list(i)%code)) then
+          deallocate(ents%list(i)%repl)
+          deallocate(ents%list(i)%publicId)
+          deallocate(ents%list(i)%systemId)
+          deallocate(ents%list(i)%notation)
+
+          ents%list(i)%internal = internal
+          ents%list(i)%parsed = parsed
+          allocate(ents%list(i)%repl(len(repl)))
+          ents%list(i)%repl = vs_str(repl)
+          allocate(ents%list(i)%publicId(len(publicId)))
+          ents%list(i)%publicId = vs_str(publicId)
+          allocate(ents%list(i)%systemId(len(systemId)))
+          ents%list(i)%systemId = vs_str(systemId)
+          allocate(ents%list(i)%notation(len(notation)))
+          ents%list(i)%notation = vs_str(notation)
+          return
+        endif
+      endif
+    enddo
     
     allocate(ents_tmp%list(n))
     do i = 1, n
       ents_tmp%list(i)%code => ents%list(i)%code
+      ents_tmp%list(i)%internal = ents%list(i)%internal
+      ents_tmp%list(i)%parsed = ents%list(i)%parsed
       ents_tmp%list(i)%repl => ents%list(i)%repl
+      ents_tmp%list(i)%publicId => ents%list(i)%publicId
+      ents_tmp%list(i)%systemId => ents%list(i)%systemId
+      ents_tmp%list(i)%notation => ents%list(i)%notation
     enddo
     deallocate(ents%list)
     allocate(ents%list(n+1))
     do i = 1, n
       ents%list(i)%code => ents_tmp%list(i)%code
+      ents%list(i)%internal = ents_tmp%list(i)%internal
+      ents%list(i)%parsed = ents_tmp%list(i)%parsed
       ents%list(i)%repl => ents_tmp%list(i)%repl
+      ents%list(i)%publicId => ents_tmp%list(i)%publicId
+      ents%list(i)%systemId => ents_tmp%list(i)%systemId
+      ents%list(i)%notation => ents_tmp%list(i)%notation
     enddo
     deallocate(ents_tmp%list)
+
     allocate(ents%list(i)%code(len(code)))
-    allocate(ents%list(i)%repl(len(repl)))
     ents%list(i)%code = vs_str(code)
+    ents%list(i)%internal = internal
+    ents%list(i)%parsed = parsed
+    allocate(ents%list(i)%repl(len(repl)))
     ents%list(i)%repl = vs_str(repl)
-  end subroutine add_char_entity
+    allocate(ents%list(i)%publicId(len(publicId)))
+    ents%list(i)%publicId = vs_str(publicId)
+    allocate(ents%list(i)%systemId(len(systemId)))
+    ents%list(i)%systemId = vs_str(systemId)
+    allocate(ents%list(i)%notation(len(notation)))
+    ents%list(i)%notation = vs_str(notation)
+  end subroutine add_entity
+
+
+  subroutine add_internal_entity(ents, code, repl)
+    type(entity_list), intent(inout) :: ents
+    character(len=*), intent(in) :: code
+    character(len=*), intent(in) :: repl
+
+    call add_entity(ents, code, repl, "", "", "", .true., .true.)
+  end subroutine add_internal_entity
 
   
+  subroutine add_external_entity(ents, code, systemId, publicId, notation)
+    type(entity_list), intent(inout) :: ents
+    character(len=*), intent(in) :: code
+    character(len=*), intent(in) :: publicId
+    character(len=*), intent(in) :: systemId
+    character(len=*), intent(in), optional :: notation
+    
+    if (present(notation)) then
+      call add_entity(ents, code, "", systemId, publicId, notation, .true., .false.)
+    else
+      call add_entity(ents, code, "", systemId, publicId, "", .true., .true.)
+    endif
+  end subroutine add_external_entity
+
+
   pure function code_registered(ents, code) result(p)
     type(entity_list), intent(in) :: ents
     character(len=*), intent(in)  :: code
