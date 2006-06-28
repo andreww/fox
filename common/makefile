@@ -2,7 +2,7 @@
 default: install
 #
 OBJFILES=m_common_array_str.o m_common_attrs.o m_common_buffer.o \
-         m_common_format.o \
+         m_common_format.o m_common_charset.o\
          m_common_error.o m_common_elstack.o m_common_io.o FoX_common.o
 #
 LIBRARY=libFoX_common.a
@@ -35,3 +35,4 @@ FoX_common.o: m_common_attrs.o
 m_common_attrs.o: m_common_array_str.o m_common_error.o
 m_common_buffer.o: m_common_error.o
 m_common_elstack.o: m_common_error.o
+m_common_io.o: m_common_error.o

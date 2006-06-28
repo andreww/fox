@@ -1,4 +1,4 @@
-module m_sax_charset
+module m_common_charset
 
   ! Written to use ASCII charset only. Full UNICODE would
   ! take much more work and need a proper unicode library.
@@ -49,7 +49,7 @@ contains !==========================================================
 
   end function belongs
 
-end module m_sax_charset
+end module m_common_charset
 
 
 
