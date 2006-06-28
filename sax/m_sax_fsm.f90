@@ -4,7 +4,8 @@ use FoX_common
 use m_common_array_str, only: vs_str
 use m_common_buffer
 use m_common_error, only : FoX_error
-use m_sax_charset
+use m_sax_charset, only : validchars, initialnamechars, namechars, &
+     whitespace, uppercase, operator(.in.)
 use m_sax_entities, only : init_entity_list, destroy_entity_list, reset_entity_list
 use m_sax_entities, only : entity_list, entity_filter_len, entity_filter
 use m_common_elstack
@@ -104,7 +105,6 @@ subroutine init_fsm(fx)
 type(fsm_t), intent(inout)   :: fx
 
  fx%state = INIT
- call setup_xml_charsets()
  fx%context = NULL_CONTEXT
  call init_elstack(fx%element_stack)
  fx%root_element_seen = .false.
@@ -125,7 +125,6 @@ subroutine reset_fsm(fx)
 type(fsm_t), intent(inout)   :: fx
 
  fx%state = INIT
- call setup_xml_charsets()
  fx%context = NULL_CONTEXT
  call reset_elstack(fx%element_stack)
  fx%action = ""
@@ -176,7 +175,7 @@ signal = QUIET
 ! Reset pcdata
 if (associated(fx%pcdata)) deallocate(fx%pcdata)
 
-if (.not. (c .in. valid_chars)) then
+if (.not. (c .in. validchars)) then
 !
 !      Let it pass (in case the underlying encoding is UTF-8)
 !      But this chars in a name will cause havoc
@@ -221,7 +220,7 @@ select case(fx%state)
       else if (c .in. whitespace) then
          fx%state = ERROR
          fx%action = ("Cannot have whitespace after <")
-      else if (c .in. initial_name_chars) then
+      else if (c .in. initialNameChars) then
          fx%context = OPENING_TAG
          fx%state = IN_NAME
          call add_to_buffer(c,fx%buffer)
@@ -236,7 +235,7 @@ select case(fx%state)
       if (c == "-") then
          fx%state = BANG_HYPHEN
          if (fx%debug) fx%action = ("Almost ready to start comment ")
-      else if (c .in. uppercase_chars) then
+      else if (c .in. uppercase) then
          if (fx%root_element_seen) then
            fx%state = ERROR
            fx%action = "DTD found after root element"
@@ -347,7 +346,7 @@ select case(fx%state)
       endif
 
  case (START_XML_DECLARATION)
-      if (c .in. initial_name_chars) then
+      if (c .in. initialNameChars) then
          fx%state = IN_NAME
          call add_to_buffer(c,fx%buffer)
          if (fx%debug) fx%action = ("Starting to read name in XML declaration")
@@ -369,7 +368,7 @@ select case(fx%state)
       else if (c .in. whitespace) then
          fx%state = ERROR
          fx%action = ("Cannot have whitespace after </")
-      else if (c .in. initial_name_chars) then
+      else if (c .in. initialNameChars) then
          fx%state = IN_NAME
          if (fx%debug) fx%action = ("Starting to read name inside endtag")
          call add_to_buffer(c,fx%buffer)
@@ -413,7 +412,7 @@ if (associated(fx%element_name)) deallocate(fx%element_name)
          fx%element_name = buffer_to_chararray(fx%buffer)
          call reset_buffer(fx%buffer)
          call reset_dict(fx%attributes)
-      else if (c .in. name_chars) then
+      else if (c .in. NameChars) then
          if (fx%debug) fx%action = ("Reading name chars in tag")
          call add_to_buffer(c,fx%buffer)
       else
@@ -441,7 +440,7 @@ if (associated(fx%element_name)) deallocate(fx%element_name)
          if (fx%debug) fx%action = ("End of attr. name")
          call add_key_to_dict(fx%attributes, str(fx%buffer))
          call reset_buffer(fx%buffer)
-      else if (c .in. name_chars) then
+      else if (c .in. NameChars) then
          if (fx%debug) fx%action = ("Reading attribute name chars")
          call add_to_buffer(c,fx%buffer)
       else
@@ -603,7 +602,7 @@ if (associated(fx%element_name)) deallocate(fx%element_name)
             fx%context = SINGLE_TAG
             if (fx%debug) fx%action = ("End whitespace in single tag")
          endif
-      else if (c .in. initial_name_chars) then
+      else if (c .in. initialNameChars) then
          fx%state = IN_ATT_NAME
          if (fx%debug) fx%action = ("Starting Attribute name in tag")
          call add_to_buffer(c,fx%buffer)
