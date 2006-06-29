@@ -50,7 +50,6 @@ module m_sax_entities
   public :: expand_parameter_entity
   public :: expand_parameter_entity_len
 
-  public :: entity_filter_EV_len2
   public :: entity_filter_EV_len
   public :: entity_filter_EV
 
@@ -609,65 +608,6 @@ contains
 
   end function entity_filter_text
 
-
-  function entity_filter_EV_len2(pents, str) result(n)
-    type(entity_list), intent(in) :: pents
-    character(len=*), intent(in) :: str
-    integer :: n
-
-    integer :: i, i2, j, k
-
-    i = 1
-    i2 = 1
-    do
-      if (i > len(str)) exit
-      if (str(i:i) == "&") then
-        if (i+1 > len(str)) then
-          n = 0
-          return
-        endif
-        k = index(str(i+1:),";")
-        if (k == 0) then
-          n = 0
-          return
-        endif
-        ! We only want to expand this if it's a character or parameter entity ...
-        ! Unparsed entities give undefined results here - we ignore them.FIXME?
-        if (is_char_entity(str(i+1:i+k-1))) then
-          j = expand_char_entity_len(str(i+1:i+k-1))
-          i  = i + k + 1
-          i2 = i2 + j
-        else
-          i = i + 1
-          i2 = i2 + 1
-        endif
-      elseif (str(i:i) == "%") then
-        if (i+1 > len(str)) then
-          n = 0
-          return
-        endif
-        k = index(str(i+1:),";")
-        if (k == 0) then
-          n = 0
-          return
-        endif
-        j = expand_parameter_entity_len(pents, str(i+1:i+k-1))
-        if (j == 0) then
-          n = 0
-          return
-        endif
-        i  = i + k + 1
-        i2 = i2 + j
-      else
-        i = i + 1
-        i2 = i2 + 1
-      endif
-      print*,'loop', i, len(str)
-    enddo
-
-    n = i2 - 1
-
-  end function entity_filter_EV_len2
 
   pure function entity_filter_EV_len(pents, str) result(n)
     type(entity_list), intent(in) :: pents
