@@ -38,6 +38,8 @@ module m_sax_entities
 
   character(len=*), parameter :: hexdigits = "0123456789abcdefABCDEF"
 
+  public :: is_unparsed_entity
+
   public :: expand_entity_text
   public :: expand_entity_text_len
   public :: existing_entity
@@ -48,6 +50,7 @@ module m_sax_entities
   public :: expand_parameter_entity
   public :: expand_parameter_entity_len
 
+  public :: entity_filter_EV_len2
   public :: entity_filter_EV_len
   public :: entity_filter_EV
 
@@ -117,7 +120,7 @@ contains
     allocate(ents%list(0))
 
     ents%PE = PE
-    if (PE) then
+    if (.not.PE) then
       call add_entity(ents, "gt", ">", "", "", "", internal=.true., parsed=.true.)
       call add_entity(ents, "lt", "<", "", "", "", internal=.true., parsed=.true.)
       call add_entity(ents, "apos", "'", "", "", "", internal=.true., parsed=.true.)
@@ -296,6 +299,22 @@ contains
   end function is_char_entity
 
 
+  function is_unparsed_entity(ents, code) result(p)
+    type(entity_list), intent(in) :: ents
+    character(len=*), intent(in) :: code
+    logical :: p
+
+    integer :: i
+
+    p = .false.
+
+    do i = 1, size(ents%list)
+      if (code == str_vs(ents%list(i)%code)) then
+        p = .not.ents%list(i)%parsed
+      endif
+    enddo
+  end function is_unparsed_entity
+ 
   pure function expand_char_entity_len(code) result(n)
     character(len=*), intent(in) :: code
     integer :: n
@@ -570,6 +589,9 @@ contains
         if (k == 0) then
           call FoX_error("Unmatched & in entity reference")
         endif
+        ! We really need to check here if we have got an unparsed
+        ! entity - if we do, then we only let it pass if this is
+        ! in content, not in an attribute value.
         j = expand_entity_text_len(ents, str(i+1:i+k-1))
         if (j > 0 .and. n > 0) then
           str2(i2:i2+j-1) = expand_entity_text(ents, str(i+1:i+k-1))
@@ -587,6 +609,65 @@ contains
 
   end function entity_filter_text
 
+
+  function entity_filter_EV_len2(pents, str) result(n)
+    type(entity_list), intent(in) :: pents
+    character(len=*), intent(in) :: str
+    integer :: n
+
+    integer :: i, i2, j, k
+
+    i = 1
+    i2 = 1
+    do
+      if (i > len(str)) exit
+      if (str(i:i) == "&") then
+        if (i+1 > len(str)) then
+          n = 0
+          return
+        endif
+        k = index(str(i+1:),";")
+        if (k == 0) then
+          n = 0
+          return
+        endif
+        ! We only want to expand this if it's a character or parameter entity ...
+        ! Unparsed entities give undefined results here - we ignore them.FIXME?
+        if (is_char_entity(str(i+1:i+k-1))) then
+          j = expand_char_entity_len(str(i+1:i+k-1))
+          i  = i + k + 1
+          i2 = i2 + j
+        else
+          i = i + 1
+          i2 = i2 + 1
+        endif
+      elseif (str(i:i) == "%") then
+        if (i+1 > len(str)) then
+          n = 0
+          return
+        endif
+        k = index(str(i+1:),";")
+        if (k == 0) then
+          n = 0
+          return
+        endif
+        j = expand_parameter_entity_len(pents, str(i+1:i+k-1))
+        if (j == 0) then
+          n = 0
+          return
+        endif
+        i  = i + k + 1
+        i2 = i2 + j
+      else
+        i = i + 1
+        i2 = i2 + 1
+      endif
+      print*,'loop', i, len(str)
+    enddo
+
+    n = i2 - 1
+
+  end function entity_filter_EV_len2
 
   pure function entity_filter_EV_len(pents, str) result(n)
     type(entity_list), intent(in) :: pents
@@ -613,12 +694,26 @@ contains
         ! Unparsed entities give undefined results here - we ignore them.FIXME?
         if (is_char_entity(str(i+1:i+k-1))) then
           j = expand_char_entity_len(str(i+1:i+k-1))
+          i  = i + k + 1
+          i2 = i2 + j
         else
-          j = expand_parameter_entity_len(pents, str(i+1:i+k-1))
-          if (j == 0) then
-            n = 0
-            return
-         endif
+          i = i + 1
+          i2 = i2 + 1
+        endif
+      elseif (str(i:i) == "%") then
+        if (i+1 > len(str)) then
+          n = 0
+          return
+        endif
+        k = index(str(i+1:),";")
+        if (k == 0) then
+          n = 0
+          return
+        endif
+        j = expand_parameter_entity_len(pents, str(i+1:i+k-1))
+        if (j == 0) then
+          n = 0
+          return
         endif
         i  = i + k + 1
         i2 = i2 + j
@@ -641,7 +736,7 @@ contains
     integer :: i, i2, j, k, n
 
     n = len(str2)
-
+    str2 = ""
     i = 1
     i2 = 1
     do
@@ -658,14 +753,27 @@ contains
         ! Unparsed entities give undefined results here - we ignore them.FIXME?
         if (is_char_entity(str(i+1:i+k-1))) then
           j = expand_char_entity_len(str(i+1:i+k-1))
-          str2(i2:i2+j-1) = expand_char_entity(str(i+1:i+k-1))
+          if (n > 0) str2(i2:i2+j-1) = expand_char_entity(str(i+1:i+k-1))
+          i  = i + k + 1
+          i2 = i2 + j
         else
-          j = expand_parameter_entity_len(pents, str(i+1:i+k-1))
-          if (j > 0) then
-            str2(i2:i2+j-1) = expand_parameter_entity(pents, str(i+1:i+k-1))
-          else
-            call FoX_error("Unknown parameter entity")
-          endif
+          str2(i2:i2) = "&"
+          i = i + 1
+          i2 = i2 + 1
+        endif
+     elseif (str(i:i) == "%") then
+        if (i+1 > len(str)) then
+          call FoX_error("Unmatched % in entity reference")
+        endif
+        k = index(str(i+1:),";")
+        if (k == 0) then
+          call FoX_error("Unmatched % in entity reference")
+        endif
+        j = expand_parameter_entity_len(pents, str(i+1:i+k-1))
+        if (j > 0 .and. n > 0) then
+          str2(i2:i2+j-1) = expand_parameter_entity(pents, str(i+1:i+k-1))
+        else
+          call FoX_error("Unknown parameter entity")
         endif
         i  = i + k + 1
         i2 = i2 + j
@@ -674,6 +782,7 @@ contains
         i = i + 1
         i2 = i2 + 1
       endif
+      print*,str2
     enddo
 
   end function entity_filter_EV

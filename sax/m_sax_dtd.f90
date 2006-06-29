@@ -302,11 +302,10 @@ contains
             (parse_state%token(1) == '"' .and. &
             parse_state%token(n) == '"')) then
             if (debug) print*,'DTD ENTITY content found'
-            print*, str_vs(parse_state%token(2:n-1))
             if (parse_state%parameter_entity) then
               call add_internal_entity(parse_state%pe_list, &
                 str_vs(parse_state%entityName), &
-                entity_filter_EV(parse_state%entity_list, &
+                entity_filter_EV(parse_state%pe_list, &
                                str_vs(parse_state%token(2:n-1)))) 
               deallocate(parse_state%entityName)
               allocate(parse_state%entityName(0))

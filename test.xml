@@ -3,6 +3,7 @@
 <!DOCTYPE test [
 <!-- a comment -->
 <?this is a PI?>
+<!NOTATION GIF "systemid">
 <!ENTITY % Pub-Status "This is a pre-publication copy">
 <!ENTITY expanded "woteva">
 <!ENTITY extern SYSTEM "star.xhtml">
@@ -18,7 +19,6 @@
           type    (bullets|ordered|glossary)  "ordered">
 <!ATTLIST form
           method  CDATA   #FIXED "POST">
-<!NOTATION stuff>
 <!ENTITY example "<p>An ampersand (&#38;#38;) may be escaped
 numerically (&#38;#38;#38;) or with a general entity
 (&amp;amp;).</p>" >
@@ -27,10 +27,10 @@ numerically (&#38;#38;#38;) or with a general entity
 %xx;
 ]>
 
-&example;
 
 <test>
 This sample shows a &tricky; method.
+&example;
 </test>
 
 

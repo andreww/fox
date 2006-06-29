@@ -2,16 +2,17 @@ module m_sax_fsm
 
 use FoX_common, only: dictionary_t, add_key_to_dict, add_value_to_dict, &
      init_dict, reset_dict, destroy_dict
-use m_common_array_str, only: vs_str
+use m_common_array_str, only: vs_str, str_vs
 use m_common_buffer, only: buffer_t, buffer_to_chararray, len, str, &
      buffer_nearly_full, add_to_buffer, reset_buffer
-use m_common_error, only: FoX_error
+use m_common_error, only: FoX_warning, FoX_error
 use m_common_elstack, only: elstack_t, init_elstack, reset_elstack, destroy_elstack
 use m_common_charset, only: validchars, initialnamechars, namechars, &
      whitespace, uppercase, operator(.in.)
 
 use m_sax_entities, only: init_entity_list, destroy_entity_list, reset_entity_list
 use m_sax_entities, only: entity_list, entity_filter_text_len, entity_filter_text
+use m_sax_entities, only: is_unparsed_entity
 use m_sax_namespaces, only: namespaceDictionary, initNamespaceDictionary, &
      destroyNamespaceDictionary
 
