@@ -9,7 +9,7 @@ module m_sax_dtd
   use m_common_error, only: FoX_error
   use m_sax_entities, only: entity_list, add_internal_entity, add_external_entity, &
        init_entity_list, destroy_entity_list, copy_entity_list, print_entity_list,&
-       code_to_str, code_to_str_len, entity_filter, entity_filter_len
+       expand_parameter_entity_len, expand_parameter_entity, entity_filter_EV, entity_filter_EV_len
 
   implicit none
   private
@@ -306,14 +306,14 @@ contains
             if (parse_state%parameter_entity) then
               call add_internal_entity(parse_state%pe_list, &
                 str_vs(parse_state%entityName), &
-                entity_filter(parse_state%entity_list, &
+                entity_filter_EV(parse_state%entity_list, &
                                str_vs(parse_state%token(2:n-1)))) 
               deallocate(parse_state%entityName)
               allocate(parse_state%entityName(0))
             else
               call add_internal_entity(parse_state%entity_list, &
                 str_vs(parse_state%entityName), &
-                entity_filter(parse_state%pe_list, &
+                entity_filter_EV(parse_state%pe_list, &
                                str_vs(parse_state%token(2:n-1))))
               deallocate(parse_state%entityName)
               allocate(parse_state%entityName(0))
@@ -455,6 +455,7 @@ contains
       elseif (all(parse_state%dtd(c:c+6) == vs_str('ATTLIST')))then
         continue
       else
+        print*, str_vs (parse_state%dtd(c:) )
         call FoX_error("Tokenizing failed")
       endif
     endif
@@ -516,12 +517,12 @@ contains
         call FoX_error("Unterminated PE reference")
       allocate(PEref(cp-1))
       PEref = parse_state%dtd(c+1:c+cp-1)
-      n = code_to_str_len(parse_state%pe_list, str_vs(PEref))
+      n = expand_parameter_entity_len(parse_state%pe_list, str_vs(PEref))
       if (n == 0) &
         call FoX_error("Unregistered PE")
       ! Yes, we must rewrite the DTD string.
       allocate(PEexpanded(n))
-      PEexpanded = vs_str(code_to_str(parse_state%pe_list, str_vs(PEref)))
+      PEexpanded = vs_str(expand_parameter_entity(parse_state%pe_list, str_vs(PEref)))
       allocate(dtdtmp(size(parse_state%dtd) - cp - 1 + n))
       dtdtmp(:c-1) = parse_state%dtd(:c-1)
       dtdtmp(c:c+n-1) = PEexpanded

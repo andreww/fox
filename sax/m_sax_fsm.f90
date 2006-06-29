@@ -11,7 +11,7 @@ use m_common_charset, only: validchars, initialnamechars, namechars, &
      whitespace, uppercase, operator(.in.)
 
 use m_sax_entities, only: init_entity_list, destroy_entity_list, reset_entity_list
-use m_sax_entities, only: entity_list, entity_filter_len, entity_filter
+use m_sax_entities, only: entity_list, entity_filter_text_len, entity_filter_text
 use m_sax_namespaces, only: namespaceDictionary, initNamespaceDictionary, &
      destroyNamespaceDictionary
 
@@ -496,7 +496,7 @@ if (associated(fx%element_name)) deallocate(fx%element_name)
          if (fx%debug) fx%action = ("Emtpy attribute value...")
          if (fx%entities_in_attributes) then
             call add_value_to_dict(fx%attributes, &
-                 entity_filter(fx%entities, str(fx%buffer)))
+                 entity_filter_text(fx%entities, str(fx%buffer)))
             fx%entities_in_attributes = .false.
          else
             call add_value_to_dict(fx%attributes, str(fx%buffer))
@@ -518,7 +518,7 @@ if (associated(fx%element_name)) deallocate(fx%element_name)
          if (fx%debug) fx%action = ("End of attribute value")
          if (fx%entities_in_attributes) then
             call add_value_to_dict(fx%attributes, &
-                 entity_filter(fx%entities, str(fx%buffer)))
+                 entity_filter_text(fx%entities, str(fx%buffer)))
             fx%entities_in_attributes = .false.
          else
             call add_value_to_dict(fx%attributes, str(fx%buffer))
@@ -687,8 +687,8 @@ if (associated(fx%element_name)) deallocate(fx%element_name)
          signal = CHUNK_OF_PCDATA
          if (fx%debug) fx%action = ("End of pcdata -- Starting tag")
          if (fx%entities_in_pcdata) then
-            allocate(fx%pcdata(entity_filter_len(fx%entities, str(fx%buffer))))
-            fx%pcdata = vs_str(entity_filter(fx%entities, str(fx%buffer)))
+            allocate(fx%pcdata(entity_filter_text_len(fx%entities, str(fx%buffer))))
+            fx%pcdata = vs_str(entity_filter_text(fx%entities, str(fx%buffer)))
             fx%entities_in_pcdata = .false.
          else
             allocate(fx%pcdata(len(fx%buffer)))
@@ -704,8 +704,8 @@ if (associated(fx%element_name)) deallocate(fx%element_name)
          if (fx%debug) fx%action = ("Resetting PCDATA buffer at newline")
          call add_to_buffer(c,fx%buffer)
          if (fx%entities_in_pcdata) then
-            allocate(fx%pcdata(entity_filter_len(fx%entities, str(fx%buffer))))
-            fx%pcdata = vs_str(entity_filter(fx%entities, str(fx%buffer)))
+            allocate(fx%pcdata(entity_filter_text_len(fx%entities, str(fx%buffer))))
+            fx%pcdata = vs_str(entity_filter_text(fx%entities, str(fx%buffer)))
             fx%entities_in_pcdata = .false.
          else
             allocate(fx%pcdata(len(fx%buffer)))
@@ -724,8 +724,8 @@ if (associated(fx%element_name)) deallocate(fx%element_name)
                signal = CHUNK_OF_PCDATA
                if (fx%debug) fx%action = ("Resetting almost full PCDATA buffer")
                if (fx%entities_in_pcdata) then
-                 allocate(fx%pcdata(entity_filter_len(fx%entities, str(fx%buffer))))
-                 fx%pcdata = vs_str(entity_filter(fx%entities, str(fx%buffer)))
+                 allocate(fx%pcdata(entity_filter_text_len(fx%entities, str(fx%buffer))))
+                 fx%pcdata = vs_str(entity_filter_text(fx%entities, str(fx%buffer)))
                  fx%entities_in_pcdata = .false.
                else
                   allocate(fx%pcdata(len(fx%buffer)))
@@ -752,8 +752,8 @@ if (associated(fx%element_name)) deallocate(fx%element_name)
          if (fx%debug) fx%action = ("Resetting PCDATA buffer at repeated newline")
          call add_to_buffer(c,fx%buffer)
          if (fx%entities_in_pcdata) then
-            allocate(fx%pcdata(entity_filter_len(fx%entities, str(fx%buffer))))
-            fx%pcdata = vs_str(entity_filter(fx%entities, str(fx%buffer)))
+            allocate(fx%pcdata(entity_filter_text_len(fx%entities, str(fx%buffer))))
+            fx%pcdata = vs_str(entity_filter_text(fx%entities, str(fx%buffer)))
             fx%entities_in_pcdata = .false.
          else
             allocate(fx%pcdata(len(fx%buffer)))
@@ -773,8 +773,8 @@ if (associated(fx%element_name)) deallocate(fx%element_name)
                signal = CHUNK_OF_PCDATA
                if (fx%debug) fx%action = ("Resetting almost full PCDATA buffer")
                if (fx%entities_in_pcdata) then
-                  allocate(fx%pcdata(entity_filter_len(fx%entities, str(fx%buffer))))
-                  fx%pcdata = vs_str(entity_filter(fx%entities, str(fx%buffer)))
+                  allocate(fx%pcdata(entity_filter_text_len(fx%entities, str(fx%buffer))))
+                  fx%pcdata = vs_str(entity_filter_text(fx%entities, str(fx%buffer)))
                   fx%entities_in_pcdata = .false.
                else
                   allocate(fx%pcdata(len(fx%buffer)))

@@ -38,6 +38,8 @@ module m_common_charset
   public :: whitespace
   public :: uppercase
 
+  public :: digits
+
 contains !==========================================================
 
   function belongs(c,charset)  result(res)

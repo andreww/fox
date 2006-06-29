@@ -13,8 +13,9 @@ module m_sax_entities
   ! Though nothing is done with them currently elsewhere in FoX.
 
   use m_common_array_str, only: str_vs, vs_str
-  use m_common_error, only : FoX_warning, FoX_error
-  use m_common_format, only : str_to_int_10, str_to_int_16
+  use m_common_charset, only: digits
+  use m_common_error, only: FoX_warning, FoX_error
+  use m_common_format, only: str_to_int_10, str_to_int_16
 
   implicit none
   private
@@ -26,7 +27,7 @@ module m_sax_entities
     character(len=1), dimension(:), pointer :: repl
     character(len=1), dimension(:), pointer :: publicId
     character(len=1), dimension(:), pointer :: systemId
-   character(len=1), dimension(:), pointer :: notation
+    character(len=1), dimension(:), pointer :: notation
   end type entity_t
 
   type entity_list
@@ -35,15 +36,20 @@ module m_sax_entities
     logical :: PE
   end type entity_list
 
-  character(len=*), parameter :: digits = "0123456789"
   character(len=*), parameter :: hexdigits = "0123456789abcdefABCDEF"
 
-  public :: code_to_str
-  public :: code_to_str_len
-  public :: code_registered
+  public :: expand_entity_text
+  public :: expand_entity_text_len
+  public :: existing_entity
 
-  public :: entity_filter_len
-  public :: entity_filter
+  public :: entity_filter_text_len
+  public :: entity_filter_text
+
+  public :: expand_parameter_entity
+  public :: expand_parameter_entity_len
+
+  public :: entity_filter_EV_len
+  public :: entity_filter_EV
 
   public :: entity_list
   public :: init_entity_list
@@ -55,6 +61,54 @@ module m_sax_entities
   public :: add_external_entity
 
 contains
+
+
+  pure function deep_copy_entity(ent1) result(ent2)
+    type(entity_t), intent(in) :: ent1
+    type(entity_t) :: ent2
+    
+    ent2%internal = ent1%internal
+    ent2%parsed = ent1%parsed
+    allocate(ent2%code(size(ent1%code)))
+    allocate(ent2%repl(size(ent1%repl)))
+    allocate(ent2%PublicId(size(ent1%PublicId)))
+    allocate(ent2%SystemId(size(ent1%SystemId)))
+    allocate(ent2%notation(size(ent1%notation)))
+    ent2%code = ent1%code
+    ent2%repl = ent1%repl
+    ent2%publicId = ent1%publicId
+    ent2%systemId = ent1%systemId
+    ent2%notation = ent1%notation
+
+  end function deep_copy_entity
+
+
+  function shallow_copy_entity(ent1) result(ent2)
+    type(entity_t), intent(in) :: ent1
+    type(entity_t) :: ent2
+    
+    ent2%internal = ent1%internal
+    ent2%parsed = ent1%parsed
+    ent2%code => ent1%code
+    ent2%repl => ent1%repl
+    ent2%publicId => ent1%publicId
+    ent2%systemId => ent1%systemId
+    ent2%notation => ent1%notation
+
+  end function shallow_copy_entity
+
+
+  subroutine destroy_entity(ent)
+    type(entity_t), intent(inout) :: ent
+    
+    deallocate(ent%code)
+    deallocate(ent%repl)
+    deallocate(ent%publicId)
+    deallocate(ent%systemId)
+    deallocate(ent%notation)
+
+  end subroutine destroy_entity
+
 
   subroutine init_entity_list(ents, PE)
     type(entity_list), intent(out) :: ents
@@ -90,11 +144,7 @@ contains
 
     n = size(ents%list)
     do i = 1, n
-      deallocate(ents%list(i)%code)
-      deallocate(ents%list(i)%repl)
-      deallocate(ents%list(i)%publicId)
-      deallocate(ents%list(i)%systemId)
-      deallocate(ents%list(i)%notation)
+      call destroy_entity(ents%list(i))
     enddo
     deallocate(ents%list)
   end subroutine destroy_entity_list
@@ -110,16 +160,7 @@ contains
     n = size(ents%list)
     allocate(ents2%list(n))
     do i = 1, n
-      allocate(ents2%list(i)%code(size(ents%list(i)%code)))
-      ents2%list(i)%code = ents%list(i)%code
-      allocate(ents2%list(i)%repl(size(ents%list(i)%repl)))
-      ents2%list(i)%repl = ents%list(i)%repl
-      allocate(ents2%list(i)%publicId(size(ents%list(i)%publicId)))
-      ents2%list(i)%publicId = ents%list(i)%publicId
-      allocate(ents2%list(i)%systemId(size(ents%list(i)%systemId)))
-      ents2%list(i)%systemId = ents%list(i)%systemId
-      allocate(ents2%list(i)%notation(size(ents%list(i)%notation)))
-      ents2%list(i)%notation = ents%list(i)%notation
+      ents2%list(i) = deep_copy_entity(ents%list(i))
     enddo
 
   end function copy_entity_list
@@ -160,13 +201,6 @@ contains
     ! This should only ever be called by add_internal_entity or add_external_entity
     ! below, so we don't bother sanity-checking input.
 
-    print*,'new entity:'
-    print*,code
-    print*,repl
-    print*,publicId
-    print*,systemId
-    print*,notation
-
     n = size(ents%list)
     !Are we redefining an existing entity?
     do i = 1, n
@@ -194,24 +228,12 @@ contains
     
     allocate(ents_tmp%list(n))
     do i = 1, n
-      ents_tmp%list(i)%code => ents%list(i)%code
-      ents_tmp%list(i)%internal = ents%list(i)%internal
-      ents_tmp%list(i)%parsed = ents%list(i)%parsed
-      ents_tmp%list(i)%repl => ents%list(i)%repl
-      ents_tmp%list(i)%publicId => ents%list(i)%publicId
-      ents_tmp%list(i)%systemId => ents%list(i)%systemId
-      ents_tmp%list(i)%notation => ents%list(i)%notation
+      ents_tmp%list(i) = shallow_copy_entity(ents%list(i))
     enddo
     deallocate(ents%list)
     allocate(ents%list(n+1))
     do i = 1, n
-      ents%list(i)%code => ents_tmp%list(i)%code
-      ents%list(i)%internal = ents_tmp%list(i)%internal
-      ents%list(i)%parsed = ents_tmp%list(i)%parsed
-      ents%list(i)%repl => ents_tmp%list(i)%repl
-      ents%list(i)%publicId => ents_tmp%list(i)%publicId
-      ents%list(i)%systemId => ents_tmp%list(i)%systemId
-      ents%list(i)%notation => ents_tmp%list(i)%notation
+      ents%list(i) = shallow_copy_entity(ents_tmp%list(i))
     enddo
     deallocate(ents_tmp%list)
 
@@ -254,7 +276,86 @@ contains
   end subroutine add_external_entity
 
 
-  pure function code_registered(ents, code) result(p)
+  pure function is_char_entity(code) result(p)
+    character(len=*), intent(in) :: code
+    logical :: p
+
+    p = .false.
+
+    if (len(code) > 1) then
+      if (code(1:1) == "#") then
+        if (code(2:2) == "x") then
+          if (len(code) > 2) then
+            p = (verify(code(3:), hexdigits) == 0)
+          endif
+        else
+          p = (verify(code(2:), digits) == 0)
+        endif
+      endif
+    endif
+  end function is_char_entity
+
+
+  pure function expand_char_entity_len(code) result(n)
+    character(len=*), intent(in) :: code
+    integer :: n
+
+    integer :: number
+
+    if (code(1:1) == "#") then
+      if (code(2:2) == "x") then       ! hex character reference
+        if (verify(code(3:), digits) == 0) then
+          number = str_to_int_16(code(3:))   
+          if (32 <= number .and. number <= 126) then
+            n = 1
+          else
+            n = len(code) + 2
+          endif
+        else 
+           n = 0
+        endif
+      else                             ! decimal character reference
+        if (verify(code(3:), digits) == 0) then
+          number = str_to_int_10(code(2:))
+          if (32 <= number .and. number <= 126) then
+            n = 1
+          else
+            n = len(code) + 2
+          endif
+        else 
+          n = 0
+        endif
+      endif
+    else
+      n = 0
+    endif
+  end function expand_char_entity_len
+
+
+  function expand_char_entity(code) result(repl)
+    character(len=*), intent(in) :: code
+    character(len=expand_char_entity_len(code)) :: repl
+
+    integer :: number
+
+    select case (len(repl))
+    case (0)
+      call FoX_error("Invalid character entity reference")
+    case (1)  
+      if (code(2:2) == "x") then       ! hex character reference
+        number = str_to_int_16(code(3:))   
+      else                             ! decimal character reference
+        number = str_to_int_10(code(2:))
+      endif
+      repl = achar(number)
+    case default
+      repl = "&"//code//";"
+    end select
+
+  end function expand_char_entity
+
+
+  pure function existing_entity(ents, code) result(p)
     type(entity_list), intent(in) :: ents
     character(len=*), intent(in)  :: code
     logical :: p
@@ -262,6 +363,8 @@ contains
     integer :: i
 
     p = .false.
+    
+!FIXME the following test is not entirely in accordance with the valid chars check we do elsewhere...
 
     if (.not.ents%PE) then
       if (len(code) > 1) then
@@ -282,66 +385,137 @@ contains
       endif
     enddo
 
-  end function code_registered
+  end function existing_entity
 
-  pure function code_to_str_len(ents, code) result(n)
+
+  pure function get_entity(ents, code) result(ent)
+    type(entity_list), intent(in) :: ents
+    character(len=*), intent(in)  :: code
+    type(entity_t) :: ent
+
+    integer :: i
+
+    do i = 1, size(ents%list)
+      if (code == str_vs(ents%list(i)%code)) then
+        ent = deep_copy_entity(ents%list(i))
+        return
+      endif
+    enddo
+
+  end function get_entity
+    
+
+  pure function expand_entity_text_len(ents, code) result(n)
     type(entity_list), intent(in) :: ents
     character(len=*), intent(in)  :: code
     integer :: n
 
     integer :: i
+    type(entity_t) :: ent
 
-    if (.not.code_registered(ents, code)) then
-      n = 0
+    if (is_char_entity(code)) then
+      n = expand_char_entity_len(code)
       return
     endif
 
-    if (.not.ents%PE) then
-      if (code(1:1) == "#") then
-        n = 1
+    if (.not.existing_entity(ents, code)) then
+      n = len(code) + 2
+      return
+    endif
+
+    do i = 1, size(ents%list)
+      if (code == str_vs(ents%list(i)%code)) then
+        if (ents%list(i)%internal) then
+          n = size(ents%list(i)%repl)
+        else
+          if (.not.ents%list(i)%parsed) then
+            n = 0
+          else
+            ! Here we would read in the additional doc
+            n = len(code) + 2
+            ! unless we're in an attribute value, in which case this is forbidden.
+          endif
+        endif
+        return
       endif
+    enddo
+
+  end function expand_entity_text_len
+
+
+  function expand_entity_text(ents, code) result(repl)
+    type(entity_list), intent(in) :: ents
+    character(len=*), intent(in)  :: code
+    character(len=expand_entity_text_len(ents, code)) :: repl
+
+    integer :: number, i
+
+    if (is_char_entity(code)) then
+      repl = expand_char_entity(code)
+      return
+    endif
+
+    if (.not.existing_entity(ents, code)) then
+      repl = "&"//code//";"
+      return
+    endif
+
+    do i = 1, size(ents%list)
+      if (code == str_vs(ents%list(i)%code)) then
+        if (ents%list(i)%internal) then
+          repl = str_vs(ents%list(i)%repl)
+        else
+          repl = "&"//code//";"
+        endif
+        return
+      endif
+    enddo
+
+  end function expand_entity_text
+
+
+  pure function expand_parameter_entity_len(ents, code) result(n)
+    type(entity_list), intent(in) :: ents
+    character(len=*), intent(in)  :: code
+    integer :: n
+
+    integer :: i
+    type(entity_t) :: ent
+
+    if (.not.existing_entity(ents, code)) then
+      n = 0
+      return
     endif
 
     do i = 1, size(ents%list)
       if (code == str_vs(ents%list(i)%code)) then
         n = size(ents%list(i)%repl)
-        return
       endif
     enddo
-  end function code_to_str_len
 
-  function code_to_str(ents, code) result(repl)
+  end function expand_parameter_entity_len
+
+
+  function expand_parameter_entity(ents, code) result(repl)
     type(entity_list), intent(in) :: ents
     character(len=*), intent(in)  :: code
-    character(len=code_to_str_len(ents, code)) :: repl
+    character(len=expand_entity_text_len(ents, code)) :: repl
 
     integer :: number, i
+
+    if (len(repl) == 0) &
+      call FoX_error("Non-existent PE")
 
     do i = 1, size(ents%list)
       if (code == str_vs(ents%list(i)%code)) then
         repl = str_vs(ents%list(i)%repl)
-        return
       endif
     enddo
 
-    if (.not.ents%PE) then
-      ! Replace character references  (but only within the range of the
-      ! char intrinsic !!)
-      if (code(1:1) == "#") then
-        if (code(2:2) == "x") then       ! hex character reference
-          number = str_to_int_16(code(3:))   
-          repl = char(number)
-        else                             ! decimal character reference
-          number = str_to_int_10(code(2:))
-          repl = char(number)
-        endif
-      endif
-    endif
-
-  end function code_to_str
+  end function expand_parameter_entity
     
 
-  pure function entity_filter_len(ents, str) result(n)
+  pure function entity_filter_text_len(ents, str) result(n)
     type(entity_list), intent(in) :: ents
     character(len=*), intent(in) :: str
     integer :: n
@@ -362,7 +536,7 @@ contains
         if (k == 0) then
           exit
         endif
-        j = code_to_str_len(ents, str(i+1:i+k-1))
+        j = expand_entity_text_len(ents, str(i+1:i+k-1))
         i  = i + k + 1
         i2 = i2 + j
       else
@@ -373,12 +547,12 @@ contains
     
     n = i2 - 1
 
-  end function entity_filter_len
+  end function entity_filter_text_len
 
-  function entity_filter(ents, str) result(str2)
+  function entity_filter_text(ents, str) result(str2)
     type(entity_list), intent(in) :: ents
     character(len=*), intent(in) :: str
-    character(len=entity_filter_len(ents, str)) :: str2
+    character(len=entity_filter_text_len(ents, str)) :: str2
 
     integer :: i, i2, j, k, n
 
@@ -396,9 +570,9 @@ contains
         if (k == 0) then
           call FoX_error("Unmatched & in entity reference")
         endif
-        j = code_to_str_len(ents, str(i+1:i+k-1))
+        j = expand_entity_text_len(ents, str(i+1:i+k-1))
         if (j > 0 .and. n > 0) then
-          str2(i2:i2+j-1) = code_to_str(ents, str(i+1:i+k-1))
+          str2(i2:i2+j-1) = expand_entity_text(ents, str(i+1:i+k-1))
         else
           call FoX_warning("Ignored unknown entity: &" // str(i+1:i+k-1) // ";")
         endif
@@ -411,6 +585,98 @@ contains
       endif
     enddo
 
-  end function entity_filter
+  end function entity_filter_text
+
+
+  pure function entity_filter_EV_len(pents, str) result(n)
+    type(entity_list), intent(in) :: pents
+    character(len=*), intent(in) :: str
+    integer :: n
+
+    integer :: i, i2, j, k
+
+    i = 1
+    i2 = 1
+    do
+      if (i > len(str)) exit
+      if (str(i:i) == "&") then
+        if (i+1 > len(str)) then
+          n = 0
+          return
+        endif
+        k = index(str(i+1:),";")
+        if (k == 0) then
+          n = 0
+          return
+        endif
+        ! We only want to expand this if it's a character or parameter entity ...
+        ! Unparsed entities give undefined results here - we ignore them.FIXME?
+        if (is_char_entity(str(i+1:i+k-1))) then
+          j = expand_char_entity_len(str(i+1:i+k-1))
+        else
+          j = expand_parameter_entity_len(pents, str(i+1:i+k-1))
+          if (j == 0) then
+            n = 0
+            return
+         endif
+        endif
+        i  = i + k + 1
+        i2 = i2 + j
+      else
+        i = i + 1
+        i2 = i2 + 1
+      endif
+    enddo
+
+    n = i2 - 1
+
+  end function entity_filter_EV_len
+
+
+  function entity_filter_EV(pents, str) result(str2)
+    type(entity_list), intent(in) :: pents
+    character(len=*), intent(in) :: str
+    character(len=entity_filter_EV_len(pents, str)) :: str2
+
+    integer :: i, i2, j, k, n
+
+    n = len(str2)
+
+    i = 1
+    i2 = 1
+    do
+      if (i > len(str)) exit
+      if (str(i:i) == "&") then
+        if (i+1 > len(str)) then
+          call FoX_error("Unmatched & in entity reference")
+        endif
+        k = index(str(i+1:),";")
+        if (k == 0) then
+          call FoX_error("Unmatched & in entity reference")
+        endif
+        ! We only want to expand this if it's a character or parameter entity ...
+        ! Unparsed entities give undefined results here - we ignore them.FIXME?
+        if (is_char_entity(str(i+1:i+k-1))) then
+          j = expand_char_entity_len(str(i+1:i+k-1))
+          str2(i2:i2+j-1) = expand_char_entity(str(i+1:i+k-1))
+        else
+          j = expand_parameter_entity_len(pents, str(i+1:i+k-1))
+          if (j > 0) then
+            str2(i2:i2+j-1) = expand_parameter_entity(pents, str(i+1:i+k-1))
+          else
+            call FoX_error("Unknown parameter entity")
+          endif
+        endif
+        i  = i + k + 1
+        i2 = i2 + j
+      else
+        if (n > 0) str2(i2:i2) = str(i:i)
+        i = i + 1
+        i2 = i2 + 1
+      endif
+    enddo
+
+  end function entity_filter_EV
+
 
 end module m_sax_entities
