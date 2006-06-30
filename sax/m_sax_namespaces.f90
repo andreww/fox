@@ -1,6 +1,6 @@
 module m_sax_namespaces
 
-  use m_common_array_str, only : compare_array_str
+  use m_common_array_str, only : compare_array_str, str_vs
   use FoX_common, only : dictionary_t, get_key, get_value, remove_key, len
   use FoX_common, only : set_nsURI, set_localName
   use m_common_error, only : FoX_error
@@ -49,10 +49,19 @@ module m_sax_namespaces
 
 contains
 
-  subroutine checkNamespaces(atts, nsDict, ix)
+  subroutine checkNamespaces(atts, nsDict, ix, start_prefix_handler)
     type(dictionary_t), intent(inout) :: atts
     type(namespaceDictionary), intent(inout) :: nsDict
     integer, intent(in) :: ix ! depth of nesting of current element.
+
+    optional :: start_prefix_handler ! what to do when we find a new prefix
+
+    interface
+      subroutine start_prefix_handler(namespaceURI, prefix)
+        character(len=*), intent(in) :: namespaceURI
+        character(len=*), intent(in) :: prefix
+      end subroutine start_prefix_handler
+    end interface
 
     character(len=6) :: xmlns
     character, dimension(:), allocatable :: prefix, QName, URI
@@ -72,10 +81,11 @@ contains
           allocate(URI(URIlength))
           URI = transfer(get_value(atts, i), URI)
           call checkURI(URI)
+          if (present(start_prefix_handler)) &
+               call start_prefix_handler(str_vs(URI), "")
           call addDefaultNS(nsDict, URI, ix)
           deallocate(URI)
           call remove_key(atts, i)
-          !TOHW call startNamespaceMapping
        elseif (xmlns == 'xmlns:') then
           !Prefixed namespace is being set
           URIlength = len(get_value(atts, i))
@@ -88,12 +98,14 @@ contains
           QName = transfer(get_key(atts, i), QName)
           prefix = QName(7:)
           call addPrefixedNS(nsDict, prefix, URI, ix)
-          !TOHW call startNamespaceMapping
+          if (present(start_prefix_handler)) &
+               call start_prefix_handler(str_vs(URI), str_vs(prefix))
+          deallocate(URI)
           deallocate(QName)
           deallocate(prefix)
           call remove_key(atts, i)
        else
-          ! we only uncrement if we haven't removed a key
+          ! we only increment if we haven't removed a key
           i = i+1
        endif
     enddo
@@ -422,28 +434,49 @@ contains
   end subroutine removePrefix
 
 
-  subroutine checkEndNamespaces(nsDict, ix)
+  subroutine checkEndNamespaces(nsDict, ix, end_prefix_handler)
     type(namespaceDictionary), intent(inout) :: nsDict
     integer, intent(in) :: ix
 
+    optional :: end_prefix_handler
+    
+    interface
+      subroutine end_prefix_handler(prefix)
+        character(len=*), intent(in) :: prefix
+      end subroutine end_prefix_handler
+    end interface
+
     integer :: l_d, l_p, l_ps, i
 
-    !It will only ever be the final element in the list that
+    !It will only ever be the final elements in the list which
     ! might have expired.
+
     l_d = ubound(nsDict%defaults,1)
-    if (nsDict%defaults(l_d)%ix == ix) then
-       call removeDefaultNS(nsDict)
-       !TOHWFIXME call endPrefixMapping
-    endif
+    do while (nsDict%defaults(l_d)%ix == ix)
+      if (present(end_prefix_handler)) &
+           call end_prefix_handler("")
+      call removeDefaultNS(nsDict)
+      l_d = ubound(nsDict%defaults,1)
+    enddo
 
     l_p = ubound(nsDict%prefixes, 1)
-    do i = 1, l_p
-       l_ps = ubound(nsDict%prefixes(l_p)%urilist,1)
-       if (nsDict%prefixes(l_p)%urilist(l_ps)%ix == ix) then
-          call removePrefixedNS(nsDict, nsDict%prefixes(i)%prefix)
-          !TOHWFIXME call endPrefixMapping
-       endif
-    enddo
+    i = 1
+    prefixes: do while (i <= l_p)
+      l_ps = ubound(nsDict%prefixes(l_p)%urilist,1)
+      do while (nsDict%prefixes(l_p)%urilist(l_ps)%ix == ix)
+        if (present(end_prefix_handler)) &
+             call end_prefix_handler(str_vs(nsDict%prefixes(i)%prefix))
+        call removePrefixedNS(nsDict, nsDict%prefixes(i)%prefix)
+        if (l_p > ubound(nsDict%prefixes, 1)) then
+          ! since we might have just removed a prefix
+          l_p = ubound(nsDict%prefixes, 1)
+          cycle prefixes
+        endif
+        print*, i, l_p,  ubound(nsDict%prefixes, 1), 'eh?'
+        l_ps = ubound(nsDict%prefixes(l_p)%urilist,1)
+      enddo
+      i = i + 1
+    enddo prefixes
 
   end subroutine checkEndNamespaces
 

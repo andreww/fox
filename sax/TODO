@@ -16,3 +16,7 @@ Things to do:
 * check input/output uses of buffer
 
 * check usage of element_name - when can we garbage-collect?
+
+* Entity reparsing in text.
+* characters handler.
+* test: lots of. Probably use sax_example as driver

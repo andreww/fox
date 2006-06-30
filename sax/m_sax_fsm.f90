@@ -716,6 +716,9 @@ if (associated(fx%element_name)) deallocate(fx%element_name)
       else
          call add_to_buffer(c,fx%buffer)
          if (c=="&") fx%entities_in_pcdata = .true.
+         !FIXME actually we should replace and reparse at this point.
+         !NOt yet clear to me whether contents need fully reparsed or not though
+         !If there is an ampersand in the replaced text, what happens to it?
          if (fx%debug) fx%action = ("Reading pcdata")
          !
          ! Check whether we are close to the end of the buffer. 
