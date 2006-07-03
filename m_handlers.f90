@@ -1,26 +1,27 @@
 module m_handlers
 
-use FoX_common
-use FoX_sax
+  use FoX_common
+  use FoX_sax
 
-private
+  private
 
-!
-! A prototype of a specific language processor.
-! It defines the routines that are called from xml_parser in response
-! to particular events.
-!
-! In this particular example we just print the names of the elements
-! and the content of the pcdata chunks, as well as any comments, XML
-! and SGML declarations, etc.
-!
-! A module such as this could use "utility routines" to convert pcdata
-! to numerical arrays, and to populate specific data structures.
-!
-public :: begin_element_handler, end_element_handler, pcdata_chunk_handler
-public :: comment_handler, xml_declaration_handler
+  ! A prototype of a specific language processor.
 
-CONTAINS  !=============================================================
+  ! It defines the routines that are called from xml_parser in response
+  ! to particular events.
+
+  ! In this particular example we just print the names of the elements
+  ! and the content of the pcdata chunks, as well as any comments, XML
+  ! and SGML declarations, etc.
+
+  ! A module such as this could use "utility routines" to convert pcdata
+  ! to numerical arrays, and to populate specific data structures.
+
+  public :: begin_element_handler, end_element_handler, pcdata_chunk_handler
+  public :: comment_handler, xml_declaration_handler
+  public :: start_prefix_handler, end_prefix_handler
+
+contains  !=============================================================
 
 subroutine begin_element_handler(URI, localname, name,attributes)
 character(len=*), intent(in)   :: URI
@@ -71,6 +72,26 @@ type(dictionary_t), intent(in) :: attributes
  call print_dict(attributes)
 
 end subroutine xml_declaration_handler
+
+
+  subroutine start_prefix_handler(URI, prefix)
+    character(len=*), intent(in) :: URI
+    character(len=*), intent(in) :: prefix
+
+    write(unit=*,fmt='(a)') "START NAMESPACE MAPPING"
+    write(unit=*,fmt='(2a)') "PREFIX:", prefix
+    write(unit=*,fmt='(2a)') "URI:", uri
+
+  end subroutine start_prefix_handler
+
+
+  subroutine end_prefix_handler(prefix)
+    character(len=*), intent(in) :: prefix
+
+    write(unit=*,fmt='(a)') "END NAMESPACE MAPPING"
+    write(unit=*,fmt='(2a)') "PREFIX:", prefix
+
+  end subroutine end_prefix_handler
 
 end module m_handlers
 

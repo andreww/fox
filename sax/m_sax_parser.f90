@@ -298,7 +298,8 @@ do
                fx%root_element_seen = .true.
             endif
             call push_elstack(str_vs(name),fx%element_stack)
-            call checkNamespaces(fx%attributes, fx%nsDict, len(fx%element_stack))
+            call checkNamespaces(fx%attributes, fx%nsDict, &
+                 len(fx%element_stack), start_prefix_handler)
             if (getURIofQName(fxml,str_vs(name))==invalidNS) then
                ! no namespace was found for the current element
                call build_error_info(error_info, &
@@ -340,7 +341,8 @@ do
                                               getlocalnameofQName(str_vs(name)), &
                                               str_vs(name))
                   endif
-                  call checkEndNamespaces(fx%nsDict, len(fx%element_stack))
+                  call checkEndNamespaces(fx%nsDict, len(fx%element_stack), &
+                       end_prefix_handler)
                   dummy = len(pop_elstack(fx%element_stack))
                else
                   call build_error_info(error_info, &
@@ -390,7 +392,8 @@ do
             ! Push name on to stack to reveal true xpath
             !
             call push_elstack(str_vs(name),fx%element_stack)
-            call checkNamespaces(fx%attributes, fx%nsDict, len(fx%element_stack))
+            call checkNamespaces(fx%attributes, fx%nsDict, &
+                 len(fx%element_stack), start_prefix_handler)
             if (getURIofQName(fxml,str_vs(name))==invalidNS) then
                ! no namespace was found for the current element
                call build_error_info(error_info, &
@@ -414,7 +417,8 @@ do
                                         getlocalNameofQName(str_vs(name)), &
                                         str_vs(name))
             endif
-            call checkEndNamespaces(fx%nsDict, len(fx%element_stack))
+            call checkEndNamespaces(fx%nsDict, len(fx%element_stack), &
+                 end_prefix_handler)
             dummy = len(pop_elstack(fx%element_stack))
 
          else if (fx%context == CDATA_SECTION_TAG) then
