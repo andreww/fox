@@ -3,6 +3,7 @@ module m_handlers
   use FoX_common
   use FoX_sax
 
+  implicit none
   private
 
   ! A prototype of a specific language processor.
@@ -18,7 +19,7 @@ module m_handlers
   ! to numerical arrays, and to populate specific data structures.
 
   public :: begin_element_handler, end_element_handler, pcdata_chunk_handler
-  public :: comment_handler, xml_declaration_handler
+  public :: comment_handler, processing_instruction_handler
   public :: start_prefix_handler, end_prefix_handler
 
 contains  !=============================================================
@@ -61,17 +62,15 @@ write(unit=*,fmt="(a)") comment
 
 end subroutine comment_handler
 
-!--------------------------------------------------
-subroutine xml_declaration_handler(name,attributes)
-character(len=*), intent(in)   :: name
-type(dictionary_t), intent(in) :: attributes
-!
-! Same structure as an element tag
-!
- write(unit=*,fmt="(2a)") ">>XML declaration: ", name
- call print_dict(attributes)
 
-end subroutine xml_declaration_handler
+  subroutine processing_instruction_handler(name, content)
+    character(len=*), intent(in)   :: name
+    character(len=*), intent(in)   :: content
+
+    write(unit=*,fmt="(2a)") ">>Processing Instruction: ", name
+    write(unit=*, fmt="(a)") content    
+
+  end subroutine processing_instruction_handler
 
 
   subroutine start_prefix_handler(URI, prefix)

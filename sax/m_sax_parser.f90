@@ -111,16 +111,16 @@ end function xml_char_count
 !
 
 recursive subroutine xml_parse(fxml, begin_element_handler,    &
-                           end_element_handler,      &
-                           start_prefix_handler,     &
-                           end_prefix_handler,       &
-                           pcdata_chunk_handler,     &
-                           comment_handler,          &
-                           xml_declaration_handler,  &
-                           error_handler,            &
-                           signal_handler,           &
-                           verbose,                  &
-                           start_document_handler,   & 
+                           end_element_handler,             &
+                           start_prefix_handler,            &
+                           end_prefix_handler,              &
+                           pcdata_chunk_handler,            &
+                           comment_handler,                 &
+                           processing_instruction_handler,  &
+                           error_handler,                   &
+                           signal_handler,                  &
+                           verbose,                         &
+                           start_document_handler,          & 
                            end_document_handler)   
 
 type(xml_t), intent(inout), target  :: fxml
@@ -131,7 +131,7 @@ optional                            :: start_prefix_handler
 optional                            :: end_prefix_handler
 optional                            :: pcdata_chunk_handler
 optional                            :: comment_handler
-optional                            :: xml_declaration_handler
+optional                            :: processing_instruction_handler
 optional                            :: error_handler
 optional                            :: signal_handler
 logical, intent(in), optional       :: verbose
@@ -170,11 +170,10 @@ interface
    character(len=*), intent(in) :: comment
    end subroutine comment_handler
 
-   subroutine xml_declaration_handler(name,attributes)
-   use FoX_common
-   character(len=*), intent(in)     :: name
-   type(dictionary_t), intent(in)   :: attributes
-   end subroutine xml_declaration_handler
+   subroutine processing_instruction_handler(name, content)
+     character(len=*), intent(in)     :: name
+     character(len=*), intent(in)     :: content
+   end subroutine processing_instruction_handler
 
    subroutine error_handler(error_info)
    use m_sax_error
@@ -203,12 +202,11 @@ character, allocatable :: name(:), oldname(:)
 logical              :: have_begin_handler, have_end_handler, &
                         have_start_prefix_handler, have_end_prefix_handler, &
                         have_pcdata_handler, have_comment_handler, &
-                        have_xml_declaration_handler, &
+                        have_processing_instruction_handler, &
                         have_error_handler, have_signal_handler, &
                         have_start_document_handler, have_end_document_handler
 
 logical              :: pause_signal
-logical              :: firstbyte = .true.
 
 type(sax_error_t)            :: error_info
 type(file_buffer_t), pointer :: fb
@@ -220,7 +218,7 @@ have_start_prefix_handler = present(start_prefix_handler)
 have_end_prefix_handler = present(end_prefix_handler)
 have_pcdata_handler = present(pcdata_chunk_handler)
 have_comment_handler = present(comment_handler)
-have_xml_declaration_handler = present(xml_declaration_handler)
+have_processing_instruction_handler = present(processing_instruction_handler)
 have_error_handler = present(error_handler)
 have_signal_handler = present(signal_handler)
 have_start_document_handler = present(start_document_handler)  
@@ -449,7 +447,6 @@ do
            if (fx%debug) print *, "We found a Processing Instruction"
            allocate(name(size(fx%element_name)))
            name = fx%element_name
-           print*,firstbyte
            if (str_vs(name) == 'xml' .and. line(fb)>1) then
              call build_error_info(error_info, &
                   "XML declaration found after beginning of document.", &
@@ -460,8 +457,8 @@ do
                call default_error_handler(error_info)
              endif
            endif
-           if (have_xml_declaration_handler)  &
-                call xml_declaration_handler(str_vs(name),fx%attributes)
+           if (have_processing_instruction_handler)  &
+                call processing_instruction_handler(str_vs(name),str_vs(fx%pcdata))
 
          else
 
@@ -505,9 +502,6 @@ do
             if (pause_signal) exit
          endif
       endif
-
-      print*, firstbyte, signal==PI_TAG
-      firstbyte = firstbyte.and.(signal==PI_TAG)
       
     enddo
 

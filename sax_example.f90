@@ -7,6 +7,8 @@ program sax_example
 
   use m_handlers      ! Defines begin_element, end_element, pcdata_chunk, etc
 
+  implicit none
+
   integer :: iostat
   type(xml_t)  :: fxml
 
@@ -21,10 +23,10 @@ program sax_example
                end_element_handler = end_element_handler, &
                pcdata_chunk_handler = pcdata_chunk_handler, &
                comment_handler = comment_handler, &
-               xml_declaration_handler = xml_declaration_handler, &
+               processing_instruction_handler = processing_instruction_handler, &
                start_prefix_handler = start_prefix_handler, &
                end_prefix_handler = end_prefix_handler, &
-               verbose = .true.)
+               verbose = .false.)
 
   call close_xmlfile(fxml)
 

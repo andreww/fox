@@ -39,6 +39,7 @@ module m_sax_fsm
     type(entity_list)                :: entities
     character(len=150)               :: action
     logical                          :: debug
+    logical                          :: xml_decl_ok
   end type fsm_t
 
   public :: init_fsm, reset_fsm, destroy_fsm, evolve_fsm
@@ -65,14 +66,18 @@ module m_sax_fsm
   integer, parameter, private  ::  BANG_HYPHEN = 18
   integer, parameter, private  ::  ONE_HYPHEN = 19
   integer, parameter, private  ::  TWO_HYPHEN = 20
-  integer, parameter, private  ::  QUESTION_MARK = 21
-  integer, parameter, private  ::  START_XML_DECLARATION = 22
+  integer, parameter, private  ::  START_PI = 22
   integer, parameter, private  ::  IN_SGML_DECLARATION = 23
   integer, parameter, private  ::  IN_CDATA_SECTION = 24
   integer, parameter, private  ::  ONE_BRACKET = 25
   integer, parameter, private  ::  TWO_BRACKET = 26
   integer, parameter, private  ::  CDATA_PREAMBLE = 27
-  integer, parameter, private  ::  IN_PCDATA_AT_EOL = 30
+  integer, parameter, private  ::  IN_PI_TARGET = 28
+  integer, parameter, private  ::  IN_PI_WHITESPACE = 29
+  integer, parameter, private  ::  IN_PI_CONTENT = 30
+  integer, parameter, private  ::  IN_PCDATA_AT_EOL = 31
+  integer, parameter, private  ::  QUESTION_MARK_IN_TARGET = 32
+  integer, parameter, private  ::  QUESTION_MARK_IN_CONTENT = 33
 
   ! Context parameters
   integer, parameter, public   ::  OPENING_TAG  = 100
@@ -205,8 +210,8 @@ select case(fx%state)
          if (fx%debug) fx%action = ("Starting endtag: ")
          fx%context = CLOSING_TAG
       else if (c == "?") then
-         fx%state = START_XML_DECLARATION
-         if (fx%debug) fx%action = ("Starting XML declaration ")
+         fx%state = START_PI
+         if (fx%debug) fx%action = ("Starting PI ")
          fx%context = PI_TAG
       else if (c == "!") then
          fx%state = BANG
@@ -217,6 +222,7 @@ select case(fx%state)
       else if (c .in. initialNameChars) then
          fx%context = OPENING_TAG
          fx%state = IN_NAME
+         call reset_buffer(fx%buffer)
          call add_to_buffer(c,fx%buffer)
          if (fx%debug) fx%action = ("Starting to read name in tag")
       else 
@@ -339,14 +345,15 @@ select case(fx%state)
          fx%action = ("Wrong character after <!- ")
       endif
 
- case (START_XML_DECLARATION)
+ case (START_PI)
       if (c .in. initialNameChars) then
-         fx%state = IN_NAME
+         fx%state = IN_PI_TARGET
+         call reset_buffer(fx%buffer)
          call add_to_buffer(c,fx%buffer)
-         if (fx%debug) fx%action = ("Starting to read name in XML declaration")
+         if (fx%debug) fx%action = ("Starting to read name in PI")
       else
          fx%state = ERROR
-         fx%action = "Wrong character after ? in start of XML declaration"
+         fx%action = "Wrong initial character for PI target"
       endif
 
  case (CLOSINGTAG_MARKER)
@@ -558,14 +565,6 @@ if (associated(fx%element_name)) deallocate(fx%element_name)
             fx%context = SINGLE_TAG
             if (fx%debug) fx%action = ("Almost ending single tag after some attributes")
          endif
-      else if (c == "?") then
-         if (fx%context /= PI_TAG) then
-            fx%state = ERROR
-            fx%action = "Wrong lone ? in tag"
-         else
-            fx%state = QUESTION_MARK
-            if (fx%debug) fx%action = ("About to end XML declaration")
-         endif
       else   
          fx%state = ERROR
          fx%action = ("Must have some whitespace after att. value")
@@ -600,28 +599,38 @@ if (associated(fx%element_name)) deallocate(fx%element_name)
          fx%state = IN_ATT_NAME
          if (fx%debug) fx%action = ("Starting Attribute name in tag")
          call add_to_buffer(c,fx%buffer)
-      else if (c == "?") then
-         if (fx%context /= PI_TAG) then
-            fx%state = ERROR
-            fx%action = "Wrong lone ? in tag"
-         else
-            fx%state = QUESTION_MARK
-            if (fx%debug) fx%action = ("About to end XML declaration after whitespace")
-         endif
       else
          fx%state = ERROR
          fx%action = ("Illegal initial character for attribute")
       endif
 
- case (QUESTION_MARK)
-      if (c == ">") then
-         fx%state = END_TAG_MARKER
-         signal  = END_OF_TAG
-         if (fx%debug) fx%action = ("End of XML declaration tag")
-      else
-         fx%state = ERROR
-         fx%action = "No > after ? in XML declaration tag"
-      endif
+ case (QUESTION_MARK_IN_TARGET)
+   if (c == ">") then
+     fx%state = END_TAG_MARKER
+     signal  = END_OF_TAG
+     if (associated(fx%element_name)) deallocate(fx%element_name)
+     allocate(fx%element_name(len(fx%buffer)))
+     fx%element_name = buffer_to_chararray(fx%buffer)
+     if (associated(fx%pcdata)) deallocate(fx%pcdata)
+     allocate(fx%pcdata(0))
+     if (fx%debug) fx%action = ("End of PI")
+   else
+     fx%state = ERROR
+     fx%action = ("Badly terminated PI")
+   endif
+
+ case (QUESTION_MARK_IN_CONTENT)
+   if (c == ">") then
+     fx%state = END_TAG_MARKER
+     signal  = END_OF_TAG
+     if (associated(fx%pcdata)) deallocate(fx%pcdata)
+     allocate(fx%pcdata(len(fx%buffer)))
+     fx%pcdata = buffer_to_chararray(fx%buffer)
+     if (fx%debug) fx%action = ("End of PI")
+   else
+     fx%state = IN_PI_CONTENT
+     call add_to_buffer(c, fx%buffer)
+   endif
 
  case (IN_COMMENT)
       !
@@ -819,6 +828,48 @@ if (associated(fx%element_name)) deallocate(fx%element_name)
          if (c=="&") fx%entities_in_pcdata = .true.
          if (fx%debug) fx%action = ("End of Tag. Starting to read PCDATA")
       endif
+
+ case (IN_PI_TARGET)
+   if (c == '?') then
+     fx%state = QUESTION_MARK_IN_TARGET
+     if (fx%debug) fx%action = ("About to end PI")
+   elseif (c .in. nameChars) then
+     call add_to_buffer(c, fx%buffer)
+     if (fx%debug) fx%action = ("Reading name chars in PI target")
+   elseif (c.in.whitespace) then
+     if (associated(fx%element_name)) deallocate(fx%element_name)
+     allocate(fx%element_name(len(fx%buffer)))
+     fx%element_name = buffer_to_chararray(fx%buffer)
+     fx%action = ("Finished reading PI target")
+     fx%state = IN_PI_WHITESPACE
+   else
+     fx%state = ERROR
+     fx%action = ("Illegal character in PI target")
+   endif
+
+ case (IN_PI_WHITESPACE)
+   if (c .in .whitespace) then
+     continue ! Not sure if this is correct ...
+   elseif (c == '?') then
+     fx%state = QUESTION_MARK_IN_CONTENT
+     if (fx%debug) fx%action = ("Maybe about to end PI")
+   else
+     fx%state = IN_PI_CONTENT
+     call reset_buffer(fx%buffer)
+     call add_to_buffer(c, fx%buffer)
+     if (fx%debug) fx%action = ("Reading chars for PI content")
+   endif
+
+ case (IN_PI_CONTENT)
+   if (c == '?') then
+     fx%state = QUESTION_MARK_IN_CONTENT
+     if (fx%debug) fx%action = ("Maybe about to end PI")
+   else
+     fx%state = IN_PI_CONTENT
+     call add_to_buffer(c, fx%buffer)
+     if (fx%debug) fx%action = ("Reading chars for PI content")
+   endif
+
 
  case (ERROR)
 
