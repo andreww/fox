@@ -11,7 +11,7 @@ use m_sax_reader
 use m_sax_debug, only: debug
 use m_sax_fsm, only: fsm_t, init_fsm, reset_fsm, destroy_fsm, evolve_fsm
 use m_sax_fsm, only: END_OF_TAG, OPENING_TAG, SINGLE_TAG, CDATA_SECTION_TAG
-use m_sax_fsm, only: CLOSING_TAG, COMMENT_TAG, SGML_DECLARATION_TAG, XML_DECLARATION_TAG
+use m_sax_fsm, only: CLOSING_TAG, COMMENT_TAG, SGML_DECLARATION_TAG, PI_TAG
 use m_sax_fsm, only: CHUNK_OF_PCDATA, QUIET, EXCEPTION
 use m_sax_namespaces, only: checkNamespaces, getnamespaceURI, checkEndNamespaces, invalidNS
 use m_sax_error, only: sax_error_t, build_error_info, WARNING_CODE, SEVERE_ERROR_CODE, default_error_handler
@@ -208,6 +208,7 @@ logical              :: have_begin_handler, have_end_handler, &
                         have_start_document_handler, have_end_document_handler
 
 logical              :: pause_signal
+logical              :: firstbyte = .true.
 
 type(sax_error_t)            :: error_info
 type(file_buffer_t), pointer :: fb
@@ -252,7 +253,7 @@ do
          endif
          if (have_end_document_handler) call end_document_handler()
          call endfile_xmlfile(fxml)  ! Mark it as eof
-         EXIT
+         exit
       endif
 
       call evolve_fsm(fx,c,signal)
@@ -443,13 +444,23 @@ do
             if (fx%debug) print *, "We found a DTD"
             call parse_dtd(str_vs(fx%pcdata), fx%entities)
 
-         else if (fx%context == XML_DECLARATION_TAG) then
+         else if (fx%context == PI_TAG) then
 
             if (fx%debug) print *, "We found an XML declaration"
             allocate(name(size(fx%element_name)))
             name = fx%element_name
+            if (str_vs(name) == 'xml' .and..not.firstbyte) then
+              call build_error_info(error_info, &
+                  "XML declaration found after beginning of document.", &
+                  line(fb),column(fb),fx%element_stack,SEVERE_ERROR_CODE)
+              if (have_error_handler) then
+                call error_handler(error_info)
+              else
+                call default_error_handler(error_info)
+              endif
+            endif
             if (have_xml_declaration_handler)  &
-                      call xml_declaration_handler(str_vs(name),fx%attributes)
+                 call xml_declaration_handler(str_vs(name),fx%attributes)
 
          else
 
@@ -494,7 +505,9 @@ do
          endif
       endif
 
-enddo
+      firstbyte = .false.
+      
+    enddo
 
 end subroutine xml_parse
 

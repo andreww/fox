@@ -24,7 +24,7 @@ program sax_example
                xml_declaration_handler = xml_declaration_handler, &
                start_prefix_handler = start_prefix_handler, &
                end_prefix_handler = end_prefix_handler, &
-               verbose = .false.)
+               verbose = .true.)
 
   call close_xmlfile(fxml)
 

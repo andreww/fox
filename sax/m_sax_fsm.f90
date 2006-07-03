@@ -88,7 +88,7 @@ integer, parameter, public   ::  OPENING_TAG  = 100
 integer, parameter, public   ::  CLOSING_TAG  = 110
 integer, parameter, public   ::  SINGLE_TAG   = 120
 integer, parameter, public   ::  COMMENT_TAG  = 130
-integer, parameter, public   ::  XML_DECLARATION_TAG  = 140
+integer, parameter, public   ::  PI_TAG  = 140
 integer, parameter, public   ::  SGML_DECLARATION_TAG  = 150
 integer, parameter, public   ::  CDATA_SECTION_TAG  = 160
 integer, parameter, public   ::  NULL_CONTEXT          = 200
@@ -217,7 +217,7 @@ select case(fx%state)
       else if (c == "?") then
          fx%state = START_XML_DECLARATION
          if (fx%debug) fx%action = ("Starting XML declaration ")
-         fx%context = XML_DECLARATION_TAG
+         fx%context = PI_TAG
       else if (c == "!") then
          fx%state = BANG
          if (fx%debug) fx%action = ("Saw ! -- comment or SGML declaration expected...")
@@ -551,9 +551,9 @@ if (associated(fx%element_name)) deallocate(fx%element_name)
          fx%state = ERROR
          fx%action = ("Starting tag within tag")
       else if (c == ">") then
-         if (fx%context == XML_DECLARATION_TAG) then
+         if (fx%context == PI_TAG) then
             fx%state = ERROR
-            fx%action = "End of XML declaration without ?"
+            fx%action = "End of Processing Instruction without ?"
          else
             fx%state = END_TAG_MARKER
             signal  = END_OF_TAG
@@ -569,7 +569,7 @@ if (associated(fx%element_name)) deallocate(fx%element_name)
             if (fx%debug) fx%action = ("Almost ending single tag after some attributes")
          endif
       else if (c == "?") then
-         if (fx%context /= XML_DECLARATION_TAG) then
+         if (fx%context /= PI_TAG) then
             fx%state = ERROR
             fx%action = "Wrong lone ? in tag"
          else
@@ -589,7 +589,7 @@ if (associated(fx%element_name)) deallocate(fx%element_name)
          fx%state = ERROR
          fx%action = ("Starting tag within tag")
       else if (c == ">") then
-         if (fx%context == XML_DECLARATION_TAG) then
+         if (fx%context == PI_TAG) then
             fx%state = ERROR
             fx%action = "End of XML declaration without ?"
          else
@@ -611,7 +611,7 @@ if (associated(fx%element_name)) deallocate(fx%element_name)
          if (fx%debug) fx%action = ("Starting Attribute name in tag")
          call add_to_buffer(c,fx%buffer)
       else if (c == "?") then
-         if (fx%context /= XML_DECLARATION_TAG) then
+         if (fx%context /= PI_TAG) then
             fx%state = ERROR
             fx%action = "Wrong lone ? in tag"
          else
