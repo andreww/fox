@@ -446,21 +446,22 @@ do
 
          else if (fx%context == PI_TAG) then
 
-            if (fx%debug) print *, "We found an XML declaration"
-            allocate(name(size(fx%element_name)))
-            name = fx%element_name
-            if (str_vs(name) == 'xml' .and..not.firstbyte) then
-              call build_error_info(error_info, &
+           if (fx%debug) print *, "We found a Processing Instruction"
+           allocate(name(size(fx%element_name)))
+           name = fx%element_name
+           print*,firstbyte
+           if (str_vs(name) == 'xml' .and. line(fb)>1) then
+             call build_error_info(error_info, &
                   "XML declaration found after beginning of document.", &
                   line(fb),column(fb),fx%element_stack,SEVERE_ERROR_CODE)
-              if (have_error_handler) then
-                call error_handler(error_info)
-              else
-                call default_error_handler(error_info)
-              endif
-            endif
-            if (have_xml_declaration_handler)  &
-                 call xml_declaration_handler(str_vs(name),fx%attributes)
+             if (have_error_handler) then
+               call error_handler(error_info)
+             else
+               call default_error_handler(error_info)
+             endif
+           endif
+           if (have_xml_declaration_handler)  &
+                call xml_declaration_handler(str_vs(name),fx%attributes)
 
          else
 
@@ -505,7 +506,8 @@ do
          endif
       endif
 
-      firstbyte = .false.
+      print*, firstbyte, signal==PI_TAG
+      firstbyte = firstbyte.and.(signal==PI_TAG)
       
     enddo
 

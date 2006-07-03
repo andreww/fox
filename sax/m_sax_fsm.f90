@@ -1,106 +1,96 @@
 module m_sax_fsm
 
-use FoX_common, only: dictionary_t, add_key_to_dict, add_value_to_dict, &
-     init_dict, reset_dict, destroy_dict
-use m_common_array_str, only: vs_str, str_vs
-use m_common_buffer, only: buffer_t, buffer_to_chararray, len, str, &
-     buffer_nearly_full, add_to_buffer, reset_buffer
-use m_common_error, only: FoX_warning, FoX_error
-use m_common_elstack, only: elstack_t, init_elstack, reset_elstack, destroy_elstack
-use m_common_charset, only: validchars, initialnamechars, namechars, &
-     whitespace, uppercase, operator(.in.)
+  use FoX_common, only: dictionary_t, add_key_to_dict, add_value_to_dict, &
+       init_dict, reset_dict, destroy_dict
+  use m_common_array_str, only: vs_str, str_vs
+  use m_common_buffer, only: buffer_t, buffer_to_chararray, len, str, &
+       buffer_nearly_full, add_to_buffer, reset_buffer
+  use m_common_error, only: FoX_warning, FoX_error
+  use m_common_elstack, only: elstack_t, init_elstack, reset_elstack, destroy_elstack
+  use m_common_charset, only: validchars, initialnamechars, namechars, &
+       whitespace, uppercase, operator(.in.)
+  
+  use m_sax_entities, only: init_entity_list, destroy_entity_list, reset_entity_list
+  use m_sax_entities, only: entity_list, entity_filter_text_len, entity_filter_text
+  use m_sax_entities, only: is_unparsed_entity
+  use m_sax_namespaces, only: namespaceDictionary, initNamespaceDictionary, &
+       destroyNamespaceDictionary
+  
+  implicit none
+  private
 
-use m_sax_entities, only: init_entity_list, destroy_entity_list, reset_entity_list
-use m_sax_entities, only: entity_list, entity_filter_text_len, entity_filter_text
-use m_sax_entities, only: is_unparsed_entity
-use m_sax_namespaces, only: namespaceDictionary, initNamespaceDictionary, &
-     destroyNamespaceDictionary
+  type, public :: fsm_t
+    ! Contains information about the "finite state machine"
+    integer                          :: state
+    integer                          :: context
+    integer                          :: nbrackets
+    integer                          :: nlts
+    character(len=1)                 :: quote_char
+    type(buffer_t)                   :: buffer
+    character, dimension(:), pointer :: element_name
+    type(dictionary_t)               :: attributes
+    type(namespaceDictionary)        :: nsDict
+    character, dimension(:), pointer :: pcdata
+    logical                          :: entities_in_pcdata
+    logical                          :: entities_in_attributes
+    type(elstack_t)                  :: element_stack
+    logical                          :: root_element_seen
+    character, dimension(:), pointer :: root_element_name
+    type(entity_list)                :: entities
+    character(len=150)               :: action
+    logical                          :: debug
+  end type fsm_t
 
-implicit none
-private
+  public :: init_fsm, reset_fsm, destroy_fsm, evolve_fsm
 
-type, public :: fsm_t
-      !
-      ! Contains information about the "finite state machine"
-      ! Some of the components (marked *) could at this point be made into
-      ! saved module variables. TOHW which would of course prevent parsing
-      ! more than one document at once, so let's not.
-      ! 
-      !
-      integer              :: state
-      integer              :: context
-      integer              :: nbrackets             !*
-      integer              :: nlts                  !*
-      character(len=1)     :: quote_char            !*
-      type(buffer_t)       :: buffer                !*
-      character, dimension(:), pointer :: element_name
-      type(dictionary_t)   :: attributes
-      type(namespaceDictionary) :: nsDict
-      character, dimension(:), pointer :: pcdata
-      logical              :: entities_in_pcdata
-      logical              :: entities_in_attributes
-      type(elstack_t)      :: element_stack
-      logical              :: root_element_seen
-      character, dimension(:), pointer :: root_element_name
-      type(entity_list)    :: entities
-      character(len=150)   :: action
-      logical              :: debug
-end type fsm_t
+  ! State parameters
+  integer, parameter, public   ::  ERROR = -1
+  integer, parameter, public   ::  INIT = 1         
+  integer, parameter, private  ::  START_TAG_MARKER = 2
+  integer, parameter, private  ::  END_TAG_MARKER = 3
+  integer, parameter, private  ::  IN_NAME = 4
+  integer, parameter, private  ::  WHITESPACE_IN_TAG = 5
+  integer, parameter, private  ::  IN_PCDATA = 6
+  integer, parameter, private  ::  SINGLETAG_MARKER = 7
+  integer, parameter, private  ::  CLOSINGTAG_MARKER = 8
+  integer, parameter, private  ::  IN_COMMENT = 9
+  integer, parameter, private  ::  IN_ATT_NAME = 10
+  integer, parameter, private  ::  IN_ATT_VALUE = 11
+  integer, parameter, private  ::  EQUAL = 12
+  integer, parameter, private  ::  SPACE_AFTER_EQUAL = 13
+  integer, parameter, private  ::  SPACE_BEFORE_EQUAL = 14
+  integer, parameter, private  ::  START_QUOTE = 15
+  integer, parameter, private  ::  END_QUOTE = 16
+  integer, parameter, private  ::  BANG = 17
+  integer, parameter, private  ::  BANG_HYPHEN = 18
+  integer, parameter, private  ::  ONE_HYPHEN = 19
+  integer, parameter, private  ::  TWO_HYPHEN = 20
+  integer, parameter, private  ::  QUESTION_MARK = 21
+  integer, parameter, private  ::  START_XML_DECLARATION = 22
+  integer, parameter, private  ::  IN_SGML_DECLARATION = 23
+  integer, parameter, private  ::  IN_CDATA_SECTION = 24
+  integer, parameter, private  ::  ONE_BRACKET = 25
+  integer, parameter, private  ::  TWO_BRACKET = 26
+  integer, parameter, private  ::  CDATA_PREAMBLE = 27
+  integer, parameter, private  ::  IN_PCDATA_AT_EOL = 30
 
-public :: init_fsm, reset_fsm, destroy_fsm, evolve_fsm
+  ! Context parameters
+  integer, parameter, public   ::  OPENING_TAG  = 100
+  integer, parameter, public   ::  CLOSING_TAG  = 110
+  integer, parameter, public   ::  SINGLE_TAG   = 120
+  integer, parameter, public   ::  COMMENT_TAG  = 130
+  integer, parameter, public   ::  PI_TAG  = 140
+  integer, parameter, public   ::  SGML_DECLARATION_TAG  = 150
+  integer, parameter, public   ::  CDATA_SECTION_TAG  = 160
+  integer, parameter, public   ::  NULL_CONTEXT          = 200
 
-!
-! State parameters
-!
-integer, parameter, public   ::  ERROR = -1
-integer, parameter, public   ::  INIT = 1         
-integer, parameter, private  ::  START_TAG_MARKER = 2
-integer, parameter, private  ::  END_TAG_MARKER = 3
-integer, parameter, private  ::  IN_NAME = 4
-integer, parameter, private  ::  WHITESPACE_IN_TAG = 5
-integer, parameter, private  ::  IN_PCDATA = 6
-integer, parameter, private  ::  SINGLETAG_MARKER = 7
-integer, parameter, private  ::  CLOSINGTAG_MARKER = 8
-integer, parameter, private  ::  IN_COMMENT = 9
-integer, parameter, private  ::  IN_ATT_NAME = 10
-integer, parameter, private  ::  IN_ATT_VALUE = 11
-integer, parameter, private  ::  EQUAL = 12
-integer, parameter, private  ::  SPACE_AFTER_EQUAL = 13
-integer, parameter, private  ::  SPACE_BEFORE_EQUAL = 14
-integer, parameter, private  ::  START_QUOTE = 15
-integer, parameter, private  ::  END_QUOTE = 16
-integer, parameter, private  ::  BANG = 17
-integer, parameter, private  ::  BANG_HYPHEN = 18
-integer, parameter, private  ::  ONE_HYPHEN = 19
-integer, parameter, private  ::  TWO_HYPHEN = 20
-integer, parameter, private  ::  QUESTION_MARK = 21
-integer, parameter, private  ::  START_XML_DECLARATION = 22
-integer, parameter, private  ::  IN_SGML_DECLARATION = 23
-integer, parameter, private  ::  IN_CDATA_SECTION = 24
-integer, parameter, private  ::  ONE_BRACKET = 25
-integer, parameter, private  ::  TWO_BRACKET = 26
-integer, parameter, private  ::  CDATA_PREAMBLE = 27
-integer, parameter, private  ::  IN_PCDATA_AT_EOL = 30
-!
-! Context parameters
-!
-integer, parameter, public   ::  OPENING_TAG  = 100
-integer, parameter, public   ::  CLOSING_TAG  = 110
-integer, parameter, public   ::  SINGLE_TAG   = 120
-integer, parameter, public   ::  COMMENT_TAG  = 130
-integer, parameter, public   ::  PI_TAG  = 140
-integer, parameter, public   ::  SGML_DECLARATION_TAG  = 150
-integer, parameter, public   ::  CDATA_SECTION_TAG  = 160
-integer, parameter, public   ::  NULL_CONTEXT          = 200
-!
-! Signal parameters
-!
-integer, parameter, public   ::  QUIET             = 1000
-integer, parameter, public   ::  END_OF_TAG        = 1100
-integer, parameter, public   ::  CHUNK_OF_PCDATA   = 1200
-integer, parameter, public   ::  EXCEPTION         = 1500
-
-CONTAINS
+  ! Signal parameters
+  integer, parameter, public   ::  QUIET             = 1000
+  integer, parameter, public   ::  END_OF_TAG        = 1100
+  integer, parameter, public   ::  CHUNK_OF_PCDATA   = 1200
+  integer, parameter, public   ::  EXCEPTION         = 1500
+  
+contains
 
 !------------------------------------------------------------
 ! Initialize once and for all the derived types (Fortran90 restriction)
