@@ -1,7 +1,7 @@
 module m_common_attrs
 
   !use m_wxml_escape, only : check_Name
-  use m_common_array_str, only : assign_str_to_array, assign_array_to_str
+  use m_common_array_str, only : assign_str_to_array, assign_array_to_str, str_vs
   use m_common_error, only : FoX_error
 
   implicit none
@@ -434,7 +434,8 @@ contains
     integer  :: i
     
     do i = 1, dict%number_of_items
-       print*, dict%items(i)%key, " = {", dict%items(i)%nsURI, '}', dict%items(i)%localName
+       write(*,'(7a)') str_vs(dict%items(i)%key), " [ {", str_vs(dict%items(i)%nsURI), &
+          "}", str_vs(dict%items(i)%localName), " ]  = ", str_vs(dict%items(i)%value)
     enddo
     
   end subroutine print_dict
