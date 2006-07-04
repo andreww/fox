@@ -11,7 +11,7 @@ use m_sax_reader
 use m_sax_debug, only: debug
 use m_sax_fsm, only: fsm_t, init_fsm, reset_fsm, destroy_fsm, evolve_fsm
 use m_sax_fsm, only: END_OF_TAG, OPENING_TAG, SINGLE_TAG, CDATA_SECTION_TAG
-use m_sax_fsm, only: CLOSING_TAG, COMMENT_TAG, SGML_DECLARATION_TAG, PI_TAG
+use m_sax_fsm, only: CLOSING_TAG, COMMENT_TAG, DTD_TAG, PI_TAG
 use m_sax_fsm, only: CHUNK_OF_PCDATA, QUIET, EXCEPTION
 use m_sax_namespaces, only: checkNamespaces, getnamespaceURI, checkEndNamespaces, invalidNS
 use m_sax_error, only: sax_error_t, build_error_info, WARNING_CODE, SEVERE_ERROR_CODE, default_error_handler
@@ -439,7 +439,7 @@ do
             if (have_comment_handler)  &
                  call comment_handler(str_vs(fx%pcdata))
 
-         else if (fx%context == SGML_DECLARATION_TAG) then
+         else if (fx%context == DTD_TAG) then
 
             if (fx%debug) print *, "We found a DTD"
             call parse_dtd(str_vs(fx%pcdata), fx%entities)
@@ -453,7 +453,7 @@ do
            call parse_string_to_dict(str_vs(fx%pcdata), fx%attributes, s)
            ! expand entities ...?FIXME
            if (str_vs(name) == 'xml') then
-             if (line(fb)>1) then
+             if (line(fb) > 1) then !this is an imperfect check
                call build_error_info(error_info, &
                     "XML declaration found after beginning of document.", &
                     line(fb),column(fb),fx%element_stack,SEVERE_ERROR_CODE)
@@ -464,7 +464,6 @@ do
                endif
              else
                if (s > 0) then
-                 print*,s
                  call build_error_info(error_info, &
                       "Invalid XML declaration found.", &
                       line(fb),column(fb),fx%element_stack,SEVERE_ERROR_CODE)

@@ -67,7 +67,7 @@ module m_sax_fsm
   integer, parameter, private  ::  ONE_HYPHEN = 19
   integer, parameter, private  ::  TWO_HYPHEN = 20
   integer, parameter, private  ::  START_PI = 22
-  integer, parameter, private  ::  IN_SGML_DECLARATION = 23
+  integer, parameter, private  ::  IN_DTD = 23
   integer, parameter, private  ::  IN_CDATA_SECTION = 24
   integer, parameter, private  ::  ONE_BRACKET = 25
   integer, parameter, private  ::  TWO_BRACKET = 26
@@ -85,7 +85,7 @@ module m_sax_fsm
   integer, parameter, public   ::  SINGLE_TAG   = 120
   integer, parameter, public   ::  COMMENT_TAG  = 130
   integer, parameter, public   ::  PI_TAG  = 140
-  integer, parameter, public   ::  SGML_DECLARATION_TAG  = 150
+  integer, parameter, public   ::  DTD_TAG  = 150
   integer, parameter, public   ::  CDATA_SECTION_TAG  = 160
   integer, parameter, public   ::  NULL_CONTEXT          = 200
 
@@ -215,7 +215,7 @@ select case(fx%state)
          fx%context = PI_TAG
       else if (c == "!") then
          fx%state = BANG
-         if (fx%debug) fx%action = ("Saw ! -- comment or SGML declaration expected...")
+         if (fx%debug) fx%action = ("Saw ! -- comment or DTD expected...")
       else if (c .in. whitespace) then
          fx%state = ERROR
          fx%action = ("Cannot have whitespace after <")
@@ -240,11 +240,11 @@ select case(fx%state)
            fx%state = ERROR
            fx%action = "DTD found after root element"
          else
-           fx%state = IN_SGML_DECLARATION
+           fx%state = IN_DTD
            fx%nlts = 0
            fx%nbrackets = 0
-           if (fx%debug) fx%action = ("SGML declaration ")
-           fx%context = SGML_DECLARATION_TAG
+           if (fx%debug) fx%action = ("DTD declaration ")
+           fx%context = DTD_TAG
            call add_to_buffer(c,fx%buffer)
          endif
       else if (c == "[") then
@@ -303,7 +303,7 @@ select case(fx%state)
          if (fx%debug) fx%action = ("Continue reading contents of CDATA section")
       endif
 
- case (IN_SGML_DECLARATION)
+ case (IN_DTD)
       if (c == "<") then
          fx%nlts = fx%nlts + 1
          call add_to_buffer("<",fx%buffer)
@@ -328,10 +328,10 @@ select case(fx%state)
          else
             fx%nlts = fx%nlts -1
             call add_to_buffer(">",fx%buffer)
-            fx%action = "Read an intermediate > in SGML declaration"
+            fx%action = "Read an intermediate > in DTD declaration"
          endif
       else
-         if (fx%debug) fx%action = ("Keep reading SGML declaration")
+         if (fx%debug) fx%action = ("Keep reading DTD")
          call add_to_buffer(c,fx%buffer)
       endif
 
