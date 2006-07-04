@@ -190,11 +190,12 @@ select case(fx%state)
  case (INIT)
       if (c == "<") then
          fx%state = START_TAG_MARKER
+         fx%xml_decl_ok = .true.
          if (fx%debug) fx%action = ("Starting tag")
-      else if (c == ">") then
+      else if (c.in.whitespace) then
+         fx%xml_decl_ok = .false.
+       else
          fx%state = ERROR
-         fx%action = ("Ending tag without being in one!")
-      else
          if (fx%debug) fx%action = ("Reading garbage chars")
       endif
 
