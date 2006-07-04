@@ -3,7 +3,7 @@ module m_sax_parser
 ! Basic module to parse XML in the SAX spirit.
 !
 
-use FoX_common, only: dictionary_t, parse_string_to_dict, destroy_dict, reset_dict
+use FoX_common, only: dictionary_t, parse_string_to_dict, destroy_dict, reset_dict, len, get_key, get_value
 use m_common_array_str, only: str_vs, vs_str
 use m_common_elstack          ! For element nesting checks
 use m_sax_dtd, only : parse_dtd
@@ -197,18 +197,19 @@ end interface
 character(len=1)       :: c
 integer                :: iostat
 
-integer                :: signal, dummy, s
+integer                :: signal, dummy, s, i, n
 
 character, allocatable :: name(:), oldname(:)
 
-logical              :: have_begin_handler, have_end_handler, &
-                        have_start_prefix_handler, have_end_prefix_handler, &
-                        have_pcdata_handler, have_comment_handler, &
-                        have_processing_instruction_handler, &
-                        have_error_handler, have_signal_handler, &
-                        have_start_document_handler, have_end_document_handler
-
-logical              :: pause_signal
+logical                :: have_begin_handler, have_end_handler, &
+                          have_start_prefix_handler, have_end_prefix_handler, &
+                          have_pcdata_handler, have_comment_handler, &
+                          have_processing_instruction_handler, &
+                          have_error_handler, have_signal_handler, &
+                          have_start_document_handler, have_end_document_handler
+ 
+logical                :: pause_signal
+logical                :: error_found
 
 type(sax_error_t)            :: error_info
 type(file_buffer_t), pointer :: fb
@@ -257,6 +258,7 @@ do
       endif
 
       call evolve_fsm(fx,c,signal)
+      error_found = .false.
 
       if (fx%debug) print *, c, " ::: ", trim(fx%action)
 
@@ -452,30 +454,61 @@ do
            call destroy_dict(fx%attributes)
            call parse_string_to_dict(str_vs(fx%pcdata), fx%attributes, s)
            ! expand entities ...?FIXME
+           ! FIXME we should record XML version, encoding & standaloneness
            if (str_vs(name) == 'xml') then
-             if (.not.fx%xml_decl_ok) then !this is an imperfect check
+             if (.not.fx%xml_decl_ok) then 
                call build_error_info(error_info, &
                     "XML declaration found after beginning of document.", &
                     line(fb),column(fb),fx%element_stack,SEVERE_ERROR_CODE)
-               if (have_error_handler) then
-                 call error_handler(error_info)
-               else
-                 call default_error_handler(error_info)
-               endif
+               error_found = .true.
              else
                if (s > 0) then
                  call build_error_info(error_info, &
                       "Invalid XML declaration found.", &
                       line(fb),column(fb),fx%element_stack,SEVERE_ERROR_CODE)
-                 if (have_error_handler) then
-                   call error_handler(error_info)
-                 else
-                   call default_error_handler(error_info)
-                 endif
+                 error_found = .true.
                else
-                 !check ordering of pseudo-atts
-                 continue
+                 n = len(fx%attributes)
+                 if (n == 0) then
+                   call build_error_info(error_info, &
+                        "No version found in XML declaration.", &
+                        line(fb),column(fb),fx%element_stack,SEVERE_ERROR_CODE)
+                   error_found = .true.
+                 elseif (get_key(fx%attributes, 1) /= 'version') then
+                   call build_error_info(error_info, &
+                        "No version found in XML declaration.", &
+                        line(fb),column(fb),fx%element_stack,SEVERE_ERROR_CODE)
+                   error_found = .true.
+                 endif
+                 if (n == 2) then
+                   if (get_key(fx%attributes, 2) /= 'encoding' .and. &
+                       get_key(fx%attributes, 2) /= 'standalone') then
+                     call build_error_info(error_info, &
+                          "Invalid attribute in XML declaration.", &
+                          line(fb),column(fb),fx%element_stack,WARNING_CODE)
+                     error_found = .true.
+                   endif
+                 elseif (n == 3) then
+                   if (get_key(fx%attributes, 2) /= 'standalone') then
+                     call build_error_info(error_info, &
+                          "Invalid attribute in XML declaration.", &
+                          line(fb),column(fb),fx%element_stack,WARNING_CODE)
+                     error_found = .true.
+                   endif
+                 elseif (n > 3) then
+                   call build_error_info(error_info, &
+                        "Invalid attribute in XML declaration.", &
+                        line(fb),column(fb),fx%element_stack,WARNING_CODE)
+                   error_found = .true.
+                 endif
                endif
+             endif
+           endif
+           if (error_found) then
+             if (have_error_handler) then
+               call error_handler(error_info)
+             else
+               call default_error_handler(error_info)
              endif
            endif
            if (have_processing_instruction_handler)  &
