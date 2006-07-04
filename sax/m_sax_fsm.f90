@@ -118,6 +118,7 @@ type(fsm_t), intent(inout)   :: fx
  call init_dict(fx%attributes)
  call initNamespaceDictionary(fx%nsDict)
  call init_entity_list(fx%entities, PE=.false.)
+ fx%xml_decl_ok = .true.
 end subroutine init_fsm
 !------------------------------------------------------------
 subroutine reset_fsm(fx) 
@@ -139,6 +140,7 @@ type(fsm_t), intent(inout)   :: fx
  call destroyNamespaceDictionary(fx%nsDict)
  call initNamespaceDictionary(fx%nsDict)
  call reset_entity_list(fx%entities)
+ fx%xml_decl_ok = .true.
 end subroutine reset_fsm
 
 subroutine destroy_fsm(fx) 
@@ -190,7 +192,6 @@ select case(fx%state)
  case (INIT)
       if (c == "<") then
          fx%state = START_TAG_MARKER
-         fx%xml_decl_ok = .true.
          if (fx%debug) fx%action = ("Starting tag")
       else if (c.in.whitespace) then
          fx%xml_decl_ok = .false.
@@ -231,6 +232,9 @@ select case(fx%state)
          fx%action = ("Illegal initial character for name")
       endif
 
+      ! if we are at the start, preserve that info ...
+      if (fx%xml_decl_ok) fx%xml_decl_ok = (fx%state == START_PI)
+
 
  case (BANG)
       if (c == "-") then
@@ -256,6 +260,8 @@ select case(fx%state)
          fx%state = ERROR
          fx%action = ("Wrong character after ! ")
       endif
+
+      
 
  case (CDATA_PREAMBLE)
       ! We assume a CDATA[ is forthcoming, we do not check

@@ -453,7 +453,7 @@ do
            call parse_string_to_dict(str_vs(fx%pcdata), fx%attributes, s)
            ! expand entities ...?FIXME
            if (str_vs(name) == 'xml') then
-             if (line(fb) > 1) then !this is an imperfect check
+             if (.not.fx%xml_decl_ok) then !this is an imperfect check
                call build_error_info(error_info, &
                     "XML declaration found after beginning of document.", &
                     line(fb),column(fb),fx%element_stack,SEVERE_ERROR_CODE)
