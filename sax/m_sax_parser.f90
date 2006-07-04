@@ -3,7 +3,7 @@ module m_sax_parser
 ! Basic module to parse XML in the SAX spirit.
 !
 
-use FoX_common, only: dictionary_t
+use FoX_common, only: dictionary_t, parse_string_to_dict, destroy_dict, reset_dict
 use m_common_array_str, only: str_vs, vs_str
 use m_common_elstack          ! For element nesting checks
 use m_sax_dtd, only : parse_dtd
@@ -170,9 +170,11 @@ interface
    character(len=*), intent(in) :: comment
    end subroutine comment_handler
 
-   subroutine processing_instruction_handler(name, content)
+   subroutine processing_instruction_handler(name, content, attributes)
+     use FoX_common
      character(len=*), intent(in)     :: name
      character(len=*), intent(in)     :: content
+     type(dictionary_t), intent(in)   :: attributes
    end subroutine processing_instruction_handler
 
    subroutine error_handler(error_info)
@@ -195,7 +197,7 @@ end interface
 character(len=1)       :: c
 integer                :: iostat
 
-integer                :: signal, dummy
+integer                :: signal, dummy, s
 
 character, allocatable :: name(:), oldname(:)
 
@@ -447,18 +449,40 @@ do
            if (fx%debug) print *, "We found a Processing Instruction"
            allocate(name(size(fx%element_name)))
            name = fx%element_name
-           if (str_vs(name) == 'xml' .and. line(fb)>1) then
-             call build_error_info(error_info, &
-                  "XML declaration found after beginning of document.", &
-                  line(fb),column(fb),fx%element_stack,SEVERE_ERROR_CODE)
-             if (have_error_handler) then
-               call error_handler(error_info)
+           call destroy_dict(fx%attributes)
+           call parse_string_to_dict(str_vs(fx%pcdata), fx%attributes, s)
+           ! expand entities ...?FIXME
+           if (str_vs(name) == 'xml') then
+             if (line(fb)>1) then
+               call build_error_info(error_info, &
+                    "XML declaration found after beginning of document.", &
+                    line(fb),column(fb),fx%element_stack,SEVERE_ERROR_CODE)
+               if (have_error_handler) then
+                 call error_handler(error_info)
+               else
+                 call default_error_handler(error_info)
+               endif
              else
-               call default_error_handler(error_info)
+               if (s > 0) then
+                 print*,s
+                 call build_error_info(error_info, &
+                      "Invalid XML declaration found.", &
+                      line(fb),column(fb),fx%element_stack,SEVERE_ERROR_CODE)
+                 if (have_error_handler) then
+                   call error_handler(error_info)
+                 else
+                   call default_error_handler(error_info)
+                 endif
+               else
+                 !check ordering of pseudo-atts
+                 continue
+               endif
              endif
            endif
            if (have_processing_instruction_handler)  &
-                call processing_instruction_handler(str_vs(name),str_vs(fx%pcdata))
+                call processing_instruction_handler(str_vs(name), &
+                str_vs(fx%pcdata), fx%attributes)
+           call reset_dict(fx%attributes)
 
          else
 

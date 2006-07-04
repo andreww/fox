@@ -5,18 +5,21 @@ Things to do:
   which are not of the form
   
  <?name  pseudo_att_name="pseudo_att_value" .... ?>
+  DONE
 
-* check for all hard-coded limitations
+* check for all hard-coded limitations: all done except for buffer in fsm,and action
 * make sure and use implicit none/private everywhere DONE
 * make sure and explicitly declare all USEd symbols
 * proper checking for QNames in tag & attribute names
 * namespace support for attributes DONE
-* prefix mapping callbacks.
+* prefix mapping callbacks. DONE
 
-* check input/output uses of buffer
+* check input/output uses of buffer DONE
 
 * check usage of element_name - when can we garbage-collect?
 
 * Entity reparsing in text.
 * characters handler.
 * test: lots of. Probably use sax_example as driver
+
+* abstract the code to parse a string into a series of attribute/value pairs, and put it in m_common_attributes. We need it elsewhere (for the XML declaration) and it will simplify the fsm/parser.

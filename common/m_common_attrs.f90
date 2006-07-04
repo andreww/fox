@@ -2,6 +2,7 @@ module m_common_attrs
 
   !use m_wxml_escape, only : check_Name
   use m_common_array_str, only : assign_str_to_array, assign_array_to_str, str_vs
+  use m_common_charset, only : whitespace, initialNameChars, nameChars, operator(.in.)
   use m_common_error, only : FoX_error
 
   implicit none
@@ -36,6 +37,8 @@ module m_common_attrs
   !these last two only because SAX needs them
   public :: add_key_to_dict
   public :: add_value_to_dict
+
+  public :: parse_string_to_dict
 
   ! Query and extraction procedures
   
@@ -439,5 +442,129 @@ contains
     enddo
     
   end subroutine print_dict
+
+  subroutine parse_string_to_dict(string, dict, status)
+    character(len=*), intent(in) :: string
+    type(dictionary_t), intent(out) :: dict
+    integer, intent(out) :: status
+
+    !Parse a string to a dictionary of (namespace-unaware) attributes.
+    ! status will be non-zero if we have an error
+
+    integer :: i, n, state
+    character(len=1) :: c, quotechar
+    character(len=1), pointer :: name(:)
+    character(len=1), pointer :: value(:)
+    character(len=1), pointer :: tmp(:)
+
+    integer, parameter :: OUTSIDE            = 0
+    integer, parameter :: IN_NAME            = 1
+    integer, parameter :: WAITING_FOR_EQUALS = 2
+    integer, parameter :: FOUND_EQUALS       = 3
+    integer, parameter :: IN_VALUE           = 4
+    integer, parameter :: DONE_VALUE         = 5
+    
+    allocate(name(0))
+    allocate(value(0))
+
+    call init_dict(dict)
+
+    state = OUTSIDE
+
+    do i = 1, len(string)
+      c = string(i:i)
+      select case (state)
+      case (OUTSIDE)
+        if (c .in. whitespace) then
+          cycle
+        elseif (c .in. initialNameChars) then
+          state = IN_NAME
+          deallocate(name)
+          allocate(name(1))
+          name(1) = c
+        else
+          status = i
+          exit
+        endif
+      case (IN_NAME)
+        if (c.in.nameChars) then
+          n = size(name)
+          tmp => name
+          allocate(name(n+1))
+          name(:n) = tmp
+          deallocate(tmp)
+          name(n+1) = c
+        elseif (c.in.whitespace) then
+          state = WAITING_FOR_EQUALS
+        elseif (c == '=') then
+          state = FOUND_EQUALS
+        else
+          status = i
+          exit
+        endif
+      case (WAITING_FOR_EQUALS)
+        if (c.in.whitespace) then
+          cycle
+        elseif (c == '=') then
+          state = FOUND_EQUALS
+        else
+          status = i
+          exit
+        endif
+      case (FOUND_EQUALS)
+        if (c.in.whitespace) then
+          cycle
+        elseif (c == "'") then
+          quotechar = "'"
+          state = IN_VALUE
+        elseif (c == '"') then
+          quotechar = '"'
+          state = IN_VALUE
+        else
+          status = i
+          exit
+        endif
+      case (IN_VALUE)  
+        if (c == quotechar) then
+          call add_item_to_dict(dict, str_vs(name), str_vs(value))
+          deallocate(name)
+          allocate(name(0))
+          deallocate(value)
+          allocate(value(0))
+          state = DONE_VALUE
+        elseif (c == '<') then
+          status = i
+          exit
+          ! We do not check for & here - leave that for elsewhere
+        else
+          n = size(value)
+          tmp => value
+          allocate(value(n+1))
+          value(:n) = tmp
+          deallocate(tmp)
+          value(n+1) = c
+        endif
+      case (DONE_VALUE)
+        if (c.in.whitespace) then
+          state = OUTSIDE
+        else
+          status = i
+          exit
+        endif
+      end select
+    enddo
+
+    if (state /= OUTSIDE .and. state /= DONE_VALUE) then
+      status = len(string)
+      call reset_dict(dict)
+    else
+      status = 0
+    endif
+
+    deallocate(name)
+    deallocate(value)
+          
+  end subroutine parse_string_to_dict
+    
   
 end module m_common_attrs

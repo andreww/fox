@@ -8,5 +8,6 @@ module FoX_common
   public :: has_key
   public :: get_nsURI
   public :: get_localName
+  public :: parse_string_to_dict
 
 end module FoX_common
