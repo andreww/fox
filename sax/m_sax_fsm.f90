@@ -46,48 +46,62 @@ module m_sax_fsm
   public :: init_fsm, reset_fsm, destroy_fsm, evolve_fsm
 
   ! State parameters
-  integer, parameter, public   ::  ERROR = -1
-  integer, parameter, public   ::  INIT = 1         
-  integer, parameter, private  ::  START_TAG_MARKER = 2
-  integer, parameter, private  ::  END_TAG_MARKER = 3
-  integer, parameter, private  ::  IN_NAME = 4
-  integer, parameter, private  ::  WHITESPACE_IN_TAG = 5
-  integer, parameter, private  ::  IN_PCDATA = 6
-  integer, parameter, private  ::  SINGLETAG_MARKER = 7
-  integer, parameter, private  ::  CLOSINGTAG_MARKER = 8
-  integer, parameter, private  ::  IN_COMMENT = 9
-  integer, parameter, private  ::  BANG = 17
-  integer, parameter, private  ::  BANG_HYPHEN = 18
-  integer, parameter, private  ::  ONE_HYPHEN = 19
-  integer, parameter, private  ::  TWO_HYPHEN = 20
-  integer, parameter, private  ::  IN_ATTS = 21
-  integer, parameter, private  ::  START_PI = 22
-  integer, parameter, private  ::  IN_DTD = 23
-  integer, parameter, private  ::  IN_CDATA_SECTION = 24
-  integer, parameter, private  ::  ONE_BRACKET = 25
-  integer, parameter, private  ::  TWO_BRACKET = 26
-  integer, parameter, private  ::  CDATA_PREAMBLE = 27
-  integer, parameter, private  ::  IN_PI_TARGET = 28
-  integer, parameter, private  ::  IN_PI_WHITESPACE = 29
-  integer, parameter, private  ::  IN_PI_CONTENT = 30
-  integer, parameter, private  ::  QUESTION_MARK_IN_TARGET = 32
-  integer, parameter, private  ::  QUESTION_MARK_IN_CONTENT = 33
+  integer, parameter ::  ERROR = -1
+  integer, parameter ::  INIT = 1         
+  integer, parameter ::  START_TAG_MARKER = 2
+  integer, parameter ::  END_TAG_MARKER = 3
+  integer, parameter ::  IN_NAME = 4
+  integer, parameter ::  WHITESPACE_IN_TAG = 5
+  integer, parameter ::  IN_PCDATA = 6
+  integer, parameter ::  SINGLETAG_MARKER = 7
+  integer, parameter ::  CLOSINGTAG_MARKER = 8
+  integer, parameter ::  IN_COMMENT = 9
+  integer, parameter ::  BANG = 17
+  integer, parameter ::  BANG_HYPHEN = 18
+  integer, parameter ::  ONE_HYPHEN = 19
+  integer, parameter ::  TWO_HYPHEN = 20
+  integer, parameter ::  IN_ATTS = 21
+  integer, parameter ::  START_PI = 22
+  integer, parameter ::  IN_DTD = 23
+  integer, parameter ::  IN_CDATA_SECTION = 24
+  integer, parameter ::  ONE_BRACKET = 25
+  integer, parameter ::  TWO_BRACKET = 26
+  integer, parameter ::  CDATA_PREAMBLE = 27
+  integer, parameter ::  IN_PI_TARGET = 28
+  integer, parameter ::  IN_PI_WHITESPACE = 29
+  integer, parameter ::  IN_PI_CONTENT = 30
+  integer, parameter ::  QUESTION_MARK_IN_TARGET = 32
+  integer, parameter ::  QUESTION_MARK_IN_CONTENT = 33
 
   ! Context parameters
-  integer, parameter, public   ::  OPENING_TAG  = 100
-  integer, parameter, public   ::  CLOSING_TAG  = 110
-  integer, parameter, public   ::  SINGLE_TAG   = 120
-  integer, parameter, public   ::  COMMENT_TAG  = 130
-  integer, parameter, public   ::  PI_TAG  = 140
-  integer, parameter, public   ::  DTD_TAG  = 150
-  integer, parameter, public   ::  CDATA_SECTION_TAG  = 160
-  integer, parameter, public   ::  NULL_CONTEXT          = 200
+  integer, parameter ::  OPENING_TAG  = 100
+  integer, parameter ::  CLOSING_TAG  = 110
+  integer, parameter ::  SINGLE_TAG   = 120
+  integer, parameter ::  COMMENT_TAG  = 130
+  integer, parameter ::  PI_TAG  = 140
+  integer, parameter ::  DTD_TAG  = 150
+  integer, parameter ::  CDATA_SECTION_TAG  = 160
+  integer, parameter ::  NULL_CONTEXT          = 200
 
   ! Signal parameters
-  integer, parameter, public   ::  QUIET             = 1000
-  integer, parameter, public   ::  END_OF_TAG        = 1100
-  integer, parameter, public   ::  CHUNK_OF_PCDATA   = 1200
-  integer, parameter, public   ::  EXCEPTION         = 1500
+  integer, parameter ::  QUIET             = 1000
+  integer, parameter ::  END_OF_TAG        = 1100
+  integer, parameter ::  CHUNK_OF_PCDATA   = 1200
+  integer, parameter ::  EXCEPTION         = 1500
+
+  public :: OPENING_TAG
+  public :: CLOSING_TAG
+  public :: SINGLE_TAG 
+  public :: COMMENT_TAG
+  public :: PI_TAG
+  public :: DTD_TAG
+  public :: CDATA_SECTION_TAG
+  public :: NULL_CONTEXT
+
+  public :: QUIET
+  public :: END_OF_TAG
+  public :: CHUNK_OF_PCDATA
+  public :: EXCEPTION
   
 contains
 
