@@ -272,7 +272,6 @@ do
          if (fx%context == OPENING_TAG) then
             allocate(name(size(fx%element_name)))
             name = fx%element_name
-
             if (fx%debug) print *, "We have found an opening tag"
             if (fx%root_element_seen) then
                if (str_vs(name) == str_vs(fx%root_element_name)) then
@@ -301,6 +300,8 @@ do
                fx%root_element_seen = .true.
             endif
             call push_elstack(str_vs(name),fx%element_stack)
+            call destroy_dict(fx%attributes)
+            call parse_string_to_dict(str_vs(fx%pcdata), fx%attributes, s)
             call checkNamespaces(fx%attributes, fx%nsDict, &
                  len(fx%element_stack), start_prefix_handler)
             if (getURIofQName(fxml,str_vs(name))==invalidNS) then
@@ -323,7 +324,6 @@ do
          else if (fx%context == CLOSING_TAG) then
             allocate(name(size(fx%element_name)))
             name = fx%element_name
-         
             if (fx%debug) print *, "We have found a closing tag"
             if (is_empty(fx%element_stack)) then
                call build_error_info(error_info, &
@@ -362,7 +362,6 @@ do
          else if (fx%context == SINGLE_TAG) then
             allocate(name(size(fx%element_name)))
             name = fx%element_name
-
             if (fx%debug) print *, "We have found a single (empty) tag: ", &
                  str_vs(name)
             if (fx%root_element_seen) then
@@ -395,6 +394,8 @@ do
             ! Push name on to stack to reveal true xpath
             !
             call push_elstack(str_vs(name),fx%element_stack)
+            call destroy_dict(fx%attributes)
+            call parse_string_to_dict(str_vs(fx%pcdata), fx%attributes, s)
             call checkNamespaces(fx%attributes, fx%nsDict, &
                  len(fx%element_stack), start_prefix_handler)
             if (getURIofQName(fxml,str_vs(name))==invalidNS) then

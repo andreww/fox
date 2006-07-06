@@ -25,6 +25,7 @@ module m_sax_fsm
     integer                          :: context
     integer                          :: nbrackets
     integer                          :: nlts
+    logical                          :: in_quotes
     character(len=1)                 :: quote_char
     type(buffer_t)                   :: buffer
     character, dimension(:), pointer :: element_name
@@ -66,6 +67,7 @@ module m_sax_fsm
   integer, parameter, private  ::  BANG_HYPHEN = 18
   integer, parameter, private  ::  ONE_HYPHEN = 19
   integer, parameter, private  ::  TWO_HYPHEN = 20
+  integer, parameter, private  ::  IN_ATTS = 21
   integer, parameter, private  ::  START_PI = 22
   integer, parameter, private  ::  IN_DTD = 23
   integer, parameter, private  ::  IN_CDATA_SECTION = 24
@@ -580,35 +582,16 @@ if (associated(fx%element_name)) deallocate(fx%element_name)
 
  case (WHITESPACE_IN_TAG)
       if ( c .in. whitespace) then
-         if (fx%debug) fx%action = ("Reading whitespace in tag")
-      else if (c == "<") then
-         fx%state = ERROR
-         fx%action = ("Starting tag within tag")
-      else if (c == ">") then
-         if (fx%context == PI_TAG) then
-            fx%state = ERROR
-            fx%action = "End of XML declaration without ?"
-         else
-            fx%state = END_TAG_MARKER
-            signal  = END_OF_TAG
-            if (fx%debug) fx%action = ("End whitespace in tag")
-         endif
-      else if (c == "/") then
-         if (fx%context /= OPENING_TAG) then
-            fx%state = ERROR
-            fx%action = ("Single tag did not open as start tag")
-         else 
-            fx%state = SINGLETAG_MARKER
-            fx%context = SINGLE_TAG
-            if (fx%debug) fx%action = ("End whitespace in single tag")
-         endif
-      else if (c .in. initialNameChars) then
-         fx%state = IN_ATT_NAME
-         if (fx%debug) fx%action = ("Starting Attribute name in tag")
-         call add_to_buffer(c,fx%buffer)
+        if (fx%debug) fx%action = ("Reading whitespace in tag")
+      elseif (c .in. initialNameChars) then
+        fx%state = IN_ATTS
+        call reset_buffer(fx%buffer)
+        call add_to_buffer(c,fx%buffer)
+        fx%in_quotes = .false.
+        if (fx%debug) fx%action = ("Starting attribute name in tag")
       else
-         fx%state = ERROR
-         fx%action = ("Illegal initial character for attribute")
+        fx%state = ERROR
+        fx%action = ("Illegal initial character for attribute")
       endif
 
  case (QUESTION_MARK_IN_TARGET)
@@ -681,6 +664,8 @@ if (associated(fx%element_name)) deallocate(fx%element_name)
       if (c == ">") then
          fx%state = END_TAG_MARKER
          signal  = END_OF_TAG
+         allocate(fx%pcdata(len(fx%buffer)))
+         fx%pcdata = buffer_to_chararray(fx%buffer)
          if (fx%debug) fx%action = ("Ending tag")
          ! We have to call begin_element AND end_element
       else 
@@ -876,6 +861,44 @@ if (associated(fx%element_name)) deallocate(fx%element_name)
      call add_to_buffer(c, fx%buffer)
      if (fx%debug) fx%action = ("Reading chars for PI content")
    endif
+
+ case (IN_ATTS)
+   if (fx%in_quotes) then
+     if (c == fx%quote_char) then
+       fx%in_quotes = .false.
+       fx%action = "Ending attribute quote"
+     else
+       fx%action = "Reading inside attribute quote"
+     endif
+     call add_to_buffer(c, fx%buffer)
+   else
+     if (c =='"' .or. c == "'") then
+       fx%quote_char = c
+       fx%in_quotes = .true.
+       call add_to_buffer(c, fx%buffer)
+       fx%action = "Entering attribute quote"
+     elseif (c == "/") then
+       allocate(fx%pcdata(len(fx%buffer)))
+       fx%pcdata = buffer_to_chararray(fx%buffer)
+       call reset_buffer(fx%buffer)
+       fx%state = SINGLETAG_MARKER
+       fx%context = SINGLE_TAG
+       fx%action = "Ending single tag"
+       signal = END_OF_TAG
+     elseif (c == ">") then
+       allocate(fx%pcdata(len(fx%buffer)))
+       fx%pcdata = buffer_to_chararray(fx%buffer)
+       call reset_buffer(fx%buffer)
+       fx%state = END_TAG_MARKER
+       fx%context = OPENING_TAG
+       fx%action = "Closing element"
+       signal = END_OF_TAG
+     else
+       call add_to_buffer(c, fx%buffer)
+       fx%action = "Reading outside attribute quote"
+     endif
+   endif
+     
 
 
  case (ERROR)

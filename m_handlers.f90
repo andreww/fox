@@ -49,6 +49,7 @@ end subroutine end_element_handler
 subroutine pcdata_chunk_handler(chunk)
 character(len=*), intent(in) :: chunk
 
+write(*,'(a)') "PCDATA:"
 write(unit=*,fmt="(a)",advance="no") chunk
 
 end subroutine pcdata_chunk_handler
