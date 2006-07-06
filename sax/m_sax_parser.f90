@@ -523,24 +523,11 @@ do
 
          endif
 
-      else if (signal == CHUNK_OF_PCDATA) then
+     else if (signal == CHUNK_OF_PCDATA) then
 
-         if (fx%debug) print *, "We found a chunk of PCDATA"
-         if (is_empty(fx%element_stack)) then
-            if (fx%debug) print *, "... Warning: PCDATA outside element context"
-               ! Just a warning
-               call build_error_info(error_info, &
-                  "PCDATA outside of element context", &
-                  line(fb),column(fb),fx%element_stack,WARNING_CODE)
-               if (have_error_handler) then
-                  call error_handler(error_info)
-               else
-                  call default_error_handler(error_info)
-               endif
-         else
-            if (have_pcdata_handler) &
-                 call pcdata_chunk_handler(str_vs(fx%pcdata))
-         endif
+       if (fx%debug) write(*,'(a)'), "We found a chunk of PCDATA"
+       if (have_pcdata_handler) &
+            call pcdata_chunk_handler(str_vs(fx%pcdata))
 
       else if (signal == EXCEPTION) then
          call build_error_info(error_info, fx%action, &
