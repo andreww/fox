@@ -12,6 +12,8 @@ module m_sax_entities
   !    2. External unparsed entities
   ! Though nothing is done with them currently elsewhere in FoX.
 
+  !FIXME need to worry about removing entities from a list.
+
   use m_common_array_str, only: str_vs, vs_str
   use m_common_charset, only: digits
   use m_common_error, only: FoX_warning, FoX_error

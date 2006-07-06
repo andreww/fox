@@ -15,6 +15,8 @@ module m_sax_fsm
   use m_sax_entities, only: is_unparsed_entity
   use m_sax_namespaces, only: namespaceDictionary, initNamespaceDictionary, &
        destroyNamespaceDictionary
+
+  use m_sax_reader, only: file_buffer_t, get_character
   
   implicit none
   private
@@ -87,6 +89,7 @@ module m_sax_fsm
   integer, parameter ::  QUIET             = 1000
   integer, parameter ::  END_OF_TAG        = 1100
   integer, parameter ::  CHUNK_OF_PCDATA   = 1200
+  integer, parameter ::  END_OF_DOCUMENT   = 1300
   integer, parameter ::  EXCEPTION         = 1500
 
   public :: OPENING_TAG
@@ -101,6 +104,7 @@ module m_sax_fsm
   public :: QUIET
   public :: END_OF_TAG
   public :: CHUNK_OF_PCDATA
+  public :: END_OF_DOCUMENT
   public :: EXCEPTION
   
 contains
@@ -169,13 +173,16 @@ type(fsm_t), intent(inout)   :: fx
 end subroutine destroy_fsm
 
 !------------------------------------------------------------
-subroutine evolve_fsm(fx,c,signal)
+subroutine evolve_fsm(fx, fb, signal)
 !
 ! Finite-state machine evolution rules for XML parsing.
 !
 type(fsm_t), intent(inout)      :: fx    ! Internal state
-character(len=1), intent(in)    :: c
+type(file_buffer_t), intent(inout)    :: fb
 integer, intent(out)            :: signal
+
+character(len=1) :: c
+integer :: iostat
 
 ! Reset signal
 !
@@ -183,6 +190,12 @@ signal = QUIET
 
 ! Reset pcdata
 if (associated(fx%pcdata)) deallocate(fx%pcdata)
+
+call get_character(fb, c, iostat)
+if (iostat /= 0) then          ! End of file...
+  signal = END_OF_DOCUMENT
+  return
+endif
 
 if (.not. (c .in. validchars)) then
 !
@@ -196,6 +209,7 @@ if (.not. (c .in. validchars)) then
 endif
 
 select case(fx%state)
+  
 
  case (INIT)
       if (c == "<") then

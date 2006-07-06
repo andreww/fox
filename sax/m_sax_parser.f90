@@ -12,7 +12,7 @@ use m_sax_debug, only: debug
 use m_sax_fsm, only: fsm_t, init_fsm, reset_fsm, destroy_fsm, evolve_fsm
 use m_sax_fsm, only: END_OF_TAG, OPENING_TAG, SINGLE_TAG, CDATA_SECTION_TAG
 use m_sax_fsm, only: CLOSING_TAG, COMMENT_TAG, DTD_TAG, PI_TAG
-use m_sax_fsm, only: CHUNK_OF_PCDATA, QUIET, EXCEPTION
+use m_sax_fsm, only: CHUNK_OF_PCDATA, QUIET, EXCEPTION, END_OF_DOCUMENT
 use m_sax_namespaces, only: checkNamespaces, getnamespaceURI, checkEndNamespaces, invalidNS
 use m_sax_error, only: sax_error_t, build_error_info, WARNING_CODE, SEVERE_ERROR_CODE, default_error_handler
 
@@ -239,25 +239,8 @@ if (have_start_document_handler) call start_document_handler()
 
 !---------------------------------------------------------------------
 do
-      call get_character(fb,c,iostat)
 
-      if (iostat /= 0) then          ! End of file...
-         if (.not. is_empty(fx%element_stack)) then
-            call build_error_info(error_info, &
-                 "Early end of file.", &
-                 line(fb),column(fb),fx%element_stack,SEVERE_ERROR_CODE)
-            if (have_error_handler) then
-               call error_handler(error_info)
-            else
-               call default_error_handler(error_info)
-            endif
-         endif
-         if (have_end_document_handler) call end_document_handler()
-         call endfile_xmlfile(fxml)  ! Mark it as eof
-         exit
-      endif
-
-      call evolve_fsm(fx,c,signal)
+      call evolve_fsm(fx, fb, signal)
       error_found = .false.
 
       if (fx%debug) print *, c, " ::: ", trim(fx%action)
@@ -523,31 +506,45 @@ do
 
          endif
 
-     else if (signal == CHUNK_OF_PCDATA) then
+       else if (signal == CHUNK_OF_PCDATA) then
 
-       if (fx%debug) write(*,'(a)'), "We found a chunk of PCDATA"
-       if (have_pcdata_handler) &
-            call pcdata_chunk_handler(str_vs(fx%pcdata))
-
-      else if (signal == EXCEPTION) then
+         if (fx%debug) write(*,'(a)'), "We found a chunk of PCDATA"
+         if (have_pcdata_handler) &
+              call pcdata_chunk_handler(str_vs(fx%pcdata))
+         
+       else if (signal == EXCEPTION) then
          call build_error_info(error_info, fx%action, &
-                  line(fb),column(fb),fx%element_stack,SEVERE_ERROR_CODE)
+              line(fb),column(fb),fx%element_stack,SEVERE_ERROR_CODE)
          if (have_error_handler) then
-            call error_handler(error_info)
+           call error_handler(error_info)
          else
-            call default_error_handler(error_info)
+           call default_error_handler(error_info)
          endif
-      else
+         
+       else if (signal == END_OF_DOCUMENT) then
+         if (.not. is_empty(fx%element_stack)) then
+           call build_error_info(error_info, &
+                "Early end of file.", &
+                line(fb),column(fb),fx%element_stack,SEVERE_ERROR_CODE)
+           if (have_error_handler) then
+             call error_handler(error_info)
+           else
+             call default_error_handler(error_info)
+           endif
+         endif
+         if (have_end_document_handler) call end_document_handler()
+         call endfile_xmlfile(fxml)  ! Mark it as eof
+         exit
+         
+       else if (signal /= QUIET) then
          ! QUIET, do nothing
-      endif
-      if (signal /= QUIET) then
          if (have_signal_handler) then
-            call signal_handler(pause_signal)
-            if (pause_signal) exit
+           call signal_handler(pause_signal)
+           if (pause_signal) exit
          endif
-      endif
-      
-    enddo
+       endif
+       
+     enddo
 
 end subroutine xml_parse
 
