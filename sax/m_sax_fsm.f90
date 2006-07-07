@@ -279,16 +279,28 @@ select case(fx%state)
       
 
  case (CDATA_PREAMBLE)
-   ! We assume a CDATA[ is forthcoming, we do not check FIXME
-      if (c == "[") then
-         fx%state = IN_CDATA_SECTION
-         if (fx%debug) fx%action = ("About to start reading CDATA contents")
-      else if (c == "]") then
-         fx%state = ERROR
-         fx%action = ("Unexpected ] in CDATA preamble")
-      else
-         if (fx%debug) fx%action = ("Reading CDATA preamble")
-      endif
+   fx%state = ERROR
+   signal = EXCEPTION
+   fx%action = "Unexpected character in CDATA preamble"
+   if (c /= 'C') return
+   call get_character(fb, c, iostat)
+   if (iostat /= 0) return
+   if (c /= 'D') return
+   call get_character(fb, c, iostat)
+   if (iostat /= 0) return
+   if (c /= 'A') return
+   call get_character(fb, c, iostat)
+   if (iostat /= 0) return
+   if (c /= 'T') return
+   call get_character(fb, c, iostat)
+   if (iostat /= 0) return
+   if (c /= 'A') return
+   call get_character(fb, c, iostat)
+   if (iostat /= 0) return
+   if (c /= '[') return
+     
+   fx%state = IN_CDATA_SECTION
+   if (fx%debug) fx%action = ("About to start reading CDATA contents")
 
  case (IN_CDATA_SECTION)
       if (c == "]") then
