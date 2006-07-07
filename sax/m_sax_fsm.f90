@@ -186,7 +186,7 @@ integer :: iostat
 
 ! Reset signal
 !
-signal = EXCEPTION
+signal = END_OF_DOCUMENT
 
 ! Reset pcdata
 if (associated(fx%pcdata)) deallocate(fx%pcdata)
@@ -679,7 +679,11 @@ select case(fx%state)
 
  end select
 
- if (fx%state /= ERROR) signal = QUIET
+ if (fx%state == ERROR) then
+   signal = EXCEPTION
+ else
+   signal = QUIET
+ endif
 
 end subroutine evolve_fsm
 

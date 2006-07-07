@@ -522,7 +522,8 @@ do
          endif
          
        else if (signal == END_OF_DOCUMENT) then
-         if (.not. is_empty(fx%element_stack)) then
+         if (.not. is_empty(fx%element_stack) .or. &
+           .not. fx%root_element_seen ) then
            call build_error_info(error_info, &
                 "Early end of file.", &
                 line(fb),column(fb),fx%element_stack,SEVERE_ERROR_CODE)
