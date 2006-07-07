@@ -186,7 +186,7 @@ integer :: iostat
 
 ! Reset signal
 !
-signal = QUIET
+signal = EXCEPTION
 
 ! Reset pcdata
 if (associated(fx%pcdata)) deallocate(fx%pcdata)
@@ -209,7 +209,6 @@ if (.not. (c .in. validchars)) then
 endif
 
 select case(fx%state)
-  
 
  case (INIT)
       if (c == "<") then
@@ -280,7 +279,7 @@ select case(fx%state)
       
 
  case (CDATA_PREAMBLE)
-      ! We assume a CDATA[ is forthcoming, we do not check FIXME
+   ! We assume a CDATA[ is forthcoming, we do not check FIXME
       if (c == "[") then
          fx%state = IN_CDATA_SECTION
          if (fx%debug) fx%action = ("About to start reading CDATA contents")
@@ -313,13 +312,14 @@ select case(fx%state)
  case (TWO_BRACKET)
       if (c == ">") then
          fx%state = IN_PCDATA
-         signal = END_OF_TAG
          if (fx%debug) fx%action = ("End of CDATA section")
          allocate(fx%pcdata(len(fx%buffer)))
          fx%pcdata = buffer_to_chararray(fx%buffer)
                 ! Not quite the same behavior
                 ! as pcdata... (not filtered)
          call reset_buffer(fx%buffer)
+         signal = END_OF_TAG
+         return
       else
          fx%state = IN_CDATA_SECTION
          call add_to_buffer("]",fx%buffer)
@@ -342,12 +342,13 @@ select case(fx%state)
       else if (c == ">") then
          if (fx%nbrackets == 0) then
            fx%state = IN_PCDATA
-           signal  = END_OF_TAG
            if (fx%debug) fx%action = ("Ending DTD")
            allocate(fx%pcdata(len(fx%buffer)))
            fx%pcdata = buffer_to_chararray(fx%buffer)
                   ! Same behavior as pcdata
            call reset_buffer(fx%buffer)
+           signal  = END_OF_TAG
+           return
          else
             fx%nlts = fx%nlts -1
             call add_to_buffer(">",fx%buffer)
@@ -404,13 +405,14 @@ select case(fx%state)
  case (IN_NAME)
       if (c == ">") then
          fx%state = IN_PCDATA
-         signal  = END_OF_TAG
          if (fx%debug) fx%action = ("Ending tag")
          if (associated(fx%element_name)) deallocate(fx%element_name)
          allocate(fx%element_name(len(fx%buffer)))
          fx%element_name = buffer_to_chararray(fx%buffer)
          call reset_buffer(fx%buffer)
          call reset_dict(fx%attributes)
+         signal  = END_OF_TAG
+         return
       else if (c == "/") then
          if (fx%context /= OPENING_TAG) then
             fx%state = ERROR
@@ -458,13 +460,14 @@ select case(fx%state)
  case (QUESTION_MARK_IN_TARGET)
    if (c == ">") then
      fx%state = IN_PCDATA
-     signal  = END_OF_TAG
      if (associated(fx%element_name)) deallocate(fx%element_name)
      allocate(fx%element_name(len(fx%buffer)))
      fx%element_name = buffer_to_chararray(fx%buffer)
      if (associated(fx%pcdata)) deallocate(fx%pcdata)
      allocate(fx%pcdata(0))
      if (fx%debug) fx%action = ("End of PI")
+     signal  = END_OF_TAG
+     return
    else
      fx%state = ERROR
      fx%action = ("Badly terminated PI")
@@ -473,11 +476,12 @@ select case(fx%state)
  case (QUESTION_MARK_IN_CONTENT)
    if (c == ">") then
      fx%state = IN_PCDATA
-     signal  = END_OF_TAG
      if (associated(fx%pcdata)) deallocate(fx%pcdata)
      allocate(fx%pcdata(len(fx%buffer)))
      fx%pcdata = buffer_to_chararray(fx%buffer)
      if (fx%debug) fx%action = ("End of PI")
+     signal  = END_OF_TAG
+     return
    else
      fx%state = IN_PI_CONTENT
      call add_to_buffer(c, fx%buffer)
@@ -509,12 +513,13 @@ select case(fx%state)
  case (TWO_HYPHEN)
       if (c == ">") then
          fx%state = IN_PCDATA
-         signal  = END_OF_TAG
          if (fx%debug) fx%action = ("End of Comment")
          allocate(fx%pcdata(len(fx%buffer)))
          fx%pcdata = buffer_to_chararray(fx%buffer)
                 ! Same behavior as pcdata
          call reset_buffer(fx%buffer)
+         signal  = END_OF_TAG
+         return
       else
          fx%state = ERROR
          fx%action = ("Cannot have -- in comment")
@@ -524,11 +529,11 @@ select case(fx%state)
 
       if (c == ">") then
          fx%state = IN_PCDATA
-         signal  = END_OF_TAG
          allocate(fx%pcdata(len(fx%buffer)))
          fx%pcdata = buffer_to_chararray(fx%buffer)
          if (fx%debug) fx%action = ("Ending tag")
-         ! We have to call begin_element AND end_element
+         signal  = END_OF_TAG
+         return
       else 
          fx%state = ERROR
          fx%action = ("Wrong ending of single tag")
@@ -537,7 +542,6 @@ select case(fx%state)
  case (IN_PCDATA)
       if (c == "<") then
          fx%state = START_TAG_MARKER
-         signal = CHUNK_OF_PCDATA
          if (fx%debug) fx%action = ("End of pcdata -- Starting tag")
          if (fx%entities_in_pcdata) then
             allocate(fx%pcdata(entity_filter_text_len(fx%entities, str(fx%buffer))))
@@ -548,6 +552,8 @@ select case(fx%state)
             fx%pcdata = buffer_to_chararray(fx%buffer)
          endif
          call reset_buffer(fx%buffer)
+         signal = CHUNK_OF_PCDATA
+         return
       else if (c == ">") then
          fx%state = ERROR
          fx%action = ("Ending tag without starting it!")
@@ -571,7 +577,6 @@ select case(fx%state)
           ! Check whether we are close to the end of the buffer. 
           ! If so, make a chunk and reset the buffer
           if (buffer_nearly_full(fx%buffer)) then
-            signal = CHUNK_OF_PCDATA
             if (fx%debug) fx%action = ("Resetting almost full PCDATA buffer")
             if (fx%entities_in_pcdata) then
               allocate(fx%pcdata(entity_filter_text_len(fx%entities, str(fx%buffer))))
@@ -582,6 +587,8 @@ select case(fx%state)
               fx%pcdata = buffer_to_chararray(fx%buffer)
             endif
             call reset_buffer(fx%buffer)
+            signal = CHUNK_OF_PCDATA
+            return
           endif
         endif
       endif
@@ -649,7 +656,6 @@ select case(fx%state)
        fx%state = SINGLETAG_MARKER
        fx%context = SINGLE_TAG
        fx%action = "Ending single tag"
-       signal = END_OF_TAG
      elseif (c == ">") then
        allocate(fx%pcdata(len(fx%buffer)))
        fx%pcdata = buffer_to_chararray(fx%buffer)
@@ -658,6 +664,7 @@ select case(fx%state)
        fx%context = OPENING_TAG
        fx%action = "Closing element"
        signal = END_OF_TAG
+       return
      else
        call add_to_buffer(c, fx%buffer)
        fx%action = "Reading outside attribute quote"
@@ -672,7 +679,7 @@ select case(fx%state)
 
  end select
 
-if (fx%state == ERROR) signal  = EXCEPTION
+ if (fx%state /= ERROR) signal = QUIET
 
 end subroutine evolve_fsm
 
