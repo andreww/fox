@@ -182,8 +182,6 @@ CONTAINS
 
     type(fnode), pointer      :: newattr
 
-    type(string) :: prefix, localname
-
     newattr => createAttribute(element % ownerDocument, name)
     call setValue(newattr,value)
     call setAttributeNode(element,newattr)
@@ -198,15 +196,13 @@ CONTAINS
 
     type(fnode), pointer      :: newattr
 
-    type(string) :: prefix, localname
-
     newattr => createAttribute(element % ownerDocument, name)
     call setValue(newattr,value)
     call setnsURI(newattr, nsURI)
     call setlocalName(newattr, localName)
     call setAttributeNode(element,newattr)
 
-  end subroutine setAttribute
+  end subroutine setAttributeNS
 
   !-----------------------------------------------------------
 

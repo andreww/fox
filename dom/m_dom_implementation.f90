@@ -1,13 +1,14 @@
 module m_dom_implementation
 
-  use m_dom_document, only : fDocument
-  use m_dom_documenttype, only : fDocumentType
-  use m_dom_node, only : dom_node
+  use m_dom_types, only : fDocumentNode
+  use m_dom_types, only : fDocumentType
+  use m_dom_types, only : fnode
 
   implicit none
   private
 
   public :: hasFeature
+  public :: createDocument
 
 contains
 
@@ -27,13 +28,13 @@ contains
     type(fdocumentType), pointer :: dt
     allocate(dt%name(len(qualifiedName)))
     dt%name = transfer(qualifiedName, dt%name)
-    dt%entities => createNamedNodeMap()
-    dt%notations => createNamedNodeMap()
+    !dt%entities
+    !dt%notations
     allocate(dt%publicId(len(publicId)))
-    dtpublicId = transfer(publicId, dt%publicId)
+    dt%publicId = transfer(publicId, dt%publicId)
     allocate(dt%publicId(len(systemId)))
     dt%systemId = transfer(systemId, dt%systemId)
-    allocate(dt%internalSubset(0) !FIXME
+    allocate(dt%internalSubset(0)) !FIXME
   end function createDocumentType
 
   subroutine destroyDocumentType(dt)
@@ -46,6 +47,19 @@ contains
     deallocate(dt%internalSubset)
     deallocate(dt)
   end subroutine destroyDocumentType
+
+  
+  function createDocument(namespaceURI, qualifiedName, docType) result(doc)
+    character(len=*), intent(in) :: namespaceURI
+    character(len=*), intent(in) :: qualifiedName
+    type(fDocumentType), pointer :: docType
+    type(fDocumentNode), pointer :: doc
+    
+    !DOM implementation ...
+    doc%doctype => docType
+    
+    !   !FIXME
+  end function createDocument
 
   ! function createDocument
   !   implementation is found in m_dom_document

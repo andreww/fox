@@ -1,20 +1,21 @@
 module m_dom_parse
 
+  use FoX_common, only: dictionary_t, len
+  use FoX_common, only: get_key, get_value
+  use FoX_sax, only: xml_parse, xml_t
+  use FoX_sax, only: open_xmlfile, close_xmlfile
+
   use m_dom_types, only: fNode, fDocumentNode, getnumberofallocatednodes
   use m_dom_types, only: createnode, DOCUMENT_NODE, destroynode
-  use m_dom_document, only: createdocument
   use m_dom_document, only: createcomment
   use m_dom_document, only: createcdatasection
   use m_dom_document, only: createelement
   use m_dom_document, only: createtextnode
+  use m_dom_implementation, only: createdocument
   use m_dom_node, only: appendchild
   use m_dom_node, only: getparentnode
   use m_dom_element, only: setattribute
   use m_dom_debug, only: dom_debug
-
-  use FoX_sax, only: xml_parse, xml_t, dictionary_t, len
-  use FoX_sax, only: open_xmlfile, close_xmlfile
-  use FoX_sax, only: get_key, get_value
 
   use m_strings, only : string, stringify, assignment(=), operator(==)
 
@@ -27,6 +28,7 @@ module m_dom_parse
   type(fDocumentNode), pointer, private, save  :: mainDoc => null()
   type(fNode), pointer, private, save  :: main => null()
   type(fNode), pointer, private, save  :: current => null()
+  type(fNode), pointer, private, save  :: documentElement => null()
 
   !type(nsDictionary), save :: nsDict
 
@@ -44,6 +46,9 @@ CONTAINS
     character(len=400)   :: attr_name, attr_value
     integer              :: status
     integer              :: i
+
+    if (.not.associated(documentElement)) then
+      mainDoc = createDocument(str_vs(URI), str_vs(name)
 
     if (dom_debug) write(*,'(4a)'), "Adding node for element: {",URI,'}', localname
 
@@ -180,7 +185,7 @@ CONTAINS
 
     if (dom_debug) print *, "Number of allocated nodes: ", getNumberofAllocatedNodes()
 
-    call createDocument(mainDoc, main)
+!    call createDocument(mainDoc, main)
     parsefile => mainDoc
     mainDoc => null()
 

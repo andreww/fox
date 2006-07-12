@@ -59,6 +59,16 @@
   end type fnodeList
 
 
+  type, public :: fDocumentType
+    character, dimension(:), pointer :: name
+    type(fNamedNodeMap)              :: entities
+    type(fNamedNodeMap)              :: notations
+    character, dimension(:), pointer :: publicId
+    character, dimension(:), pointer :: systemId
+    character, dimension(:), pointer :: internalSubset
+  end type fDocumentType
+
+
   !-----------------------------------------------------------
   !  DOMImplementation 
   !-----------------------------------------------------------
@@ -68,11 +78,11 @@
      logical :: HTML
   end type fDOMImplementation
 
-  type, public :: fDocument
+  type, public :: fDocumentNode
     type(fDocumentType), pointer ::       doctype;
-!    type(fDOMImplementation), pointer ::  implementation;
+    type(fDOMImplementation), pointer ::  implementation;
     type(fNode), pointer ::               documentElement;
- end type fDocument
+  end type fDocumentNode
 
 
 !========================================================================
