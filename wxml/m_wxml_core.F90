@@ -2,8 +2,7 @@ module m_wxml_core
 
   use FoX_common, only: FoX_version
   use m_common_attrs
-  use m_common_array_str, only: assign_array_to_str
-  use m_common_array_str, only: assign_str_to_array
+  use m_common_array_str, only: vs_str, str_vs
   use m_common_buffer
   use m_common_elstack
   use m_common_error, only: FoX_warning_base, FoX_error_base, FoX_fatal_base
@@ -131,7 +130,7 @@ else
 endif
 
 allocate(xf%filename(len(filename)))
-call assign_str_to_array(xf%filename,filename)
+xf%filename = vs_str(filename)
 
 if (present(channel)) then
   xf%lun = channel
@@ -450,7 +449,7 @@ subroutine xml_EndElement(xf,name)
 
   call checkEndNamespaces(xf%nsDict, len(xf%stack))
 
-  xf%state_2 = WXML_STATE_2_OUTSIDE_TAGo
+  xf%state_2 = WXML_STATE_2_OUTSIDE_TAG
 
 end subroutine xml_EndElement
 
@@ -464,12 +463,14 @@ subroutine xml_addNamespace(xf, nsURI, prefix)
     call wxml_error(xf, "adding namespace outside element content")
 
   if (present(prefix)) then
-    call addPrefixedNS(xf%nsDict, prefix, nsURI, len(fx%stack))
-    call xmlAddAttribute(xf, 'xmlns:'//prefix, nsURI)
+    call addPrefixedNS(xf%nsDict, vs_str(prefix), vs_str(nsURI), len(xf%stack))
+    call xml_AddAttribute(xf, 'xmlns:'//prefix, nsURI)
   else
-    call addDefaultNS(xf%nsDict, nsURI, len(fx%stack)
-    call xmlAddAttribute(xf, 'xmlns', nsURI)
+    call addDefaultNS(xf%nsDict, vs_str(nsURI), len(xf%stack))
+    call xml_AddAttribute(xf, 'xmlns', nsURI)
   endif
+
+end subroutine xml_addNamespace
   
 
 subroutine xml_Close(xf)
@@ -623,7 +624,7 @@ end subroutine write_attributes
     pure function xmlf_name(xf) result(fn)
       Type (xmlf_t), intent(in) :: xf
       character(len=size(xf%filename)) :: fn
-      call assign_array_to_str(fn,xf%filename)
+      fn = str_vs(xf%filename)
     end function xmlf_name
       
 
