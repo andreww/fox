@@ -24,4 +24,6 @@ module FoX_wxml
   public :: xml_AddAttribute
   public :: xml_AddPseudoAttribute
 
+  public :: xml_AddNamespace
+
 end module FoX_wxml

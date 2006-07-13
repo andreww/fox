@@ -7,7 +7,7 @@ module m_wxml_core
   use m_common_elstack
   use m_common_error, only: FoX_warning_base, FoX_error_base, FoX_fatal_base
   use m_common_io, only: get_unit
-  use m_common_namespaces, only: namespaceDictionary
+  use m_common_namespaces, only: namespaceDictionary, getnamespaceURI
   use m_common_namespaces, only: initnamespaceDictionary, destroynamespaceDictionary
   use m_common_namespaces, only: addDefaultNS, addPrefixedNS
   use m_common_namespaces, only: checkEndNamespaces
@@ -71,6 +71,7 @@ module m_wxml_core
   public :: xml_AddPcdata
   public :: xml_AddAttribute
   public :: xml_AddPseudoAttribute
+  public :: xml_AddNamespace
  
   interface xml_AddPcdata
     module procedure xml_AddPcdata_Ch
@@ -276,9 +277,10 @@ subroutine xml_AddComment(xf,comment)
 end subroutine xml_AddComment
 
 
-subroutine xml_NewElement(xf,name)
+subroutine xml_NewElement(xf, name, nsPrefix)
 type(xmlf_t), intent(inout)   :: xf
 character(len=*), intent(in)  :: name
+character(len=*), intent(in), optional  :: nsPrefix
 
   select case (xf%state_1)
   case (WXML_STATE_1_JUST_OPENED)
@@ -295,10 +297,19 @@ character(len=*), intent(in)  :: name
     call wxml_warning(xf, 'attribute name '//name//' is not valid')
   endif
 
+  if (present(nsPrefix)) then
+    if (len(getnamespaceURI(xf%nsDict,vs_str(nsPrefix))) == 0) &
+      call wxml_error(xf, "namespace prefix not registered")
+  endif
+
   call close_start_tag(xf)
   call add_eol(xf)
   call push_elstack(name,xf%stack)
-  call add_to_buffer("<"//name, xf%buffer)
+  if (present(nsPrefix)) then
+    call add_to_buffer("<"//nsPrefix//":"//name, xf%buffer)
+  else
+    call add_to_buffer("<"//name, xf%buffer)
+  endif
   xf%state_2 = WXML_STATE_2_INSIDE_ELEMENT
   call reset_dict(xf%dict)
 
@@ -454,7 +465,7 @@ subroutine xml_EndElement(xf,name)
 end subroutine xml_EndElement
 
 
-subroutine xml_addNamespace(xf, nsURI, prefix)
+subroutine xml_AddNamespace(xf, nsURI, prefix)
   type(xmlf_t), intent(inout)   :: xf
   character(len=*), intent(in) :: nsURI
   character(len=*), intent(in), optional :: prefix
@@ -470,7 +481,7 @@ subroutine xml_addNamespace(xf, nsURI, prefix)
     call xml_AddAttribute(xf, 'xmlns', nsURI)
   endif
 
-end subroutine xml_addNamespace
+end subroutine xml_AddNamespace
   
 
 subroutine xml_Close(xf)
