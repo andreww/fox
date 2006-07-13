@@ -266,7 +266,7 @@ contains
 
   end subroutine stmStartArrayTag
 
-  subroutine stmAddStringArray(xf, value, id, title, dictref, dataType, delim, ref)
+  subroutine stmAddStringArray(xf, value, id, title, dictref, dataType, delim, ref, units)
 
     type(xmlf_t) :: xf
     character(len=*), intent(in)           :: value(:)      ! the values to be output
@@ -274,7 +274,8 @@ contains
     character(len=*), intent(in), optional :: title         ! the title
     character(len=*), intent(in), optional :: dictref       ! the dictionary reference
     character(len=*), intent(in), optional :: dataType      ! the dataType
-    character(len=*), intent(in), optional :: ref           ! delimiter
+    character(len=*), intent(in), optional :: ref 
+    character(len=*), intent(in), optional :: units
     character(len=1), intent(in), optional :: delim         ! delimiter
 
     integer :: nvalue, i
@@ -289,9 +290,13 @@ contains
     endif
 
     if (present(dataType)) then
-      call stmStartArrayTag(xf=xf, nvalue=nvalue, id=id, title=title, dictRef=dictRef, dataType=dataType, ref=ref, delim=delim1)
+      call stmStartArrayTag(xf=xf, nvalue=nvalue, id=id, title=title, &
+        dictRef=dictRef, dataType=dataType, ref=ref, delim=delim1, &
+        units=units)
     else
-      call stmStartArrayTag(xf=xf, nvalue=nvalue, id=id, title=title, dictRef=dictRef, dataType='xsd:string', ref=ref, delim=delim1)
+      call stmStartArrayTag(xf=xf, nvalue=nvalue, id=id, title=title, &
+        dictRef=dictRef, dataType='xsd:string', ref=ref, delim=delim1, &
+        units=units)
     endif
 
     call xml_AddPcdata(xf, value(1))

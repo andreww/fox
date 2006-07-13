@@ -41,11 +41,7 @@ module m_wcml_core
   public :: cmlEndMetadataList
   public :: cmlStartModule
   public :: cmlEndModule
-  public :: cmlStartParameterList
-  public :: cmlEndParameterList
 
-! CMLComp
-  public :: cmlAddParameter
   public :: cmlStartStep
   public :: cmlEndStep
 
@@ -85,14 +81,6 @@ module m_wcml_core
      module procedure cmlAddMoleculeDP
      module procedure cmlAddMolecule3SP
      module procedure cmlAddMolecule3DP
-  end interface
-
-  interface cmlAddParameter
-     module procedure cmlAddParameterCH
-     module procedure cmlAddParameterI
-     module procedure cmlAddParameterSP
-     module procedure cmlAddParameterDP
-     module procedure cmlAddParameterLG
   end interface
 
   interface cmlAddMetadata
@@ -219,37 +207,6 @@ contains
     Call xml_EndElement(xf, 'module')
     
   end subroutine cmlEndModule
-
-  ! -------------------------------------------------
-  ! writes a parameterList start/end Tag to xml channel
-  ! -------------------------------------------------
-  subroutine cmlStartParameterList(xf, id, title, conv, dictref, ref, role)
-
-    type(xmlf_t), intent(inout) :: xf
-    character(len=*), intent(in), optional :: id
-    character(len=*), intent(in), optional :: title
-    character(len=*), intent(in), optional :: conv
-    character(len=*), intent(in), optional :: dictref
-    character(len=*), intent(in), optional :: ref
-    character(len=*), intent(in), optional :: role
-    
-    call xml_NewElement(xf, 'parameterList')
-    if (present(id)) call xml_AddAttribute(xf, 'id', id)
-    if (present(title)) call xml_AddAttribute(xf, 'title', title)
-    if (present(dictref)) call xml_AddAttribute(xf, 'dictRef', dictref)
-    if (present(conv)) call xml_AddAttribute(xf, 'convention', conv)
-    if (present(ref)) call xml_AddAttribute(xf, 'ref', ref)
-    if (present(role)) call xml_AddAttribute(xf, 'role', role)
-    
-  end subroutine cmlStartParameterList
-
-  subroutine cmlEndParameterList(xf)
-
-    type(xmlf_t), intent(inout) :: xf
-
-    Call xml_EndElement(xf, 'parameterList')
-    
-  end subroutine cmlEndParameterList
 
   ! -------------------------------------------------
   ! writes a step start Tag to xml channel
@@ -486,8 +443,7 @@ contains
     character(len=*), intent(in), optional :: fmt              ! format for coords
     character(len=*), intent(in), optional :: style            ! type of coordinates ('x3' for Cartesians, 'xFrac' 
     ! for fractionals; ' ' = default => cartesians)
-    ! Internal variables
-    !character(len=6)  :: id1, id0
+
     integer           :: i
     character(len=10) :: stylei
 
@@ -1094,128 +1050,6 @@ contains
 
    end subroutine cmlAddMetadataLG
 
-
-
-  ! -------------------------------------------------
-  ! 1. creates and writes an Char <parameter> element
-  ! -------------------------------------------------
-
-
-  subroutine cmlAddParameterCh(xf, value, ref, id, title, conv, cons, dataType, units, name, role, dictref)
-
-    type(xmlf_t), intent(inout) :: xf
-    character(len=*), intent(in) :: value 
-    character(len=*), intent(in), optional :: ref 
-    character(len=*), intent(in), optional :: title
-    character(len=*), intent(in), optional :: id
-    character(len=*), intent(in), optional :: conv
-    character(len=*), intent(in), optional :: cons
-    character(len=*), intent(in), optional :: dataType
-    character(len=*), intent(in), optional :: units
-    character(len=*), intent(in), optional :: name
-    character(len=*), intent(in), optional :: role
-    character(len=*), intent(in), optional :: dictref
-
-    call xml_NewElement(xf, 'parameter')
-    if (present(ref))     call xml_AddAttribute(xf, 'ref', ref)
-    if (present(title))   call xml_AddAttribute(xf, 'title', title)
-    if (present(id))      call xml_AddAttribute(xf, 'id', id)
-    if (present(conv))    call xml_AddAttribute(xf, 'convention', conv)
-    if (present(cons))    call xml_AddAttribute(xf, 'constraint', cons)
-    if (present(name))    call xml_AddAttribute(xf, 'name', name)
-    if (present(role))    call xml_AddAttribute(xf, 'role', role)
-    if (present(dictref)) call xml_AddAttribute(xf, 'dictRef', dictref)
-    call stmAddValue(xf=xf, value=value, dataType=dataType, units=units)
-    call xml_EndElement(xf, 'parameter')
-
-  end subroutine cmlAddParameterCh
-
-  subroutine cmlAddParameterSP(xf, value, ref, title, id, conv, cons, units, name, role, dictref, fmt)
-
-    type(xmlf_t), intent(inout) :: xf
-    real(kind=sp), intent(in) :: value 
-    character(len=*), intent(in), optional :: ref 
-    character(len=*), intent(in), optional :: title
-    character(len=*), intent(in), optional :: id
-    character(len=*), intent(in), optional :: conv
-    character(len=*), intent(in), optional :: cons
-    character(len=*), intent(in), optional :: units
-    character(len=*), intent(in), optional :: name
-    character(len=*), intent(in), optional :: role
-    character(len=*), intent(in), optional :: fmt
-    character(len=*), intent(in), optional :: dictref
-
-    if (present(fmt)) then
-      call cmlAddParameterCh(xf, str(value,fmt), ref, title, id, conv, cons, 'xsd:float', units, name, role, dictref)
-    else
-      call cmlAddParameterCh(xf, str(value), ref, title, id, conv, cons, 'xsd:float', units, name, role, dictref)
-    endif
-
-  end subroutine cmlAddParameterSP
-
-  subroutine cmlAddParameterDP(xf, value, ref, title, id, conv, cons, units, name, role, dictref, fmt)
-
-    type(xmlf_t), intent(inout) :: xf
-    real(kind=dp), intent(in) :: value 
-    character(len=*), intent(in), optional :: ref 
-    character(len=*), intent(in), optional :: title
-    character(len=*), intent(in), optional :: id
-    character(len=*), intent(in), optional :: conv
-    character(len=*), intent(in), optional :: cons
-    character(len=*), intent(in), optional :: units
-    character(len=*), intent(in), optional :: name
-    character(len=*), intent(in), optional :: role
-    character(len=*), intent(in), optional :: dictref
-    character(len=*), intent(in), optional :: fmt    
-
-    if (present(fmt)) then
-      call cmlAddParameterCh(xf, str(value,fmt), ref, title, id, conv, cons, 'xsd:double', units, name, role, dictref)
-    else
-      call cmlAddParameterCh(xf, str(value), ref, title, id, conv, cons, 'xsd:double', units, name, role, dictref)
-    endif
-
-  end subroutine cmlAddParameterDP
-
-  subroutine cmlAddParameterI(xf, value, ref, title, id, conv, cons, units, name, role, dictref, fmt)
-
-    type(xmlf_t), intent(inout) :: xf
-    integer, intent(in) :: value 
-    character(len=*), intent(in), optional :: ref 
-    character(len=*), intent(in), optional :: title
-    character(len=*), intent(in), optional :: id
-    character(len=*), intent(in), optional :: conv
-    character(len=*), intent(in), optional :: cons
-    character(len=*), intent(in), optional :: units
-    character(len=*), intent(in), optional :: name
-    character(len=*), intent(in), optional :: role
-    character(len=*), intent(in), optional :: fmt
-    character(len=*), intent(in), optional :: dictref
-
-    if (present(fmt)) then
-      call cmlAddParameterCh(xf, str(value,fmt), ref, title, id, conv, cons, 'xsd:integer', units, name, role, dictref)
-    else
-      call cmlAddParameterCh(xf, str(value), ref, title, id, conv, cons, 'xsd:integer', units, name, role, dictref)
-    endif
-
-  end subroutine cmlAddParameterI
-
-  subroutine cmlAddParameterLG(xf, value, ref, id, title, conv, cons, units, name, role, dictref)
-
-    type(xmlf_t),     intent(inout)        :: xf
-    logical,          intent(in)           :: value 
-    character(len=*), intent(in), optional :: ref 
-    character(len=*), intent(in), optional :: title
-    character(len=*), intent(in), optional :: id
-    character(len=*), intent(in), optional :: conv
-    character(len=*), intent(in), optional :: cons
-    character(len=*), intent(in), optional :: units
-    character(len=*), intent(in), optional :: name
-    character(len=*), intent(in), optional :: role
-    character(len=*), intent(in), optional :: dictref
-
-    call cmlAddParameterCh(xf, str(value), ref, title, id, conv, cons, 'xsd:boolean', units, name, role, dictref)
-
-  end subroutine cmlAddParameterLG
 
 ! =================================================
 ! basic CML routines
