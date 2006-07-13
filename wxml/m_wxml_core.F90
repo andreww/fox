@@ -1,5 +1,6 @@
 module m_wxml_core
 
+  use FoX_common, only: FoX_version
   use m_common_array_str, only: assign_array_to_str
   use m_common_array_str, only: assign_str_to_array
   use m_common_elstack
@@ -20,8 +21,6 @@ module m_wxml_core
 
   integer, parameter ::  sp = selected_real_kind(6,30)
   integer, parameter ::  dp = selected_real_kind(14,100)
-
-  character(len=*), parameter :: FoX_version = '2.0'
 
   !Output State Machines
   ! status wrt root element:
@@ -54,7 +53,6 @@ module m_wxml_core
     logical                 :: indenting_requested
   end type xmlf_t
 
-  public :: FoX_version
   public :: xmlf_t
 
   public :: xml_OpenFile

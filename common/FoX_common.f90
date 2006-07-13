@@ -2,6 +2,13 @@ module FoX_common
 
   use m_common_attrs
 
+  implicit none
+  private
+
+  character(len=*), parameter :: FoX_version = '2.0'
+
+  public :: FoX_version
+
   public :: dictionary_t
   public :: get_key
   public :: get_value

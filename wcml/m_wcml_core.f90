@@ -1,13 +1,13 @@
 module m_wcml_core
 
-  use FoX_wxml, only: FoX_version, xmlf_t, str
+  use FoX_common, only: FoX_version
+  use FoX_wxml, only: xmlf_t, str
   use FoX_wxml, only: xml_NewElement, xml_AddPcData, xml_AddAttribute
   use FoX_wxml, only: xml_EndElement
   use m_wcml_stml, only: stmAddValue
-  
-!  use m_wcml_coma
 
-  PRIVATE
+  implicit none
+  private
 
   integer, parameter ::  sp = selected_real_kind(6,30)
   integer, parameter ::  dp = selected_real_kind(14,100)
@@ -29,86 +29,81 @@ module m_wcml_core
   public :: cmlEndCml
 
 ! CMLCore
-  PUBLIC :: cmlAddCoordinates
-  PUBLIC :: cmlAddLattice
-  PUBLIC :: cmlAddCrystal
-  PUBLIC :: cmlAddAngle
-  PUBLIC :: cmlAddLength
-  PUBLIC :: cmlAddEigenvalue
-  PUBLIC :: cmlAddMolecule
-  PUBLIC :: cmlAddMetadata
-  PUBLIC :: cmlStartMetadataList
-  PUBLIC :: cmlEndMetadataList
-  PUBLIC :: cmlStartModule
-  PUBLIC :: cmlEndModule
-  PUBLIC :: cmlStartParameterList
-  PUBLIC :: cmlEndParameterList
+  public :: cmlAddCoordinates
+  public :: cmlAddLattice
+  public :: cmlAddCrystal
+  public :: cmlAddAngle
+  public :: cmlAddLength
+  public :: cmlAddEigenvalue
+  public :: cmlAddMolecule
+  public :: cmlAddMetadata
+  public :: cmlStartMetadataList
+  public :: cmlEndMetadataList
+  public :: cmlStartModule
+  public :: cmlEndModule
+  public :: cmlStartParameterList
+  public :: cmlEndParameterList
 
 ! CMLComp
-  PUBLIC :: cmlAddParameter
-  PUBLIC :: cmlStartStep
-  PUBLIC :: cmlEndStep
-
-! CMLComa
-  PUBLIC :: cmlStartBandList
-  PUBLIC :: cmlEndBandList
-  PUBLIC :: cmlAddBand
+  public :: cmlAddParameter
+  public :: cmlStartStep
+  public :: cmlEndStep
 
 ! CMLCore
-  INTERFACE cmlAddCoordinates
-     MODULE PROCEDURE cmlAddCoordinatesSP
-     MODULE PROCEDURE cmlAddCoordinatesDP
-  END INTERFACE
+  interface cmlAddCoordinates
+     module procedure cmlAddCoordinatesSP
+     module procedure cmlAddCoordinatesDP
+  end interface
 
-  INTERFACE cmlAddLattice
-     MODULE PROCEDURE cmlAddLatticeSP
-     MODULE PROCEDURE cmlAddLatticeDP
-  END INTERFACE
+  interface cmlAddLattice
+     module procedure cmlAddLatticeSP
+     module procedure cmlAddLatticeDP
+  end interface
 
-  INTERFACE cmlAddCrystal
-     MODULE PROCEDURE cmlAddCrystalSP
-     MODULE PROCEDURE cmlAddCrystalDP
-  END INTERFACE
+  interface cmlAddCrystal
+     module procedure cmlAddCrystalSP
+     module procedure cmlAddCrystalDP
+  end interface
 
-  INTERFACE cmlAddAngle
-     MODULE PROCEDURE cmlAddAngleSP
-     MODULE PROCEDURE cmlAddAngleDP
-  END INTERFACE
+  interface cmlAddAngle
+     module procedure cmlAddAngleSP
+     module procedure cmlAddAngleDP
+  end interface
 
-  INTERFACE cmlAddLength
-     MODULE PROCEDURE cmlAddLengthSP
-     MODULE PROCEDURE cmlAddLengthDP
-  END INTERFACE
+  interface cmlAddLength
+     module procedure cmlAddLengthSP
+     module procedure cmlAddLengthDP
+  end interface
 
-  INTERFACE cmlAddEigenvalue
-     MODULE PROCEDURE cmlAddEigenvalueSP
-     MODULE PROCEDURE cmlAddEigenvalueDP
-  END INTERFACE
+  interface cmlAddEigenvalue
+     module procedure cmlAddEigenvalueSP
+     module procedure cmlAddEigenvalueDP
+  end interface
 
-  INTERFACE cmlAddMolecule
-     MODULE PROCEDURE cmlAddMoleculeSP
-     MODULE PROCEDURE cmlAddMoleculeDP
-     MODULE PROCEDURE cmlAddMolecule3SP
-     MODULE PROCEDURE cmlAddMolecule3DP
-  END INTERFACE
+  interface cmlAddMolecule
+     module procedure cmlAddMoleculeSP
+     module procedure cmlAddMoleculeDP
+     module procedure cmlAddMolecule3SP
+     module procedure cmlAddMolecule3DP
+  end interface
 
-  INTERFACE cmlAddParameter
-     MODULE PROCEDURE cmlAddParameterCH
-     MODULE PROCEDURE cmlAddParameterI
-     MODULE PROCEDURE cmlAddParameterSP
-     MODULE PROCEDURE cmlAddParameterDP
-     MODULE PROCEDURE cmlAddParameterLG
-  END INTERFACE
+  interface cmlAddParameter
+     module procedure cmlAddParameterCH
+     module procedure cmlAddParameterI
+     module procedure cmlAddParameterSP
+     module procedure cmlAddParameterDP
+     module procedure cmlAddParameterLG
+  end interface
 
-  INTERFACE cmlAddMetadata
-     MODULE PROCEDURE cmlAddMetaDataCh
-     MODULE PROCEDURE cmlAddMetaDataI
-     MODULE PROCEDURE cmlAddMetaDataSP
-     MODULE PROCEDURE cmlAddMetaDataDP
-     MODULE PROCEDURE cmlAddMetaDataLg
-  END INTERFACE
+  interface cmlAddMetadata
+     module procedure cmlAddMetaDataCh
+     module procedure cmlAddMetaDataI
+     module procedure cmlAddMetaDataSP
+     module procedure cmlAddMetaDataDP
+     module procedure cmlAddMetaDataLg
+  end interface
 
-CONTAINS
+contains
 
   ! =================================================
   ! convenience CML routines
@@ -164,7 +159,7 @@ CONTAINS
   ! -------------------------------------------------
   ! writes a metadataList start/end Tag to xml channel
   ! -------------------------------------------------
-  SUBROUTINE cmlStartMetadataList(xf, id, title, conv, dictref, ref, role)
+  subroutine cmlStartMetadataList(xf, id, title, conv, dictref, ref, role)
 
     type(xmlf_t), intent(inout) :: xf
     character(len=*), intent(in), optional :: id
@@ -182,20 +177,20 @@ CONTAINS
     if (present(ref)) call xml_AddAttribute(xf, 'ref', ref)
     if (present(role)) call xml_AddAttribute(xf, 'role', role)
     
-  END SUBROUTINE cmlStartMetadataList
+  end subroutine cmlStartMetadataList
 
-  SUBROUTINE cmlEndMetadataList(xf)
+  subroutine cmlEndMetadataList(xf)
 
     type(xmlf_t), intent(inout) :: xf
 
     call xml_EndElement(xf, 'metadataList')
     
-  END SUBROUTINE cmlEndMetadataList
+  end subroutine cmlEndMetadataList
 
   ! -------------------------------------------------
   ! writes a Module start/end Tag to xml channel
   ! -------------------------------------------------
-  SUBROUTINE cmlStartModule(xf, id, title, conv, dictref, ref, role, serial)
+  subroutine cmlStartModule(xf, id, title, conv, dictref, ref, role, serial)
 
     type(xmlf_t), intent(inout) :: xf
     character(len=*), intent(in), optional :: id
@@ -215,20 +210,20 @@ CONTAINS
     if (present(role)) call xml_AddAttribute(xf, 'role', role)
     if (present(serial)) call xml_AddAttribute(xf, 'serial', serial)
     
-  END SUBROUTINE cmlStartModule
+  end subroutine cmlStartModule
 
-  SUBROUTINE cmlEndModule(xf)
+  subroutine cmlEndModule(xf)
 
     type(xmlf_t), intent(inout) :: xf
 
     Call xml_EndElement(xf, 'module')
     
-  END SUBROUTINE cmlEndModule
+  end subroutine cmlEndModule
 
   ! -------------------------------------------------
   ! writes a parameterList start/end Tag to xml channel
   ! -------------------------------------------------
-  SUBROUTINE cmlStartParameterList(xf, id, title, conv, dictref, ref, role)
+  subroutine cmlStartParameterList(xf, id, title, conv, dictref, ref, role)
 
     type(xmlf_t), intent(inout) :: xf
     character(len=*), intent(in), optional :: id
@@ -246,15 +241,15 @@ CONTAINS
     if (present(ref)) call xml_AddAttribute(xf, 'ref', ref)
     if (present(role)) call xml_AddAttribute(xf, 'role', role)
     
-  END SUBROUTINE cmlStartParameterList
+  end subroutine cmlStartParameterList
 
-  SUBROUTINE cmlEndParameterList(xf)
+  subroutine cmlEndParameterList(xf)
 
     type(xmlf_t), intent(inout) :: xf
 
     Call xml_EndElement(xf, 'parameterList')
     
-  END SUBROUTINE cmlEndParameterList
+  end subroutine cmlEndParameterList
 
   ! -------------------------------------------------
   ! writes a step start Tag to xml channel
@@ -290,7 +285,7 @@ CONTAINS
   ! 1. writes complete DP molecule to xml channel
   ! -------------------------------------------------
 
-  SUBROUTINE cmlAddMoleculeDP(xf, natoms, elements, refs, coords, style, id, title, dictref, fmt)
+  subroutine cmlAddMoleculeDP(xf, natoms, elements, refs, coords, style, id, title, dictref, fmt)
 
     type(xmlf_t), intent(inout) :: xf
     integer, intent(in)                    :: natoms             ! number of atoms
@@ -351,14 +346,14 @@ CONTAINS
     call xml_EndElement(xf, 'atomArray')
     call xml_EndElement(xf, 'molecule')
     
-  END SUBROUTINE cmlAddMoleculeDP
+  end subroutine cmlAddMoleculeDP
 
   
   ! -------------------------------------------------
   ! 2. writes complete SP molecule to xml channel
   ! -------------------------------------------------
   
-  SUBROUTINE cmlAddMoleculeSP(xf, natoms, elements, refs, coords, style, id, title, dictref, fmt)
+  subroutine cmlAddMoleculeSP(xf, natoms, elements, refs, coords, style, id, title, dictref, fmt)
     type(xmlf_t), intent(inout) :: xf
     integer, intent(in)                    :: natoms          ! number of atoms
     character(len=*), intent(in)           :: elements(*)     ! chemical element types
@@ -410,14 +405,14 @@ CONTAINS
     call xml_EndElement(xf, 'molecule')
     
     
-  END SUBROUTINE cmlAddMoleculeSP
+  end subroutine cmlAddMoleculeSP
   
   
   ! -------------------------------------------------
   ! 1. writes complete DP molecule to xml channel (No. 2)
   ! -------------------------------------------------
   
-  SUBROUTINE cmlAddMolecule3DP(xf, natoms, elements, x, y, z, style, id, title, dictref, fmt)
+  subroutine cmlAddMolecule3DP(xf, natoms, elements, x, y, z, style, id, title, dictref, fmt)
     type(xmlf_t), intent(inout) :: xf
     integer, intent(in)                    :: natoms          ! number of atoms
     real(kind=dp), intent(in)               :: x(*)
@@ -453,7 +448,7 @@ CONTAINS
        !id1(2:) = id0
        !call cmlAddAtom(xf=xf, elem=elements(i), id=trim(id1))
        call cmlAddAtom(xf=xf, elem=elements(i))
-       if (trim(stylei) .eq. 'x3') then
+       if (stylei .eq. 'x3') then
           call CMLATX39DP(xf, x(i), y(i), z(i), fmt)
        elseif (stylei .eq. 'xFrac') then
           call CMLATXF9DP(xf, x(i), y(i), z(i), fmt)
@@ -468,14 +463,14 @@ CONTAINS
     call xml_EndElement(xf, 'atomArray')
     call xml_EndElement(xf, 'molecule')
     
-  END SUBROUTINE cmlAddMolecule3DP
+  end subroutine cmlAddMolecule3DP
   
   
   ! -------------------------------------------------
   ! 2. writes complete SP molecule to xml channel (No. 2)
   ! -------------------------------------------------
   
-  SUBROUTINE cmlAddMolecule3SP(xf, natoms, elements, x, y, z, style, id, title, dictref, fmt)
+  subroutine cmlAddMolecule3SP(xf, natoms, elements, x, y, z, style, id, title, dictref, fmt)
 
 
     type(xmlf_t), intent(inout) :: xf
@@ -529,13 +524,13 @@ CONTAINS
     call xml_EndElement(xf, 'atomArray')
     call xml_EndElement(xf, 'molecule')
 
-  END SUBROUTINE cmlAddMolecule3SP
+  end subroutine cmlAddMolecule3SP
   
   ! -------------------------------------------------
   ! writes an <atom> start tag
   ! -------------------------------------------------
   
-  SUBROUTINE cmlAddAtom(xf, elem, id, charge, hCount, occupancy, fmt)
+  subroutine cmlAddAtom(xf, elem, id, charge, hCount, occupancy, fmt)
 
 
     type(xmlf_t), intent(inout) :: xf
@@ -553,14 +548,14 @@ CONTAINS
     if (present(hCount))    call xml_AddAttribute(xf, 'hydrogenCount', hCount)
     if (present(occupancy)) call xml_AddAttribute(xf, 'occupancy', occupancy, fmt)
 
-  END SUBROUTINE cmlAddAtom
+  end subroutine cmlAddAtom
   
   
   ! -------------------------------------------------
   ! 1. append SP coordinates to atom tag
   ! -------------------------------------------------
   
-  SUBROUTINE cmlAddCoordinatesSP(xf, x, y, z, style, fmt)
+  subroutine cmlAddCoordinatesSP(xf, x, y, z, style, fmt)
     type(xmlf_t), intent(inout) :: xf
     real(kind=sp), intent(in)               :: x, y
     real(kind=sp), intent(in), optional     :: z
@@ -588,13 +583,13 @@ CONTAINS
        call CMLATXY9SP(xf, x, y, fmt)
     endif
 
-  END SUBROUTINE cmlAddCoordinatesSP
+  end subroutine cmlAddCoordinatesSP
 
   ! -------------------------------------------------
   ! 2. append DP coordinates to atom tag
   ! -------------------------------------------------
 
-  SUBROUTINE cmlAddCoordinatesDP(xf, x, y, z, style, fmt)
+  subroutine cmlAddCoordinatesDP(xf, x, y, z, style, fmt)
     type(xmlf_t), intent(inout) :: xf 
     real(kind=dp), intent(in)               :: x, y
     real(kind=dp), intent(in), optional     :: z
@@ -622,14 +617,14 @@ CONTAINS
        call CMLATXY9DP(xf, x, y, fmt)           
     endif
     
-  END SUBROUTINE cmlAddCoordinatesDP
+  end subroutine cmlAddCoordinatesDP
 
   
   ! -------------------------------------------------
   ! 1. writes a DP <length> element to output channel
   ! -------------------------------------------------
   
-  SUBROUTINE cmlAddLengthDP(xf, length, id, atomRef1, atomRef2, fmt)
+  subroutine cmlAddLengthDP(xf, length, id, atomRef1, atomRef2, fmt)
     type(xmlf_t), intent(inout) :: xf
     real(kind=dp), intent(in)     :: length     ! length
     character(len=*), intent(in) :: id         ! length id
@@ -639,13 +634,13 @@ CONTAINS
 
     ! Flush on entry and exit
     call CMLLEN9DP(xf, id, atomRef1, atomRef2, length, fmt)
-  END SUBROUTINE cmlAddLengthDP
+  end subroutine cmlAddLengthDP
 
   ! -------------------------------------------------
   ! 2. writes a SP <length> element to output channel
   ! -------------------------------------------------
   
-  SUBROUTINE cmlAddLengthSP(xf, length, id, atomRef1, atomRef2, fmt)
+  subroutine cmlAddLengthSP(xf, length, id, atomRef1, atomRef2, fmt)
 
     type(xmlf_t), intent(inout) :: xf
     real(kind=sp), intent(in)     :: length     ! the length
@@ -656,14 +651,14 @@ CONTAINS
 
     ! Flush on entry and exit
     call CMLLEN9SP(xf, id, atomRef1, atomRef2, length, fmt)
-  END SUBROUTINE cmlAddLengthSP
+  end subroutine cmlAddLengthSP
 
 
   ! -------------------------------------------------
   ! 1. writes an DP <angle> element to output channel
   ! -------------------------------------------------
 
-  SUBROUTINE cmlAddAngleDP(xf, angle, id, atomRef1, atomRef2, atomRef3, fmt)
+  subroutine cmlAddAngleDP(xf, angle, id, atomRef1, atomRef2, atomRef3, fmt)
 
     type(xmlf_t), intent(inout) :: xf
     real(kind=dp), intent(in)     :: angle        ! the angle
@@ -675,13 +670,13 @@ CONTAINS
 
     ! Flush on entry and exit
     call CMLANG9DP(xf, id, atomRef1, atomRef2, atomRef3, angle, fmt)
-  END SUBROUTINE cmlAddAngleDP
+  end subroutine cmlAddAngleDP
 
   ! -------------------------------------------------
   ! 2. writes an SP <angle> element to output channel
   ! -------------------------------------------------
 
-  SUBROUTINE cmlAddAngleSP(xf, angle, id, atomRef1, atomRef2, atomRef3, fmt)
+  subroutine cmlAddAngleSP(xf, angle, id, atomRef1, atomRef2, atomRef3, fmt)
 
 
     type(xmlf_t), intent(inout) :: xf
@@ -694,14 +689,14 @@ CONTAINS
 
     ! Flush on entry and exit
     call CMLANG9SP(xf, id, atomRef1, atomRef2, atomRef3, angle, fmt)
-  END SUBROUTINE cmlAddAngleSP
+  end subroutine cmlAddAngleSP
 
 
   ! -------------------------------------------------
   ! 1. creates and writes a DP <torsion> element
   ! -------------------------------------------------
 
-  SUBROUTINE cmlAddTorsionDP(xf, torsion, id, atomRef1, atomRef2, atomRef3, atomRef4, fmt)
+  subroutine cmlAddTorsionDP(xf, torsion, id, atomRef1, atomRef2, atomRef3, atomRef4, fmt)
 
 
     type(xmlf_t), intent(inout) :: xf
@@ -715,13 +710,13 @@ CONTAINS
 
     ! Flush on entry and exit
     call CMLTOR9DP(xf, id, atomRef1, atomRef2, atomRef3, atomRef4, torsion, fmt)
-  END SUBROUTINE cmlAddTorsionDP
+  end subroutine cmlAddTorsionDP
   
   ! -------------------------------------------------
   ! 2. creates and writes a SP <torsion> element
   ! -------------------------------------------------
   
-  SUBROUTINE cmlAddTorsionSP(xf, torsion, id, atomRef1, atomRef2, atomRef3, atomRef4, fmt)
+  subroutine cmlAddTorsionSP(xf, torsion, id, atomRef1, atomRef2, atomRef3, atomRef4, fmt)
 
 
     type(xmlf_t), intent(inout) :: xf
@@ -735,14 +730,14 @@ CONTAINS
 
     ! Flush on entry and exit
     call CMLTOR9SP(xf, id, atomRef1, atomRef2, atomRef3, atomRef4, torsion, fmt)
-  END SUBROUTINE cmlAddTorsionSP
+  end subroutine cmlAddTorsionSP
 
 
   ! -------------------------------------------------
   ! 1. creates and writes an SP Lattice element
   ! -------------------------------------------------
 
-  SUBROUTINE cmlAddLatticeSP(xf, cell, units, title, id, dictref, conv, lattType, spaceType, fmt)
+  subroutine cmlAddLatticeSP(xf, cell, units, title, id, dictref, conv, lattType, spaceType, fmt)
 
     type(xmlf_t), intent(inout) :: xf
     real(kind=sp), intent(in)               :: cell(3,3)
@@ -782,14 +777,14 @@ CONTAINS
     enddo
     call xml_EndElement(xf, 'lattice')
     
-  END SUBROUTINE cmlAddLatticeSP
+  end subroutine cmlAddLatticeSP
 
 
   ! -------------------------------------------------
   ! 2. creates and writes DP Lattice element
   ! -------------------------------------------------
 
-  SUBROUTINE cmlAddLatticeDP(xf, cell, units, title, id, dictref, conv, lattType, spaceType, fmt)
+  subroutine cmlAddLatticeDP(xf, cell, units, title, id, dictref, conv, lattType, spaceType, fmt)
 
     type(xmlf_t), intent(inout) :: xf
     real(kind=dp), intent(in)               :: cell(3,3)
@@ -829,14 +824,14 @@ CONTAINS
     enddo
     call xml_EndElement(xf, 'lattice')
 
-  END SUBROUTINE cmlAddLatticeDP
+  end subroutine cmlAddLatticeDP
 
 
   ! -------------------------------------------------
   ! 1. creates and writes a DP <cell> element
   ! -------------------------------------------------
 
-  SUBROUTINE cmlAddCrystalDP(xf, a, b, c, alpha, beta, gamma, id, title, dictref, conv, lenunits, angunits, spaceType, fmt)
+  subroutine cmlAddCrystalDP(xf, a, b, c, alpha, beta, gamma, id, title, dictref, conv, lenunits, angunits, spaceType, fmt)
     type(xmlf_t), intent(inout) :: xf
     real(kind=dp), intent(in)               :: a, b, c      ! cell parameters
     real(kind=dp), intent(in)               :: alpha        ! alpha cell parameter
@@ -890,13 +885,13 @@ CONTAINS
     endif
     call xml_EndElement(xf, 'crystal')
 
-  END SUBROUTINE cmlAddCrystalDP
+  end subroutine cmlAddCrystalDP
 
   ! -------------------------------------------------
   ! 2. creates and writes a SP <cell> element
   ! -------------------------------------------------
 
-  SUBROUTINE cmlAddCrystalSP(xf, a, b, c, alpha, beta, gamma, id, title, dictref, conv, lenunits, angunits, spaceType, fmt)
+  subroutine cmlAddCrystalSP(xf, a, b, c, alpha, beta, gamma, id, title, dictref, conv, lenunits, angunits, spaceType, fmt)
     type(xmlf_t), intent(inout) :: xf
     real(kind=sp), intent(in)     :: a, b, c      ! cell parameters
     real(kind=sp), intent(in)     :: alpha        ! alpha cell parameter
@@ -950,14 +945,14 @@ CONTAINS
     call xml_EndElement(xf, 'crystal')
 
 
-  END SUBROUTINE cmlAddCrystalSP
+  end subroutine cmlAddCrystalSP
   
   
   ! -------------------------------------------------
   ! 1. creates and writes an DP <eigen> element
   ! -------------------------------------------------
   
-  SUBROUTINE cmlAddEigenvalueDP(xf, n, eigvec, eigval, id, title, dictref, fmt)
+  subroutine cmlAddEigenvalueDP(xf, n, eigvec, eigval, id, title, dictref, fmt)
 
 
     type(xmlf_t), intent(inout)            :: xf
@@ -985,7 +980,7 @@ CONTAINS
     call stmAddValue(xf=xf, value=eigvec(:n,:n), title='eigenvectors', fmt=fmt)
     call xml_EndElement(xf, 'eigen')
 
-  END SUBROUTINE cmlAddEigenvalueDP
+  end subroutine cmlAddEigenvalueDP
 
 
 
@@ -993,7 +988,7 @@ CONTAINS
   ! 2. creates and writes an SP <eigen> element
   ! -------------------------------------------------
   
-  SUBROUTINE cmlAddEigenvalueSP(xf, n, eigvec, eigval, id, title, dictref, fmt)
+  subroutine cmlAddEigenvalueSP(xf, n, eigvec, eigval, id, title, dictref, fmt)
 
 
     type(xmlf_t), intent(inout) :: xf
@@ -1021,7 +1016,7 @@ CONTAINS
     call stmAddValue(xf=xf, value=eigvec(:n,:n), title='eigenvectors', fmt=fmt)
     call xml_EndElement(xf, 'eigen')
 
-  END SUBROUTINE cmlAddEigenvalueSP
+  end subroutine cmlAddEigenvalueSP
 
 
   subroutine cmlAddMetadataCh(xf, name, content, conv)
@@ -1231,7 +1226,7 @@ CONTAINS
   ! 1. adds DP xyz3 to start tag
   ! -------------------------------------------------
   
-  SUBROUTINE CMLATXYZ39DP(xf, x3, y3, z3, fmt)
+  subroutine CMLATXYZ39DP(xf, x3, y3, z3, fmt)
     type(xmlf_t), intent(inout)             :: xf
     real(kind=dp), intent(in)               :: x3, y3, z3 ! coordinates
     character(len=*), intent(in), optional  :: fmt        ! format
@@ -1242,14 +1237,14 @@ CONTAINS
       call xml_AddAttribute(xf, 'xyz3', str(x3)//' '//str(y3)//' '//str(z3) )
     endif
 
-  END SUBROUTINE CMLATXYZ39DP
+  end subroutine CMLATXYZ39DP
 
 
   ! -------------------------------------------------
   ! 2. adds SP xyz3 to start tag
   ! -------------------------------------------------
 
-  SUBROUTINE CMLATXYZ39SP(xf, x3, y3, z3, fmt)
+  subroutine CMLATXYZ39SP(xf, x3, y3, z3, fmt)
     type(xmlf_t), intent(inout)             :: xf
     real(kind=sp), intent(in)               :: x3, y3, z3 ! coordinates
     character(len=*), intent(in), optional  :: fmt
@@ -1260,13 +1255,13 @@ CONTAINS
       call xml_AddAttribute(xf, 'xyz3', str(x3)//' '//str(y3)//' '//str(z3) )
     endif
 
-  END SUBROUTINE CMLATXYZ39SP
+  end subroutine CMLATXYZ39SP
   
   ! -------------------------------------------------
   ! 1. adds DP xyzFrac to start tag
   ! -------------------------------------------------
   
-  SUBROUTINE CMLATXYZFRACT9DP(xf, x3, y3, z3, fmt)
+  subroutine CMLATXYZFRACT9DP(xf, x3, y3, z3, fmt)
     type(xmlf_t), intent(inout)             :: xf
     real(kind=dp), intent(in)               :: x3, y3, z3 ! coordinates
     character(len=*), intent(in), optional  :: fmt        ! format
@@ -1277,13 +1272,13 @@ CONTAINS
       call xml_AddAttribute(xf, 'xyzFrac', str(x3)//' '//str(y3)//' '//str(z3) )
     endif
 
-  END SUBROUTINE CMLATXYZFRACT9DP
+  end subroutine CMLATXYZFRACT9DP
 
   ! -------------------------------------------------
   ! 2. adds SP xyzFrac to start tag
   ! -------------------------------------------------
 
-  SUBROUTINE CMLATXYZFRACT9SP(xf, x3, y3, z3, fmt)
+  subroutine CMLATXYZFRACT9SP(xf, x3, y3, z3, fmt)
     type(xmlf_t), intent(inout)            :: xf
     real(kind=sp), intent(in)              :: x3, y3, z3 ! coordinates
     character(len=*), intent(in), optional :: fmt        ! format
@@ -1294,14 +1289,14 @@ CONTAINS
       call xml_AddAttribute(xf, 'xyzFrac', str(x3)//' '//str(y3)//' '//str(z3) )
     endif
 
-  END SUBROUTINE CMLATXYZFRACT9SP
+  end subroutine CMLATXYZFRACT9SP
 
 
   ! -------------------------------------------------
   ! 1. adds DP x3, y3, z3 to start tag
   ! -------------------------------------------------
 
-  SUBROUTINE CMLATX39DP(xf, x3, y3, z3, fmt)
+  subroutine CMLATX39DP(xf, x3, y3, z3, fmt)
     type(xmlf_t), intent(inout)            :: xf
     real(kind=dp), intent(in)              :: x3, y3, z3 ! coordinates
     character(len=*), intent(in), optional :: fmt
@@ -1316,13 +1311,13 @@ CONTAINS
       call xml_AddAttribute(xf, 'z3', z3)
     endif
 
-  END SUBROUTINE CMLATX39DP
+  end subroutine CMLATX39DP
 
   ! -------------------------------------------------
   ! 2. adds SP x3, y3, z3 to start tag
   ! -------------------------------------------------
 
-  SUBROUTINE CMLATX39SP(xf, x3, y3, z3, fmt)
+  subroutine CMLATX39SP(xf, x3, y3, z3, fmt)
     type(xmlf_t), intent(inout)            :: xf
     real(kind=sp), intent(in)              :: x3, y3, z3 ! coordinates
     character(len=*), intent(in), optional :: fmt
@@ -1337,14 +1332,14 @@ CONTAINS
       call xml_AddAttribute(xf, 'z3', z3)
     endif
 
-  END SUBROUTINE CMLATX39SP
+  end subroutine CMLATX39SP
 
 
   ! -------------------------------------------------
   ! 1. adds DP xFract, yFract, zFract to start tag
   ! -------------------------------------------------
 
-  SUBROUTINE CMLATXF9DP(xf, xFract, yFract, zFract, fmt)
+  subroutine CMLATXF9DP(xf, xFract, yFract, zFract, fmt)
     type(xmlf_t), intent(inout)            :: xf
     real(kind=dp), intent(in)              :: xFract, yFract, zFract ! coordinates
     character(len=*), intent(in), optional :: fmt
@@ -1359,13 +1354,13 @@ CONTAINS
       call xml_AddAttribute(xf, 'zFract', zFract)
     endif
 
-  END SUBROUTINE CMLATXF9DP
+  end subroutine CMLATXF9DP
   
   ! -------------------------------------------------
   ! 2. adds SP xfrac, yFract, zFract to start tag
   ! -------------------------------------------------
   
-  SUBROUTINE CMLATXF9SP(xf, xFract, yFract, zFract, fmt)
+  subroutine CMLATXF9SP(xf, xFract, yFract, zFract, fmt)
     type(xmlf_t), intent(inout)            :: xf
     real(kind=sp), intent(in)              :: xFract, yFract, zFract   ! fractional coordinates
     character(len=*), intent(in), optional :: fmt
@@ -1380,14 +1375,14 @@ CONTAINS
       call xml_AddAttribute(xf, 'zFract', zFract)
     endif
 
-  END SUBROUTINE CMLATXF9SP
+  end subroutine CMLATXF9SP
 
 
   ! -------------------------------------------------
   ! 1. adds DP x2, y2 to start tag
   ! -------------------------------------------------
 
-  SUBROUTINE CMLATXY9DP(xf, x2, y2, fmt)
+  subroutine CMLATXY9DP(xf, x2, y2, fmt)
     type(xmlf_t), intent(inout)            :: xf
     real(kind=dp), intent(in)              :: x2, y2   ! coordinates
     character(len=*), intent(in), optional :: fmt      
@@ -1400,13 +1395,13 @@ CONTAINS
       call xml_AddAttribute(xf, 'y2', y2)
     endif
 
-  END SUBROUTINE CMLATXY9DP
+  end subroutine CMLATXY9DP
 
   ! -------------------------------------------------
   ! 2. adds SP x2, y2 to start tag
   ! -------------------------------------------------
 
-  SUBROUTINE CMLATXY9SP(xf, x2, y2, fmt)
+  subroutine CMLATXY9SP(xf, x2, y2, fmt)
     type(xmlf_t), intent(inout)            :: xf
     real(kind=sp), intent(in)              :: x2, y2   ! coordinates
     character(len=*), intent(in), optional :: fmt 
@@ -1419,14 +1414,14 @@ CONTAINS
       call xml_AddAttribute(xf, 'y2', y2)
     endif
 
-  END SUBROUTINE CMLATXY9SP
+  end subroutine CMLATXY9SP
 
 
   ! -------------------------------------------------
   ! 1. creates a DP <length> element
   ! -------------------------------------------------
 
-  SUBROUTINE CMLLEN9DP(xf, id, atomRef1, atomRef2, length, fmt)
+  subroutine CMLLEN9DP(xf, id, atomRef1, atomRef2, length, fmt)
     type(xmlf_t), intent(inout) :: xf
     character(len=*), intent(in) :: id           ! length id
     character(len=*), intent(in) :: atomRef1     ! ref to first atom
@@ -1440,13 +1435,13 @@ CONTAINS
     call xml_AddPcdata(xf, length, fmt)
     call xml_EndElement(xf, 'length')
 
-  END SUBROUTINE CMLLEN9DP
+  end subroutine CMLLEN9DP
   
   ! -------------------------------------------------
   ! 2. creates a SP <length> element
   ! -------------------------------------------------
   
-  SUBROUTINE CMLLEN9SP(xf, id, atomRef1, atomRef2, length, fmt)
+  subroutine CMLLEN9SP(xf, id, atomRef1, atomRef2, length, fmt)
     type(xmlf_t), intent(inout) :: xf
     character(len=*), intent(in) :: id           ! length id
     character(len=*), intent(in) :: atomRef1     ! ref to first atom
@@ -1457,18 +1452,17 @@ CONTAINS
     call xml_NewElement(xf, 'length')
     call xml_AddAttribute(xf, 'id', id)
     call xml_AddAttribute(xf, 'atomRefs2', adjustl(trim(atomRef1))//' '//adjustl(trim(atomRef2)))
-    call xml_AddAttribute(xf, 'atomRefs2', temp)
     call xml_AddPcdata(xf, length, fmt)
     call xml_EndElement(xf, 'length')
 
-  END SUBROUTINE CMLLEN9SP
+  end subroutine CMLLEN9SP
 
 
   ! -------------------------------------------------
   ! 1. creates a DP <angle> element
   ! -------------------------------------------------
 
-  SUBROUTINE CMLANG9DP(xf, id, atomRef1, atomRef2, atomRef3, angle, fmt)
+  subroutine CMLANG9DP(xf, id, atomRef1, atomRef2, atomRef3, angle, fmt)
     type(xmlf_t), intent(inout) :: xf
     character(len=*), intent(in) :: id              ! angle id
     character(len=*), intent(in) :: atomRef1        ! ref to first atom
@@ -1483,13 +1477,13 @@ CONTAINS
     call xml_AddPcdata(xf, angle, fmt)
     call xml_EndElement(xf, 'angle')
 
-  END SUBROUTINE CMLANG9DP
+  end subroutine CMLANG9DP
 
   ! -------------------------------------------------
   ! 2. creates a SP <angle> element
   ! -------------------------------------------------
 
-  SUBROUTINE CMLANG9SP(xf, id, atomRef1, atomRef2, atomRef3, angle, fmt)
+  subroutine CMLANG9SP(xf, id, atomRef1, atomRef2, atomRef3, angle, fmt)
     type(xmlf_t), intent(inout) :: xf
     character(len=*), intent(in) :: id              ! angle id
     character(len=*), intent(in) :: atomRef1        ! ref to first atom
@@ -1504,14 +1498,14 @@ CONTAINS
     call xml_AddPcdata(xf, angle, fmt)
     call xml_EndElement(xf, 'angle')
 
-  END SUBROUTINE CMLANG9SP
+  end subroutine CMLANG9SP
 
 
   ! -------------------------------------------------
   ! 1. creates a DP <torsion> element
   ! -------------------------------------------------
   
-  SUBROUTINE CMLTOR9DP(xf, id, atomRef1, atomRef2, atomRef3, atomRef4, torsion, fmt)
+  subroutine CMLTOR9DP(xf, id, atomRef1, atomRef2, atomRef3, atomRef4, torsion, fmt)
     type(xmlf_t), intent(inout) :: xf
     character(len=*), intent(in) :: id              ! torsion id
     character(len=*), intent(in) :: atomRef1        ! ref to first atom
@@ -1528,13 +1522,13 @@ CONTAINS
     call xml_AddPcdata(xf, torsion, fmt)
     call xml_EndElement(xf, 'torsion')
 
-  END SUBROUTINE CMLTOR9DP
+  end subroutine CMLTOR9DP
 
   ! -------------------------------------------------
   ! 2. creates a SP <torsion> element
   ! -------------------------------------------------
 
-  SUBROUTINE CMLTOR9SP(xf, id, atomRef1, atomRef2, atomRef3, atomRef4, torsion, fmt)
+  subroutine CMLTOR9SP(xf, id, atomRef1, atomRef2, atomRef3, atomRef4, torsion, fmt)
     type(xmlf_t), intent(inout) :: xf
     character(len=*), intent(in) :: id              ! torsion id
     character(len=*), intent(in) :: atomRef1        ! ref to first atom
@@ -1551,6 +1545,6 @@ CONTAINS
     call xml_AddPcdata(xf, torsion, fmt)
     call xml_EndElement(xf, 'torsion')
 
-  END SUBROUTINE CMLTOR9SP
+  end subroutine CMLTOR9SP
 
 end module m_wcml_core

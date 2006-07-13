@@ -1,16 +1,15 @@
 module m_wcml_coma
-  ! Implements routines relating to the (currently unfinished)
-  ! CML Condensed Matter schema
+  ! Implements routines relating to what was the intended
+  ! CML Condensed Matter schema, now incorporated into
+  ! CML 2.2
 
   use FoX_wxml, only: xmlf_t
   use FoX_wxml, only: xml_NewElement, xml_AddAttribute
   use FoX_wxml, only: xml_EndElement, xml_AddPcData
   use m_wcml_stml, only: stmAddValue
-  use m_wxml_error
   
-  Implicit None
-
-  Private
+  implicit None
+  private
 
   integer, private, parameter ::  sp = selected_real_kind(6,30)
   integer, private, parameter ::  dp = selected_real_kind(14,100)

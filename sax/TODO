@@ -18,8 +18,13 @@ Things to do:
 
 * check usage of element_name - when can we garbage-collect?
 
-* Entity reparsing in text.
+* Entity reparsing in text. Make properly recursive.
 * characters handler.
 * test: lots of. Probably use sax_example as driver
 
 * abstract the code to parse a string into a series of attribute/value pairs, and put it in m_common_attributes. We need it elsewhere (for the XML declaration) and it will simplify the fsm/parser.
+
+* Make sure m_sax_reader is working sensibly. Do we need a buffer?
+* Fix m_sax_parser to deal with CDATA preamble correctly. I think there may be a couple of other similar lurking problems.
+
+

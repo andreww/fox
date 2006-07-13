@@ -115,6 +115,7 @@ recursive subroutine xml_parse(fxml, begin_element_handler,    &
                            start_prefix_handler,            &
                            end_prefix_handler,              &
                            pcdata_chunk_handler,            &
+                           cdata_section_handler,            &
                            comment_handler,                 &
                            processing_instruction_handler,  &
                            error_handler,                   &
@@ -130,6 +131,7 @@ optional                            :: end_element_handler
 optional                            :: start_prefix_handler
 optional                            :: end_prefix_handler
 optional                            :: pcdata_chunk_handler
+optional                            :: cdata_section_handler
 optional                            :: comment_handler
 optional                            :: processing_instruction_handler
 optional                            :: error_handler
@@ -165,6 +167,10 @@ interface
    subroutine pcdata_chunk_handler(chunk)
    character(len=*), intent(in) :: chunk
    end subroutine pcdata_chunk_handler
+
+   subroutine cdata_section_handler(chunk)
+     character(len=*), intent(in) :: chunk
+   end subroutine cdata_section_handler
 
    subroutine comment_handler(comment)
    character(len=*), intent(in) :: comment
@@ -204,6 +210,7 @@ character, allocatable :: name(:), oldname(:)
 logical                :: have_begin_handler, have_end_handler, &
                           have_start_prefix_handler, have_end_prefix_handler, &
                           have_pcdata_handler, have_comment_handler, &
+                          have_cdata_handler, &
                           have_processing_instruction_handler, &
                           have_error_handler, have_signal_handler, &
                           have_start_document_handler, have_end_document_handler
@@ -220,6 +227,7 @@ have_end_handler = present(end_element_handler)
 have_start_prefix_handler = present(start_prefix_handler)
 have_end_prefix_handler = present(end_prefix_handler)
 have_pcdata_handler = present(pcdata_chunk_handler)
+have_cdata_handler = present(cdata_section_handler)
 have_comment_handler = present(comment_handler)
 have_processing_instruction_handler = present(processing_instruction_handler)
 have_error_handler = present(error_handler)
@@ -415,8 +423,11 @@ do
                if (fx%debug) print *, &
                    "... Warning: CDATA section outside element context"
             else
-              if (have_pcdata_handler) &
+              if (have_cdata_handler) then
+                call cdata_section_handler(str_vs(fx%pcdata))
+              elseif (have_pcdata_handler) then
                 call pcdata_chunk_handler(str_vs(fx%pcdata))
+              endif
             endif
 
          else if (fx%context == COMMENT_TAG) then
