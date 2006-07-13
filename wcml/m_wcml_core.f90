@@ -329,7 +329,7 @@ contains
 ! There is a case to be made for TRIMing the elements(i) and refs(i) strings
 ! because they are part of an array, and the user cannot pass in strings
 ! of varying length.
-       call cmlAddAtom(xf=xf, elem=elements(i))
+       call cmlAddAtom(xf=xf, elem=trim(elements(i)))
        if (present(refs)) call xml_AddAttribute(xf, 'ref', refs(i))
        if (stylei .eq. 'x3') then
           call CMLATX39DP(xf, coords(1, i), coords(2, i), coords(3, i), fmt)
@@ -387,7 +387,7 @@ contains
        !id1 = 'a'
        !id1(2:) = id0
        !call cmlAddAtom(xf=xf, elem=elements(i), id=trim(id1))
-       call cmlAddAtom(xf=xf, elem=elements(i))
+       call cmlAddAtom(xf=xf, elem=trim(elements(i)))
        if (present(refs)) call xml_AddAttribute(xf, 'ref', refs(i))
        if (stylei .eq. 'x3') then
           call CMLATX39SP(xf, coords(1, i), coords(2, i), coords(3, i), fmt)
@@ -447,7 +447,7 @@ contains
        !id1 = 'a'
        !id1(2:) = id0
        !call cmlAddAtom(xf=xf, elem=elements(i), id=trim(id1))
-       call cmlAddAtom(xf=xf, elem=elements(i))
+       call cmlAddAtom(xf=xf, elem=trim(elements(i)))
        if (stylei .eq. 'x3') then
           call CMLATX39DP(xf, x(i), y(i), z(i), fmt)
        elseif (stylei .eq. 'xFrac') then
@@ -508,7 +508,7 @@ contains
        !id1 = 'a'
        !id1(2:) = id0
        !call cmlAddAtom(xf=xf, elem=elements(i), id=trim(id1))
-       call cmlAddAtom(xf=xf, elem=elements(i))
+       call cmlAddAtom(xf=xf, elem=trim(elements(i)))
        if (stylei .eq. 'x3') then
           call CMLATX39SP(xf, x(i), y(i), z(i), fmt)
        else if (stylei .eq. 'xFrac') then
@@ -542,7 +542,7 @@ contains
     character(len=*), intent(in), optional  :: fmt        ! format
 
     call xml_NewElement(xf, 'atom')
-    if (present(elem))      call xml_AddAttribute(xf, 'elementType', trim(elem))
+    if (present(elem))      call xml_AddAttribute(xf, 'elementType', elem)
     if (present(id))        call xml_AddAttribute(xf, 'id', id)
     if (present(charge))    call xml_AddAttribute(xf, 'formalCharge', charge)
     if (present(hCount))    call xml_AddAttribute(xf, 'hydrogenCount', hCount)
@@ -1431,7 +1431,7 @@ contains
 
     call xml_NewElement(xf, 'length')
     call xml_AddAttribute(xf, 'id', id)
-    call xml_AddAttribute(xf, 'atomRefs2', adjustl(trim(atomRef1))//' '//adjustl(trim(atomRef2)))
+    call xml_AddAttribute(xf, 'atomRefs2', atomRef1//' '//atomRef2)
     call xml_AddPcdata(xf, length, fmt)
     call xml_EndElement(xf, 'length')
 
@@ -1451,7 +1451,7 @@ contains
 
     call xml_NewElement(xf, 'length')
     call xml_AddAttribute(xf, 'id', id)
-    call xml_AddAttribute(xf, 'atomRefs2', adjustl(trim(atomRef1))//' '//adjustl(trim(atomRef2)))
+    call xml_AddAttribute(xf, 'atomRefs2', atomRef1//' '//atomRef2)
     call xml_AddPcdata(xf, length, fmt)
     call xml_EndElement(xf, 'length')
 
@@ -1473,7 +1473,7 @@ contains
 
     call xml_NewElement(xf, 'angle')
     call xml_AddAttribute(xf, 'id', id)
-    call xml_AddAttribute(xf, 'atomRefs3', adjustl(trim(atomRef1))//' '//adjustl(trim(atomRef2))//' '//adjustl(trim(atomRef3)))
+    call xml_AddAttribute(xf, 'atomRefs3', atomRef1//' '//atomRef2//' '//atomRef3)
     call xml_AddPcdata(xf, angle, fmt)
     call xml_EndElement(xf, 'angle')
 
@@ -1494,7 +1494,7 @@ contains
 
     call xml_NewElement(xf, 'angle')
     call xml_AddAttribute(xf, 'id', id)
-    call xml_AddAttribute(xf, 'atomRefs3', adjustl(trim(atomRef1))//' '//adjustl(trim(atomRef2))//' '//adjustl(trim(atomRef3)))
+    call xml_AddAttribute(xf, 'atomRefs3', atomRef1//' '//atomRef2//' '//atomRef3)
     call xml_AddPcdata(xf, angle, fmt)
     call xml_EndElement(xf, 'angle')
 
@@ -1518,7 +1518,7 @@ contains
     call xml_NewElement(xf, 'torsion')
     call xml_AddAttribute(xf, 'id', id)
     call xml_AddAttribute(xf, 'atomRefs4', &
-         adjustl(trim(atomRef1))//' '//adjustl(trim(atomRef2))//' '//adjustl(trim(atomRef3))//' '//adjustl(trim(atomRef4)))
+         atomRef1//' '//atomRef2//' '//atomRef3//' '//atomRef4)
     call xml_AddPcdata(xf, torsion, fmt)
     call xml_EndElement(xf, 'torsion')
 
@@ -1541,7 +1541,7 @@ contains
     call xml_NewElement(xf, 'torsion')
     call xml_AddAttribute(xf, 'id', id)
     call xml_AddAttribute(xf, 'atomRefs4', &
-         adjustl(trim(atomRef1))//' '//adjustl(trim(atomRef2))//' '//adjustl(trim(atomRef3))//' '//adjustl(trim(atomRef4)))
+         atomRef1//' '//atomRef2//' '//atomRef3//' '//atomRef4)
     call xml_AddPcdata(xf, torsion, fmt)
     call xml_EndElement(xf, 'torsion')
 
