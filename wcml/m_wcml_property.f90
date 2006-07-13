@@ -83,10 +83,10 @@ contains
 
 
   subroutine propertyScaRealDp &
-    (xf, property, id, title, dictRef, convention, ref, role, units ,fmt)
+    (xf, value, id, title, dictRef, convention, ref, role, units ,fmt)
 
-    type(xmlf_t), intent(inout) :: xf
-    real(dp) , intent(in)   :: property
+    type(xmlf_t), intent(inout)              :: xf
+    real(dp) , intent(in) :: value
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
     character(len=*), intent(in), optional :: dictRef
@@ -105,16 +105,16 @@ contains
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(role)) call xml_addAttribute(xf, "role", role)
 
-    call stmAddValue(xf=xf, value=property , units=units ,fmt=fmt )
+    call stmAddValue(xf=xf, value=value , units=units ,fmt=fmt )
     call xml_EndElement(xf, "property")
 
   end subroutine propertyScaRealDp
 
   subroutine propertyScaRealSp &
-    (xf, property, id, title, dictRef, convention, ref, role, units ,fmt)
+    (xf, value, id, title, dictRef, convention, ref, role, units ,fmt)
 
-    type(xmlf_t), intent(inout) :: xf
-    real(sp) , intent(in)   :: property
+    type(xmlf_t), intent(inout)              :: xf
+    real(sp) , intent(in) :: value
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
     character(len=*), intent(in), optional :: dictRef
@@ -133,16 +133,16 @@ contains
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(role)) call xml_addAttribute(xf, "role", role)
 
-    call stmAddValue(xf=xf, value=property , units=units ,fmt=fmt )
+    call stmAddValue(xf=xf, value=value , units=units ,fmt=fmt )
     call xml_EndElement(xf, "property")
 
   end subroutine propertyScaRealSp
 
   subroutine propertyScaInt &
-    (xf, property, id, title, dictRef, convention, ref, role, units )
+    (xf, value, id, title, dictRef, convention, ref, role, units )
 
-    type(xmlf_t), intent(inout) :: xf
-    integer , intent(in)   :: property
+    type(xmlf_t), intent(inout)              :: xf
+    integer , intent(in) :: value
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
     character(len=*), intent(in), optional :: dictRef
@@ -160,16 +160,16 @@ contains
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(role)) call xml_addAttribute(xf, "role", role)
 
-    call stmAddValue(xf=xf, value=property , units=units  )
+    call stmAddValue(xf=xf, value=value , units=units  )
     call xml_EndElement(xf, "property")
 
   end subroutine propertyScaInt
 
   subroutine propertyScaLg &
-    (xf, property, id, title, dictRef, convention, ref, role, units )
+    (xf, value, id, title, dictRef, convention, ref, role, units )
 
-    type(xmlf_t), intent(inout) :: xf
-    logical , intent(in)   :: property
+    type(xmlf_t), intent(inout)              :: xf
+    logical , intent(in) :: value
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
     character(len=*), intent(in), optional :: dictRef
@@ -187,16 +187,16 @@ contains
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(role)) call xml_addAttribute(xf, "role", role)
 
-    call stmAddValue(xf=xf, value=property   )
+    call stmAddValue(xf=xf, value=value   )
     call xml_EndElement(xf, "property")
 
   end subroutine propertyScaLg
 
   subroutine propertyScaCh &
-    (xf, property, id, title, dictRef, convention, ref, role, units )
+    (xf, value, id, title, dictRef, convention, ref, role, units )
 
-    type(xmlf_t), intent(inout) :: xf
-    character(len=*) , intent(in)   :: property
+    type(xmlf_t), intent(inout)              :: xf
+    character(len=*) , intent(in) :: value
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
     character(len=*), intent(in), optional :: dictRef
@@ -214,18 +214,18 @@ contains
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(role)) call xml_addAttribute(xf, "role", role)
 
-    call stmAddValue(xf=xf, value=property , units=units  )
+    call stmAddValue(xf=xf, value=value , units=units  )
     call xml_EndElement(xf, "property")
 
   end subroutine propertyScaCh
 
 
   subroutine propertyArrRealDpSi &
-    (xf, property, nvalue,  id, title, dictRef, convention, ref, role, units ,fmt)
+    (xf, value, nvalue,  id, title, dictRef, convention, ref, role, units ,fmt)
 
-    type(xmlf_t), intent(inout)            :: xf
-    integer, intent(in)                    :: nvalue
-    real(dp) , intent(in)   :: property(* )
+    type(xmlf_t), intent(inout)              :: xf
+    integer, intent(in)                      :: nvalue
+    real(dp) , intent(in) :: value(* )
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
     character(len=*), intent(in), optional :: dictRef
@@ -244,16 +244,16 @@ contains
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(role)) call xml_addAttribute(xf, "role", role)
 
-    call stmAddValue(xf=xf, value=property(:nvalue) , units=units ,fmt=fmt )
+    call stmAddValue(xf=xf, value=value(:nvalue) , units=units ,fmt=fmt )
     call xml_EndElement(xf, "property")
   end subroutine propertyArrRealDpSi
 
   subroutine propertyArrRealSpSi &
-    (xf, property, nvalue,  id, title, dictRef, convention, ref, role, units ,fmt)
+    (xf, value, nvalue,  id, title, dictRef, convention, ref, role, units ,fmt)
 
-    type(xmlf_t), intent(inout)            :: xf
-    integer, intent(in)                    :: nvalue
-    real(sp) , intent(in)   :: property(* )
+    type(xmlf_t), intent(inout)              :: xf
+    integer, intent(in)                      :: nvalue
+    real(sp) , intent(in) :: value(* )
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
     character(len=*), intent(in), optional :: dictRef
@@ -272,16 +272,16 @@ contains
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(role)) call xml_addAttribute(xf, "role", role)
 
-    call stmAddValue(xf=xf, value=property(:nvalue) , units=units ,fmt=fmt )
+    call stmAddValue(xf=xf, value=value(:nvalue) , units=units ,fmt=fmt )
     call xml_EndElement(xf, "property")
   end subroutine propertyArrRealSpSi
 
   subroutine propertyArrIntSi &
-    (xf, property, nvalue,  id, title, dictRef, convention, ref, role, units )
+    (xf, value, nvalue,  id, title, dictRef, convention, ref, role, units )
 
-    type(xmlf_t), intent(inout)            :: xf
-    integer, intent(in)                    :: nvalue
-    integer , intent(in)   :: property(* )
+    type(xmlf_t), intent(inout)              :: xf
+    integer, intent(in)                      :: nvalue
+    integer , intent(in) :: value(* )
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
     character(len=*), intent(in), optional :: dictRef
@@ -299,16 +299,16 @@ contains
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(role)) call xml_addAttribute(xf, "role", role)
 
-    call stmAddValue(xf=xf, value=property(:nvalue) , units=units  )
+    call stmAddValue(xf=xf, value=value(:nvalue) , units=units  )
     call xml_EndElement(xf, "property")
   end subroutine propertyArrIntSi
 
   subroutine propertyArrLgSi &
-    (xf, property, nvalue,  id, title, dictRef, convention, ref, role, units )
+    (xf, value, nvalue,  id, title, dictRef, convention, ref, role, units )
 
-    type(xmlf_t), intent(inout)            :: xf
-    integer, intent(in)                    :: nvalue
-    logical , intent(in)   :: property(* )
+    type(xmlf_t), intent(inout)              :: xf
+    integer, intent(in)                      :: nvalue
+    logical , intent(in) :: value(* )
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
     character(len=*), intent(in), optional :: dictRef
@@ -326,16 +326,16 @@ contains
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(role)) call xml_addAttribute(xf, "role", role)
 
-    call stmAddValue(xf=xf, value=property(:nvalue)   )
+    call stmAddValue(xf=xf, value=value(:nvalue)   )
     call xml_EndElement(xf, "property")
   end subroutine propertyArrLgSi
 
   subroutine propertyArrChSi &
-    (xf, property, nvalue,  id, title, dictRef, convention, ref, role, units )
+    (xf, value, nvalue,  id, title, dictRef, convention, ref, role, units )
 
-    type(xmlf_t), intent(inout)            :: xf
-    integer, intent(in)                    :: nvalue
-    character(len=*) , intent(in)   :: property(* )
+    type(xmlf_t), intent(inout)              :: xf
+    integer, intent(in)                      :: nvalue
+    character(len=*) , intent(in) :: value(* )
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
     character(len=*), intent(in), optional :: dictRef
@@ -353,16 +353,16 @@ contains
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(role)) call xml_addAttribute(xf, "role", role)
 
-    call stmAddValue(xf=xf, value=property(:nvalue) , units=units  )
+    call stmAddValue(xf=xf, value=value(:nvalue) , units=units  )
     call xml_EndElement(xf, "property")
   end subroutine propertyArrChSi
 
 
   subroutine propertyArrRealDpSh &
-    (xf, property,  id, title, dictRef, convention, ref, role, units ,fmt)
+    (xf, value,  id, title, dictRef, convention, ref, role, units ,fmt)
 
-    type(xmlf_t), intent(inout)            :: xf
-    real(dp) , intent(in)   :: property(: )
+    type(xmlf_t), intent(inout)              :: xf
+    real(dp) , intent(in) :: value(: )
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
     character(len=*), intent(in), optional :: dictRef
@@ -381,15 +381,15 @@ contains
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(role)) call xml_addAttribute(xf, "role", role)
 
-    call stmAddValue(xf=xf, value=property , units=units ,fmt=fmt )
+    call stmAddValue(xf=xf, value=value , units=units ,fmt=fmt )
     call xml_EndElement(xf, "property")
   end subroutine propertyArrRealDpSh
 
   subroutine propertyArrRealSpSh &
-    (xf, property,  id, title, dictRef, convention, ref, role, units ,fmt)
+    (xf, value,  id, title, dictRef, convention, ref, role, units ,fmt)
 
-    type(xmlf_t), intent(inout)            :: xf
-    real(sp) , intent(in)   :: property(: )
+    type(xmlf_t), intent(inout)              :: xf
+    real(sp) , intent(in) :: value(: )
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
     character(len=*), intent(in), optional :: dictRef
@@ -408,15 +408,15 @@ contains
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(role)) call xml_addAttribute(xf, "role", role)
 
-    call stmAddValue(xf=xf, value=property , units=units ,fmt=fmt )
+    call stmAddValue(xf=xf, value=value , units=units ,fmt=fmt )
     call xml_EndElement(xf, "property")
   end subroutine propertyArrRealSpSh
 
   subroutine propertyArrIntSh &
-    (xf, property,  id, title, dictRef, convention, ref, role, units )
+    (xf, value,  id, title, dictRef, convention, ref, role, units )
 
-    type(xmlf_t), intent(inout)            :: xf
-    integer , intent(in)   :: property(: )
+    type(xmlf_t), intent(inout)              :: xf
+    integer , intent(in) :: value(: )
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
     character(len=*), intent(in), optional :: dictRef
@@ -434,15 +434,15 @@ contains
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(role)) call xml_addAttribute(xf, "role", role)
 
-    call stmAddValue(xf=xf, value=property , units=units  )
+    call stmAddValue(xf=xf, value=value , units=units  )
     call xml_EndElement(xf, "property")
   end subroutine propertyArrIntSh
 
   subroutine propertyArrLgSh &
-    (xf, property,  id, title, dictRef, convention, ref, role, units )
+    (xf, value,  id, title, dictRef, convention, ref, role, units )
 
-    type(xmlf_t), intent(inout)            :: xf
-    logical , intent(in)   :: property(: )
+    type(xmlf_t), intent(inout)              :: xf
+    logical , intent(in) :: value(: )
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
     character(len=*), intent(in), optional :: dictRef
@@ -460,15 +460,15 @@ contains
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(role)) call xml_addAttribute(xf, "role", role)
 
-    call stmAddValue(xf=xf, value=property   )
+    call stmAddValue(xf=xf, value=value   )
     call xml_EndElement(xf, "property")
   end subroutine propertyArrLgSh
 
   subroutine propertyArrChSh &
-    (xf, property,  id, title, dictRef, convention, ref, role, units )
+    (xf, value,  id, title, dictRef, convention, ref, role, units )
 
-    type(xmlf_t), intent(inout)            :: xf
-    character(len=*) , intent(in)   :: property(: )
+    type(xmlf_t), intent(inout)              :: xf
+    character(len=*) , intent(in) :: value(: )
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
     character(len=*), intent(in), optional :: dictRef
@@ -486,17 +486,17 @@ contains
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(role)) call xml_addAttribute(xf, "role", role)
 
-    call stmAddValue(xf=xf, value=property , units=units  )
+    call stmAddValue(xf=xf, value=value , units=units  )
     call xml_EndElement(xf, "property")
   end subroutine propertyArrChSh
 
 
   subroutine propertyMatRealDpSi &
-    (xf, property, nrows, ncols,  id, title, dictRef, convention, ref, role, units ,fmt)
+    (xf, value, nrows, ncols,  id, title, dictRef, convention, ref, role, units ,fmt)
 
-    type(xmlf_t), intent(inout)            :: xf
-    integer, intent(in)                    :: nrows, ncols
-    real(dp) , intent(in)   :: property(nrows, * )
+    type(xmlf_t), intent(inout)              :: xf
+    integer, intent(in)                      :: nrows, ncols
+    real(dp) , intent(in) :: value(nrows, * )
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
     character(len=*), intent(in), optional :: dictRef
@@ -515,16 +515,16 @@ contains
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(role)) call xml_addAttribute(xf, "role", role)
 
-    call stmAddValue(xf=xf, value=property(:nrows,:ncols) , units=units , fmt=fmt )
+    call stmAddValue(xf=xf, value=value(:nrows,:ncols) , units=units , fmt=fmt )
     call xml_EndElement(xf, "property")
   end subroutine propertyMatRealDpSi
 
   subroutine propertyMatRealSpSi &
-    (xf, property, nrows, ncols,  id, title, dictRef, convention, ref, role, units ,fmt)
+    (xf, value, nrows, ncols,  id, title, dictRef, convention, ref, role, units ,fmt)
 
-    type(xmlf_t), intent(inout)            :: xf
-    integer, intent(in)                    :: nrows, ncols
-    real(sp) , intent(in)   :: property(nrows, * )
+    type(xmlf_t), intent(inout)              :: xf
+    integer, intent(in)                      :: nrows, ncols
+    real(sp) , intent(in) :: value(nrows, * )
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
     character(len=*), intent(in), optional :: dictRef
@@ -543,16 +543,16 @@ contains
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(role)) call xml_addAttribute(xf, "role", role)
 
-    call stmAddValue(xf=xf, value=property(:nrows,:ncols) , units=units , fmt=fmt )
+    call stmAddValue(xf=xf, value=value(:nrows,:ncols) , units=units , fmt=fmt )
     call xml_EndElement(xf, "property")
   end subroutine propertyMatRealSpSi
 
   subroutine propertyMatIntSi &
-    (xf, property, nrows, ncols,  id, title, dictRef, convention, ref, role, units )
+    (xf, value, nrows, ncols,  id, title, dictRef, convention, ref, role, units )
 
-    type(xmlf_t), intent(inout)            :: xf
-    integer, intent(in)                    :: nrows, ncols
-    integer , intent(in)   :: property(nrows, * )
+    type(xmlf_t), intent(inout)              :: xf
+    integer, intent(in)                      :: nrows, ncols
+    integer , intent(in) :: value(nrows, * )
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
     character(len=*), intent(in), optional :: dictRef
@@ -570,16 +570,16 @@ contains
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(role)) call xml_addAttribute(xf, "role", role)
 
-    call stmAddValue(xf=xf, value=property(:nrows,:ncols) , units=units  )
+    call stmAddValue(xf=xf, value=value(:nrows,:ncols) , units=units  )
     call xml_EndElement(xf, "property")
   end subroutine propertyMatIntSi
 
   subroutine propertyMatLgSi &
-    (xf, property, nrows, ncols,  id, title, dictRef, convention, ref, role, units )
+    (xf, value, nrows, ncols,  id, title, dictRef, convention, ref, role, units )
 
-    type(xmlf_t), intent(inout)            :: xf
-    integer, intent(in)                    :: nrows, ncols
-    logical , intent(in)   :: property(nrows, * )
+    type(xmlf_t), intent(inout)              :: xf
+    integer, intent(in)                      :: nrows, ncols
+    logical , intent(in) :: value(nrows, * )
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
     character(len=*), intent(in), optional :: dictRef
@@ -597,16 +597,16 @@ contains
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(role)) call xml_addAttribute(xf, "role", role)
 
-    call stmAddValue(xf=xf, value=property(:nrows,:ncols)   )
+    call stmAddValue(xf=xf, value=value(:nrows,:ncols)   )
     call xml_EndElement(xf, "property")
   end subroutine propertyMatLgSi
 
   subroutine propertyMatChSi &
-    (xf, property, nrows, ncols,  id, title, dictRef, convention, ref, role, units )
+    (xf, value, nrows, ncols,  id, title, dictRef, convention, ref, role, units )
 
-    type(xmlf_t), intent(inout)            :: xf
-    integer, intent(in)                    :: nrows, ncols
-    character(len=*) , intent(in)   :: property(nrows, * )
+    type(xmlf_t), intent(inout)              :: xf
+    integer, intent(in)                      :: nrows, ncols
+    character(len=*) , intent(in) :: value(nrows, * )
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
     character(len=*), intent(in), optional :: dictRef
@@ -624,16 +624,16 @@ contains
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(role)) call xml_addAttribute(xf, "role", role)
 
-    call stmAddValue(xf=xf, value=property(:nrows,:ncols) , units=units  )
+    call stmAddValue(xf=xf, value=value(:nrows,:ncols) , units=units  )
     call xml_EndElement(xf, "property")
   end subroutine propertyMatChSi
 
 
   subroutine propertyMatRealDpSh &
-    (xf, property,  id, title, dictRef, convention, ref, role, units ,fmt)
+    (xf, value,  id, title, dictRef, convention, ref, role, units ,fmt)
 
-    type(xmlf_t), intent(inout)            :: xf
-    real(dp) , intent(in)   :: property(:, : )
+    type(xmlf_t), intent(inout)              :: xf
+    real(dp) , intent(in) :: value(:, : )
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
     character(len=*), intent(in), optional :: dictRef
@@ -652,15 +652,15 @@ contains
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(role)) call xml_addAttribute(xf, "role", role)
 
-    call stmAddValue(xf=xf, value=property , units=units , fmt=fmt )
+    call stmAddValue(xf=xf, value=value , units=units , fmt=fmt )
     call xml_EndElement(xf, "property")
   end subroutine propertyMatRealDpSh
 
   subroutine propertyMatRealSpSh &
-    (xf, property,  id, title, dictRef, convention, ref, role, units ,fmt)
+    (xf, value,  id, title, dictRef, convention, ref, role, units ,fmt)
 
-    type(xmlf_t), intent(inout)            :: xf
-    real(sp) , intent(in)   :: property(:, : )
+    type(xmlf_t), intent(inout)              :: xf
+    real(sp) , intent(in) :: value(:, : )
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
     character(len=*), intent(in), optional :: dictRef
@@ -679,15 +679,15 @@ contains
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(role)) call xml_addAttribute(xf, "role", role)
 
-    call stmAddValue(xf=xf, value=property , units=units , fmt=fmt )
+    call stmAddValue(xf=xf, value=value , units=units , fmt=fmt )
     call xml_EndElement(xf, "property")
   end subroutine propertyMatRealSpSh
 
   subroutine propertyMatIntSh &
-    (xf, property,  id, title, dictRef, convention, ref, role, units )
+    (xf, value,  id, title, dictRef, convention, ref, role, units )
 
-    type(xmlf_t), intent(inout)            :: xf
-    integer , intent(in)   :: property(:, : )
+    type(xmlf_t), intent(inout)              :: xf
+    integer , intent(in) :: value(:, : )
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
     character(len=*), intent(in), optional :: dictRef
@@ -705,15 +705,15 @@ contains
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(role)) call xml_addAttribute(xf, "role", role)
 
-    call stmAddValue(xf=xf, value=property , units=units  )
+    call stmAddValue(xf=xf, value=value , units=units  )
     call xml_EndElement(xf, "property")
   end subroutine propertyMatIntSh
 
   subroutine propertyMatLgSh &
-    (xf, property,  id, title, dictRef, convention, ref, role, units )
+    (xf, value,  id, title, dictRef, convention, ref, role, units )
 
-    type(xmlf_t), intent(inout)            :: xf
-    logical , intent(in)   :: property(:, : )
+    type(xmlf_t), intent(inout)              :: xf
+    logical , intent(in) :: value(:, : )
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
     character(len=*), intent(in), optional :: dictRef
@@ -731,15 +731,15 @@ contains
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(role)) call xml_addAttribute(xf, "role", role)
 
-    call stmAddValue(xf=xf, value=property   )
+    call stmAddValue(xf=xf, value=value   )
     call xml_EndElement(xf, "property")
   end subroutine propertyMatLgSh
 
   subroutine propertyMatChSh &
-    (xf, property,  id, title, dictRef, convention, ref, role, units )
+    (xf, value,  id, title, dictRef, convention, ref, role, units )
 
-    type(xmlf_t), intent(inout)            :: xf
-    character(len=*) , intent(in)   :: property(:, : )
+    type(xmlf_t), intent(inout)              :: xf
+    character(len=*) , intent(in) :: value(:, : )
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
     character(len=*), intent(in), optional :: dictRef
@@ -757,7 +757,7 @@ contains
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(role)) call xml_addAttribute(xf, "role", role)
 
-    call stmAddValue(xf=xf, value=property , units=units  )
+    call stmAddValue(xf=xf, value=value , units=units  )
     call xml_EndElement(xf, "property")
   end subroutine propertyMatChSh
 

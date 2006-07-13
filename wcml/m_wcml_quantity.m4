@@ -85,11 +85,11 @@ dnl Second arg is list of optional args
 dnl Third arg is type of property(character/logical etc.)
 define(`TOHWM4_ScalarSub',`dnl
   subroutine TOHWM4_subroutinename(`$1',`Sca',`$3',`') &
-    (xf, $1, TOHWM4_dummyarglist(`$2'), units dnl
+    (xf, value, TOHWM4_dummyarglist(`$2'), units dnl
 ifelse(substr($3,0,4),`Real',`,fmt)',`)')
 
-    type(xmlf_t), intent(inout) :: xf
-    TOHWM4_declarationtype(`$3'), intent(in)   :: $1
+    type(xmlf_t), intent(inout)              :: xf
+    TOHWM4_declarationtype(`$3'), intent(in) :: value
 dnl
 m4_foreach(`x', `$2', `TOHWM4_dummyargdecl(x)')
 dnl
@@ -102,7 +102,7 @@ ifelse(substr($3,0,4),`Real',`dnl
 dnl
 m4_foreach(`x', `$2', `TOHWM4_dummyarguse(x)')
 dnl
-    call stmAddValue(xf=xf, value=$1 dnl
+    call stmAddValue(xf=xf, value=value dnl
 ifelse(`$3',`Lg',`',`, units=units') dnl
 ifelse(substr($3,0,4),`Real',`,fmt=fmt',`') dnl
 )
@@ -119,16 +119,16 @@ dnl Same as before, but fourth arg is Sh/Si according
 dnl to assumed shape/size
 define(`TOHWM4_ArraySub',`dnl
   subroutine TOHWM4_subroutinename(`$1',`Arr',`$3',`$4') &
-    (xf, $1, dnl
+    (xf, value, dnl
 ifelse($4, `Si', `nvalue, ') dnl
 TOHWM4_dummyarglist(`$2'), units dnl
 ifelse(substr($3,0,4),`Real',`,fmt)',`)')
 
-    type(xmlf_t), intent(inout)            :: xf
+    type(xmlf_t), intent(inout)              :: xf
 ifelse($4, `Si', `dnl
-    integer, intent(in)                    :: nvalue
+    integer, intent(in)                      :: nvalue
 ')dnl
-    TOHWM4_declarationtype(`$3'), intent(in)   :: $1(dnl
+    TOHWM4_declarationtype(`$3'), intent(in) :: value(dnl
 ifelse($4, `Si', `*', `:') dnl
 )
 dnl
@@ -144,9 +144,9 @@ dnl
 m4_foreach(`x', `$2', `TOHWM4_dummyarguse(x)')
 dnl
 ifelse($4, `Si', `dnl
-    call stmAddValue(xf=xf, value=$1(:nvalue) dnl
+    call stmAddValue(xf=xf, value=value(:nvalue) dnl
 ',`dnl
-    call stmAddValue(xf=xf, value=$1 dnl
+    call stmAddValue(xf=xf, value=value dnl
 ')dnl
 ifelse(`$3',`Lg',`',`, units=units') dnl
 ifelse(substr($3,0,4),`Real',`,fmt=fmt',`') dnl
@@ -163,16 +163,16 @@ dnl Same as before, but fourth arg is Sh/Si according
 dnl to assumed shape/size
 define(`TOHWM4_MatrixSub',`dnl
   subroutine TOHWM4_subroutinename(`$1',`Mat',`$3',`$4') &
-    (xf, $1, dnl
+    (xf, value, dnl
 ifelse($4, `Si', `nrows, ncols, ') dnl
 TOHWM4_dummyarglist(`$2'), units dnl
 ifelse(substr($3,0,4),`Real',`,fmt)',`)')
 
-    type(xmlf_t), intent(inout)            :: xf
+    type(xmlf_t), intent(inout)              :: xf
 ifelse($4, `Si', `dnl
-    integer, intent(in)                    :: nrows, ncols
+    integer, intent(in)                      :: nrows, ncols
 ')dnl
-    TOHWM4_declarationtype(`$3'), intent(in)   :: $1(dnl
+    TOHWM4_declarationtype(`$3'), intent(in) :: value(dnl
 ifelse($4, `Si', `nrows, *', `:, :') dnl
 )
 dnl
@@ -188,9 +188,9 @@ dnl
 m4_foreach(`x', `$2', `TOHWM4_dummyarguse(x)')
 dnl
 ifelse($4, `Si', `dnl
-    call stmAddValue(xf=xf, value=$1(:nrows,:ncols) dnl
+    call stmAddValue(xf=xf, value=value(:nrows,:ncols) dnl
 ',`dnl
-    call stmAddValue(xf=xf, value=$1 dnl
+    call stmAddValue(xf=xf, value=value dnl
 ')dnl
 ifelse(`$3',`Lg',`',`, units=units') dnl
 ifelse(substr($3,0,4),`Real',`, fmt=fmt',`') dnl

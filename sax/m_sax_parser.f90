@@ -3,9 +3,10 @@ module m_sax_parser
 ! Basic module to parse XML in the SAX spirit.
 !
 
-use FoX_common, only: dictionary_t, parse_string_to_dict, destroy_dict, reset_dict, len, get_key, get_value
 use m_common_array_str, only: str_vs, vs_str
+use m_common_attrs, only: dictionary_t, parse_string_to_dict, destroy_dict, reset_dict, len, get_key, get_value
 use m_common_elstack          ! For element nesting checks
+use m_common_namespaces, only: checkNamespaces, getnamespaceURI, checkEndNamespaces, invalidNS
 use m_sax_dtd, only : parse_dtd
 use m_sax_reader
 use m_sax_debug, only: debug
@@ -13,7 +14,6 @@ use m_sax_fsm, only: fsm_t, init_fsm, reset_fsm, destroy_fsm, evolve_fsm
 use m_sax_fsm, only: END_OF_TAG, OPENING_TAG, SINGLE_TAG, CDATA_SECTION_TAG
 use m_sax_fsm, only: CLOSING_TAG, COMMENT_TAG, DTD_TAG, PI_TAG
 use m_sax_fsm, only: CHUNK_OF_PCDATA, QUIET, EXCEPTION, END_OF_DOCUMENT
-use m_sax_namespaces, only: checkNamespaces, getnamespaceURI, checkEndNamespaces, invalidNS
 use m_sax_error, only: sax_error_t, build_error_info, WARNING_CODE, SEVERE_ERROR_CODE, default_error_handler
 
 implicit none

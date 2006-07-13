@@ -10,6 +10,8 @@ module FoX_common
   public :: FoX_version
 
   public :: dictionary_t
+  public :: len
+  public :: print_dict 
   public :: get_key
   public :: get_value
   public :: has_key

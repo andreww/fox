@@ -1,8 +1,8 @@
-module m_sax_namespaces
+module m_common_namespaces
 
   use m_common_array_str, only : compare_array_str, str_vs
-  use FoX_common, only : dictionary_t, get_key, get_value, remove_key, len
-  use FoX_common, only : set_nsURI, set_localName
+  use m_common_attrs, only : dictionary_t, get_key, get_value, remove_key, len
+  use m_common_attrs, only : set_nsURI, set_localName
   use m_common_error, only : FoX_error
 
   implicit none
@@ -46,6 +46,11 @@ module m_sax_namespaces
   interface getnamespaceURI
      module procedure getURIofDefaultNS, getURIofPrefixedNS
   end interface
+
+  public :: addDefaultNS
+  public :: removeDefaultNS
+  public :: addPrefixedNS
+  public :: removePrefixedNS
 
 contains
 
@@ -564,4 +569,4 @@ contains
   end subroutine checkURI
 
 
-end module m_sax_namespaces
+end module m_common_namespaces

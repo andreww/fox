@@ -191,7 +191,7 @@ contains
                       errorBasis=errorBasis, min=min, max=max, ref=ref, &
                       units=units)
     else
-       call stmAddString(xf=xf, value=str(value, fmt), id=id, title=title, &
+       call stmAddString(xf=xf, value=str(value), id=id, title=title, &
                       dictRef=dictref, dataType='xsd:double', &
                       convention=convention, errorValue=errorValue, &
                       errorBasis=errorBasis, min=min, max=max, ref=ref, &
@@ -224,7 +224,7 @@ contains
                       errorBasis=errorBasis, min=min, max=max, ref=ref, &
                       units=units)
     else
-       call stmAddString(xf=xf, value=str(value, fmt), id=id, title=title, &
+       call stmAddString(xf=xf, value=str(value), id=id, title=title, &
                       dictRef=dictref, dataType='xsd:float', &
                       convention=convention, errorValue=errorValue, &
                       errorBasis=errorBasis, min=min, max=max, ref=ref, &

@@ -51,9 +51,10 @@ module m_wcml_parameter
 
 contains
 
-  subroutine cmlStartparameterList(xf, id, title, dictRef, convention, ref, role)
+  subroutine cmlStartparameterList(xf, name, id, title, dictRef, convention, ref, role)
 
     type(xmlf_t), intent(inout) :: xf
+    character(len=*), intent(in), optional :: name
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
     character(len=*), intent(in), optional :: dictRef
@@ -63,6 +64,7 @@ contains
 
  
     call xml_NewElement(xf, "parameterList")
+    if (present(name)) call xml_addAttribute(xf, "name", name)
     if (present(id)) call xml_addAttribute(xf, "id", id)
     if (present(title)) call xml_addAttribute(xf, "title", title)
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
@@ -83,10 +85,11 @@ contains
 
 
   subroutine parameterScaRealDp &
-    (xf, parameter, id, title, dictRef, convention, ref, role, units ,fmt)
+    (xf, value, name, id, title, dictRef, convention, ref, role, units ,fmt)
 
-    type(xmlf_t), intent(inout) :: xf
-    real(dp) , intent(in)   :: parameter
+    type(xmlf_t), intent(inout)              :: xf
+    real(dp) , intent(in) :: value
+    character(len=*), intent(in), optional :: name
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
     character(len=*), intent(in), optional :: dictRef
@@ -98,6 +101,7 @@ contains
     character(len=*), intent(in), optional :: fmt
 
     call xml_NewElement(xf, "parameter")
+    if (present(name)) call xml_addAttribute(xf, "name", name)
     if (present(id)) call xml_addAttribute(xf, "id", id)
     if (present(title)) call xml_addAttribute(xf, "title", title)
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
@@ -105,16 +109,17 @@ contains
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(role)) call xml_addAttribute(xf, "role", role)
 
-    call stmAddValue(xf=xf, value=parameter , units=units ,fmt=fmt )
+    call stmAddValue(xf=xf, value=value , units=units ,fmt=fmt )
     call xml_EndElement(xf, "parameter")
 
   end subroutine parameterScaRealDp
 
   subroutine parameterScaRealSp &
-    (xf, parameter, id, title, dictRef, convention, ref, role, units ,fmt)
+    (xf, value, name, id, title, dictRef, convention, ref, role, units ,fmt)
 
-    type(xmlf_t), intent(inout) :: xf
-    real(sp) , intent(in)   :: parameter
+    type(xmlf_t), intent(inout)              :: xf
+    real(sp) , intent(in) :: value
+    character(len=*), intent(in), optional :: name
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
     character(len=*), intent(in), optional :: dictRef
@@ -126,6 +131,7 @@ contains
     character(len=*), intent(in), optional :: fmt
 
     call xml_NewElement(xf, "parameter")
+    if (present(name)) call xml_addAttribute(xf, "name", name)
     if (present(id)) call xml_addAttribute(xf, "id", id)
     if (present(title)) call xml_addAttribute(xf, "title", title)
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
@@ -133,16 +139,17 @@ contains
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(role)) call xml_addAttribute(xf, "role", role)
 
-    call stmAddValue(xf=xf, value=parameter , units=units ,fmt=fmt )
+    call stmAddValue(xf=xf, value=value , units=units ,fmt=fmt )
     call xml_EndElement(xf, "parameter")
 
   end subroutine parameterScaRealSp
 
   subroutine parameterScaInt &
-    (xf, parameter, id, title, dictRef, convention, ref, role, units )
+    (xf, value, name, id, title, dictRef, convention, ref, role, units )
 
-    type(xmlf_t), intent(inout) :: xf
-    integer , intent(in)   :: parameter
+    type(xmlf_t), intent(inout)              :: xf
+    integer , intent(in) :: value
+    character(len=*), intent(in), optional :: name
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
     character(len=*), intent(in), optional :: dictRef
@@ -153,6 +160,7 @@ contains
     character(len=*), intent(in), optional :: units
 
     call xml_NewElement(xf, "parameter")
+    if (present(name)) call xml_addAttribute(xf, "name", name)
     if (present(id)) call xml_addAttribute(xf, "id", id)
     if (present(title)) call xml_addAttribute(xf, "title", title)
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
@@ -160,16 +168,17 @@ contains
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(role)) call xml_addAttribute(xf, "role", role)
 
-    call stmAddValue(xf=xf, value=parameter , units=units  )
+    call stmAddValue(xf=xf, value=value , units=units  )
     call xml_EndElement(xf, "parameter")
 
   end subroutine parameterScaInt
 
   subroutine parameterScaLg &
-    (xf, parameter, id, title, dictRef, convention, ref, role, units )
+    (xf, value, name, id, title, dictRef, convention, ref, role, units )
 
-    type(xmlf_t), intent(inout) :: xf
-    logical , intent(in)   :: parameter
+    type(xmlf_t), intent(inout)              :: xf
+    logical , intent(in) :: value
+    character(len=*), intent(in), optional :: name
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
     character(len=*), intent(in), optional :: dictRef
@@ -180,6 +189,7 @@ contains
     character(len=*), intent(in), optional :: units
 
     call xml_NewElement(xf, "parameter")
+    if (present(name)) call xml_addAttribute(xf, "name", name)
     if (present(id)) call xml_addAttribute(xf, "id", id)
     if (present(title)) call xml_addAttribute(xf, "title", title)
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
@@ -187,16 +197,17 @@ contains
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(role)) call xml_addAttribute(xf, "role", role)
 
-    call stmAddValue(xf=xf, value=parameter   )
+    call stmAddValue(xf=xf, value=value   )
     call xml_EndElement(xf, "parameter")
 
   end subroutine parameterScaLg
 
   subroutine parameterScaCh &
-    (xf, parameter, id, title, dictRef, convention, ref, role, units )
+    (xf, value, name, id, title, dictRef, convention, ref, role, units )
 
-    type(xmlf_t), intent(inout) :: xf
-    character(len=*) , intent(in)   :: parameter
+    type(xmlf_t), intent(inout)              :: xf
+    character(len=*) , intent(in) :: value
+    character(len=*), intent(in), optional :: name
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
     character(len=*), intent(in), optional :: dictRef
@@ -207,6 +218,7 @@ contains
     character(len=*), intent(in), optional :: units
 
     call xml_NewElement(xf, "parameter")
+    if (present(name)) call xml_addAttribute(xf, "name", name)
     if (present(id)) call xml_addAttribute(xf, "id", id)
     if (present(title)) call xml_addAttribute(xf, "title", title)
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
@@ -214,18 +226,19 @@ contains
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(role)) call xml_addAttribute(xf, "role", role)
 
-    call stmAddValue(xf=xf, value=parameter , units=units  )
+    call stmAddValue(xf=xf, value=value , units=units  )
     call xml_EndElement(xf, "parameter")
 
   end subroutine parameterScaCh
 
 
   subroutine parameterArrRealDpSi &
-    (xf, parameter, nvalue,  id, title, dictRef, convention, ref, role, units ,fmt)
+    (xf, value, nvalue,  name, id, title, dictRef, convention, ref, role, units ,fmt)
 
-    type(xmlf_t), intent(inout)            :: xf
-    integer, intent(in)                    :: nvalue
-    real(dp) , intent(in)   :: parameter(* )
+    type(xmlf_t), intent(inout)              :: xf
+    integer, intent(in)                      :: nvalue
+    real(dp) , intent(in) :: value(* )
+    character(len=*), intent(in), optional :: name
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
     character(len=*), intent(in), optional :: dictRef
@@ -237,6 +250,7 @@ contains
     character(len=*), intent(in), optional :: fmt
 
     call xml_NewElement(xf, "parameter")
+    if (present(name)) call xml_addAttribute(xf, "name", name)
     if (present(id)) call xml_addAttribute(xf, "id", id)
     if (present(title)) call xml_addAttribute(xf, "title", title)
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
@@ -244,16 +258,17 @@ contains
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(role)) call xml_addAttribute(xf, "role", role)
 
-    call stmAddValue(xf=xf, value=parameter(:nvalue) , units=units ,fmt=fmt )
+    call stmAddValue(xf=xf, value=value(:nvalue) , units=units ,fmt=fmt )
     call xml_EndElement(xf, "parameter")
   end subroutine parameterArrRealDpSi
 
   subroutine parameterArrRealSpSi &
-    (xf, parameter, nvalue,  id, title, dictRef, convention, ref, role, units ,fmt)
+    (xf, value, nvalue,  name, id, title, dictRef, convention, ref, role, units ,fmt)
 
-    type(xmlf_t), intent(inout)            :: xf
-    integer, intent(in)                    :: nvalue
-    real(sp) , intent(in)   :: parameter(* )
+    type(xmlf_t), intent(inout)              :: xf
+    integer, intent(in)                      :: nvalue
+    real(sp) , intent(in) :: value(* )
+    character(len=*), intent(in), optional :: name
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
     character(len=*), intent(in), optional :: dictRef
@@ -265,6 +280,7 @@ contains
     character(len=*), intent(in), optional :: fmt
 
     call xml_NewElement(xf, "parameter")
+    if (present(name)) call xml_addAttribute(xf, "name", name)
     if (present(id)) call xml_addAttribute(xf, "id", id)
     if (present(title)) call xml_addAttribute(xf, "title", title)
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
@@ -272,16 +288,17 @@ contains
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(role)) call xml_addAttribute(xf, "role", role)
 
-    call stmAddValue(xf=xf, value=parameter(:nvalue) , units=units ,fmt=fmt )
+    call stmAddValue(xf=xf, value=value(:nvalue) , units=units ,fmt=fmt )
     call xml_EndElement(xf, "parameter")
   end subroutine parameterArrRealSpSi
 
   subroutine parameterArrIntSi &
-    (xf, parameter, nvalue,  id, title, dictRef, convention, ref, role, units )
+    (xf, value, nvalue,  name, id, title, dictRef, convention, ref, role, units )
 
-    type(xmlf_t), intent(inout)            :: xf
-    integer, intent(in)                    :: nvalue
-    integer , intent(in)   :: parameter(* )
+    type(xmlf_t), intent(inout)              :: xf
+    integer, intent(in)                      :: nvalue
+    integer , intent(in) :: value(* )
+    character(len=*), intent(in), optional :: name
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
     character(len=*), intent(in), optional :: dictRef
@@ -292,6 +309,7 @@ contains
     character(len=*), intent(in), optional :: units
 
     call xml_NewElement(xf, "parameter")
+    if (present(name)) call xml_addAttribute(xf, "name", name)
     if (present(id)) call xml_addAttribute(xf, "id", id)
     if (present(title)) call xml_addAttribute(xf, "title", title)
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
@@ -299,16 +317,17 @@ contains
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(role)) call xml_addAttribute(xf, "role", role)
 
-    call stmAddValue(xf=xf, value=parameter(:nvalue) , units=units  )
+    call stmAddValue(xf=xf, value=value(:nvalue) , units=units  )
     call xml_EndElement(xf, "parameter")
   end subroutine parameterArrIntSi
 
   subroutine parameterArrLgSi &
-    (xf, parameter, nvalue,  id, title, dictRef, convention, ref, role, units )
+    (xf, value, nvalue,  name, id, title, dictRef, convention, ref, role, units )
 
-    type(xmlf_t), intent(inout)            :: xf
-    integer, intent(in)                    :: nvalue
-    logical , intent(in)   :: parameter(* )
+    type(xmlf_t), intent(inout)              :: xf
+    integer, intent(in)                      :: nvalue
+    logical , intent(in) :: value(* )
+    character(len=*), intent(in), optional :: name
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
     character(len=*), intent(in), optional :: dictRef
@@ -319,6 +338,7 @@ contains
     character(len=*), intent(in), optional :: units
 
     call xml_NewElement(xf, "parameter")
+    if (present(name)) call xml_addAttribute(xf, "name", name)
     if (present(id)) call xml_addAttribute(xf, "id", id)
     if (present(title)) call xml_addAttribute(xf, "title", title)
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
@@ -326,16 +346,17 @@ contains
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(role)) call xml_addAttribute(xf, "role", role)
 
-    call stmAddValue(xf=xf, value=parameter(:nvalue)   )
+    call stmAddValue(xf=xf, value=value(:nvalue)   )
     call xml_EndElement(xf, "parameter")
   end subroutine parameterArrLgSi
 
   subroutine parameterArrChSi &
-    (xf, parameter, nvalue,  id, title, dictRef, convention, ref, role, units )
+    (xf, value, nvalue,  name, id, title, dictRef, convention, ref, role, units )
 
-    type(xmlf_t), intent(inout)            :: xf
-    integer, intent(in)                    :: nvalue
-    character(len=*) , intent(in)   :: parameter(* )
+    type(xmlf_t), intent(inout)              :: xf
+    integer, intent(in)                      :: nvalue
+    character(len=*) , intent(in) :: value(* )
+    character(len=*), intent(in), optional :: name
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
     character(len=*), intent(in), optional :: dictRef
@@ -346,6 +367,7 @@ contains
     character(len=*), intent(in), optional :: units
 
     call xml_NewElement(xf, "parameter")
+    if (present(name)) call xml_addAttribute(xf, "name", name)
     if (present(id)) call xml_addAttribute(xf, "id", id)
     if (present(title)) call xml_addAttribute(xf, "title", title)
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
@@ -353,16 +375,17 @@ contains
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(role)) call xml_addAttribute(xf, "role", role)
 
-    call stmAddValue(xf=xf, value=parameter(:nvalue) , units=units  )
+    call stmAddValue(xf=xf, value=value(:nvalue) , units=units  )
     call xml_EndElement(xf, "parameter")
   end subroutine parameterArrChSi
 
 
   subroutine parameterArrRealDpSh &
-    (xf, parameter,  id, title, dictRef, convention, ref, role, units ,fmt)
+    (xf, value,  name, id, title, dictRef, convention, ref, role, units ,fmt)
 
-    type(xmlf_t), intent(inout)            :: xf
-    real(dp) , intent(in)   :: parameter(: )
+    type(xmlf_t), intent(inout)              :: xf
+    real(dp) , intent(in) :: value(: )
+    character(len=*), intent(in), optional :: name
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
     character(len=*), intent(in), optional :: dictRef
@@ -374,6 +397,7 @@ contains
     character(len=*), intent(in), optional :: fmt
 
     call xml_NewElement(xf, "parameter")
+    if (present(name)) call xml_addAttribute(xf, "name", name)
     if (present(id)) call xml_addAttribute(xf, "id", id)
     if (present(title)) call xml_addAttribute(xf, "title", title)
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
@@ -381,15 +405,16 @@ contains
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(role)) call xml_addAttribute(xf, "role", role)
 
-    call stmAddValue(xf=xf, value=parameter , units=units ,fmt=fmt )
+    call stmAddValue(xf=xf, value=value , units=units ,fmt=fmt )
     call xml_EndElement(xf, "parameter")
   end subroutine parameterArrRealDpSh
 
   subroutine parameterArrRealSpSh &
-    (xf, parameter,  id, title, dictRef, convention, ref, role, units ,fmt)
+    (xf, value,  name, id, title, dictRef, convention, ref, role, units ,fmt)
 
-    type(xmlf_t), intent(inout)            :: xf
-    real(sp) , intent(in)   :: parameter(: )
+    type(xmlf_t), intent(inout)              :: xf
+    real(sp) , intent(in) :: value(: )
+    character(len=*), intent(in), optional :: name
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
     character(len=*), intent(in), optional :: dictRef
@@ -401,6 +426,7 @@ contains
     character(len=*), intent(in), optional :: fmt
 
     call xml_NewElement(xf, "parameter")
+    if (present(name)) call xml_addAttribute(xf, "name", name)
     if (present(id)) call xml_addAttribute(xf, "id", id)
     if (present(title)) call xml_addAttribute(xf, "title", title)
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
@@ -408,15 +434,16 @@ contains
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(role)) call xml_addAttribute(xf, "role", role)
 
-    call stmAddValue(xf=xf, value=parameter , units=units ,fmt=fmt )
+    call stmAddValue(xf=xf, value=value , units=units ,fmt=fmt )
     call xml_EndElement(xf, "parameter")
   end subroutine parameterArrRealSpSh
 
   subroutine parameterArrIntSh &
-    (xf, parameter,  id, title, dictRef, convention, ref, role, units )
+    (xf, value,  name, id, title, dictRef, convention, ref, role, units )
 
-    type(xmlf_t), intent(inout)            :: xf
-    integer , intent(in)   :: parameter(: )
+    type(xmlf_t), intent(inout)              :: xf
+    integer , intent(in) :: value(: )
+    character(len=*), intent(in), optional :: name
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
     character(len=*), intent(in), optional :: dictRef
@@ -427,6 +454,7 @@ contains
     character(len=*), intent(in), optional :: units
 
     call xml_NewElement(xf, "parameter")
+    if (present(name)) call xml_addAttribute(xf, "name", name)
     if (present(id)) call xml_addAttribute(xf, "id", id)
     if (present(title)) call xml_addAttribute(xf, "title", title)
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
@@ -434,15 +462,16 @@ contains
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(role)) call xml_addAttribute(xf, "role", role)
 
-    call stmAddValue(xf=xf, value=parameter , units=units  )
+    call stmAddValue(xf=xf, value=value , units=units  )
     call xml_EndElement(xf, "parameter")
   end subroutine parameterArrIntSh
 
   subroutine parameterArrLgSh &
-    (xf, parameter,  id, title, dictRef, convention, ref, role, units )
+    (xf, value,  name, id, title, dictRef, convention, ref, role, units )
 
-    type(xmlf_t), intent(inout)            :: xf
-    logical , intent(in)   :: parameter(: )
+    type(xmlf_t), intent(inout)              :: xf
+    logical , intent(in) :: value(: )
+    character(len=*), intent(in), optional :: name
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
     character(len=*), intent(in), optional :: dictRef
@@ -453,6 +482,7 @@ contains
     character(len=*), intent(in), optional :: units
 
     call xml_NewElement(xf, "parameter")
+    if (present(name)) call xml_addAttribute(xf, "name", name)
     if (present(id)) call xml_addAttribute(xf, "id", id)
     if (present(title)) call xml_addAttribute(xf, "title", title)
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
@@ -460,15 +490,16 @@ contains
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(role)) call xml_addAttribute(xf, "role", role)
 
-    call stmAddValue(xf=xf, value=parameter   )
+    call stmAddValue(xf=xf, value=value   )
     call xml_EndElement(xf, "parameter")
   end subroutine parameterArrLgSh
 
   subroutine parameterArrChSh &
-    (xf, parameter,  id, title, dictRef, convention, ref, role, units )
+    (xf, value,  name, id, title, dictRef, convention, ref, role, units )
 
-    type(xmlf_t), intent(inout)            :: xf
-    character(len=*) , intent(in)   :: parameter(: )
+    type(xmlf_t), intent(inout)              :: xf
+    character(len=*) , intent(in) :: value(: )
+    character(len=*), intent(in), optional :: name
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
     character(len=*), intent(in), optional :: dictRef
@@ -479,6 +510,7 @@ contains
     character(len=*), intent(in), optional :: units
 
     call xml_NewElement(xf, "parameter")
+    if (present(name)) call xml_addAttribute(xf, "name", name)
     if (present(id)) call xml_addAttribute(xf, "id", id)
     if (present(title)) call xml_addAttribute(xf, "title", title)
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
@@ -486,17 +518,18 @@ contains
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(role)) call xml_addAttribute(xf, "role", role)
 
-    call stmAddValue(xf=xf, value=parameter , units=units  )
+    call stmAddValue(xf=xf, value=value , units=units  )
     call xml_EndElement(xf, "parameter")
   end subroutine parameterArrChSh
 
 
   subroutine parameterMatRealDpSi &
-    (xf, parameter, nrows, ncols,  id, title, dictRef, convention, ref, role, units ,fmt)
+    (xf, value, nrows, ncols,  name, id, title, dictRef, convention, ref, role, units ,fmt)
 
-    type(xmlf_t), intent(inout)            :: xf
-    integer, intent(in)                    :: nrows, ncols
-    real(dp) , intent(in)   :: parameter(nrows, * )
+    type(xmlf_t), intent(inout)              :: xf
+    integer, intent(in)                      :: nrows, ncols
+    real(dp) , intent(in) :: value(nrows, * )
+    character(len=*), intent(in), optional :: name
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
     character(len=*), intent(in), optional :: dictRef
@@ -508,6 +541,7 @@ contains
     character(len=*), intent(in), optional :: fmt
 
     call xml_NewElement(xf, "parameter")
+    if (present(name)) call xml_addAttribute(xf, "name", name)
     if (present(id)) call xml_addAttribute(xf, "id", id)
     if (present(title)) call xml_addAttribute(xf, "title", title)
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
@@ -515,16 +549,17 @@ contains
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(role)) call xml_addAttribute(xf, "role", role)
 
-    call stmAddValue(xf=xf, value=parameter(:nrows,:ncols) , units=units , fmt=fmt )
+    call stmAddValue(xf=xf, value=value(:nrows,:ncols) , units=units , fmt=fmt )
     call xml_EndElement(xf, "parameter")
   end subroutine parameterMatRealDpSi
 
   subroutine parameterMatRealSpSi &
-    (xf, parameter, nrows, ncols,  id, title, dictRef, convention, ref, role, units ,fmt)
+    (xf, value, nrows, ncols,  name, id, title, dictRef, convention, ref, role, units ,fmt)
 
-    type(xmlf_t), intent(inout)            :: xf
-    integer, intent(in)                    :: nrows, ncols
-    real(sp) , intent(in)   :: parameter(nrows, * )
+    type(xmlf_t), intent(inout)              :: xf
+    integer, intent(in)                      :: nrows, ncols
+    real(sp) , intent(in) :: value(nrows, * )
+    character(len=*), intent(in), optional :: name
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
     character(len=*), intent(in), optional :: dictRef
@@ -536,6 +571,7 @@ contains
     character(len=*), intent(in), optional :: fmt
 
     call xml_NewElement(xf, "parameter")
+    if (present(name)) call xml_addAttribute(xf, "name", name)
     if (present(id)) call xml_addAttribute(xf, "id", id)
     if (present(title)) call xml_addAttribute(xf, "title", title)
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
@@ -543,16 +579,17 @@ contains
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(role)) call xml_addAttribute(xf, "role", role)
 
-    call stmAddValue(xf=xf, value=parameter(:nrows,:ncols) , units=units , fmt=fmt )
+    call stmAddValue(xf=xf, value=value(:nrows,:ncols) , units=units , fmt=fmt )
     call xml_EndElement(xf, "parameter")
   end subroutine parameterMatRealSpSi
 
   subroutine parameterMatIntSi &
-    (xf, parameter, nrows, ncols,  id, title, dictRef, convention, ref, role, units )
+    (xf, value, nrows, ncols,  name, id, title, dictRef, convention, ref, role, units )
 
-    type(xmlf_t), intent(inout)            :: xf
-    integer, intent(in)                    :: nrows, ncols
-    integer , intent(in)   :: parameter(nrows, * )
+    type(xmlf_t), intent(inout)              :: xf
+    integer, intent(in)                      :: nrows, ncols
+    integer , intent(in) :: value(nrows, * )
+    character(len=*), intent(in), optional :: name
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
     character(len=*), intent(in), optional :: dictRef
@@ -563,6 +600,7 @@ contains
     character(len=*), intent(in), optional :: units
 
     call xml_NewElement(xf, "parameter")
+    if (present(name)) call xml_addAttribute(xf, "name", name)
     if (present(id)) call xml_addAttribute(xf, "id", id)
     if (present(title)) call xml_addAttribute(xf, "title", title)
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
@@ -570,16 +608,17 @@ contains
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(role)) call xml_addAttribute(xf, "role", role)
 
-    call stmAddValue(xf=xf, value=parameter(:nrows,:ncols) , units=units  )
+    call stmAddValue(xf=xf, value=value(:nrows,:ncols) , units=units  )
     call xml_EndElement(xf, "parameter")
   end subroutine parameterMatIntSi
 
   subroutine parameterMatLgSi &
-    (xf, parameter, nrows, ncols,  id, title, dictRef, convention, ref, role, units )
+    (xf, value, nrows, ncols,  name, id, title, dictRef, convention, ref, role, units )
 
-    type(xmlf_t), intent(inout)            :: xf
-    integer, intent(in)                    :: nrows, ncols
-    logical , intent(in)   :: parameter(nrows, * )
+    type(xmlf_t), intent(inout)              :: xf
+    integer, intent(in)                      :: nrows, ncols
+    logical , intent(in) :: value(nrows, * )
+    character(len=*), intent(in), optional :: name
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
     character(len=*), intent(in), optional :: dictRef
@@ -590,6 +629,7 @@ contains
     character(len=*), intent(in), optional :: units
 
     call xml_NewElement(xf, "parameter")
+    if (present(name)) call xml_addAttribute(xf, "name", name)
     if (present(id)) call xml_addAttribute(xf, "id", id)
     if (present(title)) call xml_addAttribute(xf, "title", title)
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
@@ -597,16 +637,17 @@ contains
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(role)) call xml_addAttribute(xf, "role", role)
 
-    call stmAddValue(xf=xf, value=parameter(:nrows,:ncols)   )
+    call stmAddValue(xf=xf, value=value(:nrows,:ncols)   )
     call xml_EndElement(xf, "parameter")
   end subroutine parameterMatLgSi
 
   subroutine parameterMatChSi &
-    (xf, parameter, nrows, ncols,  id, title, dictRef, convention, ref, role, units )
+    (xf, value, nrows, ncols,  name, id, title, dictRef, convention, ref, role, units )
 
-    type(xmlf_t), intent(inout)            :: xf
-    integer, intent(in)                    :: nrows, ncols
-    character(len=*) , intent(in)   :: parameter(nrows, * )
+    type(xmlf_t), intent(inout)              :: xf
+    integer, intent(in)                      :: nrows, ncols
+    character(len=*) , intent(in) :: value(nrows, * )
+    character(len=*), intent(in), optional :: name
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
     character(len=*), intent(in), optional :: dictRef
@@ -617,6 +658,7 @@ contains
     character(len=*), intent(in), optional :: units
 
     call xml_NewElement(xf, "parameter")
+    if (present(name)) call xml_addAttribute(xf, "name", name)
     if (present(id)) call xml_addAttribute(xf, "id", id)
     if (present(title)) call xml_addAttribute(xf, "title", title)
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
@@ -624,16 +666,17 @@ contains
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(role)) call xml_addAttribute(xf, "role", role)
 
-    call stmAddValue(xf=xf, value=parameter(:nrows,:ncols) , units=units  )
+    call stmAddValue(xf=xf, value=value(:nrows,:ncols) , units=units  )
     call xml_EndElement(xf, "parameter")
   end subroutine parameterMatChSi
 
 
   subroutine parameterMatRealDpSh &
-    (xf, parameter,  id, title, dictRef, convention, ref, role, units ,fmt)
+    (xf, value,  name, id, title, dictRef, convention, ref, role, units ,fmt)
 
-    type(xmlf_t), intent(inout)            :: xf
-    real(dp) , intent(in)   :: parameter(:, : )
+    type(xmlf_t), intent(inout)              :: xf
+    real(dp) , intent(in) :: value(:, : )
+    character(len=*), intent(in), optional :: name
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
     character(len=*), intent(in), optional :: dictRef
@@ -645,6 +688,7 @@ contains
     character(len=*), intent(in), optional :: fmt
 
     call xml_NewElement(xf, "parameter")
+    if (present(name)) call xml_addAttribute(xf, "name", name)
     if (present(id)) call xml_addAttribute(xf, "id", id)
     if (present(title)) call xml_addAttribute(xf, "title", title)
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
@@ -652,15 +696,16 @@ contains
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(role)) call xml_addAttribute(xf, "role", role)
 
-    call stmAddValue(xf=xf, value=parameter , units=units , fmt=fmt )
+    call stmAddValue(xf=xf, value=value , units=units , fmt=fmt )
     call xml_EndElement(xf, "parameter")
   end subroutine parameterMatRealDpSh
 
   subroutine parameterMatRealSpSh &
-    (xf, parameter,  id, title, dictRef, convention, ref, role, units ,fmt)
+    (xf, value,  name, id, title, dictRef, convention, ref, role, units ,fmt)
 
-    type(xmlf_t), intent(inout)            :: xf
-    real(sp) , intent(in)   :: parameter(:, : )
+    type(xmlf_t), intent(inout)              :: xf
+    real(sp) , intent(in) :: value(:, : )
+    character(len=*), intent(in), optional :: name
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
     character(len=*), intent(in), optional :: dictRef
@@ -672,6 +717,7 @@ contains
     character(len=*), intent(in), optional :: fmt
 
     call xml_NewElement(xf, "parameter")
+    if (present(name)) call xml_addAttribute(xf, "name", name)
     if (present(id)) call xml_addAttribute(xf, "id", id)
     if (present(title)) call xml_addAttribute(xf, "title", title)
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
@@ -679,15 +725,16 @@ contains
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(role)) call xml_addAttribute(xf, "role", role)
 
-    call stmAddValue(xf=xf, value=parameter , units=units , fmt=fmt )
+    call stmAddValue(xf=xf, value=value , units=units , fmt=fmt )
     call xml_EndElement(xf, "parameter")
   end subroutine parameterMatRealSpSh
 
   subroutine parameterMatIntSh &
-    (xf, parameter,  id, title, dictRef, convention, ref, role, units )
+    (xf, value,  name, id, title, dictRef, convention, ref, role, units )
 
-    type(xmlf_t), intent(inout)            :: xf
-    integer , intent(in)   :: parameter(:, : )
+    type(xmlf_t), intent(inout)              :: xf
+    integer , intent(in) :: value(:, : )
+    character(len=*), intent(in), optional :: name
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
     character(len=*), intent(in), optional :: dictRef
@@ -698,6 +745,7 @@ contains
     character(len=*), intent(in), optional :: units
 
     call xml_NewElement(xf, "parameter")
+    if (present(name)) call xml_addAttribute(xf, "name", name)
     if (present(id)) call xml_addAttribute(xf, "id", id)
     if (present(title)) call xml_addAttribute(xf, "title", title)
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
@@ -705,15 +753,16 @@ contains
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(role)) call xml_addAttribute(xf, "role", role)
 
-    call stmAddValue(xf=xf, value=parameter , units=units  )
+    call stmAddValue(xf=xf, value=value , units=units  )
     call xml_EndElement(xf, "parameter")
   end subroutine parameterMatIntSh
 
   subroutine parameterMatLgSh &
-    (xf, parameter,  id, title, dictRef, convention, ref, role, units )
+    (xf, value,  name, id, title, dictRef, convention, ref, role, units )
 
-    type(xmlf_t), intent(inout)            :: xf
-    logical , intent(in)   :: parameter(:, : )
+    type(xmlf_t), intent(inout)              :: xf
+    logical , intent(in) :: value(:, : )
+    character(len=*), intent(in), optional :: name
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
     character(len=*), intent(in), optional :: dictRef
@@ -724,6 +773,7 @@ contains
     character(len=*), intent(in), optional :: units
 
     call xml_NewElement(xf, "parameter")
+    if (present(name)) call xml_addAttribute(xf, "name", name)
     if (present(id)) call xml_addAttribute(xf, "id", id)
     if (present(title)) call xml_addAttribute(xf, "title", title)
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
@@ -731,15 +781,16 @@ contains
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(role)) call xml_addAttribute(xf, "role", role)
 
-    call stmAddValue(xf=xf, value=parameter   )
+    call stmAddValue(xf=xf, value=value   )
     call xml_EndElement(xf, "parameter")
   end subroutine parameterMatLgSh
 
   subroutine parameterMatChSh &
-    (xf, parameter,  id, title, dictRef, convention, ref, role, units )
+    (xf, value,  name, id, title, dictRef, convention, ref, role, units )
 
-    type(xmlf_t), intent(inout)            :: xf
-    character(len=*) , intent(in)   :: parameter(:, : )
+    type(xmlf_t), intent(inout)              :: xf
+    character(len=*) , intent(in) :: value(:, : )
+    character(len=*), intent(in), optional :: name
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
     character(len=*), intent(in), optional :: dictRef
@@ -750,6 +801,7 @@ contains
     character(len=*), intent(in), optional :: units
 
     call xml_NewElement(xf, "parameter")
+    if (present(name)) call xml_addAttribute(xf, "name", name)
     if (present(id)) call xml_addAttribute(xf, "id", id)
     if (present(title)) call xml_addAttribute(xf, "title", title)
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
@@ -757,7 +809,7 @@ contains
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(role)) call xml_addAttribute(xf, "role", role)
 
-    call stmAddValue(xf=xf, value=parameter , units=units  )
+    call stmAddValue(xf=xf, value=value , units=units  )
     call xml_EndElement(xf, "parameter")
   end subroutine parameterMatChSh
 
