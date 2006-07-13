@@ -1,13 +1,17 @@
 module m_wxml_core
 
   use FoX_common, only: FoX_version
+  use m_common_attrs
   use m_common_array_str, only: assign_array_to_str
   use m_common_array_str, only: assign_str_to_array
+  use m_common_buffer
   use m_common_elstack
   use m_common_error, only: FoX_warning_base, FoX_error_base, FoX_fatal_base
-  use m_common_io, only : get_unit
-  use m_common_buffer
-  use m_common_attrs
+  use m_common_io, only: get_unit
+  use m_common_namespaces, only: namespaceDictionary
+  use m_common_namespaces, only: initnamespaceDictionary, destroynamespaceDictionary
+  use m_common_namespaces, only: addDefaultNS, addPrefixedNS
+  use m_common_namespaces, only: checkEndNamespaces
   use m_wxml_escape, only: check_Name, escape_string, escape_string_len
   use m_wxml_text, only: str
 
@@ -16,8 +20,8 @@ module m_wxml_core
   implicit none
   private
 
-  logical, parameter  :: pcdata_advance_line_default = .false.
-  logical, parameter  :: pcdata_advance_space_default = .false.
+  logical, parameter :: pcdata_advance_line_default = .false.
+  logical, parameter :: pcdata_advance_space_default = .false.
 
   integer, parameter ::  sp = selected_real_kind(6,30)
   integer, parameter ::  dp = selected_real_kind(14,100)
@@ -43,14 +47,15 @@ module m_wxml_core
 
 
   type xmlf_t
-    character, pointer      :: filename(:)
-    integer                 :: lun
-    type(buffer_t)          :: buffer
-    type(elstack_t)         :: stack
-    type(dictionary_t)      :: dict
-    integer                 :: state_1
-    integer                 :: state_2
-    logical                 :: indenting_requested
+    character, pointer        :: filename(:)
+    integer                   :: lun
+    type(buffer_t)            :: buffer
+    type(elstack_t)           :: stack
+    type(dictionary_t)        :: dict
+    integer                   :: state_1
+    integer                   :: state_2
+    logical                   :: indenting_requested
+    type(namespaceDictionary) :: nsDict
   end type xmlf_t
 
   public :: xmlf_t
@@ -167,6 +172,8 @@ endif
 if (decl) then
   call xml_AddXMLDeclaration(xf,encoding='UTF-8')
 endif
+
+call initNamespaceDictionary(xf%nsDict)
 
 end subroutine xml_OpenFile
 
@@ -440,10 +447,30 @@ subroutine xml_EndElement(xf,name)
   case default
     call wxml_error("Cannot close element here")
   end select
-  xf%state_2 = WXML_STATE_2_OUTSIDE_TAG
+
+  call checkEndNamespaces(xf%nsDict, len(xf%stack))
+
+  xf%state_2 = WXML_STATE_2_OUTSIDE_TAGo
 
 end subroutine xml_EndElement
 
+
+subroutine xml_addNamespace(xf, nsURI, prefix)
+  type(xmlf_t), intent(inout)   :: xf
+  character(len=*), intent(in) :: nsURI
+  character(len=*), intent(in), optional :: prefix
+
+    if (xf%state_2 /= WXML_STATE_2_INSIDE_ELEMENT) &
+    call wxml_error(xf, "adding namespace outside element content")
+
+  if (present(prefix)) then
+    call addPrefixedNS(xf%nsDict, prefix, nsURI, len(fx%stack))
+    call xmlAddAttribute(xf, 'xmlns:'//prefix, nsURI)
+  else
+    call addDefaultNS(xf%nsDict, nsURI, len(fx%stack)
+    call xmlAddAttribute(xf, 'xmlns', nsURI)
+  endif
+  
 
 subroutine xml_Close(xf)
 type(xmlf_t), intent(inout)   :: xf
@@ -461,6 +488,8 @@ type(xmlf_t), intent(inout)   :: xf
 
   call destroy_dict(xf%dict)
   call destroy_elstack(xf%stack)
+
+  call destroyNamespaceDictionary(xf%nsDict)
 
   deallocate(xf%filename)
 
