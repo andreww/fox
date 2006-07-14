@@ -7,11 +7,12 @@ module m_wxml_core
   use m_common_elstack
   use m_common_error, only: FoX_warning_base, FoX_error_base, FoX_fatal_base
   use m_common_io, only: get_unit
+  use m_common_namecheck, only: checkEncName, checkName, checkPITarget, checkPubId
   use m_common_namespaces, only: namespaceDictionary, getnamespaceURI
   use m_common_namespaces, only: initnamespaceDictionary, destroynamespaceDictionary
   use m_common_namespaces, only: addDefaultNS, addPrefixedNS
   use m_common_namespaces, only: checkNamespacesWriting, checkEndNamespaces
-  use m_wxml_escape, only: check_Name, escape_string, escape_string_len
+  use m_wxml_escape, only: escape_string, escape_string_len
   use m_wxml_text, only: str
 
   use pxf, only: pxfabort
@@ -181,27 +182,30 @@ call initNamespaceDictionary(xf%nsDict)
 end subroutine xml_OpenFile
 
 
-subroutine xml_AddXMLDeclaration(xf, encoding, standalone)
-  type(xmlf_t), intent(inout)   :: xf
-  character(len=*), intent(in), optional :: encoding
-  logical, intent(in), optional :: standalone
-
-  if (xf%state_1 /= WXML_STATE_1_JUST_OPENED) &
-    call wxml_error("Tried to put XML declaration in wrong place")
-
-  call xml_AddXMLPI(xf, "xml")
-  call xml_AddPseudoAttribute(xf, "version", "1.0")
-  if (present(encoding)) &
-    call xml_AddPseudoAttribute(xf, "encoding", encoding)
-  if (present(standalone)) then
-    if (standalone) then
-      call xml_AddPseudoAttribute(xf, "standalone", "yes")
-    else
-      call xml_AddPseudoAttribute(xf, "standalone", "no")
+  subroutine xml_AddXMLDeclaration(xf, encoding, standalone)
+    type(xmlf_t), intent(inout)   :: xf
+    character(len=*), intent(in), optional :: encoding
+    logical, intent(in), optional :: standalone
+    
+    if (xf%state_1 /= WXML_STATE_1_JUST_OPENED) &
+         call wxml_error("Tried to put XML declaration in wrong place")
+    
+    call xml_AddXMLPI(xf, "xml", cheat=.true.)
+    call xml_AddPseudoAttribute(xf, "version", "1.0")
+    if (present(encoding)) then
+      if (.not.checkEncName(encoding)) &
+           call wxml_error("Invalid encoding name")
+      call xml_AddPseudoAttribute(xf, "encoding", encoding)
     endif
-  endif
-  xf%state_1 = WXML_STATE_1_BEFORE_ROOT
-end subroutine xml_AddXMLDeclaration
+    if (present(standalone)) then
+      if (standalone) then
+        call xml_AddPseudoAttribute(xf, "standalone", "yes")
+      else
+        call xml_AddPseudoAttribute(xf, "standalone", "no")
+      endif
+    endif
+    xf%state_1 = WXML_STATE_1_BEFORE_ROOT
+  end subroutine xml_AddXMLDeclaration
 
 
   subroutine xml_AddDOCTYPE(xf, name, system, public)
@@ -213,6 +217,9 @@ end subroutine xml_AddXMLDeclaration
     
     if (xf%state_1 /= WXML_STATE_1_BEFORE_ROOT) &
          call wxml_error("Tried to put XML DOCTYPE in wrong place")
+
+    if (.not.checkName(name)) &
+         call wxml_error("Invalid Name in DTD")
     
     call add_eol(xf)
     call add_to_buffer("<!DOCTYPE "//name, xf%buffer)
@@ -221,135 +228,149 @@ end subroutine xml_AddXMLDeclaration
     allocate(xf%name(len(name)))
     xf%name = vs_str(name)
 
-    if (present(system).and..not.present(public)) then
-      call add_to_buffer(' SYSTEM "'//system//'"', xf%buffer)
-    elseif (present(system).and.present(public)) then
-      call add_to_buffer(' PUBLIC "'//public//'" SYSTEM "'//system//'"', xf%buffer)
-    elseif (.not.present(system).and.present(PUBLIC)) then
+    if (present(system)) then
+      if (present(public)) then
+        if (.not.checkPubId(public)) &
+          call wxml_error("Invalid PUBLIC ID")
+        if (scan(public, "'") /= 0) then
+          call add_to_buffer(' PUBLIC "'//public//'"', xf%buffer)
+        else
+          call add_to_buffer(" PUBLIC '"//public//"'", xf%buffer)
+        endif
+      endif
+      if (scan(system, "'") /= 0) then
+        call add_to_buffer(' SYSTEM "'//system//'"', xf%buffer)
+      else
+        call add_to_buffer(" SYSTEM '"//system//"'", xf%buffer)
+      endif
+    elseif (present(public)) then
       call wxml_error("wxml:DOCTYPE: PUBLIC supplied without SYSTEM")
     endif
-    
+
     call add_to_buffer(">", xf%buffer)
   end subroutine xml_AddDOCTYPE
       
 
-subroutine xml_AddXMLStylesheet(xf, href, type, title, media, charset, alternate)
-  type(xmlf_t), intent(inout)   :: xf
-  character(len=*), intent(in) :: href
-  character(len=*), intent(in) :: type
-  character(len=*), intent(in), optional :: title
-  character(len=*), intent(in), optional :: media
-  character(len=*), intent(in), optional :: charset
-  logical,          intent(in), optional :: alternate
-
-  call close_start_tag(xf)
-
-  call xml_AddXMLPI(xf, 'xml-stylesheet')
-  call xml_AddPseudoAttribute(xf, 'href', href)
-  call xml_AddPseudoAttribute(xf, 'type', type)
-
-  if (present(title)) call xml_AddPseudoAttribute(xf, 'title', title)
-  if (present(media)) call xml_AddPseudoAttribute(xf, 'media', media)
-  if (present(charset)) call xml_AddPseudoAttribute(xf, 'charset', charset)
-  if (present(alternate)) then
-    if (alternate) then
-      call xml_AddPseudoAttribute(xf, 'alternate', 'yes')
-    else
-      call xml_AddPseudoAttribute(xf, 'alternate', 'no')
+  subroutine xml_AddXMLStylesheet(xf, href, type, title, media, charset, alternate)
+    type(xmlf_t), intent(inout)   :: xf
+    character(len=*), intent(in) :: href
+    character(len=*), intent(in) :: type
+    character(len=*), intent(in), optional :: title
+    character(len=*), intent(in), optional :: media
+    character(len=*), intent(in), optional :: charset
+    logical,          intent(in), optional :: alternate
+    
+    call close_start_tag(xf)
+    
+    call xml_AddXMLPI(xf, 'xml-stylesheet', cheat=.true.)
+    call xml_AddPseudoAttribute(xf, 'href', href)
+    call xml_AddPseudoAttribute(xf, 'type', type)
+    
+    if (present(title)) call xml_AddPseudoAttribute(xf, 'title', title)
+    if (present(media)) call xml_AddPseudoAttribute(xf, 'media', media)
+    if (present(charset)) call xml_AddPseudoAttribute(xf, 'charset', charset)
+    if (present(alternate)) then
+      if (alternate) then
+        call xml_AddPseudoAttribute(xf, 'alternate', 'yes')
+      else
+        call xml_AddPseudoAttribute(xf, 'alternate', 'no')
+      endif
     endif
-  endif
-  if (xf%state_1 == WXML_STATE_1_JUST_OPENED) &
-    xf%state_1 = WXML_STATE_1_BEFORE_ROOT 
-  xf%state_2 = WXML_STATE_2_INSIDE_PI
-
-end subroutine xml_AddXMLStylesheet
-
-
-subroutine xml_AddXMLPI(xf, name, data)
-  type(xmlf_t), intent(inout)            :: xf
-  character(len=*), intent(in)           :: name
-  character(len=*), intent(in), optional :: data
-
-  call close_start_tag(xf)
-  if (xf%state_1 == WXML_STATE_1_JUST_OPENED) then
-    xf%state_1 = WXML_STATE_1_BEFORE_ROOT
-  else
-    call add_eol(xf)
-  endif
-
-  call add_to_buffer("<?" // name, xf%buffer)
-  if (present(data)) then
-    if (index(data, '?>') > 0) &
-      call wxml_error("Tried to output invalid PI data")
-    call add_to_buffer(' '//data//'?>', xf%buffer)
-! state_2 is now OUTSIDE_TAG from close_start_tag
-  else
+    if (xf%state_1 == WXML_STATE_1_JUST_OPENED) &
+         xf%state_1 = WXML_STATE_1_BEFORE_ROOT 
     xf%state_2 = WXML_STATE_2_INSIDE_PI
-    call reset_dict(xf%dict)
-  endif
+    
+  end subroutine xml_AddXMLStylesheet
+  
 
-end subroutine xml_AddXMLPI
-
-
-subroutine xml_AddComment(xf,comment)
-  type(xmlf_t), intent(inout)   :: xf
-  character(len=*), intent(in)  :: comment
-
-  if (index(comment,'--') > 0 .or. comment(len(comment):) == '-') &
-    call wxml_error("Tried to output invalid comment")
-
-  call close_start_tag(xf)
-  call add_eol(xf)
-  call add_to_buffer("<!--", xf%buffer)
-  call add_to_buffer(comment, xf%buffer)
-  call add_to_buffer("-->", xf%buffer)
-  if (xf%state_1 == WXML_STATE_1_JUST_OPENED) &
-    xf%state_1 = WXML_STATE_1_BEFORE_ROOT
-
-end subroutine xml_AddComment
-
-
-subroutine xml_NewElement(xf, name, nsPrefix)
-type(xmlf_t), intent(inout)   :: xf
-character(len=*), intent(in)  :: name
-character(len=*), intent(in), optional  :: nsPrefix
-
-  select case (xf%state_1)
-  case (WXML_STATE_1_JUST_OPENED, WXML_STATE_1_BEFORE_ROOT)
-    xf%state_1 = WXML_STATE_1_DURING_ROOT
-    if (size(xf%name) > 0) then
-      if (str_vs(xf%name) /= name) & 
-           call wxml_error(xf, "Root element name does not match DTD")
+  subroutine xml_AddXMLPI(xf, name, data, cheat)
+    type(xmlf_t), intent(inout)            :: xf
+    character(len=*), intent(in)           :: name
+    character(len=*), intent(in), optional :: data
+    logical, optional :: cheat
+    
+    call close_start_tag(xf)
+    if (xf%state_1 == WXML_STATE_1_JUST_OPENED) then
+      xf%state_1 = WXML_STATE_1_BEFORE_ROOT
+    else
+      call add_eol(xf)
     endif
-  case (WXML_STATE_1_DURING_ROOT)
-    continue
-  case (WXML_STATE_1_AFTER_ROOT)
-    call wxml_error(xf, "Two root elements")
-  end select 
 
-  if (.not.check_Name(name)) then
-    call wxml_warning(xf, 'attribute name '//name//' is not valid')
-  endif
+    if (.not.present(cheat) .and. .not.checkPITarget(name)) &
+         call wxml_warning(xf, "Invalid PI Target")
+    call add_to_buffer("<?" // name, xf%buffer)
+    if (present(data)) then
+      if (index(data, '?>') > 0) &
+           call wxml_error(xf, "Tried to output invalid PI data")
+      call add_to_buffer(' '//data//'?>', xf%buffer)
+      ! state_2 is now OUTSIDE_TAG from close_start_tag
+    else
+      xf%state_2 = WXML_STATE_2_INSIDE_PI
+      call reset_dict(xf%dict)
+    endif
 
-  if (present(nsPrefix)) then
-    if (len(getnamespaceURI(xf%nsDict,vs_str(nsPrefix))) == 0) &
-      call wxml_error(xf, "namespace prefix not registered")
-  endif
+  end subroutine xml_AddXMLPI
 
-  call close_start_tag(xf)
-  call add_eol(xf)
-  if (present(nsPrefix)) then
-    call push_elstack(nsPrefix//":"//name,xf%stack)
-    call add_to_buffer("<"//nsPrefix//":"//name, xf%buffer)
-  else
-    call push_elstack(name,xf%stack)
-    call add_to_buffer("<"//name, xf%buffer)
-  endif
-  xf%state_2 = WXML_STATE_2_INSIDE_ELEMENT
-  call reset_dict(xf%dict)
 
-end subroutine xml_NewElement
+  subroutine xml_AddComment(xf,comment)
+    type(xmlf_t), intent(inout)   :: xf
+    character(len=*), intent(in)  :: comment
+    
+    if (index(comment,'--') > 0 .or. comment(len(comment):) == '-') &
+         call wxml_error("Tried to output invalid comment")
+    
+    call close_start_tag(xf)
+    call add_eol(xf)
+    call add_to_buffer("<!--", xf%buffer)
+    call add_to_buffer(comment, xf%buffer)
+    call add_to_buffer("-->", xf%buffer)
+    if (xf%state_1 == WXML_STATE_1_JUST_OPENED) &
+         xf%state_1 = WXML_STATE_1_BEFORE_ROOT
+    
+  end subroutine xml_AddComment
 
+
+  subroutine xml_NewElement(xf, name, nsPrefix)
+    type(xmlf_t), intent(inout)   :: xf
+    character(len=*), intent(in)  :: name
+    character(len=*), intent(in), optional  :: nsPrefix
+    
+    select case (xf%state_1)
+    case (WXML_STATE_1_JUST_OPENED, WXML_STATE_1_BEFORE_ROOT)
+      xf%state_1 = WXML_STATE_1_DURING_ROOT
+      if (size(xf%name) > 0) then
+        if (str_vs(xf%name) /= name) & 
+             call wxml_error(xf, "Root element name does not match DTD")
+      endif
+    case (WXML_STATE_1_DURING_ROOT)
+      continue
+    case (WXML_STATE_1_AFTER_ROOT)
+      call wxml_error(xf, "Two root elements")
+    end select
+    
+    if (.not.checkName(name)) then
+      call wxml_error(xf, 'attribute name '//name//' is not valid')
+    endif
+    
+    if (present(nsPrefix)) then
+      if (len(getnamespaceURI(xf%nsDict,vs_str(nsPrefix))) == 0) &
+           call wxml_error(xf, "namespace prefix not registered")
+    endif
+    
+    call close_start_tag(xf)
+    call add_eol(xf)
+    if (present(nsPrefix)) then
+      call push_elstack(nsPrefix//":"//name,xf%stack)
+      call add_to_buffer("<"//nsPrefix//":"//name, xf%buffer)
+    else
+      call push_elstack(name,xf%stack)
+      call add_to_buffer("<"//name, xf%buffer)
+    endif
+    xf%state_2 = WXML_STATE_2_INSIDE_ELEMENT
+    call reset_dict(xf%dict)
+    
+  end subroutine xml_NewElement
+  
 
 subroutine xml_AddTextSection(xf, chars, parsed)
   type(xmlf_t), intent(inout)   :: xf
