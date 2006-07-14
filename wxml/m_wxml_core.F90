@@ -339,8 +339,13 @@ end subroutine xml_OpenFile
     case (WXML_STATE_1_JUST_OPENED, WXML_STATE_1_BEFORE_ROOT)
       xf%state_1 = WXML_STATE_1_DURING_ROOT
       if (size(xf%name) > 0) then
-        if (str_vs(xf%name) /= name) & 
-             call wxml_error(xf, "Root element name does not match DTD")
+        if (present(nsPrefix)) then
+          if (str_vs(xf%name) /= nsPrefix//":"//name) & 
+               call wxml_error(xf, "Root element name does not match DTD")
+        else
+          if (str_vs(xf%name) /= name) & 
+               call wxml_error(xf, "Root element name does not match DTD")
+        endif
       endif
     case (WXML_STATE_1_DURING_ROOT)
       continue
@@ -457,7 +462,7 @@ end subroutine xml_OpenFile
     if (has_key(xf%dict,name)) &
          call wxml_error(xf, "duplicate att name")
     
-    if (.not.check_Name(name)) &
+    if (.not.checkName(name)) &
          call wxml_error(xf, "invalid attribute name")
 
     if (present(nsPrefix)) then
@@ -473,114 +478,114 @@ end subroutine xml_OpenFile
   end subroutine xml_AddAttribute_Ch
 
 
-subroutine xml_AddPseudoAttribute_Ch(xf, name, value)
-  type(xmlf_t), intent(inout)   :: xf
-  character(len=*), intent(in)  :: name
-  character(len=*), intent(in)  :: value
+  subroutine xml_AddPseudoAttribute_Ch(xf, name, value)
+    type(xmlf_t), intent(inout)   :: xf
+    character(len=*), intent(in)  :: name
+    character(len=*), intent(in)  :: value
 
-  if (xf%state_2 /= WXML_STATE_2_INSIDE_PI) &
-     call wxml_fatal("PI pseudo-attribute outside PI")
+    if (xf%state_2 /= WXML_STATE_2_INSIDE_PI) &
+         call wxml_fatal("PI pseudo-attribute outside PI")
+    
+    if (has_key(xf%dict,name)) &
+         call wxml_error(xf, "duplicate PI pseudo-attribute name")
+    
+    call add_item_to_dict(xf%dict, name, value)
+    
+  end subroutine xml_AddPseudoAttribute_Ch
 
-  if (has_key(xf%dict,name)) &
-     call wxml_error(xf, "duplicate PI pseudo-attribute name")
+
+  subroutine xml_AddArray_Ch(xf, array)
+    type(xmlf_t), intent(inout) :: xf
+    character(len=*), dimension(:), intent(in) :: array
+    
+    integer :: i,n
+    !If appropriate
+    
+    n = size(array)
+    do i = 1, n-1
+      call add_to_buffer(array(i)//' ', xf%buffer)
+    enddo
+    call add_to_buffer(array(n), xf%buffer)
+    
+  end subroutine xml_AddArray_Ch
   
-  call add_item_to_dict(xf%dict, name, value)
 
-end subroutine xml_AddPseudoAttribute_Ch
-
-
-subroutine xml_AddArray_Ch(xf, array)
-  type(xmlf_t), intent(inout) :: xf
-  character(len=*), dimension(:), intent(in) :: array
-
-  integer :: i,n
-  !If appropriate
-
-  n = size(array)
-  do i = 1, n-1
-    call add_to_buffer(array(i)//' ', xf%buffer)
-  enddo
-  call add_to_buffer(array(n), xf%buffer)
-
-end subroutine xml_AddArray_Ch  
-
-
-subroutine xml_EndElement(xf, name, prefix)
-  type(xmlf_t), intent(inout)             :: xf
-  character(len=*), intent(in)            :: name
-  character(len=*), intent(in), optional  :: prefix
-
-  if (present(prefix)) then
-    if (get_top_elstack(xf%stack) /= prefix//":"//name) &
-         call wxml_fatal(xf, 'Trying to close '//prefix//":"//name//' but '//get_top_elstack(xf%stack)//' is open.') 
-  else
-    if (get_top_elstack(xf%stack) /= name) &
-         call wxml_fatal(xf, 'Trying to close '//name//' but '//get_top_elstack(xf%stack)//' is open.') 
-  endif
-
-  select case (xf%state_2)
-  case (WXML_STATE_2_INSIDE_ELEMENT)
-    call checkNamespacesWriting(xf%dict, xf%nsDict, len(xf%stack))
-    if (len(xf%dict) > 0) call write_attributes(xf)
-    call add_to_buffer("/>",xf%buffer)
-    call devnull(pop_elstack(xf%stack))
-  case (WXML_STATE_2_OUTSIDE_TAG)
-    call add_eol(xf)
-    call add_to_buffer("</" //pop_elstack(xf%stack)// ">", xf%buffer)
-  case default
-    call wxml_error("Cannot close element here")
-  end select
-
-  call checkEndNamespaces(xf%nsDict, len(xf%stack)+1)
-
-  if (is_empty(xf%stack)) then
-    xf%state_1 = WXML_STATE_1_AFTER_ROOT
-  endif
-  xf%state_2 = WXML_STATE_2_OUTSIDE_TAG
-
-end subroutine xml_EndElement
+  subroutine xml_EndElement(xf, name, prefix)
+    type(xmlf_t), intent(inout)             :: xf
+    character(len=*), intent(in)            :: name
+    character(len=*), intent(in), optional  :: prefix
+    
+    if (present(prefix)) then
+      if (get_top_elstack(xf%stack) /= prefix//":"//name) &
+           call wxml_fatal(xf, 'Trying to close '//prefix//":"//name//' but '//get_top_elstack(xf%stack)//' is open.') 
+    else
+      if (get_top_elstack(xf%stack) /= name) &
+           call wxml_fatal(xf, 'Trying to close '//name//' but '//get_top_elstack(xf%stack)//' is open.') 
+    endif
+    
+    select case (xf%state_2)
+    case (WXML_STATE_2_INSIDE_ELEMENT)
+      call checkNamespacesWriting(xf%dict, xf%nsDict, len(xf%stack))
+      if (len(xf%dict) > 0) call write_attributes(xf)
+      call add_to_buffer("/>",xf%buffer)
+      call devnull(pop_elstack(xf%stack))
+    case (WXML_STATE_2_OUTSIDE_TAG)
+      call add_eol(xf)
+      call add_to_buffer("</" //pop_elstack(xf%stack)// ">", xf%buffer)
+    case default
+      call wxml_error("Cannot close element here")
+    end select
+    
+    call checkEndNamespaces(xf%nsDict, len(xf%stack)+1)
+    
+    if (is_empty(xf%stack)) then
+      xf%state_1 = WXML_STATE_1_AFTER_ROOT
+    endif
+    xf%state_2 = WXML_STATE_2_OUTSIDE_TAG
+    
+  end subroutine xml_EndElement
 
 
-subroutine xml_AddNamespace(xf, nsURI, prefix)
-  type(xmlf_t), intent(inout)   :: xf
-  character(len=*), intent(in) :: nsURI
-  character(len=*), intent(in), optional :: prefix
-
+  subroutine xml_AddNamespace(xf, nsURI, prefix)
+    type(xmlf_t), intent(inout)   :: xf
+    character(len=*), intent(in) :: nsURI
+    character(len=*), intent(in), optional :: prefix
+    
     if (xf%state_2 /= WXML_STATE_2_INSIDE_ELEMENT) &
-    call wxml_error(xf, "adding namespace outside element content")
+         call wxml_error(xf, "adding namespace outside element content")
+    
+    if (present(prefix)) then
+      call addPrefixedNS(xf%nsDict, vs_str(prefix), vs_str(nsURI), len(xf%stack)+1)
+    else
+      call addDefaultNS(xf%nsDict, vs_str(nsURI), len(xf%stack)+1)
+    endif
+    
+  end subroutine xml_AddNamespace
 
-  if (present(prefix)) then
-    call addPrefixedNS(xf%nsDict, vs_str(prefix), vs_str(nsURI), len(xf%stack)+1)
-  else
-    call addDefaultNS(xf%nsDict, vs_str(nsURI), len(xf%stack)+1)
-  endif
 
-end subroutine xml_AddNamespace
-
-
-subroutine xml_Close(xf)
-type(xmlf_t), intent(inout)   :: xf
-
-  call close_start_tag(xf)
-
-  do while (xf%state_1 == WXML_STATE_1_DURING_ROOT)
-    if (xf%state_1 == WXML_STATE_1_AFTER_ROOT) exit
-    call xml_EndElement(xf, get_top_elstack(xf%stack))
-  enddo
-
-  !should call dump_buffer
-  write(unit=xf%lun,fmt="(a)") char(xf%buffer)
-  close(unit=xf%lun)
-
-  call destroy_dict(xf%dict)
-  call destroy_elstack(xf%stack)
-
-  call destroyNamespaceDictionary(xf%nsDict)
-
-  deallocate(xf%name)
-  deallocate(xf%filename)
-
-end subroutine xml_Close
+  subroutine xml_Close(xf)
+    type(xmlf_t), intent(inout)   :: xf
+    
+    call close_start_tag(xf)
+    
+    do while (xf%state_1 == WXML_STATE_1_DURING_ROOT)
+      if (xf%state_1 == WXML_STATE_1_AFTER_ROOT) exit
+      call xml_EndElement(xf, get_top_elstack(xf%stack))
+    enddo
+    
+    !should call dump_buffer
+    write(unit=xf%lun,fmt="(a)") char(xf%buffer)
+    close(unit=xf%lun)
+    
+    call destroy_dict(xf%dict)
+    call destroy_elstack(xf%stack)
+    
+    call destroyNamespaceDictionary(xf%nsDict)
+    
+    deallocate(xf%name)
+    deallocate(xf%filename)
+    
+  end subroutine xml_Close
 
 !==================================================================
 !----------------------------------------------------------

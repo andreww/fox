@@ -31,7 +31,7 @@ contains
     good = (n > 0)
     if (good) good = (scan(name(1:1), letters) /= 0)
     if (good .and. n > 1) &
-         good = (verify(name(2:), QNameChars) == 0)
+         good = (verify(name(2:), NCNameChars) == 0)
   end function checkEncName
 
 
