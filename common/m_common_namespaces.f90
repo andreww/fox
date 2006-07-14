@@ -432,7 +432,6 @@ contains
        if (n > 0) then
           allocate(prefix(n-1))
           prefix = transfer(QName(1:n-1), prefix)
-          print*,'nsURI',getnamespaceURI(nsDict, prefix)
           call set_nsURI(atts, i, getnamespaceURI(nsDict, prefix))
           deallocate(prefix)
        else
@@ -453,9 +452,6 @@ contains
     ! active namespaces & add any necessary declarations
 
     integer :: i, i_p, l_d, l_ps, n
-
-    print*, 'INDEX', ix
-    call dumpnsdict(nsdict)
 
     n = len(atts) ! we need the length before we fiddle with it
 
@@ -537,8 +533,6 @@ contains
           l_p = ubound(nsDict%prefixes, 1)
           cycle prefixes
         endif
-        print*, i, l_p,  ubound(nsDict%prefixes, 1), 'eh?'
-        print*, ix, nsDict%prefixes(l_p)%urilist(l_ps)%ix
         l_ps = ubound(nsDict%prefixes(l_p)%urilist,1)
       enddo
       i = i + 1
@@ -550,16 +544,16 @@ contains
   subroutine dumpnsdict(nsdict)
     type(namespaceDictionary), intent(in) :: nsdict
     integer :: i, j
-    print*,'* default namespaces *'
+    write(*,'(a)')'* default namespaces *'
 
     do i = 1, ubound(nsdict%defaults, 1)
-       print*, nsdict%defaults(i)%ix, nsdict%defaults(i)%URI
+      write(*,'(i0,a)') nsdict%defaults(i)%ix, str_vs(nsdict%defaults(i)%URI)
     enddo
-    print*,'* Prefixed namespaces *'
+    write(*,'(a)') '* Prefixed namespaces *'
     do i = 1, ubound(nsdict%prefixes, 1)
-       print*,'* prefix: ', nsdict%prefixes(i)%prefix
+       write(*,'(2a)') '* prefix: ', nsdict%prefixes(i)%prefix
        do j = 1, ubound(nsdict%prefixes(i)%urilist, 1)
-          print*, nsdict%prefixes(i)%urilist(j)%ix, nsdict%prefixes(i)%urilist(j)%URI
+          write(*,'(i0,a)') nsdict%prefixes(i)%urilist(j)%ix, str_vs(nsdict%prefixes(i)%urilist(j)%URI)
        enddo
     enddo
     !call pxfflush(6)

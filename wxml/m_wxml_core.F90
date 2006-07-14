@@ -314,10 +314,6 @@ character(len=*), intent(in), optional  :: nsPrefix
   xf%state_2 = WXML_STATE_2_INSIDE_ELEMENT
   call reset_dict(xf%dict)
 
-  print*, 'added new element'
-  print*, name
-  print*,len(xf%stack)
-
 end subroutine xml_NewElement
 
 
@@ -462,29 +458,25 @@ subroutine xml_EndElement(xf, name, prefix)
     if (get_top_elstack(xf%stack) /= name) &
          call wxml_fatal(xf, 'Trying to close '//name//' but '//get_top_elstack(xf%stack)//' is open.') 
   endif
-  call devnull(pop_elstack(xf%stack))
-  if (is_empty(xf%stack)) then
-    xf%state_1 = WXML_STATE_1_AFTER_ROOT
-  endif
 
   select case (xf%state_2)
   case (WXML_STATE_2_INSIDE_ELEMENT)
     call checkNamespacesWriting(xf%dict, xf%nsDict, len(xf%stack))
     if (len(xf%dict) > 0) call write_attributes(xf)
     call add_to_buffer("/>",xf%buffer)
+    call devnull(pop_elstack(xf%stack))
   case (WXML_STATE_2_OUTSIDE_TAG)
     call add_eol(xf)
-    if (present(prefix)) then
-      call add_to_buffer("</" // prefix//":"//name // ">", xf%buffer)
-    else
-      call add_to_buffer("</" // name // ">", xf%buffer)
-    endif
+    call add_to_buffer("</" //pop_elstack(xf%stack)// ">", xf%buffer)
   case default
     call wxml_error("Cannot close element here")
   end select
 
-  call checkEndNamespaces(xf%nsDict, len(xf%stack))
+  call checkEndNamespaces(xf%nsDict, len(xf%stack)+1)
 
+  if (is_empty(xf%stack)) then
+    xf%state_1 = WXML_STATE_1_AFTER_ROOT
+  endif
   xf%state_2 = WXML_STATE_2_OUTSIDE_TAG
 
 end subroutine xml_EndElement
@@ -575,7 +567,6 @@ type(xmlf_t), intent(inout)   :: xf
 
   select case (xf%state_2)
   case (WXML_STATE_2_INSIDE_ELEMENT)
-    print*,'new element finished', len(xf%stack)
     call checkNamespacesWriting(xf%dict, xf%nsDict, len(xf%stack))
     if (len(xf%dict) > 0)  call write_attributes(xf)
     call add_to_buffer('>', xf%buffer)
