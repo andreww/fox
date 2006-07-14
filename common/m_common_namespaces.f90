@@ -254,8 +254,8 @@ contains
     
     p_i = 0
     do i = 1, l_p
-      print*,'comparing; ', str_vs(nsDict%prefixes(l_p)%prefix), str_vs(prefix)
-      if (str_vs(nsDict%prefixes(l_p)%prefix) == str_vs(prefix)) then
+      print*,'comparing; ', str_vs(nsDict%prefixes(i)%prefix), str_vs(prefix)
+      if (str_vs(nsDict%prefixes(i)%prefix) == str_vs(prefix)) then
         print*, 'founnd it!', i
         p_i = i
         exit
