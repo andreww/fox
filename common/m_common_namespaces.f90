@@ -249,27 +249,21 @@ contains
     integer :: l_p, p_i, i
     l_p = ubound(nsDict%prefixes, 1)
 
-    print*,'PREFIX TO GO ', str_vs(prefix)
-    call dumpnsdict(nsdict)
-    
     p_i = 0
     do i = 1, l_p
-      print*,'comparing; ', str_vs(nsDict%prefixes(i)%prefix), str_vs(prefix)
       if (str_vs(nsDict%prefixes(i)%prefix) == str_vs(prefix)) then
-        print*, 'founnd it!', i
         p_i = i
         exit
       endif
     enddo
 
     if (p_i /= 0) then
-      print*, 'first', ubound(nsDict%prefixes(p_i)%urilist,1)
       call removePrefixedURI(nsDict%prefixes(p_i))
-      print*, 'second', ubound(nsDict%prefixes(p_i)%urilist,1)
       if (ubound(nsDict%prefixes(p_i)%urilist,1) == 0) then
         !that was the last mapping for that prefix
         call removePrefix(nsDict, p_i)
       endif
+    else
       call FoX_error('Internal error in m_sax_namespaces:removePrefixedNS')
     endif
     
@@ -460,6 +454,7 @@ contains
 
     integer :: i, i_p, l_d, l_ps, n
 
+    print*, 'INDEX', ix
     call dumpnsdict(nsdict)
 
     n = len(atts) ! we need the length before we fiddle with it
@@ -472,7 +467,7 @@ contains
            str_vs(nsDict%defaults(l_d)%URI))
     endif
 
-    !next, add any overudue prefixed NS's in the same way:
+    !next, add any overdue prefixed NS's in the same way:
     ! there should only ever be one. More would be an error,
     ! but the check should have been done earlier.
     do i_p = 0, ubound(nsDict%prefixes, 1)
@@ -487,7 +482,6 @@ contains
 
     !Finally, we may have some we've added for attribute QNames
     ! have to get those too:
-    call dumpnsDict(nsDict)
     do i = 1, len(atts)
       ! get prefix, and identify the relevant NS mapping
       i_p = getPrefixIndex(nsDict, vs_str(get_prefix(atts, i)))

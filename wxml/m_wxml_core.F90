@@ -314,6 +314,10 @@ character(len=*), intent(in), optional  :: nsPrefix
   xf%state_2 = WXML_STATE_2_INSIDE_ELEMENT
   call reset_dict(xf%dict)
 
+  print*, 'added new element'
+  print*, name
+  print*,len(xf%stack)
+
 end subroutine xml_NewElement
 
 
@@ -571,6 +575,7 @@ type(xmlf_t), intent(inout)   :: xf
 
   select case (xf%state_2)
   case (WXML_STATE_2_INSIDE_ELEMENT)
+    print*,'new element finished', len(xf%stack)
     call checkNamespacesWriting(xf%dict, xf%nsDict, len(xf%stack))
     if (len(xf%dict) > 0)  call write_attributes(xf)
     call add_to_buffer('>', xf%buffer)
