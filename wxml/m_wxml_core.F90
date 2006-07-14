@@ -54,6 +54,7 @@ module m_wxml_core
     integer                   :: state_1
     integer                   :: state_2
     logical                   :: indenting_requested
+    character, pointer        :: name(:)
     type(namespaceDictionary) :: nsDict
   end type xmlf_t
 
@@ -72,6 +73,7 @@ module m_wxml_core
   public :: xml_AddAttribute
   public :: xml_AddPseudoAttribute
   public :: xml_AddNamespace
+  public :: xml_AddDOCTYPE
  
   interface xml_AddPcdata
     module procedure xml_AddPcdata_Ch
@@ -132,6 +134,7 @@ endif
 
 allocate(xf%filename(len(filename)))
 xf%filename = vs_str(filename)
+allocate(xf%name(0))
 
 if (present(channel)) then
   xf%lun = channel
@@ -200,6 +203,35 @@ subroutine xml_AddXMLDeclaration(xf, encoding, standalone)
   xf%state_1 = WXML_STATE_1_BEFORE_ROOT
 end subroutine xml_AddXMLDeclaration
 
+
+  subroutine xml_AddDOCTYPE(xf, name, system, public)
+    type(xmlf_t), intent(inout) :: xf
+    character(len=*), intent(in) :: name
+    character(len=*), intent(in), optional :: system, public
+    
+    call close_start_tag(xf)
+    
+    if (xf%state_1 /= WXML_STATE_1_BEFORE_ROOT) &
+         call wxml_error("Tried to put XML DOCTYPE in wrong place")
+    
+    call add_eol(xf)
+    call add_to_buffer("<!DOCTYPE "//name, xf%buffer)
+
+    deallocate(xf%name)
+    allocate(xf%name(len(name)))
+    xf%name = vs_str(name)
+
+    if (present(system).and..not.present(public)) then
+      call add_to_buffer(' SYSTEM "'//system//'"', xf%buffer)
+    elseif (present(system).and.present(public)) then
+      call add_to_buffer(' PUBLIC "'//public//'" SYSTEM "'//system//'"', xf%buffer)
+    elseif (.not.present(system).and.present(PUBLIC)) then
+      call wxml_error("wxml:DOCTYPE: PUBLIC supplied without SYSTEM")
+    endif
+    
+    call add_to_buffer(">", xf%buffer)
+  end subroutine xml_AddDOCTYPE
+      
 
 subroutine xml_AddXMLStylesheet(xf, href, type, title, media, charset, alternate)
   type(xmlf_t), intent(inout)   :: xf
@@ -283,14 +315,16 @@ character(len=*), intent(in)  :: name
 character(len=*), intent(in), optional  :: nsPrefix
 
   select case (xf%state_1)
-  case (WXML_STATE_1_JUST_OPENED)
+  case (WXML_STATE_1_JUST_OPENED, WXML_STATE_1_BEFORE_ROOT)
     xf%state_1 = WXML_STATE_1_DURING_ROOT
-  case (WXML_STATE_1_BEFORE_ROOT)
-    xf%state_1 = WXML_STATE_1_DURING_ROOT
+    if (size(xf%name) > 0) then
+      if (str_vs(xf%name) /= name) & 
+           call wxml_error(xf, "Root element name does not match DTD")
+    endif
   case (WXML_STATE_1_DURING_ROOT)
     continue
   case (WXML_STATE_1_AFTER_ROOT)
-    call wxml_error(xf, "two root elements")
+    call wxml_error(xf, "Two root elements")
   end select 
 
   if (.not.check_Name(name)) then
@@ -497,7 +531,7 @@ subroutine xml_AddNamespace(xf, nsURI, prefix)
   endif
 
 end subroutine xml_AddNamespace
-  
+
 
 subroutine xml_Close(xf)
 type(xmlf_t), intent(inout)   :: xf
@@ -518,6 +552,7 @@ type(xmlf_t), intent(inout)   :: xf
 
   call destroyNamespaceDictionary(xf%nsDict)
 
+  deallocate(xf%name)
   deallocate(xf%filename)
 
 end subroutine xml_Close

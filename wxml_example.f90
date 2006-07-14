@@ -9,6 +9,8 @@ real, dimension(20)  :: x
 real, dimension(4,4)  :: y
 
 call xml_OpenFile("simple.xml",xf, indent=.true.)
+call xml_AddDOCTYPE(xf, "john", "hello.dtd")
+
 
 call xml_AddXMLStylesheet(xf,href="simple.css",type="text/css",media="braille")
 call xml_AddXMLPI(xf, name="robots")
@@ -53,7 +55,10 @@ call xml_AddNamespace(xf, "http://www.w3.org/1999/svg", "svg")
 call xml_NewElement(xf, "html", "h")
 call xml_NewElement(xf, "svg", "svg")
 call xml_EndElement(xf, "svg", "svg")
-
+call xml_NewElement(xf, "head", "h")
+call xml_Addnamespace(xf,"http://www.xml-cml.org/schema", "cml")
+call xml_AddAttribute(xf, "convention", "eMinerals", "cml")
+call xml_EndElement(xf, "head", "h")
 !
 ! Writing multidimensional arrays... index order?
 !
