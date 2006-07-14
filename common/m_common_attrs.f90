@@ -1,7 +1,7 @@
 module m_common_attrs
 
   !use m_wxml_escape, only : check_Name
-  use m_common_array_str, only : assign_str_to_array, assign_array_to_str, str_vs
+  use m_common_array_str, only : str_vs, vs_str
   use m_common_charset, only : whitespace, initialNameChars, nameChars, operator(.in.)
   use m_common_error, only : FoX_error
 
@@ -16,6 +16,7 @@ module m_common_attrs
   type dict_item
      character(len=1), pointer, dimension(:) :: nsURI
      character(len=1), pointer, dimension(:) :: localName
+     character(len=1), pointer, dimension(:) :: prefix
      character(len=1), pointer, dimension(:) :: key
      character(len=1), pointer, dimension(:) :: value
   end type dict_item
@@ -51,8 +52,10 @@ module m_common_attrs
 
   ! Namespaces
   public :: get_nsURI
+  public :: get_prefix
   public :: get_localName
   public :: set_nsURI
+  public :: set_prefix
   public :: set_localName
   
  
@@ -69,11 +72,17 @@ module m_common_attrs
   interface get_nsURI
      module procedure get_nsURI_by_index
   end interface
+  interface get_prefix
+     module procedure get_prefix_by_index
+  end interface
   interface get_localName
      module procedure get_localName_by_index
   end interface
   interface set_nsURI
      module procedure set_nsURI_by_index
+  end interface
+  interface set_prefix
+     module procedure set_prefix_by_index
   end interface
   interface set_localName
      module procedure set_localName_by_index_s
@@ -134,7 +143,7 @@ contains
     if (present(status)) status = -1
     do  i = 1, dict%number_of_items
        if (key == transfer(dict%items(i)%key, key)) then
-          call assign_array_to_str(value,dict%items(i)%value)
+          value = str_vs(dict%items(i)%value)
           if (present(status)) status = 0
           exit
        endif
@@ -160,16 +169,19 @@ contains
        tempDict(i)%key => dict%items(i)%key
        tempDict(i)%value => dict%items(i)%value
        tempDict(i)%nsURI => dict%items(i)%nsURI
+       tempDict(i)%prefix => dict%items(i)%prefix
        tempDict(i)%localName => dict%items(i)%localName
     enddo
     deallocate(dict%items(i)%key)
     deallocate(dict%items(i)%value)
     deallocate(dict%items(i)%nsURI)
+    deallocate(dict%items(i)%prefix)
     deallocate(dict%items(i)%localName)
     do i = key+1, dict%number_of_items
        tempDict(i-1)%key => dict%items(i)%key
        tempDict(i-1)%value => dict%items(i)%value
        tempDict(i-1)%nsURI => dict%items(i)%nsURI
+       tempDict(i-1)%prefix => dict%items(i)%prefix
        tempDict(i-1)%localName => dict%items(i)%localName
     enddo
     !NB we don't resize here, because dictionaries only get
@@ -179,6 +191,7 @@ contains
        dict%items(i)%key => tempDict(i)%key
        dict%items(i)%value => tempDict(i)%value
        dict%items(i)%nsURI => tempDict(i)%nsURI
+       dict%items(i)%prefix => tempDict(i)%prefix
        dict%items(i)%localName => tempDict(i)%localName
     enddo
   end subroutine remove_key_by_index
@@ -190,7 +203,7 @@ contains
     character(len = merge(size(dict%items(i)%value), 0, (i>0 .and. i<=dict%number_of_items))) :: value
     
     if (i>0 .and. i<=dict%number_of_items) then
-       call assign_array_to_str(value,dict%items(i)%value)
+       value = str_vs(dict%items(i)%value)
        if (present(status)) status = 0
     else
        if (present(status)) status = -1
@@ -208,7 +221,7 @@ contains
     character(len = merge(size(dict%items(i)%key), 0, (i>0 .and. i<=dict%number_of_items))) :: key
     
     if (i>0 .and. i<=dict%number_of_items)then
-       call assign_array_to_str(key,dict%items(i)%key)
+       key = str_vs(dict%items(i)%key)
        if (present(status)) status = 0
     else
        if (present(status)) status = -1
@@ -216,17 +229,22 @@ contains
     
   end function get_key
   
-  subroutine add_item_to_dict(dict, key, value)
+  subroutine add_item_to_dict(dict, key, value, prefix, nsURI)
     
     type(dictionary_t), intent(inout) :: dict
-    character(len=*), intent(in)          :: key
-    character(len=*), intent(in)          :: value
+    character(len=*), intent(in)           :: key
+    character(len=*), intent(in)           :: value
+    character(len=*), intent(in), optional :: prefix
+    character(len=*), intent(in), optional :: nsURI
     
     integer  :: n
     
     if (has_key(dict, key)) then
        call Fox_Error('Duplicate attribute')
     endif
+
+    if (present(prefix) .eqv. .not.present(nsURI)) &
+       call Fox_Error('Namespace improperly specified')
     
     n = dict%number_of_items
     if (n == size(dict%items)) then
@@ -238,12 +256,25 @@ contains
     !endif
     
     n = n + 1
-    allocate(dict%items(n)%key(len(key)))
-    call assign_str_to_array(dict%items(n)%key,key)
     allocate(dict%items(n)%value(len(value)))
-    call assign_str_to_array(dict%items(n)%value,value)
-    allocate(dict%items(n)%nsURI(0))
-    allocate(dict%items(n)%localName(0))
+    dict%items(n)%value = vs_str(value)
+    if (present(prefix)) then
+      allocate(dict%items(n)%key(len(prefix)+1+len(key)))
+      dict%items(n)%key = vs_str(prefix//":"//key)
+      allocate(dict%items(n)%prefix(len(prefix)))
+      dict%items(n)%prefix = vs_str(prefix)
+      allocate(dict%items(n)%nsURI(len(nsURI)))
+      dict%items(n)%nsURI = vs_str(nsURI)
+      allocate(dict%items(n)%localname(len(key)))
+      dict%items(n)%localname = vs_str(key)
+    else
+      allocate(dict%items(n)%key(len(key)))
+      dict%items(n)%key = vs_str(key)
+      allocate(dict%items(n)%localname(len(key)))
+      dict%items(n)%localname = vs_str(key)
+      allocate(dict%items(n)%prefix(0))
+      allocate(dict%items(n)%nsURI(0))
+    endif
     
     dict%number_of_items = n
     
@@ -271,7 +302,7 @@ contains
     n = n + 1
     !call pxfflush(6)
     allocate(dict%items(n)%key(len(key)))
-    call assign_str_to_array(dict%items(n)%key,key)
+    dict%items(n)%key = vs_str(key)
     dict%number_of_items = n
   end subroutine add_key_to_dict
 
@@ -283,7 +314,8 @@ contains
     n = dict%number_of_items
 
     allocate(dict%items(n)%value(len(value)))
-    call assign_str_to_array(dict%items(n)%value,value)
+    dict%items(n)%value = vs_str(value)
+    allocate(dict%items(n)%prefix(0))
     allocate(dict%items(n)%nsURI(0))
     allocate(dict%items(n)%localName(0))
   end subroutine add_value_to_dict
@@ -298,6 +330,17 @@ contains
     allocate(dict%items(i)%nsURI(len(nsURI)))
     dict%items(i)%nsURI = transfer(nsURI, dict%items(i)%nsURI)
   end subroutine set_nsURI_by_index
+
+  subroutine set_prefix_by_index(dict, i, prefix)
+    type(dictionary_t), intent(inout) :: dict
+    integer, intent(in) :: i
+    character(len=*) :: prefix
+
+    if (associated(dict%items(i)%prefix)) &
+         deallocate(dict%items(i)%prefix)
+    allocate(dict%items(i)%nsURI(len(prefix)))
+    dict%items(i)%prefix = vs_str(prefix)
+  end subroutine set_prefix_by_index
 
   subroutine set_localName_by_index_s(dict, i, localName)
     type(dictionary_t), intent(inout) :: dict
@@ -329,6 +372,14 @@ contains
     nsURI = transfer(dict%items(i)%nsURI, nsURI)
   end function get_nsURI_by_index
 
+  pure function get_prefix_by_index(dict, i) result(prefix)
+    type(dictionary_t), intent(in) :: dict
+    integer, intent(in) :: i
+    character(len=size(dict%items(i)%prefix)) :: prefix
+    
+    prefix = transfer(dict%items(i)%prefix, prefix)
+  end function get_prefix_by_index
+
   pure function get_localName_by_index(dict, i) result(localName)
     type(dictionary_t), intent(in) :: dict
     integer, intent(in) :: i
@@ -345,8 +396,18 @@ contains
 
     i=get_key_index(dict, keyname)
     nsURI = transfer(dict%items(i)%nsURI, nsURI)
-
   end function get_nsURI_by_keyname
+
+  pure function get_prefix_by_keyname(dict, keyname) result(prefix)
+    type(dictionary_t), intent(in) :: dict
+    character(len=*), intent(in) :: keyname
+    character(len=merge(size(dict%items(get_key_index(dict, keyname))%prefix), 0, (get_key_index(dict, keyname) > 0))) :: prefix
+    integer :: i
+
+    i=get_key_index(dict, keyname)
+    prefix = str_vs(dict%items(i)%prefix)
+
+  end function get_prefix_by_keyname
 
   pure function get_localName_by_keyname(dict, keyname) result(localName)
     type(dictionary_t), intent(in) :: dict
@@ -409,6 +470,7 @@ contains
        deallocate(dict%items(i)%key)
        deallocate(dict%items(i)%value)
        deallocate(dict%items(i)%nsURI)
+       deallocate(dict%items(i)%prefix)
        deallocate(dict%items(i)%localName)
     enddo
     deallocate(dict%items)
@@ -423,6 +485,7 @@ contains
        deallocate(dict%items(i)%key)
        deallocate(dict%items(i)%value)
        deallocate(dict%items(i)%nsURI)
+       deallocate(dict%items(i)%prefix)
        deallocate(dict%items(i)%localName)
     enddo
     

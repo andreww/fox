@@ -1,9 +1,11 @@
 module m_common_namespaces
 
-  use m_common_array_str, only : compare_array_str, str_vs
-  use m_common_attrs, only : dictionary_t, get_key, get_value, remove_key, len
-  use m_common_attrs, only : set_nsURI, set_localName
-  use m_common_error, only : FoX_error
+  use m_common_array_str, only: str_vs, vs_str
+  use m_common_attrs, only: dictionary_t, get_key, get_value, remove_key, len
+  use m_common_attrs, only: set_nsURI, set_localName, get_prefix, add_item_to_dict
+  use m_common_error, only: FoX_error
+
+  use m_pxf_abort_flush, only: pxfabort
 
   implicit none
   private
@@ -41,6 +43,7 @@ module m_common_namespaces
   public :: destroyNamespaceDictionary
   public :: namespaceDictionary
   public :: checkNamespaces
+  public :: checkNamespacesWriting
   public :: checkEndNamespaces
   public :: getnamespaceURI
   interface getnamespaceURI
@@ -54,94 +57,6 @@ module m_common_namespaces
 
 contains
 
-  subroutine checkNamespaces(atts, nsDict, ix, start_prefix_handler)
-    type(dictionary_t), intent(inout) :: atts
-    type(namespaceDictionary), intent(inout) :: nsDict
-    integer, intent(in) :: ix ! depth of nesting of current element.
-
-    optional :: start_prefix_handler ! what to do when we find a new prefix
-
-    interface
-      subroutine start_prefix_handler(namespaceURI, prefix)
-        character(len=*), intent(in) :: namespaceURI
-        character(len=*), intent(in) :: prefix
-      end subroutine start_prefix_handler
-    end interface
-
-    character(len=6) :: xmlns
-    character, dimension(:), allocatable :: prefix, QName, URI
-    integer :: i, j, n, xmlnsLength, URIlength
-
-    !Check for namespaces; *and* remove xmlns references from 
-    !the attributes dictionary.
-
-    ! we can't do a simple loop across the attributes,
-    ! because we need to remove some as we go along ...
-    i = 1
-    do while (i <= len(atts))
-       xmlns = get_key(atts, i)
-       if (xmlns == 'xmlns ') then
-          !Default namespace is being set
-          URIlength = len(get_value(atts, i))
-          allocate(URI(URIlength))
-          URI = transfer(get_value(atts, i), URI)
-          call checkURI(URI)
-          if (present(start_prefix_handler)) &
-               call start_prefix_handler(str_vs(URI), "")
-          call addDefaultNS(nsDict, URI, ix)
-          deallocate(URI)
-          call remove_key(atts, i)
-       elseif (xmlns == 'xmlns:') then
-          !Prefixed namespace is being set
-          URIlength = len(get_value(atts, i))
-          allocate(URI(URIlength))
-          URI = transfer(get_value(atts, i), URI)
-          call checkURI(URI)
-          xmlnsLength = len(get_key(atts, i))
-          allocate(QName(xmlnsLength))
-          allocate(prefix(xmlnsLength - 6))
-          QName = transfer(get_key(atts, i), QName)
-          prefix = QName(7:)
-          call addPrefixedNS(nsDict, prefix, URI, ix)
-          if (present(start_prefix_handler)) &
-               call start_prefix_handler(str_vs(URI), str_vs(prefix))
-          deallocate(URI)
-          deallocate(QName)
-          deallocate(prefix)
-          call remove_key(atts, i)
-       else
-          ! we only increment if we haven't removed a key
-          i = i+1
-       endif
-    enddo
-
-    ! having done that, now resolve all attribute namespaces:
-    do i = 1, len(atts)
-       ! get name
-       allocate(QName(len(get_key(atts, i))))
-       QName = transfer(get_key(atts,i), QName)
-       n = 0
-       do j = 1, size(QName)
-          if (QName(j) == ':') then
-             n = j
-             exit
-          endif
-       enddo
-       if (n > 0) then
-          allocate(prefix(n-1))
-          prefix = transfer(QName(1:n-1), prefix)
-          print*,'nsURI',getnamespaceURI(nsDict, prefix)
-          call set_nsURI(atts, i, getnamespaceURI(nsDict, prefix))
-          deallocate(prefix)
-       else
-          call set_nsURI(atts, i, '') ! no such thing as a default namespace on attributes
-       endif
-       call set_localName(atts, i, QName(n+1:))
-       deallocate(QName)
-    enddo
-
-  end subroutine checkNamespaces
-
 
   subroutine initNamespaceDictionary(nsDict)
     type(namespaceDictionary), intent(out) :: nsDict
@@ -154,6 +69,7 @@ contains
     allocate(nsDict%defaults(0:0))
     allocate(nsDict%defaults(0)%URI(0))
     !The 0th element of the defaults NS is the empty namespace
+    nsDict%defaults(0)%ix = -1
     
     allocate(nsDict%prefixes(0:0))
     allocate(nsDict%prefixes(0)%prefix(0))
@@ -161,6 +77,7 @@ contains
     allocate(nsDict%prefixes(0)%urilist(0)%URI(len(invalidNS)))
     nsDict%prefixes(0)%urilist(0)%URI = &
          transfer(invalidNS, nsDict%prefixes(0)%urilist(0)%URI)
+    nsDict%prefixes(0)%urilist(0)%ix = -1
     
     
   end subroutine initNamespaceDictionary
@@ -311,7 +228,7 @@ contains
     
     p_i = 0
     do i = 1, l_p
-       if (compare_array_str(nsDict%prefixes(l_p)%prefix, prefix)) then
+       if (str_vs(nsDict%prefixes(l_p)%prefix) == str_vs(prefix)) then
           p_i = i
           exit
        endif
@@ -323,7 +240,7 @@ contains
     endif
 
     call addPrefixedURI(nsDict%prefixes(p_i), URI, ix)
-    
+
   end subroutine addPrefixedNS
 
   subroutine removePrefixedNS(nsDict, prefix)
@@ -331,23 +248,29 @@ contains
     character, dimension(:), intent(in) :: prefix
     integer :: l_p, p_i, i
     l_p = ubound(nsDict%prefixes, 1)
+
+    print*,'PREFIX TO GO ', str_vs(prefix)
+    call dumpnsdict(nsdict)
     
     p_i = 0
     do i = 1, l_p
-       if (compare_array_str(nsDict%prefixes(l_p)%prefix, prefix)) then
-          p_i = i
-          exit
-       endif
+      print*,'comparing; ', str_vs(nsDict%prefixes(l_p)%prefix), str_vs(prefix)
+      if (str_vs(nsDict%prefixes(l_p)%prefix) == str_vs(prefix)) then
+        print*, 'founnd it!', i
+        p_i = i
+        exit
+      endif
     enddo
 
     if (p_i /= 0) then
-       call removePrefixedURI(nsDict%prefixes(p_i))
-       if (ubound(nsDict%prefixes(p_i)%urilist,1) == 0) then
-          !that was the last mapping for that prefix
-          call removePrefix(nsDict, p_i)
-       endif
-    else
-       call FoX_error('Internal error in m_sax_namespaces:removePrefixedNS')
+      print*, 'first', ubound(nsDict%prefixes(p_i)%urilist,1)
+      call removePrefixedURI(nsDict%prefixes(p_i))
+      print*, 'second', ubound(nsDict%prefixes(p_i)%urilist,1)
+      if (ubound(nsDict%prefixes(p_i)%urilist,1) == 0) then
+        !that was the last mapping for that prefix
+        call removePrefix(nsDict, p_i)
+      endif
+      call FoX_error('Internal error in m_sax_namespaces:removePrefixedNS')
     endif
     
   end subroutine removePrefixedNS
@@ -439,6 +362,149 @@ contains
   end subroutine removePrefix
 
 
+  subroutine checkNamespaces(atts, nsDict, ix, start_prefix_handler)
+    type(dictionary_t), intent(inout) :: atts
+    type(namespaceDictionary), intent(inout) :: nsDict
+    integer, intent(in) :: ix ! depth of nesting of current element.
+
+    optional :: start_prefix_handler ! what to do when we find a new prefix
+
+    interface
+      subroutine start_prefix_handler(namespaceURI, prefix)
+        character(len=*), intent(in) :: namespaceURI
+        character(len=*), intent(in) :: prefix
+      end subroutine start_prefix_handler
+    end interface
+
+    character(len=6) :: xmlns
+    character, dimension(:), allocatable :: prefix, QName, URI
+    integer :: i, j, n, xmlnsLength, URIlength
+
+    !Check for namespaces; *and* remove xmlns references from 
+    !the attributes dictionary.
+
+    ! we can't do a simple loop across the attributes,
+    ! because we need to remove some as we go along ...
+    i = 1
+    do while (i <= len(atts))
+       xmlns = get_key(atts, i)
+       if (xmlns == 'xmlns ') then
+          !Default namespace is being set
+          URIlength = len(get_value(atts, i))
+          allocate(URI(URIlength))
+          URI = transfer(get_value(atts, i), URI)
+          call checkURI(URI)
+          if (present(start_prefix_handler)) &
+               call start_prefix_handler(str_vs(URI), "")
+          call addDefaultNS(nsDict, URI, ix)
+          deallocate(URI)
+          call remove_key(atts, i)
+       elseif (xmlns == 'xmlns:') then
+          !Prefixed namespace is being set
+          URIlength = len(get_value(atts, i))
+          allocate(URI(URIlength))
+          URI = transfer(get_value(atts, i), URI)
+          call checkURI(URI)
+          xmlnsLength = len(get_key(atts, i))
+          allocate(QName(xmlnsLength))
+          allocate(prefix(xmlnsLength - 6))
+          QName = transfer(get_key(atts, i), QName)
+          prefix = QName(7:)
+          call addPrefixedNS(nsDict, prefix, URI, ix)
+          if (present(start_prefix_handler)) &
+               call start_prefix_handler(str_vs(URI), str_vs(prefix))
+          deallocate(URI)
+          deallocate(QName)
+          deallocate(prefix)
+          call remove_key(atts, i)
+       else
+          ! we only increment if we haven't removed a key
+          i = i+1
+       endif
+    enddo
+
+    ! having done that, now resolve all attribute namespaces:
+    do i = 1, len(atts)
+       ! get name
+       allocate(QName(len(get_key(atts, i))))
+       QName = transfer(get_key(atts,i), QName)
+       n = 0
+       do j = 1, size(QName)
+          if (QName(j) == ':') then
+             n = j
+             exit
+          endif
+       enddo
+       if (n > 0) then
+          allocate(prefix(n-1))
+          prefix = transfer(QName(1:n-1), prefix)
+          print*,'nsURI',getnamespaceURI(nsDict, prefix)
+          call set_nsURI(atts, i, getnamespaceURI(nsDict, prefix))
+          deallocate(prefix)
+       else
+          call set_nsURI(atts, i, '') ! no such thing as a default namespace on attributes
+       endif
+       call set_localName(atts, i, QName(n+1:))
+       deallocate(QName)
+    enddo
+
+  end subroutine checkNamespaces
+
+  
+  subroutine checkNamespacesWriting(atts, nsdict, ix)
+    type(dictionary_t), intent(inout) :: atts
+    type(namespaceDictionary), intent(inout) :: nsDict
+    integer, intent(in) :: ix
+    ! Read through a list of attributes, check with currently
+    ! active namespaces & add any necessary declarations
+
+    integer :: i, i_p, l_d, l_ps, n
+
+    call dumpnsdict(nsdict)
+
+    n = len(atts) ! we need the length before we fiddle with it
+
+    !Does the default NS need added?
+    l_d = ubound(nsDict%defaults,1)
+    if (nsDict%defaults(l_d)%ix == ix) then
+      !It's not been registered yet:
+      call add_item_to_dict(atts, "xmlns", &
+           str_vs(nsDict%defaults(l_d)%URI))
+    endif
+
+    !next, add any overudue prefixed NS's in the same way:
+    ! there should only ever be one. More would be an error,
+    ! but the check should have been done earlier.
+    do i_p = 0, ubound(nsDict%prefixes, 1)
+      l_ps = ubound(nsDict%prefixes(i_p)%urilist,1)
+      if (nsDict%prefixes(i_p)%urilist(l_ps)%ix == ix) then
+        call add_item_to_dict(atts, &
+             "xmlns:"//str_vs(nsDict%prefixes(i_p)%prefix), &
+             str_vs(nsDict%prefixes(i_p)%urilist(l_ps)%URI))
+      endif
+    enddo
+    
+
+    !Finally, we may have some we've added for attribute QNames
+    ! have to get those too:
+    call dumpnsDict(nsDict)
+    do i = 1, len(atts)
+      ! get prefix, and identify the relevant NS mapping
+      i_p = getPrefixIndex(nsDict, vs_str(get_prefix(atts, i)))
+      l_ps = ubound(nsDict%prefixes(i_p)%urilist,1)
+      !If the index is greater than what it should be:
+      if (nsDict%prefixes(i_p)%urilist(l_ps)%ix > ix) then
+        !we only just added this, so we need to declare it
+        call add_item_to_dict(atts, "xmlns:"//get_prefix(atts, i), &
+             str_vs(nsDict%prefixes(i_p)%urilist(l_ps)%URI))
+        !Reset the index to the right value:
+        nsDict%prefixes(i_p)%urilist(l_ps)%ix = ix
+      endif
+    enddo
+
+  end subroutine checkNamespacesWriting
+
+
   subroutine checkEndNamespaces(nsDict, ix, end_prefix_handler)
     type(namespaceDictionary), intent(inout) :: nsDict
     integer, intent(in) :: ix
@@ -478,12 +544,14 @@ contains
           cycle prefixes
         endif
         print*, i, l_p,  ubound(nsDict%prefixes, 1), 'eh?'
+        print*, ix, nsDict%prefixes(l_p)%urilist(l_ps)%ix
         l_ps = ubound(nsDict%prefixes(l_p)%urilist,1)
       enddo
       i = i + 1
     enddo prefixes
 
   end subroutine checkEndNamespaces
+
 
   subroutine dumpnsdict(nsdict)
     type(namespaceDictionary), intent(in) :: nsdict
@@ -520,7 +588,7 @@ contains
 
     force = .false.
     do i = 1, ubound(nsDict%prefixes, 1)
-       if (compare_array_str(nsDict%prefixes(i)%prefix, prefix)) &
+       if (str_vs(nsDict%prefixes(i)%prefix) == str_vs(prefix)) &
             force = .true.
     enddo
 
@@ -534,9 +602,9 @@ contains
     integer :: i
     p = 0
     do i = 1, ubound(nsDict%prefixes, 1)
-       if (compare_array_str(nsDict%prefixes(i)%prefix, prefix)) then
-          p = i
-          exit
+      if (str_vs(nsDict%prefixes(i)%prefix) == str_vs(prefix)) then
+           p = i
+           exit
        endif
     enddo
   end function getPrefixIndex

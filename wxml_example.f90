@@ -47,6 +47,13 @@ call xml_EndElement(xf,"data")
 call xml_NewElement(xf,"data")
 call xml_AddAttribute(xf,"units","Ryd")
 call random_number(y)
+
+call xml_AddNamespace(xf, "http://www.w3.org/1999/xhtml", "h")
+call xml_AddNamespace(xf, "http://www.w3.org/1999/svg", "svg")
+call xml_NewElement(xf, "html", "h")
+call xml_NewElement(xf, "svg", "svg")
+call xml_EndElement(xf, "svg", "svg")
+
 !
 ! Writing multidimensional arrays... index order?
 !
