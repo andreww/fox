@@ -372,101 +372,105 @@ end subroutine xml_OpenFile
   end subroutine xml_NewElement
   
 
-subroutine xml_AddTextSection(xf, chars, parsed)
-  type(xmlf_t), intent(inout)   :: xf
-  character(len=*), intent(in)  :: chars
-  logical, intent(in), optional :: parsed
+  subroutine xml_AddTextSection(xf, chars, parsed)
+    type(xmlf_t), intent(inout)   :: xf
+    character(len=*), intent(in)  :: chars
+    logical, intent(in), optional :: parsed
 
-  logical :: pc
+    logical :: pc
 
-  if (xf%state_2 /= WXML_STATE_2_INSIDE_ELEMENT .and. &
-      xf%state_2 /= WXML_STATE_2_OUTSIDE_TAG)         &
-    call wxml_fatal("Tried to add text section in wrong place.")
+    if (xf%state_2 /= WXML_STATE_2_INSIDE_ELEMENT .and. &
+         xf%state_2 /= WXML_STATE_2_OUTSIDE_TAG)         &
+         call wxml_fatal("Tried to add text section in wrong place.")
+    
+    if (present(parsed)) then
+      pc = parsed
+    else
+      pc = .true.
+    endif
+    
+    call close_start_tag(xf)
+    
+    if (pc) then
+      call add_to_buffer(escape_String(chars), xf%buffer)
+    else
+      if (index(chars,']]>') > 0) &
+           call wxml_error("Tried to output invalid CDATA")
+      call add_to_buffer("<![CDATA["//chars//"]]>", xf%buffer)
+    endif
+    
+    xf%state_2 = WXML_STATE_2_OUTSIDE_TAG
+  end subroutine xml_AddTextSection
 
-  if (present(parsed)) then
-    pc = parsed
-  else
-    pc = .true.
-  endif
-
-  call close_start_tag(xf)
   
-  if (pc) then
-    call add_to_buffer(escape_String(chars), xf%buffer)
-  else
-    if (index(chars,']]>') > 0) &
-      call wxml_error("Tried to output invalid CDATA")
-    call add_to_buffer("<![CDATA["//chars//"]]>", xf%buffer)
-  endif
-end subroutine xml_AddTextSection
+  subroutine xml_AddPcdata_Ch(xf,pcdata,space,line_feed)
+    type(xmlf_t), intent(inout)   :: xf
+    character(len=*), intent(in)  :: pcdata
+    logical, intent(in), optional  :: space
+    logical, intent(in), optional  :: line_feed
 
-  
-subroutine xml_AddPcdata_Ch(xf,pcdata,space,line_feed)
-  type(xmlf_t), intent(inout)   :: xf
-  character(len=*), intent(in)  :: pcdata
-  logical, intent(in), optional  :: space
-  logical, intent(in), optional  :: line_feed
+    logical :: advance_line , advance_space
 
-  logical :: advance_line , advance_space
-
-!FIXME here
-  if (xf%state_1 /= WXML_STATE_1_DURING_ROOT) &
-    call wxml_error("Cannot output character data here.")
-
-  advance_line = pcdata_advance_line_default 
-  if (present(line_feed)) then
-    advance_line = line_feed
-  endif
-
-  advance_space = pcdata_advance_space_default 
-  if (present(space)) then
-    advance_space = space
-  endif
-
-  call close_start_tag(xf)
-
-  if (advance_line) then
-    call add_eol(xf)
-    advance_space = .false.
-  else
-    if (xf%indenting_requested) then
-      if ((len(xf%buffer) + escape_string_len(pcdata) + 1) > COLUMNS ) then
-        call add_eol(xf)
-        advance_space = .false.
+    !FIXME here
+    if (xf%state_1 /= WXML_STATE_1_DURING_ROOT) &
+         call wxml_error("Cannot output character data here.")
+    
+    advance_line = pcdata_advance_line_default 
+    if (present(line_feed)) then
+      advance_line = line_feed
+    endif
+    
+    advance_space = pcdata_advance_space_default 
+    if (present(space)) then
+      advance_space = space
+    endif
+    
+    call close_start_tag(xf)
+    
+    if (advance_line) then
+      call add_eol(xf)
+      advance_space = .false.
+    else
+      if (xf%indenting_requested) then
+        if ((len(xf%buffer) + escape_string_len(pcdata) + 1) > COLUMNS ) then
+          call add_eol(xf)
+          advance_space = .false.
+        endif
       endif
     endif
-  endif
-  if (advance_space) call add_to_buffer(" ",xf%buffer)
+    if (advance_space) call add_to_buffer(" ",xf%buffer)
+    
+    call add_to_buffer(escape_String(pcdata), xf%buffer)
 
-  call add_to_buffer(escape_String(pcdata), xf%buffer)
-
-end subroutine xml_AddPcdata_Ch
-
-
-subroutine xml_AddAttribute_Ch(xf,name,value, nsPrefix)
-  type(xmlf_t), intent(inout)             :: xf
-  character(len=*), intent(in)            :: name
-  character(len=*), intent(in)            :: value
-  character(len=*), intent(in), optional  :: nsPrefix
-
-  if (xf%state_2 /= WXML_STATE_2_INSIDE_ELEMENT) &
-    call wxml_error(xf, "attributes outside element content")
-
-  if (has_key(xf%dict,name)) then
-    call wxml_error(xf, "duplicate att name")
-  endif
-
-  if (present(nsPrefix)) then
-    if (len(getnamespaceURI(xf%nsDict,vs_str(nsPrefix))) == 0) &
-      call wxml_error(xf, "namespace prefix not registered")
-    call add_item_to_dict(xf%dict, name, value, &
-         nsPrefix, getnamespaceURI(xf%nsDict,vs_str(nsPrefix)))
-  else
-    call add_item_to_dict(xf%dict, name, value)
-  endif
+  end subroutine xml_AddPcdata_Ch
 
 
-end subroutine xml_AddAttribute_Ch
+  subroutine xml_AddAttribute_Ch(xf, name, value, nsPrefix)
+    type(xmlf_t), intent(inout)             :: xf
+    character(len=*), intent(in)            :: name
+    character(len=*), intent(in)            :: value
+    character(len=*), intent(in), optional  :: nsPrefix
+    
+    if (xf%state_2 /= WXML_STATE_2_INSIDE_ELEMENT) &
+         call wxml_error(xf, "attributes outside element content")
+    
+    if (has_key(xf%dict,name)) &
+         call wxml_error(xf, "duplicate att name")
+    
+    if (.not.check_Name(name)) &
+         call wxml_error(xf, "invalid attribute name")
+
+    if (present(nsPrefix)) then
+      if (len(getnamespaceURI(xf%nsDict,vs_str(nsPrefix))) == 0) &
+           call wxml_error(xf, "namespace prefix not registered")
+      call add_item_to_dict(xf%dict, name, value, &
+           nsPrefix, getnamespaceURI(xf%nsDict,vs_str(nsPrefix)))
+    else
+      call add_item_to_dict(xf%dict, name, value)
+    endif
+    
+    
+  end subroutine xml_AddAttribute_Ch
 
 
 subroutine xml_AddPseudoAttribute_Ch(xf, name, value)

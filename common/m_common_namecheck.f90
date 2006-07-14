@@ -9,10 +9,11 @@ module m_common_namecheck
   character(len=*), parameter :: letters = lowerCase//upperCase
   character(len=*), parameter :: digits = "0123456789"
   character(len=*), parameter :: NameChars = lowerCase//upperCase//digits//".-_:"
-  character(len=*), parameter :: QNameChars = lowerCase//upperCase//digits//".-_"
+  character(len=*), parameter :: NCNameChars = lowerCase//upperCase//digits//".-_"
   character(len=*), parameter :: PubIdChars = NameChars//spaces//"'()+,/=?;!*#@$%"
 
   public :: checkName
+  public :: checkNCName
   public :: checkEncName
   public :: checkPITarget
   public :: checkPubId
@@ -72,9 +73,23 @@ contains
        
   end function checkName
 
-  !function checkQName
 
-  !end function checkQName
+  function checkNCName(name) result(good)
+    character(len=*), intent(in) :: name
+    logical :: good
+    ! Validates a string against the XML requirements for an NCNAME
+    ! Is not fully compliant; ignores UTF issues.
+
+    integer :: n
+
+    n = len(name)
+    good = (n > 0)
+    if (good) good = (scan(name(1:1), letters//'_') /= 0) 
+    if (good .and. n > 1) &
+             good = (verify(name(2:), NCNameChars) == 0) 
+       
+  end function checkNCName
+
 
   function checkPubId(PubId) result(good)
     character(len=*), intent(in) :: PubId
@@ -83,7 +98,6 @@ contains
   end function checkPubId
 
   !function checkURI
-
   !end function checkURI
 
 end module m_common_namecheck
