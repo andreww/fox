@@ -1,9 +1,10 @@
 module m_wcml_core
 
   use FoX_common, only: FoX_version
+  use m_common_error, only: FoX_error
   use FoX_wxml, only: xmlf_t, str
   use FoX_wxml, only: xml_NewElement, xml_AddPcData, xml_AddAttribute
-  use FoX_wxml, only: xml_EndElement
+  use FoX_wxml, only: xml_EndElement, xml_AddNamespace
   use m_wcml_stml, only: stmAddValue
 
   implicit none
@@ -16,14 +17,8 @@ module m_wcml_core
   
 ! CMLUnits
   character(len=*), parameter :: U_ANGSTR = 'units:angstrom'
-  character(len=*), parameter :: U_PMETER = 'units:pm'
   character(len=*), parameter :: U_DEGREE = 'units:degree'
   character(len=*), parameter :: U_RADIAN = 'units:radian'
-  character(len=*), parameter :: U_INVCM  = 'units:cm-1'
-  character(len=*), parameter :: U_KCALMO = 'units:kcal-mole'
-  character(len=*), parameter :: U_EVOLT  = 'units:ev'
-  character(len=*), parameter :: U_SECOND = 'units:second'
-  character(len=*), parameter :: U_VOLT   = 'units:volt'
 
   public :: cmlStartCml
   public :: cmlEndCml
@@ -108,18 +103,18 @@ contains
     character(len=*), intent(in), optional :: dictref
     character(len=*), intent(in), optional :: ref
 
+    call xml_AddNamespace(xf, 'http://www.xml-cml.org/schema')
+    call xml_AddNamespace(xf, 'http://www.w3.org/2001/XMLSchema', 'xsd')
+    call xml_AddNamespace(xf, 'http://purl.org/dc/elements/1.1/title', 'dc')
+! FIXME TOHW we will want other namespaces in here - particularly for units
+! once PMR has stabilized that.
+
     call xml_NewElement(xf, 'cml')
     if (present(id)) call xml_AddAttribute(xf, 'id', id)
     if (present(title)) call xml_AddAttribute(xf, 'title', title)
     if (present(dictref)) call xml_AddAttribute(xf, 'dictRef', dictref)
     if (present(conv)) call xml_AddAttribute(xf, 'convention', conv)
     if (present(ref)) call xml_AddAttribute(xf, 'ref', ref)
-
-    call xml_AddAttribute(xf, 'xmlns', 'http://www.xml-cml.org/schema')
-    call xml_AddAttribute(xf, 'xmlns:xsd', 'http://www.w3.org/2001/XMLSchema')
-    call xml_AddAttribute(xf, 'xmlns:dc', 'http://purl.org/dc/elements/1.1/title')
-! FIXME TOHW we will want other namespaces in here - particularly for units
-! once PMR has stabilized that.
 
   end subroutine cmlStartCml
 
@@ -130,19 +125,6 @@ contains
     call xml_EndElement(xf, 'cml')
 
   end subroutine cmlEndCml
-
-  subroutine cmlAddNamespace(xf, ns, nsURI)
-    type(xmlf_t), intent(inout) :: xf
-    character(len=*), intent(in) :: ns
-    character(len=*), intent(in) :: nsURI
-! FIXME this should be updated if we ever do proper NS handling
-! in wxml
-    !if (currentTag(xf) /= 'cml') &
-   ! call wxml_abort('Attempt to add namespace in wrong place')
-
-    call xml_AddAttribute(xf, 'xmlns:ns', nsURI)
-
-  end subroutine cmlAddNamespace
 
   ! -------------------------------------------------
   ! writes a metadataList start/end Tag to xml channel
@@ -242,13 +224,14 @@ contains
   ! 1. writes complete DP molecule to xml channel
   ! -------------------------------------------------
 
-  subroutine cmlAddMoleculeDP(xf, natoms, elements, refs, coords, style, id, title, dictref, fmt)
+  subroutine cmlAddMoleculeDP(xf, natoms, elements, refs, coords, occupancies, style, id, title, dictref, fmt)
 
     type(xmlf_t), intent(inout) :: xf
     integer, intent(in)                    :: natoms             ! number of atoms
     real(kind=dp), intent(in)              :: coords(3, natoms)  ! atomic coordinates
     character(len=*), intent(in)           :: elements(natoms)   ! chemical element types
-    character(len=*), intent(in), optional :: refs(natoms)       ! id
+    character(len=*), intent(in), optional :: refs(natoms) 
+    real(kind=dp), intent(in), optional :: occupancies(natoms) 
     character(len=*), intent(in), optional :: id                 ! id
     character(len=*), intent(in), optional :: title              ! the title
     character(len=*), intent(in), optional :: dictref            ! the dictionary reference
@@ -265,11 +248,11 @@ contains
     integer          :: i
 
     if (present(style)) then
-       stylei = style
+      stylei = style
     else
-       stylei = 'x3'
+      stylei = 'x3'
     endif
-
+    
     call xml_NewElement(xf, 'molecule')
     if (present(id)) call xml_AddAttribute(xf, 'id', id)
     if (present(title)) call xml_AddAttribute(xf, 'id', title)
@@ -277,26 +260,31 @@ contains
     call xml_NewElement(xf, 'atomArray')
     !TOHW this should be cleaned up .... Internal writes should go through str
     do i = 1, natoms
-! This next is obviously bollocks. It will result in duplicate ids.
-       !write(id0, '(i4)') i
-       !id0 = adjustl(id0)
-       !id1 = 'a'
-       !id1(2:) = id0
-       !call cmlAddAtom(xf=xf, elem=elements(i), id=trim(id1))
-! There is a case to be made for TRIMing the elements(i) and refs(i) strings
-! because they are part of an array, and the user cannot pass in strings
-! of varying length.
-       call cmlAddAtom(xf=xf, elem=trim(elements(i)))
-       if (present(refs)) call xml_AddAttribute(xf, 'ref', refs(i))
-       if (stylei .eq. 'x3') then
+      ! This next is obviously bollocks. It will result in duplicate ids.
+      !write(id0, '(i4)') i
+      !id0 = adjustl(id0)
+      !id1 = 'a'
+      !id1(2:) = id0
+      !call cmlAddAtom(xf=xf, elem=elements(i), id=trim(id1))
+      ! There is a case to be made for TRIMing the elements(i) and refs(i) strings
+      ! because they are part of an array, and the user cannot pass in strings
+      ! of varying length.
+      if (present(occupancies)) then
+        call cmlAddAtom(xf=xf, elem=trim(elements(i)), &
+          occupancyDP=occupancies(i))
+      else
+        call cmlAddAtom(xf=xf, elem=trim(elements(i)))
+      endif
+        if (present(refs)) call xml_AddAttribute(xf, 'ref', refs(i))
+        if (stylei .eq. 'x3') then
           call CMLATX39DP(xf, coords(1, i), coords(2, i), coords(3, i), fmt)
-       elseif (stylei .eq. 'xFrac') then
+        elseif (stylei .eq. 'xFrac') then
           call CMLATXF9DP(xf, coords(1, i), coords(2, i), coords(3, i), fmt)
-       elseif (stylei .eq. 'xyz3') then
+        elseif (stylei .eq. 'xyz3') then
           call CMLATXYZ39DP(xf, coords(1, i), coords (2, i), coords(3, i), fmt)
-       elseif (stylei .eq. 'xyzFrac') then
+        elseif (stylei .eq. 'xyzFrac') then
           call CMLATXYZFRACT9DP(xf, coords(1, i), coords(2, i), coords(3, i), fmt)
-       endif
+        endif
        call xml_EndElement(xf, 'atom')
     enddo
 
@@ -310,12 +298,13 @@ contains
   ! 2. writes complete SP molecule to xml channel
   ! -------------------------------------------------
   
-  subroutine cmlAddMoleculeSP(xf, natoms, elements, refs, coords, style, id, title, dictref, fmt)
+  subroutine cmlAddMoleculeSP(xf, natoms, elements, refs, coords, occupancies, style, id, title, dictref, fmt)
     type(xmlf_t), intent(inout) :: xf
     integer, intent(in)                    :: natoms          ! number of atoms
     character(len=*), intent(in)           :: elements(*)     ! chemical element types
     real(kind=sp), intent(in)              :: coords(3, *)    ! atomic coordinates
     character(len=*), intent(in), optional :: refs(natoms)    ! id
+    real(kind=sp), intent(in), optional :: occupancies(natoms) 
     character(len=*), intent(in), optional :: id              ! id
     character(len=*), intent(in), optional :: title           ! the title
     character(len=*), intent(in), optional :: dictref         ! the dictionary reference
@@ -344,6 +333,12 @@ contains
        !id1 = 'a'
        !id1(2:) = id0
        !call cmlAddAtom(xf=xf, elem=elements(i), id=trim(id1))
+      if (present(occupancies)) then
+        call cmlAddAtom(xf=xf, elem=trim(elements(i)), &
+          occupancySP=occupancies(i))
+      else
+        call cmlAddAtom(xf=xf, elem=trim(elements(i)))
+      endif
        call cmlAddAtom(xf=xf, elem=trim(elements(i)))
        if (present(refs)) call xml_AddAttribute(xf, 'ref', refs(i))
        if (stylei .eq. 'x3') then
@@ -486,13 +481,12 @@ contains
   ! writes an <atom> start tag
   ! -------------------------------------------------
   
-  subroutine cmlAddAtom(xf, elem, id, charge, hCount, occupancy, fmt)
-
-
+  subroutine cmlAddAtom(xf, elem, id, charge, hCount, occupancySP, occupancyDP, fmt)
     type(xmlf_t), intent(inout) :: xf
     integer, intent(in), optional           :: charge     ! formalCharge
     integer, intent(in), optional           :: hCount     ! hydrogenCount
-    real(kind=sp), intent(in), optional     :: occupancy  ! hydrogenCount
+    real(kind=sp), intent(in), optional     :: occupancySP
+    real(kind=dp), intent(in), optional     :: occupancyDP
     character(len=*), intent(in), optional  :: elem       ! chemical element name
     character(len=*), intent(in), optional  :: id         ! atom id
     character(len=*), intent(in), optional  :: fmt        ! format
@@ -502,10 +496,12 @@ contains
     if (present(id))        call xml_AddAttribute(xf, 'id', id)
     if (present(charge))    call xml_AddAttribute(xf, 'formalCharge', charge)
     if (present(hCount))    call xml_AddAttribute(xf, 'hydrogenCount', hCount)
-    if (present(occupancy)) call xml_AddAttribute(xf, 'occupancy', occupancy, fmt)
+    if (present(occupancySP) .and. present(occupancyDP)) &
+      call FoX_error("Bad argumens to cmlAddAtom")
+    if (present(occupancySP)) call xml_AddAttribute(xf, 'occupancy', occupancySP, fmt)
+    if (present(occupancyDP)) call xml_AddAttribute(xf, 'occupancy', occupancyDP, fmt)
 
   end subroutine cmlAddAtom
-  
   
   ! -------------------------------------------------
   ! 1. append SP coordinates to atom tag

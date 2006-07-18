@@ -551,7 +551,7 @@ end subroutine xml_OpenFile
     character(len=*), intent(in) :: nsURI
     character(len=*), intent(in), optional :: prefix
     
-    if (xf%state_2 /= WXML_STATE_2_INSIDE_ELEMENT) &
+    if (xf%state_1 == WXML_STATE_1_AFTER_ROOT) &
          call wxml_error(xf, "adding namespace outside element content")
     
     if (present(prefix)) then
