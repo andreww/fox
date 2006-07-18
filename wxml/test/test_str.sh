@@ -5,10 +5,12 @@ make test_str.exe
 OUT=`./test_str.exe`
 rm -f test_str.exe test_str.o test_str.f90
 
+echo $OUT $2
+
 if [ $OUT = $2 ]; then
-  echo Passed: $OUT
+  echo Passed: $2
   exit 0
 else
-  echo Failed: $OUT
+  echo Failed: $2
   exit 1
 fi
