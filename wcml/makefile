@@ -1,7 +1,8 @@
 #
 default: install
 #
-OBJFILES=FoX_wcml.o m_wcml_coma.o m_wcml_core.o m_wcml_stml.o m_wcml_property.o m_wcml_parameter.o
+OBJFILES=FoX_wcml.o m_wcml_coma.o m_wcml_core.o m_wcml_stml.o \
+         m_wcml_property.o m_wcml_parameter.o m_wcml_metadata.o
 #
 LIBRARY=libFoX_wcml.a
 INCFLAGS=$(MOD_PREFIX)../objs/finclude
@@ -35,9 +36,3 @@ install: $(OBJFILES)
 clean:
 	rm -f *.o  *.$(MOD_EXT) $(LIBRARY)
 # DO NOT DELETE THIS LINE - used by make depend
-FoX_wcml.o: m_wcml_coma.o m_wcml_core.o m_wcml_parameter.o m_wcml_property.o
-FoX_wcml.o: m_wcml_stml.o
-m_wcml_coma.o: m_wcml_stml.o
-m_wcml_core.o: m_wcml_stml.o
-m_wcml_parameter.o: m_wcml_stml.o
-m_wcml_property.o: m_wcml_stml.o
