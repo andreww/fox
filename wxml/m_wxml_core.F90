@@ -86,7 +86,9 @@ module m_wxml_core
     module procedure xml_AddPseudoAttribute_Ch
   end interface
  
-  !public :: xml_AddArray
+  interface xml_AddArray
+    module procedure xml_AddArray_Ch
+  end interface
 
   !overload error handlers to allow file info
   interface wxml_warning
@@ -494,21 +496,28 @@ end subroutine xml_OpenFile
   end subroutine xml_AddPseudoAttribute_Ch
 
 
-  subroutine xml_AddArray_Ch(xf, array)
+  subroutine xml_AddArray_Ch(xf, array, delimiter)
     type(xmlf_t), intent(inout) :: xf
     character(len=*), dimension(:), intent(in) :: array
+    character(len=1), intent(in), optional :: delimiter
     
     integer :: i,n
-    !If appropriate
+    character(len=1) :: d
+
+    if (present(delimiter)) then
+      d = delimiter
+    else
+      d = ' '
+    endif
     
     n = size(array)
     do i = 1, n-1
-      call add_to_buffer(array(i)//' ', xf%buffer)
+      call add_to_buffer(array(i)//d, xf%buffer)
     enddo
     call add_to_buffer(array(n), xf%buffer)
     
   end subroutine xml_AddArray_Ch
-  
+
 
   subroutine xml_EndElement(xf, name, prefix)
     type(xmlf_t), intent(inout)             :: xf

@@ -2,7 +2,8 @@
 default: install
 #
 OBJFILES=FoX_wcml.o m_wcml_coma.o m_wcml_core.o m_wcml_stml.o \
-         m_wcml_property.o m_wcml_parameter.o m_wcml_metadata.o
+         m_wcml_property.o m_wcml_parameter.o m_wcml_metadata.o \
+         m_wcml_lattice.o
 #
 LIBRARY=libFoX_wcml.a
 INCFLAGS=$(MOD_PREFIX)../objs/finclude

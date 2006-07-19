@@ -41,82 +41,48 @@ contains
 
   !-------------------------------------------------------------------
 
-  subroutine xml_AddPcdata_SP(xf,pcdata,fmt, space,line_feed)
+  subroutine xml_AddPcdata_SP(xf, pcdata, fmt)
     type(xmlf_t), intent(inout)    :: xf
     real(kind=sp), intent(in)      :: pcdata
-    logical,          intent(in), optional  :: space
-    logical,          intent(in), optional  :: line_feed
-    character(len=*), intent(in), optional  :: fmt
+    character(len=*), intent(in), optional :: fmt
 
-#ifdef PGF90
-    if (present(fmt)) then
-      call xml_AddPcdata_Ch(xf,trim(str(pcdata,fmt)),space,line_feed)
-    else
-      call xml_AddPcdata_Ch(xf,trim(str(pcdata)),space,line_feed)
-    endif
-#else
-    if (present(fmt)) then
-      call xml_AddPcdata_Ch(xf,str(pcdata,fmt),space,line_feed)
-    else
-      call xml_AddPcdata_Ch(xf,str(pcdata),space,line_feed)
-    endif
-#endif
+!!$    if (present(fmt)) then
+!!$      call xml_AddPcdata_Ch(xf,str(pcdata, fmt),space,line_feed)
+!!$    else
+!!$      call xml_AddPcdata_Ch(xf,str(pcdata),space,line_feed)
+!!$    endif
 
   end subroutine xml_AddPcdata_SP
 
 
-  subroutine xml_AddPcdata_DP(xf,pcdata,fmt,space,line_feed)
+  subroutine xml_AddPcdata_DP(xf, pcdata, fmt)
     type(xmlf_t), intent(inout)    :: xf
     real(kind=dp), intent(in)      :: pcdata
     character(len=*), optional    :: fmt
-    logical, intent(in), optional  :: space
-    logical, intent(in), optional  :: line_feed
 
-#ifdef PGF90
     if (present(fmt)) then
-      call xml_AddPcdata_Ch(xf,trim(str(pcdata,fmt)),space,line_feed)
+      call xml_AddPcdata_Ch(xf,str(pcdata,fmt))
     else
-      call xml_AddPcdata_Ch(xf,trim(str(pcdata)),space,line_feed)
+      call xml_AddPcdata_Ch(xf,str(pcdata))
     endif
-#else
-    if (present(fmt)) then
-      call xml_AddPcdata_Ch(xf,str(pcdata,fmt),space,line_feed)
-    else
-      call xml_AddPcdata_Ch(xf,str(pcdata),space,line_feed)
-    endif
-#endif
 
   end subroutine xml_AddPcdata_DP
 
 
-  subroutine xml_AddPcdata_log(xf,pcdata,fmt,space,line_feed)
+  subroutine xml_AddPcdata_log(xf,pcdata)
     type(xmlf_t), intent(inout)    :: xf
     logical, intent(in)            :: pcdata
-    character(len=*), intent(in), optional    :: fmt
-    logical, intent(in), optional  :: space
-    logical, intent(in), optional  :: line_feed
 
-    if (present(fmt)) then
-      call xml_AddPcdata_Ch(xf,str(pcdata,fmt),space,line_feed)
-    else
-      call xml_AddPcdata_Ch(xf,str(pcdata),space,line_feed)
-    endif
+    call xml_AddPcdata_Ch(xf,str(pcdata))
 
   end subroutine xml_AddPcdata_log
 
 
-  subroutine xml_AddPcdata_int(xf,pcdata,fmt,space,line_feed)
+  subroutine xml_AddPcdata_int(xf,pcdata)
     type(xmlf_t), intent(inout)    :: xf
     integer, intent(in)            :: pcdata
-    character(len=*), intent(in), optional    :: fmt
-    logical, intent(in), optional  :: space
-    logical, intent(in), optional  :: line_feed
 
-    if (present(fmt)) then
-      call xml_AddPcdata_Ch(xf,str(pcdata,fmt),space,line_feed)
-    else
-      call xml_AddPcdata_Ch(xf,str(pcdata),space,line_feed)
-    endif
+    call xml_AddPcdata_Ch(xf,str(pcdata))
 
   end subroutine xml_AddPcdata_int
 
@@ -129,15 +95,15 @@ contains
     real(kind=sp),    intent(in)  :: value
     character(len=*), intent(in), optional   :: fmt
 
-    if (present(fmt)) then
-      call xml_AddAttribute_Ch(xf,name,str(value,fmt))
-    else
-      call xml_AddAttribute_Ch(xf,name,str(value))
-    endif
+!!$    if (present(fmt)) then
+!!$      call xml_AddAttribute_Ch(xf,name,str(value,fmt))
+!!$    else
+!!$      call xml_AddAttribute_Ch(xf,name,str(value))
+!!$    endif
 
   end subroutine xml_AddAttribute_SP
 
-  subroutine xml_AddAttribute_DP(xf,name,value,fmt)
+  subroutine xml_AddAttribute_DP(xf, name, value, fmt)
     type(xmlf_t), intent(inout)   :: xf
     character(len=*), intent(in)  :: name
     real(kind=dp),    intent(in)  :: value
@@ -151,31 +117,21 @@ contains
 
   end subroutine xml_AddAttribute_DP
 
-  subroutine xml_AddAttribute_log(xf,name,value,fmt)
+  subroutine xml_AddAttribute_log(xf, name, value)
     type(xmlf_t), intent(inout)   :: xf
     character(len=*), intent(in)  :: name
     logical, intent(in)           :: value
-    character(len=*), intent(in), optional   :: fmt
 
-    if (present(fmt)) then
-      call xml_AddAttribute_Ch(xf,name,str(value,fmt))
-    else
-      call xml_AddAttribute_Ch(xf,name,str(value))
-    endif
+    call xml_AddAttribute_Ch(xf,name,str(value))
 
   end subroutine xml_AddAttribute_log
 
-  subroutine xml_AddAttribute_int(xf,name,value,fmt)
+  subroutine xml_AddAttribute_int(xf, name, value)
     type(xmlf_t), intent(inout)   :: xf
     character(len=*), intent(in)  :: name
     integer, intent(in)           :: value
-    character(len=*), intent(in), optional   :: fmt
 
-    if (present(fmt)) then
-      call xml_AddAttribute_Ch(xf,name,str(value,fmt))
-    else
-      call xml_AddAttribute_Ch(xf,name,str(value))
-    endif
+    call xml_AddAttribute_Ch(xf,name,str(value))
 
   end subroutine xml_AddAttribute_int
 
@@ -184,7 +140,7 @@ contains
     character(len=*), intent(in)  :: name
     real(sp), intent(in)          :: value
 
-    call xml_AddPseudoAttribute_Ch(xf, name, str(value))
+!!$    call xml_AddPseudoAttribute_Ch(xf, name, str(value))
   end subroutine xml_AddPseudoAttribute_SP
 
   subroutine xml_AddPseudoAttribute_DP(xf, name, value)

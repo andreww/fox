@@ -25,15 +25,11 @@ module m_wcml_core
 
 ! CMLCore
   public :: cmlAddCoordinates
-  public :: cmlAddLattice
   public :: cmlAddCrystal
   public :: cmlAddAngle
   public :: cmlAddLength
   public :: cmlAddEigenvalue
   public :: cmlAddMolecule
-  public :: cmlAddMetadata
-  public :: cmlStartMetadataList
-  public :: cmlEndMetadataList
   public :: cmlStartModule
   public :: cmlEndModule
 
@@ -44,11 +40,6 @@ module m_wcml_core
   interface cmlAddCoordinates
      module procedure cmlAddCoordinatesSP
      module procedure cmlAddCoordinatesDP
-  end interface
-
-  interface cmlAddLattice
-     module procedure cmlAddLatticeSP
-     module procedure cmlAddLatticeDP
   end interface
 
   interface cmlAddCrystal
@@ -76,14 +67,6 @@ module m_wcml_core
      module procedure cmlAddMoleculeDP
      module procedure cmlAddMolecule3SP
      module procedure cmlAddMolecule3DP
-  end interface
-
-  interface cmlAddMetadata
-     module procedure cmlAddMetaDataCh
-     module procedure cmlAddMetaDataI
-     module procedure cmlAddMetaDataSP
-     module procedure cmlAddMetaDataDP
-     module procedure cmlAddMetaDataLg
   end interface
 
 contains
@@ -121,41 +104,10 @@ contains
   subroutine cmlEndCml(xf)
     type(xmlf_t), intent(inout) :: xf
 
-    call cmlAddMetadata(xf, name='dc:contributor', content='FoX-'//FoX_version//' (http://www.eminerals.org)')
+  !  call cmlAddMetadata(xf, name='dc:contributor', content='FoX-'//FoX_version//' (http://www.eminerals.org)')
     call xml_EndElement(xf, 'cml')
 
   end subroutine cmlEndCml
-
-  ! -------------------------------------------------
-  ! writes a metadataList start/end Tag to xml channel
-  ! -------------------------------------------------
-  subroutine cmlStartMetadataList(xf, id, title, conv, dictref, ref, role)
-
-    type(xmlf_t), intent(inout) :: xf
-    character(len=*), intent(in), optional :: id
-    character(len=*), intent(in), optional :: title
-    character(len=*), intent(in), optional :: conv
-    character(len=*), intent(in), optional :: dictref
-    character(len=*), intent(in), optional :: ref
-    character(len=*), intent(in), optional :: role
-    
-    call xml_NewElement(xf, 'metadataList')
-    if (present(id)) call xml_AddAttribute(xf, 'id', id)
-    if (present(title)) call xml_AddAttribute(xf, 'title', title)
-    if (present(dictref)) call xml_AddAttribute(xf, 'dictRef', dictref)
-    if (present(conv)) call xml_AddAttribute(xf, 'convention', conv)
-    if (present(ref)) call xml_AddAttribute(xf, 'ref', ref)
-    if (present(role)) call xml_AddAttribute(xf, 'role', role)
-    
-  end subroutine cmlStartMetadataList
-
-  subroutine cmlEndMetadataList(xf)
-
-    type(xmlf_t), intent(inout) :: xf
-
-    call xml_EndElement(xf, 'metadataList')
-    
-  end subroutine cmlEndMetadataList
 
   ! -------------------------------------------------
   ! writes a Module start/end Tag to xml channel
@@ -686,100 +638,6 @@ contains
 
 
   ! -------------------------------------------------
-  ! 1. creates and writes an SP Lattice element
-  ! -------------------------------------------------
-
-  subroutine cmlAddLatticeSP(xf, cell, units, title, id, dictref, conv, lattType, spaceType, fmt)
-
-    type(xmlf_t), intent(inout) :: xf
-    real(kind=sp), intent(in)               :: cell(3,3)
-    character(len=*), intent(in), optional :: units       
-    character(len=*), intent(in), optional :: id           ! id
-    character(len=*), intent(in), optional :: title        ! title
-    character(len=*), intent(in), optional :: dictref      ! dictref
-    character(len=*), intent(in), optional :: conv         ! convention
-    character(len=*), intent(in), optional :: lattType 
-    character(len=*), intent(in), optional :: spaceType    !
-    character(len=*), intent(in), optional :: fmt         
-
-    integer :: i
-    character(len=10) :: formt
-    if (present(fmt)) then
-       formt = fmt
-    else
-       formt = spformat
-    endif
-
-    call xml_NewElement(xf, 'lattice')
-    if (present(id)) call xml_AddAttribute(xf, 'id', id)
-    if (present(title)) call xml_AddAttribute(xf, 'title', title)
-    if (present(dictref)) call xml_AddAttribute(xf, 'dictRef', dictref)
-    if (present(conv)) call xml_AddAttribute(xf, 'convention', conv)
-    if (present(lattType)) call xml_AddAttribute(xf, 'latticeType', lattType)
-    if (present(spaceType)) call xml_AddAttribute(xf, 'spaceType', spaceType)
-
-    do i = 1,3
-       call xml_NewElement(xf, 'latticeVector')
-       if (present(units)) call xml_AddAttribute(xf, 'units', units)
-       call xml_AddAttribute(xf, 'dictRef', 'cml:latticeVector')
-       call xml_AddPcdata(xf, cell(1,i), formt)
-       call xml_AddPcdata(xf, cell(2,i), formt, space=.true.)
-       call xml_AddPcdata(xf, cell(3,i), formt, space=.true.)
-       call xml_EndElement(xf, 'latticeVector')
-    enddo
-    call xml_EndElement(xf, 'lattice')
-    
-  end subroutine cmlAddLatticeSP
-
-
-  ! -------------------------------------------------
-  ! 2. creates and writes DP Lattice element
-  ! -------------------------------------------------
-
-  subroutine cmlAddLatticeDP(xf, cell, units, title, id, dictref, conv, lattType, spaceType, fmt)
-
-    type(xmlf_t), intent(inout) :: xf
-    real(kind=dp), intent(in)               :: cell(3,3)
-    character(len=*), intent(in), optional :: units       
-    character(len=*), intent(in), optional :: id           ! id
-    character(len=*), intent(in), optional :: title        ! title
-    character(len=*), intent(in), optional :: dictref      ! dictref
-    character(len=*), intent(in), optional :: conv         ! 
-    character(len=*), intent(in), optional :: lattType     ! 
-    character(len=*), intent(in), optional :: spaceType    !
-    character(len=*), intent(in), optional :: fmt         
-
-    integer :: i
-    character(len=10) :: formt
-    if (present(fmt)) then
-       formt = fmt
-    else
-       formt = dpformat
-    endif
-
-    call xml_NewElement(xf, 'lattice')
-    if (present(id)) call xml_AddAttribute(xf, 'id', id)
-    if (present(title)) call xml_AddAttribute(xf, 'title', title)
-    if (present(dictref)) call xml_AddAttribute(xf, 'dictRef', dictref)
-    if (present(conv)) call xml_AddAttribute(xf, 'convention', conv)
-    if (present(lattType)) call xml_AddAttribute(xf, 'latticeType', lattType)
-    if (present(spaceType)) call xml_AddAttribute(xf, 'spaceType', spaceType)
-
-    do i = 1,3
-       call xml_NewElement(xf, 'latticeVector')
-       if (present(units)) call xml_AddAttribute(xf, 'units', units)
-       call xml_AddAttribute(xf, 'dictRef', 'cml:latticeVector')
-       call xml_AddPcdata(xf, cell(1,i), formt)
-       call xml_AddPcdata(xf, cell(2,i), formt, space=.true.)
-       call xml_AddPcdata(xf, cell(3,i), formt, space=.true.)
-       call xml_EndElement(xf, 'latticeVector')
-    enddo
-    call xml_EndElement(xf, 'lattice')
-
-  end subroutine cmlAddLatticeDP
-
-
-  ! -------------------------------------------------
   ! 1. creates and writes a DP <cell> element
   ! -------------------------------------------------
 
@@ -969,83 +827,6 @@ contains
     call xml_EndElement(xf, 'eigen')
 
   end subroutine cmlAddEigenvalueSP
-
-
-  subroutine cmlAddMetadataCh(xf, name, content, conv)
-    
-    type(xmlf_t), intent(inout) :: xf
-    character(len=*), intent(in) :: name
-    character(len=*), intent(in) :: content
-    character(len=*), intent(in), optional :: conv
-    
-    call xml_NewElement(xf, 'metadata')
-    call xml_AddAttribute(xf, 'name', name)
-    call xml_AddAttribute(xf, 'content', content)
-    if (present(conv)) call xml_AddAttribute(xf, 'convention', conv)
-    call xml_EndElement(xf, 'metadata')
-
-  end subroutine cmlAddMetadataCh
-
-  subroutine cmlAddMetadataSP(xf, name, content, conv)
-    
-    type(xmlf_t), intent(inout) :: xf
-    character(len=*), intent(in) :: name
-    real(sp), intent(in) :: content
-    character(len=*), intent(in), optional :: conv
-    
-    call xml_NewElement(xf, 'metadata')
-    call xml_AddAttribute(xf, 'name', name)
-    call xml_AddAttribute(xf, 'content', content)
-    if (present(conv)) call xml_AddAttribute(xf, 'convention', conv)
-    call xml_EndElement(xf, 'metadata')
-    
-  end subroutine cmlAddMetadataSP
-
-  subroutine cmlAddMetadataDP(xf, name, content, conv)
-    
-    type(xmlf_t), intent(inout) :: xf
-    character(len=*), intent(in) :: name
-    real(dp), intent(in) :: content
-    character(len=*), intent(in), optional :: conv
-    
-    call xml_NewElement(xf, 'metadata')
-    call xml_AddAttribute(xf, 'name', name)
-    call xml_AddAttribute(xf, 'content', content)
-    if (present(conv)) call xml_AddAttribute(xf, 'convention', conv)
-    call xml_EndElement(xf, 'metadata')
-    
-  end subroutine cmlAddMetadataDP
-
-  subroutine cmlAddMetadataI(xf, name, content, conv)
-    
-    type(xmlf_t), intent(inout) :: xf
-    character(len=*), intent(in) :: name
-    integer, intent(in) :: content
-    character(len=*), intent(in), optional :: conv
-    
-    call xml_NewElement(xf, 'metadata')
-    call xml_AddAttribute(xf, 'name', name)
-    call xml_AddAttribute(xf, 'content', content)
-    if (present(conv)) call xml_AddAttribute(xf, 'convention', conv)
-    call xml_EndElement(xf, 'metadata')
-    
-  end subroutine cmlAddMetadataI
-
-  subroutine cmlAddMetadataLG(xf, name, content, conv)
-
-     type(xmlf_t), intent(inout) :: xf
-     character(len=*), intent(in) :: name
-     logical, intent(in) :: content
-     character(len=*), intent(in), optional :: conv
-
-     call xml_NewElement(xf, 'metadata')
-     call xml_AddAttribute(xf, 'name', name)
-     call xml_AddAttribute(xf, 'content', content)
-     if (present(conv)) call xml_AddAttribute(xf, 'convention', conv)
-     call xml_EndElement(xf, 'metadata')
-
-   end subroutine cmlAddMetadataLG
-
 
 ! =================================================
 ! basic CML routines
