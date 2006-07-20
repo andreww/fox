@@ -240,6 +240,8 @@ contains
     integer :: e, i, j, k, n, predecimal
     real(dp) :: x_
 
+    s = ''
+
     if (x == 0.0_dp) then
       e = 1
     else
@@ -282,7 +284,6 @@ contains
       endif
 
       if (x > 1.0_dp) then
-        
         x_ = x / (10.0_dp**e)
         j = int(x_)
         s(n:n) = digit(j+1:j+1)
@@ -306,26 +307,21 @@ contains
         endif
       else
         s(n:n) = '0'
-        print*, 'n', n, s
         if (dec > 1) then
           s(n+1:n+1) = '.'
           n = n + 2
-        print*, 'n', n, -e, s
-          s(n:n-e-1) = repeat('0', -e)
-          n = n - e
-        print*, 'n', n, s
-          if (n >= dec) then
-            x_ = x / (10.0_dp**(-e))
+          s(n:n-e-2) = repeat('0', -e-1)
+          n = n - e - 1
+          if (n <= dec) then
+            x_ = x / (10.0_dp**e)
             j = int(x_)
             s(n:n) = digit(j+1:j+1)
             n = n + 1
-        print*, 'n', n, s
             do k = dec - n - 1, 0, -1
-              j = int(x_)
               x_ = (x_ - j) * 10.0_dp
+              j = int(x_)
               s(n:n) = digit(j+1:j+1)
               n = n + 1
-        print*, 'n', n
             enddo
           endif
         endif
