@@ -6,8 +6,10 @@ module m_common_format
   private
 
 
-  integer, parameter ::  sp = selected_real_kind(6,30)
-  integer, parameter ::  dp = selected_real_kind(14,100)
+  integer, parameter :: sp = selected_real_kind(6,30)
+  integer, parameter :: dp = selected_real_kind(14,100)
+  integer, parameter :: sig_sp = digits(sp)/2
+  integer, parameter :: sig_dp = digits(dp)/2 ! Approximate precision worth outputting of each type.
 
   character(len=*), parameter :: digit = "0123456789"
   character(len=*), parameter :: hexdigit = "0123456789abcdefABCDEF"
@@ -16,14 +18,10 @@ module m_common_format
     module procedure str_integer, str_integer_array, &
                      str_logical, str_logical_array, &
                      str_real_dp, str_real_dp_fmt!, &
-                     !str_real_dp_array_no_fmt, str_real_dp_array_with_fmt, &
-                     !str_real_sp
-                     !str_real_sp_array_no_fmt, str_real_sp_array_with_fmt
-  end interface
+                     !str_real_sp, str_real_sp_fmt!, &
+  end interface str
 
   public :: str
-  public :: str_real_dp_fmt_len
-
 
   public :: str_to_int_10
   public :: str_to_int_16
@@ -218,18 +216,26 @@ contains
   ! or
   ! "s<integer>": which implies scientific notation, with an 
   ! exponent, with <integer> significant figures.
+  ! If the integer is absent, then the precision will be
+  ! half of the number of significant figures available
+  ! for that real type.
   ! The absence of a format implies scientific notation, with
-  ! as many significant figures as the format supports.
+  ! the default precision.
 
-  ! These routines are fairly imperfect - they will almost certainly 
-  ! behave badly for denormalized numbers. Also they will probably
-  ! be orders of magnitude slower than library IO.
+  ! These routines are fairly imperfect - they are inaccurate for
+  ! the lower-end bits of the number, since they work by simple
+  ! multiplications by 10.
+  ! Also they will probably be orders of magnitude slower than library IO.
+  ! Ideally they'd be rewritten to convert from teh native format by
+  ! bit-twidding. Not sure how to do that portably though.
 
   ! The format specification could be done more nicely - but unfortunately
   ! not in F95 due to *stupid* restrictions on specification expressions.
 
   ! And I wouldn't have to invent my own format specification if Fortran
   ! had a proper IO library anyway.
+
+!FIXME we should round the last digit
 
   function str_real_dp_fmt(x, fmt) result(s)
     real(dp), intent(in) :: x
@@ -239,8 +245,6 @@ contains
     integer :: sig, dec
     integer :: e, i, j, k, n, predecimal
     real(dp) :: x_
-
-    s = ''
 
     if (x == 0.0_dp) then
       e = 1
@@ -256,18 +260,16 @@ contains
     endif
 
     if (len(fmt) == 0) then
-      sig = digits(dp)
+      sig = sig_dp
       
       x_ = x / (10.0_dp**e)
       j = int(x_)
       s(n:n+1) = digit(j+1:j+1)//'.'
-      sig = sig - 1
       x_ = (x_ - j) * 10.0_dp
       n = n + 2
-      do k = sig - 1, 0, -1
+      do k = sig - 2, 0, -1
         j = int(x_)
         x_ = (x_ - j) * 10.0_dp
-      sig = sig - 1
         s(n:n) = digit(j+1:j+1)
         n = n + 1
       enddo
@@ -280,7 +282,7 @@ contains
       if (len(fmt) > 1) then
         dec = str_to_int_10(fmt(2:))
       else
-        dec = digits(dp) - e
+        dec = sig_dp - e
       endif
 
       if (x > 1.0_dp) then
@@ -332,20 +334,24 @@ contains
       if (len(fmt) > 1) then
         sig = str_to_int_10(fmt(2:))
       else
-        sig = digits(dp)
+        sig = sig_dp
       endif
 
       x_ = x / (10.0_dp**e)
       j = int(x_)
-      s(n:n+1) = digit(j+1:j+1)//'.'
-      x_ = (x_ - j) * 10.0_dp
-      n = n + 2
-      do k = sig - 2, 0, -1
-        j = int(x_)
-        x_ = (x_ - j) * 10.0_dp
-        s(n:n) = digit(j+1:j+1)
+      s(n:n) = digit(j+1:j+1)
+      n = n + 1
+      if (sig > 1) then
+        s(n:n) = '.'
         n = n + 1
-      enddo
+        x_ = (x_ - j) * 10.0_dp
+        do k = sig - 2, 0, -1
+          j = int(x_)
+          x_ = (x_ - j) * 10.0_dp
+          s(n:n) = digit(j+1:j+1)
+          n = n + 1
+        enddo
+      endif
 
       s(n:n) = 'e'
       s(n+1:) = str(e)
@@ -363,50 +369,25 @@ contains
     integer :: td, dec, sig
     integer :: e
     
+    if (x == 0.0_dp) then
+      e = 1
+    else
+      e = floor(log10(abs(x)))
+    endif
+      
+    if (x < 0.0_dp) then
+      n = 1
+    else
+      n = 0
+    endif
+      
     if (len(fmt) == 0) then
-      sig = digits(dp)
-      if (x < 0.0_dp) then
-        n = 1
-      else
-        n = 0
-      endif
-      
-      if (x == 0.0_dp) then
-        e = 1
-      else
-        e = floor(log10(abs(x)))
-      endif
-      
-      n = n + sig + 1 + 1 + len(str(e))
+      sig = sig_dp
+
+      n = n + sig + 2 + len(str(e))
+      ! for the decimal point and the e
 
     elseif (fmt(1:1) == 'r') then
-      if (abs(x) == 0.0_dp) then
-        td = digits(dp)
-      else
-        td = digits(dp) - int(log10(abs(x))) - 1
-      endif
-      
-      if (len(fmt) > 1) then
-        dec = str_to_int_10(fmt(2:))
-        dec = max(dec, 0)
-        dec = min(dec, td)
-      else
-        dec = td
-      endif
-
-      if (x < 0.0_dp) then
-        n = 1
-      else
-        n = 0
-      endif
-
-      if (abs(x) == 0.0_dp) then
-        n = n + dec + 1
-      elseif (abs(x) > 1.0_dp) then
-        n = n + int(log10(abs(x))) + 1
-      else
-        n = n + 2 + dec
-      endif
 
       n = 100
       
@@ -414,24 +395,15 @@ contains
       if (len(fmt) > 1) then
         sig = str_to_int_10(fmt(2:))
       else
-        sig = digits(dp)
+        sig = sig_dp
       endif
       sig = max(sig, 1)
       sig = min(sig, digits(dp))
+
+      if (sig > 1) n = n + 1
+      ! for the decimal point
       
-      if (x < 0.0_dp) then
-        n = 1
-      else
-        n = 0
-      endif
-      
-      if (x == 0.0_dp) then
-        e = 1
-      else
-        e = floor(log10(abs(x)))
-      endif
-      
-      n = n + sig + 1 + 1 + len(str(e))
+      n = n + sig + 1 + len(str(e))
     else
       call pxfabort()
     endif
