@@ -1,13 +1,10 @@
 module FoX_wxml
 
-  use m_wxml_text
   use m_wxml_core
   use m_wxml_overloads
 
   implicit none
   private
-
-  public :: str
 
   public :: xmlf_t
   public :: xml_OpenFile

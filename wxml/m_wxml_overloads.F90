@@ -1,6 +1,6 @@
 module m_wxml_overloads
   
-  use m_wxml_text, only: str
+  use m_common_format, only: str
   use m_wxml_core, only: xmlf_t
   use m_wxml_core, only: xml_AddPcData_Ch => xml_AddPcData
   use m_wxml_core, only: xml_AddAttribute_Ch => xml_AddAttribute
