@@ -231,31 +231,31 @@ contains
   ! And I wouldn't have to invent my own format specification if Fortran
   ! had a proper IO library anyway.
 
-  pure function str_real_dp_fmt(x, fmt) result(s)
+  function str_real_dp_fmt(x, fmt) result(s)
     real(dp), intent(in) :: x
     character(len=*), intent(in) :: fmt
     character(len=str_real_dp_fmt_len(x, fmt)) :: s
 
-    integer :: sig
+    integer :: sig, dec
     integer :: e, i, j, k, n, predecimal
     real(dp) :: x_
 
+    if (x == 0.0_dp) then
+      e = 1
+    else
+      e = floor(log10(abs(x)))
+    endif
+
+    if (x < 0.0_dp) then
+      s(1:1) = "-"
+      n = 2
+    else
+      n = 1
+    endif
 
     if (len(fmt) == 0) then
       sig = digits(dp)
-      if (x < 0.0_dp) then
-        s(1:1) = "-"
-        n = 2
-      else
-        n = 1
-      endif
       
-      if (x == 0.0_dp) then
-        e = 1
-      else
-        e = floor(log10(abs(x)))
-      endif
-
       x_ = x / (10.0_dp**e)
       j = int(x_)
       s(n:n+1) = digit(j+1:j+1)//'.'
@@ -275,7 +275,61 @@ contains
 
     elseif (fmt(1:1) == 'r') then
 
-      continue
+      if (len(fmt) > 1) then
+        dec = str_to_int_10(fmt(2:))
+      else
+        dec = digits(dp) - e
+      endif
+
+      if (x > 1.0_dp) then
+        
+        x_ = x / (10.0_dp**e)
+        j = int(x_)
+        s(n:n) = digit(j+1:j+1)
+        x_ = (x_ - j) * 10.0_dp
+        n = n + 1
+        do k = e - 1, 0, -1
+          j = int(x_)
+          x_ = (x_ - j) * 10.0_dp
+          s(n:n) = digit(j+1:j+1)
+          n = n + 1
+        enddo
+        if (dec > 1) then
+          s(n:n) = '.'
+          n = n + 1
+          do k = dec - 1, 0, -1
+            j = int(x_)
+            x_ = (x_ - j) * 10.0_dp
+            s(n:n) = digit(j+1:j+1)
+            n = n + 1
+          enddo
+        endif
+      else
+        s(n:n) = '0'
+        print*, 'n', n, s
+        if (dec > 1) then
+          s(n+1:n+1) = '.'
+          n = n + 2
+        print*, 'n', n, -e, s
+          s(n:n-e-1) = repeat('0', -e)
+          n = n - e
+        print*, 'n', n, s
+          if (n >= dec) then
+            x_ = x / (10.0_dp**(-e))
+            j = int(x_)
+            s(n:n) = digit(j+1:j+1)
+            n = n + 1
+        print*, 'n', n, s
+            do k = dec - n - 1, 0, -1
+              j = int(x_)
+              x_ = (x_ - j) * 10.0_dp
+              s(n:n) = digit(j+1:j+1)
+              n = n + 1
+        print*, 'n', n
+            enddo
+          endif
+        endif
+      endif
 
     elseif (fmt(1:1) == 's') then
 
@@ -285,29 +339,14 @@ contains
         sig = digits(dp)
       endif
 
-      if (x < 0.0_dp) then
-        s(1:1) = "-"
-        n = 2
-      else
-        n = 1
-      endif
-      
-      if (x == 0.0_dp) then
-        e = 1
-      else
-        e = floor(log10(abs(x)))
-      endif
-
       x_ = x / (10.0_dp**e)
       j = int(x_)
       s(n:n+1) = digit(j+1:j+1)//'.'
-      sig = sig - 1
       x_ = (x_ - j) * 10.0_dp
       n = n + 2
-      do k = sig - 1, 0, -1
+      do k = sig - 2, 0, -1
         j = int(x_)
         x_ = (x_ - j) * 10.0_dp
-      sig = sig - 1
         s(n:n) = digit(j+1:j+1)
         n = n + 1
       enddo
@@ -372,6 +411,8 @@ contains
       else
         n = n + 2 + dec
       endif
+
+      n = 100
       
     elseif (fmt(1:1) == 's') then
       if (len(fmt) > 1) then
