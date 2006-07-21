@@ -235,7 +235,7 @@ contains
   ! And I wouldn't have to invent my own format specification if Fortran
   ! had a proper IO library anyway.
 
-!FIXME we should round the last digit
+!FIXME we should round the last digit, but that's an arse to do correctly.
 
   function str_real_dp_fmt(x, fmt) result(s)
     real(dp), intent(in) :: x
@@ -245,6 +245,8 @@ contains
     integer :: sig, dec
     integer :: e, i, j, k, n, predecimal
     real(dp) :: x_
+
+    s= ''
 
     if (x == 0.0_dp) then
       e = 1
@@ -259,10 +261,11 @@ contains
       n = 1
     endif
 
+    x_ = abs(x) / (10.0_dp**e)
+
     if (len(fmt) == 0) then
       sig = sig_dp
       
-      x_ = x / (10.0_dp**e)
       j = int(x_)
       s(n:n+1) = digit(j+1:j+1)//'.'
       x_ = (x_ - j) * 10.0_dp
@@ -285,8 +288,7 @@ contains
         dec = sig_dp - e
       endif
 
-      if (x > 1.0_dp) then
-        x_ = x / (10.0_dp**e)
+      if (abs(x) > 1.0_dp) then
         j = int(x_)
         s(n:n) = digit(j+1:j+1)
         x_ = (x_ - j) * 10.0_dp
@@ -309,22 +311,25 @@ contains
         endif
       else
         s(n:n) = '0'
-        if (dec > 1) then
+        if (dec > 0) then
           s(n+1:n+1) = '.'
           n = n + 2
-          s(n:n-e-2) = repeat('0', -e-1)
-          n = n - e - 1
-          if (n <= dec) then
-            x_ = x / (10.0_dp**e)
-            j = int(x_)
-            s(n:n) = digit(j+1:j+1)
-            n = n + 1
-            do k = dec - n - 1, 0, -1
-              x_ = (x_ - j) * 10.0_dp
+          if (dec < -e-1) then
+            s(n:) = repeat('0', dec)
+          else
+            s(n:n-e-2) = repeat('0', -e-1)
+            n = n - e - 1
+            if (n <= len(s)) then
               j = int(x_)
               s(n:n) = digit(j+1:j+1)
               n = n + 1
-            enddo
+              do k = dec + e - 1, 0, -1
+                x_ = (x_ - j) * 10.0_dp
+                j = int(x_)
+                s(n:n) = digit(j+1:j+1)
+                n = n + 1
+              enddo
+            endif
           endif
         endif
       endif
@@ -337,7 +342,6 @@ contains
         sig = sig_dp
       endif
 
-      x_ = x / (10.0_dp**e)
       j = int(x_)
       s(n:n) = digit(j+1:j+1)
       n = n + 1
@@ -361,14 +365,16 @@ contains
   end function str_real_dp_fmt
 
 
- pure function str_real_dp_fmt_len(x, fmt) result(n)
+  pure function str_real_dp_fmt_len(x, fmt) result(n)
     real(dp), intent(in) :: x
     character(len=*), intent(in) :: fmt
     integer :: n
 
     integer :: td, dec, sig
     integer :: e
-    
+      public :: str_real_dp_fmt_len
+
+
     if (x == 0.0_dp) then
       e = 1
     else
@@ -384,12 +390,25 @@ contains
     if (len(fmt) == 0) then
       sig = sig_dp
 
-      n = n + sig + 2 + len(str(e))
+      n = n + sig + 2 + len(str(e)) 
       ! for the decimal point and the e
 
     elseif (fmt(1:1) == 'r') then
 
-      n = 100
+     if (len(fmt) > 1) then
+        dec = str_to_int_10(fmt(2:))
+      else
+        dec = sig_dp - e
+      endif
+
+      n = n + 1
+      if (abs(x) > 1.0_dp) then
+        ! we want all digits before the decimal point.
+        n = n + e - 1 !unless we round
+      endif
+      if (dec > 1) then
+        n = n + dec + 1
+      endif
       
     elseif (fmt(1:1) == 's') then
       if (len(fmt) > 1) then
@@ -400,7 +419,7 @@ contains
       sig = max(sig, 1)
       sig = min(sig, digits(dp))
 
-      if (sig > 1) n = n + 1
+      if (sig > 1) n = n + 1 
       ! for the decimal point
       
       n = n + sig + 1 + len(str(e))
