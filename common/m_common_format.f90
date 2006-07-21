@@ -245,6 +245,11 @@ contains
     integer :: e, i, j, k, n
     real(dp) :: x_
 
+    if (sig < 1) then
+      s ='' 
+      return
+    endif
+
     if (x == 0.0_dp) then
       e = 1
     else
@@ -263,8 +268,11 @@ contains
       ! Now round ...
       s(n:n) = '9'
       i = verify(s, '9', .true.)
-      !if (i==1) then
-      !argh need another number if this is from dec
+      if (i == 0) then
+        s(1:1) = '!'
+        !overflow
+        return
+      endif
       j = index(digit, s(i:i))
       s(i:i) = digit(j+1:j+1)
       s(i+1:) = repeat('0', sig - i + 1)
@@ -281,10 +289,10 @@ contains
 
     integer :: sig, dec
     integer :: e, i, j, k, n
-    real(dp) :: x_
+    logical :: overflow
     character(len=len(s)) :: num !this wll always be enough memory.
 
-    s= ''
+    overflow = .false.
 
     if (x == 0.0_dp) then
       e = 1
@@ -304,6 +312,12 @@ contains
       sig = sig_dp
 
       num = real_dp_str(abs(x), sig)
+      if (num(1:1) == '!') then
+        overflow = .true.
+        e = e + 1
+        num = '1'//repeat('0',len(num)-1)
+      endif
+
       if (sig == 1) then
         s(n:n) = num
       else
@@ -314,62 +328,6 @@ contains
 
       s(n:n) = 'e'
       s(n+1:) = str(e)
-
-    elseif (fmt(1:1) == 'r') then
-
-      if (len(fmt) > 1) then
-        dec = str_to_int_10(fmt(2:))
-      else
-        dec = sig_dp - e
-      endif
-
-      x_ = abs(x) / (10.0_dp**e)
-
-      if (abs(x) > 1.0_dp) then
-        j = int(x_)
-        s(n:n) = digit(j+1:j+1)
-        x_ = (x_ - j) * 10.0_dp
-        n = n + 1
-        do k = e - 1, 0, -1
-          j = int(x_)
-          x_ = (x_ - j) * 10.0_dp
-          s(n:n) = digit(j+1:j+1)
-          n = n + 1
-        enddo
-        if (dec > 1) then
-          s(n:n) = '.'
-          n = n + 1
-          do k = dec - 1, 0, -1
-            j = int(x_)
-            x_ = (x_ - j) * 10.0_dp
-            s(n:n) = digit(j+1:j+1)
-            n = n + 1
-          enddo
-        endif
-      else
-        s(n:n) = '0'
-        if (dec > 0) then
-          s(n+1:n+1) = '.'
-          n = n + 2
-          if (dec < -e-1) then
-            s(n:) = repeat('0', dec)
-          else
-            s(n:n-e-2) = repeat('0', -e-1)
-            n = n - e - 1
-            if (n <= len(s)) then
-              j = int(x_)
-              s(n:n) = digit(j+1:j+1)
-              n = n + 1
-              do k = dec + e - 1, 0, -1
-                x_ = (x_ - j) * 10.0_dp
-                j = int(x_)
-                s(n:n) = digit(j+1:j+1)
-                n = n + 1
-              enddo
-            endif
-          endif
-        endif
-      endif
 
     elseif (fmt(1:1) == 's') then
 
@@ -382,6 +340,12 @@ contains
       sig = min(sig, digits(dp))
 
       num = real_dp_str(abs(x), sig)
+      if (num(1:1) == '!') then
+        overflow = .true.
+        e = e + 1
+        num = '1'//repeat('0',len(num)-1)
+      endif
+
       if (sig == 1) then
         s(n:n) = num
         n = n + 1
@@ -393,6 +357,54 @@ contains
 
       s(n:n) = 'e'
       s(n+1:) = str(e)
+
+    elseif (fmt(1:1) == 'r') then
+
+      if (len(fmt) > 1) then
+        dec = str_to_int_10(fmt(2:))
+      else
+        dec = sig_dp - e
+      endif
+      dec = max(dec, 0)
+      dec = min(dec, digits(dp)-e)
+
+      if (e+dec+1 > 0) then
+        num = real_dp_str(abs(x), e+dec+1)
+      else
+        num = ''
+      endif
+      if (num(1:1) == '!') then
+        overflow = .true.
+        e = e + 1
+        num = '1'//repeat('0',len(num)-1)
+      endif
+
+      if (abs(x) > 1.0_dp) then
+        s(n:n+e) = num(:e+1)
+        n = n + e + 1
+        if (dec > 0) then
+          s(n:n) = '.'
+          n = n + 1
+          s(n:) = num(e+2:)
+        endif
+      else
+        !there is a chance we've been rounded up to 1 ...
+        !if (abs(x)>0.5_d0 .and. num(1:1)=='1') then
+        s(n:n) = '0'
+        if (dec > 0) then
+          s(n+1:n+1) = '.'
+          n = n + 2
+          if (dec < -e-1) then
+            s(n:) = repeat('0', dec)
+          else
+            s(n:n-e-2) = repeat('0', -e-1)
+            n = n - e - 1
+            if (n <= len(s)) then
+              s(n:) = num
+            endif
+          endif
+        endif
+      endif
 
     endif
 
@@ -429,20 +441,22 @@ contains
 
     elseif (fmt(1:1) == 'r') then
 
-     if (len(fmt) > 1) then
-        dec = str_to_int_10(fmt(2:))
-      else
-        dec = sig_dp - e
-      endif
+!!$     if (len(fmt) > 1) then
+!!$        dec = str_to_int_10(fmt(2:))
+!!$      else
+!!$        dec = sig_dp - e
+!!$      endif
+!!$
+!!$      n = n + 1
+!!$      if (abs(x) > 1.0_dp) then
+!!$        ! we want all digits before the decimal point.
+!!$        n = n + e - 1 !unless we round
+!!$      endif
+!!$      if (dec > 1) then
+!!$        n = n + dec + 1
+!!$      endif
 
-      n = n + 1
-      if (abs(x) > 1.0_dp) then
-        ! we want all digits before the decimal point.
-        n = n + e - 1 !unless we round
-      endif
-      if (dec > 1) then
-        n = n + dec + 1
-      endif
+      n = 100
       
     elseif (fmt(1:1) == 's') then
       if (len(fmt) > 1) then
