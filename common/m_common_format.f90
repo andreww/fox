@@ -237,14 +237,52 @@ contains
 
 !FIXME we should round the last digit, but that's an arse to do correctly.
 
+  function real_dp_str(x, sig) result(s)
+    real(dp), intent(in) :: x
+    integer, intent(in) :: sig
+    character(len=sig) :: s
+    ! make a string of numbers sig long of x.
+    integer :: e, i, j, k, n
+    real(dp) :: x_
+
+    if (x == 0.0_dp) then
+      e = 1
+    else
+      e = floor(log10(abs(x)))
+    endif
+    x_ = abs(x) / (10.0_dp**e)
+    n = 1
+    do k = sig - 2, 0, -1
+      j = int(x_)
+      s(n:n) = digit(j+1:j+1)
+      n = n + 1
+      x_ = (x_ - j) * 10.0_dp
+    enddo
+    j = nint(x_)
+    if (j == 10) then
+      ! Now round ...
+      s(n:n) = '9'
+      i = verify(s, '9', .true.)
+      !if (i==1) then
+      !argh need another number if this is from dec
+      j = index(digit, s(i:i))
+      s(i:i) = digit(j+1:j+1)
+      s(i+1:) = repeat('0', sig - i + 1)
+    else
+      s(n:n) = digit(j+1:j+1)
+    endif
+
+  end function real_dp_str
+
   function str_real_dp_fmt(x, fmt) result(s)
     real(dp), intent(in) :: x
     character(len=*), intent(in) :: fmt
     character(len=str_real_dp_fmt_len(x, fmt)) :: s
 
     integer :: sig, dec
-    integer :: e, i, j, k, n, predecimal
+    integer :: e, i, j, k, n
     real(dp) :: x_
+    character(len=len(s)) :: num !this wll always be enough memory.
 
     s= ''
 
@@ -261,21 +299,18 @@ contains
       n = 1
     endif
 
-    x_ = abs(x) / (10.0_dp**e)
-
     if (len(fmt) == 0) then
+
       sig = sig_dp
-      
-      j = int(x_)
-      s(n:n+1) = digit(j+1:j+1)//'.'
-      x_ = (x_ - j) * 10.0_dp
-      n = n + 2
-      do k = sig - 2, 0, -1
-        j = int(x_)
-        x_ = (x_ - j) * 10.0_dp
-        s(n:n) = digit(j+1:j+1)
-        n = n + 1
-      enddo
+
+      num = real_dp_str(abs(x), sig)
+      if (sig == 1) then
+        s(n:n) = num
+      else
+        s(n:n+1) = num(1:1)//'.'
+        s(n+2:n+sig) = num(2:)
+      endif
+      n = n + sig
 
       s(n:n) = 'e'
       s(n+1:) = str(e)
@@ -287,6 +322,8 @@ contains
       else
         dec = sig_dp - e
       endif
+
+      x_ = abs(x) / (10.0_dp**e)
 
       if (abs(x) > 1.0_dp) then
         j = int(x_)
@@ -341,20 +378,17 @@ contains
       else
         sig = sig_dp
       endif
+      sig = max(sig, 1)
+      sig = min(sig, digits(dp))
 
-      j = int(x_)
-      s(n:n) = digit(j+1:j+1)
-      n = n + 1
-      if (sig > 1) then
-        s(n:n) = '.'
+      num = real_dp_str(abs(x), sig)
+      if (sig == 1) then
+        s(n:n) = num
         n = n + 1
-        x_ = (x_ - j) * 10.0_dp
-        do k = sig - 2, 0, -1
-          j = int(x_)
-          x_ = (x_ - j) * 10.0_dp
-          s(n:n) = digit(j+1:j+1)
-          n = n + 1
-        enddo
+      else
+        s(n:n+1) = num(1:1)//'.'
+        s(n+2:n+sig) = num(2:)
+        n = n + sig + 1
       endif
 
       s(n:n) = 'e'
