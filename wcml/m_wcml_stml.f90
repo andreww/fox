@@ -6,7 +6,6 @@ module m_wcml_stml
   use FoX_wxml, only: xml_EndElement
 
   implicit none
-
   private
 
   integer, private, parameter ::  sp = selected_real_kind(6,30)
@@ -299,10 +298,8 @@ contains
         units=units)
     endif
 
-    call xml_AddPcdata(xf, value(1))
-    do i = 2, nvalue
-      call xml_AddPcdata(xf, delim1//value(i))
-    enddo
+    call xml_AddCharacters(xf, value, delim1)
+
     call xml_EndElement(xf, 'array')
 
   end subroutine stmAddStringArray
@@ -320,11 +317,9 @@ contains
 
     nvalue = size(value)
     call stmStartArrayTag(xf=xf, nvalue=nvalue, id=id, title=title, dictRef=dictRef, dataType='xsd:boolean', ref=ref)
-    call xml_AddPcdata(xf, value(1))
-    do i = 2, nvalue
-      call xml_AddPcdata(xf, ' ')
-      call xml_AddPcdata(xf, value(i))
-    enddo
+
+    call xml_AddCharacters(xf, value)
+
     call xml_EndElement(xf, 'array')
 
   end subroutine stmAddLogicalArray
@@ -343,11 +338,9 @@ contains
 
     nvalue = size(value)
     call stmStartArrayTag(xf=xf, nvalue=nvalue, id=id, title=title, dictRef=dictRef, dataType='xsd:double', ref=ref, units=units)
-    call xml_AddPcdata(xf, value(1))
-    do i = 2, nvalue
-      call xml_AddPcdata(xf, ' ')
-      call xml_AddPcdata(xf, value(i))
-    enddo
+
+    call xml_AddCharacters(xf, value)
+
     call xml_EndElement(xf, 'array')
 
   end subroutine stmAddIntegerArray
@@ -367,11 +360,9 @@ contains
 
     nvalue = size(value)
     call stmStartArrayTag(xf=xf, nvalue=nvalue, id=id, title=title, dictRef=dictRef, dataType='xsd:float', ref=ref, units=units)
-    call xml_AddPcdata(xf, value(1),fmt)
-    do i = 2, nvalue
-      call xml_AddPcdata(xf, ' ')
-      call xml_AddPcdata(xf, value(i),fmt)
-    enddo
+
+    call xml_AddCharacters(xf, value, fmt)
+
     call xml_EndElement(xf, 'array')
 
   end subroutine stmAddFloatArraySP
@@ -391,11 +382,9 @@ contains
 
     nvalue = size(value)
     call stmStartArrayTag(xf=xf, nvalue=nvalue, id=id, title=title, dictRef=dictRef, dataType='xsd:double', ref=ref, units=units)
-    call xml_AddPcdata(xf, value(1),fmt)
-    do i = 2, nvalue
-      call xml_AddPcdata(xf, ' ')
-      call xml_AddPcdata(xf, value(i),fmt)
-    enddo
+
+    call xml_AddCharacters(xf, value, fmt)
+
     call xml_EndElement(xf, 'array')
 
   end subroutine stmAddFloatArrayDP
@@ -449,11 +438,8 @@ contains
                              title=title, dictRef=dictRef, units=units, dataType='xsd:string')
     endif
 
-    do i = 1, ncols
-       do j = 1, nrows
-          call xml_AddPcdata(xf, value(j, i), space=.true.)
-       enddo
-    enddo
+    call xml_AddCharacters(xf, reshape(value, (/ncols*nrows/)))
+
     call xml_EndElement(xf, 'matrix')
 
   end subroutine stmAddstringMatrix
@@ -475,11 +461,8 @@ contains
     call stmStartMatrixTag(xf=xf, nrows=nrows, ncols=ncols, id=id, &
                            title=title, dictRef=dictRef, units=units, dataType='xsd:integer')
 
-    do i = 1, ncols
-       do j = 1, nrows
-          call xml_AddPcdata(xf, value(j, i), space=.true.)
-       enddo
-    enddo
+    call xml_AddCharacters(xf, reshape(value, (/ncols*nrows/)))
+
     call xml_EndElement(xf, 'matrix')
 
   end subroutine stmAddIntegerMatrix
@@ -501,11 +484,9 @@ contains
     call stmStartMatrixTag(xf=xf, nrows=nrows, ncols=ncols, id=id, &
                            title=title, dictRef=dictRef, units=units, dataType='xsd:boolean')
 
-    do i = 1, ncols
-       do j = 1, nrows
-          call xml_AddPcdata(xf, value(j, i), space=.true.)
-       enddo
-    enddo
+
+    call xml_AddCharacters(xf, reshape(value, (/ncols*nrows/)))
+
     call xml_EndElement(xf, 'matrix')
 
   end subroutine stmAddLogicalMatrix
@@ -528,11 +509,9 @@ contains
     call stmStartMatrixTag(xf=xf, nrows=nrows, ncols=ncols, id=id, &
                            title=title, dictRef=dictRef, units=units, dataType='xsd:double')
 
-    do i = 1, ncols
-       do j = 1, nrows
-          call xml_AddPcdata(xf, value(j, i), fmt, space=.true.)
-       enddo
-    enddo
+
+    call xml_AddCharacters(xf, reshape(value, (/ncols*nrows/)), fmt)
+
     call xml_EndElement(xf, 'matrix')
 
   end subroutine stmAddFloatMatrixDP
@@ -555,11 +534,8 @@ contains
     call stmStartMatrixTag(xf=xf, nrows=nrows, ncols=ncols, id=id, &
                            title=title, dictRef=dictRef, units=units, dataType='xsd:float')
 
-    do i = 1, ncols
-       do j = 1, nrows
-          call xml_AddPcdata(xf, value(j, i), fmt, space=.true.)
-       enddo
-    enddo
+    call xml_AddCharacters(xf, reshape(value, (/ncols*nrows/)), fmt)
+
     call xml_EndElement(xf, 'matrix')
 
   end subroutine stmAddFloatMatrixSP

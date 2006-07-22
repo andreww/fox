@@ -2,8 +2,9 @@ module m_wcml_core
 
   use FoX_common, only: FoX_version
   use m_common_error, only: FoX_error
-  use FoX_wxml, only: xmlf_t, str
-  use FoX_wxml, only: xml_NewElement, xml_AddPcData, xml_AddAttribute
+  use m_common_format, only: str
+  use FoX_wxml, only: xmlf_t
+  use FoX_wxml, only: xml_NewElement, xml_AddCharacters, xml_AddAttribute
   use FoX_wxml, only: xml_EndElement, xml_AddNamespace
   use m_wcml_stml, only: stmAddValue
 
@@ -26,8 +27,6 @@ module m_wcml_core
 ! CMLCore
   public :: cmlAddCoordinates
   public :: cmlAddCrystal
-  public :: cmlAddAngle
-  public :: cmlAddLength
   public :: cmlAddEigenvalue
   public :: cmlAddMolecule
   public :: cmlStartModule
@@ -45,16 +44,6 @@ module m_wcml_core
   interface cmlAddCrystal
      module procedure cmlAddCrystalSP
      module procedure cmlAddCrystalDP
-  end interface
-
-  interface cmlAddAngle
-     module procedure cmlAddAngleSP
-     module procedure cmlAddAngleDP
-  end interface
-
-  interface cmlAddLength
-     module procedure cmlAddLengthSP
-     module procedure cmlAddLengthDP
   end interface
 
   interface cmlAddEigenvalue
@@ -523,119 +512,6 @@ contains
     
   end subroutine cmlAddCoordinatesDP
 
-  
-  ! -------------------------------------------------
-  ! 1. writes a DP <length> element to output channel
-  ! -------------------------------------------------
-  
-  subroutine cmlAddLengthDP(xf, length, id, atomRef1, atomRef2, fmt)
-    type(xmlf_t), intent(inout) :: xf
-    real(kind=dp), intent(in)     :: length     ! length
-    character(len=*), intent(in) :: id         ! length id
-    character(len=*), intent(in) :: atomRef1   ! ref to first atom
-    character(len=*), intent(in) :: atomRef2   ! ref to second atom
-    character(len=*), intent(in), optional :: fmt        ! format
-
-    ! Flush on entry and exit
-    call CMLLEN9DP(xf, id, atomRef1, atomRef2, length, fmt)
-  end subroutine cmlAddLengthDP
-
-  ! -------------------------------------------------
-  ! 2. writes a SP <length> element to output channel
-  ! -------------------------------------------------
-  
-  subroutine cmlAddLengthSP(xf, length, id, atomRef1, atomRef2, fmt)
-
-    type(xmlf_t), intent(inout) :: xf
-    real(kind=sp), intent(in)     :: length     ! the length
-    character(len=*), intent(in) :: id         ! length id
-    character(len=*), intent(in) :: atomRef1   ! ref to first atom
-    character(len=*), intent(in) :: atomRef2   ! ref to second atom
-    character(len=*), intent(in), optional :: fmt        ! format
-
-    ! Flush on entry and exit
-    call CMLLEN9SP(xf, id, atomRef1, atomRef2, length, fmt)
-  end subroutine cmlAddLengthSP
-
-
-  ! -------------------------------------------------
-  ! 1. writes an DP <angle> element to output channel
-  ! -------------------------------------------------
-
-  subroutine cmlAddAngleDP(xf, angle, id, atomRef1, atomRef2, atomRef3, fmt)
-
-    type(xmlf_t), intent(inout) :: xf
-    real(kind=dp), intent(in)     :: angle        ! the angle
-    character(len=*), intent(in) :: id           ! angle id
-    character(len=*), intent(in) :: atomRef1     ! ref to first atom
-    character(len=*), intent(in) :: atomRef2     ! ref to second atom
-    character(len=*), intent(in) :: atomRef3     ! ref to third atom
-    character(len=*), intent(in), optional :: fmt          ! format
-
-    ! Flush on entry and exit
-    call CMLANG9DP(xf, id, atomRef1, atomRef2, atomRef3, angle, fmt)
-  end subroutine cmlAddAngleDP
-
-  ! -------------------------------------------------
-  ! 2. writes an SP <angle> element to output channel
-  ! -------------------------------------------------
-
-  subroutine cmlAddAngleSP(xf, angle, id, atomRef1, atomRef2, atomRef3, fmt)
-
-
-    type(xmlf_t), intent(inout) :: xf
-    real(kind=sp), intent(in)     :: angle        ! the angle
-    character(len=*), intent(in) :: id           ! angle id
-    character(len=*), intent(in) :: atomRef1     ! ref to first atom
-    character(len=*), intent(in) :: atomRef2     ! ref to second atom
-    character(len=*), intent(in) :: atomRef3     ! ref to third atom
-    character(len=*), intent(in), optional :: fmt          ! format
-
-    ! Flush on entry and exit
-    call CMLANG9SP(xf, id, atomRef1, atomRef2, atomRef3, angle, fmt)
-  end subroutine cmlAddAngleSP
-
-
-  ! -------------------------------------------------
-  ! 1. creates and writes a DP <torsion> element
-  ! -------------------------------------------------
-
-  subroutine cmlAddTorsionDP(xf, torsion, id, atomRef1, atomRef2, atomRef3, atomRef4, fmt)
-
-
-    type(xmlf_t), intent(inout) :: xf
-    real(kind=dp), intent(in)     :: torsion         ! the torsion
-    character(len=*), intent(in) :: id              ! torsion id
-    character(len=*), intent(in) :: atomRef1        ! ref to first atom
-    character(len=*), intent(in) :: atomRef2        ! ref to second atom
-    character(len=*), intent(in) :: atomRef3        ! ref to third atom
-    character(len=*), intent(in) :: atomRef4        ! ref to fourth atom
-    character(len=*), intent(in), optional :: fmt             ! format
-
-    ! Flush on entry and exit
-    call CMLTOR9DP(xf, id, atomRef1, atomRef2, atomRef3, atomRef4, torsion, fmt)
-  end subroutine cmlAddTorsionDP
-  
-  ! -------------------------------------------------
-  ! 2. creates and writes a SP <torsion> element
-  ! -------------------------------------------------
-  
-  subroutine cmlAddTorsionSP(xf, torsion, id, atomRef1, atomRef2, atomRef3, atomRef4, fmt)
-
-
-    type(xmlf_t), intent(inout) :: xf
-    real(kind=sp), intent(in)     :: torsion         ! the torsion
-    character(len=*), intent(in) :: id              ! torsion id
-    character(len=*), intent(in) :: atomRef1        ! ref to first atom
-    character(len=*), intent(in) :: atomRef2        ! ref to second atom
-    character(len=*), intent(in) :: atomRef3        ! ref to third atom
-    character(len=*), intent(in) :: atomRef4        ! ref to fourth atom
-    character(len=*), intent(in), optional :: fmt             ! format
-
-    ! Flush on entry and exit
-    call CMLTOR9SP(xf, id, atomRef1, atomRef2, atomRef3, atomRef4, torsion, fmt)
-  end subroutine cmlAddTorsionSP
-
 
   ! -------------------------------------------------
   ! 1. creates and writes a DP <cell> element
@@ -1026,136 +902,5 @@ contains
     endif
 
   end subroutine CMLATXY9SP
-
-
-  ! -------------------------------------------------
-  ! 1. creates a DP <length> element
-  ! -------------------------------------------------
-
-  subroutine CMLLEN9DP(xf, id, atomRef1, atomRef2, length, fmt)
-    type(xmlf_t), intent(inout) :: xf
-    character(len=*), intent(in) :: id           ! length id
-    character(len=*), intent(in) :: atomRef1     ! ref to first atom
-    character(len=*), intent(in) :: atomRef2     ! ref to second atom
-    real(kind=dp), intent(in)    :: length       ! the length
-    character(len=*), intent(in), optional :: fmt          ! format
-
-    call xml_NewElement(xf, 'length')
-    call xml_AddAttribute(xf, 'id', id)
-    call xml_AddAttribute(xf, 'atomRefs2', atomRef1//' '//atomRef2)
-    call xml_AddPcdata(xf, length, fmt)
-    call xml_EndElement(xf, 'length')
-
-  end subroutine CMLLEN9DP
-  
-  ! -------------------------------------------------
-  ! 2. creates a SP <length> element
-  ! -------------------------------------------------
-  
-  subroutine CMLLEN9SP(xf, id, atomRef1, atomRef2, length, fmt)
-    type(xmlf_t), intent(inout) :: xf
-    character(len=*), intent(in) :: id           ! length id
-    character(len=*), intent(in) :: atomRef1     ! ref to first atom
-    character(len=*), intent(in) :: atomRef2     ! ref to second atom
-    real(kind=sp), intent(in)    :: length       ! the length
-    character(len=*), intent(in), optional :: fmt          ! format
-
-    call xml_NewElement(xf, 'length')
-    call xml_AddAttribute(xf, 'id', id)
-    call xml_AddAttribute(xf, 'atomRefs2', atomRef1//' '//atomRef2)
-    call xml_AddPcdata(xf, length, fmt)
-    call xml_EndElement(xf, 'length')
-
-  end subroutine CMLLEN9SP
-
-
-  ! -------------------------------------------------
-  ! 1. creates a DP <angle> element
-  ! -------------------------------------------------
-
-  subroutine CMLANG9DP(xf, id, atomRef1, atomRef2, atomRef3, angle, fmt)
-    type(xmlf_t), intent(inout) :: xf
-    character(len=*), intent(in) :: id              ! angle id
-    character(len=*), intent(in) :: atomRef1        ! ref to first atom
-    character(len=*), intent(in) :: atomRef2        ! ref to second atom
-    character(len=*), intent(in) :: atomRef3        ! ref to third atom
-    real(kind=dp), intent(in)     :: angle          ! the angle
-    character(len=*), intent(in), optional :: fmt             ! format
-
-    call xml_NewElement(xf, 'angle')
-    call xml_AddAttribute(xf, 'id', id)
-    call xml_AddAttribute(xf, 'atomRefs3', atomRef1//' '//atomRef2//' '//atomRef3)
-    call xml_AddPcdata(xf, angle, fmt)
-    call xml_EndElement(xf, 'angle')
-
-  end subroutine CMLANG9DP
-
-  ! -------------------------------------------------
-  ! 2. creates a SP <angle> element
-  ! -------------------------------------------------
-
-  subroutine CMLANG9SP(xf, id, atomRef1, atomRef2, atomRef3, angle, fmt)
-    type(xmlf_t), intent(inout) :: xf
-    character(len=*), intent(in) :: id              ! angle id
-    character(len=*), intent(in) :: atomRef1        ! ref to first atom
-    character(len=*), intent(in) :: atomRef2        ! ref to second atom
-    character(len=*), intent(in) :: atomRef3        ! ref to third atom
-    real(kind=sp), intent(in)     :: angle          ! the angle
-    character(len=*), intent(in), optional :: fmt             ! format
-
-    call xml_NewElement(xf, 'angle')
-    call xml_AddAttribute(xf, 'id', id)
-    call xml_AddAttribute(xf, 'atomRefs3', atomRef1//' '//atomRef2//' '//atomRef3)
-    call xml_AddPcdata(xf, angle, fmt)
-    call xml_EndElement(xf, 'angle')
-
-  end subroutine CMLANG9SP
-
-
-  ! -------------------------------------------------
-  ! 1. creates a DP <torsion> element
-  ! -------------------------------------------------
-  
-  subroutine CMLTOR9DP(xf, id, atomRef1, atomRef2, atomRef3, atomRef4, torsion, fmt)
-    type(xmlf_t), intent(inout) :: xf
-    character(len=*), intent(in) :: id              ! torsion id
-    character(len=*), intent(in) :: atomRef1        ! ref to first atom
-    character(len=*), intent(in) :: atomRef2        ! ref to second atom
-    character(len=*), intent(in) :: atomRef3        ! ref to third atom
-    character(len=*), intent(in) :: atomRef4        ! ref to fourth atom
-    real(kind=dp), intent(in)    :: torsion         ! the torsion
-    character(len=*), intent(in), optional :: fmt             ! format
-
-    call xml_NewElement(xf, 'torsion')
-    call xml_AddAttribute(xf, 'id', id)
-    call xml_AddAttribute(xf, 'atomRefs4', &
-         atomRef1//' '//atomRef2//' '//atomRef3//' '//atomRef4)
-    call xml_AddPcdata(xf, torsion, fmt)
-    call xml_EndElement(xf, 'torsion')
-
-  end subroutine CMLTOR9DP
-
-  ! -------------------------------------------------
-  ! 2. creates a SP <torsion> element
-  ! -------------------------------------------------
-
-  subroutine CMLTOR9SP(xf, id, atomRef1, atomRef2, atomRef3, atomRef4, torsion, fmt)
-    type(xmlf_t), intent(inout) :: xf
-    character(len=*), intent(in) :: id              ! torsion id
-    character(len=*), intent(in) :: atomRef1        ! ref to first atom
-    character(len=*), intent(in) :: atomRef2        ! ref to second atom
-    character(len=*), intent(in) :: atomRef3        ! ref to third atom
-    character(len=*), intent(in) :: atomRef4        ! ref to fourth atom
-    real(kind=sp), intent(in)    :: torsion         ! the torsion
-    character(len=*), intent(in), optional :: fmt             ! format
-
-    call xml_NewElement(xf, 'torsion')
-    call xml_AddAttribute(xf, 'id', id)
-    call xml_AddAttribute(xf, 'atomRefs4', &
-         atomRef1//' '//atomRef2//' '//atomRef3//' '//atomRef4)
-    call xml_AddPcdata(xf, torsion, fmt)
-    call xml_EndElement(xf, 'torsion')
-
-  end subroutine CMLTOR9SP
 
 end module m_wcml_core

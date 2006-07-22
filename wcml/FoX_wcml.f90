@@ -2,11 +2,13 @@ module FoX_wcml
 
   use m_wcml_core
   use m_wcml_coma
+  use m_wcml_geometry
   use m_wcml_parameter
   use m_wcml_property
   use m_wcml_stml
 
-  public
+  implicit none
+  private
 
   public :: cmlStartPropertyList
   public :: cmlEndPropertyList

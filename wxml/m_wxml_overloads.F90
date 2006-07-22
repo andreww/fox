@@ -13,28 +13,29 @@ module m_wxml_overloads
   integer, parameter ::  dp = selected_real_kind(14,100)
 
   interface xml_AddCharacters
-     module procedure xml_AddCharacters_SP
-     module procedure xml_AddCharacters_DP
-     module procedure xml_AddCharacters_Int
-     module procedure xml_AddCharacters_Log
-     module procedure xml_AddCharacters_SP_array
-     module procedure xml_AddCharacters_DP_array
-     module procedure xml_AddCharacters_Int_array
-     module procedure xml_AddCharacters_Log_array
+    module procedure xml_AddCharacters_SP
+    module procedure xml_AddCharacters_DP
+    module procedure xml_AddCharacters_Int
+    module procedure xml_AddCharacters_Log
+    module procedure xml_AddCharacters_SP_array
+    module procedure xml_AddCharacters_DP_array
+    module procedure xml_AddCharacters_Int_array
+    module procedure xml_AddCharacters_Log_array
+    module procedure xml_AddCharacters_Ch_array
   end interface
 
   interface xml_AddAttribute
-     module procedure xml_AddAttribute_SP
-     module procedure xml_AddAttribute_DP
-     module procedure xml_AddAttribute_Int
-     module procedure xml_AddAttribute_Log
+    module procedure xml_AddAttribute_SP
+    module procedure xml_AddAttribute_DP
+    module procedure xml_AddAttribute_Int
+    module procedure xml_AddAttribute_Log
   end interface
 
   interface xml_AddPseudoAttribute
-     module procedure xml_AddPseudoAttribute_SP
-     module procedure xml_AddPseudoAttribute_DP
-     module procedure xml_AddPseudoAttribute_Int
-     module procedure xml_AddPseudoAttribute_Log
+    module procedure xml_AddPseudoAttribute_SP
+    module procedure xml_AddPseudoAttribute_DP
+    module procedure xml_AddPseudoAttribute_Int
+    module procedure xml_AddPseudoAttribute_Log
   end interface
 
   public :: xml_AddCharacters
@@ -132,6 +133,15 @@ contains
     call xml_AddCharacters(xf, str(data))
 
   end subroutine xml_AddCharacters_int_array
+
+  subroutine xml_AddCharacters_Ch_array(xf, data, delimiter)
+    type(xmlf_t), intent(inout)    :: xf
+    character(len=*), dimension(:), intent(in) :: data
+    character(len=1), intent(in), optional :: delimiter
+
+    call xml_AddCharacters(xf, str(data, delimiter))
+
+  end subroutine xml_AddCharacters_Ch_array
 
 
   subroutine xml_AddAttribute_SP(xf,name,value,fmt)
