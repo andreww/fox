@@ -17,7 +17,8 @@ module m_common_format
   interface str
     module procedure str_integer, str_integer_array, &
                      str_logical, str_logical_array, &
-                     str_real_dp, str_real_dp_fmt!, &
+                     str_real_dp, str_real_dp_fmt, &
+                     str_real_dp_array, str_real_dp_array_fmt!, &
                      !str_real_sp, str_real_sp_fmt!, &
   end interface str
 
@@ -291,8 +292,6 @@ contains
     integer :: e, i, j, k, n
     character(len=len(s)) :: num !this wll always be enough memory.
 
-    s = repeat('x', len(s))
-
     if (x == 0.0_dp) then
       e = 0
     else
@@ -473,7 +472,7 @@ contains
   end function str_real_dp_fmt_len
 
 
-  function str_real_dp(x) result(s)
+  pure function str_real_dp(x) result(s)
     real(dp), intent(in) :: x
     character(len=str_real_dp_len(x)) :: s
 
@@ -490,5 +489,78 @@ contains
 
   end function str_real_dp_len
 
-          
+
+  pure function str_real_dp_array(xa) result(s)
+    real(dp), dimension(:), intent(in) :: xa
+    character(len=str_real_dp_array_len(xa)) :: s
+    
+    integer :: j, k, n
+    character(len=1) :: d
+
+    n = 1
+    do k = 1, size(xa) - 1
+      j = str_real_dp_fmt_len(xa(k), "")
+      s(n:n+j) = str(xa(k), "")//" "
+      n = n + j
+    enddo
+    s(n:) = str(xa(k))
+
+  end function str_real_dp_array
+
+
+  pure function str_real_dp_array_fmt(xa, fmt, delimiter) result(s)
+    real(dp), dimension(:), intent(in) :: xa
+    character(len=*), intent(in) :: fmt
+    character(len=1), intent(in), optional :: delimiter
+    character(len=str_real_dp_array_fmt_len(xa, fmt)) :: s
+    
+    integer :: j, k, n
+    character(len=1) :: d
+
+    if (present(delimiter)) then
+      d = delimiter
+    else
+      d = " "
+    endif
+
+    n = 1
+    do k = 1, size(xa) - 1
+      j = str_real_dp_fmt_len(xa(k), fmt)
+      s(n:n+j) = str(xa(k), fmt)//d
+      n = n + j
+    enddo
+    s(n:) = str(xa(k), fmt)
+
+  end function str_real_dp_array_fmt
+
+     
+  pure function str_real_dp_array_len(xa) result(n)
+    real(dp), dimension(:), intent(in) :: xa
+    integer :: n
+
+    integer :: k
+
+    n = size(xa) - 1
+    do k = 1, size(xa)
+      n = n + str_real_dp_fmt_len(xa(k), "")
+    enddo
+    
+  end function str_real_dp_array_len
+
+     
+  pure function str_real_dp_array_fmt_len(xa, fmt) result(n)
+    real(dp), dimension(:), intent(in) :: xa
+    character(len=*), intent(in) :: fmt
+    integer :: n
+
+    integer :: k
+
+    n = size(xa) - 1
+    do k = 1, size(xa)
+      n = n + str_real_dp_fmt_len(xa(k), fmt)
+    enddo
+    
+  end function str_real_dp_array_fmt_len
+     
+     
 end module m_common_format
