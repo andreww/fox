@@ -20,9 +20,6 @@ module m_wxml_core
   implicit none
   private
 
-  logical, parameter :: pcdata_advance_line_default = .false.
-  logical, parameter :: pcdata_advance_space_default = .false.
-
   integer, parameter ::  sp = selected_real_kind(6,30)
   integer, parameter ::  dp = selected_real_kind(14,100)
 
