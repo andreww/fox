@@ -235,7 +235,7 @@ contains
   ! And I wouldn't have to invent my own format specification if Fortran
   ! had a proper IO library anyway.
 
-!FIXME we should round the last digit, but that's an arse to do correctly.
+!FIXME Signed zero is not handled correctly; don't quite understand why.
 
   pure function real_dp_str(x, sig) result(s)
     real(dp), intent(in) :: x
@@ -282,7 +282,7 @@ contains
 
   end function real_dp_str
 
-  function str_real_dp_fmt(x, fmt) result(s)
+  pure function str_real_dp_fmt(x, fmt) result(s)
     real(dp), intent(in) :: x
     character(len=*), intent(in) :: fmt
     character(len=str_real_dp_fmt_len(x, fmt)) :: s
@@ -290,6 +290,8 @@ contains
     integer :: sig, dec
     integer :: e, i, j, k, n
     character(len=len(s)) :: num !this wll always be enough memory.
+
+    s = repeat('x', len(s))
 
     if (x == 0.0_dp) then
       e = 0
@@ -358,10 +360,10 @@ contains
       if (len(fmt) > 1) then
         dec = str_to_int_10(fmt(2:))
       else
-        dec = sig_dp - e
+        dec = sig_dp - e - 1
       endif
       dec = max(dec, 0)
-      dec = min(dec, digits(dp)-e)
+      dec = min(dec, digits(dp)-e-1)
 
       if (e+dec+1 > 0) then
         num = real_dp_str(abs(x), e+dec+1)
@@ -448,10 +450,13 @@ contains
       if (len(fmt) > 1) then
         dec = str_to_int_10(fmt(2:))
       else
-        dec = sig_dp - e
+        dec = sig_dp - e - 1
       endif
       dec = max(dec, 0)
       dec = min(dec, digits(dp)-e)
+
+      if (dec > 0) n = n + 1
+      if (abs(x) > 0.0_dp) n = n + 1
 
       ! Need to know if there's an overflow ....
       if (e+dec+1 > 0) then
@@ -459,7 +464,7 @@ contains
              e = e + 1
       endif
 
-      n = n + abs(e) + 1 + dec
+      n = n + abs(e) + dec
 
     else
       call pxfabort()
@@ -472,8 +477,7 @@ contains
     real(dp), intent(in) :: x
     character(len=str_real_dp_len(x)) :: s
 
-    s = ""
-    !s = str_real_dp_fmt(x, "")
+    s = str_real_dp_fmt(x, "")
 
   end function str_real_dp
 
@@ -482,8 +486,7 @@ contains
     real(dp), intent(in) :: x
     integer :: n
 
-    n = 0
-    !n = str_real_dp_fmt_len(x, "")
+    n = str_real_dp_fmt_len(x, "")
 
   end function str_real_dp_len
 
