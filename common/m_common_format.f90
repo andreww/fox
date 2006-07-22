@@ -18,8 +18,9 @@ module m_common_format
     module procedure str_integer, str_integer_array, &
                      str_logical, str_logical_array, &
                      str_real_dp, str_real_dp_fmt, &
-                     str_real_dp_array, str_real_dp_array_fmt!, &
-                     !str_real_sp, str_real_sp_fmt!, &
+                     str_real_dp_array, str_real_dp_array_fmt, &
+                     str_real_sp, str_real_sp_fmt, &
+                     str_real_sp_array, str_real_sp_array_fmt
   end interface str
 
   public :: str
@@ -237,7 +238,333 @@ contains
   ! had a proper IO library anyway.
 
 !FIXME Signed zero is not handled correctly; don't quite understand why.
+!FIXME too much duplication between sp & dp, we should m4.
 
+  pure function real_sp_str(x, sig) result(s)
+    real(sp), intent(in) :: x
+    integer, intent(in) :: sig
+    character(len=sig) :: s
+    ! make a string of numbers sig long of x.
+    integer :: e, i, j, k, n
+    real(sp) :: x_
+
+    if (sig < 1) then
+      s ='' 
+      return
+    endif
+
+    if (x == 0.0_sp) then
+      e = 1
+    else
+      e = floor(log10(abs(x)))
+    endif
+    x_ = abs(x) / (10.0_sp**e)
+    n = 1
+    do k = sig - 2, 0, -1
+      j = int(x_)
+      s(n:n) = digit(j+1:j+1)
+      n = n + 1
+      x_ = (x_ - j) * 10.0_sp
+    enddo
+    j = nint(x_)
+    if (j == 10) then
+      ! Now round ...
+      s(n:n) = '9'
+      i = verify(s, '9', .true.)
+      if (i == 0) then
+        s(1:1) = '!'
+        !overflow
+        return
+      endif
+      j = index(digit, s(i:i))
+      s(i:i) = digit(j+1:j+1)
+      s(i+1:) = repeat('0', sig - i + 1)
+    else
+      s(n:n) = digit(j+1:j+1)
+    endif
+
+  end function real_sp_str
+
+  pure function str_real_sp_fmt(x, fmt) result(s)
+    real(sp), intent(in) :: x
+    character(len=*), intent(in) :: fmt
+    character(len=str_real_sp_fmt_len(x, fmt)) :: s
+
+    integer :: sig, dec
+    integer :: e, i, j, k, n
+    character(len=len(s)) :: num !this wll always be enough memory.
+
+    if (x == 0.0_sp) then
+      e = 0
+    else
+      e = floor(log10(abs(x)))
+    endif
+
+    if (x < 0.0_sp) then
+      s(1:1) = "-"
+      n = 2
+    else
+      n = 1
+    endif
+
+    if (len(fmt) == 0) then
+
+      sig = sig_sp
+
+      num = real_sp_str(abs(x), sig)
+      if (num(1:1) == '!') then
+        e = e + 1
+        num = '1'//repeat('0',len(num)-1)
+      endif
+
+      if (sig == 1) then
+        s(n:n) = num
+      else
+        s(n:n+1) = num(1:1)//'.'
+        s(n+2:n+sig) = num(2:)
+      endif
+      n = n + sig
+
+      s(n:n) = 'e'
+      s(n+1:) = str(e)
+
+    elseif (fmt(1:1) == 's') then
+
+      if (len(fmt) > 1) then
+        sig = str_to_int_10(fmt(2:))
+      else
+        sig = sig_dp
+      endif
+      sig = max(sig, 1)
+      sig = min(sig, digits(dp))
+
+      num = real_sp_str(abs(x), sig)
+      if (num(1:1) == '!') then
+        e = e + 1
+        num = '1'//repeat('0',len(num)-1)
+      endif
+
+      if (sig == 1) then
+        s(n:n) = num
+        n = n + 1
+      else
+        s(n:n+1) = num(1:1)//'.'
+        s(n+2:n+sig) = num(2:)
+        n = n + sig + 1
+      endif
+
+      s(n:n) = 'e'
+      s(n+1:) = str(e)
+
+    elseif (fmt(1:1) == 'r') then
+
+      if (len(fmt) > 1) then
+        dec = str_to_int_10(fmt(2:))
+      else
+        dec = sig_sp - e - 1
+      endif
+      dec = max(dec, 0)
+      dec = min(dec, digits(sp)-e-1)
+
+      if (e+dec+1 > 0) then
+        num = real_sp_str(abs(x), e+dec+1)
+      else
+        num = ''
+      endif
+      if (num(1:1) == '!') then
+        e = e + 1
+        num = '1'//repeat('0',len(num)-1)
+      endif
+
+      if (abs(x) >= 1.0_sp) then
+        s(n:n+e) = num(:e+1)
+        n = n + e + 1
+        if (dec > 0) then
+          s(n:n) = '.'
+          n = n + 1
+          s(n:) = num(e+2:)
+        endif
+      else
+        s(n:n) = '0'
+        if (dec > 0) then
+          s(n+1:n+1) = '.'
+          n = n + 2
+          if (dec < -e-1) then
+            s(n:) = repeat('0', dec)
+          else
+            s(n:n-e-2) = repeat('0', -e-1)
+            n = n - min(e,-1) - 1
+            if (n <= len(s)) then
+              s(n:) = num
+            endif
+          endif
+        endif
+      endif
+
+    endif
+
+  end function str_real_sp_fmt
+
+
+  pure function str_real_sp_fmt_len(x, fmt) result(n)
+    real(sp), intent(in) :: x
+    character(len=*), intent(in) :: fmt
+    integer :: n
+
+    integer :: td, dec, sig
+    integer :: e
+
+    if (x == 0.0_sp) then
+      e = 1
+    else
+      e = floor(log10(abs(x)))
+    endif
+      
+    if (x < 0.0_sp) then
+      n = 1
+    else
+      n = 0
+    endif
+      
+    if (len(fmt) == 0) then
+      sig = sig_sp
+
+      n = n + sig + 2 + len(str(e)) 
+      ! for the decimal point and the e
+
+    elseif (fmt(1:1) == 's') then
+      if (len(fmt) > 1) then
+        sig = str_to_int_10(fmt(2:))
+      else
+        sig = sig_sp
+      endif
+      sig = max(sig, 1)
+      sig = min(sig, digits(sp))
+
+      if (sig > 1) n = n + 1 
+      ! for the decimal point
+      
+      n = n + sig + 1 + len(str(e))
+
+    elseif (fmt(1:1) == 'r') then
+
+      if (len(fmt) > 1) then
+        dec = str_to_int_10(fmt(2:))
+      else
+        dec = sig_sp - e - 1
+      endif
+      dec = max(dec, 0)
+      dec = min(dec, digits(sp)-e)
+
+      if (dec > 0) n = n + 1
+      if (abs(x) > 0.0_sp) n = n + 1
+
+      ! Need to know if there's an overflow ....
+      if (e+dec+1 > 0) then
+        if (index(real_sp_str(abs(x), e+dec+1), '!') == 1) &
+             e = e + 1
+      endif
+
+      n = n + abs(e) + dec
+
+    else
+      call pxfabort()
+    endif
+
+  end function str_real_sp_fmt_len
+
+
+  pure function str_real_sp(x) result(s)
+    real(sp), intent(in) :: x
+    character(len=str_real_sp_len(x)) :: s
+
+    s = str_real_sp_fmt(x, "")
+
+  end function str_real_sp
+
+
+  pure function str_real_sp_len(x) result(n)
+    real(sp), intent(in) :: x
+    integer :: n
+
+    n = str_real_sp_fmt_len(x, "")
+
+  end function str_real_sp_len
+
+
+  pure function str_real_sp_array(xa) result(s)
+    real(sp), dimension(:), intent(in) :: xa
+    character(len=str_real_sp_array_len(xa)) :: s
+    
+    integer :: j, k, n
+    character(len=1) :: d
+
+    n = 1
+    do k = 1, size(xa) - 1
+      j = str_real_sp_fmt_len(xa(k), "")
+      s(n:n+j) = str(xa(k), "")//" "
+      n = n + j
+    enddo
+    s(n:) = str(xa(k))
+
+  end function str_real_sp_array
+
+
+  pure function str_real_sp_array_fmt(xa, fmt, delimiter) result(s)
+    real(sp), dimension(:), intent(in) :: xa
+    character(len=*), intent(in) :: fmt
+    character(len=1), intent(in), optional :: delimiter
+    character(len=str_real_sp_array_fmt_len(xa, fmt)) :: s
+    
+    integer :: j, k, n
+    character(len=1) :: d
+
+    if (present(delimiter)) then
+      d = delimiter
+    else
+      d = " "
+    endif
+
+    n = 1
+    do k = 1, size(xa) - 1
+      j = str_real_sp_fmt_len(xa(k), fmt)
+      s(n:n+j) = str(xa(k), fmt)//d
+      n = n + j
+    enddo
+    s(n:) = str(xa(k), fmt)
+
+  end function str_real_sp_array_fmt
+
+     
+  pure function str_real_sp_array_len(xa) result(n)
+    real(sp), dimension(:), intent(in) :: xa
+    integer :: n
+
+    integer :: k
+
+    n = size(xa) - 1
+    do k = 1, size(xa)
+      n = n + str_real_sp_fmt_len(xa(k), "")
+    enddo
+    
+  end function str_real_sp_array_len
+
+     
+  pure function str_real_sp_array_fmt_len(xa, fmt) result(n)
+    real(sp), dimension(:), intent(in) :: xa
+    character(len=*), intent(in) :: fmt
+    integer :: n
+
+    integer :: k
+
+    n = size(xa) - 1
+    do k = 1, size(xa)
+      n = n + str_real_sp_fmt_len(xa(k), fmt)
+    enddo
+    
+  end function str_real_sp_array_fmt_len
+     
+     
   pure function real_dp_str(x, sig) result(s)
     real(dp), intent(in) :: x
     integer, intent(in) :: sig
