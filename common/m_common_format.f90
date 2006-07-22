@@ -15,7 +15,8 @@ module m_common_format
   character(len=*), parameter :: hexdigit = "0123456789abcdefABCDEF"
 
   interface str
-    module procedure str_integer, str_integer_array, &
+    module procedure str_string, str_string_array, &
+                     str_integer, str_integer_array, &
                      str_logical, str_logical_array, &
                      str_real_dp, str_real_dp_fmt, &
                      str_real_dp_array, str_real_dp_array_fmt, &
@@ -89,6 +90,53 @@ contains
          
   end function str_to_int_16
 
+
+  pure function str_string(st) result(s)
+    character(len=*), intent(in) :: st
+    character(len=len(st)) :: s
+
+    s = st
+  end function str_string
+
+
+  pure function str_string_array(st, delimiter) result(s)
+    character(len=*), dimension(:), intent(in) :: st
+    character(len=1), intent(in), optional :: delimiter
+    character(len=str_string_array_len(st)) :: s
+    
+    integer :: k, n
+    character(len=1) :: d
+    
+    if (present(delimiter)) then
+      d = delimiter
+    else
+      d = ' '
+    endif
+
+    n = 1
+    do k = 1, size(st) - 1
+      s(n:n+len(st(k))) = st(k)//d
+      n = n + k
+    enddo
+    s(n:) = st(k)
+
+  end function str_string_array
+
+
+  pure function str_string_array_len(st) result(n)
+    character(len=*), dimension(:), intent(in) :: st
+    integer :: n
+
+    integer :: k
+
+    n = size(st) - 1
+    do k = 1, size(st)
+      n = n + len(st(k))
+    enddo
+
+  end function str_string_array_len
+    
+      
 
   pure function str_integer(i) result(s)
     integer, intent(in) :: i

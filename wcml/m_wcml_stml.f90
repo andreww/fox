@@ -2,7 +2,7 @@ module m_wcml_stml
 
   use m_common_format, only : str
   use FoX_wxml, only: xmlf_t
-  use FoX_wxml, only: xml_NewElement, xml_AddPcData, xml_AddAttribute
+  use FoX_wxml, only: xml_NewElement, xml_AddCharacters, xml_AddAttribute
   use FoX_wxml, only: xml_EndElement
 
   implicit none
@@ -114,7 +114,7 @@ contains
     if (present(max))        call cmlAddAttribute(xf, 'max', max)
     if (present(ref))        call cmlAddAttribute(xf, 'ref', ref)
     if (present(units))      call cmlAddAttribute(xf, 'units', units)
-    call xml_AddPcdata(xf, value)
+    call xml_AddCharacters(xf, value)
     call xml_EndElement(xf, 'scalar')
 
   end subroutine stmAddString
