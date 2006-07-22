@@ -1,7 +1,7 @@
 module m_wcml_stml
 
+  use m_common_format, only : str
   use FoX_wxml, only: xmlf_t
-  use FoX_wxml, only: str
   use FoX_wxml, only: xml_NewElement, xml_AddPcData, xml_AddAttribute
   use FoX_wxml, only: xml_EndElement
 

@@ -23,7 +23,7 @@ call xml_AddXMLPI(xf,name="ccode", data="{hello_world();}")
 !!call xml_NewElement(xf,"98_john")
 !
 call xml_NewElement(xf,"john")
-call xml_AddAttribute(xf,"age",str(age))
+call xml_AddAttribute(xf,"age",age)
 !
 ! Markup escaping in attributes
 !
@@ -31,8 +31,8 @@ call xml_AddAttribute(xf,"with_markup","O'Reilly & Assoc is < OUP but > Wiley")
 call xml_NewElement(xf,"peter")
 call xml_NewElement(xf,"tim")
 call xml_AddAttribute(xf,"age","37")
-call xml_AddAttribute(xf,"weight",str(123.45d0,"r3"))
-call xml_AddAttribute(xf,"cholesterol",str(167.0d0,fmt="r0"))
+call xml_AddAttribute(xf,"weight",123.45d0,fmt="r3")
+call xml_AddAttribute(xf,"cholesterol",167.0d0,fmt="r0")
 call xml_EndElement(xf,"tim")
 call xml_AddPcdata(xf,"Ping-pong")
 call xml_AddPcdata(xf,"champion", line_feed=.false.)
