@@ -237,7 +237,7 @@ contains
 
 !FIXME we should round the last digit, but that's an arse to do correctly.
 
-  function real_dp_str(x, sig) result(s)
+  pure function real_dp_str(x, sig) result(s)
     real(dp), intent(in) :: x
     integer, intent(in) :: sig
     character(len=sig) :: s
@@ -289,13 +289,10 @@ contains
 
     integer :: sig, dec
     integer :: e, i, j, k, n
-    logical :: overflow
     character(len=len(s)) :: num !this wll always be enough memory.
 
-    overflow = .false.
-
     if (x == 0.0_dp) then
-      e = 1
+      e = 0
     else
       e = floor(log10(abs(x)))
     endif
@@ -313,7 +310,6 @@ contains
 
       num = real_dp_str(abs(x), sig)
       if (num(1:1) == '!') then
-        overflow = .true.
         e = e + 1
         num = '1'//repeat('0',len(num)-1)
       endif
@@ -341,7 +337,6 @@ contains
 
       num = real_dp_str(abs(x), sig)
       if (num(1:1) == '!') then
-        overflow = .true.
         e = e + 1
         num = '1'//repeat('0',len(num)-1)
       endif
@@ -374,12 +369,11 @@ contains
         num = ''
       endif
       if (num(1:1) == '!') then
-        overflow = .true.
         e = e + 1
         num = '1'//repeat('0',len(num)-1)
       endif
 
-      if (abs(x) > 1.0_dp) then
+      if (abs(x) >= 1.0_dp) then
         s(n:n+e) = num(:e+1)
         n = n + e + 1
         if (dec > 0) then
@@ -388,8 +382,6 @@ contains
           s(n:) = num(e+2:)
         endif
       else
-        !there is a chance we've been rounded up to 1 ...
-        !if (abs(x)>0.5_d0 .and. num(1:1)=='1') then
         s(n:n) = '0'
         if (dec > 0) then
           s(n+1:n+1) = '.'
@@ -398,7 +390,7 @@ contains
             s(n:) = repeat('0', dec)
           else
             s(n:n-e-2) = repeat('0', -e-1)
-            n = n - e - 1
+            n = n - min(e,-1) - 1
             if (n <= len(s)) then
               s(n:) = num
             endif
@@ -418,8 +410,6 @@ contains
 
     integer :: td, dec, sig
     integer :: e
-      public :: str_real_dp_fmt_len
-
 
     if (x == 0.0_dp) then
       e = 1
@@ -439,25 +429,6 @@ contains
       n = n + sig + 2 + len(str(e)) 
       ! for the decimal point and the e
 
-    elseif (fmt(1:1) == 'r') then
-
-!!$     if (len(fmt) > 1) then
-!!$        dec = str_to_int_10(fmt(2:))
-!!$      else
-!!$        dec = sig_dp - e
-!!$      endif
-!!$
-!!$      n = n + 1
-!!$      if (abs(x) > 1.0_dp) then
-!!$        ! we want all digits before the decimal point.
-!!$        n = n + e - 1 !unless we round
-!!$      endif
-!!$      if (dec > 1) then
-!!$        n = n + dec + 1
-!!$      endif
-
-      n = 100
-      
     elseif (fmt(1:1) == 's') then
       if (len(fmt) > 1) then
         sig = str_to_int_10(fmt(2:))
@@ -471,6 +442,25 @@ contains
       ! for the decimal point
       
       n = n + sig + 1 + len(str(e))
+
+    elseif (fmt(1:1) == 'r') then
+
+      if (len(fmt) > 1) then
+        dec = str_to_int_10(fmt(2:))
+      else
+        dec = sig_dp - e
+      endif
+      dec = max(dec, 0)
+      dec = min(dec, digits(dp)-e)
+
+      ! Need to know if there's an overflow ....
+      if (e+dec+1 > 0) then
+        if (index(real_dp_str(abs(x), e+dec+1), '!') == 1) &
+             e = e + 1
+      endif
+
+      n = n + abs(e) + 1 + dec
+
     else
       call pxfabort()
     endif
