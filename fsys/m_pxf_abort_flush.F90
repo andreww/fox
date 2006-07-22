@@ -66,27 +66,14 @@ end subroutine pxfflush
 ! on every platform I've tried it with. Just in case it doesn't (it need
 ! not even stop execution) a stop is given to force termination.
 
-pure subroutine pxfabort()
-#ifdef __NAG__
-  use f90_unix_proc, only : abort
-#endif
+! ignore the above. In order that we can cheat the compiler & make
+! pxfabort PURE, (in order to do sensible error-handling on PURE
+! subroutines) we use the trick below.
 
-#ifdef F2003
-  interface
-    subroutine abort(), bind(c)
-    end subroutine abort
-  end interface
-  call abort()
-#elif defined(xlC)
-  call abort_()
-#elif defined(FC_HAVE_ABORT)
-  call abort()
-#else
-  Integer, Pointer :: i
-  i=>null()
-  Print*,i
-#endif
-
-end subroutine pxfabort
+  pure subroutine pxfabort()
+    integer, pointer :: i
+    nullify(i)
+    i = 0
+  end subroutine pxfabort
 
 end module m_pxf_abort_flush
