@@ -14,17 +14,167 @@ module m_wcml_molecule
   integer, parameter ::  dp = selected_real_kind(14,100)
 
   interface cmlAddMolecule
+    module procedure cmlAddMoleculeSP
+    module procedure cmlAddMoleculeSP_sh
+    module procedure cmlAddMolecule_3_SP
+    module procedure cmlAddMolecule_3_SP_sh
     module procedure cmlAddMoleculeDP
     module procedure cmlAddMoleculeDP_sh
     module procedure cmlAddMolecule_3_DP
-    !module procedure cmlAddMoleculeSP
-    !module procedure cmlAddMoleculeSP_sh
-    !module procedure cmlAddMolecule_3_SP
+    module procedure cmlAddMolecule_3_DP_sh
+  end interface
+
+  interface cmlAddAtom
+    module procedure cmlAddAtom_sp
+    module procedure cmlAddAtom_dp
   end interface
 
   public :: cmlAddMolecule
 
 contains
+
+
+  subroutine cmlAddMoleculeSP(xf, elements, refs, coords, occupancies, style, id, title, dictref, fmt)
+    type(xmlf_t), intent(inout) :: xf
+    real(kind=sp), intent(in)              :: coords(:, :)
+    character(len=*), intent(in)           :: elements(:)
+    character(len=*), intent(in), optional :: refs(:) 
+    real(kind=sp), intent(in), optional :: occupancies(:) 
+    character(len=*), intent(in), optional :: id
+    character(len=*), intent(in), optional :: title
+    character(len=*), intent(in), optional :: dictref
+    character(len=*), intent(in), optional :: fmt
+    character(len=*), intent(in), optional :: style
+
+    integer          :: i
+
+    call xml_NewElement(xf, 'molecule')
+    if (present(id)) call xml_AddAttribute(xf, 'id', id)
+    if (present(title)) call xml_AddAttribute(xf, 'id', title)
+    if (present(dictRef)) call xml_AddAttribute(xf, 'dictRef', dictRef)
+    call xml_NewElement(xf, 'atomArray')
+
+    do i = 1, size(coords,2)
+      call cmlAddAtom(xf=xf, elem=trim(elements(i)), &
+           coords=coords(:, i), style=style, fmt=fmt)
+      if (present(occupancies)) call xml_AddAttribute(xf, 'occupancy', occupancies(i))
+      if (present(refs)) call xml_AddAttribute(xf, 'ref', refs(i))
+      call xml_EndElement(xf, 'atom')
+     enddo
+
+    call xml_EndElement(xf, 'atomArray')
+    call xml_EndElement(xf, 'molecule')
+    
+  end subroutine cmlAddMoleculeSP
+
+  subroutine cmlAddMoleculeSP_sh(xf, natoms, elements, refs, coords, occupancies, style, id, title, dictref, fmt)
+    type(xmlf_t), intent(inout) :: xf
+    integer, intent(in) :: natoms
+    real(kind=sp), intent(in)              :: coords(3, natoms)
+    character(len=*), intent(in)           :: elements(natoms)
+    character(len=*), intent(in), optional :: refs(natoms) 
+    real(kind=sp), intent(in), optional :: occupancies(natoms) 
+    character(len=*), intent(in), optional :: id
+    character(len=*), intent(in), optional :: title
+    character(len=*), intent(in), optional :: dictref
+    character(len=*), intent(in), optional :: fmt
+    character(len=*), intent(in), optional :: style
+
+    integer          :: i
+
+    call xml_NewElement(xf, 'molecule')
+    if (present(id)) call xml_AddAttribute(xf, 'id', id)
+    if (present(title)) call xml_AddAttribute(xf, 'id', title)
+    if (present(dictRef)) call xml_AddAttribute(xf, 'dictRef', dictRef)
+    call xml_NewElement(xf, 'atomArray')
+
+
+    do i = 1, natoms
+      call cmlAddAtom(xf=xf, elem=trim(elements(i)), &
+           coords=coords(:, i), style=style, fmt=fmt)
+      if (present(occupancies)) call xml_AddAttribute(xf, 'occupancy', occupancies(i))
+      if (present(refs)) call xml_AddAttribute(xf, 'ref', refs(i))
+      call xml_EndElement(xf, 'atom')
+     enddo
+
+    call xml_EndElement(xf, 'atomArray')
+    call xml_EndElement(xf, 'molecule')
+    
+  end subroutine cmlAddMoleculeSP_sh
+
+
+  subroutine cmlAddMolecule_3_SP(xf, elements, x, y, z, refs, occupancies, style, id, title, dictref, fmt)
+    type(xmlf_t), intent(inout) :: xf
+    real(kind=sp), intent(in)              :: x(:)
+    real(kind=sp), intent(in)              :: y(:)
+    real(kind=sp), intent(in)              :: z(:)
+    character(len=*), intent(in)           :: elements(:)
+    character(len=*), intent(in), optional :: refs(:) 
+    real(kind=sp), intent(in), optional :: occupancies(:) 
+    character(len=*), intent(in), optional :: id
+    character(len=*), intent(in), optional :: title
+    character(len=*), intent(in), optional :: dictref
+    character(len=*), intent(in), optional :: fmt
+    character(len=*), intent(in), optional :: style
+
+    integer          :: i
+
+    call xml_NewElement(xf, 'molecule')
+    if (present(id)) call xml_AddAttribute(xf, 'id', id)
+    if (present(title)) call xml_AddAttribute(xf, 'id', title)
+    if (present(dictRef)) call xml_AddAttribute(xf, 'dictRef', dictRef)
+    call xml_NewElement(xf, 'atomArray')
+
+    do i = 1, size(x)
+      call cmlAddAtom(xf=xf, elem=trim(elements(i)), &
+           coords=(/x(i), y(i), z(i)/), style=style, fmt=fmt)
+      if (present(occupancies)) call xml_AddAttribute(xf, 'occupancy', occupancies(i))
+      if (present(refs)) call xml_AddAttribute(xf, 'ref', refs(i))
+      call xml_EndElement(xf, 'atom')
+     enddo
+
+    call xml_EndElement(xf, 'atomArray')
+    call xml_EndElement(xf, 'molecule')
+    
+  end subroutine cmlAddMolecule_3_SP
+
+
+  subroutine cmlAddMolecule_3_SP_sh(xf, natoms, elements, x, y, z, refs, occupancies, style, id, title, dictref, fmt)
+    type(xmlf_t), intent(inout) :: xf
+    integer, intent(in) :: natoms
+    real(kind=sp), intent(in)              :: x(natoms)
+    real(kind=sp), intent(in)              :: y(natoms)
+    real(kind=sp), intent(in)              :: z(natoms)
+    character(len=*), intent(in)           :: elements(natoms)
+    character(len=*), intent(in), optional :: refs(natoms)
+    real(kind=sp), intent(in), optional :: occupancies(natoms)
+    character(len=*), intent(in), optional :: id
+    character(len=*), intent(in), optional :: title
+    character(len=*), intent(in), optional :: dictref
+    character(len=*), intent(in), optional :: fmt
+    character(len=*), intent(in), optional :: style
+
+    integer          :: i
+
+    call xml_NewElement(xf, 'molecule')
+    if (present(id)) call xml_AddAttribute(xf, 'id', id)
+    if (present(title)) call xml_AddAttribute(xf, 'id', title)
+    if (present(dictRef)) call xml_AddAttribute(xf, 'dictRef', dictRef)
+    call xml_NewElement(xf, 'atomArray')
+
+    do i = 1, natoms
+      call cmlAddAtom(xf=xf, elem=trim(elements(i)), &
+           coords=(/x(i), y(i), z(i)/), style=style, fmt=fmt)
+      if (present(occupancies)) call xml_AddAttribute(xf, 'occupancy', occupancies(i))
+      if (present(refs)) call xml_AddAttribute(xf, 'ref', refs(i))
+      call xml_EndElement(xf, 'atom')
+     enddo
+
+    call xml_EndElement(xf, 'atomArray')
+    call xml_EndElement(xf, 'molecule')
+    
+  end subroutine cmlAddMolecule_3_SP_sh
+
 
   subroutine cmlAddMoleculeDP(xf, elements, refs, coords, occupancies, style, id, title, dictref, fmt)
     type(xmlf_t), intent(inout) :: xf
@@ -47,27 +197,10 @@ contains
     call xml_NewElement(xf, 'atomArray')
 
     do i = 1, size(coords,2)
-      if (present(occupancies)) then
-        call cmlAddAtom(xf=xf, elem=trim(elements(i)), &
-          occupancyDP=occupancies(i))
-      else
-        call cmlAddAtom(xf=xf, elem=trim(elements(i)))
-      endif
+      call cmlAddAtom(xf=xf, elem=trim(elements(i)), &
+           coords=coords(:, i), style=style, fmt=fmt)
+      if (present(occupancies)) call xml_AddAttribute(xf, 'occupancy', occupancies(i))
       if (present(refs)) call xml_AddAttribute(xf, 'ref', refs(i))
-      if (present(style)) then
-        select case(style)
-        case ('x3') 
-          call addcoords_x3_dp(xf, coords(:, i), fmt)
-        case ('xFrac')
-          call addcoords_xfrac_dp(xf, coords(:, i), fmt)
-        case ('xyz3')
-          call addcoords_xyz3_dp(xf, coords(:, i), fmt)
-        case ('xyzFrac')
-          call addcoords_xyzfrac_dp(xf, coords(:, i), fmt)
-        end select
-      else
-        call addcoords_x3_dp(xf, coords(:, i), fmt)
-      endif
       call xml_EndElement(xf, 'atom')
      enddo
 
@@ -97,28 +230,12 @@ contains
     if (present(dictRef)) call xml_AddAttribute(xf, 'dictRef', dictRef)
     call xml_NewElement(xf, 'atomArray')
 
+
     do i = 1, natoms
-      if (present(occupancies)) then
-        call cmlAddAtom(xf=xf, elem=trim(elements(i)), &
-          occupancyDP=occupancies(i))
-      else
-        call cmlAddAtom(xf=xf, elem=trim(elements(i)))
-      endif
+      call cmlAddAtom(xf=xf, elem=trim(elements(i)), &
+           coords=coords(:, i), style=style, fmt=fmt)
+      if (present(occupancies)) call xml_AddAttribute(xf, 'occupancy', occupancies(i))
       if (present(refs)) call xml_AddAttribute(xf, 'ref', refs(i))
-      if (present(style)) then
-        select case(style)
-        case ('x3') 
-          call addcoords_x3_dp(xf, coords(:, i), fmt)
-        case ('xFrac')
-          call addcoords_xfrac_dp(xf, coords(:, i), fmt)
-        case ('xyz3')
-          call addcoords_xyz3_dp(xf, coords(:, i), fmt)
-        case ('xyzFrac')
-          call addcoords_xyzfrac_dp(xf, coords(:, i), fmt)
-        end select
-      else
-        call addcoords_x3_dp(xf, coords(:, i), fmt)
-      endif
       call xml_EndElement(xf, 'atom')
      enddo
 
@@ -126,6 +243,7 @@ contains
     call xml_EndElement(xf, 'molecule')
     
   end subroutine cmlAddMoleculeDP_sh
+
 
   subroutine cmlAddMolecule_3_DP(xf, elements, x, y, z, refs, occupancies, style, id, title, dictref, fmt)
     type(xmlf_t), intent(inout) :: xf
@@ -150,27 +268,10 @@ contains
     call xml_NewElement(xf, 'atomArray')
 
     do i = 1, size(x)
-      if (present(occupancies)) then
-        call cmlAddAtom(xf=xf, elem=trim(elements(i)), &
-          occupancyDP=occupancies(i))
-      else
-        call cmlAddAtom(xf=xf, elem=trim(elements(i)))
-      endif
+      call cmlAddAtom(xf=xf, elem=trim(elements(i)), &
+           coords=(/x(i), y(i), z(i)/), style=style, fmt=fmt)
+      if (present(occupancies)) call xml_AddAttribute(xf, 'occupancy', occupancies(i))
       if (present(refs)) call xml_AddAttribute(xf, 'ref', refs(i))
-      if (present(style)) then
-        select case(style)
-        case ('x3') 
-          call addcoords_x3_dp(xf, (/x(i), y(i), z(i)/), fmt)
-        case ('xFrac')
-          call addcoords_xfrac_dp(xf, (/x(i), y(i), z(i)/), fmt)
-        case ('xyz3')
-          call addcoords_xyz3_dp(xf, (/x(i), y(i), z(i)/), fmt)
-        case ('xyzFrac')
-          call addcoords_xyzfrac_dp(xf, (/x(i), y(i), z(i)/), fmt)
-        end select
-      else
-        call addcoords_x3_dp(xf, (/x(i), y(i), z(i)/), fmt)
-      endif
       call xml_EndElement(xf, 'atom')
      enddo
 
@@ -179,29 +280,119 @@ contains
     
   end subroutine cmlAddMolecule_3_DP
 
-  
-  subroutine cmlAddAtom(xf, elem, id, charge, hCount, occupancySP, occupancyDP, fmt)
+
+  subroutine cmlAddMolecule_3_DP_sh(xf, natoms, elements, x, y, z, refs, occupancies, style, id, title, dictref, fmt)
     type(xmlf_t), intent(inout) :: xf
-    integer, intent(in), optional           :: charge     ! formalCharge
-    integer, intent(in), optional           :: hCount     ! hydrogenCount
-    real(kind=sp), intent(in), optional     :: occupancySP
-    real(kind=dp), intent(in), optional     :: occupancyDP
-    character(len=*), intent(in), optional  :: elem       ! chemical element name
-    character(len=*), intent(in), optional  :: id         ! atom id
-    character(len=*), intent(in), optional  :: fmt        ! format
+    integer, intent(in) :: natoms
+    real(kind=dp), intent(in)              :: x(natoms)
+    real(kind=dp), intent(in)              :: y(natoms)
+    real(kind=dp), intent(in)              :: z(natoms)
+    character(len=*), intent(in)           :: elements(natoms)
+    character(len=*), intent(in), optional :: refs(natoms) 
+    real(kind=dp), intent(in), optional :: occupancies(natoms) 
+    character(len=*), intent(in), optional :: id
+    character(len=*), intent(in), optional :: title
+    character(len=*), intent(in), optional :: dictref
+    character(len=*), intent(in), optional :: fmt
+    character(len=*), intent(in), optional :: style
+
+    integer          :: i
+
+    call xml_NewElement(xf, 'molecule')
+    if (present(id)) call xml_AddAttribute(xf, 'id', id)
+    if (present(title)) call xml_AddAttribute(xf, 'id', title)
+    if (present(dictRef)) call xml_AddAttribute(xf, 'dictRef', dictRef)
+    call xml_NewElement(xf, 'atomArray')
+
+    do i = 1, natoms
+      call cmlAddAtom(xf=xf, elem=trim(elements(i)), &
+           coords=(/x(i), y(i), z(i)/), style=style, fmt=fmt)
+      if (present(occupancies)) call xml_AddAttribute(xf, 'occupancy', occupancies(i))
+      if (present(refs)) call xml_AddAttribute(xf, 'ref', refs(i))
+      call xml_EndElement(xf, 'atom')
+     enddo
+
+    call xml_EndElement(xf, 'atomArray')
+    call xml_EndElement(xf, 'molecule')
+    
+  end subroutine cmlAddMolecule_3_DP_sh
+
+
+
+  subroutine cmlAddAtom_sp(xf, elem, coords, id, charge, hCount, occupancy, &
+       fmt, style)
+    type(xmlf_t), intent(inout) :: xf
+    real(kind=sp), intent(in), dimension(:) :: coords
+    character(len=*), intent(in) :: elem
+    integer, intent(in), optional           :: charge
+    integer, intent(in), optional           :: hCount
+    real(kind=sp), intent(in), optional     :: occupancy
+    character(len=*), intent(in), optional  :: id
+    character(len=*), intent(in), optional  :: fmt
+    character(len=*), intent(in), optional  :: style
+    
 
     call xml_NewElement(xf, 'atom')
-    if (present(elem))      call xml_AddAttribute(xf, 'elementType', elem)
+    call xml_AddAttribute(xf, 'elementType', elem)
     if (present(id))        call xml_AddAttribute(xf, 'id', id)
     if (present(charge))    call xml_AddAttribute(xf, 'formalCharge', charge)
     if (present(hCount))    call xml_AddAttribute(xf, 'hydrogenCount', hCount)
-    if (present(occupancySP) .and. present(occupancyDP)) &
-      call FoX_error("Bad argumens to cmlAddAtom")
-    if (present(occupancySP)) call xml_AddAttribute(xf, 'occupancy', occupancySP, fmt)
-    if (present(occupancyDP)) call xml_AddAttribute(xf, 'occupancy', occupancyDP, fmt)
+    if (present(occupancy)) call xml_AddAttribute(xf, 'occupancy', occupancy, fmt)
 
-  end subroutine cmlAddAtom
+    if (present(style)) then
+      select case(style)
+      case ('x3') 
+        call addcoords_x3_sp(xf, coords, fmt)
+      case ('xFrac')
+        call addcoords_xfrac_sp(xf, coords, fmt)
+      case ('xyz3')
+        call addcoords_xyz3_sp(xf, coords, fmt)
+      case ('xyzFrac')
+        call addcoords_xyzfrac_sp(xf, coords, fmt)
+      end select
+    else
+      call addcoords_x3_sp(xf, coords, fmt)
+    endif
+
+  end subroutine cmlAddAtom_sp
   
+
+  subroutine cmlAddAtom_dp(xf, elem, coords, id, charge, hCount, occupancy, &
+       fmt, style)
+    type(xmlf_t), intent(inout) :: xf
+    real(kind=dp), intent(in), dimension(:) :: coords
+    character(len=*), intent(in) :: elem
+    integer, intent(in), optional           :: charge
+    integer, intent(in), optional           :: hCount
+    real(kind=dp), intent(in), optional     :: occupancy
+    character(len=*), intent(in), optional  :: id
+    character(len=*), intent(in), optional  :: fmt
+    character(len=*), intent(in), optional  :: style
+    
+
+    call xml_NewElement(xf, 'atom')
+    call xml_AddAttribute(xf, 'elementType', elem)
+    if (present(id))        call xml_AddAttribute(xf, 'id', id)
+    if (present(charge))    call xml_AddAttribute(xf, 'formalCharge', charge)
+    if (present(hCount))    call xml_AddAttribute(xf, 'hydrogenCount', hCount)
+    if (present(occupancy)) call xml_AddAttribute(xf, 'occupancy', occupancy, fmt)
+
+    if (present(style)) then
+      select case(style)
+      case ('x3') 
+        call addcoords_x3_dp(xf, coords, fmt)
+      case ('xFrac')
+        call addcoords_xfrac_dp(xf, coords, fmt)
+      case ('xyz3')
+        call addcoords_xyz3_dp(xf, coords, fmt)
+      case ('xyzFrac')
+        call addcoords_xyzfrac_dp(xf, coords, fmt)
+      end select
+    else
+      call addcoords_x3_dp(xf, coords, fmt)
+    endif
+
+  end subroutine cmlAddAtom_dp
 
   subroutine addcoords_xyz3_dp(xf, coords, fmt)
     type(xmlf_t), intent(inout)              :: xf
