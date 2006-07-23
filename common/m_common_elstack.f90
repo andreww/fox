@@ -65,7 +65,6 @@ end subroutine destroy_elstack
 !-----------------------------------------------------------------
 subroutine reset_elstack(elstack)
   type(elstack_t), intent(inout)  :: elstack
-  integer :: i
 
   call destroy_elstack(elstack)
   call init_elstack(elstack)
@@ -76,7 +75,7 @@ end subroutine reset_elstack
 subroutine resize_elstack(elstack)
   type(elstack_t), intent(inout)  :: elstack
   type(elstack_item), dimension(0:ubound(elstack%stack,1)) :: temp
-  integer :: i, s, dataLength
+  integer :: i, s
 
   s = ubound(elstack%stack, 1)
 

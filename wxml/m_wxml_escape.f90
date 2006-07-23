@@ -4,7 +4,6 @@ module m_wxml_escape
 !strings are compliant with XML naming policy. Should be in
 !common
 
-  use m_common_error, only : FoX_warning
   implicit none
   private
 

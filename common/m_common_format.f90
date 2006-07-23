@@ -1,6 +1,6 @@
 module m_common_format
 
-  use pxf, only: pxfabort, pxfflush
+  use pxf, only: pxfabort
 
   implicit none
   private
@@ -218,7 +218,7 @@ contains
     character(len=1), optional, intent(in) :: delimiter
     character(len=5*size(la) - 1 + count(.not.la)) :: s
     
-    integer :: j, k, n
+    integer :: k, n
     character(len=1) :: d
     if (present(delimiter)) then
       d = delimiter
@@ -339,7 +339,7 @@ contains
     character(len=str_real_sp_fmt_len(x, fmt)) :: s
 
     integer :: sig, dec
-    integer :: e, i, j, k, n
+    integer :: e, n
     character(len=len(s)) :: num !this wll always be enough memory.
 
     if (x == 0.0_sp) then
@@ -459,7 +459,7 @@ contains
     character(len=*), intent(in) :: fmt
     integer :: n
 
-    integer :: td, dec, sig
+    integer :: dec, sig
     integer :: e
 
     if (x == 0.0_sp) then
@@ -545,7 +545,6 @@ contains
     character(len=str_real_sp_array_len(xa)) :: s
     
     integer :: j, k, n
-    character(len=1) :: d
 
     n = 1
     do k = 1, size(xa) - 1
@@ -664,7 +663,7 @@ contains
     character(len=str_real_dp_fmt_len(x, fmt)) :: s
 
     integer :: sig, dec
-    integer :: e, i, j, k, n
+    integer :: e, n
     character(len=len(s)) :: num !this wll always be enough memory.
 
     if (x == 0.0_dp) then
@@ -784,7 +783,7 @@ contains
     character(len=*), intent(in) :: fmt
     integer :: n
 
-    integer :: td, dec, sig
+    integer :: dec, sig
     integer :: e
 
     if (x == 0.0_dp) then
@@ -870,7 +869,6 @@ contains
     character(len=str_real_dp_array_len(xa)) :: s
     
     integer :: j, k, n
-    character(len=1) :: d
 
     n = 1
     do k = 1, size(xa) - 1

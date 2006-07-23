@@ -45,8 +45,8 @@ module m_wxml_overloads
     module procedure xml_AddPseudoAttribute_Log
     module procedure xml_AddPseudoAttribute_SP_array
     module procedure xml_AddPseudoAttribute_DP_array
-    module procedure xml_AddPseudoAttribute_Int_array
-    module procedure xml_AddPseudoAttribute_Log_array
+    module procedure xml_AddPseudoAttribute_I_array
+    module procedure xml_AddPseudoAttribute_L_array
     module procedure xml_AddPseudoAttribute_Ch_array
   end interface
 
@@ -331,13 +331,13 @@ contains
   end subroutine xml_AddPseudoAttribute_Int
 
 
-  subroutine xml_AddPseudoAttribute_Int_array(xf, name, value)
+  subroutine xml_AddPseudoAttribute_I_array(xf, name, value)
     type(xmlf_t), intent(inout)   :: xf
     character(len=*), intent(in)  :: name
     integer, intent(in), dimension(:) :: value
 
     call xml_AddPseudoAttribute(xf, name, str(value))
-  end subroutine xml_AddPseudoAttribute_Int_array
+  end subroutine xml_AddPseudoAttribute_I_array
 
 
   subroutine xml_AddPseudoAttribute_Log(xf, name, value)
@@ -349,13 +349,13 @@ contains
   end subroutine xml_AddPseudoAttribute_Log
 
 
-  subroutine xml_AddPseudoAttribute_Log_array(xf, name, value)
+  subroutine xml_AddPseudoAttribute_L_array(xf, name, value)
     type(xmlf_t), intent(inout)   :: xf
     character(len=*), intent(in)  :: name
     logical, intent(in), dimension(:) :: value
 
     call xml_AddPseudoAttribute(xf, name, str(value))
-  end subroutine xml_AddPseudoAttribute_Log_array
+  end subroutine xml_AddPseudoAttribute_L_array
 
 
   subroutine xml_AddPseudoAttribute_Ch_array(xf, name, value, delimiter)

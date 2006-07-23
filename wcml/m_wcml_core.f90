@@ -1,10 +1,9 @@
 module m_wcml_core
 
   use FoX_common, only: FoX_version
-  use m_common_error, only: FoX_error
   use m_common_format, only: str
   use FoX_wxml, only: xmlf_t
-  use FoX_wxml, only: xml_NewElement, xml_AddCharacters, xml_AddAttribute
+  use FoX_wxml, only: xml_NewElement, xml_AddAttribute
   use FoX_wxml, only: xml_EndElement, xml_AddNamespace
   use m_wcml_stml, only: stmAddValue
 

@@ -5,8 +5,6 @@ module m_common_namespaces
   use m_common_attrs, only: set_nsURI, set_localName, get_prefix, add_item_to_dict
   use m_common_error, only: FoX_error
 
-  use m_pxf_abort_flush, only: pxfabort
-
   implicit none
   private
 

@@ -6,7 +6,6 @@ module m_wxml_core
   use m_common_buffer
   use m_common_elstack
   use m_common_error, only: FoX_warning_base, FoX_error_base, FoX_fatal_base
-  use m_common_format, only: str
   use m_common_io, only: get_unit
   use m_common_namecheck, only: checkEncName, checkName, checkPITarget, checkPubId
   use m_common_namespaces, only: namespaceDictionary, getnamespaceURI

@@ -85,7 +85,8 @@ dnl Second arg is list of optional args
 dnl Third arg is type of property(character/logical etc.)
 define(`TOHWM4_ScalarSub',`dnl
   subroutine TOHWM4_subroutinename(`$1',`Sca',`$3',`') &
-    (xf, value, TOHWM4_dummyarglist(`$2'), units dnl
+    (xf, value, TOHWM4_dummyarglist(`$2') dnl
+ifelse(`$3',`Lg',`',`, units') dnl
 ifelse(substr($3,0,4),`Real',`,fmt)',`)')
 
     type(xmlf_t), intent(inout)              :: xf
@@ -93,7 +94,9 @@ ifelse(substr($3,0,4),`Real',`,fmt)',`)')
 dnl
 m4_foreach(`x', `$2', `TOHWM4_dummyargdecl(x)')
 dnl
+ifelse(`$3',`Lg',`',`dnl
     character(len=*), intent(in), optional :: units
+') dnl
 ifelse(substr($3,0,4),`Real',`dnl 
     character(len=*), intent(in), optional :: fmt
 ')dnl
@@ -121,7 +124,8 @@ define(`TOHWM4_ArraySub',`dnl
   subroutine TOHWM4_subroutinename(`$1',`Arr',`$3',`$4') &
     (xf, value, dnl
 ifelse($4, `Si', `nvalue, ') dnl
-TOHWM4_dummyarglist(`$2'), units dnl
+TOHWM4_dummyarglist(`$2') dnl
+ifelse(`$3',`Lg',`',`, units') dnl
 ifelse(substr($3,0,4),`Real',`,fmt)',`)')
 
     type(xmlf_t), intent(inout)              :: xf
@@ -134,7 +138,9 @@ ifelse($4, `Si', `*', `:') dnl
 dnl
 m4_foreach(`x', `$2', `TOHWM4_dummyargdecl(x)')
 dnl
+ifelse(`$3',`Lg',`',`dnl
     character(len=*), intent(in), optional :: units
+') dnl
 ifelse(substr($3,0,4),`Real',`dnl 
     character(len=*), intent(in), optional :: fmt
 ')dnl
@@ -165,7 +171,8 @@ define(`TOHWM4_MatrixSub',`dnl
   subroutine TOHWM4_subroutinename(`$1',`Mat',`$3',`$4') &
     (xf, value, dnl
 ifelse($4, `Si', `nrows, ncols, ') dnl
-TOHWM4_dummyarglist(`$2'), units dnl
+TOHWM4_dummyarglist(`$2') dnl
+ifelse(`$3',`Lg',`',`, units') dnl
 ifelse(substr($3,0,4),`Real',`,fmt)',`)')
 
     type(xmlf_t), intent(inout)              :: xf
@@ -178,7 +185,9 @@ ifelse($4, `Si', `nrows, *', `:, :') dnl
 dnl
 m4_foreach(`x', `$2', `TOHWM4_dummyargdecl(x)')
 dnl
-    character(len=*), intent(in), optional :: units
+ifelse(`$3',`Lg',`',`dnl
+     character(len=*), intent(in), optional :: units
+') dnl
 ifelse(substr($3,0,4),`Real',`dnl 
     character(len=*), intent(in), optional :: fmt
 ')dnl

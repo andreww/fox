@@ -277,7 +277,7 @@ contains
     character(len=*), intent(in), optional :: units
     character(len=1), intent(in), optional :: delim         ! delimiter
 
-    integer :: nvalue, i
+    integer :: nvalue
     character(len=1) :: delim1
 
     nvalue = size(value)
@@ -313,7 +313,7 @@ contains
     character(len=*), intent(in), optional :: dictref       ! the dictionary reference
     character(len=*), intent(in), optional :: ref           ! delimiter
 
-    integer          :: nvalue, i
+    integer          :: nvalue
 
     nvalue = size(value)
     call stmStartArrayTag(xf=xf, nvalue=nvalue, id=id, title=title, dictRef=dictRef, dataType='xsd:boolean', ref=ref)
@@ -334,7 +334,7 @@ contains
     character(len=*), intent(in), optional :: units         ! scienitific units (default ' ')
     character(len=*), intent(in), optional :: ref
 
-    integer          :: nvalue, i
+    integer          :: nvalue
 
     nvalue = size(value)
     call stmStartArrayTag(xf=xf, nvalue=nvalue, id=id, title=title, dictRef=dictRef, dataType='xsd:double', ref=ref, units=units)
@@ -356,7 +356,7 @@ contains
     character(len=*), intent(in), optional :: fmt           ! the output format
     character(len=*), intent(in), optional :: ref
 
-    integer          :: nvalue, i
+    integer          :: nvalue
 
     nvalue = size(value)
     call stmStartArrayTag(xf=xf, nvalue=nvalue, id=id, title=title, dictRef=dictRef, dataType='xsd:float', ref=ref, units=units)
@@ -378,7 +378,7 @@ contains
     character(len=*), intent(in), optional :: ref           ! the output format
     character(len=*), intent(in), optional :: fmt           ! the output format
 
-    integer          :: nvalue, i
+    integer          :: nvalue
 
     nvalue = size(value)
     call stmStartArrayTag(xf=xf, nvalue=nvalue, id=id, title=title, dictRef=dictRef, dataType='xsd:double', ref=ref, units=units)
@@ -425,7 +425,7 @@ contains
     character(len=*), intent(in), optional :: units         ! scienitific units (default ' ')
     character(len=*), intent(in), optional :: dataType
 
-    integer ::  i, j, nrows, ncols
+    integer ::  nrows, ncols
 
     ncols = size(value, 1)
     nrows = size(value, 2)
@@ -453,7 +453,7 @@ contains
     character(len=*), intent(in), optional :: dictref       ! the dictionary reference
     character(len=*), intent(in), optional :: units         ! scienitific units (default ' ')
 
-    integer ::  i, j, nrows, ncols
+    integer :: nrows, ncols
 
     ncols = size(value, 1)
     nrows = size(value, 2)
@@ -476,7 +476,7 @@ contains
     character(len=*), intent(in), optional :: dictref       ! the dictionary reference
     character(len=*), intent(in), optional :: units         ! scienitific units (default ' ')
 
-    integer ::  i, j, nrows, ncols
+    integer :: nrows, ncols
 
     ncols = size(value, 1)
     nrows = size(value, 2)
@@ -501,7 +501,7 @@ contains
     character(len=*), intent(in), optional :: units         ! scienitific units (default ' ')
     character(len=*), intent(in), optional :: fmt
 
-    integer ::  i, j, nrows, ncols
+    integer :: nrows, ncols
 
     ncols = size(value, 1)
     nrows = size(value, 2)
@@ -526,7 +526,7 @@ contains
     character(len=*), intent(in), optional :: units         ! scienitific units (default ' ')
     character(len=*), intent(in), optional :: fmt
 
-    integer ::  i, j, nrows, ncols
+    integer :: nrows, ncols
 
     ncols = size(value, 1)
     nrows = size(value, 2)
