@@ -48,7 +48,7 @@
   call cmlAddProperty(xf=myfile, title='inputSize', value=3.0)
   call cmlAddProperty(xf=myfile, title='inputSize', value=3.0d0)
 
-  call cmlAddProperty(xf=myfile, title='inputArray', value=(/'one', 'two'/))
+  call cmlAddProperty(xf=myfile, title='inputArray', value=(/'one  ', 'two  ', 'three'/))
   call cmlAddProperty(xf=myfile, title='inputArray', value=(/.true., .false./))
   call cmlAddProperty(xf=myfile, title='inputArray', value=(/1, 2/))
   call cmlAddProperty(xf=myfile, title='inputArray', value=(/1.0, 2.0/))
@@ -60,7 +60,7 @@
   call cmlAddMolecule(xf=myfile, natoms=na,elements=elements,coords=coords, style='xyz3')
 
   ! Add molecule output in short style in user supplied format
-  call cmlAddMolecule(xf=myfile, natoms=na,elements=elements,coords=coords, style='xyz3', fmt='(f12.6)')
+  call cmlAddMolecule(xf=myfile, natoms=na,elements=elements,coords=coords, style='xyz3', fmt='r6')
 
   ! End and Close
   call cmlEndCml(myfile)

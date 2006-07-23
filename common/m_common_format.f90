@@ -116,7 +116,7 @@ contains
     n = 1
     do k = 1, size(st) - 1
       s(n:n+len(st(k))) = st(k)//d
-      n = n + k
+      n = n + len(st(k)) 
     enddo
     s(n:) = st(k)
 
@@ -192,11 +192,11 @@ contains
 
     n = 1
     do k = 1, size(ia) - 1
-      j = len(str(ia(j)))
-      s(n:n+j-1) = str(ia(j))
+      j = len(str(ia(k)))
+      s(n:n+j+1) = str(ia(k))//d
       n = n + j + 1
-      s(n-1:n-1) = d
     enddo
+    s(n:) = str(ia(k))
 
   end function str_integer_array
     
@@ -237,6 +237,11 @@ contains
       endif
       s(n-1:n-1) = d
     enddo
+    if (la(k)) then
+      s(n:) = 'true'
+    else
+      s(n:) = 'false'
+    endif
 
   end function str_logical_array
 
@@ -764,7 +769,7 @@ contains
           if (dec < -e-1) then
             s(n:) = repeat('0', dec)
           else
-            s(n:n-e-2) = repeat('0', -e-1)
+            s(n:n-e-2) = repeat('0', max(-e-1,0))
             n = n - min(e,-1) - 1
             if (n <= len(s)) then
               s(n:) = num

@@ -337,7 +337,7 @@ contains
     integer          :: nvalue
 
     nvalue = size(value)
-    call stmStartArrayTag(xf=xf, nvalue=nvalue, id=id, title=title, dictRef=dictRef, dataType='xsd:double', ref=ref, units=units)
+    call stmStartArrayTag(xf=xf, nvalue=nvalue, id=id, title=title, dictRef=dictRef, dataType='xsd:integer', ref=ref, units=units)
 
     call xml_AddCharacters(xf, value)
 
