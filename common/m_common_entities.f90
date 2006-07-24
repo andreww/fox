@@ -18,7 +18,8 @@ module m_common_entities
   use m_common_charset, only: digits
   use m_common_error, only: FoX_warning, FoX_error
   use m_common_format, only: str_to_int_10, str_to_int_16
-  use m_common_namecheck, only: checkCharacterEntityReference
+  use m_common_namecheck, only: checkName, checkSystemId, checkPubId, &
+    checkCharacterEntityReference, checkEntityValue
 
   implicit none
   private
@@ -260,6 +261,11 @@ contains
     character(len=*), intent(in) :: code
     character(len=*), intent(in) :: repl
 
+    if (.not.checkName(code)) &
+      call FoX_error("Illegal entity name")
+    if (.not.checkEntityValue(repl)) &
+      call FoX_error("Illegal entity value")
+
     call add_entity(ents, code, repl, "", "", "", .true., .true.)
   end subroutine add_internal_entity
 
@@ -267,14 +273,31 @@ contains
   subroutine add_external_entity(ents, code, systemId, publicId, notation)
     type(entity_list), intent(inout) :: ents
     character(len=*), intent(in) :: code
-    character(len=*), intent(in) :: publicId
     character(len=*), intent(in) :: systemId
+    character(len=*), intent(in), optional :: publicId
     character(len=*), intent(in), optional :: notation
-    
+
+    if (.not.checkName(code)) &
+      call FoX_error("Illegal entity name. "//code)
+    if (.not.checkSystemId(systemId)) &
+      call FoX_error("Illegal system Id. "//systemId)
+    if (present(publicId)) then
+      if (.not.checkPubId(publicId)) &
+        call FoX_error("Illegal publicId. "//publicId)
+    endif
     if (present(notation)) then
+      if (.not.checkName(notation)) &
+        call FoX_error("Illegal notation. "//notation)
+    endif
+
+    if (present(publicId) .and. present(notation)) then
       call add_entity(ents, code, "", systemId, publicId, notation, .true., .false.)
-    else
+    elseif (present(publicId)) then
       call add_entity(ents, code, "", systemId, publicId, "", .true., .true.)
+    elseif (present(notation)) then
+      call add_entity(ents, code, "", systemId, "", notation, .true., .false.)
+    else
+      call add_entity(ents, code, "", systemId, "", "", .true., .true.)
     endif
   end subroutine add_external_entity
 

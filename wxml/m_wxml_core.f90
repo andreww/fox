@@ -6,11 +6,11 @@ module m_wxml_core
   use m_common_buffer
   use m_common_elstack
   use m_common_entities, only: entity_list, init_entity_list, destroy_entity_list, &
-    add_internal_entity
+    add_internal_entity, add_external_entity
   use m_common_error, only: FoX_warning_base, FoX_error_base, FoX_fatal_base
   use m_common_io, only: get_unit
-  use m_common_namecheck, only: checkEncName, checkName, checkPITarget,  &
-    checkPubId, checkCharacterEntityReference, checkEntityValue
+  use m_common_namecheck, only: checkEncName, checkName, checkPITarget, &
+    checkCharacterEntityReference, checkSystemId, checkPubId
   use m_common_namespaces, only: namespaceDictionary, getnamespaceURI
   use m_common_namespaces, only: initnamespaceDictionary, destroynamespaceDictionary
   use m_common_namespaces, only: addDefaultNS, addPrefixedNS
@@ -80,6 +80,7 @@ module m_wxml_core
   public :: xml_AddNamespace
   public :: xml_AddDOCTYPE
   public :: xml_AddInternalEntity
+  public :: xml_AddExternalEntity
  
   interface xml_AddCharacters
     module procedure xml_AddCharacters_Ch
@@ -232,9 +233,11 @@ contains
     xf%name = vs_str(name)
 
     if (present(system)) then
+      if (.not.checkSystemId(system)) &
+        call wxml_error("Invalid SYSTEM ID "//system)
       if (present(public)) then
         if (.not.checkPubId(public)) &
-          call wxml_error("Invalid PUBLIC ID")
+          call wxml_error("Invalid PUBLIC ID "//public)
         if (scan(public, "'") /= 0) then
           call add_to_buffer(' PUBLIC "'//public//'"', xf%buffer)
         else
@@ -267,11 +270,6 @@ contains
     if (xf%state_2 /= WXML_STATE_2_INSIDE_INTSUBSET) &
       call wxml_fatal("Cannot define Entity here.")
       
-    if (.not.checkName(code)) &
-      call wxml_fatal("Illegal entity name")
-    if (.not.checkEntityValue(value)) &
-      call wxml_fatal("Illegal entity value")
-    
     call add_internal_entity(xf%entityList, code, value)
     
     call add_to_buffer('<!ENTITY '//code//' ', xf%buffer)
@@ -282,6 +280,46 @@ contains
     endif
 
   end subroutine xml_AddInternalEntity
+
+
+  subroutine xml_AddExternalEntity(xf, name, system, public, notation)
+    type(xmlf_t), intent(inout) :: xf
+    character(len=*), intent(in) :: name
+    character(len=*), intent(in) :: system
+    character(len=*), intent(in), optional :: public
+    character(len=*), intent(in), optional :: notation
+
+    if (xf%state_2 == WXML_STATE_2_INSIDE_DOCTYPE) then
+      call add_to_buffer(" [", xf%buffer)
+      xf%state_2 = WXML_STATE_2_INSIDE_INTSUBSET
+    endif
+
+    if (xf%state_2 /= WXML_STATE_2_INSIDE_INTSUBSET) &
+      call wxml_fatal("Cannot define Entity here.")
+      
+    !Name checking is done within add_external_entity
+    call add_external_entity(xf%entityList, name, system, public, notation)
+    
+    call add_to_buffer('<!ENTITY '//name, xf%buffer)
+    if (present(public)) then
+      if (index(public, '"') > 0) then
+        call add_to_buffer(" PUBLIC '"//public//"' ", xf%buffer)
+      else
+        call add_to_buffer(' PUBLIC "'//public//'" ', xf%buffer)
+      endif
+    else
+      call add_to_buffer(' SYSTEM ', xf%buffer)
+    endif
+    if (index(system, '"') > 0) then
+      call add_to_buffer("'"//system//'"', xf%buffer)
+    else
+      call add_to_buffer("'"//system//"'", xf%buffer)
+    endif
+    if (present(notation)) then
+      call add_to_buffer(' NDATA '//system, xf%buffer)
+    endif
+      
+  end subroutine xml_AddExternalEntity
 
 
   subroutine xml_AddXMLStylesheet(xf, href, type, title, media, charset, alternate)

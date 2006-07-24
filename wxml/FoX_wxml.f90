@@ -24,5 +24,6 @@ module FoX_wxml
   public :: xml_AddNamespace
   public :: xml_AddDOCTYPE
   public :: xml_AddInternalEntity
+  public :: xml_AddExternalEntity
 
 end module FoX_wxml

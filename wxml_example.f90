@@ -11,6 +11,7 @@ real, dimension(4,4)  :: y
 call xml_OpenFile("simple.xml",xf, indent=.true.)
 call xml_AddDOCTYPE(xf, "john", "hello.dtd")
 call xml_AddInternalEntity(xf, "abc", "A B C")
+call xml_AddExternalEntity(xf, "abc", "http://blah", public="h", notation="sdhfg")
 
 call xml_AddXMLStylesheet(xf,href="simple.css",type="text/css",media="braille")
 call xml_AddXMLPI(xf, name="robots")

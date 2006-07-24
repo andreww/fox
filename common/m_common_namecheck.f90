@@ -17,6 +17,7 @@ module m_common_namecheck
   public :: checkNCName
   public :: checkEncName
   public :: checkPITarget
+  public :: checkSystemId
   public :: checkPubId
   public :: checkCharacterEntityReference
   public :: checkEntityValue
@@ -97,9 +98,22 @@ contains
   pure function checkPubId(PubId) result(good)
     character(len=*), intent(in) :: PubId
     logical :: good
-    good =  (verify(PubId, PubIdChars) /= 0) 
+    good =  (verify(PubId, PubIdChars) == 0) 
   end function checkPubId
 
+
+  pure function checkSystemId(SystemId) result(good)
+    character(len=*), intent(in) :: SystemId
+    logical :: good
+    if (index(SystemId, '"') > 0) then
+      good = (index(SystemId, "'") > 0)
+    elseif (index(SystemId, "'") > 0) then
+      good = (index(SystemId, '"') > 0)
+    else
+      good = .true.
+    end if
+  end function checkSystemId
+    
   !function checkURI
   !end function checkURI
 
