@@ -458,11 +458,13 @@ contains
       xf%state_2 /= WXML_STATE_2_OUTSIDE_TAG)         &
       call wxml_fatal("Tried to add entity reference in wrong place.")
 
+    call close_start_tag(xf)
+
     if (.not.checkCharacterEntityReference(entityref)) then
       !it's not just a unicode entity
       call wxml_warning("Entity reference added - document may not be well-formed")
     endif
-    call add_to_buffer('&'//entityref, xf%buffer)
+    call add_to_buffer('&'//entityref//';', xf%buffer)
   end subroutine xml_AddEntityReference
 
 

@@ -36,11 +36,11 @@ call xml_AddAttribute(xf,"cholesterol",167.0d0,fmt="r0")
 call xml_EndElement(xf,"tim")
 call xml_AddCharacters(xf,"Ping-pong")
 call xml_AddCharacters(xf,"champion")
-!
-! Markup escaping in pcdata
-!
+
 call xml_AddCharacters(xf," in years < 2004")
-!
+
+call xml_AddEntityReference(xf, 'abc')
+
 call xml_NewElement(xf,"data")
 call xml_AddAttribute(xf,"units","eV")
 call random_number(x)
@@ -48,7 +48,8 @@ call random_number(x)
 call xml_EndElement(xf,"data")
 call xml_NewElement(xf,"data")
 call xml_AddAttribute(xf,"units","Ryd")
-call random_number(y)
+
+call xml_AddEntityReference(xf, 'x2A9')
 
 call xml_AddNamespace(xf, "http://www.w3.org/1999/xhtml", "h")
 call xml_AddNamespace(xf, "http://www.w3.org/1999/svg", "svg")
