@@ -458,7 +458,9 @@ contains
     character(len=*), intent(in), optional :: charset
     logical,          intent(in), optional :: alternate
     
-    ! FIXME this can only appear in the prolog
+    if (xf%state_1 /= WXML_STATE_1_JUST_OPENED &
+         .and. xf%state_1 /= WXML_STATE_JBEFORE_ROOT) then
+      call wxml_error("Cannot add stylesheet here: "//href)
 
     call close_start_tag(xf)
     
@@ -673,13 +675,18 @@ contains
     character(len=*), intent(in)  :: name
     character(len=*), intent(in)  :: value
 
-    !FIXME check that value doesn't contain ?>
-
     if (xf%state_2 /= WXML_STATE_2_INSIDE_PI) &
-         call wxml_fatal("PI pseudo-attribute outside PI: "//name)
+         call wxml_error("PI pseudo-attribute outside PI: "//name)
+
+    ! This is mostly ad-hoc, pseudo-attribute names are not defined anywhere.
+    if (.not.checkName(name)) &
+         call wxml_error("Invalid pseudo-attribute name: "//name)
 
     if (has_key(xf%dict,name)) &
-         call wxml_error(xf, "duplicate PI pseudo-attribute name: "//name)
+         call wxml_error(xf, "duplicate pseudo-attribute name: "//name)
+
+    if (index(value, '?>') > 0) &
+         call wxml_error(xf, "Invalid pseudo-attribute data: "//value)
     
     call add_item_to_dict(xf%dict, name, value)
     
