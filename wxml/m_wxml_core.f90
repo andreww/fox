@@ -459,7 +459,7 @@ contains
     logical,          intent(in), optional :: alternate
     
     if (xf%state_1 /= WXML_STATE_1_JUST_OPENED &
-         .and. xf%state_1 /= WXML_STATE_JBEFORE_ROOT) then
+         .and. xf%state_1 /= WXML_STATE_1_BEFORE_ROOT) &
       call wxml_error("Cannot add stylesheet here: "//href)
 
     call close_start_tag(xf)
@@ -654,10 +654,10 @@ contains
         call wxml_error(xf, "namespace prefix not registered: "//prefixOfQName(name))
       if (esc) then
         call add_item_to_dict(xf%dict, name, escape_string(value), prefixOfQName(name), &
-          getnamespaceURI(xf%nsDict,vs_str(prefixOfQname(name))))
+          getnamespaceURI(xf%nsDict,prefixOfQname(name)))
       else
         call add_item_to_dict(xf%dict, name, value, prefixOfQName(name), &
-          getnamespaceURI(xf%nsDict,vs_str(prefixOfQName(name))))
+          getnamespaceURI(xf%nsDict,prefixOfQName(name)))
       endif
     else
       if (esc) then

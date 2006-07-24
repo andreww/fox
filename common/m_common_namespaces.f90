@@ -433,7 +433,7 @@ contains
        if (n > 0) then
           allocate(prefix(n-1))
           prefix = transfer(QName(1:n-1), prefix)
-          call set_nsURI(atts, i, getnamespaceURI(nsDict, prefix))
+          call set_nsURI(atts, i, getnamespaceURI(nsDict, str_vs(prefix)))
           deallocate(prefix)
        else
           call set_nsURI(atts, i, '') ! no such thing as a default namespace on attributes
@@ -481,7 +481,7 @@ contains
     ! have to get those too:
     do i = 1, len(atts)
       ! get prefix, and identify the relevant NS mapping
-      i_p = getPrefixIndex(nsDict, vs_str(get_prefix(atts, i)))
+      i_p = getPrefixIndex(nsDict, get_prefix(atts, i))
       l_ps = ubound(nsDict%prefixes(i_p)%urilist,1)
       !If the index is greater than what it should be:
       if (nsDict%prefixes(i_p)%urilist(l_ps)%ix > ix) then
@@ -590,22 +590,23 @@ contains
 
   pure function getPrefixIndex(nsDict, prefix) result(p)
     type(namespaceDictionary), intent(in) :: nsDict
-    character, dimension(:), intent(in) :: prefix
+    character(len=*), intent(in) :: prefix
     integer :: p
     
     integer :: i
     p = 0
     do i = 1, ubound(nsDict%prefixes, 1)
-      if (str_vs(nsDict%prefixes(i)%prefix) == str_vs(prefix)) then
+      if (str_vs(nsDict%prefixes(i)%prefix) == prefix) then
            p = i
            exit
        endif
     enddo
   end function getPrefixIndex
 
+
   pure function getURIofPrefixedNS(nsDict, prefix) result(uri)
     type(namespaceDictionary), intent(in) :: nsDict
-    character, dimension(:), intent(in) :: prefix
+    character(len=*), intent(in) :: prefix
     character(len=size( &
               nsDict%prefixes( &
            getPrefixIndex(nsDict,prefix) &
@@ -617,7 +618,7 @@ contains
     integer :: p_i, l_m
     p_i = getPrefixIndex(nsDict, prefix)
     l_m = ubound(nsDict%prefixes(p_i)%urilist, 1)
-    uri = transfer(nsDict%prefixes(p_i)%urilist(l_m)%URI,uri)
+    uri = str_vs(nsDict%prefixes(p_i)%urilist(l_m)%URI)
 
   end function getURIofPrefixedNS
 
