@@ -16,6 +16,7 @@ module m_common_namecheck
   character(len=*), parameter :: PubIdChars = NameChars//spaces//"'()+,/=?;!*#@$%"
 
   public :: checkName
+  public :: checkQName
   public :: checkNCName
   public :: checkEncName
   public :: checkPITarget
@@ -206,7 +207,7 @@ contains
 
   pure function prefixOfQName(qname) result(prefix)
     character(len=*), intent(in) :: qname
-    character(len=index(qname, ':')-1) :: prefix
+    character(len=max(index(qname, ':')-1,0)) :: prefix
 
     prefix = qname ! automatic truncation
   end function prefixOfQName
@@ -214,7 +215,7 @@ contains
   
   pure function localpartOfQname(qname) result(localpart)
     character(len=*), intent(in) :: qname
-    character(len=len(qname)-index(qname,':')-1) ::localpart
+    character(len=max(len(qname)-index(qname,':')-1,0)) ::localpart
 
     localpart = qname(index(qname,':')+1:)
   end function localpartOfQname

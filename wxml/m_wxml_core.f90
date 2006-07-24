@@ -12,11 +12,14 @@ module m_wxml_core
   use m_common_error, only: FoX_warning_base, FoX_error_base, FoX_fatal_base
   use m_common_io, only: get_unit
   use m_common_namecheck, only: checkEncName, checkName, checkPITarget, &
-    checkCharacterEntityReference, checkSystemId, checkPubId
+    checkCharacterEntityReference, checkSystemId, checkPubId, &
+    checkQName, prefixOfQName
   use m_common_namespaces, only: namespaceDictionary, getnamespaceURI
   use m_common_namespaces, only: initnamespaceDictionary, destroynamespaceDictionary
   use m_common_namespaces, only: addDefaultNS, addPrefixedNS
   use m_common_namespaces, only: checkNamespacesWriting, checkEndNamespaces
+  use m_common_notations, only: notation_list, init_notation_list, destroy_notation_list, &
+    add_notation, notation_exists
   use m_wxml_escape, only: escape_string
 
   use pxf, only: pxfabort
@@ -63,6 +66,7 @@ module m_wxml_core
     character, pointer        :: name(:)
     type(namespaceDictionary) :: nsDict
     type(entity_list)         :: entityList
+    type(notation_list)       :: nList
   end type xmlf_t
 
   public :: xmlf_t
@@ -84,6 +88,7 @@ module m_wxml_core
   public :: xml_AddParameterEntity
   public :: xml_AddInternalEntity
   public :: xml_AddExternalEntity
+  public :: xml_AddNotation
  
   interface xml_AddCharacters
     module procedure xml_AddCharacters_Ch
@@ -185,6 +190,7 @@ contains
     
     call initNamespaceDictionary(xf%nsDict)
     call init_entity_list(xf%entityList, .false.)
+    call init_notation_list(xf%nList)
     
   end subroutine xml_OpenFile
 
@@ -355,6 +361,12 @@ contains
 
     if (xf%state_2 /= WXML_STATE_2_INSIDE_INTSUBSET) &
       call wxml_fatal("Cannot define Entity here.")
+
+    !FIXME but what if the notation was specified externally?
+    if (present(notation)) then
+      if (.not.notation_exists(xf%nList, notation)) &
+        call wxml_fatal("Tried to add unregistered notation to entity: "//name)
+    endif
       
     !Name checking is done within add_external_entity
     call add_external_entity(xf%entityList, name, system, public, notation)
@@ -385,7 +397,7 @@ contains
   subroutine xml_AddNotation(xf, name, system, public)
     type(xmlf_t), intent(inout) :: xf
     character(len=*), intent(in) :: name
-    character(len=*), intent(in) :: system
+    character(len=*), intent(in), optional :: system
     character(len=*), intent(in), optional :: public
 
     if (xf%state_2 == WXML_STATE_2_INSIDE_DOCTYPE) then
@@ -394,9 +406,34 @@ contains
     endif
 
     if (xf%state_2 /= WXML_STATE_2_INSIDE_INTSUBSET) &
-      call wxml_fatal("Cannot define Notation here.")
+      call wxml_fatal("Cannot define Notation here: "//name)
+    
+    if (.not.present(system) .and. .not.present(public)) &
+      call wxml_fatal("Neither External nor Public Id specified for notation: "//name)
 
-    !FIXME
+    if (notation_exists(xf%nList, name)) &
+      call wxml_fatal("Tried to create duplicate notation: "//name)
+
+    call add_notation(xf%nList, name, system, public)
+    call add_to_buffer('<!NOTATION '//name, xf%buffer)
+    if (present(public)) then
+      if (index(public, '"') > 0) then
+        call add_to_buffer(" PUBLIC '"//public//"' ", xf%buffer)
+      else
+        call add_to_buffer(' PUBLIC "'//public//'" ', xf%buffer)
+      endif
+    elseif (present(system)) then
+      call add_to_buffer(' SYSTEM ', xf%buffer)
+    endif
+    if (present(system)) then
+      if (index(system, '"') > 0) then
+        call add_to_buffer("'"//system//'"', xf%buffer)
+      else
+        call add_to_buffer("'"//system//"'", xf%buffer)
+      endif
+    endif
+    call add_to_buffer('>', xf%buffer)
+    
   end subroutine xml_AddNotation
 
 
@@ -481,22 +518,16 @@ contains
   end subroutine xml_AddComment
 
 
-  subroutine xml_NewElement(xf, name, nsPrefix)
+  subroutine xml_NewElement(xf, name)
     type(xmlf_t), intent(inout)   :: xf
     character(len=*), intent(in)  :: name
-    character(len=*), intent(in), optional  :: nsPrefix
-    
+
     select case (xf%state_1)
     case (WXML_STATE_1_JUST_OPENED, WXML_STATE_1_BEFORE_ROOT)
       xf%state_1 = WXML_STATE_1_DURING_ROOT
       if (size(xf%name) > 0) then
-        if (present(nsPrefix)) then
-          if (str_vs(xf%name) /= nsPrefix//":"//name) & 
-               call wxml_error(xf, "Root element name does not match DTD")
-        else
-          if (str_vs(xf%name) /= name) & 
-               call wxml_error(xf, "Root element name does not match DTD")
-        endif
+        if (str_vs(xf%name) /= name) & 
+          call wxml_error(xf, "Root element name does not match DTD")
       endif
     case (WXML_STATE_1_DURING_ROOT)
       continue
@@ -504,24 +535,19 @@ contains
       call wxml_error(xf, "Two root elements")
     end select
     
-    if (.not.checkName(name)) then
+    if (.not.checkQName(name)) then
       call wxml_error(xf, 'attribute name '//name//' is not valid')
     endif
-    
-    if (present(nsPrefix)) then
-      if (len(getnamespaceURI(xf%nsDict,vs_str(nsPrefix))) == 0) &
+
+    if (len(prefixOfQName(name)) > 0) then
+      if (len(getnamespaceURI(xf%nsDict,vs_str(prefixOfQName(name)))) == 0) &
            call wxml_error(xf, "namespace prefix not registered")
     endif
     
     call close_start_tag(xf)
     call add_eol(xf)
-    if (present(nsPrefix)) then
-      call push_elstack(nsPrefix//":"//name,xf%stack)
-      call add_to_buffer("<"//nsPrefix//":"//name, xf%buffer)
-    else
-      call push_elstack(name,xf%stack)
-      call add_to_buffer("<"//name, xf%buffer)
-    endif
+    call push_elstack(name,xf%stack)
+    call add_to_buffer("<"//name, xf%buffer)
     xf%state_2 = WXML_STATE_2_INSIDE_ELEMENT
     call reset_dict(xf%dict)
     
@@ -570,8 +596,8 @@ contains
     !well-formed output, unless we tie the sax parser
     !in as well ...
 
-    !Also, how do we add one in an attribute value?
-
+    !This check is wrong. We should be able to add them before
+    ! & after tags.
     if (xf%state_2 /= WXML_STATE_2_INSIDE_ELEMENT .and. &
       xf%state_2 /= WXML_STATE_2_OUTSIDE_TAG)         &
       call wxml_fatal("Tried to add entity reference in wrong place.")
@@ -586,11 +612,10 @@ contains
   end subroutine xml_AddEntityReference
 
 
-  subroutine xml_AddAttribute_Ch(xf, name, value, nsPrefix, escape)
+  subroutine xml_AddAttribute_Ch(xf, name, value, escape)
     type(xmlf_t), intent(inout)             :: xf
     character(len=*), intent(in)            :: name
     character(len=*), intent(in)            :: value
-    character(len=*), intent(in), optional  :: nsPrefix
     logical, intent(in), optional           :: escape
 
     logical :: esc
@@ -609,18 +634,19 @@ contains
     if (has_key(xf%dict,name)) &
          call wxml_error(xf, "duplicate att name")
     
-    if (.not.checkName(name)) &
+    if (.not.checkQName(name)) &
          call wxml_error(xf, "invalid attribute name")
 
-    if (present(nsPrefix)) then
-      if (len(getnamespaceURI(xf%nsDict,vs_str(nsPrefix))) == 0) &
-           call wxml_error(xf, "namespace prefix not registered")
+    !FIXME don't know what happens with default ns here.
+    if (len(prefixOfQName(name))>0) then
+      if (len(getnamespaceURI(xf%nsDict,vs_str(prefixOfQName(name)))) == 0) &
+        call wxml_error(xf, "namespace prefix not registered")
       if (esc) then
-        call add_item_to_dict(xf%dict, name, escape_string(value), &
-          nsPrefix, getnamespaceURI(xf%nsDict,vs_str(nsPrefix)))
+        call add_item_to_dict(xf%dict, name, escape_string(value), prefixOfQName(name), &
+          getnamespaceURI(xf%nsDict,vs_str(prefixOfQname(name))))
       else
-        call add_item_to_dict(xf%dict, name, value, &
-          nsPrefix, getnamespaceURI(xf%nsDict,vs_str(nsPrefix)))
+        call add_item_to_dict(xf%dict, name, value, prefixOfQName(name), &
+          getnamespaceURI(xf%nsDict,vs_str(prefixOfQName(name))))
       endif
     else
       if (esc) then
@@ -629,7 +655,6 @@ contains
         call add_item_to_dict(xf%dict, name, value)
       endif
     endif
-    
     
   end subroutine xml_AddAttribute_Ch
 
@@ -652,18 +677,12 @@ contains
   end subroutine xml_AddPseudoAttribute_Ch
 
 
-  subroutine xml_EndElement(xf, name, prefix)
+  subroutine xml_EndElement(xf, name)
     type(xmlf_t), intent(inout)             :: xf
     character(len=*), intent(in)            :: name
-    character(len=*), intent(in), optional  :: prefix
 
-    if (present(prefix)) then
-      if (get_top_elstack(xf%stack) /= prefix//":"//name) &
-           call wxml_fatal(xf, 'Trying to close '//prefix//":"//name//' but '//get_top_elstack(xf%stack)//' is open.') 
-    else
-      if (get_top_elstack(xf%stack) /= name) &
-           call wxml_fatal(xf, 'Trying to close '//name//' but '//get_top_elstack(xf%stack)//' is open.') 
-    endif
+    if (get_top_elstack(xf%stack) /= name) &
+      call wxml_fatal(xf, 'Trying to close '//name//' but '//get_top_elstack(xf%stack)//' is open.') 
     
     select case (xf%state_2)
     case (WXML_STATE_2_INSIDE_ELEMENT)
@@ -715,7 +734,6 @@ contains
       call xml_EndElement(xf, get_top_elstack(xf%stack))
     enddo
     
-    !should call dump_buffer
     write(unit=xf%lun,fmt="(a)") char(xf%buffer)
     close(unit=xf%lun)
     
@@ -724,6 +742,7 @@ contains
     
     call destroyNamespaceDictionary(xf%nsDict)
     call destroy_entity_list(xf%entityList)
+    call destroy_notation_list(xf%nList)
     
     deallocate(xf%name)
     deallocate(xf%filename)
@@ -751,23 +770,6 @@ if (xf%indenting_requested) &
    call add_to_buffer(repeat(' ',indent_level),xf%buffer)
 
 end subroutine add_eol
-!------------------------------------------------------------
-subroutine dump_buffer(xf,lf)
-type(xmlf_t), intent(inout)   :: xf
-logical, intent(in), optional :: lf
-
-if (present(lf)) then
-   if (lf) then
-      write(unit=xf%lun,fmt="(a)",advance="yes") char(xf%buffer)
-   else
-      write(unit=xf%lun,fmt="(a)",advance="no") char(xf%buffer)
-   endif
-else
-   write(unit=xf%lun,fmt="(a)",advance="no") char(xf%buffer)
-endif
-call reset_buffer(xf%buffer)
-
-end subroutine dump_buffer
 
 
   subroutine close_start_tag(xf)

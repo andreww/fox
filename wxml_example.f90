@@ -12,23 +12,19 @@ call xml_OpenFile("simple.xml",xf, indent=.true.)
 call xml_AddDOCTYPE(xf, "john", "hello.dtd")
 call xml_AddParameterEntity(xf, 'pe', 'parameter')
 call xml_AddInternalEntity(xf, "abc", "A B C%pe")
-call xml_AddExternalEntity(xf, "def", "http://blah", public="h", notation="sdhfg")
+call xml_AddNotation(xf, "GIF", "http://lzw.org")
+call xml_AddNotation(xf, "GIF", "http://lzw.org")
+call xml_AddExternalEntity(xf, "def", "http://blah", public="h", notation="GIF")
 
 call xml_AddXMLStylesheet(xf,href="simple.css",type="text/css",media="braille")
 call xml_AddXMLPI(xf, name="robots")
 call xml_AddPseudoAttribute(xf, "index", "yes")
 call xml_AddPseudoAttribute(xf, "follow", "no")
 call xml_AddXMLPI(xf,name="ccode", data="{hello_world();}")
-!
-! Uncomment this to test name checks
-!
-!!call xml_NewElement(xf,"98_john")
-!
+
 call xml_NewElement(xf,"john")
 call xml_AddAttribute(xf,"age",age)
-!
-! Markup escaping in attributes
-!
+
 call xml_AddAttribute(xf,"with_markup","O'Reilly & Assoc is < OUP but > Wiley")
 call xml_NewElement(xf,"peter")
 call xml_NewElement(xf,"tim")
@@ -55,13 +51,13 @@ call xml_AddEntityReference(xf, '#x2A9')
 
 call xml_AddNamespace(xf, "http://www.w3.org/1999/xhtml", "h")
 call xml_AddNamespace(xf, "http://www.w3.org/1999/svg", "svg")
-call xml_NewElement(xf, "html", "h")
-call xml_NewElement(xf, "svg", "svg")
-call xml_EndElement(xf, "svg", "svg")
-call xml_NewElement(xf, "head", "h")
+call xml_NewElement(xf, "h:html")
+call xml_NewElement(xf, "svg:svg")
+call xml_EndElement(xf, "svg:svg")
+call xml_NewElement(xf, "h:head")
 call xml_Addnamespace(xf,"http://www.xml-cml.org/schema", "cml")
-call xml_AddAttribute(xf, "convention", "eMinerals", "cml")
-call xml_EndElement(xf, "head", "h")
+call xml_AddAttribute(xf, "cml:convention", "eMinerals")
+call xml_EndElement(xf, "h:head")
 !
 ! Writing multidimensional arrays... index order?
 !

@@ -26,5 +26,6 @@ module FoX_wxml
   public :: xml_AddParameterEntity
   public :: xml_AddInternalEntity
   public :: xml_AddExternalEntity
+  public :: xml_AddNotation
 
 end module FoX_wxml
