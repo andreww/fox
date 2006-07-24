@@ -1,3 +1,2 @@
 check entity references while outputting? with ref to standalone?
-add notations?
-allow outputting entity references in attribute values
+check unescaped attribute values

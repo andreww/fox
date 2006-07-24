@@ -16,8 +16,8 @@ module m_wxml_core
     checkQName, prefixOfQName
   use m_common_namespaces, only: namespaceDictionary, getnamespaceURI
   use m_common_namespaces, only: initnamespaceDictionary, destroynamespaceDictionary
-  use m_common_namespaces, only: addDefaultNS, addPrefixedNS
-  use m_common_namespaces, only: checkNamespacesWriting, checkEndNamespaces
+  use m_common_namespaces, only: addDefaultNS, addPrefixedNS, isPrefixInForce
+  use m_common_namespaces, only: checkNamespacesWriting, checkEndNamespaces, dumpnsdict
   use m_common_notations, only: notation_list, init_notation_list, destroy_notation_list, &
     add_notation, notation_exists
   use m_wxml_escape, only: escape_string
@@ -531,21 +531,23 @@ contains
       xf%state_1 = WXML_STATE_1_DURING_ROOT
       if (size(xf%name) > 0) then
         if (str_vs(xf%name) /= name) & 
-          call wxml_error(xf, "Root element name does not match DTD")
+          call wxml_error(xf, "Root element name does not match DTD: "//name)
       endif
     case (WXML_STATE_1_DURING_ROOT)
       continue
     case (WXML_STATE_1_AFTER_ROOT)
-      call wxml_error(xf, "Two root elements")
+      call wxml_error(xf, "Two root elements: "//name)
     end select
     
     if (.not.checkQName(name)) then
       call wxml_error(xf, 'attribute name '//name//' is not valid')
     endif
 
+    call dumpnsdict(xf%nsdict)
+
     if (len(prefixOfQName(name)) > 0) then
-      if (len(getnamespaceURI(xf%nsDict,vs_str(prefixOfQName(name)))) == 0) &
-           call wxml_error(xf, "namespace prefix not registered")
+      if (isPrefixInForce(xf%nsDict, prefixOfQName(name))) &
+        call wxml_error(xf, "namespace prefix not registered: "//prefixOfQName(name))
     endif
     
     call close_start_tag(xf)
@@ -633,18 +635,17 @@ contains
     !FIXME when escape is false we should still verify somehow.
 
     if (xf%state_2 /= WXML_STATE_2_INSIDE_ELEMENT) &
-         call wxml_error(xf, "attributes outside element content")
+         call wxml_error(xf, "attributes outside element content: "//name)
     
     if (has_key(xf%dict,name)) &
-         call wxml_error(xf, "duplicate att name")
+         call wxml_error(xf, "duplicate att name: "//name)
     
     if (.not.checkQName(name)) &
-         call wxml_error(xf, "invalid attribute name")
+         call wxml_error(xf, "invalid attribute name: "//name)
 
-    !FIXME don't know what happens with default ns here.
     if (len(prefixOfQName(name))>0) then
-      if (len(getnamespaceURI(xf%nsDict,vs_str(prefixOfQName(name)))) == 0) &
-        call wxml_error(xf, "namespace prefix not registered")
+      if (isPrefixInForce(xf%nsDict, prefixOfQName(name))) &
+        call wxml_error(xf, "namespace prefix not registered: "//prefixOfQName(name))
       if (esc) then
         call add_item_to_dict(xf%dict, name, escape_string(value), prefixOfQName(name), &
           getnamespaceURI(xf%nsDict,vs_str(prefixOfQname(name))))
@@ -671,10 +672,10 @@ contains
     !FIXME check that value doesn't contain ?>
 
     if (xf%state_2 /= WXML_STATE_2_INSIDE_PI) &
-         call wxml_fatal("PI pseudo-attribute outside PI")
-    
+         call wxml_fatal("PI pseudo-attribute outside PI: "//name)
+
     if (has_key(xf%dict,name)) &
-         call wxml_error(xf, "duplicate PI pseudo-attribute name")
+         call wxml_error(xf, "duplicate PI pseudo-attribute name: "//name)
     
     call add_item_to_dict(xf%dict, name, value)
     

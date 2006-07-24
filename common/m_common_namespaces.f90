@@ -47,6 +47,9 @@ module m_common_namespaces
   interface getnamespaceURI
      module procedure getURIofDefaultNS, getURIofPrefixedNS
   end interface
+  public :: isPrefixInForce
+
+  public :: dumpnsdict !FIXME
 
   public :: addDefaultNS
   public :: removeDefaultNS
@@ -557,6 +560,7 @@ contains
     !call pxfflush(6)
   end subroutine dumpnsdict
 
+
   pure function getURIofDefaultNS(nsDict) result(uri)
     type(namespaceDictionary), intent(in) :: nsDict
     character(len=size(nsDict%defaults(ubound(nsDict%defaults,1))%URI)) :: URI
@@ -566,19 +570,23 @@ contains
     uri = transfer(nsDict%defaults(l_d)%URI, uri)
   end function getURIofDefaultNS
 
+
   pure function isPrefixInForce(nsDict, prefix) result(force)
     type(namespaceDictionary), intent(in) :: nsDict
-    character, dimension(:), intent(in) :: prefix
+    character(len=*), intent(in) :: prefix
     logical :: force
     integer :: i
 
     force = .false.
     do i = 1, ubound(nsDict%prefixes, 1)
-       if (str_vs(nsDict%prefixes(i)%prefix) == str_vs(prefix)) &
-            force = .true.
+       if (str_vs(nsDict%prefixes(i)%prefix) == prefix) then
+         force = .true.
+         exit
+       endif
     enddo
 
   end function isPrefixInForce
+
 
   pure function getPrefixIndex(nsDict, prefix) result(p)
     type(namespaceDictionary), intent(in) :: nsDict
