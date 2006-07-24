@@ -116,7 +116,7 @@ contains
     n = 1
     do k = 1, size(st) - 1
       s(n:n+len(st(k))) = st(k)//d
-      n = n + len(st(k)) 
+      n = n + len(st(k)) + 1
     enddo
     s(n:) = st(k)
 
@@ -193,7 +193,7 @@ contains
     n = 1
     do k = 1, size(ia) - 1
       j = len(str(ia(k)))
-      s(n:n+j+1) = str(ia(k))//d
+      s(n:n+j) = str(ia(k))//d
       n = n + j + 1
     enddo
     s(n:) = str(ia(k))
@@ -229,10 +229,10 @@ contains
     n = 1
     do k = 1, size(la) - 1
       if (la(k)) then
-        s(n:n+4-1) = 'true'
+        s(n:n+3) = 'true'
         n = n + 5
       else
-        s(n:n+4-1) = 'false'
+        s(n:n+4) = 'false'
         n = n + 6
       endif
       s(n-1:n-1) = d
@@ -445,7 +445,7 @@ contains
           if (dec < -e-1) then
             s(n:) = repeat('0', dec)
           else
-            s(n:n-e-2) = repeat('0', -e-1)
+            s(n:n-e-2) = repeat('0', max(-e-1,0))
             n = n - min(e,-1) - 1
             if (n <= len(s)) then
               s(n:) = num
@@ -555,7 +555,7 @@ contains
     do k = 1, size(xa) - 1
       j = str_real_sp_fmt_len(xa(k), "")
       s(n:n+j) = str(xa(k), "")//" "
-      n = n + j
+      n = n + j + 1
     enddo
     s(n:) = str(xa(k))
 
@@ -581,7 +581,7 @@ contains
     do k = 1, size(xa) - 1
       j = str_real_sp_fmt_len(xa(k), fmt)
       s(n:n+j) = str(xa(k), fmt)//d
-      n = n + j
+      n = n + j + 1
     enddo
     s(n:) = str(xa(k), fmt)
 
@@ -879,7 +879,7 @@ contains
     do k = 1, size(xa) - 1
       j = str_real_dp_fmt_len(xa(k), "")
       s(n:n+j) = str(xa(k), "")//" "
-      n = n + j
+      n = n + j + 1
     enddo
     s(n:) = str(xa(k))
 
@@ -905,7 +905,7 @@ contains
     do k = 1, size(xa) - 1
       j = str_real_dp_fmt_len(xa(k), fmt)
       s(n:n+j) = str(xa(k), fmt)//d
-      n = n + j
+      n = n + j + 1
     enddo
     s(n:) = str(xa(k), fmt)
 

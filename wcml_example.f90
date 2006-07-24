@@ -16,7 +16,6 @@
 !
 
   integer           :: num, na
-  character(len=10) :: jon
   character(len=2)  :: elements(3)
   real(kind=dp)      :: coords(3,3)
   real(kind=dp)      :: adp
@@ -31,7 +30,6 @@
   elements(2) = 'Si'
   elements(3) = 'O'
   num = 20
-  jon = '   jon'
   
   call xml_Openfile('test.cml',myfile)
   call cmlStartCml(myfile)
