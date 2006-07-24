@@ -1,5 +1,6 @@
 module m_common_format
 
+  use m_common_error, only: FoX_error
   use pxf, only: pxfabort
 
   implicit none
@@ -338,7 +339,7 @@ contains
 
   end function real_sp_str
 
-  pure function str_real_sp_fmt(x, fmt) result(s)
+  function str_real_sp_fmt(x, fmt) result(s)
     real(sp), intent(in) :: x
     character(len=*), intent(in) :: fmt
     character(len=str_real_sp_fmt_len(x, fmt)) :: s
@@ -346,6 +347,9 @@ contains
     integer :: sig, dec
     integer :: e, n
     character(len=len(s)) :: num !this wll always be enough memory.
+
+    if (.not.checkFmt(fmt)) &
+      call FoX_error("Invalid format: "//fmt)
 
     if (x == 0.0_sp) then
       e = 0
@@ -527,7 +531,7 @@ contains
   end function str_real_sp_fmt_len
 
 
-  pure function str_real_sp(x) result(s)
+  function str_real_sp(x) result(s)
     real(sp), intent(in) :: x
     character(len=str_real_sp_len(x)) :: s
 
@@ -545,7 +549,7 @@ contains
   end function str_real_sp_len
 
 
-  pure function str_real_sp_array(xa) result(s)
+  function str_real_sp_array(xa) result(s)
     real(sp), dimension(:), intent(in) :: xa
     character(len=str_real_sp_array_len(xa)) :: s
     
@@ -562,7 +566,7 @@ contains
   end function str_real_sp_array
 
 
-  pure function str_real_sp_array_fmt(xa, fmt, delimiter) result(s)
+  function str_real_sp_array_fmt(xa, fmt, delimiter) result(s)
     real(sp), dimension(:), intent(in) :: xa
     character(len=*), intent(in) :: fmt
     character(len=1), intent(in), optional :: delimiter
@@ -662,7 +666,7 @@ contains
 
   end function real_dp_str
 
-  pure function str_real_dp_fmt(x, fmt) result(s)
+  function str_real_dp_fmt(x, fmt) result(s)
     real(dp), intent(in) :: x
     character(len=*), intent(in) :: fmt
     character(len=str_real_dp_fmt_len(x, fmt)) :: s
@@ -670,6 +674,9 @@ contains
     integer :: sig, dec
     integer :: e, n
     character(len=len(s)) :: num !this wll always be enough memory.
+
+    if (.not.checkFmt(fmt)) &
+      call FoX_error("Invalid format: "//fmt)
 
     if (x == 0.0_dp) then
       e = 0
@@ -851,7 +858,7 @@ contains
   end function str_real_dp_fmt_len
 
 
-  pure function str_real_dp(x) result(s)
+  function str_real_dp(x) result(s)
     real(dp), intent(in) :: x
     character(len=str_real_dp_len(x)) :: s
 
@@ -869,7 +876,7 @@ contains
   end function str_real_dp_len
 
 
-  pure function str_real_dp_array(xa) result(s)
+  function str_real_dp_array(xa) result(s)
     real(dp), dimension(:), intent(in) :: xa
     character(len=str_real_dp_array_len(xa)) :: s
     
@@ -886,7 +893,7 @@ contains
   end function str_real_dp_array
 
 
-  pure function str_real_dp_array_fmt(xa, fmt, delimiter) result(s)
+  function str_real_dp_array_fmt(xa, fmt, delimiter) result(s)
     real(dp), dimension(:), intent(in) :: xa
     character(len=*), intent(in) :: fmt
     character(len=1), intent(in), optional :: delimiter
@@ -939,6 +946,27 @@ contains
     enddo
     
   end function str_real_dp_array_fmt_len
-     
+
+
+  pure function checkFmt(fmt) result(good)
+    character(len=*), intent(in) :: fmt
+    logical :: good
+
+    ! should be ([rs][0-9]*)?
+
+    if (len(fmt) > 0) then
+      if (fmt(1:1) == 'r' .or. fmt(1:1) == 's') then
+        if (len(fmt) > 1) then
+          good = (verify(fmt(2:), digit) == 0)
+        else
+          good = .true.
+        endif
+      else
+        good = .false.
+      endif
+    else
+      good = .true.
+    endif
+  end function checkFmt
      
 end module m_common_format

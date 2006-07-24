@@ -1,2 +1,4 @@
 check entity references while outputting? with ref to standalone?
 check unescaped attribute values
+check usage of buffer
+what happens to unbroken character data?
