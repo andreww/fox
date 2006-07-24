@@ -302,7 +302,6 @@ contains
   end subroutine add_external_entity
 
 
-
   function is_unparsed_entity(ents, code) result(p)
     type(entity_list), intent(in) :: ents
     character(len=*), intent(in) :: code

@@ -1,10 +1,12 @@
 module m_wxml_core
 
   use FoX_common, only: FoX_version
-  use m_common_attrs
+  use m_common_attrs, only: dictionary_t, len, get_key, get_value, has_key, &
+    add_item_to_dict, init_dict, reset_dict, destroy_dict
   use m_common_array_str, only: vs_str, str_vs
   use m_common_buffer
-  use m_common_elstack
+  use m_common_elstack, only: elstack_t, len, get_top_elstack, pop_elstack, is_empty, &
+    init_elstack, push_elstack, destroy_elstack
   use m_common_entities, only: entity_list, init_entity_list, destroy_entity_list, &
     add_internal_entity, add_external_entity
   use m_common_error, only: FoX_warning_base, FoX_error_base, FoX_fatal_base
@@ -299,6 +301,8 @@ contains
       
     !Name checking is done within add_external_entity
     call add_external_entity(xf%entityList, name, system, public, notation)
+    print*, 'NAME ', notation
+    print*, checkName(notation)
     
     call add_to_buffer('<!ENTITY '//name, xf%buffer)
     if (present(public)) then
@@ -316,8 +320,9 @@ contains
       call add_to_buffer("'"//system//"'", xf%buffer)
     endif
     if (present(notation)) then
-      call add_to_buffer(' NDATA '//system, xf%buffer)
+      call add_to_buffer(' NDATA '//notation, xf%buffer)
     endif
+    call add_to_buffer('>', xf%buffer)
       
   end subroutine xml_AddExternalEntity
 

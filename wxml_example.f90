@@ -11,7 +11,7 @@ real, dimension(4,4)  :: y
 call xml_OpenFile("simple.xml",xf, indent=.true.)
 call xml_AddDOCTYPE(xf, "john", "hello.dtd")
 call xml_AddInternalEntity(xf, "abc", "A B C")
-call xml_AddExternalEntity(xf, "abc", "http://blah", public="h", notation="sdhfg")
+call xml_AddExternalEntity(xf, "def", "http://blah", public="h", notation="sdhfg")
 
 call xml_AddXMLStylesheet(xf,href="simple.css",type="text/css",media="braille")
 call xml_AddXMLPI(xf, name="robots")
@@ -50,7 +50,7 @@ call xml_EndElement(xf,"data")
 call xml_NewElement(xf,"data")
 call xml_AddAttribute(xf,"units","Ryd")
 
-call xml_AddEntityReference(xf, 'x2A9')
+call xml_AddEntityReference(xf, '#x2A9')
 
 call xml_AddNamespace(xf, "http://www.w3.org/1999/xhtml", "h")
 call xml_AddNamespace(xf, "http://www.w3.org/1999/svg", "svg")
