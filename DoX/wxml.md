@@ -1,15 +1,17 @@
 # WXML
 
-Wxml is a general Fortran XML output library. It offers a Fortran interface, in the form of a number of subroutines,  to generate well-formed XML documents. Almost all of the XML features described in [XML11] and [Namespaces] are available, and Wxml will diagnose almost all attempts to produce an invalid document. Section [REF] below describes where wxml falls short of these aims
+`wxml` is a general Fortran XML output library. It offers a Fortran interface, in the form of a number of subroutines,  to generate well-formed XML documents. Almost all of the XML features described in [XML11](#XML11)  and [Namespaces](#Namespaces) are available, and `wxml` will diagnose almost all attempts to produce an invalid document. [Exceptions](#Exceptions) below describes where `wxml` falls short of these aims.
 
-The following functions are available, arranged in three sections.
+First, [Conventions](#Conventions) describes the conventions use in this document.
 
-Firstly, the very few functions necessary to create the simplest XML document, containing only elements, attributes, and text.
+Then, [Functions](#Functions) lists all of `wxml`'s publically exported functions, in three sections:
 
-Secondly, those functions concerned with XML Namespaces, and how Namespaces affect the behaviour of the first tranche of functions.
+1. [Firstly](#simple), the very few functions necessary to create the simplest XML document, containing only elements, attributes, and text. 
+2. [Secondly](#NSfunctions), those functions concerned with XML Namespaces, and how Namespaces affect the behaviour of the first tranche of functions.  
+3. [Thirdly](#obscure), a set of more rarely used functions required to access some of the more esoteric corners of the XML specification.
 
-Thridly, a set of more rarely used functions required to access some of the more esoteric corners of the XML specification.
 
+<a name="Conventions">
 
 ##Conventions and notes:
 
@@ -35,7 +37,13 @@ It is strongly recommended that the functions be used with keyword arguments rat
 ####Derived type: `xmlf_t`
 This is an opaque type representing the XML file handle. Each function requires this as an argument, so it knows which file to operate on. (And it is an output of the xml_OpenFile subroutine) Since all subroutines require it, it is not mentioned below.
 
+<a name="Functions"/>
+
 ## Function listing
+
+--------------
+
+<a name="simple"/>
 
 ### Frequently used functions
 
@@ -99,6 +107,9 @@ and if they are an array, the elements will all be output, separated by spaces (
 case the delimiter may be changed to any other single character using an optional argument).
 
 ----------
+
+<a name="NSfunctions"/>
+
 ### Namespace-aware functions:
 
 * `xml_AddNamespace`  
@@ -132,6 +143,8 @@ The element or attribute name is checked, and if it is a QName (ie if it is of t
 registered namespace prefix, and generate an error if not.
 
 ----------
+
+<a name="obscure"/>
 
 ### More rarely used functions:
 
@@ -251,21 +264,29 @@ This may be used anywhere that xml_AddCharacters may be, and will insert an enti
 ---------------
 ##Exceptions
 
-Below is a list of areas where wxml fails to implement the whole of XML 1.1; numerical references below are to the sections in [XML11]
+<a name="Exceptions"/>
 
-1: XML documents which are not namespace-valid may not be produced; that is, attempts to produce documents which are well-formed according to [XML11] but not namespace-well-formed according to [Namespaces] will fail. 
+Below is a list of areas where wxml fails to implement the whole of XML 1.1; numerical references below are to the sections in \[[XML11](#XML11)]\]
 
-2: Unicode support[2.2] is practically non-existent. Due to the limitations of Fortran, wxml will directly only emit whatever characters are allowed by the Fortran processor; in general this amounts to only ASCII. Some unicode output is possible through the use of character entities, but only where character data is allowed. No means is offered for output of unicode in attribute values or in XML Names. Unicode character references are checked according to XML-1.1 (2.2)
+ 1. XML documents which are not namespace-valid may not be produced; that is, attempts to produce documents which are well-formed according to [XML11] but not namespace-well-formed according to [Namespaces] will fail. 
+ 1. Unicode support\[[2.2]\](http://www.w3.org/TR/xml11/#charsets) is practically non-existent. Due to the limitations of Fortran, wxml will directly only emit whatever characters are allowed by the Fortran processor; in general this amounts to only ASCII. Some unicode output is possible through the use of character entities, but only where character data is allowed. No means is offered for output of unicode in attribute values or in XML Names. Unicode character references are checked before output according to the constraints of [[XML11]](#XML11)
+ 1. DTD support is not complete. While a DTD may be output, and entities defined in the internal subset, there is no support for adding Element\[[3.2](http://www.w3.org/TR/xml11/#elemdecls)\] or Attlist\[[3.3](http://www.w3.org/TR/xml11/#attdecls\] declarations; nor is there any support for Conditional Sections.[3.4]
+ 1. Entity support is not complete\[[4.1](http://www.w3.org/TR/xml11/#sec-references), [4.2](http://www.w3.org/TR/xml11/#sec-entity-decl). [4.3](http://www.w3.org/TR/xml11/#TextEntities)\]. All XML entities (parameter, internal, external) may be defined; however, general entities may only be referenced from within a character data section between tags generated with `xml_NewElement` (In principle it should be possible to start the root element from within an entity reference). Furthermore, when an entity reference is added to the document, no check is made of its validity or its contents. (In general, validating all entity references is impossible, but even where possible wxml does not attempt it.) This means that if an entity reference is output, wxml offers no guarantees on the well-formedness of the document, and it will emit a warning to this effect.
 
-3: Entity support is not complete[4.1, 4.2, 4.3, 4.4]. All XML entities (parameter, internal, external) may be defined; however, general entities may only be referenced from within a character data section between tags generated with `xml_NewElement` (In principle it should be possible to start the root element from within an entity reference). Furthermore, when an entity reference is added to the document, no check is made of its validity or its contents. (In general, validating all entity references is impossible, but even where possible wxml does not attempt it.) This means that if an entity reference is output, wxml offers no guarantees on the well-formedness of the document, and it will emit a warning to this effect.
-
-4: DTD support is not complete. While a DTD may be output, and entities defined in the internal subset, there is no support for adding Element[3.2] or Attlist[3.3] declarations; nor is there any support for Conditional Sections.[3.4]
 
 ---------------
 ##References
 
-[XML11]: W3C Recommendation, http://www.w3.org/TR/xml11
+<a name="References"/>
 
-[Namespaces]: W3C Recommendation, http://www.w3.org/TR/xml-names11
+<a name="XML11"/>
 
-[Stylesheets]: W3C Recommendation, http://www.w3.org/TR/xml-stylesheet
+[XML11]: W3C Recommendation, <http://www.w3.org/TR/xml11>
+
+<a name="Namespaces"/>
+
+[Namespaces]: W3C Recommendation, <http://www.w3.org/TR/xml-names11>
+
+<a name="Stylesheets"/>
+
+[Stylesheets]: W3C Recommendation, <http://www.w3.org/TR/xml-stylesheet>
