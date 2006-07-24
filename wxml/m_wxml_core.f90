@@ -153,7 +153,7 @@ contains
       xf%lun = channel
     else
       call get_unit(xf%lun,iostat)
-      if (iostat /= 0) call wxml_fatal(xf, "cannot open file")
+      if (iostat /= 0) call wxml_fatal(xf, "cannot open file: "//filename)
     endif
     
     !
@@ -209,7 +209,7 @@ contains
     call xml_AddPseudoAttribute(xf, "version", "1.0")
     if (present(encoding)) then
       if (.not.checkEncName(encoding)) &
-           call wxml_error("Invalid encoding name")
+           call wxml_error("Invalid encoding name "//encoding)
       call xml_AddPseudoAttribute(xf, "encoding", encoding)
     endif
     if (present(standalone)) then
@@ -231,14 +231,14 @@ contains
     call close_start_tag(xf)
     
     if (xf%state_1 /= WXML_STATE_1_BEFORE_ROOT) &
-      call wxml_error("Tried to put XML DOCTYPE in wrong place")
+      call wxml_error("Tried to put XML DOCTYPE in wrong place: "//name)
 
     if (size(xf%name) > 0) &
       ! We must have already had a DOCTYPE declaration
-      call wxml_error("Tried to output more than one DOCTYPE declaration.")
+      call wxml_error("Tried to output more than one DOCTYPE declaration: "//name)
 
     if (.not.checkName(name)) &
-         call wxml_error("Invalid Name in DTD")
+         call wxml_error("Invalid Name in DTD "//name)
     
     call add_eol(xf)
     call add_to_buffer("<!DOCTYPE "//name, xf%buffer)
@@ -265,7 +265,7 @@ contains
         call add_to_buffer(" SYSTEM '"//system//"'", xf%buffer)
       endif
     elseif (present(public)) then
-      call wxml_error("wxml:DOCTYPE: PUBLIC supplied without SYSTEM")
+      call wxml_error("wxml:DOCTYPE: PUBLIC supplied without SYSTEM for: "//name)
     endif
     
     xf%state_2 = WXML_STATE_2_INSIDE_DOCTYPE
@@ -285,7 +285,7 @@ contains
     endif
 
     if (xf%state_2 /= WXML_STATE_2_INSIDE_INTSUBSET) &
-      call wxml_fatal("Cannot define Parameter Entity here.")
+      call wxml_fatal("Cannot define Parameter Entity here: "//name)
       
 
     if (present(PEdef)) then
@@ -340,7 +340,7 @@ contains
     endif
 
     if (xf%state_2 /= WXML_STATE_2_INSIDE_INTSUBSET) &
-      call wxml_fatal("Cannot define Entity here.")
+      call wxml_fatal("Cannot define Entity here: "//name)
       
     call add_internal_entity(xf%entityList, name, value)
 
@@ -369,15 +369,15 @@ contains
     endif
 
     if (xf%state_2 /= WXML_STATE_2_INSIDE_INTSUBSET) &
-      call wxml_fatal("Cannot define Entity here.")
+      call wxml_fatal("Cannot define Entity here: "//name)
 
     !Ideally we'd check here - but perhaps the notation has been specified
     ! externally ...
 
-    !if (present(notation)) then
-    !  if (.not.notation_exists(xf%nList, notation)) &
-    !    call wxml_fatal("Tried to add unregistered notation to entity: "//name)
-    !endif
+    if (present(notation)) then
+      if (.not.notation_exists(xf%nList, notation)) &
+        call wxml_warning("Tried to add possibly unregistered notation to entity: "//name)
+    endif
       
     !Name checking is done within add_external_entity
     call add_external_entity(xf%entityList, name, system, public, notation)
@@ -497,11 +497,11 @@ contains
     endif
 
     if (.not.present(xml) .and. .not.checkPITarget(name)) &
-         call wxml_warning(xf, "Invalid PI Target")
+         call wxml_warning(xf, "Invalid PI Target "//name)
     call add_to_buffer("<?" // name, xf%buffer)
     if (present(data)) then
       if (index(data, '?>') > 0) &
-           call wxml_error(xf, "Tried to output invalid PI data")
+           call wxml_error(xf, "Tried to output invalid PI data "//data)
       call add_to_buffer(' '//data//'?>', xf%buffer)
       ! state_2 is now OUTSIDE_TAG from close_start_tag
     else
@@ -517,7 +517,7 @@ contains
     character(len=*), intent(in)  :: comment
     
     if (index(comment,'--') > 0 .or. comment(len(comment):) == '-') &
-         call wxml_error("Tried to output invalid comment")
+         call wxml_error("Tried to output invalid comment "//comment)
     
     call close_start_tag(xf)
     call add_eol(xf)
@@ -575,9 +575,7 @@ contains
 
     if (xf%state_2 /= WXML_STATE_2_INSIDE_ELEMENT .and. &
          xf%state_2 /= WXML_STATE_2_OUTSIDE_TAG)         &
-         call wxml_fatal("Tried to add text section in wrong place.")
-
-    ! FIXME check for parsed inside attribute
+         call wxml_fatal("Tried to add text section in wrong place: "//chars)
     
     if (present(parsed)) then
       pc = parsed
@@ -591,7 +589,7 @@ contains
       call add_to_buffer(escape_String(chars), xf%buffer)
     else
       if (index(chars,']]>') > 0) &
-           call wxml_error("Tried to output invalid CDATA")
+           call wxml_fatal("Tried to output invalid CDATA: "//chars)
       call add_to_buffer("<![CDATA["//chars//"]]>", xf%buffer)
     endif
     
@@ -612,7 +610,7 @@ contains
     ! & after tags.
     if (xf%state_2 /= WXML_STATE_2_INSIDE_ELEMENT .and. &
       xf%state_2 /= WXML_STATE_2_OUTSIDE_TAG)         &
-      call wxml_fatal("Tried to add entity reference in wrong place.")
+      call wxml_fatal("Tried to add entity reference in wrong place: "//entityref)
 
     call close_start_tag(xf)
 
@@ -860,6 +858,7 @@ contains
 
     end subroutine wxml_error_xf
 
+
     subroutine wxml_fatal_xf(xf, msg)
       !Emit error message and abort with coredump. Does not try to
       !close file, so should be used from anything xml_Close might
@@ -875,6 +874,7 @@ contains
       stop
 
     end subroutine wxml_fatal_xf
+
 
     pure function xmlf_name(xf) result(fn)
       Type (xmlf_t), intent(in) :: xf
