@@ -23,7 +23,7 @@ This may be done in one of two ways:
 
  Thus the number 111, when output with the format "s2" will produce the string "1.1e2".
 
- The number of significant figures should lie between 1 and the number of digits precision provided by the real kind. If a larger or smaller number is specified, output will be truncated accorsingly. If unspecified, then a sensible default will be chosen.
+ The number of significant figures should lie between 1 and the number of digits precision provided by the real kind. If a larger or smaller number is specified, output will be truncated accordingly. If unspecified, then a sensible default will be chosen.
 
   This format is not permitted by XML Schema Datatypes 1.0, though it is in 2.0
 
