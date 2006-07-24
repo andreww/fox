@@ -18,6 +18,7 @@ module m_common_entities
   use m_common_charset, only: digits
   use m_common_error, only: FoX_warning, FoX_error
   use m_common_format, only: str_to_int_10, str_to_int_16
+  use m_common_namecheck, only: checkCharacterEntityReference
 
   implicit none
   private
@@ -37,8 +38,6 @@ module m_common_entities
     type(entity_t), dimension(:), pointer :: list
     logical :: PE
   end type entity_list
-
-  character(len=*), parameter :: hexdigits = "0123456789abcdefABCDEF"
 
   public :: is_unparsed_entity
 
@@ -280,25 +279,6 @@ contains
   end subroutine add_external_entity
 
 
-  pure function is_char_entity(code) result(p)
-    character(len=*), intent(in) :: code
-    logical :: p
-
-    p = .false.
-
-    if (len(code) > 1) then
-      if (code(1:1) == "#") then
-        if (code(2:2) == "x") then
-          if (len(code) > 2) then
-            p = (verify(code(3:), hexdigits) == 0)
-          endif
-        else
-          p = (verify(code(2:), digits) == 0)
-        endif
-      endif
-    endif
-  end function is_char_entity
-
 
   function is_unparsed_entity(ents, code) result(p)
     type(entity_list), intent(in) :: ents
@@ -387,15 +367,7 @@ contains
 !FIXME the following test is not entirely in accordance with the valid chars check we do elsewhere...
 
     if (.not.ents%PE) then
-      if (len(code) > 1) then
-        if (code(1:1) == "#") then
-          if (code(2:2) == "x") then
-            if (len(code) > 2) p = (verify(code(3:), hexdigits) == 0)
-          else
-            p = (verify(code(2:), digits) == 0)
-          endif
-        endif
-      endif
+      p = checkCharacterEntityReference(code)
     endif
  
     do i = 1, size(ents%list)
@@ -433,7 +405,7 @@ contains
     integer :: i
     type(entity_t) :: ent
 
-    if (is_char_entity(code)) then
+    if (checkCharacterEntityReference(code)) then
       n = expand_char_entity_len(code)
       return
     endif
@@ -470,7 +442,7 @@ contains
 
     integer :: number, i
 
-    if (is_char_entity(code)) then
+    if (checkCharacterEntityReference(code)) then
       repl = expand_char_entity(code)
       return
     endif
@@ -634,7 +606,7 @@ contains
         endif
         ! We only want to expand this if it's a character or parameter entity ...
         ! Unparsed entities give undefined results here - we ignore them.FIXME?
-        if (is_char_entity(str(i+1:i+k-1))) then
+        if (checkCharacterEntityReference(str(i+1:i+k-1))) then
           j = expand_char_entity_len(str(i+1:i+k-1))
           i  = i + k + 1
           i2 = i2 + j
@@ -693,7 +665,7 @@ contains
         endif
         ! We only want to expand this if it's a character or parameter entity ...
         ! Unparsed entities give undefined results here - we ignore them.FIXME?
-        if (is_char_entity(str(i+1:i+k-1))) then
+        if (checkCharacterEntityReference(str(i+1:i+k-1))) then
           j = expand_char_entity_len(str(i+1:i+k-1))
           if (n > 0) str2(i2:i2+j-1) = expand_char_entity(str(i+1:i+k-1))
           i  = i + k + 1

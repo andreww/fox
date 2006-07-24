@@ -5,9 +5,12 @@ module m_wxml_core
   use m_common_array_str, only: vs_str, str_vs
   use m_common_buffer
   use m_common_elstack
+  use m_common_entities, only: entity_list, init_entity_list, destroy_entity_list, &
+    add_internal_entity
   use m_common_error, only: FoX_warning_base, FoX_error_base, FoX_fatal_base
   use m_common_io, only: get_unit
-  use m_common_namecheck, only: checkEncName, checkName, checkPITarget, checkPubId
+  use m_common_namecheck, only: checkEncName, checkName, checkPITarget,  &
+    checkPubId, checkCharacterEntityReference, checkEntityValue
   use m_common_namespaces, only: namespaceDictionary, getnamespaceURI
   use m_common_namespaces, only: initnamespaceDictionary, destroynamespaceDictionary
   use m_common_namespaces, only: addDefaultNS, addPrefixedNS
@@ -39,7 +42,11 @@ module m_wxml_core
   integer, parameter :: WXML_STATE_2_INSIDE_PI = 1
   !We are inside a Processing Instruction tag
   integer, parameter :: WXML_STATE_2_INSIDE_ELEMENT = 2
-  !We are in inside an element tag.
+  !We are inside an element tag.
+  integer, parameter :: WXML_STATE_2_INSIDE_DOCTYPE = 3
+  !We are inside the DOCTYPE declaration
+  integer, parameter :: WXML_STATE_2_INSIDE_INTSUBSET = 4
+  !We are inside the internal subset definition
 
 
   type xmlf_t
@@ -53,6 +60,7 @@ module m_wxml_core
     logical                   :: indenting_requested
     character, pointer        :: name(:)
     type(namespaceDictionary) :: nsDict
+    type(entity_list)         :: entityList
   end type xmlf_t
 
   public :: xmlf_t
@@ -71,6 +79,7 @@ module m_wxml_core
   public :: xml_AddPseudoAttribute
   public :: xml_AddNamespace
   public :: xml_AddDOCTYPE
+  public :: xml_AddInternalEntity
  
   interface xml_AddCharacters
     module procedure xml_AddCharacters_Ch
@@ -104,76 +113,76 @@ module m_wxml_core
 
 contains
 
-!-------------------------------------------------------------------
-subroutine xml_OpenFile(filename, xf, indent, channel, replace, addDecl)
-character(len=*), intent(in)  :: filename
-type(xmlf_t), intent(inout)   :: xf
-logical, intent(in), optional :: indent
-integer, intent(in), optional :: channel
-logical, intent(in), optional :: replace
-logical, intent(in), optional :: addDecl
-
-integer :: iostat
-logical :: repl, decl
-
-if (present(replace)) then
-       repl = replace
-else
-       repl = .true.
-endif
-if (present(addDecl)) then
-       decl = addDecl
-else
-       decl = .true.
-endif
-
-allocate(xf%filename(len(filename)))
-xf%filename = vs_str(filename)
-allocate(xf%name(0))
-
-if (present(channel)) then
-  xf%lun = channel
-else
-  call get_unit(xf%lun,iostat)
-  if (iostat /= 0) call wxml_fatal(xf, "cannot open file")
-endif
-
-!
-! Use large I/O buffer in case the O.S./Compiler combination
-! has hard-limits by default (i.e., NAGWare f95's 1024 byte limit)
-! This is related to the maximum size of the buffer.
-! TOHW - This is the longest string that may be output without
-! a newline. The buffer must not be larger than this, but its size 
-! can be tuned for performance.
-
-if(repl) then
-  open(unit=xf%lun, file=filename, form="formatted", status="unknown", &
-       action="write", position="rewind", recl=xml_recl)
-else 
-  open(unit=xf%lun, file=filename, form="formatted", status="old", &
-       action="write", position="append", recl=xml_recl)
-endif
-
-call init_elstack(xf%stack)
-
-call init_dict(xf%dict)
-call reset_buffer(xf%buffer)
-
-xf%state_1 = WXML_STATE_1_JUST_OPENED
-xf%state_2 = WXML_STATE_2_OUTSIDE_TAG
-
-xf%indenting_requested = .false.
-if (present(indent)) then
-   xf%indenting_requested = indent
-endif
-
-if (decl) then
-  call xml_AddXMLDeclaration(xf,encoding='UTF-8')
-endif
-
-call initNamespaceDictionary(xf%nsDict)
-
-end subroutine xml_OpenFile
+  subroutine xml_OpenFile(filename, xf, indent, channel, replace, addDecl)
+    character(len=*), intent(in)  :: filename
+    type(xmlf_t), intent(inout)   :: xf
+    logical, intent(in), optional :: indent
+    integer, intent(in), optional :: channel
+    logical, intent(in), optional :: replace
+    logical, intent(in), optional :: addDecl
+    
+    integer :: iostat
+    logical :: repl, decl
+    
+    if (present(replace)) then
+      repl = replace
+    else
+      repl = .true.
+    endif
+    if (present(addDecl)) then
+      decl = addDecl
+    else
+      decl = .true.
+    endif
+    
+    allocate(xf%filename(len(filename)))
+    xf%filename = vs_str(filename)
+    allocate(xf%name(0))
+    
+    if (present(channel)) then
+      xf%lun = channel
+    else
+      call get_unit(xf%lun,iostat)
+      if (iostat /= 0) call wxml_fatal(xf, "cannot open file")
+    endif
+    
+    !
+    ! Use large I/O buffer in case the O.S./Compiler combination
+    ! has hard-limits by default (i.e., NAGWare f95's 1024 byte limit)
+    ! This is related to the maximum size of the buffer.
+    ! TOHW - This is the longest string that may be output without
+    ! a newline. The buffer must not be larger than this, but its size 
+    ! can be tuned for performance.
+    
+    if(repl) then
+      open(unit=xf%lun, file=filename, form="formatted", status="unknown", &
+        action="write", position="rewind", recl=xml_recl)
+    else 
+      open(unit=xf%lun, file=filename, form="formatted", status="old", &
+        action="write", position="append", recl=xml_recl)
+    endif
+    
+    call init_elstack(xf%stack)
+    
+    call init_dict(xf%dict)
+    call reset_buffer(xf%buffer)
+    
+    xf%state_1 = WXML_STATE_1_JUST_OPENED
+    xf%state_2 = WXML_STATE_2_OUTSIDE_TAG
+    
+    xf%indenting_requested = .false.
+    if (present(indent)) then
+      xf%indenting_requested = indent
+    endif
+    
+    if (decl) then
+      call xml_AddXMLDeclaration(xf,encoding='UTF-8')
+    endif
+    
+    call initNamespaceDictionary(xf%nsDict)
+    call init_entity_list(xf%entityList, .false.)
+    
+  end subroutine xml_OpenFile
 
 
   subroutine xml_AddXMLDeclaration(xf, encoding, standalone)
@@ -240,10 +249,40 @@ end subroutine xml_OpenFile
     elseif (present(public)) then
       call wxml_error("wxml:DOCTYPE: PUBLIC supplied without SYSTEM")
     endif
-
-    call add_to_buffer(">", xf%buffer)
+    
+    xf%state_2 = WXML_STATE_2_INSIDE_DOCTYPE
   end subroutine xml_AddDOCTYPE
+
+
+  subroutine xml_AddInternalEntity(xf, code, value)
+    type(xmlf_t), intent(inout) :: xf
+    character(len=*), intent(in) :: code
+    character(len=*), intent(in) :: value
+
+    if (xf%state_2 == WXML_STATE_2_INSIDE_DOCTYPE) then
+      call add_to_buffer(" [", xf%buffer)
+      xf%state_2 = WXML_STATE_2_INSIDE_INTSUBSET
+    endif
+
+    if (xf%state_2 /= WXML_STATE_2_INSIDE_INTSUBSET) &
+      call wxml_fatal("Cannot define Entity here.")
       
+    if (.not.checkName(code)) &
+      call wxml_fatal("Illegal entity name")
+    if (.not.checkEntityValue(value)) &
+      call wxml_fatal("Illegal entity value")
+    
+    call add_internal_entity(xf%entityList, code, value)
+    
+    call add_to_buffer('<!ENTITY '//code//' ', xf%buffer)
+    if (index(value, '"') > 0) then
+      call add_to_buffer("'"//value//"'>", xf%buffer)
+    else
+      call add_to_buffer('"'//value//'">', xf%buffer)
+    endif
+
+  end subroutine xml_AddInternalEntity
+
 
   subroutine xml_AddXMLStylesheet(xf, href, type, title, media, charset, alternate)
     type(xmlf_t), intent(inout)   :: xf
@@ -413,10 +452,17 @@ end subroutine xml_OpenFile
     !well-formed output, unless we tie the sax parser
     !in as well ...
 
-    if () then!it's not just a unicode entity
+    !Also, how do we add one in an attribute value?
+
+    if (xf%state_2 /= WXML_STATE_2_INSIDE_ELEMENT .and. &
+      xf%state_2 /= WXML_STATE_2_OUTSIDE_TAG)         &
+      call wxml_fatal("Tried to add entity reference in wrong place.")
+
+    if (.not.checkCharacterEntityReference(entityref)) then
+      !it's not just a unicode entity
       call wxml_warning("Entity reference added - document may not be well-formed")
     endif
-    call add_to_buffer('&'//entityref)
+    call add_to_buffer('&'//entityref, xf%buffer)
   end subroutine xml_AddEntityReference
 
 
@@ -535,6 +581,7 @@ end subroutine xml_OpenFile
     call destroy_elstack(xf%stack)
     
     call destroyNamespaceDictionary(xf%nsDict)
+    call destroy_entity_list(xf%entityList)
     
     deallocate(xf%name)
     deallocate(xf%filename)
@@ -580,27 +627,31 @@ call reset_buffer(xf%buffer)
 
 end subroutine dump_buffer
 
-!------------------------------------------------------------
-subroutine close_start_tag(xf)
-type(xmlf_t), intent(inout)   :: xf
 
-  select case (xf%state_2)
-  case (WXML_STATE_2_INSIDE_ELEMENT)
-    call checkNamespacesWriting(xf%dict, xf%nsDict, len(xf%stack))
-    if (len(xf%dict) > 0)  call write_attributes(xf)
-    call add_to_buffer('>', xf%buffer)
-  case (WXML_STATE_2_INSIDE_PI)
-    if (len(xf%dict) > 0)  call write_attributes(xf)
-    call add_to_buffer('?>', xf%buffer)
-  case (WXML_STATE_2_OUTSIDE_TAG)
-    continue
-  case default
-    call wxml_fatal("Internal library error")
-  end select
-  
-  xf%state_2 = WXML_STATE_2_OUTSIDE_TAG
-  
-end subroutine close_start_tag
+  subroutine close_start_tag(xf)
+    type(xmlf_t), intent(inout)   :: xf
+    
+    select case (xf%state_2)
+    case (WXML_STATE_2_INSIDE_ELEMENT)
+      call checkNamespacesWriting(xf%dict, xf%nsDict, len(xf%stack))
+      if (len(xf%dict) > 0)  call write_attributes(xf)
+      call add_to_buffer('>', xf%buffer)
+    case (WXML_STATE_2_INSIDE_PI)
+      if (len(xf%dict) > 0)  call write_attributes(xf)
+      call add_to_buffer('?>', xf%buffer)
+    case (WXML_STATE_2_INSIDE_DOCTYPE)
+      call add_to_buffer('>', xf%buffer)
+    case (WXML_STATE_2_INSIDE_INTSUBSET)
+      call add_to_buffer(']>', xf%buffer)
+    case (WXML_STATE_2_OUTSIDE_TAG)
+      continue
+    case default
+      call wxml_fatal("Internal library error")
+    end select
+    
+    xf%state_2 = WXML_STATE_2_OUTSIDE_TAG
+    
+  end subroutine close_start_tag
 
 !-------------------------------------------------------------
 subroutine write_attributes(xf)

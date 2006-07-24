@@ -8,6 +8,7 @@ module m_common_namecheck
   character(len=*), parameter :: upperCase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
   character(len=*), parameter :: letters = lowerCase//upperCase
   character(len=*), parameter :: digits = "0123456789"
+  character(len=*), parameter :: hexdigits = "0123456789abcdefABCDEF"
   character(len=*), parameter :: NameChars = lowerCase//upperCase//digits//".-_:"
   character(len=*), parameter :: NCNameChars = lowerCase//upperCase//digits//".-_"
   character(len=*), parameter :: PubIdChars = NameChars//spaces//"'()+,/=?;!*#@$%"
@@ -17,10 +18,12 @@ module m_common_namecheck
   public :: checkEncName
   public :: checkPITarget
   public :: checkPubId
+  public :: checkCharacterEntityReference
+  public :: checkEntityValue
 
 contains
 
-  function checkEncName(name) result(good)
+  pure function checkEncName(name) result(good)
     ![81]   	EncName	   ::=   	[A-Za-z] ([A-Za-z0-9._] | '-')*
     character(len=*), intent(in) :: name
     logical :: good
@@ -35,7 +38,7 @@ contains
   end function checkEncName
 
 
-  function checkPITarget(name) result(good)
+  pure function checkPITarget(name) result(good)
     character(len=*), intent(in) :: name
     logical :: good
     ! Validates a string against the XML requirements for a NAME
@@ -57,7 +60,7 @@ contains
   end function checkPITarget
 
 
-  function checkName(name) result(good)
+  pure function checkName(name) result(good)
     character(len=*), intent(in) :: name
     logical :: good
     ! Validates a string against the XML requirements for a NAME
@@ -74,7 +77,7 @@ contains
   end function checkName
 
 
-  function checkNCName(name) result(good)
+  pure function checkNCName(name) result(good)
     character(len=*), intent(in) :: name
     logical :: good
     ! Validates a string against the XML requirements for an NCNAME
@@ -91,7 +94,7 @@ contains
   end function checkNCName
 
 
-  function checkPubId(PubId) result(good)
+  pure function checkPubId(PubId) result(good)
     character(len=*), intent(in) :: PubId
     logical :: good
     good =  (verify(PubId, PubIdChars) /= 0) 
@@ -99,5 +102,41 @@ contains
 
   !function checkURI
   !end function checkURI
+
+  pure function checkCharacterEntityReference(code) result(good)
+    character(len=*), intent(in) :: code
+    logical :: good
+
+    good = .false.
+    if (len(code) > 0) then
+      if (code(1:1) == "#") then
+        if (code(2:2) == "x") then
+          if (len(code) > 2) then
+            good = (verify(code(3:), hexdigits) == 0)
+          endif
+        else
+          good = (verify(code(2:), digits) == 0)
+        endif
+      endif
+    endif
+  end function checkCharacterEntityReference
+
+  
+  pure function checkEntityValue(value) result (good)
+    ![9] EntityValue ::= '"' ([^%&"] | PEReference | Reference)* '"'
+    !                 |  "'" ([^%&'] | PEReference | Reference)* "'"
+    character(len=*), intent(in) :: value
+    logical :: good
+    ! this is a very imperfect check
+    good = (len(value) > 0)
+    if (good) then
+      if (index(value, '"') > 0) then
+        good = (index(value, "'") == 0)
+      elseif (index(value, "'") > 0) then
+        good = (index(value, '"') == 0)
+      endif
+    endif
+
+  end function checkEntityValue
 
 end module m_common_namecheck
