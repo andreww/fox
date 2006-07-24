@@ -17,7 +17,7 @@ module m_wxml_core
   use m_common_namespaces, only: namespaceDictionary, getnamespaceURI
   use m_common_namespaces, only: initnamespaceDictionary, destroynamespaceDictionary
   use m_common_namespaces, only: addDefaultNS, addPrefixedNS, isPrefixInForce
-  use m_common_namespaces, only: checkNamespacesWriting, checkEndNamespaces, dumpnsdict
+  use m_common_namespaces, only: checkNamespacesWriting, checkEndNamespaces
   use m_common_notations, only: notation_list, init_notation_list, destroy_notation_list, &
     add_notation, notation_exists
   use m_wxml_escape, only: escape_string
@@ -551,10 +551,8 @@ contains
       call wxml_error(xf, 'attribute name '//name//' is not valid')
     endif
 
-    call dumpnsdict(xf%nsdict)
-
     if (len(prefixOfQName(name)) > 0) then
-      if (isPrefixInForce(xf%nsDict, prefixOfQName(name))) &
+      if (.not.isPrefixInForce(xf%nsDict, prefixOfQName(name))) &
         call wxml_error(xf, "namespace prefix not registered: "//prefixOfQName(name))
     endif
     
@@ -652,7 +650,7 @@ contains
          call wxml_error(xf, "invalid attribute name: "//name)
 
     if (len(prefixOfQName(name))>0) then
-      if (isPrefixInForce(xf%nsDict, prefixOfQName(name))) &
+      if (.not.isPrefixInForce(xf%nsDict, prefixOfQName(name))) &
         call wxml_error(xf, "namespace prefix not registered: "//prefixOfQName(name))
       if (esc) then
         call add_item_to_dict(xf%dict, name, escape_string(value), prefixOfQName(name), &

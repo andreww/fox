@@ -552,12 +552,12 @@ contains
     enddo
     write(*,'(a)') '* Prefixed namespaces *'
     do i = 1, ubound(nsdict%prefixes, 1)
-       write(*,'(2a)') '* prefix: ', nsdict%prefixes(i)%prefix
+       write(*,'(2a)') '* prefix: ', str_vs(nsdict%prefixes(i)%prefix)
        do j = 1, ubound(nsdict%prefixes(i)%urilist, 1)
           write(*,'(i0,a)') nsdict%prefixes(i)%urilist(j)%ix, str_vs(nsdict%prefixes(i)%urilist(j)%URI)
        enddo
     enddo
-    !call pxfflush(6)
+
   end subroutine dumpnsdict
 
 
