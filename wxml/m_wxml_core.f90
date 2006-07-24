@@ -66,6 +66,7 @@ module m_wxml_core
     character, pointer        :: name(:)
     type(namespaceDictionary) :: nsDict
     type(entity_list)         :: entityList
+    type(entity_list)         :: PEList
     type(notation_list)       :: nList
   end type xmlf_t
 
@@ -190,6 +191,7 @@ contains
     
     call initNamespaceDictionary(xf%nsDict)
     call init_entity_list(xf%entityList, .false.)
+    call init_entity_list(xf%PEList, .true.)
     call init_notation_list(xf%nList)
     
   end subroutine xml_OpenFile
@@ -285,8 +287,6 @@ contains
     if (xf%state_2 /= WXML_STATE_2_INSIDE_INTSUBSET) &
       call wxml_fatal("Cannot define Parameter Entity here.")
       
-    !call add_internal_entity(xf%entityList, name, value)
-    ! we do not store it at the moment.
 
     if (present(PEdef)) then
       if (present(system) .or. present(public)) &
@@ -294,6 +294,11 @@ contains
     else
       if (.not.present(system)) &
         call wxml_fatal("Parameter entity "//name//" must have either a PEdef and an External ID")
+    endif
+    if (present(PEdef)) then
+      call add_internal_entity(xf%PEList, name, PEdef)
+    else
+      call add_external_entity(xf%PEList, name, system, public)
     endif
 
     call add_to_buffer('<!ENTITY % '//name//' ', xf%buffer)
@@ -362,11 +367,13 @@ contains
     if (xf%state_2 /= WXML_STATE_2_INSIDE_INTSUBSET) &
       call wxml_fatal("Cannot define Entity here.")
 
-    !FIXME but what if the notation was specified externally?
-    if (present(notation)) then
-      if (.not.notation_exists(xf%nList, notation)) &
-        call wxml_fatal("Tried to add unregistered notation to entity: "//name)
-    endif
+    !Ideally we'd check here - but perhaps the notation has been specified
+    ! externally ...
+
+    !if (present(notation)) then
+    !  if (.not.notation_exists(xf%nList, notation)) &
+    !    call wxml_fatal("Tried to add unregistered notation to entity: "//name)
+    !endif
       
     !Name checking is done within add_external_entity
     call add_external_entity(xf%entityList, name, system, public, notation)
@@ -408,9 +415,6 @@ contains
     if (xf%state_2 /= WXML_STATE_2_INSIDE_INTSUBSET) &
       call wxml_fatal("Cannot define Notation here: "//name)
     
-    if (.not.present(system) .and. .not.present(public)) &
-      call wxml_fatal("Neither External nor Public Id specified for notation: "//name)
-
     if (notation_exists(xf%nList, name)) &
       call wxml_fatal("Tried to create duplicate notation: "//name)
 
@@ -742,6 +746,7 @@ contains
     
     call destroyNamespaceDictionary(xf%nsDict)
     call destroy_entity_list(xf%entityList)
+    call destroy_entity_list(xf%PEList)
     call destroy_notation_list(xf%nList)
     
     deallocate(xf%name)

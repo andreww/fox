@@ -13,7 +13,6 @@ call xml_AddDOCTYPE(xf, "john", "hello.dtd")
 call xml_AddParameterEntity(xf, 'pe', 'parameter')
 call xml_AddInternalEntity(xf, "abc", "A B C%pe")
 call xml_AddNotation(xf, "GIF", "http://lzw.org")
-call xml_AddNotation(xf, "GIF", "http://lzw.org")
 call xml_AddExternalEntity(xf, "def", "http://blah", public="h", notation="GIF")
 
 call xml_AddXMLStylesheet(xf,href="simple.css",type="text/css",media="braille")
