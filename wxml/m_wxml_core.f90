@@ -66,6 +66,7 @@ module m_wxml_core
   public :: xml_AddXMLPI
   public :: xml_AddComment
   public :: xml_AddCharacters
+  public :: xml_AddEntityReference
   public :: xml_AddAttribute
   public :: xml_AddPseudoAttribute
   public :: xml_AddNamespace
@@ -81,10 +82,6 @@ module m_wxml_core
     module procedure xml_AddPseudoAttribute_Ch
   end interface
  
-  interface xml_AddArray
-    module procedure xml_AddArray_Ch
-  end interface
-
   !overload error handlers to allow file info
   interface wxml_warning
     module procedure wxml_warning_xf, FoX_warning_base
@@ -406,6 +403,22 @@ end subroutine xml_OpenFile
     xf%state_2 = WXML_STATE_2_OUTSIDE_TAG
   end subroutine xml_AddCharacters_Ch
 
+  
+  subroutine xml_AddEntityReference(xf, entityref)
+    type(xmlf_t), intent(inout) :: xf
+    character(len=*), intent(in) :: entityref
+
+    !Where can we add this? If we allow the full gamut
+    !of entities, we can no longer properly ensure
+    !well-formed output, unless we tie the sax parser
+    !in as well ...
+
+    if () then!it's not just a unicode entity
+      call wxml_warning("Entity reference added - document may not be well-formed")
+    endif
+    call add_to_buffer('&'//entityref)
+  end subroutine xml_AddEntityReference
+
 
   subroutine xml_AddAttribute_Ch(xf, name, value, nsPrefix)
     type(xmlf_t), intent(inout)             :: xf
@@ -449,29 +462,6 @@ end subroutine xml_OpenFile
     call add_item_to_dict(xf%dict, name, value)
     
   end subroutine xml_AddPseudoAttribute_Ch
-
-
-  subroutine xml_AddArray_Ch(xf, array, delimiter)
-    type(xmlf_t), intent(inout) :: xf
-    character(len=*), dimension(:), intent(in) :: array
-    character(len=1), intent(in), optional :: delimiter
-    
-    integer :: i,n
-    character(len=1) :: d
-
-    if (present(delimiter)) then
-      d = delimiter
-    else
-      d = ' '
-    endif
-    
-    n = size(array)
-    do i = 1, n-1
-      call add_to_buffer(array(i)//d, xf%buffer)
-    enddo
-    call add_to_buffer(array(n), xf%buffer)
-    
-  end subroutine xml_AddArray_Ch
 
 
   subroutine xml_EndElement(xf, name, prefix)

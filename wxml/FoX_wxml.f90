@@ -15,12 +15,13 @@ module FoX_wxml
   public :: xml_AddXMLStylesheet
   public :: xml_AddXMLPI
   public :: xml_AddComment
+  public :: xml_AddEntityReference
 
   public :: xml_AddCharacters
   public :: xml_AddAttribute
   public :: xml_AddPseudoAttribute
 
   public :: xml_AddNamespace
-  public :: xml_addDOCTYPE
+  public :: xml_AddDOCTYPE
 
 end module FoX_wxml
