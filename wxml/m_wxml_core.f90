@@ -17,7 +17,7 @@ module m_wxml_core
   use m_common_namespaces, only: initnamespaceDictionary, destroynamespaceDictionary
   use m_common_namespaces, only: addDefaultNS, addPrefixedNS
   use m_common_namespaces, only: checkNamespacesWriting, checkEndNamespaces
-  use m_wxml_escape, only: escape_string, escape_string_len
+  use m_wxml_escape, only: escape_string
 
   use pxf, only: pxfabort
 
@@ -81,6 +81,7 @@ module m_wxml_core
   public :: xml_AddPseudoAttribute
   public :: xml_AddNamespace
   public :: xml_AddDOCTYPE
+  public :: xml_AddParameterEntity
   public :: xml_AddInternalEntity
   public :: xml_AddExternalEntity
  
@@ -196,7 +197,7 @@ contains
     if (xf%state_1 /= WXML_STATE_1_JUST_OPENED) &
          call wxml_error("Tried to put XML declaration in wrong place")
     
-    call xml_AddXMLPI(xf, "xml", cheat=.true.)
+    call xml_AddXMLPI(xf, "xml", xml=.true.)
     call xml_AddPseudoAttribute(xf, "version", "1.0")
     if (present(encoding)) then
       if (.not.checkEncName(encoding)) &
@@ -222,7 +223,11 @@ contains
     call close_start_tag(xf)
     
     if (xf%state_1 /= WXML_STATE_1_BEFORE_ROOT) &
-         call wxml_error("Tried to put XML DOCTYPE in wrong place")
+      call wxml_error("Tried to put XML DOCTYPE in wrong place")
+
+    if (size(xf%name) > 0) &
+      ! We must have already had a DOCTYPE declaration
+      call wxml_error("Tried to output more than one DOCTYPE declaration.")
 
     if (.not.checkName(name)) &
          call wxml_error("Invalid Name in DTD")
@@ -259,9 +264,61 @@ contains
   end subroutine xml_AddDOCTYPE
 
 
-  subroutine xml_AddInternalEntity(xf, code, value)
+  subroutine xml_AddParameterEntity(xf, name, PEdef, system, public)
     type(xmlf_t), intent(inout) :: xf
-    character(len=*), intent(in) :: code
+    character(len=*), intent(in) :: name
+    character(len=*), intent(in), optional :: PEDef
+    character(len=*), intent(in), optional :: system
+    character(len=*), intent(in), optional :: public
+    
+    if (xf%state_2 == WXML_STATE_2_INSIDE_DOCTYPE) then
+      call add_to_buffer(" [", xf%buffer)
+      xf%state_2 = WXML_STATE_2_INSIDE_INTSUBSET
+    endif
+
+    if (xf%state_2 /= WXML_STATE_2_INSIDE_INTSUBSET) &
+      call wxml_fatal("Cannot define Parameter Entity here.")
+      
+    !call add_internal_entity(xf%entityList, name, value)
+    ! we do not store it at the moment.
+
+    if (present(PEdef)) then
+      if (present(system) .or. present(public)) &
+        call wxml_fatal("Parameter entity "//name//" cannot have both a PEdef and an External ID")
+    else
+      if (.not.present(system)) &
+        call wxml_fatal("Parameter entity "//name//" must have either a PEdef and an External ID")
+    endif
+
+    call add_to_buffer('<!ENTITY % '//name//' ', xf%buffer)
+    if (present(PEdef)) then
+      if (index(PEdef, '"') > 0) then
+        call add_to_buffer("'"//PEdef//"'>", xf%buffer)
+      else
+        call add_to_buffer('"'//PEdef//'">', xf%buffer)
+      endif
+    else
+      if (present(public)) then
+        if (index(public, '"') > 0) then
+          call add_to_buffer(" PUBLIC '"//public//"' ", xf%buffer)
+        else
+          call add_to_buffer(' PUBLIC "'//public//'" ', xf%buffer)
+        endif
+      else
+        call add_to_buffer(' SYSTEM ', xf%buffer)
+      endif
+      if (index(system, '"') > 0) then
+        call add_to_buffer("'"//system//'"', xf%buffer)
+      else
+        call add_to_buffer("'"//system//"'", xf%buffer)
+      endif
+    endif
+  end subroutine xml_AddParameterEntity
+
+
+  subroutine xml_AddInternalEntity(xf, name, value)
+    type(xmlf_t), intent(inout) :: xf
+    character(len=*), intent(in) :: name
     character(len=*), intent(in) :: value
 
     if (xf%state_2 == WXML_STATE_2_INSIDE_DOCTYPE) then
@@ -272,9 +329,9 @@ contains
     if (xf%state_2 /= WXML_STATE_2_INSIDE_INTSUBSET) &
       call wxml_fatal("Cannot define Entity here.")
       
-    call add_internal_entity(xf%entityList, code, value)
+    call add_internal_entity(xf%entityList, name, value)
     
-    call add_to_buffer('<!ENTITY '//code//' ', xf%buffer)
+    call add_to_buffer('<!ENTITY '//name//' ', xf%buffer)
     if (index(value, '"') > 0) then
       call add_to_buffer("'"//value//"'>", xf%buffer)
     else
@@ -301,8 +358,6 @@ contains
       
     !Name checking is done within add_external_entity
     call add_external_entity(xf%entityList, name, system, public, notation)
-    print*, 'NAME ', notation
-    print*, checkName(notation)
     
     call add_to_buffer('<!ENTITY '//name, xf%buffer)
     if (present(public)) then
@@ -327,6 +382,24 @@ contains
   end subroutine xml_AddExternalEntity
 
 
+  subroutine xml_AddNotation(xf, name, system, public)
+    type(xmlf_t), intent(inout) :: xf
+    character(len=*), intent(in) :: name
+    character(len=*), intent(in) :: system
+    character(len=*), intent(in), optional :: public
+
+    if (xf%state_2 == WXML_STATE_2_INSIDE_DOCTYPE) then
+      call add_to_buffer(" [", xf%buffer)
+      xf%state_2 = WXML_STATE_2_INSIDE_INTSUBSET
+    endif
+
+    if (xf%state_2 /= WXML_STATE_2_INSIDE_INTSUBSET) &
+      call wxml_fatal("Cannot define Notation here.")
+
+    !FIXME
+  end subroutine xml_AddNotation
+
+
   subroutine xml_AddXMLStylesheet(xf, href, type, title, media, charset, alternate)
     type(xmlf_t), intent(inout)   :: xf
     character(len=*), intent(in) :: href
@@ -336,9 +409,11 @@ contains
     character(len=*), intent(in), optional :: charset
     logical,          intent(in), optional :: alternate
     
+    ! FIXME this can only appear in the prolog
+
     call close_start_tag(xf)
     
-    call xml_AddXMLPI(xf, 'xml-stylesheet', cheat=.true.)
+    call xml_AddXMLPI(xf, 'xml-stylesheet', xml=.true.)
     call xml_AddPseudoAttribute(xf, 'href', href)
     call xml_AddPseudoAttribute(xf, 'type', type)
     
@@ -359,11 +434,11 @@ contains
   end subroutine xml_AddXMLStylesheet
   
 
-  subroutine xml_AddXMLPI(xf, name, data, cheat)
+  subroutine xml_AddXMLPI(xf, name, data, xml)
     type(xmlf_t), intent(inout)            :: xf
     character(len=*), intent(in)           :: name
     character(len=*), intent(in), optional :: data
-    logical, optional :: cheat
+    logical, optional :: xml
     
     call close_start_tag(xf)
     if (xf%state_1 == WXML_STATE_1_JUST_OPENED) then
@@ -372,7 +447,7 @@ contains
       call add_eol(xf)
     endif
 
-    if (.not.present(cheat) .and. .not.checkPITarget(name)) &
+    if (.not.present(xml) .and. .not.checkPITarget(name)) &
          call wxml_warning(xf, "Invalid PI Target")
     call add_to_buffer("<?" // name, xf%buffer)
     if (present(data)) then
@@ -511,12 +586,21 @@ contains
   end subroutine xml_AddEntityReference
 
 
-  subroutine xml_AddAttribute_Ch(xf, name, value, nsPrefix)
+  subroutine xml_AddAttribute_Ch(xf, name, value, nsPrefix, escape)
     type(xmlf_t), intent(inout)             :: xf
     character(len=*), intent(in)            :: name
     character(len=*), intent(in)            :: value
     character(len=*), intent(in), optional  :: nsPrefix
-    
+    logical, intent(in), optional           :: escape
+
+    logical :: esc
+
+    if (present(escape)) then
+      esc = escape
+    else
+      esc = .true.
+    endif
+
     if (xf%state_2 /= WXML_STATE_2_INSIDE_ELEMENT) &
          call wxml_error(xf, "attributes outside element content")
     
@@ -529,10 +613,19 @@ contains
     if (present(nsPrefix)) then
       if (len(getnamespaceURI(xf%nsDict,vs_str(nsPrefix))) == 0) &
            call wxml_error(xf, "namespace prefix not registered")
-      call add_item_to_dict(xf%dict, name, value, &
-           nsPrefix, getnamespaceURI(xf%nsDict,vs_str(nsPrefix)))
+      if (esc) then
+        call add_item_to_dict(xf%dict, name, escape_string(value), &
+          nsPrefix, getnamespaceURI(xf%nsDict,vs_str(nsPrefix)))
+      else
+        call add_item_to_dict(xf%dict, name, value, &
+          nsPrefix, getnamespaceURI(xf%nsDict,vs_str(nsPrefix)))
+      endif
     else
-      call add_item_to_dict(xf%dict, name, value)
+      if (esc) then
+        call add_item_to_dict(xf%dict, name, escape_string(value))
+      else
+        call add_item_to_dict(xf%dict, name, value)
+      endif
     endif
     
     
@@ -543,6 +636,8 @@ contains
     type(xmlf_t), intent(inout)   :: xf
     character(len=*), intent(in)  :: name
     character(len=*), intent(in)  :: value
+
+    !FIXME check that value doesn't contain ?>
 
     if (xf%state_2 /= WXML_STATE_2_INSIDE_PI) &
          call wxml_fatal("PI pseudo-attribute outside PI")
@@ -559,7 +654,7 @@ contains
     type(xmlf_t), intent(inout)             :: xf
     character(len=*), intent(in)            :: name
     character(len=*), intent(in), optional  :: prefix
-    
+
     if (present(prefix)) then
       if (get_top_elstack(xf%stack) /= prefix//":"//name) &
            call wxml_fatal(xf, 'Trying to close '//prefix//":"//name//' but '//get_top_elstack(xf%stack)//' is open.') 
@@ -698,29 +793,30 @@ end subroutine dump_buffer
     
   end subroutine close_start_tag
 
-!-------------------------------------------------------------
-subroutine write_attributes(xf)
-type(xmlf_t), intent(inout)   :: xf
 
-integer  :: i, size
+  subroutine write_attributes(xf)
+    type(xmlf_t), intent(inout)   :: xf
 
-if (xf%state_2 /= WXML_STATE_2_INSIDE_PI .and. &
-    xf%state_2 /= WXML_STATE_2_INSIDE_ELEMENT) &
-  call wxml_fatal("Internal library error")
-
-do i = 1, len(xf%dict)
-   size = len(get_key(xf%dict, i)) + escape_string_len(get_value(xf%dict, i)) + 4
-   if ((len(xf%buffer) + size) > COLUMNS) call add_eol(xf)
-   call add_to_buffer(" ", xf%buffer)
-   call add_to_buffer(get_key(xf%dict, i), xf%buffer)
-   call add_to_buffer("=", xf%buffer)
-   call add_to_buffer("""",xf%buffer)
-   call add_to_buffer(escape_string(get_value(xf%dict, i)), xf%buffer)
-   call add_to_buffer("""", xf%buffer)
-enddo
-
-end subroutine write_attributes
-
+    integer  :: i, size
+    
+    if (xf%state_2 /= WXML_STATE_2_INSIDE_PI .and. &
+      xf%state_2 /= WXML_STATE_2_INSIDE_ELEMENT) &
+      call wxml_fatal("Internal library error")
+    
+    do i = 1, len(xf%dict)
+      size = len(get_key(xf%dict, i)) + len(get_value(xf%dict, i)) + 4
+      if ((len(xf%buffer) + size) > COLUMNS) call add_eol(xf)
+      call add_to_buffer(" ", xf%buffer)
+      call add_to_buffer(get_key(xf%dict, i), xf%buffer)
+      call add_to_buffer("=", xf%buffer)
+      call add_to_buffer("""",xf%buffer)
+      call add_to_buffer(get_value(xf%dict, i), xf%buffer)
+      call add_to_buffer("""", xf%buffer)
+    enddo
+    
+    
+  end subroutine write_attributes
+  
 !---------------------------------------------------------
 ! Error handling/trapping routines:
 

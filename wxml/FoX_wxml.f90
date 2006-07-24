@@ -23,6 +23,7 @@ module FoX_wxml
 
   public :: xml_AddNamespace
   public :: xml_AddDOCTYPE
+  public :: xml_AddParameterEntity
   public :: xml_AddInternalEntity
   public :: xml_AddExternalEntity
 
