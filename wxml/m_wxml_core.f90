@@ -301,6 +301,8 @@ contains
       call add_external_entity(xf%PEList, name, system, public)
     endif
 
+    call add_eol(xf)
+
     call add_to_buffer('<!ENTITY % '//name//' ', xf%buffer)
     if (present(PEdef)) then
       if (index(PEdef, '"') > 0) then
@@ -341,6 +343,8 @@ contains
       call wxml_fatal("Cannot define Entity here.")
       
     call add_internal_entity(xf%entityList, name, value)
+
+    call add_eol(xf)
     
     call add_to_buffer('<!ENTITY '//name//' ', xf%buffer)
     if (index(value, '"') > 0) then
@@ -377,6 +381,8 @@ contains
       
     !Name checking is done within add_external_entity
     call add_external_entity(xf%entityList, name, system, public, notation)
+    
+    call add_eol(xf)
     
     call add_to_buffer('<!ENTITY '//name, xf%buffer)
     if (present(public)) then
@@ -417,6 +423,8 @@ contains
     
     if (notation_exists(xf%nList, name)) &
       call wxml_fatal("Tried to create duplicate notation: "//name)
+    
+    call add_eol(xf)
 
     call add_notation(xf%nList, name, system, public)
     call add_to_buffer('<!NOTATION '//name, xf%buffer)
@@ -756,27 +764,27 @@ contains
   end subroutine xml_Close
 
 !==================================================================
-!----------------------------------------------------------
-subroutine add_eol(xf)
-type(xmlf_t), intent(inout)   :: xf
-
-integer :: indent_level
-
-! In case we still have a zero-length stack, we must make
-! sure indent_level is not less than zero.
-indent_level = max(len(xf%stack) - 1, 0)
-
-!We must flush here (rather than just adding an eol character)
-!since we don't know what the eol character is on this system.
-!Flushing with a linefeed will get it automatically, though.
-write(unit=xf%lun,fmt="(a)") char(xf%buffer)
-call reset_buffer(xf%buffer)
-
-if (xf%indenting_requested) &
-   call add_to_buffer(repeat(' ',indent_level),xf%buffer)
-
-end subroutine add_eol
-
+  !----------------------------------------------------------
+  subroutine add_eol(xf)
+    type(xmlf_t), intent(inout)   :: xf
+    
+    integer :: indent_level
+    
+    ! In case we still have a zero-length stack, we must make
+    ! sure indent_level is not less than zero.
+    indent_level = max(len(xf%stack) - 1, 0)
+    
+    !We must flush here (rather than just adding an eol character)
+    !since we don't know what the eol character is on this system.
+    !Flushing with a linefeed will get it automatically, though.
+    write(unit=xf%lun,fmt="(a)") char(xf%buffer)
+    call reset_buffer(xf%buffer)
+    
+    if (xf%indenting_requested) &
+     call add_to_buffer(repeat(' ',indent_level),xf%buffer)
+    
+  end subroutine add_eol
+  
 
   subroutine close_start_tag(xf)
     type(xmlf_t), intent(inout)   :: xf
@@ -792,6 +800,7 @@ end subroutine add_eol
     case (WXML_STATE_2_INSIDE_DOCTYPE)
       call add_to_buffer('>', xf%buffer)
     case (WXML_STATE_2_INSIDE_INTSUBSET)
+      call add_eol(xf)
       call add_to_buffer(']>', xf%buffer)
     case (WXML_STATE_2_OUTSIDE_TAG)
       continue
