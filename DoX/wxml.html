@@ -1,0 +1,310 @@
+<h1>WXML</h1>
+
+<p>Wxml is a general Fortran XML output library. It offers a Fortran interface, in the form of a number of subroutines,  to generate well-formed XML documents. Almost all of the XML features described in [XML11] and [Namespaces] are available, and Wxml will diagnose almost all attempts to produce an invalid document. Section [REF] below describes where wxml falls short of these aims</p>
+
+<p>The following functions are available, arranged in three sections.</p>
+
+<p>Firstly, the very few functions necessary to create the simplest XML document, containing only elements, attributes, and text.</p>
+
+<p>Secondly, those functions concerned with XML Namespaces, and how Namespaces affect the behaviour of the first tranche of functions.</p>
+
+<p>Thridly, a set of more rarely used functions required to access some of the more esoteric corners of the XML specification.</p>
+
+<h2>Conventions and notes:</h2>
+
+<h4>Conventions used below.</h4>
+
+<ul>
+<li>Function names are in <code>monospace</code></li>
+<li>argument names are in <strong>bold</strong></li>
+<li>optional argument names are in (<strong>parenthesized bold</strong>)</li>
+<li>argument types are in <em>italic</em> and may consist of:</li>
+<li><em>string</em>: string of arbitrary (unless otherwise specified) length</li>
+<li><em>integer</em>: default integer</li>
+<li><em>real(sp)</em>: single precision real number</li>
+<li><em>real(dp)</em>: double precision real number</li>
+<li><em>logical</em>: default logical </li>
+<li><em>real</em>: either of <em>real(sp)</em> or <em>real(dp)</em></li>
+<li><em>anytype</em>: any of <em>logical</em>, <em>integer</em>, <em>real(sp)</em>, <em>real(dp)</em>, <em>string</em></li>
+</ul>
+
+<p>Note that where <em>strings</em> are passed in, they will be passed through entirely unchanged to the output file - no truncation of whitespace will occur.</p>
+
+<p>It is strongly recommended that the functions be used with keyword arguments rather than replying on implicit ordering.</p>
+
+<h4>Derived type: <code>xmlf_t</code></h4>
+
+<p>This is an opaque type representing the XML file handle. Each function requires this as an argument, so it knows which file to operate on. (And it is an output of the xml_OpenFile subroutine) Since all subroutines require it, it is not mentioned below.</p>
+
+<h2>Function listing</h2>
+
+<h3>Frequently used functions</h3>
+
+<ul>
+<li><code>xml_OpenFile</code> <br />
+<strong>filename</strong>: <em>string</em>: Filename to be opened <br />
+<strong>xf</strong>: <em>xmlf_t</em>: XML File handle <br />
+(<strong>indent</strong>): <em>logical</em>:  Should the output XML be indented according to element depth?
+<em>default: false</em> <br />
+(<strong>channel</strong>): <em>integer</em>: What Fortran file handle should the XML file be attached to? 
+<em>default: picked by the library at runtime</em> <br />
+(<strong>replace</strong>): <em>logical</em>: Should the file be replaced if it already exists? 
+<em>default: no, stop at runtime if file already exists</em> <br />
+(<strong>addDecl</strong>): <em>logical</em>: Should an XML declaration be added at the start of the file?
+<em>default: yes</em></li>
+</ul>
+
+<p>Open a file for writing XML</p>
+
+<ul>
+<li><code>xml_Close</code> <br />
+<strong>xf</strong>: <em>xmlf_t</em>: XML File handle</li>
+</ul>
+
+<p>Close an opened XML file, closing all still-opened tags so that it is well-formed.</p>
+
+<ul>
+<li><code>xml_NewElement</code> <br />
+<strong>name</strong>: <em>string</em>:
+Name of tag (for namespaced output, you need to include the prefix)</li>
+</ul>
+
+<p>Open a new element tag</p>
+
+<ul>
+<li><code>xml_EndElement</code> <br />
+<strong>name</strong>: <em>string</em>: 
+Name of tag to be closed (if it doesn't match currently open tag, you'll get an error)</li>
+</ul>
+
+<p>Close an open tag</p>
+
+<ul>
+<li><code>xml_AddAttribute</code> <br />
+<strong>name</strong>: <em>string</em>: Name of attribute <br />
+<strong>value</strong>: <em>anytype</em>: Value of attribute <br />
+(<strong>escape</strong>): <em>logical</em>: if the attribute value is a string, should the attribute value be escaped?
+<em>default: true</em></li>
+</ul>
+
+<p>Add an attribute to the currently open tag.</p>
+
+<p>By default, if the attribute value contains markup characters, they will be escaped automatically by
+wxml before output.</p>
+
+<p>However, in some cases you may not wish this to happen - for example if you wish to output Unicode
+characters, or entity references. In this case, you should set <code>escape=.false.</code> for the relevant
+subroutine call.</p>
+
+<ul>
+<li><code>xml_AddCharacters</code> <br />
+<strong>data</strong> <em>anytype</em>:
+The text to be output <br />
+(<strong>parsed</strong>): <em>logical</em>: Should the output characters be parsed (ie should the library replace '&amp;' with '&amp;' etc?) or unparsed (in which case
+the characters will be surrounded by CDATA tags.
+<em>default: yes</em> <br />
+(<strong>delimiter</strong>): <em>character(1)</em>: If <strong>data</strong> is a character array, what should the delimiter between elements be on output?
+<em>default: a single space</em>  </li>
+</ul>
+
+<p>Add text data. The data to be added may be of any type; they will be converted to text according to the rules in [REF],
+and if they are an array, the elements will all be output, separated by spaces (except if it is a character array, in which
+case the delimiter may be changed to any other single character using an optional argument).</p>
+
+<hr />
+
+<h3>Namespace-aware functions:</h3>
+
+<ul>
+<li><code>xml_AddNamespace</code> <br />
+<strong>nsURI</strong> <em>string</em>: The URI of the namespace <br />
+(<strong>prefix</strong>) <em>prefix</em>: The namespace prefix to be used in the document. If absent, then the default namespace is affected.</li>
+</ul>
+
+<p>Add an XML Namespace declaration. This function may be called at any time, and its precise effect depends on when it is called.
+If it is called immediately prior to an xml_NewElement call, then the namespace will be declared in that next element, and will therefore take effect in all child elements.</p>
+
+<p>If it is called prior to an xml_NewElement call, but that element has namespaced attributes </p>
+
+<p>To explain by means of example: In order to generate the following XML output:</p>
+
+<pre><code> &lt;cml:cml xmlns:cml="http://www.xml-cml.org/schema"/&gt;
+</code></pre>
+
+<p>then the following two calls are necessary, in the prescribed order:</p>
+
+<pre><code>  xml_AddNamespace(xf, 'cml', 'http://www.xml-cml.org')
+  xml_NewElement(xf, 'cml:cml')
+</code></pre>
+
+<p>However, to generate XML input like so:
+      <cml xhtml:class="symbol" xmlns:xhtml="http://www.w3.org/1999/xhtml"/>
+that is, where the namespace refers to an attribute at the same level,
+then as long as the <code>xml_AddNamespace</code> call is made before the element tag is closed (either by <code>xml_EndElement</code>, or by a new element tag being opened, or some text being added etc.) the correct XML will be generated.</p>
+
+<p>Two previously mentioned functions are affected when used in a namespace-aware fashion.</p>
+
+<ul>
+<li><code>xml_NewElement</code>, <code>xml_AddAttribute</code></li>
+</ul>
+
+<p>The element or attribute name is checked, and if it is a QName (ie if it is of the form prefix:tagName) then wxml will check that prefix is a
+registered namespace prefix, and generate an error if not.</p>
+
+<hr />
+
+<h3>More rarely used functions:</h3>
+
+<p>If you don't know the purpose of any of these, then you don't need to. </p>
+
+<ul>
+<li><code>xml_AddXMLDeclaration</code> <br />
+(<strong>encoding</strong>) <em>string</em>: character encoding of the document
+<em>default: absent</em> <br />
+(<strong>standalone</strong>) <em>logical</em>: is this document standalone [REF]?
+<em>default: absent</em>  </li>
+</ul>
+
+<p>Add XML declaration to the first line of output. If used, then the file must have been opened with <code>addDecl = .false.</code>, and this must be the first wxml call to the document.</p>
+
+<ul>
+<li><code>xml_AddDOCTYPE</code> <br />
+<strong>name</strong> <em>string</em>: DOCTYPE name <br />
+<strong>system</strong> <em>string</em>: DOCTYPE SYSTEM ID <br />
+(<strong>public</strong>) <em>string</em>: DOCTYPE PUBLIC ID  </li>
+</ul>
+
+<p>Add an XML document type declaration. If used, this must be used prior to first <code>xml_NewElement</code> call, and only one such call must be made.</p>
+
+<ul>
+<li><code>xml_AddInternalEntity</code> <br />
+<strong>name</strong> <em>string</em>: name of internal entity <br />
+<strong>value</strong> <em>string</em>: value of internal entity  </li>
+</ul>
+
+<p>Define an internal entity for the document. If used, this call must be made after <code>xml_AddDOCTYPE</code> and before the first <code>xml_NewElement</code> call.</p>
+
+<ul>
+<li><code>xml_AddExternalEntity</code> <br />
+<strong>name</strong> <em>string</em>: name of external entity <br />
+<strong>system</strong> <em>string</em>: SYSTEM ID of external entity <br />
+(<strong>public</strong>) <em>string</em>: PUBLIC ID of external entity
+<em>default: absent</em> <br />
+(<strong>notation</strong>) <em>string</em>: notation for external entity
+<em>default: absent</em>  </li>
+</ul>
+
+<p>Define an external entity for the document. If used, this call must be made after <code>xml_AddDOCTYPE</code> and before the first <code>xml_NewElement</code> call.</p>
+
+<ul>
+<li><code>xml_AddParameterEntity</code> <br />
+<strong>name</strong> <em>string</em>: name of parameter entity <br />
+(<strong>PEdef</strong>) <em>string</em>: definition of parameter entity
+<em>default: absent</em> <br />
+(<strong>system</strong>) <em>string</em>: SYSTEM ID of parameter entity
+<em>default: absent</em> <br />
+(<strong>public</strong>) <em>string</em>: PUBLIC ID of parameter entity
+<em>default: absent</em>  </li>
+</ul>
+
+<p>Define a parameter entity for the document. If used, this call must be made after <code>xml_AddDOCTYPE</code> and before the first <code>xml_NewElement</code> call.</p>
+
+<ul>
+<li><code>xml_AddNotation</code> <br />
+<strong>name</strong> <em>string</em>: name of notation <br />
+(<strong>system</strong>) <em>string</em>: SYSTEM ID of notation
+<em>default: absent</em> <br />
+(<strong>public</strong>) <em>string</em>: PUBLIC ID of notation
+<em>default: absent</em>  </li>
+</ul>
+
+<p>Define a notation for the document. If used, this call must be made after <code>xml_AddDOCTYPE</code> and before the first <code>xml_NewElement</code> call.</p>
+
+<ul>
+<li><code>xml_AddXMLStylesheet</code> <br />
+<strong>href</strong> :<em>string</em>: 
+address of stylesheet <br />
+<strong>type</strong>: <em>string</em>:
+type of stylesheet (generally "text/xsl") <br />
+(<strong>title</strong>): <em>string</em>:
+title of stylesheet
+<em>default: none</em> <br />
+(<strong>media</strong>): <em>string:</em>
+output media type
+<em>default: none</em> <br />
+(<strong>charset</strong>): <em>string</em>
+charset of media type
+<em>default:none</em> <br />
+(<strong>alternate</strong>): <em>string</em>:
+alternate
+<em>default:none</em>  </li>
+</ul>
+
+<p>Add XML stylesheet processing instruction, as described in [Stylesheets]. If used, this call must be made before the first <code>xml_NewElement</code> call.</p>
+
+<ul>
+<li><code>xml_AddXMLPI</code> <br />
+<strong>name</strong>: <em>string</em>:
+name of PI <br />
+(<strong>data</strong>): <em>string</em>:
+data for PI 
+(<strong>xml</strong>): <em>string</em>
+<em>default: false</em></li>
+</ul>
+
+<p>Add an XML Processing Instruction.</p>
+
+<p>If data is present, nothing further can be added to the PI. If it is <em>not</em> present, then pseudoattributes may be added using the call below.
+Normally, the <strong>name</strong> is checked to ensure that it is XML-compliant. This requires that PI targets not start with <code>[Xx][Mm][Ll]</code>, because such names are reserved. However, some are defined by later W3 specificataions. If you wish to use such PI targets, then set <code>xml=.true.</code> when outputting them.</p>
+
+<p>The output PI will look like:
+<code>&lt;?name data?&gt;</code></p>
+
+<ul>
+<li><code>xml_AddPseudoAttribute</code> <br />
+<strong>name</strong>: <em>string</em>:
+Name of pseudoattribute <br />
+<strong>value</strong>: <em>anytype</em>:
+Value of pseudoattribute</li>
+</ul>
+
+<p>Add a pseudoattribute to the currently open PI</p>
+
+<ul>
+<li><code>xml_AddComment</code> <br />
+<strong>comment</strong>: <em>string</em>
+Contents of comment</li>
+</ul>
+
+<p>Add an XML comment</p>
+
+<ul>
+<li><code>xml_AddEntityReference</code> <br />
+<strong>entityref</strong>: Entity reference.</li>
+</ul>
+
+<p>This may be used anywhere that xml_AddCharacters may be, and will insert an entity reference into the contents of the XML document at that point.</p>
+
+<hr />
+
+<h2>Exceptions</h2>
+
+<p>Below is a list of areas where wxml fails to implement the whole of XML 1.1; numerical references below are to the sections in [XML11]</p>
+
+<p>1: XML documents which are not namespace-valid may not be produced; that is, attempts to produce documents which are well-formed according to [XML11] but not namespace-well-formed according to [Namespaces] will fail. </p>
+
+<p>2: Unicode support[2.2] is practically non-existent. Due to the limitations of Fortran, wxml will directly only emit whatever characters are allowed by the Fortran processor; in general this amounts to only ASCII. Some unicode output is possible through the use of character entities, but only where character data is allowed. No means is offered for output of unicode in attribute values or in XML Names. Unicode character references are checked according to XML-1.1 (2.2)</p>
+
+<p>3: Entity support is not complete[4.1, 4.2, 4.3, 4.4]. All XML entities (parameter, internal, external) may be defined; however, general entities may only be referenced from within a character data section between tags generated with <code>xml_NewElement</code> (In principle it should be possible to start the root element from within an entity reference). Furthermore, when an entity reference is added to the document, no check is made of its validity or its contents. (In general, validating all entity references is impossible, but even where possible wxml does not attempt it.) This means that if an entity reference is output, wxml offers no guarantees on the well-formedness of the document, and it will emit a warning to this effect.</p>
+
+<p>4: DTD support is not complete. While a DTD may be output, and entities defined in the internal subset, there is no support for adding Element[3.2] or Attlist[3.3] declarations; nor is there any support for Conditional Sections.[3.4]</p>
+
+<hr />
+
+<h2>References</h2>
+
+<p>[XML11]: W3C Recommendation, http://www.w3.org/TR/xml11</p>
+
+<p>[Namespaces]: W3C Recommendation, http://www.w3.org/TR/xml-names11</p>
+
+<p>[Stylesheets]: W3C Recommendation, http://www.w3.org/TR/xml-stylesheet</p>
