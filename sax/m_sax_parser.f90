@@ -617,13 +617,9 @@ end subroutine xml_attributes
     character(len=URIlength(fxml, qname)) :: URI
     
     integer :: n
-    character, dimension(:), allocatable :: prefix
     n = index(QName, ':')
     if (n > 0) then
-       allocate(prefix(n-1))
-       prefix = transfer(QName(1:n-1), prefix)
-       URI = getnamespaceURI(fxml%fx%nsDict, prefix)
-       deallocate(prefix)
+       URI = getnamespaceURI(fxml%fx%nsDict, QName(1:n-1))
     else
        URI = getnamespaceURI(fxml%fx%nsDict)
     endif
@@ -635,13 +631,9 @@ end subroutine xml_attributes
     character(len=*), intent(in) :: qName
     integer :: l_u
     integer :: n
-    character, dimension(:), allocatable :: prefix
     n = index(QName, ':')
     if (n > 0) then
-       allocate(prefix(n-1))
-       prefix = transfer(QName(1:n-1), prefix)
-       l_u = len(getnamespaceURI(fxml%fx%nsDict, prefix))
-       deallocate(prefix)
+       l_u = len(getnamespaceURI(fxml%fx%nsDict, QName(1:n-1)))
     else
        l_u = len(getnamespaceURI(fxml%fx%nsDict))
     endif

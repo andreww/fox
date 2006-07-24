@@ -76,8 +76,7 @@ contains
     allocate(nsDict%prefixes(0)%prefix(0))
     allocate(nsDict%prefixes(0)%urilist(0:0))
     allocate(nsDict%prefixes(0)%urilist(0)%URI(len(invalidNS)))
-    nsDict%prefixes(0)%urilist(0)%URI = &
-         transfer(invalidNS, nsDict%prefixes(0)%urilist(0)%URI)
+    nsDict%prefixes(0)%urilist(0)%URI = vs_str(invalidNS)
     nsDict%prefixes(0)%urilist(0)%ix = -1
     
     
@@ -387,7 +386,7 @@ contains
           !Default namespace is being set
           URIlength = len(get_value(atts, i))
           allocate(URI(URIlength))
-          URI = transfer(get_value(atts, i), URI)
+          URI = vs_str(get_value(atts, i))
           call checkURI(URI)
           if (present(start_prefix_handler)) &
                call start_prefix_handler(str_vs(URI), "")
@@ -398,12 +397,12 @@ contains
           !Prefixed namespace is being set
           URIlength = len(get_value(atts, i))
           allocate(URI(URIlength))
-          URI = transfer(get_value(atts, i), URI)
+          URI = vs_str(get_value(atts, i))
           call checkURI(URI)
           xmlnsLength = len(get_key(atts, i))
           allocate(QName(xmlnsLength))
           allocate(prefix(xmlnsLength - 6))
-          QName = transfer(get_key(atts, i), QName)
+          QName = vs_str(get_key(atts, i))
           prefix = QName(7:)
           call addPrefixedNS(nsDict, prefix, URI, ix)
           if (present(start_prefix_handler)) &
@@ -422,7 +421,7 @@ contains
     do i = 1, len(atts)
        ! get name
        allocate(QName(len(get_key(atts, i))))
-       QName = transfer(get_key(atts,i), QName)
+       QName = vs_str(get_key(atts,i))
        n = 0
        do j = 1, size(QName)
           if (QName(j) == ':') then
@@ -431,10 +430,7 @@ contains
           endif
        enddo
        if (n > 0) then
-          allocate(prefix(n-1))
-          prefix = transfer(QName(1:n-1), prefix)
-          call set_nsURI(atts, i, getnamespaceURI(nsDict, str_vs(prefix)))
-          deallocate(prefix)
+          call set_nsURI(atts, i, getnamespaceURI(nsDict, str_vs(QName(1:n-1))))
        else
           call set_nsURI(atts, i, '') ! no such thing as a default namespace on attributes
        endif
@@ -567,7 +563,7 @@ contains
     
     integer :: l_d
     l_d = ubound(nsDict%defaults,1)
-    uri = transfer(nsDict%defaults(l_d)%URI, uri)
+    uri = str_vs(nsDict%defaults(l_d)%URI)
   end function getURIofDefaultNS
 
 
