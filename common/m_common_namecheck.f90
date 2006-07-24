@@ -1,5 +1,7 @@
 module m_common_namecheck
 
+  use m_common_format, only: str_to_int_10, str_to_int_16
+
   implicit none
   private
 
@@ -19,8 +21,12 @@ module m_common_namecheck
   public :: checkPITarget
   public :: checkSystemId
   public :: checkPubId
+  public :: checkIRI
   public :: checkCharacterEntityReference
   public :: checkEntityValue
+
+  public :: prefixOfQName
+  public :: localpartOfQName
 
 contains
 
@@ -78,6 +84,23 @@ contains
   end function checkName
 
 
+  pure function checkQName(name) result(good)
+    character(len=*), intent(in) :: name
+    logical :: good
+    ! Validates a string against the XML requirements for a NAME
+    ! Is not fully compliant; ignores UTF issues.
+
+    integer :: n
+
+    n = index(name, ':')
+    if (n == 0) then
+      good = checkNCName(name)
+    else
+      good = (checkNCName(name(:n-1)) .and. checkNCName(name(n+1:)))
+    endif
+  end function checkQName
+
+
   pure function checkNCName(name) result(good)
     character(len=*), intent(in) :: name
     logical :: good
@@ -114,12 +137,27 @@ contains
     end if
   end function checkSystemId
     
-  !function checkURI
-  !end function checkURI
+  function checkIRI(IRI) result(good)
+    character(len=*), intent(in) :: IRI
+    logical :: good
+    !By [Namespaces] section 9, there is no
+    ! formal definition of IRI's yet.
+    good = .true.
+  end function checkIRI
 
   pure function checkCharacterEntityReference(code) result(good)
     character(len=*), intent(in) :: code
     logical :: good
+
+    ! This is XML-1.1 compliant (not 1.0), character range according to:
+    !
+    ![2] Char ::= [#x1-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF]
+    ![66] CharRef ::= '&#' [0-9]+ ';'
+    !               | '&#x' [0-9a-fA-F]+ ';' [WFC: Legal Character]o
+    ! Well-formedness constraint: Legal Character
+    ! Characters referred to using character references MUST match the production for Char [2].
+
+    integer :: i
 
     good = .false.
     if (len(code) > 0) then
@@ -127,12 +165,23 @@ contains
         if (code(2:2) == "x") then
           if (len(code) > 2) then
             good = (verify(code(3:), hexdigits) == 0)
+            if (good) then
+              i = str_to_int_16(code(3:))
+            endif
           endif
         else
           good = (verify(code(2:), digits) == 0)
+          if (good) then
+            i = str_to_int_10(code(3:))
+          endif
         endif
       endif
     endif
+    if (good) &
+      good = ((0<i .and. i<55296) &
+      .or.(57343<i .and. i<65534) &
+      .or.(65535<i .and. i<4177778))
+
   end function checkCharacterEntityReference
 
   
@@ -153,5 +202,21 @@ contains
     endif
 
   end function checkEntityValue
+
+
+  pure function prefixOfQName(qname) result(prefix)
+    character(len=*), intent(in) :: qname
+    character(len=index(qname, ':')-1) :: prefix
+
+    prefix = qname ! automatic truncation
+  end function prefixOfQName
+
+  
+  pure function localpartOfQname(qname) result(localpart)
+    character(len=*), intent(in) :: qname
+    character(len=len(qname)-index(qname,':')-1) ::localpart
+
+    localpart = qname(index(qname,':')+1:)
+  end function localpartOfQname
 
 end module m_common_namecheck

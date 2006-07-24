@@ -601,6 +601,8 @@ contains
       esc = .true.
     endif
 
+    !FIXME when escape is false we should still verify somehow.
+
     if (xf%state_2 /= WXML_STATE_2_INSIDE_ELEMENT) &
          call wxml_error(xf, "attributes outside element content")
     
