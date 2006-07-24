@@ -12,9 +12,9 @@ module m_sax_fsm
   use m_common_namespaces, only: namespaceDictionary, initNamespaceDictionary, &
        destroyNamespaceDictionary
   
-  use m_sax_entities, only: init_entity_list, destroy_entity_list, reset_entity_list
-  use m_sax_entities, only: entity_list, entity_filter_text_len, entity_filter_text
-  use m_sax_entities, only: is_unparsed_entity
+  use m_common_entities, only: init_entity_list, destroy_entity_list, reset_entity_list
+  use m_common_entities, only: entity_list, entity_filter_text_len, entity_filter_text
+  use m_common_entities, only: is_unparsed_entity
 
   use m_sax_reader, only: file_buffer_t, get_character
   

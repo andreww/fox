@@ -7,7 +7,7 @@ module m_sax_dtd
 
   use m_common_array_str, only : str_vs, vs_str
   use m_common_error, only: FoX_error
-  use m_sax_entities, only: entity_list, add_internal_entity, add_external_entity, &
+  use m_common_entities, only: entity_list, add_internal_entity, add_external_entity, &
        init_entity_list, destroy_entity_list, copy_entity_list, print_entity_list,&
        expand_parameter_entity_len, expand_parameter_entity, entity_filter_EV, entity_filter_EV_len
 

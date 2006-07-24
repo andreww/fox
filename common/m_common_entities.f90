@@ -1,4 +1,4 @@
-module m_sax_entities
+module m_common_entities
 
   ! Entity management
 
@@ -729,5 +729,4 @@ contains
 
   end function entity_filter_EV
 
-
-end module m_sax_entities
+end module m_common_entities
