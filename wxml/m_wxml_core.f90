@@ -4,7 +4,7 @@ module m_wxml_core
   use m_common_attrs, only: dictionary_t, len, get_key, get_value, has_key, &
     add_item_to_dict, init_dict, reset_dict, destroy_dict
   use m_common_array_str, only: vs_str, str_vs
-  use m_common_buffer
+  use m_common_buffer, only: buffer_t, len, char, add_to_buffer, reset_buffer
   use m_common_elstack, only: elstack_t, len, get_top_elstack, pop_elstack, is_empty, &
     init_elstack, push_elstack, destroy_elstack
   use m_common_entities, only: entity_list, init_entity_list, destroy_entity_list, &
@@ -115,6 +115,11 @@ module m_wxml_core
   ! Heuristic (approximate) target for justification of output
   ! Large unbroken pcdatas will go beyond this limit
   integer, parameter  :: COLUMNS = 80
+  !Actually this is only ever used in write_attributes. which is 
+  ! fine since that's almost the only place in the main body of a 
+  ! XML document where new-lines are semantically meaningless.
+  !(they are also meaningless after the Name of a start or empty tag,
+  ! but that is less useful for reformatting
 
   ! TOHW - This is the longest string that may be output without
   ! a newline. The buffer must not be larger than this, but its size 
