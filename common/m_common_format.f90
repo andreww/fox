@@ -16,13 +16,15 @@ module m_common_format
   character(len=*), parameter :: hexdigit = "0123456789abcdefABCDEF"
 
   interface str
-    module procedure str_string, str_string_array, &
-                     str_integer, str_integer_array, &
-                     str_logical, str_logical_array, &
+    module procedure str_string, str_string_array, str_string_matrix, &
+                     str_integer, str_integer_array, str_integer_matrix, &
+                     str_logical, str_logical_array, str_logical_matrix, &
                      str_real_dp, str_real_dp_fmt, &
                      str_real_dp_array, str_real_dp_array_fmt, &
+                     str_real_dp_matrix, str_real_dp_matrix_fmt, &
                      str_real_sp, str_real_sp_fmt, &
-                     str_real_sp_array, str_real_sp_array_fmt
+                     str_real_sp_array, str_real_sp_array_fmt, &
+                     str_real_sp_matrix, str_real_sp_matrix_fmt
   end interface str
 
   public :: str

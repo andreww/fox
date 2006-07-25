@@ -7,6 +7,9 @@ OBJFILES= m_wxml_escape.o m_wxml_core.o \
 LIBRARY=libFoX_wxml.a
 INCFLAGS=$(MOD_PREFIX)../objs/finclude
 #
+m_wxml_overloads.f90: m_wxml_overloads.m4
+	m4 $< > $@
+#
 #---------NOTHING SHOULD NEED TO BE CHANGED BELOW THIS LINE-----
 #
 include ../arch.make
