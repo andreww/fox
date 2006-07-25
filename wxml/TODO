@@ -3,6 +3,6 @@ check unescaped attribute values
 check usage of buffer
 what happens to unbroken character data?, indeed when we put anything > 1024 chars into the buffer?
 Fix str bug.
-Fix namespace bug
-can we output PIs and comments in the middle of teh DTD?
+can we output PIs and comments in the middle of the DTD? No, and we need another state variable to do that properly
 we should be able to output random stuff into the DTD too.
+break m_wxml_core into multiple files.

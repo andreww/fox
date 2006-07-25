@@ -4,7 +4,7 @@ module m_wxml_core
   use m_common_attrs, only: dictionary_t, len, get_key, get_value, has_key, &
     add_item_to_dict, init_dict, reset_dict, destroy_dict
   use m_common_array_str, only: vs_str, str_vs
-  use m_common_buffer, only: buffer_t, len, char, add_to_buffer, reset_buffer
+  use m_common_buffer, only: buffer_t, len, add_to_buffer, reset_buffer, dump_buffer
   use m_common_elstack, only: elstack_t, len, get_top_elstack, pop_elstack, is_empty, &
     init_elstack, push_elstack, destroy_elstack
   use m_common_entities, only: entity_list, init_entity_list, destroy_entity_list, &
@@ -180,7 +180,7 @@ contains
     call init_elstack(xf%stack)
     
     call init_dict(xf%dict)
-    call reset_buffer(xf%buffer)
+    call reset_buffer(xf%buffer, xf%lun)
     
     xf%state_1 = WXML_STATE_1_JUST_OPENED
     xf%state_2 = WXML_STATE_2_OUTSIDE_TAG
@@ -755,7 +755,7 @@ contains
       call xml_EndElement(xf, get_top_elstack(xf%stack))
     enddo
     
-    write(unit=xf%lun,fmt="(a)") char(xf%buffer)
+    call dump_buffer(xf%buffer)
     close(unit=xf%lun)
     
     call destroy_dict(xf%dict)
@@ -785,8 +785,8 @@ contains
     !We must flush here (rather than just adding an eol character)
     !since we don't know what the eol character is on this system.
     !Flushing with a linefeed will get it automatically, though.
-    write(unit=xf%lun,fmt="(a)") char(xf%buffer)
-    call reset_buffer(xf%buffer)
+    call dump_buffer(xf%buffer)
+    call reset_buffer(xf%buffer, xf%lun)
     
     if (xf%indenting_requested) &
      call add_to_buffer(repeat(' ',indent_level),xf%buffer)

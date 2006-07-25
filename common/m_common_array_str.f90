@@ -1,26 +1,28 @@
 module m_common_array_str
+
+  implicit none
+  private
 !
 ! Utilities for character to character array
 ! conversions and tests of equality.
 !
-interface operator (.equal.)
- module procedure compare_vs_s, compare_vs_vs
-end interface operator(.equal.)
-interface compare_array_str
-   module procedure compare_vs_s, compare_vs_vs
-end interface compare_array_str
+!interface operator (.equal.)
+! module procedure compare_vs_s, compare_vs_vs
+!end interface operator(.equal.)
+!interface compare_array_str
+!   module procedure compare_vs_s, compare_vs_vs
+!end interface compare_array_str
 !
 ! Not supported by all compilers...
 ! interface assignment (=)
 !  module procedure assign_array_to_str !!!! , assign_str_to_array
 ! end interface
 
-public :: operator(.equal.), compare_array_str !!!! , assignment(=)
-public :: assign_array_to_str , assign_str_to_array
-public :: str_vs, vs_str
-private
+!public :: operator(.equal.), compare_array_str !!!! , assignment(=)
+!public :: assign_array_to_str , assign_str_to_array
+  public :: str_vs, vs_str
 
-CONTAINS
+contains
 !-------------------------------------------------------------
 pure subroutine assign_array_to_str(str,s)
 character(len=1), dimension(:), intent(in)   :: s
@@ -93,12 +95,14 @@ equal = .true.
 
 end function compare_vs_vs
 
+
   pure function str_vs(vs) result(s)
     character, dimension(:), intent(in) :: vs
     character(len=size(vs)) :: s
 
     s = transfer(vs, s)
   end function str_vs
+
 
   pure function vs_str(s) result(vs)
     character(len=*), intent(in) :: s

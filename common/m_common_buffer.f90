@@ -1,233 +1,149 @@
 module m_common_buffer
 
-use m_common_error, only : FoX_error
+  use m_common_error, only : FoX_warning
 
-implicit none
-private
+  implicit none
+  private
+  
+  ! At this point we use a fixed-size buffer. 
+  ! Note however that buffer overflows will only be
+  ! triggered by overly long *unbroken* pcdata values, or
+  ! by overly long attribute values. Hopefully
+  ! element or attribute names are "short enough".
+  !
+  ! In a forthcoming implementation it could be made dynamical...
+  
+  ! MAX_BUFF_SIZE cannot be bigger than the maximum available
+  ! record length for a compiler. In practice, this means
+  ! 1024 seems to be the biggest available size.
+  
+  integer, parameter :: MAX_BUFF_SIZE  = 1024
+  integer, parameter :: BUFF_SIZE_WARNING  = 0.9 * MAX_BUFF_SIZE
+  
+  type buffer_t
+    private
+    integer                       :: size
+    character(len=MAX_BUFF_SIZE)  :: str
+    integer                       :: unit
+  end type buffer_t
+  
+  public :: buffer_t
+  
+  public :: add_to_buffer
+  public :: print_buffer, str, char, len
+  public :: buffer_to_chararray
+  public :: buffer_nearly_full
+  public :: reset_buffer
+  public :: dump_buffer
 
-! At this point we use a fixed-size buffer. 
-! Note however that buffer overflows will only be
-! triggered by overly long *unbroken* pcdata values, or
-! by overly long attribute values. Hopefully
-! element or attribute names are "short enough".
-! There is code in the parser module  m_fsm to avoid buffer overflows
-! caused by pcdata values.
-!
-! This module is re-used from the parser package.
-! Most of the routines are superfluous at this point.
-!
-! In a forthcoming implementation it could be made dynamical...
+  interface str
+    module procedure buffer_to_str
+  end interface
+  
+  interface char
+    module procedure buffer_to_str
+  end interface
+  
+  interface len
+    module procedure buffer_length
+  end interface
+  
+contains
 
-! MAX_BUFF_SIZE cannot be bigger than the maximum available
-! record length for a compiler. In practice, this means
-! 1024 seems to be the biggest available size.
+  subroutine add_to_buffer(s,buffer)
+    character(len=*), intent(in)   :: s
+    type(buffer_t), intent(inout)  :: buffer
+    
+    integer   :: i, n, len_b, len_s
 
-integer, parameter :: MAX_BUFF_SIZE  = 1024
-integer, parameter :: BUFF_SIZE_WARNING  = 0.9 * MAX_BUFF_SIZE
+    !If we overreach our buffer size, we will be unable to
+    !output any more characters without a newline.
 
-type buffer_t
-private
-      integer                       :: size
-      character(len=MAX_BUFF_SIZE)  :: str
-end type buffer_t
+    if (buffer%size + len(s) > MAX_BUFF_SIZE) then
+      call FoX_warning("Buffer overflow impending; inserting newlines, sorry")
+      call dump_buffer(buffer)
+    endif
+    
+    n = 1
+    do i = 1, len(s)/MAX_BUFF_SIZE
+      write(buffer%unit, '(a)') s(n:n+MAX_BUFF_SIZE-1)
+      n = n + MAX_BUFF_SIZE
+    enddo
+
+    len_s = len(s(n:)) 
+    len_b = buffer%size
+    buffer%str(len_b+1:len_b+len_s) = s(n:)
+    buffer%size = buffer%size + len_s
+
+  end subroutine add_to_buffer
 
 
-public :: MAX_BUFF_SIZE
+  subroutine reset_buffer(buffer, unit)
+    type(buffer_t), intent(inout)  :: buffer
+    integer, intent(in), optional :: unit
 
-public :: buffer_t
+    buffer%size = 0
+    if (present(unit)) then
+      buffer%unit = unit
+    else 
+      buffer%unit = 6
+    endif
+    
+  end subroutine reset_buffer
+  
 
-public :: add_to_buffer
-public :: print_buffer, str, char, len
-public :: operator (.equal.)
-public :: buffer_to_character
-public :: buffer_to_chararray
-public :: buffer_nearly_full, reset_buffer
+  subroutine print_buffer(buffer)
+    type(buffer_t), intent(in)  :: buffer
+    
+    integer :: i
+    
+    write(unit=6,fmt="(a)") buffer%str(:buffer%size)
 
-!----------------------------------------------------------------
-interface add_to_buffer
-      module procedure add_str_to_buffer
-end interface
-private :: add_char_to_buffer, add_str_to_buffer
+  end subroutine print_buffer
 
-interface operator (.equal.)
-      module procedure compare_buffers, compare_buffer_str, &
-             compare_str_buffer
-end interface
-private :: compare_buffers, compare_buffer_str, compare_str_buffer
 
-interface str
-      module procedure buffer_to_str
-end interface
-interface char                 ! Experimental
-      module procedure buffer_to_str
-end interface
-private :: buffer_to_str
+  function buffer_to_str(buffer) result(str)
+    type(buffer_t), intent(in)          :: buffer
+    character(len=buffer%size)          :: str
+    
+    str = buffer%str(:buffer%size)
+  end function buffer_to_str
 
-interface len
-   module procedure buffer_length
-end interface
-private :: buffer_length
 
-CONTAINS
-!==================================================================
+  function buffer_to_chararray(buffer) result(str)
+    type(buffer_t), intent(in)               :: buffer
+    character(len=1), dimension(buffer%size) :: str
+    integer :: i
+    
+    do i = 1, buffer%size
+      str(i) = buffer%str(i:i)
+    enddo
+  end function buffer_to_chararray
 
-!----------------------------------------------------------------
-function compare_buffers(a,b) result(equal)     ! .equal. generic
-type(buffer_t), intent(in)  :: a
-type(buffer_t), intent(in)  :: b
-logical                     :: equal
 
-equal = ((a%size == b%size) .and. (a%str(1:a%size) == b%str(1:b%size)))
+  function buffer_nearly_full(buffer) result(warn)
+    type(buffer_t), intent(in)          :: buffer
+    logical                             :: warn
+    
+    warn = buffer%size > BUFF_SIZE_WARNING
+    
+  end function buffer_nearly_full
 
-end function compare_buffers
 
-!----------------------------------------------------------------
-function compare_buffer_str(buffer,str) result(equal) ! .equal. generic
-type(buffer_t), intent(in)   :: buffer
-character(len=*), intent(in) :: str
-logical                      :: equal
+  function buffer_length(buffer) result(length)
+    type(buffer_t), intent(in)          :: buffer
+    integer                             :: length
+    
+    length = buffer%size 
 
-equal = (buffer%str(1:buffer%size) == str)
+  end function buffer_length
 
-end function compare_buffer_str
+  
+  subroutine dump_buffer(buffer)
+    type(buffer_t), intent(inout) :: buffer
 
-!----------------------------------------------------------------
-function compare_str_buffer(str,buffer) result(equal) ! .equal. generic
-character(len=*), intent(in) :: str
-type(buffer_t), intent(in)   :: buffer
-logical                     :: equal
-
-equal = (buffer%str(1:buffer%size) == str)
-
-end function compare_str_buffer
-
-!----------------------------------------------------------------
-subroutine add_char_to_buffer(c,buffer)
-character(len=1), intent(in)   :: c
-type(buffer_t), intent(inout)  :: buffer
-
-integer   :: n
-buffer%size = buffer%size + 1
-n = buffer%size
-
-if (n > MAX_BUFF_SIZE) then
-  call FoX_error("Buffer overflow: long unbroken string of pcdata or attribute value...")
-endif
-
-buffer%str(n:n) = c
-end subroutine add_char_to_buffer
-
-!------ ----------------------------------------------------------
-subroutine add_str_to_buffer(s,buffer)
-character(len=*), intent(in)   :: s
-type(buffer_t), intent(inout)  :: buffer
-
-integer   :: n, len_s, last_pos
-
-len_s = len(s)
-last_pos = buffer%size
-buffer%size = buffer%size + len_s
-n = buffer%size
-
-if (n> MAX_BUFF_SIZE) then
-  call FoX_error("Buffer overflow: long unbroken string of pcdata or attribute value.")
-endif
-
-buffer%str(last_pos+1:n) = s
-end subroutine add_str_to_buffer
-
-subroutine add_to_buffer_escaping_markup(s,buf)
-character(len=*), intent(in)      ::   s
-type(buffer_t), intent(inout)     ::   buf
-
-integer           :: len_s, i
-character(len=1)  :: c
-
-len_s = len(s)
-i = 0
-do 
- if (i==len_s) exit
- i = i + 1
- c = s(i:i)
- if (c == "<") then
-    call add_to_buffer("&lt;",buf)
- else if (c == "&") then
-    call add_to_buffer("&amp;",buf)
- else if (c == "'") then
-    call add_to_buffer("&quot;",buf)
- else if (c == '"') then
-    call add_to_buffer("&apos;",buf)
- else
-    call add_to_buffer(c,buf)
- endif
-enddo
-
-end subroutine add_to_buffer_escaping_markup
-
-!----------------------------------------------------------------
-subroutine reset_buffer(buffer)
-type(buffer_t), intent(inout)  :: buffer
-
-buffer%size = 0
-buffer%str=""
-
-end subroutine reset_buffer
-
-!----------------------------------------------------------------
-subroutine print_buffer(buffer)
-type(buffer_t), intent(in)  :: buffer
-
-integer :: i
-
-do i = 1, buffer%size
-      write(unit=6,fmt="(a1)",advance="no") buffer%str(i:i)
-enddo
-
-end subroutine print_buffer
-!----------------------------------------------------------------
-! This is better... but could it lead to memory leaks?
-!
-function buffer_to_str(buffer) result(str)
-type(buffer_t), intent(in)          :: buffer
-character(len=buffer%size)          :: str
-
-str = buffer%str(1:buffer%size)
-end function buffer_to_str
-!----------------------------------------------------------------
-!
-subroutine buffer_to_character(buffer,str)
-type(buffer_t), intent(in)          :: buffer
-character(len=*), intent(out)       :: str
-
-str = buffer%str(1:buffer%size)
-end subroutine buffer_to_character
-!----------------------------------------------------------------
-function buffer_to_chararray(buffer) result(str)
-type(buffer_t), intent(in)               :: buffer
-character(len=1), dimension(buffer%size) :: str
-integer :: i
-
-do i = 1, buffer%size
-  str(i) = buffer%str(i:i)
-enddo
-end function buffer_to_chararray
-!----------------------------------------------------------------
-function buffer_nearly_full(buffer) result(warn)
-type(buffer_t), intent(in)          :: buffer
-logical                             :: warn
-
-warn = buffer%size > BUFF_SIZE_WARNING
-
-end function buffer_nearly_full
-
-!----------------------------------------------------------------
-function buffer_length(buffer) result(length)
-type(buffer_t), intent(in)          :: buffer
-integer                             :: length
-
-length = buffer%size 
-
-end function buffer_length
-
+    write(buffer%unit, '(a)') buffer%str(:buffer%size)
+    buffer%size = 0
+  end subroutine dump_buffer
 
 end module m_common_buffer
