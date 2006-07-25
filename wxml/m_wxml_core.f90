@@ -161,7 +161,6 @@ contains
       if (iostat /= 0) call wxml_fatal(xf, "cannot open file: "//filename)
     endif
     
-    !
     ! Use large I/O buffer in case the O.S./Compiler combination
     ! has hard-limits by default (i.e., NAGWare f95's 1024 byte limit)
     ! This is related to the maximum size of the buffer.
@@ -170,11 +169,11 @@ contains
     ! can be tuned for performance.
     
     if(repl) then
-      open(unit=xf%lun, file=filename, form="formatted", status="unknown", &
-        action="write", position="rewind", recl=xml_recl)
+      open(unit=xf%lun, file=filename, form="formatted", status="replace", &
+        action="write", recl=xml_recl)
     else 
-      open(unit=xf%lun, file=filename, form="formatted", status="old", &
-        action="write", position="append", recl=xml_recl)
+      open(unit=xf%lun, file=filename, form="formatted", status="new", &
+        action="write", recl=xml_recl)
     endif
     
     call init_elstack(xf%stack)
