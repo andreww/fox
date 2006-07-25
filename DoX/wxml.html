@@ -108,9 +108,13 @@ wxml before output.</p>
 characters, or entity references. In this case, you should set <code>escape=.false.</code> for the relevant
 subroutine call.</p>
 
+<p>The value to be added may be of any type; it will be converted to text according to FoX's <a href="str.html">formatting rules</a>,
+and if it is a 1- or 2-dimensional array, the elements will all be output, separated by spaces (except if it is a character array, in which
+case the delimiter may be changed to any other single character using an optional argument).</p>
+
 <ul>
 <li><code>xml_AddCharacters</code> <br />
-<strong>data</strong> <em>anytype</em>:
+<strong>chars</strong> <em>anytype</em>:
 The text to be output <br />
 (<strong>parsed</strong>): <em>logical</em>: Should the output characters be parsed (ie should the library replace '&amp;' with '&amp;' etc?) or unparsed (in which case
 the characters will be surrounded by CDATA tags.
@@ -119,8 +123,8 @@ the characters will be surrounded by CDATA tags.
 <em>default: a single space</em>  </li>
 </ul>
 
-<p>Add text data. The data to be added may be of any type; they will be converted to text according to the rules in [REF],
-and if they are an array, the elements will all be output, separated by spaces (except if it is a character array, in which
+<p>Add text data. The data to be added may be of any type; they will be converted to text according to FoX's <a href="str.html">formatting rules</a>,
+and if they are a 1- or 2-dimensional array, the elements will all be output, separated by spaces (except if it is a character array, in which
 case the delimiter may be changed to any other single character using an optional argument).</p>
 
 <hr />
@@ -181,7 +185,9 @@ registered namespace prefix, and generate an error if not.</p>
 <em>default: absent</em>  </li>
 </ul>
 
-<p>Add XML declaration to the first line of output. If used, then the file must have been opened with <code>addDecl = .false.</code>, and this must be the first wxml call to the document.</p>
+<p>Add XML declaration to the first line of output. If used, then the file must have been opened with <code>addDecl = .false.</code>, and this must be the first wxml call to the document.o</p>
+
+<p>NB Note that if the encoding is specified, and is specified to not be UTF-8, then if the specified encoding does not match that supported by the Fortran processor, you may end up with output you do not expect.</p>
 
 <ul>
 <li><code>xml_AddDOCTYPE</code> <br />
@@ -235,6 +241,15 @@ registered namespace prefix, and generate an error if not.</p>
 </ul>
 
 <p>Define a notation for the document. If used, this call must be made after <code>xml_AddDOCTYPE</code> and before the first <code>xml_NewElement</code> call.</p>
+
+<ul>
+<li><code>xml_AddStringToDTD</code> <br />
+<strong>string</strong> <em>string</em>: string to add  </li>
+</ul>
+
+<p>Since there is no other method of adding ELEMENT or ATTLIST declarations to the DTD, this function provides a method to output arbitrary data to the DTD if such declarations are needed. Note that no checking <em>at all</em> is performed on the validity of <strong>string</strong>. Use this function with a great deal of care.</p>
+
+<p>If used, this call must be made after <code>xml_AddDOCTYPE</code> and before the first <code>xml_NewElement</code> call.</p>
 
 <ul>
 <li><code>xml_AddXMLStylesheet</code> <br />
@@ -311,10 +326,23 @@ Contents of comment</li>
 
 <ol>
 <li>XML documents which are not namespace-valid may not be produced; that is, attempts to produce documents which are well-formed according to [XML11] but not namespace-well-formed according to [Namespaces] will fail. </li>
-<li>Unicode support[[2.2]](http://www.w3.org/TR/xml11/#charsets) is practically non-existent. Due to the limitations of Fortran, wxml will directly only emit whatever characters are allowed by the Fortran processor; in general this amounts to only ASCII. Some unicode output is possible through the use of character entities, but only where character data is allowed. No means is offered for output of unicode in attribute values or in XML Names. Unicode character references are checked before output according to the constraints of <a href="#XML11">[XML11]</a></li>
+<li>Unicode support[[2.2]](http://www.w3.org/TR/xml11/#charsets) is practically non-existent. Due to the limitations of Fortran, wxml will directly only emit characters within the range of the local single-byte encoding. wxml will ensure that characters corresponding to those in 7-bit ASCII are output correctly for a UTF-8 encoding. Any other characters are output without any transcoding. Proper output of other unicode characters is possible through the use of character entities, but only where character data is allowed. No means is offered for output of unicode in XML Names. Unicode character references are checked before output according to the constraints of <a href="#XML11">[XML11]</a></li>
 <li>DTD support is not complete. While a DTD may be output, and entities defined in the internal subset, there is no support for adding Element[<a href="http://www.w3.org/TR/xml11/#elemdecls">3.2</a>] or Attlist[[3.3](http://www.w3.org/TR/xml11/#attdecls] declarations; nor is there any support for Conditional Sections.[3.4]</li>
 <li>Entity support is not complete[<a href="http://www.w3.org/TR/xml11/#sec-references">4.1</a>, <a href="http://www.w3.org/TR/xml11/#sec-entity-decl">4.2</a>. <a href="http://www.w3.org/TR/xml11/#TextEntities">4.3</a>]. All XML entities (parameter, internal, external) may be defined; however, general entities may only be referenced from within a character data section between tags generated with <code>xml_NewElement</code> (In principle it should be possible to start the root element from within an entity reference). Furthermore, when an entity reference is added to the document, no check is made of its validity or its contents. (In general, validating all entity references is impossible, but even where possible wxml does not attempt it.) This means that if an entity reference is output, wxml offers no guarantees on the well-formedness of the document, and it will emit a warning to this effect.</li>
+<li>Due to the constraints of the Fortran IO specification, it is impossible to output arbitrary long strings without carriage returns. The size of the limit varies between processors, but may be as low as 1024 characters. To avoid overrunning this limit, wxml will by default insert carriage returns before every new element, and if an unbroken string of attribute or text data is requested greater than 1024 characters, then carriage returns will be inserted as appropriate to ensure it is broken up into smaller sections to fit within the limits. Thus unwanted text sections are being created, and user output modified. This behaviour can be switched off by specifying <code>**indenting**=.false.</code> to xml_OpenFile, at the risk of file output failing on sufficiently long lines.</li>
 </ol>
+
+<p>wxml will try very hard to ensure that output is well-formed. However, it is possible to fool wxml into producing ill-formed XML documents. Avoid doing so if possible; for completeness these ways are listed here.</p>
+
+<ol>
+<li>If you specify a non-default text encoding, and then run FoX on a platform which does not use this encoding, then the result will be nonsense, and more than likely ill-formed. FoX will issue a warning in this case.</li>
+<li>Although entities may be output, their contents are not comprehensively checked. It is therefore possible to output combinations of entities which produce nonsense when referenced and expanded. FoX will issue a warning when this is possible.</li>
+<li>When entity references are made, a check is performed to ensure that the referenced entity exists - but it may be an externally-defined reference, in which case the document will be ill-formed. If so, then a warning will be issued.</li>
+<li>When adding text through xml_AddCharacters, or as the value of an attribute, if any characters are passed in which are not within 7-bit ASCII, then the results are processor-dependent, and may result in an invalid document on output. A warning will be issued if this occurs. If you need a guarantee that such characters will be passed correctly, use character entities.</li>
+<li>In order to add ELEMENT and ATTLIST portions of the DTD, a function xml_AddStringToDTD is provided. However, no checking at all is done on the contents of the string passed in, so if that string is not a well-formed DTD fragment, the resultant document will be ill-formed.</li>
+</ol>
+
+<p>Finally, it should be noted (although it is obvious from the above) that wxml makes no attempt at all to ensure that output documents are valid XML (by any definition of <em>valid</em>.)</p>
 
 <hr />
 

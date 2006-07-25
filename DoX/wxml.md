@@ -210,6 +210,14 @@ Define a parameter entity for the document. If used, this call must be made afte
 
 Define a notation for the document. If used, this call must be made after `xml_AddDOCTYPE` and before the first `xml_NewElement` call.
 
+* `xml_AddStringToDTD`  
+**string** *string*: string to add  
+
+Since there is no other method of adding ELEMENT or ATTLIST declarations to the DTD, this function provides a method to output arbitrary data to the DTD if such declarations are needed. Note that no checking *at all* is performed on the validity of **string**. Use this function with a great deal of care.
+
+If used, this call must be made after `xml_AddDOCTYPE` and before the first `xml_NewElement` call.
+
+
 * `xml_AddXMLStylesheet`  
 **href** :*string*: 
  address of stylesheet    
@@ -282,13 +290,15 @@ Below is a list of areas where wxml fails to implement the whole of XML 1.1; num
  1. Entity support is not complete\[[4.1](http://www.w3.org/TR/xml11/#sec-references), [4.2](http://www.w3.org/TR/xml11/#sec-entity-decl). [4.3](http://www.w3.org/TR/xml11/#TextEntities)\]. All XML entities (parameter, internal, external) may be defined; however, general entities may only be referenced from within a character data section between tags generated with `xml_NewElement` (In principle it should be possible to start the root element from within an entity reference). Furthermore, when an entity reference is added to the document, no check is made of its validity or its contents. (In general, validating all entity references is impossible, but even where possible wxml does not attempt it.) This means that if an entity reference is output, wxml offers no guarantees on the well-formedness of the document, and it will emit a warning to this effect.
  1. Due to the constraints of the Fortran IO specification, it is impossible to output arbitrary long strings without carriage returns. The size of the limit varies between processors, but may be as low as 1024 characters. To avoid overrunning this limit, wxml will by default insert carriage returns before every new element, and if an unbroken string of attribute or text data is requested greater than 1024 characters, then carriage returns will be inserted as appropriate to ensure it is broken up into smaller sections to fit within the limits. Thus unwanted text sections are being created, and user output modified. This behaviour can be switched off by specifying `**indenting**=.false.` to xml_OpenFile, at the risk of file output failing on sufficiently long lines.
 
-wxml will try very hard to ensure that output is well-formed. However, it is possible to fool wxml into producing invalid XML data. Avoid doing so if possible; for completeness these ways are listed here.
+wxml will try very hard to ensure that output is well-formed. However, it is possible to fool wxml into producing ill-formed XML documents. Avoid doing so if possible; for completeness these ways are listed here.
 
  1. If you specify a non-default text encoding, and then run FoX on a platform which does not use this encoding, then the result will be nonsense, and more than likely ill-formed. FoX will issue a warning in this case.
  2. Although entities may be output, their contents are not comprehensively checked. It is therefore possible to output combinations of entities which produce nonsense when referenced and expanded. FoX will issue a warning when this is possible.
  3. When entity references are made, a check is performed to ensure that the referenced entity exists - but it may be an externally-defined reference, in which case the document will be ill-formed. If so, then a warning will be issued.
  4. When adding text through xml_AddCharacters, or as the value of an attribute, if any characters are passed in which are not within 7-bit ASCII, then the results are processor-dependent, and may result in an invalid document on output. A warning will be issued if this occurs. If you need a guarantee that such characters will be passed correctly, use character entities.
- 5. arbitrary DTD
+ 5. In order to add ELEMENT and ATTLIST portions of the DTD, a function xml_AddStringToDTD is provided. However, no checking at all is done on the contents of the string passed in, so if that string is not a well-formed DTD fragment, the resultant document will be ill-formed.
+
+Finally, it should be noted (although it is obvious from the above) that wxml makes no attempt at all to ensure that output documents are valid XML (by any definition of *valid*.)
 
 ---------------
 ##References

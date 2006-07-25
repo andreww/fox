@@ -27,5 +27,6 @@ module FoX_wxml
   public :: xml_AddInternalEntity
   public :: xml_AddExternalEntity
   public :: xml_AddNotation
+  public :: xml_AddStringToDTD
 
 end module FoX_wxml

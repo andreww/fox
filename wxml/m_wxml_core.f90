@@ -90,6 +90,7 @@ module m_wxml_core
   public :: xml_AddInternalEntity
   public :: xml_AddExternalEntity
   public :: xml_AddNotation
+  public :: xml_AddStringToDTD
  
   interface xml_AddCharacters
     module procedure xml_AddCharacters_Ch
@@ -453,6 +454,22 @@ contains
     call add_to_buffer('>', xf%buffer)
     
   end subroutine xml_AddNotation
+
+
+  subroutine xml_AddStringToDTD(xf, string)
+    type(xmlf_t), intent(inout) :: xf
+    character(len=*), intent(in) :: string
+
+    if (xf%state_2 == WXML_STATE_2_INSIDE_DOCTYPE) then
+      call add_to_buffer(" [", xf%buffer)
+      xf%state_2 = WXML_STATE_2_INSIDE_INTSUBSET
+    endif
+
+    if (xf%state_2 /= WXML_STATE_2_INSIDE_INTSUBSET) &
+      call wxml_fatal("Cannot write to DTD here "//string)
+
+    call add_to_buffer(string, xf%buffer)
+  end subroutine xml_AddStringToDTD
 
 
   subroutine xml_AddXMLStylesheet(xf, href, type, title, media, charset, alternate)
