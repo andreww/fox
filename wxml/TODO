@@ -6,3 +6,4 @@ Fix str bug.
 can we output PIs and comments in the middle of the DTD? No, and we need another state variable to do that properly
 we should be able to output random stuff into the DTD too.
 break m_wxml_core into multiple files.
+m4 creation of m_wxml_overloads.f90

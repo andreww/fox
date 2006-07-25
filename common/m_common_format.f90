@@ -124,6 +124,16 @@ contains
   end function str_string_array
 
 
+  pure function str_string_matrix(st, delimiter) result(s)
+    character(len=*), dimension(:, :), intent(in) :: st
+    character(len=1), intent(in), optional :: delimiter
+    character(len=str_string_array_len(reshape(st,(/size(st)/)))) :: s
+    
+    s = str_string_array(reshape(st,(/size(st)/)), delimiter)
+
+  end function str_string_matrix
+
+
   pure function str_string_array_len(st) result(n)
     character(len=*), dimension(:), intent(in) :: st
     integer :: n
@@ -136,6 +146,17 @@ contains
     enddo
 
   end function str_string_array_len
+
+
+  pure function str_string_matrix_len(st) result(n)
+    character(len=*), dimension(:,:), intent(in) :: st
+    integer :: n
+
+    integer :: j, k
+
+    n = str_string_array_len(reshape(st, (/size(st, 1)*size(st,2)/)))
+
+  end function str_string_matrix_len
     
       
 
@@ -200,7 +221,17 @@ contains
     s(n:) = str(ia(k))
 
   end function str_integer_array
-    
+
+
+  pure function str_integer_matrix(ia, delimiter) result(s)
+    integer, dimension(:,:), intent(in) :: ia
+    character(len=1), optional, intent(in) :: delimiter
+    character(len=str_integer_array_len(reshape(ia,(/size(ia)/)))) :: s
+
+    s = str_integer_array(reshape(ia, (/size(ia)/)), delimiter)
+
+  end function str_integer_matrix
+
   
   pure function str_logical(l) result(s)
     logical, intent(in)   :: l
@@ -246,7 +277,17 @@ contains
 
   end function str_logical_array
 
+
+  pure function str_logical_matrix(la, delimiter) result(s)
+    logical, dimension(:,:), intent(in)   :: la
+    character(len=1), optional, intent(in) :: delimiter
+    character(len=5*size(la) - 1 + count(.not.la)) :: s
+
+    s = str_logical_array(reshape(la, (/size(la)/)), delimiter)
+
+  end function str_logical_matrix
   
+
   ! In order to convert real numbers to strings, we need to
   ! perform an internal write - but how long will the 
   ! resultant string be? We don't know & there is no way
@@ -620,7 +661,24 @@ contains
     
   end function str_real_sp_array_fmt_len
      
+
+  function str_real_sp_matrix(xa) result(s)
+    real(sp), dimension(:,:), intent(in) :: xa
+    character(len=str_real_sp_array_len(reshape(xa,(/size(xa)/)))) :: s
+
+    s = str_real_sp_array(reshape(xa,(/size(xa)/)))
+  end function str_real_sp_matrix
+    
+
+  function str_real_sp_matrix_fmt(xa, fmt) result(s)
+    real(sp), dimension(:,:), intent(in) :: xa
+    character(len=*), intent(in) :: fmt
+    character(len=str_real_sp_array_fmt_len(reshape(xa,(/size(xa)/)),fmt)) :: s
+
+    s = str_real_sp_array(reshape(xa,(/size(xa)/)))
+  end function str_real_sp_matrix_fmt
      
+
   pure function real_dp_str(x, sig) result(s)
     real(dp), intent(in) :: x
     integer, intent(in) :: sig
@@ -948,6 +1006,23 @@ contains
   end function str_real_dp_array_fmt_len
 
 
+  function str_real_dp_matrix(xa) result(s)
+    real(dp), dimension(:,:), intent(in) :: xa
+    character(len=str_real_dp_array_len(reshape(xa,(/size(xa)/)))) :: s
+
+    s = str_real_dp_array(reshape(xa,(/size(xa)/)))
+  end function str_real_dp_matrix
+    
+
+  function str_real_dp_matrix_fmt(xa, fmt) result(s)
+    real(dp), dimension(:,:), intent(in) :: xa
+    character(len=*), intent(in) :: fmt
+    character(len=str_real_dp_array_fmt_len(reshape(xa,(/size(xa)/)),fmt)) :: s
+
+    s = str_real_dp_array(reshape(xa,(/size(xa)/)))
+  end function str_real_dp_matrix_fmt
+
+ 
   pure function checkFmt(fmt) result(good)
     character(len=*), intent(in) :: fmt
     logical :: good
