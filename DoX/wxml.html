@@ -66,6 +66,8 @@
 
 <p>Open a file for writing XML</p>
 
+<p>NB: The <strong>replace</strong> option should be noted. By default, xml_OpenFile will fail with a runtime error if you try and write to an existing file. If you are sure you want to continue on in such a case, then you can specify <code>**replace**=.true.</code> and any existing files will be overwritten. If finer granularity is required over how to proceed in such cases, use the Fortran <code>inquire</code> statement in your code. There is no 'append' functionality by design - any XML file created by appending to an existing file would almost certainly be invalid.</p>
+
 <ul>
 <li><code>xml_Close</code> <br />
 <strong>xf</strong>: <em>xmlf_t</em>: XML File handle</li>

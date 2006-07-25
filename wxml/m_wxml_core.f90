@@ -213,7 +213,9 @@ contains
     call xml_AddPseudoAttribute(xf, "version", "1.0")
     if (present(encoding)) then
       if (.not.checkEncName(encoding)) &
-           call wxml_error("Invalid encoding name "//encoding)
+        call wxml_error("Invalid encoding name: "//encoding)
+      if (encoding /= 'UTF-8' .or. encoding /= 'utf-8') &
+        call wxml_warning("Non-default encoding specified: "//encoding)
       call xml_AddPseudoAttribute(xf, "encoding", encoding)
     endif
     if (present(standalone)) then
@@ -590,7 +592,7 @@ contains
     endif
     
     call close_start_tag(xf)
-    
+
     if (pc) then
       call add_to_buffer(escape_String(chars), xf%buffer)
     else
@@ -784,7 +786,7 @@ contains
     !We must flush here (rather than just adding an eol character)
     !since we don't know what the eol character is on this system.
     !Flushing with a linefeed will get it automatically, though.
-    call dump_buffer(xf%buffer)
+    call dump_buffer(xf%buffer, lf=xf%indenting_requested)
     call reset_buffer(xf%buffer, xf%lun)
     
     if (xf%indenting_requested) &

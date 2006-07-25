@@ -61,6 +61,8 @@ This is an opaque type representing the XML file handle. Each function requires 
 
 Open a file for writing XML
 
+NB: The **replace** option should be noted. By default, xml_OpenFile will fail with a runtime error if you try and write to an existing file. If you are sure you want to continue on in such a case, then you can specify `**replace**=.true.` and any existing files will be overwritten. If finer granularity is required over how to proceed in such cases, use the Fortran `inquire` statement in your code. There is no 'append' functionality by design - any XML file created by appending to an existing file would almost certainly be invalid.
+
 * `xml_Close`   
 **xf**: *xmlf_t*: XML File handle
 
@@ -93,8 +95,12 @@ However, in some cases you may not wish this to happen - for example if you wish
 characters, or entity references. In this case, you should set `escape=.false.` for the relevant
 subroutine call.
 
+The value to be added may be of any type; it will be converted to text according to FoX's [formatting rules](str.html),
+and if it is a 1- or 2-dimensional array, the elements will all be output, separated by spaces (except if it is a character array, in which
+case the delimiter may be changed to any other single character using an optional argument).
+
 * `xml_AddCharacters`  
-**data** *anytype*:
+**chars** *anytype*:
  The text to be output  
 (**parsed**): *logical*: Should the output characters be parsed (ie should the library replace '&' with '&amp;' etc?) or unparsed (in which case
 the characters will be surrounded by CDATA tags.
@@ -102,8 +108,8 @@ the characters will be surrounded by CDATA tags.
 (**delimiter**): *character(1)*: If **data** is a character array, what should the delimiter between elements be on output?
  *default: a single space*  
 
-Add text data. The data to be added may be of any type; they will be converted to text according to the rules in [REF],
-and if they are an array, the elements will all be output, separated by spaces (except if it is a character array, in which
+Add text data. The data to be added may be of any type; they will be converted to text according to FoX's [formatting rules](str.html),
+and if they are a 1- or 2-dimensional array, the elements will all be output, separated by spaces (except if it is a character array, in which
 case the delimiter may be changed to any other single character using an optional argument).
 
 ----------
@@ -157,7 +163,9 @@ If you don't know the purpose of any of these, then you don't need to.
 (**standalone**) *logical*: is this document standalone [REF]?
   *default: absent*  
 
-Add XML declaration to the first line of output. If used, then the file must have been opened with `addDecl = .false.`, and this must be the first wxml call to the document.
+Add XML declaration to the first line of output. If used, then the file must have been opened with `addDecl = .false.`, and this must be the first wxml call to the document.o
+
+NB Note that if the encoding is specified, and is specified to not be UTF-8, then if the specified encoding does not match that supported by the Fortran processor, you may end up with output you do not expect.
 
 * `xml_AddDOCTYPE`  
 **name** *string*: DOCTYPE name  
@@ -269,10 +277,18 @@ This may be used anywhere that xml_AddCharacters may be, and will insert an enti
 Below is a list of areas where wxml fails to implement the whole of XML 1.1; numerical references below are to the sections in \[[XML11](#XML11)]\]
 
  1. XML documents which are not namespace-valid may not be produced; that is, attempts to produce documents which are well-formed according to [XML11] but not namespace-well-formed according to [Namespaces] will fail. 
- 1. Unicode support\[[2.2]\](http://www.w3.org/TR/xml11/#charsets) is practically non-existent. Due to the limitations of Fortran, wxml will directly only emit whatever characters are allowed by the Fortran processor; in general this amounts to only ASCII. Some unicode output is possible through the use of character entities, but only where character data is allowed. No means is offered for output of unicode in attribute values or in XML Names. Unicode character references are checked before output according to the constraints of [[XML11]](#XML11)
+ 1. Unicode support\[[2.2]\](http://www.w3.org/TR/xml11/#charsets) is practically non-existent. Due to the limitations of Fortran, wxml will directly only emit characters within the range of the local single-byte encoding. wxml will ensure that characters corresponding to those in 7-bit ASCII are output correctly for a UTF-8 encoding. Any other characters are output without any transcoding. Proper output of other unicode characters is possible through the use of character entities, but only where character data is allowed. No means is offered for output of unicode in XML Names. Unicode character references are checked before output according to the constraints of [[XML11]](#XML11)
  1. DTD support is not complete. While a DTD may be output, and entities defined in the internal subset, there is no support for adding Element\[[3.2](http://www.w3.org/TR/xml11/#elemdecls)\] or Attlist\[[3.3](http://www.w3.org/TR/xml11/#attdecls\] declarations; nor is there any support for Conditional Sections.[3.4]
  1. Entity support is not complete\[[4.1](http://www.w3.org/TR/xml11/#sec-references), [4.2](http://www.w3.org/TR/xml11/#sec-entity-decl). [4.3](http://www.w3.org/TR/xml11/#TextEntities)\]. All XML entities (parameter, internal, external) may be defined; however, general entities may only be referenced from within a character data section between tags generated with `xml_NewElement` (In principle it should be possible to start the root element from within an entity reference). Furthermore, when an entity reference is added to the document, no check is made of its validity or its contents. (In general, validating all entity references is impossible, but even where possible wxml does not attempt it.) This means that if an entity reference is output, wxml offers no guarantees on the well-formedness of the document, and it will emit a warning to this effect.
+ 1. Due to the constraints of the Fortran IO specification, it is impossible to output arbitrary long strings without carriage returns. The size of the limit varies between processors, but may be as low as 1024 characters. To avoid overrunning this limit, wxml will by default insert carriage returns before every new element, and if an unbroken string of attribute or text data is requested greater than 1024 characters, then carriage returns will be inserted as appropriate to ensure it is broken up into smaller sections to fit within the limits. Thus unwanted text sections are being created, and user output modified. This behaviour can be switched off by specifying `**indenting**=.false.` to xml_OpenFile, at the risk of file output failing on sufficiently long lines.
 
+wxml will try very hard to ensure that output is well-formed. However, it is possible to fool wxml into producing invalid XML data. Avoid doing so if possible; for completeness these ways are listed here.
+
+ 1. If you specify a non-default text encoding, and then run FoX on a platform which does not use this encoding, then the result will be nonsense, and more than likely ill-formed. FoX will issue a warning in this case.
+ 2. Although entities may be output, their contents are not comprehensively checked. It is therefore possible to output combinations of entities which produce nonsense when referenced and expanded. FoX will issue a warning when this is possible.
+ 3. When entity references are made, a check is performed to ensure that the referenced entity exists - but it may be an externally-defined reference, in which case the document will be ill-formed. If so, then a warning will be issued.
+ 4. When adding text through xml_AddCharacters, or as the value of an attribute, if any characters are passed in which are not within 7-bit ASCII, then the results are processor-dependent, and may result in an invalid document on output. A warning will be issued if this occurs. If you need a guarantee that such characters will be passed correctly, use character entities.
+ 5. arbitrary DTD
 
 ---------------
 ##References

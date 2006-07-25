@@ -8,3 +8,5 @@ we should be able to output random stuff into the DTD too.
 break m_wxml_core into multiple files. NO
 m4 creation of m_wxml_overloads.f90 - DONE
 autodetect xml_recl
+allow for >2 dimensional array output?
+allow character entities in XML Names

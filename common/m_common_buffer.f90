@@ -139,10 +139,23 @@ contains
   end function buffer_length
 
   
-  subroutine dump_buffer(buffer)
+  subroutine dump_buffer(buffer, lf)
     type(buffer_t), intent(inout) :: buffer
+    logical, intent(in), optional :: lf
 
-    write(buffer%unit, '(a)') buffer%str(:buffer%size)
+    logical :: lf_
+
+    if (present(lf)) then
+      lf_ = lf
+    else
+      lf_ = .true.
+    endif
+
+    if (lf_) then
+      write(buffer%unit, '(a)') buffer%str(:buffer%size)
+    else
+      write(buffer%unit, '(a)', advance='no') buffer%str(:buffer%size)
+    endif
     buffer%size = 0
   end subroutine dump_buffer
 
