@@ -35,13 +35,11 @@ contains
       case (APOS)
         c = c + 5
       case (1:9)
-        c = c + 4
+        c = c + 3
       case (10:31)
-        c = c + 5
-      case (32:QUOT-1, QUOT+1:AMP-1, AMP+1:APOS-1, APOS+1:LT-1, LT+1:126)
-        c = c + 1
+        c = c + 4
       case (127:)
-        c = c + 6
+        c = c + 5
         ! a char can never contain more than 8 bits = 256 characters, so
         ! we never need more than 3 chars to represent the int.
       end select
