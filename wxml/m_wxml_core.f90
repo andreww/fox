@@ -30,6 +30,8 @@ module m_wxml_core
   integer, parameter ::  sp = selected_real_kind(6,30)
   integer, parameter ::  dp = selected_real_kind(14,100)
 
+  integer, parameter :: indent_inc = 2
+
   !Output State Machines
   ! status wrt root element:
   integer, parameter :: WXML_STATE_1_JUST_OPENED = 0 
@@ -659,6 +661,7 @@ contains
         end select
       endif
       call add_eol(xf)
+      xf%state_1 = WXML_STATE_1_DURING_ROOT
     case (WXML_STATE_1_DURING_ROOT)
       call close_start_tag(xf)
     case (WXML_STATE_1_AFTER_ROOT)
@@ -678,7 +681,7 @@ contains
     call add_to_buffer("<"//name, xf%buffer)
     xf%state_2 = WXML_STATE_2_INSIDE_ELEMENT
     call reset_dict(xf%dict)
-    xf%state_1 = WXML_STATE_1_DURING_ROOT
+    xf%indent = xf%indent + indent_inc
 
   end subroutine xml_NewElement
   
@@ -839,7 +842,8 @@ contains
 
     if (get_top_elstack(xf%stack) /= name) &
       call wxml_fatal(xf, 'Trying to close '//name//' but '//get_top_elstack(xf%stack)//' is open.') 
-    
+    xf%indent = xf%indent - indent_inc
+ 
     select case (xf%state_2)
     case (WXML_STATE_2_INSIDE_ELEMENT)
       call checkNamespacesWriting(xf%dict, xf%nsDict, len(xf%stack))
@@ -975,9 +979,9 @@ contains
     ! In case we still have a zero-length stack, we must make
     ! sure indent_level is not less than zero.
     if (xf%state_3 == WXML_STATE_3_INSIDE_INTSUBSET) then
-      indent_level = 2
+      indent_level = indent_inc
     else
-      indent_level = max(len(xf%stack) - 1, 0)
+      indent_level = xf%indent
     endif
     
     !We must flush here (rather than just adding an eol character)
