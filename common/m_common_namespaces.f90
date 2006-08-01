@@ -250,7 +250,7 @@ contains
           call FoX_error("Attempt to declare 'xmlns' prefix")
         else
           if (.not.xml_) &
-            call FoX_error("Attempt to declare reserved prefix: "//str_vs(prefix))
+            call FoX_error("Attempt to declare reserved prefix: "//prefix)
         endif
       endif
     endif
