@@ -9,8 +9,8 @@ module m_common_format
 
   integer, parameter :: sp = selected_real_kind(6,30)
   integer, parameter :: dp = selected_real_kind(14,100)
-  integer, parameter :: sig_sp = digits(sp)/2
-  integer, parameter :: sig_dp = digits(dp)/2 ! Approximate precision worth outputting of each type.
+  integer, parameter :: sig_sp = digits(1.0_sp)/4
+  integer, parameter :: sig_dp = digits(1.0_dp)/4 ! Approximate precision worth outputting of each type.
 
   character(len=*), parameter :: digit = "0123456789"
   character(len=*), parameter :: hexdigit = "0123456789abcdefABCDEF"
@@ -419,11 +419,12 @@ contains
 
       if (sig == 1) then
         s(n:n) = num
+        n = n + 1
       else
         s(n:n+1) = num(1:1)//'.'
         s(n+2:n+sig) = num(2:)
+        n = n + sig + 1
       endif
-      n = n + sig
 
       s(n:n) = 'e'
       s(n+1:) = str(e)
@@ -433,10 +434,10 @@ contains
       if (len(fmt) > 1) then
         sig = str_to_int_10(fmt(2:))
       else
-        sig = sig_dp
+        sig = sig_sp
       endif
       sig = max(sig, 1)
-      sig = min(sig, digits(dp))
+      sig = min(sig, digits(1.0_sp))
 
       num = real_sp_str(abs(x), sig)
       if (num(1:1) == '!') then
@@ -464,7 +465,7 @@ contains
         dec = sig_sp - e - 1
       endif
       dec = max(dec, 0)
-      dec = min(dec, digits(sp)-e-1)
+      dec = min(dec, digits(1.0_sp)-e-1)
 
       if (e+dec+1 > 0) then
         num = real_sp_str(abs(x), e+dec+1)
@@ -539,7 +540,7 @@ contains
         sig = sig_sp
       endif
       sig = max(sig, 1)
-      sig = min(sig, digits(sp))
+      sig = min(sig, digits(1.0_sp))
 
       if (sig > 1) n = n + 1 
       ! for the decimal point
@@ -554,7 +555,7 @@ contains
         dec = sig_sp - e - 1
       endif
       dec = max(dec, 0)
-      dec = min(dec, digits(sp)-e)
+      dec = min(dec, digits(1.0_sp)-e)
 
       if (dec > 0) n = n + 1
       if (abs(x) > 0.0_sp) n = n + 1
@@ -763,11 +764,12 @@ contains
 
       if (sig == 1) then
         s(n:n) = num
+        n = n + 1
       else
         s(n:n+1) = num(1:1)//'.'
         s(n+2:n+sig) = num(2:)
+        n = n + sig + 1
       endif
-      n = n + sig
 
       s(n:n) = 'e'
       s(n+1:) = str(e)
@@ -780,7 +782,7 @@ contains
         sig = sig_dp
       endif
       sig = max(sig, 1)
-      sig = min(sig, digits(dp))
+      sig = min(sig, digits(1.0_dp))
 
       num = real_dp_str(abs(x), sig)
       if (num(1:1) == '!') then
@@ -808,7 +810,7 @@ contains
         dec = sig_dp - e - 1
       endif
       dec = max(dec, 0)
-      dec = min(dec, digits(dp)-e-1)
+      dec = min(dec, digits(1.0_dp)-e-1)
 
       if (e+dec+1 > 0) then
         num = real_dp_str(abs(x), e+dec+1)
@@ -883,7 +885,7 @@ contains
         sig = sig_dp
       endif
       sig = max(sig, 1)
-      sig = min(sig, digits(dp))
+      sig = min(sig, digits(1.0_dp))
 
       if (sig > 1) n = n + 1 
       ! for the decimal point
@@ -898,7 +900,7 @@ contains
         dec = sig_dp - e - 1
       endif
       dec = max(dec, 0)
-      dec = min(dec, digits(dp)-e)
+      dec = min(dec, digits(1.0_dp)-e)
 
       if (dec > 0) n = n + 1
       if (abs(x) > 0.0_dp) n = n + 1
