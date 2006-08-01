@@ -8,7 +8,7 @@ program test
   type(xmlf_t) :: xf
 
   call xml_OpenFile(filename, xf)
-  call xml_AddXMLPI(xf, "testPI", 'a whole bunch of PI data?!"')
+  call xml_AddXMLPI(xf, "PItarget")
   call xml_Close(xf)
 
 end program test

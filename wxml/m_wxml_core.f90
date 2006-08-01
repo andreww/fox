@@ -194,7 +194,7 @@ contains
     xf%state_2 = WXML_STATE_2_OUTSIDE_TAG
     xf%state_3 = WXML_STATE_3_BEFORE_DTD
     
-    xf%indenting_requested = .false.
+    xf%indenting_requested = .true.
     if (present(indent)) then
       xf%indenting_requested = indent
     endif
@@ -224,7 +224,7 @@ contains
     if (present(encoding)) then
       if (.not.checkEncName(encoding)) &
         call wxml_error("Invalid encoding name: "//encoding)
-      if (encoding /= 'UTF-8' .or. encoding /= 'utf-8') &
+      if (encoding /= 'UTF-8' .and. encoding /= 'utf-8') &
         call wxml_warning("Non-default encoding specified: "//encoding)
       call xml_AddPseudoAttribute(xf, "encoding", encoding)
     endif
@@ -562,7 +562,7 @@ contains
     end select
 
     if (.not.present(xml) .and. .not.checkPITarget(name)) &
-         call wxml_warning(xf, "Invalid PI Target "//name)
+         call wxml_error(xf, "Invalid PI Target "//name)
     call add_to_buffer("<?" // name, xf%buffer)
     if (present(data)) then
       if (index(data, '?>') > 0) &
@@ -848,6 +848,9 @@ contains
       if (xf%state_1 == WXML_STATE_1_AFTER_ROOT) exit
       call xml_EndElement(xf, get_top_elstack(xf%stack))
     enddo
+
+    if (xf%state_1 /= WXML_STATE_1_AFTER_ROOT) &
+      call wxml_warning(xf, 'Invalid XML document produced: No root element')
     
     call dump_buffer(xf%buffer)
     close(unit=xf%lun)

@@ -8,7 +8,7 @@ program test
   type(xmlf_t) :: xf
 
   call xml_OpenFile(filename, xf)
-  call xml_AddComment(xf, "comment")
+  call xml_AddComment(xf, "invalid comment -")
   call xml_Close(xf)
 
 end program test

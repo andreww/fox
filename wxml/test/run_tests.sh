@@ -5,6 +5,14 @@ make clean
 rm -f passed.score failed.score
 rm -f tests.out failed.out
 
+echo "Testing XML Processing Instructions"
+./test_xml_AddXMLPI.sh
+exit
+
+echo "Testing XML Comments"
+./test_xml_AddComment.sh
+exit
+
 echo "Testing XML File creation"
 ./test_xml_openFile.sh
 

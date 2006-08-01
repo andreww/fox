@@ -1,15 +1,24 @@
 #!/bin/sh
 
 make $1.exe
-./$1.exe
+output=$(./$1.exe 2>&1)
 passed=no
-if diff test.xml $1.xml > /dev/null; then
-  passed=yes
+if [ -f $1.xml ]
+then
+  if diff test.xml $1.xml > /dev/null; then
+    passed=yes
+  else
+     echo $1 >> failed.out
+     diff -u test.xml $1.xml >> failed.out
+  fi
 else
-   echo $1 >> failed.out
-   diff -u test.xml $1.xml >> failed.out
+  if echo $output | grep ERROR > /dev/null; then
+    passed=yes
+  else
+     echo $1 >> failed.out
+     echo "Failed to fail" >> failed.out
+  fi
 fi
-#rm -f test.xml
 
 if [ $passed = yes ]; then
   echo 'PASSED: ' $1 
