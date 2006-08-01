@@ -861,10 +861,11 @@ contains
   end subroutine xml_EndElement
 
 
-  subroutine xml_AddNamespace(xf, nsURI, prefix)
+  subroutine xml_AddNamespace(xf, nsURI, prefix, xml)
     type(xmlf_t), intent(inout)   :: xf
     character(len=*), intent(in) :: nsURI
     character(len=*), intent(in), optional :: prefix
+    logical, intent(in), optional :: xml
     
     call check_xf(xf)
     
@@ -872,9 +873,9 @@ contains
          call wxml_error(xf, "adding namespace outside element content")
     
     if (present(prefix)) then
-      call addPrefixedNS(xf%nsDict, vs_str(prefix), vs_str(nsURI), len(xf%stack)+1)
+      call addPrefixedNS(xf%nsDict, prefix, nsURI, len(xf%stack)+1)
     else
-      call addDefaultNS(xf%nsDict, vs_str(nsURI), len(xf%stack)+1)
+      call addDefaultNS(xf%nsDict, nsURI, len(xf%stack)+1)
     endif
     
   end subroutine xml_AddNamespace

@@ -4,6 +4,7 @@ module m_common_namespaces
   use m_common_attrs, only: dictionary_t, get_key, get_value, remove_key, len
   use m_common_attrs, only: set_nsURI, set_localName, get_prefix, add_item_to_dict
   use m_common_error, only: FoX_error
+  use m_common_namecheck, only: checkNCName, checkIRI
 
   implicit none
   private
@@ -124,11 +125,14 @@ contains
   
   subroutine addDefaultNS(nsDict, uri, ix)
     type(namespaceDictionary), intent(inout) :: nsDict
-    character, dimension(:), intent(in) :: uri
+    character(len=*), intent(in) :: uri
     integer, intent(in) :: ix
 
     type(URIMapping), dimension(:), allocatable :: tempMap
     integer :: l_m, l_s
+
+    if (.not.checkIRI(URI)) &
+      call FoX_error("Attempt to declare invalid namespace IRI: "//URI)
 
     l_m = ubound(nsDict%defaults,1)
     allocate(tempMap(0:l_m))
@@ -142,9 +146,9 @@ contains
     deallocate(tempMap)
     ! And finally, add the new default NS
     nsDict%defaults(l_m)%ix = ix
-    l_s = size(uri)
+    l_s = len(uri)
     allocate(nsDict%defaults(l_m)%URI(l_s))
-    nsDict%defaults(l_m)%URI = uri
+    nsDict%defaults(l_m)%URI = vs_str(uri)
 
   end subroutine addDefaultNS
   
@@ -217,29 +221,61 @@ contains
 
   end subroutine removePrefixedURI
 
-  subroutine addPrefixedNS(nsDict, prefix, URI, ix)
+  subroutine addPrefixedNS(nsDict, prefix, URI, ix, xml)
     type(namespaceDictionary), intent(inout) :: nsDict
-    character, dimension(:), intent(in) :: prefix
-    character, dimension(:), intent(in) :: uri
+    character(len=*), intent(in) :: prefix
+    character(len=*), intent(in) :: uri
     integer, intent(in) :: ix
+    logical, intent(in), optional :: xml
     
     integer :: l_p, p_i, i
+    logical :: xml_
+
+    if (present(xml)) then
+      xml_ = xml
+    else
+      xml_ = .false.
+    endif
+
+    !check prefix is not reserved
+    if (len(prefix) > 2) then
+      if ((verify(prefix(1:1), 'xX') == 0) &
+           .and. (verify(prefix(2:2), 'mM') == 0) &
+           .and. (verify(prefix(3:3), 'lL') == 0)) then
+        if (prefix == 'xml' .and. &
+          .not. URI == 'http://www.w3.org/XML/1998/namespace') then
+          call FoX_error("Attempt to assign incorrect URI to prefix 'xml'")
+        elseif (prefix == 'xmlns') then
+          call FoX_error("Attempt to declare 'xmlns' prefix")
+        else
+          if (.not.xml_) &
+            call FoX_error("Attempt to declare reserved prefix: "//str_vs(prefix))
+        endif
+      endif
+    endif
+
+    if (.not.checkNCName(prefix)) &
+      call FoX_error("Attempt to declare invalid prefix: "//prefix)
+
+    if (.not.checkIRI(URI)) &
+      call FoX_error("Attempt to declare invalid namespace IRI: "//URI)
+
     l_p = ubound(nsDict%prefixes, 1)
     
     p_i = 0
     do i = 1, l_p
-       if (str_vs(nsDict%prefixes(l_p)%prefix) == str_vs(prefix)) then
+       if (str_vs(nsDict%prefixes(l_p)%prefix) == prefix) then
           p_i = i
           exit
        endif
     enddo
 
     if (p_i == 0) then
-       call addPrefix(nsDict, prefix)
+       call addPrefix(nsDict, vs_str(prefix))
        p_i = l_p + 1
     endif
 
-    call addPrefixedURI(nsDict%prefixes(p_i), URI, ix)
+    call addPrefixedURI(nsDict%prefixes(p_i), vs_str(URI), ix)
 
   end subroutine addPrefixedNS
 
@@ -390,7 +426,7 @@ contains
           call checkURI(URI)
           if (present(start_prefix_handler)) &
                call start_prefix_handler(str_vs(URI), "")
-          call addDefaultNS(nsDict, URI, ix)
+          call addDefaultNS(nsDict, str_vs(URI), ix)
           deallocate(URI)
           call remove_key(atts, i)
        elseif (xmlns == 'xmlns:') then
@@ -404,7 +440,7 @@ contains
           allocate(prefix(xmlnsLength - 6))
           QName = vs_str(get_key(atts, i))
           prefix = QName(7:)
-          call addPrefixedNS(nsDict, prefix, URI, ix)
+          call addPrefixedNS(nsDict, str_vs(prefix), str_vs(URI), ix)
           if (present(start_prefix_handler)) &
                call start_prefix_handler(str_vs(URI), str_vs(prefix))
           deallocate(URI)
