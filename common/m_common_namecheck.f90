@@ -143,6 +143,8 @@ contains
     logical :: good
     !By [Namespaces] section 9, there is no
     ! formal definition of IRI's yet.
+    ! The result of this depends whether we are doing
+    ! namespaces 1.1 or 1.0 ...
     good = .true.
   end function checkIRI
 

@@ -264,7 +264,7 @@ contains
     
     p_i = 0
     do i = 1, l_p
-       if (str_vs(nsDict%prefixes(l_p)%prefix) == prefix) then
+       if (str_vs(nsDict%prefixes(i)%prefix) == prefix) then
           p_i = i
           exit
        endif
@@ -607,12 +607,13 @@ contains
     type(namespaceDictionary), intent(in) :: nsDict
     character(len=*), intent(in) :: prefix
     logical :: force
-    integer :: i
+    integer :: i, l_s
 
     force = .false.
     do i = 1, ubound(nsDict%prefixes, 1)
        if (str_vs(nsDict%prefixes(i)%prefix) == prefix) then
-         force = .true.
+         l_s = ubound(nsDict%prefixes(i)%urilist, 1)
+         force = (size(nsdict%prefixes(i)%urilist(l_s)%URI) > 0)
          exit
        endif
     enddo

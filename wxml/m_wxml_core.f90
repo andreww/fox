@@ -17,7 +17,7 @@ module m_wxml_core
   use m_common_namespaces, only: namespaceDictionary, getnamespaceURI
   use m_common_namespaces, only: initnamespaceDictionary, destroynamespaceDictionary
   use m_common_namespaces, only: addDefaultNS, addPrefixedNS, isPrefixInForce
-  use m_common_namespaces, only: checkNamespacesWriting, checkEndNamespaces
+  use m_common_namespaces, only: checkNamespacesWriting, checkEndNamespaces, dumpnsdict
   use m_common_notations, only: notation_list, init_notation_list, destroy_notation_list, &
     add_notation, notation_exists
   use m_wxml_escape, only: escape_string
