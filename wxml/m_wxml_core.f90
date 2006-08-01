@@ -13,7 +13,7 @@ module m_wxml_core
   use m_common_io, only: get_unit
   use m_common_namecheck, only: checkEncName, checkName, checkPITarget, &
     checkCharacterEntityReference, checkSystemId, checkPubId, &
-    checkQName, prefixOfQName
+    checkQName, prefixOfQName, localpartofQName
   use m_common_namespaces, only: namespaceDictionary, getnamespaceURI
   use m_common_namespaces, only: initnamespaceDictionary, destroynamespaceDictionary
   use m_common_namespaces, only: addDefaultNS, addPrefixedNS, isPrefixInForce
@@ -769,10 +769,10 @@ contains
       if (.not.isPrefixInForce(xf%nsDict, prefixOfQName(name))) &
         call wxml_error(xf, "namespace prefix not registered: "//prefixOfQName(name))
       if (esc) then
-        call add_item_to_dict(xf%dict, name, escape_string(value), prefixOfQName(name), &
+        call add_item_to_dict(xf%dict, localpartofQname(name), escape_string(value), prefixOfQName(name), &
           getnamespaceURI(xf%nsDict,prefixOfQname(name)))
       else
-        call add_item_to_dict(xf%dict, name, value, prefixOfQName(name), &
+        call add_item_to_dict(xf%dict, localpartofQname(name), value, prefixOfQName(name), &
           getnamespaceURI(xf%nsDict,prefixOfQName(name)))
       endif
     else

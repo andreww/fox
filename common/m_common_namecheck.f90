@@ -215,7 +215,7 @@ contains
   
   pure function localpartOfQname(qname) result(localpart)
     character(len=*), intent(in) :: qname
-    character(len=max(len(qname)-index(qname,':')-1,0)) ::localpart
+    character(len=max(len(qname)-index(qname,':'),0)) ::localpart
 
     localpart = qname(index(qname,':')+1:)
   end function localpartOfQname
