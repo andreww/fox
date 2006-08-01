@@ -1,0 +1,6 @@
+ERROR(wxml) in writing to file 
+test.xml
+Element name !root is not valid
+WARNING(wxml) in writing to file 
+test.xml
+Invalid XML document produced: No root element

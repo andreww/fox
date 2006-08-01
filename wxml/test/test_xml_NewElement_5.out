@@ -1,0 +1,6 @@
+ERROR(wxml) in writing to file 
+test.xml
+Root element name does not match DTD: root
+WARNING(wxml) in writing to file 
+test.xml
+Invalid XML document produced: No root element

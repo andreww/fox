@@ -616,20 +616,17 @@ contains
       endif
       call close_start_tag(xf)
       call add_eol(xf)
-      xf%state_1 = WXML_STATE_1_DURING_ROOT
-    case (WXML_STATE_1_DURING_ROOT)
-      continue
     case (WXML_STATE_1_AFTER_ROOT)
       call wxml_error(xf, "Two root elements: "//name)
     end select
     
     if (.not.checkQName(name)) then
-      call wxml_error(xf, 'attribute name '//name//' is not valid')
+      call wxml_error(xf, 'Element name '//name//' is not valid')
     endif
 
     if (len(prefixOfQName(name)) > 0) then
       if (.not.isPrefixInForce(xf%nsDict, prefixOfQName(name))) &
-        call wxml_error(xf, "namespace prefix not registered: "//prefixOfQName(name))
+        call wxml_error(xf, "Namespace prefix not registered: "//prefixOfQName(name))
     endif
     
     if (xf%state_3 /= WXML_STATE_3_BEFORE_DTD) then
@@ -649,7 +646,8 @@ contains
     call add_to_buffer("<"//name, xf%buffer)
     xf%state_2 = WXML_STATE_2_INSIDE_ELEMENT
     call reset_dict(xf%dict)
-    
+    xf%state_1 = WXML_STATE_1_DURING_ROOT
+
   end subroutine xml_NewElement
   
 

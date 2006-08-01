@@ -1,0 +1,6 @@
+ERROR(wxml) in writing to file 
+test.xml
+Tried to output invalid PI data lalala?>
+WARNING(wxml) in writing to file 
+test.xml
+Invalid XML document produced: No root element
