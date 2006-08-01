@@ -102,6 +102,20 @@ contains
   end function str_string
 
 
+  pure function str_string_array_len(st) result(n)
+    character(len=*), dimension(:), intent(in) :: st
+    integer :: n
+
+    integer :: k
+
+    n = size(st) - 1
+    do k = 1, size(st)
+      n = n + len(st(k))
+    enddo
+
+  end function str_string_array_len
+
+
   pure function str_string_array(st, delimiter) result(s)
     character(len=*), dimension(:), intent(in) :: st
     character(len=1), intent(in), optional :: delimiter
@@ -135,32 +149,6 @@ contains
 
   end function str_string_matrix
 
-
-  pure function str_string_array_len(st) result(n)
-    character(len=*), dimension(:), intent(in) :: st
-    integer :: n
-
-    integer :: k
-
-    n = size(st) - 1
-    do k = 1, size(st)
-      n = n + len(st(k))
-    enddo
-
-  end function str_string_array_len
-
-
-  pure function str_string_matrix_len(st) result(n)
-    character(len=*), dimension(:,:), intent(in) :: st
-    integer :: n
-
-    integer :: j, k
-
-    n = str_string_array_len(reshape(st, (/size(st, 1)*size(st,2)/)))
-
-  end function str_string_matrix_len
-    
-      
 
   pure function str_integer(i) result(s)
     integer, intent(in) :: i
@@ -382,10 +370,83 @@ contains
 
   end function real_sp_str
 
+
+  pure function str_real_sp_fmt_len(x, fmt) result(n)
+    real(sp), intent(in) :: x
+    character(len=*), intent(in) :: fmt
+    integer :: n
+
+    integer :: dec, sig
+    integer :: e
+
+    if (x == 0.0_sp) then
+      e = 1
+    else
+      e = floor(log10(abs(x)))
+    endif
+      
+    if (x < 0.0_sp) then
+      n = 1
+    else
+      n = 0
+    endif
+      
+    if (len(fmt) == 0) then
+      sig = sig_sp
+
+      n = n + sig + 2 + len(str(e)) 
+      ! for the decimal point and the e
+
+    elseif (fmt(1:1) == 's') then
+      if (len(fmt) > 1) then
+        sig = str_to_int_10(fmt(2:))
+      else
+        sig = sig_sp
+      endif
+      sig = max(sig, 1)
+      sig = min(sig, digits(1.0_sp))
+
+      if (sig > 1) n = n + 1 
+      ! for the decimal point
+      
+      n = n + sig + 1 + len(str(e))
+
+    elseif (fmt(1:1) == 'r') then
+
+      if (len(fmt) > 1) then
+        dec = str_to_int_10(fmt(2:))
+      else
+        dec = sig_sp - e - 1
+      endif
+      dec = max(dec, 0)
+      dec = min(dec, digits(1.0_sp)-e)
+
+      if (dec > 0) n = n + 1
+      if (abs(x) >= 1.0_sp) n = n + 1
+
+      ! Need to know if there's an overflow ....
+      if (e+dec+1 > 0) then
+        if (index(real_sp_str(abs(x), e+dec+1), '!') == 1) &
+             e = e + 1
+      endif
+
+      n = n + abs(e) + dec
+
+    else
+      n = pure_pxfabort()
+    endif
+
+  end function str_real_sp_fmt_len
+
+
   function str_real_sp_fmt(x, fmt) result(s)
     real(sp), intent(in) :: x
     character(len=*), intent(in) :: fmt
+#ifdef BROKEN_COMPILER
+    character(len=100) :: s
+#else
     character(len=str_real_sp_fmt_len(x, fmt)) :: s
+#endif
 
     integer :: sig, dec
     integer :: e, n
@@ -507,72 +568,13 @@ contains
   end function str_real_sp_fmt
 
 
-  pure function str_real_sp_fmt_len(x, fmt) result(n)
+  pure function str_real_sp_len(x) result(n)
     real(sp), intent(in) :: x
-    character(len=*), intent(in) :: fmt
     integer :: n
 
-    integer :: dec, sig
-    integer :: e
+    n = str_real_sp_fmt_len(x, "")
 
-    if (x == 0.0_sp) then
-      e = 1
-    else
-      e = floor(log10(abs(x)))
-    endif
-      
-    if (x < 0.0_sp) then
-      n = 1
-    else
-      n = 0
-    endif
-      
-    if (len(fmt) == 0) then
-      sig = sig_sp
-
-      n = n + sig + 2 + len(str(e)) 
-      ! for the decimal point and the e
-
-    elseif (fmt(1:1) == 's') then
-      if (len(fmt) > 1) then
-        sig = str_to_int_10(fmt(2:))
-      else
-        sig = sig_sp
-      endif
-      sig = max(sig, 1)
-      sig = min(sig, digits(1.0_sp))
-
-      if (sig > 1) n = n + 1 
-      ! for the decimal point
-      
-      n = n + sig + 1 + len(str(e))
-
-    elseif (fmt(1:1) == 'r') then
-
-      if (len(fmt) > 1) then
-        dec = str_to_int_10(fmt(2:))
-      else
-        dec = sig_sp - e - 1
-      endif
-      dec = max(dec, 0)
-      dec = min(dec, digits(1.0_sp)-e)
-
-      if (dec > 0) n = n + 1
-      if (abs(x) >= 1.0_sp) n = n + 1
-
-      ! Need to know if there's an overflow ....
-      if (e+dec+1 > 0) then
-        if (index(real_sp_str(abs(x), e+dec+1), '!') == 1) &
-             e = e + 1
-      endif
-
-      n = n + abs(e) + dec
-
-    else
-      n = pure_pxfabort()
-    endif
-
-  end function str_real_sp_fmt_len
+  end function str_real_sp_len
 
 
   function str_real_sp(x) result(s)
@@ -583,14 +585,19 @@ contains
 
   end function str_real_sp
 
-
-  pure function str_real_sp_len(x) result(n)
-    real(sp), intent(in) :: x
+     
+  pure function str_real_sp_array_len(xa) result(n)
+    real(sp), dimension(:), intent(in) :: xa
     integer :: n
 
-    n = str_real_sp_fmt_len(x, "")
+    integer :: k
 
-  end function str_real_sp_len
+    n = size(xa) - 1
+    do k = 1, size(xa)
+      n = n + str_real_sp_fmt_len(xa(k), "")
+    enddo
+    
+  end function str_real_sp_array_len
 
 
   function str_real_sp_array(xa) result(s)
@@ -609,6 +616,21 @@ contains
 
   end function str_real_sp_array
 
+ 
+  pure function str_real_sp_array_fmt_len(xa, fmt) result(n)
+    real(sp), dimension(:), intent(in) :: xa
+    character(len=*), intent(in) :: fmt
+    integer :: n
+
+    integer :: k
+
+    n = size(xa) - 1
+    do k = 1, size(xa)
+      n = n + str_real_sp_fmt_len(xa(k), fmt)
+    enddo
+    
+  end function str_real_sp_array_fmt_len
+     
 
   function str_real_sp_array_fmt(xa, fmt, delimiter) result(s)
     real(sp), dimension(:), intent(in) :: xa
@@ -635,35 +657,6 @@ contains
 
   end function str_real_sp_array_fmt
 
-     
-  pure function str_real_sp_array_len(xa) result(n)
-    real(sp), dimension(:), intent(in) :: xa
-    integer :: n
-
-    integer :: k
-
-    n = size(xa) - 1
-    do k = 1, size(xa)
-      n = n + str_real_sp_fmt_len(xa(k), "")
-    enddo
-    
-  end function str_real_sp_array_len
-
-     
-  pure function str_real_sp_array_fmt_len(xa, fmt) result(n)
-    real(sp), dimension(:), intent(in) :: xa
-    character(len=*), intent(in) :: fmt
-    integer :: n
-
-    integer :: k
-
-    n = size(xa) - 1
-    do k = 1, size(xa)
-      n = n + str_real_sp_fmt_len(xa(k), fmt)
-    enddo
-    
-  end function str_real_sp_array_fmt_len
-     
 
   function str_real_sp_matrix(xa) result(s)
     real(sp), dimension(:,:), intent(in) :: xa
@@ -727,10 +720,83 @@ contains
 
   end function real_dp_str
 
+
+  pure function str_real_dp_fmt_len(x, fmt) result(n)
+    real(dp), intent(in) :: x
+    character(len=*), intent(in) :: fmt
+    integer :: n
+
+    integer :: dec, sig
+    integer :: e
+
+    if (x == 0.0_dp) then
+      e = 1
+    else
+      e = floor(log10(abs(x)))
+    endif
+      
+    if (x < 0.0_dp) then
+      n = 1
+    else
+      n = 0
+    endif
+      
+    if (len(fmt) == 0) then
+      sig = sig_dp
+
+      n = n + sig + 2 + len(str(e)) 
+      ! for the decimal point and the e
+
+    elseif (fmt(1:1) == 's') then
+      if (len(fmt) > 1) then
+        sig = str_to_int_10(fmt(2:))
+      else
+        sig = sig_dp
+      endif
+      sig = max(sig, 1)
+      sig = min(sig, digits(1.0_dp))
+
+      if (sig > 1) n = n + 1 
+      ! for the decimal point
+      
+      n = n + sig + 1 + len(str(e))
+
+    elseif (fmt(1:1) == 'r') then
+
+      if (len(fmt) > 1) then
+        dec = str_to_int_10(fmt(2:))
+      else
+        dec = sig_dp - e - 1
+      endif
+      dec = max(dec, 0)
+      dec = min(dec, digits(1.0_dp)-e)
+
+      if (dec > 0) n = n + 1
+      if (abs(x) >= 1.0_dp) n = n + 1
+
+      ! Need to know if there's an overflow ....
+      if (e+dec+1 > 0) then
+        if (index(real_dp_str(abs(x), e+dec+1), '!') == 1) &
+             e = e + 1
+      endif
+
+      n = n + abs(e) + dec
+
+    else
+      n = pure_pxfabort()
+    endif
+
+  end function str_real_dp_fmt_len
+
+
   function str_real_dp_fmt(x, fmt) result(s)
     real(dp), intent(in) :: x
     character(len=*), intent(in) :: fmt
+#ifdef BROKEN_COMPILER
+    character(len=100) :: s
+#else
     character(len=str_real_dp_fmt_len(x, fmt)) :: s
+#endif
 
     integer :: sig, dec
     integer :: e, n
@@ -852,72 +918,13 @@ contains
   end function str_real_dp_fmt
 
 
-  pure function str_real_dp_fmt_len(x, fmt) result(n)
+  pure function str_real_dp_len(x) result(n)
     real(dp), intent(in) :: x
-    character(len=*), intent(in) :: fmt
     integer :: n
 
-    integer :: dec, sig
-    integer :: e
+    n = str_real_dp_fmt_len(x, "")
 
-    if (x == 0.0_dp) then
-      e = 1
-    else
-      e = floor(log10(abs(x)))
-    endif
-      
-    if (x < 0.0_dp) then
-      n = 1
-    else
-      n = 0
-    endif
-      
-    if (len(fmt) == 0) then
-      sig = sig_dp
-
-      n = n + sig + 2 + len(str(e)) 
-      ! for the decimal point and the e
-
-    elseif (fmt(1:1) == 's') then
-      if (len(fmt) > 1) then
-        sig = str_to_int_10(fmt(2:))
-      else
-        sig = sig_dp
-      endif
-      sig = max(sig, 1)
-      sig = min(sig, digits(1.0_dp))
-
-      if (sig > 1) n = n + 1 
-      ! for the decimal point
-      
-      n = n + sig + 1 + len(str(e))
-
-    elseif (fmt(1:1) == 'r') then
-
-      if (len(fmt) > 1) then
-        dec = str_to_int_10(fmt(2:))
-      else
-        dec = sig_dp - e - 1
-      endif
-      dec = max(dec, 0)
-      dec = min(dec, digits(1.0_dp)-e)
-
-      if (dec > 0) n = n + 1
-      if (abs(x) >= 1.0_dp) n = n + 1
-
-      ! Need to know if there's an overflow ....
-      if (e+dec+1 > 0) then
-        if (index(real_dp_str(abs(x), e+dec+1), '!') == 1) &
-             e = e + 1
-      endif
-
-      n = n + abs(e) + dec
-
-    else
-      n = pure_pxfabort()
-    endif
-
-  end function str_real_dp_fmt_len
+  end function str_real_dp_len
 
 
   function str_real_dp(x) result(s)
@@ -927,15 +934,6 @@ contains
     s = str_real_dp_fmt(x, "")
 
   end function str_real_dp
-
-
-  pure function str_real_dp_len(x) result(n)
-    real(dp), intent(in) :: x
-    integer :: n
-
-    n = str_real_dp_fmt_len(x, "")
-
-  end function str_real_dp_len
 
 
   function str_real_dp_array(xa) result(s)
@@ -953,32 +951,6 @@ contains
     s(n:) = str(xa(k))
 
   end function str_real_dp_array
-
-
-  function str_real_dp_array_fmt(xa, fmt, delimiter) result(s)
-    real(dp), dimension(:), intent(in) :: xa
-    character(len=*), intent(in) :: fmt
-    character(len=1), intent(in), optional :: delimiter
-    character(len=str_real_dp_array_fmt_len(xa, fmt)) :: s
-    
-    integer :: j, k, n
-    character(len=1) :: d
-
-    if (present(delimiter)) then
-      d = delimiter
-    else
-      d = " "
-    endif
-
-    n = 1
-    do k = 1, size(xa) - 1
-      j = str_real_dp_fmt_len(xa(k), fmt)
-      s(n:n+j) = str(xa(k), fmt)//d
-      n = n + j + 1
-    enddo
-    s(n:) = str(xa(k), fmt)
-
-  end function str_real_dp_array_fmt
 
      
   pure function str_real_dp_array_len(xa) result(n)
@@ -1008,6 +980,32 @@ contains
     enddo
     
   end function str_real_dp_array_fmt_len
+
+
+  function str_real_dp_array_fmt(xa, fmt, delimiter) result(s)
+    real(dp), dimension(:), intent(in) :: xa
+    character(len=*), intent(in) :: fmt
+    character(len=1), intent(in), optional :: delimiter
+    character(len=str_real_dp_array_fmt_len(xa, fmt)) :: s
+    
+    integer :: j, k, n
+    character(len=1) :: d
+
+    if (present(delimiter)) then
+      d = delimiter
+    else
+      d = " "
+    endif
+
+    n = 1
+    do k = 1, size(xa) - 1
+      j = str_real_dp_fmt_len(xa(k), fmt)
+      s(n:n+j) = str(xa(k), fmt)//d
+      n = n + j + 1
+    enddo
+    s(n:) = str(xa(k), fmt)
+
+  end function str_real_dp_array_fmt
 
 
   function str_real_dp_matrix(xa) result(s)
