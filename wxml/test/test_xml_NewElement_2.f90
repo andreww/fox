@@ -8,7 +8,7 @@ program test
   type(xmlf_t) :: xf
 
   call xml_OpenFile(filename, xf)
-  call xml_NewElement(xf, "root")
+  call xml_NewElement(xf, "!root")
   call xml_Close(xf)
 
 end program test

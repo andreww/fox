@@ -610,11 +610,13 @@ contains
 
     select case (xf%state_1)
     case (WXML_STATE_1_JUST_OPENED, WXML_STATE_1_BEFORE_ROOT)
-      xf%state_1 = WXML_STATE_1_DURING_ROOT
       if (size(xf%name) > 0) then
         if (str_vs(xf%name) /= name) & 
           call wxml_error(xf, "Root element name does not match DTD: "//name)
       endif
+      call close_start_tag(xf)
+      call add_eol(xf)
+      xf%state_1 = WXML_STATE_1_DURING_ROOT
     case (WXML_STATE_1_DURING_ROOT)
       continue
     case (WXML_STATE_1_AFTER_ROOT)
@@ -634,13 +636,12 @@ contains
       select case (xf%state_3)
       case (WXML_STATE_3_DURING_DTD)
         call add_to_buffer('>', xf%buffer)
-        xf%state_3 = WXML_STATE_3_AFTER_DTD
       case (WXML_STATE_3_INSIDE_INTSUBSET)
         call add_eol(xf)
         call add_to_buffer(']>', xf%buffer)
         call add_eol(xf)
-        xf%state_3 = WXML_STATE_3_AFTER_DTD
       end select
+      xf%state_3 = WXML_STATE_3_AFTER_DTD
     endif
 
     call close_start_tag(xf)
@@ -800,11 +801,10 @@ contains
     case (WXML_STATE_2_INSIDE_ELEMENT)
       call checkNamespacesWriting(xf%dict, xf%nsDict, len(xf%stack))
       if (len(xf%dict) > 0) call write_attributes(xf)
-      call add_eol(xf)
+      if (len(xf%stack) > 1) call add_eol(xf)
       call add_to_buffer("/>",xf%buffer)
       call devnull(pop_elstack(xf%stack))
     case (WXML_STATE_2_OUTSIDE_TAG)
-      !call add_eol(xf)
       call add_to_buffer("</" //pop_elstack(xf%stack), xf%buffer)
       call add_eol(xf)
       call add_to_buffer(">", xf%buffer)
@@ -842,7 +842,8 @@ contains
   subroutine xml_Close(xf)
     type(xmlf_t), intent(inout)   :: xf
     
-    call close_start_tag(xf)
+    if (xf%state_2 == WXML_STATE_2_INSIDE_PI) &
+      call close_start_tag(xf)
     
     do while (xf%state_1 == WXML_STATE_1_DURING_ROOT)
       if (xf%state_1 == WXML_STATE_1_AFTER_ROOT) exit
@@ -886,7 +887,7 @@ contains
     call reset_buffer(xf%buffer, xf%lun)
     
     if (xf%indenting_requested) &
-     call add_to_buffer(repeat(' ',indent_level),xf%buffer)
+      call add_to_buffer(repeat(' ',indent_level),xf%buffer)
     
   end subroutine add_eol
   
