@@ -31,7 +31,7 @@
   elements(3) = 'O'
   num = 20
   
-  call xml_Openfile('test.cml',myfile)
+  call xml_Openfile('test.cml',myfile, indent=.true.)
   call cmlStartCml(myfile)
 
   ! Add parameter
