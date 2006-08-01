@@ -61,11 +61,14 @@ wxml_example: wxml_lib wxml_example.o
 wcml_example: wcml_lib wcml_example.o 
 	$(FC) -o $@ wcml_example.o $$(./FoX-config --libs --wcml)
 #
+common_check:
+	(cd common/test;./run_tests.sh)
 dom_check:
 sax_check:
 wcml_check:
 wxml_check:
 	(cd wxml/test;./run_tests.sh)
+check: common_check wxml_check wcml_check sax_check dom_check
 
 clean: dom_lib_clean sax_lib_clean wxml_lib_clean wcml_lib_clean common_lib_clean fsys_lib_clean
 	rm -f *.o dom_example sax_example wxml_example wcml_example simple.xml output.xml *.*d *.a

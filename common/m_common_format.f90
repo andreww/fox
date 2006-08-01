@@ -734,7 +734,7 @@ contains
 
     integer :: sig, dec
     integer :: e, n
-    character(len=len(s)) :: num !this wll always be enough memory.
+    character(len=len(s)) :: num !this will always be enough memory.
 
     if (.not.checkFmt(fmt)) &
       call FoX_error("Invalid format: "//fmt)
@@ -903,7 +903,7 @@ contains
       dec = min(dec, digits(1.0_dp)-e)
 
       if (dec > 0) n = n + 1
-      if (abs(x) > 1.0_dp) n = n + 1
+      if (abs(x) >= 1.0_dp) n = n + 1
 
       ! Need to know if there's an overflow ....
       if (e+dec+1 > 0) then
