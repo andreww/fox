@@ -49,7 +49,6 @@ fi
 ./passed.sh $PASSED "file creation without replacement"
 rm -f test.xml
 
-# check that we eplace existing file by default
 echo TESTINPUT > test.xml
 make test_xml_Openfile_1.exe
 ./test_xml_OpenFile_1.exe> /dev/null 2>&1
@@ -59,4 +58,15 @@ else
    PASSED=no
 fi
 ./passed.sh $PASSED "file creation specifying REPLACE"
+rm -f test.xml
+
+make test_xml_Openfile_4.exe
+rm -f test.xml
+./test_xml_OpenFile_4.exe> test.out 2>&1
+if diff test.out test_xml_Openfile_4.out >/dev/null; then
+   PASSED=yes
+else
+   PASSED=no
+fi
+./passed.sh $PASSED "Trying to create file twice"
 rm -f test.xml

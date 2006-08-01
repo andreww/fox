@@ -24,6 +24,10 @@ echo "Testing XML Stylesheet"
 echo "Testing XML Declaration"
 ./test_xml_AddXMLDeclaration.sh
 
+echo "Testing XML file closing"
+./test_xml_Close.sh
+
+
 #exit
 
 echo Test Results:

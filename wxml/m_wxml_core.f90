@@ -63,7 +63,7 @@ module m_wxml_core
 
   type xmlf_t
     character, pointer        :: filename(:)
-    integer                   :: lun
+    integer                   :: lun = -1
     type(buffer_t)            :: buffer
     type(elstack_t)           :: stack
     type(dictionary_t)        :: dict
@@ -147,6 +147,9 @@ contains
     
     integer :: iostat
     logical :: repl, decl
+
+    if (xf%lun /= -1) &
+      call wxml_fatal("Trying to reopen an already-open XML file")
     
     if (present(replace)) then
       repl = replace
@@ -215,9 +218,11 @@ contains
     type(xmlf_t), intent(inout)   :: xf
     character(len=*), intent(in), optional :: encoding
     logical, intent(in), optional :: standalone
+
+    call check_xf(xf)
     
     if (xf%state_1 /= WXML_STATE_1_JUST_OPENED) &
-         call wxml_error("Tried to put XML declaration in wrong place")
+      call wxml_error("Tried to put XML declaration in wrong place")
     
     call xml_AddXMLPI(xf, "xml", xml=.true.)
     call xml_AddPseudoAttribute(xf, "version", "1.0")
@@ -243,6 +248,8 @@ contains
     type(xmlf_t), intent(inout) :: xf
     character(len=*), intent(in) :: name
     character(len=*), intent(in), optional :: system, public
+    
+    call check_xf(xf)
     
     call close_start_tag(xf)
     
@@ -295,6 +302,8 @@ contains
     character(len=*), intent(in), optional :: PEDef
     character(len=*), intent(in), optional :: system
     character(len=*), intent(in), optional :: public
+    
+    call check_xf(xf)
     
     if (xf%state_3 == WXML_STATE_3_DURING_DTD) then
       call add_to_buffer(" [", xf%buffer)
@@ -355,6 +364,8 @@ contains
     character(len=*), intent(in) :: name
     character(len=*), intent(in) :: value
 
+    call check_xf(xf)
+    
     if (xf%state_3 == WXML_STATE_3_DURING_DTD) then
       call add_to_buffer(" [", xf%buffer)
       xf%state_3 = WXML_STATE_3_INSIDE_INTSUBSET
@@ -389,6 +400,8 @@ contains
     character(len=*), intent(in), optional :: public
     character(len=*), intent(in), optional :: notation
 
+    call check_xf(xf)
+    
     if (xf%state_3 == WXML_STATE_3_DURING_DTD) then
       call add_to_buffer(" [", xf%buffer)
       xf%state_3 = WXML_STATE_3_INSIDE_INTSUBSET
@@ -444,6 +457,8 @@ contains
     character(len=*), intent(in), optional :: system
     character(len=*), intent(in), optional :: public
 
+    call check_xf(xf)
+    
     if (xf%state_3 == WXML_STATE_3_DURING_DTD) then
       call add_to_buffer(" [", xf%buffer)
       xf%state_3 = WXML_STATE_3_INSIDE_INTSUBSET
@@ -489,6 +504,8 @@ contains
     type(xmlf_t), intent(inout) :: xf
     character(len=*), intent(in) :: string
 
+    call check_xf(xf)
+    
     if (xf%state_3 == WXML_STATE_3_DURING_DTD) then
       call add_to_buffer(" [", xf%buffer)
       xf%state_3 = WXML_STATE_3_INSIDE_INTSUBSET
@@ -514,6 +531,8 @@ contains
     character(len=*), intent(in), optional :: media
     character(len=*), intent(in), optional :: charset
     logical,          intent(in), optional :: alternate
+    
+    call check_xf(xf)
     
     if (xf%state_1 /= WXML_STATE_1_JUST_OPENED &
          .and. xf%state_1 /= WXML_STATE_1_BEFORE_ROOT) &
@@ -548,6 +567,8 @@ contains
     character(len=*), intent(in), optional :: data
     logical, optional :: xml
 
+    call check_xf(xf)
+    
     select case (xf%state_1)
     case (WXML_STATE_1_JUST_OPENED) 
       xf%state_1 = WXML_STATE_1_BEFORE_ROOT
@@ -581,6 +602,8 @@ contains
     type(xmlf_t), intent(inout)   :: xf
     character(len=*), intent(in)  :: comment
     
+    call check_xf(xf)
+    
     select case (xf%state_1)
     case (WXML_STATE_1_JUST_OPENED) 
       xf%state_1 = WXML_STATE_1_BEFORE_ROOT
@@ -608,6 +631,8 @@ contains
     type(xmlf_t), intent(inout)   :: xf
     character(len=*), intent(in)  :: name
 
+    call check_xf(xf)
+    
     select case (xf%state_1)
     case (WXML_STATE_1_JUST_OPENED, WXML_STATE_1_BEFORE_ROOT)
       if (size(xf%name) > 0) then
@@ -658,6 +683,8 @@ contains
 
     logical :: pc
 
+    call check_xf(xf)
+    
     if (xf%state_1 /= WXML_STATE_1_DURING_ROOT) &
          call wxml_fatal("Tried to add text section in wrong place: "//chars)
     
@@ -685,6 +712,8 @@ contains
     type(xmlf_t), intent(inout) :: xf
     character(len=*), intent(in) :: entityref
 
+    call check_xf(xf)
+    
     !Where can we add this? If we allow the full gamut
     !of entities, we can no longer properly ensure
     !well-formed output, unless we tie the sax parser
@@ -714,6 +743,8 @@ contains
 
     logical :: esc
 
+    call check_xf(xf)
+    
     if (present(escape)) then
       esc = escape
     else
@@ -760,6 +791,8 @@ contains
 
     logical :: esc
 
+    call check_xf(xf)
+    
     if (present(escape)) then
       esc = escape
     else
@@ -792,6 +825,11 @@ contains
     type(xmlf_t), intent(inout)             :: xf
     character(len=*), intent(in)            :: name
 
+    call check_xf(xf)
+    
+    if (len(xf%stack) == 0) &
+      call wxml_fatal(xf,'Trying to close '//name//' but no tags are open.')
+
     if (get_top_elstack(xf%stack) /= name) &
       call wxml_fatal(xf, 'Trying to close '//name//' but '//get_top_elstack(xf%stack)//' is open.') 
     
@@ -806,8 +844,8 @@ contains
       call add_to_buffer("</" //pop_elstack(xf%stack), xf%buffer)
       call add_eol(xf)
       call add_to_buffer(">", xf%buffer)
-    case default
-      call wxml_error("Cannot close element here")
+    case (WXML_STATE_2_INSIDE_PI)
+      call close_start_tag(xf)
     end select
     
     call checkEndNamespaces(xf%nsDict, len(xf%stack)+1)
@@ -825,6 +863,8 @@ contains
     character(len=*), intent(in) :: nsURI
     character(len=*), intent(in), optional :: prefix
     
+    call check_xf(xf)
+    
     if (xf%state_1 == WXML_STATE_1_AFTER_ROOT) &
          call wxml_error(xf, "adding namespace outside element content")
     
@@ -839,9 +879,24 @@ contains
 
   subroutine xml_Close(xf)
     type(xmlf_t), intent(inout)   :: xf
-    
+
+    if (xf%lun == -1) &
+      call wxml_fatal('Tried to close XML file which is not open')
+
     if (xf%state_2 == WXML_STATE_2_INSIDE_PI) &
       call close_start_tag(xf)
+
+    if (xf%state_3 /= WXML_STATE_3_BEFORE_DTD &
+      .and. xf%state_3 /= WXML_STATE_3_AFTER_DTD) then
+      select case (xf%state_3)
+      case (WXML_STATE_3_DURING_DTD)
+        call add_to_buffer('>', xf%buffer)
+      case (WXML_STATE_3_INSIDE_INTSUBSET)
+        call add_eol(xf)
+        call add_to_buffer(']>', xf%buffer)
+      end select
+      xf%state_3 = WXML_STATE_3_AFTER_DTD
+    endif
     
     do while (xf%state_1 == WXML_STATE_1_DURING_ROOT)
       if (xf%state_1 == WXML_STATE_1_AFTER_ROOT) exit
@@ -853,7 +908,8 @@ contains
     
     call dump_buffer(xf%buffer)
     close(unit=xf%lun)
-    
+    xf%lun = -1
+
     call destroy_dict(xf%dict)
     call destroy_elstack(xf%stack)
     
@@ -869,6 +925,15 @@ contains
 
 !==================================================================
   !----------------------------------------------------------
+
+  subroutine check_xf(xf)
+    type(xmlf_t), intent(inout)   :: xf
+    if (xf%lun == -1) &
+      call wxml_fatal("Tried to manipulate an XML File which is not open")
+
+  end subroutine check_xf
+
+
   subroutine add_eol(xf)
     type(xmlf_t), intent(inout)   :: xf
     
@@ -897,6 +962,7 @@ contains
     case (WXML_STATE_2_INSIDE_ELEMENT)
       call checkNamespacesWriting(xf%dict, xf%nsDict, len(xf%stack))
       if (len(xf%dict) > 0)  call write_attributes(xf)
+      call add_eol(xf)
       call add_to_buffer('>', xf%buffer)
       xf%state_2 = WXML_STATE_2_OUTSIDE_TAG
     case (WXML_STATE_2_INSIDE_PI)

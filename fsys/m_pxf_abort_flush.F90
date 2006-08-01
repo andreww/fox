@@ -1,6 +1,10 @@
 module m_pxf_abort_flush
 
-public :: pxfabort, pxfflush
+  implicit none
+
+  public :: pxfflush
+  public :: pxfabort
+  public :: pure_pxfabort
 
 ! pxf.F90 - assortment of Fortran wrappers to various
 ! unix-y system calls.
@@ -70,10 +74,18 @@ end subroutine pxfflush
 ! pxfabort PURE, (in order to do sensible error-handling on PURE
 ! subroutines) we use the trick below.
 
-  pure subroutine pxfabort()
+  subroutine pxfabort()
+    integer, pointer :: i
+    integer :: j
+    stop
+  end subroutine pxfabort
+
+
+  pure function pure_pxfabort() result (crash)
+    integer :: crash
     integer, pointer :: i
     nullify(i)
-    i = 0
-  end subroutine pxfabort
+    crash = i
+  end function pure_pxfabort
 
 end module m_pxf_abort_flush

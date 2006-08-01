@@ -1,7 +1,7 @@
 module m_common_format
 
   use m_common_error, only: FoX_error
-  use pxf, only: pxfabort
+  use pxf, only: pxfabort, pure_pxfabort
 
   implicit none
   private
@@ -40,7 +40,7 @@ contains
 
     integer :: max_power, i, j
 
-    if (verify(str, digit) > 0) call pxfabort()
+    if (verify(str, digit) > 0) n = pure_pxfabort()
 
     max_power = len(str) - 1
 
@@ -64,7 +64,7 @@ contains
     if (verify(str, hexdigit) == 0) then
        str_l = to_lower(str)
     else
-      call pxfabort()
+      n = pure_pxfabort()
     endif
 
     max_power = len(str) - 1
@@ -569,7 +569,7 @@ contains
       n = n + abs(e) + dec
 
     else
-      call pxfabort()
+      n = pure_pxfabort()
     endif
 
   end function str_real_sp_fmt_len
@@ -914,7 +914,7 @@ contains
       n = n + abs(e) + dec
 
     else
-      call pxfabort()
+      n = pure_pxfabort()
     endif
 
   end function str_real_dp_fmt_len
