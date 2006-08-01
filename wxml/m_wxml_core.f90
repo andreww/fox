@@ -42,16 +42,23 @@ module m_wxml_core
   !The root element has been opened but not closed
 
   ! status wrt tags:
-  integer, parameter :: WXML_STATE_2_OUTSIDE_TAG= 0
+  integer, parameter :: WXML_STATE_2_OUTSIDE_TAG = 0
   !We are not within a tag.
   integer, parameter :: WXML_STATE_2_INSIDE_PI = 1
   !We are inside a Processing Instruction tag
   integer, parameter :: WXML_STATE_2_INSIDE_ELEMENT = 2
   !We are inside an element tag.
-  integer, parameter :: WXML_STATE_2_INSIDE_DOCTYPE = 3
-  !We are inside the DOCTYPE declaration
-  integer, parameter :: WXML_STATE_2_INSIDE_INTSUBSET = 4
+
+  ! status wrt DTD
+  integer, parameter :: WXML_STATE_3_BEFORE_DTD = 0
+  ! No DTD has been encountered yet.
+  integer, parameter :: WXML_STATE_3_DURING_DTD = 1
+  ! Halfway throught outputting a DTD
+  integer, parameter :: WXML_STATE_3_INSIDE_INTSUBSET = 2
   !We are inside the internal subset definition
+  integer, parameter :: WXML_STATE_3_AFTER_DTD = 3
+  ! Finished outputting a DTD
+  
 
 
   type xmlf_t
@@ -62,6 +69,7 @@ module m_wxml_core
     type(dictionary_t)        :: dict
     integer                   :: state_1
     integer                   :: state_2
+    integer                   :: state_3
     logical                   :: indenting_requested
     character, pointer        :: name(:)
     type(namespaceDictionary) :: nsDict
@@ -184,6 +192,7 @@ contains
     
     xf%state_1 = WXML_STATE_1_JUST_OPENED
     xf%state_2 = WXML_STATE_2_OUTSIDE_TAG
+    xf%state_3 = WXML_STATE_3_BEFORE_DTD
     
     xf%indenting_requested = .false.
     if (present(indent)) then
@@ -240,9 +249,11 @@ contains
     if (xf%state_1 /= WXML_STATE_1_BEFORE_ROOT) &
       call wxml_error("Tried to put XML DOCTYPE in wrong place: "//name)
 
-    if (size(xf%name) > 0) &
-      ! We must have already had a DOCTYPE declaration
+    if (xf%state_3 /= WXML_STATE_3_BEFORE_DTD) then
       call wxml_error("Tried to output more than one DOCTYPE declaration: "//name)
+    else
+      xf%state_3 = WXML_STATE_3_DURING_DTD
+    endif
 
     if (.not.checkName(name)) &
          call wxml_error("Invalid Name in DTD "//name)
@@ -275,7 +286,6 @@ contains
       call wxml_error("wxml:DOCTYPE: PUBLIC supplied without SYSTEM for: "//name)
     endif
     
-    xf%state_2 = WXML_STATE_2_INSIDE_DOCTYPE
   end subroutine xml_AddDOCTYPE
 
 
@@ -286,14 +296,18 @@ contains
     character(len=*), intent(in), optional :: system
     character(len=*), intent(in), optional :: public
     
-    if (xf%state_2 == WXML_STATE_2_INSIDE_DOCTYPE) then
+    if (xf%state_3 == WXML_STATE_3_DURING_DTD) then
       call add_to_buffer(" [", xf%buffer)
-      xf%state_2 = WXML_STATE_2_INSIDE_INTSUBSET
+      xf%state_3 = WXML_STATE_3_INSIDE_INTSUBSET
     endif
 
-    if (xf%state_2 /= WXML_STATE_2_INSIDE_INTSUBSET) &
+    if (xf%state_3 /= WXML_STATE_3_INSIDE_INTSUBSET) &
       call wxml_fatal("Cannot define Parameter Entity here: "//name)
       
+    if (xf%state_2 == WXML_STATE_2_INSIDE_PI) then
+      call close_start_tag(xf)
+      xf%state_2 = WXML_STATE_2_OUTSIDE_TAG
+    endif
 
     if (present(PEdef)) then
       if (present(system) .or. present(public)) &
@@ -341,14 +355,19 @@ contains
     character(len=*), intent(in) :: name
     character(len=*), intent(in) :: value
 
-    if (xf%state_2 == WXML_STATE_2_INSIDE_DOCTYPE) then
+    if (xf%state_3 == WXML_STATE_3_DURING_DTD) then
       call add_to_buffer(" [", xf%buffer)
-      xf%state_2 = WXML_STATE_2_INSIDE_INTSUBSET
+      xf%state_3 = WXML_STATE_3_INSIDE_INTSUBSET
     endif
 
-    if (xf%state_2 /= WXML_STATE_2_INSIDE_INTSUBSET) &
+    if (xf%state_3 /= WXML_STATE_3_INSIDE_INTSUBSET) &
       call wxml_fatal("Cannot define Entity here: "//name)
       
+    if (xf%state_2 == WXML_STATE_2_INSIDE_PI) then
+      call close_start_tag(xf)
+      xf%state_2 = WXML_STATE_2_OUTSIDE_TAG
+    endif
+
     call add_internal_entity(xf%entityList, name, value)
 
     call add_eol(xf)
@@ -370,13 +389,18 @@ contains
     character(len=*), intent(in), optional :: public
     character(len=*), intent(in), optional :: notation
 
-    if (xf%state_2 == WXML_STATE_2_INSIDE_DOCTYPE) then
+    if (xf%state_3 == WXML_STATE_3_DURING_DTD) then
       call add_to_buffer(" [", xf%buffer)
-      xf%state_2 = WXML_STATE_2_INSIDE_INTSUBSET
+      xf%state_3 = WXML_STATE_3_INSIDE_INTSUBSET
     endif
 
-    if (xf%state_2 /= WXML_STATE_2_INSIDE_INTSUBSET) &
+    if (xf%state_3 /= WXML_STATE_3_INSIDE_INTSUBSET) &
       call wxml_fatal("Cannot define Entity here: "//name)
+
+    if (xf%state_2 == WXML_STATE_2_INSIDE_PI) then
+      call close_start_tag(xf)
+      xf%state_2 = WXML_STATE_2_OUTSIDE_TAG
+    endif
 
     !Ideally we'd check here - but perhaps the notation has been specified
     ! externally ...
@@ -420,14 +444,19 @@ contains
     character(len=*), intent(in), optional :: system
     character(len=*), intent(in), optional :: public
 
-    if (xf%state_2 == WXML_STATE_2_INSIDE_DOCTYPE) then
+    if (xf%state_3 == WXML_STATE_3_DURING_DTD) then
       call add_to_buffer(" [", xf%buffer)
-      xf%state_2 = WXML_STATE_2_INSIDE_INTSUBSET
+      xf%state_3 = WXML_STATE_3_INSIDE_INTSUBSET
     endif
 
-    if (xf%state_2 /= WXML_STATE_2_INSIDE_INTSUBSET) &
+    if (xf%state_3 /= WXML_STATE_3_INSIDE_INTSUBSET) &
       call wxml_fatal("Cannot define Notation here: "//name)
     
+    if (xf%state_2 == WXML_STATE_2_INSIDE_PI) then
+      call close_start_tag(xf)
+      xf%state_2 = WXML_STATE_2_OUTSIDE_TAG
+    endif
+
     if (notation_exists(xf%nList, name)) &
       call wxml_fatal("Tried to create duplicate notation: "//name)
     
@@ -460,13 +489,18 @@ contains
     type(xmlf_t), intent(inout) :: xf
     character(len=*), intent(in) :: string
 
-    if (xf%state_2 == WXML_STATE_2_INSIDE_DOCTYPE) then
+    if (xf%state_3 == WXML_STATE_3_DURING_DTD) then
       call add_to_buffer(" [", xf%buffer)
-      xf%state_2 = WXML_STATE_2_INSIDE_INTSUBSET
+      xf%state_3 = WXML_STATE_3_INSIDE_INTSUBSET
     endif
 
-    if (xf%state_2 /= WXML_STATE_2_INSIDE_INTSUBSET) &
+    if (xf%state_3 /= WXML_STATE_3_INSIDE_INTSUBSET) &
       call wxml_fatal("Cannot write to DTD here "//string)
+
+    if (xf%state_2 == WXML_STATE_2_INSIDE_PI) then
+      call close_start_tag(xf)
+      xf%state_2 = WXML_STATE_2_OUTSIDE_TAG
+    endif
 
     call add_to_buffer(string, xf%buffer)
   end subroutine xml_AddStringToDTD
@@ -514,11 +548,13 @@ contains
     character(len=*), intent(in), optional :: data
     logical, optional :: xml
     
-    call close_start_tag(xf)
     if (xf%state_1 == WXML_STATE_1_JUST_OPENED) then
       xf%state_1 = WXML_STATE_1_BEFORE_ROOT
-    else
+      call close_start_tag(xf)
+    elseif (xf%state_1 == WXML_STATE_1_BEFORE_ROOT &
+         .or. xf%state_1 == WXML_STATE_1_DURING_ROOT) then
       call add_eol(xf)
+      call close_start_tag(xf)
     endif
 
     if (.not.present(xml) .and. .not.checkPITarget(name)) &
@@ -544,14 +580,16 @@ contains
     if (index(comment,'--') > 0 .or. comment(len(comment):) == '-') &
          call wxml_error("Tried to output invalid comment "//comment)
     
-    call close_start_tag(xf)
-    call add_eol(xf)
-    call add_to_buffer("<!--", xf%buffer)
-    call add_to_buffer(comment, xf%buffer)
-    call add_to_buffer("-->", xf%buffer)
     if (xf%state_1 == WXML_STATE_1_JUST_OPENED) &
          xf%state_1 = WXML_STATE_1_BEFORE_ROOT
     
+    call close_start_tag(xf)
+    if (xf%state_1 == WXML_STATE_1_BEFORE_ROOT) &
+      call add_eol(xf)
+    call add_to_buffer("<!--", xf%buffer)
+    call add_to_buffer(comment, xf%buffer)
+    call add_to_buffer("-->", xf%buffer)
+
   end subroutine xml_AddComment
 
 
@@ -581,7 +619,19 @@ contains
         call wxml_error(xf, "namespace prefix not registered: "//prefixOfQName(name))
     endif
     
-    !call add_eol(xf)
+    if (xf%state_3 /= WXML_STATE_3_BEFORE_DTD) then
+      select case (xf%state_3)
+      case (WXML_STATE_3_DURING_DTD)
+        call add_to_buffer('>', xf%buffer)
+        xf%state_3 = WXML_STATE_3_AFTER_DTD
+      case (WXML_STATE_3_INSIDE_INTSUBSET)
+        call add_eol(xf)
+        call add_to_buffer(']>', xf%buffer)
+        call add_eol(xf)
+        xf%state_3 = WXML_STATE_3_AFTER_DTD
+      end select
+    endif
+
     call close_start_tag(xf)
     call push_elstack(name,xf%stack)
     call add_to_buffer("<"//name, xf%buffer)
@@ -823,21 +873,12 @@ contains
       call checkNamespacesWriting(xf%dict, xf%nsDict, len(xf%stack))
       if (len(xf%dict) > 0)  call write_attributes(xf)
       call add_to_buffer('>', xf%buffer)
+      xf%state_2 = WXML_STATE_2_OUTSIDE_TAG
     case (WXML_STATE_2_INSIDE_PI)
       if (len(xf%dict) > 0)  call write_attributes(xf)
       call add_to_buffer('?>', xf%buffer)
-    case (WXML_STATE_2_INSIDE_DOCTYPE)
-      call add_to_buffer('>', xf%buffer)
-    case (WXML_STATE_2_INSIDE_INTSUBSET)
-      call add_eol(xf)
-      call add_to_buffer(']>', xf%buffer)
-    case (WXML_STATE_2_OUTSIDE_TAG)
-      continue
-    case default
-      call wxml_fatal("Internal library error")
+      xf%state_2 = WXML_STATE_2_OUTSIDE_TAG
     end select
-    
-    xf%state_2 = WXML_STATE_2_OUTSIDE_TAG
     
   end subroutine close_start_tag
 

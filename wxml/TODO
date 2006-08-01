@@ -2,11 +2,12 @@ check entity references while outputting? with ref to standalone?
 check unescaped attribute values
 check usage of buffer DONE
 what happens to unbroken character data?, indeed when we put anything > 1024 chars into the buffer? DONE
-Fix str bug.
+Fix str bug. done
 can we output PIs and comments in the middle of the DTD? No, and we need another state variable to do that properly
-we should be able to output random stuff into the DTD too.
+we should be able to output random stuff into the DTD too. done
 break m_wxml_core into multiple files. NO
 m4 creation of m_wxml_overloads.f90 - DONE
 autodetect xml_recl
-allow for >2 dimensional array output?
+allow for >2 dimensional array output? done
 allow character entities in XML Names
+make abort work properly, check all usages of abort/error
