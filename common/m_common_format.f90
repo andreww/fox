@@ -558,7 +558,7 @@ contains
       dec = min(dec, digits(1.0_sp)-e)
 
       if (dec > 0) n = n + 1
-      if (abs(x) > 0.0_sp) n = n + 1
+      if (abs(x) >= 1.0_sp) n = n + 1
 
       ! Need to know if there's an overflow ....
       if (e+dec+1 > 0) then
@@ -903,7 +903,7 @@ contains
       dec = min(dec, digits(1.0_dp)-e)
 
       if (dec > 0) n = n + 1
-      if (abs(x) > 0.0_dp) n = n + 1
+      if (abs(x) > 1.0_dp) n = n + 1
 
       ! Need to know if there's an overflow ....
       if (e+dec+1 > 0) then
