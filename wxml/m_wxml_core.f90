@@ -71,6 +71,7 @@ module m_wxml_core
     integer                   :: state_2 = -1
     integer                   :: state_3 = -1
     logical                   :: indenting_requested
+    integer                   :: indent = 0
     character, pointer        :: name(:)
     type(namespaceDictionary) :: nsDict
     type(entity_list)         :: entityList
@@ -202,6 +203,7 @@ contains
     if (present(indent)) then
       xf%indenting_requested = indent
     endif
+    xf%indent = 0
     
     if (decl) then
       call xml_AddXMLDeclaration(xf,encoding='UTF-8')
@@ -359,6 +361,7 @@ contains
       else
         call add_to_buffer("'"//system//"'", xf%buffer)
       endif
+      call add_to_buffer(">", xf%buffer)
     endif
   end subroutine xml_AddParameterEntity
 
@@ -644,7 +647,20 @@ contains
           call wxml_error(xf, "Root element name does not match DTD: "//name)
       endif
       call close_start_tag(xf)
+      if (xf%state_3 /= WXML_STATE_3_BEFORE_DTD) then
+        select case (xf%state_3)
+        case (WXML_STATE_3_DURING_DTD)
+          call add_to_buffer('>', xf%buffer)
+          xf%state_3 = WXML_STATE_3_AFTER_DTD
+        case (WXML_STATE_3_INSIDE_INTSUBSET)
+          xf%state_3 = WXML_STATE_3_AFTER_DTD
+          call add_eol(xf)
+          call add_to_buffer(']>', xf%buffer)
+        end select
+      endif
       call add_eol(xf)
+    case (WXML_STATE_1_DURING_ROOT)
+      call close_start_tag(xf)
     case (WXML_STATE_1_AFTER_ROOT)
       call wxml_error(xf, "Two root elements: "//name)
     end select
@@ -658,19 +674,6 @@ contains
         call wxml_error(xf, "Namespace prefix not registered: "//prefixOfQName(name))
     endif
     
-    if (xf%state_3 /= WXML_STATE_3_BEFORE_DTD) then
-      select case (xf%state_3)
-      case (WXML_STATE_3_DURING_DTD)
-        call add_to_buffer('>', xf%buffer)
-      case (WXML_STATE_3_INSIDE_INTSUBSET)
-        call add_eol(xf)
-        call add_to_buffer(']>', xf%buffer)
-        call add_eol(xf)
-      end select
-      xf%state_3 = WXML_STATE_3_AFTER_DTD
-    endif
-
-    call close_start_tag(xf)
     call push_elstack(name,xf%stack)
     call add_to_buffer("<"//name, xf%buffer)
     xf%state_2 = WXML_STATE_2_INSIDE_ELEMENT
@@ -971,7 +974,11 @@ contains
     
     ! In case we still have a zero-length stack, we must make
     ! sure indent_level is not less than zero.
-    indent_level = max(len(xf%stack) - 1, 0)
+    if (xf%state_3 == WXML_STATE_3_INSIDE_INTSUBSET) then
+      indent_level = 2
+    else
+      indent_level = max(len(xf%stack) - 1, 0)
+    endif
     
     !We must flush here (rather than just adding an eol character)
     !since we don't know what the eol character is on this system.

@@ -19,8 +19,8 @@ call xml_AddNotation(xf, "GIF", "http://lzw.org")
 call xml_AddComment(xf, "a comment ...")
 call xml_AddExternalEntity(xf, "def", "http://blah", public="h", notation="GIF")
 
-call xml_AddXMLStylesheet(xf,href="simple.css",type="text/css",media="braille")
-call xml_AddXMLPI(xf,name="ccode", data="{hello_world();}")
+!call xml_AddXMLStylesheet(xf,href="simple.css",type="text/css",media="braille")
+!call xml_AddXMLPI(xf,name="ccode", data="{hello_world();}")
 
 call xml_NewElement(xf,"john")
 call xml_AddAttribute(xf,"age",age)

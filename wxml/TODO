@@ -1,4 +1,6 @@
 make abort work properly, check all usages of abort/error
+spurious linefeed at end of DOCTYPE (see wxml_example)
+get indentation working properly again: meaningful on/off option
 
 autodetect xml_recl - don't bother for the moment
 check entity references while outputting? with ref to standalone? - wait for proprt unicode spuport
