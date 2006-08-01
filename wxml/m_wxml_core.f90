@@ -67,9 +67,9 @@ module m_wxml_core
     type(buffer_t)            :: buffer
     type(elstack_t)           :: stack
     type(dictionary_t)        :: dict
-    integer                   :: state_1
-    integer                   :: state_2
-    integer                   :: state_3
+    integer                   :: state_1 = -1
+    integer                   :: state_2 = -1
+    integer                   :: state_3 = -1
     logical                   :: indenting_requested
     character, pointer        :: name(:)
     type(namespaceDictionary) :: nsDict
@@ -240,6 +240,9 @@ contains
         call xml_AddPseudoAttribute(xf, "standalone", "no")
       endif
     endif
+    call close_start_tag(xf)
+    ! We have to close explicitly here to ensure nothing gets tied
+    ! up in the XML declaration
     xf%state_1 = WXML_STATE_1_BEFORE_ROOT
   end subroutine xml_AddXMLDeclaration
 

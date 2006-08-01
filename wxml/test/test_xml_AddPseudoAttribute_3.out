@@ -1,0 +1,6 @@
+ERROR(wxml) in writing to file 
+test.xml
+duplicate pseudo-attribute name: att
+WARNING(wxml) in writing to file 
+test.xml
+Invalid XML document produced: No root element
