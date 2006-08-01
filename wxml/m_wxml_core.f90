@@ -581,7 +581,7 @@ contains
         call wxml_error(xf, "namespace prefix not registered: "//prefixOfQName(name))
     endif
     
-    call add_eol(xf)
+    !call add_eol(xf)
     call close_start_tag(xf)
     call push_elstack(name,xf%stack)
     call add_to_buffer("<"//name, xf%buffer)
@@ -727,6 +727,7 @@ contains
     case (WXML_STATE_2_INSIDE_ELEMENT)
       call checkNamespacesWriting(xf%dict, xf%nsDict, len(xf%stack))
       if (len(xf%dict) > 0) call write_attributes(xf)
+      call add_eol(xf)
       call add_to_buffer("/>",xf%buffer)
       call devnull(pop_elstack(xf%stack))
     case (WXML_STATE_2_OUTSIDE_TAG)
