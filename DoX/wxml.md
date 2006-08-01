@@ -118,12 +118,22 @@ case the delimiter may be changed to any other single character using an optiona
 
 ### Namespace-aware functions:
 
-* `xml_AddNamespace`  
+* `xml_DeclareNamespace`  
 **nsURI** *string*: The URI of the namespace   
-(**prefix**) *prefix*: The namespace prefix to be used in the document. If absent, then the default namespace is affected.
+(**prefix**) *string*: The namespace prefix to be used in the document. If absent, then the default namespace is affected.
 
-Add an XML Namespace declaration. This function may be called at any time, and its precise effect depends on when it is called.
-If it is called immediately prior to an xml_NewElement call, then the namespace will be declared in that next element, and will therefore take effect in all child elements.
+Add an XML Namespace declaration. This function may be called at any time, and its precise effect depends on when it is called; see below
+
+* `xml_UndeclareNamespace`  
+(**prefix**) *string*: The namespace prefix to be used in the document. If absent, then the default namespace is affected.
+
+Undeclare an XML namespace. This is equivalent to declaring an namespace with an empty URI, and renders the namespace ineffective for the scope of the declaration. For explanation of its scope, see below.
+
+**NB** Use of xml_UndeclareNamespace implies that the resultant document will be compliant with XML Namespaces 1.1, but not 1.0
+
+#### Scope of namespace functions
+
+If  `xml_[Un]declareNamespace` is called immediately prior to an xml_NewElement call, then the namespace will be declared in that next element, and will therefore take effect in all child elements.
 
 If it is called prior to an xml_NewElement call, but that element has namespaced attributes 
 

@@ -138,15 +138,21 @@ contains
     end if
   end function checkSystemId
     
+
   function checkIRI(IRI) result(good)
     character(len=*), intent(in) :: IRI
     logical :: good
     !By [Namespaces] section 9, there is no
     ! formal definition of IRI's yet.
     ! The result of this depends whether we are doing
-    ! namespaces 1.1 or 1.0 ...
+    ! namespaces 1.1 or 1.0. Firstly, because 1.1
+    ! allows IRIs as well as URIs, and secondly because
+    ! 1.1 allows undeclaring prefixes, so an empty
+    ! string is valid here (which is how FoX signals
+    ! an undeclared prefix)
     good = .true.
   end function checkIRI
+
 
   pure function checkCharacterEntityReference(code) result(good)
     character(len=*), intent(in) :: code

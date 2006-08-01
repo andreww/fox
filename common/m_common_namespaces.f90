@@ -49,6 +49,7 @@ module m_common_namespaces
      module procedure getURIofDefaultNS, getURIofPrefixedNS
   end interface
   public :: isPrefixInForce
+  public :: isDefaultNSInForce
 
   public :: dumpnsdict !FIXME
 
@@ -619,6 +620,19 @@ contains
     enddo
 
   end function isPrefixInForce
+
+
+  pure function isDefaultNSInForce(nsDict) result(force)
+    type(namespaceDictionary), intent(in) :: nsDict
+    logical :: force
+    integer :: i, l_s
+
+    force = .false.
+    l_s = ubound(nsDict%defaults, 1)
+    if (l_s > 0) &
+      force = (size(nsdict%defaults(l_s)%URI) > 0)
+
+  end function isDefaultNSInForce
 
 
   pure function getPrefixIndex(nsDict, prefix) result(p)

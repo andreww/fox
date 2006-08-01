@@ -21,7 +21,9 @@ module FoX_wxml
   public :: xml_AddAttribute
   public :: xml_AddPseudoAttribute
 
-  public :: xml_AddNamespace
+  public :: xml_DeclareNamespace
+  public :: xml_UndeclareNamespace
+
   public :: xml_AddDOCTYPE
   public :: xml_AddParameterEntity
   public :: xml_AddInternalEntity

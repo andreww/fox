@@ -51,13 +51,13 @@ call xml_AddAttribute(xf,"units","Ryd")
 
 call xml_AddEntityReference(xf, '#x2A9')
 
-call xml_AddNamespace(xf, "http://www.w3.org/1999/xhtml", "h")
-call xml_AddNamespace(xf, "http://www.w3.org/1999/svg", "svg")
+call xml_DeclareNamespace(xf, "http://www.w3.org/1999/xhtml", "h")
+call xml_DeclareNamespace(xf, "http://www.w3.org/1999/svg", "svg")
 call xml_NewElement(xf, "h:html")
 call xml_NewElement(xf, "svg:svg")
 call xml_EndElement(xf, "svg:svg")
 call xml_NewElement(xf, "h:head")
-call xml_Addnamespace(xf,"http://www.xml-cml.org/schema", "cml")
+call xml_DeclareNamespace(xf,"http://www.xml-cml.org/schema", "cml")
 call xml_AddAttribute(xf, "cml:convention", "eMinerals")
 call xml_EndElement(xf, "h:head")
 

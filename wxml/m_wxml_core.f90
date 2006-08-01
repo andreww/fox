@@ -16,7 +16,7 @@ module m_wxml_core
     checkQName, prefixOfQName, localpartofQName
   use m_common_namespaces, only: namespaceDictionary, getnamespaceURI
   use m_common_namespaces, only: initnamespaceDictionary, destroynamespaceDictionary
-  use m_common_namespaces, only: addDefaultNS, addPrefixedNS, isPrefixInForce
+  use m_common_namespaces, only: addDefaultNS, addPrefixedNS, isPrefixInForce, isDefaultNSInForce
   use m_common_namespaces, only: checkNamespacesWriting, checkEndNamespaces, dumpnsdict
   use m_common_notations, only: notation_list, init_notation_list, destroy_notation_list, &
     add_notation, notation_exists
@@ -92,7 +92,8 @@ module m_wxml_core
   public :: xml_AddEntityReference
   public :: xml_AddAttribute
   public :: xml_AddPseudoAttribute
-  public :: xml_AddNamespace
+  public :: xml_DeclareNamespace
+  public :: xml_UnDeclareNamespace
   public :: xml_AddDOCTYPE
   public :: xml_AddParameterEntity
   public :: xml_AddInternalEntity
@@ -861,7 +862,7 @@ contains
   end subroutine xml_EndElement
 
 
-  subroutine xml_AddNamespace(xf, nsURI, prefix, xml)
+  subroutine xml_DeclareNamespace(xf, nsURI, prefix, xml)
     type(xmlf_t), intent(inout)   :: xf
     character(len=*), intent(in) :: nsURI
     character(len=*), intent(in), optional :: prefix
@@ -870,7 +871,10 @@ contains
     call check_xf(xf)
     
     if (xf%state_1 == WXML_STATE_1_AFTER_ROOT) &
-         call wxml_error(xf, "adding namespace outside element content")
+      call wxml_error(xf, "adding namespace outside element content")
+
+    if (len(nsURI) == 0) &
+      call wxml_error(xf, "adding namespace with empty URI")
     
     if (present(prefix)) then
       call addPrefixedNS(xf%nsDict, prefix, nsURI, len(xf%stack)+1)
@@ -878,7 +882,25 @@ contains
       call addDefaultNS(xf%nsDict, nsURI, len(xf%stack)+1)
     endif
     
-  end subroutine xml_AddNamespace
+  end subroutine xml_DeclareNamespace
+
+
+  subroutine xml_UndeclareNamespace(xf, prefix)
+    type(xmlf_t), intent(inout)   :: xf
+    character(len=*), intent(in), optional :: prefix
+    
+    call check_xf(xf)
+    
+    if (xf%state_1 == WXML_STATE_1_AFTER_ROOT) &
+      call wxml_error(xf, "Undeclaring namespace outside element content")
+    
+    if (present(prefix)) then
+      call addPrefixedNS(xf%nsDict, prefix, "", len(xf%stack)+1)
+    else
+      call addDefaultNS(xf%nsDict, "", len(xf%stack)+1)
+    endif
+    
+  end subroutine xml_UndeclareNamespace
 
 
   subroutine xml_Close(xf)

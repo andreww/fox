@@ -4,7 +4,7 @@ module m_wcml_core
   use m_common_format, only: str
   use FoX_wxml, only: xmlf_t
   use FoX_wxml, only: xml_NewElement, xml_AddAttribute
-  use FoX_wxml, only: xml_EndElement, xml_AddNamespace
+  use FoX_wxml, only: xml_EndElement, xml_DeclareNamespace
   use m_wcml_stml, only: stmAddValue
 
   implicit none
@@ -59,9 +59,9 @@ contains
     character(len=*), intent(in), optional :: dictref
     character(len=*), intent(in), optional :: ref
 
-    call xml_AddNamespace(xf, 'http://www.xml-cml.org/schema')
-    call xml_AddNamespace(xf, 'http://www.w3.org/2001/XMLSchema', 'xsd')
-    call xml_AddNamespace(xf, 'http://purl.org/dc/elements/1.1/title', 'dc')
+    call xml_DeclareNamespace(xf, 'http://www.xml-cml.org/schema')
+    call xml_DeclareNamespace(xf, 'http://www.w3.org/2001/XMLSchema', 'xsd')
+    call xml_DeclareNamespace(xf, 'http://purl.org/dc/elements/1.1/title', 'dc')
 ! FIXME TOHW we will want other namespaces in here - particularly for units
 ! once PMR has stabilized that.
 
