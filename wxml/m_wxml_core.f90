@@ -845,7 +845,11 @@ contains
       call add_to_buffer("/>",xf%buffer)
       call devnull(pop_elstack(xf%stack))
     case (WXML_STATE_2_OUTSIDE_TAG)
-      call add_to_buffer("</" //pop_elstack(xf%stack), xf%buffer)
+! XLF does a weird thing here, and if pop_elstack is called as an 
+! argument to the call, it gets called twice. So we have to separate
+! out get_top_... from pop_...
+      call add_to_buffer("</" //get_top_elstack(xf%stack), xf%buffer)
+      call devnull(pop_elstack(xf%stack))
       call add_eol(xf)
       call add_to_buffer(">", xf%buffer)
     case (WXML_STATE_2_INSIDE_PI)

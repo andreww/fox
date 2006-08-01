@@ -10,7 +10,7 @@ then
   else
      echo $1 >> failed.out
      echo "------------" >> failed.out
-     diff -u test.xml $1.xml >> failed.out
+     diff test.xml $1.xml >> failed.out
      echo "------------" >> failed.out
   fi
 elif [ -f $1.out ]
@@ -20,7 +20,7 @@ then
   else
      echo $1 >> failed.out
      echo "------------" >> failed.out
-     diff -u test.out $1.out >> failed.out
+     diff test.out $1.out >> failed.out
      echo "------------" >> failed.out
   fi
 else
@@ -30,9 +30,9 @@ fi
 if [ $passed = yes ]; then
   echo 'PASSED: ' $1 
   echo 'PASSED: ' $1 >> tests.out
-  echo -n '1' >> passed.score
+  echo '1' >> passed.score
 else
   echo 'FAILED: ' $1 
   echo 'FAILED: ' $1 >> tests.out
-  echo -n '1' >> failed.score
+  echo '1' >> failed.score
 fi
