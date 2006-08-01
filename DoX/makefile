@@ -3,7 +3,7 @@
 .SUFFIXES:
 .SUFFIXES: .html .md
 
-OBJECTS = wxml.html str.html
+OBJECTS = wxml.html str.html install.html
 
 default: $(OBJECTS)
 
