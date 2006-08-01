@@ -60,13 +60,11 @@ call xml_NewElement(xf, "h:head")
 call xml_Addnamespace(xf,"http://www.xml-cml.org/schema", "cml")
 call xml_AddAttribute(xf, "cml:convention", "eMinerals")
 call xml_EndElement(xf, "h:head")
-!
-! Writing multidimensional arrays... index order?
-!
-!call xml_AddArray(xf,reshape(y,(/ 16 /)))
-!
+
+call xml_AddCharacters(xf,(/1, 2, 3, 4, 16 /))
+
 ! xml_Close will take care to close all outstanding elements
-!
+
 call xml_Close(xf)
 
 ! Equivalent code:

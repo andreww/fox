@@ -547,15 +547,21 @@ contains
     character(len=*), intent(in)           :: name
     character(len=*), intent(in), optional :: data
     logical, optional :: xml
+
+    print*, 'PI ', name, xf%state_1
     
-    if (xf%state_1 == WXML_STATE_1_JUST_OPENED) then
+    select case (xf%state_1)
+    case (WXML_STATE_1_JUST_OPENED) 
       xf%state_1 = WXML_STATE_1_BEFORE_ROOT
+    case (WXML_STATE_1_BEFORE_ROOT)
       call close_start_tag(xf)
-    elseif (xf%state_1 == WXML_STATE_1_BEFORE_ROOT &
-         .or. xf%state_1 == WXML_STATE_1_DURING_ROOT) then
       call add_eol(xf)
+    case (WXML_STATE_1_DURING_ROOT)
       call close_start_tag(xf)
-    endif
+    case (WXML_STATE_1_AFTER_ROOT)
+      call close_start_tag(xf)
+      call add_eol(xf)
+    end select
 
     if (.not.present(xml) .and. .not.checkPITarget(name)) &
          call wxml_warning(xf, "Invalid PI Target "//name)
@@ -577,15 +583,22 @@ contains
     type(xmlf_t), intent(inout)   :: xf
     character(len=*), intent(in)  :: comment
     
+    select case (xf%state_1)
+    case (WXML_STATE_1_JUST_OPENED) 
+      xf%state_1 = WXML_STATE_1_BEFORE_ROOT
+    case (WXML_STATE_1_BEFORE_ROOT)
+      call close_start_tag(xf)
+      call add_eol(xf)
+    case (WXML_STATE_1_DURING_ROOT)
+      call close_start_tag(xf)
+    case (WXML_STATE_1_AFTER_ROOT)
+      call close_start_tag(xf)
+      call add_eol(xf)
+    end select
+
     if (index(comment,'--') > 0 .or. comment(len(comment):) == '-') &
          call wxml_error("Tried to output invalid comment "//comment)
-    
-    if (xf%state_1 == WXML_STATE_1_JUST_OPENED) &
-         xf%state_1 = WXML_STATE_1_BEFORE_ROOT
-    
-    call close_start_tag(xf)
-    if (xf%state_1 == WXML_STATE_1_BEFORE_ROOT) &
-      call add_eol(xf)
+
     call add_to_buffer("<!--", xf%buffer)
     call add_to_buffer(comment, xf%buffer)
     call add_to_buffer("-->", xf%buffer)
@@ -743,10 +756,19 @@ contains
   end subroutine xml_AddAttribute_Ch
 
 
-  subroutine xml_AddPseudoAttribute_Ch(xf, name, value)
+  subroutine xml_AddPseudoAttribute_Ch(xf, name, value, escape)
     type(xmlf_t), intent(inout)   :: xf
     character(len=*), intent(in)  :: name
     character(len=*), intent(in)  :: value
+    logical, intent(in), optional           :: escape
+
+    logical :: esc
+
+    if (present(escape)) then
+      esc = escape
+    else
+      esc = .true.
+    endif
 
     if (xf%state_2 /= WXML_STATE_2_INSIDE_PI) &
          call wxml_error("PI pseudo-attribute outside PI: "//name)
@@ -761,7 +783,11 @@ contains
     if (index(value, '?>') > 0) &
          call wxml_error(xf, "Invalid pseudo-attribute data: "//value)
     
-    call add_item_to_dict(xf%dict, name, value)
+    if (esc) then
+      call add_item_to_dict(xf%dict, name, escape_string(value))
+    else
+      call add_item_to_dict(xf%dict, name, value)
+    endif
     
   end subroutine xml_AddPseudoAttribute_Ch
 
