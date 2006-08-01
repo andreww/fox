@@ -548,8 +548,6 @@ contains
     character(len=*), intent(in), optional :: data
     logical, optional :: xml
 
-    print*, 'PI ', name, xf%state_1
-    
     select case (xf%state_1)
     case (WXML_STATE_1_JUST_OPENED) 
       xf%state_1 = WXML_STATE_1_BEFORE_ROOT
@@ -661,8 +659,7 @@ contains
 
     logical :: pc
 
-    if (xf%state_2 /= WXML_STATE_2_INSIDE_ELEMENT .and. &
-         xf%state_2 /= WXML_STATE_2_OUTSIDE_TAG)         &
+    if (xf%state_1 /= WXML_STATE_1_DURING_ROOT) &
          call wxml_fatal("Tried to add text section in wrong place: "//chars)
     
     if (present(parsed)) then

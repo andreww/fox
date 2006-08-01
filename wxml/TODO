@@ -1,8 +1,9 @@
-autodetect xml_recl
+make abort work properly, check all usages of abort/error
+
+autodetect xml_recl - don't bother for the moment
 check entity references while outputting? with ref to standalone? - wait for proprt unicode spuport
 check unescaped attribute values - wait for proper unicode support
 allow character entities in XML Names - this requires full unicode support - wait.
-make abort work properly, check all usages of abort/error
 
 check usage of buffer DONE
 what happens to unbroken character data?, indeed when we put anything > 1024 chars into the buffer? DONE

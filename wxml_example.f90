@@ -33,9 +33,9 @@ call xml_NewElement(xf,"tim")
 call xml_AddAttribute(xf,"age",37)
 call xml_AddAttribute(xf,"weight",123.45d0,fmt="r3")
 call xml_AddAttribute(xf,"cholesterol",167.0d0,fmt="r0")
-call xml_EndElement(xf,"tim")
 call xml_AddCharacters(xf,"Ping-pong")
 call xml_AddCharacters(xf,"champion")
+call xml_EndElement(xf,"tim")
 
 call xml_AddCharacters(xf," in years < 2004")
 
