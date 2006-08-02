@@ -661,7 +661,6 @@ contains
         end select
       endif
       call add_eol(xf)
-      xf%state_1 = WXML_STATE_1_DURING_ROOT
     case (WXML_STATE_1_DURING_ROOT)
       call close_start_tag(xf)
     case (WXML_STATE_1_AFTER_ROOT)
@@ -682,6 +681,7 @@ contains
     xf%state_2 = WXML_STATE_2_INSIDE_ELEMENT
     call reset_dict(xf%dict)
     xf%indent = xf%indent + indent_inc
+    xf%state_1 = WXML_STATE_1_DURING_ROOT
 
   end subroutine xml_NewElement
   
