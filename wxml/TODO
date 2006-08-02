@@ -1,8 +1,8 @@
 check all uses of abort/error
 possible str bug on XLF?
 check eol handling of PIs in chardata
-check failing tests in wxml
 pass arbitrary data to PI data.
+some tests are failing because aborting is losing all output to test.out
 
 autodetect xml_recl - don't bother for the moment
 check entity references while outputting? with ref to standalone? - wait for proprt unicode spuport
