@@ -440,15 +440,11 @@ contains
   function str_real_sp_fmt(x, fmt) result(s)
     real(sp), intent(in) :: x
     character(len=*), intent(in) :: fmt
-#ifdef BROKEN_COMPILER
-    character(len=100) :: s
-#else
     character(len=str_real_sp_fmt_len(x, fmt)) :: s
-#endif
 
     integer :: sig, dec
     integer :: e, n
-    character(len=len(s)) :: num !this wll always be enough memory.
+    character(len=str_real_sp_fmt_len(x, fmt)) :: num !this wll always be enough memory.
 
     if (.not.checkFmt(fmt)) &
       call FoX_error("Invalid format: "//fmt)
@@ -790,15 +786,11 @@ contains
   function str_real_dp_fmt(x, fmt) result(s)
     real(dp), intent(in) :: x
     character(len=*), intent(in) :: fmt
-#ifdef BROKEN_COMPILER
-    character(len=100) :: s
-#else
     character(len=str_real_dp_fmt_len(x, fmt)) :: s
-#endif
 
     integer :: sig, dec
     integer :: e, n
-    character(len=len(s)) :: num !this will always be enough memory.
+    character(len=str_real_dp_fmt_len(x, fmt)) :: num !this will always be enough memory.
 
     if (.not.checkFmt(fmt)) &
       call FoX_error("Invalid format: "//fmt)
