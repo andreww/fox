@@ -37,9 +37,10 @@ install: $(OBJFILES)
 clean:
 	rm -f *.o  *.$(MOD_EXT) $(LIBRARY)
 # DO NOT DELETE THIS LINE - used by make depend
-FoX_wcml.o: m_wcml_coma.o m_wcml_core.o m_wcml_geometry.o m_wcml_molecule.o
-FoX_wcml.o: m_wcml_parameter.o m_wcml_property.o m_wcml_stml.o
+FoX_wcml.o: m_wcml_coma.o m_wcml_core.o m_wcml_geometry.o m_wcml_lattice.o
+FoX_wcml.o: m_wcml_metadata.o m_wcml_molecule.o m_wcml_parameter.o
+FoX_wcml.o: m_wcml_property.o m_wcml_stml.o
 m_wcml_coma.o: m_wcml_stml.o
-m_wcml_core.o: m_wcml_stml.o
+m_wcml_lattice.o: m_wcml_stml.o
 m_wcml_parameter.o: m_wcml_stml.o
 m_wcml_property.o: m_wcml_stml.o
