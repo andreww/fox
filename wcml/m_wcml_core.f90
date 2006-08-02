@@ -5,7 +5,6 @@ module m_wcml_core
   use FoX_wxml, only: xmlf_t
   use FoX_wxml, only: xml_NewElement, xml_AddAttribute
   use FoX_wxml, only: xml_EndElement, xml_DeclareNamespace
-  use m_wcml_stml, only: stmAddValue
 
   implicit none
   private
@@ -47,6 +46,7 @@ contains
     if (present(ref)) call xml_AddAttribute(xf, 'ref', ref)
 
   end subroutine cmlStartCml
+
 
   subroutine cmlEndCml(xf)
     type(xmlf_t), intent(inout) :: xf

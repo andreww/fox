@@ -1,9 +1,11 @@
-* Check allowed attributes for parameter
+* Check allowed attributes for parameter (and all other elements)
 * Do m4 correctly for stml
 * move eigenvalues to m_wcml_coma, and allow for assumed-shape arrays - done
-* move Crystal to m_wcml_lattice
+* move Crystal to m_wcml_lattice - done
+* provide interfaces for cell-><lattice> & lattice-><crystal>
 * Tidy up m_wcml_core
 * test test test
 * explicitly list all public interfaces
 * document
 * find units namespace
+* share definition of sp/dp

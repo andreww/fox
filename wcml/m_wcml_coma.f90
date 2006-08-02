@@ -10,8 +10,8 @@ module m_wcml_coma
   implicit none
   private
 
-  integer, private, parameter ::  sp = selected_real_kind(6,30)
-  integer, private, parameter ::  dp = selected_real_kind(14,100)
+  integer, parameter ::  sp = selected_real_kind(6,30)
+  integer, parameter ::  dp = selected_real_kind(14,100)
 
   public :: cmlAddBand
   public :: cmlStartBandList
