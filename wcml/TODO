@@ -1,2 +1,9 @@
 * Check allowed attributes for parameter
 * Do m4 correctly for stml
+* move eigenvalues to m_wcml_coma, and allow for assumed-shape arrays - done
+* move Crystal to m_wcml_lattice
+* Tidy up m_wcml_core
+* test test test
+* explicitly list all public interfaces
+* document
+* find units namespace
