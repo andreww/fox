@@ -50,7 +50,7 @@ This is an opaque type representing the XML file handle. Each function requires 
 * `xml_OpenFile`  
 **filename**: *string*: Filename to be opened  
 **xf**: *xmlf_t*: XML File handle  
-(**indent**): *logical*:  Should the output XML be indented according to element depth?
+(**broken_indenting**): *logical*:  Should the output XML be pretty-printed?
   *default: false*  
 (**channel**): *integer*: What Fortran file handle should the XML file be attached to? 
   *default: picked by the library at runtime*  
@@ -60,6 +60,15 @@ This is an opaque type representing the XML file handle. Each function requires 
   *default: yes*
 
 Open a file for writing XML
+
+By default, the XML will have no extraneous text nodes. This has the effect of it
+looking slightly ugly, since there will be no newlines inserted between tags.
+
+This behaviour can be changed to produce slightly nicer looking XML, by switching
+on broken_indenting. This will insert newlines and spaces between some tags where
+they are unlikely to carry semantics. Note, though, that this does result in 
+the XML produced being not quite what was asked for, since extra characters and
+text nodes have been inserted.
 
 NB: The **replace** option should be noted. By default, xml_OpenFile will fail with a runtime error if you try and write to an existing file. If you are sure you want to continue on in such a case, then you can specify `**replace**=.true.` and any existing files will be overwritten. If finer granularity is required over how to proceed in such cases, use the Fortran `inquire` statement in your code. There is no 'append' functionality by design - any XML file created by appending to an existing file would almost certainly be invalid.
 

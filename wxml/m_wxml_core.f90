@@ -49,6 +49,8 @@ module m_wxml_core
   !We are inside a Processing Instruction tag
   integer, parameter :: WXML_STATE_2_INSIDE_ELEMENT = 2
   !We are inside an element tag.
+  integer, parameter :: WXML_STATE_2_IN_CHARDATA = 3
+  !We are inside deliberately-constructed text. (this is only necessary for broken_indenting)
 
   ! status wrt DTD
   integer, parameter :: WXML_STATE_3_BEFORE_DTD = 0
@@ -71,7 +73,7 @@ module m_wxml_core
     integer                   :: state_1 = -1
     integer                   :: state_2 = -1
     integer                   :: state_3 = -1
-    logical                   :: indenting_requested
+    logical                   :: broken_indenting
     integer                   :: indent = 0
     character, pointer        :: name(:)
     type(namespaceDictionary) :: nsDict
@@ -140,10 +142,10 @@ module m_wxml_core
 
 contains
 
-  subroutine xml_OpenFile(filename, xf, indent, channel, replace, addDecl)
+  subroutine xml_OpenFile(filename, xf, broken_indenting, channel, replace, addDecl)
     character(len=*), intent(in)  :: filename
     type(xmlf_t), intent(inout)   :: xf
-    logical, intent(in), optional :: indent
+    logical, intent(in), optional :: broken_indenting
     integer, intent(in), optional :: channel
     logical, intent(in), optional :: replace
     logical, intent(in), optional :: addDecl
@@ -200,10 +202,12 @@ contains
     xf%state_2 = WXML_STATE_2_OUTSIDE_TAG
     xf%state_3 = WXML_STATE_3_BEFORE_DTD
     
-    xf%indenting_requested = .true.
-    if (present(indent)) then
-      xf%indenting_requested = indent
+    if (present(broken_indenting)) then
+      xf%broken_indenting = broken_indenting
+    else
+      xf%broken_indenting = .false.
     endif
+      
     xf%indent = 0
     
     if (decl) then
@@ -575,6 +579,8 @@ contains
     character(len=*), intent(in), optional :: data
     logical, optional :: xml
 
+    integer :: state_2
+
     call check_xf(xf)
     
     select case (xf%state_1)
@@ -609,6 +615,8 @@ contains
   subroutine xml_AddComment(xf,comment)
     type(xmlf_t), intent(inout)   :: xf
     character(len=*), intent(in)  :: comment
+
+    integer :: state_2
     
     call check_xf(xf)
     
@@ -620,6 +628,7 @@ contains
       call add_eol(xf)
     case (WXML_STATE_1_DURING_ROOT)
       call close_start_tag(xf)
+      if (xf%broken_indenting.and.xf%state_2 == WXML_STATE_2_OUTSIDE_TAG) call add_eol(xf)
     case (WXML_STATE_1_AFTER_ROOT)
       call close_start_tag(xf)
       call add_eol(xf)
@@ -662,6 +671,7 @@ contains
       call add_eol(xf)
     case (WXML_STATE_1_DURING_ROOT)
       call close_start_tag(xf)
+      if (xf%broken_indenting.and.xf%state_2 == WXML_STATE_2_OUTSIDE_TAG) call add_eol(xf)
     case (WXML_STATE_1_AFTER_ROOT)
       call wxml_error(xf, "Two root elements: "//name)
     end select
@@ -713,7 +723,7 @@ contains
       call add_to_buffer("<![CDATA["//chars//"]]>", xf%buffer)
     endif
     
-    xf%state_2 = WXML_STATE_2_OUTSIDE_TAG
+    xf%state_2 = WXML_STATE_2_IN_CHARDATA
   end subroutine xml_AddCharacters_Ch
 
   
@@ -728,19 +738,18 @@ contains
     !well-formed output, unless we tie the sax parser
     !in as well ...
 
-    !This check is wrong. We should be able to add them before
-    ! & after tags.
-    if (xf%state_2 /= WXML_STATE_2_INSIDE_ELEMENT .and. &
-      xf%state_2 /= WXML_STATE_2_OUTSIDE_TAG)         &
-      call wxml_fatal("Tried to add entity reference in wrong place: "//entityref)
-
     call close_start_tag(xf)
+
+    if (xf%state_2 /= WXML_STATE_2_OUTSIDE_TAG .and. &
+      xf%state_2 /= WXML_STATE_2_IN_CHARDATA)         &
+      call wxml_fatal("Tried to add entity reference in wrong place: "//entityref)
 
     if (.not.checkCharacterEntityReference(entityref)) then
       !it's not just a unicode entity
       call wxml_warning("Entity reference added - document may not be well-formed")
     endif
     call add_to_buffer('&'//entityref//';', xf%buffer)
+    xf%state_2 = WXML_STATE_2_IN_CHARDATA
   end subroutine xml_AddEntityReference
 
 
@@ -835,7 +844,7 @@ contains
     character(len=*), intent(in)            :: name
 
     call check_xf(xf)
-    
+
     if (len(xf%stack) == 0) &
       call wxml_fatal(xf,'Trying to close '//name//' but no tags are open.')
 
@@ -847,28 +856,33 @@ contains
     case (WXML_STATE_2_INSIDE_ELEMENT)
       call checkNamespacesWriting(xf%dict, xf%nsDict, len(xf%stack))
       if (len(xf%dict) > 0) call write_attributes(xf)
-      if (len(xf%stack) > 1) call add_eol(xf)
-      call add_to_buffer("/>",xf%buffer)
+      if (xf%broken_indenting) then
+        call add_to_buffer("/>",xf%buffer)
+      else
+        call add_eol(xf)
+        call add_to_buffer("/>",xf%buffer)
+      endif
       call devnull(pop_elstack(xf%stack))
-    case (WXML_STATE_2_OUTSIDE_TAG)
+    case (WXML_STATE_2_OUTSIDE_TAG, WXML_STATE_2_IN_CHARDATA)
+      if (xf%broken_indenting.and.xf%state_2==WXML_STATE_2_OUTSIDE_TAG) call add_eol(xf)
 ! XLF does a weird thing here, and if pop_elstack is called as an 
 ! argument to the call, it gets called twice. So we have to separate
 ! out get_top_... from pop_...
       call add_to_buffer("</" //get_top_elstack(xf%stack), xf%buffer)
       call devnull(pop_elstack(xf%stack))
-      call add_eol(xf)
+      if (.not.xf%broken_indenting) call add_eol(xf)
       call add_to_buffer(">", xf%buffer)
     case (WXML_STATE_2_INSIDE_PI)
       call close_start_tag(xf)
     end select
-    
+
     call checkEndNamespaces(xf%nsDict, len(xf%stack)+1)
     
     if (is_empty(xf%stack)) then
       xf%state_1 = WXML_STATE_1_AFTER_ROOT
     endif
     xf%state_2 = WXML_STATE_2_OUTSIDE_TAG
-    
+
   end subroutine xml_EndElement
 
 
@@ -986,10 +1000,10 @@ contains
     !We must flush here (rather than just adding an eol character)
     !since we don't know what the eol character is on this system.
     !Flushing with a linefeed will get it automatically, though.
-    call dump_buffer(xf%buffer, lf=xf%indenting_requested)
+    call dump_buffer(xf%buffer, lf=.true.)
     call reset_buffer(xf%buffer, xf%lun)
     
-    if (xf%indenting_requested) &
+    if (xf%broken_indenting) &
       call add_to_buffer(repeat(' ',indent_level),xf%buffer)
     
   end subroutine add_eol
@@ -1002,13 +1016,22 @@ contains
     case (WXML_STATE_2_INSIDE_ELEMENT)
       call checkNamespacesWriting(xf%dict, xf%nsDict, len(xf%stack))
       if (len(xf%dict) > 0)  call write_attributes(xf)
-      call add_eol(xf)
-      call add_to_buffer('>', xf%buffer)
+      if (xf%broken_indenting) then
+        call add_to_buffer('>', xf%buffer)
+        !call add_eol(xf)
+      else
+        call add_eol(xf)
+        call add_to_buffer('>', xf%buffer)
+      endif
       xf%state_2 = WXML_STATE_2_OUTSIDE_TAG
     case (WXML_STATE_2_INSIDE_PI)
       if (len(xf%dict) > 0)  call write_attributes(xf)
       call add_to_buffer('?>', xf%buffer)
       xf%state_2 = WXML_STATE_2_OUTSIDE_TAG
+    case (WXML_STATE_2_IN_CHARDATA)
+      continue
+    case (WXML_STATE_2_OUTSIDE_TAG)
+      continue
     end select
     
   end subroutine close_start_tag
@@ -1025,8 +1048,11 @@ contains
     
     do i = 1, len(xf%dict)
       size = len(get_key(xf%dict, i)) + len(get_value(xf%dict, i)) + 4
-      if ((len(xf%buffer) + size) > COLUMNS) call add_eol(xf)
-      call add_to_buffer(" ", xf%buffer)
+      if ((len(xf%buffer) + size) > COLUMNS) then
+        call add_eol(xf)
+      else
+        call add_to_buffer(" ", xf%buffer)
+      endif
       call add_to_buffer(get_key(xf%dict, i), xf%buffer)
       call add_to_buffer("=", xf%buffer)
       call add_to_buffer("""",xf%buffer)
