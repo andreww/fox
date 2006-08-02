@@ -6,20 +6,19 @@ use pxf
 implicit none
 private
 
-!
 ! Simple stack to keep track of which elements have appeared so far
-!
-! Initial stack size:
-integer, parameter, private            :: STACK_SIZE_INIT = 10
-! Multiplier when stack is exceeded:
-real, parameter, private            :: STACK_SIZE_MULT = 1.5
 
-type, private :: elstack_item
+! Initial stack size:
+integer, parameter :: STACK_SIZE_INIT = 10
+! Multiplier when stack is exceeded:
+real, parameter :: STACK_SIZE_MULT = 1.5
+
+type :: elstack_item
   character, dimension(:), pointer :: data
 end type
 
 type, public :: elstack_t
-private
+  private
   integer                                   :: n_items
   type(elstack_item), pointer, dimension(:) :: stack
 end type elstack_t
@@ -31,12 +30,10 @@ public  :: len
 interface len
   module procedure number_of_items
 end interface
-private :: number_of_items
 
 interface is_empty
   module procedure is_empty_elstack
 end interface
-private :: is_empty_elstack
 
 CONTAINS
 

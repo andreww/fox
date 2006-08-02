@@ -1,6 +1,5 @@
 module m_common_attrs
 
-  !use m_wxml_escape, only : check_Name
   use m_common_array_str, only : str_vs, vs_str
   use m_common_charset, only : whitespace, initialNameChars, nameChars, operator(.in.)
   use m_common_error, only : FoX_error
@@ -9,9 +8,9 @@ module m_common_attrs
   private
   
   !Initial length of dictionary
-  integer, parameter, private    :: DICT_INIT_LEN = 10 
+  integer, parameter :: DICT_INIT_LEN = 10 
   !Multiplier if we need to extend it.
-  real, parameter, private       :: DICT_LEN_MULT = 1.5
+  real, parameter :: DICT_LEN_MULT = 1.5
 
   type dict_item
      character(len=1), pointer, dimension(:) :: nsURI
