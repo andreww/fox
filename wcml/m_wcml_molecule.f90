@@ -63,7 +63,7 @@ contains
 
     call xml_EndElement(xf, 'atomArray')
     call xml_EndElement(xf, 'molecule')
-    
+
   end subroutine cmlAddMoleculeSP
 
   subroutine cmlAddMoleculeSP_sh(xf, natoms, elements, refs, coords, occupancies, style, id, title, dictref, fmt)
@@ -197,7 +197,7 @@ contains
 
     do i = 1, size(coords,2)
       call cmlAddAtom(xf=xf, elem=trim(elements(i)), &
-           coords=coords(:, i), style=style, fmt=fmt)
+        coords=coords(:, i), style=style, fmt=fmt)
       if (present(occupancies)) call xml_AddAttribute(xf, 'occupancy', occupancies(i))
       if (present(refs)) call xml_AddAttribute(xf, 'ref', refs(i))
       call xml_EndElement(xf, 'atom')

@@ -5,7 +5,7 @@
 * provide interfaces for cell-><lattice> & lattice-><crystal>
 * Tidy up m_wcml_core
 * test test test
-* explicitly list all public interfaces
+* explicitly list all public interfaces - done
 * document
 * find units namespace
 * share definition of sp/dp

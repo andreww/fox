@@ -33,6 +33,16 @@ echo Arrays:
 echo "Testing single precision to string conversion"
 echo Scalars:
 for i in \
+         '0.50e0,"s1" 5e-1' \
+         '0.50e0,"s2" 5.0e-1' \
+         '0.50e0,"s3" 5.00e-1' \
+         '0.50e0,"s4" 5.000e-1' \
+         '0.50e0,"s5" 5.0000e-1' \
+         '0.50e0,"r0" 0' \
+         '0.50e0,"r1" 0.5' \
+         '0.50e0,"r2" 0.50' \
+         '0.50e0,"r3" 0.500' \
+         '0.50e0,"r4" 0.5000' \
          '0.00e0,"s1" 0e0' \
          '0.00e0,"s2" 0.0e0' \
          '0.00e0,"s3" 0.00e0' \
@@ -134,6 +144,15 @@ echo Arrays:
 echo "Testing double precision to string conversion"
 echo Scalars:
 for i in \
+         '0.50e0,"s1" 5e-1' \
+         '0.50e0,"s2" 5.0e-1' \
+         '0.50e0,"s3" 5.00e-1' \
+         '0.50e0,"s4" 5.000e-1' \
+         '0.50e0,"s5" 5.0000e-1' \
+         '0.50e0,"r0" 0' \
+         '0.50e0,"r1" 0.5' \
+         '0.50e0,"r2" 0.50' \
+         '0.50e0,"r3" 0.500' \
          '0.00d0,"s1" 0e0' \
          '0.00d0,"s2" 0.0e0' \
          '0.00d0,"s3" 0.00e0' \
