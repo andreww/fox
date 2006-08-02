@@ -2,7 +2,6 @@ check all uses of abort/error
 possible str bug on XLF?
 check eol handling of PIs in chardata
 check failing tests in wxml
-when breaking lines at 1024, check for whitespace ...
 pass arbitrary data to PI data.
 
 autodetect xml_recl - don't bother for the moment
@@ -24,3 +23,4 @@ Swicth formatting between correct & pretty-printed output. - done
 parameter entities are wrong dor some reason. - done
 intel bug in m_wxml_Escape - done
 make abort work properly - done
+when breaking lines at 1024, check for whitespace ... done

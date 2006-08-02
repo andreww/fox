@@ -108,7 +108,7 @@ contains
     integer  ::  i
     found = .false.
     do  i = 1, dict%number_of_items
-       if (key == transfer(dict%items(i)%key,key)) then
+       if (key == str_vs(dict%items(i)%key)) then
           found = .true.
           exit
        endif
@@ -123,7 +123,7 @@ contains
     integer  ::  i
     ind = 0
     do  i = 1, dict%number_of_items
-       if (key == transfer(dict%items(i)%key,key)) then
+       if (key == str_vs(dict%items(i)%key)) then
           ind = i
           exit
        endif
@@ -141,7 +141,7 @@ contains
     
     if (present(status)) status = -1
     do  i = 1, dict%number_of_items
-       if (key == transfer(dict%items(i)%key, key)) then
+       if (key == str_vs(dict%items(i)%key)) then
           value = str_vs(dict%items(i)%value)
           if (present(status)) status = 0
           exit
@@ -322,18 +322,18 @@ contains
   subroutine set_nsURI_by_index(dict, i, nsURI)
     type(dictionary_t), intent(inout) :: dict
     integer, intent(in) :: i
-    character(len=*) :: nsURI
+    character(len=*), intent(in) :: nsURI
 
     if (associated(dict%items(i)%nsURI)) &
          deallocate(dict%items(i)%nsURI)
     allocate(dict%items(i)%nsURI(len(nsURI)))
-    dict%items(i)%nsURI = transfer(nsURI, dict%items(i)%nsURI)
+    dict%items(i)%nsURI = vs_str(nsURI)
   end subroutine set_nsURI_by_index
 
   subroutine set_prefix_by_index(dict, i, prefix)
     type(dictionary_t), intent(inout) :: dict
     integer, intent(in) :: i
-    character(len=*) :: prefix
+    character(len=*), intent(in) :: prefix
 
     if (associated(dict%items(i)%prefix)) &
          deallocate(dict%items(i)%prefix)
@@ -344,18 +344,18 @@ contains
   subroutine set_localName_by_index_s(dict, i, localName)
     type(dictionary_t), intent(inout) :: dict
     integer, intent(in) :: i
-    character(len=*) :: localName
+    character(len=*), intent(in) :: localName
 
     if (associated(dict%items(i)%localName)) &
          deallocate(dict%items(i)%localName)
     allocate(dict%items(i)%localName(len(localName)))
-    dict%items(i)%localName = transfer(localName, dict%items(i)%localName)
+    dict%items(i)%localName = vs_str(localName)
   end subroutine set_localName_by_index_s
 
   subroutine set_localName_by_index_vs(dict, i, localName)
     type(dictionary_t), intent(inout) :: dict
     integer, intent(in) :: i
-    character(len=1), dimension(:) :: localName
+    character(len=1), dimension(:), intent(in) :: localName
 
     if (associated(dict%items(i)%localName)) &
          deallocate(dict%items(i)%localName)
@@ -368,7 +368,7 @@ contains
     integer, intent(in) :: i
     character(len=size(dict%items(i)%nsURI)) :: nsURI
     
-    nsURI = transfer(dict%items(i)%nsURI, nsURI)
+    nsURI = str_vs(dict%items(i)%nsURI)
   end function get_nsURI_by_index
 
   pure function get_prefix_by_index(dict, i) result(prefix)
@@ -376,7 +376,7 @@ contains
     integer, intent(in) :: i
     character(len=size(dict%items(i)%prefix)) :: prefix
     
-    prefix = transfer(dict%items(i)%prefix, prefix)
+    prefix = str_vs(dict%items(i)%prefix)
   end function get_prefix_by_index
 
   pure function get_localName_by_index(dict, i) result(localName)
@@ -384,7 +384,7 @@ contains
     integer, intent(in) :: i
     character(len=size(dict%items(i)%localName)) :: localName
     
-    localName = transfer(dict%items(i)%localName, localName)
+    localName = str_vs(dict%items(i)%localName)
   end function get_localName_by_index
     
   pure function get_nsURI_by_keyname(dict, keyname) result(nsURI)
@@ -394,7 +394,7 @@ contains
     integer :: i
 
     i=get_key_index(dict, keyname)
-    nsURI = transfer(dict%items(i)%nsURI, nsURI)
+    nsURI = str_vs(dict%items(i)%nsURI)
   end function get_nsURI_by_keyname
 
   pure function get_prefix_by_keyname(dict, keyname) result(prefix)
@@ -416,7 +416,7 @@ contains
     integer :: i
 
     i=get_key_index(dict, keyname)
-    localName = transfer(dict%items(i)%localName, localName)
+    localName = str_vs(dict%items(i)%localName)
 
   end function get_localName_by_keyname
 
