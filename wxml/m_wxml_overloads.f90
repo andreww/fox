@@ -6,6 +6,7 @@
 module m_wxml_overloads
 
   use m_common_format, only: str
+  use m_common_realtypes, only: sp, dp
   use m_wxml_core, only: xmlf_t
   use m_wxml_core, only: xml_AddCharacters
   use m_wxml_core, only: xml_AddAttribute
@@ -13,9 +14,6 @@ module m_wxml_overloads
 
   implicit none
   private
-
-  integer, parameter ::  sp = selected_real_kind(6,30)
-  integer, parameter ::  dp = selected_real_kind(14,100)
 
   interface xml_AddCharacters
     module procedure CharactersScalarRealDp

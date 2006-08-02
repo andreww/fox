@@ -2,15 +2,13 @@ module m_wcml_core
 
   use FoX_common, only: FoX_version
   use m_common_format, only: str
+  use m_common_realtypes, only: sp, dp
   use FoX_wxml, only: xmlf_t
   use FoX_wxml, only: xml_NewElement, xml_AddAttribute
   use FoX_wxml, only: xml_EndElement, xml_DeclareNamespace
 
   implicit none
   private
-
-  integer, parameter ::  sp = selected_real_kind(6,30)
-  integer, parameter ::  dp = selected_real_kind(14,100)
   
   public :: cmlStartCml
   public :: cmlEndCml
@@ -35,6 +33,7 @@ contains
     call xml_DeclareNamespace(xf, 'http://www.xml-cml.org/schema')
     call xml_DeclareNamespace(xf, 'http://www.w3.org/2001/XMLSchema', 'xsd')
     call xml_DeclareNamespace(xf, 'http://purl.org/dc/elements/1.1/title', 'dc')
+    call xml_DeclareNamespace(xf, 'http://www.xml-cml.org/units/units', 'units')
 ! FIXME TOHW we will want other namespaces in here - particularly for units
 ! once PMR has stabilized that.
 

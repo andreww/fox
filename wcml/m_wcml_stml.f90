@@ -1,15 +1,13 @@
 module m_wcml_stml
 
-  use m_common_format, only : str
+  use m_common_format, only: str
+  use m_common_realtypes, only: sp, dp
   use FoX_wxml, only: xmlf_t
   use FoX_wxml, only: xml_NewElement, xml_AddCharacters, xml_AddAttribute
   use FoX_wxml, only: xml_EndElement
 
   implicit none
   private
-
-  integer, parameter ::  sp = selected_real_kind(6,30)
-  integer, parameter ::  dp = selected_real_kind(14,100)
 
   public :: stmAddValue
   public :: stmAddScalar

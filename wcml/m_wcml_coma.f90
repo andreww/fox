@@ -2,6 +2,7 @@ module m_wcml_coma
   ! Implements routines relating to electronic structure
 
   use m_common_format, only: str
+  use m_common_realtypes, only: sp, dp
   use FoX_wxml, only: xmlf_t
   use FoX_wxml, only: xml_NewElement, xml_AddAttribute
   use FoX_wxml, only: xml_EndElement, xml_AddCharacters
@@ -9,9 +10,6 @@ module m_wcml_coma
 
   implicit none
   private
-
-  integer, parameter ::  sp = selected_real_kind(6,30)
-  integer, parameter ::  dp = selected_real_kind(14,100)
 
   public :: cmlAddBand
   public :: cmlStartBandList

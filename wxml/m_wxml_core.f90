@@ -20,6 +20,7 @@ module m_wxml_core
   use m_common_namespaces, only: checkNamespacesWriting, checkEndNamespaces, dumpnsdict
   use m_common_notations, only: notation_list, init_notation_list, destroy_notation_list, &
     add_notation, notation_exists
+  use m_common_realtypes, only: sp, dp
   use m_wxml_escape, only: escape_string
 
   use pxf, only: pxfabort
@@ -27,10 +28,8 @@ module m_wxml_core
   implicit none
   private
 
-  integer, parameter ::  sp = selected_real_kind(6,30)
-  integer, parameter ::  dp = selected_real_kind(14,100)
-
   integer, parameter :: indent_inc = 2
+  ! FIXME should we let this be set?
 
   !Output State Machines
   ! status wrt root element:

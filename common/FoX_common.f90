@@ -9,6 +9,9 @@ module FoX_common
 
   public :: FoX_version
 
+  ! FIXME we should rename everythting below.
+  ! only necessary for SAX and maybe DOM anyway.
+
   public :: dictionary_t
   public :: len
   public :: print_dict 

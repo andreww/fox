@@ -1,14 +1,12 @@
 module m_common_format
 
+  use m_common_realtypes, only: sp, dp
   use m_common_error, only: FoX_error
   use pxf, only: pxfabort, pure_pxfabort
 
   implicit none
   private
 
-
-  integer, parameter :: sp = selected_real_kind(6,30)
-  integer, parameter :: dp = selected_real_kind(14,100)
   integer, parameter :: sig_sp = digits(1.0_sp)/4
   integer, parameter :: sig_dp = digits(1.0_dp)/4 ! Approximate precision worth outputting of each type.
 

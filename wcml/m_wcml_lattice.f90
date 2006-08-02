@@ -1,5 +1,6 @@
 module m_wcml_lattice
 
+  use m_common_realtypes, only: sp, dp
   use FoX_wxml, only: xmlf_t
   use FoX_wxml, only: xml_NewElement, xml_EndElement
   use FoX_wxml, only: xml_AddAttribute, xml_AddCharacters
@@ -7,10 +8,6 @@ module m_wcml_lattice
 
   implicit none
   private
-
-  integer, parameter ::  sp = selected_real_kind(6,30)
-  integer, parameter ::  dp = selected_real_kind(14,100)
-
 
   character(len=*), parameter :: U_ANGSTR = 'units:angstrom'
   character(len=*), parameter :: U_DEGREE = 'units:degree'
