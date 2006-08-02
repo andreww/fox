@@ -8,7 +8,7 @@ integer :: age = 34
 real, dimension(20)  :: x
 real, dimension(4,4)  :: y
 
-call xml_OpenFile("simple.xml",xf, broken_indenting=.false.)
+call xml_OpenFile("simple.xml",xf, broken_indenting=.true.)
 call xml_AddDOCTYPE(xf, "john", "hello.dtd")
 call xml_AddParameterEntity(xf, 'pe', '<!ENTITY def "what a load of nonsense">')
 call xml_AddInternalEntity(xf, "abc", "A B C")
@@ -43,6 +43,8 @@ call xml_AddCharacters(xf," in years < 2004")
 call xml_AddXMLPI(xf, name="robots2")
 call xml_AddPseudoAttribute(xf, "index", "if you're nice")
 call xml_AddEntityReference(xf, 'abc')
+
+call xml_AddCharacters(xf, repeat("abcd   ",500))
 
 call xml_NewElement(xf,"data")
 call xml_AddAttribute(xf,"units","eV")

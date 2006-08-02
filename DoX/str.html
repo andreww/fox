@@ -5,15 +5,28 @@
 <p>In such cases, a few notes on the conversion of non-textual data to text is on order. The
 standard Fortran I/O formatting routines do not offer the control required for useful XML output, so FoX performs all its own formatting.</p>
 
-<h3>Logical</h3>
+<p>This formatting is done internally through a function which is also available publically to the user, <code>str</code>.</p>
+
+<p>To use this in your program, import it via:</p>
+
+<pre><code>use FoX_common, only; str
+</code></pre>
+
+<p>You may pass data of the following primitive type to <code>str</code>:</p>
+
+<h3>Character (default kind)</h3>
+
+<p>Character data is returned unchanged.</p>
+
+<h3>Logical (default kind)</h3>
 
 <p>Logical data is output such that True values are converted to the string 'true', and False to the string 'false'.</p>
 
-<h3>Integer</h3>
+<h3>Integer (default kind)</h3>
 
 <p>Integer data is converted to the standard decimal representation.</p>
 
-<h3>Real numbers</h3>
+<h3>Real numbers (single and double precision)</h3>
 
 <p>Real numbers, both single and double precision, are converted to strings in one of two ways, with some control offered to the user. The output will conform to the real number formats specified by XML Schema Datatypes.</p>
 
@@ -39,3 +52,15 @@ standard Fortran I/O formatting routines do not offer the control required for u
 
 <p>If a format is specified not conforming to either of the two forms above, a run-time error will be generated.</p></li>
 </ol>
+
+<h4>Arrays and matrices</h4>
+
+<p>All of the above types of data may be passed in as arrays and matrices as well. In this case, a string containing all the individual elements will be returned, ordered as they would be in memory, each element separated by a single space.</p>
+
+<p>If the data is character data, then there is an additional option to str, <code>delimiter</code> which may be any single-character string, and will replace a space as the delimiter.</p>
+
+<h3>wxml/wcml wrappers.</h3>
+
+<p>All functions in wxml which can accept arbitrary data (roughly, wherever you put anything that is not an XML name; attribute values, pseudo-attribute values, character data) will take scalars, arrays, and matrices of any of the above data types, with <code>fmt=</code> and <code>delimiter=</code> optional arguments where appropriate.</p>
+
+<p>Similarly, wcml functions which can accept varied data will behave similarly.</p>

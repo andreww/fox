@@ -1,5 +1,6 @@
 module m_common_buffer
 
+  use m_common_charset, only: whitespace
   use m_common_error, only : FoX_warning
 
   implicit none
@@ -54,26 +55,31 @@ contains
     character(len=*), intent(in)   :: s
     type(buffer_t), intent(inout)  :: buffer
     
-    integer   :: i, n, len_b, len_s
+    integer   :: i, n, len_b
+    character(len=(buffer%size+len(s))) :: s2
 
     !If we overreach our buffer size, we will be unable to
     !output any more characters without a newline.
+    ! Go through current buffer + new string, insert newlines
+    ! at spaces just before MAX_BUFF_SIZE chars
+    ! until we have less than MAX_BUFF_SIZE left to go,
+    ! then put that in the buffer.
 
-    if (buffer%size + len(s) > MAX_BUFF_SIZE) then
+    if (buffer%size + len(s) > MAX_BUFF_SIZE) &
       call FoX_warning("Buffer overflow impending; inserting newlines, sorry")
-      call dump_buffer(buffer)
-    endif
     
+    s2 = buffer%str(:buffer%size)//s
+
     n = 1
-    do i = 1, len(s)/MAX_BUFF_SIZE
-      write(buffer%unit, '(a)') s(n:n+MAX_BUFF_SIZE-1)
-      n = n + MAX_BUFF_SIZE
+    do while (n < len(s2)-MAX_BUFF_SIZE)
+      i = scan(s2(n:n+MAX_BUFF_SIZE-1), whitespace, back=.true.)
+      write(buffer%unit, '(a)') s2(n:n+i-1)
+      n = n + i 
     enddo
 
-    len_s = len(s(n:)) 
-    len_b = buffer%size
-    buffer%str(len_b+1:len_b+len_s) = s(n:)
-    buffer%size = buffer%size + len_s
+    len_b = len(s2) - n + 1
+    buffer%str(:len_b) = s2(n:)
+    buffer%size = len_b
 
   end subroutine add_to_buffer
 
