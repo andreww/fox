@@ -856,12 +856,8 @@ contains
     case (WXML_STATE_2_INSIDE_ELEMENT)
       call checkNamespacesWriting(xf%dict, xf%nsDict, len(xf%stack))
       if (len(xf%dict) > 0) call write_attributes(xf)
-      if (xf%broken_indenting) then
-        call add_to_buffer("/>",xf%buffer)
-      else
-        call add_eol(xf)
-        call add_to_buffer("/>",xf%buffer)
-      endif
+      if (.not.xf%broken_indenting) call add_eol(xf)
+      call add_to_buffer("/>",xf%buffer)
       call devnull(pop_elstack(xf%stack))
     case (WXML_STATE_2_OUTSIDE_TAG, WXML_STATE_2_IN_CHARDATA)
       if (xf%broken_indenting.and.xf%state_2==WXML_STATE_2_OUTSIDE_TAG) call add_eol(xf)

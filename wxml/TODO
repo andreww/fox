@@ -1,7 +1,8 @@
 make abort work properly, check all usages of abort/error
 possible str bug on XLF?
-intel bug in m_wxml_Escape
-parameter entities are wrong dor some reason.
+check eol handling of PIs in chardata
+check failing tests in wxml
+when breaking lines at 1024, check for whitespace ...
 
 autodetect xml_recl - don't bother for the moment
 check entity references while outputting? with ref to standalone? - wait for proprt unicode spuport
@@ -19,3 +20,5 @@ m4 creation of m_wxml_overloads.f90 - DONE
 allow for >2 dimensional array output? done
 get indentation working properly again: meaningful on/off option - done
 Swicth formatting between correct & pretty-printed output. - done
+parameter entities are wrong dor some reason. - done
+intel bug in m_wxml_Escape - done

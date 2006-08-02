@@ -54,35 +54,38 @@ contains
 
     integer :: c, i
 
-    ! We have to do this (with achar etc) in case the native
+    ! We have to do it this way (with achar etc) in case the native
     ! platform encoding is not ASCII
 
     c = 1
     do i = 1, len(s)
-      select case(iachar(s(i:i)))
+      select case (iachar(s(i:i)))
       case (0)
         call FoX_error("Tried to output a NUL character")
-      case (AMP)
-        s2(c:c+4) = "&amp;"
-        c = c + 5
-      case (LT)
-        s2(c:c+3) = "&lt;"
-        c = c + 4
-      case (QUOT)
-        s2(c:c+5) = "&quot;"
-        c = c + 6
-      case (APOS)
-        s2(c:c+5) = "&apos;"
-        c = c + 6
       case (1:9)
         s2(c:c+3) = "&#"//str(iachar(s(i:i)))//";"
         c = c + 4
       case (10:31)
         s2(c:c+4) = "&#"//str(iachar(s(i:i)))//";"
         c = c + 5
-      case (32:QUOT-1, QUOT+1:AMP-1, AMP+1:APOS-1, APOS+1:LT-1, LT+1:126)
-        s2(c:c) = achar(iachar(s(i:i)))
-        c = c + 1
+      case (32:126)
+        select case (iachar(s(i:i)))
+        case (AMP)
+          s2(c:c+4) = "&amp;"
+          c = c + 5
+        case (LT)
+          s2(c:c+3) = "&lt;"
+          c = c + 4
+        case (QUOT)
+          s2(c:c+5) = "&quot;"
+          c = c + 6
+        case (APOS)
+          s2(c:c+5) = "&apos;"
+          c = c + 6
+        case default
+          s2(c:c) = achar(iachar(s(i:i)))
+          c = c + 1
+        end select
       case (127)
         s2(c:c+5) = "&#127;"
         c = c + 6
