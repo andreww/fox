@@ -52,6 +52,12 @@ This may be done in one of two ways:
 
  If a format is specified not conforming to either of the two forms above, a run-time error will be generated.
 
+**NB** Since by using FoX or str, you are passing real numbers through various functions, this means that
+       they must be valid real numbers. A corollary of this is that if you pass in +/-Infinity, or NaN, then
+       the behaviour of FoX is unpredictable, and may well result in a crash. This is a consequence of the
+       Fortran standard, which strictly disallows doing anything at all with such numbers, including even
+       just passing them to a subroutine.
+
 
 #### Arrays and matrices
 

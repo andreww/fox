@@ -53,6 +53,12 @@ standard Fortran I/O formatting routines do not offer the control required for u
 <p>If a format is specified not conforming to either of the two forms above, a run-time error will be generated.</p></li>
 </ol>
 
+<p><strong>NB</strong> Since by using FoX or str, you are passing real numbers through various functions, this means that
+       they must be valid real numbers. A corollary of this is that if you pass in +/-Infinity, or NaN, then
+       the behaviour of FoX is unpredictable, and may well result in a crash. This is a consequence of the
+       Fortran standard, which strictly disallows doing anything at all with such numbers, including even
+       just passing them to a subroutine.</p>
+
 <h4>Arrays and matrices</h4>
 
 <p>All of the above types of data may be passed in as arrays and matrices as well. In this case, a string containing all the individual elements will be returned, ordered as they would be in memory, each element separated by a single space.</p>
