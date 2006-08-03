@@ -8,12 +8,13 @@ Some problems are known to occur with older versions of some compilers - if you 
 
 The following compilers have been tested.
 
-Intel version 8.x: compiles with `-DBROKEN_COMPILER`
-      version 9.1: works correctly, passes all tests
-PGI version 6.1 : fails - bug report made.
-XLF version 9.1 : works entirely, passes all tests
-NAG version 5.1: works entirely
-g95 2006-08-01: works entirely (except that common/m_common_format.f90 must be compiled at -O0)
+Intel version 8.x(linux-ia32): works partly with `-DBROKEN_COMPILER` (will compile without, but fail later)
+      version 9.1(linux-ia32): works correctly, passes all tests
+PGI version 6.1(linux-ia32): fails - bug report made.
+XLF version 9.1(powerpc-aix): works entirely, passes all tests
+NAG version 5.1(linux-ia32,osx-ppc): works entirely
+g95 2006-08-01(linux-ia32,osx-ppc): works entirely (with the exception of two bugs in str, under investigation)
+Pathscale 2.4(linux-x86_64): fails completely
 
 If you have difficulty compiling, try adding
 `-DBROKEN_COMPILER` to `FPPFLAGS` in `arch.make`

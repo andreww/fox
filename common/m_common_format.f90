@@ -926,6 +926,20 @@ contains
 
   end function str_real_dp
 
+     
+  pure function str_real_dp_array_len(xa) result(n)
+    real(dp), dimension(:), intent(in) :: xa
+    integer :: n
+
+    integer :: k
+
+    n = size(xa) - 1
+    do k = 1, size(xa)
+      n = n + str_real_dp_fmt_len(xa(k), "")
+    enddo
+    
+  end function str_real_dp_array_len
+     
 
   function str_real_dp_array(xa) result(s)
     real(dp), dimension(:), intent(in) :: xa
@@ -943,21 +957,7 @@ contains
 
   end function str_real_dp_array
 
-     
-  pure function str_real_dp_array_len(xa) result(n)
-    real(dp), dimension(:), intent(in) :: xa
-    integer :: n
 
-    integer :: k
-
-    n = size(xa) - 1
-    do k = 1, size(xa)
-      n = n + str_real_dp_fmt_len(xa(k), "")
-    enddo
-    
-  end function str_real_dp_array_len
-
-     
   pure function str_real_dp_array_fmt_len(xa, fmt) result(n)
     real(dp), dimension(:), intent(in) :: xa
     character(len=*), intent(in) :: fmt
