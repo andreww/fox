@@ -29,22 +29,29 @@ module m_wcml_coma
   end interface
 
   interface cmlAddBand
-    module procedure cmlAddBand_kpt
-    module procedure cmlAddBand_kptref
+    module procedure cmlAddBand_kpt_sp
+    module procedure cmlAddBand_kptref_sp
+    module procedure cmlAddBand_kpt_dp
+    module procedure cmlAddBand_kptref_dp
+  end interface
+
+  interface cmlAddKpoint
+    module procedure cmlAddKpoint_sp
+    module procedure cmlAddKpoint_dp
   end interface
 
 contains
 
-  subroutine cmlAddBand_kpt(xf, kpoint, kweight, bands, kptfmt, eigfmt)
+  subroutine cmlAddBand_kpt_sp(xf, kpoint, kweight, bands, kptfmt, eigfmt)
     type(xmlf_t), intent(inout)            :: xf
-    real(dp), intent(in) :: kpoint(3)
-    real(dp), intent(in) :: kweight
-    real(dp), intent(in) :: bands(:)
+    real(sp), intent(in) :: kpoint(3)
+    real(sp), intent(in) :: bands(:)
+    real(sp), intent(in), optional :: kweight
     character(len=*), intent(in), optional :: kptfmt
     character(len=*), intent(in), optional :: eigfmt
 
     call xml_NewElement(xf, 'band')
-    call xml_AddAttribute(xf, 'weight', kweight)
+    if (present(kweight)) call xml_AddAttribute(xf, 'weight', kweight)
     if (present(kptfmt)) then
       call xml_AddAttribute(xf, 'kpoint', str(kpoint, kptfmt))
     else
@@ -54,10 +61,46 @@ contains
     call stmAddValue(xf, value=bands, fmt=eigfmt)
     call xml_EndElement(xf, 'band')
 
-  end subroutine cmlAddBand_kpt
+  end subroutine cmlAddBand_kpt_sp
 
 
-  subroutine cmlAddBand_kptref(xf, kptref, bands, eigfmt)
+  subroutine cmlAddBand_kptref_sp(xf, kptref, bands, eigfmt)
+    type(xmlf_t), intent(inout)            :: xf
+    character(len=*), intent(in) :: kptref
+    real(sp), intent(in) :: bands(:)
+    character(len=*), intent(in), optional :: eigfmt
+
+    call xml_NewElement(xf, 'band')
+    call xml_AddAttribute(xf, 'kpointRef', kptref)
+    call stmAddValue(xf, value=bands, fmt=eigfmt)
+    call xml_EndElement(xf, 'band')
+
+  end subroutine cmlAddBand_kptref_sp
+
+
+  subroutine cmlAddBand_kpt_dp(xf, kpoint, kweight, bands, kptfmt, eigfmt)
+    type(xmlf_t), intent(inout)            :: xf
+    real(dp), intent(in) :: kpoint(3)
+    real(dp), intent(in) :: bands(:)
+    real(dp), intent(in), optional :: kweight
+    character(len=*), intent(in), optional :: kptfmt
+    character(len=*), intent(in), optional :: eigfmt
+
+    call xml_NewElement(xf, 'band')
+    if (present(kweight)) call xml_AddAttribute(xf, 'weight', kweight)
+    if (present(kptfmt)) then
+      call xml_AddAttribute(xf, 'kpoint', str(kpoint, kptfmt))
+    else
+      call xml_AddAttribute(xf, 'kpoint', str(kpoint, "r7"))
+    endif
+
+    call stmAddValue(xf, value=bands, fmt=eigfmt)
+    call xml_EndElement(xf, 'band')
+
+  end subroutine cmlAddBand_kpt_dp
+
+
+  subroutine cmlAddBand_kptref_dp(xf, kptref, bands, eigfmt)
     type(xmlf_t), intent(inout)            :: xf
     character(len=*), intent(in) :: kptref
     real(dp), intent(in) :: bands(:)
@@ -68,7 +111,7 @@ contains
     call stmAddValue(xf, value=bands, fmt=eigfmt)
     call xml_EndElement(xf, 'band')
 
-  end subroutine cmlAddBand_kptref
+  end subroutine cmlAddBand_kptref_dp
 
 
   subroutine cmlStartBandList(xf, id, title, conv, dictref, ref, role)
@@ -99,10 +142,10 @@ contains
   end subroutine cmlEndBandList
 
 
-  subroutine cmlAddKPoint(xf, kpoint, weight, id, title, conv, dictref, weightfmt, kptfmt)
+  subroutine cmlAddKPoint_sp(xf, kpoint, weight, id, title, conv, dictref, weightfmt, kptfmt)
     type(xmlf_t), intent(inout) :: xf
-    real(kind=dp), dimension(3), intent(in)  :: kpoint
-    real(kind=dp), intent(in)  :: weight
+    real(kind=sp), dimension(3), intent(in)  :: kpoint
+    real(kind=sp), intent(in), optional  :: weight
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
     character(len=*), intent(in), optional :: dictref
@@ -116,10 +159,48 @@ contains
     if (present(dictref)) call xml_AddAttribute(xf, 'dictRef', dictref)
     if (present(conv))    call xml_AddAttribute(xf, 'convention', conv)
 
-    if (present(weightfmt)) then
-      call xml_AddAttribute(xf, 'weight', str(weight, weightfmt))
+    if (present(weight)) then
+      if (present(weightfmt)) then
+        call xml_AddAttribute(xf, 'weight', str(weight, weightfmt))
+      else
+        call xml_AddAttribute(xf, 'weight', str(weight, "r3"))
+      endif
+    endif
+
+    if (present(kptfmt)) then
+      call xml_AddCharacters(xf, kpoint, kptfmt)
     else
-      call xml_AddAttribute(xf, 'weight', str(weight, "r7"))
+      call xml_AddCharacters(xf, kpoint, "r3")
+    end if
+
+    call xml_EndElement(xf, 'kpoint')
+
+  end subroutine cmlAddKPoint_sp
+
+
+  subroutine cmlAddKPoint_dp(xf, kpoint, weight, id, title, conv, dictref, weightfmt, kptfmt)
+    type(xmlf_t), intent(inout) :: xf
+    real(kind=dp), dimension(3), intent(in)  :: kpoint
+    real(kind=dp), intent(in), optional  :: weight
+    character(len=*), intent(in), optional :: id
+    character(len=*), intent(in), optional :: title
+    character(len=*), intent(in), optional :: dictref
+    character(len=*), intent(in), optional :: conv
+    character(len=*), intent(in), optional :: weightfmt
+    character(len=*), intent(in), optional :: kptfmt
+
+    call xml_NewElement(xf, 'kpoint')
+    if (present(id))      call xml_AddAttribute(xf, 'id', id)
+    if (present(title))   call xml_AddAttribute(xf, 'title', title)
+    if (present(dictref)) call xml_AddAttribute(xf, 'dictRef', dictref)
+    if (present(conv))    call xml_AddAttribute(xf, 'convention', conv)
+
+    if (present(weight)) then
+      if (present(weightfmt)) then
+        call xml_AddAttribute(xf, 'weight', str(weight, weightfmt))
+      else
+        call xml_AddAttribute(xf, 'weight', str(weight, "r7"))
+      endif
     endif
 
     if (present(kptfmt)) then
@@ -130,7 +211,7 @@ contains
 
     call xml_EndElement(xf, 'kpoint')
 
-  end subroutine cmlAddKPoint
+  end subroutine cmlAddKPoint_dp
 
 
   subroutine cmlStartKPointList(xf, id, title, conv, dictref, ref, role)
