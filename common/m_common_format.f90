@@ -341,15 +341,15 @@ contains
     else
       e = floor(log10(abs(x)))
     endif
-    x_ = abs(x) / (10.0_sp**e)
+    ! Have to multiply by 10^-e rather than divide by 10^e
+    ! to avoid rounding errors.
+    x_ = abs(x) * (10.0_sp**(-e))
     n = 1
     do k = sig - 2, 0, -1
-! We can't store int(x_) here or we'll get inconsistent
-! answers on the x87 fpu when optimized
-! FIXME we need to fix this to get the right answer as well...
-      s(n:n) = digit(int(x_)+1:int(x_)+1)
+      j = int(x_)
+      s(n:n) = digit(j+1:j+1)
       n = n + 1
-      x_ = (x_ - int(x_)) * 10.0_sp
+      x_ = (x_ - j) * 10.0_sp
     enddo
     j = nint(x_)
     if (j == 10) then
@@ -689,12 +689,14 @@ contains
     else
       e = floor(log10(abs(x)))
     endif
-    x_ = abs(x) / (10.0_dp**e)
+    x_ = abs(x) * (10.0_dp**(-e))
+    ! See comment in str_real_sp above
     n = 1
     do k = sig - 2, 0, -1
-      s(n:n) = digit(int(x_)+1:int(x_)+1)
+      j = int(x_)
+      s(n:n) = digit(j+1:j+1)
       n = n + 1
-      x_ = (x_ - int(x_)) * 10.0_dp
+      x_ = (x_ - j) * 10.0_dp
     enddo
     j = nint(x_)
     if (j == 10) then
