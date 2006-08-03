@@ -344,6 +344,9 @@ contains
     x_ = abs(x) / (10.0_sp**e)
     n = 1
     do k = sig - 2, 0, -1
+! We can't store int(x_) here or we'll get inconsistent
+! answers on the x87 fpu when optimized
+! FIXME we need to fix this to get the right answer as well...
       s(n:n) = digit(int(x_)+1:int(x_)+1)
       n = n + 1
       x_ = (x_ - int(x_)) * 10.0_sp
