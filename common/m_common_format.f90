@@ -418,8 +418,8 @@ contains
       else
         dec = sig_sp - e - 1
       endif
-      dec = max(dec, 0)
       dec = min(dec, digits(1.0_sp)-e)
+      dec = max(dec, 0)
 
       if (dec > 0) n = n + 1
       if (abs(x) >= 1.0_sp) n = n + 1
@@ -521,8 +521,8 @@ contains
       else
         dec = sig_sp - e - 1
       endif
-      dec = max(dec, 0)
       dec = min(dec, digits(1.0_sp)-e-1)
+      dec = max(dec, 0)
 
       if (e+dec+1 > 0) then
         num = real_sp_str(abs(x), e+dec+1)
@@ -765,8 +765,8 @@ contains
       else
         dec = sig_dp - e - 1
       endif
-      dec = max(dec, 0)
       dec = min(dec, digits(1.0_dp)-e)
+      dec = max(dec, 0)
 
       if (dec > 0) n = n + 1
       if (abs(x) >= 1.0_dp) n = n + 1
@@ -868,8 +868,8 @@ contains
       else
         dec = sig_dp - e - 1
       endif
-      dec = max(dec, 0)
       dec = min(dec, digits(1.0_dp)-e-1)
+      dec = max(dec, 0)
 
       if (e+dec+1 > 0) then
         num = real_dp_str(abs(x), e+dec+1)
