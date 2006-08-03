@@ -9,9 +9,11 @@
 <p>The following compilers have been tested.</p>
 
 <p>Intel version 8.x: compiles with <code>-DBROKEN_COMPILER</code>
-      version 9.x: fails - thoroughly broken.
+      version 9.1: works correctly, passes all tests
 PGI version 6.1 : fails - bug report made.
-XLF version 9.1 : works entirely, passes all tests</p>
+XLF version 9.1 : works entirely, passes all tests
+NAG version 5.1: works entirely
+g95 2006-08-01: works entirely (except that common/m<em>common</em>format.f90 must be compiled at -O0)</p>
 
 <p>If you have difficulty compiling, try adding
 <code>-DBROKEN_COMPILER</code> to <code>FPPFLAGS</code> in <code>arch.make</code>
