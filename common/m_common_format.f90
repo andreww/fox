@@ -344,10 +344,9 @@ contains
     x_ = abs(x) / (10.0_sp**e)
     n = 1
     do k = sig - 2, 0, -1
-      j = int(x_)
-      s(n:n) = digit(j+1:j+1)
+      s(n:n) = digit(int(x_)+1:int(x_)+1)
       n = n + 1
-      x_ = (x_ - j) * 10.0_sp
+      x_ = (x_ - int(x_)) * 10.0_sp
     enddo
     j = nint(x_)
     if (j == 10) then
@@ -690,10 +689,9 @@ contains
     x_ = abs(x) / (10.0_dp**e)
     n = 1
     do k = sig - 2, 0, -1
-      j = int(x_)
-      s(n:n) = digit(j+1:j+1)
+      s(n:n) = digit(int(x_)+1:int(x_)+1)
       n = n + 1
-      x_ = (x_ - j) * 10.0_dp
+      x_ = (x_ - int(x_)) * 10.0_dp
     enddo
     j = nint(x_)
     if (j == 10) then

@@ -1,7 +1,7 @@
 Expand charset/make unicode string classes
 Check unicode IO
 Fix makeilfe to make m_common_format w/o optimization (if g95 is not fixed)
-Document str properlyt
 Test and warn for broken compilers
 
 Format all files coherently - done
+Document str properly - done
