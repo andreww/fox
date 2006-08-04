@@ -22,6 +22,7 @@ The following compilers are tested and known to fail
 * NAG versions prior to 5.0-391
 * Pathscale, all versions
 * PGI, all versions
+* gfortran prior to and including version 4.1
 
 Other compilers are untested; reports of their success or failure are welcomed.
 

@@ -50,10 +50,11 @@
 <h2>Other things</h2>
 
 <ul>
+<li><p><a href="#Debugging">Hints for debugging</a></p></li>
 <li><p><a href="#Information">Further information</a></p></li>
 <li><p><a href="#Licensing">Licensing</a></p></li>
 </ul>
-</div><div class="DoX"/>
+</div><hr/><div class="DoX"/>
 <a name="Versioning"/>
 <h1>FoX versioning</h1>
 
@@ -72,7 +73,7 @@
 <p>In addition, there is a large suite of routines available for outputting valid <a href="http://www.xml-cml.org">CML</a> documents.</p>
 
 <p>Input modules are under development for SAX, DOM, and XPath, and will be released with version 2.1.</p>
-</div><div class="DoX"/>
+</div><hr/><div class="DoX"/>
 <a name="Compilation"/>
 <h1>Configuration and compilation</h1>
 
@@ -100,6 +101,7 @@
 <li>NAG versions prior to 5.0-391</li>
 <li>Pathscale, all versions</li>
 <li>PGI, all versions</li>
+<li>gfortran prior to and including version 4.1</li>
 </ul>
 
 <p>Other compilers are untested; reports of their success or failure are welcomed.</p>
@@ -179,7 +181,7 @@ However, you may only be interested in building the libraries, or perhaps a subs
 
 <pre><code>FoX-config --fcflags --wcml
 </code></pre>
-</div><div class="DoX"/>
+</div><hr/><div class="DoX"/>
 <a name="Embedding"/>
 <h1>Using FoX in your own project.</h1>
 
@@ -229,7 +231,7 @@ save space)</li>
 </code></pre>
 
 <p>If you don't have any automatic Makefile configuration, and rely on the user making hand-edited changes to Makefiles, then you must add to your documentation how to configure &amp; build FoX.</p>
-</div><div class="DoX"/>
+</div><hr/><div class="DoX"/>
 <a name="FoX_common"/>
 <h1>FoX_common</h1>
 
@@ -238,7 +240,7 @@ save space)</li>
 <p>Currently, the only publically available function is <code>str</code>, which converts primitive datatypes into strings in a consistent fashion, conformant with the expectations of XML processors.</p>
 
 <p>It is fully described in <a href="#StringFormatting">StringFormatting</a></p>
-</div><div class="DoX"/>
+</div><hr/><div class="DoX"/>
 <a name="StringFormatting"/>
 <h1>String handling in FoX</h1>
 
@@ -346,7 +348,7 @@ standard Fortran I/O formatting routines do not offer the control required for u
 <p>All functions in wxml which can accept arbitrary data (roughly, wherever you put anything that is not an XML name; attribute values, pseudo-attribute values, character data) will take scalars, arrays, and matrices of any of the above data types, with <code>fmt=</code> and <code>delimiter=</code> optional arguments where appropriate.</p>
 
 <p>Similarly, wcml functions which can accept varied data will behave similarly.</p>
-</div><div class="DoX"/>
+</div><hr/><div class="DoX"/>
 <a name="FoX_wxml"/>
 <h1>WXML</h1>
 
@@ -393,8 +395,6 @@ standard Fortran I/O formatting routines do not offer the control required for u
 <p><a name="Functions"/></p>
 
 <h2>Function listing</h2>
-
-<hr />
 
 <p><a name="simple"/></p>
 
@@ -486,8 +486,6 @@ the characters will be surrounded by CDATA tags.
 and if they are a 1- or 2-dimensional array, the elements will all be output, separated by spaces (except if it is a character array, in which
 case the delimiter may be changed to any other single character using an optional argument).</p>
 
-<hr />
-
 <p><a name="NSfunctions"/></p>
 
 <h3>Namespace-aware functions:</h3>
@@ -539,8 +537,6 @@ then as long as the <code>xml_AddNamespace</code> call is made before the elemen
 
 <p>The element or attribute name is checked, and if it is a QName (ie if it is of the form prefix:tagName) then wxml will check that prefix is a
 registered namespace prefix, and generate an error if not.</p>
-
-<hr />
 
 <p><a name="obscure"/></p>
 
@@ -687,8 +683,6 @@ Contents of comment</li>
 
 <p>This may be used anywhere that xml_AddCharacters may be, and will insert an entity reference into the contents of the XML document at that point.</p>
 
-<hr />
-
 <h2>Exceptions</h2>
 
 <p><a name="Exceptions"/></p>
@@ -715,8 +709,6 @@ Contents of comment</li>
 
 <p>Finally, it should be noted (although it is obvious from the above) that wxml makes no attempt at all to ensure that output documents are valid XML (by any definition of <em>valid</em>.)</p>
 
-<hr />
-
 <h2>References</h2>
 
 <p><a name="References"/></p>
@@ -732,24 +724,87 @@ Contents of comment</li>
 <p><a name="Stylesheets"/></p>
 
 <p>[Stylesheets]: W3C Recommendation, <a href="http://www.w3.org/TR/xml-stylesheet">http://www.w3.org/TR/xml-stylesheet</a></p>
-</div><div class="DoX"/>
+</div><hr/><div class="DoX"/>
 <a name="FoX_wcml"/>
 <h1>WCML</h1>
-</div><div class="DoX"/>
+</div><hr/><div class="DoX"/>
+<a name="Debugging"/>
+<h1>Debugging with FoX.</h1>
+
+<p>Following experience integrating FoX into several codes, here are a few tips for debugging any problems you may encounter.</p>
+
+<h2>Compilation problems</h2>
+
+<p>You may encounter problems at the compiling or linking stage, with error messages along the lines of:
+     'No Specific Function can be found for this Generic Function'
+(exact phrasing depending on compiler, of course.)</p>
+
+<p>If this is the case, it is possible that you have accidentally got the arguments to the offending out of order. If so, then use the keyword form of the argument to ensure correctness; that is, instead of doing:</p>
+
+<pre><code>call cmlAddProperty(file, name, value)
+</code></pre>
+
+<p>do:</p>
+
+<pre><code>call cmlAddProperty(xf=file, name=name, value=value)
+</code></pre>
+
+<p>This will prevent argument mismatches, and is recommended practise in any case.</p>
+
+<h2>Runtime problems</h2>
+
+<p>You may encounter run-time issues. FoX performs many run-time checks to ensure the validity of the resultant XML code. In so far as it is possible, FoX will either issue warnings about potential problems, or try and safely handle any errors it encounters. In both cases, warning will be output on stderr, which will hopefully help diagnose the problem.</p>
+
+<p>Sometimes, however, FoX will encounter a problem it can do nothing about, and must stop. In all cases, it will try and write out an error message highlighting the reason, and generate a backtrace pointing to the offending line. Occasionally though, the compiler will not generate this information, and the error message will be lost.</p>
+
+<p>If this is the case, you can either investigate the coredump to find the problem, or (if you are on a Mac) look in ~/Library/Logs/CrashReporter to find a human-readable log.</p>
+
+<p>If this is not enlightening, or you cannot find the problem, then some of the most common issues we have encountered are listed below. Many of them are general Fortran problems, but sometimes are not easily spotted in the context of FoX.</p>
+
+<h3>Incorrect formatting.</h3>
+
+<p>Make sure, whenever you are writing out a real number through one of FoX's routines, and specifying a format, that the format is correct according to <a href="#StringFormatting">StringFormatting</a>. Fortran-style formats are <strong>not</strong> permitted, and will cause crashes at runtime.</p>
+
+<h3>Array overruns</h3>
+
+<p>If you are outputting arrays or matrices, and are doing so in the traditional Fortran style - by passing both the array and its length to the routine, like so:</p>
+
+<pre><code> call xml_AddAttribute(xf=file, name=name, value=array, nvalue=n)
+</code></pre>
+
+<p>then if <code>n</code> is wring, you may end up with an array overrun, and cause a crash.</p>
+
+<p>We highly recommend wherever possible using the Fortran-90 style, like so:</p>
+
+<pre><code> call xml_AddAttribute(xf=file, name=name, value=array)
+</code></pre>
+
+<p>where the array length will be passed automatically.</p>
+
+<h3>Uninitialized variables</h3>
+
+<p>If you are passing variables to FoX which have not been initialized, you may well cause a crash. This is especially true, and easy to cause if you are passing in an array which (due to a bug elsewhere) has been partly but not entirely initialized. To diagnose this, try printing out suspect variables just before passing them to FoX, and look for suspiciously wrong values.</p>
+
+<h3>Invalid floating point numbers.</h3>
+
+<p>If during the course of your calculation you accidentally generate Infinities, or NaNs, then passing them to any Fortran subroutine can result in a crash - therefore trying to pass them to FoX for output may result in a crash.</p>
+
+<p>If you suspect this is happening, try printing out suspect variables before calling FoX. </p>
+</div><hr/><div class="DoX"/>
 <a name="Information"/>
 <h1>Further information</h1>
 
 <p>FoX evolved from the initial codebase of <a href="http://lcdx00.wm.lc.ehu.es/ag/xml/">xmlf90</a>,
-which was written largely by Alberto Garcia &lt;<a href="&#x6D;&#x61;&#x69;&#x6C;&#116;&#111;:&#97;l&#98;e&#x72;&#116;&#x6F;&#103;&#64;&#105;&#x63;m&#97;&#x62;&#46;&#101;&#x73;">&#97;l&#98;e&#x72;&#116;&#x6F;&#103;&#64;&#105;&#x63;m&#97;&#x62;&#46;&#101;&#x73;</a>> and Jon Wakelin &lt;<a href="&#109;&#97;&#105;&#108;&#116;&#x6F;:&#106;&#x6F;&#x6E;&#x2E;&#x77;&#97;&#107;&#x65;&#108;&#105;&#110;&#64;&#x62;r&#x69;&#115;&#x74;&#111;&#108;&#46;a&#99;&#46;&#x75;&#107;">&#106;&#x6F;&#x6E;&#x2E;&#x77;&#97;&#107;&#x65;&#108;&#105;&#110;&#64;&#x62;r&#x69;&#115;&#x74;&#111;&#108;&#46;a&#99;&#46;&#x75;&#107;</a>>.</p>
+which was written largely by Alberto Garcia &lt;<a href="&#x6D;&#x61;&#105;&#x6C;&#x74;o:&#x61;&#108;b&#101;r&#116;&#111;&#103;&#64;&#105;&#x63;&#x6D;&#x61;&#x62;&#x2E;&#x65;&#x73;">&#x61;&#108;b&#101;r&#116;&#111;&#103;&#64;&#105;&#x63;&#x6D;&#x61;&#x62;&#x2E;&#x65;&#x73;</a>> and Jon Wakelin &lt;<a href="&#x6D;&#97;&#105;&#x6C;&#116;&#111;:&#x6A;&#111;&#x6E;&#x2E;&#119;&#x61;&#107;&#x65;&#108;&#x69;&#110;&#64;b&#114;i&#x73;&#x74;&#111;l&#46;&#x61;&#x63;.u&#x6B;">&#x6A;&#111;&#x6E;&#x2E;&#119;&#x61;&#107;&#x65;&#108;&#x69;&#110;&#64;b&#114;i&#x73;&#x74;&#111;l&#46;&#x61;&#x63;.u&#x6B;</a>>.</p>
 
-<p>FoX is the work of Toby White &lt;<a href="&#x6D;&#97;&#105;&#x6C;&#x74;&#x6F;:&#x74;&#111;&#119;&#50;&#x31;&#64;&#99;&#x61;&#109;&#46;&#x61;&#99;&#x2E;&#117;k">&#x74;&#111;&#119;&#50;&#x31;&#64;&#99;&#x61;&#109;&#46;&#x61;&#99;&#x2E;&#117;k</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
+<p>FoX is the work of Toby White &lt;<a href="&#109;&#97;&#105;l&#x74;&#x6F;:t&#111;&#119;&#50;&#x31;&#64;&#x63;&#97;&#109;&#46;&#97;&#x63;&#x2E;&#x75;&#107;">t&#111;&#119;&#50;&#x31;&#64;&#x63;&#97;&#109;&#46;&#97;&#x63;&#x2E;&#x75;&#107;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
 
 <p>There is a FoX website at <a href="http://www.uszla.me.uk/software/FoX/">http://www.uszla.me.uk/software/FoX/</a>.</p>
 
 <p>There is also a mailing list for announcements/queries/bug reports. Information on how to subscribe may be found at <a href="http://www.uszla.me.uk/cgi-bin/mailman/listinfo/FoX/">http://www.uszla.me.uk/cgi-bin/mailman/listinfo/FoX/</a>,</p>
 
 <p>This manual is &copy; Toby White 2006.</p>
-</div><div class="DoX"/>
+</div><hr/><div class="DoX"/>
 <a name="Licensing"/>
 <h1>Licensing</h1>
 
@@ -789,7 +844,7 @@ LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
 DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
 THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE </p>
-</div><div class="DoX"/>
+</div><hr/><div class="DoX"/>
 </div>
 </body>
 </html>

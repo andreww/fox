@@ -41,7 +41,6 @@ This is an opaque type representing the XML file handle. Each function requires 
 
 ## Function listing
 
---------------
 
 <a name="simple"/>
 
@@ -121,7 +120,6 @@ Add text data. The data to be added may be of any type; they will be converted t
 and if they are a 1- or 2-dimensional array, the elements will all be output, separated by spaces (except if it is a character array, in which
 case the delimiter may be changed to any other single character using an optional argument).
 
-----------
 
 <a name="NSfunctions"/>
 
@@ -167,7 +165,6 @@ Two previously mentioned functions are affected when used in a namespace-aware f
 The element or attribute name is checked, and if it is a QName (ie if it is of the form prefix:tagName) then wxml will check that prefix is a
 registered namespace prefix, and generate an error if not.
 
-----------
 
 <a name="obscure"/>
 
@@ -296,7 +293,6 @@ Add an XML comment
 This may be used anywhere that xml_AddCharacters may be, and will insert an entity reference into the contents of the XML document at that point.
 
 
----------------
 ##Exceptions
 
 <a name="Exceptions"/>
@@ -319,7 +315,6 @@ wxml will try very hard to ensure that output is well-formed. However, it is pos
 
 Finally, it should be noted (although it is obvious from the above) that wxml makes no attempt at all to ensure that output documents are valid XML (by any definition of *valid*.)
 
----------------
 ##References
 
 <a name="References"/>

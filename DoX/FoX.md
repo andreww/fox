@@ -32,6 +32,8 @@ The astute developer is reminded that all times the final reference documentatio
 
 ## Other things
 
+* [Hints for debugging](|Debugging|)
+
 * [Further information](|Information|)
 
 * [Licensing](|Licensing|)
