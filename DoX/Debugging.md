@@ -39,7 +39,7 @@ If you are outputting arrays or matrices, and are doing so in the traditional Fo
 
      call xml_AddAttribute(xf=file, name=name, value=array, nvalue=n)
 
-then if `n` is wring, you may end up with an array overrun, and cause a crash.
+then if `n` is wrong, you may end up with an array overrun, and cause a crash.
 
 We highly recommend wherever possible using the Fortran-90 style, like so:
 

@@ -5,6 +5,8 @@
 * test test test
 * document
 * redo m4 build for quantity
+m4 for all start/end lists
+* m4 for metadata
 
 
 * move eigenvalues to m_wcml_coma, and allow for assumed-shape arrays - done

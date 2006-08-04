@@ -1,5 +1,6 @@
 module FoX_wcml
 
+  use FoX_wxml, only: xmlf_t
   use m_wcml_core
   use m_wcml_coma
   use m_wcml_geometry
@@ -12,6 +13,12 @@ module FoX_wcml
 
   implicit none
   private
+
+  public :: xmlf_t
+
+  public :: cmlBeginFile
+  public :: cmlFinishFile
+  public :: cmlAddNamespace
 
   public :: cmlStartCml
   public :: cmlEndCml

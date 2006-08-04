@@ -65,6 +65,7 @@ module m_wxml_core
 
 
   type xmlf_t
+    private
     character, pointer        :: filename(:)
     integer                   :: lun = -1
     type(buffer_t)            :: buffer

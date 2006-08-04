@@ -49,8 +49,8 @@ contains
 
   end subroutine cmlEndMetadataList
 
-  subroutine cmlAddMetadataCh(xf, name, content, conv)
-
+  subroutine cmlAddMetadataCh(xf, name, content, conv, dictRef, id, title)
+!dictRef, id, title
     type(xmlf_t), intent(inout) :: xf
     character(len=*), intent(in) :: name
     character(len=*), intent(in) :: content

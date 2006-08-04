@@ -1,5 +1,10 @@
 module m_wcml_lattice
 
+
+!FIXME: unimplemented bits:
+! periodicity of latticevectors ...
+! conversion between lattices & crystals ...
+
   use m_common_realtypes, only: sp, dp
   use FoX_wxml, only: xmlf_t
   use FoX_wxml, only: xml_NewElement, xml_EndElement
@@ -9,9 +14,8 @@ module m_wcml_lattice
   implicit none
   private
 
-  character(len=*), parameter :: U_ANGSTR = 'units:angstrom'
-  character(len=*), parameter :: U_DEGREE = 'units:degree'
-  character(len=*), parameter :: U_RADIAN = 'units:radian'
+  character(len=*), parameter :: U_ANGSTR = 'cmlUnits:angstrom'
+  character(len=*), parameter :: U_DEGREE = 'cmlUnits:degree'
 
   interface cmlAddCrystal
      module procedure cmlAddCrystalSP
@@ -124,17 +128,17 @@ contains
   end subroutine cmlAddCrystalDP
 
 
-  subroutine cmlAddLatticeSP(xf, cell, units, title, id, dictref, conv, lattType, spaceType, fmt)
+  subroutine cmlAddLatticeSP(xf, cell, units, title, id, dictref, conv, latticeType, spaceType, fmt)
     type(xmlf_t), intent(inout) :: xf
     real(kind=sp), intent(in)              :: cell(3,3)
     character(len=*), intent(in), optional :: units       
-    character(len=*), intent(in), optional :: id           ! id
-    character(len=*), intent(in), optional :: title        ! title
-    character(len=*), intent(in), optional :: dictref      ! dictref
-    character(len=*), intent(in), optional :: conv         ! convention
-    character(len=*), intent(in), optional :: lattType 
-    character(len=*), intent(in), optional :: spaceType    !
-    character(len=*), intent(in), optional :: fmt         
+    character(len=*), intent(in), optional :: id
+    character(len=*), intent(in), optional :: title
+    character(len=*), intent(in), optional :: dictref
+    character(len=*), intent(in), optional :: conv
+    character(len=*), intent(in), optional :: latticeType
+    character(len=*), intent(in), optional :: spaceType
+    character(len=*), intent(in), optional :: fmt
 
     integer :: i
 
@@ -143,7 +147,7 @@ contains
     if (present(title)) call xml_AddAttribute(xf, 'title', title)
     if (present(dictref)) call xml_AddAttribute(xf, 'dictRef', dictref)
     if (present(conv)) call xml_AddAttribute(xf, 'convention', conv)
-    if (present(lattType)) call xml_AddAttribute(xf, 'latticeType', lattType)
+    if (present(latticeType)) call xml_AddAttribute(xf, 'latticeType', latticeType)
     if (present(spaceType)) call xml_AddAttribute(xf, 'spaceType', spaceType)
 
     do i = 1,3
@@ -158,17 +162,17 @@ contains
   end subroutine cmlAddLatticeSP
 
 
-  subroutine cmlAddLatticeDP(xf, cell, units, title, id, dictref, conv, lattType, spaceType, fmt)
+  subroutine cmlAddLatticeDP(xf, cell, units, title, id, dictref, conv, latticeType, spaceType, fmt)
     type(xmlf_t), intent(inout) :: xf
     real(kind=dp), intent(in)              :: cell(3,3)
     character(len=*), intent(in), optional :: units       
-    character(len=*), intent(in), optional :: id           ! id
-    character(len=*), intent(in), optional :: title        ! title
-    character(len=*), intent(in), optional :: dictref      ! dictref
-    character(len=*), intent(in), optional :: conv         ! 
-    character(len=*), intent(in), optional :: lattType     ! 
-    character(len=*), intent(in), optional :: spaceType    !
-    character(len=*), intent(in), optional :: fmt         
+    character(len=*), intent(in), optional :: id
+    character(len=*), intent(in), optional :: title
+    character(len=*), intent(in), optional :: dictref
+    character(len=*), intent(in), optional :: conv
+    character(len=*), intent(in), optional :: latticeType
+    character(len=*), intent(in), optional :: spaceType
+    character(len=*), intent(in), optional :: fmt
 
     integer :: i
 
@@ -177,7 +181,7 @@ contains
     if (present(title)) call xml_AddAttribute(xf, 'title', title)
     if (present(dictref)) call xml_AddAttribute(xf, 'dictRef', dictref)
     if (present(conv)) call xml_AddAttribute(xf, 'convention', conv)
-    if (present(lattType)) call xml_AddAttribute(xf, 'latticeType', lattType)
+    if (present(latticeType)) call xml_AddAttribute(xf, 'latticeType', latticeType)
     if (present(spaceType)) call xml_AddAttribute(xf, 'spaceType', spaceType)
 
     do i = 1,3

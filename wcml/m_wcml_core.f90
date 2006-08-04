@@ -3,12 +3,16 @@ module m_wcml_core
   use FoX_common, only: FoX_version
   use m_common_format, only: str
   use m_common_realtypes, only: sp, dp
-  use FoX_wxml, only: xmlf_t
+  use FoX_wxml, only: xmlf_t, xml_OpenFile, xml_Close
   use FoX_wxml, only: xml_NewElement, xml_AddAttribute
   use FoX_wxml, only: xml_EndElement, xml_DeclareNamespace
 
   implicit none
   private
+
+  public :: cmlBeginFile
+  public :: cmlFinishFile
+  public :: cmlAddNamespace
   
   public :: cmlStartCml
   public :: cmlEndCml
@@ -20,6 +24,37 @@ module m_wcml_core
   public :: cmlEndStep
 
 contains
+
+  subroutine cmlBeginFile(xf, filename)
+    type(xmlf_t), intent(out) :: xf
+    character(len=*), intent(in) :: filename
+
+    call xml_OpenFile(filename, xf)
+
+  end subroutine cmlBeginFile
+
+  
+  subroutine cmlFinishFile(xf)
+    type(xmlf_t), intent(out) :: xf
+
+    call xml_Close(xf)
+
+  end subroutine cmlFinishFile
+
+
+  subroutine cmlAddNamespace(xf, prefix, URI)
+    type(xmlf_t), intent(inout) :: xf
+    
+    character(len=*), intent(in) :: prefix
+    character(len=*), intent(in) :: URI
+
+    !FIXME
+    !if (len(xf%stack) > 0) &
+    !  call FoX_error("Cannot do cmlAddNamespace after document output")
+
+    call xml_DeclareNamespace(xf, URI, prefix)
+  end subroutine cmlAddNamespace
+
 
   subroutine cmlStartCml(xf, id, title, conv, dictref, ref)
     type(xmlf_t), intent(inout) :: xf
@@ -33,8 +68,8 @@ contains
     call xml_DeclareNamespace(xf, 'http://www.xml-cml.org/schema')
     call xml_DeclareNamespace(xf, 'http://www.w3.org/2001/XMLSchema', 'xsd')
     call xml_DeclareNamespace(xf, 'http://purl.org/dc/elements/1.1/title', 'dc')
-    call xml_DeclareNamespace(xf, 'http://www.xml-cml.org/units/units', 'units')
-! FIXME TOHW we will want other namespaces in here - particularly for units
+    call xml_DeclareNamespace(xf, 'http://www.xml-cml.org/units/units', 'cmlUnits')
+! FIXME TOHW we may want other namespaces in here - particularly for units
 ! once PMR has stabilized that.
 
     call xml_NewElement(xf, 'cml')

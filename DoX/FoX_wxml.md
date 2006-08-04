@@ -120,7 +120,6 @@ Add text data. The data to be added may be of any type; they will be converted t
 and if they are a 1- or 2-dimensional array, the elements will all be output, separated by spaces (except if it is a character array, in which
 case the delimiter may be changed to any other single character using an optional argument).
 
-
 <a name="NSfunctions"/>
 
 ### Namespace-aware functions:
@@ -136,13 +135,13 @@ Add an XML Namespace declaration. This function may be called at any time, and i
 
 Undeclare an XML namespace. This is equivalent to declaring an namespace with an empty URI, and renders the namespace ineffective for the scope of the declaration. For explanation of its scope, see below.
 
-**NB** Use of xml_UndeclareNamespace implies that the resultant document will be compliant with XML Namespaces 1.1, but not 1.0
+**NB** Use of `xml_UndeclareNamespace` implies that the resultant document will be compliant with XML Namespaces 1.1, but not 1.0
 
 #### Scope of namespace functions
 
-If  `xml_[Un]declareNamespace` is called immediately prior to an xml_NewElement call, then the namespace will be declared in that next element, and will therefore take effect in all child elements.
+If  `xml_[Un]declareNamespace` is called immediately prior to an `xml_NewElement` call, then the namespace will be declared in that next element, and will therefore take effect in all child elements.
 
-If it is called prior to an xml_NewElement call, but that element has namespaced attributes 
+If it is called prior to an `xml_NewElement` call, but that element has namespaced attributes 
 
 To explain by means of example: In order to generate the following XML output:
 
@@ -290,7 +289,9 @@ Add an XML comment
 * `xml_AddEntityReference`  
 **entityref**: Entity reference.
 
-This may be used anywhere that xml_AddCharacters may be, and will insert an entity reference into the contents of the XML document at that point.
+This may be used anywhere that `xml_AddCharacters` may be, and will insert an entity reference into the contents of the XML document at that point. Note that if the entity inserted is a character entity, its validity well be checked according to the rules of XML-1.1, not 1.0.
+
+If the entity reference is not a character entity, then no check is made of its validity, and a warning will be issued
 
 
 ##Exceptions
