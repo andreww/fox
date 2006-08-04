@@ -549,7 +549,7 @@ do
     break;
   fi
 done
-rm -f conftest.$ac_ext conftest.$ac_exe_ext conftest.mod conftest.MOD conftest.M CONFTEST.MOD
+rm -f conftest.$ac_ext conftest.$ac_exe_ext conftest.mod conftest.MOD conftest.M CONFTEST.MOD CONFTEST.mod
 #
 FC_MODEXT=
 FC_MODUPPERCASE=no
@@ -565,6 +565,10 @@ case $ac_mod_file in
     ;;
   CONFTEST.MOD)
     FC_MODEXT=MOD
+    FC_MODUPPERCASE=yes
+    ;;
+  CONFTEST.mod)
+    FC_MODEXT=mod
     FC_MODUPPERCASE=yes
     ;;
   none)

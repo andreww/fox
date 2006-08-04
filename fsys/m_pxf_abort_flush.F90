@@ -79,11 +79,15 @@ CONTAINS
       subroutine abort(), bind(c)
       end subroutine abort
     end interface
+#define FC_HAVE_ABORT
+#endif
+
+    call pxfflush(6)
+
+#ifdef FC_HAVE_ABORT
     call abort()
-#elif defined(xlC)
+#elif defined (xlC)
     call abort_()
-#elif defined(FC_HAVE_ABORT)
-    call abort()
 #else
     Integer, Pointer :: i
     i=>null()

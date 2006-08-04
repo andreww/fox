@@ -70,6 +70,9 @@ wxml_check:
 	(cd wxml/test;./run_tests.sh)
 check: common_check wxml_check wcml_check sax_check dom_check
 
+DoX:
+	(cd DoX; make)
+
 clean: dom_lib_clean sax_lib_clean wxml_lib_clean wcml_lib_clean common_lib_clean fsys_lib_clean
 	rm -f *.o dom_example sax_example wxml_example wcml_example simple.xml output.xml *.*d *.a
 	rm -f objs/lib/* objs/finclude/*
