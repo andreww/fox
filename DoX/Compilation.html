@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Compilation</title>
+  <link rel="stylesheet" type="text/css" href="DoX.css"/>
+</head>
+<body>
+  <div class="DoX">
+<h1>Configuration and compilation</h1>
+
+<p>You will have received the FoX source code as a tar.gz file.</p>
+
+<p>Unpack it as normal, and change directory into the top-level directory, FoX.</p>
+
+<h3>Requirements for use</h3>
+
+<p>FoX requires a Fortran 95 compiler - not just Fortran 90. All currently available versions of Fortran compilers claim to support F95. If your favoured compiler is not listed as working below, I recommend the use of <a href="www.g95.org">g95</a>, which is free to download and use.</p>
+
+<p>The following compilers are tested and are known to work:</p>
+
+<ul>
+<li>Intel Fortran version 9.0 and above (previous versions may compile, but do not work correctly.)</li>
+<li>XLF version 9.1 (previous versions untested)</li>
+<li>NAG version 5.0 (patch 391 and later) or 5.1</li>
+<li>g95 (version of 2006-08-01, earlier versions untested)</li>
+</ul>
+
+<p>The following compilers are tested and known to fail</p>
+
+<ul>
+<li>Intel Fortran prior to version 9.0</li>
+<li>NAG versions prior to 5.0-391</li>
+<li>Pathscale, all versions</li>
+<li>PGI, all versions</li>
+</ul>
+
+<p>Other compilers are untested; reports of their success or failure are welcomed.</p>
+
+<h2>Configuration</h2>
+
+<ul>
+<li><p>In order to generate the Makefile, make sure that you have a Fortran compiler in your <code>PATH</code>, and do:</p>
+
+<p>config/configure</p></li>
+</ul>
+
+<p>This should suffice for most installations. However:</p>
+
+<ol>
+<li><p>If you have more than one Fortran compiler available, or it is not on your <code>PATH</code>, you can force the choice by doing:</p>
+
+<p>config/configure FC=/path/to/compiler/of/choice</p></li>
+<li><p>It is possible that the configuration fails. In this case</p>
+
+<ul>
+<li>please tell me about it so I can fix it</li>
+<li>all relevant compiler details are placed in the file arch.make; you may be able to edit that file to allow compilation. Again, if so, please let me know what you need to do.</li>
+</ul></li>
+<li><p>By default the resultant files are installed under the objs directory. If you wish them to be installed elsewhere, you may do</p>
+
+<p>config/configure --prefix=/path/to/installation</p></li>
+</ol>
+
+<p>Note that the configure process encodes the current directory location in several
+places.  If you move the FoX directory later on, you will need to re-run configure.</p>
+
+<h2>Compilation</h2>
+
+<p>In order to compile the full library, now simply do:</p>
+
+<pre><code>make
+</code></pre>
+
+<p>This will build all the FoX modules, and all the examples.
+However, you may only be interested in building the libraries, or perhaps a subset of the libraries. In that case, the following targets are available:</p>
+
+<pre><code>    wxml_lib
+    wcml_lib
+</code></pre>
+
+<h2>Linking to an existing program</h2>
+
+<ul>
+<li>The files all having been compiled and installed, you need to link them into your program.</li>
+</ul>
+
+<p>A script is provided which will provide the appropriate compiler and linker flags for you; this will be created after configuration, in the top-level directory, and is called <code>FoX-config</code>. It may be taken from there and placed anywhere.</p>
+
+<p>FoX-config takes the following arguments:</p>
+
+<ul>
+<li><code>--fcflags</code>: return flags for compilation</li>
+<li><code>--libs</code>: return flags for linking</li>
+<li><code>--wxml</code>: return flags for compiling/linking against wxml</li>
+<li><code>--wcml</code>: return flags for compiling/linking against wcml</li>
+</ul>
+
+<p>For compiling files against FoX, do the following:</p>
+
+<pre><code>f95 -c `FoX-config --fcflags` sourcefile.f90
+</code></pre>
+
+<p>For linking objects to the FoX library, do:</p>
+
+<pre><code>f95 -o program `FoX-config --libs` *.o
+</code></pre>
+
+<p>or similar, according to your compilation scheme. </p>
+
+<p>Note that by default, <code>FoX-config</code> assumes you are using all modules of the library. If you are only using part, then this can be specified by also passing the name of each module required, like so:</p>
+
+<pre><code>FoX-config --fcflags --wcml
+</code></pre>
+</div>
+</body>
+</html>
