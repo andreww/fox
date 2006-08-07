@@ -31,4 +31,7 @@ module FoX_wxml
   public :: xml_AddNotation
   public :: xml_AddStringToDTD
 
+  public :: xmlf_Name
+  public :: xmlf_OpenTag
+
 end module FoX_wxml

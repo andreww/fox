@@ -3,7 +3,6 @@ possible str bug on XLF?
 check eol handling of PIs in chardata
 some tests are failing because aborting is losing all output to test.out
 check entity references while outputting? with ref to standalone?
-allow for some simple enquiry functions: what is the currently open tag?
 
 check unescaped attribute values - wait for proper unicode support
 allow character entities in XML Names - this requires full unicode support - wait.
@@ -11,6 +10,7 @@ allow character entities in XML Names - this requires full unicode support - wai
 pass arbitrary data to PI data. No, let's not actually
 autodetect xml_recl - No - then output will be dependent on platform & it shouldn't be.
 
+allow for some simple enquiry functions: what is the currently open tag? - done
 spurious linefeed at end of DOCTYPE (see wxml_example) - done
 check usage of buffer DONE
 what happens to unbroken character data?, indeed when we put anything > 1024 chars into the buffer? DONE

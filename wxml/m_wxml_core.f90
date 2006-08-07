@@ -105,6 +105,9 @@ module m_wxml_core
   public :: xml_AddExternalEntity
   public :: xml_AddNotation
   public :: xml_AddStringToDTD
+
+  public :: xmlf_Name
+  public :: xmlf_OpenTag
  
   interface xml_AddCharacters
     module procedure xml_AddCharacters_Ch
@@ -130,11 +133,10 @@ module m_wxml_core
   ! Heuristic (approximate) target for justification of output
   ! Large unbroken pcdatas will go beyond this limit
   integer, parameter  :: COLUMNS = 80
+!FIXME this comment
   !Actually this is only ever used in write_attributes. which is 
   ! fine since that's almost the only place in the main body of a 
   ! XML document where new-lines are semantically meaningless.
-  !(they are also meaningless after the Name of a start or empty tag,
-  ! but that is less useful for reformatting
 
   ! TOHW - This is the longest string that may be output without
   ! a newline. The buffer must not be larger than this, but its size 
@@ -970,6 +972,7 @@ contains
     
   end subroutine xml_Close
 
+
 !==================================================================
   !----------------------------------------------------------
 
@@ -1105,10 +1108,21 @@ contains
 
 
     pure function xmlf_name(xf) result(fn)
-      Type (xmlf_t), intent(in) :: xf
+      type (xmlf_t), intent(in) :: xf
       character(len=size(xf%filename)) :: fn
       fn = str_vs(xf%filename)
     end function xmlf_name
+
+
+    function xmlf_opentag(xf) result(fn)
+      type (xmlf_t), intent(in) :: xf
+      character(len=merge(0, len(get_top_elstack(xf%stack)), is_empty(xf%stack))) :: fn
+      if (is_empty(xf%stack)) then
+        fn = ""
+      else
+        fn = get_top_elstack(xf%stack)
+      endif
+    end function xmlf_opentag
       
 
     subroutine devnull(str)
@@ -1117,4 +1131,3 @@ contains
     end subroutine devnull
 
 end module m_wxml_core
-

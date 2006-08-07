@@ -1,11 +1,14 @@
 module m_wcml_core
 
-  use FoX_common, only: FoX_version
-  use m_common_format, only: str
+  use m_common_error, only: FoX_error
   use m_common_realtypes, only: sp, dp
+
+  use FoX_common, only: FoX_version
+  use FoX_common, only: str
   use FoX_wxml, only: xmlf_t, xml_OpenFile, xml_Close
   use FoX_wxml, only: xml_NewElement, xml_AddAttribute
   use FoX_wxml, only: xml_EndElement, xml_DeclareNamespace
+  use FoX_wxml, only: xmlf_Name, xmlf_OpenTag
 
   implicit none
   private
@@ -43,8 +46,8 @@ contains
     character(len=*), intent(in) :: URI
 
     !FIXME
-    !if (len(xf%stack) > 0) &
-    !  call FoX_error("Cannot do cmlAddNamespace after document output")
+    if (xmlf_OpenTag(xf) /= "") &
+      call FoX_error("Cannot do cmlAddNamespace after document output")
 
     call xml_DeclareNamespace(xf, URI, prefix)
   end subroutine cmlAddNamespace
@@ -76,12 +79,11 @@ contains
     else
       call xml_AddAttribute(xf, 'convention', 'FoX_wcml-2.0')
     endif
-! FIXME
-!    if (present(fileId)) then
-!      call xml_AddAttribute(xf, 'fileId', fileId)
-!    else
-!      call xml_AddAttribute(xf, 'fileId', str_vs(xf%filename))
-!    endif
+    if (present(fileId)) then
+      call xml_AddAttribute(xf, 'fileId', fileId)
+    else
+      call xml_AddAttribute(xf, 'fileId', xmlf_Name(xf))
+    endif
     if (present(version)) then
       call xml_AddAttribute(xf, 'version', version)
     else

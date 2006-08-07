@@ -2,7 +2,7 @@ module m_common_elstack
 
   use m_common_array_str, only: str_vs, vs_str
   use m_common_error, only : FoX_error, FoX_fatal
-  use pxf
+  use pxf, only: pure_pxfabort
 
   implicit none
   private
@@ -36,7 +36,7 @@ module m_common_elstack
     module procedure is_empty_elstack
   end interface
 
-CONTAINS
+contains
 
   !-----------------------------------------------------------------
   subroutine init_elstack(elstack)
@@ -89,7 +89,7 @@ CONTAINS
   end subroutine resize_elstack
 
   !-----------------------------------------------------------------
-  function is_empty_elstack(elstack) result(answer)
+  pure function is_empty_elstack(elstack) result(answer)
     type(elstack_t), intent(in)  :: elstack
     logical                    :: answer
 
@@ -140,7 +140,7 @@ CONTAINS
   end function pop_elstack
 
   !-----------------------------------------------------------------
-  function get_top_elstack(elstack) result(item)
+  pure function get_top_elstack(elstack) result(item)
     !
     ! Get the top element of the stack, *without popping it*.
     !
@@ -151,9 +151,9 @@ CONTAINS
 
     n = elstack%n_items
 
-    if (n == 0) then
-      call FoX_error("Element stack empty")
-    endif
+    if (n == 0) &
+      i = pure_pxfabort()
+
     item = str_vs(elstack%stack(n)%data)
 
   end function get_top_elstack
