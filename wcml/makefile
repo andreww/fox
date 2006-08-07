@@ -12,7 +12,8 @@ m_wcml_property.f90: m_wcml_quantity.m4
 	m4 -DQUANTITY=property -DARGS="(id, title, dictRef, convention, ref, role)" m_wcml_quantity.m4 > $@
 m_wcml_parameter.f90: m_wcml_quantity.m4
 	m4 -DQUANTITY=parameter -DARGS="(name, id, title, dictRef, convention, ref, role)" m_wcml_quantity.m4 > $@
-
+m_wcml_metadata.f90: m_wcml_metadata.m4
+	m4 $< > $@
 
 #
 #---------NOTHING SHOULD NEED TO BE CHANGED BELOW THIS LINE-----

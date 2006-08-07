@@ -10,10 +10,10 @@ module m_wcml_metadata
 
   interface cmlAddMetadata
     module procedure cmlAddMetaDataCh
-    module procedure cmlAddMetaDataI
-    module procedure cmlAddMetaDataSP
-    module procedure cmlAddMetaDataDP
+    module procedure cmlAddMetaDataInt
     module procedure cmlAddMetaDataLg
+    module procedure cmlAddMetaDataRealSP
+    module procedure cmlAddMetaDataRealDP
   end interface
 
   public :: cmlStartMetadataList
@@ -22,22 +22,22 @@ module m_wcml_metadata
 
 contains
 
-  subroutine cmlStartMetadataList(xf, id, title, conv, dictref, ref, role)
+  subroutine cmlStartMetadataList(xf, id, title, convention, dictref, name, role)
 
     type(xmlf_t), intent(inout) :: xf
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
-    character(len=*), intent(in), optional :: conv
+    character(len=*), intent(in), optional :: convention
     character(len=*), intent(in), optional :: dictref
-    character(len=*), intent(in), optional :: ref
+    character(len=*), intent(in), optional :: name
     character(len=*), intent(in), optional :: role
 
     call xml_NewElement(xf, 'metadataList')
     if (present(id)) call xml_AddAttribute(xf, 'id', id)
     if (present(title)) call xml_AddAttribute(xf, 'title', title)
     if (present(dictref)) call xml_AddAttribute(xf, 'dictRef', dictref)
-    if (present(conv)) call xml_AddAttribute(xf, 'convention', conv)
-    if (present(ref)) call xml_AddAttribute(xf, 'ref', ref)
+    if (present(convention)) call xml_AddAttribute(xf, 'convention', convention)
+    if (present(name)) call xml_AddAttribute(xf, 'name', name)
     if (present(role)) call xml_AddAttribute(xf, 'role', role)
 
   end subroutine cmlStartMetadataList
@@ -49,79 +49,114 @@ contains
 
   end subroutine cmlEndMetadataList
 
-  subroutine cmlAddMetadataCh(xf, name, content, conv, dictRef, id, title)
-!dictRef, id, title
+  subroutine cmlAddMetadataCh(xf, name, content, convention, dictRef, id, title)
     type(xmlf_t), intent(inout) :: xf
     character(len=*), intent(in) :: name
     character(len=*), intent(in) :: content
-    character(len=*), intent(in), optional :: conv
+    character(len=*), intent(in), optional :: convention
+    character(len=*), intent(in), optional :: dictRef
+    character(len=*), intent(in), optional :: id
+    character(len=*), intent(in), optional :: title
 
     call xml_NewElement(xf, 'metadata')
     call xml_AddAttribute(xf, 'name', name)
     call xml_AddAttribute(xf, 'content', content)
-    if (present(conv)) call xml_AddAttribute(xf, 'convention', conv)
+    if (present(dictref)) call xml_AddAttribute(xf, 'dictRef', dictref)
+    if (present(id)) call xml_AddAttribute(xf, 'id', title)
+    if (present(title)) call xml_AddAttribute(xf, 'title', title)
+    if (present(convention)) call xml_AddAttribute(xf, 'convention', convention)
     call xml_EndElement(xf, 'metadata')
 
   end subroutine cmlAddMetadataCh
 
-  subroutine cmlAddMetadataSP(xf, name, content, conv)
-
+   subroutine cmlAddMetadataLg(xf, name, content, convention, dictRef, id, title )
     type(xmlf_t), intent(inout) :: xf
     character(len=*), intent(in) :: name
-    real(sp), intent(in) :: content
-    character(len=*), intent(in), optional :: conv
+    logical , intent(in) :: content
+    character(len=*), intent(in), optional :: convention
+    character(len=*), intent(in), optional :: dictRef
+    character(len=*), intent(in), optional :: id
+    character(len=*), intent(in), optional :: title
 
-    call xml_NewElement(xf, 'metadata')
-    call xml_AddAttribute(xf, 'name', name)
-    call xml_AddAttribute(xf, 'content', content)
-    if (present(conv)) call xml_AddAttribute(xf, 'convention', conv)
-    call xml_EndElement(xf, 'metadata')
 
-  end subroutine cmlAddMetadataSP
+    call xml_NewElement(xf, "metadata")
+    call xml_AddAttribute(xf, "name", name)
+    call xml_AddAttribute(xf, name="content", value=content  )
+    if (present(dictref)) call xml_AddAttribute(xf, "dictRef", dictref)
+    if (present(id)) call xml_AddAttribute(xf, "id", title)
+    if (present(title)) call xml_AddAttribute(xf, "title", title)
+    if (present(convention)) call xml_AddAttribute(xf, "convention", convention)
+    call xml_EndElement(xf, "metadata")
 
-  subroutine cmlAddMetadataDP(xf, name, content, conv)
+   end subroutine cmlAddMetadataLg
 
+
+   subroutine cmlAddMetadataInt(xf, name, content, convention, dictRef, id, title )
     type(xmlf_t), intent(inout) :: xf
     character(len=*), intent(in) :: name
-    real(dp), intent(in) :: content
-    character(len=*), intent(in), optional :: conv
+    integer , intent(in) :: content
+    character(len=*), intent(in), optional :: convention
+    character(len=*), intent(in), optional :: dictRef
+    character(len=*), intent(in), optional :: id
+    character(len=*), intent(in), optional :: title
 
-    call xml_NewElement(xf, 'metadata')
-    call xml_AddAttribute(xf, 'name', name)
-    call xml_AddAttribute(xf, 'content', content)
-    if (present(conv)) call xml_AddAttribute(xf, 'convention', conv)
-    call xml_EndElement(xf, 'metadata')
 
-  end subroutine cmlAddMetadataDP
+    call xml_NewElement(xf, "metadata")
+    call xml_AddAttribute(xf, "name", name)
+    call xml_AddAttribute(xf, name="content", value=content  )
+    if (present(dictref)) call xml_AddAttribute(xf, "dictRef", dictref)
+    if (present(id)) call xml_AddAttribute(xf, "id", title)
+    if (present(title)) call xml_AddAttribute(xf, "title", title)
+    if (present(convention)) call xml_AddAttribute(xf, "convention", convention)
+    call xml_EndElement(xf, "metadata")
 
-  subroutine cmlAddMetadataI(xf, name, content, conv)
+   end subroutine cmlAddMetadataInt
 
+
+   subroutine cmlAddMetadataRealSp(xf, name, content, convention, dictRef, id, title ,fmt)
     type(xmlf_t), intent(inout) :: xf
     character(len=*), intent(in) :: name
-    integer, intent(in) :: content
-    character(len=*), intent(in), optional :: conv
+    real(sp) , intent(in) :: content
+    character(len=*), intent(in), optional :: convention
+    character(len=*), intent(in), optional :: dictRef
+    character(len=*), intent(in), optional :: id
+    character(len=*), intent(in), optional :: title
 
-    call xml_NewElement(xf, 'metadata')
-    call xml_AddAttribute(xf, 'name', name)
-    call xml_AddAttribute(xf, 'content', content)
-    if (present(conv)) call xml_AddAttribute(xf, 'convention', conv)
-    call xml_EndElement(xf, 'metadata')
+    character(len=*), intent(in), optional :: fmt
 
-  end subroutine cmlAddMetadataI
+    call xml_NewElement(xf, "metadata")
+    call xml_AddAttribute(xf, "name", name)
+    call xml_AddAttribute(xf, name="content", value=content ,fmt=fmt )
+    if (present(dictref)) call xml_AddAttribute(xf, "dictRef", dictref)
+    if (present(id)) call xml_AddAttribute(xf, "id", title)
+    if (present(title)) call xml_AddAttribute(xf, "title", title)
+    if (present(convention)) call xml_AddAttribute(xf, "convention", convention)
+    call xml_EndElement(xf, "metadata")
 
-  subroutine cmlAddMetadataLG(xf, name, content, conv)
+   end subroutine cmlAddMetadataRealSp
 
+
+   subroutine cmlAddMetadataRealDp(xf, name, content, convention, dictRef, id, title ,fmt)
     type(xmlf_t), intent(inout) :: xf
     character(len=*), intent(in) :: name
-    logical, intent(in) :: content
-    character(len=*), intent(in), optional :: conv
+    real(dp) , intent(in) :: content
+    character(len=*), intent(in), optional :: convention
+    character(len=*), intent(in), optional :: dictRef
+    character(len=*), intent(in), optional :: id
+    character(len=*), intent(in), optional :: title
 
-    call xml_NewElement(xf, 'metadata')
-    call xml_AddAttribute(xf, 'name', name)
-    call xml_AddAttribute(xf, 'content', content)
-    if (present(conv)) call xml_AddAttribute(xf, 'convention', conv)
-    call xml_EndElement(xf, 'metadata')
+    character(len=*), intent(in), optional :: fmt
 
-  end subroutine cmlAddMetadataLG
+    call xml_NewElement(xf, "metadata")
+    call xml_AddAttribute(xf, "name", name)
+    call xml_AddAttribute(xf, name="content", value=content ,fmt=fmt )
+    if (present(dictref)) call xml_AddAttribute(xf, "dictRef", dictref)
+    if (present(id)) call xml_AddAttribute(xf, "id", title)
+    if (present(title)) call xml_AddAttribute(xf, "title", title)
+    if (present(convention)) call xml_AddAttribute(xf, "convention", convention)
+    call xml_EndElement(xf, "metadata")
+
+   end subroutine cmlAddMetadataRealDp
+
 
 end module m_wcml_metadata

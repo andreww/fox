@@ -23,6 +23,7 @@ The following compilers are tested and known to fail
 * Pathscale, all versions (bug reported #6259)
 * PGI, all versions (bug reported)
 * gfortran prior to and including version 4.1
+* Sun Fortran 95 7.1 Patch 112762-16 2005/10/25 (later versions untested)
 
 Other compilers are untested; reports of their success or failure are welcomed.
 
@@ -39,7 +40,7 @@ This should suffice for most installations. However:
 	config/configure FC=/path/to/compiler/of/choice
 
 2. It is possible that the configuration fails. In this case
-	*  please tell me about it so I can fix it
+	* please tell me about it so I can fix it
   	* all relevant compiler details are placed in the file arch.make; you may be able to edit that file to allow compilation. Again, if so, please let me know what you need to do.
 
 3. By default the resultant files are installed under the objs directory. If you wish them to be installed elsewhere, you may do

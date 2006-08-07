@@ -56,14 +56,15 @@ contains
   end subroutine cmlAddNamespace
 
 
-  subroutine cmlStartCml(xf, id, title, conv, dictref, ref)
+  subroutine cmlStartCml(xf, id, title, convention, dictref, fileId, version)
     type(xmlf_t), intent(inout) :: xf
 
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
-    character(len=*), intent(in), optional :: conv
+    character(len=*), intent(in), optional :: convention
     character(len=*), intent(in), optional :: dictref
-    character(len=*), intent(in), optional :: ref
+    character(len=*), intent(in), optional :: fileId
+    character(len=*), intent(in), optional :: version
 
     call xml_DeclareNamespace(xf, 'http://www.xml-cml.org/schema')
     call xml_DeclareNamespace(xf, 'http://www.w3.org/2001/XMLSchema', 'xsd')
@@ -76,8 +77,22 @@ contains
     if (present(id)) call xml_AddAttribute(xf, 'id', id)
     if (present(title)) call xml_AddAttribute(xf, 'title', title)
     if (present(dictref)) call xml_AddAttribute(xf, 'dictRef', dictref)
-    if (present(conv)) call xml_AddAttribute(xf, 'convention', conv)
-    if (present(ref)) call xml_AddAttribute(xf, 'ref', ref)
+    if (present(convention)) then
+      call xml_AddAttribute(xf, 'convention', convention)
+    else
+      call xml_AddAttribute(xf, 'convention', 'FoX_wcml-2.0')
+    endif
+! FIXME
+!    if (present(fileId)) then
+!      call xml_AddAttribute(xf, 'fileId', fileId)
+!    else
+!      call xml_AddAttribute(xf, 'fileId', str_vs(xf%filename))
+!    endif
+    if (present(version)) then
+      call xml_AddAttribute(xf, 'version', version)
+    else
+      call xml_AddAttribute(xf, 'version', "2.4")
+    endif
 
   end subroutine cmlStartCml
 
@@ -91,13 +106,12 @@ contains
   end subroutine cmlEndCml
 
 
-  subroutine cmlStartModule(xf, id, title, conv, dictref, ref, role, serial)
+  subroutine cmlStartModule(xf, id, title, convention, dictref, role, serial)
     type(xmlf_t), intent(inout) :: xf
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
-    character(len=*), intent(in), optional :: conv
+    character(len=*), intent(in), optional :: convention
     character(len=*), intent(in), optional :: dictref
-    character(len=*), intent(in), optional :: ref
     character(len=*), intent(in), optional :: role
     character(len=*), intent(in), optional :: serial
     
@@ -105,8 +119,7 @@ contains
     if (present(id)) call xml_AddAttribute(xf, 'id', id)
     if (present(title)) call xml_AddAttribute(xf, 'title', title)
     if (present(dictref)) call xml_AddAttribute(xf, 'dictRef', dictref)
-    if (present(conv)) call xml_AddAttribute(xf, 'convention', conv)
-    if (present(ref)) call xml_AddAttribute(xf, 'ref', ref)
+    if (present(convention)) call xml_AddAttribute(xf, 'convention', convention)
     if (present(role)) call xml_AddAttribute(xf, 'role', role)
     if (present(serial)) call xml_AddAttribute(xf, 'serial', serial)
     
@@ -121,19 +134,20 @@ contains
   end subroutine cmlEndModule
 
 
-  subroutine cmlStartStep(xf, type, index, id, title, conv, ref)
+  subroutine cmlStartStep(xf, type, index, id, title, convention)
     type(xmlf_t), intent(inout) :: xf
     character(len=*), intent(in), optional :: type
     character(len=*), intent(in), optional :: id
     integer, intent(in), optional :: index
     character(len=*), intent(in), optional :: title
-    character(len=*), intent(in), optional :: conv
-    character(len=*), intent(in), optional :: ref
+    character(len=*), intent(in), optional :: convention
 
     if (present(index)) then
-      call cmlStartModule(xf=xf, id=id, title=title, conv=conv, dictRef=type, ref=ref, role='step', serial=str(index))
+      call cmlStartModule(xf=xf, id=id, title=title, convention=convention, &
+        dictRef=type, role='step', serial=str(index))
     else
-      call cmlStartModule(xf=xf, id=id, title=title, conv=conv, dictRef=type, ref=ref, role='step')
+      call cmlStartModule(xf=xf, id=id, title=title, convention=convention, &
+        dictRef=type, role='step')
     endif
     
   end subroutine cmlStartStep
