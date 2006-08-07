@@ -168,27 +168,31 @@ This pair of functions open and close a module of a computation which is strongl
 
 * `cmlAddMetadata`
 
-This adds a single item of metadata. It takes the following arguments:
-
 **name**: *string* *scalar*: Identifying string for metadata  
 **content**: *anytype* *scalar*: Content of metadata  
 
-* `cmlAddParameter`
+This adds a single item of metadata. It takes the following arguments:
 
-This function adds a tag representing an input parameter
+* `cmlAddParameter`
 
 **title**: *string* *scalar*: Identifying title for parameter  
 **value**:*anytype* *anydim*: value of parameter  
 **units**: *string* *scalar*: units of parameter value  
-**cons** FIXME
+(**constraint**) *string* scalar*: Manner in which the property is constrained
+(**ref**) *string* *scalar*: Reference an `id` attribute of another element (generally deprecated)  
+(**role**) *string* *scalar* role which the element plays 
+
+This function adds a tag representing an input parameter
 
 * `cmlAddProperty`
+**name**: *string* *scalar*  
+**value**: *any* *anydim*  
+**units**: *string* *scalar* units of property value  
+(**ref**) *string* *scalar*: Reference an `id` attribute of another element (generally deprecated)  
+(**role**) *string* *scalar* role which the element plays 
 
 This function adds a tag representing an output property
 
-**name**: *string* *scalar*  
-**property**: *any* *anydim*  
-**units**: *string* *scalar* units of property value  
 
 * `cmlAddMolecule`
 
@@ -205,9 +209,9 @@ Outputs information about a unit cell, in lattice-vector form
 
 **cell**: *real* *matrix* a 3x3 matrix of the unit cell  
 **spaceType**: 'real' or 'reciprocal' space.  
-(**latticeType)**: Space group of the lattice; 
+(**latticeType)**: *string* *scalar* Space group of the lattice; 
 default - none  
-(**units**): units of (reciprocal) distance that cell vectors is given in; 
+(**units**): *string * scalar* units of (reciprocal) distance that cell vectors is given in; 
 default - none
 
 * `cmlAddCrystal`

@@ -205,31 +205,34 @@ Attempts to do otherwise will result in a runtime error.</p>
 <li><code>cmlAddMetadata</code></li>
 </ul>
 
-<p>This adds a single item of metadata. It takes the following arguments:</p>
-
 <p><strong>name</strong>: <em>string</em> <em>scalar</em>: Identifying string for metadata <br />
 <strong>content</strong>: <em>anytype</em> <em>scalar</em>: Content of metadata  </p>
+
+<p>This adds a single item of metadata. It takes the following arguments:</p>
 
 <ul>
 <li><code>cmlAddParameter</code></li>
 </ul>
 
-<p>This function adds a tag representing an input parameter</p>
-
 <p><strong>title</strong>: <em>string</em> <em>scalar</em>: Identifying title for parameter <br />
 <strong>value</strong>:<em>anytype</em> <em>anydim</em>: value of parameter <br />
 <strong>units</strong>: <em>string</em> <em>scalar</em>: units of parameter value <br />
-<strong>cons</strong> FIXME</p>
+(<strong>constraint</strong>) <em>string</em> scalar<em>: Manner in which the property is constrained
+(<strong>ref</strong>) *string</em> <em>scalar</em>: Reference an <code>id</code> attribute of another element (generally deprecated) <br />
+(<strong>role</strong>) <em>string</em> <em>scalar</em> role which the element plays </p>
+
+<p>This function adds a tag representing an input parameter</p>
 
 <ul>
-<li><code>cmlAddProperty</code></li>
+<li><code>cmlAddProperty</code>
+<strong>name</strong>: <em>string</em> <em>scalar</em> <br />
+<strong>value</strong>: <em>any</em> <em>anydim</em> <br />
+<strong>units</strong>: <em>string</em> <em>scalar</em> units of property value <br />
+(<strong>ref</strong>) <em>string</em> <em>scalar</em>: Reference an <code>id</code> attribute of another element (generally deprecated) <br />
+(<strong>role</strong>) <em>string</em> <em>scalar</em> role which the element plays </li>
 </ul>
 
 <p>This function adds a tag representing an output property</p>
-
-<p><strong>name</strong>: <em>string</em> <em>scalar</em> <br />
-<strong>property</strong>: <em>any</em> <em>anydim</em> <br />
-<strong>units</strong>: <em>string</em> <em>scalar</em> units of property value  </p>
 
 <ul>
 <li><code>cmlAddMolecule</code></li>
@@ -250,9 +253,9 @@ Attempts to do otherwise will result in a runtime error.</p>
 
 <p><strong>cell</strong>: <em>real</em> <em>matrix</em> a 3x3 matrix of the unit cell <br />
 <strong>spaceType</strong>: 'real' or 'reciprocal' space. <br />
-(<strong>latticeType)</strong>: Space group of the lattice; 
+(<strong>latticeType)</strong>: <em>string</em> <em>scalar</em> Space group of the lattice; 
 default - none <br />
-(<strong>units</strong>): units of (reciprocal) distance that cell vectors is given in; 
+(<strong>units</strong>): <em>string * scalar</em> units of (reciprocal) distance that cell vectors is given in; 
 default - none</p>
 
 <ul>

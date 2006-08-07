@@ -23,15 +23,14 @@ ifelse(`$1', `RealDp', `real(dp)',
 ')dnl
 dnl
 dnl
-define(`TOHWM4_subroutinename', `$1$2$3$4')dnl
-define(`TOHWM4_interfacename',`module procedure TOHWM4_subroutinename(`$1',`$2',`$3',`$4')')dnl
+define(`TOHWM4_interfacename',module procedure `$1'`$2'`$3')dnl
 dnl
 define(`TOHWM4_interfacelist', `dnl
-     TOHWM4_interfacename($1,`Sca',`$2',`')
-     TOHWM4_interfacename($1,`Arr',`$2',`Si')
-     TOHWM4_interfacename($1,`Arr',`$2',`Sh')
-     TOHWM4_interfacename($1,`Mat',`$2',`Si')
-     TOHWM4_interfacename($1,`Mat',`$2',`Sh')
+     TOHWM4_interfacename(`$1',`$2',`Sca')
+     TOHWM4_interfacename(`$1',`$2',`ArrSi')
+     TOHWM4_interfacename(`$1',`$2',`ArrSh')
+     TOHWM4_interfacename(`$1',`$2',`MatSi')
+     TOHWM4_interfacename(`$1',`$2',`MatSh')
 ')dnl
 dnl
 dnl
@@ -51,24 +50,35 @@ define(`TOHWM4_dummyarguse',`dnl
 ')dnl
 dnl
 dnl
-dnl This is what a subroutine looks like if it is for a SCALAR quantity
-dnl FIrst arg is name of quantity (property/parameter)
+dnl This is what a subroutine looks like.
+dnl First arg is name of quantity (property/parameter)
 dnl Second arg is list of optional args
 dnl Third arg is type of property(character/logical etc.)
-define(`TOHWM4_ScalarSub',`dnl
-  subroutine TOHWM4_subroutinename(`$1',`Sca',`$3',`') &
-    (xf, value, TOHWM4_dummyarglist(`$2') dnl
+dnl Fourth arg is whether scalar; assumed-size array, assumed-shape array, assumed size, matrix, or assumed-shape matrix.
+define(`TOHWM4_QuantitySub',`dnl
+  subroutine `$1'`$3'`$4' &
+    (xf, value, dnl
+ifelse(`$4', `ArrSi', `nitems, ', `$4', `MatSi', `nrows, ncols, ') dnl
+ TOHWM4_dummyarglist(`$2') dnl
 ifelse(`$3',`Lg',`',`, units') dnl
 ifelse(substr($3,0,4),`Real',`,fmt)',`)')
 
     type(xmlf_t), intent(inout)              :: xf
-    TOHWM4_declarationtype(`$3'), intent(in) :: value
+    TOHWM4_declarationtype(`$3'), intent(in) dnl
+ifelse(substr($4,0,3), `Arr', `, dimension(:)', substr($4,0,3), `Mat', `, dimension(:,:)') dnl
+ :: value
+ifelse(`$4', `ArrSi', `dnl
+    integer, intent(in) :: nitems
+', `$4', `MatSi', `dnl
+    integer, intent(in) :: nrows
+    integer, intent(in) :: ncols
+')dnl
 dnl
 m4_foreach(`x', `$2', `TOHWM4_dummyargdecl(x)')
 dnl
 ifelse(`$3',`Lg',`',`dnl
     character(len=*), intent(in), optional :: units
-') dnl
+')dnl
 ifelse(substr($3,0,4),`Real',`dnl 
     character(len=*), intent(in), optional :: fmt
 ')dnl
@@ -77,109 +87,16 @@ ifelse(substr($3,0,4),`Real',`dnl
 dnl
 m4_foreach(`x', `$2', `TOHWM4_dummyarguse(x)')
 dnl
-    call stmAddValue(xf=xf, value=value dnl
+    call stmAddValue(xf=xf dnl
+ifelse($4, `ArrSi', `, value=value(:nitems)', $4, `MatSi', `, value=value(:nrows, :ncols)', `, value=value') dnl
 ifelse(`$3',`Lg',`',`, units=units') dnl
 ifelse(substr($3,0,4),`Real',`,fmt=fmt',`') dnl
 )
 dnl
     call xml_EndElement(xf, "$1")
 
-  end subroutine TOHWM4_subroutinename(`$1',`Sca',`$3',`')
+  end subroutine `$1'`$3'`$4'
 ')dnl
-dnl
-dnl
-dnl
-dnl Arrays; assumed shape/size:
-dnl Same as before, but fourth arg is Sh/Si according
-dnl to assumed shape/size
-define(`TOHWM4_ArraySub',`dnl
-  subroutine TOHWM4_subroutinename(`$1',`Arr',`$3',`$4') &
-    (xf, value, dnl
-ifelse($4, `Si', `nvalue, ') dnl
-TOHWM4_dummyarglist(`$2') dnl
-ifelse(`$3',`Lg',`',`, units') dnl
-ifelse(substr($3,0,4),`Real',`,fmt)',`)')
-
-    type(xmlf_t), intent(inout)              :: xf
-ifelse($4, `Si', `dnl
-    integer, intent(in)                      :: nvalue
-')dnl
-    TOHWM4_declarationtype(`$3'), intent(in) :: value(dnl
-ifelse($4, `Si', `*', `:') dnl
-)
-dnl
-m4_foreach(`x', `$2', `TOHWM4_dummyargdecl(x)')
-dnl
-ifelse(`$3',`Lg',`',`dnl
-    character(len=*), intent(in), optional :: units
-') dnl
-ifelse(substr($3,0,4),`Real',`dnl 
-    character(len=*), intent(in), optional :: fmt
-')dnl
-
-    call xml_NewElement(xf, "$1")
-dnl
-m4_foreach(`x', `$2', `TOHWM4_dummyarguse(x)')
-dnl
-ifelse($4, `Si', `dnl
-    call stmAddValue(xf=xf, value=value(:nvalue) dnl
-',`dnl
-    call stmAddValue(xf=xf, value=value dnl
-')dnl
-ifelse(`$3',`Lg',`',`, units=units') dnl
-ifelse(substr($3,0,4),`Real',`,fmt=fmt',`') dnl
-)
-dnl
-    call xml_EndElement(xf, "$1")
-  end subroutine TOHWM4_subroutinename(`$1',`Arr',`$3',`$4')
-')dnl
-dnl
-dnl
-dnl
-dnl Matrices; assumed shape/size:
-dnl Same as before, but fourth arg is Sh/Si according
-dnl to assumed shape/size
-define(`TOHWM4_MatrixSub',`dnl
-  subroutine TOHWM4_subroutinename(`$1',`Mat',`$3',`$4') &
-    (xf, value, dnl
-ifelse($4, `Si', `nrows, ncols, ') dnl
-TOHWM4_dummyarglist(`$2') dnl
-ifelse(`$3',`Lg',`',`, units') dnl
-ifelse(substr($3,0,4),`Real',`,fmt)',`)')
-
-    type(xmlf_t), intent(inout)              :: xf
-ifelse($4, `Si', `dnl
-    integer, intent(in)                      :: nrows, ncols
-')dnl
-    TOHWM4_declarationtype(`$3'), intent(in) :: value(dnl
-ifelse($4, `Si', `nrows, *', `:, :') dnl
-)
-dnl
-m4_foreach(`x', `$2', `TOHWM4_dummyargdecl(x)')
-dnl
-ifelse(`$3',`Lg',`',`dnl
-     character(len=*), intent(in), optional :: units
-') dnl
-ifelse(substr($3,0,4),`Real',`dnl 
-    character(len=*), intent(in), optional :: fmt
-')dnl
-
-    call xml_NewElement(xf, "$1")
-dnl
-m4_foreach(`x', `$2', `TOHWM4_dummyarguse(x)')
-dnl
-ifelse($4, `Si', `dnl
-    call stmAddValue(xf=xf, value=value(:nrows,:ncols) dnl
-',`dnl
-    call stmAddValue(xf=xf, value=value dnl
-')dnl
-ifelse(`$3',`Lg',`',`, units=units') dnl
-ifelse(substr($3,0,4),`Real',`, fmt=fmt',`') dnl
-)
-    call xml_EndElement(xf, "$1")
-  end subroutine TOHWM4_subroutinename(`$1',`Mat',`$3',`$4')
-')dnl
-dnl
 dnl
 dnl
 dnl
@@ -208,22 +125,20 @@ m4_foreach(`x', `(RealDp, RealSp, Int, Lg, Ch)', `TOHWM4_interfacelist($1, x)')
 contains
 
 dnl Make the Scalar subroutines:
-m4_foreach(`x', `(RealDp, RealSp, Int, Lg, Ch)', `TOHWM4_ScalarSub($1, `$2', x)
+m4_foreach(`x', `(RealDp, RealSp, Int, Lg, Ch)', `TOHWM4_QuantitySub($1, `$2', x, `Sca')
 ')
-dnl Make the assumed size array subroutines:
-m4_foreach(`x', `(RealDp, RealSp, Int, Lg, Ch)', `TOHWM4_ArraySub($1, `$2', x, `Si')
+m4_foreach(`x', `(RealDp, RealSp, Int, Lg, Ch)', `TOHWM4_QuantitySub($1, `$2', x, `ArrSi')
 ')
-dnl Make the assumed shape array subroutines:
-m4_foreach(`x', `(RealDp, RealSp, Int, Lg, Ch)', `TOHWM4_ArraySub($1, `$2', x, `Sh')
+m4_foreach(`x', `(RealDp, RealSp, Int, Lg, Ch)', `TOHWM4_QuantitySub($1, `$2', x, `ArrSh')
 ')
-dnl Make the assumed size matrix subroutines:
-m4_foreach(`x', `(RealDp, RealSp, Int, Lg, Ch)', `TOHWM4_MatrixSub($1, `$2', x, `Si')
+m4_foreach(`x', `(RealDp, RealSp, Int, Lg, Ch)', `TOHWM4_QuantitySub($1, `$2', x, `MatSi')
 ')
-dnl Make the assumed shape matrix subroutines:
-m4_foreach(`x', `(RealDp, RealSp, Int, Lg, Ch)', `TOHWM4_MatrixSub($1, `$2', x, `Sh')
+m4_foreach(`x', `(RealDp, RealSp, Int, Lg, Ch)', `TOHWM4_QuantitySub($1, `$2', x, `MatSh')
 ')
 dnl
 end module m_wcml_$1
 ')dnl
+TOHWM4_Doc(`property', `(dictRef, convention, title, id, ref, role)')
+
+TOHWM4_Doc(`parameter', `(ref, title, id, convention, dictRef, constraint, name, role)')
 dnl
-TOHWM4_Doc(QUANTITY, ARGS)

@@ -4,9 +4,9 @@
 * Tidy up m_wcml_core
 * test test test
 * document
-* redo m4 build for quantity
 
 
+* redo m4 build for quantity -done
 * m4 for all start/end lists - done
 * m4 for metadata - done
 * move eigenvalues to m_wcml_coma, and allow for assumed-shape arrays - done

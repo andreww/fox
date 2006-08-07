@@ -2,24 +2,19 @@
 default: install
 #
 OBJFILES=FoX_wcml.o m_wcml_coma.o m_wcml_core.o m_wcml_stml.o \
-         m_wcml_property.o m_wcml_parameter.o m_wcml_metadata.o \
+         m_wcml_quantity.o m_wcml_metadata.o \
          m_wcml_lattice.o m_wcml_geometry.o m_wcml_molecule.o \
          m_wcml_lists.o
 #
 LIBRARY=libFoX_wcml.a
 INCFLAGS=$(MOD_PREFIX)../objs/finclude
 #
-m_wcml_property.f90: m_wcml_quantity.m4
-	m4 -DQUANTITY=property -DARGS="(id, title, dictRef, convention, ref, role)" m_wcml_quantity.m4 > $@
-m_wcml_parameter.f90: m_wcml_quantity.m4
-	m4 -DQUANTITY=parameter -DARGS="(name, id, title, dictRef, convention, ref, role)" m_wcml_quantity.m4 > $@
-m_wcml_metadata.f90: m_wcml_metadata.m4
-	m4 $< > $@
 m_wcml_lists.f90: m_wcml_lists.m4
 	m4 $< > $@
-
-#
-#---------NOTHING SHOULD NEED TO BE CHANGED BELOW THIS LINE-----
+m_wcml_metadata.f90: m_wcml_metadata.m4
+	m4 $< > $@
+m_wcml_quantity.f90: m_wcml_quantity.m4
+	m4 $< > $@
 #
 include ../arch.make
 
@@ -43,8 +38,11 @@ clean:
 # DO NOT DELETE THIS LINE - used by make depend
 FoX_wcml.o: m_wcml_coma.o m_wcml_core.o m_wcml_geometry.o m_wcml_lattice.o
 FoX_wcml.o: m_wcml_lists.o m_wcml_metadata.o m_wcml_molecule.o
-FoX_wcml.o: m_wcml_parameter.o m_wcml_property.o m_wcml_stml.o
+FoX_wcml.o: m_wcml_quantity.o m_wcml_quantity.o m_wcml_stml.o
 m_wcml_coma.o: m_wcml_stml.o
 m_wcml_lattice.o: m_wcml_stml.o
 m_wcml_parameter.o: m_wcml_stml.o
 m_wcml_property.o: m_wcml_stml.o
+m_wcml_quantity.o: m_wcml_stml.o
+m_wcml_parameter.mod: m_wcml_quantity.o
+m_wcml_property.mod: m_wcml_quantity.o
