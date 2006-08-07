@@ -66,6 +66,8 @@ a pair of functions will exist:</p>
 
 <p>Note that where <em>strings</em> are passed in, they will be passed through entirely unchanged to the output file - no truncation of whitespace will occur.</p>
 
+<p>Also note that wherever a <em>real</em> number can be passed in (including through <em>anytype</em>) then the formatting can be specified using the conventions described in <a href="StringFormatting.html">StringFormatting</a></p>
+
 <ul>
 <li><em>scalar</em>: single item</li>
 <li><em>array</em>: one-dimensional array of items</li>
@@ -279,9 +281,7 @@ default - none</p>
 <li><code>convention</code>: convention by which the element is to be read.  </li>
 </ul>
 
-<p>(The wording of the definitions for <code>convention</code> and <code>role</code> are deliberately loose.)</p>
-
-<p>(Actually, this is not entirely true: cmlStartStep does not take a <code>role</code> argument, since that is set to <code>role="step"</code></p>
+<p>(The wording of the definitions for <code>convention</code> is deliberately loose.)</p>
 </div>
 </body>
 </html>

@@ -51,34 +51,6 @@ define(`TOHWM4_dummyarguse',`dnl
 ')dnl
 dnl
 dnl
-dnl Start/End QuantityLists.
-dnl First argument is name of quantity,
-dnl second is list of optional args.
-define(`TOHWM4_QuantityList',`dnl
-  subroutine cmlStart$1List(xf, TOHWM4_dummyarglist($2))
-
-    type(xmlf_t), intent(inout) :: xf
-dnl
-m4_foreach(`x', `$2', `TOHWM4_dummyargdecl(x)')
-dnl
- 
-    call xml_NewElement(xf, "$1List")
-dnl
-m4_foreach(`x', `$2', `TOHWM4_dummyarguse(x)')
-dnl
-    
-  end subroutine cmlStart$1List
-
-  subroutine cmlEnd$1List(xf)
-
-    type(xmlf_t), intent(inout) :: xf
-
-    Call xml_EndElement(xf, "$1List")
-    
-  end subroutine cmlEnd$1List
-')dnl
-dnl
-dnl
 dnl This is what a subroutine looks like if it is for a SCALAR quantity
 dnl FIrst arg is name of quantity (property/parameter)
 dnl Second arg is list of optional args
@@ -232,13 +204,8 @@ m4_foreach(`x', `(RealDp, RealSp, Int, Lg, Ch)', `TOHWM4_interfacelist($1, x)')
   end interface cmlAdd$1
 
   public :: cmlAdd$1
-  public :: cmlStart$1List
-  public :: cmlEnd$1List
 
 contains
-
-dnl Make the Start/End Lists
-TOHWM4_QuantityList(`$1', `$2')
 
 dnl Make the Scalar subroutines:
 m4_foreach(`x', `(RealDp, RealSp, Int, Lg, Ch)', `TOHWM4_ScalarSub($1, `$2', x)

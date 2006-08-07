@@ -5,6 +5,7 @@ module FoX_wcml
   use m_wcml_coma
   use m_wcml_geometry
   use m_wcml_lattice
+  use m_wcml_lists
   use m_wcml_metadata
   use m_wcml_molecule
   use m_wcml_parameter

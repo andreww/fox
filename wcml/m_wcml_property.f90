@@ -44,41 +44,8 @@ module m_wcml_property
   end interface cmlAddproperty
 
   public :: cmlAddproperty
-  public :: cmlStartpropertyList
-  public :: cmlEndpropertyList
 
 contains
-
-  subroutine cmlStartpropertyList(xf, id, title, dictRef, convention, ref, role)
-
-    type(xmlf_t), intent(inout) :: xf
-    character(len=*), intent(in), optional :: id
-    character(len=*), intent(in), optional :: title
-    character(len=*), intent(in), optional :: dictRef
-    character(len=*), intent(in), optional :: convention
-    character(len=*), intent(in), optional :: ref
-    character(len=*), intent(in), optional :: role
-
- 
-    call xml_NewElement(xf, "propertyList")
-    if (present(id)) call xml_addAttribute(xf, "id", id)
-    if (present(title)) call xml_addAttribute(xf, "title", title)
-    if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
-    if (present(convention)) call xml_addAttribute(xf, "convention", convention)
-    if (present(ref)) call xml_addAttribute(xf, "ref", ref)
-    if (present(role)) call xml_addAttribute(xf, "role", role)
-
-    
-  end subroutine cmlStartpropertyList
-
-  subroutine cmlEndpropertyList(xf)
-
-    type(xmlf_t), intent(inout) :: xf
-
-    Call xml_EndElement(xf, "propertyList")
-    
-  end subroutine cmlEndpropertyList
-
 
   subroutine propertyScaRealDp &
     (xf, value, id, title, dictRef, convention, ref, role , units ,fmt)

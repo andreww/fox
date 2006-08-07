@@ -44,43 +44,8 @@ module m_wcml_parameter
   end interface cmlAddparameter
 
   public :: cmlAddparameter
-  public :: cmlStartparameterList
-  public :: cmlEndparameterList
 
 contains
-
-  subroutine cmlStartparameterList(xf, name, id, title, dictRef, convention, ref, role)
-
-    type(xmlf_t), intent(inout) :: xf
-    character(len=*), intent(in), optional :: name
-    character(len=*), intent(in), optional :: id
-    character(len=*), intent(in), optional :: title
-    character(len=*), intent(in), optional :: dictRef
-    character(len=*), intent(in), optional :: convention
-    character(len=*), intent(in), optional :: ref
-    character(len=*), intent(in), optional :: role
-
- 
-    call xml_NewElement(xf, "parameterList")
-    if (present(name)) call xml_addAttribute(xf, "name", name)
-    if (present(id)) call xml_addAttribute(xf, "id", id)
-    if (present(title)) call xml_addAttribute(xf, "title", title)
-    if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
-    if (present(convention)) call xml_addAttribute(xf, "convention", convention)
-    if (present(ref)) call xml_addAttribute(xf, "ref", ref)
-    if (present(role)) call xml_addAttribute(xf, "role", role)
-
-    
-  end subroutine cmlStartparameterList
-
-  subroutine cmlEndparameterList(xf)
-
-    type(xmlf_t), intent(inout) :: xf
-
-    Call xml_EndElement(xf, "parameterList")
-    
-  end subroutine cmlEndparameterList
-
 
   subroutine parameterScaRealDp &
     (xf, value, name, id, title, dictRef, convention, ref, role , units ,fmt)

@@ -17,19 +17,13 @@ module m_wcml_core
   public :: cmlStartCml
   public :: cmlEndCml
 
-  public :: cmlStartModule
-  public :: cmlEndModule
-
-  public :: cmlStartStep
-  public :: cmlEndStep
-
 contains
 
   subroutine cmlBeginFile(xf, filename)
     type(xmlf_t), intent(out) :: xf
     character(len=*), intent(in) :: filename
 
-    call xml_OpenFile(filename, xf)
+    call xml_OpenFile(filename, xf, broken_indenting=.true.)
 
   end subroutine cmlBeginFile
 
@@ -105,60 +99,6 @@ contains
 
   end subroutine cmlEndCml
 
-
-  subroutine cmlStartModule(xf, id, title, convention, dictref, role, serial)
-    type(xmlf_t), intent(inout) :: xf
-    character(len=*), intent(in), optional :: id
-    character(len=*), intent(in), optional :: title
-    character(len=*), intent(in), optional :: convention
-    character(len=*), intent(in), optional :: dictref
-    character(len=*), intent(in), optional :: role
-    character(len=*), intent(in), optional :: serial
-    
-    call xml_NewElement(xf, 'module')
-    if (present(id)) call xml_AddAttribute(xf, 'id', id)
-    if (present(title)) call xml_AddAttribute(xf, 'title', title)
-    if (present(dictref)) call xml_AddAttribute(xf, 'dictRef', dictref)
-    if (present(convention)) call xml_AddAttribute(xf, 'convention', convention)
-    if (present(role)) call xml_AddAttribute(xf, 'role', role)
-    if (present(serial)) call xml_AddAttribute(xf, 'serial', serial)
-    
-  end subroutine cmlStartModule
-
-
-  subroutine cmlEndModule(xf)
-    type(xmlf_t), intent(inout) :: xf
-
-    call xml_EndElement(xf, 'module')
-    
-  end subroutine cmlEndModule
-
-
-  subroutine cmlStartStep(xf, type, index, id, title, convention)
-    type(xmlf_t), intent(inout) :: xf
-    character(len=*), intent(in), optional :: type
-    character(len=*), intent(in), optional :: id
-    integer, intent(in), optional :: index
-    character(len=*), intent(in), optional :: title
-    character(len=*), intent(in), optional :: convention
-
-    if (present(index)) then
-      call cmlStartModule(xf=xf, id=id, title=title, convention=convention, &
-        dictRef=type, role='step', serial=str(index))
-    else
-      call cmlStartModule(xf=xf, id=id, title=title, convention=convention, &
-        dictRef=type, role='step')
-    endif
-    
-  end subroutine cmlStartStep
-
-
-  subroutine cmlEndStep(xf)
-    type(xmlf_t), intent(inout) :: xf
-
-    call xml_EndElement(xf, 'module')
-    
-  end subroutine cmlEndStep
 
 
 end module m_wcml_core

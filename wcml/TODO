@@ -5,10 +5,10 @@
 * test test test
 * document
 * redo m4 build for quantity
-m4 for all start/end lists
-* m4 for metadata
 
 
+* m4 for all start/end lists - done
+* m4 for metadata - done
 * move eigenvalues to m_wcml_coma, and allow for assumed-shape arrays - done
 * move Crystal to m_wcml_lattice - done
 * explicitly list all public interfaces - done

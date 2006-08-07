@@ -53,6 +53,8 @@ at the start. This will import all of the subroutines described below, plus the 
 
 Note that where *strings* are passed in, they will be passed through entirely unchanged to the output file - no truncation of whitespace will occur.
 
+Also note that wherever a *real* number can be passed in (including through *anytype*) then the formatting can be specified using the conventions described in [StringFormatting](|StringFormatting|)
+
 * *scalar*: single item
 * *array*: one-dimensional array of items
 * *matrix*: two-dimensional array of items
