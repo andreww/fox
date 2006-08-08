@@ -200,7 +200,7 @@ This adds a single item of metadata. It takes the following arguments:
 **title**: *string* *scalar*: Identifying title for parameter  
 **value**:*anytype* *anydim*: value of parameter  
 **units**: *string* *scalar*: units of parameter value  
-(**constraint**) *string* *scalar*: Constraint under which the parameter is set (this can be an arbitrary string) 
+(**constraint**) *string* *scalar*: Constraint under which the parameter is set (this can be an arbitrary string)  
 (**ref**) *string* *scalar*: Reference an `id` attribute of another element (generally deprecated)  
 (**role**) *string* *scalar* role which the element plays 
 
@@ -252,7 +252,7 @@ Outputs information about a unit cell, in crystallographic form
 
 * `cmlAddBand`
 * `cmlAddKpoint`
-* `cmlAddEigenvalue
+* `cmlAddEigenvalue`
 
 * `cmlAddLength`
 * `cmlAddAngle`
