@@ -9,6 +9,10 @@ OBJFILES=FoX_wcml.o m_wcml_coma.o m_wcml_core.o m_wcml_stml.o \
 LIBRARY=libFoX_wcml.a
 INCFLAGS=$(MOD_PREFIX)../objs/finclude
 #
+m_wcml_geometry.f90: m_wcml_geometry.m4
+	m4 $< > $@
+m_wcml_lattice.f90: m_wcml_lattice.m4
+	m4 $< > $@
 m_wcml_lists.f90: m_wcml_lists.m4
 	m4 $< > $@
 m_wcml_metadata.f90: m_wcml_metadata.m4
