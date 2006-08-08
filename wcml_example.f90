@@ -52,12 +52,14 @@
   call cmlAddProperty(xf=myfile, title='inputArray', value=(/1.0d0, 2.0d0/), units="cmlUnits:Angstrom")
 
   ! Add molecule
-  call cmlAddMolecule(xf=myfile, natoms=na,elements=elements,coords=coords)                               
+  call cmlAddMolecule(xf=myfile, elements=elements,coords=coords)                               
   ! Add molecule output in short style
-  call cmlAddMolecule(xf=myfile, natoms=na,elements=elements,coords=coords, style='xyz3')
+  call cmlAddMolecule(xf=myfile, elements=elements,coords=coords, style='xyz3')
 
   ! Add molecule output in short style in user supplied format
-  call cmlAddMolecule(xf=myfile, natoms=na,elements=elements,coords=coords, style='xyz3', fmt='r6')
+  call cmlAddMolecule(xf=myfile, elements=elements,coords=coords, style='xyz3', fmt='r6')
+
+  call cmlAddCrystal(xf=myfile, a=1.0, b=1.0, c=1.0, alpha=90.0, beta=90.0, gamma=90.0)
 
   ! End and Close
   call cmlEndCml(myfile)

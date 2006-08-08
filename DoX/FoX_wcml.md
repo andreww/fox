@@ -237,7 +237,8 @@ Outputs an atomic configuration.
 **cell**: *real* *matrix* a 3x3 matrix of the unit cell  
 (**spaceType**): *string* *scalar*: `real` or `reciprocal` space.  
 (**latticeType**): *string* *scalar* Space group of the lattice; 
-(**units**): *string * scalar* units of (reciprocal) distance that cell vectors is given in; 
+(**units**): *string* *scalar* units of (reciprocal) distance that cell vectors is given in; 
+default: Angstrom
 
 Outputs information about a unit cell, in lattice-vector form
 

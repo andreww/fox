@@ -35,19 +35,21 @@ module m_wcml_lattice
 
 contains
 
-  subroutine cmlAddCrystalsp(xf, a, b, c, alpha, beta, gamma, id, title, dictref, convention, lenunits, angunits, spaceType, fmt)
+  subroutine cmlAddCrystalsp(xf, a, b, c, alpha, beta, gamma, z,&
+    id, title, dictref, convention, lenunits, angunits, spaceGroup, fmt)
     type(xmlf_t), intent(inout) :: xf
     real(kind=sp), intent(in)               :: a, b, c
     real(kind=sp), intent(in)               :: alpha
     real(kind=sp), intent(in)               :: beta
     real(kind=sp), intent(in)               :: gamma
+    integer, intent(in), optional           :: z
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
     character(len=*), intent(in), optional :: dictref
     character(len=*), intent(in), optional :: convention
     character(len=*), intent(in), optional :: lenunits
     character(len=*), intent(in), optional :: angunits
-    character(len=*), intent(in), optional :: spaceType
+    character(len=*), intent(in), optional :: spaceGroup
     character(len=*), intent(in), optional :: fmt
 
     call xml_NewElement(xf=xf, name="crystal")
@@ -55,27 +57,33 @@ contains
     if (present(title))   call xml_AddAttribute(xf, "title", title)
     if (present(dictref)) call xml_AddAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_AddAttribute(xf, "convention", convention)
+    if (present(z)) call xml_AddAttribute(xf, "z", z)
+
+    call xml_NewElement(xf=xf, name="cellParameter")
+    call xml_AddAttribute(xf=xf, name="latticeType", value="real")
+    call xml_AddAttribute(xf=xf, name="parameterType", value="length")
     if (present(lenunits)) then
-      call stmAddValue(xf=xf, value=a, title="a", dictref="cml:a", units=lenunits, fmt=fmt)
-      call stmAddValue(xf=xf, value=b, title="b", dictref="cml:b", units=lenunits, fmt=fmt)
-      call stmAddValue(xf=xf, value=c, title="c", dictref="cml:c", units=lenunits, fmt=fmt)
+      call xml_AddAttribute(xf=xf, name="units", value=lenunits)
     else
-      call stmAddValue(xf=xf, value=a, title="a", dictref="cml:a", units=U_ANGSTR, fmt=fmt)
-      call stmAddValue(xf=xf, value=b, title="b", dictref="cml:b", units=U_ANGSTR, fmt=fmt)
-      call stmAddValue(xf=xf, value=c, title="c", dictref="cml:c", units=U_ANGSTR, fmt=fmt)
+      call xml_AddAttribute(xf=xf, name="units", value=U_ANGSTR)
     endif
+    call xml_AddCharacters(xf=xf, chars=(/a, b, c/))
+    call xml_EndElement(xf=xf, name="cellParameter")
+
+    call xml_NewElement(xf=xf, name="cellParameter")
+    call xml_AddAttribute(xf=xf, name="latticeType", value="real")
+    call xml_AddAttribute(xf=xf, name="parameterType", value="angle")
     if (present(angunits)) then
-      call stmAddValue(xf=xf, value=alpha, title="alpha", dictref="cml:alpha", units=angunits, fmt=fmt)
-      call stmAddValue(xf=xf, value=beta,  title="beta",  dictref="cml:beta",  units=angunits, fmt=fmt)
-      call stmAddValue(xf=xf, value=gamma, title="gamma", dictref="cml:gamma", units=angunits, fmt=fmt)
+      call xml_AddAttribute(xf=xf, name="units", value=angunits)
     else
-      call stmAddValue(xf=xf, value=alpha, title="alpha", dictref="cml:alpha", units=U_DEGREE, fmt=fmt)
-      call stmAddValue(xf=xf, value=beta,  title="beta",  dictref="cml:beta",  units=U_DEGREE, fmt=fmt)
-      call stmAddValue(xf=xf, value=gamma, title="gamma", dictref="cml:gamma", units=U_DEGREE, fmt=fmt)
+      call xml_AddAttribute(xf=xf, name="units", value=U_DEGREE)
     endif
-    if (present(spaceType)) then
+    call xml_AddCharacters(xf=xf, chars=(/alpha, beta, gamma/))
+    call xml_EndElement(xf=xf, name="cellParameter")
+
+    if (present(spaceGroup)) then
       call xml_NewElement(xf, "symmetry")
-      call xml_AddAttribute(xf, "spaceGroup", spaceType)
+      call xml_AddAttribute(xf, "spaceGroup", spaceGroup)
       call xml_EndElement(xf, "symmetry")
     endif
     call xml_EndElement(xf, "crystal")
@@ -117,19 +125,21 @@ contains
 
 
 
-  subroutine cmlAddCrystaldp(xf, a, b, c, alpha, beta, gamma, id, title, dictref, convention, lenunits, angunits, spaceType, fmt)
+  subroutine cmlAddCrystaldp(xf, a, b, c, alpha, beta, gamma, z,&
+    id, title, dictref, convention, lenunits, angunits, spaceGroup, fmt)
     type(xmlf_t), intent(inout) :: xf
     real(kind=dp), intent(in)               :: a, b, c
     real(kind=dp), intent(in)               :: alpha
     real(kind=dp), intent(in)               :: beta
     real(kind=dp), intent(in)               :: gamma
+    integer, intent(in), optional           :: z
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
     character(len=*), intent(in), optional :: dictref
     character(len=*), intent(in), optional :: convention
     character(len=*), intent(in), optional :: lenunits
     character(len=*), intent(in), optional :: angunits
-    character(len=*), intent(in), optional :: spaceType
+    character(len=*), intent(in), optional :: spaceGroup
     character(len=*), intent(in), optional :: fmt
 
     call xml_NewElement(xf=xf, name="crystal")
@@ -137,27 +147,33 @@ contains
     if (present(title))   call xml_AddAttribute(xf, "title", title)
     if (present(dictref)) call xml_AddAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_AddAttribute(xf, "convention", convention)
+    if (present(z)) call xml_AddAttribute(xf, "z", z)
+
+    call xml_NewElement(xf=xf, name="cellParameter")
+    call xml_AddAttribute(xf=xf, name="latticeType", value="real")
+    call xml_AddAttribute(xf=xf, name="parameterType", value="length")
     if (present(lenunits)) then
-      call stmAddValue(xf=xf, value=a, title="a", dictref="cml:a", units=lenunits, fmt=fmt)
-      call stmAddValue(xf=xf, value=b, title="b", dictref="cml:b", units=lenunits, fmt=fmt)
-      call stmAddValue(xf=xf, value=c, title="c", dictref="cml:c", units=lenunits, fmt=fmt)
+      call xml_AddAttribute(xf=xf, name="units", value=lenunits)
     else
-      call stmAddValue(xf=xf, value=a, title="a", dictref="cml:a", units=U_ANGSTR, fmt=fmt)
-      call stmAddValue(xf=xf, value=b, title="b", dictref="cml:b", units=U_ANGSTR, fmt=fmt)
-      call stmAddValue(xf=xf, value=c, title="c", dictref="cml:c", units=U_ANGSTR, fmt=fmt)
+      call xml_AddAttribute(xf=xf, name="units", value=U_ANGSTR)
     endif
+    call xml_AddCharacters(xf=xf, chars=(/a, b, c/))
+    call xml_EndElement(xf=xf, name="cellParameter")
+
+    call xml_NewElement(xf=xf, name="cellParameter")
+    call xml_AddAttribute(xf=xf, name="latticeType", value="real")
+    call xml_AddAttribute(xf=xf, name="parameterType", value="angle")
     if (present(angunits)) then
-      call stmAddValue(xf=xf, value=alpha, title="alpha", dictref="cml:alpha", units=angunits, fmt=fmt)
-      call stmAddValue(xf=xf, value=beta,  title="beta",  dictref="cml:beta",  units=angunits, fmt=fmt)
-      call stmAddValue(xf=xf, value=gamma, title="gamma", dictref="cml:gamma", units=angunits, fmt=fmt)
+      call xml_AddAttribute(xf=xf, name="units", value=angunits)
     else
-      call stmAddValue(xf=xf, value=alpha, title="alpha", dictref="cml:alpha", units=U_DEGREE, fmt=fmt)
-      call stmAddValue(xf=xf, value=beta,  title="beta",  dictref="cml:beta",  units=U_DEGREE, fmt=fmt)
-      call stmAddValue(xf=xf, value=gamma, title="gamma", dictref="cml:gamma", units=U_DEGREE, fmt=fmt)
+      call xml_AddAttribute(xf=xf, name="units", value=U_DEGREE)
     endif
-    if (present(spaceType)) then
+    call xml_AddCharacters(xf=xf, chars=(/alpha, beta, gamma/))
+    call xml_EndElement(xf=xf, name="cellParameter")
+
+    if (present(spaceGroup)) then
       call xml_NewElement(xf, "symmetry")
-      call xml_AddAttribute(xf, "spaceGroup", spaceType)
+      call xml_AddAttribute(xf, "spaceGroup", spaceGroup)
       call xml_EndElement(xf, "symmetry")
     endif
     call xml_EndElement(xf, "crystal")
