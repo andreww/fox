@@ -2,6 +2,7 @@ check all uses of abort/error
 possible str bug on XLF?
 check eol handling of PIs in chardata
 check entity references while outputting? with ref to standalone?
+make m_wxml_escape 1.0/1.1-aware
 
 check unescaped attribute values - wait for proper unicode support
 allow character entities in XML Names - this requires full unicode support - wait.

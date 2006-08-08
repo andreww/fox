@@ -9,6 +9,18 @@
   <div class="DoX">
 <h1>WCML</h1>
 
+<p>WCML is a library for outputting <a href="http://www.xml-cml.org">CML</a> data. It wraps all the necessary XML calls, such that you should never need to touch any WXML calls when outputting CML.</p>
+
+<p>The CML output is conformant to version 2.4 of the CML schema.</p>
+
+<p>The available functions and their intended use are listed below. Quite deliberately, no reference is made to the actual CML output by each function. </p>
+
+<p>Wcml is <em>not</em> intended to be a generalized Fortran CML output layer. rather it is intended to be a library which allows the output of a limited set of well-defined syntactical fragments.</p>
+
+<p>Further information on these fragments, and on the style of CML generated here, is available at <a href="http://www.uszla.me.uk/CML/eminerals.html">http://www.uszla.me.uk/CML/eminerals.html</a>.</p>
+
+<p>This section of the manual will detail the available CMl output subroutines.</p>
+
 <h2>General naming conventions for functions.</h2>
 
 <p>Functions are named in the following way:</p>
@@ -27,14 +39,6 @@ a pair of functions will exist:</p>
 <code>cmlAdd</code>something</p></li>
 </ul>
 
-<h2>General mapping of concepts.</h2>
-
-<p>The available functions and their intended use are listed below. Quite deliberately, no reference is made to the actual CML output by each function. </p>
-
-<p>Wcml is <em>not</em> intended to be a generalized Fortran CML output layer. rather it is intended to be a library which allows the output of a limited set of well-defined syntactical fragments.</p>
-
-<p>Further information on these fragments, and on the style of CML generated here, is available at <a href="http://www.uszla.me.uk/CML/eminerals.html">http://www.uszla.me.uk/CML/eminerals.html</a>.</p>
-
 <h2>Use of WCML</h2>
 
 <p>wcml subroutines can be accessed from within a module or subroutine by inserting</p>
@@ -47,6 +51,24 @@ a pair of functions will exist:</p>
 <p><em>No</em> other entities will be imported; public/private Fortran namespaces are very carefully  controlled within the library.</p>
 
 <h2>Listing of functions.</h2>
+
+<h3>General naming conventions for functions.</h3>
+
+<p>Functions are named in the following way:</p>
+
+<ul>
+<li><p>All functions begin 
+<code>cml</code></p></li>
+<li><p>To begin and end a section of the CML file,
+a pair of functions will exist:</p>
+
+<ul>
+<li><code>cmlStart</code>something</li>
+<li><code>cmlEnd</code>something</li>
+</ul></li>
+<li><p>To output a given quantity/property/concept etc. a function will exist
+<code>cmlAdd</code>something</p></li>
+</ul>
 
 <h4>Conventions used below.</h4>
 
@@ -99,7 +121,7 @@ call cmlAddProperty(xf, 'coords', matrix)
 call cmlAddProperty(xf, 'coords', matrix, nrows=3, ncols=50)
 </code></pre>
 
-<p>All functions take as their first argument an XML file object, whose keyword is always <code>xf</code>. This file object is initialized by a cmlBegin function.</p>
+<p>All functions take as their first argument an XML file object, whose keyword is always <code>xf</code>. This file object is initialized by a <code>cmlBeginFile</code> function.</p>
 
 <p>It is <em>highly</em> recommended that subroutines be called with keywords specified rather than relying on the implicit ordering of arguments. This is robust against changes in the library calling convention; and also stepsides a significant cause of errors when using subroutines with large numbers of arguments.</p>
 
@@ -202,24 +224,22 @@ Attempts to do otherwise will result in a runtime error.</p>
 <h5>Adding items.</h5>
 
 <ul>
-<li><code>cmlAddMetadata</code></li>
+<li><code>cmlAddMetadata</code> <br />
+<strong>name</strong>: <em>string</em> <em>scalar</em>: Identifying string for metadata <br />
+<strong>content</strong>: <em>anytype</em> <em>scalar</em>: Content of metadata  </li>
 </ul>
-
-<p><strong>name</strong>: <em>string</em> <em>scalar</em>: Identifying string for metadata <br />
-<strong>content</strong>: <em>anytype</em> <em>scalar</em>: Content of metadata  </p>
 
 <p>This adds a single item of metadata. It takes the following arguments:</p>
 
 <ul>
-<li><code>cmlAddParameter</code></li>
-</ul>
-
-<p><strong>title</strong>: <em>string</em> <em>scalar</em>: Identifying title for parameter <br />
+<li><code>cmlAddParameter</code> <br />
+<strong>title</strong>: <em>string</em> <em>scalar</em>: Identifying title for parameter <br />
 <strong>value</strong>:<em>anytype</em> <em>anydim</em>: value of parameter <br />
 <strong>units</strong>: <em>string</em> <em>scalar</em>: units of parameter value <br />
-(<strong>constraint</strong>) <em>string</em> scalar<em>: Manner in which the property is constrained
-(<strong>ref</strong>) *string</em> <em>scalar</em>: Reference an <code>id</code> attribute of another element (generally deprecated) <br />
-(<strong>role</strong>) <em>string</em> <em>scalar</em> role which the element plays </p>
+(<strong>constraint</strong>) <em>string</em> <em>scalar</em>: Constraint under which the parameter is set (this can be an arbitrary string) 
+(<strong>ref</strong>) <em>string</em> <em>scalar</em>: Reference an <code>id</code> attribute of another element (generally deprecated) <br />
+(<strong>role</strong>) <em>string</em> <em>scalar</em> role which the element plays </li>
+</ul>
 
 <p>This function adds a tag representing an input parameter</p>
 
@@ -235,43 +255,44 @@ Attempts to do otherwise will result in a runtime error.</p>
 <p>This function adds a tag representing an output property</p>
 
 <ul>
-<li><code>cmlAddMolecule</code></li>
+<li><code>cmlAddMolecule</code> <br />
+<strong>coords</strong>: <em>real</em>: a 3xn matrix of real numbers representing atomic coordinates (either fractional or Cartesian) <br />
+<strong>OR</strong> <br />
+<strong>x</strong>, <strong>y</strong>, <strong>z</strong>: <em>real</em>: 3 one-dimensional arrays containing the <em>x</em>, <em>y</em>, and <em>z</em> coordinates of the atoms in the molecule. <br />
+(<strong>natoms</strong>) <em>integer</em> <em>scalar</em>: number of atoms in molecule (default: picked up from length of <strong>coords</strong> array) <br />
+<strong>elements</strong>: <em>string</em> <em>array</em>: a length-n array of length-2 strings containing IUPAC chemical symbols for the atoms <br />
+(<strong>occupancies</strong>): <em>real</em> <em>array</em> : a length-n array of the occupancies of each atom. <br />
+(<strong>refs</strong>): <em>string</em> <em>array</em>: a length-n array of strings containing references which may point to IDs elsewhere of, for example, pseudopotentials or basis sets defining the element's behaviour. <br />
+(<strong>style</strong>): <em>string</em> <em>scalar</em>: 'xyz3' - the coordinates are Cartesian, or <code>xyzFract</code> - the coordinates are fractional. The default is Cartesian.  </li>
 </ul>
 
-<p>Outputs an atomic configuration.</p>
-
-<p><strong>coords</strong>: <em>real</em>: a 3xn matrix of real numbers representing atomic coordinates (either fractional or Cartesian) <br />
-<strong>elems</strong>: <em>string</em> <em>array</em>: a length-n array of length-2 strings containing IUPAC chemical symbols for the atoms <br />
-(<strong>refs</strong>): <em>string</em> <em>array</em>: a length-n array of strings containing references which may point to IDs elsewhere of, for example, pseudopotentials or basis sets defining the element's behaviour. <br />
-(<strong>style</strong>): <em>string</em> <em>scalar</em>: 'xyz3' - the coordinates are Cartesian, or <code>xyzFract</code> - the coordinates are fractional. The default is Cartesian.  </p>
+<p>Outputs an atomic configuration. </p>
 
 <ul>
-<li><code>cmlAddLattice</code> </li>
+<li><code>cmlAddLattice</code> <br />
+<strong>cell</strong>: <em>real</em> <em>matrix</em> a 3x3 matrix of the unit cell <br />
+<strong>spaceType</strong>: <code>real</code> or <code>reciprocal</code> space. <br />
+(<strong>latticeType)</strong>: <em>string</em> <em>scalar</em> Space group of the lattice; 
+default - none <br />
+(<strong>units</strong>): <em>string * scalar</em> units of (reciprocal) distance that cell vectors is given in; 
+default - none</li>
 </ul>
 
 <p>Outputs information about a unit cell, in lattice-vector form</p>
 
-<p><strong>cell</strong>: <em>real</em> <em>matrix</em> a 3x3 matrix of the unit cell <br />
-<strong>spaceType</strong>: 'real' or 'reciprocal' space. <br />
-(<strong>latticeType)</strong>: <em>string</em> <em>scalar</em> Space group of the lattice; 
-default - none <br />
-(<strong>units</strong>): <em>string * scalar</em> units of (reciprocal) distance that cell vectors is given in; 
-default - none</p>
-
 <ul>
-<li><code>cmlAddCrystal</code></li>
-</ul>
-
-<p>Outputs information about a unit cell, in crystallographic form</p>
-
-<p><strong>a</strong>: <em>real</em> <em>scalar</em> the 'a' parameter (must be in Angstrom) <br />
+<li><code>cmlAddCrystal</code> <br />
+<strong>a</strong>: <em>real</em> <em>scalar</em> the 'a' parameter (must be in Angstrom) <br />
 <strong>b</strong>: <em>real</em> <em>scalar</em> the 'b' parameter <br />
 <strong>c</strong>: <em>real</em> <em>scalar</em> the 'c' parameter <br />
 <strong>alpha</strong>: <em>real</em> <em>scalar</em> the 'alpha' parameter <br />
 <strong>beta</strong>: <em>real</em> <em>scalar</em> the 'beta' parameter <br />
 <strong>gamma</strong>: <em>real</em> <em>scalar</em> the 'gamma' parameter <br />
 (<strong>lenunits</strong>): Units of length: default is <code>cmlUnits:angstrom</code>
-(<strong>angunits</strong>): Units of angle: default is <code>cmlUnits:degrees</code></p>
+(<strong>angunits</strong>): Units of angle: default is <code>cmlUnits:degrees</code></li>
+</ul>
+
+<p>Outputs information about a unit cell, in crystallographic form</p>
 
 <h4>Common arguments</h4>
 

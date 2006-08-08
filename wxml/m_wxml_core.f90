@@ -67,6 +67,7 @@ module m_wxml_core
   type xmlf_t
     private
     character, pointer        :: filename(:)
+    character(len=3)          :: xml_version
     integer                   :: lun = -1
     type(buffer_t)            :: buffer
     type(elstack_t)           :: stack
@@ -222,8 +223,9 @@ contains
   end subroutine xml_OpenFile
 
 
-  subroutine xml_AddXMLDeclaration(xf, encoding, standalone)
+  subroutine xml_AddXMLDeclaration(xf, version, encoding, standalone)
     type(xmlf_t), intent(inout)   :: xf
+    character(len=*), intent(in), optional :: version
     character(len=*), intent(in), optional :: encoding
     logical, intent(in), optional :: standalone
 
@@ -233,7 +235,15 @@ contains
       call wxml_error("Tried to put XML declaration in wrong place")
     
     call xml_AddXMLPI(xf, "xml", xml=.true.)
-    call xml_AddPseudoAttribute(xf, "version", "1.0")
+    if (present(version)) then
+      if (version /= "1.0" .and. version /="1.1") &
+        call wxml_error("Invalid XML version.")
+      call xml_AddPseudoAttribute(xf, "version", version)
+      xf%version = version
+    else
+      call xml_AddPseudoAttribute(xf, "version", "1.0")
+      xf%version = "1.0"
+    endif
     if (present(encoding)) then
       if (.not.checkEncName(encoding)) &
         call wxml_error("Invalid encoding name: "//encoding)
@@ -911,6 +921,9 @@ contains
     character(len=*), intent(in), optional :: prefix
     
     call check_xf(xf)
+
+    if (xf%version == "1.0") &
+      call wxml_error("cannot undeclare namespaces in XML 1.0")
     
     if (xf%state_1 == WXML_STATE_1_AFTER_ROOT) &
       call wxml_error(xf, "Undeclaring namespace outside element content")
@@ -1115,6 +1128,7 @@ contains
     function xmlf_opentag(xf) result(fn)
       type (xmlf_t), intent(in) :: xf
       character(len=merge(0, len(get_top_elstack(xf%stack)), is_empty(xf%stack))) :: fn
+      !FIXME calling this function on an uninitialized xf will cause a crash.
       if (is_empty(xf%stack)) then
         fn = ""
       else

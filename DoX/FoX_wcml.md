@@ -1,5 +1,17 @@
 #WCML
 
+WCML is a library for outputting [CML](http://www.xml-cml.org) data. It wraps all the necessary XML calls, such that you should never need to touch any WXML calls when outputting CML.
+
+The CML output is conformant to version 2.4 of the CML schema.
+
+The available functions and their intended use are listed below. Quite deliberately, no reference is made to the actual CML output by each function. 
+
+Wcml is *not* intended to be a generalized Fortran CML output layer. rather it is intended to be a library which allows the output of a limited set of well-defined syntactical fragments.
+
+Further information on these fragments, and on the style of CML generated here, is available at <http://www.uszla.me.uk/CML/eminerals.html>.
+
+This section of the manual will detail the available CMl output subroutines.
+
 ## General naming conventions for functions.
 
 Functions are named in the following way:
@@ -15,14 +27,6 @@ a pair of functions will exist:
 * To output a given quantity/property/concept etc. a function will exist
 `cmlAdd`something
 
-##General mapping of concepts.
-
-The available functions and their intended use are listed below. Quite deliberately, no reference is made to the actual CML output by each function. 
-
-Wcml is *not* intended to be a generalized Fortran CML output layer. rather it is intended to be a library which allows the output of a limited set of well-defined syntactical fragments.
-
-Further information on these fragments, and on the style of CML generated here, is available at <http://www.uszla.me.uk/CML/eminerals.html>.
-
 ## Use of WCML
 
 wcml subroutines can be accessed from within a module or subroutine by inserting
@@ -33,8 +37,22 @@ at the start. This will import all of the subroutines described below, plus the 
 
 *No* other entities will be imported; public/private Fortran namespaces are very carefully  controlled within the library.
 
-
 ##Listing of functions.
+
+### General naming conventions for functions.
+
+Functions are named in the following way:
+
+* All functions begin 
+`cml`
+
+* To begin and end a section of the CML file,
+a pair of functions will exist:
+	* `cmlStart`something
+	* `cmlEnd`something
+
+* To output a given quantity/property/concept etc. a function will exist
+`cmlAdd`something
 
 
 ####Conventions used below.
@@ -80,7 +98,7 @@ or
 	integer :: array(3, *)
 	call cmlAddProperty(xf, 'coords', matrix, nrows=3, ncols=50)
 
-All functions take as their first argument an XML file object, whose keyword is always `xf`. This file object is initialized by a cmlBegin function.
+All functions take as their first argument an XML file object, whose keyword is always `xf`. This file object is initialized by a `cmlBeginFile` function.
 
 It is *highly* recommended that subroutines be called with keywords specified rather than relying on the implicit ordering of arguments. This is robust against changes in the library calling convention; and also stepsides a significant cause of errors when using subroutines with large numbers of arguments.
 
@@ -166,19 +184,17 @@ This pair of functions open and close a module of a computation which is strongl
 
 ##### Adding items.
 
-* `cmlAddMetadata`
-
+* `cmlAddMetadata`  
 **name**: *string* *scalar*: Identifying string for metadata  
 **content**: *anytype* *scalar*: Content of metadata  
 
 This adds a single item of metadata. It takes the following arguments:
 
-* `cmlAddParameter`
-
+* `cmlAddParameter`  
 **title**: *string* *scalar*: Identifying title for parameter  
 **value**:*anytype* *anydim*: value of parameter  
 **units**: *string* *scalar*: units of parameter value  
-(**constraint**) *string* scalar*: Manner in which the property is constrained
+(**constraint**) *string* *scalar*: Constraint under which the parameter is set (this can be an arbitrary string) 
 (**ref**) *string* *scalar*: Reference an `id` attribute of another element (generally deprecated)  
 (**role**) *string* *scalar* role which the element plays 
 
@@ -194,30 +210,29 @@ This function adds a tag representing an input parameter
 This function adds a tag representing an output property
 
 
-* `cmlAddMolecule`
-
-Outputs an atomic configuration.
-
+* `cmlAddMolecule`  
 **coords**: *real*: a 3xn matrix of real numbers representing atomic coordinates (either fractional or Cartesian)  
-**elems**: *string* *array*: a length-n array of length-2 strings containing IUPAC chemical symbols for the atoms  
+**OR**  
+**x**, **y**, **z**: *real*: 3 one-dimensional arrays containing the *x*, *y*, and *z* coordinates of the atoms in the molecule.  
+(**natoms**) *integer* *scalar*: number of atoms in molecule (default: picked up from length of **coords** array)  
+**elements**: *string* *array*: a length-n array of length-2 strings containing IUPAC chemical symbols for the atoms    
+(**occupancies**): *real* *array* : a length-n array of the occupancies of each atom.  
 (**refs**): *string* *array*: a length-n array of strings containing references which may point to IDs elsewhere of, for example, pseudopotentials or basis sets defining the element's behaviour.  
 (**style**): *string* *scalar*: 'xyz3' - the coordinates are Cartesian, or `xyzFract` - the coordinates are fractional. The default is Cartesian.  
 
-* `cmlAddLattice` 
+Outputs an atomic configuration. 
 
-Outputs information about a unit cell, in lattice-vector form
-
+* `cmlAddLattice`   
 **cell**: *real* *matrix* a 3x3 matrix of the unit cell  
-**spaceType**: 'real' or 'reciprocal' space.  
+**spaceType**: `real` or `reciprocal` space.  
 (**latticeType)**: *string* *scalar* Space group of the lattice; 
 default - none  
 (**units**): *string * scalar* units of (reciprocal) distance that cell vectors is given in; 
 default - none
 
-* `cmlAddCrystal`
+Outputs information about a unit cell, in lattice-vector form
 
-Outputs information about a unit cell, in crystallographic form
-
+* `cmlAddCrystal`  
 **a**: *real* *scalar* the 'a' parameter (must be in Angstrom)  
 **b**: *real* *scalar* the 'b' parameter  
 **c**: *real* *scalar* the 'c' parameter  
@@ -226,6 +241,8 @@ Outputs information about a unit cell, in crystallographic form
 **gamma**: *real* *scalar* the 'gamma' parameter  
 (**lenunits**): Units of length: default is `cmlUnits:angstrom`
 (**angunits**): Units of angle: default is `cmlUnits:degrees`
+
+Outputs information about a unit cell, in crystallographic form
 
 ####Common arguments
 

@@ -162,7 +162,7 @@ case the delimiter may be changed to any other single character using an optiona
 
 <p>Undeclare an XML namespace. This is equivalent to declaring an namespace with an empty URI, and renders the namespace ineffective for the scope of the declaration. For explanation of its scope, see below.</p>
 
-<p><strong>NB</strong> Use of <code>xml_UndeclareNamespace</code> implies that the resultant document will be compliant with XML Namespaces 1.1, but not 1.0</p>
+<p><strong>NB</strong> Use of <code>xml_UndeclareNamespace</code> implies that the resultant document will be compliant with XML Namespaces 1.1, but not 1.0; wxml will issue an error when trying to undeclare namespaces under XML 1.0.</p>
 
 <h4>Scope of namespace functions</h4>
 
@@ -203,6 +203,8 @@ registered namespace prefix, and generate an error if not.</p>
 
 <ul>
 <li><code>xml_AddXMLDeclaration</code> <br />
+(<strong>version</strong>) <em>string</em>: XML version to be used.
+<em>default: 1.0</em>
 (<strong>encoding</strong>) <em>string</em>: character encoding of the document
 <em>default: absent</em> <br />
 (<strong>standalone</strong>) <em>logical</em>: is this document standalone [REF]?
@@ -210,6 +212,8 @@ registered namespace prefix, and generate an error if not.</p>
 </ul>
 
 <p>Add XML declaration to the first line of output. If used, then the file must have been opened with <code>addDecl = .false.</code>, and this must be the first wxml call to the document.o</p>
+
+<p>NB The only XML versions available are 1.0 and 1.1. Attempting to specify anything else will result in an error.</p>
 
 <p>NB Note that if the encoding is specified, and is specified to not be UTF-8, then if the specified encoding does not match that supported by the Fortran processor, you may end up with output you do not expect.</p>
 
@@ -342,18 +346,34 @@ Contents of comment</li>
 
 <p>If the entity reference is not a character entity, then no check is made of its validity, and a warning will be issued</p>
 
+<h3>Functions to query XML file objects</h3>
+
+<p>These functions may be of use in building wrapper libraries:</p>
+
+<ul>
+<li><code>xmlf_Name</code> result(<em>string</em>)</li>
+</ul>
+
+<p>Return the filename of an open XML file</p>
+
+<ul>
+<li><code>xmlf_OpenTag</code> result(<em>string</em>)</li>
+</ul>
+
+<p>Return the currently open tag of the current XML file (or the empty string if none is open)</p>
+
 <h2>Exceptions</h2>
 
 <p><a name="Exceptions"/></p>
 
-<p>Below is a list of areas where wxml fails to implement the whole of XML 1.1; numerical references below are to the sections in [<a href="#XML11">XML11</a>]]</p>
+<p>Below is a list of areas where wxml fails to implement the whole of XML 1.0/1.1; numerical references below are to the sections in [<a href="#XML11">XML11</a>]]</p>
 
 <ol>
 <li>XML documents which are not namespace-valid may not be produced; that is, attempts to produce documents which are well-formed according to [XML11] but not namespace-well-formed according to [Namespaces] will fail. </li>
-<li>Unicode support[[2.2]](http://www.w3.org/TR/xml11/#charsets) is practically non-existent. Due to the limitations of Fortran, wxml will directly only emit characters within the range of the local single-byte encoding. wxml will ensure that characters corresponding to those in 7-bit ASCII are output correctly for a UTF-8 encoding. Any other characters are output without any transcoding. Proper output of other unicode characters is possible through the use of character entities, but only where character data is allowed. No means is offered for output of unicode in XML Names. Unicode character references are checked before output according to the constraints of <a href="#XML11">[XML11]</a></li>
-<li>DTD support is not complete. While a DTD may be output, and entities defined in the internal subset, there is no support for adding Element[<a href="http://www.w3.org/TR/xml11/#elemdecls">3.2</a>] or Attlist[[3.3](http://www.w3.org/TR/xml11/#attdecls] declarations; nor is there any support for Conditional Sections.[3.4]</li>
+<li>Unicode support[[2.2]](http://www.w3.org/TR/xml11/#charsets) is practically non-existent. Due to the limitations of Fortran, wxml will directly only emit characters within the range of the local single-byte encoding. wxml will ensure that characters corresponding to those in 7-bit ASCII are output correctly for a UTF-8 encoding. Any other characters are output without any transcoding, and a warning will be issued. Proper output of other unicode characters is possible through the use of character entities, but only where character data is allowed. No means is offered for output of unicode in XML Names. Unicode character references are checked before output according to the constraints of <a href="#XML11">[XML11]</a></li>
+<li>DTD support is not complete. While a DTD may be output, and entities defined in the internal subset, there is no direct support for adding Element[<a href="http://www.w3.org/TR/xml11/#elemdecls">3.2</a>] or Attlist[[3.3](http://www.w3.org/TR/xml11/#attdecls] declarations; nor is there any direct support for Conditional Sections.[3.4] However, arbitrary strings may be added to the DTD, though without any checking for validity.</li>
 <li>Entity support is not complete[<a href="http://www.w3.org/TR/xml11/#sec-references">4.1</a>, <a href="http://www.w3.org/TR/xml11/#sec-entity-decl">4.2</a>. <a href="http://www.w3.org/TR/xml11/#TextEntities">4.3</a>]. All XML entities (parameter, internal, external) may be defined; however, general entities may only be referenced from within a character data section between tags generated with <code>xml_NewElement</code> (In principle it should be possible to start the root element from within an entity reference). Furthermore, when an entity reference is added to the document, no check is made of its validity or its contents. (In general, validating all entity references is impossible, but even where possible wxml does not attempt it.) This means that if an entity reference is output, wxml offers no guarantees on the well-formedness of the document, and it will emit a warning to this effect.</li>
-<li>Due to the constraints of the Fortran IO specification, it is impossible to output arbitrary long strings without carriage returns. The size of the limit varies between processors, but may be as low as 1024 characters. To avoid overrunning this limit, wxml will by default insert carriage returns before every new element, and if an unbroken string of attribute or text data is requested greater than 1024 characters, then carriage returns will be inserted as appropriate to ensure it is broken up into smaller sections to fit within the limits. Thus unwanted text sections are being created, and user output modified. This behaviour can be switched off by specifying <code>**indenting**=.false.</code> to xml_OpenFile, at the risk of file output failing on sufficiently long lines.</li>
+<li>Due to the constraints of the Fortran IO specification, it is impossible to output arbitrary long strings without carriage returns. The size of the limit varies between processors, but may be as low as 1024 characters. To avoid overrunning this limit, wxml will by default insert carriage returns before every new element, and if an unbroken string of attribute or text data is requested greater than 1024 characters, then carriage returns will be inserted as appropriate; within whitespace if possible; to ensure it is broken up into smaller sections to fit within the limits. Thus unwanted text sections are being created, and user output modified. This behaviour can be switched off by specifying <code>**indenting**=.false.</code> to xml_OpenFile, at the risk of file output failing on sufficiently long lines.</li>
 </ol>
 
 <p>wxml will try very hard to ensure that output is well-formed. However, it is possible to fool wxml into producing ill-formed XML documents. Avoid doing so if possible; for completeness these ways are listed here.</p>
@@ -361,7 +381,7 @@ Contents of comment</li>
 <ol>
 <li>If you specify a non-default text encoding, and then run FoX on a platform which does not use this encoding, then the result will be nonsense, and more than likely ill-formed. FoX will issue a warning in this case.</li>
 <li>Although entities may be output, their contents are not comprehensively checked. It is therefore possible to output combinations of entities which produce nonsense when referenced and expanded. FoX will issue a warning when this is possible.</li>
-<li>When entity references are made, a check is performed to ensure that the referenced entity exists - but it may be an externally-defined reference, in which case the document will be ill-formed. If so, then a warning will be issued.</li>
+<li>When entity references are made, a check is performed to ensure that the referenced entity exists - but if not it may be an externally-defined reference, in which case the document may or may not be ill-formed. If so, then a warning will be issued.</li>
 <li>When adding text through xml_AddCharacters, or as the value of an attribute, if any characters are passed in which are not within 7-bit ASCII, then the results are processor-dependent, and may result in an invalid document on output. A warning will be issued if this occurs. If you need a guarantee that such characters will be passed correctly, use character entities.</li>
 <li>In order to add ELEMENT and ATTLIST portions of the DTD, a function xml_AddStringToDTD is provided. However, no checking at all is done on the contents of the string passed in, so if that string is not a well-formed DTD fragment, the resultant document will be ill-formed.</li>
 </ol>
