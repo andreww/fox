@@ -13,7 +13,6 @@ module m_wcml_stml
   use FoX_wxml, only: xml_AddCharacters, xml_AddAttribute
 
   implicit none
-
   private
 
   integer, private, parameter ::  sp = selected_real_kind(6,30)

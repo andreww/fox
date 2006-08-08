@@ -141,7 +141,6 @@ module m_wcml_stml
   use FoX_wxml, only: xml_AddCharacters, xml_AddAttribute
 
   implicit none
-
   private
 
   integer, private, parameter ::  sp = selected_real_kind(6,30)
@@ -179,4 +178,3 @@ m4_foreach(`x', `(RealDp, RealSp, Int, Lg, Ch)', `TOHWM4_stml_sub(x,`(id, title,
 m4_foreach(`x', `(RealDp, RealSp, Int, Lg, Ch)', `TOHWM4_stml_sub(x,`(id, title, dictRef, convention, errorValue, errorBasis, min, max, ref)',`Mat')
 ')
 end module m_wcml_stml
-dnl Make the Scalar subroutines:

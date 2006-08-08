@@ -1,11 +1,11 @@
 * Check allowed attributes for parameter (and all other elements)
-* Do m4 correctly for stml
 * provide interfaces for cell-><lattice> & lattice-><crystal>
 * Tidy up m_wcml_core
 * test test test
 * document
 
 
+* Do m4 correctly for stml - done
 * redo m4 build for quantity -done
 * m4 for all start/end lists - done
 * m4 for metadata - done
