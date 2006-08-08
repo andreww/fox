@@ -108,8 +108,6 @@ contains
   subroutine print_buffer(buffer)
     type(buffer_t), intent(in)  :: buffer
     
-    integer :: i
-    
     write(unit=6,fmt="(a)") buffer%str(:buffer%size)
 
   end subroutine print_buffer
@@ -152,9 +150,8 @@ contains
   end function buffer_length
 
   
-  subroutine dump_buffer(buffer, version, lf)
+  subroutine dump_buffer(buffer, lf)
     type(buffer_t), intent(inout) :: buffer
-    character(len=*), intent(in) :: version
     logical, intent(in), optional :: lf
 
     logical :: lf_

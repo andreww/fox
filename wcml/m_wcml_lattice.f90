@@ -12,7 +12,6 @@ module m_wcml_lattice
   use FoX_wxml, only: xmlf_t
   use FoX_wxml, only: xml_NewElement, xml_EndElement
   use FoX_wxml, only: xml_AddAttribute, xml_AddCharacters
-  use m_wcml_stml, only: stmAddValue
 
   implicit none
   private
@@ -36,7 +35,7 @@ module m_wcml_lattice
 contains
 
   subroutine cmlAddCrystalsp(xf, a, b, c, alpha, beta, gamma, z,&
-    id, title, dictref, convention, lenunits, angunits, spaceGroup, fmt)
+    id, title, dictref, convention, lenunits, angunits, spaceGroup, lenfmt, angfmt)
     type(xmlf_t), intent(inout) :: xf
     real(kind=sp), intent(in)               :: a, b, c
     real(kind=sp), intent(in)               :: alpha
@@ -50,7 +49,8 @@ contains
     character(len=*), intent(in), optional :: lenunits
     character(len=*), intent(in), optional :: angunits
     character(len=*), intent(in), optional :: spaceGroup
-    character(len=*), intent(in), optional :: fmt
+    character(len=*), intent(in), optional :: lenfmt
+    character(len=*), intent(in), optional :: angfmt
 
     call xml_NewElement(xf=xf, name="crystal")
     if (present(id))      call xml_AddAttribute(xf, "id", id)
@@ -67,7 +67,7 @@ contains
     else
       call xml_AddAttribute(xf=xf, name="units", value=U_ANGSTR)
     endif
-    call xml_AddCharacters(xf=xf, chars=(/a, b, c/))
+    call xml_AddCharacters(xf=xf, chars=(/a, b, c/), fmt=lenfmt)
     call xml_EndElement(xf=xf, name="cellParameter")
 
     call xml_NewElement(xf=xf, name="cellParameter")
@@ -78,7 +78,7 @@ contains
     else
       call xml_AddAttribute(xf=xf, name="units", value=U_DEGREE)
     endif
-    call xml_AddCharacters(xf=xf, chars=(/alpha, beta, gamma/), fmt="r3")
+    call xml_AddCharacters(xf=xf, chars=(/alpha, beta, gamma/), fmt=angfmt)
     call xml_EndElement(xf=xf, name="cellParameter")
 
     if (present(spaceGroup)) then
@@ -126,7 +126,7 @@ contains
 
 
   subroutine cmlAddCrystaldp(xf, a, b, c, alpha, beta, gamma, z,&
-    id, title, dictref, convention, lenunits, angunits, spaceGroup, fmt)
+    id, title, dictref, convention, lenunits, angunits, spaceGroup, lenfmt, angfmt)
     type(xmlf_t), intent(inout) :: xf
     real(kind=dp), intent(in)               :: a, b, c
     real(kind=dp), intent(in)               :: alpha
@@ -140,7 +140,8 @@ contains
     character(len=*), intent(in), optional :: lenunits
     character(len=*), intent(in), optional :: angunits
     character(len=*), intent(in), optional :: spaceGroup
-    character(len=*), intent(in), optional :: fmt
+    character(len=*), intent(in), optional :: lenfmt
+    character(len=*), intent(in), optional :: angfmt
 
     call xml_NewElement(xf=xf, name="crystal")
     if (present(id))      call xml_AddAttribute(xf, "id", id)
@@ -157,7 +158,7 @@ contains
     else
       call xml_AddAttribute(xf=xf, name="units", value=U_ANGSTR)
     endif
-    call xml_AddCharacters(xf=xf, chars=(/a, b, c/))
+    call xml_AddCharacters(xf=xf, chars=(/a, b, c/), fmt=lenfmt)
     call xml_EndElement(xf=xf, name="cellParameter")
 
     call xml_NewElement(xf=xf, name="cellParameter")
@@ -168,7 +169,7 @@ contains
     else
       call xml_AddAttribute(xf=xf, name="units", value=U_DEGREE)
     endif
-    call xml_AddCharacters(xf=xf, chars=(/alpha, beta, gamma/), fmt="r3")
+    call xml_AddCharacters(xf=xf, chars=(/alpha, beta, gamma/), fmt=angfmt)
     call xml_EndElement(xf=xf, name="cellParameter")
 
     if (present(spaceGroup)) then

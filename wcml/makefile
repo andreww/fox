@@ -50,9 +50,5 @@ FoX_wcml.o: m_wcml_coma.o m_wcml_core.o m_wcml_geometry.o m_wcml_lattice.o
 FoX_wcml.o: m_wcml_lists.o m_wcml_metadata.o m_wcml_molecule.o
 FoX_wcml.o: m_wcml_quantity.o m_wcml_quantity.o m_wcml_stml.o
 m_wcml_coma.o: m_wcml_stml.o
-m_wcml_lattice.o: m_wcml_stml.o
-m_wcml_parameter.o: m_wcml_stml.o
-m_wcml_property.o: m_wcml_stml.o
+m_wcml_core.o: m_wcml_metadata.o
 m_wcml_quantity.o: m_wcml_stml.o
-m_wcml_parameter.mod: m_wcml_quantity.o
-m_wcml_property.mod: m_wcml_quantity.o

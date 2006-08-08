@@ -625,7 +625,7 @@ contains
   pure function isDefaultNSInForce(nsDict) result(force)
     type(namespaceDictionary), intent(in) :: nsDict
     logical :: force
-    integer :: i, l_s
+    integer :: l_s
 
     force = .false.
     l_s = ubound(nsDict%defaults, 1)

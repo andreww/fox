@@ -176,15 +176,15 @@ contains
     integer :: i, n
 
     n = size(ents%list)
-    print*, '>ENTITYLIST'
+    write(*,'(a)') '>ENTITYLIST'
     do i = 1, n
-      print'(a)', str_vs(ents%list(i)%code)
-      print'(a)', str_vs(ents%list(i)%repl)
-      print'(a)', str_vs(ents%list(i)%publicId)
-      print'(a)', str_vs(ents%list(i)%systemId)
-      print'(a)', str_vs(ents%list(i)%notation)
+      write(*,'(a)') str_vs(ents%list(i)%code)
+      write(*,'(a)') str_vs(ents%list(i)%repl)
+      write(*,'(a)') str_vs(ents%list(i)%publicId)
+      write(*,'(a)') str_vs(ents%list(i)%systemId)
+      write(*,'(a)') str_vs(ents%list(i)%notation)
     enddo
-    print*, '<ENTITYLIST'
+    write(*,'(a)') '<ENTITYLIST'
     deallocate(ents%list)    
   end subroutine print_entity_list
 
@@ -425,7 +425,6 @@ contains
     integer :: n
 
     integer :: i
-    type(entity_t) :: ent
 
     if (checkCharacterEntityReference(code)) then
       n = expand_char_entity_len(code)
@@ -462,7 +461,7 @@ contains
     character(len=*), intent(in)  :: code
     character(len=expand_entity_text_len(ents, code)) :: repl
 
-    integer :: number, i
+    integer :: i
 
     if (checkCharacterEntityReference(code)) then
       repl = expand_char_entity(code)
@@ -494,7 +493,6 @@ contains
     integer :: n
 
     integer :: i
-    type(entity_t) :: ent
 
     if (.not.existing_entity(ents, code)) then
       n = 0
@@ -515,7 +513,7 @@ contains
     character(len=*), intent(in)  :: code
     character(len=expand_entity_text_len(ents, code)) :: repl
 
-    integer :: number, i
+    integer :: i
 
     if (len(repl) == 0) &
       call FoX_error("Non-existent PE")

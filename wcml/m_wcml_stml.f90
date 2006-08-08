@@ -7,7 +7,6 @@
 !
 module m_wcml_stml
 
-  use FoX_common, only: str
   use FoX_wxml, only: xmlf_t
   use FoX_wxml, only: xml_NewElement, xml_EndElement
   use FoX_wxml, only: xml_AddCharacters, xml_AddAttribute

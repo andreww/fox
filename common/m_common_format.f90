@@ -2,7 +2,7 @@ module m_common_format
 
   use m_common_realtypes, only: sp, dp
   use m_common_error, only: FoX_error
-  use pxf, only: pxfabort, pure_pxfabort
+  use pxf, only: pure_pxfabort
 
   implicit none
   private

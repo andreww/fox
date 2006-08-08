@@ -258,8 +258,10 @@ Outputs information about a unit cell, in lattice-vector form
 **beta**: *real* *scalar* the 'beta' parameter  
 **gamma**: *real* *scalar* the 'gamma' parameter  
 (**z**): *integer* *scalar* the 'z' parameter: number of molecules per unit cell.  
-(**lenunits**): Units of length: default is `cmlUnits:angstrom`    
-(**angunits**): Units of angle: default is `cmlUnits:degrees`  
+(**lenunits**): *string* *scalar*: Units of length: default is `units:angstrom`    
+(**angunits**): *string* *scalar*: Units of angle: default is `units:degrees`  
+(**lenfmt**): *string* *scalar*: format for crystal lengths
+(**angfmt**): *string* *scalar*: format for crystal angles
 (**spaceGroup**): *string* *scalar* Space group of the crystal. No defined vocabulary.
 
 Outputs information about a unit cell, in crystallographic form

@@ -16,11 +16,10 @@ module m_wxml_core
     checkQName, prefixOfQName, localpartofQName
   use m_common_namespaces, only: namespaceDictionary, getnamespaceURI
   use m_common_namespaces, only: initnamespaceDictionary, destroynamespaceDictionary
-  use m_common_namespaces, only: addDefaultNS, addPrefixedNS, isPrefixInForce, isDefaultNSInForce
-  use m_common_namespaces, only: checkNamespacesWriting, checkEndNamespaces, dumpnsdict
+  use m_common_namespaces, only: addDefaultNS, addPrefixedNS, isPrefixInForce
+  use m_common_namespaces, only: checkNamespacesWriting, checkEndNamespaces
   use m_common_notations, only: notation_list, init_notation_list, destroy_notation_list, &
     add_notation, notation_exists
-  use m_common_realtypes, only: sp, dp
   use m_wxml_escape, only: escape_string
 
   use pxf, only: pxfabort
@@ -595,8 +594,6 @@ contains
     character(len=*), intent(in), optional :: data
     logical, optional :: xml
 
-    integer :: state_2
-
     call check_xf(xf)
     
     select case (xf%state_1)
@@ -631,8 +628,6 @@ contains
   subroutine xml_AddComment(xf,comment)
     type(xmlf_t), intent(inout)   :: xf
     character(len=*), intent(in)  :: comment
-
-    integer :: state_2
     
     call check_xf(xf)
     
@@ -907,9 +902,9 @@ contains
     character(len=*), intent(in) :: nsURI
     character(len=*), intent(in), optional :: prefix
     logical, intent(in), optional :: xml
-    
+
     call check_xf(xf)
-    
+
     if (xf%state_1 == WXML_STATE_1_AFTER_ROOT) &
       call wxml_error(xf, "adding namespace outside element content")
 
@@ -917,7 +912,7 @@ contains
       call wxml_error(xf, "adding namespace with empty URI")
     
     if (present(prefix)) then
-      call addPrefixedNS(xf%nsDict, prefix, nsURI, len(xf%stack)+1)
+      call addPrefixedNS(xf%nsDict, prefix, nsURI, len(xf%stack)+1, xml)
     else
       call addDefaultNS(xf%nsDict, nsURI, len(xf%stack)+1)
     endif
@@ -975,7 +970,7 @@ contains
     if (xf%state_1 /= WXML_STATE_1_AFTER_ROOT) &
       call wxml_warning(xf, 'Invalid XML document produced: No root element')
     
-    call dump_buffer(xf%buffer, xf%xml_version)
+    call dump_buffer(xf%buffer)
     close(unit=xf%lun)
     xf%lun = -1
 
@@ -1020,7 +1015,7 @@ contains
     !We must flush here (rather than just adding an eol character)
     !since we don't know what the eol character is on this system.
     !Flushing with a linefeed will get it automatically, though.
-    call dump_buffer(xf%buffer, xf%xml_version, lf=.true.)
+    call dump_buffer(xf%buffer, lf=.true.)
     call reset_buffer(xf%buffer, xf%lun, xf%xml_version)
     
     if (xf%broken_indenting) &

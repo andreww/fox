@@ -1,14 +1,14 @@
 module m_wcml_core
 
   use m_common_error, only: FoX_error
-  use m_common_realtypes, only: sp, dp
 
   use FoX_common, only: FoX_version
-  use FoX_common, only: str
   use FoX_wxml, only: xmlf_t, xml_OpenFile, xml_Close
   use FoX_wxml, only: xml_NewElement, xml_AddAttribute
   use FoX_wxml, only: xml_EndElement, xml_DeclareNamespace
   use FoX_wxml, only: xmlf_Name, xmlf_OpenTag
+
+  use m_wcml_metadata, only: cmlAddMetadata
 
   implicit none
   private
@@ -99,7 +99,7 @@ contains
   subroutine cmlEndCml(xf)
     type(xmlf_t), intent(inout) :: xf
 
-  !  call cmlAddMetadata(xf, name='dc:contributor', content='FoX-'//FoX_version//' (http://www.eminerals.org)')
+    call cmlAddMetadata(xf, name='dc:contributor', content='FoX-'//FoX_version//' (http://www.uszla.me.uk/FoX)')
     call xml_EndElement(xf, 'cml')
 
   end subroutine cmlEndCml

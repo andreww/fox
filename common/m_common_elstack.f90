@@ -1,7 +1,7 @@
 module m_common_elstack
 
   use m_common_array_str, only: str_vs, vs_str
-  use m_common_error, only : FoX_error, FoX_fatal
+  use m_common_error, only: FoX_fatal
   use pxf, only: pure_pxfabort
 
   implicit none
