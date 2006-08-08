@@ -10,7 +10,7 @@ Wcml is *not* intended to be a generalized Fortran CML output layer. rather it i
 
 Further information on these fragments, and on the style of CML generated here, is available at <http://www.uszla.me.uk/CML/eminerals.html>.
 
-This section of the manual will detail the available CMl output subroutines.
+This section of the manual will detail the available CML output subroutines.
 
 ## General naming conventions for functions.
 
@@ -164,6 +164,12 @@ This pair of functions open & close a parameterList, which is a wrapper for inpu
 
 This pair of functions open & close a propertyList, which is a wrapper for output properties.
 
+* `cmlStartBandList`
+* `cmlEndBandList`
+
+* `cmlStartKpointList`
+* `cmlEndKpointList`
+
 * `cmlStartModule`  
 (**serial**) *string* *scalar*: serial id for the module  
 (**role**) *string* *scalar* role which the element plays 
@@ -239,10 +245,18 @@ Outputs information about a unit cell, in lattice-vector form
 **alpha**: *real* *scalar* the 'alpha' parameter  
 **beta**: *real* *scalar* the 'beta' parameter  
 **gamma**: *real* *scalar* the 'gamma' parameter  
-(**lenunits**): Units of length: default is `cmlUnits:angstrom`
+(**lenunits**): Units of length: default is `cmlUnits:angstrom`  
 (**angunits**): Units of angle: default is `cmlUnits:degrees`
 
 Outputs information about a unit cell, in crystallographic form
+
+* `cmlAddBand`
+* `cmlAddKpoint`
+* `cmlAddEigenvalue
+
+* `cmlAddLength`
+* `cmlAddAngle`
+* `cmlAddTorsion`
 
 ####Common arguments
 

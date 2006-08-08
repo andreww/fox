@@ -19,7 +19,7 @@
 
 <p>Further information on these fragments, and on the style of CML generated here, is available at <a href="http://www.uszla.me.uk/CML/eminerals.html">http://www.uszla.me.uk/CML/eminerals.html</a>.</p>
 
-<p>This section of the manual will detail the available CMl output subroutines.</p>
+<p>This section of the manual will detail the available CML output subroutines.</p>
 
 <h2>General naming conventions for functions.</h2>
 
@@ -199,9 +199,13 @@ Attempts to do otherwise will result in a runtime error.</p>
 <p>This pair of functions open &amp; close a propertyList, which is a wrapper for output properties.</p>
 
 <ul>
-<li><code>cmlStartModule</code> <br />
+<li><code>cmlStartBandList</code></li>
+<li><p><code>cmlEndBandList</code></p></li>
+<li><p><code>cmlStartKpointList</code></p></li>
+<li><p><code>cmlEndKpointList</code></p></li>
+<li><p><code>cmlStartModule</code> <br />
 (<strong>serial</strong>) <em>string</em> <em>scalar</em>: serial id for the module <br />
-(<strong>role</strong>) <em>string</em> <em>scalar</em> role which the element plays </li>
+(<strong>role</strong>) <em>string</em> <em>scalar</em> role which the element plays </p></li>
 </ul>
 
 <p>Note that in most cases where you might want to use a serial number, you should probably be using the <code>cmlStartStep</code> subroutine below.</p>
@@ -288,11 +292,20 @@ default - none</li>
 <strong>alpha</strong>: <em>real</em> <em>scalar</em> the 'alpha' parameter <br />
 <strong>beta</strong>: <em>real</em> <em>scalar</em> the 'beta' parameter <br />
 <strong>gamma</strong>: <em>real</em> <em>scalar</em> the 'gamma' parameter <br />
-(<strong>lenunits</strong>): Units of length: default is <code>cmlUnits:angstrom</code>
+(<strong>lenunits</strong>): Units of length: default is <code>cmlUnits:angstrom</code> <br />
 (<strong>angunits</strong>): Units of angle: default is <code>cmlUnits:degrees</code></li>
 </ul>
 
 <p>Outputs information about a unit cell, in crystallographic form</p>
+
+<ul>
+<li><code>cmlAddBand</code></li>
+<li><code>cmlAddKpoint</code></li>
+<li><p>`cmlAddEigenvalue</p></li>
+<li><p><code>cmlAddLength</code></p></li>
+<li><code>cmlAddAngle</code></li>
+<li><code>cmlAddTorsion</code></li>
+</ul>
 
 <h4>Common arguments</h4>
 

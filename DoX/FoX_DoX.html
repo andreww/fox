@@ -548,10 +548,10 @@ registered namespace prefix, and generate an error if not.</p>
 <ul>
 <li><code>xml_AddXMLDeclaration</code> <br />
 (<strong>version</strong>) <em>string</em>: XML version to be used.
-<em>default: 1.0</em>
+<em>default: 1.0</em> <br />
 (<strong>encoding</strong>) <em>string</em>: character encoding of the document
 <em>default: absent</em> <br />
-(<strong>standalone</strong>) <em>logical</em>: is this document standalone [REF]?
+(<strong>standalone</strong>) <em>logical</em>: is this document standalone?
 <em>default: absent</em>  </li>
 </ul>
 
@@ -762,7 +762,7 @@ Contents of comment</li>
 
 <p>Further information on these fragments, and on the style of CML generated here, is available at <a href="http://www.uszla.me.uk/CML/eminerals.html">http://www.uszla.me.uk/CML/eminerals.html</a>.</p>
 
-<p>This section of the manual will detail the available CMl output subroutines.</p>
+<p>This section of the manual will detail the available CML output subroutines.</p>
 
 <h2>General naming conventions for functions.</h2>
 
@@ -942,9 +942,13 @@ Attempts to do otherwise will result in a runtime error.</p>
 <p>This pair of functions open &amp; close a propertyList, which is a wrapper for output properties.</p>
 
 <ul>
-<li><code>cmlStartModule</code> <br />
+<li><code>cmlStartBandList</code></li>
+<li><p><code>cmlEndBandList</code></p></li>
+<li><p><code>cmlStartKpointList</code></p></li>
+<li><p><code>cmlEndKpointList</code></p></li>
+<li><p><code>cmlStartModule</code> <br />
 (<strong>serial</strong>) <em>string</em> <em>scalar</em>: serial id for the module <br />
-(<strong>role</strong>) <em>string</em> <em>scalar</em> role which the element plays </li>
+(<strong>role</strong>) <em>string</em> <em>scalar</em> role which the element plays </p></li>
 </ul>
 
 <p>Note that in most cases where you might want to use a serial number, you should probably be using the <code>cmlStartStep</code> subroutine below.</p>
@@ -1031,11 +1035,20 @@ default - none</li>
 <strong>alpha</strong>: <em>real</em> <em>scalar</em> the 'alpha' parameter <br />
 <strong>beta</strong>: <em>real</em> <em>scalar</em> the 'beta' parameter <br />
 <strong>gamma</strong>: <em>real</em> <em>scalar</em> the 'gamma' parameter <br />
-(<strong>lenunits</strong>): Units of length: default is <code>cmlUnits:angstrom</code>
+(<strong>lenunits</strong>): Units of length: default is <code>cmlUnits:angstrom</code> <br />
 (<strong>angunits</strong>): Units of angle: default is <code>cmlUnits:degrees</code></li>
 </ul>
 
 <p>Outputs information about a unit cell, in crystallographic form</p>
+
+<ul>
+<li><code>cmlAddBand</code></li>
+<li><code>cmlAddKpoint</code></li>
+<li><p>`cmlAddEigenvalue</p></li>
+<li><p><code>cmlAddLength</code></p></li>
+<li><code>cmlAddAngle</code></li>
+<li><code>cmlAddTorsion</code></li>
+</ul>
 
 <h4>Common arguments</h4>
 
@@ -1117,9 +1130,9 @@ default - none</li>
 <h1>Further information</h1>
 
 <p>FoX evolved from the initial codebase of <a href="http://lcdx00.wm.lc.ehu.es/ag/xml/">xmlf90</a>,
-which was written largely by Alberto Garcia &lt;<a href="&#109;&#x61;&#105;&#x6C;&#116;&#111;:&#x61;&#x6C;&#98;e&#x72;&#116;&#111;&#103;&#64;i&#99;&#x6D;&#97;&#x62;&#46;&#101;&#115;">&#x61;&#x6C;&#98;e&#x72;&#116;&#111;&#103;&#64;i&#99;&#x6D;&#97;&#x62;&#46;&#101;&#115;</a>> and Jon Wakelin &lt;<a href="m&#x61;&#105;&#108;&#x74;&#x6F;:&#x6A;&#x6F;&#x6E;&#x2E;&#119;&#x61;&#107;e&#x6C;&#105;&#x6E;&#64;&#x62;&#114;&#105;&#x73;&#116;o&#108;&#46;&#97;&#x63;&#x2E;&#x75;&#107;">&#x6A;&#x6F;&#x6E;&#x2E;&#119;&#x61;&#107;e&#x6C;&#105;&#x6E;&#64;&#x62;&#114;&#105;&#x73;&#116;o&#108;&#46;&#97;&#x63;&#x2E;&#x75;&#107;</a>>.</p>
+which was written largely by Alberto Garcia &lt;<a href="&#x6D;&#x61;i&#x6C;&#116;&#111;:&#x61;&#108;&#98;&#101;r&#116;&#111;&#x67;&#64;&#105;&#x63;&#x6D;&#97;&#98;&#x2E;e&#x73;">&#x61;&#108;&#98;&#101;r&#116;&#111;&#x67;&#64;&#105;&#x63;&#x6D;&#97;&#98;&#x2E;e&#x73;</a>> and Jon Wakelin &lt;<a href="&#109;&#x61;&#105;&#108;&#x74;&#x6F;:&#106;&#x6F;&#x6E;&#x2E;w&#97;k&#x65;&#x6C;&#x69;&#x6E;&#64;&#98;&#x72;&#x69;&#x73;&#x74;&#x6F;&#108;&#46;&#x61;&#99;.&#117;&#x6B;">&#106;&#x6F;&#x6E;&#x2E;w&#97;k&#x65;&#x6C;&#x69;&#x6E;&#64;&#98;&#x72;&#x69;&#x73;&#x74;&#x6F;&#108;&#46;&#x61;&#99;.&#117;&#x6B;</a>>.</p>
 
-<p>FoX is the work of Toby White &lt;<a href="&#x6D;&#x61;&#105;&#x6C;&#116;&#111;:&#x74;&#111;&#119;&#50;&#49;&#64;&#x63;&#x61;&#x6D;&#x2E;ac&#46;&#x75;&#x6B;">&#x74;&#111;&#119;&#50;&#49;&#64;&#x63;&#x61;&#x6D;&#x2E;ac&#46;&#x75;&#x6B;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
+<p>FoX is the work of Toby White &lt;<a href="&#109;&#97;&#105;&#108;&#116;&#111;:&#x74;o&#119;2&#49;&#64;c&#97;&#109;&#46;&#x61;&#99;&#x2E;&#x75;&#107;">&#x74;o&#119;2&#49;&#64;c&#97;&#109;&#46;&#x61;&#99;&#x2E;&#x75;&#107;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
 
 <p>There is a FoX website at <a href="http://www.uszla.me.uk/software/FoX/">http://www.uszla.me.uk/software/FoX/</a>.</p>
 
