@@ -77,7 +77,9 @@ dnl
 m4_foreach(`x', `$2', `TOHWM4_dummyargdecl(x)')
 dnl
 ifelse(`$3',`Lg',`',`dnl
-    character(len=*), intent(in), optional :: units
+    character(len=*), intent(in) dnl
+ifelse(`$3', `Ch', `, optional') dnl
+ :: units
 ')dnl
 ifelse(substr($3,0,4),`Real',`dnl 
     character(len=*), intent(in), optional :: fmt

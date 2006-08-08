@@ -59,7 +59,7 @@ contains
     character(len=*), intent(in), optional :: ref
     character(len=*), intent(in), optional :: role
 
-    character(len=*), intent(in), optional :: units
+    character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
     call xml_NewElement(xf, "property")
@@ -87,7 +87,7 @@ contains
     character(len=*), intent(in), optional :: ref
     character(len=*), intent(in), optional :: role
 
-    character(len=*), intent(in), optional :: units
+    character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
     call xml_NewElement(xf, "property")
@@ -115,7 +115,7 @@ contains
     character(len=*), intent(in), optional :: ref
     character(len=*), intent(in), optional :: role
 
-    character(len=*), intent(in), optional :: units
+    character(len=*), intent(in)   :: units
 
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
@@ -168,7 +168,7 @@ contains
     character(len=*), intent(in), optional :: ref
     character(len=*), intent(in), optional :: role
 
-    character(len=*), intent(in), optional :: units
+    character(len=*), intent(in) , optional  :: units
 
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
@@ -197,7 +197,7 @@ contains
     character(len=*), intent(in), optional :: ref
     character(len=*), intent(in), optional :: role
 
-    character(len=*), intent(in), optional :: units
+    character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
     call xml_NewElement(xf, "property")
@@ -226,7 +226,7 @@ contains
     character(len=*), intent(in), optional :: ref
     character(len=*), intent(in), optional :: role
 
-    character(len=*), intent(in), optional :: units
+    character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
     call xml_NewElement(xf, "property")
@@ -255,7 +255,7 @@ contains
     character(len=*), intent(in), optional :: ref
     character(len=*), intent(in), optional :: role
 
-    character(len=*), intent(in), optional :: units
+    character(len=*), intent(in)   :: units
 
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
@@ -310,7 +310,7 @@ contains
     character(len=*), intent(in), optional :: ref
     character(len=*), intent(in), optional :: role
 
-    character(len=*), intent(in), optional :: units
+    character(len=*), intent(in) , optional  :: units
 
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
@@ -338,7 +338,7 @@ contains
     character(len=*), intent(in), optional :: ref
     character(len=*), intent(in), optional :: role
 
-    character(len=*), intent(in), optional :: units
+    character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
     call xml_NewElement(xf, "property")
@@ -366,7 +366,7 @@ contains
     character(len=*), intent(in), optional :: ref
     character(len=*), intent(in), optional :: role
 
-    character(len=*), intent(in), optional :: units
+    character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
     call xml_NewElement(xf, "property")
@@ -394,7 +394,7 @@ contains
     character(len=*), intent(in), optional :: ref
     character(len=*), intent(in), optional :: role
 
-    character(len=*), intent(in), optional :: units
+    character(len=*), intent(in)   :: units
 
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
@@ -447,7 +447,7 @@ contains
     character(len=*), intent(in), optional :: ref
     character(len=*), intent(in), optional :: role
 
-    character(len=*), intent(in), optional :: units
+    character(len=*), intent(in) , optional  :: units
 
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
@@ -477,7 +477,7 @@ contains
     character(len=*), intent(in), optional :: ref
     character(len=*), intent(in), optional :: role
 
-    character(len=*), intent(in), optional :: units
+    character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
     call xml_NewElement(xf, "property")
@@ -507,7 +507,7 @@ contains
     character(len=*), intent(in), optional :: ref
     character(len=*), intent(in), optional :: role
 
-    character(len=*), intent(in), optional :: units
+    character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
     call xml_NewElement(xf, "property")
@@ -537,7 +537,7 @@ contains
     character(len=*), intent(in), optional :: ref
     character(len=*), intent(in), optional :: role
 
-    character(len=*), intent(in), optional :: units
+    character(len=*), intent(in)   :: units
 
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
@@ -594,7 +594,7 @@ contains
     character(len=*), intent(in), optional :: ref
     character(len=*), intent(in), optional :: role
 
-    character(len=*), intent(in), optional :: units
+    character(len=*), intent(in) , optional  :: units
 
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
@@ -622,7 +622,7 @@ contains
     character(len=*), intent(in), optional :: ref
     character(len=*), intent(in), optional :: role
 
-    character(len=*), intent(in), optional :: units
+    character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
     call xml_NewElement(xf, "property")
@@ -650,7 +650,7 @@ contains
     character(len=*), intent(in), optional :: ref
     character(len=*), intent(in), optional :: role
 
-    character(len=*), intent(in), optional :: units
+    character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
     call xml_NewElement(xf, "property")
@@ -678,7 +678,7 @@ contains
     character(len=*), intent(in), optional :: ref
     character(len=*), intent(in), optional :: role
 
-    character(len=*), intent(in), optional :: units
+    character(len=*), intent(in)   :: units
 
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
@@ -731,7 +731,7 @@ contains
     character(len=*), intent(in), optional :: ref
     character(len=*), intent(in), optional :: role
 
-    character(len=*), intent(in), optional :: units
+    character(len=*), intent(in) , optional  :: units
 
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
@@ -812,7 +812,7 @@ contains
     character(len=*), intent(in), optional :: name
     character(len=*), intent(in), optional :: role
 
-    character(len=*), intent(in), optional :: units
+    character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
     call xml_NewElement(xf, "parameter")
@@ -844,7 +844,7 @@ contains
     character(len=*), intent(in), optional :: name
     character(len=*), intent(in), optional :: role
 
-    character(len=*), intent(in), optional :: units
+    character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
     call xml_NewElement(xf, "parameter")
@@ -876,7 +876,7 @@ contains
     character(len=*), intent(in), optional :: name
     character(len=*), intent(in), optional :: role
 
-    character(len=*), intent(in), optional :: units
+    character(len=*), intent(in)   :: units
 
     call xml_NewElement(xf, "parameter")
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
@@ -937,7 +937,7 @@ contains
     character(len=*), intent(in), optional :: name
     character(len=*), intent(in), optional :: role
 
-    character(len=*), intent(in), optional :: units
+    character(len=*), intent(in) , optional  :: units
 
     call xml_NewElement(xf, "parameter")
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
@@ -970,7 +970,7 @@ contains
     character(len=*), intent(in), optional :: name
     character(len=*), intent(in), optional :: role
 
-    character(len=*), intent(in), optional :: units
+    character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
     call xml_NewElement(xf, "parameter")
@@ -1003,7 +1003,7 @@ contains
     character(len=*), intent(in), optional :: name
     character(len=*), intent(in), optional :: role
 
-    character(len=*), intent(in), optional :: units
+    character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
     call xml_NewElement(xf, "parameter")
@@ -1036,7 +1036,7 @@ contains
     character(len=*), intent(in), optional :: name
     character(len=*), intent(in), optional :: role
 
-    character(len=*), intent(in), optional :: units
+    character(len=*), intent(in)   :: units
 
     call xml_NewElement(xf, "parameter")
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
@@ -1099,7 +1099,7 @@ contains
     character(len=*), intent(in), optional :: name
     character(len=*), intent(in), optional :: role
 
-    character(len=*), intent(in), optional :: units
+    character(len=*), intent(in) , optional  :: units
 
     call xml_NewElement(xf, "parameter")
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
@@ -1131,7 +1131,7 @@ contains
     character(len=*), intent(in), optional :: name
     character(len=*), intent(in), optional :: role
 
-    character(len=*), intent(in), optional :: units
+    character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
     call xml_NewElement(xf, "parameter")
@@ -1163,7 +1163,7 @@ contains
     character(len=*), intent(in), optional :: name
     character(len=*), intent(in), optional :: role
 
-    character(len=*), intent(in), optional :: units
+    character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
     call xml_NewElement(xf, "parameter")
@@ -1195,7 +1195,7 @@ contains
     character(len=*), intent(in), optional :: name
     character(len=*), intent(in), optional :: role
 
-    character(len=*), intent(in), optional :: units
+    character(len=*), intent(in)   :: units
 
     call xml_NewElement(xf, "parameter")
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
@@ -1256,7 +1256,7 @@ contains
     character(len=*), intent(in), optional :: name
     character(len=*), intent(in), optional :: role
 
-    character(len=*), intent(in), optional :: units
+    character(len=*), intent(in) , optional  :: units
 
     call xml_NewElement(xf, "parameter")
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
@@ -1290,7 +1290,7 @@ contains
     character(len=*), intent(in), optional :: name
     character(len=*), intent(in), optional :: role
 
-    character(len=*), intent(in), optional :: units
+    character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
     call xml_NewElement(xf, "parameter")
@@ -1324,7 +1324,7 @@ contains
     character(len=*), intent(in), optional :: name
     character(len=*), intent(in), optional :: role
 
-    character(len=*), intent(in), optional :: units
+    character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
     call xml_NewElement(xf, "parameter")
@@ -1358,7 +1358,7 @@ contains
     character(len=*), intent(in), optional :: name
     character(len=*), intent(in), optional :: role
 
-    character(len=*), intent(in), optional :: units
+    character(len=*), intent(in)   :: units
 
     call xml_NewElement(xf, "parameter")
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
@@ -1423,7 +1423,7 @@ contains
     character(len=*), intent(in), optional :: name
     character(len=*), intent(in), optional :: role
 
-    character(len=*), intent(in), optional :: units
+    character(len=*), intent(in) , optional  :: units
 
     call xml_NewElement(xf, "parameter")
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
@@ -1455,7 +1455,7 @@ contains
     character(len=*), intent(in), optional :: name
     character(len=*), intent(in), optional :: role
 
-    character(len=*), intent(in), optional :: units
+    character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
     call xml_NewElement(xf, "parameter")
@@ -1487,7 +1487,7 @@ contains
     character(len=*), intent(in), optional :: name
     character(len=*), intent(in), optional :: role
 
-    character(len=*), intent(in), optional :: units
+    character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
     call xml_NewElement(xf, "parameter")
@@ -1519,7 +1519,7 @@ contains
     character(len=*), intent(in), optional :: name
     character(len=*), intent(in), optional :: role
 
-    character(len=*), intent(in), optional :: units
+    character(len=*), intent(in)   :: units
 
     call xml_NewElement(xf, "parameter")
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
@@ -1580,7 +1580,7 @@ contains
     character(len=*), intent(in), optional :: name
     character(len=*), intent(in), optional :: role
 
-    character(len=*), intent(in), optional :: units
+    character(len=*), intent(in) , optional  :: units
 
     call xml_NewElement(xf, "parameter")
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
