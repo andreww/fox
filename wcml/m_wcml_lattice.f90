@@ -78,7 +78,7 @@ contains
     else
       call xml_AddAttribute(xf=xf, name="units", value=U_DEGREE)
     endif
-    call xml_AddCharacters(xf=xf, chars=(/alpha, beta, gamma/))
+    call xml_AddCharacters(xf=xf, chars=(/alpha, beta, gamma/), fmt="r3")
     call xml_EndElement(xf=xf, name="cellParameter")
 
     if (present(spaceGroup)) then
@@ -168,7 +168,7 @@ contains
     else
       call xml_AddAttribute(xf=xf, name="units", value=U_DEGREE)
     endif
-    call xml_AddCharacters(xf=xf, chars=(/alpha, beta, gamma/))
+    call xml_AddCharacters(xf=xf, chars=(/alpha, beta, gamma/), fmt="r3")
     call xml_EndElement(xf=xf, name="cellParameter")
 
     if (present(spaceGroup)) then

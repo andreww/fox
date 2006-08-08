@@ -102,6 +102,12 @@ All functions take as their first argument an XML file object, whose keyword is 
 
 It is *highly* recommended that subroutines be called with keywords specified rather than relying on the implicit ordering of arguments. This is robust against changes in the library calling convention; and also stepsides a significant cause of errors when using subroutines with large numbers of arguments.
 
+### Units
+
+Note below that the functions `cmlAddParameter` and `cmlAddProperty` both *require* that units be specified for any numerical quantities output.
+
+If you are trying to output a quantity that is genuinely dimensionless, then you should specify `units="siUnits:dimensionless"`; or if you are trying to output a countable quantity (eg number of CPUs) then you may specify `units="siUnits:countable"`.
+
 ## Functions for manipulating the CML file:
 
 * `cmlBeginFile`  
@@ -199,7 +205,7 @@ This adds a single item of metadata. It takes the following arguments:
 * `cmlAddParameter`  
 **title**: *string* *scalar*: Identifying title for parameter  
 **value**:*anytype* *anydim*: value of parameter  
-**units**: *string* *scalar*: units of parameter value  
+**units**: *string* *scalar*: units of parameter value  (optional for logical/character **value**s, compulsory otherwise)
 (**constraint**) *string* *scalar*: Constraint under which the parameter is set (this can be an arbitrary string)  
 (**ref**) *string* *scalar*: Reference an `id` attribute of another element (generally deprecated)  
 (**role**) *string* *scalar* role which the element plays 
@@ -209,7 +215,7 @@ This function adds a tag representing an input parameter
 * `cmlAddProperty`
 **name**: *string* *scalar*  
 **value**: *any* *anydim*  
-**units**: *string* *scalar* units of property value  
+**units**: *string* *scalar* units of property value  (optional for logical/character **value**s, compulsory otherwise)
 (**ref**) *string* *scalar*: Reference an `id` attribute of another element (generally deprecated)  
 (**role**) *string* *scalar* role which the element plays 
 
@@ -236,9 +242,10 @@ Outputs an atomic configuration.
 * `cmlAddLattice`   
 **cell**: *real* *matrix* a 3x3 matrix of the unit cell  
 (**spaceType**): *string* *scalar*: `real` or `reciprocal` space.  
-(**latticeType**): *string* *scalar* Space group of the lattice; 
-(**units**): *string* *scalar* units of (reciprocal) distance that cell vectors is given in; 
-default: Angstrom
+(**latticeType**): *string* *scalar* Space group of the lattice. No defined vocabulary
+(**units**): *string* *scalar* units of (reciprocal) distance that cell vectors is given in;
+default: Angstrom  
+
 
 Outputs information about a unit cell, in lattice-vector form
 
@@ -249,14 +256,42 @@ Outputs information about a unit cell, in lattice-vector form
 **alpha**: *real* *scalar* the 'alpha' parameter  
 **beta**: *real* *scalar* the 'beta' parameter  
 **gamma**: *real* *scalar* the 'gamma' parameter  
+(**z**): *integer* *scalar* the 'z' parameter: number of molecules per unit cell.
 (**lenunits**): Units of length: default is `cmlUnits:angstrom`  
 (**angunits**): Units of angle: default is `cmlUnits:degrees`
+(**spaceGroup**): *string* *scalar* Space group of the crystal. No defined vocabulary.
 
 Outputs information about a unit cell, in crystallographic form
 
-* `cmlAddBand`
-* `cmlAddKpoint`
-* `cmlAddEigenvalue`
+* `cmlAddBand`  
+**kptref**: *string* *scalar*:  Reference id of relevant kpoint.  
+**bands**: *real* *array*: array of eigenvalues
+**units**: * string* *scalar*: energy units of eigenvalues
+(**fmt**): *string* *scalar*: format to output eigenvalues
+(**label**): *string* *scalar*: label for band.
+
+Output eigenvalues for a band.
+
+* `cmlAddKpoint`  
+**kpoint**: *real* *array* length-3 array defining k-point  
+(**weight**): *real* *scalar*: weight of k-point  
+(**kptfmt**): *string* *scalar*: format for outputting k-point (default: `"r3"`)  
+(**weightfmt**): *string* *scalar*: format for outputting weight (default: `"r3"`)  
+(**label**): *string* *scalar*: label for k-point
+
+Output a k-point
+
+* `cmlAddEigen`  
+**eigvec**: *real* *matrix* nxn array of eigenvectors  
+**eigval**: *real* *array* length-n array of eigenvalues  
+(**n**): number of eigenvalues/eigenvectors (default: picked up from length of **eigval**)  
+**units**: units of eigenvalues  
+**eigenOrientationType**: *string* *scalar*: is the eigenvector matrix `column` or `row` oriented?  
+(**vecfmt**): *string* *scalar*: format for outputting eigenvectors  
+(**valfmt**): *string* *scalar*: format for outputting eigenvalues  
+(**type**): *string* *scalar*: what sort of thing are these eigenvectors? No defined vocabulary.
+
+Output a set of eigenvalues and eigenvectors
 
 * `cmlAddLength`
 * `cmlAddAngle`

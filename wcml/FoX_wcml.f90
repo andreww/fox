@@ -59,6 +59,6 @@ module FoX_wcml
   public :: cmlStartKPointList
   public :: cmlEndKPointList
 
-  public :: cmlAddEigenvalue
+  public :: cmlAddEigen
 
 end module FoX_wcml

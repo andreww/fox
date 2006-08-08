@@ -125,6 +125,12 @@ call cmlAddProperty(xf, 'coords', matrix, nrows=3, ncols=50)
 
 <p>It is <em>highly</em> recommended that subroutines be called with keywords specified rather than relying on the implicit ordering of arguments. This is robust against changes in the library calling convention; and also stepsides a significant cause of errors when using subroutines with large numbers of arguments.</p>
 
+<h3>Units</h3>
+
+<p>Note below that the functions <code>cmlAddParameter</code> and <code>cmlAddProperty</code> both <em>require</em> that units be specified for any numerical quantities output.</p>
+
+<p>If you are trying to output a quantity that is genuinely dimensionless, then you should specify <code>units="siUnits:dimensionless"</code>; or if you are trying to output a countable quantity (eg number of CPUs) then you may specify <code>units="siUnits:countable"</code>.</p>
+
 <h2>Functions for manipulating the CML file:</h2>
 
 <ul>
@@ -239,7 +245,7 @@ Attempts to do otherwise will result in a runtime error.</p>
 <li><code>cmlAddParameter</code> <br />
 <strong>title</strong>: <em>string</em> <em>scalar</em>: Identifying title for parameter <br />
 <strong>value</strong>:<em>anytype</em> <em>anydim</em>: value of parameter <br />
-<strong>units</strong>: <em>string</em> <em>scalar</em>: units of parameter value <br />
+<strong>units</strong>: <em>string</em> <em>scalar</em>: units of parameter value  (optional for logical/character <strong>value</strong>s, compulsory otherwise)
 (<strong>constraint</strong>) <em>string</em> <em>scalar</em>: Constraint under which the parameter is set (this can be an arbitrary string) <br />
 (<strong>ref</strong>) <em>string</em> <em>scalar</em>: Reference an <code>id</code> attribute of another element (generally deprecated) <br />
 (<strong>role</strong>) <em>string</em> <em>scalar</em> role which the element plays </li>
@@ -251,7 +257,7 @@ Attempts to do otherwise will result in a runtime error.</p>
 <li><code>cmlAddProperty</code>
 <strong>name</strong>: <em>string</em> <em>scalar</em> <br />
 <strong>value</strong>: <em>any</em> <em>anydim</em> <br />
-<strong>units</strong>: <em>string</em> <em>scalar</em> units of property value <br />
+<strong>units</strong>: <em>string</em> <em>scalar</em> units of property value  (optional for logical/character <strong>value</strong>s, compulsory otherwise)
 (<strong>ref</strong>) <em>string</em> <em>scalar</em>: Reference an <code>id</code> attribute of another element (generally deprecated) <br />
 (<strong>role</strong>) <em>string</em> <em>scalar</em> role which the element plays </li>
 </ul>
@@ -281,9 +287,9 @@ Attempts to do otherwise will result in a runtime error.</p>
 <li><code>cmlAddLattice</code> <br />
 <strong>cell</strong>: <em>real</em> <em>matrix</em> a 3x3 matrix of the unit cell <br />
 (<strong>spaceType</strong>): <em>string</em> <em>scalar</em>: <code>real</code> or <code>reciprocal</code> space. <br />
-(<strong>latticeType</strong>): <em>string</em> <em>scalar</em> Space group of the lattice; 
-(<strong>units</strong>): <em>string</em> <em>scalar</em> units of (reciprocal) distance that cell vectors is given in; 
-default: Angstrom</li>
+(<strong>latticeType</strong>): <em>string</em> <em>scalar</em> Space group of the lattice. No defined vocabulary
+(<strong>units</strong>): <em>string</em> <em>scalar</em> units of (reciprocal) distance that cell vectors is given in;
+default: Angstrom  </li>
 </ul>
 
 <p>Outputs information about a unit cell, in lattice-vector form</p>
@@ -296,17 +302,52 @@ default: Angstrom</li>
 <strong>alpha</strong>: <em>real</em> <em>scalar</em> the 'alpha' parameter <br />
 <strong>beta</strong>: <em>real</em> <em>scalar</em> the 'beta' parameter <br />
 <strong>gamma</strong>: <em>real</em> <em>scalar</em> the 'gamma' parameter <br />
+(<strong>z</strong>): <em>integer</em> <em>scalar</em> the 'z' parameter: number of molecules per unit cell.
 (<strong>lenunits</strong>): Units of length: default is <code>cmlUnits:angstrom</code> <br />
-(<strong>angunits</strong>): Units of angle: default is <code>cmlUnits:degrees</code></li>
+(<strong>angunits</strong>): Units of angle: default is <code>cmlUnits:degrees</code>
+(<strong>spaceGroup</strong>): <em>string</em> <em>scalar</em> Space group of the crystal. No defined vocabulary.</li>
 </ul>
 
 <p>Outputs information about a unit cell, in crystallographic form</p>
 
 <ul>
-<li><code>cmlAddBand</code></li>
-<li><code>cmlAddKpoint</code></li>
-<li><p><code>cmlAddEigenvalue</code></p></li>
-<li><p><code>cmlAddLength</code></p></li>
+<li><code>cmlAddBand</code> <br />
+<strong>kptref</strong>: <em>string</em> <em>scalar</em>:  Reference id of relevant kpoint. <br />
+<strong>bands</strong>: <em>real</em> <em>array</em>: array of eigenvalues
+<strong>units</strong>: * string* <em>scalar</em>: energy units of eigenvalues
+(<strong>fmt</strong>): <em>string</em> <em>scalar</em>: format to output eigenvalues
+(<strong>label</strong>): <em>string</em> <em>scalar</em>: label for band.</li>
+</ul>
+
+<p>Output eigenvalues for a band.</p>
+
+<ul>
+<li><code>cmlAddKpoint</code> <br />
+<strong>kpoint</strong>: <em>real</em> <em>array</em> length-3 array defining k-point <br />
+(<strong>weight</strong>): <em>real</em> <em>scalar</em>: weight of k-point <br />
+(<strong>kptfmt</strong>): <em>string</em> <em>scalar</em>: format for outputting k-point (default: <code>"r3"</code>) <br />
+(<strong>weightfmt</strong>): <em>string</em> <em>scalar</em>: format for outputting weight (default: <code>"r3"</code>) <br />
+(<strong>label</strong>): <em>string</em> <em>scalar</em>: label for k-point</li>
+</ul>
+
+<p>Output a k-point</p>
+
+<ul>
+<li><code>cmlAddEigen</code> <br />
+<strong>eigvec</strong>: <em>real</em> <em>matrix</em> nxn array of eigenvectors <br />
+<strong>eigval</strong>: <em>real</em> <em>array</em> length-n array of eigenvalues <br />
+(<strong>n</strong>): number of eigenvalues/eigenvectors (default: picked up from length of <strong>eigval</strong>) <br />
+<strong>units</strong>: units of eigenvalues <br />
+<strong>eigenOrientationType</strong>: <em>string</em> <em>scalar</em>: is the eigenvector matrix <code>column</code> or <code>row</code> oriented? <br />
+(<strong>vecfmt</strong>): <em>string</em> <em>scalar</em>: format for outputting eigenvectors <br />
+(<strong>valfmt</strong>): <em>string</em> <em>scalar</em>: format for outputting eigenvalues <br />
+(<strong>type</strong>): <em>string</em> <em>scalar</em>: what sort of thing are these eigenvectors? No defined vocabulary.</li>
+</ul>
+
+<p>Output a set of eigenvalues and eigenvectors</p>
+
+<ul>
+<li><code>cmlAddLength</code></li>
 <li><code>cmlAddAngle</code></li>
 <li><code>cmlAddTorsion</code></li>
 </ul>
