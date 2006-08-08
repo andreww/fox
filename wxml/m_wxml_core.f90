@@ -1,6 +1,5 @@
 module m_wxml_core
 
-  use FoX_common, only: FoX_version
   use m_common_attrs, only: dictionary_t, len, get_key, get_value, has_key, &
     add_item_to_dict, init_dict, reset_dict, destroy_dict
   use m_common_array_str, only: vs_str, str_vs
