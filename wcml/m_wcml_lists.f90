@@ -22,6 +22,12 @@ module m_wcml_lists
   public :: cmlStartParameterList
   public :: cmlEndParameterList
 
+  public :: cmlStartBandList
+  public :: cmlEndBandList
+
+  public :: cmlStartKpointList
+  public :: cmlEndKpointList
+
   public :: cmlStartModule
   public :: cmlEndModule
 
@@ -123,6 +129,68 @@ contains
 
 
 
+
+  subroutine cmlStartbandList(xf, dictRef, convention, title, id, ref, role)
+
+    type(xmlf_t), intent(inout) :: xf
+    character(len=*), intent(in), optional :: dictRef
+    character(len=*), intent(in), optional :: convention
+    character(len=*), intent(in), optional :: title
+    character(len=*), intent(in), optional :: id
+    character(len=*), intent(in), optional :: ref
+    character(len=*), intent(in), optional :: role
+
+
+    call xml_NewElement(xf, "bandList")
+
+    if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
+    if (present(convention)) call xml_addAttribute(xf, "convention", convention)
+    if (present(title)) call xml_addAttribute(xf, "title", title)
+    if (present(id)) call xml_addAttribute(xf, "id", id)
+    if (present(ref)) call xml_addAttribute(xf, "ref", ref)
+    if (present(role)) call xml_addAttribute(xf, "role", role)
+
+ 
+  end subroutine cmlStartbandList
+
+  subroutine cmlEndbandList(xf)
+    type(xmlf_t), intent(inout) :: xf
+    call xmLEndElement(xf, "bandList")
+  end subroutine cmlEndbandList
+
+
+!FIXME what attributes
+
+  subroutine cmlStartkpointList(xf, dictRef, convention, title, id, ref, role)
+
+    type(xmlf_t), intent(inout) :: xf
+    character(len=*), intent(in), optional :: dictRef
+    character(len=*), intent(in), optional :: convention
+    character(len=*), intent(in), optional :: title
+    character(len=*), intent(in), optional :: id
+    character(len=*), intent(in), optional :: ref
+    character(len=*), intent(in), optional :: role
+
+
+    call xml_NewElement(xf, "kpointList")
+
+    if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
+    if (present(convention)) call xml_addAttribute(xf, "convention", convention)
+    if (present(title)) call xml_addAttribute(xf, "title", title)
+    if (present(id)) call xml_addAttribute(xf, "id", id)
+    if (present(ref)) call xml_addAttribute(xf, "ref", ref)
+    if (present(role)) call xml_addAttribute(xf, "role", role)
+
+ 
+  end subroutine cmlStartkpointList
+
+  subroutine cmlEndkpointList(xf)
+    type(xmlf_t), intent(inout) :: xf
+    call xmLEndElement(xf, "kpointList")
+  end subroutine cmlEndkpointList
+
+
+!FIXME what attributes
 
   subroutine cmlStartmodule(xf, serial, title, id, convention, dictRef, role)
 

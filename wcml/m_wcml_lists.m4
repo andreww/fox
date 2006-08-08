@@ -71,6 +71,12 @@ module m_wcml_lists
   public :: cmlStartParameterList
   public :: cmlEndParameterList
 
+  public :: cmlStartBandList
+  public :: cmlEndBandList
+
+  public :: cmlStartKpointList
+  public :: cmlEndKpointList
+
   public :: cmlStartModule
   public :: cmlEndModule
 
@@ -85,6 +91,10 @@ TOHWM4_list_subs(`propertyList', (dictRef, convention, title, id, ref, role))
 
 TOHWM4_list_subs(`parameterList', (dictRef, convention, title, id, ref, role))
 
+TOHWM4_list_subs(`bandList', (dictRef, convention, title, id, ref, role))
+!FIXME what attributes
+TOHWM4_list_subs(`kpointList', (dictRef, convention, title, id, ref, role))
+!FIXME what attributes
 TOHWM4_list_subs(`module', (serial, title, id, convention, dictRef, role))
 
   subroutine cmlStartStep(xf, type, index, id, title, convention)
