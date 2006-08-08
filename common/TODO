@@ -2,8 +2,8 @@ Expand charset/make unicode string classes
 Check unicode IO
 Test and warn for broken compilers
 Fix str for g95 weirdness on big numbers
-Fix configure.m4 for pathscale
 
+Fix configure.m4 for pathscale - done
 Format all files coherently - done
 Document str properly - done
 Fix makeilfe to make m_common_format w/o optimization - found workaround

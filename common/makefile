@@ -10,9 +10,6 @@ OBJFILES=m_common_array_str.o m_common_attrs.o m_common_buffer.o \
 LIBRARY=libFoX_common.a
 INCFLAGS=$(MOD_PREFIX)../objs/finclude
 #
-m_common_format.f90: m_common_format.m4
-	m4 $< > $@
-#
 #
 include ../arch.make
 
