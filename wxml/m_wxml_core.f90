@@ -527,6 +527,8 @@ contains
     character(len=*), intent(in) :: string
 
     call check_xf(xf)
+
+    call wxml_warning("Adding arbitrary string to DTD. Cannot guarantee well-formedness")
     
     if (xf%state_3 == WXML_STATE_3_DURING_DTD) then
       call add_to_buffer(" [", xf%buffer)
@@ -779,8 +781,11 @@ contains
       esc = .true.
     endif
 
-    !FIMXE when escape is false we should still verify somehow.
+    !FIXME when escape is false we should still verify somehow.
     !minimal check: only extra allowed is a character entity reference
+
+    if (.not.esc) &
+      call wxml_warning("Outputting unescaped attribute value. Cannot guarantee well-formedness")
 
     if (xf%state_2 /= WXML_STATE_2_INSIDE_ELEMENT) &
          call wxml_error(xf, "attributes outside element content: "//name)

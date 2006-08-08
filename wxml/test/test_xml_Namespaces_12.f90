@@ -7,8 +7,7 @@ program test
   character(len=*), parameter :: filename = 'test.xml'
   type(xmlf_t) :: xf
 
-  call xml_OpenFile(filename, xf, addDecl=.false.)
-  call xml_AddXMLDeclaration(xf, version="1.1")
+  call xml_OpenFile(filename, xf)
   call xml_DeclareNamespace(xf, "http://www.xml-cml.org/schema", "cml")
   call xml_NewElement(xf, "cml:cml")
   call xml_DeclareNamespace(xf, "http://www.w3.org/1999/svg", "svg")
