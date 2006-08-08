@@ -174,10 +174,10 @@ If you don't know the purpose of any of these, then you don't need to.
 
 * `xml_AddXMLDeclaration`  
 (**version**) *string*: XML version to be used.
- *default: 1.0*
+ *default: 1.0*  
 (**encoding**) *string*: character encoding of the document
   *default: absent*  
-(**standalone**) *logical*: is this document standalone [REF]?
+(**standalone**) *logical*: is this document standalone?
   *default: absent*  
 
 Add XML declaration to the first line of output. If used, then the file must have been opened with `addDecl = .false.`, and this must be the first wxml call to the document.o

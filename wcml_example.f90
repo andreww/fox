@@ -1,6 +1,5 @@
  program wcml_example
 
-   use FoX_wxml
    use FoX_wcml
 
   integer,  parameter ::  sp = selected_real_kind(6,30)
@@ -31,7 +30,7 @@
   elements(3) = 'O'
   num = 20
   
-  call xml_Openfile('test.cml',myfile)
+  call cmlBeginFile(myfile, 'test.cml')
   call cmlStartCml(myfile)
 
   ! Add parameter
@@ -62,6 +61,6 @@
 
   ! End and Close
   call cmlEndCml(myfile)
-  call xml_Close(myfile)
+  call cmlFinishFile(myfile)
  
 end program wcml_example

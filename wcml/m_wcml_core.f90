@@ -32,7 +32,7 @@ contains
 
   
   subroutine cmlFinishFile(xf)
-    type(xmlf_t), intent(out) :: xf
+    type(xmlf_t), intent(inout) :: xf
 
     call xml_Close(xf)
 

@@ -67,7 +67,8 @@ module m_wxml_core
   type xmlf_t
     private
     character, pointer        :: filename(:)
-    character(len=3)          :: xml_version
+    character(len=3)          :: xml_version = "1.0"
+    logical                   :: standalone = .false.
     integer                   :: lun = -1
     type(buffer_t)            :: buffer
     type(elstack_t)           :: stack
@@ -193,7 +194,7 @@ contains
       open(unit=xf%lun, file=filename, form="formatted", status="new", &
         action="write", recl=xml_recl)
     endif
-    
+
     call init_elstack(xf%stack)
     
     call init_dict(xf%dict)
@@ -252,6 +253,7 @@ contains
       call xml_AddPseudoAttribute(xf, "encoding", encoding)
     endif
     if (present(standalone)) then
+      xf%standalone = standalone
       if (standalone) then
         call xml_AddPseudoAttribute(xf, "standalone", "yes")
       else
