@@ -67,7 +67,7 @@ module m_wxml_core
   type xmlf_t
     private
     character, pointer        :: filename(:)
-    character(len=3)          :: xml_version = "1.0"
+    character(len=3)          :: xml_version
     logical                   :: standalone = .false.
     integer                   :: lun = -1
     type(buffer_t)            :: buffer
@@ -198,7 +198,7 @@ contains
     call init_elstack(xf%stack)
     
     call init_dict(xf%dict)
-    call reset_buffer(xf%buffer, xf%lun)
+    call reset_buffer(xf%buffer, xf%lun, xf%xml_version)
     
     xf%state_1 = WXML_STATE_1_JUST_OPENED
     xf%state_2 = WXML_STATE_2_OUTSIDE_TAG
@@ -214,6 +214,8 @@ contains
     
     if (decl) then
       call xml_AddXMLDeclaration(xf,encoding='UTF-8')
+    else
+      xf%xml_version = "1.0"
     endif
     
     call initNamespaceDictionary(xf%nsDict)
@@ -237,7 +239,7 @@ contains
     
     call xml_AddXMLPI(xf, "xml", xml=.true.)
     if (present(version)) then
-      if (version /= "1.0" .and. version /="1.1") &
+      if (version /= "1.0" .and. version /= "1.1") &
         call wxml_error("Invalid XML version.")
       call xml_AddPseudoAttribute(xf, "version", version)
       xf%xml_version = version
@@ -730,7 +732,7 @@ contains
     call close_start_tag(xf)
 
     if (pc) then
-      call add_to_buffer(escape_String(chars), xf%buffer)
+      call add_to_buffer(escape_string(chars, xf%xml_version), xf%buffer)
     else
       if (index(chars,']]>') > 0) &
            call wxml_fatal("Tried to output invalid CDATA: "//chars)
@@ -802,7 +804,7 @@ contains
       if (.not.isPrefixInForce(xf%nsDict, prefixOfQName(name))) &
         call wxml_error(xf, "namespace prefix not registered: "//prefixOfQName(name))
       if (esc) then
-        call add_item_to_dict(xf%dict, localpartofQname(name), escape_string(value), prefixOfQName(name), &
+        call add_item_to_dict(xf%dict, localpartofQname(name), escape_string(value, xf%xml_version), prefixOfQName(name), &
           getnamespaceURI(xf%nsDict,prefixOfQname(name)))
       else
         call add_item_to_dict(xf%dict, localpartofQname(name), value, prefixOfQName(name), &
@@ -810,7 +812,7 @@ contains
       endif
     else
       if (esc) then
-        call add_item_to_dict(xf%dict, name, escape_string(value))
+        call add_item_to_dict(xf%dict, name, escape_string(value, xf%xml_version))
       else
         call add_item_to_dict(xf%dict, name, value)
       endif
@@ -849,7 +851,7 @@ contains
          call wxml_error(xf, "Invalid pseudo-attribute data: "//value)
     
     if (esc) then
-      call add_item_to_dict(xf%dict, name, escape_string(value))
+      call add_item_to_dict(xf%dict, name, escape_string(value, xf%xml_version))
     else
       call add_item_to_dict(xf%dict, name, value)
     endif
@@ -973,7 +975,7 @@ contains
     if (xf%state_1 /= WXML_STATE_1_AFTER_ROOT) &
       call wxml_warning(xf, 'Invalid XML document produced: No root element')
     
-    call dump_buffer(xf%buffer)
+    call dump_buffer(xf%buffer, xf%xml_version)
     close(unit=xf%lun)
     xf%lun = -1
 
@@ -1018,8 +1020,8 @@ contains
     !We must flush here (rather than just adding an eol character)
     !since we don't know what the eol character is on this system.
     !Flushing with a linefeed will get it automatically, though.
-    call dump_buffer(xf%buffer, lf=.true.)
-    call reset_buffer(xf%buffer, xf%lun)
+    call dump_buffer(xf%buffer, xf%xml_version, lf=.true.)
+    call reset_buffer(xf%buffer, xf%lun, xf%xml_version)
     
     if (xf%broken_indenting) &
       call add_to_buffer(repeat(' ',indent_level),xf%buffer)

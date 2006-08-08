@@ -141,7 +141,7 @@ eigenOrientationType, vecfmt, valfmt &
 
 
     call stmAddValue(xf=xf, value=eigval, title="eigenvalues", dictref=dictRef, fmt=valfmt, units=units)
-    call stmAddValue(xf=xf, value=eigvec, title="eigenvectors", fmt=vecfmt, units="cmlUnits:dimensionless")
+    call stmAddValue(xf=xf, value=eigvec, title="eigenvectors", fmt=vecfmt, units="units:dimensionless")
     call xml_EndElement(xf, "eigen")
     
   end subroutine cmlAddEigenvaluespSh
@@ -177,7 +177,7 @@ eigenOrientationType, vecfmt, valfmt &
 
 
     call stmAddValue(xf=xf, value=eigval(:n), title="eigenvalues", units=units, dictref=dictRef, fmt=valfmt)
-    call stmAddValue(xf=xf, value=eigvec(:n,:n), title="eigenvectors", units="cmlUnits:dimensionless", fmt=vecfmt)
+    call stmAddValue(xf=xf, value=eigvec(:n,:n), title="eigenvectors", units="units:dimensionless", fmt=vecfmt)
     call xml_EndElement(xf, "eigen")
     
   end subroutine cmlAddEigenvaluespSi
@@ -288,7 +288,7 @@ eigenOrientationType, vecfmt, valfmt &
 
 
     call stmAddValue(xf=xf, value=eigval, title="eigenvalues", dictref=dictRef, fmt=valfmt, units=units)
-    call stmAddValue(xf=xf, value=eigvec, title="eigenvectors", fmt=vecfmt, units="cmlUnits:dimensionless")
+    call stmAddValue(xf=xf, value=eigvec, title="eigenvectors", fmt=vecfmt, units="units:dimensionless")
     call xml_EndElement(xf, "eigen")
     
   end subroutine cmlAddEigenvaluedpSh
@@ -324,7 +324,7 @@ eigenOrientationType, vecfmt, valfmt &
 
 
     call stmAddValue(xf=xf, value=eigval(:n), title="eigenvalues", units=units, dictref=dictRef, fmt=valfmt)
-    call stmAddValue(xf=xf, value=eigvec(:n,:n), title="eigenvectors", units="cmlUnits:dimensionless", fmt=vecfmt)
+    call stmAddValue(xf=xf, value=eigvec(:n,:n), title="eigenvectors", units="units:dimensionless", fmt=vecfmt)
     call xml_EndElement(xf, "eigen")
     
   end subroutine cmlAddEigenvaluedpSi

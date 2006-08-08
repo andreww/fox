@@ -66,8 +66,10 @@ contains
     call xml_DeclareNamespace(xf, 'http://www.xml-cml.org/schema')
     call xml_DeclareNamespace(xf, 'http://www.w3.org/2001/XMLSchema', 'xsd')
     call xml_DeclareNamespace(xf, 'http://purl.org/dc/elements/1.1/title', 'dc')
+    call xml_DeclareNamespace(xf, 'http://www.uszla.me.uk/FoX/units', 'units')
     call xml_DeclareNamespace(xf, 'http://www.xml-cml.org/units/units', 'cmlUnits')
     call xml_DeclareNamespace(xf, 'http://www.xml-cml.org/units/siUnits', 'siUnits')
+    call xml_DeclareNamespace(xf, 'http://www.xml-cml.org/units/atomic', 'atomicUnits')
 ! FIXME TOHW we may want other namespaces in here - particularly for units
 ! once PMR has stabilized that.
 

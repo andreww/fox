@@ -17,8 +17,8 @@ module m_wcml_lattice
   implicit none
   private
 
-  character(len=*), parameter :: U_ANGSTR = "cmlUnits:angstrom"
-  character(len=*), parameter :: U_DEGREE = "cmlUnits:degree"
+  character(len=*), parameter :: U_ANGSTR = "units:angstrom"
+  character(len=*), parameter :: U_DEGREE = "units:degree"
 
   interface cmlAddCrystal
      module procedure cmlAddCrystalSP

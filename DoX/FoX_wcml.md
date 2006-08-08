@@ -1,6 +1,6 @@
 #WCML
 
-WCML is a library for outputting [CML](http://www.xml-cml.org) data. It wraps all the necessary XML calls, such that you should never need to touch any WXML calls when outputting CML.
+WCML is a library for outputting [CML](http://www.xml-cml.org) data. It wraps all the necessary XML calls, such that you should never need to touch any [WXML](|FoX_wxml|) calls when outputting CML.
 
 The CML output is conformant to version 2.4 of the CML schema.
 
@@ -12,21 +12,6 @@ Further information on these fragments, and on the style of CML generated here, 
 
 This section of the manual will detail the available CML output subroutines.
 
-## General naming conventions for functions.
-
-Functions are named in the following way:
-
-* All functions begin 
-`cml`
-
-* To begin and end a section of the CML file,
-a pair of functions will exist:
-	* `cmlStart`something
-	* `cmlEnd`something
-
-* To output a given quantity/property/concept etc. a function will exist
-`cmlAdd`something
-
 ## Use of WCML
 
 wcml subroutines can be accessed from within a module or subroutine by inserting
@@ -36,8 +21,6 @@ wcml subroutines can be accessed from within a module or subroutine by inserting
 at the start. This will import all of the subroutines described below, plus the derived type `xmlf_t` needed to manipulate a CML file.
 
 *No* other entities will be imported; public/private Fortran namespaces are very carefully  controlled within the library.
-
-##Listing of functions.
 
 ### General naming conventions for functions.
 
@@ -55,7 +38,7 @@ a pair of functions will exist:
 `cmlAdd`something
 
 
-####Conventions used below.
+###Conventions used below.
 
 * Function names are in `monospace`
 * argument names are in **bold**
@@ -106,7 +89,21 @@ It is *highly* recommended that subroutines be called with keywords specified ra
 
 Note below that the functions `cmlAddParameter` and `cmlAddProperty` both *require* that units be specified for any numerical quantities output.
 
-If you are trying to output a quantity that is genuinely dimensionless, then you should specify `units="siUnits:dimensionless"`; or if you are trying to output a countable quantity (eg number of CPUs) then you may specify `units="siUnits:countable"`.
+If you are trying to output a quantity that is genuinely dimensionless, then you should specify `units="units:dimensionless"`; or if you are trying to output a countable quantity (eg number of CPUs) then you may specify `units="units:countable"`.
+
+For other properties, all units should be specified as namespaced quantities. If you are using
+a very few common units, it may be easiest to borrow definitions from the provided dictionaries;
+
+(These links do not resolve yet.)
+
+`cmlUnits:` <http://www.xml-cml.org/units/units>  
+`siUnits:` <http://www.xml-cml.org/units/siUnits>  
+`atomicUnits:` <http://www.xml-cml.org/units/atomic>  
+
+Otherwise, you should feel at liberty to construct your own namespace;
+declare it using `cmlAddNamespace`, and markup all your units as:
+
+     units="myNamespace:myunit"
 
 ## Functions for manipulating the CML file:
 
@@ -120,8 +117,8 @@ This takes care of all calls to open a CML output file.
 This takes care of all calls to close an open CML output file, once you have finished with it. It is compulsory to call this - if your program finished without calling this, then your CML file will be invalid.
 
 * `cmlAddNamespace`  
-**prefix** *string* *scalar*: prefix to be used
-**nsURI** *string* *scalar*: namespace URI to be used
+**prefix** *string* *scalar*: prefix to be used  
+**nsURI** *string* *scalar*: namespace URI to be used  
 
 This adds a namespace to a CML file.  
 NB This may only ever be called immediately after a `cmlBeginCml` call, before any
@@ -135,8 +132,8 @@ This will be needed if you are adding dictionary references to your output. Thus
 and then output all our properties and parameters with `dictRef="siesta:something"`.
 
 * `cmlStartCml`  
-(**fileId**) *string* *scalar*: name of originating file.  
-(**version**) *string* *scalar*: version of CML in use.  
+(**fileId**) *string* *scalar*: name of originating file.  (default: current filename)
+(**version**) *string* *scalar*: version of CML in use.  (default: 2.4)
 
 * `cmlEndCml`
 
@@ -144,7 +141,7 @@ This pair of functions begin and end the CML output to an existing CML file. It 
 
 Note that unless specified otherwise, there will be a `convention` attribute added to the `cml` tag specifying `FoX_wcml-2.0` as the convention. (see <http://www.uszla.me.uk/FoX> for details)
 
-##### Start/End sections
+## Start/End sections
 
 * `cmlStartMetadataList`  
 (**name**) *string* *scalar*: name for the metadata list    
@@ -173,8 +170,12 @@ This pair of functions open & close a propertyList, which is a wrapper for outpu
 * `cmlStartBandList`
 * `cmlEndBandList`
 
+Start/end a list of bands (added using `cmlAddBand` below)
+
 * `cmlStartKpointList`
 * `cmlEndKpointList`
+
+Start/end a list of k-points (added using `cmlAddKpoint` below)
 
 * `cmlStartModule`  
 (**serial**) *string* *scalar*: serial id for the module  
@@ -194,7 +195,7 @@ This pair of functions open & close a module of a computation which is unordered
 
 This pair of functions open and close a module of a computation which is strongly ordered. For example, DLPOLY uses steps for each step of the simulation.
 
-##### Adding items.
+## Adding items.
 
 * `cmlAddMetadata`  
 **name**: *string* *scalar*: Identifying string for metadata  
@@ -205,7 +206,7 @@ This adds a single item of metadata. It takes the following arguments:
 * `cmlAddParameter`  
 **title**: *string* *scalar*: Identifying title for parameter  
 **value**:*anytype* *anydim*: value of parameter  
-**units**: *string* *scalar*: units of parameter value  (optional for logical/character **value**s, compulsory otherwise)
+**units**: *string* *scalar*: units of parameter value  (optional for logical/character **value**s, compulsory otherwise; see note above)
 (**constraint**) *string* *scalar*: Constraint under which the parameter is set (this can be an arbitrary string)  
 (**ref**) *string* *scalar*: Reference an `id` attribute of another element (generally deprecated)  
 (**role**) *string* *scalar* role which the element plays 
@@ -215,7 +216,7 @@ This function adds a tag representing an input parameter
 * `cmlAddProperty`
 **name**: *string* *scalar*  
 **value**: *any* *anydim*  
-**units**: *string* *scalar* units of property value  (optional for logical/character **value**s, compulsory otherwise)
+**units**: *string* *scalar* units of property value  (optional for logical/character **value**s, compulsory otherwise; see note above)
 (**ref**) *string* *scalar*: Reference an `id` attribute of another element (generally deprecated)  
 (**role**) *string* *scalar* role which the element plays 
 
@@ -223,9 +224,9 @@ This function adds a tag representing an output property
 
 
 * `cmlAddMolecule`  
-**coords**: *real*: a 3xn matrix of real numbers representing atomic coordinates (either fractional or Cartesian)  
+**coords**: *real*: a 3xn matrix of real numbers representing atomic coordinates (either fractional or Cartesian) . These *must* be specified in Angstrom or fractional units (see **style** below.)
 **OR**  
-**x**, **y**, **z**: *real*: 3 one-dimensional arrays containing the *x*, *y*, and *z* coordinates of the atoms in the molecule.  
+**x**, **y**, **z**: *real*: 3 one-dimensional arrays containing the *x*, *y*, and *z* coordinates of the atoms in the molecule.  These *must* be specified in Angstrom or fractional units (see **style** below.)  
 **elements**: *string* *array*: a length-n array of length-2 strings containing IUPAC chemical symbols for the atoms    
 (**natoms**) *integer* *scalar*: number of atoms in molecule (default: picked up from length of **coords** array)  
 (**occupancies**): *real* *array* : a length-n array of the occupancies of each atom.  
@@ -256,9 +257,9 @@ Outputs information about a unit cell, in lattice-vector form
 **alpha**: *real* *scalar* the 'alpha' parameter  
 **beta**: *real* *scalar* the 'beta' parameter  
 **gamma**: *real* *scalar* the 'gamma' parameter  
-(**z**): *integer* *scalar* the 'z' parameter: number of molecules per unit cell.
-(**lenunits**): Units of length: default is `cmlUnits:angstrom`  
-(**angunits**): Units of angle: default is `cmlUnits:degrees`
+(**z**): *integer* *scalar* the 'z' parameter: number of molecules per unit cell.  
+(**lenunits**): Units of length: default is `cmlUnits:angstrom`    
+(**angunits**): Units of angle: default is `cmlUnits:degrees`  
 (**spaceGroup**): *string* *scalar* Space group of the crystal. No defined vocabulary.
 
 Outputs information about a unit cell, in crystallographic form
@@ -293,13 +294,12 @@ Output a k-point
 
 Output a set of eigenvalues and eigenvectors
 
-####Common arguments
+##Common arguments
 
 All `cmlAdd` and `cmlStart` routines take the following set of optional arguments:
 
-* `id`: Unique identifying string for element. (Uniqueness is not enforce, though duplicated ids on output are usually an error and may cause later problems)  
+* `id`: Unique identifying string for element. (Uniqueness is not enforced, though duplicated ids on output are usually an error and may cause later problems)  
 * `title`: Human-readable title of element for display purposes  
 * `dictRef`: reference to disambiguate element. Should be a QName; a namespaced string. An actual dictionary entry may or may not exist. It is not an error for it not to.  
 * `convention`: convention by which the element is to be read.  
-
 (The wording of the definitions for `convention` is deliberately loose.)

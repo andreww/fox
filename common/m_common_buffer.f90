@@ -1,7 +1,8 @@
 module m_common_buffer
 
   use m_common_charset, only: whitespace
-  use m_common_error, only : FoX_warning
+  use m_common_error, only: FoX_error, FoX_warning
+  use m_common_format, only: str
 
   implicit none
   private
@@ -26,6 +27,7 @@ module m_common_buffer
     integer                       :: size
     character(len=MAX_BUFF_SIZE)  :: str
     integer                       :: unit
+    character(len=3)              :: xml_version !this affects which chars are allowed.
   end type buffer_t
   
   public :: buffer_t
@@ -52,6 +54,7 @@ module m_common_buffer
 contains
 
   subroutine add_to_buffer(s,buffer)
+!FIXME we should call check_buffer from here.
     character(len=*), intent(in)   :: s
     type(buffer_t), intent(inout)  :: buffer
     
@@ -64,6 +67,8 @@ contains
     ! at spaces just before MAX_BUFF_SIZE chars
     ! until we have less than MAX_BUFF_SIZE left to go,
     ! then put that in the buffer.
+
+    call check_buffer(s, buffer%xml_version)
 
     if (buffer%size + len(s) > MAX_BUFF_SIZE) &
       call FoX_warning("Buffer overflow impending; inserting newlines, sorry")
@@ -84,9 +89,10 @@ contains
   end subroutine add_to_buffer
 
 
-  subroutine reset_buffer(buffer, unit)
+  subroutine reset_buffer(buffer, unit, xml_version)
     type(buffer_t), intent(inout)  :: buffer
     integer, intent(in), optional :: unit
+    character(len=3), intent(in) :: xml_version
 
     buffer%size = 0
     if (present(unit)) then
@@ -94,6 +100,7 @@ contains
     else 
       buffer%unit = 6
     endif
+    buffer%xml_version = xml_version
     
   end subroutine reset_buffer
   
@@ -145,8 +152,9 @@ contains
   end function buffer_length
 
   
-  subroutine dump_buffer(buffer, lf)
+  subroutine dump_buffer(buffer, version, lf)
     type(buffer_t), intent(inout) :: buffer
+    character(len=*), intent(in) :: version
     logical, intent(in), optional :: lf
 
     logical :: lf_
@@ -164,5 +172,33 @@ contains
     endif
     buffer%size = 0
   end subroutine dump_buffer
+
+  
+  subroutine check_buffer(s, version)
+    character(len=*), intent(in) :: s
+    character(len=*), intent(in) :: version
+
+    integer :: i
+
+!FIXME this is almost a duplicate of logic in wxml/m_wxml_escape.f90
+
+    ! We have to do it this way (with achar etc) in case the native
+    ! platform encoding is not ASCII
+
+    do i = 1, len(s)
+      select case (iachar(s(i:i)))
+      case (0)
+        call FoX_error("Tried to output a NUL character")
+      case (1:8,11:13,15:31)
+        if (version == "1.0") &
+          call FoX_error("Tried to output a character invalid under XML 1.0: &#"//str(iachar(s(i:i)))//";")
+      case (128:)
+        !TOHW we should maybe just disallow this ...
+        call FoX_warning("emitting non-ASCII character. Platform-dependent result!")
+      end select
+    enddo 
+
+  end subroutine check_buffer
+
 
 end module m_common_buffer

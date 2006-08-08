@@ -48,8 +48,9 @@ contains
   end function escape_string_len
     
 
-  function escape_string(s) result (s2)
+  function escape_string(s, version) result (s2)
     character(len=*), intent(in) :: s
+    character(len=*), intent(in) :: version
     character(len=escape_string_len(s)) :: s2
 
     integer :: c, i
@@ -62,12 +63,33 @@ contains
       select case (iachar(s(i:i)))
       case (0)
         call FoX_error("Tried to output a NUL character")
-      case (1:9)
-        s2(c:c+3) = "&#"//str(iachar(s(i:i)))//";"
-        c = c + 4
-      case (10:31)
-        s2(c:c+4) = "&#"//str(iachar(s(i:i)))//";"
-        c = c + 5
+      case (1:8)
+        if (version == "1.0") then
+          call FoX_error("Tried to output a character invalid under XML 1.0")
+        else
+          s2(c:c+3) = "&#"//str(iachar(s(i:i)))//";"
+          c = c + 4
+        endif
+      case(9:10)
+        s2(c:c) = achar(iachar(s(i:i)))
+        c = c + 1
+      case(11:13)
+        if (version == "1.0") then
+          call FoX_error("Tried to output a character invalid under XML 1.0")
+        else
+          s2(c:c+5) = "&#"//str(iachar(s(i:i)))//";"
+          c = c + 5
+        endif
+      case(14)
+        s2(c:c) = achar(iachar(s(i:i)))
+        c = c + 1
+      case (15:31)
+        if (version == "1.0") then
+          call FoX_error("Tried to output a character invalid under XML 1.0")
+        else
+          s2(c:c+5) = "&#"//str(iachar(s(i:i)))//";"
+          c = c + 5
+        endif
       case (32:126)
         select case (iachar(s(i:i)))
         case (AMP)

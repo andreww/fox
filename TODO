@@ -1,4 +1,4 @@
 Make configure a bit less absolute in its paths?
 try on gfortran 4.2
 autoconfigure fails a bit on solaris because sh is stupid.
-
+convention name?
