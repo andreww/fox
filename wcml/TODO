@@ -1,11 +1,11 @@
-* Check allowed attributes for parameter (and all other elements)
 * provide interfaces for cell-><lattice> & lattice-><crystal>
-* Tidy up m_wcml_core
 * test test test
 * document
 
-*cmlAddTable
+* cmlAddTable
 
+* Check allowed attributes for parameter (and all other elements) - done
+* Tidy up m_wcml_core - done
 * Do m4 correctly for stml - done
 * redo m4 build for quantity -done
 * m4 for all start/end lists - done
