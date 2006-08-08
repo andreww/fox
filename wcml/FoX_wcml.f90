@@ -30,9 +30,10 @@ module FoX_wcml
   public :: cmlStartStep
   public :: cmlEndStep
 
-  public :: cmlAddLength
-  public :: cmlAddAngle
-  public :: cmlAddTorsion
+!  public :: cmlAddLength
+!  public :: cmlAddAngle
+!  public :: cmlAddTorsion
+!TOHW we don't use these ever
 
   public :: cmlAddCrystal
   public :: cmlAddLattice

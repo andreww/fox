@@ -293,10 +293,6 @@ Output a k-point
 
 Output a set of eigenvalues and eigenvectors
 
-* `cmlAddLength`
-* `cmlAddAngle`
-* `cmlAddTorsion`
-
 ####Common arguments
 
 All `cmlAdd` and `cmlStart` routines take the following set of optional arguments:
