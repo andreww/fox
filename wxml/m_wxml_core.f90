@@ -239,10 +239,10 @@ contains
       if (version /= "1.0" .and. version /="1.1") &
         call wxml_error("Invalid XML version.")
       call xml_AddPseudoAttribute(xf, "version", version)
-      xf%version = version
+      xf%xml_version = version
     else
       call xml_AddPseudoAttribute(xf, "version", "1.0")
-      xf%version = "1.0"
+      xf%xml_version = "1.0"
     endif
     if (present(encoding)) then
       if (.not.checkEncName(encoding)) &
@@ -922,7 +922,7 @@ contains
     
     call check_xf(xf)
 
-    if (xf%version == "1.0") &
+    if (xf%xml_version == "1.0") &
       call wxml_error("cannot undeclare namespaces in XML 1.0")
     
     if (xf%state_1 == WXML_STATE_1_AFTER_ROOT) &
