@@ -15,6 +15,8 @@ m_wcml_metadata.f90: m_wcml_metadata.m4
 	m4 $< > $@
 m_wcml_quantity.f90: m_wcml_quantity.m4
 	m4 $< > $@
+m_wcml_stml.f90: m_wcml_stml.m4
+	m4 $< > $@
 #
 include ../arch.make
 

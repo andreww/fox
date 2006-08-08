@@ -90,7 +90,7 @@ contains
         s2(c:c+5) = "&#127;"
         c = c + 6
       case default
-        !FIXME we should maybe just disallow this ...
+        !TOHW we should maybe just disallow this ...
         call FoX_warning("emitting non-ASCII character. Platform-dependent result!")
         s2(c:c+6) = "&#"//str(iachar(s(i:i)))//";"
         c = c + 6

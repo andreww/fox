@@ -29,7 +29,7 @@ module m_wxml_core
   private
 
   integer, parameter :: indent_inc = 2
-  ! FIXME should we let this be set?
+  ! TOHW should we let this be set?
 
   !Output State Machines
   ! status wrt root element:
@@ -131,17 +131,14 @@ module m_wxml_core
   end interface
 
   ! Heuristic (approximate) target for justification of output
-  ! Large unbroken pcdatas will go beyond this limit
+  ! only gets used for outputting attributes
   integer, parameter  :: COLUMNS = 80
-!FIXME this comment
-  !Actually this is only ever used in write_attributes. which is 
-  ! fine since that's almost the only place in the main body of a 
-  ! XML document where new-lines are semantically meaningless.
 
   ! TOHW - This is the longest string that may be output without
   ! a newline. The buffer must not be larger than this, but its size 
   ! can be tuned for performance.
-  integer, parameter  :: xml_recl = 4096
+  !lowest value found so far is 4096, for NAG. We use 1024 just in case.
+  integer, parameter  :: xml_recl = 1024
 
 contains
 
@@ -772,7 +769,8 @@ contains
       esc = .true.
     endif
 
-    !FIXME when escape is false we should still verify somehow.
+    !FIMXE when escape is false we should still verify somehow.
+    !minimal check: only extra allowed is a character entity reference
 
     if (xf%state_2 /= WXML_STATE_2_INSIDE_ELEMENT) &
          call wxml_error(xf, "attributes outside element content: "//name)
