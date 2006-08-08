@@ -263,11 +263,16 @@ Attempts to do otherwise will result in a runtime error.</p>
 <strong>coords</strong>: <em>real</em>: a 3xn matrix of real numbers representing atomic coordinates (either fractional or Cartesian) <br />
 <strong>OR</strong> <br />
 <strong>x</strong>, <strong>y</strong>, <strong>z</strong>: <em>real</em>: 3 one-dimensional arrays containing the <em>x</em>, <em>y</em>, and <em>z</em> coordinates of the atoms in the molecule. <br />
-(<strong>natoms</strong>) <em>integer</em> <em>scalar</em>: number of atoms in molecule (default: picked up from length of <strong>coords</strong> array) <br />
 <strong>elements</strong>: <em>string</em> <em>array</em>: a length-n array of length-2 strings containing IUPAC chemical symbols for the atoms <br />
+(<strong>natoms</strong>) <em>integer</em> <em>scalar</em>: number of atoms in molecule (default: picked up from length of <strong>coords</strong> array) <br />
 (<strong>occupancies</strong>): <em>real</em> <em>array</em> : a length-n array of the occupancies of each atom. <br />
-(<strong>refs</strong>): <em>string</em> <em>array</em>: a length-n array of strings containing references which may point to IDs elsewhere of, for example, pseudopotentials or basis sets defining the element's behaviour. <br />
-(<strong>style</strong>): <em>string</em> <em>scalar</em>: 'xyz3' - the coordinates are Cartesian, or <code>xyzFract</code> - the coordinates are fractional. The default is Cartesian.  </li>
+(<strong>atomRefs</strong>): <em>string</em> <em>array</em>: a length-n array of strings containing references which may point to IDs elsewhere of, for example, pseudopotentials or basis sets defining the element's behaviour. <br />
+(<strong>atomIds</strong>): <em>string</em> <em>array</em>: a length-n array of strings containing IDs for the atoms. <br />
+(<strong>style</strong>): <em>string</em> <em>scalar</em>: <code>xyz3</code> - the coordinates are Cartesian, or <code>xyzFract</code> - the coordinates are fractional. The default is Cartesian.
+(<strong>ref</strong>) <em>string</em> <em>scalar</em>: Reference an <code>id</code> attribute of another element (generally deprecated) <br />
+(<strong>formula</strong>) <em>string</em> <em>scalar</em>: An IUPAC chemical formula
+(<strong>chirality</strong>) <em>string</em> <em>scalar</em>: The chirality of the molecule. No defined vocabulary.
+(<strong>role</strong>) <em>string</em> <em>scalar</em>: Role of molecule. No defined vocabulary.</li>
 </ul>
 
 <p>Outputs an atomic configuration. </p>
@@ -275,7 +280,7 @@ Attempts to do otherwise will result in a runtime error.</p>
 <ul>
 <li><code>cmlAddLattice</code> <br />
 <strong>cell</strong>: <em>real</em> <em>matrix</em> a 3x3 matrix of the unit cell <br />
-<strong>spaceType</strong>: <code>real</code> or <code>reciprocal</code> space. <br />
+<strong>spaceType</strong>: <em>string</em> <em>scalar</em>: <code>real</code> or <code>reciprocal</code> space. <br />
 (<strong>latticeType)</strong>: <em>string</em> <em>scalar</em> Space group of the lattice; 
 default - none <br />
 (<strong>units</strong>): <em>string * scalar</em> units of (reciprocal) distance that cell vectors is given in; 

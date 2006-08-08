@@ -100,7 +100,7 @@
 <li>Intel Fortran prior to version 9.0</li>
 <li>NAG versions prior to 5.0-391</li>
 <li>Pathscale, all versions (bug reported #6259)</li>
-<li>PGI, all versions (bug reported)</li>
+<li>PGI, all versions (bug reported #3897)</li>
 <li>gfortran prior to and including version 4.1</li>
 <li>Sun Fortran 95 7.1 Patch 112762-16 2005/10/25 (later versions untested)</li>
 </ul>
@@ -1006,11 +1006,16 @@ Attempts to do otherwise will result in a runtime error.</p>
 <strong>coords</strong>: <em>real</em>: a 3xn matrix of real numbers representing atomic coordinates (either fractional or Cartesian) <br />
 <strong>OR</strong> <br />
 <strong>x</strong>, <strong>y</strong>, <strong>z</strong>: <em>real</em>: 3 one-dimensional arrays containing the <em>x</em>, <em>y</em>, and <em>z</em> coordinates of the atoms in the molecule. <br />
-(<strong>natoms</strong>) <em>integer</em> <em>scalar</em>: number of atoms in molecule (default: picked up from length of <strong>coords</strong> array) <br />
 <strong>elements</strong>: <em>string</em> <em>array</em>: a length-n array of length-2 strings containing IUPAC chemical symbols for the atoms <br />
+(<strong>natoms</strong>) <em>integer</em> <em>scalar</em>: number of atoms in molecule (default: picked up from length of <strong>coords</strong> array) <br />
 (<strong>occupancies</strong>): <em>real</em> <em>array</em> : a length-n array of the occupancies of each atom. <br />
-(<strong>refs</strong>): <em>string</em> <em>array</em>: a length-n array of strings containing references which may point to IDs elsewhere of, for example, pseudopotentials or basis sets defining the element's behaviour. <br />
-(<strong>style</strong>): <em>string</em> <em>scalar</em>: 'xyz3' - the coordinates are Cartesian, or <code>xyzFract</code> - the coordinates are fractional. The default is Cartesian.  </li>
+(<strong>atomRefs</strong>): <em>string</em> <em>array</em>: a length-n array of strings containing references which may point to IDs elsewhere of, for example, pseudopotentials or basis sets defining the element's behaviour. <br />
+(<strong>atomIds</strong>): <em>string</em> <em>array</em>: a length-n array of strings containing IDs for the atoms. <br />
+(<strong>style</strong>): <em>string</em> <em>scalar</em>: <code>xyz3</code> - the coordinates are Cartesian, or <code>xyzFract</code> - the coordinates are fractional. The default is Cartesian.
+(<strong>ref</strong>) <em>string</em> <em>scalar</em>: Reference an <code>id</code> attribute of another element (generally deprecated) <br />
+(<strong>formula</strong>) <em>string</em> <em>scalar</em>: An IUPAC chemical formula
+(<strong>chirality</strong>) <em>string</em> <em>scalar</em>: The chirality of the molecule. No defined vocabulary.
+(<strong>role</strong>) <em>string</em> <em>scalar</em>: Role of molecule. No defined vocabulary.</li>
 </ul>
 
 <p>Outputs an atomic configuration. </p>
@@ -1018,7 +1023,7 @@ Attempts to do otherwise will result in a runtime error.</p>
 <ul>
 <li><code>cmlAddLattice</code> <br />
 <strong>cell</strong>: <em>real</em> <em>matrix</em> a 3x3 matrix of the unit cell <br />
-<strong>spaceType</strong>: <code>real</code> or <code>reciprocal</code> space. <br />
+<strong>spaceType</strong>: <em>string</em> <em>scalar</em>: <code>real</code> or <code>reciprocal</code> space. <br />
 (<strong>latticeType)</strong>: <em>string</em> <em>scalar</em> Space group of the lattice; 
 default - none <br />
 (<strong>units</strong>): <em>string * scalar</em> units of (reciprocal) distance that cell vectors is given in; 
@@ -1130,9 +1135,9 @@ default - none</li>
 <h1>Further information</h1>
 
 <p>FoX evolved from the initial codebase of <a href="http://lcdx00.wm.lc.ehu.es/ag/xml/">xmlf90</a>,
-which was written largely by Alberto Garcia &lt;<a href="&#109;&#x61;i&#x6C;&#116;&#x6F;:&#97;&#x6C;&#x62;e&#114;&#x74;&#111;&#x67;&#64;i&#99;&#109;&#x61;&#x62;&#x2E;&#101;&#115;">&#97;&#x6C;&#x62;e&#114;&#x74;&#111;&#x67;&#64;i&#99;&#109;&#x61;&#x62;&#x2E;&#101;&#115;</a>> and Jon Wakelin &lt;<a href="&#x6D;&#97;&#x69;&#108;&#x74;&#111;:j&#x6F;&#110;&#x2E;&#x77;&#x61;&#107;&#101;&#108;&#x69;n&#64;&#98;&#x72;&#x69;&#115;&#116;ol&#x2E;&#97;&#x63;&#x2E;u&#x6B;">j&#x6F;&#110;&#x2E;&#x77;&#x61;&#107;&#101;&#108;&#x69;n&#64;&#98;&#x72;&#x69;&#115;&#116;ol&#x2E;&#97;&#x63;&#x2E;u&#x6B;</a>>.</p>
+which was written largely by Alberto Garcia &lt;<a href="&#x6D;a&#x69;&#x6C;&#x74;o:a&#108;&#x62;&#101;&#x72;&#116;&#x6F;&#103;&#64;&#105;&#x63;&#x6D;a&#98;&#46;&#101;&#115;">a&#108;&#x62;&#101;&#x72;&#116;&#x6F;&#103;&#64;&#105;&#x63;&#x6D;a&#98;&#46;&#101;&#115;</a>> and Jon Wakelin &lt;<a href="&#109;&#97;&#105;&#x6C;&#x74;&#111;:&#x6A;&#x6F;n&#46;&#119;&#97;&#x6B;&#x65;&#x6C;&#x69;&#x6E;&#64;&#x62;&#114;&#x69;s&#x74;&#x6F;&#x6C;&#46;&#x61;&#x63;&#x2E;&#x75;&#107;">&#x6A;&#x6F;n&#46;&#119;&#97;&#x6B;&#x65;&#x6C;&#x69;&#x6E;&#64;&#x62;&#114;&#x69;s&#x74;&#x6F;&#x6C;&#46;&#x61;&#x63;&#x2E;&#x75;&#107;</a>>.</p>
 
-<p>FoX is the work of Toby White &lt;<a href="&#109;&#x61;&#105;&#108;&#x74;&#111;:&#116;&#x6F;&#x77;&#50;&#x31;&#64;&#x63;&#97;&#109;&#46;&#x61;&#x63;&#x2E;&#x75;&#107;">&#116;&#x6F;&#x77;&#50;&#x31;&#64;&#x63;&#97;&#109;&#46;&#x61;&#x63;&#x2E;&#x75;&#107;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
+<p>FoX is the work of Toby White &lt;<a href="&#109;&#x61;&#x69;&#108;&#116;&#x6F;:&#116;&#x6F;&#x77;&#50;&#x31;&#64;&#99;&#x61;&#x6D;.&#x61;&#x63;&#46;&#x75;k">&#116;&#x6F;&#x77;&#50;&#x31;&#64;&#99;&#x61;&#x6D;.&#x61;&#x63;&#46;&#x75;k</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
 
 <p>There is a FoX website at <a href="http://www.uszla.me.uk/software/FoX/">http://www.uszla.me.uk/software/FoX/</a>.</p>
 

@@ -1,29 +1,65 @@
+dnl
+dnl First part is boilerplate to give us a foreach function
+dnl
+divert(-1)
+# foreach(x, (item_1, item_2, ..., item_n), stmt)
+define(`m4_foreach', `pushdef(`$1', `')_foreach(`$1', `$2', `$3')popdef(`$1')')
+define(`_arg1', `$1')
+define(`_foreach',
+        `ifelse(`$2', `()', ,
+                `define(`$1', _arg1$2)$3`'_foreach(`$1', (shift$2), `$3')')')
+# traceon(`define', `foreach', `_foreach', `ifelse')
+divert 
+dnl given a variable name a, declare it as follows:
+define(`TOHWM4_dummyargdecl',`dnl
+    character(len=*), intent(in), optional :: $1
+')dnl
+dnl
+dnl use an optional character variable:
+define(`TOHWM4_dummyarguse',`dnl
+    if (present($1)) call xml_addAttribute(xf, "$1", $1)
+')dnl
+dnl Below we only use arguments with a type of xsd:string
+define(`TOHWM4_moleculeargs', `(dictRef,convention,title,id,ref,formula,chirality,role)')dnl
+dnl
+define(`TOHWM4_moleculeargslist', `dnl
+m4_foreach(`x', TOHWM4_moleculeargs, `,x')dnl
+')dnl
+dnl
+define(`TOHWM4_moleculeargsdecl',`dnl
+m4_foreach(`x',TOHWM4_moleculeargs,`TOHWM4_dummyargdecl(x)')
+')dnl
+define(`TOHWM4_moleculeargsuse',`dnl
+m4_foreach(`x',TOHWM4_moleculeargs,`TOHWM4_dummyarguse(x)')
+')dnl
 define(`TOHWM4_molecule_subs', `dnl
-  subroutine cmlAddMolecule$1(xf, elements, refs, coords, occupancies, style, id, title, dictref, fmt)
+  subroutine cmlAddMolecule$1(xf, elements, atomRefs, coords, occupancies, atomIds, style, fmt &
+TOHWM4_moleculeargslist)
     type(xmlf_t), intent(inout) :: xf
     real(kind=$1), intent(in)              :: coords(:, :)
     character(len=*), intent(in)           :: elements(:)
-    character(len=*), intent(in), optional :: refs(:) 
-    real(kind=$1), intent(in), optional :: occupancies(:) 
-    character(len=*), intent(in), optional :: id
-    character(len=*), intent(in), optional :: title
-    character(len=*), intent(in), optional :: dictref
+    character(len=*), intent(in), optional :: atomRefs(:) 
+    real(kind=$1), intent(in), optional :: occupancies(:)
+    character(len=*), intent(in), optional :: atomIds(:)
     character(len=*), intent(in), optional :: fmt
     character(len=*), intent(in), optional :: style
+
+TOHWM4_moleculeargsdecl
 
     integer          :: i
 
     call xml_NewElement(xf, "molecule")
-    if (present(id)) call xml_AddAttribute(xf, "id", id)
-    if (present(title)) call xml_AddAttribute(xf, "title", title)
-    if (present(dictRef)) call xml_AddAttribute(xf, "dictRef", dictRef)
+
+TOHWM4_moleculeargsuse
+
     call xml_NewElement(xf, "atomArray")
 
     do i = 1, size(coords,2)
       call cmlAddAtom(xf=xf, elem=trim(elements(i)), &
            coords=coords(:, i), style=style, fmt=fmt)
       if (present(occupancies)) call xml_AddAttribute(xf, "occupancy", occupancies(i))
-      if (present(refs)) call xml_AddAttribute(xf, "ref", refs(i))
+      if (present(atomRefs)) call xml_AddAttribute(xf, "ref", atomRefs(i))
+      if (present(atomIds)) call xml_AddAttribute(xf, "id", atomIds(i))
       call xml_EndElement(xf, "atom")
      enddo
 
@@ -33,25 +69,26 @@ define(`TOHWM4_molecule_subs', `dnl
   end subroutine cmlAddMolecule$1
 
 
-  subroutine cmlAddMolecule$1_sh(xf, natoms, elements, refs, coords, occupancies, style, id, title, dictref, fmt)
+  subroutine cmlAddMolecule$1_sh(xf, natoms, elements, atomRefs, coords, occupancies, atomIds, style, fmt &
+TOHWM4_moleculeargslist)
     type(xmlf_t), intent(inout) :: xf
     integer, intent(in) :: natoms
     real(kind=$1), intent(in)              :: coords(3, natoms)
     character(len=*), intent(in)           :: elements(natoms)
-    character(len=*), intent(in), optional :: refs(natoms) 
+    character(len=*), intent(in), optional :: atomRefs(natoms) 
     real(kind=$1), intent(in), optional :: occupancies(natoms) 
-    character(len=*), intent(in), optional :: id
-    character(len=*), intent(in), optional :: title
-    character(len=*), intent(in), optional :: dictref
+    character(len=*), intent(in), optional :: atomIds(natoms) 
     character(len=*), intent(in), optional :: fmt
     character(len=*), intent(in), optional :: style
+
+TOHWM4_moleculeargsdecl
 
     integer          :: i
 
     call xml_NewElement(xf, "molecule")
-    if (present(id)) call xml_AddAttribute(xf, "id", id)
-    if (present(title)) call xml_AddAttribute(xf, "title", title)
-    if (present(dictRef)) call xml_AddAttribute(xf, "dictRef", dictRef)
+
+TOHWM4_moleculeargsuse
+
     call xml_NewElement(xf, "atomArray")
 
 
@@ -59,7 +96,8 @@ define(`TOHWM4_molecule_subs', `dnl
       call cmlAddAtom(xf=xf, elem=trim(elements(i)), &
            coords=coords(:, i), style=style, fmt=fmt)
       if (present(occupancies)) call xml_AddAttribute(xf, "occupancy", occupancies(i))
-      if (present(refs)) call xml_AddAttribute(xf, "ref", refs(i))
+      if (present(atomRefs)) call xml_AddAttribute(xf, "ref", atomRefs(i))
+      if (present(atomIds)) call xml_AddAttribute(xf, "id", atomIds(i))
       call xml_EndElement(xf, "atom")
      enddo
 
@@ -69,33 +107,35 @@ define(`TOHWM4_molecule_subs', `dnl
   end subroutine cmlAddMolecule$1_sh
 
 
-  subroutine cmlAddMolecule_3_$1(xf, elements, x, y, z, refs, occupancies, style, id, title, dictref, fmt)
+  subroutine cmlAddMolecule_3_$1(xf, elements, x, y, z, atomRefs, occupancies, atomIds, style, fmt &
+TOHWM4_moleculeargslist)
     type(xmlf_t), intent(inout) :: xf
     real(kind=$1), intent(in)              :: x(:)
     real(kind=$1), intent(in)              :: y(:)
     real(kind=$1), intent(in)              :: z(:)
     character(len=*), intent(in)           :: elements(:)
-    character(len=*), intent(in), optional :: refs(:) 
+    character(len=*), intent(in), optional :: atomRefs(:) 
+    character(len=*), intent(in), optional :: atomIds(:) 
     real(kind=$1), intent(in), optional :: occupancies(:) 
-    character(len=*), intent(in), optional :: id
-    character(len=*), intent(in), optional :: title
-    character(len=*), intent(in), optional :: dictref
     character(len=*), intent(in), optional :: fmt
     character(len=*), intent(in), optional :: style
+
+TOHWM4_moleculeargsdecl
 
     integer          :: i
 
     call xml_NewElement(xf, "molecule")
-    if (present(id)) call xml_AddAttribute(xf, "id", id)
-    if (present(title)) call xml_AddAttribute(xf, "title", title)
-    if (present(dictRef)) call xml_AddAttribute(xf, "dictRef", dictRef)
+
+TOHWM4_moleculeargsuse
+
     call xml_NewElement(xf, "atomArray")
 
     do i = 1, size(x)
       call cmlAddAtom(xf=xf, elem=trim(elements(i)), &
            coords=(/x(i), y(i), z(i)/), style=style, fmt=fmt)
       if (present(occupancies)) call xml_AddAttribute(xf, "occupancy", occupancies(i))
-      if (present(refs)) call xml_AddAttribute(xf, "ref", refs(i))
+      if (present(atomRefs)) call xml_AddAttribute(xf, "ref", atomRefs(i))
+      if (present(atomIds)) call xml_AddAttribute(xf, "id", atomIDs(i))
       call xml_EndElement(xf, "atom")
      enddo
 
@@ -105,34 +145,36 @@ define(`TOHWM4_molecule_subs', `dnl
   end subroutine cmlAddMolecule_3_$1
 
 
-  subroutine cmlAddMolecule_3_$1_sh(xf, natoms, elements, x, y, z, refs, occupancies, style, id, title, dictref, fmt)
+  subroutine cmlAddMolecule_3_$1_sh(xf, natoms, elements, x, y, z, atomRefs, occupancies, atomIds, style, fmt &
+TOHWM4_moleculeargslist)
     type(xmlf_t), intent(inout) :: xf
     integer, intent(in) :: natoms
     real(kind=$1), intent(in)              :: x(natoms)
     real(kind=$1), intent(in)              :: y(natoms)
     real(kind=$1), intent(in)              :: z(natoms)
     character(len=*), intent(in)           :: elements(natoms)
-    character(len=*), intent(in), optional :: refs(natoms)
+    character(len=*), intent(in), optional :: atomRefs(natoms)
+    character(len=*), intent(in), optional :: atomIds(natoms)
     real(kind=$1), intent(in), optional :: occupancies(natoms)
-    character(len=*), intent(in), optional :: id
-    character(len=*), intent(in), optional :: title
-    character(len=*), intent(in), optional :: dictref
     character(len=*), intent(in), optional :: fmt
     character(len=*), intent(in), optional :: style
+
+TOHWM4_moleculeargsdecl
 
     integer          :: i
 
     call xml_NewElement(xf, "molecule")
-    if (present(id)) call xml_AddAttribute(xf, "id", id)
-    if (present(title)) call xml_AddAttribute(xf, "title", title)
-    if (present(dictRef)) call xml_AddAttribute(xf, "dictRef", dictRef)
+
+TOHWM4_moleculeargsuse
+
     call xml_NewElement(xf, "atomArray")
 
     do i = 1, natoms
       call cmlAddAtom(xf=xf, elem=trim(elements(i)), &
            coords=(/x(i), y(i), z(i)/), style=style, fmt=fmt)
       if (present(occupancies)) call xml_AddAttribute(xf, "occupancy", occupancies(i))
-      if (present(refs)) call xml_AddAttribute(xf, "ref", refs(i))
+      if (present(atomRefs)) call xml_AddAttribute(xf, "ref", atomRefs(i))
+      if (present(atomIds)) call xml_AddAttribute(xf, "id", atomIds(i))
       call xml_EndElement(xf, "atom")
      enddo
 

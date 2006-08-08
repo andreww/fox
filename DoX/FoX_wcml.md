@@ -220,21 +220,24 @@ This function adds a tag representing an output property
 **coords**: *real*: a 3xn matrix of real numbers representing atomic coordinates (either fractional or Cartesian)  
 **OR**  
 **x**, **y**, **z**: *real*: 3 one-dimensional arrays containing the *x*, *y*, and *z* coordinates of the atoms in the molecule.  
-(**natoms**) *integer* *scalar*: number of atoms in molecule (default: picked up from length of **coords** array)  
 **elements**: *string* *array*: a length-n array of length-2 strings containing IUPAC chemical symbols for the atoms    
+(**natoms**) *integer* *scalar*: number of atoms in molecule (default: picked up from length of **coords** array)  
 (**occupancies**): *real* *array* : a length-n array of the occupancies of each atom.  
-(**refs**): *string* *array*: a length-n array of strings containing references which may point to IDs elsewhere of, for example, pseudopotentials or basis sets defining the element's behaviour.  
-(**style**): *string* *scalar*: 'xyz3' - the coordinates are Cartesian, or `xyzFract` - the coordinates are fractional. The default is Cartesian.  
+(**atomRefs**): *string* *array*: a length-n array of strings containing references which may point to IDs elsewhere of, for example, pseudopotentials or basis sets defining the element's behaviour.  
+(**atomIds**): *string* *array*: a length-n array of strings containing IDs for the atoms.  
+(**style**): *string* *scalar*: `xyz3` - the coordinates are Cartesian, or `xyzFract` - the coordinates are fractional. The default is Cartesian.
+(**ref**) *string* *scalar*: Reference an `id` attribute of another element (generally deprecated)  
+(**formula**) *string* *scalar*: An IUPAC chemical formula
+(**chirality**) *string* *scalar*: The chirality of the molecule. No defined vocabulary.
+(**role**) *string* *scalar*: Role of molecule. No defined vocabulary.
 
 Outputs an atomic configuration. 
 
 * `cmlAddLattice`   
 **cell**: *real* *matrix* a 3x3 matrix of the unit cell  
-**spaceType**: `real` or `reciprocal` space.  
-(**latticeType)**: *string* *scalar* Space group of the lattice; 
-default - none  
+(**spaceType**): *string* *scalar*: `real` or `reciprocal` space.  
+(**latticeType**): *string* *scalar* Space group of the lattice; 
 (**units**): *string * scalar* units of (reciprocal) distance that cell vectors is given in; 
-default - none
 
 Outputs information about a unit cell, in lattice-vector form
 
