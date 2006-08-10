@@ -237,7 +237,7 @@ contains
     character(len=*), intent(in), optional :: nsURI
     
     integer  :: n
-    
+
     if (has_key(dict, key)) then
        call Fox_Error('Duplicate attribute')
     endif
@@ -250,6 +250,7 @@ contains
        call resize_dict(dict)
     endif
     
+    !FIXME why is this commented out?
     !if (.not.check_Name(key)) then
     !  call wxml_fatal('attribute name is invalid')
     !endif
@@ -276,7 +277,7 @@ contains
     endif
     
     dict%number_of_items = n
-    
+
   end subroutine add_item_to_dict
   
   subroutine add_key_to_dict(dict, key)
@@ -447,6 +448,7 @@ contains
     do i = 1, l_d_old
        tempDict(i)%key => dict%items(i)%key
        tempDict(i)%value => dict%items(i)%value
+       tempDict(i)%prefix => dict%items(i)%prefix
        tempDict(i)%nsURI => dict%items(i)%nsURI
        tempDict(i)%localName => dict%items(i)%localName
     enddo
@@ -457,6 +459,7 @@ contains
        dict%items(i)%key => tempDict(i)%key
        dict%items(i)%value => tempDict(i)%value
        dict%items(i)%nsURI => tempDict(i)%nsURI
+       dict%items(i)%prefix => tempDict(i)%prefix
        dict%items(i)%localName => tempDict(i)%localName
     enddo
 

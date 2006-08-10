@@ -29,8 +29,11 @@
   elements(2) = 'Si'
   elements(3) = 'O'
   num = 20
-  
+
   call cmlBeginFile(myfile, 'test.cml')
+
+  call cmlAddNamespace(prefix="myDict", nsURI="http://www.example.com/dict")
+
   call cmlStartCml(myfile)
 
   ! Add parameter

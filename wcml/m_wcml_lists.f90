@@ -62,7 +62,7 @@ contains
 
   subroutine cmlEndmetadataList(xf)
     type(xmlf_t), intent(inout) :: xf
-    call xmLEndElement(xf, "metadataList")
+    call xml_EndElement(xf, "metadataList")
   end subroutine cmlEndmetadataList
 
 
@@ -93,7 +93,7 @@ contains
 
   subroutine cmlEndpropertyList(xf)
     type(xmlf_t), intent(inout) :: xf
-    call xmLEndElement(xf, "propertyList")
+    call xml_EndElement(xf, "propertyList")
   end subroutine cmlEndpropertyList
 
 
@@ -124,7 +124,7 @@ contains
 
   subroutine cmlEndparameterList(xf)
     type(xmlf_t), intent(inout) :: xf
-    call xmLEndElement(xf, "parameterList")
+    call xml_EndElement(xf, "parameterList")
   end subroutine cmlEndparameterList
 
 
@@ -155,7 +155,7 @@ contains
 
   subroutine cmlEndbandList(xf)
     type(xmlf_t), intent(inout) :: xf
-    call xmLEndElement(xf, "bandList")
+    call xml_EndElement(xf, "bandList")
   end subroutine cmlEndbandList
 
 
@@ -186,7 +186,7 @@ contains
 
   subroutine cmlEndkpointList(xf)
     type(xmlf_t), intent(inout) :: xf
-    call xmLEndElement(xf, "kpointList")
+    call xml_EndElement(xf, "kpointList")
   end subroutine cmlEndkpointList
 
 
@@ -217,7 +217,7 @@ contains
 
   subroutine cmlEndmodule(xf)
     type(xmlf_t), intent(inout) :: xf
-    call xmLEndElement(xf, "module")
+    call xml_EndElement(xf, "module")
   end subroutine cmlEndmodule
 
 
