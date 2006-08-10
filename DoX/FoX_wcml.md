@@ -109,6 +109,8 @@ declare it using `cmlAddNamespace`, and markup all your units as:
 
 * `cmlBeginFile`  
 **filename**: *string* *scalar*: Filename to be opened.
+(**replace**): *logical* *scalar*: should the file be replaced if it already exists? *default: yes*
+
 
 This takes care of all calls to open a CML output file.
 
