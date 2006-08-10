@@ -22,11 +22,12 @@ module m_wcml_core
 
 contains
 
-  subroutine cmlBeginFile(xf, filename)
+  subroutine cmlBeginFile(xf, filename, replace)
     type(xmlf_t), intent(out) :: xf
     character(len=*), intent(in) :: filename
+    logical, intent(in), optional :: replace
 
-    call xml_OpenFile(filename, xf, broken_indenting=.true.)
+    call xml_OpenFile(filename, xf, broken_indenting=.true., replace=replace)
 
   end subroutine cmlBeginFile
 
@@ -45,7 +46,6 @@ contains
     character(len=*), intent(in) :: prefix
     character(len=*), intent(in) :: URI
 
-    !FIXME
     if (xmlf_OpenTag(xf) /= "") &
       call FoX_error("Cannot do cmlAddNamespace after document output")
 

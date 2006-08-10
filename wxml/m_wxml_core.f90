@@ -1127,18 +1127,31 @@ contains
       fn = str_vs(xf%filename)
     end function xmlf_name
 
+    pure function xmlf_opentag_len(xf) result(n)
+      type (xmlf_t), intent(in) :: xf
+      integer :: n
 
+      if (xf%lun == -1) then
+        n = 0
+      elseif (is_empty(xf%stack)) then
+        n = 0
+      else
+        n = len(get_top_elstack(xf%stack))
+      endif
+    end function xmlf_opentag_len
+      
     function xmlf_opentag(xf) result(fn)
       type (xmlf_t), intent(in) :: xf
-      character(len=merge(0, len(get_top_elstack(xf%stack)), is_empty(xf%stack))) :: fn
-      !FIXME calling this function on an uninitialized xf will cause a crash.
-      if (is_empty(xf%stack)) then
-        fn = ""
+      character(len=xmlf_opentag_len(xf)) :: fn
+
+      if (xf%lun == -1) then
+        fn = ''
+      elseif (is_empty(xf%stack)) then
+        fn = ''
       else
         fn = get_top_elstack(xf%stack)
       endif
     end function xmlf_opentag
-      
 
     subroutine devnull(str)
       character(len=*), intent(in) :: str

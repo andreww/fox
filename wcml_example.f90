@@ -30,9 +30,9 @@
   elements(3) = 'O'
   num = 20
 
-  call cmlBeginFile(myfile, 'test.cml')
+  call cmlBeginFile(myfile, 'test.cml', replace = .true.)
 
-  call cmlAddNamespace(prefix="myDict", nsURI="http://www.example.com/dict")
+  call cmlAddNamespace(myfile, prefix="myDict", URI="http://www.example.com/dict")
 
   call cmlStartCml(myfile)
 
