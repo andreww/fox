@@ -15,12 +15,13 @@ The following compilers are tested and are known to work:
 * XLF version 9.1 (previous versions untested)
 * NAG version 5.0 (patch 391 and later) or 5.1
 * g95 (version of 2006-08-01, earlier versions untested)
+* Lahey version 6.20 (previous versions untested)
+* Pathscale, version 2.4 (previous versions untested)
 
 The following compilers are tested and known to fail
 
 * Intel Fortran prior to version 9.0
 * NAG versions prior to 5.0-391
-* Pathscale, all versions (bug reported #6259)
 * PGI, all versions (bug reported #3897)
 * gfortran prior to and including version 4.1
 * Sun Fortran 95 7.1 Patch 112762-16 2005/10/25 (later versions untested)
