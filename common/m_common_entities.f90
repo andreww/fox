@@ -402,23 +402,6 @@ contains
   end function existing_entity
 
 
-  pure function get_entity(ents, code) result(ent)
-    type(entity_list), intent(in) :: ents
-    character(len=*), intent(in)  :: code
-    type(entity_t) :: ent
-
-    integer :: i
-
-    do i = 1, size(ents%list)
-      if (code == str_vs(ents%list(i)%code)) then
-        ent = deep_copy_entity(ents%list(i))
-        return
-      endif
-    enddo
-
-  end function get_entity
-    
-
   pure function expand_entity_text_len(ents, code) result(n)
     type(entity_list), intent(in) :: ents
     character(len=*), intent(in)  :: code
