@@ -36,7 +36,7 @@
 
 <p>The use of dictionaries with WCML is strongly encouraged. (For those not conversant with dictionaries, a fairly detailed explanation is available at <a href="http://www.xml-cml.org/information/dictionaries">http://www.xml-cml.org/information/dictionaries</a>)</p>
 
-<p>In brief, dictionaries are in two ways.</p>
+<p>In brief, dictionaries are used in two ways.</p>
 
 <h3>Identification</h3>
 
@@ -164,7 +164,7 @@ declare it using <code>cmlAddNamespace</code>, and markup all your units as:</p>
 
 <ul>
 <li><code>cmlBeginFile</code> <br />
-<strong>filename</strong>: <em>string</em> <em>scalar</em>: Filename to be opened.
+<strong>filename</strong>: <em>string</em> <em>scalar</em>: Filename to be opened. <br />
 (<strong>replace</strong>): <em>logical</em> <em>scalar</em>: should the file be replaced if it already exists? <em>default: yes</em></li>
 </ul>
 
@@ -285,7 +285,7 @@ Attempts to do otherwise will result in a runtime error.</p>
 <li><code>cmlAddParameter</code> <br />
 <strong>title</strong>: <em>string</em> <em>scalar</em>: Identifying title for parameter <br />
 <strong>value</strong>:<em>anytype</em> <em>anydim</em>: value of parameter <br />
-<strong>units</strong>: <em>string</em> <em>scalar</em>: units of parameter value  (optional for logical/character <strong>value</strong>s, compulsory otherwise; see note above)
+<strong>units</strong>: <em>string</em> <em>scalar</em>: units of parameter value  (optional for logical/character <strong>value</strong>s, compulsory otherwise; see note above) <br />
 (<strong>constraint</strong>) <em>string</em> <em>scalar</em>: Constraint under which the parameter is set (this can be an arbitrary string) <br />
 (<strong>ref</strong>) <em>string</em> <em>scalar</em>: Reference an <code>id</code> attribute of another element (generally deprecated) <br />
 (<strong>role</strong>) <em>string</em> <em>scalar</em> role which the element plays </li>
@@ -294,10 +294,10 @@ Attempts to do otherwise will result in a runtime error.</p>
 <p>This function adds a tag representing an input parameter</p>
 
 <ul>
-<li><code>cmlAddProperty</code>
+<li><code>cmlAddProperty</code> <br />
 <strong>name</strong>: <em>string</em> <em>scalar</em> <br />
 <strong>value</strong>: <em>any</em> <em>anydim</em> <br />
-<strong>units</strong>: <em>string</em> <em>scalar</em> units of property value  (optional for logical/character <strong>value</strong>s, compulsory otherwise; see note above)
+<strong>units</strong>: <em>string</em> <em>scalar</em> units of property value  (optional for logical/character <strong>value</strong>s, compulsory otherwise; see note above) <br />
 (<strong>ref</strong>) <em>string</em> <em>scalar</em>: Reference an <code>id</code> attribute of another element (generally deprecated) <br />
 (<strong>role</strong>) <em>string</em> <em>scalar</em> role which the element plays </li>
 </ul>
@@ -306,7 +306,7 @@ Attempts to do otherwise will result in a runtime error.</p>
 
 <ul>
 <li><code>cmlAddMolecule</code> <br />
-<strong>coords</strong>: <em>real</em>: a 3xn matrix of real numbers representing atomic coordinates (either fractional or Cartesian) . These <em>must</em> be specified in Angstrom or fractional units (see <strong>style</strong> below.)
+<strong>coords</strong>: <em>real</em>: a 3xn matrix of real numbers representing atomic coordinates (either fractional or Cartesian) . These <em>must</em> be specified in Angstrom or fractional units (see <strong>style</strong> below.) <br />
 <strong>OR</strong> <br />
 <strong>x</strong>, <strong>y</strong>, <strong>z</strong>: <em>real</em>: 3 one-dimensional arrays containing the <em>x</em>, <em>y</em>, and <em>z</em> coordinates of the atoms in the molecule.  These <em>must</em> be specified in Angstrom or fractional units (see <strong>style</strong> below.) <br />
 <strong>elements</strong>: <em>string</em> <em>array</em>: a length-n array of length-2 strings containing IUPAC chemical symbols for the atoms <br />
@@ -314,10 +314,10 @@ Attempts to do otherwise will result in a runtime error.</p>
 (<strong>occupancies</strong>): <em>real</em> <em>array</em> : a length-n array of the occupancies of each atom. <br />
 (<strong>atomRefs</strong>): <em>string</em> <em>array</em>: a length-n array of strings containing references which may point to IDs elsewhere of, for example, pseudopotentials or basis sets defining the element's behaviour. <br />
 (<strong>atomIds</strong>): <em>string</em> <em>array</em>: a length-n array of strings containing IDs for the atoms. <br />
-(<strong>style</strong>): <em>string</em> <em>scalar</em>: <code>xyz3</code> - the coordinates are Cartesian, or <code>xyzFract</code> - the coordinates are fractional. The default is Cartesian.
+(<strong>style</strong>): <em>string</em> <em>scalar</em>: <code>xyz3</code> - the coordinates are Cartesian, or <code>xyzFract</code> - the coordinates are fractional. The default is Cartesian. <br />
 (<strong>ref</strong>) <em>string</em> <em>scalar</em>: Reference an <code>id</code> attribute of another element (generally deprecated) <br />
-(<strong>formula</strong>) <em>string</em> <em>scalar</em>: An IUPAC chemical formula
-(<strong>chirality</strong>) <em>string</em> <em>scalar</em>: The chirality of the molecule. No defined vocabulary.
+(<strong>formula</strong>) <em>string</em> <em>scalar</em>: An IUPAC chemical formula <br />
+(<strong>chirality</strong>) <em>string</em> <em>scalar</em>: The chirality of the molecule. No defined vocabulary. <br />
 (<strong>role</strong>) <em>string</em> <em>scalar</em>: Role of molecule. No defined vocabulary.</li>
 </ul>
 
@@ -327,9 +327,9 @@ Attempts to do otherwise will result in a runtime error.</p>
 <li><code>cmlAddLattice</code> <br />
 <strong>cell</strong>: <em>real</em> <em>matrix</em> a 3x3 matrix of the unit cell <br />
 (<strong>spaceType</strong>): <em>string</em> <em>scalar</em>: <code>real</code> or <code>reciprocal</code> space. <br />
-(<strong>latticeType</strong>): <em>string</em> <em>scalar</em> Space group of the lattice. No defined vocabulary
+(<strong>latticeType</strong>): <em>string</em> <em>scalar</em> Space group of the lattice. No defined vocabulary <br />
 (<strong>units</strong>): <em>string</em> <em>scalar</em> units of (reciprocal) distance that cell vectors is given in;
-default: Angstrom  </li>
+<em>default: Angstrom</em></li>
 </ul>
 
 <p>Outputs information about a unit cell, in lattice-vector form</p>
@@ -345,8 +345,8 @@ default: Angstrom  </li>
 (<strong>z</strong>): <em>integer</em> <em>scalar</em> the 'z' parameter: number of molecules per unit cell. <br />
 (<strong>lenunits</strong>): <em>string</em> <em>scalar</em>: Units of length: default is <code>units:angstrom</code> <br />
 (<strong>angunits</strong>): <em>string</em> <em>scalar</em>: Units of angle: default is <code>units:degrees</code> <br />
-(<strong>lenfmt</strong>): <em>string</em> <em>scalar</em>: format for crystal lengths
-(<strong>angfmt</strong>): <em>string</em> <em>scalar</em>: format for crystal angles
+(<strong>lenfmt</strong>): <em>string</em> <em>scalar</em>: format for crystal lengths <br />
+(<strong>angfmt</strong>): <em>string</em> <em>scalar</em>: format for crystal angles <br />
 (<strong>spaceGroup</strong>): <em>string</em> <em>scalar</em> Space group of the crystal. No defined vocabulary.</li>
 </ul>
 
@@ -355,9 +355,9 @@ default: Angstrom  </li>
 <ul>
 <li><code>cmlAddBand</code> <br />
 <strong>kptref</strong>: <em>string</em> <em>scalar</em>:  Reference id of relevant kpoint. <br />
-<strong>bands</strong>: <em>real</em> <em>array</em>: array of eigenvalues
-<strong>units</strong>: * string* <em>scalar</em>: energy units of eigenvalues
-(<strong>fmt</strong>): <em>string</em> <em>scalar</em>: format to output eigenvalues
+<strong>bands</strong>: <em>real</em> <em>array</em>: array of eigenvalues <br />
+<strong>units</strong>: * string* <em>scalar</em>: energy units of eigenvalues <br />
+(<strong>fmt</strong>): <em>string</em> <em>scalar</em>: format to output eigenvalues <br />
 (<strong>label</strong>): <em>string</em> <em>scalar</em>: label for band.</li>
 </ul>
 

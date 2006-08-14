@@ -26,7 +26,7 @@ at the start. This will import all of the subroutines described below, plus the 
 
 The use of dictionaries with WCML is strongly encouraged. (For those not conversant with dictionaries, a fairly detailed explanation is available at <http://www.xml-cml.org/information/dictionaries>)
 
-In brief, dictionaries are in two ways.
+In brief, dictionaries are used in two ways.
 
 ### Identification
 
@@ -139,8 +139,8 @@ declare it using `cmlAddNamespace`, and markup all your units as:
 
 ## Functions for manipulating the CML file:
 
-* `cmlBeginFile`  
-**filename**: *string* *scalar*: Filename to be opened.
+* `cmlBeginFile`   
+**filename**: *string* *scalar*: Filename to be opened.  
 (**replace**): *logical* *scalar*: should the file be replaced if it already exists? *default: yes*
 
 
@@ -240,17 +240,17 @@ This adds a single item of metadata. It takes the following arguments:
 * `cmlAddParameter`  
 **title**: *string* *scalar*: Identifying title for parameter  
 **value**:*anytype* *anydim*: value of parameter  
-**units**: *string* *scalar*: units of parameter value  (optional for logical/character **value**s, compulsory otherwise; see note above)
+**units**: *string* *scalar*: units of parameter value  (optional for logical/character **value**s, compulsory otherwise; see note above)  
 (**constraint**) *string* *scalar*: Constraint under which the parameter is set (this can be an arbitrary string)  
 (**ref**) *string* *scalar*: Reference an `id` attribute of another element (generally deprecated)  
 (**role**) *string* *scalar* role which the element plays 
 
 This function adds a tag representing an input parameter
 
-* `cmlAddProperty`
+* `cmlAddProperty`  
 **name**: *string* *scalar*  
 **value**: *any* *anydim*  
-**units**: *string* *scalar* units of property value  (optional for logical/character **value**s, compulsory otherwise; see note above)
+**units**: *string* *scalar* units of property value  (optional for logical/character **value**s, compulsory otherwise; see note above)  
 (**ref**) *string* *scalar*: Reference an `id` attribute of another element (generally deprecated)  
 (**role**) *string* *scalar* role which the element plays 
 
@@ -258,7 +258,7 @@ This function adds a tag representing an output property
 
 
 * `cmlAddMolecule`  
-**coords**: *real*: a 3xn matrix of real numbers representing atomic coordinates (either fractional or Cartesian) . These *must* be specified in Angstrom or fractional units (see **style** below.)
+**coords**: *real*: a 3xn matrix of real numbers representing atomic coordinates (either fractional or Cartesian) . These *must* be specified in Angstrom or fractional units (see **style** below.)  
 **OR**  
 **x**, **y**, **z**: *real*: 3 one-dimensional arrays containing the *x*, *y*, and *z* coordinates of the atoms in the molecule.  These *must* be specified in Angstrom or fractional units (see **style** below.)  
 **elements**: *string* *array*: a length-n array of length-2 strings containing IUPAC chemical symbols for the atoms    
@@ -266,10 +266,10 @@ This function adds a tag representing an output property
 (**occupancies**): *real* *array* : a length-n array of the occupancies of each atom.  
 (**atomRefs**): *string* *array*: a length-n array of strings containing references which may point to IDs elsewhere of, for example, pseudopotentials or basis sets defining the element's behaviour.  
 (**atomIds**): *string* *array*: a length-n array of strings containing IDs for the atoms.  
-(**style**): *string* *scalar*: `xyz3` - the coordinates are Cartesian, or `xyzFract` - the coordinates are fractional. The default is Cartesian.
+(**style**): *string* *scalar*: `xyz3` - the coordinates are Cartesian, or `xyzFract` - the coordinates are fractional. The default is Cartesian.  
 (**ref**) *string* *scalar*: Reference an `id` attribute of another element (generally deprecated)  
-(**formula**) *string* *scalar*: An IUPAC chemical formula
-(**chirality**) *string* *scalar*: The chirality of the molecule. No defined vocabulary.
+(**formula**) *string* *scalar*: An IUPAC chemical formula  
+(**chirality**) *string* *scalar*: The chirality of the molecule. No defined vocabulary.  
 (**role**) *string* *scalar*: Role of molecule. No defined vocabulary.
 
 Outputs an atomic configuration. 
@@ -277,9 +277,9 @@ Outputs an atomic configuration.
 * `cmlAddLattice`   
 **cell**: *real* *matrix* a 3x3 matrix of the unit cell  
 (**spaceType**): *string* *scalar*: `real` or `reciprocal` space.  
-(**latticeType**): *string* *scalar* Space group of the lattice. No defined vocabulary
+(**latticeType**): *string* *scalar* Space group of the lattice. No defined vocabulary  
 (**units**): *string* *scalar* units of (reciprocal) distance that cell vectors is given in;
-default: Angstrom  
+*default: Angstrom*
 
 
 Outputs information about a unit cell, in lattice-vector form
@@ -293,18 +293,18 @@ Outputs information about a unit cell, in lattice-vector form
 **gamma**: *real* *scalar* the 'gamma' parameter  
 (**z**): *integer* *scalar* the 'z' parameter: number of molecules per unit cell.  
 (**lenunits**): *string* *scalar*: Units of length: default is `units:angstrom`    
-(**angunits**): *string* *scalar*: Units of angle: default is `units:degrees`  
-(**lenfmt**): *string* *scalar*: format for crystal lengths
-(**angfmt**): *string* *scalar*: format for crystal angles
+(**angunits**): *string* *scalar*: Units of angle: default is `units:degrees`   
+(**lenfmt**): *string* *scalar*: format for crystal lengths  
+(**angfmt**): *string* *scalar*: format for crystal angles  
 (**spaceGroup**): *string* *scalar* Space group of the crystal. No defined vocabulary.
 
 Outputs information about a unit cell, in crystallographic form
 
 * `cmlAddBand`  
 **kptref**: *string* *scalar*:  Reference id of relevant kpoint.  
-**bands**: *real* *array*: array of eigenvalues
-**units**: * string* *scalar*: energy units of eigenvalues
-(**fmt**): *string* *scalar*: format to output eigenvalues
+**bands**: *real* *array*: array of eigenvalues  
+**units**: * string* *scalar*: energy units of eigenvalues  
+(**fmt**): *string* *scalar*: format to output eigenvalues  
 (**label**): *string* *scalar*: label for band.
 
 Output eigenvalues for a band.

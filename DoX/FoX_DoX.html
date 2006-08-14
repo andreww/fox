@@ -162,7 +162,7 @@ wcml_lib
 * On Lahey, 16 tests in <code>wxml/test</code> will fail - this is a flaw in the testsuite, the library is actually
 working correctly. Please ignore this problem. </p>
 
-<p>If any other failures occur, please send a message to the mailing list (<a href="m&#97;&#105;&#108;&#x74;&#111;:&#70;&#x6F;&#x58;&#64;&#x6C;&#x69;&#115;&#116;s&#x2E;&#x75;&#x73;&#122;&#x6C;&#x61;&#x2E;&#109;e&#46;&#x75;&#x6B;">&#70;&#x6F;&#x58;&#64;&#x6C;&#x69;&#115;&#116;s&#x2E;&#x75;&#x73;&#122;&#x6C;&#x61;&#x2E;&#109;e&#46;&#x75;&#x6B;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
+<p>If any other failures occur, please send a message to the mailing list (<a href="&#x6D;&#97;&#x69;&#x6C;&#x74;&#x6F;:&#70;&#111;&#88;&#64;&#108;&#105;&#115;&#x74;&#x73;&#x2E;&#x75;&#x73;&#x7A;&#108;&#x61;&#x2E;&#109;&#101;&#x2E;&#117;&#107;">&#70;&#111;&#88;&#64;&#108;&#105;&#115;&#x74;&#x73;&#x2E;&#x75;&#x73;&#x7A;&#108;&#x61;&#x2E;&#109;&#101;&#x2E;&#117;&#107;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
 
 <h2>Linking to an existing program</h2>
 
@@ -804,7 +804,7 @@ Contents of comment</li>
 
 <p>The use of dictionaries with WCML is strongly encouraged. (For those not conversant with dictionaries, a fairly detailed explanation is available at <a href="http://www.xml-cml.org/information/dictionaries">http://www.xml-cml.org/information/dictionaries</a>)</p>
 
-<p>In brief, dictionaries are in two ways.</p>
+<p>In brief, dictionaries are used in two ways.</p>
 
 <h3>Identification</h3>
 
@@ -932,7 +932,7 @@ declare it using <code>cmlAddNamespace</code>, and markup all your units as:</p>
 
 <ul>
 <li><code>cmlBeginFile</code> <br />
-<strong>filename</strong>: <em>string</em> <em>scalar</em>: Filename to be opened.
+<strong>filename</strong>: <em>string</em> <em>scalar</em>: Filename to be opened. <br />
 (<strong>replace</strong>): <em>logical</em> <em>scalar</em>: should the file be replaced if it already exists? <em>default: yes</em></li>
 </ul>
 
@@ -1053,7 +1053,7 @@ Attempts to do otherwise will result in a runtime error.</p>
 <li><code>cmlAddParameter</code> <br />
 <strong>title</strong>: <em>string</em> <em>scalar</em>: Identifying title for parameter <br />
 <strong>value</strong>:<em>anytype</em> <em>anydim</em>: value of parameter <br />
-<strong>units</strong>: <em>string</em> <em>scalar</em>: units of parameter value  (optional for logical/character <strong>value</strong>s, compulsory otherwise; see note above)
+<strong>units</strong>: <em>string</em> <em>scalar</em>: units of parameter value  (optional for logical/character <strong>value</strong>s, compulsory otherwise; see note above) <br />
 (<strong>constraint</strong>) <em>string</em> <em>scalar</em>: Constraint under which the parameter is set (this can be an arbitrary string) <br />
 (<strong>ref</strong>) <em>string</em> <em>scalar</em>: Reference an <code>id</code> attribute of another element (generally deprecated) <br />
 (<strong>role</strong>) <em>string</em> <em>scalar</em> role which the element plays </li>
@@ -1062,10 +1062,10 @@ Attempts to do otherwise will result in a runtime error.</p>
 <p>This function adds a tag representing an input parameter</p>
 
 <ul>
-<li><code>cmlAddProperty</code>
+<li><code>cmlAddProperty</code> <br />
 <strong>name</strong>: <em>string</em> <em>scalar</em> <br />
 <strong>value</strong>: <em>any</em> <em>anydim</em> <br />
-<strong>units</strong>: <em>string</em> <em>scalar</em> units of property value  (optional for logical/character <strong>value</strong>s, compulsory otherwise; see note above)
+<strong>units</strong>: <em>string</em> <em>scalar</em> units of property value  (optional for logical/character <strong>value</strong>s, compulsory otherwise; see note above) <br />
 (<strong>ref</strong>) <em>string</em> <em>scalar</em>: Reference an <code>id</code> attribute of another element (generally deprecated) <br />
 (<strong>role</strong>) <em>string</em> <em>scalar</em> role which the element plays </li>
 </ul>
@@ -1074,7 +1074,7 @@ Attempts to do otherwise will result in a runtime error.</p>
 
 <ul>
 <li><code>cmlAddMolecule</code> <br />
-<strong>coords</strong>: <em>real</em>: a 3xn matrix of real numbers representing atomic coordinates (either fractional or Cartesian) . These <em>must</em> be specified in Angstrom or fractional units (see <strong>style</strong> below.)
+<strong>coords</strong>: <em>real</em>: a 3xn matrix of real numbers representing atomic coordinates (either fractional or Cartesian) . These <em>must</em> be specified in Angstrom or fractional units (see <strong>style</strong> below.) <br />
 <strong>OR</strong> <br />
 <strong>x</strong>, <strong>y</strong>, <strong>z</strong>: <em>real</em>: 3 one-dimensional arrays containing the <em>x</em>, <em>y</em>, and <em>z</em> coordinates of the atoms in the molecule.  These <em>must</em> be specified in Angstrom or fractional units (see <strong>style</strong> below.) <br />
 <strong>elements</strong>: <em>string</em> <em>array</em>: a length-n array of length-2 strings containing IUPAC chemical symbols for the atoms <br />
@@ -1082,10 +1082,10 @@ Attempts to do otherwise will result in a runtime error.</p>
 (<strong>occupancies</strong>): <em>real</em> <em>array</em> : a length-n array of the occupancies of each atom. <br />
 (<strong>atomRefs</strong>): <em>string</em> <em>array</em>: a length-n array of strings containing references which may point to IDs elsewhere of, for example, pseudopotentials or basis sets defining the element's behaviour. <br />
 (<strong>atomIds</strong>): <em>string</em> <em>array</em>: a length-n array of strings containing IDs for the atoms. <br />
-(<strong>style</strong>): <em>string</em> <em>scalar</em>: <code>xyz3</code> - the coordinates are Cartesian, or <code>xyzFract</code> - the coordinates are fractional. The default is Cartesian.
+(<strong>style</strong>): <em>string</em> <em>scalar</em>: <code>xyz3</code> - the coordinates are Cartesian, or <code>xyzFract</code> - the coordinates are fractional. The default is Cartesian. <br />
 (<strong>ref</strong>) <em>string</em> <em>scalar</em>: Reference an <code>id</code> attribute of another element (generally deprecated) <br />
-(<strong>formula</strong>) <em>string</em> <em>scalar</em>: An IUPAC chemical formula
-(<strong>chirality</strong>) <em>string</em> <em>scalar</em>: The chirality of the molecule. No defined vocabulary.
+(<strong>formula</strong>) <em>string</em> <em>scalar</em>: An IUPAC chemical formula <br />
+(<strong>chirality</strong>) <em>string</em> <em>scalar</em>: The chirality of the molecule. No defined vocabulary. <br />
 (<strong>role</strong>) <em>string</em> <em>scalar</em>: Role of molecule. No defined vocabulary.</li>
 </ul>
 
@@ -1095,9 +1095,9 @@ Attempts to do otherwise will result in a runtime error.</p>
 <li><code>cmlAddLattice</code> <br />
 <strong>cell</strong>: <em>real</em> <em>matrix</em> a 3x3 matrix of the unit cell <br />
 (<strong>spaceType</strong>): <em>string</em> <em>scalar</em>: <code>real</code> or <code>reciprocal</code> space. <br />
-(<strong>latticeType</strong>): <em>string</em> <em>scalar</em> Space group of the lattice. No defined vocabulary
+(<strong>latticeType</strong>): <em>string</em> <em>scalar</em> Space group of the lattice. No defined vocabulary <br />
 (<strong>units</strong>): <em>string</em> <em>scalar</em> units of (reciprocal) distance that cell vectors is given in;
-default: Angstrom  </li>
+<em>default: Angstrom</em></li>
 </ul>
 
 <p>Outputs information about a unit cell, in lattice-vector form</p>
@@ -1113,8 +1113,8 @@ default: Angstrom  </li>
 (<strong>z</strong>): <em>integer</em> <em>scalar</em> the 'z' parameter: number of molecules per unit cell. <br />
 (<strong>lenunits</strong>): <em>string</em> <em>scalar</em>: Units of length: default is <code>units:angstrom</code> <br />
 (<strong>angunits</strong>): <em>string</em> <em>scalar</em>: Units of angle: default is <code>units:degrees</code> <br />
-(<strong>lenfmt</strong>): <em>string</em> <em>scalar</em>: format for crystal lengths
-(<strong>angfmt</strong>): <em>string</em> <em>scalar</em>: format for crystal angles
+(<strong>lenfmt</strong>): <em>string</em> <em>scalar</em>: format for crystal lengths <br />
+(<strong>angfmt</strong>): <em>string</em> <em>scalar</em>: format for crystal angles <br />
 (<strong>spaceGroup</strong>): <em>string</em> <em>scalar</em> Space group of the crystal. No defined vocabulary.</li>
 </ul>
 
@@ -1123,9 +1123,9 @@ default: Angstrom  </li>
 <ul>
 <li><code>cmlAddBand</code> <br />
 <strong>kptref</strong>: <em>string</em> <em>scalar</em>:  Reference id of relevant kpoint. <br />
-<strong>bands</strong>: <em>real</em> <em>array</em>: array of eigenvalues
-<strong>units</strong>: * string* <em>scalar</em>: energy units of eigenvalues
-(<strong>fmt</strong>): <em>string</em> <em>scalar</em>: format to output eigenvalues
+<strong>bands</strong>: <em>real</em> <em>array</em>: array of eigenvalues <br />
+<strong>units</strong>: * string* <em>scalar</em>: energy units of eigenvalues <br />
+(<strong>fmt</strong>): <em>string</em> <em>scalar</em>: format to output eigenvalues <br />
 (<strong>label</strong>): <em>string</em> <em>scalar</em>: label for band.</li>
 </ul>
 
@@ -1235,9 +1235,9 @@ default: Angstrom  </li>
 <h1>Further information</h1>
 
 <p>FoX evolved from the initial codebase of <a href="http://lcdx00.wm.lc.ehu.es/ag/xml/">xmlf90</a>,
-which was written largely by Alberto Garcia &lt;<a href="&#x6D;&#97;&#105;l&#x74;&#x6F;:&#97;&#108;&#x62;e&#114;&#x74;&#111;&#103;&#64;&#105;&#99;&#x6D;&#97;&#x62;&#x2E;&#101;&#115;">&#97;&#108;&#x62;e&#114;&#x74;&#111;&#103;&#64;&#105;&#99;&#x6D;&#97;&#x62;&#x2E;&#101;&#115;</a>> and Jon Wakelin &lt;<a href="&#x6D;&#97;&#x69;&#108;&#116;&#111;:j&#x6F;&#x6E;&#46;&#119;&#97;&#107;e&#x6C;i&#x6E;&#64;&#98;&#114;&#105;&#115;&#x74;&#111;&#108;&#46;&#x61;&#99;&#46;&#117;&#x6B;">j&#x6F;&#x6E;&#46;&#119;&#97;&#107;e&#x6C;i&#x6E;&#64;&#98;&#114;&#105;&#115;&#x74;&#111;&#108;&#46;&#x61;&#99;&#46;&#117;&#x6B;</a>>.</p>
+which was written largely by Alberto Garcia &lt;<a href="&#109;a&#x69;&#108;&#x74;&#111;:&#x61;&#x6C;&#98;er&#x74;&#x6F;&#x67;&#64;&#105;&#x63;&#x6D;&#x61;&#98;&#x2E;&#x65;&#115;">&#x61;&#x6C;&#98;er&#x74;&#x6F;&#x67;&#64;&#105;&#x63;&#x6D;&#x61;&#98;&#x2E;&#x65;&#115;</a>> and Jon Wakelin &lt;<a href="&#109;&#x61;&#105;&#108;&#x74;&#111;:&#x6A;o&#x6E;&#46;&#x77;&#x61;&#107;&#x65;&#108;&#x69;&#x6E;&#64;&#98;&#114;&#x69;&#115;&#x74;o&#108;&#x2E;&#97;&#99;&#x2E;&#117;&#107;">&#x6A;o&#x6E;&#46;&#x77;&#x61;&#107;&#x65;&#108;&#x69;&#x6E;&#64;&#98;&#114;&#x69;&#115;&#x74;o&#108;&#x2E;&#97;&#99;&#x2E;&#117;&#107;</a>>.</p>
 
-<p>FoX is the work of Toby White &lt;<a href="&#109;&#x61;&#105;&#108;&#116;o:t&#x6F;&#x77;&#50;&#x31;&#64;&#99;&#97;&#109;&#46;&#97;&#99;&#x2E;&#x75;&#x6B;">t&#x6F;&#x77;&#50;&#x31;&#64;&#99;&#97;&#109;&#46;&#97;&#99;&#x2E;&#x75;&#x6B;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
+<p>FoX is the work of Toby White &lt;<a href="&#x6D;&#x61;&#105;&#x6C;&#x74;&#x6F;:&#x74;&#111;&#119;&#50;&#x31;&#64;&#x63;&#x61;&#x6D;&#x2E;&#97;&#x63;&#x2E;&#117;&#x6B;">&#x74;&#111;&#119;&#50;&#x31;&#64;&#x63;&#x61;&#x6D;&#x2E;&#97;&#x63;&#x2E;&#117;&#x6B;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
 
 <p>There is a FoX website at <a href="http://www.uszla.me.uk/software/FoX/">http://www.uszla.me.uk/software/FoX/</a>.</p>
 
