@@ -42,7 +42,7 @@ dnl
 
   subroutine cmlEnd$1(xf)
     type(xmlf_t), intent(inout) :: xf
-    call xmLEndElement(xf, "$1")
+    call xml_EndElement(xf, "$1")
   end subroutine cmlEnd$1
 
 ')dnl

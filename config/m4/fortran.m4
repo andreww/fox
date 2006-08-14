@@ -543,7 +543,7 @@ cat > conftest.$ac_ext << \_ACEOF
 _ACEOF
 _AC_EVAL_STDERR($ac_compile)
 AC_MSG_CHECKING([for suffix of module files])
-for ac_mod_file in conftest.mod conftest.MOD conftest.M CONFTEST.MOD none	 
+for ac_mod_file in conftest.mod conftest.MOD conftest.M CONFTEST.MOD CONFTEST.mod none 
 do
   if test -f $ac_mod_file; then
     break;

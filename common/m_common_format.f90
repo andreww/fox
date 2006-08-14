@@ -1,5 +1,19 @@
 module m_common_format
 
+!Note that there are several oddities to this package,
+!to get round assorted compiler bugs.
+
+!All the _matrix_ subroutines should be straight
+!call-throughs to the relevant _array_ subroutine,
+!but with flattened arrayys. (this would allow easy
+!generation of all functions up to 7 dimensions)
+!but unfortunately that breaks PGI-6.1, and causes
+!errors on Pathscale-2.4.
+
+!The Logical array/matrix functions should be able
+!to COUNT their length inline in the specification
+!expression, but Pathscale-2.4 gives an error on that.
+
   use m_common_realtypes, only: sp, dp
   use m_common_error, only: FoX_error
   use pxf, only: pure_pxfabort
@@ -138,12 +152,40 @@ contains
   end function str_string_array
 
 
+  pure function str_string_matrix_len(st) result(n)
+    character(len=*), dimension(:, :), intent(in) :: st
+    integer :: n
+
+    n = len(st) * size(st) + size(st) - 1
+  end function str_string_matrix_len
+
+
   pure function str_string_matrix(st, delimiter) result(s)
     character(len=*), dimension(:, :), intent(in) :: st
     character(len=1), intent(in), optional :: delimiter
-    character(len=str_string_array_len(reshape(st,(/size(st)/)))) :: s
+    character(len=str_string_matrix_len(st)) :: s
     
-    s = str_string_array(reshape(st,(/size(st)/)), delimiter)
+    integer :: j, k, n
+    character(len=1) :: d
+
+    if (present(delimiter)) then
+      d = delimiter
+    else
+      d = ' '
+    endif
+
+    s(1:len(st)) = st(1,1)
+    n = len(st) + 1
+    do j = 2, size(st, 1)
+      s(n:n+len(st)) = d//st(j,1)
+        n = n + len(st) + 1
+    enddo
+    do k = 2, size(st, 2) - 1
+      do j = 1, size(st, 1)
+        s(n:n+len(st(j,k))) = d//st(j,k)
+        n = n + len(st) + 1
+      enddo
+    enddo
 
   end function str_string_matrix
 
@@ -210,13 +252,51 @@ contains
 
   end function str_integer_array
 
+ 
+  pure function str_integer_matrix_len(ia) result(n)
+    integer, dimension(:,:), intent(in) :: ia
+    integer :: n
+
+    integer :: j, k
+
+    n = size(ia) - 1
+
+    do k = 1, size(ia, 2)
+      do j = 1, size(ia, 1)
+        n = n + len(str(ia(j, k)))
+      enddo
+    enddo
+
+   end function str_integer_matrix_len
+
 
   pure function str_integer_matrix(ia, delimiter) result(s)
     integer, dimension(:,:), intent(in) :: ia
     character(len=1), optional, intent(in) :: delimiter
-    character(len=str_integer_array_len(reshape(ia,(/size(ia)/)))) :: s
+    character(len=str_integer_matrix_len(ia)) :: s
 
-    s = str_integer_array(reshape(ia, (/size(ia)/)), delimiter)
+    character :: d
+
+    integer :: j, k, n
+
+    if (present(delimiter)) then
+      d = delimiter
+    else
+      d = " "
+    endif
+
+    s(1:len(str(ia(1,1)))) = str(ia(1,1))
+    n = len(str(ia(1,1))) + 1
+    do j = 2, size(ia, 1)
+      s(n:n+len(str(ia(j,1)))) = d//str(ia(j,1))
+        n = n + len(str(ia(j,1))) + 1
+    enddo
+    do k = 2, size(ia, 2) - 1
+      do j = 1, size(ia, 1)
+        s(n:n+len(str(ia(j,k)))) = d//str(ia(j,k))
+        n = n + len(str(ia(j,k))) + 1
+      enddo
+    enddo
 
   end function str_integer_matrix
 
@@ -232,11 +312,20 @@ contains
     endif
   end function str_logical
 
+
+  pure function str_logical_array_len(la) result(n)
+! This function should be inlined in the declarations of
+! str_logical_array below but PGI and pathscale don't like it.
+    logical, dimension(:), intent(in)   :: la
+    integer :: n
+    n = 5*size(la) - 1 + count(.not.la)
+  end function str_logical_array_len
   
+
   pure function str_logical_array(la, delimiter) result(s)
     logical, dimension(:), intent(in)   :: la
     character(len=1), optional, intent(in) :: delimiter
-    character(len=5*size(la) - 1 + count(.not.la)) :: s
+    character(len=str_logical_array_len(la)) :: s
     
     integer :: k, n
     character(len=1) :: d
@@ -266,12 +355,59 @@ contains
   end function str_logical_array
 
 
+  pure function str_logical_matrix_len(la) result(n)
+! This function should be inlined in the declarations of
+! str_logical_matrix below but PGI and pathscale don't like it.
+    logical, dimension(:,:), intent(in)   :: la
+    integer :: n
+    n = 5*size(la) - 1 + count(.not.la)
+  end function str_logical_matrix_len
+
+
   pure function str_logical_matrix(la, delimiter) result(s)
     logical, dimension(:,:), intent(in)   :: la
     character(len=1), optional, intent(in) :: delimiter
-    character(len=5*size(la) - 1 + count(.not.la)) :: s
+    character(len=str_logical_matrix_len(la)) :: s
 
-    s = str_logical_array(reshape(la, (/size(la)/)), delimiter)
+    integer :: j, k, n
+    character(len=1) :: d
+
+    if (present(delimiter)) then
+      d = delimiter
+    else
+      d = ' '
+    endif
+
+    if (la(1,1)) then
+       s(:4) = 'true'
+       n = 5
+    else
+       s(:5) = 'false'
+       n = 6
+    endif
+    s(n-1:n-1) = d
+    do j = 2, size(la, 1)
+      s(n:n) = d
+      if (la(j,1)) then
+        s(n+1:n+4) = 'true'
+        n = n + 5
+      else
+        s(n+1:n+5) = 'false'
+        n = n + 6
+      endif
+    enddo
+    do k = 2, size(la, 2)
+      do j = 1, size(la, 1)
+        s(n:n) = d
+        if (la(j,k)) then
+          s(n+1:n+4) = 'true'
+          n = n + 5
+        else
+          s(n+1:n+5) = 'false'
+          n = n + 6
+        endif
+      enddo
+    enddo
 
   end function str_logical_matrix
   
@@ -654,22 +790,64 @@ contains
   end function str_real_sp_array_fmt
 
 
-  function str_real_sp_matrix(xa) result(s)
+  pure function str_real_sp_matrix_fmt_len(xa, fmt) result(n)
     real(sp), dimension(:,:), intent(in) :: xa
-    character(len=str_real_sp_array_len(reshape(xa,(/size(xa)/)))) :: s
+    character(len=*), intent(in) :: fmt
+    integer :: n
 
-    s = str_real_sp_array(reshape(xa,(/size(xa)/)))
-  end function str_real_sp_matrix
-    
+    integer :: j, k
+
+    n = size(xa) - 1
+    do k = 1, size(xa, 2)
+      do j = 1, size(xa, 1)
+        n = n + str_real_sp_fmt_len(xa(j,k), fmt)
+      enddo
+    enddo
+
+  end function str_real_sp_matrix_fmt_len
+
+
+  pure function str_real_sp_matrix_len(xa) result(n)
+    real(sp), dimension(:,:), intent(in) :: xa
+    integer :: n
+
+    n = str_real_sp_matrix_fmt_len(xa, "")
+  end function str_real_sp_matrix_len
+
 
   function str_real_sp_matrix_fmt(xa, fmt) result(s)
     real(sp), dimension(:,:), intent(in) :: xa
     character(len=*), intent(in) :: fmt
-    character(len=str_real_sp_array_fmt_len(reshape(xa,(/size(xa)/)),fmt)) :: s
+    character(len=str_real_sp_matrix_fmt_len(xa,fmt)) :: s
 
-    s = str_real_sp_array(reshape(xa,(/size(xa)/)))
+    integer :: i, j, k, n
+
+    i = str_real_sp_fmt_len(xa(1,1), fmt)
+    s(:i) = str(xa(1,1), fmt)
+    n = i + 1
+    do j = 2, size(xa, 1)
+      i = str_real_sp_fmt_len(xa(j,1), fmt)
+      s(n:n+i) = " "//str(xa(j,1), fmt)
+      n = n + i + 1
+    enddo
+    do k = 2, size(xa)
+      do j = 2, size(xa, 1)
+        i = str_real_sp_fmt_len(xa(j,k), fmt)
+        s(n:n+i) = " "//str(xa(j,k), fmt)
+        n = n + i + 1
+      enddo
+    enddo
+
   end function str_real_sp_matrix_fmt
-     
+
+
+  function str_real_sp_matrix(xa) result(s)
+    real(sp), dimension(:,:), intent(in) :: xa
+    character(len=str_real_sp_matrix_len(xa)) :: s
+
+    s = str_real_sp_matrix_fmt(xa, "")
+  end function str_real_sp_matrix
+    
 
   pure function real_dp_str(x, sig) result(s)
     real(dp), intent(in) :: x
@@ -1001,23 +1179,65 @@ contains
   end function str_real_dp_array_fmt
 
 
-  function str_real_dp_matrix(xa) result(s)
+  pure function str_real_dp_matrix_fmt_len(xa, fmt) result(n)
     real(dp), dimension(:,:), intent(in) :: xa
-    character(len=str_real_dp_array_len(reshape(xa,(/size(xa)/)))) :: s
+    character(len=*), intent(in) :: fmt
+    integer :: n
 
-    s = str_real_dp_array(reshape(xa,(/size(xa)/)))
-  end function str_real_dp_matrix
-    
+    integer :: j, k
+
+    n = size(xa) - 1
+    do k = 1, size(xa, 2)
+      do j = 1, size(xa, 1)
+        n = n + str_real_dp_fmt_len(xa(j,k), fmt)
+      enddo
+    enddo
+
+  end function str_real_dp_matrix_fmt_len
+
+
+  pure function str_real_dp_matrix_len(xa) result(n)
+    real(dp), dimension(:,:), intent(in) :: xa
+    integer :: n
+
+    n = str_real_dp_matrix_fmt_len(xa, "")
+  end function str_real_dp_matrix_len
+
 
   function str_real_dp_matrix_fmt(xa, fmt) result(s)
     real(dp), dimension(:,:), intent(in) :: xa
     character(len=*), intent(in) :: fmt
-    character(len=str_real_dp_array_fmt_len(reshape(xa,(/size(xa)/)),fmt)) :: s
+    character(len=str_real_dp_matrix_fmt_len(xa,fmt)) :: s
 
-    s = str_real_dp_array(reshape(xa,(/size(xa)/)))
+    integer :: i, j, k, n
+
+    i = str_real_dp_fmt_len(xa(1,1), fmt)
+    s(:i) = str(xa(1,1), fmt)
+    n = i + 1
+    do j = 2, size(xa, 1)
+      i = str_real_dp_fmt_len(xa(j,1), fmt)
+      s(n:n+i) = " "//str(xa(j,1), fmt)
+      n = n + i + 1
+    enddo
+    do k = 2, size(xa)
+      do j = 2, size(xa, 1)
+        i = str_real_dp_fmt_len(xa(j,k), fmt)
+        s(n:n+i) = " "//str(xa(j,k), fmt)
+        n = n + i + 1
+      enddo
+    enddo
+
   end function str_real_dp_matrix_fmt
 
- 
+
+  function str_real_dp_matrix(xa) result(s)
+    real(dp), dimension(:,:), intent(in) :: xa
+    character(len=str_real_dp_matrix_len(xa)) :: s
+
+    s = str_real_dp_matrix_fmt(xa, "")
+  end function str_real_dp_matrix
+
+
   pure function checkFmt(fmt) result(good)
     character(len=*), intent(in) :: fmt
     logical :: good

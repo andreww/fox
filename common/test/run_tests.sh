@@ -3,6 +3,7 @@
 export INCFLAGS=`../../FoX-config --fcflags --wxml`
 make clean
 rm -f passed.score failed.score
+touch passed.score failed.score
 rm -f tests.out failed.out
 
 
@@ -16,6 +17,9 @@ echo Arrays:
 ./test_str.sh "(/0, 1, 2, 3/)" "0 1 2 3"
 ./test_str.sh "(/0, 1, -2, -100/)" "0 1 -2 -100"
 ./test_str.sh "(/0/)" "0"
+echo Matrices:
+./test_str.sh "(/(/0, 1, 2/), (/3, 4, 5/)/)" "0 1 2 3 4 5"
+./test_str.sh "(/(/0, 1, 2/), (/3, 4, 5/), (/4, 5, 6/), (/7, 8, 9/) /)" "0 1 2 3 4 5 4 5 6 7 8 9"
 
 echo "Testing logical to string conversion"
 
@@ -29,6 +33,9 @@ echo Arrays:
 ./test_str.sh "(/.false./)" "false"
 ./test_str.sh "(/.true., .false./)" "true false"
 ./test_str.sh "(/.false., .true., .false./)" "false true false"
+echo Matrices:
+./test_str.sh "(/(/.true., .true., .true./), (/.false., .false., .false./)/)" "true true true false false false"
+./test_str.sh "(/(/.true.,.true./),(/.false.,.false./),(/.true.,.true./)/)" "true true false false true true"
 
 echo "Testing single precision to string conversion"
 echo Scalars:
@@ -101,8 +108,6 @@ for i in \
          '-1.00e4,"r0" -10000' \
          '-1.00e4,"r1" -10000.0' \
          '-1.00e4,"r2" -10000.00' \
-         '-1.00e4,"r3" -10000.000' \
-         '-1.00e4,"r4" -10000.0000' \
          '-1.00e4/3.0e0,"s1" -3e3' \
          '-1.00e4/3.0e0,"s2" -3.3e3' \
          '-1.00e4/3.0e0,"s3" -3.33e3' \
@@ -112,7 +117,6 @@ for i in \
          '-1.00e4/3.0e0,"r1" -3333.3' \
          '-1.00e4/3.0e0,"r2" -3333.33' \
          '-1.00e4/3.0e0,"r3" -3333.333' \
-         '-1.00e4/3.0e0,"r4" -3333.3333' \
          '-2.00e4/3.0e0,"s1" -7e3' \
          '-2.00e4/3.0e0,"s2" -6.7e3' \
          '-2.00e4/3.0e0,"s3" -6.67e3' \
@@ -140,6 +144,9 @@ echo Arrays:
 ./test_str.sh '(/0.0e0, 1.0e0/),"s5"' "0.0000e0 1.0000e0"
 ./test_str.sh '(/0.0e0, 100e0/),"s3"' "0.00e0 1.00e2"
 ./test_str.sh '(/0.35e0, 0.0e0, 100e0/),"s3"' "3.50e-1 0.00e0 1.00e2"
+echo Matrices
+./test_str.sh '(/(/0.0, 1.0, 2.0/), (/3.0, 4.0, 5.0/)/),"r1"' "0.0 1.0 2.0 3.0 4.0 5.0"
+./test_str.sh '(/(/0.0, 1.0/), (/3.0, 4.0/), (/4.0, 5.0/)/),"r1"' "0.0 1.0 3.0 4.0 4.0 5.0"
 
 echo "Testing double precision to string conversion"
 echo Scalars:
@@ -251,9 +258,12 @@ echo Arrays:
 ./test_str.sh '(/0.0d0, 1.0d0/),"s5"' "0.0000e0 1.0000e0"
 ./test_str.sh '(/0.0d0, 100d0/),"s3"' "0.00e0 1.00e2"
 ./test_str.sh '(/0.35d0, 0.0d0, 100d0/),"s3"' "3.50e-1 0.00e0 1.00e2"
+echo Matrices
+./test_str.sh '(/(/0.0d0, 1.0d0, 2.0d0/), (/3.0d0, 4.0d0, 5.0d0/)/),"r1"' "0.0 1.0 2.0 3.0 4.0 5.0"
+./test_str.sh '(/(/0.0d0,1.0d0/),(/3.0d0,4.0d0/),(/4.0d0,5.0d0/)/),"r1"' "0.0 1.0 3.0 4.0 4.0 5.0"
 
-#echo Test Results:
-#echo Passed: `wc -c passed.score`
-#echo Failed: `wc -c failed.score`
+echo Test Results:
+echo Passed: `wc -c passed.score`
+echo Failed: `wc -c failed.score`
 
-#echo See failed.out for details of failed tests.
+echo See failed.out for details of failed tests.

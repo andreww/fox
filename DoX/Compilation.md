@@ -11,18 +11,20 @@ FoX requires a Fortran 95 compiler - not just Fortran 90. All currently availabl
 
 The following compilers are tested and are known to work:
 
-* Intel Fortran version 9.0 and above (previous versions may compile, but do not work correctly.)
-* XLF version 9.1 (previous versions untested)
-* NAG version 5.0 (patch 391 and later) or 5.1
+* gfortran, version 4.2 (as of 2006-07-09)
 * g95 (version of 2006-08-01, earlier versions untested)
+* Intel Fortran version 9.0 and above (previous versions may compile, but do not work correctly.)
+* Lahey version 6.20 (previous versions untested)
+* NAG version 5.0 (patch 391 and later) or 5.1
+* Pathscale, version 2.4 (previous versions untested)
+* XLF version 9.1 (previous versions untested)
 
 The following compilers are tested and known to fail
 
+* gfortran prior to and including version 4.1
 * Intel Fortran prior to version 9.0
 * NAG versions prior to 5.0-391
-* Pathscale, all versions (bug reported #6259)
 * PGI, all versions (bug reported #3897)
-* gfortran prior to and including version 4.1
 * Sun Fortran 95 7.1 Patch 112762-16 2005/10/25 (later versions untested)
 
 Other compilers are untested; reports of their success or failure are welcomed.
