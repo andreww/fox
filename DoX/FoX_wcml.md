@@ -216,7 +216,7 @@ This function adds a tag representing an input parameter
 * `cmlAddProperty`
 **name**: *string* *scalar*  
 **value**: *any* *anydim*  
-**units**: *string* *scalar* units of property value  (optional for logical/character **value**s, compulsory otherwise; see note above)
+**units**: *string* *scalar* units of property value  (optional for logical/character **value**s, compulsory otherwise; see note above)  
 (**ref**) *string* *scalar*: Reference an `id` attribute of another element (generally deprecated)  
 (**role**) *string* *scalar* role which the element plays 
 
@@ -232,9 +232,9 @@ This function adds a tag representing an output property
 (**occupancies**): *real* *array* : a length-n array of the occupancies of each atom.  
 (**atomRefs**): *string* *array*: a length-n array of strings containing references which may point to IDs elsewhere of, for example, pseudopotentials or basis sets defining the element's behaviour.  
 (**atomIds**): *string* *array*: a length-n array of strings containing IDs for the atoms.  
-(**style**): *string* *scalar*: `xyz3` - the coordinates are Cartesian, or `xyzFract` - the coordinates are fractional. The default is Cartesian.
+(**style**): *string* *scalar*: `xyz3` - the coordinates are Cartesian, or `xyzFract` - the coordinates are fractional. The default is Cartesian.  
 (**ref**) *string* *scalar*: Reference an `id` attribute of another element (generally deprecated)  
-(**formula**) *string* *scalar*: An IUPAC chemical formula
+(**formula**) *string* *scalar*: An IUPAC chemical formula  
 (**chirality**) *string* *scalar*: The chirality of the molecule. No defined vocabulary.
 (**role**) *string* *scalar*: Role of molecule. No defined vocabulary.
 
@@ -243,9 +243,9 @@ Outputs an atomic configuration.
 * `cmlAddLattice`   
 **cell**: *real* *matrix* a 3x3 matrix of the unit cell  
 (**spaceType**): *string* *scalar*: `real` or `reciprocal` space.  
-(**latticeType**): *string* *scalar* Space group of the lattice. No defined vocabulary
+(**latticeType**): *string* *scalar* Space group of the lattice. No defined vocabulary  
 (**units**): *string* *scalar* units of (reciprocal) distance that cell vectors is given in;
-default: Angstrom  
+*default: Angstrom* 
 
 
 Outputs information about a unit cell, in lattice-vector form
@@ -260,16 +260,16 @@ Outputs information about a unit cell, in lattice-vector form
 (**z**): *integer* *scalar* the 'z' parameter: number of molecules per unit cell.  
 (**lenunits**): *string* *scalar*: Units of length: default is `units:angstrom`    
 (**angunits**): *string* *scalar*: Units of angle: default is `units:degrees`  
-(**lenfmt**): *string* *scalar*: format for crystal lengths
-(**angfmt**): *string* *scalar*: format for crystal angles
+(**lenfmt**): *string* *scalar*: format for crystal lengths  
+(**angfmt**): *string* *scalar*: format for crystal angles  
 (**spaceGroup**): *string* *scalar* Space group of the crystal. No defined vocabulary.
 
 Outputs information about a unit cell, in crystallographic form
 
 * `cmlAddBand`  
 **kptref**: *string* *scalar*:  Reference id of relevant kpoint.  
-**bands**: *real* *array*: array of eigenvalues
-**units**: * string* *scalar*: energy units of eigenvalues
+**bands**: *real* *array*: array of eigenvalues  
+**units**: * string* *scalar*: energy units of eigenvalues  
 (**fmt**): *string* *scalar*: format to output eigenvalues
 (**label**): *string* *scalar*: label for band.
 

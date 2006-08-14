@@ -1011,7 +1011,7 @@ Attempts to do otherwise will result in a runtime error.</p>
 <li><code>cmlAddProperty</code>
 <strong>name</strong>: <em>string</em> <em>scalar</em> <br />
 <strong>value</strong>: <em>any</em> <em>anydim</em> <br />
-<strong>units</strong>: <em>string</em> <em>scalar</em> units of property value  (optional for logical/character <strong>value</strong>s, compulsory otherwise; see note above)
+<strong>units</strong>: <em>string</em> <em>scalar</em> units of property value  (optional for logical/character <strong>value</strong>s, compulsory otherwise; see note above) <br />
 (<strong>ref</strong>) <em>string</em> <em>scalar</em>: Reference an <code>id</code> attribute of another element (generally deprecated) <br />
 (<strong>role</strong>) <em>string</em> <em>scalar</em> role which the element plays </li>
 </ul>
@@ -1028,9 +1028,9 @@ Attempts to do otherwise will result in a runtime error.</p>
 (<strong>occupancies</strong>): <em>real</em> <em>array</em> : a length-n array of the occupancies of each atom. <br />
 (<strong>atomRefs</strong>): <em>string</em> <em>array</em>: a length-n array of strings containing references which may point to IDs elsewhere of, for example, pseudopotentials or basis sets defining the element's behaviour. <br />
 (<strong>atomIds</strong>): <em>string</em> <em>array</em>: a length-n array of strings containing IDs for the atoms. <br />
-(<strong>style</strong>): <em>string</em> <em>scalar</em>: <code>xyz3</code> - the coordinates are Cartesian, or <code>xyzFract</code> - the coordinates are fractional. The default is Cartesian.
+(<strong>style</strong>): <em>string</em> <em>scalar</em>: <code>xyz3</code> - the coordinates are Cartesian, or <code>xyzFract</code> - the coordinates are fractional. The default is Cartesian. <br />
 (<strong>ref</strong>) <em>string</em> <em>scalar</em>: Reference an <code>id</code> attribute of another element (generally deprecated) <br />
-(<strong>formula</strong>) <em>string</em> <em>scalar</em>: An IUPAC chemical formula
+(<strong>formula</strong>) <em>string</em> <em>scalar</em>: An IUPAC chemical formula <br />
 (<strong>chirality</strong>) <em>string</em> <em>scalar</em>: The chirality of the molecule. No defined vocabulary.
 (<strong>role</strong>) <em>string</em> <em>scalar</em>: Role of molecule. No defined vocabulary.</li>
 </ul>
@@ -1041,9 +1041,9 @@ Attempts to do otherwise will result in a runtime error.</p>
 <li><code>cmlAddLattice</code> <br />
 <strong>cell</strong>: <em>real</em> <em>matrix</em> a 3x3 matrix of the unit cell <br />
 (<strong>spaceType</strong>): <em>string</em> <em>scalar</em>: <code>real</code> or <code>reciprocal</code> space. <br />
-(<strong>latticeType</strong>): <em>string</em> <em>scalar</em> Space group of the lattice. No defined vocabulary
+(<strong>latticeType</strong>): <em>string</em> <em>scalar</em> Space group of the lattice. No defined vocabulary <br />
 (<strong>units</strong>): <em>string</em> <em>scalar</em> units of (reciprocal) distance that cell vectors is given in;
-default: Angstrom  </li>
+<em>default: Angstrom</em> </li>
 </ul>
 
 <p>Outputs information about a unit cell, in lattice-vector form</p>
@@ -1059,8 +1059,8 @@ default: Angstrom  </li>
 (<strong>z</strong>): <em>integer</em> <em>scalar</em> the 'z' parameter: number of molecules per unit cell. <br />
 (<strong>lenunits</strong>): <em>string</em> <em>scalar</em>: Units of length: default is <code>units:angstrom</code> <br />
 (<strong>angunits</strong>): <em>string</em> <em>scalar</em>: Units of angle: default is <code>units:degrees</code> <br />
-(<strong>lenfmt</strong>): <em>string</em> <em>scalar</em>: format for crystal lengths
-(<strong>angfmt</strong>): <em>string</em> <em>scalar</em>: format for crystal angles
+(<strong>lenfmt</strong>): <em>string</em> <em>scalar</em>: format for crystal lengths <br />
+(<strong>angfmt</strong>): <em>string</em> <em>scalar</em>: format for crystal angles <br />
 (<strong>spaceGroup</strong>): <em>string</em> <em>scalar</em> Space group of the crystal. No defined vocabulary.</li>
 </ul>
 
@@ -1069,8 +1069,8 @@ default: Angstrom  </li>
 <ul>
 <li><code>cmlAddBand</code> <br />
 <strong>kptref</strong>: <em>string</em> <em>scalar</em>:  Reference id of relevant kpoint. <br />
-<strong>bands</strong>: <em>real</em> <em>array</em>: array of eigenvalues
-<strong>units</strong>: * string* <em>scalar</em>: energy units of eigenvalues
+<strong>bands</strong>: <em>real</em> <em>array</em>: array of eigenvalues <br />
+<strong>units</strong>: * string* <em>scalar</em>: energy units of eigenvalues <br />
 (<strong>fmt</strong>): <em>string</em> <em>scalar</em>: format to output eigenvalues
 (<strong>label</strong>): <em>string</em> <em>scalar</em>: label for band.</li>
 </ul>
@@ -1181,9 +1181,9 @@ default: Angstrom  </li>
 <h1>Further information</h1>
 
 <p>FoX evolved from the initial codebase of <a href="http://lcdx00.wm.lc.ehu.es/ag/xml/">xmlf90</a>,
-which was written largely by Alberto Garcia &lt;<a href="&#x6D;&#x61;&#x69;&#x6C;&#116;&#111;:&#97;&#x6C;&#x62;&#x65;&#x72;&#116;&#111;&#103;&#64;&#x69;&#99;&#109;&#x61;&#98;&#x2E;&#101;&#115;">&#97;&#x6C;&#x62;&#x65;&#x72;&#116;&#111;&#103;&#64;&#x69;&#99;&#109;&#x61;&#98;&#x2E;&#101;&#115;</a>> and Jon Wakelin &lt;<a href="&#x6D;&#97;&#x69;&#x6C;&#116;&#x6F;:&#106;&#x6F;&#110;&#46;&#119;&#x61;&#107;&#101;&#x6C;&#105;&#x6E;&#64;&#x62;&#x72;&#105;&#x73;&#116;&#x6F;&#108;&#x2E;&#97;&#x63;&#x2E;&#x75;&#107;">&#106;&#x6F;&#110;&#46;&#119;&#x61;&#107;&#101;&#x6C;&#105;&#x6E;&#64;&#x62;&#x72;&#105;&#x73;&#116;&#x6F;&#108;&#x2E;&#97;&#x63;&#x2E;&#x75;&#107;</a>>.</p>
+which was written largely by Alberto Garcia &lt;<a href="&#109;&#x61;&#105;&#108;&#x74;&#x6F;:&#97;&#x6C;&#98;&#101;&#x72;&#x74;&#x6F;&#x67;&#64;&#x69;&#99;&#x6D;&#x61;&#x62;&#x2E;&#x65;&#115;">&#97;&#x6C;&#98;&#101;&#x72;&#x74;&#x6F;&#x67;&#64;&#x69;&#99;&#x6D;&#x61;&#x62;&#x2E;&#x65;&#115;</a>> and Jon Wakelin &lt;<a href="m&#97;&#105;&#x6C;&#x74;&#x6F;:j&#x6F;&#110;&#46;&#119;&#97;&#x6B;&#101;&#x6C;&#x69;&#110;&#64;&#x62;&#114;&#105;&#x73;&#x74;&#111;&#108;&#46;&#97;&#x63;&#x2E;&#x75;&#x6B;">j&#x6F;&#110;&#46;&#119;&#97;&#x6B;&#101;&#x6C;&#x69;&#110;&#64;&#x62;&#114;&#105;&#x73;&#x74;&#111;&#108;&#46;&#97;&#x63;&#x2E;&#x75;&#x6B;</a>>.</p>
 
-<p>FoX is the work of Toby White &lt;<a href="&#109;&#x61;i&#x6C;&#x74;&#111;:&#116;&#111;&#119;&#50;&#49;&#64;&#99;&#97;&#109;.&#x61;&#99;&#x2E;&#117;&#x6B;">&#116;&#111;&#119;&#50;&#49;&#64;&#99;&#97;&#109;.&#x61;&#99;&#x2E;&#117;&#x6B;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
+<p>FoX is the work of Toby White &lt;<a href="&#x6D;&#x61;&#x69;&#x6C;&#x74;&#x6F;:&#x74;&#111;&#119;2&#x31;&#64;&#x63;&#97;&#109;&#46;&#97;c&#x2E;&#117;&#x6B;">&#x74;&#111;&#119;2&#x31;&#64;&#x63;&#97;&#109;&#46;&#97;c&#x2E;&#117;&#x6B;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
 
 <p>There is a FoX website at <a href="http://www.uszla.me.uk/software/FoX/">http://www.uszla.me.uk/software/FoX/</a>.</p>
 
