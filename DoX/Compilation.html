@@ -83,6 +83,19 @@ However, you may only be interested in building the libraries, or perhaps a subs
 wcml_lib
 </code></pre>
 
+<h2>Testing</h2>
+
+<p>Two test-suites are supplied; one in <code>common/test</code> and one in <code>wxml/test</code>. In both cases, <code>cd</code> to the relevant directory and then run <code>./run_tests.sh</code>.</p>
+
+<p>The tests will run and then print out the number of passes and fails. Details of failing tests may be found in the file <code>failed.out</code>.</p>
+
+<p>Known failures: <br />
+* <code>test_xml_Close_2</code> sometimes unexpectedly fails - this is not a problem, ignore it.
+* On Lahey, 16 tests in <code>wxml/test</code> will fail - this is a flaw in the testsuite, the library is actually
+working correctly. Please ignore this problem. </p>
+
+<p>If any other failures occur, please send a message to the mailing list (<a href="&#x6D;&#x61;&#105;&#108;&#x74;o:&#x46;&#111;&#88;&#64;&#108;&#x69;&#115;&#116;&#115;&#46;&#117;&#115;&#x7A;&#x6C;&#97;&#x2E;&#109;&#101;&#x2E;&#x75;&#107;">&#x46;&#111;&#88;&#64;&#108;&#x69;&#115;&#116;&#115;&#46;&#117;&#115;&#x7A;&#x6C;&#97;&#x2E;&#109;&#101;&#x2E;&#x75;&#107;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
+
 <h2>Linking to an existing program</h2>
 
 <ul>

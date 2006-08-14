@@ -151,6 +151,19 @@ However, you may only be interested in building the libraries, or perhaps a subs
 wcml_lib
 </code></pre>
 
+<h2>Testing</h2>
+
+<p>Two test-suites are supplied; one in <code>common/test</code> and one in <code>wxml/test</code>. In both cases, <code>cd</code> to the relevant directory and then run <code>./run_tests.sh</code>.</p>
+
+<p>The tests will run and then print out the number of passes and fails. Details of failing tests may be found in the file <code>failed.out</code>.</p>
+
+<p>Known failures: <br />
+* <code>test_xml_Close_2</code> sometimes unexpectedly fails - this is not a problem, ignore it.
+* On Lahey, 16 tests in <code>wxml/test</code> will fail - this is a flaw in the testsuite, the library is actually
+working correctly. Please ignore this problem. </p>
+
+<p>If any other failures occur, please send a message to the mailing list (<a href="&#109;&#x61;&#x69;l&#116;&#x6F;:&#70;&#x6F;&#x58;&#64;&#108;&#105;&#115;&#116;&#115;&#46;&#x75;&#x73;&#x7A;&#108;&#x61;.&#x6D;&#x65;&#46;&#x75;&#x6B;">&#70;&#x6F;&#x58;&#64;&#108;&#105;&#115;&#116;&#115;&#46;&#x75;&#x73;&#x7A;&#108;&#x61;.&#x6D;&#x65;&#46;&#x75;&#x6B;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
+
 <h2>Linking to an existing program</h2>
 
 <ul>
@@ -204,15 +217,15 @@ save space)</li>
 
 <h2>To incorporate into the program</h2>
 
-<p>The easiest, and least intrusive way is probably to create a F90 module for your program, looking something like <code>example_xml_output.f90</code></p>
+<p>There is an example of suggested use in the <code>examples/</code> subdirectory.</p>
 
-<p>Then you must somewhere (probably in your main program), use this module, and call <code>my_cml_init()</code> at the start; and then <code>my_cml_finish()</code> at the end of the program.</p>
+<p>The easiest, and least intrusive way is probably to create a F90 module for your program, looking something like <code>example_xml_module.f90</code></p>
 
-<p>In any of the subroutines where you want to output data to the xml file, you should then insert <code>use my_cml_output</code> at the beginning of the subroutine. You can then use any of the cml output routines with no further worries, like as in <code>example_cml_subroutine.f</code>.</p>
+<p>Then you must somewhere (probably in your main program), use this module, and call <code>initialize_xml_output()</code> at the start; and then <code>end_xml_output()</code> at the end of the program.</p>
 
-<p>An example of this sort of thing can be found in the examples/ subdirectory of the code.</p>
+<p>In any of the subroutines where you want to output data to the xml file, you should then insert <code>use example_cml_moule</code> at the beginning of the subroutine. You can then use any of the cml output routines with no further worries, as shown in the examples.</p>
 
-<p>It is easy to make the use of FoX optional, by the use of preprocessor defines. This can be done simply by wrapping each call to your XML wrapper routines in <code>#ifdef XML</code>. This is also shown in the example file.</p>
+<p>It is easy to make the use of FoX optional, by the use of preprocessor defines. This can be done simply by wrapping each call to your XML wrapper routines in <code>#ifdef XML</code>, or similar.</p>
 
 <h2>To incorporate into the build process:</h2>
 
@@ -366,6 +379,10 @@ standard Fortran I/O formatting routines do not offer the control required for u
 <li><a href="#NSfunctions">Secondly</a>, those functions concerned with XML Namespaces, and how Namespaces affect the behaviour of the first tranche of functions.  </li>
 <li><a href="#obscure">Thirdly</a>, a set of more rarely used functions required to access some of the more esoteric corners of the XML specification.</li>
 </ol>
+
+<p>Please note that where the documentation below is not clear, it may be useful to look at some of the example files. There is a very simple example in the <code>examples/</code> subdirectory, but which nevertheless shows the use of most of the features you will use.</p>
+
+<p>A more elaborate example, using almost all of the XML features found here, is available in the top-level directory as <code>wxml_example.f90</code>. It will be automatically compiled as part of the build porcess.</p>
 
 <p><a name="Conventions"></p>
 
@@ -1184,9 +1201,9 @@ default: Angstrom  </li>
 <h1>Further information</h1>
 
 <p>FoX evolved from the initial codebase of <a href="http://lcdx00.wm.lc.ehu.es/ag/xml/">xmlf90</a>,
-which was written largely by Alberto Garcia &lt;<a href="&#109;&#97;&#x69;&#x6C;&#x74;&#111;:a&#108;&#98;&#101;&#114;&#x74;&#x6F;&#103;&#64;&#105;&#99;&#109;&#x61;&#x62;&#x2E;&#x65;&#x73;">a&#108;&#98;&#101;&#114;&#x74;&#x6F;&#103;&#64;&#105;&#99;&#109;&#x61;&#x62;&#x2E;&#x65;&#x73;</a>> and Jon Wakelin &lt;<a href="&#109;&#x61;&#105;&#108;t&#x6F;:&#x6A;&#111;&#110;&#46;&#x77;&#x61;&#107;&#x65;l&#105;&#x6E;&#64;&#x62;&#x72;&#105;s&#116;&#x6F;&#x6C;&#x2E;&#x61;&#x63;&#x2E;&#117;&#107;">&#x6A;&#111;&#110;&#46;&#x77;&#x61;&#107;&#x65;l&#105;&#x6E;&#64;&#x62;&#x72;&#105;s&#116;&#x6F;&#x6C;&#x2E;&#x61;&#x63;&#x2E;&#117;&#107;</a>>.</p>
+which was written largely by Alberto Garcia &lt;<a href="&#109;&#97;&#x69;&#x6C;&#x74;&#111;:&#x61;l&#x62;&#x65;&#114;t&#111;&#x67;&#64;&#x69;&#x63;&#109;&#x61;&#98;&#46;&#101;&#x73;">&#x61;l&#x62;&#x65;&#114;t&#111;&#x67;&#64;&#x69;&#x63;&#109;&#x61;&#98;&#46;&#101;&#x73;</a>> and Jon Wakelin &lt;<a href="&#109;&#x61;&#x69;l&#116;&#x6F;:&#106;&#111;&#x6E;&#x2E;&#119;&#x61;&#x6B;&#x65;&#x6C;i&#x6E;&#64;&#98;&#x72;&#x69;&#115;&#116;&#111;&#108;&#46;&#x61;&#99;&#46;&#x75;&#107;">&#106;&#111;&#x6E;&#x2E;&#119;&#x61;&#x6B;&#x65;&#x6C;i&#x6E;&#64;&#98;&#x72;&#x69;&#115;&#116;&#111;&#108;&#46;&#x61;&#99;&#46;&#x75;&#107;</a>>.</p>
 
-<p>FoX is the work of Toby White &lt;<a href="&#109;&#97;&#x69;&#x6C;&#116;&#x6F;:&#116;&#x6F;&#119;2&#x31;&#64;c&#x61;&#x6D;&#46;&#97;&#99;&#46;&#117;&#x6B;">&#116;&#x6F;&#119;2&#x31;&#64;c&#x61;&#x6D;&#46;&#97;&#99;&#46;&#117;&#x6B;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
+<p>FoX is the work of Toby White &lt;<a href="&#109;&#97;&#105;&#108;&#x74;&#111;:&#x74;&#111;&#119;&#50;&#49;&#64;&#x63;&#x61;&#109;&#46;&#x61;&#99;&#x2E;&#x75;&#x6B;">&#x74;&#111;&#119;&#50;&#49;&#64;&#x63;&#x61;&#109;&#46;&#x61;&#99;&#x2E;&#x75;&#x6B;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
 
 <p>There is a FoX website at <a href="http://www.uszla.me.uk/software/FoX/">http://www.uszla.me.uk/software/FoX/</a>.</p>
 

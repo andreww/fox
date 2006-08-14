@@ -10,6 +10,9 @@ Then, [Functions](#Functions) lists all of `wxml`'s publically exported function
 2. [Secondly](#NSfunctions), those functions concerned with XML Namespaces, and how Namespaces affect the behaviour of the first tranche of functions.  
 3. [Thirdly](#obscure), a set of more rarely used functions required to access some of the more esoteric corners of the XML specification.
 
+Please note that where the documentation below is not clear, it may be useful to look at some of the example files. There is a very simple example in the `examples/` subdirectory, but which nevertheless shows the use of most of the features you will use.
+
+A more elaborate example, using almost all of the XML features found here, is available in the top-level directory as `wxml_example.f90`. It will be automatically compiled as part of the build porcess.
 
 <a name="Conventions">
 

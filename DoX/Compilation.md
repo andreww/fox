@@ -64,6 +64,19 @@ However, you may only be interested in building the libraries, or perhaps a subs
     wxml_lib
     wcml_lib
 
+##Testing
+
+Two test-suites are supplied; one in `common/test` and one in `wxml/test`. In both cases, `cd` to the relevant directory and then run `./run_tests.sh`.
+
+The tests will run and then print out the number of passes and fails. Details of failing tests may be found in the file `failed.out`.
+
+Known failures:   
+* `test_xml_Close_2` sometimes unexpectedly fails - this is not a problem, ignore it.
+* On Lahey, 16 tests in `wxml/test` will fail - this is a flaw in the testsuite, the library is actually
+working correctly. Please ignore this problem. 
+
+If any other failures occur, please send a message to the mailing list (<FoX@lists.uszla.me.uk>) with details of compiler, hardware platform, and the nature of the failure.
+
 ##Linking to an existing program
 
 * The files all having been compiled and installed, you need to link them into your program.

@@ -25,15 +25,15 @@ save space)</li>
 
 <h2>To incorporate into the program</h2>
 
-<p>The easiest, and least intrusive way is probably to create a F90 module for your program, looking something like <code>example_xml_output.f90</code></p>
+<p>There is an example of suggested use in the <code>examples/</code> subdirectory.</p>
 
-<p>Then you must somewhere (probably in your main program), use this module, and call <code>my_cml_init()</code> at the start; and then <code>my_cml_finish()</code> at the end of the program.</p>
+<p>The easiest, and least intrusive way is probably to create a F90 module for your program, looking something like <code>example_xml_module.f90</code></p>
 
-<p>In any of the subroutines where you want to output data to the xml file, you should then insert <code>use my_cml_output</code> at the beginning of the subroutine. You can then use any of the cml output routines with no further worries, like as in <code>example_cml_subroutine.f</code>.</p>
+<p>Then you must somewhere (probably in your main program), use this module, and call <code>initialize_xml_output()</code> at the start; and then <code>end_xml_output()</code> at the end of the program.</p>
 
-<p>An example of this sort of thing can be found in the examples/ subdirectory of the code.</p>
+<p>In any of the subroutines where you want to output data to the xml file, you should then insert <code>use example_cml_moule</code> at the beginning of the subroutine. You can then use any of the cml output routines with no further worries, as shown in the examples.</p>
 
-<p>It is easy to make the use of FoX optional, by the use of preprocessor defines. This can be done simply by wrapping each call to your XML wrapper routines in <code>#ifdef XML</code>. This is also shown in the example file.</p>
+<p>It is easy to make the use of FoX optional, by the use of preprocessor defines. This can be done simply by wrapping each call to your XML wrapper routines in <code>#ifdef XML</code>, or similar.</p>
 
 <h2>To incorporate into the build process:</h2>
 
