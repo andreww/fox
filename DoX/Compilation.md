@@ -33,13 +33,13 @@ Other compilers are untested; reports of their success or failure are welcomed.
 
 * In order to generate the Makefile, make sure that you have a Fortran compiler in your `PATH`, and do:
 
-	config/configure
+    `config/configure`
 
 This should suffice for most installations. However:
 
 1. If you have more than one Fortran compiler available, or it is not on your `PATH`, you can force the choice by doing:
 
-	config/configure FC=/path/to/compiler/of/choice
+   `config/configure FC=/path/to/compiler/of/choice`
 
 2. It is possible that the configuration fails. In this case
 	* please tell me about it so I can fix it
@@ -47,7 +47,7 @@ This should suffice for most installations. However:
 
 3. By default the resultant files are installed under the objs directory. If you wish them to be installed elsewhere, you may do
 
-	config/configure --prefix=/path/to/installation
+    `config/configure --prefix=/path/to/installation`
 
 Note that the configure process encodes the current directory location in several
 places.  If you move the FoX directory later on, you will need to re-run configure.
@@ -56,13 +56,13 @@ places.  If you move the FoX directory later on, you will need to re-run configu
 
 In order to compile the full library, now simply do:
 
-	make
+    make
 
 This will build all the FoX modules, and all the examples.
 However, you may only be interested in building the libraries, or perhaps a subset of the libraries. In that case, the following targets are available:
 
-        wxml_lib
-        wcml_lib
+    wxml_lib
+    wcml_lib
 
 ##Linking to an existing program
 

@@ -46,7 +46,7 @@
 <ul>
 <li><p>In order to generate the Makefile, make sure that you have a Fortran compiler in your <code>PATH</code>, and do:</p>
 
-<p>config/configure</p></li>
+<p><code>config/configure</code></p></li>
 </ul>
 
 <p>This should suffice for most installations. However:</p>
@@ -54,7 +54,7 @@
 <ol>
 <li><p>If you have more than one Fortran compiler available, or it is not on your <code>PATH</code>, you can force the choice by doing:</p>
 
-<p>config/configure FC=/path/to/compiler/of/choice</p></li>
+<p><code>config/configure FC=/path/to/compiler/of/choice</code></p></li>
 <li><p>It is possible that the configuration fails. In this case</p>
 
 <ul>
@@ -63,7 +63,7 @@
 </ul></li>
 <li><p>By default the resultant files are installed under the objs directory. If you wish them to be installed elsewhere, you may do</p>
 
-<p>config/configure --prefix=/path/to/installation</p></li>
+<p><code>config/configure --prefix=/path/to/installation</code></p></li>
 </ol>
 
 <p>Note that the configure process encodes the current directory location in several
@@ -79,8 +79,8 @@ places.  If you move the FoX directory later on, you will need to re-run configu
 <p>This will build all the FoX modules, and all the examples.
 However, you may only be interested in building the libraries, or perhaps a subset of the libraries. In that case, the following targets are available:</p>
 
-<pre><code>    wxml_lib
-    wcml_lib
+<pre><code>wxml_lib
+wcml_lib
 </code></pre>
 
 <h2>Linking to an existing program</h2>
