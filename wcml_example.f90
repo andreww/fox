@@ -37,22 +37,29 @@
   call cmlStartCml(myfile)
 
   ! Add parameter
+  call cmlStartParameterList(xf=myfile, title="Input parameters")
   call cmlAddParameter(xf=myfile, name='inputSize', value='True')
   call cmlAddParameter(xf=myfile, name='inputSize', value=.True.)
   call cmlAddParameter(xf=myfile, name='inputSize', value=3, units="cmlUnits:Angstrom")
   call cmlAddParameter(xf=myfile, name='inputSize', value=3.0, units="cmlUnits:Angstrom")
   call cmlAddParameter(xf=myfile, name='inputSize', value=3.0d0, units="cmlUnits:Angstrom")
+  call cmlEndParameterList(xf=myfile)
+
+  call cmlStartPropertyList(xf=myfile, title="Scalars")
   call cmlAddProperty(xf=myfile, title='inputSize', value='True')
   call cmlAddProperty(xf=myfile, title='inputSize', value=.True.)
   call cmlAddProperty(xf=myfile, title='inputSize', value=3, units="cmlUnits:Angstrom")
   call cmlAddProperty(xf=myfile, title='inputSize', value=3.0, units="cmlUnits:Angstrom")
   call cmlAddProperty(xf=myfile, title='inputSize', value=3.0d0, units="cmlUnits:Angstrom")
+  call cmlEndPropertyList(xf=myfile)
 
+  call cmlStartPropertyList(xf=myfile, title="Scalars")
   call cmlAddProperty(xf=myfile, title='inputArray', value=(/'one  ', 'two  ', 'three'/))
   call cmlAddProperty(xf=myfile, title='inputArray', value=(/.true., .false./))
   call cmlAddProperty(xf=myfile, title='inputArray', value=(/1, 2/), units="cmlUnits:Angstrom")
   call cmlAddProperty(xf=myfile, title='inputArray', value=(/1.0, 2.0/), units="cmlUnits:Angstrom")
   call cmlAddProperty(xf=myfile, title='inputArray', value=(/1.0d0, 2.0d0/), units="cmlUnits:Angstrom")
+  call cmlEndPropertyList(xf=myfile)
 
   ! Add molecule
   call cmlAddMolecule(xf=myfile, elements=elements,coords=coords)                               
