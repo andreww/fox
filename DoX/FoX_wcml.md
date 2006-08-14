@@ -204,18 +204,18 @@ This pair of functions open and close a module of a computation which is strongl
 This adds a single item of metadata. It takes the following arguments:
 
 * `cmlAddParameter`  
-**title**: *string* *scalar*: Identifying title for parameter  
+**name**: *string* *scalar*: Name of this parameter
 **value**:*anytype* *anydim*: value of parameter  
-**units**: *string* *scalar*: units of parameter value  (optional for logical/character **value**s, compulsory otherwise; see note above)
+**units**: *string* *scalar*: units of parameter value  (optional for logical/character **value**s, compulsory otherwise; see note above)  
 (**constraint**) *string* *scalar*: Constraint under which the parameter is set (this can be an arbitrary string)  
 (**ref**) *string* *scalar*: Reference an `id` attribute of another element (generally deprecated)  
 (**role**) *string* *scalar* role which the element plays 
 
 This function adds a tag representing an input parameter
 
-* `cmlAddProperty`
-**name**: *string* *scalar*  
-**value**: *any* *anydim*  
+* `cmlAddProperty`  
+**title**: *string* *scalar*: title of property
+**value**: *any* *anydim*: value of property
 **units**: *string* *scalar* units of property value  (optional for logical/character **value**s, compulsory otherwise; see note above)  
 (**ref**) *string* *scalar*: Reference an `id` attribute of another element (generally deprecated)  
 (**role**) *string* *scalar* role which the element plays 
