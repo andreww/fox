@@ -17,7 +17,7 @@
 
 <p>Wcml is <em>not</em> intended to be a generalized Fortran CML output layer. rather it is intended to be a library which allows the output of a limited set of well-defined syntactical fragments.</p>
 
-<p>Further information on these fragments, and on the style of CML generated here, is available at <a href="http://www.uszla.me.uk/CML/eminerals.html">http://www.uszla.me.uk/CML/eminerals.html</a>.</p>
+<p>Further information on these fragments, and on the style of CML generated here, is available at <a href="http://www.uszla.me.uk/specs/subset.html">http://www.uszla.me.uk/specs/subset.html</a>.</p>
 
 <p>This section of the manual will detail the available CML output subroutines.</p>
 
@@ -31,6 +31,38 @@
 <p>at the start. This will import all of the subroutines described below, plus the derived type <code>xmlf_t</code> needed to manipulate a CML file.</p>
 
 <p><em>No</em> other entities will be imported; public/private Fortran namespaces are very carefully  controlled within the library.</p>
+
+<h2>Dictionaries.</h2>
+
+<p>The use of dictionaries with WCML is strongly encouraged. (For those not conversant with dictionaries, a fairly detailed explanation is available at <a href="http://www.xml-cml.org/information/dictionaries">http://www.xml-cml.org/information/dictionaries</a>)</p>
+
+<p>In brief, dictionaries are in two ways.</p>
+
+<h3>Identification</h3>
+
+<p>Firstly, to identify and disambiguate output data. Every output function below takes an optional argument, <code>dictRef=""</code>. It is intended that every piece of data output is tagged with a dictionary reference, which will look something like <code>nameOfCode:nameOfThing</code>. </p>
+
+<p>So, for example, in SIESTA, all the energies are output with different dictRefs, looking like: <code>siesta:KohnShamEnergy</code>, or <code>siesta:kineticEnergy</code>, etc. By doing this, we can ensure that later on all these numbers can be usefully identified.</p>
+
+<p>We hope that ultimately, dictionaries can be written for codes, which will explain what some of these names might mean. However, it is not in any way necessary that this be done - and using <code>dictRef</code> attributes will help merely by giving the ability to disambiguate otherwise indistinguishable quantities.</p>
+
+<p>We strongly recommend this course of action - if you choose to do follow our recommendation, then you should add a suitable Namespace to your code. That is, immediately <em>after</em> <code>cmlBeginFile</code> and <em>before</em> <code>cmlStartCml</code>, you should add something like:</p>
+
+<pre><code>call cmlAddNamespace('nameOfCode', 'WebPageOfCodee')
+</code></pre>
+
+<p>Again, for SIESTA, we add:</p>
+
+<pre><code>call cmlAddNamespace('siesta, 'http://www.uam.es/siesta')
+</code></pre>
+
+<p>If you don't have a webpage for your code, don't worry; the address is only used as an identifier, so anything that looks like a URL, and which nobody else is using, will suffice.</p>
+
+<h3>Quantification</h3>
+
+<p>Secondly, we use dictionaries for units. This is compulsory (unlike <code>dictRef</code>s above). Any numerical quantity that is output through cmlAddProperty or cmlAddParameter is <em>required</em> to carry units. These are added with the <code>units=""</code> argument to the function. In addition, every other function below which will take numerical arguments also will take optional units, although default will be used if no units are supplied.</p>
+
+<p>Further details are supplied in section <a href="#Units">Units</a> below.</p>
 
 <h3>General naming conventions for functions.</h3>
 
@@ -104,6 +136,8 @@ call cmlAddProperty(xf, 'coords', matrix, nrows=3, ncols=50)
 <p>All functions take as their first argument an XML file object, whose keyword is always <code>xf</code>. This file object is initialized by a <code>cmlBeginFile</code> function.</p>
 
 <p>It is <em>highly</em> recommended that subroutines be called with keywords specified rather than relying on the implicit ordering of arguments. This is robust against changes in the library calling convention; and also stepsides a significant cause of errors when using subroutines with large numbers of arguments.</p>
+
+<p><a name="Units"/></p>
 
 <h3>Units</h3>
 

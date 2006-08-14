@@ -8,7 +8,7 @@ The available functions and their intended use are listed below. Quite deliberat
 
 Wcml is *not* intended to be a generalized Fortran CML output layer. rather it is intended to be a library which allows the output of a limited set of well-defined syntactical fragments.
 
-Further information on these fragments, and on the style of CML generated here, is available at <http://www.uszla.me.uk/CML/eminerals.html>.
+Further information on these fragments, and on the style of CML generated here, is available at <http://www.uszla.me.uk/specs/subset.html>.
 
 This section of the manual will detail the available CML output subroutines.
 
@@ -21,6 +21,36 @@ wcml subroutines can be accessed from within a module or subroutine by inserting
 at the start. This will import all of the subroutines described below, plus the derived type `xmlf_t` needed to manipulate a CML file.
 
 *No* other entities will be imported; public/private Fortran namespaces are very carefully  controlled within the library.
+
+## Dictionaries.
+
+The use of dictionaries with WCML is strongly encouraged. (For those not conversant with dictionaries, a fairly detailed explanation is available at <http://www.xml-cml.org/information/dictionaries>)
+
+In brief, dictionaries are in two ways.
+
+### Identification
+
+Firstly, to identify and disambiguate output data. Every output function below takes an optional argument, `dictRef=""`. It is intended that every piece of data output is tagged with a dictionary reference, which will look something like `nameOfCode:nameOfThing`. 
+
+So, for example, in SIESTA, all the energies are output with different dictRefs, looking like: `siesta:KohnShamEnergy`, or `siesta:kineticEnergy`, etc. By doing this, we can ensure that later on all these numbers can be usefully identified.
+
+We hope that ultimately, dictionaries can be written for codes, which will explain what some of these names might mean. However, it is not in any way necessary that this be done - and using `dictRef` attributes will help merely by giving the ability to disambiguate otherwise indistinguishable quantities.
+
+We strongly recommend this course of action - if you choose to do follow our recommendation, then you should add a suitable Namespace to your code. That is, immediately *after* `cmlBeginFile` and *before* `cmlStartCml`, you should add something like:
+
+    call cmlAddNamespace('nameOfCode', 'WebPageOfCodee')
+
+Again, for SIESTA, we add:
+ 
+    call cmlAddNamespace('siesta, 'http://www.uam.es/siesta')
+
+If you don't have a webpage for your code, don't worry; the address is only used as an identifier, so anything that looks like a URL, and which nobody else is using, will suffice.
+
+###Quantification
+
+Secondly, we use dictionaries for units. This is compulsory (unlike `dictRef`s above). Any numerical quantity that is output through cmlAddProperty or cmlAddParameter is *required* to carry units. These are added with the `units=""` argument to the function. In addition, every other function below which will take numerical arguments also will take optional units, although default will be used if no units are supplied.
+
+Further details are supplied in section [Units](#Units) below.
 
 ### General naming conventions for functions.
 
@@ -84,6 +114,8 @@ or
 All functions take as their first argument an XML file object, whose keyword is always `xf`. This file object is initialized by a `cmlBeginFile` function.
 
 It is *highly* recommended that subroutines be called with keywords specified rather than relying on the implicit ordering of arguments. This is robust against changes in the library calling convention; and also stepsides a significant cause of errors when using subroutines with large numbers of arguments.
+
+<a name="Units"/>
 
 ### Units
 

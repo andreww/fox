@@ -162,7 +162,7 @@ wcml_lib
 * On Lahey, 16 tests in <code>wxml/test</code> will fail - this is a flaw in the testsuite, the library is actually
 working correctly. Please ignore this problem. </p>
 
-<p>If any other failures occur, please send a message to the mailing list (<a href="&#109;&#x61;&#x69;l&#116;&#x6F;:&#70;&#x6F;&#x58;&#64;&#108;&#105;&#115;&#116;&#115;&#46;&#x75;&#x73;&#x7A;&#108;&#x61;.&#x6D;&#x65;&#46;&#x75;&#x6B;">&#70;&#x6F;&#x58;&#64;&#108;&#105;&#115;&#116;&#115;&#46;&#x75;&#x73;&#x7A;&#108;&#x61;.&#x6D;&#x65;&#46;&#x75;&#x6B;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
+<p>If any other failures occur, please send a message to the mailing list (<a href="m&#97;&#105;&#108;&#x74;&#111;:&#70;&#x6F;&#x58;&#64;&#x6C;&#x69;&#115;&#116;s&#x2E;&#x75;&#x73;&#122;&#x6C;&#x61;&#x2E;&#109;e&#46;&#x75;&#x6B;">&#70;&#x6F;&#x58;&#64;&#x6C;&#x69;&#115;&#116;s&#x2E;&#x75;&#x73;&#122;&#x6C;&#x61;&#x2E;&#109;e&#46;&#x75;&#x6B;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
 
 <h2>Linking to an existing program</h2>
 
@@ -785,7 +785,7 @@ Contents of comment</li>
 
 <p>Wcml is <em>not</em> intended to be a generalized Fortran CML output layer. rather it is intended to be a library which allows the output of a limited set of well-defined syntactical fragments.</p>
 
-<p>Further information on these fragments, and on the style of CML generated here, is available at <a href="http://www.uszla.me.uk/CML/eminerals.html">http://www.uszla.me.uk/CML/eminerals.html</a>.</p>
+<p>Further information on these fragments, and on the style of CML generated here, is available at <a href="http://www.uszla.me.uk/specs/subset.html">http://www.uszla.me.uk/specs/subset.html</a>.</p>
 
 <p>This section of the manual will detail the available CML output subroutines.</p>
 
@@ -799,6 +799,38 @@ Contents of comment</li>
 <p>at the start. This will import all of the subroutines described below, plus the derived type <code>xmlf_t</code> needed to manipulate a CML file.</p>
 
 <p><em>No</em> other entities will be imported; public/private Fortran namespaces are very carefully  controlled within the library.</p>
+
+<h2>Dictionaries.</h2>
+
+<p>The use of dictionaries with WCML is strongly encouraged. (For those not conversant with dictionaries, a fairly detailed explanation is available at <a href="http://www.xml-cml.org/information/dictionaries">http://www.xml-cml.org/information/dictionaries</a>)</p>
+
+<p>In brief, dictionaries are in two ways.</p>
+
+<h3>Identification</h3>
+
+<p>Firstly, to identify and disambiguate output data. Every output function below takes an optional argument, <code>dictRef=""</code>. It is intended that every piece of data output is tagged with a dictionary reference, which will look something like <code>nameOfCode:nameOfThing</code>. </p>
+
+<p>So, for example, in SIESTA, all the energies are output with different dictRefs, looking like: <code>siesta:KohnShamEnergy</code>, or <code>siesta:kineticEnergy</code>, etc. By doing this, we can ensure that later on all these numbers can be usefully identified.</p>
+
+<p>We hope that ultimately, dictionaries can be written for codes, which will explain what some of these names might mean. However, it is not in any way necessary that this be done - and using <code>dictRef</code> attributes will help merely by giving the ability to disambiguate otherwise indistinguishable quantities.</p>
+
+<p>We strongly recommend this course of action - if you choose to do follow our recommendation, then you should add a suitable Namespace to your code. That is, immediately <em>after</em> <code>cmlBeginFile</code> and <em>before</em> <code>cmlStartCml</code>, you should add something like:</p>
+
+<pre><code>call cmlAddNamespace('nameOfCode', 'WebPageOfCodee')
+</code></pre>
+
+<p>Again, for SIESTA, we add:</p>
+
+<pre><code>call cmlAddNamespace('siesta, 'http://www.uam.es/siesta')
+</code></pre>
+
+<p>If you don't have a webpage for your code, don't worry; the address is only used as an identifier, so anything that looks like a URL, and which nobody else is using, will suffice.</p>
+
+<h3>Quantification</h3>
+
+<p>Secondly, we use dictionaries for units. This is compulsory (unlike <code>dictRef</code>s above). Any numerical quantity that is output through cmlAddProperty or cmlAddParameter is <em>required</em> to carry units. These are added with the <code>units=""</code> argument to the function. In addition, every other function below which will take numerical arguments also will take optional units, although default will be used if no units are supplied.</p>
+
+<p>Further details are supplied in section <a href="#Units">Units</a> below.</p>
 
 <h3>General naming conventions for functions.</h3>
 
@@ -872,6 +904,8 @@ call cmlAddProperty(xf, 'coords', matrix, nrows=3, ncols=50)
 <p>All functions take as their first argument an XML file object, whose keyword is always <code>xf</code>. This file object is initialized by a <code>cmlBeginFile</code> function.</p>
 
 <p>It is <em>highly</em> recommended that subroutines be called with keywords specified rather than relying on the implicit ordering of arguments. This is robust against changes in the library calling convention; and also stepsides a significant cause of errors when using subroutines with large numbers of arguments.</p>
+
+<p><a name="Units"/></p>
 
 <h3>Units</h3>
 
@@ -1201,9 +1235,9 @@ default: Angstrom  </li>
 <h1>Further information</h1>
 
 <p>FoX evolved from the initial codebase of <a href="http://lcdx00.wm.lc.ehu.es/ag/xml/">xmlf90</a>,
-which was written largely by Alberto Garcia &lt;<a href="&#109;&#97;&#x69;&#x6C;&#x74;&#111;:&#x61;l&#x62;&#x65;&#114;t&#111;&#x67;&#64;&#x69;&#x63;&#109;&#x61;&#98;&#46;&#101;&#x73;">&#x61;l&#x62;&#x65;&#114;t&#111;&#x67;&#64;&#x69;&#x63;&#109;&#x61;&#98;&#46;&#101;&#x73;</a>> and Jon Wakelin &lt;<a href="&#109;&#x61;&#x69;l&#116;&#x6F;:&#106;&#111;&#x6E;&#x2E;&#119;&#x61;&#x6B;&#x65;&#x6C;i&#x6E;&#64;&#98;&#x72;&#x69;&#115;&#116;&#111;&#108;&#46;&#x61;&#99;&#46;&#x75;&#107;">&#106;&#111;&#x6E;&#x2E;&#119;&#x61;&#x6B;&#x65;&#x6C;i&#x6E;&#64;&#98;&#x72;&#x69;&#115;&#116;&#111;&#108;&#46;&#x61;&#99;&#46;&#x75;&#107;</a>>.</p>
+which was written largely by Alberto Garcia &lt;<a href="&#x6D;&#97;&#105;l&#x74;&#x6F;:&#97;&#108;&#x62;e&#114;&#x74;&#111;&#103;&#64;&#105;&#99;&#x6D;&#97;&#x62;&#x2E;&#101;&#115;">&#97;&#108;&#x62;e&#114;&#x74;&#111;&#103;&#64;&#105;&#99;&#x6D;&#97;&#x62;&#x2E;&#101;&#115;</a>> and Jon Wakelin &lt;<a href="&#x6D;&#97;&#x69;&#108;&#116;&#111;:j&#x6F;&#x6E;&#46;&#119;&#97;&#107;e&#x6C;i&#x6E;&#64;&#98;&#114;&#105;&#115;&#x74;&#111;&#108;&#46;&#x61;&#99;&#46;&#117;&#x6B;">j&#x6F;&#x6E;&#46;&#119;&#97;&#107;e&#x6C;i&#x6E;&#64;&#98;&#114;&#105;&#115;&#x74;&#111;&#108;&#46;&#x61;&#99;&#46;&#117;&#x6B;</a>>.</p>
 
-<p>FoX is the work of Toby White &lt;<a href="&#109;&#97;&#105;&#108;&#x74;&#111;:&#x74;&#111;&#119;&#50;&#49;&#64;&#x63;&#x61;&#109;&#46;&#x61;&#99;&#x2E;&#x75;&#x6B;">&#x74;&#111;&#119;&#50;&#49;&#64;&#x63;&#x61;&#109;&#46;&#x61;&#99;&#x2E;&#x75;&#x6B;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
+<p>FoX is the work of Toby White &lt;<a href="&#109;&#x61;&#105;&#108;&#116;o:t&#x6F;&#x77;&#50;&#x31;&#64;&#99;&#97;&#109;&#46;&#97;&#99;&#x2E;&#x75;&#x6B;">t&#x6F;&#x77;&#50;&#x31;&#64;&#99;&#97;&#109;&#46;&#97;&#99;&#x2E;&#x75;&#x6B;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
 
 <p>There is a FoX website at <a href="http://www.uszla.me.uk/software/FoX/">http://www.uszla.me.uk/software/FoX/</a>.</p>
 
