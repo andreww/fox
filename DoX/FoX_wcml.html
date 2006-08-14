@@ -249,9 +249,9 @@ Attempts to do otherwise will result in a runtime error.</p>
 
 <ul>
 <li><code>cmlAddParameter</code> <br />
-<strong>name</strong>: <em>string</em> <em>scalar</em>: Name of this parameter
+<strong>title</strong>: <em>string</em> <em>scalar</em>: Identifying title for parameter <br />
 <strong>value</strong>:<em>anytype</em> <em>anydim</em>: value of parameter <br />
-<strong>units</strong>: <em>string</em> <em>scalar</em>: units of parameter value  (optional for logical/character <strong>value</strong>s, compulsory otherwise; see note above) <br />
+<strong>units</strong>: <em>string</em> <em>scalar</em>: units of parameter value  (optional for logical/character <strong>value</strong>s, compulsory otherwise; see note above)
 (<strong>constraint</strong>) <em>string</em> <em>scalar</em>: Constraint under which the parameter is set (this can be an arbitrary string) <br />
 (<strong>ref</strong>) <em>string</em> <em>scalar</em>: Reference an <code>id</code> attribute of another element (generally deprecated) <br />
 (<strong>role</strong>) <em>string</em> <em>scalar</em> role which the element plays </li>
@@ -260,10 +260,10 @@ Attempts to do otherwise will result in a runtime error.</p>
 <p>This function adds a tag representing an input parameter</p>
 
 <ul>
-<li><code>cmlAddProperty</code> <br />
-<strong>title</strong>: <em>string</em> <em>scalar</em>: title of property
-<strong>value</strong>: <em>any</em> <em>anydim</em>: value of property
-<strong>units</strong>: <em>string</em> <em>scalar</em> units of property value  (optional for logical/character <strong>value</strong>s, compulsory otherwise; see note above) <br />
+<li><code>cmlAddProperty</code>
+<strong>name</strong>: <em>string</em> <em>scalar</em> <br />
+<strong>value</strong>: <em>any</em> <em>anydim</em> <br />
+<strong>units</strong>: <em>string</em> <em>scalar</em> units of property value  (optional for logical/character <strong>value</strong>s, compulsory otherwise; see note above)
 (<strong>ref</strong>) <em>string</em> <em>scalar</em>: Reference an <code>id</code> attribute of another element (generally deprecated) <br />
 (<strong>role</strong>) <em>string</em> <em>scalar</em> role which the element plays </li>
 </ul>
@@ -280,9 +280,9 @@ Attempts to do otherwise will result in a runtime error.</p>
 (<strong>occupancies</strong>): <em>real</em> <em>array</em> : a length-n array of the occupancies of each atom. <br />
 (<strong>atomRefs</strong>): <em>string</em> <em>array</em>: a length-n array of strings containing references which may point to IDs elsewhere of, for example, pseudopotentials or basis sets defining the element's behaviour. <br />
 (<strong>atomIds</strong>): <em>string</em> <em>array</em>: a length-n array of strings containing IDs for the atoms. <br />
-(<strong>style</strong>): <em>string</em> <em>scalar</em>: <code>xyz3</code> - the coordinates are Cartesian, or <code>xyzFract</code> - the coordinates are fractional. The default is Cartesian. <br />
+(<strong>style</strong>): <em>string</em> <em>scalar</em>: <code>xyz3</code> - the coordinates are Cartesian, or <code>xyzFract</code> - the coordinates are fractional. The default is Cartesian.
 (<strong>ref</strong>) <em>string</em> <em>scalar</em>: Reference an <code>id</code> attribute of another element (generally deprecated) <br />
-(<strong>formula</strong>) <em>string</em> <em>scalar</em>: An IUPAC chemical formula <br />
+(<strong>formula</strong>) <em>string</em> <em>scalar</em>: An IUPAC chemical formula
 (<strong>chirality</strong>) <em>string</em> <em>scalar</em>: The chirality of the molecule. No defined vocabulary.
 (<strong>role</strong>) <em>string</em> <em>scalar</em>: Role of molecule. No defined vocabulary.</li>
 </ul>
@@ -293,9 +293,9 @@ Attempts to do otherwise will result in a runtime error.</p>
 <li><code>cmlAddLattice</code> <br />
 <strong>cell</strong>: <em>real</em> <em>matrix</em> a 3x3 matrix of the unit cell <br />
 (<strong>spaceType</strong>): <em>string</em> <em>scalar</em>: <code>real</code> or <code>reciprocal</code> space. <br />
-(<strong>latticeType</strong>): <em>string</em> <em>scalar</em> Space group of the lattice. No defined vocabulary <br />
+(<strong>latticeType</strong>): <em>string</em> <em>scalar</em> Space group of the lattice. No defined vocabulary
 (<strong>units</strong>): <em>string</em> <em>scalar</em> units of (reciprocal) distance that cell vectors is given in;
-<em>default: Angstrom</em> </li>
+default: Angstrom  </li>
 </ul>
 
 <p>Outputs information about a unit cell, in lattice-vector form</p>
@@ -311,8 +311,8 @@ Attempts to do otherwise will result in a runtime error.</p>
 (<strong>z</strong>): <em>integer</em> <em>scalar</em> the 'z' parameter: number of molecules per unit cell. <br />
 (<strong>lenunits</strong>): <em>string</em> <em>scalar</em>: Units of length: default is <code>units:angstrom</code> <br />
 (<strong>angunits</strong>): <em>string</em> <em>scalar</em>: Units of angle: default is <code>units:degrees</code> <br />
-(<strong>lenfmt</strong>): <em>string</em> <em>scalar</em>: format for crystal lengths <br />
-(<strong>angfmt</strong>): <em>string</em> <em>scalar</em>: format for crystal angles <br />
+(<strong>lenfmt</strong>): <em>string</em> <em>scalar</em>: format for crystal lengths
+(<strong>angfmt</strong>): <em>string</em> <em>scalar</em>: format for crystal angles
 (<strong>spaceGroup</strong>): <em>string</em> <em>scalar</em> Space group of the crystal. No defined vocabulary.</li>
 </ul>
 
@@ -321,8 +321,8 @@ Attempts to do otherwise will result in a runtime error.</p>
 <ul>
 <li><code>cmlAddBand</code> <br />
 <strong>kptref</strong>: <em>string</em> <em>scalar</em>:  Reference id of relevant kpoint. <br />
-<strong>bands</strong>: <em>real</em> <em>array</em>: array of eigenvalues <br />
-<strong>units</strong>: * string* <em>scalar</em>: energy units of eigenvalues <br />
+<strong>bands</strong>: <em>real</em> <em>array</em>: array of eigenvalues
+<strong>units</strong>: * string* <em>scalar</em>: energy units of eigenvalues
 (<strong>fmt</strong>): <em>string</em> <em>scalar</em>: format to output eigenvalues
 (<strong>label</strong>): <em>string</em> <em>scalar</em>: label for band.</li>
 </ul>

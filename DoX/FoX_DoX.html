@@ -64,9 +64,11 @@
 
 <p>This release version includes only output modules.</p>
 
+<p>(which is a further development of the xmlf90 library, last released as version 1.2)</p>
+
 <p>This is a stable branch, which will be maintained with important bugfixes, but on which no further major development will occur.</p>
 
-<p>Version 2.0 has support for outputting complete XML documents, with support for all XML objects described in XML 1.0/1.1, and XML Namespaces 1.0/1.1. A detailed description of its precise conformance level is at [#FoX_wxml].</p>
+<p>Version 2.0 has support for outputting complete XML documents, with support for all XML objects described in XML11, and XML Names. FIXME. A detailed description of its precise conformance level is at [FIXME] link.</p>
 
 <p>In addition, there is a large suite of routines available for outputting valid <a href="http://www.xml-cml.org">CML</a> documents.</p>
 
@@ -365,7 +367,7 @@ standard Fortran I/O formatting routines do not offer the control required for u
 <li><a href="#obscure">Thirdly</a>, a set of more rarely used functions required to access some of the more esoteric corners of the XML specification.</li>
 </ol>
 
-<p><a name="Conventions"/></p>
+<p><a name="Conventions"></p>
 
 <h2>Conventions and notes:</h2>
 
@@ -476,7 +478,7 @@ case the delimiter may be changed to any other single character using an optiona
 <li><code>xml_AddCharacters</code> <br />
 <strong>chars</strong> <em>anytype</em>:
 The text to be output <br />
-(<strong>parsed</strong>): <em>logical</em>: Should the output characters be parsed (ie should the library replace '&amp;' with '&amp;amp;' etc?) or unparsed (in which case
+(<strong>parsed</strong>): <em>logical</em>: Should the output characters be parsed (ie should the library replace '&amp;' with '&amp;' etc?) or unparsed (in which case
 the characters will be surrounded by CDATA tags.
 <em>default: yes</em> <br />
 (<strong>delimiter</strong>): <em>character(1)</em>: If <strong>data</strong> is a character array, what should the delimiter between elements be on output?
@@ -715,9 +717,9 @@ Contents of comment</li>
 <p>Ways in which wxml renders it impossible to produce a certain sort of well-formed XML document:</p>
 
 <ol>
-<li>XML documents which are not namespace-valid may not be produced; that is, attempts to produce documents which are well-formed according to [<a href="#XML11">XML11</a>] but not namespace-well-formed according to [<a href="#Namespaces">Namespaces</a>] will fail. </li>
-<li>Unicode support[<a href="http://www.w3.org/TR/xml11/#charsets">2.2</a>] is limited. Due to the limitations of Fortran, wxml will directly only emit characters within the range of the local single-byte encoding. wxml will ensure that characters corresponding to those in 7-bit ASCII are output correctly for a UTF-8 encoding. Any other characters are output without any transcoding, and a warning will be issued. Proper output of other unicode characters is possible through the use of character entities, but only where character data is allowed. No means is offered for output of unicode in XML Names. Unicode character references in the range 0-128 are checked before output according to the constraints of [<a href="#XML10">XML10</a>] or [<a href="#XML11">XML11</a>] as appropriate, but characters above 128 are not checked.</li>
-<li>DTD support is not complete. While a DTD may be output, and entities defined in the internal subset, there is no direct support for adding Element[<a href="http://www.w3.org/TR/xml11/#elemdecls">3.2</a>] or Attlist[<a href="http://www.w3.org/TR/xml11/#attdecls">3.3</a>] declarations; nor is there any direct support for Conditional Sections.[<a href="http://www.w3.org/TR/xml11/#sec-condition-sect">3.4</a>] However, arbitrary strings may be added to the DTD, though without any checking for validity.</li>
+<li>XML documents which are not namespace-valid may not be produced; that is, attempts to produce documents which are well-formed according to [XML11] but not namespace-well-formed according to [Namespaces] will fail. </li>
+<li>Unicode support[[2.2]](http://www.w3.org/TR/xml11/#charsets) is limited. Due to the limitations of Fortran, wxml will directly only emit characters within the range of the local single-byte encoding. wxml will ensure that characters corresponding to those in 7-bit ASCII are output correctly for a UTF-8 encoding. Any other characters are output without any transcoding, and a warning will be issued. Proper output of other unicode characters is possible through the use of character entities, but only where character data is allowed. No means is offered for output of unicode in XML Names. Unicode character references in the range 0-128 are checked before output according to the constraints of <a href="#XML10">[XML10]</a> or <a href="#XML11">[XML11]</a> as appropriate, but characters above 128 are not checked.</li>
+<li>DTD support is not complete. While a DTD may be output, and entities defined in the internal subset, there is no direct support for adding Element[<a href="http://www.w3.org/TR/xml11/#elemdecls">3.2</a>] or Attlist[[3.3](http://www.w3.org/TR/xml11/#attdecls] declarations; nor is there any direct support for Conditional Sections.[3.4] However, arbitrary strings may be added to the DTD, though without any checking for validity.</li>
 <li>Entity support is not complete[<a href="http://www.w3.org/TR/xml11/#sec-references">4.1</a>, <a href="http://www.w3.org/TR/xml11/#sec-entity-decl">4.2</a>. <a href="http://www.w3.org/TR/xml11/#TextEntities">4.3</a>]. All XML entities (parameter, internal, external) may be defined; however, general entities may only be referenced from within a character data section between tags generated with <code>xml_NewElement</code>, or within an element attribute value. (In principle it should be possible to start the root element from within an entity reference). </li>
 <li>Due to the constraints of the Fortran IO specification, it is impossible to output arbitrary long strings without carriage returns. The size of the limit varies between processors, but may be as low as 1024 characters. To avoid overrunning this limit, wxml will by default insert carriage returns before every new element, and if an unbroken string of attribute or text data is requested greater than 1024 characters, then carriage returns will be inserted as appropriate; within whitespace if possible; to ensure it is broken up into smaller sections to fit within the limits. Thus unwanted text sections are being created, and user output modified. </li>
 </ol>
@@ -998,9 +1000,9 @@ Attempts to do otherwise will result in a runtime error.</p>
 
 <ul>
 <li><code>cmlAddParameter</code> <br />
-<strong>name</strong>: <em>string</em> <em>scalar</em>: Name of this parameter
+<strong>title</strong>: <em>string</em> <em>scalar</em>: Identifying title for parameter <br />
 <strong>value</strong>:<em>anytype</em> <em>anydim</em>: value of parameter <br />
-<strong>units</strong>: <em>string</em> <em>scalar</em>: units of parameter value  (optional for logical/character <strong>value</strong>s, compulsory otherwise; see note above) <br />
+<strong>units</strong>: <em>string</em> <em>scalar</em>: units of parameter value  (optional for logical/character <strong>value</strong>s, compulsory otherwise; see note above)
 (<strong>constraint</strong>) <em>string</em> <em>scalar</em>: Constraint under which the parameter is set (this can be an arbitrary string) <br />
 (<strong>ref</strong>) <em>string</em> <em>scalar</em>: Reference an <code>id</code> attribute of another element (generally deprecated) <br />
 (<strong>role</strong>) <em>string</em> <em>scalar</em> role which the element plays </li>
@@ -1009,10 +1011,10 @@ Attempts to do otherwise will result in a runtime error.</p>
 <p>This function adds a tag representing an input parameter</p>
 
 <ul>
-<li><code>cmlAddProperty</code> <br />
-<strong>title</strong>: <em>string</em> <em>scalar</em>: title of property
-<strong>value</strong>: <em>any</em> <em>anydim</em>: value of property
-<strong>units</strong>: <em>string</em> <em>scalar</em> units of property value  (optional for logical/character <strong>value</strong>s, compulsory otherwise; see note above) <br />
+<li><code>cmlAddProperty</code>
+<strong>name</strong>: <em>string</em> <em>scalar</em> <br />
+<strong>value</strong>: <em>any</em> <em>anydim</em> <br />
+<strong>units</strong>: <em>string</em> <em>scalar</em> units of property value  (optional for logical/character <strong>value</strong>s, compulsory otherwise; see note above)
 (<strong>ref</strong>) <em>string</em> <em>scalar</em>: Reference an <code>id</code> attribute of another element (generally deprecated) <br />
 (<strong>role</strong>) <em>string</em> <em>scalar</em> role which the element plays </li>
 </ul>
@@ -1029,9 +1031,9 @@ Attempts to do otherwise will result in a runtime error.</p>
 (<strong>occupancies</strong>): <em>real</em> <em>array</em> : a length-n array of the occupancies of each atom. <br />
 (<strong>atomRefs</strong>): <em>string</em> <em>array</em>: a length-n array of strings containing references which may point to IDs elsewhere of, for example, pseudopotentials or basis sets defining the element's behaviour. <br />
 (<strong>atomIds</strong>): <em>string</em> <em>array</em>: a length-n array of strings containing IDs for the atoms. <br />
-(<strong>style</strong>): <em>string</em> <em>scalar</em>: <code>xyz3</code> - the coordinates are Cartesian, or <code>xyzFract</code> - the coordinates are fractional. The default is Cartesian. <br />
+(<strong>style</strong>): <em>string</em> <em>scalar</em>: <code>xyz3</code> - the coordinates are Cartesian, or <code>xyzFract</code> - the coordinates are fractional. The default is Cartesian.
 (<strong>ref</strong>) <em>string</em> <em>scalar</em>: Reference an <code>id</code> attribute of another element (generally deprecated) <br />
-(<strong>formula</strong>) <em>string</em> <em>scalar</em>: An IUPAC chemical formula <br />
+(<strong>formula</strong>) <em>string</em> <em>scalar</em>: An IUPAC chemical formula
 (<strong>chirality</strong>) <em>string</em> <em>scalar</em>: The chirality of the molecule. No defined vocabulary.
 (<strong>role</strong>) <em>string</em> <em>scalar</em>: Role of molecule. No defined vocabulary.</li>
 </ul>
@@ -1042,9 +1044,9 @@ Attempts to do otherwise will result in a runtime error.</p>
 <li><code>cmlAddLattice</code> <br />
 <strong>cell</strong>: <em>real</em> <em>matrix</em> a 3x3 matrix of the unit cell <br />
 (<strong>spaceType</strong>): <em>string</em> <em>scalar</em>: <code>real</code> or <code>reciprocal</code> space. <br />
-(<strong>latticeType</strong>): <em>string</em> <em>scalar</em> Space group of the lattice. No defined vocabulary <br />
+(<strong>latticeType</strong>): <em>string</em> <em>scalar</em> Space group of the lattice. No defined vocabulary
 (<strong>units</strong>): <em>string</em> <em>scalar</em> units of (reciprocal) distance that cell vectors is given in;
-<em>default: Angstrom</em> </li>
+default: Angstrom  </li>
 </ul>
 
 <p>Outputs information about a unit cell, in lattice-vector form</p>
@@ -1060,8 +1062,8 @@ Attempts to do otherwise will result in a runtime error.</p>
 (<strong>z</strong>): <em>integer</em> <em>scalar</em> the 'z' parameter: number of molecules per unit cell. <br />
 (<strong>lenunits</strong>): <em>string</em> <em>scalar</em>: Units of length: default is <code>units:angstrom</code> <br />
 (<strong>angunits</strong>): <em>string</em> <em>scalar</em>: Units of angle: default is <code>units:degrees</code> <br />
-(<strong>lenfmt</strong>): <em>string</em> <em>scalar</em>: format for crystal lengths <br />
-(<strong>angfmt</strong>): <em>string</em> <em>scalar</em>: format for crystal angles <br />
+(<strong>lenfmt</strong>): <em>string</em> <em>scalar</em>: format for crystal lengths
+(<strong>angfmt</strong>): <em>string</em> <em>scalar</em>: format for crystal angles
 (<strong>spaceGroup</strong>): <em>string</em> <em>scalar</em> Space group of the crystal. No defined vocabulary.</li>
 </ul>
 
@@ -1070,8 +1072,8 @@ Attempts to do otherwise will result in a runtime error.</p>
 <ul>
 <li><code>cmlAddBand</code> <br />
 <strong>kptref</strong>: <em>string</em> <em>scalar</em>:  Reference id of relevant kpoint. <br />
-<strong>bands</strong>: <em>real</em> <em>array</em>: array of eigenvalues <br />
-<strong>units</strong>: * string* <em>scalar</em>: energy units of eigenvalues <br />
+<strong>bands</strong>: <em>real</em> <em>array</em>: array of eigenvalues
+<strong>units</strong>: * string* <em>scalar</em>: energy units of eigenvalues
 (<strong>fmt</strong>): <em>string</em> <em>scalar</em>: format to output eigenvalues
 (<strong>label</strong>): <em>string</em> <em>scalar</em>: label for band.</li>
 </ul>
@@ -1182,9 +1184,9 @@ Attempts to do otherwise will result in a runtime error.</p>
 <h1>Further information</h1>
 
 <p>FoX evolved from the initial codebase of <a href="http://lcdx00.wm.lc.ehu.es/ag/xml/">xmlf90</a>,
-which was written largely by Alberto Garcia &lt;<a href="&#x6D;&#97;&#x69;&#x6C;&#x74;o:&#x61;&#108;&#x62;e&#114;&#116;&#x6F;&#103;&#64;&#x69;&#99;&#109;&#97;b&#x2E;&#101;&#x73;">&#x61;&#108;&#x62;e&#114;&#116;&#x6F;&#103;&#64;&#x69;&#99;&#109;&#97;b&#x2E;&#101;&#x73;</a>> and Jon Wakelin &lt;<a href="&#109;&#x61;&#x69;&#x6C;&#x74;&#111;:&#x6A;&#x6F;&#110;.&#x77;&#97;&#107;&#101;&#x6C;&#105;&#x6E;&#64;&#98;&#x72;&#105;&#x73;&#x74;o&#108;&#x2E;&#97;&#99;&#x2E;&#x75;&#x6B;">&#x6A;&#x6F;&#110;.&#x77;&#97;&#107;&#101;&#x6C;&#105;&#x6E;&#64;&#98;&#x72;&#105;&#x73;&#x74;o&#108;&#x2E;&#97;&#99;&#x2E;&#x75;&#x6B;</a>>.</p>
+which was written largely by Alberto Garcia &lt;<a href="&#x6D;&#x61;&#x69;&#x6C;&#x74;&#111;:a&#x6C;&#x62;&#x65;&#114;&#x74;&#x6F;&#x67;&#64;i&#99;&#x6D;&#x61;&#x62;&#x2E;e&#x73;">a&#x6C;&#x62;&#x65;&#114;&#x74;&#x6F;&#x67;&#64;i&#99;&#x6D;&#x61;&#x62;&#x2E;e&#x73;</a>> and Jon Wakelin &lt;<a href="&#x6D;&#97;&#105;&#108;&#x74;&#111;:&#x6A;&#x6F;&#x6E;&#46;&#119;&#97;&#107;&#101;&#x6C;&#105;&#x6E;&#64;&#x62;&#114;&#x69;&#115;&#116;&#x6F;&#108;&#x2E;&#97;&#x63;&#46;&#117;&#107;">&#x6A;&#x6F;&#x6E;&#46;&#119;&#97;&#107;&#101;&#x6C;&#105;&#x6E;&#64;&#x62;&#114;&#x69;&#115;&#116;&#x6F;&#108;&#x2E;&#97;&#x63;&#46;&#117;&#107;</a>>.</p>
 
-<p>FoX is the work of Toby White &lt;<a href="&#x6D;&#97;&#105;&#x6C;&#x74;&#x6F;:to&#x77;&#x32;&#49;&#64;&#99;&#x61;&#x6D;&#46;&#97;&#x63;&#x2E;&#117;&#x6B;">to&#x77;&#x32;&#49;&#64;&#99;&#x61;&#x6D;&#46;&#97;&#x63;&#x2E;&#117;&#x6B;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
+<p>FoX is the work of Toby White &lt;<a href="&#x6D;&#x61;&#105;l&#x74;o:t&#x6F;&#119;&#x32;&#49;&#64;&#x63;&#x61;&#x6D;&#46;&#x61;&#x63;&#x2E;u&#107;">t&#x6F;&#119;&#x32;&#49;&#64;&#x63;&#x61;&#x6D;&#46;&#x61;&#x63;&#x2E;u&#107;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
 
 <p>There is a FoX website at <a href="http://www.uszla.me.uk/software/FoX/">http://www.uszla.me.uk/software/FoX/</a>.</p>
 

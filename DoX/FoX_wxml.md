@@ -11,7 +11,7 @@ Then, [Functions](#Functions) lists all of `wxml`'s publically exported function
 3. [Thirdly](#obscure), a set of more rarely used functions required to access some of the more esoteric corners of the XML specification.
 
 
-<a name="Conventions"/>
+<a name="Conventions">
 
 ##Conventions and notes:
 
@@ -110,7 +110,7 @@ case the delimiter may be changed to any other single character using an optiona
 * `xml_AddCharacters`  
 **chars** *anytype*:
  The text to be output  
-(**parsed**): *logical*: Should the output characters be parsed (ie should the library replace '&' with '&amp;amp;' etc?) or unparsed (in which case
+(**parsed**): *logical*: Should the output characters be parsed (ie should the library replace '&' with '&amp;' etc?) or unparsed (in which case
 the characters will be surrounded by CDATA tags.
  *default: yes*  
 (**delimiter**): *character(1)*: If **data** is a character array, what should the delimiter between elements be on output?
@@ -318,9 +318,9 @@ Below are explained areas where wxml fails to implement the whole of XML 1.0/1.1
 
 Ways in which wxml renders it impossible to produce a certain sort of well-formed XML document:
 
- 1. XML documents which are not namespace-valid may not be produced; that is, attempts to produce documents which are well-formed according to \[[XML11](#XML11)\] but not namespace-well-formed according to \[[Namespaces](#Namespaces)\] will fail. 
- 1. Unicode support\[[2.2](http://www.w3.org/TR/xml11/#charsets)\] is limited. Due to the limitations of Fortran, wxml will directly only emit characters within the range of the local single-byte encoding. wxml will ensure that characters corresponding to those in 7-bit ASCII are output correctly for a UTF-8 encoding. Any other characters are output without any transcoding, and a warning will be issued. Proper output of other unicode characters is possible through the use of character entities, but only where character data is allowed. No means is offered for output of unicode in XML Names. Unicode character references in the range 0-128 are checked before output according to the constraints of \[[XML10](#XML10)\] or \[[XML11](#XML11)\] as appropriate, but characters above 128 are not checked.
- 1. DTD support is not complete. While a DTD may be output, and entities defined in the internal subset, there is no direct support for adding Element\[[3.2](http://www.w3.org/TR/xml11/#elemdecls)\] or Attlist\[[3.3](http://www.w3.org/TR/xml11/#attdecls)\] declarations; nor is there any direct support for Conditional Sections.\[[3.4](http://www.w3.org/TR/xml11/#sec-condition-sect)\] However, arbitrary strings may be added to the DTD, though without any checking for validity.
+ 1. XML documents which are not namespace-valid may not be produced; that is, attempts to produce documents which are well-formed according to [XML11] but not namespace-well-formed according to [Namespaces] will fail. 
+ 1. Unicode support\[[2.2]\](http://www.w3.org/TR/xml11/#charsets) is limited. Due to the limitations of Fortran, wxml will directly only emit characters within the range of the local single-byte encoding. wxml will ensure that characters corresponding to those in 7-bit ASCII are output correctly for a UTF-8 encoding. Any other characters are output without any transcoding, and a warning will be issued. Proper output of other unicode characters is possible through the use of character entities, but only where character data is allowed. No means is offered for output of unicode in XML Names. Unicode character references in the range 0-128 are checked before output according to the constraints of [[XML10]](#XML10) or [[XML11]](#XML11) as appropriate, but characters above 128 are not checked.
+ 1. DTD support is not complete. While a DTD may be output, and entities defined in the internal subset, there is no direct support for adding Element\[[3.2](http://www.w3.org/TR/xml11/#elemdecls)\] or Attlist\[[3.3](http://www.w3.org/TR/xml11/#attdecls\] declarations; nor is there any direct support for Conditional Sections.[3.4] However, arbitrary strings may be added to the DTD, though without any checking for validity.
  1. Entity support is not complete\[[4.1](http://www.w3.org/TR/xml11/#sec-references), [4.2](http://www.w3.org/TR/xml11/#sec-entity-decl). [4.3](http://www.w3.org/TR/xml11/#TextEntities)\]. All XML entities (parameter, internal, external) may be defined; however, general entities may only be referenced from within a character data section between tags generated with `xml_NewElement`, or within an element attribute value. (In principle it should be possible to start the root element from within an entity reference). 
  1. Due to the constraints of the Fortran IO specification, it is impossible to output arbitrary long strings without carriage returns. The size of the limit varies between processors, but may be as low as 1024 characters. To avoid overrunning this limit, wxml will by default insert carriage returns before every new element, and if an unbroken string of attribute or text data is requested greater than 1024 characters, then carriage returns will be inserted as appropriate; within whitespace if possible; to ensure it is broken up into smaller sections to fit within the limits. Thus unwanted text sections are being created, and user output modified. 
 
