@@ -291,7 +291,7 @@ contains
       s(n:n+len(str(ia(j,1)))) = d//str(ia(j,1))
         n = n + len(str(ia(j,1))) + 1
     enddo
-    do k = 2, size(ia, 2) - 1
+    do k = 2, size(ia, 2) 
       do j = 1, size(ia, 1)
         s(n:n+len(str(ia(j,k)))) = d//str(ia(j,k))
         n = n + len(str(ia(j,k))) + 1
@@ -385,7 +385,6 @@ contains
        s(:5) = 'false'
        n = 6
     endif
-    s(n-1:n-1) = d
     do j = 2, size(la, 1)
       s(n:n) = d
       if (la(j,1)) then
@@ -830,8 +829,8 @@ contains
       s(n:n+i) = " "//str(xa(j,1), fmt)
       n = n + i + 1
     enddo
-    do k = 2, size(xa)
-      do j = 2, size(xa, 1)
+    do k = 2, size(xa, 2)
+      do j = 1, size(xa, 1)
         i = str_real_sp_fmt_len(xa(j,k), fmt)
         s(n:n+i) = " "//str(xa(j,k), fmt)
         n = n + i + 1
@@ -1219,8 +1218,8 @@ contains
       s(n:n+i) = " "//str(xa(j,1), fmt)
       n = n + i + 1
     enddo
-    do k = 2, size(xa)
-      do j = 2, size(xa, 1)
+    do k = 2, size(xa, 2)
+      do j = 1, size(xa, 1)
         i = str_real_dp_fmt_len(xa(j,k), fmt)
         s(n:n+i) = " "//str(xa(j,k), fmt)
         n = n + i + 1

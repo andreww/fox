@@ -18,8 +18,8 @@ echo Arrays:
 ./test_str.sh "(/0, 1, -2, -100/)" "0 1 -2 -100"
 ./test_str.sh "(/0/)" "0"
 echo Matrices:
-./test_str.sh "(/(/0, 1, 2/), (/3, 4, 5/)/)" "0 1 2 3 4 5"
-./test_str.sh "(/(/0, 1, 2/), (/3, 4, 5/), (/4, 5, 6/), (/7, 8, 9/) /)" "0 1 2 3 4 5 4 5 6 7 8 9"
+./test_str.sh "reshape((/0,1,2,3,4,5/), (/3,2/))" "0 1 2 3 4 5"
+./test_str.sh "reshape((/0,1,2,3,4,5,4,5,6,7,8,9/),(/3,4/))" "0 1 2 3 4 5 4 5 6 7 8 9"
 
 echo "Testing logical to string conversion"
 
@@ -34,8 +34,8 @@ echo Arrays:
 ./test_str.sh "(/.true., .false./)" "true false"
 ./test_str.sh "(/.false., .true., .false./)" "false true false"
 echo Matrices:
-./test_str.sh "(/(/.true., .true., .true./), (/.false., .false., .false./)/)" "true true true false false false"
-./test_str.sh "(/(/.true.,.true./),(/.false.,.false./),(/.true.,.true./)/)" "true true false false true true"
+./test_str.sh "reshape((/.true.,.true.,.true.,.false.,.false.,.false./),(/3,2/))" "true true true false false false"
+./test_str.sh "reshape((/.true.,.true.,.false.,.false.,.true.,.true./),(/2,3/))" "true true false false true true"
 
 echo "Testing single precision to string conversion"
 echo Scalars:
@@ -145,8 +145,8 @@ echo Arrays:
 ./test_str.sh '(/0.0e0, 100e0/),"s3"' "0.00e0 1.00e2"
 ./test_str.sh '(/0.35e0, 0.0e0, 100e0/),"s3"' "3.50e-1 0.00e0 1.00e2"
 echo Matrices
-./test_str.sh '(/(/0.0, 1.0, 2.0/), (/3.0, 4.0, 5.0/)/),"r1"' "0.0 1.0 2.0 3.0 4.0 5.0"
-./test_str.sh '(/(/0.0, 1.0/), (/3.0, 4.0/), (/4.0, 5.0/)/),"r1"' "0.0 1.0 3.0 4.0 4.0 5.0"
+./test_str.sh 'reshape((/0.0,1.0,3.0,4.0,4.0,5.0/),(/3,2/),"r1"' "0.0 1.0 3.0 4.0 4.0 5.0"
+./test_str.sh 'reshape((/0.0,1.0,2.0,3.0,4.0,5.0/), (/3,2/)),"r1"' "0.0 1.0 2.0 3.0 4.0 5.0"
 
 echo "Testing double precision to string conversion"
 echo Scalars:
@@ -259,8 +259,8 @@ echo Arrays:
 ./test_str.sh '(/0.0d0, 100d0/),"s3"' "0.00e0 1.00e2"
 ./test_str.sh '(/0.35d0, 0.0d0, 100d0/),"s3"' "3.50e-1 0.00e0 1.00e2"
 echo Matrices
-./test_str.sh '(/(/0.0d0, 1.0d0, 2.0d0/), (/3.0d0, 4.0d0, 5.0d0/)/),"r1"' "0.0 1.0 2.0 3.0 4.0 5.0"
-./test_str.sh '(/(/0.0d0,1.0d0/),(/3.0d0,4.0d0/),(/4.0d0,5.0d0/)/),"r1"' "0.0 1.0 3.0 4.0 4.0 5.0"
+./test_str.sh 'reshape((/0.0d0,1.0d0,3.0d0,4.0d0,4.0d0,5.0d0/),(/3,2/),"r1"' "0.0 1.0 3.0 4.0 4.0 5.0"
+./test_str.sh 'reshape((/0.0d0,1.0d0,2.0d0,3.0d0,4.0d0,5.0d0/), (/3,2/)),"r1"' "0.0 1.0 2.0 3.0 4.0 5.0"
 
 echo Test Results:
 echo Passed: `wc -c passed.score`

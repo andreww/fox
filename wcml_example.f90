@@ -17,11 +17,13 @@
   integer           :: num, na
   character(len=2)  :: elements(3)
   real(kind=dp)      :: coords(3,3)
-  real(kind=dp)      :: adp
+  real(kind=dp)      :: adp, matrix(3,3)
 
   data coords(1:3,1)/0.0d0, 0.0d0, 0.0d0/
   data coords(1:3,2)/0.5d0, 0.5d0, 0.5d0/
   data coords(1:3,3)/0.4d0, 0.4d0, 0.4d0/
+
+  matrix = 3.141_dp
 
   adp=1.234567890
   na=3
@@ -59,6 +61,14 @@
   call cmlAddProperty(xf=myfile, title='inputArray', value=(/1, 2/), units="cmlUnits:Angstrom")
   call cmlAddProperty(xf=myfile, title='inputArray', value=(/1.0, 2.0/), units="cmlUnits:Angstrom")
   call cmlAddProperty(xf=myfile, title='inputArray', value=(/1.0d0, 2.0d0/), units="cmlUnits:Angstrom")
+  call cmlEndPropertyList(xf=myfile)
+
+  call cmlStartPropertyList(xf=myfile, title="Scalars")
+
+  call cmlAddProperty(xf=myfile, &
+    value=matrix,&
+    title='Elastic Constant Matrix',units='units:GPa')
+
   call cmlEndPropertyList(xf=myfile)
 
   ! Add molecule
