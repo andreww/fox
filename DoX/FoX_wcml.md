@@ -155,7 +155,7 @@ This takes care of all calls to close an open CML output file, once you have fin
 **nsURI** *string* *scalar*: namespace URI to be used  
 
 This adds a namespace to a CML file.  
-NB This may only ever be called immediately after a `cmlBeginCml` call, before any
+NB This may only ever be called immediately after a `cmlBeginFile` call, before any
 output has been performed.
 Attempts to do otherwise will result in a runtime error.
 
