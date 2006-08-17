@@ -38,11 +38,11 @@ We hope that ultimately, dictionaries can be written for codes, which will expla
 
 We strongly recommend this course of action - if you choose to do follow our recommendation, then you should add a suitable Namespace to your code. That is, immediately *after* `cmlBeginFile` and *before* `cmlStartCml`, you should add something like:
 
-    call cmlAddNamespace('nameOfCode', 'WebPageOfCodee')
+    call cmlAddNamespace(xf=xf, 'nameOfCode', 'WebPageOfCode')
 
 Again, for SIESTA, we add:
  
-    call cmlAddNamespace('siesta, 'http://www.uam.es/siesta')
+    call cmlAddNamespace(xf, 'siesta, 'http://www.uam.es/siesta')
 
 If you don't have a webpage for your code, don't worry; the address is only used as an identifier, so anything that looks like a URL, and which nobody else is using, will suffice.
 

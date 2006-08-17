@@ -19,6 +19,8 @@
   real(kind=dp)      :: coords(3,3)
   real(kind=dp)      :: adp, matrix(3,3)
 
+  character(len=10) :: filename
+
   data coords(1:3,1)/0.0d0, 0.0d0, 0.0d0/
   data coords(1:3,2)/0.5d0, 0.5d0, 0.5d0/
   data coords(1:3,3)/0.4d0, 0.4d0, 0.4d0/
@@ -32,7 +34,9 @@
   elements(3) = 'O'
   num = 20
 
-  call cmlBeginFile(myfile, 'test.cml', replace = .true.)
+  filename = 'myest.cml'
+  
+  call cmlBeginFile(myfile, filename=filename)
 
   call cmlAddNamespace(myfile, prefix="myDict", URI="http://www.example.com/dict")
 

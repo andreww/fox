@@ -48,12 +48,12 @@
 
 <p>We strongly recommend this course of action - if you choose to do follow our recommendation, then you should add a suitable Namespace to your code. That is, immediately <em>after</em> <code>cmlBeginFile</code> and <em>before</em> <code>cmlStartCml</code>, you should add something like:</p>
 
-<pre><code>call cmlAddNamespace('nameOfCode', 'WebPageOfCodee')
+<pre><code>call cmlAddNamespace(xf=xf, 'nameOfCode', 'WebPageOfCode')
 </code></pre>
 
 <p>Again, for SIESTA, we add:</p>
 
-<pre><code>call cmlAddNamespace('siesta, 'http://www.uam.es/siesta')
+<pre><code>call cmlAddNamespace(xf, 'siesta, 'http://www.uam.es/siesta')
 </code></pre>
 
 <p>If you don't have a webpage for your code, don't worry; the address is only used as an identifier, so anything that looks like a URL, and which nobody else is using, will suffice.</p>
