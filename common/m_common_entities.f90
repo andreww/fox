@@ -262,9 +262,9 @@ contains
     character(len=*), intent(in) :: repl
 
     if (.not.checkName(code)) &
-      call FoX_error("Illegal entity name")
+      call FoX_error("Illegal entity name: "//code)
     if (.not.checkEntityValue(repl)) &
-      call FoX_error("Illegal entity value")
+      call FoX_error("Illegal entity value: "//repl)
 
     call add_entity(ents, code, repl, "", "", "", .true., .true.)
   end subroutine add_internal_entity

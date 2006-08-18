@@ -233,10 +233,26 @@ Define a parameter entity for the document. If used, this call must be made afte
 
 Define a notation for the document. If used, this call must be made after `xml_AddDOCTYPE` and before the first `xml_NewElement` call.
 
-* `xml_AddStringToDTD`  
-**string** *string*: string to add  
+* `xml_AddElementToDTD`  
+**name** *string*: name of element  
+**declaration** *string*: declaration of element  
 
-Since there is no other method of adding ELEMENT or ATTLIST declarations to the DTD, this function provides a method to output arbitrary data to the DTD if such declarations are needed. Note that no checking *at all* is performed on the validity of **string**. Use this function with a great deal of care.
+Add an ELEMENT declaration to the DTD. The syntax of the declaration is not checked in any way, nor does this affect how elements may be added in the content of the XML document.
+
+If used, this call must be made after `xml_AddDOCTYPE` and before the first `xml_NewElement` call.
+
+* `xml_AddAttlistToDTD`  
+**name** *string*: name of element  
+**declaration** *string*: declaration of element  
+
+Add an ATTLIST declaration to the DTD. The syntax of the declaration is not checked in any way, nor does this affect how attributes may be added in the content of the XML document.
+
+If used, this call must be made after `xml_AddDOCTYPE` and before the first `xml_NewElement` call.
+
+* `xml_AddPEreferenceToDTD`  
+**name** *string*: name of PEreference
+
+Add a reference to a Parameter Entity in the DTD. No check is made according to whether the PE exists, has been declared, or may legally be used.
 
 If used, this call must be made after `xml_AddDOCTYPE` and before the first `xml_NewElement` call.
 
@@ -334,7 +350,7 @@ wxml will try very hard to ensure that output is well-formed. However, it is pos
  3. When entity references are made, a check is performed to ensure that the referenced entity exists - but if not it may be an externally-defined reference, in which case the document may or may not be ill-formed. If so, then a warning will be issued.
  4. When adding text through xml_AddCharacters, or as the value of an attribute, if any characters are passed in which are not within 7-bit ASCII, then the results are processor-dependent, and may result in an invalid document on output. A warning will be issued if this occurs. If you need a guarantee that such characters will be passed correctly, use character entities.
  5. In order to add non-ASCII characters to an attribute value via character entity references, the function `xml_AddAttribute` can be told not to escape its input. In this case, however, no checking at all is performed on the validity of the output string. A warning will be issued if this is done.
- 5. In order to add ELEMENT and ATTLIST portions of the DTD, a function `xml_AddStringToDTD` is provided. However, no checking at all is done on the contents of the string passed in, so if that string is not a well-formed DTD fragment, the resultant document will be ill-formed. A warning will be issued if this is done/
+ 5. When adding ELEMENT and ATTLIST declarations in the DTD, no checking at all is done on the contents of the declarations passed in, neither at the level of mere syntax, nor at the level of consistency; so that if the declaration is invalid syntactically, the resultant XML document will be ill-formed. A warning will be issued if either function is used.
 
 Finally, it should be noted (although it is obvious from the above) that wxml makes no attempt at all to ensure that output documents are valid XML (by any definition of *valid*.)
 

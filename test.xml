@@ -1,6 +1,9 @@
 <?xml version="1.0"?>
 
-<!DOCTYPE public test>
+<!DOCTYPE test [
+<!ENTITY % ab 'blah'>
+<!ENTITY abc '%ab'>
+>
 
 <!-- A Comment: Illustration of Allowable Constructs -->
 

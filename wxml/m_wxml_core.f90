@@ -104,7 +104,9 @@ module m_wxml_core
   public :: xml_AddInternalEntity
   public :: xml_AddExternalEntity
   public :: xml_AddNotation
-  public :: xml_AddStringToDTD
+  public :: xml_AddElementToDTD
+  public :: xml_AddAttlistToDTD
+  public :: xml_AddPEreferenceToDTD
 
   public :: xmlf_Name
   public :: xmlf_OpenTag
@@ -524,13 +526,18 @@ contains
   end subroutine xml_AddNotation
 
 
-  subroutine xml_AddStringToDTD(xf, string)
+  subroutine xml_AddElementToDTD(xf, name, declaration)
     type(xmlf_t), intent(inout) :: xf
-    character(len=*), intent(in) :: string
+    character(len=*), intent(in) :: name
+    character(len=*), intent(in) :: declaration
 
     call check_xf(xf)
 
-    call wxml_warning("Adding arbitrary string to DTD. Cannot guarantee well-formedness")
+    if (.not.checkName(name)) &
+      call wxml_error("Element name is illegal in xml_AddElementToDTD: "//name)
+
+    !FIXME we should check declaration syntax too.
+    call wxml_warning("Adding ELEMENT declaration to DTD. Cannot guarantee well-formedness")
     
     if (xf%state_3 == WXML_STATE_3_DURING_DTD) then
       call add_to_buffer(" [", xf%buffer)
@@ -538,15 +545,79 @@ contains
     endif
 
     if (xf%state_3 /= WXML_STATE_3_INSIDE_INTSUBSET) &
-      call wxml_fatal("Cannot write to DTD here "//string)
+      call wxml_fatal("Cannot write to DTD here: xml_AddElementToDTD")
 
     if (xf%state_2 == WXML_STATE_2_INSIDE_PI) then
       call close_start_tag(xf)
       xf%state_2 = WXML_STATE_2_OUTSIDE_TAG
     endif
 
-    call add_to_buffer(string, xf%buffer)
-  end subroutine xml_AddStringToDTD
+    call add_eol(xf)
+    call add_to_buffer('<!ELEMENT '//name//' '//declaration//'>', xf%buffer)
+
+  end subroutine xml_AddElementToDTD
+
+
+  subroutine xml_AddAttlistToDTD(xf, name, declaration)
+    type(xmlf_t), intent(inout) :: xf
+    character(len=*), intent(in) :: name
+    character(len=*), intent(in) :: declaration
+
+    call check_xf(xf)
+
+    if (.not.checkName(name)) &
+      call wxml_error("Attlist name is illegal in xml_AddAttlistToDTD: "//name)
+
+    !FIXME we should check declaration syntax too.
+    call wxml_warning("Adding ATTLIST declaration to DTD. Cannot guarantee well-formedness")
+    
+    if (xf%state_3 == WXML_STATE_3_DURING_DTD) then
+      call add_to_buffer(" [", xf%buffer)
+      xf%state_3 = WXML_STATE_3_INSIDE_INTSUBSET
+    endif
+
+    if (xf%state_3 /= WXML_STATE_3_INSIDE_INTSUBSET) &
+      call wxml_fatal("Cannot write to DTD here: xml_AddAttlistToDTD")
+
+    if (xf%state_2 == WXML_STATE_2_INSIDE_PI) then
+      call close_start_tag(xf)
+      xf%state_2 = WXML_STATE_2_OUTSIDE_TAG
+    endif
+
+    call add_eol(xf)
+    call add_to_buffer('<!ATTLIST '//name//' '//declaration//'>', xf%buffer)
+
+  end subroutine xml_AddAttlistToDTD
+    
+
+  subroutine xml_AddPEReferenceToDTD(xf, name)
+    type(xmlf_t), intent(inout) :: xf
+    character(len=*), intent(in) :: name
+
+    call check_xf(xf)
+
+    if (.not.checkName(name)) &
+      call wxml_error("Trying to add illegal name in xml_AddPEReferenceToDTD: "//name)
+
+    call wxml_warning("Adding PEReference to DTD. Cannot guarantee well-formedness")
+    
+    if (xf%state_3 == WXML_STATE_3_DURING_DTD) then
+      call add_to_buffer(" [", xf%buffer)
+      xf%state_3 = WXML_STATE_3_INSIDE_INTSUBSET
+    endif
+
+    if (xf%state_3 /= WXML_STATE_3_INSIDE_INTSUBSET) &
+      call wxml_fatal("Cannot write to DTD here: xml_AddPEReferenceToDTD")
+
+    if (xf%state_2 == WXML_STATE_2_INSIDE_PI) then
+      call close_start_tag(xf)
+      xf%state_2 = WXML_STATE_2_OUTSIDE_TAG
+    endif
+
+    call add_eol(xf)
+    call add_to_buffer('%'//name//';', xf%buffer)
+
+  end subroutine xml_AddPEReferenceToDTD
 
 
   subroutine xml_AddXMLStylesheet(xf, href, type, title, media, charset, alternate)

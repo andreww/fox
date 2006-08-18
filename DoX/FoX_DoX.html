@@ -162,7 +162,7 @@ wcml_lib
 * On Lahey, 16 tests in <code>wxml/test</code> will fail - this is a flaw in the testsuite, the library is actually
 working correctly. Please ignore this problem. </p>
 
-<p>If any other failures occur, please send a message to the mailing list (<a href="&#109;&#x61;&#x69;&#108;&#116;&#x6F;:&#70;&#x6F;X&#64;&#108;&#105;&#x73;&#x74;&#x73;&#x2E;&#x75;&#x73;&#x7A;&#108;a&#46;&#x6D;&#x65;&#46;&#117;&#x6B;">&#70;&#x6F;X&#64;&#108;&#105;&#x73;&#x74;&#x73;&#x2E;&#x75;&#x73;&#x7A;&#108;a&#46;&#x6D;&#x65;&#46;&#117;&#x6B;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
+<p>If any other failures occur, please send a message to the mailing list (<a href="&#109;&#x61;&#105;l&#116;&#x6F;:&#70;&#111;&#x58;&#64;&#108;&#105;&#x73;&#116;&#115;&#x2E;&#117;&#115;&#122;l&#97;&#x2E;m&#x65;&#x2E;&#x75;&#107;">&#70;&#111;&#x58;&#64;&#108;&#105;&#x73;&#116;&#115;&#x2E;&#117;&#115;&#122;l&#97;&#x2E;m&#x65;&#x2E;&#x75;&#107;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
 
 <h2>Linking to an existing program</h2>
 
@@ -634,11 +634,31 @@ registered namespace prefix, and generate an error if not.</p>
 <p>Define a notation for the document. If used, this call must be made after <code>xml_AddDOCTYPE</code> and before the first <code>xml_NewElement</code> call.</p>
 
 <ul>
-<li><code>xml_AddStringToDTD</code> <br />
-<strong>string</strong> <em>string</em>: string to add  </li>
+<li><code>xml_AddElementToDTD</code> <br />
+<strong>name</strong> <em>string</em>: name of element <br />
+<strong>declaration</strong> <em>string</em>: declaration of element  </li>
 </ul>
 
-<p>Since there is no other method of adding ELEMENT or ATTLIST declarations to the DTD, this function provides a method to output arbitrary data to the DTD if such declarations are needed. Note that no checking <em>at all</em> is performed on the validity of <strong>string</strong>. Use this function with a great deal of care.</p>
+<p>Add an ELEMENT declaration to the DTD. The syntax of the declaration is not checked in any way, nor does this affect how elements may be added in the content of the XML document.</p>
+
+<p>If used, this call must be made after <code>xml_AddDOCTYPE</code> and before the first <code>xml_NewElement</code> call.</p>
+
+<ul>
+<li><code>xml_AddAttlistToDTD</code> <br />
+<strong>name</strong> <em>string</em>: name of element <br />
+<strong>declaration</strong> <em>string</em>: declaration of element  </li>
+</ul>
+
+<p>Add an ATTLIST declaration to the DTD. The syntax of the declaration is not checked in any way, nor does this affect how attributes may be added in the content of the XML document.</p>
+
+<p>If used, this call must be made after <code>xml_AddDOCTYPE</code> and before the first <code>xml_NewElement</code> call.</p>
+
+<ul>
+<li><code>xml_AddPEreferenceToDTD</code> <br />
+<strong>name</strong> <em>string</em>: name of PEreference</li>
+</ul>
+
+<p>Add a reference to a Parameter Entity in the DTD. No check is made according to whether the PE exists, has been declared, or may legally be used.</p>
 
 <p>If used, this call must be made after <code>xml_AddDOCTYPE</code> and before the first <code>xml_NewElement</code> call.</p>
 
@@ -749,7 +769,7 @@ Contents of comment</li>
 <li>When entity references are made, a check is performed to ensure that the referenced entity exists - but if not it may be an externally-defined reference, in which case the document may or may not be ill-formed. If so, then a warning will be issued.</li>
 <li>When adding text through xml_AddCharacters, or as the value of an attribute, if any characters are passed in which are not within 7-bit ASCII, then the results are processor-dependent, and may result in an invalid document on output. A warning will be issued if this occurs. If you need a guarantee that such characters will be passed correctly, use character entities.</li>
 <li>In order to add non-ASCII characters to an attribute value via character entity references, the function <code>xml_AddAttribute</code> can be told not to escape its input. In this case, however, no checking at all is performed on the validity of the output string. A warning will be issued if this is done.</li>
-<li>In order to add ELEMENT and ATTLIST portions of the DTD, a function <code>xml_AddStringToDTD</code> is provided. However, no checking at all is done on the contents of the string passed in, so if that string is not a well-formed DTD fragment, the resultant document will be ill-formed. A warning will be issued if this is done/</li>
+<li>When adding ELEMENT and ATTLIST declarations in the DTD, no checking at all is done on the contents of the declarations passed in, neither at the level of mere syntax, nor at the level of consistency; so that if the declaration is invalid syntactically, the resultant XML document will be ill-formed. A warning will be issued if either function is used.</li>
 </ol>
 
 <p>Finally, it should be noted (although it is obvious from the above) that wxml makes no attempt at all to ensure that output documents are valid XML (by any definition of <em>valid</em>.)</p>
@@ -1235,9 +1255,9 @@ Attempts to do otherwise will result in a runtime error.</p>
 <h1>Further information</h1>
 
 <p>FoX evolved from the initial codebase of <a href="http://lcdx00.wm.lc.ehu.es/ag/xml/">xmlf90</a>,
-which was written largely by Alberto Garcia &lt;<a href="&#109;&#97;i&#108;&#x74;&#111;:a&#x6C;&#x62;e&#x72;t&#x6F;g&#64;&#x69;&#99;&#x6D;&#97;&#98;&#46;&#x65;&#115;">a&#x6C;&#x62;e&#x72;t&#x6F;g&#64;&#x69;&#99;&#x6D;&#97;&#98;&#46;&#x65;&#115;</a>> and Jon Wakelin &lt;<a href="&#109;&#x61;&#x69;l&#116;&#111;:&#x6A;&#111;&#110;&#46;&#x77;&#x61;&#107;&#101;&#x6C;&#x69;&#x6E;&#64;&#x62;&#114;&#x69;&#x73;&#116;o&#x6C;&#x2E;&#x61;&#99;&#x2E;&#x75;&#x6B;">&#x6A;&#111;&#110;&#46;&#x77;&#x61;&#107;&#101;&#x6C;&#x69;&#x6E;&#64;&#x62;&#114;&#x69;&#x73;&#116;o&#x6C;&#x2E;&#x61;&#99;&#x2E;&#x75;&#x6B;</a>>.</p>
+which was written largely by Alberto Garcia &lt;<a href="&#109;a&#105;&#x6C;&#x74;&#111;:&#97;&#x6C;&#98;&#x65;&#x72;&#x74;o&#103;&#64;&#x69;&#99;&#109;&#97;&#x62;&#46;&#x65;&#x73;">&#97;&#x6C;&#98;&#x65;&#x72;&#x74;o&#103;&#64;&#x69;&#99;&#109;&#97;&#x62;&#46;&#x65;&#x73;</a>> and Jon Wakelin &lt;<a href="&#109;&#x61;&#105;&#108;&#x74;&#x6F;:j&#x6F;&#x6E;&#46;&#x77;&#97;&#x6B;&#x65;&#x6C;&#x69;&#x6E;&#64;&#98;&#114;&#105;&#115;&#116;&#111;&#x6C;&#x2E;&#97;c&#46;&#117;&#107;">j&#x6F;&#x6E;&#46;&#x77;&#97;&#x6B;&#x65;&#x6C;&#x69;&#x6E;&#64;&#98;&#114;&#105;&#115;&#116;&#111;&#x6C;&#x2E;&#97;c&#46;&#117;&#107;</a>>.</p>
 
-<p>FoX is the work of Toby White &lt;<a href="&#x6D;&#97;&#105;&#108;&#x74;&#111;:&#x74;&#x6F;&#x77;&#x32;&#x31;&#64;&#x63;a&#x6D;&#x2E;&#x61;&#x63;&#46;&#117;k">&#x74;&#x6F;&#x77;&#x32;&#x31;&#64;&#x63;a&#x6D;&#x2E;&#x61;&#x63;&#46;&#117;k</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
+<p>FoX is the work of Toby White &lt;<a href="&#x6D;&#x61;&#105;&#108;&#x74;o:&#x74;&#111;&#x77;&#50;&#x31;&#64;&#99;&#97;&#109;&#46;&#97;c&#46;&#117;&#107;">&#x74;&#111;&#x77;&#50;&#x31;&#64;&#99;&#97;&#109;&#46;&#97;c&#46;&#117;&#107;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
 
 <p>There is a FoX website at <a href="http://www.uszla.me.uk/software/FoX/">http://www.uszla.me.uk/software/FoX/</a>.</p>
 

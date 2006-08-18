@@ -29,7 +29,9 @@ module FoX_wxml
   public :: xml_AddInternalEntity
   public :: xml_AddExternalEntity
   public :: xml_AddNotation
-  public :: xml_AddStringToDTD
+  public :: xml_AddElementToDTD
+  public :: xml_AddAttlistToDTD
+  public :: xml_AddPEreferenceToDTD
 
   public :: xmlf_Name
   public :: xmlf_OpenTag

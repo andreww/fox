@@ -200,8 +200,14 @@ contains
     character(len=*), intent(in) :: value
     logical :: good
     ! this is a very imperfect check and should really be in
-    ! m_common_entities
+    ! m_common_entities, and have better error messages
+    ! FIXME
     good = (len(value) > 0)
+    !good = good.and.(index(value,'&') > 0)
+    ! unless it is a char entity reference...
+    good = good.and.(index(value,'%') == 0)
+    ! you can only have PEreferences if this is an external subset,
+    ! which we don't care about.
     if (good) then
       if (index(value, '"') > 0) then
         good = (index(value, "'") == 0)
