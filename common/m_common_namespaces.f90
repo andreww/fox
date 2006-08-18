@@ -98,8 +98,8 @@ contains
           deallocate(nsDict%prefixes(i)%urilist(j)%URI)
        enddo
        deallocate(nsDict%prefixes(i)%urilist)
+       deallocate(nsDict%prefixes(i)%prefix)
     enddo
-    deallocate(nsDict%prefixes(0)%prefix)
     deallocate(nsDict%prefixes)
   end subroutine destroyNamespaceDictionary
 
