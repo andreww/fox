@@ -150,9 +150,16 @@ a very few common units, it may be easiest to borrow definitions from the provid
 
 <p>(These links do not resolve yet.)</p>
 
-<p><code>cmlUnits:</code> <a href="http://www.xml-cml.org/units/units">http://www.xml-cml.org/units/units</a> <br />
-<code>siUnits:</code> <a href="http://www.xml-cml.org/units/siUnits">http://www.xml-cml.org/units/siUnits</a> <br />
-<code>atomicUnits:</code> <a href="http://www.xml-cml.org/units/atomic">http://www.xml-cml.org/units/atomic</a>  </p>
+<p><code>cmlUnits: http://www.xml-cml.org/units/units</code>
+<code>siUnits: &lt;http://www.xml-cml.org/units/siUnits</code>
+<code>atomicUnits: http://www.xml-cml.org/units/atomic</code></p>
+
+<p>A default units dictionary, containing only the very basic units that wcml needs to know about, which has a namespace of: <code>http://www.uszla.me.uk/FoX/units</code>, and wcml assigns it automatically to the prefix <code>units</code>.</p>
+
+<p>This is added <em>automatically</em>, so attempts to add it manually will fail.</p>
+
+<p>The contents of all of these dictionaries, plus the wcml dictionary, may be viewed at:
+<a href="http://www.uszla.me.uk/unitsviz/units.cgi">http://www.uszla.me.uk/unitsviz/units.cgi</a>.</p>
 
 <p>Otherwise, you should feel at liberty to construct your own namespace;
 declare it using <code>cmlAddNamespace</code>, and markup all your units as:</p>
@@ -165,6 +172,8 @@ declare it using <code>cmlAddNamespace</code>, and markup all your units as:</p>
 <ul>
 <li><code>cmlBeginFile</code> <br />
 <strong>filename</strong>: <em>string</em> <em>scalar</em>: Filename to be opened. <br />
+<strong>unit</strong>: <em>integer</em> <em>scalar</em>: what unit number should the file be opened on? If you don't
+care, you may specify '-1' as the unit number, in which case wcml will make a guess
 (<strong>replace</strong>): <em>logical</em> <em>scalar</em>: should the file be replaced if it already exists? <em>default: yes</em></li>
 </ul>
 

@@ -22,12 +22,17 @@ module m_wcml_core
 
 contains
 
-  subroutine cmlBeginFile(xf, filename, replace)
+  subroutine cmlBeginFile(xf, filename, unit, replace)
     type(xmlf_t), intent(out) :: xf
     character(len=*), intent(in) :: filename
+    integer, intent(in) :: unit
     logical, intent(in), optional :: replace
 
-    call xml_OpenFile(filename, xf, broken_indenting=.true., replace=replace)
+    if (unit==-1) then
+      call xml_OpenFile(filename, xf, broken_indenting=.true., replace=replace)
+    else
+      call xml_OpenFile(filename, xf, broken_indenting=.true., channel=unit, replace=replace)
+    endif
 
   end subroutine cmlBeginFile
 

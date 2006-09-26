@@ -34,9 +34,9 @@
   elements(3) = 'O'
   num = 20
 
-  filename = 'myest.cml'
+  filename = 'mytest.cml'
   
-  call cmlBeginFile(myfile, filename=filename)
+  call cmlBeginFile(myfile, filename=filename, unit=-1)
 
   call cmlAddNamespace(myfile, prefix="myDict", URI="http://www.example.com/dict")
 

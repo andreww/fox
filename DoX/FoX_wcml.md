@@ -128,9 +128,16 @@ a very few common units, it may be easiest to borrow definitions from the provid
 
 (These links do not resolve yet.)
 
-`cmlUnits:` <http://www.xml-cml.org/units/units>  
-`siUnits:` <http://www.xml-cml.org/units/siUnits>  
-`atomicUnits:` <http://www.xml-cml.org/units/atomic>  
+`cmlUnits: http://www.xml-cml.org/units/units`
+`siUnits: <http://www.xml-cml.org/units/siUnits`
+`atomicUnits: http://www.xml-cml.org/units/atomic`
+
+A default units dictionary, containing only the very basic units that wcml needs to know about, which has a namespace of: `http://www.uszla.me.uk/FoX/units`, and wcml assigns it automatically to the prefix `units`.
+
+This is added *automatically*, so attempts to add it manually will fail.
+
+The contents of all of these dictionaries, plus the wcml dictionary, may be viewed at:
+<http://www.uszla.me.uk/unitsviz/units.cgi>.
 
 Otherwise, you should feel at liberty to construct your own namespace;
 declare it using `cmlAddNamespace`, and markup all your units as:
@@ -141,8 +148,9 @@ declare it using `cmlAddNamespace`, and markup all your units as:
 
 * `cmlBeginFile`   
 **filename**: *string* *scalar*: Filename to be opened.  
+**unit**: *integer* *scalar*: what unit number should the file be opened on? If you don't
+care, you may specify '-1' as the unit number, in which case wcml will make a guess
 (**replace**): *logical* *scalar*: should the file be replaced if it already exists? *default: yes*
-
 
 This takes care of all calls to open a CML output file.
 
