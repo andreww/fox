@@ -69,6 +69,16 @@
 
   call cmlStartPropertyList(xf=myfile, title="Scalars")
 
+  call cmlStartPropertyList(myfile, dictref="castep:kpt_band")
+  call cmlAddProperty(myfile, 1, dictref="castep:spin", &
+             units="castepunits:spin")
+  call cmlAddKpoint(myfile, (/1.0d0, 2.0d0, 3.0d0/), &
+              weight=1.0d0, id="okpt:")
+  call cmlAddProperty(myfile, (/1.0, 2.0/), title="Eigenvalues", &
+              dictref="castep:eigenenergies", &
+              units="castepunits:")
+  call cmlEndPropertyList(myfile)
+
   call cmlAddProperty(xf=myfile, &
     value=matrix,&
     title='Elastic Constant Matrix',units='units:GPa')

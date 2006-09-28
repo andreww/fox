@@ -863,7 +863,9 @@ contains
       call wxml_fatal(xf,'Trying to close '//name//' but no tags are open.')
 
     if (get_top_elstack(xf%stack) /= name) &
-      call wxml_fatal(xf, 'Trying to close '//name//' but '//get_top_elstack(xf%stack)//' is open.') 
+      call wxml_fatal(xf, 'Trying to close '//name//' but '//get_top_elstack(xf%stack)// &
+      ' is open. Either you have failed to open '//get_top_elstack(xf%stack)//&
+      ' or you have failed to close '//name//'.') 
     xf%indent = xf%indent - indent_inc
  
     select case (xf%state_2)
