@@ -1,3 +1,9 @@
+2006-10-05: version 2.0.2
+        Fix crash on printing matrices
+        Assorted documentation fixes.
+        Several testsuite fixes/improvements
+        Require unit number for cmlBeginFile
+
 2006-08-14: Version 2.0.1
 	Several documentation fixes
 	Workaround for Pathscale bug - also confirmed working on Lahey & gfortran-2.0
