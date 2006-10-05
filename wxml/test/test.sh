@@ -22,7 +22,7 @@ elif [ -f $1.out ]
 then
 # Note below that we don't do a direct grep; we just check 
 # that the only DIFFerences are in one direction.
-  if diff test.out $1.out | grep "^<" > /dev/null; then
+  if diff test.out $1.out | grep "^>" > /dev/null; then
      echo $1 >> failed.out
      echo "------------" >> failed.out
      diff test.out $1.out >> failed.out
