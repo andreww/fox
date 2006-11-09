@@ -5,7 +5,7 @@ module m_common_format
 
 !All the _matrix_ subroutines should be straight
 !call-throughs to the relevant _array_ subroutine,
-!but with flattened arrayys. (this would allow easy
+!but with flattened arrays. (this would allow easy
 !generation of all functions up to 7 dimensions)
 !but unfortunately that breaks PGI-6.1, and causes
 !errors on Pathscale-2.4.
@@ -28,16 +28,62 @@ module m_common_format
   character(len=*), parameter :: hexdigit = "0123456789abcdefABCDEF"
 
   interface str
+! This is for external use only: str should not be called within this
+! file.
+! All *_chk subroutines check that the fmt they are passed is valid.
     module procedure str_string, str_string_array, str_string_matrix, &
                      str_integer, str_integer_array, str_integer_matrix, &
                      str_logical, str_logical_array, str_logical_matrix, &
+                     str_real_sp, str_real_sp_fmt_chk, &
+                     str_real_sp_array, str_real_sp_array_fmt_chk, &
+                     str_real_sp_matrix, str_real_sp_matrix_fmt_chk, &
+                     str_real_dp, str_real_dp_fmt_chk, &
+                     str_real_dp_array, str_real_dp_array_fmt_chk, &
+                     str_real_dp_matrix, str_real_dp_matrix_fmt_chk, &
+                     str_complex_sp, str_complex_sp_fmt_chk, &
+                     str_complex_sp_array, str_complex_sp_array_fmt_chk, &
+                     str_complex_sp_matrix, str_complex_sp_matrix_fmt_chk, &
+                     str_complex_dp, str_complex_dp_fmt_chk, &
+                     str_complex_dp_array, str_complex_dp_array_fmt_chk, &
+                     str_complex_dp_matrix, str_complex_dp_matrix_fmt_chk
+  end interface str
+
+  interface safestr
+! This is for internal use only - no check is made on the validity of 
+! any fmt input.
+    module procedure str_string, str_string_array, str_string_matrix, &
+                     str_integer, str_integer_array, str_integer_matrix, &
+                     str_logical, str_logical_array, str_logical_matrix, &
+                     str_real_sp, str_real_sp_fmt, &
+                     str_real_sp_array, str_real_sp_array_fmt, &
+                     str_real_sp_matrix, str_real_sp_matrix_fmt, &
                      str_real_dp, str_real_dp_fmt, &
                      str_real_dp_array, str_real_dp_array_fmt, &
                      str_real_dp_matrix, str_real_dp_matrix_fmt, &
-                     str_real_sp, str_real_sp_fmt, &
-                     str_real_sp_array, str_real_sp_array_fmt, &
-                     str_real_sp_matrix, str_real_sp_matrix_fmt
-  end interface str
+                     str_complex_sp, str_complex_sp_fmt, &
+                     str_complex_sp_array, str_complex_sp_array_fmt, &
+                     str_complex_sp_matrix, str_complex_sp_matrix_fmt, &
+                     str_complex_dp, str_complex_dp_fmt, &
+                     str_complex_dp_array, str_complex_dp_array_fmt, &
+                     str_complex_dp_matrix, str_complex_dp_matrix_fmt
+  end interface safestr
+
+  interface len
+    module procedure str_integer_len, str_integer_array_len, str_integer_matrix_len, &
+                     str_logical_len, str_logical_array_len, str_logical_matrix_len, &
+                     str_real_sp_len, str_real_sp_fmt_len, &
+                     str_real_sp_array_len, str_real_sp_array_fmt_len, &
+                     str_real_sp_matrix_len, str_real_sp_matrix_fmt_len, &
+                     str_real_dp_len, str_real_dp_fmt_len, &
+                     str_real_dp_array_len, str_real_dp_array_fmt_len, &
+                     str_real_dp_matrix_len, str_real_dp_matrix_fmt_len, &
+                     str_complex_sp_len, str_complex_sp_fmt_len, &
+                     str_complex_sp_array_len, str_complex_sp_array_fmt_len, &
+                     str_complex_sp_matrix_len, str_complex_sp_matrix_fmt_len, &
+                     str_complex_dp_len, str_complex_dp_fmt_len, &
+                     str_complex_dp_array_len, str_complex_dp_array_fmt_len, &
+                     str_complex_dp_matrix_len, str_complex_dp_matrix_fmt_len
+  end interface
 
   public :: str
 
@@ -47,15 +93,23 @@ module m_common_format
 contains
 
   pure function str_to_int_10(str) result(n)
+    ! Takes a string containing digits, and returns
+    ! the integer representable by those digits.
+    ! Does not deal with negative numbers, and
+    ! presumes that the number is representable
+    ! in a default integer
+    ! Error is flagged by returning -1
     character(len=*), intent(in) :: str
     integer :: n
 
     integer :: max_power, i, j
 
-    if (verify(str, digit) > 0) n = pure_pxfabort()
+    if (verify(str, digit) > 0) then
+      n = -1
+      return
+    endif
 
     max_power = len(str) - 1
-
 
     n = 0
     do i = 0, max_power
@@ -67,6 +121,12 @@ contains
 
 
   pure function str_to_int_16(str) result(n)
+    ! Takes a string containing hexadecimal digits, and returns
+    ! the integer representable by those digits.
+    ! Does not deal with negative numbers, and
+    ! presumes that the number is representable
+    ! in a default integer
+    ! Error is flagged by returning -1
     character(len=*), intent(in) :: str
     integer :: n
     
@@ -76,7 +136,8 @@ contains
     if (verify(str, hexdigit) == 0) then
        str_l = to_lower(str)
     else
-      n = pure_pxfabort()
+      n = -1
+      return
     endif
 
     max_power = len(str) - 1
@@ -190,6 +251,15 @@ contains
   end function str_string_matrix
 
 
+  pure function str_integer_len(i) result (n)
+    integer, intent(in) :: i
+    integer :: n
+    
+    n = int(log10(real(max(abs(i),1)))) + 1 + dim(-i,0)/max(abs(i),1)
+
+  end function str_integer_len
+
+
   pure function str_integer(i) result(s)
     integer, intent(in) :: i
     character(len=int(log10(real(max(abs(i),1)))) + 1 + dim(-i,0)/max(abs(i),1)) :: s
@@ -232,7 +302,7 @@ contains
   pure function str_integer_array(ia, delimiter) result(s)
     integer, dimension(:), intent(in) :: ia
     character(len=1), optional, intent(in) :: delimiter
-    character(len=str_integer_array_len(ia)) :: s
+    character(len=len(ia)) :: s
 
     integer :: j, k, n
     character(len=1) :: d
@@ -273,7 +343,7 @@ contains
   pure function str_integer_matrix(ia, delimiter) result(s)
     integer, dimension(:,:), intent(in) :: ia
     character(len=1), optional, intent(in) :: delimiter
-    character(len=str_integer_matrix_len(ia)) :: s
+    character(len=len(ia)) :: s
 
     character :: d
 
@@ -300,9 +370,20 @@ contains
 
   end function str_integer_matrix
 
+
+  pure function str_logical_len(l) result (n)
+    logical, intent(in) :: l
+    integer :: n
+    
+    if (l) then
+      n = 4
+    else
+      n = 5
+    endif
+  end function str_logical_len
   
   pure function str_logical(l) result(s)
-    logical, intent(in)   :: l
+    logical, intent(in) :: l
     character(len=merge(4,5,l)) :: s
     
     if (l) then
@@ -325,7 +406,7 @@ contains
   pure function str_logical_array(la, delimiter) result(s)
     logical, dimension(:), intent(in)   :: la
     character(len=1), optional, intent(in) :: delimiter
-    character(len=str_logical_array_len(la)) :: s
+    character(len=len(la)) :: s
     
     integer :: k, n
     character(len=1) :: d
@@ -367,7 +448,7 @@ contains
   pure function str_logical_matrix(la, delimiter) result(s)
     logical, dimension(:,:), intent(in)   :: la
     character(len=1), optional, intent(in) :: delimiter
-    character(len=str_logical_matrix_len(la)) :: s
+    character(len=len(la)) :: s
 
     integer :: j, k, n
     character(len=1) :: d
@@ -514,6 +595,11 @@ contains
     integer :: dec, sig
     integer :: e
 
+    if (.not.checkFmt(fmt)) then
+      n = 0
+      return
+    endif
+
     if (x == 0.0_sp) then
       e = 1
     else
@@ -529,7 +615,7 @@ contains
     if (len(fmt) == 0) then
       sig = sig_sp
 
-      n = n + sig + 2 + len(str(e)) 
+      n = n + sig + 2 + len(e) 
       ! for the decimal point and the e
 
     elseif (fmt(1:1) == 's') then
@@ -544,7 +630,7 @@ contains
       if (sig > 1) n = n + 1 
       ! for the decimal point
       
-      n = n + sig + 1 + len(str(e))
+      n = n + sig + 1 + len(e)
 
     elseif (fmt(1:1) == 'r') then
 
@@ -567,24 +653,30 @@ contains
 
       n = n + abs(e) + dec
 
-    else
-      n = pure_pxfabort()
     endif
 
   end function str_real_sp_fmt_len
 
-
-  function str_real_sp_fmt(x, fmt) result(s)
+  function str_real_sp_fmt_chk(x, fmt) result(s)
     real(sp), intent(in) :: x
     character(len=*), intent(in) :: fmt
-    character(len=str_real_sp_fmt_len(x, fmt)) :: s
+    character(len=len(x, fmt)) :: s
+
+    if (checkFmt(fmt)) then
+      s = safestr(x, fmt)
+    else
+      call FoX_error("Invalid format: "//fmt)
+    endif
+  end function str_real_sp_fmt_chk
+
+  pure function str_real_sp_fmt(x, fmt) result(s)
+    real(sp), intent(in) :: x
+    character(len=*), intent(in) :: fmt
+    character(len=len(x, fmt)) :: s
 
     integer :: sig, dec
     integer :: e, n
-    character(len=str_real_sp_fmt_len(x, fmt)) :: num !this wll always be enough memory.
-
-    if (.not.checkFmt(fmt)) &
-      call FoX_error("Invalid format: "//fmt)
+    character(len=len(x, fmt)) :: num !this wll always be enough memory.
 
     if (x == 0.0_sp) then
       e = 0
@@ -703,16 +795,16 @@ contains
     real(sp), intent(in) :: x
     integer :: n
 
-    n = str_real_sp_fmt_len(x, "")
+    n = len(x, "")
 
   end function str_real_sp_len
 
 
-  function str_real_sp(x) result(s)
+  pure function str_real_sp(x) result(s)
     real(sp), intent(in) :: x
-    character(len=str_real_sp_len(x)) :: s
+    character(len=len(x)) :: s
 
-    s = str_real_sp_fmt(x, "")
+    s = safestr(x, "")
 
   end function str_real_sp
 
@@ -725,28 +817,26 @@ contains
 
     n = size(xa) - 1
     do k = 1, size(xa)
-      n = n + str_real_sp_fmt_len(xa(k), "")
+      n = n + len(xa(k), "")
     enddo
-    
+
   end function str_real_sp_array_len
 
-
-  function str_real_sp_array(xa) result(s)
+  pure function str_real_sp_array(xa) result(s)
     real(sp), dimension(:), intent(in) :: xa
-    character(len=str_real_sp_array_len(xa)) :: s
+    character(len=len(xa)) :: s
     
     integer :: j, k, n
 
     n = 1
     do k = 1, size(xa) - 1
-      j = str_real_sp_fmt_len(xa(k), "")
-      s(n:n+j) = str(xa(k), "")//" "
+      j = len(xa(k), "")
+      s(n:n+j) = safestr(xa(k), "")//" "
       n = n + j + 1
     enddo
-    s(n:) = str(xa(k))
+    s(n:) = safestr(xa(k), "")
 
   end function str_real_sp_array
-
  
   pure function str_real_sp_array_fmt_len(xa, fmt) result(n)
     real(sp), dimension(:), intent(in) :: xa
@@ -757,17 +847,16 @@ contains
 
     n = size(xa) - 1
     do k = 1, size(xa)
-      n = n + str_real_sp_fmt_len(xa(k), fmt)
+      n = n + len(xa(k), fmt)
     enddo
     
   end function str_real_sp_array_fmt_len
      
-
-  function str_real_sp_array_fmt(xa, fmt, delimiter) result(s)
+  pure function str_real_sp_array_fmt(xa, fmt, delimiter) result(s)
     real(sp), dimension(:), intent(in) :: xa
     character(len=*), intent(in) :: fmt
     character(len=1), intent(in), optional :: delimiter
-    character(len=str_real_sp_array_fmt_len(xa, fmt)) :: s
+    character(len=len(xa, fmt)) :: s
     
     integer :: j, k, n
     character(len=1) :: d
@@ -780,13 +869,26 @@ contains
 
     n = 1
     do k = 1, size(xa) - 1
-      j = str_real_sp_fmt_len(xa(k), fmt)
-      s(n:n+j) = str(xa(k), fmt)//d
+      j = len(xa(k), fmt)
+      s(n:n+j) = safestr(xa(k), fmt)//d
       n = n + j + 1
     enddo
-    s(n:) = str(xa(k), fmt)
+    s(n:) = safestr(xa(k), fmt)
 
   end function str_real_sp_array_fmt
+
+  function str_real_sp_array_fmt_chk(xa, fmt, delimiter) result(s)
+    real(sp), dimension(:), intent(in) :: xa
+    character(len=*), intent(in) :: fmt
+    character(len=1), intent(in), optional :: delimiter
+    character(len=len(xa, fmt)) :: s
+    
+    if (checkFmt(fmt)) then
+      s = safestr(xa, fmt, delimiter)
+    else
+      call FoX_error("Invalid format: "//fmt)
+    endif
+  end function str_real_sp_array_fmt_chk
 
 
   pure function str_real_sp_matrix_fmt_len(xa, fmt) result(n)
@@ -799,52 +901,62 @@ contains
     n = size(xa) - 1
     do k = 1, size(xa, 2)
       do j = 1, size(xa, 1)
-        n = n + str_real_sp_fmt_len(xa(j,k), fmt)
+        n = n + len(xa(j,k), fmt)
       enddo
     enddo
 
   end function str_real_sp_matrix_fmt_len
 
-
   pure function str_real_sp_matrix_len(xa) result(n)
     real(sp), dimension(:,:), intent(in) :: xa
     integer :: n
 
-    n = str_real_sp_matrix_fmt_len(xa, "")
+    n = len(xa, "")
   end function str_real_sp_matrix_len
 
-
-  function str_real_sp_matrix_fmt(xa, fmt) result(s)
+  pure function str_real_sp_matrix_fmt(xa, fmt) result(s)
     real(sp), dimension(:,:), intent(in) :: xa
     character(len=*), intent(in) :: fmt
-    character(len=str_real_sp_matrix_fmt_len(xa,fmt)) :: s
+    character(len=len(xa,fmt)) :: s
 
     integer :: i, j, k, n
 
-    i = str_real_sp_fmt_len(xa(1,1), fmt)
-    s(:i) = str(xa(1,1), fmt)
+    i = len(xa(1,1), fmt)
+    s(:i) = safestr(xa(1,1), fmt)
     n = i + 1
     do j = 2, size(xa, 1)
-      i = str_real_sp_fmt_len(xa(j,1), fmt)
-      s(n:n+i) = " "//str(xa(j,1), fmt)
+      i = len(xa(j,1), fmt)
+      s(n:n+i) = " "//safestr(xa(j,1), fmt)
       n = n + i + 1
     enddo
     do k = 2, size(xa, 2)
       do j = 1, size(xa, 1)
-        i = str_real_sp_fmt_len(xa(j,k), fmt)
-        s(n:n+i) = " "//str(xa(j,k), fmt)
+        i = len(xa(j,k), fmt)
+        s(n:n+i) = " "//safestr(xa(j,k), fmt)
         n = n + i + 1
       enddo
     enddo
 
   end function str_real_sp_matrix_fmt
 
+  function str_real_sp_matrix_fmt_chk(xa, fmt) result(s)
+    real(sp), dimension(:,:), intent(in) :: xa
+    character(len=*), intent(in) :: fmt
+    character(len=len(xa,fmt)) :: s
+
+    if (checkFmt(fmt)) then
+      s = safestr(xa, fmt)
+    else
+      call FoX_error("Invalid format: "//fmt)
+    end if
+
+  end function str_real_sp_matrix_fmt_chk
 
   function str_real_sp_matrix(xa) result(s)
     real(sp), dimension(:,:), intent(in) :: xa
-    character(len=str_real_sp_matrix_len(xa)) :: s
+    character(len=len(xa)) :: s
 
-    s = str_real_sp_matrix_fmt(xa, "")
+    s = safestr(xa, "")
   end function str_real_sp_matrix
     
 
@@ -903,6 +1015,11 @@ contains
     integer :: dec, sig
     integer :: e
 
+    if (.not.checkFmt(fmt)) then
+      n = 0
+      return
+    endif
+
     if (x == 0.0_dp) then
       e = 1
     else
@@ -918,7 +1035,7 @@ contains
     if (len(fmt) == 0) then
       sig = sig_dp
 
-      n = n + sig + 2 + len(str(e)) 
+      n = n + sig + 2 + len(e) 
       ! for the decimal point and the e
 
     elseif (fmt(1:1) == 's') then
@@ -933,7 +1050,7 @@ contains
       if (sig > 1) n = n + 1 
       ! for the decimal point
       
-      n = n + sig + 1 + len(str(e))
+      n = n + sig + 1 + len(e)
 
     elseif (fmt(1:1) == 'r') then
 
@@ -956,24 +1073,30 @@ contains
 
       n = n + abs(e) + dec
 
-    else
-      n = pure_pxfabort()
     endif
 
   end function str_real_dp_fmt_len
 
-
-  function str_real_dp_fmt(x, fmt) result(s)
+  function str_real_dp_fmt_chk(x, fmt) result(s)
     real(dp), intent(in) :: x
     character(len=*), intent(in) :: fmt
-    character(len=str_real_dp_fmt_len(x, fmt)) :: s
+    character(len=len(x, fmt)) :: s
+
+    if (checkFmt(fmt)) then
+      s = safestr(x, fmt)
+    else
+      call FoX_error("Invalid format: "//fmt)
+    endif
+  end function str_real_dp_fmt_chk
+  
+  pure function str_real_dp_fmt(x, fmt) result(s)
+    real(dp), intent(in) :: x
+    character(len=*), intent(in) :: fmt
+    character(len=len(x, fmt)) :: s
 
     integer :: sig, dec
     integer :: e, n
-    character(len=str_real_dp_fmt_len(x, fmt)) :: num !this will always be enough memory.
-
-    if (.not.checkFmt(fmt)) &
-      call FoX_error("Invalid format: "//fmt)
+    character(len=len(x, fmt)) :: num !this will always be enough memory.
 
     if (x == 0.0_dp) then
       e = 0
@@ -1008,7 +1131,7 @@ contains
       endif
 
       s(n:n) = 'e'
-      s(n+1:) = str(e)
+      s(n+1:) = safestr(e)
 
     elseif (fmt(1:1) == 's') then
 
@@ -1036,7 +1159,7 @@ contains
       endif
 
       s(n:n) = 'e'
-      s(n+1:) = str(e)
+      s(n+1:) = safestr(e)
 
     elseif (fmt(1:1) == 'r') then
 
@@ -1092,17 +1215,16 @@ contains
     real(dp), intent(in) :: x
     integer :: n
 
-    n = str_real_dp_fmt_len(x, "")
+    n = len(x, "")
 
   end function str_real_dp_len
 
 
-  function str_real_dp(x) result(s)
+  pure function str_real_dp(x) result(s)
     real(dp), intent(in) :: x
-    character(len=str_real_dp_len(x)) :: s
+    character(len=len(x)) :: s
 
-    s = str_real_dp_fmt(x, "")
-
+    s = safestr(x, "")
   end function str_real_dp
 
      
@@ -1114,25 +1236,25 @@ contains
 
     n = size(xa) - 1
     do k = 1, size(xa)
-      n = n + str_real_dp_fmt_len(xa(k), "")
+      n = n + len(xa(k), "")
     enddo
     
   end function str_real_dp_array_len
      
 
-  function str_real_dp_array(xa) result(s)
+  pure function str_real_dp_array(xa) result(s)
     real(dp), dimension(:), intent(in) :: xa
-    character(len=str_real_dp_array_len(xa)) :: s
+    character(len=len(xa)) :: s
     
     integer :: j, k, n
 
     n = 1
     do k = 1, size(xa) - 1
-      j = str_real_dp_fmt_len(xa(k), "")
-      s(n:n+j) = str(xa(k), "")//" "
+      j = len(xa(k), "")
+      s(n:n+j) = safestr(xa(k), "")//" "
       n = n + j + 1
     enddo
-    s(n:) = str(xa(k))
+    s(n:) = safestr(xa(k))
 
   end function str_real_dp_array
 
@@ -1146,17 +1268,16 @@ contains
 
     n = size(xa) - 1
     do k = 1, size(xa)
-      n = n + str_real_dp_fmt_len(xa(k), fmt)
+      n = n + len(xa(k), fmt)
     enddo
     
   end function str_real_dp_array_fmt_len
 
-
-  function str_real_dp_array_fmt(xa, fmt, delimiter) result(s)
+  pure function str_real_dp_array_fmt(xa, fmt, delimiter) result(s)
     real(dp), dimension(:), intent(in) :: xa
     character(len=*), intent(in) :: fmt
     character(len=1), intent(in), optional :: delimiter
-    character(len=str_real_dp_array_fmt_len(xa, fmt)) :: s
+    character(len=len(xa, fmt)) :: s
     
     integer :: j, k, n
     character(len=1) :: d
@@ -1169,13 +1290,27 @@ contains
 
     n = 1
     do k = 1, size(xa) - 1
-      j = str_real_dp_fmt_len(xa(k), fmt)
-      s(n:n+j) = str(xa(k), fmt)//d
+      j = len(xa(k), fmt)
+      s(n:n+j) = safestr(xa(k), fmt)//d
       n = n + j + 1
     enddo
-    s(n:) = str(xa(k), fmt)
+    s(n:) = safestr(xa(k), fmt)
 
   end function str_real_dp_array_fmt
+
+  function str_real_dp_array_fmt_chk(xa, fmt, delimiter) result(s)
+    real(dp), dimension(:), intent(in) :: xa
+    character(len=*), intent(in) :: fmt
+    character(len=1), intent(in), optional :: delimiter
+    character(len=len(xa, fmt)) :: s
+    
+    if (checkFmt(fmt)) then
+      s = safestr(xa, fmt, delimiter)
+    else
+      call FoX_error("Invalid format: "//fmt)
+    endif
+  end function str_real_dp_array_fmt_chk
+
 
 
   pure function str_real_dp_matrix_fmt_len(xa, fmt) result(n)
@@ -1188,7 +1323,7 @@ contains
     n = size(xa) - 1
     do k = 1, size(xa, 2)
       do j = 1, size(xa, 1)
-        n = n + str_real_dp_fmt_len(xa(j,k), fmt)
+        n = n + len(xa(j,k), fmt)
       enddo
     enddo
 
@@ -1199,49 +1334,418 @@ contains
     real(dp), dimension(:,:), intent(in) :: xa
     integer :: n
 
-    n = str_real_dp_matrix_fmt_len(xa, "")
+    n = len(xa, "")
   end function str_real_dp_matrix_len
 
 
   function str_real_dp_matrix_fmt(xa, fmt) result(s)
     real(dp), dimension(:,:), intent(in) :: xa
     character(len=*), intent(in) :: fmt
-    character(len=str_real_dp_matrix_fmt_len(xa,fmt)) :: s
+    character(len=len(xa,fmt)) :: s
 
     integer :: i, j, k, n
 
-    i = str_real_dp_fmt_len(xa(1,1), fmt)
-    s(:i) = str(xa(1,1), fmt)
+    i = len(xa(1,1), fmt)
+    s(:i) = safestr(xa(1,1), fmt)
     n = i + 1
     do j = 2, size(xa, 1)
-      i = str_real_dp_fmt_len(xa(j,1), fmt)
-      s(n:n+i) = " "//str(xa(j,1), fmt)
+      i = len(xa(j,1), fmt)
+      s(n:n+i) = " "//safestr(xa(j,1), fmt)
       n = n + i + 1
     enddo
     do k = 2, size(xa, 2)
       do j = 1, size(xa, 1)
-        i = str_real_dp_fmt_len(xa(j,k), fmt)
-        s(n:n+i) = " "//str(xa(j,k), fmt)
+        i = len(xa(j,k), fmt)
+        s(n:n+i) = " "//safestr(xa(j,k), fmt)
         n = n + i + 1
       enddo
     enddo
 
   end function str_real_dp_matrix_fmt
 
+  function str_real_dp_matrix_fmt_chk(xa, fmt) result(s)
+    real(dp), dimension(:,:), intent(in) :: xa
+    character(len=*), intent(in) :: fmt
+    character(len=len(xa,fmt)) :: s
+
+    if (checkFmt(fmt)) then
+      s = safestr(xa, fmt)
+    else
+      call FoX_error("Invalid format: "//fmt)
+    end if
+
+  end function str_real_dp_matrix_fmt_chk
 
   function str_real_dp_matrix(xa) result(s)
     real(dp), dimension(:,:), intent(in) :: xa
-    character(len=str_real_dp_matrix_len(xa)) :: s
+    character(len=len(xa)) :: s
 
-    s = str_real_dp_matrix_fmt(xa, "")
+    s = safestr(xa, "")
   end function str_real_dp_matrix
+
+
+! For complex numbers, there's not really much prior art, so
+! we use the easy solution: a+bi, where a & b are real numbers
+! as output above.
+
+  pure function str_complex_sp_fmt_len(c, fmt) result(n)
+    complex(sp), intent(in) :: c
+    character(len=*), intent(in) :: fmt
+    integer :: n
+
+    real(sp) :: re, im
+    re = real(c)
+    im = imag(c)
+
+    n = len(re, fmt) + len(im, fmt) + 6
+  end function str_complex_sp_fmt_len
+
+  function str_complex_sp_fmt_chk(c, fmt) result(s)
+    complex(sp), intent(in) :: c
+    character(len=*), intent(in) :: fmt
+    character(len=len(c, fmt)) :: s
+    
+    if (checkFmt(fmt)) then
+      s = safestr(c, fmt)
+    else
+      call FoX_error("Invalid format: "//fmt)
+    endif
+
+  end function str_complex_sp_fmt_chk
+
+  pure function str_complex_sp_fmt(c, fmt) result(s)
+    complex(sp), intent(in) :: c
+    character(len=*), intent(in) :: fmt
+    character(len=len(c, fmt)) :: s
+    
+    real(sp) :: re, im
+    integer :: i
+    re = real(c)
+    im = imag(c)
+    i = len(re, fmt)
+    s(:i+4) = "("//safestr(re, fmt)//")+i"
+    s(i+5:)="("//safestr(im,fmt)//")"
+  end function str_complex_sp_fmt
+
+  pure function str_complex_sp_len(c) result(n)
+    complex(sp), intent(in) :: c
+    integer :: n
+
+    n = len(c, "")
+  end function str_complex_sp_len
+
+  pure function str_complex_sp(c) result(s)
+    complex(sp), intent(in) :: c
+    character(len=len(c, "")) :: s
+
+    s = safestr(c, "")
+  end function str_complex_sp
+
+  pure function str_complex_sp_array_fmt_len(ca, fmt) result(n)
+    complex(sp), dimension(:), intent(in) :: ca
+    character(len=*), intent(in) :: fmt
+    integer :: n
+
+    integer :: i
+
+    n = size(ca) - 1
+    do i = 1, size(ca)
+      n = n + len(ca(i), fmt)
+    enddo
+  end function str_complex_sp_array_fmt_len
+     
+  pure function str_complex_sp_array_fmt(ca, fmt) result(s)
+    complex(sp), dimension(:), intent(in) :: ca
+    character(len=*), intent(in) :: fmt
+    character(len=len(ca, fmt)) :: s
+
+    integer :: i, n
+ 
+    s(1:len(ca(1), fmt)) = safestr(ca(1), fmt)
+    n = len(ca(1), fmt)+1
+    do i = 2, size(ca) 
+      s(n:n+len(ca(i), fmt)+1) = " "//safestr(ca(i), fmt)
+      n = n + len(ca(i), fmt)+1
+    enddo
+  end function str_complex_sp_array_fmt
+
+  function str_complex_sp_array_fmt_chk(ca, fmt) result(s)
+    complex(sp), dimension(:), intent(in) :: ca
+    character(len=*), intent(in) :: fmt
+    character(len=len(ca, fmt)) :: s
+
+    if (checkFmt(fmt)) then
+      s = safestr(ca, fmt)
+    else
+      call FoX_error("Invalid format: "//fmt)
+    endif
+
+  end function str_complex_sp_array_fmt_chk
+
+  pure function str_complex_sp_array_len(ca) result(n)
+    complex(sp), dimension(:), intent(in) :: ca
+    integer :: n
+
+    n = len(ca, "")
+  end function str_complex_sp_array_len
+  
+  pure function str_complex_sp_array(ca) result(s)
+    complex(sp), dimension(:), intent(in) :: ca
+    character(len=len(ca)) :: s
+
+    s = safestr(ca, "")
+  end function str_complex_sp_array
+
+
+  pure function str_complex_sp_matrix_fmt_len(ca, fmt) result(n)
+    complex(sp), dimension(:, :), intent(in) :: ca
+    character(len=*), intent(in) :: fmt
+    integer :: n
+
+    integer :: i, j
+
+    n = size(ca) - 1
+    do i = 1, size(ca, 1)
+      do j = 1, size(ca, 2)
+        n = n + len(ca(i, j), fmt)
+      enddo
+    enddo
+  end function str_complex_sp_matrix_fmt_len
+     
+  pure function str_complex_sp_matrix_fmt(ca, fmt) result(s)
+    complex(sp), dimension(:, :), intent(in) :: ca
+    character(len=*), intent(in) :: fmt
+    character(len=len(ca, fmt)) :: s
+
+    integer :: i, j, k, n
+
+    i = len(ca(1,1), fmt)
+    s(:i) = safestr(ca(1,1), fmt)
+    n = i + 1
+    do j = 2, size(ca, 1)
+      i = len(ca(j,1), fmt)
+      s(n:n+i) = " "//safestr(ca(j,1), fmt)
+      n = n + i + 1
+    enddo
+    do k = 2, size(ca, 2)
+      do j = 1, size(ca, 1)
+        i = len(ca(j,k), fmt)
+        s(n:n+i) = " "//safestr(ca(j,k), fmt)
+        n = n + i + 1
+      enddo
+    enddo
+
+  end function str_complex_sp_matrix_fmt
+
+  function str_complex_sp_matrix_fmt_chk(ca, fmt) result(s)
+    complex(sp), dimension(:, :), intent(in) :: ca
+    character(len=*), intent(in) :: fmt
+    character(len=len(ca, fmt)) :: s
+
+    if (checkFmt(fmt)) then
+      s = safestr(ca, fmt)
+    else
+      call FoX_error("Invalid format: "//fmt)
+    endif
+
+  end function str_complex_sp_matrix_fmt_chk
+
+  pure function str_complex_sp_matrix_len(ca) result(n)
+    complex(sp), dimension(:, :), intent(in) :: ca
+    integer :: n
+
+    n = len(ca, "")
+  end function str_complex_sp_matrix_len
+  
+  pure function str_complex_sp_matrix(ca) result(s)
+    complex(sp), dimension(:, :), intent(in) :: ca
+    character(len=len(ca)) :: s
+
+    s = safestr(ca, "")
+  end function str_complex_sp_matrix
+  
+
+  pure function str_complex_dp_fmt_len(c, fmt) result(n)
+    complex(dp), intent(in) :: c
+    character(len=*), intent(in) :: fmt
+    integer :: n
+
+    real(dp) :: re, im
+    re = real(c)
+    im = imag(c)
+
+    n = len(re, fmt) + len(im, fmt) + 6
+  end function str_complex_dp_fmt_len
+
+  function str_complex_dp_fmt_chk(c, fmt) result(s)
+    complex(dp), intent(in) :: c
+    character(len=*), intent(in) :: fmt
+    character(len=len(c, fmt)) :: s
+    
+    if (checkFmt(fmt)) then
+      s = safestr(c, fmt)
+    else
+      call FoX_error("Invalid format: "//fmt)
+    endif
+
+  end function str_complex_dp_fmt_chk
+
+  pure function str_complex_dp_fmt(c, fmt) result(s)
+    complex(dp), intent(in) :: c
+    character(len=*), intent(in) :: fmt
+    character(len=len(c, fmt)) :: s
+    
+    real(dp) :: re, im
+    integer :: i
+    re = real(c)
+    im = imag(c)
+    i = len(re, fmt)
+    s(:i+4) = "("//safestr(re, fmt)//")+i"
+    s(i+5:)="("//safestr(im,fmt)//")"
+  end function str_complex_dp_fmt
+
+  pure function str_complex_dp_len(c) result(n)
+    complex(dp), intent(in) :: c
+    integer :: n
+
+    n = len(c, "")
+  end function str_complex_dp_len
+
+  pure function str_complex_dp(c) result(s)
+    complex(dp), intent(in) :: c
+    character(len=len(c, "")) :: s
+
+    s = safestr(c, "")
+  end function str_complex_dp
+
+  pure function str_complex_dp_array_fmt_len(ca, fmt) result(n)
+    complex(dp), dimension(:), intent(in) :: ca
+    character(len=*), intent(in) :: fmt
+    integer :: n
+
+    integer :: i
+
+    n = size(ca) - 1
+    do i = 1, size(ca)
+      n = n + len(ca(i), fmt)
+    enddo
+  end function str_complex_dp_array_fmt_len
+     
+  pure function str_complex_dp_array_fmt(ca, fmt) result(s)
+    complex(dp), dimension(:), intent(in) :: ca
+    character(len=*), intent(in) :: fmt
+    character(len=len(ca, fmt)) :: s
+
+    integer :: i, n
+
+    s(1:len(ca(1), fmt)) = safestr(ca(1), fmt)
+    n = len(ca(1), fmt)+1
+    do i = 2, size(ca) 
+      s(n:n+len(ca(i), fmt)+1) = " "//safestr(ca(i), fmt)
+      n = n + len(ca(i), fmt)+1
+    enddo
+  end function str_complex_dp_array_fmt
+
+  function str_complex_dp_array_fmt_chk(ca, fmt) result(s)
+    complex(dp), dimension(:), intent(in) :: ca
+    character(len=*), intent(in) :: fmt
+    character(len=len(ca, fmt)) :: s
+
+    if (checkFmt(fmt)) then
+      s = safestr(ca, fmt)
+    else
+      call FoX_error("Invalid format: "//fmt)
+    endif
+
+  end function str_complex_dp_array_fmt_chk
+
+  pure function str_complex_dp_array_len(ca) result(n)
+    complex(dp), dimension(:), intent(in) :: ca
+    integer :: n
+
+    n = len(ca, "")
+  end function str_complex_dp_array_len
+  
+  pure function str_complex_dp_array(ca) result(s)
+    complex(dp), dimension(:), intent(in) :: ca
+    character(len=len(ca)) :: s
+
+    s = safestr(ca, " ")
+  end function str_complex_dp_array
+
+  pure function str_complex_dp_matrix_fmt_len(ca, fmt) result(n)
+    complex(dp), dimension(:, :), intent(in) :: ca
+    character(len=*), intent(in) :: fmt
+    integer :: n
+
+    integer :: i, j
+
+    n = size(ca) - 1
+    do i = 1, size(ca, 1)
+      do j = 1, size(ca, 2)
+        n = n + len(ca(i, j), fmt)
+      enddo
+    enddo
+  end function str_complex_dp_matrix_fmt_len
+     
+  pure function str_complex_dp_matrix_fmt(ca, fmt) result(s)
+    complex(dp), dimension(:, :), intent(in) :: ca
+    character(len=*), intent(in) :: fmt
+    character(len=len(ca, fmt)) :: s
+
+    integer :: i, j, k, n
+
+    i = len(ca(1,1), fmt)
+    s(:i) = safestr(ca(1,1), fmt)
+    n = i + 1
+    do j = 2, size(ca, 1)
+      i = len(ca(j,1), fmt)
+      s(n:n+i) = " "//safestr(ca(j,1), fmt)
+      n = n + i + 1
+    enddo
+    do k = 2, size(ca, 2)
+      do j = 1, size(ca, 1)
+        i = len(ca(j,k), fmt)
+        s(n:n+i) = " "//safestr(ca(j,k), fmt)
+        n = n + i + 1
+      enddo
+    enddo
+
+  end function str_complex_dp_matrix_fmt
+
+  function str_complex_dp_matrix_fmt_chk(ca, fmt) result(s)
+    complex(dp), dimension(:, :), intent(in) :: ca
+    character(len=*), intent(in) :: fmt
+    character(len=len(ca, fmt)) :: s
+
+    if (checkFmt(fmt)) then
+      s = safestr(ca, fmt)
+    else
+      call FoX_error("Invalid format: "//fmt)
+    endif
+
+  end function str_complex_dp_matrix_fmt_chk
+
+  pure function str_complex_dp_matrix_len(ca) result(n)
+    complex(dp), dimension(:, :), intent(in) :: ca
+    integer :: n
+
+    n = len(ca, "")
+  end function str_complex_dp_matrix_len
+  
+  pure function str_complex_dp_matrix(ca) result(s)
+    complex(dp), dimension(:, :), intent(in) :: ca
+    character(len=len(ca)) :: s
+
+    s = safestr(ca, "")
+  end function str_complex_dp_matrix
 
 
   pure function checkFmt(fmt) result(good)
     character(len=*), intent(in) :: fmt
     logical :: good
 
-    ! should be ([rs][0-9]*)?
+    ! should be ([rs]\d*)?
 
     if (len(fmt) > 0) then
       if (fmt(1:1) == 'r' .or. fmt(1:1) == 's') then
