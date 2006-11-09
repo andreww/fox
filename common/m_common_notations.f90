@@ -27,7 +27,7 @@ module m_common_notations
 contains
 
   subroutine init_notation_list(nlist)
-    type(notation_list), intent(out) :: nlist
+    type(notation_list), intent(in) :: nlist
 
     allocate(nlist%notations(0:0))
     allocate(nlist%notations(0)%name(0))
