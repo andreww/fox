@@ -15,7 +15,9 @@ dnl Define a few basic bits
 dnl
 dnl
 define(`TOHWM4_declarationtype', `dnl
-ifelse(`$1', `RealDp', `real(dp)', 
+ifelse(`$1', `CmplxDp', `complex(dp)',
+       `$1', `CmplxSp', `complex(sp)',
+       `$1', `RealDp', `real(dp)', 
        `$1', `RealSp', `real(sp)', 
        `$1', `Int', `integer', 
        `$1', `Lg', `logical', 
@@ -113,37 +115,37 @@ module m_wxml_overloads
   private
 
   interface xml_AddCharacters
-m4_foreach(`x', `(RealDp, RealSp, Int, Lg)', `dnl
+m4_foreach(`x', `(CmplxDp, CmplxSp, RealDp, RealSp, Int, Lg)', `dnl
     module procedure TOHWM4_subroutinename(`Characters', `Scalar', x)
 ')
-m4_foreach(`x', `(RealDp, RealSp, Int, Lg, Ch)', `dnl
+m4_foreach(`x', `(CmplxDp, CmplxSp, RealDp, RealSp, Int, Lg, Ch)', `dnl
     module procedure TOHWM4_subroutinename(`Characters', `Array', x)
 ')
-m4_foreach(`x', `(RealDp, RealSp, Int, Lg, Ch)', `dnl
+m4_foreach(`x', `(CmplxDp, CmplxSp, RealDp, RealSp, Int, Lg, Ch)', `dnl
     module procedure TOHWM4_subroutinename(`Characters', `Matrix', x)
 ') dnl
  end interface xml_AddCharacters
 
   interface xml_AddAttribute
-m4_foreach(`x', `(RealDp, RealSp, Int, Lg)', `dnl
+m4_foreach(`x', `(CmplxDp, CmplxSp, RealDp, RealSp, Int, Lg)', `dnl
     module procedure TOHWM4_subroutinename(`Attribute', `Scalar', x)
 ')
-m4_foreach(`x', `(RealDp, RealSp, Int, Lg, Ch)', `dnl
+m4_foreach(`x', `(CmplxDp, CmplxSp, RealDp, RealSp, Int, Lg, Ch)', `dnl
     module procedure TOHWM4_subroutinename(`Attribute', `Array', x)
 ')
-m4_foreach(`x', `(RealDp, RealSp, Int, Lg, Ch)', `dnl
+m4_foreach(`x', `(CmplxDp, CmplxSp, RealDp, RealSp, Int, Lg, Ch)', `dnl
     module procedure TOHWM4_subroutinename(`Attribute', `Matrix', x)
 ') dnl
  end interface xml_AddAttribute
 
   interface xml_AddPseudoAttribute
-m4_foreach(`x', `(RealDp, RealSp, Int, Lg)', `dnl
+m4_foreach(`x', `(CmplxDp, CmplxSp, RealDp, RealSp, Int, Lg)', `dnl
     module procedure TOHWM4_subroutinename(`Attribute', `Scalar', x)
 ')
-m4_foreach(`x', `(RealDp, RealSp, Int, Lg, Ch)', `dnl
+m4_foreach(`x', `(CmplxDp, CmplxSp, RealDp, RealSp, Int, Lg, Ch)', `dnl
     module procedure TOHWM4_subroutinename(`Attribute', `Array', x)
 ')
-m4_foreach(`x', `(RealDp, RealSp, Int, Lg, Ch)', `dnl
+m4_foreach(`x', `(CmplxDp, CmplxSp, RealDp, RealSp, Int, Lg, Ch)', `dnl
     module procedure TOHWM4_subroutinename(`Attribute', `Matrix', x)
 ') dnl
  end interface xml_AddPseudoAttribute
@@ -154,27 +156,27 @@ m4_foreach(`x', `(RealDp, RealSp, Int, Lg, Ch)', `dnl
 
 contains
 
-m4_foreach(`x', `(RealDp, RealSp, Int, Lg)', `TOHWM4_CharacterSub(`Characters', `Scalar', x)
+m4_foreach(`x', `(CmplxDp, CmplxSp, RealDp, RealSp, Int, Lg)', `TOHWM4_CharacterSub(`Characters', `Scalar', x)
 ')
-m4_foreach(`x', `(RealDp, RealSp, Int, Lg, Ch)', `TOHWM4_CharacterSub(`Characters', `Array', x)
+m4_foreach(`x', `(CmplxDp, CmplxSp, RealDp, RealSp, Int, Lg, Ch)', `TOHWM4_CharacterSub(`Characters', `Array', x)
 ')
-m4_foreach(`x', `(RealDp, RealSp, Int, Lg, Ch)', `TOHWM4_CharacterSub(`Characters', `Matrix', x)
-')
-
-
-m4_foreach(`x', `(RealDp, RealSp, Int, Lg)', `TOHWM4_AttributeSub(`Attribute', `Scalar', x)
-')
-m4_foreach(`x', `(RealDp, RealSp, Int, Lg, Ch)', `TOHWM4_AttributeSub(`Attribute', `Array', x)
-')
-m4_foreach(`x', `(RealDp, RealSp, Int, Lg, Ch)', `TOHWM4_AttributeSub(`Attribute', `Matrix', x)
+m4_foreach(`x', `(CmplxDp, CmplxSp, RealDp, RealSp, Int, Lg, Ch)', `TOHWM4_CharacterSub(`Characters', `Matrix', x)
 ')
 
 
-m4_foreach(`x', `(RealDp, RealSp, Int, Lg)', `TOHWM4_AttributeSub(`PseudoAttribute', `Scalar', x)
+m4_foreach(`x', `(CmplxDp, CmplxSp, RealDp, RealSp, Int, Lg)', `TOHWM4_AttributeSub(`Attribute', `Scalar', x)
 ')
-m4_foreach(`x', `(RealDp, RealSp, Int, Lg, Ch)', `TOHWM4_AttributeSub(`PseudoAttribute', `Array', x)
+m4_foreach(`x', `(CmplxDp, CmplxSp, RealDp, RealSp, Int, Lg, Ch)', `TOHWM4_AttributeSub(`Attribute', `Array', x)
 ')
-m4_foreach(`x', `(RealDp, RealSp, Int, Lg, Ch)', `TOHWM4_AttributeSub(`PseudoAttribute', `Matrix', x)
+m4_foreach(`x', `(CmplxDp, CmplxSp, RealDp, RealSp, Int, Lg, Ch)', `TOHWM4_AttributeSub(`Attribute', `Matrix', x)
+')
+
+
+m4_foreach(`x', `(CmplxDp, CmplxSp, RealDp, RealSp, Int, Lg)', `TOHWM4_AttributeSub(`PseudoAttribute', `Scalar', x)
+')
+m4_foreach(`x', `(CmplxDp, CmplxSp, RealDp, RealSp, Int, Lg, Ch)', `TOHWM4_AttributeSub(`PseudoAttribute', `Array', x)
+')
+m4_foreach(`x', `(CmplxDp, CmplxSp, RealDp, RealSp, Int, Lg, Ch)', `TOHWM4_AttributeSub(`PseudoAttribute', `Matrix', x)
 ')
 
 end module m_wxml_overloads

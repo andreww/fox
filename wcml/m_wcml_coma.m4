@@ -1,26 +1,12 @@
 dnl
-dnl First part is boilerplate to give us a foreach function
+include(`foreach.m4')dnl
 dnl
-divert(-1)
-# foreach(x, (item_1, item_2, ..., item_n), stmt)
-define(`m4_foreach', `pushdef(`$1', `')_foreach(`$1', `$2', `$3')popdef(`$1')')
-define(`_arg1', `$1')
-define(`_foreach',
-        `ifelse(`$2', `()', ,
-                `define(`$1', _arg1$2)$3`'_foreach(`$1', (shift$2), `$3')')')
-# traceon(`define', `foreach', `_foreach', `ifelse')
-divert 
-dnl given a variable name a, declare it as follows:
-define(`TOHWM4_dummyargdecl',`dnl
-    character(len=*), intent(in), optional :: $1
-')dnl
+include(`common.m4')dnl
 dnl
-dnl use an optional character variable:
-define(`TOHWM4_dummyarguse',`dnl
-    if (present($1)) call xml_addAttribute(xf, "$1", $1)
-')dnl
 dnl Below we only use arguments with a type of xsd:string
 define(`TOHWM4_bandargs', `(dictRef,convention,title,id,ref,label)')dnl
+dnl
+define(`TOHWM4_eigenargs', `(dictRef,convention,title,id,type)')dnl
 dnl
 define(`TOHWM4_bandargslist', `dnl
 m4_foreach(`x', TOHWM4_bandargs, `,x')dnl
@@ -31,8 +17,6 @@ m4_foreach(`x',TOHWM4_bandargs,`TOHWM4_dummyargdecl(x)')
 define(`TOHWM4_bandargsuse',`dnl
 m4_foreach(`x',TOHWM4_bandargs,`TOHWM4_dummyarguse(x)')
 ')dnl
-dnl Below we only use arguments with a type of xsd:string
-define(`TOHWM4_eigenargs', `(dictRef,convention,title,id,type)')dnl
 dnl
 define(`TOHWM4_eigenargslist', `dnl
 m4_foreach(`x', TOHWM4_eigenargs, `,x')dnl
@@ -43,6 +27,7 @@ m4_foreach(`x',TOHWM4_eigenargs,`TOHWM4_dummyargdecl(x)')
 define(`TOHWM4_eigenargsuse',`dnl
 m4_foreach(`x',TOHWM4_eigenargs,`TOHWM4_dummyarguse(x)')
 ')dnl
+dnl
 define(`TOHWM4_coma_subs', `dnl
 dnl subroutine cmlAddBand_kpt_$1(xf, kpoint, kweight, units, bands, kptfmt, eigfmt)
 dnl     type(xmlf_t), intent(inout)            :: xf

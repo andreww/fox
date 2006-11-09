@@ -1,37 +1,14 @@
 dnl
-dnl First part is boilerplate to give us a foreach function
+include(`foreach.m4')
 dnl
-divert(-1)
-# foreach(x, (item_1, item_2, ..., item_n), stmt)
-define(`m4_foreach', `pushdef(`$1', `')_foreach(`$1', `$2', `$3')popdef(`$1')')
-define(`_arg1', `$1')
-define(`_foreach',
-        `ifelse(`$2', `()', ,
-                `define(`$1', _arg1$2)$3`'_foreach(`$1', (shift$2), `$3')')')
-# traceon(`define', `foreach', `_foreach', `ifelse')
-divert 
+include(`common.m4')
+dnl
+include(`datatypes.m4')
+dnl
 define(`TOHWM4_splitlines', `dnl
 dnl Cannot for the life of me do this splitting correctly in m4 alone.
 esyscmd(`echo "'$1`" | awk \{i=1\;while\(i\<\(\length\(\)-132\)\)\{print\ \substr\(\$\0,i,131\)\"\&\"\;i+=131\}print\ substr\(\$\0,i,132\)\} -') dnl
 ') dnl
-dnl
-dnl Define a few basic bits
-dnl
-dnl
-define(`TOHWM4_declarationtype', `dnl
-ifelse(`$1', `RealDp', `real(dp)', 
-       `$1', `RealSp', `real(sp)', 
-       `$1', `Int', `integer', 
-       `$1', `Lg', `logical', 
-       `$1', `Ch', `character(len=*)')`'dnl
-')dnl
-define(`TOHWM4_datatype', `dnl
-ifelse(`$1', `RealDp', `xsd:double', 
-       `$1', `RealSp', `xsd:float', 
-       `$1', `Int', `xsd:integer', 
-       `$1', `Lg', `xsd:boolean', 
-       `$1', `Ch', `xsd:string')`'dnl
-')dnl
 dnl
 dnl
 define(`TOHWM4_subroutinename', `stmAdd$1')dnl
@@ -41,21 +18,6 @@ define(`TOHWM4_interfacelist', `dnl
      module procedure stmAdd$1$2
 ')dnl
 dnl
-dnl
-dnl given a list (a, b, c) strip off the brackets:
-define(`TOHWM4_dummyarglist',`dnl
-substr($1,1,decr(decr(len($1))))`'dnl
-')dnl
-dnl
-dnl given a variable name a, declare it as follows:
-define(`TOHWM4_dummyargdecl',`dnl
-    character(len=*), intent(in), optional :: $1
-')dnl
-dnl
-dnl use an optional character variable:
-define(`TOHWM4_dummyarguse',`dnl
-    if (present($1)) call xml_addAttribute(xf, "$1", $1)
-')dnl
 define(`TOHWM4_dummyargcall', `,`$1'=`$1'')dnl
 dnl
 define(`TOHWM4_stml_sub',`dnl
@@ -105,7 +67,7 @@ ifelse(`$3', `Sca', `', `dnl
     if (present(dataType)) then
       call xml_addAttribute(xf, "dataType", dataType)
     else
-  ') dnl
+') dnl
     call xml_AddAttribute(xf, "dataType", dnl
 "TOHWM4_datatype(`$1')")
 ifelse(`$1', `Ch', `    endif')
@@ -146,21 +108,21 @@ module m_wcml_stml
   integer, private, parameter ::  dp = selected_real_kind(14,100)
 
   interface stmAddValue
-m4_foreach(`x', `(RealDp, RealSp, Int, Lg, Ch)', `TOHWM4_interfacelist(x, `Sca')')
-m4_foreach(`x', `(RealDp, RealSp, Int, Lg, Ch)', `TOHWM4_interfacelist(x, `Arr')')
-m4_foreach(`x', `(RealDp, RealSp, Int, Lg, Ch)', `TOHWM4_interfacelist(x, `Mat')')
+m4_foreach(`x', TOHWM4_types, `TOHWM4_interfacelist(x, `Sca')')
+m4_foreach(`x', TOHWM4_types, `TOHWM4_interfacelist(x, `Arr')')
+m4_foreach(`x', TOHWM4_types, `TOHWM4_interfacelist(x, `Mat')')
   end interface stmAddValue
 
   interface stmAddScalar
-m4_foreach(`x', `(RealDp, RealSp, Int, Lg, Ch)', `TOHWM4_interfacelist(x, `Sca')')
+m4_foreach(`x', TOHWM4_types, `TOHWM4_interfacelist(x, `Sca')')
   end interface stmAddScalar
 
   interface stmAddArray
-m4_foreach(`x', `(RealDp, RealSp, Int, Lg, Ch)', `TOHWM4_interfacelist(x, `Arr')')
+m4_foreach(`x', TOHWM4_types, `TOHWM4_interfacelist(x, `Arr')')
   end interface stmAddArray
 
   interface stmAddMatrix
-m4_foreach(`x', `(RealDp, RealSp, Int, Lg, Ch)', `TOHWM4_interfacelist(x, `Mat')')
+m4_foreach(`x', TOHWM4_types, `TOHWM4_interfacelist(x, `Mat')')
   end interface stmAddMatrix
 
   public :: stmAddValue
@@ -170,10 +132,10 @@ m4_foreach(`x', `(RealDp, RealSp, Int, Lg, Ch)', `TOHWM4_interfacelist(x, `Mat')
 
 contains
 
-m4_foreach(`x', `(RealDp, RealSp, Int, Lg, Ch)', `TOHWM4_stml_sub(x,`(id, title, dictRef, convention, errorValue, errorBasis, min, max, ref)',`Sca')
+m4_foreach(`x', TOHWM4_types, `TOHWM4_stml_sub(x,`(id, title, dictRef, convention, errorValue, errorBasis, min, max, ref)',`Sca')
 ')
-m4_foreach(`x', `(RealDp, RealSp, Int, Lg, Ch)', `TOHWM4_stml_sub(x,`(id, title, dictRef, convention, errorValue, errorBasis, min, max, ref)',`Arr')
+m4_foreach(`x', TOHWM4_types, `TOHWM4_stml_sub(x,`(id, title, dictRef, convention, errorValue, errorBasis, min, max, ref)',`Arr')
 ')
-m4_foreach(`x', `(RealDp, RealSp, Int, Lg, Ch)', `TOHWM4_stml_sub(x,`(id, title, dictRef, convention, errorValue, errorBasis, min, max, ref)',`Mat')
+m4_foreach(`x', TOHWM4_types, `TOHWM4_stml_sub(x,`(id, title, dictRef, convention, errorValue, errorBasis, min, max, ref)',`Mat')
 ')
 end module m_wcml_stml

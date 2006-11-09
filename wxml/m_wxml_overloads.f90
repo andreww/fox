@@ -16,17 +16,23 @@ module m_wxml_overloads
   private
 
   interface xml_AddCharacters
+    module procedure CharactersScalarCmplxDp
+    module procedure CharactersScalarCmplxSp
     module procedure CharactersScalarRealDp
     module procedure CharactersScalarRealSp
     module procedure CharactersScalarInt
     module procedure CharactersScalarLg
 
+    module procedure CharactersArrayCmplxDp
+    module procedure CharactersArrayCmplxSp
     module procedure CharactersArrayRealDp
     module procedure CharactersArrayRealSp
     module procedure CharactersArrayInt
     module procedure CharactersArrayLg
     module procedure CharactersArrayCh
 
+    module procedure CharactersMatrixCmplxDp
+    module procedure CharactersMatrixCmplxSp
     module procedure CharactersMatrixRealDp
     module procedure CharactersMatrixRealSp
     module procedure CharactersMatrixInt
@@ -35,17 +41,23 @@ module m_wxml_overloads
   end interface xml_AddCharacters
 
   interface xml_AddAttribute
+    module procedure AttributeScalarCmplxDp
+    module procedure AttributeScalarCmplxSp
     module procedure AttributeScalarRealDp
     module procedure AttributeScalarRealSp
     module procedure AttributeScalarInt
     module procedure AttributeScalarLg
 
+    module procedure AttributeArrayCmplxDp
+    module procedure AttributeArrayCmplxSp
     module procedure AttributeArrayRealDp
     module procedure AttributeArrayRealSp
     module procedure AttributeArrayInt
     module procedure AttributeArrayLg
     module procedure AttributeArrayCh
 
+    module procedure AttributeMatrixCmplxDp
+    module procedure AttributeMatrixCmplxSp
     module procedure AttributeMatrixRealDp
     module procedure AttributeMatrixRealSp
     module procedure AttributeMatrixInt
@@ -54,17 +66,23 @@ module m_wxml_overloads
   end interface xml_AddAttribute
 
   interface xml_AddPseudoAttribute
+    module procedure AttributeScalarCmplxDp
+    module procedure AttributeScalarCmplxSp
     module procedure AttributeScalarRealDp
     module procedure AttributeScalarRealSp
     module procedure AttributeScalarInt
     module procedure AttributeScalarLg
 
+    module procedure AttributeArrayCmplxDp
+    module procedure AttributeArrayCmplxSp
     module procedure AttributeArrayRealDp
     module procedure AttributeArrayRealSp
     module procedure AttributeArrayInt
     module procedure AttributeArrayLg
     module procedure AttributeArrayCh
 
+    module procedure AttributeMatrixCmplxDp
+    module procedure AttributeMatrixCmplxSp
     module procedure AttributeMatrixRealDp
     module procedure AttributeMatrixRealSp
     module procedure AttributeMatrixInt
@@ -77,6 +95,26 @@ module m_wxml_overloads
   public :: xml_AddPseudoAttribute
 
 contains
+
+  subroutine CharactersScalarCmplxDp &
+    (xf, chars )
+
+    type(xmlf_t), intent(inout) :: xf
+    complex(dp) , intent(in)   :: chars
+
+       call xml_AddCharacters(xf=xf, chars=str(chars  ))
+ 
+  end subroutine CharactersScalarCmplxDp
+
+  subroutine CharactersScalarCmplxSp &
+    (xf, chars )
+
+    type(xmlf_t), intent(inout) :: xf
+    complex(sp) , intent(in)   :: chars
+
+       call xml_AddCharacters(xf=xf, chars=str(chars  ))
+ 
+  end subroutine CharactersScalarCmplxSp
 
   subroutine CharactersScalarRealDp &
     (xf, chars , fmt)
@@ -128,6 +166,26 @@ contains
  
   end subroutine CharactersScalarLg
 
+
+  subroutine CharactersArrayCmplxDp &
+    (xf, chars )
+
+    type(xmlf_t), intent(inout) :: xf
+    complex(dp) , intent(in) , dimension(:)  :: chars
+
+       call xml_AddCharacters(xf=xf, chars=str(chars  ))
+ 
+  end subroutine CharactersArrayCmplxDp
+
+  subroutine CharactersArrayCmplxSp &
+    (xf, chars )
+
+    type(xmlf_t), intent(inout) :: xf
+    complex(sp) , intent(in) , dimension(:)  :: chars
+
+       call xml_AddCharacters(xf=xf, chars=str(chars  ))
+ 
+  end subroutine CharactersArrayCmplxSp
 
   subroutine CharactersArrayRealDp &
     (xf, chars , fmt)
@@ -190,6 +248,26 @@ contains
  
   end subroutine CharactersArrayCh
 
+
+  subroutine CharactersMatrixCmplxDp &
+    (xf, chars )
+
+    type(xmlf_t), intent(inout) :: xf
+    complex(dp) , intent(in) , dimension(:,:)  :: chars
+
+       call xml_AddCharacters(xf=xf, chars=str(chars  ))
+ 
+  end subroutine CharactersMatrixCmplxDp
+
+  subroutine CharactersMatrixCmplxSp &
+    (xf, chars )
+
+    type(xmlf_t), intent(inout) :: xf
+    complex(sp) , intent(in) , dimension(:,:)  :: chars
+
+       call xml_AddCharacters(xf=xf, chars=str(chars  ))
+ 
+  end subroutine CharactersMatrixCmplxSp
 
   subroutine CharactersMatrixRealDp &
     (xf, chars , fmt)
@@ -255,6 +333,28 @@ contains
 
 
 
+  subroutine AttributeScalarCmplxDp &
+    (xf, name, value )
+
+    type(xmlf_t), intent(inout) :: xf
+    character(len=*), intent(in) :: name
+    complex(dp) , intent(in)   :: value
+
+       call xml_AddAttribute(xf=xf, name=name, value=str(value  ))
+ 
+  end subroutine AttributeScalarCmplxDp
+
+  subroutine AttributeScalarCmplxSp &
+    (xf, name, value )
+
+    type(xmlf_t), intent(inout) :: xf
+    character(len=*), intent(in) :: name
+    complex(sp) , intent(in)   :: value
+
+       call xml_AddAttribute(xf=xf, name=name, value=str(value  ))
+ 
+  end subroutine AttributeScalarCmplxSp
+
   subroutine AttributeScalarRealDp &
     (xf, name, value , fmt)
 
@@ -309,6 +409,28 @@ contains
  
   end subroutine AttributeScalarLg
 
+
+  subroutine AttributeArrayCmplxDp &
+    (xf, name, value )
+
+    type(xmlf_t), intent(inout) :: xf
+    character(len=*), intent(in) :: name
+    complex(dp) , intent(in) , dimension(:)  :: value
+
+       call xml_AddAttribute(xf=xf, name=name, value=str(value  ))
+ 
+  end subroutine AttributeArrayCmplxDp
+
+  subroutine AttributeArrayCmplxSp &
+    (xf, name, value )
+
+    type(xmlf_t), intent(inout) :: xf
+    character(len=*), intent(in) :: name
+    complex(sp) , intent(in) , dimension(:)  :: value
+
+       call xml_AddAttribute(xf=xf, name=name, value=str(value  ))
+ 
+  end subroutine AttributeArrayCmplxSp
 
   subroutine AttributeArrayRealDp &
     (xf, name, value , fmt)
@@ -376,6 +498,28 @@ contains
  
   end subroutine AttributeArrayCh
 
+
+  subroutine AttributeMatrixCmplxDp &
+    (xf, name, value )
+
+    type(xmlf_t), intent(inout) :: xf
+    character(len=*), intent(in) :: name
+    complex(dp) , intent(in) , dimension(:,:)  :: value
+
+       call xml_AddAttribute(xf=xf, name=name, value=str(value  ))
+ 
+  end subroutine AttributeMatrixCmplxDp
+
+  subroutine AttributeMatrixCmplxSp &
+    (xf, name, value )
+
+    type(xmlf_t), intent(inout) :: xf
+    character(len=*), intent(in) :: name
+    complex(sp) , intent(in) , dimension(:,:)  :: value
+
+       call xml_AddAttribute(xf=xf, name=name, value=str(value  ))
+ 
+  end subroutine AttributeMatrixCmplxSp
 
   subroutine AttributeMatrixRealDp &
     (xf, name, value , fmt)
@@ -446,6 +590,28 @@ contains
 
 
 
+  subroutine PseudoAttributeScalarCmplxDp &
+    (xf, name, value )
+
+    type(xmlf_t), intent(inout) :: xf
+    character(len=*), intent(in) :: name
+    complex(dp) , intent(in)   :: value
+
+       call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value  ))
+ 
+  end subroutine PseudoAttributeScalarCmplxDp
+
+  subroutine PseudoAttributeScalarCmplxSp &
+    (xf, name, value )
+
+    type(xmlf_t), intent(inout) :: xf
+    character(len=*), intent(in) :: name
+    complex(sp) , intent(in)   :: value
+
+       call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value  ))
+ 
+  end subroutine PseudoAttributeScalarCmplxSp
+
   subroutine PseudoAttributeScalarRealDp &
     (xf, name, value , fmt)
 
@@ -500,6 +666,28 @@ contains
  
   end subroutine PseudoAttributeScalarLg
 
+
+  subroutine PseudoAttributeArrayCmplxDp &
+    (xf, name, value )
+
+    type(xmlf_t), intent(inout) :: xf
+    character(len=*), intent(in) :: name
+    complex(dp) , intent(in) , dimension(:)  :: value
+
+       call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value  ))
+ 
+  end subroutine PseudoAttributeArrayCmplxDp
+
+  subroutine PseudoAttributeArrayCmplxSp &
+    (xf, name, value )
+
+    type(xmlf_t), intent(inout) :: xf
+    character(len=*), intent(in) :: name
+    complex(sp) , intent(in) , dimension(:)  :: value
+
+       call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value  ))
+ 
+  end subroutine PseudoAttributeArrayCmplxSp
 
   subroutine PseudoAttributeArrayRealDp &
     (xf, name, value , fmt)
@@ -567,6 +755,28 @@ contains
  
   end subroutine PseudoAttributeArrayCh
 
+
+  subroutine PseudoAttributeMatrixCmplxDp &
+    (xf, name, value )
+
+    type(xmlf_t), intent(inout) :: xf
+    character(len=*), intent(in) :: name
+    complex(dp) , intent(in) , dimension(:,:)  :: value
+
+       call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value  ))
+ 
+  end subroutine PseudoAttributeMatrixCmplxDp
+
+  subroutine PseudoAttributeMatrixCmplxSp &
+    (xf, name, value )
+
+    type(xmlf_t), intent(inout) :: xf
+    character(len=*), intent(in) :: name
+    complex(sp) , intent(in) , dimension(:,:)  :: value
+
+       call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value  ))
+ 
+  end subroutine PseudoAttributeMatrixCmplxSp
 
   subroutine PseudoAttributeMatrixRealDp &
     (xf, name, value , fmt)

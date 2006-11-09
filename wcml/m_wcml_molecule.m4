@@ -1,24 +1,8 @@
 dnl
-dnl First part is boilerplate to give us a foreach function
+include(`foreach.m4')
 dnl
-divert(-1)
-# foreach(x, (item_1, item_2, ..., item_n), stmt)
-define(`m4_foreach', `pushdef(`$1', `')_foreach(`$1', `$2', `$3')popdef(`$1')')
-define(`_arg1', `$1')
-define(`_foreach',
-        `ifelse(`$2', `()', ,
-                `define(`$1', _arg1$2)$3`'_foreach(`$1', (shift$2), `$3')')')
-# traceon(`define', `foreach', `_foreach', `ifelse')
-divert 
-dnl given a variable name a, declare it as follows:
-define(`TOHWM4_dummyargdecl',`dnl
-    character(len=*), intent(in), optional :: $1
-')dnl
+include(`common.m4')
 dnl
-dnl use an optional character variable:
-define(`TOHWM4_dummyarguse',`dnl
-    if (present($1)) call xml_addAttribute(xf, "$1", $1)
-')dnl
 dnl Below we only use arguments with a type of xsd:string
 define(`TOHWM4_moleculeargs', `(dictRef,convention,title,id,ref,formula,chirality,role)')dnl
 dnl

@@ -9,22 +9,8 @@ OBJFILES=FoX_wcml.o m_wcml_coma.o m_wcml_core.o m_wcml_stml.o \
 LIBRARY=libFoX_wcml.a
 INCFLAGS=$(MOD_PREFIX)../objs/finclude
 #
-m_wcml_coma.f90: m_wcml_coma.m4
-	m4 $< > $@
-m_wcml_geometry.f90: m_wcml_geometry.m4
-	m4 $< > $@
-m_wcml_lattice.f90: m_wcml_lattice.m4
-	m4 $< > $@
-m_wcml_lists.f90: m_wcml_lists.m4
-	m4 $< > $@
-m_wcml_metadata.f90: m_wcml_metadata.m4
-	m4 $< > $@
-m_wcml_molecule.f90: m_wcml_molecule.m4
-	m4 $< > $@
-m_wcml_quantity.f90: m_wcml_quantity.m4
-	m4 $< > $@
-m_wcml_stml.f90: m_wcml_stml.m4
-	m4 $< > $@
+.m4.f90:
+	m4 -I ../m4 $< > $@
 #
 include ../arch.make
 
@@ -45,10 +31,20 @@ install: $(OBJFILES)
 #
 clean:
 	rm -f *.o  *.$(MOD_EXT) $(LIBRARY)
+m_wcml_coma.f90: m_wcml_coma.m4
+m_wcml_geometry.f90: m_wcml_geometry.m4
+m_wcml_lattice.f90: m_wcml_lattice.m4
+m_wcml_lists.f90: m_wcml_lists.m4
+m_wcml_metadata.f90: m_wcml_metadata.m4
+m_wcml_molecule.f90: m_wcml_molecule.m4
+m_wcml_parameter.f90: m_wcml_parameter.m4
+m_wcml_property.f90: m_wcml_property.m4
+m_wcml_stml.f90: m_wcml_stml.m4
 # DO NOT DELETE THIS LINE - used by make depend
 FoX_wcml.o: m_wcml_coma.o m_wcml_core.o m_wcml_geometry.o m_wcml_lattice.o
 FoX_wcml.o: m_wcml_lists.o m_wcml_metadata.o m_wcml_molecule.o
-FoX_wcml.o: m_wcml_quantity.o m_wcml_quantity.o m_wcml_stml.o
+FoX_wcml.o: m_wcml_parameter.o m_wcml_property.o m_wcml_stml.o
 m_wcml_coma.o: m_wcml_stml.o
 m_wcml_core.o: m_wcml_metadata.o
-m_wcml_quantity.o: m_wcml_stml.o
+m_wcml_parameter.o: m_wcml_stml.o
+m_wcml_property.o: m_wcml_stml.o

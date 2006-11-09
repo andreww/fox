@@ -1,10 +1,9 @@
-define(`TOHWM4_declarationtype', `dnl
-ifelse(`$1', `RealDp', `real(dp)', 
-       `$1', `RealSp', `real(sp)', 
-       `$1', `Int', `integer', 
-       `$1', `Lg', `logical', 
-       `$1', `Ch', `character(len=*)') dnl
-')dnl
+dnl
+include(`foreach.m4')dnl
+dnl
+include(`common.m4')dnl
+dnl
+include(`datatypes.m4')dnl
 dnl
 define(`TOHWM4_metadata_sub',`dnl
    subroutine cmlAddMetadata$1(xf, name, content, convention, dictRef, id, title dnl
@@ -16,7 +15,7 @@ ifelse(substr($1,0,4),`Real',`,fmt)',`)')
     character(len=*), intent(in), optional :: dictRef
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
-
+dnl
 ifelse(substr($1,0,4),`Real',`dnl 
     character(len=*), intent(in), optional :: fmt
 ')dnl
@@ -51,25 +50,15 @@ module m_wcml_metadata
   private
 
   interface cmlAddMetadata
-    module procedure cmlAddMetaDataCh
-    module procedure cmlAddMetaDataInt
-    module procedure cmlAddMetaDataLg
-    module procedure cmlAddMetaDataRealSP
-    module procedure cmlAddMetaDataRealDP
+    m4_foreach(`x', TOHWM4_types, `TOHWM4_interfacename(cmlAddMetadata, x)
+')dnl
   end interface
 
   public :: cmlAddMetadata
 
 contains
 
-TOHWM4_metadata_sub(`Ch')
-
-TOHWM4_metadata_sub(`Lg')
-
-TOHWM4_metadata_sub(`Int')
-
-TOHWM4_metadata_sub(`RealSp')
-
-TOHWM4_metadata_sub(`RealDp')
+m4_foreach(`x', TOHWM4_types, `TOHWM4_metadata_sub(x)
+')
 
 end module m_wcml_metadata
