@@ -14,8 +14,7 @@ define(`TOHWM4_dummyarguse',`dnl
     if (present($1)) call xml_addAttribute(xf, "$1", $1)
 ')dnl
 dnl
-define(`TOHWM4_interfacename',
-    module procedure `$1'`$2'`$3')dnl
+define(`TOHWM4_interfacename',module procedure `$1'`$2'`$3')dnl
 dnl
 define(`TOHWM4_interfacelist', `dnl
      TOHWM4_interfacename(`$1',`$2',`Sca')
