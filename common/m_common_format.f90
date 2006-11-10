@@ -200,7 +200,7 @@ contains
     if (present(delimiter)) then
       d = delimiter
     else
-      d = ' '
+      d = " "
     endif
 
     n = 1
@@ -232,7 +232,7 @@ contains
     if (present(delimiter)) then
       d = delimiter
     else
-      d = ' '
+      d = " "
     endif
 
     s(1:len(st)) = st(1,1)
@@ -268,7 +268,7 @@ contains
 
 
     if (i < 0) then
-      s(1:1) = '-'
+      s(1:1) = "-"
       n = 2
     else
       n = 1
@@ -309,7 +309,7 @@ contains
     if (present(delimiter)) then
       d = delimiter
     else
-      d = ' '
+      d = " "
     endif
 
     n = 1
@@ -387,9 +387,9 @@ contains
     character(len=merge(4,5,l)) :: s
     
     if (l) then
-      s='true'
+      s="true"
     else
-      s='false'
+      s="false"
     endif
   end function str_logical
 
@@ -413,24 +413,24 @@ contains
     if (present(delimiter)) then
       d = delimiter
     else
-      d = ' '
+      d = " "
     endif
 
     n = 1
     do k = 1, size(la) - 1
       if (la(k)) then
-        s(n:n+3) = 'true'
+        s(n:n+3) = "true"
         n = n + 5
       else
-        s(n:n+4) = 'false'
+        s(n:n+4) = "false"
         n = n + 6
       endif
       s(n-1:n-1) = d
     enddo
     if (la(k)) then
-      s(n:) = 'true'
+      s(n:) = "true"
     else
-      s(n:) = 'false'
+      s(n:) = "false"
     endif
 
   end function str_logical_array
@@ -456,23 +456,23 @@ contains
     if (present(delimiter)) then
       d = delimiter
     else
-      d = ' '
+      d = " "
     endif
 
     if (la(1,1)) then
-       s(:4) = 'true'
+       s(:4) = "true"
        n = 5
     else
-       s(:5) = 'false'
+       s(:5) = "false"
        n = 6
     endif
     do j = 2, size(la, 1)
       s(n:n) = d
       if (la(j,1)) then
-        s(n+1:n+4) = 'true'
+        s(n+1:n+4) = "true"
         n = n + 5
       else
-        s(n+1:n+5) = 'false'
+        s(n+1:n+5) = "false"
         n = n + 6
       endif
     enddo
@@ -480,10 +480,10 @@ contains
       do j = 1, size(la, 1)
         s(n:n) = d
         if (la(j,k)) then
-          s(n+1:n+4) = 'true'
+          s(n+1:n+4) = "true"
           n = n + 5
         else
-          s(n+1:n+5) = 'false'
+          s(n+1:n+5) = "false"
           n = n + 6
         endif
       enddo
@@ -548,7 +548,7 @@ contains
     real(sp) :: x_
 
     if (sig < 1) then
-      s ='' 
+      s ="" 
       return
     endif
 
@@ -570,16 +570,16 @@ contains
     j = nint(x_)
     if (j == 10) then
       ! Now round ...
-      s(n:n) = '9'
-      i = verify(s, '9', .true.)
+      s(n:n) = "9"
+      i = verify(s, "9", .true.)
       if (i == 0) then
-        s(1:1) = '!'
+        s(1:1) = "!"
         !overflow
         return
       endif
       j = index(digit, s(i:i))
       s(i:i) = digit(j+1:j+1)
-      s(i+1:) = repeat('0', sig - i + 1)
+      s(i+1:) = repeat("0", sig - i + 1)
     else
       s(n:n) = digit(j+1:j+1)
     endif
@@ -618,7 +618,7 @@ contains
       n = n + sig + 2 + len(e) 
       ! for the decimal point and the e
 
-    elseif (fmt(1:1) == 's') then
+    elseif (fmt(1:1) == "s") then
       if (len(fmt) > 1) then
         sig = str_to_int_10(fmt(2:))
       else
@@ -632,7 +632,7 @@ contains
       
       n = n + sig + 1 + len(e)
 
-    elseif (fmt(1:1) == 'r') then
+    elseif (fmt(1:1) == "r") then
 
       if (len(fmt) > 1) then
         dec = str_to_int_10(fmt(2:))
@@ -647,7 +647,7 @@ contains
 
       ! Need to know if there's an overflow ....
       if (e+dec+1 > 0) then
-        if (index(real_sp_str(abs(x), e+dec+1), '!') == 1) &
+        if (index(real_sp_str(abs(x), e+dec+1), "!") == 1) &
              e = e + 1
       endif
 
@@ -696,24 +696,24 @@ contains
       sig = sig_sp
 
       num = real_sp_str(abs(x), sig)
-      if (num(1:1) == '!') then
+      if (num(1:1) == "!") then
         e = e + 1
-        num = '1'//repeat('0',len(num)-1)
+        num = "1"//repeat("0",len(num)-1)
       endif
 
       if (sig == 1) then
         s(n:n) = num
         n = n + 1
       else
-        s(n:n+1) = num(1:1)//'.'
+        s(n:n+1) = num(1:1)//"."
         s(n+2:n+sig) = num(2:)
         n = n + sig + 1
       endif
 
-      s(n:n) = 'e'
+      s(n:n) = "e"
       s(n+1:) = str(e)
 
-    elseif (fmt(1:1) == 's') then
+    elseif (fmt(1:1) == "s") then
 
       if (len(fmt) > 1) then
         sig = str_to_int_10(fmt(2:))
@@ -724,24 +724,24 @@ contains
       sig = min(sig, digits(1.0_sp))
 
       num = real_sp_str(abs(x), sig)
-      if (num(1:1) == '!') then
+      if (num(1:1) == "!") then
         e = e + 1
-        num = '1'//repeat('0',len(num)-1)
+        num = "1"//repeat("0",len(num)-1)
       endif
 
       if (sig == 1) then
         s(n:n) = num
         n = n + 1
       else
-        s(n:n+1) = num(1:1)//'.'
+        s(n:n+1) = num(1:1)//"."
         s(n+2:n+sig) = num(2:)
         n = n + sig + 1
       endif
 
-      s(n:n) = 'e'
+      s(n:n) = "e"
       s(n+1:) = str(e)
 
-    elseif (fmt(1:1) == 'r') then
+    elseif (fmt(1:1) == "r") then
 
       if (len(fmt) > 1) then
         dec = str_to_int_10(fmt(2:))
@@ -754,30 +754,30 @@ contains
       if (e+dec+1 > 0) then
         num = real_sp_str(abs(x), e+dec+1)
       else
-        num = ''
+        num = ""
       endif
-      if (num(1:1) == '!') then
+      if (num(1:1) == "!") then
         e = e + 1
-        num = '1'//repeat('0',len(num)-1)
+        num = "1"//repeat("0",len(num)-1)
       endif
 
       if (abs(x) >= 1.0_sp) then
         s(n:n+e) = num(:e+1)
         n = n + e + 1
         if (dec > 0) then
-          s(n:n) = '.'
+          s(n:n) = "."
           n = n + 1
           s(n:) = num(e+2:)
         endif
       else
-        s(n:n) = '0'
+        s(n:n) = "0"
         if (dec > 0) then
-          s(n+1:n+1) = '.'
+          s(n+1:n+1) = "."
           n = n + 2
           if (dec < -e-1) then
-            s(n:) = repeat('0', dec)
+            s(n:) = repeat("0", dec)
           else
-            s(n:n-e-2) = repeat('0', max(-e-1,0))
+            s(n:n-e-2) = repeat("0", max(-e-1,0))
             n = n - min(e,-1) - 1
             if (n <= len(s)) then
               s(n:) = num
@@ -969,7 +969,7 @@ contains
     real(dp) :: x_
 
     if (sig < 1) then
-      s ='' 
+      s ="" 
       return
     endif
 
@@ -990,16 +990,16 @@ contains
     j = nint(x_)
     if (j == 10) then
       ! Now round ...
-      s(n:n) = '9'
-      i = verify(s, '9', .true.)
+      s(n:n) = "9"
+      i = verify(s, "9", .true.)
       if (i == 0) then
-        s(1:1) = '!'
+        s(1:1) = "!"
         !overflow
         return
       endif
       j = index(digit, s(i:i))
       s(i:i) = digit(j+1:j+1)
-      s(i+1:) = repeat('0', sig - i + 1)
+      s(i+1:) = repeat("0", sig - i + 1)
     else
       s(n:n) = digit(j+1:j+1)
     endif
@@ -1038,7 +1038,7 @@ contains
       n = n + sig + 2 + len(e) 
       ! for the decimal point and the e
 
-    elseif (fmt(1:1) == 's') then
+    elseif (fmt(1:1) == "s") then
       if (len(fmt) > 1) then
         sig = str_to_int_10(fmt(2:))
       else
@@ -1052,7 +1052,7 @@ contains
       
       n = n + sig + 1 + len(e)
 
-    elseif (fmt(1:1) == 'r') then
+    elseif (fmt(1:1) == "r") then
 
       if (len(fmt) > 1) then
         dec = str_to_int_10(fmt(2:))
@@ -1067,7 +1067,7 @@ contains
 
       ! Need to know if there's an overflow ....
       if (e+dec+1 > 0) then
-        if (index(real_dp_str(abs(x), e+dec+1), '!') == 1) &
+        if (index(real_dp_str(abs(x), e+dec+1), "!") == 1) &
              e = e + 1
       endif
 
@@ -1116,24 +1116,24 @@ contains
       sig = sig_dp
 
       num = real_dp_str(abs(x), sig)
-      if (num(1:1) == '!') then
+      if (num(1:1) == "!") then
         e = e + 1
-        num = '1'//repeat('0',len(num)-1)
+        num = "1"//repeat("0",len(num)-1)
       endif
 
       if (sig == 1) then
         s(n:n) = num
         n = n + 1
       else
-        s(n:n+1) = num(1:1)//'.'
+        s(n:n+1) = num(1:1)//"."
         s(n+2:n+sig) = num(2:)
         n = n + sig + 1
       endif
 
-      s(n:n) = 'e'
+      s(n:n) = "e"
       s(n+1:) = safestr(e)
 
-    elseif (fmt(1:1) == 's') then
+    elseif (fmt(1:1) == "s") then
 
       if (len(fmt) > 1) then
         sig = str_to_int_10(fmt(2:))
@@ -1144,24 +1144,24 @@ contains
       sig = min(sig, digits(1.0_dp))
 
       num = real_dp_str(abs(x), sig)
-      if (num(1:1) == '!') then
+      if (num(1:1) == "!") then
         e = e + 1
-        num = '1'//repeat('0',len(num)-1)
+        num = "1"//repeat("0",len(num)-1)
       endif
 
       if (sig == 1) then
         s(n:n) = num
         n = n + 1
       else
-        s(n:n+1) = num(1:1)//'.'
+        s(n:n+1) = num(1:1)//"."
         s(n+2:n+sig) = num(2:)
         n = n + sig + 1
       endif
 
-      s(n:n) = 'e'
+      s(n:n) = "e"
       s(n+1:) = safestr(e)
 
-    elseif (fmt(1:1) == 'r') then
+    elseif (fmt(1:1) == "r") then
 
       if (len(fmt) > 1) then
         dec = str_to_int_10(fmt(2:))
@@ -1174,30 +1174,30 @@ contains
       if (e+dec+1 > 0) then
         num = real_dp_str(abs(x), e+dec+1)
       else
-        num = ''
+        num = ""
       endif
-      if (num(1:1) == '!') then
+      if (num(1:1) == "!") then
         e = e + 1
-        num = '1'//repeat('0',len(num)-1)
+        num = "1"//repeat("0",len(num)-1)
       endif
 
       if (abs(x) >= 1.0_dp) then
         s(n:n+e) = num(:e+1)
         n = n + e + 1
         if (dec > 0) then
-          s(n:n) = '.'
+          s(n:n) = "."
           n = n + 1
           s(n:) = num(e+2:)
         endif
       else
-        s(n:n) = '0'
+        s(n:n) = "0"
         if (dec > 0) then
-          s(n+1:n+1) = '.'
+          s(n+1:n+1) = "."
           n = n + 2
           if (dec < -e-1) then
-            s(n:) = repeat('0', dec)
+            s(n:) = repeat("0", dec)
           else
-            s(n:n-e-2) = repeat('0', max(-e-1,0))
+            s(n:n-e-2) = repeat("0", max(-e-1,0))
             n = n - min(e,-1) - 1
             if (n <= len(s)) then
               s(n:) = num
@@ -1670,7 +1670,7 @@ contains
     complex(dp), dimension(:), intent(in) :: ca
     character(len=len(ca)) :: s
 
-    s = safestr(ca, " ")
+    s = safestr(ca, "")
   end function str_complex_dp_array
 
   pure function str_complex_dp_matrix_fmt_len(ca, fmt) result(n)
@@ -1748,7 +1748,7 @@ contains
     ! should be ([rs]\d*)?
 
     if (len(fmt) > 0) then
-      if (fmt(1:1) == 'r' .or. fmt(1:1) == 's') then
+      if (fmt(1:1) == "r" .or. fmt(1:1) == "s") then
         if (len(fmt) > 1) then
           good = (verify(fmt(2:), digit) == 0)
         else

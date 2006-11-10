@@ -1,6 +1,7 @@
  program wcml_example
 
    use FoX_wcml
+  use FoX_common, only: str
 
   integer,  parameter ::  sp = selected_real_kind(6,30)
   integer,  parameter ::  dp = selected_real_kind(14,100)
@@ -35,6 +36,10 @@
   num = 20
 
   filename = 'mytest.cml'
+
+  print*, (/(1.0d0,0.0d0), (2.0d0,0.0d0)/)
+
+  print*, str((/(1.0d0,0.0d0), (2.0d0,0.0d0)/))
   
   call cmlBeginFile(myfile, filename=filename, unit=-1)
 
@@ -58,7 +63,7 @@
   call cmlAddProperty(xf=myfile, title='inputSize', value=3, units="cmlUnits:Angstrom")
   call cmlAddProperty(xf=myfile, title='inputSize', value=3.0, units="cmlUnits:Angstrom")
   call cmlAddProperty(xf=myfile, title='inputSize', value=3.0d0, units="cmlUnits:Angstrom")
-  call cmlAddProperty(xf=myfile, name='inputSize', value=(3.0d0, 0.0d0), units="cmlUnits:Angstrom")
+  call cmlAddProperty(xf=myfile, title='inputSize', value=(3.0d0, 0.0d0), units="cmlUnits:Angstrom")
   call cmlEndPropertyList(xf=myfile)
 
   call cmlStartPropertyList(xf=myfile, title="Scalars")
