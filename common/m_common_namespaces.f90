@@ -89,6 +89,7 @@ contains
     type(namespaceDictionary), intent(inout) :: nsDict
 
     integer :: i, j
+
     do i = 0, ubound(nsDict%defaults,1)
        deallocate(nsDict%defaults(i)%URI)
     enddo
@@ -97,9 +98,9 @@ contains
        do j = 0, ubound(nsDict%prefixes(i)%urilist,1)
           deallocate(nsDict%prefixes(i)%urilist(j)%URI)
        enddo
+       deallocate(nsDict%prefixes(i)%prefix)
        deallocate(nsDict%prefixes(i)%urilist)
     enddo
-    deallocate(nsDict%prefixes(0)%prefix)
     deallocate(nsDict%prefixes)
   end subroutine destroyNamespaceDictionary
 
