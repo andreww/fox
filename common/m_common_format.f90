@@ -241,7 +241,7 @@ contains
       s(n:n+len(st)) = d//st(j,1)
         n = n + len(st) + 1
     enddo
-    do k = 2, size(st, 2) - 1
+    do k = 2, size(st, 2)
       do j = 1, size(st, 1)
         s(n:n+len(st(j,k))) = d//st(j,k)
         n = n + len(st) + 1

@@ -2,7 +2,7 @@
 default: install
 #
 OBJFILES=FoX_wcml.o m_wcml_coma.o m_wcml_core.o m_wcml_stml.o \
-         m_wcml_quantity.o m_wcml_metadata.o \
+         m_wcml_parameter.o m_wcml_property.o m_wcml_metadata.o \
          m_wcml_lattice.o m_wcml_geometry.o m_wcml_molecule.o \
          m_wcml_lists.o
 #
@@ -37,9 +37,9 @@ m_wcml_lattice.f90: m_wcml_lattice.m4
 m_wcml_lists.f90: m_wcml_lists.m4
 m_wcml_metadata.f90: m_wcml_metadata.m4
 m_wcml_molecule.f90: m_wcml_molecule.m4
-m_wcml_parameter.f90: m_wcml_parameter.m4
-m_wcml_property.f90: m_wcml_property.m4
-m_wcml_stml.f90: m_wcml_stml.m4
+m_wcml_parameter.f90: m_wcml_parameter.m4 ../m4/quantity.m4 ../m4/foreach.m4 ../m4/datatypes.m4 ../m4/common.m4
+m_wcml_property.f90: m_wcml_property.m4 ../m4/quantity.m4 ../m4/foreach.m4 ../m4/datatypes.m4 ../m4/common.m4 
+m_wcml_stml.f90: m_wcml_stml.m4 ../m4/foreach.m4 ../m4/common.m4 ../m4/datatypes.m4
 # DO NOT DELETE THIS LINE - used by make depend
 FoX_wcml.o: m_wcml_coma.o m_wcml_core.o m_wcml_geometry.o m_wcml_lattice.o
 FoX_wcml.o: m_wcml_lists.o m_wcml_metadata.o m_wcml_molecule.o

@@ -19,31 +19,39 @@ dnl
 define(`TOHWM4_CharacterSub',`dnl
 ifelse(`$2$3', `ScalarCh', `', `dnl
   subroutine $1$2$3 &
-    (xf, chars dnl
-ifelse(substr($3,0,4),`Real',`, fmt', `$2$3', `ScalarCh', `', `$3', `Ch', `, delimiter'))
+    (xf, chars`'dnl
+ifelse(substr($3,0,4),`Real',`, fmt', substr($3,0,5), `Cmplx', `, fmt', `$2$3', `ScalarCh', `', `$3', `Ch', `, delimiter'))
 
     type(xmlf_t), intent(inout) :: xf
     TOHWM4_declarationtype(`$3'), intent(in) dnl
 ifelse(`$2', `Array', `, dimension(:)', `$2', `Matrix',`, dimension(:,:)') dnl
  :: chars
 dnl
-ifelse(substr($3,0,4),`Real',`dnl 
+ifelse(substr($3,0,4), `Real', `dnl 
+    character(len=*), intent(in), optional :: fmt
+', substr($3,0,5), `Cmplx', `dnl
     character(len=*), intent(in), optional :: fmt
 ', `$2$3', `ScalarCh', `', `$3', `Ch', `dnl
     character(len=1), intent(in), optional :: delimiter
 ')dnl
 
-ifelse(substr($3,0,4),`Real',`dnl 
+ifelse(substr($3,0,4), `Real', `dnl 
     if (present(fmt)) then
-       call xml_Add$1(xf=xf, chars=str(chars, fmt))
+      call xml_Add$1(xf=xf, chars=str(chars, fmt))
     else
-')dnl
-       call xml_Add$1(xf=xf, chars=str(chars dnl
+  ', substr($3,0,5), `Cmplx', `dnl
+    if (present(fmt)) then
+      call xml_Add$1(xf=xf, chars=str(chars, fmt))
+    else
+  ')dnl
+    call xml_Add$1(xf=xf, chars=str(chars`'dnl
 ifelse(`$2$3', `ScalarCh', `', `$3', `Ch', `, delimiter') dnl
 ))
-ifelse(substr($3,0,4),`Real',`dnl
-     endif
-') dnl
+ifelse(substr($3,0,4), `Real', `dnl
+    endif
+', substr($3,0,5), `Cmplx', `dnl
+    endif
+')`'dnl
 
   end subroutine $1$2$3
 ')
@@ -53,8 +61,8 @@ dnl
 define(`TOHWM4_AttributeSub',`dnl
 ifelse(`$2$3', `ScalarCh', `', `dnl
   subroutine $1$2$3 &
-    (xf, name, value dnl
-ifelse(substr($3,0,4),`Real',`, fmt', `$2$3', `ScalarCh', `', `$3', `Ch', `, delimiter')) 
+    (xf, name, value`'dnl
+ifelse(substr($3,0,4),`Real',`, fmt', substr($3,0,5), `Cmplx', `, fmt', `$2$3', `ScalarCh', `', `$3', `Ch', `, delimiter')) 
 
     type(xmlf_t), intent(inout) :: xf
     character(len=*), intent(in) :: name
@@ -62,7 +70,9 @@ ifelse(substr($3,0,4),`Real',`, fmt', `$2$3', `ScalarCh', `', `$3', `Ch', `, del
 ifelse(`$2', `Array', `, dimension(:)', `$2', `Matrix',`, dimension(:,:)') dnl
  :: value
 dnl
-ifelse(substr($3,0,4),`Real',`dnl 
+ifelse(substr($3,0,4), `Real', `dnl 
+    character(len=*), intent(in), optional :: fmt
+', substr($3,0,5), `Cmplx',`dnl
     character(len=*), intent(in), optional :: fmt
 ', `$2$3', `ScalarCh', `', `$3', `Ch', `dnl
     character(len=1), intent(in), optional :: delimiter
@@ -70,14 +80,20 @@ ifelse(substr($3,0,4),`Real',`dnl
 dnl
 ifelse(substr($3,0,4),`Real',`dnl 
     if (present(fmt)) then
-       call xml_Add$1(xf=xf, name=name, value=str(value, fmt))
+      call xml_Add$1(xf=xf, name=name, value=str(value, fmt))
     else
-')dnl
-       call xml_Add$1(xf=xf, name=name, value=str(value`'dnl
+  ', substr($3,0,5), `Cmplx', `dnl
+    if (present(fmt)) then
+      call xml_Add$1(xf=xf, name=name, value=str(value, fmt))
+    else
+  ')dnl
+    call xml_Add$1(xf=xf, name=name, value=str(value`'dnl
 ifelse(`$2$3', `ScalarCh', `', `$3', `Ch', `, delimiter')))dnl
 
-ifelse(substr($3,0,4),`Real',`dnl
-     endif
+ifelse(substr($3,0,4), `Real', `dnl
+    endif
+', substr($3,0,5), `Cmplx', `dnl
+    endif
 ') dnl
 dnl
 

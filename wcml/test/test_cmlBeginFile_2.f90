@@ -7,8 +7,16 @@ program test_xml_Openfile
 
   type(xmlf_t) :: xf1
 
+  integer :: n
+
   call cmlBeginFile(xf1, filename, unit=20)
 
-  !TOHW FIXME use check 20 is open and attached to filename
+  inquire(file=filename, number=n)
+
+  if (n==20) then
+    write(*,'(a)') "file is attached"
+  else
+    write(*,'(a)') "file is not attached"
+  endif
 
 end program test_xml_Openfile

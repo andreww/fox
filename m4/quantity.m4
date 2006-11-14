@@ -1,9 +1,9 @@
 dnl
-include(`foreach.m4')
+include(`foreach.m4')dnl
 dnl
 include(`datatypes.m4')dnl
 dnl
-include(`common.m4')
+include(`common.m4')dnl
 dnl
 dnl This is what a subroutine looks like.
 dnl First arg is name of quantity (property/parameter)
@@ -12,11 +12,11 @@ dnl Third arg is type of property(character/logical etc.)
 dnl Fourth arg is whether scalar; assumed-size array, assumed-shape array, assumed size, matrix, or assumed-shape matrix.
 define(`TOHWM4_QuantitySub',`dnl
   subroutine `$1'`$3'`$4' &
-    (xf, value, dnl
-ifelse(`$4', `ArrSi', `nitems, ', `$4', `MatSi', `nrows, ncols, ') dnl
- TOHWM4_dummyarglist(`$2') dnl
-ifelse(`$3',`Lg',`',`, units') dnl
-ifelse(substr($3,0,4),`Real',`,fmt)',`)')
+    (xf, value,dnl
+ifelse(`$4', `ArrSi', `nitems, ', `$4', `MatSi', `nrows, ncols, ')`'dnl
+ TOHWM4_dummyarglist(`$2')`'dnl
+ifelse(`$3',`Lg',`',`, units')`'dnl
+ifelse(substr($3,0,4),`Real',`, fmt)', substr($3,0,5), `Cmplx', `, fmt)',`)')
 
     type(xmlf_t), intent(inout)              :: xf
     TOHWM4_declarationtype(`$3'), intent(in) dnl
@@ -38,20 +38,22 @@ ifelse(`$3', `Ch', `, optional') dnl
 ')dnl
 ifelse(substr($3,0,4),`Real',`dnl 
     character(len=*), intent(in), optional :: fmt
+', substr($3,0,5), `Cmplx',`dnl
+    character(len=*), intent(in), optional :: fmt
 ')dnl
 
     call xml_NewElement(xf, "$1")
 dnl
 m4_foreach(`x', `$2', `TOHWM4_dummyarguse(x)')
 dnl
-    call stmAddValue(xf=xf dnl
-ifelse($4, `ArrSi', `, value=value(:nitems)', $4, `MatSi', `, value=value(:nrows, :ncols)', `, value=value') dnl
-ifelse(`$3',`Lg',`',`, units=units') dnl
-ifelse(substr($3,0,4),`Real',`,fmt=fmt',`') dnl
+    call stmAddValue(xf=xf`'dnl
+ifelse($4, `ArrSi', `, value=value(:nitems)', $4, `MatSi', `, value=value(:nrows, :ncols)', `, value=value')`'dnl
+ifelse(`$3',`Lg',`',`, units=units')`'dnl
+ifelse(substr($3,0,4),`Real',`, fmt=fmt',substr($3,0,5),`Cmplx',`, fmt=fmt',`')`'dnl
 )
 dnl
     call xml_EndElement(xf, "$1")
-
+ 
   end subroutine `$1'`$3'`$4'
 ')dnl
 dnl
