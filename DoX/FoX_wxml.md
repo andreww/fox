@@ -192,7 +192,7 @@ NB Note that if the encoding is specified, and is specified to not be UTF-8, the
 
 * `xml_AddDOCTYPE`  
 **name** *string*: DOCTYPE name  
-**system** *string*: DOCTYPE SYSTEM ID  
+(**system**) *string*: DOCTYPE SYSTEM ID  
 (**public**) *string*: DOCTYPE PUBLIC ID  
 
 Add an XML document type declaration. If used, this must be used prior to first `xml_NewElement` call, and only one such call must be made.

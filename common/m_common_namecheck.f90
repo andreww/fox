@@ -200,8 +200,10 @@ contains
     character(len=*), intent(in) :: value
     logical :: good
     ! this is a very imperfect check and should really be in
-    ! m_common_entities
-    good = (len(value) > 0)
+    ! m_common_entities, since we need to check for PEReferences
+    ! and References
+    !if (good) &
+    !  good = (index(value, "%") == 0).and.(index(value,"&")==0))
     if (good) then
       if (index(value, '"') > 0) then
         good = (index(value, "'") == 0)

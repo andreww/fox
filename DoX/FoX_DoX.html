@@ -162,7 +162,7 @@ wcml_lib
 * On Lahey, 16 tests in <code>wxml/test</code> will fail - this is a flaw in the testsuite, the library is actually
 working correctly. Please ignore this problem. </p>
 
-<p>If any other failures occur, please send a message to the mailing list (<a href="&#109;&#x61;&#x69;&#108;t&#x6F;:&#70;o&#88;&#64;&#x6C;&#x69;&#x73;&#x74;s&#x2E;&#117;&#115;&#122;&#x6C;&#97;&#46;&#x6D;&#x65;&#x2E;&#117;&#x6B;">&#70;o&#88;&#64;&#x6C;&#x69;&#x73;&#x74;s&#x2E;&#117;&#115;&#122;&#x6C;&#97;&#46;&#x6D;&#x65;&#x2E;&#117;&#x6B;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
+<p>If any other failures occur, please send a message to the mailing list (<a href="&#x6D;&#97;&#x69;&#108;&#116;&#111;:&#x46;&#x6F;&#88;&#64;&#x6C;i&#115;&#x74;&#x73;&#x2E;&#117;&#x73;&#x7A;&#x6C;a&#46;&#109;&#101;&#x2E;&#117;&#107;">&#x46;&#x6F;&#88;&#64;&#x6C;i&#115;&#x74;&#x73;&#x2E;&#117;&#x73;&#x7A;&#x6C;a&#46;&#109;&#101;&#x2E;&#117;&#107;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
 
 <h2>Linking to an existing program</h2>
 
@@ -352,6 +352,16 @@ standard Fortran I/O formatting routines do not offer the control required for u
        the behaviour of FoX is unpredictable, and may well result in a crash. This is a consequence of the
        Fortran standard, which strictly disallows doing anything at all with such numbers, including even
        just passing them to a subroutine.</p>
+
+<h2>Complex numbers (single and double precision)</h2>
+
+<p>Complex numbers will be output as pairs of real numbers, in the following way:</p>
+
+<p><code>(1.0e0)+i(1.0e0)</code></p>
+
+<p>where the two halves can be formatted in the way described for 'Real numbers' above; only one format may be specified, and it will apply to both.</p>
+
+<p>All the caveats described above apply for complex number as well; that is, output of complex numbers either of whose components are infinite or NaN is illegal in Fortran, and more than likely will cause a crash in FoX.</p>
 
 <h2>Arrays and matrices</h2>
 
@@ -583,7 +593,7 @@ registered namespace prefix, and generate an error if not.</p>
 <ul>
 <li><code>xml_AddDOCTYPE</code> <br />
 <strong>name</strong> <em>string</em>: DOCTYPE name <br />
-<strong>system</strong> <em>string</em>: DOCTYPE SYSTEM ID <br />
+(<strong>system</strong>) <em>string</em>: DOCTYPE SYSTEM ID <br />
 (<strong>public</strong>) <em>string</em>: DOCTYPE PUBLIC ID  </li>
 </ul>
 
@@ -1244,9 +1254,9 @@ Attempts to do otherwise will result in a runtime error.</p>
 <h1>Further information</h1>
 
 <p>FoX evolved from the initial codebase of <a href="http://lcdx00.wm.lc.ehu.es/ag/xml/">xmlf90</a>,
-which was written largely by Alberto Garcia &lt;<a href="&#x6D;&#97;&#x69;&#108;&#x74;&#111;:&#97;&#108;&#x62;&#101;&#114;&#x74;&#111;&#x67;&#64;i&#x63;&#109;&#x61;&#x62;&#46;&#101;&#115;">&#97;&#108;&#x62;&#101;&#114;&#x74;&#111;&#x67;&#64;i&#x63;&#109;&#x61;&#x62;&#46;&#101;&#115;</a>> and Jon Wakelin &lt;<a href="&#109;&#97;&#105;&#x6C;&#116;&#x6F;:&#106;&#x6F;&#110;&#x2E;&#x77;&#x61;&#107;&#101;&#108;&#105;&#110;&#64;&#98;&#114;&#x69;&#x73;&#116;o&#108;&#x2E;&#x61;&#99;&#46;&#x75;&#107;">&#106;&#x6F;&#110;&#x2E;&#x77;&#x61;&#107;&#101;&#108;&#105;&#110;&#64;&#98;&#114;&#x69;&#x73;&#116;o&#108;&#x2E;&#x61;&#99;&#46;&#x75;&#107;</a>>.</p>
+which was written largely by Alberto Garcia &lt;<a href="&#109;&#97;&#x69;&#108;&#x74;&#x6F;:&#x61;l&#98;&#x65;&#x72;&#116;&#111;g&#64;&#x69;&#99;&#x6D;&#x61;&#98;&#x2E;&#101;&#x73;">&#x61;l&#98;&#x65;&#x72;&#116;&#111;g&#64;&#x69;&#99;&#x6D;&#x61;&#98;&#x2E;&#101;&#x73;</a>> and Jon Wakelin &lt;<a href="&#x6D;&#x61;&#105;&#x6C;&#116;&#x6F;:&#106;&#111;&#110;&#46;&#119;&#x61;&#107;&#101;&#108;&#105;&#110;&#64;b&#114;&#x69;&#x73;&#116;&#111;&#108;&#46;&#x61;&#99;&#46;&#117;&#x6B;">&#106;&#111;&#110;&#46;&#119;&#x61;&#107;&#101;&#108;&#105;&#110;&#64;b&#114;&#x69;&#x73;&#116;&#111;&#108;&#46;&#x61;&#99;&#46;&#117;&#x6B;</a>>.</p>
 
-<p>FoX is the work of Toby White &lt;<a href="&#x6D;&#x61;&#x69;&#108;&#x74;&#111;:&#116;&#x6F;w&#x32;&#49;&#64;&#x63;&#97;&#109;&#x2E;&#97;&#99;&#46;&#117;&#107;">&#116;&#x6F;w&#x32;&#49;&#64;&#x63;&#97;&#109;&#x2E;&#97;&#99;&#46;&#117;&#107;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
+<p>FoX is the work of Toby White &lt;<a href="&#x6D;&#x61;&#105;&#108;&#x74;&#111;:&#x74;&#111;&#119;&#x32;&#49;&#64;&#99;&#97;&#x6D;&#46;&#x61;&#99;&#46;&#117;&#107;">&#x74;&#111;&#119;&#x32;&#49;&#64;&#99;&#97;&#x6D;&#46;&#x61;&#99;&#46;&#117;&#107;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
 
 <p>There is a FoX website at <a href="http://www.uszla.me.uk/software/FoX/">http://www.uszla.me.uk/software/FoX/</a>.</p>
 

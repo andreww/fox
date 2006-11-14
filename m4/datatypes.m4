@@ -9,10 +9,10 @@ ifelse(`$1', `CmplxDp', `complex(dp)',
        `$1', `Ch', `character(len=*)')`'dnl
 ')dnl
 define(`TOHWM4_datatype', `dnl
-ifelse(`$1', `CmplxDp', `xfp:complex',
-       `$1', `CmplxSp', `xfp:complex',
-       `$1', `RealDp', `xfp:real', 
-       `$1', `RealSp', `xfp:real', 
+ifelse(`$1', `CmplxDp', `fpx:complex',
+       `$1', `CmplxSp', `fpx:complex',
+       `$1', `RealDp', `fpx:real', 
+       `$1', `RealSp', `fpx:real', 
        `$1', `Int', `xsd:integer', 
        `$1', `Lg', `xsd:boolean', 
        `$1', `Ch', `xsd:string')`'dnl

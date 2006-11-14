@@ -36,10 +36,6 @@
   num = 20
 
   filename = 'mytest.cml'
-
-  print*, (/(1.0d0,0.0d0), (2.0d0,0.0d0)/)
-
-  print*, str((/(1.0d0,0.0d0), (2.0d0,0.0d0)/))
   
   call cmlBeginFile(myfile, filename=filename, unit=-1)
 

@@ -302,15 +302,17 @@ contains
         if (.not.checkPubId(public)) &
           call wxml_error("Invalid PUBLIC ID "//public)
         if (scan(public, "'") /= 0) then
-          call add_to_buffer(' PUBLIC "'//public//'"', xf%buffer)
+          call add_to_buffer(' PUBLIC "'//public//'" ', xf%buffer)
         else
-          call add_to_buffer(" PUBLIC '"//public//"'", xf%buffer)
+          call add_to_buffer(" PUBLIC '"//public//"' ", xf%buffer)
         endif
+      else
+        call add_to_buffer(' SYSTEM ', xf%buffer)
       endif
       if (scan(system, "'") /= 0) then
-        call add_to_buffer(' SYSTEM "'//system//'"', xf%buffer)
+        call add_to_buffer('"'//system//'"', xf%buffer)
       else
-        call add_to_buffer(" SYSTEM '"//system//"'", xf%buffer)
+        call add_to_buffer("'"//system//"'", xf%buffer)
       endif
     elseif (present(public)) then
       call wxml_error("wxml:DOCTYPE: PUBLIC supplied without SYSTEM for: "//name)
@@ -346,7 +348,7 @@ contains
         call wxml_fatal("Parameter entity "//name//" cannot have both a PEdef and an External ID")
     else
       if (.not.present(system)) &
-        call wxml_fatal("Parameter entity "//name//" must have either a PEdef and an External ID")
+        call wxml_fatal("Parameter entity "//name//" must have either a PEdef or an External ID")
     endif
     if (present(PEdef)) then
       call add_internal_entity(xf%PEList, name, PEdef)
@@ -366,12 +368,12 @@ contains
     else
       if (present(public)) then
         if (index(public, '"') > 0) then
-          call add_to_buffer(" PUBLIC '"//public//"' ", xf%buffer)
+          call add_to_buffer("PUBLIC '"//public//"' ", xf%buffer)
         else
-          call add_to_buffer(' PUBLIC "'//public//'" ', xf%buffer)
+          call add_to_buffer('PUBLIC "'//public//'" ', xf%buffer)
         endif
       else
-        call add_to_buffer(' SYSTEM ', xf%buffer)
+        call add_to_buffer('SYSTEM ', xf%buffer)
       endif
       if (index(system, '"') > 0) then
         call add_to_buffer("'"//system//'"', xf%buffer)

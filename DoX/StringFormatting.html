@@ -18,7 +18,7 @@ standard Fortran I/O formatting routines do not offer the control required for u
 
 <p>To use this in your program, import it via:</p>
 
-<pre><code>use FoX_common, only: str
+<pre><code>use FoX_common, only; str
 </code></pre>
 
 <p>and use it like so:</p>
@@ -101,6 +101,16 @@ standard Fortran I/O formatting routines do not offer the control required for u
        the behaviour of FoX is unpredictable, and may well result in a crash. This is a consequence of the
        Fortran standard, which strictly disallows doing anything at all with such numbers, including even
        just passing them to a subroutine.</p>
+
+<h2>Complex numbers (single and double precision)</h2>
+
+<p>Complex numbers will be output as pairs of real numbers, in the following way:</p>
+
+<p><code>(1.0e0)+i(1.0e0)</code></p>
+
+<p>where the two halves can be formatted in the way described for 'Real numbers' above; only one format may be specified, and it will apply to both.</p>
+
+<p>All the caveats described above apply for complex number as well; that is, output of complex numbers either of whose components are infinite or NaN is illegal in Fortran, and more than likely will cause a crash in FoX.</p>
 
 <h2>Arrays and matrices</h2>
 
