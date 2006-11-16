@@ -8,7 +8,7 @@
   xmlns:cmlUnits="http://www.xml-cml.org/units/units"
   xmlns:siUnits="http://www.xml-cml.org/units/siUnits"
   xmlns:atomicUnits="http://www.xml-cml.org/units/atomic">
-  <parameter title="name">
+  <parameter name="name">
     <array size="2" dataType="xsd:integer" units="siUnits:m">1 1</array>
   </parameter>
 </cml>

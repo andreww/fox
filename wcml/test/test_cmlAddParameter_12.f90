@@ -8,7 +8,7 @@ program test
 
   call cmlBeginFile(xf, filename, unit=-1)
   call cmlStartCml(xf)
-  call cmlAddParameter(xf, title="name", value=(/2.0d0, 3.0d0/), fmt="s3", units="siUnits:m")
+  call cmlAddParameter(xf, name="name", value=(/2.0d0, 3.0d0/), fmt="s3", units="siUnits:m")
 
   call cmlFinishFile(xf)
 

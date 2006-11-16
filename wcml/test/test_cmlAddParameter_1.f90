@@ -8,7 +8,7 @@ program test
 
   call cmlBeginFile(xf, filename, unit=-1)
   call cmlStartCml(xf)
-  call cmlAddParameter(xf, title="name", value="value")
+  call cmlAddParameter(xf, name="name", value="value")
 
   call cmlFinishFile(xf)
 

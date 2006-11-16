@@ -8,7 +8,7 @@ program test
 
   call cmlBeginFile(xf, filename, unit=-1)
   call cmlStartCml(xf)
-  call cmlAddParameter(xf, title="name", value=reshape((/1, 1, 2, 2/),(/2,2/)), units="siUnits:m")
+  call cmlAddParameter(xf, name="name", value=reshape((/1, 1, 2, 2/),(/2,2/)), units="siUnits:m")
 
   call cmlFinishFile(xf)
 

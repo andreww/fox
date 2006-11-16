@@ -9,7 +9,7 @@ program test
 
   call cmlBeginFile(xf, filename, unit=-1)
   call cmlStartCml(xf)
-  call cmlAddParameter(xf, title="name", &
+  call cmlAddParameter(xf, name="name", &
     value=reshape((/"value1", "value2", "value3", "value4"/), (/2,2/)))
 
   call cmlFinishFile(xf)
