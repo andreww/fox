@@ -1,7 +1,7 @@
 dnl
-include(`foreach.m4')
+include(`foreach.m4')dnl
 dnl
-include(`common.m4')
+include(`common.m4')dnl
 dnl
 dnl Below we only use arguments with a type of xsd:string
 define(`TOHWM4_moleculeargs', `(dictRef,convention,title,id,ref,formula,chirality,role)')dnl
@@ -197,6 +197,8 @@ TOHWM4_moleculeargsuse
         call addcoords_xyz3_$1(xf, coords, fmt)
       case ("xyzFrac")
         call addcoords_xyzfrac_$1(xf, coords, fmt)
+      case default
+        call FoX_error("Invalid style specification for atomic coordinates")
       end select
     else
       call addcoords_x3_$1(xf, coords, fmt)
@@ -271,6 +273,7 @@ dnl
 module m_wcml_molecule
 
   use m_common_realtypes, only: sp, dp
+  use m_common_error, only: FoX_error
   use FoX_wxml, only: xmlf_t
   use FoX_wxml, only: xml_NewElement, xml_EndElement
   use FoX_wxml, only: xml_AddAttribute

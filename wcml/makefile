@@ -35,7 +35,6 @@ m_wcml_coma.f90: m_wcml_coma.m4
 m_wcml_geometry.f90: m_wcml_geometry.m4
 m_wcml_lattice.f90: m_wcml_lattice.m4
 m_wcml_lists.f90: m_wcml_lists.m4
-m_wcml_metadata.f90: m_wcml_metadata.m4
 m_wcml_molecule.f90: m_wcml_molecule.m4
 m_wcml_parameter.f90: m_wcml_parameter.m4 ../m4/quantity.m4 ../m4/foreach.m4 ../m4/datatypes.m4 ../m4/common.m4
 m_wcml_property.f90: m_wcml_property.m4 ../m4/quantity.m4 ../m4/foreach.m4 ../m4/datatypes.m4 ../m4/common.m4 
