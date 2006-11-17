@@ -86,6 +86,12 @@ contains
     buffer%str(:len_b) = s2(n:)
     buffer%size = len_b
 
+    print*,'----- CHARACTERS ADDED --------'
+    print*, buffer%str(:len_b)
+    print*,'-------------------------------'
+    print*,len_b
+    print*
+
   end subroutine add_to_buffer
 
 
@@ -186,7 +192,7 @@ contains
       select case (iachar(s(i:i)))
       case (0)
         call FoX_error("Tried to output a NUL character")
-      case (1:8,11:13,15:31)
+      case (1:8,11:12,14:31)
         if (version == "1.0") &
           call FoX_error("Tried to output a character invalid under XML 1.0: &#"//str(iachar(s(i:i)))//";")
       case (128:)

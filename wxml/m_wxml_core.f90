@@ -94,6 +94,7 @@ module m_wxml_core
   public :: xml_AddXMLPI
   public :: xml_AddComment
   public :: xml_AddCharacters
+  public :: xml_AddNewline
   public :: xml_AddEntityReference
   public :: xml_AddAttribute
   public :: xml_AddPseudoAttribute
@@ -737,6 +738,13 @@ contains
     
     xf%state_2 = WXML_STATE_2_IN_CHARDATA
   end subroutine xml_AddCharacters_Ch
+
+
+  subroutine xml_AddNewline(xf)
+    type(xmlf_t), intent(inout) :: xf
+    
+    call xml_AddCharacters_ch(xf, achar(13))
+  end subroutine xml_AddNewline
 
   
   subroutine xml_AddEntityReference(xf, entityref)

@@ -53,41 +53,42 @@ contains
     character(len=*), intent(in) :: version
     character(len=escape_string_len(s)) :: s2
 
-    integer :: c, i
+    integer :: c, i, ic
 
     ! We have to do it this way (with achar etc) in case the native
     ! platform encoding is not ASCII
 
     c = 1
     do i = 1, len(s)
-      select case (iachar(s(i:i)))
+      ic = iachar(s(i:i))
+      select case (ic)
       case (0)
         call FoX_error("Tried to output a NUL character")
       case (1:8)
         if (version == "1.0") then
           call FoX_error("Tried to output a character invalid under XML 1.0")
         else
-          s2(c:c+3) = "&#"//str(iachar(s(i:i)))//";"
+          s2(c:c+3) = "&#"//str(ic)//";"
           c = c + 4
         endif
       case(9:10)
-        s2(c:c) = achar(iachar(s(i:i)))
+        s2(c:c) = achar(ic)
         c = c + 1
-      case(11:13)
+      case(11:12)
         if (version == "1.0") then
           call FoX_error("Tried to output a character invalid under XML 1.0")
         else
-          s2(c:c+5) = "&#"//str(iachar(s(i:i)))//";"
+          s2(c:c+5) = "&#"//str(ic)//";"
           c = c + 5
         endif
-      case(14)
-        s2(c:c) = achar(iachar(s(i:i)))
+      case(13)
+        s2(c:c) = achar(13)
         c = c + 1
-      case (15:31)
+      case (14:31)
         if (version == "1.0") then
           call FoX_error("Tried to output a character invalid under XML 1.0")
         else
-          s2(c:c+5) = "&#"//str(iachar(s(i:i)))//";"
+          s2(c:c+5) = "&#"//str(ic)//";"
           c = c + 5
         endif
       case (32:126)
@@ -105,7 +106,7 @@ contains
           s2(c:c+5) = "&apos;"
           c = c + 6
         case default
-          s2(c:c) = achar(iachar(s(i:i)))
+          s2(c:c) = achar(ic)
           c = c + 1
         end select
       case (127)
@@ -114,7 +115,7 @@ contains
       case default
         !TOHW we should maybe just disallow this ...
         call FoX_warning("emitting non-ASCII character. Platform-dependent result!")
-        s2(c:c+6) = "&#"//str(iachar(s(i:i)))//";"
+        s2(c:c+6) = "&#"//str(ic)//";"
         c = c + 6
         ! a char can never contain more than 8 bits = 256 characters, so
         ! we never need more than 3 chars to represent the int.

@@ -18,6 +18,7 @@ module FoX_wxml
   public :: xml_AddEntityReference
 
   public :: xml_AddCharacters
+  public :: xml_AddNewline
   public :: xml_AddAttribute
   public :: xml_AddPseudoAttribute
 

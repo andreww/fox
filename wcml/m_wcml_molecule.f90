@@ -4,11 +4,12 @@
 
 module m_wcml_molecule
 
+  use m_common_format, only: str
   use m_common_realtypes, only: sp, dp
   use m_common_error, only: FoX_error
   use FoX_wxml, only: xmlf_t
   use FoX_wxml, only: xml_NewElement, xml_EndElement
-  use FoX_wxml, only: xml_AddAttribute
+  use FoX_wxml, only: xml_AddAttribute, xml_AddCharacters
 
   implicit none
   private
@@ -57,6 +58,13 @@ contains
 
 
     integer          :: i
+
+    if (style=="DL_POLY") then
+      if (present(atomRefs).or.present(occupancies).or.present(atomIds).or.present(fmt)) &
+        call FoX_error("With DL_POLY style, no optional arguments permitted.")
+      call addDlpolyMatrix_sp(xf, coords, elements)
+      return
+    endif
 
     call xml_NewElement(xf, "molecule")
 
@@ -112,6 +120,13 @@ contains
 
 
     integer          :: i
+
+    if (style=="DL_POLY") then
+      if (present(atomRefs).or.present(occupancies).or.present(atomIds).or.present(fmt)) &
+        call FoX_error("With DL_POLY style, no optional arguments permitted.")
+      call addDlpolyMatrix_sp(xf, coords(:, :natoms), elements(:natoms))
+      return
+    endif
 
     call xml_NewElement(xf, "molecule")
 
@@ -170,6 +185,13 @@ contains
 
     integer          :: i
 
+    if (style=="DL_POLY") then
+      if (present(atomRefs).or.present(occupancies).or.present(atomIds).or.present(fmt)) &
+        call FoX_error("With DL_POLY style, no optional arguments permitted.")
+      call addDlpolyMatrix_3_sp(xf, x, y, z, elements)
+      return
+    endif
+
     call xml_NewElement(xf, "molecule")
 
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
@@ -226,6 +248,13 @@ contains
 
 
     integer          :: i
+
+    if (style=="DL_POLY") then
+      if (present(atomRefs).or.present(occupancies).or.present(atomIds).or.present(fmt)) &
+        call FoX_error("With DL_POLY style, no optional arguments permitted.")
+      call addDlpolyMatrix_3_sp(xf, x(:natoms), y(:natoms), z(:natoms), elements(:natoms))
+      return
+    endif
 
     call xml_NewElement(xf, "molecule")
 
@@ -355,6 +384,50 @@ contains
 
   end subroutine addcoords_xfrac_sp
 
+  subroutine addDlpolyMatrix_sp(xf, coords, elems)
+    type(xmlf_t), intent(inout)                :: xf
+    real(kind=sp), intent(in), dimension(:, :) :: coords
+    character(len=2), intent(in), dimension(:) :: elems
+
+    integer :: natoms, i
+
+    natoms = size(elems)
+    
+    call xml_NewElement(xf, "matrix")
+    call xml_AddAttribute(xf, "nrows", size(elems))
+    call xml_AddAttribute(xf, "ncols", 11)
+    call xml_AddAttribute(xf, "dataType", "xsd:string")
+    
+    do i = 1, natoms
+      call xml_AddCharacters(xf, elems(i)//"  "//str(i)//achar(13))
+      call xml_AddCharacters(xf, str(coords(1,i))//" "//str(coords(2,i))//" "//str(coords(3,i))//achar(13))
+      call xml_AddCharacters(xf, "0 0 0"//achar(13)//"0 0 0"//achar(13))
+    enddo
+  end subroutine addDlpolyMatrix_sp
+
+  subroutine addDlpolyMatrix_3_sp(xf, x, y, z, elems)
+    type(xmlf_t), intent(inout)                :: xf
+    real(kind=sp), intent(in), dimension(:)    :: x, y, z
+    character(len=2), intent(in), dimension(:) :: elems
+
+    integer :: natoms, i
+
+    natoms = size(elems)
+    
+    call xml_NewElement(xf, "matrix")
+    call xml_AddAttribute(xf, "nrows", size(elems))
+    call xml_AddAttribute(xf, "ncols", 11)
+    call xml_AddAttribute(xf, "dataType", "xsd:string")
+    
+    do i = 1, natoms
+      call xml_AddCharacters(xf, elems(i)//"  "//str(i)//achar(13))
+      call xml_AddCharacters(xf, str(x(i))//" "//str(y(i))//" "//str(z(i))//achar(13))
+      call xml_AddCharacters(xf, "0 0 0"//achar(13)//"0 0 0"//achar(13))
+    enddo
+  end subroutine addDlpolyMatrix_3_sp
+
+
+
 
   subroutine cmlAddMoleculedp(xf, elements, atomRefs, coords, occupancies, atomIds, style, fmt &
 ,dictRef,convention,title,id,ref,formula,chirality,role)
@@ -379,6 +452,13 @@ contains
 
 
     integer          :: i
+
+    if (style=="DL_POLY") then
+      if (present(atomRefs).or.present(occupancies).or.present(atomIds).or.present(fmt)) &
+        call FoX_error("With DL_POLY style, no optional arguments permitted.")
+      call addDlpolyMatrix_dp(xf, coords, elements)
+      return
+    endif
 
     call xml_NewElement(xf, "molecule")
 
@@ -434,6 +514,13 @@ contains
 
 
     integer          :: i
+
+    if (style=="DL_POLY") then
+      if (present(atomRefs).or.present(occupancies).or.present(atomIds).or.present(fmt)) &
+        call FoX_error("With DL_POLY style, no optional arguments permitted.")
+      call addDlpolyMatrix_dp(xf, coords(:, :natoms), elements(:natoms))
+      return
+    endif
 
     call xml_NewElement(xf, "molecule")
 
@@ -492,6 +579,13 @@ contains
 
     integer          :: i
 
+    if (style=="DL_POLY") then
+      if (present(atomRefs).or.present(occupancies).or.present(atomIds).or.present(fmt)) &
+        call FoX_error("With DL_POLY style, no optional arguments permitted.")
+      call addDlpolyMatrix_3_dp(xf, x, y, z, elements)
+      return
+    endif
+
     call xml_NewElement(xf, "molecule")
 
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
@@ -548,6 +642,13 @@ contains
 
 
     integer          :: i
+
+    if (style=="DL_POLY") then
+      if (present(atomRefs).or.present(occupancies).or.present(atomIds).or.present(fmt)) &
+        call FoX_error("With DL_POLY style, no optional arguments permitted.")
+      call addDlpolyMatrix_3_dp(xf, x(:natoms), y(:natoms), z(:natoms), elements(:natoms))
+      return
+    endif
 
     call xml_NewElement(xf, "molecule")
 
@@ -676,6 +777,50 @@ contains
     call xml_AddAttribute(xf, "zFract", coords(3), fmt)
 
   end subroutine addcoords_xfrac_dp
+
+  subroutine addDlpolyMatrix_dp(xf, coords, elems)
+    type(xmlf_t), intent(inout)                :: xf
+    real(kind=dp), intent(in), dimension(:, :) :: coords
+    character(len=2), intent(in), dimension(:) :: elems
+
+    integer :: natoms, i
+
+    natoms = size(elems)
+    
+    call xml_NewElement(xf, "matrix")
+    call xml_AddAttribute(xf, "nrows", size(elems))
+    call xml_AddAttribute(xf, "ncols", 11)
+    call xml_AddAttribute(xf, "dataType", "xsd:string")
+    
+    do i = 1, natoms
+      call xml_AddCharacters(xf, elems(i)//"  "//str(i)//achar(13))
+      call xml_AddCharacters(xf, str(coords(1,i))//" "//str(coords(2,i))//" "//str(coords(3,i))//achar(13))
+      call xml_AddCharacters(xf, "0 0 0"//achar(13)//"0 0 0"//achar(13))
+    enddo
+  end subroutine addDlpolyMatrix_dp
+
+  subroutine addDlpolyMatrix_3_dp(xf, x, y, z, elems)
+    type(xmlf_t), intent(inout)                :: xf
+    real(kind=dp), intent(in), dimension(:)    :: x, y, z
+    character(len=2), intent(in), dimension(:) :: elems
+
+    integer :: natoms, i
+
+    natoms = size(elems)
+    
+    call xml_NewElement(xf, "matrix")
+    call xml_AddAttribute(xf, "nrows", size(elems))
+    call xml_AddAttribute(xf, "ncols", 11)
+    call xml_AddAttribute(xf, "dataType", "xsd:string")
+    
+    do i = 1, natoms
+      call xml_AddCharacters(xf, elems(i)//"  "//str(i)//achar(13))
+      call xml_AddCharacters(xf, str(x(i))//" "//str(y(i))//" "//str(z(i))//achar(13))
+      call xml_AddCharacters(xf, "0 0 0"//achar(13)//"0 0 0"//achar(13))
+    enddo
+  end subroutine addDlpolyMatrix_3_dp
+
+
 
 
 end module m_wcml_molecule
