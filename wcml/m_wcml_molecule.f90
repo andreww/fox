@@ -9,7 +9,7 @@ module m_wcml_molecule
   use m_common_error, only: FoX_error
   use FoX_wxml, only: xmlf_t
   use FoX_wxml, only: xml_NewElement, xml_EndElement
-  use FoX_wxml, only: xml_AddAttribute, xml_AddCharacters
+  use FoX_wxml, only: xml_AddAttribute, xml_AddCharacters, xml_AddNewline
 
   implicit none
   private
@@ -309,7 +309,11 @@ contains
       select case(style)
       case ("x3") 
         call addcoords_x3_sp(xf, coords, fmt)
+      case ("cartesian") 
+        call addcoords_x3_sp(xf, coords, fmt)
       case ("xFrac")
+        call addcoords_xfrac_sp(xf, coords, fmt)
+      case ("fractional")
         call addcoords_xfrac_sp(xf, coords, fmt)
       case ("xyz3")
         call addcoords_xyz3_sp(xf, coords, fmt)
@@ -398,10 +402,16 @@ contains
     call xml_AddAttribute(xf, "ncols", 11)
     call xml_AddAttribute(xf, "dataType", "xsd:string")
     
+    call xml_AddNewline(xf)
     do i = 1, natoms
-      call xml_AddCharacters(xf, elems(i)//"  "//str(i)//achar(13))
-      call xml_AddCharacters(xf, str(coords(1,i))//" "//str(coords(2,i))//" "//str(coords(3,i))//achar(13))
-      call xml_AddCharacters(xf, "0 0 0"//achar(13)//"0 0 0"//achar(13))
+      call xml_AddCharacters(xf, elems(i)//"  "//str(i))
+      call xml_AddNewline(xf)
+      call xml_AddCharacters(xf, str(coords(1,i))//" "//str(coords(2,i))//" "//str(coords(3,i)))
+      call xml_AddNewline(xf)
+      call xml_AddCharacters(xf, "0 0 0")
+      call xml_AddNewline(xf)
+      call xml_AddCharacters(xf, "0 0 0")
+      call xml_AddNewline(xf)
     enddo
   end subroutine addDlpolyMatrix_sp
 
@@ -419,10 +429,16 @@ contains
     call xml_AddAttribute(xf, "ncols", 11)
     call xml_AddAttribute(xf, "dataType", "xsd:string")
     
+    call xml_AddNewline(xf)
     do i = 1, natoms
-      call xml_AddCharacters(xf, elems(i)//"  "//str(i)//achar(13))
-      call xml_AddCharacters(xf, str(x(i))//" "//str(y(i))//" "//str(z(i))//achar(13))
-      call xml_AddCharacters(xf, "0 0 0"//achar(13)//"0 0 0"//achar(13))
+      call xml_AddCharacters(xf, elems(i)//"  "//str(i))
+      call xml_AddNewline(xf)
+      call xml_AddCharacters(xf, str(x(i))//" "//str(y(i))//" "//str(z(i)))
+      call xml_AddNewline(xf)
+      call xml_AddCharacters(xf, "0 0 0")
+      call xml_AddNewline(xf)
+      call xml_AddCharacters(xf, "0 0 0")
+      call xml_AddNewline(xf)
     enddo
   end subroutine addDlpolyMatrix_3_sp
 
@@ -703,7 +719,11 @@ contains
       select case(style)
       case ("x3") 
         call addcoords_x3_dp(xf, coords, fmt)
+      case ("cartesian") 
+        call addcoords_x3_dp(xf, coords, fmt)
       case ("xFrac")
+        call addcoords_xfrac_dp(xf, coords, fmt)
+      case ("fractional")
         call addcoords_xfrac_dp(xf, coords, fmt)
       case ("xyz3")
         call addcoords_xyz3_dp(xf, coords, fmt)
@@ -792,10 +812,16 @@ contains
     call xml_AddAttribute(xf, "ncols", 11)
     call xml_AddAttribute(xf, "dataType", "xsd:string")
     
+    call xml_AddNewline(xf)
     do i = 1, natoms
-      call xml_AddCharacters(xf, elems(i)//"  "//str(i)//achar(13))
-      call xml_AddCharacters(xf, str(coords(1,i))//" "//str(coords(2,i))//" "//str(coords(3,i))//achar(13))
-      call xml_AddCharacters(xf, "0 0 0"//achar(13)//"0 0 0"//achar(13))
+      call xml_AddCharacters(xf, elems(i)//"  "//str(i))
+      call xml_AddNewline(xf)
+      call xml_AddCharacters(xf, str(coords(1,i))//" "//str(coords(2,i))//" "//str(coords(3,i)))
+      call xml_AddNewline(xf)
+      call xml_AddCharacters(xf, "0 0 0")
+      call xml_AddNewline(xf)
+      call xml_AddCharacters(xf, "0 0 0")
+      call xml_AddNewline(xf)
     enddo
   end subroutine addDlpolyMatrix_dp
 
@@ -813,10 +839,16 @@ contains
     call xml_AddAttribute(xf, "ncols", 11)
     call xml_AddAttribute(xf, "dataType", "xsd:string")
     
+    call xml_AddNewline(xf)
     do i = 1, natoms
-      call xml_AddCharacters(xf, elems(i)//"  "//str(i)//achar(13))
-      call xml_AddCharacters(xf, str(x(i))//" "//str(y(i))//" "//str(z(i))//achar(13))
-      call xml_AddCharacters(xf, "0 0 0"//achar(13)//"0 0 0"//achar(13))
+      call xml_AddCharacters(xf, elems(i)//"  "//str(i))
+      call xml_AddNewline(xf)
+      call xml_AddCharacters(xf, str(x(i))//" "//str(y(i))//" "//str(z(i)))
+      call xml_AddNewline(xf)
+      call xml_AddCharacters(xf, "0 0 0")
+      call xml_AddNewline(xf)
+      call xml_AddCharacters(xf, "0 0 0")
+      call xml_AddNewline(xf)
     enddo
   end subroutine addDlpolyMatrix_3_dp
 

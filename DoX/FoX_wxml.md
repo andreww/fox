@@ -14,7 +14,7 @@ Please note that where the documentation below is not clear, it may be useful to
 
 A more elaborate example, using almost all of the XML features found here, is available in the top-level directory as `wxml_example.f90`. It will be automatically compiled as part of the build porcess.
 
-<a name="Conventions">
+<a name="Conventions"/>
 
 ##Conventions and notes:
 
@@ -122,6 +122,12 @@ the characters will be surrounded by CDATA tags.
 Add text data. The data to be added may be of any type; they will be converted to text according to FoX's [formatting rules](str.html),
 and if they are a 1- or 2-dimensional array, the elements will all be output, separated by spaces (except if it is a character array, in which
 case the delimiter may be changed to any other single character using an optional argument).
+
+* `xml_AddNewline`
+
+Within the context of character output, add a (system-dependent) newline character. This function can only
+be called wherever `xml_AddCharacters` can be called. (Newlines outside of character context are under
+FoX's control, and cannot be manipulated by the user.)
 
 <a name="NSfunctions"/>
 

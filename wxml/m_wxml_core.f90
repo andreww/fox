@@ -743,7 +743,8 @@ contains
   subroutine xml_AddNewline(xf)
     type(xmlf_t), intent(inout) :: xf
     
-    call xml_AddCharacters_ch(xf, achar(13))
+    call xml_AddCharacters(xf, "")
+    call add_eol(xf)
   end subroutine xml_AddNewline
 
   

@@ -86,12 +86,6 @@ contains
     buffer%str(:len_b) = s2(n:)
     buffer%size = len_b
 
-    print*,'----- CHARACTERS ADDED --------'
-    print*, buffer%str(:len_b)
-    print*,'-------------------------------'
-    print*,len_b
-    print*
-
   end subroutine add_to_buffer
 
 

@@ -162,7 +162,7 @@ wcml_lib
 * On Lahey, 16 tests in <code>wxml/test</code> will fail - this is a flaw in the testsuite, the library is actually
 working correctly. Please ignore this problem. </p>
 
-<p>If any other failures occur, please send a message to the mailing list (<a href="&#x6D;a&#x69;&#108;&#x74;&#x6F;:&#x46;&#111;&#88;&#64;&#x6C;&#105;&#x73;&#116;&#x73;&#x2E;&#117;&#115;&#122;&#108;&#x61;&#46;&#109;&#x65;&#x2E;u&#107;">&#x46;&#111;&#88;&#64;&#x6C;&#105;&#x73;&#116;&#x73;&#x2E;&#117;&#115;&#122;&#108;&#x61;&#46;&#109;&#x65;&#x2E;u&#107;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
+<p>If any other failures occur, please send a message to the mailing list (<a href="&#109;a&#x69;&#x6C;&#116;&#111;:F&#111;&#x58;&#64;&#108;&#105;&#x73;&#x74;s&#46;&#x75;&#115;&#122;&#x6C;&#97;&#x2E;&#x6D;e&#x2E;&#x75;&#x6B;">F&#111;&#x58;&#64;&#108;&#105;&#x73;&#x74;s&#46;&#x75;&#115;&#122;&#x6C;&#97;&#x2E;&#x6D;e&#x2E;&#x75;&#x6B;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
 
 <h2>Linking to an existing program</h2>
 
@@ -394,7 +394,7 @@ standard Fortran I/O formatting routines do not offer the control required for u
 
 <p>A more elaborate example, using almost all of the XML features found here, is available in the top-level directory as <code>wxml_example.f90</code>. It will be automatically compiled as part of the build porcess.</p>
 
-<p><a name="Conventions"></p>
+<p><a name="Conventions"/></p>
 
 <h2>Conventions and notes:</h2>
 
@@ -515,6 +515,14 @@ the characters will be surrounded by CDATA tags.
 <p>Add text data. The data to be added may be of any type; they will be converted to text according to FoX's <a href="str.html">formatting rules</a>,
 and if they are a 1- or 2-dimensional array, the elements will all be output, separated by spaces (except if it is a character array, in which
 case the delimiter may be changed to any other single character using an optional argument).</p>
+
+<ul>
+<li><code>xml_AddNewline</code></li>
+</ul>
+
+<p>Within the context of character output, add a (system-dependent) newline character. This function can only
+be called wherever <code>xml_AddCharacters</code> can be called. (Newlines outside of character context are under
+FoX's control, and cannot be manipulated by the user.)</p>
 
 <p><a name="NSfunctions"/></p>
 
@@ -1101,7 +1109,7 @@ Attempts to do otherwise will result in a runtime error.</p>
 (<strong>occupancies</strong>): <em>real</em> <em>array</em> : a length-n array of the occupancies of each atom. <br />
 (<strong>atomRefs</strong>): <em>string</em> <em>array</em>: a length-n array of strings containing references which may point to IDs elsewhere of, for example, pseudopotentials or basis sets defining the element's behaviour. <br />
 (<strong>atomIds</strong>): <em>string</em> <em>array</em>: a length-n array of strings containing IDs for the atoms. <br />
-(<strong>style</strong>): <em>string</em> <em>scalar</em>: <code>x3</code> - the coordinates are Cartesian, or <code>xFrac</code> - the coordinates are fractional. The default is Cartesian. <br />
+(<strong>style</strong>): <em>string</em> <em>scalar</em>: <code>cartesian</code> - the coordinates are Cartesian, or <code>fractional</code> - the coordinates are fractional. The default is Cartesian. <br />
 (<strong>ref</strong>) <em>string</em> <em>scalar</em>: Reference an <code>id</code> attribute of another element (generally deprecated) <br />
 (<strong>formula</strong>) <em>string</em> <em>scalar</em>: An IUPAC chemical formula <br />
 (<strong>chirality</strong>) <em>string</em> <em>scalar</em>: The chirality of the molecule. No defined vocabulary. <br />
@@ -1254,9 +1262,9 @@ Attempts to do otherwise will result in a runtime error.</p>
 <h1>Further information</h1>
 
 <p>FoX evolved from the initial codebase of <a href="http://lcdx00.wm.lc.ehu.es/ag/xml/">xmlf90</a>,
-which was written largely by Alberto Garcia &lt;<a href="&#x6D;&#97;&#x69;&#108;t&#x6F;:&#x61;&#x6C;&#x62;&#101;&#114;&#x74;&#x6F;&#x67;&#64;&#105;&#99;&#109;&#97;&#98;&#x2E;&#101;&#115;">&#x61;&#x6C;&#x62;&#101;&#114;&#x74;&#x6F;&#x67;&#64;&#105;&#99;&#109;&#97;&#98;&#x2E;&#101;&#115;</a>> and Jon Wakelin &lt;<a href="&#109;&#x61;&#x69;&#108;&#x74;&#x6F;:&#106;&#111;&#110;&#46;&#x77;&#97;&#107;&#101;&#108;&#105;n&#64;b&#x72;&#105;&#x73;&#x74;&#x6F;&#108;&#46;&#x61;&#99;&#x2E;&#117;&#107;">&#106;&#111;&#110;&#46;&#x77;&#97;&#107;&#101;&#108;&#105;n&#64;b&#x72;&#105;&#x73;&#x74;&#x6F;&#108;&#46;&#x61;&#99;&#x2E;&#117;&#107;</a>>.</p>
+which was written largely by Alberto Garcia &lt;<a href="&#x6D;&#x61;&#105;&#108;t&#111;:&#x61;&#108;&#x62;&#101;&#114;t&#x6F;&#103;&#64;&#105;c&#109;&#97;&#x62;&#x2E;&#101;&#115;">&#x61;&#108;&#x62;&#101;&#114;t&#x6F;&#103;&#64;&#105;c&#109;&#97;&#x62;&#x2E;&#101;&#115;</a>> and Jon Wakelin &lt;<a href="&#x6D;&#97;&#105;&#x6C;&#x74;&#x6F;:&#106;o&#x6E;&#x2E;&#119;&#97;&#107;&#101;&#x6C;i&#110;&#64;&#98;&#x72;&#x69;&#115;&#116;&#111;&#108;&#46;&#97;&#x63;.&#x75;&#107;">&#106;o&#x6E;&#x2E;&#119;&#97;&#107;&#101;&#x6C;i&#110;&#64;&#98;&#x72;&#x69;&#115;&#116;&#111;&#108;&#46;&#97;&#x63;.&#x75;&#107;</a>>.</p>
 
-<p>FoX is the work of Toby White &lt;<a href="&#x6D;&#x61;&#x69;&#108;&#116;&#x6F;:&#x74;o&#119;&#x32;&#x31;&#64;&#99;&#97;&#109;&#x2E;&#97;&#x63;&#x2E;&#x75;&#x6B;">&#x74;o&#119;&#x32;&#x31;&#64;&#99;&#97;&#109;&#x2E;&#97;&#x63;&#x2E;&#x75;&#x6B;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
+<p>FoX is the work of Toby White &lt;<a href="&#x6D;&#x61;i&#x6C;&#116;&#111;:&#x74;&#111;&#x77;&#50;&#x31;&#64;&#x63;&#97;&#x6D;&#x2E;a&#x63;&#46;&#x75;&#107;">&#x74;&#111;&#x77;&#50;&#x31;&#64;&#x63;&#97;&#x6D;&#x2E;a&#x63;&#46;&#x75;&#107;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
 
 <p>There is a FoX website at <a href="http://www.uszla.me.uk/software/FoX/">http://www.uszla.me.uk/software/FoX/</a>.</p>
 

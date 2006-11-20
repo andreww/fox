@@ -274,7 +274,7 @@ This function adds a tag representing an output property
 (**occupancies**): *real* *array* : a length-n array of the occupancies of each atom.  
 (**atomRefs**): *string* *array*: a length-n array of strings containing references which may point to IDs elsewhere of, for example, pseudopotentials or basis sets defining the element's behaviour.  
 (**atomIds**): *string* *array*: a length-n array of strings containing IDs for the atoms.  
-(**style**): *string* *scalar*: `x3` - the coordinates are Cartesian, or `xFrac` - the coordinates are fractional. The default is Cartesian.  
+(**style**): *string* *scalar*: `cartesian` - the coordinates are Cartesian, or `fractional` - the coordinates are fractional. The default is Cartesian.  
 (**ref**) *string* *scalar*: Reference an `id` attribute of another element (generally deprecated)  
 (**formula**) *string* *scalar*: An IUPAC chemical formula  
 (**chirality**) *string* *scalar*: The chirality of the molecule. No defined vocabulary.  
