@@ -9,8 +9,8 @@
   xmlns:siUnits="http://www.xml-cml.org/units/siUnits"
   xmlns:atomicUnits="http://www.xml-cml.org/units/atomic">
   <lattice>
-    <latticeVector dictRef="cml:latticeVector">1.00e0 5.00e-1 5.00e-1</latticeVector>
-    <latticeVector dictRef="cml:latticeVector">0.00e0 1.00e0 0.00e0</latticeVector>
-    <latticeVector dictRef="cml:latticeVector">0.00e0 0.00e0 1.00e0</latticeVector>
+    <latticeVector units="units:angstrom" dictRef="cml:latticeVector">1.00e0 5.00e-1 5.00e-1</latticeVector>
+    <latticeVector units="units:angstrom" dictRef="cml:latticeVector">0.00e0 1.00e0 0.00e0</latticeVector>
+    <latticeVector units="units:angstrom" dictRef="cml:latticeVector">0.00e0 0.00e0 1.00e0</latticeVector>
   </lattice>
 </cml>
