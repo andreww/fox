@@ -1395,7 +1395,7 @@ contains
 
     real(sp) :: re, im
     re = real(c)
-    im = imag(c)
+    im = aimag(c)
 
     n = len(re, fmt) + len(im, fmt) + 6
   end function str_complex_sp_fmt_len
@@ -1421,7 +1421,7 @@ contains
     real(sp) :: re, im
     integer :: i
     re = real(c)
-    im = imag(c)
+    im = aimag(c)
     i = len(re, fmt)
     s(:i+4) = "("//safestr(re, fmt)//")+i"
     s(i+5:)="("//safestr(im,fmt)//")"
@@ -1572,7 +1572,7 @@ contains
 
     real(dp) :: re, im
     re = real(c)
-    im = imag(c)
+    im = aimag(c)
 
     n = len(re, fmt) + len(im, fmt) + 6
   end function str_complex_dp_fmt_len
@@ -1598,7 +1598,7 @@ contains
     real(dp) :: re, im
     integer :: i
     re = real(c)
-    im = imag(c)
+    im = aimag(c)
     i = len(re, fmt)
     s(:i+4) = "("//safestr(re, fmt)//")+i"
     s(i+5:)="("//safestr(im,fmt)//")"

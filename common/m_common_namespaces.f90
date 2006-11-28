@@ -62,12 +62,12 @@ contains
 
 
   subroutine initNamespaceDictionary(nsDict)
-    type(namespaceDictionary), intent(out) :: nsDict
+    type(namespaceDictionary), intent(inout) :: nsDict
 
     !We need to properly initialize 0th elements
     !(which are never used) in order to provide
-    !sensible behaviour when trying to retrieve
-    !from an empty dictionary.
+    !sensible behaviour when trying to manipulate
+    !an empty dictionary.
 
     allocate(nsDict%defaults(0:0))
     allocate(nsDict%defaults(0)%URI(0))
@@ -80,7 +80,6 @@ contains
     allocate(nsDict%prefixes(0)%urilist(0)%URI(len(invalidNS)))
     nsDict%prefixes(0)%urilist(0)%URI = vs_str(invalidNS)
     nsDict%prefixes(0)%urilist(0)%ix = -1
-    
     
   end subroutine initNamespaceDictionary
 
@@ -114,12 +113,10 @@ contains
     if (ubound(urilist1,1) < l_m .or. ubound(urilist2,1) < l_m) then
        call FoX_error('Internal error in m_sax_namespaces:copyURIMapping')
     endif
-    ! Now copy all defaults across ...
+    ! Now copy all defaults across (or rather - add pointers to them)
     do i = 0, l_m
        urilist2(i)%ix = urilist1(i)%ix
        urilist2(i)%URI => urilist1(i)%URI
-       !and deallocate all current defaults
-       nullify(urilist1(i)%URI)
     enddo
 
   end subroutine copyURIMapping
@@ -165,7 +162,7 @@ contains
 
     l_m = ubound(nsPrefix%urilist,1)
     allocate(tempMap(0:l_m))
-    ! Now copy all dacross ...
+    ! Now copy all across ...
     call copyURIMapping(nsPrefix%urilist, tempMap, l_m)
     deallocate(nsPrefix%urilist)
     l_m = l_m + 1
@@ -276,7 +273,7 @@ contains
        call addPrefix(nsDict, vs_str(prefix))
        p_i = l_p + 1
     endif
-
+ 
     call addPrefixedURI(nsDict%prefixes(p_i), vs_str(URI), ix)
 
   end subroutine addPrefixedNS
@@ -344,7 +341,9 @@ contains
     allocate(nsDict%prefixes(l_p)%prefix(size(prefix)))
     nsDict%prefixes(l_p)%prefix = prefix
     allocate(nsDict%prefixes(l_p)%urilist(0:0))
-    allocate(nsDict%prefixes(l_p)%urilist(0)%URI(0))
+    allocate(nsDict%prefixes(l_p)%urilist(0)%URI(len(invalidNS)))
+    nsDict%prefixes(l_p)%urilist(0)%URI = vs_str(invalidNS)
+    nsDict%prefixes(l_p)%urilist(0)%ix = -1
     
   end subroutine addPrefix
 

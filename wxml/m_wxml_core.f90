@@ -197,6 +197,10 @@ contains
     call init_elstack(xf%stack)
     
     call init_dict(xf%dict)
+    !NB it can make no difference which XML version we are using
+    !until after we output the XML declaration. So we set it to
+    !1.0 for the moment & reset below.
+    xf%xml_version = "1.0"
     call reset_buffer(xf%buffer, xf%lun, xf%xml_version)
     
     xf%state_1 = WXML_STATE_1_JUST_OPENED
@@ -211,11 +215,8 @@ contains
       
     xf%indent = 0
     
-    if (decl) then
-      call xml_AddXMLDeclaration(xf,encoding='UTF-8')
-    else
-      xf%xml_version = "1.0"
-    endif
+    if (decl) call xml_AddXMLDeclaration(xf,encoding='UTF-8')
+    call reset_buffer(xf%buffer, xf%lun, xf%xml_version)
     
     call initNamespaceDictionary(xf%nsDict)
     call init_entity_list(xf%entityList, .false.)

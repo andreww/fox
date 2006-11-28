@@ -1,4 +1,4 @@
-#!/bin/sh
+#! /bin/sh -e
 
 # NB Note that we ensure all locally-produced files 
 # have Unix line endings only by using 'tr', in
@@ -8,8 +8,8 @@ make $1.exe
 ./$1.exe 2>&1 | tr -d '\15' > test.out
 passed=no
 if [ -f $1.xml ]
-tr -d '/15' < test.xml > test.xml.tmp; mv test.xml.tmp test.xml
 then
+  tr -d '/15' < test.xml > test.xml.tmp; mv test.xml.tmp test.xml
   if diff test.xml $1.xml > /dev/null; then
      echo $1 >> failed.out
      echo "------------" >> failed.out

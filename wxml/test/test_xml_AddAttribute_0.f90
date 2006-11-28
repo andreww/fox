@@ -1,7 +1,7 @@
 program test
 
-  use FoX_wxml, only : xmlf_t, xml_OpenFile, xml_Close
-  use FoX_wxml, only : xml_NewElement, xml_AddAttribute
+  use FoX_wxml, only : xmlf_t
+  use FoX_wxml, only : xml_AddAttribute
   implicit none
 
   character(len=*), parameter :: filename = 'test.xml'

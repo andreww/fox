@@ -204,6 +204,7 @@ contains
     ! and References
     !if (good) &
     !  good = (index(value, "%") == 0).and.(index(value,"&")==0))
+    good = .true.
     if (good) then
       if (index(value, '"') > 0) then
         good = (index(value, "'") == 0)

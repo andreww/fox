@@ -27,7 +27,10 @@ module m_common_notations
 contains
 
   subroutine init_notation_list(nlist)
-    type(notation_list), intent(in) :: nlist
+! It is not clear how we should specify the 
+! intent of this argument - different 
+! compilers seem to have different semantics
+    type(notation_list), intent(inout) :: nlist
 
     allocate(nlist%notations(0:0))
     allocate(nlist%notations(0)%name(0))
