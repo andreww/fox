@@ -1,0 +1,61 @@
+Developer Notes:
+
+The parser is built on several levels:
+
+1. The closest to the user.
+
+   Modules:  m_xml_parser: The main module
+             m_error     : Basic error handling
+
+2. An intermediate layer.
+
+   Modules: m_fsm  (A finite-state machine to parse the input)
+
+3. A layer defining basic data structures and file interfaces:
+
+   Modules: m_reader:  File interface and character handling as per XML specs.
+	    m_buffer:  Basic homemade "variable length string", with some
+                       limitations (size, of course), but avoiding the
+                       use of dynamic structures for now.
+	    m_dictionary: Simple, not dynamic.
+            m_charset: A simple hashing method for sets of characters.
+	    m_elstack: Simple stack to check well-formedness.
+	    m_entities: Entity replacement utilities.
+
+4. Something which does not really belong in the parser but which
+   is useful to massage the data extracted from the file:
+
+	m_converters: Routines to turn pcdata chunks into numerical arrays
+
+
+There are obviously a number of hardwired limitations, which should be
+removed in a later version:
+
+* Buffer size in buffer_t definition. This is not as serious as it
+  looks. Only long unbroken pcdata sections and overly long attribute
+  names or values will be affected. Long SGML declarations and comments
+  might be truncated, but they are not relevant anyway.
+
+* Maximum number of attributes in an element tag (set in m_dictionary)
+
+While the parser does not use any variable-length strings (to keep it
+compatible with existing Fortran90 compilers) or dynamical data
+structures for attribute dictionaries, etc, such improvements could be
+incorporated almost as drop-in replacements for existing sub-modules.
+
+
+The coding style is that of the F subset of Fortran90. I strongly
+believe that it makes for better coding and fewer errors.
+Go to http://www.fortran.com/imagine1/ and get a feel for it. You can
+download free implementations for Linux and Windows, or get an
+inexpensive CD+Book combination to help support the project. Of course,
+F *is* Fortran, so you can always compile it with a Fortran compiler.
+
+
+
+
+
+
+
+
+
