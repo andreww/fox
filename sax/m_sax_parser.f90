@@ -66,7 +66,7 @@ end subroutine rewind_xmlfile
 subroutine endfile_xmlfile(fxml)
   type(xml_t), intent(inout) :: fxml
 
-  call mark_eof_file(fxml%fb) 
+!  call mark_eof_file(fxml%fb) 
 
 end subroutine endfile_xmlfile
 
@@ -74,7 +74,7 @@ end subroutine endfile_xmlfile
 subroutine close_xmlfile(fxml)
   type(xml_t), intent(inout) :: fxml
   
-  call close_file_buffer(fxml%fb)
+  call close_file(fxml%fb)
   call destroy_fsm(fxml%fx) 
   fxml%path_mark = ""
 
@@ -85,7 +85,7 @@ subroutine sync_xmlfile(fxml,iostat)
   type(xml_t), intent(inout) :: fxml
   integer, intent(out)       :: iostat
   
-  call sync_file(fxml%fb,iostat)
+!  call sync_file(fxml%fb,iostat)
   ! Do not reset fx: that's the whole point of synching.
   
 end subroutine sync_xmlfile

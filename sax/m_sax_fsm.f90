@@ -4,8 +4,8 @@ module m_sax_fsm
        init_dict, reset_dict, destroy_dict
   use m_common_array_str, only: vs_str, str_vs
   use m_common_buffer, only: buffer_t, buffer_to_chararray, len, str, &
-       buffer_nearly_full, add_to_buffer, reset_buffer, buffer_to_str
-  use m_common_error, only: FoX_warning, FoX_error
+       buffer_nearly_full, add_to_buffer, reset_buffer
+  use m_common_error, only: FoX_warning, FoX_error, FoX_fatal
   use m_common_charset, only: XML1_0, XML1_1, XML1_0_INITIALNAMECHARS, &
     XML1_1_INITIALNAMECHARS, XML_INITIALENCODINGCHARS, XML_ENCODINGCHARS, &
     XML_WHITESPACE
@@ -151,7 +151,7 @@ contains
     allocate(fx%encoding(5))
     fx%encoding = vs_str("UTF-8")
     fx%standalone = .false.
-    call reset_buffer(fx%buffer)
+    !call reset_buffer(fx%buffer)
     nullify(fx%element_name)
     nullify(fx%pcdata)
     nullify(fx%root_element_name)
@@ -174,7 +174,7 @@ contains
     allocate(fx%encoding(5))
     fx%encoding = vs_str("UTF-8")
     fx%standalone = .false.
-    call reset_buffer(fx%buffer)
+    !call reset_buffer(fx%buffer, xml_version=fx%xml_version)
     if (associated(fx%element_name)) deallocate(fx%element_name)
     nullify(fx%element_name)
     if (associated(fx%pcdata)) deallocate(fx%pcdata)
@@ -305,8 +305,8 @@ contains
         c = get_characters(fb, 1, iostat)
         if (iostat /= 0) goto 100
         if (c .in. initialNameChars) then
-          call push_characters(fb, c)
-          call get_characters_until_not_namechars(fb, iostat)
+          call put_characters(fb, c)
+          call get_characters_until_not_namechar(fb, iostat)
           if (iostat/=0) goto 100
           allocate(fx%element_name(len_namebuffer(fb)))
           fx%element_name = vs_str(retrieve_namebuffer(fb))
@@ -756,7 +756,7 @@ contains
       call get_characters_until_one_of(fb, quotechar, iostat)
       if (iostat/=0) return
       !FIXME can we ever get iostat=EOF through fill_buffer percolating too high?
-      call normalize_text(buffer_to_str(fx%buffer))
+!      call normalize_text(buffer_to_str(fx%buffer))
 !        else
           call put_characters(fb, '!')!FIXME
           fx%state = WHITESPACE_IN_TAG

@@ -2,7 +2,7 @@
 #!/bin/make
 #
 #default: objsdir dom_example sax_example wxml_example wcml_example
-default: objsdir wxml_example wcml_example
+default: objsdir wxml_example wcml_example sax_example
 #
 objsdir:
 	mkdir -p objs/lib objs/finclude

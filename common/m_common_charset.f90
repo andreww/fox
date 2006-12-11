@@ -30,6 +30,19 @@ module m_common_charset
   ! these are all the standard ASCII printable characters: whitespace + (33-126)
   ! which are the only characters we can guarantee to know how to handle properly.
 
+  integer, parameter :: XML1_0 = 10
+  integer, parameter :: XML1_1 = 11
+
+  character(len=*), parameter :: XML1_0_NAMECHARS = NameChars
+  character(len=*), parameter :: XML1_1_NAMECHARS = NameChars
+
+  character(len=*), parameter :: XML1_0_INITIALNAMECHARS = InitialNameChars
+  character(len=*), parameter :: XML1_1_INITIALNAMECHARS = InitialNameChars
+
+  character(len=*), parameter :: XML_WHITESPACE = whitespace
+  character(len=*), parameter :: XML_INITIALENCODINGCHARS = lowerCase//upperCase
+  character(len=*), parameter :: XML_ENCODINGCHARS = lowerCase//upperCase//digits//'._-'
+
   public :: operator(.in.)
 
   public :: InitialNameChars
@@ -40,7 +53,17 @@ module m_common_charset
 
   public :: digits
 
-contains !==========================================================
+  public :: XML1_0
+  public :: XML1_1
+  public :: XML1_0_NAMECHARS
+  public :: XML1_1_NAMECHARS
+  public :: XML1_0_INITIALNAMECHARS
+  public :: XML1_1_INITIALNAMECHARS
+  public :: XML_WHITESPACE
+  public :: XML_INITIALENCODINGCHARS
+  public :: XML_ENCODINGCHARS
+
+contains
 
   function belongs(c,charset)  result(res)
     character(len=1), intent(in)  :: c
