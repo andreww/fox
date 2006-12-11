@@ -1,70 +1,68 @@
 dnl
-dnl First part is boilerplate to give us a foreach function
+include(`foreach.m4')dnl
 dnl
-divert(-1)
-# foreach(x, (item_1, item_2, ..., item_n), stmt)
-define(`m4_foreach', `pushdef(`$1', `')_foreach(`$1', `$2', `$3')popdef(`$1')')
-define(`_arg1', `$1')
-define(`_foreach',
-        `ifelse(`$2', `()', ,
-                `define(`$1', _arg1$2)$3`'_foreach(`$1', (shift$2), `$3')')')
-# traceon(`define', `foreach', `_foreach', `ifelse')
-divert 
+include(`datatypes.m4')dnl
 dnl
-dnl Define a few basic bits
+dnl Note that, irritatingly, we have to exclude the possibility of
+dnl a scalar character subroutine in order to not overlap with the
+dnl basic one to which we are calling through.
 dnl
+define(`TOHWM4_subroutinename', `dnl
+ifelse(`$2$3', `ScalarCh', `', `dnl
+module procedure $1$2$3')`'dnl
+')`'dnl
 dnl
-define(`TOHWM4_declarationtype', `dnl
-ifelse(`$1', `RealDp', `real(dp)', 
-       `$1', `RealSp', `real(sp)', 
-       `$1', `Int', `integer', 
-       `$1', `Lg', `logical', 
-       `$1', `Ch', `character(len=*)') dnl
-')dnl
-dnl
-dnl
-define(`TOHWM4_subroutinename', `$1$2$3$4')dnl
-dnl
-dnl This is what a subroutine looks like if it is for a SCALAR quantity
 dnl First arg is name of quantity (Character, Attribute, PseudoAttribute)
 dnl Second arg is whether this is scalar, array, or matrix.
 dnl Third arg is type of property(character/logical etc.)
+dnl
 define(`TOHWM4_CharacterSub',`dnl
-  subroutine TOHWM4_subroutinename(`$1',`$2',`$3',`') &
-    (xf, chars dnl
-ifelse(substr($3,0,4),`Real',`, fmt', `$3', `Ch', `, delimiter'))
+ifelse(`$2$3', `ScalarCh', `', `dnl
+  subroutine $1$2$3 &
+    (xf, chars`'dnl
+ifelse(substr($3,0,4),`Real',`, fmt', substr($3,0,5), `Cmplx', `, fmt', `$2$3', `ScalarCh', `', `$3', `Ch', `, delimiter'))
 
     type(xmlf_t), intent(inout) :: xf
     TOHWM4_declarationtype(`$3'), intent(in) dnl
 ifelse(`$2', `Array', `, dimension(:)', `$2', `Matrix',`, dimension(:,:)') dnl
  :: chars
 dnl
-ifelse(substr($3,0,4),`Real',`dnl 
+ifelse(substr($3,0,4), `Real', `dnl 
     character(len=*), intent(in), optional :: fmt
-', `$3', `Ch', `dnl
+', substr($3,0,5), `Cmplx', `dnl
+    character(len=*), intent(in), optional :: fmt
+', `$2$3', `ScalarCh', `', `$3', `Ch', `dnl
     character(len=1), intent(in), optional :: delimiter
-')
-dnl
-ifelse(substr($3,0,4),`Real',`dnl 
-    if (present(fmt)) then
-       call xml_Add$1(xf=xf, chars=str(chars, fmt))
-    else
 ')dnl
-       call xml_Add$1(xf=xf, chars=str(chars dnl
-ifelse(`$3', `Ch', `, delimiter') dnl
-))
-ifelse(substr($3,0,4),`Real',`dnl
-     endif
-') dnl
 
-  end subroutine TOHWM4_subroutinename(`$1',`$2',`$3',`')
+ifelse(substr($3,0,4), `Real', `dnl 
+    if (present(fmt)) then
+      call xml_Add$1(xf=xf, chars=str(chars, fmt))
+    else
+  ', substr($3,0,5), `Cmplx', `dnl
+    if (present(fmt)) then
+      call xml_Add$1(xf=xf, chars=str(chars, fmt))
+    else
+  ')dnl
+    call xml_Add$1(xf=xf, chars=str(chars`'dnl
+ifelse(`$2$3', `ScalarCh', `', `$3', `Ch', `, delimiter') dnl
+))
+ifelse(substr($3,0,4), `Real', `dnl
+    endif
+', substr($3,0,5), `Cmplx', `dnl
+    endif
+')`'dnl
+
+  end subroutine $1$2$3
+')
 ')dnl
 dnl
 dnl
 define(`TOHWM4_AttributeSub',`dnl
-  subroutine TOHWM4_subroutinename(`$1',`$2',`$3',`') &
-    (xf, name, value dnl
-ifelse(substr($3,0,4),`Real',`, fmt', `$3', `Ch', `, delimiter'))
+ifelse(`$2$3', `ScalarCh', `', `dnl
+  subroutine $1$2$3 &
+    (xf, name, value`'dnl
+ifelse(substr($3,0,4),`Real',`, fmt', substr($3,0,5), `Cmplx', `, fmt', `$2$3', `ScalarCh', `', `$3', `Ch', `, delimiter')) 
 
     type(xmlf_t), intent(inout) :: xf
     character(len=*), intent(in) :: name
@@ -72,26 +70,35 @@ ifelse(substr($3,0,4),`Real',`, fmt', `$3', `Ch', `, delimiter'))
 ifelse(`$2', `Array', `, dimension(:)', `$2', `Matrix',`, dimension(:,:)') dnl
  :: value
 dnl
-ifelse(substr($3,0,4),`Real',`dnl 
+ifelse(substr($3,0,4), `Real', `dnl 
     character(len=*), intent(in), optional :: fmt
-', `$3', `Ch', `dnl
+', substr($3,0,5), `Cmplx',`dnl
+    character(len=*), intent(in), optional :: fmt
+', `$2$3', `ScalarCh', `', `$3', `Ch', `dnl
     character(len=1), intent(in), optional :: delimiter
 ')
 dnl
 ifelse(substr($3,0,4),`Real',`dnl 
     if (present(fmt)) then
-       call xml_Add$1(xf=xf, name=name, value=str(value, fmt))
+      call xml_Add$1(xf=xf, name=name, value=str(value, fmt))
     else
-')dnl
-       call xml_Add$1(xf=xf, name=name, value=str(value dnl
-ifelse(`$3', `Ch', `, delimiter') dnl
-))
-ifelse(substr($3,0,4),`Real',`dnl
-     endif
+  ', substr($3,0,5), `Cmplx', `dnl
+    if (present(fmt)) then
+      call xml_Add$1(xf=xf, name=name, value=str(value, fmt))
+    else
+  ')dnl
+    call xml_Add$1(xf=xf, name=name, value=str(value`'dnl
+ifelse(`$2$3', `ScalarCh', `', `$3', `Ch', `, delimiter')))dnl
+
+ifelse(substr($3,0,4), `Real', `dnl
+    endif
+', substr($3,0,5), `Cmplx', `dnl
+    endif
 ') dnl
 dnl
 
-  end subroutine TOHWM4_subroutinename(`$1',`$2',`$3',`')
+  end subroutine $1$2$3
+')dnl
 ')dnl
 dnl
 dnl
@@ -113,39 +120,27 @@ module m_wxml_overloads
   private
 
   interface xml_AddCharacters
-m4_foreach(`x', `(RealDp, RealSp, Int, Lg)', `dnl
-    module procedure TOHWM4_subroutinename(`Characters', `Scalar', x)
-')
-m4_foreach(`x', `(RealDp, RealSp, Int, Lg, Ch)', `dnl
-    module procedure TOHWM4_subroutinename(`Characters', `Array', x)
-')
-m4_foreach(`x', `(RealDp, RealSp, Int, Lg, Ch)', `dnl
-    module procedure TOHWM4_subroutinename(`Characters', `Matrix', x)
-') dnl
+m4_foreach(`type', `(Scalar, Array, Matrix)', `dnl
+m4_foreach(`x', TOHWM4_types, `dnl
+    TOHWM4_subroutinename(`Characters', type, x)
+')dnl
+')dnl
  end interface xml_AddCharacters
 
   interface xml_AddAttribute
-m4_foreach(`x', `(RealDp, RealSp, Int, Lg)', `dnl
-    module procedure TOHWM4_subroutinename(`Attribute', `Scalar', x)
-')
-m4_foreach(`x', `(RealDp, RealSp, Int, Lg, Ch)', `dnl
-    module procedure TOHWM4_subroutinename(`Attribute', `Array', x)
-')
-m4_foreach(`x', `(RealDp, RealSp, Int, Lg, Ch)', `dnl
-    module procedure TOHWM4_subroutinename(`Attribute', `Matrix', x)
-') dnl
+m4_foreach(`type', `(Scalar, Array, Matrix)', `dnl
+m4_foreach(`x', TOHWM4_types, `dnl
+    TOHWM4_subroutinename(`Attribute', type, x)
+')dnl
+')dnl
  end interface xml_AddAttribute
 
   interface xml_AddPseudoAttribute
-m4_foreach(`x', `(RealDp, RealSp, Int, Lg)', `dnl
-    module procedure TOHWM4_subroutinename(`Attribute', `Scalar', x)
-')
-m4_foreach(`x', `(RealDp, RealSp, Int, Lg, Ch)', `dnl
-    module procedure TOHWM4_subroutinename(`Attribute', `Array', x)
-')
-m4_foreach(`x', `(RealDp, RealSp, Int, Lg, Ch)', `dnl
-    module procedure TOHWM4_subroutinename(`Attribute', `Matrix', x)
-') dnl
+m4_foreach(`type', `(Scalar, Array, Matrix)', `dnl
+m4_foreach(`x', TOHWM4_types, `dnl
+    TOHWM4_subroutinename(`PseudoAttribute', type, x)
+')dnl
+')dnl
  end interface xml_AddPseudoAttribute
 
   public :: xml_AddCharacters
@@ -154,27 +149,22 @@ m4_foreach(`x', `(RealDp, RealSp, Int, Lg, Ch)', `dnl
 
 contains
 
-m4_foreach(`x', `(RealDp, RealSp, Int, Lg)', `TOHWM4_CharacterSub(`Characters', `Scalar', x)
-')
-m4_foreach(`x', `(RealDp, RealSp, Int, Lg, Ch)', `TOHWM4_CharacterSub(`Characters', `Array', x)
-')
-m4_foreach(`x', `(RealDp, RealSp, Int, Lg, Ch)', `TOHWM4_CharacterSub(`Characters', `Matrix', x)
-')
+m4_foreach(`ArrayType', `(Scalar, Array, Matrix)', `dnl
+m4_foreach(`x', TOHWM4_types, `dnl
+TOHWM4_CharacterSub(`Characters', ArrayType, x)
+')dnl
+')dnl
 
+m4_foreach(`ArrayType', `(Scalar, Array, Matrix)', `dnl
+m4_foreach(`x', TOHWM4_types, `dnl
+TOHWM4_AttributeSub(`Attribute', ArrayType, x)
+')dnl
+')dnl
 
-m4_foreach(`x', `(RealDp, RealSp, Int, Lg)', `TOHWM4_AttributeSub(`Attribute', `Scalar', x)
-')
-m4_foreach(`x', `(RealDp, RealSp, Int, Lg, Ch)', `TOHWM4_AttributeSub(`Attribute', `Array', x)
-')
-m4_foreach(`x', `(RealDp, RealSp, Int, Lg, Ch)', `TOHWM4_AttributeSub(`Attribute', `Matrix', x)
-')
-
-
-m4_foreach(`x', `(RealDp, RealSp, Int, Lg)', `TOHWM4_AttributeSub(`PseudoAttribute', `Scalar', x)
-')
-m4_foreach(`x', `(RealDp, RealSp, Int, Lg, Ch)', `TOHWM4_AttributeSub(`PseudoAttribute', `Array', x)
-')
-m4_foreach(`x', `(RealDp, RealSp, Int, Lg, Ch)', `TOHWM4_AttributeSub(`PseudoAttribute', `Matrix', x)
-')
+m4_foreach(`ArrayType', `(Scalar, Array, Matrix)', `dnl
+m4_foreach(`x', TOHWM4_types, `dnl
+TOHWM4_AttributeSub(`PseudoAttribute', ArrayType, x)
+')dnl
+')dnl
 
 end module m_wxml_overloads

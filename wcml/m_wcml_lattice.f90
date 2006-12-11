@@ -7,6 +7,7 @@ module m_wcml_lattice
 !FIXME: unimplemented bits:
 ! periodicity of latticevectors ...
 ! conversion between lattices & crystals ...
+! <lattice> can also contain xtal coords or a <matrix>
 
   use m_common_realtypes, only: sp, dp
   use FoX_wxml, only: xmlf_t
@@ -114,7 +115,11 @@ contains
 
     do i = 1,3
       call xml_NewElement(xf, "latticeVector")
-      if (present(units)) call xml_AddAttribute(xf, "units", units)
+      if (present(units)) then
+        call xml_AddAttribute(xf, "units", units)
+      else
+        call xml_AddAttribute(xf, "units", U_ANGSTR)
+      endif
       call xml_AddAttribute(xf, "dictRef", "cml:latticeVector")
       call xml_AddCharacters(xf, cell(:,i), fmt)
       call xml_EndElement(xf, "latticeVector")
@@ -205,7 +210,11 @@ contains
 
     do i = 1,3
       call xml_NewElement(xf, "latticeVector")
-      if (present(units)) call xml_AddAttribute(xf, "units", units)
+      if (present(units)) then
+        call xml_AddAttribute(xf, "units", units)
+      else
+        call xml_AddAttribute(xf, "units", U_ANGSTR)
+      endif
       call xml_AddAttribute(xf, "dictRef", "cml:latticeVector")
       call xml_AddCharacters(xf, cell(:,i), fmt)
       call xml_EndElement(xf, "latticeVector")

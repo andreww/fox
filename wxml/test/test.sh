@@ -1,27 +1,34 @@
-#!/bin/sh
+#! /bin/sh -e
+
+# NB Note that we ensure all locally-produced files 
+# have Unix line endings only by using 'tr', in
+# order to compare properly to our canonical versions.
 
 make $1.exe
-./$1.exe > test.out 2>&1
+./$1.exe 2>&1 | tr -d '\15' > test.out
 passed=no
 if [ -f $1.xml ]
 then
+  tr -d '/15' < test.xml > test.xml.tmp; mv test.xml.tmp test.xml
   if diff test.xml $1.xml > /dev/null; then
-    passed=yes
-  else
      echo $1 >> failed.out
      echo "------------" >> failed.out
      diff test.xml $1.xml >> failed.out
      echo "------------" >> failed.out
+  else
+    passed=yes
   fi
 elif [ -f $1.out ]
 then
-  if diff test.out $1.out > /dev/null; then
-    passed=yes
-  else
+# Note below that we don't do a direct grep; we just check 
+# that the only DIFFerences are in one direction.
+  if diff test.out $1.out | grep "^>" > /dev/null; then
      echo $1 >> failed.out
      echo "------------" >> failed.out
      diff test.out $1.out >> failed.out
      echo "------------" >> failed.out
+  else
+    passed=yes
   fi
 else
   echo No test output found for $1

@@ -6,7 +6,6 @@ rm -f passed.score failed.score
 touch passed.score failed.score
 rm -f tests.out failed.out
 
-
 echo "Testing integer to string conversion"
 echo Scalars:
 for i in '0 0' '1 1' '-1 -1' '10 10' '-356 -356'
@@ -261,6 +260,33 @@ echo Arrays:
 echo Matrices
 ./test_str.sh 'reshape((/0.0d0,1.0d0,3.0d0,4.0d0,4.0d0,5.0d0/),(/3,2/),"r1"' "0.0 1.0 3.0 4.0 4.0 5.0"
 ./test_str.sh 'reshape((/0.0d0,1.0d0,2.0d0,3.0d0,4.0d0,5.0d0/), (/3,2/)),"r1"' "0.0 1.0 2.0 3.0 4.0 5.0"
+
+echo "Testing complex float to string conversion"
+echo "Scalars:"
+./test_str.sh '(0.50e0, 0.50e0),"s1"' '(5e-1)+i(5e-1)'
+./test_str.sh '(-0.50e0, 0.50e0),"s1"' '(-5e-1)+i(5e-1)'
+./test_str.sh '(0.50e0, -0.50e0),"s1"' '(5e-1)+i(-5e-1)'
+./test_str.sh '(-0.50e0, -0.50e0),"s1"' '(-5e-1)+i(-5e-1)'
+echo "Arrays:"
+./test_str.sh '(/(0.50e0, 0.50e0), (1e0, 1e0)/),"s1"' '(5e-1)+i(5e-1) (1e0)+i(1e0)'
+./test_str.sh '(/(0.50e0, 0.50e0), (1e0, 1e0), (2e0, 2e0), (-2e0, -2e0)/),"s1"' '(5e-1)+i(5e-1) (1e0)+i(1e0) (2e0)+i(2e0) (-2e0)+i(-2e0)'
+echo "Matrices:"
+./test_str.sh 'reshape((/(0.50e0, 0.50e0), (1e0, 1e0), (2e0, 2e0), (-2e0, -2e0)/),(/1,4/)),"s1"' '(5e-1)+i(5e-1) (1e0)+i(1e0) (2e0)+i(2e0) (-2e0)+i(-2e0)'
+./test_str.sh 'reshape((/(0.50e0, 0.50e0), (1e0, 1e0), (2e0, 2e0), (-2e0, -2e0)/),(/2,2/)),"s1"' '(5e-1)+i(5e-1) (1e0)+i(1e0) (2e0)+i(2e0) (-2e0)+i(-2e0)'
+
+
+echo "Testing complex double to string conversion"
+echo "Scalars:"
+./test_str.sh '(0.50d0, 0.50d0),"s1"' '(5e-1)+i(5e-1)'
+./test_str.sh '(-0.50d0, 0.50d0),"s1"' '(-5e-1)+i(5e-1)'
+./test_str.sh '(0.50d0, -0.50d0),"s1"' '(5e-1)+i(-5e-1)'
+./test_str.sh '(-0.50d0, -0.50d0),"s1"' '(-5e-1)+i(-5e-1)'
+echo "Arrays:"
+./test_str.sh '(/(0.50d0, 0.50d0), (1d0, 1d0)/),"s1"' '(5e-1)+i(5e-1) (1e0)+i(1e0)'
+./test_str.sh '(/(0.50d0, 0.50d0), (1d0, 1d0), (2d0, 2d0), (-2d0, -2d0)/),"s1"' '(5e-1)+i(5e-1) (1e0)+i(1e0) (2e0)+i(2e0) (-2e0)+i(-2e0)'
+echo "Matrices:"
+./test_str.sh 'reshape((/(0.50d0, 0.50d0), (1d0, 1d0), (2d0, 2d0), (-2d0, -2d0)/),(/1,4/)),"s1"' '(5e-1)+i(5e-1) (1e0)+i(1e0) (2e0)+i(2e0) (-2e0)+i(-2e0)'
+./test_str.sh 'reshape((/(0.50d0, 0.50d0), (1d0, 1d0), (2d0, 2d0), (-2d0, -2d0)/),(/2,2/)),"s1"' '(5e-1)+i(5e-1) (1e0)+i(1e0) (2e0)+i(2e0) (-2e0)+i(-2e0)'
 
 echo Test Results:
 echo Passed: `wc -c passed.score`

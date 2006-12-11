@@ -94,6 +94,7 @@ module m_wxml_core
   public :: xml_AddXMLPI
   public :: xml_AddComment
   public :: xml_AddCharacters
+  public :: xml_AddNewline
   public :: xml_AddEntityReference
   public :: xml_AddAttribute
   public :: xml_AddPseudoAttribute
@@ -198,6 +199,10 @@ contains
     call init_elstack(xf%stack)
     
     call init_dict(xf%dict)
+    !NB it can make no difference which XML version we are using
+    !until after we output the XML declaration. So we set it to
+    !1.0 for the moment & reset below.
+    xf%xml_version = "1.0"
     call reset_buffer(xf%buffer, xf%lun, xf%xml_version)
     
     xf%state_1 = WXML_STATE_1_JUST_OPENED
@@ -212,11 +217,8 @@ contains
       
     xf%indent = 0
     
-    if (decl) then
-      call xml_AddXMLDeclaration(xf,encoding='UTF-8')
-    else
-      xf%xml_version = "1.0"
-    endif
+    if (decl) call xml_AddXMLDeclaration(xf,encoding='UTF-8')
+    call reset_buffer(xf%buffer, xf%lun, xf%xml_version)
     
     call initNamespaceDictionary(xf%nsDict)
     call init_entity_list(xf%entityList, .false.)
@@ -304,15 +306,17 @@ contains
         if (.not.checkPubId(public)) &
           call wxml_error("Invalid PUBLIC ID "//public)
         if (scan(public, "'") /= 0) then
-          call add_to_buffer(' PUBLIC "'//public//'"', xf%buffer)
+          call add_to_buffer(' PUBLIC "'//public//'" ', xf%buffer)
         else
-          call add_to_buffer(" PUBLIC '"//public//"'", xf%buffer)
+          call add_to_buffer(" PUBLIC '"//public//"' ", xf%buffer)
         endif
+      else
+        call add_to_buffer(' SYSTEM ', xf%buffer)
       endif
       if (scan(system, "'") /= 0) then
-        call add_to_buffer(' SYSTEM "'//system//'"', xf%buffer)
+        call add_to_buffer('"'//system//'"', xf%buffer)
       else
-        call add_to_buffer(" SYSTEM '"//system//"'", xf%buffer)
+        call add_to_buffer("'"//system//"'", xf%buffer)
       endif
     elseif (present(public)) then
       call wxml_error("wxml:DOCTYPE: PUBLIC supplied without SYSTEM for: "//name)
@@ -348,7 +352,7 @@ contains
         call wxml_fatal("Parameter entity "//name//" cannot have both a PEdef and an External ID")
     else
       if (.not.present(system)) &
-        call wxml_fatal("Parameter entity "//name//" must have either a PEdef and an External ID")
+        call wxml_fatal("Parameter entity "//name//" must have either a PEdef or an External ID")
     endif
     if (present(PEdef)) then
       call add_internal_entity(xf%PEList, name, PEdef)
@@ -368,12 +372,12 @@ contains
     else
       if (present(public)) then
         if (index(public, '"') > 0) then
-          call add_to_buffer(" PUBLIC '"//public//"' ", xf%buffer)
+          call add_to_buffer("PUBLIC '"//public//"' ", xf%buffer)
         else
-          call add_to_buffer(' PUBLIC "'//public//'" ', xf%buffer)
+          call add_to_buffer('PUBLIC "'//public//'" ', xf%buffer)
         endif
       else
-        call add_to_buffer(' SYSTEM ', xf%buffer)
+        call add_to_buffer('SYSTEM ', xf%buffer)
       endif
       if (index(system, '"') > 0) then
         call add_to_buffer("'"//system//'"', xf%buffer)
@@ -807,6 +811,14 @@ contains
     xf%state_2 = WXML_STATE_2_IN_CHARDATA
   end subroutine xml_AddCharacters_Ch
 
+
+  subroutine xml_AddNewline(xf)
+    type(xmlf_t), intent(inout) :: xf
+    
+    call xml_AddCharacters(xf, "")
+    call add_eol(xf)
+  end subroutine xml_AddNewline
+
   
   subroutine xml_AddEntityReference(xf, entityref)
     type(xmlf_t), intent(inout) :: xf
@@ -934,7 +946,9 @@ contains
       call wxml_fatal(xf,'Trying to close '//name//' but no tags are open.')
 
     if (get_top_elstack(xf%stack) /= name) &
-      call wxml_fatal(xf, 'Trying to close '//name//' but '//get_top_elstack(xf%stack)//' is open.') 
+      call wxml_fatal(xf, 'Trying to close '//name//' but '//get_top_elstack(xf%stack)// &
+      ' is open. Either you have failed to open '//get_top_elstack(xf%stack)//&
+      ' or you have failed to close '//name//'.') 
     xf%indent = xf%indent - indent_inc
  
     select case (xf%state_2)

@@ -87,6 +87,15 @@ This may be done in one of two ways:
        Fortran standard, which strictly disallows doing anything at all with such numbers, including even
        just passing them to a subroutine.
 
+## Complex numbers (single and double precision)
+
+Complex numbers will be output as pairs of real numbers, in the following way:
+
+`(1.0e0)+i(1.0e0)`
+
+where the two halves can be formatted in the way described for 'Real numbers' above; only one format may be specified, and it will apply to both.
+
+All the caveats described above apply for complex number as well; that is, output of complex numbers either of whose components are infinite or NaN is illegal in Fortran, and more than likely will cause a crash in FoX.
 
 ## Arrays and matrices
 

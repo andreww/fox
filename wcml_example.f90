@@ -1,6 +1,7 @@
  program wcml_example
 
    use FoX_wcml
+  use FoX_common, only: str
 
   integer,  parameter ::  sp = selected_real_kind(6,30)
   integer,  parameter ::  dp = selected_real_kind(14,100)
@@ -34,9 +35,9 @@
   elements(3) = 'O'
   num = 20
 
-  filename = 'myest.cml'
+  filename = 'mytest.cml'
   
-  call cmlBeginFile(myfile, filename=filename)
+  call cmlBeginFile(myfile, filename=filename, unit=-1)
 
   call cmlAddNamespace(myfile, prefix="myDict", URI="http://www.example.com/dict")
 
@@ -49,6 +50,7 @@
   call cmlAddParameter(xf=myfile, name='inputSize', value=3, units="cmlUnits:Angstrom")
   call cmlAddParameter(xf=myfile, name='inputSize', value=3.0, units="cmlUnits:Angstrom")
   call cmlAddParameter(xf=myfile, name='inputSize', value=3.0d0, units="cmlUnits:Angstrom")
+  call cmlAddParameter(xf=myfile, name='inputSize', value=(3.0d0, 0.0d0), units="cmlUnits:Angstrom")
   call cmlEndParameterList(xf=myfile)
 
   call cmlStartPropertyList(xf=myfile, title="Scalars")
@@ -57,6 +59,7 @@
   call cmlAddProperty(xf=myfile, title='inputSize', value=3, units="cmlUnits:Angstrom")
   call cmlAddProperty(xf=myfile, title='inputSize', value=3.0, units="cmlUnits:Angstrom")
   call cmlAddProperty(xf=myfile, title='inputSize', value=3.0d0, units="cmlUnits:Angstrom")
+  call cmlAddProperty(xf=myfile, title='inputSize', value=(3.0d0, 0.0d0), units="cmlUnits:Angstrom")
   call cmlEndPropertyList(xf=myfile)
 
   call cmlStartPropertyList(xf=myfile, title="Scalars")
@@ -65,9 +68,20 @@
   call cmlAddProperty(xf=myfile, title='inputArray', value=(/1, 2/), units="cmlUnits:Angstrom")
   call cmlAddProperty(xf=myfile, title='inputArray', value=(/1.0, 2.0/), units="cmlUnits:Angstrom")
   call cmlAddProperty(xf=myfile, title='inputArray', value=(/1.0d0, 2.0d0/), units="cmlUnits:Angstrom")
+  call cmlAddProperty(xf=myfile, title='inputArray', value=(/(1.0d0,0.0d0), (2.0d0,0.0d0)/), units="cmlUnits:Angstrom")
   call cmlEndPropertyList(xf=myfile)
 
   call cmlStartPropertyList(xf=myfile, title="Scalars")
+
+  call cmlStartPropertyList(myfile, dictref="castep:kpt_band")
+  call cmlAddProperty(myfile, 1, dictref="castep:spin", &
+             units="castepunits:spin")
+  call cmlAddKpoint(myfile, (/1.0d0, 2.0d0, 3.0d0/), &
+              weight=1.0d0, id="okpt:")
+  call cmlAddProperty(myfile, (/1.0, 2.0/), title="Eigenvalues", &
+              dictref="castep:eigenenergies", &
+              units="castepunits:")
+  call cmlEndPropertyList(myfile)
 
   call cmlAddProperty(xf=myfile, &
     value=matrix,&

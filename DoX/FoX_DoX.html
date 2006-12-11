@@ -162,7 +162,7 @@ wcml_lib
 * On Lahey, 16 tests in <code>wxml/test</code> will fail - this is a flaw in the testsuite, the library is actually
 working correctly. Please ignore this problem. </p>
 
-<p>If any other failures occur, please send a message to the mailing list (<a href="m&#97;&#x69;&#x6C;&#116;&#111;:F&#x6F;&#88;&#64;&#108;&#105;&#x73;&#116;&#115;&#46;&#117;&#x73;&#x7A;&#108;&#97;&#x2E;&#109;&#x65;&#46;&#117;&#x6B;">F&#x6F;&#88;&#64;&#108;&#105;&#x73;&#116;&#115;&#46;&#117;&#x73;&#x7A;&#108;&#97;&#x2E;&#109;&#x65;&#46;&#117;&#x6B;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
+<p>If any other failures occur, please send a message to the mailing list (<a href="&#109;&#x61;&#105;&#x6C;&#116;&#111;:&#70;o&#x58;&#64;&#108;&#105;&#115;&#x74;&#115;&#x2E;&#117;&#x73;&#x7A;&#108;&#x61;&#x2E;&#x6D;e&#x2E;&#117;&#x6B;">&#70;o&#x58;&#64;&#108;&#105;&#115;&#x74;&#115;&#x2E;&#117;&#x73;&#x7A;&#108;&#x61;&#x2E;&#x6D;e&#x2E;&#117;&#x6B;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
 
 <h2>Linking to an existing program</h2>
 
@@ -353,6 +353,16 @@ standard Fortran I/O formatting routines do not offer the control required for u
        Fortran standard, which strictly disallows doing anything at all with such numbers, including even
        just passing them to a subroutine.</p>
 
+<h2>Complex numbers (single and double precision)</h2>
+
+<p>Complex numbers will be output as pairs of real numbers, in the following way:</p>
+
+<p><code>(1.0e0)+i(1.0e0)</code></p>
+
+<p>where the two halves can be formatted in the way described for 'Real numbers' above; only one format may be specified, and it will apply to both.</p>
+
+<p>All the caveats described above apply for complex number as well; that is, output of complex numbers either of whose components are infinite or NaN is illegal in Fortran, and more than likely will cause a crash in FoX.</p>
+
 <h2>Arrays and matrices</h2>
 
 <p>All of the above types of data may be passed in as arrays and matrices as well. In this case, a string containing all the individual elements will be returned, ordered as they would be in memory, each element separated by a single space.</p>
@@ -384,7 +394,7 @@ standard Fortran I/O formatting routines do not offer the control required for u
 
 <p>A more elaborate example, using almost all of the XML features found here, is available in the top-level directory as <code>wxml_example.f90</code>. It will be automatically compiled as part of the build porcess.</p>
 
-<p><a name="Conventions"></p>
+<p><a name="Conventions"/></p>
 
 <h2>Conventions and notes:</h2>
 
@@ -506,6 +516,14 @@ the characters will be surrounded by CDATA tags.
 and if they are a 1- or 2-dimensional array, the elements will all be output, separated by spaces (except if it is a character array, in which
 case the delimiter may be changed to any other single character using an optional argument).</p>
 
+<ul>
+<li><code>xml_AddNewline</code></li>
+</ul>
+
+<p>Within the context of character output, add a (system-dependent) newline character. This function can only
+be called wherever <code>xml_AddCharacters</code> can be called. (Newlines outside of character context are under
+FoX's control, and cannot be manipulated by the user.)</p>
+
 <p><a name="NSfunctions"/></p>
 
 <h3>Namespace-aware functions:</h3>
@@ -583,7 +601,7 @@ registered namespace prefix, and generate an error if not.</p>
 <ul>
 <li><code>xml_AddDOCTYPE</code> <br />
 <strong>name</strong> <em>string</em>: DOCTYPE name <br />
-<strong>system</strong> <em>string</em>: DOCTYPE SYSTEM ID <br />
+(<strong>system</strong>) <em>string</em>: DOCTYPE SYSTEM ID <br />
 (<strong>public</strong>) <em>string</em>: DOCTYPE PUBLIC ID  </li>
 </ul>
 
@@ -937,9 +955,16 @@ a very few common units, it may be easiest to borrow definitions from the provid
 
 <p>(These links do not resolve yet.)</p>
 
-<p><code>cmlUnits:</code> <a href="http://www.xml-cml.org/units/units">http://www.xml-cml.org/units/units</a> <br />
-<code>siUnits:</code> <a href="http://www.xml-cml.org/units/siUnits">http://www.xml-cml.org/units/siUnits</a> <br />
-<code>atomicUnits:</code> <a href="http://www.xml-cml.org/units/atomic">http://www.xml-cml.org/units/atomic</a>  </p>
+<p><code>cmlUnits: http://www.xml-cml.org/units/units</code>
+<code>siUnits: &lt;http://www.xml-cml.org/units/siUnits</code>
+<code>atomicUnits: http://www.xml-cml.org/units/atomic</code></p>
+
+<p>A default units dictionary, containing only the very basic units that wcml needs to know about, which has a namespace of: <code>http://www.uszla.me.uk/FoX/units</code>, and wcml assigns it automatically to the prefix <code>units</code>.</p>
+
+<p>This is added <em>automatically</em>, so attempts to add it manually will fail.</p>
+
+<p>The contents of all of these dictionaries, plus the wcml dictionary, may be viewed at:
+<a href="http://www.uszla.me.uk/unitsviz/units.cgi">http://www.uszla.me.uk/unitsviz/units.cgi</a>.</p>
 
 <p>Otherwise, you should feel at liberty to construct your own namespace;
 declare it using <code>cmlAddNamespace</code>, and markup all your units as:</p>
@@ -952,6 +977,8 @@ declare it using <code>cmlAddNamespace</code>, and markup all your units as:</p>
 <ul>
 <li><code>cmlBeginFile</code> <br />
 <strong>filename</strong>: <em>string</em> <em>scalar</em>: Filename to be opened. <br />
+<strong>unit</strong>: <em>integer</em> <em>scalar</em>: what unit number should the file be opened on? If you don't
+care, you may specify '-1' as the unit number, in which case wcml will make a guess
 (<strong>replace</strong>): <em>logical</em> <em>scalar</em>: should the file be replaced if it already exists? <em>default: yes</em></li>
 </ul>
 
@@ -1063,14 +1090,14 @@ Attempts to do otherwise will result in a runtime error.</p>
 <ul>
 <li><code>cmlAddMetadata</code> <br />
 <strong>name</strong>: <em>string</em> <em>scalar</em>: Identifying string for metadata <br />
-<strong>content</strong>: <em>anytype</em> <em>scalar</em>: Content of metadata  </li>
+<strong>content</strong>: <em>character</em> <em>scalar</em>: Content of metadata  </li>
 </ul>
 
-<p>This adds a single item of metadata. It takes the following arguments:</p>
+<p>This adds a single item of metadata. Metadata vocabulary is completely uncontrolled within WCML. This means that metadata values may <em>only</em> be strings of characters. If you need your values to contain numbers, then you need to define the representation yourself, and construct your own strings.</p>
 
 <ul>
 <li><code>cmlAddParameter</code> <br />
-<strong>title</strong>: <em>string</em> <em>scalar</em>: Identifying title for parameter <br />
+<strong>name</strong>: <em>string</em> <em>scalar</em>: Identifying title for parameter <br />
 <strong>value</strong>:<em>anytype</em> <em>anydim</em>: value of parameter <br />
 <strong>units</strong>: <em>string</em> <em>scalar</em>: units of parameter value  (optional for logical/character <strong>value</strong>s, compulsory otherwise; see note above) <br />
 (<strong>constraint</strong>) <em>string</em> <em>scalar</em>: Constraint under which the parameter is set (this can be an arbitrary string) <br />
@@ -1082,7 +1109,7 @@ Attempts to do otherwise will result in a runtime error.</p>
 
 <ul>
 <li><code>cmlAddProperty</code> <br />
-<strong>name</strong>: <em>string</em> <em>scalar</em> <br />
+<strong>title</strong>: <em>string</em> <em>scalar</em> <br />
 <strong>value</strong>: <em>any</em> <em>anydim</em> <br />
 <strong>units</strong>: <em>string</em> <em>scalar</em> units of property value  (optional for logical/character <strong>value</strong>s, compulsory otherwise; see note above) <br />
 (<strong>ref</strong>) <em>string</em> <em>scalar</em>: Reference an <code>id</code> attribute of another element (generally deprecated) <br />
@@ -1101,7 +1128,7 @@ Attempts to do otherwise will result in a runtime error.</p>
 (<strong>occupancies</strong>): <em>real</em> <em>array</em> : a length-n array of the occupancies of each atom. <br />
 (<strong>atomRefs</strong>): <em>string</em> <em>array</em>: a length-n array of strings containing references which may point to IDs elsewhere of, for example, pseudopotentials or basis sets defining the element's behaviour. <br />
 (<strong>atomIds</strong>): <em>string</em> <em>array</em>: a length-n array of strings containing IDs for the atoms. <br />
-(<strong>style</strong>): <em>string</em> <em>scalar</em>: <code>xyz3</code> - the coordinates are Cartesian, or <code>xyzFract</code> - the coordinates are fractional. The default is Cartesian. <br />
+(<strong>style</strong>): <em>string</em> <em>scalar</em>: <code>cartesian</code> - the coordinates are Cartesian, or <code>fractional</code> - the coordinates are fractional. The default is Cartesian. <br />
 (<strong>ref</strong>) <em>string</em> <em>scalar</em>: Reference an <code>id</code> attribute of another element (generally deprecated) <br />
 (<strong>formula</strong>) <em>string</em> <em>scalar</em>: An IUPAC chemical formula <br />
 (<strong>chirality</strong>) <em>string</em> <em>scalar</em>: The chirality of the molecule. No defined vocabulary. <br />
@@ -1254,9 +1281,9 @@ Attempts to do otherwise will result in a runtime error.</p>
 <h1>Further information</h1>
 
 <p>FoX evolved from the initial codebase of <a href="http://lcdx00.wm.lc.ehu.es/ag/xml/">xmlf90</a>,
-which was written largely by Alberto Garcia &lt;<a href="&#x6D;a&#105;&#108;&#x74;&#x6F;:&#97;l&#x62;&#x65;&#x72;&#x74;&#x6F;&#103;&#64;&#x69;&#99;&#109;&#x61;&#x62;&#x2E;e&#x73;">&#97;l&#x62;&#x65;&#x72;&#x74;&#x6F;&#103;&#64;&#x69;&#99;&#109;&#x61;&#x62;&#x2E;e&#x73;</a>> and Jon Wakelin &lt;<a href="m&#x61;&#x69;l&#x74;&#111;:&#x6A;&#x6F;&#x6E;&#x2E;&#x77;&#x61;&#x6B;e&#x6C;&#x69;&#x6E;&#64;&#98;&#x72;&#x69;&#x73;t&#111;&#108;&#x2E;&#97;c.&#x75;&#x6B;">&#x6A;&#x6F;&#x6E;&#x2E;&#x77;&#x61;&#x6B;e&#x6C;&#x69;&#x6E;&#64;&#98;&#x72;&#x69;&#x73;t&#111;&#108;&#x2E;&#97;c.&#x75;&#x6B;</a>>.</p>
+which was written largely by Alberto Garcia &lt;<a href="&#x6D;&#97;&#105;&#108;&#x74;&#111;:&#x61;l&#98;&#101;&#x72;&#x74;&#x6F;&#103;&#64;&#105;&#x63;&#x6D;&#x61;&#x62;&#46;&#x65;&#x73;">&#x61;l&#98;&#101;&#x72;&#x74;&#x6F;&#103;&#64;&#105;&#x63;&#x6D;&#x61;&#x62;&#46;&#x65;&#x73;</a>> and Jon Wakelin &lt;<a href="&#x6D;&#x61;&#105;&#x6C;&#116;&#111;:&#106;&#x6F;&#110;&#x2E;&#119;&#x61;&#107;&#x65;&#108;&#x69;&#110;&#64;&#98;&#x72;&#105;&#115;&#x74;&#111;&#108;&#46;&#x61;&#99;&#x2E;&#117;&#x6B;">&#106;&#x6F;&#110;&#x2E;&#119;&#x61;&#107;&#x65;&#108;&#x69;&#110;&#64;&#98;&#x72;&#105;&#115;&#x74;&#111;&#108;&#46;&#x61;&#99;&#x2E;&#117;&#x6B;</a>>.</p>
 
-<p>FoX is the work of Toby White &lt;<a href="&#109;&#97;&#x69;&#108;&#x74;&#x6F;:&#x74;&#x6F;&#x77;&#x32;&#x31;&#64;c&#x61;m&#x2E;&#x61;&#99;&#x2E;&#117;&#107;">&#x74;&#x6F;&#x77;&#x32;&#x31;&#64;c&#x61;m&#x2E;&#x61;&#99;&#x2E;&#117;&#107;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
+<p>FoX is the work of Toby White &lt;<a href="&#109;&#x61;&#x69;&#108;&#116;&#111;:&#x74;&#111;&#119;&#x32;1&#64;&#99;&#x61;&#x6D;&#46;&#x61;&#99;&#x2E;&#x75;&#107;">&#x74;&#111;&#119;&#x32;1&#64;&#99;&#x61;&#x6D;&#46;&#x61;&#99;&#x2E;&#x75;&#107;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
 
 <p>There is a FoX website at <a href="http://www.uszla.me.uk/software/FoX/">http://www.uszla.me.uk/software/FoX/</a>.</p>
 

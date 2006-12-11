@@ -7,8 +7,9 @@ OBJFILES= m_wxml_escape.o m_wxml_core.o \
 LIBRARY=libFoX_wxml.a
 INCFLAGS=$(MOD_PREFIX)../objs/finclude
 #
-m_wxml_overloads.f90: m_wxml_overloads.m4
-	m4 $< > $@
+.m4.f90:
+	m4 -I ../m4 $< > $@
+
 #
 #---------NOTHING SHOULD NEED TO BE CHANGED BELOW THIS LINE-----
 #
@@ -30,6 +31,8 @@ install: $(OBJFILES)
 #
 clean:
 	rm -f *.o  *.$(MOD_EXT) $(LIBRARY)
+
+m_wxml_overloads.f90: m_wxml_overloads.m4
 # DO NOT DELETE THIS LINE - used by make depend
 FoX_wxml.o: m_wxml_core.o m_wxml_overloads.o
 m_wxml_core.o: m_wxml_escape.o

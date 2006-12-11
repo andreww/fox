@@ -1,24 +1,8 @@
 dnl
-dnl First part is boilerplate to give us a foreach function
+include(`foreach.m4')dnl
 dnl
-divert(-1)
-# foreach(x, (item_1, item_2, ..., item_n), stmt)
-define(`m4_foreach', `pushdef(`$1', `')_foreach(`$1', `$2', `$3')popdef(`$1')')
-define(`_arg1', `$1')
-define(`_foreach',
-        `ifelse(`$2', `()', ,
-                `define(`$1', _arg1$2)$3`'_foreach(`$1', (shift$2), `$3')')')
-# traceon(`define', `foreach', `_foreach', `ifelse')
-divert 
-dnl given a variable name a, declare it as follows:
-define(`TOHWM4_dummyargdecl',`dnl
-    character(len=*), intent(in), optional :: $1
-')dnl
+include(`common.m4')dnl
 dnl
-dnl use an optional character variable:
-define(`TOHWM4_dummyarguse',`dnl
-    if (present($1)) call xml_addAttribute(xf, "$1", $1)
-')dnl
 dnl Below we only use arguments with a type of xsd:string
 define(`TOHWM4_moleculeargs', `(dictRef,convention,title,id,ref,formula,chirality,role)')dnl
 dnl
@@ -47,6 +31,13 @@ TOHWM4_moleculeargslist)
 TOHWM4_moleculeargsdecl
 
     integer          :: i
+
+    if (style=="DL_POLY") then
+      if (present(atomRefs).or.present(occupancies).or.present(atomIds).or.present(fmt)) &
+        call FoX_error("With DL_POLY style, no optional arguments permitted.")
+      call addDlpolyMatrix_$1(xf, coords, elements)
+      return
+    endif
 
     call xml_NewElement(xf, "molecule")
 
@@ -84,6 +75,13 @@ TOHWM4_moleculeargslist)
 TOHWM4_moleculeargsdecl
 
     integer          :: i
+
+    if (style=="DL_POLY") then
+      if (present(atomRefs).or.present(occupancies).or.present(atomIds).or.present(fmt)) &
+        call FoX_error("With DL_POLY style, no optional arguments permitted.")
+      call addDlpolyMatrix_$1(xf, coords(:, :natoms), elements(:natoms))
+      return
+    endif
 
     call xml_NewElement(xf, "molecule")
 
@@ -124,6 +122,13 @@ TOHWM4_moleculeargsdecl
 
     integer          :: i
 
+    if (style=="DL_POLY") then
+      if (present(atomRefs).or.present(occupancies).or.present(atomIds).or.present(fmt)) &
+        call FoX_error("With DL_POLY style, no optional arguments permitted.")
+      call addDlpolyMatrix_3_$1(xf, x, y, z, elements)
+      return
+    endif
+
     call xml_NewElement(xf, "molecule")
 
 TOHWM4_moleculeargsuse
@@ -162,6 +167,13 @@ TOHWM4_moleculeargslist)
 TOHWM4_moleculeargsdecl
 
     integer          :: i
+
+    if (style=="DL_POLY") then
+      if (present(atomRefs).or.present(occupancies).or.present(atomIds).or.present(fmt)) &
+        call FoX_error("With DL_POLY style, no optional arguments permitted.")
+      call addDlpolyMatrix_3_$1(xf, x(:natoms), y(:natoms), z(:natoms), elements(:natoms))
+      return
+    endif
 
     call xml_NewElement(xf, "molecule")
 
@@ -207,12 +219,18 @@ TOHWM4_moleculeargsuse
       select case(style)
       case ("x3") 
         call addcoords_x3_$1(xf, coords, fmt)
+      case ("cartesian") 
+        call addcoords_x3_$1(xf, coords, fmt)
       case ("xFrac")
+        call addcoords_xfrac_$1(xf, coords, fmt)
+      case ("fractional")
         call addcoords_xfrac_$1(xf, coords, fmt)
       case ("xyz3")
         call addcoords_xyz3_$1(xf, coords, fmt)
       case ("xyzFrac")
         call addcoords_xyzfrac_$1(xf, coords, fmt)
+      case default
+        call FoX_error("Invalid style specification for atomic coordinates")
       end select
     else
       call addcoords_x3_$1(xf, coords, fmt)
@@ -279,6 +297,62 @@ TOHWM4_moleculeargsuse
     call xml_AddAttribute(xf, "zFract", coords(3), fmt)
 
   end subroutine addcoords_xfrac_$1
+
+  subroutine addDlpolyMatrix_$1(xf, coords, elems)
+    type(xmlf_t), intent(inout)                :: xf
+    real(kind=$1), intent(in), dimension(:, :) :: coords
+    character(len=2), intent(in), dimension(:) :: elems
+
+    integer :: natoms, i
+
+    natoms = size(elems)
+    
+    call xml_NewElement(xf, "matrix")
+    call xml_AddAttribute(xf, "nrows", size(elems))
+    call xml_AddAttribute(xf, "ncols", 11)
+    call xml_AddAttribute(xf, "dataType", "xsd:string")
+    
+    call xml_AddNewline(xf)
+    do i = 1, natoms
+      call xml_AddCharacters(xf, elems(i)//"  "//str(i))
+      call xml_AddNewline(xf)
+      call xml_AddCharacters(xf, str(coords(1,i))//" "//str(coords(2,i))//" "//str(coords(3,i)))
+      call xml_AddNewline(xf)
+      call xml_AddCharacters(xf, "0 0 0")
+      call xml_AddNewline(xf)
+      call xml_AddCharacters(xf, "0 0 0")
+      call xml_AddNewline(xf)
+    enddo
+  end subroutine addDlpolyMatrix_$1
+
+  subroutine addDlpolyMatrix_3_$1(xf, x, y, z, elems)
+    type(xmlf_t), intent(inout)                :: xf
+    real(kind=$1), intent(in), dimension(:)    :: x, y, z
+    character(len=2), intent(in), dimension(:) :: elems
+
+    integer :: natoms, i
+
+    natoms = size(elems)
+    
+    call xml_NewElement(xf, "matrix")
+    call xml_AddAttribute(xf, "nrows", size(elems))
+    call xml_AddAttribute(xf, "ncols", 11)
+    call xml_AddAttribute(xf, "dataType", "xsd:string")
+    
+    call xml_AddNewline(xf)
+    do i = 1, natoms
+      call xml_AddCharacters(xf, elems(i)//"  "//str(i))
+      call xml_AddNewline(xf)
+      call xml_AddCharacters(xf, str(x(i))//" "//str(y(i))//" "//str(z(i)))
+      call xml_AddNewline(xf)
+      call xml_AddCharacters(xf, "0 0 0")
+      call xml_AddNewline(xf)
+      call xml_AddCharacters(xf, "0 0 0")
+      call xml_AddNewline(xf)
+    enddo
+  end subroutine addDlpolyMatrix_3_$1
+
+
 ')dnl
 dnl
 ! This file is AUTOGENERATED
@@ -286,10 +360,12 @@ dnl
 
 module m_wcml_molecule
 
+  use m_common_format, only: str
   use m_common_realtypes, only: sp, dp
+  use m_common_error, only: FoX_error
   use FoX_wxml, only: xmlf_t
   use FoX_wxml, only: xml_NewElement, xml_EndElement
-  use FoX_wxml, only: xml_AddAttribute
+  use FoX_wxml, only: xml_AddAttribute, xml_AddCharacters, xml_AddNewline
 
   implicit none
   private

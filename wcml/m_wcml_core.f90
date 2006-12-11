@@ -22,12 +22,17 @@ module m_wcml_core
 
 contains
 
-  subroutine cmlBeginFile(xf, filename, replace)
+  subroutine cmlBeginFile(xf, filename, unit, replace)
     type(xmlf_t), intent(out) :: xf
     character(len=*), intent(in) :: filename
+    integer, intent(in) :: unit
     logical, intent(in), optional :: replace
 
-    call xml_OpenFile(filename, xf, broken_indenting=.true., replace=replace)
+    if (unit==-1) then
+      call xml_OpenFile(filename, xf, broken_indenting=.true., replace=replace)
+    else
+      call xml_OpenFile(filename, xf, broken_indenting=.true., channel=unit, replace=replace)
+    endif
 
   end subroutine cmlBeginFile
 
@@ -47,7 +52,7 @@ contains
     character(len=*), intent(in) :: URI
 
     if (xmlf_OpenTag(xf) /= "") &
-      call FoX_error("Cannot do cmlAddNamespace after document output")
+      call FoX_error("Cannot do cmlAddNamespace after starting CML output")
 
     call xml_DeclareNamespace(xf, URI, prefix)
   end subroutine cmlAddNamespace
@@ -65,6 +70,7 @@ contains
 
     call xml_DeclareNamespace(xf, 'http://www.xml-cml.org/schema')
     call xml_DeclareNamespace(xf, 'http://www.w3.org/2001/XMLSchema', 'xsd')
+    call xml_DeclareNamespace(xf, 'http://www.uszla.me.uk/fpx', 'fpx')
     call xml_DeclareNamespace(xf, 'http://purl.org/dc/elements/1.1/title', 'dc')
     call xml_DeclareNamespace(xf, 'http://www.uszla.me.uk/FoX/units', 'units')
     call xml_DeclareNamespace(xf, 'http://www.xml-cml.org/units/units', 'cmlUnits')

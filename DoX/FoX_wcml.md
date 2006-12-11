@@ -128,9 +128,16 @@ a very few common units, it may be easiest to borrow definitions from the provid
 
 (These links do not resolve yet.)
 
-`cmlUnits:` <http://www.xml-cml.org/units/units>  
-`siUnits:` <http://www.xml-cml.org/units/siUnits>  
-`atomicUnits:` <http://www.xml-cml.org/units/atomic>  
+`cmlUnits: http://www.xml-cml.org/units/units`
+`siUnits: <http://www.xml-cml.org/units/siUnits`
+`atomicUnits: http://www.xml-cml.org/units/atomic`
+
+A default units dictionary, containing only the very basic units that wcml needs to know about, which has a namespace of: `http://www.uszla.me.uk/FoX/units`, and wcml assigns it automatically to the prefix `units`.
+
+This is added *automatically*, so attempts to add it manually will fail.
+
+The contents of all of these dictionaries, plus the wcml dictionary, may be viewed at:
+<http://www.uszla.me.uk/unitsviz/units.cgi>.
 
 Otherwise, you should feel at liberty to construct your own namespace;
 declare it using `cmlAddNamespace`, and markup all your units as:
@@ -141,8 +148,9 @@ declare it using `cmlAddNamespace`, and markup all your units as:
 
 * `cmlBeginFile`   
 **filename**: *string* *scalar*: Filename to be opened.  
+**unit**: *integer* *scalar*: what unit number should the file be opened on? If you don't
+care, you may specify '-1' as the unit number, in which case wcml will make a guess
 (**replace**): *logical* *scalar*: should the file be replaced if it already exists? *default: yes*
-
 
 This takes care of all calls to open a CML output file.
 
@@ -233,12 +241,12 @@ This pair of functions open and close a module of a computation which is strongl
 
 * `cmlAddMetadata`  
 **name**: *string* *scalar*: Identifying string for metadata  
-**content**: *anytype* *scalar*: Content of metadata  
+**content**: *character* *scalar*: Content of metadata  
 
-This adds a single item of metadata. It takes the following arguments:
+This adds a single item of metadata. Metadata vocabulary is completely uncontrolled within WCML. This means that metadata values may *only* be strings of characters. If you need your values to contain numbers, then you need to define the representation yourself, and construct your own strings.
 
 * `cmlAddParameter`  
-**title**: *string* *scalar*: Identifying title for parameter  
+**name**: *string* *scalar*: Identifying title for parameter  
 **value**:*anytype* *anydim*: value of parameter  
 **units**: *string* *scalar*: units of parameter value  (optional for logical/character **value**s, compulsory otherwise; see note above)  
 (**constraint**) *string* *scalar*: Constraint under which the parameter is set (this can be an arbitrary string)  
@@ -248,7 +256,7 @@ This adds a single item of metadata. It takes the following arguments:
 This function adds a tag representing an input parameter
 
 * `cmlAddProperty`  
-**name**: *string* *scalar*  
+**title**: *string* *scalar*  
 **value**: *any* *anydim*  
 **units**: *string* *scalar* units of property value  (optional for logical/character **value**s, compulsory otherwise; see note above)  
 (**ref**) *string* *scalar*: Reference an `id` attribute of another element (generally deprecated)  
@@ -266,7 +274,7 @@ This function adds a tag representing an output property
 (**occupancies**): *real* *array* : a length-n array of the occupancies of each atom.  
 (**atomRefs**): *string* *array*: a length-n array of strings containing references which may point to IDs elsewhere of, for example, pseudopotentials or basis sets defining the element's behaviour.  
 (**atomIds**): *string* *array*: a length-n array of strings containing IDs for the atoms.  
-(**style**): *string* *scalar*: `xyz3` - the coordinates are Cartesian, or `xyzFract` - the coordinates are fractional. The default is Cartesian.  
+(**style**): *string* *scalar*: `cartesian` - the coordinates are Cartesian, or `fractional` - the coordinates are fractional. The default is Cartesian.  
 (**ref**) *string* *scalar*: Reference an `id` attribute of another element (generally deprecated)  
 (**formula**) *string* *scalar*: An IUPAC chemical formula  
 (**chirality**) *string* *scalar*: The chirality of the molecule. No defined vocabulary.  
