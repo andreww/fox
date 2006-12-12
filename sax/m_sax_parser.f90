@@ -439,7 +439,7 @@ do
          else if (fx%context == DTD_TAG) then
 
             if (fx%debug) print *, "We found a DTD"
-            call parse_dtd(str_vs(fx%pcdata), fx%entities)
+            !FIXMEcall parse_dtd(str_vs(fx%pcdata), fx%entities)
 
          else if (fx%context == PI_TAG) then
 

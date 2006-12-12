@@ -5,11 +5,18 @@ module m_sax_dtd
   !no external entities are read.
   !And certainly no validation.
 
-  use m_common_array_str, only : str_vs, vs_str
+  use m_common_array_str, only: str_vs, vs_str
+  use m_common_charset, only: XML_WHITESPACE, XML1_0_INITIALNAMECHARS, XML1_0_NAMECHARS, operator(.in.)
   use m_common_error, only: FoX_error
   use m_common_entities, only: entity_list, add_internal_entity, add_external_entity, &
        init_entity_list, destroy_entity_list, copy_entity_list, print_entity_list,&
        expand_parameter_entity_len, expand_parameter_entity, entity_filter_EV, entity_filter_EV_len
+
+  use m_sax_reader, only: file_buffer_t, get_characters, &
+    get_next_character_discarding_whitespace, get_characters_until_one_of, &
+    get_characters_until_not_one_of, get_characters_until_all_of, &
+    len_namebuffer, retrieve_namebuffer
+
 
   implicit none
   private
@@ -42,6 +49,7 @@ module m_sax_dtd
   integer, parameter :: DTD_DONE                  = 16
 
   type dtd_parser
+    type(file_buffer_t) :: fb
     character(len=1), dimension(:), pointer :: dtd
     character(len=1), dimension(:), pointer :: token
     character(len=1), dimension(:), pointer :: docTypeName
@@ -67,14 +75,12 @@ module m_sax_dtd
 
 contains
 
-  subroutine init_dtd_parser(parse_state, dtd, ents)
+  subroutine init_dtd_parser(parse_state, fb, ents)
     type(dtd_parser), intent(out) :: parse_state
-    character(len=*), intent(in) :: dtd
+    type(file_buffer_t), intent(in) :: fb
     type(entity_list), intent(in), optional :: ents
 
-    nullify(parse_state%dtd)
-    allocate(parse_state%dtd(len(dtd)))
-    parse_state%dtd = vs_str(dtd)
+    parse_state%fb = fb
 
     allocate(parse_state%token(0))
 
@@ -119,18 +125,20 @@ contains
   end subroutine destroy_dtd_parser
 
 
-  subroutine parse_dtd(dtd, ents)
-    character(len=*), intent(in):: dtd
+  subroutine parse_dtd(fb, ents, iostat)
+    type(file_buffer_t), intent(inout) :: fb
     type(entity_list), intent(inout) :: ents
+    integer, intent(out) :: iostat
 
     integer :: c, i, cp, n
 
     type(dtd_parser) :: parse_state
 
-    call init_dtd_parser(parse_state, dtd, ents)
+    call init_dtd_parser(parse_state, fb, ents)
 
     do 
-      call tokenize_dtd(parse_state)
+      call tokenize_dtd(parse_state, iostat)
+      if (iostat/=0) return
 
       n = size(parse_state%token)
 
@@ -411,174 +419,163 @@ contains
   end subroutine parse_dtd
 
 
-  subroutine tokenize_dtd(parse_state)
+  subroutine tokenize_dtd(parse_state, iostat)
     type(dtd_parser), intent(inout) :: parse_state
+    integer, intent(out) :: iostat
 
     character(len=1), allocatable, dimension(:) :: PEref, PEexpanded, dtdtmp
 
-    integer :: c, cp, cp1, n
+    type(file_buffer_t) :: fb
+    character :: c, c2
 
     deallocate(parse_state%token)
-    c = parse_state%curr_pos
-    if (c > size(parse_state%dtd)) then
-      allocate(parse_state%token(0))
-      return
-    endif
        
-    cp = verify(str_vs(parse_state%dtd(c:)), spaces)
-    if (cp == 0) then
-      !nothing left but spaces
-      allocate(parse_state%token(0))
-      return
+    c = get_next_character_discarding_whitespace(parse_state%fb, iostat)
+    if (iostat/=0) return
       
-    elseif (cp == 1) then
-      ! no spaces here, only the following tokens allowed:
-      if (parse_state%dtd(c) == '[')  then
-        continue
-      elseif (parse_state%dtd(c) == ']') then
-        continue
-      elseif (all(parse_state%dtd(c:c+1) == (/'<','!'/))) then
-        continue
-      elseif (all(parse_state%dtd(c:c+1) == (/'<','?'/))) then
-        continue
-      elseif (parse_state%dtd(c) == '>') then
-        continue
-      elseif (all(parse_state%dtd(c:c+6) == vs_str('DOCTYPE')))then
-        continue
-      elseif (all(parse_state%dtd(c:c+5) == vs_str('ENTITY')))then
-        continue
-      elseif (all(parse_state%dtd(c:c+6) == vs_str('NOTATION')))then
-        continue
-      elseif (all(parse_state%dtd(c:c+6) == vs_str('ELEMENT')))then
-        continue
-      elseif (all(parse_state%dtd(c:c+6) == vs_str('ATTLIST')))then
-        continue
-      else
-        print*, str_vs (parse_state%dtd(c:) )
-        call FoX_error("Tokenizing failed")
-      endif
-    endif
+    select case(c)
 
-    c = c + cp - 1
-    ! The first five only need the first character, we know it exists:
-    if (parse_state%dtd(c) == '[') then
+    case ('[')
       allocate(parse_state%token(1))
       parse_state%token = '['
-      parse_state%curr_pos = c + 1
-      return
-      
-    elseif (parse_state%dtd(c) == ']') then
+
+    case (']')
       allocate(parse_state%token(1))
       parse_state%token = ']'
-      parse_state%curr_pos = c + 1
-      return
 
-    elseif (parse_state%dtd(c) == '>') then
+    case ('<')
+      continue
+      ! FIXME check for ! or ?
+      !allocate(parse_state%token(1))
+      !parse_state%token = ']'
+
+    case ('>')
       allocate(parse_state%token(1))
       parse_state%token = '>'
-      parse_state%curr_pos = c + 1
-      return
 
-    elseif (parse_state%dtd(c) == '"') then
-      cp = index(str_vs(parse_state%dtd(c+1:)), '"')
-      if (cp == 0) &
-        call FoX_error("Unmatched "" in DTD")
-      allocate(parse_state%token(cp+1))
-      parse_state%token = parse_state%dtd(c:c+cp)
-      parse_state%curr_pos = c + cp  + 1
-      return
+    case ('"')
+      ! FIXME Grab everything till next quote
+      call get_characters_until_one_of(fb, '"', iostat)
+      if (iostat/=0) return
+      allocate(parse_state%token(len_namebuffer(fb)+1))
+      parse_state%token = c//vs_str(retrieve_namebuffer(fb))
 
-    elseif (parse_state%dtd(c) == "'") then
-      cp = index(str_vs(parse_state%dtd(c+1:)), "'") 
-      if (cp == 0) &
-        call FoX_error("Unmatched ' in DTD")
-      allocate(parse_state%token(cp+1))
-      parse_state%token = parse_state%dtd(c:c+cp)
-      parse_state%curr_pos = c + cp + 1
-      return
+    case ("'")
+      ! FIXME Grab everything till next quote
+      call get_characters_until_one_of(fb, "'", iostat)
+      if (iostat/=0) return
+      allocate(parse_state%token(len_namebuffer(fb)+1))
+      parse_state%token = c//vs_str(retrieve_namebuffer(fb))
 
-    elseif (parse_state%dtd(c) == "%") then
-      if (c+1 > size(parse_state%dtd)) then
+    case ('%')
+      c2 = get_characters(parse_state%fb, 1, iostat)
+      if (iostat/=0) return
+      if (c2.in.XML_WHITESPACE) then
         allocate(parse_state%token(1))
-        parse_state%token(1) = "%"
-        parse_state%curr_pos = c + 1
-        return
-      endif
-      if (verify(parse_state%dtd(c+1), spaces) == 0) then
-        allocate(parse_state%token(1))
-        parse_state%token(1) = "%"
-        parse_state%curr_pos = c + 1
-        return
-      endif
-      ! We have a PE we need to replace. Is it registered?
-      cp = index(str_vs(parse_state%dtd(c+1:)), ';')
-      if (cp == 0) &
-        call FoX_error("Unterminated PE reference")
-      allocate(PEref(cp-1))
-      PEref = parse_state%dtd(c+1:c+cp-1)
-      n = expand_parameter_entity_len(parse_state%pe_list, str_vs(PEref))
-      if (n == 0) &
-        call FoX_error("Unregistered PE")
-      ! Yes, we must rewrite the DTD string.
-      allocate(PEexpanded(n))
-      PEexpanded = vs_str(expand_parameter_entity(parse_state%pe_list, str_vs(PEref)))
-      allocate(dtdtmp(size(parse_state%dtd) - cp - 1 + n))
-      dtdtmp(:c-1) = parse_state%dtd(:c-1)
-      dtdtmp(c:c+n-1) = PEexpanded
-      dtdtmp(c+n:) = parse_state%dtd(c+cp+1:)
-      deallocate(parse_state%dtd)
-      allocate(parse_state%dtd(size(dtdtmp)))
-      parse_state%dtd = dtdtmp
-      deallocate(dtdtmp)
-      allocate(parse_state%token(1))
-      parse_state%token = " " 
-      !this should trigger nothing in the parser, so reparsing will occur.
-      return
-    endif
-
-    if (c+3 <= size(parse_state%dtd)) then
-      if (all(parse_state%dtd(c:c+3) == (/'<','!','-','-'/))) then
-        !it's a comment ...
-        cp1 = index(str_vs(parse_state%dtd(c+3:)), '--')
-        cp = index(str_vs(parse_state%dtd(c+3:)), '-->')
-        if (cp1 < cp) then
-          call FoX_error("Invalid comment in DTD")
-        elseif (cp == 0) then
-          call FoX_error("Unterminate comment in DTD")
-        else
-          allocate(parse_state%token(cp+6))
-          parse_state%token = parse_state%dtd(c:cp+5)
-          parse_state%curr_pos = c + cp + 5
+        parse_state%token = '%'
+      elseif (c.in.XML1_0_initialNameChars) then! FIXMEVERSION
+        call get_characters_until_not_one_of(parse_state%fb, XML1_0_NameChars, iostat)
+        if (iostat/=0) return
+        c2 = get_characters(fb, 1, iostat) ! cannot fail
+        if (c2/=';') then
+          call parse_error("Expecting ; at end of PE reference"); return
         endif
-        return
+        allocate(PEref(len_namebuffer(fb)+1))
+        PEref = c//vs_str(retrieve_namebuffer(fb))
+        !FIXME expand PE (& reparse?)
+        !Run along till we find end of PE reference
+      else
+        call parse_error("Unexpected character after %"); return
       endif
-    endif
-      
-    if (c+1 <= size(parse_state%dtd)) then
-      if (all(parse_state%dtd(c:c+1) == (/'<','!'/))) then
-        allocate(parse_state%token(2))
-        parse_state%token = (/'<','!'/)
-        parse_state%curr_pos = c + 2
-        return
-      
-      elseif (all(parse_state%dtd(c:c+1) == (/'<','?'/))) then
-        !it's a PI ...
-        cp = index(str_vs(parse_state%dtd(c:)), '?>')
-        if (cp == 0) &
-          call FoX_error("Unterminated PI in DTD")
-        allocate(parse_state%token(cp+2))
-        parse_state%token = parse_state%dtd(c:cp+1)
-        parse_state%curr_pos = c + cp + 1
-        return
-      endif
-    endif
-    
-    !Otherwise just grab the next word
-    cp = scan(str_vs(parse_state%dtd(c:)), spaces//'>')
-    allocate(parse_state%token(cp-1))
-    parse_state%token = parse_state%dtd(c:c+cp-2)
-    parse_state%curr_pos = c + cp - 1
-    return
+
+    case default
+      ! Grab the next whitespace-delimited word
+      call get_characters_until_one_of(parse_state%fb, XML_WHITESPACE, iostat)
+      if (iostat/=0) return
+      allocate(parse_state%token(len_namebuffer(fb)+1))
+      parse_state%token = c//vs_str(retrieve_namebuffer(fb))
+    end select
+!!$
+!!$        allocate(parse_state%token(1))
+!!$        parse_state%token(1) = "%"
+!!$        parse_state%curr_pos = c + 1
+!!$        return
+!!$      endif
+!!$      if (verify(parse_state%dtd(c+1), spaces) == 0) then
+!!$        allocate(parse_state%token(1))
+!!$        parse_state%token(1) = "%"
+!!$        parse_state%curr_pos = c + 1
+!!$        return
+!!$      endif
+!!$      ! We have a PE we need to replace. Is it registered?
+!!$      cp = index(str_vs(parse_state%dtd(c+1:)), ';')
+!!$      if (cp == 0) &
+!!$        call FoX_error("Unterminated PE reference")
+!!$      allocate(PEref(cp-1))
+!!$      PEref = parse_state%dtd(c+1:c+cp-1)
+!!$      n = expand_parameter_entity_len(parse_state%pe_list, str_vs(PEref))
+!!$      if (n == 0) &
+!!$        call FoX_error("Unregistered PE")
+!!$      ! Yes, we must rewrite the DTD string.
+!!$      allocate(PEexpanded(n))
+!!$      PEexpanded = vs_str(expand_parameter_entity(parse_state%pe_list, str_vs(PEref)))
+!!$      allocate(dtdtmp(size(parse_state%dtd) - cp - 1 + n))
+!!$      dtdtmp(:c-1) = parse_state%dtd(:c-1)
+!!$      dtdtmp(c:c+n-1) = PEexpanded
+!!$      dtdtmp(c+n:) = parse_state%dtd(c+cp+1:)
+!!$      deallocate(parse_state%dtd)
+!!$      allocate(parse_state%dtd(size(dtdtmp)))
+!!$      parse_state%dtd = dtdtmp
+!!$      deallocate(dtdtmp)
+!!$      allocate(parse_state%token(1))
+!!$      parse_state%token = " " 
+!!$      !this should trigger nothing in the parser, so reparsing will occur.
+!!$      return
+!!$    endif
+!!$
+!!$    if (c+3 <= size(parse_state%dtd)) then
+!!$      if (all(parse_state%dtd(c:c+3) == (/'<','!','-','-'/))) then
+!!$        !it's a comment ...
+!!$        cp1 = index(str_vs(parse_state%dtd(c+3:)), '--')
+!!$        cp = index(str_vs(parse_state%dtd(c+3:)), '-->')
+!!$        if (cp1 < cp) then
+!!$          call FoX_error("Invalid comment in DTD")
+!!$        elseif (cp == 0) then
+!!$          call FoX_error("Unterminate comment in DTD")
+!!$        else
+!!$          allocate(parse_state%token(cp+6))
+!!$          parse_state%token = parse_state%dtd(c:cp+5)
+!!$          parse_state%curr_pos = c + cp + 5
+!!$        endif
+!!$        return
+!!$      endif
+!!$    endif
+!!$      
+!!$    if (c+1 <= size(parse_state%dtd)) then
+!!$      if (all(parse_state%dtd(c:c+1) == (/'<','!'/))) then
+!!$        allocate(parse_state%token(2))
+!!$        parse_state%token = (/'<','!'/)
+!!$        parse_state%curr_pos = c + 2
+!!$        return
+!!$      
+!!$      elseif (all(parse_state%dtd(c:c+1) == (/'<','?'/))) then
+!!$        !it's a PI ...
+!!$        cp = index(str_vs(parse_state%dtd(c:)), '?>')
+!!$        if (cp == 0) &
+!!$          call FoX_error("Unterminated PI in DTD")
+!!$        allocate(parse_state%token(cp+2))
+!!$        parse_state%token = parse_state%dtd(c:cp+1)
+!!$        parse_state%curr_pos = c + cp + 1
+!!$        return
+!!$      endif
+!!$    endif
+!!$    
+!!$    !Otherwise just grab the next word
+!!$    cp = scan(str_vs(parse_state%dtd(c:)), spaces//'>')
+!!$    allocate(parse_state%token(cp-1))
+!!$    parse_state%token = parse_state%dtd(c:c+cp-2)
+!!$    parse_state%curr_pos = c + cp - 1
+!!$    return
 
   end subroutine tokenize_dtd
 

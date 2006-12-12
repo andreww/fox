@@ -170,6 +170,25 @@ contains
   end function copy_entity_list
 
 
+  function copy_entity_list_without(ents, code) result(ents2)
+    type(entity_list), intent(in) :: ents
+    type(entity_list) :: ents2
+
+    integer :: i, n
+
+    ents2%PE = ents%PE
+    n = size(ents%list)
+    ! We trust that the relevant entity is in the list ...
+    allocate(ents2%list(n-1))
+    do i = 1, n
+      if (ents%list(i)%code /= code) then
+        ents2%list(i) = deep_copy_entity(ents%list(i))
+      endif
+    enddo
+
+  end function copy_entity_list_without
+
+
   subroutine print_entity_list(ents)
     type(entity_list), intent(inout) :: ents
 

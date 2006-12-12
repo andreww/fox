@@ -22,7 +22,6 @@ module m_sax_reader
   ! IO.
 
 
-  use m_common_buffer, only: buffer_t, reset_buffer, add_to_buffer
   use m_common_charset, only: XML1_0, XML1_1, &
     XML1_0_NAMECHARS, XML1_1_NAMECHARS, XML_WHITESPACE, &
     XML1_0_INITIALNAMECHARS, XML1_1_INITIALNAMECHARS
@@ -42,6 +41,10 @@ module m_sax_reader
   ! The above must be an even number, and greater than 20
   integer, parameter             :: READLENGTH = BUFLENGTH/2
 
+  type buffer_t
+    character, dimension(:), pointer :: s
+  end type buffer_t
+
   type file_buffer_t
     private
     logical                  :: connected=.false.   ! Are we connected?
@@ -54,6 +57,7 @@ module m_sax_reader
     ! fb%pos gets there, but we don't want to issue another read.
     character, pointer       :: filename(:)         ! filename
     character(len=BUFLENGTH) :: buffer              ! character buffer.
+    type(buffer_t),  pointer :: buffer_stack(:)     ! stack of expansion buffers
     character, pointer       :: namebuffer(:)       ! temporary buffer for
     ! retrieving strings potentially greater than 1024 chars
     character, pointer       :: next_chars(:)       ! Additional arbitrary
@@ -82,7 +86,7 @@ module m_sax_reader
 
   public :: get_characters
   public :: get_next_character_discarding_whitespace
-  public :: get_characters_until_not_namechar
+  public :: get_characters_until_not_one_of
   public :: get_characters_until_one_of
   public :: get_characters_until_all_of
   public :: put_characters
@@ -138,13 +142,15 @@ contains
     fb%filename = vs_str(fname)
     fb%pos = 1
     fb%nchars = 0
-    fb%buffer = ""
+    allocate(fb%buffer_stack(0))
 
   end subroutine open_file
 
   !-------------------------------------------------
   subroutine rewind_file(fb)
     type(file_buffer_t), intent(inout)  :: fb
+
+    integer :: i
 
     fb%eor = .false.
     fb%eof = .false.
@@ -155,6 +161,10 @@ contains
     fb%buffer = ""
     deallocate(fb%next_chars)
     allocate(fb%next_chars(0))
+    do i = 1, size(fb%buffer_stack)
+      deallocate(fb%buffer_stack(i)%s)
+    enddo
+    deallocate(fb%buffer_stack)
 
     rewind(unit=fb%lun)
 
@@ -164,10 +174,15 @@ contains
   subroutine close_file(fb)
     type(file_buffer_t), intent(inout)  :: fb
 
+    integer :: i
+
     if (fb%connected) then
       deallocate(fb%filename)
       deallocate(fb%next_chars)
       if (associated(fb%namebuffer)) deallocate(fb%namebuffer)
+      do i = 1, size(fb%buffer_stack)
+        deallocate(fb%buffer_stack(i)%s)
+      enddo
       close(unit=fb%lun)
       fb%connected = .false.
     endif
@@ -228,6 +243,10 @@ contains
         iostat = 0
       else
         read(unit=fb%lun, iostat=iostat, advance="no", fmt="(a1)") rc
+        if (iostat == io_eor) then
+          rc = achar(13)
+          iostat = 0
+        endif
         ! Don't need to do any EOF checking here, we are only
         ! reading one char at a time without buffering
       endif
@@ -444,6 +463,7 @@ contains
     character(len=n) :: string
 
     integer :: n_needed, n_held
+    type(buffer_t), pointer :: currentBuffer
     character, pointer :: tempbuf(:)
 
     if (.not. fb%connected) then
@@ -451,31 +471,44 @@ contains
       return
     endif
 
-    n_needed = n
-    n_held = size(fb%next_chars)
-    if (n_needed <= n_held) then
-      ! Grab it all from the pushback buffer
-      string = str_vs(fb%next_chars(:n_needed))
-      allocate(tempbuf(n_held-n_needed))
-      tempbuf = fb%next_chars(n_needed+1:)
-      deallocate(fb%next_chars)
-      fb%next_chars => tempbuf
+    !If we have any characters in the pushback buffer, grab
+    !them first.
+
+    ! Which is current buffer?
+    if (size(fb%buffer_stack) > 0) then
+      currentBuffer => fb%buffer_stack(size(fb%buffer_stack))
+      
+      n_held = size(currentBuffer%s)
+      if (n <= n_held) then
+        ! Actually, we should just move a cursor here rather than
+        ! reallocating every time.
+        string = str_vs(currentBuffer%s(:n))
+        allocate(tempbuf(n_held-n))
+        tempbuf = currentBuffer%s(n+1:)
+        deallocate(currentBuffer%s)
+        currentBuffer%s => tempbuf
+      else
+        ! Not enough characters here
+        iostat = io_eof ! will trigger an end of parsing this buffer
+      endif
     else
-      ! Grab what we can, then get the rest from the buffer,
-      ! filling it if necessary.
-      string(:n_held) = str_vs(fb%next_chars(:n_held))
-      deallocate(fb%next_chars)
-      allocate(fb%next_chars(0))
-      n_needed = n_needed - n_held
+      ! We're reading straight from the file.
+      ! Refill the buffer if necessary
       if ((fb%nchars-fb%pos)<=READLENGTH) then
         ! This will happen if a) this is the 1st/2nd time we are called
         ! b) Last buffer access was through a get_characters_until...
         call fill_buffer(fb, iostat)
         if (iostat/=0) return
       endif
-      string(n_held+1:) = fb%buffer(fb%pos:fb%pos+n_needed)
-      iostat = 0
-      fb%pos = fb%pos + n_needed
+      if (fb%nchars-fb%pos+1 > n) then
+        string = fb%buffer(fb%pos:fb%pos+n)
+        iostat = 0
+      else
+        ! Not enough characters left
+        iostat = io_eof
+        string = ''
+        return
+      endif
     endif
 
     call move_cursor(fb, string)
@@ -533,33 +566,26 @@ contains
 
   end function get_next_character_discarding_whitespace
 
-  subroutine get_characters_until_not_namechar(fb, iostat)
+  subroutine get_characters_until_not_one_of(fb, marker, iostat)
     type(file_buffer_t), intent(inout) :: fb
+    character(len=*) :: marker
     integer, intent(out) :: iostat
     
     character, dimension(:), pointer :: tempbuf, buf
     integer :: m_i
-    ! Run through next_chars and buffer checking for first non-namechar
+    ! Run through next_chars and buffer checking for first non-marker
     ! character, filling a buffer as we go - if none found, then 
     ! refill the buffer.
     ! Repeat until either we find such a character, or
     ! IO fails.
 
-    if (fb%xml_version == XML1_0) then
-      m_i = verify(str_vs(fb%next_chars), XML1_0_NAMECHARS)
-    elseif (fb%xml_version == XML1_1) then
-      m_i = verify(str_vs(fb%next_chars), XML1_1_NAMECHARS)
-    endif
+    m_i = verify(str_vs(fb%next_chars), marker)
     if (m_i == 0) then
       ! put all of next_chars into holding buffer, and move on.
       buf => fb%next_chars
       allocate(fb%next_chars(0))
       do
-        if (fb%xml_version == XML1_0) then
-          m_i = verify(fb%buffer(fb%pos:fb%nchars), XML1_0_NAMECHARS)
-        elseif (fb%xml_version == XML1_1) then
-          m_i = verify(fb%buffer(fb%pos:fb%nchars), XML1_1_NAMECHARS)
-        endif
+        m_i = verify(fb%buffer(fb%pos:fb%nchars), marker)
         if (m_i == 0) then
           tempbuf => buf
           allocate(buf(size(tempbuf)+fb%nchars-fb%pos+1))
@@ -591,13 +617,13 @@ contains
 
     if (associated(fb%namebuffer)) then
       ! it shouldn't be!
-      call FoX_error("Internal error in get_characters_until_not_namechar")
+      call FoX_error("Internal error in get_characters_until_not_one_of")
     endif
     fb%namebuffer => buf
     call move_cursor(fb, str_vs(fb%namebuffer))
     ! FIXME somewhere we need to be checking every character for allowability.
 
-  end subroutine get_characters_until_not_namechar
+  end subroutine get_characters_until_not_one_of
 
   subroutine get_characters_until_one_of(fb, marker, iostat)
     type(file_buffer_t), intent(inout) :: fb

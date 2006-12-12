@@ -8,7 +8,7 @@ module m_sax_fsm
   use m_common_error, only: FoX_warning, FoX_error, FoX_fatal
   use m_common_charset, only: XML1_0, XML1_1, XML1_0_INITIALNAMECHARS, &
     XML1_1_INITIALNAMECHARS, XML_INITIALENCODINGCHARS, XML_ENCODINGCHARS, &
-    XML_WHITESPACE
+    XML_WHITESPACE, XML1_0_NAMECHARS, XML1_1_NAMECHARS
   use m_common_charset, only: validchars, initialnamechars, namechars, &
        whitespace, uppercase, operator(.in.)
   use m_common_elstack, only: elstack_t, init_elstack, reset_elstack, destroy_elstack, is_empty
@@ -22,7 +22,7 @@ module m_sax_fsm
 
   use m_sax_reader, only: file_buffer_t, open_file, read_char, read_chars, &
     get_characters, get_next_character_discarding_whitespace, &
-    get_characters_until_not_namechar, get_characters_until_one_of, &
+    get_characters_until_not_one_of, get_characters_until_one_of, &
     get_characters_until_all_of, put_characters, &
     len_namebuffer, retrieve_namebuffer
   
@@ -304,7 +304,7 @@ contains
         if (iostat /= 0) goto 100
         if (c .in. initialNameChars) then
           call put_characters(fb, c)
-          call get_characters_until_not_namechar(fb, iostat)
+          call get_characters_until_not_one_of(fb, XML1_0_NAMECHARS, iostat)
           if (iostat/=0) goto 100
           allocate(fx%element_name(len_namebuffer(fb)))
           fx%element_name = vs_str(retrieve_namebuffer(fb))
@@ -691,7 +691,7 @@ contains
 
     subroutine parse_name
       ! get characters until not-a-name-char.
-      call get_characters_until_not_namechar(fb, iostat)
+      call get_characters_until_not_one_of(fb, XML1_0_NAMECHARS, iostat)
       if (iostat/=0) return
       if (len_namebuffer(fb) == 0) then
         call parse_error("No element name found - illegal name character")!FIXME ??
@@ -744,10 +744,11 @@ contains
     end subroutine parse_attributes
 
 
-    subroutine parse_entity_reference
+    subroutine parse_entityreference
+      character :: c_i
       ! Check first character of name to give better error messages.
       c = get_characters(fb, 1, iostat)
-      if (iostat/=0) goto 100
+      if (iostat/=0) return
       if (c.in.whitespace) then
         call parse_error("Bare ampersand found."); return
       elseif (c==';') then
@@ -755,13 +756,13 @@ contains
       elseif (c=='#') then
         ! This is a character entity reference.
         c = get_characters(fb, 1, iostat)
-        if (iostat/=0) goto 100
+        if (iostat/=0) return
         if (c=='x') then
           !It's hexadecimal
           !get characters until not one of hex
-        elseif (c.in.digits) then
-          !It's decimal
-          ! get characters until not one of digit
+ !       elseif (c.in.digits) then
+ !         !It's decimal
+ !         ! get characters until not one of digit
         else
           call parse_error("Unexpected character found in entity reference"); return
         endif
@@ -772,32 +773,40 @@ contains
       elseif (c.in.initialNameChars) then
         c_i = c
         ! This is a general entity reference
-        ! getcharacters until not namechar
+        call get_characters_until_not_one_of(fb, XML1_0_NAMECHARS, iostat)
+        if (iostat/=0) return
+        c = get_characters(fb, 1, iostat) ! cannot fail
         if (c/=';') then
           call parse_error("Expecting ; at end of general entity reference"); return
         endif
-        if! does c_i//str_vs(fx%blah) exist? then
-          if !it is an parsed general entity then
-            if !it is internal then
-              ! Create new entity list without this entity
-              call reparse(entity_contents, entity_list, signal)
-              if (signal == BROKEN) then
-                call parse_errorsomething
-              else
-                return
-              endif
-            else
-              call parse_error("Cannot include external reference"); return !FIXME is this right?
-          else
-            call parse_error("Cannot reference unparsed entity in content"); return
-          endif
+        allocate(GEref(len_namebuffer(1)+1))
+        GEref = c//vs_str(retrieve_namebuffer(fb))
+        
+        if (existing_entity(internal_ents, GEref)) then
+          continue
+ !         entity_sublist = copy_entity_list-without(ents, str_vs(GEref))
+          !Expand entity & put into new fb buffer
+!          call evolve_fsm(fb, entity_sublist, signal)
+          !              ! Create new entity list without this entity
+          !              call reparse(entity_contents, entity_list, signal)
+          !              if (signal == BROKEN) then
+          !                call parse_errorsomething
+          !              else
+          !                return
+          !              endif
+          !            else
         else
-          call parse_error("Unknown entity"); return !check - what if we have missed external ones?
+          call parse_error("Cannot reference unparsed entity in content"); return
         endif
+      elseif (existing_entity(external_ents, GEref)) then
+        call parse_error("FoX does not handle external reference"); return
+        !FIXME maybe this should be a warning?
+      else
+        call parse_error("Reference to unknown entity"); return
       endif
           
           
-    end subroutine parse_entity_reference
+    end subroutine parse_entityreference
       
     subroutine parse_error(msg)
       character(len=*) :: msg
@@ -818,9 +827,6 @@ contains
       character(len=*) :: s
     end subroutine normalize_text
 
-    subroutine parse_dtd
-    end subroutine parse_dtd
-      
 
   end subroutine evolve_fsm
 

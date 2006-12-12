@@ -33,5 +33,7 @@ clean:
 # DO NOT DELETE THIS LINE - used by make depend
 FoX_sax.o: m_sax_converters.o m_sax_error.o m_sax_parser.o
 m_sax_converters.o: m_sax_debug.o
+m_sax_dtd.o: m_sax_reader.o
+m_sax_fsm.o: m_sax_reader.o
 m_sax_parser.o: m_sax_debug.o m_sax_dtd.o m_sax_error.o m_sax_fsm.o
 m_sax_parser.o: m_sax_reader.o
