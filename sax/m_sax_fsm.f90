@@ -220,8 +220,6 @@ contains
     type(buffer_t) :: tempBuf
 
     parse_loop: do 
-      ! Reset pcdata
-     ! if (associated(fx%buffer)) deallocate(fx%buffer)
 
       select case(fx%state)
 
@@ -371,27 +369,8 @@ contains
 !          fx%state = STARTING_TAG
           continue
         case ('&')
-          ! Check first character of name to give better error messages.
-          c = get_characters(fb, 1, iostat)
-          if (iostat/=0) goto 100
-          if (c.in.whitespace) then
-            call parse_error("Bare ampersand found."); goto 100
-          elseif (c==';') then
-            call parse_error("No name found for entity reference."); goto 100
-          else
-            !FIXME check for initial char.
-          endif
-          call get_characters_until_not_nameChar(fb, iostat)
-          if (iostat/=0) goto 100
-          !FIXME put in one of our buffers c + namebuffer
-          c = get_characters(fb, 1, iostat)
-          if (iostat/=0) goto 100
-          if (c/=";") then
-            call parse_error("Illegal character in entity name - expected ';'"); exit
-          endif
-          ! check if this entity exists and is appropriate
-          ! push its expansion back onto stack
-          ! FIXM still what about bare ampersands after expansion?
+          call parse_entityreference
+
         end select
 
       end select
@@ -764,6 +743,62 @@ contains
       enddo
     end subroutine parse_attributes
 
+
+    subroutine parse_entity_reference
+      ! Check first character of name to give better error messages.
+      c = get_characters(fb, 1, iostat)
+      if (iostat/=0) goto 100
+      if (c.in.whitespace) then
+        call parse_error("Bare ampersand found."); return
+      elseif (c==';') then
+        call parse_error("No name found for entity reference."); return
+      elseif (c=='#') then
+        ! This is a character entity reference.
+        c = get_characters(fb, 1, iostat)
+        if (iostat/=0) goto 100
+        if (c=='x') then
+          !It's hexadecimal
+          !get characters until not one of hex
+        elseif (c.in.digits) then
+          !It's decimal
+          ! get characters until not one of digit
+        else
+          call parse_error("Unexpected character found in entity reference"); return
+        endif
+        if (c/=';') then
+          call parse_error("Expecting ; at end of character entity reference"); return
+        endif
+        ! Leave character references to be decoded later.
+      elseif (c.in.initialNameChars) then
+        c_i = c
+        ! This is a general entity reference
+        ! getcharacters until not namechar
+        if (c/=';') then
+          call parse_error("Expecting ; at end of general entity reference"); return
+        endif
+        if! does c_i//str_vs(fx%blah) exist? then
+          if !it is an parsed general entity then
+            if !it is internal then
+              ! Create new entity list without this entity
+              call reparse(entity_contents, entity_list, signal)
+              if (signal == BROKEN) then
+                call parse_errorsomething
+              else
+                return
+              endif
+            else
+              call parse_error("Cannot include external reference"); return !FIXME is this right?
+          else
+            call parse_error("Cannot reference unparsed entity in content"); return
+          endif
+        else
+          call parse_error("Unknown entity"); return !check - what if we have missed external ones?
+        endif
+      endif
+          
+          
+    end subroutine parse_entity_reference
+      
     subroutine parse_error(msg)
       character(len=*) :: msg
       fx%state = ERROR
