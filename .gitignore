@@ -1,3 +1,4 @@
+*~
 *.o
 *.mod
 *.MOD
@@ -8,4 +9,5 @@ arch.make
 config.log
 config.status
 fsys/libfsys.a
+common/libFoX_common.a
 objs
