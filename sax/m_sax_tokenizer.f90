@@ -5,6 +5,9 @@ module m_sax_tokenizer
 contains
 
   subroutine sax_tokenizer(fx, fb, signal)
+    type(sax_parser_t), intent(in) :: fx
+    type(file_buffer_t), intent(inout) :: fb
+    integer, intent(out) :: signal
 
 
     if (fx%preserve_whitespace) then
