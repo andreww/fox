@@ -10,15 +10,17 @@ module m_sax_reader
   ! for XML parsing.
 
   ! It also offers the ability to push characters back into 
-  ! the reader, which is necessary for readahead by the parser,
-  ! and for XML entity references, whose expansion should be
-  ! pushed back for reparsing.
+  ! the reader, onto a stack of additional buffers, which
+  ! we need for entity expansion.
+
+  ! Furthermore, readahead and pushback is available on
+  ! all buffers.
 
   ! In addition, it includes a layer for caching, whereby 
-  ! (except under special conditions) it actually reads from 
+  ! (except during entity expansion) it actually reads from 
   ! the file READLENGTH(512) characters at a time, into
-  ! a large buffer, which is where new-line conversion takes
-  ! place, so most of the seeking is done in memory, not through
+  ! a large buffer with all newline conversion already done.
+  ! Thus most of the tokenizer/parser's seeking is done in memory, not through
   ! IO.
 
 
@@ -43,6 +45,7 @@ module m_sax_reader
 
   type buffer_t
     character, dimension(:), pointer :: s
+    integer :: pos = 1
   end type buffer_t
 
   type file_buffer_t
@@ -60,9 +63,6 @@ module m_sax_reader
     type(buffer_t),  pointer :: buffer_stack(:)     ! stack of expansion buffers
     character, pointer       :: namebuffer(:)       ! temporary buffer for
     ! retrieving strings potentially greater than 1024 chars
-    character, pointer       :: next_chars(:)       ! Additional arbitrary
-    ! length character stack in case necessary (either for one char 
-    ! readahead or entity expansion)
     logical                  :: eor                 ! read_really needs to
     ! remember if we have a pending newline
     integer                  :: pos                 ! which char are we at?
@@ -71,6 +71,16 @@ module m_sax_reader
     integer                  :: col                 ! which column of file?
     logical                  :: debug               ! debug messages?
   end type file_buffer_t
+
+  interface index
+    module procedure index_fb
+  end interface index
+  interface scan
+    module procedure scan_fb
+  end interface scan
+  interface verify
+    module procedure verify_fb
+  end interface verify
 
 
   public :: file_buffer_t
@@ -143,6 +153,7 @@ contains
     fb%pos = 1
     fb%nchars = 0
     allocate(fb%buffer_stack(0))
+    allocate(fb%buffer_stack(0)%s(0))
 
   end subroutine open_file
 
@@ -220,7 +231,7 @@ contains
       c2 = really_read_char(iostat)
       if (iostat/=0) return
       if (c2 /= achar(13)) then
-        call put_characters(fb, c2)
+        call put_characters(fb, 1)
         ! else discard it.
       endif
       fb%line = fb%line + 1
@@ -373,7 +384,7 @@ contains
           if (iostat /= 0) then
             if ((fb%xml_version==XML1_0.and.c/=achar(13)).or. &
               (fb%xml_version==XML1_1.and.c/=achar(13).and.c/=achar(133))) then
-              call put_characters(fb, c)
+              call put_characters(fb, 1)
             ! else we'd be throwing it away below anyway
             endif
           else
@@ -456,6 +467,43 @@ contains
 
   end subroutine fill_buffer
 
+  subroutine push_buffer_stack(fb, string)
+    type(file_buffer_t), intent(inout) :: fb
+    character(len=*), intent(in) :: string
+
+    ! Add a new buffer to the stack.
+    integer :: i
+    type(buffer_t), dimension(:), pointer :: tempStack
+
+    allocate(tempStack(0:size(fb%buffer_stack)+1))
+    do i = 0, size(fb%buffer_stack)
+      tempStack(i)%s => fb%buffer_stack(i)%s
+      tempStack(i)%pos = fb%buffer_stack(i)%pos
+    enddo
+    allocate(tempStack(size(fb%buffer_stack))%s(len(string)))
+    tempStack(size(fb%buffer_stack))%s = vs_str(string)
+    deallocate(fb%buffer_stack)
+    fb%buffer_stack => tempStack
+  end subroutine push_buffer_stack
+    
+  subroutine pop_buffer_stack(fb)
+    type(file_buffer_t), intent(inout) :: fb
+
+    ! Pop active buffer from the stack.
+    integer :: i
+    type(buffer_t), dimension(:), pointer :: tempStack
+
+    allocate(tempStack(0:size(fb%buffer_stack)-1))
+    do i = 0, size(fb%buffer_stack)-1
+      tempStack(i)%s => fb%buffer_stack(i)%s
+      tempStack(i)%pos = fb%buffer_stack(i)%pos
+    enddo
+    deallocate(fb%buffer_stack(size(fb%buffer_stack))%s)
+    deallocate(fb%buffer_stack)
+    fb%buffer_stack => tempStack
+    
+  end subroutine pop_buffer_stack
+
   function get_characters(fb, n, iostat) result(string)
     type(file_buffer_t), intent(inout) :: fb
     integer, intent(in) :: n
@@ -463,8 +511,7 @@ contains
     character(len=n) :: string
 
     integer :: n_needed, n_held
-    type(buffer_t), pointer :: currentBuffer
-    character, pointer :: tempbuf(:)
+    type(buffer_t), pointer :: cb
 
     if (.not. fb%connected) then
       iostat = BUFFER_NOT_CONNECTED
@@ -476,20 +523,19 @@ contains
 
     ! Which is current buffer?
     if (size(fb%buffer_stack) > 0) then
-      currentBuffer => fb%buffer_stack(size(fb%buffer_stack))
+      cb => fb%buffer_stack(size(fb%buffer_stack))
       
-      n_held = size(currentBuffer%s)
+      n_held = size(cb%s) - cb%pos + 1
       if (n <= n_held) then
         ! Actually, we should just move a cursor here rather than
         ! reallocating every time.
-        string = str_vs(currentBuffer%s(:n))
-        allocate(tempbuf(n_held-n))
-        tempbuf = currentBuffer%s(n+1:)
-        deallocate(currentBuffer%s)
-        currentBuffer%s => tempbuf
+        string = str_vs(cb%s(cb%pos:cb%pos+n-1))
+        cb%pos = cb%pos + n
       else
         ! Not enough characters here
-        iostat = io_eof ! will trigger an end of parsing this buffer
+        string = ''
+        iostat = io_eof
+        return
       endif
     else
       ! We're reading straight from the file.
@@ -505,8 +551,8 @@ contains
         iostat = 0
       else
         ! Not enough characters left
-        iostat = io_eof
         string = ''
+        iostat = io_eof
         return
       endif
     endif
@@ -521,6 +567,7 @@ contains
     integer, intent(out) :: iostat
     character :: c
 
+    type(buffer_t), pointer :: cb
     character, dimension(:), pointer :: tempbuf
     integer :: m_i
 
@@ -529,99 +576,104 @@ contains
     ! Repeat until either we find the correct character, or
     ! IO fails.
 
-    m_i = verify(str_vs(fb%next_chars), XML_WHITESPACE)
+    if (size(fb%buffer_stack)>0) then
+      cb => fb%buffer_stack(size(fb%buffer_stack))
+    endif
+
+    m_i = verify(fb, XML_WHITESPACE)
     if (m_i == 0) then
-      !Chuck away the next_chars, and start searching through the buffer
-      call move_cursor(fb, str_vs(fb%next_chars))
-      deallocate(fb%next_chars)
-      allocate(fb%next_chars(0))
-      do
-        m_i = verify(fb%buffer(fb%pos:fb%nchars), XML_WHITESPACE)
-        if (m_i == 0) then
-          call move_cursor(fb, fb%buffer(fb%pos:fb%nchars))
-          fb%pos = fb%nchars ! FIXME + 1?
-          call fill_buffer(fb, iostat)
-          if (iostat /= 0) then
-            c = achar(0)
-            return
-          endif
-        else
-          call move_cursor(fb, fb%buffer(fb%pos:fb%pos+m_i-1))
-          exit ! fb%pos+m_i-1 now holds the char we want.
+      if (size(fb%buffer_stack)>0) then
+        cb%pos = size(cb%s)+1
+        c = achar(0)
+        iostat = io_eof
+        return
+      endif
+      do while (m_i==0)
+        call move_cursor(fb, fb%buffer(fb%pos:fb%nchars))
+        fb%pos = fb%nchars ! FIXME + 1?
+        call fill_buffer(fb, iostat)
+        if (iostat /= 0) then
+          c = achar(0)
+          return
         endif
+        m_i = verify(fb, XML_WHITESPACE)
       enddo
+      call move_cursor(fb, fb%buffer(fb%pos:fb%pos+m_i-1))
+    endif
+    if (size(fb%buffer_stack)>0) then
+      cb%pos = cb%pos + m_i
+      c = cb%s(cb%pos-1)
+    else
       fb%pos = fb%pos + m_i
       c = fb%buffer(fb%pos-1:fb%pos-1)
-    else
-      ! In next_chars somewhere, move along & reallocate.
-      c = fb%next_chars(m_i)
-      call move_cursor(fb, str_vs(fb%next_chars(:m_i)))
-      allocate(tempbuf(size(fb%next_chars)-m_i-1))
-      tempbuf = fb%next_chars(m_i+1:)
-      deallocate(fb%next_chars)
-      fb%next_chars => tempbuf
     endif
     
     ! FIXME somewhere we need to be checking every character for allowability.
 
   end function get_next_character_discarding_whitespace
 
+  subroutine get_chars_with_condition(fb, marker, condition, iostat)
+    type(file_buffer_t), intent(inout) :: fb
+    character(len=*), intent(in) :: marker
+    integer, external :: condition
+    integer, intent(out) :: iostat
+
+    type(buffer_t), pointer :: cb
+    character, dimension(:), pointer :: tempbuf, buf
+    integer :: m_i
+
+    if (size(fb%buffer_stack)>0) then
+      cb => fb%buffer_stack(size(fb%buffer_stack))
+    endif
+
+    allocate(buf(0))
+    m_i = condition(fb, marker)
+    if (m_i == 0) then
+      if (size(fb%buffer_stack)>0) then
+        cb%pos = size(cb%s)+1
+        iostat = io_eof
+        return
+      endif
+      do while (m_i==0)
+        allocate(tempbuf(size(buf)+fb%nchars-fb%pos+1))
+        tempbuf(:size(buf)) = buf
+        tempbuf(size(buf)+1:) = fb%buffer(fb%pos:fb%nchars)
+        deallocate(buf)
+        buf => tempbuf
+        fb%pos = fb%nchars ! FIXME + 1?
+        call fill_buffer(fb, iostat)
+        if (iostat /= 0) return
+        m_i = condition(fb, marker)
+      enddo
+    endif
+
+    if (size(fb%buffer_stack)>0) then
+      deallocate(buf)
+      allocate(buf(m_i-1))
+      buf = cb%s(cb%pos+m_i-1)
+      cb%pos = cb%pos+m_i
+    else
+      allocate(tempbuf(size(buf)+fb%pos+m_i-1))
+      tempbuf(:size(buf)) = buf
+      tempbuf(size(buf)+1:) = fb%buffer(fb%pos:fb%pos+m_i-1)
+      deallocate(buf)
+      buf => tempbuf
+      fb%pos = fb%pos + m_i
+    endif
+
+    if (associated(fb%namebuffer)) deallocate(fb%namebuffer)
+    fb%namebuffer => buf
+    call move_cursor(fb, str_vs(fb%namebuffer))
+
+  end subroutine get_chars_with_condition
+    
+
   subroutine get_characters_until_not_one_of(fb, marker, iostat)
     type(file_buffer_t), intent(inout) :: fb
     character(len=*) :: marker
     integer, intent(out) :: iostat
     
-    character, dimension(:), pointer :: tempbuf, buf
-    integer :: m_i
-    ! Run through next_chars and buffer checking for first non-marker
-    ! character, filling a buffer as we go - if none found, then 
-    ! refill the buffer.
-    ! Repeat until either we find such a character, or
-    ! IO fails.
-
-    m_i = verify(str_vs(fb%next_chars), marker)
-    if (m_i == 0) then
-      ! put all of next_chars into holding buffer, and move on.
-      buf => fb%next_chars
-      allocate(fb%next_chars(0))
-      do
-        m_i = verify(fb%buffer(fb%pos:fb%nchars), marker)
-        if (m_i == 0) then
-          tempbuf => buf
-          allocate(buf(size(tempbuf)+fb%nchars-fb%pos+1))
-          buf(:size(tempbuf)) = tempbuf
-          buf(size(tempbuf)+1:) = vs_str(fb%buffer(fb%pos:fb%nchars))
-          deallocate(tempbuf)
-          fb%pos = fb%nchars + 1
-          call fill_buffer(fb, iostat)
-          if (iostat /= 0) return
-        else
-          exit
-        endif
-      enddo
-      tempbuf => buf
-      allocate(buf(size(tempbuf)+m_i-1))
-      buf(:size(tempbuf)) = tempbuf
-      buf(size(tempbuf)+1:) = vs_str(fb%buffer(fb%pos:fb%pos+m_i-1))
-      deallocate(tempbuf)
-      fb%pos = fb%pos + m_i - 1
-    else
-      ! scoot along in next_chars
-      allocate(buf(m_i-1))
-      buf = fb%next_chars(:m_i-1)
-      allocate(tempbuf(size(fb%next_chars)-m_i+1))
-      tempbuf = fb%next_chars(m_i:)
-      deallocate(fb%next_chars)
-      fb%next_chars => tempbuf
-    endif
-
-    if (associated(fb%namebuffer)) then
-      ! it shouldn't be!
-      call FoX_error("Internal error in get_characters_until_not_one_of")
-    endif
-    fb%namebuffer => buf
-    call move_cursor(fb, str_vs(fb%namebuffer))
-    ! FIXME somewhere we need to be checking every character for allowability.
+    call get_chars_with_condition(fb, marker, verify_fb, iostat)
 
   end subroutine get_characters_until_not_one_of
 
@@ -630,56 +682,7 @@ contains
     character(len=*), intent(in) :: marker
     integer, intent(out) :: iostat
 
-    integer :: m_i 
-    character, dimension(:), pointer :: tempbuf, buf
-    ! Run through the buffer checking for any of the marker
-    ! characters, filling another buffer as we go - if none found, then 
-    ! refill the main buffer.
-    ! Repeat until either we find such a character, or
-    ! IO fails.
-    m_i = scan(str_vs(fb%next_chars), marker)
-    if (m_i == 0) then
-      ! put all of next_chars into holding buffer, and move on.
-      buf => fb%next_chars
-      allocate(fb%next_chars(0))
-      do
-        m_i = scan(fb%buffer(fb%pos:fb%nchars), marker)
-        if (m_i == 0) then
-          tempbuf => buf
-          allocate(buf(size(tempbuf)+fb%nchars-fb%pos+1))
-          buf(:size(tempbuf)) = tempbuf
-          buf(size(tempbuf)+1:) = vs_str(fb%buffer(fb%pos:fb%nchars))
-          deallocate(tempbuf)
-          fb%pos = fb%nchars + 1
-          call fill_buffer(fb, iostat)
-          if (iostat /= 0) return
-        else
-          exit
-        endif
-      enddo
-      tempbuf => buf
-      allocate(buf(size(tempbuf)+m_i-1))
-      buf(:size(tempbuf)) = tempbuf
-      buf(size(tempbuf)+1:) = vs_str(fb%buffer(fb%pos:fb%pos+m_i-1))
-      deallocate(tempbuf)
-      fb%pos = fb%pos + m_i - 1
-    else
-      ! scoot along in next_chars
-      allocate(buf(m_i-1))
-      buf = fb%next_chars(:m_i-1)
-      allocate(tempbuf(size(fb%next_chars)-m_i+1))
-      tempbuf = fb%next_chars(m_i:)
-      deallocate(fb%next_chars)
-      fb%next_chars => tempbuf
-    endif
-
-    if (associated(fb%namebuffer)) then
-      ! it shouldn't be!
-      call FoX_error("Internal error in get_characters_until_one_of")
-    endif
-    fb%namebuffer => buf
-    call move_cursor(fb, str_vs(fb%namebuffer))
-    ! FIXME somewhere we need to be checking every character for allowability.
+    call get_chars_with_condition(fb, marker, scan_fb, iostat)
 
   end subroutine get_characters_until_one_of
 
@@ -688,59 +691,30 @@ contains
     character(len=*), intent(in) :: marker
     integer, intent(out) :: iostat
 
-    integer :: m_i
-    character, dimension(:), pointer :: tempBuf, buf
-    ! Run through the buffer checking for marker string,
-    ! filling a buffer as we go - if not found, then 
-    ! refill the buffer (buffer is only half-filled each
-    ! time in case marker string spans join.)
-    ! Repeat until either we find such a character, or
-    ! IO fails.
-    m_i = index(str_vs(fb%next_chars), marker)
-    if (m_i == 0) then
-      ! put all of next_chars into holding buffer, and move on.
-      buf => fb%next_chars
-      allocate(fb%next_chars(0))
-      do
-        m_i = scan(fb%buffer(fb%pos:fb%nchars), marker)
-        if (m_i == 0) then
-          tempbuf => buf
-          allocate(buf(size(tempbuf)+fb%nchars-fb%pos+1))
-          buf(:size(tempbuf)) = tempbuf
-          buf(size(tempbuf)+1:) = vs_str(fb%buffer(fb%pos:fb%nchars))
-          deallocate(tempbuf)
-          fb%pos = fb%nchars + 1
-          call fill_buffer(fb, iostat)
-          if (iostat /= 0) return
-        else
-          exit
-        endif
-      enddo
-      tempbuf => buf
-      allocate(buf(size(tempbuf)+m_i-1))
-      buf(:size(tempbuf)) = tempbuf
-      buf(size(tempbuf)+1:) = vs_str(fb%buffer(fb%pos:fb%pos+m_i-1))
-      deallocate(tempbuf)
-      fb%pos = fb%pos + m_i - 1
-    else
-      ! scoot along in next_chars
-      allocate(buf(m_i-1))
-      buf = fb%next_chars(:m_i-1)
-      allocate(tempbuf(size(fb%next_chars)-m_i+1))
-      tempbuf = fb%next_chars(m_i:)
-      deallocate(fb%next_chars)
-      fb%next_chars => tempbuf
-    endif
-
-    if (associated(fb%namebuffer)) then
-      ! it shouldn't be!
-      call FoX_error("Internal error in get_characters_until_all_of")
-    endif
-    fb%namebuffer => buf
-    call move_cursor(fb, str_vs(fb%namebuffer))
-    ! FIXME somewhere we need to be checking every character for allowability.
+    call get_chars_with_condition(fb, marker, index_fb, iostat)
 
   end subroutine get_characters_until_all_of
+
+  function next_chars_are(fb, string, iostat) result(p)
+    type(file_buffer_t), intent(inout) :: fb
+    character(len=*), intent(in) :: string
+    integer, intent(out) :: iostat
+    logical :: p
+
+    character(len=len(string)) :: s
+
+    p = .false.
+    s = get_characters(fb, len(string), iostat)
+    if (iostat==io_eof) then
+      s = ''
+      return
+    elseif (iostat/=0) then
+      return
+    endif
+    p = (s==string) 
+    if (.not.p) call put_characters(fb, len(string))
+
+  end function next_chars_are
 
   function len_namebuffer(fb) result(n)
     type(file_buffer_t), intent(in) :: fb
@@ -776,19 +750,26 @@ contains
   end subroutine move_cursor
 
 
-  subroutine put_characters(fb, string)
+  subroutine put_characters(fb, n)
     type(file_buffer_t), intent(inout) :: fb
-    character(len=*), intent(in) :: string
+    integer, intent(in) :: n
     
-    character, pointer :: tempString(:)
-    integer :: n
+    type(buffer_t), pointer :: cb
 
-    tempString => fb%next_chars
-    n = size(tempString)
-    allocate(fb%next_chars(n+len(string)))
-    fb%next_chars(:n) = tempString
-    deallocate(tempString)
-    fb%next_chars(n+1:) = vs_str(string)
+    if (size(fb%buffer_stack)>0) then
+      cb = fb%buffer_stack(size(fb%buffer_stack))
+      if (n > cb%pos) then
+        ! make an error
+      else
+        cb%pos = cb%pos - n
+      endif
+    else
+      if (n > fb%pos) then
+        ! make an error
+      else
+        fb%pos = fb%pos - n
+      endif
+    endif
 
   end subroutine put_characters
 
@@ -821,5 +802,56 @@ contains
     enddo
     write(*,'(a)') string(m:)
   end subroutine dump_string
+
+  function index_fb(fb, marker, back) result(p)
+    type(file_buffer_t), intent(in) :: fb
+    character(len=*), intent(in) :: marker
+    logical, intent(in), optional :: back
+    integer :: p
+
+    type(buffer_t), pointer :: cb
+
+    if (size(fb%buffer_stack) > 0) then
+      cb => fb%buffer_stack(size(fb%buffer_stack))
+      p = index(str_vs(cb%s(cb%pos:)), marker, back)
+    else
+      p = index(fb%buffer(fb%pos:fb%nchars), marker, back)
+    endif
+
+  end function index_fb
+
+  function scan_fb(fb, marker, back) result(p)
+    type(file_buffer_t), intent(in) :: fb
+    character(len=*), intent(in) :: marker
+    logical, intent(in), optional :: back
+    integer :: p
+
+    type(buffer_t), pointer :: cb
+
+    if (size(fb%buffer_stack) > 0) then
+      cb => fb%buffer_stack(size(fb%buffer_stack))
+      p = scan(str_vs(cb%s(cb%pos:)), marker, back)
+    else
+      p = scan(fb%buffer(fb%pos:fb%nchars), marker, back)
+    endif
+
+  end function scan_fb
+
+  function verify_fb(fb, marker, back) result(p)
+    type(file_buffer_t), intent(in) :: fb
+    character(len=*), intent(in) :: marker
+    logical, intent(in), optional :: back
+    integer :: p
+
+    type(buffer_t), pointer :: cb
+
+    if (size(fb%buffer_stack) > 0) then
+      cb => fb%buffer_stack(size(fb%buffer_stack))
+      p = verify(str_vs(cb%s(cb%pos:)), marker, back)
+    else
+      p = verify(fb%buffer(fb%pos:fb%nchars), marker, back)
+    endif
+
+  end function verify_fb
 
 end module m_sax_reader

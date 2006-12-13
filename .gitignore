@@ -1,0 +1,11 @@
+*.o
+*.mod
+*.MOD
+*.m
+*.M
+FoX-config
+arch.make
+config.log
+config.status
+fsys/libfsys.a
+objs

@@ -38,13 +38,34 @@ contains
         select case(c)
 
         case ('<')
-          !is it PI
-          !is it ! directive
-          !is it DOCTYPE, ELEMENT, ATTLIST, ENTITY, NOTATION, [CDATA
-          !is it /
-          !is it initialNameChar
-          !wtf
-          token = '<'
+          c = get_next_character_discarding_whitespace(fb, iostat)
+          if (iostat/=0) return
+          if (c=='?') then
+            allocate(fx%token(2))
+            fx%token = '<?'
+          elseif (c=='!') then
+            allocate(fx%token(2))
+            fx%token = '<?'
+          elseif (c=='/') then
+            allocate(fx%token(2))
+            fx%token = '</'
+          elseif (c.in.initialNameChar) then
+            call put_characters(fb, 1)
+            allocate(fx%token(1))
+            fx%token = '<'
+          else
+            !make an error
+          endif
+
+        case ('/')
+          c = get_next_character_discarding_whitespace(fb, iostat)
+          if (iostat/=0) return
+          if (c=='>') then
+            allocate(fx%token(2))
+            fx%token = '<?'
+          else
+            !make an error
+          endif
 
         case ('%') then
           c = get_characters(fb, 1, iostat)
@@ -89,13 +110,39 @@ contains
             !expand & reinvoke parser, truncating entity list
           endif
 
-        case ('"') 
-          !Depends if we are in DTD or in content
-          ! chase along to next ", doing magic with resulting string.
+        case ('"')
+          if (fx%context = CTXT_IN_DTD .and. some other condition) then
+            call get_characters_until_one_of(fb, '"', iostat)
+            if (iostat/=0) return
+            call get_namebuffer(fb, fx)
+            
+          elseif (fx%context = CTXT_IN_CONTENT .an.d some other condition) then
+            call get_characters_until_one_of(fb, '"', iostat)
+            if (iostat/=0) return
+            call get_namebuffer(fb, fx)
+            ! expand entities
+            ! normalize text
 
-        case ('"') 
-          !Depends if we are in DTD or in content
-          ! chase along to next ', doing magic with resulting string.
+          else
+            ! make an error
+          endif
+
+        case ("'")
+          if (fx%context = CTXT_IN_DTD .and. some other condition) then
+            call get_characters_until_one_of(fb, "'", iostat)
+            if (iostat/=0) return
+            call get_namebuffer(fb, fx)
+            
+          elseif (fx%context = CTXT_IN_CONTENT .and. some other condition) then
+            call get_characters_until_one_of(fb, "'", iostat)
+            if (iostat/=0) return
+            call get_namebuffer(fb, fx)
+            ! expand entities
+            ! normalize text
+
+          else
+            ! make an error
+          endif
 
         case default !It's probably a name ...
 
