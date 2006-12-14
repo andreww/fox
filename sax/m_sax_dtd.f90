@@ -17,6 +17,8 @@ module m_sax_dtd
     get_characters_until_not_one_of, get_characters_until_all_of, &
     len_namebuffer, retrieve_namebuffer
 
+  use m_sax_types, only: dtd_parser_t
+
 
   implicit none
   private
@@ -48,27 +50,6 @@ module m_sax_dtd
   integer, parameter :: DTD_DECLARATION_DONE      = 15
   integer, parameter :: DTD_DONE                  = 16
 
-  type dtd_parser
-    type(file_buffer_t) :: fb
-    character(len=1), dimension(:), pointer :: dtd
-    character(len=1), dimension(:), pointer :: token
-    character(len=1), dimension(:), pointer :: docTypeName
-    character(len=1), dimension(:), pointer :: PublicId
-    character(len=1), dimension(:), pointer :: SystemId
-    character(len=1), dimension(:), pointer :: entityName
-    character(len=1), dimension(:), pointer :: entityContent
-    character(len=1), dimension(:), pointer :: entityPublicId
-    character(len=1), dimension(:), pointer :: entitySystemId
-    character(len=1), dimension(:), pointer :: NdataValue
-    type(entity_list) :: pe_list
-    type(entity_list) :: entity_list
-    integer :: dtd_state
-    integer :: curr_pos
-    logical :: external_found
-    logical :: parameter_entity
-    logical :: internal_subset
-  end type dtd_parser
-
   public :: parse_dtd
 
   logical, save :: debug = .true.
@@ -76,11 +57,9 @@ module m_sax_dtd
 contains
 
   subroutine init_dtd_parser(parse_state, fb, ents)
-    type(dtd_parser), intent(out) :: parse_state
+    type(dtd_parser_t), intent(out) :: parse_state
     type(file_buffer_t), intent(in) :: fb
     type(entity_list), intent(in), optional :: ents
-
-    parse_state%fb = fb
 
     allocate(parse_state%token(0))
 
@@ -106,7 +85,7 @@ contains
   end subroutine init_dtd_parser
 
   subroutine destroy_dtd_parser(parse_state)
-    type(dtd_parser), intent(inout) :: parse_state
+    type(dtd_parser_t), intent(inout) :: parse_state
 
     deallocate(parse_state%dtd)
     if (associated(parse_state%token)) deallocate(parse_state%token)
@@ -132,7 +111,7 @@ contains
 
     integer :: c, i, cp, n
 
-    type(dtd_parser) :: parse_state
+    type(dtd_parser_t) :: parse_state
 
     call init_dtd_parser(parse_state, fb, ents)
 
@@ -419,94 +398,27 @@ contains
   end subroutine parse_dtd
 
 
-  subroutine tokenize_dtd(parse_state, iostat)
-    type(dtd_parser), intent(inout) :: parse_state
-    integer, intent(out) :: iostat
-
-    character(len=1), allocatable, dimension(:) :: PEref, PEexpanded, dtdtmp
-
-    type(file_buffer_t) :: fb
-    character :: c, c2
-
-    deallocate(parse_state%token)
-       
-    c = get_next_character_discarding_whitespace(parse_state%fb, iostat)
-    if (iostat/=0) return
-      
-    select case(c)
-
-    case ('[')
-      allocate(parse_state%token(1))
-      parse_state%token = '['
-
-    case (']')
-      allocate(parse_state%token(1))
-      parse_state%token = ']'
-
-    case ('<')
-      continue
-      ! FIXME check for ! or ?
-      !allocate(parse_state%token(1))
-      !parse_state%token = ']'
-
-    case ('>')
-      allocate(parse_state%token(1))
-      parse_state%token = '>'
-
-    case ('"')
-      ! FIXME Grab everything till next quote
-      call get_characters_until_one_of(fb, '"', iostat)
-      if (iostat/=0) return
-      allocate(parse_state%token(len_namebuffer(fb)+1))
-      parse_state%token = c//vs_str(retrieve_namebuffer(fb))
-
-    case ("'")
-      ! FIXME Grab everything till next quote
-      call get_characters_until_one_of(fb, "'", iostat)
-      if (iostat/=0) return
-      allocate(parse_state%token(len_namebuffer(fb)+1))
-      parse_state%token = c//vs_str(retrieve_namebuffer(fb))
-
-    case ('%')
-      c2 = get_characters(parse_state%fb, 1, iostat)
-      if (iostat/=0) return
-      if (c2.in.XML_WHITESPACE) then
-        allocate(parse_state%token(1))
-        parse_state%token = '%'
-      elseif (c.in.XML1_0_initialNameChars) then! FIXMEVERSION
-        call get_characters_until_not_one_of(parse_state%fb, XML1_0_NameChars, iostat)
-        if (iostat/=0) return
-        c2 = get_characters(fb, 1, iostat) ! cannot fail
-        if (c2/=';') then
-          call parse_error("Expecting ; at end of PE reference"); return
-        endif
-        allocate(PEref(len_namebuffer(fb)+1))
-        PEref = c//vs_str(retrieve_namebuffer(fb))
-        !FIXME expand PE (& reparse?)
-        !Run along till we find end of PE reference
-      else
-        call parse_error("Unexpected character after %"); return
-      endif
-
-    case default
-      ! Grab the next whitespace-delimited word
-      call get_characters_until_one_of(parse_state%fb, XML_WHITESPACE, iostat)
-      if (iostat/=0) return
-      allocate(parse_state%token(len_namebuffer(fb)+1))
-      parse_state%token = c//vs_str(retrieve_namebuffer(fb))
-    end select
-!!$
+!!$    case ('%')
+!!$      c2 = get_characters(parse_state%fb, 1, iostat)
+!!$      if (iostat/=0) return
+!!$      if (c2.in.XML_WHITESPACE) then
 !!$        allocate(parse_state%token(1))
-!!$        parse_state%token(1) = "%"
-!!$        parse_state%curr_pos = c + 1
-!!$        return
+!!$        parse_state%token = '%'
+!!$      elseif (c.in.XML1_0_initialNameChars) then! FIXMEVERSION
+!!$        call get_characters_until_not_one_of(parse_state%fb, XML1_0_NameChars, iostat)
+!!$        if (iostat/=0) return
+!!$        c2 = get_characters(fb, 1, iostat) ! cannot fail
+!!$        if (c2/=';') then
+!!$          call parse_error("Expecting ; at end of PE reference"); return
+!!$        endif
+!!$        allocate(PEref(len_namebuffer(fb)+1))
+!!$        PEref = c//vs_str(retrieve_namebuffer(fb))
+!!$        !FIXME expand PE (& reparse?)
+!!$        !Run along till we find end of PE reference
+!!$      else
+!!$        call parse_error("Unexpected character after %"); return
 !!$      endif
-!!$      if (verify(parse_state%dtd(c+1), spaces) == 0) then
-!!$        allocate(parse_state%token(1))
-!!$        parse_state%token(1) = "%"
-!!$        parse_state%curr_pos = c + 1
-!!$        return
-!!$      endif
+
 !!$      ! We have a PE we need to replace. Is it registered?
 !!$      cp = index(str_vs(parse_state%dtd(c+1:)), ';')
 !!$      if (cp == 0) &
@@ -576,7 +488,5 @@ contains
 !!$    parse_state%token = parse_state%dtd(c:c+cp-2)
 !!$    parse_state%curr_pos = c + cp - 1
 !!$    return
-
-  end subroutine tokenize_dtd
 
 end module m_sax_dtd

@@ -79,3 +79,5 @@ clean: wxml_lib_clean wcml_lib_clean common_lib_clean fsys_lib_clean
 
 distclean: clean
 	rm -f FoX-config arch.make config.log config.status
+# DO NOT DELETE THIS LINE - used by make depend
+sax_example.o: m_handlers.o

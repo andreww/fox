@@ -72,15 +72,18 @@ module m_sax_reader
     logical                  :: debug               ! debug messages?
   end type file_buffer_t
 
+
+
+
   interface index
     module procedure index_fb
-  end interface index
+  end interface
   interface scan
     module procedure scan_fb
-  end interface scan
+  end interface
   interface verify
     module procedure verify_fb
-  end interface verify
+  end interface
 
 
   public :: file_buffer_t
@@ -113,11 +116,11 @@ contains
     type(file_buffer_t), intent(out)  :: fb
     integer, intent(out)              :: iostat
     integer, intent(in), optional     :: lun
-    
+
     iostat = 0
 
     call setup_io()
-    
+
     if (present(lun)) then
       fb%lun = iostat
     else
@@ -135,13 +138,11 @@ contains
     endif
 
     open(unit=fb%lun, file=fname, form="formatted", status="old", &
-        action="read", position="rewind", iostat=iostat)
+      action="read", position="rewind", iostat=iostat)
     if (iostat /= 0) then
       if (fb%debug) write(*,'(a)') "Cannot open file "//fname//" iostat: "//str(iostat)
       return
     endif
-
-    allocate(fb%next_chars(0))
 
     fb%connected = .true.
     fb%eor = .false.
@@ -152,7 +153,7 @@ contains
     fb%filename = vs_str(fname)
     fb%pos = 1
     fb%nchars = 0
-    allocate(fb%buffer_stack(0))
+    allocate(fb%buffer_stack(0:0))
     allocate(fb%buffer_stack(0)%s(0))
 
   end subroutine open_file
@@ -170,12 +171,12 @@ contains
     fb%pos = 1
     fb%nchars = 0
     fb%buffer = ""
-    deallocate(fb%next_chars)
-    allocate(fb%next_chars(0))
     do i = 1, size(fb%buffer_stack)
       deallocate(fb%buffer_stack(i)%s)
     enddo
     deallocate(fb%buffer_stack)
+    allocate(fb%buffer_stack(0:0))
+    allocate(fb%buffer_stack(0)%s(0))
 
     rewind(unit=fb%lun)
 
@@ -189,11 +190,11 @@ contains
 
     if (fb%connected) then
       deallocate(fb%filename)
-      deallocate(fb%next_chars)
       if (associated(fb%namebuffer)) deallocate(fb%namebuffer)
       do i = 1, size(fb%buffer_stack)
         deallocate(fb%buffer_stack(i)%s)
       enddo
+      deallocate(fb%buffer_stack)
       close(unit=fb%lun)
       fb%connected = .false.
     endif
@@ -238,29 +239,19 @@ contains
       fb%col = 0
       c = achar(13)
     endif
-    
+
   contains
     function really_read_char(iostat) result(rc)
       integer, intent(out) :: iostat
       integer :: n_stack
       character :: rc
-      n_stack = size(fb%next_chars)
-      if (n_stack > 0) then
-        rc = fb%next_chars(1)
-        tempString => fb%next_chars
-        deallocate(fb%next_chars)
-        allocate(fb%next_chars(n_stack-1))
-        fb%next_chars = tempString(2:)
+      read(unit=fb%lun, iostat=iostat, advance="no", fmt="(a1)") rc
+      if (iostat == io_eor) then
+        rc = achar(13)
         iostat = 0
-      else
-        read(unit=fb%lun, iostat=iostat, advance="no", fmt="(a1)") rc
-        if (iostat == io_eor) then
-          rc = achar(13)
-          iostat = 0
-        endif
-        ! Don't need to do any EOF checking here, we are only
-        ! reading one char at a time without buffering
       endif
+      ! Don't need to do any EOF checking here, we are only
+      ! reading one char at a time without buffering
     end function really_read_char
   end function read_char
 
@@ -282,8 +273,7 @@ contains
   ! replacement (shortening the string) and repeat until either it has
   ! filled a 512-length string, it encounters a file error, or eof.
   ! In every loop of the recursion, we may have to read one extra
-  ! char to check it. If we do & need to keep it around, it stays
-  ! in fb%next_char until the next read.
+  ! char to check it. If we do & need to keep it around, we put it back.
 
   ! It will return a 512-length string. Output from the subroutine
   ! are l_s, the number of chars in the string (always 512 except in
@@ -306,15 +296,15 @@ contains
     ! raw characters. It reads lines repeatedly, with non-advancing
     ! IO, adding 0xD every time it hits a newline (== end of record)
     ! until enough characters have been gathered.
-    
+
     ! fill_buffer_really fills the buffer with READLENGTH chars from 
     ! read_really, then does newline replacement, shortening the
     ! string in the buffer accordingly.
-    
+
     ! The main part of the subroutine then calls fill_buffer_really
     ! repeatedly until we've definitely got 512 characters after
     ! newline replacement.
-    
+
     ! The buffer should then only be accessed through one of the 
     ! get_characters routine below, which take care of the pushback
     ! buffer.
@@ -352,13 +342,13 @@ contains
     endif
 
   contains
-    
+
     subroutine fill_buffer_really
 
       integer :: i, n, p, q
       character :: c
       character(len=z) :: string
-      
+
       if (z==0) then
         iostat = 0
         return
@@ -367,7 +357,7 @@ contains
       string = read_really(z, p)
       ! p now holds useful length of current string
       if (iostat /= 0) return
-      
+
       ! Now replace newline characters according to 
       ! XML 1.0/1.1 section 2.11
       i = 1
@@ -384,8 +374,9 @@ contains
           if (iostat /= 0) then
             if ((fb%xml_version==XML1_0.and.c/=achar(13)).or. &
               (fb%xml_version==XML1_1.and.c/=achar(13).and.c/=achar(133))) then
-              call put_characters(fb, 1)
-            ! else we'd be throwing it away below anyway
+              ! FIXME we need to store the character somewhere.
+              continue
+              ! else we'd be throwing it away below anyway
             endif
           else
             if (iostat /= io_eof) return
@@ -485,7 +476,7 @@ contains
     deallocate(fb%buffer_stack)
     fb%buffer_stack => tempStack
   end subroutine push_buffer_stack
-    
+
   subroutine pop_buffer_stack(fb)
     type(file_buffer_t), intent(inout) :: fb
 
@@ -501,7 +492,7 @@ contains
     deallocate(fb%buffer_stack(size(fb%buffer_stack))%s)
     deallocate(fb%buffer_stack)
     fb%buffer_stack => tempStack
-    
+
   end subroutine pop_buffer_stack
 
   function get_characters(fb, n, iostat) result(string)
@@ -524,7 +515,7 @@ contains
     ! Which is current buffer?
     if (size(fb%buffer_stack) > 0) then
       cb => fb%buffer_stack(size(fb%buffer_stack))
-      
+
       n_held = size(cb%s) - cb%pos + 1
       if (n <= n_held) then
         ! Actually, we should just move a cursor here rather than
@@ -607,7 +598,7 @@ contains
       fb%pos = fb%pos + m_i
       c = fb%buffer(fb%pos-1:fb%pos-1)
     endif
-    
+
     ! FIXME somewhere we need to be checking every character for allowability.
 
   end function get_next_character_discarding_whitespace
@@ -666,13 +657,13 @@ contains
     call move_cursor(fb, str_vs(fb%namebuffer))
 
   end subroutine get_chars_with_condition
-    
+
 
   subroutine get_characters_until_not_one_of(fb, marker, iostat)
     type(file_buffer_t), intent(inout) :: fb
     character(len=*) :: marker
     integer, intent(out) :: iostat
-    
+
     call get_chars_with_condition(fb, marker, verify_fb, iostat)
 
   end subroutine get_characters_until_not_one_of
@@ -726,7 +717,7 @@ contains
   function retrieve_namebuffer(fb) result(string)
     type(file_buffer_t), intent(inout) :: fb
     character(len=size(fb%namebuffer)) :: string
-    
+
     if (.not.associated(fb%namebuffer)) then
       call FoX_error("Don't be an arse, check return values please")
     endif
@@ -753,7 +744,7 @@ contains
   subroutine put_characters(fb, n)
     type(file_buffer_t), intent(inout) :: fb
     integer, intent(in) :: n
-    
+
     type(buffer_t), pointer :: cb
 
     if (size(fb%buffer_stack)>0) then

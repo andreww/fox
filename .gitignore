@@ -4,10 +4,11 @@
 *.MOD
 *.m
 *.M
+*.a
 FoX-config
 arch.make
 config.log
 config.status
-fsys/libfsys.a
-common/libFoX_common.a
 objs
+wcml_example
+wxml_example

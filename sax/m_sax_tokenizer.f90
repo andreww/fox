@@ -2,13 +2,8 @@
 
 module m_sax_tokenizer
 
-  type sax_parser_t
-    logical :: discard_whitespace
-    integer :: context
-    integer :: state
-    type(dtd_parser_t) :: dtd_parser
-    character, dimension(:), pointer :: token
-  end type sax_parser_t
+  use m_sax_reader, only: file_buffer_t
+  use m_sax_types, only: sax_parser_t
 
 contains
 
@@ -21,31 +16,36 @@ contains
     if (fx%discard_whitespace) then
       c = get_next_character_discarding_whitespace(fb, iostat)
       if (iostat/=0) return
-      
-    if (fx%preserve_whitespace) then
-      if (fx%state==ST_PI) then
+
+    elseif (fx%long_token) then
+      select case(fx%state)
+      case (fx%state==ST_PI)
         call get_characters_until_all_of(fb, '?>', iostat)
-      elseif (fx%state==ST_COMMENT) then
+      case (fx%state==ST_COMMENT)
         call get_characters_until_all_of(fb, '--', iostat)
-      elseif (fx%state==ST_CDATA) then
+      case (fx%state==ST_CDATA)
         call get_characters_until_all_of(fb, ']]>', iostat)
-      elseif (fx%state==ST_CHARDATA) then
+      case (fx%state==ST_CHARDATA)
         call get_characters_until_one_of(fb, '<&', iostat)
-      endif
-      if (iostat/=0) then
-        !make an error happen
-        continue
-      endif
+      end select
+      if (iostat/=0) return
       allocate(fx%token(len_namebuffer(fb)))
       fx%token = vs_str(retrieve_namebuffer(fb))
 
     else
       c = get_next_character_discarding_whitespace(fb, iostat)
-      if (iostat/=0); return
-      if (c.in.'>[]?+*()|)') then
+      if (iostat/=0) return
+      if (c.in.'#>[]?+*()|)'//XML_WHITESPACE) then
         !No further investigation needed, that's the token
         allocate(fx%token(1))
         fx%token = c
+
+      elseif (c.in.initialNameChars) then
+        call get_characters_until_not_one_of(fb, nameChars, iostat)
+        if (iostat/=0) return
+        allocate(fx%token(len_namebuffer(fb)+1))
+        fx%token = c//vs_str(retrieve_namebuffer(fb))
+
       else
         select case(c)
 
@@ -155,16 +155,10 @@ contains
           else
             ! make an error
           endif
+          
+        case default 
+          ! make an error
 
-        case default !It's probably a name ...
-
-          call get_next_character_until_not_one_of(fb, XML_WHITESPACE, iostat)
-          if (iostat/=0) then
-            !make an error
-            return
-          endif
-          allocate(fx%token(len_namebuffer(fb)))
-          fx%token = vs_str(retrieve_namebuffer(fb))
         end select
 
       end if ! more than one-char token

@@ -17,11 +17,11 @@ use m_sax_error
 implicit none
 private
 
-public :: open_xmlFile
-public :: close_xmlFile
-public :: xml_parse
+!public :: open_xmlFile
+!public :: close_xmlFile
+public :: sax_parse
 
-public :: xml_t
+! public :: xml_t
 
 !public :: begin_document_handler
 !public :: end_document_handler
