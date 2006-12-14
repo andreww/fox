@@ -9,7 +9,7 @@ program test_sax_reader
 
   call open_file("test_sax_reader_5.in", fb, iostat)
 
-  call put_characters(fb, "abc")
+  call push_chars(fb, "abc")
 
   s = read_chars(fb, 5, iostat)
   write(*,'(3a)') 'char:', s, ':'

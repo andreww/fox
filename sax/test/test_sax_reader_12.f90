@@ -14,7 +14,7 @@ program test_sax_reader
 
   buf = get_characters(fb, 40, iostat) 
 
-  call get_characters_until_not_namechar(fb, iostat) 
+  call get_characters_until_not_one_of(fb, 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', iostat) 
 
   write(*,'(3a)') 'char:', retrieve_namebuffer(fb), ':'
   write(*,'(a,i0)') 'iost:', iostat
@@ -27,33 +27,16 @@ program test_sax_reader
 
   buf = get_characters(fb, 40, iostat) 
 
-  call get_characters_until_not_namechar(fb, iostat) 
+  call get_characters_until_not_one_of(fb, 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', iostat) 
 
   print*, len_namebuffer(fb)
 
   write(*,'(3a)') 'char:', retrieve_namebuffer(fb), ':'
   write(*,'(a,i0)') 'iost:', iostat
 
-  ! test 3: put some chars on the pushback stack, and read them.
+  call get_characters_until_not_one_of(fb, 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', iostat) 
 
-  call put_characters(fb, "abcde ")
-
-  call get_characters_until_not_namechar(fb, iostat) 
-
-  write(*,'(3a)') 'char:', retrieve_namebuffer(fb), ':'
-  write(*,'(a,i0)') 'iost:', iostat
-
-  buf = get_characters(fb, 1, iostat) ! clear out trailing space.
-
-  call rewind_file(fb)
-
-  buf = get_characters(fb, 100, iostat) !read till we're in the middle of the long name
-
-  ! test 3: put some chars on the pushback stack, and read them, but now we need to look at the buffer as well.
-
-  call put_characters(fb, "abcde")
-
-  call get_characters_until_not_namechar(fb, iostat) 
+  print*, len_namebuffer(fb)
 
   write(*,'(3a)') 'char:', retrieve_namebuffer(fb), ':'
   write(*,'(a,i0)') 'iost:', iostat

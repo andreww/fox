@@ -27,28 +27,6 @@ program test_sax_reader
   write(*,'(3a)') 'char:', retrieve_namebuffer(fb), ':'
   write(*,'(a,i0)') 'iost:', iostat
 
-! test three - search through pushback
-
-  call put_characters(fb, "abc <la/>")
-
-  call get_characters_until_one_of(fb, '&<', iostat) 
-
-  write(*,'(3a)') 'char:', retrieve_namebuffer(fb), ':'
-  write(*,'(a,i0)') 'iost:', iostat
-
-  call rewind_file(fb)
-
-! test four, search through pushback and file.
-
-  print*, 'TEST4'
-
-  call put_characters(fb, "abc ")
-
-  call get_characters_until_one_of(fb, '&<', iostat) 
-
-  write(*,'(3a)') 'char:', retrieve_namebuffer(fb), ':'
-  write(*,'(a,i0)') 'iost:', iostat
-
   call close_file(fb) 
 
 

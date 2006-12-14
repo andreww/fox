@@ -8,7 +8,7 @@ module m_sax_tokenizer
     XML1_0, XML1_1, operator(.in.)
 
   use m_sax_reader, only: file_buffer_t, &
-    read_char, read_chars, get_characters, put_characters, &
+    read_char, read_chars, push_chars, get_characters, put_characters, &
     get_next_character_discarding_whitespace, &
     get_characters_until_all_of, &
     get_characters_until_one_of, &
@@ -202,7 +202,7 @@ contains
     do while (c.in.XML_WHITESPACE)
       c = read_char(fb, iostat); if (iostat/=0) return
     enddo
-    call put_characters(fb, 1)
+    call push_chars(fb, c)
     allocate(ch(7))
     ch = vs_str(read_chars(fb, 7, iostat)); if (iostat/=0) return
     if (str_vs(ch)/="version") then
@@ -224,11 +224,11 @@ contains
       endif
       return
     endif
-    call put_characters(fb, 1)
+    call push_chars(fb, c)
     allocate(ch(8))
     ch = vs_str(read_chars(fb, 8, iostat)); if (iostat/=0) return
     if (str_vs(ch)/="encoding") then
-      call put_characters(fb, 8)
+      call push_chars(fb, "encoding")
       deallocate(ch)
       allocate(ch(10))
       ch = vs_str(read_chars(fb, 10, iostat)); if (iostat/=0) return
@@ -255,7 +255,7 @@ contains
         endif
         return
       endif
-      call put_characters(fb, 1)
+      call push_chars(fb, c)
       allocate(ch(10))
       ch = vs_str(read_chars(fb, 10, iostat)); if (iostat/=0) return
       if (str_vs(ch)/="standalone") then

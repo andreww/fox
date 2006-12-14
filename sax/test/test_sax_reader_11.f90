@@ -27,14 +27,7 @@ program test_sax_reader
   write(*,'(3a)') 'char:', c, ':'
   write(*,'(a,i0)') 'iost:', iostat
 
-  call put_characters(fb, "     ")
-
-  c = get_next_character_discarding_whitespace(fb, iostat) 
-
-  write(*,'(3a)') 'char:', c, ':'
-  write(*,'(a,i0)') 'iost:', iostat
-
-  call put_characters(fb, "     1")
+  call put_characters(fb, 10)
 
   c = get_next_character_discarding_whitespace(fb, iostat) 
 

@@ -11,14 +11,14 @@ program test_sax_reader
 
   buf = get_characters(fb, 15, iostat) 
 
-  write(*,'(3a)') 'char:', buf, ':'
+  call dump_string(buf)
   write(*,'(a,i0)') 'iost:', iostat
 
-  call put_characters(fb, "putback")
+  call put_characters(fb, 7)
 
   buf = get_characters(fb, 15, iostat) 
 
-  write(*,'(3a)') 'char:', buf, ':'
+  call dump_string(buf)
   write(*,'(a,i0)') 'iost:', iostat
 
   call close_file(fb) 
