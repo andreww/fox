@@ -40,62 +40,45 @@ contains
 
   subroutine sax_parse()
 
+    !read xml declaration
+
+    fx%context = CTXT_BEFORE_DTD
+    fx%state = ST_MISC
+    fx%discard_whitespace = .true.
+    
     do
 
       call sax_tokenizer(fx, fb, signal)
 
       select case (fx%context)
         
-      case (CTXT_INIT)
-        read xml declaration
-
-      case (CTXT_BEFORE_DTD)
-
-        select case(fx%state)
-        case(ST_MISC)
-          if (str_vs(fx%token) == '<!DOCTYPE') then
-            fx%context = CTXT_IN_DTD
-            fx%state = 
-          elseif (str_vs(fx%token) == '<?') then
-            fx%state = ST_START_PI
-          elseif (strvs(fx%token) ==  '<!--') then
-            fx%state = ST_START_COMMENT
-          elseif (str_vs(fx%token) == '<') then
-            fx%context = CTXT_IN_CONTENT
-            fx%state = ST_START_TAG
-          else
-            ! make error
-          endif
-        case (ST_START_PI)
-          ! should be a Name
-          ! put somewhere
-          fx%state = ST_PI_CONTENT
-        case (ST_PI_CONTENT)
-          ! report PI
-          fx%state = ST_MISC
-        case (ST_START_COMMENT)
-
-        end select
-
       case (ST_MISC)
-        if (str_vs(fx%token) == '<!DOCTYPE') then
-          if (fx%context == CTXT_BEFORE_DTD) then
-            fx%context = CTXT_IN_DTD
-            fx%state = 
-          else
-            ! make an error
-          endif
-        elseif (str_vs(fx%token) == '<?') then
+        if (str_vs(fx%token) == '<?') then
           fx%state = ST_START_PI
-        elseif (strvs(fx%token) ==  '<!--') then
-          fx%state = ST_START_COMMENT
+        elseif (strvs(fx%token) ==  '<!') then
+          fx%state = ST_BANG_TAG
         elseif (str_vs(fx%token) == '<') then
           fx%context = CTXT_IN_CONTENT
           fx%state = ST_START_TAG
         else
           ! make error
         endif
-        
+
+      case (ST_BANG_TAG)
+        if (str_vs(fx%token) == '--') then
+          fx%state = ST_START_COMMENT
+        elseif (str_vs(fx%token) == 'DOCTYPE') then
+          ! go to DTD parser
+        elseif (str_vs(fx%token) == '[') then
+          if (fx%context == CTXT_CONTENT) then
+            fx%state = ST_START_CDATA_1
+          elseif
+            ! make an error
+          endif
+        else
+          ! make an error
+        endif
+
       case (ST_START_PI)
         !token should be an XML Name
         else
@@ -115,15 +98,70 @@ contains
           .or. fx%context == CTXT_BEFORE_CONTENT) then
           ! root element
           ! get next token.
+          fx%discard_whitespace = .true.
+          fx%state = ST_IN_TAG
         elseif (fx%context == CTXT_IN_CONTENT)
           ! normal element
+          fx%discard_whitespace = .true.
         elseif (fx%context == CTXT_AFTER_CONTENT)
           ! make an error
         elseif (fx%context == CTXT_IN_DTD)
           ! make an error
         endif
 
-      case (
+      case (ST_START_CDATA_1)
+        if (str_vs(fx%token) == 'CDATA') then
+          fx%state = ST_START_CDATA_2
+        else
+          ! make an error
+        endif
+
+      case (ST_START_CDATA_2)
+        if (str_vs(fx%token) == '[') then
+          fx%state = ST_START_CDATA_2
+        else
+          ! make an error
+        endif
+
+      case (ST_IN_TAG)
+        if (token=='>') then
+          ! push tag onto stack
+          fx%state = ST_CHAR_IN_CONTENT
+        elseif (token=='/>') then
+          ! open & close
+          fx%state = ST_CHAR_IN_CONTENT
+        !token should be xmlname
+          fx%state = ST_ATT_NAME
+        else
+          !make an error
+        endif
+
+      case (ST_ATT_NAME)
+        if (fx%token=='=') then
+          fx%state = ST_ATT_EQUALS
+        else
+          ! make an error
+        endif
+
+      case (ST_ATT_EQUALS)
+        if (fx%token(1)=='"'.or.fx%token(1)=="'") then
+          ! token (2:end-1) is att value
+          fx%state = ST_IN_TAG
+        else
+          ! make an error
+        endif
+        
+        case (ST_CHAR_IN_CONTENT)
+          if (fx%token=='<') then
+            fx%state = ST_STARTING_TAG
+            fx%discard_whitespace = .true.
+          elseif (fx%token=='<!') then
+            fx%state = ST_BANG_TAG
+          elseif (fx%token=='<?') then
+            fx%state = 
+          ! entire token is character data
+          
+        
       end select
 
   end subroutine sax_parse

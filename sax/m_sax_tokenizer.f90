@@ -2,6 +2,14 @@
 
 module m_sax_tokenizer
 
+  type sax_parser_t
+    logical :: discard_whitespace
+    integer :: context
+    integer :: state
+    type(dtd_parser_t) :: dtd_parser
+    character, dimension(:), pointer :: token
+  end type sax_parser_t
+
 contains
 
   subroutine sax_tokenizer(fx, fb, signal)
@@ -10,6 +18,10 @@ contains
     integer, intent(out) :: signal
 
 
+    if (fx%discard_whitespace) then
+      c = get_next_character_discarding_whitespace(fb, iostat)
+      if (iostat/=0) return
+      
     if (fx%preserve_whitespace) then
       if (fx%state==ST_PI) then
         call get_characters_until_all_of(fb, '?>', iostat)
@@ -62,7 +74,7 @@ contains
           if (iostat/=0) return
           if (c=='>') then
             allocate(fx%token(2))
-            fx%token = '<?'
+            fx%token = '/>'
           else
             !make an error
           endif
