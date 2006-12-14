@@ -9,42 +9,11 @@ module m_sax_parser
   use m_common_io, only: io_eof
   use m_common_namecheck, only: checkName
 
-  use m_sax_reader, only: file_buffer_t
-  use m_sax_types, only: sax_error_t, sax_parser_t
+  use m_sax_reader, only: file_buffer_t, read_char, read_chars
+  use m_sax_types ! everything, really
 
   implicit none
   private
-
-  ! Context
-
-  integer, parameter :: CTXT_NULL = -1
-  integer, parameter :: CTXT_INIT = 0
-  integer, parameter :: CTXT_BEFORE_DTD = 1
-  integer, parameter :: CTXT_IN_DTD = 2
-  integer, parameter :: CTXT_BEFORE_CONTENT = 3
-  integer, parameter :: CTXT_IN_CONTENT = 4
-  integer, parameter :: CTXT_AFTER_CONTENT = 5
-
-  ! State
-
-  integer, parameter :: ST_NULL = -1
-  integer, parameter :: ST_MISC = 0
-  integer, parameter :: ST_BANG_TAG = 1 
-  integer, parameter :: ST_START_PI = 2
-  integer, parameter :: ST_START_COMMENT = 3
-  integer, parameter :: ST_START_TAG = 4 
-  integer, parameter :: ST_START_CDATA_1 = 5
-  integer, parameter :: ST_START_CDATA_2 = 6
-  integer, parameter :: ST_IN_TAG = 7
-  integer, parameter :: ST_ATT_NAME = 8
-  integer, parameter :: ST_ATT_EQUALS = 9
-  integer, parameter :: ST_CHAR_IN_CONTENT = 10
-  integer, parameter :: ST_CLOSING_TAG = 11
-  integer, parameter :: ST_PI_NAME = 12
-  integer, parameter :: ST_PI_END = 13
-  integer, parameter :: ST_COMMENT_CONTENTS = 14
-  integer, parameter :: ST_COMMENT_END = 15
-  integer, parameter :: ST_PI_CONTENTS = 16
 
   public :: sax_parse
 
@@ -82,7 +51,7 @@ contains
 
     iostat = 0
 
-    !read xml declaration
+
 
     fx%context = CTXT_BEFORE_DTD
     fx%state = ST_MISC
@@ -219,7 +188,7 @@ contains
 
       case (ST_START_CDATA_2)
         if (str_vs(fx%token) == '[') then
-          fx%state = ST_START_CDATA_2
+          fx%state = ST_CDATA_CONTENTS
         else
           ! make an error
           continue
@@ -322,16 +291,19 @@ contains
 
   end subroutine sax_parse
 
+
+
+
   subroutine add_parse_error(fx, msg)
     type(sax_parser_t), intent(inout) :: fx
     character(len=*), intent(in) :: msg
-    
+
     type(sax_error_t), dimension(:), pointer :: tempStack
     integer :: i, n
-    
+
     n = size(fx%error_stack)
     allocate(tempStack(0:n+1))
-    
+
     do i = 0, n
       tempStack(i)%msg => fx%error_stack(i)%msg
     enddo
@@ -339,7 +311,7 @@ contains
     deallocate(fx%error_stack)
     fx%error_stack => tempStack
   end subroutine add_parse_error
-  
+
 
 end module m_sax_parser
 

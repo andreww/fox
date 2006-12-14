@@ -2,6 +2,40 @@ module m_sax_types
 
   use m_common_entities, only: entity_list
 
+  implicit none
+
+  ! Context
+
+  integer, parameter :: CTXT_NULL = -1
+  integer, parameter :: CTXT_INIT = 0
+  integer, parameter :: CTXT_BEFORE_DTD = 1
+  integer, parameter :: CTXT_IN_DTD = 2
+  integer, parameter :: CTXT_BEFORE_CONTENT = 3
+  integer, parameter :: CTXT_IN_CONTENT = 4
+  integer, parameter :: CTXT_AFTER_CONTENT = 5
+
+  ! State
+
+  integer, parameter :: ST_NULL = -1
+  integer, parameter :: ST_MISC = 0
+  integer, parameter :: ST_BANG_TAG = 1 
+  integer, parameter :: ST_START_PI = 2
+  integer, parameter :: ST_START_COMMENT = 3
+  integer, parameter :: ST_START_TAG = 4 
+  integer, parameter :: ST_START_CDATA_1 = 5
+  integer, parameter :: ST_START_CDATA_2 = 6
+  integer, parameter :: ST_IN_TAG = 7
+  integer, parameter :: ST_ATT_NAME = 8
+  integer, parameter :: ST_ATT_EQUALS = 9
+  integer, parameter :: ST_CHAR_IN_CONTENT = 10
+  integer, parameter :: ST_CLOSING_TAG = 11
+  integer, parameter :: ST_PI_NAME = 12
+  integer, parameter :: ST_PI_END = 13
+  integer, parameter :: ST_COMMENT_CONTENTS = 14
+  integer, parameter :: ST_COMMENT_END = 15
+  integer, parameter :: ST_PI_CONTENTS = 16
+  integer, parameter :: ST_CDATA_CONTENTS = 17
+  
   type dtd_parser_t
     character(len=1), dimension(:), pointer :: dtd
     character(len=1), dimension(:), pointer :: token
@@ -36,6 +70,10 @@ module m_sax_types
     character, dimension(:), pointer :: token => null()
     type(sax_error_t), dimension(:), pointer :: error_stack => null()
     integer :: xml_version
+    character, dimension(:), pointer :: encoding
+    logical :: standalone
+    character, dimension(:), pointer :: initialNameChars
+    character, dimension(:), pointer :: NameChars
   end type sax_parser_t
 
 
