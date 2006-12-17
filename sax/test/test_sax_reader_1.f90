@@ -6,7 +6,7 @@ program test_sax_reader
 
   integer :: iostat
 
-  call open_file("test_sax_reader_1.in", fb, iostat)
+  call open_file(fb, file="test_sax_reader_1.in",  iostat=iostat)
 
   write(*,'(2a)') 'char:', read_char(fb, iostat)
   write(*,'(a,i0)') 'iost:', iostat

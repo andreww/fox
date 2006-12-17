@@ -3,7 +3,7 @@ default: install
 #
 OBJFILES= m_sax_debug.o m_sax_tokenizer.o\
           m_sax_reader.o m_sax_converters.o \
-          m_sax_error.o m_sax_parser_2.o \
+          m_sax_error.o m_sax_parser.o \
           FoX_sax.o
 #
 LIBRARY=libFoX_sax.a
@@ -31,8 +31,8 @@ install: $(OBJFILES)
 clean:
 	rm -f *.o  *.$(MOD_EXT) $(LIBRARY)
 # DO NOT DELETE THIS LINE - used by make depend
-FoX_sax.o: m_sax_converters.o m_sax_error.o
+FoX_sax.o: m_sax_converters.o m_sax_error.o m_sax_parser.o
 m_sax_converters.o: m_sax_debug.o
-m_sax_parser_2.o: m_sax_types.o
+m_sax_dtd.o: m_sax_reader.o m_sax_types.o
+m_sax_parser.o: m_sax_reader.o m_sax_types.o
 m_sax_tokenizer.o: m_sax_reader.o m_sax_types.o
-m_sax_parser.mod: m_sax_parser_2.o

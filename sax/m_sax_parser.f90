@@ -6,15 +6,19 @@ module m_sax_parser
   use m_common_charset, only: XML1_0, XML1_1, XML1_0_INITIALNAMECHARS, &
     XML1_1_INITIALNAMECHARS, XML_INITIALENCODINGCHARS, XML_ENCODINGCHARS, &
     XML_WHITESPACE, XML1_0_NAMECHARS, XML1_1_NAMECHARS, operator(.in.)
+  use m_common_error, only: FoX_error
   use m_common_io, only: io_eof
   use m_common_namecheck, only: checkName
 
   use m_sax_reader, only: file_buffer_t, read_char, read_chars
+  use m_sax_tokenizer, only: sax_tokenize, parse_xml_declaration, add_parse_error
   use m_sax_types ! everything, really
 
   implicit none
   private
 
+  public :: sax_parser_init
+  public :: sax_parser_destroy
   public :: sax_parse
 
 contains
@@ -36,30 +40,36 @@ contains
     fx%context = CTXT_NULL
     fx%state = ST_NULL
 
+    deallocate(fx%encoding)
     deallocate(fx%token)
     do i = 0, ubound(fx%error_stack,1)
       deallocate(fx%error_stack(i)%msg)
-      enddo
+    enddo
     deallocate(fx%error_stack)
 
   end subroutine sax_parser_destroy
 
-  recursive subroutine sax_parse(fx, fb, iostat)
+  recursive subroutine sax_parse(fx, fb, iostat, sax_error_callback)
     type(sax_parser_t), intent(inout) :: fx
     type(file_buffer_t), intent(inout) :: fb
     integer, intent(out) :: iostat
+    external sax_error_callback
+    optional sax_error_callback
 
     iostat = 0
+    
+    if (fx%parse_stack==0) then
+      call parse_xml_declaration(fx, fb, iostat)
+      if (iostat/=0) return
 
-
-
-    fx%context = CTXT_BEFORE_DTD
-    fx%state = ST_MISC
-    fx%discard_whitespace = .true.
+      fx%context = CTXT_BEFORE_DTD
+      fx%state = ST_MISC
+      fx%discard_whitespace = .true.
+    endif
 
     do
 
-      call sax_tokenizer(fx, fb, iostat)
+      call sax_tokenize(fx, fb, iostat)
       if (iostat/=0) goto 100
 
       select case (fx%context)
@@ -265,8 +275,7 @@ contains
             iostat = 0
             ! go back up stack
           else !badly formed entity
-            call make_an_error
-            !        push an error onto stack
+            call add_parse_error(fx, "Badly formed entity.")
             return
           endif
         else ! EOF of main file
@@ -274,16 +283,15 @@ contains
             continue
             ! finish
           else
-            call make_an_error
-            !        push an error onto stack
+            call add_parse_error(fx, "File is not well-formed")
+            call sax_error(fx, sax_error_callback)
           endif
         endif
       else ! Hard error - stop immediately
         if (fx%parse_stack>0) then !we are parsing an entity
-          call make_an_error
-          !        push an error onto stack
+          call add_parse_error(fx, "Internal error: Error encountered processing entity.")
         else
-          call sax_error_callback
+          call sax_error(fx, sax_error_callback)
         endif
       endif
 
@@ -291,27 +299,33 @@ contains
 
   end subroutine sax_parse
 
-
-
-
-  subroutine add_parse_error(fx, msg)
+  subroutine sax_error(fx, sax_error_callback)
     type(sax_parser_t), intent(inout) :: fx
-    character(len=*), intent(in) :: msg
+    external sax_error_callback
+    optional sax_error_callback
 
-    type(sax_error_t), dimension(:), pointer :: tempStack
-    integer :: i, n
+    character, dimension(:), pointer :: errmsg
 
-    n = size(fx%error_stack)
-    allocate(tempStack(0:n+1))
-
-    do i = 0, n
-      tempStack(i)%msg => fx%error_stack(i)%msg
+    integer :: i, m, n
+    n = 0 
+    
+    do i = 0, fx%parse_stack
+      n = n + size(fx%error_stack(i)%msg) ! + spaces + size of entityref
     enddo
-    tempStack(n+1)%msg = vs_str(msg)
-    deallocate(fx%error_stack)
-    fx%error_stack => tempStack
-  end subroutine add_parse_error
+    allocate(errmsg(n))
+    n = 1
+    do i = 0, fx%parse_stack
+      m = size(fx%error_stack(i)%msg)
+      errmsg(n:n+m-1) = fx%error_stack(i)%msg
+      n = n + m 
+    enddo
+    if (present(sax_error_callback)) then
+      call sax_error_callback(str_vs(errmsg))
+    else
+      call FoX_error(str_vs(errmsg))
+    endif
 
-
+  end subroutine sax_error
+      
 end module m_sax_parser
 

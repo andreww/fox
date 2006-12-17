@@ -8,7 +8,7 @@ program test_sax_reader
 
   integer :: iostat
 
-  call open_file("test_sax_reader_11a.in", fb, iostat)
+  call open_file(fb, file="test_sax_reader_11a.in", iostat=iostat)
 
   buf = get_characters(fb, 21, iostat) 
 
@@ -18,7 +18,7 @@ program test_sax_reader
   write(*,'(a,i0)') 'iost:', iostat
 
   call close_file(fb) 
-  call open_file("test_sax_reader_11b.in", fb, iostat) 
+  call open_file(fb, file="test_sax_reader_11b.in", iostat=iostat) 
 
   buf = get_characters(fb, 21, iostat) 
 

@@ -10,7 +10,7 @@ program test_sax_reader
 
   ! test 1: move 40 chars in, and then pick up the name
 
-  call open_file("test_sax_reader_12a.in", fb, iostat)
+  call open_file(fb, file="test_sax_reader_12a.in", iostat=iostat)
 
   buf = get_characters(fb, 40, iostat) 
 
@@ -23,7 +23,7 @@ program test_sax_reader
 
   ! test 2: move 40 chars in, and then pick up the name, which is now 2004 chars long.
 
-  call open_file("test_sax_reader_12b.in", fb, iostat) 
+  call open_file(fb, file="test_sax_reader_12b.in", iostat=iostat) 
 
   buf = get_characters(fb, 40, iostat) 
 

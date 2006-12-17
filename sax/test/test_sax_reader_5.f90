@@ -7,7 +7,7 @@ program test_sax_reader
   character(len=5) :: s
   integer :: iostat
 
-  call open_file("test_sax_reader_5.in", fb, iostat)
+  call open_file(fb, file="test_sax_reader_5.in", iostat=iostat)
 
   call push_chars(fb, "abc")
 

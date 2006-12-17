@@ -9,7 +9,7 @@ program test_sax_reader
 
 ! test 1: quick & easy
 
-  call open_file("test_sax_reader_13.in", fb, iostat)
+  call open_file(fb, file="test_sax_reader_13.in", iostat=iostat)
 
   call get_characters_until_one_of(fb, '&<', iostat) 
 
@@ -20,7 +20,7 @@ program test_sax_reader
 
 ! test two - string over 1000 chars
 
-  call open_file("test_sax_reader_13b.in", fb, iostat) 
+  call open_file(fb, file="test_sax_reader_13b.in", iostat=iostat) 
 
   call get_characters_until_one_of(fb, '&<', iostat) 
 

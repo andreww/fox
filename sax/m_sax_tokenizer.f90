@@ -6,24 +6,27 @@ module m_sax_tokenizer
   use m_common_charset, only: XML_WHITESPACE, &
     XML_INITIALENCODINGCHARS, XML_ENCODINGCHARS, &
     XML1_0, XML1_1, operator(.in.)
+  use m_common_error, only: FoX_warning
 
-  use m_sax_reader, only: file_buffer_t, &
+  use m_sax_reader, only: file_buffer_t, rewind_file, &
     read_char, read_chars, push_chars, get_characters, put_characters, &
     get_next_character_discarding_whitespace, &
     get_characters_until_all_of, &
     get_characters_until_one_of, &
+    get_characters_until_not_one_of, &
     len_namebuffer, retrieve_namebuffer
   use m_sax_types ! everything, really
 
   implicit none
   private
 
-  public :: sax_tokenizer
+  public :: sax_tokenize
   public :: parse_xml_declaration
+  public :: add_parse_error
 
 contains
 
-  subroutine sax_tokenizer(fx, fb, iostat)
+  subroutine sax_tokenize(fx, fb, iostat)
     type(sax_parser_t), intent(in) :: fx
     type(file_buffer_t), intent(inout) :: fb
     integer, intent(out) :: iostat
@@ -146,12 +149,14 @@ contains
           if (fx%context==CTXT_IN_DTD) then! .and. some other condition) then
             call get_characters_until_one_of(fb, '"', iostat)
             if (iostat/=0) return
-            call get_namebuffer(fb, fx)
+            allocate(fx%token(len_namebuffer(fb)))
+            fx%token = vs_str(retrieve_namebuffer(fb))
             
           elseif (fx%context==CTXT_IN_CONTENT) then !.an.d some other condition) then
             call get_characters_until_one_of(fb, '"', iostat)
             if (iostat/=0) return
-            call get_namebuffer(fb, fx)
+            allocate(fx%token(len_namebuffer(fb)))
+            fx%token = vs_str(retrieve_namebuffer(fb))
             ! expand entities
             ! normalize text
 
@@ -163,12 +168,14 @@ contains
           if (fx%context==CTXT_IN_DTD) then! .and. some other condition) then
             call get_characters_until_one_of(fb, "'", iostat)
             if (iostat/=0) return
-            call get_namebuffer(fb, fx)
+            allocate(fx%token(len_namebuffer(fb)))
+            fx%token = vs_str(retrieve_namebuffer(fb))
             
           elseif (fx%context==CTXT_IN_CONTENT) then! .and. some other condition) then
             call get_characters_until_one_of(fb, "'", iostat)
             if (iostat/=0) return
-            call get_namebuffer(fb, fx)
+            allocate(fx%token(len_namebuffer(fb)))
+            fx%token = vs_str(retrieve_namebuffer(fb))
             ! expand entities
             ! normalize text
 
@@ -185,7 +192,7 @@ contains
 
     end if ! preserve whitespace
 
-  end subroutine sax_tokenizer
+  end subroutine sax_tokenize
 
 
   subroutine parse_xml_declaration(fx, fb, iostat)
@@ -197,8 +204,25 @@ contains
     integer :: i
     character(len=*), parameter :: version="version", encoding="encoding", standalone="standalone"
     character :: c, quotation_mark
+    character(len=5) :: xml = "<?xml"
     character, allocatable :: ch(:)
-    c = " "
+    ! default values ...
+    fx%xml_version = XML1_0
+    allocate(fx%encoding(5))
+    fx%encoding = vs_str("UTF-8")
+    fx%standalone = .false.
+    do i = 1, 5
+      c = read_char(fb, iostat); if (iostat/=0) return
+      if (c/=xml(i:i)) then
+        call rewind_file(fb)
+        return
+      endif
+    enddo
+    c = read_char(fb, iostat); if (iostat/=0) return
+    if (.not.(c.in.XML_WHITESPACE)) then
+      call rewind_file(fb)
+      return
+    endif
     do while (c.in.XML_WHITESPACE)
       c = read_char(fb, iostat); if (iostat/=0) return
     enddo
@@ -207,7 +231,7 @@ contains
     ch = vs_str(read_chars(fb, 7, iostat)); if (iostat/=0) return
     if (str_vs(ch)/="version") then
       deallocate(ch)
-      call parse_error("Expecting XML version"); return
+      call add_parse_error(fx, "Expecting XML version"); return
     endif
     deallocate(ch)
     call check_version
@@ -220,7 +244,7 @@ contains
       c = read_char(fb, iostat); if (iostat/=0) return
       ! FIXME read_char io_eor handling
       if (c/='>') then
-        call parse_error("Expecting > to end XML declaration"); return
+        call add_parse_error(fx, "Expecting > to end XML declaration"); return
       endif
       return
     endif
@@ -234,7 +258,7 @@ contains
       ch = vs_str(read_chars(fb, 10, iostat)); if (iostat/=0) return
       if (str_vs(ch)/="standalone") then
         deallocate(ch)
-        call parse_error("Expecting XML encoding or standalone declaration"); return
+        call add_parse_error(fx, "Expecting XML encoding or standalone declaration"); return
       endif
       deallocate(ch)
       call check_standalone
@@ -251,7 +275,7 @@ contains
         c = read_char(fb, iostat); if (iostat/=0) return
         ! FIXME read_char io_eor handling
         if (c/='>') then
-          call parse_error("Expecting > to end XML declaration"); return
+          call add_parse_error(fx, "Expecting > to end XML declaration"); return
         endif
         return
       endif
@@ -260,7 +284,7 @@ contains
       ch = vs_str(read_chars(fb, 10, iostat)); if (iostat/=0) return
       if (str_vs(ch)/="standalone") then
         deallocate(ch)
-        call parse_error("Expecting XML encoding or standalone declaration"); return
+        call add_parse_error(fx, "Expecting XML encoding or standalone declaration"); return
       endif
       deallocate(ch)
       call check_standalone
@@ -273,7 +297,7 @@ contains
         c = read_char(fb, iostat); if (iostat/=0) return
         ! FIXME read_char io_eor handling
         if (c/='>') then
-          call parse_error("Expecting > to end XML declaration"); return
+          call add_parse_error(fx, "Expecting > to end XML declaration"); return
         endif
       endif
     endif
@@ -292,34 +316,34 @@ contains
         c = read_char(fb, iostat); if (iostat/=0) return
       enddo
       if (c/="=") then
-        call parse_error("Expecting ="); return
+        call add_parse_error(fx, "Expecting ="); return
       endif
       c = read_char(fb, iostat); if (iostat/=0) return
       do while (c.in.XML_WHITESPACE)
         c = read_char(fb, iostat); if (iostat/=0) return
       enddo
       if (c/="'".and.c/='"') then
-        call parse_error("Expecting "" or '"); return
+        call add_parse_error(fx, "Expecting "" or '"); return
       endif
       quotechar = c
       c = read_char(fb, iostat); if (iostat/=0) return
       if (c/="1") then
-        call parse_error("Unknown XML version"); return
+        call add_parse_error(fx, "Unknown XML version"); return
       endif
       c = read_char(fb, iostat); if (iostat/=0) return
       if (c/=".") then
-        call parse_error("Unknown XML version"); return
+        call add_parse_error(fx, "Unknown XML version"); return
       endif
       c = read_char(fb, iostat); if (iostat/=0) return
       if (c/="1".and.c/="0") then
-        call parse_error("Unknown XML version"); return
+        call add_parse_error(fx, "Unknown XML version"); return
       endif
       if (c=="1") then
         fx%xml_version = XML1_1
       endif
       c = read_char(fb, iostat); if (iostat/=0) return
       if (c/=quotechar) then
-        call parse_error("Expecting "//quotechar); return
+        call add_parse_error(fx, "Expecting "//quotechar); return
       endif
     end subroutine check_version
 
@@ -332,19 +356,19 @@ contains
         c = read_char(fb, iostat); if (iostat/=0) return
       enddo
       if (c/="=") then
-        call parse_error("Expecting ="); return
+        call add_parse_error(fx, "Expecting ="); return
       endif
       c = read_char(fb, iostat); if (iostat/=0) return
       do while (c.in.XML_WHITESPACE)
         c = read_char(fb, iostat); if (iostat/=0) return
       enddo
       if (c/="'".and.c/='"') then
-        call parse_error("Expecting "" or '"); return
+        call add_parse_error(fx, "Expecting "" or '"); return
       endif
       quotechar = c
       c = read_char(fb, iostat); if (iostat/=0) return
       if (.not.(c.in.XML_INITIALENCODINGCHARS)) then
-        call parse_error("Illegal character at start of encoding declaration."); return
+        call add_parse_error(fx, "Illegal character at start of encoding declaration."); return
       endif
       i = 1
       allocate(buf(1))
@@ -355,12 +379,12 @@ contains
         return
       endif
       do while (c.in.XML_ENCODINGCHARS)
+        tempbuf => buf
         i = i+1
-        allocate(tempbuf(i))
-        tempbuf(:i-1) = buf
-        deallocate(buf)
-        tempbuf(i) = c
-        buf => tempbuf
+        allocate(buf(i))
+        buf(:i-1) = tempbuf
+        deallocate(tempbuf)
+        buf(i) = c
         c = read_char(fb, iostat)
         if (iostat/=0) then
           deallocate(buf)
@@ -368,7 +392,7 @@ contains
         endif
       enddo
       if (c/=quotechar) then
-        call parse_error("Illegal character in XML encoding declaration; expecting "//quotechar); return
+        call add_parse_error(fx, "Illegal character in XML encoding declaration; expecting "//quotechar); return
       endif
       deallocate(fx%encoding)
       fx%encoding => buf
@@ -381,14 +405,14 @@ contains
         c = read_char(fb, iostat); if (iostat/=0) return
       enddo
       if (c/="=") then
-        call parse_error("Expecting ="); return
+        call add_parse_error(fx, "Expecting ="); return
       endif
       c = read_char(fb, iostat); if (iostat/=0) return
       do while (c.in.XML_WHITESPACE)
         c = read_char(fb, iostat); if (iostat/=0) return
       enddo
       if (c/="'".and.c/='"') then
-        call parse_error("Expecting "" or '"); return
+        call add_parse_error(fx, "Expecting "" or '"); return
       endif
       quotechar = c
       c = read_char(fb, iostat); if (iostat/=0) return
@@ -399,27 +423,48 @@ contains
           if (c=="s") then
             fx%standalone = .true.
           else
-            call parse_error("standalone accepts only 'yes' or 'no'"); return
+            call add_parse_error(fx, "standalone accepts only 'yes' or 'no'"); return
           endif
         else
-          call parse_error("standalone accepts only 'yes' or 'no'"); return
+          call add_parse_error(fx, "standalone accepts only 'yes' or 'no'"); return
         endif
       elseif (c=="n") then
         c = read_char(fb, iostat); if (iostat/=0) return
         if (c=="o") then
           fx%standalone = .false.
         else
-          call parse_error("standalone accepts only 'yes' or 'no'"); return
+          call add_parse_error(fx, "standalone accepts only 'yes' or 'no'"); return
         endif
       else
-        call parse_error("standalone accepts only 'yes' or 'no'"); return
+        call add_parse_error(fx, "standalone accepts only 'yes' or 'no'"); return
       endif
       c = read_char(fb, iostat); if (iostat/=0) return
       if (c/=quotechar) then
-        call parse_error("Expecting "" or '"); return
+        call add_parse_error(fx, "Expecting "" or '"); return
       endif
     end subroutine check_standalone
 
   end subroutine parse_xml_declaration
+
+
+
+  subroutine add_parse_error(fx, msg)
+    type(sax_parser_t), intent(inout) :: fx
+    character(len=*), intent(in) :: msg
+
+    type(sax_error_t), dimension(:), pointer :: tempStack
+    integer :: i, n
+
+    n = fx%parse_stack
+    allocate(tempStack(0:n))
+
+    do i = 0, n - 1
+      tempStack(i)%msg => fx%error_stack(i)%msg
+    enddo
+    allocate(tempStack(n)%msg(len(msg)))
+    tempStack(n)%msg = vs_str(msg)
+    deallocate(fx%error_stack)
+    fx%error_stack => tempStack
+  end subroutine add_parse_error
 
 end module m_sax_tokenizer

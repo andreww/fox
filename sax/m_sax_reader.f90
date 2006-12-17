@@ -55,6 +55,8 @@ module m_sax_reader
     ! declaration yet? - we need to know for whitespace handling.
     integer                  :: xml_version = XML1_0
     integer                  :: lun                 ! Which unit number
+    ! If lun = -1, then we are reading from a string ....
+    character, pointer       :: input_string(:)     ! If input is from a string
     logical                  :: eof                 ! have we read past eof?
     ! Necessary since we don't want to report eof to user until
     ! fb%pos gets there, but we don't want to issue another read.
@@ -114,37 +116,48 @@ module m_sax_reader
 
 contains
 
-  subroutine open_file(fname, fb, iostat, lun)
-    character(len=*), intent(in)      :: fname
+  subroutine open_file(fb, iostat, file, lun, string)
     type(file_buffer_t), intent(out)  :: fb
+    character(len=*), intent(in), optional :: file
     integer, intent(out)              :: iostat
     integer, intent(in), optional     :: lun
+    character(len=*), intent(in), optional :: string
 
     iostat = 0
 
     call setup_io()
 
-    if (present(lun)) then
-      fb%lun = iostat
+    if (present(string)) then
+      if (present(file)) then
+        call FoX_error("Cannot specify both file and string input to open_xml")
+      elseif (present(lun)) then
+        call FoX_error("Cannot specify lun for string input to open_xml")
+      endif
+      fb%lun = -1
+      fb%input_string = vs_str(string)
     else
-      call get_unit(fb%lun,iostat)
+      if (present(lun)) then
+        fb%lun = lun
+      else
+        call get_unit(fb%lun, iostat)
+        if (iostat/=0) then
+          if (fb%debug) write(*,'(a)') "Cannot find free unit"
+          return
+        endif
+      endif
+      open(unit=fb%lun, file=file, form="formatted", status="old", &
+        action="read", position="rewind", iostat=iostat)
       if (iostat /= 0) then
-        if (fb%debug) write(*,'(a)') "Cannot get unit"
+        if (fb%debug) write(*,'(a)') "Cannot open file "//file//" iostat: "//str(iostat)
         return
       endif
+      allocate(fb%input_string(0))
     endif
-
+      
     if (.true.) then
       fb%debug = .true.
     else
       fb%debug = .false.
-    endif
-
-    open(unit=fb%lun, file=fname, form="formatted", status="old", &
-      action="read", position="rewind", iostat=iostat)
-    if (iostat /= 0) then
-      if (fb%debug) write(*,'(a)') "Cannot open file "//fname//" iostat: "//str(iostat)
-      return
     endif
 
     fb%connected = .true.
@@ -152,8 +165,8 @@ contains
     fb%eof = .false.
     fb%line = 1
     fb%col = 0
-    allocate(fb%filename(len(fname)))
-    fb%filename = vs_str(fname)
+    allocate(fb%filename(len(file)))
+    fb%filename = vs_str(file)
     fb%pos = 1
     fb%nchars = 0
     allocate(fb%buffer_stack(0:0))
@@ -163,7 +176,7 @@ contains
 
   end subroutine open_file
 
-  !-------------------------------------------------
+
   subroutine rewind_file(fb)
     type(file_buffer_t), intent(inout)  :: fb
 
@@ -186,7 +199,9 @@ contains
     deallocate(fb%next_chars)
     allocate(fb%next_chars(0))
 
-    rewind(unit=fb%lun)
+    if (fb%lun/=-1) then
+      rewind(unit=fb%lun)
+    endif
 
   end subroutine rewind_file
 
@@ -204,7 +219,8 @@ contains
       enddo
       deallocate(fb%buffer_stack)
       deallocate(fb%next_chars)
-      close(unit=fb%lun)
+      if (fb%lun/=-1) close(fb%lun)
+      deallocate(fb%input_string)
       fb%connected = .false.
     endif
 
@@ -616,7 +632,7 @@ contains
       endif
       do while (m_i==0)
         call move_cursor(fb, fb%buffer(fb%pos:fb%nchars))
-        fb%pos = fb%nchars ! FIXME + 1?
+        fb%pos = fb%nchars + 1
         call fill_buffer(fb, iostat)
         if (iostat /= 0) then
           c = achar(0)
