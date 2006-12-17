@@ -63,16 +63,45 @@ module m_common_charset
   public :: XML_INITIALENCODINGCHARS
   public :: XML_ENCODINGCHARS
 
+  public :: isInitialNameChar
+  public :: isNameChar
+
 contains
 
-  function belongs(c,charset)  result(res)
-    character(len=1), intent(in)  :: c
-    character(len=*), intent(in)  :: charset
-    logical                       :: res
-
-    res = (verify(c, charset) == 0)
-
+  function belongs(c, str) result(p)
+    character, intent(in) :: c
+    character(len=*), intent(in) :: str
+    logical :: p
+    p = (verify(c, str)==0)
   end function belongs
+
+  function isInitialNameChar(c, xml_version) result(p)
+    character, intent(in) :: c
+    integer, intent(in) :: xml_version
+    logical :: p
+
+    select case(xml_version)
+      case (XML1_0)
+        p = (verify(c, XML1_0_INITIALNAMECHARS)==0)
+      case (XML1_1)
+        p = (verify(c, XML1_1_INITIALNAMECHARS)==0)
+      end select
+
+    end function isInitialNameChar
+
+  function isNameChar(c, xml_version) result(p)
+    character, intent(in) :: c
+    integer, intent(in) :: xml_version
+    logical :: p
+
+    select case(xml_version)
+      case (XML1_0)
+        p = (verify(c, XML1_0_NAMECHARS)==0)
+      case (XML1_1)
+        p = (verify(c, XML1_1_NAMECHARS)==0)
+      end select
+
+    end function isNameChar
 
 end module m_common_charset
 

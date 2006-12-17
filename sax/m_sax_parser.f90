@@ -49,37 +49,113 @@ contains
 
   end subroutine sax_parser_destroy
 
-  recursive subroutine sax_parse(fx, fb, iostat, sax_error_callback)
+  recursive subroutine sax_parse(fx, fb,  &
+    begin_element_handler,    &
+    end_element_handler,             &
+    start_prefix_handler,            &
+    end_prefix_handler,              &
+    character_handler,            &
+    comment_handler,                 &
+    processing_instruction_handler,  &
+    error_handler,                   &
+    start_document_handler,          & 
+    end_document_handler)
+    
     type(sax_parser_t), intent(inout) :: fx
     type(file_buffer_t), intent(inout) :: fb
-    integer, intent(out) :: iostat
-    external sax_error_callback
-    optional sax_error_callback
+    optional                            :: begin_element_handler
+    optional                            :: end_element_handler
+    optional                            :: start_prefix_handler
+    optional                            :: end_prefix_handler
+    optional                            :: character_handler
+    optional                            :: comment_handler
+    optional                            :: processing_instruction_handler
+    optional                            :: error_handler
+    optional                            :: start_document_handler
+    optional                            :: end_document_handler
+
+    interface
+      subroutine begin_element_handler(namespaceURI, localName, name, attributes)
+        use FoX_common
+        character(len=*), intent(in)     :: namespaceUri
+        character(len=*), intent(in)     :: localName
+        character(len=*), intent(in)     :: name
+        type(dictionary_t), intent(in)   :: attributes
+      end subroutine begin_element_handler
+
+      subroutine end_element_handler(namespaceURI, localName, name)
+        character(len=*), intent(in)     :: namespaceURI
+        character(len=*), intent(in)     :: localName
+        character(len=*), intent(in)     :: name
+      end subroutine end_element_handler
+
+      subroutine start_prefix_handler(namespaceURI, prefix)
+        character(len=*), intent(in) :: namespaceURI
+        character(len=*), intent(in) :: prefix
+      end subroutine start_prefix_handler
+
+      subroutine end_prefix_handler(prefix)
+        character(len=*), intent(in) :: prefix
+      end subroutine end_prefix_handler
+
+      subroutine character_handler(chunk)
+        character(len=*), intent(in) :: chunk
+      end subroutine character_handler
+
+      subroutine comment_handler(comment)
+        character(len=*), intent(in) :: comment
+      end subroutine comment_handler
+
+      subroutine processing_instruction_handler(name, content)
+        use FoX_common
+        character(len=*), intent(in)     :: name
+        character(len=*), intent(in)     :: content
+      end subroutine processing_instruction_handler
+
+      subroutine error_handler(msg)
+        character(len=*), intent(in)     :: msg
+      end subroutine error_handler
+
+      subroutine start_document_handler()   
+      end subroutine start_document_handler
+
+      subroutine end_document_handler()     
+      end subroutine end_document_handler
+    end interface
+
+    integer :: iostat
 
     iostat = 0
     
     if (fx%parse_stack==0) then
       call parse_xml_declaration(fx, fb, iostat)
-      if (iostat/=0) return
+      if (iostat/=0) goto 100
 
       fx%context = CTXT_BEFORE_DTD
       fx%state = ST_MISC
       fx%discard_whitespace = .true.
     endif
+    print*,'XML declaration parsed.', fb%input_pos
 
     do
+      print*,'executing parse loop'
+      print*,fb%buffer(1:1)
 
       call sax_tokenize(fx, fb, iostat)
       if (iostat/=0) goto 100
+      print*,'token',str_vs(fx%token)
 
       select case (fx%context)
 
       case (ST_MISC)
+        print*,'ST_MISC'
         if (str_vs(fx%token) == '<?') then
           fx%state = ST_START_PI
         elseif (str_vs(fx%token) ==  '<!') then
           fx%state = ST_BANG_TAG
         elseif (str_vs(fx%token) == '<') then
+          print*,'starting tag'
+          stop
           fx%context = CTXT_IN_CONTENT
           fx%state = ST_START_TAG
         else
@@ -207,14 +283,30 @@ contains
       case (ST_IN_TAG)
         if (str_vs(fx%token)=='>') then
           ! push tag onto stack
+          if (fx%context /= CTXT_IN_CONTENT) then
+            if(present(start_document_handler)) call start_document_handler()
+            fx%context = CTXT_IN_CONTENT
+          endif
           fx%state = ST_CHAR_IN_CONTENT
           fx%discard_whitespace = .false.
         elseif (str_vs(fx%token)=='/>') then
-          ! open & close
-          fx%state = ST_CHAR_IN_CONTENT
-          fx%discard_whitespace = .false.
           !token should be xmlname
-          fx%state = ST_ATT_NAME
+          if (fx%context==CTXT_IN_CONTENT) then
+            fx%state = ST_CHAR_IN_CONTENT
+          else
+            ! only a single element in this doc
+            if(present(start_document_handler)) call start_document_handler()
+          endif
+          ! begin and end
+          if (fx%context==CTXT_IN_CONTENT) then
+            fx%discard_whitespace = .false.
+          else
+            if(present(end_document_handler)) call end_document_handler()
+            fx%context = CTXT_AFTER_CONTENT
+            fx%state = ST_MISC
+            fx%discard_whitespace = .true.
+          endif
+          ! open & close
         else
           !make an error
           continue
@@ -249,7 +341,17 @@ contains
           fx%state = ST_CLOSING_TAG
         elseif (fx%token(1)=='&') then
           ! tell tokenizer to expand it
-          call sax_parse(fx, fb, iostat)
+          call sax_parse(fx, fb, &
+            begin_element_handler,    &
+            end_element_handler,             &
+            start_prefix_handler,            &
+            end_prefix_handler,              &
+            character_handler,            &
+            comment_handler,                 &
+            processing_instruction_handler,  &
+            error_handler,                   &
+            start_document_handler,          & 
+            end_document_handler)
           if (iostat/=0) goto 100
         else
           ! make an error
@@ -269,40 +371,44 @@ contains
 
       end select
 
-100   if (iostat==io_eof) then ! error is end of file then
-        if (fx%parse_stack>0) then !we are parsing an entity
-          if (fx%well_formed) then
-            iostat = 0
-            ! go back up stack
-          else !badly formed entity
-            call add_parse_error(fx, "Badly formed entity.")
-            return
-          endif
-        else ! EOF of main file
-          if (fx%well_formed) then
-            continue
-            ! finish
-          else
-            call add_parse_error(fx, "File is not well-formed")
-            call sax_error(fx, sax_error_callback)
-          endif
+    end do
+
+100 if (iostat==io_eof) then ! error is end of file then
+      if (fx%parse_stack>0) then !we are parsing an entity
+        if (fx%well_formed) then
+          iostat = 0
+          ! go back up stack
+        else !badly formed entity
+          call add_parse_error(fx, "Badly formed entity.")
+          return
         endif
-      else ! Hard error - stop immediately
-        if (fx%parse_stack>0) then !we are parsing an entity
-          call add_parse_error(fx, "Internal error: Error encountered processing entity.")
+      else ! EOF of main file
+        if (fx%well_formed) then
+          continue
+          ! finish
         else
-          call sax_error(fx, sax_error_callback)
+          call add_parse_error(fx, "File is not well-formed")
+          call sax_error(fx, error_handler)
         endif
       endif
-
-    end do
+    else ! Hard error - stop immediately
+      if (fx%parse_stack>0) then !we are parsing an entity
+        call add_parse_error(fx, "Internal error: Error encountered processing entity.")
+      else
+        call sax_error(fx, error_handler)
+      endif
+    endif
 
   end subroutine sax_parse
 
-  subroutine sax_error(fx, sax_error_callback)
+  subroutine sax_error(fx, error_handler)
     type(sax_parser_t), intent(inout) :: fx
-    external sax_error_callback
-    optional sax_error_callback
+    optional :: error_handler
+    interface
+      subroutine error_handler(msg)
+        character(len=*), intent(in)     :: msg
+      end subroutine error_handler
+    end interface
 
     character, dimension(:), pointer :: errmsg
 
@@ -319,8 +425,8 @@ contains
       errmsg(n:n+m-1) = fx%error_stack(i)%msg
       n = n + m 
     enddo
-    if (present(sax_error_callback)) then
-      call sax_error_callback(str_vs(errmsg))
+    if (present(error_handler)) then
+      call error_handler(str_vs(errmsg))
     else
       call FoX_error(str_vs(errmsg))
     endif
@@ -328,4 +434,3 @@ contains
   end subroutine sax_error
       
 end module m_sax_parser
-

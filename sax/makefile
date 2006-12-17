@@ -4,7 +4,7 @@ default: install
 OBJFILES= m_sax_debug.o m_sax_tokenizer.o\
           m_sax_reader.o m_sax_converters.o \
           m_sax_error.o m_sax_parser.o \
-          FoX_sax.o
+          m_sax_operate.o FoX_sax.o
 #
 LIBRARY=libFoX_sax.a
 INCFLAGS=$(MOD_PREFIX)../objs/finclude
@@ -34,5 +34,7 @@ clean:
 FoX_sax.o: m_sax_converters.o m_sax_error.o m_sax_parser.o
 m_sax_converters.o: m_sax_debug.o
 m_sax_dtd.o: m_sax_reader.o m_sax_types.o
-m_sax_parser.o: m_sax_reader.o m_sax_types.o
+m_sax_operate.o: m_sax_types.o
+m_sax_parser.o: m_sax_reader.o m_sax_tokenizer.o m_sax_types.o
 m_sax_tokenizer.o: m_sax_reader.o m_sax_types.o
+m_sax_types.o: m_sax_reader.o

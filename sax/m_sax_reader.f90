@@ -49,7 +49,7 @@ module m_sax_reader
   end type buffer_t
 
   type file_buffer_t
-    private
+   !FIXME private
     logical                  :: connected=.false.   ! Are we connected?
     logical                  :: xml_decl=.false.    ! Have we seen an XML
     ! declaration yet? - we need to know for whitespace handling.
@@ -57,6 +57,7 @@ module m_sax_reader
     integer                  :: lun                 ! Which unit number
     ! If lun = -1, then we are reading from a string ....
     character, pointer       :: input_string(:)     ! If input is from a string
+    integer                  :: input_pos
     logical                  :: eof                 ! have we read past eof?
     ! Necessary since we don't want to report eof to user until
     ! fb%pos gets there, but we don't want to issue another read.
@@ -90,6 +91,7 @@ module m_sax_reader
   end interface
 
 
+  public :: buffer_t
   public :: file_buffer_t
   public :: line
   public :: column
@@ -134,7 +136,9 @@ contains
         call FoX_error("Cannot specify lun for string input to open_xml")
       endif
       fb%lun = -1
+      allocate(fb%input_string(len(string)))
       fb%input_string = vs_str(string)
+      fb%input_pos = 1
     else
       if (present(lun)) then
         fb%lun = lun
@@ -199,6 +203,7 @@ contains
     deallocate(fb%next_chars)
     allocate(fb%next_chars(0))
 
+    fb%input_pos = 1
     if (fb%lun/=-1) then
       rewind(unit=fb%lun)
     endif
@@ -282,10 +287,21 @@ contains
         deallocate(fb%next_chars)
         fb%next_chars => nc
       else
-        read(unit=fb%lun, iostat=iostat, advance="no", fmt="(a1)") rc
-        if (iostat == io_eor) then
-          rc = achar(13)
-          iostat = 0
+        if (fb%lun==-1) then
+          if (fb%input_pos>size(fb%input_string)) then
+            rc = achar(0)
+            iostat = io_eof
+          else
+            rc = fb%input_string(fb%input_pos)
+            fb%input_pos = fb%input_pos + 1
+            iostat = 0
+          endif
+        else
+          read(unit=fb%lun, iostat=iostat, advance="no", fmt="(a1)") rc
+          if (iostat == io_eor) then
+            rc = achar(13)
+            iostat = 0
+          endif
         endif
         ! Don't need to do any EOF checking here, we are only
         ! reading one char at a time without buffering
@@ -385,10 +401,8 @@ contains
     if (iostat == io_eof) then
       if (fb%debug) write(*,'(a)') "End of file."
       if (fb%nchars - fb%pos > 0) iostat = 0
-      return 
     elseif (iostat > 0) then
       if (fb%debug) write(*,'(a)') "Hard i/o error. iostat: "//str(iostat)
-      return ! FIXME?
     endif
 
   contains
@@ -480,8 +494,23 @@ contains
           ! We don't want to return just yet - we might have
           ! picked up some chars from previous reads
         else
-          read(unit=fb%lun, iostat=iostat, advance="no", &
-            size=nc, fmt="("//str(n_chars-ncr)//"a)") string(ncr+1:)
+          if (fb%lun == -1) then
+            ! get chars from string
+            if (size(fb%input_string) - fb%input_pos + 1 < n_chars) then
+              iostat = io_eof
+              nc = size(fb%input_string) - fb%input_pos + 1
+              string(:nc) = str_vs(fb%input_string(fb%input_pos:))
+              fb%input_pos = size(fb%input_string) + 1
+            else
+              iostat = 0
+              nc = n_chars
+              string(:nc) = str_vs(fb%input_string(fb%input_pos:fb%input_pos+n_chars-1))
+              fb%input_pos = fb%input_pos+n_chars
+            endif
+          else
+            read(unit=fb%lun, iostat=iostat, advance="no", &
+              size=nc, fmt="("//str(n_chars-ncr)//"a)") string(ncr+1:)
+          endif
         endif
         ncr = ncr + nc
         if (iostat == io_eor) then ! we hit a newline, need to record it
@@ -838,11 +867,9 @@ contains
     m = 1
     n = index(string, achar(13))
     do while (n /= 0)
-      write(*,'(a)') string(m:m+n-1)
       m = m + n
       n = index(string(m:), achar(13))
     enddo
-    write(*,'(a)') string(m:)
   end subroutine dump_string
 
   function index_fb(fb, marker) result(p)

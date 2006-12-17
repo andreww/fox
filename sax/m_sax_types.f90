@@ -2,6 +2,8 @@ module m_sax_types
 
   use m_common_entities, only: entity_list
 
+  use m_sax_reader, only: file_buffer_t
+
   implicit none
 
   ! Context
@@ -75,6 +77,13 @@ module m_sax_types
     character, dimension(:), pointer :: initialNameChars
     character, dimension(:), pointer :: NameChars
   end type sax_parser_t
+
+
+  type xml_t
+    type(file_buffer_t) :: fb
+    type(sax_parser_t) :: fx
+    integer :: sax_signal
+  end type xml_t
 
 
 end module m_sax_types

@@ -5,7 +5,8 @@ module m_sax_tokenizer
   use m_common_array_str, only: vs_str, str_vs
   use m_common_charset, only: XML_WHITESPACE, &
     XML_INITIALENCODINGCHARS, XML_ENCODINGCHARS, &
-    XML1_0, XML1_1, operator(.in.)
+    XML1_0, XML1_1, operator(.in.), &
+    isInitialNameChar, isNameChar
   use m_common_error, only: FoX_warning
 
   use m_sax_reader, only: file_buffer_t, rewind_file, &
@@ -27,13 +28,15 @@ module m_sax_tokenizer
 contains
 
   subroutine sax_tokenize(fx, fb, iostat)
-    type(sax_parser_t), intent(in) :: fx
+    type(sax_parser_t), intent(inout) :: fx
     type(file_buffer_t), intent(inout) :: fb
     integer, intent(out) :: iostat
 
     character :: c
 
     if (associated(fx%token)) deallocate(fx%token)
+
+    print*,'tokenizing...'
 
     if (fx%discard_whitespace) then
       c = get_next_character_discarding_whitespace(fb, iostat)
@@ -53,144 +56,148 @@ contains
       if (iostat/=0) return
       allocate(fx%token(len_namebuffer(fb)))
       fx%token = vs_str(retrieve_namebuffer(fb))
+      return
 
     else
-      c = get_next_character_discarding_whitespace(fb, iostat)
+      c = get_characters(fb, 1, iostat)
+      print*,'wtf'
       if (iostat/=0) return
-      if (c.in.'#>[]?+*()|)'//XML_WHITESPACE) then
-        !No further investigation needed, that's the token
-        allocate(fx%token(1))
-        fx%token = c
+    endif
 
-      elseif (c.in.str_vs(fx%initialNameChars)) then
-        call get_characters_until_not_one_of(fb, str_vs(fx%nameChars), iostat)
+    if (c.in.'#>[]?+*()|)'//XML_WHITESPACE) then
+      !No further investigation needed, that's the token
+      allocate(fx%token(1))
+      fx%token = c
+
+    elseif (isInitialNameChar(c, fx%xml_version)) then
+      stop
+      call get_characters_until_not_one_of(fb, str_vs(fx%nameChars), iostat)
+      if (iostat/=0) return
+      allocate(fx%token(len_namebuffer(fb)+1))
+      fx%token = c//vs_str(retrieve_namebuffer(fb))
+
+    else
+      select case(c)
+
+      case ('<')
+        fx%discard_whitespace = .false.
+        c = get_characters(fb, 1, iostat)
         if (iostat/=0) return
-        allocate(fx%token(len_namebuffer(fb)+1))
-        fx%token = c//vs_str(retrieve_namebuffer(fb))
+        if (c=='?') then
+          allocate(fx%token(2))
+          fx%token = '<?'
+        elseif (c=='!') then
+          allocate(fx%token(2))
+          fx%token = '<?'
+        elseif (c=='/') then
+          allocate(fx%token(2))
+          fx%token = '</'
+        elseif (isInitialNameChar(c, fx%xml_version)) then
+          call put_characters(fb, 1)
+          allocate(fx%token(1))
+          fx%token = '<'
+        else
+          call add_parse_error(fx,"Unexpected character found.")
+        endif
 
-      else
-        select case(c)
+      case ('/')
+        c = get_next_character_discarding_whitespace(fb, iostat)
+        if (iostat/=0) return
+        if (c=='>') then
+          allocate(fx%token(2))
+          fx%token = '/>'
+        else
+          !make an error
+        endif
 
-        case ('<')
-          c = get_next_character_discarding_whitespace(fb, iostat)
-          if (iostat/=0) return
-          if (c=='?') then
-            allocate(fx%token(2))
-            fx%token = '<?'
-          elseif (c=='!') then
-            allocate(fx%token(2))
-            fx%token = '<?'
-          elseif (c=='/') then
-            allocate(fx%token(2))
-            fx%token = '</'
-          elseif (c.in.str_vs(fx%initialNameChars)) then
-            call put_characters(fb, 1)
-            allocate(fx%token(1))
-            fx%token = '<'
-          else
-            !make an error
-          endif
-
-        case ('/')
-          c = get_next_character_discarding_whitespace(fb, iostat)
-          if (iostat/=0) return
-          if (c=='>') then
-            allocate(fx%token(2))
-            fx%token = '/>'
-          else
-            !make an error
-          endif
-
-        case ('%')
-          c = get_characters(fb, 1, iostat)
+      case ('%')
+        c = get_characters(fb, 1, iostat)
+        if (iostat/=0) then
+          !make an error happen
+          return
+        endif
+        if (c.in.XML_WHITESPACE) then
+          allocate(fx%token(1))
+          fx%token = '%'
+        elseif (isInitialNameChar(c, fx%xml_version)) then
+          call get_characters_until_not_one_of(fb, str_vs(fx%nameChars), iostat)
           if (iostat/=0) then
             !make an error happen
             return
           endif
-          if (c.in.XML_WHITESPACE) then
-            allocate(fx%token(1))
-            fx%token = '%'
-          elseif (c.in.str_vs(fx%initialNameChars)) then
-            call get_characters_until_not_one_of(fb, str_vs(fx%nameChars), iostat)
-            if (iostat/=0) then
-              !make an error happen
-              return
-            endif
-            c = get_characters(fb, 1, iostat)
-            if (c/=';') then
-              !make an error happen
-              return
-            endif
-            !expand & reinvoke parser, truncating entity list
-          endif
-        case ('&')
           c = get_characters(fb, 1, iostat)
+          if (c/=';') then
+            !make an error happen
+            return
+          endif
+          !expand & reinvoke parser, truncating entity list
+        endif
+      case ('&')
+        c = get_characters(fb, 1, iostat)
+        if (iostat/=0) then
+          !make an error happen
+          return
+        endif
+        if (c.in.XML_WHITESPACE) then
+          !make an error happen
+        elseif (isInitialNameChar(c, fx%xml_version)) then
+          call get_characters_until_not_one_of(fb, str_vs(fx%nameChars), iostat)
           if (iostat/=0) then
             !make an error happen
             return
           endif
-          if (c.in.XML_WHITESPACE) then
+          c = get_characters(fb, 1, iostat)
+          if (c/=';') then
             !make an error happen
-          elseif (c.in.str_vs(fx%initialNameChars)) then
-            call get_characters_until_not_one_of(fb, str_vs(fx%nameChars), iostat)
-            if (iostat/=0) then
-              !make an error happen
-              return
-            endif
-            c = get_characters(fb, 1, iostat)
-            if (c/=';') then
-              !make an error happen
-              return
-            endif
-            !expand & reinvoke parser, truncating entity list
+            return
           endif
+          !expand & reinvoke parser, truncating entity list
+        endif
 
-        case ('"')
-          if (fx%context==CTXT_IN_DTD) then! .and. some other condition) then
-            call get_characters_until_one_of(fb, '"', iostat)
-            if (iostat/=0) return
-            allocate(fx%token(len_namebuffer(fb)))
-            fx%token = vs_str(retrieve_namebuffer(fb))
-            
-          elseif (fx%context==CTXT_IN_CONTENT) then !.an.d some other condition) then
-            call get_characters_until_one_of(fb, '"', iostat)
-            if (iostat/=0) return
-            allocate(fx%token(len_namebuffer(fb)))
-            fx%token = vs_str(retrieve_namebuffer(fb))
-            ! expand entities
-            ! normalize text
+      case ('"')
+        if (fx%context==CTXT_IN_DTD) then! .and. some other condition) then
+          call get_characters_until_one_of(fb, '"', iostat)
+          if (iostat/=0) return
+          allocate(fx%token(len_namebuffer(fb)))
+          fx%token = vs_str(retrieve_namebuffer(fb))
 
-          else
-            ! make an error
-          endif
+        elseif (fx%context==CTXT_IN_CONTENT) then !.an.d some other condition) then
+          call get_characters_until_one_of(fb, '"', iostat)
+          if (iostat/=0) return
+          allocate(fx%token(len_namebuffer(fb)))
+          fx%token = vs_str(retrieve_namebuffer(fb))
+          ! expand entities
+          ! normalize text
 
-        case ("'")
-          if (fx%context==CTXT_IN_DTD) then! .and. some other condition) then
-            call get_characters_until_one_of(fb, "'", iostat)
-            if (iostat/=0) return
-            allocate(fx%token(len_namebuffer(fb)))
-            fx%token = vs_str(retrieve_namebuffer(fb))
-            
-          elseif (fx%context==CTXT_IN_CONTENT) then! .and. some other condition) then
-            call get_characters_until_one_of(fb, "'", iostat)
-            if (iostat/=0) return
-            allocate(fx%token(len_namebuffer(fb)))
-            fx%token = vs_str(retrieve_namebuffer(fb))
-            ! expand entities
-            ! normalize text
-
-          else
-            ! make an error
-          endif
-          
-        case default 
+        else
           ! make an error
+        endif
 
-        end select
+      case ("'")
+        if (fx%context==CTXT_IN_DTD) then! .and. some other condition) then
+          call get_characters_until_one_of(fb, "'", iostat)
+          if (iostat/=0) return
+          allocate(fx%token(len_namebuffer(fb)))
+          fx%token = vs_str(retrieve_namebuffer(fb))
 
-      end if ! more than one-char token
+        elseif (fx%context==CTXT_IN_CONTENT) then! .and. some other condition) then
+          call get_characters_until_one_of(fb, "'", iostat)
+          if (iostat/=0) return
+          allocate(fx%token(len_namebuffer(fb)))
+          fx%token = vs_str(retrieve_namebuffer(fb))
+          ! expand entities
+          ! normalize text
 
-    end if ! preserve whitespace
+        else
+          ! make an error
+        endif
+
+      case default 
+        ! make an error
+
+      end select
+
+    end if ! more than one-char token
 
   end subroutine sax_tokenize
 
