@@ -73,11 +73,11 @@ module m_sax_types
     character, dimension(:), pointer :: token => null()
     character, dimension(:), pointer :: name => null()
     type(sax_error_t), dimension(:), pointer :: error_stack => null()
+    ! Aspects of document structure
     integer :: xml_version
     character, dimension(:), pointer :: encoding
     logical :: standalone
-    character, dimension(:), pointer :: initialNameChars
-    character, dimension(:), pointer :: NameChars
+    character, dimension(:), pointer :: root_element
     type(elstack_t) :: elstack
   end type sax_parser_t
 

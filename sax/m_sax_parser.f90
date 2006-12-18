@@ -260,8 +260,7 @@ contains
         if (fx%context==CTXT_BEFORE_DTD &
           .or. fx%context==CTXT_BEFORE_CONTENT &
           .or. fx%context==CTXT_IN_CONTENT) then
-          allocate(fx%name(len_namebuffer(fb)))
-          fx%name = str_vs(retrieve_namebuffer(fb))
+          fx%name => fx%token
           print*,'Found tag labelled: ',str_vs(fx%name)
           ! check name is name? ought to be.
           fx%discard_whitespace = .true.
@@ -299,7 +298,12 @@ contains
           if (fx%context /= CTXT_IN_CONTENT) then
             if(present(start_document_handler)) &
               call start_document_handler()
-            ! FIXME put this name as root name & check against DTD
+            if (associated(fx%root_element)) then
+              ! FIXME check with DTD
+              continue
+            else
+              fx%root_element => fx%name
+            endif
             fx%context = CTXT_IN_CONTENT
           endif
           fx%state = ST_CHAR_IN_CONTENT
@@ -310,11 +314,17 @@ contains
             fx%state = ST_CHAR_IN_CONTENT
           else
             ! only a single element in this doc
-            ! check root name against DTD
+            if (associated(fx%root_element)) then
+              ! FIXME check with DTD
+              continue
+            else
+              fx%root_element => fx%name
+            endif
             if (present(start_document_handler)) &
               call start_document_handler()
             print*,'root element is a single tag'
           endif
+          ! No point in pushing & pulling onto elstack.
           !if (present(begin_element_handler)) &
           !  call begin_element_handler(str_vs(fx%name)
           !if (present(end_element_handler)) &
