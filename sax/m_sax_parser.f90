@@ -6,11 +6,12 @@ module m_sax_parser
   use m_common_charset, only: XML1_0, XML1_1, XML1_0_INITIALNAMECHARS, &
     XML1_1_INITIALNAMECHARS, XML_INITIALENCODINGCHARS, XML_ENCODINGCHARS, &
     XML_WHITESPACE, XML1_0_NAMECHARS, XML1_1_NAMECHARS, operator(.in.)
+  use m_common_elstack, only: elstack_t, push_elstack, pop_elstack, init_elstack, destroy_elstack
   use m_common_error, only: FoX_error
   use m_common_io, only: io_eof
   use m_common_namecheck, only: checkName
 
-  use m_sax_reader, only: file_buffer_t, read_char, read_chars
+  use m_sax_reader, only: file_buffer_t, read_char, read_chars, len_namebuffer, retrieve_namebuffer
   use m_sax_tokenizer, only: sax_tokenize, parse_xml_declaration, add_parse_error
   use m_sax_types ! everything, really
 
@@ -30,6 +31,8 @@ contains
     allocate(fx%error_stack(0:0))
     allocate(fx%error_stack(0)%msg(0))
     
+    call init_elstack(fx%elstack)
+    
   end subroutine sax_parser_init
 
   subroutine sax_parser_destroy(fx)
@@ -46,6 +49,8 @@ contains
       deallocate(fx%error_stack(i)%msg)
     enddo
     deallocate(fx%error_stack)
+
+    call destroy_elstack(fx%elstack)
 
   end subroutine sax_parser_destroy
 
@@ -139,13 +144,13 @@ contains
 
     do
       print*,'executing parse loop'
-      print*,fb%buffer(1:1)
 
       call sax_tokenize(fx, fb, iostat)
+      print*,'tokenize iostat', iostat
       if (iostat/=0) goto 100
-      print*,'token',str_vs(fx%token)
+      print*,'token: ',str_vs(fx%token)
 
-      select case (fx%context)
+      select case (fx%state)
 
       case (ST_MISC)
         print*,'ST_MISC'
@@ -155,11 +160,9 @@ contains
           fx%state = ST_BANG_TAG
         elseif (str_vs(fx%token) == '<') then
           print*,'starting tag'
-          stop
-          fx%context = CTXT_IN_CONTENT
           fx%state = ST_START_TAG
         else
-          ! make error
+          call add_parse_error(fx, "Unexpected token found outside content")
         endif
 
       case (ST_BANG_TAG)
@@ -181,6 +184,7 @@ contains
         endif
 
       case (ST_START_PI)
+        print*,'ST_START_PI'
         !token should be an XML Name
         if (.true.) then
           fx%discard_whitespace = .false.
@@ -191,6 +195,7 @@ contains
         endif
 
       case (ST_PI_NAME)
+        print*,'ST_PI_NAME'
         if (fx%token(1).in.XML_WHITESPACE) then
           fx%state = ST_PI_CONTENTS
         else
@@ -199,6 +204,7 @@ contains
         endif
 
       case (ST_PI_CONTENTS)
+        print*,'ST_PI_CONTENTS'
         ! fx%token - longer than 1 char?
         if (size(fx%token)>1) then
           ! put it somewhere
@@ -209,6 +215,7 @@ contains
         endif
 
       case (ST_PI_END)
+        print*,'ST_PI_END'
         if (str_vs(fx%token)=='?>') then
           if (fx%context==CTXT_IN_CONTENT) then
             fx%state = ST_CHAR_IN_CONTENT
@@ -221,10 +228,12 @@ contains
         endif
 
       case (ST_START_COMMENT)
+        print*,'ST_PI_COMMENT'
         ! token should be comment contents.
         fx%state = ST_COMMENT_CONTENTS
 
       case (ST_COMMENT_CONTENTS)
+        print*,'ST_COMMENT_CONTENTS'
         if (str_vs(fx%token)=='--') then
           fx%state = ST_COMMENT_END
         else
@@ -233,6 +242,7 @@ contains
         endif
 
       case (ST_COMMENT_END)
+        print*,'ST_COMMENT_END'
         if (str_vs(fx%token)=='>') then
           if (fx%context==CTXT_IN_CONTENT) then
             fx%state = ST_CHAR_IN_CONTENT
@@ -246,25 +256,24 @@ contains
         endif
 
       case (ST_START_TAG)
-        if (fx%context == CTXT_BEFORE_DTD &
-          .or. fx%context == CTXT_BEFORE_CONTENT) then
-          ! root element
-          ! check token is name
+        print*,'ST_START_TAG', fx%context
+        if (fx%context==CTXT_BEFORE_DTD &
+          .or. fx%context==CTXT_BEFORE_CONTENT &
+          .or. fx%context==CTXT_IN_CONTENT) then
+          allocate(fx%name(len_namebuffer(fb)))
+          fx%name = str_vs(retrieve_namebuffer(fb))
+          print*,'Found tag labelled: ',str_vs(fx%name)
+          ! check name is name? ought to be.
           fx%discard_whitespace = .true.
           fx%state = ST_IN_TAG
-        elseif (fx%context == CTXT_IN_CONTENT) then
-          ! normal element
-          ! check token is name
-          fx%discard_whitespace = .true.
         elseif (fx%context == CTXT_AFTER_CONTENT) then
-          ! make an error
-          continue
+          call add_parse_error(fx, "Cannot open second root element")
         elseif (fx%context == CTXT_IN_DTD) then
-          ! make an error
-          continue
+          call add_parse_error(fx, "Cannot open root element before DTD is finished")
         endif
 
       case (ST_START_CDATA_1)
+        print*,'ST_START_CDATA_1'
         if (str_vs(fx%token) == 'CDATA') then
           fx%state = ST_START_CDATA_2
         else
@@ -273,6 +282,7 @@ contains
         endif
 
       case (ST_START_CDATA_2)
+        print*,'ST_START_CDATA_2'
         if (str_vs(fx%token) == '[') then
           fx%state = ST_CDATA_CONTENTS
         else
@@ -281,23 +291,35 @@ contains
         endif
 
       case (ST_IN_TAG)
+        print*,'ST_IN_TAG'
         if (str_vs(fx%token)=='>') then
-          ! push tag onto stack
+          call push_elstack(str_vs(fx%name), fx%elstack)
+          deallocate(fx%name)
+          ! FIXME and dictionary
           if (fx%context /= CTXT_IN_CONTENT) then
-            if(present(start_document_handler)) call start_document_handler()
+            if(present(start_document_handler)) &
+              call start_document_handler()
+            ! FIXME put this name as root name & check against DTD
             fx%context = CTXT_IN_CONTENT
           endif
           fx%state = ST_CHAR_IN_CONTENT
           fx%discard_whitespace = .false.
+
         elseif (str_vs(fx%token)=='/>') then
-          !token should be xmlname
           if (fx%context==CTXT_IN_CONTENT) then
             fx%state = ST_CHAR_IN_CONTENT
           else
             ! only a single element in this doc
-            if(present(start_document_handler)) call start_document_handler()
+            ! check root name against DTD
+            if (present(start_document_handler)) &
+              call start_document_handler()
+            print*,'root element is a single tag'
           endif
-          ! begin and end
+          !if (present(begin_element_handler)) &
+          !  call begin_element_handler(str_vs(fx%name)
+          !if (present(end_element_handler)) &
+          !  call end_element_handler(str_vs(fx%name))
+          deallocate(fx%name)
           if (fx%context==CTXT_IN_CONTENT) then
             fx%discard_whitespace = .false.
           else
@@ -306,13 +328,12 @@ contains
             fx%state = ST_MISC
             fx%discard_whitespace = .true.
           endif
-          ! open & close
         else
-          !make an error
-          continue
+          call add_parse_error(fx, "Unexpected token in tag")
         endif
 
       case (ST_ATT_NAME)
+        print*,'ST_ATT_NAME'
         if (str_vs(fx%token)=='=') then
           fx%state = ST_ATT_EQUALS
         else
@@ -321,6 +342,7 @@ contains
         endif
 
       case (ST_ATT_EQUALS)
+        print*,'ST_ATT_EQUALS'
         if (fx%token(1)=='"'.or.fx%token(1)=="'") then
           ! token (2:end-1) is att value
           fx%state = ST_IN_TAG
@@ -330,6 +352,7 @@ contains
         endif
 
       case (ST_CHAR_IN_CONTENT)
+        print*,'ST_CHAR_IN_CONTENT'
         if (str_vs(fx%token)=='<') then
           fx%state = ST_START_TAG
           fx%discard_whitespace = .true.
@@ -360,6 +383,7 @@ contains
         ! entire token is character data
 
       case (ST_CLOSING_TAG)
+        print*,'ST_CLOSING_TAG'
         if (checkName(str_vs(fx%token))) then!fx%token, fx%xml_version)) then
           ! ok
           fx%discard_whitespace = .true.

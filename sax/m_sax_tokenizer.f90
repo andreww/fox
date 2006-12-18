@@ -6,7 +6,7 @@ module m_sax_tokenizer
   use m_common_charset, only: XML_WHITESPACE, &
     XML_INITIALENCODINGCHARS, XML_ENCODINGCHARS, &
     XML1_0, XML1_1, operator(.in.), &
-    isInitialNameChar, isNameChar
+    isInitialNameChar, isNameChar, isXML1_0_NameChar, isXML1_1_NameChar
   use m_common_error, only: FoX_warning
 
   use m_sax_reader, only: file_buffer_t, rewind_file, &
@@ -14,7 +14,7 @@ module m_sax_tokenizer
     get_next_character_discarding_whitespace, &
     get_characters_until_all_of, &
     get_characters_until_one_of, &
-    get_characters_until_not_one_of, &
+    get_characters_until_condition, &
     len_namebuffer, retrieve_namebuffer
   use m_sax_types ! everything, really
 
@@ -36,7 +36,7 @@ contains
 
     if (associated(fx%token)) deallocate(fx%token)
 
-    print*,'tokenizing...'
+    print*,'tokenizing... discard whitespace?', fx%discard_whitespace
 
     if (fx%discard_whitespace) then
       c = get_next_character_discarding_whitespace(fb, iostat)
@@ -60,7 +60,6 @@ contains
 
     else
       c = get_characters(fb, 1, iostat)
-      print*,'wtf'
       if (iostat/=0) return
     endif
 
@@ -70,11 +69,15 @@ contains
       fx%token = c
 
     elseif (isInitialNameChar(c, fx%xml_version)) then
-      stop
-      call get_characters_until_not_one_of(fb, str_vs(fx%nameChars), iostat)
+      if (fx%xml_version==XML1_0) then
+        call get_characters_until_condition(fb, isXML1_0_NameChar, .false., iostat)
+      elseif (fx%xml_version==XML1_1) then
+        call get_characters_until_condition(fb, isXML1_1_NameChar, .false., iostat)
+      endif
       if (iostat/=0) return
       allocate(fx%token(len_namebuffer(fb)+1))
-      fx%token = c//vs_str(retrieve_namebuffer(fb))
+      fx%token(1) = c
+      fx%token(2:) = vs_str(retrieve_namebuffer(fb))
 
     else
       select case(c)
@@ -105,9 +108,9 @@ contains
         if (iostat/=0) return
         if (c=='>') then
           allocate(fx%token(2))
-          fx%token = '/>'
+          fx%token = vs_str('/>')
         else
-          !make an error
+          call add_parse_error(fx, "Unexpected character after/")
         endif
 
       case ('%')
@@ -120,7 +123,11 @@ contains
           allocate(fx%token(1))
           fx%token = '%'
         elseif (isInitialNameChar(c, fx%xml_version)) then
-          call get_characters_until_not_one_of(fb, str_vs(fx%nameChars), iostat)
+          if (fx%xml_version==XML1_0) then
+            call get_characters_until_condition(fb, isXML1_0_NameChar, .false., iostat)
+          elseif (fx%xml_version==XML1_1) then
+            call get_characters_until_condition(fb, isXML1_1_NameChar, .false., iostat)
+          endif
           if (iostat/=0) then
             !make an error happen
             return
@@ -141,7 +148,11 @@ contains
         if (c.in.XML_WHITESPACE) then
           !make an error happen
         elseif (isInitialNameChar(c, fx%xml_version)) then
-          call get_characters_until_not_one_of(fb, str_vs(fx%nameChars), iostat)
+          if (fx%xml_version==XML1_0) then
+            call get_characters_until_condition(fb, isXML1_0_NameChar, .false., iostat)
+          elseif (fx%xml_version==XML1_1) then
+            call get_characters_until_condition(fb, isXML1_1_NameChar, .false., iostat)
+          endif
           if (iostat/=0) then
             !make an error happen
             return

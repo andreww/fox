@@ -65,6 +65,8 @@ module m_common_charset
 
   public :: isInitialNameChar
   public :: isNameChar
+  public :: isXML1_0_NameChar
+  public :: isXML1_1_NameChar
 
 contains
 
@@ -102,6 +104,22 @@ contains
       end select
 
     end function isNameChar
+
+    function isXML1_0_NameChar(c) result(p)
+      character, intent(in) :: c
+      logical :: p
+    
+      p = (verify(c, XML1_0_NAMECHARS)==0)
+      
+    end function isXML1_0_NameChar
+
+    function isXML1_1_NameChar(c) result(p)
+    character, intent(in) :: c
+    logical :: p
+
+    p = (verify(c, XML1_1_NAMECHARS)==0)
+
+  end function isXML1_1_NameChar
 
 end module m_common_charset
 

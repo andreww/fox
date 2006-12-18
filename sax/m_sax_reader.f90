@@ -106,6 +106,7 @@ module m_sax_reader
 
   public :: get_characters
   public :: get_next_character_discarding_whitespace
+  public :: get_characters_until_condition
   public :: get_characters_until_not_one_of
   public :: get_characters_until_one_of
   public :: get_characters_until_all_of
@@ -399,10 +400,7 @@ contains
     fb%nchars = fb%nchars + l_s
 
     if (iostat == io_eof) then
-      if (fb%debug) write(*,'(a)') "End of file."
       if (fb%nchars - fb%pos > 0) iostat = 0
-    elseif (iostat > 0) then
-      if (fb%debug) write(*,'(a)') "Hard i/o error. iostat: "//str(iostat)
     endif
 
   contains
@@ -683,6 +681,67 @@ contains
 
   end function get_next_character_discarding_whitespace
 
+  subroutine get_characters_until_condition(fb, condition, true, iostat)
+    type(file_buffer_t), intent(inout) :: fb
+    interface
+      function condition(c) result(p)
+        character, intent(in) :: c
+        logical :: p
+      end function condition
+    end interface
+    logical, intent(in) :: true
+    integer, intent(out) :: iostat
+
+    type(buffer_t), pointer :: cb
+    character, dimension(:), pointer :: tempbuf, buf
+    integer :: m_i
+
+    if (ubound(fb%buffer_stack,1)>0) then
+      cb => fb%buffer_stack(ubound(fb%buffer_stack,1))
+    endif
+
+    allocate(buf(0))
+    m_i = check_fb(fb, condition, true)
+    if (m_i == 0) then
+      if (ubound(fb%buffer_stack,1)>0) then
+        cb%pos = size(cb%s)+1
+        iostat = io_eof
+        return
+      endif
+      do while (m_i==0)
+        allocate(tempbuf(size(buf)+fb%nchars-fb%pos+1))
+        tempbuf(:size(buf)) = buf
+        tempbuf(size(buf)+1:) = vs_str(fb%buffer(fb%pos:fb%nchars))
+        deallocate(buf)
+        buf => tempbuf
+        fb%pos = fb%nchars + 1
+        call fill_buffer(fb, iostat)
+        if (iostat /= 0) return
+        m_i = check_fb(fb, condition, true)
+      enddo
+    endif
+
+    if (ubound(fb%buffer_stack,1)>0) then
+      deallocate(buf)
+      allocate(buf(m_i-1))
+      buf = cb%s(cb%pos:cb%pos+m_i-1)
+      cb%pos = cb%pos + m_i - 1
+    else
+      allocate(tempbuf(size(buf)+m_i-1))
+      tempbuf(:size(buf)) = buf
+      tempbuf(size(buf)+1:) = vs_str(fb%buffer(fb%pos:fb%pos+m_i-1))
+      deallocate(buf)
+      buf => tempbuf
+      fb%pos = fb%pos + m_i - 1
+    endif
+
+    if (associated(fb%namebuffer)) deallocate(fb%namebuffer)
+    fb%namebuffer => buf
+    call move_cursor(fb, str_vs(fb%namebuffer))
+
+  end subroutine get_characters_until_condition
+
+
   subroutine get_chars_with_condition(fb, marker, condition, iostat)
     type(file_buffer_t), intent(inout) :: fb
     character(len=*), intent(in) :: marker
@@ -721,15 +780,15 @@ contains
     if (ubound(fb%buffer_stack,1)>0) then
       deallocate(buf)
       allocate(buf(m_i-1))
-      buf = cb%s(cb%pos+m_i-1)
-      cb%pos = cb%pos+m_i
+      buf = cb%s(cb%pos:cb%pos+m_i-1)
+      cb%pos = cb%pos + m_i - 1
     else
       allocate(tempbuf(size(buf)+m_i-1))
       tempbuf(:size(buf)) = buf
       tempbuf(size(buf)+1:) = vs_str(fb%buffer(fb%pos:fb%pos+m_i-1))
       deallocate(buf)
       buf => tempbuf
-      fb%pos = fb%pos + m_i
+      fb%pos = fb%pos + m_i - 1
     endif
 
     if (associated(fb%namebuffer)) deallocate(fb%namebuffer)
@@ -919,5 +978,44 @@ contains
     endif
 
   end function verify_fb
+
+  function check_fb(fb, check, true) result(n)
+    type(file_buffer_t), intent(in) :: fb
+    interface
+      function check(c) result(p)
+        character, intent(in) :: c
+        logical :: p
+      end function check
+    end interface
+    logical, intent(in) :: true
+    integer :: n
+
+    type(buffer_t), pointer :: cb
+    integer :: i
+
+    n = 0
+    i = 1
+    if (ubound(fb%buffer_stack,1) > 0) then
+      cb => fb%buffer_stack(ubound(fb%buffer_stack,1))
+      do while (cb%pos+i<=size(cb%s))
+        if (true.eqv.check(cb%s(cb%pos+i-1))) then
+          n = i
+          exit
+        else
+          i = i + 1
+        endif
+      enddo
+    else
+      do while (fb%pos+i<=fb%nchars)
+        if (true.eqv.check(fb%buffer(fb%pos+i-1:fb%pos+i-1))) then
+          n = i
+          exit
+        else
+          i = i + 1
+        endif
+      enddo
+    endif
+
+  end function check_fb
 
 end module m_sax_reader

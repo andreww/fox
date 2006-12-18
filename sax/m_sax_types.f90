@@ -1,5 +1,6 @@
 module m_sax_types
 
+  use m_common_elstack, only: elstack_t
   use m_common_entities, only: entity_list
 
   use m_sax_reader, only: file_buffer_t
@@ -70,12 +71,14 @@ module m_sax_types
     logical :: well_formed = .false.
     type(dtd_parser_t) :: dtd_parser
     character, dimension(:), pointer :: token => null()
+    character, dimension(:), pointer :: name => null()
     type(sax_error_t), dimension(:), pointer :: error_stack => null()
     integer :: xml_version
     character, dimension(:), pointer :: encoding
     logical :: standalone
     character, dimension(:), pointer :: initialNameChars
     character, dimension(:), pointer :: NameChars
+    type(elstack_t) :: elstack
   end type sax_parser_t
 
 
