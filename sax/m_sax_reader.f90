@@ -49,7 +49,7 @@ module m_sax_reader
   end type buffer_t
 
   type file_buffer_t
-   !FIXME private
+    !FIXME private
     logical                  :: connected=.false.   ! Are we connected?
     logical                  :: xml_decl=.false.    ! Have we seen an XML
     ! declaration yet? - we need to know for whitespace handling.
@@ -105,7 +105,6 @@ module m_sax_reader
   public :: push_chars
 
   public :: get_characters
-  public :: get_next_character_discarding_whitespace
   public :: get_characters_until_condition
   public :: get_characters_until_not_one_of
   public :: get_characters_until_one_of
@@ -155,7 +154,7 @@ contains
       endif
       allocate(fb%input_string(0))
     endif
-      
+
     if (.true.) then
       fb%debug = .true.
     else
@@ -398,6 +397,7 @@ contains
     fb%nchars = fb%nchars + l_s
 
     if (iostat == io_eof) then
+      print*,'filling buffer', fb%nchars, fb%pos
       if (fb%nchars - fb%pos >= 0) iostat = 0
     endif
 
@@ -578,10 +578,12 @@ contains
     integer :: n_needed, n_held
     type(buffer_t), pointer :: cb
 
-    if (.not. fb%connected) then
+    if (.not.fb%connected) then
       iostat = BUFFER_NOT_CONNECTED
       return
     endif
+
+    print*,'getting chars1'
 
     !If we have any characters in the pushback buffer, grab
     !them first.
@@ -592,8 +594,6 @@ contains
 
       n_held = size(cb%s) - cb%pos + 1
       if (n <= n_held) then
-        ! Actually, we should just move a cursor here rather than
-        ! reallocating every time.
         string = str_vs(cb%s(cb%pos:cb%pos+n-1))
         cb%pos = cb%pos + n
         iostat = 0 
@@ -610,9 +610,10 @@ contains
         ! This will happen if a) this is the 1st/2nd time we are called
         ! b) Last buffer access was through a get_characters_until...
         call fill_buffer(fb, iostat)
+        print*,'getting chars2', iostat
         if (iostat/=0) return
       endif
-      if (fb%nchars-fb%pos+1 > n) then
+      if (n <= fb%nchars-fb%pos+1) then
         string = fb%buffer(fb%pos:fb%pos+n)
         fb%pos = fb%pos + n
         iostat = 0
@@ -629,59 +630,59 @@ contains
   end function get_characters
 
 
-  function get_next_character_discarding_whitespace(fb, iostat) result(c)
-    type(file_buffer_t), intent(inout) :: fb
-    integer, intent(out) :: iostat
-    character :: c
-
-    type(buffer_t), pointer :: cb
-    character, dimension(:), pointer :: tempbuf
-    integer :: m_i
-
-    ! Run through the buffer checking for first non-whitespace
-    ! character - if none found, then refill the buffer.
-    ! Repeat until either we find the correct character, or
-    ! IO fails.
-
-    if (ubound(fb%buffer_stack,1)>0) then
-      cb => fb%buffer_stack(ubound(fb%buffer_stack,1))
-      if (cb%pos>size(cb%s)) then
-        iostat = io_eof
-        return
-      endif
-    endif
-
-    m_i = verify(fb, XML_WHITESPACE)
-    if (m_i == 0) then
-      if (ubound(fb%buffer_stack,1)>0) then
-        cb%pos = size(cb%s)+1
-        c = achar(0)
-        iostat = io_eof
-        return
-      endif
-      do while (m_i==0)
-        call move_cursor(fb, fb%buffer(fb%pos:fb%nchars))
-        fb%pos = fb%nchars + 1
-        call fill_buffer(fb, iostat)
-        if (iostat /= 0) then
-          c = achar(0)
-          return
-        endif
-        m_i = verify(fb, XML_WHITESPACE)
-      enddo
-      call move_cursor(fb, fb%buffer(fb%pos:fb%pos+m_i-1))
-    endif
-    if (ubound(fb%buffer_stack,1)>0) then
-      cb%pos = cb%pos + m_i
-      c = cb%s(cb%pos-1)
-    else
-      fb%pos = fb%pos + m_i
-      c = fb%buffer(fb%pos-1:fb%pos-1)
-    endif
-
-    ! FIXME somewhere we need to be checking every character for allowability.
-
-  end function get_next_character_discarding_whitespace
+!!$  function get_next_character_discarding_whitespace(fb, iostat) result(c)
+!!$    type(file_buffer_t), intent(inout) :: fb
+!!$    integer, intent(out) :: iostat
+!!$    character :: c
+!!$
+!!$    type(buffer_t), pointer :: cb
+!!$    character, dimension(:), pointer :: tempbuf
+!!$    integer :: m_i
+!!$
+!!$    ! Run through the buffer checking for first non-whitespace
+!!$    ! character - if none found, then refill the buffer.
+!!$    ! Repeat until either we find the correct character, or
+!!$    ! IO fails.
+!!$
+!!$    if (ubound(fb%buffer_stack,1)>0) then
+!!$      cb => fb%buffer_stack(ubound(fb%buffer_stack,1))
+!!$      if (cb%pos>size(cb%s)) then
+!!$        iostat = io_eof
+!!$        return
+!!$      endif
+!!$    endif
+!!$
+!!$    m_i = verify(fb, XML_WHITESPACE)
+!!$    if (m_i == 0) then
+!!$      if (ubound(fb%buffer_stack,1)>0) then
+!!$        cb%pos = size(cb%s)+1
+!!$        c = achar(0)
+!!$        iostat = io_eof
+!!$        return
+!!$      endif
+!!$      do while (m_i==0)
+!!$        call move_cursor(fb, fb%buffer(fb%pos:fb%nchars))
+!!$        fb%pos = fb%nchars + 1
+!!$        call fill_buffer(fb, iostat)
+!!$        if (iostat /= 0) then
+!!$          c = achar(0)
+!!$          return
+!!$        endif
+!!$        m_i = verify(fb, XML_WHITESPACE)
+!!$      enddo
+!!$      call move_cursor(fb, fb%buffer(fb%pos:fb%pos+m_i-1))
+!!$    endif
+!!$    if (ubound(fb%buffer_stack,1)>0) then
+!!$      cb%pos = cb%pos + m_i
+!!$      c = cb%s(cb%pos-1)
+!!$    else
+!!$      fb%pos = fb%pos + m_i
+!!$      c = fb%buffer(fb%pos-1:fb%pos-1)
+!!$    endif
+!!$
+!!$    ! FIXME somewhere we need to be checking every character for allowability.
+!!$
+!!$  end function get_next_character_discarding_whitespace
 
   subroutine get_characters_until_condition(fb, condition, true, iostat)
     type(file_buffer_t), intent(inout) :: fb

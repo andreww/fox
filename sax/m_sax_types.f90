@@ -32,7 +32,7 @@ module m_sax_types
   integer, parameter :: ST_ATT_EQUALS = 9
   integer, parameter :: ST_CHAR_IN_CONTENT = 10
   integer, parameter :: ST_CLOSING_TAG = 11
-  integer, parameter :: ST_PI_NAME = 12
+  integer, parameter :: ST_IN_PI = 12
   integer, parameter :: ST_PI_END = 13
   integer, parameter :: ST_COMMENT_CONTENTS = 14
   integer, parameter :: ST_COMMENT_END = 15
@@ -72,6 +72,7 @@ module m_sax_types
     logical :: well_formed = .false.
     type(dtd_parser_t) :: dtd_parser
     character, dimension(:), pointer :: token => null()
+    character, dimension(:), pointer :: next_token => null()
     character, dimension(:), pointer :: name => null()
     type(sax_error_t), dimension(:), pointer :: error_stack => null()
     ! Aspects of document structure

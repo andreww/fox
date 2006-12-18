@@ -187,32 +187,53 @@ contains
       case (ST_START_PI)
         print*,'ST_START_PI'
         !token should be an XML Name
-        if (.true.) then
+        if (checkName(str_vs(fx%token))) then
           fx%discard_whitespace = .false.
-          fx%state = ST_PI_NAME
+          fx%state = ST_IN_PI
+          fx%name => fx%token
+          nullify(fx%token)
         else
-          ! make error
-          continue
+          call add_parse_error(fx, "Unexpected token found for PI target; expecting Name")
+          return
         endif
 
-      case (ST_PI_NAME)
-        print*,'ST_PI_NAME'
-        if (fx%token(1).in.XML_WHITESPACE) then
+      case (ST_IN_PI)
+        print*,'ST_IN_PI'
+        if (str_vs(fx%token)=='?>') then
+          ! No data for this PI
+          if (present(processing_instruction_handler)) &
+            call processing_instruction_handler(str_vs(fx%name), '')
+          deallocate(fx%name)
+          if (fx%context==CTXT_IN_CONTENT) then
+            fx%state = ST_CHAR_IN_CONTENT
+          else
+            fx%state = ST_MISC
+          endif
+        elseif (str_vs(fx%token).in.XML_WHITESPACE) then
+          fx%discard_whitespace = .true.
           fx%state = ST_PI_CONTENTS
         else
-          ! make error
-          continue
+          call add_parse_error(fx, "Unexpected token found after PI target; expecting whitespace or ?>")
+          return
         endif
 
       case (ST_PI_CONTENTS)
         print*,'ST_PI_CONTENTS'
-        ! fx%token - longer than 1 char?
-        if (size(fx%token)>1) then
-          ! put it somewhere
-          fx%state = ST_PI_END
+        if (str_vs(fx%token)=='?>') then
+          ! No data for this PI
+          if (present(processing_instruction_handler)) &
+            call processing_instruction_handler(str_vs(fx%name), '')
+          deallocate(fx%name)
+          if (fx%context==CTXT_IN_CONTENT) then
+            fx%state = ST_CHAR_IN_CONTENT
+          else
+            fx%state = ST_MISC
+          endif
         else
-          ! make an error
-          continue
+          if (present(processing_instruction_handler)) &
+            call processing_instruction_handler(str_vs(fx%name), str_vs(fx%token))
+          deallocate(fx%name)
+          fx%state = ST_PI_END
         endif
 
       case (ST_PI_END)
@@ -220,12 +241,14 @@ contains
         if (str_vs(fx%token)=='?>') then
           if (fx%context==CTXT_IN_CONTENT) then
             fx%state = ST_CHAR_IN_CONTENT
+            fx%discard_whitespace = .false.
           else
             fx%state = ST_MISC
             fx%discard_whitespace = .true.
           endif
         else
-          ! make an error
+          call add_parse_error(fx, "Internal error: unexpected token at end of PI, expecting ?>")
+          return
         endif
 
       case (ST_START_COMMENT)
@@ -367,7 +390,9 @@ contains
 
       case (ST_CHAR_IN_CONTENT)
         print*,'ST_CHAR_IN_CONTENT'
-        if (present(characters_handler)) call characters_handler(str_vs(fx%token))
+        if (size(fx%token)>0) then
+          if (present(characters_handler)) call characters_handler(str_vs(fx%token))
+        endif
         fx%state = ST_TAG_IN_CONTENT
 
       case (ST_TAG_IN_CONTENT)

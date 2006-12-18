@@ -11,9 +11,9 @@ module m_sax_tokenizer
 
   use m_sax_reader, only: file_buffer_t, rewind_file, &
     read_char, read_chars, push_chars, get_characters, put_characters, &
-    get_next_character_discarding_whitespace, &
     get_characters_until_all_of, &
     get_characters_until_one_of, &
+    get_characters_until_not_one_of, &
     get_characters_until_condition
   use m_sax_types ! everything, really
 
@@ -33,37 +33,59 @@ contains
 
     character :: c
 
-    if (associated(fx%token)) deallocate(fx%token)
-
     print*,'tokenizing... discard whitespace?', fx%discard_whitespace
 
-    if (fx%discard_whitespace) then
-      c = get_next_character_discarding_whitespace(fb, iostat)
-      if (iostat/=0) return
+    if (associated(fx%token)) deallocate(fx%token)
+    if (associated(fx%next_token)) then
+      iostat = 0
+      fx%token => fx%next_token
+      nullify(fx%next_token)
+      return
+    endif
 
-    elseif (fx%state==ST_PI_CONTENTS.or.fx%state==ST_COMMENT_CONTENTS &
+    if (fx%state==ST_PI_CONTENTS.or.fx%state==ST_COMMENT_CONTENTS &
       .or.fx%state==ST_CDATA_CONTENTS.or.fx%state==ST_CHAR_IN_CONTENT) then
       select case(fx%state)
       case (ST_PI_CONTENTS)
+        call get_characters_until_not_one_of(fb, XML_WHITESPACE, iostat)
+        if (iostat/=0) return
+        deallocate(fb%namebuffer)
         call get_characters_until_all_of(fb, '?>', iostat)
+        if (iostat/=0) return
+        allocate(fx%next_token(2))
+        fx%next_token = vs_str(get_characters(fb, 2, iostat))
+        if (iostat/=0) return
       case (ST_COMMENT_CONTENTS)
         call get_characters_until_all_of(fb, '--', iostat)
+        if (iostat/=0) return
+        allocate(fx%next_token(2))
+        fx%next_token = vs_str(get_characters(fb, 2, iostat))
+        if (iostat/=0) return
       case (ST_CDATA_CONTENTS)
         call get_characters_until_all_of(fb, ']]>', iostat)
+        if (iostat/=0) return
+        allocate(fx%next_token(3))
+        fx%next_token = vs_str(get_characters(fb, 3, iostat))
+        if (iostat/=0) return
       case (ST_CHAR_IN_CONTENT)
         call get_characters_until_one_of(fb, '<&', iostat)
+        if (iostat/=0) return
       end select
-      if (iostat/=0) return
       fx%token => fb%namebuffer
       nullify(fb%namebuffer)
       return
 
-    else
-      c = get_characters(fb, 1, iostat)
+    elseif (fx%discard_whitespace) then
+      call get_characters_until_not_one_of(fb, XML_WHITESPACE, iostat)
+      print*, "IOSTAT", iostat
       if (iostat/=0) return
     endif
 
-    if (c.in.'#>[]?+*()|)'//XML_WHITESPACE) then
+    c = get_characters(fb, 1, iostat)
+      print*, "IOSTAT2", iostat
+    if (iostat/=0) return
+
+    if (c.in.'#>[]+*()|?'//XML_WHITESPACE) then
       !No further investigation needed, that's the token
       allocate(fx%token(1))
       fx%token = c
@@ -84,8 +106,8 @@ contains
       select case(c)
 
       case ('<')
-        fx%discard_whitespace = .false.
         c = get_characters(fb, 1, iostat)
+        print*,'extra char: ', c
         if (iostat/=0) return
         if (c=='?') then
           allocate(fx%token(2))
@@ -105,7 +127,7 @@ contains
         endif
 
       case ('/')
-        c = get_next_character_discarding_whitespace(fb, iostat)
+        c = get_characters(fb, 1, iostat)
         if (iostat/=0) return
         if (c=='>') then
           allocate(fx%token(2))
@@ -140,6 +162,7 @@ contains
           endif
           !expand & reinvoke parser, truncating entity list
         endif
+
       case ('&')
         c = get_characters(fb, 1, iostat)
         if (iostat/=0) then
