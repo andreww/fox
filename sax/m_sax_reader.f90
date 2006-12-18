@@ -112,9 +112,6 @@ module m_sax_reader
   public :: get_characters_until_all_of
   public :: put_characters
 
-  public :: len_namebuffer
-  public :: retrieve_namebuffer
-
   public :: dump_string
 
 contains
@@ -382,6 +379,7 @@ contains
     ! and we've hit eof - or when we've hit an IO error in reading.
 
     ! FIXME semantics of pushback buffer ...
+    ! FIXME don't let read_chars work if anything in buffer
 
     if (fb%pos > READLENGTH) then
       fb%buffer(:READLENGTH) = fb%buffer(READLENGTH+1:)
@@ -400,7 +398,7 @@ contains
     fb%nchars = fb%nchars + l_s
 
     if (iostat == io_eof) then
-      if (fb%nchars - fb%pos > 0) iostat = 0
+      if (fb%nchars - fb%pos >= 0) iostat = 0
     endif
 
   contains
@@ -647,6 +645,10 @@ contains
 
     if (ubound(fb%buffer_stack,1)>0) then
       cb => fb%buffer_stack(ubound(fb%buffer_stack,1))
+      if (cb%pos>size(cb%s)) then
+        iostat = io_eof
+        return
+      endif
     endif
 
     m_i = verify(fb, XML_WHITESPACE)
@@ -698,15 +700,17 @@ contains
 
     if (ubound(fb%buffer_stack,1)>0) then
       cb => fb%buffer_stack(ubound(fb%buffer_stack,1))
+      if (cb%pos>size(cb%s)) then
+        iostat = io_eof
+        return
+      endif
     endif
 
     allocate(buf(0))
     m_i = check_fb(fb, condition, true)
     if (m_i == 0) then
       if (ubound(fb%buffer_stack,1)>0) then
-        cb%pos = size(cb%s)+1
-        iostat = io_eof
-        return
+        m_i = size(cb%s) + 1
       endif
       do while (m_i==0)
         allocate(tempbuf(size(buf)+fb%nchars-fb%pos+1))
@@ -716,8 +720,14 @@ contains
         buf => tempbuf
         fb%pos = fb%nchars + 1
         call fill_buffer(fb, iostat)
-        if (iostat /= 0) return
-        m_i = check_fb(fb, condition, true)
+        if (iostat==io_eof) then
+          iostat = 0! just return with what we have
+          m_i = fb%nchars+1
+        elseif (iostat/=0) then
+          return
+        else
+          m_i = check_fb(fb, condition, true)
+        endif
       enddo
     endif
 
@@ -754,15 +764,17 @@ contains
 
     if (ubound(fb%buffer_stack,1)>0) then
       cb => fb%buffer_stack(ubound(fb%buffer_stack,1))
+      if (cb%pos>size(cb%s)) then
+        iostat = io_eof
+        return
+      endif
     endif
 
     allocate(buf(0))
     m_i = condition(fb, marker)
     if (m_i == 0) then
       if (ubound(fb%buffer_stack,1)>0) then
-        cb%pos = size(cb%s)+1
-        iostat = io_eof
-        return
+        m_i = size(cb%s)+1
       endif
       do while (m_i==0)
         allocate(tempbuf(size(buf)+fb%nchars-fb%pos+1))
@@ -772,8 +784,14 @@ contains
         buf => tempbuf
         fb%pos = fb%nchars + 1
         call fill_buffer(fb, iostat)
-        if (iostat /= 0) return
-        m_i = condition(fb, marker)
+        if (iostat==io_eof) then
+          iostat = 0 
+          m_i = fb%nchars + 1
+        elseif (iostat/=0) then
+          return
+        else
+          m_i = condition(fb, marker)
+        endif
       enddo
     endif
 
@@ -846,23 +864,6 @@ contains
 
   end function next_chars_are
 
-  function len_namebuffer(fb) result(n)
-    type(file_buffer_t), intent(in) :: fb
-    integer :: n
-
-    n = size(fb%namebuffer)
-  end function len_namebuffer
-
-  function retrieve_namebuffer(fb) result(string)
-    type(file_buffer_t), intent(inout) :: fb
-    character(len=size(fb%namebuffer)) :: string
-
-    if (.not.associated(fb%namebuffer)) then
-      call FoX_error("Don't be an arse, check return values please")
-    endif
-    string = str_vs(fb%namebuffer)
-    deallocate(fb%namebuffer)
-  end function retrieve_namebuffer
 
   subroutine move_cursor(fb, string)
     type(file_buffer_t), intent(inout) :: fb
@@ -997,7 +998,7 @@ contains
     i = 1
     if (ubound(fb%buffer_stack,1) > 0) then
       cb => fb%buffer_stack(ubound(fb%buffer_stack,1))
-      do while (cb%pos+i<=size(cb%s))
+      do while (cb%pos+i-1<=size(cb%s))
         if (true.eqv.check(cb%s(cb%pos+i-1))) then
           n = i
           exit
@@ -1006,7 +1007,7 @@ contains
         endif
       enddo
     else
-      do while (fb%pos+i<=fb%nchars)
+      do while (fb%pos+i-1<=fb%nchars)
         if (true.eqv.check(fb%buffer(fb%pos+i-1:fb%pos+i-1))) then
           n = i
           exit

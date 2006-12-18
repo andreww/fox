@@ -14,8 +14,7 @@ module m_sax_tokenizer
     get_next_character_discarding_whitespace, &
     get_characters_until_all_of, &
     get_characters_until_one_of, &
-    get_characters_until_condition, &
-    len_namebuffer, retrieve_namebuffer
+    get_characters_until_condition
   use m_sax_types ! everything, really
 
   implicit none
@@ -42,7 +41,8 @@ contains
       c = get_next_character_discarding_whitespace(fb, iostat)
       if (iostat/=0) return
 
-    elseif (fx%long_token) then
+    elseif (fx%state==ST_PI_CONTENTS.or.fx%state==ST_COMMENT_CONTENTS &
+      .or.fx%state==ST_CDATA_CONTENTS.or.fx%state==ST_CHAR_IN_CONTENT) then
       select case(fx%state)
       case (ST_PI_CONTENTS)
         call get_characters_until_all_of(fb, '?>', iostat)
@@ -54,8 +54,8 @@ contains
         call get_characters_until_one_of(fb, '<&', iostat)
       end select
       if (iostat/=0) return
-      allocate(fx%token(len_namebuffer(fb)))
-      fx%token = vs_str(retrieve_namebuffer(fb))
+      fx%token => fb%namebuffer
+      nullify(fb%namebuffer)
       return
 
     else
@@ -75,9 +75,10 @@ contains
         call get_characters_until_condition(fb, isXML1_1_NameChar, .false., iostat)
       endif
       if (iostat/=0) return
-      allocate(fx%token(len_namebuffer(fb)+1))
+      allocate(fx%token(size(fb%namebuffer)+1))
       fx%token(1) = c
-      fx%token(2:) = vs_str(retrieve_namebuffer(fb))
+      fx%token(2:) = fb%namebuffer
+      deallocate(fb%namebuffer)
 
     else
       select case(c)
@@ -88,13 +89,13 @@ contains
         if (iostat/=0) return
         if (c=='?') then
           allocate(fx%token(2))
-          fx%token = '<?'
+          fx%token = vs_str('<?')
         elseif (c=='!') then
           allocate(fx%token(2))
-          fx%token = '<?'
+          fx%token = vs_str('<!')
         elseif (c=='/') then
           allocate(fx%token(2))
-          fx%token = '</'
+          fx%token = vs_str('</')
         elseif (isInitialNameChar(c, fx%xml_version)) then
           call put_characters(fb, 1)
           allocate(fx%token(1))
@@ -169,15 +170,22 @@ contains
         if (fx%context==CTXT_IN_DTD) then! .and. some other condition) then
           call get_characters_until_one_of(fb, '"', iostat)
           if (iostat/=0) return
-          allocate(fx%token(len_namebuffer(fb)))
-          fx%token = vs_str(retrieve_namebuffer(fb))
+          allocate(fx%token(size(fb%namebuffer)+2))
+          fx%token(1) = '"'
+          fx%token(2:size(fx%token)-1) = fb%namebuffer
+          fx%token(size(fx%token)) = '"'
+          deallocate(fb%namebuffer)
+          ! inefficient copying ...
 
         elseif (fx%context==CTXT_IN_CONTENT) then !.an.d some other condition) then
           call get_characters_until_one_of(fb, '"', iostat)
           if (iostat/=0) return
-          allocate(fx%token(len_namebuffer(fb)))
-          fx%token = vs_str(retrieve_namebuffer(fb))
-          ! expand entities
+          allocate(fx%token(size(fb%namebuffer)+2))
+          fx%token(1) = '"'
+          fx%token(2:size(fx%token)-1) = fb%namebuffer
+          fx%token(size(fx%token)) = '"'
+          deallocate(fb%namebuffer)
+          ! inefficient copying ...
           ! normalize text
 
         else
@@ -188,15 +196,22 @@ contains
         if (fx%context==CTXT_IN_DTD) then! .and. some other condition) then
           call get_characters_until_one_of(fb, "'", iostat)
           if (iostat/=0) return
-          allocate(fx%token(len_namebuffer(fb)))
-          fx%token = vs_str(retrieve_namebuffer(fb))
+          allocate(fx%token(size(fb%namebuffer)+2))
+          fx%token(1) = "'"
+          fx%token(2:size(fx%token)-1) = fb%namebuffer
+          fx%token(size(fx%token)) = "'"
+          deallocate(fb%namebuffer)
+          ! inefficient copying ...
 
         elseif (fx%context==CTXT_IN_CONTENT) then! .and. some other condition) then
           call get_characters_until_one_of(fb, "'", iostat)
           if (iostat/=0) return
-          allocate(fx%token(len_namebuffer(fb)))
-          fx%token = vs_str(retrieve_namebuffer(fb))
-          ! expand entities
+          allocate(fx%token(size(fb%namebuffer)+2))
+          fx%token(1) = "'"
+          fx%token(2:size(fx%token)-1) = fb%namebuffer
+          fx%token(size(fx%token)) = "'"
+          deallocate(fb%namebuffer)
+          ! inefficient copying ...
           ! normalize text
 
         else

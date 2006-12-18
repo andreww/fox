@@ -38,6 +38,8 @@ module m_sax_types
   integer, parameter :: ST_COMMENT_END = 15
   integer, parameter :: ST_PI_CONTENTS = 16
   integer, parameter :: ST_CDATA_CONTENTS = 17
+  integer, parameter :: ST_IN_CLOSING_TAG = 18
+  integer, parameter :: ST_TAG_IN_CONTENT = 19
   
   type dtd_parser_t
     character(len=1), dimension(:), pointer :: dtd
@@ -64,7 +66,6 @@ module m_sax_types
 
   type sax_parser_t
     logical :: discard_whitespace = .false.
-    logical :: long_token = .false.
     integer :: context 
     integer :: state
     integer :: parse_stack = 0
@@ -75,9 +76,9 @@ module m_sax_types
     type(sax_error_t), dimension(:), pointer :: error_stack => null()
     ! Aspects of document structure
     integer :: xml_version
-    character, dimension(:), pointer :: encoding
+    character, dimension(:), pointer :: encoding => null()
     logical :: standalone
-    character, dimension(:), pointer :: root_element
+    character, dimension(:), pointer :: root_element => null()
     type(elstack_t) :: elstack
   end type sax_parser_t
 

@@ -6,12 +6,13 @@ module m_sax_parser
   use m_common_charset, only: XML1_0, XML1_1, XML1_0_INITIALNAMECHARS, &
     XML1_1_INITIALNAMECHARS, XML_INITIALENCODINGCHARS, XML_ENCODINGCHARS, &
     XML_WHITESPACE, XML1_0_NAMECHARS, XML1_1_NAMECHARS, operator(.in.)
-  use m_common_elstack, only: elstack_t, push_elstack, pop_elstack, init_elstack, destroy_elstack
+  use m_common_elstack, only: elstack_t, push_elstack, pop_elstack, &
+    init_elstack, destroy_elstack, is_empty
   use m_common_error, only: FoX_error
   use m_common_io, only: io_eof
   use m_common_namecheck, only: checkName
 
-  use m_sax_reader, only: file_buffer_t, read_char, read_chars, len_namebuffer, retrieve_namebuffer
+  use m_sax_reader, only: file_buffer_t
   use m_sax_tokenizer, only: sax_tokenize, parse_xml_declaration, add_parse_error
   use m_sax_types ! everything, really
 
@@ -29,7 +30,6 @@ contains
     
     allocate(fx%token(0))
     allocate(fx%error_stack(0:0))
-    allocate(fx%error_stack(0)%msg(0))
     
     call init_elstack(fx%elstack)
     
@@ -44,9 +44,10 @@ contains
     fx%state = ST_NULL
 
     deallocate(fx%encoding)
-    deallocate(fx%token)
+    if (associated(fx%token)) deallocate(fx%token)
+    if (associated(fx%root_element)) deallocate(fx%root_element)
     do i = 0, ubound(fx%error_stack,1)
-      deallocate(fx%error_stack(i)%msg)
+      if (associated(fx%error_stack(i)%msg)) deallocate(fx%error_stack(i)%msg)
     enddo
     deallocate(fx%error_stack)
 
@@ -59,7 +60,7 @@ contains
     end_element_handler,             &
     start_prefix_handler,            &
     end_prefix_handler,              &
-    character_handler,            &
+    characters_handler,            &
     comment_handler,                 &
     processing_instruction_handler,  &
     error_handler,                   &
@@ -72,7 +73,7 @@ contains
     optional                            :: end_element_handler
     optional                            :: start_prefix_handler
     optional                            :: end_prefix_handler
-    optional                            :: character_handler
+    optional                            :: characters_handler
     optional                            :: comment_handler
     optional                            :: processing_instruction_handler
     optional                            :: error_handler
@@ -103,9 +104,9 @@ contains
         character(len=*), intent(in) :: prefix
       end subroutine end_prefix_handler
 
-      subroutine character_handler(chunk)
+      subroutine characters_handler(chunk)
         character(len=*), intent(in) :: chunk
-      end subroutine character_handler
+      end subroutine characters_handler
 
       subroutine comment_handler(comment)
         character(len=*), intent(in) :: comment
@@ -261,6 +262,7 @@ contains
           .or. fx%context==CTXT_BEFORE_CONTENT &
           .or. fx%context==CTXT_IN_CONTENT) then
           fx%name => fx%token
+          nullify(fx%token)
           print*,'Found tag labelled: ',str_vs(fx%name)
           ! check name is name? ought to be.
           fx%discard_whitespace = .true.
@@ -293,7 +295,6 @@ contains
         print*,'ST_IN_TAG'
         if (str_vs(fx%token)=='>') then
           call push_elstack(str_vs(fx%name), fx%elstack)
-          deallocate(fx%name)
           ! FIXME and dictionary
           if (fx%context /= CTXT_IN_CONTENT) then
             if(present(start_document_handler)) &
@@ -306,6 +307,7 @@ contains
             endif
             fx%context = CTXT_IN_CONTENT
           endif
+          deallocate(fx%name)
           fx%state = ST_CHAR_IN_CONTENT
           fx%discard_whitespace = .false.
 
@@ -319,6 +321,7 @@ contains
               continue
             else
               fx%root_element => fx%name
+              nullify(fx%name)
             endif
             if (present(start_document_handler)) &
               call start_document_handler()
@@ -333,6 +336,7 @@ contains
           if (fx%context==CTXT_IN_CONTENT) then
             fx%discard_whitespace = .false.
           else
+            fx%well_formed = .true.
             if(present(end_document_handler)) call end_document_handler()
             fx%context = CTXT_AFTER_CONTENT
             fx%state = ST_MISC
@@ -363,23 +367,28 @@ contains
 
       case (ST_CHAR_IN_CONTENT)
         print*,'ST_CHAR_IN_CONTENT'
+        if (present(characters_handler)) call characters_handler(str_vs(fx%token))
+        fx%state = ST_TAG_IN_CONTENT
+
+      case (ST_TAG_IN_CONTENT)
+        print*,'ST_TAG_IN_CONTENT'
         if (str_vs(fx%token)=='<') then
           fx%state = ST_START_TAG
-          fx%discard_whitespace = .true.
         elseif (str_vs(fx%token)=='<!') then
           fx%state = ST_BANG_TAG
         elseif (str_vs(fx%token)=='<?') then
           fx%state = ST_START_PI
         elseif (str_vs(fx%token)=='</') then
+          print*, 'found a closing tag'
           fx%state = ST_CLOSING_TAG
         elseif (fx%token(1)=='&') then
           ! tell tokenizer to expand it
-          call sax_parse(fx, fb, &
-            begin_element_handler,    &
+          call sax_parse(fx, fb,             &
+            begin_element_handler,           &
             end_element_handler,             &
             start_prefix_handler,            &
             end_prefix_handler,              &
-            character_handler,            &
+            characters_handler,              &
             comment_handler,                 &
             processing_instruction_handler,  &
             error_handler,                   &
@@ -387,21 +396,42 @@ contains
             end_document_handler)
           if (iostat/=0) goto 100
         else
-          ! make an error
-          continue
+          call add_parse_error(fx, "Unexpected token found in character context")
         endif
-        ! entire token is character data
 
       case (ST_CLOSING_TAG)
         print*,'ST_CLOSING_TAG'
         if (checkName(str_vs(fx%token))) then!fx%token, fx%xml_version)) then
-          ! ok
+          fx%name => fx%token
+          nullify(fx%token)
           fx%discard_whitespace = .true.
-          fx%state = ST_IN_TAG !is it FIXME
+          fx%state = ST_IN_CLOSING_TAG
         else
-          ! make an error
-          continue
+          call add_parse_error(fx, "Unexpected token found in closing tag: expecting a Name")
         endif
+
+      case (ST_IN_CLOSING_TAG)
+        print*,'ST_IN_CLOSING_TAG'
+        if (str_vs(fx%token)=='>') then
+          if (str_vs(fx%name)/=pop_elstack(fx%elstack)) then
+            call add_parse_error(fx, "Mismatching close tag - expecting "//str_vs(fx%name))
+            return
+          endif
+          !if (present(end_element_handler)) call end_element_handler()
+          if (is_empty(fx%elstack)) then
+            !we're done
+            fx%well_formed = .true.
+            fx%state = ST_MISC
+            fx%context = CTXT_AFTER_CONTENT
+            fx%discard_whitespace = .true.
+          else
+            fx%discard_whitespace = .false.
+            fx%state = ST_CHAR_IN_CONTENT
+          endif
+        else
+          call add_parse_error(fx, "Unexpected token in closing tag - expecting Name")
+        endif
+            
 
       end select
 
@@ -417,7 +447,7 @@ contains
           return
         endif
       else ! EOF of main file
-        if (fx%well_formed) then
+        if (fx%well_formed.and.fx%state==ST_MISC) then
           continue
           ! finish
         else
