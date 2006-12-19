@@ -397,7 +397,6 @@ contains
     fb%nchars = fb%nchars + l_s
 
     if (iostat == io_eof) then
-      print*,'filling buffer', fb%nchars, fb%pos
       if (fb%nchars - fb%pos >= 0) iostat = 0
     endif
 
@@ -583,8 +582,6 @@ contains
       return
     endif
 
-    print*,'getting chars1'
-
     !If we have any characters in the pushback buffer, grab
     !them first.
 
@@ -610,7 +607,6 @@ contains
         ! This will happen if a) this is the 1st/2nd time we are called
         ! b) Last buffer access was through a get_characters_until...
         call fill_buffer(fb, iostat)
-        print*,'getting chars2', iostat
         if (iostat/=0) return
       endif
       if (n <= fb%nchars-fb%pos+1) then
@@ -705,13 +701,16 @@ contains
         iostat = io_eof
         return
       endif
+    elseif (fb%eof.and.fb%pos>fb%nchars) then
+      iostat = io_eof
+      return
     endif
 
     allocate(buf(0))
     m_i = check_fb(fb, condition, true)
     if (m_i == 0) then
       if (ubound(fb%buffer_stack,1)>0) then
-        m_i = size(cb%s) + 1
+        m_i = size(cb%s) - cb%pos + 1
       endif
       do while (m_i==0)
         allocate(tempbuf(size(buf)+fb%nchars-fb%pos+1))
@@ -723,7 +722,7 @@ contains
         call fill_buffer(fb, iostat)
         if (iostat==io_eof) then
           iostat = 0! just return with what we have
-          m_i = fb%nchars+1
+          m_i = fb%nchars - fb%pos + 1
         elseif (iostat/=0) then
           return
         else
@@ -769,13 +768,16 @@ contains
         iostat = io_eof
         return
       endif
+    elseif (fb%eof.and.fb%pos>fb%nchars) then
+      iostat = io_eof
+      return
     endif
 
     allocate(buf(0))
     m_i = condition(fb, marker)
     if (m_i == 0) then
       if (ubound(fb%buffer_stack,1)>0) then
-        m_i = size(cb%s)+1
+        m_i = size(cb%s) - cb%pos + 1
       endif
       do while (m_i==0)
         allocate(tempbuf(size(buf)+fb%nchars-fb%pos+1))
@@ -787,7 +789,7 @@ contains
         call fill_buffer(fb, iostat)
         if (iostat==io_eof) then
           iostat = 0 
-          m_i = fb%nchars + 1
+          m_i = fb%nchars - fb%pos + 1
         elseif (iostat/=0) then
           return
         else

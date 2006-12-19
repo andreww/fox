@@ -77,15 +77,13 @@ contains
 
     elseif (fx%discard_whitespace) then
       call get_characters_until_not_one_of(fb, XML_WHITESPACE, iostat)
-      print*, "IOSTAT", iostat
       if (iostat/=0) return
     endif
 
     c = get_characters(fb, 1, iostat)
-      print*, "IOSTAT2", iostat
     if (iostat/=0) return
 
-    if (c.in.'#>[]+*()|?'//XML_WHITESPACE) then
+    if (c.in.'#>[]+*()|'//XML_WHITESPACE) then
       !No further investigation needed, that's the token
       allocate(fx%token(1))
       fx%token = c
@@ -107,7 +105,6 @@ contains
 
       case ('<')
         c = get_characters(fb, 1, iostat)
-        print*,'extra char: ', c
         if (iostat/=0) return
         if (c=='?') then
           allocate(fx%token(2))
@@ -133,7 +130,19 @@ contains
           allocate(fx%token(2))
           fx%token = vs_str('/>')
         else
-          call add_parse_error(fx, "Unexpected character after/")
+          call add_parse_error(fx, "Unexpected character after /")
+        endif
+
+      case ('?')
+        c = get_characters(fb, 1, iostat)
+        if (iostat/=0) return
+        if (c=='>') then
+          allocate(fx%token(2))
+          fx%token = vs_str('?>')
+        else
+          call put_characters(fb, 1)
+          allocate(fx%token(1))
+          fx%token = '?'
         endif
 
       case ('%')
