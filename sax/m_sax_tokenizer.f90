@@ -43,34 +43,43 @@ contains
       return
     endif
 
-    if (fx%state==ST_PI_CONTENTS.or.fx%state==ST_COMMENT_CONTENTS &
-      .or.fx%state==ST_CDATA_CONTENTS.or.fx%state==ST_CHAR_IN_CONTENT) then
-      select case(fx%state)
-      case (ST_PI_CONTENTS)
-        call get_characters_until_not_one_of(fb, XML_WHITESPACE, iostat)
-        if (iostat/=0) return
-        deallocate(fb%namebuffer)
-        call get_characters_until_all_of(fb, '?>', iostat)
-        if (iostat/=0) return
-        allocate(fx%next_token(2))
-        fx%next_token = vs_str(get_characters(fb, 2, iostat))
-        if (iostat/=0) return
-      case (ST_COMMENT_CONTENTS)
-        call get_characters_until_all_of(fb, '--', iostat)
-        if (iostat/=0) return
-        allocate(fx%next_token(2))
-        fx%next_token = vs_str(get_characters(fb, 2, iostat))
-        if (iostat/=0) return
-      case (ST_CDATA_CONTENTS)
-        call get_characters_until_all_of(fb, ']]>', iostat)
-        if (iostat/=0) return
-        allocate(fx%next_token(3))
-        fx%next_token = vs_str(get_characters(fb, 3, iostat))
-        if (iostat/=0) return
-      case (ST_CHAR_IN_CONTENT)
-        call get_characters_until_one_of(fb, '<&', iostat)
-        if (iostat/=0) return
-      end select
+    if (fx%state==ST_PI_CONTENTS) then
+      call get_characters_until_not_one_of(fb, XML_WHITESPACE, iostat)
+      if (iostat/=0) return
+      deallocate(fb%namebuffer)
+      call get_characters_until_all_of(fb, '?>', iostat)
+      if (iostat/=0) return
+      allocate(fx%next_token(2))
+      fx%next_token = vs_str(get_characters(fb, 2, iostat))
+      if (iostat/=0) return
+      fx%token => fb%namebuffer
+      nullify(fb%namebuffer)
+      return
+
+    elseif (fx%state==ST_START_COMMENT) then
+      call get_characters_until_all_of(fb, '--', iostat)
+      if (iostat/=0) return
+      allocate(fx%next_token(2))
+      fx%next_token = vs_str(get_characters(fb, 2, iostat))
+      if (iostat/=0) return
+      fx%token => fb%namebuffer
+      print*,'namebuffer: ', str_vs(fb%namebuffer)
+      nullify(fb%namebuffer)
+      return
+
+    elseif (fx%state==ST_CDATA_CONTENTS) then
+      call get_characters_until_all_of(fb, ']]>', iostat)
+      if (iostat/=0) return
+      allocate(fx%next_token(3))
+      fx%next_token = vs_str(get_characters(fb, 3, iostat))
+      if (iostat/=0) return
+      fx%token => fb%namebuffer
+      nullify(fb%namebuffer)
+      return
+
+    elseif (fx%state==ST_CHAR_IN_CONTENT) then
+      call get_characters_until_one_of(fb, '<&', iostat)
+      if (iostat/=0) return
       fx%token => fb%namebuffer
       nullify(fb%namebuffer)
       return
@@ -101,6 +110,7 @@ contains
       deallocate(fb%namebuffer)
 
     else
+    print*,'six: ',c
       select case(c)
 
       case ('<')
@@ -143,6 +153,16 @@ contains
           call put_characters(fb, 1)
           allocate(fx%token(1))
           fx%token = '?'
+        endif
+
+      case ('-')
+        c = get_characters(fb, 1, iostat)
+        if (iostat/=0) return
+        if (c=='-') then
+          allocate(fx%token(2))
+          fx%token = vs_str('--')
+        else
+          call add_parse_error(fx, "Unexpected character after =") !FIXME is this right?
         endif
 
       case ('%')

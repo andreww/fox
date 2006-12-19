@@ -34,8 +34,8 @@ module m_sax_types
   integer, parameter :: ST_CLOSING_TAG = 11
   integer, parameter :: ST_IN_PI = 12
   integer, parameter :: ST_PI_END = 13
-  integer, parameter :: ST_COMMENT_CONTENTS = 14
-  integer, parameter :: ST_COMMENT_END = 15
+  integer, parameter :: ST_COMMENT_END_1 = 14
+  integer, parameter :: ST_COMMENT_END_2 = 15
   integer, parameter :: ST_PI_CONTENTS = 16
   integer, parameter :: ST_CDATA_CONTENTS = 17
   integer, parameter :: ST_IN_CLOSING_TAG = 18
@@ -61,7 +61,7 @@ module m_sax_types
   end type dtd_parser_t
 
   type sax_error_t
-    character, dimension(:), pointer :: msg
+    character, dimension(:), pointer :: msg => null()
   end type sax_error_t
 
   type sax_parser_t

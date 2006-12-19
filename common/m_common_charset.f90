@@ -21,7 +21,7 @@ module m_common_charset
   character(len=*), parameter :: upperCase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
   character(len=*), parameter :: digits = "0123456789"
   character(len=*), parameter :: NameChars = lowerCase//upperCase//digits//".-_:"
-  character(len=*), parameter :: InitialNameChars = lowerCase//upperCase//"-_:"
+  character(len=*), parameter :: InitialNameChars = lowerCase//upperCase//"_:"
 
   character(len=*), parameter :: PubIdChars = NameChars//whitespace//"'()+,/=?;!*#@$%"
   character(len=*), parameter :: validchars = &

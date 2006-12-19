@@ -46,8 +46,9 @@ contains
     deallocate(fx%encoding)
     if (associated(fx%token)) deallocate(fx%token)
     if (associated(fx%root_element)) deallocate(fx%root_element)
-    do i = 0, ubound(fx%error_stack,1)
-      if (associated(fx%error_stack(i)%msg)) deallocate(fx%error_stack(i)%msg)
+    if (associated(fx%error_stack(0)%msg)) deallocate(fx%error_stack(0)%msg)
+    do i = 1, ubound(fx%error_stack,1)
+      deallocate(fx%error_stack(i)%msg)
     enddo
     deallocate(fx%error_stack)
 
@@ -157,31 +158,34 @@ contains
         print*,'ST_MISC'
         if (str_vs(fx%token) == '<?') then
           fx%state = ST_START_PI
+          fx%discard_whitespace = .false.
         elseif (str_vs(fx%token) ==  '<!') then
           fx%state = ST_BANG_TAG
+          fx%discard_whitespace = .false.
         elseif (str_vs(fx%token) == '<') then
-          print*,'starting tag'
+          fx%discard_whitespace = .false.
           fx%state = ST_START_TAG
         else
           call add_parse_error(fx, "Unexpected token found outside content")
+          return
         endif
 
       case (ST_BANG_TAG)
         if (str_vs(fx%token) == '--') then
           fx%state = ST_START_COMMENT
-          fx%discard_whitespace = .false.
         elseif (str_vs(fx%token) == 'DOCTYPE') then
+          fx%discard_whitespace = .true.
           ! go to DTD parser
         elseif (str_vs(fx%token) == '[') then
           if (fx%context == CTXT_IN_CONTENT) then
             fx%state = ST_START_CDATA_1
           else
-            ! make an error
-            continue
+            call add_parse_error(fx, "Unexpected token after !")
+            return
           endif
         else
-          ! make an error
-          continue
+          call add_parse_error(fx, "Unexpected token after !")
+          return
         endif
 
       case (ST_START_PI)
@@ -216,7 +220,7 @@ contains
           call add_parse_error(fx, "Unexpected token found after PI target; expecting whitespace or ?>")
           return
         endif
-
+        
       case (ST_PI_CONTENTS)
         print*,'ST_PI_CONTENTS'
         if (str_vs(fx%token)=='?>') then
@@ -252,22 +256,26 @@ contains
         endif
 
       case (ST_START_COMMENT)
-        print*,'ST_PI_COMMENT'
-        ! token should be comment contents.
-        fx%state = ST_COMMENT_CONTENTS
+        print*,'ST_START_COMMENT'
+        fx%name => fx%token
+        nullify(fx%token)
+        fx%state = ST_COMMENT_END_1
 
-      case (ST_COMMENT_CONTENTS)
-        print*,'ST_COMMENT_CONTENTS'
+      case (ST_COMMENT_END_1)
+        print*,'ST_COMMENT_END_1'
         if (str_vs(fx%token)=='--') then
-          fx%state = ST_COMMENT_END
+          fx%state = ST_COMMENT_END_2
         else
-          ! make an error (internal error?)
-          continue
+          call add_parse_error(fx, "Internal error: expecting --")
+          return
         endif
 
-      case (ST_COMMENT_END)
-        print*,'ST_COMMENT_END'
+      case (ST_COMMENT_END_2)
+        print*,'ST_COMMENT_END_2'
         if (str_vs(fx%token)=='>') then
+          if (present(comment_handler)) &
+            call comment_handler(str_vs(fx%name))
+          deallocate(fx%name)
           if (fx%context==CTXT_IN_CONTENT) then
             fx%state = ST_CHAR_IN_CONTENT
           else
@@ -275,8 +283,8 @@ contains
             fx%discard_whitespace = .true.
           endif
         else
-          ! make an error
-          continue
+          call add_parse_error(fx, "Expecting > after -- in comment")
+          return
         endif
 
       case (ST_START_TAG)
@@ -474,7 +482,6 @@ contains
       else ! EOF of main file
         if (fx%well_formed.and.fx%state==ST_MISC) then
           continue
-          ! finish
         else
           call add_parse_error(fx, "File is not well-formed")
           call sax_error(fx, error_handler)
