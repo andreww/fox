@@ -40,6 +40,7 @@ module m_sax_types
   integer, parameter :: ST_CDATA_CONTENTS = 17
   integer, parameter :: ST_IN_CLOSING_TAG = 18
   integer, parameter :: ST_TAG_IN_CONTENT = 19
+  integer, parameter :: ST_CDATA_END = 20
   
   type dtd_parser_t
     character(len=1), dimension(:), pointer :: dtd

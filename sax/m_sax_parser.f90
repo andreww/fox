@@ -148,11 +148,7 @@ contains
       print*,'executing parse loop'
 
       call sax_tokenize(fx, fb, iostat)
-      if (fx%error) then
-        print*,'ERROR'
-        iostat = io_err
-      endif
-      print*,'tokenize iostat', iostat
+      if (fx%error) iostat = io_err
       if (iostat/=0) goto 100
       print*,'token: ',str_vs(fx%token)
 
@@ -312,8 +308,7 @@ contains
         if (str_vs(fx%token) == 'CDATA') then
           fx%state = ST_START_CDATA_2
         else
-          ! make an error
-          continue
+          call add_parse_error(fx, "Unexpected token found - expecting CDATA afte <![")
         endif
 
       case (ST_START_CDATA_2)
@@ -321,8 +316,26 @@ contains
         if (str_vs(fx%token) == '[') then
           fx%state = ST_CDATA_CONTENTS
         else
-          ! make an error
-          continue
+          call add_parse_error(fx, "Unexpected token found - expecting [ after CDATA")
+        endif
+
+      case (ST_CDATA_CONTENTS)
+        print*,'ST_CDATA_CONTENTS'
+        fx%name => fx%token
+        nullify(fx%token)
+        fx%state = ST_CDATA_END
+
+      case (ST_CDATA_END)
+        print*,'ST_CDATA_END'
+        if (str_vs(fx%token) == ']]>') then
+          if (size(fx%name)>0) then
+            if (present(characters_handler)) &
+              call characters_handler(str_vs(fx%name))
+          endif
+          deallocate(fx%name)
+          fx%state = ST_CHAR_IN_CONTENT
+        else
+          call add_parse_error(fx, "Internal error, unexpected token in CDATA")
         endif
 
       case (ST_IN_TAG)
@@ -361,7 +374,6 @@ contains
             endif
             if (present(start_document_handler)) &
               call start_document_handler()
-            print*,'root element is a single tag'
           endif
           ! No point in pushing & pulling onto elstack.
           !if (present(begin_element_handler)) &
@@ -417,7 +429,6 @@ contains
         elseif (str_vs(fx%token)=='<?') then
           fx%state = ST_START_PI
         elseif (str_vs(fx%token)=='</') then
-          print*, 'found a closing tag'
           fx%state = ST_CLOSING_TAG
         elseif (fx%token(1)=='&') then
           ! tell tokenizer to expand it
