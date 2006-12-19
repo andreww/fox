@@ -294,8 +294,7 @@ contains
           .or. fx%context==CTXT_IN_CONTENT) then
           fx%name => fx%token
           nullify(fx%token)
-          print*,'Found tag labelled: ',str_vs(fx%name)
-          ! check name is name? ought to be.
+          ! FIXME check name is name? ought to be.
           fx%discard_whitespace = .true.
           fx%state = ST_IN_TAG
         elseif (fx%context == CTXT_AFTER_CONTENT) then
@@ -335,10 +334,12 @@ contains
               continue
             else
               fx%root_element => fx%name
+              nullify(fx%name)
             endif
             fx%context = CTXT_IN_CONTENT
+          else
+            deallocate(fx%name)
           endif
-          deallocate(fx%name)
           fx%state = ST_CHAR_IN_CONTENT
           fx%discard_whitespace = .false.
 
@@ -451,6 +452,7 @@ contains
             return
           endif
           !if (present(end_element_handler)) call end_element_handler()
+          deallocate(fx%name)
           if (is_empty(fx%elstack)) then
             !we're done
             fx%well_formed = .true.

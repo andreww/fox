@@ -110,7 +110,6 @@ contains
       deallocate(fb%namebuffer)
 
     else
-    print*,'six: ',c
       select case(c)
 
       case ('<')
