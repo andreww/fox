@@ -3,11 +3,12 @@
 module m_sax_parser
 
   use m_common_array_str, only: str_vs, vs_str
+  use m_common_attrs, only: init_dict, destroy_dict, add_item_to_dict
   use m_common_charset, only: XML1_0, XML1_1, XML1_0_INITIALNAMECHARS, &
     XML1_1_INITIALNAMECHARS, XML_INITIALENCODINGCHARS, XML_ENCODINGCHARS, &
     XML_WHITESPACE, XML1_0_NAMECHARS, XML1_1_NAMECHARS, operator(.in.)
   use m_common_elstack, only: elstack_t, push_elstack, pop_elstack, &
-    init_elstack, destroy_elstack, is_empty
+    init_elstack, destroy_elstack, is_empty, get_top_elstack
   use m_common_error, only: FoX_error
   use m_common_io, only: io_eof, io_err
   use m_common_namecheck, only: checkName
@@ -32,6 +33,7 @@ contains
     allocate(fx%error_stack(0:0))
     
     call init_elstack(fx%elstack)
+    call init_dict(fx%attributes)
     
   end subroutine sax_parser_init
 
@@ -53,6 +55,7 @@ contains
     deallocate(fx%error_stack)
 
     call destroy_elstack(fx%elstack)
+    call destroy_dict(fX%attributes)
 
   end subroutine sax_parser_destroy
 
@@ -140,7 +143,7 @@ contains
 
       fx%context = CTXT_BEFORE_DTD
       fx%state = ST_MISC
-      fx%discard_whitespace = .true.
+      fx%whitespace = WS_DISCARD
     endif
     print*,'XML declaration parsed.', fb%input_pos
 
@@ -158,13 +161,13 @@ contains
         print*,'ST_MISC'
         if (str_vs(fx%token) == '<?') then
           fx%state = ST_START_PI
-          fx%discard_whitespace = .false.
+          fx%whitespace = WS_FORBIDDEN
         elseif (str_vs(fx%token) ==  '<!') then
           fx%state = ST_BANG_TAG
-          fx%discard_whitespace = .false.
+          fx%whitespace = WS_FORBIDDEN
         elseif (str_vs(fx%token) == '<') then
-          fx%discard_whitespace = .false.
           fx%state = ST_START_TAG
+          fx%whitespace = WS_FORBIDDEN
         else
           call add_parse_error(fx, "Unexpected token found outside content")
           return
@@ -174,7 +177,7 @@ contains
         if (str_vs(fx%token) == '--') then
           fx%state = ST_START_COMMENT
         elseif (str_vs(fx%token) == 'DOCTYPE') then
-          fx%discard_whitespace = .true.
+          fx%whitespace = WS_MANDATORY
           ! go to DTD parser FIXME
         elseif (str_vs(fx%token) == '[') then
           if (fx%context == CTXT_IN_CONTENT) then
@@ -192,8 +195,8 @@ contains
         print*,'ST_START_PI'
         !token should be an XML Name FIXME
         if (checkName(str_vs(fx%token))) then
-          fx%discard_whitespace = .false.
-          fx%state = ST_IN_PI
+          fx%whitespace = WS_MANDATORY
+          fx%state = ST_PI_CONTENTS
           fx%name => fx%token
           nullify(fx%token)
         else
@@ -201,26 +204,6 @@ contains
           return
         endif
 
-      case (ST_IN_PI)
-        print*,'ST_IN_PI'
-        if (str_vs(fx%token)=='?>') then
-          ! No data for this PI
-          if (present(processing_instruction_handler)) &
-            call processing_instruction_handler(str_vs(fx%name), '')
-          deallocate(fx%name)
-          if (fx%context==CTXT_IN_CONTENT) then
-            fx%state = ST_CHAR_IN_CONTENT
-          else
-            fx%state = ST_MISC
-          endif
-        elseif (str_vs(fx%token).in.XML_WHITESPACE) then
-          fx%discard_whitespace = .true.
-          fx%state = ST_PI_CONTENTS
-        else
-          call add_parse_error(fx, "Unexpected token found after PI target; expecting whitespace or ?>")
-          return
-        endif
-        
       case (ST_PI_CONTENTS)
         print*,'ST_PI_CONTENTS'
         if (str_vs(fx%token)=='?>') then
@@ -245,10 +228,10 @@ contains
         if (str_vs(fx%token)=='?>') then
           if (fx%context==CTXT_IN_CONTENT) then
             fx%state = ST_CHAR_IN_CONTENT
-            fx%discard_whitespace = .false.
+            fx%whitespace = WS_PRESERVE
           else
             fx%state = ST_MISC
-            fx%discard_whitespace = .true.
+            fx%whitespace = WS_DISCARD
           endif
         else
           call add_parse_error(fx, "Internal error: unexpected token at end of PI, expecting ?>")
@@ -280,7 +263,7 @@ contains
             fx%state = ST_CHAR_IN_CONTENT
           else
             fx%state = ST_MISC
-            fx%discard_whitespace = .true.
+            fx%whitespace = WS_DISCARD
           endif
         else
           call add_parse_error(fx, "Expecting > after -- in comment")
@@ -295,7 +278,7 @@ contains
           fx%name => fx%token
           nullify(fx%token)
           ! FIXME check name is name? ought to be.
-          fx%discard_whitespace = .true.
+          fx%whitespace = WS_MANDATORY
           fx%state = ST_IN_TAG
         elseif (fx%context == CTXT_AFTER_CONTENT) then
           call add_parse_error(fx, "Cannot open second root element")
@@ -358,7 +341,6 @@ contains
             deallocate(fx%name)
           endif
           fx%state = ST_CHAR_IN_CONTENT
-          fx%discard_whitespace = .false.
 
         elseif (str_vs(fx%token)=='/>') then
           if (fx%context==CTXT_IN_CONTENT) then
@@ -382,16 +364,20 @@ contains
           !  call end_element_handler(str_vs(fx%name))
           deallocate(fx%name)
           if (fx%context==CTXT_IN_CONTENT) then
-            fx%discard_whitespace = .false.
+            fx%whitespace = WS_PRESERVE
           else
             fx%well_formed = .true.
             if(present(end_document_handler)) call end_document_handler()
             fx%context = CTXT_AFTER_CONTENT
             fx%state = ST_MISC
-            fx%discard_whitespace = .true.
           endif
         else
-          call add_parse_error(fx, "Unexpected token in tag")
+          ! FIXME It should be an XML name for the attribute
+          ! pick up that it is a name:
+          fx%name => fx%token
+          nullify(fx%token)
+          fx%state = ST_ATT_NAME
+          fx%whitespace = WS_DISCARD
         endif
 
       case (ST_ATT_NAME)
@@ -399,19 +385,16 @@ contains
         if (str_vs(fx%token)=='=') then
           fx%state = ST_ATT_EQUALS
         else
-          ! make an error
-          continue
+          call add_parse_error(fx, "Unexpected token in tag - expected =")
         endif
 
       case (ST_ATT_EQUALS)
         print*,'ST_ATT_EQUALS'
-        if (fx%token(1)=='"'.or.fx%token(1)=="'") then
-          ! token (2:end-1) is att value
-          fx%state = ST_IN_TAG
-        else
-          ! make an error
-          continue
-        endif
+        ! token is pre-processed attribute value.
+        ! fx%name still contains attribute name
+        call add_item_to_dict(fx%attributes, str_vs(fx%name), &
+          str_vs(fx%token))
+        fx%state = ST_IN_TAG
 
       case (ST_CHAR_IN_CONTENT)
         print*,'ST_CHAR_IN_CONTENT'
@@ -453,7 +436,7 @@ contains
         if (checkName(str_vs(fx%token))) then!fx%token, fx%xml_version)) then
           fx%name => fx%token
           nullify(fx%token)
-          fx%discard_whitespace = .true.
+          fx%whitespace = WS_DISCARD
           fx%state = ST_IN_CLOSING_TAG
         else
           call add_parse_error(fx, "Unexpected token found in closing tag: expecting a Name")
@@ -462,6 +445,7 @@ contains
       case (ST_IN_CLOSING_TAG)
         print*,'ST_IN_CLOSING_TAG'
         if (str_vs(fx%token)=='>') then
+!          print*, 'TOP: ', str_vs(get_top_elstack(fx%elstack))
           if (str_vs(fx%name)/=pop_elstack(fx%elstack)) then
             call add_parse_error(fx, "Mismatching close tag - expecting "//str_vs(fx%name))
             return
@@ -473,9 +457,9 @@ contains
             fx%well_formed = .true.
             fx%state = ST_MISC
             fx%context = CTXT_AFTER_CONTENT
-            fx%discard_whitespace = .true.
+            fx%whitespace = WS_DISCARD
           else
-            fx%discard_whitespace = .false.
+            fx%whitespace = WS_PRESERVE
             fx%state = ST_CHAR_IN_CONTENT
           endif
         else

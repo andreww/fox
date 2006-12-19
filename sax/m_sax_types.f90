@@ -1,5 +1,6 @@
 module m_sax_types
 
+  use m_common_attrs, only: dictionary_t
   use m_common_elstack, only: elstack_t
   use m_common_entities, only: entity_list
 
@@ -32,7 +33,6 @@ module m_sax_types
   integer, parameter :: ST_ATT_EQUALS = 9
   integer, parameter :: ST_CHAR_IN_CONTENT = 10
   integer, parameter :: ST_CLOSING_TAG = 11
-  integer, parameter :: ST_IN_PI = 12
   integer, parameter :: ST_PI_END = 13
   integer, parameter :: ST_COMMENT_END_1 = 14
   integer, parameter :: ST_COMMENT_END_2 = 15
@@ -42,6 +42,14 @@ module m_sax_types
   integer, parameter :: ST_TAG_IN_CONTENT = 19
   integer, parameter :: ST_CDATA_END = 20
   
+  ! Whitespace
+  
+  integer, parameter :: WS_FORBIDDEN = 0
+  integer, parameter :: WS_PRESERVE = 1
+  integer, parameter :: WS_MANDATORY = 2
+  integer, parameter :: WS_DISCARD = 3
+  
+
   type dtd_parser_t
     character(len=1), dimension(:), pointer :: dtd
     character(len=1), dimension(:), pointer :: token
@@ -66,7 +74,7 @@ module m_sax_types
   end type sax_error_t
 
   type sax_parser_t
-    logical :: discard_whitespace = .false.
+    integer :: whitespace
     integer :: context 
     integer :: state
     integer :: parse_stack = 0
@@ -83,6 +91,7 @@ module m_sax_types
     logical :: standalone
     character, dimension(:), pointer :: root_element => null()
     type(elstack_t) :: elstack
+    type(dictionary_t) :: attributes
   end type sax_parser_t
 
 

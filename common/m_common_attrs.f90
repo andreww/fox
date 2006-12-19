@@ -35,8 +35,8 @@ module m_common_attrs
   public :: add_item_to_dict
   public :: destroy_dict
   !these last two only because SAX needs them
-  public :: add_key_to_dict
-  public :: add_value_to_dict
+  !public :: add_key_to_dict
+  !public :: add_value_to_dict
 
   public :: parse_string_to_dict
 

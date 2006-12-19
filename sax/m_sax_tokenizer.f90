@@ -14,7 +14,8 @@ module m_sax_tokenizer
     get_characters_until_all_of, &
     get_characters_until_one_of, &
     get_characters_until_not_one_of, &
-    get_characters_until_condition
+    get_characters_until_condition, &
+    next_chars_are
   use m_sax_types ! everything, really
 
   implicit none
@@ -33,7 +34,7 @@ contains
 
     character :: c
 
-    print*,'tokenizing... discard whitespace?', fx%discard_whitespace
+    print*,'tokenizing... discard whitespace?', fx%whitespace
 
     if (associated(fx%token)) deallocate(fx%token)
     if (associated(fx%next_token)) then
@@ -46,6 +47,18 @@ contains
     if (fx%state==ST_PI_CONTENTS) then
       call get_characters_until_not_one_of(fb, XML_WHITESPACE, iostat)
       if (iostat/=0) return
+      if (size(fb%namebuffer)==0) then
+        !token had better be '?>'
+        deallocate(fb%namebuffer)
+        allocate(fx%token(2))
+        fx%token = get_characters(fb, 2, iostat)
+        if (iostat/=0) return
+        if (str_vs(fx%token)/='?>') then
+          call add_parse_error(fx, "Unexpected token in PI")
+        endif
+        return
+      endif
+      ! Otherwise token is all chars after whitespace until '?>'
       deallocate(fb%namebuffer)
       call get_characters_until_all_of(fb, '?>', iostat)
       if (iostat/=0) return
@@ -83,15 +96,81 @@ contains
       nullify(fb%namebuffer)
       return
 
-    elseif (fx%discard_whitespace) then
+    elseif (fx%state==ST_IN_TAG) then
       call get_characters_until_not_one_of(fb, XML_WHITESPACE, iostat)
       if (iostat/=0) return
+      if (size(fb%namebuffer)==0) then
+        deallocate(fb%namebuffer)
+        ! This had better be the end of the tag.
+        c = get_characters(fb, 1, iostat)
+        if (iostat/=0) return
+        if (c=='>') then
+          allocate(fx%token(1))
+          fx%token = vs_str('>')
+        elseif (c=='/') then
+          c = get_characters(fb, 1, iostat)
+          if (iostat/=0) return
+          if (c=='>') then
+            allocate(fx%token(2))
+            fx%token = vs_str('/>')
+          endif
+        else
+          call add_parse_error(fx, "Unexpected character in tag.")
+          return
+        endif
+      else
+        deallocate(fb%namebuffer)
+        ! This had better be a name ...
+        if (fx%xml_version==XML1_0) then
+          call get_characters_until_condition(fb, isXML1_0_NameChar, .false., iostat)
+        elseif (fx%xml_version==XML1_1) then
+          call get_characters_until_condition(fb, isXML1_1_NameChar, .false., iostat)
+        endif
+        fx%token => fb%namebuffer
+        nullify(fb%namebuffer)
+        if (size(fx%token)==0) then
+          call add_parse_error(fx, "Unexpected character in tag")
+        endif
+      endif
+      return
+      
+    elseif (fx%state==ST_ATT_EQUALS) then
+      call get_characters_until_not_one_of(fb, XML_WHITESPACE, iostat)
+      if (iostat/=0) return
+      c = get_characters(fb, 1, iostat)
+      if (iostat/=0) return
+      print*,'c: ', c
+      if (c/='"'.and.c/="'") then
+        call add_parse_error(fx, "Expecting "" or '")
+        return
+      endif
+      call get_characters_until_all_of(fb, c, iostat)
+      if (iostat/=0) return
+      fx%token => normalize_text(fx, fb%namebuffer)
+      ! Next character is either quotechar or eof.
+      c = get_characters(fb, 1, iostat)
+      ! Either way, we return
+      return
+      
+    endif
+
+    if (fx%whitespace==WS_DISCARD) then
+      call get_characters_until_not_one_of(fb, XML_WHITESPACE, iostat)
+      if (iostat/=0) return
+
+    elseif (fx%whitespace==WS_MANDATORY) then
+      call get_characters_until_not_one_of(fb, XML_WHITESPACE, iostat)
+      if (iostat/=0) return
+      if (size(fb%namebuffer)==0) then
+        call add_parse_error(fx, 'Tokenizer expected whitespace')
+        return
+      endif
     endif
 
     c = get_characters(fb, 1, iostat)
     if (iostat/=0) return
 
-    if (c.in.'#>[]+*()|'//XML_WHITESPACE) then
+    if (c.in.'#>[]+*()|='//XML_WHITESPACE) then
       !No further investigation needed, that's the token
       allocate(fx%token(1))
       fx%token = c
@@ -265,7 +344,9 @@ contains
           ! normalize text
 
         else
-          ! make an error
+
+          call add_parse_error(fx, "Unrecognized token.")
+          return
         endif
 
       case default 
@@ -530,7 +611,46 @@ contains
   end subroutine parse_xml_declaration
 
 
+  function normalize_text(fx, s_in) result(s_out)
+    type(sax_parser_t), intent(inout) :: fx
+    character, dimension(:), intent(in) :: s_in
+    character, dimension(:), pointer :: s_out
 
+    character, dimension(:), pointer :: s_temp
+    integer :: i, i2
+    logical :: w
+
+    ! Condense all whitespace
+    ! Expand all &
+    ! Complain about < and &
+
+    allocate(s_temp(size(s_in))) ! in the first instance
+
+    i2 = 0
+    w = .false.
+    do i = 1, size(s_in)
+      if (w) then
+        if (s_in(i).in.XML_WHITESPACE) cycle
+      endif
+      if (s_in(i).in.XML_WHITESPACE) then
+        w = .true.
+      elseif (s_in(i)=='<') then
+        call add_parse_error(fx, "Illegal character found in attribute.")
+        return
+      elseif (s_in(i)=='&') then
+        ! do some magic expansion or error
+        continue
+      endif
+      i2 = i2 + 1
+      s_temp(i2) = s_in(i)
+    enddo
+    
+    allocate(s_out(i2))
+    s_out = s_temp(:i2)
+    deallocate(s_temp)
+
+  end function normalize_text
+    
   subroutine add_parse_error(fx, msg)
     type(sax_parser_t), intent(inout) :: fx
     character(len=*), intent(in) :: msg

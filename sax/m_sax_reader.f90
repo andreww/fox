@@ -111,6 +111,8 @@ module m_sax_reader
   public :: get_characters_until_all_of
   public :: put_characters
 
+  public :: next_chars_are
+
   public :: dump_string
 
 contains
