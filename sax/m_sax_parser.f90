@@ -9,7 +9,7 @@ module m_sax_parser
   use m_common_elstack, only: elstack_t, push_elstack, pop_elstack, &
     init_elstack, destroy_elstack, is_empty
   use m_common_error, only: FoX_error
-  use m_common_io, only: io_eof
+  use m_common_io, only: io_eof, io_err
   use m_common_namecheck, only: checkName
 
   use m_sax_reader, only: file_buffer_t
@@ -148,6 +148,10 @@ contains
       print*,'executing parse loop'
 
       call sax_tokenize(fx, fb, iostat)
+      if (fx%error) then
+        print*,'ERROR'
+        iostat = io_err
+      endif
       print*,'tokenize iostat', iostat
       if (iostat/=0) goto 100
       print*,'token: ',str_vs(fx%token)
@@ -175,7 +179,7 @@ contains
           fx%state = ST_START_COMMENT
         elseif (str_vs(fx%token) == 'DOCTYPE') then
           fx%discard_whitespace = .true.
-          ! go to DTD parser
+          ! go to DTD parser FIXME
         elseif (str_vs(fx%token) == '[') then
           if (fx%context == CTXT_IN_CONTENT) then
             fx%state = ST_START_CDATA_1
@@ -190,7 +194,7 @@ contains
 
       case (ST_START_PI)
         print*,'ST_START_PI'
-        !token should be an XML Name
+        !token should be an XML Name FIXME
         if (checkName(str_vs(fx%token))) then
           fx%discard_whitespace = .false.
           fx%state = ST_IN_PI
@@ -488,6 +492,13 @@ contains
           call add_parse_error(fx, "File is not well-formed")
           call sax_error(fx, error_handler)
         endif
+      endif
+    elseif (iostat==io_err) then ! we generated the error
+      if (fx%parse_stack>0) then
+        ! append to error all the way up the stack
+        return ! go back up stack
+      else
+        call sax_error(fx, error_handler)
       endif
     else ! Hard error - stop immediately
       if (fx%parse_stack>0) then !we are parsing an entity

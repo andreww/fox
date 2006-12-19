@@ -63,7 +63,6 @@ contains
       fx%next_token = vs_str(get_characters(fb, 2, iostat))
       if (iostat/=0) return
       fx%token => fb%namebuffer
-      print*,'namebuffer: ', str_vs(fb%namebuffer)
       nullify(fb%namebuffer)
       return
 
@@ -540,15 +539,24 @@ contains
     integer :: i, n
 
     n = fx%parse_stack
-    allocate(tempStack(0:n))
 
-    do i = 0, n - 1
-      tempStack(i)%msg => fx%error_stack(i)%msg
-    enddo
-    allocate(tempStack(n)%msg(len(msg)))
-    tempStack(n)%msg = vs_str(msg)
-    deallocate(fx%error_stack)
-    fx%error_stack => tempStack
+    if (.not.fx%error) then
+      fx%error = .true.
+      allocate(fx%error_stack(0)%msg(len(msg)))
+      fx%error_stack(0)%msg = vs_str(msg)
+      print*,'adding parse error: ', fx%error, msg
+    else
+      allocate(tempStack(0:n))
+      
+      do i = 0, n - 1
+        tempStack(i)%msg => fx%error_stack(i)%msg
+      enddo
+      allocate(tempStack(n)%msg(len(msg)))
+      tempStack(n)%msg = vs_str(msg)
+      deallocate(fx%error_stack)
+      fx%error_stack => tempStack
+    endif
+
   end subroutine add_parse_error
 
 end module m_sax_tokenizer

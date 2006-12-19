@@ -7,10 +7,13 @@ module m_common_io
 
   ! Basic  I/O tools
 
-  integer, save :: io_eor, io_eof
+  integer, save :: io_eor
+  integer, save :: io_eof
+  integer, save :: io_err
 
   public :: io_eor
   public :: io_eof
+  public :: io_err
   public :: get_unit
   public :: setup_io
 
@@ -77,6 +80,13 @@ contains
     enddo
 
     close(unit=lun,status="delete")
+    
+    ! Invent an io_err ...
+    io_err = 1
+    do
+      if (io_err/=0.and.io_err/=io_eor.and.io_err/=io_eof) exit
+      io_err = io_err + 1
+    end do
 
   end subroutine find_eor_eof
 
