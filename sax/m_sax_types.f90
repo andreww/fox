@@ -83,6 +83,7 @@ module m_sax_types
     character, dimension(:), pointer :: token => null()
     character, dimension(:), pointer :: next_token => null()
     character, dimension(:), pointer :: name => null()
+    character, dimension(:), pointer :: attname => null()
     logical :: error = .false.
     type(sax_error_t), dimension(:), pointer :: error_stack => null()
     ! Aspects of document structure

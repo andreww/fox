@@ -374,7 +374,7 @@ contains
         else
           ! FIXME It should be an XML name for the attribute
           ! pick up that it is a name:
-          fx%name => fx%token
+          fx%attname => fx%token
           nullify(fx%token)
           fx%state = ST_ATT_NAME
           fx%whitespace = WS_DISCARD
@@ -392,8 +392,9 @@ contains
         print*,'ST_ATT_EQUALS'
         ! token is pre-processed attribute value.
         ! fx%name still contains attribute name
-        call add_item_to_dict(fx%attributes, str_vs(fx%name), &
+        call add_item_to_dict(fx%attributes, str_vs(fx%attname), &
           str_vs(fx%token))
+        deallocate(fx%attname)
         fx%state = ST_IN_TAG
 
       case (ST_CHAR_IN_CONTENT)
@@ -445,7 +446,6 @@ contains
       case (ST_IN_CLOSING_TAG)
         print*,'ST_IN_CLOSING_TAG'
         if (str_vs(fx%token)=='>') then
-!          print*, 'TOP: ', str_vs(get_top_elstack(fx%elstack))
           if (str_vs(fx%name)/=pop_elstack(fx%elstack)) then
             call add_parse_error(fx, "Mismatching close tag - expecting "//str_vs(fx%name))
             return

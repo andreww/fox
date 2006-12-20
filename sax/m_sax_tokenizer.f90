@@ -139,7 +139,6 @@ contains
       if (iostat/=0) return
       c = get_characters(fb, 1, iostat)
       if (iostat/=0) return
-      print*,'c: ', c
       if (c/='"'.and.c/="'") then
         call add_parse_error(fx, "Expecting "" or '")
         return
