@@ -16,7 +16,7 @@ module m_sax_parser
     checkNamespaces, checkEndNamespaces, &
     initNamespaceDictionary, destroyNamespaceDictionary
   use m_common_notations, only: init_notation_list, destroy_notation_list, &
-    add_notation
+    add_notation, notation_exists
 
   use m_sax_reader, only: file_buffer_t
   use m_sax_tokenizer, only: sax_tokenize, parse_xml_declaration, add_parse_error
@@ -679,6 +679,10 @@ contains
         
       case (ST_DTD_NOTATION_PUBLIC_2)
         if (str_vs(fx%token)=='>') then
+          if (notation_exists(fx%nlist, str_vs(fx%name))) then
+            call add_parse_error(fx, "Two notations share the same Name")
+            exit
+          endif
           call add_notation(fx%nlist, str_vs(fx%name), &
             publicId=str_vs(fx%publicId))
           if (present(notationDecl_handler)) &
@@ -696,6 +700,10 @@ contains
         
       case (ST_DTD_NOTATION_END)
         if (str_vs(fx%token)=='>') then
+          if (notation_exists(fx%nlist, str_vs(fx%name))) then
+            call add_parse_error(fx, "Two notations share the same Name")
+            exit
+          endif
           if (associated(fx%publicId)) then
             call add_notation(fx%nlist, str_vs(fx%name), &
               publicId=str_vs(fx%publicId), systemId=str_vs(fx%systemId))

@@ -182,10 +182,10 @@ contains
           if (iostat/=0) return
           if (c=='?') then
             allocate(fx%token(2))
-            fx%token = '<?'
+            fx%token = vs_str('<?')
           elseif (c=='!') then
             allocate(fx%token(2))
-            fx%token = '<!'
+            fx%token = vs_str('<!')
           endif
         elseif (c=='"'.or.c=='"') then ! grab until next quote
           call get_characters_until_all_of(fb, c, iostat)
