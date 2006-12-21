@@ -15,7 +15,8 @@ module m_sax_parser
   use m_common_namespaces, only: getnamespaceURI, invalidNS, &
     checkNamespaces, checkEndNamespaces, &
     initNamespaceDictionary, destroyNamespaceDictionary
-  use m_common_notations, only: add_notation
+  use m_common_notations, only: init_notation_list, destroy_notation_list, &
+    add_notation
 
   use m_sax_reader, only: file_buffer_t
   use m_sax_tokenizer, only: sax_tokenize, parse_xml_declaration, add_parse_error
@@ -38,6 +39,7 @@ contains
     
     call init_elstack(fx%elstack)
     call initNamespaceDictionary(fx%nsdict)
+    call init_notation_list(fx%nlist)
     
   end subroutine sax_parser_init
 
@@ -62,6 +64,7 @@ contains
     call destroy_elstack(fx%elstack)
     call destroy_dict(fx%attributes)
     call destroyNamespaceDictionary(fx%nsdict)
+    call destroy_notation_list(fx%nlist)
 
     if (associated(fx%token)) deallocate(fx%token)
     if (associated(fx%next_token)) deallocate(fx%next_token)
