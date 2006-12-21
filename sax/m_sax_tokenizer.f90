@@ -186,11 +186,21 @@ contains
             allocate(fx%token(2))
             fx%token = '<!'
           endif
-        elseif (c=='"'.or.c=='"') then
-          ! it's system/public ID or replacement text
-          ! grab until next quote
+        elseif (c=='"'.or.c=='"') then ! grab until next quote
+          call get_characters_until_all_of(fb, c, iostat)
+          if (iostat/=0) return
+          fx%token => fb%namebuffer
+          nullify(fb%namebuffer)
+          c = get_characters(fb, 1, iostat)
+          if (iostat/=0) return
         else !it must be a NAME for some reason
-          ! get until not a name ...
+          if (fx%xml_version==XML1_0) then
+            call get_characters_until_condition(fb, isXML1_0_NameChar, .false., iostat)
+          elseif (fx%xml_version==XML1_1) then
+            call get_characters_until_condition(fb, isXML1_1_NameChar, .false., iostat)
+          endif
+          fx%token => fb%namebuffer
+          nullify(fb%namebuffer)
         endif
       elseif (fx%whitespace==WS_FORBIDDEN) then
         ! it must be ATTLIST, ELEMENT, ENTITY, NOTATION
