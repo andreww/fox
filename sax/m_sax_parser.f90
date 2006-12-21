@@ -231,6 +231,7 @@ contains
           fx%state = ST_START_COMMENT
         elseif (fx%context==CTXT_BEFORE_DTD) then
           if (str_vs(fx%token)=='DOCTYPE') then
+            fx%whitespace = WS_MANDATORY
             fx%context = CTXT_IN_DTD
             fx%state = ST_IN_DTD
           endif

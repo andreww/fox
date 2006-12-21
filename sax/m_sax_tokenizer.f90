@@ -155,7 +155,6 @@ contains
     elseif (fx%context==CTXT_IN_DTD) then
       if (fx%whitespace==WS_MANDATORY) then
         !We are still allowed a '>'
-        print*,'ARSE';stop
         call get_characters_until_not_one_of(fb, XML_WHITESPACE, iostat)
         if (iostat/=0) return
         if (size(fb%namebuffer)==0) then
