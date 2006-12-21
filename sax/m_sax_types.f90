@@ -3,6 +3,7 @@ module m_sax_types
   use m_common_attrs, only: dictionary_t
   use m_common_elstack, only: elstack_t
   use m_common_entities, only: entity_list
+  use m_common_namespaces, only: namespacedictionary
 
   use m_sax_reader, only: file_buffer_t
 
@@ -93,6 +94,7 @@ module m_sax_types
     character, dimension(:), pointer :: root_element => null()
     type(elstack_t) :: elstack
     type(dictionary_t) :: attributes
+    type(namespacedictionary) :: nsdict
   end type sax_parser_t
 
 

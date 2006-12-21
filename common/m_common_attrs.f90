@@ -13,17 +13,17 @@ module m_common_attrs
   real, parameter :: DICT_LEN_MULT = 1.5
 
   type dict_item
-     character(len=1), pointer, dimension(:) :: nsURI
-     character(len=1), pointer, dimension(:) :: localName
-     character(len=1), pointer, dimension(:) :: prefix
-     character(len=1), pointer, dimension(:) :: key
-     character(len=1), pointer, dimension(:) :: value
+     character(len=1), pointer, dimension(:) :: nsURI => null()
+     character(len=1), pointer, dimension(:) :: localName => null()
+     character(len=1), pointer, dimension(:) :: prefix => null()
+     character(len=1), pointer, dimension(:) :: key => null()
+     character(len=1), pointer, dimension(:) :: value => null()
   end type dict_item
   
   type dictionary_t
      private
      integer                                :: number_of_items ! = 0
-     type(dict_item), dimension(:), pointer :: items
+     type(dict_item), dimension(:), pointer :: items => null()
   end type dictionary_t
 
   public :: dictionary_t
@@ -34,11 +34,6 @@ module m_common_attrs
   public :: reset_dict
   public :: add_item_to_dict
   public :: destroy_dict
-  !these last two only because SAX needs them
-  !public :: add_key_to_dict
-  !public :: add_value_to_dict
-
-  public :: parse_string_to_dict
 
   ! Query and extraction procedures
   
@@ -90,7 +85,6 @@ module m_common_attrs
   
 contains
 
-  !------------------------------------------------------
   function number_of_entries(dict) result(n)
     type(dictionary_t), intent(in)   :: dict
     integer                          :: n
@@ -99,7 +93,7 @@ contains
     
   end function number_of_entries
   
-  !------------------------------------------------------
+
   function has_key(dict,key) result(found)
     type(dictionary_t), intent(in)   :: dict
     character(len=*), intent(in)     :: key
@@ -130,7 +124,7 @@ contains
     enddo
   end function get_key_index
   
-  !------------------------------------------------------
+
   function get_value_by_key(dict,key,status) result(value)
     type(dictionary_t), intent(in)       :: dict
     character(len=*), intent(in)              :: key
@@ -239,11 +233,11 @@ contains
     integer  :: n
 
     if (has_key(dict, key)) then
-       call Fox_Error('Duplicate attribute')
+       call FoX_Error('Duplicate attribute')
     endif
 
     if (present(prefix) .eqv. .not.present(nsURI)) &
-       call Fox_Error('Namespace improperly specified')
+       call FoX_Error('Namespace improperly specified')
     
     n = dict%number_of_items
     if (n == size(dict%items)) then
@@ -258,6 +252,7 @@ contains
     n = n + 1
     allocate(dict%items(n)%value(len(value)))
     dict%items(n)%value = vs_str(value)
+
     if (present(prefix)) then
       allocate(dict%items(n)%key(len(prefix)+1+len(key)))
       dict%items(n)%key = vs_str(prefix//":"//key)
@@ -275,51 +270,11 @@ contains
       allocate(dict%items(n)%prefix(0))
       allocate(dict%items(n)%nsURI(0))
     endif
-    
+
     dict%number_of_items = n
 
   end subroutine add_item_to_dict
   
-  subroutine add_key_to_dict(dict, key)
-    type(dictionary_t), intent(inout) :: dict
-    character(len=*), intent(in)      :: key
-
-    integer  :: n
-
-    if (has_key(dict, key)) then
-       call FoX_error('Duplicate attribute')
-    endif
-
-    n = dict%number_of_items
-    if (n == size(dict%items)) then
-       call resize_dict(dict)
-    endif
-
-    !if (.not.check_Name(key)) then
-    !  call wxml_fatal('attribute name is invalid')
-    !endif
-
-    n = n + 1
-    !call pxfflush(6)
-    allocate(dict%items(n)%key(len(key)))
-    dict%items(n)%key = vs_str(key)
-    dict%number_of_items = n
-  end subroutine add_key_to_dict
-
-  subroutine add_value_to_dict(dict, value)
-    type(dictionary_t), intent(inout) :: dict
-    character(len=*), intent(in)      :: value
-
-    integer  :: n
-    n = dict%number_of_items
-
-    allocate(dict%items(n)%value(len(value)))
-    dict%items(n)%value = vs_str(value)
-    allocate(dict%items(n)%prefix(0))
-    allocate(dict%items(n)%nsURI(0))
-    allocate(dict%items(n)%localName(0))
-  end subroutine add_value_to_dict
-
   subroutine set_nsURI_by_index(dict, i, nsURI)
     type(dictionary_t), intent(inout) :: dict
     integer, intent(in) :: i
@@ -431,6 +386,7 @@ contains
     do i = 1, DICT_INIT_LEN
        nullify(dict%items(i)%key)
        nullify(dict%items(i)%value)
+       nullify(dict%items(i)%prefix)
        nullify(dict%items(i)%nsURI)
        nullify(dict%items(i)%localName)
     enddo
@@ -468,17 +424,20 @@ contains
   subroutine destroy_dict(dict)
     type(dictionary_t), intent(inout) :: dict
     integer :: i
+
     do i = 1, dict%number_of_items
-       deallocate(dict%items(i)%key)
-       deallocate(dict%items(i)%value)
-       deallocate(dict%items(i)%nsURI)
-       deallocate(dict%items(i)%prefix)
-       deallocate(dict%items(i)%localName)
+      deallocate(dict%items(i)%key)
+      deallocate(dict%items(i)%value)
+      deallocate(dict%items(i)%nsURI)
+      deallocate(dict%items(i)%prefix)
+      deallocate(dict%items(i)%localName)
     enddo
-    deallocate(dict%items)
+    if (associated(dict%items)) deallocate(dict%items)
+
+    dict%number_of_items = 0
   end subroutine destroy_dict
   
-  !------------------------------------------------------
+
   subroutine reset_dict(dict)
     type(dictionary_t), intent(inout)   :: dict
     
@@ -486,8 +445,8 @@ contains
     do i = 1, dict%number_of_items
        deallocate(dict%items(i)%key)
        deallocate(dict%items(i)%value)
-       deallocate(dict%items(i)%nsURI)
        deallocate(dict%items(i)%prefix)
+       deallocate(dict%items(i)%nsURI)
        deallocate(dict%items(i)%localName)
     enddo
     
@@ -495,7 +454,7 @@ contains
     
   end subroutine reset_dict
   
-  !------------------------------------------------------
+  
   subroutine print_dict(dict)
     type(dictionary_t), intent(in)   :: dict
     
@@ -508,128 +467,4 @@ contains
     
   end subroutine print_dict
 
-  subroutine parse_string_to_dict(string, dict, status)
-    character(len=*), intent(in) :: string
-    type(dictionary_t), intent(out) :: dict
-    integer, intent(out) :: status
-
-    !Parse a string to a dictionary of (namespace-unaware) attributes.
-    ! status will be non-zero if we have an error
-
-    integer :: i, n, state
-    character(len=1) :: c, quotechar
-    character(len=1), pointer :: name(:)
-    character(len=1), pointer :: value(:)
-    character(len=1), pointer :: tmp(:)
-
-    integer, parameter :: OUTSIDE            = 0
-    integer, parameter :: IN_NAME            = 1
-    integer, parameter :: WAITING_FOR_EQUALS = 2
-    integer, parameter :: FOUND_EQUALS       = 3
-    integer, parameter :: IN_VALUE           = 4
-    integer, parameter :: DONE_VALUE         = 5
-    
-    allocate(name(0))
-    allocate(value(0))
-
-    call init_dict(dict)
-
-    state = OUTSIDE
-
-    do i = 1, len(string)
-      c = string(i:i)
-      select case (state)
-      case (OUTSIDE)
-        if (c .in. whitespace) then
-          cycle
-        elseif (c .in. initialNameChars) then
-          state = IN_NAME
-          deallocate(name)
-          allocate(name(1))
-          name(1) = c
-        else
-          status = i
-          exit
-        endif
-      case (IN_NAME)
-        if (c.in.nameChars) then
-          n = size(name)
-          tmp => name
-          allocate(name(n+1))
-          name(:n) = tmp
-          deallocate(tmp)
-          name(n+1) = c
-        elseif (c.in.whitespace) then
-          state = WAITING_FOR_EQUALS
-        elseif (c == '=') then
-          state = FOUND_EQUALS
-        else
-          status = i
-          exit
-        endif
-      case (WAITING_FOR_EQUALS)
-        if (c.in.whitespace) then
-          cycle
-        elseif (c == '=') then
-          state = FOUND_EQUALS
-        else
-          status = i
-          exit
-        endif
-      case (FOUND_EQUALS)
-        if (c.in.whitespace) then
-          cycle
-        elseif (c == "'") then
-          quotechar = "'"
-          state = IN_VALUE
-        elseif (c == '"') then
-          quotechar = '"'
-          state = IN_VALUE
-        else
-          status = i
-          exit
-        endif
-      case (IN_VALUE)  
-        if (c == quotechar) then
-          call add_item_to_dict(dict, str_vs(name), str_vs(value))
-          deallocate(name)
-          allocate(name(0))
-          deallocate(value)
-          allocate(value(0))
-          state = DONE_VALUE
-        elseif (c == '<') then
-          status = i
-          exit
-          ! We do not check for & here - leave that for elsewhere
-        else
-          n = size(value)
-          tmp => value
-          allocate(value(n+1))
-          value(:n) = tmp
-          deallocate(tmp)
-          value(n+1) = c
-        endif
-      case (DONE_VALUE)
-        if (c.in.whitespace) then
-          state = OUTSIDE
-        else
-          status = i
-          exit
-        endif
-      end select
-    enddo
-
-    if (state /= OUTSIDE .and. state /= DONE_VALUE) then
-      status = len(string)
-      call reset_dict(dict)
-    else
-      status = 0
-    endif
-
-    deallocate(name)
-    deallocate(value)
-          
-  end subroutine parse_string_to_dict
-    
-  
 end module m_common_attrs

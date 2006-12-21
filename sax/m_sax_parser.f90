@@ -8,10 +8,13 @@ module m_sax_parser
     XML1_1_INITIALNAMECHARS, XML_INITIALENCODINGCHARS, XML_ENCODINGCHARS, &
     XML_WHITESPACE, XML1_0_NAMECHARS, XML1_1_NAMECHARS, operator(.in.)
   use m_common_elstack, only: elstack_t, push_elstack, pop_elstack, &
-    init_elstack, destroy_elstack, is_empty, get_top_elstack
+    init_elstack, destroy_elstack, is_empty, get_top_elstack, len
   use m_common_error, only: FoX_error
   use m_common_io, only: io_eof, io_err
   use m_common_namecheck, only: checkName
+  use m_common_namespaces, only: getnamespaceURI, invalidNS, &
+    checkNamespaces, checkEndNamespaces, &
+    initNamespaceDictionary, destroyNamespaceDictionary
 
   use m_sax_reader, only: file_buffer_t
   use m_sax_tokenizer, only: sax_tokenize, parse_xml_declaration, add_parse_error
@@ -33,7 +36,7 @@ contains
     allocate(fx%error_stack(0:0))
     
     call init_elstack(fx%elstack)
-    call init_dict(fx%attributes)
+    call initNamespaceDictionary(fx%nsdict)
     
   end subroutine sax_parser_init
 
@@ -54,21 +57,23 @@ contains
     enddo
     deallocate(fx%error_stack)
 
+    stop
     call destroy_elstack(fx%elstack)
-    call destroy_dict(fX%attributes)
+    call destroy_dict(fx%attributes)
+    call destroyNamespaceDictionary(fx%nsdict)
 
   end subroutine sax_parser_destroy
 
   recursive subroutine sax_parse(fx, fb,  &
-    begin_element_handler,    &
-    end_element_handler,             &
-    start_prefix_handler,            &
-    end_prefix_handler,              &
-    characters_handler,            &
-    comment_handler,                 &
-    processing_instruction_handler,  &
-    error_handler,                   &
-    start_document_handler,          & 
+    begin_element_handler,                &
+    end_element_handler,                  &
+    start_prefix_handler,                 &
+    end_prefix_handler,                   &
+    characters_handler,                   &
+    comment_handler,                      &
+    processing_instruction_handler,       &
+    error_handler,                        &
+    start_document_handler,               & 
     end_document_handler)
     
     type(sax_parser_t), intent(inout) :: fx
@@ -144,8 +149,10 @@ contains
       fx%context = CTXT_BEFORE_DTD
       fx%state = ST_MISC
       fx%whitespace = WS_DISCARD
+      print*,'XML declaration parsed.', fb%input_pos
+      if(present(start_document_handler)) &
+        call start_document_handler()
     endif
-    print*,'XML declaration parsed.', fb%input_pos
 
     do
       print*,'executing parse loop'
@@ -280,6 +287,7 @@ contains
           ! FIXME check name is name? ought to be.
           fx%whitespace = WS_MANDATORY
           fx%state = ST_IN_TAG
+          call init_dict(fx%attributes)
         elseif (fx%context == CTXT_AFTER_CONTENT) then
           call add_parse_error(fx, "Cannot open second root element")
         elseif (fx%context == CTXT_IN_DTD) then
@@ -324,22 +332,25 @@ contains
       case (ST_IN_TAG)
         print*,'ST_IN_TAG'
         if (str_vs(fx%token)=='>') then
-          call push_elstack(str_vs(fx%name), fx%elstack)
-          ! FIXME and dictionary
           if (fx%context /= CTXT_IN_CONTENT) then
-            if(present(start_document_handler)) &
-              call start_document_handler()
             if (associated(fx%root_element)) then
-              ! FIXME check with DTD
-              continue
+              if (str_vs(fx%name)/=str_vs(fx%root_element)) then
+                call add_parse_error(fx, "Root element name does not match document name")
+                return
+              endif
             else
               fx%root_element => fx%name
-              nullify(fx%name)
             endif
+            call open_tag
+            if (fx%error) goto 100
+            nullify(fx%name)
             fx%context = CTXT_IN_CONTENT
           else
+            call open_tag
+            if (fx%error) goto 100
             deallocate(fx%name)
           endif
+          call destroy_dict(fx%attributes)
           fx%state = ST_CHAR_IN_CONTENT
 
         elseif (str_vs(fx%token)=='/>') then
@@ -348,26 +359,25 @@ contains
           else
             ! only a single element in this doc
             if (associated(fx%root_element)) then
-              ! FIXME check with DTD
-              continue
+              if (str_vs(fx%name)/=str_vs(fx%root_element)) then
+                call add_parse_error(fx, "Root element name does not match document name")
+                return
+              endif
             else
               fx%root_element => fx%name
               nullify(fx%name)
             endif
-            if (present(start_document_handler)) &
-              call start_document_handler()
           endif
-          ! No point in pushing & pulling onto elstack.
-          !if (present(begin_element_handler)) &
-          !  call begin_element_handler(str_vs(fx%name)
-          !if (present(end_element_handler)) &
-          !  call end_element_handler(str_vs(fx%name))
-          deallocate(fx%name)
+          call open_tag
+          if (fx%error) goto 100
+          call close_tag
+          if (fx%error) goto 100
           if (fx%context==CTXT_IN_CONTENT) then
+            deallocate(fx%name)
             fx%whitespace = WS_PRESERVE
           else
             fx%well_formed = .true.
-            if(present(end_document_handler)) call end_document_handler()
+            nullify(fx%name)
             fx%context = CTXT_AFTER_CONTENT
             fx%state = ST_MISC
           endif
@@ -392,6 +402,8 @@ contains
         print*,'ST_ATT_EQUALS'
         ! token is pre-processed attribute value.
         ! fx%name still contains attribute name
+        ! Is it an xmlns:?
+        ! Is it an xml:?
         call add_item_to_dict(fx%attributes, str_vs(fx%attname), &
           str_vs(fx%token))
         deallocate(fx%attname)
@@ -482,7 +494,8 @@ contains
         endif
       else ! EOF of main file
         if (fx%well_formed.and.fx%state==ST_MISC) then
-          continue
+          if (present(end_document_handler)) &
+            call end_document_handler()
         else
           call add_parse_error(fx, "File is not well-formed")
           call sax_error(fx, error_handler)
@@ -502,6 +515,38 @@ contains
         call sax_error(fx, error_handler)
       endif
     endif
+
+    contains
+
+      subroutine open_tag
+        call checkNamespaces(fx%attributes, fx%nsDict, &
+          len(fx%elstack), start_prefix_handler)
+        if (getURIofQName(fx,str_vs(fx%name))==invalidNS) then
+          ! no namespace was found for the current element
+          call add_parse_error(fx, "No namespace found for current element")
+          return
+        endif
+        call push_elstack(str_vs(fx%name), fx%elstack)
+        ! No point in pushing & pulling onto elstack.
+        if (present(begin_element_handler)) &
+          call begin_element_handler(getURIofQName(fx, str_vs(fx%name)), &
+          getlocalNameofQName(str_vs(fx%name)), &
+          str_vs(fx%name), fx%attributes)
+        call destroy_dict(fx%attributes)
+      end subroutine open_tag
+
+      subroutine close_tag
+        if (str_vs(fx%name)/=pop_elstack(fx%elstack)) then
+          call add_parse_error(fx, "Mismatching close tag - expecting "//str_vs(fx%name))
+          return
+        endif
+        if (present(end_element_handler)) &
+          call end_element_handler(getURIofQName(fx, str_vs(fx%name)), &
+          getlocalnameofQName(str_vs(fx%name)), &
+          str_vs(fx%name))
+        call checkEndNamespaces(fx%nsDict, len(fx%elstack)+1, &
+          end_prefix_handler)
+      end subroutine close_tag
 
   end subroutine sax_parse
 
@@ -536,5 +581,40 @@ contains
     endif
 
   end subroutine sax_error
+
+  pure function getURIofQName(fx, qname) result(URI)
+    type(sax_parser_t), intent(in) :: fx
+    character(len=*), intent(in) :: qName
+    character(len=URIlength(fx, qname)) :: URI
+    
+    integer :: n
+    n = index(QName, ':')
+    if (n > 0) then
+       URI = getnamespaceURI(fx%nsDict, QName(1:n-1))
+    else
+       URI = getnamespaceURI(fx%nsDict)
+    endif
+
+  end function getURIofQName
+  
+  pure function URIlength(fx, qname) result(l_u)
+    type(sax_parser_t), intent(in) :: fx
+    character(len=*), intent(in) :: qName
+    integer :: l_u
+    integer :: n
+    n = index(QName, ':')
+    if (n > 0) then
+       l_u = len(getnamespaceURI(fx%nsDict, QName(1:n-1)))
+    else
+       l_u = len(getnamespaceURI(fx%nsDict))
+    endif
+  end function URIlength
+
+  pure function getLocalNameofQName(qname) result(localName)
+    character(len=*), intent(in) :: qName
+    character(len=len(QName)-index(QName,':')) :: localName
+    
+    localName = QName(index(QName,':')+1:)
+  end function getLocalNameofQName
       
 end module m_sax_parser
