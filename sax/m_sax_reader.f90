@@ -685,9 +685,9 @@ contains
       buf = cb%s(cb%pos:cb%pos+m_i-1)
       cb%pos = cb%pos + m_i - 1
     else
-      allocate(tempbuf(size(buf)+m_i))
+      allocate(tempbuf(size(buf)+m_i-1))
       tempbuf(:size(buf)) = buf
-      tempbuf(size(buf)+1:) = vs_str(fb%buffer(fb%pos:fb%pos+m_i-1))
+      tempbuf(size(buf)+1:) = vs_str(fb%buffer(fb%pos:fb%pos+m_i-2))
       deallocate(buf)
       buf => tempbuf
       fb%pos = fb%pos + m_i - 1
@@ -736,8 +736,13 @@ contains
         fb%pos = fb%nchars + 1
         call fill_buffer(fb, iostat)
         if (iostat==io_eof) then
-          iostat = 0 
+          print*,'found an eof', fb%pos, fb%nchars
           m_i = fb%nchars - fb%pos + 1
+          if (m_i==0) then 
+            m_i = 1
+          else
+            iostat = 0 
+          endif
         elseif (iostat/=0) then
           return
         else
@@ -752,11 +757,9 @@ contains
       buf = cb%s(cb%pos:cb%pos+m_i-1)
       cb%pos = cb%pos + m_i - 1
     else
-      allocate(tempbuf(size(buf)+m_i))
+      allocate(tempbuf(size(buf)+m_i-1))
       tempbuf(:size(buf)) = buf
-      print*, 'SIZE', size(tempbuf(size(buf)+1:)), &
-        size(vs_str(fb%buffer(fb%pos:fb%pos+m_i-1)))
-      tempbuf(size(buf)+1:) = vs_str(fb%buffer(fb%pos:fb%pos+m_i-1))
+      tempbuf(size(buf)+1:) = vs_str(fb%buffer(fb%pos:fb%pos+m_i-2))
       deallocate(buf)
       buf => tempbuf
       fb%pos = fb%pos + m_i - 1
@@ -765,6 +768,7 @@ contains
     if (associated(fb%namebuffer)) deallocate(fb%namebuffer)
     fb%namebuffer => buf
     call move_cursor(fb, str_vs(fb%namebuffer))
+
 
   end subroutine get_chars_with_condition
 

@@ -193,6 +193,7 @@ contains
           c = get_characters(fb, 1, iostat)
           if (iostat/=0) return
         else !it must be a NAME for some reason
+          call put_characters(fb, 1)
           if (fx%xml_version==XML1_0) then
             call get_characters_until_condition(fb, isXML1_0_NameChar, .false., iostat)
           elseif (fx%xml_version==XML1_1) then
@@ -214,9 +215,10 @@ contains
 
     endif
 
-    print*, 'statecontext', fx%state, fx%context
+    print*, 'statecontext', fx%state, fx%context, fx%whitespace
 
     if (fx%whitespace==WS_DISCARD) then
+      print*,'ffs'
       call get_characters_until_not_one_of(fb, XML_WHITESPACE, iostat)
       if (iostat/=0) return
 

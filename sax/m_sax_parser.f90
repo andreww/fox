@@ -203,7 +203,7 @@ contains
       call sax_tokenize(fx, fb, iostat)
       if (fx%error) iostat = io_err
       if (iostat/=0) then
-        fx%state = ST_NULL
+        !fx%state = ST_NULL
         goto 100
       endif
       print*,'token: ',str_vs(fx%token)
@@ -444,6 +444,7 @@ contains
             nullify(fx%name)
             fx%context = CTXT_AFTER_CONTENT
             fx%state = ST_MISC
+            fx%whitespace = WS_DISCARD
           endif
         else
           ! FIXME It should be an XML name for the attribute
