@@ -56,19 +56,19 @@ module m_sax_reader
     integer                  :: xml_version = XML1_0
     integer                  :: lun                 ! Which unit number
     ! If lun = -1, then we are reading from a string ....
-    character, pointer       :: input_string(:)     ! If input is from a string
+    character, pointer       :: input_string(:) => null()    ! If input is from a string
     integer                  :: input_pos
     logical                  :: eof                 ! have we read past eof?
     ! Necessary since we don't want to report eof to user until
     ! fb%pos gets there, but we don't want to issue another read.
-    character, pointer       :: filename(:)         ! filename
+    character, pointer       :: filename(:) => null()        ! filename
     character(len=BUFLENGTH) :: buffer              ! character buffer.
-    type(buffer_t),  pointer :: buffer_stack(:)     ! stack of expansion buffers
-    character, pointer       :: namebuffer(:)       ! temporary buffer for
+    type(buffer_t),  pointer :: buffer_stack(:) => null()  ! stack of expansion buffers
+    character, pointer       :: namebuffer(:) => null()    ! temporary buffer for
     ! retrieving strings potentially greater than 1024 chars
     logical                  :: eor                 ! read_really needs to
     ! remember if we have a pending newline
-    character, pointer       :: next_chars(:)       ! read_really needs its
+    character, pointer       :: next_chars(:)  => null()     ! read_really needs its
     ! own pushback buffer
     integer                  :: pos                 ! which char are we at?
     integer                  :: nchars              ! How many chars in buffer?
