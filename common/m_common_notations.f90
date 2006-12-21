@@ -67,7 +67,7 @@ contains
       call Fox_error("Illegal notation name: "//name)
 
     if (.not.present(systemId) .and. .not.present(publicId)) &
-      call FoX_error("Neither System nor Public Id speicified for notation: "//name)
+      call FoX_error("Neither System nor Public Id specified for notation: "//name)
     if (present(publicId)) then
       if (.not.checkPubId(publicId)) &
         call Fox_error("Illegal public ID for notation: "//name)
@@ -95,8 +95,12 @@ contains
 
     allocate(nlist%notations(i)%name(len(name)))
     nlist%notations(i)%name = vs_str(name)
-    allocate(nlist%notations(i)%systemId(len(systemId)))
-    nlist%notations(i)%systemId = vs_str(systemId)
+    if (present(systemId)) then
+      allocate(nlist%notations(i)%systemId(len(systemId)))
+      nlist%notations(i)%systemId = vs_str(systemId)
+    else
+      allocate(nlist%notations(i)%systemId(0))
+    endif
     if (present(publicId)) then
       allocate(nlist%notations(i)%publicId(len(publicId)))
       nlist%notations(i)%publicId = vs_str(publicId)
