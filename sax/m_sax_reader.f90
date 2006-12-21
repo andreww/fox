@@ -736,7 +736,6 @@ contains
         fb%pos = fb%nchars + 1
         call fill_buffer(fb, iostat)
         if (iostat==io_eof) then
-          print*,'found an eof', fb%pos, fb%nchars
           m_i = fb%nchars - fb%pos + 1
           if (m_i==0) then 
             m_i = 1

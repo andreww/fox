@@ -223,7 +223,7 @@ contains
           fx%whitespace = WS_FORBIDDEN
         else
           call add_parse_error(fx, "Unexpected token found outside content")
-          return
+          exit
         endif
 
       case (ST_BANG_TAG)
@@ -251,7 +251,7 @@ contains
           endif
         else
           call add_parse_error(fx, "Unexpected token after !")
-          return
+          exit
         endif
 
       case (ST_START_PI)
@@ -264,7 +264,7 @@ contains
           nullify(fx%token)
         else
           call add_parse_error(fx, "Unexpected token found for PI target; expecting Name")
-          return
+          exit
         endif
 
       case (ST_PI_CONTENTS)
@@ -300,7 +300,7 @@ contains
           endif
         else
           call add_parse_error(fx, "Internal error: unexpected token at end of PI, expecting ?>")
-          return
+          exit
         endif
 
       case (ST_START_COMMENT)
@@ -315,7 +315,7 @@ contains
           fx%state = ST_COMMENT_END_2
         else
           call add_parse_error(fx, "Internal error: expecting --")
-          return
+          exit
         endif
 
       case (ST_COMMENT_END_2)
@@ -334,7 +334,7 @@ contains
           endif
         else
           call add_parse_error(fx, "Expecting > after -- in comment")
-          return
+          exit
         endif
 
       case (ST_START_TAG)
@@ -400,7 +400,7 @@ contains
             if (associated(fx%root_element)) then
               if (str_vs(fx%name)/=str_vs(fx%root_element)) then
                 call add_parse_error(fx, "Root element name does not match document name")
-                return
+                exit
               endif
             else
               fx%root_element => fx%name
@@ -425,7 +425,7 @@ contains
             if (associated(fx%root_element)) then
               if (str_vs(fx%name)/=str_vs(fx%root_element)) then
                 call add_parse_error(fx, "Root element name does not match document name")
-                return
+                exit
               endif
             else
               fx%root_element => fx%name
@@ -570,7 +570,6 @@ contains
           fx%systemId => fx%token
           nullify(fx%token)
           fx%state = ST_DTD_SYSTEM
-        fx%whitespace = WS_DISCARD
         else
           call add_parse_error(fx, "Invalid document system id")
         endif       
@@ -743,6 +742,7 @@ contains
         endif
       endif
     elseif (iostat==io_err) then ! we generated the error
+      print*,'an error'
       if (fx%parse_stack>0) then
         ! append to error all the way up the stack
         return ! go back up stack
