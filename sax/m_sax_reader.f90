@@ -752,8 +752,10 @@ contains
       buf = cb%s(cb%pos:cb%pos+m_i-1)
       cb%pos = cb%pos + m_i - 1
     else
-      allocate(tempbuf(size(buf)+m_i-1))
+      allocate(tempbuf(size(buf)+m_i))
       tempbuf(:size(buf)) = buf
+      print*, 'SIZE', size(tempbuf(size(buf)+1:)), &
+        size(vs_str(fb%buffer(fb%pos:fb%pos+m_i-1)))
       tempbuf(size(buf)+1:) = vs_str(fb%buffer(fb%pos:fb%pos+m_i-1))
       deallocate(buf)
       buf => tempbuf
