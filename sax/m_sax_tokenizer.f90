@@ -205,6 +205,10 @@ contains
         endif
       elseif (fx%whitespace==WS_FORBIDDEN) then
         ! it must be ATTLIST, ELEMENT, ENTITY, NOTATION
+        call get_characters_until_not_one_of(fb, 'ATLISENYMOAI', iostat)
+        if (iostat/=0) return
+        fx%token => fb%namebuffer
+        nullify(fb%namebuffer)
       elseif (fx%whitespace==WS_DISCARD) then
         call get_characters_until_not_one_of(fb, XML_WHITESPACE, iostat)
         if (iostat/=0) return
