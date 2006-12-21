@@ -1,5 +1,7 @@
 <?xml version='1.0'?>
 
-<!DOCTYPE test PUBLIC "arse" "bum" []>
+<!DOCTYPE test PUBLIC "arse" "bum" [
+<!NOTATION note PUBLIC "bum">
+]>
 
 <test/>
