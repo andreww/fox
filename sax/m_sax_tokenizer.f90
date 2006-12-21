@@ -205,8 +205,25 @@ contains
       elseif (fx%whitespace==WS_FORBIDDEN) then
         ! it must be ATTLIST, ELEMENT, ENTITY, NOTATION
       elseif (fx%whitespace==WS_DISCARD) then
-        ! I don't think we can be here
-        call add_parse_error(fx, "Internal error: WS_DISCARD here?")
+        call get_characters_until_not_one_of(fb, XML_WHITESPACE, iostat)
+        if (iostat/=0) return
+        c = get_characters(fb, 1, iostat)
+        if (iostat/=0) return
+        if (c.in."#>[]+*()|,") then
+          allocate(fx%token(1))
+          fx%token = c
+        elseif (c=='<') then
+          !it's a comment or a PI ... or a DTD keyword.
+          c = get_characters(fb, 1, iostat)
+          if (iostat/=0) return
+          if (c=='?') then
+            allocate(fx%token(2))
+            fx%token = '<?'
+          elseif (c=='!') then
+            allocate(fx%token(2))
+            fx%token = '<!'
+          endif
+        endif
       endif
       return
       ! elseif (fx%state = ST_DTD_ATTLIST_CONTENTS
@@ -218,7 +235,6 @@ contains
     print*, 'statecontext', fx%state, fx%context, fx%whitespace
 
     if (fx%whitespace==WS_DISCARD) then
-      print*,'ffs'
       call get_characters_until_not_one_of(fb, XML_WHITESPACE, iostat)
       if (iostat/=0) return
 
