@@ -249,6 +249,7 @@ contains
           elseif (str_vs(fx%token)=='NOTATION') then
             fx%state = ST_DTD_NOTATION
           endif
+          fx%whitespace = WS_MANDATORY
         else
           call add_parse_error(fx, "Unexpected token after !")
           exit
@@ -622,6 +623,7 @@ contains
           fx%state = ST_START_PI
         elseif (str_vs(fx%token)=='<!') then
           fx%state = ST_BANG_TAG
+          fx%whitespace = WS_FORBIDDEN
         else
           call add_parse_error(fx, "Unexpected token in internal subset")
         endif
@@ -650,6 +652,8 @@ contains
           fx%state = ST_DTD_NOTATION_SYSTEM
         elseif (str_vs(fx%token)=='PUBLIC') then
           fx%state = ST_DTD_NOTATION_PUBLIC
+        else
+          call add_parse_error(fx, "Unexpected token after NOTATION")
         endif
 
       case (ST_DTD_NOTATION_SYSTEM)
@@ -707,6 +711,7 @@ contains
           endif
           deallocate(fx%name)
           fx%state = ST_INT_SUBSET
+          fx%whitespace = WS_DISCARD
         else
           call add_parse_error(fx, "Unexpected token in NOTATION")
         endif

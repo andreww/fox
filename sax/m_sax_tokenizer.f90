@@ -153,6 +153,7 @@ contains
       return
 
     elseif (fx%context==CTXT_IN_DTD) then
+      print*,'context', fx%whitespace
       if (fx%whitespace==WS_MANDATORY) then
         !We are still allowed a '>'
         call get_characters_until_not_one_of(fb, XML_WHITESPACE, iostat)
@@ -204,6 +205,7 @@ contains
           nullify(fb%namebuffer)
         endif
       elseif (fx%whitespace==WS_FORBIDDEN) then
+        print*,'WS_FORBIDDEN'
         ! it must be ATTLIST, ELEMENT, ENTITY, NOTATION
         call get_characters_until_not_one_of(fb, 'ATLISENYMOAI', iostat)
         if (iostat/=0) return
