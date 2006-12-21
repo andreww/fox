@@ -11,10 +11,11 @@ module m_sax_parser
     init_elstack, destroy_elstack, is_empty, get_top_elstack, len
   use m_common_error, only: FoX_error
   use m_common_io, only: io_eof, io_err
-  use m_common_namecheck, only: checkName
+  use m_common_namecheck, only: checkName, checkSystemId, checkPubId
   use m_common_namespaces, only: getnamespaceURI, invalidNS, &
     checkNamespaces, checkEndNamespaces, &
     initNamespaceDictionary, destroyNamespaceDictionary
+  use m_common_notations, only: add_notation
 
   use m_sax_reader, only: file_buffer_t
   use m_sax_tokenizer, only: sax_tokenize, parse_xml_declaration, add_parse_error
@@ -48,7 +49,7 @@ contains
     fx%context = CTXT_NULL
     fx%state = ST_NULL
 
-    deallocate(fx%encoding)
+    if (associated(fx%encoding)) deallocate(fx%encoding)
     if (associated(fx%token)) deallocate(fx%token)
     if (associated(fx%root_element)) deallocate(fx%root_element)
     if (associated(fx%error_stack(0)%msg)) deallocate(fx%error_stack(0)%msg)
@@ -62,6 +63,15 @@ contains
     call destroy_dict(fx%attributes)
     call destroyNamespaceDictionary(fx%nsdict)
 
+    if (associated(fx%token)) deallocate(fx%token)
+    if (associated(fx%next_token)) deallocate(fx%next_token)
+    if (associated(fx%name)) deallocate(fx%name)
+    if (associated(fx%attname)) deallocate(fx%attname)
+    if (associated(fx%publicId)) deallocate(fx%publicId)
+    if (associated(fx%systemId)) deallocate(fx%systemId)
+    if (associated(fx%entityContent)) deallocate(fx%entityContent)
+    if (associated(fx%NdataValue)) deallocate(fx%NdataValue)
+
   end subroutine sax_parser_destroy
 
   recursive subroutine sax_parse(fx, fb,  &
@@ -74,7 +84,12 @@ contains
     processing_instruction_handler,       &
     error_handler,                        &
     start_document_handler,               & 
-    end_document_handler)
+    end_document_handler,                 &
+    startDTD_handler,                     &
+    endDTD_handler,                       &
+    startCdata_handler,                   &
+    endCdata_handler,                     &
+    notationDecl_handler)
     
     type(sax_parser_t), intent(inout) :: fx
     type(file_buffer_t), intent(inout) :: fb
@@ -88,6 +103,13 @@ contains
     optional                            :: error_handler
     optional                            :: start_document_handler
     optional                            :: end_document_handler
+    !optional :: ignorableWhitespace
+    optional :: notationDecl_handler
+    !optional :: unparsedEntityDecl
+    optional :: startDTD_handler
+    optional :: endDTD_handler
+    optional :: startCdata_handler
+    optional :: endCdata_handler
 
     interface
       subroutine begin_element_handler(namespaceURI, localName, name, attributes)
@@ -136,6 +158,27 @@ contains
 
       subroutine end_document_handler()     
       end subroutine end_document_handler
+
+      subroutine notationDecl_handler(name, publicId, systemId)
+        character(len=*), intent(in) :: name
+        character(len=*), optional, intent(in) :: publicId
+        character(len=*), optional, intent(in) :: systemId
+      end subroutine notationDecl_handler
+
+      subroutine startDTD_handler(name, publicId, systemId)
+        character(len=*), intent(in) :: name
+        character(len=*), optional, intent(in) :: publicId
+        character(len=*), intent(in) :: systemId
+      end subroutine startDTD_handler
+
+      subroutine endDTD_handler()
+      end subroutine endDTD_handler
+
+      subroutine startCdata_handler()
+      end subroutine startCdata_handler
+
+      subroutine endCdata_handler()
+      end subroutine endCdata_handler
     end interface
 
     integer :: iostat
@@ -159,7 +202,10 @@ contains
 
       call sax_tokenize(fx, fb, iostat)
       if (fx%error) iostat = io_err
-      if (iostat/=0) goto 100
+      if (iostat/=0) then
+        fx%state = ST_NULL
+        goto 100
+      endif
       print*,'token: ',str_vs(fx%token)
 
       select case (fx%state)
@@ -181,17 +227,26 @@ contains
         endif
 
       case (ST_BANG_TAG)
-        if (str_vs(fx%token) == '--') then
+        if (str_vs(fx%token)=='--') then
           fx%state = ST_START_COMMENT
-        elseif (str_vs(fx%token) == 'DOCTYPE') then
-          fx%whitespace = WS_MANDATORY
-          ! go to DTD parser FIXME
-        elseif (str_vs(fx%token) == '[') then
-          if (fx%context == CTXT_IN_CONTENT) then
+        elseif (fx%context==CTXT_BEFORE_DTD) then
+          if (str_vs(fx%token)=='DOCTYPE') then
+            fx%context = CTXT_IN_DTD
+            fx%state = ST_IN_DTD
+          endif
+        elseif (fx%context==CTXT_IN_CONTENT) then
+          if (str_vs(fx%token)=='[') then
             fx%state = ST_START_CDATA_1
-          else
-            call add_parse_error(fx, "Unexpected token after !")
-            return
+          endif
+        elseif (fx%context==CTXT_IN_DTD) then  
+          if (str_vs(fx%token)=='ATTLIST') then
+            fx%state = ST_DTD_ATTLIST
+          elseif (str_vs(fx%token)=='ELEMENT') then
+            fx%state = ST_DTD_ELEMENT
+          elseif (str_vs(fx%token)=='ENTITY') then
+            fx%state = ST_DTD_ENTITY
+          elseif (str_vs(fx%token)=='NOTATION') then
+            fx%state = ST_DTD_NOTATION
           endif
         else
           call add_parse_error(fx, "Unexpected token after !")
@@ -236,6 +291,8 @@ contains
           if (fx%context==CTXT_IN_CONTENT) then
             fx%state = ST_CHAR_IN_CONTENT
             fx%whitespace = WS_PRESERVE
+          elseif (fx%context==CTXT_IN_DTD) then
+            fx%state = ST_INT_SUBSET
           else
             fx%state = ST_MISC
             fx%whitespace = WS_DISCARD
@@ -268,6 +325,8 @@ contains
           deallocate(fx%name)
           if (fx%context==CTXT_IN_CONTENT) then
             fx%state = ST_CHAR_IN_CONTENT
+          elseif (fx%context==CTXT_IN_DTD) then
+            fx%state = ST_INT_SUBSET
           else
             fx%state = ST_MISC
             fx%whitespace = WS_DISCARD
@@ -319,10 +378,14 @@ contains
       case (ST_CDATA_END)
         print*,'ST_CDATA_END'
         if (str_vs(fx%token) == ']]>') then
+          if (present(startCdata_handler)) &
+            call startCdata_handler
           if (size(fx%name)>0) then
             if (present(characters_handler)) &
               call characters_handler(str_vs(fx%name))
           endif
+          if (present(endCdata_handler)) &
+            call endCdata_handler
           deallocate(fx%name)
           fx%state = ST_CHAR_IN_CONTENT
         else
@@ -457,12 +520,9 @@ contains
 
       case (ST_IN_CLOSING_TAG)
         print*,'ST_IN_CLOSING_TAG'
-        if (str_vs(fx%token)=='>') then
-          if (str_vs(fx%name)/=pop_elstack(fx%elstack)) then
-            call add_parse_error(fx, "Mismatching close tag - expecting "//str_vs(fx%name))
-            return
-          endif
-          !if (present(end_element_handler)) call end_element_handler()
+        if (str_vs(fx%token) == '>') then
+          call close_tag
+          if (fx%error) goto 100
           deallocate(fx%name)
           if (is_empty(fx%elstack)) then
             !we're done
@@ -477,8 +537,187 @@ contains
         else
           call add_parse_error(fx, "Unexpected token in closing tag - expecting Name")
         endif
-            
 
+      case (ST_IN_DTD)
+        print*,'ST_IN_DTD'
+        ! check token is name
+        fx%root_element => fx%token
+        nullify(fx%token)
+        fx%whitespace = WS_MANDATORY
+        fx%state = ST_DTD_NAME
+        
+      case (ST_DTD_NAME)
+        print*, 'ST_DTD_NAME'
+        if (str_vs(fx%token)=='SYSTEM') then
+          fx%state = ST_DTD_SYSTEM
+        elseif (str_vs(fx%token)=='PUBLIC') then
+          fx%state = ST_DTD_PUBLIC
+        elseif (str_vs(fx%token)=='[') then
+          fx%whitespace = WS_DISCARD
+          fx%state = ST_INT_SUBSET
+        elseif (str_vs(fx%token)=='>') then
+          fx%context = CTXT_BEFORE_CONTENT
+          fx%state = ST_MISC
+        else
+          call add_parse_error(fx, "Internal error: unexpected token")
+        endif
+         
+      case (ST_DTD_PUBLIC)
+        print*, 'ST_DTD_PUBLIC'
+        if (checkPubId(str_vs(fx%token))) then
+          fx%systemId => fx%token
+          nullify(fx%token)
+          fx%state = ST_DTD_SYSTEM
+        fx%whitespace = WS_DISCARD
+        else
+          call add_parse_error(fx, "Invalid document system id")
+        endif       
+
+      case (ST_DTD_SYSTEM)
+        print*, 'ST_DTD_SYSTEM'
+        if (checkSystemId(str_vs(fx%token))) then
+          fx%systemId => fx%token
+          nullify(fx%token)
+          fx%state = ST_DTD_DECL
+        else
+          call add_parse_error(fx, "Invalid document system id")
+        endif
+
+      case (ST_DTD_DECL)
+        print*, 'ST_DTD_DECL'
+        if (str_vs(fx%token)=='[') then
+          if (present(startDTD_handler)) then
+            if (associated(fx%publicId)) then
+              call startDTD_handler(str_vs(fx%name), publicId=str_vs(fx%publicId), systemId=str_vs(fx%systemId))
+            else
+              call startDTD_handler(str_vs(fx%name), systemId=str_vs(fx%systemId))
+            endif
+          endif
+          fx%whitespace = WS_DISCARD
+          fx%state = ST_INT_SUBSET
+        elseif (str_vs(fx%token)=='>') then
+          if (present(startDTD_handler)) then
+            if (associated(fx%publicId)) then
+              call startDTD_handler(str_vs(fx%name), publicId=str_vs(fx%publicId), systemId=str_vs(fx%systemId))
+            else
+              call startDTD_handler(str_vs(fx%name), systemId=str_vs(fx%systemId))
+            endif
+          endif
+          if (present(endDTD_handler)) &
+            call endDTD_handler
+          fx%context = CTXT_BEFORE_CONTENT
+          fx%state = ST_MISC
+        else
+          call add_parse_error(fx, "Internal error: unexpected token")
+        endif
+
+      case (ST_INT_SUBSET)
+        print*, 'ST_INT_SUBSET'
+        if (str_vs(fx%token)==']') then
+          fx%state = ST_CLOSE_DTD
+        elseif (str_vs(fx%token)=='%') then
+          !argh
+        elseif (str_vs(fx%token)=='<?') then
+          fx%state = ST_START_PI
+        elseif (str_vs(fx%token)=='<!') then
+          fx%state = ST_BANG_TAG
+        else
+          call add_parse_error(fx, "Unexpected token in internal subset")
+        endif
+
+      case (ST_DTD_ATTLIST)
+        print*, 'ST_DTD_ATTLIST'
+        ! parse contents
+
+      case (ST_DTD_ELEMENT)
+        print*, 'ST_DTD_ELEMENT'
+        ! parse contents
+        
+      case (ST_DTD_ENTITY)
+        print*, 'ST_DTD_ENTITY'
+        ! parse contents
+        
+      case (ST_DTD_NOTATION)
+        print*, 'ST_DTD_NOTATION'
+        fx%name => fx%token
+        nullify(fx%token)
+        fx%state = ST_DTD_NOTATION_ID
+
+      case (ST_DTD_NOTATION_ID)
+        print*,'ST_DTD_NOTATION_ID'
+        if (str_vs(fx%token)=='SYSTEM') then
+          fx%state = ST_DTD_NOTATION_SYSTEM
+        elseif (str_vs(fx%token)=='PUBLIC') then
+          fx%state = ST_DTD_NOTATION_PUBLIC
+        endif
+
+      case (ST_DTD_NOTATION_SYSTEM)
+        if (checkSystemId(str_vs(fx%token))) then
+          fx%systemId => fx%token
+          nullify(fx%token)
+          fx%state = ST_DTD_NOTATION_END
+        else
+          call add_parse_error(fx, "Invalid SYSTEM id in NOTATION")
+        endif
+        
+      case (ST_DTD_NOTATION_PUBLIC)
+        if (checkPubId(str_vs(fx%token))) then
+          fx%publicId => fx%token
+          nullify(fx%token)
+          fx%state = ST_DTD_NOTATION_PUBLIC_2
+        else
+          call add_parse_error(fx, "Invalid PUBLIC id in NOTATION")
+        endif
+        
+      case (ST_DTD_NOTATION_PUBLIC_2)
+        if (str_vs(fx%token)=='>') then
+          call add_notation(fx%nlist, str_vs(fx%name), &
+            publicId=str_vs(fx%publicId))
+          if (present(notationDecl_handler)) &
+            call notationDecl_handler(str_vs(fx%name), publicId=str_vs(fx%publicId)) 
+          deallocate(fx%name)
+          deallocate(fx%publicId)
+          fx%state = ST_INT_SUBSET
+        elseif (checkSystemId(str_vs(fx%token))) then
+            fx%systemId => fx%token
+            nullify(fx%token)
+            fx%state = ST_DTD_NOTATION_END
+        else
+          call add_parse_error(fx, "Invalid SYSTEM id in NOTATION")
+        endif
+        
+      case (ST_DTD_NOTATION_END)
+        if (str_vs(fx%token)=='>') then
+          if (associated(fx%publicId)) then
+            call add_notation(fx%nlist, str_vs(fx%name), &
+              publicId=str_vs(fx%publicId), systemId=str_vs(fx%systemId))
+            if (present(notationDecl_handler)) &
+              call notationDecl_handler(str_vs(fx%name), &
+              publicId=str_vs(fx%publicId), systemId=str_vs(fx%systemId)) 
+            deallocate(fx%publicId)
+            deallocate(fx%systemId)
+          else
+            call add_notation(fx%nlist, str_vs(fx%name), &
+              systemId=str_vs(fx%systemId))
+            if (present(notationDecl_handler)) &
+              call notationDecl_handler(str_vs(fx%name), &
+              systemId=str_vs(fx%systemId)) 
+            deallocate(fx%systemId)
+          endif
+          deallocate(fx%name)
+          fx%state = ST_INT_SUBSET
+        else
+          call add_parse_error(fx, "Unexpected token in NOTATION")
+        endif
+
+      case (ST_CLOSE_DTD)
+        print*, 'ST_CLOSE_DTD'
+        ! token must be '>'
+        if (present(endDTD_handler)) &
+          call endDTD_handler
+        fx%state = ST_MISC
+        fx%context = CTXT_BEFORE_CONTENT
+            
       end select
 
     end do

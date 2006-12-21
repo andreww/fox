@@ -4,6 +4,7 @@ module m_sax_types
   use m_common_elstack, only: elstack_t
   use m_common_entities, only: entity_list
   use m_common_namespaces, only: namespacedictionary
+  use m_common_notations, only: notation_list
 
   use m_sax_reader, only: file_buffer_t
 
@@ -42,6 +43,22 @@ module m_sax_types
   integer, parameter :: ST_IN_CLOSING_TAG = 18
   integer, parameter :: ST_TAG_IN_CONTENT = 19
   integer, parameter :: ST_CDATA_END = 20
+  integer, parameter :: ST_IN_DTD = 21
+  integer, parameter :: ST_DTD_NAME = 22
+  integer, parameter :: ST_DTD_SYSTEM = 23
+  integer, parameter :: ST_DTD_PUBLIC = 24
+  integer, parameter :: ST_INT_SUBSET = 25
+  integer, parameter :: ST_DTD_ATTLIST = 26
+  integer, parameter :: ST_DTD_ELEMENT = 27
+  integer, parameter :: ST_DTD_ENTITY= 28
+  integer, parameter :: ST_DTD_NOTATION = 29
+  integer, parameter :: ST_DTD_NOTATION_ID = 30
+  integer, parameter :: ST_DTD_NOTATION_SYSTEM = 31
+  integer, parameter :: ST_DTD_NOTATION_PUBLIC = 32
+  integer, parameter :: ST_DTD_NOTATION_PUBLIC_2 = 33
+  integer, parameter :: ST_DTD_NOTATION_END = 34
+  integer, parameter :: ST_DTD_DECL = 35
+  integer, parameter :: ST_CLOSE_DTD = 36
   
   ! Whitespace
   
@@ -50,26 +67,6 @@ module m_sax_types
   integer, parameter :: WS_MANDATORY = 2
   integer, parameter :: WS_DISCARD = 3
   
-
-  type dtd_parser_t
-    character(len=1), dimension(:), pointer :: dtd
-    character(len=1), dimension(:), pointer :: token
-    character(len=1), dimension(:), pointer :: docTypeName
-    character(len=1), dimension(:), pointer :: PublicId
-    character(len=1), dimension(:), pointer :: SystemId
-    character(len=1), dimension(:), pointer :: entityName
-    character(len=1), dimension(:), pointer :: entityContent
-    character(len=1), dimension(:), pointer :: entityPublicId
-    character(len=1), dimension(:), pointer :: entitySystemId
-    character(len=1), dimension(:), pointer :: NdataValue
-    type(entity_list) :: pe_list
-    type(entity_list) :: entity_list
-    integer :: dtd_state
-    logical :: external_found
-    logical :: parameter_entity
-    logical :: internal_subset
-  end type dtd_parser_t
-
   type sax_error_t
     character, dimension(:), pointer :: msg => null()
   end type sax_error_t
@@ -80,7 +77,6 @@ module m_sax_types
     integer :: state
     integer :: parse_stack = 0
     logical :: well_formed = .false.
-    type(dtd_parser_t) :: dtd_parser
     character, dimension(:), pointer :: token => null()
     character, dimension(:), pointer :: next_token => null()
     character, dimension(:), pointer :: name => null()
@@ -95,6 +91,13 @@ module m_sax_types
     type(elstack_t) :: elstack
     type(dictionary_t) :: attributes
     type(namespacedictionary) :: nsdict
+    type(notation_list) :: nlist
+    type(entity_list) :: pe_list
+    type(entity_list) :: entity_list
+    character(len=1), dimension(:), pointer :: PublicId => null()
+    character(len=1), dimension(:), pointer :: SystemId => null()
+    character(len=1), dimension(:), pointer :: entityContent => null()
+    character(len=1), dimension(:), pointer :: NdataValue => null()
   end type sax_parser_t
 
 

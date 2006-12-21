@@ -8,6 +8,7 @@ module m_sax_tokenizer
     XML1_0, XML1_1, operator(.in.), &
     isInitialNameChar, isNameChar, isXML1_0_NameChar, isXML1_1_NameChar
   use m_common_error, only: FoX_warning
+  use m_common_format, only: str
 
   use m_sax_reader, only: file_buffer_t, rewind_file, &
     read_char, read_chars, push_chars, get_characters, put_characters, &
@@ -150,8 +151,61 @@ contains
       c = get_characters(fb, 1, iostat)
       ! Either way, we return
       return
-      
+
+    elseif (fx%context==CTXT_IN_DTD) then
+      if (fx%whitespace==WS_MANDATORY) then
+        !We are still allowed a '>'
+        print*,'ARSE';stop
+        call get_characters_until_not_one_of(fb, XML_WHITESPACE, iostat)
+        if (iostat/=0) return
+        if (size(fb%namebuffer)==0) then
+          c = get_characters(fb, 1, iostat)
+          if (iostat/=0) return
+          if (c=='>') then
+            allocate(fx%token(1))
+            fx%token = c
+          else
+            call add_parse_error(fx, "Required whitespace omitted in DTD")
+          endif
+          return
+        endif
+        c = get_characters(fb, 1, iostat)
+        if (iostat/=0) return
+        ! do some stuff
+        if (c.in."#>[]+*()|,") then
+          allocate(fx%token(1))
+          fx%token = c
+        elseif (c=='<') then
+          !it's a comment or a PI ... or a DTD keyword.
+          c = get_characters(fb, 1, iostat)
+          if (iostat/=0) return
+          if (c=='?') then
+            allocate(fx%token(2))
+            fx%token = '<?'
+          elseif (c=='!') then
+            allocate(fx%token(2))
+            fx%token = '<!'
+          endif
+        elseif (c=='"'.or.c=='"') then
+          ! it's system/public ID or replacement text
+          ! grab until next quote
+        else !it must be a NAME for some reason
+          ! get until not a name ...
+        endif
+      elseif (fx%whitespace==WS_FORBIDDEN) then
+        ! it must be ATTLIST, ELEMENT, ENTITY, NOTATION
+      elseif (fx%whitespace==WS_DISCARD) then
+        ! I don't think we can be here
+        call add_parse_error(fx, "Internal error: WS_DISCARD here?")
+      endif
+      return
+      ! elseif (fx%state = ST_DTD_ATTLIST_CONTENTS
+      ! elseif (fx%state = ST_DTD_ELEMENT_CONTENTS
+
+
     endif
+
+    print*, 'statecontext', fx%state, fx%context
 
     if (fx%whitespace==WS_DISCARD) then
       call get_characters_until_not_one_of(fb, XML_WHITESPACE, iostat)
@@ -159,7 +213,6 @@ contains
 
     elseif (fx%whitespace==WS_MANDATORY) then
       call get_characters_until_not_one_of(fb, XML_WHITESPACE, iostat)
-      if (iostat/=0) return
       if (size(fb%namebuffer)==0) then
         call add_parse_error(fx, 'Tokenizer expected whitespace')
         return
@@ -610,7 +663,7 @@ contains
   end subroutine parse_xml_declaration
 
 
-  function normalize_text(fx, s_in) result(s_out)
+  recursive function normalize_text(fx, s_in) result(s_out)
     type(sax_parser_t), intent(inout) :: fx
     character, dimension(:), intent(in) :: s_in
     character, dimension(:), pointer :: s_out
@@ -663,7 +716,6 @@ contains
       fx%error = .true.
       allocate(fx%error_stack(0)%msg(len(msg)))
       fx%error_stack(0)%msg = vs_str(msg)
-      print*,'adding parse error: ', fx%error, msg
     else
       allocate(tempStack(0:n))
       
