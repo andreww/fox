@@ -172,7 +172,7 @@ contains
         c = get_characters(fb, 1, iostat)
         if (iostat/=0) return
         ! do some stuff
-        if (c.in."#>[]+*()|,") then
+        if (c.in."%#>[]+*()|,") then
           allocate(fx%token(1))
           fx%token = c
         elseif (c=='<') then

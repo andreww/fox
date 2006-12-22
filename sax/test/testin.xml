@@ -3,6 +3,14 @@
 <!DOCTYPE test PUBLIC "arse" "bum" [
 <!NOTATION note SYSTEM "bum">
 <!ENTITY qr "lkj">
+<!ENTITY % qr "lkj">
+<!ENTITY % qr2 SYSTEM "kjlh">
+<!ENTITY % qr3 PUBLIC "kjlh" "jhg">
+<!ENTITY qr "lkj">
+<!ENTITY qr2 SYSTEM "arse">
+<!ENTITY qr3 SYSTEM "arse" NDATA note>
+<!ENTITY qr4 PUBLIC "arse" "poo">
+<!ENTITY qr5 PUBLIC "arse" "poo" NDATA note>
 ]>
 
 <test/>

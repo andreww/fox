@@ -529,7 +529,7 @@ contains
             startCdata_handler,              &
             endCdata_handler,                &
             unparsedEntityDecl_handler,      &
-    notationDecl_handler)
+            notationDecl_handler)
           if (iostat/=0) goto 100
         else
           call add_parse_error(fx, "Unexpected token found in character context")
@@ -762,6 +762,8 @@ contains
         print*, 'ST_DTD_ENTITY_NDATA'
         if (str_vs(fx%token)=='>') then
           call add_entity
+          fx%state = ST_INT_SUBSET
+          fx%whitespace = WS_DISCARD
         elseif (str_vs(fx%token)=='NDATA') then
           if (fx%pe) then
             call add_parse_error(fx, "Parameter entity cannot have NDATA declaration"); goto 100
@@ -774,7 +776,7 @@ contains
       case (ST_DTD_ENTITY_NDATA_VALUE)
         print*, 'ST_DTD_ENTITY_NDATA_VALUE'
         !check is a name and exists in notationlist
-        if(notation_exists(fx%nlist, str_vs(fx%name))) then
+        if(notation_exists(fx%nlist, str_vs(fx%token))) then
           fx%Ndata => fx%token
           nullify(fx%token)
           fx%state = ST_DTD_ENTITY_END
@@ -811,6 +813,7 @@ contains
         endif
 
       case (ST_DTD_NOTATION_SYSTEM)
+        print*,'ST_DTD_NOTATION_SYSTEM'
         if (checkSystemId(str_vs(fx%token))) then
           fx%systemId => fx%token
           nullify(fx%token)
@@ -820,6 +823,7 @@ contains
         endif
         
       case (ST_DTD_NOTATION_PUBLIC)
+        print*,'ST_DTD_NOTATION_PUBLIC'
         if (checkPubId(str_vs(fx%token))) then
           fx%publicId => fx%token
           nullify(fx%token)
@@ -829,13 +833,16 @@ contains
         endif
         
       case (ST_DTD_NOTATION_PUBLIC_2)
+        print*,'ST_DTD_NOTATION_PUBLIC_2'
         if (str_vs(fx%token)=='>') then
           if (notation_exists(fx%nlist, str_vs(fx%name))) then
             call add_parse_error(fx, "Two notations share the same Name")
             exit
           endif
+          print*,'ADDED NOTATION: ', str_vs(fx%name)
           call add_notation(fx%nlist, str_vs(fx%name), &
             publicId=str_vs(fx%publicId))
+          print*,'NOTATION EXISTS: ', notation_exists(fx%nlist,str_vs(fx%name))
           if (present(notationDecl_handler)) &
             call notationDecl_handler(str_vs(fx%name), publicId=str_vs(fx%publicId)) 
           deallocate(fx%name)
@@ -850,11 +857,13 @@ contains
         endif
         
       case (ST_DTD_NOTATION_END)
+        print*,'ST_DTD_NOTATION_END'
         if (str_vs(fx%token)=='>') then
           if (notation_exists(fx%nlist, str_vs(fx%name))) then
             call add_parse_error(fx, "Two notations share the same Name")
             exit
           endif
+          print*,'ADDED NOTATION: ', str_vs(fx%name)
           if (associated(fx%publicId)) then
             call add_notation(fx%nlist, str_vs(fx%name), &
               publicId=str_vs(fx%publicId), systemId=str_vs(fx%systemId))
@@ -871,6 +880,7 @@ contains
               systemId=str_vs(fx%systemId)) 
             deallocate(fx%systemId)
           endif
+          print*,'NOTATION EXISTS: ', notation_exists(fx%nlist,str_vs(fx%name))
           deallocate(fx%name)
           fx%state = ST_INT_SUBSET
           fx%whitespace = WS_DISCARD
