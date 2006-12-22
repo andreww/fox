@@ -25,18 +25,18 @@ module m_common_entities
   private
 
   type entity_t
-    character(len=1), dimension(:), pointer :: code
+    character(len=1), dimension(:), pointer :: code => null()
     logical :: internal
     logical :: parsed
-    character(len=1), dimension(:), pointer :: repl
-    character(len=1), dimension(:), pointer :: publicId
-    character(len=1), dimension(:), pointer :: systemId
-    character(len=1), dimension(:), pointer :: notation
+    character(len=1), dimension(:), pointer :: repl => null()
+    character(len=1), dimension(:), pointer :: publicId => null()
+    character(len=1), dimension(:), pointer :: systemId => null()
+    character(len=1), dimension(:), pointer :: notation => null()
   end type entity_t
 
   type entity_list
     private
-    type(entity_t), dimension(:), pointer :: list
+    type(entity_t), dimension(:), pointer :: list => null()
   end type entity_list
 
   public :: is_unparsed_entity
@@ -114,8 +114,9 @@ contains
 
 
   subroutine init_entity_list(ents)
-    type(entity_list), intent(in) :: ents
+    type(entity_list), intent(inout) :: ents
 
+    if (associated(ents%list)) deallocate(ents%list)
     allocate(ents%list(0))
 
   end subroutine init_entity_list
