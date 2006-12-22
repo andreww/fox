@@ -37,7 +37,6 @@ module m_common_entities
   type entity_list
     private
     type(entity_t), dimension(:), pointer :: list
-    logical :: PE
   end type entity_list
 
   public :: is_unparsed_entity
@@ -114,20 +113,10 @@ contains
   end subroutine destroy_entity
 
 
-  subroutine init_entity_list(ents, PE)
-    type(entity_list), intent(out) :: ents
-    logical :: PE
+  subroutine init_entity_list(ents)
+    type(entity_list), intent(in) :: ents
 
     allocate(ents%list(0))
-
-    ents%PE = PE
-    if (.not.PE) then
-      call add_entity(ents, "gt", ">", "", "", "", internal=.true., parsed=.true.)
-      call add_entity(ents, "lt", "<", "", "", "", internal=.true., parsed=.true.)
-      call add_entity(ents, "apos", "'", "", "", "", internal=.true., parsed=.true.)
-      call add_entity(ents, "quot", '"', "", "", "", internal=.true., parsed=.true.)
-      call add_entity(ents, "amp", "&", "", "", "", internal=.true., parsed=.true.)
-    endif
 
   end subroutine init_entity_list
 
@@ -136,7 +125,7 @@ contains
     type(entity_list), intent(inout) :: ents
 
     call destroy_entity_list(ents)
-    call init_entity_list(ents, ents%PE)
+    call init_entity_list(ents)
 
   end subroutine reset_entity_list
 
@@ -160,7 +149,6 @@ contains
 
     integer :: i, n
 
-    ents2%PE = ents%PE
     n = size(ents%list)
     allocate(ents2%list(n))
     do i = 1, n
@@ -407,10 +395,6 @@ contains
     
 !FIXME the following test is not entirely in accordance with the valid chars check we do elsewhere...
 
-    if (.not.ents%PE) then
-      p = checkCharacterEntityReference(code)
-    endif
- 
     do i = 1, size(ents%list)
       if (code == str_vs(ents%list(i)%code)) then
         p = .true.

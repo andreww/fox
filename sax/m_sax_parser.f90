@@ -10,6 +10,7 @@ module m_sax_parser
   use m_common_elstack, only: elstack_t, push_elstack, pop_elstack, &
     init_elstack, destroy_elstack, is_empty, get_top_elstack, len
   use m_common_entities, only: existing_entity, &
+    init_entity_list, destroy_entity_list, &
     add_internal_entity, add_external_entity
   use m_common_error, only: FoX_error
   use m_common_io, only: io_eof, io_err
@@ -43,6 +44,8 @@ contains
     call init_elstack(fx%elstack)
     call initNamespaceDictionary(fx%nsdict)
     call init_notation_list(fx%nlist)
+    call init_entity_list(fx%ge_list)
+    call init_entity_list(fx%pe_list)
     
   end subroutine sax_parser_init
 
@@ -68,6 +71,8 @@ contains
     call destroy_dict(fx%attributes)
     call destroyNamespaceDictionary(fx%nsdict)
     call destroy_notation_list(fx%nlist)
+    call destroy_entity_list(fx%ge_list)
+    call destroy_entity_list(fx%pe_list)
 
     if (associated(fx%token)) deallocate(fx%token)
     if (associated(fx%next_token)) deallocate(fx%next_token)
@@ -740,12 +745,7 @@ contains
       case (ST_DTD_ENTITY_NDATA)
         print*, 'ST_DTD_ENTITY_NDATA'
         if (str_vs(fx%token)=='>') then
-          if (associated(fx%attname)) then
-            ! if it doesn't already exist
-            ! add it to (general/parameter) entity list
-          else
-            ! add it as external entity
-          endif
+          call add_entity
         elseif (str_vs(fx%token)=='NDATA') then
           if (fx%pe) then
             call add_parse_error(fx, "Parameter entity cannot have NDATA declaration"); goto 100
@@ -771,54 +771,7 @@ contains
       case (ST_DTD_ENTITY_END)
         print*, 'ST_DTD_ENTITY_END'
         if (str_vs(fx%token)=='>') then
-          !Parameter or General Entity?
-          if (fx%pe) then
-            !Does entity with this name exist?
-            if (.not.existing_entity(fx%pe_list, str_vs(fx%name))) then
-              ! Internal or external?
-              if (associated(fx%attname)) then ! it's internal
-                call add_internal_entity(fx%pe_list, str_vs(fx%name), &
-                  str_vs(fx%attname))
-              else ! PE can't have Ndata declaration
-                if (associated(fx%publicId)) then
-                  call add_external_entity(fx%pe_list, str_vs(fx%name), &
-                    str_vs(fx%systemId), publicId=str_vs(fx%publicId))
-                else
-                  call add_external_entity(fx%pe_list, str_vs(fx%name), &
-                    str_vs(fx%systemId))
-                endif
-              endif
-              ! else we ignore it
-            endif
-          else !It's a general entity
-            if (.not.existing_entity(fx%ge_list, str_vs(fx%name))) then
-              ! Internal or external?
-              if (associated(fx%attname)) then ! it's internal
-                call add_internal_entity(fx%ge_list, str_vs(fx%name), &
-                  str_vs(fx%attname))
-              else
-                if (associated(fx%publicId).and.associated(fx%Ndata)) then
-                  call add_external_entity(fx%ge_list, str_vs(fx%name), &
-                    str_vs(fx%systemId), publicId=str_vs(fx%publicId), &
-                    notation=str_vs(fx%Ndata))
-                elseif (associated(fx%Ndata)) then
-                  call add_external_entity(fx%ge_list, str_vs(fx%name), &
-                    str_vs(fx%systemId), notation=str_vs(fx%Ndata))
-                elseif (associated(fx%publicId)) then
-                  call add_external_entity(fx%ge_list, str_vs(fx%name), &
-                    str_vs(fx%systemId), publicId=str_vs(fx%publicId))
-                else
-                  call add_external_entity(fx%ge_list, str_vs(fx%name), &
-                    str_vs(fx%systemId))
-                endif
-              endif
-            endif
-          endif
-          deallocate(fx%name)
-          if (associated(fx%attname)) deallocate(fx%attname)
-          if (associated(fx%systemId)) deallocate(fx%systemId)
-          if (associated(fx%publicId)) deallocate(fx%publicId)
-          if (associated(fx%Ndata)) deallocate(fx%Ndata)
+          call add_entity
           fx%state = ST_INT_SUBSET
         else
           call add_parse_error(fx, "Unexpected token at end of ENTITY")
@@ -986,6 +939,57 @@ contains
         call checkEndNamespaces(fx%nsDict, len(fx%elstack)+1, &
           end_prefix_handler)
       end subroutine close_tag
+
+      subroutine add_entity
+        !Parameter or General Entity?
+        if (fx%pe) then
+          !Does entity with this name exist?
+          if (.not.existing_entity(fx%pe_list, str_vs(fx%name))) then
+            ! Internal or external?
+            if (associated(fx%attname)) then ! it's internal
+              call add_internal_entity(fx%pe_list, str_vs(fx%name), &
+                str_vs(fx%attname))
+            else ! PE can't have Ndata declaration
+              if (associated(fx%publicId)) then
+                call add_external_entity(fx%pe_list, str_vs(fx%name), &
+                  str_vs(fx%systemId), publicId=str_vs(fx%publicId))
+              else
+                call add_external_entity(fx%pe_list, str_vs(fx%name), &
+                  str_vs(fx%systemId))
+              endif
+            endif
+            ! else we ignore it
+          endif
+        else !It's a general entity
+          if (.not.existing_entity(fx%ge_list, str_vs(fx%name))) then
+            ! Internal or external?
+            if (associated(fx%attname)) then ! it's internal
+              call add_internal_entity(fx%ge_list, str_vs(fx%name), &
+                str_vs(fx%attname))
+            else
+              if (associated(fx%publicId).and.associated(fx%Ndata)) then
+                call add_external_entity(fx%ge_list, str_vs(fx%name), &
+                  str_vs(fx%systemId), publicId=str_vs(fx%publicId), &
+                  notation=str_vs(fx%Ndata))
+              elseif (associated(fx%Ndata)) then
+                call add_external_entity(fx%ge_list, str_vs(fx%name), &
+                  str_vs(fx%systemId), notation=str_vs(fx%Ndata))
+              elseif (associated(fx%publicId)) then
+                call add_external_entity(fx%ge_list, str_vs(fx%name), &
+                  str_vs(fx%systemId), publicId=str_vs(fx%publicId))
+              else
+                call add_external_entity(fx%ge_list, str_vs(fx%name), &
+                  str_vs(fx%systemId))
+              endif
+            endif
+          endif
+        endif
+        deallocate(fx%name)
+        if (associated(fx%attname)) deallocate(fx%attname)
+        if (associated(fx%systemId)) deallocate(fx%systemId)
+        if (associated(fx%publicId)) deallocate(fx%publicId)
+        if (associated(fx%Ndata)) deallocate(fx%Ndata)
+      end subroutine add_entity
 
       subroutine parse_attlist
       end subroutine parse_attlist
