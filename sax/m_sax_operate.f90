@@ -56,7 +56,13 @@ contains
     processing_instruction_handler,  &
     error_handler,                   &
     start_document_handler,          & 
-    end_document_handler)
+    end_document_handler,            &
+    startDTD_handler,                     &
+    endDTD_handler,                       &
+    startCdata_handler,                   &
+    endCdata_handler,                     &
+    unparsedEntityDecl_handler,           &
+    notationDecl_handler)
     type(xml_t), intent(inout) :: xt
     optional :: begin_element_handler
     optional :: end_element_handler
@@ -68,6 +74,12 @@ contains
     optional :: error_handler
     optional :: start_document_handler
     optional :: end_document_handler
+    optional :: startDTD_handler
+    optional :: endDTD_handler
+    optional :: startCdata_handler
+    optional :: endCdata_handler
+    optional :: notationDecl_handler
+    optional :: unparsedEntityDecl_handler
 
     interface
       subroutine begin_element_handler(namespaceURI, localName, name, attributes)
@@ -116,6 +128,34 @@ contains
 
       subroutine end_document_handler()     
       end subroutine end_document_handler
+
+      subroutine unparsedEntityDecl_handler(name, publicId, systemId, notation)
+        character(len=*), intent(in) :: name
+        character(len=*), optional, intent(in) :: publicId
+        character(len=*), intent(in) :: systemId
+        character(len=*), intent(in) :: notation
+      end subroutine unparsedEntityDecl_handler
+
+      subroutine notationDecl_handler(name, publicId, systemId)
+        character(len=*), intent(in) :: name
+        character(len=*), optional, intent(in) :: publicId
+        character(len=*), optional, intent(in) :: systemId
+      end subroutine notationDecl_handler
+
+      subroutine startDTD_handler(name, publicId, systemId)
+        character(len=*), intent(in) :: name
+        character(len=*), optional, intent(in) :: publicId
+        character(len=*), intent(in) :: systemId
+      end subroutine startDTD_handler
+
+      subroutine endDTD_handler()
+      end subroutine endDTD_handler
+
+      subroutine startCdata_handler()
+      end subroutine startCdata_handler
+
+      subroutine endCdata_handler()
+      end subroutine endCdata_handler
 
     end interface
 
