@@ -59,6 +59,17 @@ module m_sax_types
   integer, parameter :: ST_DTD_NOTATION_END = 34
   integer, parameter :: ST_DTD_DECL = 35
   integer, parameter :: ST_CLOSE_DTD = 36
+  integer, parameter :: ST_DTD_ENTITY_PE = 37
+  integer, parameter :: ST_DTD_ENTITY_ID = 38
+  integer, parameter :: ST_DTD_ENTITY_PUBLIC = 39
+  integer, parameter :: ST_DTD_ENTITY_SYSTEM = 40
+  integer, parameter :: ST_DTD_ENTITY_NDATA = 41
+  integer, parameter :: ST_DTD_ENTITY_NDATA_VALUE = 42
+  integer, parameter :: ST_DTD_ENTITY_END = 43
+  integer, parameter :: ST_DTD_ATTLIST_CONTENTS = 44
+  integer, parameter :: ST_DTD_ATTLIST_END = 45
+  integer, parameter :: ST_DTD_ELEMENT_CONTENTS = 46
+  integer, parameter :: ST_DTD_ELEMENT_END = 47
   
   ! Whitespace
   
@@ -82,6 +93,7 @@ module m_sax_types
     character, dimension(:), pointer :: name => null()
     character, dimension(:), pointer :: attname => null()
     logical :: error = .false.
+    logical :: pe = .false.
     type(sax_error_t), dimension(:), pointer :: error_stack => null()
     ! Aspects of document structure
     integer :: xml_version
@@ -93,11 +105,11 @@ module m_sax_types
     type(namespacedictionary) :: nsdict
     type(notation_list) :: nlist
     type(entity_list) :: pe_list
-    type(entity_list) :: entity_list
+    type(entity_list) :: ge_list
     character(len=1), dimension(:), pointer :: PublicId => null()
     character(len=1), dimension(:), pointer :: SystemId => null()
     character(len=1), dimension(:), pointer :: entityContent => null()
-    character(len=1), dimension(:), pointer :: NdataValue => null()
+    character(len=1), dimension(:), pointer :: Ndata => null()
   end type sax_parser_t
 
 

@@ -190,10 +190,13 @@ contains
         elseif (c=='"'.or.c=='"') then ! grab until next quote
           call get_characters_until_all_of(fb, c, iostat)
           if (iostat/=0) return
-          fx%token => fb%namebuffer
-          nullify(fb%namebuffer)
+          allocate(fx%token(size(fb%namebuffer)+2))
+          fx%token(1) = c
+          fx%token(2:size(fx%token)-1) = fb%namebuffer
+          deallocate(fb%namebuffer)
           c = get_characters(fb, 1, iostat)
           if (iostat/=0) return
+          fx%token(size(fx%token)) = c
         else !it must be a NAME for some reason
           call put_characters(fb, 1)
           if (fx%xml_version==XML1_0) then

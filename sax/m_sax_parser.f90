@@ -9,6 +9,8 @@ module m_sax_parser
     XML_WHITESPACE, XML1_0_NAMECHARS, XML1_1_NAMECHARS, operator(.in.)
   use m_common_elstack, only: elstack_t, push_elstack, pop_elstack, &
     init_elstack, destroy_elstack, is_empty, get_top_elstack, len
+  use m_common_entities, only: existing_entity, &
+    add_internal_entity, add_external_entity
   use m_common_error, only: FoX_error
   use m_common_io, only: io_eof, io_err
   use m_common_namecheck, only: checkName, checkSystemId, checkPubId
@@ -19,7 +21,8 @@ module m_sax_parser
     add_notation, notation_exists
 
   use m_sax_reader, only: file_buffer_t
-  use m_sax_tokenizer, only: sax_tokenize, parse_xml_declaration, add_parse_error
+  use m_sax_tokenizer, only: sax_tokenize, parse_xml_declaration, &
+    add_parse_error
   use m_sax_types ! everything, really
 
   implicit none
@@ -73,7 +76,7 @@ contains
     if (associated(fx%publicId)) deallocate(fx%publicId)
     if (associated(fx%systemId)) deallocate(fx%systemId)
     if (associated(fx%entityContent)) deallocate(fx%entityContent)
-    if (associated(fx%NdataValue)) deallocate(fx%NdataValue)
+    if (associated(fx%Ndata)) deallocate(fx%Ndata)
 
   end subroutine sax_parser_destroy
 
@@ -621,7 +624,7 @@ contains
         if (str_vs(fx%token)==']') then
           fx%state = ST_CLOSE_DTD
         elseif (str_vs(fx%token)=='%') then
-          !argh
+          call FoX_Error("PE reference unimplemented")
         elseif (str_vs(fx%token)=='<?') then
           fx%state = ST_START_PI
         elseif (str_vs(fx%token)=='<!') then
@@ -633,18 +636,197 @@ contains
 
       case (ST_DTD_ATTLIST)
         print*, 'ST_DTD_ATTLIST'
-        ! parse contents
+        ! check is name
+        fx%name => fx%token
+        nullify(fx%token)
+        fx%state = ST_DTD_ATTLIST_CONTENTS
+
+      case (ST_DTD_ATTLIST_CONTENTS)
+        !token is everything up to >
+        call parse_attlist
+        if (fx%error) goto 100
+        fx%state = ST_DTD_ATTLIST_END
+
+      case (ST_DTD_ATTLIST_END)
+        if (str_vs(fx%token)=='>') then
+          ! register contents ...
+          deallocate(fx%name)
+          fx%state = ST_INT_SUBSET
+          fx%whitespace = WS_DISCARD
+        else
+          call add_parse_error(fx, "Unexpected token in ATTLIST")
+        endif
 
       case (ST_DTD_ELEMENT)
         print*, 'ST_DTD_ELEMENT'
-        ! parse contents
+        ! check is name
+        fx%name => fx%token
+        nullify(fx%token)
+        fx%state = ST_DTD_ELEMENT_CONTENTS
+        call FoX_Error("element unimplemented")
+
+      case (ST_DTD_ELEMENT_CONTENTS)
+        !token is everything up to >
+        call parse_element
+        if (fx%error) goto 100
+        fx%state = ST_DTD_ELEMENT_END
+        
+      case (ST_DTD_ELEMENT_END)
+        if (str_vs(fx%token)=='>') then
+          ! register contents ...
+          deallocate(fx%name)
+          fx%state = ST_INT_SUBSET
+          fx%whitespace = WS_DISCARD
+        else
+          call add_parse_error(fx, "Unexpected token in ELEMENT")
+        endif
         
       case (ST_DTD_ENTITY)
         print*, 'ST_DTD_ENTITY'
-        ! parse contents
+        if (str_vs(fx%token) == '%') then
+          fx%pe = .true.
+          ! this will be a PE
+          fx%state = ST_DTD_ENTITY_PE
+          fx%name => fx%token
+          nullify(fx%token)
+        else
+          fx%pe = .false.
+          ! FIXME check it's a name
+          fx%state = ST_DTD_ENTITY_ID
+        endif
         
+      case (ST_DTD_ENTITY_PE)
+        print*, 'ST_DTD_ENTITY_PE'
+        !check name is name FIXME
+        fx%name => fx%token
+        nullify(fx%token)
+        fx%state = ST_DTD_ENTITY_ID
+
+      case (ST_DTD_ENTITY_ID)
+        print*, 'ST_DTD_ENTITY_ID'
+        if (str_vs(fx%token) == 'PUBLIC') then
+          fx%state = ST_DTD_ENTITY_PUBLIC
+        elseif (str_vs(fx%token) == 'SYSTEM') then
+          fx%state = ST_DTD_ENTITY_SYSTEM
+        elseif (fx%token(1)=="'".or.fx%token(1)=='"') then
+          fx%attname => fx%token
+          nullify(fx%token)
+          fx%state = ST_DTD_ENTITY_END
+          fx%whitespace = WS_DISCARD
+        else
+          call add_parse_error(fx, "Unexpected token in ENTITY")
+        endif
+          
+      case (ST_DTD_ENTITY_PUBLIC)
+        print*, 'ST_DTD_ENTITY_PUBLIC'
+        if (checkPubId(str_vs(fx%token))) then
+          fx%publicId => fx%token
+          nullify(fx%token)
+          fx%state = ST_DTD_ENTITY_SYSTEM
+        else
+          call add_parse_error(fx, "Invalid PUBLIC id in ENTITY")
+        endif
+        
+      case (ST_DTD_ENTITY_SYSTEM)
+        print*, 'ST_DTD_ENTITY_SYSTEM'
+        if (checkSystemId(str_vs(fx%token))) then
+          fx%systemId => fx%token
+          nullify(fx%token)
+          fx%state = ST_DTD_ENTITY_NDATA
+        else
+          call add_parse_error(fx, "Invalid SYSTEM id in ENTITY")
+        endif
+
+      case (ST_DTD_ENTITY_NDATA)
+        print*, 'ST_DTD_ENTITY_NDATA'
+        if (str_vs(fx%token)=='>') then
+          if (associated(fx%attname)) then
+            ! if it doesn't already exist
+            ! add it to (general/parameter) entity list
+          else
+            ! add it as external entity
+          endif
+        elseif (str_vs(fx%token)=='NDATA') then
+          if (fx%pe) then
+            call add_parse_error(fx, "Parameter entity cannot have NDATA declaration"); goto 100
+          endif
+          fx%state = ST_DTD_ENTITY_NDATA_VALUE
+        else
+          call add_parse_error(fx, "Unexpected token in ENTITY")
+        endif
+
+      case (ST_DTD_ENTITY_NDATA_VALUE)
+        print*, 'ST_DTD_ENTITY_NDATA_VALUE'
+        !check is a name and exists in notationlist
+        if(notation_exists(fx%nlist, str_vs(fx%name))) then
+          fx%Ndata => fx%token
+          nullify(fx%token)
+          fx%state = ST_DTD_ENTITY_END
+          fx%whitespace = WS_DISCARD
+          ! add entity
+        else
+          call add_parse_error(fx, "Attempt to use undeclared notation")
+        endif
+
+      case (ST_DTD_ENTITY_END)
+        print*, 'ST_DTD_ENTITY_END'
+        if (str_vs(fx%token)=='>') then
+          !Parameter or General Entity?
+          if (fx%pe) then
+            !Does entity with this name exist?
+            if (.not.existing_entity(fx%pe_list, str_vs(fx%name))) then
+              ! Internal or external?
+              if (associated(fx%attname)) then ! it's internal
+                call add_internal_entity(fx%pe_list, str_vs(fx%name), &
+                  str_vs(fx%attname))
+              else ! PE can't have Ndata declaration
+                if (associated(fx%publicId)) then
+                  call add_external_entity(fx%pe_list, str_vs(fx%name), &
+                    str_vs(fx%systemId), publicId=str_vs(fx%publicId))
+                else
+                  call add_external_entity(fx%pe_list, str_vs(fx%name), &
+                    str_vs(fx%systemId))
+                endif
+              endif
+              ! else we ignore it
+            endif
+          else !It's a general entity
+            if (.not.existing_entity(fx%ge_list, str_vs(fx%name))) then
+              ! Internal or external?
+              if (associated(fx%attname)) then ! it's internal
+                call add_internal_entity(fx%ge_list, str_vs(fx%name), &
+                  str_vs(fx%attname))
+              else
+                if (associated(fx%publicId).and.associated(fx%Ndata)) then
+                  call add_external_entity(fx%ge_list, str_vs(fx%name), &
+                    str_vs(fx%systemId), publicId=str_vs(fx%publicId), &
+                    notation=str_vs(fx%Ndata))
+                elseif (associated(fx%Ndata)) then
+                  call add_external_entity(fx%ge_list, str_vs(fx%name), &
+                    str_vs(fx%systemId), notation=str_vs(fx%Ndata))
+                elseif (associated(fx%publicId)) then
+                  call add_external_entity(fx%ge_list, str_vs(fx%name), &
+                    str_vs(fx%systemId), publicId=str_vs(fx%publicId))
+                else
+                  call add_external_entity(fx%ge_list, str_vs(fx%name), &
+                    str_vs(fx%systemId))
+                endif
+              endif
+            endif
+          endif
+          deallocate(fx%name)
+          if (associated(fx%attname)) deallocate(fx%attname)
+          if (associated(fx%systemId)) deallocate(fx%systemId)
+          if (associated(fx%publicId)) deallocate(fx%publicId)
+          if (associated(fx%Ndata)) deallocate(fx%Ndata)
+          fx%state = ST_INT_SUBSET
+        else
+          call add_parse_error(fx, "Unexpected token at end of ENTITY")
+        endif
+
       case (ST_DTD_NOTATION)
         print*, 'ST_DTD_NOTATION'
+        ! check name is name FIXMe
         fx%name => fx%token
         nullify(fx%token)
         fx%state = ST_DTD_NOTATION_ID
@@ -804,6 +986,12 @@ contains
         call checkEndNamespaces(fx%nsDict, len(fx%elstack)+1, &
           end_prefix_handler)
       end subroutine close_tag
+
+      subroutine parse_attlist
+      end subroutine parse_attlist
+      
+      subroutine parse_element
+      end subroutine parse_element
 
   end subroutine sax_parse
 

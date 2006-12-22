@@ -122,20 +122,27 @@ contains
   pure function checkPubId(PubId) result(good)
     character(len=*), intent(in) :: PubId
     logical :: good
-    good =  (verify(PubId, PubIdChars) == 0) 
+    character :: q
+    ! We are assuming all non-legitimate Chars are already excluded.
+    !FIXME should we?
+    q = PubId(1:1)
+    good = (q/='"'.or.q/="'") 
+    good = good.and.(PubId(len(PubId):len(PubId))==q)
+    good =  (verify(PubId(2:len(Pubid)-1), PubIdChars) == 0) 
   end function checkPubId
 
 
   pure function checkSystemId(SystemId) result(good)
     character(len=*), intent(in) :: SystemId
     logical :: good
-    if (index(SystemId, '"') > 0) then
-      good = (index(SystemId, "'") > 0)
-    elseif (index(SystemId, "'") > 0) then
-      good = (index(SystemId, '"') > 0)
-    else
-      good = .true.
-    end if
+    character :: q
+    ! We are assuming all non-legitimate Chars are already excluded.
+    !FIXME should we?
+    q = SystemId(1:1)
+    good = (q/='"'.or.q/="'") 
+    good = good.and.(SystemId(len(SystemId):len(SystemId))==q)
+    good = good.and.(index(SystemId(2:len(SystemId)-1), q)==0)
+
   end function checkSystemId
     
 
