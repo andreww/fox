@@ -116,12 +116,12 @@ contains
     optional                            :: start_document_handler
     optional                            :: end_document_handler
     !optional :: ignorableWhitespace
-    optional :: notationDecl_handler
-    optional :: unparsedEntityDecl_handler
     optional :: startDTD_handler
     optional :: endDTD_handler
     optional :: startCdata_handler
     optional :: endCdata_handler
+    optional :: notationDecl_handler
+    optional :: unparsedEntityDecl_handler
 
     interface
       subroutine begin_element_handler(namespaceURI, localName, name, attributes)
@@ -523,7 +523,13 @@ contains
             processing_instruction_handler,  &
             error_handler,                   &
             start_document_handler,          & 
-            end_document_handler)
+            end_document_handler,            &
+            startDTD_handler,                &
+            endDTD_handler,                  &
+            startCdata_handler,              &
+            endCdata_handler,                &
+            unparsedEntityDecl_handler,      &
+    notationDecl_handler)
           if (iostat/=0) goto 100
         else
           call add_parse_error(fx, "Unexpected token found in character context")
