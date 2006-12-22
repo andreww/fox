@@ -100,6 +100,7 @@ contains
     endDTD_handler,                       &
     startCdata_handler,                   &
     endCdata_handler,                     &
+    unparsedEntityDecl_handler,           &
     notationDecl_handler)
     
     type(sax_parser_t), intent(inout) :: fx
@@ -116,7 +117,7 @@ contains
     optional                            :: end_document_handler
     !optional :: ignorableWhitespace
     optional :: notationDecl_handler
-    !optional :: unparsedEntityDecl
+    optional :: unparsedEntityDecl_handler
     optional :: startDTD_handler
     optional :: endDTD_handler
     optional :: startCdata_handler
@@ -169,6 +170,13 @@ contains
 
       subroutine end_document_handler()     
       end subroutine end_document_handler
+
+      subroutine unparsedEntityDecl_handler(name, publicId, systemId, notation)
+        character(len=*), intent(in) :: name
+        character(len=*), optional, intent(in) :: publicId
+        character(len=*), intent(in) :: systemId
+        character(len=*), intent(in) :: notation
+      end subroutine unparsedEntityDecl_handler
 
       subroutine notationDecl_handler(name, publicId, systemId)
         character(len=*), intent(in) :: name
@@ -696,6 +704,8 @@ contains
           nullify(fx%token)
         else
           fx%pe = .false.
+          fx%name => fx%token
+          nullify(fx%token)
           ! FIXME check it's a name
           fx%state = ST_DTD_ENTITY_ID
         endif
@@ -971,9 +981,16 @@ contains
                 call add_external_entity(fx%ge_list, str_vs(fx%name), &
                   str_vs(fx%systemId), publicId=str_vs(fx%publicId), &
                   notation=str_vs(fx%Ndata))
+                if (present(unparsedEntityDecl_handler)) &
+                  call unparsedEntityDecl_Handler(str_vs(fx%name), &
+                  str_vs(fx%systemId), str_vs(fx%publicId), &
+                  str_vs(fx%Ndata))
               elseif (associated(fx%Ndata)) then
                 call add_external_entity(fx%ge_list, str_vs(fx%name), &
                   str_vs(fx%systemId), notation=str_vs(fx%Ndata))
+                if (present(unparsedEntityDecl_handler)) &
+                  call unparsedEntityDecl_Handler(str_vs(fx%name), &
+                  systemId=str_vs(fx%systemId), notation=str_vs(fx%Ndata))
               elseif (associated(fx%publicId)) then
                 call add_external_entity(fx%ge_list, str_vs(fx%name), &
                   str_vs(fx%systemId), publicId=str_vs(fx%publicId))
