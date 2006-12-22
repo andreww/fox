@@ -528,24 +528,24 @@ contains
           fx%state = ST_CLOSING_TAG
         elseif (fx%token(1)=='&') then
           ! tell tokenizer to expand it
-          call sax_parse(fx, fb,             &
-            begin_element_handler,           &
-            end_element_handler,             &
-            start_prefix_handler,            &
-            end_prefix_handler,              &
-            characters_handler,              &
-            comment_handler,                 &
-            processing_instruction_handler,  &
-            error_handler,                   &
-            start_document_handler,          & 
-            end_document_handler,            &
-            startDTD_handler,                &
-            endDTD_handler,                  &
-            startCdata_handler,              &
-            endCdata_handler,                &
-            unparsedEntityDecl_handler,      &
-            externalEntityDecl_handler,           &
+          call sax_parse(fx, fb,  &
+            begin_element_handler,                &
+            end_element_handler,                  &
+            start_prefix_handler,                 &
+            end_prefix_handler,                   &
+            characters_handler,                   &
+            comment_handler,                      &
+            processing_instruction_handler,       &
+            error_handler,                        &
+            start_document_handler,               & 
+            end_document_handler,                 &
+            startDTD_handler,                     &
+            endDTD_handler,                       &
+            startCdata_handler,                   &
+            endCdata_handler,                     &
             internalEntityDecl_handler,           &
+            externalEntityDecl_handler,           &
+            unparsedEntityDecl_handler,           &
             notationDecl_handler)
           if (iostat/=0) goto 100
         else

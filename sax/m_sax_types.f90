@@ -3,6 +3,7 @@ module m_sax_types
   use m_common_attrs, only: dictionary_t
   use m_common_elstack, only: elstack_t
   use m_common_entities, only: entity_list
+  use m_common_error, only: error_t
   use m_common_namespaces, only: namespacedictionary
   use m_common_notations, only: notation_list
 
@@ -78,10 +79,6 @@ module m_sax_types
   integer, parameter :: WS_MANDATORY = 2
   integer, parameter :: WS_DISCARD = 3
   
-  type sax_error_t
-    character, dimension(:), pointer :: msg => null()
-  end type sax_error_t
-
   type sax_parser_t
     integer :: whitespace
     integer :: context 
@@ -94,7 +91,7 @@ module m_sax_types
     character, dimension(:), pointer :: attname => null()
     logical :: error = .false.
     logical :: pe = .false.
-    type(sax_error_t), dimension(:), pointer :: error_stack => null()
+    type(error_t), dimension(:), pointer :: error_stack => null()
     ! Aspects of document structure
     integer :: xml_version
     character, dimension(:), pointer :: encoding => null()

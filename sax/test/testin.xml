@@ -11,6 +11,7 @@
 <!ENTITY qr3 SYSTEM "arse" NDATA note>
 <!ENTITY qr4 PUBLIC "arse" "poo">
 <!ENTITY qr5 PUBLIC "arse" "poo" NDATA note>
+<!ENTITY qr6 "<">
 ]>
 
-<test/>
+<test>&qr6;</test>

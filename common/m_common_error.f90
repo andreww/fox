@@ -3,6 +3,17 @@ module m_common_error
   use pxf, only: pxfabort, pxfflush
 
   implicit none
+  private
+
+  integer, parameter :: ERR_NULL = 0
+  integer, parameter :: ERR_WARNING = 1
+  integer, parameter :: ERR_ERROR = 2
+  integer, parameter :: ERR_FATAL = 3
+
+  type error_t
+    integer :: severity = ERR_NULL
+    character, dimension(:), pointer :: msg => null()
+  end type error_t
 
   interface FoX_warning
     module procedure FoX_warning_base
@@ -15,6 +26,17 @@ module m_common_error
   interface FoX_fatal
     module procedure FoX_fatal_base
   end interface
+
+  public :: ERR_NULL
+  public :: ERR_WARNING
+  public :: ERR_ERROR
+  public :: ERR_FATAL
+
+  public :: error_t
+
+  public :: FoX_warning
+  public :: FoX_error
+  public :: FoX_fatal
 
 contains
   !---------------------------------------------------------

@@ -20,7 +20,7 @@ module m_common_array_str
 
   !public :: operator(.equal.), compare_array_str !!!! , assignment(=)
   !public :: assign_array_to_str , assign_str_to_array
-  public :: str_vs, vs_str
+  public :: str_vs, vs_str, vs_str_alloc
 
 contains
   !-------------------------------------------------------------
@@ -57,7 +57,7 @@ contains
 
   end subroutine assign_str_to_array
 
-  !-------------------------------------------------------------
+
   pure function compare_vs_s(s,str) result(equal) ! .equal. generic
     character(len=1), dimension(:), intent(in)   :: s
     character(len=*), intent(in) :: str
@@ -112,5 +112,13 @@ contains
 
     vs = transfer(s, vs)
   end function vs_str
+
+  pure function vs_str_alloc(s) result(vs)
+    character(len=*), intent(in) :: s
+    character, dimension(:), pointer :: vs
+
+    allocate(vs(len(s)))
+    vs = vs_str(s)
+  end function vs_str_alloc
 
 end module m_common_array_str

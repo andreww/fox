@@ -14,9 +14,9 @@ module m_common_entities
 
   !FIXME need to worry about removing entities from a list.
 
-  use m_common_array_str, only: str_vs, vs_str
+  use m_common_array_str, only: str_vs, vs_str, vs_str_alloc
   use m_common_charset, only: digits
-  use m_common_error, only: FoX_warning, FoX_error
+  use m_common_error, only: error_t, ERR_WARNING, ERR_ERROR, FoX_warning, FoX_error
   use m_common_format, only: str_to_int_10, str_to_int_16
   use m_common_namecheck, only: checkName, checkSystemId, checkPubId, &
     checkCharacterEntityReference, checkEntityValue
@@ -273,7 +273,6 @@ contains
       call FoX_error("Illegal entity name: "//code)
     if (.not.checkEntityValue(repl)) &
       call FoX_error("Illegal entity value: "//repl)
-
     call add_entity(ents, code, repl, "", "", "", .true., .true.)
   end subroutine add_internal_entity
 
@@ -707,5 +706,84 @@ contains
     enddo
 
   end function entity_filter_EV
+
+  pure function len_lexically_expand_entity(repl, error) result(n)
+    character(len=*), intent(in) :: repl
+    type(error_t), optional, intent(out) :: error
+    integer :: n
+
+    integer :: i, i2, j
+
+    if (index(repl,'%')/=0) then
+      n = -1
+      if (present(error)) &
+        error%msg => vs_str_alloc("Cannot have '%' inside internal entity value in internal subset")
+      return
+    endif
+    
+    i = 1
+    i = i2
+    do 
+      if (repl(i:i)=='&') then
+        j = index(str_vs(repl(i+1:)),';')
+        if (j/=0) then
+          n = -1
+          if (present(error)) &
+            error%msg => vs_str_alloc("Unterminated entity reference")
+          return
+        elseif (checkEntityName(str_vs(repl(i+1:j-1)))) then
+          i = i + j
+          i2 = i2 + j
+        elseif (isACharacterReference(str_vs(repl(i+1:j-1)))) then
+          i = i + 1
+          i2 = i2 + 1
+        else
+          n = -1
+          if (present(error)) &
+            error%msg => vs_str_alloc("Invalid entity reference")
+          return
+        endif
+      else
+        i = i + 1
+      endif
+    enddo
+
+    n = i2 - 1
+
+  end function len_lexically_expand_entity
+
+  function lexically_expand_entity(repl, error) result(repl_new)
+    character(len=*), intent(in) :: repl
+    type(error_t), intent(out) :: error
+    character(len=len_lexically_expand_entity(repl)) :: repl_new
+
+    integer :: i, i2, j
+    
+    if (len_lexically_expand_entity(repl, error)==-1) then
+      return
+    endif
+
+    i = 1
+    i = i2
+    do 
+      if (repl(i:i)=='&') then
+        j = index(str_vs(repl(i+1:)),';')
+        if (checkName(str_vs(repl(i+1:j-1)))) then
+          repl_new(i2:i2+j-1) = str_vs(repl(i:i+j-1))
+          i2 = i2 + j
+        elseif (isACharacterReference(str_vs(repl(i+1:j-1)))) then
+          !if it is ascii then
+          repl_new(i2:i2) = charRef(str_vs(repl(i+1:j-1)))
+          i2 = i2 + 1
+        endif
+        i = i + 1
+      else
+        repl_new(i2:i2) = repl(i:i)
+      endif
+    enddo
+
+  end function lexically_expand_entity
+
+    
 
 end module m_common_entities

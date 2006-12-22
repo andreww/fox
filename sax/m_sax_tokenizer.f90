@@ -7,7 +7,7 @@ module m_sax_tokenizer
     XML_INITIALENCODINGCHARS, XML_ENCODINGCHARS, &
     XML1_0, XML1_1, operator(.in.), &
     isInitialNameChar, isNameChar, isXML1_0_NameChar, isXML1_1_NameChar
-  use m_common_error, only: FoX_warning
+  use m_common_error, only: ERR_WARNING, ERR_ERROR
   use m_common_format, only: str
 
   use m_sax_reader, only: file_buffer_t, rewind_file, &
@@ -556,8 +556,7 @@ contains
     endif
 
     if (str_vs(fx%encoding)/="UTF-8") then
-      call FoX_warning("Unknown character encoding in XML declaration. "//&
-        "Assuming you know what you are doing, going ahead anyway.")
+      call add_parse_error(fx, "Unknown character encoding in XML declaration", ERR_WARNING)
     endif
 
   contains
@@ -740,9 +739,10 @@ contains
 
   end function normalize_text
     
-  subroutine add_parse_error(fx, msg)
+  subroutine add_parse_error(fx, msg, severity)
     type(sax_parser_t), intent(inout) :: fx
     character(len=*), intent(in) :: msg
+    integer, optional, intent(in) :: severity
 
     type(sax_error_t), dimension(:), pointer :: tempStack
     integer :: i, n
@@ -763,6 +763,12 @@ contains
       tempStack(n)%msg = vs_str(msg)
       deallocate(fx%error_stack)
       fx%error_stack => tempStack
+    endif
+
+    if (present(severity)) then
+      fx%error_stack(ubound(fx%error_stack))%severity = ERR_ERROR
+    else
+      fx%error_stack(ubound(fx%error_stack))%severity = severity
     endif
 
   end subroutine add_parse_error
