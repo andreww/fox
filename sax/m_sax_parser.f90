@@ -100,6 +100,8 @@ contains
     endDTD_handler,                       &
     startCdata_handler,                   &
     endCdata_handler,                     &
+    internalEntityDecl_handler,           &
+    externalEntityDecl_handler,           &
     unparsedEntityDecl_handler,           &
     notationDecl_handler)
     
@@ -120,8 +122,10 @@ contains
     optional :: endDTD_handler
     optional :: startCdata_handler
     optional :: endCdata_handler
-    optional :: notationDecl_handler
+    optional :: internalEntityDecl_handler
+    optional :: externalEntityDecl_handler
     optional :: unparsedEntityDecl_handler
+    optional :: notationDecl_handler
 
     interface
       subroutine begin_element_handler(namespaceURI, localName, name, attributes)
@@ -177,6 +181,17 @@ contains
         character(len=*), intent(in) :: systemId
         character(len=*), intent(in) :: notation
       end subroutine unparsedEntityDecl_handler
+
+      subroutine internalEntityDecl_handler(name, value)
+        character(len=*), intent(in) :: name
+        character(len=*), intent(in) :: value
+      end subroutine internalEntityDecl_handler
+
+      subroutine externalEntityDecl_handler(name, publicId, systemId)
+        character(len=*), intent(in) :: name
+        character(len=*), optional, intent(in) :: publicId
+        character(len=*), intent(in) :: systemId
+      end subroutine externalEntityDecl_handler
 
       subroutine notationDecl_handler(name, publicId, systemId)
         character(len=*), intent(in) :: name
@@ -529,6 +544,8 @@ contains
             startCdata_handler,              &
             endCdata_handler,                &
             unparsedEntityDecl_handler,      &
+            externalEntityDecl_handler,           &
+            internalEntityDecl_handler,           &
             notationDecl_handler)
           if (iostat/=0) goto 100
         else
@@ -975,13 +992,23 @@ contains
             if (associated(fx%attname)) then ! it's internal
               call add_internal_entity(fx%pe_list, str_vs(fx%name), &
                 str_vs(fx%attname))
+              ! FIXME need to expand value here before reporting ...
+              if (present(internalEntityDecl_handler)) &
+                call internalEntityDecl_handler('%'//str_vs(fx%name), str_vs(fx%attname))
             else ! PE can't have Ndata declaration
               if (associated(fx%publicId)) then
                 call add_external_entity(fx%pe_list, str_vs(fx%name), &
                   str_vs(fx%systemId), publicId=str_vs(fx%publicId))
+                !FIXME need to 'fully resolve URL'
+                if (present(externalEntityDecl_handler)) &
+                  call externalEntityDecl_handler('%'//str_vs(fx%name), &
+                  systemId=str_vs(fx%systemId), publicId=str_vs(fx%publicId))
               else
                 call add_external_entity(fx%pe_list, str_vs(fx%name), &
                   str_vs(fx%systemId))
+                if (present(externalEntityDecl_handler)) &
+                  call externalEntityDecl_handler('%'//str_vs(fx%name), &
+                  systemId=str_vs(fx%systemId))
               endif
             endif
             ! else we ignore it
@@ -992,27 +1019,37 @@ contains
             if (associated(fx%attname)) then ! it's internal
               call add_internal_entity(fx%ge_list, str_vs(fx%name), &
                 str_vs(fx%attname))
+              if (present(internalEntityDecl_handler)) &
+                call internalEntityDecl_handler(str_vs(fx%name),&
+                str_vs(fx%attname))
             else
               if (associated(fx%publicId).and.associated(fx%Ndata)) then
                 call add_external_entity(fx%ge_list, str_vs(fx%name), &
                   str_vs(fx%systemId), publicId=str_vs(fx%publicId), &
                   notation=str_vs(fx%Ndata))
                 if (present(unparsedEntityDecl_handler)) &
-                  call unparsedEntityDecl_Handler(str_vs(fx%name), &
-                  str_vs(fx%systemId), str_vs(fx%publicId), &
-                  str_vs(fx%Ndata))
+                  call unparsedEntityDecl_handler(str_vs(fx%name), &
+                  systemId=str_vs(fx%systemId), publicId=str_vs(fx%publicId), &
+                  notation=str_vs(fx%Ndata))
               elseif (associated(fx%Ndata)) then
                 call add_external_entity(fx%ge_list, str_vs(fx%name), &
                   str_vs(fx%systemId), notation=str_vs(fx%Ndata))
                 if (present(unparsedEntityDecl_handler)) &
-                  call unparsedEntityDecl_Handler(str_vs(fx%name), &
+                  call unparsedEntityDecl_handler(str_vs(fx%name), &
                   systemId=str_vs(fx%systemId), notation=str_vs(fx%Ndata))
               elseif (associated(fx%publicId)) then
                 call add_external_entity(fx%ge_list, str_vs(fx%name), &
                   str_vs(fx%systemId), publicId=str_vs(fx%publicId))
+                !FIXME need to 'fully resolve URL'
+                if (present(externalEntityDecl_handler)) &
+                  call externalEntityDecl_handler('%'//str_vs(fx%name), &
+                  systemId=str_vs(fx%systemId), publicId=str_vs(fx%publicId))
               else
                 call add_external_entity(fx%ge_list, str_vs(fx%name), &
                   str_vs(fx%systemId))
+                if (present(externalEntityDecl_handler)) &
+                  call externalEntityDecl_handler('%'//str_vs(fx%name), &
+                  systemId=str_vs(fx%systemId))
               endif
             endif
           endif

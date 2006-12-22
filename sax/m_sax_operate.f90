@@ -62,7 +62,10 @@ contains
     startCdata_handler,                   &
     endCdata_handler,                     &
     unparsedEntityDecl_handler,           &
+    internalEntityDecl_handler,           &
+    externalEntityDecl_handler,           &
     notationDecl_handler)
+
     type(xml_t), intent(inout) :: xt
     optional :: begin_element_handler
     optional :: end_element_handler
@@ -80,6 +83,8 @@ contains
     optional :: endCdata_handler
     optional :: notationDecl_handler
     optional :: unparsedEntityDecl_handler
+    optional :: internalEntityDecl_handler
+    optional :: externalEntityDecl_handler
 
     interface
       subroutine begin_element_handler(namespaceURI, localName, name, attributes)
@@ -136,6 +141,17 @@ contains
         character(len=*), intent(in) :: notation
       end subroutine unparsedEntityDecl_handler
 
+      subroutine internalEntityDecl_handler(name, value)
+        character(len=*), intent(in) :: name
+        character(len=*), intent(in) :: value
+      end subroutine internalEntityDecl_handler
+
+      subroutine externalEntityDecl_handler(name, publicId, systemId)
+        character(len=*), intent(in) :: name
+        character(len=*), optional, intent(in) :: publicId
+        character(len=*), intent(in) :: systemId
+      end subroutine externalEntityDecl_handler
+
       subroutine notationDecl_handler(name, publicId, systemId)
         character(len=*), intent(in) :: name
         character(len=*), optional, intent(in) :: publicId
@@ -171,7 +187,15 @@ contains
     processing_instruction_handler,  &
     error_handler,                   &
     start_document_handler,          & 
-    end_document_handler)
+    end_document_handler,            &
+    startDTD_handler,                     &
+    endDTD_handler,                       &
+    startCdata_handler,                   &
+    endCdata_handler,                     &
+    internalEntityDecl_handler,           &
+    externalEntityDecl_handler,           &
+    unparsedEntityDecl_handler,           &
+    notationDecl_handler)
 
   end subroutine sax_parse_go
 
