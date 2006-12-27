@@ -14,4 +14,4 @@
 <!ENTITY qr6 "<">
 ]>
 
-<test>&qr6;</test>
+<test att="value">jhgfjhgf:</test>

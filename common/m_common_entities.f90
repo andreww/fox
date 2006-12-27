@@ -53,7 +53,7 @@ module m_common_entities
   public :: expand_parameter_entity
   public :: expand_parameter_entity_len
 
-  public :: expand_entity_value
+  public :: expand_entity_value_alloc
 
   public :: entity_filter_EV_len
   public :: entity_filter_EV
@@ -694,39 +694,65 @@ contains
 
   end function expand_entity_error
 
-  function expand_entity_value(repl, error) result(repl_new)
+  function expand_entity_value_alloc(repl, error) result(repl_new)
+    !perform expansion of 
+    ! 1: character entity references
+    ! 2: internal parsed entity references
+    !on the value of a just-declared internal parsed entity,
+    !before storing it.
+    !
+    ! This is only ever called from the SAX parser
+    ! (might it be called from WXML?)
+    ! so input & output is with character arrays, not strings.
     character, dimension(:), intent(in) :: repl
     type(error_t), intent(out) :: error
     character, dimension(:), pointer :: repl_new
 
+    character, dimension(:), pointer :: repl_temp
     integer :: i, i2, j
     
-    if (expand_entity_error(str_vs(repl), error)==-1) then
       allocate(repl_new(0))
+    if (index(str_vs(repl),'%')/=0) then
+      error%msg = vs_str_alloc("Not allowed % in intenal subset general entity value")
       return
     else
-      allocate(error%msg(0))
+      allocate(repl_temp(size(repl))) ! it will always be less than or equal
     endif
 
     i = 1
-    i = i2
-    do 
+    i2 = 1
+    do
+      if (i>size(repl)) exit
       if (repl(i)=='&') then
         j = index(str_vs(repl(i+1:)),';')
-        if (checkName(str_vs(repl(i+1:j-1)))) then
-          repl_new(i2:i2+j-1) = str_vs(repl(i:i+j-1))
-          i2 = i2 + j
+        if (j==0) then
+          error%msg = vs_str_alloc("Not allowed bare & in entity value")
+          return
+        elseif (checkName(str_vs(repl(i+1:j-1)))) then
+          repl_temp(i2:i2+j-1) = repl(i:i+j-1)
+          i = i + j + 1
+          i2 = i2 + j + 1
         elseif (checkCharacterEntityReference(str_vs(repl(i+1:j-1)))) then
           !if it is ascii then
-          repl_new(i2:i2) = expand_char_entity(str_vs(repl(i+1:j-1)))
+          repl_temp(i2:i2) = vs_str(expand_char_entity(str_vs(repl(i+1:j-1))))
+          i = i + j + 1
           i2 = i2 + 1
+        else
+          error%msg = vs_str_alloc("Invalid entity reference")
+          return
         endif
-        i = i + 1
       else
-        repl_new(i2) = repl(i)
+        repl_temp(i2) = repl(i)
+        i = i + 1
+        i2 = i2 + 1
       endif
     enddo
 
-  end function expand_entity_value
+    deallocate(repl_new)
+    allocate(error%msg(0))
+    allocate(repl_new(i2-1))
+    repl_new = repl_temp(:i2-1)
+
+  end function expand_entity_value_alloc
 
 end module m_common_entities

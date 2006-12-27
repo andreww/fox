@@ -12,7 +12,7 @@ module m_sax_parser
   use m_common_entities, only: existing_entity, &
     init_entity_list, destroy_entity_list, &
     add_internal_entity, add_external_entity, &
-    expand_entity_value
+    expand_entity_value_alloc
   use m_common_error, only: FoX_error, ERR_NULL, error_t
   use m_common_io, only: io_eof, io_err
   use m_common_namecheck, only: checkName, checkSystemId, checkPubId
@@ -241,6 +241,9 @@ contains
       if (iostat/=0) then
         !fx%state = ST_NULL
         goto 100
+      endif
+      if (.not.associated(fx%token)) then
+        print*, 'no token';stop
       endif
       print*,'token: ',str_vs(fx%token)
 
@@ -516,6 +519,7 @@ contains
         if (size(fx%token)>0) then
           if (present(characters_handler)) call characters_handler(str_vs(fx%token))
         endif
+        fx%whitespace = WS_FORBIDDEN
         fx%state = ST_TAG_IN_CONTENT
 
       case (ST_TAG_IN_CONTENT)
@@ -662,6 +666,11 @@ contains
         if (str_vs(fx%token)==']') then
           fx%state = ST_CLOSE_DTD
         elseif (str_vs(fx%token)=='%') then
+          !FIXME
+          ! Check this. Is it internal? expand.
+          ! is it not?
+          !  then are we standalone?
+          !   then look at XML section 5.1
           call FoX_Error("PE reference unimplemented")
         elseif (str_vs(fx%token)=='<?') then
           fx%state = ST_START_PI
@@ -749,7 +758,7 @@ contains
         elseif (str_vs(fx%token) == 'SYSTEM') then
           fx%state = ST_DTD_ENTITY_SYSTEM
         elseif (fx%token(1)=="'".or.fx%token(1)=='"') then
-          fx%attname => expand_entity_value(fx%token, error)
+          fx%attname => expand_entity_value_alloc(fx%token, error)
           if (error%severity/=ERR_NULL) then
             call add_parse_error(fx, str_vs(error%msg), error%severity)
             goto 100
@@ -966,6 +975,7 @@ contains
           call add_parse_error(fx, "No namespace found for current element")
           return
         endif
+        ! FIXME Are there any default values missing?
         call push_elstack(str_vs(fx%name), fx%elstack)
         ! No point in pushing & pulling onto elstack.
         if (present(begin_element_handler)) &

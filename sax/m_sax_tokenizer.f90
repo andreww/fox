@@ -721,9 +721,10 @@ contains
 
     allocate(s_temp(size(s_in))) ! in the first instance
 
-    i2 = 0
+    i2 = 1
     i = 1
     do 
+      print*,'i ',i,' size ',size(s_IN)
       if (i > size(s_in)) exit
       ! Firstly, all whitespace must become 0x20
       if (s_in(i).in.XML_WHITESPACE) then
@@ -783,7 +784,8 @@ contains
             deallocate(s_ent)
           else
             s_temp(i2:i2+j) = s_in(i:i+j)
-            i2 = i2 + j 
+            i = i + j + 1
+            i2 = i2 + j + 1
             if (fx%standalone) then
               ! or possibly otherwise? empty DTD?:
               call add_parse_error(fx, "Undeclared entity encountered in standalone document.")
@@ -794,13 +796,15 @@ contains
           call add_parse_error(fx, "Illegal entity reference")
           return
         endif
+      else
+        s_temp(i2) = s_in(i)
+        i = i + 1
+        i2 = i2 + 1
       endif
-      i2 = i2 + 1
-      s_temp(i2) = s_in(i)
     enddo
     
-    allocate(s_out(i2))
-    s_out = s_temp(:i2)
+    allocate(s_out(i2-1))
+    s_out = s_temp(:i2-1)
     deallocate(s_temp)
 
   end function normalize_text
