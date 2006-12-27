@@ -221,8 +221,8 @@ contains
     call reset_buffer(xf%buffer, xf%lun, xf%xml_version)
     
     call initNamespaceDictionary(xf%nsDict)
-    call init_entity_list(xf%entityList, .false.)
-    call init_entity_list(xf%PEList, .true.)
+    call init_entity_list(xf%entityList)
+    call init_entity_list(xf%PEList)
     call init_notation_list(xf%nList)
     
   end subroutine xml_OpenFile

@@ -7,8 +7,12 @@ module m_sax_tokenizer
     XML_INITIALENCODINGCHARS, XML_ENCODINGCHARS, &
     XML1_0, XML1_1, operator(.in.), &
     isInitialNameChar, isNameChar, isXML1_0_NameChar, isXML1_1_NameChar
-  use m_common_error, only: ERR_WARNING, ERR_ERROR
+  use m_common_error, only: ERR_WARNING, ERR_ERROR, error_t
+  use m_common_entities, only: entity_list, shallow_copy_entity_list_without, &
+    shallow_destroy_entity_list, existing_entity, is_unparsed_entity, &
+    is_external_entity, expand_entity_text, expand_char_entity
   use m_common_format, only: str
+  use m_common_namecheck, only: checkName, checkCharacterEntityReference
 
   use m_sax_reader, only: file_buffer_t, rewind_file, &
     read_char, read_chars, push_chars, get_characters, put_characters, &
@@ -146,7 +150,9 @@ contains
       endif
       call get_characters_until_all_of(fb, c, iostat)
       if (iostat/=0) return
-      fx%token => normalize_text(fx, fb%namebuffer)
+      fx%token => normalize_text(fx, fx%ge_list, fb%namebuffer)
+      ! if this is a confirmed CDATA attribute, normalize away
+      ! all multiple spaces. FIXME actually, do that in parser.
       ! Next character is either quotechar or eof.
       c = get_characters(fb, 1, iostat)
       ! Either way, we return
@@ -155,7 +161,7 @@ contains
     elseif (fx%context==CTXT_IN_DTD) then
       print*,'context', fx%whitespace
       if (fx%whitespace==WS_MANDATORY) then
-        !We are still allowed a '>'
+        !We are still allowed a '>' without space, ... check first.
         call get_characters_until_not_one_of(fb, XML_WHITESPACE, iostat)
         if (iostat/=0) return
         if (size(fb%namebuffer)==0) then
@@ -176,7 +182,6 @@ contains
           allocate(fx%token(1))
           fx%token = c
         elseif (c=='<') then
-          !FIXME I don't think this is actually allowed here ..
           !it's a comment or a PI ... or a DTD keyword.
           c = get_characters(fb, 1, iostat)
           if (iostat/=0) return
@@ -699,35 +704,96 @@ contains
   end subroutine parse_xml_declaration
 
 
-  recursive function normalize_text(fx, s_in) result(s_out)
+  recursive function normalize_text(fx, e_list, s_in) result(s_out)
     type(sax_parser_t), intent(inout) :: fx
+    type(entity_list), intent(in) :: e_list !WTF
     character, dimension(:), intent(in) :: s_in
     character, dimension(:), pointer :: s_out
 
-    character, dimension(:), pointer :: s_temp
-    integer :: i, i2
+    type(entity_list) :: shortened_entity_list
+    character, dimension(:), pointer :: s_temp, s_temp2, s_ent
+    integer :: i, i2, j
     logical :: w
 
-    ! Condense all whitespace
+    ! Condense all whitespace, only if we are validating,
     ! Expand all &
     ! Complain about < and &
 
     allocate(s_temp(size(s_in))) ! in the first instance
 
     i2 = 0
-    w = .false.
-    do i = 1, size(s_in)
-      if (w) then
-        if (s_in(i).in.XML_WHITESPACE) cycle
-      endif
+    i = 1
+    do 
+      if (i > size(s_in)) exit
+      ! Firstly, all whitespace must become 0x20
       if (s_in(i).in.XML_WHITESPACE) then
-        w = .true.
+        s_temp(i2) = " "
+        ! Then, < is always illegal
+        i = i + 1
+        i2 = i2 + 1
       elseif (s_in(i)=='<') then
-        call add_parse_error(fx, "Illegal character found in attribute.")
+        call add_parse_error(fx, "Illegal < found in attribute.")
         return
+        ! Then, expand <
       elseif (s_in(i)=='&') then
-        ! do some magic expansion or error
-        continue
+        j = index(str_vs(s_in(i+1:)), ';')
+        if (j==0) then
+          call add_parse_error(fx, "Illegal & found in attribute")
+          return
+        elseif (j==1) then
+          call add_parse_error(fx, "No entity reference found")
+          return
+        elseif (checkCharacterEntityReference(str_vs(s_in(i+1:i+j-1)))) then
+          ! Expand all character entities
+          s_temp(i2) = expand_char_entity(str_vs(s_in(i+1:i+j-1))) ! FIXME ascii
+          i = i + j  + 1
+          i2 = i2 + 1 ! fixme
+        elseif (checkName(str_vs(s_in(i+1:i+j-1)))) then
+          ! It looks like an entity, is it a good Name?
+          if (str_vs(s_in(i+1:i+j-1))=='lt') then
+            s_temp(i2) = '<' 
+            i = i + j + 1
+            i2 = i2 + 1
+          elseif (str_vs(s_in(i+1:i+j-1))=='amp') then
+            s_temp(i2) = '&'
+            i = i + j + 1
+            i2 = i2 + j + 1
+          elseif (existing_entity(e_list, str_vs(s_in(i+1:i+j-1)))) then
+            !is it the right sort of entity?
+            if (is_unparsed_entity(e_list, str_vs(s_in(i+1:i+j-1)))) then
+              call add_parse_error(fx, "Unparsed entity forbidden in attribute")
+              return
+            elseif (is_external_entity(e_list, str_vs(s_in(i+1:i+j-1)))) then
+              call add_parse_error(fx, "External entity forbidden in attribute")
+              return
+            endif
+            ! shorten entity list
+            shortened_entity_list = shallow_copy_entity_list_without(e_list, str_vs(s_in(i+1:i+j-1)))
+            ! Recursively expand entity, checking for errors.
+            s_ent => normalize_text(fx, shortened_entity_list, expand_entity_text(e_list, str_vs(s_in(i+1:i+j-1))))
+            call shallow_destroy_entity_list(shortened_entity_list)
+            if (fx%error) return
+            allocate(s_temp2(size(s_temp)+size(s_ent)-(j+1)))
+            s_temp2(:i2) = s_temp
+            s_temp2(i2+1:) = s_ent
+            deallocate(s_temp)
+            s_temp => s_temp2
+            i = i + j + 1
+            i2 = i2 + size(s_ent)
+            deallocate(s_ent)
+          else
+            s_temp(i2:i2+j) = s_in(i:i+j)
+            i2 = i2 + j 
+            if (fx%standalone) then
+              ! or possibly otherwise? empty DTD?:
+              call add_parse_error(fx, "Undeclared entity encountered in standalone document.")
+              return
+            endif
+          endif
+        else
+          call add_parse_error(fx, "Illegal entity reference")
+          return
+        endif
       endif
       i2 = i2 + 1
       s_temp(i2) = s_in(i)
@@ -744,7 +810,7 @@ contains
     character(len=*), intent(in) :: msg
     integer, optional, intent(in) :: severity
 
-    type(sax_error_t), dimension(:), pointer :: tempStack
+    type(error_t), dimension(:), pointer :: tempStack
     integer :: i, n
 
     n = fx%parse_stack

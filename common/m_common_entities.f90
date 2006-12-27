@@ -25,9 +25,8 @@ module m_common_entities
   private
 
   type entity_t
+    logical :: external
     character(len=1), dimension(:), pointer :: code => null()
-    logical :: internal
-    logical :: parsed
     character(len=1), dimension(:), pointer :: repl => null()
     character(len=1), dimension(:), pointer :: publicId => null()
     character(len=1), dimension(:), pointer :: systemId => null()
@@ -40,16 +39,21 @@ module m_common_entities
   end type entity_list
 
   public :: is_unparsed_entity
+  public :: is_external_entity
 
   public :: expand_entity_text
   public :: expand_entity_text_len
   public :: existing_entity
+
+  public :: expand_char_entity
 
   public :: entity_filter_text_len
   public :: entity_filter_text
 
   public :: expand_parameter_entity
   public :: expand_parameter_entity_len
+
+  public :: expand_entity_value
 
   public :: entity_filter_EV_len
   public :: entity_filter_EV
@@ -58,40 +62,20 @@ module m_common_entities
   public :: init_entity_list
   public :: reset_entity_list
   public :: destroy_entity_list
+  public :: shallow_destroy_entity_list
   public :: print_entity_list
-  public :: copy_entity_list
+  public :: shallow_copy_entity_list_without
   public :: add_internal_entity
   public :: add_external_entity
 
 contains
 
 
-  pure function deep_copy_entity(ent1) result(ent2)
-    type(entity_t), intent(in) :: ent1
-    type(entity_t) :: ent2
-    
-    ent2%internal = ent1%internal
-    ent2%parsed = ent1%parsed
-    allocate(ent2%code(size(ent1%code)))
-    allocate(ent2%repl(size(ent1%repl)))
-    allocate(ent2%PublicId(size(ent1%PublicId)))
-    allocate(ent2%SystemId(size(ent1%SystemId)))
-    allocate(ent2%notation(size(ent1%notation)))
-    ent2%code = ent1%code
-    ent2%repl = ent1%repl
-    ent2%publicId = ent1%publicId
-    ent2%systemId = ent1%systemId
-    ent2%notation = ent1%notation
-
-  end function deep_copy_entity
-
-
   function shallow_copy_entity(ent1) result(ent2)
     type(entity_t), intent(in) :: ent1
     type(entity_t) :: ent2
     
-    ent2%internal = ent1%internal
-    ent2%parsed = ent1%parsed
+    ent2%external = ent1%external
     ent2%code => ent1%code
     ent2%repl => ent1%repl
     ent2%publicId => ent1%publicId
@@ -143,39 +127,32 @@ contains
     deallocate(ents%list)
   end subroutine destroy_entity_list
 
+  subroutine shallow_destroy_entity_list(ents)
+    type(entity_list), intent(inout) :: ents
 
-  function copy_entity_list(ents) result(ents2)
+    deallocate(ents%list)
+  end subroutine shallow_destroy_entity_list
+
+
+  function shallow_copy_entity_list_without(ents, code) result(ents2)
     type(entity_list), intent(in) :: ents
+    character(len=*), intent(in) :: code
     type(entity_list) :: ents2
 
-    integer :: i, n
+    integer :: i, i2, n
 
     n = size(ents%list)
-    allocate(ents2%list(n))
+    ! We trust that the relevant entity is in the list ...
+    allocate(ents2%list(n-1))
+    i2 = 1
     do i = 1, n
-      ents2%list(i) = deep_copy_entity(ents%list(i))
+      if (str_vs(ents%list(i)%code) /= code) then
+        ents2%list(i2) = shallow_copy_entity(ents%list(i))
+        i2 = i2 + 1
+      endif
     enddo
 
-  end function copy_entity_list
-
-
-!  function copy_entity_list_without(ents, code) result(ents2)
-!    type(entity_list), intent(in) :: ents
-!    type(entity_list) :: ents2!!
-
-!    integer :: i, n
-
-!    ents2%PE = ents%PE
-!    n = size(ents%list)
-!    ! We trust that the relevant entity is in the list ...
-!    allocate(ents2%list(n-1))
-!    do i = 1, n
-!      if (ents%list(i)%code /= code) then
-!        ents2%list(i) = deep_copy_entity(ents%list(i))
-!      endif
-!    enddo
-
-!  end function copy_entity_list_without
+  end function shallow_copy_entity_list_without
 
 
   subroutine print_entity_list(ents)
@@ -197,46 +174,26 @@ contains
   end subroutine print_entity_list
 
 
-  subroutine add_entity(ents, code, repl, publicId, systemId, notation, internal, parsed)
+  subroutine add_entity(ents, code, repl, publicId, systemId, notation, external)
     type(entity_list), intent(inout) :: ents
     character(len=*), intent(in) :: code
     character(len=*), intent(in) :: repl
     character(len=*), intent(in) :: publicId
     character(len=*), intent(in) :: systemId
     character(len=*), intent(in) :: notation
-    logical, intent(in) :: internal
-    logical, intent(in) :: parsed
+    logical, intent(in) :: external
 
     type(entity_list) :: ents_tmp
     integer :: i, n
 
     ! This should only ever be called by add_internal_entity or add_external_entity
-    ! below, so we don't bother sanity-checking input.
+    ! below, so we don't bother sanity-checking input. Note especially we don't 
+    ! check for duplication of entities, so this will happily add another entity
+    ! of the same name if you ask it to. This should't matter though, since the
+    ! first defined will always be picked up first, which is what the XML spec
+    ! requires.
 
     n = size(ents%list)
-    !Are we redefining an existing entity?
-    do i = 1, n
-      if (len(code) == size(ents%list(i)%code)) then
-        if (code == str_vs(ents%list(i)%code)) then
-          deallocate(ents%list(i)%repl)
-          deallocate(ents%list(i)%publicId)
-          deallocate(ents%list(i)%systemId)
-          deallocate(ents%list(i)%notation)
-
-          ents%list(i)%internal = internal
-          ents%list(i)%parsed = parsed
-          allocate(ents%list(i)%repl(len(repl)))
-          ents%list(i)%repl = vs_str(repl)
-          allocate(ents%list(i)%publicId(len(publicId)))
-          ents%list(i)%publicId = vs_str(publicId)
-          allocate(ents%list(i)%systemId(len(systemId)))
-          ents%list(i)%systemId = vs_str(systemId)
-          allocate(ents%list(i)%notation(len(notation)))
-          ents%list(i)%notation = vs_str(notation)
-          return
-        endif
-      endif
-    enddo
     
     allocate(ents_tmp%list(n))
     do i = 1, n
@@ -248,11 +205,9 @@ contains
       ents%list(i) = shallow_copy_entity(ents_tmp%list(i))
     enddo
     deallocate(ents_tmp%list)
-
+    ents%list(i)%external = external
     allocate(ents%list(i)%code(len(code)))
     ents%list(i)%code = vs_str(code)
-    ents%list(i)%internal = internal
-    ents%list(i)%parsed = parsed
     allocate(ents%list(i)%repl(len(repl)))
     ents%list(i)%repl = vs_str(repl)
     allocate(ents%list(i)%publicId(len(publicId)))
@@ -273,7 +228,7 @@ contains
       call FoX_error("Illegal entity name: "//code)
     if (.not.checkEntityValue(repl)) &
       call FoX_error("Illegal entity value: "//repl)
-    call add_entity(ents, code, repl, "", "", "", .true., .true.)
+    call add_entity(ents, code, repl, "", "", "", .false.)
   end subroutine add_internal_entity
 
   
@@ -298,13 +253,13 @@ contains
     endif
 
     if (present(publicId) .and. present(notation)) then
-      call add_entity(ents, code, "", systemId, publicId, notation, .true., .false.)
+      call add_entity(ents, code, "", systemId, publicId, notation, .true.)
     elseif (present(publicId)) then
-      call add_entity(ents, code, "", systemId, publicId, "", .true., .true.)
+      call add_entity(ents, code, "", systemId, publicId, "", .true.)
     elseif (present(notation)) then
-      call add_entity(ents, code, "", systemId, "", notation, .true., .false.)
+      call add_entity(ents, code, "", systemId, "", notation, .true.)
     else
-      call add_entity(ents, code, "", systemId, "", "", .true., .true.)
+      call add_entity(ents, code, "", systemId, "", "", .true.)
     endif
   end subroutine add_external_entity
 
@@ -320,10 +275,28 @@ contains
 
     do i = 1, size(ents%list)
       if (code == str_vs(ents%list(i)%code)) then
-        p = .not.ents%list(i)%parsed
+        p = (size(ents%list(i)%notation)>0)
+        exit
       endif
     enddo
   end function is_unparsed_entity
+
+  function is_external_entity(ents, code) result(p)
+    type(entity_list), intent(in) :: ents
+    character(len=*), intent(in) :: code
+    logical :: p
+
+    integer :: i
+
+    p = .false.
+
+    do i = 1, size(ents%list)
+      if (code == str_vs(ents%list(i)%code)) then
+        p = ents%list(i)%external
+        exit
+      endif
+    enddo
+  end function is_external_entity
  
   pure function expand_char_entity_len(code) result(n)
     character(len=*), intent(in) :: code
@@ -377,6 +350,7 @@ contains
         number = str_to_int_10(code(2:))
       endif
       repl = achar(number)
+      ! FIXME what about > 127 ...
     case default
       repl = "&"//code//";"
     end select
@@ -412,30 +386,9 @@ contains
 
     integer :: i
 
-    if (checkCharacterEntityReference(code)) then
-      n = expand_char_entity_len(code)
-      return
-    endif
-
-    if (.not.existing_entity(ents, code)) then
-      n = len(code) + 2
-      return
-    endif
-
     do i = 1, size(ents%list)
       if (code == str_vs(ents%list(i)%code)) then
-        if (ents%list(i)%internal) then
-          n = size(ents%list(i)%repl)
-        else
-          if (.not.ents%list(i)%parsed) then
-            n = 0
-          else
-            ! Here we would read in the additional doc
-            n = len(code) + 2
-            ! unless we're in an attribute value, in which case this is forbidden.
-          endif
-        endif
-        return
+        n = size(ents%list(i)%repl)
       endif
     enddo
 
@@ -449,24 +402,12 @@ contains
 
     integer :: i
 
-    if (checkCharacterEntityReference(code)) then
-      repl = expand_char_entity(code)
-      return
-    endif
-
-    if (.not.existing_entity(ents, code)) then
-      repl = "&"//code//";"
-      return
-    endif
+    ! No error checking - make sure entity exists before calling it.
 
     do i = 1, size(ents%list)
       if (code == str_vs(ents%list(i)%code)) then
-        if (ents%list(i)%internal) then
-          repl = str_vs(ents%list(i)%repl)
-        else
-          repl = "&"//code//";"
-        endif
-        return
+        repl = str_vs(ents%list(i)%repl)
+        exit
       endif
     enddo
 
@@ -707,11 +648,11 @@ contains
 
   end function entity_filter_EV
 
-  pure function len_lexically_expand_entity(repl, error) result(n)
+  function expand_entity_error(repl, error) result(n)
     character(len=*), intent(in) :: repl
     type(error_t), optional, intent(out) :: error
     integer :: n
-
+    
     integer :: i, i2, j
 
     if (index(repl,'%')/=0) then
@@ -722,19 +663,20 @@ contains
     endif
     
     i = 1
-    i = i2
-    do 
+    i2 = 1
+    do
+      if (i>len(repl)) exit
       if (repl(i:i)=='&') then
-        j = index(str_vs(repl(i+1:)),';')
-        if (j/=0) then
+        j = index(repl(i+1:),';')
+        if (j==0) then
           n = -1
           if (present(error)) &
             error%msg => vs_str_alloc("Unterminated entity reference")
           return
-        elseif (checkEntityName(str_vs(repl(i+1:j-1)))) then
+        elseif (checkName(repl(i+1:j-1))) then
           i = i + j
           i2 = i2 + j
-        elseif (isACharacterReference(str_vs(repl(i+1:j-1)))) then
+        elseif (checkCharacterEntityReference(repl(i+1:j-1))) then
           i = i + 1
           i2 = i2 + 1
         else
@@ -750,40 +692,41 @@ contains
 
     n = i2 - 1
 
-  end function len_lexically_expand_entity
+  end function expand_entity_error
 
-  function lexically_expand_entity(repl, error) result(repl_new)
-    character(len=*), intent(in) :: repl
+  function expand_entity_value(repl, error) result(repl_new)
+    character, dimension(:), intent(in) :: repl
     type(error_t), intent(out) :: error
-    character(len=len_lexically_expand_entity(repl)) :: repl_new
+    character, dimension(:), pointer :: repl_new
 
     integer :: i, i2, j
     
-    if (len_lexically_expand_entity(repl, error)==-1) then
+    if (expand_entity_error(str_vs(repl), error)==-1) then
+      allocate(repl_new(0))
       return
+    else
+      allocate(error%msg(0))
     endif
 
     i = 1
     i = i2
     do 
-      if (repl(i:i)=='&') then
+      if (repl(i)=='&') then
         j = index(str_vs(repl(i+1:)),';')
         if (checkName(str_vs(repl(i+1:j-1)))) then
           repl_new(i2:i2+j-1) = str_vs(repl(i:i+j-1))
           i2 = i2 + j
-        elseif (isACharacterReference(str_vs(repl(i+1:j-1)))) then
+        elseif (checkCharacterEntityReference(str_vs(repl(i+1:j-1)))) then
           !if it is ascii then
-          repl_new(i2:i2) = charRef(str_vs(repl(i+1:j-1)))
+          repl_new(i2:i2) = expand_char_entity(str_vs(repl(i+1:j-1)))
           i2 = i2 + 1
         endif
         i = i + 1
       else
-        repl_new(i2:i2) = repl(i:i)
+        repl_new(i2) = repl(i)
       endif
     enddo
 
-  end function lexically_expand_entity
-
-    
+  end function expand_entity_value
 
 end module m_common_entities

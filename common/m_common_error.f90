@@ -38,6 +38,10 @@ module m_common_error
   public :: FoX_error
   public :: FoX_fatal
 
+  public :: FoX_warning_base
+  public :: FoX_error_base
+  public :: FoX_fatal_base
+
 contains
   !---------------------------------------------------------
   ! Error handling/trapping routines:

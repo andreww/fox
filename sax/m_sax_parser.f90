@@ -11,8 +11,9 @@ module m_sax_parser
     init_elstack, destroy_elstack, is_empty, get_top_elstack, len
   use m_common_entities, only: existing_entity, &
     init_entity_list, destroy_entity_list, &
-    add_internal_entity, add_external_entity
-  use m_common_error, only: FoX_error
+    add_internal_entity, add_external_entity, &
+    expand_entity_value
+  use m_common_error, only: FoX_error, ERR_NULL, error_t
   use m_common_io, only: io_eof, io_err
   use m_common_namecheck, only: checkName, checkSystemId, checkPubId
   use m_common_namespaces, only: getnamespaceURI, invalidNS, &
@@ -215,6 +216,7 @@ contains
       end subroutine endCdata_handler
     end interface
 
+    type(error_t) :: error
     integer :: iostat
 
     iostat = 0
@@ -747,8 +749,11 @@ contains
         elseif (str_vs(fx%token) == 'SYSTEM') then
           fx%state = ST_DTD_ENTITY_SYSTEM
         elseif (fx%token(1)=="'".or.fx%token(1)=='"') then
-          fx%attname => fx%token
-          nullify(fx%token)
+          fx%attname => expand_entity_value(fx%token, error)
+          if (error%severity/=ERR_NULL) then
+            call add_parse_error(fx, str_vs(error%msg), error%severity)
+            goto 100
+          endif
           fx%state = ST_DTD_ENTITY_END
           fx%whitespace = WS_DISCARD
         else
@@ -1065,6 +1070,15 @@ contains
       end subroutine parse_attlist
       
       subroutine parse_element
+        ! discard whitespace ...
+
+        !check for EMPTY and ANY, alternatively, a bracket ...
+        !if a bracket, then either:
+        !   another bracker, or
+        !   an element name, or
+        !   #PCDATA ... in which case either ")", or:
+        !               only | or Names allowed until ")*"
+
       end subroutine parse_element
 
   end subroutine sax_parse
