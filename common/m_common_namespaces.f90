@@ -99,7 +99,6 @@ contains
        enddo
        deallocate(nsDict%prefixes(i)%prefix)
        deallocate(nsDict%prefixes(i)%urilist)
-       deallocate(nsDict%prefixes(i)%prefix)
     enddo
     deallocate(nsDict%prefixes)
   end subroutine destroyNamespaceDictionary

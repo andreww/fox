@@ -662,15 +662,13 @@ contains
     type(error_stack), intent(inout) :: stack
     character, dimension(:), pointer :: repl_new
 
-    character, dimension(:), pointer :: repl_temp
+    character, dimension(size(repl)) :: repl_temp
     integer :: i, i2, j
     
     allocate(repl_new(0))
     if (index(str_vs(repl),'%')/=0) then
       call add_error(stack, "Not allowed % in internal subset general entity value")
       return
-    else
-      allocate(repl_temp(size(repl))) ! it will always be less than or equal
     endif
 
     i = 1

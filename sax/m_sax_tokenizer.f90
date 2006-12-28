@@ -805,6 +805,7 @@ contains
       endif
     enddo
     
+    deallocate(s_out)
     allocate(s_out(i2-1))
     s_out = s_temp(:i2-1)
     deallocate(s_temp)
