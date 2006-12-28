@@ -2,7 +2,7 @@
 
 <!DOCTYPE test PUBLIC "arse" "bum" [
 <!NOTATION note SYSTEM "bum">
-<!ENTITY qr "  &lkj  &pqr">
+<!ENTITY qr "  &lkj;  &pqr;">
 <!ENTITY lkj " arse">
 <!ENTITY pqr " bum">
 <!ENTITY % qr "lkj">

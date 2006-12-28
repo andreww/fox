@@ -761,6 +761,7 @@ contains
           fx%attname => expand_entity_value_alloc(fx%token, error)
           if (error%severity/=ERR_NULL) then
             call add_parse_error(fx, str_vs(error%msg), error%severity)
+            deallocate(error%msg)
             goto 100
           endif
           fx%state = ST_DTD_ENTITY_END
