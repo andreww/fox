@@ -742,6 +742,7 @@ contains
       elseif (s_in(i)=='&') then
         j = index(str_vs(s_in(i+1:)), ';')
         if (j==0) then
+          print*,'j is zero'
           call add_parse_error(fx, "Illegal & found in attribute")
           return
         elseif (j==1) then

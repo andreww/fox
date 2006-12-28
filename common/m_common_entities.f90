@@ -725,7 +725,7 @@ contains
       if (repl(i)=='&') then
         j = index(str_vs(repl(i+1:)),';')
         if (j==0) then
-          error%msg = vs_str_alloc("Not allowed bare & in entity value")
+          error%msg => vs_str_alloc("Not allowed bare & in entity value")
           return
         elseif (checkName(str_vs(repl(i+1:j-1)))) then
           repl_temp(i2:i2+j-1) = repl(i:i+j-1)
