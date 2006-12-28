@@ -156,7 +156,7 @@ contains
 
 
   subroutine print_entity_list(ents)
-    type(entity_list), intent(inout) :: ents
+    type(entity_list), intent(in) :: ents
 
     integer :: i, n
 
@@ -170,7 +170,6 @@ contains
       write(*,'(a)') str_vs(ents%list(i)%notation)
     enddo
     write(*,'(a)') '<ENTITYLIST'
-    deallocate(ents%list)    
   end subroutine print_entity_list
 
 

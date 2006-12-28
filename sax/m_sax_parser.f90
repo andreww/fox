@@ -12,7 +12,7 @@ module m_sax_parser
   use m_common_entities, only: existing_entity, &
     init_entity_list, destroy_entity_list, &
     add_internal_entity, add_external_entity, &
-    expand_entity_value_alloc
+    expand_entity_value_alloc, print_entity_list
   use m_common_error, only: FoX_error, ERR_NULL, error_t
   use m_common_io, only: io_eof, io_err
   use m_common_namecheck, only: checkName, checkSystemId, checkPubId
@@ -924,6 +924,10 @@ contains
         ! token must be '>'
         if (present(endDTD_handler)) &
           call endDTD_handler
+        print*
+        print*,'Finished reading DTD'
+        call print_entity_list(fx%ge_list)
+        print*
         fx%state = ST_MISC
         fx%context = CTXT_BEFORE_CONTENT
             
@@ -1006,10 +1010,10 @@ contains
             ! Internal or external?
             if (associated(fx%attname)) then ! it's internal
               call add_internal_entity(fx%pe_list, str_vs(fx%name), &
-                str_vs(fx%attname))
+                str_vs(fx%attname(2:size(fx%attname)-1))) ! stripping off quotes
               ! FIXME need to expand value here before reporting ...
               if (present(internalEntityDecl_handler)) &
-                call internalEntityDecl_handler('%'//str_vs(fx%name), str_vs(fx%attname))
+                call internalEntityDecl_handler('%'//str_vs(fx%name), str_vs(fx%attname(2:size(fx%attname)-1)))
             else ! PE can't have Ndata declaration
               if (associated(fx%publicId)) then
                 call add_external_entity(fx%pe_list, str_vs(fx%name), &
@@ -1033,10 +1037,10 @@ contains
             ! Internal or external?
             if (associated(fx%attname)) then ! it's internal
               call add_internal_entity(fx%ge_list, str_vs(fx%name), &
-                str_vs(fx%attname))
+                str_vs(fx%attname(2:size(fx%attname)-1)))
               if (present(internalEntityDecl_handler)) &
                 call internalEntityDecl_handler(str_vs(fx%name),&
-                str_vs(fx%attname))
+                str_vs(fx%attname(2:size(fx%attname)-1))) ! stripping quotes
             else
               if (associated(fx%publicId).and.associated(fx%Ndata)) then
                 call add_external_entity(fx%ge_list, str_vs(fx%name), &
