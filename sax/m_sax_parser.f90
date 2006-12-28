@@ -14,7 +14,7 @@ module m_sax_parser
     add_internal_entity, add_external_entity, &
     expand_entity_value_alloc, print_entity_list
   use m_common_error, only: FoX_error, ERR_NULL, add_error, &
-    init_error_stack, destroy_error_stack
+    init_error_stack, destroy_error_stack, in_error
   use m_common_io, only: io_eof, io_err
   use m_common_namecheck, only: checkName, checkSystemId, checkPubId
   use m_common_namespaces, only: getnamespaceURI, invalidNS, &
@@ -231,7 +231,7 @@ contains
       print*,'executing parse loop'
 
       call sax_tokenize(fx, fb, iostat)
-      if (fx%error) iostat = io_err
+      if (in_error(fx%error_stack)) iostat = io_err
       if (iostat/=0) then
         !fx%state = ST_NULL
         goto 100
@@ -440,12 +440,12 @@ contains
               fx%root_element => fx%name
             endif
             call open_tag
-            if (fx%error) goto 100
+            if (in_error(fx%error_stack)) goto 100
             nullify(fx%name)
             fx%context = CTXT_IN_CONTENT
           else
             call open_tag
-            if (fx%error) goto 100
+            if (in_error(fx%error_stack)) goto 100
             deallocate(fx%name)
           endif
           call destroy_dict(fx%attributes)
@@ -467,9 +467,9 @@ contains
             endif
           endif
           call open_tag
-          if (fx%error) goto 100
+          if (in_error(fx%error_stack)) goto 100
           call close_tag
-          if (fx%error) goto 100
+          if (in_error(fx%error_stack)) goto 100
           if (fx%context==CTXT_IN_CONTENT) then
             deallocate(fx%name)
             fx%whitespace = WS_PRESERVE
@@ -567,7 +567,7 @@ contains
         print*,'ST_IN_CLOSING_TAG'
         if (str_vs(fx%token) == '>') then
           call close_tag
-          if (fx%error) goto 100
+          if (in_error(fx%error_stack)) goto 100
           deallocate(fx%name)
           if (is_empty(fx%elstack)) then
             !we're done
@@ -685,7 +685,7 @@ contains
       case (ST_DTD_ATTLIST_CONTENTS)
         !token is everything up to >
         call parse_attlist
-        if (fx%error) goto 100
+        if (in_error(fx%error_stack)) goto 100
         fx%state = ST_DTD_ATTLIST_END
 
       case (ST_DTD_ATTLIST_END)
@@ -709,7 +709,7 @@ contains
       case (ST_DTD_ELEMENT_CONTENTS)
         !token is everything up to >
         call parse_element
-        if (fx%error) goto 100
+        if (in_error(fx%error_stack)) goto 100
         fx%state = ST_DTD_ELEMENT_END
         
       case (ST_DTD_ELEMENT_END)
@@ -753,7 +753,7 @@ contains
           fx%state = ST_DTD_ENTITY_SYSTEM
         elseif (fx%token(1)=="'".or.fx%token(1)=='"') then
           fx%attname => expand_entity_value_alloc(fx%token, fx%error_stack)
-          if (size(fx%error_stack%stack)>0) goto 100
+          if (in_error(fx%error_stack)) goto 100
           fx%state = ST_DTD_ENTITY_END
           fx%whitespace = WS_DISCARD
         else

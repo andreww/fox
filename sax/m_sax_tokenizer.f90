@@ -721,14 +721,10 @@ contains
     allocate(s_temp(size(s_in))) ! in the first instance
     allocate(s_out(0)) ! in case we return early ...
 
-    print*,'Entering NORMALIZE-TEXT'
-
     i2 = 1
     i = 1
     do 
-      print*,'i ',i,' size ',size(s_IN), ' ', str_vs(s_temp(:i2-1))
       if (i > size(s_in)) exit
-      print*,'i ',i,' size ',size(s_IN)
       ! Firstly, all whitespace must become 0x20
       if (s_in(i).in.XML_WHITESPACE) then
         s_temp(i2) = " "
@@ -775,17 +771,13 @@ contains
             shortened_entity_list = shallow_copy_entity_list_without(e_list, str_vs(s_in(i+1:i+j-1)))
             ! Recursively expand entity, checking for errors.
             s_ent => normalize_text(fx, shortened_entity_list, vs_str(expand_entity_text(e_list, str_vs(s_in(i+1:i+j-1)))))
-            print*,'returned from NORMALIZE: ', associated(s_ent)
             call shallow_destroy_entity_list(shortened_entity_list)
             if (in_error(fx%error_stack)) then
               deallocate(s_ent)
               return
             endif
             allocate(s_temp2(size(s_temp)+size(s_ent)-j))
-            print*,'expanding entity ', i2, ' ', size(s_temp)
             s_temp2(:i2-1) = s_temp(:i2-1)
-            print*,'sizes ', size(s_temp2), i2, size(s_ent), i2+size(s_ent)
-            print*, 'strings ', s_temp(:i2-1)
             s_temp2(i2:i2+size(s_ent)-1) = s_ent
             deallocate(s_temp)
             s_temp => s_temp2
@@ -811,12 +803,10 @@ contains
         i = i + 1
         i2 = i2 + 1
       endif
-      print*,'this s_temp: ', str_vs(s_temp(:i2-1))
     enddo
     
     allocate(s_out(i2-1))
     s_out = s_temp(:i2-1)
-      print*,'s_out:  ', s_out
     deallocate(s_temp)
 
   end function normalize_text

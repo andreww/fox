@@ -683,7 +683,7 @@ contains
           call add_error(stack, "Not allowed bare & in entity value")
           return
         elseif (checkName(str_vs(repl(i+1:i+j-1)))) then
-          repl_temp(i2:i2+j-1) = repl(i:i+j-1)
+          repl_temp(i2:i2+j) = repl(i:i+j)
           i = i + j + 1
           i2 = i2 + j + 1
         elseif (checkCharacterEntityReference(str_vs(repl(i+1:i+j-1)))) then
@@ -692,7 +692,7 @@ contains
           i = i + j + 1
           i2 = i2 + 1
         else
-          call add_error(stack, "Invalid entity reference")
+          call add_error(stack, "Invalid entity reference in entity value")
           return
         endif
       else
