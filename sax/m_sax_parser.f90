@@ -13,7 +13,8 @@ module m_sax_parser
     init_entity_list, destroy_entity_list, &
     add_internal_entity, add_external_entity, &
     expand_entity_value_alloc, print_entity_list
-  use m_common_error, only: FoX_error, ERR_NULL, error_t
+  use m_common_error, only: FoX_error, ERR_NULL, add_error, &
+    init_error_stack, destroy_error_stack
   use m_common_io, only: io_eof, io_err
   use m_common_namecheck, only: checkName, checkSystemId, checkPubId
   use m_common_namespaces, only: getnamespaceURI, invalidNS, &
@@ -23,8 +24,7 @@ module m_sax_parser
     add_notation, notation_exists
 
   use m_sax_reader, only: file_buffer_t
-  use m_sax_tokenizer, only: sax_tokenize, parse_xml_declaration, &
-    add_parse_error
+  use m_sax_tokenizer, only: sax_tokenize, parse_xml_declaration
   use m_sax_types ! everything, really
 
   implicit none
@@ -40,8 +40,8 @@ contains
     type(sax_parser_t), intent(out) :: fx
     
     allocate(fx%token(0))
-    allocate(fx%error_stack(0:0))
     
+    call init_error_stack(fx%error_stack)
     call init_elstack(fx%elstack)
     call initNamespaceDictionary(fx%nsdict)
     call init_notation_list(fx%nlist)
@@ -61,13 +61,8 @@ contains
     if (associated(fx%encoding)) deallocate(fx%encoding)
     if (associated(fx%token)) deallocate(fx%token)
     if (associated(fx%root_element)) deallocate(fx%root_element)
-    if (associated(fx%error_stack(0)%msg)) deallocate(fx%error_stack(0)%msg)
-    do i = 1, ubound(fx%error_stack,1)
-      deallocate(fx%error_stack(i)%msg)
-    enddo
-    deallocate(fx%error_stack)
 
-    stop
+    call destroy_error_stack(fx%error_stack)
     call destroy_elstack(fx%elstack)
     call destroy_dict(fx%attributes)
     call destroyNamespaceDictionary(fx%nsdict)
@@ -216,7 +211,6 @@ contains
       end subroutine endCdata_handler
     end interface
 
-    type(error_t) :: error
     integer :: iostat
 
     iostat = 0
@@ -261,7 +255,7 @@ contains
           fx%state = ST_START_TAG
           fx%whitespace = WS_FORBIDDEN
         else
-          call add_parse_error(fx, "Unexpected token found outside content")
+          call add_error(fx%error_stack, "Unexpected token found outside content")
           exit
         endif
 
@@ -290,7 +284,7 @@ contains
           endif
           fx%whitespace = WS_MANDATORY
         else
-          call add_parse_error(fx, "Unexpected token after !")
+          call add_error(fx%error_stack, "Unexpected token after !")
           exit
         endif
 
@@ -303,7 +297,7 @@ contains
           fx%name => fx%token
           nullify(fx%token)
         else
-          call add_parse_error(fx, "Unexpected token found for PI target; expecting Name")
+          call add_error(fx%error_stack, "Unexpected token found for PI target; expecting Name")
           exit
         endif
 
@@ -339,7 +333,7 @@ contains
             fx%whitespace = WS_DISCARD
           endif
         else
-          call add_parse_error(fx, "Internal error: unexpected token at end of PI, expecting ?>")
+          call add_error(fx%error_stack, "Internal error: unexpected token at end of PI, expecting ?>")
           exit
         endif
 
@@ -354,7 +348,7 @@ contains
         if (str_vs(fx%token)=='--') then
           fx%state = ST_COMMENT_END_2
         else
-          call add_parse_error(fx, "Internal error: expecting --")
+          call add_error(fx%error_stack, "Internal error: expecting --")
           exit
         endif
 
@@ -373,7 +367,7 @@ contains
             fx%whitespace = WS_DISCARD
           endif
         else
-          call add_parse_error(fx, "Expecting > after -- in comment")
+          call add_error(fx%error_stack, "Expecting > after -- in comment")
           exit
         endif
 
@@ -389,9 +383,9 @@ contains
           fx%state = ST_IN_TAG
           call init_dict(fx%attributes)
         elseif (fx%context == CTXT_AFTER_CONTENT) then
-          call add_parse_error(fx, "Cannot open second root element")
+          call add_error(fx%error_stack, "Cannot open second root element")
         elseif (fx%context == CTXT_IN_DTD) then
-          call add_parse_error(fx, "Cannot open root element before DTD is finished")
+          call add_error(fx%error_stack, "Cannot open root element before DTD is finished")
         endif
 
       case (ST_START_CDATA_1)
@@ -399,7 +393,7 @@ contains
         if (str_vs(fx%token) == 'CDATA') then
           fx%state = ST_START_CDATA_2
         else
-          call add_parse_error(fx, "Unexpected token found - expecting CDATA afte <![")
+          call add_error(fx%error_stack, "Unexpected token found - expecting CDATA afte <![")
         endif
 
       case (ST_START_CDATA_2)
@@ -407,7 +401,7 @@ contains
         if (str_vs(fx%token) == '[') then
           fx%state = ST_CDATA_CONTENTS
         else
-          call add_parse_error(fx, "Unexpected token found - expecting [ after CDATA")
+          call add_error(fx%error_stack, "Unexpected token found - expecting [ after CDATA")
         endif
 
       case (ST_CDATA_CONTENTS)
@@ -430,7 +424,7 @@ contains
           deallocate(fx%name)
           fx%state = ST_CHAR_IN_CONTENT
         else
-          call add_parse_error(fx, "Internal error, unexpected token in CDATA")
+          call add_error(fx%error_stack, "Internal error, unexpected token in CDATA")
         endif
 
       case (ST_IN_TAG)
@@ -439,7 +433,7 @@ contains
           if (fx%context /= CTXT_IN_CONTENT) then
             if (associated(fx%root_element)) then
               if (str_vs(fx%name)/=str_vs(fx%root_element)) then
-                call add_parse_error(fx, "Root element name does not match document name")
+                call add_error(fx%error_stack, "Root element name does not match document name")
                 exit
               endif
             else
@@ -464,7 +458,7 @@ contains
             ! only a single element in this doc
             if (associated(fx%root_element)) then
               if (str_vs(fx%name)/=str_vs(fx%root_element)) then
-                call add_parse_error(fx, "Root element name does not match document name")
+                call add_error(fx%error_stack, "Root element name does not match document name")
                 exit
               endif
             else
@@ -500,7 +494,7 @@ contains
         if (str_vs(fx%token)=='=') then
           fx%state = ST_ATT_EQUALS
         else
-          call add_parse_error(fx, "Unexpected token in tag - expected =")
+          call add_error(fx%error_stack, "Unexpected token in tag - expected =")
         endif
 
       case (ST_ATT_EQUALS)
@@ -555,7 +549,7 @@ contains
             notationDecl_handler)
           if (iostat/=0) goto 100
         else
-          call add_parse_error(fx, "Unexpected token found in character context")
+          call add_error(fx%error_stack, "Unexpected token found in character context")
         endif
 
       case (ST_CLOSING_TAG)
@@ -566,7 +560,7 @@ contains
           fx%whitespace = WS_DISCARD
           fx%state = ST_IN_CLOSING_TAG
         else
-          call add_parse_error(fx, "Unexpected token found in closing tag: expecting a Name")
+          call add_error(fx%error_stack, "Unexpected token found in closing tag: expecting a Name")
         endif
 
       case (ST_IN_CLOSING_TAG)
@@ -586,7 +580,7 @@ contains
             fx%state = ST_CHAR_IN_CONTENT
           endif
         else
-          call add_parse_error(fx, "Unexpected token in closing tag - expecting Name")
+          call add_error(fx%error_stack, "Unexpected token in closing tag - expecting Name")
         endif
 
       case (ST_IN_DTD)
@@ -610,7 +604,7 @@ contains
           fx%context = CTXT_BEFORE_CONTENT
           fx%state = ST_MISC
         else
-          call add_parse_error(fx, "Internal error: unexpected token")
+          call add_error(fx%error_stack, "Internal error: unexpected token")
         endif
          
       case (ST_DTD_PUBLIC)
@@ -620,7 +614,7 @@ contains
           nullify(fx%token)
           fx%state = ST_DTD_SYSTEM
         else
-          call add_parse_error(fx, "Invalid document system id")
+          call add_error(fx%error_stack, "Invalid document system id")
         endif       
 
       case (ST_DTD_SYSTEM)
@@ -630,7 +624,7 @@ contains
           nullify(fx%token)
           fx%state = ST_DTD_DECL
         else
-          call add_parse_error(fx, "Invalid document system id")
+          call add_error(fx%error_stack, "Invalid document system id")
         endif
 
       case (ST_DTD_DECL)
@@ -658,7 +652,7 @@ contains
           fx%context = CTXT_BEFORE_CONTENT
           fx%state = ST_MISC
         else
-          call add_parse_error(fx, "Internal error: unexpected token")
+          call add_error(fx%error_stack, "Internal error: unexpected token")
         endif
 
       case (ST_INT_SUBSET)
@@ -678,7 +672,7 @@ contains
           fx%state = ST_BANG_TAG
           fx%whitespace = WS_FORBIDDEN
         else
-          call add_parse_error(fx, "Unexpected token in internal subset")
+          call add_error(fx%error_stack, "Unexpected token in internal subset")
         endif
 
       case (ST_DTD_ATTLIST)
@@ -701,7 +695,7 @@ contains
           fx%state = ST_INT_SUBSET
           fx%whitespace = WS_DISCARD
         else
-          call add_parse_error(fx, "Unexpected token in ATTLIST")
+          call add_error(fx%error_stack, "Unexpected token in ATTLIST")
         endif
 
       case (ST_DTD_ELEMENT)
@@ -725,7 +719,7 @@ contains
           fx%state = ST_INT_SUBSET
           fx%whitespace = WS_DISCARD
         else
-          call add_parse_error(fx, "Unexpected token in ELEMENT")
+          call add_error(fx%error_stack, "Unexpected token in ELEMENT")
         endif
         
       case (ST_DTD_ENTITY)
@@ -758,16 +752,12 @@ contains
         elseif (str_vs(fx%token) == 'SYSTEM') then
           fx%state = ST_DTD_ENTITY_SYSTEM
         elseif (fx%token(1)=="'".or.fx%token(1)=='"') then
-          fx%attname => expand_entity_value_alloc(fx%token, error)
-          if (error%severity/=ERR_NULL) then
-            call add_parse_error(fx, str_vs(error%msg), error%severity)
-            deallocate(error%msg)
-            goto 100
-          endif
+          fx%attname => expand_entity_value_alloc(fx%token, fx%error_stack)
+          if (size(fx%error_stack%stack)>0) goto 100
           fx%state = ST_DTD_ENTITY_END
           fx%whitespace = WS_DISCARD
         else
-          call add_parse_error(fx, "Unexpected token in ENTITY")
+          call add_error(fx%error_stack, "Unexpected token in ENTITY")
         endif
           
       case (ST_DTD_ENTITY_PUBLIC)
@@ -777,7 +767,7 @@ contains
           nullify(fx%token)
           fx%state = ST_DTD_ENTITY_SYSTEM
         else
-          call add_parse_error(fx, "Invalid PUBLIC id in ENTITY")
+          call add_error(fx%error_stack, "Invalid PUBLIC id in ENTITY")
         endif
         
       case (ST_DTD_ENTITY_SYSTEM)
@@ -787,7 +777,7 @@ contains
           nullify(fx%token)
           fx%state = ST_DTD_ENTITY_NDATA
         else
-          call add_parse_error(fx, "Invalid SYSTEM id in ENTITY")
+          call add_error(fx%error_stack, "Invalid SYSTEM id in ENTITY")
         endif
 
       case (ST_DTD_ENTITY_NDATA)
@@ -798,11 +788,11 @@ contains
           fx%whitespace = WS_DISCARD
         elseif (str_vs(fx%token)=='NDATA') then
           if (fx%pe) then
-            call add_parse_error(fx, "Parameter entity cannot have NDATA declaration"); goto 100
+            call add_error(fx%error_stack, "Parameter entity cannot have NDATA declaration"); goto 100
           endif
           fx%state = ST_DTD_ENTITY_NDATA_VALUE
         else
-          call add_parse_error(fx, "Unexpected token in ENTITY")
+          call add_error(fx%error_stack, "Unexpected token in ENTITY")
         endif
 
       case (ST_DTD_ENTITY_NDATA_VALUE)
@@ -815,7 +805,7 @@ contains
           fx%whitespace = WS_DISCARD
           ! add entity
         else
-          call add_parse_error(fx, "Attempt to use undeclared notation")
+          call add_error(fx%error_stack, "Attempt to use undeclared notation")
         endif
 
       case (ST_DTD_ENTITY_END)
@@ -824,7 +814,7 @@ contains
           call add_entity
           fx%state = ST_INT_SUBSET
         else
-          call add_parse_error(fx, "Unexpected token at end of ENTITY")
+          call add_error(fx%error_stack, "Unexpected token at end of ENTITY")
         endif
 
       case (ST_DTD_NOTATION)
@@ -841,7 +831,7 @@ contains
         elseif (str_vs(fx%token)=='PUBLIC') then
           fx%state = ST_DTD_NOTATION_PUBLIC
         else
-          call add_parse_error(fx, "Unexpected token after NOTATION")
+          call add_error(fx%error_stack, "Unexpected token after NOTATION")
         endif
 
       case (ST_DTD_NOTATION_SYSTEM)
@@ -851,7 +841,7 @@ contains
           nullify(fx%token)
           fx%state = ST_DTD_NOTATION_END
         else
-          call add_parse_error(fx, "Invalid SYSTEM id in NOTATION")
+          call add_error(fx%error_stack, "Invalid SYSTEM id in NOTATION")
         endif
         
       case (ST_DTD_NOTATION_PUBLIC)
@@ -861,14 +851,14 @@ contains
           nullify(fx%token)
           fx%state = ST_DTD_NOTATION_PUBLIC_2
         else
-          call add_parse_error(fx, "Invalid PUBLIC id in NOTATION")
+          call add_error(fx%error_stack, "Invalid PUBLIC id in NOTATION")
         endif
         
       case (ST_DTD_NOTATION_PUBLIC_2)
         print*,'ST_DTD_NOTATION_PUBLIC_2'
         if (str_vs(fx%token)=='>') then
           if (notation_exists(fx%nlist, str_vs(fx%name))) then
-            call add_parse_error(fx, "Two notations share the same Name")
+            call add_error(fx%error_stack, "Two notations share the same Name")
             exit
           endif
           print*,'ADDED NOTATION: ', str_vs(fx%name)
@@ -885,14 +875,14 @@ contains
             nullify(fx%token)
             fx%state = ST_DTD_NOTATION_END
         else
-          call add_parse_error(fx, "Invalid SYSTEM id in NOTATION")
+          call add_error(fx%error_stack, "Invalid SYSTEM id in NOTATION")
         endif
         
       case (ST_DTD_NOTATION_END)
         print*,'ST_DTD_NOTATION_END'
         if (str_vs(fx%token)=='>') then
           if (notation_exists(fx%nlist, str_vs(fx%name))) then
-            call add_parse_error(fx, "Two notations share the same Name")
+            call add_error(fx%error_stack, "Two notations share the same Name")
             exit
           endif
           print*,'ADDED NOTATION: ', str_vs(fx%name)
@@ -917,7 +907,7 @@ contains
           fx%state = ST_INT_SUBSET
           fx%whitespace = WS_DISCARD
         else
-          call add_parse_error(fx, "Unexpected token in NOTATION")
+          call add_error(fx%error_stack, "Unexpected token in NOTATION")
         endif
 
       case (ST_CLOSE_DTD)
@@ -942,7 +932,7 @@ contains
           iostat = 0
           ! go back up stack
         else !badly formed entity
-          call add_parse_error(fx, "Badly formed entity.")
+          call add_error(fx%error_stack, "Badly formed entity.")
           return
         endif
       else ! EOF of main file
@@ -950,7 +940,7 @@ contains
           if (present(end_document_handler)) &
             call end_document_handler()
         else
-          call add_parse_error(fx, "File is not well-formed")
+          call add_error(fx%error_stack, "File is not well-formed")
           call sax_error(fx, error_handler)
         endif
       endif
@@ -964,7 +954,7 @@ contains
       endif
     else ! Hard error - stop immediately
       if (fx%parse_stack>0) then !we are parsing an entity
-        call add_parse_error(fx, "Internal error: Error encountered processing entity.")
+        call add_error(fx%error_stack, "Internal error: Error encountered processing entity.")
       else
         call sax_error(fx, error_handler)
       endif
@@ -977,7 +967,7 @@ contains
           len(fx%elstack), start_prefix_handler)
         if (getURIofQName(fx,str_vs(fx%name))==invalidNS) then
           ! no namespace was found for the current element
-          call add_parse_error(fx, "No namespace found for current element")
+          call add_error(fx%error_stack, "No namespace found for current element")
           return
         endif
         ! FIXME Are there any default values missing?
@@ -992,7 +982,7 @@ contains
 
       subroutine close_tag
         if (str_vs(fx%name)/=pop_elstack(fx%elstack)) then
-          call add_parse_error(fx, "Mismatching close tag - expecting "//str_vs(fx%name))
+          call add_error(fx%error_stack, "Mismatching close tag - expecting "//str_vs(fx%name))
           return
         endif
         if (present(end_element_handler)) &
@@ -1109,17 +1099,18 @@ contains
 
     character, dimension(:), pointer :: errmsg
 
-    integer :: i, m, n
-    n = 0 
+    integer :: i, m, n, n_err
+    n = size(fx%error_stack%stack)
+    n_err = n
     
-    do i = 0, fx%parse_stack
-      n = n + size(fx%error_stack(i)%msg) ! + spaces + size of entityref
+    do i = 1, n
+      n_err = n_err + size(fx%error_stack%stack(i)%msg) ! + spaces + size of entityref
     enddo
-    allocate(errmsg(n))
+    allocate(errmsg(n_err))
     n = 1
-    do i = 0, fx%parse_stack
-      m = size(fx%error_stack(i)%msg)
-      errmsg(n:n+m-1) = fx%error_stack(i)%msg
+    do i = 1, size(fx%error_stack%stack)
+      m = size(fx%error_stack%stack(i)%msg)
+      errmsg(n:n+m-1) = fx%error_stack%stack(i)%msg
       n = n + m 
     enddo
     if (present(error_handler)) then

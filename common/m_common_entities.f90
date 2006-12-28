@@ -14,9 +14,10 @@ module m_common_entities
 
   !FIXME need to worry about removing entities from a list.
 
-  use m_common_array_str, only: str_vs, vs_str, vs_str_alloc
+  use m_common_array_str, only: str_vs, vs_str
   use m_common_charset, only: digits
-  use m_common_error, only: error_t, ERR_WARNING, ERR_ERROR, FoX_warning, FoX_error
+  use m_common_error, only: ERR_WARNING, ERR_ERROR, &
+    FoX_warning, FoX_error, error_stack, add_error
   use m_common_format, only: str_to_int_10, str_to_int_16
   use m_common_namecheck, only: checkName, checkSystemId, checkPubId, &
     checkCharacterEntityReference, checkEntityValue
@@ -647,72 +648,26 @@ contains
 
   end function entity_filter_EV
 
-  function expand_entity_error(repl, error) result(n)
-    character(len=*), intent(in) :: repl
-    type(error_t), optional, intent(out) :: error
-    integer :: n
-    
-    integer :: i, i2, j
 
-    if (index(repl,'%')/=0) then
-      n = -1
-      if (present(error)) &
-        error%msg => vs_str_alloc("Cannot have '%' inside internal entity value in internal subset")
-      return
-    endif
-    
-    i = 1
-    i2 = 1
-    do
-      if (i>len(repl)) exit
-      if (repl(i:i)=='&') then
-        j = index(repl(i+1:),';')
-        if (j==0) then
-          n = -1
-          if (present(error)) &
-            error%msg => vs_str_alloc("Unterminated entity reference")
-          return
-        elseif (checkName(repl(i+1:j-1))) then
-          i = i + j
-          i2 = i2 + j
-        elseif (checkCharacterEntityReference(repl(i+1:j-1))) then
-          i = i + 1
-          i2 = i2 + 1
-        else
-          n = -1
-          if (present(error)) &
-            error%msg => vs_str_alloc("Invalid entity reference")
-          return
-        endif
-      else
-        i = i + 1
-      endif
-    enddo
-
-    n = i2 - 1
-
-  end function expand_entity_error
-
-  function expand_entity_value_alloc(repl, error) result(repl_new)
-    !perform expansion of 
-    ! 1: character entity references
-    ! 2: internal parsed entity references
-    !on the value of a just-declared internal parsed entity,
+  function expand_entity_value_alloc(repl, stack) result(repl_new)
+    !perform expansion of character entity references
+    ! check that no parameter entities are present
+    ! and check that all general entity references are well-formed.
     !before storing it.
     !
     ! This is only ever called from the SAX parser
     ! (might it be called from WXML?)
     ! so input & output is with character arrays, not strings.
     character, dimension(:), intent(in) :: repl
-    type(error_t), intent(out) :: error
+    type(error_stack), intent(inout) :: stack
     character, dimension(:), pointer :: repl_new
 
     character, dimension(:), pointer :: repl_temp
     integer :: i, i2, j
     
-      allocate(repl_new(0))
+    allocate(repl_new(0))
     if (index(str_vs(repl),'%')/=0) then
-      error%msg = vs_str_alloc("Not allowed % in intenal subset general entity value")
+      call add_error(stack, "Not allowed % in internal subset general entity value")
       return
     else
       allocate(repl_temp(size(repl))) ! it will always be less than or equal
@@ -725,19 +680,19 @@ contains
       if (repl(i)=='&') then
         j = index(str_vs(repl(i+1:)),';')
         if (j==0) then
-          error%msg => vs_str_alloc("Not allowed bare & in entity value")
+          call add_error(stack, "Not allowed bare & in entity value")
           return
-        elseif (checkName(str_vs(repl(i+1:j-1)))) then
+        elseif (checkName(str_vs(repl(i+1:i+j-1)))) then
           repl_temp(i2:i2+j-1) = repl(i:i+j-1)
           i = i + j + 1
           i2 = i2 + j + 1
-        elseif (checkCharacterEntityReference(str_vs(repl(i+1:j-1)))) then
+        elseif (checkCharacterEntityReference(str_vs(repl(i+1:i+j-1)))) then
           !if it is ascii then
-          repl_temp(i2:i2) = vs_str(expand_char_entity(str_vs(repl(i+1:j-1))))
+          repl_temp(i2:i2) = vs_str(expand_char_entity(str_vs(repl(i+1:i+j-1))))
           i = i + j + 1
           i2 = i2 + 1
         else
-          error%msg = vs_str_alloc("Invalid entity reference")
+          call add_error(stack, "Invalid entity reference")
           return
         endif
       else
@@ -748,7 +703,6 @@ contains
     enddo
 
     deallocate(repl_new)
-    allocate(error%msg(0))
     allocate(repl_new(i2-1))
     repl_new = repl_temp(:i2-1)
 

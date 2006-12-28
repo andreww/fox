@@ -7,7 +7,7 @@ module m_sax_tokenizer
     XML_INITIALENCODINGCHARS, XML_ENCODINGCHARS, &
     XML1_0, XML1_1, operator(.in.), &
     isInitialNameChar, isNameChar, isXML1_0_NameChar, isXML1_1_NameChar
-  use m_common_error, only: ERR_WARNING, ERR_ERROR, error_t
+  use m_common_error, only: ERR_WARNING, ERR_ERROR, add_error, in_error
   use m_common_entities, only: entity_list, shallow_copy_entity_list_without, &
     shallow_destroy_entity_list, existing_entity, is_unparsed_entity, &
     is_external_entity, expand_entity_text, expand_char_entity
@@ -28,7 +28,6 @@ module m_sax_tokenizer
 
   public :: sax_tokenize
   public :: parse_xml_declaration
-  public :: add_parse_error
 
 contains
 
@@ -59,7 +58,7 @@ contains
         fx%token = get_characters(fb, 2, iostat)
         if (iostat/=0) return
         if (str_vs(fx%token)/='?>') then
-          call add_parse_error(fx, "Unexpected token in PI")
+          call add_error(fx%error_stack, "Unexpected token in PI")
         endif
         return
       endif
@@ -120,7 +119,7 @@ contains
             fx%token = vs_str('/>')
           endif
         else
-          call add_parse_error(fx, "Unexpected character in tag.")
+          call add_error(fx%error_stack, "Unexpected character in tag.")
           return
         endif
       else
@@ -134,7 +133,7 @@ contains
         fx%token => fb%namebuffer
         nullify(fb%namebuffer)
         if (size(fx%token)==0) then
-          call add_parse_error(fx, "Unexpected character in tag")
+          call add_error(fx%error_stack, "Unexpected character in tag")
         endif
       endif
       return
@@ -145,7 +144,7 @@ contains
       c = get_characters(fb, 1, iostat)
       if (iostat/=0) return
       if (c/='"'.and.c/="'") then
-        call add_parse_error(fx, "Expecting "" or '")
+        call add_error(fx%error_stack, "Expecting "" or '")
         return
       endif
       call get_characters_until_all_of(fb, c, iostat)
@@ -171,7 +170,7 @@ contains
             allocate(fx%token(1))
             fx%token = c
           else
-            call add_parse_error(fx, "Required whitespace omitted in DTD")
+            call add_error(fx%error_stack, "Required whitespace omitted in DTD")
           endif
           return
         endif
@@ -256,7 +255,7 @@ contains
     elseif (fx%whitespace==WS_MANDATORY) then
       call get_characters_until_not_one_of(fb, XML_WHITESPACE, iostat)
       if (size(fb%namebuffer)==0) then
-        call add_parse_error(fx, 'Tokenizer expected whitespace')
+        call add_error(fx%error_stack, 'Tokenizer expected whitespace')
         return
       endif
     endif
@@ -301,7 +300,7 @@ contains
           allocate(fx%token(1))
           fx%token = '<'
         else
-          call add_parse_error(fx,"Unexpected character found.")
+          call add_error(fx%error_stack,"Unexpected character found.")
         endif
 
       case ('/')
@@ -311,7 +310,7 @@ contains
           allocate(fx%token(2))
           fx%token = vs_str('/>')
         else
-          call add_parse_error(fx, "Unexpected character after /")
+          call add_error(fx%error_stack, "Unexpected character after /")
         endif
 
       case ('?')
@@ -333,7 +332,7 @@ contains
           allocate(fx%token(2))
           fx%token = vs_str('--')
         else
-          call add_parse_error(fx, "Unexpected character after =") !FIXME is this right?
+          call add_error(fx%error_stack, "Unexpected character after =") !FIXME is this right?
         endif
 
       case ('%')
@@ -439,7 +438,7 @@ contains
 
         else
 
-          call add_parse_error(fx, "Unrecognized token.")
+          call add_error(fx%error_stack, "Unrecognized token.")
           return
         endif
 
@@ -489,7 +488,7 @@ contains
     ch = vs_str(read_chars(fb, 7, iostat)); if (iostat/=0) return
     if (str_vs(ch)/="version") then
       deallocate(ch)
-      call add_parse_error(fx, "Expecting XML version"); return
+      call add_error(fx%error_stack, "Expecting XML version"); return
     endif
     deallocate(ch)
     call check_version
@@ -502,7 +501,7 @@ contains
       c = read_char(fb, iostat); if (iostat/=0) return
       ! FIXME read_char io_eor handling
       if (c/='>') then
-        call add_parse_error(fx, "Expecting > to end XML declaration"); return
+        call add_error(fx%error_stack, "Expecting > to end XML declaration"); return
       endif
       return
     endif
@@ -516,7 +515,7 @@ contains
       ch = vs_str(read_chars(fb, 10, iostat)); if (iostat/=0) return
       if (str_vs(ch)/="standalone") then
         deallocate(ch)
-        call add_parse_error(fx, "Expecting XML encoding or standalone declaration"); return
+        call add_error(fx%error_stack, "Expecting XML encoding or standalone declaration"); return
       endif
       deallocate(ch)
       call check_standalone
@@ -533,7 +532,7 @@ contains
         c = read_char(fb, iostat); if (iostat/=0) return
         ! FIXME read_char io_eor handling
         if (c/='>') then
-          call add_parse_error(fx, "Expecting > to end XML declaration"); return
+          call add_error(fx%error_stack, "Expecting > to end XML declaration"); return
         endif
         return
       endif
@@ -542,7 +541,7 @@ contains
       ch = vs_str(read_chars(fb, 10, iostat)); if (iostat/=0) return
       if (str_vs(ch)/="standalone") then
         deallocate(ch)
-        call add_parse_error(fx, "Expecting XML encoding or standalone declaration"); return
+        call add_error(fx%error_stack, "Expecting XML encoding or standalone declaration"); return
       endif
       deallocate(ch)
       call check_standalone
@@ -555,13 +554,13 @@ contains
         c = read_char(fb, iostat); if (iostat/=0) return
         ! FIXME read_char io_eor handling
         if (c/='>') then
-          call add_parse_error(fx, "Expecting > to end XML declaration"); return
+          call add_error(fx%error_stack, "Expecting > to end XML declaration"); return
         endif
       endif
     endif
 
     if (str_vs(fx%encoding)/="UTF-8") then
-      call add_parse_error(fx, "Unknown character encoding in XML declaration", ERR_WARNING)
+      call add_error(fx%error_stack, "Unknown character encoding in XML declaration", ERR_WARNING)
     endif
 
   contains
@@ -573,34 +572,34 @@ contains
         c = read_char(fb, iostat); if (iostat/=0) return
       enddo
       if (c/="=") then
-        call add_parse_error(fx, "Expecting ="); return
+        call add_error(fx%error_stack, "Expecting ="); return
       endif
       c = read_char(fb, iostat); if (iostat/=0) return
       do while (c.in.XML_WHITESPACE)
         c = read_char(fb, iostat); if (iostat/=0) return
       enddo
       if (c/="'".and.c/='"') then
-        call add_parse_error(fx, "Expecting "" or '"); return
+        call add_error(fx%error_stack, "Expecting "" or '"); return
       endif
       quotechar = c
       c = read_char(fb, iostat); if (iostat/=0) return
       if (c/="1") then
-        call add_parse_error(fx, "Unknown XML version"); return
+        call add_error(fx%error_stack, "Unknown XML version"); return
       endif
       c = read_char(fb, iostat); if (iostat/=0) return
       if (c/=".") then
-        call add_parse_error(fx, "Unknown XML version"); return
+        call add_error(fx%error_stack, "Unknown XML version"); return
       endif
       c = read_char(fb, iostat); if (iostat/=0) return
       if (c/="1".and.c/="0") then
-        call add_parse_error(fx, "Unknown XML version"); return
+        call add_error(fx%error_stack, "Unknown XML version"); return
       endif
       if (c=="1") then
         fx%xml_version = XML1_1
       endif
       c = read_char(fb, iostat); if (iostat/=0) return
       if (c/=quotechar) then
-        call add_parse_error(fx, "Expecting "//quotechar); return
+        call add_error(fx%error_stack, "Expecting "//quotechar); return
       endif
     end subroutine check_version
 
@@ -613,19 +612,19 @@ contains
         c = read_char(fb, iostat); if (iostat/=0) return
       enddo
       if (c/="=") then
-        call add_parse_error(fx, "Expecting ="); return
+        call add_error(fx%error_stack, "Expecting ="); return
       endif
       c = read_char(fb, iostat); if (iostat/=0) return
       do while (c.in.XML_WHITESPACE)
         c = read_char(fb, iostat); if (iostat/=0) return
       enddo
       if (c/="'".and.c/='"') then
-        call add_parse_error(fx, "Expecting "" or '"); return
+        call add_error(fx%error_stack, "Expecting "" or '"); return
       endif
       quotechar = c
       c = read_char(fb, iostat); if (iostat/=0) return
       if (.not.(c.in.XML_INITIALENCODINGCHARS)) then
-        call add_parse_error(fx, "Illegal character at start of encoding declaration."); return
+        call add_error(fx%error_stack, "Illegal character at start of encoding declaration."); return
       endif
       i = 1
       allocate(buf(1))
@@ -649,7 +648,7 @@ contains
         endif
       enddo
       if (c/=quotechar) then
-        call add_parse_error(fx, "Illegal character in XML encoding declaration; expecting "//quotechar); return
+        call add_error(fx%error_stack, "Illegal character in XML encoding declaration; expecting "//quotechar); return
       endif
       deallocate(fx%encoding)
       fx%encoding => buf
@@ -662,14 +661,14 @@ contains
         c = read_char(fb, iostat); if (iostat/=0) return
       enddo
       if (c/="=") then
-        call add_parse_error(fx, "Expecting ="); return
+        call add_error(fx%error_stack, "Expecting ="); return
       endif
       c = read_char(fb, iostat); if (iostat/=0) return
       do while (c.in.XML_WHITESPACE)
         c = read_char(fb, iostat); if (iostat/=0) return
       enddo
       if (c/="'".and.c/='"') then
-        call add_parse_error(fx, "Expecting "" or '"); return
+        call add_error(fx%error_stack, "Expecting "" or '"); return
       endif
       quotechar = c
       c = read_char(fb, iostat); if (iostat/=0) return
@@ -680,24 +679,24 @@ contains
           if (c=="s") then
             fx%standalone = .true.
           else
-            call add_parse_error(fx, "standalone accepts only 'yes' or 'no'"); return
+            call add_error(fx%error_stack, "standalone accepts only 'yes' or 'no'"); return
           endif
         else
-          call add_parse_error(fx, "standalone accepts only 'yes' or 'no'"); return
+          call add_error(fx%error_stack, "standalone accepts only 'yes' or 'no'"); return
         endif
       elseif (c=="n") then
         c = read_char(fb, iostat); if (iostat/=0) return
         if (c=="o") then
           fx%standalone = .false.
         else
-          call add_parse_error(fx, "standalone accepts only 'yes' or 'no'"); return
+          call add_error(fx%error_stack, "standalone accepts only 'yes' or 'no'"); return
         endif
       else
-        call add_parse_error(fx, "standalone accepts only 'yes' or 'no'"); return
+        call add_error(fx%error_stack, "standalone accepts only 'yes' or 'no'"); return
       endif
       c = read_char(fb, iostat); if (iostat/=0) return
       if (c/=quotechar) then
-        call add_parse_error(fx, "Expecting "" or '"); return
+        call add_error(fx%error_stack, "Expecting "" or '"); return
       endif
     end subroutine check_standalone
 
@@ -720,6 +719,7 @@ contains
     ! Complain about < and &
 
     allocate(s_temp(size(s_in))) ! in the first instance
+    allocate(s_out(0)) ! in case we return early ...
 
     print*,'Entering NORMALIZE-TEXT'
 
@@ -736,17 +736,16 @@ contains
         i = i + 1
         i2 = i2 + 1
       elseif (s_in(i)=='<') then
-        call add_parse_error(fx, "Illegal < found in attribute.")
+        call add_error(fx%error_stack, "Illegal < found in attribute.")
         return
         ! Then, expand <
       elseif (s_in(i)=='&') then
         j = index(str_vs(s_in(i+1:)), ';')
         if (j==0) then
-          print*,'j is zero'
-          call add_parse_error(fx, "Illegal & found in attribute")
+          call add_error(fx%error_stack, "Illegal & found in attribute")
           return
         elseif (j==1) then
-          call add_parse_error(fx, "No entity reference found")
+          call add_error(fx%error_stack, "No entity reference found")
           return
         elseif (checkCharacterEntityReference(str_vs(s_in(i+1:i+j-1)))) then
           ! Expand all character entities
@@ -766,18 +765,22 @@ contains
           elseif (existing_entity(e_list, str_vs(s_in(i+1:i+j-1)))) then
             !is it the right sort of entity?
             if (is_unparsed_entity(e_list, str_vs(s_in(i+1:i+j-1)))) then
-              call add_parse_error(fx, "Unparsed entity forbidden in attribute")
+              call add_error(fx%error_stack, "Unparsed entity forbidden in attribute")
               return
             elseif (is_external_entity(e_list, str_vs(s_in(i+1:i+j-1)))) then
-              call add_parse_error(fx, "External entity forbidden in attribute")
+              call add_error(fx%error_stack, "External entity forbidden in attribute")
               return
             endif
             ! shorten entity list
             shortened_entity_list = shallow_copy_entity_list_without(e_list, str_vs(s_in(i+1:i+j-1)))
             ! Recursively expand entity, checking for errors.
             s_ent => normalize_text(fx, shortened_entity_list, vs_str(expand_entity_text(e_list, str_vs(s_in(i+1:i+j-1)))))
+            print*,'returned from NORMALIZE: ', associated(s_ent)
             call shallow_destroy_entity_list(shortened_entity_list)
-            if (fx%error) return
+            if (in_error(fx%error_stack)) then
+              deallocate(s_ent)
+              return
+            endif
             allocate(s_temp2(size(s_temp)+size(s_ent)-j))
             print*,'expanding entity ', i2, ' ', size(s_temp)
             s_temp2(:i2-1) = s_temp(:i2-1)
@@ -795,12 +798,12 @@ contains
             i2 = i2 + j + 1
             if (fx%standalone) then
               ! or possibly otherwise? empty DTD?:
-              call add_parse_error(fx, "Undeclared entity encountered in standalone document.")
+              call add_error(fx%error_stack, "Undeclared entity encountered in standalone document.")
               return
             endif
           endif
         else
-          call add_parse_error(fx, "Illegal entity reference")
+          call add_error(fx%error_stack, "Illegal entity reference")
           return
         endif
       else
@@ -818,38 +821,4 @@ contains
 
   end function normalize_text
     
-  subroutine add_parse_error(fx, msg, severity)
-    type(sax_parser_t), intent(inout) :: fx
-    character(len=*), intent(in) :: msg
-    integer, optional, intent(in) :: severity
-
-    type(error_t), dimension(:), pointer :: tempStack
-    integer :: i, n
-
-    n = fx%parse_stack
-
-    if (.not.fx%error) then
-      fx%error = .true.
-      allocate(fx%error_stack(0)%msg(len(msg)))
-      fx%error_stack(0)%msg = vs_str(msg)
-    else
-      allocate(tempStack(0:n))
-      
-      do i = 0, n - 1
-        tempStack(i)%msg => fx%error_stack(i)%msg
-      enddo
-      allocate(tempStack(n)%msg(len(msg)))
-      tempStack(n)%msg = vs_str(msg)
-      deallocate(fx%error_stack)
-      fx%error_stack => tempStack
-    endif
-
-    if (present(severity)) then
-      fx%error_stack(ubound(fx%error_stack))%severity = ERR_ERROR
-    else
-      fx%error_stack(ubound(fx%error_stack))%severity = severity
-    endif
-
-  end subroutine add_parse_error
-
 end module m_sax_tokenizer
