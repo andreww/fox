@@ -543,10 +543,10 @@ contains
 
     allocate(tempStack(size(fb%buffer_stack)+1))
     do i = 1, size(fb%buffer_stack)
-      tempStack(i)%s => fb%buffer_stack(i)%s
-      tempStack(i)%pos = fb%buffer_stack(i)%pos
+      tempStack(i+1)%s => fb%buffer_stack(i)%s
+      tempStack(i+1)%pos = fb%buffer_stack(i)%pos
     enddo
-    tempStack(size(tempStack))%s => vs_str_alloc(string)
+    tempStack(1)%s => vs_str_alloc(string)
     deallocate(fb%buffer_stack)
     fb%buffer_stack => tempStack
   end subroutine push_buffer_stack
@@ -558,11 +558,11 @@ contains
     integer :: i
     type(buffer_t), dimension(:), pointer :: tempStack
 
-    deallocate(fb%buffer_stack(size(fb%buffer_stack))%s)
+    deallocate(fb%buffer_stack(1)%s)
     allocate(tempStack(size(fb%buffer_stack)-1))
-    do i = 1, size(fb%buffer_stack)-1
-      tempStack(i)%s => fb%buffer_stack(i)%s
-      tempStack(i)%pos = fb%buffer_stack(i)%pos
+    do i = 1, size(tempStack)
+      tempStack(i)%s => fb%buffer_stack(i+1)%s
+      tempStack(i)%pos = fb%buffer_stack(i+1)%pos
     enddo
     deallocate(fb%buffer_stack)
     fb%buffer_stack => tempStack
@@ -583,12 +583,9 @@ contains
       return
     endif
 
-    !If we have any characters in the pushback buffer, grab
-    !them first.
-
     ! Which is current buffer?
     if (size(fb%buffer_stack) > 0) then
-      cb => fb%buffer_stack(size(fb%buffer_stack))
+      cb => fb%buffer_stack(1)
 
       n_held = size(cb%s) - cb%pos + 1
       print*,'getting chars', size(cb%s), cb%pos
@@ -644,7 +641,7 @@ contains
     integer :: m_i
 
     if (size(fb%buffer_stack)>0) then
-      cb => fb%buffer_stack(size(fb%buffer_stack))
+      cb => fb%buffer_stack(1)
       if (cb%pos>size(cb%s)) then
         iostat = io_eof
         return
@@ -656,34 +653,35 @@ contains
 
     allocate(buf(0))
     m_i = check_fb(fb, condition, true)
-    if (m_i == 0) then
-      if (size(fb%buffer_stack)>0) then
-        m_i = size(cb%s) - cb%pos + 1
+    do while (size(fb%buffer_stack)==0.and.m_i==0)
+      allocate(tempbuf(size(buf)+fb%nchars-fb%pos+1))
+      tempbuf(:size(buf)) = buf
+      tempbuf(size(buf)+1:) = vs_str(fb%buffer(fb%pos:fb%nchars))
+      deallocate(buf)
+      buf => tempbuf
+      fb%pos = fb%nchars + 1
+      call fill_buffer(fb, iostat)
+      if (iostat==io_eof) then
+        iostat = 0! just return with what we have
+        m_i = fb%nchars - fb%pos + 1
+      elseif (iostat/=0) then
+        return
+      else
+        m_i = check_fb(fb, condition, true)
       endif
-      do while (m_i==0)
-        allocate(tempbuf(size(buf)+fb%nchars-fb%pos+1))
-        tempbuf(:size(buf)) = buf
-        tempbuf(size(buf)+1:) = vs_str(fb%buffer(fb%pos:fb%nchars))
-        deallocate(buf)
-        buf => tempbuf
-        fb%pos = fb%nchars + 1
-        call fill_buffer(fb, iostat)
-        if (iostat==io_eof) then
-          iostat = 0! just return with what we have
-          m_i = fb%nchars - fb%pos + 1
-        elseif (iostat/=0) then
-          return
-        else
-          m_i = check_fb(fb, condition, true)
-        endif
-      enddo
-    endif
+    enddo
 
     if (size(fb%buffer_stack)>0) then
       deallocate(buf)
-      allocate(buf(m_i-1))
-      buf = cb%s(cb%pos:cb%pos+m_i-1)
-      cb%pos = cb%pos + m_i - 1
+      if (m_i==0) then
+        allocate(buf(size(cb%s)-cb%pos+1))
+        buf = cb%s(cb%pos:)
+        cb%pos = size(cb%s) + 1
+      else
+        allocate(buf(m_i-1))
+        buf = cb%s(cb%pos:cb%pos+m_i-1)
+        cb%pos = cb%pos + m_i - 1
+      endif
     else
       allocate(tempbuf(size(buf)+m_i-1))
       tempbuf(:size(buf)) = buf
@@ -711,7 +709,7 @@ contains
     integer :: m_i
 
     if (size(fb%buffer_stack)>0) then
-      cb => fb%buffer_stack(size(fb%buffer_stack))
+      cb => fb%buffer_stack(1)
       if (cb%pos>size(cb%s)) then
         iostat = io_eof
         return
@@ -845,7 +843,7 @@ contains
     type(buffer_t), pointer :: cb
 
     if (size(fb%buffer_stack)>0) then
-      cb => fb%buffer_stack(size(fb%buffer_stack))
+      cb => fb%buffer_stack(1)
       if (n > cb%pos) then
         ! make an error
       else
@@ -897,7 +895,7 @@ contains
     type(buffer_t), pointer :: cb
 
     if (size(fb%buffer_stack) > 0) then
-      cb => fb%buffer_stack(size(fb%buffer_stack))
+      cb => fb%buffer_stack(1)
       p = index(str_vs(cb%s(cb%pos:)), marker)
     else
       p = index(fb%buffer(fb%pos:fb%nchars), marker)
@@ -913,7 +911,7 @@ contains
     type(buffer_t), pointer :: cb
 
     if (size(fb%buffer_stack) > 0) then
-      cb => fb%buffer_stack(size(fb%buffer_stack))
+      cb => fb%buffer_stack(1)
       p = scan(str_vs(cb%s(cb%pos:)), marker)
     else
       p = scan(fb%buffer(fb%pos:fb%nchars), marker)
@@ -929,7 +927,7 @@ contains
     type(buffer_t), pointer :: cb
 
     if (size(fb%buffer_stack) > 0) then
-      cb => fb%buffer_stack(size(fb%buffer_stack))
+      cb => fb%buffer_stack(1)
       p = verify(str_vs(cb%s(cb%pos:)), marker)
     else
       p = verify(fb%buffer(fb%pos:fb%nchars), marker)
@@ -954,7 +952,7 @@ contains
     n = 0
     i = 1
     if (size(fb%buffer_stack) > 0) then
-      cb => fb%buffer_stack(size(fb%buffer_stack))
+      cb => fb%buffer_stack(1)
       do while (cb%pos+i-1<=size(cb%s))
         if (true.eqv.check(cb%s(cb%pos+i-1))) then
           n = i
