@@ -558,6 +558,7 @@ contains
     integer :: i
     type(buffer_t), dimension(:), pointer :: tempStack
 
+    deallocate(fb%buffer_stack(size(fb%buffer_stack))%s)
     allocate(tempStack(size(fb%buffer_stack)-1))
     do i = 1, size(fb%buffer_stack)-1
       tempStack(i)%s => fb%buffer_stack(i)%s
@@ -590,6 +591,7 @@ contains
       cb => fb%buffer_stack(size(fb%buffer_stack))
 
       n_held = size(cb%s) - cb%pos + 1
+      print*,'getting chars', size(cb%s), cb%pos
       if (n <= n_held) then
         string = str_vs(cb%s(cb%pos:cb%pos+n-1))
         cb%pos = cb%pos + n
@@ -721,38 +723,40 @@ contains
 
     allocate(buf(0))
     m_i = condition(fb, marker)
-    if (m_i == 0) then
-      if (size(fb%buffer_stack)>0) then
-        m_i = size(cb%s) - cb%pos + 1
-      endif
-      do while (m_i==0)
-        allocate(tempbuf(size(buf)+fb%nchars-fb%pos+1))
-        tempbuf(:size(buf)) = buf
-        tempbuf(size(buf)+1:) = vs_str(fb%buffer(fb%pos:fb%nchars))
-        deallocate(buf)
-        buf => tempbuf
-        fb%pos = fb%nchars + 1
-        call fill_buffer(fb, iostat)
-        if (iostat==io_eof) then
-          m_i = fb%nchars - fb%pos + 1
-          if (m_i==0) then 
-            m_i = 1
-          else
-            iostat = 0 
-          endif
-        elseif (iostat/=0) then
-          return
+    do while (size(fb%buffer_stack)==0.and.m_i==0)
+      allocate(tempbuf(size(buf)+fb%nchars-fb%pos+1))
+      tempbuf(:size(buf)) = buf
+      tempbuf(size(buf)+1:) = vs_str(fb%buffer(fb%pos:fb%nchars))
+      deallocate(buf)
+      buf => tempbuf
+      fb%pos = fb%nchars + 1
+      call fill_buffer(fb, iostat)
+      if (iostat==io_eof) then
+        m_i = fb%nchars - fb%pos + 1
+        if (m_i==0) then 
+          m_i = 1
         else
-          m_i = condition(fb, marker)
+          iostat = 0 
         endif
-      enddo
-    endif
+      elseif (iostat/=0) then
+        return
+      else
+        m_i = condition(fb, marker)
+      endif
+    enddo
 
     if (size(fb%buffer_stack)>0) then
       deallocate(buf)
-      allocate(buf(m_i-1))
-      buf = cb%s(cb%pos:cb%pos+m_i-1)
-      cb%pos = cb%pos + m_i - 1
+      if (m_i==0) then
+        allocate(buf(size(cb%s)-cb%pos+1))
+        buf = cb%s(cb%pos:)
+        cb%pos = size(cb%s)+1
+      else
+        allocate(buf(m_i-1))
+        buf = cb%s(cb%pos:cb%pos+m_i-1)
+        print*,'cb%pos', cb%pos, m_i
+        cb%pos = cb%pos + m_i - 1
+      endif
     else
       allocate(tempbuf(size(buf)+m_i-1))
       tempbuf(:size(buf)) = buf
@@ -765,7 +769,6 @@ contains
     if (associated(fb%namebuffer)) deallocate(fb%namebuffer)
     fb%namebuffer => buf
     call move_cursor(fb, str_vs(fb%namebuffer))
-
 
   end subroutine get_chars_with_condition
 
@@ -842,7 +845,7 @@ contains
     type(buffer_t), pointer :: cb
 
     if (size(fb%buffer_stack)>0) then
-      cb = fb%buffer_stack(size(fb%buffer_stack))
+      cb => fb%buffer_stack(size(fb%buffer_stack))
       if (n > cb%pos) then
         ! make an error
       else

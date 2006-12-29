@@ -237,9 +237,12 @@ contains
       call sax_tokenize(fx, fb, iostat)
       if (in_error(fx%error_stack)) iostat = io_err
       if (fx%context==CTXT_IN_DTD.and.iostat==io_eof.and.fx%parse_stack>0) then
+        print*, 'Finished parameter entity expansion, back up parse stack'
         ! that's just the end of a parameter entity expansion.
         ! pop the parse stack, and carry on ..
+        iostat = 0
         call pop_buffer_stack(fb)
+        fx%parse_stack = fx%parse_stack - 1
         cycle
       elseif (iostat/=0) then
         ! Any other error, we want to quit (this instance of ...) sax_tokenizer
@@ -689,6 +692,8 @@ contains
             else
               ! Expand the entity, 
               call push_buffer_stack(fb, " "//expand_entity(fx%pe_list, str_vs(tempString))//" ")
+              fx%parse_stack = fx%parse_stack + 1
+              print*,'Parameter entity expanded, now reading from buffer stack'
             endif
               ! and do nothing else, carry on ...
           else

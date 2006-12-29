@@ -207,8 +207,10 @@ contains
         nullify(fb%namebuffer)
       elseif (fx%whitespace==WS_DISCARD) then
         call get_characters_until_not_one_of(fb, XML_WHITESPACE, iostat)
+        print*,'DISCARDING1', iostat
         if (iostat/=0) return
         c = get_characters(fb, 1, iostat)
+        print*,'DISCARDING2', iostat
         if (iostat/=0) return
         print*, 'IN DTD , c = ', c
         if (c.in."#>[]+*()|,") then
