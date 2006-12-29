@@ -1,10 +1,11 @@
 <?xml version='1.0'?>
 
-<!DOCTYPE test PUBLIC "arse" "bum" [
+<!DOCTYPE test PUBLIC "abarse" "bum" [
 <!NOTATION note SYSTEM "bum">
 <!ENTITY qr "  &lkj;  &pqr;">
-<!ENTITY lkj " arse">
+<!ENTITY lkj " &yt;">
 <!ENTITY pqr " bum">
+<!ENTITY yt "arse">
 <!ENTITY % qr "lkj">
 <!ENTITY % qr2 SYSTEM "kjlh">
 <!ENTITY % qr3 PUBLIC "kjlh" "jhg">

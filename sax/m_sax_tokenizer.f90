@@ -2,7 +2,7 @@
 
 module m_sax_tokenizer
 
-  use m_common_array_str, only: vs_str, str_vs
+  use m_common_array_str, only: vs_str, str_vs, vs_str_alloc
   use m_common_charset, only: XML_WHITESPACE, &
     XML_INITIALENCODINGCHARS, XML_ENCODINGCHARS, &
     XML1_0, XML1_1, operator(.in.), &
@@ -54,8 +54,7 @@ contains
       if (size(fb%namebuffer)==0) then
         !token had better be '?>'
         deallocate(fb%namebuffer)
-        allocate(fx%token(2))
-        fx%token = get_characters(fb, 2, iostat)
+        fx%token => vs_str_alloc(get_characters(fb, 2, iostat))
         if (iostat/=0) return
         if (str_vs(fx%token)/='?>') then
           call add_error(fx%error_stack, "Unexpected token in PI")
@@ -66,8 +65,7 @@ contains
       deallocate(fb%namebuffer)
       call get_characters_until_all_of(fb, '?>', iostat)
       if (iostat/=0) return
-      allocate(fx%next_token(2))
-      fx%next_token = vs_str(get_characters(fb, 2, iostat))
+      fx%next_token => vs_str_alloc(get_characters(fb, 2, iostat))
       if (iostat/=0) return
       fx%token => fb%namebuffer
       nullify(fb%namebuffer)
@@ -76,8 +74,7 @@ contains
     elseif (fx%state==ST_START_COMMENT) then
       call get_characters_until_all_of(fb, '--', iostat)
       if (iostat/=0) return
-      allocate(fx%next_token(2))
-      fx%next_token = vs_str(get_characters(fb, 2, iostat))
+      fx%next_token => vs_str_alloc(get_characters(fb, 2, iostat))
       if (iostat/=0) return
       fx%token => fb%namebuffer
       nullify(fb%namebuffer)
@@ -86,8 +83,7 @@ contains
     elseif (fx%state==ST_CDATA_CONTENTS) then
       call get_characters_until_all_of(fb, ']]>', iostat)
       if (iostat/=0) return
-      allocate(fx%next_token(3))
-      fx%next_token = vs_str(get_characters(fb, 3, iostat))
+      fx%next_token => vs_str_alloc(get_characters(fb, 3, iostat))
       if (iostat/=0) return
       fx%token => fb%namebuffer
       nullify(fb%namebuffer)
@@ -109,21 +105,19 @@ contains
         c = get_characters(fb, 1, iostat)
         if (iostat/=0) return
         if (c=='>') then
-          allocate(fx%token(1))
-          fx%token = vs_str('>')
+          fx%token => vs_str_alloc('>')
         elseif (c=='/') then
           c = get_characters(fb, 1, iostat)
           if (iostat/=0) return
           if (c=='>') then
-            allocate(fx%token(2))
-            fx%token = vs_str('/>')
+            fx%token => vs_str_alloc('/>')
           endif
         else
           call add_error(fx%error_stack, "Unexpected character in tag.")
           return
         endif
       else
-        deallocate(fb%namebuffer)
+        deallocate(fb%namebuffer) ! which only contains whitespace now.
         ! This had better be a name ...
         if (fx%xml_version==XML1_0) then
           call get_characters_until_condition(fb, isXML1_0_NameChar, .false., iostat)
@@ -167,8 +161,7 @@ contains
           c = get_characters(fb, 1, iostat)
           if (iostat/=0) return
           if (c=='>') then
-            allocate(fx%token(1))
-            fx%token = c
+            fx%token => vs_str_alloc(c)
           else
             call add_error(fx%error_stack, "Required whitespace omitted in DTD")
           endif
@@ -178,29 +171,23 @@ contains
         if (iostat/=0) return
         ! do some stuff
         if (c.in."%#>[]+*()|,") then
-          allocate(fx%token(1))
-          fx%token = c
+          fx%token => vs_str_alloc(c)
         elseif (c=='<') then
           !it's a comment or a PI ... or a DTD keyword.
           c = get_characters(fb, 1, iostat)
           if (iostat/=0) return
           if (c=='?') then
-            allocate(fx%token(2))
-            fx%token = vs_str('<?')
+            fx%token = vs_str_alloc('<?')
           elseif (c=='!') then
-            allocate(fx%token(2))
-            fx%token = vs_str('<!')
+            fx%token = vs_str_alloc('<!')
           endif
         elseif (c=='"'.or.c=='"') then ! grab until next quote
           call get_characters_until_all_of(fb, c, iostat)
           if (iostat/=0) return
-          allocate(fx%token(size(fb%namebuffer)+2))
-          fx%token(1) = c
-          fx%token(2:size(fx%token)-1) = fb%namebuffer
-          deallocate(fb%namebuffer)
           c = get_characters(fb, 1, iostat)
           if (iostat/=0) return
-          fx%token(size(fx%token)) = c
+          fx%token => vs_str_alloc(c//str_vs(fb%namebuffer)//c)
+          deallocate(fb%namebuffer)
         else !it must be a NAME for some reason
           call put_characters(fb, 1)
           if (fx%xml_version==XML1_0) then
@@ -224,18 +211,15 @@ contains
         c = get_characters(fb, 1, iostat)
         if (iostat/=0) return
         if (c.in."#>[]+*()|,") then
-          allocate(fx%token(1))
-          fx%token = c
+          fx%token => vs_str_alloc(c)
         elseif (c=='<') then
           !it's a comment or a PI ... or a DTD keyword.
           c = get_characters(fb, 1, iostat)
           if (iostat/=0) return
           if (c=='?') then
-            allocate(fx%token(2))
-            fx%token = vs_str('<?')
+            fx%token => vs_str_alloc('<?')
           elseif (c=='!') then
-            allocate(fx%token(2))
-            fx%token = vs_str('<!')
+            fx%token => vs_str_alloc('<!')
           endif
         endif
       endif
@@ -265,8 +249,7 @@ contains
 
     if (c.in.'#>[]+*()|='//XML_WHITESPACE) then
       !No further investigation needed, that's the token
-      allocate(fx%token(1))
-      fx%token = c
+      fx%token = vs_str_alloc(c)
 
     elseif (isInitialNameChar(c, fx%xml_version)) then
       if (fx%xml_version==XML1_0) then
@@ -275,9 +258,7 @@ contains
         call get_characters_until_condition(fb, isXML1_1_NameChar, .false., iostat)
       endif
       if (iostat/=0) return
-      allocate(fx%token(size(fb%namebuffer)+1))
-      fx%token(1) = c
-      fx%token(2:) = fb%namebuffer
+      fx%token => vs_str_alloc(c//str_vs(fb%namebuffer))
       deallocate(fb%namebuffer)
 
     else
@@ -287,18 +268,14 @@ contains
         c = get_characters(fb, 1, iostat)
         if (iostat/=0) return
         if (c=='?') then
-          allocate(fx%token(2))
-          fx%token = vs_str('<?')
+          fx%token => vs_str_alloc('<?')
         elseif (c=='!') then
-          allocate(fx%token(2))
-          fx%token = vs_str('<!')
+          fx%token => vs_str_alloc('<!')
         elseif (c=='/') then
-          allocate(fx%token(2))
-          fx%token = vs_str('</')
+          fx%token => vs_str_alloc('</')
         elseif (isInitialNameChar(c, fx%xml_version)) then
           call put_characters(fb, 1)
-          allocate(fx%token(1))
-          fx%token = '<'
+          fx%token =>vs_str_alloc('<')
         else
           call add_error(fx%error_stack,"Unexpected character found.")
         endif
@@ -307,8 +284,7 @@ contains
         c = get_characters(fb, 1, iostat)
         if (iostat/=0) return
         if (c=='>') then
-          allocate(fx%token(2))
-          fx%token = vs_str('/>')
+          fx%token => vs_str_alloc('/>')
         else
           call add_error(fx%error_stack, "Unexpected character after /")
         endif
@@ -317,57 +293,24 @@ contains
         c = get_characters(fb, 1, iostat)
         if (iostat/=0) return
         if (c=='>') then
-          allocate(fx%token(2))
-          fx%token = vs_str('?>')
+          fx%token => vs_str_alloc('?>')
         else
           call put_characters(fb, 1)
-          allocate(fx%token(1))
-          fx%token = '?'
+          fx%token => vs_str_alloc('?')
         endif
 
       case ('-')
         c = get_characters(fb, 1, iostat)
         if (iostat/=0) return
         if (c=='-') then
-          allocate(fx%token(2))
-          fx%token = vs_str('--')
+          fx%token = vs_str_alloc('--')
         else
           call add_error(fx%error_stack, "Unexpected character after =") !FIXME is this right?
         endif
 
-      case ('%')
-        c = get_characters(fb, 1, iostat)
-        if (iostat/=0) then
-          !make an error happen
-          return
-        endif
-        if (c.in.XML_WHITESPACE) then
-          allocate(fx%token(1))
-          fx%token = '%'
-        elseif (isInitialNameChar(c, fx%xml_version)) then
-          if (fx%xml_version==XML1_0) then
-            call get_characters_until_condition(fb, isXML1_0_NameChar, .false., iostat)
-          elseif (fx%xml_version==XML1_1) then
-            call get_characters_until_condition(fb, isXML1_1_NameChar, .false., iostat)
-          endif
-          if (iostat/=0) then
-            !make an error happen
-            return
-          endif
-          c = get_characters(fb, 1, iostat)
-          if (c/=';') then
-            !make an error happen
-            return
-          endif
-          !expand & reinvoke parser, truncating entity list
-        endif
-
       case ('&')
         c = get_characters(fb, 1, iostat)
-        if (iostat/=0) then
-          !make an error happen
-          return
-        endif
+        if (iostat/=0) return
         if (c.in.XML_WHITESPACE) then
           !make an error happen
         elseif (isInitialNameChar(c, fx%xml_version)) then
@@ -376,65 +319,31 @@ contains
           elseif (fx%xml_version==XML1_1) then
             call get_characters_until_condition(fb, isXML1_1_NameChar, .false., iostat)
           endif
-          if (iostat/=0) then
-            !make an error happen
-            return
-          endif
+          if (iostat/=0) return
           c = get_characters(fb, 1, iostat)
           if (c/=';') then
-            !make an error happen
+            call add_error(fx%error_stack, "Illegal general entity reference")
             return
           endif
           !expand & reinvoke parser, truncating entity list
         endif
 
       case ('"')
-        if (fx%context==CTXT_IN_DTD) then! .and. some other condition) then
+        if (fx%context==CTXT_IN_CONTENT) then !.an.d some other condition) then
           call get_characters_until_one_of(fb, '"', iostat)
           if (iostat/=0) return
-          allocate(fx%token(size(fb%namebuffer)+2))
-          fx%token(1) = '"'
-          fx%token(2:size(fx%token)-1) = fb%namebuffer
-          fx%token(size(fx%token)) = '"'
           deallocate(fb%namebuffer)
-          ! inefficient copying ...
-
-        elseif (fx%context==CTXT_IN_CONTENT) then !.an.d some other condition) then
-          call get_characters_until_one_of(fb, '"', iostat)
-          if (iostat/=0) return
-          allocate(fx%token(size(fb%namebuffer)+2))
-          fx%token(1) = '"'
-          fx%token(2:size(fx%token)-1) = fb%namebuffer
-          fx%token(size(fx%token)) = '"'
-          deallocate(fb%namebuffer)
-          ! inefficient copying ...
-          ! normalize text
-
+          fx%token = vs_str_alloc('"'//str_vs(fb%namebuffer)//'"')
         else
           ! make an error
         endif
 
       case ("'")
-        if (fx%context==CTXT_IN_DTD) then! .and. some other condition) then
+        if (fx%context==CTXT_IN_CONTENT) then! .and. some other condition) then
           call get_characters_until_one_of(fb, "'", iostat)
           if (iostat/=0) return
-          allocate(fx%token(size(fb%namebuffer)+2))
-          fx%token(1) = "'"
-          fx%token(2:size(fx%token)-1) = fb%namebuffer
-          fx%token(size(fx%token)) = "'"
           deallocate(fb%namebuffer)
-          ! inefficient copying ...
-
-        elseif (fx%context==CTXT_IN_CONTENT) then! .and. some other condition) then
-          call get_characters_until_one_of(fb, "'", iostat)
-          if (iostat/=0) return
-          allocate(fx%token(size(fb%namebuffer)+2))
-          fx%token(1) = "'"
-          fx%token(2:size(fx%token)-1) = fb%namebuffer
-          fx%token(size(fx%token)) = "'"
-          deallocate(fb%namebuffer)
-          ! inefficient copying ...
-          ! normalize text
+          fx%token = vs_str_alloc("'"//str_vs(fb%namebuffer)//"'")
 
         else
 

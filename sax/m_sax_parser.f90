@@ -76,7 +76,6 @@ contains
     if (associated(fx%attname)) deallocate(fx%attname)
     if (associated(fx%publicId)) deallocate(fx%publicId)
     if (associated(fx%systemId)) deallocate(fx%systemId)
-    if (associated(fx%entityContent)) deallocate(fx%entityContent)
     if (associated(fx%Ndata)) deallocate(fx%Ndata)
 
   end subroutine sax_parser_destroy
@@ -198,7 +197,7 @@ contains
       subroutine startDTD_handler(name, publicId, systemId)
         character(len=*), intent(in) :: name
         character(len=*), optional, intent(in) :: publicId
-        character(len=*), intent(in) :: systemId
+        character(len=*), optional, intent(in) :: systemId
       end subroutine startDTD_handler
 
       subroutine endDTD_handler()
@@ -232,10 +231,7 @@ contains
 
       call sax_tokenize(fx, fb, iostat)
       if (in_error(fx%error_stack)) iostat = io_err
-      if (iostat/=0) then
-        !fx%state = ST_NULL
-        goto 100
-      endif
+      if (iostat/=0) goto 100
       if (.not.associated(fx%token)) then
         print*, 'no token';stop
       endif
@@ -435,20 +431,15 @@ contains
               if (str_vs(fx%name)/=str_vs(fx%root_element)) then
                 call add_error(fx%error_stack, "Root element name does not match document name")
                 exit
+              else
+                deallocate(fx%root_element)
               endif
-            else
-              fx%root_element => fx%name
             endif
-            call open_tag
-            if (in_error(fx%error_stack)) goto 100
-            nullify(fx%name)
             fx%context = CTXT_IN_CONTENT
-          else
-            call open_tag
-            if (in_error(fx%error_stack)) goto 100
-            deallocate(fx%name)
           endif
-          call destroy_dict(fx%attributes)
+          call open_tag
+          if (in_error(fx%error_stack)) goto 100
+          deallocate(fx%name)
           fx%state = ST_CHAR_IN_CONTENT
 
         elseif (str_vs(fx%token)=='/>') then
@@ -460,22 +451,20 @@ contains
               if (str_vs(fx%name)/=str_vs(fx%root_element)) then
                 call add_error(fx%error_stack, "Root element name does not match document name")
                 exit
+              else
+                deallocate(fx%root_element)
               endif
-            else
-              fx%root_element => fx%name
-              nullify(fx%name)
             endif
           endif
           call open_tag
           if (in_error(fx%error_stack)) goto 100
           call close_tag
           if (in_error(fx%error_stack)) goto 100
+          deallocate(fx%name)
           if (fx%context==CTXT_IN_CONTENT) then
-            deallocate(fx%name)
             fx%whitespace = WS_PRESERVE
           else
             fx%well_formed = .true.
-            nullify(fx%name)
             fx%context = CTXT_AFTER_CONTENT
             fx%state = ST_MISC
             fx%whitespace = WS_DISCARD
@@ -610,7 +599,7 @@ contains
       case (ST_DTD_PUBLIC)
         print*, 'ST_DTD_PUBLIC'
         if (checkPubId(str_vs(fx%token))) then
-          fx%systemId => fx%token
+          fx%publicId => fx%token
           nullify(fx%token)
           fx%state = ST_DTD_SYSTEM
         else
@@ -632,21 +621,31 @@ contains
         if (str_vs(fx%token)=='[') then
           if (present(startDTD_handler)) then
             if (associated(fx%publicId)) then
-              call startDTD_handler(str_vs(fx%name), publicId=str_vs(fx%publicId), systemId=str_vs(fx%systemId))
+              call startDTD_handler(str_vs(fx%root_element), publicId=str_vs(fx%publicId), systemId=str_vs(fx%systemId))
+            elseif (associated(fx%systemId)) then
+              call startDTD_handler(str_vs(fx%root_element), systemId=str_vs(fx%systemId))
             else
-              call startDTD_handler(str_vs(fx%name), systemId=str_vs(fx%systemId))
+              call startDTD_handler(str_vs(fx%root_element))
             endif
           endif
+          print*, 'systemId ', str_vs(fx%systemId)
+          if (associated(fx%systemId)) deallocate(fx%systemId)
+          if (associated(fx%publicId)) deallocate(fx%publicId)
           fx%whitespace = WS_DISCARD
           fx%state = ST_INT_SUBSET
         elseif (str_vs(fx%token)=='>') then
           if (present(startDTD_handler)) then
             if (associated(fx%publicId)) then
-              call startDTD_handler(str_vs(fx%name), publicId=str_vs(fx%publicId), systemId=str_vs(fx%systemId))
+              call startDTD_handler(str_vs(fx%root_element), publicId=str_vs(fx%publicId), systemId=str_vs(fx%systemId))
+              deallocate(fx%publicId)
+            elseif (associated(fx%systemId)) then
+              call startDTD_handler(str_vs(fx%root_element), systemId=str_vs(fx%systemId))
             else
-              call startDTD_handler(str_vs(fx%name), systemId=str_vs(fx%systemId))
+              call startDTD_handler(str_vs(fx%root_element))
             endif
           endif
+          if (associated(fx%systemId)) deallocate(fx%systemId)
+          if (associated(fx%publicId)) deallocate(fx%publicId)
           if (present(endDTD_handler)) &
             call endDTD_handler
           fx%context = CTXT_BEFORE_CONTENT
@@ -893,15 +892,14 @@ contains
               call notationDecl_handler(str_vs(fx%name), &
               publicId=str_vs(fx%publicId), systemId=str_vs(fx%systemId)) 
             deallocate(fx%publicId)
-            deallocate(fx%systemId)
           else
             call add_notation(fx%nlist, str_vs(fx%name), &
               systemId=str_vs(fx%systemId))
             if (present(notationDecl_handler)) &
               call notationDecl_handler(str_vs(fx%name), &
               systemId=str_vs(fx%systemId)) 
-            deallocate(fx%systemId)
           endif
+          deallocate(fx%systemId)
           print*,'NOTATION EXISTS: ', notation_exists(fx%nlist,str_vs(fx%name))
           deallocate(fx%name)
           fx%state = ST_INT_SUBSET
