@@ -249,7 +249,7 @@ contains
 
     if (c.in.'#>[]+*()|='//XML_WHITESPACE) then
       !No further investigation needed, that's the token
-      fx%token = vs_str_alloc(c)
+      fx%token => vs_str_alloc(c)
 
     elseif (isInitialNameChar(c, fx%xml_version)) then
       if (fx%xml_version==XML1_0) then
@@ -275,7 +275,7 @@ contains
           fx%token => vs_str_alloc('</')
         elseif (isInitialNameChar(c, fx%xml_version)) then
           call put_characters(fb, 1)
-          fx%token =>vs_str_alloc('<')
+          fx%token => vs_str_alloc('<')
         else
           call add_error(fx%error_stack,"Unexpected character found.")
         endif
@@ -303,7 +303,7 @@ contains
         c = get_characters(fb, 1, iostat)
         if (iostat/=0) return
         if (c=='-') then
-          fx%token = vs_str_alloc('--')
+          fx%token => vs_str_alloc('--')
         else
           call add_error(fx%error_stack, "Unexpected character after =") !FIXME is this right?
         endif
@@ -325,6 +325,7 @@ contains
             call add_error(fx%error_stack, "Illegal general entity reference")
             return
           endif
+          print*,'unimplemented';stop
           !expand & reinvoke parser, truncating entity list
         endif
 
@@ -333,7 +334,7 @@ contains
           call get_characters_until_one_of(fb, '"', iostat)
           if (iostat/=0) return
           deallocate(fb%namebuffer)
-          fx%token = vs_str_alloc('"'//str_vs(fb%namebuffer)//'"')
+          fx%token => vs_str_alloc('"'//str_vs(fb%namebuffer)//'"')
         else
           ! make an error
         endif

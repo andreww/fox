@@ -17,4 +17,4 @@
 <!ENTITY qr6 "<">
 ]>
 
-<test att="&qr;">jhgfjhgf:</test>
+<test att="&qr;"/>

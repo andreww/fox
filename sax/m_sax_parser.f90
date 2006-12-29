@@ -727,8 +727,6 @@ contains
           fx%pe = .true.
           ! this will be a PE
           fx%state = ST_DTD_ENTITY_PE
-          fx%name => fx%token
-          nullify(fx%token)
         else
           fx%pe = .false.
           fx%name => fx%token
