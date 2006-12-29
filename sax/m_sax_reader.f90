@@ -24,13 +24,13 @@ module m_sax_reader
   ! IO.
 
 
+  use m_common_array_str, only : vs_str, str_vs, vs_str_alloc
   use m_common_charset, only: XML1_0, XML1_1, &
     XML1_0_NAMECHARS, XML1_1_NAMECHARS, XML_WHITESPACE, &
     XML1_0_INITIALNAMECHARS, XML1_1_INITIALNAMECHARS
   use m_common_error,  only: FoX_error, FoX_fatal
   use m_common_io, only: setup_io, io_eor, io_eof, get_unit
   use m_common_format, only: str
-  use m_common_array_str, only : vs_str, str_vs
 
   implicit none
   private
@@ -138,8 +138,7 @@ contains
         call FoX_error("Cannot specify lun for string input to open_xml")
       endif
       fb%lun = -1
-      allocate(fb%input_string(len(string)))
-      fb%input_string = vs_str(string)
+      fb%input_string => vs_str_alloc(string)
       fb%input_pos = 1
     else
       if (present(lun)) then
@@ -171,12 +170,10 @@ contains
     fb%eof = .false.
     fb%line = 1
     fb%col = 0
-    allocate(fb%filename(len(file)))
-    fb%filename = vs_str(file)
+    fb%filename => vs_str_alloc(file)
     fb%pos = 1
     fb%nchars = 0
-    allocate(fb%buffer_stack(0:0))
-    allocate(fb%buffer_stack(0)%s(0))
+    allocate(fb%buffer_stack(0))
 
     allocate(fb%next_chars(0))
 
@@ -195,12 +192,11 @@ contains
     fb%pos = 1
     fb%nchars = 0
     fb%buffer = ""
-    do i = 0, ubound(fb%buffer_stack,1)
+    do i = 1, size(fb%buffer_stack)
       deallocate(fb%buffer_stack(i)%s)
     enddo
     deallocate(fb%buffer_stack)
-    allocate(fb%buffer_stack(0:0))
-    allocate(fb%buffer_stack(0)%s(0))
+    allocate(fb%buffer_stack(0))
 
     deallocate(fb%next_chars)
     allocate(fb%next_chars(0))
@@ -221,7 +217,7 @@ contains
     if (fb%connected) then
       deallocate(fb%filename)
       if (associated(fb%namebuffer)) deallocate(fb%namebuffer)
-      do i = 0, ubound(fb%buffer_stack,1)
+      do i = 1, size(fb%buffer_stack)
         deallocate(fb%buffer_stack(i)%s)
       enddo
       deallocate(fb%buffer_stack)
@@ -545,13 +541,12 @@ contains
     integer :: i
     type(buffer_t), dimension(:), pointer :: tempStack
 
-    allocate(tempStack(0:ubound(fb%buffer_stack,1)+1))
-    do i = 0, ubound(fb%buffer_stack,1)
+    allocate(tempStack(size(fb%buffer_stack)+1))
+    do i = 1, size(fb%buffer_stack)
       tempStack(i)%s => fb%buffer_stack(i)%s
       tempStack(i)%pos = fb%buffer_stack(i)%pos
     enddo
-    allocate(tempStack(ubound(fb%buffer_stack,1))%s(len(string)))
-    tempStack(ubound(fb%buffer_stack,1))%s = vs_str(string)
+    tempStack(size(tempStack))%s => vs_str_alloc(string)
     deallocate(fb%buffer_stack)
     fb%buffer_stack => tempStack
   end subroutine push_buffer_stack
@@ -563,8 +558,8 @@ contains
     integer :: i
     type(buffer_t), dimension(:), pointer :: tempStack
 
-    allocate(tempStack(0:ubound(fb%buffer_stack,1)-1))
-    do i = 0, ubound(fb%buffer_stack,1)-1
+    allocate(tempStack(size(fb%buffer_stack)-1))
+    do i = 1, size(fb%buffer_stack)-1
       tempStack(i)%s => fb%buffer_stack(i)%s
       tempStack(i)%pos = fb%buffer_stack(i)%pos
     enddo
@@ -591,8 +586,8 @@ contains
     !them first.
 
     ! Which is current buffer?
-    if (ubound(fb%buffer_stack,1) > 0) then
-      cb => fb%buffer_stack(ubound(fb%buffer_stack,1))
+    if (size(fb%buffer_stack) > 0) then
+      cb => fb%buffer_stack(size(fb%buffer_stack))
 
       n_held = size(cb%s) - cb%pos + 1
       if (n <= n_held) then
@@ -646,8 +641,8 @@ contains
     character, dimension(:), pointer :: tempbuf, buf
     integer :: m_i
 
-    if (ubound(fb%buffer_stack,1)>0) then
-      cb => fb%buffer_stack(ubound(fb%buffer_stack,1))
+    if (size(fb%buffer_stack)>0) then
+      cb => fb%buffer_stack(size(fb%buffer_stack))
       if (cb%pos>size(cb%s)) then
         iostat = io_eof
         return
@@ -660,7 +655,7 @@ contains
     allocate(buf(0))
     m_i = check_fb(fb, condition, true)
     if (m_i == 0) then
-      if (ubound(fb%buffer_stack,1)>0) then
+      if (size(fb%buffer_stack)>0) then
         m_i = size(cb%s) - cb%pos + 1
       endif
       do while (m_i==0)
@@ -682,7 +677,7 @@ contains
       enddo
     endif
 
-    if (ubound(fb%buffer_stack,1)>0) then
+    if (size(fb%buffer_stack)>0) then
       deallocate(buf)
       allocate(buf(m_i-1))
       buf = cb%s(cb%pos:cb%pos+m_i-1)
@@ -713,8 +708,8 @@ contains
     character, dimension(:), pointer :: tempbuf, buf
     integer :: m_i
 
-    if (ubound(fb%buffer_stack,1)>0) then
-      cb => fb%buffer_stack(ubound(fb%buffer_stack,1))
+    if (size(fb%buffer_stack)>0) then
+      cb => fb%buffer_stack(size(fb%buffer_stack))
       if (cb%pos>size(cb%s)) then
         iostat = io_eof
         return
@@ -727,7 +722,7 @@ contains
     allocate(buf(0))
     m_i = condition(fb, marker)
     if (m_i == 0) then
-      if (ubound(fb%buffer_stack,1)>0) then
+      if (size(fb%buffer_stack)>0) then
         m_i = size(cb%s) - cb%pos + 1
       endif
       do while (m_i==0)
@@ -753,7 +748,7 @@ contains
       enddo
     endif
 
-    if (ubound(fb%buffer_stack,1)>0) then
+    if (size(fb%buffer_stack)>0) then
       deallocate(buf)
       allocate(buf(m_i-1))
       buf = cb%s(cb%pos:cb%pos+m_i-1)
@@ -846,8 +841,8 @@ contains
 
     type(buffer_t), pointer :: cb
 
-    if (ubound(fb%buffer_stack,1)>0) then
-      cb = fb%buffer_stack(ubound(fb%buffer_stack,1))
+    if (size(fb%buffer_stack)>0) then
+      cb = fb%buffer_stack(size(fb%buffer_stack))
       if (n > cb%pos) then
         ! make an error
       else
@@ -898,8 +893,8 @@ contains
 
     type(buffer_t), pointer :: cb
 
-    if (ubound(fb%buffer_stack,1) > 0) then
-      cb => fb%buffer_stack(ubound(fb%buffer_stack,1))
+    if (size(fb%buffer_stack) > 0) then
+      cb => fb%buffer_stack(size(fb%buffer_stack))
       p = index(str_vs(cb%s(cb%pos:)), marker)
     else
       p = index(fb%buffer(fb%pos:fb%nchars), marker)
@@ -914,8 +909,8 @@ contains
 
     type(buffer_t), pointer :: cb
 
-    if (ubound(fb%buffer_stack,1) > 0) then
-      cb => fb%buffer_stack(ubound(fb%buffer_stack,1))
+    if (size(fb%buffer_stack) > 0) then
+      cb => fb%buffer_stack(size(fb%buffer_stack))
       p = scan(str_vs(cb%s(cb%pos:)), marker)
     else
       p = scan(fb%buffer(fb%pos:fb%nchars), marker)
@@ -930,8 +925,8 @@ contains
 
     type(buffer_t), pointer :: cb
 
-    if (ubound(fb%buffer_stack,1) > 0) then
-      cb => fb%buffer_stack(ubound(fb%buffer_stack,1))
+    if (size(fb%buffer_stack) > 0) then
+      cb => fb%buffer_stack(size(fb%buffer_stack))
       p = verify(str_vs(cb%s(cb%pos:)), marker)
     else
       p = verify(fb%buffer(fb%pos:fb%nchars), marker)
@@ -955,8 +950,8 @@ contains
 
     n = 0
     i = 1
-    if (ubound(fb%buffer_stack,1) > 0) then
-      cb => fb%buffer_stack(ubound(fb%buffer_stack,1))
+    if (size(fb%buffer_stack) > 0) then
+      cb => fb%buffer_stack(size(fb%buffer_stack))
       do while (cb%pos+i-1<=size(cb%s))
         if (true.eqv.check(cb%s(cb%pos+i-1))) then
           n = i
