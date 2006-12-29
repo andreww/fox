@@ -747,10 +747,11 @@ contains
         fx%name => fx%token
         nullify(fx%token)
         fx%state = ST_DTD_ELEMENT_CONTENTS
-        call FoX_Error("element unimplemented")
 
       case (ST_DTD_ELEMENT_CONTENTS)
         !token is everything up to >
+        print*,'ST_DTD_ELEMENT_CONTENTS'
+        call FoX_Error("element unimplemented")
         call parse_element
         if (in_error(fx%error_stack)) goto 100
         fx%state = ST_DTD_ELEMENT_END
