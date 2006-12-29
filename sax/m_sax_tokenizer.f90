@@ -181,7 +181,7 @@ contains
           elseif (c=='!') then
             fx%token = vs_str_alloc('<!')
           endif
-        elseif (c=='"'.or.c=='"') then ! grab until next quote
+        elseif (c=='"'.or.c=="'") then ! grab until next quote
           call get_characters_until_all_of(fb, c, iostat)
           if (iostat/=0) return
           c = get_characters(fb, 1, iostat)
@@ -210,6 +210,7 @@ contains
         if (iostat/=0) return
         c = get_characters(fb, 1, iostat)
         if (iostat/=0) return
+        print*, 'IN DTD , c = ', c
         if (c.in."#>[]+*()|,") then
           fx%token => vs_str_alloc(c)
         elseif (c=='<') then
@@ -221,6 +222,21 @@ contains
           elseif (c=='!') then
             fx%token => vs_str_alloc('<!')
           endif
+        elseif (c=='%') then
+          !It ought to be a parameter entity reference
+          if (fx%xml_version==XML1_0) then
+            call get_characters_until_condition(fb, isXML1_0_NameChar, .false., iostat)
+          elseif (fx%xml_version==XML1_1) then
+            call get_characters_until_condition(fb, isXML1_1_NameChar, .false., iostat)
+          endif
+          c = get_characters(fb, 1, iostat)
+          if (iostat/=0) return
+          if (c/=';') then
+            call add_error(fx%error_stack, "Illegal parameter entity reference.")
+            return
+          endif
+          fx%token => vs_str_alloc('%'//str_vs(fb%namebuffer)//';')
+          ! push back, surrounding with spaces
         endif
       endif
       return

@@ -6,7 +6,10 @@
 <!ENTITY lkj " &yt;">
 <!ENTITY pqr " bum">
 <!ENTITY yt "arse">
-<!ENTITY % qr "lkj">
+<!ENTITY % qr '<!ENTITY a "b" >'>
+<!ENTITY % pc "&#37;qr;">
+<!ENTITY % pc2 "qr;">
+<!ENTITY % twoqr "&#37;qr;">
 <!ENTITY % qr2 SYSTEM "kjlh">
 <!ENTITY % qr3 PUBLIC "kjlh" "jhg">
 <!ENTITY qr "lkj">
@@ -15,6 +18,7 @@
 <!ENTITY qr4 PUBLIC "arse" "poo">
 <!ENTITY qr5 PUBLIC "arse" "poo" NDATA note>
 <!ENTITY qr6 "<">
+%pc;
 ]>
 
 <test att="&qr;"/>

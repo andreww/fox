@@ -12,9 +12,10 @@ module m_sax_parser
   use m_common_entities, only: existing_entity, &
     init_entity_list, destroy_entity_list, &
     add_internal_entity, add_external_entity, &
-    expand_entity_value_alloc, print_entity_list
+    expand_entity_value_alloc, print_entity_list, &
+    is_external_entity, expand_entity
   use m_common_error, only: FoX_error, ERR_NULL, add_error, &
-    init_error_stack, destroy_error_stack, in_error
+    init_error_stack, destroy_error_stack, in_error, ERR_WARNING
   use m_common_io, only: io_eof, io_err
   use m_common_namecheck, only: checkName, checkSystemId, checkPubId
   use m_common_namespaces, only: getnamespaceURI, invalidNS, &
@@ -23,7 +24,7 @@ module m_sax_parser
   use m_common_notations, only: init_notation_list, destroy_notation_list, &
     add_notation, notation_exists
 
-  use m_sax_reader, only: file_buffer_t
+  use m_sax_reader, only: file_buffer_t, pop_buffer_stack, push_buffer_stack
   use m_sax_tokenizer, only: sax_tokenize, parse_xml_declaration
   use m_sax_types ! everything, really
 
@@ -98,7 +99,8 @@ contains
     internalEntityDecl_handler,           &
     externalEntityDecl_handler,           &
     unparsedEntityDecl_handler,           &
-    notationDecl_handler)
+    notationDecl_handler,                 &
+    skippedEntity_handler)
     
     type(sax_parser_t), intent(inout) :: fx
     type(file_buffer_t), intent(inout) :: fb
@@ -121,7 +123,8 @@ contains
     optional :: externalEntityDecl_handler
     optional :: unparsedEntityDecl_handler
     optional :: notationDecl_handler
-
+    optional :: skippedEntity_handler
+    
     interface
       subroutine begin_element_handler(namespaceURI, localName, name, attributes)
         use FoX_common
@@ -208,21 +211,23 @@ contains
 
       subroutine endCdata_handler()
       end subroutine endCdata_handler
+
+      subroutine skippedEntity_handler(name)
+        character(len=*), intent(in) :: name
+      end subroutine skippedEntity_handler
     end interface
 
     integer :: iostat
-
+    character, pointer :: tempString(:)
     iostat = 0
     
     if (fx%parse_stack==0) then
       call parse_xml_declaration(fx, fb, iostat)
       if (iostat/=0) goto 100
-
       fx%context = CTXT_BEFORE_DTD
       fx%state = ST_MISC
       fx%whitespace = WS_DISCARD
-      print*,'XML declaration parsed.', fb%input_pos
-      if(present(start_document_handler)) &
+      if (present(start_document_handler)) &
         call start_document_handler()
     endif
 
@@ -231,7 +236,15 @@ contains
 
       call sax_tokenize(fx, fb, iostat)
       if (in_error(fx%error_stack)) iostat = io_err
-      if (iostat/=0) goto 100
+      if (fx%context==CTXT_IN_DTD.and.iostat==io_eof.and.fx%parse_stack>0) then
+        ! that's just the end of a parameter entity expansion.
+        ! pop the parse stack, and carry on ..
+        call pop_buffer_stack(fb)
+        cycle
+      elseif (iostat/=0) then
+        ! Any other error, we want to quit (this instance of ...) sax_tokenizer
+        goto 100
+      endif
       if (.not.associated(fx%token)) then
         print*, 'no token';stop
       endif
@@ -517,7 +530,7 @@ contains
           fx%state = ST_CLOSING_TAG
         elseif (fx%token(1)=='&') then
           ! tell tokenizer to expand it
-          call sax_parse(fx, fb,  &
+          call sax_parse(fx, fb,                  &
             begin_element_handler,                &
             end_element_handler,                  &
             start_prefix_handler,                 &
@@ -535,7 +548,8 @@ contains
             internalEntityDecl_handler,           &
             externalEntityDecl_handler,           &
             unparsedEntityDecl_handler,           &
-            notationDecl_handler)
+            notationDecl_handler,                 &
+            skippedEntity_handler)
           if (iostat/=0) goto 100
         else
           call add_error(fx%error_stack, "Unexpected token found in character context")
@@ -658,13 +672,38 @@ contains
         print*, 'ST_INT_SUBSET'
         if (str_vs(fx%token)==']') then
           fx%state = ST_CLOSE_DTD
-        elseif (str_vs(fx%token)=='%') then
-          !FIXME
-          ! Check this. Is it internal? expand.
-          ! is it not?
-          !  then are we standalone?
-          !   then look at XML section 5.1
-          call FoX_Error("PE reference unimplemented")
+        elseif (fx%token(1)=='%') then
+          tempString => fx%token(2:size(fx%token)-1)
+          print*,'entity ', str_vs(tempString)
+          if (existing_entity(fx%pe_list, str_vs(tempString))) then
+            if (is_external_entity(fx%pe_list, str_vs(tempString))) then
+              ! We are not validating, do not include external entities
+              call add_error(fx%error_stack, &
+                "Skipping external parameter entity reference", ERR_WARNING)
+              if (present(skippedEntity_handler)) &
+                call skippedEntity_handler('%'//str_vs(tempString))
+              fx%skippedExternalEntity = .true.
+              !  FIXME then are we standalone?
+              !   then look at XML section 5.1
+              fx%processDTD = .not.fx%standalone !FIXME use this everywhere
+            else
+              ! Expand the entity, 
+              call push_buffer_stack(fb, " "//expand_entity(fx%pe_list, str_vs(tempString))//" ")
+            endif
+              ! and do nothing else, carry on ...
+          else
+            ! Have we previously skipped an external entity?
+            if (fx%skippedExternalEntity) then
+              call add_error(fx%error_stack, &
+                "Skipping undeclared parameter entity reference", ERR_WARNING)
+              if (present(skippedEntity_handler)) &
+                call skippedEntity_handler('%'//str_vs(tempString))
+            else
+              ! If not, 
+              call add_error(fx%error_stack, &
+                "Reference to undeclared parameter entity.")
+            endif
+          endif
         elseif (str_vs(fx%token)=='<?') then
           fx%state = ST_START_PI
         elseif (str_vs(fx%token)=='<!') then
@@ -914,6 +953,7 @@ contains
         print*
         print*,'Finished reading DTD'
         call print_entity_list(fx%ge_list)
+        call print_entity_list(fx%pe_list)
         print*
         fx%state = ST_MISC
         fx%context = CTXT_BEFORE_CONTENT
@@ -924,7 +964,8 @@ contains
 
 100 if (iostat==io_eof) then ! error is end of file then
       if (fx%parse_stack>0) then !we are parsing an entity
-        if (fx%well_formed) then
+        if (fx%well_formed) then ! FIXME need better test.
+          ! We've come out of a well-formed general entity expansion
           iostat = 0
           ! go back up stack
         else !badly formed entity

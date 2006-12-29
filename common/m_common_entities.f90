@@ -48,16 +48,10 @@ module m_common_entities
 
   public :: expand_char_entity
 
-  public :: entity_filter_text_len
-  public :: entity_filter_text
-
-  public :: expand_parameter_entity
-  public :: expand_parameter_entity_len
+  public :: expand_entity
+  public :: expand_entity_len
 
   public :: expand_entity_value_alloc
-
-  public :: entity_filter_EV_len
-  public :: entity_filter_EV
 
   public :: entity_list
   public :: init_entity_list
@@ -414,17 +408,12 @@ contains
   end function expand_entity_text
 
 
-  pure function expand_parameter_entity_len(ents, code) result(n)
+  pure function expand_entity_len(ents, code) result(n)
     type(entity_list), intent(in) :: ents
     character(len=*), intent(in)  :: code
     integer :: n
 
     integer :: i
-
-    if (.not.existing_entity(ents, code)) then
-      n = 0
-      return
-    endif
 
     do i = 1, size(ents%list)
       if (code == str_vs(ents%list(i)%code)) then
@@ -432,222 +421,24 @@ contains
       endif
     enddo
 
-  end function expand_parameter_entity_len
+  end function expand_entity_len
 
 
-  function expand_parameter_entity(ents, code) result(repl)
+  function expand_entity(ents, code) result(repl)
     type(entity_list), intent(in) :: ents
     character(len=*), intent(in)  :: code
-    character(len=expand_entity_text_len(ents, code)) :: repl
-
+    character(len=expand_entity_len(ents, code)) :: repl
+    
     integer :: i
-
-    if (len(repl) == 0) &
-      call FoX_error("Non-existent PE")
-
+    
     do i = 1, size(ents%list)
       if (code == str_vs(ents%list(i)%code)) then
         repl = str_vs(ents%list(i)%repl)
       endif
     enddo
 
-  end function expand_parameter_entity
+  end function expand_entity
     
-
-  pure function entity_filter_text_len(ents, str) result(n)
-    type(entity_list), intent(in) :: ents
-    character(len=*), intent(in) :: str
-    integer :: n
-
-    integer :: i, i2, j, k
-    
-    n = 0
-
-    i = 1
-    i2 = 1
-    do
-      if (i > len(str)) exit
-      if (str(i:i) == "&") then
-        if (i+1 > len(str)) then
-          exit
-        endif
-        k = index(str(i+1:),";")
-        if (k == 0) then
-          exit
-        endif
-        j = expand_entity_text_len(ents, str(i+1:i+k-1))
-        i  = i + k + 1
-        i2 = i2 + j
-      else
-        i = i + 1
-        i2 = i2 + 1
-      endif
-    enddo
-    
-    n = i2 - 1
-
-  end function entity_filter_text_len
-
-  function entity_filter_text(ents, str) result(str2)
-    type(entity_list), intent(in) :: ents
-    character(len=*), intent(in) :: str
-    character(len=entity_filter_text_len(ents, str)) :: str2
-
-    integer :: i, i2, j, k, n
-
-    n = len(str2)
-
-    i = 1
-    i2 = 1
-    do
-      if (i > len(str)) exit
-      if (str(i:i) == "&") then
-        if (i+1 > len(str)) then
-          call FoX_error("Unmatched & in entity reference")
-        endif
-        k = index(str(i+1:),";")
-        if (k == 0) then
-          call FoX_error("Unmatched & in entity reference")
-        endif
-        ! We really need to check here if we have got an unparsed
-        ! entity - if we do, then we only let it pass if this is
-        ! in content, not in an attribute value.
-        j = expand_entity_text_len(ents, str(i+1:i+k-1))
-        if (j > 0 .and. n > 0) then
-          str2(i2:i2+j-1) = expand_entity_text(ents, str(i+1:i+k-1))
-        else
-          call FoX_warning("Ignored unknown entity: &" // str(i+1:i+k-1) // ";")
-        endif
-        i  = i + k + 1
-        i2 = i2 + j
-      else
-        if (n > 0) str2(i2:i2) = str(i:i)
-        i = i + 1
-        i2 = i2 + 1
-      endif
-    enddo
-
-  end function entity_filter_text
-
-
-  pure function entity_filter_EV_len(pents, str) result(n)
-    type(entity_list), intent(in) :: pents
-    character(len=*), intent(in) :: str
-    integer :: n
-
-    integer :: i, i2, j, k
-
-    i = 1
-    i2 = 1
-    do
-      if (i > len(str)) exit
-      if (str(i:i) == "&") then
-        if (i+1 > len(str)) then
-          n = 0
-          return
-        endif
-        k = index(str(i+1:),";")
-        if (k == 0) then
-          n = 0
-          return
-        endif
-        ! We only want to expand this if it's a character or parameter entity ...
-        ! Unparsed entities give undefined results here - we ignore them.FIXME?
-        if (checkCharacterEntityReference(str(i+1:i+k-1))) then
-          j = expand_char_entity_len(str(i+1:i+k-1))
-          i  = i + k + 1
-          i2 = i2 + j
-        else
-          i = i + 1
-          i2 = i2 + 1
-        endif
-      elseif (str(i:i) == "%") then
-        if (i+1 > len(str)) then
-          n = 0
-          return
-        endif
-        k = index(str(i+1:),";")
-        if (k == 0) then
-          n = 0
-          return
-        endif
-        j = expand_parameter_entity_len(pents, str(i+1:i+k-1))
-        if (j == 0) then
-          n = 0
-          return
-        endif
-        i  = i + k + 1
-        i2 = i2 + j
-      else
-        i = i + 1
-        i2 = i2 + 1
-      endif
-    enddo
-
-    n = i2 - 1
-
-  end function entity_filter_EV_len
-
-
-  function entity_filter_EV(pents, str) result(str2)
-    type(entity_list), intent(in) :: pents
-    character(len=*), intent(in) :: str
-    character(len=entity_filter_EV_len(pents, str)) :: str2
-
-    integer :: i, i2, j, k, n
-
-    n = len(str2)
-    str2 = ""
-    i = 1
-    i2 = 1
-    do
-      if (i > len(str)) exit
-      if (str(i:i) == "&") then
-        if (i+1 > len(str)) then
-          call FoX_error("Unmatched & in entity reference")
-        endif
-        k = index(str(i+1:),";")
-        if (k == 0) then
-          call FoX_error("Unmatched & in entity reference")
-        endif
-        ! We only want to expand this if it's a character or parameter entity ...
-        ! Unparsed entities give undefined results here - we ignore them.FIXME?
-        if (checkCharacterEntityReference(str(i+1:i+k-1))) then
-          j = expand_char_entity_len(str(i+1:i+k-1))
-          if (n > 0) str2(i2:i2+j-1) = expand_char_entity(str(i+1:i+k-1))
-          i  = i + k + 1
-          i2 = i2 + j
-        else
-          str2(i2:i2) = "&"
-          i = i + 1
-          i2 = i2 + 1
-        endif
-     elseif (str(i:i) == "%") then
-        if (i+1 > len(str)) then
-          call FoX_error("Unmatched % in entity reference")
-        endif
-        k = index(str(i+1:),";")
-        if (k == 0) then
-          call FoX_error("Unmatched % in entity reference")
-        endif
-        j = expand_parameter_entity_len(pents, str(i+1:i+k-1))
-        if (j > 0 .and. n > 0) then
-          str2(i2:i2+j-1) = expand_parameter_entity(pents, str(i+1:i+k-1))
-        else
-          call FoX_error("Unknown parameter entity")
-        endif
-        i  = i + k + 1
-        i2 = i2 + j
-      else
-        if (n > 0) str2(i2:i2) = str(i:i)
-        i = i + 1
-        i2 = i2 + 1
-      endif
-      print*,str2
-    enddo
-
-  end function entity_filter_EV
-
 
   function expand_entity_value_alloc(repl, stack) result(repl_new)
     !perform expansion of character entity references

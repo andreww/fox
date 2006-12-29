@@ -115,6 +115,9 @@ module m_sax_reader
 
   public :: dump_string
 
+  public :: push_buffer_stack
+  public :: pop_buffer_stack
+
 contains
 
   subroutine open_file(fb, iostat, file, lun, string)
