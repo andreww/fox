@@ -64,7 +64,9 @@ contains
     unparsedEntityDecl_handler,           &
     internalEntityDecl_handler,           &
     externalEntityDecl_handler,           &
-    notationDecl_handler)
+    notationDecl_handler,                 &
+    skippedEntity_handler,                &
+    elementDecl_handler)
 
     type(xml_t), intent(inout) :: xt
     optional :: begin_element_handler
@@ -85,6 +87,8 @@ contains
     optional :: unparsedEntityDecl_handler
     optional :: internalEntityDecl_handler
     optional :: externalEntityDecl_handler
+    optional :: skippedEntity_handler
+    optional :: elementDecl_handler
 
     interface
       subroutine begin_element_handler(namespaceURI, localName, name, attributes)
@@ -173,6 +177,15 @@ contains
       subroutine endCdata_handler()
       end subroutine endCdata_handler
 
+      subroutine skippedEntity_handler(name)
+        character(len=*), intent(in) :: name
+      end subroutine skippedEntity_handler
+
+      subroutine elementDecl_handler(name, model)
+        character(len=*), intent(in) :: name
+        character(len=*), intent(in) :: model
+      end subroutine elementDecl_handler
+
     end interface
 
     ! check xt is initialized
@@ -195,7 +208,9 @@ contains
     internalEntityDecl_handler,           &
     externalEntityDecl_handler,           &
     unparsedEntityDecl_handler,           &
-    notationDecl_handler)
+    notationDecl_handler,                 &
+    skippedEntity_handler,                &
+    elementDecl_handler)
 
   end subroutine sax_parse_go
 

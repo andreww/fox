@@ -774,6 +774,7 @@ contains
         fx%state = ST_DTD_ELEMENT_END
         
       case (ST_DTD_ELEMENT_END)
+        print*,'ST_DTD_ELEMENT_END'
         if (str_vs(fx%token)=='>') then
           if (present(elementDecl_handler)) &
             call elementDecl_handler(str_vs(fx%name), str_vs(elem%model))

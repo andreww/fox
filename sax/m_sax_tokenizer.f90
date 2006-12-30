@@ -99,7 +99,8 @@ contains
     elseif (fx%state==ST_DTD_ELEMENT_CONTENTS) then
       call get_characters_until_all_of(fb, '>', iostat)
       if (iostat/=0) return
-      fx%next_token => vs_str_alloc('>')
+      fx%next_token => vs_str_alloc(get_characters(fb, 1, iostat))
+      if (iostat/=0) return
       fx%token => fb%namebuffer
       nullify(fb%namebuffer)
       return
@@ -258,6 +259,8 @@ contains
           fx%token => vs_str_alloc('%'//str_vs(fb%namebuffer)//';')
         endif
       endif
+
+      print*,'token from DTD: ',c
       return
 
 

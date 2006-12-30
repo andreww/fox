@@ -62,6 +62,7 @@ contains
 
     do i = 1, size(e_list%list)
       deallocate(e_list%list(i)%name)
+      deallocate(e_list%list(i)%model)
     enddo
     deallocate(e_list%list)
   end subroutine destroy_element_list
@@ -115,6 +116,7 @@ contains
       e_list%list(i)%mixed = temp(i)%mixed
       e_list%list(i)%space = temp(i)%space
     enddo
+    deallocate(temp)
     e_list%list(i)%name => vs_str_alloc(name)
     e => e_list%list(i)
   end function add_element
@@ -226,6 +228,7 @@ contains
             deallocate(name)
             nbrackets = 0
             state = ST_AFTERLASTBRACKET
+            deallocate(order)
           else
             call add_error(stack, &
               'Unexpected token after #')
@@ -252,6 +255,7 @@ contains
           name(size(name)) = c
           deallocate(temp)
         elseif (c=='?') then
+          deallocate(name)
           if (element%mixed) then
             call add_error(stack, &
               'Repeat operators forbidden for Mixed elements')
@@ -260,6 +264,7 @@ contains
             state = ST_SEPARATOR
           endif
         elseif (c=='+') then
+          deallocate(name)
           if (element%mixed) then
             call add_error(stack, &
               'Repeat operators forbidden for Mixed elements')
@@ -268,6 +273,7 @@ contains
             state = ST_SEPARATOR
           endif
         elseif (c=='*') then
+          deallocate(name)
           if (element%mixed) then
             call add_error(stack, &
               'Repeat operators forbidden for Mixed elements')
@@ -276,9 +282,11 @@ contains
             state = ST_SEPARATOR
           endif
         elseif (c.in.XML_WHITESPACE) then
+          deallocate(name)
           if (element%mixed) mixed_additional = .true.
           state = ST_SEPARATOR
         elseif (c==',') then
+          deallocate(name)
           if (order(nbrackets)=='') then
             order(nbrackets)=','
           elseif (order(nbrackets)=='|') then
@@ -288,6 +296,7 @@ contains
           endif
           state = ST_CHILD
         elseif (c=='|') then
+          deallocate(name)
           if (order(nbrackets)=='') then
             order(nbrackets)='|'
           elseif (order(nbrackets)==',') then
@@ -298,15 +307,17 @@ contains
           if (element%mixed) mixed_additional = .true.
           state = ST_CHILD
         elseif (c==')') then
-          nbrackets = nbrackets - 1
-          temp => order
-          allocate(order(nbrackets))
-          order = temp(:size(order))
-          deallocate(temp)
+          deallocate(name)
           if (element%mixed) mixed_additional = .true.
+          nbrackets = nbrackets - 1
           if (nbrackets==0) then
             state = ST_AFTERLASTBRACKET
+            deallocate(order)
           else
+            temp => order
+            allocate(order(nbrackets))
+            order = temp(:size(order))
+            deallocate(temp)
             state = ST_AFTERBRACKET
           endif
         else
@@ -371,13 +382,14 @@ contains
           state = ST_CHILD
         elseif (c==')') then
           nbrackets = nbrackets - 1
-          temp => order
-          allocate(order(nbrackets))
-          order = temp(:size(order))
-          deallocate(temp)
           if (nbrackets==0) then
             state = ST_AFTERLASTBRACKET
+            deallocate(order)
           else
+            temp => order
+            allocate(order(nbrackets))
+            order = temp(:size(order))
+            deallocate(temp)
             state = ST_AFTERBRACKET
           endif
         endif
@@ -412,13 +424,14 @@ contains
           state = ST_CHILD
         elseif (c==')') then
           nbrackets = nbrackets - 1
-          temp => order
-          allocate(order(nbrackets))
-          order = temp(:size(order))
-          deallocate(temp)
           if (nbrackets==0) then
+            deallocate(order)
             state = ST_AFTERLASTBRACKET
           else
+            temp => order
+            allocate(order(nbrackets))
+            order = temp(:size(order))
+            deallocate(temp)
             state = ST_AFTERBRACKET
           endif
         else
