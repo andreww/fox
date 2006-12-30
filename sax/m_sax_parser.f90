@@ -751,8 +751,8 @@ contains
       case (ST_DTD_ELEMENT_CONTENTS)
         !token is everything up to >
         print*,'ST_DTD_ELEMENT_CONTENTS'
+        call parse_element(str_vs(fb%namebuffer))
         call FoX_Error("element unimplemented")
-        call parse_element
         if (in_error(fx%error_stack)) goto 100
         fx%state = ST_DTD_ELEMENT_END
         
@@ -1117,15 +1117,270 @@ contains
       subroutine parse_attlist
       end subroutine parse_attlist
       
-      subroutine parse_element
-        ! discard whitespace ...
+      subroutine parse_element(contents, stack)
+        character(len=*), intent(in) :: contents
+        type(error_stack), intent(inout) :: stack
 
-        !check for EMPTY and ANY, alternatively, a bracket ...
-        !if a bracket, then either:
-        !   another bracker, or
-        !   an element name, or
-        !   #PCDATA ... in which case either ")", or:
-        !               only | or Names allowed until ")*"
+        integer :: nbrackets
+        logical :: mixed
+        character, allocatable :: order(:), name(:)
+        character, pointer :: temp(:)
+
+        nbrackets = 0
+        state = START
+
+        do i = 1, len(contents)
+          c = contents(i:i)
+          
+          if (state==START) then
+            if (i.in.XML_WHITESPACE) cycle
+            if (c.in.'EMPTYANY') then
+              allocate(name(1))
+              name(1) = contents(i:i)
+              state = EMPTYANY
+            elseif (c=='(') then
+              allocate(order(1))
+              order(1) = ''
+              nbrackets = 1
+              state = VERYFIRSTCHILD
+            else
+              call add_error(stack, &
+                'Unexpected character "'//c//'" at start of ELEMENT specification')
+              exit
+            endif
+
+          elseif (state==EMPTYANY) then
+            if (c.in.'EMPTYANY') then
+              temp => name
+              allocate(name(size(temp)+1))
+              name(size(name)) = contents(i:i)
+              deallocate(temp)
+            elseif (c.in.XML_WHITESPACE)
+              if (str_vs(name)=='EMPTY') then
+                continue
+              elseif (str_vs(name)=='ANY') then
+                continue
+              else
+                call add_error(stack, &
+                  'Unexpected ELEMENT specification; expecting EMPTY or ANY')
+                exit
+              endif
+              state = END
+            else
+              call add_error(stack, &
+                'Unexpected ELEMENT specification; expecting EMPTY or ANY')
+              exit
+            endif
+            
+          elseif (state==VERYFIRSTCHILD) then
+            if (c.in.XML_WHITESPACE) cycle
+            if (c=='#') then
+              mixed = .true.
+              state = PCDATA
+            elseif ! a name
+              state = NAME
+            elseif (c=='(') then
+              deallocate(order)
+              allocate(order(2))
+              order = ''
+              nbrackets = 2
+              state = CHILD
+            else
+              call add_error(stack, &
+                'Unexpected character "'//c//'"in ELEMENT specification')
+              exit
+            endif
+
+          elseif (state==PCDATA) then
+            if (c.in.'PCDATA') then
+              ! record that & carry on
+            elseif (c==')') then
+              ! check if we have PCDATA
+              ! decrement brackets
+              if (nbrackets==0) then
+                state = END
+              else
+                state = NEXTCHILD
+              endif
+            elseif (c=='|') then
+              order(1) = '|'
+              state = NEXTCHILD
+            elseif (contents(i:i)==',') then
+              call add_error(stack, &
+                'Ordered specification not allowed for Mixed elements')
+              exit
+            else
+              call add_error(stack, &
+                'Unexpected character "'//c//'"in ELEMENT specification')
+              exit
+            endif
+            
+          elseif (state==NAME) then
+            if ! name
+              ! carry on recording
+            elseif (c=='?') then
+              if (mixed) then
+                call add_error(stack, &
+                  'Repeat operators forbidden for Mixed elements')
+                exit
+              else
+                state = SEPARATOR
+              endif
+            elseif (c=='+') then
+              if (mixed) then
+                call add_error(stack, &
+                  'Repeat operators forbidden for Mixed elements')
+                exit
+              else
+                state = SEPARATOR
+              endif
+            elseif (c=='*') then
+              if (mixed) then
+                call add_error(stack, &
+                  'Repeat operators forbidden for Mixed elements')
+                exit
+              else
+                state = SEPARATOR
+              endif
+            elseif (c.in.XML_WHITESPACE) then
+              state = SEPARATOR
+            elseif (c=='(') then
+              nbrackets = nbrackets + 1
+              temp => order
+              allocate(order(nbrackets))
+              do j = 1, nbrackets - 1
+                order(j) = temp(j)
+              enddo
+              deallocate(temp)
+              order(nbrackets) = ''
+              state = CHILD
+            else
+              call add_error(stack, &
+                'Unexpected character "'//c//'" found after element name')
+              exit
+            endif
+            
+          elseif (state==CHILD) then
+            if (i.in.XML_WHITESPACE) cycle
+            if (contents(i:i)=='#') then
+              call add_error(stack, &
+                '# forbidden except inside first bracket')
+            elseif ! a name
+              state = NAME
+            elseif (contents(i:i)=='(') then
+              nbrackets = nbrackets + 1
+              temp => order
+              allocate(order(nbrackets))
+              do j = 1, nbrackets - 1
+                order(j) = temp(j)
+              enddo
+              deallocate(temp)
+              order(nbrackets) = ''
+            else
+              call add_error(stack, &
+                'Unexpected character "'//c//'" found after (')
+              exit
+            endif
+            
+          elseif (state==SEPARATOR) then
+            if (i.in.XML_WHITESPACE) cycle
+            if (contents(i:i)=='#') then
+              ! error
+            elseif (contents(i:i)==',') then
+              if (order(nbrackets)=='') then
+                order(nbrackets==',')
+              elseif (order(nbrackets)=='|') then
+                call add_error(stack, &
+                  'Cannot mix ordered and unordered elements')
+              endif
+              state = CHILD
+            elseif (contents(i:i)=='|') then
+              if (order(nbrackets)=='') then
+                order(nbrackets=='|')
+              elseif (order(nbrackets)==',') then
+                call add_error(stack, &
+                  'Cannot mix ordered and unordered elements')
+              endif
+              state = CHILD
+            elseif (contents(i:i)==')') then
+              nbrackets = nbrackets - 1
+              temp => order
+              allocate(order(nbrackets))
+              do j = 1, nbrackets
+                order(j) = temp(j)
+              enddo
+              deallocate(temp)
+              state = AFTERBRACKET
+            endif
+            
+          elseif (state==AFTERBRACKET) then
+            if (c=='*') then
+              continue
+            elseif (c=='+') then
+              if (mixed) then
+                call add_error(stack, &
+                  '+ operator disallowed for Mixed elements')
+                exit
+              endif
+            elseif (c=='?') then
+              if (mixed) then
+                call add_error(stack, &
+                  '? operator disallowed for Mixed elements')
+                exit
+              endif
+            elseif (c.in.XML_WHITESPACE) then
+              if (nbrackets==0) then
+                state = END
+              else
+                state = SEPARATOR
+              endif
+            elseif (c ==',') then
+              if (nbrackets==0) then
+                call add_error(stack, &
+                  'Unexpected "," outside final bracket')
+                exit
+              else
+                if (order(nbrackets)=='') then
+                  order(nbrackets) = ','
+                elseif (order(nbrackets)=='|') then
+                  call add_error(stack, &
+                    'Cannot mix ordered and unordered elements')
+                  exit
+                endif
+              endif
+              state = CHILD
+            elseif (c =='|') then
+              if (nbrackets==0) then
+                call add_error(stack, &
+                  'Unexpected "," outside final bracket')
+                exit
+              else
+                if (order(nbrackets)=='') then
+                  order(nbrackets) = '|'
+                elseif (order(nbrackets)==',') then
+                  call add_error(stack, &
+                    "Cannot mix ordered and unordered elements")
+                  exit
+                endif
+              endif
+              state = CHILD
+            else
+              call add_error(stack, &
+                'Unexpected character "'//c//'"found after ")"')
+              exit
+            endif
+            
+          elseif (state==END) then
+            if (c.in.XML_WHITESPACE) then
+              continue
+            else
+              call add_error(stack, &
+                'Unexpected token found after end of element specification')
+            endif
+            
+          endif
+                
+        enddo
 
       end subroutine parse_element
 

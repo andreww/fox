@@ -151,6 +151,12 @@ contains
       ! Either way, we return
       return
 
+    !elseif (fx%state = ST_DTD_ATTLIST_CONTENTS
+
+    elseif (fx%state = ST_DTD_ELEMENT_CONTENTS) then
+      call get_characters_until_all_of(fb, '>', iostat)
+      if (iostat/=0) return
+
     elseif (fx%context==CTXT_IN_DTD) then
       print*,'context', fx%whitespace
       if (fx%whitespace==WS_MANDATORY) then
@@ -238,12 +244,9 @@ contains
             return
           endif
           fx%token => vs_str_alloc('%'//str_vs(fb%namebuffer)//';')
-          ! push back, surrounding with spaces
         endif
       endif
       return
-      ! elseif (fx%state = ST_DTD_ATTLIST_CONTENTS
-      ! elseif (fx%state = ST_DTD_ELEMENT_CONTENTS
 
 
     endif
