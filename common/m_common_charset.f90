@@ -45,8 +45,6 @@ module m_common_charset
 
   public :: operator(.in.)
 
-  public :: InitialNameChars
-  public :: NameChars
   public :: validchars
   public :: whitespace
   public :: uppercase

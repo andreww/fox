@@ -38,7 +38,7 @@ contains
 
     character :: c
 
-    print*,'tokenizing... discard whitespace?', fx%whitespace
+    print*,'tokenizing... discard whitespace?', fx%whitespace, fx%state
 
     if (associated(fx%token)) deallocate(fx%token)
     if (associated(fx%next_token)) then
@@ -92,6 +92,22 @@ contains
     elseif (fx%state==ST_CHAR_IN_CONTENT) then
       call get_characters_until_one_of(fb, '<&', iostat)
       if (iostat/=0) return
+      fx%token => fb%namebuffer
+      nullify(fb%namebuffer)
+      return
+
+    elseif (fx%state==ST_DTD_ELEMENT_CONTENTS) then
+      call get_characters_until_all_of(fb, '>', iostat)
+      if (iostat/=0) return
+      fx%next_token => vs_str_alloc('>')
+      fx%token => fb%namebuffer
+      nullify(fb%namebuffer)
+      return
+
+    elseif (fx%state==ST_DTD_ATTLIST_CONTENTS) then
+      call get_characters_until_all_of(fb, '>', iostat)
+      if (iostat/=0) return
+      fx%next_token => vs_str_alloc('>')
       fx%token => fb%namebuffer
       nullify(fb%namebuffer)
       return
@@ -152,10 +168,6 @@ contains
       return
 
     !elseif (fx%state = ST_DTD_ATTLIST_CONTENTS
-
-    elseif (fx%state = ST_DTD_ELEMENT_CONTENTS) then
-      call get_characters_until_all_of(fb, '>', iostat)
-      if (iostat/=0) return
 
     elseif (fx%context==CTXT_IN_DTD) then
       print*,'context', fx%whitespace

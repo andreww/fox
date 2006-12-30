@@ -1,7 +1,6 @@
 module m_common_attrs
 
-  use m_common_array_str, only : str_vs, vs_str
-  use m_common_charset, only : whitespace, initialNameChars, nameChars, operator(.in.)
+  use m_common_array_str, only : str_vs, vs_str_alloc
   use m_common_error, only : FoX_error
 
   implicit none
@@ -250,23 +249,16 @@ contains
     !endif
     
     n = n + 1
-    allocate(dict%items(n)%value(len(value)))
-    dict%items(n)%value = vs_str(value)
+    dict%items(n)%value => vs_str_alloc(value)
 
     if (present(prefix)) then
-      allocate(dict%items(n)%key(len(prefix)+1+len(key)))
-      dict%items(n)%key = vs_str(prefix//":"//key)
-      allocate(dict%items(n)%prefix(len(prefix)))
-      dict%items(n)%prefix = vs_str(prefix)
-      allocate(dict%items(n)%nsURI(len(nsURI)))
-      dict%items(n)%nsURI = vs_str(nsURI)
-      allocate(dict%items(n)%localname(len(key)))
-      dict%items(n)%localname = vs_str(key)
+      dict%items(n)%key => vs_str_alloc(prefix//":"//key)
+      dict%items(n)%prefix => vs_str_alloc(prefix)
+      dict%items(n)%nsURI => vs_str_alloc(nsURI)
+      dict%items(n)%localname => vs_str_alloc(key)
     else
-      allocate(dict%items(n)%key(len(key)))
-      dict%items(n)%key = vs_str(key)
-      allocate(dict%items(n)%localname(len(key)))
-      dict%items(n)%localname = vs_str(key)
+      dict%items(n)%key => vs_str_alloc(key)
+      dict%items(n)%localname => vs_str_alloc(key)
       allocate(dict%items(n)%prefix(0))
       allocate(dict%items(n)%nsURI(0))
     endif
@@ -282,8 +274,7 @@ contains
 
     if (associated(dict%items(i)%nsURI)) &
          deallocate(dict%items(i)%nsURI)
-    allocate(dict%items(i)%nsURI(len(nsURI)))
-    dict%items(i)%nsURI = vs_str(nsURI)
+    dict%items(i)%nsURI => vs_str_alloc(nsURI)
   end subroutine set_nsURI_by_index
 
   subroutine set_prefix_by_index(dict, i, prefix)
@@ -293,8 +284,7 @@ contains
 
     if (associated(dict%items(i)%prefix)) &
          deallocate(dict%items(i)%prefix)
-    allocate(dict%items(i)%nsURI(len(prefix)))
-    dict%items(i)%prefix = vs_str(prefix)
+    dict%items(i)%prefix => vs_str_alloc(prefix)
   end subroutine set_prefix_by_index
 
   subroutine set_localName_by_index_s(dict, i, localName)
@@ -304,8 +294,7 @@ contains
 
     if (associated(dict%items(i)%localName)) &
          deallocate(dict%items(i)%localName)
-    allocate(dict%items(i)%localName(len(localName)))
-    dict%items(i)%localName = vs_str(localName)
+    dict%items(i)%localName => vs_str_alloc(localName)
   end subroutine set_localName_by_index_s
 
   subroutine set_localName_by_index_vs(dict, i, localName)
@@ -349,7 +338,7 @@ contains
     character(len=merge(size(dict%items(get_key_index(dict, keyname))%nsURI), 0, (get_key_index(dict, keyname) > 0))) :: nsURI
     integer :: i
 
-    i=get_key_index(dict, keyname)
+    i = get_key_index(dict, keyname)
     nsURI = str_vs(dict%items(i)%nsURI)
   end function get_nsURI_by_keyname
 

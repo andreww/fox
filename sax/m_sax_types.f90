@@ -1,6 +1,7 @@
 module m_sax_types
 
   use m_common_attrs, only: dictionary_t
+  use m_common_element, only: element_list
   use m_common_elstack, only: elstack_t
   use m_common_entities, only: entity_list
   use m_common_error, only: error_stack
@@ -103,6 +104,7 @@ module m_sax_types
     type(notation_list) :: nlist
     type(entity_list) :: pe_list
     type(entity_list) :: ge_list
+    type(element_list) :: element_list
     character(len=1), dimension(:), pointer :: PublicId => null()
     character(len=1), dimension(:), pointer :: SystemId => null()
     character(len=1), dimension(:), pointer :: Ndata => null()
