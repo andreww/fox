@@ -98,6 +98,8 @@ module m_common_element
 
   public :: parse_dtd_attlist
 
+  public :: report_declarations
+
 contains
 
   subroutine init_element_list(e_list)
@@ -573,7 +575,7 @@ contains
     type(attribute_list), intent(inout) :: a_list
 
     integer :: i, j
-    
+
     do i = 1, size(a_list%list)
       deallocate(a_list%list(i)%name)
       if (associated(a_list%list(i)%default)) deallocate(a_list%list(i)%default)
@@ -917,4 +919,139 @@ contains
   end subroutine parse_dtd_attlist
 
 
+  subroutine report_declarations(elem, attributeDecl_handler)
+    type(element_t), intent(in) :: elem
+    interface
+      subroutine attributeDecl_handler(eName, aName, type, mode, value)
+        character(len=*), intent(in) :: eName
+        character(len=*), intent(in) :: aName
+        character(len=*), intent(in) :: type
+        character(len=*), intent(in), optional :: mode
+        character(len=*), intent(in), optional :: value
+      end subroutine attributeDecl_handler
+    end interface
+
+    integer :: i
+    character(len=11)  :: type
+    character(len=8) :: mode
+    type(attribute_t), pointer :: a
+
+    do i = 1, size(elem%attlist%list)
+      a => elem%attlist%list(i)
+
+      select case (a%attType)
+      case (ATT_CDATA)
+        type = 'CDATA'
+      case (ATT_ID)
+        type = 'ID'
+      case (ATT_IDREF)
+        type = 'IDREF'
+      case (ATT_IDREFS)
+        type = 'IDREFS'
+      case (ATT_NMTOKEN)
+        type = 'NMTOKENS'
+      case (ATT_NMTOKENS)
+        type = 'NMTOKENS'
+      case (ATT_ENTITY)
+        type = 'ENTITY'
+      case (ATT_ENTITIES)
+        type = 'ENTITIES'
+      end select
+      select case (a%attDefault)
+      case (ATT_REQUIRED)
+        mode = "REQUIRED"
+      case (ATT_IMPLIED)
+        mode = "IMPLIED"
+      case (ATT_FIXED)
+        mode = "FIXED"
+      end select
+
+      if (a%attType==ATT_NOTATION) then
+        if (a%attDefault==ATT_DEFAULT) then
+          if (associated(a%default)) then
+            call attributeDecl_handler(str_vs(elem%name), str_vs(a%name), &
+              'NOTATION '//make_token_group(a%enumerations), value=str_vs(a%default))
+          else
+            call attributeDecl_handler(str_vs(elem%name), str_vs(a%name), &
+              'NOTATION '//make_token_group(a%enumerations))
+          endif
+        else
+          if (associated(a%default)) then
+            call attributeDecl_handler(str_vs(elem%name), str_vs(a%name), &
+              'NOTATION '//make_token_group(a%enumerations), mode=trim(mode), &
+              value=str_vs(a%default))
+          else
+            call attributeDecl_handler(str_vs(elem%name), str_vs(a%name), &
+              'NOTATION '//make_token_group(a%enumerations), mode=trim(mode))
+          endif
+        endif
+      elseif (a%attType==ATT_ENUM) then
+        if (a%attDefault==ATT_DEFAULT) then
+          if (associated(a%default)) then
+            call attributeDecl_handler(str_vs(elem%name), str_vs(a%name), &
+              make_token_group(a%enumerations), value=str_vs(a%default))
+          else
+            call attributeDecl_handler(str_vs(elem%name), str_vs(a%name), &
+              make_token_group(a%enumerations))
+          endif
+        else
+          if (associated(a%default)) then
+            call attributeDecl_handler(str_vs(elem%name), str_vs(a%name), &
+              make_token_group(a%enumerations), mode=trim(mode), &
+              value=str_vs(a%default))
+          else
+            call attributeDecl_handler(str_vs(elem%name), str_vs(a%name), &
+              make_token_group(a%enumerations), mode=trim(mode))
+          endif
+        endif
+      else
+        if (a%attDefault==ATT_DEFAULT) then
+          if (associated(a%default)) then
+            call attributeDecl_handler(str_vs(elem%name), str_vs(a%name), &
+              trim(type), value=str_vs(a%default))
+          else
+            call attributeDecl_handler(str_vs(elem%name), str_vs(a%name), &
+              trim(type))
+          endif
+        else
+          if (associated(a%default)) then
+            call attributeDecl_handler(str_vs(elem%name), str_vs(a%name), &
+              trim(type), mode=trim(mode), value=str_vs(a%default))
+          else
+            call attributeDecl_handler(str_vs(elem%name), str_vs(a%name), &
+              trim(type), mode=trim(mode))
+          endif
+        endif
+      endif
+    enddo
+
+
+  end subroutine report_declarations
+
+  pure function make_token_group_len(s_list) result(n)
+    type(string_list), intent(in) :: s_list
+    integer :: n
+
+    integer :: i
+    n = size(s_list%list) + 1
+    do i = 1, size(s_list%list)
+      n = n + size(s_list%list(i)%s)
+    enddo
+  end function make_token_group_len
+
+  function make_token_group(s_list) result(s)
+    type(string_list), intent(in) :: s_list
+    character(len=make_token_group_len(s_list)) :: s
+    
+    integer :: i, m, n
+    s(1:1) = '('
+    n = 2
+    do i = 1, size(s_list%list)
+      m = size(s_list%list(i)%s)
+      s(n:n+m) = str_vs(s_list%list(i)%s)//'|'
+      n = n + m + 1
+    enddo
+    s(n:n) = ')'
+  end function make_token_group
+  
 end module m_common_element

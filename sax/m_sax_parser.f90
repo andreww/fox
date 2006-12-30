@@ -9,7 +9,7 @@ module m_sax_parser
     XML_WHITESPACE, XML1_0_NAMECHARS, XML1_1_NAMECHARS, operator(.in.)
   use m_common_element, only: element_t, element_list, init_element_list, &
     destroy_element_list, existing_element, add_element, get_element, &
-    parse_dtd_element, parse_dtd_attlist
+    parse_dtd_element, parse_dtd_attlist, report_declarations
   use m_common_elstack, only: elstack_t, push_elstack, pop_elstack, &
     init_elstack, destroy_elstack, is_empty, get_top_elstack, len
   use m_common_entities, only: existing_entity, &
@@ -106,7 +106,8 @@ contains
     unparsedEntityDecl_handler,           &
     notationDecl_handler,                 &
     skippedEntity_handler,                &
-    elementDecl_handler)
+    elementDecl_handler,                  &
+    attributeDecl_handler)
     
     type(sax_parser_t), intent(inout) :: fx
     type(file_buffer_t), intent(inout) :: fb
@@ -131,6 +132,7 @@ contains
     optional :: notationDecl_handler
     optional :: skippedEntity_handler
     optional :: elementDecl_handler
+    optional :: attributeDecl_handler
     
     interface
       subroutine begin_element_handler(namespaceURI, localName, name, attributes)
@@ -227,6 +229,14 @@ contains
         character(len=*), intent(in) :: name
         character(len=*), intent(in) :: model
       end subroutine elementDecl_handler
+
+      subroutine attributeDecl_handler(eName, aName, type, mode, value)
+        character(len=*), intent(in) :: eName
+        character(len=*), intent(in) :: aName
+        character(len=*), intent(in) :: type
+        character(len=*), intent(in), optional :: mode
+        character(len=*), intent(in), optional :: value
+      end subroutine attributeDecl_handler
     end interface
 
     integer :: iostat
@@ -752,8 +762,9 @@ contains
 
       case (ST_DTD_ATTLIST_END)
         if (str_vs(fx%token)=='>') then
-          ! register contents ...
           deallocate(fx%name)
+          if (present(attributeDecl_handler)) &
+            call report_declarations(elem, attributeDecl_handler)
           fx%state = ST_INT_SUBSET
           fx%whitespace = WS_DISCARD
 
