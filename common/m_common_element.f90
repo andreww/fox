@@ -101,6 +101,7 @@ module m_common_element
   public :: report_declarations
 
   public :: isCdataAtt
+  public :: get_default_atts
 
 contains
 
@@ -1123,5 +1124,23 @@ contains
       p = .true.
     endif
   end function isCdataAtt
+
+
+  function get_default_atts(a_list) result(s_list)
+    type(attribute_list), intent(in) :: a_list
+    type(string_list) :: s_list
+    
+    integer :: i
+    type(attribute_t), pointer :: a
+
+    call init_string_list(s_list)
+    do i = 1, size(a_list%list)
+      a => a_list%list(i)
+      if (a%attDefault==ATT_DEFAULT) then
+        call add_string(s_list, str_vs(a%name))
+        call add_string(s_list, str_vs(a%default))
+      endif
+    enddo
+  end function get_default_atts
   
 end module m_common_element

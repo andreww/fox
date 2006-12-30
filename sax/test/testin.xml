@@ -31,7 +31,8 @@ type    (bullets|ordered|glossary)  "ordered">
 <!ATTLIST form
 method  CDATA   #FIXED "POST">
 <!ATTLIST test
-notcdata NMTOKENS #IMPLIED>
+notcdata NMTOKENS #IMPLIED
+default CDATA "default">
 ]>
 
 <test notcdata="  ab 
