@@ -19,7 +19,14 @@
 <!ENTITY qr5 PUBLIC "arse" "poo" NDATA note>
 <!ENTITY qr6 "<">
 %pc;
-<!ELEMENT br (lkj| PCDATA| k)* >
+<!ELEMENT br (#PCDATA) >
+<!ATTLIST termdef
+id      ID      #REQUIRED
+name    CDATA   #IMPLIED>
+<!ATTLIST list
+type    (bullets|ordered|glossary)  "ordered">
+<!ATTLIST form
+method  CDATA   #FIXED "POST">
 ]>
 
 <test att="&qr;"/>

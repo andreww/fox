@@ -2,101 +2,60 @@ module m_common_array_str
 
   implicit none
   private
-  !
-  ! Utilities for character to character array
-  ! conversions and tests of equality.
-  !
-  !interface operator (.equal.)
-  ! module procedure compare_vs_s, compare_vs_vs
-  !end interface operator(.equal.)
-  !interface compare_array_str
-  !   module procedure compare_vs_s, compare_vs_vs
-  !end interface compare_array_str
-  !
-  ! Not supported by all compilers...
-  ! interface assignment (=)
-  !  module procedure assign_array_to_str !!!! , assign_str_to_array
-  ! end interface
 
-  !public :: operator(.equal.), compare_array_str !!!! , assignment(=)
-  !public :: assign_array_to_str , assign_str_to_array
-  public :: str_vs, vs_str, vs_str_alloc
+  type string_t
+    character, pointer :: s(:) => null()
+  end type string_t
+
+  type string_list
+    type(string_t), pointer :: list(:) => null()
+  end type string_list
+
+  public :: string_t
+  public :: string_list
+
+  public :: init_string_list
+  public :: destroy_string_list
+  public :: add_string
+
+  public :: str_vs
+  public :: vs_str
+  public :: vs_str_alloc
 
 contains
-  !-------------------------------------------------------------
-  pure subroutine assign_array_to_str(str,s)
-    character(len=1), dimension(:), intent(in)   :: s
-    character(len=*), intent(out) :: str
 
-    integer :: i, lstr
+  subroutine init_string_list(s_list)
+    type(string_list), intent(inout) :: s_list
 
-    lstr = len(str)
-    do i = 1, min(size(s),lstr)
-      str(i:i) = s(i)
+    allocate(s_list%list(0))
+  end subroutine init_string_list
+
+  subroutine destroy_string_list(s_list)
+    type(string_list), intent(inout) :: s_list
+
+    integer :: i
+
+    do i = 1, size(s_list%list)
+      deallocate(s_list%list(i)%s)
     enddo
-    do i = size(s)+1, lstr
-      str(i:i) = " "
+    deallocate(s_list%list)
+  end subroutine destroy_string_list
+
+  subroutine add_string(s_list, s)
+    type(string_list), intent(inout) :: s_list
+    character(len=*), intent(in) :: s
+
+    integer :: i
+    type(string_t), pointer :: temp(:)
+
+    temp => s_list%list
+    allocate(s_list%list(size(temp)+1))
+    do i = 1, size(temp)
+      s_list%list(i)%s => temp(i)%s
     enddo
-  end subroutine assign_array_to_str
-
-  !-------------------------------------------------------------
-  ! The NAG and Intel compilers cannot distinguish this from the
-  ! intrinsic assignment... so we resort to using an explicit
-  ! subroutine call.
-  !
-  pure subroutine assign_str_to_array(s,str)
-    character(len=1), dimension(:), intent(out)   :: s
-    character(len=*), intent(in) :: str
-
-    integer :: i, lstr
-
-    lstr = len(str)
-    do i = 1, min(size(s),lstr)
-      s(i) = str(i:i)
-    enddo
-
-  end subroutine assign_str_to_array
-
-
-  pure function compare_vs_s(s,str) result(equal) ! .equal. generic
-    character(len=1), dimension(:), intent(in)   :: s
-    character(len=*), intent(in) :: str
-    logical                      :: equal
-
-    integer :: lens, lenstr, i
-
-    equal = .false.
-    lens = size(s)
-    lenstr = len(str)
-    if (lens .ne. lenstr) return
-
-    do i = 1, lens
-      if (s(i) .ne. str(i:i)) return
-    enddo
-    equal = .true.
-
-  end function compare_vs_s
-
-
-  pure function compare_vs_vs(s,str) result(equal) ! .equal. generic
-    character(len=1), dimension(:), intent(in)   :: s
-    character(len=1), dimension(:), intent(in)   :: str
-    logical                      :: equal
-
-    integer :: lens, lenstr, i
-
-    equal = .false.
-    lens = size(s)
-    lenstr = size(str)
-    if (lens .ne. lenstr) return
-
-    do i = 1, lens
-      if (s(i) .ne. str(i)) return
-    enddo
-    equal = .true.
-
-  end function compare_vs_vs
-
+    deallocate(temp)
+    s_list%list(i)%s => vs_str_alloc(s)
+  end subroutine add_string
 
   pure function str_vs(vs) result(s)
     character, dimension(:), intent(in) :: vs

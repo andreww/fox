@@ -108,7 +108,8 @@ contains
     elseif (fx%state==ST_DTD_ATTLIST_CONTENTS) then
       call get_characters_until_all_of(fb, '>', iostat)
       if (iostat/=0) return
-      fx%next_token => vs_str_alloc('>')
+      fx%next_token => vs_str_alloc(get_characters(fb, 1, iostat))
+      if (iostat/=0) return
       fx%token => fb%namebuffer
       nullify(fb%namebuffer)
       return

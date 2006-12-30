@@ -9,7 +9,7 @@ module m_sax_parser
     XML_WHITESPACE, XML1_0_NAMECHARS, XML1_1_NAMECHARS, operator(.in.)
   use m_common_element, only: element_t, element_list, init_element_list, &
     destroy_element_list, existing_element, add_element, get_element, &
-    parse_dtd_element
+    parse_dtd_element, parse_dtd_attlist
   use m_common_elstack, only: elstack_t, push_elstack, pop_elstack, &
     init_elstack, destroy_elstack, is_empty, get_top_elstack, len
   use m_common_entities, only: existing_entity, &
@@ -735,12 +735,18 @@ contains
         print*, 'ST_DTD_ATTLIST'
         ! check is name
         fx%name => fx%token
+        if (existing_element(fx%element_list, str_vs(fx%name))) then
+          elem => get_element(fx%element_list, str_vs(fx%name))
+        else
+          elem => add_element(fx%element_list, str_vs(fx%name))
+          ! FIXME call add_warning(fx%error_stack
+        endif
         nullify(fx%token)
         fx%state = ST_DTD_ATTLIST_CONTENTS
 
       case (ST_DTD_ATTLIST_CONTENTS)
         !token is everything up to >
-        call parse_attlist
+        call parse_dtd_attlist(elem, str_vs(fx%token), fx%xml_version, fx%error_stack)
         if (in_error(fx%error_stack)) goto 100
         fx%state = ST_DTD_ATTLIST_END
 
@@ -750,6 +756,7 @@ contains
           deallocate(fx%name)
           fx%state = ST_INT_SUBSET
           fx%whitespace = WS_DISCARD
+
         else
           call add_error(fx%error_stack, "Unexpected token in ATTLIST")
         endif
@@ -1134,12 +1141,8 @@ contains
         if (associated(fx%Ndata)) deallocate(fx%Ndata)
       end subroutine add_entity
 
-      subroutine parse_attlist
-      end subroutine parse_attlist
-      
-      
-
   end subroutine sax_parse
+
 
   subroutine sax_error(fx, error_handler)
     type(sax_parser_t), intent(inout) :: fx
