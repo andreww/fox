@@ -1192,7 +1192,7 @@ contains
 
       integer :: i
       type(element_t), pointer :: e
-      type(string_list), pointer :: default_atts
+      type(string_list) :: default_atts
 
       if (existing_element(e_list, eName)) then
         e => get_element(e_list, eName)
