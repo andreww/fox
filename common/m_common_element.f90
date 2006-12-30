@@ -28,6 +28,7 @@ module m_common_element
     logical :: any = .false.
     logical :: mixed = .false.
     logical :: space = .false.
+    character, pointer :: model(:) => null()
     !   type(attribute_t), pointer :: attlist => null()
   end type element_t
 
@@ -481,6 +482,8 @@ contains
       call add_error(stack, &
         'Incomplete element specification')
     endif
+
+    element%model => vs_str_alloc(contents)
 
     return
 

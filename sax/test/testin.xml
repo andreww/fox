@@ -19,7 +19,7 @@
 <!ENTITY qr5 PUBLIC "arse" "poo" NDATA note>
 <!ENTITY qr6 "<">
 %pc;
-<!ELEMENT br (lkj| PCDATA| k >
+<!ELEMENT br (lkj| PCDATA| k)* >
 ]>
 
 <test att="&qr;"/>

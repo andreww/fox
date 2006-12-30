@@ -105,7 +105,8 @@ contains
     externalEntityDecl_handler,           &
     unparsedEntityDecl_handler,           &
     notationDecl_handler,                 &
-    skippedEntity_handler)
+    skippedEntity_handler,                &
+    elementDecl_handler)
     
     type(sax_parser_t), intent(inout) :: fx
     type(file_buffer_t), intent(inout) :: fb
@@ -129,6 +130,7 @@ contains
     optional :: unparsedEntityDecl_handler
     optional :: notationDecl_handler
     optional :: skippedEntity_handler
+    optional :: elementDecl_handler
     
     interface
       subroutine begin_element_handler(namespaceURI, localName, name, attributes)
@@ -220,6 +222,11 @@ contains
       subroutine skippedEntity_handler(name)
         character(len=*), intent(in) :: name
       end subroutine skippedEntity_handler
+
+      subroutine elementDecl_handler(name, model)
+        character(len=*), intent(in) :: name
+        character(len=*), intent(in) :: model
+      end subroutine elementDecl_handler
     end interface
 
     integer :: iostat
@@ -764,17 +771,18 @@ contains
         endif
         call parse_dtd_element(str_vs(fx%token), elem, fx%xml_version, fx%error_stack)
         if (in_error(fx%error_stack)) goto 100
-        call FoX_Error("element unimplemented")
         fx%state = ST_DTD_ELEMENT_END
         
       case (ST_DTD_ELEMENT_END)
         if (str_vs(fx%token)=='>') then
-          ! register contents ...
+          if (present(elementDecl_handler)) &
+            call elementDecl_handler(str_vs(fx%name), str_vs(elem%model))
           deallocate(fx%name)
           fx%state = ST_INT_SUBSET
           fx%whitespace = WS_DISCARD
         else
           call add_error(fx%error_stack, "Unexpected token in ELEMENT")
+          !FIXME this can't happen
         endif
         
       case (ST_DTD_ENTITY)
