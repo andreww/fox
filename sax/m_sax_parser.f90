@@ -9,7 +9,7 @@ module m_sax_parser
     XML_WHITESPACE, XML1_0_NAMECHARS, XML1_1_NAMECHARS, operator(.in.)
   use m_common_element, only: element_t, element_list, init_element_list, &
     destroy_element_list, existing_element, add_element, get_element, &
-    parse_dtd_element, parse_dtd_attlist, report_declarations
+    parse_dtd_element, parse_dtd_attlist, report_declarations, isCdataAtt
   use m_common_elstack, only: elstack_t, push_elstack, pop_elstack, &
     init_elstack, destroy_elstack, is_empty, get_top_elstack, len
   use m_common_entities, only: existing_entity, &
@@ -531,8 +531,17 @@ contains
         ! fx%name still contains attribute name
         ! Is it an xmlns:?
         ! Is it an xml:?
-        call add_item_to_dict(fx%attributes, str_vs(fx%attname), &
-          str_vs(fx%token))
+        !If this attribute is CDATA, we must process further;
+        print*,'iscdatatt?', isCdataAtt(fx%element_list, &
+          str_vs(fx%name), str_vs(fx%attname))
+        if (isCdataAtt(fx%element_list, &
+          str_vs(fx%name), str_vs(fx%attname))) then
+          call add_item_to_dict(fx%attributes, str_vs(fx%attname), &
+            str_vs(fx%token))
+        else
+          call add_item_to_dict(fx%attributes, str_vs(fx%attname), &
+            trim(NotCDataNormalize(str_vs(fx%token))))
+        endif
         deallocate(fx%attname)
         fx%state = ST_IN_TAG
 
@@ -784,6 +793,7 @@ contains
         print*,'ST_DTD_ELEMENT_CONTENTS'
         if (existing_element(fx%element_list, str_vs(fx%name))) then
           elem => get_element(fx%element_list, str_vs(fx%name))
+          ! VC If this were validating, we should issue an error here
         else
           elem => add_element(fx%element_list, str_vs(fx%name))
         endif
@@ -1151,6 +1161,25 @@ contains
         if (associated(fx%publicId)) deallocate(fx%publicId)
         if (associated(fx%Ndata)) deallocate(fx%Ndata)
       end subroutine add_entity
+
+      function NotCDataNormalize(s1) result(s2)
+        character(len=*), intent(in) :: s1
+        character(len=len(s1)) :: s2
+        
+        integer :: i, i2
+        logical :: w
+        
+        i2 = 1
+        w = .true.
+        do i = 1, len(s1)
+          if (w.and.(s1(i:i).in.XML_WHITESPACE)) cycle
+          w = .false.
+          s2(i2:i2) = s1(i:i)
+          i2 = i2 + 1
+          if (s1(i:i).in.XML_WHITESPACE) w = .true.
+        enddo
+        s2(i2:) = ''
+      end function NotCDataNormalize
 
   end subroutine sax_parse
 

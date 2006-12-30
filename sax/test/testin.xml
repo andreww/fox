@@ -23,10 +23,16 @@
 <!ATTLIST termdef
 id      ID      #REQUIRED
 name    CDATA   #IMPLIED>
+<!ATTLIST termdef
+id      ID      #REQUIRED
+name    CDATA   #IMPLIED>
 <!ATTLIST list
 type    (bullets|ordered|glossary)  "ordered">
 <!ATTLIST form
 method  CDATA   #FIXED "POST">
+<!ATTLIST test
+notcdata NMTOKENS #IMPLIED>
 ]>
 
-<test att="&qr;"/>
+<test notcdata="  ab 
+ cd " att="&qr;"/>

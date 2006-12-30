@@ -100,6 +100,8 @@ module m_common_element
 
   public :: report_declarations
 
+  public :: isCdataAtt
+
 contains
 
   subroutine init_element_list(e_list)
@@ -555,7 +557,6 @@ contains
     endif
 
     element%model => vs_str_alloc(contents)
-    print*,'btu2', size(element%model)
 
     return
 
@@ -585,6 +586,19 @@ contains
 
   end subroutine destroy_attribute_list
 
+  function existing_attribute(a_list, name) result(p)
+    type(attribute_list), intent(inout) :: a_list
+    character(len=*), intent(in) :: name
+    logical :: p
+
+    integer :: i
+    p = .false.
+    do i = 1, size(a_list%list)
+      p = (str_vs(a_list%list(i)%name)==name)
+      if (p) exit
+    enddo
+  end function existing_attribute
+
   function add_attribute(a_list, name) result(a)
     type(attribute_list), intent(inout) :: a_list
     character(len=*), intent(in) :: name
@@ -610,6 +624,20 @@ contains
     call init_string_list(a%enumerations)
 
   end function add_attribute
+  
+  function get_attribute(a_list, name) result(a)
+    type(attribute_list), intent(inout) :: a_list
+    character(len=*), intent(in) :: name
+    type(attribute_t), pointer :: a
+
+    integer :: i
+    do i = 1, size(a_list%list)
+      if (str_vs(a_list%list(i)%name)==name) then
+        a => a_list%list(i)
+        exit
+      endif
+    enddo
+  end function get_attribute
 
   subroutine parse_dtd_attlist(elem, contents, xv, stack)
     type(element_t), intent(inout) :: elem
@@ -623,6 +651,9 @@ contains
     character, pointer :: name(:), type(:), default(:), value(:), temp(:)
 
     type(attribute_t), pointer :: ca
+    type(attribute_t), target :: ignore_att
+    call init_string_list(ignore_att%enumerations)
+    ! We need ignore_att to process but not take account of duplicate attributes
 
     state = ST_START
 
@@ -654,7 +685,15 @@ contains
           name(size(name)) = c
           deallocate(temp)
         elseif (c.in.XML_WHITESPACE) then
-          ca => add_attribute(elem%attlist, str_vs(name))
+          if (existing_attribute(elem%attlist, str_vs(name))) then
+            if (associated(ignore_att%name)) deallocate(name)
+            if (associated(ignore_att%default)) deallocate(default)
+            call destroy_string_list(ignore_att%enumerations)
+            call init_string_list(ignore_att%enumerations)
+            ca => ignore_att
+          else
+            ca => add_attribute(elem%attlist, str_vs(name))
+          endif
           deallocate(name) 
           state = ST_AFTERNAME
         else
@@ -909,12 +948,19 @@ contains
       goto 200
     endif
 
+    if (associated(ignore_att%name)) deallocate(name)
+    if (associated(ignore_att%default)) deallocate(default)
+    call destroy_string_list(ignore_att%enumerations)
+
     return
 
 200 if (associated(name)) deallocate(name)
     if (associated(type)) deallocate(type)
     if (associated(default)) deallocate(default)
     if (associated(value)) deallocate(value)
+    if (associated(ignore_att%name)) deallocate(name)
+    if (associated(ignore_att%default)) deallocate(default)
+    call destroy_string_list(ignore_att%enumerations)
 
   end subroutine parse_dtd_attlist
 
@@ -1053,5 +1099,29 @@ contains
     enddo
     s(n:n) = ')'
   end function make_token_group
+
+
+  function isCdataAtt(e_list, eName, aName) result(p)
+    type(element_list), intent(in) :: e_list
+    character(len=*), intent(in) :: eName
+    character(len=*), intent(in) :: aName
+    logical :: p
+    
+    type(element_t), pointer :: e
+    type(attribute_t), pointer :: a
+
+    p = .false.
+    if (existing_element(e_list, eName)) then
+      e => get_element(e_list, eName)
+      if (existing_attribute(e%attlist, aName)) then
+        a => get_attribute(e%attlist, aName)
+        p = (a%attType==ATT_CDATA)
+      else
+        p = .true.
+      endif
+    else
+      p = .true.
+    endif
+  end function isCdataAtt
   
 end module m_common_element
