@@ -300,6 +300,10 @@ contains
           ! pop the parse stack, and carry on ..
           call pop_entity_list(fx%forbidden_pe_list)
         elseif (fx%context==CTXT_IN_CONTENT) then
+          if (fx%state==ST_TAG_IN_CONTENT) fx%state = ST_CHAR_IN_CONTENT
+          ! because CHAR_IN_CONTENT *always* leads to TAG_IN_CONTENT
+          ! *except* when it is the end of an entity expansion
+          print*,'cycling: ', fx%state
           ! it's the end of a general entity expansion
           print*, 'Finished general entity expansion, back up parse stack'
           call pop_entity_list(fx%forbidden_ge_list)
@@ -316,8 +320,6 @@ contains
         call pop_buffer_stack(fb)
         fx%parse_stack = fx%parse_stack - 1
         cycle
-        ! sort out recursive PE expansion
-        call pop_entity_list(fx%forbidden_pe_list)
       elseif (iostat/=0) then
         ! Any other error, we want to quit sax_tokenizer
         goto 100

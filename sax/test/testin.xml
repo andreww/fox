@@ -22,6 +22,7 @@
 <!ENTITY qr4 PUBLIC "arse" "poo">
 <!ENTITY qr5 PUBLIC "arse" "poo" NDATA note>
 <!ENTITY qr6 "<">
+<!ENTITY trouble "<abc/>">
 %pc;
 <!ELEMENT br (#PCDATA) >
 <!ATTLIST termdef
@@ -47,7 +48,8 @@ default CDATA "default">
  cd " att="&qr;">
 lalala
 &#37;
-&pqr;
+&qr;
+&trouble;
 <?PI pi4?>
 <!-- comment 4 -->
 </test>
