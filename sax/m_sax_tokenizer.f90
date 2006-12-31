@@ -5,12 +5,12 @@ module m_sax_tokenizer
   use m_common_array_str, only: vs_str, str_vs, vs_str_alloc
   use m_common_charset, only: XML_WHITESPACE, &
     XML_INITIALENCODINGCHARS, XML_ENCODINGCHARS, &
-    XML1_0, XML1_1, operator(.in.), &
+    XML1_0, XML1_1, operator(.in.), upperCase, digits, hexdigits, &
     isInitialNameChar, isNameChar, isXML1_0_NameChar, isXML1_1_NameChar
   use m_common_error, only: ERR_WARNING, ERR_ERROR, add_error, in_error
-  use m_common_entities, only: entity_list, shallow_copy_entity_list_without, &
-    shallow_destroy_entity_list, existing_entity, is_unparsed_entity, &
-    is_external_entity, expand_entity_text, expand_char_entity
+  use m_common_entities, only: entity_list, existing_entity, &
+    is_unparsed_entity, is_external_entity, expand_entity_text, &
+    expand_char_entity, add_internal_entity, pop_entity_list
   use m_common_format, only: str
   use m_common_namecheck, only: checkName, checkCharacterEntityReference
 
@@ -36,7 +36,7 @@ contains
     type(file_buffer_t), intent(inout) :: fb
     integer, intent(out) :: iostat
 
-    character :: c
+    character :: c, c2
 
     print*,'tokenizing... discard whitespace?', fx%whitespace, fx%state
 
@@ -48,7 +48,26 @@ contains
       return
     endif
 
-    if (fx%state==ST_PI_CONTENTS) then
+    if (fx%state==ST_START_PI) then
+      c = get_characters(fb, 1, iostat)
+      if (iostat/=0) return
+      if (.not.isInitialNameChar(c, fx%xml_version)) then
+        call add_error(fx%error_stack, &
+          'Invalid PI Name')
+        return
+      endif
+      if (fx%xml_version==XML1_0) then
+        call get_characters_until_condition(fb, isXML1_0_NameChar, .false., iostat)
+      elseif (fx%xml_version==XML1_1) then
+        call get_characters_until_condition(fb, isXML1_1_NameChar, .false., iostat)
+      endif
+      allocate(fx%token(size(fb%namebuffer)+1))
+      fx%token(1) = c
+      fx%token(2:) = fb%namebuffer
+      deallocate(fb%namebuffer)
+      return
+
+    elseif (fx%state==ST_PI_CONTENTS) then
       call get_characters_until_not_one_of(fb, XML_WHITESPACE, iostat)
       if (iostat/=0) return
       if (size(fb%namebuffer)==0) then
@@ -70,6 +89,35 @@ contains
       fx%token => fb%namebuffer
       nullify(fb%namebuffer)
       return
+
+    elseif (fx%state==ST_BANG_TAG) then
+      c = get_characters(fb, 1, iostat)
+      if (iostat/=0) return
+      if (c=='-') then
+        c = get_characters(fb, 1, iostat)
+        if (iostat/=0) return
+        if (c=='-') then
+          fx%token => vs_str_alloc('--')
+        else
+          call add_error(fx%error_stack, &
+            'Unexpected token after <!')
+        endif
+      elseif (c=='[') then
+        fx%token => vs_str_alloc('[')
+      elseif (c.in.upperCase) then
+        call get_characters_until_not_one_of(fb, upperCase, iostat)
+        if (iostat/=0) return
+        allocate(fx%token(size(fb%namebuffer)+1))
+        fx%token(1) = c
+        fx%token(2:) = fb%namebuffer
+        deallocate(fb%namebuffer)
+      else
+        call add_error(fx%error_stack, &
+          'Unexpected token after <!')
+      endif
+      return
+        
+        
 
     elseif (fx%state==ST_START_COMMENT) then
       call get_characters_until_all_of(fb, '--', iostat)
@@ -161,18 +209,14 @@ contains
       endif
       call get_characters_until_all_of(fb, c, iostat)
       if (iostat/=0) return
-      fx%token => normalize_text(fx, fx%ge_list, fb%namebuffer)
-      ! if this is a confirmed CDATA attribute, normalize away
-      ! all multiple spaces. FIXME actually, do that in parser.
+      fx%token => normalize_text(fx, fb%namebuffer)
       ! Next character is either quotechar or eof.
       c = get_characters(fb, 1, iostat)
       ! Either way, we return
       return
 
-    !elseif (fx%state = ST_DTD_ATTLIST_CONTENTS
-
     elseif (fx%context==CTXT_IN_DTD) then
-      print*,'context', fx%whitespace
+      print*,'context', fx%whitespace, fx%state
       if (fx%whitespace==WS_MANDATORY) then
         !We are still allowed a '>' without space, ... check first.
         call get_characters_until_not_one_of(fb, XML_WHITESPACE, iostat)
@@ -220,8 +264,8 @@ contains
         endif
       elseif (fx%whitespace==WS_FORBIDDEN) then
         print*,'WS_FORBIDDEN'
-        ! it must be ATTLIST, ELEMENT, ENTITY, NOTATION
-        call get_characters_until_not_one_of(fb, 'ATLISENYMOAI', iostat)
+        ! it will either be a <!DIRECTIVE or a <?PINAME
+        call get_characters_until_one_of(fb, XML_WHITESPACE, iostat)
         if (iostat/=0) return
         fx%token => fb%namebuffer
         nullify(fb%namebuffer)
@@ -233,7 +277,7 @@ contains
         print*,'DISCARDING2', iostat
         if (iostat/=0) return
         print*, 'IN DTD , c = ', c
-        if (c.in."#>[]+*()|,") then
+        if (c.in.">[]") then
           fx%token => vs_str_alloc(c)
         elseif (c=='<') then
           !it's a comment or a PI ... or a DTD keyword.
@@ -284,7 +328,9 @@ contains
     c = get_characters(fb, 1, iostat)
     if (iostat/=0) return
 
-    if (c.in.'#>[]+*()|='//XML_WHITESPACE) then
+    print*,'special c ', c
+
+    if (c.in.'>=') then
       !No further investigation needed, that's the token
       fx%token => vs_str_alloc(c)
 
@@ -326,30 +372,47 @@ contains
           call add_error(fx%error_stack, "Unexpected character after /")
         endif
 
-      case ('?')
-        c = get_characters(fb, 1, iostat)
-        if (iostat/=0) return
-        if (c=='>') then
-          fx%token => vs_str_alloc('?>')
-        else
-          call put_characters(fb, 1)
-          fx%token => vs_str_alloc('?')
-        endif
-
-      case ('-')
-        c = get_characters(fb, 1, iostat)
-        if (iostat/=0) return
-        if (c=='-') then
-          fx%token => vs_str_alloc('--')
-        else
-          call add_error(fx%error_stack, "Unexpected character after =") !FIXME is this right?
-        endif
-
       case ('&')
+        print*,'in the rigth place'
         c = get_characters(fb, 1, iostat)
         if (iostat/=0) return
-        if (c.in.XML_WHITESPACE) then
-          !make an error happen
+        if (c=='#') then
+          c = get_characters(fb, 1, iostat)
+          if (iostat/=0) return
+          if (c=='x') then
+            call get_characters_until_not_one_of(fb, hexdigits, iostat)
+            if (size(fb%namebuffer)==0) then
+              call add_error(fx%error_stack, 'Illegal character entity reference')
+              return
+            endif
+            if (iostat/=0) return
+            c2 = get_characters(fb, 1, iostat)
+            if (iostat/=0) return
+            if (c2/=';') then
+              call add_error(fx%error_stack, &
+                'Illegal character entity reference')
+              return
+            endif
+            allocate(fx%token(size(fb%namebuffer)+4))
+            fx%token(:3) = vs_str('&#x')
+            fx%token(4:size(fx%token)-1) = fb%namebuffer
+            fx%token(size(fx%token)) = ';'
+          elseif (c.in.digits) then
+            call get_characters_until_not_one_of(fb, digits, iostat)
+            if (iostat/=0) return
+            c2 = get_characters(fb, 1, iostat)
+            if (iostat/=0) return
+            if (c2/=';') then
+              call add_error(fx%error_stack, 'Illegal character entity reference')
+              return
+            endif
+            allocate(fx%token(size(fb%namebuffer)+4))
+            fx%token(:3) = vs_str('&#'//c)
+            fx%token(4:size(fx%token)-1) = fb%namebuffer
+            fx%token(size(fx%token)) = ';'
+          else
+            call add_error(fx%error_stack, 'Illegal character entity reference')
+          endif
         elseif (isInitialNameChar(c, fx%xml_version)) then
           if (fx%xml_version==XML1_0) then
             call get_characters_until_condition(fb, isXML1_0_NameChar, .false., iostat)
@@ -357,13 +420,16 @@ contains
             call get_characters_until_condition(fb, isXML1_1_NameChar, .false., iostat)
           endif
           if (iostat/=0) return
-          c = get_characters(fb, 1, iostat)
-          if (c/=';') then
+          c2 = get_characters(fb, 1, iostat)
+          if (iostat/=0) return
+          if (c2/=';') then
             call add_error(fx%error_stack, "Illegal general entity reference")
             return
           endif
-          print*,'unimplemented';stop
-          !expand & reinvoke parser, truncating entity list
+        else
+          call add_error(fx%error_stack, &
+            'Illegal general entity reference')
+          return
         endif
 
       case ('"')
@@ -650,9 +716,8 @@ contains
   end subroutine parse_xml_declaration
 
 
-  recursive function normalize_text(fx, e_list, s_in) result(s_out)
+  recursive function normalize_text(fx, s_in) result(s_out)
     type(sax_parser_t), intent(inout) :: fx
-    type(entity_list), intent(in) :: e_list !WTF
     character, dimension(:), intent(in) :: s_in
     character, dimension(:), pointer :: s_out
 
@@ -696,6 +761,10 @@ contains
           i = i + j  + 1
           i2 = i2 + 1 ! fixme
         elseif (checkName(str_vs(s_in(i+1:i+j-1)))) then
+          if (existing_entity(fx%forbidden_ge_list, str_vs(s_in(i+1:i+j-1)))) then
+            call add_error(fx%error_stack, 'Recursive entity expansion')
+            return
+          endif
           ! It looks like an entity, is it a good Name?
           if (str_vs(s_in(i+1:i+j-1))=='lt') then
             s_temp(i2) = '<' 
@@ -705,20 +774,19 @@ contains
             s_temp(i2) = '&'
             i = i + j + 1
             i2 = i2 + j + 1
-          elseif (existing_entity(e_list, str_vs(s_in(i+1:i+j-1)))) then
+          elseif (existing_entity(fx%ge_list, str_vs(s_in(i+1:i+j-1)))) then
             !is it the right sort of entity?
-            if (is_unparsed_entity(e_list, str_vs(s_in(i+1:i+j-1)))) then
+            if (is_unparsed_entity(fx%ge_list, str_vs(s_in(i+1:i+j-1)))) then
               call add_error(fx%error_stack, "Unparsed entity forbidden in attribute")
               return
-            elseif (is_external_entity(e_list, str_vs(s_in(i+1:i+j-1)))) then
+            elseif (is_external_entity(fx%ge_list, str_vs(s_in(i+1:i+j-1)))) then
               call add_error(fx%error_stack, "External entity forbidden in attribute")
               return
             endif
-            ! shorten entity list
-            shortened_entity_list = shallow_copy_entity_list_without(e_list, str_vs(s_in(i+1:i+j-1)))
+            call add_internal_entity(fx%forbidden_ge_list, str_vs(s_in(i+1:i+j-1)), "")
             ! Recursively expand entity, checking for errors.
-            s_ent => normalize_text(fx, shortened_entity_list, vs_str(expand_entity_text(e_list, str_vs(s_in(i+1:i+j-1)))))
-            call shallow_destroy_entity_list(shortened_entity_list)
+            s_ent => normalize_text(fx, vs_str(expand_entity_text(fx%ge_list, str_vs(s_in(i+1:i+j-1)))))
+            call pop_entity_list(fx%forbidden_ge_list)
             if (in_error(fx%error_stack)) then
               deallocate(s_ent)
               return

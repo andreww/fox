@@ -1,15 +1,19 @@
 <?xml version='1.0'?>
 
+<?PI pi1?>
+<!-- comment 1 -->
 <!DOCTYPE test PUBLIC "abarse" "bum" [
 <!NOTATION note SYSTEM "bum">
 <!ENTITY qr "  &lkj;  &pqr;">
 <!ENTITY lkj " &yt;">
 <!ENTITY pqr " bum">
+<?PI pi2?>
 <!ENTITY yt "arse">
 <!ENTITY % qr '<!ENTITY a "b" >'>
 <!ENTITY % pc "&#37;qr;">
 <!ENTITY % pc2 "qr;">
 <!ENTITY % twoqr "&#37;qr;">
+<!-- comment 2 -->
 <!ENTITY % qr2 SYSTEM "kjlh">
 <!ENTITY % qr3 PUBLIC "kjlh" "jhg">
 <!ENTITY qr "lkj">
@@ -36,8 +40,15 @@ default CDATA "default">
 <!ENTITY content "<abc/>">
 ]>
 
+<?PI pi3?>
+
+<!-- comment 3 -->
 <test notcdata="  ab 
  cd " att="&qr;">
 lalala
 &#37;
+<?PI pi4?>
+<!-- comment 4 -->
 </test>
+<?PI pi5?>
+<!-- comment 5 -->

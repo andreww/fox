@@ -20,6 +20,7 @@ module m_common_charset
   character(len=*), parameter :: lowerCase = "abcdefghijklmnopqrstuvwxyz"
   character(len=*), parameter :: upperCase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
   character(len=*), parameter :: digits = "0123456789"
+  character(len=*), parameter :: hexdigits = "0123456789abcdefABCDEF"
   character(len=*), parameter :: NameChars = lowerCase//upperCase//digits//".-_:"
   character(len=*), parameter :: InitialNameChars = lowerCase//upperCase//"_:"
 
@@ -50,6 +51,7 @@ module m_common_charset
   public :: uppercase
 
   public :: digits
+  public :: hexdigits
 
   public :: XML1_0
   public :: XML1_1

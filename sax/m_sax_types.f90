@@ -85,6 +85,8 @@ module m_sax_types
     integer :: context 
     integer :: state
     integer :: parse_stack = 0
+    integer, pointer :: wf_stack(:) => null()
+    type(element_list), pointer :: elist(:)
     logical :: well_formed = .false.
     character, dimension(:), pointer :: token => null()
     character, dimension(:), pointer :: next_token => null()
@@ -104,6 +106,8 @@ module m_sax_types
     type(notation_list) :: nlist
     type(entity_list) :: pe_list
     type(entity_list) :: ge_list
+    type(entity_list) :: forbidden_pe_list
+    type(entity_list) :: forbidden_ge_list
     type(element_list) :: element_list
     character(len=1), dimension(:), pointer :: PublicId => null()
     character(len=1), dimension(:), pointer :: SystemId => null()

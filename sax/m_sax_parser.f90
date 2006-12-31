@@ -18,11 +18,13 @@ module m_sax_parser
     init_entity_list, destroy_entity_list, &
     add_internal_entity, add_external_entity, &
     expand_entity_value_alloc, print_entity_list, &
-    is_external_entity, expand_entity
+    is_external_entity, expand_entity, expand_char_entity, &
+    is_unparsed_entity, pop_entity_list
   use m_common_error, only: FoX_error, ERR_NULL, add_error, &
     init_error_stack, destroy_error_stack, in_error, ERR_WARNING
   use m_common_io, only: io_eof, io_err
-  use m_common_namecheck, only: checkName, checkSystemId, checkPubId
+  use m_common_namecheck, only: checkName, checkSystemId, checkPubId, &
+    checkCharacterEntityReference
   use m_common_namespaces, only: getnamespaceURI, invalidNS, &
     checkNamespaces, checkEndNamespaces, &
     initNamespaceDictionary, destroyNamespaceDictionary
@@ -55,6 +57,10 @@ contains
     call init_entity_list(fx%pe_list)
     call init_element_list(fx%element_list)
 
+    allocate(fx%wf_stack(1))
+    call init_entity_list(fx%forbidden_ge_list)
+    call init_entity_list(fx%forbidden_pe_list)
+
   end subroutine sax_parser_init
 
   subroutine sax_parser_destroy(fx)
@@ -78,6 +84,10 @@ contains
     call destroy_entity_list(fx%pe_list)
     call destroy_element_list(fx%element_list)
 
+    deallocate(fx%wf_stack)
+    call destroy_entity_list(fx%forbidden_ge_list)
+    call destroy_entity_list(fx%forbidden_pe_list)
+
     if (associated(fx%token)) deallocate(fx%token)
     if (associated(fx%next_token)) deallocate(fx%next_token)
     if (associated(fx%name)) deallocate(fx%name)
@@ -88,7 +98,7 @@ contains
 
   end subroutine sax_parser_destroy
 
-  recursive subroutine sax_parse(fx, fb,  &
+  subroutine sax_parse(fx, fb, &
 ! org.xml.sax
 ! SAX ContentHandler
     characters_handler,            &
@@ -123,7 +133,7 @@ contains
     startCdata_handler,            &
     startDTD_handler               &
     ! startEntity
-)
+    )
 
     type(sax_parser_t), intent(inout) :: fx
     type(file_buffer_t), intent(inout) :: fb
@@ -261,6 +271,10 @@ contains
     integer :: iostat
     character, pointer :: tempString(:)
     type(element_t), pointer :: elem
+    integer, pointer :: temp_wf_stack(:)
+    type(entity_list), pointer :: temp_ge_list(:)
+    type(entity_list), pointer :: temp_pe_list(:)
+
     iostat = 0
 
     if (fx%parse_stack==0) then
@@ -278,14 +292,31 @@ contains
 
       call sax_tokenize(fx, fb, iostat)
       if (in_error(fx%error_stack)) iostat = io_err
-      if (fx%context==CTXT_IN_DTD.and.iostat==io_eof.and.fx%parse_stack>0) then
-        print*, 'Finished parameter entity expansion, back up parse stack'
-        ! that's just the end of a parameter entity expansion.
-        ! pop the parse stack, and carry on ..
+      if (iostat==io_eof.and.fx%parse_stack>0) then
+        if (fx%context==CTXT_IN_DTD) then
+          print*, 'Finished parameter entity expansion, back up parse stack'
+          ! that's just the end of a parameter entity expansion.
+          ! pop the parse stack, and carry on ..
+          call pop_entity_list(fx%forbidden_pe_list)
+        elseif (fx%context==CTXT_IN_CONTENT) then
+          ! it's the end of a general entity expansion
+          print*, 'Finished general entity expansion, back up parse stack'
+          call pop_entity_list(fx%forbidden_ge_list)
+          if (fx%wf_stack(1)/=0) then
+            call add_error(fx%error_stack, 'Ill-formed entity')
+            goto 100
+          endif
+          temp_wf_stack => fx%wf_stack
+          allocate(fx%wf_stack(size(temp_wf_stack)-1))
+          fx%wf_stack = temp_wf_stack(2:size(temp_wf_stack))
+          deallocate(temp_wf_stack)
+        endif
         iostat = 0
         call pop_buffer_stack(fb)
         fx%parse_stack = fx%parse_stack - 1
         cycle
+        ! sort out recursive PE expansion
+        call pop_entity_list(fx%forbidden_pe_list)
       elseif (iostat/=0) then
         ! Any other error, we want to quit (this instance of ...) sax_tokenizer
         goto 100
@@ -293,7 +324,7 @@ contains
       if (.not.associated(fx%token)) then
         print*, 'no token';stop
       endif
-      print*,'token: ',str_vs(fx%token)
+      print*,'token: "'//str_vs(fx%token)//'"'
 
       select case (fx%state)
 
@@ -382,6 +413,7 @@ contains
             fx%whitespace = WS_PRESERVE
           elseif (fx%context==CTXT_IN_DTD) then
             fx%state = ST_INT_SUBSET
+            fx%whitespace = WS_DISCARD
           else
             fx%state = ST_MISC
             fx%whitespace = WS_DISCARD
@@ -414,8 +446,10 @@ contains
           deallocate(fx%name)
           if (fx%context==CTXT_IN_CONTENT) then
             fx%state = ST_CHAR_IN_CONTENT
+            fx%whitespace = WS_PRESERVE
           elseif (fx%context==CTXT_IN_DTD) then
             fx%state = ST_INT_SUBSET
+            fx%whitespace = WS_DISCARD
           else
             fx%state = ST_MISC
             fx%whitespace = WS_DISCARD
@@ -551,8 +585,6 @@ contains
         ! Is it an xmlns:?
         ! Is it an xml:?
         !If this attribute is CDATA, we must process further;
-        print*,'iscdatatt?', isCdataAtt(fx%element_list, &
-          str_vs(fx%name), str_vs(fx%attname))
         if (isCdataAtt(fx%element_list, &
           str_vs(fx%name), str_vs(fx%attname))) then
           call add_item_to_dict(fx%attributes, str_vs(fx%attname), &
@@ -583,38 +615,38 @@ contains
         elseif (str_vs(fx%token)=='</') then
           fx%state = ST_CLOSING_TAG
         elseif (fx%token(1)=='&') then
+          tempString => fx%token(2:size(fx%token)-1)
           ! tell tokenizer to expand it
-          call FoX_error("Content Entity expansion not yet implemented")
-          call sax_parse(fx, fb,                  &
-            characters_handler,            &
-            endDocument_handler,           &
-            endElement_handler,            &
-            endPrefixMapping_handler,      &
-            ignorableWhitespace_handler,   &
-            processingInstruction_handler, &
-            ! setDocumentLocator
-            skippedEntity_handler,         &
-            startDocument_handler,         & 
-            startElement_handler,          &
-            startPrefixMapping_handler,    &
-            notationDecl_handler,          &
-            unparsedEntityDecl_handler,    &
-            error_handler,                 &
-            ! fatalError
-            ! warning
-            attributeDecl_handler,         &
-            elementDecl_handler,           &
-            externalEntityDecl_handler,    &
-            internalEntityDecl_handler,    &
-            comment_handler,               &
-            endCdata_handler,              &
-            endDTD_handler,                &
-            ! endEntity
-            startCdata_handler,            &
-            startDTD_handler               &
-            ! startEntity
-            )
-          if (iostat/=0) goto 100
+          if (existing_entity(fx%forbidden_ge_list, str_vs(tempString))) then
+            call add_error(fx%error_stack, 'Recursive entity reference')
+          endif
+          if (checkCharacterEntityReference(str_vs(tempString))) then
+            !FIXME is legal character here?
+            if (present(characters_handler)) &
+              call characters_handler(expand_char_entity(str_vs(tempString)))
+          elseif (existing_entity(fx%ge_list, str_vs(tempString))) then
+            if (is_external_entity(fx%ge_list, str_vs(tempString))) then
+              if (present(skippedEntity_handler)) &
+                call skippedEntity_handler(str_vs(fx%token))
+            elseif (is_unparsed_entity(fx%ge_list, str_vs(tempString))) then
+              call add_error(fx%error_stack, &
+                'Cannot reference unparsed entity in content')
+              return
+            else
+              call add_internal_entity(fx%forbidden_ge_list, str_vs(tempString), "")
+              call push_buffer_stack(fb, expand_entity(fx%ge_list, str_vs(tempString)))
+              temp_wf_stack => fx%wf_stack
+              allocate(fx%wf_stack(size(temp_wf_stack)+1))
+              fx%wf_stack(2:size(fx%wf_stack)) = temp_wf_stack
+              fx%wf_stack(1) = 0
+              deallocate(temp_wf_stack)
+            endif
+          else
+            ! Unknown entity FIXME check standalone etc
+            if (present(skippedEntity_handler)) &
+              call skippedEntity_handler(str_vs(fx%token))
+          endif
+          fx%state = ST_CHAR_IN_CONTENT
         else
           call add_error(fx%error_stack, "Unexpected token found in character context")
         endif
@@ -739,6 +771,11 @@ contains
         elseif (fx%token(1)=='%') then
           tempString => fx%token(2:size(fx%token)-1)
           print*,'entity ', str_vs(tempString)
+          if (existing_entity(fx%forbidden_pe_list, str_vs(tempString))) then
+            call add_error(fx%error_stack, &
+              'Recursive entity reference')
+            return
+          endif
           if (existing_entity(fx%pe_list, str_vs(tempString))) then
             if (is_external_entity(fx%pe_list, str_vs(tempString))) then
               ! We are not validating, do not include external entities
@@ -752,7 +789,11 @@ contains
               fx%processDTD = .not.fx%standalone !FIXME use this everywhere
             else
               ! Expand the entity, 
-              call push_buffer_stack(fb, " "//expand_entity(fx%pe_list, str_vs(tempString))//" ")
+              ! FIXME what about recursive?
+              call add_internal_entity(fx%forbidden_pe_list, &
+                str_vs(tempString), "")
+              call push_buffer_stack(fb, &
+                " "//expand_entity(fx%pe_list, str_vs(tempString))//" ")
               fx%parse_stack = fx%parse_stack + 1
               print*,'Parameter entity expanded, now reading from buffer stack'
             endif
@@ -1046,23 +1087,13 @@ contains
     end do
 
 100 if (iostat==io_eof) then ! error is end of file then
-      if (fx%parse_stack>0) then !we are parsing an entity
-        if (fx%well_formed) then ! FIXME need better test.
-          ! We've come out of a well-formed general entity expansion
-          iostat = 0
-          ! go back up stack
-        else !badly formed entity
-          call add_error(fx%error_stack, "Badly formed entity.")
-          return
-        endif
-      else ! EOF of main file
-        if (fx%well_formed.and.fx%state==ST_MISC) then
-          if (present(endDocument_handler)) &
-            call endDocument_handler()
-        else
-          call add_error(fx%error_stack, "File is not well-formed")
-          call sax_error(fx, error_handler)
-        endif
+      ! EOF of main file
+      if (fx%well_formed.and.fx%state==ST_MISC) then
+        if (present(endDocument_handler)) &
+          call endDocument_handler()
+      else
+        call add_error(fx%error_stack, "File is not well-formed")
+        call sax_error(fx, error_handler)
       endif
     elseif (iostat==io_err) then ! we generated the error
       print*,'an error'
@@ -1101,9 +1132,16 @@ contains
         getlocalNameofQName(str_vs(fx%name)), &
         str_vs(fx%name), fx%attributes)
       call destroy_dict(fx%attributes)
+      fx%wf_stack(1) = fx%wf_stack(1) + 1
     end subroutine open_tag
 
     subroutine close_tag
+      fx%wf_stack(1) = fx%wf_stack(1) - 1
+      if (fx%wf_stack(1)<0) then
+        call add_error(fx%error_stack, &
+          'Ill-formed entity')
+        return
+      endif
       if (str_vs(fx%name)/=pop_elstack(fx%elstack)) then
         call add_error(fx%error_stack, "Mismatching close tag - expecting "//str_vs(fx%name))
         return

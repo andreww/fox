@@ -57,11 +57,10 @@ module m_common_entities
   public :: init_entity_list
   public :: reset_entity_list
   public :: destroy_entity_list
-  public :: shallow_destroy_entity_list
   public :: print_entity_list
-  public :: shallow_copy_entity_list_without
   public :: add_internal_entity
   public :: add_external_entity
+  public :: pop_entity_list
 
 contains
 
@@ -122,33 +121,21 @@ contains
     deallocate(ents%list)
   end subroutine destroy_entity_list
 
-  subroutine shallow_destroy_entity_list(ents)
+  subroutine pop_entity_list(ents)
     type(entity_list), intent(inout) :: ents
-
-    deallocate(ents%list)
-  end subroutine shallow_destroy_entity_list
-
-
-  function shallow_copy_entity_list_without(ents, code) result(ents2)
-    type(entity_list), intent(in) :: ents
-    character(len=*), intent(in) :: code
-    type(entity_list) :: ents2
-
-    integer :: i, i2, n
-
+    
+    type(entity_t), pointer :: ents_tmp(:)
+    integer :: i, n
     n = size(ents%list)
-    ! We trust that the relevant entity is in the list ...
-    allocate(ents2%list(n-1))
-    i2 = 1
-    do i = 1, n
-      if (str_vs(ents%list(i)%code) /= code) then
-        ents2%list(i2) = shallow_copy_entity(ents%list(i))
-        i2 = i2 + 1
-      endif
+
+    ents_tmp => ents%list
+    allocate(ents%list(n-1))
+    do i = 1, n - 1
+      ents%list(i) = shallow_copy_entity(ents_tmp(i))
     enddo
-
-  end function shallow_copy_entity_list_without
-
+    call destroy_entity(ents_tmp(i))
+    deallocate(ents_tmp)
+  end subroutine pop_entity_list
 
   subroutine print_entity_list(ents)
     type(entity_list), intent(in) :: ents
@@ -177,7 +164,7 @@ contains
     character(len=*), intent(in) :: notation
     logical, intent(in) :: external
 
-    type(entity_list) :: ents_tmp
+    type(entity_t), pointer :: ents_tmp(:)
     integer :: i, n
 
     ! This should only ever be called by add_internal_entity or add_external_entity
@@ -188,17 +175,13 @@ contains
     ! requires.
 
     n = size(ents%list)
-    
-    allocate(ents_tmp%list(n))
-    do i = 1, n
-      ents_tmp%list(i) = shallow_copy_entity(ents%list(i))
-    enddo
-    deallocate(ents%list)
+
+    ents_tmp => ents%list
     allocate(ents%list(n+1))
     do i = 1, n
-      ents%list(i) = shallow_copy_entity(ents_tmp%list(i))
+      ents%list(i) = shallow_copy_entity(ents_tmp(i))
     enddo
-    deallocate(ents_tmp%list)
+    deallocate(ents_tmp)
     ents%list(i)%external = external
     allocate(ents%list(i)%code(len(code)))
     ents%list(i)%code = vs_str(code)
@@ -220,8 +203,9 @@ contains
 
     if (.not.checkName(code)) &
       call FoX_error("Illegal entity name: "//code)
-    if (.not.checkEntityValue(repl)) &
-      call FoX_error("Illegal entity value: "//repl)
+    !if (.not.checkEntityValue(repl)) &
+    !  call FoX_error("Illegal entity value: "//repl)
+    ! FIXME
     call add_entity(ents, code, repl, "", "", "", .false.)
   end subroutine add_internal_entity
 
