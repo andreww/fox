@@ -33,7 +33,11 @@ method  CDATA   #FIXED "POST">
 <!ATTLIST test
 notcdata NMTOKENS #IMPLIED
 default CDATA "default">
+<!ENTITY content "<abc/>">
 ]>
 
 <test notcdata="  ab 
- cd " att="&qr;"/>
+ cd " att="&qr;">
+lalala
+&#37;
+</test>

@@ -89,41 +89,55 @@ contains
   end subroutine sax_parser_destroy
 
   recursive subroutine sax_parse(fx, fb,  &
-    begin_element_handler,                &
-    end_element_handler,                  &
-    start_prefix_handler,                 &
-    end_prefix_handler,                   &
-    characters_handler,                   &
-    comment_handler,                      &
-    processing_instruction_handler,       &
-    error_handler,                        &
-    start_document_handler,               & 
-    end_document_handler,                 &
-    startDTD_handler,                     &
-    endDTD_handler,                       &
-    startCdata_handler,                   &
-    endCdata_handler,                     &
-    internalEntityDecl_handler,           &
-    externalEntityDecl_handler,           &
-    unparsedEntityDecl_handler,           &
-    notationDecl_handler,                 &
-    skippedEntity_handler,                &
-    elementDecl_handler,                  &
-    attributeDecl_handler)
+! org.xml.sax
+! SAX ContentHandler
+    characters_handler,            &
+    endDocument_handler,           &
+    endElement_handler,            &
+    endPrefixMapping_handler,      &
+    ignorableWhitespace_handler,   &
+    processingInstruction_handler, &
+    ! setDocumentLocator
+    skippedEntity_handler,         &
+    startDocument_handler,         & 
+    startElement_handler,          &
+    startPrefixMapping_handler,    &
+! SAX DTDHandler
+    notationDecl_handler,          &
+    unparsedEntityDecl_handler,    &
+! SAX ErrorHandler
+    error_handler,                 &
+    ! fatalError
+    ! warning
+! org.xml.sax.ext
+! SAX DeclHandler
+    attributeDecl_handler,         &
+    elementDecl_handler,           &
+    externalEntityDecl_handler,    &
+    internalEntityDecl_handler,    &
+! SAX LexicalHandler
+    comment_handler,               &
+    endCdata_handler,              &
+    endDTD_handler,                &
+    ! endEntity
+    startCdata_handler,            &
+    startDTD_handler               &
+    ! startEntity
+)
 
     type(sax_parser_t), intent(inout) :: fx
     type(file_buffer_t), intent(inout) :: fb
-    optional                            :: begin_element_handler
-    optional                            :: end_element_handler
-    optional                            :: start_prefix_handler
-    optional                            :: end_prefix_handler
-    optional                            :: characters_handler
-    optional                            :: comment_handler
-    optional                            :: processing_instruction_handler
-    optional                            :: error_handler
-    optional                            :: start_document_handler
-    optional                            :: end_document_handler
-    !optional :: ignorableWhitespace
+    optional :: characters_handler
+    optional :: endDocument_handler
+    optional :: endElement_handler
+    optional :: endPrefixMapping_handler
+    optional :: ignorableWhitespace_handler
+    optional :: startElement_handler
+    optional :: startDocument_handler
+    optional :: startPrefixMapping_handler
+    optional :: comment_handler
+    optional :: processingInstruction_handler
+    optional :: error_handler
     optional :: startDTD_handler
     optional :: endDTD_handler
     optional :: startCdata_handler
@@ -137,28 +151,28 @@ contains
     optional :: attributeDecl_handler
 
     interface
-      subroutine begin_element_handler(namespaceURI, localName, name, attributes)
+      subroutine startElement_handler(namespaceURI, localName, name, attributes)
         use FoX_common
         character(len=*), intent(in)     :: namespaceUri
         character(len=*), intent(in)     :: localName
         character(len=*), intent(in)     :: name
         type(dictionary_t), intent(in)   :: attributes
-      end subroutine begin_element_handler
+      end subroutine startElement_handler
 
-      subroutine end_element_handler(namespaceURI, localName, name)
+      subroutine endElement_handler(namespaceURI, localName, name)
         character(len=*), intent(in)     :: namespaceURI
         character(len=*), intent(in)     :: localName
         character(len=*), intent(in)     :: name
-      end subroutine end_element_handler
+      end subroutine endElement_handler
 
-      subroutine start_prefix_handler(namespaceURI, prefix)
+      subroutine startPrefixMapping_handler(namespaceURI, prefix)
         character(len=*), intent(in) :: namespaceURI
         character(len=*), intent(in) :: prefix
-      end subroutine start_prefix_handler
+      end subroutine startPrefixMapping_handler
 
-      subroutine end_prefix_handler(prefix)
+      subroutine endPrefixMapping_handler(prefix)
         character(len=*), intent(in) :: prefix
-      end subroutine end_prefix_handler
+      end subroutine endPrefixMapping_handler
 
       subroutine characters_handler(chunk)
         character(len=*), intent(in) :: chunk
@@ -168,21 +182,20 @@ contains
         character(len=*), intent(in) :: comment
       end subroutine comment_handler
 
-      subroutine processing_instruction_handler(name, content)
-        use FoX_common
+      subroutine processingInstruction_handler(name, content)
         character(len=*), intent(in)     :: name
         character(len=*), intent(in)     :: content
-      end subroutine processing_instruction_handler
+      end subroutine processingInstruction_handler
 
       subroutine error_handler(msg)
         character(len=*), intent(in)     :: msg
       end subroutine error_handler
 
-      subroutine start_document_handler()   
-      end subroutine start_document_handler
+      subroutine startDocument_handler()   
+      end subroutine startDocument_handler
 
-      subroutine end_document_handler()     
-      end subroutine end_document_handler
+      subroutine endDocument_handler()     
+      end subroutine endDocument_handler
 
       subroutine unparsedEntityDecl_handler(name, publicId, systemId, notation)
         character(len=*), intent(in) :: name
@@ -239,6 +252,10 @@ contains
         character(len=*), intent(in), optional :: mode
         character(len=*), intent(in), optional :: value
       end subroutine attributeDecl_handler
+
+      subroutine ignorableWhitespace_handler(chars)
+        character(len=*), intent(in) :: chars
+      end subroutine ignorableWhitespace_handler
     end interface
 
     integer :: iostat
@@ -252,8 +269,8 @@ contains
       fx%context = CTXT_BEFORE_DTD
       fx%state = ST_MISC
       fx%whitespace = WS_DISCARD
-      if (present(start_document_handler)) &
-        call start_document_handler()
+      if (present(startDocument_handler)) &
+        call startDocument_handler()
     endif
 
     do
@@ -342,8 +359,8 @@ contains
         print*,'ST_PI_CONTENTS'
         if (str_vs(fx%token)=='?>') then
           ! No data for this PI
-          if (present(processing_instruction_handler)) &
-            call processing_instruction_handler(str_vs(fx%name), '')
+          if (present(processingInstruction_handler)) &
+            call processingInstruction_handler(str_vs(fx%name), '')
           deallocate(fx%name)
           if (fx%context==CTXT_IN_CONTENT) then
             fx%state = ST_CHAR_IN_CONTENT
@@ -351,8 +368,8 @@ contains
             fx%state = ST_MISC
           endif
         else
-          if (present(processing_instruction_handler)) &
-            call processing_instruction_handler(str_vs(fx%name), str_vs(fx%token))
+          if (present(processingInstruction_handler)) &
+            call processingInstruction_handler(str_vs(fx%name), str_vs(fx%token))
           deallocate(fx%name)
           fx%state = ST_PI_END
         endif
@@ -567,26 +584,36 @@ contains
           fx%state = ST_CLOSING_TAG
         elseif (fx%token(1)=='&') then
           ! tell tokenizer to expand it
+          call FoX_error("Content Entity expansion not yet implemented")
           call sax_parse(fx, fb,                  &
-            begin_element_handler,                &
-            end_element_handler,                  &
-            start_prefix_handler,                 &
-            end_prefix_handler,                   &
-            characters_handler,                   &
-            comment_handler,                      &
-            processing_instruction_handler,       &
-            error_handler,                        &
-            start_document_handler,               & 
-            end_document_handler,                 &
-            startDTD_handler,                     &
-            endDTD_handler,                       &
-            startCdata_handler,                   &
-            endCdata_handler,                     &
-            internalEntityDecl_handler,           &
-            externalEntityDecl_handler,           &
-            unparsedEntityDecl_handler,           &
-            notationDecl_handler,                 &
-            skippedEntity_handler)
+            characters_handler,            &
+            endDocument_handler,           &
+            endElement_handler,            &
+            endPrefixMapping_handler,      &
+            ignorableWhitespace_handler,   &
+            processingInstruction_handler, &
+            ! setDocumentLocator
+            skippedEntity_handler,         &
+            startDocument_handler,         & 
+            startElement_handler,          &
+            startPrefixMapping_handler,    &
+            notationDecl_handler,          &
+            unparsedEntityDecl_handler,    &
+            error_handler,                 &
+            ! fatalError
+            ! warning
+            attributeDecl_handler,         &
+            elementDecl_handler,           &
+            externalEntityDecl_handler,    &
+            internalEntityDecl_handler,    &
+            comment_handler,               &
+            endCdata_handler,              &
+            endDTD_handler,                &
+            ! endEntity
+            startCdata_handler,            &
+            startDTD_handler               &
+            ! startEntity
+            )
           if (iostat/=0) goto 100
         else
           call add_error(fx%error_stack, "Unexpected token found in character context")
@@ -1030,8 +1057,8 @@ contains
         endif
       else ! EOF of main file
         if (fx%well_formed.and.fx%state==ST_MISC) then
-          if (present(end_document_handler)) &
-            call end_document_handler()
+          if (present(endDocument_handler)) &
+            call endDocument_handler()
         else
           call add_error(fx%error_stack, "File is not well-formed")
           call sax_error(fx, error_handler)
@@ -1056,20 +1083,21 @@ contains
   contains
 
     subroutine open_tag
+      ! Are there any default values missing?
       call checkImplicitAttributes(fx%element_list, str_vs(fx%name), &
         fx%attributes)
+      ! Check for namespace changes
       call checkNamespaces(fx%attributes, fx%nsDict, &
-        len(fx%elstack), start_prefix_handler)
+        len(fx%elstack), startPrefixMapping_handler)
       if (getURIofQName(fx,str_vs(fx%name))==invalidNS) then
         ! no namespace was found for the current element
         call add_error(fx%error_stack, "No namespace found for current element")
         return
       endif
-      ! FIXME Are there any default values missing?
+      call checkXmlAttributes
       call push_elstack(str_vs(fx%name), fx%elstack)
-      ! No point in pushing & pulling onto elstack.
-      if (present(begin_element_handler)) &
-        call begin_element_handler(getURIofQName(fx, str_vs(fx%name)), &
+      if (present(startElement_handler)) &
+        call startElement_handler(getURIofQName(fx, str_vs(fx%name)), &
         getlocalNameofQName(str_vs(fx%name)), &
         str_vs(fx%name), fx%attributes)
       call destroy_dict(fx%attributes)
@@ -1080,12 +1108,12 @@ contains
         call add_error(fx%error_stack, "Mismatching close tag - expecting "//str_vs(fx%name))
         return
       endif
-      if (present(end_element_handler)) &
-        call end_element_handler(getURIofQName(fx, str_vs(fx%name)), &
+      if (present(endElement_handler)) &
+        call endElement_handler(getURIofQName(fx, str_vs(fx%name)), &
         getlocalnameofQName(str_vs(fx%name)), &
         str_vs(fx%name))
       call checkEndNamespaces(fx%nsDict, len(fx%elstack)+1, &
-        end_prefix_handler)
+        endPrefixMapping_handler)
     end subroutine close_tag
 
     subroutine add_entity
@@ -1208,6 +1236,13 @@ contains
 
     end subroutine checkImplicitAttributes
 
+    subroutine checkXMLAttributes
+      !FIXME
+      !if (has_key(fx%attributes, 'xml:space')
+      !if (has_key(fx%attributes, 'xml:id')
+      !if (has_key(fx%attributes, 'xml:base')
+      !if (has_key(fx%attributes, 'xml:lang')
+    end subroutine checkXMLAttributes
   end subroutine sax_parse
 
 

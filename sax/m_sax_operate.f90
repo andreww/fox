@@ -46,75 +46,82 @@ contains
     call sax_parser_destroy(xt%fx)
   end subroutine close_xml_t
 
-  subroutine sax_parse_go(xt,        &
-    begin_element_handler,           &
-    end_element_handler,             &
-    start_prefix_handler,            &
-    end_prefix_handler,              &
-    characters_handler,              &
-    comment_handler,                 &
-    processing_instruction_handler,  &
-    error_handler,                   &
-    start_document_handler,          & 
-    end_document_handler,            &
-    startDTD_handler,                     &
-    endDTD_handler,                       &
-    startCdata_handler,                   &
-    endCdata_handler,                     &
-    unparsedEntityDecl_handler,           &
-    internalEntityDecl_handler,           &
-    externalEntityDecl_handler,           &
-    notationDecl_handler,                 &
-    skippedEntity_handler,                &
-    elementDecl_handler,                  &
-    attributeDecl_handler)
-
+  subroutine sax_parse_go(xt,      &
+    characters_handler,            &
+    endDocument_handler,           &
+    endElement_handler,            &
+    endPrefixMapping_handler,      &
+    ignorableWhitespace_handler,   &
+    processingInstruction_handler, &
+    ! setDocumentLocator
+    skippedEntity_handler,         &
+    startDocument_handler,         & 
+    startElement_handler,          &
+    startPrefixMapping_handler,    &
+    notationDecl_handler,          &
+    unparsedEntityDecl_handler,    &
+    error_handler,                 &
+    ! fatalError
+    ! warning
+    attributeDecl_handler,         &
+    elementDecl_handler,           &
+    externalEntityDecl_handler,    &
+    internalEntityDecl_handler,    &
+    comment_handler,               &
+    endCdata_handler,              &
+    endDTD_handler,                &
+    ! endEntity
+    startCdata_handler,            &
+    startDTD_handler               &
+    ! startEntity
+)
     type(xml_t), intent(inout) :: xt
-    optional :: begin_element_handler
-    optional :: end_element_handler
-    optional :: start_prefix_handler
-    optional :: end_prefix_handler
     optional :: characters_handler
+    optional :: endDocument_handler
+    optional :: endElement_handler
+    optional :: endPrefixMapping_handler
+    optional :: ignorableWhitespace_handler
+    optional :: startElement_handler
+    optional :: startDocument_handler
+    optional :: startPrefixMapping_handler
     optional :: comment_handler
-    optional :: processing_instruction_handler
+    optional :: processingInstruction_handler
     optional :: error_handler
-    optional :: start_document_handler
-    optional :: end_document_handler
     optional :: startDTD_handler
     optional :: endDTD_handler
     optional :: startCdata_handler
     optional :: endCdata_handler
-    optional :: notationDecl_handler
-    optional :: unparsedEntityDecl_handler
     optional :: internalEntityDecl_handler
     optional :: externalEntityDecl_handler
+    optional :: unparsedEntityDecl_handler
+    optional :: notationDecl_handler
     optional :: skippedEntity_handler
     optional :: elementDecl_handler
     optional :: attributeDecl_handler
 
     interface
-      subroutine begin_element_handler(namespaceURI, localName, name, attributes)
+      subroutine startElement_handler(namespaceURI, localName, name, attributes)
         use FoX_common
         character(len=*), intent(in)     :: namespaceUri
         character(len=*), intent(in)     :: localName
         character(len=*), intent(in)     :: name
         type(dictionary_t), intent(in)   :: attributes
-      end subroutine begin_element_handler
+      end subroutine startElement_handler
 
-      subroutine end_element_handler(namespaceURI, localName, name)
+      subroutine endElement_handler(namespaceURI, localName, name)
         character(len=*), intent(in)     :: namespaceURI
         character(len=*), intent(in)     :: localName
         character(len=*), intent(in)     :: name
-      end subroutine end_element_handler
+      end subroutine endElement_handler
 
-      subroutine start_prefix_handler(namespaceURI, prefix)
+      subroutine startPrefixMapping_handler(namespaceURI, prefix)
         character(len=*), intent(in) :: namespaceURI
         character(len=*), intent(in) :: prefix
-      end subroutine start_prefix_handler
+      end subroutine startPrefixMapping_handler
 
-      subroutine end_prefix_handler(prefix)
+      subroutine endPrefixMapping_handler(prefix)
         character(len=*), intent(in) :: prefix
-      end subroutine end_prefix_handler
+      end subroutine endPrefixMapping_handler
 
       subroutine characters_handler(chunk)
         character(len=*), intent(in) :: chunk
@@ -124,21 +131,20 @@ contains
         character(len=*), intent(in) :: comment
       end subroutine comment_handler
 
-      subroutine processing_instruction_handler(name, content)
-        use FoX_common
+      subroutine processingInstruction_handler(name, content)
         character(len=*), intent(in)     :: name
         character(len=*), intent(in)     :: content
-      end subroutine processing_instruction_handler
+      end subroutine processingInstruction_handler
 
       subroutine error_handler(msg)
         character(len=*), intent(in)     :: msg
       end subroutine error_handler
 
-      subroutine start_document_handler()   
-      end subroutine start_document_handler
+      subroutine startDocument_handler()   
+      end subroutine startDocument_handler
 
-      subroutine end_document_handler()     
-      end subroutine end_document_handler
+      subroutine endDocument_handler()     
+      end subroutine endDocument_handler
 
       subroutine unparsedEntityDecl_handler(name, publicId, systemId, notation)
         character(len=*), intent(in) :: name
@@ -167,7 +173,7 @@ contains
       subroutine startDTD_handler(name, publicId, systemId)
         character(len=*), intent(in) :: name
         character(len=*), optional, intent(in) :: publicId
-        character(len=*), intent(in) :: systemId
+        character(len=*), optional, intent(in) :: systemId
       end subroutine startDTD_handler
 
       subroutine endDTD_handler()
@@ -195,32 +201,43 @@ contains
         character(len=*), intent(in), optional :: mode
         character(len=*), intent(in), optional :: value
       end subroutine attributeDecl_handler
+
+      subroutine ignorableWhitespace_handler(chars)
+        character(len=*), intent(in) :: chars
+      end subroutine ignorableWhitespace_handler
     end interface
 
     ! check xt is initialized
 
     call sax_parse(xt%fx, xt%fb,     &
-    begin_element_handler,           &
-    end_element_handler,             &
-    start_prefix_handler,            &
-    end_prefix_handler,              &
-    characters_handler,              &
-    comment_handler,                 &
-    processing_instruction_handler,  &
-    error_handler,                   &
-    start_document_handler,          & 
-    end_document_handler,            &
-    startDTD_handler,                     &
-    endDTD_handler,                       &
-    startCdata_handler,                   &
-    endCdata_handler,                     &
-    internalEntityDecl_handler,           &
-    externalEntityDecl_handler,           &
-    unparsedEntityDecl_handler,           &
-    notationDecl_handler,                 &
-    skippedEntity_handler,                &
-    elementDecl_handler,              &
-    attributeDecl_handler)
+      characters_handler,            &
+      endDocument_handler,           &
+      endElement_handler,            &
+      endPrefixMapping_handler,      &
+      ignorableWhitespace_handler,   &
+      processingInstruction_handler, &
+      ! setDocumentLocator
+      skippedEntity_handler,         &
+      startDocument_handler,         & 
+      startElement_handler,          &
+      startPrefixMapping_handler,    &
+      notationDecl_handler,          &
+      unparsedEntityDecl_handler,    &
+      error_handler,                 &
+      ! fatalError
+      ! warning
+      attributeDecl_handler,         &
+      elementDecl_handler,           &
+      externalEntityDecl_handler,    &
+      internalEntityDecl_handler,    &
+      comment_handler,               &
+      endCdata_handler,              &
+      endDTD_handler,                &
+      ! endEntity
+      startCdata_handler,            &
+      startDTD_handler               &
+      ! startEntity
+      )
 
   end subroutine sax_parse_go
 
