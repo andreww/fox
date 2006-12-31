@@ -698,7 +698,6 @@ contains
     character, dimension(:), intent(in) :: s_in
     character, dimension(:), pointer :: s_out
 
-    type(entity_list) :: shortened_entity_list
     character, dimension(:), pointer :: s_temp, s_temp2, s_ent, tempString
     integer :: i, i2, j
     logical :: w
