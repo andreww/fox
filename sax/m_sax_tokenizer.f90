@@ -699,7 +699,7 @@ contains
     character, dimension(:), pointer :: s_out
 
     type(entity_list) :: shortened_entity_list
-    character, dimension(:), pointer :: s_temp, s_temp2, s_ent
+    character, dimension(:), pointer :: s_temp, s_temp2, s_ent, tempString
     integer :: i, i2, j
     logical :: w
 
@@ -732,39 +732,46 @@ contains
         elseif (j==1) then
           call add_error(fx%error_stack, "No entity reference found")
           return
-        elseif (checkCharacterEntityReference(str_vs(s_in(i+1:i+j-1)))) then
+        endif
+        allocate(tempString(j-1))
+        tempString = s_in(i+1:i+j-1)
+        if (checkCharacterEntityReference(str_vs(tempString))) then
           ! Expand all character entities
-          s_temp(i2) = expand_char_entity(str_vs(s_in(i+1:i+j-1))) ! FIXME ascii
+          s_temp(i2) = expand_char_entity(str_vs(tempString)) ! FIXME ascii
           i = i + j  + 1
           i2 = i2 + 1 ! fixme
-        elseif (checkName(str_vs(s_in(i+1:i+j-1)))) then
-          if (existing_entity(fx%forbidden_ge_list, str_vs(s_in(i+1:i+j-1)))) then
+        elseif (checkName(str_vs(tempString))) then
+          if (existing_entity(fx%forbidden_ge_list, str_vs(tempString))) then
             call add_error(fx%error_stack, 'Recursive entity expansion')
+            deallocate(tempString)
             return
           endif
           ! It looks like an entity, is it a good Name?
-          if (str_vs(s_in(i+1:i+j-1))=='lt') then
+          if (str_vs(tempString)=='lt') then
             s_temp(i2) = '<' 
             i = i + j + 1
             i2 = i2 + 1
-          elseif (str_vs(s_in(i+1:i+j-1))=='amp') then
+          elseif (str_vs(tempString)=='amp') then
             s_temp(i2) = '&'
             i = i + j + 1
             i2 = i2 + j + 1
-          elseif (existing_entity(fx%ge_list, str_vs(s_in(i+1:i+j-1)))) then
+          elseif (existing_entity(fx%ge_list, str_vs(tempString))) then
             !is it the right sort of entity?
-            if (is_unparsed_entity(fx%ge_list, str_vs(s_in(i+1:i+j-1)))) then
+            if (is_unparsed_entity(fx%ge_list, str_vs(tempString))) then
               call add_error(fx%error_stack, "Unparsed entity forbidden in attribute")
+              deallocate(tempString)
               return
-            elseif (is_external_entity(fx%ge_list, str_vs(s_in(i+1:i+j-1)))) then
+            elseif (is_external_entity(fx%ge_list, str_vs(tempString))) then
               call add_error(fx%error_stack, "External entity forbidden in attribute")
+              deallocate(tempString)
               return
             endif
-            call add_internal_entity(fx%forbidden_ge_list, str_vs(s_in(i+1:i+j-1)), "")
+            call add_internal_entity(fx%forbidden_ge_list, str_vs(tempString), "")
             ! Recursively expand entity, checking for errors.
-            s_ent => normalize_text(fx, vs_str(expand_entity_text(fx%ge_list, str_vs(s_in(i+1:i+j-1)))))
+            s_ent => normalize_text(fx, vs_str(expand_entity_text(fx%ge_list, str_vs(tempString))))
             call pop_entity_list(fx%forbidden_ge_list)
             if (in_error(fx%error_stack)) then
+            deallocate(tempString)
               deallocate(s_ent)
               return
             endif
