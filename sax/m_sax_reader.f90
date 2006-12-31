@@ -588,7 +588,6 @@ contains
       cb => fb%buffer_stack(1)
 
       n_held = size(cb%s) - cb%pos + 1
-      print*,'getting chars', size(cb%s), cb%pos
       if (n <= n_held) then
         string = str_vs(cb%s(cb%pos:cb%pos+n-1))
         cb%pos = cb%pos + n
@@ -640,8 +639,6 @@ contains
     character, dimension(:), pointer :: tempbuf, buf
     integer :: m_i
 
-    print*,'get_characters_until_condition', fb%pos
-    print*,'current char: "'//fb%buffer(fb%pos:fb%pos)//'"'
 
     if (size(fb%buffer_stack)>0) then
       cb => fb%buffer_stack(1)
@@ -698,8 +695,6 @@ contains
     fb%namebuffer => buf
     call move_cursor(fb, str_vs(fb%namebuffer))
 
-    print*, fb%pos
-    
   end subroutine get_characters_until_condition
 
 
@@ -712,9 +707,6 @@ contains
     type(buffer_t), pointer :: cb
     character, dimension(:), pointer :: tempbuf, buf
     integer :: m_i
-
-    print*,'get_chars_with_condition', fb%pos
-    print*,'current char: "'//fb%buffer(fb%pos:fb%pos)//'"'
 
     if (size(fb%buffer_stack)>0) then
       cb => fb%buffer_stack(1)
@@ -760,7 +752,6 @@ contains
       else
         allocate(buf(m_i-1))
         buf = cb%s(cb%pos:cb%pos+m_i-1)
-        print*,'cb%pos', cb%pos, m_i
         cb%pos = cb%pos + m_i - 1
       endif
     else

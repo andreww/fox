@@ -38,8 +38,6 @@ contains
 
     character :: c, c2
 
-    print*,'tokenizing... discard whitespace?', fx%whitespace, fx%state
-
     if (associated(fx%token)) deallocate(fx%token)
     if (associated(fx%next_token)) then
       iostat = 0
@@ -65,7 +63,6 @@ contains
       fx%token(1) = c
       fx%token(2:) = fb%namebuffer
       deallocate(fb%namebuffer)
-      return
 
     elseif (fx%state==ST_PI_CONTENTS) then
       call get_characters_until_not_one_of(fb, XML_WHITESPACE, iostat)
@@ -77,18 +74,18 @@ contains
         if (iostat/=0) return
         if (str_vs(fx%token)/='?>') then
           call add_error(fx%error_stack, "Unexpected token in PI")
+          return
         endif
-        return
+      else
+        ! Otherwise token is all chars after whitespace until '?>'
+        deallocate(fb%namebuffer)
+        call get_characters_until_all_of(fb, '?>', iostat)
+        if (iostat/=0) return
+        fx%next_token => vs_str_alloc(get_characters(fb, 2, iostat))
+        if (iostat/=0) return
+        fx%token => fb%namebuffer
+        nullify(fb%namebuffer)
       endif
-      ! Otherwise token is all chars after whitespace until '?>'
-      deallocate(fb%namebuffer)
-      call get_characters_until_all_of(fb, '?>', iostat)
-      if (iostat/=0) return
-      fx%next_token => vs_str_alloc(get_characters(fb, 2, iostat))
-      if (iostat/=0) return
-      fx%token => fb%namebuffer
-      nullify(fb%namebuffer)
-      return
 
     elseif (fx%state==ST_BANG_TAG) then
       c = get_characters(fb, 1, iostat)
@@ -101,6 +98,7 @@ contains
         else
           call add_error(fx%error_stack, &
             'Unexpected token after <!')
+          return
         endif
       elseif (c=='[') then
         fx%token => vs_str_alloc('[')
@@ -114,10 +112,8 @@ contains
       else
         call add_error(fx%error_stack, &
           'Unexpected token after <!')
+        return
       endif
-      return
-        
-        
 
     elseif (fx%state==ST_START_COMMENT) then
       call get_characters_until_all_of(fb, '--', iostat)
@@ -126,7 +122,6 @@ contains
       if (iostat/=0) return
       fx%token => fb%namebuffer
       nullify(fb%namebuffer)
-      return
 
     elseif (fx%state==ST_CDATA_CONTENTS) then
       call get_characters_until_all_of(fb, ']]>', iostat)
@@ -135,14 +130,12 @@ contains
       if (iostat/=0) return
       fx%token => fb%namebuffer
       nullify(fb%namebuffer)
-      return
 
     elseif (fx%state==ST_CHAR_IN_CONTENT) then
       call get_characters_until_one_of(fb, '<&', iostat)
       if (iostat/=0) return
       fx%token => fb%namebuffer
       nullify(fb%namebuffer)
-      return
 
     elseif (fx%state==ST_DTD_ELEMENT_CONTENTS) then
       call get_characters_until_all_of(fb, '>', iostat)
@@ -151,7 +144,6 @@ contains
       if (iostat/=0) return
       fx%token => fb%namebuffer
       nullify(fb%namebuffer)
-      return
 
     elseif (fx%state==ST_DTD_ATTLIST_CONTENTS) then
       call get_characters_until_all_of(fb, '>', iostat)
@@ -160,7 +152,6 @@ contains
       if (iostat/=0) return
       fx%token => fb%namebuffer
       nullify(fb%namebuffer)
-      return
 
     elseif (fx%state==ST_IN_TAG) then
       call get_characters_until_not_one_of(fb, XML_WHITESPACE, iostat)
@@ -196,8 +187,7 @@ contains
           call add_error(fx%error_stack, "Unexpected character in tag")
         endif
       endif
-      return
-      
+
     elseif (fx%state==ST_ATT_EQUALS) then
       call get_characters_until_not_one_of(fb, XML_WHITESPACE, iostat)
       if (iostat/=0) return
@@ -213,11 +203,17 @@ contains
       ! Next character is either quotechar or eof.
       c = get_characters(fb, 1, iostat)
       ! Either way, we return
-      return
 
     elseif (fx%context==CTXT_IN_DTD) then
       print*,'context', fx%whitespace, fx%state
-      if (fx%whitespace==WS_MANDATORY) then
+      if (fx%whitespace==WS_FORBIDDEN) then
+        ! it will either be a <!DIRECTIVE or a <?PINAME
+        call get_characters_until_one_of(fb, XML_WHITESPACE, iostat)
+        if (iostat/=0) return
+        fx%token => fb%namebuffer
+        nullify(fb%namebuffer)
+
+      elseif (fx%whitespace==WS_MANDATORY) then
         !We are still allowed a '>' without space, ... check first.
         call get_characters_until_not_one_of(fb, XML_WHITESPACE, iostat)
         if (iostat/=0) return
@@ -234,7 +230,7 @@ contains
         c = get_characters(fb, 1, iostat)
         if (iostat/=0) return
         ! do some stuff
-        if (c.in."%#>[]+*()|,") then
+        if (c.in."%>[]") then
           fx%token => vs_str_alloc(c)
         elseif (c=='<') then
           !it's a comment or a PI ... or a DTD keyword.
@@ -262,21 +258,12 @@ contains
           fx%token => fb%namebuffer
           nullify(fb%namebuffer)
         endif
-      elseif (fx%whitespace==WS_FORBIDDEN) then
-        print*,'WS_FORBIDDEN'
-        ! it will either be a <!DIRECTIVE or a <?PINAME
-        call get_characters_until_one_of(fb, XML_WHITESPACE, iostat)
-        if (iostat/=0) return
-        fx%token => fb%namebuffer
-        nullify(fb%namebuffer)
+
       elseif (fx%whitespace==WS_DISCARD) then
         call get_characters_until_not_one_of(fb, XML_WHITESPACE, iostat)
-        print*,'DISCARDING1', iostat
         if (iostat/=0) return
         c = get_characters(fb, 1, iostat)
-        print*,'DISCARDING2', iostat
         if (iostat/=0) return
-        print*, 'IN DTD , c = ', c
         if (c.in.">[]") then
           fx%token => vs_str_alloc(c)
         elseif (c=='<') then
@@ -304,168 +291,164 @@ contains
           fx%token => vs_str_alloc('%'//str_vs(fb%namebuffer)//';')
         endif
       endif
-
-      print*,'token from DTD: ',c
       return
 
 
-    endif
-
-    print*, 'statecontext', fx%state, fx%context, fx%whitespace
-
-    if (fx%whitespace==WS_DISCARD) then
-      call get_characters_until_not_one_of(fb, XML_WHITESPACE, iostat)
-      if (iostat/=0) return
-
-    elseif (fx%whitespace==WS_MANDATORY) then
-      call get_characters_until_not_one_of(fb, XML_WHITESPACE, iostat)
-      if (size(fb%namebuffer)==0) then
-        call add_error(fx%error_stack, 'Tokenizer expected whitespace')
-        return
-      endif
-    endif
-
-    c = get_characters(fb, 1, iostat)
-    if (iostat/=0) return
-
-    print*,'special c ', c
-
-    if (c.in.'>=') then
-      !No further investigation needed, that's the token
-      fx%token => vs_str_alloc(c)
-
-    elseif (isInitialNameChar(c, fx%xml_version)) then
-      if (fx%xml_version==XML1_0) then
-        call get_characters_until_condition(fb, isXML1_0_NameChar, .false., iostat)
-      elseif (fx%xml_version==XML1_1) then
-        call get_characters_until_condition(fb, isXML1_1_NameChar, .false., iostat)
-      endif
-      if (iostat/=0) return
-      fx%token => vs_str_alloc(c//str_vs(fb%namebuffer))
-      deallocate(fb%namebuffer)
-
     else
-      select case(c)
 
-      case ('<')
-        c = get_characters(fb, 1, iostat)
+      print*, 'Magicstatecontext', fx%state, fx%context, fx%whitespace
+
+      if (fx%whitespace==WS_DISCARD) then
+        call get_characters_until_not_one_of(fb, XML_WHITESPACE, iostat)
         if (iostat/=0) return
-        if (c=='?') then
-          fx%token => vs_str_alloc('<?')
-        elseif (c=='!') then
-          fx%token => vs_str_alloc('<!')
-        elseif (c=='/') then
-          fx%token => vs_str_alloc('</')
-        elseif (isInitialNameChar(c, fx%xml_version)) then
-          call put_characters(fb, 1)
-          fx%token => vs_str_alloc('<')
-        else
-          call add_error(fx%error_stack,"Unexpected character found.")
+
+      elseif (fx%whitespace==WS_MANDATORY) then
+        call get_characters_until_not_one_of(fb, XML_WHITESPACE, iostat)
+        if (size(fb%namebuffer)==0) then
+          call add_error(fx%error_stack, 'Tokenizer expected whitespace')
+          return
         endif
+      endif
 
-      case ('/')
-        c = get_characters(fb, 1, iostat)
-        if (iostat/=0) return
-        if (c=='>') then
-          fx%token => vs_str_alloc('/>')
-        else
-          call add_error(fx%error_stack, "Unexpected character after /")
+      c = get_characters(fb, 1, iostat)
+      if (iostat/=0) return
+
+      if (c.in.'>=') then
+        !No further investigation needed, that's the token
+        fx%token => vs_str_alloc(c)
+
+      elseif (isInitialNameChar(c, fx%xml_version)) then
+        if (fx%xml_version==XML1_0) then
+          call get_characters_until_condition(fb, isXML1_0_NameChar, .false., iostat)
+        elseif (fx%xml_version==XML1_1) then
+          call get_characters_until_condition(fb, isXML1_1_NameChar, .false., iostat)
         endif
-
-      case ('&')
-        print*,'in the rigth place'
-        c = get_characters(fb, 1, iostat)
         if (iostat/=0) return
-        if (c=='#') then
+        fx%token => vs_str_alloc(c//str_vs(fb%namebuffer))
+        deallocate(fb%namebuffer)
+
+      else
+        select case(c)
+
+        case ('<')
           c = get_characters(fb, 1, iostat)
           if (iostat/=0) return
-          if (c=='x') then
-            call get_characters_until_not_one_of(fb, hexdigits, iostat)
-            if (size(fb%namebuffer)==0) then
-              call add_error(fx%error_stack, 'Illegal character entity reference')
-              return
-            endif
-            if (iostat/=0) return
-            c2 = get_characters(fb, 1, iostat)
-            if (iostat/=0) return
-            if (c2/=';') then
-              call add_error(fx%error_stack, &
-                'Illegal character entity reference')
-              return
-            endif
-            allocate(fx%token(size(fb%namebuffer)+4))
-            fx%token(:3) = vs_str('&#x')
-            fx%token(4:size(fx%token)-1) = fb%namebuffer
-            fx%token(size(fx%token)) = ';'
-          elseif (c.in.digits) then
-            call get_characters_until_not_one_of(fb, digits, iostat)
-            if (iostat/=0) return
-            c2 = get_characters(fb, 1, iostat)
-            if (iostat/=0) return
-            if (c2/=';') then
-              call add_error(fx%error_stack, 'Illegal character entity reference')
-              return
-            endif
-            allocate(fx%token(size(fb%namebuffer)+4))
-            fx%token(:3) = vs_str('&#'//c)
-            fx%token(4:size(fx%token)-1) = fb%namebuffer
-            fx%token(size(fx%token)) = ';'
+          if (c=='?') then
+            fx%token => vs_str_alloc('<?')
+          elseif (c=='!') then
+            fx%token => vs_str_alloc('<!')
+          elseif (c=='/') then
+            fx%token => vs_str_alloc('</')
+          elseif (isInitialNameChar(c, fx%xml_version)) then
+            call put_characters(fb, 1)
+            fx%token => vs_str_alloc('<')
           else
-            call add_error(fx%error_stack, 'Illegal character entity reference')
+            call add_error(fx%error_stack,"Unexpected character found.")
           endif
-        elseif (isInitialNameChar(c, fx%xml_version)) then
-          if (fx%xml_version==XML1_0) then
-            call get_characters_until_condition(fb, isXML1_0_NameChar, .false., iostat)
-          elseif (fx%xml_version==XML1_1) then
-            call get_characters_until_condition(fb, isXML1_1_NameChar, .false., iostat)
+
+        case ('/')
+          c = get_characters(fb, 1, iostat)
+          if (iostat/=0) return
+          if (c=='>') then
+            fx%token => vs_str_alloc('/>')
+          else
+            call add_error(fx%error_stack, "Unexpected character after /")
           endif
+
+        case ('&')
+          c = get_characters(fb, 1, iostat)
           if (iostat/=0) return
-          c2 = get_characters(fb, 1, iostat)
-          if (iostat/=0) return
-          if (c2/=';') then
-            call add_error(fx%error_stack, "Illegal general entity reference")
+          if (c=='#') then
+            c = get_characters(fb, 1, iostat)
+            if (iostat/=0) return
+            if (c=='x') then
+              call get_characters_until_not_one_of(fb, hexdigits, iostat)
+              if (size(fb%namebuffer)==0) then
+                call add_error(fx%error_stack, 'Illegal character entity reference')
+                return
+              endif
+              if (iostat/=0) return
+              c2 = get_characters(fb, 1, iostat)
+              if (iostat/=0) return
+              if (c2/=';') then
+                call add_error(fx%error_stack, &
+                  'Illegal character entity reference')
+                return
+              endif
+              allocate(fx%token(size(fb%namebuffer)+4))
+              fx%token(:3) = vs_str('&#x')
+              fx%token(4:size(fx%token)-1) = fb%namebuffer
+              fx%token(size(fx%token)) = ';'
+            elseif (c.in.digits) then
+              call get_characters_until_not_one_of(fb, digits, iostat)
+              if (iostat/=0) return
+              c2 = get_characters(fb, 1, iostat)
+              if (iostat/=0) return
+              if (c2/=';') then
+                call add_error(fx%error_stack, 'Illegal character entity reference')
+                return
+              endif
+              allocate(fx%token(size(fb%namebuffer)+4))
+              fx%token(:3) = vs_str('&#'//c)
+              fx%token(4:size(fx%token)-1) = fb%namebuffer
+              fx%token(size(fx%token)) = ';'
+            else
+              call add_error(fx%error_stack, 'Illegal character entity reference')
+            endif
+          elseif (isInitialNameChar(c, fx%xml_version)) then
+            if (fx%xml_version==XML1_0) then
+              call get_characters_until_condition(fb, isXML1_0_NameChar, .false., iostat)
+            elseif (fx%xml_version==XML1_1) then
+              call get_characters_until_condition(fb, isXML1_1_NameChar, .false., iostat)
+            endif
+            if (iostat/=0) return
+            c2 = get_characters(fb, 1, iostat)
+            if (iostat/=0) return
+            if (c2/=';') then
+              call add_error(fx%error_stack, "Illegal general entity reference")
+              return
+            endif
+            allocate(fx%token(size(fb%namebuffer)+3))
+            fx%token(:2) = vs_str('&'//c)
+            fx%token(3:size(fx%token)-1) = fb%namebuffer
+            fx%token(size(fx%token)) = ';'
+            deallocate(fb%namebuffer)
+          else
+            call add_error(fx%error_stack, &
+              'Illegal general entity reference')
             return
           endif
-          allocate(fx%token(size(fb%namebuffer)+3))
-          fx%token(:2) = vs_str('&'//c)
-          fx%token(3:size(fx%token)-1) = fb%namebuffer
-          fx%token(size(fx%token)) = ';'
-          deallocate(fb%namebuffer)
-        else
-          call add_error(fx%error_stack, &
-            'Illegal general entity reference')
-          return
-        endif
 
-      case ('"')
-        if (fx%context==CTXT_IN_CONTENT) then !.an.d some other condition) then
-          call get_characters_until_one_of(fb, '"', iostat)
-          if (iostat/=0) return
-          deallocate(fb%namebuffer)
-          fx%token => vs_str_alloc('"'//str_vs(fb%namebuffer)//'"')
-        else
+        case ('"')
+          if (fx%context==CTXT_IN_CONTENT) then !.an.d some other condition) then
+            call get_characters_until_one_of(fb, '"', iostat)
+            if (iostat/=0) return
+            deallocate(fb%namebuffer)
+            fx%token => vs_str_alloc('"'//str_vs(fb%namebuffer)//'"')
+          else
+            ! make an error
+          endif
+
+        case ("'")
+          if (fx%context==CTXT_IN_CONTENT) then! .and. some other condition) then
+            call get_characters_until_one_of(fb, "'", iostat)
+            if (iostat/=0) return
+            deallocate(fb%namebuffer)
+            fx%token = vs_str_alloc("'"//str_vs(fb%namebuffer)//"'")
+
+          else
+
+            call add_error(fx%error_stack, "Unrecognized token.")
+            return
+          endif
+
+        case default 
           ! make an error
-        endif
 
-      case ("'")
-        if (fx%context==CTXT_IN_CONTENT) then! .and. some other condition) then
-          call get_characters_until_one_of(fb, "'", iostat)
-          if (iostat/=0) return
-          deallocate(fb%namebuffer)
-          fx%token = vs_str_alloc("'"//str_vs(fb%namebuffer)//"'")
+        end select
 
-        else
-
-          call add_error(fx%error_stack, "Unrecognized token.")
-          return
-        endif
-
-      case default 
-        ! make an error
-
-      end select
-
-    end if ! more than one-char token
+      end if ! more than one-char token
+    endif
 
   end subroutine sax_tokenize
 

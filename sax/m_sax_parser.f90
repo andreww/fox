@@ -288,14 +288,11 @@ contains
     endif
 
     do
-      print*,'executing parse loop'
 
       call sax_tokenize(fx, fb, iostat)
       if (in_error(fx%error_stack)) iostat = io_err
-      print*,'...', iostat, fx%parse_stack
       if (iostat==io_eof.and.fx%parse_stack>0) then
         if (fx%context==CTXT_IN_DTD) then
-          print*, 'Finished parameter entity expansion, back up parse stack'
           ! that's just the end of a parameter entity expansion.
           ! pop the parse stack, and carry on ..
           call pop_entity_list(fx%forbidden_pe_list)
@@ -303,9 +300,7 @@ contains
           if (fx%state==ST_TAG_IN_CONTENT) fx%state = ST_CHAR_IN_CONTENT
           ! because CHAR_IN_CONTENT *always* leads to TAG_IN_CONTENT
           ! *except* when it is the end of an entity expansion
-          print*,'cycling: ', fx%state
           ! it's the end of a general entity expansion
-          print*, 'Finished general entity expansion, back up parse stack'
           call pop_entity_list(fx%forbidden_ge_list)
           if (fx%state/=ST_CHAR_IN_CONTENT.or.fx%wf_stack(1)/=0) then
             call add_error(fx%error_stack, 'Ill-formed entity')
@@ -755,7 +750,6 @@ contains
               call startDTD_handler(str_vs(fx%root_element))
             endif
           endif
-          print*, 'systemId ', str_vs(fx%systemId)
           if (associated(fx%systemId)) deallocate(fx%systemId)
           if (associated(fx%publicId)) deallocate(fx%publicId)
           fx%whitespace = WS_DISCARD
@@ -788,7 +782,6 @@ contains
           fx%state = ST_CLOSE_DTD
         elseif (fx%token(1)=='%') then
           tempString => fx%token(2:size(fx%token)-1)
-          print*,'entity ', str_vs(tempString)
           if (existing_entity(fx%forbidden_pe_list, str_vs(tempString))) then
             call add_error(fx%error_stack, &
               'Recursive entity reference')
@@ -813,7 +806,6 @@ contains
               call push_buffer_stack(fb, &
                 " "//expand_entity(fx%pe_list, str_vs(tempString))//" ")
               fx%parse_stack = fx%parse_stack + 1
-              print*,'Parameter entity expanded, now reading from buffer stack'
             endif
             ! and do nothing else, carry on ...
           else
@@ -1053,10 +1045,8 @@ contains
             call add_error(fx%error_stack, "Two notations share the same Name")
             exit
           endif
-          print*,'ADDED NOTATION: ', str_vs(fx%name)
           call add_notation(fx%nlist, str_vs(fx%name), &
             publicId=str_vs(fx%publicId))
-          print*,'NOTATION EXISTS: ', notation_exists(fx%nlist,str_vs(fx%name))
           if (present(notationDecl_handler)) &
             call notationDecl_handler(str_vs(fx%name), publicId=str_vs(fx%publicId)) 
           deallocate(fx%name)
@@ -1078,7 +1068,6 @@ contains
             call add_error(fx%error_stack, "Two notations share the same Name")
             exit
           endif
-          print*,'ADDED NOTATION: ', str_vs(fx%name)
           if (associated(fx%publicId)) then
             call add_notation(fx%nlist, str_vs(fx%name), &
               publicId=str_vs(fx%publicId), systemId=str_vs(fx%systemId))
@@ -1094,7 +1083,6 @@ contains
               systemId=str_vs(fx%systemId)) 
           endif
           deallocate(fx%systemId)
-          print*,'NOTATION EXISTS: ', notation_exists(fx%nlist,str_vs(fx%name))
           deallocate(fx%name)
           fx%state = ST_INT_SUBSET
           fx%whitespace = WS_DISCARD
@@ -1108,11 +1096,6 @@ contains
         ! token must be '>'
         if (present(endDTD_handler)) &
           call endDTD_handler
-        print*
-        print*,'Finished reading DTD'
-        call print_entity_list(fx%ge_list)
-        call print_entity_list(fx%pe_list)
-        print*
         fx%state = ST_MISC
         fx%context = CTXT_BEFORE_CONTENT
 
