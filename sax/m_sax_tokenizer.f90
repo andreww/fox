@@ -59,9 +59,7 @@ contains
       elseif (fx%xml_version==XML1_1) then
         call get_characters_until_condition(fb, isXML1_1_NameChar, .false., iostat)
       endif
-      allocate(fx%token(size(fb%namebuffer)+1))
-      fx%token(1) = c
-      fx%token(2:) = fb%namebuffer
+      fx%token => vs_str_alloc(c//str_vs(fb%namebuffer))
       deallocate(fb%namebuffer)
 
     elseif (fx%state==ST_PI_CONTENTS) then
@@ -105,9 +103,7 @@ contains
       elseif (c.in.upperCase) then
         call get_characters_until_not_one_of(fb, upperCase, iostat)
         if (iostat/=0) return
-        allocate(fx%token(size(fb%namebuffer)+1))
-        fx%token(1) = c
-        fx%token(2:) = fb%namebuffer
+        fx%token => vs_str_alloc(c//str_vs(fb%namebuffer))
         deallocate(fb%namebuffer)
       else
         call add_error(fx%error_stack, &
@@ -237,9 +233,9 @@ contains
           c = get_characters(fb, 1, iostat)
           if (iostat/=0) return
           if (c=='?') then
-            fx%token = vs_str_alloc('<?')
+            fx%token => vs_str_alloc('<?')
           elseif (c=='!') then
-            fx%token = vs_str_alloc('<!')
+            fx%token => vs_str_alloc('<!')
           endif
         elseif (c=='"'.or.c=="'") then ! grab until next quote
           call get_characters_until_all_of(fb, c, iostat)
@@ -375,10 +371,8 @@ contains
                   'Illegal character entity reference')
                 return
               endif
-              allocate(fx%token(size(fb%namebuffer)+4))
-              fx%token(:3) = vs_str('&#x')
-              fx%token(4:size(fx%token)-1) = fb%namebuffer
-              fx%token(size(fx%token)) = ';'
+              fx%token => vs_str_alloc('&#x'//str_vs(fb%namebuffer)//';')
+              deallocate(fb%namebuffer)
             elseif (c.in.digits) then
               call get_characters_until_not_one_of(fb, digits, iostat)
               if (iostat/=0) return
@@ -388,10 +382,8 @@ contains
                 call add_error(fx%error_stack, 'Illegal character entity reference')
                 return
               endif
-              allocate(fx%token(size(fb%namebuffer)+4))
-              fx%token(:3) = vs_str('&#'//c)
-              fx%token(4:size(fx%token)-1) = fb%namebuffer
-              fx%token(size(fx%token)) = ';'
+              fx%token => vs_str_alloc('&#'//c//str_vs(fb%namebuffer)//';')
+              deallocate(fb%namebuffer)
             else
               call add_error(fx%error_stack, 'Illegal character entity reference')
             endif
@@ -408,10 +400,7 @@ contains
               call add_error(fx%error_stack, "Illegal general entity reference")
               return
             endif
-            allocate(fx%token(size(fb%namebuffer)+3))
-            fx%token(:2) = vs_str('&'//c)
-            fx%token(3:size(fx%token)-1) = fb%namebuffer
-            fx%token(size(fx%token)) = ';'
+            fx%token => vs_str_alloc('&'//str_vs(fb%namebuffer)//';')
             deallocate(fb%namebuffer)
           else
             call add_error(fx%error_stack, &
