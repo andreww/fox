@@ -4,7 +4,8 @@ module m_sax_parser
 
   use m_common_array_str, only: str_vs, vs_str, string_list, &
     init_string_list, destroy_string_list
-  use m_common_attrs, only: init_dict, destroy_dict, add_item_to_dict, has_key
+  use m_common_attrs, only: init_dict, destroy_dict, add_item_to_dict, &
+    has_key, get_value
   use m_common_charset, only: XML1_0, XML1_1, XML1_0_INITIALNAMECHARS, &
     XML1_1_INITIALNAMECHARS, XML_INITIALENCODINGCHARS, XML_ENCODINGCHARS, &
     XML_WHITESPACE, XML1_0_NAMECHARS, XML1_1_NAMECHARS, operator(.in.)
@@ -605,6 +606,9 @@ contains
         if (size(fx%token)>0) then
           if (present(characters_handler)) call characters_handler(str_vs(fx%token))
         endif
+        !FIXME If current element is not ANY or EMPTY or MIXED then
+        ! any whitespace here is not significant, and we should call
+        ! back to ignorableWhitespace.
         fx%whitespace = WS_FORBIDDEN
         fx%state = ST_TAG_IN_CONTENT
 
@@ -1143,6 +1147,7 @@ contains
         return
       endif
       call checkXmlAttributes
+      if (in_error(fx%error_stack)) return
       call push_elstack(str_vs(fx%name), fx%elstack)
       if (present(startElement_handler)) &
         call startElement_handler(getURIofQName(fx, str_vs(fx%name)), &
@@ -1292,9 +1297,17 @@ contains
     end subroutine checkImplicitAttributes
 
     subroutine checkXMLAttributes
-      !FIXME
-      !if (has_key(fx%attributes, 'xml:space')
-      !if (has_key(fx%attributes, 'xml:id')
+      if (has_key(fx%attributes, 'xml:space')) then
+        if (get_value(fx%attributes, 'xml:space')/='default' &
+          .and. get_value(fx%attributes, 'xml:space')/='preserve') then
+          call add_error(fx%error_stack, 'Illegal value of xml:space attribute')
+        endif
+      endif
+      ! FIXME
+      !if (has_key(fx%attributes, 'xml:id')) then
+      ! must be an NCName
+      ! must be unique ...
+      !endif
       !if (has_key(fx%attributes, 'xml:base')
       !if (has_key(fx%attributes, 'xml:lang')
     end subroutine checkXMLAttributes
@@ -1320,12 +1333,14 @@ contains
       n_err = n_err + size(fx%error_stack%stack(i)%msg) ! + spaces + size of entityref
     enddo
     allocate(errmsg(n_err))
+    errmsg = ''
     n = 1
     do i = 1, size(fx%error_stack%stack)
       m = size(fx%error_stack%stack(i)%msg)
       errmsg(n:n+m-1) = fx%error_stack%stack(i)%msg
       n = n + m 
     enddo
+    ! FIXME put location information in here
     if (present(error_handler)) then
       call error_handler(str_vs(errmsg))
     else

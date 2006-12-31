@@ -52,6 +52,9 @@ lalala
 &trouble;
 <?PI pi4?>
 <!-- comment 4 -->
+
+<error xml:space="myarse"/>
+
 </test>
 <?PI pi5?>
 <!-- comment 5 -->
