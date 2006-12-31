@@ -292,6 +292,7 @@ contains
 
       call sax_tokenize(fx, fb, iostat)
       if (in_error(fx%error_stack)) iostat = io_err
+      print*,'...', iostat, fx%parse_stack
       if (iostat==io_eof.and.fx%parse_stack>0) then
         if (fx%context==CTXT_IN_DTD) then
           print*, 'Finished parameter entity expansion, back up parse stack'
@@ -302,7 +303,7 @@ contains
           ! it's the end of a general entity expansion
           print*, 'Finished general entity expansion, back up parse stack'
           call pop_entity_list(fx%forbidden_ge_list)
-          if (fx%wf_stack(1)/=0) then
+          if (fx%state/=ST_CHAR_IN_CONTENT.or.fx%wf_stack(1)/=0) then
             call add_error(fx%error_stack, 'Ill-formed entity')
             goto 100
           endif
@@ -318,7 +319,7 @@ contains
         ! sort out recursive PE expansion
         call pop_entity_list(fx%forbidden_pe_list)
       elseif (iostat/=0) then
-        ! Any other error, we want to quit (this instance of ...) sax_tokenizer
+        ! Any other error, we want to quit sax_tokenizer
         goto 100
       endif
       if (.not.associated(fx%token)) then
@@ -472,8 +473,10 @@ contains
           call init_dict(fx%attributes)
         elseif (fx%context == CTXT_AFTER_CONTENT) then
           call add_error(fx%error_stack, "Cannot open second root element")
+          exit
         elseif (fx%context == CTXT_IN_DTD) then
           call add_error(fx%error_stack, "Cannot open root element before DTD is finished")
+          exit
         endif
 
       case (ST_START_CDATA_1)
@@ -482,6 +485,7 @@ contains
           fx%state = ST_START_CDATA_2
         else
           call add_error(fx%error_stack, "Unexpected token found - expecting CDATA afte <![")
+          exit
         endif
 
       case (ST_START_CDATA_2)
@@ -490,6 +494,7 @@ contains
           fx%state = ST_CDATA_CONTENTS
         else
           call add_error(fx%error_stack, "Unexpected token found - expecting [ after CDATA")
+          exit
         endif
 
       case (ST_CDATA_CONTENTS)
@@ -513,6 +518,7 @@ contains
           fx%state = ST_CHAR_IN_CONTENT
         else
           call add_error(fx%error_stack, "Internal error, unexpected token in CDATA")
+          exit
         endif
 
       case (ST_IN_TAG)
@@ -576,6 +582,7 @@ contains
           fx%state = ST_ATT_EQUALS
         else
           call add_error(fx%error_stack, "Unexpected token in tag - expected =")
+          exit
         endif
 
       case (ST_ATT_EQUALS)
@@ -619,6 +626,7 @@ contains
           ! tell tokenizer to expand it
           if (existing_entity(fx%forbidden_ge_list, str_vs(tempString))) then
             call add_error(fx%error_stack, 'Recursive entity reference')
+            exit
           endif
           if (checkCharacterEntityReference(str_vs(tempString))) then
             !FIXME is legal character here?
@@ -631,10 +639,11 @@ contains
             elseif (is_unparsed_entity(fx%ge_list, str_vs(tempString))) then
               call add_error(fx%error_stack, &
                 'Cannot reference unparsed entity in content')
-              return
+              exit
             else
               call add_internal_entity(fx%forbidden_ge_list, str_vs(tempString), "")
               call push_buffer_stack(fb, expand_entity(fx%ge_list, str_vs(tempString)))
+              fx%parse_stack = fx%parse_stack + 1
               temp_wf_stack => fx%wf_stack
               allocate(fx%wf_stack(size(temp_wf_stack)+1))
               fx%wf_stack(2:size(fx%wf_stack)) = temp_wf_stack
@@ -649,6 +658,7 @@ contains
           fx%state = ST_CHAR_IN_CONTENT
         else
           call add_error(fx%error_stack, "Unexpected token found in character context")
+          exit
         endif
 
       case (ST_CLOSING_TAG)
@@ -660,6 +670,7 @@ contains
           fx%state = ST_IN_CLOSING_TAG
         else
           call add_error(fx%error_stack, "Unexpected token found in closing tag: expecting a Name")
+          exit
         endif
 
       case (ST_IN_CLOSING_TAG)
@@ -680,6 +691,7 @@ contains
           endif
         else
           call add_error(fx%error_stack, "Unexpected token in closing tag - expecting Name")
+          exit
         endif
 
       case (ST_IN_DTD)
@@ -704,6 +716,7 @@ contains
           fx%state = ST_MISC
         else
           call add_error(fx%error_stack, "Internal error: unexpected token")
+          exit
         endif
 
       case (ST_DTD_PUBLIC)
@@ -714,6 +727,7 @@ contains
           fx%state = ST_DTD_SYSTEM
         else
           call add_error(fx%error_stack, "Invalid document system id")
+          exit
         endif
 
       case (ST_DTD_SYSTEM)
@@ -724,6 +738,7 @@ contains
           fx%state = ST_DTD_DECL
         else
           call add_error(fx%error_stack, "Invalid document system id")
+          exit
         endif
 
       case (ST_DTD_DECL)
@@ -762,6 +777,7 @@ contains
           fx%state = ST_MISC
         else
           call add_error(fx%error_stack, "Internal error: unexpected token")
+          exit
         endif
 
       case (ST_INT_SUBSET)
@@ -774,7 +790,7 @@ contains
           if (existing_entity(fx%forbidden_pe_list, str_vs(tempString))) then
             call add_error(fx%error_stack, &
               'Recursive entity reference')
-            return
+            exit
           endif
           if (existing_entity(fx%pe_list, str_vs(tempString))) then
             if (is_external_entity(fx%pe_list, str_vs(tempString))) then
@@ -809,6 +825,7 @@ contains
               ! If not, 
               call add_error(fx%error_stack, &
                 "Reference to undeclared parameter entity.")
+              exit
             endif
           endif
         elseif (str_vs(fx%token)=='<?') then
@@ -818,6 +835,7 @@ contains
           fx%whitespace = WS_FORBIDDEN
         else
           call add_error(fx%error_stack, "Unexpected token in internal subset")
+          exit
         endif
 
       case (ST_DTD_ATTLIST)
@@ -849,6 +867,7 @@ contains
 
         else
           call add_error(fx%error_stack, "Unexpected token in ATTLIST")
+          exit
         endif
 
       case (ST_DTD_ELEMENT)
@@ -881,6 +900,7 @@ contains
           fx%whitespace = WS_DISCARD
         else
           call add_error(fx%error_stack, "Unexpected token in ELEMENT")
+          exit
           !FIXME this can't happen
         endif
 
@@ -918,6 +938,7 @@ contains
           fx%whitespace = WS_DISCARD
         else
           call add_error(fx%error_stack, "Unexpected token in ENTITY")
+          exit
         endif
 
       case (ST_DTD_ENTITY_PUBLIC)
@@ -928,6 +949,7 @@ contains
           fx%state = ST_DTD_ENTITY_SYSTEM
         else
           call add_error(fx%error_stack, "Invalid PUBLIC id in ENTITY")
+          exit
         endif
 
       case (ST_DTD_ENTITY_SYSTEM)
@@ -938,6 +960,7 @@ contains
           fx%state = ST_DTD_ENTITY_NDATA
         else
           call add_error(fx%error_stack, "Invalid SYSTEM id in ENTITY")
+          exit
         endif
 
       case (ST_DTD_ENTITY_NDATA)
@@ -948,11 +971,13 @@ contains
           fx%whitespace = WS_DISCARD
         elseif (str_vs(fx%token)=='NDATA') then
           if (fx%pe) then
-            call add_error(fx%error_stack, "Parameter entity cannot have NDATA declaration"); goto 100
+            call add_error(fx%error_stack, "Parameter entity cannot have NDATA declaration")
+            exit
           endif
           fx%state = ST_DTD_ENTITY_NDATA_VALUE
         else
           call add_error(fx%error_stack, "Unexpected token in ENTITY")
+          exit
         endif
 
       case (ST_DTD_ENTITY_NDATA_VALUE)
@@ -966,6 +991,7 @@ contains
           ! add entity
         else
           call add_error(fx%error_stack, "Attempt to use undeclared notation")
+          exit
         endif
 
       case (ST_DTD_ENTITY_END)
@@ -975,6 +1001,7 @@ contains
           fx%state = ST_INT_SUBSET
         else
           call add_error(fx%error_stack, "Unexpected token at end of ENTITY")
+          exit
         endif
 
       case (ST_DTD_NOTATION)
@@ -992,6 +1019,7 @@ contains
           fx%state = ST_DTD_NOTATION_PUBLIC
         else
           call add_error(fx%error_stack, "Unexpected token after NOTATION")
+          exit
         endif
 
       case (ST_DTD_NOTATION_SYSTEM)
@@ -1002,6 +1030,7 @@ contains
           fx%state = ST_DTD_NOTATION_END
         else
           call add_error(fx%error_stack, "Invalid SYSTEM id in NOTATION")
+          exit
         endif
 
       case (ST_DTD_NOTATION_PUBLIC)
@@ -1012,6 +1041,7 @@ contains
           fx%state = ST_DTD_NOTATION_PUBLIC_2
         else
           call add_error(fx%error_stack, "Invalid PUBLIC id in NOTATION")
+          exit
         endif
 
       case (ST_DTD_NOTATION_PUBLIC_2)
@@ -1036,6 +1066,7 @@ contains
           fx%state = ST_DTD_NOTATION_END
         else
           call add_error(fx%error_stack, "Invalid SYSTEM id in NOTATION")
+          exit
         endif
 
       case (ST_DTD_NOTATION_END)
@@ -1067,6 +1098,7 @@ contains
           fx%whitespace = WS_DISCARD
         else
           call add_error(fx%error_stack, "Unexpected token in NOTATION")
+          exit
         endif
 
       case (ST_CLOSE_DTD)

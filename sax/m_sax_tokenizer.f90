@@ -426,6 +426,11 @@ contains
             call add_error(fx%error_stack, "Illegal general entity reference")
             return
           endif
+          allocate(fx%token(size(fb%namebuffer)+3))
+          fx%token(:2) = vs_str('&'//c)
+          fx%token(3:size(fx%token)-1) = fb%namebuffer
+          fx%token(size(fx%token)) = ';'
+          deallocate(fb%namebuffer)
         else
           call add_error(fx%error_stack, &
             'Illegal general entity reference')

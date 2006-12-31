@@ -47,6 +47,7 @@ default CDATA "default">
  cd " att="&qr;">
 lalala
 &#37;
+&pqr;
 <?PI pi4?>
 <!-- comment 4 -->
 </test>
