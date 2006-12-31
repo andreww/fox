@@ -2,7 +2,7 @@ module m_common_element
 
   ! Structure and manipulation of element specification
 
-  use m_common_array_str, only: string_t, str_vs, vs_str_alloc, &
+  use m_common_array_str, only: str_vs, vs_str_alloc, &
     string_list, init_string_list, destroy_string_list, add_string
   use m_common_charset, only: isInitialNameChar, isNameChar, &
     upperCase, operator(.in.), XML_WHITESPACE
@@ -190,7 +190,7 @@ contains
     type(error_stack), intent(inout) :: stack
 
     integer :: state
-    integer :: i, j, nbrackets
+    integer :: i, nbrackets
     character :: c
     character, pointer :: order(:), name(:), temp(:)
     logical :: mixed_additional
@@ -576,7 +576,7 @@ contains
   subroutine destroy_attribute_list(a_list)
     type(attribute_list), intent(inout) :: a_list
 
-    integer :: i, j
+    integer :: i
 
     do i = 1, size(a_list%list)
       deallocate(a_list%list(i)%name)
