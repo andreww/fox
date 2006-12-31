@@ -2,7 +2,8 @@
 
 <!DOCTYPE test [
 <!ENTITY % ab 'blah'>
-<!ENTITY abc '%ab'>
+<!ENTITY abc 'ab'>
+]
 >
 
 <!-- A Comment: Illustration of Allowable Constructs -->
@@ -20,7 +21,7 @@
 
 <title>Mary had a &lt;little&gt; lamb who liked standard entities</title>
 
-<text>This is some text, with character references (&#x4F; &#87;)
+<text>This is some text, with character references (&#x4f; &#87;)
 and some cdata sections inside to make it more interesting. How about this
 <![CDATA[ 
                    <begin> 
@@ -41,7 +42,7 @@ In the next pcdata chunk there is an unknown entity
 In the following chunk there is a character reference out of range of the
 char() intrinsic... remove it from test.xml if it gives you trouble.
 
-Offending reference: &#3456; 
+Offending reference: &#56; 
 
 2.454 9.455
 <![CDATA[ <<<<< some hairy cdata!>>>]]]<<<>!?  ]]>

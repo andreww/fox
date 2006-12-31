@@ -64,14 +64,12 @@ write(unit=*,fmt="(a)") comment
 end subroutine comment_handler
 
 
-  subroutine processing_instruction_handler(name, content, attributes)
+  subroutine processing_instruction_handler(name, content)
     character(len=*), intent(in)   :: name
     character(len=*), intent(in)   :: content
-    type(dictionary_t), intent(in) :: attributes
 
     write(unit=*,fmt="(2a)") ">>Processing Instruction: ", name
     write(unit=*, fmt="(a)") content
-    call print_dict(attributes)
 
   end subroutine processing_instruction_handler
 
