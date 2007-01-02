@@ -15,7 +15,7 @@ module m_common_entities
   !FIXME need to worry about removing entities from a list.
 
   use m_common_array_str, only: str_vs, vs_str
-  use m_common_charset, only: digits
+  use m_common_charset, only: digits, hexdigits
   use m_common_error, only: ERR_WARNING, ERR_ERROR, &
     FoX_warning, FoX_error, error_stack, add_error
   use m_common_format, only: str_to_int_10, str_to_int_16
@@ -284,7 +284,7 @@ contains
 
     if (code(1:1) == "#") then
       if (code(2:2) == "x") then       ! hex character reference
-        if (verify(code(3:), digits) == 0) then
+        if (verify(code(3:), hexdigits) == 0) then
           number = str_to_int_16(code(3:))   
           if (32 <= number .and. number <= 126) then
             n = 1
