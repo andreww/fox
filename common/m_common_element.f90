@@ -178,7 +178,7 @@ contains
     deallocate(temp)
     e => e_list%list(i)
     e%name => vs_str_alloc(name)
-    print*,'btu', size(e%name)
+    !print*,'btu', size(e%name)
     call init_attribute_list(e%attlist)
 
   end function add_element
@@ -208,7 +208,7 @@ contains
       endif
 
       if (state==ST_START) then
-        print*,'ST_START'
+        !print*,'ST_START'
         if (c.in.XML_WHITESPACE) then
           continue
         elseif (c.in.'EMPTYANY') then
@@ -227,7 +227,7 @@ contains
         endif
 
       elseif (state==ST_EMPTYANY) then
-        print*,'ST_EMPTYANY'
+        !print*,'ST_EMPTYANY'
         if (c.in.upperCase) then
           temp => name
           allocate(name(size(temp)+1))
@@ -254,7 +254,7 @@ contains
         endif
 
       elseif (state==ST_FIRSTCHILD) then
-        print*,'ST_FIRSTCHILD'
+        !print*,'ST_FIRSTCHILD'
         if (c.in.XML_WHITESPACE) cycle
         if (c=='#') then
           element%mixed = .true.
@@ -277,7 +277,7 @@ contains
         endif
 
       elseif (state==ST_PCDATA) then
-        print*,'ST_PCDATA'
+        !print*,'ST_PCDATA'
         if (c.in.'PCDATA') then
           temp => name
           allocate(name(size(temp)+1))
@@ -309,7 +309,7 @@ contains
         endif
 
       elseif (state==ST_NAME) then
-        print*,'ST_NAME'
+        !print*,'ST_NAME'
         if (isNameChar(c, xv)) then
           temp => name
           allocate(name(size(temp)+1))
@@ -389,7 +389,7 @@ contains
         endif
 
       elseif (state==ST_CHILD) then
-        print*,'ST_CHILD'
+        !print*,'ST_CHILD'
         if (c.in.XML_WHITESPACE) cycle
         if (c=='#') then
           call add_error(stack, &
@@ -418,7 +418,7 @@ contains
         endif
 
       elseif (state==ST_SEPARATOR) then
-        print*,'ST_SEPARATOR'
+        !print*,'ST_SEPARATOR'
         if (c.in.XML_WHITESPACE) cycle
         if (c=='#') then
           call add_error(stack, &
@@ -457,7 +457,7 @@ contains
         endif
 
       elseif (state==ST_AFTERBRACKET) then
-        print*,'ST_AFTERBRACKET'
+        !print*,'ST_AFTERBRACKET'
         if (c=='*') then
           state = ST_SEPARATOR
         elseif (c=='+') then
@@ -503,7 +503,7 @@ contains
         endif
 
       elseif (state==ST_AFTERLASTBRACKET) then
-        print*,'ST_AFTERLASTBRACKET'
+        !print*,'ST_AFTERLASTBRACKET'
         if (c=='*') then
           state = ST_END
         elseif (c=='+') then
@@ -538,7 +538,7 @@ contains
         endif
 
       elseif (state==ST_END) then
-        print*,'ST_END'
+        !print*,'ST_END'
         if (c.in.XML_WHITESPACE) then
           continue
         else
@@ -621,7 +621,7 @@ contains
     a => a_list%list(i)
 
     a%name => vs_str_alloc(name)
-    print*,'btu3', size(a%name)
+    !print*,'btu3', size(a%name)
     call init_string_list(a%enumerations)
 
   end function add_attribute
@@ -666,7 +666,7 @@ contains
       endif
 
       if (state==ST_START) then
-        print*,'ST_START'
+        !print*,'ST_START'
         if (c.in.XML_WHITESPACE) cycle
         if (isInitialNameChar(c, xv)) then
           name => vs_str_alloc(c)
@@ -678,7 +678,7 @@ contains
         endif
 
       elseif (state==ST_NAME) then
-        print*,'ST_NAME'
+        !print*,'ST_NAME'
         if (isNameChar(c, xv)) then
           temp => name
           allocate(name(size(temp)+1))
@@ -704,7 +704,7 @@ contains
         endif
 
       elseif (state==ST_AFTERNAME) then
-        print*,'ST_AFTERNAME'
+        !print*,'ST_AFTERNAME'
         if (c.in.XML_WHITESPACE) cycle
         if (c.in.upperCase) then
           type => vs_str_alloc(c)
@@ -720,7 +720,7 @@ contains
         endif
 
       elseif (state==ST_ATTTYPE) then
-        print*,'ST_ATTTYPE'
+        !print*,'ST_ATTTYPE'
         if (c.in.upperCase) then
           temp => type
           allocate(type(size(temp)+1))
@@ -767,7 +767,7 @@ contains
         endif
 
       elseif (state==ST_AFTER_NOTATION) then
-        print*,'ST_AFTER_NOTATION'
+        !print*,'ST_AFTER_NOTATION'
         if (c.in.XML_WHITESPACE) cycle
         if (c=='(') then
           state = ST_NOTATION_LIST
@@ -778,7 +778,7 @@ contains
         endif
 
       elseif (state==ST_NOTATION_LIST) then
-        print*,'ST_NOTATION_LIST'
+        !print*,'ST_NOTATION_LIST'
         if (c.in.XML_WHITESPACE) cycle
         if (isInitialNameChar(c, xv)) then
           value => vs_str_alloc(c)
@@ -790,7 +790,7 @@ contains
         endif
 
       elseif (state==ST_ENUMERATION) then
-        print*,'ST_ENUMERATION'
+        !print*,'ST_ENUMERATION'
         if (c.in.XML_WHITESPACE) cycle
         if (isNameChar(c, xv)) then
           temp => value
@@ -806,7 +806,7 @@ contains
         endif
 
       elseif (state==ST_ENUM_NAME) then
-        print*,'ST_ENUM_NAME'
+        !print*,'ST_ENUM_NAME'
         if (isNameChar(c, xv)) then
           temp => value
           allocate(value(size(temp)+1))
@@ -837,7 +837,7 @@ contains
         endif
 
       elseif (state==ST_SEPARATOR) then
-        print*,'ST_SEPARATOR'
+        !print*,'ST_SEPARATOR'
         if (c.in.XML_WHITESPACE) cycle
         if (c=='|') then
           if (ca%attType==ATT_NOTATION) then
@@ -855,7 +855,7 @@ contains
         endif
 
       elseif (state==ST_AFTER_ATTTYPE) then
-        print*,'ST_AFTER_ATTTYPE'
+        !print*,'ST_AFTER_ATTTYPE'
         if (c.in.XML_WHITESPACE) cycle
         if (c=='#') then
           allocate(default(0))
@@ -877,7 +877,7 @@ contains
         endif
 
       elseif (state==ST_DEFAULT_DECL) then
-        print*,'ST_DEFAULT_DECL'
+        !print*,'ST_DEFAULT_DECL'
         if (c.in.upperCase) then
           temp => default
           allocate(default(size(temp)+1))
@@ -909,7 +909,7 @@ contains
         endif
 
       elseif (state==ST_AFTERDEFAULTDECL) then
-        print*,'ST_AFTERDEFAULTDECL'
+        !print*,'ST_AFTERDEFAULTDECL'
         if (c.in.XML_WHITESPACE) cycle
         if (c=='"') then
           q = c
@@ -926,7 +926,7 @@ contains
         endif
 
       elseif (state==ST_DEFAULTVALUE) then
-        print*,'ST_DEFAULTVALUE'
+        !print*,'ST_DEFAULTVALUE'
         if (c==q) then
           ca%default => value
           nullify(value)

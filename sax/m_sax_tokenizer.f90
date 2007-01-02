@@ -209,7 +209,7 @@ contains
       ! Either way, we return
 
     elseif (fx%context==CTXT_IN_DTD) then
-      print*,'context', fx%whitespace, fx%state
+      !print*,'context', fx%whitespace, fx%state
       if (fx%whitespace==WS_FORBIDDEN) then
         ! it will either be a <!DIRECTIVE or a <?PINAME
         call get_characters_until_one_of(fb, XML_WHITESPACE, iostat)
@@ -300,7 +300,7 @@ contains
 
     else
 
-      print*, 'Magicstatecontext', fx%state, fx%context, fx%whitespace
+      !print*, 'Magicstatecontext', fx%state, fx%context, fx%whitespace
 
       if (fx%whitespace==WS_DISCARD) then
         call get_characters_until_not_one_of(fb, XML_WHITESPACE, iostat)

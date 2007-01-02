@@ -99,8 +99,6 @@ contains
     type(error_stack), intent(inout) :: stack
     
     allocate(stack%stack(0))
-    print*,'initerrorstack'
-    print*,size(stack%stack)
   end subroutine init_error_stack
 
   subroutine destroy_error_stack(stack)

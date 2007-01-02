@@ -49,6 +49,8 @@ Offending reference: &#56;
 2.454 9.455
 <![CDATA[ <<<<< some hairy cdata!>>>]]]<<<>!?  ]]>
 </pqr:misc>
+
+<mytag att="&amp;&lt;&gt;&apos;&quot;"/>
 </test>
 
 

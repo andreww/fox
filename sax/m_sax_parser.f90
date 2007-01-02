@@ -63,6 +63,7 @@ contains
     call init_entity_list(fx%forbidden_pe_list)
 
     call init_entity_list(fx%predefined_e_list)
+
     call add_internal_entity(fx%predefined_e_list, 'amp', '&')
     call add_internal_entity(fx%predefined_e_list, 'lt', '<')
     call add_internal_entity(fx%predefined_e_list, 'gt', '>')
@@ -327,14 +328,14 @@ contains
         goto 100
       endif
       if (.not.associated(fx%token)) then
-        print*, 'no token';stop
+        call add_error(fx%error_stack, 'Internal error! No token found!')
       endif
-      print*,'token: "'//str_vs(fx%token)//'"'
+      !print*,'token: "'//str_vs(fx%token)//'"'
 
       select case (fx%state)
 
       case (ST_MISC)
-        print*,'ST_MISC'
+        !print*,'ST_MISC'
         if (str_vs(fx%token) == '<?') then
           fx%state = ST_START_PI
           fx%whitespace = WS_FORBIDDEN
@@ -379,7 +380,7 @@ contains
         endif
 
       case (ST_START_PI)
-        print*,'ST_START_PI'
+        !print*,'ST_START_PI'
         !token should be an XML Name FIXME
         if (checkName(str_vs(fx%token))) then
           fx%whitespace = WS_MANDATORY
@@ -392,7 +393,7 @@ contains
         endif
 
       case (ST_PI_CONTENTS)
-        print*,'ST_PI_CONTENTS'
+        !print*,'ST_PI_CONTENTS'
         if (str_vs(fx%token)=='?>') then
           ! No data for this PI
           if (present(processingInstruction_handler)) &
@@ -411,7 +412,7 @@ contains
         endif
 
       case (ST_PI_END)
-        print*,'ST_PI_END'
+        !print*,'ST_PI_END'
         if (str_vs(fx%token)=='?>') then
           if (fx%context==CTXT_IN_CONTENT) then
             fx%state = ST_CHAR_IN_CONTENT
@@ -429,13 +430,13 @@ contains
         endif
 
       case (ST_START_COMMENT)
-        print*,'ST_START_COMMENT'
+        !print*,'ST_START_COMMENT'
         fx%name => fx%token
         nullify(fx%token)
         fx%state = ST_COMMENT_END_1
 
       case (ST_COMMENT_END_1)
-        print*,'ST_COMMENT_END_1'
+        !print*,'ST_COMMENT_END_1'
         if (str_vs(fx%token)=='--') then
           fx%state = ST_COMMENT_END_2
         else
@@ -444,7 +445,7 @@ contains
         endif
 
       case (ST_COMMENT_END_2)
-        print*,'ST_COMMENT_END_2'
+        !print*,'ST_COMMENT_END_2'
         if (str_vs(fx%token)=='>') then
           if (present(comment_handler)) &
             call comment_handler(str_vs(fx%name))
@@ -465,7 +466,7 @@ contains
         endif
 
       case (ST_START_TAG)
-        print*,'ST_START_TAG', fx%context
+        !print*,'ST_START_TAG', fx%context
         if (fx%context==CTXT_BEFORE_DTD &
           .or. fx%context==CTXT_BEFORE_CONTENT &
           .or. fx%context==CTXT_IN_CONTENT) then
@@ -484,7 +485,7 @@ contains
         endif
 
       case (ST_START_CDATA_1)
-        print*,'ST_START_CDATA_1'
+        !print*,'ST_START_CDATA_1'
         if (str_vs(fx%token) == 'CDATA') then
           fx%state = ST_START_CDATA_2
         else
@@ -493,7 +494,7 @@ contains
         endif
 
       case (ST_START_CDATA_2)
-        print*,'ST_START_CDATA_2'
+        !print*,'ST_START_CDATA_2'
         if (str_vs(fx%token) == '[') then
           fx%state = ST_CDATA_CONTENTS
         else
@@ -502,13 +503,13 @@ contains
         endif
 
       case (ST_CDATA_CONTENTS)
-        print*,'ST_CDATA_CONTENTS'
+        !print*,'ST_CDATA_CONTENTS'
         fx%name => fx%token
         nullify(fx%token)
         fx%state = ST_CDATA_END
 
       case (ST_CDATA_END)
-        print*,'ST_CDATA_END'
+        !print*,'ST_CDATA_END'
         if (str_vs(fx%token) == ']]>') then
           if (present(startCdata_handler)) &
             call startCdata_handler
@@ -526,7 +527,7 @@ contains
         endif
 
       case (ST_IN_TAG)
-        print*,'ST_IN_TAG'
+        !print*,'ST_IN_TAG'
         if (str_vs(fx%token)=='>') then
           if (fx%context /= CTXT_IN_CONTENT) then
             if (associated(fx%root_element)) then
@@ -581,7 +582,7 @@ contains
         endif
 
       case (ST_ATT_NAME)
-        print*,'ST_ATT_NAME'
+        !print*,'ST_ATT_NAME'
         if (str_vs(fx%token)=='=') then
           fx%state = ST_ATT_EQUALS
         else
@@ -590,7 +591,7 @@ contains
         endif
 
       case (ST_ATT_EQUALS)
-        print*,'ST_ATT_EQUALS'
+        !print*,'ST_ATT_EQUALS'
         ! token is pre-processed attribute value.
         ! fx%name still contains attribute name
         ! Is it an xmlns:?
@@ -608,7 +609,7 @@ contains
         fx%state = ST_IN_TAG
 
       case (ST_CHAR_IN_CONTENT)
-        print*,'ST_CHAR_IN_CONTENT'
+        !print*,'ST_CHAR_IN_CONTENT'
         if (size(fx%token)>0) then
           if (present(characters_handler)) call characters_handler(str_vs(fx%token))
         endif
@@ -619,7 +620,7 @@ contains
         fx%state = ST_TAG_IN_CONTENT
 
       case (ST_TAG_IN_CONTENT)
-        print*,'ST_TAG_IN_CONTENT'
+        !print*,'ST_TAG_IN_CONTENT'
         if (str_vs(fx%token)=='<') then
           fx%state = ST_START_TAG
         elseif (str_vs(fx%token)=='<!') then
@@ -673,7 +674,7 @@ contains
         endif
 
       case (ST_CLOSING_TAG)
-        print*,'ST_CLOSING_TAG'
+        !print*,'ST_CLOSING_TAG'
         if (checkName(str_vs(fx%token))) then!fx%token, fx%xml_version)) then
           fx%name => fx%token
           nullify(fx%token)
@@ -685,7 +686,7 @@ contains
         endif
 
       case (ST_IN_CLOSING_TAG)
-        print*,'ST_IN_CLOSING_TAG'
+        !print*,'ST_IN_CLOSING_TAG'
         if (str_vs(fx%token) == '>') then
           call close_tag
           if (in_error(fx%error_stack)) goto 100
@@ -706,7 +707,7 @@ contains
         endif
 
       case (ST_IN_DTD)
-        print*,'ST_IN_DTD'
+        !print*,'ST_IN_DTD'
         ! check token is name
         fx%root_element => fx%token
         nullify(fx%token)
@@ -714,7 +715,7 @@ contains
         fx%state = ST_DTD_NAME
 
       case (ST_DTD_NAME)
-        print*, 'ST_DTD_NAME'
+        !print*, 'ST_DTD_NAME'
         if (str_vs(fx%token)=='SYSTEM') then
           fx%state = ST_DTD_SYSTEM
         elseif (str_vs(fx%token)=='PUBLIC') then
@@ -731,7 +732,7 @@ contains
         endif
 
       case (ST_DTD_PUBLIC)
-        print*, 'ST_DTD_PUBLIC'
+        !print*, 'ST_DTD_PUBLIC'
         if (checkPubId(str_vs(fx%token))) then
           fx%publicId => fx%token
           nullify(fx%token)
@@ -742,7 +743,7 @@ contains
         endif
 
       case (ST_DTD_SYSTEM)
-        print*, 'ST_DTD_SYSTEM'
+        !print*, 'ST_DTD_SYSTEM'
         if (checkSystemId(str_vs(fx%token))) then
           fx%systemId => fx%token
           nullify(fx%token)
@@ -753,7 +754,7 @@ contains
         endif
 
       case (ST_DTD_DECL)
-        print*, 'ST_DTD_DECL'
+        !print*, 'ST_DTD_DECL'
         if (str_vs(fx%token)=='[') then
           if (present(startDTD_handler)) then
             if (associated(fx%publicId)) then
@@ -791,7 +792,7 @@ contains
         endif
 
       case (ST_INT_SUBSET)
-        print*, 'ST_INT_SUBSET'
+        !print*, 'ST_INT_SUBSET'
         if (str_vs(fx%token)==']') then
           fx%state = ST_CLOSE_DTD
         elseif (fx%token(1)=='%') then
@@ -847,7 +848,7 @@ contains
         endif
 
       case (ST_DTD_ATTLIST)
-        print*, 'ST_DTD_ATTLIST'
+        !print*, 'ST_DTD_ATTLIST'
         ! check is name
         fx%name => fx%token
         if (existing_element(fx%element_list, str_vs(fx%name))) then
@@ -879,7 +880,7 @@ contains
         endif
 
       case (ST_DTD_ELEMENT)
-        print*, 'ST_DTD_ELEMENT'
+        !print*, 'ST_DTD_ELEMENT'
         ! check is name
         fx%name => fx%token
         nullify(fx%token)
@@ -887,7 +888,7 @@ contains
 
       case (ST_DTD_ELEMENT_CONTENTS)
         !token is everything up to >
-        print*,'ST_DTD_ELEMENT_CONTENTS'
+        !print*,'ST_DTD_ELEMENT_CONTENTS'
         if (existing_element(fx%element_list, str_vs(fx%name))) then
           elem => get_element(fx%element_list, str_vs(fx%name))
           ! VC If this were validating, we should issue an error here
@@ -899,7 +900,7 @@ contains
         fx%state = ST_DTD_ELEMENT_END
 
       case (ST_DTD_ELEMENT_END)
-        print*,'ST_DTD_ELEMENT_END'
+        !print*,'ST_DTD_ELEMENT_END'
         if (str_vs(fx%token)=='>') then
           if (present(elementDecl_handler)) &
             call elementDecl_handler(str_vs(fx%name), str_vs(elem%model))
@@ -913,7 +914,7 @@ contains
         endif
 
       case (ST_DTD_ENTITY)
-        print*, 'ST_DTD_ENTITY'
+        !print*, 'ST_DTD_ENTITY'
         if (str_vs(fx%token) == '%') then
           fx%pe = .true.
           ! this will be a PE
@@ -927,14 +928,14 @@ contains
         endif
 
       case (ST_DTD_ENTITY_PE)
-        print*, 'ST_DTD_ENTITY_PE'
+        !print*, 'ST_DTD_ENTITY_PE'
         !check name is name FIXME
         fx%name => fx%token
         nullify(fx%token)
         fx%state = ST_DTD_ENTITY_ID
 
       case (ST_DTD_ENTITY_ID)
-        print*, 'ST_DTD_ENTITY_ID'
+        !print*, 'ST_DTD_ENTITY_ID'
         if (str_vs(fx%token) == 'PUBLIC') then
           fx%state = ST_DTD_ENTITY_PUBLIC
         elseif (str_vs(fx%token) == 'SYSTEM') then
@@ -950,7 +951,7 @@ contains
         endif
 
       case (ST_DTD_ENTITY_PUBLIC)
-        print*, 'ST_DTD_ENTITY_PUBLIC'
+        !print*, 'ST_DTD_ENTITY_PUBLIC'
         if (checkPubId(str_vs(fx%token))) then
           fx%publicId => fx%token
           nullify(fx%token)
@@ -961,7 +962,7 @@ contains
         endif
 
       case (ST_DTD_ENTITY_SYSTEM)
-        print*, 'ST_DTD_ENTITY_SYSTEM'
+        !print*, 'ST_DTD_ENTITY_SYSTEM'
         if (checkSystemId(str_vs(fx%token))) then
           fx%systemId => fx%token
           nullify(fx%token)
@@ -972,7 +973,7 @@ contains
         endif
 
       case (ST_DTD_ENTITY_NDATA)
-        print*, 'ST_DTD_ENTITY_NDATA'
+        !print*, 'ST_DTD_ENTITY_NDATA'
         if (str_vs(fx%token)=='>') then
           call add_entity
           fx%state = ST_INT_SUBSET
@@ -989,7 +990,7 @@ contains
         endif
 
       case (ST_DTD_ENTITY_NDATA_VALUE)
-        print*, 'ST_DTD_ENTITY_NDATA_VALUE'
+        !print*, 'ST_DTD_ENTITY_NDATA_VALUE'
         !check is a name and exists in notationlist
         if(notation_exists(fx%nlist, str_vs(fx%token))) then
           fx%Ndata => fx%token
@@ -1003,7 +1004,7 @@ contains
         endif
 
       case (ST_DTD_ENTITY_END)
-        print*, 'ST_DTD_ENTITY_END'
+        !print*, 'ST_DTD_ENTITY_END'
         if (str_vs(fx%token)=='>') then
           call add_entity
           fx%state = ST_INT_SUBSET
@@ -1013,14 +1014,14 @@ contains
         endif
 
       case (ST_DTD_NOTATION)
-        print*, 'ST_DTD_NOTATION'
+        !print*, 'ST_DTD_NOTATION'
         ! check name is name FIXMe
         fx%name => fx%token
         nullify(fx%token)
         fx%state = ST_DTD_NOTATION_ID
 
       case (ST_DTD_NOTATION_ID)
-        print*,'ST_DTD_NOTATION_ID'
+        !print*,'ST_DTD_NOTATION_ID'
         if (str_vs(fx%token)=='SYSTEM') then
           fx%state = ST_DTD_NOTATION_SYSTEM
         elseif (str_vs(fx%token)=='PUBLIC') then
@@ -1031,7 +1032,7 @@ contains
         endif
 
       case (ST_DTD_NOTATION_SYSTEM)
-        print*,'ST_DTD_NOTATION_SYSTEM'
+        !print*,'ST_DTD_NOTATION_SYSTEM'
         if (checkSystemId(str_vs(fx%token))) then
           fx%systemId => fx%token
           nullify(fx%token)
@@ -1042,7 +1043,7 @@ contains
         endif
 
       case (ST_DTD_NOTATION_PUBLIC)
-        print*,'ST_DTD_NOTATION_PUBLIC'
+        !print*,'ST_DTD_NOTATION_PUBLIC'
         if (checkPubId(str_vs(fx%token))) then
           fx%publicId => fx%token
           nullify(fx%token)
@@ -1053,7 +1054,7 @@ contains
         endif
 
       case (ST_DTD_NOTATION_PUBLIC_2)
-        print*,'ST_DTD_NOTATION_PUBLIC_2'
+        !print*,'ST_DTD_NOTATION_PUBLIC_2'
         if (str_vs(fx%token)=='>') then
           if (notation_exists(fx%nlist, str_vs(fx%name))) then
             call add_error(fx%error_stack, "Two notations share the same Name")
@@ -1076,7 +1077,7 @@ contains
         endif
 
       case (ST_DTD_NOTATION_END)
-        print*,'ST_DTD_NOTATION_END'
+        !print*,'ST_DTD_NOTATION_END'
         if (str_vs(fx%token)=='>') then
           if (notation_exists(fx%nlist, str_vs(fx%name))) then
             call add_error(fx%error_stack, "Two notations share the same Name")
@@ -1106,7 +1107,7 @@ contains
         endif
 
       case (ST_CLOSE_DTD)
-        print*, 'ST_CLOSE_DTD'
+        !print*, 'ST_CLOSE_DTD'
         ! token must be '>'
         if (present(endDTD_handler)) &
           call endDTD_handler
@@ -1129,7 +1130,7 @@ contains
         call sax_error(fx, error_handler)
       endif
     elseif (iostat==io_err) then ! we generated the error
-      print*,'an error'
+      !print*,'an error'
       if (fx%parse_stack>0) then
         ! append to error all the way up the stack
         return ! go back up stack
