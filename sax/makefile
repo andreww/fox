@@ -1,9 +1,9 @@
 #
 default: install
 #
-OBJFILES= m_sax_debug.o m_sax_tokenizer.o\
+OBJFILES= m_sax_tokenizer.o\
           m_sax_reader.o m_sax_converters.o \
-          m_sax_error.o m_sax_parser.o \
+          m_sax_parser.o \
           m_sax_operate.o FoX_sax.o
 #
 LIBRARY=libFoX_sax.a
