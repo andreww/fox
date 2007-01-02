@@ -742,7 +742,12 @@ contains
         endif
         allocate(tempString(j-1))
         tempString = s_in(i+1:i+j-1)
-        if (checkCharacterEntityReference(str_vs(tempString))) then
+        if (existing_entity(fx%predefined_e_list, str_vs(tempString))) then
+            ! Expand immediately
+          s_temp(i2) = expand_entity_text(fx%predefined_e_list, str_vs(tempString))
+          i = i + j + 1
+          i2 = i2 + 1
+        elseif (checkCharacterEntityReference(str_vs(tempString))) then
           ! Expand all character entities
           s_temp(i2) = expand_char_entity(str_vs(tempString)) ! FIXME ascii
           i = i + j  + 1
@@ -752,16 +757,6 @@ contains
             call add_error(fx%error_stack, 'Recursive entity expansion')
             deallocate(tempString)
             return
-          endif
-          ! It looks like an entity, is it a good Name?
-          if (str_vs(tempString)=='lt') then
-            s_temp(i2) = '<' 
-            i = i + j + 1
-            i2 = i2 + 1
-          elseif (str_vs(tempString)=='amp') then
-            s_temp(i2) = '&'
-            i = i + j + 1
-            i2 = i2 + j + 1
           elseif (existing_entity(fx%ge_list, str_vs(tempString))) then
             !is it the right sort of entity?
             if (is_unparsed_entity(fx%ge_list, str_vs(tempString))) then

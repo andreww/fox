@@ -104,6 +104,7 @@ module m_sax_types
     type(dictionary_t) :: attributes
     type(namespacedictionary) :: nsdict
     type(notation_list) :: nlist
+    type(entity_list) :: predefined_e_list
     type(entity_list) :: pe_list
     type(entity_list) :: ge_list
     type(entity_list) :: forbidden_pe_list

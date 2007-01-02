@@ -62,6 +62,12 @@ contains
     call init_entity_list(fx%forbidden_ge_list)
     call init_entity_list(fx%forbidden_pe_list)
 
+    call init_entity_list(fx%predefined_e_list)
+    call add_internal_entity(fx%predefined_e_list, 'amp', '&')
+    call add_internal_entity(fx%predefined_e_list, 'lt', '<')
+    call add_internal_entity(fx%predefined_e_list, 'gt', '>')
+    call add_internal_entity(fx%predefined_e_list, 'apos', "'")
+    call add_internal_entity(fx%predefined_e_list, 'quot', '"')
   end subroutine sax_parser_init
 
   subroutine sax_parser_destroy(fx)
@@ -88,6 +94,7 @@ contains
     deallocate(fx%wf_stack)
     call destroy_entity_list(fx%forbidden_ge_list)
     call destroy_entity_list(fx%forbidden_pe_list)
+    call destroy_entity_list(fx%predefined_e_list)
 
     if (associated(fx%token)) deallocate(fx%token)
     if (associated(fx%next_token)) deallocate(fx%next_token)
@@ -273,8 +280,7 @@ contains
     character, pointer :: tempString(:)
     type(element_t), pointer :: elem
     integer, pointer :: temp_wf_stack(:)
-    type(entity_list), pointer :: temp_ge_list(:)
-    type(entity_list), pointer :: temp_pe_list(:)
+    type(entity_list), pointer :: predefined_list(:)
 
     iostat = 0
 
@@ -629,7 +635,11 @@ contains
             call add_error(fx%error_stack, 'Recursive entity reference')
             exit
           endif
-          if (checkCharacterEntityReference(str_vs(tempString))) then
+          if (existing_entity(fx%predefined_e_list, str_vs(tempString))) then
+            ! Expand immediately
+            if (present(characters_handler)) &
+              call characters_handler(expand_entity(fx%predefined_e_list, str_vs(tempString)))
+          elseif (checkCharacterEntityReference(str_vs(tempString))) then
             !FIXME is legal character here?
             if (present(characters_handler)) &
               call characters_handler(expand_char_entity(str_vs(tempString)))
@@ -1106,6 +1116,8 @@ contains
       end select
 
     end do
+
+    if (associated(tempString)) deallocate(tempString)
 
 100 if (iostat==io_eof) then ! error is end of file then
       ! EOF of main file
