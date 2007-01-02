@@ -70,11 +70,11 @@ contains
     comment_handler,               &
     endCdata_handler,              &
     endDTD_handler,                &
-    ! endEntity
+    endEntity_handler,             &
     startCdata_handler,            &
-    startDTD_handler               &
-    ! startEntity
-)
+    startDTD_handler,              &
+    startEntity_handler)
+
     type(xml_t), intent(inout) :: xt
     optional :: characters_handler
     optional :: endDocument_handler
@@ -98,6 +98,8 @@ contains
     optional :: skippedEntity_handler
     optional :: elementDecl_handler
     optional :: attributeDecl_handler
+    optional :: startEntity_handler
+    optional :: endEntity_handler
 
     interface
       subroutine startElement_handler(namespaceURI, localName, name, attributes)
@@ -205,6 +207,14 @@ contains
       subroutine ignorableWhitespace_handler(chars)
         character(len=*), intent(in) :: chars
       end subroutine ignorableWhitespace_handler
+
+      subroutine startEntity_handler(name)
+        character(len=*), intent(in) :: name
+      end subroutine startEntity_handler
+
+      subroutine endEntity_handler(name)
+        character(len=*), intent(in) :: name
+      end subroutine endEntity_handler
     end interface
 
     ! check xt is initialized
@@ -233,11 +243,10 @@ contains
       comment_handler,               &
       endCdata_handler,              &
       endDTD_handler,                &
-      ! endEntity
+      endEntity_handler,             &
       startCdata_handler,            &
-      startDTD_handler               &
-      ! startEntity
-      )
+      startDTD_handler,              &
+      startEntity_handler)
 
   end subroutine sax_parse_go
 

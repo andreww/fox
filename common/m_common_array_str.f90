@@ -22,6 +22,8 @@ module m_common_array_str
   public :: vs_str
   public :: vs_str_alloc
 
+  public :: devnull
+
 contains
 
   subroutine init_string_list(s_list)
@@ -79,5 +81,10 @@ contains
     allocate(vs(len(s)))
     vs = vs_str(s)
   end function vs_str_alloc
+
+  subroutine devnull(in)
+    character(len=*), intent(in) :: in
+    ! just so we can call string functions for their side-effects
+  end subroutine devnull
 
 end module m_common_array_str

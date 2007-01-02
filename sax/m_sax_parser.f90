@@ -3,7 +3,7 @@
 module m_sax_parser
 
   use m_common_array_str, only: str_vs, vs_str, string_list, &
-    init_string_list, destroy_string_list
+    init_string_list, destroy_string_list, devnull
   use m_common_attrs, only: init_dict, destroy_dict, add_item_to_dict, &
     has_key, get_value
   use m_common_charset, only: XML1_0, XML1_1, XML1_0_INITIALNAMECHARS, &
@@ -138,11 +138,10 @@ contains
     comment_handler,               &
     endCdata_handler,              &
     endDTD_handler,                &
-    ! endEntity
+    endEntity_handler,             &
     startCdata_handler,            &
-    startDTD_handler               &
-    ! startEntity
-    )
+    startDTD_handler,              &
+    startEntity_handler)
 
     type(sax_parser_t), intent(inout) :: fx
     type(file_buffer_t), intent(inout) :: fb
@@ -168,6 +167,8 @@ contains
     optional :: skippedEntity_handler
     optional :: elementDecl_handler
     optional :: attributeDecl_handler
+    optional :: startEntity_handler
+    optional :: endEntity_handler
 
     interface
       subroutine startElement_handler(namespaceURI, localName, name, attributes)
@@ -275,6 +276,14 @@ contains
       subroutine ignorableWhitespace_handler(chars)
         character(len=*), intent(in) :: chars
       end subroutine ignorableWhitespace_handler
+
+      subroutine startEntity_handler(name)
+        character(len=*), intent(in) :: name
+      end subroutine startEntity_handler
+
+      subroutine endEntity_handler(name)
+        character(len=*), intent(in) :: name
+      end subroutine endEntity_handler
     end interface
 
     integer :: iostat
@@ -303,13 +312,21 @@ contains
         if (fx%context==CTXT_IN_DTD) then
           ! that's just the end of a parameter entity expansion.
           ! pop the parse stack, and carry on ..
-          call pop_entity_list(fx%forbidden_pe_list)
+          if (present(endEntity_handler)) then
+            call endEntity_handler('%'//pop_entity_list(fx%forbidden_pe_list))
+          else
+            call devnull(pop_entity_list(fx%forbidden_pe_list))
+          endif
         elseif (fx%context==CTXT_IN_CONTENT) then
           if (fx%state==ST_TAG_IN_CONTENT) fx%state = ST_CHAR_IN_CONTENT
           ! because CHAR_IN_CONTENT *always* leads to TAG_IN_CONTENT
           ! *except* when it is the end of an entity expansion
           ! it's the end of a general entity expansion
-          call pop_entity_list(fx%forbidden_ge_list)
+          if (present(endEntity_handler)) then
+            call endEntity_handler(pop_entity_list(fx%forbidden_ge_list))
+          else
+            call devnull(pop_entity_list(fx%forbidden_ge_list))
+          endif
           if (fx%state/=ST_CHAR_IN_CONTENT.or.fx%wf_stack(1)/=0) then
             call add_error(fx%error_stack, 'Ill-formed entity')
             goto 100
@@ -638,6 +655,8 @@ contains
           endif
           if (existing_entity(fx%predefined_e_list, str_vs(tempString))) then
             ! Expand immediately
+            if (present(startEntity_handler)) &
+              call startEntity_handler(str_vs(tempString))
             if (present(characters_handler)) &
               call characters_handler(expand_entity(fx%predefined_e_list, str_vs(tempString)))
           elseif (checkCharacterEntityReference(str_vs(tempString))) then
@@ -653,6 +672,8 @@ contains
                 'Cannot reference unparsed entity in content')
               exit
             else
+              if (present(startEntity_handler)) &
+                call startEntity_handler(str_vs(tempString))
               call add_internal_entity(fx%forbidden_ge_list, str_vs(tempString), "")
               call push_buffer_stack(fb, expand_entity(fx%ge_list, str_vs(tempString)))
               fx%parse_stack = fx%parse_stack + 1

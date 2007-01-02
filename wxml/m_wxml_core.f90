@@ -2,7 +2,7 @@ module m_wxml_core
 
   use m_common_attrs, only: dictionary_t, len, get_key, get_value, has_key, &
     add_item_to_dict, init_dict, reset_dict, destroy_dict
-  use m_common_array_str, only: vs_str, str_vs
+  use m_common_array_str, only: vs_str, str_vs, devnull
   use m_common_buffer, only: buffer_t, len, add_to_buffer, reset_buffer, dump_buffer
   use m_common_elstack, only: elstack_t, len, get_top_elstack, pop_elstack, is_empty, &
     init_elstack, push_elstack, destroy_elstack
@@ -1237,10 +1237,5 @@ contains
         fn = get_top_elstack(xf%stack)
       endif
     end function xmlf_opentag
-
-    subroutine devnull(str)
-      character(len=*), intent(in) :: str
-      continue
-    end subroutine devnull
 
 end module m_wxml_core

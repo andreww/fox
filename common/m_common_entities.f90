@@ -121,8 +121,9 @@ contains
     deallocate(ents%list)
   end subroutine destroy_entity_list
 
-  subroutine pop_entity_list(ents)
+  function pop_entity_list(ents) result(name)
     type(entity_list), intent(inout) :: ents
+    character(len=size(ents%list(size(ents%list))%code)) :: name
     
     type(entity_t), pointer :: ents_tmp(:)
     integer :: i, n
@@ -133,9 +134,10 @@ contains
     do i = 1, n - 1
       ents%list(i) = shallow_copy_entity(ents_tmp(i))
     enddo
+    name = str_vs(ents_tmp(i)%code)
     call destroy_entity(ents_tmp(i))
     deallocate(ents_tmp)
-  end subroutine pop_entity_list
+  end function pop_entity_list
 
   subroutine print_entity_list(ents)
     type(entity_list), intent(in) :: ents

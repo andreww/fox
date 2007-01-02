@@ -18,63 +18,58 @@ module m_handlers
   ! A module such as this could use "utility routines" to convert pcdata
   ! to numerical arrays, and to populate specific data structures.
 
-  public :: begin_element_handler, end_element_handler, pcdata_chunk_handler
-  public :: comment_handler, processing_instruction_handler
-  public :: start_prefix_handler, end_prefix_handler
+  public :: startElement_handler, endElement_handler, characters_handler
+  public :: comment_handler, processingInstruction_handler
+  public :: startPrefixMapping_handler, endPrefixMapping_handler
 
-contains  !=============================================================
+contains
 
-subroutine begin_element_handler(URI, localname, name,attributes)
-character(len=*), intent(in)   :: URI
-character(len=*), intent(in)   :: localname
-character(len=*), intent(in)   :: name
-type(dictionary_t), intent(in) :: attributes
+  subroutine startElement_handler(URI, localname, name,attributes)
+    character(len=*), intent(in)   :: URI
+    character(len=*), intent(in)   :: localname
+    character(len=*), intent(in)   :: name
+    type(dictionary_t), intent(in) :: attributes
 
-write(unit=*,fmt="(4a)") ">>Begin Element: {", URI, "}", localname
-write(unit=*,fmt="(a,i2,a)") "--- ", len(attributes), " attributes:"
-call print_dict(attributes)
-end subroutine begin_element_handler
+    write(unit=*,fmt="(4a)") ">>Begin Element: {", URI, "}", localname
+    write(unit=*,fmt="(a,i2,a)") "--- ", len(attributes), " attributes:"
+    call print_dict(attributes)
+  end subroutine startElement_handler
 
-!--------------------------------------------------
-subroutine end_element_handler(URI, localname, name)
-character(len=*), intent(in)     :: URI
-character(len=*), intent(in)     :: localname
-character(len=*), intent(in)     :: name
+  subroutine endElement_handler(URI, localname, name)
+    character(len=*), intent(in)     :: URI
+    character(len=*), intent(in)     :: localname
+    character(len=*), intent(in)     :: name
 
-write(unit=*,fmt="(4a)") ">>End Element: {", URI, "}", localname
+    write(unit=*,fmt="(4a)") ">>End Element: {", URI, "}", localname
 
-end subroutine end_element_handler
+  end subroutine endElement_handler
 
-!--------------------------------------------------
-subroutine pcdata_chunk_handler(chunk)
-character(len=*), intent(in) :: chunk
+  subroutine characters_handler(chunk)
+    character(len=*), intent(in) :: chunk
 
-write(*,'(a)') "PCDATA:"
-write(unit=*,fmt="(a)") chunk
+    write(*,'(a)') "PCDATA:"
+    write(unit=*,fmt="(a)") chunk
 
-end subroutine pcdata_chunk_handler
+  end subroutine characters_handler
 
-!--------------------------------------------------
-subroutine comment_handler(comment)
-character(len=*), intent(in) :: comment
+  subroutine comment_handler(comment)
+    character(len=*), intent(in) :: comment
 
-write(unit=*,fmt="(a)") ">>Comment: "
-write(unit=*,fmt="(a)") comment
+    write(unit=*,fmt="(a)") ">>Comment: "
+    write(unit=*,fmt="(a)") comment
 
-end subroutine comment_handler
+  end subroutine comment_handler
 
-
-  subroutine processing_instruction_handler(name, content)
+  subroutine processingInstruction_handler(name, content)
     character(len=*), intent(in)   :: name
     character(len=*), intent(in)   :: content
 
     write(unit=*,fmt="(2a)") ">>Processing Instruction: ", name
     write(unit=*, fmt="(a)") content
 
-  end subroutine processing_instruction_handler
+  end subroutine processingInstruction_handler
 
-
-  subroutine start_prefix_handler(URI, prefix)
+  subroutine startPrefixMapping_handler(URI, prefix)
     character(len=*), intent(in) :: URI
     character(len=*), intent(in) :: prefix
 
@@ -82,16 +77,15 @@ end subroutine comment_handler
     write(unit=*,fmt='(2a)') "PREFIX:", prefix
     write(unit=*,fmt='(2a)') "URI:", uri
 
-  end subroutine start_prefix_handler
+  end subroutine startPrefixMapping_handler
 
-
-  subroutine end_prefix_handler(prefix)
+  subroutine endPrefixMapping_handler(prefix)
     character(len=*), intent(in) :: prefix
 
     write(unit=*,fmt='(a)') "END NAMESPACE MAPPING"
     write(unit=*,fmt='(2a)') "PREFIX:", prefix
 
-  end subroutine end_prefix_handler
+  end subroutine endPrefixMapping_handler
 
 end module m_handlers
 

@@ -13,18 +13,18 @@ program sax_example
 
   call open_xml_file(fxml, "test.xml", iostat)
   if (iostat /= 0) then
-     write(*,*) "Cannot open file."
-	stop
+    write(*,*) "Cannot open file."
+    stop
   endif
 
   call sax_parse_go(fxml, &
-               startElement_handler = begin_element_handler , &
-               endElement_handler = end_element_handler, &
-               characters_handler = pcdata_chunk_handler, &
-               comment_handler = comment_handler, &
-               processingInstruction_handler = processing_instruction_handler, &
-               startPrefixMapping_handler = start_prefix_handler, &
-               endPrefixMapping_handler = end_prefix_handler)
+    startElement_handler = startElement_handler , &
+    endElement_handler = endElement_handler, &
+    characters_handler = characters_handler, &
+    comment_handler = comment_handler, &
+    processingInstruction_handler = processingInstruction_handler, &
+    startPrefixMapping_handler = startPrefixMapping_handler, &
+    endPrefixMapping_handler = endPrefixMapping_handler)
 
   call close_xml_t(fxml)
 
