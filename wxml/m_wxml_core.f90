@@ -3,22 +3,23 @@ module m_wxml_core
   use m_common_attrs, only: dictionary_t, len, get_key, get_value, has_key, &
     add_item_to_dict, init_dict, reset_dict, destroy_dict
   use m_common_array_str, only: vs_str, str_vs, devnull
-  use m_common_buffer, only: buffer_t, len, add_to_buffer, reset_buffer, dump_buffer
-  use m_common_elstack, only: elstack_t, len, get_top_elstack, pop_elstack, is_empty, &
-    init_elstack, push_elstack, destroy_elstack
-  use m_common_entities, only: entity_list, init_entity_list, destroy_entity_list, &
-    add_internal_entity, add_external_entity
+  use m_common_buffer, only: buffer_t, len, add_to_buffer, reset_buffer, &
+    dump_buffer
+  use m_common_charset, only: XML1_0, XML1_1
+  use m_common_elstack, only: elstack_t, len, get_top_elstack, pop_elstack, &
+    is_empty, init_elstack, push_elstack, destroy_elstack
+  use m_common_entities, only: entity_list, init_entity_list, &
+    destroy_entity_list, add_internal_entity, add_external_entity
   use m_common_error, only: FoX_warning_base, FoX_error_base, FoX_fatal_base
   use m_common_io, only: get_unit
   use m_common_namecheck, only: checkEncName, checkName, checkPITarget, &
     checkCharacterEntityReference, checkSystemId, checkPubId, &
     checkQName, prefixOfQName, localpartofQName
-  use m_common_namespaces, only: namespaceDictionary, getnamespaceURI
-  use m_common_namespaces, only: initnamespaceDictionary, destroynamespaceDictionary
-  use m_common_namespaces, only: addDefaultNS, addPrefixedNS, isPrefixInForce
-  use m_common_namespaces, only: checkNamespacesWriting, checkEndNamespaces
-  use m_common_notations, only: notation_list, init_notation_list, destroy_notation_list, &
-    add_notation, notation_exists
+  use m_common_namespaces, only: namespaceDictionary, getnamespaceURI, &
+  initnamespaceDictionary, destroynamespaceDictionary, addDefaultNS, &
+  addPrefixedNS, isPrefixInForce, checkNamespacesWriting, checkEndNamespaces
+  use m_common_notations, only: notation_list, init_notation_list, &
+    destroy_notation_list, add_notation, notation_exists
   use m_wxml_escape, only: escape_string
 
   use pxf, only: pxfabort
@@ -65,7 +66,7 @@ module m_wxml_core
   type xmlf_t
     private
     character, pointer        :: filename(:)
-    character(len=3)          :: xml_version
+    integer                   :: xml_version
     logical                   :: standalone = .false.
     integer                   :: lun = -1
     type(buffer_t)            :: buffer
@@ -202,7 +203,7 @@ contains
     !NB it can make no difference which XML version we are using
     !until after we output the XML declaration. So we set it to
     !1.0 for the moment & reset below.
-    xf%xml_version = "1.0"
+    xf%xml_version = XML1_0
     call reset_buffer(xf%buffer, xf%lun, xf%xml_version)
     
     xf%state_1 = WXML_STATE_1_JUST_OPENED
@@ -241,13 +242,18 @@ contains
     
     call xml_AddXMLPI(xf, "xml", xml=.true.)
     if (present(version)) then
-      if (version /= "1.0" .and. version /= "1.1") &
+      if (version =="1.0") then
+        xf%xml_version = XML1_0
+        call xml_AddPseudoAttribute(xf, "version", version)
+      elseif (version=="1.1") then
+        xf%xml_version = XML1_1
+        call xml_AddPseudoAttribute(xf, "version", version)
+      else
         call wxml_error("Invalid XML version.")
-      call xml_AddPseudoAttribute(xf, "version", version)
-      xf%xml_version = version
+      endif
     else
       call xml_AddPseudoAttribute(xf, "version", "1.0")
-      xf%xml_version = "1.0"
+      xf%xml_version = XML1_0
     endif
     if (present(encoding)) then
       if (.not.checkEncName(encoding)) &
@@ -300,10 +306,10 @@ contains
     xf%name = vs_str(name)
 
     if (present(system)) then
-      if (.not.checkSystemId(system)) &
+      if (.not.checkSystemId("'"//system//"'")) &
         call wxml_error("Invalid SYSTEM ID "//system)
       if (present(public)) then
-        if (.not.checkPubId(public)) &
+        if (.not.checkPubId("'"//public//"'")) &
           call wxml_error("Invalid PUBLIC ID "//public)
         if (scan(public, "'") /= 0) then
           call add_to_buffer(' PUBLIC "'//public//'" ', xf%buffer)
@@ -837,7 +843,7 @@ contains
       xf%state_2 /= WXML_STATE_2_IN_CHARDATA)         &
       call wxml_fatal("Tried to add entity reference in wrong place: "//entityref)
 
-    if (.not.checkCharacterEntityReference(entityref)) then
+    if (.not.checkCharacterEntityReference(entityref, xf%xml_version)) then
       !it's not just a unicode entity
       call wxml_warning("Entity reference added - document may not be well-formed")
     endif
@@ -1010,7 +1016,7 @@ contains
     
     call check_xf(xf)
 
-    if (xf%xml_version == "1.0") &
+    if (xf%xml_version == XML1_0) &
       call wxml_error("cannot undeclare namespaces in XML 1.0")
     
     if (xf%state_1 == WXML_STATE_1_AFTER_ROOT) &

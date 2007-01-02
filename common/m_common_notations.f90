@@ -69,13 +69,13 @@ contains
     if (.not.present(systemId) .and. .not.present(publicId)) &
       call FoX_error("Neither System nor Public Id specified for notation: "//name)
     if (present(publicId)) then
-      if (.not.checkPubId(publicId)) &
+      if (.not.checkPubId("'"//publicId//"'")) &
         call Fox_error("Illegal public ID for notation: "//name)
     endif
 
     if (present(systemId)) then
-      if (.not.checkSystemId(systemId)) &
-        call Fox_error("Illegal system ID for notation: "//name)
+      if (.not.checkSystemId("'"//systemId//"'")) &
+        call Fox_error("Illegal system ID for notation: "//systemId)
     endif
 
     allocate(temp(0:ubound(nlist%notations,1)))

@@ -1,6 +1,6 @@
 module m_common_buffer
 
-  use m_common_charset, only: whitespace
+  use m_common_charset, only: XML1_0, XML1_1, whitespace
   use m_common_error, only: FoX_error, FoX_warning
   use m_common_format, only: str
 
@@ -27,7 +27,7 @@ module m_common_buffer
     integer                       :: size
     character(len=MAX_BUFF_SIZE)  :: str
     integer                       :: unit
-    character(len=3)              :: xml_version !this affects which chars are allowed.
+    integer                       :: xml_version
   end type buffer_t
   
   public :: buffer_t
@@ -92,7 +92,7 @@ contains
   subroutine reset_buffer(buffer, unit, xml_version)
     type(buffer_t), intent(inout)  :: buffer
     integer, intent(in), optional :: unit
-    character(len=3), intent(in) :: xml_version
+    integer, intent(in) :: xml_version
 
     buffer%size = 0
     if (present(unit)) then
@@ -173,7 +173,7 @@ contains
   
   subroutine check_buffer(s, version)
     character(len=*), intent(in) :: s
-    character(len=*), intent(in) :: version
+    integer, intent(in) :: version
 
     integer :: i
 
@@ -187,8 +187,9 @@ contains
       case (0)
         call FoX_error("Tried to output a NUL character")
       case (1:8,11:12,14:31)
-        if (version == "1.0") &
+        if (version==XML1_0) then
           call FoX_error("Tried to output a character invalid under XML 1.0: &#"//str(iachar(s(i:i)))//";")
+        endif
       case (128:)
         !TOHW we should maybe just disallow this ...
         call FoX_warning("emitting non-ASCII character. Platform-dependent result!")

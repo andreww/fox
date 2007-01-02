@@ -2,6 +2,7 @@ module m_wxml_escape
   
   !Ensure all characters are safe to go out into XML file.
 
+  use m_common_charset, only: XML1_0
   use m_common_error, only: FoX_error, FoX_warning
   use m_common_format, only: str
 
@@ -50,7 +51,7 @@ contains
 
   function escape_string(s, version) result (s2)
     character(len=*), intent(in) :: s
-    character(len=*), intent(in) :: version
+    integer, intent(in) :: version
     character(len=escape_string_len(s)) :: s2
 
     integer :: c, i, ic
@@ -65,7 +66,7 @@ contains
       case (0)
         call FoX_error("Tried to output a NUL character")
       case (1:8)
-        if (version == "1.0") then
+        if (version==XML1_0) then
           call FoX_error("Tried to output a character invalid under XML 1.0")
         else
           s2(c:c+3) = "&#"//str(ic)//";"
@@ -75,7 +76,7 @@ contains
         s2(c:c) = achar(ic)
         c = c + 1
       case(11:12)
-        if (version == "1.0") then
+        if (version==XML1_0) then
           call FoX_error("Tried to output a character invalid under XML 1.0")
         else
           s2(c:c+5) = "&#"//str(ic)//";"
@@ -85,7 +86,7 @@ contains
         s2(c:c) = achar(13)
         c = c + 1
       case (14:31)
-        if (version == "1.0") then
+        if (version==XML1_0) then
           call FoX_error("Tried to output a character invalid under XML 1.0")
         else
           s2(c:c+5) = "&#"//str(ic)//";"

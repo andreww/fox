@@ -9,7 +9,7 @@ real, dimension(20)  :: x
 real, dimension(4,4)  :: y
 
 call xml_OpenFile("simple.xml",xf, broken_indenting=.true.)
-call xml_AddDOCTYPE(xf, "john", "hello.dtd")
+call xml_AddDOCTYPE(xf, "john", "hellodtd")
 call xml_AddParameterEntity(xf, 'pe', '<!ENTITY def "what a load of nonsense">')
 call xml_AddInternalEntity(xf, "abc", "A B C")
 call xml_AddElementToDTD(xf, "br", "EMPTY")
@@ -18,7 +18,7 @@ call xml_AddPEreferenceToDTD(xf, "pe")
 call xml_AddXMLPI(xf, name="robots")
 call xml_AddPseudoAttribute(xf, "index", "yes")
 call xml_AddPseudoAttribute(xf, "follow", "no")
-call xml_AddNotation(xf, "GIF", "http://lzw.org")
+call xml_AddNotation(xf, name="GIF", system="http://lzw.org")
 call xml_AddComment(xf, "a comment ...")
 call xml_AddExternalEntity(xf, "def", "http://blah", public="h", notation="GIF")
 
