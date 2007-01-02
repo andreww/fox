@@ -51,6 +51,8 @@ module m_common_attrs
   public :: set_prefix
   public :: set_localName
   
+  ! Just for the sake of completeness
+  public :: getType
  
   interface len
      module procedure number_of_entries
@@ -80,6 +82,10 @@ module m_common_attrs
   interface set_localName
      module procedure set_localName_by_index_s
      module procedure set_localName_by_index_vs
+  end interface
+
+  interface getType
+    module procedure getType_by_index, getType_by_keyname
   end interface
   
 contains
@@ -365,7 +371,32 @@ contains
 
   end function get_localName_by_keyname
 
-  !------------------------------------------------------
+  function getType_by_index(dict, i) result(type)
+    type(dictionary_t), intent(in) :: dict
+    integer, intent(in) :: i
+    character(len=merge(5, 0, i<=size(dict%items))) :: type
+
+    if (i<=size(dict%items)) then
+      type = 'CDATA'
+    else
+      type = ''
+    endif
+
+  end function getType_by_index
+
+  function getType_by_keyname(dict, keyname) result(type)
+    type(dictionary_t), intent(in) :: dict
+    character(len=*), intent(in) :: keyname
+    character(len=merge(5, 0, get_key_index(dict, keyname)>0)) :: type
+
+    if (get_key_index(dict, keyname)>0) then
+      type = 'CDATA'
+    else
+      type = ''
+    endif
+
+  end function getType_by_keyname
+
   subroutine init_dict(dict)
     type(dictionary_t), intent(out)   :: dict
     

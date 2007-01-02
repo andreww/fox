@@ -26,8 +26,7 @@ module m_sax_reader
 
   use m_common_array_str, only : vs_str, str_vs, vs_str_alloc
   use m_common_charset, only: XML1_0, XML1_1, &
-    XML1_0_NAMECHARS, XML1_1_NAMECHARS, XML_WHITESPACE, &
-    XML1_0_INITIALNAMECHARS, XML1_1_INITIALNAMECHARS
+    XML_WHITESPACE, isLegalChar, isLegalCharRef
   use m_common_error,  only: FoX_error, FoX_fatal
   use m_common_io, only: setup_io, io_eor, io_eof, get_unit
   use m_common_format, only: str

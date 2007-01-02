@@ -426,7 +426,7 @@ contains
   end function expand_entity
     
 
-  function expand_entity_value_alloc(repl, stack) result(repl_new)
+  function expand_entity_value_alloc(repl, xv, stack) result(repl_new)
     !perform expansion of character entity references
     ! check that no parameter entities are present
     ! and check that all general entity references are well-formed.
@@ -436,6 +436,7 @@ contains
     ! (might it be called from WXML?)
     ! so input & output is with character arrays, not strings.
     character, dimension(:), intent(in) :: repl
+    integer, intent(in) :: xv
     type(error_stack), intent(inout) :: stack
     character, dimension(:), pointer :: repl_new
 
@@ -461,7 +462,7 @@ contains
           repl_temp(i2:i2+j) = repl(i:i+j)
           i = i + j + 1
           i2 = i2 + j + 1
-        elseif (checkCharacterEntityReference(str_vs(repl(i+1:i+j-1)))) then
+        elseif (checkCharacterEntityReference(str_vs(repl(i+1:i+j-1)), xv)) then
           !if it is ascii then
           repl_temp(i2:i2) = vs_str(expand_char_entity(str_vs(repl(i+1:i+j-1))))
           i = i + j + 1

@@ -2,7 +2,7 @@
 
 module m_sax_tokenizer
 
-  use m_common_array_str, only: vs_str, str_vs, vs_str_alloc
+  use m_common_array_str, only: vs_str, str_vs, vs_str_alloc, devnull
   use m_common_charset, only: XML_WHITESPACE, &
     XML_INITIALENCODINGCHARS, XML_ENCODINGCHARS, &
     XML1_0, XML1_1, operator(.in.), upperCase, digits, hexdigits, &
@@ -747,7 +747,7 @@ contains
           s_temp(i2) = expand_entity_text(fx%predefined_e_list, str_vs(tempString))
           i = i + j + 1
           i2 = i2 + 1
-        elseif (checkCharacterEntityReference(str_vs(tempString))) then
+        elseif (checkCharacterEntityReference(str_vs(tempString), fx%xml_version)) then
           ! Expand all character entities
           s_temp(i2) = expand_char_entity(str_vs(tempString)) ! FIXME ascii
           i = i + j  + 1
@@ -771,7 +771,7 @@ contains
             call add_internal_entity(fx%forbidden_ge_list, str_vs(tempString), "")
             ! Recursively expand entity, checking for errors.
             s_ent => normalize_text(fx, vs_str(expand_entity_text(fx%ge_list, str_vs(tempString))))
-            call pop_entity_list(fx%forbidden_ge_list)
+            call devnull(pop_entity_list(fx%forbidden_ge_list))
             if (in_error(fx%error_stack)) then
               deallocate(tempString)
               deallocate(s_ent)

@@ -659,7 +659,7 @@ contains
               call startEntity_handler(str_vs(tempString))
             if (present(characters_handler)) &
               call characters_handler(expand_entity(fx%predefined_e_list, str_vs(tempString)))
-          elseif (checkCharacterEntityReference(str_vs(tempString))) then
+          elseif (checkCharacterEntityReference(str_vs(tempString), fx%xml_version)) then
             !FIXME is legal character here?
             if (present(characters_handler)) &
               call characters_handler(expand_char_entity(str_vs(tempString)))
@@ -962,7 +962,7 @@ contains
         elseif (str_vs(fx%token) == 'SYSTEM') then
           fx%state = ST_DTD_ENTITY_SYSTEM
         elseif (fx%token(1)=="'".or.fx%token(1)=='"') then
-          fx%attname => expand_entity_value_alloc(fx%token, fx%error_stack)
+          fx%attname => expand_entity_value_alloc(fx%token, fx%xml_version, fx%error_stack)
           if (in_error(fx%error_stack)) goto 100
           fx%state = ST_DTD_ENTITY_END
           fx%whitespace = WS_DISCARD

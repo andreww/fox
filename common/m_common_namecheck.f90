@@ -1,5 +1,6 @@
 module m_common_namecheck
 
+  use m_common_charset, only: isLegalCharRef
   use m_common_format, only: str_to_int_10, str_to_int_16
 
   implicit none
@@ -161,17 +162,10 @@ contains
   end function checkIRI
 
 
-  pure function checkCharacterEntityReference(code) result(good)
+  pure function checkCharacterEntityReference(code, xv) result(good)
     character(len=*), intent(in) :: code
+    integer, intent(in) :: xv
     logical :: good
-
-    ! This is XML-1.1 compliant (not 1.0), character range according to:
-    !
-    ![2] Char ::= [#x1-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF]
-    ![66] CharRef ::= '&#' [0-9]+ ';'
-    !               | '&#x' [0-9a-fA-F]+ ';' [WFC: Legal Character]o
-    ! Well-formedness constraint: Legal Character
-    ! Characters referred to using character references MUST match the production for Char [2].
 
     integer :: i
 
@@ -194,9 +188,10 @@ contains
       endif
     endif
     if (good) &
-      good = ((0<i .and. i<55296) &
-      .or.(57343<i .and. i<65534) &
-      .or.(65535<i .and. i<4177778))
+      good = isLegalCharRef(i, xv)
+!      good = ((0<i .and. i<55296) &
+!      .or.(57343<i .and. i<65534) &
+!      .or.(65535<i .and. i<4177778))
 
   end function checkCharacterEntityReference
 
