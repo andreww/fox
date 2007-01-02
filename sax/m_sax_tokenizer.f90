@@ -152,8 +152,8 @@ contains
     elseif (fx%state==ST_IN_TAG) then
       call get_characters_until_not_one_of(fb, XML_WHITESPACE, iostat)
       if (iostat/=0) return
+      deallocate(fb%namebuffer) ! which only contains whitespace now.
       if (size(fb%namebuffer)==0) then
-        deallocate(fb%namebuffer)
         ! This had better be the end of the tag.
         c = get_characters(fb, 1, iostat)
         if (iostat/=0) return
@@ -167,20 +167,28 @@ contains
           endif
         else
           call add_error(fx%error_stack, "Unexpected character in tag.")
-          return
         endif
       else
-        deallocate(fb%namebuffer) ! which only contains whitespace now.
-        ! This had better be a name ...
-        if (fx%xml_version==XML1_0) then
-          call get_characters_until_condition(fb, isXML1_0_NameChar, .false., iostat)
-        elseif (fx%xml_version==XML1_1) then
-          call get_characters_until_condition(fb, isXML1_1_NameChar, .false., iostat)
-        endif
-        fx%token => fb%namebuffer
-        nullify(fb%namebuffer)
-        if (size(fx%token)==0) then
-          call add_error(fx%error_stack, "Unexpected character in tag")
+        c = get_characters(fb, 1, iostat)
+        if (iostat/=0) return
+        if (c=='>') then
+          fx%token => vs_str_alloc('>')
+        elseif (c=='/') then
+          c = get_characters(fb, 1, iostat)
+          if (iostat/=0) return
+          if (c=='>') then
+            fx%token => vs_str_alloc('/>')
+          endif
+        elseif (isInitialNameChar(c, fx%xml_version)) then 
+          if (fx%xml_version==XML1_0) then
+            call get_characters_until_condition(fb, isXML1_0_NameChar, .false., iostat)
+          elseif (fx%xml_version==XML1_1) then
+            call get_characters_until_condition(fb, isXML1_1_NameChar, .false., iostat)
+          endif
+          fx%token => vs_str_alloc(c//str_vs(fb%namebuffer))
+          deallocate(fb%namebuffer)
+        else
+          call add_error(fx%error_stack, "Unexpected character in tag.")
         endif
       endif
 
@@ -309,7 +317,7 @@ contains
       c = get_characters(fb, 1, iostat)
       if (iostat/=0) return
 
-      if (c.in.'>=') then
+      if (c.in.'>=[') then
         !No further investigation needed, that's the token
         fx%token => vs_str_alloc(c)
 
@@ -400,7 +408,7 @@ contains
               call add_error(fx%error_stack, "Illegal general entity reference")
               return
             endif
-            fx%token => vs_str_alloc('&'//str_vs(fb%namebuffer)//';')
+            fx%token => vs_str_alloc('&'//c//str_vs(fb%namebuffer)//';')
             deallocate(fb%namebuffer)
           else
             call add_error(fx%error_stack, &
@@ -770,7 +778,7 @@ contains
             s_ent => normalize_text(fx, vs_str(expand_entity_text(fx%ge_list, str_vs(tempString))))
             call pop_entity_list(fx%forbidden_ge_list)
             if (in_error(fx%error_stack)) then
-            deallocate(tempString)
+              deallocate(tempString)
               deallocate(s_ent)
               return
             endif
@@ -794,8 +802,10 @@ contains
           endif
         else
           call add_error(fx%error_stack, "Illegal entity reference")
+          deallocate(tempString)
           return
         endif
+        deallocate(tempString)
       else
         s_temp(i2) = s_in(i)
         i = i + 1

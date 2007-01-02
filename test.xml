@@ -29,6 +29,8 @@ and some cdata sections inside to make it more interesting. How about this
                    </end> ]]>    ?
 </text>
 
+&amp;
+
 <single what="An 'empty' tag" />
 
 <tag which="has" a="lot" no="really" loads="o" fa="t" t="r" i="b" u="t" e="s" in="it"/>
