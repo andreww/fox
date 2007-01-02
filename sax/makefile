@@ -1,10 +1,8 @@
 #
 default: install
 #
-OBJFILES= m_sax_tokenizer.o\
-          m_sax_reader.o m_sax_converters.o \
-          m_sax_parser.o \
-          m_sax_operate.o FoX_sax.o
+OBJFILES= m_sax_tokenizer.o m_sax_reader.o \
+          m_sax_parser.o m_sax_operate.o FoX_sax.o
 #
 LIBRARY=libFoX_sax.a
 INCFLAGS=$(MOD_PREFIX)../objs/finclude
