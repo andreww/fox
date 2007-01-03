@@ -7955,3 +7955,4 @@ if test "$no_create" != yes; then
 fi
 
 chmod +x FoX-config
+touch .config
