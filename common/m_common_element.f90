@@ -182,22 +182,23 @@ contains
 
   end function add_element
 
-  subroutine parse_dtd_element(contents, element, xv, stack)
+  subroutine parse_dtd_element(contents, xv, stack, element)
     character(len=*), intent(in) :: contents
-    type(element_t), intent(inout) :: element
     integer, intent(in) :: xv
     type(error_stack), intent(inout) :: stack
+    type(element_t), intent(inout), optional :: element
 
     integer :: state
     integer :: i, nbrackets
+    logical :: mixed
     character :: c
     character, pointer :: order(:), name(:), temp(:)
     logical :: mixed_additional
 
+    mixed = .false.
     nbrackets = 0
     mixed_additional = .false.
     state = ST_START
-
 
     do i = 1, len(contents) + 1
       if (i<=len(contents)) then
@@ -256,7 +257,7 @@ contains
         !print*,'ST_FIRSTCHILD'
         if (c.in.XML_WHITESPACE) cycle
         if (c=='#') then
-          element%mixed = .true.
+          mixed = .true.
           state = ST_PCDATA
           allocate(name(0))
         elseif (isInitialNameChar(c, xv)) then
@@ -317,7 +318,7 @@ contains
           deallocate(temp)
         elseif (c=='?') then
           deallocate(name)
-          if (element%mixed) then
+          if (mixed) then
             call add_error(stack, &
               'Repeat operators forbidden for Mixed elements')
             goto 100
@@ -326,7 +327,7 @@ contains
           endif
         elseif (c=='+') then
           deallocate(name)
-          if (element%mixed) then
+          if (mixed) then
             call add_error(stack, &
               'Repeat operators forbidden for Mixed elements')
             goto 100
@@ -335,7 +336,7 @@ contains
           endif
         elseif (c=='*') then
           deallocate(name)
-          if (element%mixed) then
+          if (mixed) then
             call add_error(stack, &
               'Repeat operators forbidden for Mixed elements')
             goto 100
@@ -344,7 +345,7 @@ contains
           endif
         elseif (c.in.XML_WHITESPACE) then
           deallocate(name)
-          if (element%mixed) mixed_additional = .true.
+          if (mixed) mixed_additional = .true.
           state = ST_SEPARATOR
         elseif (c==',') then
           deallocate(name)
@@ -365,11 +366,11 @@ contains
               'Cannot mix ordered and unordered elements')
             goto 100
           endif
-          if (element%mixed) mixed_additional = .true.
+          if (mixed) mixed_additional = .true.
           state = ST_CHILD
         elseif (c==')') then
           deallocate(name)
-          if (element%mixed) mixed_additional = .true.
+          if (mixed) mixed_additional = .true.
           nbrackets = nbrackets - 1
           if (nbrackets==0) then
             state = ST_AFTERLASTBRACKET
@@ -399,7 +400,7 @@ contains
           name(1) = c
           state = ST_NAME
         elseif (c=='(') then
-          if (element%mixed) then
+          if (mixed) then
             call add_error(stack, &
               'Nested brackets forbidden for Mixed content')
             goto 100
@@ -506,7 +507,7 @@ contains
         if (c=='*') then
           state = ST_END
         elseif (c=='+') then
-          if (element%mixed) then
+          if (mixed) then
             call add_error(stack, &
               '+ operator disallowed for Mixed elements')
             goto 100
@@ -514,7 +515,7 @@ contains
             state = ST_END
           endif
         elseif (c=='?') then
-          if (element%mixed) then
+          if (mixed) then
             call add_error(stack, &
               '? operator disallowed for Mixed elements')
             goto 100
@@ -522,7 +523,7 @@ contains
             state = ST_END
           endif
         elseif (c.in.XML_WHITESPACE) then
-          if (element%mixed) then
+          if (mixed) then
             if (mixed_additional) then
               call add_error(stack, &
                 'Missing "*" at end of Mixed element specification')
@@ -556,7 +557,10 @@ contains
       goto 100
     endif
 
-    element%model => vs_str_alloc(trim(strip_spaces(contents)))
+    if (present(element)) then
+      element%mixed = mixed
+      element%model => vs_str_alloc(trim(strip_spaces(contents)))
+    endif
 
     return
 
@@ -652,21 +656,24 @@ contains
     enddo
   end function get_attribute
 
-  subroutine parse_dtd_attlist(elem, contents, xv, stack)
-    type(element_t), intent(inout) :: elem
+  subroutine parse_dtd_attlist(contents, xv, stack, elem)
     character(len=*), intent(in) :: contents
     integer :: xv
     type(error_stack), intent(inout) :: stack
+    type(element_t), intent(inout), optional :: elem
 
     integer :: i
     integer :: state
     character :: c, q
     character, pointer :: name(:), type(:), default(:), value(:), temp(:)
 
+    type(element_t), pointer :: ce
     type(attribute_t), pointer :: ca
     type(attribute_t), target :: ignore_att
     call init_string_list(ignore_att%enumerations)
     ! We need ignore_att to process but not take account of duplicate attributes
+
+    ! elem is optional so we can not record declarations if necessary.
 
     state = ST_START
 
@@ -698,14 +705,22 @@ contains
           name(size(name)) = c
           deallocate(temp)
         elseif (c.in.XML_WHITESPACE) then
-          if (existing_attribute(elem%attlist, str_vs(name))) then
+          if (present(elem)) then
+            if (existing_attribute(elem%attlist, str_vs(name))) then
+              if (associated(ignore_att%name)) deallocate(name)
+              if (associated(ignore_att%default)) deallocate(default)
+              call destroy_string_list(ignore_att%enumerations)
+              call init_string_list(ignore_att%enumerations)
+              ca => ignore_att
+            else
+              ca => add_attribute(elem%attlist, str_vs(name))
+            endif
+          else
             if (associated(ignore_att%name)) deallocate(name)
             if (associated(ignore_att%default)) deallocate(default)
             call destroy_string_list(ignore_att%enumerations)
             call init_string_list(ignore_att%enumerations)
             ca => ignore_att
-          else
-            ca => add_attribute(elem%attlist, str_vs(name))
           endif
           deallocate(name) 
           state = ST_AFTERNAME

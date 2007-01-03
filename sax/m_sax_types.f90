@@ -86,14 +86,12 @@ module m_sax_types
     integer :: state
     integer :: parse_stack = 0
     integer, pointer :: wf_stack(:) => null()
-    type(element_list), pointer :: elist(:)
     logical :: well_formed = .false.
     character, dimension(:), pointer :: token => null()
     character, dimension(:), pointer :: next_token => null()
     character, dimension(:), pointer :: name => null()
     character, dimension(:), pointer :: attname => null()
     logical :: error = .false.
-    logical :: pe = .false.
     type(error_stack) :: error_stack 
     ! Aspects of document structure
     integer :: xml_version
@@ -113,8 +111,6 @@ module m_sax_types
     character(len=1), dimension(:), pointer :: PublicId => null()
     character(len=1), dimension(:), pointer :: SystemId => null()
     character(len=1), dimension(:), pointer :: Ndata => null()
-    logical :: skippedExternalEntity = .false.
-    logical :: processDTD = .true.
   end type sax_parser_t
 
 

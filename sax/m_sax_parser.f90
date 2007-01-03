@@ -143,7 +143,8 @@ contains
     endEntity_handler,             &
     startCdata_handler,            &
     startDTD_handler,              &
-    startEntity_handler)
+    startEntity_handler,           &
+    validate)
 
     type(sax_parser_t), intent(inout) :: fx
     type(file_buffer_t), intent(inout) :: fb
@@ -173,6 +174,8 @@ contains
     optional :: startCdata_handler
     optional :: startDTD_handler
     optional :: startEntity_handler
+
+    logical, intent(in), optional :: validate
 
     interface
 
@@ -300,12 +303,20 @@ contains
 
     end interface
 
+    logical :: validCheck, skippedExternal, processDTD, pe
     integer :: iostat
     character, pointer :: tempString(:)
     type(element_t), pointer :: elem
     integer, pointer :: temp_wf_stack(:)
     type(entity_list), pointer :: predefined_list(:)
 
+    if (present(validate)) then
+      validCheck = validate
+    else
+      validCheck = .false.
+    endif
+    skippedExternal = .false.
+    processDTD = .true.
     iostat = 0
 
     if (fx%parse_stack==0) then
@@ -561,12 +572,13 @@ contains
         if (str_vs(fx%token)=='>') then
           if (fx%context /= CTXT_IN_CONTENT) then
             if (associated(fx%root_element)) then
-              if (str_vs(fx%name)/=str_vs(fx%root_element)) then
-                call add_error(fx%error_stack, "Root element name does not match document name")
-                exit
-              else
-                deallocate(fx%root_element)
+              if (validCheck) then
+                if (str_vs(fx%name)/=str_vs(fx%root_element)) then
+                  call add_error(fx%error_stack, "Root element name does not match document name")
+                  exit
+                endif
               endif
+              deallocate(fx%root_element)
             endif
             fx%context = CTXT_IN_CONTENT
           endif
@@ -581,12 +593,13 @@ contains
           else
             ! only a single element in this doc
             if (associated(fx%root_element)) then
-              if (str_vs(fx%name)/=str_vs(fx%root_element)) then
-                call add_error(fx%error_stack, "Root element name does not match document name")
-                exit
-              else
-                deallocate(fx%root_element)
+              if (validCheck) then
+                if (str_vs(fx%name)/=str_vs(fx%root_element)) then
+                  call add_error(fx%error_stack, "Root element name does not match document name")
+                  exit
+                endif
               endif
+              deallocate(fx%root_element)
             endif
           endif
           call open_tag
@@ -782,7 +795,7 @@ contains
           nullify(fx%token)
           fx%state = ST_DTD_SYSTEM
         else
-          call add_error(fx%error_stack, "Invalid document system id")
+          call add_error(fx%error_stack, "Invalid document public id")
           exit
         endif
 
@@ -853,10 +866,10 @@ contains
                 "Skipping external parameter entity reference", ERR_WARNING)
               if (present(skippedEntity_handler)) &
                 call skippedEntity_handler('%'//str_vs(tempString))
-              fx%skippedExternalEntity = .true.
-              !  FIXME then are we standalone?
+              !  then are we standalone?
               !   then look at XML section 5.1
-              fx%processDTD = .not.fx%standalone !FIXME use this everywhere
+              skippedExternal = .true.
+              processDTD = fx%standalone !FIXME use this everywhere
             else
               ! Expand the entity, 
               if (present(startEntity_handler)) &
@@ -870,11 +883,11 @@ contains
             ! and do nothing else, carry on ...
           else
             ! Have we previously skipped an external entity?
-            if (fx%skippedExternalEntity) then
-              call add_error(fx%error_stack, &
-                "Skipping undeclared parameter entity reference", ERR_WARNING)
-              if (present(skippedEntity_handler)) &
-                call skippedEntity_handler('%'//str_vs(tempString))
+            if (skippedExternal) then
+              if (processDTD) then
+                if (present(skippedEntity_handler)) &
+                  call skippedEntity_handler('%'//str_vs(tempString))
+              endif
             else
               ! If not, 
               call add_error(fx%error_stack, &
@@ -900,22 +913,27 @@ contains
           elem => get_element(fx%element_list, str_vs(fx%name))
         else
           elem => add_element(fx%element_list, str_vs(fx%name))
-          ! FIXME call add_warning(fx%error_stack
         endif
         nullify(fx%token)
         fx%state = ST_DTD_ATTLIST_CONTENTS
 
       case (ST_DTD_ATTLIST_CONTENTS)
         !token is everything up to >
-        call parse_dtd_attlist(elem, str_vs(fx%token), fx%xml_version, fx%error_stack)
+        if (processDTD) then
+          call parse_dtd_attlist(str_vs(fx%token), fx%xml_version, fx%error_stack, elem)
+        else
+          call parse_dtd_attlist(str_vs(fx%token), fx%xml_version, fx%error_stack)
+        endif
         if (in_error(fx%error_stack)) goto 100
         fx%state = ST_DTD_ATTLIST_END
 
       case (ST_DTD_ATTLIST_END)
         if (str_vs(fx%token)=='>') then
           deallocate(fx%name)
-          if (present(attributeDecl_handler)) &
-            call report_declarations(elem, attributeDecl_handler)
+          if (processDTD) then
+            if (present(attributeDecl_handler)) &
+              call report_declarations(elem, attributeDecl_handler)
+          endif
           fx%state = ST_INT_SUBSET
           fx%whitespace = WS_DISCARD
 
@@ -935,20 +953,31 @@ contains
         !token is everything up to >
         !print*,'ST_DTD_ELEMENT_CONTENTS'
         if (existing_element(fx%element_list, str_vs(fx%name))) then
-          elem => get_element(fx%element_list, str_vs(fx%name))
-          ! VC If this were validating, we should issue an error here
+          if (validCheck) then
+            call add_error(fx%error_stack, "Duplicate Element declaration")
+          else
+            elem => get_element(fx%element_list, str_vs(fx%name))
+            ! Ignore contents ...
+            call parse_dtd_element(str_vs(fx%token), fx%xml_version, fx%error_stack)
+          endif
         else
-          elem => add_element(fx%element_list, str_vs(fx%name))
+          if (processDTD) then
+            elem => add_element(fx%element_list, str_vs(fx%name))
+            call parse_dtd_element(str_vs(fx%token), fx%xml_version, fx%error_stack, elem)
+          else
+            call parse_dtd_element(str_vs(fx%token), fx%xml_version, fx%error_stack)
+          endif
         endif
-        call parse_dtd_element(str_vs(fx%token), elem, fx%xml_version, fx%error_stack)
         if (in_error(fx%error_stack)) goto 100
         fx%state = ST_DTD_ELEMENT_END
 
       case (ST_DTD_ELEMENT_END)
         !print*,'ST_DTD_ELEMENT_END'
         if (str_vs(fx%token)=='>') then
-          if (present(elementDecl_handler)) &
-            call elementDecl_handler(str_vs(fx%name), str_vs(elem%model))
+          if (processDTD) then
+            if (present(elementDecl_handler)) &
+              call elementDecl_handler(str_vs(fx%name), str_vs(elem%model))
+          endif
           deallocate(fx%name)
           fx%state = ST_INT_SUBSET
           fx%whitespace = WS_DISCARD
@@ -961,11 +990,11 @@ contains
       case (ST_DTD_ENTITY)
         !print*, 'ST_DTD_ENTITY'
         if (str_vs(fx%token) == '%') then
-          fx%pe = .true.
+          pe = .true.
           ! this will be a PE
           fx%state = ST_DTD_ENTITY_PE
         else
-          fx%pe = .false.
+          pe = .false.
           fx%name => fx%token
           nullify(fx%token)
           ! FIXME check it's a name
@@ -1020,11 +1049,19 @@ contains
       case (ST_DTD_ENTITY_NDATA)
         !print*, 'ST_DTD_ENTITY_NDATA'
         if (str_vs(fx%token)=='>') then
-          call add_entity
+          if (processDTD) then
+            call add_entity
+!FIXME can thios cause an error?
+          endif
+          deallocate(fx%name)
+          if (associated(fx%attname)) deallocate(fx%attname)
+          if (associated(fx%systemId)) deallocate(fx%systemId)
+          if (associated(fx%publicId)) deallocate(fx%publicId)
+          if (associated(fx%Ndata)) deallocate(fx%Ndata)
           fx%state = ST_INT_SUBSET
           fx%whitespace = WS_DISCARD
         elseif (str_vs(fx%token)=='NDATA') then
-          if (fx%pe) then
+          if (pe) then
             call add_error(fx%error_stack, "Parameter entity cannot have NDATA declaration")
             exit
           endif
@@ -1044,14 +1081,24 @@ contains
           fx%whitespace = WS_DISCARD
           ! add entity
         else
-          call add_error(fx%error_stack, "Attempt to use undeclared notation")
-          exit
+          if (validCheck) then
+            call add_error(fx%error_stack, "Attempt to use undeclared notation")
+            exit
+          endif
         endif
 
       case (ST_DTD_ENTITY_END)
         !print*, 'ST_DTD_ENTITY_END'
         if (str_vs(fx%token)=='>') then
-          call add_entity
+          if (processDTD) then
+            call add_entity
+            ! FIXME can this cause an error?
+          endif
+          deallocate(fx%name)
+          if (associated(fx%attname)) deallocate(fx%attname)
+          if (associated(fx%systemId)) deallocate(fx%systemId)
+          if (associated(fx%publicId)) deallocate(fx%publicId)
+          if (associated(fx%Ndata)) deallocate(fx%Ndata)
           fx%state = ST_INT_SUBSET
         else
           call add_error(fx%error_stack, "Unexpected token at end of ENTITY")
@@ -1101,14 +1148,18 @@ contains
       case (ST_DTD_NOTATION_PUBLIC_2)
         !print*,'ST_DTD_NOTATION_PUBLIC_2'
         if (str_vs(fx%token)=='>') then
-          if (notation_exists(fx%nlist, str_vs(fx%name))) then
-            call add_error(fx%error_stack, "Two notations share the same Name")
-            exit
+          if (validCheck) then
+            if (notation_exists(fx%nlist, str_vs(fx%name))) then
+              call add_error(fx%error_stack, "Duplicate notation declaration")
+              exit
+            endif
           endif
-          call add_notation(fx%nlist, str_vs(fx%name), fx%xml_version, &
-            publicId=str_vs(fx%publicId))
-          if (present(notationDecl_handler)) &
-            call notationDecl_handler(str_vs(fx%name), publicId=str_vs(fx%publicId)) 
+          if (processDTD) then
+            call add_notation(fx%nlist, str_vs(fx%name), fx%xml_version, &
+              publicId=str_vs(fx%publicId))
+            if (present(notationDecl_handler)) &
+              call notationDecl_handler(str_vs(fx%name), publicId=str_vs(fx%publicId)) 
+          endif
           deallocate(fx%name)
           deallocate(fx%publicId)
           fx%state = ST_INT_SUBSET
@@ -1124,24 +1175,28 @@ contains
       case (ST_DTD_NOTATION_END)
         !print*,'ST_DTD_NOTATION_END'
         if (str_vs(fx%token)=='>') then
-          if (notation_exists(fx%nlist, str_vs(fx%name))) then
-            call add_error(fx%error_stack, "Two notations share the same Name")
-            exit
+          if (validCheck) then
+            if (notation_exists(fx%nlist, str_vs(fx%name))) then
+              call add_error(fx%error_stack, "Duplicate notation declaration")
+              exit
+            endif
           endif
-          if (associated(fx%publicId)) then
-            call add_notation(fx%nlist, str_vs(fx%name), fx%xml_version, &
-              publicId=str_vs(fx%publicId), systemId=str_vs(fx%systemId))
-            if (present(notationDecl_handler)) &
-              call notationDecl_handler(str_vs(fx%name), &
-              publicId=str_vs(fx%publicId), systemId=str_vs(fx%systemId)) 
-            deallocate(fx%publicId)
-          else
-            call add_notation(fx%nlist, str_vs(fx%name), fx%xml_version, &
-              systemId=str_vs(fx%systemId))
-            if (present(notationDecl_handler)) &
-              call notationDecl_handler(str_vs(fx%name), &
-              systemId=str_vs(fx%systemId)) 
+          if (processDTD) then
+            if (associated(fx%publicId)) then
+              call add_notation(fx%nlist, str_vs(fx%name), fx%xml_version, &
+                publicId=str_vs(fx%publicId), systemId=str_vs(fx%systemId))
+              if (present(notationDecl_handler)) &
+                call notationDecl_handler(str_vs(fx%name), &
+                publicId=str_vs(fx%publicId), systemId=str_vs(fx%systemId)) 
+            else
+              call add_notation(fx%nlist, str_vs(fx%name), fx%xml_version, &
+                systemId=str_vs(fx%systemId))
+              if (present(notationDecl_handler)) &
+                call notationDecl_handler(str_vs(fx%name), &
+                systemId=str_vs(fx%systemId)) 
+            endif
           endif
+          if (associated(fx%publicId)) deallocate(fx%publicId)
           deallocate(fx%systemId)
           deallocate(fx%name)
           fx%state = ST_INT_SUBSET
@@ -1241,7 +1296,7 @@ contains
 
     subroutine add_entity
       !Parameter or General Entity?
-      if (fx%pe) then
+      if (pe) then
         !Does entity with this name exist?
         if (.not.existing_entity(fx%pe_list, str_vs(fx%name))) then
           ! Internal or external?
@@ -1310,11 +1365,6 @@ contains
           endif
         endif
       endif
-      deallocate(fx%name)
-      if (associated(fx%attname)) deallocate(fx%attname)
-      if (associated(fx%systemId)) deallocate(fx%systemId)
-      if (associated(fx%publicId)) deallocate(fx%publicId)
-      if (associated(fx%Ndata)) deallocate(fx%Ndata)
     end subroutine add_entity
 
     function NotCDataNormalize(s1) result(s2)
