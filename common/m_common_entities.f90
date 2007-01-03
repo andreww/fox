@@ -290,7 +290,7 @@ contains
       if (code(2:2) == "x") then       ! hex character reference
         if (verify(code(3:), hexdigits) == 0) then
           number = str_to_int_16(code(3:))   
-          if (32 <= number .and. number <= 126) then
+          if (0 <= number .and. number <= 128) then
             n = 1
           else
             n = len(code) + 2
@@ -301,7 +301,7 @@ contains
       else                             ! decimal character reference
         if (verify(code(3:), digits) == 0) then
           number = str_to_int_10(code(2:))
-          if (32 <= number .and. number <= 126) then
+          if (0 <= number .and. number <= 128) then
             n = 1
           else
             n = len(code) + 2

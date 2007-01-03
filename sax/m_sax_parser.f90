@@ -361,7 +361,6 @@ contains
       if (.not.associated(fx%token)) then
         call add_error(fx%error_stack, 'Internal error! No token found!')
       endif
-      !print*,'token: "'//str_vs(fx%token)//'"'
 
       select case (fx%state)
 

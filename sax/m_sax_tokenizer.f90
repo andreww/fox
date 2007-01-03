@@ -300,8 +300,6 @@ contains
 
     else
 
-      !print*, 'Magicstatecontext', fx%state, fx%context, fx%whitespace
-
       if (fx%whitespace==WS_DISCARD) then
         call get_characters_until_not_one_of(fb, XML_WHITESPACE, iostat)
         if (iostat/=0) return
@@ -507,7 +505,7 @@ contains
     allocate(ch(8))
     ch = vs_str(read_chars(fb, 8, iostat)); if (iostat/=0) return
     if (str_vs(ch)/="encoding") then
-      call push_chars(fb, "encoding")
+      call push_chars(fb, str_vs(ch))
       deallocate(ch)
       allocate(ch(10))
       ch = vs_str(read_chars(fb, 10, iostat)); if (iostat/=0) return
@@ -544,16 +542,16 @@ contains
       deallocate(ch)
       call check_standalone
       if (iostat/=0) return
+    endif
+    c = read_char(fb, iostat); if (iostat/=0) return
+    do while (c.in.XML_WHITESPACE)
       c = read_char(fb, iostat); if (iostat/=0) return
-      do while (c.in.XML_WHITESPACE)
-        c = read_char(fb, iostat); if (iostat/=0) return
-      enddo
-      if (c=='?') then
-        c = read_char(fb, iostat); if (iostat/=0) return
-        ! FIXME read_char io_eor handling
-        if (c/='>') then
-          call add_error(fx%error_stack, "Expecting > to end XML declaration"); return
-        endif
+    enddo
+    if (c=='?') then
+      c = read_char(fb, iostat); if (iostat/=0) return
+      ! FIXME read_char io_eor handling
+      if (c/='>') then
+        call add_error(fx%error_stack, "Expecting > to end XML declaration"); return
       endif
     endif
 

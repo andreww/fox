@@ -962,8 +962,8 @@ contains
       goto 200
     endif
 
-    if (associated(ignore_att%name)) deallocate(name)
-    if (associated(ignore_att%default)) deallocate(default)
+    if (associated(ignore_att%name)) deallocate(ignore_att%name)
+    if (associated(ignore_att%default)) deallocate(ignore_att%default)
     call destroy_string_list(ignore_att%enumerations)
 
     return
