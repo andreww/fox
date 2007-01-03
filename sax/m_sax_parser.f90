@@ -27,7 +27,7 @@ module m_sax_parser
   use m_common_io, only: io_eof, io_err
   use m_common_namecheck, only: checkName, checkSystemId, checkPubId, &
     checkCharacterEntityReference, looksLikeCharacterEntityReference, &
-    checkQName
+    checkQName, checkNCName
   use m_common_namespaces, only: getnamespaceURI, invalidNS, &
     checkNamespaces, checkEndNamespaces, &
     initNamespaceDictionary, destroyNamespaceDictionary
@@ -66,11 +66,11 @@ contains
 
     call init_entity_list(fx%predefined_e_list)
 
-    call add_internal_entity(fx%predefined_e_list, 'amp', '&')
-    call add_internal_entity(fx%predefined_e_list, 'lt', '<')
-    call add_internal_entity(fx%predefined_e_list, 'gt', '>')
-    call add_internal_entity(fx%predefined_e_list, 'apos', "'")
-    call add_internal_entity(fx%predefined_e_list, 'quot', '"')
+    call add_internal_entity(fx%predefined_e_list, 'amp', '&', XML1_0)
+    call add_internal_entity(fx%predefined_e_list, 'lt', '<', XML1_0)
+    call add_internal_entity(fx%predefined_e_list, 'gt', '>', XML1_0)
+    call add_internal_entity(fx%predefined_e_list, 'apos', "'", XML1_0)
+    call add_internal_entity(fx%predefined_e_list, 'quot', '"', XML1_0)
   end subroutine sax_parser_init
 
   subroutine sax_parser_destroy(fx)
@@ -413,7 +413,7 @@ contains
       case (ST_START_PI)
         !print*,'ST_START_PI'
         !token should be an XML Name FIXME
-        if (checkName(str_vs(fx%token))) then
+        if (checkName(str_vs(fx%token), fx%xml_version)) then
           fx%whitespace = WS_MANDATORY
           fx%state = ST_PI_CONTENTS
           fx%name => fx%token
@@ -625,8 +625,10 @@ contains
         !print*,'ST_ATT_EQUALS'
         ! token is pre-processed attribute value.
         ! fx%name still contains attribute name
-        ! Is it an xmlns:?
-        ! Is it an xml:?
+        if (.not.checkQName(str_vs(fx%attname), fx%xml_version)) then
+          call add_error(fx%error_stack, "Invalid QName for attribute name")
+          exit
+        endif
         !If this attribute is CDATA, we must process further;
         if (isCdataAtt(fx%element_list, &
           str_vs(fx%name), str_vs(fx%attname))) then
@@ -692,7 +694,7 @@ contains
             else
               if (present(startEntity_handler)) &
                 call startEntity_handler(str_vs(tempString))
-              call add_internal_entity(fx%forbidden_ge_list, str_vs(tempString), "")
+              call add_internal_entity(fx%forbidden_ge_list, str_vs(tempString), "", fx%xml_version)
               call push_buffer_stack(fb, expand_entity(fx%ge_list, str_vs(tempString)))
               fx%parse_stack = fx%parse_stack + 1
               temp_wf_stack => fx%wf_stack
@@ -714,7 +716,7 @@ contains
 
       case (ST_CLOSING_TAG)
         !print*,'ST_CLOSING_TAG'
-        if (checkName(str_vs(fx%token))) then!fx%token, fx%xml_version)) then
+        if (checkName(str_vs(fx%token), fx%xml_version)) then!fx%token, fx%xml_version)) then
           fx%name => fx%token
           nullify(fx%token)
           fx%whitespace = WS_DISCARD
@@ -860,7 +862,7 @@ contains
               ! Expand the entity, 
               ! FIXME what about recursive?
               call add_internal_entity(fx%forbidden_pe_list, &
-                str_vs(tempString), "")
+                str_vs(tempString), "", fx%xml_version)
               call push_buffer_stack(fb, &
                 " "//expand_entity(fx%pe_list, str_vs(tempString))//" ")
               fx%parse_stack = fx%parse_stack + 1
@@ -1103,7 +1105,7 @@ contains
             call add_error(fx%error_stack, "Two notations share the same Name")
             exit
           endif
-          call add_notation(fx%nlist, str_vs(fx%name), &
+          call add_notation(fx%nlist, str_vs(fx%name), fx%xml_version, &
             publicId=str_vs(fx%publicId))
           if (present(notationDecl_handler)) &
             call notationDecl_handler(str_vs(fx%name), publicId=str_vs(fx%publicId)) 
@@ -1127,14 +1129,14 @@ contains
             exit
           endif
           if (associated(fx%publicId)) then
-            call add_notation(fx%nlist, str_vs(fx%name), &
+            call add_notation(fx%nlist, str_vs(fx%name), fx%xml_version, &
               publicId=str_vs(fx%publicId), systemId=str_vs(fx%systemId))
             if (present(notationDecl_handler)) &
               call notationDecl_handler(str_vs(fx%name), &
               publicId=str_vs(fx%publicId), systemId=str_vs(fx%systemId)) 
             deallocate(fx%publicId)
           else
-            call add_notation(fx%nlist, str_vs(fx%name), &
+            call add_notation(fx%nlist, str_vs(fx%name), fx%xml_version, &
               systemId=str_vs(fx%systemId))
             if (present(notationDecl_handler)) &
               call notationDecl_handler(str_vs(fx%name), &
@@ -1192,10 +1194,7 @@ contains
 
     subroutine open_tag
       ! Is Name a valid QName?
-      print*,'open tag', getURIofQName(fx, str_vs(fx%name))
-      print*,'open tag', getlocalNameofQName(str_vs(fx%name))
-      print*,'open tag', checkQName(str_vs(fx%name))
-      if (getURIofQName(fx, str_vs(fx%name))=="::INVALID::") then
+      if (.not.checkQName(str_vs(fx%name), fx%xml_version)) then
         call add_error(fx%error_stack, "Invalid QName")
         return
       endif
@@ -1204,7 +1203,7 @@ contains
         fx%attributes)
       ! Check for namespace changes
       call checkNamespaces(fx%attributes, fx%nsDict, &
-        len(fx%elstack), startPrefixMapping_handler)
+        len(fx%elstack), fx%xml_version, startPrefixMapping_handler)
       if (getURIofQName(fx,str_vs(fx%name))==invalidNS) then
         ! no namespace was found for the current element
         call add_error(fx%error_stack, "No namespace found for current element")
@@ -1248,20 +1247,20 @@ contains
           ! Internal or external?
           if (associated(fx%attname)) then ! it's internal
             call add_internal_entity(fx%pe_list, str_vs(fx%name), &
-              str_vs(fx%attname(2:size(fx%attname)-1))) ! stripping off quotes
+              str_vs(fx%attname(2:size(fx%attname)-1)), fx%xml_version) ! stripping off quotes
             ! FIXME need to expand value here before reporting ...
             if (present(internalEntityDecl_handler)) &
               call internalEntityDecl_handler('%'//str_vs(fx%name), str_vs(fx%attname(2:size(fx%attname)-1)))
           else ! PE can't have Ndata declaration
             if (associated(fx%publicId)) then
-              call add_external_entity(fx%pe_list, str_vs(fx%name), &
+              call add_external_entity(fx%pe_list, str_vs(fx%name), fx%xml_version, &
                 str_vs(fx%systemId), publicId=str_vs(fx%publicId))
               !FIXME need to 'fully resolve URL'
               if (present(externalEntityDecl_handler)) &
                 call externalEntityDecl_handler('%'//str_vs(fx%name), &
                 systemId=str_vs(fx%systemId), publicId=str_vs(fx%publicId))
             else
-              call add_external_entity(fx%pe_list, str_vs(fx%name), &
+              call add_external_entity(fx%pe_list, str_vs(fx%name), fx%xml_version, &
                 str_vs(fx%systemId))
               if (present(externalEntityDecl_handler)) &
                 call externalEntityDecl_handler('%'//str_vs(fx%name), &
@@ -1275,13 +1274,13 @@ contains
           ! Internal or external?
           if (associated(fx%attname)) then ! it's internal
             call add_internal_entity(fx%ge_list, str_vs(fx%name), &
-              str_vs(fx%attname(2:size(fx%attname)-1)))
+              str_vs(fx%attname(2:size(fx%attname)-1)), fx%xml_version)
             if (present(internalEntityDecl_handler)) &
               call internalEntityDecl_handler(str_vs(fx%name),&
               str_vs(fx%attname(2:size(fx%attname)-1))) ! stripping quotes
           else
             if (associated(fx%publicId).and.associated(fx%Ndata)) then
-              call add_external_entity(fx%ge_list, str_vs(fx%name), &
+              call add_external_entity(fx%ge_list, str_vs(fx%name), fx%xml_version, &
                 str_vs(fx%systemId), publicId=str_vs(fx%publicId), &
                 notation=str_vs(fx%Ndata))
               if (present(unparsedEntityDecl_handler)) &
@@ -1289,20 +1288,20 @@ contains
                 systemId=str_vs(fx%systemId), publicId=str_vs(fx%publicId), &
                 notation=str_vs(fx%Ndata))
             elseif (associated(fx%Ndata)) then
-              call add_external_entity(fx%ge_list, str_vs(fx%name), &
+              call add_external_entity(fx%ge_list, str_vs(fx%name), fx%xml_version, &
                 str_vs(fx%systemId), notation=str_vs(fx%Ndata))
               if (present(unparsedEntityDecl_handler)) &
                 call unparsedEntityDecl_handler(str_vs(fx%name), &
                 systemId=str_vs(fx%systemId), notation=str_vs(fx%Ndata))
             elseif (associated(fx%publicId)) then
-              call add_external_entity(fx%ge_list, str_vs(fx%name), &
+              call add_external_entity(fx%ge_list, str_vs(fx%name), fx%xml_version, &
                 str_vs(fx%systemId), publicId=str_vs(fx%publicId))
               !FIXME need to 'fully resolve URL'
               if (present(externalEntityDecl_handler)) &
                 call externalEntityDecl_handler('%'//str_vs(fx%name), &
                 systemId=str_vs(fx%systemId), publicId=str_vs(fx%publicId))
             else
-              call add_external_entity(fx%ge_list, str_vs(fx%name), &
+              call add_external_entity(fx%ge_list, str_vs(fx%name), fx%xml_version, &
                 str_vs(fx%systemId))
               if (present(externalEntityDecl_handler)) &
                 call externalEntityDecl_handler('%'//str_vs(fx%name), &

@@ -114,14 +114,14 @@ contains
 
     integer :: i
 
-    good = (len(name) > 0)
-    if (good) good = isInitialNCNameChar(name(1:1), xv) 
-    do i = 1, len(name)
-      if (.not.isNCNameChar(name(i:i), xv)) then
-        good = .false.
-        exit
-      endif
-    enddo
+    good = .false.
+    if (len(name)>0) then
+      if (.not.isInitialNCNameChar(name(1:1), xv)) return
+      do i = 2, len(name)
+        if (.not.isNCNameChar(name(i:i), xv)) return
+      enddo
+      good = .true.
+    endif
        
   end function checkNCName
 

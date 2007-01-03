@@ -752,7 +752,7 @@ contains
           s_temp(i2) = expand_char_entity(str_vs(tempString)) ! FIXME ascii
           i = i + j  + 1
           i2 = i2 + 1 ! fixme
-        elseif (checkName(str_vs(tempString))) then
+        elseif (checkName(str_vs(tempString), fx%xml_version)) then
           if (existing_entity(fx%forbidden_ge_list, str_vs(tempString))) then
             call add_error(fx%error_stack, 'Recursive entity expansion')
             deallocate(tempString)
@@ -768,7 +768,7 @@ contains
               deallocate(tempString)
               return
             endif
-            call add_internal_entity(fx%forbidden_ge_list, str_vs(tempString), "")
+            call add_internal_entity(fx%forbidden_ge_list, str_vs(tempString), "", fx%xml_version)
             ! Recursively expand entity, checking for errors.
             s_ent => normalize_text(fx, vs_str(expand_entity_text(fx%ge_list, str_vs(tempString))))
             call devnull(pop_entity_list(fx%forbidden_ge_list))
