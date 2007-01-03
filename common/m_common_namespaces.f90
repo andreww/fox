@@ -220,11 +220,12 @@ contains
 
   end subroutine removePrefixedURI
 
-  subroutine addPrefixedNS(nsDict, prefix, URI, ix, xml)
+  subroutine addPrefixedNS(nsDict, prefix, URI, ix, xv, xml)
     type(namespaceDictionary), intent(inout) :: nsDict
     character(len=*), intent(in) :: prefix
     character(len=*), intent(in) :: uri
     integer, intent(in) :: ix
+    integer, intent(in) :: xv
     logical, intent(in), optional :: xml
     
     integer :: l_p, p_i, i
@@ -253,7 +254,7 @@ contains
       endif
     endif
 
-    if (.not.checkNCName(prefix)) &
+    if (.not.checkNCName(prefix, xv)) &
       call FoX_error("Attempt to declare invalid prefix: "//prefix)
 
     if (.not.checkIRI(URI)) &
@@ -393,10 +394,11 @@ contains
   end subroutine removePrefix
 
 
-  subroutine checkNamespaces(atts, nsDict, ix, start_prefix_handler)
+  subroutine checkNamespaces(atts, nsDict, ix, xv, start_prefix_handler)
     type(dictionary_t), intent(inout) :: atts
     type(namespaceDictionary), intent(inout) :: nsDict
     integer, intent(in) :: ix ! depth of nesting of current element.
+    integer, intent(in) :: xv
 
     optional :: start_prefix_handler ! what to do when we find a new prefix
 
@@ -441,7 +443,7 @@ contains
           allocate(prefix(xmlnsLength - 6))
           QName = vs_str(get_key(atts, i))
           prefix = QName(7:)
-          call addPrefixedNS(nsDict, str_vs(prefix), str_vs(URI), ix)
+          call addPrefixedNS(nsDict, str_vs(prefix), str_vs(URI), ix, xv)
           if (present(start_prefix_handler)) &
                call start_prefix_handler(str_vs(URI), str_vs(prefix))
           deallocate(URI)

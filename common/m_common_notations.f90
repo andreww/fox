@@ -54,16 +54,17 @@ contains
   end subroutine destroy_notation_list
  
 
-  subroutine add_notation(nlist, name, systemId, publicId)
+  subroutine add_notation(nlist, name, xv, systemId, publicId)
     type(notation_list), intent(inout) :: nlist
     character(len=*), intent(in) :: name
+    integer, intent(in) :: xv
     character(len=*), intent(in), optional :: systemId
     character(len=*), intent(in), optional :: publicId
 
     integer :: i
     type(notation), dimension(:), allocatable :: temp
 
-    if (.not.checkName(name)) &
+    if (.not.checkName(name, xv)) &
       call Fox_error("Illegal notation name: "//name)
 
     if (.not.present(systemId) .and. .not.present(publicId)) &

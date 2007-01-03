@@ -295,7 +295,7 @@ contains
       xf%state_3 = WXML_STATE_3_DURING_DTD
     endif
 
-    if (.not.checkName(name)) &
+    if (.not.checkName(name, xf%xml_version)) &
          call wxml_error("Invalid Name in DTD "//name)
     
     call add_eol(xf)
@@ -361,9 +361,9 @@ contains
         call wxml_fatal("Parameter entity "//name//" must have either a PEdef or an External ID")
     endif
     if (present(PEdef)) then
-      call add_internal_entity(xf%PEList, name, PEdef)
+      call add_internal_entity(xf%PEList, name, PEdef, xf%xml_version)
     else
-      call add_external_entity(xf%PEList, name, system, public)
+      call add_external_entity(xf%PEList, name, xf%xml_version, system, public)
     endif
 
     call add_eol(xf)
@@ -415,7 +415,7 @@ contains
       xf%state_2 = WXML_STATE_2_OUTSIDE_TAG
     endif
 
-    call add_internal_entity(xf%entityList, name, value)
+    call add_internal_entity(xf%entityList, name, value, xf%xml_version)
 
     call add_eol(xf)
     
@@ -460,7 +460,7 @@ contains
     endif
       
     !Name checking is done within add_external_entity
-    call add_external_entity(xf%entityList, name, system, public, notation)
+    call add_external_entity(xf%entityList, name, xf%xml_version, system, public, notation)
     
     call add_eol(xf)
     
@@ -513,7 +513,7 @@ contains
     
     call add_eol(xf)
 
-    call add_notation(xf%nList, name, system, public)
+    call add_notation(xf%nList, name, xf%xml_version, system, public)
     call add_to_buffer('<!NOTATION '//name, xf%buffer)
     if (present(public)) then
       if (index(public, '"') > 0) then
@@ -543,7 +543,7 @@ contains
 
     call check_xf(xf)
 
-    if (.not.checkName(name)) &
+    if (.not.checkName(name, xf%xml_version)) &
       call wxml_error("Element name is illegal in xml_AddElementToDTD: "//name)
 
     !FIXME we should check declaration syntax too.
@@ -575,7 +575,7 @@ contains
 
     call check_xf(xf)
 
-    if (.not.checkName(name)) &
+    if (.not.checkName(name, xf%xml_version)) &
       call wxml_error("Attlist name is illegal in xml_AddAttlistToDTD: "//name)
 
     !FIXME we should check declaration syntax too.
@@ -606,7 +606,7 @@ contains
 
     call check_xf(xf)
 
-    if (.not.checkName(name)) &
+    if (.not.checkName(name, xf%xml_version)) &
       call wxml_error("Trying to add illegal name in xml_AddPEReferenceToDTD: "//name)
 
     call wxml_warning("Adding PEReference to DTD. Cannot guarantee well-formedness")
@@ -689,7 +689,7 @@ contains
       call add_eol(xf)
     end select
 
-    if (.not.present(xml) .and. .not.checkPITarget(name)) &
+    if (.not.present(xml) .and. .not.checkPITarget(name, xf%xml_version)) &
          call wxml_error(xf, "Invalid PI Target "//name)
     call add_to_buffer("<?" // name, xf%buffer)
     if (present(data)) then
@@ -767,7 +767,7 @@ contains
       call wxml_error(xf, "Two root elements: "//name)
     end select
     
-    if (.not.checkQName(name)) then
+    if (.not.checkQName(name, xf%xml_version)) then
       call wxml_error(xf, 'Element name '//name//' is not valid')
     endif
 
@@ -880,7 +880,7 @@ contains
     if (has_key(xf%dict,name)) &
          call wxml_error(xf, "duplicate att name: "//name)
     
-    if (.not.checkQName(name)) &
+    if (.not.checkQName(name, xf%xml_version)) &
          call wxml_error(xf, "invalid attribute name: "//name)
 
     if (len(prefixOfQName(name))>0) then
@@ -924,7 +924,7 @@ contains
          call wxml_error("PI pseudo-attribute outside PI: "//name)
 
     ! This is mostly ad-hoc, pseudo-attribute names are not defined anywhere.
-    if (.not.checkName(name)) &
+    if (.not.checkName(name, xf%xml_version)) &
          call wxml_error("Invalid pseudo-attribute name: "//name)
 
     if (has_key(xf%dict,name)) &
@@ -1002,7 +1002,7 @@ contains
       call wxml_error(xf, "adding namespace with empty URI")
     
     if (present(prefix)) then
-      call addPrefixedNS(xf%nsDict, prefix, nsURI, len(xf%stack)+1, xml)
+      call addPrefixedNS(xf%nsDict, prefix, nsURI, len(xf%stack)+1, xf%xml_version, xml)
     else
       call addDefaultNS(xf%nsDict, nsURI, len(xf%stack)+1)
     endif
@@ -1023,7 +1023,7 @@ contains
       call wxml_error(xf, "Undeclaring namespace outside element content")
     
     if (present(prefix)) then
-      call addPrefixedNS(xf%nsDict, prefix, "", len(xf%stack)+1)
+      call addPrefixedNS(xf%nsDict, prefix, "", len(xf%stack)+1, XML1_1)
     else
       call addDefaultNS(xf%nsDict, "", len(xf%stack)+1)
     endif

@@ -557,13 +557,26 @@ contains
       goto 100
     endif
 
-    element%model => vs_str_alloc(contents)
+    element%model => vs_str_alloc(trim(strip_spaces(contents)))
 
     return
 
 100 if (associated(order)) deallocate(order)
     if (associated(name)) deallocate(name)
 
+    contains
+      function strip_spaces(s1) result(s2)
+        character(len=*) :: s1
+        character(len=len(s1)) :: s2
+        integer :: i, i2
+        i2 = 1
+        do i = 1, len(s1)
+          if (s1(i:i).in.XML_WHITESPACE) cycle
+          s2(i2:i2) = s1(i:i)
+          i2 = i2 + 1
+        end do
+        s2(i2:) = ''
+      end function strip_spaces
   end subroutine parse_dtd_element
 
 

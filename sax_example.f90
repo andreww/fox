@@ -17,14 +17,34 @@ program sax_example
     stop
   endif
 
-  call sax_parse_go(fxml, &
-    startElement_handler = startElement_handler , &
-    endElement_handler = endElement_handler, &
-    characters_handler = characters_handler, &
-    comment_handler = comment_handler, &
-    processingInstruction_handler = processingInstruction_handler, &
-    startPrefixMapping_handler = startPrefixMapping_handler, &
-    endPrefixMapping_handler = endPrefixMapping_handler)
+  call sax_parse_go(fxml,&
+    characters_handler,            &
+    endDocument_handler,           &
+    endElement_handler,            &
+    endPrefixMapping_handler,      &
+    ignorableWhitespace_handler,   &
+    processingInstruction_handler, &
+    ! setDocumentLocator
+    skippedEntity_handler,         &
+    startDocument_handler,         & 
+    startElement_handler,          &
+    startPrefixMapping_handler,    &
+    notationDecl_handler,          &
+    unparsedEntityDecl_handler,    &
+    error_handler,                 &
+    fatalError_handler,            &
+    warning_handler,               &
+    attributeDecl_handler,         &
+    elementDecl_handler,           &
+    externalEntityDecl_handler,    &
+    internalEntityDecl_handler,    &
+    comment_handler,               &
+    endCdata_handler,              &
+    endDTD_handler,                &
+    endEntity_handler,             &
+    startCdata_handler,            &
+    startDTD_handler,              &
+    startEntity_handler)
 
   call close_xml_t(fxml)
 

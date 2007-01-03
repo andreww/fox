@@ -61,8 +61,8 @@ contains
     notationDecl_handler,          &
     unparsedEntityDecl_handler,    &
     error_handler,                 &
-    ! fatalError
-    ! warning
+    fatalError_handler,            &
+    warning_handler,               &
     attributeDecl_handler,         &
     elementDecl_handler,           &
     externalEntityDecl_handler,    &
@@ -81,27 +81,63 @@ contains
     optional :: endElement_handler
     optional :: endPrefixMapping_handler
     optional :: ignorableWhitespace_handler
+    optional :: processingInstruction_handler
+    optional :: skippedEntity_handler
     optional :: startElement_handler
     optional :: startDocument_handler
     optional :: startPrefixMapping_handler
-    optional :: comment_handler
-    optional :: processingInstruction_handler
+    optional :: notationDecl_handler
+    optional :: unparsedEntityDecl_handler
     optional :: error_handler
-    optional :: startDTD_handler
+    optional :: fatalError_handler
+    optional :: warning_handler
+    optional :: attributeDecl_handler
+    optional :: elementDecl_handler
+    optional :: externalEntityDecl_handler
+    optional :: internalEntityDecl_handler
+    optional :: comment_handler
+    optional :: endCdata_handler
+    optional :: endEntity_handler
     optional :: endDTD_handler
     optional :: startCdata_handler
-    optional :: endCdata_handler
-    optional :: internalEntityDecl_handler
-    optional :: externalEntityDecl_handler
-    optional :: unparsedEntityDecl_handler
-    optional :: notationDecl_handler
-    optional :: skippedEntity_handler
-    optional :: elementDecl_handler
-    optional :: attributeDecl_handler
+    optional :: startDTD_handler
     optional :: startEntity_handler
-    optional :: endEntity_handler
 
     interface
+
+      subroutine characters_handler(chunk)
+        character(len=*), intent(in) :: chunk
+      end subroutine characters_handler
+
+      subroutine endDocument_handler()     
+      end subroutine endDocument_handler
+
+      subroutine endElement_handler(namespaceURI, localName, name)
+        character(len=*), intent(in)     :: namespaceURI
+        character(len=*), intent(in)     :: localName
+        character(len=*), intent(in)     :: name
+      end subroutine endElement_handler
+      
+      subroutine endPrefixMapping_handler(prefix)
+        character(len=*), intent(in) :: prefix
+      end subroutine endPrefixMapping_handler
+
+      subroutine ignorableWhitespace_handler(chars)
+        character(len=*), intent(in) :: chars
+      end subroutine ignorableWhitespace_handler
+
+      subroutine processingInstruction_handler(name, content)
+        character(len=*), intent(in)     :: name
+        character(len=*), intent(in)     :: content
+      end subroutine processingInstruction_handler
+
+      subroutine skippedEntity_handler(name)
+        character(len=*), intent(in) :: name
+      end subroutine skippedEntity_handler
+
+      subroutine startDocument_handler()   
+      end subroutine startDocument_handler
+
       subroutine startElement_handler(namespaceURI, localName, name, attributes)
         use FoX_common
         character(len=*), intent(in)     :: namespaceUri
@@ -110,43 +146,16 @@ contains
         type(dictionary_t), intent(in)   :: attributes
       end subroutine startElement_handler
 
-      subroutine endElement_handler(namespaceURI, localName, name)
-        character(len=*), intent(in)     :: namespaceURI
-        character(len=*), intent(in)     :: localName
-        character(len=*), intent(in)     :: name
-      end subroutine endElement_handler
-
       subroutine startPrefixMapping_handler(namespaceURI, prefix)
         character(len=*), intent(in) :: namespaceURI
         character(len=*), intent(in) :: prefix
       end subroutine startPrefixMapping_handler
 
-      subroutine endPrefixMapping_handler(prefix)
-        character(len=*), intent(in) :: prefix
-      end subroutine endPrefixMapping_handler
-
-      subroutine characters_handler(chunk)
-        character(len=*), intent(in) :: chunk
-      end subroutine characters_handler
-
-      subroutine comment_handler(comment)
-        character(len=*), intent(in) :: comment
-      end subroutine comment_handler
-
-      subroutine processingInstruction_handler(name, content)
-        character(len=*), intent(in)     :: name
-        character(len=*), intent(in)     :: content
-      end subroutine processingInstruction_handler
-
-      subroutine error_handler(msg)
-        character(len=*), intent(in)     :: msg
-      end subroutine error_handler
-
-      subroutine startDocument_handler()   
-      end subroutine startDocument_handler
-
-      subroutine endDocument_handler()     
-      end subroutine endDocument_handler
+      subroutine notationDecl_handler(name, publicId, systemId)
+        character(len=*), intent(in) :: name
+        character(len=*), optional, intent(in) :: publicId
+        character(len=*), optional, intent(in) :: systemId
+      end subroutine notationDecl_handler
 
       subroutine unparsedEntityDecl_handler(name, publicId, systemId, notation)
         character(len=*), intent(in) :: name
@@ -155,46 +164,17 @@ contains
         character(len=*), intent(in) :: notation
       end subroutine unparsedEntityDecl_handler
 
-      subroutine internalEntityDecl_handler(name, value)
-        character(len=*), intent(in) :: name
-        character(len=*), intent(in) :: value
-      end subroutine internalEntityDecl_handler
+      subroutine error_handler(msg)
+        character(len=*), intent(in)     :: msg
+      end subroutine error_handler
 
-      subroutine externalEntityDecl_handler(name, publicId, systemId)
-        character(len=*), intent(in) :: name
-        character(len=*), optional, intent(in) :: publicId
-        character(len=*), intent(in) :: systemId
-      end subroutine externalEntityDecl_handler
-
-      subroutine notationDecl_handler(name, publicId, systemId)
-        character(len=*), intent(in) :: name
-        character(len=*), optional, intent(in) :: publicId
-        character(len=*), optional, intent(in) :: systemId
-      end subroutine notationDecl_handler
-
-      subroutine startDTD_handler(name, publicId, systemId)
-        character(len=*), intent(in) :: name
-        character(len=*), optional, intent(in) :: publicId
-        character(len=*), optional, intent(in) :: systemId
-      end subroutine startDTD_handler
-
-      subroutine endDTD_handler()
-      end subroutine endDTD_handler
-
-      subroutine startCdata_handler()
-      end subroutine startCdata_handler
-
-      subroutine endCdata_handler()
-      end subroutine endCdata_handler
-
-      subroutine skippedEntity_handler(name)
-        character(len=*), intent(in) :: name
-      end subroutine skippedEntity_handler
-
-      subroutine elementDecl_handler(name, model)
-        character(len=*), intent(in) :: name
-        character(len=*), intent(in) :: model
-      end subroutine elementDecl_handler
+      subroutine fatalError_handler(msg)
+        character(len=*), intent(in)     :: msg
+      end subroutine fatalError_handler
+      
+      subroutine warning_handler(msg)
+        character(len=*), intent(in)     :: msg
+      end subroutine warning_handler
 
       subroutine attributeDecl_handler(eName, aName, type, mode, value)
         character(len=*), intent(in) :: eName
@@ -204,17 +184,49 @@ contains
         character(len=*), intent(in), optional :: value
       end subroutine attributeDecl_handler
 
-      subroutine ignorableWhitespace_handler(chars)
-        character(len=*), intent(in) :: chars
-      end subroutine ignorableWhitespace_handler
+      subroutine elementDecl_handler(name, model)
+        character(len=*), intent(in) :: name
+        character(len=*), intent(in) :: model
+      end subroutine elementDecl_handler
+
+      subroutine externalEntityDecl_handler(name, publicId, systemId)
+        character(len=*), intent(in) :: name
+        character(len=*), optional, intent(in) :: publicId
+        character(len=*), intent(in) :: systemId
+      end subroutine externalEntityDecl_handler
+
+      subroutine internalEntityDecl_handler(name, value)
+        character(len=*), intent(in) :: name
+        character(len=*), intent(in) :: value
+      end subroutine internalEntityDecl_handler
+
+      subroutine comment_handler(comment)
+        character(len=*), intent(in) :: comment
+      end subroutine comment_handler
+
+      subroutine endCdata_handler()
+      end subroutine endCdata_handler
+
+      subroutine endDTD_handler()
+      end subroutine endDTD_handler
+
+      subroutine endEntity_handler(name)
+        character(len=*), intent(in) :: name
+      end subroutine endEntity_handler
+
+      subroutine startCdata_handler()
+      end subroutine startCdata_handler
+
+      subroutine startDTD_handler(name, publicId, systemId)
+        character(len=*), intent(in) :: name
+        character(len=*), optional, intent(in) :: publicId
+        character(len=*), optional, intent(in) :: systemId
+      end subroutine startDTD_handler
 
       subroutine startEntity_handler(name)
         character(len=*), intent(in) :: name
       end subroutine startEntity_handler
 
-      subroutine endEntity_handler(name)
-        character(len=*), intent(in) :: name
-      end subroutine endEntity_handler
     end interface
 
     ! check xt is initialized
@@ -234,8 +246,8 @@ contains
       notationDecl_handler,          &
       unparsedEntityDecl_handler,    &
       error_handler,                 &
-      ! fatalError
-      ! warning
+      fatalError_handler,            &
+      warning_handler,               &
       attributeDecl_handler,         &
       elementDecl_handler,           &
       externalEntityDecl_handler,    &

@@ -41,8 +41,8 @@ module m_common_charset
 
   character(len=*), parameter :: PubIdChars = NameChars//whitespace//"'()+,/=?;!*#@$%"
   character(len=*), parameter :: validchars = &
-       whitespace//"!""#$%&'()*+,-./"//digits// &
-       ":;<=>?@"//upperCase//"[\]^_`"//lowerCase//"{|}~"
+    whitespace//"!""#$%&'()*+,-./"//digits// &
+    ":;<=>?@"//upperCase//"[\]^_`"//lowerCase//"{|}~"
   ! these are all the standard ASCII printable characters: whitespace + (33-126)
   ! which are the only characters we can guarantee to know how to handle properly.
 
@@ -86,6 +86,8 @@ module m_common_charset
   public :: isLegalCharRef
   public :: isInitialNameChar
   public :: isNameChar
+  public :: isInitialNCNameChar
+  public :: isNCNameChar
   public :: isXML1_0_NameChar
   public :: isXML1_1_NameChar
 
@@ -97,12 +99,12 @@ contains
     logical :: p
     p = (verify(c, str)==0)
   end function belongs
-  
+
   pure function isLegalChar(c, xml_version) result(p)
     character, intent(in) :: c
     integer, intent(in) :: xml_version
     logical :: p 
-! Is this character legal as a source character in the document?
+    ! Is this character legal as a source character in the document?
     integer :: i
     i = iachar(c)
     if (i<0.or.i>127) then
@@ -121,58 +123,90 @@ contains
     integer, intent(in) :: i
     integer, intent(in) :: xml_version
     logical :: p 
-    
+
     ! Is ASCII character # i legal as a character reference?
-   
+
     if (i<0.or.i>127) then
       p = .false. ! FIXME but it's processor dependent ...
-    endif
-    select case(xml_version)
-    case (XML1_0)
-      p = (i==9.or.i==10.or.i==13.or.(i>31.and.i<127))
-    case (XML1_1)
+    elseif (xml_version==XML1_0) then
+      p = (i==9.or.i==10.or.i==13.or.(i>31.and.i<128))
+    elseif (xml_version==XML1_1) then
       p = .true.
       ! XML 1.1 made all control characters legal as character references.
-    end select
+    end if
   end function isLegalCharRef
 
-  function isInitialNameChar(c, xml_version) result(p)
+  pure function isInitialNameChar(c, xml_version) result(p)
     character, intent(in) :: c
     integer, intent(in) :: xml_version
     logical :: p
 
     select case(xml_version)
+    case (XML1_0)
+      p = (verify(c, XML1_0_INITIALNAMECHARS)==0)
+    case (XML1_1)
+      p = (verify(c, XML1_1_INITIALNAMECHARS)==0)
+    end select
+
+  end function isInitialNameChar
+
+  pure function isNameChar(c, xml_version) result(p)
+    character, intent(in) :: c
+    integer, intent(in) :: xml_version
+    logical :: p
+
+    select case(xml_version)
+    case (XML1_0)
+      p = (verify(c, XML1_0_NAMECHARS)==0)
+    case (XML1_1)
+      p = (verify(c, XML1_1_NAMECHARS)==0)
+    end select
+
+  end function isNameChar
+
+  pure function isInitialNCNameChar(c, xml_version) result(p)
+    character, intent(in) :: c
+    integer, intent(in) :: xml_version
+    logical :: p
+
+    if (c==":") then
+      p = .false.
+    else
+      select case(xml_version)
       case (XML1_0)
         p = (verify(c, XML1_0_INITIALNAMECHARS)==0)
       case (XML1_1)
         p = (verify(c, XML1_1_INITIALNAMECHARS)==0)
       end select
+    endif
+  end function isInitialNCNameChar
 
-    end function isInitialNameChar
-
-  function isNameChar(c, xml_version) result(p)
+  pure function isNCNameChar(c, xml_version) result(p)
     character, intent(in) :: c
     integer, intent(in) :: xml_version
     logical :: p
 
-    select case(xml_version)
+    if (c==":") then
+      p = .false.
+    else
+      select case(xml_version)
       case (XML1_0)
         p = (verify(c, XML1_0_NAMECHARS)==0)
       case (XML1_1)
         p = (verify(c, XML1_1_NAMECHARS)==0)
       end select
+    endif
+  end function isNCNameChar
 
-    end function isNameChar
+  function isXML1_0_NameChar(c) result(p)
+    character, intent(in) :: c
+    logical :: p
 
-    function isXML1_0_NameChar(c) result(p)
-      character, intent(in) :: c
-      logical :: p
-    
-      p = (verify(c, XML1_0_NAMECHARS)==0)
-      
-    end function isXML1_0_NameChar
+    p = (verify(c, XML1_0_NAMECHARS)==0)
 
-    function isXML1_1_NameChar(c) result(p)
+  end function isXML1_0_NameChar
+
+  function isXML1_1_NameChar(c) result(p)
     character, intent(in) :: c
     logical :: p
 

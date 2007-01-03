@@ -8,7 +8,8 @@ module m_sax_parser
     has_key, get_value
   use m_common_charset, only: XML1_0, XML1_1, XML1_0_INITIALNAMECHARS, &
     XML1_1_INITIALNAMECHARS, XML_INITIALENCODINGCHARS, XML_ENCODINGCHARS, &
-    XML_WHITESPACE, XML1_0_NAMECHARS, XML1_1_NAMECHARS, operator(.in.)
+    XML_WHITESPACE, XML1_0_NAMECHARS, XML1_1_NAMECHARS, operator(.in.), &
+    isLegalCharRef
   use m_common_element, only: element_t, element_list, init_element_list, &
     destroy_element_list, existing_element, add_element, get_element, &
     parse_dtd_element, parse_dtd_attlist, report_declarations, isCdataAtt, &
@@ -25,7 +26,8 @@ module m_sax_parser
     init_error_stack, destroy_error_stack, in_error, ERR_WARNING
   use m_common_io, only: io_eof, io_err
   use m_common_namecheck, only: checkName, checkSystemId, checkPubId, &
-    checkCharacterEntityReference
+    checkCharacterEntityReference, looksLikeCharacterEntityReference, &
+    checkQName
   use m_common_namespaces, only: getnamespaceURI, invalidNS, &
     checkNamespaces, checkEndNamespaces, &
     initNamespaceDictionary, destroyNamespaceDictionary
@@ -126,8 +128,8 @@ contains
     unparsedEntityDecl_handler,    &
 ! SAX ErrorHandler
     error_handler,                 &
-    ! fatalError
-    ! warning
+    fatalError_handler,            &
+    warning_handler,               &
 ! org.xml.sax.ext
 ! SAX DeclHandler
     attributeDecl_handler,         &
@@ -150,27 +152,63 @@ contains
     optional :: endElement_handler
     optional :: endPrefixMapping_handler
     optional :: ignorableWhitespace_handler
+    optional :: processingInstruction_handler
+    optional :: skippedEntity_handler
     optional :: startElement_handler
     optional :: startDocument_handler
     optional :: startPrefixMapping_handler
-    optional :: comment_handler
-    optional :: processingInstruction_handler
+    optional :: notationDecl_handler
+    optional :: unparsedEntityDecl_handler
     optional :: error_handler
-    optional :: startDTD_handler
+    optional :: fatalError_handler
+    optional :: warning_handler
+    optional :: attributeDecl_handler
+    optional :: elementDecl_handler
+    optional :: externalEntityDecl_handler
+    optional :: internalEntityDecl_handler
+    optional :: comment_handler
+    optional :: endCdata_handler
+    optional :: endEntity_handler
     optional :: endDTD_handler
     optional :: startCdata_handler
-    optional :: endCdata_handler
-    optional :: internalEntityDecl_handler
-    optional :: externalEntityDecl_handler
-    optional :: unparsedEntityDecl_handler
-    optional :: notationDecl_handler
-    optional :: skippedEntity_handler
-    optional :: elementDecl_handler
-    optional :: attributeDecl_handler
+    optional :: startDTD_handler
     optional :: startEntity_handler
-    optional :: endEntity_handler
 
     interface
+
+      subroutine characters_handler(chunk)
+        character(len=*), intent(in) :: chunk
+      end subroutine characters_handler
+
+      subroutine endDocument_handler()     
+      end subroutine endDocument_handler
+
+      subroutine endElement_handler(namespaceURI, localName, name)
+        character(len=*), intent(in)     :: namespaceURI
+        character(len=*), intent(in)     :: localName
+        character(len=*), intent(in)     :: name
+      end subroutine endElement_handler
+      
+      subroutine endPrefixMapping_handler(prefix)
+        character(len=*), intent(in) :: prefix
+      end subroutine endPrefixMapping_handler
+
+      subroutine ignorableWhitespace_handler(chars)
+        character(len=*), intent(in) :: chars
+      end subroutine ignorableWhitespace_handler
+
+      subroutine processingInstruction_handler(name, content)
+        character(len=*), intent(in)     :: name
+        character(len=*), intent(in)     :: content
+      end subroutine processingInstruction_handler
+
+      subroutine skippedEntity_handler(name)
+        character(len=*), intent(in) :: name
+      end subroutine skippedEntity_handler
+
+      subroutine startDocument_handler()   
+      end subroutine startDocument_handler
+
       subroutine startElement_handler(namespaceURI, localName, name, attributes)
         use FoX_common
         character(len=*), intent(in)     :: namespaceUri
@@ -179,43 +217,16 @@ contains
         type(dictionary_t), intent(in)   :: attributes
       end subroutine startElement_handler
 
-      subroutine endElement_handler(namespaceURI, localName, name)
-        character(len=*), intent(in)     :: namespaceURI
-        character(len=*), intent(in)     :: localName
-        character(len=*), intent(in)     :: name
-      end subroutine endElement_handler
-
       subroutine startPrefixMapping_handler(namespaceURI, prefix)
         character(len=*), intent(in) :: namespaceURI
         character(len=*), intent(in) :: prefix
       end subroutine startPrefixMapping_handler
 
-      subroutine endPrefixMapping_handler(prefix)
-        character(len=*), intent(in) :: prefix
-      end subroutine endPrefixMapping_handler
-
-      subroutine characters_handler(chunk)
-        character(len=*), intent(in) :: chunk
-      end subroutine characters_handler
-
-      subroutine comment_handler(comment)
-        character(len=*), intent(in) :: comment
-      end subroutine comment_handler
-
-      subroutine processingInstruction_handler(name, content)
-        character(len=*), intent(in)     :: name
-        character(len=*), intent(in)     :: content
-      end subroutine processingInstruction_handler
-
-      subroutine error_handler(msg)
-        character(len=*), intent(in)     :: msg
-      end subroutine error_handler
-
-      subroutine startDocument_handler()   
-      end subroutine startDocument_handler
-
-      subroutine endDocument_handler()     
-      end subroutine endDocument_handler
+      subroutine notationDecl_handler(name, publicId, systemId)
+        character(len=*), intent(in) :: name
+        character(len=*), optional, intent(in) :: publicId
+        character(len=*), optional, intent(in) :: systemId
+      end subroutine notationDecl_handler
 
       subroutine unparsedEntityDecl_handler(name, publicId, systemId, notation)
         character(len=*), intent(in) :: name
@@ -224,46 +235,17 @@ contains
         character(len=*), intent(in) :: notation
       end subroutine unparsedEntityDecl_handler
 
-      subroutine internalEntityDecl_handler(name, value)
-        character(len=*), intent(in) :: name
-        character(len=*), intent(in) :: value
-      end subroutine internalEntityDecl_handler
+      subroutine error_handler(msg)
+        character(len=*), intent(in)     :: msg
+      end subroutine error_handler
 
-      subroutine externalEntityDecl_handler(name, publicId, systemId)
-        character(len=*), intent(in) :: name
-        character(len=*), optional, intent(in) :: publicId
-        character(len=*), intent(in) :: systemId
-      end subroutine externalEntityDecl_handler
-
-      subroutine notationDecl_handler(name, publicId, systemId)
-        character(len=*), intent(in) :: name
-        character(len=*), optional, intent(in) :: publicId
-        character(len=*), optional, intent(in) :: systemId
-      end subroutine notationDecl_handler
-
-      subroutine startDTD_handler(name, publicId, systemId)
-        character(len=*), intent(in) :: name
-        character(len=*), optional, intent(in) :: publicId
-        character(len=*), optional, intent(in) :: systemId
-      end subroutine startDTD_handler
-
-      subroutine endDTD_handler()
-      end subroutine endDTD_handler
-
-      subroutine startCdata_handler()
-      end subroutine startCdata_handler
-
-      subroutine endCdata_handler()
-      end subroutine endCdata_handler
-
-      subroutine skippedEntity_handler(name)
-        character(len=*), intent(in) :: name
-      end subroutine skippedEntity_handler
-
-      subroutine elementDecl_handler(name, model)
-        character(len=*), intent(in) :: name
-        character(len=*), intent(in) :: model
-      end subroutine elementDecl_handler
+      subroutine fatalError_handler(msg)
+        character(len=*), intent(in)     :: msg
+      end subroutine fatalError_handler
+      
+      subroutine warning_handler(msg)
+        character(len=*), intent(in)     :: msg
+      end subroutine warning_handler
 
       subroutine attributeDecl_handler(eName, aName, type, mode, value)
         character(len=*), intent(in) :: eName
@@ -273,17 +255,49 @@ contains
         character(len=*), intent(in), optional :: value
       end subroutine attributeDecl_handler
 
-      subroutine ignorableWhitespace_handler(chars)
-        character(len=*), intent(in) :: chars
-      end subroutine ignorableWhitespace_handler
+      subroutine elementDecl_handler(name, model)
+        character(len=*), intent(in) :: name
+        character(len=*), intent(in) :: model
+      end subroutine elementDecl_handler
+
+      subroutine externalEntityDecl_handler(name, publicId, systemId)
+        character(len=*), intent(in) :: name
+        character(len=*), optional, intent(in) :: publicId
+        character(len=*), intent(in) :: systemId
+      end subroutine externalEntityDecl_handler
+
+      subroutine internalEntityDecl_handler(name, value)
+        character(len=*), intent(in) :: name
+        character(len=*), intent(in) :: value
+      end subroutine internalEntityDecl_handler
+
+      subroutine comment_handler(comment)
+        character(len=*), intent(in) :: comment
+      end subroutine comment_handler
+
+      subroutine endCdata_handler()
+      end subroutine endCdata_handler
+
+      subroutine endDTD_handler()
+      end subroutine endDTD_handler
+
+      subroutine endEntity_handler(name)
+        character(len=*), intent(in) :: name
+      end subroutine endEntity_handler
+
+      subroutine startCdata_handler()
+      end subroutine startCdata_handler
+
+      subroutine startDTD_handler(name, publicId, systemId)
+        character(len=*), intent(in) :: name
+        character(len=*), optional, intent(in) :: publicId
+        character(len=*), optional, intent(in) :: systemId
+      end subroutine startDTD_handler
 
       subroutine startEntity_handler(name)
         character(len=*), intent(in) :: name
       end subroutine startEntity_handler
 
-      subroutine endEntity_handler(name)
-        character(len=*), intent(in) :: name
-      end subroutine endEntity_handler
     end interface
 
     integer :: iostat
@@ -659,8 +673,12 @@ contains
               call startEntity_handler(str_vs(tempString))
             if (present(characters_handler)) &
               call characters_handler(expand_entity(fx%predefined_e_list, str_vs(tempString)))
-          elseif (checkCharacterEntityReference(str_vs(tempString), fx%xml_version)) then
-            !FIXME is legal character here?
+            if (present(endEntity_handler)) &
+              call endEntity_handler(str_vs(tempString))
+          elseif (looksLikeCharacterEntityReference(str_vs(tempString), fx%xml_version)) then
+            if (.not.checkCharacterEntityReference(str_vs(tempString), fx%xml_version)) then
+              call add_error(fx%error_stack, "Illegal character reference")
+            endif
             if (present(characters_handler)) &
               call characters_handler(expand_char_entity(str_vs(tempString)))
           elseif (existing_entity(fx%ge_list, str_vs(tempString))) then
@@ -742,9 +760,13 @@ contains
         elseif (str_vs(fx%token)=='PUBLIC') then
           fx%state = ST_DTD_PUBLIC
         elseif (str_vs(fx%token)=='[') then
+          if (present(startDTD_handler)) &
+            call startDTD_handler(str_vs(fx%root_element))
           fx%whitespace = WS_DISCARD
           fx%state = ST_INT_SUBSET
         elseif (str_vs(fx%token)=='>') then
+          if (present(startDTD_handler)) &
+            call startDTD_handler(str_vs(fx%root_element))
           fx%context = CTXT_BEFORE_CONTENT
           fx%state = ST_MISC
         else
@@ -1169,6 +1191,14 @@ contains
   contains
 
     subroutine open_tag
+      ! Is Name a valid QName?
+      print*,'open tag', getURIofQName(fx, str_vs(fx%name))
+      print*,'open tag', getlocalNameofQName(str_vs(fx%name))
+      print*,'open tag', checkQName(str_vs(fx%name))
+      if (getURIofQName(fx, str_vs(fx%name))=="::INVALID::") then
+        call add_error(fx%error_stack, "Invalid QName")
+        return
+      endif
       ! Are there any default values missing?
       call checkImplicitAttributes(fx%element_list, str_vs(fx%name), &
         fx%attributes)
@@ -1377,6 +1407,7 @@ contains
     ! FIXME put location information in here
     if (present(error_handler)) then
       call error_handler(str_vs(errmsg))
+      deallocate(errmsg)
     else
       call FoX_error(str_vs(errmsg))
     endif

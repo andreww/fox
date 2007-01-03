@@ -1,20 +1,19 @@
 module m_common_namecheck
 
-  use m_common_charset, only: isLegalCharRef
+  use m_common_charset, only: XML_WHITESPACE, isLegalCharRef, isNCNameChar, &
+    isInitialNCNameChar, isInitialNameChar, isNameChar
   use m_common_format, only: str_to_int_10, str_to_int_16
 
   implicit none
   private
 
-  character(len=*), parameter :: spaces = " "//achar(9)//achar(10)//achar(13)
   character(len=*), parameter :: lowerCase = "abcdefghijklmnopqrstuvwxyz"
   character(len=*), parameter :: upperCase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
   character(len=*), parameter :: letters = lowerCase//upperCase
   character(len=*), parameter :: digits = "0123456789"
   character(len=*), parameter :: hexdigits = "0123456789abcdefABCDEF"
   character(len=*), parameter :: NameChars = lowerCase//upperCase//digits//".-_:"
-  character(len=*), parameter :: NCNameChars = lowerCase//upperCase//digits//".-_"
-  character(len=*), parameter :: PubIdChars = NameChars//spaces//"'()+,/=?;!*#@$%"
+  character(len=*), parameter :: PubIdChars = NameChars//XML_WHITESPACE//"'()+,/=?;!*#@$%"
 
   public :: checkName
   public :: checkQName
@@ -25,6 +24,7 @@ module m_common_namecheck
   public :: checkPubId
   public :: checkIRI
   public :: checkCharacterEntityReference
+  public :: looksLikeCharacterEntityReference
   public :: checkEntityValue
 
   public :: prefixOfQName
@@ -43,23 +43,20 @@ contains
     good = (n > 0)
     if (good) good = (scan(name(1:1), letters) /= 0)
     if (good .and. n > 1) &
-         good = (verify(name(2:), NCNameChars) == 0)
+         good = (verify(name(2:), letters//digits//'.-_') == 0)
   end function checkEncName
 
 
-  pure function checkPITarget(name) result(good)
+  pure function checkPITarget(name, xv) result(good)
     character(len=*), intent(in) :: name
+    integer, intent(in) :: xv
     logical :: good
     ! Validates a string against the XML requirements for a NAME
     ! Is not fully compliant; ignores UTF issues.
 
     integer :: n
 
-    n = len(name)
-    good = (n > 0)
-    if (good) good = (scan(name(1:1), letters//'_'//':') /= 0) 
-    if (good .and. n > 1) &
-             good = (verify(name(2:), NameChars) == 0) 
+    good = checkName(name, xv)
     if (good .and. n > 2) then
       good = (.not.(scan(name(1:1), 'Xx') == 1 .and. &
                     scan(name(2:2), 'Mm') == 1 .and. &
@@ -69,25 +66,30 @@ contains
   end function checkPITarget
 
 
-  pure function checkName(name) result(good)
+  pure function checkName(name, xv) result(good)
     character(len=*), intent(in) :: name
+    integer, intent(in) :: xv
     logical :: good
     ! Validates a string against the XML requirements for a NAME
     ! Is not fully compliant; ignores UTF issues.
 
-    integer :: n
+    integer :: i
 
-    n = len(name)
-    good = (n > 0)
-    if (good) good = (scan(name(1:1), letters//'_'//':') /= 0) 
-    if (good .and. n > 1) &
-             good = (verify(name(2:), NameChars) == 0) 
+    good = (len(name) > 0)
+    if (good) good = isInitialNameChar(name(1:1), xv) 
+    do i = 1, len(name)
+      if (.not.isNameChar(name(i:i), xv)) then
+        good = .false.
+        exit
+      endif
+    enddo
        
   end function checkName
 
 
-  pure function checkQName(name) result(good)
+  pure function checkQName(name, xv) result(good)
     character(len=*), intent(in) :: name
+    integer, intent(in) :: xv
     logical :: good
     ! Validates a string against the XML requirements for a NAME
     ! Is not fully compliant; ignores UTF issues.
@@ -96,26 +98,30 @@ contains
 
     n = index(name, ':')
     if (n == 0) then
-      good = checkNCName(name)
+      good = checkNCName(name, xv)
     else
-      good = (checkNCName(name(:n-1)) .and. checkNCName(name(n+1:)))
+      good = (checkNCName(name(:n-1), xv) .and. checkNCName(name(n+1:), xv))
     endif
   end function checkQName
 
 
-  pure function checkNCName(name) result(good)
+  pure function checkNCName(name, xv) result(good)
     character(len=*), intent(in) :: name
+    integer, intent(in) :: xv
     logical :: good
     ! Validates a string against the XML requirements for an NCNAME
     ! Is not fully compliant; ignores UTF issues.
 
-    integer :: n
+    integer :: i
 
-    n = len(name)
-    good = (n > 0)
-    if (good) good = (scan(name(1:1), letters//'_') /= 0) 
-    if (good .and. n > 1) &
-             good = (verify(name(2:), NCNameChars) == 0) 
+    good = (len(name) > 0)
+    if (good) good = isInitialNCNameChar(name(1:1), xv) 
+    do i = 1, len(name)
+      if (.not.isNCNameChar(name(i:i), xv)) then
+        good = .false.
+        exit
+      endif
+    enddo
        
   end function checkNCName
 
@@ -162,6 +168,26 @@ contains
   end function checkIRI
 
 
+  function looksLikeCharacterEntityReference(code, xv) result(good)
+    character(len=*), intent(in) :: code
+    integer, intent(in) :: xv
+    logical :: good
+
+    good = .false.
+    if (len(code) > 0) then
+      if (code(1:1) == "#") then
+        if (code(2:2) == "x") then
+          if (len(code) > 2) then
+            good = (verify(code(3:), hexdigits) == 0)
+          endif
+        else
+          good = (verify(code(2:), digits) == 0)
+        endif
+      endif
+    endif
+
+  end function looksLikeCharacterEntityReference
+
   pure function checkCharacterEntityReference(code, xv) result(good)
     character(len=*), intent(in) :: code
     integer, intent(in) :: xv
@@ -182,19 +208,17 @@ contains
         else
           good = (verify(code(2:), digits) == 0)
           if (good) then
-            i = str_to_int_10(code(3:))
+            i = str_to_int_10(code(2:))
           endif
         endif
       endif
     endif
-    if (good) &
-      good = isLegalCharRef(i, xv)
+    if (good) good = isLegalCharRef(i, xv)
 !      good = ((0<i .and. i<55296) &
 !      .or.(57343<i .and. i<65534) &
 !      .or.(65535<i .and. i<4177778))
 
   end function checkCharacterEntityReference
-
   
   pure function checkEntityValue(value) result (good)
     ![9] EntityValue ::= '"' ([^%&"] | PEReference | Reference)* '"'

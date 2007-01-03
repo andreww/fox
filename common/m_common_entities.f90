@@ -198,12 +198,13 @@ contains
   end subroutine add_entity
 
 
-  subroutine add_internal_entity(ents, code, repl)
+  subroutine add_internal_entity(ents, code, repl, xv)
     type(entity_list), intent(inout) :: ents
     character(len=*), intent(in) :: code
     character(len=*), intent(in) :: repl
+    integer, intent(in) :: xv
 
-    if (.not.checkName(code)) &
+    if (.not.checkName(code, xv)) &
       call FoX_error("Illegal entity name: "//code)
     !if (.not.checkEntityValue(repl)) &
     !  call FoX_error("Illegal entity value: "//repl)
@@ -212,14 +213,15 @@ contains
   end subroutine add_internal_entity
 
   
-  subroutine add_external_entity(ents, code, systemId, publicId, notation)
+  subroutine add_external_entity(ents, code, xv, systemId, publicId, notation)
     type(entity_list), intent(inout) :: ents
     character(len=*), intent(in) :: code
+    integer, intent(in) :: xv
     character(len=*), intent(in) :: systemId
     character(len=*), intent(in), optional :: publicId
     character(len=*), intent(in), optional :: notation
 
-    if (.not.checkName(code)) &
+    if (.not.checkName(code, xv)) &
       call FoX_error("Illegal entity name. "//code)
     if (.not.checkSystemId(systemId)) &
       call FoX_error("Illegal system Id. "//systemId)
@@ -228,7 +230,7 @@ contains
         call FoX_error("Illegal publicId. "//publicId)
     endif
     if (present(notation)) then
-      if (.not.checkName(notation)) &
+      if (.not.checkName(notation, xv)) &
         call FoX_error("Illegal notation. "//notation)
     endif
 
@@ -458,7 +460,7 @@ contains
         if (j==0) then
           call add_error(stack, "Not allowed bare & in entity value")
           return
-        elseif (checkName(str_vs(repl(i+1:i+j-1)))) then
+        elseif (checkName(str_vs(repl(i+1:i+j-1)), xv)) then
           repl_temp(i2:i2+j) = repl(i:i+j)
           i = i + j + 1
           i2 = i2 + j + 1
