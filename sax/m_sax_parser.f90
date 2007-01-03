@@ -859,7 +859,8 @@ contains
               fx%processDTD = .not.fx%standalone !FIXME use this everywhere
             else
               ! Expand the entity, 
-              ! FIXME what about recursive?
+              if (present(startEntity_handler)) &
+                call startEntity_handler('%'//str_vs(tempString))
               call add_internal_entity(fx%forbidden_pe_list, &
                 str_vs(tempString), "", fx%xml_version)
               call push_buffer_stack(fb, &

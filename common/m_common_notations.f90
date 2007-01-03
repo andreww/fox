@@ -64,6 +64,8 @@ contains
     integer :: i
     type(notation), dimension(:), allocatable :: temp
 
+    print*,'adding notation'
+
     if (.not.checkName(name, xv)) &
       call Fox_error("Illegal notation name: "//name)
 

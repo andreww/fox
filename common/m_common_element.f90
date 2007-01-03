@@ -31,7 +31,6 @@ module m_common_element
   integer, parameter :: ST_DEFAULT_DECL     = 17
   integer, parameter :: ST_AFTERDEFAULTDECL = 18
   integer, parameter :: ST_DEFAULTVALUE     = 19
-  integer, parameter :: ST_NOTATION         = 20
 
   integer, parameter :: ATT_NULL = 0
 
@@ -812,6 +811,18 @@ contains
           value(size(value)) = c
           deallocate(temp)
           state = ST_ENUM_NAME
+        elseif (c=='|') then
+          call add_string(ca%enumerations, str_vs(value))
+          deallocate(value)
+          if (ca%attType==ATT_NOTATION) then
+            state = ST_NOTATION_LIST
+          else
+            allocate(value(0))
+          endif
+        elseif (c==')') then
+          call add_string(ca%enumerations, str_vs(value))
+          deallocate(value)
+          state = ST_AFTER_ATTTYPE
         else
           call add_error(stack, &
             'Unexpected character in attlist enumeration')
@@ -834,7 +845,7 @@ contains
           call add_string(ca%enumerations, str_vs(value))
           deallocate(value)
           if (ca%attType==ATT_NOTATION) then
-            state = ST_NOTATION
+            state = ST_NOTATION_LIST
           else
             allocate(value(0))
             state = ST_ENUMERATION
@@ -854,7 +865,7 @@ contains
         if (c.in.XML_WHITESPACE) cycle
         if (c=='|') then
           if (ca%attType==ATT_NOTATION) then
-            state = ST_NOTATION
+            state = ST_NOTATION_LIST
           else
             allocate(value(0))
             state = ST_ENUMERATION
@@ -1106,12 +1117,12 @@ contains
     integer :: i, m, n
     s(1:1) = '('
     n = 2
-    do i = 1, size(s_list%list)
+    do i = 1, size(s_list%list)-1
       m = size(s_list%list(i)%s)
       s(n:n+m) = str_vs(s_list%list(i)%s)//'|'
       n = n + m + 1
     enddo
-    s(n:n) = ')'
+    s(n:) = str_vs(s_list%list(i)%s)//')'
   end function make_token_group
 
 

@@ -13,7 +13,6 @@ module m_common_namecheck
   character(len=*), parameter :: digits = "0123456789"
   character(len=*), parameter :: hexdigits = "0123456789abcdefABCDEF"
   character(len=*), parameter :: NameChars = lowerCase//upperCase//digits//".-_:"
-  character(len=*), parameter :: PubIdChars = NameChars//XML_WHITESPACE//"'()+,/=?;!*#@$%"
 
   public :: checkName
   public :: checkQName
@@ -126,12 +125,13 @@ contains
   end function checkNCName
 
 
-  pure function checkPubId(PubId) result(good)
+  function checkPubId(PubId) result(good)
     character(len=*), intent(in) :: PubId
     logical :: good
     character :: q
-    ! We are assuming all non-legitimate Chars are already excluded.
-    !FIXME should we?
+    character(len=*), parameter :: PubIdChars = &
+      achar(10)//achar(13)//lowerCase//upperCase//digits//"-'()+,./:=?;!*#@$_%"
+
     q = PubId(1:1)
     good = (q/='"'.or.q/="'") 
     good = good.and.(PubId(len(PubId):len(PubId))==q)

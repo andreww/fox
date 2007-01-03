@@ -185,7 +185,7 @@ contains
     character(len=*), intent(in) :: name
     character(len=*), optional, intent(in) :: publicId
     character(len=*), intent(in) :: systemId
-    write(*,'(a)') "External entity declared"
+    write(*,'(a)') "External entity declared: "//name
     if (present(publicId)) write(*,'(a)') "Public Id "//publicId
     write(*,'(a)') "System Id "//systemId
   end subroutine externalEntityDecl_handler
