@@ -133,4 +133,5 @@ AC_CONFIG_FILES([arch.make])
 AC_CONFIG_FILES([FoX-config])
 AC_OUTPUT
 chmod +x FoX-config
+touch .config
 dnl
