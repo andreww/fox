@@ -13,7 +13,7 @@ module m_wxml_core
   use m_common_error, only: FoX_warning_base, FoX_error_base, FoX_fatal_base
   use m_common_io, only: get_unit
   use m_common_namecheck, only: checkEncName, checkName, checkPITarget, &
-    checkCharacterEntityReference, checkSystemId, checkPubId, &
+    checkCharacterEntityReference, checkPubId, &
     checkQName, prefixOfQName, localpartofQName
   use m_common_namespaces, only: namespaceDictionary, getnamespaceURI, &
   initnamespaceDictionary, destroynamespaceDictionary, addDefaultNS, &
@@ -314,10 +314,8 @@ contains
     xf%name = vs_str(name)
 
     if (present(system)) then
-      if (.not.checkSystemId("'"//system//"'")) &
-        call wxml_error("Invalid SYSTEM ID "//system)
       if (present(public)) then
-        if (.not.checkPubId("'"//public//"'")) &
+        if (.not.checkPubId(public)) &
           call wxml_error("Invalid PUBLIC ID "//public)
         if (scan(public, "'") /= 0) then
           call add_to_buffer(' PUBLIC "'//public//'" ', xf%buffer)
@@ -327,7 +325,9 @@ contains
       else
         call add_to_buffer(' SYSTEM ', xf%buffer)
       endif
-      if (scan(system, "'") /= 0) then
+      if (scan(system, "'")/=0) then
+        if (scan(system, '"')/=0) &
+          call wxml_error("Invalid SYSTEM ID "//system)
         call add_to_buffer('"'//system//'"', xf%buffer)
       else
         call add_to_buffer("'"//system//"'", xf%buffer)

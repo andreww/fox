@@ -19,7 +19,7 @@ module m_common_entities
   use m_common_error, only: ERR_WARNING, ERR_ERROR, &
     FoX_warning, FoX_error, error_stack, add_error
   use m_common_format, only: str_to_int_10, str_to_int_16
-  use m_common_namecheck, only: checkName, checkSystemId, checkPubId, &
+  use m_common_namecheck, only: checkName, &
     checkCharacterEntityReference, checkEntityValue
 
   implicit none
@@ -204,8 +204,8 @@ contains
     character(len=*), intent(in) :: repl
     integer, intent(in) :: xv
 
-    if (.not.checkName(code, xv)) &
-      call FoX_error("Illegal entity name: "//code)
+    !if (.not.checkName(code, xv)) &
+    !  call FoX_error("Illegal entity name: "//code)
     !if (.not.checkEntityValue(repl)) &
     !  call FoX_error("Illegal entity value: "//repl)
     ! FIXME
@@ -220,19 +220,6 @@ contains
     character(len=*), intent(in) :: systemId
     character(len=*), intent(in), optional :: publicId
     character(len=*), intent(in), optional :: notation
-
-    if (.not.checkName(code, xv)) &
-      call FoX_error("Illegal entity name. "//code)
-    if (.not.checkSystemId(systemId)) &
-      call FoX_error("Illegal system Id. "//systemId)
-    if (present(publicId)) then
-      if (.not.checkPubId(publicId)) &
-        call FoX_error("Illegal publicId. "//publicId)
-    endif
-    if (present(notation)) then
-      if (.not.checkName(notation, xv)) &
-        call FoX_error("Illegal notation. "//notation)
-    endif
 
     if (present(publicId) .and. present(notation)) then
       call add_entity(ents, code, "", systemId, publicId, notation, .true.)

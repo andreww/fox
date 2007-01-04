@@ -25,7 +25,7 @@ module m_sax_parser
   use m_common_error, only: FoX_error, ERR_NULL, add_error, &
     init_error_stack, destroy_error_stack, in_error, ERR_WARNING
   use m_common_io, only: io_eof, io_err
-  use m_common_namecheck, only: checkName, checkSystemId, checkPubId, &
+  use m_common_namecheck, only: checkName, checkPubId, &
     checkCharacterEntityReference, looksLikeCharacterEntityReference, &
     checkQName, checkNCName
   use m_common_namespaces, only: getnamespaceURI, invalidNS, &
@@ -790,8 +790,8 @@ contains
 
       case (ST_DTD_PUBLIC)
         !print*, 'ST_DTD_PUBLIC'
-        if (checkPubId(str_vs(fx%token))) then
-          fx%publicId => fx%token
+        if (checkPubId(str_vs(fx%token(2:size(fx%token)-1)))) then
+          fx%publicId => fx%token(2:size(fx%token)-1)
           nullify(fx%token)
           fx%state = ST_DTD_SYSTEM
         else
@@ -801,14 +801,9 @@ contains
 
       case (ST_DTD_SYSTEM)
         !print*, 'ST_DTD_SYSTEM'
-        if (checkSystemId(str_vs(fx%token))) then
-          fx%systemId => fx%token
-          nullify(fx%token)
-          fx%state = ST_DTD_DECL
-        else
-          call add_error(fx%error_stack, "Invalid document system id")
-          exit
-        endif
+        fx%systemId => fx%token(2:size(fx%token)-1)
+        nullify(fx%token)
+        fx%state = ST_DTD_DECL
 
       case (ST_DTD_DECL)
         !print*, 'ST_DTD_DECL'
@@ -1026,8 +1021,8 @@ contains
 
       case (ST_DTD_ENTITY_PUBLIC)
         !print*, 'ST_DTD_ENTITY_PUBLIC'
-        if (checkPubId(str_vs(fx%token))) then
-          fx%publicId => fx%token
+        if (checkPubId(str_vs(fx%token(2:size(fx%token)-1)))) then
+          fx%publicId => fx%token(2:size(fx%token)-1)
           nullify(fx%token)
           fx%state = ST_DTD_ENTITY_SYSTEM
         else
@@ -1037,14 +1032,9 @@ contains
 
       case (ST_DTD_ENTITY_SYSTEM)
         !print*, 'ST_DTD_ENTITY_SYSTEM'
-        if (checkSystemId(str_vs(fx%token))) then
-          fx%systemId => fx%token
-          nullify(fx%token)
-          fx%state = ST_DTD_ENTITY_NDATA
-        else
-          call add_error(fx%error_stack, "Invalid SYSTEM id in ENTITY")
-          exit
-        endif
+        fx%systemId => fx%token(2:size(fx%systemId)-1)
+        nullify(fx%token)
+        fx%state = ST_DTD_ENTITY_NDATA
 
       case (ST_DTD_ENTITY_NDATA)
         !print*, 'ST_DTD_ENTITY_NDATA'
@@ -1125,19 +1115,14 @@ contains
 
       case (ST_DTD_NOTATION_SYSTEM)
         !print*,'ST_DTD_NOTATION_SYSTEM'
-        if (checkSystemId(str_vs(fx%token))) then
-          fx%systemId => fx%token
-          nullify(fx%token)
-          fx%state = ST_DTD_NOTATION_END
-        else
-          call add_error(fx%error_stack, "Invalid SYSTEM id in NOTATION")
-          exit
-        endif
+        fx%systemId => fx%token(2:size(fx%token)-1)
+        nullify(fx%token)
+        fx%state = ST_DTD_NOTATION_END
 
       case (ST_DTD_NOTATION_PUBLIC)
         !print*,'ST_DTD_NOTATION_PUBLIC'
-        if (checkPubId(str_vs(fx%token))) then
-          fx%publicId => fx%token
+        if (checkPubId(str_vs(fx%token(2:size(fx%token)-1)))) then
+          fx%publicId => fx%token(2:size(fx%token)-1)
           nullify(fx%token)
           fx%state = ST_DTD_NOTATION_PUBLIC_2
         else
@@ -1163,13 +1148,10 @@ contains
           deallocate(fx%name)
           deallocate(fx%publicId)
           fx%state = ST_INT_SUBSET
-        elseif (checkSystemId(str_vs(fx%token))) then
-          fx%systemId => fx%token
+        else
+          fx%systemId => fx%token(2:size(fx%token)-1)
           nullify(fx%token)
           fx%state = ST_DTD_NOTATION_END
-        else
-          call add_error(fx%error_stack, "Invalid SYSTEM id in NOTATION")
-          exit
         endif
 
       case (ST_DTD_NOTATION_END)

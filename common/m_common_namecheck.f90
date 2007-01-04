@@ -19,7 +19,6 @@ module m_common_namecheck
   public :: checkNCName
   public :: checkEncName
   public :: checkPITarget
-  public :: checkSystemId
   public :: checkPubId
   public :: checkIRI
   public :: checkCharacterEntityReference
@@ -132,26 +131,9 @@ contains
     character(len=*), parameter :: PubIdChars = &
       achar(10)//achar(13)//lowerCase//upperCase//digits//"-'()+,./:=?;!*#@$_%"
 
-    q = PubId(1:1)
-    good = (q/='"'.or.q/="'") 
-    good = good.and.(PubId(len(PubId):len(PubId))==q)
-    good =  (verify(PubId(2:len(Pubid)-1), PubIdChars) == 0) 
+    good = (verify(PubId, PubIdChars)==0) 
   end function checkPubId
 
-
-  pure function checkSystemId(SystemId) result(good)
-    character(len=*), intent(in) :: SystemId
-    logical :: good
-    character :: q
-    ! We are assuming all non-legitimate Chars are already excluded.
-    !FIXME should we?
-    q = SystemId(1:1)
-    good = (q/='"'.or.q/="'") 
-    good = good.and.(SystemId(len(SystemId):len(SystemId))==q)
-    good = good.and.(index(SystemId(2:len(SystemId)-1), q)==0)
-
-  end function checkSystemId
-    
 
   function checkIRI(IRI) result(good)
     character(len=*), intent(in) :: IRI
