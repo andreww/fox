@@ -205,7 +205,6 @@ contains
     !until after we output the XML declaration. So we set it to
     !1.0 for the moment & reset below.
     xf%xml_version = XML1_0
-    call reset_buffer(xf%buffer, xf%lun, xf%xml_version)
     
     xf%state_1 = WXML_STATE_1_JUST_OPENED
     xf%state_2 = WXML_STATE_2_OUTSIDE_TAG
@@ -221,8 +220,12 @@ contains
       
     xf%indent = 0
     
-    if (decl) call xml_AddXMLDeclaration(xf,encoding='UTF-8')
-    call reset_buffer(xf%buffer, xf%lun, xf%xml_version)
+    if (decl) then
+      call xml_AddXMLDeclaration(xf,encoding='UTF-8')
+      ! which will reset the buffer itself
+    else
+      call reset_buffer(xf%buffer, xf%lun, xf%xml_version)
+    endif
     
     call initNamespaceDictionary(xf%nsDict)
     call init_entity_list(xf%entityList)
@@ -242,6 +245,8 @@ contains
     
     if (xf%state_1 /= WXML_STATE_1_JUST_OPENED) &
       call wxml_error("Tried to put XML declaration in wrong place")
+    
+    call reset_buffer(xf%buffer, xf%lun, xf%xml_version)
     
     call xml_AddXMLPI(xf, "xml", xml=.true.)
     if (present(version)) then
