@@ -24,7 +24,7 @@ module m_common_format
   integer, parameter :: sig_sp = digits(1.0_sp)/4
   integer, parameter :: sig_dp = digits(1.0_dp)/4 ! Approximate precision worth outputting of each type.
 
-  character(len=*), parameter :: digit = "0123456789"
+  character(len=*), parameter :: digit = "0123456789:"
   character(len=*), parameter :: hexdigit = "0123456789abcdefABCDEF"
 
   interface str
@@ -118,7 +118,6 @@ contains
     enddo
 
   end function str_to_int_10
-
 
   pure function str_to_int_16(str) result(n)
     ! Takes a string containing hexadecimal digits, and returns
@@ -562,7 +561,17 @@ contains
     x_ = abs(x) * (10.0_sp**(-e))
     n = 1
     do k = sig - 2, 0, -1
-      j = int(x_)
+      ! This baroque way of taking int() ensures the optimizer 
+      ! stores it in j without keeping a different value in cache.
+      j = iachar(digit(int(x_)+1:int(x_)+1)) - 48
+      if (j==10) then
+        ! This can happen if, on the previous cycle, int(x_) in 
+        ! the line above gave a result approx. 1.0 less than
+        ! expected.
+        ! In this case we want to quit the cycle & just get 999... to the end
+        s(n:) = repeat("9", sig - n + 1)
+        return
+      endif
       s(n:n) = digit(j+1:j+1)
       n = n + 1
       x_ = (x_ - j) * 10.0_sp
@@ -571,10 +580,11 @@ contains
     if (j == 10) then
       ! Now round ...
       s(n:n) = "9"
+      ! Are they all 9's?
       i = verify(s, "9", .true.)
       if (i == 0) then
         s(1:1) = "!"
-        !overflow
+        ! overflow
         return
       endif
       j = index(digit, s(i:i))
@@ -585,7 +595,6 @@ contains
     endif
 
   end function real_sp_str
-
 
   pure function str_real_sp_fmt_len(x, fmt) result(n)
     real(sp), intent(in) :: x
@@ -676,7 +685,7 @@ contains
 
     integer :: sig, dec
     integer :: e, n
-    character(len=len(x, fmt)) :: num !this wll always be enough memory.
+    character(len=len(x, fmt)) :: num !this will always be enough memory.
 
     if (x == 0.0_sp) then
       e = 0
@@ -952,7 +961,7 @@ contains
 
   end function str_real_sp_matrix_fmt_chk
 
-  function str_real_sp_matrix(xa) result(s)
+  pure function str_real_sp_matrix(xa) result(s)
     real(sp), dimension(:,:), intent(in) :: xa
     character(len=len(xa)) :: s
 
@@ -982,7 +991,17 @@ contains
     ! See comment in str_real_sp above
     n = 1
     do k = sig - 2, 0, -1
-      j = int(x_)
+      ! This baroque way of taking int() ensures the optimizer definitely
+      ! stores it in j without keeping a different value in cache.
+      j = iachar(digit(int(x_)+1:int(x_)+1)) - 48
+      if (j==10) then
+        ! This can happen if, on the previous cycle, int(x_) in 
+        ! the line above gave a result almost exactly 1.0 less than
+        ! expected - but FP arithmetic is not consistent.
+        ! In this case we want to quit the cycle & just get 999... to the end
+        s(n:) = repeat("9", sig - n + 1)
+        return
+      endif
       s(n:n) = digit(j+1:j+1)
       n = n + 1
       x_ = (x_ - j) * 10.0_dp

@@ -76,7 +76,7 @@ DoX:
 
 clean: wxml_lib_clean wcml_lib_clean common_lib_clean fsys_lib_clean
 	rm -f *.o dom_example sax_example wxml_example wcml_example simple.xml output.xml *.*d *.a
-	rm -f objs/lib/* objs/finclude/*
+	rm -f objs/lib/* objs/finclude/* .FoX
 
 distclean: clean
-	rm -f FoX-config arch.make config.log config.status
+	rm -f FoX-config arch.make config.log config.status .config .FoX
