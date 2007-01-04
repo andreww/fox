@@ -388,7 +388,7 @@ contains
           fx%whitespace = WS_FORBIDDEN
         else
           call add_error(fx%error_stack, "Unexpected token found outside content")
-          exit
+          goto 100
         endif
 
       case (ST_BANG_TAG)
@@ -417,7 +417,7 @@ contains
           fx%whitespace = WS_MANDATORY
         else
           call add_error(fx%error_stack, "Unexpected token after !")
-          exit
+          goto 100
         endif
 
       case (ST_START_PI)
@@ -430,7 +430,7 @@ contains
           nullify(fx%token)
         else
           call add_error(fx%error_stack, "Unexpected token found for PI target; expecting Name")
-          exit
+          goto 100
         endif
 
       case (ST_PI_CONTENTS)
@@ -467,7 +467,7 @@ contains
           endif
         else
           call add_error(fx%error_stack, "Internal error: unexpected token at end of PI, expecting ?>")
-          exit
+          goto 100
         endif
 
       case (ST_START_COMMENT)
@@ -482,7 +482,7 @@ contains
           fx%state = ST_COMMENT_END_2
         else
           call add_error(fx%error_stack, "Internal error: expecting --")
-          exit
+          goto 100
         endif
 
       case (ST_COMMENT_END_2)
@@ -503,7 +503,7 @@ contains
           endif
         else
           call add_error(fx%error_stack, "Expecting > after -- in comment")
-          exit
+          goto 100
         endif
 
       case (ST_START_TAG)
@@ -519,10 +519,10 @@ contains
           call init_dict(fx%attributes)
         elseif (fx%context == CTXT_AFTER_CONTENT) then
           call add_error(fx%error_stack, "Cannot open second root element")
-          exit
+          goto 100
         elseif (fx%context == CTXT_IN_DTD) then
           call add_error(fx%error_stack, "Cannot open root element before DTD is finished")
-          exit
+          goto 100
         endif
 
       case (ST_START_CDATA_1)
@@ -531,7 +531,7 @@ contains
           fx%state = ST_START_CDATA_2
         else
           call add_error(fx%error_stack, "Unexpected token found - expecting CDATA afte <![")
-          exit
+          goto 100
         endif
 
       case (ST_START_CDATA_2)
@@ -540,7 +540,7 @@ contains
           fx%state = ST_CDATA_CONTENTS
         else
           call add_error(fx%error_stack, "Unexpected token found - expecting [ after CDATA")
-          exit
+          goto 100
         endif
 
       case (ST_CDATA_CONTENTS)
@@ -564,7 +564,7 @@ contains
           fx%state = ST_CHAR_IN_CONTENT
         else
           call add_error(fx%error_stack, "Internal error, unexpected token in CDATA")
-          exit
+          goto 100
         endif
 
       case (ST_IN_TAG)
@@ -575,7 +575,7 @@ contains
               if (validCheck) then
                 if (str_vs(fx%name)/=str_vs(fx%root_element)) then
                   call add_error(fx%error_stack, "Root element name does not match document name")
-                  exit
+                  goto 100
                 endif
               endif
               deallocate(fx%root_element)
@@ -596,7 +596,7 @@ contains
               if (validCheck) then
                 if (str_vs(fx%name)/=str_vs(fx%root_element)) then
                   call add_error(fx%error_stack, "Root element name does not match document name")
-                  exit
+                  goto 100
                 endif
               endif
               deallocate(fx%root_element)
@@ -630,7 +630,7 @@ contains
           fx%state = ST_ATT_EQUALS
         else
           call add_error(fx%error_stack, "Unexpected token in tag - expected =")
-          exit
+          goto 100
         endif
 
       case (ST_ATT_EQUALS)
@@ -639,7 +639,7 @@ contains
         ! fx%name still contains attribute name
         if (.not.checkQName(str_vs(fx%attname), fx%xml_version)) then
           call add_error(fx%error_stack, "Invalid QName for attribute name")
-          exit
+          goto 100
         endif
         !If this attribute is CDATA, we must process further;
         if (isCdataAtt(fx%element_list, &
@@ -655,6 +655,10 @@ contains
 
       case (ST_CHAR_IN_CONTENT)
         !print*,'ST_CHAR_IN_CONTENT'
+        if (index(str_vs(fx%token),']]>')/=0) then
+          call add_error(fx%error_stack, "Cannot have ]]> in character context")
+          goto 100
+        endif
         if (size(fx%token)>0) then
           if (present(characters_handler)) call characters_handler(str_vs(fx%token))
         endif
@@ -679,7 +683,7 @@ contains
           ! tell tokenizer to expand it
           if (existing_entity(fx%forbidden_ge_list, str_vs(tempString))) then
             call add_error(fx%error_stack, 'Recursive entity reference')
-            exit
+            goto 100
           endif
           if (existing_entity(fx%predefined_e_list, str_vs(tempString))) then
             ! Expand immediately
@@ -702,7 +706,7 @@ contains
             elseif (is_unparsed_entity(fx%ge_list, str_vs(tempString))) then
               call add_error(fx%error_stack, &
                 'Cannot reference unparsed entity in content')
-              exit
+              goto 100
             else
               if (present(startEntity_handler)) &
                 call startEntity_handler(str_vs(tempString))
@@ -717,13 +721,18 @@ contains
             endif
           else
             ! Unknown entity FIXME check standalone etc
-            if (present(skippedEntity_handler)) &
-              call skippedEntity_handler(str_vs(fx%token))
+            if (skippedExternal) then
+              if (present(skippedEntity_handler)) &
+                call skippedEntity_handler(str_vs(fx%token))
+            else
+              call add_error(fx%error_stack, &
+                'Encountered reference to undeclared entity')
+            endif
           endif
           fx%state = ST_CHAR_IN_CONTENT
         else
           call add_error(fx%error_stack, "Unexpected token found in character context")
-          exit
+          goto 100
         endif
 
       case (ST_CLOSING_TAG)
@@ -735,7 +744,7 @@ contains
           fx%state = ST_IN_CLOSING_TAG
         else
           call add_error(fx%error_stack, "Unexpected token found in closing tag: expecting a Name")
-          exit
+          goto 100
         endif
 
       case (ST_IN_CLOSING_TAG)
@@ -756,7 +765,7 @@ contains
           endif
         else
           call add_error(fx%error_stack, "Unexpected token in closing tag - expecting Name")
-          exit
+          goto 100
         endif
 
       case (ST_IN_DTD)
@@ -785,7 +794,7 @@ contains
           fx%state = ST_MISC
         else
           call add_error(fx%error_stack, "Internal error: unexpected token")
-          exit
+          goto 100
         endif
 
       case (ST_DTD_PUBLIC)
@@ -796,7 +805,7 @@ contains
           fx%state = ST_DTD_SYSTEM
         else
           call add_error(fx%error_stack, "Invalid document public id")
-          exit
+          goto 100
         endif
 
       case (ST_DTD_SYSTEM)
@@ -840,7 +849,7 @@ contains
           fx%state = ST_MISC
         else
           call add_error(fx%error_stack, "Internal error: unexpected token")
-          exit
+          goto 100
         endif
 
       case (ST_INT_SUBSET)
@@ -852,7 +861,7 @@ contains
           if (existing_entity(fx%forbidden_pe_list, str_vs(tempString))) then
             call add_error(fx%error_stack, &
               'Recursive entity reference')
-            exit
+            goto 100
           endif
           if (existing_entity(fx%pe_list, str_vs(tempString))) then
             if (is_external_entity(fx%pe_list, str_vs(tempString))) then
@@ -887,7 +896,7 @@ contains
               ! If not, 
               call add_error(fx%error_stack, &
                 "Reference to undeclared parameter entity.")
-              exit
+              goto 100
             endif
           endif
         elseif (str_vs(fx%token)=='<?') then
@@ -897,7 +906,7 @@ contains
           fx%whitespace = WS_FORBIDDEN
         else
           call add_error(fx%error_stack, "Unexpected token in internal subset")
-          exit
+          goto 100
         endif
 
       case (ST_DTD_ATTLIST)
@@ -934,7 +943,7 @@ contains
 
         else
           call add_error(fx%error_stack, "Unexpected token in ATTLIST")
-          exit
+          goto 100
         endif
 
       case (ST_DTD_ELEMENT)
@@ -978,7 +987,7 @@ contains
           fx%whitespace = WS_DISCARD
         else
           call add_error(fx%error_stack, "Unexpected token in ELEMENT")
-          exit
+          goto 100
           !FIXME this can't happen
         endif
 
@@ -1016,7 +1025,7 @@ contains
           fx%whitespace = WS_DISCARD
         else
           call add_error(fx%error_stack, "Unexpected token in ENTITY")
-          exit
+          goto 100
         endif
 
       case (ST_DTD_ENTITY_PUBLIC)
@@ -1027,7 +1036,7 @@ contains
           fx%state = ST_DTD_ENTITY_SYSTEM
         else
           call add_error(fx%error_stack, "Invalid PUBLIC id in ENTITY")
-          exit
+          goto 100
         endif
 
       case (ST_DTD_ENTITY_SYSTEM)
@@ -1053,12 +1062,12 @@ contains
         elseif (str_vs(fx%token)=='NDATA') then
           if (pe) then
             call add_error(fx%error_stack, "Parameter entity cannot have NDATA declaration")
-            exit
+            goto 100
           endif
           fx%state = ST_DTD_ENTITY_NDATA_VALUE
         else
           call add_error(fx%error_stack, "Unexpected token in ENTITY")
-          exit
+          goto 100
         endif
 
       case (ST_DTD_ENTITY_NDATA_VALUE)
@@ -1200,9 +1209,9 @@ contains
 
     end do
 
-    if (associated(tempString)) deallocate(tempString)
+100 if (associated(tempString)) deallocate(tempString)
 
-100 if (iostat==io_eof) then ! error is end of file then
+    if (iostat==io_eof) then ! error is end of file then
       ! EOF of main file
       if (fx%well_formed.and.fx%state==ST_MISC) then
         if (present(endDocument_handler)) &
@@ -1212,16 +1221,12 @@ contains
         call sax_error(fx, error_handler)
       endif
     elseif (iostat==io_err) then ! we generated the error
-      !print*,'an error'
-      if (fx%parse_stack>0) then
-        ! append to error all the way up the stack
-        return ! go back up stack
-      else
-        call sax_error(fx, error_handler)
-      endif
+      print*,'adding error'
+      call sax_error(fx, error_handler)
     else ! Hard error - stop immediately
       if (fx%parse_stack>0) then !we are parsing an entity
-        call add_error(fx%error_stack, "Internal error: Error encountered processing entity.")
+        call add_error(fx%error_stack, "Error encountered processing entity.")
+        call sax_error(fx, error_handler)
       else
         call sax_error(fx, error_handler)
       endif
@@ -1433,7 +1438,8 @@ contains
     do i = 1, size(fx%error_stack%stack)
       m = size(fx%error_stack%stack(i)%msg)
       errmsg(n:n+m-1) = fx%error_stack%stack(i)%msg
-      n = n + m 
+      errmsg(n+m:n+m) = " "
+      n = n + m + 1
     enddo
     ! FIXME put location information in here
     if (present(error_handler)) then

@@ -490,6 +490,9 @@ contains
     call check_version
     if (iostat/=0) return
     c = read_char(fb, iostat); if (iostat/=0) return
+    if (.not.(c.in.XML_WHITESPACE).and.c/='?') then
+      call add_error(fx%error_stack, "Missing whitespace in XML declaration");return
+    endif
     do while (c.in.XML_WHITESPACE)
       c = read_char(fb, iostat); if (iostat/=0) return
     enddo
@@ -521,6 +524,9 @@ contains
       call check_encoding
       if (iostat/=0) return
       c = read_char(fb, iostat); if (iostat/=0) return
+      if (.not.(c.in.XML_WHITESPACE).and.c/='?') then
+        call add_error(fx%error_stack, "Missing whitespace in XML declaration");return
+      endif
       do while (c.in.XML_WHITESPACE)
         c = read_char(fb, iostat); if (iostat/=0) return
       enddo
@@ -544,6 +550,9 @@ contains
       if (iostat/=0) return
     endif
     c = read_char(fb, iostat); if (iostat/=0) return
+    if (.not.(c.in.XML_WHITESPACE).and.c/='?') then
+      call add_error(fx%error_stack, "Missing whitespace in XML declaration");return
+    endif
     do while (c.in.XML_WHITESPACE)
       c = read_char(fb, iostat); if (iostat/=0) return
     enddo
@@ -727,16 +736,16 @@ contains
         i2 = i2 + 1
       elseif (s_in(i)=='<') then
         call add_error(fx%error_stack, "Illegal < found in attribute.")
-        return
+        goto 100
         ! Then, expand <
       elseif (s_in(i)=='&') then
         j = index(str_vs(s_in(i+1:)), ';')
         if (j==0) then
           call add_error(fx%error_stack, "Illegal & found in attribute")
-          return
+          goto 100
         elseif (j==1) then
           call add_error(fx%error_stack, "No entity reference found")
-          return
+          goto 100
         endif
         allocate(tempString(j-1))
         tempString = s_in(i+1:i+j-1)
@@ -753,27 +762,22 @@ contains
         elseif (checkName(str_vs(tempString), fx%xml_version)) then
           if (existing_entity(fx%forbidden_ge_list, str_vs(tempString))) then
             call add_error(fx%error_stack, 'Recursive entity expansion')
-            deallocate(tempString)
-            return
+            goto 100
           elseif (existing_entity(fx%ge_list, str_vs(tempString))) then
             !is it the right sort of entity?
             if (is_unparsed_entity(fx%ge_list, str_vs(tempString))) then
               call add_error(fx%error_stack, "Unparsed entity forbidden in attribute")
-              deallocate(tempString)
-              return
+              goto 100
             elseif (is_external_entity(fx%ge_list, str_vs(tempString))) then
               call add_error(fx%error_stack, "External entity forbidden in attribute")
-              deallocate(tempString)
-              return
+              goto 100
             endif
             call add_internal_entity(fx%forbidden_ge_list, str_vs(tempString), "", fx%xml_version)
             ! Recursively expand entity, checking for errors.
             s_ent => normalize_text(fx, vs_str(expand_entity_text(fx%ge_list, str_vs(tempString))))
             call devnull(pop_entity_list(fx%forbidden_ge_list))
             if (in_error(fx%error_stack)) then
-              deallocate(tempString)
-              deallocate(s_ent)
-              return
+              goto 100
             endif
             allocate(s_temp2(size(s_temp)+size(s_ent)-j))
             s_temp2(:i2-1) = s_temp(:i2-1)
@@ -787,16 +791,15 @@ contains
             s_temp(i2:i2+j) = s_in(i:i+j)
             i = i + j + 1
             i2 = i2 + j + 1
-            if (fx%standalone) then
+            if (.not.fx%skippedExternal) then
               ! or possibly otherwise? empty DTD?:
               call add_error(fx%error_stack, "Undeclared entity encountered in standalone document.")
-              return
+              goto 100
             endif
           endif
         else
           call add_error(fx%error_stack, "Illegal entity reference")
-          deallocate(tempString)
-          return
+          goto 100
         endif
         deallocate(tempString)
       else
@@ -810,6 +813,12 @@ contains
     allocate(s_out(i2-1))
     s_out = s_temp(:i2-1)
     deallocate(s_temp)
+    return
+
+100 deallocate(s_out)
+    deallocate(s_temp)
+    if (associated(s_ent))  deallocate(s_ent)
+    if (associated(tempString)) deallocate(tempString)
 
   end function normalize_text
     

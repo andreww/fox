@@ -87,6 +87,7 @@ module m_sax_types
     integer :: parse_stack = 0
     integer, pointer :: wf_stack(:) => null()
     logical :: well_formed = .false.
+    logical :: skippedExternal = .false.
     character, dimension(:), pointer :: token => null()
     character, dimension(:), pointer :: next_token => null()
     character, dimension(:), pointer :: name => null()

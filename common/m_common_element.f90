@@ -27,10 +27,11 @@ module m_common_element
   integer, parameter :: ST_NOTATION_LIST    = 13
   integer, parameter :: ST_ENUMERATION      = 14
   integer, parameter :: ST_ENUM_NAME        = 15
-  integer, parameter :: ST_AFTER_ATTTYPE    = 16
-  integer, parameter :: ST_DEFAULT_DECL     = 17
-  integer, parameter :: ST_AFTERDEFAULTDECL = 18
-  integer, parameter :: ST_DEFAULTVALUE     = 19
+  integer, parameter :: ST_AFTER_ATTTYPE_SPACE = 16
+  integer, parameter :: ST_AFTER_ATTTYPE    = 17
+  integer, parameter :: ST_DEFAULT_DECL     = 18
+  integer, parameter :: ST_AFTERDEFAULTDECL = 19
+  integer, parameter :: ST_DEFAULTVALUE     = 20
 
   integer, parameter :: ATT_NULL = 0
 
@@ -454,6 +455,9 @@ contains
             deallocate(temp)
             state = ST_AFTERBRACKET
           endif
+        else
+          call add_error(stack, &
+            'Unexpected character found in element declaration.')
         endif
 
       elseif (state==ST_AFTERBRACKET) then
@@ -756,28 +760,28 @@ contains
         elseif (c.in.XML_WHITESPACE) then
           if (str_vs(type)=='CDATA') then
             ca%attType = ATT_CDATA
-            state = ST_AFTER_ATTTYPE
+            state = ST_AFTER_ATTTYPE_SPACE
           elseif (str_vs(type)=='ID') then
             ca%attType = ATT_ID
-            state = ST_AFTER_ATTTYPE
+            state = ST_AFTER_ATTTYPE_SPACE
           elseif (str_vs(type)=='IDREF') then
             ca%attType = ATT_IDREF
-            state = ST_AFTER_ATTTYPE
+            state = ST_AFTER_ATTTYPE_SPACE
           elseif (str_vs(type)=='IDREFS') then
             ca%attType = ATT_IDREFS
-            state = ST_AFTER_ATTTYPE
+            state = ST_AFTER_ATTTYPE_SPACE
           elseif (str_vs(type)=='ENTITY') then
             ca%attType = ATT_ENTITY
-            state = ST_AFTER_ATTTYPE
+            state = ST_AFTER_ATTTYPE_SPACE
           elseif (str_vs(type)=='ENTITIES') then
             ca%attType = ATT_ENTITIES
-            state = ST_AFTER_ATTTYPE
+            state = ST_AFTER_ATTTYPE_SPACE
           elseif (str_vs(type)=='NMTOKEN') then
             ca%attType = ATT_NMTOKEN
-            state = ST_AFTER_ATTTYPE
+            state = ST_AFTER_ATTTYPE_SPACE
           elseif (str_vs(type)=='NMTOKENS') then
             ca%attType = ATT_NMTOKENS
-            state = ST_AFTER_ATTTYPE
+            state = ST_AFTER_ATTTYPE_SPACE
           elseif (str_vs(type)=='NOTATION') then
             ca%attType = ATT_NOTATION
             state = ST_AFTER_NOTATION
@@ -836,7 +840,7 @@ contains
         elseif (c==')') then
           call add_string(ca%enumerations, str_vs(value))
           deallocate(value)
-          state = ST_AFTER_ATTTYPE
+          state = ST_AFTER_ATTTYPE_SPACE
         else
           call add_error(stack, &
             'Unexpected character in attlist enumeration')
@@ -867,7 +871,7 @@ contains
         elseif (c==')') then
           call add_string(ca%enumerations, str_vs(value))
           deallocate(value)
-          state = ST_AFTER_ATTTYPE
+          state = ST_AFTER_ATTTYPE_SPACE
         else
           call add_error(stack, &
             'Unexpected character in attlist enumeration')
@@ -885,12 +889,20 @@ contains
             state = ST_ENUMERATION
           endif
         elseif (c==')') then
-          state = ST_AFTER_ATTTYPE
+          state = ST_AFTER_ATTTYPE_SPACE
         else
           call add_error(stack, &
             'Unexpected character in attlist enumeration')
           goto 200
         endif
+
+      elseif (state==ST_AFTER_ATTTYPE_SPACE) then
+        if (.not.(c.in.XML_WHITESPACE)) then
+          call add_error(stack, &
+            'Missing whitespace in attlist enumeration')
+          goto 200
+        endif
+        state = ST_AFTER_ATTTYPE
 
       elseif (state==ST_AFTER_ATTTYPE) then
         !print*,'ST_AFTER_ATTTYPE'
