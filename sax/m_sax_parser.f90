@@ -3,7 +3,7 @@
 module m_sax_parser
 
   use m_common_array_str, only: str_vs, vs_str, string_list, &
-    init_string_list, destroy_string_list, devnull
+    init_string_list, destroy_string_list, devnull, vs_str_alloc
   use m_common_attrs, only: init_dict, destroy_dict, add_item_to_dict, &
     has_key, get_value
   use m_common_charset, only: XML1_0, XML1_1, XML1_0_INITIALNAMECHARS, &
@@ -791,7 +791,7 @@ contains
       case (ST_DTD_PUBLIC)
         !print*, 'ST_DTD_PUBLIC'
         if (checkPubId(str_vs(fx%token(2:size(fx%token)-1)))) then
-          fx%publicId = fx%token(2:size(fx%token)-1)
+          fx%publicId => vs_str_alloc(str_vs(fx%token(2:size(fx%token)-1)))
           deallocate(fx%token)
           fx%state = ST_DTD_SYSTEM
         else
@@ -801,7 +801,7 @@ contains
 
       case (ST_DTD_SYSTEM)
         !print*, 'ST_DTD_SYSTEM'
-        fx%systemId => fx%token(2:size(fx%token)-1)
+        fx%systemId => vs_str_alloc(str_vs(fx%token(2:size(fx%token)-1)))
         deallocate(fx%token)
         fx%state = ST_DTD_DECL
 
@@ -1022,7 +1022,7 @@ contains
       case (ST_DTD_ENTITY_PUBLIC)
         !print*, 'ST_DTD_ENTITY_PUBLIC'
         if (checkPubId(str_vs(fx%token(2:size(fx%token)-1)))) then
-          fx%publicId => fx%token(2:size(fx%token)-1)
+          fx%publicId => vs_str_alloc(str_vs(fx%token(2:size(fx%token)-1)))
           deallocate(fx%token)
           fx%state = ST_DTD_ENTITY_SYSTEM
         else
@@ -1032,7 +1032,7 @@ contains
 
       case (ST_DTD_ENTITY_SYSTEM)
         !print*, 'ST_DTD_ENTITY_SYSTEM'
-        fx%systemId => fx%token(2:size(fx%systemId)-1)
+        fx%systemId => vs_str_alloc(str_vs(fx%token(2:size(fx%systemId)-1)))
         deallocate(fx%token)
         fx%state = ST_DTD_ENTITY_NDATA
 
@@ -1115,14 +1115,14 @@ contains
 
       case (ST_DTD_NOTATION_SYSTEM)
         !print*,'ST_DTD_NOTATION_SYSTEM'
-        fx%systemId => fx%token(2:size(fx%token)-1)
+        fx%systemId => vs_str_alloc(str_vs(fx%token(2:size(fx%token)-1)))
         deallocate(fx%token)
         fx%state = ST_DTD_NOTATION_END
 
       case (ST_DTD_NOTATION_PUBLIC)
         !print*,'ST_DTD_NOTATION_PUBLIC'
         if (checkPubId(str_vs(fx%token(2:size(fx%token)-1)))) then
-          fx%publicId => fx%token(2:size(fx%token)-1)
+          fx%publicId => vs_str_alloc(str_vs(fx%token(2:size(fx%token)-1)))
           deallocate(fx%token)
           fx%state = ST_DTD_NOTATION_PUBLIC_2
         else
@@ -1149,8 +1149,8 @@ contains
           deallocate(fx%publicId)
           fx%state = ST_INT_SUBSET
         else
-          fx%systemId => fx%token(2:size(fx%token)-1)
-          nullify(fx%token)
+          fx%systemId => vs_str_alloc(str_vs(fx%token(2:size(fx%token)-1)))
+          deallocate(fx%token)
           fx%state = ST_DTD_NOTATION_END
         endif
 

@@ -14,7 +14,7 @@ module m_common_entities
 
   !FIXME need to worry about removing entities from a list.
 
-  use m_common_array_str, only: str_vs, vs_str
+  use m_common_array_str, only: str_vs, vs_str, vs_str_alloc
   use m_common_charset, only: digits, hexdigits
   use m_common_error, only: ERR_WARNING, ERR_ERROR, &
     FoX_warning, FoX_error, error_stack, add_error
@@ -185,16 +185,11 @@ contains
     enddo
     deallocate(ents_tmp)
     ents%list(i)%external = external
-    allocate(ents%list(i)%code(len(code)))
-    ents%list(i)%code = vs_str(code)
-    allocate(ents%list(i)%repl(len(repl)))
-    ents%list(i)%repl = vs_str(repl)
-    allocate(ents%list(i)%publicId(len(publicId)))
-    ents%list(i)%publicId = vs_str(publicId)
-    allocate(ents%list(i)%systemId(len(systemId)))
-    ents%list(i)%systemId = vs_str(systemId)
-    allocate(ents%list(i)%notation(len(notation)))
-    ents%list(i)%notation = vs_str(notation)
+    ents%list(i)%code => vs_str_alloc(code)
+    ents%list(i)%repl => vs_str_alloc(repl)
+    ents%list(i)%publicId => vs_str_alloc(publicId)
+    ents%list(i)%systemId => vs_str_alloc(systemId)
+    ents%list(i)%notation => vs_str_alloc(notation)
   end subroutine add_entity
 
 

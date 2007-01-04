@@ -561,7 +561,6 @@ contains
       element%mixed = mixed
       element%model => vs_str_alloc(trim(strip_spaces(contents)))
     endif
-
     return
 
 100 if (associated(order)) deallocate(order)
