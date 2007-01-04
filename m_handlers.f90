@@ -143,20 +143,20 @@ contains
 
   subroutine error_handler(msg)
     character(len=*), intent(in) :: msg
-    write(*,'(a)'), "Error encountered and caught"
-    write(*,'(a)'), msg
+    write(*,'(a)') "Error encountered and caught"
+    write(*,'(a)') msg
   end subroutine error_handler
 
   subroutine fatalError_handler(msg)
     character(len=*), intent(in) :: msg
-    write(*,'(a)'), "Fatal error encountered and caught"
-    write(*,'(a)'), msg
+    write(*,'(a)') "Fatal error encountered and caught"
+    write(*,'(a)') msg
   end subroutine fatalError_handler
 
   subroutine warning_handler(msg)
     character(len=*), intent(in) :: msg
-    write(*,'(a)'), "Warning encountered and caught"
-    write(*,'(a)'), msg
+    write(*,'(a)') "Warning encountered and caught"
+    write(*,'(a)') msg
   end subroutine warning_handler
 
   subroutine attributeDecl_handler(eName, aName, type, mode, value)
