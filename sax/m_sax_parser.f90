@@ -791,8 +791,8 @@ contains
       case (ST_DTD_PUBLIC)
         !print*, 'ST_DTD_PUBLIC'
         if (checkPubId(str_vs(fx%token(2:size(fx%token)-1)))) then
-          fx%publicId => fx%token(2:size(fx%token)-1)
-          nullify(fx%token)
+          fx%publicId = fx%token(2:size(fx%token)-1)
+          deallocate(fx%token)
           fx%state = ST_DTD_SYSTEM
         else
           call add_error(fx%error_stack, "Invalid document public id")
@@ -802,7 +802,7 @@ contains
       case (ST_DTD_SYSTEM)
         !print*, 'ST_DTD_SYSTEM'
         fx%systemId => fx%token(2:size(fx%token)-1)
-        nullify(fx%token)
+        deallocate(fx%token)
         fx%state = ST_DTD_DECL
 
       case (ST_DTD_DECL)
@@ -1023,7 +1023,7 @@ contains
         !print*, 'ST_DTD_ENTITY_PUBLIC'
         if (checkPubId(str_vs(fx%token(2:size(fx%token)-1)))) then
           fx%publicId => fx%token(2:size(fx%token)-1)
-          nullify(fx%token)
+          deallocate(fx%token)
           fx%state = ST_DTD_ENTITY_SYSTEM
         else
           call add_error(fx%error_stack, "Invalid PUBLIC id in ENTITY")
@@ -1033,7 +1033,7 @@ contains
       case (ST_DTD_ENTITY_SYSTEM)
         !print*, 'ST_DTD_ENTITY_SYSTEM'
         fx%systemId => fx%token(2:size(fx%systemId)-1)
-        nullify(fx%token)
+        deallocate(fx%token)
         fx%state = ST_DTD_ENTITY_NDATA
 
       case (ST_DTD_ENTITY_NDATA)
@@ -1116,14 +1116,14 @@ contains
       case (ST_DTD_NOTATION_SYSTEM)
         !print*,'ST_DTD_NOTATION_SYSTEM'
         fx%systemId => fx%token(2:size(fx%token)-1)
-        nullify(fx%token)
+        deallocate(fx%token)
         fx%state = ST_DTD_NOTATION_END
 
       case (ST_DTD_NOTATION_PUBLIC)
         !print*,'ST_DTD_NOTATION_PUBLIC'
         if (checkPubId(str_vs(fx%token(2:size(fx%token)-1)))) then
           fx%publicId => fx%token(2:size(fx%token)-1)
-          nullify(fx%token)
+          deallocate(fx%token)
           fx%state = ST_DTD_NOTATION_PUBLIC_2
         else
           call add_error(fx%error_stack, "Invalid PUBLIC id in NOTATION")
