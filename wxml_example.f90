@@ -8,12 +8,12 @@ integer :: age = 34
 real, dimension(20)  :: x
 real, dimension(4,4)  :: y
 
-call xml_OpenFile("simple.xml",xf, broken_indenting=.true.)
+call xml_OpenFile("simple.xml",xf)
 call xml_AddDOCTYPE(xf, "john", "hellodtd")
 call xml_AddParameterEntity(xf, 'pe', '<!ENTITY def "what a load of nonsense">')
 call xml_AddInternalEntity(xf, "abc", "A B C")
 call xml_AddElementToDTD(xf, "br", "EMPTY")
-call xml_AddAttlistToDTD(xf, "p", "CDATA")
+call xml_AddAttlistToDTD(xf, "p", "class NMTOKENS #IMPLIED")
 call xml_AddPEreferenceToDTD(xf, "pe")
 call xml_AddXMLPI(xf, name="robots")
 call xml_AddPseudoAttribute(xf, "index", "yes")

@@ -162,7 +162,7 @@ wcml_lib
 * On Lahey, 16 tests in <code>wxml/test</code> will fail - this is a flaw in the testsuite, the library is actually
 working correctly. Please ignore this problem. </p>
 
-<p>If any other failures occur, please send a message to the mailing list (<a href="&#109;&#x61;&#105;&#x6C;&#116;&#111;:&#70;o&#x58;&#64;&#108;&#105;&#115;&#x74;&#115;&#x2E;&#117;&#x73;&#x7A;&#108;&#x61;&#x2E;&#x6D;e&#x2E;&#117;&#x6B;">&#70;o&#x58;&#64;&#108;&#105;&#115;&#x74;&#115;&#x2E;&#117;&#x73;&#x7A;&#108;&#x61;&#x2E;&#x6D;e&#x2E;&#117;&#x6B;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
+<p>If any other failures occur, please send a message to the mailing list (<a href="&#109;&#97;i&#108;&#116;&#111;:&#70;&#x6F;&#x58;&#64;&#108;&#x69;s&#x74;&#x73;&#x2E;&#117;&#x73;&#122;&#x6C;&#97;&#x2E;&#x6D;&#101;&#46;&#117;&#107;">&#70;&#x6F;&#x58;&#64;&#108;&#x69;s&#x74;&#x73;&#x2E;&#117;&#x73;&#122;&#x6C;&#97;&#x2E;&#x6D;&#101;&#46;&#117;&#107;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
 
 <h2>Linking to an existing program</h2>
 
@@ -434,7 +434,7 @@ standard Fortran I/O formatting routines do not offer the control required for u
 <li><code>xml_OpenFile</code> <br />
 <strong>filename</strong>: <em>string</em>: Filename to be opened <br />
 <strong>xf</strong>: <em>xmlf_t</em>: XML File handle <br />
-(<strong>broken_indenting</strong>): <em>logical</em>:  Should the output XML be pretty-printed?
+(<strong>preserve_whitespace</strong>): <em>logical</em>: Is whitespace important in the output? (If not, the XML will be pretty-printed.)
 <em>default: false</em> <br />
 (<strong>channel</strong>): <em>integer</em>: What Fortran file handle should the XML file be attached to? 
 <em>default: picked by the library at runtime</em> <br />
@@ -558,7 +558,7 @@ FoX's control, and cannot be manipulated by the user.)</p>
 
 <p>then the following two calls are necessary, in the prescribed order:</p>
 
-<pre><code>  xml_AddNamespace(xf, 'cml', 'http://www.xml-cml.org')
+<pre><code>  xml_DeclareNamespace(xf, 'cml', 'http://www.xml-cml.org')
   xml_NewElement(xf, 'cml:cml')
 </code></pre>
 
@@ -1281,9 +1281,9 @@ Attempts to do otherwise will result in a runtime error.</p>
 <h1>Further information</h1>
 
 <p>FoX evolved from the initial codebase of <a href="http://lcdx00.wm.lc.ehu.es/ag/xml/">xmlf90</a>,
-which was written largely by Alberto Garcia &lt;<a href="&#x6D;&#97;&#105;&#108;&#x74;&#111;:&#x61;l&#98;&#101;&#x72;&#x74;&#x6F;&#103;&#64;&#105;&#x63;&#x6D;&#x61;&#x62;&#46;&#x65;&#x73;">&#x61;l&#98;&#101;&#x72;&#x74;&#x6F;&#103;&#64;&#105;&#x63;&#x6D;&#x61;&#x62;&#46;&#x65;&#x73;</a>> and Jon Wakelin &lt;<a href="&#x6D;&#x61;&#105;&#x6C;&#116;&#111;:&#106;&#x6F;&#110;&#x2E;&#119;&#x61;&#107;&#x65;&#108;&#x69;&#110;&#64;&#98;&#x72;&#105;&#115;&#x74;&#111;&#108;&#46;&#x61;&#99;&#x2E;&#117;&#x6B;">&#106;&#x6F;&#110;&#x2E;&#119;&#x61;&#107;&#x65;&#108;&#x69;&#110;&#64;&#98;&#x72;&#105;&#115;&#x74;&#111;&#108;&#46;&#x61;&#99;&#x2E;&#117;&#x6B;</a>>.</p>
+which was written largely by Alberto Garcia &lt;<a href="&#x6D;&#x61;&#105;l&#116;&#x6F;:&#x61;&#108;&#x62;&#x65;r&#116;&#111;&#x67;&#64;&#x69;&#99;&#x6D;&#97;&#x62;&#x2E;&#101;&#115;">&#x61;&#108;&#x62;&#x65;r&#116;&#111;&#x67;&#64;&#x69;&#99;&#x6D;&#97;&#x62;&#x2E;&#101;&#115;</a>> and Jon Wakelin &lt;<a href="&#109;&#x61;&#x69;&#108;&#116;&#x6F;:&#x6A;&#111;&#x6E;&#x2E;&#x77;&#97;&#x6B;e&#x6C;&#105;&#x6E;&#64;&#98;&#x72;&#105;&#x73;&#x74;&#x6F;&#108;&#46;&#x61;&#99;&#46;&#117;&#107;">&#x6A;&#111;&#x6E;&#x2E;&#x77;&#97;&#x6B;e&#x6C;&#105;&#x6E;&#64;&#98;&#x72;&#105;&#x73;&#x74;&#x6F;&#108;&#46;&#x61;&#99;&#46;&#117;&#107;</a>>.</p>
 
-<p>FoX is the work of Toby White &lt;<a href="&#109;&#x61;&#x69;&#108;&#116;&#111;:&#x74;&#111;&#119;&#x32;1&#64;&#99;&#x61;&#x6D;&#46;&#x61;&#99;&#x2E;&#x75;&#107;">&#x74;&#111;&#119;&#x32;1&#64;&#99;&#x61;&#x6D;&#46;&#x61;&#99;&#x2E;&#x75;&#107;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
+<p>FoX is the work of Toby White &lt;<a href="&#109;&#97;&#105;&#108;&#116;&#111;:&#116;&#x6F;&#x77;&#x32;&#49;&#64;&#99;&#x61;&#109;&#46;a&#99;&#46;&#117;&#x6B;">&#116;&#x6F;&#x77;&#x32;&#49;&#64;&#99;&#x61;&#109;&#46;a&#99;&#46;&#117;&#x6B;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
 
 <p>There is a FoX website at <a href="http://www.uszla.me.uk/software/FoX/">http://www.uszla.me.uk/software/FoX/</a>.</p>
 
