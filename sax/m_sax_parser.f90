@@ -22,8 +22,8 @@ module m_sax_parser
     expand_entity_value_alloc, print_entity_list, &
     is_external_entity, expand_entity, expand_char_entity, &
     is_unparsed_entity, pop_entity_list
-  use m_common_error, only: FoX_error, ERR_NULL, add_error, &
-    init_error_stack, destroy_error_stack, in_error, ERR_WARNING
+  use m_common_error, only: FoX_error, add_error, &
+    init_error_stack, destroy_error_stack, in_error
   use m_common_io, only: io_eof, io_err
   use m_common_namecheck, only: checkName, checkPubId, &
     checkCharacterEntityReference, looksLikeCharacterEntityReference, &
@@ -648,6 +648,11 @@ contains
           call add_error(fx%error_stack, "Invalid QName for attribute name")
           goto 100
         endif
+        !Have we already had this dictionary item?
+        if (has_key(fx%attributes, str_vs(fx%attname))) then
+          call add_error(fx%error_stack, "Duplicate attribute name")
+          goto 100
+        endif
         !If this attribute is CDATA, we must process further;
         if (isCdataAtt(fx%element_list, &
           str_vs(fx%name), str_vs(fx%attname))) then
@@ -873,8 +878,6 @@ contains
           if (existing_entity(fx%pe_list, str_vs(tempString))) then
             if (is_external_entity(fx%pe_list, str_vs(tempString))) then
               ! We are not validating, do not include external entities
-              call add_error(fx%error_stack, &
-                "Skipping external parameter entity reference", ERR_WARNING)
               if (present(skippedEntity_handler)) &
                 call skippedEntity_handler('%'//str_vs(tempString))
               !  then are we standalone?
