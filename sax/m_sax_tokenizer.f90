@@ -120,6 +120,10 @@ contains
       fx%token => fb%namebuffer
       nullify(fb%namebuffer)
 
+    elseif (fx%state==ST_COMMENT_END_2) then
+      fx%token => vs_str_alloc(get_characters(fb, 1, iostat))
+      if (iostat/=0) return
+
     elseif (fx%state==ST_CDATA_CONTENTS) then
       call get_characters_until_all_of(fb, ']]>', iostat)
       if (iostat/=0) return
@@ -159,6 +163,8 @@ contains
         if (iostat/=0) return
         fx%token => fb%namebuffer
         nullify(fb%namebuffer)
+      elseif (c==">") then
+        fx%token => vs_str_alloc(">")
       else
         call add_error(fx%error_stack, &
           'Missing whitespace in attlist declaration')
@@ -224,12 +230,17 @@ contains
       ! Either way, we return
 
     elseif (fx%context==CTXT_IN_DTD) then
+      
       if (fx%whitespace==WS_FORBIDDEN) then
-        ! it will either be a <!DIRECTIVE or a <?PINAME
-        call get_characters_until_one_of(fb, XML_WHITESPACE, iostat)
+        ! This MUST be the end of a comment
+        c = get_characters(fb, 1, iostat)
         if (iostat/=0) return
-        fx%token => fb%namebuffer
-        nullify(fb%namebuffer)
+        fx%token => vs_str_alloc(c)
+        ! it will either be a <!DIRECTIVE or a <?PINAME
+        !call get_characters_until_one_of(fb, XML_WHITESPACE, iostat)
+        !if (iostat/=0) return
+        !fx%token => fb%namebuffer
+        !nullify(fb%namebuffer)
 
       elseif (fx%whitespace==WS_MANDATORY) then
         !We are still allowed a '>' without space, ... check first.
@@ -292,6 +303,10 @@ contains
             fx%token => vs_str_alloc('<?')
           elseif (c=='!') then
             fx%token => vs_str_alloc('<!')
+          else
+            call add_error(fx%error_stack, &
+              "Tokenizing error in the DTD")
+            return
           endif
         elseif (c=='%') then
           !It ought to be a parameter entity reference

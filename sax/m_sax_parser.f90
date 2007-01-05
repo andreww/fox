@@ -363,6 +363,7 @@ contains
         iostat = 0
         call pop_buffer_stack(fb)
         fx%parse_stack = fx%parse_stack - 1
+        print*, 'state',fx%state
         cycle
       elseif (iostat/=0) then
         ! Any other error, we want to quit sax_tokenizer
@@ -391,6 +392,7 @@ contains
         endif
 
       case (ST_BANG_TAG)
+        !print*,'ST_BANG_TAG'
         if (str_vs(fx%token)=='--') then
           fx%state = ST_START_COMMENT
         elseif (fx%context==CTXT_BEFORE_DTD) then
@@ -712,13 +714,13 @@ contains
             if (present(characters_handler)) &
               call characters_handler(expand_char_entity(str_vs(tempString)))
           elseif (existing_entity(fx%ge_list, str_vs(tempString))) then
-            if (is_external_entity(fx%ge_list, str_vs(tempString))) then
-              if (present(skippedEntity_handler)) &
-                call skippedEntity_handler(str_vs(fx%token))
-            elseif (is_unparsed_entity(fx%ge_list, str_vs(tempString))) then
+            if (is_unparsed_entity(fx%ge_list, str_vs(tempString))) then
               call add_error(fx%error_stack, &
                 'Cannot reference unparsed entity in content')
               goto 100
+            elseif (is_external_entity(fx%ge_list, str_vs(tempString))) then
+              if (present(skippedEntity_handler)) &
+                call skippedEntity_handler(str_vs(fx%token))
             else
               if (present(startEntity_handler)) &
                 call startEntity_handler(str_vs(tempString))
@@ -733,7 +735,7 @@ contains
             endif
           else
             ! Unknown entity check standalone etc
-            if (fx%skippedExternal) then
+            if (fx%skippedExternal.and..not.fx%standalone) then
               if (present(skippedEntity_handler)) &
                 call skippedEntity_handler(str_vs(fx%token))
             else
@@ -880,7 +882,7 @@ contains
         endif
 
       case (ST_INT_SUBSET)
-        !print*, 'ST_INT_SUBSET'
+        print*, 'ST_INT_SUBSET'
         if (str_vs(fx%token)==']') then
           fx%state = ST_CLOSE_DTD
         elseif (fx%token(1)=='%') then
@@ -912,7 +914,7 @@ contains
             ! and do nothing else, carry on ...
           else
             ! Have we previously skipped an external entity?
-            if (fx%skippedExternal) then
+            if (fx%skippedExternal.and..not.fx%standalone) then
               if (processDTD) then
                 if (present(skippedEntity_handler)) &
                   call skippedEntity_handler('%'//str_vs(tempString))
@@ -926,6 +928,7 @@ contains
           endif
         elseif (str_vs(fx%token)=='<?') then
           fx%state = ST_START_PI
+          fx%whitespace = WS_FORBIDDEN
         elseif (str_vs(fx%token)=='<!') then
           fx%state = ST_BANG_TAG
           fx%whitespace = WS_FORBIDDEN
@@ -947,23 +950,33 @@ contains
         fx%state = ST_DTD_ATTLIST_CONTENTS
 
       case (ST_DTD_ATTLIST_CONTENTS)
-        !token is everything up to >
-        if (processDTD) then
-          call parse_dtd_attlist(str_vs(fx%token), fx%xml_version, fx%error_stack, elem)
-        else
-          call parse_dtd_attlist(str_vs(fx%token), fx%xml_version, fx%error_stack)
-        endif
-        if (in_error(fx%error_stack)) goto 100
-        ! Normalize attribute values in attlist
-        do i = 1, size(elem%attlist%list)
-          if (associated(elem%attlist%list(i)%default)) then
-            tempString => elem%attlist%list(i)%default
-            elem%attlist%list(i)%default => normalize_text(fx, tempString)
-            deallocate(tempString)
-            if (in_error(fx%error_stack)) goto 100
+        if (str_vs(fx%token)==">") then
+          deallocate(fx%name)
+          if (processDTD) then
+            if (present(attributeDecl_handler)) &
+              call report_declarations(elem, attributeDecl_handler)
           endif
-        enddo
-        fx%state = ST_DTD_ATTLIST_END
+          fx%state = ST_INT_SUBSET
+          fx%whitespace = WS_DISCARD
+        else
+          !token is everything up to >
+          if (processDTD) then
+            call parse_dtd_attlist(str_vs(fx%token), fx%xml_version, fx%error_stack, elem)
+          else
+            call parse_dtd_attlist(str_vs(fx%token), fx%xml_version, fx%error_stack)
+          endif
+          if (in_error(fx%error_stack)) goto 100
+          ! Normalize attribute values in attlist
+          do i = 1, size(elem%attlist%list)
+            if (associated(elem%attlist%list(i)%default)) then
+              tempString => elem%attlist%list(i)%default
+              elem%attlist%list(i)%default => normalize_text(fx, tempString)
+              deallocate(tempString)
+              if (in_error(fx%error_stack)) goto 100
+            endif
+          enddo
+          fx%state = ST_DTD_ATTLIST_END
+        endif
 
       case (ST_DTD_ATTLIST_END)
         if (str_vs(fx%token)=='>') then
@@ -1125,6 +1138,10 @@ contains
       case (ST_DTD_ENTITY_NDATA_VALUE)
         !print*, 'ST_DTD_ENTITY_NDATA_VALUE'
         !check is a name and exists in notationlist
+        if (.not.checkName(str_vs(fx%token), fx%xml_version)) then
+          call add_error(fx%error_stack, "Invalid name for Notation")
+          goto 100
+        endif
         if (notation_exists(fx%nlist, str_vs(fx%token))) then
           fx%Ndata => fx%token
           nullify(fx%token)
@@ -1133,6 +1150,8 @@ contains
             call add_error(fx%error_stack, "Attempt to use undeclared notation")
             goto 100
           endif
+          fx%Ndata => fx%token
+          nullify(fx%token)
         endif
         fx%state = ST_DTD_ENTITY_END
         fx%whitespace = WS_DISCARD
