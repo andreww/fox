@@ -729,8 +729,8 @@ contains
               ca => add_attribute(elem%attlist, str_vs(name))
             endif
           else
-            if (associated(ignore_att%name)) deallocate(name)
-            if (associated(ignore_att%default)) deallocate(default)
+            if (associated(ignore_att%name)) deallocate(ignore_att%name)
+            if (associated(ignore_att%default)) deallocate(ignore_att%default)
             call destroy_string_list(ignore_att%enumerations)
             call init_string_list(ignore_att%enumerations)
             ca => ignore_att
@@ -823,7 +823,7 @@ contains
         if (c.in.XML_WHITESPACE) cycle
         if (isInitialNameChar(c, xv)) then
           value => vs_str_alloc(c)
-          state = ST_ENUMERATION
+          state = ST_ENUM_NAME
         else
           call add_error(stack, &
             'Unexpected character in Notation list')
@@ -841,17 +841,13 @@ contains
           deallocate(temp)
           state = ST_ENUM_NAME
         elseif (c=='|') then
-          call add_string(ca%enumerations, str_vs(value))
-          deallocate(value)
-          if (ca%attType==ATT_NOTATION) then
-            state = ST_NOTATION_LIST
-          else
-            allocate(value(0))
-          endif
+          call add_error(stack, &
+            "Missing token in Enumeration")
+          goto 200
         elseif (c==')') then
-          call add_string(ca%enumerations, str_vs(value))
-          deallocate(value)
-          state = ST_AFTER_ATTTYPE_SPACE
+          call add_error(stack, &
+            "Missing tokens in Enumeration")
+          goto 200
         else
           call add_error(stack, &
             'Unexpected character in attlist enumeration')
@@ -880,6 +876,11 @@ contains
             state = ST_ENUMERATION
           endif
         elseif (c==')') then
+          if (size(value)>0) then
+            call add_error(stack, &
+              'Missing token in notation/enumeration list')
+            goto 200
+          endif
           call add_string(ca%enumerations, str_vs(value))
           deallocate(value)
           state = ST_AFTER_ATTTYPE_SPACE

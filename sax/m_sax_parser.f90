@@ -1032,15 +1032,23 @@ contains
           fx%state = ST_DTD_ENTITY_PE
         else
           pe = .false.
+          if (.not.checkName(str_vs(fx%token), fx%xml_version)) then
+            call add_error(fx%error_stack, &
+              "Illegal name for general entity")
+            goto 100
+          endif
           fx%name => fx%token
           nullify(fx%token)
-          ! FIXME check it's a name
           fx%state = ST_DTD_ENTITY_ID
         endif
 
       case (ST_DTD_ENTITY_PE)
         !print*, 'ST_DTD_ENTITY_PE'
-        !check name is name FIXME
+        if (.not.checkName(str_vs(fx%token), fx%xml_version)) then
+          call add_error(fx%error_stack, &
+            "Illegal name for parameter entity")
+          goto 100
+        endif
         fx%name => fx%token
         nullify(fx%token)
         fx%state = ST_DTD_ENTITY_ID
