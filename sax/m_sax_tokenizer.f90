@@ -646,8 +646,7 @@ contains
         call add_error(fx%error_stack, "Illegal character at start of encoding declaration."); return
       endif
       i = 1
-      allocate(buf(1))
-      buf(1) = c
+      buf => vs_str_alloc(c)
       c = read_char(fb, iostat)
       if (iostat/=0) then
         deallocate(buf)

@@ -811,6 +811,11 @@ contains
 
       case (ST_DTD_PUBLIC)
         !print*, 'ST_DTD_PUBLIC'
+        if (fx%token(1)/='"'.or.fx%token(1)/="'" &
+          .or.fx%token(1)/=fx%token(size(fx%token))) then
+          call add_error(fx%error_stack, "Invalid Public Id literal")
+          goto 100
+        endif
         if (checkPubId(str_vs(fx%token(2:size(fx%token)-1)))) then
           fx%publicId => vs_str_alloc(str_vs(fx%token(2:size(fx%token)-1)))
           deallocate(fx%token)
@@ -822,6 +827,11 @@ contains
 
       case (ST_DTD_SYSTEM)
         !print*, 'ST_DTD_SYSTEM'
+        if (fx%token(1)/='"'.or.fx%token(1)/="'" &
+          .or.fx%token(1)/=fx%token(size(fx%token))) then
+          call add_error(fx%error_stack, "Invalid System Id literal")
+          goto 100
+        endif
         fx%systemId => vs_str_alloc(str_vs(fx%token(2:size(fx%token)-1)))
         deallocate(fx%token)
         fx%state = ST_DTD_DECL
@@ -1050,6 +1060,11 @@ contains
 
       case (ST_DTD_ENTITY_PUBLIC)
         !print*, 'ST_DTD_ENTITY_PUBLIC'
+        if (fx%token(1)/='"'.or.fx%token(1)/="'" &
+          .or.fx%token(1)/=fx%token(size(fx%token))) then
+          call add_error(fx%error_stack, "Invalid Public Id literal")
+          goto 100
+        endif
         if (checkPubId(str_vs(fx%token(2:size(fx%token)-1)))) then
           fx%publicId => vs_str_alloc(str_vs(fx%token(2:size(fx%token)-1)))
           deallocate(fx%token)
@@ -1061,6 +1076,11 @@ contains
 
       case (ST_DTD_ENTITY_SYSTEM)
         !print*, 'ST_DTD_ENTITY_SYSTEM'
+        if (fx%token(1)/='"'.or.fx%token(1)/="'" &
+          .or.fx%token(1)/=fx%token(size(fx%token))) then
+          call add_error(fx%error_stack, "Invalid System Id literal")
+          goto 100
+        endif
         fx%systemId => vs_str_alloc(str_vs(fx%token(2:size(fx%systemId)-1)))
         deallocate(fx%token)
         fx%state = ST_DTD_ENTITY_NDATA
@@ -1144,12 +1164,22 @@ contains
 
       case (ST_DTD_NOTATION_SYSTEM)
         !print*,'ST_DTD_NOTATION_SYSTEM'
+        if (fx%token(1)/='"'.or.fx%token(1)/="'" &
+          .or.fx%token(1)/=fx%token(size(fx%token))) then
+          call add_error(fx%error_stack, "Invalid System Id literal")
+          goto 100
+        endif
         fx%systemId => vs_str_alloc(str_vs(fx%token(2:size(fx%token)-1)))
         deallocate(fx%token)
         fx%state = ST_DTD_NOTATION_END
 
       case (ST_DTD_NOTATION_PUBLIC)
         !print*,'ST_DTD_NOTATION_PUBLIC'
+        if (fx%token(1)/='"'.or.fx%token(1)/="'" &
+          .or.fx%token(1)/=fx%token(size(fx%token))) then
+          call add_error(fx%error_stack, "Invalid Public Id literal")
+          goto 100
+        endif
         if (checkPubId(str_vs(fx%token(2:size(fx%token)-1)))) then
           fx%publicId => vs_str_alloc(str_vs(fx%token(2:size(fx%token)-1)))
           deallocate(fx%token)
@@ -1178,6 +1208,11 @@ contains
           deallocate(fx%publicId)
           fx%state = ST_INT_SUBSET
         else
+          if (fx%token(1)/='"'.or.fx%token(1)/="'" &
+            .or.fx%token(1)/=fx%token(size(fx%token))) then
+            call add_error(fx%error_stack, "Invalid System Id literal")
+            goto 100
+          endif
           fx%systemId => vs_str_alloc(str_vs(fx%token(2:size(fx%token)-1)))
           deallocate(fx%token)
           fx%state = ST_DTD_NOTATION_END
@@ -1241,7 +1276,6 @@ contains
         call sax_error(fx, error_handler)
       endif
     elseif (iostat==io_err) then ! we generated the error
-      print*,'adding error'
       call sax_error(fx, error_handler)
     else ! Hard error - stop immediately
       if (fx%parse_stack>0) then !we are parsing an entity
