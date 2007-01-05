@@ -127,7 +127,7 @@ contains
     logical :: good
     character :: q
     character(len=*), parameter :: PubIdChars = &
-      achar(10)//achar(13)//lowerCase//upperCase//digits//"-'()+,./:=?;!*#@$_%"
+      " "//achar(10)//achar(13)//lowerCase//upperCase//digits//"-'()+,./:=?;!*#@$_%"
 
     good = (verify(PubId, PubIdChars)==0) 
   end function checkPubId

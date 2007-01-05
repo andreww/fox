@@ -303,7 +303,7 @@ contains
 
     end interface
 
-    logical :: validCheck, skippedExternal, processDTD, pe
+    logical :: validCheck, processDTD, pe
     integer :: i, iostat
     character, pointer :: tempString(:)
     type(element_t), pointer :: elem
@@ -315,7 +315,6 @@ contains
     else
       validCheck = .false.
     endif
-    skippedExternal = .false.
     processDTD = .true.
     iostat = 0
 
@@ -732,8 +731,8 @@ contains
               deallocate(temp_wf_stack)
             endif
           else
-            ! Unknown entity FIXME check standalone etc
-            if (skippedExternal) then
+            ! Unknown entity check standalone etc
+            if (fx%skippedExternal) then
               if (present(skippedEntity_handler)) &
                 call skippedEntity_handler(str_vs(fx%token))
             else
@@ -811,8 +810,8 @@ contains
 
       case (ST_DTD_PUBLIC)
         !print*, 'ST_DTD_PUBLIC'
-        if (fx%token(1)/='"'.or.fx%token(1)/="'" &
-          .or.fx%token(1)/=fx%token(size(fx%token))) then
+        if (fx%token(1)/='"'.and.fx%token(1)/="'" &
+          .and.fx%token(1)/=fx%token(size(fx%token))) then
           call add_error(fx%error_stack, "Invalid Public Id literal")
           goto 100
         endif
@@ -827,8 +826,8 @@ contains
 
       case (ST_DTD_SYSTEM)
         !print*, 'ST_DTD_SYSTEM'
-        if (fx%token(1)/='"'.or.fx%token(1)/="'" &
-          .or.fx%token(1)/=fx%token(size(fx%token))) then
+        if (fx%token(1)/='"'.and.fx%token(1)/="'" &
+          .and.fx%token(1)/=fx%token(size(fx%token))) then
           call add_error(fx%error_stack, "Invalid System Id literal")
           goto 100
         endif
@@ -839,6 +838,8 @@ contains
       case (ST_DTD_DECL)
         !print*, 'ST_DTD_DECL'
         if (str_vs(fx%token)=='[') then
+          if (associated(fx%publicId).or.associated(fx%systemId)) &
+            fx%skippedExternal = .true.
           if (present(startDTD_handler)) then
             if (associated(fx%publicId)) then
               call startDTD_handler(str_vs(fx%root_element), publicId=str_vs(fx%publicId), systemId=str_vs(fx%systemId))
@@ -853,6 +854,8 @@ contains
           fx%whitespace = WS_DISCARD
           fx%state = ST_INT_SUBSET
         elseif (str_vs(fx%token)=='>') then
+          if (associated(fx%publicId).or.associated(fx%systemId)) &
+            fx%skippedExternal = .true.
           if (present(startDTD_handler)) then
             if (associated(fx%publicId)) then
               call startDTD_handler(str_vs(fx%root_element), publicId=str_vs(fx%publicId), systemId=str_vs(fx%systemId))
@@ -1060,8 +1063,8 @@ contains
 
       case (ST_DTD_ENTITY_PUBLIC)
         !print*, 'ST_DTD_ENTITY_PUBLIC'
-        if (fx%token(1)/='"'.or.fx%token(1)/="'" &
-          .or.fx%token(1)/=fx%token(size(fx%token))) then
+        if (fx%token(1)/='"'.and.fx%token(1)/="'" &
+          .and.fx%token(1)/=fx%token(size(fx%token))) then
           call add_error(fx%error_stack, "Invalid Public Id literal")
           goto 100
         endif
@@ -1076,8 +1079,8 @@ contains
 
       case (ST_DTD_ENTITY_SYSTEM)
         !print*, 'ST_DTD_ENTITY_SYSTEM'
-        if (fx%token(1)/='"'.or.fx%token(1)/="'" &
-          .or.fx%token(1)/=fx%token(size(fx%token))) then
+        if (fx%token(1)/='"'.and.fx%token(1)/="'" &
+          .and.fx%token(1)/=fx%token(size(fx%token))) then
           call add_error(fx%error_stack, "Invalid System Id literal")
           goto 100
         endif
@@ -1090,7 +1093,6 @@ contains
         if (str_vs(fx%token)=='>') then
           if (processDTD) then
             call add_entity
-!FIXME can thios cause an error?
           endif
           deallocate(fx%name)
           if (associated(fx%attname)) deallocate(fx%attname)
@@ -1113,25 +1115,23 @@ contains
       case (ST_DTD_ENTITY_NDATA_VALUE)
         !print*, 'ST_DTD_ENTITY_NDATA_VALUE'
         !check is a name and exists in notationlist
-        if(notation_exists(fx%nlist, str_vs(fx%token))) then
+        if (notation_exists(fx%nlist, str_vs(fx%token))) then
           fx%Ndata => fx%token
           nullify(fx%token)
-          fx%state = ST_DTD_ENTITY_END
-          fx%whitespace = WS_DISCARD
-          ! add entity
         else
           if (validCheck) then
             call add_error(fx%error_stack, "Attempt to use undeclared notation")
-            exit
+            goto 100
           endif
         endif
+        fx%state = ST_DTD_ENTITY_END
+        fx%whitespace = WS_DISCARD
 
       case (ST_DTD_ENTITY_END)
         !print*, 'ST_DTD_ENTITY_END'
         if (str_vs(fx%token)=='>') then
           if (processDTD) then
             call add_entity
-            ! FIXME can this cause an error?
           endif
           deallocate(fx%name)
           if (associated(fx%attname)) deallocate(fx%attname)
@@ -1141,7 +1141,7 @@ contains
           fx%state = ST_INT_SUBSET
         else
           call add_error(fx%error_stack, "Unexpected token at end of ENTITY")
-          exit
+          goto 100
         endif
 
       case (ST_DTD_NOTATION)
@@ -1164,8 +1164,8 @@ contains
 
       case (ST_DTD_NOTATION_SYSTEM)
         !print*,'ST_DTD_NOTATION_SYSTEM'
-        if (fx%token(1)/='"'.or.fx%token(1)/="'" &
-          .or.fx%token(1)/=fx%token(size(fx%token))) then
+        if (fx%token(1)/='"'.and.fx%token(1)/="'" &
+          .and.fx%token(1)/=fx%token(size(fx%token))) then
           call add_error(fx%error_stack, "Invalid System Id literal")
           goto 100
         endif
@@ -1175,11 +1175,12 @@ contains
 
       case (ST_DTD_NOTATION_PUBLIC)
         !print*,'ST_DTD_NOTATION_PUBLIC'
-        if (fx%token(1)/='"'.or.fx%token(1)/="'" &
-          .or.fx%token(1)/=fx%token(size(fx%token))) then
+        if (fx%token(1)/='"'.and.fx%token(1)/="'" &
+          .and.fx%token(1)/=fx%token(size(fx%token))) then
           call add_error(fx%error_stack, "Invalid Public Id literal")
           goto 100
         endif
+        print*,'token ', str_vs(fx%token)
         if (checkPubId(str_vs(fx%token(2:size(fx%token)-1)))) then
           fx%publicId => vs_str_alloc(str_vs(fx%token(2:size(fx%token)-1)))
           deallocate(fx%token)
@@ -1208,8 +1209,8 @@ contains
           deallocate(fx%publicId)
           fx%state = ST_INT_SUBSET
         else
-          if (fx%token(1)/='"'.or.fx%token(1)/="'" &
-            .or.fx%token(1)/=fx%token(size(fx%token))) then
+          if (fx%token(1)/='"'.and.fx%token(1)/="'" &
+            .and.fx%token(1)/=fx%token(size(fx%token))) then
             call add_error(fx%error_stack, "Invalid System Id literal")
             goto 100
           endif

@@ -807,7 +807,7 @@ contains
             i = i + j + 1
             i2 = i2 + j + 1
             if (.not.fx%skippedExternal) then
-              ! or possibly otherwise? empty DTD?:
+              ! or possibly otherwise? empty DTD?
               call add_error(fx%error_stack, "Undeclared entity encountered in standalone document.")
               goto 100
             endif
