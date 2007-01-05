@@ -154,7 +154,7 @@ contains
     n = 0
     do i = 0, max_power
       j = max_power - i + 1
-      n = n + (index(hexdigit, str_l(j:j)) - 1) * 10**i
+      n = n + (index(hexdigit, str_l(j:j)) - 1) * 16**i
     enddo
 
   contains

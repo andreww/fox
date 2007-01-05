@@ -168,7 +168,7 @@ contains
 
   end function looksLikeCharacterEntityReference
 
-  pure function checkCharacterEntityReference(code, xv) result(good)
+  function checkCharacterEntityReference(code, xv) result(good)
     character(len=*), intent(in) :: code
     integer, intent(in) :: xv
     logical :: good
