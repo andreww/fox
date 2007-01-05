@@ -178,7 +178,6 @@ contains
     deallocate(temp)
     e => e_list%list(i)
     e%name => vs_str_alloc(name)
-    !print*,'btu', size(e%name)
     call init_attribute_list(e%attlist)
 
   end function add_element
@@ -273,7 +272,7 @@ contains
           state = ST_CHILD
         else
           call add_error(stack, &
-            'Unexpected character "'//c//'"in ELEMENT specification')
+            'Unexpected character in ELEMENT specification')
           goto 100
         endif
 
@@ -285,9 +284,17 @@ contains
           name(:size(temp)) = temp
           name(size(name)) = c
           deallocate(temp)
+        elseif (c.in.XML_WHITESPACE) then
+          if (str_vs(name)=='PCDATA') then
+            deallocate(name)
+          else
+            call add_error(stack, &
+              'Unexpected token after #')
+            goto 100
+          endif
+          state = ST_SEPARATOR
         elseif (c==')') then
           if (str_vs(name)=='PCDATA') then
-            ! continue
             deallocate(name)
             nbrackets = 0
             state = ST_AFTERLASTBRACKET
@@ -314,7 +321,7 @@ contains
           goto 100
         else
           call add_error(stack, &
-            'Unexpected character "'//c//'"in ELEMENT specification')
+            'Unexpected character in ELEMENT specification')
           goto 100
         endif
 
@@ -394,7 +401,7 @@ contains
           endif
         else
           call add_error(stack, &
-            'Unexpected character "'//c//'" found after element name')
+            'Unexpected character found after element name')
           goto 100
         endif
 
@@ -650,7 +657,6 @@ contains
     a => a_list%list(i)
 
     a%name => vs_str_alloc(name)
-    !print*,'btu3', size(a%name)
     call init_string_list(a%enumerations)
 
   end function add_attribute
@@ -876,9 +882,9 @@ contains
             state = ST_ENUMERATION
           endif
         elseif (c==')') then
-          if (size(value)>0) then
+          if (size(value)==0) then
             call add_error(stack, &
-              'Missing token in notation/enumeration list')
+              'Missing token in Enumeration list')
             goto 200
           endif
           call add_string(ca%enumerations, str_vs(value))
