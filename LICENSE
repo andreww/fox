@@ -1,17 +1,11 @@
-------------------------------------------------
-Although this version of FoX is licensed as below
-for free redistribution, please note that this is
-a PRE-RELEASE VERSION. As such, although it may be
-of use for interim development, please refrain
-from redistributing it with your code. A release
-version of FoX will be forthcoming shortly.
-------------------------------------------------
+FoX - Fortran XML library
 
 Copyright:
-(c) 2003, 2004, Alberto Garcia (SAX, WXML, initial design)
+(c) 2003, 2004, Alberto Garcia (original versions of SAX and WXML)
 (c) 2003, 2004, Jon Wakelin, Alberto Garcia (DOM subsystem)
 (c) 2003, 2004, Jon Wakelin (initial WCML)
-(c) 2005, 2006, Toby White (general overhaul, configure magic, namespace support, XPATH)
+(c) 2005, 2006, 2007 Toby White (major rewrite of wxml/wcml, complete new SAX, 
+                                 configuration, namespace support)
 
 All rights reserved.
 
