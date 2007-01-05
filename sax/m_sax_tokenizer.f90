@@ -134,20 +134,34 @@ contains
       nullify(fb%namebuffer)
 
     elseif (fx%state==ST_DTD_ELEMENT_CONTENTS) then
-      call get_characters_until_all_of(fb, '>', iostat)
+      c = get_characters(fb, 1, iostat)
       if (iostat/=0) return
-      fx%next_token => vs_str_alloc(get_characters(fb, 1, iostat))
-      if (iostat/=0) return
-      fx%token => fb%namebuffer
-      nullify(fb%namebuffer)
+      if (c.in.XML_WHITESPACE) then
+        call get_characters_until_all_of(fb, '>', iostat)
+        if (iostat/=0) return
+        fx%next_token => vs_str_alloc(get_characters(fb, 1, iostat))
+        if (iostat/=0) return
+        fx%token => fb%namebuffer
+        nullify(fb%namebuffer)
+      else
+        call add_error(fx%error_stack, &
+          'Missing whitespace in element declaration')
+      endif
 
     elseif (fx%state==ST_DTD_ATTLIST_CONTENTS) then
-      call get_characters_until_all_of(fb, '>', iostat)
+      c = get_characters(fb, 1, iostat)
       if (iostat/=0) return
-      fx%next_token => vs_str_alloc(get_characters(fb, 1, iostat))
-      if (iostat/=0) return
-      fx%token => fb%namebuffer
-      nullify(fb%namebuffer)
+      if (c.in.XML_WHITESPACE) then
+        call get_characters_until_all_of(fb, '>', iostat)
+        if (iostat/=0) return
+        fx%next_token => vs_str_alloc(get_characters(fb, 1, iostat))
+        if (iostat/=0) return
+        fx%token => fb%namebuffer
+        nullify(fb%namebuffer)
+      else
+        call add_error(fx%error_stack, &
+          'Missing whitespace in attlist declaration')
+      endif
 
     elseif (fx%state==ST_IN_TAG) then
       call get_characters_until_not_one_of(fb, XML_WHITESPACE, iostat)

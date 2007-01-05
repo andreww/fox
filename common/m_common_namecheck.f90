@@ -45,20 +45,18 @@ contains
   end function checkEncName
 
 
-  pure function checkPITarget(name, xv) result(good)
+  function checkPITarget(name, xv) result(good)
     character(len=*), intent(in) :: name
     integer, intent(in) :: xv
     logical :: good
     ! Validates a string against the XML requirements for a NAME
     ! Is not fully compliant; ignores UTF issues.
 
-    integer :: n
-
     good = checkName(name, xv)
-    if (good .and. n > 2) then
-      good = (.not.(scan(name(1:1), 'Xx') == 1 .and. &
-                    scan(name(2:2), 'Mm') == 1 .and. &
-                    scan(name(3:3), 'Ll') == 1))
+    if (good .and. len(name) > 2) then
+      good = (scan(name(1:1), 'Xx') == 0 .and. &
+        scan(name(2:2), 'Mm') == 0 .and. &
+        scan(name(3:3), 'Ll') == 0)
     endif
        
   end function checkPITarget

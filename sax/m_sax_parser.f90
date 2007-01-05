@@ -27,7 +27,7 @@ module m_sax_parser
   use m_common_io, only: io_eof, io_err
   use m_common_namecheck, only: checkName, checkPubId, &
     checkCharacterEntityReference, looksLikeCharacterEntityReference, &
-    checkQName, checkNCName
+    checkQName, checkNCName, checkPITarget
   use m_common_namespaces, only: getnamespaceURI, invalidNS, &
     checkNamespaces, checkEndNamespaces, &
     initNamespaceDictionary, destroyNamespaceDictionary
@@ -422,12 +422,19 @@ contains
 
       case (ST_START_PI)
         !print*,'ST_START_PI'
-        !token should be an XML Name FIXME
         if (checkName(str_vs(fx%token), fx%xml_version)) then
-          fx%whitespace = WS_MANDATORY
-          fx%state = ST_PI_CONTENTS
-          fx%name => fx%token
-          nullify(fx%token)
+          if (str_vs(fx%token)=='xml') then
+            call add_error(fx%error_stack, "XML declaration must be at start of document")
+            goto 100
+          elseif (checkPITarget(str_vs(fx%token), fx%xml_version)) then
+            fx%whitespace = WS_MANDATORY
+            fx%state = ST_PI_CONTENTS
+            fx%name => fx%token
+            nullify(fx%token)
+          else
+            call add_error(fx%error_stack, "Invalid PI target name")
+            goto 100
+          endif
         else
           call add_error(fx%error_stack, "Unexpected token found for PI target; expecting Name")
           goto 100
@@ -872,7 +879,7 @@ contains
                 call skippedEntity_handler('%'//str_vs(tempString))
               !  then are we standalone?
               !   then look at XML section 5.1
-              skippedExternal = .true.
+              fx%skippedExternal = .true.
               processDTD = fx%standalone !FIXME use this everywhere
             else
               ! Expand the entity, 
@@ -887,7 +894,7 @@ contains
             ! and do nothing else, carry on ...
           else
             ! Have we previously skipped an external entity?
-            if (skippedExternal) then
+            if (fx%skippedExternal) then
               if (processDTD) then
                 if (present(skippedEntity_handler)) &
                   call skippedEntity_handler('%'//str_vs(tempString))
@@ -951,6 +958,7 @@ contains
         ! check is name
         fx%name => fx%token
         nullify(fx%token)
+        fx%whitespace = WS_MANDATORY
         fx%state = ST_DTD_ELEMENT_CONTENTS
 
       case (ST_DTD_ELEMENT_CONTENTS)
