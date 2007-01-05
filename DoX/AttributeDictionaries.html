@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>AttributeDictionaries</title>
+  <link rel="stylesheet" type="text/css" href="DoX.css"/>
+</head>
+<body>
+  <div class="DoX">
+<h1>Attributes dictionaries.</h1>
+
+<p>When parsing XML using the FoX SAX module, attributes are returned contained within a dictionary object.</p>
+
+<p>Any subroutines that have to deal the dictionary object must use the FoX_common module, and it is manipulated using the API described below.</p>
+
+<p>Conceptually, the dictionary is comprised of a series of entries, one for each attribute, each of which has the following associated data:</p>
+
+<ul>
+<li>key - the attribute's name  </li>
+<li>value - the attribute's value</li>
+</ul>
+
+<p>and for namespaced attributes:</p>
+
+<ul>
+<li>prefix - the prefix (if any) of the attribute</li>
+<li>nsURI - the namespace URI (if any) of the attribute</li>
+<li>localname - the local name of the attribute</li>
+</ul>
+
+<hr />
+
+<h2>Derived types</h2>
+
+<p>There is one derived type of interest, <code>dictionary_t</code>.</p>
+
+<p>It is opaque - that is, it should only be manipulated through the functions described here.</p>
+
+<h2>Functions</h2>
+
+<ul>
+<li><code>len</code>
+type(dictionary_t), intent(in) :: dict</li>
+</ul>
+
+<p>Returns an integer with the length of the dictionary, ie the number of dictionary entries.</p>
+
+<ul>
+<li><code>has_key</code>
+type(dictionary_t), intent(in) :: dict
+character(len=*), intent(in) :: key</li>
+</ul>
+
+<p>Returns a logical value according ot whether the dictionary contains an attribute named <code>key</code> or not.</p>
+
+<p>The following functions may be used to retrieve data from a dictionary</p>
+
+<ul>
+<li><code>getKey</code>
+type(dictionary_t), intent(in) :: dict <br />
+integer, intent(in) :: i</li>
+</ul>
+
+<p>Return the key of the <code>i</code>th dictionary entry.</p>
+
+<ul>
+<li><code>getValue</code>
+type(dictionary_t), intent(in)
+integer, intent(in), optional :: i
+character(len=*), intent(in), optional :: value</li>
+</ul>
+
+<p>If an integer is passed in - the value of the <code>i</code>th attribute. If a string is passed in, the value of the attribute with that key.</p>
+
+<ul>
+<li><code>getPrefix</code>
+type(dictionary_t), intent(in)
+integer, intent(in), optional :: i</li>
+</ul>
+
+<p>Returns a string containing the prefix of the <code>i</code>th attribute.</p>
+
+<ul>
+<li><code>getnsURI</code>
+type(dictionary_t), intent(in)
+integer, intent(in), optional :: i</li>
+</ul>
+
+<p>Returns a string containing the nsURI of the <code>i</code>th attribute.</p>
+
+<ul>
+<li><code>getlocalName</code>
+type(dictionary_t), intent(in)
+integer, intent(in), optional :: i</li>
+</ul>
+
+<p>Returns a string containing the localName of the <code>i</code>th attribute.</p>
+</div>
+</body>
+</html>

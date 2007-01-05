@@ -737,6 +737,7 @@ contains
                 'Encountered reference to undeclared entity')
             endif
           endif
+          deallocate(tempString)
           fx%state = ST_CHAR_IN_CONTENT
         else
           call add_error(fx%error_stack, "Unexpected token found in character context")
@@ -920,6 +921,7 @@ contains
               goto 100
             endif
           endif
+          deallocate(tempString)
         elseif (str_vs(fx%token)=='<?') then
           fx%state = ST_START_PI
           fx%whitespace = WS_FORBIDDEN
