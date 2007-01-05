@@ -948,7 +948,6 @@ contains
             if (in_error(fx%error_stack)) goto 100
           endif
         enddo
-        stop
         fx%state = ST_DTD_ATTLIST_END
 
       case (ST_DTD_ATTLIST_END)
