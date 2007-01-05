@@ -22,7 +22,7 @@ module m_common_namecheck
   public :: checkPubId
   public :: checkIRI
   public :: checkCharacterEntityReference
-  public :: looksLikeCharacterEntityReference
+  public :: likeCharacterEntityReference
   public :: checkEntityValue
 
   public :: prefixOfQName
@@ -148,7 +148,7 @@ contains
   end function checkIRI
 
 
-  function looksLikeCharacterEntityReference(code, xv) result(good)
+  function likeCharacterEntityReference(code, xv) result(good)
     character(len=*), intent(in) :: code
     integer, intent(in) :: xv
     logical :: good
@@ -166,7 +166,7 @@ contains
       endif
     endif
 
-  end function looksLikeCharacterEntityReference
+  end function likeCharacterEntityReference
 
   function checkCharacterEntityReference(code, xv) result(good)
     character(len=*), intent(in) :: code

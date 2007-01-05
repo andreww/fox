@@ -2,32 +2,28 @@
 
 module m_sax_parser
 
-  use m_common_array_str, only: str_vs, vs_str, string_list, &
-    init_string_list, destroy_string_list, devnull, vs_str_alloc
+  use m_common_array_str, only: str_vs, string_list, &
+    destroy_string_list, devnull, vs_str_alloc
   use m_common_attrs, only: init_dict, destroy_dict, add_item_to_dict, &
     has_key, get_value
-  use m_common_charset, only: XML1_0, XML1_1, XML1_0_INITIALNAMECHARS, &
-    XML1_1_INITIALNAMECHARS, XML_INITIALENCODINGCHARS, XML_ENCODINGCHARS, &
-    XML_WHITESPACE, XML1_0_NAMECHARS, XML1_1_NAMECHARS, operator(.in.), &
-    isLegalCharRef
+  use m_common_charset, only: XML1_0, XML1_0_INITIALNAMECHARS, &
+    XML1_1_INITIALNAMECHARS, XML_WHITESPACE, operator(.in.)
   use m_common_element, only: element_t, element_list, init_element_list, &
     destroy_element_list, existing_element, add_element, get_element, &
     parse_dtd_element, parse_dtd_attlist, report_declarations, isCdataAtt, &
     get_default_atts
-  use m_common_elstack, only: elstack_t, push_elstack, pop_elstack, &
-    init_elstack, destroy_elstack, is_empty, get_top_elstack, len
-  use m_common_entities, only: existing_entity, &
-    init_entity_list, destroy_entity_list, &
-    add_internal_entity, add_external_entity, &
-    expand_entity_value_alloc, print_entity_list, &
-    is_external_entity, expand_entity, expand_char_entity, &
-    is_unparsed_entity, pop_entity_list
+  use m_common_elstack, only: push_elstack, pop_elstack, init_elstack, &
+    destroy_elstack, is_empty, len
+  use m_common_entities, only: existing_entity, init_entity_list, &
+    destroy_entity_list, add_internal_entity, add_external_entity, &
+    expand_entity_value_alloc, is_external_entity, expand_entity, &
+    expand_char_entity, is_unparsed_entity, pop_entity_list
   use m_common_error, only: FoX_error, add_error, &
     init_error_stack, destroy_error_stack, in_error
   use m_common_io, only: io_eof, io_err
   use m_common_namecheck, only: checkName, checkPubId, &
-    checkCharacterEntityReference, looksLikeCharacterEntityReference, &
-    checkQName, checkNCName, checkPITarget
+    checkCharacterEntityReference, likeCharacterEntityReference, &
+    checkQName, checkPITarget
   use m_common_namespaces, only: getnamespaceURI, invalidNS, &
     checkNamespaces, checkEndNamespaces, &
     initNamespaceDictionary, destroyNamespaceDictionary
@@ -75,8 +71,6 @@ contains
 
   subroutine sax_parser_destroy(fx)
     type(sax_parser_t), intent(inout) :: fx
-
-    integer :: i
 
     fx%context = CTXT_NULL
     fx%state = ST_NULL
@@ -308,7 +302,6 @@ contains
     character, pointer :: tempString(:)
     type(element_t), pointer :: elem
     integer, pointer :: temp_wf_stack(:)
-    type(entity_list), pointer :: predefined_list(:)
 
     if (present(validate)) then
       validCheck = validate
@@ -707,7 +700,7 @@ contains
               call characters_handler(expand_entity(fx%predefined_e_list, str_vs(tempString)))
             if (present(endEntity_handler)) &
               call endEntity_handler(str_vs(tempString))
-          elseif (looksLikeCharacterEntityReference(str_vs(tempString), fx%xml_version)) then
+          elseif (likeCharacterEntityReference(str_vs(tempString), fx%xml_version)) then
             if (.not.checkCharacterEntityReference(str_vs(tempString), fx%xml_version)) then
               call add_error(fx%error_stack, "Illegal character reference")
             endif

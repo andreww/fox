@@ -25,9 +25,8 @@ module m_sax_reader
 
 
   use m_common_array_str, only : vs_str, str_vs, vs_str_alloc
-  use m_common_charset, only: XML1_0, XML1_1, &
-    XML_WHITESPACE, isLegalChar, isLegalCharRef
-  use m_common_error,  only: FoX_error, FoX_fatal
+  use m_common_charset, only: XML1_0, XML1_1
+  use m_common_error,  only: FoX_error
   use m_common_io, only: setup_io, io_eor, io_eof, get_unit
   use m_common_format, only: str
 
@@ -255,7 +254,6 @@ contains
     character :: c
 
     character :: c2
-    character, pointer :: tempString(:)
 
     c = really_read_char(iostat)
     if (iostat/=0) return
@@ -274,7 +272,6 @@ contains
   contains
     function really_read_char(iostat) result(rc)
       integer, intent(out) :: iostat
-      integer :: n_stack
       character :: rc
       character, dimension(:), pointer :: nc
       if (size(fb%next_chars)>0) then
@@ -349,7 +346,6 @@ contains
     type(file_buffer_t), intent(inout) :: fb
     integer, intent(out) :: iostat
 
-    character(len=READLENGTH) :: string
     integer :: l_s ! number of chars read
     integer :: z ! number of chars left to be read
 
@@ -574,7 +570,7 @@ contains
     integer, intent(out) :: iostat
     character(len=n) :: string
 
-    integer :: n_needed, n_held
+    integer :: n_held
     type(buffer_t), pointer :: cb
 
     if (.not.fb%connected) then

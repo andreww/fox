@@ -6,12 +6,11 @@ module m_sax_tokenizer
   use m_common_charset, only: XML_WHITESPACE, &
     XML_INITIALENCODINGCHARS, XML_ENCODINGCHARS, &
     XML1_0, XML1_1, operator(.in.), upperCase, digits, hexdigits, &
-    isInitialNameChar, isNameChar, isXML1_0_NameChar, isXML1_1_NameChar
-  use m_common_error, only: ERR_WARNING, ERR_ERROR, add_error, in_error
-  use m_common_entities, only: entity_list, existing_entity, &
+    isInitialNameChar, isXML1_0_NameChar, isXML1_1_NameChar
+  use m_common_error, only: ERR_WARNING, add_error, in_error
+  use m_common_entities, only: existing_entity, &
     is_unparsed_entity, is_external_entity, expand_entity_text, &
     expand_char_entity, add_internal_entity, pop_entity_list
-  use m_common_format, only: str
   use m_common_namecheck, only: checkName, checkCharacterEntityReference
 
   use m_sax_reader, only: file_buffer_t, rewind_file, &
@@ -19,8 +18,7 @@ module m_sax_tokenizer
     get_characters_until_all_of, &
     get_characters_until_one_of, &
     get_characters_until_not_one_of, &
-    get_characters_until_condition, &
-    next_chars_are
+    get_characters_until_condition
   use m_sax_types ! everything, really
 
   implicit none
@@ -485,7 +483,7 @@ contains
     ! FIXME below all read_chars should be error-checked.
     integer :: i
     character(len=*), parameter :: version="version", encoding="encoding", standalone="standalone"
-    character :: c, quotation_mark
+    character :: c
     character(len=5) :: xml = "<?xml"
     character, allocatable :: ch(:)
     ! default values ...
@@ -745,7 +743,6 @@ contains
 
     character, dimension(:), pointer :: s_temp, s_temp2, s_ent, tempString
     integer :: i, i2, j
-    logical :: w
 
     ! Condense all whitespace, only if we are validating,
     ! Expand all &
