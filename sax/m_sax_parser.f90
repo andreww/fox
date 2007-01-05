@@ -35,7 +35,7 @@ module m_sax_parser
     add_notation, notation_exists
 
   use m_sax_reader, only: file_buffer_t, pop_buffer_stack, push_buffer_stack
-  use m_sax_tokenizer, only: sax_tokenize, parse_xml_declaration
+  use m_sax_tokenizer, only: sax_tokenize, parse_xml_declaration, normalize_text
   use m_sax_types ! everything, really
 
   implicit none
@@ -304,7 +304,7 @@ contains
     end interface
 
     logical :: validCheck, skippedExternal, processDTD, pe
-    integer :: iostat
+    integer :: i, iostat
     character, pointer :: tempString(:)
     type(element_t), pointer :: elem
     integer, pointer :: temp_wf_stack(:)
@@ -939,6 +939,16 @@ contains
           call parse_dtd_attlist(str_vs(fx%token), fx%xml_version, fx%error_stack)
         endif
         if (in_error(fx%error_stack)) goto 100
+        ! Normalize attribute values in attlist
+        do i = 1, size(elem%attlist%list)
+          if (associated(elem%attlist%list(i)%default)) then
+            tempString => elem%attlist%list(i)%default
+            elem%attlist%list(i)%default => normalize_text(fx, tempString)
+            deallocate(tempString)
+            if (in_error(fx%error_stack)) goto 100
+          endif
+        enddo
+        stop
         fx%state = ST_DTD_ATTLIST_END
 
       case (ST_DTD_ATTLIST_END)
