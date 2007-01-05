@@ -11,27 +11,27 @@ module m_common_element
   implicit none
   private
 
-  integer, parameter :: ST_START            = 0
-  integer, parameter :: ST_EMPTYANY         = 1
-  integer, parameter :: ST_FIRSTCHILD       = 2
-  integer, parameter :: ST_END              = 3
-  integer, parameter :: ST_PCDATA           = 4
-  integer, parameter :: ST_NAME             = 5
-  integer, parameter :: ST_CHILD            = 6
-  integer, parameter :: ST_AFTERBRACKET     = 7
-  integer, parameter :: ST_AFTERLASTBRACKET = 8
-  integer, parameter :: ST_SEPARATOR        = 9
-  integer, parameter :: ST_AFTERNAME        = 10
-  integer, parameter :: ST_ATTTYPE          = 11
-  integer, parameter :: ST_AFTER_NOTATION   = 12
-  integer, parameter :: ST_NOTATION_LIST    = 13
-  integer, parameter :: ST_ENUMERATION      = 14
-  integer, parameter :: ST_ENUM_NAME        = 15
+  integer, parameter :: ST_START               = 0
+  integer, parameter :: ST_EMPTYANY            = 1
+  integer, parameter :: ST_FIRSTCHILD          = 2
+  integer, parameter :: ST_END                 = 3
+  integer, parameter :: ST_PCDATA              = 4
+  integer, parameter :: ST_NAME                = 5
+  integer, parameter :: ST_CHILD               = 6
+  integer, parameter :: ST_AFTERBRACKET        = 7
+  integer, parameter :: ST_AFTERLASTBRACKET    = 8
+  integer, parameter :: ST_SEPARATOR           = 9
+  integer, parameter :: ST_AFTERNAME           = 10
+  integer, parameter :: ST_ATTTYPE             = 11
+  integer, parameter :: ST_AFTER_NOTATION      = 12
+  integer, parameter :: ST_NOTATION_LIST       = 13
+  integer, parameter :: ST_ENUMERATION         = 14
+  integer, parameter :: ST_ENUM_NAME           = 15
   integer, parameter :: ST_AFTER_ATTTYPE_SPACE = 16
-  integer, parameter :: ST_AFTER_ATTTYPE    = 17
-  integer, parameter :: ST_DEFAULT_DECL     = 18
-  integer, parameter :: ST_AFTERDEFAULTDECL = 19
-  integer, parameter :: ST_DEFAULTVALUE     = 20
+  integer, parameter :: ST_AFTER_ATTTYPE       = 17
+  integer, parameter :: ST_DEFAULT_DECL        = 18
+  integer, parameter :: ST_AFTERDEFAULTDECL    = 19
+  integer, parameter :: ST_DEFAULTVALUE        = 20
 
   integer, parameter :: ATT_NULL = 0
 
@@ -760,28 +760,28 @@ contains
         elseif (c.in.XML_WHITESPACE) then
           if (str_vs(type)=='CDATA') then
             ca%attType = ATT_CDATA
-            state = ST_AFTER_ATTTYPE_SPACE
+            state = ST_AFTER_ATTTYPE
           elseif (str_vs(type)=='ID') then
             ca%attType = ATT_ID
-            state = ST_AFTER_ATTTYPE_SPACE
+            state = ST_AFTER_ATTTYPE
           elseif (str_vs(type)=='IDREF') then
             ca%attType = ATT_IDREF
-            state = ST_AFTER_ATTTYPE_SPACE
+            state = ST_AFTER_ATTTYPE
           elseif (str_vs(type)=='IDREFS') then
             ca%attType = ATT_IDREFS
-            state = ST_AFTER_ATTTYPE_SPACE
+            state = ST_AFTER_ATTTYPE
           elseif (str_vs(type)=='ENTITY') then
             ca%attType = ATT_ENTITY
-            state = ST_AFTER_ATTTYPE_SPACE
+            state = ST_AFTER_ATTTYPE
           elseif (str_vs(type)=='ENTITIES') then
             ca%attType = ATT_ENTITIES
-            state = ST_AFTER_ATTTYPE_SPACE
+            state = ST_AFTER_ATTTYPE
           elseif (str_vs(type)=='NMTOKEN') then
             ca%attType = ATT_NMTOKEN
-            state = ST_AFTER_ATTTYPE_SPACE
+            state = ST_AFTER_ATTTYPE
           elseif (str_vs(type)=='NMTOKENS') then
             ca%attType = ATT_NMTOKENS
-            state = ST_AFTER_ATTTYPE_SPACE
+            state = ST_AFTER_ATTTYPE
           elseif (str_vs(type)=='NOTATION') then
             ca%attType = ATT_NOTATION
             state = ST_AFTER_NOTATION
@@ -899,7 +899,7 @@ contains
       elseif (state==ST_AFTER_ATTTYPE_SPACE) then
         if (.not.(c.in.XML_WHITESPACE)) then
           call add_error(stack, &
-            'Missing whitespace in attlist enumeration')
+            'Missing xwhitespace in attlist enumeration')
           goto 200
         endif
         state = ST_AFTER_ATTTYPE
