@@ -449,6 +449,7 @@ contains
           if (fx%context==CTXT_IN_CONTENT) then
             fx%state = ST_CHAR_IN_CONTENT
           else
+            fx%whitespace = WS_DISCARD
             fx%state = ST_MISC
           endif
         else
@@ -833,6 +834,7 @@ contains
         endif
         fx%systemId => vs_str_alloc(str_vs(fx%token(2:size(fx%token)-1)))
         deallocate(fx%token)
+        fx%whitespace = WS_DISCARD
         fx%state = ST_DTD_DECL
 
       case (ST_DTD_DECL)
