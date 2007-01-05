@@ -376,7 +376,7 @@ contains
     ! FIXME semantics of pushback buffer ...
     ! FIXME don't let read_chars work if anything in buffer
 
-    if (fb%pos > READLENGTH) then
+    if (fb%pos >= READLENGTH) then
       fb%buffer(:READLENGTH) = fb%buffer(READLENGTH+1:)
       fb%pos = fb%pos - READLENGTH
       fb%nchars = fb%nchars - READLENGTH
@@ -596,7 +596,7 @@ contains
     else
       ! We're reading straight from the file.
       ! Refill the buffer if necessary
-      if ((fb%nchars-fb%pos)<=READLENGTH) then
+      if ((fb%nchars-fb%pos)<READLENGTH) then
         ! This will happen if a) this is the 1st/2nd time we are called
         ! b) Last buffer access was through a get_characters_until...
         call fill_buffer(fb, iostat)

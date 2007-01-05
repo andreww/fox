@@ -360,6 +360,7 @@ contains
         cycle
       elseif (iostat/=0) then
         ! Any other error, we want to quit sax_tokenizer
+        call add_error(fx%error_stack, 'Error getting token')
         goto 100
       endif
       if (.not.associated(fx%token)) then
@@ -686,7 +687,7 @@ contains
         elseif (str_vs(fx%token)=='</') then
           fx%state = ST_CLOSING_TAG
         elseif (fx%token(1)=='&') then
-          tempString => fx%token(2:size(fx%token)-1)
+          tempString => vs_str_alloc(str_vs(fx%token(2:size(fx%token)-1)))
           ! tell tokenizer to expand it
           if (existing_entity(fx%forbidden_ge_list, str_vs(tempString))) then
             call add_error(fx%error_stack, 'Recursive entity reference')
@@ -879,7 +880,7 @@ contains
         if (str_vs(fx%token)==']') then
           fx%state = ST_CLOSE_DTD
         elseif (fx%token(1)=='%') then
-          tempString => fx%token(2:size(fx%token)-1)
+          tempString => vs_str_alloc(str_vs(fx%token(2:size(fx%token)-1)))
           if (existing_entity(fx%forbidden_pe_list, str_vs(tempString))) then
             call add_error(fx%error_stack, &
               'Recursive entity reference')

@@ -171,8 +171,8 @@ contains
     elseif (fx%state==ST_IN_TAG) then
       call get_characters_until_not_one_of(fb, XML_WHITESPACE, iostat)
       if (iostat/=0) return
-      deallocate(fb%namebuffer) ! which only contains whitespace now.
       if (size(fb%namebuffer)==0) then
+        deallocate(fb%namebuffer) ! which only contains whitespace now.
         ! This had better be the end of the tag.
         c = get_characters(fb, 1, iostat)
         if (iostat/=0) return
@@ -188,6 +188,7 @@ contains
           call add_error(fx%error_stack, "Unexpected character in tag.")
         endif
       else
+        deallocate(fb%namebuffer) ! which only contains whitespace now.
         c = get_characters(fb, 1, iostat)
         if (iostat/=0) return
         if (c=='>') then
@@ -750,6 +751,8 @@ contains
 
     allocate(s_temp(size(s_in))) ! in the first instance
     allocate(s_out(0)) ! in case we return early ...
+    s_ent => null()
+    tempString => null()
 
     i2 = 1
     i = 1
@@ -811,6 +814,7 @@ contains
             s_temp2(i2:i2+size(s_ent)-1) = s_ent
             deallocate(s_temp)
             s_temp => s_temp2
+            nullify(s_temp2)
             i = i + j + 1
             i2 = i2 + size(s_ent)
             deallocate(s_ent)
