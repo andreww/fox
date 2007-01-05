@@ -666,7 +666,9 @@ contains
         endif
       enddo
       if (c/=quotechar) then
-        call add_error(fx%error_stack, "Illegal character in XML encoding declaration; expecting "//quotechar); return
+        call add_error(fx%error_stack, "Illegal character in XML encoding declaration; expecting "//quotechar); 
+        deallocate(buf)
+        return
       endif
       deallocate(fx%encoding)
       fx%encoding => buf

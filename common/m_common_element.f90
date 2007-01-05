@@ -295,8 +295,17 @@ contains
           else
             call add_error(stack, &
               'Unexpected token after #')
+            goto 100
           endif
         elseif (c=='|') then
+          if (str_vs(name)=='PCDATA') then
+            ! continue
+            deallocate(name)
+          else
+            call add_error(stack, &
+              'Unexpected token after #')
+            goto 100
+          endif
           order(1) = '|'
           state = ST_CHILD
         elseif (c==',') then
@@ -458,6 +467,7 @@ contains
         else
           call add_error(stack, &
             'Unexpected character found in element declaration.')
+          goto 100
         endif
 
       elseif (state==ST_AFTERBRACKET) then
@@ -788,6 +798,7 @@ contains
           else
             call add_error(stack, &
               'Unknown AttType')
+            goto 200
           endif
           deallocate(type)
         else
@@ -815,7 +826,7 @@ contains
           state = ST_ENUMERATION
         else
           call add_error(stack, &
-            'Unexpeted character in Notation list')
+            'Unexpected character in Notation list')
           goto 200
         endif
 
