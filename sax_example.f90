@@ -17,7 +17,7 @@ program sax_example
     stop
   endif
 
-  call sax_parse_go(fxml,&
+  call parse(fxml,&
     characters_handler,            &
     endDocument_handler,           &
     endElement_handler,            &

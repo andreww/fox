@@ -13,7 +13,7 @@ module m_sax_operate
   public :: open_xml_file
   public :: open_xml_string
   public :: close_xml_t
-  public :: sax_parse_go
+  public :: parse
 
 contains
 
@@ -46,7 +46,7 @@ contains
     call sax_parser_destroy(xt%fx)
   end subroutine close_xml_t
 
-  subroutine sax_parse_go(xt,      &
+  subroutine parse(xt,      &
     characters_handler,            &
     endDocument_handler,           &
     endElement_handler,            &
@@ -260,6 +260,6 @@ contains
       startDTD_handler,              &
       startEntity_handler)
 
-  end subroutine sax_parse_go
+  end subroutine parse
 
 end module m_sax_operate

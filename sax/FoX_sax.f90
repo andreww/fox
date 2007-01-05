@@ -9,7 +9,7 @@ module FoX_sax
   public :: open_xml_file
   public :: open_xml_string
   public :: close_xml_t
-  public :: sax_parse_go
+  public :: parse
 
   public :: xml_t
 
