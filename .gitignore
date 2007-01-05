@@ -12,3 +12,6 @@ config.status
 objs
 wcml_example
 wxml_example
+sax_example
+.FoX
+.config
