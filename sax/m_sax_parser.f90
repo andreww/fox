@@ -356,7 +356,6 @@ contains
         iostat = 0
         call pop_buffer_stack(fb)
         fx%parse_stack = fx%parse_stack - 1
-        print*, 'state',fx%state
         cycle
       elseif (iostat/=0) then
         ! Any other error, we want to quit sax_tokenizer
@@ -370,7 +369,7 @@ contains
       select case (fx%state)
 
       case (ST_MISC)
-        !print*,'ST_MISC'
+        !write(*,*) 'ST_MISC'
         if (str_vs(fx%token) == '<?') then
           fx%state = ST_START_PI
           fx%whitespace = WS_FORBIDDEN
@@ -386,7 +385,7 @@ contains
         endif
 
       case (ST_BANG_TAG)
-        !print*,'ST_BANG_TAG'
+        !write(*,*)'ST_BANG_TAG'
         if (str_vs(fx%token)=='--') then
           fx%state = ST_START_COMMENT
         elseif (fx%context==CTXT_BEFORE_DTD) then
@@ -416,7 +415,7 @@ contains
         endif
 
       case (ST_START_PI)
-        !print*,'ST_START_PI'
+        !write(*,*)'ST_START_PI'
         if (checkName(str_vs(fx%token), fx%xml_version)) then
           if (str_vs(fx%token)=='xml') then
             call add_error(fx%error_stack, "XML declaration must be at start of document")
@@ -436,7 +435,7 @@ contains
         endif
 
       case (ST_PI_CONTENTS)
-        !print*,'ST_PI_CONTENTS'
+        !write(*,*)'ST_PI_CONTENTS'
         if (str_vs(fx%token)=='?>') then
           ! No data for this PI
           if (present(processingInstruction_handler)) &
@@ -456,7 +455,7 @@ contains
         endif
 
       case (ST_PI_END)
-        !print*,'ST_PI_END'
+        !write(*,*)'ST_PI_END'
         if (str_vs(fx%token)=='?>') then
           if (fx%context==CTXT_IN_CONTENT) then
             fx%state = ST_CHAR_IN_CONTENT
@@ -474,13 +473,13 @@ contains
         endif
 
       case (ST_START_COMMENT)
-        !print*,'ST_START_COMMENT'
+        !write(*,*)'ST_START_COMMENT'
         fx%name => fx%token
         nullify(fx%token)
         fx%state = ST_COMMENT_END_1
 
       case (ST_COMMENT_END_1)
-        !print*,'ST_COMMENT_END_1'
+        !write(*,*)'ST_COMMENT_END_1'
         if (str_vs(fx%token)=='--') then
           fx%state = ST_COMMENT_END_2
         else
@@ -489,7 +488,7 @@ contains
         endif
 
       case (ST_COMMENT_END_2)
-        !print*,'ST_COMMENT_END_2'
+        !write(*,*)'ST_COMMENT_END_2'
         if (str_vs(fx%token)=='>') then
           if (present(comment_handler)) &
             call comment_handler(str_vs(fx%name))
@@ -510,7 +509,7 @@ contains
         endif
 
       case (ST_START_TAG)
-        !print*,'ST_START_TAG', fx%context
+        !write(*,*)'ST_START_TAG', fx%context
         if (fx%context==CTXT_BEFORE_DTD &
           .or. fx%context==CTXT_BEFORE_CONTENT &
           .or. fx%context==CTXT_IN_CONTENT) then
@@ -529,7 +528,7 @@ contains
         endif
 
       case (ST_START_CDATA_1)
-        !print*,'ST_START_CDATA_1'
+        !write(*,*)'ST_START_CDATA_1'
         if (str_vs(fx%token) == 'CDATA') then
           fx%state = ST_START_CDATA_2
         else
@@ -538,7 +537,7 @@ contains
         endif
 
       case (ST_START_CDATA_2)
-        !print*,'ST_START_CDATA_2'
+        !write(*,*)'ST_START_CDATA_2'
         if (str_vs(fx%token) == '[') then
           fx%state = ST_CDATA_CONTENTS
         else
@@ -547,13 +546,13 @@ contains
         endif
 
       case (ST_CDATA_CONTENTS)
-        !print*,'ST_CDATA_CONTENTS'
+        !write(*,*)'ST_CDATA_CONTENTS'
         fx%name => fx%token
         nullify(fx%token)
         fx%state = ST_CDATA_END
 
       case (ST_CDATA_END)
-        !print*,'ST_CDATA_END'
+        !write(*,*)'ST_CDATA_END'
         if (str_vs(fx%token) == ']]>') then
           if (present(startCdata_handler)) &
             call startCdata_handler
@@ -571,7 +570,7 @@ contains
         endif
 
       case (ST_IN_TAG)
-        !print*,'ST_IN_TAG'
+        !write(*,*)'ST_IN_TAG'
         if (str_vs(fx%token)=='>') then
           if (fx%context /= CTXT_IN_CONTENT) then
             if (associated(fx%root_element)) then
@@ -628,7 +627,7 @@ contains
         endif
 
       case (ST_ATT_NAME)
-        !print*,'ST_ATT_NAME'
+        !write(*,*)'ST_ATT_NAME'
         if (str_vs(fx%token)=='=') then
           fx%state = ST_ATT_EQUALS
         else
@@ -637,7 +636,7 @@ contains
         endif
 
       case (ST_ATT_EQUALS)
-        !print*,'ST_ATT_EQUALS'
+        !write(*,*)'ST_ATT_EQUALS'
         ! token is pre-processed attribute value.
         ! fx%name still contains attribute name
         if (.not.checkQName(str_vs(fx%attname), fx%xml_version)) then
@@ -662,7 +661,7 @@ contains
         fx%state = ST_IN_TAG
 
       case (ST_CHAR_IN_CONTENT)
-        !print*,'ST_CHAR_IN_CONTENT'
+        !write(*,*)'ST_CHAR_IN_CONTENT'
         if (index(str_vs(fx%token),']]>')/=0) then
           call add_error(fx%error_stack, "Cannot have ]]> in character context")
           goto 100
@@ -677,7 +676,7 @@ contains
         fx%state = ST_TAG_IN_CONTENT
 
       case (ST_TAG_IN_CONTENT)
-        !print*,'ST_TAG_IN_CONTENT'
+        !write(*,*)'ST_TAG_IN_CONTENT'
         if (str_vs(fx%token)=='<') then
           fx%state = ST_START_TAG
         elseif (str_vs(fx%token)=='<!') then
@@ -745,7 +744,7 @@ contains
         endif
 
       case (ST_CLOSING_TAG)
-        !print*,'ST_CLOSING_TAG'
+        !write(*,*)'ST_CLOSING_TAG'
         if (checkName(str_vs(fx%token), fx%xml_version)) then!fx%token, fx%xml_version)) then
           fx%name => fx%token
           nullify(fx%token)
@@ -757,7 +756,7 @@ contains
         endif
 
       case (ST_IN_CLOSING_TAG)
-        !print*,'ST_IN_CLOSING_TAG'
+        !write(*,*)'ST_IN_CLOSING_TAG'
         if (str_vs(fx%token) == '>') then
           call close_tag
           if (in_error(fx%error_stack)) goto 100
@@ -778,7 +777,7 @@ contains
         endif
 
       case (ST_IN_DTD)
-        !print*,'ST_IN_DTD'
+        !write(*,*)'ST_IN_DTD'
         ! check token is name
         fx%root_element => fx%token
         nullify(fx%token)
@@ -786,7 +785,7 @@ contains
         fx%state = ST_DTD_NAME
 
       case (ST_DTD_NAME)
-        !print*, 'ST_DTD_NAME'
+        !write(*,*) 'ST_DTD_NAME'
         if (str_vs(fx%token)=='SYSTEM') then
           fx%state = ST_DTD_SYSTEM
         elseif (str_vs(fx%token)=='PUBLIC') then
@@ -807,7 +806,7 @@ contains
         endif
 
       case (ST_DTD_PUBLIC)
-        !print*, 'ST_DTD_PUBLIC'
+        !write(*,*) 'ST_DTD_PUBLIC'
         if (fx%token(1)/='"'.and.fx%token(1)/="'" &
           .and.fx%token(1)/=fx%token(size(fx%token))) then
           call add_error(fx%error_stack, "Invalid Public Id literal")
@@ -823,7 +822,7 @@ contains
         endif
 
       case (ST_DTD_SYSTEM)
-        !print*, 'ST_DTD_SYSTEM'
+        !write(*,*) 'ST_DTD_SYSTEM'
         if (fx%token(1)/='"'.and.fx%token(1)/="'" &
           .and.fx%token(1)/=fx%token(size(fx%token))) then
           call add_error(fx%error_stack, "Invalid System Id literal")
@@ -835,7 +834,7 @@ contains
         fx%state = ST_DTD_DECL
 
       case (ST_DTD_DECL)
-        !print*, 'ST_DTD_DECL'
+        !write(*,*) 'ST_DTD_DECL'
         if (str_vs(fx%token)=='[') then
           if (associated(fx%publicId).or.associated(fx%systemId)) &
             fx%skippedExternal = .true.
@@ -877,7 +876,7 @@ contains
         endif
 
       case (ST_INT_SUBSET)
-        print*, 'ST_INT_SUBSET'
+        write(*,*) 'ST_INT_SUBSET'
         if (str_vs(fx%token)==']') then
           fx%state = ST_CLOSE_DTD
         elseif (fx%token(1)=='%') then
@@ -934,7 +933,7 @@ contains
         endif
 
       case (ST_DTD_ATTLIST)
-        !print*, 'ST_DTD_ATTLIST'
+        !write(*,*) 'ST_DTD_ATTLIST'
         ! check is name
         fx%name => fx%token
         if (existing_element(fx%element_list, str_vs(fx%name))) then
@@ -990,7 +989,7 @@ contains
         endif
 
       case (ST_DTD_ELEMENT)
-        !print*, 'ST_DTD_ELEMENT'
+        !write(*,*) 'ST_DTD_ELEMENT'
         ! check is name
         fx%name => fx%token
         nullify(fx%token)
@@ -999,7 +998,7 @@ contains
 
       case (ST_DTD_ELEMENT_CONTENTS)
         !token is everything up to >
-        !print*,'ST_DTD_ELEMENT_CONTENTS'
+        !write(*,*)'ST_DTD_ELEMENT_CONTENTS'
         if (existing_element(fx%element_list, str_vs(fx%name))) then
           if (validCheck) then
             call add_error(fx%error_stack, "Duplicate Element declaration")
@@ -1020,7 +1019,7 @@ contains
         fx%state = ST_DTD_ELEMENT_END
 
       case (ST_DTD_ELEMENT_END)
-        !print*,'ST_DTD_ELEMENT_END'
+        !write(*,*)'ST_DTD_ELEMENT_END'
         if (str_vs(fx%token)=='>') then
           if (processDTD) then
             if (present(elementDecl_handler)) &
@@ -1036,7 +1035,7 @@ contains
         endif
 
       case (ST_DTD_ENTITY)
-        !print*, 'ST_DTD_ENTITY'
+        !write(*,*) 'ST_DTD_ENTITY'
         if (str_vs(fx%token) == '%') then
           pe = .true.
           ! this will be a PE
@@ -1054,7 +1053,7 @@ contains
         endif
 
       case (ST_DTD_ENTITY_PE)
-        !print*, 'ST_DTD_ENTITY_PE'
+        !write(*,*) 'ST_DTD_ENTITY_PE'
         if (.not.checkName(str_vs(fx%token), fx%xml_version)) then
           call add_error(fx%error_stack, &
             "Illegal name for parameter entity")
@@ -1065,7 +1064,7 @@ contains
         fx%state = ST_DTD_ENTITY_ID
 
       case (ST_DTD_ENTITY_ID)
-        !print*, 'ST_DTD_ENTITY_ID'
+        !write(*,*) 'ST_DTD_ENTITY_ID'
         if (str_vs(fx%token) == 'PUBLIC') then
           fx%state = ST_DTD_ENTITY_PUBLIC
         elseif (str_vs(fx%token) == 'SYSTEM') then
@@ -1081,7 +1080,7 @@ contains
         endif
 
       case (ST_DTD_ENTITY_PUBLIC)
-        !print*, 'ST_DTD_ENTITY_PUBLIC'
+        !write(*,*) 'ST_DTD_ENTITY_PUBLIC'
         if (fx%token(1)/='"'.and.fx%token(1)/="'" &
           .and.fx%token(1)/=fx%token(size(fx%token))) then
           call add_error(fx%error_stack, "Invalid Public Id literal")
@@ -1097,7 +1096,7 @@ contains
         endif
 
       case (ST_DTD_ENTITY_SYSTEM)
-        !print*, 'ST_DTD_ENTITY_SYSTEM'
+        !write(*,*) 'ST_DTD_ENTITY_SYSTEM'
         if (fx%token(1)/='"'.and.fx%token(1)/="'" &
           .and.fx%token(1)/=fx%token(size(fx%token))) then
           call add_error(fx%error_stack, "Invalid System Id literal")
@@ -1108,7 +1107,7 @@ contains
         fx%state = ST_DTD_ENTITY_NDATA
 
       case (ST_DTD_ENTITY_NDATA)
-        !print*, 'ST_DTD_ENTITY_NDATA'
+        !write(*,*) 'ST_DTD_ENTITY_NDATA'
         if (str_vs(fx%token)=='>') then
           if (processDTD) then
             call add_entity
@@ -1132,7 +1131,7 @@ contains
         endif
 
       case (ST_DTD_ENTITY_NDATA_VALUE)
-        !print*, 'ST_DTD_ENTITY_NDATA_VALUE'
+        !write(*,*) 'ST_DTD_ENTITY_NDATA_VALUE'
         !check is a name and exists in notationlist
         if (.not.checkName(str_vs(fx%token), fx%xml_version)) then
           call add_error(fx%error_stack, "Invalid name for Notation")
@@ -1153,7 +1152,7 @@ contains
         fx%whitespace = WS_DISCARD
 
       case (ST_DTD_ENTITY_END)
-        !print*, 'ST_DTD_ENTITY_END'
+        !write(*,*) 'ST_DTD_ENTITY_END'
         if (str_vs(fx%token)=='>') then
           if (processDTD) then
             call add_entity
@@ -1170,14 +1169,14 @@ contains
         endif
 
       case (ST_DTD_NOTATION)
-        !print*, 'ST_DTD_NOTATION'
+        !write(*,*) 'ST_DTD_NOTATION'
         ! check name is name FIXMe
         fx%name => fx%token
         nullify(fx%token)
         fx%state = ST_DTD_NOTATION_ID
 
       case (ST_DTD_NOTATION_ID)
-        !print*,'ST_DTD_NOTATION_ID'
+        !write(*,*)'ST_DTD_NOTATION_ID'
         if (str_vs(fx%token)=='SYSTEM') then
           fx%state = ST_DTD_NOTATION_SYSTEM
         elseif (str_vs(fx%token)=='PUBLIC') then
@@ -1188,7 +1187,7 @@ contains
         endif
 
       case (ST_DTD_NOTATION_SYSTEM)
-        !print*,'ST_DTD_NOTATION_SYSTEM'
+        !write(*,*)'ST_DTD_NOTATION_SYSTEM'
         if (fx%token(1)/='"'.and.fx%token(1)/="'" &
           .and.fx%token(1)/=fx%token(size(fx%token))) then
           call add_error(fx%error_stack, "Invalid System Id literal")
@@ -1199,13 +1198,12 @@ contains
         fx%state = ST_DTD_NOTATION_END
 
       case (ST_DTD_NOTATION_PUBLIC)
-        !print*,'ST_DTD_NOTATION_PUBLIC'
+        !write(*,*)'ST_DTD_NOTATION_PUBLIC'
         if (fx%token(1)/='"'.and.fx%token(1)/="'" &
           .and.fx%token(1)/=fx%token(size(fx%token))) then
           call add_error(fx%error_stack, "Invalid Public Id literal")
           goto 100
         endif
-        print*,'token ', str_vs(fx%token)
         if (checkPubId(str_vs(fx%token(2:size(fx%token)-1)))) then
           fx%publicId => vs_str_alloc(str_vs(fx%token(2:size(fx%token)-1)))
           deallocate(fx%token)
@@ -1216,7 +1214,7 @@ contains
         endif
 
       case (ST_DTD_NOTATION_PUBLIC_2)
-        !print*,'ST_DTD_NOTATION_PUBLIC_2'
+        !write(*,*)'ST_DTD_NOTATION_PUBLIC_2'
         if (str_vs(fx%token)=='>') then
           if (validCheck) then
             if (notation_exists(fx%nlist, str_vs(fx%name))) then
@@ -1245,7 +1243,7 @@ contains
         endif
 
       case (ST_DTD_NOTATION_END)
-        !print*,'ST_DTD_NOTATION_END'
+        !write(*,*)'ST_DTD_NOTATION_END'
         if (str_vs(fx%token)=='>') then
           if (validCheck) then
             if (notation_exists(fx%nlist, str_vs(fx%name))) then
@@ -1279,7 +1277,7 @@ contains
         endif
 
       case (ST_CLOSE_DTD)
-        !print*, 'ST_CLOSE_DTD'
+        !write(*,*) 'ST_CLOSE_DTD'
         ! token must be '>'
         if (present(endDTD_handler)) &
           call endDTD_handler
