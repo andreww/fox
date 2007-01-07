@@ -1,6 +1,6 @@
 # SAX
 
-SAX stands for Simple API for XML, and was originally a Java API for reading XML. (Full details at [http://saxproject.org](http://saxproject.org). SAX implementations exist for most common modern computer languages.
+SAX stands for Simple API for XML, and was originally a Java API for reading XML. (Full details at [http://saxproject.org](http://saxproject.org)). SAX implementations exist for most common modern computer languages.
 
 FoX includes a SAX implementation, which translates most of the Java API into Fortran, and makes it accessible to Fortran programs, enabling them to read in XML documents in a fashion as close and familiar as possible to other languages.
 
@@ -450,6 +450,7 @@ Note also that FoX will not read external entities when processing an XML docume
 The difference betweek Java & Fortran means that none of the SAX APIs can be copied directly. However, FoX offers data types, subroutines, and interfaces covering a large proportion of the facilities offered by SAX. Where it does not, this is mentioned here.
 
 org.sax.xml:
+
 * Querying/setting of feature flags/property values for the XML parser.  
 * XML filters - Java SAX makes it possible to write filters to intercept the
 flow of events. FoX does not support this.  
@@ -462,9 +463,11 @@ FOX does not - all entities are resolved within the parser.
 * AttributeList/DocumentHandler/Parser - FoX only offers namespace aware attributes, not the pre-namespace versions.  
 
 org.sax.xml.ext:
-* Attributes2 - FoX does not implement these attribute-declaration querying functions  
-* EntityResolver2 - see above  
+
+* Attributes2 - FoX does not implement these attribute-declaration querying functions   
+* EntityResolver2 - see above   
 * Locator2 - not implemented  
 
 org.sax.xml.helpers:
+
 * None of these helper methods are implemented.

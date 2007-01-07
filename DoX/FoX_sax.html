@@ -9,7 +9,7 @@
   <div class="DoX">
 <h1>SAX</h1>
 
-<p>SAX stands for Simple API for XML, and was originally a Java API for reading XML. (Full details at <a href="http://saxproject.org">http://saxproject.org</a>. SAX implementations exist for most common modern computer languages.</p>
+<p>SAX stands for Simple API for XML, and was originally a Java API for reading XML. (Full details at <a href="http://saxproject.org">http://saxproject.org</a>). SAX implementations exist for most common modern computer languages.</p>
 
 <p>FoX includes a SAX implementation, which translates most of the Java API into Fortran, and makes it accessible to Fortran programs, enabling them to read in XML documents in a fashion as close and familiar as possible to other languages.</p>
 
@@ -526,25 +526,34 @@ Thus a typical call to <code>parse</code> might look something like:</p>
 
 <p>The difference betweek Java &amp; Fortran means that none of the SAX APIs can be copied directly. However, FoX offers data types, subroutines, and interfaces covering a large proportion of the facilities offered by SAX. Where it does not, this is mentioned here.</p>
 
-<p>org.sax.xml:
-* Querying/setting of feature flags/property values for the XML parser. <br />
-* XML filters - Java SAX makes it possible to write filters to intercept the
-flow of events. FoX does not support this. <br />
-* Namespace configuration - SAX 2 allows changing the ways in which namespaces are interpreted <br />
-by the parser. FoX supports only the SAX 2 default.
-* Entity resolution - SAX 2 exports an interface to the application for entity resolution, but <br />
-FOX does not - all entities are resolved within the parser.
-* Locator - SAX 2 offers an interface to export information regarding object locations within the document, FoX does not. <br />
-* XMLReader - FoX only offers the parse() method - no other methods really make sense in Fortran. <br />
-* AttributeList/DocumentHandler/Parser - FoX only offers namespace aware attributes, not the pre-namespace versions.  </p>
+<p>org.sax.xml:</p>
 
-<p>org.sax.xml.ext:
-* Attributes2 - FoX does not implement these attribute-declaration querying functions <br />
-* EntityResolver2 - see above <br />
-* Locator2 - not implemented  </p>
+<ul>
+<li>Querying/setting of feature flags/property values for the XML parser.  </li>
+<li>XML filters - Java SAX makes it possible to write filters to intercept the
+flow of events. FoX does not support this.  </li>
+<li>Namespace configuration - SAX 2 allows changing the ways in which namespaces are interpreted <br />
+by the parser. FoX supports only the SAX 2 default.</li>
+<li>Entity resolution - SAX 2 exports an interface to the application for entity resolution, but <br />
+FOX does not - all entities are resolved within the parser.</li>
+<li>Locator - SAX 2 offers an interface to export information regarding object locations within the document, FoX does not.  </li>
+<li>XMLReader - FoX only offers the parse() method - no other methods really make sense in Fortran.  </li>
+<li>AttributeList/DocumentHandler/Parser - FoX only offers namespace aware attributes, not the pre-namespace versions.  </li>
+</ul>
 
-<p>org.sax.xml.helpers:
-* None of these helper methods are implemented.</p>
+<p>org.sax.xml.ext:</p>
+
+<ul>
+<li>Attributes2 - FoX does not implement these attribute-declaration querying functions   </li>
+<li>EntityResolver2 - see above   </li>
+<li>Locator2 - not implemented  </li>
+</ul>
+
+<p>org.sax.xml.helpers:</p>
+
+<ul>
+<li>None of these helper methods are implemented.</li>
+</ul>
 </div>
 </body>
 </html>

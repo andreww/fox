@@ -64,21 +64,21 @@
 <a name="Versioning"/>
 <h1>FoX versioning</h1>
 
-<p>This documentation describes version 2.0 of the FoX library</p>
+<p>This documentation describes version 2.1 of the FoX library</p>
 
 <p>FoX was originally based on the version 1.2 of the <a href="http://lcdx00.wm.lc.ehu.es/ag/xml/">xmlf90</a> library, but has since evolved heavily.</p>
 
-<p>This release version includes only output modules.</p>
-
-<p>(which is a further development of the xmlf90 library, last released as version 1.2)</p>
+<p>This release version includes output modules for general XML, and for CML, and also a Fortran version of the SAX2 input parser interface</p>
 
 <p>This is a stable branch, which will be maintained with important bugfixes, but on which no further major development will occur.</p>
 
-<p>Version 2.0 has support for outputting complete XML documents, with support for all XML objects described in XML11, and XML Names. FIXME. A detailed description of its precise conformance level is at [FIXME] link.</p>
+<p>Version 2.1 has support for outputting complete XML documents, with support for all XML objects described in XML11, and XML Namespaces. A detailed description of its precise conformance level is in the WXML documentation.</p>
 
 <p>In addition, there is a large suite of routines available for outputting valid <a href="http://www.xml-cml.org">CML</a> documents.</p>
 
-<p>Input modules are under development for SAX, DOM, and XPath, and will be released with version 2.1.</p>
+<p>There is also a SAX input module, compatible with the SAX 2 standard - pprecise conformance details listed in the SAX documentation.</p>
+
+<p>Input modules are under development for DOM and XPath, and will be released with a later version.</p>
 </div><hr/><div class="DoX">
 <a name="Compilation"/>
 <h1>Configuration and compilation</h1>
@@ -171,7 +171,7 @@ sax_lib
 <p>Known failures: <br />
 * <code>test_xml_Close_2</code> sometimes unexpectedly fails - this is not a problem, ignore it.  </p>
 
-<p>If any other failures occur, please send a message to the mailing list (<a href="m&#97;&#105;&#108;&#116;&#111;:F&#111;X&#64;&#108;&#105;&#x73;ts&#x2E;&#117;&#115;&#x7A;&#x6C;&#x61;&#46;&#109;&#101;&#46;&#117;&#107;">F&#111;X&#64;&#108;&#105;&#x73;ts&#x2E;&#117;&#115;&#x7A;&#x6C;&#x61;&#46;&#109;&#101;&#46;&#117;&#107;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
+<p>If any other failures occur, please send a message to the mailing list (<a href="m&#97;&#x69;&#108;&#116;o:&#70;&#x6F;&#88;&#64;&#108;&#105;&#115;&#116;&#x73;&#46;&#117;s&#122;&#108;&#x61;&#46;&#x6D;&#101;&#x2E;&#x75;&#x6B;">&#70;&#x6F;&#88;&#64;&#108;&#105;&#115;&#116;&#x73;&#46;&#117;s&#122;&#108;&#x61;&#46;&#x6D;&#101;&#x2E;&#x75;&#x6B;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
 
 <h2>Linking to an existing program</h2>
 
@@ -1309,9 +1309,9 @@ Attempts to do otherwise will result in a runtime error.</p>
 <h1>Further information</h1>
 
 <p>FoX evolved from the initial codebase of <a href="http://lcdx00.wm.lc.ehu.es/ag/xml/">xmlf90</a>,
-which was written largely by Alberto Garcia &lt;<a href="&#x6D;&#x61;&#105;&#108;&#x74;o:&#x61;&#108;&#98;&#x65;&#114;&#116;&#111;&#x67;&#64;&#x69;&#99;m&#x61;&#x62;&#46;&#x65;&#x73;">&#x61;&#108;&#98;&#x65;&#114;&#116;&#111;&#x67;&#64;&#x69;&#99;m&#x61;&#x62;&#46;&#x65;&#x73;</a>> and Jon Wakelin &lt;<a href="&#x6D;&#x61;il&#116;&#x6F;:&#106;o&#110;&#46;w&#x61;&#x6B;&#x65;&#x6C;&#105;&#110;&#64;&#98;&#x72;&#105;&#x73;&#x74;&#111;&#108;&#46;&#97;c&#x2E;&#117;&#x6B;">&#106;o&#110;&#46;w&#x61;&#x6B;&#x65;&#x6C;&#105;&#110;&#64;&#98;&#x72;&#105;&#x73;&#x74;&#111;&#108;&#46;&#97;c&#x2E;&#117;&#x6B;</a>>.</p>
+which was written largely by Alberto Garcia &lt;<a href="m&#97;&#x69;&#108;&#x74;&#111;:&#97;&#x6C;&#98;e&#x72;&#116;&#111;&#x67;&#64;&#x69;&#99;&#109;&#x61;&#98;&#46;&#101;&#115;">&#97;&#x6C;&#98;e&#x72;&#116;&#111;&#x67;&#64;&#x69;&#99;&#109;&#x61;&#98;&#46;&#101;&#115;</a>> and Jon Wakelin &lt;<a href="&#109;&#x61;&#x69;&#108;&#x74;&#x6F;:j&#x6F;&#110;&#x2E;&#119;&#x61;&#x6B;&#101;&#108;&#x69;&#x6E;&#64;&#x62;&#114;&#105;&#x73;&#116;&#x6F;l&#x2E;&#97;&#x63;&#x2E;&#x75;&#107;">j&#x6F;&#110;&#x2E;&#119;&#x61;&#x6B;&#101;&#108;&#x69;&#x6E;&#64;&#x62;&#114;&#105;&#x73;&#116;&#x6F;l&#x2E;&#97;&#x63;&#x2E;&#x75;&#107;</a>>.</p>
 
-<p>FoX is the work of Toby White &lt;<a href="&#x6D;&#x61;&#105;&#108;&#116;o:&#x74;&#111;&#x77;2&#x31;&#64;&#x63;&#97;m&#x2E;&#97;&#x63;&#x2E;&#x75;&#x6B;">&#x74;&#111;&#x77;2&#x31;&#64;&#x63;&#97;m&#x2E;&#97;&#x63;&#x2E;&#x75;&#x6B;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
+<p>FoX is the work of Toby White &lt;<a href="&#x6D;&#x61;&#105;&#108;&#116;&#x6F;:&#116;o&#119;&#50;&#x31;&#64;&#99;&#x61;&#x6D;&#x2E;&#x61;c.u&#x6B;">&#116;o&#119;&#50;&#x31;&#64;&#99;&#x61;&#x6D;&#x2E;&#x61;c.u&#x6B;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
 
 <p>There is a FoX website at <a href="http://www.uszla.me.uk/software/FoX/">http://www.uszla.me.uk/software/FoX/</a>.</p>
 
@@ -1362,7 +1362,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 <a name="FoX_sax"/>
 <h1>SAX</h1>
 
-<p>SAX stands for Simple API for XML, and was originally a Java API for reading XML. (Full details at <a href="http://saxproject.org">http://saxproject.org</a>. SAX implementations exist for most common modern computer languages.</p>
+<p>SAX stands for Simple API for XML, and was originally a Java API for reading XML. (Full details at <a href="http://saxproject.org">http://saxproject.org</a>). SAX implementations exist for most common modern computer languages.</p>
 
 <p>FoX includes a SAX implementation, which translates most of the Java API into Fortran, and makes it accessible to Fortran programs, enabling them to read in XML documents in a fashion as close and familiar as possible to other languages.</p>
 
@@ -1879,25 +1879,34 @@ Thus a typical call to <code>parse</code> might look something like:</p>
 
 <p>The difference betweek Java &amp; Fortran means that none of the SAX APIs can be copied directly. However, FoX offers data types, subroutines, and interfaces covering a large proportion of the facilities offered by SAX. Where it does not, this is mentioned here.</p>
 
-<p>org.sax.xml:
-* Querying/setting of feature flags/property values for the XML parser. <br />
-* XML filters - Java SAX makes it possible to write filters to intercept the
-flow of events. FoX does not support this. <br />
-* Namespace configuration - SAX 2 allows changing the ways in which namespaces are interpreted <br />
-by the parser. FoX supports only the SAX 2 default.
-* Entity resolution - SAX 2 exports an interface to the application for entity resolution, but <br />
-FOX does not - all entities are resolved within the parser.
-* Locator - SAX 2 offers an interface to export information regarding object locations within the document, FoX does not. <br />
-* XMLReader - FoX only offers the parse() method - no other methods really make sense in Fortran. <br />
-* AttributeList/DocumentHandler/Parser - FoX only offers namespace aware attributes, not the pre-namespace versions.  </p>
+<p>org.sax.xml:</p>
 
-<p>org.sax.xml.ext:
-* Attributes2 - FoX does not implement these attribute-declaration querying functions <br />
-* EntityResolver2 - see above <br />
-* Locator2 - not implemented  </p>
+<ul>
+<li>Querying/setting of feature flags/property values for the XML parser.  </li>
+<li>XML filters - Java SAX makes it possible to write filters to intercept the
+flow of events. FoX does not support this.  </li>
+<li>Namespace configuration - SAX 2 allows changing the ways in which namespaces are interpreted <br />
+by the parser. FoX supports only the SAX 2 default.</li>
+<li>Entity resolution - SAX 2 exports an interface to the application for entity resolution, but <br />
+FOX does not - all entities are resolved within the parser.</li>
+<li>Locator - SAX 2 offers an interface to export information regarding object locations within the document, FoX does not.  </li>
+<li>XMLReader - FoX only offers the parse() method - no other methods really make sense in Fortran.  </li>
+<li>AttributeList/DocumentHandler/Parser - FoX only offers namespace aware attributes, not the pre-namespace versions.  </li>
+</ul>
 
-<p>org.sax.xml.helpers:
-* None of these helper methods are implemented.</p>
+<p>org.sax.xml.ext:</p>
+
+<ul>
+<li>Attributes2 - FoX does not implement these attribute-declaration querying functions   </li>
+<li>EntityResolver2 - see above   </li>
+<li>Locator2 - not implemented  </li>
+</ul>
+
+<p>org.sax.xml.helpers:</p>
+
+<ul>
+<li>None of these helper methods are implemented.</li>
+</ul>
 </div><hr/><div class="DoX">
 <a name="AttributeDictionaries"/>
 <h1>Attributes dictionaries.</h1>
@@ -1931,32 +1940,32 @@ FOX does not - all entities are resolved within the parser.
 <h2>Functions</h2>
 
 <ul>
-<li><code>len</code>
-type(dictionary_t), intent(in) :: dict</li>
+<li><code>len <br />
+type(dictionary_t), intent(in) :: dict</code></li>
 </ul>
 
 <p>Returns an integer with the length of the dictionary, ie the number of dictionary entries.</p>
 
 <ul>
-<li><code>getLength</code>
-type(dictionary_t), intent(in) :: dict</li>
+<li><code>getLength <br />
+type(dictionary_t), intent(in) :: dict</code></li>
 </ul>
 
 <p>Returns an integer with the length of the dictionary, ie the number of dictionary entries. Identical to the <code>len</code> function.</p>
 
 <ul>
-<li><code>hasKey</code>
-type(dictionary_t), intent(in) :: dict
-character(len=*), intent(in) :: key</li>
+<li><code>hasKey <br />
+type(dictionary_t), intent(in) :: dict <br />
+character(len=*), intent(in) :: key</code></li>
 </ul>
 
 <p>Returns a logical value according to whether the dictionary contains an attribute named <code>key</code> or not.</p>
 
 <ul>
-<li><code>hasKey</code>
-type(dictionary_t), intent(in) :: dict
-character(len=<em>), intent(in) :: uri
-character(len=</em>), intent(in) :: localname</li>
+<li><code>hasKey <br />
+type(dictionary_t), intent(in) :: dict <br />
+character(len=*), intent(in) :: uri <br />
+character(len=*), intent(in) :: localname</code></li>
 </ul>
 
 <p>Returns a logical value according to whether the dictionary contains an attribute with the correct <code>URI</code> and <code>localname</code>.</p>
@@ -1964,49 +1973,49 @@ character(len=</em>), intent(in) :: localname</li>
 <p>The following functions may be used to retrieve data from a dictionary</p>
 
 <ul>
-<li><code>getQName</code>
+<li><code>getQName <br />
 type(dictionary_t), intent(in) :: dict <br />
-integer, intent(in) :: i</li>
+integer, intent(in) :: i</code></li>
 </ul>
 
 <p>Return the full name of the <code>i</code>th dictionary entry.</p>
 
 <ul>
-<li><code>getValue</code>
-type(dictionary_t), intent(in)
-integer, intent(in) :: i</li>
+<li><code>getValue <br />
+type(dictionary_t), intent(in) <br />
+integer, intent(in) :: i</code></li>
 </ul>
 
 <p>If an integer is passed in - the value of the <code>i</code>th attribute. </p>
 
 <ul>
-<li><code>getValue</code>
-type(dictionary_t), intent(in)
-character(len=*), intent(in) :: key</li>
+<li><code>getValue <br />
+type(dictionary_t), intent(in) <br />
+character(len=*), intent(in) :: key</code></li>
 </ul>
 
 <p>If a single string is passed in, the value of the attribute with that name.</p>
 
 <ul>
-<li><code>getValue</code>
-type(dictionary_t), intent(in)
-character(len=*), intent(in) :: uri, localname</li>
+<li><code>getValue <br />
+type(dictionary_t), intent(in) <br />
+character(len=*), intent(in) :: uri, localname</code></li>
 </ul>
 
 <p>If two strings are passed in, the value of the attribute with that uri and localname.</p>
 
 <ul>
-<li><code>getURI</code>
-type(dictionary_t), intent(in)
-integer, intent(in), optional :: i</li>
+<li><code>getURI <br />
+type(dictionary_t), intent(in) <br />
+integer, intent(in), optional :: i</code></li>
 </ul>
 
 <p>Returns a string containing the nsURI of the <code>i</code>th attribute.</p>
 
 <ul>
-<li><code>getlocalName</code>
-type(dictionary_t), intent(in)
-integer, intent(in), optional :: i</li>
+<li><code>getlocalName <br />
+type(dictionary_t), intent(in) <br />
+integer, intent(in), optional :: i</code></li>
 </ul>
 
 <p>Returns a string containing the localName of the <code>i</code>th attribute.</p>
