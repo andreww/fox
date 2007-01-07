@@ -2,6 +2,8 @@
 
 module m_sax_operate
 
+  use m_common_error, only: FoX_error
+
   use m_sax_reader, only: open_file, close_file
   use m_sax_parser, only: sax_parser_init, sax_parser_destroy, sax_parse
   use m_sax_types, only: xml_t
@@ -20,10 +22,17 @@ contains
   subroutine open_xml_file(xt, file, iostat, lun)
     type(xml_t), intent(out) :: xt
     character(len=*), intent(in) :: file
-    integer, intent(out) :: iostat
+    integer, intent(out), optional :: iostat
     integer, intent(in), optional :: lun
+    integer :: i
 
-    call open_file(xt%fb, file=file, iostat=iostat, lun=lun)
+    call open_file(xt%fb, file=file, iostat=i, lun=lun)
+
+    if (present(iostat)) then
+      iostat = i
+    else
+      call FoX_error("Error opening file in open_xml_file")
+    endif
     call sax_parser_init(xt%fx)
 
   end subroutine open_xml_file
