@@ -26,4 +26,6 @@ module FoX_sax
   public :: len
   public :: hasKey
 
+  public :: print_dict
+
 end module FoX_sax

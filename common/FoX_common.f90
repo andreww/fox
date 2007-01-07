@@ -13,6 +13,7 @@ module FoX_common
   public :: str
   public :: operator(//)
 
+!These are all exported through SAX now
   public :: dictionary_t
 !SAX functions
   public :: getIndex 
@@ -25,5 +26,7 @@ module FoX_common
 !For convenience
   public :: len
   public :: hasKey
+
+  public :: print_dict
 
 end module FoX_common
