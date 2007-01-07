@@ -822,8 +822,7 @@ contains
             s_temp(i2:i2+j) = s_in(i:i+j)
             i = i + j + 1
             i2 = i2 + j + 1
-            if (.not.fx%skippedExternal) then
-              ! or possibly otherwise? empty DTD?
+            if (.not.fx%skippedExternal.or.fx%standalone) then
               call add_error(fx%error_stack, "Undeclared entity encountered in standalone document.")
               goto 100
             endif

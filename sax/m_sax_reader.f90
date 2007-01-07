@@ -33,8 +33,8 @@ module m_sax_reader
   implicit none
   private
 
-  integer, parameter              :: BUFFER_NOT_CONNECTED = -2048
   ! FIXME need to check that io_eor & io_eof cannot be -2048
+  integer, parameter             :: BUFFER_NOT_CONNECTED = -2048
   ! We need a longish character buffer to a) minimize IO and
   ! b) allow stepping backwards in the lexer/parser.
   integer, parameter             :: BUFLENGTH = 1024
@@ -373,10 +373,7 @@ contains
     ! it is still zero. It is only non-zero when the buffer is empty,
     ! and we've hit eof - or when we've hit an IO error in reading.
 
-    ! FIXME semantics of pushback buffer ...
-    ! FIXME don't let read_chars work if anything in buffer
-
-    if (fb%pos >= READLENGTH) then
+    if (fb%pos > READLENGTH) then
       fb%buffer(:READLENGTH) = fb%buffer(READLENGTH+1:)
       fb%pos = fb%pos - READLENGTH
       fb%nchars = fb%nchars - READLENGTH
@@ -456,7 +453,6 @@ contains
         endif
       enddo
 
-      ! FIXME actually not sure of this next line...
       fb%buffer(fb%nchars+l_s+1:fb%nchars+l_s+p) = string(:p)
       l_s = l_s + p
       z = READLENGTH - l_s
