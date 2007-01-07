@@ -13,4 +13,17 @@ module FoX_sax
 
   public :: xml_t
 
+  public :: dictionary_t
+!SAX functions
+  public :: getIndex 
+  public :: getLength
+  public :: getLocalName
+  public :: getQName
+  public :: getURI
+  public :: getValue
+  public :: getType
+!For convenience
+  public :: len
+  public :: hasKey
+
 end module FoX_sax

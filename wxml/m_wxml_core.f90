@@ -146,17 +146,18 @@ module m_wxml_core
 
 contains
 
-  subroutine xml_OpenFile(filename, xf, preserve_whitespace, broken_indenting, channel, replace, addDecl)
+  subroutine xml_OpenFile(filename, xf, unit, iostat, preserve_whitespace, broken_indenting, replace, addDecl)
     character(len=*), intent(in)  :: filename
     type(xmlf_t), intent(inout)   :: xf
+    integer, intent(in), optional :: unit
+    integer, intent(out), optional :: iostat
     logical, intent(in), optional :: preserve_whitespace
     logical, intent(in), optional :: broken_indenting
-    integer, intent(in), optional :: channel
     logical, intent(in), optional :: replace
     logical, intent(in), optional :: addDecl
     
-    integer :: iostat
     logical :: repl, decl
+    integer :: iostat_
 
     if (xf%lun /= -1) &
       call wxml_fatal("Trying to reopen an already-open XML file")
@@ -176,11 +177,22 @@ contains
     xf%filename = vs_str(filename)
     allocate(xf%name(0))
     
-    if (present(channel)) then
-      xf%lun = channel
+    if (present(unit)) then
+      if (unit==-1) then
+        call get_unit(xf%lun,iostat_)
+        if (iostat_ /= 0) then
+          iostat = iostat_
+          return
+        endif
+      else
+        xf%lun = unit
+      endif
     else
-      call get_unit(xf%lun,iostat)
-      if (iostat /= 0) call wxml_fatal(xf, "cannot open file: "//filename)
+      call get_unit(xf%lun,iostat_)
+      if (iostat_ /= 0) then
+        iostat = iostat_
+        return
+      endif
     endif
     
     ! Use large I/O buffer in case the O.S./Compiler combination
@@ -192,10 +204,14 @@ contains
     
     if(repl) then
       open(unit=xf%lun, file=filename, form="formatted", status="replace", &
-        action="write", recl=xml_recl)
+        action="write", recl=xml_recl, iostat=iostat_)
     else 
       open(unit=xf%lun, file=filename, form="formatted", status="new", &
-        action="write", recl=xml_recl)
+        action="write", recl=xml_recl, iostat=iostat_)
+    endif
+    if (iostat_/=0) then
+      iostat = iostat_
+      return
     endif
 
     call init_elstack(xf%stack)

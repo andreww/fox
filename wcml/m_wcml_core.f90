@@ -29,9 +29,9 @@ contains
     logical, intent(in), optional :: replace
 
     if (unit==-1) then
-      call xml_OpenFile(filename, xf, broken_indenting=.true., replace=replace)
+      call xml_OpenFile(filename, xf, preserve_whitespace=.false., replace=replace)
     else
-      call xml_OpenFile(filename, xf, broken_indenting=.true., channel=unit, replace=replace)
+      call xml_OpenFile(filename, xf, preserve_whitespace=.false., unit=unit, replace=replace)
     endif
 
   end subroutine cmlBeginFile

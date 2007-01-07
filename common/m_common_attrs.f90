@@ -5,127 +5,187 @@ module m_common_attrs
 
   implicit none
   private
-  
+
   !Initial length of dictionary
   integer, parameter :: DICT_INIT_LEN = 10 
   !Multiplier if we need to extend it.
   real, parameter :: DICT_LEN_MULT = 1.5
 
   type dict_item
-     character(len=1), pointer, dimension(:) :: nsURI => null()
-     character(len=1), pointer, dimension(:) :: localName => null()
-     character(len=1), pointer, dimension(:) :: prefix => null()
-     character(len=1), pointer, dimension(:) :: key => null()
-     character(len=1), pointer, dimension(:) :: value => null()
+    character(len=1), pointer, dimension(:) :: nsURI => null()
+    character(len=1), pointer, dimension(:) :: localName => null()
+    character(len=1), pointer, dimension(:) :: prefix => null()
+    character(len=1), pointer, dimension(:) :: key => null()
+    character(len=1), pointer, dimension(:) :: value => null()
   end type dict_item
-  
+
   type dictionary_t
-     private
-     integer                                :: number_of_items ! = 0
-     type(dict_item), dimension(:), pointer :: items => null()
+    private
+    integer                                :: number_of_items ! = 0
+    type(dict_item), dimension(:), pointer :: items => null()
   end type dictionary_t
 
   public :: dictionary_t
 
   ! Building procedures
-  
+
   public :: init_dict
   public :: reset_dict
   public :: add_item_to_dict
   public :: destroy_dict
 
   ! Query and extraction procedures
-  
-  public  :: getLength
-  public  :: get_key 
-  public  :: get_value
-  public  :: remove_key
-  public  :: has_key
-  public  :: print_dict
+
+  ! SAX names:
+  public :: getIndex
+  public :: getLength
+  public :: getLocalName
+  public :: getQName
+  public :: getURI
+  public :: getValue
+  public :: getType
+  public :: hasKey
+
+  public :: len
+  public :: get_key 
+  public :: get_value
+  public :: remove_key
+  public :: has_key
+  public :: print_dict
 
   ! Namespaces
-  public :: get_nsURI
   public :: get_prefix
   public :: get_localName
   public :: set_nsURI
   public :: set_prefix
   public :: set_localName
-  
-  ! Just for the sake of completeness
-  public :: getType
- 
-  interface get_value
-     module procedure get_value_by_key, get_value_by_index
-  end interface
-  interface remove_key
-     module procedure remove_key_by_index
+
+  interface len
+    module procedure getLength
   end interface
 
-  interface get_nsURI
-     module procedure get_nsURI_by_index
+  interface hasKey
+    module procedure has_key, has_key_ns
+  end interface hasKey
+
+  interface getIndex
+    module procedure get_key_index, get_key_index_ns
+  end interface
+
+  interface getQName
+    module procedure get_key
+  end interface
+
+  interface getValue
+    module procedure get_value_by_key, get_value_by_index, get_value_by_key_ns
+  end interface
+  interface get_value
+    module procedure get_value_by_key, get_value_by_index
+  end interface
+  interface remove_key
+    module procedure remove_key_by_index
+  end interface
+
+  interface getURI
+    module procedure get_nsURI_by_index
   end interface
   interface get_prefix
-     module procedure get_prefix_by_index
+    module procedure get_prefix_by_index
+  end interface
+  interface getLocalName
+    module procedure get_localName_by_index
   end interface
   interface get_localName
-     module procedure get_localName_by_index
+    module procedure get_localName_by_index
   end interface
   interface set_nsURI
-     module procedure set_nsURI_by_index
+    module procedure set_nsURI_by_index
   end interface
   interface set_prefix
-     module procedure set_prefix_by_index
+    module procedure set_prefix_by_index
   end interface
   interface set_localName
-     module procedure set_localName_by_index_s
-     module procedure set_localName_by_index_vs
+    module procedure set_localName_by_index_s
+    module procedure set_localName_by_index_vs
   end interface
 
   interface getType
     module procedure getType_by_index, getType_by_keyname
   end interface
-  
+
 contains
 
   function getLength(dict) result(n)
     type(dictionary_t), intent(in)   :: dict
     integer                          :: n
-    
+
     n = dict%number_of_items
-    
+
   end function getLength
-  
+
 
   function has_key(dict,key) result(found)
     type(dictionary_t), intent(in)   :: dict
     character(len=*), intent(in)     :: key
     logical                          :: found
-    
+
     integer  ::  i
     found = .false.
     do  i = 1, dict%number_of_items
-       if (key == str_vs(dict%items(i)%key)) then
-          found = .true.
-          exit
-       endif
+      if (key == str_vs(dict%items(i)%key)) then
+        found = .true.
+        exit
+      endif
     enddo
   end function has_key
-  
+
+  function has_key_ns(dict, uri, localname) result(found)
+    type(dictionary_t), intent(in)   :: dict
+    character(len=*), intent(in)     :: uri, localname
+    logical                          :: found
+
+    integer  ::  i
+    found = .false.
+    do  i = 1, dict%number_of_items
+      if (uri==str_vs(dict%items(i)%nsURI) &
+        .and.localname==str_vs(dict%items(i)%localname)) then
+        found = .true.
+        exit
+      endif
+    enddo
+  end function has_key_ns
+
   pure function get_key_index(dict,key) result(ind)
     type(dictionary_t), intent(in)   :: dict
     character(len=*), intent(in)     :: key
     integer                          :: ind
-    
+
     integer  ::  i
-    ind = 0
+    ind = -1
     do  i = 1, dict%number_of_items
-       if (key == str_vs(dict%items(i)%key)) then
-          ind = i
-          exit
-       endif
+      if (key == str_vs(dict%items(i)%key)) then
+        ind = i
+        exit
+      endif
     enddo
   end function get_key_index
-  
+
+  pure function get_key_index_ns(dict, uri, localname) result(ind)
+    type(dictionary_t), intent(in)   :: dict
+    character(len=*), intent(in)     :: uri, localname
+    integer                          :: ind
+
+    integer  ::  i
+    ind = -1
+    do  i = 1, dict%number_of_items
+      if (uri==str_vs(dict%items(i)%nsURI) &
+        .and. localname==str_vs(dict%items(i)%localname)) then
+        ind = i
+        exit
+      endif
+    enddo
+  end function get_key_index_ns
+
 
   function get_value_by_key(dict,key,status) result(value)
     type(dictionary_t), intent(in)       :: dict
@@ -134,17 +194,38 @@ contains
     character(len = merge(size(dict%items(get_key_index(dict, key))%value), 0, (get_key_index(dict, key) > 0))) :: value
     !
     integer  :: i
-    
+
     if (present(status)) status = -1
     do  i = 1, dict%number_of_items
-       if (key == str_vs(dict%items(i)%key)) then
+      if (key == str_vs(dict%items(i)%key)) then
+        value = str_vs(dict%items(i)%value)
+        if (present(status)) status = 0
+        exit
+      endif
+    enddo
+
+  end function get_value_by_key
+
+  function get_value_by_key_ns(dict, uri, localname, status) result(value)
+    type(dictionary_t), intent(in)       :: dict
+    character(len=*), intent(in)         :: uri, localname
+    integer, optional, intent(out)       :: status
+    character(len = merge(size(dict%items(get_key_index_ns(dict, uri, localname))%value), 0, &
+      (get_key_index_ns(dict, uri, localname) > 0))) :: value
+    !
+    integer  :: i
+
+    if (present(status)) status = -1
+    do  i = 1, dict%number_of_items
+       if (uri==str_vs(dict%items(i)%nsURI) &
+         .and.localname==str_vs(dict%items(i)%localname)) then
           value = str_vs(dict%items(i)%value)
           if (present(status)) status = 0
           exit
        endif
     enddo
 
-  end function get_value_by_key
+  end function get_value_by_key_ns
 
   subroutine remove_key_by_index(dict, key, status)
     type(dictionary_t), intent(inout)       :: dict

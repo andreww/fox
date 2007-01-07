@@ -13,7 +13,7 @@
 
 ## API documentation
 
-* FoX has three sets of publically exported interfaces. These are documented here:
+* FoX has four sets of publically exported interfaces. These are documented here:
 
 ### COMMON interface
 
@@ -23,6 +23,10 @@
 
 * [FoX_wxml](|FoX_wxml|)
 * [FoX_wcml](|FoX_wcml|)
+
+### INPUT interface
+
+* [FoX_sax](|FoX_sax|)
 
 These documents describe all publically usable APIs.
 

@@ -97,7 +97,7 @@ The other likely most common event is the startElement event. Handling this invo
 
 An attribute dictionary is essentially a set of key:value pairs - where the key is the attributes name, and the value is its value. (In fact, when considering namespaces, it is more complex than this, but that can largely be ignored.)
 
-Full details of all the dictionary-manipulation routines are given elsewhere (link), but here we shall show the most common.
+Full details of all the dictionary-manipulation routines are given in AttributeDictionaries(|AttributeDictionaries|), but here we shall show the most common.
 
 * `len(dictionary)` - returns the number of entries in the dictionary (the number of attributes declared)
 
@@ -107,7 +107,9 @@ Full details of all the dictionary-manipulation routines are given elsewhere (li
 
 * `hasKey(dictionary, key)` (where `key` is a string) returns `.true.` or `.false.` depending on whether an attribute named `key` is present.
 
-* `getValue(dictionary, key) (where `key` is a string) returns a string containing the value of the attribute named `key` (if it is present)
+* `hasKey(dictionary, URI, localname)` (where `URI` and `localname are strings) returns `.true.` or `.false.` depending on whether an attribute with the appropriate `URI` and `localname` is present.
+
+* `getValue(dictionary, URI, localname)` (where `URI` and `localname` are strings) returns a string containing the value of the attribute with the appropriate `URI` and `localname` (if it is present)
 
 So, a simple subroutine to receive a startElement event would look like:
 

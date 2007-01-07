@@ -14,12 +14,16 @@ module FoX_common
   public :: operator(//)
 
   public :: dictionary_t
+!SAX functions
+  public :: getIndex 
   public :: getLength
-  public :: print_dict 
-  public :: get_key
-  public :: get_value
-  public :: has_key
-  public :: get_nsURI
-  public :: get_localName
+  public :: getLocalName
+  public :: getQName
+  public :: getURI
+  public :: getValue
+  public :: getType
+!For convenience
+  public :: len
+  public :: hasKey
 
 end module FoX_common
