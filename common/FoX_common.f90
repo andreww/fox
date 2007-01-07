@@ -11,12 +11,10 @@ module FoX_common
   public :: FoX_version
 
   public :: str
-
-  ! FIXME we should rename everythting below.
-  ! only necessary for SAX and maybe DOM anyway.
+  public :: operator(//)
 
   public :: dictionary_t
-  public :: len
+  public :: getLength
   public :: print_dict 
   public :: get_key
   public :: get_value

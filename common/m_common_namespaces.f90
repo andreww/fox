@@ -1,7 +1,7 @@
 module m_common_namespaces
 
   use m_common_array_str, only: str_vs, vs_str
-  use m_common_attrs, only: dictionary_t, get_key, get_value, remove_key, len
+  use m_common_attrs, only: dictionary_t, get_key, get_value, remove_key, getLength
   use m_common_attrs, only: set_nsURI, set_localName, get_prefix, add_item_to_dict
   use m_common_error, only: FoX_error
   use m_common_namecheck, only: checkNCName, checkIRI
@@ -419,7 +419,7 @@ contains
     ! we can't do a simple loop across the attributes,
     ! because we need to remove some as we go along ...
     i = 1
-    do while (i <= len(atts))
+    do while (i <= getLength(atts))
        xmlns = get_key(atts, i)
        if (xmlns == 'xmlns ') then
           !Default namespace is being set
@@ -457,7 +457,7 @@ contains
     enddo
 
     ! having done that, now resolve all attribute namespaces:
-    do i = 1, len(atts)
+    do i = 1, getLength(atts)
        ! get name
        allocate(QName(len(get_key(atts, i))))
        QName = vs_str(get_key(atts,i))
@@ -489,7 +489,7 @@ contains
 
     integer :: i, i_p, l_d, l_ps, n
 
-    n = len(atts) ! we need the length before we fiddle with it
+    n = getLength(atts) ! we need the length before we fiddle with it
 
     !Does the default NS need added?
     l_d = ubound(nsDict%defaults,1)
@@ -514,7 +514,7 @@ contains
 
     !Finally, we may have some we've added for attribute QNames
     ! have to get those too:
-    do i = 1, len(atts)
+    do i = 1, getLength(atts)
       ! get prefix, and identify the relevant NS mapping
       i_p = getPrefixIndex(nsDict, get_prefix(atts, i))
       l_ps = ubound(nsDict%prefixes(i_p)%urilist,1)

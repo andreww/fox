@@ -1,6 +1,6 @@
 module m_wxml_core
 
-  use m_common_attrs, only: dictionary_t, len, get_key, get_value, has_key, &
+  use m_common_attrs, only: dictionary_t, getLength, get_key, get_value, has_key, &
     add_item_to_dict, init_dict, reset_dict, destroy_dict
   use m_common_array_str, only: vs_str, str_vs, devnull
   use m_common_buffer, only: buffer_t, len, add_to_buffer, reset_buffer, &
@@ -968,7 +968,7 @@ contains
     select case (xf%state_2)
     case (WXML_STATE_2_INSIDE_ELEMENT)
       call checkNamespacesWriting(xf%dict, xf%nsDict, len(xf%stack))
-      if (len(xf%dict) > 0) call write_attributes(xf)
+      if (getLength(xf%dict) > 0) call write_attributes(xf)
       if (xf%preserve_whitespace) call add_eol(xf)
       call add_to_buffer("/>",xf%buffer)
       call devnull(pop_elstack(xf%stack))
@@ -1128,7 +1128,7 @@ contains
     select case (xf%state_2)
     case (WXML_STATE_2_INSIDE_ELEMENT)
       call checkNamespacesWriting(xf%dict, xf%nsDict, len(xf%stack))
-      if (len(xf%dict) > 0)  call write_attributes(xf)
+      if (getLength(xf%dict) > 0)  call write_attributes(xf)
       if (.not.xf%preserve_whitespace) then
         call add_to_buffer('>', xf%buffer)
       else
@@ -1137,7 +1137,7 @@ contains
       endif
       xf%state_2 = WXML_STATE_2_OUTSIDE_TAG
     case (WXML_STATE_2_INSIDE_PI)
-      if (len(xf%dict) > 0)  call write_attributes(xf)
+      if (getLength(xf%dict) > 0)  call write_attributes(xf)
       call add_to_buffer('?>', xf%buffer)
       xf%state_2 = WXML_STATE_2_OUTSIDE_TAG
     case (WXML_STATE_2_IN_CHARDATA)
@@ -1158,7 +1158,7 @@ contains
       xf%state_2 /= WXML_STATE_2_INSIDE_ELEMENT) &
       call wxml_fatal("Internal library error")
     
-    do i = 1, len(xf%dict)
+    do i = 1, getLength(xf%dict)
       size = len(get_key(xf%dict, i)) + len(get_value(xf%dict, i)) + 4
       if ((len(xf%buffer) + size) > COLUMNS) then
         call add_eol(xf)

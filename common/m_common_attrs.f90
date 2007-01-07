@@ -36,7 +36,7 @@ module m_common_attrs
 
   ! Query and extraction procedures
   
-  public  :: len
+  public  :: getLength
   public  :: get_key 
   public  :: get_value
   public  :: remove_key
@@ -54,9 +54,6 @@ module m_common_attrs
   ! Just for the sake of completeness
   public :: getType
  
-  interface len
-     module procedure number_of_entries
-  end interface
   interface get_value
      module procedure get_value_by_key, get_value_by_index
   end interface
@@ -90,13 +87,13 @@ module m_common_attrs
   
 contains
 
-  function number_of_entries(dict) result(n)
+  function getLength(dict) result(n)
     type(dictionary_t), intent(in)   :: dict
     integer                          :: n
     
     n = dict%number_of_items
     
-  end function number_of_entries
+  end function getLength
   
 
   function has_key(dict,key) result(found)
