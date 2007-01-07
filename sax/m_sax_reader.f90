@@ -465,6 +465,10 @@ contains
       character(len=n_chars) :: string
       integer :: nc
 
+      ! This should only return EOF if it is EOF , and we've read no
+      ! character at all.
+
+
       ! We may have a pending newline
       if (fb%eor) then
         string(1:1) = achar(13)
@@ -477,8 +481,11 @@ contains
         if (fb%eof) then
           ! Don't read again if we've already encountered eof
           nc = 0
-          iostat = io_eof
-          ! We don't want to return just yet - we might have
+          if (ncr==0) then
+            iostat = io_eof
+            return
+          endif
+          ! else we don't want to return just yet - we might have
           ! picked up some chars from previous reads
         else
           if (fb%lun == -1) then
@@ -496,11 +503,11 @@ contains
             endif
           else
             read(unit=fb%lun, iostat=iostat, advance="no", &
-              size=nc, fmt="("//str(n_chars-ncr)//"a)") string(ncr+1:)
+              size=nc, fmt="("//str(n_chars-ncr)//"a1)") string(ncr+1:)
           endif
         endif
         ncr = ncr + nc
-        if (iostat == io_eor) then ! we hit a newline, need to record it
+        if (iostat==io_eor) then ! we hit a newline, need to record it
           if (ncr < n_chars) then
             ! we can just add it to the string
             ncr = ncr + 1
@@ -655,6 +662,12 @@ contains
       if (iostat==io_eof) then
         iostat = 0! just return with what we have
         m_i = fb%nchars - fb%pos + 1
+        if (m_i==0) then 
+          m_i = 1
+        else
+          iostat = 0 
+        endif
+        exit
       elseif (iostat/=0) then
         return
       else

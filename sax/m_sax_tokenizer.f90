@@ -38,6 +38,7 @@ contains
     character :: c, c2
 
     if (associated(fx%token)) deallocate(fx%token)
+    nullify(fx%token)
     if (associated(fx%next_token)) then
       iostat = 0
       fx%token => fx%next_token
@@ -229,7 +230,6 @@ contains
       ! Either way, we return
 
     elseif (fx%context==CTXT_IN_DTD) then
-      
       if (fx%whitespace==WS_FORBIDDEN) then
         ! This MUST be the end of a comment
         c = get_characters(fb, 1, iostat)
@@ -304,7 +304,7 @@ contains
             fx%token => vs_str_alloc('<!')
           else
             call add_error(fx%error_stack, &
-              "Tokenizing error in the DTD")
+              "Invalid token found in DTD")
             return
           endif
         elseif (c=='%') then
@@ -321,6 +321,10 @@ contains
             return
           endif
           fx%token => vs_str_alloc('%'//str_vs(fb%namebuffer)//';')
+        else
+          call add_error(fx%error_stack, &
+            "Invalid token found in DTD")
+          return
         endif
       endif
       return
@@ -466,7 +470,8 @@ contains
           endif
 
         case default 
-          ! make an error
+          ! return c as token anyway - probably meaningless though
+          fx%token => vs_str_alloc(c)
 
         end select
 

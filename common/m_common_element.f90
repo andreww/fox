@@ -195,6 +195,10 @@ contains
     character, pointer :: order(:), name(:), temp(:)
     logical :: mixed_additional
 
+    order => null()
+    name => null()
+    temp => null()
+
     mixed = .false.
     nbrackets = 0
     mixed_additional = .false.
@@ -693,6 +697,12 @@ contains
     ! We need ignore_att to process but not take account of duplicate attributes
 
     ! elem is optional so we can not record declarations if necessary.
+
+    name => null()
+    type => null()
+    default => null()
+    value => null()
+    temp => null()
 
     state = ST_START
 

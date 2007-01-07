@@ -303,6 +303,9 @@ contains
     type(element_t), pointer :: elem
     integer, pointer :: temp_wf_stack(:)
 
+    nullify(tempString)
+    nullify(elem)
+
     if (present(validate)) then
       validCheck = validate
     else
@@ -364,6 +367,7 @@ contains
       endif
       if (.not.associated(fx%token)) then
         call add_error(fx%error_stack, 'Internal error! No token found!')
+        goto 100
       endif
 
       select case (fx%state)
@@ -531,6 +535,7 @@ contains
         !write(*,*)'ST_START_CDATA_1'
         if (str_vs(fx%token) == 'CDATA') then
           fx%state = ST_START_CDATA_2
+          fx%whitespace = WS_FORBIDDEN
         else
           call add_error(fx%error_stack, "Unexpected token found - expecting CDATA afte <![")
           goto 100
@@ -1002,9 +1007,10 @@ contains
         if (existing_element(fx%element_list, str_vs(fx%name))) then
           if (validCheck) then
             call add_error(fx%error_stack, "Duplicate Element declaration")
+            goto 100
           else
-            elem => get_element(fx%element_list, str_vs(fx%name))
             ! Ignore contents ...
+            nullify(elem)
             call parse_dtd_element(str_vs(fx%token), fx%xml_version, fx%error_stack)
           endif
         else
@@ -1012,6 +1018,7 @@ contains
             elem => add_element(fx%element_list, str_vs(fx%name))
             call parse_dtd_element(str_vs(fx%token), fx%xml_version, fx%error_stack, elem)
           else
+            nullify(elem)
             call parse_dtd_element(str_vs(fx%token), fx%xml_version, fx%error_stack)
           endif
         endif
@@ -1021,7 +1028,7 @@ contains
       case (ST_DTD_ELEMENT_END)
         !write(*,*)'ST_DTD_ELEMENT_END'
         if (str_vs(fx%token)=='>') then
-          if (processDTD) then
+          if (processDTD.and.associated(elem)) then
             if (present(elementDecl_handler)) &
               call elementDecl_handler(str_vs(fx%name), str_vs(elem%model))
           endif
@@ -1102,7 +1109,7 @@ contains
           call add_error(fx%error_stack, "Invalid System Id literal")
           goto 100
         endif
-        fx%systemId => vs_str_alloc(str_vs(fx%token(2:size(fx%systemId)-1)))
+        fx%systemId => vs_str_alloc(str_vs(fx%token(2:size(fx%token)-1)))
         deallocate(fx%token)
         fx%state = ST_DTD_ENTITY_NDATA
 
