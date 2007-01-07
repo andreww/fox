@@ -1479,7 +1479,7 @@ contains
 
     n = size(ca) - 1
     do i = 1, size(ca)
-      n = n + len(ca(i), fmt)
+      n = n + len(ca(i), fmt) 
     enddo
   end function str_complex_sp_array_fmt_len
      
@@ -1493,7 +1493,7 @@ contains
     s(1:len(ca(1), fmt)) = safestr(ca(1), fmt)
     n = len(ca(1), fmt)+1
     do i = 2, size(ca) 
-      s(n:n+len(ca(i), fmt)+1) = " "//safestr(ca(i), fmt)
+      s(n:n+len(ca(i), fmt)) = " "//safestr(ca(i), fmt)
       n = n + len(ca(i), fmt)+1
     enddo
   end function str_complex_sp_array_fmt
@@ -1670,7 +1670,7 @@ contains
     s(1:len(ca(1), fmt)) = safestr(ca(1), fmt)
     n = len(ca(1), fmt)+1
     do i = 2, size(ca) 
-      s(n:n+len(ca(i), fmt)+1) = " "//safestr(ca(i), fmt)
+      s(n:n+len(ca(i), fmt)) = " "//safestr(ca(i), fmt)
       n = n + len(ca(i), fmt)+1
     enddo
   end function str_complex_dp_array_fmt

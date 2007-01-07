@@ -13,7 +13,7 @@ default: FoX_DoX.html
 
 FoX_DoX.html: $(OBJECTS)
 	sed -e 's/TITLE/$*/' head > "$@"
-	for i in $(OBJECTS); do echo '<a name="'$${i%.html}'"/>' >> $@; sed -e 's/|\(.*\)|/#\1/g' $${i%.html}.md | markdown >> $@; echo '</div><hr/><div class="DoX"/>' >> $@; done
+	for i in $(OBJECTS); do echo '<a name="'$${i%.html}'"/>' >> $@; sed -e 's/|\(.*\)|/#\1/g' $${i%.html}.md | markdown >> $@; echo '</div><hr/><div class="DoX">' >> $@; done
 	cat tail >> $@
 
 

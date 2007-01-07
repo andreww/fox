@@ -11,19 +11,18 @@
 
 <p>When parsing XML using the FoX SAX module, attributes are returned contained within a dictionary object.</p>
 
-<p>Any subroutines that have to deal the dictionary object must use the FoX_common module, and it is manipulated using the API described below.</p>
+<p>All of the attribute dictionary objects and functions are exported through FoX<em>common and FoX</em>sax - you must USE the module to enable them. The dictionary API is described here.</p>
 
-<p>Conceptually, the dictionary is comprised of a series of entries, one for each attribute, each of which has the following associated data:</p>
+<p>An attribute dictionary consists of a list of entries, one for each attribute. The entries all have the following pieces of data:</p>
 
 <ul>
-<li>key - the attribute's name  </li>
+<li>key - the attribute's full name  </li>
 <li>value - the attribute's value</li>
 </ul>
 
 <p>and for namespaced attributes:</p>
 
 <ul>
-<li>prefix - the prefix (if any) of the attribute</li>
 <li>nsURI - the namespace URI (if any) of the attribute</li>
 <li>localname - the local name of the attribute</li>
 </ul>
@@ -46,42 +45,65 @@ type(dictionary_t), intent(in) :: dict</li>
 <p>Returns an integer with the length of the dictionary, ie the number of dictionary entries.</p>
 
 <ul>
-<li><code>has_key</code>
+<li><code>getLength</code>
+type(dictionary_t), intent(in) :: dict</li>
+</ul>
+
+<p>Returns an integer with the length of the dictionary, ie the number of dictionary entries. Identical to the <code>len</code> function.</p>
+
+<ul>
+<li><code>hasKey</code>
 type(dictionary_t), intent(in) :: dict
 character(len=*), intent(in) :: key</li>
 </ul>
 
-<p>Returns a logical value according ot whether the dictionary contains an attribute named <code>key</code> or not.</p>
+<p>Returns a logical value according to whether the dictionary contains an attribute named <code>key</code> or not.</p>
+
+<ul>
+<li><code>hasKey</code>
+type(dictionary_t), intent(in) :: dict
+character(len=<em>), intent(in) :: uri
+character(len=</em>), intent(in) :: localname</li>
+</ul>
+
+<p>Returns a logical value according to whether the dictionary contains an attribute with the correct <code>URI</code> and <code>localname</code>.</p>
 
 <p>The following functions may be used to retrieve data from a dictionary</p>
 
 <ul>
-<li><code>getKey</code>
+<li><code>getQName</code>
 type(dictionary_t), intent(in) :: dict <br />
 integer, intent(in) :: i</li>
 </ul>
 
-<p>Return the key of the <code>i</code>th dictionary entry.</p>
+<p>Return the full name of the <code>i</code>th dictionary entry.</p>
 
 <ul>
 <li><code>getValue</code>
 type(dictionary_t), intent(in)
-integer, intent(in), optional :: i
-character(len=*), intent(in), optional :: value</li>
+integer, intent(in) :: i</li>
 </ul>
 
-<p>If an integer is passed in - the value of the <code>i</code>th attribute. If a string is passed in, the value of the attribute with that key.</p>
+<p>If an integer is passed in - the value of the <code>i</code>th attribute. </p>
 
 <ul>
-<li><code>getPrefix</code>
+<li><code>getValue</code>
 type(dictionary_t), intent(in)
-integer, intent(in), optional :: i</li>
+character(len=*), intent(in) :: key</li>
 </ul>
 
-<p>Returns a string containing the prefix of the <code>i</code>th attribute.</p>
+<p>If a single string is passed in, the value of the attribute with that name.</p>
 
 <ul>
-<li><code>getnsURI</code>
+<li><code>getValue</code>
+type(dictionary_t), intent(in)
+character(len=*), intent(in) :: uri, localname</li>
+</ul>
+
+<p>If two strings are passed in, the value of the attribute with that uri and localname.</p>
+
+<ul>
+<li><code>getURI</code>
 type(dictionary_t), intent(in)
 integer, intent(in), optional :: i</li>
 </ul>

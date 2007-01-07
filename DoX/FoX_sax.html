@@ -9,7 +9,7 @@
   <div class="DoX">
 <h1>SAX</h1>
 
-<p>SAX stands for Simple API for XML, and was originally a Java API for reading XML. (Full details at [http://saxproject.org]. SAX implementations exist for most common modern computer languages.</p>
+<p>SAX stands for Simple API for XML, and was originally a Java API for reading XML. (Full details at <a href="http://saxproject.org">http://saxproject.org</a>. SAX implementations exist for most common modern computer languages.</p>
 
 <p>FoX includes a SAX implementation, which translates most of the Java API into Fortran, and makes it accessible to Fortran programs, enabling them to read in XML documents in a fashion as close and familiar as possible to other languages.</p>
 
@@ -33,7 +33,7 @@
 
 <h3>Invoking the parser.</h3>
 
-<p>ANy program using the FoX SAX parser must a) use the FoX module, and b) declare a derived type variable to hold the parser, like so:</p>
+<p>Any program using the FoX SAX parser must a) use the FoX module, and b) declare a derived type variable to hold the parser, like so:</p>
 
 <pre><code>   use FoX_sax
    type(xml_t) :: xp
@@ -53,7 +53,7 @@
 <pre><code>  call open_xml_string(xp, XMLstring)
 </code></pre>
 
-<p>where XMLstring is a character variable.</p>
+<p>where <code>XMLstring</code> is a character variable.</p>
 
 <p>To now run the parser over the file, you simply do:</p>
 
@@ -65,7 +65,7 @@
 <pre><code> call close_xml_t(xp)
 </code></pre>
 
-<h3> Receiving events</h3>
+<h3>Receiving events</h3>
 
 <p>To receive events, you must construct a module containing event handling subroutines. These are subroutines of a prescribed form - the input &amp; output is predetermined by the requirements of the SAX interface, but the body of the subroutine is up to you.</p>
 
@@ -73,39 +73,40 @@
 
 <p>To receive notification of character events, you must write a subroutine which takes as input one string, which will contain the characters received. So:</p>
 
-<pre><code> module event_handling
-
- contains
+<pre><code>module event_handling
+  use FoX_sax
+contains
 
   subroutine characters_handler(chars)
-       character(len=*), intent(in) :: chars
+    character(len=*), intent(in) :: chars
 
-       print*, chars
- end subroutine
- end module
+    print*, chars
+  end subroutine
+end module
 </code></pre>
 
 <p>That does very little - it simply prints out the data it receives. However, since the subroutine is in a module, you can save the data to a module variable, and manipulate it elsewhere; alternatively you can choose to call other subroutines based on the input.</p>
 
-<p>So, a complete program which reads in all the text from an XML document looks like this:
-    module event_handling</p>
+<p>So, a complete program which reads in all the text from an XML document looks like this:</p>
 
-<pre><code> contains
+<pre><code>module event_handling
+  use FoX_sax
+contains
 
   subroutine characters_handler(chars)
-       character(len=*), intent(in) :: chars
+    character(len=*), intent(in) :: chars
 
-       print*, chars
- end subroutine
- end module
+    print*, chars
+  end subroutine
+end module
 
- program XMLreader
- use FoX_sax
- use event_handling
- type(xml_t) :: xp
- call open_xml_file(xp, 'input.xml')
- call parse(xp, characters_handler=characters_handler)
- call close_xml_t(xp)
+program XMLreader
+  use FoX_sax
+  use event_handling
+  type(xml_t) :: xp
+  call open_xml_file(xp, 'input.xml')
+  call parse(xp, characters_handler=characters_handler)
+  call close_xml_t(xp)
 end program
 </code></pre>
 
@@ -113,23 +114,24 @@ end program
 
 <p>The other likely most common event is the startElement event. Handling this involves writing a subroutine which takes as input three strings (which are the local name, namespace URI, and fully qualified name of the tag) and a dictionary of attributes. </p>
 
-<p>An attribute dictionary is essentially a set of key:value pairs - where the key is the attributes name, and the value is its value. (In fact, when considering namespaces, it is more complex than this, but that can largely be ignored.)</p>
+<p>An attribute dictionary is essentially a set of key:value pairs - where the key is the attributes name, and the value is its value. (When considering namespaces, each attribute also has a URI and localName.)</p>
 
-<p>Full details of all the dictionary-manipulation routines are given elsewhere (link), but here we shall show the most common.</p>
+<p>Full details of all the dictionary-manipulation routines are given in AttributeDictionaries(AttributeDictionaries.html), but here we shall show the most common.</p>
 
 <ul>
 <li><p><code>len(dictionary)</code> - returns the number of entries in the dictionary (the number of attributes declared)</p></li>
 <li><p><code>getKey(dictionary, i)</code> (where <code>i</code> is an integer) returns a string containing the key of the <code>i</code>th dictionary entry (ie, the name of the <code>i</code>th attribute.</p></li>
 <li><p><code>getValue(dictionary, i)</code> (where <code>i</code> is an integer) returns a string containing the value of the <code>i</code>th dictionary entry (ie the value of the <code>i</code>th attribute.</p></li>
 <li><p><code>hasKey(dictionary, key)</code> (where <code>key</code> is a string) returns <code>.true.</code> or <code>.false.</code> depending on whether an attribute named <code>key</code> is present.</p></li>
-<li><p><code>getValue(dictionary, key) (where</code>key<code>is a string) returns a string containing the value of the attribute named</code>key` (if it is present)</p></li>
+<li><p><code>hasKey(dictionary, URI, localname)</code> (where <code>URI</code> and <code>localname</code> are strings) returns <code>.true.</code> or <code>.false.</code> depending on whether an attribute with the appropriate <code>URI</code> and <code>localname</code> is present.</p></li>
+<li><p><code>getValue(dictionary, URI, localname)</code> (where <code>URI</code> and <code>localname</code> are strings) returns a string containing the value of the attribute with the appropriate <code>URI</code> and <code>localname</code> (if it is present)</p></li>
 </ul>
 
 <p>So, a simple subroutine to receive a startElement event would look like:</p>
 
-<pre><code> module event_handling
+<pre><code>module event_handling
 
- contains
+contains
 
  subroutine startElement_handler(URI, localname, name,attributes)
    character(len=*), intent(in)   :: URI  
@@ -146,7 +148,7 @@ end program
    enddo
 
   end subroutine startElement_handler
-  end module
+end module
 
 program XMLreader
  use FoX_sax
@@ -168,14 +170,13 @@ end program
 
 <p>An error handling suubroutine works in the same way as any other event handler, with the event data being an error message. Thus, you could write:</p>
 
-<pre><code>  subroutine error_handler(msg)
-       character(len=*), intent(in) :: msg
+<pre><code>subroutine error_handler(msg)
+  character(len=*), intent(in) :: msg
 
-       print*, "The SAX parser encountered an error:"
-       print*, msg
-       print*, "Never mind, carrying on with the rest of the calcaulation."
- end subroutine
- end module
+  print*, "The SAX parser encountered an error:"
+  print*, msg
+  print*, "Never mind, carrying on with the rest of the calcaulation."
+end subroutine
 </code></pre>
 
 <hr />
@@ -191,39 +192,39 @@ end program
 <p>There are four subroutines:</p>
 
 <ul>
-<li><code>open_xml_file</code> <br />
+<li><code>open_xml_file <br />
 type(xml_t), intent(inout) :: xp <br />
 character(len=*), intent(in) :: string <br />
-integer, intent(out) :: iostat</li>
+integer, intent(out), optional :: iostat</code></li>
 </ul>
 
 <p>This opens a file. <code>xp</code> is initialized, and prepared for parsing. <code>string</code> must contain the name of the file to be opened. <code>iostat</code> reports on the success of opening the file. A value of <code>0</code> indicates success.</p>
 
 <ul>
-<li><p><code>open_xml_string</code> <br />
-type(xml_t), intent(inout) :: xp
-character(len=*), intent(in) :: string</p>
+<li><p><code>open_xml_string <br />
+type(xml_t), intent(inout) :: xpi <br />
+character(len=*), intent(in) :: string</code></p>
 
 <p>This prepares to parse a string containing XML data. <code>xp</code> is initialized. <code>string</code> must contain the XML data.</p></li>
-<li><p><code>close_xml_t</code>
-type(xml_t), intent(inout) :: xp</p></li>
+<li><p><code>close_xml_t <br />
+type(xml_t), intent(inout) :: xp</code></p></li>
 </ul>
 
 <p>This closes down the parser (and closes the file, if input was coming from a file.) <code>xp</code> is left uninitialized, ready to be used again if necessary.</p>
 
 <ul>
-<li><p><code>parse</code>
-type(xml_t), intent(inout) :: xp
-logical, optional, intent(in) :: validate
-external :: list of event handlers.</p>
+<li><p><code>parse <br />
+type(xml_t), intent(inout) :: xp <br />
+external :: list of event handlers <br />
+logical, optional, intent(in) :: validate</code></p>
 
 <p>This tells <code>xp</code> to start parsing its document. </p></li>
 </ul>
 
 <p>(<em>Advanced: By default, this will be done in a non-validating way, testing only for well-formedness errors. However, if <code>validate</code> is set to true. FoX will attempt to diagnose validation errors. Note that FoX is not a full validating parser, and will not read external entities, so do not rely on this behaviour</em>)</p>
 
-<p>The full ist of event handlers is in the next section. To use them, the interface must be placed in a module, and the body of the subroutine filled in as desired; then it should be specified as an argument to <code>parse</code> as: <br />
-  <code>name_of_event_handler = name_of_user_written_subroutine</code>
+<p>The full list of event handlers is in the next section. To use them, the interface must be placed in a module, and the body of the subroutine filled in as desired; then it should be specified as an argument to <code>parse</code> as: <br />
+  <code>name_of_event_handler = name_of_user_written_subroutine</code> <br />
 Thus a typical call to <code>parse</code> might look something like:</p>
 
 <pre><code>  call parse(xp, startElement_handler = mystartelement, endElement_handler = myendelement, characters_handler = mychars)
@@ -233,17 +234,17 @@ Thus a typical call to <code>parse</code> might look something like:</p>
 
 <hr />
 
-<h2> Callbacks.</h2>
+<h2>Callbacks.</h2>
 
-<p>All of the callbacks specified by SAX 2 are implemented. Documentation of the SAX 2 interfaces is available at [http://saxproject.org], but as the interfaces needed adjustment for Fortran, they are listed here.</p>
+<p>All of the callbacks specified by SAX 2 are implemented. Documentation of the SAX 2 interfaces is available in the JavaDoc at <a href="http://sax_project.org">http://saxproject.org</a>, but as the interfaces needed adjustment for Fortran, they are listed here.</p>
 
 <p>For documentation on the meaning of the callbacks and of their arguments, please refer to the Java SAX documentation.</p>
 
 <ul>
-<li><code>characters_handler</code>
-  subroutine characters<em>handler(chunk)
-    character(len=*), intent(in) :: chunk
-  end subroutine characters</em>handler</li>
+<li><code>characters_handler <br />
+  subroutine characters_handler(chunk) <br />
+    character(len=*), intent(in) :: chunk <br />
+  end subroutine characters_handler</code></li>
 </ul>
 
 <p>Triggered when some character data is read from between tags. </p>
@@ -253,257 +254,260 @@ Thus a typical call to <code>parse</code> might look something like:</p>
 <p>NB Note also that it is not required that large chunks of character data all come as one event - they may come as multiple consecutive events.</p>
 
 <ul>
-<li><code>endDocument_handler</code> <br />
-  subroutine endDocument<em>handler() <br />
-  end subroutine endDocument</em>handler</li>
+<li><code>endDocument_handler <br />
+  subroutine endDocument_handler() <br />
+  end subroutine endDocument_handler</code></li>
 </ul>
 
 <p>Triggered when the parser reaches the end of the document.</p>
 
 <ul>
-<li><code>endElement_handler</code>
-  subroutine endElement<em>handler(namespaceURI, localName, name)
-    character(len=*), intent(in)     :: namespaceURI
-    character(len=*), intent(in)     :: localName
-    character(len=*), intent(in)     :: name 
-  end subroutine endElement</em>handler</li>
+<li><code>endElement_handler <br />
+  subroutine endElement_handler(namespaceURI, localName, name) <br />
+    character(len=*), intent(in)     :: namespaceURI <br />
+    character(len=*), intent(in)     :: localName <br />
+    character(len=*), intent(in)     :: name <br />
+  end subroutine endElement_handler</code></li>
 </ul>
 
 <p>Triggered by a closing tag.</p>
 
 <ul>
-<li><code>endPrefixMapping_handler</code>
-  subroutine endPrefixMapping<em>handler(prefix)
-    character(len=*), intent(in) :: prefix
-  end subroutine endPrefixMapping</em>handler</li>
+<li><code>endPrefixMapping_handler <br />
+  subroutine endPrefixMapping_handler(prefix) <br />
+    character(len=*), intent(in) :: prefix <br />
+  end subroutine endPrefixMapping_handler</code></li>
 </ul>
 
 <p>Triggered when a namespace prefix mapping goes out of scope.</p>
 
 <ul>
-<li><code>ignorableWhitespace</code>
-  subroutine ignorableWhitespace<em>handler(chars)
-    character(len=*), intent(in) :: chars
-  end subroutine ignorableWhitespace</em>handler</li>
+<li><code>ignorableWhitespace <br />
+  subroutine ignorableWhitespace_handler(chars) <br />
+    character(len=*), intent(in) :: chars <br />
+  end subroutine ignorableWhitespace_handler</code></li>
 </ul>
 
 <p>Triggered when whitespace is encountered within an element declared as <code>EMPTY</code>. (Only active in validating mode.)</p>
 
 <ul>
-<li><code>processingInstruction_handler</code>
-  subroutine processingInstruction<em>handler(name, content)
-    character(len=*), intent(in)     :: name
-    character(len=*), intent(in)     :: content
-  end subroutine processingInstruction</em>handler</li>
+<li><code>processingInstruction_handler <br />
+  subroutine processingInstruction_handler(name, content) <br />
+    character(len=*), intent(in)     :: name <br />
+    character(len=*), intent(in)     :: content <br />
+  end subroutine processingInstruction_handler</code></li>
 </ul>
 
 <p>Triggered by a Processing Instruction</p>
 
 <ul>
-<li><code>skippedEntity_handler</code>
-  subroutine skippedEntity<em>handler(name)
-    character(len=*), intent(in) :: name
-  end subroutine skippedEntity</em>handler</li>
+<li><code>skippedEntity_handler <br />
+  subroutine skippedEntity_handler(name) <br />
+    character(len=*), intent(in) :: name <br />
+  end subroutine skippedEntity_handler</code></li>
 </ul>
 
 <p>Triggered when either an external entity, or an undeclared entity, is skipped.</p>
 
 <ul>
-<li><code>startDocument_handler</code>
-  subroutine startDocument<em>handler()
-  end subroutine startDocument</em>handler</li>
+<li><code>startDocument_handler <br />
+  subroutine startDocument_handler() <br />
+  end subroutine startDocument_handler</code></li>
 </ul>
 
 <p>Triggered when the parser starts reading the document.</p>
 
 <ul>
-<li><code>startElement_handler</code>
-  subroutine startElement<em>handler(namespaceURI, localName, name, attributes)
-    use FoX</em>common
-    character(len=<em>), intent(in)     :: namespaceUri
-    character(len=</em>), intent(in)     :: localName
-    character(len=*), intent(in)     :: name
-    type(dictionary<em>t), intent(in)   :: attributes
-  end subroutine startElement</em>handler</li>
+<li><code>startElement_handler <br />
+  subroutine startElement_handler(namespaceURI, localName, name, attributes) <br />
+    character(len=*), intent(in)     :: namespaceUri <br />
+    character(len=*), intent(in)     :: localName <br />
+    character(len=*), intent(in)     :: name <br />
+    type(dictionary_t), intent(in)   :: attributes <br />
+  end subroutine startElement_handler</code></li>
 </ul>
 
 <p>Triggered when an opening tag is encountered. (see LINK for documentation on handling attribute dictionaries.</p>
 
 <ul>
-<li><code>startPrefixMapping_handler</code>
-  subroutine startPrefixMapping<em>handler(namespaceURI, prefix)
-    character(len=*), intent(in) :: namespaceURI
-    character(len=*), intent(in) :: prefix
-  end subroutine startPrefixMapping</em>handler</li>
+<li><code>startPrefixMapping_handler <br />
+  subroutine startPrefixMapping_handler(namespaceURI, prefix) <br />
+    character(len=*), intent(in) :: namespaceURI <br />
+    character(len=*), intent(in) :: prefix <br />
+  end subroutine startPrefixMapping_handler</code></li>
 </ul>
 
 <p>Triggered when a namespace prefix mapping start.</p>
 
 <ul>
-<li><code>notationDecl_handler</code>
-  subroutine notationDecl<em>handler(name, publicId, systemId)
-    character(len=*), intent(in) :: name
-    character(len=*), optional, intent(in) :: publicId
-    character(len=*), optional, intent(in) :: systemId
-  end subroutine notationDecl</em>handler</li>
+<li><code>notationDecl_handler <br />
+  subroutine notationDecl_handler(name, publicId, systemId) <br />
+    character(len=*), intent(in) :: name <br />
+    character(len=*), optional, intent(in) :: publicId <br />
+    character(len=*), optional, intent(in) :: systemId <br />
+  end subroutine notationDecl_handler</code></li>
 </ul>
 
 <p>Triggered when a NOTATION declaration is made in the DTD</p>
 
 <ul>
-<li><code>unparsedEntityDecl_handler</code>
-  subroutine unparsedEntityDecl<em>handler(name, publicId, systemId, notation)
-    character(len=*), intent(in) :: name
-    character(len=*), optional, intent(in) :: publicId
-    character(len=*), intent(in) :: systemId
-    character(len=*), intent(in) :: notation
-  end subroutine unparsedEntityDecl</em>handler</li>
+<li><code>unparsedEntityDecl_handler <br />
+  subroutine unparsedEntityDecl_handler(name, publicId, systemId, notation) <br />
+    character(len=*), intent(in) :: name <br />
+    character(len=*), optional, intent(in) :: publicId <br />
+    character(len=*), intent(in) :: systemId <br />
+    character(len=*), intent(in) :: notation <br />
+  end subroutine unparsedEntityDecl_handler</code></li>
 </ul>
 
 <p>Triggered when an unparsed entity is declared</p>
 
 <ul>
-<li><code>error_handler</code>
-  subroutine error<em>handler(msg)
-    character(len=*), intent(in)     :: msg
-  end subroutine error</em>handler</li>
+<li><code>error_handler <br />
+  subroutine error_handler(msg) <br />
+    character(len=*), intent(in)     :: msg <br />
+  end subroutine error_handler</code></li>
 </ul>
 
 <p>Triggered when a normal parsing error is encountered. Parsing will cease after this event.</p>
 
 <ul>
-<li><code>fatalError_handler</code>
-  subroutine fatalError<em>handler(msg)
-    character(len=*), intent(in)     :: msg
-  end subroutine fatalError</em>handler</li>
+<li><code>fatalError_handler <br />
+  subroutine fatalError_handler(msg) <br />
+    character(len=*), intent(in)     :: msg <br />
+  end subroutine fatalError_handler</code></li>
 </ul>
 
 <p>Triggered when a fatal parsing error is encountered. Parsing will cease after this event.</p>
 
 <ul>
-<li><code>warning_handler</code>
-  subroutine warning<em>handler(msg)
-    character(len=*), intent(in)     :: msg
-  end subroutine warning</em>handler</li>
+<li><code>warning_handler <br />
+  subroutine warning_handler(msg) <br />
+    character(len=*), intent(in)     :: msg <br />
+  end subroutine warning_handler</code></li>
 </ul>
 
 <p>Triggered when a parser warning is generated. Parsing will continue after this event.</p>
 
 <ul>
-<li><code>attributeDecl_handler</code>
-  subroutine attributeDecl<em>handler(eName, aName, type, mode, value)
-    character(len=*), intent(in) :: eName
-    character(len=*), intent(in) :: aName
-    character(len=*), intent(in) :: type
-    character(len=*), intent(in), optional :: mode
-    character(len=*), intent(in), optional :: value
-  end subroutine attributeDecl</em>handler</li>
+<li><code>attributeDecl_handler <br />
+  subroutine attributeDecl_handler(eName, aName, type, mode, value) <br />
+    character(len=*), intent(in) :: eName <br />
+    character(len=*), intent(in) :: aName <br />
+    character(len=*), intent(in) :: type <br />
+    character(len=*), intent(in), optional :: mode <br />
+    character(len=*), intent(in), optional :: value <br />
+  end subroutine attributeDecl_handler</code></li>
 </ul>
 
 <p>Triggered when an attribute declaration is encountered in the DTD.</p>
 
 <ul>
-<li><code>elementDecl_handler</code>
-  subroutine elementDecl<em>handler(name, model)
-    character(len=*), intent(in) :: name
-    character(len=*), intent(in) :: model
-  end subroutine elementDecl</em>handler</li>
+<li><code>elementDecl_handler <br />
+  subroutine elementDecl_handler(name, model) <br />
+    character(len=*), intent(in) :: name <br />
+    character(len=*), intent(in) :: model <br />
+  end subroutine elementDecl_handler</code></li>
 </ul>
 
 <p>Triggered when an element declaration is enountered in the DTD.</p>
 
 <ul>
-<li><code>externalEntityDecl_handler</code>
-  subroutine externalEntityDecl<em>handler(name, publicId, systemId)
-    character(len=*), intent(in) :: name
-    character(len=*), optional, intent(in) :: publicId
-    character(len=*), intent(in) :: systemId
-  end subroutine externalEntityDecl</em>handler</li>
+<li><code>externalEntityDecl_handler <br />
+  subroutine externalEntityDecl_handler(name, publicId, systemId) <br />
+    character(len=*), intent(in) :: name <br />
+    character(len=*), optional, intent(in) :: publicId <br />
+    character(len=*), intent(in) :: systemId <br />
+  end subroutine externalEntityDecl_handler</code></li>
 </ul>
 
 <p>Triggered when a parsed external entity is declared in the DTD.</p>
 
 <ul>
-<li><code>internalEntityDecl_handler</code>
-  subroutine internalEntityDecl<em>handler(name, value)
-    character(len=*), intent(in) :: name
-    character(len=*), intent(in) :: value
-  end subroutine internalEntityDecl</em>handler</li>
+<li><code>internalEntityDecl_handler <br />
+  subroutine internalEntityDecl_handler(name, value) <br />
+    character(len=*), intent(in) :: name <br />
+    character(len=*), intent(in) :: value <br />
+  end subroutine internalEntityDecl_handler</code></li>
 </ul>
 
 <p>Triggered when an internal entity is declared in the DTD.</p>
 
 <ul>
-<li><code>comment_handler</code>
-  subroutine comment<em>handler(comment)
-    character(len=*), intent(in) :: comment
-  end subroutine comment</em>handler</li>
+<li><code>comment_handler <br />
+  subroutine comment_handler(comment) <br />
+    character(len=*), intent(in) :: comment <br />
+  end subroutine comment_handler</code></li>
 </ul>
 
 <p>Triggered when a comment is encountered.</p>
 
 <ul>
-<li><code>endCdata_handler</code>
-  subroutine endCdata<em>handler()
-  end subroutine endCdata</em>handler</li>
+<li><code>endCdata_handler <br />
+  subroutine endCdata_handler() <br />
+  end subroutine endCdata_handler</code></li>
 </ul>
 
 <p>Triggered by the end of a CData section.</p>
 
 <ul>
-<li><code>endDTD_handler</code>
-  subroutine endDTD<em>handler()
-  end subroutine endDTD</em>handler</li>
+<li><code>endDTD_handler <br />
+  subroutine endDTD_handler() <br />
+  end subroutine endDTD_handler</code></li>
 </ul>
 
 <p>Triggered by the end of a DTD.</p>
 
 <ul>
-<li><code>endEntity_handler</code>
-  subroutine endEntity<em>handler(name)
-    character(len=*), intent(in) :: name
-  end subroutine endEntity</em>handler</li>
+<li><code>endEntity_handler <br />
+  subroutine endEntity_handler(name) <br />
+    character(len=*), intent(in) :: name <br />
+  end subroutine endEntity_handler</code></li>
 </ul>
 
 <p>Triggered at the end of entity expansion.</p>
 
 <ul>
-<li><code>startCdata_handler</code>
-  subroutine startCdata<em>handler()
-  end subroutine startCdata</em>handler`</li>
+<li><code>startCdata_handler <br />
+  subroutine startCdata_handler() <br />
+  end subroutine startCdata_handler</code></li>
 </ul>
 
 <p>Triggered by the start of a CData section.</p>
 
-<p><em><code>startDTD_handler</code>
-      subroutine startDTD_handler(name, publicId, systemId)
-        character(len=</em>), intent(in) :: name
-        character(len=<em>), optional, intent(in) :: publicId
-        character(len=</em>), optional, intent(in) :: systemId
-      end subroutine startDTD_handler</p>
+<ul>
+<li><code>startDTD_handler <br />
+  subroutine startDTD_handler(name, publicId, systemId) <br />
+    character(len=*), intent(in) :: name <br />
+    character(len=*), optional, intent(in) :: publicId <br />
+    character(len=*), optional, intent(in) :: systemId <br />
+  end subroutine startDTD_handler</code></li>
+</ul>
 
 <p>Triggered by the start of a DTD section.</p>
 
 <ul>
-<li><code>startEntity_handler</code>
-  subroutine startEntity<em>handler(name)
-    character(len=*), intent(in) :: name
-  end subroutine startEntity</em>handler</li>
+<li><code>startEntity_handler <br />
+  subroutine startEntity_handler(name) <br />
+    character(len=*), intent(in) :: name <br />
+  end subroutine startEntity_handler</code></li>
 </ul>
 
 <p>Triggered by the start of entity expansion.</p>
 
 <hr />
 
-<p>Exceptions.</p>
+<h3>Exceptions.</h3>
 
 <p>Although FoX tries very hard to  work to the letter of the XML and SAX standards, it falls short in a few areas.</p>
 
 <ul>
-<li>Unicode support is completely absent. It is unfortunately impossible to implement Unicode reading through standard Fortran. FoX will work perfectly well on documents of any encoding that only contain characters equivalent to those in US-ASCII, but its behaviour on documents containing other characters is not well-defined.</li>
+<li>Unicode support is completely absent. It is unfortunately impossible to implement Unicode reading in standard Fortran 95. FoX will work perfectly well on documents of any encoding that only contain characters equivalent to those in US-ASCII, but its behaviour on documents containing other characters is not well-defined.</li>
 </ul>
 
 <p>(This includes non-ASCII characters present only by character reference.)</p>
+
+<p>It will, however, happily accept documents labelled as UTF-8 encoded.</p>
 
 <ul>
 <li><p>XML specifies that all SYSTEM IDs reported by events should be converted to URIs before the application receives them. FoX does no such conversion, and as a result, will allow through invalid SYSTEM IDs.</p></li>
@@ -518,26 +522,26 @@ Thus a typical call to <code>parse</code> might look something like:</p>
 
 <hr />
 
-<p>What of Java SAX 2 is not included in FoX?</p>
+<h3>What of Java SAX 2 is not included in FoX?</h3>
 
 <p>The difference betweek Java &amp; Fortran means that none of the SAX APIs can be copied directly. However, FoX offers data types, subroutines, and interfaces covering a large proportion of the facilities offered by SAX. Where it does not, this is mentioned here.</p>
 
 <p>org.sax.xml:
-* Querying/setting of feature flags/property values for the XML parser.
+* Querying/setting of feature flags/property values for the XML parser. <br />
 * XML filters - Java SAX makes it possible to write filters to intercept the
-flow of events. FoX does not support this.
-* Namespace configuration - SAX 2 allows changing the ways in which namespaces are interpreted
+flow of events. FoX does not support this. <br />
+* Namespace configuration - SAX 2 allows changing the ways in which namespaces are interpreted <br />
 by the parser. FoX supports only the SAX 2 default.
-* Entity resolution - SAX 2 exports an interface to the application for entity resolution, but
+* Entity resolution - SAX 2 exports an interface to the application for entity resolution, but <br />
 FOX does not - all entities are resolved within the parser.
-* Locator - SAX 2 offers an interface to export information regarding object locations within the document, FoX does not.
-* XMLReader - FoX only offers the parse() method - no other methods really make sense in Fortran.
-* AttributeList/DocumentHandler/Parser - FoX only offers namespace aware attributes, not the pre-namespace versions.</p>
+* Locator - SAX 2 offers an interface to export information regarding object locations within the document, FoX does not. <br />
+* XMLReader - FoX only offers the parse() method - no other methods really make sense in Fortran. <br />
+* AttributeList/DocumentHandler/Parser - FoX only offers namespace aware attributes, not the pre-namespace versions.  </p>
 
 <p>org.sax.xml.ext:
-* Attributes2 - FoX does not implement these attribute-declaration querying functions
-* EntityResolver2 - see above
-* Locator2 - not implemented</p>
+* Attributes2 - FoX does not implement these attribute-declaration querying functions <br />
+* EntityResolver2 - see above <br />
+* Locator2 - not implemented  </p>
 
 <p>org.sax.xml.helpers:
 * None of these helper methods are implemented.</p>

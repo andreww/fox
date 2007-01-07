@@ -7,9 +7,11 @@ Unpack it as normal, and change directory into the top-level directory, FoX.
 
 ### Requirements for use
 
-FoX requires a Fortran 95 compiler - not just Fortran 90. All currently available versions of Fortran compilers claim to support F95. If your favoured compiler is not listed as working below, I recommend the use of [g95](www.g95.org), which is free to download and use.
+FoX requires a Fortran 95 compiler - not just Fortran 90. All currently available versions of Fortran compilers claim to support F95. If your favoured compiler is not listed as working below, I recommend the use of [g95](www.g95.org), which is free to download and use. And if your favourite compiler is listed as not working, then please send a bug report to your compiler vendor.
 
-The following compilers are tested and are known to work:
+Version 2.1.0 has been tested extensively on g95 and NAG, and is known to work on g95 (2006-11-21), and NAG Fortran 5.0, patch 391. Results from other compilers are welcome.
+
+As of version 2.0.2, the following compilers were tested and are known to work:
 
 * gfortran, version 4.2 (as of 2006-07-09)
 * g95 (version of 2006-08-01, earlier versions untested)
@@ -19,7 +21,7 @@ The following compilers are tested and are known to work:
 * Pathscale, version 2.4 (previous versions untested)
 * XLF version 9.1 (previous versions untested)
 
-The following compilers are tested and known to fail
+and the following compilers tested and known to fail
 
 * gfortran prior to and including version 4.1
 * Intel Fortran prior to version 9.0
@@ -63,17 +65,18 @@ However, you may only be interested in building the libraries, or perhaps a subs
 
     wxml_lib
     wcml_lib
+    sax_lib
 
 ##Testing
 
-Two test-suites are supplied; one in `common/test` and one in `wxml/test`. In both cases, `cd` to the relevant directory and then run `./run_tests.sh`.
+Three test-suites are supplied; in `common/test`, `wxml/test`, and `wcml/test`. In each case, `cd` to the relevant directory and then run `./run_tests.sh`.
+
+(The sax testsuite is available separately. Please contact the author for details.)
 
 The tests will run and then print out the number of passes and fails. Details of failing tests may be found in the file `failed.out`.
 
-Known failures:   
-* `test_xml_Close_2` sometimes unexpectedly fails - this is not a problem, ignore it.
-* On Lahey, 16 tests in `wxml/test` will fail - this is a flaw in the testsuite, the library is actually
-working correctly. Please ignore this problem. 
+Known failures:     
+* `test_xml_Close_2` sometimes unexpectedly fails - this is not a problem, ignore it.  
 
 If any other failures occur, please send a message to the mailing list (<FoX@lists.uszla.me.uk>) with details of compiler, hardware platform, and the nature of the failure.
 
@@ -89,13 +92,17 @@ FoX-config takes the following arguments:
 * `--libs`: return flags for linking
 * `--wxml`: return flags for compiling/linking against wxml
 * `--wcml`: return flags for compiling/linking against wcml
+* `--sax`: return flags for compiling/linking against sax
 
+If it is called with no arguments, it will expand to compile & link flags, thusly:
 
-For compiling files against FoX, do the following:
+       f95 -o program program.f90 `FoX-config`
+
+For compiling only against FoX, do the following:
 
  	f95 -c `FoX-config --fcflags` sourcefile.f90
 
-For linking objects to the FoX library, do:
+For linking only to the FoX library, do:
 
   	f95 -o program `FoX-config --libs` *.o
 
