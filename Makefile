@@ -1,12 +1,13 @@
-#
 #!/bin/make
 #
-#default: objsdir dom_example sax_example wxml_example wcml_example
-default: objsdir wxml_example wcml_example sax_example
+default: objsdir wxml_lib wcml_lib sax_lib examples_build
 	touch .FoX
 #
 objsdir:
 	mkdir -p objs/lib objs/finclude
+#
+examples_build:
+	(cd examples; make)
 #
 check: dom_check sax_check wxml_check wcml_check
 #
@@ -14,10 +15,7 @@ include arch.make
 #---------------------------
 INCFLAGS=-Iobjs/finclude
 #
-DOM_OBJS=dom_example.o
-SAX_OBJS=m_handlers.o sax_example.o
-WXML_OBJS=wxml_example.o
-WCML_OBJS=wcml_example.o
+#
 #
 dom_lib: sax_lib wxml_lib
 	(cd dom; $(MAKE))
@@ -67,6 +65,7 @@ common_check:
 dom_check:
 sax_check:
 wcml_check:
+	(cd wcml/test;./run_tests.sh)
 wxml_check:
 	(cd wxml/test;./run_tests.sh)
 check: common_check wxml_check wcml_check sax_check dom_check
@@ -75,7 +74,7 @@ DoX:
 	(cd DoX; make)
 
 clean: wxml_lib_clean wcml_lib_clean common_lib_clean fsys_lib_clean sax_lib_clean
-	rm -f *.o dom_example sax_example wxml_example wcml_example simple.xml output.xml *.*d *.a
+	(cd examples;make clean)
 	rm -f objs/lib/* objs/finclude/* .FoX
 
 distclean: clean
