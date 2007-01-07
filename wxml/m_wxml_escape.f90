@@ -11,6 +11,7 @@ module m_wxml_escape
 
   integer, parameter :: AMP = iachar('&')
   integer, parameter :: LT = iachar('<')
+  integer, parameter :: GT = iachar('>')
   integer, parameter :: QUOT = iachar('"')
   integer, parameter :: APOS = iachar("'")
 
@@ -30,6 +31,8 @@ contains
       case (AMP)
         c = c + 4
       case (LT)
+        c = c + 3
+      case (GT)
         c = c + 3
       case (QUOT)
         c = c + 5
@@ -99,6 +102,9 @@ contains
           c = c + 5
         case (LT)
           s2(c:c+3) = "&lt;"
+          c = c + 4
+        case (GT)
+          s2(c:c+3) = "&gt;"
           c = c + 4
         case (QUOT)
           s2(c:c+5) = "&quot;"
