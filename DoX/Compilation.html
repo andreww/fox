@@ -15,9 +15,11 @@
 
 <h3>Requirements for use</h3>
 
-<p>FoX requires a Fortran 95 compiler - not just Fortran 90. All currently available versions of Fortran compilers claim to support F95. If your favoured compiler is not listed as working below, I recommend the use of <a href="www.g95.org">g95</a>, which is free to download and use.</p>
+<p>FoX requires a Fortran 95 compiler - not just Fortran 90. All currently available versions of Fortran compilers claim to support F95. If your favoured compiler is not listed as working below, I recommend the use of <a href="www.g95.org">g95</a>, which is free to download and use. And if your favourite compiler is listed as not working, then please send a bug report to your compiler vendor.</p>
 
-<p>The following compilers are tested and are known to work:</p>
+<p>Version 2.1.0 has been tested extensively on g95 and NAG, and is known to work on g95 (2006-11-21), and NAG Fortran 5.0, patch 391. Results from other compilers are welcome.</p>
+
+<p>As of version 2.0.2, the following compilers were tested and are known to work:</p>
 
 <ul>
 <li>gfortran, version 4.2 (as of 2006-07-09)</li>
@@ -29,7 +31,7 @@
 <li>XLF version 9.1 (previous versions untested)</li>
 </ul>
 
-<p>The following compilers are tested and known to fail</p>
+<p>and the following compilers tested and known to fail</p>
 
 <ul>
 <li>gfortran prior to and including version 4.1</li>
@@ -81,20 +83,21 @@ However, you may only be interested in building the libraries, or perhaps a subs
 
 <pre><code>wxml_lib
 wcml_lib
+sax_lib
 </code></pre>
 
 <h2>Testing</h2>
 
-<p>Two test-suites are supplied; one in <code>common/test</code> and one in <code>wxml/test</code>. In both cases, <code>cd</code> to the relevant directory and then run <code>./run_tests.sh</code>.</p>
+<p>Three test-suites are supplied; in <code>common/test</code>, <code>wxml/test</code>, and <code>wcml/test</code>. In each case, <code>cd</code> to the relevant directory and then run <code>./run_tests.sh</code>.</p>
+
+<p>(The sax testsuite is available separately. Please contact the author for details.)</p>
 
 <p>The tests will run and then print out the number of passes and fails. Details of failing tests may be found in the file <code>failed.out</code>.</p>
 
 <p>Known failures: <br />
-* <code>test_xml_Close_2</code> sometimes unexpectedly fails - this is not a problem, ignore it.
-* On Lahey, 16 tests in <code>wxml/test</code> will fail - this is a flaw in the testsuite, the library is actually
-working correctly. Please ignore this problem. </p>
+* <code>test_xml_Close_2</code> sometimes unexpectedly fails - this is not a problem, ignore it.  </p>
 
-<p>If any other failures occur, please send a message to the mailing list (<a href="&#x6D;&#x61;&#105;&#108;&#x74;o:&#x46;&#111;&#88;&#64;&#108;&#x69;&#115;&#116;&#115;&#46;&#117;&#115;&#x7A;&#x6C;&#97;&#x2E;&#109;&#101;&#x2E;&#x75;&#107;">&#x46;&#111;&#88;&#64;&#108;&#x69;&#115;&#116;&#115;&#46;&#117;&#115;&#x7A;&#x6C;&#97;&#x2E;&#109;&#101;&#x2E;&#x75;&#107;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
+<p>If any other failures occur, please send a message to the mailing list (<a href="&#109;&#97;&#x69;&#x6C;&#x74;&#111;:&#70;&#111;&#88;&#64;&#x6C;&#x69;&#115;&#116;&#115;&#46;&#117;&#x73;&#x7A;&#x6C;&#x61;&#46;&#109;e&#46;&#x75;&#107;">&#70;&#111;&#88;&#64;&#x6C;&#x69;&#115;&#116;&#115;&#46;&#117;&#x73;&#x7A;&#x6C;&#x61;&#46;&#109;e&#46;&#x75;&#107;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
 
 <h2>Linking to an existing program</h2>
 
@@ -111,14 +114,20 @@ working correctly. Please ignore this problem. </p>
 <li><code>--libs</code>: return flags for linking</li>
 <li><code>--wxml</code>: return flags for compiling/linking against wxml</li>
 <li><code>--wcml</code>: return flags for compiling/linking against wcml</li>
+<li><code>--sax</code>: return flags for compiling/linking against sax</li>
 </ul>
 
-<p>For compiling files against FoX, do the following:</p>
+<p>If it is called with no arguments, it will expand to compile &amp; link flags, thusly:</p>
+
+<pre><code>   f95 -o program program.f90 `FoX-config`
+</code></pre>
+
+<p>For compiling only against FoX, do the following:</p>
 
 <pre><code>f95 -c `FoX-config --fcflags` sourcefile.f90
 </code></pre>
 
-<p>For linking objects to the FoX library, do:</p>
+<p>For linking only to the FoX library, do:</p>
 
 <pre><code>f95 -o program `FoX-config --libs` *.o
 </code></pre>

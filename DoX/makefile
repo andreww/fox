@@ -3,7 +3,7 @@
 .SUFFIXES:
 .SUFFIXES: .html .md
 
-OBJECTS = FoX.html Versioning.html Compilation.html Embedding.html FoX_common.html StringFormatting.html FoX_wxml.html FoX_wcml.html Debugging.html Information.html Licensing.html
+OBJECTS = FoX.html Versioning.html Compilation.html Embedding.html FoX_common.html StringFormatting.html FoX_wxml.html FoX_wcml.html Debugging.html FoX_sax.html AttributeDictionaries.html Information.html Licensing.html
 
 default: FoX_DoX.html
 	ln -sf FoX.html index.html
@@ -13,7 +13,7 @@ default: FoX_DoX.html
 
 FoX_DoX.html: $(OBJECTS)
 	sed -e 's/TITLE/$*/' head > "$@"
-	for i in $(OBJECTS); do echo '<a name="'$${i%.html}'"/>' >> $@; sed -e 's/|\(.*\)|/#\1/g' $${i%.html}.md | markdown >> $@; echo '</div><hr/><div class="DoX"/>' >> $@; done
+	for i in $(OBJECTS); do echo '<a name="'$${i%.html}'"/>' >> $@; sed -e 's/|\(.*\)|/#\1/g' $${i%.html}.md | markdown >> $@; echo '</div><hr/><div class="DoX">' >> $@; done
 	cat tail >> $@
 
 

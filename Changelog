@@ -1,6 +1,8 @@
 2007-01-07: version 2.1.0
-        Incorporate fully-rewritten SAX interface
-        Complex number output from wxml & wcml
+        Introduce fully-rewritten SAX interface
+        Full WCML testsuite
+        Complex number output for WXML & WCML
+        Assorted minor bugfixes
 
 2006-10-05: version 2.0.2
         Fix crash on printing matrices

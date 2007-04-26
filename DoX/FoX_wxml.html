@@ -65,7 +65,7 @@
 <li><code>xml_OpenFile</code> <br />
 <strong>filename</strong>: <em>string</em>: Filename to be opened <br />
 <strong>xf</strong>: <em>xmlf_t</em>: XML File handle <br />
-(<strong>broken_indenting</strong>): <em>logical</em>:  Should the output XML be pretty-printed?
+(<strong>preserve_whitespace</strong>): <em>logical</em>: Is whitespace important in the output? (If not, the XML will be pretty-printed.)
 <em>default: false</em> <br />
 (<strong>channel</strong>): <em>integer</em>: What Fortran file handle should the XML file be attached to? 
 <em>default: picked by the library at runtime</em> <br />
@@ -189,7 +189,7 @@ FoX's control, and cannot be manipulated by the user.)</p>
 
 <p>then the following two calls are necessary, in the prescribed order:</p>
 
-<pre><code>  xml_AddNamespace(xf, 'cml', 'http://www.xml-cml.org')
+<pre><code>  xml_DeclareNamespace(xf, 'cml', 'http://www.xml-cml.org')
   xml_NewElement(xf, 'cml:cml')
 </code></pre>
 

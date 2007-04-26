@@ -1,7 +1,7 @@
 module m_common_namespaces
 
   use m_common_array_str, only: str_vs, vs_str
-  use m_common_attrs, only: dictionary_t, get_key, get_value, remove_key, len
+  use m_common_attrs, only: dictionary_t, get_key, get_value, remove_key, getLength
   use m_common_attrs, only: set_nsURI, set_localName, get_prefix, add_item_to_dict
   use m_common_error, only: FoX_error
   use m_common_namecheck, only: checkNCName, checkIRI
@@ -99,7 +99,6 @@ contains
        enddo
        deallocate(nsDict%prefixes(i)%prefix)
        deallocate(nsDict%prefixes(i)%urilist)
-       deallocate(nsDict%prefixes(i)%prefix)
     enddo
     deallocate(nsDict%prefixes)
   end subroutine destroyNamespaceDictionary
@@ -221,11 +220,12 @@ contains
 
   end subroutine removePrefixedURI
 
-  subroutine addPrefixedNS(nsDict, prefix, URI, ix, xml)
+  subroutine addPrefixedNS(nsDict, prefix, URI, ix, xv, xml)
     type(namespaceDictionary), intent(inout) :: nsDict
     character(len=*), intent(in) :: prefix
     character(len=*), intent(in) :: uri
     integer, intent(in) :: ix
+    integer, intent(in) :: xv
     logical, intent(in), optional :: xml
     
     integer :: l_p, p_i, i
@@ -254,7 +254,7 @@ contains
       endif
     endif
 
-    if (.not.checkNCName(prefix)) &
+    if (.not.checkNCName(prefix, xv)) &
       call FoX_error("Attempt to declare invalid prefix: "//prefix)
 
     if (.not.checkIRI(URI)) &
@@ -394,10 +394,11 @@ contains
   end subroutine removePrefix
 
 
-  subroutine checkNamespaces(atts, nsDict, ix, start_prefix_handler)
+  subroutine checkNamespaces(atts, nsDict, ix, xv, start_prefix_handler)
     type(dictionary_t), intent(inout) :: atts
     type(namespaceDictionary), intent(inout) :: nsDict
     integer, intent(in) :: ix ! depth of nesting of current element.
+    integer, intent(in) :: xv
 
     optional :: start_prefix_handler ! what to do when we find a new prefix
 
@@ -418,7 +419,7 @@ contains
     ! we can't do a simple loop across the attributes,
     ! because we need to remove some as we go along ...
     i = 1
-    do while (i <= len(atts))
+    do while (i <= getLength(atts))
        xmlns = get_key(atts, i)
        if (xmlns == 'xmlns ') then
           !Default namespace is being set
@@ -442,7 +443,7 @@ contains
           allocate(prefix(xmlnsLength - 6))
           QName = vs_str(get_key(atts, i))
           prefix = QName(7:)
-          call addPrefixedNS(nsDict, str_vs(prefix), str_vs(URI), ix)
+          call addPrefixedNS(nsDict, str_vs(prefix), str_vs(URI), ix, xv)
           if (present(start_prefix_handler)) &
                call start_prefix_handler(str_vs(URI), str_vs(prefix))
           deallocate(URI)
@@ -456,7 +457,7 @@ contains
     enddo
 
     ! having done that, now resolve all attribute namespaces:
-    do i = 1, len(atts)
+    do i = 1, getLength(atts)
        ! get name
        allocate(QName(len(get_key(atts, i))))
        QName = vs_str(get_key(atts,i))
@@ -488,7 +489,7 @@ contains
 
     integer :: i, i_p, l_d, l_ps, n
 
-    n = len(atts) ! we need the length before we fiddle with it
+    n = getLength(atts) ! we need the length before we fiddle with it
 
     !Does the default NS need added?
     l_d = ubound(nsDict%defaults,1)
@@ -513,7 +514,7 @@ contains
 
     !Finally, we may have some we've added for attribute QNames
     ! have to get those too:
-    do i = 1, len(atts)
+    do i = 1, getLength(atts)
       ! get prefix, and identify the relevant NS mapping
       i_p = getPrefixIndex(nsDict, get_prefix(atts, i))
       l_ps = ubound(nsDict%prefixes(i_p)%urilist,1)

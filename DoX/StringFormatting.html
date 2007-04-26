@@ -26,6 +26,19 @@ standard Fortran I/O formatting routines do not offer the control required for u
 <pre><code> print*, str(data)
 </code></pre>
 
+<p>In addition, for ease of use, the <code>//</code> concatenation operator is overloaded, such that strings can easily be formed by concatenation of strings to other datatypes. To use this you must import it via:</p>
+
+<pre><code> use FoX_common, only: operator(//)
+</code></pre>
+
+<p>and use it like so:</p>
+
+<pre><code> integer :: data
+ print*, "This is a number "//data
+</code></pre>
+
+<p>This will work for all native Fortran data types - but no floating point formatting is available as described below with concatenation, only with str()</p>
+
 <p>You may pass data of the following primitive types to <code>str</code>:</p>
 
 <h2>Scalar data</h2>

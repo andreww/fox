@@ -15,6 +15,17 @@ and use it like so:
 
      print*, str(data)
 
+In addition, for ease of use, the `//` concatenation operator is overloaded, such that strings can easily be formed by concatenation of strings to other datatypes. To use this you must import it via:
+
+     use FoX_common, only: operator(//)
+
+and use it like so:
+
+     integer :: data
+     print*, "This is a number "//data
+
+This will work for all native Fortran data types - but no floating point formatting is available as described below with concatenation, only with str()
+
 You may pass data of the following primitive types to `str`:
 
 ## Scalar data

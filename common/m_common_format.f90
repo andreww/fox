@@ -85,7 +85,17 @@ module m_common_format
                      str_complex_dp_matrix_len, str_complex_dp_matrix_fmt_len
   end interface
 
+  interface operator(//)
+    module procedure concat_str_int, concat_int_str, &
+      concat_str_logical, concat_logical_str, &
+      concat_real_sp_str, concat_str_real_sp, &
+      concat_real_dp_str, concat_str_real_dp, &
+      concat_complex_sp_str, concat_str_complex_sp, &
+      concat_complex_dp_str, concat_str_complex_dp
+  end interface
+
   public :: str
+  public :: operator(//)
 
   public :: str_to_int_10
   public :: str_to_int_16
@@ -144,7 +154,7 @@ contains
     n = 0
     do i = 0, max_power
       j = max_power - i + 1
-      n = n + (index(hexdigit, str_l(j:j)) - 1) * 10**i
+      n = n + (index(hexdigit, str_l(j:j)) - 1) * 16**i
     enddo
 
   contains
@@ -1469,7 +1479,7 @@ contains
 
     n = size(ca) - 1
     do i = 1, size(ca)
-      n = n + len(ca(i), fmt)
+      n = n + len(ca(i), fmt) 
     enddo
   end function str_complex_sp_array_fmt_len
      
@@ -1483,7 +1493,7 @@ contains
     s(1:len(ca(1), fmt)) = safestr(ca(1), fmt)
     n = len(ca(1), fmt)+1
     do i = 2, size(ca) 
-      s(n:n+len(ca(i), fmt)+1) = " "//safestr(ca(i), fmt)
+      s(n:n+len(ca(i), fmt)) = " "//safestr(ca(i), fmt)
       n = n + len(ca(i), fmt)+1
     enddo
   end function str_complex_sp_array_fmt
@@ -1660,7 +1670,7 @@ contains
     s(1:len(ca(1), fmt)) = safestr(ca(1), fmt)
     n = len(ca(1), fmt)+1
     do i = 2, size(ca) 
-      s(n:n+len(ca(i), fmt)+1) = " "//safestr(ca(i), fmt)
+      s(n:n+len(ca(i), fmt)) = " "//safestr(ca(i), fmt)
       n = n + len(ca(i), fmt)+1
     enddo
   end function str_complex_dp_array_fmt
@@ -1780,5 +1790,82 @@ contains
       good = .true.
     endif
   end function checkFmt
-     
+
+  pure function concat_str_int(s1, s2) result(s3)
+    character(len=*), intent(in) :: s1
+    integer, intent(in) :: s2
+    character(len=len(s1)+len(s2)) :: s3
+    s3 = s1//str(s2)
+  end function concat_str_int
+  pure function concat_int_str(s1, s2) result(s3)
+    integer, intent(in) :: s1
+    character(len=*), intent(in) :: s2
+    character(len=len(s1)+len(s2)) :: s3
+    s3 = str(s1)//s2
+  end function concat_int_str
+
+  pure function concat_str_logical(s1, s2) result(s3)
+    character(len=*), intent(in) :: s1
+    logical, intent(in) :: s2
+    character(len=len(s1)+len(s2)) :: s3
+    s3 = s1//str(s2)
+  end function concat_str_logical
+  pure function concat_logical_str(s1, s2) result(s3)
+    logical, intent(in) :: s1
+    character(len=*), intent(in) :: s2
+    character(len=len(s1)+len(s2)) :: s3
+    s3 = str(s1)//s2
+  end function concat_logical_str
+
+  pure function concat_str_real_sp(s1, s2) result(s3)
+    character(len=*), intent(in) :: s1
+    real(sp), intent(in) :: s2
+    character(len=len(s1)+len(s2)) :: s3
+    s3 = s1//str(s2)
+  end function concat_str_real_sp
+  pure function concat_real_sp_str(s1, s2) result(s3)
+    real(sp), intent(in) :: s1
+    character(len=*), intent(in) :: s2
+    character(len=len(s1)+len(s2)) :: s3
+    s3 = str(s1)//s2
+  end function concat_real_sp_str
+
+  pure function concat_str_real_dp(s1, s2) result(s3)
+    character(len=*), intent(in) :: s1
+    real(dp), intent(in) :: s2
+    character(len=len(s1)+len(s2)) :: s3
+    s3 = s1//str(s2)
+  end function concat_str_real_dp
+  pure function concat_real_dp_str(s1, s2) result(s3)
+    real(dp), intent(in) :: s1
+    character(len=*), intent(in) :: s2
+    character(len=len(s1)+len(s2)) :: s3
+    s3 = str(s1)//s2
+  end function concat_real_dp_str
+
+  pure function concat_str_complex_sp(s1, s2) result(s3)
+    character(len=*), intent(in) :: s1
+    complex(sp), intent(in) :: s2
+    character(len=len(s1)+len(s2)) :: s3
+    s3 = s1//str(s2)
+  end function concat_str_complex_sp
+  pure function concat_complex_sp_str(s1, s2) result(s3)
+    complex(sp), intent(in) :: s1
+    character(len=*), intent(in) :: s2
+    character(len=len(s1)+len(s2)) :: s3
+    s3 = str(s1)//s2
+  end function concat_complex_sp_str
+
+  pure function concat_str_complex_dp(s1, s2) result(s3)
+    character(len=*), intent(in) :: s1
+    complex(dp), intent(in) :: s2
+    character(len=len(s1)+len(s2)) :: s3
+    s3 = s1//str(s2)
+  end function concat_str_complex_dp
+  pure function concat_complex_dp_str(s1, s2) result(s3)
+    complex(dp), intent(in) :: s1
+    character(len=*), intent(in) :: s2
+    character(len=len(s1)+len(s2)) :: s3
+    s3 = str(s1)//s2
+  end function concat_complex_dp_str
 end module m_common_format

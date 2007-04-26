@@ -2,7 +2,7 @@ module m_common_notations
 
   use m_common_array_str, only: vs_str, str_vs
   use m_common_error, only: FoX_error
-  use m_common_namecheck, only: checkName, checkPubId, checkSystemId
+  use m_common_namecheck, only: checkName, checkPubId
 
   implicit none
   private
@@ -54,28 +54,26 @@ contains
   end subroutine destroy_notation_list
  
 
-  subroutine add_notation(nlist, name, systemId, publicId)
+  subroutine add_notation(nlist, name, xv, systemId, publicId)
     type(notation_list), intent(inout) :: nlist
     character(len=*), intent(in) :: name
+    integer, intent(in) :: xv
     character(len=*), intent(in), optional :: systemId
     character(len=*), intent(in), optional :: publicId
 
     integer :: i
     type(notation), dimension(:), allocatable :: temp
 
-    if (.not.checkName(name)) &
+    print*,'adding notation'
+
+    if (.not.checkName(name, xv)) &
       call Fox_error("Illegal notation name: "//name)
 
     if (.not.present(systemId) .and. .not.present(publicId)) &
-      call FoX_error("Neither System nor Public Id speicified for notation: "//name)
+      call FoX_error("Neither System nor Public Id specified for notation: "//name)
     if (present(publicId)) then
       if (.not.checkPubId(publicId)) &
         call Fox_error("Illegal public ID for notation: "//name)
-    endif
-
-    if (present(systemId)) then
-      if (.not.checkSystemId(systemId)) &
-        call Fox_error("Illegal system ID for notation: "//name)
     endif
 
     allocate(temp(0:ubound(nlist%notations,1)))
@@ -95,8 +93,12 @@ contains
 
     allocate(nlist%notations(i)%name(len(name)))
     nlist%notations(i)%name = vs_str(name)
-    allocate(nlist%notations(i)%systemId(len(systemId)))
-    nlist%notations(i)%systemId = vs_str(systemId)
+    if (present(systemId)) then
+      allocate(nlist%notations(i)%systemId(len(systemId)))
+      nlist%notations(i)%systemId = vs_str(systemId)
+    else
+      allocate(nlist%notations(i)%systemId(0))
+    endif
     if (present(publicId)) then
       allocate(nlist%notations(i)%publicId(len(publicId)))
       nlist%notations(i)%publicId = vs_str(publicId)

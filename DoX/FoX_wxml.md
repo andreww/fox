@@ -52,7 +52,7 @@ This is an opaque type representing the XML file handle. Each function requires 
 * `xml_OpenFile`  
 **filename**: *string*: Filename to be opened  
 **xf**: *xmlf_t*: XML File handle  
-(**broken_indenting**): *logical*:  Should the output XML be pretty-printed?
+(**preserve_whitespace**): *logical*: Is whitespace important in the output? (If not, the XML will be pretty-printed.)
   *default: false*  
 (**channel**): *integer*: What Fortran file handle should the XML file be attached to? 
   *default: picked by the library at runtime*  
@@ -158,7 +158,7 @@ To explain by means of example: In order to generate the following XML output:
 
 then the following two calls are necessary, in the prescribed order:
 
-      xml_AddNamespace(xf, 'cml', 'http://www.xml-cml.org')
+      xml_DeclareNamespace(xf, 'cml', 'http://www.xml-cml.org')
       xml_NewElement(xf, 'cml:cml')
 
 However, to generate XML input like so:

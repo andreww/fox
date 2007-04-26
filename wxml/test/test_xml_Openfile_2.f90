@@ -7,7 +7,7 @@ program test_xml_Openfile
 
   type(xmlf_t) :: xf1
 
-  call xml_OpenFile(filename, xf1, channel=20)
+  call xml_OpenFile(filename, xf1, unit=20)
 
   !TOHW FIXME use check 20 is open and attached to filename
 
