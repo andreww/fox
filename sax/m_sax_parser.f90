@@ -6,8 +6,7 @@ module m_sax_parser
     destroy_string_list, devnull, vs_str_alloc
   use m_common_attrs, only: init_dict, destroy_dict, add_item_to_dict, &
     has_key, get_value
-  use m_common_charset, only: XML1_0, XML1_0_INITIALNAMECHARS, &
-    XML1_1_INITIALNAMECHARS, XML_WHITESPACE, operator(.in.)
+  use m_common_charset, only: XML1_0, XML_WHITESPACE, operator(.in.)
   use m_common_element, only: element_t, element_list, init_element_list, &
     destroy_element_list, existing_element, add_element, get_element, &
     parse_dtd_element, parse_dtd_attlist, report_declarations, isCdataAtt, &

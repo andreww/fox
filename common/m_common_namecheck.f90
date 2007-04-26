@@ -1,6 +1,6 @@
 module m_common_namecheck
 
-  use m_common_charset, only: XML_WHITESPACE, isLegalCharRef, isNCNameChar, &
+  use m_common_charset, only: isLegalCharRef, isNCNameChar, &
     isInitialNCNameChar, isInitialNameChar, isNameChar
   use m_common_format, only: str_to_int_10, str_to_int_16
 
@@ -125,7 +125,6 @@ contains
   function checkPubId(PubId) result(good)
     character(len=*), intent(in) :: PubId
     logical :: good
-    character :: q
     character(len=*), parameter :: PubIdChars = &
       " "//achar(10)//achar(13)//lowerCase//upperCase//digits//"-'()+,./:=?;!*#@$_%"
 

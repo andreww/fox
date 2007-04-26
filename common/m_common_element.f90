@@ -690,7 +690,6 @@ contains
     character :: c, q
     character, pointer :: name(:), type(:), default(:), value(:), temp(:)
 
-    type(element_t), pointer :: ce
     type(attribute_t), pointer :: ca
     type(attribute_t), target :: ignore_att
     call init_string_list(ignore_att%enumerations)

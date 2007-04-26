@@ -1,6 +1,6 @@
 module m_common_buffer
 
-  use m_common_charset, only: XML1_0, XML1_1, whitespace
+  use m_common_charset, only: XML1_0, whitespace
   use m_common_error, only: FoX_error, FoX_warning
   use m_common_format, only: str
 

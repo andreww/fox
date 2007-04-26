@@ -16,11 +16,10 @@ module m_common_entities
 
   use m_common_array_str, only: str_vs, vs_str, vs_str_alloc
   use m_common_charset, only: digits, hexdigits
-  use m_common_error, only: ERR_WARNING, ERR_ERROR, &
-    FoX_warning, FoX_error, error_stack, add_error
+  use m_common_error, only: FoX_error, error_stack, add_error
   use m_common_format, only: str_to_int_10, str_to_int_16
   use m_common_namecheck, only: checkName, &
-    checkCharacterEntityReference, checkEntityValue
+    checkCharacterEntityReference
 
   implicit none
   private
