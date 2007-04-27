@@ -323,7 +323,7 @@ contains
          call wxml_error("Invalid Name in DTD "//name)
     
     call add_eol(xf)
-    call add_to_buffer("<!DOCTYPE "//name, xf%buffer)
+    call add_to_buffer("<!DOCTYPE "//name, xf%buffer, .false.)
 
     deallocate(xf%name)
     allocate(xf%name(len(name)))
@@ -333,20 +333,18 @@ contains
       if (present(public)) then
         if (.not.checkPubId(public)) &
           call wxml_error("Invalid PUBLIC ID "//public)
-        if (scan(public, "'") /= 0) then
-          call add_to_buffer(' PUBLIC "'//public//'" ', xf%buffer)
-        else
-          call add_to_buffer(" PUBLIC '"//public//"' ", xf%buffer)
-        endif
+        call add_to_buffer(' PUBLIC ', xf%buffer, .false.)
+        call add_to_buffer('"'//public//'"', xf%buffer, .true.)
+        call add_to_buffer(' ', xf%buffer, .false.)
       else
-        call add_to_buffer(' SYSTEM ', xf%buffer)
+        call add_to_buffer(' SYSTEM ', xf%buffer, .false.)
       endif
       if (scan(system, "'")/=0) then
         if (scan(system, '"')/=0) &
           call wxml_error("Invalid SYSTEM ID "//system)
-        call add_to_buffer('"'//system//'"', xf%buffer)
+        call add_to_buffer('"'//system//'"', xf%buffer, .true.)
       else
-        call add_to_buffer("'"//system//"'", xf%buffer)
+        call add_to_buffer("'"//system//"'", xf%buffer, .true.)
       endif
     elseif (present(public)) then
       call wxml_error("wxml:DOCTYPE: PUBLIC supplied without SYSTEM for: "//name)
@@ -365,7 +363,7 @@ contains
     call check_xf(xf)
     
     if (xf%state_3 == WXML_STATE_3_DURING_DTD) then
-      call add_to_buffer(" [", xf%buffer)
+      call add_to_buffer(" [", xf%buffer, .false.)
       xf%state_3 = WXML_STATE_3_INSIDE_INTSUBSET
     endif
 
@@ -392,27 +390,28 @@ contains
 
     call add_eol(xf)
 
-    call add_to_buffer('<!ENTITY % '//name//' ', xf%buffer)
+    call add_to_buffer('<!ENTITY % '//name//' ', xf%buffer, .false.) ! name can never contain whitespace
     if (present(PEdef)) then
       if (index(PEdef, '"') > 0) then
-        call add_to_buffer("'"//PEdef//"'>", xf%buffer)
+        call add_to_buffer("'"//PEdef//"'", xf%buffer, .true.)
       else
-        call add_to_buffer('"'//PEdef//'">', xf%buffer)
+        call add_to_buffer('"'//PEdef//'"', xf%buffer, .true.)
       endif
+        call add_to_buffer('>', xf%buffer, .false.)
     else
       if (present(public)) then
-        if (index(public, '"') > 0) then
-          call add_to_buffer("PUBLIC '"//public//"' ", xf%buffer)
-        else
-          call add_to_buffer('PUBLIC "'//public//'" ', xf%buffer)
-        endif
+        call add_to_buffer(' PUBLIC ', xf%buffer, .false.)
+        call add_to_buffer('"'//public//'"', xf%buffer, .true.)
+        call add_to_buffer(' ', xf%buffer, .false.)
       else
-        call add_to_buffer('SYSTEM ', xf%buffer)
+        call add_to_buffer(' SYSTEM ', xf%buffer, .false.)
       endif
-      if (index(system, '"') > 0) then
-        call add_to_buffer("'"//system//'"', xf%buffer)
+      if (scan(system, "'")/=0) then
+        if (scan(system, '"')/=0) &
+          call wxml_error("Invalid SYSTEM ID "//system)
+        call add_to_buffer('"'//system//'"', xf%buffer, .true.)
       else
-        call add_to_buffer("'"//system//"'", xf%buffer)
+        call add_to_buffer("'"//system//"'", xf%buffer, .true.)
       endif
       call add_to_buffer(">", xf%buffer)
     endif
@@ -443,11 +442,12 @@ contains
 
     call add_eol(xf)
     
-    call add_to_buffer('<!ENTITY '//name//' ', xf%buffer)
+    !FIXME - valid entity values?
+    call add_to_buffer('<!ENTITY '//name//' ', xf%buffer, .false.) ! name cannot contain whitespace
     if (index(value, '"') > 0) then
-      call add_to_buffer("'"//value//"'>", xf%buffer)
+      call add_to_buffer("'"//value//"'>", xf%buffer, .true.)
     else
-      call add_to_buffer('"'//value//'">', xf%buffer)
+      call add_to_buffer('"'//value//'">', xf%buffer, .true.)
     endif
 
   end subroutine xml_AddInternalEntity
@@ -463,7 +463,7 @@ contains
     call check_xf(xf)
     
     if (xf%state_3 == WXML_STATE_3_DURING_DTD) then
-      call add_to_buffer(" [", xf%buffer)
+      call add_to_buffer(" [", xf%buffer, .false.)
       xf%state_3 = WXML_STATE_3_INSIDE_INTSUBSET
     endif
 
@@ -488,25 +488,26 @@ contains
     
     call add_eol(xf)
     
-    call add_to_buffer('<!ENTITY '//name, xf%buffer)
+    call add_to_buffer('<!ENTITY '//name, xf%buffer, .false.)
     if (present(public)) then
-      if (index(public, '"') > 0) then
-        call add_to_buffer(" PUBLIC '"//public//"' ", xf%buffer)
-      else
-        call add_to_buffer(' PUBLIC "'//public//'" ', xf%buffer)
-      endif
+      call add_to_buffer("PUBLIC ", xf%buffer, .false.)
+      call add_to_buffer('"'//public//'"', xf%buffer, .true.)
+      call add_to_buffer(" ", xf%buffer, .false.)
     else
-      call add_to_buffer(' SYSTEM ', xf%buffer)
+      call add_to_buffer('SYSTEM ', xf%buffer, .false.)
     endif
-    if (index(system, '"') > 0) then
-      call add_to_buffer("'"//system//'"', xf%buffer)
+    if (scan(system, "'")/=0) then
+      if (scan(system, '"')/=0) &
+        call wxml_error("Invalid SYSTEM ID "//system)
+      call add_to_buffer('"'//system//'"', xf%buffer, .true.)
     else
-      call add_to_buffer("'"//system//"'", xf%buffer)
+      call add_to_buffer("'"//system//"'", xf%buffer, .true.)
     endif
     if (present(notation)) then
-      call add_to_buffer(' NDATA '//notation, xf%buffer)
+      ! FIXME Has notation been declared yet?
+      call add_to_buffer(' NDATA '//notation, xf%buffer, .false.) ! notation cannot contain whitespace
     endif
-    call add_to_buffer('>', xf%buffer)
+    call add_to_buffer('>', xf%buffer, .false.)
       
   end subroutine xml_AddExternalEntity
 
@@ -520,7 +521,7 @@ contains
     call check_xf(xf)
     
     if (xf%state_3 == WXML_STATE_3_DURING_DTD) then
-      call add_to_buffer(" [", xf%buffer)
+      call add_to_buffer(" [", xf%buffer, .false.)
       xf%state_3 = WXML_STATE_3_INSIDE_INTSUBSET
     endif
 
@@ -538,24 +539,22 @@ contains
     call add_eol(xf)
 
     call add_notation(xf%nList, name, xf%xml_version, system, public)
-    call add_to_buffer('<!NOTATION '//name, xf%buffer)
+    call add_to_buffer('<!NOTATION '//name, xf%buffer, .false.)
     if (present(public)) then
-      if (index(public, '"') > 0) then
-        call add_to_buffer(" PUBLIC '"//public//"' ", xf%buffer)
-      else
-        call add_to_buffer(' PUBLIC "'//public//'" ', xf%buffer)
-      endif
+      call add_to_buffer(" PUBLIC ", xf%buffer, .false.)
+      call add_to_buffer('"'//public//'"', xf%buffer, .true.)
+      call add_to_buffer(" ", xf%buffer, .false.)
     elseif (present(system)) then
-      call add_to_buffer(' SYSTEM ', xf%buffer)
+      call add_to_buffer('SYSTEM ', xf%buffer, .false.)
     endif
     if (present(system)) then
       if (index(system, '"') > 0) then
-        call add_to_buffer("'"//system//'"', xf%buffer)
+        call add_to_buffer('"'//system//'"', xf%buffer, .true.)
       else
-        call add_to_buffer("'"//system//"'", xf%buffer)
+        call add_to_buffer("'"//system//"'", xf%buffer, .true.)
       endif
     endif
-    call add_to_buffer('>', xf%buffer)
+    call add_to_buffer('>', xf%buffer, .false.)
     
   end subroutine xml_AddNotation
 
@@ -574,7 +573,7 @@ contains
     call wxml_warning("Adding ELEMENT declaration to DTD. Cannot guarantee well-formedness")
     
     if (xf%state_3 == WXML_STATE_3_DURING_DTD) then
-      call add_to_buffer(" [", xf%buffer)
+      call add_to_buffer(" [", xf%buffer, .false.)
       xf%state_3 = WXML_STATE_3_INSIDE_INTSUBSET
     endif
 
@@ -587,7 +586,7 @@ contains
     endif
 
     call add_eol(xf)
-    call add_to_buffer('<!ELEMENT '//name//' '//declaration//'>', xf%buffer)
+    call add_to_buffer('<!ELEMENT '//name//' '//declaration//'>', xf%buffer, .false.)
 
   end subroutine xml_AddElementToDTD
 
@@ -606,7 +605,7 @@ contains
     call wxml_warning("Adding ATTLIST declaration to DTD. Cannot guarantee well-formedness")
     
     if (xf%state_3 == WXML_STATE_3_DURING_DTD) then
-      call add_to_buffer(" [", xf%buffer)
+      call add_to_buffer(" [", xf%buffer, .false.)
       xf%state_3 = WXML_STATE_3_INSIDE_INTSUBSET
     endif
 
@@ -619,7 +618,7 @@ contains
     endif
 
     call add_eol(xf)
-    call add_to_buffer('<!ATTLIST '//name//' '//declaration//'>', xf%buffer)
+    call add_to_buffer('<!ATTLIST '//name//' '//declaration//'>', xf%buffer, .false.)
 
   end subroutine xml_AddAttlistToDTD
     
@@ -636,7 +635,7 @@ contains
     call wxml_warning("Adding PEReference to DTD. Cannot guarantee well-formedness")
     
     if (xf%state_3 == WXML_STATE_3_DURING_DTD) then
-      call add_to_buffer(" [", xf%buffer)
+      call add_to_buffer(" [", xf%buffer, .false.)
       xf%state_3 = WXML_STATE_3_INSIDE_INTSUBSET
     endif
 
@@ -649,7 +648,7 @@ contains
     endif
 
     call add_eol(xf)
-    call add_to_buffer('%'//name//';', xf%buffer)
+    call add_to_buffer('%'//name//';', xf%buffer, .false.)
 
   end subroutine xml_AddPEReferenceToDTD
 
@@ -692,11 +691,12 @@ contains
   end subroutine xml_AddXMLStylesheet
   
 
-  subroutine xml_AddXMLPI(xf, name, data, xml)
+  subroutine xml_AddXMLPI(xf, name, data, xml, ws_significant)
     type(xmlf_t), intent(inout)            :: xf
     character(len=*), intent(in)           :: name
     character(len=*), intent(in), optional :: data
-    logical, optional :: xml
+    logical, intent(in), optional :: xml
+    logical, intent(in), optional :: ws_significant
 
     call check_xf(xf)
     
@@ -715,11 +715,12 @@ contains
 
     if (.not.present(xml) .and. .not.checkPITarget(name, xf%xml_version)) &
          call wxml_error(xf, "Invalid PI Target "//name)
-    call add_to_buffer("<?" // name, xf%buffer)
+    call add_to_buffer("<?" // name, xf%buffer, .false.)
     if (present(data)) then
       if (index(data, '?>') > 0) &
            call wxml_error(xf, "Tried to output invalid PI data "//data)
-      call add_to_buffer(' '//data//'?>', xf%buffer)
+      call add_to_buffer(' ', xf%buffer, .false.)
+      call add_to_buffer(data//'?>', xf%buffer, ws_significant)
       ! state_2 is now OUTSIDE_TAG from close_start_tag
     else
       xf%state_2 = WXML_STATE_2_INSIDE_PI
@@ -729,9 +730,10 @@ contains
   end subroutine xml_AddXMLPI
 
 
-  subroutine xml_AddComment(xf,comment)
+  subroutine xml_AddComment(xf, comment, ws_significant)
     type(xmlf_t), intent(inout)   :: xf
     character(len=*), intent(in)  :: comment
+    logical, intent(in), optional :: ws_significant
     
     call check_xf(xf)
     
@@ -752,9 +754,9 @@ contains
     if (index(comment,'--') > 0 .or. comment(len(comment):) == '-') &
          call wxml_error("Tried to output invalid comment "//comment)
 
-    call add_to_buffer("<!--", xf%buffer)
-    call add_to_buffer(comment, xf%buffer)
-    call add_to_buffer("-->", xf%buffer)
+    call add_to_buffer("<!--", xf%buffer, .false.)
+    call add_to_buffer(comment, xf%buffer, ws_significant)
+    call add_to_buffer("-->", xf%buffer, .false.)
 
   end subroutine xml_AddComment
 
@@ -775,12 +777,12 @@ contains
       if (xf%state_3 /= WXML_STATE_3_BEFORE_DTD) then
         select case (xf%state_3)
         case (WXML_STATE_3_DURING_DTD)
-          call add_to_buffer('>', xf%buffer)
+          call add_to_buffer('>', xf%buffer, .false.)
           xf%state_3 = WXML_STATE_3_AFTER_DTD
         case (WXML_STATE_3_INSIDE_INTSUBSET)
           xf%state_3 = WXML_STATE_3_AFTER_DTD
           call add_eol(xf)
-          call add_to_buffer(']>', xf%buffer)
+          call add_to_buffer(']>', xf%buffer, .false.)
         end select
       endif
       call add_eol(xf)
@@ -801,7 +803,7 @@ contains
     endif
     
     call push_elstack(name,xf%stack)
-    call add_to_buffer("<"//name, xf%buffer)
+    call add_to_buffer("<"//name, xf%buffer, .false.)
     xf%state_2 = WXML_STATE_2_INSIDE_ELEMENT
     call reset_dict(xf%dict)
     xf%indent = xf%indent + indent_inc
@@ -810,10 +812,11 @@ contains
   end subroutine xml_NewElement
   
 
-  subroutine xml_AddCharacters_ch(xf, chars, parsed)
+  subroutine xml_AddCharacters_ch(xf, chars, parsed, ws_significant)
     type(xmlf_t), intent(inout)   :: xf
     character(len=*), intent(in)  :: chars
     logical, intent(in), optional :: parsed
+    logical, intent(in), optional :: ws_significant
 
     logical :: pc
 
@@ -831,11 +834,11 @@ contains
     call close_start_tag(xf)
 
     if (pc) then
-      call add_to_buffer(escape_string(chars, xf%xml_version), xf%buffer)
+      call add_to_buffer(escape_string(chars, xf%xml_version), xf%buffer, ws_significant)
     else
       if (index(chars,']]>') > 0) &
            call wxml_fatal("Tried to output invalid CDATA: "//chars)
-      call add_to_buffer("<![CDATA["//chars//"]]>", xf%buffer)
+      call add_to_buffer("<![CDATA["//chars//"]]>", xf%buffer, ws_significant)
     endif
     
     xf%state_2 = WXML_STATE_2_IN_CHARDATA
@@ -845,7 +848,7 @@ contains
   subroutine xml_AddNewline(xf)
     type(xmlf_t), intent(inout) :: xf
     
-    call xml_AddCharacters(xf, "")
+    call xml_AddCharacters(xf, "") ! FIXME Does this line do anything?
     call add_eol(xf)
   end subroutine xml_AddNewline
 
@@ -871,7 +874,7 @@ contains
       !it's not just a unicode entity
       call wxml_warning("Entity reference added - document may not be well-formed")
     endif
-    call add_to_buffer('&'//entityref//';', xf%buffer)
+    call add_to_buffer('&'//entityref//';', xf%buffer, .false.)
     xf%state_2 = WXML_STATE_2_IN_CHARDATA
   end subroutine xml_AddEntityReference
 
@@ -986,17 +989,17 @@ contains
       call checkNamespacesWriting(xf%dict, xf%nsDict, len(xf%stack))
       if (getLength(xf%dict) > 0) call write_attributes(xf)
       if (xf%preserve_whitespace) call add_eol(xf)
-      call add_to_buffer("/>",xf%buffer)
+      call add_to_buffer("/>",xf%buffer, .false.)
       call devnull(pop_elstack(xf%stack))
     case (WXML_STATE_2_OUTSIDE_TAG, WXML_STATE_2_IN_CHARDATA)
       if (.not.xf%preserve_whitespace.and.xf%state_2==WXML_STATE_2_OUTSIDE_TAG) call add_eol(xf)
 ! XLF does a weird thing here, and if pop_elstack is called as an 
 ! argument to the call, it gets called twice. So we have to separate
 ! out get_top_... from pop_...
-      call add_to_buffer("</" //get_top_elstack(xf%stack), xf%buffer)
+      call add_to_buffer("</" //get_top_elstack(xf%stack), xf%buffer, .false.)
       call devnull(pop_elstack(xf%stack))
       if (xf%preserve_whitespace) call add_eol(xf)
-      call add_to_buffer(">", xf%buffer)
+      call add_to_buffer(">", xf%buffer, .false.)
     case (WXML_STATE_2_INSIDE_PI)
       call close_start_tag(xf)
     end select
@@ -1068,10 +1071,10 @@ contains
       .and. xf%state_3 /= WXML_STATE_3_AFTER_DTD) then
       select case (xf%state_3)
       case (WXML_STATE_3_DURING_DTD)
-        call add_to_buffer('>', xf%buffer)
+        call add_to_buffer('>', xf%buffer, .false.)
       case (WXML_STATE_3_INSIDE_INTSUBSET)
         call add_eol(xf)
-        call add_to_buffer(']>', xf%buffer)
+        call add_to_buffer(']>', xf%buffer, .false.)
       end select
       xf%state_3 = WXML_STATE_3_AFTER_DTD
     endif
@@ -1133,7 +1136,7 @@ contains
     call reset_buffer(xf%buffer, xf%lun, xf%xml_version)
     
     if (.not.xf%preserve_whitespace) &
-      call add_to_buffer(repeat(' ',indent_level),xf%buffer)
+      call add_to_buffer(repeat(' ',indent_level),xf%buffer, .false.)
     
   end subroutine add_eol
   
@@ -1146,15 +1149,15 @@ contains
       call checkNamespacesWriting(xf%dict, xf%nsDict, len(xf%stack))
       if (getLength(xf%dict) > 0)  call write_attributes(xf)
       if (.not.xf%preserve_whitespace) then
-        call add_to_buffer('>', xf%buffer)
+        call add_to_buffer('>', xf%buffer, .false.)
       else
         call add_eol(xf)
-        call add_to_buffer('>', xf%buffer)
+        call add_to_buffer('>', xf%buffer, .false.)
       endif
       xf%state_2 = WXML_STATE_2_OUTSIDE_TAG
     case (WXML_STATE_2_INSIDE_PI)
       if (getLength(xf%dict) > 0)  call write_attributes(xf)
-      call add_to_buffer('?>', xf%buffer)
+      call add_to_buffer('?>', xf%buffer, .false.)
       xf%state_2 = WXML_STATE_2_OUTSIDE_TAG
     case (WXML_STATE_2_IN_CHARDATA)
       continue
@@ -1179,13 +1182,13 @@ contains
       if ((len(xf%buffer) + size) > COLUMNS) then
         call add_eol(xf)
       else
-        call add_to_buffer(" ", xf%buffer)
+        call add_to_buffer(" ", xf%buffer, .false.)
       endif
-      call add_to_buffer(get_key(xf%dict, i), xf%buffer)
-      call add_to_buffer("=", xf%buffer)
-      call add_to_buffer("""",xf%buffer)
-      call add_to_buffer(get_value(xf%dict, i), xf%buffer)
-      call add_to_buffer("""", xf%buffer)
+      call add_to_buffer(get_key(xf%dict, i), xf%buffer, .false.)
+      call add_to_buffer("=", xf%buffer, .false.)
+      call add_to_buffer("""",xf%buffer, .false.)
+      call add_to_buffer(get_value(xf%dict, i), xf%buffer, .true.)
+      call add_to_buffer("""", xf%buffer, .false.)
     enddo
     
     

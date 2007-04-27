@@ -53,26 +53,47 @@ module m_common_buffer
   
 contains
 
-  subroutine add_to_buffer(s,buffer)
+  subroutine add_to_buffer(s, buffer, ws_significant)
 !FIXME we should call check_buffer from here.
     character(len=*), intent(in)   :: s
     type(buffer_t), intent(inout)  :: buffer
+    logical, intent(in), optional :: ws_significant
     
     integer   :: i, n, len_b
     character(len=(buffer%size+len(s))) :: s2
 
+    ! Is whitespace significant in this context?
+    ! If not, we can adjust the buffer without worrying
+    ! about it.
+    ! But if we are not told, we warn about it.
+    ! And if we are told it definitely is - then we error out.
+
     !If we overreach our buffer size, we will be unable to
     !output any more characters without a newline.
-    ! Go through current buffer + new string, insert newlines
+    ! Go through new string, insert newlines
     ! at spaces just before MAX_BUFF_SIZE chars
     ! until we have less than MAX_BUFF_SIZE left to go,
     ! then put that in the buffer.
 
+    ! If no whitespace is found in the newly-added string, then
+    ! insert a new line immediately before it (at the end of the
+    ! current buffer)
+
     call check_buffer(s, buffer%xml_version)
 
-    if (buffer%size + len(s) > MAX_BUFF_SIZE) &
-      call FoX_warning("Buffer overflow impending; inserting newlines, sorry")
-    
+    if (buffer%size + len(s) > MAX_BUFF_SIZE) then
+      if (.not.present(ws_significant)) then
+        call FoX_warning("Output buffer too small. Need to insert a newline. If whitespace might be significant, check your output.")
+      elseif (ws_significant) then
+        call FoX_error("Output buffer too small. Need to insert a newline but whitespace is significant. Stopping now.")
+      else
+        continue ! without error or warning
+      endif
+    endif
+
+    ! FIXME this is wrong. We should not ever insert whitespace into the
+    ! existing buffer, we don't know if it might be whitespace-significant.
+
     s2 = buffer%str(:buffer%size)//s
 
     n = 1

@@ -103,7 +103,7 @@ contains
     if (present(fmt)) then
       call xml_AddCharacters(xf=xf, chars=str(chars, fmt))
     else
-      call xml_AddCharacters(xf=xf, chars=str(chars ))
+      call xml_AddCharacters(xf=xf, chars=str(chars))
     endif
 
   end subroutine CharactersScalarCmplxDp
@@ -119,7 +119,7 @@ contains
     if (present(fmt)) then
       call xml_AddCharacters(xf=xf, chars=str(chars, fmt))
     else
-      call xml_AddCharacters(xf=xf, chars=str(chars ))
+      call xml_AddCharacters(xf=xf, chars=str(chars))
     endif
 
   end subroutine CharactersScalarCmplxSp
@@ -135,7 +135,7 @@ contains
     if (present(fmt)) then
       call xml_AddCharacters(xf=xf, chars=str(chars, fmt))
     else
-      call xml_AddCharacters(xf=xf, chars=str(chars ))
+      call xml_AddCharacters(xf=xf, chars=str(chars))
     endif
 
   end subroutine CharactersScalarRealDp
@@ -151,7 +151,7 @@ contains
     if (present(fmt)) then
       call xml_AddCharacters(xf=xf, chars=str(chars, fmt))
     else
-      call xml_AddCharacters(xf=xf, chars=str(chars ))
+      call xml_AddCharacters(xf=xf, chars=str(chars))
     endif
 
   end subroutine CharactersScalarRealSp
@@ -163,7 +163,7 @@ contains
     type(xmlf_t), intent(inout) :: xf
     integer, intent(in)   :: chars
 
-    call xml_AddCharacters(xf=xf, chars=str(chars ))
+    call xml_AddCharacters(xf=xf, chars=str(chars))
 
   end subroutine CharactersScalarInt
 
@@ -174,7 +174,7 @@ contains
     type(xmlf_t), intent(inout) :: xf
     logical, intent(in)   :: chars
 
-    call xml_AddCharacters(xf=xf, chars=str(chars ))
+    call xml_AddCharacters(xf=xf, chars=str(chars))
 
   end subroutine CharactersScalarLg
 
@@ -189,9 +189,9 @@ contains
     character(len=*), intent(in), optional :: fmt
 
     if (present(fmt)) then
-      call xml_AddCharacters(xf=xf, chars=str(chars, fmt))
+      call xml_AddCharacters(xf=xf, chars=str(chars, fmt), ws_significant=.false.)
     else
-      call xml_AddCharacters(xf=xf, chars=str(chars ))
+      call xml_AddCharacters(xf=xf, chars=str(chars), ws_significant=.false.)
     endif
 
   end subroutine CharactersArrayCmplxDp
@@ -205,9 +205,9 @@ contains
     character(len=*), intent(in), optional :: fmt
 
     if (present(fmt)) then
-      call xml_AddCharacters(xf=xf, chars=str(chars, fmt))
+      call xml_AddCharacters(xf=xf, chars=str(chars, fmt), ws_significant=.false.)
     else
-      call xml_AddCharacters(xf=xf, chars=str(chars ))
+      call xml_AddCharacters(xf=xf, chars=str(chars), ws_significant=.false.)
     endif
 
   end subroutine CharactersArrayCmplxSp
@@ -221,9 +221,9 @@ contains
     character(len=*), intent(in), optional :: fmt
 
     if (present(fmt)) then
-      call xml_AddCharacters(xf=xf, chars=str(chars, fmt))
+      call xml_AddCharacters(xf=xf, chars=str(chars, fmt), ws_significant=.false.)
     else
-      call xml_AddCharacters(xf=xf, chars=str(chars ))
+      call xml_AddCharacters(xf=xf, chars=str(chars), ws_significant=.false.)
     endif
 
   end subroutine CharactersArrayRealDp
@@ -237,9 +237,9 @@ contains
     character(len=*), intent(in), optional :: fmt
 
     if (present(fmt)) then
-      call xml_AddCharacters(xf=xf, chars=str(chars, fmt))
+      call xml_AddCharacters(xf=xf, chars=str(chars, fmt), ws_significant=.false.)
     else
-      call xml_AddCharacters(xf=xf, chars=str(chars ))
+      call xml_AddCharacters(xf=xf, chars=str(chars), ws_significant=.false.)
     endif
 
   end subroutine CharactersArrayRealSp
@@ -251,7 +251,7 @@ contains
     type(xmlf_t), intent(inout) :: xf
     integer, intent(in) , dimension(:)  :: chars
 
-    call xml_AddCharacters(xf=xf, chars=str(chars ))
+    call xml_AddCharacters(xf=xf, chars=str(chars), ws_significant=.false.)
 
   end subroutine CharactersArrayInt
 
@@ -262,7 +262,7 @@ contains
     type(xmlf_t), intent(inout) :: xf
     logical, intent(in) , dimension(:)  :: chars
 
-    call xml_AddCharacters(xf=xf, chars=str(chars ))
+    call xml_AddCharacters(xf=xf, chars=str(chars), ws_significant=.false.)
 
   end subroutine CharactersArrayLg
 
@@ -274,7 +274,7 @@ contains
     character(len=*), intent(in) , dimension(:)  :: chars
     character(len=1), intent(in), optional :: delimiter
 
-    call xml_AddCharacters(xf=xf, chars=str(chars, delimiter ))
+    call xml_AddCharacters(xf=xf, chars=str(chars, delimiter), ws_significant=.false.)
 
   end subroutine CharactersArrayCh
 
@@ -287,9 +287,9 @@ contains
     character(len=*), intent(in), optional :: fmt
 
     if (present(fmt)) then
-      call xml_AddCharacters(xf=xf, chars=str(chars, fmt))
+      call xml_AddCharacters(xf=xf, chars=str(chars, fmt), ws_significant=.false.)
     else
-      call xml_AddCharacters(xf=xf, chars=str(chars ))
+      call xml_AddCharacters(xf=xf, chars=str(chars), ws_significant=.false.)
     endif
 
   end subroutine CharactersMatrixCmplxDp
@@ -303,9 +303,9 @@ contains
     character(len=*), intent(in), optional :: fmt
 
     if (present(fmt)) then
-      call xml_AddCharacters(xf=xf, chars=str(chars, fmt))
+      call xml_AddCharacters(xf=xf, chars=str(chars, fmt), ws_significant=.false.)
     else
-      call xml_AddCharacters(xf=xf, chars=str(chars ))
+      call xml_AddCharacters(xf=xf, chars=str(chars), ws_significant=.false.)
     endif
 
   end subroutine CharactersMatrixCmplxSp
@@ -319,9 +319,9 @@ contains
     character(len=*), intent(in), optional :: fmt
 
     if (present(fmt)) then
-      call xml_AddCharacters(xf=xf, chars=str(chars, fmt))
+      call xml_AddCharacters(xf=xf, chars=str(chars, fmt), ws_significant=.false.)
     else
-      call xml_AddCharacters(xf=xf, chars=str(chars ))
+      call xml_AddCharacters(xf=xf, chars=str(chars), ws_significant=.false.)
     endif
 
   end subroutine CharactersMatrixRealDp
@@ -335,9 +335,9 @@ contains
     character(len=*), intent(in), optional :: fmt
 
     if (present(fmt)) then
-      call xml_AddCharacters(xf=xf, chars=str(chars, fmt))
+      call xml_AddCharacters(xf=xf, chars=str(chars, fmt), ws_significant=.false.)
     else
-      call xml_AddCharacters(xf=xf, chars=str(chars ))
+      call xml_AddCharacters(xf=xf, chars=str(chars), ws_significant=.false.)
     endif
 
   end subroutine CharactersMatrixRealSp
@@ -349,7 +349,7 @@ contains
     type(xmlf_t), intent(inout) :: xf
     integer, intent(in) , dimension(:,:)  :: chars
 
-    call xml_AddCharacters(xf=xf, chars=str(chars ))
+    call xml_AddCharacters(xf=xf, chars=str(chars), ws_significant=.false.)
 
   end subroutine CharactersMatrixInt
 
@@ -360,7 +360,7 @@ contains
     type(xmlf_t), intent(inout) :: xf
     logical, intent(in) , dimension(:,:)  :: chars
 
-    call xml_AddCharacters(xf=xf, chars=str(chars ))
+    call xml_AddCharacters(xf=xf, chars=str(chars), ws_significant=.false.)
 
   end subroutine CharactersMatrixLg
 
@@ -372,7 +372,7 @@ contains
     character(len=*), intent(in) , dimension(:,:)  :: chars
     character(len=1), intent(in), optional :: delimiter
 
-    call xml_AddCharacters(xf=xf, chars=str(chars, delimiter ))
+    call xml_AddCharacters(xf=xf, chars=str(chars, delimiter), ws_significant=.false.)
 
   end subroutine CharactersMatrixCh
 

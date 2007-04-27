@@ -37,16 +37,23 @@ ifelse(substr($3,0,4), `Real', `dnl
 
 ifelse(substr($3,0,4), `Real', `dnl 
     if (present(fmt)) then
-      call xml_Add$1(xf=xf, chars=str(chars, fmt))
+      call xml_Add$1(xf=xf, chars=str(chars, fmt)`'dnl
+ifelse(`$2', `Array', `, ws_significant=.false.')`'dnl
+ifelse(`$2', `Matrix', `, ws_significant=.false.'))
     else
   ', substr($3,0,5), `Cmplx', `dnl
     if (present(fmt)) then
-      call xml_Add$1(xf=xf, chars=str(chars, fmt))
+      call xml_Add$1(xf=xf, chars=str(chars, fmt)`'dnl
+ifelse(`$2', `Array', `, ws_significant=.false.')`'dnl
+ifelse(`$2', `Matrix', `, ws_significant=.false.'))
     else
   ')dnl
     call xml_Add$1(xf=xf, chars=str(chars`'dnl
-ifelse(`$2$3', `ScalarCh', `', `$3', `Ch', `, delimiter') dnl
-))
+ifelse(`$2$3', `ScalarCh', `', `$3', `Ch', `, delimiter'))`'dnl
+ifelse(`$2', `Array', `, ws_significant=.false.')`'dnl
+ifelse(`$2', `Matrix', `, ws_significant=.false.')`'dnl
+)
+dnl
 ifelse(substr($3,0,4), `Real', `dnl
     endif
 ', substr($3,0,5), `Cmplx', `dnl
@@ -88,7 +95,7 @@ ifelse(substr($3,0,4),`Real',`dnl
     else
   ')dnl
     call xml_Add$1(xf=xf, name=name, value=str(value`'dnl
-ifelse(`$2$3', `ScalarCh', `', `$3', `Ch', `, delimiter')))dnl
+ifelse(`$2$3', `ScalarCh', `', `$3', `Ch', `, delimiter')))`'dnl
 
 ifelse(substr($3,0,4), `Real', `dnl
     endif
