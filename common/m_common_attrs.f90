@@ -11,12 +11,27 @@ module m_common_attrs
   !Multiplier if we need to extend it.
   real, parameter :: DICT_LEN_MULT = 1.5
 
+  ! attribute type parameters
+  integer, parameter :: CDATA = 1
+  integer, parameter :: ID = 2
+  integer, parameter :: IDREF = 3
+  integer, parameter :: IDREFS = 4
+  integer, parameter :: NMTOKEN = 5
+  integer, parameter :: NMTOKENS = 6
+  integer, parameter :: ENTITY = 7
+  integer, parameter :: ENTITIES = 8
+  integer, parameter :: NOTATION = 9
+  integer, parameter :: CDANO = 10
+  integer, parameter :: CDAMB = 11
+  integer, parameter :: typelengths(0:11) = (/0,5,2,5,6,7,8,6,8,8,5,5/)
+
   type dict_item
     character(len=1), pointer, dimension(:) :: nsURI => null()
     character(len=1), pointer, dimension(:) :: localName => null()
     character(len=1), pointer, dimension(:) :: prefix => null()
     character(len=1), pointer, dimension(:) :: key => null()
     character(len=1), pointer, dimension(:) :: value => null()
+    integer :: type = 11
   end type dict_item
 
   type dictionary_t
@@ -305,13 +320,14 @@ contains
     
   end function get_key
   
-  subroutine add_item_to_dict(dict, key, value, prefix, nsURI)
+  subroutine add_item_to_dict(dict, key, value, prefix, nsURI, type)
     
     type(dictionary_t), intent(inout) :: dict
     character(len=*), intent(in)           :: key
     character(len=*), intent(in)           :: value
     character(len=*), intent(in), optional :: prefix
     character(len=*), intent(in), optional :: nsURI
+    character(len=*), intent(in), optional :: type
     
     integer  :: n
 
@@ -346,7 +362,31 @@ contains
       allocate(dict%items(n)%prefix(0))
       allocate(dict%items(n)%nsURI(0))
     endif
-
+    select case(type)
+    case ('CDATA')
+      dict%items(n)%type = CDATA
+    case ('ID')
+      dict%items(n)%type = ID
+    case ('IDREF')
+      dict%items(n)%type = IDREF
+    case ('IDREFS')
+      dict%items(n)%type = IDREFS
+    case ('NMTOKEN')
+      dict%items(n)%type = NMTOKEN
+    case ('NMTOKENS')
+      dict%items(n)%type = NMTOKENS
+    case ('ENTITY')
+      dict%items(n)%type = ENTITY
+    case ('ENTITIES')
+      dict%items(n)%type = ENTITIES
+    case ('NOTATION')
+      dict%items(n)%type = NOTATION
+    case ('CDANO')
+      dict%items(n)%type = CDANO
+    case ('CDAMB')
+      dict%items(n)%type = CDAMB
+    end select
+        
     dict%number_of_items = n
 
   end subroutine add_item_to_dict
@@ -452,10 +492,27 @@ contains
   function getType_by_index(dict, i) result(type)
     type(dictionary_t), intent(in) :: dict
     integer, intent(in) :: i
-    character(len=merge(5, 0, i<=size(dict%items))) :: type
+    character(len=typelengths(merge(dict%items(i)%type,0,i<=size(dict%items)))) :: type
 
     if (i<=size(dict%items)) then
-      type = 'CDATA'
+      select case(dict%items(i)%type)
+      case (CDATA)
+        type='CDATA'
+      case (ID)
+        type='ID'
+      case (IDREF)
+        type='IDREF'
+      case (IDREFS)
+        type='IDREFS'
+      case (NMTOKEN)
+        type='NMTOKENS'
+      case (ENTITY)
+        type='ENTITY'
+      case (ENTITIES)
+        type='ENTITIES'
+      case (NOTATION)
+        type='NOTATION'
+      end select
     else
       type = ''
     endif
@@ -465,10 +522,29 @@ contains
   function getType_by_keyname(dict, keyname) result(type)
     type(dictionary_t), intent(in) :: dict
     character(len=*), intent(in) :: keyname
-    character(len=merge(5, 0, get_key_index(dict, keyname)>0)) :: type
+    character(len=typelengths( &
+      merge(dict%items(get_key_index(dict, keyname))%type, 0, get_key_index(dict, keyname)>0) &
+      )) :: type
 
     if (get_key_index(dict, keyname)>0) then
-      type = 'CDATA'
+      select case(dict%items(get_key_index(dict, keyname))%type)
+      case (CDATA)
+        type='CDATA'
+      case (ID)
+        type='ID'
+      case (IDREF)
+        type='IDREF'
+      case (IDREFS)
+        type='IDREFS'
+      case (NMTOKEN)
+        type='NMTOKENS'
+      case (ENTITY)
+        type='ENTITY'
+      case (ENTITIES)
+        type='ENTITIES'
+      case (NOTATION)
+        type='NOTATION'
+      end select
     else
       type = ''
     endif
@@ -505,6 +581,7 @@ contains
        tempDict(i)%prefix => dict%items(i)%prefix
        tempDict(i)%nsURI => dict%items(i)%nsURI
        tempDict(i)%localName => dict%items(i)%localName
+       tempDict(i)%type = dict%items(i)%type
     enddo
     deallocate(dict%items)
     l_d_new = l_d_old * DICT_LEN_MULT
@@ -515,6 +592,7 @@ contains
        dict%items(i)%nsURI => tempDict(i)%nsURI
        dict%items(i)%prefix => tempDict(i)%prefix
        dict%items(i)%localName => tempDict(i)%localName
+       dict%items(i)%type = tempDict(i)%type
     enddo
 
   end subroutine resize_dict

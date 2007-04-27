@@ -1,8 +1,8 @@
 module m_wxml_core
 
   use m_common_attrs, only: dictionary_t, getLength, get_key, get_value, has_key, &
-    add_item_to_dict, init_dict, reset_dict, destroy_dict
-  use m_common_array_str, only: vs_str, str_vs, devnull
+    add_item_to_dict, init_dict, reset_dict, destroy_dict, getType
+  use m_common_array_str, only: vs_str, str_vs, vs_str_alloc, devnull
   use m_common_buffer, only: buffer_t, len, add_to_buffer, reset_buffer, &
     dump_buffer
   use m_common_charset, only: XML1_0, XML1_1
@@ -879,13 +879,25 @@ contains
   end subroutine xml_AddEntityReference
 
 
-  subroutine xml_AddAttribute_Ch(xf, name, value, escape)
+  subroutine xml_AddAttribute_Ch(xf, name, value, escape, type)
     type(xmlf_t), intent(inout)             :: xf
     character(len=*), intent(in)            :: name
     character(len=*), intent(in)            :: value
     logical, intent(in), optional           :: escape
+    character(len=*), intent(in), optional  :: type
 
     logical :: esc
+    character, pointer :: type_(:)
+
+    if (present(type)) then
+      if (type/='CDATA'.and.type/='ID'.and.type/='IDREF'.and.type/='IDREFS'.and.type/='NMTOKEN'.and.type/='NMTOKENS' &
+        .and.type/='ENTITY'.and.type/='ENTITIES'.and.type/='NOTATION') then
+        call wxml_fatal("Invalid type in xml_AddAttribute: "//type)
+      endif
+      type_ => vs_str_alloc(type)
+    else
+      type_ => vs_str_alloc('CDATA')
+    endif
 
     call check_xf(xf)
     
@@ -915,29 +927,33 @@ contains
         call wxml_error(xf, "namespace prefix not registered: "//prefixOfQName(name))
       if (esc) then
         call add_item_to_dict(xf%dict, localpartofQname(name), escape_string(value, xf%xml_version), prefixOfQName(name), &
-          getnamespaceURI(xf%nsDict,prefixOfQname(name)))
+          getnamespaceURI(xf%nsDict,prefixOfQname(name)), type=str_vs(type_))
       else
         call add_item_to_dict(xf%dict, localpartofQname(name), value, prefixOfQName(name), &
-          getnamespaceURI(xf%nsDict,prefixOfQName(name)))
+          getnamespaceURI(xf%nsDict,prefixOfQName(name)), type=str_vs(type_))
       endif
     else
       if (esc) then
-        call add_item_to_dict(xf%dict, name, escape_string(value, xf%xml_version))
+        call add_item_to_dict(xf%dict, name, escape_string(value, xf%xml_version), type=str_vs(type_))
       else
-        call add_item_to_dict(xf%dict, name, value)
+        call add_item_to_dict(xf%dict, name, value, type=str_vs(type_))
       endif
     endif
+
+    deallocate(type_)
     
   end subroutine xml_AddAttribute_Ch
 
 
-  subroutine xml_AddPseudoAttribute_Ch(xf, name, value, escape)
+  subroutine xml_AddPseudoAttribute_Ch(xf, name, value, escape, ws_significant)
     type(xmlf_t), intent(inout)   :: xf
     character(len=*), intent(in)  :: name
     character(len=*), intent(in)  :: value
-    logical, intent(in), optional           :: escape
+    logical, intent(in), optional :: escape
+    logical, intent(in), optional :: ws_significant
 
     logical :: esc
+    character(len=5) :: type
 
     call check_xf(xf)
     
@@ -945,6 +961,15 @@ contains
       esc = escape
     else
       esc = .true.
+    endif
+    if (present(ws_significant)) then
+      if (ws_significant) then
+        type='CDATA'
+      else
+        type='CDANO' ! CDAta, whitespace Not significant
+      endif
+    else
+      type='CDAMB'   ! CDAta, whitespace MayBe significant
     endif
 
     if (xf%state_2 /= WXML_STATE_2_INSIDE_PI) &
@@ -961,9 +986,9 @@ contains
          call wxml_error(xf, "Invalid pseudo-attribute data: "//value)
     
     if (esc) then
-      call add_item_to_dict(xf%dict, name, escape_string(value, xf%xml_version))
+      call add_item_to_dict(xf%dict, name, escape_string(value, xf%xml_version), type=type)
     else
-      call add_item_to_dict(xf%dict, name, value)
+      call add_item_to_dict(xf%dict, name, value, type=type)
     endif
     
   end subroutine xml_AddPseudoAttribute_Ch
@@ -1186,9 +1211,15 @@ contains
       endif
       call add_to_buffer(get_key(xf%dict, i), xf%buffer, .false.)
       call add_to_buffer("=", xf%buffer, .false.)
-      call add_to_buffer("""",xf%buffer, .false.)
-      call add_to_buffer(get_value(xf%dict, i), xf%buffer, .true.)
-      call add_to_buffer("""", xf%buffer, .false.)
+      call add_to_buffer('"',xf%buffer, .false.)
+      if (getType(xf%dict, i)=='CDATA') then
+        call add_to_buffer(get_value(xf%dict, i), xf%buffer, .true.)
+      elseif (getType(xf%dict, i)=='CDAMB') then
+        call add_to_buffer(get_value(xf%dict, i), xf%buffer)
+      else
+        call add_to_buffer(get_value(xf%dict, i), xf%buffer, .false.)
+      endif
+      call add_to_buffer('"', xf%buffer, .false.)
     enddo
     
     
