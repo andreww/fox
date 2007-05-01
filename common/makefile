@@ -32,16 +32,16 @@ clean:
 	rm -f *.o  *.$(MOD_EXT) $(LIBRARY)
 # DO NOT DELETE THIS LINE - used by make depend
 FoX_common.o: m_common_attrs.o m_common_format.o
-m_common_attrs.o: m_common_array_str.o m_common_error.o
+m_common_attrs.o: m_common_array_str.o m_common_element.o m_common_error.o
 m_common_buffer.o: m_common_charset.o m_common_error.o m_common_format.o
-m_common_element.o: m_common_charset.o m_common_error.o
+m_common_element.o: m_common_array_str.o m_common_charset.o m_common_error.o
 m_common_elstack.o: m_common_array_str.o m_common_error.o
 m_common_entities.o: m_common_array_str.o m_common_charset.o m_common_error.o
 m_common_entities.o: m_common_format.o m_common_namecheck.o
 m_common_error.o: m_common_array_str.o
 m_common_format.o: m_common_error.o m_common_realtypes.o
 m_common_io.o: m_common_error.o
-m_common_namecheck.o: m_common_format.o
+m_common_namecheck.o: m_common_charset.o m_common_format.o
 m_common_namespaces.o: m_common_array_str.o m_common_attrs.o m_common_error.o
 m_common_namespaces.o: m_common_namecheck.o
 m_common_notations.o: m_common_array_str.o m_common_error.o

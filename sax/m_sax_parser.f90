@@ -9,8 +9,8 @@ module m_sax_parser
   use m_common_charset, only: XML1_0, XML_WHITESPACE, operator(.in.)
   use m_common_element, only: element_t, element_list, init_element_list, &
     destroy_element_list, existing_element, add_element, get_element, &
-    parse_dtd_element, parse_dtd_attlist, report_declarations, isCdataAtt, &
-    get_default_atts
+    parse_dtd_element, parse_dtd_attlist, report_declarations, get_att_type, &
+    get_default_atts, ATT_CDATA
   use m_common_elstack, only: push_elstack, pop_elstack, init_elstack, &
     destroy_elstack, is_empty, len
   use m_common_entities, only: existing_entity, init_entity_list, &
@@ -297,7 +297,7 @@ contains
     end interface
 
     logical :: validCheck, processDTD, pe
-    integer :: i, iostat
+    integer :: i, iostat, temp_i
     character, pointer :: tempString(:)
     type(element_t), pointer :: elem
     integer, pointer :: temp_wf_stack(:)
@@ -652,14 +652,14 @@ contains
           call add_error(fx%error_stack, "Duplicate attribute name")
           goto 100
         endif
-        !If this attribute is CDATA, we must process further;
-        if (isCdataAtt(fx%element_list, &
-          str_vs(fx%name), str_vs(fx%attname))) then
+        !If this attribute is not CDATA, we must process further;
+        temp_i = get_att_type(fx%element_list, str_vs(fx%name), str_vs(fx%attname))
+        if (temp_i==ATT_CDATA) then
           call add_item_to_dict(fx%attributes, str_vs(fx%attname), &
-            str_vs(fx%token))
+            str_vs(fx%token), itype=ATT_CDATA)
         else
           call add_item_to_dict(fx%attributes, str_vs(fx%attname), &
-            trim(NotCDataNormalize(str_vs(fx%token))))
+            trim(NotCDataNormalize(str_vs(fx%token))), itype=temp_i)
         endif
         deallocate(fx%attname)
         fx%state = ST_IN_TAG

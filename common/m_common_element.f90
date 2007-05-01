@@ -45,6 +45,9 @@ module m_common_element
   integer, parameter :: ATT_NMTOKENS = 8
   integer, parameter :: ATT_NOTATION = 9
   integer, parameter :: ATT_ENUM = 10
+  integer, parameter :: ATT_CDANO = 11
+  integer, parameter :: ATT_CDAMB = 12
+  integer, parameter :: ATT_TYPELENGTHS(0:12) = (/0,5,2,5,6,7,8,6,8,8,4,5,5/)
 
   integer, parameter :: ATT_REQUIRED = 1
   integer, parameter :: ATT_IMPLIED = 2
@@ -100,8 +103,23 @@ module m_common_element
 
   public :: report_declarations
 
-  public :: isCdataAtt
+  public :: get_att_type
   public :: get_default_atts
+
+  public :: ATT_NULL
+  public :: ATT_CDATA
+  public :: ATT_ID 
+  public :: ATT_IDREF
+  public :: ATT_IDREFS
+  public :: ATT_ENTITY
+  public :: ATT_ENTITIES
+  public :: ATT_NMTOKEN
+  public :: ATT_NMTOKENS
+  public :: ATT_NOTATION
+  public :: ATT_ENUM
+  public :: ATT_CDANO
+  public :: ATT_CDAMB
+  public :: ATT_TYPELENGTHS
 
 contains
 
@@ -1179,28 +1197,27 @@ contains
   end function make_token_group
 
 
-  function isCdataAtt(e_list, eName, aName) result(p)
+  function get_att_type(e_list, eName, aName) result(i)
     type(element_list), intent(in) :: e_list
     character(len=*), intent(in) :: eName
     character(len=*), intent(in) :: aName
-    logical :: p
+    integer :: i
     
     type(element_t), pointer :: e
     type(attribute_t), pointer :: a
 
-    p = .false.
     if (existing_element(e_list, eName)) then
       e => get_element(e_list, eName)
       if (existing_attribute(e%attlist, aName)) then
         a => get_attribute(e%attlist, aName)
-        p = (a%attType==ATT_CDATA)
+        i = a%attType
       else
-        p = .true.
+        i = ATT_NULL
       endif
     else
-      p = .true.
+      i = ATT_NULL
     endif
-  end function isCdataAtt
+  end function get_att_type
 
 
   function get_default_atts(a_list) result(s_list)

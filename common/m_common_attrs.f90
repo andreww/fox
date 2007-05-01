@@ -1,6 +1,10 @@
 module m_common_attrs
 
   use m_common_array_str, only : str_vs, vs_str_alloc
+  use m_common_element, only: ATT_CDATA, ATT_ID, ATT_IDREF, &
+    ATT_IDREFS, ATT_ENTITY, ATT_ENTITIES, ATT_NMTOKEN, &
+    ATT_NMTOKENS, ATT_NOTATION, ATT_ENUM, ATT_CDANO, ATT_CDAMB, &
+    ATT_TYPELENGTHS
   use m_common_error, only : FoX_error
 
   implicit none
@@ -10,20 +14,6 @@ module m_common_attrs
   integer, parameter :: DICT_INIT_LEN = 10 
   !Multiplier if we need to extend it.
   real, parameter :: DICT_LEN_MULT = 1.5
-
-  ! attribute type parameters
-  integer, parameter :: CDATA = 1
-  integer, parameter :: ID = 2
-  integer, parameter :: IDREF = 3
-  integer, parameter :: IDREFS = 4
-  integer, parameter :: NMTOKEN = 5
-  integer, parameter :: NMTOKENS = 6
-  integer, parameter :: ENTITY = 7
-  integer, parameter :: ENTITIES = 8
-  integer, parameter :: NOTATION = 9
-  integer, parameter :: CDANO = 10
-  integer, parameter :: CDAMB = 11
-  integer, parameter :: typelengths(0:11) = (/0,5,2,5,6,7,8,6,8,8,5,5/)
 
   type dict_item
     character(len=1), pointer, dimension(:) :: nsURI => null()
@@ -323,7 +313,7 @@ contains
     
   end function get_key
   
-  subroutine add_item_to_dict(dict, key, value, prefix, nsURI, type)
+  subroutine add_item_to_dict(dict, key, value, prefix, nsURI, type, itype)
     
     type(dictionary_t), intent(inout) :: dict
     character(len=*), intent(in)           :: key
@@ -331,6 +321,7 @@ contains
     character(len=*), intent(in), optional :: prefix
     character(len=*), intent(in), optional :: nsURI
     character(len=*), intent(in), optional :: type
+    integer, intent(in), optional :: itype
     
     integer  :: n
 
@@ -366,34 +357,39 @@ contains
       allocate(dict%items(n)%nsURI(0))
     endif
     if (present(type)) then
+      if (present(itype)) &
+        call FoX_fatal("internal library error in add_item_to_dict")
       select case(type)
       case ('CDATA')
-        dict%items(n)%type = CDATA
+        dict%items(n)%type = ATT_CDATA
       case ('ID')
-        dict%items(n)%type = ID
+        dict%items(n)%type = ATT_ID
       case ('IDREF')
-        dict%items(n)%type = IDREF
+        dict%items(n)%type = ATT_IDREF
       case ('IDREFS')
-        dict%items(n)%type = IDREFS
+        dict%items(n)%type = ATT_IDREFS
       case ('NMTOKEN')
-        dict%items(n)%type = NMTOKEN
+        dict%items(n)%type = ATT_NMTOKEN
       case ('NMTOKENS')
-        dict%items(n)%type = NMTOKENS
+        dict%items(n)%type = ATT_NMTOKENS
       case ('ENTITY')
-        dict%items(n)%type = ENTITY
+        dict%items(n)%type = ATT_ENTITY
       case ('ENTITIES')
-        dict%items(n)%type = ENTITIES
+        dict%items(n)%type = ATT_ENTITIES
       case ('NOTATION')
-        dict%items(n)%type = NOTATION
+        dict%items(n)%type = ATT_NOTATION
       case ('CDANO')
-        dict%items(n)%type = CDANO
+        dict%items(n)%type = ATT_CDANO
       case ('CDAMB')
-        dict%items(n)%type = CDAMB
+        dict%items(n)%type = ATT_CDAMB
       end select
+    elseif (present(itype)) then
+      dict%items(n)%type = itype
     else
-      dict%items(n)%type = CDAMB
+      dict%items(n)%type = ATT_CDAMB
     endif
         
+
     dict%number_of_items = n
 
   end subroutine add_item_to_dict
@@ -499,29 +495,29 @@ contains
   function getType_by_index(dict, i) result(type)
     type(dictionary_t), intent(in) :: dict
     integer, intent(in) :: i
-    character(len=typelengths(merge(dict%items(i)%type,0,i<=size(dict%items)))) :: type
+    character(len=ATT_TYPELENGTHS(merge(dict%items(i)%type,0,i<=size(dict%items)))) :: type
 
     if (i<=size(dict%items)) then
       select case(dict%items(i)%type)
-      case (CDATA)
+      case (ATT_CDATA)
         type='CDATA'
-      case (ID)
+      case (ATT_ID)
         type='ID'
-      case (IDREF)
+      case (ATT_IDREF)
         type='IDREF'
-      case (IDREFS)
+      case (ATT_IDREFS)
         type='IDREFS'
-      case (NMTOKEN)
+      case (ATT_NMTOKEN)
         type='NMTOKENS'
-      case (ENTITY)
+      case (ATT_ENTITY)
         type='ENTITY'
-      case (ENTITIES)
+      case (ATT_ENTITIES)
         type='ENTITIES'
-      case (NOTATION)
+      case (ATT_NOTATION)
         type='NOTATION'
-      case (CDANO)
+      case (ATT_CDANO)
         type='CDATA'
-      case (CDAMB)
+      case (ATT_CDAMB)
         type='CDATA'
       end select
     else
@@ -533,31 +529,31 @@ contains
   function getType_by_keyname(dict, keyname) result(type)
     type(dictionary_t), intent(in) :: dict
     character(len=*), intent(in) :: keyname
-    character(len=typelengths( &
+    character(len=ATT_TYPELENGTHS( &
       merge(dict%items(get_key_index(dict, keyname))%type, 0, get_key_index(dict, keyname)>0) &
       )) :: type
 
     if (get_key_index(dict, keyname)>0) then
       select case(dict%items(get_key_index(dict, keyname))%type)
-      case (CDATA)
+      case (ATT_CDATA)
         type='CDATA'
-      case (ID)
+      case (ATT_ID)
         type='ID'
-      case (IDREF)
+      case (ATT_IDREF)
         type='IDREF'
-      case (IDREFS)
+      case (ATT_IDREFS)
         type='IDREFS'
-      case (NMTOKEN)
+      case (ATT_NMTOKEN)
         type='NMTOKENS'
-      case (ENTITY)
+      case (ATT_ENTITY)
         type='ENTITY'
-      case (ENTITIES)
+      case (ATT_ENTITIES)
         type='ENTITIES'
-      case (NOTATION)
+      case (ATT_NOTATION)
         type='NOTATION'
-      case (CDANO)
+      case (ATT_CDANO)
         type='CDATA'
-      case (CDAMB)
+      case (ATT_CDAMB)
         type='CDATA'
       end select
     else
@@ -573,9 +569,9 @@ contains
 
     if (i<=size(dict%items)) then
       select case(dict%items(i)%type)
-      case (CDATA)
+      case (ATT_CDATA)
         j = 0 !
-      case (CDAMB)
+      case (ATT_CDAMB)
         j = 1
       case default
         j = 2
