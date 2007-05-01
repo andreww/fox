@@ -365,30 +365,34 @@ contains
       allocate(dict%items(n)%prefix(0))
       allocate(dict%items(n)%nsURI(0))
     endif
-    select case(type)
-    case ('CDATA')
-      dict%items(n)%type = CDATA
-    case ('ID')
-      dict%items(n)%type = ID
-    case ('IDREF')
-      dict%items(n)%type = IDREF
-    case ('IDREFS')
-      dict%items(n)%type = IDREFS
-    case ('NMTOKEN')
-      dict%items(n)%type = NMTOKEN
-    case ('NMTOKENS')
-      dict%items(n)%type = NMTOKENS
-    case ('ENTITY')
-      dict%items(n)%type = ENTITY
-    case ('ENTITIES')
-      dict%items(n)%type = ENTITIES
-    case ('NOTATION')
-      dict%items(n)%type = NOTATION
-    case ('CDANO')
-      dict%items(n)%type = CDANO
-    case ('CDAMB')
+    if (present(type)) then
+      select case(type)
+      case ('CDATA')
+        dict%items(n)%type = CDATA
+      case ('ID')
+        dict%items(n)%type = ID
+      case ('IDREF')
+        dict%items(n)%type = IDREF
+      case ('IDREFS')
+        dict%items(n)%type = IDREFS
+      case ('NMTOKEN')
+        dict%items(n)%type = NMTOKEN
+      case ('NMTOKENS')
+        dict%items(n)%type = NMTOKENS
+      case ('ENTITY')
+        dict%items(n)%type = ENTITY
+      case ('ENTITIES')
+        dict%items(n)%type = ENTITIES
+      case ('NOTATION')
+        dict%items(n)%type = NOTATION
+      case ('CDANO')
+        dict%items(n)%type = CDANO
+      case ('CDAMB')
+        dict%items(n)%type = CDAMB
+      end select
+    else
       dict%items(n)%type = CDAMB
-    end select
+    endif
         
     dict%number_of_items = n
 

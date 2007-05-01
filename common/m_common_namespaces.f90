@@ -496,7 +496,7 @@ contains
     if (nsDict%defaults(l_d)%ix == ix) then
       !It's not been registered yet:
       call add_item_to_dict(atts, "xmlns", &
-           str_vs(nsDict%defaults(l_d)%URI))
+           str_vs(nsDict%defaults(l_d)%URI), type="CDATA")
     endif
 
     !next, add any overdue prefixed NS's in the same way:
@@ -507,7 +507,8 @@ contains
       if (nsDict%prefixes(i_p)%urilist(l_ps)%ix == ix) then
         call add_item_to_dict(atts, &
              "xmlns:"//str_vs(nsDict%prefixes(i_p)%prefix), &
-             str_vs(nsDict%prefixes(i_p)%urilist(l_ps)%URI))
+             str_vs(nsDict%prefixes(i_p)%urilist(l_ps)%URI), &
+             type="CDATA")
       endif
     enddo
     
@@ -522,7 +523,8 @@ contains
       if (nsDict%prefixes(i_p)%urilist(l_ps)%ix > ix) then
         !we only just added this, so we need to declare it
         call add_item_to_dict(atts, "xmlns:"//get_prefix(atts, i), &
-             str_vs(nsDict%prefixes(i_p)%urilist(l_ps)%URI))
+             str_vs(nsDict%prefixes(i_p)%urilist(l_ps)%URI), &
+             type="CDATA")
         !Reset the index to the right value:
         nsDict%prefixes(i_p)%urilist(l_ps)%ix = ix
       endif
