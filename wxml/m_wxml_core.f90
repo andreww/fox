@@ -1,7 +1,7 @@
 module m_wxml_core
 
   use m_common_attrs, only: dictionary_t, getLength, get_key, get_value, has_key, &
-    add_item_to_dict, init_dict, reset_dict, destroy_dict, getType
+    add_item_to_dict, init_dict, reset_dict, destroy_dict, getWhitespaceHandling
   use m_common_array_str, only: vs_str, str_vs, vs_str_alloc, devnull
   use m_common_buffer, only: buffer_t, len, add_to_buffer, reset_buffer, &
     dump_buffer
@@ -879,12 +879,13 @@ contains
   end subroutine xml_AddEntityReference
 
 
-  subroutine xml_AddAttribute_Ch(xf, name, value, escape, type)
+  subroutine xml_AddAttribute_Ch(xf, name, value, escape, type, ws_significant)
     type(xmlf_t), intent(inout)             :: xf
     character(len=*), intent(in)            :: name
     character(len=*), intent(in)            :: value
     logical, intent(in), optional           :: escape
     character(len=*), intent(in), optional  :: type
+    logical, intent(in), optional           :: ws_significant
 
     logical :: esc
     character, pointer :: type_(:)
@@ -896,7 +897,16 @@ contains
       endif
       type_ => vs_str_alloc(type)
     else
-      type_ => vs_str_alloc('CDATA')
+      ! We assume CDATA, but need to worry about whether the caller cares about whitespace ...
+      if (present(ws_significant)) then
+        if (ws_significant) then
+          type_ => vs_str_alloc('CDATA')
+        else
+          type_ => vs_str_alloc('CDANO') ! CDAta, whitespace Not significant
+        endif
+      else
+        type_ => vs_str_alloc('CDAMB')   ! CDAta, whitespace MayBe significant
+      endif
     endif
 
     call check_xf(xf)
@@ -1196,7 +1206,7 @@ contains
   subroutine write_attributes(xf)
     type(xmlf_t), intent(inout)   :: xf
 
-    integer  :: i, size
+    integer  :: i, j, size
     
     if (xf%state_2 /= WXML_STATE_2_INSIDE_PI .and. &
       xf%state_2 /= WXML_STATE_2_INSIDE_ELEMENT) &
@@ -1212,9 +1222,10 @@ contains
       call add_to_buffer(get_key(xf%dict, i), xf%buffer, .false.)
       call add_to_buffer("=", xf%buffer, .false.)
       call add_to_buffer('"',xf%buffer, .false.)
-      if (getType(xf%dict, i)=='CDATA') then
+      j = getWhiteSpaceHandling(xf%dict, i)
+      if (j==0) then
         call add_to_buffer(get_value(xf%dict, i), xf%buffer, .true.)
-      elseif (getType(xf%dict, i)=='CDAMB') then
+      elseif (j==1) then
         call add_to_buffer(get_value(xf%dict, i), xf%buffer)
       else
         call add_to_buffer(get_value(xf%dict, i), xf%buffer, .false.)

@@ -95,7 +95,8 @@ Close an open tag
 **name**: *string*: Name of attribute  
 **value**: *anytype*: Value of attribute  
 (**escape**): *logical*: if the attribute value is a string, should the attribute value be escaped?
-  *default: true*
+  *default: true*  
+(**type**): *string*: the type of the attribute. This must be one of `CDATA`, `ID`, `IDREF`, `IDREFS`, `NMTOKEN`, `NMTOKENS`, `ENTITY`, `ENTITIES`, or `NOTATION` (always upper case). If specified, this must match any attribute declarations that have been previously declared in the DTD. If unspecified this (as the XML standard requires) defaults to `CDATA`.
 
 Add an attribute to the currently open tag.
 
@@ -110,6 +111,8 @@ The value to be added may be of any type; it will be converted to text according
 and if it is a 1- or 2-dimensional array, the elements will all be output, separated by spaces (except if it is a character array, in which
 case the delimiter may be changed to any other single character using an optional argument).
 
+NB The **type** option is only provided so that in the case of an external DTD which FoX is unaware of, the attribute type can be specified (which gives FoX more information to ensure well-formedness and validity). Specifying the type incorrectly may result in spurious error messages)
+
 * `xml_AddCharacters`  
 **chars** *anytype*:
  The text to be output  
@@ -118,6 +121,7 @@ the characters will be surrounded by CDATA tags.
  *default: yes*  
 (**delimiter**): *character(1)*: If **data** is a character array, what should the delimiter between elements be on output?
  *default: a single space*  
+(**ws_significant**): *logical*: Is any whitespace in the string significant? *default: unknown*
 
 Add text data. The data to be added may be of any type; they will be converted to text according to FoX's [formatting rules](str.html),
 and if they are a 1- or 2-dimensional array, the elements will all be output, separated by spaces (except if it is a character array, in which
@@ -286,11 +290,12 @@ Add XML stylesheet processing instruction, as described in [Stylesheets]. If use
 
 * `xml_AddXMLPI`   
 **name**: *string*:
-name of PI  
+name of PI    
 (**data**): *string*:
-data for PI 
-(**xml**): *string*
-  *default: false*
+data for PI   
+(**xml**): *logical*: (see below)
+  *default: false*  
+(**ws_significant**): *logical*: if this is a PI containing only **data**, then is any whitespace in the data significant? *default: unknown*
 
 Add an XML Processing Instruction.
 
@@ -305,15 +310,17 @@ The output PI will look like:
  Name of pseudoattribute  
 **value**: *anytype*:
  Value of pseudoattribute
+(**ws_significant**): *logical*: If there is any whitespace in the value of this pseudoattribute, is is significant?
 
-Add a pseudoattribute to the currently open PI
+Add a pseudoattribute to the currently open PI.
 
 
 * `xml_AddComment`  
 **comment**: *string*
- Contents of comment
+ Contents of comment  
+(**ws_significant**): *logical*: is any whitespace in the comment string significant? *default: unknown*
 
-Add an XML comment
+Add an XML comment.
 
 
 * `xml_AddEntityReference`  

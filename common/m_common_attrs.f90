@@ -75,6 +75,9 @@ module m_common_attrs
   public :: set_prefix
   public :: set_localName
 
+  ! For internal FoX use only:
+  public :: getWhitespaceHandling
+
   interface len
     module procedure getLength
   end interface
@@ -512,6 +515,10 @@ contains
         type='ENTITIES'
       case (NOTATION)
         type='NOTATION'
+      case (CDANO)
+        type='CDATA'
+      case (CDAMB)
+        type='CDATA'
       end select
     else
       type = ''
@@ -544,12 +551,36 @@ contains
         type='ENTITIES'
       case (NOTATION)
         type='NOTATION'
+      case (CDANO)
+        type='CDATA'
+      case (CDAMB)
+        type='CDATA'
       end select
     else
       type = ''
     endif
 
   end function getType_by_keyname
+
+  function getWhitespaceHandling(dict, i) result(j)
+    type(dictionary_t), intent(in) :: dict
+    integer, intent(in) :: i
+    integer :: j
+
+    if (i<=size(dict%items)) then
+      select case(dict%items(i)%type)
+      case (CDATA)
+        j = 0 !
+      case (CDAMB)
+        j = 1
+      case default
+        j = 2
+      end select
+    else
+      j = 2
+    endif
+
+  end function getWhitespaceHandling
 
   subroutine init_dict(dict)
     type(dictionary_t), intent(out)   :: dict

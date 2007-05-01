@@ -116,7 +116,8 @@ Name of tag to be closed (if it doesn't match currently open tag, you'll get an 
 <strong>name</strong>: <em>string</em>: Name of attribute <br />
 <strong>value</strong>: <em>anytype</em>: Value of attribute <br />
 (<strong>escape</strong>): <em>logical</em>: if the attribute value is a string, should the attribute value be escaped?
-<em>default: true</em></li>
+<em>default: true</em> <br />
+(<strong>type</strong>): <em>string</em>: the type of the attribute. This must be one of <code>CDATA</code>, <code>ID</code>, <code>IDREF</code>, <code>IDREFS</code>, <code>NMTOKEN</code>, <code>NMTOKENS</code>, <code>ENTITY</code>, <code>ENTITIES</code>, or <code>NOTATION</code> (always upper case). If specified, this must match any attribute declarations that have been previously declared in the DTD. If unspecified this (as the XML standard requires) defaults to <code>CDATA</code>.</li>
 </ul>
 
 <p>Add an attribute to the currently open tag.</p>
@@ -132,6 +133,8 @@ subroutine call. Note that if you do this, no checking on the validity of the ou
 and if it is a 1- or 2-dimensional array, the elements will all be output, separated by spaces (except if it is a character array, in which
 case the delimiter may be changed to any other single character using an optional argument).</p>
 
+<p>NB The <strong>type</strong> option is only provided so that in the case of an external DTD which FoX is unaware of, the attribute type can be specified (which gives FoX more information to ensure well-formedness and validity). Specifying the type incorrectly may result in spurious error messages)</p>
+
 <ul>
 <li><code>xml_AddCharacters</code> <br />
 <strong>chars</strong> <em>anytype</em>:
@@ -140,7 +143,8 @@ The text to be output <br />
 the characters will be surrounded by CDATA tags.
 <em>default: yes</em> <br />
 (<strong>delimiter</strong>): <em>character(1)</em>: If <strong>data</strong> is a character array, what should the delimiter between elements be on output?
-<em>default: a single space</em>  </li>
+<em>default: a single space</em> <br />
+(<strong>ws_significant</strong>): <em>logical</em>: Is any whitespace in the string significant? <em>default: unknown</em></li>
 </ul>
 
 <p>Add text data. The data to be added may be of any type; they will be converted to text according to FoX's <a href="str.html">formatting rules</a>,
@@ -338,9 +342,10 @@ alternate
 <strong>name</strong>: <em>string</em>:
 name of PI <br />
 (<strong>data</strong>): <em>string</em>:
-data for PI 
-(<strong>xml</strong>): <em>string</em>
-<em>default: false</em></li>
+data for PI <br />
+(<strong>xml</strong>): <em>logical</em>: (see below)
+<em>default: false</em> <br />
+(<strong>ws_significant</strong>): <em>logical</em>: if this is a PI containing only <strong>data</strong>, then is any whitespace in the data significant? <em>default: unknown</em></li>
 </ul>
 
 <p>Add an XML Processing Instruction.</p>
@@ -356,18 +361,20 @@ Normally, the <strong>name</strong> is checked to ensure that it is XML-complian
 <strong>name</strong>: <em>string</em>:
 Name of pseudoattribute <br />
 <strong>value</strong>: <em>anytype</em>:
-Value of pseudoattribute</li>
+Value of pseudoattribute
+(<strong>ws_significant</strong>): <em>logical</em>: If there is any whitespace in the value of this pseudoattribute, is is significant?</li>
 </ul>
 
-<p>Add a pseudoattribute to the currently open PI</p>
+<p>Add a pseudoattribute to the currently open PI.</p>
 
 <ul>
 <li><code>xml_AddComment</code> <br />
 <strong>comment</strong>: <em>string</em>
-Contents of comment</li>
+Contents of comment <br />
+(<strong>ws_significant</strong>): <em>logical</em>: is any whitespace in the comment string significant? <em>default: unknown</em></li>
 </ul>
 
-<p>Add an XML comment</p>
+<p>Add an XML comment.</p>
 
 <ul>
 <li><code>xml_AddEntityReference</code> <br />

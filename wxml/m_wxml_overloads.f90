@@ -474,9 +474,9 @@ contains
     character(len=*), intent(in), optional :: fmt
 
     if (present(fmt)) then
-      call xml_AddAttribute(xf=xf, name=name, value=str(value, fmt))
+      call xml_AddAttribute(xf=xf, name=name, value=str(value, fmt), ws_significant=.false.)
     else
-      call xml_AddAttribute(xf=xf, name=name, value=str(value))
+      call xml_AddAttribute(xf=xf, name=name, value=str(value), ws_significant=.false.)
     endif
  
   end subroutine AttributeArrayCmplxDp
@@ -490,9 +490,9 @@ contains
     character(len=*), intent(in), optional :: fmt
 
     if (present(fmt)) then
-      call xml_AddAttribute(xf=xf, name=name, value=str(value, fmt))
+      call xml_AddAttribute(xf=xf, name=name, value=str(value, fmt), ws_significant=.false.)
     else
-      call xml_AddAttribute(xf=xf, name=name, value=str(value))
+      call xml_AddAttribute(xf=xf, name=name, value=str(value), ws_significant=.false.)
     endif
  
   end subroutine AttributeArrayCmplxSp
@@ -506,9 +506,9 @@ contains
     character(len=*), intent(in), optional :: fmt
 
     if (present(fmt)) then
-      call xml_AddAttribute(xf=xf, name=name, value=str(value, fmt))
+      call xml_AddAttribute(xf=xf, name=name, value=str(value, fmt), ws_significant=.false.)
     else
-      call xml_AddAttribute(xf=xf, name=name, value=str(value))
+      call xml_AddAttribute(xf=xf, name=name, value=str(value), ws_significant=.false.)
     endif
  
   end subroutine AttributeArrayRealDp
@@ -522,9 +522,9 @@ contains
     character(len=*), intent(in), optional :: fmt
 
     if (present(fmt)) then
-      call xml_AddAttribute(xf=xf, name=name, value=str(value, fmt))
+      call xml_AddAttribute(xf=xf, name=name, value=str(value, fmt), ws_significant=.false.)
     else
-      call xml_AddAttribute(xf=xf, name=name, value=str(value))
+      call xml_AddAttribute(xf=xf, name=name, value=str(value), ws_significant=.false.)
     endif
  
   end subroutine AttributeArrayRealSp
@@ -536,7 +536,7 @@ contains
     character(len=*), intent(in) :: name
     integer, intent(in) , dimension(:)  :: value
 
-    call xml_AddAttribute(xf=xf, name=name, value=str(value))
+    call xml_AddAttribute(xf=xf, name=name, value=str(value), ws_significant=.false.)
  
   end subroutine AttributeArrayInt
 
@@ -547,7 +547,7 @@ contains
     character(len=*), intent(in) :: name
     logical, intent(in) , dimension(:)  :: value
 
-    call xml_AddAttribute(xf=xf, name=name, value=str(value))
+    call xml_AddAttribute(xf=xf, name=name, value=str(value), ws_significant=.false.)
  
   end subroutine AttributeArrayLg
 
@@ -559,7 +559,7 @@ contains
     character(len=*), intent(in) , dimension(:)  :: value
     character(len=1), intent(in), optional :: delimiter
 
-    call xml_AddAttribute(xf=xf, name=name, value=str(value, delimiter))
+    call xml_AddAttribute(xf=xf, name=name, value=str(value, delimiter), ws_significant=.false.)
  
   end subroutine AttributeArrayCh
 
@@ -572,9 +572,9 @@ contains
     character(len=*), intent(in), optional :: fmt
 
     if (present(fmt)) then
-      call xml_AddAttribute(xf=xf, name=name, value=str(value, fmt))
+      call xml_AddAttribute(xf=xf, name=name, value=str(value, fmt), ws_significant=.false.)
     else
-      call xml_AddAttribute(xf=xf, name=name, value=str(value))
+      call xml_AddAttribute(xf=xf, name=name, value=str(value), ws_significant=.false.)
     endif
  
   end subroutine AttributeMatrixCmplxDp
@@ -588,9 +588,9 @@ contains
     character(len=*), intent(in), optional :: fmt
 
     if (present(fmt)) then
-      call xml_AddAttribute(xf=xf, name=name, value=str(value, fmt))
+      call xml_AddAttribute(xf=xf, name=name, value=str(value, fmt), ws_significant=.false.)
     else
-      call xml_AddAttribute(xf=xf, name=name, value=str(value))
+      call xml_AddAttribute(xf=xf, name=name, value=str(value), ws_significant=.false.)
     endif
  
   end subroutine AttributeMatrixCmplxSp
@@ -604,9 +604,9 @@ contains
     character(len=*), intent(in), optional :: fmt
 
     if (present(fmt)) then
-      call xml_AddAttribute(xf=xf, name=name, value=str(value, fmt))
+      call xml_AddAttribute(xf=xf, name=name, value=str(value, fmt), ws_significant=.false.)
     else
-      call xml_AddAttribute(xf=xf, name=name, value=str(value))
+      call xml_AddAttribute(xf=xf, name=name, value=str(value), ws_significant=.false.)
     endif
  
   end subroutine AttributeMatrixRealDp
@@ -620,9 +620,9 @@ contains
     character(len=*), intent(in), optional :: fmt
 
     if (present(fmt)) then
-      call xml_AddAttribute(xf=xf, name=name, value=str(value, fmt))
+      call xml_AddAttribute(xf=xf, name=name, value=str(value, fmt), ws_significant=.false.)
     else
-      call xml_AddAttribute(xf=xf, name=name, value=str(value))
+      call xml_AddAttribute(xf=xf, name=name, value=str(value), ws_significant=.false.)
     endif
  
   end subroutine AttributeMatrixRealSp
@@ -634,7 +634,7 @@ contains
     character(len=*), intent(in) :: name
     integer, intent(in) , dimension(:,:)  :: value
 
-    call xml_AddAttribute(xf=xf, name=name, value=str(value))
+    call xml_AddAttribute(xf=xf, name=name, value=str(value), ws_significant=.false.)
  
   end subroutine AttributeMatrixInt
 
@@ -645,7 +645,7 @@ contains
     character(len=*), intent(in) :: name
     logical, intent(in) , dimension(:,:)  :: value
 
-    call xml_AddAttribute(xf=xf, name=name, value=str(value))
+    call xml_AddAttribute(xf=xf, name=name, value=str(value), ws_significant=.false.)
  
   end subroutine AttributeMatrixLg
 
@@ -657,7 +657,7 @@ contains
     character(len=*), intent(in) , dimension(:,:)  :: value
     character(len=1), intent(in), optional :: delimiter
 
-    call xml_AddAttribute(xf=xf, name=name, value=str(value, delimiter))
+    call xml_AddAttribute(xf=xf, name=name, value=str(value, delimiter), ws_significant=.false.)
  
   end subroutine AttributeMatrixCh
 
@@ -758,9 +758,9 @@ contains
     character(len=*), intent(in), optional :: fmt
 
     if (present(fmt)) then
-      call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value, fmt))
+      call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value, fmt), ws_significant=.false.)
     else
-      call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value))
+      call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value), ws_significant=.false.)
     endif
  
   end subroutine PseudoAttributeArrayCmplxDp
@@ -774,9 +774,9 @@ contains
     character(len=*), intent(in), optional :: fmt
 
     if (present(fmt)) then
-      call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value, fmt))
+      call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value, fmt), ws_significant=.false.)
     else
-      call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value))
+      call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value), ws_significant=.false.)
     endif
  
   end subroutine PseudoAttributeArrayCmplxSp
@@ -790,9 +790,9 @@ contains
     character(len=*), intent(in), optional :: fmt
 
     if (present(fmt)) then
-      call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value, fmt))
+      call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value, fmt), ws_significant=.false.)
     else
-      call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value))
+      call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value), ws_significant=.false.)
     endif
  
   end subroutine PseudoAttributeArrayRealDp
@@ -806,9 +806,9 @@ contains
     character(len=*), intent(in), optional :: fmt
 
     if (present(fmt)) then
-      call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value, fmt))
+      call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value, fmt), ws_significant=.false.)
     else
-      call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value))
+      call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value), ws_significant=.false.)
     endif
  
   end subroutine PseudoAttributeArrayRealSp
@@ -820,7 +820,7 @@ contains
     character(len=*), intent(in) :: name
     integer, intent(in) , dimension(:)  :: value
 
-    call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value))
+    call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value), ws_significant=.false.)
  
   end subroutine PseudoAttributeArrayInt
 
@@ -831,7 +831,7 @@ contains
     character(len=*), intent(in) :: name
     logical, intent(in) , dimension(:)  :: value
 
-    call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value))
+    call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value), ws_significant=.false.)
  
   end subroutine PseudoAttributeArrayLg
 
@@ -843,7 +843,7 @@ contains
     character(len=*), intent(in) , dimension(:)  :: value
     character(len=1), intent(in), optional :: delimiter
 
-    call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value, delimiter))
+    call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value, delimiter), ws_significant=.false.)
  
   end subroutine PseudoAttributeArrayCh
 
@@ -856,9 +856,9 @@ contains
     character(len=*), intent(in), optional :: fmt
 
     if (present(fmt)) then
-      call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value, fmt))
+      call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value, fmt), ws_significant=.false.)
     else
-      call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value))
+      call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value), ws_significant=.false.)
     endif
  
   end subroutine PseudoAttributeMatrixCmplxDp
@@ -872,9 +872,9 @@ contains
     character(len=*), intent(in), optional :: fmt
 
     if (present(fmt)) then
-      call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value, fmt))
+      call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value, fmt), ws_significant=.false.)
     else
-      call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value))
+      call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value), ws_significant=.false.)
     endif
  
   end subroutine PseudoAttributeMatrixCmplxSp
@@ -888,9 +888,9 @@ contains
     character(len=*), intent(in), optional :: fmt
 
     if (present(fmt)) then
-      call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value, fmt))
+      call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value, fmt), ws_significant=.false.)
     else
-      call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value))
+      call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value), ws_significant=.false.)
     endif
  
   end subroutine PseudoAttributeMatrixRealDp
@@ -904,9 +904,9 @@ contains
     character(len=*), intent(in), optional :: fmt
 
     if (present(fmt)) then
-      call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value, fmt))
+      call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value, fmt), ws_significant=.false.)
     else
-      call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value))
+      call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value), ws_significant=.false.)
     endif
  
   end subroutine PseudoAttributeMatrixRealSp
@@ -918,7 +918,7 @@ contains
     character(len=*), intent(in) :: name
     integer, intent(in) , dimension(:,:)  :: value
 
-    call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value))
+    call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value), ws_significant=.false.)
  
   end subroutine PseudoAttributeMatrixInt
 
@@ -929,7 +929,7 @@ contains
     character(len=*), intent(in) :: name
     logical, intent(in) , dimension(:,:)  :: value
 
-    call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value))
+    call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value), ws_significant=.false.)
  
   end subroutine PseudoAttributeMatrixLg
 
@@ -941,7 +941,7 @@ contains
     character(len=*), intent(in) , dimension(:,:)  :: value
     character(len=1), intent(in), optional :: delimiter
 
-    call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value, delimiter))
+    call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value, delimiter), ws_significant=.false.)
  
   end subroutine PseudoAttributeMatrixCh
 

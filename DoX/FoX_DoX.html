@@ -171,7 +171,7 @@ sax_lib
 <p>Known failures: <br />
 * <code>test_xml_Close_2</code> sometimes unexpectedly fails - this is not a problem, ignore it.  </p>
 
-<p>If any other failures occur, please send a message to the mailing list (<a href="&#109;a&#105;&#x6C;&#116;&#111;:&#x46;&#111;&#88;&#64;&#x6C;&#x69;&#x73;&#x74;&#115;&#x2E;&#117;&#x73;&#122;&#x6C;&#x61;&#46;&#109;&#x65;&#x2E;&#x75;&#107;">&#x46;&#111;&#88;&#64;&#x6C;&#x69;&#x73;&#x74;&#115;&#x2E;&#117;&#x73;&#122;&#x6C;&#x61;&#46;&#109;&#x65;&#x2E;&#x75;&#107;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
+<p>If any other failures occur, please send a message to the mailing list (<a href="&#x6D;&#97;&#x69;&#108;&#116;&#x6F;:&#x46;&#x6F;&#88;&#64;&#108;&#x69;&#x73;&#x74;&#x73;&#x2E;u&#115;&#122;&#x6C;&#x61;&#46;m&#x65;&#x2E;u&#107;">&#x46;&#x6F;&#88;&#64;&#108;&#x69;&#x73;&#x74;&#x73;&#x2E;u&#115;&#122;&#x6C;&#x61;&#46;m&#x65;&#x2E;u&#107;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
 
 <h2>Linking to an existing program</h2>
 
@@ -513,7 +513,8 @@ Name of tag to be closed (if it doesn't match currently open tag, you'll get an 
 <strong>name</strong>: <em>string</em>: Name of attribute <br />
 <strong>value</strong>: <em>anytype</em>: Value of attribute <br />
 (<strong>escape</strong>): <em>logical</em>: if the attribute value is a string, should the attribute value be escaped?
-<em>default: true</em></li>
+<em>default: true</em> <br />
+(<strong>type</strong>): <em>string</em>: the type of the attribute. This must be one of <code>CDATA</code>, <code>ID</code>, <code>IDREF</code>, <code>IDREFS</code>, <code>NMTOKEN</code>, <code>NMTOKENS</code>, <code>ENTITY</code>, <code>ENTITIES</code>, or <code>NOTATION</code> (always upper case). If specified, this must match any attribute declarations that have been previously declared in the DTD. If unspecified this (as the XML standard requires) defaults to <code>CDATA</code>.</li>
 </ul>
 
 <p>Add an attribute to the currently open tag.</p>
@@ -529,6 +530,8 @@ subroutine call. Note that if you do this, no checking on the validity of the ou
 and if it is a 1- or 2-dimensional array, the elements will all be output, separated by spaces (except if it is a character array, in which
 case the delimiter may be changed to any other single character using an optional argument).</p>
 
+<p>NB The <strong>type</strong> option is only provided so that in the case of an external DTD which FoX is unaware of, the attribute type can be specified (which gives FoX more information to ensure well-formedness and validity). Specifying the type incorrectly may result in spurious error messages)</p>
+
 <ul>
 <li><code>xml_AddCharacters</code> <br />
 <strong>chars</strong> <em>anytype</em>:
@@ -537,7 +540,8 @@ The text to be output <br />
 the characters will be surrounded by CDATA tags.
 <em>default: yes</em> <br />
 (<strong>delimiter</strong>): <em>character(1)</em>: If <strong>data</strong> is a character array, what should the delimiter between elements be on output?
-<em>default: a single space</em>  </li>
+<em>default: a single space</em> <br />
+(<strong>ws_significant</strong>): <em>logical</em>: Is any whitespace in the string significant? <em>default: unknown</em></li>
 </ul>
 
 <p>Add text data. The data to be added may be of any type; they will be converted to text according to FoX's <a href="str.html">formatting rules</a>,
@@ -735,9 +739,10 @@ alternate
 <strong>name</strong>: <em>string</em>:
 name of PI <br />
 (<strong>data</strong>): <em>string</em>:
-data for PI 
-(<strong>xml</strong>): <em>string</em>
-<em>default: false</em></li>
+data for PI <br />
+(<strong>xml</strong>): <em>logical</em>: (see below)
+<em>default: false</em> <br />
+(<strong>ws_significant</strong>): <em>logical</em>: if this is a PI containing only <strong>data</strong>, then is any whitespace in the data significant? <em>default: unknown</em></li>
 </ul>
 
 <p>Add an XML Processing Instruction.</p>
@@ -753,18 +758,20 @@ Normally, the <strong>name</strong> is checked to ensure that it is XML-complian
 <strong>name</strong>: <em>string</em>:
 Name of pseudoattribute <br />
 <strong>value</strong>: <em>anytype</em>:
-Value of pseudoattribute</li>
+Value of pseudoattribute
+(<strong>ws_significant</strong>): <em>logical</em>: If there is any whitespace in the value of this pseudoattribute, is is significant?</li>
 </ul>
 
-<p>Add a pseudoattribute to the currently open PI</p>
+<p>Add a pseudoattribute to the currently open PI.</p>
 
 <ul>
 <li><code>xml_AddComment</code> <br />
 <strong>comment</strong>: <em>string</em>
-Contents of comment</li>
+Contents of comment <br />
+(<strong>ws_significant</strong>): <em>logical</em>: is any whitespace in the comment string significant? <em>default: unknown</em></li>
 </ul>
 
-<p>Add an XML comment</p>
+<p>Add an XML comment.</p>
 
 <ul>
 <li><code>xml_AddEntityReference</code> <br />
@@ -1970,9 +1977,9 @@ integer, intent(in), optional :: i</code></li>
 <h1>Further information</h1>
 
 <p>FoX evolved from the initial codebase of <a href="http://lcdx00.wm.lc.ehu.es/ag/xml/">xmlf90</a>,
-which was written largely by Alberto Garcia &lt;<a href="&#x6D;&#97;&#x69;&#x6C;&#x74;o:&#97;&#108;&#x62;&#101;&#114;&#x74;&#x6F;&#103;&#64;&#105;&#x63;&#x6D;&#97;&#x62;&#x2E;&#x65;&#x73;">&#97;&#108;&#x62;&#101;&#114;&#x74;&#x6F;&#103;&#64;&#105;&#x63;&#x6D;&#97;&#x62;&#x2E;&#x65;&#x73;</a>> and Jon Wakelin &lt;<a href="&#109;a&#x69;&#x6C;&#116;&#111;:&#106;&#111;&#x6E;&#x2E;&#x77;&#97;&#107;&#101;&#108;&#x69;&#x6E;&#64;&#x62;&#114;i&#x73;&#116;&#x6F;&#108;&#x2E;&#97;&#99;&#x2E;&#x75;&#x6B;">&#106;&#111;&#x6E;&#x2E;&#x77;&#97;&#107;&#101;&#108;&#x69;&#x6E;&#64;&#x62;&#114;i&#x73;&#116;&#x6F;&#108;&#x2E;&#97;&#99;&#x2E;&#x75;&#x6B;</a>>.</p>
+which was written largely by Alberto Garcia &lt;<a href="&#109;a&#x69;&#108;&#x74;&#x6F;:&#x61;&#x6C;&#98;&#x65;&#114;&#x74;&#111;&#103;&#64;&#105;&#99;&#109;&#97;&#98;&#x2E;&#x65;&#x73;">&#x61;&#x6C;&#98;&#x65;&#114;&#x74;&#111;&#103;&#64;&#105;&#99;&#109;&#97;&#98;&#x2E;&#x65;&#x73;</a>> and Jon Wakelin &lt;<a href="&#109;&#97;i&#108;&#x74;&#111;:j&#111;&#x6E;&#x2E;&#x77;&#97;&#107;&#101;l&#105;&#x6E;&#64;&#98;&#x72;&#105;&#x73;&#x74;&#111;&#x6C;&#46;a&#99;&#x2E;&#117;&#x6B;">j&#111;&#x6E;&#x2E;&#x77;&#97;&#107;&#101;l&#105;&#x6E;&#64;&#98;&#x72;&#105;&#x73;&#x74;&#111;&#x6C;&#46;a&#99;&#x2E;&#117;&#x6B;</a>>.</p>
 
-<p>FoX is the work of Toby White &lt;<a href="&#x6D;a&#105;&#x6C;&#x74;&#111;:&#116;&#111;&#119;&#x32;1&#64;&#99;&#97;&#x6D;&#x2E;&#97;c&#46;&#x75;&#x6B;">&#116;&#111;&#119;&#x32;1&#64;&#99;&#97;&#x6D;&#x2E;&#97;c&#46;&#x75;&#x6B;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
+<p>FoX is the work of Toby White &lt;<a href="&#x6D;&#x61;&#x69;&#108;t&#x6F;:&#x74;o&#119;&#x32;&#49;&#64;&#99;&#x61;&#x6D;&#x2E;&#x61;&#99;.&#x75;&#x6B;">&#x74;o&#119;&#x32;&#49;&#64;&#99;&#x61;&#x6D;&#x2E;&#x61;&#99;.&#x75;&#x6B;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
 
 <p>There is a FoX website at <a href="http://www.uszla.me.uk/software/FoX/">http://www.uszla.me.uk/software/FoX/</a>.</p>
 
