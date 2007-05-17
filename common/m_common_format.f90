@@ -566,9 +566,14 @@ contains
     else
       e = floor(log10(abs(x)))
     endif
-    ! Have to multiply by 10^-e rather than divide by 10^e
-    ! to avoid rounding errors.
-    x_ = abs(x) * (10.0_sp**(-e))
+    x_ = abs(x)
+    ! Have to do this next in a loop rather than just exponentiating in
+    ! order to  avoid under/over-flow.
+    do i = 1, abs(e)
+      ! Have to multiply by 10^-e rather than divide by 10^e
+      ! to avoid rounding errors.
+      x_ = x_ * (10.0_sp**(-abs(e)/e))
+    enddo
     n = 1
     do k = sig - 2, 0, -1
       ! This baroque way of taking int() ensures the optimizer 
@@ -997,8 +1002,14 @@ contains
     else
       e = floor(log10(abs(x)))
     endif
-    x_ = abs(x) * (10.0_dp**(-e))
-    ! See comment in str_real_sp above
+    x_ = abs(x)
+    ! Have to do this next in a loop rather than just exponentiating in
+    ! order to  avoid under/over-flow.
+    do i = 1, abs(e)
+      ! Have to multiply by 10^-e rather than divide by 10^e
+      ! to avoid rounding errors.
+      x_ = x_ * (10.0_dp**(-abs(e)/e))
+    enddo
     n = 1
     do k = sig - 2, 0, -1
       ! This baroque way of taking int() ensures the optimizer definitely
