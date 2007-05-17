@@ -196,7 +196,7 @@ FoX's control, and cannot be manipulated by the user.)</p>
 <p>However, to generate XML input like so:
       <cml xhtml:class="symbol" xmlns:xhtml="http://www.w3.org/1999/xhtml"/>
 that is, where the namespace refers to an attribute at the same level,
-then as long as the <code>xml_AddNamespace</code> call is made before the element tag is closed (either by <code>xml_EndElement</code>, or by a new element tag being opened, or some text being added etc.) the correct XML will be generated.</p>
+then as long as the <code>xml_DeclareNamespace</code> call is made before the element tag is closed (either by <code>xml_EndElement</code>, or by a new element tag being opened, or some text being added etc.) the correct XML will be generated.</p>
 
 <p>Two previously mentioned functions are affected when used in a namespace-aware fashion.</p>
 

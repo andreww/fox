@@ -164,7 +164,7 @@ then the following two calls are necessary, in the prescribed order:
 However, to generate XML input like so:
       <cml xhtml:class="symbol" xmlns:xhtml="http://www.w3.org/1999/xhtml"/>
 that is, where the namespace refers to an attribute at the same level,
-then as long as the `xml_AddNamespace` call is made before the element tag is closed (either by `xml_EndElement`, or by a new element tag being opened, or some text being added etc.) the correct XML will be generated.
+then as long as the `xml_DeclareNamespace` call is made before the element tag is closed (either by `xml_EndElement`, or by a new element tag being opened, or some text being added etc.) the correct XML will be generated.
 
 Two previously mentioned functions are affected when used in a namespace-aware fashion.
 
