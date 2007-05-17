@@ -47,19 +47,6 @@ fsys_lib: objsdir
 fsys_lib_clean:
 	(cd fsys; $(MAKE) clean)
 #
-dom_example: dom_lib dom_example.o
-	$(FC) -o $@ dom_example.o $$(./FoX-config --libs --dom)
-#
-sax_example.o: m_handlers.o
-sax_example: sax_lib m_handlers.o sax_example.o
-	$(FC) -o $@ sax_example.o m_handlers.o $$(./FoX-config --libs --sax)
-#
-wxml_example: wxml_lib wxml_example.o 
-	$(FC) -o $@ wxml_example.o $$(./FoX-config --libs --wxml)
-#
-wcml_example: wcml_lib wcml_example.o 
-	$(FC) -o $@ wcml_example.o $$(./FoX-config --libs --wcml)
-#
 common_check:
 	(cd common/test;./run_tests.sh)
 dom_check:
