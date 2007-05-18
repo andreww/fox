@@ -53,10 +53,9 @@ contains
   end subroutine destroy_notation_list
  
 
-  subroutine add_notation(nlist, name, xv, systemId, publicId)
+  subroutine add_notation(nlist, name, systemId, publicId)
     type(notation_list), intent(inout) :: nlist
     character(len=*), intent(in) :: name
-    integer, intent(in) :: xv
     character(len=*), intent(in), optional :: systemId
     character(len=*), intent(in), optional :: publicId
 

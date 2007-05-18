@@ -215,7 +215,8 @@ contains
     !NB it can make no difference which XML version we are using
     !until after we output the XML declaration. So we set it to
     !1.0 for the moment & reset below.
-    xf%xds%xml_version = XML1_0
+    ! Actually, this is done automatically in initializing xf%xds
+    call init_xml_doc_state(xf%xds)
     
     xf%state_1 = WXML_STATE_1_JUST_OPENED
     xf%state_2 = WXML_STATE_2_OUTSIDE_TAG
@@ -239,7 +240,6 @@ contains
     endif
     
     call initNamespaceDictionary(xf%nsDict)
-    call init_xml_doc_state(xf%xds)
     
   end subroutine xml_OpenFile
 
@@ -541,7 +541,7 @@ contains
         call wxml_error("PUblic ID name is illegal in xml_AddNotation: "//public)
     endif
     
-    call add_notation(xf%xds%nList, name, xf%xds%xml_version, system, public)
+    call add_notation(xf%xds%nList, name, system, public)
     call add_to_buffer('<!NOTATION '//name, xf%buffer)
     if (present(public)) then
       if (index(public, '"') > 0) then
