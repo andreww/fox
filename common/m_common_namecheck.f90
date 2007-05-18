@@ -223,6 +223,44 @@ contains
   end function checkEntityValue
 
 
+  function checkValidEntityName(value, ext, e_list) result(p)
+    character(len=*), intent(in) :: value
+    logical, intent(in) :: ext ! Does an external DTD apply?
+    type(entity_list), intent(in) :: e_list ! Currently active list of entities
+    logical :: p
+
+    if (ext) then
+      p = isName(value)
+    else
+      p = (value=='gt'.or.value=='lt'.or.value='apos'.or.value=='quot' &
+        .or.value=='amp'.or.isRegisteredEntity(e_lis, value))
+    endif
+  end function checkValidEntityName
+
+  function checkUnescapedAttributeValue(value, ext, e_list) result(p)
+    character(len=*), intent(in) :: value
+    logical, intent(in) :: ext ! Does an external DTD apply?
+    type(entity_list), intent(in) :: e_list ! Currently active list of entities
+    logical :: p
+    integer :: i, i1, 2
+
+    if (scan(value, "<>'"//'"')>0) then
+      p = .false.
+      return
+    endif
+    
+    p  = .true.
+    i = 1
+    i1 = index(value, '&')
+    do while (i1>0)
+      i2 = index(value(i+i1:), ';')
+      if (checkValidEntityName(value(i+i1+1:i+i2-1)), ext, e_list) then
+        p = .false.
+        return
+      endif
+    enddo
+  end function checkUnescapedAttributeValue
+
   pure function prefixOfQName(qname) result(prefix)
     character(len=*), intent(in) :: qname
     character(len=max(index(qname, ':')-1,0)) :: prefix
