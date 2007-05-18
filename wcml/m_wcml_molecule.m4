@@ -32,11 +32,13 @@ TOHWM4_moleculeargsdecl
 
     integer          :: i
 
-    if (style=="DL_POLY") then
-      if (present(atomRefs).or.present(occupancies).or.present(atomIds).or.present(fmt)) &
-        call FoX_error("With DL_POLY style, no optional arguments permitted.")
-      call addDlpolyMatrix_$1(xf, coords, elements)
-      return
+    if (present(style)) then
+      if (style=="DL_POLY") then
+        if (present(atomRefs).or.present(occupancies).or.present(atomIds).or.present(fmt)) &
+          call FoX_error("With DL_POLY style, no optional arguments permitted.")
+        call addDlpolyMatrix_$1(xf, coords, elements)
+        return
+      endif
     endif
 
     call xml_NewElement(xf, "molecule")
