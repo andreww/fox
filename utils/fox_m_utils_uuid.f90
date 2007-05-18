@@ -129,7 +129,7 @@ contains
       int32ToHexOctets(time_mid, 2)//"-"// &
       int32ToHexOctets(time_hi_and_version, 2)//"-"// & 
       int32ToHexOctets(clk_seq_hi_res, 1)// &
-      int32ToHexOctets(clk_seq_low, 1)// &
+      int32ToHexOctets(clk_seq_low, 1)//"-"// &
       int64ToHexOctets(node, 6)
 
   contains
