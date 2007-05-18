@@ -1,10 +1,10 @@
-module fuuid
+module fox_m_utils_uuid
 
   !This generates UUIDs according to RFC 4122
 
   ! Only types 1 (time-based) and 4 (pseudo-RNG-based) are implemented.
 
-  use mtprng, only : mtprng_state, mtprng_init, mtprng_rand64
+  use fox_m_utils_mtprng, only : mtprng_state, mtprng_init, mtprng_rand64
   implicit none
   private
   
@@ -226,4 +226,4 @@ contains
   end function get_utc_since_1582
 
 
-end module fuuid
+end module fox_m_utils_uuid

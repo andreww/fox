@@ -50,7 +50,7 @@ while test $# -gt 0; do
         MODULES="$MODULES wxml common fsys"
         ;;
     --wcml)
-        MODULES="$MODULES wcml wxml common fsys"
+        MODULES="$MODULES wcml wxml utils common fsys"
         ;;
     --sax)
         MODULES="$MODULES sax common fsys"
@@ -72,6 +72,9 @@ if [[ $MODULES = *fsys* ]]; then
 fi
 if [[ $MODULES = *common* ]]; then
   LIBS="-lFoX_common $LIBS"
+fi
+if [[ $MODULES = *utils* ]]; then
+  LIBS="-lFoX_utils $LIBS"
 fi
 if [[ $MODULES = *wxml* ]]; then
   LIBS="-lFoX_wxml $LIBS"

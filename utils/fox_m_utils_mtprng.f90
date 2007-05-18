@@ -1,4 +1,4 @@
-module mtprng
+module fox_m_utils_mtprng
 !---------------------------------------------------------------------
 ! From the Algorithmic Conjurings of Scott Robert Ladd comes...
 !---------------------------------------------------------------------
@@ -130,7 +130,6 @@ contains
         
         ! working storage
         integer :: i
-        integer(INT64) :: s, b
 
         ! save seed        
         state%mt(0) = seed
@@ -350,4 +349,4 @@ contains
         
     end function mtprng_rand_real3
 
-end module mtprng
+end module fox_m_utils_mtprng

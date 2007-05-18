@@ -16,6 +16,7 @@ include arch.make
 INCFLAGS=-Iobjs/finclude
 #
 #
+# Recursive make for each module
 #
 dom_lib: sax_lib wxml_lib
 	(cd dom; $(MAKE))
@@ -32,7 +33,7 @@ wxml_lib: common_lib fsys_lib
 wxml_lib_clean:
 	(cd wxml; $(MAKE) clean)
 #
-wcml_lib: wxml_lib
+wcml_lib: utils_lib wxml_lib
 	(cd wcml; $(MAKE))
 wcml_lib_clean: 
 	(cd wcml; $(MAKE) clean)
@@ -42,27 +43,50 @@ common_lib: fsys_lib
 common_lib_clean:
 	(cd common; $(MAKE) clean)
 #
+utils_lib:
+	(cd utils; $(MAKE))
+utils_lib_clean:
+	(cd utils; $(MAKE) clean)
+#
 fsys_lib: objsdir
 	(cd fsys; $(MAKE))
 fsys_lib_clean:
 	(cd fsys; $(MAKE) clean)
 #
+#
+# Unit tests (where implemented)
+#
+fsys_check:
+#
 common_check:
 	(cd common/test;./run_tests.sh)
+#
+utils_check:
+#
 dom_check:
+#
 sax_check:
+#
 wcml_check:
 	(cd wcml/test;./run_tests.sh)
+#
 wxml_check:
 	(cd wxml/test;./run_tests.sh)
+#
 check: common_check wxml_check wcml_check sax_check dom_check
-
+#
+#
+# Documentation
+#
 DoX:
 	(cd DoX; make)
-
-clean: wxml_lib_clean wcml_lib_clean common_lib_clean fsys_lib_clean sax_lib_clean
+#
+#
+# Clean
+#
+clean: wxml_lib_clean wcml_lib_clean common_lib_clean fsys_lib_clean sax_lib_clean utils_lib_clean
 	(cd examples;make clean)
 	rm -f objs/lib/* objs/finclude/* .FoX
-
+#
 distclean: clean
 	rm -f FoX-config arch.make config.log config.status .config
