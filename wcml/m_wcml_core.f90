@@ -3,6 +3,7 @@ module m_wcml_core
   use m_common_error, only: FoX_error
 
   use FoX_common, only: FoX_version
+  use FoX_utils, only: generate_uuid
   use FoX_wxml, only: xmlf_t, xml_OpenFile, xml_Close
   use FoX_wxml, only: xml_NewElement, xml_AddAttribute
   use FoX_wxml, only: xml_EndElement, xml_DeclareNamespace
@@ -98,6 +99,8 @@ contains
     else
       call xml_AddAttribute(xf, 'version', "2.4")
     endif
+
+    call cmlAddMetadata(xf, name='UUID', content=generate_uuid(1))
 
   end subroutine cmlStartCml
 
