@@ -9,7 +9,7 @@ make $1.exe
 passed=no
 if [ -f $1.xml ]
 then
-  tr -d '/15' < test.xml > test.xml.tmp; mv test.xml.tmp test.xml
+  grep -v UUID test.xml | tr -d '/15' > test.xml.tmp; mv test.xml.tmp test.xml
   if diff test.xml $1.xml > /dev/null; then
      echo $1 >> failed.out
      echo "------------" >> failed.out
