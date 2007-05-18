@@ -2,7 +2,6 @@ module m_common_notations
 
   use m_common_array_str, only: vs_str, str_vs
   use m_common_error, only: FoX_error
-  use m_common_namecheck, only: checkName, checkPubId
 
   implicit none
   private
@@ -64,17 +63,8 @@ contains
     integer :: i
     type(notation), dimension(:), allocatable :: temp
 
-    print*,'adding notation'
-
-    if (.not.checkName(name, xv)) &
-      call Fox_error("Illegal notation name: "//name)
-
     if (.not.present(systemId) .and. .not.present(publicId)) &
       call FoX_error("Neither System nor Public Id specified for notation: "//name)
-    if (present(publicId)) then
-      if (.not.checkPubId(publicId)) &
-        call Fox_error("Illegal public ID for notation: "//name)
-    endif
 
     allocate(temp(0:ubound(nlist%notations,1)))
     do i = 0, ubound(nlist%notations, 1)

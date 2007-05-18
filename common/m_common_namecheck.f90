@@ -3,6 +3,7 @@ module m_common_namecheck
   use m_common_charset, only: isLegalCharRef, isNCNameChar, &
     isInitialNCNameChar, isInitialNameChar, isNameChar
   use m_common_format, only: str_to_int_10, str_to_int_16
+  use m_common_struct, only: xml_doc_state
 
   implicit none
   private
@@ -19,7 +20,8 @@ module m_common_namecheck
   public :: checkNCName
   public :: checkEncName
   public :: checkPITarget
-  public :: checkPubId
+  public :: checkPublicId
+  public :: checkSystemId
   public :: checkIRI
   public :: checkCharacterEntityReference
   public :: likeCharacterEntityReference
@@ -45,14 +47,14 @@ contains
   end function checkEncName
 
 
-  function checkPITarget(name, xv) result(good)
+  function checkPITarget(name, xds) result(good)
     character(len=*), intent(in) :: name
-    integer, intent(in) :: xv
+    type(xml_doc_state), intent(in) :: xds
     logical :: good
     ! Validates a string against the XML requirements for a NAME
     ! Is not fully compliant; ignores UTF issues.
 
-    good = checkName(name, xv)
+    good = checkName(name, xds)
     if (good .and. len(name) > 2) then
       good = (scan(name(1:1), 'Xx') == 0 .and. &
         scan(name(2:2), 'Mm') == 0 .and. &
@@ -62,9 +64,9 @@ contains
   end function checkPITarget
 
 
-  pure function checkName(name, xv) result(good)
+  pure function checkName(name, xds) result(good)
     character(len=*), intent(in) :: name
-    integer, intent(in) :: xv
+    type(xml_doc_state), intent(in) :: xds
     logical :: good
     ! Validates a string against the XML requirements for a NAME
     ! Is not fully compliant; ignores UTF issues.
@@ -72,9 +74,9 @@ contains
     integer :: i
 
     good = (len(name) > 0)
-    if (good) good = isInitialNameChar(name(1:1), xv) 
+    if (good) good = isInitialNameChar(name(1:1), xds%xml_version) 
     do i = 1, len(name)
-      if (.not.isNameChar(name(i:i), xv)) then
+      if (.not.isNameChar(name(i:i), xds%xml_version)) then
         good = .false.
         exit
       endif
@@ -122,15 +124,21 @@ contains
   end function checkNCName
 
 
-  function checkPubId(PubId) result(good)
-    character(len=*), intent(in) :: PubId
+  function checkPublicId(value) result(good)
+    character(len=*), intent(in) :: value
     logical :: good
     character(len=*), parameter :: PubIdChars = &
       " "//achar(10)//achar(13)//lowerCase//upperCase//digits//"-'()+,./:=?;!*#@$_%"
 
-    good = (verify(PubId, PubIdChars)==0) 
-  end function checkPubId
+    good = (verify(value, PubIdChars)==0) 
+  end function checkPublicId
 
+  function checkSystemId(value) result(good)
+    character(len=*), intent(in) :: value
+    logical :: good
+    ! FIXME Check resolving system id -> URL
+    good = .true.
+  end function checkSystemId
 
   function checkIRI(IRI) result(good)
     character(len=*), intent(in) :: IRI
@@ -222,44 +230,6 @@ contains
 
   end function checkEntityValue
 
-
-  function checkValidEntityName(value, ext, e_list) result(p)
-    character(len=*), intent(in) :: value
-    logical, intent(in) :: ext ! Does an external DTD apply?
-    type(entity_list), intent(in) :: e_list ! Currently active list of entities
-    logical :: p
-
-    if (ext) then
-      p = isName(value)
-    else
-      p = (value=='gt'.or.value=='lt'.or.value='apos'.or.value=='quot' &
-        .or.value=='amp'.or.isRegisteredEntity(e_lis, value))
-    endif
-  end function checkValidEntityName
-
-  function checkUnescapedAttributeValue(value, ext, e_list) result(p)
-    character(len=*), intent(in) :: value
-    logical, intent(in) :: ext ! Does an external DTD apply?
-    type(entity_list), intent(in) :: e_list ! Currently active list of entities
-    logical :: p
-    integer :: i, i1, 2
-
-    if (scan(value, "<>'"//'"')>0) then
-      p = .false.
-      return
-    endif
-    
-    p  = .true.
-    i = 1
-    i1 = index(value, '&')
-    do while (i1>0)
-      i2 = index(value(i+i1:), ';')
-      if (checkValidEntityName(value(i+i1+1:i+i2-1)), ext, e_list) then
-        p = .false.
-        return
-      endif
-    enddo
-  end function checkUnescapedAttributeValue
 
   pure function prefixOfQName(qname) result(prefix)
     character(len=*), intent(in) :: qname

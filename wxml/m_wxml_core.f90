@@ -8,18 +8,17 @@ module m_wxml_core
   use m_common_charset, only: XML1_0, XML1_1
   use m_common_elstack, only: elstack_t, len, get_top_elstack, pop_elstack, &
     is_empty, init_elstack, push_elstack, destroy_elstack
-  use m_common_entities, only: entity_list, init_entity_list, &
-    destroy_entity_list, add_internal_entity, add_external_entity
+  use m_common_entities, only: add_internal_entity, add_external_entity
   use m_common_error, only: FoX_warning_base, FoX_error_base, FoX_fatal_base
   use m_common_io, only: get_unit
   use m_common_namecheck, only: checkEncName, checkName, checkPITarget, &
-    checkCharacterEntityReference, checkPubId, &
+    checkCharacterEntityReference, checkPublicId, checkSystemId, &
     checkQName, prefixOfQName, localpartofQName
   use m_common_namespaces, only: namespaceDictionary, getnamespaceURI, &
   initnamespaceDictionary, destroynamespaceDictionary, addDefaultNS, &
   addPrefixedNS, isPrefixInForce, checkNamespacesWriting, checkEndNamespaces
-  use m_common_notations, only: notation_list, init_notation_list, &
-    destroy_notation_list, add_notation, notation_exists
+  use m_common_notations, only: add_notation, notation_exists
+  use m_common_struct, only: xml_doc_state
   use m_wxml_escape, only: escape_string
 
   use pxf, only: pxfabort
@@ -65,9 +64,8 @@ module m_wxml_core
 
   type xmlf_t
     private
+    type(xml_doc_state) :: xds
     character, pointer        :: filename(:)
-    integer                   :: xml_version
-    logical                   :: standalone = .false.
     integer                   :: lun = -1
     type(buffer_t)            :: buffer
     type(elstack_t)           :: stack
@@ -79,9 +77,6 @@ module m_wxml_core
     integer                   :: indent = 0
     character, pointer        :: name(:)
     type(namespaceDictionary) :: nsDict
-    type(entity_list)         :: entityList
-    type(entity_list)         :: PEList
-    type(notation_list)       :: nList
   end type xmlf_t
 
   public :: xmlf_t
@@ -220,7 +215,7 @@ contains
     !NB it can make no difference which XML version we are using
     !until after we output the XML declaration. So we set it to
     !1.0 for the moment & reset below.
-    xf%xml_version = XML1_0
+    xf%xds%xml_version = XML1_0
     
     xf%state_1 = WXML_STATE_1_JUST_OPENED
     xf%state_2 = WXML_STATE_2_OUTSIDE_TAG
@@ -240,13 +235,11 @@ contains
       call xml_AddXMLDeclaration(xf,encoding='UTF-8')
       ! which will reset the buffer itself
     else
-      call reset_buffer(xf%buffer, xf%lun, xf%xml_version)
+      call reset_buffer(xf%buffer, xf%lun, xf%xds%xml_version)
     endif
     
     call initNamespaceDictionary(xf%nsDict)
-    call init_entity_list(xf%entityList)
-    call init_entity_list(xf%PEList)
-    call init_notation_list(xf%nList)
+    call init_xml_doc_state(xf%xds)
     
   end subroutine xml_OpenFile
 
@@ -262,22 +255,22 @@ contains
     if (xf%state_1 /= WXML_STATE_1_JUST_OPENED) &
       call wxml_error("Tried to put XML declaration in wrong place")
     
-    call reset_buffer(xf%buffer, xf%lun, xf%xml_version)
+    call reset_buffer(xf%buffer, xf%lun, xf%xds%xml_version)
     
     call xml_AddXMLPI(xf, "xml", xml=.true.)
     if (present(version)) then
       if (version =="1.0") then
-        xf%xml_version = XML1_0
+        xf%xds%xml_version = XML1_0
         call xml_AddPseudoAttribute(xf, "version", version)
       elseif (version=="1.1") then
-        xf%xml_version = XML1_1
+        xf%xds%xml_version = XML1_1
         call xml_AddPseudoAttribute(xf, "version", version)
       else
         call wxml_error("Invalid XML version.")
       endif
     else
       call xml_AddPseudoAttribute(xf, "version", "1.0")
-      xf%xml_version = XML1_0
+      xf%xds%xml_version = XML1_0
     endif
     if (present(encoding)) then
       if (.not.checkEncName(encoding)) &
@@ -287,7 +280,7 @@ contains
       call xml_AddPseudoAttribute(xf, "encoding", encoding)
     endif
     if (present(standalone)) then
-      xf%standalone = standalone
+      xf%xds%standalone = standalone
       if (standalone) then
         call xml_AddPseudoAttribute(xf, "standalone", "yes")
       else
@@ -319,7 +312,7 @@ contains
       xf%state_3 = WXML_STATE_3_DURING_DTD
     endif
 
-    if (.not.checkName(name, xf%xml_version)) &
+    if (.not.checkName(name, xf%xds)) &
          call wxml_error("Invalid Name in DTD "//name)
     
     call add_eol(xf)
@@ -331,7 +324,7 @@ contains
 
     if (present(system)) then
       if (present(public)) then
-        if (.not.checkPubId(public)) &
+        if (.not.checkPublicId(public)) &
           call wxml_error("Invalid PUBLIC ID "//public)
         if (scan(public, "'") /= 0) then
           call add_to_buffer(' PUBLIC "'//public//'" ', xf%buffer)
@@ -385,9 +378,9 @@ contains
         call wxml_fatal("Parameter entity "//name//" must have either a PEdef or an External ID")
     endif
     if (present(PEdef)) then
-      call add_internal_entity(xf%PEList, name, PEdef, xf%xml_version)
+      call add_internal_entity(xf%xds%PEList, name, PEdef, xf%xds%xml_version)
     else
-      call add_external_entity(xf%PEList, name, xf%xml_version, system, public)
+      call add_external_entity(xf%xds%PEList, name, xf%xds%xml_version, system, public)
     endif
 
     call add_eol(xf)
@@ -439,7 +432,7 @@ contains
       xf%state_2 = WXML_STATE_2_OUTSIDE_TAG
     endif
 
-    call add_internal_entity(xf%entityList, name, value, xf%xml_version)
+    call add_internal_entity(xf%xds%entityList, name, value, xf%xds%xml_version)
 
     call add_eol(xf)
     
@@ -479,12 +472,12 @@ contains
     ! externally ...
 
     if (present(notation)) then
-      if (.not.notation_exists(xf%nList, notation)) &
+      if (.not.notation_exists(xf%xds%nList, notation)) &
         call wxml_warning("Tried to add possibly unregistered notation to entity: "//name)
     endif
       
     !Name checking is done within add_external_entity
-    call add_external_entity(xf%entityList, name, xf%xml_version, system, public, notation)
+    call add_external_entity(xf%xds%entityList, name, xf%xds%xml_version, system, public, notation)
     
     call add_eol(xf)
     
@@ -532,12 +525,24 @@ contains
       xf%state_2 = WXML_STATE_2_OUTSIDE_TAG
     endif
 
-    if (notation_exists(xf%nList, name)) &
+    if (notation_exists(xf%xds%nList, name)) &
       call wxml_fatal("Tried to create duplicate notation: "//name)
     
     call add_eol(xf)
 
-    call add_notation(xf%nList, name, xf%xml_version, system, public)
+    ! FIXME check system, public, name
+    if (.not.checkName(name, xf%xds)) &
+      call wxml_error("Notation name is illegal in xml_AddNotation: "//name)
+    if (present(system)) then
+      if (.not.checkSystemId(system)) &
+        call wxml_error("System ID name is illegal in xml_AddNotation: "//system)
+    endif
+    if (present(public)) then
+      if (.not.checkPublicId(public)) &
+        call wxml_error("PUblic ID name is illegal in xml_AddNotation: "//public)
+    endif
+    
+    call add_notation(xf%xds%nList, name, xf%xds%xml_version, system, public)
     call add_to_buffer('<!NOTATION '//name, xf%buffer)
     if (present(public)) then
       if (index(public, '"') > 0) then
@@ -567,7 +572,7 @@ contains
 
     call check_xf(xf)
 
-    if (.not.checkName(name, xf%xml_version)) &
+    if (.not.checkName(name, xf%xds)) &
       call wxml_error("Element name is illegal in xml_AddElementToDTD: "//name)
 
     !FIXME we should check declaration syntax too.
@@ -599,7 +604,7 @@ contains
 
     call check_xf(xf)
 
-    if (.not.checkName(name, xf%xml_version)) &
+    if (.not.checkName(name, xf%xds)) &
       call wxml_error("Attlist name is illegal in xml_AddAttlistToDTD: "//name)
 
     !FIXME we should check declaration syntax too.
@@ -630,7 +635,7 @@ contains
 
     call check_xf(xf)
 
-    if (.not.checkName(name, xf%xml_version)) &
+    if (.not.checkName(name, xf%xds)) &
       call wxml_error("Trying to add illegal name in xml_AddPEReferenceToDTD: "//name)
 
     call wxml_warning("Adding PEReference to DTD. Cannot guarantee well-formedness")
@@ -713,7 +718,7 @@ contains
       call add_eol(xf)
     end select
 
-    if (.not.present(xml) .and. .not.checkPITarget(name, xf%xml_version)) &
+    if (.not.present(xml) .and. .not.checkPITarget(name, xf%xds)) &
          call wxml_error(xf, "Invalid PI Target "//name)
     call add_to_buffer("<?" // name, xf%buffer)
     if (present(data)) then
@@ -791,7 +796,7 @@ contains
       call wxml_error(xf, "Two root elements: "//name)
     end select
     
-    if (.not.checkQName(name, xf%xml_version)) then
+    if (.not.checkQName(name, xf%xds%xml_version)) then
       call wxml_error(xf, 'Element name '//name//' is not valid')
     endif
 
@@ -831,7 +836,7 @@ contains
     call close_start_tag(xf)
 
     if (pc) then
-      call add_to_buffer(escape_string(chars, xf%xml_version), xf%buffer)
+      call add_to_buffer(escape_string(chars, xf%xds%xml_version), xf%buffer)
     else
       if (index(chars,']]>') > 0) &
            call wxml_fatal("Tried to output invalid CDATA: "//chars)
@@ -867,7 +872,7 @@ contains
       xf%state_2 /= WXML_STATE_2_IN_CHARDATA)         &
       call wxml_fatal("Tried to add entity reference in wrong place: "//entityref)
 
-    if (.not.checkCharacterEntityReference(entityref, xf%xml_version)) then
+    if (.not.checkCharacterEntityReference(entityref, xf%xds%xml_version)) then
       !it's not just a unicode entity
       call wxml_warning("Entity reference added - document may not be well-formed")
     endif
@@ -904,14 +909,14 @@ contains
     if (has_key(xf%dict,name)) &
          call wxml_error(xf, "duplicate att name: "//name)
     
-    if (.not.checkQName(name, xf%xml_version)) &
+    if (.not.checkQName(name, xf%xds%xml_version)) &
          call wxml_error(xf, "invalid attribute name: "//name)
 
     if (len(prefixOfQName(name))>0) then
       if (.not.isPrefixInForce(xf%nsDict, prefixOfQName(name))) &
         call wxml_error(xf, "namespace prefix not registered: "//prefixOfQName(name))
       if (esc) then
-        call add_item_to_dict(xf%dict, localpartofQname(name), escape_string(value, xf%xml_version), prefixOfQName(name), &
+        call add_item_to_dict(xf%dict, localpartofQname(name), escape_string(value, xf%xds%xml_version), prefixOfQName(name), &
           getnamespaceURI(xf%nsDict,prefixOfQname(name)))
       else
         call add_item_to_dict(xf%dict, localpartofQname(name), value, prefixOfQName(name), &
@@ -919,7 +924,7 @@ contains
       endif
     else
       if (esc) then
-        call add_item_to_dict(xf%dict, name, escape_string(value, xf%xml_version))
+        call add_item_to_dict(xf%dict, name, escape_string(value, xf%xds%xml_version))
       else
         call add_item_to_dict(xf%dict, name, value)
       endif
@@ -948,7 +953,7 @@ contains
          call wxml_error("PI pseudo-attribute outside PI: "//name)
 
     ! This is mostly ad-hoc, pseudo-attribute names are not defined anywhere.
-    if (.not.checkName(name, xf%xml_version)) &
+    if (.not.checkName(name, xf%xds)) &
          call wxml_error("Invalid pseudo-attribute name: "//name)
 
     if (has_key(xf%dict,name)) &
@@ -958,7 +963,7 @@ contains
          call wxml_error(xf, "Invalid pseudo-attribute data: "//value)
     
     if (esc) then
-      call add_item_to_dict(xf%dict, name, escape_string(value, xf%xml_version))
+      call add_item_to_dict(xf%dict, name, escape_string(value, xf%xds%xml_version))
     else
       call add_item_to_dict(xf%dict, name, value)
     endif
@@ -1026,7 +1031,7 @@ contains
       call wxml_error(xf, "adding namespace with empty URI")
     
     if (present(prefix)) then
-      call addPrefixedNS(xf%nsDict, prefix, nsURI, len(xf%stack)+1, xf%xml_version, xml)
+      call addPrefixedNS(xf%nsDict, prefix, nsURI, len(xf%stack)+1, xf%xds%xml_version, xml)
     else
       call addDefaultNS(xf%nsDict, nsURI, len(xf%stack)+1)
     endif
@@ -1040,7 +1045,7 @@ contains
     
     call check_xf(xf)
 
-    if (xf%xml_version == XML1_0) &
+    if (xf%xds%xml_version == XML1_0) &
       call wxml_error("cannot undeclare namespaces in XML 1.0")
     
     if (xf%state_1 == WXML_STATE_1_AFTER_ROOT) &
@@ -1092,9 +1097,7 @@ contains
     call destroy_elstack(xf%stack)
     
     call destroyNamespaceDictionary(xf%nsDict)
-    call destroy_entity_list(xf%entityList)
-    call destroy_entity_list(xf%PEList)
-    call destroy_notation_list(xf%nList)
+    call destroy_xml_doc_state(xf%xds)
     
     deallocate(xf%name)
     deallocate(xf%filename)
@@ -1130,7 +1133,7 @@ contains
     !since we don't know what the eol character is on this system.
     !Flushing with a linefeed will get it automatically, though.
     call dump_buffer(xf%buffer, lf=.true.)
-    call reset_buffer(xf%buffer, xf%lun, xf%xml_version)
+    call reset_buffer(xf%buffer, xf%lun, xf%xds%xml_version)
     
     if (.not.xf%preserve_whitespace) &
       call add_to_buffer(repeat(' ',indent_level),xf%buffer)
