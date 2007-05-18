@@ -85,9 +85,9 @@ contains
   end function checkName
 
 
-  pure function checkQName(name, xv) result(good)
+  pure function checkQName(name, xds) result(good)
     character(len=*), intent(in) :: name
-    integer, intent(in) :: xv
+    type(xml_doc_state), intent(in) :: xds
     logical :: good
     ! Validates a string against the XML requirements for a NAME
     ! Is not fully compliant; ignores UTF issues.
@@ -96,9 +96,9 @@ contains
 
     n = index(name, ':')
     if (n == 0) then
-      good = checkNCName(name, xv)
+      good = checkNCName(name, xds%xml_version)
     else
-      good = (checkNCName(name(:n-1), xv) .and. checkNCName(name(n+1:), xv))
+      good = (checkNCName(name(:n-1), xds%xml_version) .and. checkNCName(name(n+1:), xds%xml_version))
     endif
   end function checkQName
 

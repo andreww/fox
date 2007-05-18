@@ -8,7 +8,6 @@ module m_wxml_core
   use m_common_charset, only: XML1_0, XML1_1
   use m_common_elstack, only: elstack_t, len, get_top_elstack, pop_elstack, &
     is_empty, init_elstack, push_elstack, destroy_elstack
-  use m_common_entities, only: add_internal_entity, add_external_entity
   use m_common_error, only: FoX_warning_base, FoX_error_base, FoX_fatal_base
   use m_common_io, only: get_unit
   use m_common_namecheck, only: checkEncName, checkName, checkPITarget, &
@@ -18,7 +17,8 @@ module m_wxml_core
   initnamespaceDictionary, destroynamespaceDictionary, addDefaultNS, &
   addPrefixedNS, isPrefixInForce, checkNamespacesWriting, checkEndNamespaces
   use m_common_notations, only: add_notation, notation_exists
-  use m_common_struct, only: xml_doc_state
+  use m_common_struct, only: xml_doc_state, init_xml_doc_state, destroy_xml_doc_state, &
+    register_internal_PE, register_external_PE, register_internal_GE, register_external_GE
   use m_wxml_escape, only: escape_string
 
   use pxf, only: pxfabort
@@ -378,9 +378,9 @@ contains
         call wxml_fatal("Parameter entity "//name//" must have either a PEdef or an External ID")
     endif
     if (present(PEdef)) then
-      call add_internal_entity(xf%xds%PEList, name, PEdef, xf%xds%xml_version)
+      call register_internal_PE(xf%xds, name, PEdef)
     else
-      call add_external_entity(xf%xds%PEList, name, xf%xds%xml_version, system, public)
+      call register_external_PE(xf%xds, name, system, public)
     endif
 
     call add_eol(xf)
@@ -432,7 +432,7 @@ contains
       xf%state_2 = WXML_STATE_2_OUTSIDE_TAG
     endif
 
-    call add_internal_entity(xf%xds%entityList, name, value, xf%xds%xml_version)
+    call register_internal_GE(xf%xds, name, value)
 
     call add_eol(xf)
     
@@ -476,8 +476,7 @@ contains
         call wxml_warning("Tried to add possibly unregistered notation to entity: "//name)
     endif
       
-    !Name checking is done within add_external_entity
-    call add_external_entity(xf%xds%entityList, name, xf%xds%xml_version, system, public, notation)
+    call register_external_GE(xf%xds, name, system, public, notation)
     
     call add_eol(xf)
     
@@ -796,7 +795,7 @@ contains
       call wxml_error(xf, "Two root elements: "//name)
     end select
     
-    if (.not.checkQName(name, xf%xds%xml_version)) then
+    if (.not.checkQName(name, xf%xds)) then
       call wxml_error(xf, 'Element name '//name//' is not valid')
     endif
 
@@ -909,7 +908,7 @@ contains
     if (has_key(xf%dict,name)) &
          call wxml_error(xf, "duplicate att name: "//name)
     
-    if (.not.checkQName(name, xf%xds%xml_version)) &
+    if (.not.checkQName(name, xf%xds)) &
          call wxml_error(xf, "invalid attribute name: "//name)
 
     if (len(prefixOfQName(name))>0) then
