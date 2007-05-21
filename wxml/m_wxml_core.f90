@@ -1045,6 +1045,15 @@ contains
       esc = .true.
     endif
 
+    if (.not.esc) then
+      if (scan(value,'<"&')>0 .or. index(value,'?>')>0) &
+        call wxml_error(xf, "Invalid pseudo-attribute data: "//value)
+    else
+      ! FIXME
+      continue
+    endif
+      
+
     if (xf%state_2 /= WXML_STATE_2_INSIDE_PI) &
          call wxml_error("PI pseudo-attribute outside PI: "//name)
 
