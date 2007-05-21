@@ -2,7 +2,7 @@ module m_common_namecheck
 
   use m_common_charset, only: isLegalCharRef, isNCNameChar, &
     isInitialNCNameChar, isInitialNameChar, isNameChar
-  use m_common_format, only: str_to_int_10, str_to_int_16
+  use m_common_format, only: str_to_int_10, str_to_int_16, operator(//)
   use m_common_struct, only: xml_doc_state
 
   implicit none
@@ -23,6 +23,7 @@ module m_common_namecheck
   public :: checkPublicId
   public :: checkSystemId
   public :: checkIRI
+  public :: checkPEDef
   public :: checkCharacterEntityReference
   public :: likeCharacterEntityReference
   public :: checkEntityValue
@@ -137,8 +138,48 @@ contains
     character(len=*), intent(in) :: value
     logical :: good
     ! FIXME Check resolving system id -> URL
+    ! System ID should be a URL
+    ! No fragment IDs allowed!
+    ! For the moment we let everything through.
+    
     good = .true.
   end function checkSystemId
+
+  pure function resolveSystemId_len(value) result(n)
+    character(len=*), intent(in) :: value
+    integer :: n
+
+    integer :: i
+    n = len(value)
+    do i = 1, len(value)
+      select case(iachar(value(i:i)))
+      case (0:32,34,60,62,92,94,96,123:125)
+        n = n + 2
+      end select
+    enddo
+      
+  end function resolveSystemId_len
+
+  function resolveSystemId(value) result(sys)
+    character(len=*), intent(in) :: value
+    character(len=resolveSystemId_len(value)) :: sys
+
+    integer :: i, i_s
+    i_s = 1
+    do i = 1, len(value)
+      select case(iachar(value(i:i)))
+      case (0:32,34,60,62,92,94,96,123:125)
+        sys(i_s:i_s+3) = '%'//iachar(value(i:i))
+        i_s = i_s + 3
+      case default
+        sys(i_s:i_s) = value(i:i)
+        i_s = i_s + 1
+      end select
+    enddo
+      
+  end function resolveSystemId
+
+
 
   function checkIRI(IRI) result(good)
     character(len=*), intent(in) :: IRI
@@ -154,6 +195,27 @@ contains
     good = .true.
   end function checkIRI
 
+  function checkPEDef(value, xds) result(p)
+    character(len=*), intent(in) :: value
+    type(xml_doc_state), intent(in) :: xds
+    logical :: p
+
+    integer :: i1, i2
+
+    p = .false.
+    if (scan(value, '%&')==0) then
+      p = .true.
+    elseif (scan(value, '"')==0) then
+      i1 = scan(value, '%&')
+      do while (i1>0)
+        i2 = scan(value(i1+1:),';')
+        if (i2==0) return
+        if (.not.checkName(value(i1+1:i2-1), xds)) return
+        i1 = scan(value(i2+1:), '%&')
+      enddo
+      p = .true.
+    endif
+  end function checkPEDef
 
   function likeCharacterEntityReference(code, xv) result(good)
     character(len=*), intent(in) :: code

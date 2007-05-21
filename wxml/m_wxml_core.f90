@@ -5,14 +5,14 @@ module m_wxml_core
   use m_common_array_str, only: vs_str, str_vs, devnull
   use m_common_buffer, only: buffer_t, len, add_to_buffer, reset_buffer, &
     dump_buffer
-  use m_common_charset, only: XML1_0, XML1_1
+  use m_common_charset, only: XML1_0, XML1_1, checkChars
   use m_common_elstack, only: elstack_t, len, get_top_elstack, pop_elstack, &
     is_empty, init_elstack, push_elstack, destroy_elstack
   use m_common_error, only: FoX_warning_base, FoX_error_base, FoX_fatal_base
   use m_common_io, only: get_unit
   use m_common_namecheck, only: checkEncName, checkName, checkPITarget, &
     checkCharacterEntityReference, checkPublicId, checkSystemId, &
-    checkQName, prefixOfQName, localpartofQName
+    checkQName, prefixOfQName, localpartofQName, checkPEDef
   use m_common_namespaces, only: namespaceDictionary, getnamespaceURI, &
   initnamespaceDictionary, destroynamespaceDictionary, addDefaultNS, &
   addPrefixedNS, isPrefixInForce, checkNamespacesWriting, checkEndNamespaces
@@ -251,6 +251,8 @@ contains
     logical, intent(in), optional :: standalone
 
     call check_xf(xf)
+    ! Don't need to call checkChars on args, everything is checked
+    ! fully below anyway.
     
     if (xf%state_1 /= WXML_STATE_1_JUST_OPENED) &
       call wxml_error("Tried to put XML declaration in wrong place")
@@ -300,6 +302,9 @@ contains
     character(len=*), intent(in), optional :: system, public
     
     call check_xf(xf)
+    if (.not.checkChars(name,xf%xds%xml_version)) call wxml_error("xml_AddDOCTYPE: Invalid character in name")
+    if (.not.checkChars(system,xf%xds%xml_version)) call wxml_error("xml_AddDOCTYPE: Invalid character in System ID")
+    if (.not.checkChars(system,xf%xds%xml_version)) call wxml_error("xml_AddDOCTYPE: Invalid character in System ID")
     
     call close_start_tag(xf)
     
@@ -356,6 +361,16 @@ contains
     character(len=*), intent(in), optional :: public
     
     call check_xf(xf)
+    if (.not.checkChars(name,xf%xds%xml_version)) call wxml_error("xml_AddParameterEntity: Invalid character in name")
+    if (present(PEDef)) then
+      if (.not.checkChars(PEDef,xf%xds%xml_version)) call wxml_error("xml_AddParameterEntity: Invalid character in PEDef")
+    endif
+    if (present(system)) then
+      if (.not.checkChars(system,xf%xds%xml_version)) call wxml_error("xml_AddParameterEntity: Invalid character in system")
+    endif
+    if (present(public)) then
+      if (.not.checkChars(public,xf%xds%xml_version)) call wxml_error("xml_AddParameterEntity: Invalid character in public")
+    endif
     
     if (xf%state_3 == WXML_STATE_3_DURING_DTD) then
       call add_to_buffer(" [", xf%buffer)
@@ -378,8 +393,16 @@ contains
         call wxml_fatal("Parameter entity "//name//" must have either a PEdef or an External ID")
     endif
     if (present(PEdef)) then
+      if (.not.checkPEDef(PEDef, xf%xds)) &
+        call wxml_fatal("Parameter entity definition is invalid: "//PEDef)
       call register_internal_PE(xf%xds, name, PEdef)
     else
+      if (.not.checkSystemID(system)) &
+        call wxml_fatal("Parameter entity System ID is invalid: "//system)
+      if (present(public)) then
+        if (.not.checkPublicID(public)) &
+          call wxml_fatal("Parameter entity Public ID is invalid: "//public)
+      endif
       call register_external_PE(xf%xds, name, system, public)
     endif
 
@@ -418,6 +441,8 @@ contains
     character(len=*), intent(in) :: value
 
     call check_xf(xf)
+    if (.not.checkChars(name,xf%xds%xml_version)) call wxml_error("xml_AddInternalEntity: Invalid character in name")
+    if (.not.checkChars(value,xf%xds%xml_version)) call wxml_error("xml_AddInternalEntity: Invalid character in value")
     
     if (xf%state_3 == WXML_STATE_3_DURING_DTD) then
       call add_to_buffer(" [", xf%buffer)
@@ -454,6 +479,14 @@ contains
     character(len=*), intent(in), optional :: notation
 
     call check_xf(xf)
+    if (.not.checkChars(name,xf%xds%xml_version)) call wxml_error("xml_AddExternalEntity: Invalid character in name")
+    if (.not.checkChars(system,xf%xds%xml_version)) call wxml_error("xml_AddExternalEntity: Invalid character in system")
+    if (present(public)) then
+      if (.not.checkChars(public,xf%xds%xml_version)) call wxml_error("xml_AddExternalEntity: Invalid character in public")
+    endif
+    if (present(notation)) then
+      if (.not.checkChars(notation,xf%xds%xml_version)) call wxml_error("xml_AddExternalEntity: Invalid character in notation")
+    endif
     
     if (xf%state_3 == WXML_STATE_3_DURING_DTD) then
       call add_to_buffer(" [", xf%buffer)
@@ -510,6 +543,13 @@ contains
     character(len=*), intent(in), optional :: public
 
     call check_xf(xf)
+    if (.not.checkChars(name,xf%xds%xml_version)) call wxml_error("xml_AddNotation: Invalid character in name")
+    if (present(system)) then
+      if (.not.checkChars(system,xf%xds%xml_version)) call wxml_error("xml_AddNotation: Invalid character in system")
+    endif
+    if (present(public)) then
+      if (.not.checkChars(public,xf%xds%xml_version)) call wxml_error("xml_AddNotation: Invalid character in public")
+    endif
     
     if (xf%state_3 == WXML_STATE_3_DURING_DTD) then
       call add_to_buffer(" [", xf%buffer)
@@ -538,7 +578,7 @@ contains
     endif
     if (present(public)) then
       if (.not.checkPublicId(public)) &
-        call wxml_error("PUblic ID name is illegal in xml_AddNotation: "//public)
+        call wxml_error("Public ID name is illegal in xml_AddNotation: "//public)
     endif
     
     call add_notation(xf%xds%nList, name, system, public)
@@ -570,6 +610,8 @@ contains
     character(len=*), intent(in) :: declaration
 
     call check_xf(xf)
+    if (.not.checkChars(name,xf%xds%xml_version)) call wxml_error("xml_AddElementToDTD: Invalid character in name")
+    if (.not.checkChars(declaration,xf%xds%xml_version)) call wxml_error("xml_AddElementToDTD: Invalid character in declaration")
 
     if (.not.checkName(name, xf%xds)) &
       call wxml_error("Element name is illegal in xml_AddElementToDTD: "//name)
@@ -602,6 +644,8 @@ contains
     character(len=*), intent(in) :: declaration
 
     call check_xf(xf)
+    if (.not.checkChars(name,xf%xds%xml_version)) call wxml_error("xml_AddAttListToDTD: Invalid character in name")
+    if (.not.checkChars(declaration,xf%xds%xml_version)) call wxml_error("xml_AddAttListToDTD: Invalid character in declaration")
 
     if (.not.checkName(name, xf%xds)) &
       call wxml_error("Attlist name is illegal in xml_AddAttlistToDTD: "//name)
@@ -633,6 +677,7 @@ contains
     character(len=*), intent(in) :: name
 
     call check_xf(xf)
+    if (.not.checkChars(name,xf%xds%xml_version)) call wxml_error("xml_AddPEReferenceToDTD: Invalid character in name")
 
     if (.not.checkName(name, xf%xds)) &
       call wxml_error("Trying to add illegal name in xml_AddPEReferenceToDTD: "//name)
@@ -668,6 +713,7 @@ contains
     logical,          intent(in), optional :: alternate
     
     call check_xf(xf)
+    ! Don't bother doing checkChars - all pseudoatts get checked anyway.
     
     if (xf%state_1 /= WXML_STATE_1_JUST_OPENED &
          .and. xf%state_1 /= WXML_STATE_1_BEFORE_ROOT) &
@@ -703,6 +749,10 @@ contains
     logical, optional :: xml
 
     call check_xf(xf)
+    if (.not.checkChars(name,xf%xds%xml_version)) call wxml_error("xml_AddXMLPI: Invalid character in name")
+    if (present(data)) then
+      if (.not.checkChars(data,xf%xds%xml_version)) call wxml_error("xml_AddXMLPI: Invalid character in data")
+    endif
     
     select case (xf%state_1)
     case (WXML_STATE_1_JUST_OPENED) 
@@ -738,6 +788,7 @@ contains
     character(len=*), intent(in)  :: comment
     
     call check_xf(xf)
+    if (.not.checkChars(comment,xf%xds%xml_version)) call wxml_error("xml_AddComment: Invalid character in comment")
     
     select case (xf%state_1)
     case (WXML_STATE_1_JUST_OPENED) 
@@ -768,6 +819,7 @@ contains
     character(len=*), intent(in)  :: name
 
     call check_xf(xf)
+    if (.not.checkChars(name,xf%xds%xml_version)) call wxml_error("xml_NewElement: Invalid character in name")
     
     select case (xf%state_1)
     case (WXML_STATE_1_JUST_OPENED, WXML_STATE_1_BEFORE_ROOT)
@@ -822,6 +874,7 @@ contains
     logical :: pc
 
     call check_xf(xf)
+    if (.not.checkChars(chars, xf%xds%xml_version)) call wxml_error("xml_AddCharacters: Invalid character in chars")
     
     if (xf%state_1 /= WXML_STATE_1_DURING_ROOT) &
          call wxml_fatal("Tried to add text section in wrong place: "//chars)
@@ -859,6 +912,7 @@ contains
     character(len=*), intent(in) :: entityref
 
     call check_xf(xf)
+    if (.not.checkChars(entityref, xf%xds%xml_version)) call wxml_error("xml_AddEntityReference: Invalid character in entityref")
     
     !Where can we add this? If we allow the full gamut
     !of entities, we can no longer properly ensure
@@ -889,6 +943,8 @@ contains
     logical :: esc
 
     call check_xf(xf)
+    if (.not.checkChars(name, xf%xds%xml_version)) call wxml_error("xml_AddAttribute: Invalid character in name")
+    if (.not.checkChars(value, xf%xds%xml_version)) call wxml_error("xml_AddAttribute: Invalid character in value")
     
     if (present(escape)) then
       esc = escape
@@ -941,6 +997,8 @@ contains
     logical :: esc
 
     call check_xf(xf)
+    if (.not.checkChars(name, xf%xds%xml_version)) call wxml_error("xml_AddPseudoAttribute: Invalid character in name")
+    if (.not.checkChars(value, xf%xds%xml_version)) call wxml_error("xml_AddPseudoAttribute: Invalid character in value")
     
     if (present(escape)) then
       esc = escape
@@ -975,6 +1033,7 @@ contains
     character(len=*), intent(in)            :: name
 
     call check_xf(xf)
+    ! No point in doing checkChars, name is compared to stack anyway.
 
     if (len(xf%stack) == 0) &
       call wxml_fatal(xf,'Trying to close '//name//' but no tags are open.')
@@ -1022,6 +1081,10 @@ contains
     logical, intent(in), optional :: xml
 
     call check_xf(xf)
+    if (.not.checkChars(nsURI, xf%xds%xml_version)) call wxml_error("xml_DeclareNamespace: Invalid character in nsURI")
+    if (present(prefix)) then
+      if (.not.checkChars(prefix, xf%xds%xml_version)) call wxml_error("xml_DeclareNamespace: Invalid character in prefix")
+    endif
 
     if (xf%state_1 == WXML_STATE_1_AFTER_ROOT) &
       call wxml_error(xf, "adding namespace outside element content")
@@ -1043,6 +1106,7 @@ contains
     character(len=*), intent(in), optional :: prefix
     
     call check_xf(xf)
+    !No need to checkChars, prfix is checked against stack
 
     if (xf%xds%xml_version == XML1_0) &
       call wxml_error("cannot undeclare namespaces in XML 1.0")

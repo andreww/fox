@@ -90,6 +90,7 @@ module m_common_charset
   public :: isNCNameChar
   public :: isXML1_0_NameChar
   public :: isXML1_1_NameChar
+  public :: checkChars
 
 contains
 
@@ -213,6 +214,31 @@ contains
     p = (verify(c, XML1_1_NAMECHARS)==0)
 
   end function isXML1_1_NameChar
+
+  pure function checkChars(value, xv) result(p)
+    character(len=*), intent(in) :: value
+    integer, intent(in) :: xv
+    logical :: p
+
+    ! This checks if value only contains values
+    ! legal to appear (escaped or unescaped) 
+    ! according to whichever XML version is in force.
+    integer :: i
+
+    p = .true.
+    do i = 1, len(value)
+      if (xv == XML1_0) then
+        select case(iachar(value(i:i)))
+        case (0,8)
+          p = .false.
+        case (11,12)
+          p = .false.
+        end select
+      else
+        if (iachar(value(i:i))==0) p =.false.
+      endif
+    enddo
+  end function checkChars
 
 end module m_common_charset
 
