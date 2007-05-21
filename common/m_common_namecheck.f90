@@ -140,9 +140,10 @@ contains
     ! FIXME Check resolving system id -> URL
     ! System ID should be a URL
     ! No fragment IDs allowed!
-    ! For the moment we let everything through.
+    ! Only simple check is, can't have both ' & "
+    ! For the moment we let everything else through
     
-    good = .true.
+    good = .not.(scan(value, '"')>0 .and. scan(value, "'")==0)
   end function checkSystemId
 
   pure function resolveSystemId_len(value) result(n)

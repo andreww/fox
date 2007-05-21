@@ -8,6 +8,7 @@ module m_wxml_core
   use m_common_charset, only: XML1_0, XML1_1, checkChars
   use m_common_elstack, only: elstack_t, len, get_top_elstack, pop_elstack, &
     is_empty, init_elstack, push_elstack, destroy_elstack
+  use m_common_entities, only: existing_entity, is_unparsed_entity
   use m_common_error, only: FoX_warning_base, FoX_error_base, FoX_fatal_base
   use m_common_io, only: get_unit
   use m_common_namecheck, only: checkEncName, checkName, checkPITarget, &
@@ -303,8 +304,12 @@ contains
     
     call check_xf(xf)
     if (.not.checkChars(name,xf%xds%xml_version)) call wxml_error("xml_AddDOCTYPE: Invalid character in name")
-    if (.not.checkChars(system,xf%xds%xml_version)) call wxml_error("xml_AddDOCTYPE: Invalid character in System ID")
-    if (.not.checkChars(system,xf%xds%xml_version)) call wxml_error("xml_AddDOCTYPE: Invalid character in System ID")
+    if (present(system)) then
+      if (.not.checkChars(system,xf%xds%xml_version)) call wxml_error("xml_AddDOCTYPE: Invalid character in system")
+    endif
+    if (present(system)) then
+      if (.not.checkChars(public,xf%xds%xml_version)) call wxml_error("xml_AddDOCTYPE: Invalid character in public")
+    endif
     
     call close_start_tag(xf)
     
@@ -339,15 +344,13 @@ contains
       else
         call add_to_buffer(' SYSTEM ', xf%buffer)
       endif
-      if (scan(system, "'")/=0) then
-        if (scan(system, '"')/=0) &
+      if (.not.checkSystemId(system)) &
           call wxml_error("Invalid SYSTEM ID "//system)
+      if (scan(system, "'")>0) then
         call add_to_buffer('"'//system//'"', xf%buffer)
       else
         call add_to_buffer("'"//system//"'", xf%buffer)
       endif
-    elseif (present(public)) then
-      call wxml_error("wxml:DOCTYPE: PUBLIC supplied without SYSTEM for: "//name)
     endif
     
   end subroutine xml_AddDOCTYPE
@@ -457,6 +460,8 @@ contains
       xf%state_2 = WXML_STATE_2_OUTSIDE_TAG
     endif
 
+    if (.not.checkName(name, xf%xds)) &
+      call wxml_error("xml_AddInternalEntity: Invalid Name: "//name)
     call register_internal_GE(xf%xds, name, value)
 
     call add_eol(xf)
@@ -501,14 +506,27 @@ contains
       xf%state_2 = WXML_STATE_2_OUTSIDE_TAG
     endif
 
-    !Ideally we'd check here - but perhaps the notation has been specified
-    ! externally ...
-
     if (present(notation)) then
-      if (.not.notation_exists(xf%xds%nList, notation)) &
-        call wxml_warning("Tried to add possibly unregistered notation to entity: "//name)
+      if (.not.notation_exists(xf%xds%nList, notation)) then
+        if (.not.xf%xds%standalone) then
+          call wxml_warning("Tried to add possibly unregistered notation to entity: "//name)
+          if (.not.checkName(notation, xf%xds)) &
+            call wxml_error("xml_AddExternalEntity: Invalid notation "//notation)
+        else
+          call wxml_error("Tried to add non-existent notation to entity: "//name)
+        endif
+      endif
     endif
-      
+  
+    if (.not.checkName(name, xf%xds)) &
+      call wxml_error("xml_AddExternalEntity: Invalid Name: "//name)
+    if (.not.checkSystemID(system)) &
+      call wxml_error("xml_AddExternalEntity: Invalid System: "//system)
+    if (present(public)) then
+      if (.not.checkPublicID(public)) &
+        call wxml_error("xml_AddExternalEntity: Invalid Public: "//public)
+    endif
+    ! Notation only needs checked if not already registered - done above.
     call register_external_GE(xf%xds, name, system, public, notation)
     
     call add_eol(xf)
@@ -565,7 +583,7 @@ contains
     endif
 
     if (notation_exists(xf%xds%nList, name)) &
-      call wxml_fatal("Tried to create duplicate notation: "//name)
+      call wxml_error("Tried to create duplicate notation: "//name)
     
     call add_eol(xf)
 
@@ -683,6 +701,16 @@ contains
       call wxml_error("Trying to add illegal name in xml_AddPEReferenceToDTD: "//name)
 
     call wxml_warning("Adding PEReference to DTD. Cannot guarantee well-formedness")
+    if (.not.existing_entity(xf%xds%PEList, name)) then
+      if (.not.xf%xds%standalone) then
+        call wxml_warning("Tried to reference possibly unregistered parameter entity in DTD: "//name)
+      else
+        call wxml_error("Tried to reference unregistered parameter entity in DTD "//name)
+      endif
+    else
+      if (is_unparsed_entity(xf%xds%PEList, name)) &
+        call wxml_error("Tried to reference unparsed parameter entity in DTD "//name)
+    endif
     
     if (xf%state_3 == WXML_STATE_3_DURING_DTD) then
       call add_to_buffer(" [", xf%buffer)
@@ -928,7 +956,18 @@ contains
     if (.not.checkCharacterEntityReference(entityref, xf%xds%xml_version)) then
       !it's not just a unicode entity
       call wxml_warning("Entity reference added - document may not be well-formed")
+      if (.not.existing_entity(xf%xds%entityList, entityref)) then
+        if (xf%xds%standalone) then
+          call wxml_error("Tried to reference unregistered entity")
+        else
+          call wxml_warning("Tried to reference unregistered entity")
+        endif
+      else
+        if (is_unparsed_entity(xf%xds%entityList, entityref)) &
+          call wxml_error("Tried to reference unparsed entity")
+      endif
     endif
+
     call add_to_buffer('&'//entityref//';', xf%buffer)
     xf%state_2 = WXML_STATE_2_IN_CHARDATA
   end subroutine xml_AddEntityReference
