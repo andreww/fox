@@ -1,6 +1,3 @@
 ERROR(wxml) in writing to file 
 test.xml
 Invalid pseudo-attribute value: value?>
-WARNING(wxml) in writing to file 
-test.xml
-Invalid XML document produced: No root element

@@ -1,6 +1,3 @@
 ERROR(wxml) in writing to file 
 test.xml
 Invalid PI Target xml-pi
-WARNING(wxml) in writing to file 
-test.xml
-Invalid XML document produced: No root element

@@ -1,7 +1,11 @@
 module m_common_attrs
 
   use m_common_array_str, only : str_vs, vs_str_alloc
-  use m_common_error, only : FoX_error
+  use m_common_element, only: ATT_CDATA, ATT_ID, ATT_IDREF, &
+    ATT_IDREFS, ATT_ENTITY, ATT_ENTITIES, ATT_NMTOKEN, &
+    ATT_NMTOKENS, ATT_NOTATION, ATT_ENUM, ATT_CDANO, ATT_CDAMB, &
+    ATT_TYPELENGTHS
+  use m_common_error, only : FoX_error, FoX_fatal
 
   implicit none
   private
@@ -17,6 +21,7 @@ module m_common_attrs
     character(len=1), pointer, dimension(:) :: prefix => null()
     character(len=1), pointer, dimension(:) :: key => null()
     character(len=1), pointer, dimension(:) :: value => null()
+    integer :: type = 11
   end type dict_item
 
   type dictionary_t
@@ -59,6 +64,9 @@ module m_common_attrs
   public :: set_nsURI
   public :: set_prefix
   public :: set_localName
+
+  ! For internal FoX use only:
+  public :: getWhitespaceHandling
 
   interface len
     module procedure getLength
@@ -305,13 +313,15 @@ contains
     
   end function get_key
   
-  subroutine add_item_to_dict(dict, key, value, prefix, nsURI)
+  subroutine add_item_to_dict(dict, key, value, prefix, nsURI, type, itype)
     
     type(dictionary_t), intent(inout) :: dict
     character(len=*), intent(in)           :: key
     character(len=*), intent(in)           :: value
     character(len=*), intent(in), optional :: prefix
     character(len=*), intent(in), optional :: nsURI
+    character(len=*), intent(in), optional :: type
+    integer, intent(in), optional :: itype
     
     integer  :: n
 
@@ -346,6 +356,39 @@ contains
       allocate(dict%items(n)%prefix(0))
       allocate(dict%items(n)%nsURI(0))
     endif
+    if (present(type)) then
+      if (present(itype)) &
+        call FoX_fatal("internal library error in add_item_to_dict")
+      select case(type)
+      case ('CDATA')
+        dict%items(n)%type = ATT_CDATA
+      case ('ID')
+        dict%items(n)%type = ATT_ID
+      case ('IDREF')
+        dict%items(n)%type = ATT_IDREF
+      case ('IDREFS')
+        dict%items(n)%type = ATT_IDREFS
+      case ('NMTOKEN')
+        dict%items(n)%type = ATT_NMTOKEN
+      case ('NMTOKENS')
+        dict%items(n)%type = ATT_NMTOKENS
+      case ('ENTITY')
+        dict%items(n)%type = ATT_ENTITY
+      case ('ENTITIES')
+        dict%items(n)%type = ATT_ENTITIES
+      case ('NOTATION')
+        dict%items(n)%type = ATT_NOTATION
+      case ('CDANO')
+        dict%items(n)%type = ATT_CDANO
+      case ('CDAMB')
+        dict%items(n)%type = ATT_CDAMB
+      end select
+    elseif (present(itype)) then
+      dict%items(n)%type = itype
+    else
+      dict%items(n)%type = ATT_CDAMB
+    endif
+        
 
     dict%number_of_items = n
 
@@ -452,10 +495,31 @@ contains
   function getType_by_index(dict, i) result(type)
     type(dictionary_t), intent(in) :: dict
     integer, intent(in) :: i
-    character(len=merge(5, 0, i<=size(dict%items))) :: type
+    character(len=ATT_TYPELENGTHS(merge(dict%items(i)%type,0,i<=size(dict%items)))) :: type
 
     if (i<=size(dict%items)) then
-      type = 'CDATA'
+      select case(dict%items(i)%type)
+      case (ATT_CDATA)
+        type='CDATA'
+      case (ATT_ID)
+        type='ID'
+      case (ATT_IDREF)
+        type='IDREF'
+      case (ATT_IDREFS)
+        type='IDREFS'
+      case (ATT_NMTOKEN)
+        type='NMTOKENS'
+      case (ATT_ENTITY)
+        type='ENTITY'
+      case (ATT_ENTITIES)
+        type='ENTITIES'
+      case (ATT_NOTATION)
+        type='NOTATION'
+      case (ATT_CDANO)
+        type='CDATA'
+      case (ATT_CDAMB)
+        type='CDATA'
+      end select
     else
       type = ''
     endif
@@ -465,15 +529,58 @@ contains
   function getType_by_keyname(dict, keyname) result(type)
     type(dictionary_t), intent(in) :: dict
     character(len=*), intent(in) :: keyname
-    character(len=merge(5, 0, get_key_index(dict, keyname)>0)) :: type
+    character(len=ATT_TYPELENGTHS( &
+      merge(dict%items(get_key_index(dict, keyname))%type, 0, get_key_index(dict, keyname)>0) &
+      )) :: type
 
     if (get_key_index(dict, keyname)>0) then
-      type = 'CDATA'
+      select case(dict%items(get_key_index(dict, keyname))%type)
+      case (ATT_CDATA)
+        type='CDATA'
+      case (ATT_ID)
+        type='ID'
+      case (ATT_IDREF)
+        type='IDREF'
+      case (ATT_IDREFS)
+        type='IDREFS'
+      case (ATT_NMTOKEN)
+        type='NMTOKENS'
+      case (ATT_ENTITY)
+        type='ENTITY'
+      case (ATT_ENTITIES)
+        type='ENTITIES'
+      case (ATT_NOTATION)
+        type='NOTATION'
+      case (ATT_CDANO)
+        type='CDATA'
+      case (ATT_CDAMB)
+        type='CDATA'
+      end select
     else
       type = ''
     endif
 
   end function getType_by_keyname
+
+  function getWhitespaceHandling(dict, i) result(j)
+    type(dictionary_t), intent(in) :: dict
+    integer, intent(in) :: i
+    integer :: j
+
+    if (i<=size(dict%items)) then
+      select case(dict%items(i)%type)
+      case (ATT_CDATA)
+        j = 0 !
+      case (ATT_CDAMB)
+        j = 1
+      case default
+        j = 2
+      end select
+    else
+      j = 2
+    endif
+
+  end function getWhitespaceHandling
 
   subroutine init_dict(dict)
     type(dictionary_t), intent(out)   :: dict
@@ -505,6 +612,7 @@ contains
        tempDict(i)%prefix => dict%items(i)%prefix
        tempDict(i)%nsURI => dict%items(i)%nsURI
        tempDict(i)%localName => dict%items(i)%localName
+       tempDict(i)%type = dict%items(i)%type
     enddo
     deallocate(dict%items)
     l_d_new = l_d_old * DICT_LEN_MULT
@@ -515,6 +623,7 @@ contains
        dict%items(i)%nsURI => tempDict(i)%nsURI
        dict%items(i)%prefix => tempDict(i)%prefix
        dict%items(i)%localName => tempDict(i)%localName
+       dict%items(i)%type = tempDict(i)%type
     enddo
 
   end subroutine resize_dict
