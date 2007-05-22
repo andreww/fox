@@ -125,14 +125,12 @@ contains
     integer, intent(in) :: xml_version
     logical :: p 
 
-    ! Is ASCII character # i legal as a character reference?
+    ! Is ASCII character #i legal as a character reference?
 
-    if (i<0.or.i>127) then
-      p = .false. ! FIXME but it's processor dependent ...
-    elseif (xml_version==XML1_0) then
-      p = (i==9.or.i==10.or.i==13.or.(i>31.and.i<128))
+    if (xml_version==XML1_0) then
+      p = (i==9).or.(i==10).or.(i==13).or.(i>31.and.i<55296).or.(i>57343.and.i<65534).or.(i>65535.and.i<1114112)
     elseif (xml_version==XML1_1) then
-      p = .true.
+      p = (i>0.and.i<55296).or.(i>57343.and.i<65534).or.(i>65535.and.i<1114112)
       ! XML 1.1 made all control characters legal as character references.
     end if
   end function isLegalCharRef

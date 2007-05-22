@@ -143,7 +143,7 @@ module m_wxml_core
 
 contains
 
-  subroutine xml_OpenFile(filename, xf, unit, iostat, preserve_whitespace, broken_indenting, replace, addDecl)
+  subroutine xml_OpenFile(filename, xf, unit, iostat, preserve_whitespace, broken_indenting, replace, addDecl, warning, valid)
     character(len=*), intent(in)  :: filename
     type(xmlf_t), intent(inout)   :: xf
     integer, intent(in), optional :: unit
@@ -152,6 +152,9 @@ contains
     logical, intent(in), optional :: broken_indenting
     logical, intent(in), optional :: replace
     logical, intent(in), optional :: addDecl
+    logical, intent(in), optional :: warning
+    logical, intent(in), optional :: valid
+    
     
     logical :: repl, decl
     integer :: iostat_
@@ -219,6 +222,8 @@ contains
     !1.0 for the moment & reset below.
     ! Actually, this is done automatically in initializing xf%xds
     call init_xml_doc_state(xf%xds)
+    if (present(warning)) xf%xds%warning = warning
+    if (present(valid)) xf%xds%valid = valid 
     
     xf%state_1 = WXML_STATE_1_JUST_OPENED
     xf%state_2 = WXML_STATE_2_OUTSIDE_TAG
@@ -412,7 +417,15 @@ contains
     if (present(PEdef)) then
       if (.not.checkPEDef(PEDef, xf%xds)) &
         call wxml_fatal("Parameter entity definition is invalid: "//PEDef)
+      if (xf%xds%standalone) then
+        if (.not.checkExistingRefs()) &
+          call wxml_error("Tried to reference unregistered parameter entity")
+      else
+        if (.not.checkExistingRefs()) &
+          call wxml_warning("Reference to unknown parameter entity")
+      endif
       call register_internal_PE(xf%xds, name, PEdef)
+! FIXME CHECK HERE DO WE REFERENCE UNDEFINED PEs?
     else
       if (.not.checkSystemID(system)) &
         call wxml_fatal("Parameter entity System ID is invalid: "//system)
@@ -449,6 +462,32 @@ contains
       endif
       call add_to_buffer(">", xf%buffer)
     endif
+
+  contains
+    function checkExistingRefs() result(p)
+      logical :: p
+      
+      integer :: i1, i2
+      
+      ! Here we assume we have syntactic well-formedness as
+      ! checked by checkPEDef.
+      
+      p = .false.
+      i1 = index(PEDef, '%')
+      i2 = 0 
+      do while (i1 > 0)
+        i1 = i2 + i1
+        i2 = index(PEDef(i1+1:),';')
+        if (i2 == 0) return
+        i2 = i1 + i2
+        if (.not.existing_entity(xf%xds%PEList, PEDef(i1+1:i2-1))) &
+          return
+        i1 = index(PEDef(i2+1:), '%')
+      enddo
+      p = .true.
+      
+    end function checkExistingRefs
+    
   end subroutine xml_AddParameterEntity
 
 
@@ -601,7 +640,6 @@ contains
     
     call add_eol(xf)
 
-    ! FIXME check system, public, name
     if (.not.checkName(name, xf%xds)) &
       call wxml_error("Notation name is illegal in xml_AddNotation: "//name)
     if (present(system)) then
@@ -809,8 +847,13 @@ contains
       call add_eol(xf)
     end select
 
-    if (.not.present(xml) .and. .not.checkPITarget(name, xf%xds)) &
-         call wxml_error(xf, "Invalid PI Target "//name)
+    if (present(xml)) then
+      if (.not.checkName(name, xf%xds)) &
+        call wxml_error(xf, "Invalid PI Target "//name)
+    else
+      if (.not.checkPITarget(name, xf%xds)) &
+        call wxml_error(xf, "Invalid PI Target "//name)
+    endif
     call add_to_buffer("<?" // name, xf%buffer)
     if (present(data)) then
       if (index(data, '?>') > 0) &
@@ -1072,12 +1115,16 @@ contains
       
       p = .false.
       i1 = index(value, '&')
+      i2 = 0 
       do while (i1 > 0)
-        i2 = scan(value(i1+1:),';')
+        i1 = i2 + i1
+        i2 = index(value(i1+1:),';')
         if (i2 == 0) return
-        if (.not.existing_entity(xf%xds%entityList, value(i1+1:i2-1))) &
+        i2 = i1 + i2
+        if (.not.existing_entity(xf%xds%entityList, value(i1+1:i2-1)) .and. &
+          .not.checkCharacterEntityReference(value(i1+1:i2-1), xf%xds%xml_version)) &
           return
-        i1 = scan(value(i2+1:), '&')
+        i1 = index(value(i2+1:), '&')
       enddo
       p = .true.
       
@@ -1093,12 +1140,15 @@ contains
       
       p = .false.
       i1 = index(value, '&')
+      i2 = 0
       do while (i1 > 0)
-        i2 = scan(value(i1+1:),';')
+        i1 = i1 + i2
+        i2 = index(value(i1+1:),';')
         if (i2 == 0) return
+        i2  = i1 + i2
         if (is_unparsed_entity(xf%xds%entityList, value(i1+1:i2-1))) &
           return
-        i1 = scan(value(i2+1:), '&')
+        i1 = index(value(i2+1:), '&')
       enddo
       p = .true.
 
@@ -1391,10 +1441,13 @@ contains
       type(xmlf_t), intent(in) :: xf
       character(len=*), intent(in) :: msg
 
-      write(6,'(a)') 'WARNING(wxml) in writing to file ', xmlf_name(xf)
-      write(6,'(a)')  msg
+      if (xf%xds%warning) then
+        write(6,'(a)') 'WARNING(wxml) in writing to file ', xmlf_name(xf)
+        write(6,'(a)')  msg
+      endif
 
     end subroutine wxml_warning_xf
+
 
     subroutine wxml_error_xf(xf, msg)
       ! Emit error message, clean up file and stop.

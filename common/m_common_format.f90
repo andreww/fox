@@ -161,14 +161,14 @@ contains
     pure function to_lower(s) result(s2)
       character(len=*), intent(in) :: s
       character(len=len(s)) :: s2
-      character(len=12), parameter :: hex = "ABCDEFabcdef"
+      character(len=*), parameter :: hex = "abcdef"
       integer :: j, k
       do j = 1, len(s)
-        if (verify(s(j:j), digit) == 0) then
-          s2(j:j) = s(j:j)
-        else
-          k = index(s(j:j), hex)+6
+        k = index('ABCDEF', s(j:j))
+        if (k > 0) then
           s2(j:j) = hex(k:k)
+        else
+          s2(j:j) = s(j:j)
         endif
       enddo
     end function to_lower

@@ -6,6 +6,11 @@ rm -f passed.score failed.score
 touch passed.score failed.score
 rm -f tests.out failed.out
 
+for t in test_xml*.sh
+do
+  ./$t
+done
+
 echo "Testing integer to string conversion"
 echo Scalars:
 for i in '0 0' '1 1' '-1 -1' '10 10' '-356 -356'

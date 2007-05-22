@@ -37,7 +37,6 @@ module m_common_namecheck
   public :: checkAttValue
   public :: checkCharacterEntityReference
 !  public :: likeCharacterEntityReference
-  public :: checkEntityValue
 
   public :: prefixOfQName
   public :: localpartOfQName
@@ -154,7 +153,7 @@ contains
     ! Only simple check is, can't have both ' & "
     ! For the moment we let everything else through
     
-    good = .not.(scan(value, '"')>0 .and. scan(value, "'")==0)
+    good = .not.(index(value, '"')>0 .and. index(value, "'")>0)
   end function checkSystemId
 
   pure function resolveSystemId_len(value) result(n)
@@ -219,10 +218,19 @@ contains
       p = .true.
     elseif (scan(value, '"')==0) then
       i1 = scan(value, '%&')
+      i2 = 0
       do while (i1>0)
-        i2 = scan(value(i1+1:),';')
+        i1 = i2 + i1
+        i2 = index(value(i1+1:),';')
         if (i2==0) return
-        if (.not.checkName(value(i1+1:i2-1), xds)) return
+        i2 = i1 + i2
+        if (value(i1:i1)=='&') then
+          if (.not.checkName(value(i1+1:i2-1), xds) .and. &
+            .not.checkCharacterEntityReference(value(i1+1:i2-1), xds%xml_version)) return
+        else
+          if (.not.checkName(value(i1+1:i2-1), xds)) &
+            return
+        endif
         i1 = scan(value(i2+1:), '%&')
       enddo
       p = .true.
@@ -241,9 +249,12 @@ contains
       p = .true.
     elseif (index(value, '&') > 0) then
       i1 = index(value, '&')
+      i2 = 0
       do while (i1 > 0)
-        i2 = scan(value(i1+1:),';')
-        if (i2 == 0) return
+        i1 = i2 + i1
+        i2 = index(value(i1+1:),';')
+        if (i2==0) return
+        i2 = i1 + i2
         if (value(i1+1:i2-1) /= 'amp' .and. &
           value(i1+1:i2-1) /= 'lt' .and. &
           value(i1+1:i2-1) /= 'gt' .and. &
@@ -251,7 +262,7 @@ contains
           value(i1+1:i2-1) /= 'apos' .and. &
           .not.checkCharacterEntityReference(value(i1+1:i2-1), xds%xml_version)) &
           return
-        i1 = scan(value(i2+1:), '&')
+        i1 = index(value(i2+1:), '&')
       enddo
       p = .true.
     endif
@@ -269,13 +280,16 @@ contains
       p = .true.
     elseif (index(value, '&') > 0) then
       i1 = index(value, '&')
+      i2 = 0
       do while (i1 > 0)
+        i1 = i2 + 1
         i2 = scan(value(i1+1:),';')
         if (i2 == 0) return
+        i2 = i1 + i2
         if (.not.checkName(value(i1+1:i2-1), xds) .and. &
           .not.checkCharacterEntityReference(value(i1+1:i2-1), xds%xml_version)) &
           return
-        i1 = scan(value(i2+1:), '&')
+        i1 = index(value(i2+1:), '&')
       enddo
       p = .true.
     endif
@@ -328,35 +342,9 @@ contains
       endif
     endif
     if (good) good = isLegalCharRef(i, xv)
-!      good = ((0<i .and. i<55296) &
-!      .or.(57343<i .and. i<65534) &
-!      .or.(65535<i .and. i<4177778))
 
   end function checkCharacterEntityReference
   
-  pure function checkEntityValue(value) result (good)
-    ![9] EntityValue ::= '"' ([^%&"] | PEReference | Reference)* '"'
-    !                 |  "'" ([^%&'] | PEReference | Reference)* "'"
-    character(len=*), intent(in) :: value
-    logical :: good
-    ! this is a very imperfect check and should really be in
-    ! m_common_entities, and have better error messages
-    ! FIXME
-    good = (len(value) > 0)
-    !good = good.and.(index(value,'&') > 0)
-    ! unless it is a char entity reference...
-    !if (good) &
-    !  good = (index(value, "%") == 0).and.(index(value,"&")==0))
-    if (good) then
-      if (index(value, '"') > 0) then
-        good = (index(value, "'") == 0)
-      elseif (index(value, "'") > 0) then
-        good = (index(value, '"') == 0)
-      endif
-    endif
-
-  end function checkEntityValue
-
 
   pure function prefixOfQName(qname) result(prefix)
     character(len=*), intent(in) :: qname
