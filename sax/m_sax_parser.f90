@@ -23,7 +23,7 @@ module m_sax_parser
   use m_common_io, only: io_eof, io_err
   use m_common_namecheck, only: checkName, checkPublicId, &
     checkCharacterEntityReference, likeCharacterEntityReference, &
-    checkQName, checkPITarget, resolveSystemId
+    checkQName, checkPITarget, resolveSystemId, checkRepCharEntityReference
   use m_common_namespaces, only: getnamespaceURI, invalidNS, &
     checkNamespaces, checkEndNamespaces, &
     initNamespaceDictionary, destroyNamespaceDictionary
@@ -52,6 +52,7 @@ contains
 
     call init_error_stack(fx%error_stack)
     call init_elstack(fx%elstack)
+    call init_dict(fx%attributes)
     call initNamespaceDictionary(fx%nsdict)
     call init_notation_list(fx%nlist)
     call init_xml_doc_state(fx%xds)
@@ -706,11 +707,16 @@ contains
             if (present(endEntity_handler)) &
               call endEntity_handler(str_vs(tempString))
           elseif (likeCharacterEntityReference(str_vs(tempString))) then
-            if (.not.checkCharacterEntityReference(str_vs(tempString), fx%xml_version)) then
+            if (checkRepCharEntityReference(str_vs(tempString), fx%xml_version)) then
+              if (present(characters_handler)) &
+                call characters_handler(expand_char_entity(str_vs(tempString)))
+            elseif (checkCharacterEntityReference(str_vs(tempString), fx%xml_version)) then
+              call add_error(fx%error_stack, "Unable to digest character entity reference in content, sorry.")
+              goto 100
+            else
               call add_error(fx%error_stack, "Illegal character reference")
+              goto 100
             endif
-            if (present(characters_handler)) &
-              call characters_handler(expand_char_entity(str_vs(tempString)))
           elseif (existing_entity(fx%xds%entityList, str_vs(tempString))) then
             if (is_unparsed_entity(fx%xds%entityList, str_vs(tempString))) then
               call add_error(fx%error_stack, &

@@ -3,7 +3,8 @@ module m_common_entity_expand
   use m_common_array_str, only: str_vs, vs_str
   use m_common_entities, only: expand_char_entity
   use m_common_error, only: error_stack, add_error
-  use m_common_namecheck, only: checkName, checkCharacterEntityReference
+  use m_common_namecheck, only: checkName, checkCharacterEntityReference, &
+    checkRepCharEntityReference
   use m_common_struct, only: xml_doc_state
 
   implicit none
@@ -53,11 +54,16 @@ contains
           repl_temp(i2:i2+j) = repl(i:i+j)
           i = i + j + 1
           i2 = i2 + j + 1
-        elseif (checkCharacterEntityReference(str_vs(repl(i+1:i+j-1)), xds%xml_version)) then
+          ! For SAX, we need to be able to represent the character:
+        elseif (checkRepCharEntityReference(str_vs(repl(i+1:i+j-1)), xds%xml_version)) then
           !if it is ascii then
           repl_temp(i2:i2) = vs_str(expand_char_entity(str_vs(repl(i+1:i+j-1))))
           i = i + j + 1
           i2 = i2 + 1
+        elseif (checkCharacterEntityReference(str_vs(repl(i+1:i+j-1)), xds%xml_version)) then
+          ! We can't represent it. Issue an error and stop.
+          call add_error(stack, "Unable to digest character entity reference in entity value, sorry.")
+          return
         else
           call add_error(stack, "Invalid entity reference in entity value")
           return

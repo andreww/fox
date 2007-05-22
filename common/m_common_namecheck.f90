@@ -10,7 +10,7 @@ module m_common_namecheck
   !    unicode-aware programs, so is only skeleton here)
 
   use m_common_charset, only: isLegalCharRef, isNCNameChar, &
-    isInitialNCNameChar, isInitialNameChar, isNameChar
+    isInitialNCNameChar, isInitialNameChar, isNameChar, isRepCharRef
   use m_common_format, only: str_to_int_10, str_to_int_16, operator(//)
   use m_common_struct, only: xml_doc_state
 
@@ -36,6 +36,7 @@ module m_common_namecheck
   public :: checkPseudoAttValue
   public :: checkAttValue
   public :: checkCharacterEntityReference
+  public :: checkRepCharEntityReference
   public :: likeCharacterEntityReference
 
   public :: prefixOfQName
@@ -345,6 +346,38 @@ contains
     if (good) good = isLegalCharRef(i, xv)
 
   end function checkCharacterEntityReference
+
+  function checkRepCharEntityReference(code, xv) result(good)
+    character(len=*), intent(in) :: code
+    integer, intent(in) :: xv
+    logical :: good
+    
+    ! Is this a reference to a character we can actually represent
+    ! in memory? ie without unicode, US-ASCII only.
+
+    integer :: i
+
+    good = .false.
+    if (len(code) > 0) then
+      if (code(1:1) == "#") then
+        if (code(2:2) == "x") then
+          if (len(code) > 2) then
+            good = (verify(code(3:), hexdigits) == 0)
+            if (good) then
+              i = str_to_int_16(code(3:))
+            endif
+          endif
+        else
+          good = (verify(code(2:), digits) == 0)
+          if (good) then
+            i = str_to_int_10(code(2:))
+          endif
+        endif
+      endif
+    endif
+    if (good) good = isRepCharRef(i, xv)
+
+  end function checkRepCharEntityReference
   
 
   pure function prefixOfQName(qname) result(prefix)

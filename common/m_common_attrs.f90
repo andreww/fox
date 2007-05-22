@@ -337,9 +337,9 @@ contains
 
     if (present(prefix)) then
       dict%items(n)%key => vs_str_alloc(prefix//":"//key)
+      dict%items(n)%localname => vs_str_alloc(key)
       dict%items(n)%prefix => vs_str_alloc(prefix)
       dict%items(n)%nsURI => vs_str_alloc(nsURI)
-      dict%items(n)%localname => vs_str_alloc(key)
     else
       dict%items(n)%key => vs_str_alloc(key)
       dict%items(n)%localname => vs_str_alloc(key)
@@ -479,7 +479,7 @@ contains
     type(dictionary_t), intent(out)   :: dict
     
     integer :: i
-    
+
     allocate(dict%items(DICT_INIT_LEN))
     do i = 1, DICT_INIT_LEN
        nullify(dict%items(i)%key)

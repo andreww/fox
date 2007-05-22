@@ -84,6 +84,7 @@ module m_common_charset
 
   public :: isLegalChar
   public :: isLegalCharRef
+  public :: isRepCharRef
   public :: isInitialNameChar
   public :: isNameChar
   public :: isInitialNCNameChar
@@ -125,7 +126,7 @@ contains
     integer, intent(in) :: xml_version
     logical :: p 
 
-    ! Is ASCII character #i legal as a character reference?
+    ! Is Unicode character #i legal as a character reference?
 
     if (xml_version==XML1_0) then
       p = (i==9).or.(i==10).or.(i==13).or.(i>31.and.i<55296).or.(i>57343.and.i<65534).or.(i>65535.and.i<1114112)
@@ -134,6 +135,21 @@ contains
       ! XML 1.1 made all control characters legal as character references.
     end if
   end function isLegalCharRef
+
+  pure function isRepCharRef(i, xml_version) result(p)
+    integer, intent(in) :: i
+    integer, intent(in) :: xml_version
+    logical :: p 
+
+    ! Is Unicode character #i legal and representable here?
+
+    if (xml_version==XML1_0) then
+      p = (i==9).or.(i==10).or.(i==13).or.(i>31.and.i<127)
+    elseif (xml_version==XML1_1) then
+      p = (i>0.and.i<128)
+      ! XML 1.1 made all control characters legal as character references.
+    end if
+  end function isRepCharRef
 
   pure function isInitialNameChar(c, xml_version) result(p)
     character, intent(in) :: c
