@@ -13,7 +13,7 @@ module m_wxml_core
   use m_common_io, only: get_unit
   use m_common_namecheck, only: checkEncName, checkName, checkPITarget, &
     checkCharacterEntityReference, checkPublicId, checkSystemId, &
-    checkQName, prefixOfQName, localpartofQName, checkPEDef
+    checkQName, prefixOfQName, localpartofQName, checkPEDef, checkPseudoAttValue
   use m_common_namespaces, only: namespaceDictionary, getnamespaceURI, &
   initnamespaceDictionary, destroynamespaceDictionary, addDefaultNS, &
   addPrefixedNS, isPrefixInForce, checkNamespacesWriting, checkEndNamespaces
@@ -1031,7 +1031,7 @@ contains
     type(xmlf_t), intent(inout)   :: xf
     character(len=*), intent(in)  :: name
     character(len=*), intent(in)  :: value
-    logical, intent(in), optional           :: escape
+    logical, intent(in), optional :: escape
 
     logical :: esc
 
@@ -1045,14 +1045,12 @@ contains
       esc = .true.
     endif
 
+    if (index(value, '?>') > 0) &
+        call wxml_error(xf, "Invalid pseudo-attribute value: "//value)
     if (.not.esc) then
-      if (scan(value,'<"&')>0 .or. index(value,'?>')>0) &
-        call wxml_error(xf, "Invalid pseudo-attribute data: "//value)
-    else
-      ! FIXME
-      continue
+      if (.not.checkPseudoAttValue(value, xf%xds)) &
+        call wxml_error(xf, "Invalid pseudo-attribute value: "//value)
     endif
-      
 
     if (xf%state_2 /= WXML_STATE_2_INSIDE_PI) &
          call wxml_error("PI pseudo-attribute outside PI: "//name)

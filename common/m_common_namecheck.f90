@@ -24,8 +24,9 @@ module m_common_namecheck
   public :: checkSystemId
   public :: checkIRI
   public :: checkPEDef
+  public :: checkPseudoAttValue
   public :: checkCharacterEntityReference
-  public :: likeCharacterEntityReference
+!  public :: likeCharacterEntityReference
   public :: checkEntityValue
 
   public :: prefixOfQName
@@ -217,6 +218,34 @@ contains
       p = .true.
     endif
   end function checkPEDef
+
+  function checkPseudoAttValue(value, xds) result(p)
+    character(len=*), intent(in) :: value
+    type(xml_doc_state), intent(in) :: xds
+    logical :: p
+
+    integer :: i1, i2
+
+    p = .false.
+    if (scan(value, '"<&')==0) then
+      p = .true.
+    elseif (index(value, '&') > 0) then
+      i1 = index(value, '&')
+      do while (i1 > 0)
+        i2 = scan(value(i1+1:),';')
+        if (i2 == 0) return
+        if (value(i1+1:i2-1) /= 'amp' .and. &
+          value(i1+1:i2-1) /= 'lt' .and. &
+          value(i1+1:i2-1) /= 'gt' .and. &
+          value(i1+1:i2-1) /= 'quot' .and. &
+          value(i1+1:i2-1) /= 'apos' .and. &
+          .not.checkCharacterEntityReference(value(i1+1:i2-1), xds%xml_version)) &
+          return
+        i1 = scan(value(i2+1:), '&')
+      enddo
+      p = .true.
+    endif
+  end function checkPseudoAttValue
 
   function likeCharacterEntityReference(code, xv) result(good)
     character(len=*), intent(in) :: code
