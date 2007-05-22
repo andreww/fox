@@ -1,2 +1,2 @@
-WARNING(FoX)
-Tried to add possibly unregistered notation to entity: ENT
+ERROR(FoX)
+Tried to add non-existent notation to entity: ENT

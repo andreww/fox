@@ -12,10 +12,13 @@ module m_common_struct
 
   type xml_doc_state
     integer :: xml_version = XML1_0
+    logical :: standalone_declared = .false.
     logical :: standalone = .true.
     type(entity_list) :: entityList
     type(entity_list) :: PEList
     type(notation_list) :: nList
+    logical :: warning = .false. ! Do we care about warnings?
+    logical :: valid = .true. ! Do we care about validity?
   end type xml_doc_state
 
   public :: xml_doc_state

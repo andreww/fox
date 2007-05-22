@@ -284,6 +284,7 @@ contains
       call xml_AddPseudoAttribute(xf, "encoding", encoding)
     endif
     if (present(standalone)) then
+      xf%xds%standalone_declared = .true.
       xf%xds%standalone = standalone
       if (standalone) then
         call xml_AddPseudoAttribute(xf, "standalone", "yes")
@@ -308,10 +309,17 @@ contains
     if (present(system)) then
       if (.not.checkChars(system,xf%xds%xml_version)) call wxml_error("xml_AddDOCTYPE: Invalid character in system")
     endif
-    if (present(system)) then
+    if (present(public)) then
       if (.not.checkChars(public,xf%xds%xml_version)) call wxml_error("xml_AddDOCTYPE: Invalid character in public")
     endif
     
+    if (present(public).and..not.present(system)) &
+      call wxml_error('xml_AddDOCTYPE: PUBLIC supplied without SYSTEM for: '//name)
+
+    ! By having an external ID we render this non-standalone (unless we've said that it is in the declaration)
+    if (present(system).and..not.xf%xds%standalone_declared) &
+      xf%xds%standalone=.false.
+
     call close_start_tag(xf)
     
     if (xf%state_1 /= WXML_STATE_1_BEFORE_ROOT) &
@@ -376,6 +384,11 @@ contains
       if (.not.checkChars(public,xf%xds%xml_version)) call wxml_error("xml_AddParameterEntity: Invalid character in public")
     endif
     
+    ! By adding a parameter entity (internal or external) we make this
+    ! a non-standalone document.
+    if (.not.xf%xds%standalone_declared) &
+      xf%xds%standalone = .false.
+
     if (xf%state_3 == WXML_STATE_3_DURING_DTD) then
       call add_to_buffer(" [", xf%buffer)
       xf%state_3 = WXML_STATE_3_INSIDE_INTSUBSET

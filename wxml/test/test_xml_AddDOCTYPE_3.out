@@ -1,2 +1,2 @@
 ERROR(FoX)
-wxml:DOCTYPE: PUBLIC supplied without SYSTEM for: html
+xml_AddDOCTYPE: PUBLIC supplied without SYSTEM for: html
