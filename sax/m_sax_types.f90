@@ -7,6 +7,7 @@ module m_sax_types
   use m_common_error, only: error_stack
   use m_common_namespaces, only: namespacedictionary
   use m_common_notations, only: notation_list
+  use m_common_struct, only: xml_doc_state
 
   use m_sax_reader, only: file_buffer_t
 
@@ -81,6 +82,7 @@ module m_sax_types
   integer, parameter :: WS_DISCARD = 3
   
   type sax_parser_t
+    type(xml_doc_state) :: xds
     integer :: whitespace
     integer :: context 
     integer :: state
@@ -97,15 +99,12 @@ module m_sax_types
     ! Aspects of document structure
     integer :: xml_version
     character, dimension(:), pointer :: encoding => null()
-    logical :: standalone
     character, dimension(:), pointer :: root_element => null()
     type(elstack_t) :: elstack
     type(dictionary_t) :: attributes
     type(namespacedictionary) :: nsdict
     type(notation_list) :: nlist
     type(entity_list) :: predefined_e_list
-    type(entity_list) :: pe_list
-    type(entity_list) :: ge_list
     type(entity_list) :: forbidden_pe_list
     type(entity_list) :: forbidden_ge_list
     type(element_list) :: element_list

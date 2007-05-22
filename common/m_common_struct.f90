@@ -52,7 +52,7 @@ contains
     character(len=*), intent(in) :: name
     character(len=*), intent(in) :: value
 
-    call add_internal_entity(xds%PEList, name, value, xds%xml_version)
+    call add_internal_entity(xds%PEList, name, value)
 
   end subroutine register_internal_PE
 
@@ -62,7 +62,7 @@ contains
     character(len=*), intent(in) :: system
     character(len=*), intent(in), optional :: public
 
-    call add_external_entity(xds%PEList, name, xds%xml_version, system, public)
+    call add_external_entity(xds%PEList, name, system, public)
   end subroutine register_external_PE
 
   subroutine register_internal_GE(xds, name, value)
@@ -70,7 +70,7 @@ contains
     character(len=*), intent(in) :: name
     character(len=*), intent(in) :: value
 
-    call add_internal_entity(xds%entityList, name, value, xds%xml_version)
+    call add_internal_entity(xds%entityList, name, value)
 
   end subroutine register_internal_GE
 
@@ -81,7 +81,7 @@ contains
     character(len=*), intent(in), optional :: public
     character(len=*), intent(in), optional :: notation
 
-    call add_external_entity(xds%entityList, name, xds%xml_version, system, public, notation)
+    call add_external_entity(xds%entityList, name, system, public, notation)
   end subroutine register_external_GE
 
 end module m_common_struct

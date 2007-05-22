@@ -36,7 +36,7 @@ module m_common_namecheck
   public :: checkPseudoAttValue
   public :: checkAttValue
   public :: checkCharacterEntityReference
-!  public :: likeCharacterEntityReference
+  public :: likeCharacterEntityReference
 
   public :: prefixOfQName
   public :: localpartOfQName
@@ -296,9 +296,8 @@ contains
   end function checkAttValue
 
   
-  function likeCharacterEntityReference(code, xv) result(good)
+  function likeCharacterEntityReference(code) result(good)
     character(len=*), intent(in) :: code
-    integer, intent(in) :: xv
     logical :: good
 
     good = .false.

@@ -496,7 +496,7 @@ contains
     fx%xml_version = XML1_0
     allocate(fx%encoding(5))
     fx%encoding = vs_str("UTF-8")
-    fx%standalone = .false.
+    fx%xds%standalone = .false.
     do i = 1, 5
       c = read_char(fb, iostat); if (iostat/=0) return
       if (c/=xml(i:i)) then
@@ -716,7 +716,7 @@ contains
         if (c=="e") then
           c = read_char(fb, iostat); if (iostat/=0) return
           if (c=="s") then
-            fx%standalone = .true.
+            fx%xds%standalone = .true.
           else
             call add_error(fx%error_stack, "standalone accepts only 'yes' or 'no'"); return
           endif
@@ -726,7 +726,7 @@ contains
       elseif (c=="n") then
         c = read_char(fb, iostat); if (iostat/=0) return
         if (c=="o") then
-          fx%standalone = .false.
+          fx%xds%standalone = .false.
         else
           call add_error(fx%error_stack, "standalone accepts only 'yes' or 'no'"); return
         endif
@@ -794,22 +794,22 @@ contains
           s_temp(i2) = expand_char_entity(str_vs(tempString)) ! FIXME ascii
           i = i + j  + 1
           i2 = i2 + 1 ! fixme
-        elseif (checkName(str_vs(tempString), fx%xml_version)) then
+        elseif (checkName(str_vs(tempString), fx%xds)) then
           if (existing_entity(fx%forbidden_ge_list, str_vs(tempString))) then
             call add_error(fx%error_stack, 'Recursive entity expansion')
             goto 100
-          elseif (existing_entity(fx%ge_list, str_vs(tempString))) then
+          elseif (existing_entity(fx%xds%entityList, str_vs(tempString))) then
             !is it the right sort of entity?
-            if (is_unparsed_entity(fx%ge_list, str_vs(tempString))) then
+            if (is_unparsed_entity(fx%xds%entityList, str_vs(tempString))) then
               call add_error(fx%error_stack, "Unparsed entity forbidden in attribute")
               goto 100
-            elseif (is_external_entity(fx%ge_list, str_vs(tempString))) then
+            elseif (is_external_entity(fx%xds%entityList, str_vs(tempString))) then
               call add_error(fx%error_stack, "External entity forbidden in attribute")
               goto 100
             endif
-            call add_internal_entity(fx%forbidden_ge_list, str_vs(tempString), "", fx%xml_version)
+            call add_internal_entity(fx%forbidden_ge_list, str_vs(tempString), "")
             ! Recursively expand entity, checking for errors.
-            s_ent => normalize_text(fx, vs_str(expand_entity_text(fx%ge_list, str_vs(tempString))))
+            s_ent => normalize_text(fx, vs_str(expand_entity_text(fx%xds%entityList, str_vs(tempString))))
             call devnull(pop_entity_list(fx%forbidden_ge_list))
             if (in_error(fx%error_stack)) then
               goto 100
@@ -827,7 +827,7 @@ contains
             s_temp(i2:i2+j) = s_in(i:i+j)
             i = i + j + 1
             i2 = i2 + j + 1
-            if (.not.fx%skippedExternal.or.fx%standalone) then
+            if (.not.fx%skippedExternal.or.fx%xds%standalone) then
               call add_error(fx%error_stack, "Undeclared entity encountered in standalone document.")
               goto 100
             endif

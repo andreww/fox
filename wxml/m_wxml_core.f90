@@ -425,7 +425,6 @@ contains
           call wxml_warning("Reference to unknown parameter entity")
       endif
       call register_internal_PE(xf%xds, name, PEdef)
-! FIXME CHECK HERE DO WE REFERENCE UNDEFINED PEs?
     else
       if (.not.checkSystemID(system)) &
         call wxml_fatal("Parameter entity System ID is invalid: "//system)
