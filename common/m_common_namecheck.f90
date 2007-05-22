@@ -41,6 +41,8 @@ module m_common_namecheck
   public :: prefixOfQName
   public :: localpartOfQName
 
+  public :: resolveSystemId
+
 contains
 
   pure function checkEncName(name) result(good)

@@ -14,7 +14,7 @@ module m_sax_parser
   use m_common_elstack, only: push_elstack, pop_elstack, init_elstack, &
     destroy_elstack, is_empty, len
   use m_common_entities, only: existing_entity, init_entity_list, &
-    destroy_entity_list, add_internal_entity, add_external_entity, &
+    destroy_entity_list, add_internal_entity, &
     is_external_entity, expand_entity, expand_char_entity, &
     is_unparsed_entity, pop_entity_list
   use m_common_entity_expand, only: expand_entity_value_alloc
@@ -23,7 +23,7 @@ module m_sax_parser
   use m_common_io, only: io_eof, io_err
   use m_common_namecheck, only: checkName, checkPublicId, &
     checkCharacterEntityReference, likeCharacterEntityReference, &
-    checkQName, checkPITarget
+    checkQName, checkPITarget, resolveSystemId
   use m_common_namespaces, only: getnamespaceURI, invalidNS, &
     checkNamespaces, checkEndNamespaces, &
     initNamespaceDictionary, destroyNamespaceDictionary
@@ -1177,7 +1177,10 @@ contains
 
       case (ST_DTD_NOTATION)
         !write(*,*) 'ST_DTD_NOTATION'
-        ! check name is name FIXMe
+        if (.not.checkName(str_vs(fx%token), fx%xds)) then
+          call add_error(fx%error_stack, "Invalid name for Notation")
+          goto 100
+        endif
         fx%name => fx%token
         nullify(fx%token)
         fx%state = ST_DTD_NOTATION_ID
@@ -1379,15 +1382,15 @@ contains
           else ! PE can't have Ndata declaration
             if (associated(fx%publicId)) then
               call register_external_PE(fx%xds, str_vs(fx%name), str_vs(fx%systemId), public=str_vs(fx%publicId))
-              !FIXME need to 'fully resolve URL'
+              !Need to fully resolve system ID to URL here
               if (present(externalEntityDecl_handler)) &
                 call externalEntityDecl_handler('%'//str_vs(fx%name), &
-                systemId=str_vs(fx%systemId), publicId=str_vs(fx%publicId))
+                systemId=resolveSystemID(str_vs(fx%systemId)), publicId=str_vs(fx%publicId))
             else
               call register_external_PE(fx%xds, str_vs(fx%name), str_vs(fx%systemId))
               if (present(externalEntityDecl_handler)) &
                 call externalEntityDecl_handler('%'//str_vs(fx%name), &
-                systemId=str_vs(fx%systemId))
+                systemId=resolveSystemId(str_vs(fx%systemId)))
             endif
           endif
           ! else we ignore it
@@ -1406,24 +1409,23 @@ contains
                 public=str_vs(fx%publicId), notation=str_vs(fx%Ndata))
               if (present(unparsedEntityDecl_handler)) &
                 call unparsedEntityDecl_handler(str_vs(fx%name), &
-                systemId=str_vs(fx%systemId), publicId=str_vs(fx%publicId), &
+                systemId=resolveSystemId(str_vs(fx%systemId)), publicId=str_vs(fx%publicId), &
                 notation=str_vs(fx%Ndata))
             elseif (associated(fx%Ndata)) then
               call register_external_GE(fx%xds, str_vs(fx%name), str_vs(fx%systemId), notation=str_vs(fx%Ndata))
               if (present(unparsedEntityDecl_handler)) &
                 call unparsedEntityDecl_handler(str_vs(fx%name), &
-                systemId=str_vs(fx%systemId), notation=str_vs(fx%Ndata))
+                systemId=resolveSystemId(str_vs(fx%systemId)), notation=str_vs(fx%Ndata))
             elseif (associated(fx%publicId)) then
               call register_external_GE(fx%xds, str_vs(fx%name), str_vs(fx%systemId), public=str_vs(fx%publicId))
-              !FIXME need to 'fully resolve URL'
               if (present(externalEntityDecl_handler)) &
                 call externalEntityDecl_handler('%'//str_vs(fx%name), &
-                systemId=str_vs(fx%systemId), publicId=str_vs(fx%publicId))
+                systemId=resolveSystemId(str_vs(fx%systemId)), publicId=str_vs(fx%publicId))
             else
               call register_external_GE(fx%xds, str_vs(fx%name), str_vs(fx%systemId))
               if (present(externalEntityDecl_handler)) &
                 call externalEntityDecl_handler('%'//str_vs(fx%name), &
-                systemId=str_vs(fx%systemId))
+                systemId=resolveSystemId(str_vs(fx%systemId)))
             endif
           endif
         endif
