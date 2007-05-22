@@ -13,7 +13,8 @@ module m_wxml_core
   use m_common_io, only: get_unit
   use m_common_namecheck, only: checkEncName, checkName, checkPITarget, &
     checkCharacterEntityReference, checkPublicId, checkSystemId, &
-    checkQName, prefixOfQName, localpartofQName, checkPEDef, checkPseudoAttValue
+    checkQName, prefixOfQName, localpartofQName, checkPEDef, checkPseudoAttValue, &
+    checkAttValue
   use m_common_namespaces, only: namespaceDictionary, getnamespaceURI, &
   initnamespaceDictionary, destroynamespaceDictionary, addDefaultNS, &
   addPrefixedNS, isPrefixInForce, checkNamespacesWriting, checkEndNamespaces
@@ -991,11 +992,32 @@ contains
       esc = .true.
     endif
 
-    !FIXME when escape is false we should still verify somehow.
-    !minimal check: only extra allowed is a character entity reference
+    ! FIXME when escape is false we should still verify somehow.
+    ! minimal check: only extra allowed is character entity references.
+    ! We check they exist, and are not unparsed.
+    ! Ideally we would fully expand all entity references (at least for
+    ! a standalone document where we can) and then
+    ! match the resultant production against [XML]-3.3.1. This is
+    ! initially too much work though, so we just check simple
+    ! syntactic constraint.
 
-    if (.not.esc) &
-      call wxml_warning("Outputting unescaped attribute value. Cannot guarantee well-formedness")
+    if (.not.esc) then
+      if (.not.checkAttValue(value, xf%xds)) &
+        call wxml_error(xf, "Invalid pseudo-attribute value: "//value)
+      if (index(value, '&') > 0) then
+        ! There are entity references
+        ! They should exist (unless we are not standalone) and they must not be unparsed.
+        if (.not.checkExistingRefsInAttValue()) then
+          if (xf%xds%standalone) then
+            call wxml_error(xf, "outputting unknown entity. Cannot guarantee validity.")
+          else
+            call wxml_warning(xf, "Warning: outputting unknown entity. Cannot guarantee validity.")
+          endif
+        endif
+        if (.not.checkParsedRefsInAttValue()) &
+          call wxml_error(xf, "Warning: outputting unknown entity. Cannot guarantee validity.")
+      endif
+    endif
 
     if (xf%state_2 /= WXML_STATE_2_INSIDE_ELEMENT) &
          call wxml_error(xf, "attributes outside element content: "//name)
@@ -1023,6 +1045,51 @@ contains
         call add_item_to_dict(xf%dict, name, value)
       endif
     endif
+
+  contains
+    function checkExistingRefsInAttValue() result(p)
+      logical :: p
+      
+      integer :: i1, i2
+      
+      ! Here we assume we have syntactic well-formedness as
+      ! checked by checkAttValue.
+      ! We also assume we do not have simply one entity as
+      ! the contents - that is checked by checkAttValueEntity
+      
+      p = .false.
+      i1 = index(value, '&')
+      do while (i1 > 0)
+        i2 = scan(value(i1+1:),';')
+        if (i2 == 0) return
+        if (.not.existing_entity(xf%xds%entityList, value(i1+1:i2-1))) &
+          return
+        i1 = scan(value(i2+1:), '&')
+      enddo
+      p = .true.
+      
+    end function checkExistingRefsInAttValue
+    
+    function checkParsedRefsInAttValue() result(p)
+      logical :: p
+      
+      integer :: i1, i2
+      
+      ! Here we assume we have syntactic well-formedness as
+      ! checked by checkAttValue.
+      
+      p = .false.
+      i1 = index(value, '&')
+      do while (i1 > 0)
+        i2 = scan(value(i1+1:),';')
+        if (i2 == 0) return
+        if (is_unparsed_entity(xf%xds%entityList, value(i1+1:i2-1))) &
+          return
+        i1 = scan(value(i2+1:), '&')
+      enddo
+      p = .true.
+
+    end function checkParsedRefsInAttValue
     
   end subroutine xml_AddAttribute_Ch
 
