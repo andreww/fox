@@ -1,17 +1,17 @@
 module m_dom_parse
 
   use FoX_common, only: dictionary_t, len
-  use FoX_common, only: get_key, get_value
-  use FoX_sax, only: xml_parse, xml_t
-  use FoX_sax, only: open_xmlfile, close_xmlfile
+  use FoX_common, only: getQName, getValue, getLocalname, getURI
+  use FoX_sax, only: parse, xml_t
+  use FoX_sax, only: open_xml_file, close_xml_t
 
   use m_dom_types, only: fNode, fDocumentNode, getnumberofallocatednodes
   use m_dom_types, only: createnode, DOCUMENT_NODE, destroynode
   use m_dom_document, only: createcomment
   use m_dom_document, only: createcdatasection
-  use m_dom_document, only: createelement
+  use m_dom_document, only: createElement, createElementNS
   use m_dom_document, only: createtextnode
-  use m_dom_implementation, only: createdocument
+  use m_dom_implementation, only: createDocument, createDocumentType
   use m_dom_node, only: appendchild
   use m_dom_node, only: getparentnode
   use m_dom_element, only: setattribute
@@ -35,7 +35,7 @@ module m_dom_parse
 
 CONTAINS
 
-  subroutine begin_element_handler(URI, localname, name,attrs)
+  subroutine startElement_handler(URI, localname, name, attrs)
     character(len=*),   intent(in) :: URI
     character(len=*),   intent(in) :: localname
     character(len=*),   intent(in) :: name
@@ -43,14 +43,13 @@ CONTAINS
     type(dictionary_t), intent(in) :: attrs
    
     type(fnode), pointer :: temp
-    character(len=400)   :: attr_name, attr_value
-    integer              :: status
     integer              :: i
 
-    if (.not.associated(documentElement)) then
-      mainDoc = createDocument(str_vs(URI), str_vs(name)
+    if (.not.associated(documentElement)) &
+      mainDoc = createDocument(URI, name, createDocumentType())
 
-    if (dom_debug) write(*,'(4a)'), "Adding node for element: {",URI,'}', localname
+    if (dom_debug) &
+      write(*,'(4a)') "Adding node for element: {",URI,'}', localname
 
     temp => createElement(mainDoc, name)
     temp => createElementNS(mainDoc, name, URI, localName)
@@ -61,8 +60,8 @@ CONTAINS
 !
     do i = 1, len(attrs)
        if (dom_debug) print *, "Adding attribute: ", &
-         get_key(attrs, i), ":",get_value(attrs, i)
-       call setAttributeNS(current,get_key(attrs, i),get_value(attrs, i), get_nsURI(attrs, i), get_localName(attrs, i))
+         getQName(attrs, i), ":",getValue(attrs, i)
+       call setAttributeNS(current,getQName(attrs, i),getValue(attrs, i), getURI(attrs, i), getLocalName(attrs, i))
     enddo
 
     current % namespaceURI = URI
@@ -72,26 +71,27 @@ CONTAINS
     endif
     current % localname = localname
 
-  end subroutine begin_element_handler
+  end subroutine startElement_handler
 
 !---------------------------------------------------------
 
-  subroutine end_element_handler(URI, localName, name)
+  subroutine endElement_handler(URI, localName, name)
     character(len=*), intent(in)     :: URI
     character(len=*), intent(in)     :: localname
     character(len=*), intent(in)     :: name
 
 !!AG for IBM    type(fnode), pointer :: np
 
-    if (dom_debug) write(*,'(4a)'), "Ending node for element: {",URI,'}', localname
+    if (dom_debug) &
+      write(*,'(4a)') "Ending node for element: {",URI,'}', localname
 !!AG for IBM    np => getParentNode(current)
 !!AG for IBM    current => np
     current => getParentNode(current)
-  end subroutine end_element_handler
+  end subroutine endElement_handler
 
 !---------------------------------------------------------
 
-  subroutine pcdata_chunk_handler(chunk)
+  subroutine characters_handler(chunk)
     character(len=*), intent(in) :: chunk
 
     type(fnode), pointer :: temp, dummy
@@ -101,7 +101,7 @@ CONTAINS
     temp => createTextNode(mainDoc, chunk)
     dummy => appendChild(current,temp)
 
-  end subroutine pcdata_chunk_handler
+  end subroutine characters_handler
 
 !---------------------------------------------------------
 
@@ -116,28 +116,14 @@ CONTAINS
     dummy => appendChild(current,temp)
 
   end subroutine comment_handler
-!---------------------------------------------------------
-  subroutine cdata_section_handler(chunk)
-    character(len=*), intent(in) :: chunk
 
-    type(fnode), pointer :: temp, dummy
-    
-    if (dom_debug) print *, "Got CDATA_SECTION: |", chunk, "|"
-
-    temp => createCdataSection(mainDoc, chunk)
-    dummy => appendChild(current,temp)
-
-  end subroutine cdata_section_handler
-
-!---------------------------------------------------------
-
-  subroutine start_document_handler
+  subroutine startDocument_handler
     print*,'allocating mainDoc'
     allocate(mainDoc)
     main => createNode()
     main % nodeType = DOCUMENT_NODE
     current => main
-  end subroutine start_document_handler
+  end subroutine startDocument_handler
 
 
 
@@ -167,28 +153,48 @@ CONTAINS
        sax_debug = sax_verbose
     endif
     
-    call open_xmlfile(filename, fxml, iostat)
-
+    call open_xml_file(fxml, filename, iostat)
     if (iostat /= 0) then
-       stop "Cannot open file."
+      call FoX_error("Cannot open file")
     endif
+
+    call parse(fxml,&
+      characters_handler,            &
+      !endDocument_handler,           &
+      endElement_handler,            &
+      !endPrefixMapping_handler,      &
+      !ignorableWhitespace_handler,   &
+      !processingInstruction_handler, &
+      ! setDocumentLocator
+      !skippedEntity_handler,         &
+      startDocument_handler,         & 
+      startElement_handler,          &
+      !startPrefixMapping_handler,    &
+      !notationDecl_handler,          &
+      !unparsedEntityDecl_handler,    &
+      !error_handler,                 &
+      !fatalError_handler,            &
+      !warning_handler,               &
+      !attributeDecl_handler,         &
+      !elementDecl_handler,           &
+      !externalEntityDecl_handler,    &
+      !internalEntityDecl_handler,    &
+      comment_handler               &
+      !endCdata_handler,              &
+      !endDTD_handler,                &
+      !endEntity_handler,             &
+      !startCdata_handler,            &
+      !startDTD_handler,              &
+      !startEntity_handler
+      )
     
-    call xml_parse(fxml,  &
-         start_document_handler=start_document_handler, &
-         begin_element_handler=begin_element_handler, &
-         end_element_handler=end_element_handler, &
-         pcdata_chunk_handler=pcdata_chunk_handler, &
-         comment_handler=comment_handler, &
-         cdata_section_handler=cdata_section_handler, &
-         verbose = sax_debug)    
-    call close_xmlfile(fxml)
-
+    call close_xml_t(fxml)
     if (dom_debug) print *, "Number of allocated nodes: ", getNumberofAllocatedNodes()
-
-!    call createDocument(mainDoc, main)
+    
+    !    call createDocument(mainDoc, main)
     parsefile => mainDoc
     mainDoc => null()
-
+    
   end function parsefile
-
+  
 end module m_dom_parse

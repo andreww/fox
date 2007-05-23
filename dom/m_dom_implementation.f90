@@ -1,5 +1,6 @@
 module m_dom_implementation
 
+  use m_common_array_str, only: vs_str_alloc
   use m_dom_types, only : fDocumentNode
   use m_dom_types, only : fDocumentType
   use m_dom_types, only : fnode
@@ -9,6 +10,7 @@ module m_dom_implementation
 
   public :: hasFeature
   public :: createDocument
+  public :: createDocumentType
 
 contains
 
@@ -22,18 +24,28 @@ contains
   end function hasFeature
 
   function createDocumentType(qualifiedName, publicId, systemId) result(dt)
-    character(len=*), intent(in) :: qualifiedName
-    character(len=*), intent(in) :: publicId
-    character(len=*), intent(in) :: systemId
+    character(len=*), intent(in), optional :: qualifiedName
+    character(len=*), intent(in), optional :: publicId
+    character(len=*), intent(in), optional :: systemId
     type(fdocumentType), pointer :: dt
-    allocate(dt%name(len(qualifiedName)))
-    dt%name = transfer(qualifiedName, dt%name)
+    if (present(qualifiedName)) then
+      dt%name = vs_str_alloc(qualifiedName)
+    else
+      allocate(dt%name(0))
+    endif
     !dt%entities
     !dt%notations
-    allocate(dt%publicId(len(publicId)))
-    dt%publicId = transfer(publicId, dt%publicId)
-    allocate(dt%publicId(len(systemId)))
-    dt%systemId = transfer(systemId, dt%systemId)
+      allocate(dt%publicId(len(publicId)))
+    if (present(publicId)) then
+      dt%publicId = vs_str_alloc(publicId)
+    else
+      allocate(dt%publicId(0))
+    endif
+    if (present(systemId)) then
+      dt%systemId = vs_str_alloc(systemId)
+    else
+      allocate(dt%publicId(0))
+    endif
     allocate(dt%internalSubset(0)) !FIXME
   end function createDocumentType
 
