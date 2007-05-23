@@ -1535,6 +1535,19 @@ contains
 
   end subroutine sax_error
 
+  pure function URIlength(fx, qname) result(l_u)
+    type(sax_parser_t), intent(in) :: fx
+    character(len=*), intent(in) :: qName
+    integer :: l_u
+    integer :: n
+    n = index(QName, ':')
+    if (n > 0) then
+      l_u = len(getnamespaceURI(fx%nsDict, QName(1:n-1)))
+    else
+      l_u = len(getnamespaceURI(fx%nsDict))
+    endif
+  end function URIlength
+
   pure function getURIofQName(fx, qname) result(URI)
     type(sax_parser_t), intent(in) :: fx
     character(len=*), intent(in) :: qName
@@ -1549,19 +1562,6 @@ contains
     endif
 
   end function getURIofQName
-
-  pure function URIlength(fx, qname) result(l_u)
-    type(sax_parser_t), intent(in) :: fx
-    character(len=*), intent(in) :: qName
-    integer :: l_u
-    integer :: n
-    n = index(QName, ':')
-    if (n > 0) then
-      l_u = len(getnamespaceURI(fx%nsDict, QName(1:n-1)))
-    else
-      l_u = len(getnamespaceURI(fx%nsDict))
-    endif
-  end function URIlength
 
   pure function getLocalNameofQName(qname) result(localName)
     character(len=*), intent(in) :: qName
