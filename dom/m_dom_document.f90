@@ -2,23 +2,22 @@ module m_dom_document
 !
 !use m_dom_documenttype, only : fDocumentType
 !use m_dom_documenttype, only : createDocumentType, destroyDocumentType
-
-use m_dom_types, only: fnode,  createNode, destroyNode, &
-  ELEMENT_NODE, ATTRIBUTE_NODE, TEXT_NODE, CDATA_SECTION_NODE, &
-  ENTITY_REFERENCE_NODE, ENTITY_NODE, PROCESSING_INSTRUCTION_NODE, &
-  COMMENT_NODE, DOCUMENT_NODE, DOCUMENT_TYPE_NODE, DOCUMENT_FRAGMENT_NODE, &
-  NOTATION_NODE
-use m_dom_types, only : fDocumentNode, fDocumentType
-
-use m_dom_node, only : getChildNodes
-
-use m_dom_error, only : NOT_FOUND_ERR, dom_error
-
-use m_strings, only: string, assignment(=)
-
-implicit none
-
-private
+  use m_common_array_str, only: vs_str_alloc
+  use m_common_namecheck, only: prefixOfQName, localPartOfQName
+  
+  use m_dom_types, only: fnode,  createNode, destroyNode, &
+    ELEMENT_NODE, ATTRIBUTE_NODE, TEXT_NODE, CDATA_SECTION_NODE, &
+    ENTITY_REFERENCE_NODE, ENTITY_NODE, PROCESSING_INSTRUCTION_NODE, &
+    COMMENT_NODE, DOCUMENT_NODE, DOCUMENT_TYPE_NODE, DOCUMENT_FRAGMENT_NODE, &
+    NOTATION_NODE
+  use m_dom_types, only : fDocumentNode, fDocumentType
+  
+  use m_dom_node, only : getChildNodes
+  
+  use m_dom_error, only : NOT_FOUND_ERR, dom_error
+  
+  implicit none
+  private
 
 ! from DOMImplementation
 !  public :: createDocument
@@ -100,10 +99,7 @@ CONTAINS
     character(len=*), intent(in) :: tagName
     type(fnode), pointer :: createElement
   
-    createElement => createNode()
-    createElement % nodeName = tagName
-    createElement % nodeType = ELEMENT_NODE
-    createElement % ownerDocument => doc
+    createElement => createElementNS(doc, tagName, "")
   
   end function createElement
     
@@ -113,7 +109,7 @@ CONTAINS
     
     createDocumentFragment => createNode()
     createDocumentFragment % nodeType = DOCUMENT_FRAGMENT_NODE
-    createDocumentFragment % nodeName = "#document-fragment"
+    createDocumentFragment % nodeName = vs_str_alloc("#document-fragment")
     createDocumentFragment % ownerDocument => doc
     
   end function createDocumentFragment
@@ -125,7 +121,7 @@ CONTAINS
     
     createTextNode => createNode()
     createTextNode % nodeType = TEXT_NODE
-    createTextNode % nodeName = "#text"
+    createTextNode % nodeName = vs_str_alloc("#text")
     createTextNode % nodeValue = data
     createtextNode % ownerDocument => doc
     
@@ -137,7 +133,7 @@ CONTAINS
     type(fnode), pointer :: createComment
   
     createComment => createNode()
-    createComment % nodeName = "#comment"
+    createComment % nodeName = vs_str_alloc("#comment")
     createComment % nodeValue = data
     createComment % nodeType = COMMENT_NODE
     createComment % ownerDocument => doc
@@ -150,7 +146,7 @@ CONTAINS
     type(fnode), pointer :: createCdataSection
   
     createCdataSection => createNode()
-    createCdataSection % nodeName = "#cdata-section"
+    createCdataSection % nodeName = vs_str_alloc("#cdata-section")
     createCdataSection % nodeValue = data
     createCdataSection % nodeType = CDATA_SECTION_NODE
     createCdataSection % ownerDocument => doc
@@ -164,8 +160,8 @@ CONTAINS
     type(fnode), pointer :: createProcessingInstruction
 
     createProcessingInstruction => createNode()
-    createProcessingInstruction % nodeName = target
-    createProcessingInstruction % nodeValue = data
+    createProcessingInstruction % nodeName = vs_str_alloc(target)
+    createProcessingInstruction % nodeValue = vs_str_alloc(data)
     createProcessingInstruction % nodeType = PROCESSING_INSTRUCTION_NODE
     createProcessingInstruction % ownerDocument => doc
     
@@ -176,10 +172,7 @@ CONTAINS
     character(len=*), intent(in) :: name
     type(fnode), pointer :: createAttribute
   
-    createAttribute => createNode()
-    createAttribute % nodeName = name
-    createAttribute % nodeType = ATTRIBUTE_NODE
-    createAttribute % ownerDocument => doc
+    createAttribute => createAttributeNS(doc, name, "")
   
   end function createAttribute
 
@@ -189,7 +182,7 @@ CONTAINS
     type(fnode), pointer :: createEntityReference  
 
     createEntityReference => createNode()
-    createEntityReference % nodeName = name
+    createEntityReference % nodeName = vs_str_alloc(name)
     createEntityReference % nodeType = ENTITY_REFERENCE_NODE
     createEntityReference % ownerDocument => doc
 
@@ -213,27 +206,29 @@ CONTAINS
 
   function createElementNS(doc, namespaceURI, qualifiedName)
     type(fDocumentNode), pointer :: doc
-    type(string), intent(in) :: namespaceURI, qualifiedName
+    character(len=*), intent(in) :: namespaceURI, qualifiedName
     type(fnode), pointer :: createElementNS
   
     createElementNS => createNode()
-    createElementNS % nodeName = qualifiedName
+    createElementNS % nodeName = vs_str_alloc(qualifiedName)
     createElementNS % nodeType = ELEMENT_NODE
     createElementNS % ownerDocument => doc
-    createElementNS % namespaceURI = namespaceURI
+    createElementNS % namespaceURI = vs_str_alloc(namespaceURI)
+    createElementNS % prefix = vs_str_alloc(prefixOfQName(qualifiedname))
+    createElementNS % localName = vs_str_alloc(localpartOfQName(qualifiedname))
   
   end function createElementNS
   
   function createAttributeNS(doc, namespaceURI,  qualifiedname)
     type(fDocumentNode), pointer :: doc
-    type(string), intent(in) :: namespaceURI, qualifiedName
+    character(len=*), intent(in) :: namespaceURI, qualifiedName
     type(fnode), pointer :: createAttributeNS
   
     createAttributeNS => createNode()
-    createAttributeNS % nodeName = qualifiedname
+    createAttributeNS % nodeName = vs_str_alloc(qualifiedname)
     createAttributeNS % nodeType = ATTRIBUTE_NODE
     createAttributeNS % ownerDocument => doc
-    createAttributeNS % namespaceURI = namespaceURI
+    createAttributeNS % namespaceURI = vs_str_alloc(namespaceURI)
     
   end function createAttributeNS
 

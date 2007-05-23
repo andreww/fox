@@ -1,5 +1,7 @@
 module m_dom_element
 
+  use m_common_array_str, only: str_vs
+
 use m_dom_types, only: fnode, fnodelist, fDocumentNode
 use m_dom_types, only: element_node, document_node
 use m_dom_types, only: text_node
@@ -33,9 +35,6 @@ interface getElementById
   module procedure getElementById_doc, getElementById_node
 end interface getElementById
 
-  !-------------------------------------------------------   
-  ! METHODS FOR ELEMENT NODES
-  !-------------------------------------------------------   
   public :: getTagName
   public :: getAttribute
   public :: getAttributeNode
@@ -43,23 +42,19 @@ end interface getElementById
   public :: setAttributeNS
   public :: setAttributeNode
   public :: removeAttribute
-  public :: normalize       !--- combines adjacent text nodes ---!
+  public :: normalize
 
   public :: getElementsByTagName
   public :: getElementById
 
-CONTAINS
+contains
 
-  !-----------------------------------------------------------
-  !  METHODS FOR ELEMENT NODES
-  !-----------------------------------------------------------
   function getTagName(element)
-
     type(fnode), intent(in) :: element   
-    type(string)            :: getTagName
+    character(len=size(element%nodeName)) :: getTagName
     
     if (element % nodeType == ELEMENT_NODE) then
-       getTagName = element % nodeName 
+       getTagName = str_vs(element%nodeName )
     else
        getTagName = ''
     endif
@@ -128,7 +123,8 @@ CONTAINS
     
     type(fnode), intent(in) :: element
     character(len=*), intent(in) :: name
-    type(string)                 :: getAttribute
+    ! FIXME
+    character(len=100) :: getAttribute
 
     type(fnode), pointer :: nn
 
@@ -137,7 +133,7 @@ CONTAINS
     nn => getNamedItem(element%attributes,name)
     if (.not. associated(nn)) RETURN
     
-    getAttribute = nn%nodeValue
+    getAttribute = str_vs(nn%nodeValue)
 
         
   end function getAttribute
@@ -227,10 +223,11 @@ CONTAINS
     logical                     :: first
 
     type(fnode), pointer        :: head
+    character, pointer :: temp(:)
 
     first = .true.  ! next Text node will be first
 
-    if (dom_debug) print *, "Normalizing: ", stringify(element%nodeName)
+    if (dom_debug) print *, "Normalizing: ", str_vs(element%nodeName)
     np => element%firstChild
     ! 
     do
@@ -245,7 +242,10 @@ CONTAINS
                 np => getNextSibling(np)
              else                    ! a contiguous text node
                 if (dom_debug) print *, "normalize: found second in chain"
-                head%nodeValue = head%nodeValue + np%nodeValue
+                temp => head%nodeValue
+                allocate(head%nodeValue(size(temp)+size(np%nodeValue)))
+                head%nodeValue(:size(temp)) = temp
+                head%nodeValue(size(temp)+1:) = np%nodeValue
                 head%nextSibling => np%nextSibling
                 if (associated(np,np%parentNode%lastChild)) then
                    np%parentNode%lastChild => head
@@ -261,14 +261,14 @@ CONTAINS
           case(ELEMENT_NODE)
 
              first = .true.
-             if (dom_debug) print *, "element sibling: ", stringify(np%nodeName)
+             if (dom_debug) print *, "element sibling: ", str_vs(np%nodeName)
              if (hasChildNodes(np)) call normalize(np)
              np => getNextSibling(np)
 
           case default
              
              ! do nothing, just mark that we break the chain of text nodes
-             if (dom_debug) print *, "other sibling: ", stringify(np%nodeName)
+             if (dom_debug) print *, "other sibling: ", str_vs(np%nodeName)
              first = .true.
              np => getNextSibling(np)
 

@@ -1,17 +1,14 @@
- Module m_dom_types
-
-  use m_strings, only: string, unstring
+module m_dom_types
 
   implicit none
-
   private
 
-  !-------------------------------------------------------   
+  !----------------:---------------------------------------   
   ! A GENERIC NODE
-  !-------------------------------------------------------   
+  !---------------:----------------------------------------   
   type, public :: fnode
-     type(string)         :: nodeName    
-     type(string)         :: nodeValue   
+     character, pointer, dimension(:)         :: nodeName    
+     character, pointer, dimension(:)         :: nodeValue   
      integer              :: nc              = 0 
      integer              :: nodeType        = 0
      type(fnode), pointer :: parentNode      => null()
@@ -23,16 +20,16 @@
      type(fnamedNodeMap), pointer :: attributes => null()
      type(fnodeList), pointer :: childNodes  => null()  ! New
      ! Introduced in DOM Level 2:
-     type(string) :: namespaceURI 
-     type(string) :: prefix 
-     type(string) :: localName
+     character, pointer, dimension(:) :: namespaceURI 
+     character, pointer, dimension(:) :: prefix 
+     character, pointer, dimension(:) :: localName
   end type fnode
 
   !-----------------------------------------------------------
   !  NAMEDNODEMAP
   !-----------------------------------------------------------
   type, public :: fnamedNode
-     type(string)                  :: name
+     character, pointer, dimension(:)                  :: name
      type(fnode), pointer          :: node => null()
      type(fnamedNode), pointer     :: next => null()
   end type fnamedNode
@@ -108,11 +105,11 @@
   public :: node_class
   public :: createNode
   public :: destroyNode
-  public :: destroyNamedNodeMap
-  public :: destroyNodeList
+!  public :: destroyNamedNodeMap
+!  public :: destroyNodeList
   public :: getNumberofAllocatedNodes
 
-CONTAINS
+contains
 
   function getNumberofAllocatedNodes() result(n)
     integer   :: n
@@ -148,38 +145,40 @@ CONTAINS
     end select
   end function node_class
 
-  subroutine destroyNamedNodeMap(nodemap)
-    type(fnamedNodeMap), pointer :: nodemap
+!FIXME
 
-    type(fnamednode), pointer  :: nnp
-    type(fnode), pointer       :: ghost
-    
-    if (.not. associated(nodemap)) return
-    nnp => nodemap%head
-    do while (associated(nnp))
-       call unstring(nnp%name)
-       ghost => nnp%node
-       nnp => nnp%next
-       call destroyNode(ghost)      ! We might not want to really destroy
-    enddo
-  end subroutine destroyNamedNodeMap
-
-  subroutine destroyNodeList(nodelist)
-    type(fnodeList), pointer :: nodelist
-
-    type(flistnode), pointer   :: p
-    type(fnode), pointer       :: ghost
-    
-    if (.not. associated(nodelist)) return
-    p => nodelist%head
-    do while (associated(p))
-       ghost => p%node
-       p => p%next
-       call destroyNode(ghost)      ! We might not want to really destroy
-    enddo
-    deallocate(nodelist%head)
-    deallocate(nodelist)
-  end subroutine destroyNodeList
+!!$  subroutine destroyNamedNodeMap(nodemap)
+!!$    type(fnamedNodeMap), pointer :: nodemap
+!!$
+!!$    type(fnamednode), pointer  :: nnp
+!!$    type(fnode), pointer       :: ghost
+!!$    
+!!$    if (.not. associated(nodemap)) return
+!!$    nnp => nodemap%head
+!!$    do while (associated(nnp))
+!!$       call unstring(nnp%name)
+!!$       ghost => nnp%node
+!!$       nnp => nnp%next
+!!$       call destroyNode(ghost)      ! We might not want to really destroy
+!!$    enddo
+!!$  end subroutine destroyNamedNodeMap
+!!$
+!!$  subroutine destroyNodeList(nodelist)
+!!$    type(fnodeList), pointer :: nodelist
+!!$
+!!$    type(flistnode), pointer   :: p
+!!$    type(fnode), pointer       :: ghost
+!!$    
+!!$    if (.not. associated(nodelist)) return
+!!$    p => nodelist%head
+!!$    do while (associated(p))
+!!$       ghost => p%node
+!!$       p => p%next
+!!$       call destroyNode(ghost)      ! We might not want to really destroy
+!!$    enddo
+!!$    deallocate(nodelist%head)
+!!$    deallocate(nodelist)
+!!$  end subroutine destroyNodeList
 
   recursive subroutine destroyNode(node)
     type(fnode), pointer  :: node

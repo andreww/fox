@@ -1,5 +1,6 @@
 module m_dom_parse
 
+  use m_common_array_str, only: vs_str_alloc
   use FoX_common, only: dictionary_t, len
   use FoX_common, only: getQName, getValue, getLocalname, getURI
   use FoX_sax, only: parse, xml_t
@@ -32,8 +33,7 @@ module m_dom_parse
 
   !type(nsDictionary), save :: nsDict
 
-
-CONTAINS
+contains
 
   subroutine startElement_handler(URI, localname, name, attrs)
     character(len=*),   intent(in) :: URI
@@ -52,7 +52,7 @@ CONTAINS
       write(*,'(4a)') "Adding node for element: {",URI,'}', localname
 
     temp => createElement(mainDoc, name)
-    temp => createElementNS(mainDoc, name, URI, localName)
+    temp => createElementNS(mainDoc, URI, name)
     current => appendChild(current,temp)
 
 !
@@ -64,12 +64,12 @@ CONTAINS
        call setAttributeNS(current,getQName(attrs, i),getValue(attrs, i), getURI(attrs, i), getLocalName(attrs, i))
     enddo
 
-    current % namespaceURI = URI
-    if (current % namespaceURI == '') then
+    current%namespaceURI=vs_str_alloc(URI)
+    if (URI=='') then
       ! this prefix is not bound to a URI - element localname is full name
       continue
     endif
-    current % localname = localname
+    current%localname=vs_str_alloc(localname)
 
   end subroutine startElement_handler
 
@@ -161,14 +161,14 @@ CONTAINS
     call parse(fxml,&
       characters_handler,            &
       !endDocument_handler,           &
-      endElement_handler,            &
+      endElement_handler=endElement_handler,            &
       !endPrefixMapping_handler,      &
       !ignorableWhitespace_handler,   &
       !processingInstruction_handler, &
       ! setDocumentLocator
       !skippedEntity_handler,         &
-      startDocument_handler,         & 
-      startElement_handler,          &
+      startDocument_handler=startDocument_handler,         & 
+      startElement_handler=startElement_handler,          &
       !startPrefixMapping_handler,    &
       !notationDecl_handler,          &
       !unparsedEntityDecl_handler,    &
@@ -179,7 +179,7 @@ CONTAINS
       !elementDecl_handler,           &
       !externalEntityDecl_handler,    &
       !internalEntityDecl_handler,    &
-      comment_handler               &
+      comment_handler=comment_handler               &
       !endCdata_handler,              &
       !endDTD_handler,                &
       !endEntity_handler,             &

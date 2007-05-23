@@ -1,5 +1,7 @@
 module m_dom_text
 
+  use m_common_array_str, only: str_vs
+
   use m_dom_types, only: fnode, TEXT_NODE
   !use m_dom_namednodemap
   !use m_dom_nodelist
@@ -7,9 +9,8 @@ module m_dom_text
   !use m_dom_document
   !use m_dom_debug
   !use m_dom_node
-  use m_strings, only: string, len, assignment(=)
-  implicit none
 
+  implicit none
   private
   
   public :: getLength
@@ -25,28 +26,23 @@ module m_dom_text
      module procedure getLengthText
   end interface
 
-CONTAINS
+contains
 
-
-  !-------------------------------------------------------   
-  ! METHODS FOR TEXT NODES
-  !-------------------------------------------------------   
   function getLengthText(node)
     type(fnode), intent(in) :: node
     integer :: getLengthText
     if (node % nodeType == TEXT_NODE) then
-       getLengthText = len(node % nodeValue)
+       getLengthText = size(node%nodeValue)
     else
        getLengthText = 0
     endif
   end function getLengthText
 
-  !-------------------------------------------------------   
   function getData(node)
     type(fnode), intent(in) :: node
-    type(string) :: getData
+    character(len=size(node%nodeValue)) :: getData
     if (node % nodeType == TEXT_NODE) then
-       getData = node % nodeValue
+       getData = str_vs(node%nodeValue)
     else
        getData = ''
     endif

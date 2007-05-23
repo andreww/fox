@@ -1,5 +1,6 @@
 module m_dom_node
 
+  use m_common_array_str, only: str_vs
   use m_dom_types, only: fnode, fnodelist, fnamednodemap, fDocumentNode
   use m_dom_types, only: createNode
   use m_dom_types, only: ELEMENT_NODE, ATTRIBUTE_NODE, COMMENT_NODE
@@ -10,8 +11,6 @@ module m_dom_node
   use m_dom_debug, only: dom_debug
   use m_dom_error, only: NOT_FOUND_ERR, HIERARCHY_REQUEST_ERR, WRONG_DOCUMENT_ERR
   use m_dom_error, only: dom_error
-  
-  use m_strings, only: string, assignment(=), stringify
   
   implicit none
   
@@ -68,24 +67,21 @@ CONTAINS
   function getNodeName(node)
 
     type(fnode), pointer :: node
-    type(string)  :: getNodeName
+    character(len=merge(size(node%nodeName), 0, associated(node)))  :: getNodeName
 
-    if (.not. associated(node))  &
+    if (.not.associated(node))  &
                call dom_error("getNodeName",0,"Node not allocated")
-    getNodeName = node % nodeName
+    getNodeName = str_vs(node%nodeName)
 
   end function getNodeName
 
-  !-----------------------------------------------------------
-
   function getNodeValue(node)
-
     type(fnode), pointer :: node
-    type(string)  :: getNodeValue
+    character(len=merge(size(node%nodeName), 0, associated(node)))  :: getNodeValue
 
-    if (.not. associated(node))  &
+    if (.not.associated(node))  &
                call dom_error("getNodeValue",0,"Node not allocated")
-    getNodeValue = node % nodeValue
+    getNodeValue = str_vs(node%nodeValue)
 
   end function getNodeValue
 
@@ -428,7 +424,6 @@ CONTAINS
 
       type(fnode), pointer :: np, clone
       type(fnode), pointer :: previous_clone, attr, newattr
-      type(string)         :: name
       logical :: first_sibling
       integer :: i
 
@@ -451,10 +446,11 @@ CONTAINS
                                      ! be aliases of cloneNode !!
             first_sibling = .false.
          endif
-         clone % nodeName    = np % nodeName
-         name = np%nodeName
-         if (dom_debug) print *, "Cloning ", stringify(name)
-         clone % nodeValue   = np % nodeValue
+         allocate(clone%nodeName(size(np%nodeName)))
+         clone%nodeName = np%nodeName
+         if (dom_debug) print *, "Cloning ", str_vs(clone%nodeName)
+         allocate(clone%nodeValue(size(np%nodeValue)))
+         clone%nodeValue = np%nodeValue
          clone % nodeType    = np % nodeType
          clone % ownerDocument => np % ownerDocument
          clone % parentNode  => parent_clone
@@ -501,7 +497,7 @@ CONTAINS
          endif
 
          if (associated(np,node)) then
-            if (dom_debug) print *, "No more siblings of ", stringify(name)
+            if (dom_debug) print *, "No more siblings of ", str_vs(clone%nodeName)
             EXIT  ! no siblings of master node
          endif
          np => np % nextSibling

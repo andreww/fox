@@ -1,53 +1,46 @@
 module m_dom_attribute
 
-use m_dom_types, only : fnode, ATTRIBUTE_NODE
-use m_dom_node, only : setNodeValue
-use m_strings, only: string, assignment(=)!, len_trim
-
-implicit none
-
-private
-  !-------------------------------------------------------  
-  ! METHODS FOR ATTRIBUTE NODES
-  !------------------------------------------------------- 
+  use m_common_array_str, only: str_vs
+  use m_common_error, only: FoX_error
+  use m_dom_types, only : fnode, ATTRIBUTE_NODE
+  use m_dom_node, only : setNodeValue
+  
+  implicit none
+  private
 
   public :: getName
   public :: getValue
   public :: setValue
   public :: setnsURI
   public :: setlocalName
-
+  
 CONTAINS
-
+  
   function getName(attribute)
-
     type(fnode), intent(in) :: attribute
-    type(string)            :: getName
-
+    character(size(attribute%nodeName))  :: getName
+    
     if (attribute % nodeType == ATTRIBUTE_NODE) then
-       getName = attribute%nodeName
+      getName = str_vs(attribute%nodeName)
     else
-       getName = ''
+      getName = ''
     endif
-
+    
   end function getName
 
-  !-----------------------------------------------------------
 
   function getValue(attribute)
-
     type(fnode), intent(in) :: attribute
-    type(string)            :: getValue
+    character(size(attribute%nodeValue))  :: getValue
 
     if (attribute % nodeType == ATTRIBUTE_NODE) then
-       getValue = attribute%nodeValue
+       getValue = str_vs(attribute%nodeValue)
     else
        getValue = ''
     endif
 
   end function getValue
 
-  !-----------------------------------------------------------
 
   subroutine setValue(attribute, value)
 

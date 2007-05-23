@@ -114,10 +114,11 @@ CONTAINS
 
     nnp => namedNodeMap%head
     do while (associated(nnp)) 
-       if (nnp%name == name) then
-          getNamedItem => nnp%node
-          exit                 ! one or zero nodes with a given name
-       endif
+      ! FIXME
+       !if (nnp%name == name) then
+       !   getNamedItem => nnp%node
+       !   exit                 ! one or zero nodes with a given name
+       !endif
        nnp => nnp%next
     enddo
 
@@ -144,12 +145,13 @@ CONTAINS
 
        nnp => namedNodeMap%head
        do while (associated(nnp)) 
-          if (nnp%name == node%nodeName) then
-             setNamedItem => nnp%node
-             nnp%node => node
-             setNamedItem => node
-             return
-          endif
+         ! FIXME
+          !if (nnp%name == node%nodeName) then
+          !   setNamedItem => nnp%node
+          !   nnp%node => node
+          !   setNamedItem => node
+          !   return
+          !endif
           nnp => nnp%next
        enddo
 
@@ -176,24 +178,25 @@ CONTAINS
     previous => null()
     nnp => namedNodeMap%head
     do while (associated(nnp)) 
-       if (nnp%name == name) then
-          removeNamedItem => nnp%node
-          if (associated(nnp,namedNodeMap%head)) then
-             ! we remove the first fnamedNode in the chain...
-             namedNodeMap%head => nnp%next
-          else if (.not. associated(nnp%next)) then
-             ! we remove the last fnamedNode in the chain
-             previous%next => null()
-             namedNodeMap%tail => previous
-          else
-             ! we remove a link in the middle of the chain
-             previous%next => nnp%next
-          endif
-          namedNodeMap%length =  namedNodeMap%length - 1
-          call unstring(nnp%name)
-          deallocate(nnp)
-          exit                 ! one or zero nodes with a given name
-       endif
+      ! FIXME
+       !if (nnp%name == name) then
+       !   removeNamedItem => nnp%node
+       !   if (associated(nnp,namedNodeMap%head)) then
+       !      ! we remove the first fnamedNode in the chain...
+       !      namedNodeMap%head => nnp%next
+       !   else if (.not. associated(nnp%next)) then
+       !      ! we remove the last fnamedNode in the chain
+       !      previous%next => null()
+       !      namedNodeMap%tail => previous
+       !   else
+       !      ! we remove a link in the middle of the chain
+       !      previous%next => nnp%next
+       !   endif
+       !   namedNodeMap%length =  namedNodeMap%length - 1
+       !   call unstring(nnp%name)
+       !   deallocate(nnp)
+       !   exit                 ! one or zero nodes with a given name
+       !endif
        previous => nnp
        nnp => nnp%next
     enddo

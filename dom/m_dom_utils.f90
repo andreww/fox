@@ -1,5 +1,7 @@
 module m_dom_utils
 
+  use m_common_array_str, only: str_vs, vs_str_alloc
+  use m_common_format, only: operator(//)
   use m_dom_types, only: fnode, fnamednodemap, fDocumentNode
   use m_dom_types, only: element_node
   use m_dom_types, only: text_node, cdata_section_node
@@ -11,17 +13,17 @@ module m_dom_utils
   use m_dom_node, only: haschildnodes, getattributes
   use m_dom_namednodemap, only: getlength, item
 
-  use m_strings, only: string, stringify, operator(==), operator(/=), assignment(=), operator(+)
-  use m_dict, only : dictionary, addKey, getValue, hasKey
+  use m_common_attrs, only: dictionary_t, add_item_to_dict, getValue, hasKey
+!  use m_dict, only : dictionary, addKey, getValue, hasKey
 
   use FoX_wxml, only: xmlf_t
   use FoX_wxml, only: xml_OpenFile, xml_Close
   use FoX_wxml, only: xml_AddXMLDeclaration
+  use FoX_wxml, only: xml_DeclareNamespace
   use FoX_wxml, only: xml_AddAttribute
-  use FoX_wxml, only: xml_AddPcdata
+  use FoX_wxml, only: xml_AddCharacters
   use FoX_wxml, only: xml_NewElement
   use FoX_wxml, only: xml_EndElement
-  use FoX_wxml, only: xml_AddCdataSection
   use FoX_wxml, only: xml_AddComment
 
   implicit none
@@ -44,7 +46,6 @@ CONTAINS
 
     character(len=50) :: indent = " "
     integer           :: indent_level
-    type(string)      :: s
 
     indent_level = 0
 
@@ -57,9 +58,8 @@ CONTAINS
       type(fnode), pointer :: temp     
       temp => input
       do while(associated(temp))
-         s = getNodeName(temp)
          write(*,'(3a,i3)') indent(1:indent_level), &
-                        stringify(s), " of type ", &
+                        getNodeName(temp), " of type ", &
                         getNodeType(temp)
          if (hasChildNodes(temp)) then
             indent_level = indent_level + 3
@@ -106,9 +106,8 @@ CONTAINS
     type(fnamedNodeMap), pointer :: attr_map
     integer  ::  i
     integer, save :: nns = -1
-    type(string) :: prefix, nsURI
-    type(string)  :: s, sv, sn
-    type(dictionary), save :: simpleDict
+    type(dictionary_t), save :: simpleDict
+    character, pointer :: prefix(:), elementQName(:)
 
     node => input
     if (.not. associated(node)) return
@@ -116,64 +115,60 @@ CONTAINS
       
     case (ELEMENT_NODE)
       
-      nsURI = node % namespaceURI
-      if (nsURI == '') then
-        s = getNodeName(node)
+      if (size(node%namespaceURI)==0) then
+        elementQName => vs_str_alloc(getNodeName(node))
       else
-        if (hasKey(simpleDict, nsURI)) then
-          prefix = getValue(simpleDict, nsURI)
+        if (hasKey(simpleDict, str_vs(node%namespaceURI))) then
+          prefix = getValue(simpleDict, str_vs(node%namespaceURI))
         else
           nns = nns + 1
           if (nns == 0) then
-            prefix = ''
+            allocate(prefix(0))
           else
-            prefix = 'ns' + stringify(nns)
+            prefix => vs_str_alloc('ns'//nns)
           endif
-          call addKey(simpleDict,nsURI,prefix)
+          call addItem(simpleDict, str_vs(node%namespaceURI), str_vs(node%prefix))
         endif
-        if (prefix == '') then
-          s = node%localName
+        if (size(prefix)==0) then
+          elementQName => vs_str_alloc(getNodeName(node))
         else
-          s = prefix + ':' + node % localName
+          elementQName => vs_str_alloc(str_vs(node%prefix)//":"//getNodeName(node))
         endif
       endif
-      call xml_NewElement(xf,stringify(s))
-      if (nsURI /= '') then
-        if (prefix == '') then
-          call xml_AddAttribute(xf, 'xmlns', stringify(nsURI))
+      call xml_NewElement(xf, str_vs(elementQName))
+      if (size(node%namespaceURI)==0) then
+        if (size(prefix)==0) then
+          call xml_DeclareNamespace(xf, str_vs(node%namespaceURI))
         else
-          call xml_AddAttribute(xf, stringify('xmlns:'+prefix), stringify(nsURI))
+          call xml_DeclareNamespace(xf, str_vs(node%namespaceURI), str_vs(node%prefix))
         endif
       endif
+      deallocate(prefix)
       !TOHW need to check for & print out attribute namespaces as well.
       attr_map => getAttributes(node)
       do i = 0, getLength(attr_map) - 1
         attr => item(attr_map,i)
-        sn = getNodeName(attr)
-        sv = getNodeValue(attr)
-        call xml_AddAttribute(xf, stringify(sn), stringify(sv))
+        call xml_AddAttribute(xf, getNodeName(attr), getNodeValue(attr))
       enddo
       child => node % firstChild
       do while (associated(child))
         call dump_xml(xf, child)
         child => child % nextSibling
       enddo
-      call xml_EndElement(xf,stringify(s))
+      call xml_EndElement(xf,str_vs(elementQName))
+      deallocate(elementQName)
       
     case (TEXT_NODE)
       
-      s = getNodeValue(node)
-      call xml_AddPcdata(xf,stringify(s))
+      call xml_AddPcdata(xf, getNodeValue(node))
       
     case (CDATA_SECTION_NODE)
       
-      s = getNodeValue(node)
-      call xml_AddCdataSection(xf,stringify(s))
+      call xml_AddCdataSection(xf, getNodeValue(node))
       
     case (COMMENT_NODE)
       
-      s = getNodeValue(node)
-      call xml_AddComment(xf,stringify(s))
+      call xml_AddComment(xf, getNodeValue(node))
       
     end select
 
