@@ -9,9 +9,16 @@ Unpack it as normal, and change directory into the top-level directory, FoX.
 
 FoX requires a Fortran 95 compiler - not just Fortran 90. All currently available versions of Fortran compilers claim to support F95. If your favoured compiler is not listed as working below, I recommend the use of [g95](www.g95.org), which is free to download and use. And if your favourite compiler is listed as not working, then please send a bug report to your compiler vendor.
 
-Version 2.1.0 has been tested extensively on g95 and NAG, and is known to work on g95 (2006-11-21), and NAG Fortran 5.0, patch 391. Results from other compilers are welcome.
+As of version 2.1.1, FoX has been tested with the following compiler versions.
 
-As of version 2.0.2, the following compilers were tested and are known to work:
+* g95 as of 20/5/7: Fails to compile
+* NAG version 5.1: compiles and runs all tests
+* Intel version 9.1: compiles and runs all tests
+* PGI version 6.2-3: compiles (apart from WCML), some mysterious test failures.
+
+Results from other compilers are welcome.
+
+As of version 2.0.2, the following other compilers had been tested and are known to work:
 
 * gfortran, version 4.2 (as of 2006-07-09)
 * g95 (version of 2006-08-01, earlier versions untested)
@@ -28,8 +35,6 @@ and the following compilers tested and known to fail
 * NAG versions prior to 5.0-391
 * PGI, all versions (bug reported #3897)
 * Sun Fortran 95 7.1 Patch 112762-16 2005/10/25 (later versions untested)
-
-Other compilers are untested; reports of their success or failure are welcomed.
 
 ##Configuration
 

@@ -17,9 +17,18 @@
 
 <p>FoX requires a Fortran 95 compiler - not just Fortran 90. All currently available versions of Fortran compilers claim to support F95. If your favoured compiler is not listed as working below, I recommend the use of <a href="www.g95.org">g95</a>, which is free to download and use. And if your favourite compiler is listed as not working, then please send a bug report to your compiler vendor.</p>
 
-<p>Version 2.1.0 has been tested extensively on g95 and NAG, and is known to work on g95 (2006-11-21), and NAG Fortran 5.0, patch 391. Results from other compilers are welcome.</p>
+<p>As of version 2.1.1, FoX has been tested with the following compiler versions.</p>
 
-<p>As of version 2.0.2, the following compilers were tested and are known to work:</p>
+<ul>
+<li>g95 as of 20/5/7: Fails to compile</li>
+<li>NAG version 5.1: compiles and runs all tests</li>
+<li>Intel version 9.1: compiles and runs all tests</li>
+<li>PGI version 6.2-3: compiles (apart from WCML), some mysterious test failures.</li>
+</ul>
+
+<p>Results from other compilers are welcome.</p>
+
+<p>As of version 2.0.2, the following other compilers had been tested and are known to work:</p>
 
 <ul>
 <li>gfortran, version 4.2 (as of 2006-07-09)</li>
@@ -40,8 +49,6 @@
 <li>PGI, all versions (bug reported #3897)</li>
 <li>Sun Fortran 95 7.1 Patch 112762-16 2005/10/25 (later versions untested)</li>
 </ul>
-
-<p>Other compilers are untested; reports of their success or failure are welcomed.</p>
 
 <h2>Configuration</h2>
 
@@ -97,7 +104,7 @@ sax_lib
 <p>Known failures: <br />
 * <code>test_xml_Close_2</code> sometimes unexpectedly fails - this is not a problem, ignore it.  </p>
 
-<p>If any other failures occur, please send a message to the mailing list (<a href="&#x6D;&#x61;&#x69;&#108;&#x74;&#111;:F&#x6F;&#x58;&#64;&#108;&#105;&#115;&#116;&#115;.&#x75;&#115;&#x7A;&#x6C;&#x61;&#x2E;m&#101;&#x2E;&#x75;&#107;">F&#x6F;&#x58;&#64;&#108;&#105;&#115;&#116;&#115;.&#x75;&#115;&#x7A;&#x6C;&#x61;&#x2E;m&#101;&#x2E;&#x75;&#107;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
+<p>If any other failures occur, please send a message to the mailing list (<a href="&#x6D;&#97;&#x69;&#x6C;&#x74;&#111;:&#x46;&#111;&#88;&#64;&#108;i&#x73;&#116;&#x73;&#x2E;&#x75;&#115;&#x7A;&#108;&#x61;&#46;&#109;e.&#x75;&#x6B;">&#x46;&#111;&#88;&#64;&#108;i&#x73;&#116;&#x73;&#x2E;&#x75;&#115;&#x7A;&#108;&#x61;&#46;&#109;e.&#x75;&#x6B;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
 
 <h2>Linking to an existing program</h2>
 
