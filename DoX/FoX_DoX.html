@@ -65,7 +65,7 @@
 <a name="Versioning"/>
 <h1>FoX versioning</h1>
 
-<p>This documentation describes version 2.1 of the FoX library</p>
+<p>This documentation describes version 2.1.1 of the FoX library</p>
 
 <p>FoX was originally based on the version 1.2 of the <a href="http://lcdx00.wm.lc.ehu.es/ag/xml/">xmlf90</a> library, but has since evolved heavily.</p>
 
@@ -73,11 +73,11 @@
 
 <p>This is a stable branch, which will be maintained with important bugfixes, but on which no further major development will occur.</p>
 
-<p>Version 2.1 has support for outputting complete XML documents, with support for all XML objects described in XML11, and XML Namespaces. A detailed description of its precise conformance level is in the WXML documentation.</p>
+<p>Version 2.1.1 has support for outputting complete XML documents, with support for all XML objects described in XML11, and XML Namespaces. A detailed description of its precise conformance level is in the WXML documentation.</p>
 
 <p>In addition, there is a large suite of routines available for outputting valid <a href="http://www.xml-cml.org">CML</a> documents.</p>
 
-<p>There is also a SAX input module, compatible with the SAX 2 standard - pprecise conformance details listed in the SAX documentation.</p>
+<p>There is also a SAX input module, compatible with the SAX 2 standard - precise conformance details listed in the SAX documentation.</p>
 
 <p>Input modules are under development for DOM and XPath, and will be released with a later version.</p>
 </div><hr/><div class="DoX">
@@ -92,9 +92,18 @@
 
 <p>FoX requires a Fortran 95 compiler - not just Fortran 90. All currently available versions of Fortran compilers claim to support F95. If your favoured compiler is not listed as working below, I recommend the use of <a href="www.g95.org">g95</a>, which is free to download and use. And if your favourite compiler is listed as not working, then please send a bug report to your compiler vendor.</p>
 
-<p>Version 2.1.0 has been tested extensively on g95 and NAG, and is known to work on g95 (2006-11-21), and NAG Fortran 5.0, patch 391. Results from other compilers are welcome.</p>
+<p>As of version 2.1.1, FoX has been tested with the following compiler versions.</p>
 
-<p>As of version 2.0.2, the following compilers were tested and are known to work:</p>
+<ul>
+<li>g95 as of 20/5/7: Fails to compile</li>
+<li>NAG version 5.1: compiles and runs all tests</li>
+<li>Intel version 9.1: compiles and runs all tests</li>
+<li>PGI version 6.2-3: compiles (apart from WCML), some mysterious test failures.</li>
+</ul>
+
+<p>Results from other compilers are welcome.</p>
+
+<p>As of version 2.0.2, the following other compilers had been tested and are known to work:</p>
 
 <ul>
 <li>gfortran, version 4.2 (as of 2006-07-09)</li>
@@ -115,8 +124,6 @@
 <li>PGI, all versions (bug reported #3897)</li>
 <li>Sun Fortran 95 7.1 Patch 112762-16 2005/10/25 (later versions untested)</li>
 </ul>
-
-<p>Other compilers are untested; reports of their success or failure are welcomed.</p>
 
 <h2>Configuration</h2>
 
@@ -172,7 +179,7 @@ sax_lib
 <p>Known failures: <br />
 * <code>test_xml_Close_2</code> sometimes unexpectedly fails - this is not a problem, ignore it.  </p>
 
-<p>If any other failures occur, please send a message to the mailing list (<a href="&#109;&#x61;&#x69;&#x6C;&#x74;&#111;:F&#x6F;&#88;&#64;&#x6C;&#105;&#115;&#x74;&#x73;&#x2E;&#117;s&#122;&#108;&#97;&#x2E;&#x6D;e&#x2E;&#x75;&#107;">F&#x6F;&#88;&#64;&#x6C;&#105;&#115;&#x74;&#x73;&#x2E;&#117;s&#122;&#108;&#97;&#x2E;&#x6D;e&#x2E;&#x75;&#107;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
+<p>If any other failures occur, please send a message to the mailing list (<a href="&#109;&#x61;&#x69;&#108;&#116;&#x6F;:&#70;&#111;&#88;&#64;&#108;&#105;&#x73;&#x74;&#x73;&#x2E;&#117;&#x73;&#122;l&#x61;&#46;&#109;&#101;&#46;&#117;&#107;">&#70;&#111;&#88;&#64;&#108;&#105;&#x73;&#x74;&#x73;&#x2E;&#117;&#x73;&#122;l&#x61;&#46;&#109;&#101;&#46;&#117;&#107;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
 
 <h2>Linking to an existing program</h2>
 
@@ -823,7 +830,7 @@ Contents of comment <br />
 <li>If you specify a non-default text encoding, and then run FoX on a platform which does not use this encoding, then the result will be nonsense, and more than likely ill-formed. FoX will issue a warning in this case.</li>
 <li>When adding any text, if any characters are passed in (regardless of character set) which do not have equivalants within 7-bit ASCII, then the results are processor-dependent, and may result in an invalid document on output. A warning will be issued if this occurs. If you need a guarantee that such characters will be passed correctly, use character entities.</li>
 <li>Although entities may be output, their contents are not comprehensively checked. It is therefore possible to output combinations of entities which produce nonsense when referenced and expanded. FoX will issue a warning when this is possible.</li>
-<li>When entity references are made, a check is performed to ensure that the referenced entity exists - but if not it may be an externally-defined reference, in which case the document may or may not be ill-formed. If so, then a warning will be issued.</li>
+<li>Whenever an external subset of the DTD is referenced, and the document is not standalone, then FoX is unable to check that any unknown references exist or are used correctly, and can therefore no longer guarantee well-formedness. In this case, a warning will be issued.</li>
 <li>When adding ELEMENT and ATTLIST declarations in the DTD, no checking at all is done on the contents of the declarations passed in, neither at the level of mere syntax, nor at the level of consistency; so that if the declaration is invalid syntactically, the resultant XML document will be ill-formed. A warning will be issued if either function is used.</li>
 <li>Within the DTD whenever any External ID is written with a SYSTEM ID, this should be a string which can be resolved to a correctly-formatted URI string. No such check is made by wxml though.</li>
 </ol>
@@ -2029,9 +2036,9 @@ integer, intent(in), optional :: i</code></li>
 <h1>Further information</h1>
 
 <p>FoX evolved from the initial codebase of <a href="http://lcdx00.wm.lc.ehu.es/ag/xml/">xmlf90</a>,
-which was written largely by Alberto Garcia &lt;<a href="&#109;&#97;&#x69;&#108;&#116;&#111;:&#x61;&#108;&#98;&#101;&#114;&#x74;&#x6F;g&#64;&#x69;&#x63;&#x6D;&#x61;&#x62;&#x2E;e&#x73;">&#x61;&#108;&#98;&#101;&#114;&#x74;&#x6F;g&#64;&#x69;&#x63;&#x6D;&#x61;&#x62;&#x2E;e&#x73;</a>> and Jon Wakelin &lt;<a href="&#x6D;&#97;&#x69;l&#116;&#111;:&#106;o&#x6E;&#x2E;&#119;&#97;&#107;&#x65;&#108;&#105;&#x6E;&#64;&#x62;&#x72;&#105;&#115;&#116;&#x6F;&#x6C;&#x2E;&#97;c&#46;&#x75;&#107;">&#106;o&#x6E;&#x2E;&#119;&#97;&#107;&#x65;&#108;&#105;&#x6E;&#64;&#x62;&#x72;&#105;&#115;&#116;&#x6F;&#x6C;&#x2E;&#97;c&#46;&#x75;&#107;</a>>.</p>
+which was written largely by Alberto Garcia &lt;<a href="&#109;&#x61;&#x69;&#108;&#116;&#111;:&#x61;&#x6C;&#x62;&#101;&#x72;&#x74;&#111;&#103;&#64;&#105;&#x63;&#109;&#97;&#98;&#x2E;&#x65;&#x73;">&#x61;&#x6C;&#x62;&#101;&#x72;&#x74;&#111;&#103;&#64;&#105;&#x63;&#109;&#97;&#98;&#x2E;&#x65;&#x73;</a>> and Jon Wakelin &lt;<a href="&#109;&#x61;&#x69;l&#x74;&#111;:&#x6A;o&#110;&#x2E;&#119;&#97;&#107;&#101;&#x6C;&#x69;&#x6E;&#64;&#98;&#x72;&#105;&#115;&#116;&#x6F;&#108;&#46;&#x61;&#x63;.&#x75;&#x6B;">&#x6A;o&#110;&#x2E;&#119;&#97;&#107;&#101;&#x6C;&#x69;&#x6E;&#64;&#98;&#x72;&#105;&#115;&#116;&#x6F;&#108;&#46;&#x61;&#x63;.&#x75;&#x6B;</a>>.</p>
 
-<p>FoX is the work of Toby White &lt;<a href="&#109;&#97;&#105;&#x6C;&#x74;&#111;:t&#111;&#119;&#50;&#49;&#64;&#x63;&#97;&#x6D;&#x2E;&#97;&#99;&#x2E;&#x75;&#107;">t&#111;&#119;&#50;&#49;&#64;&#x63;&#97;&#x6D;&#x2E;&#97;&#99;&#x2E;&#x75;&#107;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
+<p>FoX is the work of Toby White &lt;<a href="&#109;&#x61;&#x69;&#x6C;&#116;&#111;:&#116;&#x6F;w2&#x31;&#64;&#x63;&#97;&#109;&#x2E;a&#99;&#46;&#x75;&#x6B;">&#116;&#x6F;w2&#x31;&#64;&#x63;&#97;&#109;&#x2E;a&#99;&#46;&#x75;&#x6B;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
 
 <p>There is a FoX website at <a href="http://www.uszla.me.uk/software/FoX/">http://www.uszla.me.uk/software/FoX/</a>.</p>
 
