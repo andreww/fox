@@ -85,7 +85,8 @@ CONTAINS
     call pxfflush(6)
 
 #ifdef FC_HAVE_ABORT
-    call abort()
+!FIXME should test in autoconfo does abort take an argument.
+    call abort("")
 #elif defined (xlC)
     call abort_()
 #else
