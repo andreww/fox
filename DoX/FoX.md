@@ -11,9 +11,15 @@
 
 * [Embedding into an existing project](|Embedding|)
 
+## Other documentation
+
+In January 2007, a workshop was run introducing FoX. This was **iFax: Integrating Fortran and XML**, organized by the [National Institute for Environmental eScience](http://www.niees.ac.uk).
+
+The materials for this workshop included several talks, a set of documentation, and a number of example programs and problem sets to work through. [All of these materials are available for download](http://buffalo.niees.group.cam.ac.uk/archive2.php?event_details=ifax).
+
 ## API documentation
 
-* FoX has four sets of publically exported interfaces. These are documented here:
+* FoX has five sets of publically exported interfaces. These are documented here:
 
 ### COMMON interfaces
 
