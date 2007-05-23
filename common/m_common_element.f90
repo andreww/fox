@@ -208,7 +208,7 @@ contains
 
     integer :: state
     integer :: i, nbrackets
-    logical :: mixed
+    logical :: mixed, empty, any
     character :: c
     character, pointer :: order(:), name(:), temp(:)
     logical :: mixed_additional
@@ -217,6 +217,8 @@ contains
     name => null()
     temp => null()
 
+    any = .false.
+    empty = .false.
     mixed = .false.
     nbrackets = 0
     mixed_additional = .false.
@@ -258,10 +260,10 @@ contains
           deallocate(temp)
         elseif (c.in.XML_WHITESPACE) then
           if (str_vs(name)=='EMPTY') then
-            element%empty = .true.
+            empty = .true.
             ! check do we have any notations FIXME
           elseif (str_vs(name)=='ANY') then
-            element%any = .true.
+            any = .true.
           else
             call add_error(stack, &
               'Unexpected ELEMENT specification; expecting EMPTY or ANY')
@@ -601,6 +603,8 @@ contains
     endif
 
     if (present(element)) then
+      element%any = any
+      element%empty = empty
       element%mixed = mixed
       element%model => vs_str_alloc(trim(strip_spaces(contents)))
     endif
