@@ -12,7 +12,7 @@ do
 done
 
 echo Test Results:
-echo Passed: `wc -l passed.score| cut -f 1 -d 'p'`
-echo Failed: `wc -l failed.score| cut -f 1 -d 'f'`
+echo Passed: `grep -c PASSED tests.out`
+echo Failed: `grep -c FAILED tests.out`
 
 echo See failed.out for details of failed tests.

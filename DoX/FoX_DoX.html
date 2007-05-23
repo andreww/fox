@@ -179,7 +179,7 @@ sax_lib
 <p>Known failures: <br />
 * <code>test_xml_Close_2</code> sometimes unexpectedly fails - this is not a problem, ignore it.  </p>
 
-<p>If any other failures occur, please send a message to the mailing list (<a href="&#109;&#x61;&#x69;&#108;&#116;&#x6F;:&#70;&#111;&#88;&#64;&#108;&#105;&#x73;&#x74;&#x73;&#x2E;&#117;&#x73;&#122;l&#x61;&#46;&#109;&#101;&#46;&#117;&#107;">&#70;&#111;&#88;&#64;&#108;&#105;&#x73;&#x74;&#x73;&#x2E;&#117;&#x73;&#122;l&#x61;&#46;&#109;&#101;&#46;&#117;&#107;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
+<p>If any other failures occur, please send a message to the mailing list (<a href="&#x6D;&#x61;&#x69;&#108;&#x74;&#111;:&#70;&#111;&#x58;&#64;&#x6C;&#x69;&#115;&#x74;&#x73;&#x2E;us&#122;&#x6C;&#97;&#46;&#109;&#101;.&#117;&#107;">&#70;&#111;&#x58;&#64;&#x6C;&#x69;&#115;&#x74;&#x73;&#x2E;us&#122;&#x6C;&#97;&#46;&#109;&#101;.&#117;&#107;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
 
 <h2>Linking to an existing program</h2>
 
@@ -499,10 +499,13 @@ text nodes have been inserted.</p>
 
 <ul>
 <li><code>xml_Close</code> <br />
-<strong>xf</strong>: <em>xmlf_t</em>: XML File handle</li>
+<strong>xf</strong>: <em>xmlf_t</em>: XML File handle
+(<strong>empty</strong>): Can the file be empty? <em>default: .false.</em></li>
 </ul>
 
 <p>Close an opened XML file, closing all still-opened tags so that it is well-formed.</p>
+
+<p>In the normal run of event, trying to close an XML file with no root element will cause an error, since this is not well-formed. However, an doptional argument, <strong>empty</strong> is provided in case it is desirable to close files which may be empty. In this case, a warning will still be emitted, but no fatal error generated.</p>
 
 <ul>
 <li><code>xml_NewElement</code> <br />
@@ -2036,9 +2039,9 @@ integer, intent(in), optional :: i</code></li>
 <h1>Further information</h1>
 
 <p>FoX evolved from the initial codebase of <a href="http://lcdx00.wm.lc.ehu.es/ag/xml/">xmlf90</a>,
-which was written largely by Alberto Garcia &lt;<a href="&#109;&#x61;&#x69;&#108;&#116;&#111;:&#x61;&#x6C;&#x62;&#101;&#x72;&#x74;&#111;&#103;&#64;&#105;&#x63;&#109;&#97;&#98;&#x2E;&#x65;&#x73;">&#x61;&#x6C;&#x62;&#101;&#x72;&#x74;&#111;&#103;&#64;&#105;&#x63;&#109;&#97;&#98;&#x2E;&#x65;&#x73;</a>> and Jon Wakelin &lt;<a href="&#109;&#x61;&#x69;l&#x74;&#111;:&#x6A;o&#110;&#x2E;&#119;&#97;&#107;&#101;&#x6C;&#x69;&#x6E;&#64;&#98;&#x72;&#105;&#115;&#116;&#x6F;&#108;&#46;&#x61;&#x63;.&#x75;&#x6B;">&#x6A;o&#110;&#x2E;&#119;&#97;&#107;&#101;&#x6C;&#x69;&#x6E;&#64;&#98;&#x72;&#105;&#115;&#116;&#x6F;&#108;&#46;&#x61;&#x63;.&#x75;&#x6B;</a>>.</p>
+which was written largely by Alberto Garcia &lt;<a href="&#109;&#97;&#105;&#x6C;&#x74;&#x6F;:&#x61;&#x6C;&#x62;&#101;r&#116;o&#x67;&#64;&#105;&#99;&#x6D;a&#98;&#46;&#x65;&#x73;">&#x61;&#x6C;&#x62;&#101;r&#116;o&#x67;&#64;&#105;&#99;&#x6D;a&#98;&#46;&#x65;&#x73;</a>> and Jon Wakelin &lt;<a href="&#109;&#x61;&#105;&#x6C;&#116;&#x6F;:&#106;o&#x6E;&#x2E;&#119;&#x61;&#107;&#x65;&#108;i&#110;&#64;&#x62;&#x72;ist&#111;&#x6C;&#x2E;&#97;c&#46;&#x75;&#107;">&#106;o&#x6E;&#x2E;&#119;&#x61;&#107;&#x65;&#108;i&#110;&#64;&#x62;&#x72;ist&#111;&#x6C;&#x2E;&#97;c&#46;&#x75;&#107;</a>>.</p>
 
-<p>FoX is the work of Toby White &lt;<a href="&#109;&#x61;&#x69;&#x6C;&#116;&#111;:&#116;&#x6F;w2&#x31;&#64;&#x63;&#97;&#109;&#x2E;a&#99;&#46;&#x75;&#x6B;">&#116;&#x6F;w2&#x31;&#64;&#x63;&#97;&#109;&#x2E;a&#99;&#46;&#x75;&#x6B;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
+<p>FoX is the work of Toby White &lt;<a href="&#x6D;&#97;&#x69;&#x6C;&#x74;&#x6F;:&#x74;&#x6F;&#x77;&#x32;&#x31;&#64;&#x63;&#97;&#x6D;&#46;a&#99;&#x2E;&#x75;&#107;">&#x74;&#x6F;&#x77;&#x32;&#x31;&#64;&#x63;&#97;&#x6D;&#46;a&#99;&#x2E;&#x75;&#107;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
 
 <p>There is a FoX website at <a href="http://www.uszla.me.uk/software/FoX/">http://www.uszla.me.uk/software/FoX/</a>.</p>
 

@@ -80,8 +80,11 @@ NB: The **replace** option should be noted. By default, xml_OpenFile will fail w
 
 * `xml_Close`   
 **xf**: *xmlf_t*: XML File handle
+(**empty**): Can the file be empty? *default: .false.*
 
 Close an opened XML file, closing all still-opened tags so that it is well-formed.
+
+In the normal run of event, trying to close an XML file with no root element will cause an error, since this is not well-formed. However, an doptional argument, **empty** is provided in case it is desirable to close files which may be empty. In this case, a warning will still be emitted, but no fatal error generated.
 
 * `xml_NewElement`  
 **name**: *string*:

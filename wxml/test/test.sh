@@ -37,9 +37,7 @@ fi
 if [ $passed = yes ]; then
   echo 'PASSED: ' $1 
   echo 'PASSED: ' $1 >> tests.out
-  echo '1' >> passed.score
 else
   echo 'FAILED: ' $1 
   echo 'FAILED: ' $1 >> tests.out
-  echo '1' >> failed.score
 fi

@@ -65,10 +65,10 @@ rm -f test.xml
 make test_xml_Openfile_4.exe
 rm -f test.xml
 ./test_xml_Openfile_4.exe> test.out 2>&1
-if diff test.out test_xml_Openfile_4.out >/dev/null; then
-   PASSED=yes
-else
+if diff test.out test_xml_Openfile_4.out | grep "^>" > /dev/null; then
    PASSED=no
+else
+   PASSED=yes
 fi
 ./passed.sh $PASSED "Trying to create file twice"
 rm -f test.xml

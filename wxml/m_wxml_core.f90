@@ -1333,8 +1333,17 @@ contains
   end subroutine xml_UndeclareNamespace
 
 
-  subroutine xml_Close(xf)
+  subroutine xml_Close(xf, empty)
     type(xmlf_t), intent(inout)   :: xf
+    logical, optional :: empty
+
+    logical :: empty_
+
+    if (present(empty)) then
+      empty_ = empty
+    else
+      empty_ = .false.
+    endif
 
     if (xf%lun == -1) &
       call wxml_fatal('Tried to close XML file which is not open')
@@ -1359,8 +1368,13 @@ contains
       call xml_EndElement(xf, get_top_elstack(xf%stack))
     enddo
 
-    if (xf%state_1 /= WXML_STATE_1_AFTER_ROOT) &
-      call wxml_warning(xf, 'Invalid XML document produced: No root element')
+    if (xf%state_1 /= WXML_STATE_1_AFTER_ROOT) then
+      if (empty_) then
+        call wxml_warning(xf, 'Invalid XML document produced: No root element')
+      else
+        call wxml_error(xf, 'Invalid XML document produced: No root element')
+      endif
+    endif
     
     call dump_buffer(xf%buffer)
     close(unit=xf%lun)
@@ -1498,7 +1512,7 @@ contains
       write(6,'(a)') 'ERROR(wxml) in writing to file ', xmlf_name(xf)
       write(6,'(a)')  msg
 
-      call xml_Close(xf)
+      !call xml_Close(xf)
       stop
 
     end subroutine wxml_error_xf
