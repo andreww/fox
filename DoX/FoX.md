@@ -15,9 +15,10 @@
 
 * FoX has four sets of publically exported interfaces. These are documented here:
 
-### COMMON interface
+### COMMON interfaces
 
 * [FoX_common](|FoX_common|)
+* [FoX_utils](|FoX_utils|)
 
 ### OUTPUT interfaces
 

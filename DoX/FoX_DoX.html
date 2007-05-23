@@ -28,10 +28,11 @@
 <li>FoX has four sets of publically exported interfaces. These are documented here:</li>
 </ul>
 
-<h3>COMMON interface</h3>
+<h3>COMMON interfaces</h3>
 
 <ul>
 <li><a href="#FoX_common">FoX_common</a></li>
+<li><a href="#FoX_utils">FoX_utils</a></li>
 </ul>
 
 <h3>OUTPUT interfaces</h3>
@@ -171,7 +172,7 @@ sax_lib
 <p>Known failures: <br />
 * <code>test_xml_Close_2</code> sometimes unexpectedly fails - this is not a problem, ignore it.  </p>
 
-<p>If any other failures occur, please send a message to the mailing list (<a href="&#x6D;a&#x69;&#x6C;&#116;&#111;:&#x46;&#111;&#88;&#64;&#108;&#105;st&#115;.&#117;&#x73;&#x7A;&#108;&#x61;&#46;&#109;&#101;&#x2E;u&#x6B;">&#x46;&#111;&#88;&#64;&#108;&#105;st&#115;.&#117;&#x73;&#x7A;&#108;&#x61;&#46;&#109;&#101;&#x2E;u&#x6B;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
+<p>If any other failures occur, please send a message to the mailing list (<a href="&#109;&#x61;&#x69;&#x6C;&#x74;&#111;:F&#x6F;&#88;&#64;&#x6C;&#105;&#115;&#x74;&#x73;&#x2E;&#117;s&#122;&#108;&#97;&#x2E;&#x6D;e&#x2E;&#x75;&#107;">F&#x6F;&#88;&#64;&#x6C;&#105;&#115;&#x74;&#x73;&#x2E;&#117;s&#122;&#108;&#97;&#x2E;&#x6D;e&#x2E;&#x75;&#107;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
 
 <h2>Linking to an existing program</h2>
 
@@ -469,7 +470,11 @@ standard Fortran I/O formatting routines do not offer the control required for u
 (<strong>replace</strong>): <em>logical</em>: Should the file be replaced if it already exists? 
 <em>default: no, stop at runtime if file already exists</em> <br />
 (<strong>addDecl</strong>): <em>logical</em>: Should an XML declaration be added at the start of the file?
-<em>default: yes</em></li>
+<em>default: yes</em>
+(<strong>valid</strong>): <em>logical</em>: Should wxml carry out any checks on the optional VC constraints specified by XML?
+<em>default: yes</em>
+(<strong>warning</strong>): <em>logical</em>: Should wxml emit warnings when it is unable to guarantee well-formedness?
+<em>default: no</em></li>
 </ul>
 
 <p>Open a file for writing XML</p>
@@ -802,29 +807,28 @@ Contents of comment <br />
 
 <p><a name="Exceptions"/></p>
 
-<p>Below are explained areas where wxml fails to implement the whole of XML 1.0/1.1; numerical references below are to the sections in [<a href="#XML11">XML11</a>]]. These are divided into two lists: </p>
+<p>Below are explained areas where wxml fails to implement the whole of XML 1.0/1.1; numerical references below are to the sections in [<a href="#XML11">XML11</a>]]. These are divided into two lists; where wxml <strong>does not</strong> permit the generation of a particular well-formed XML document, and where it <strong>does</strong> permit the generation of a particular non-well-formed document.</p>
 
 <p>Ways in which wxml renders it impossible to produce a certain sort of well-formed XML document:</p>
 
 <ol>
 <li>XML documents which are not namespace-valid may not be produced; that is, attempts to produce documents which are well-formed according to [XML11] but not namespace-well-formed according to [Namespaces] will fail. </li>
-<li>Unicode support[[2.2]](http://www.w3.org/TR/xml11/#charsets) is limited. Due to the limitations of Fortran, wxml will directly only emit characters within the range of the local single-byte encoding. wxml will ensure that characters corresponding to those in 7-bit ASCII are output correctly for a UTF-8 encoding. Any other characters are output without any transcoding, and a warning will be issued. Proper output of other unicode characters is possible through the use of character entities, but only where character data is allowed. No means is offered for output of unicode in XML Names. Unicode character references in the range 0-128 are checked before output according to the constraints of <a href="#XML10">[XML10]</a> or <a href="#XML11">[XML11]</a> as appropriate, but characters above 128 are not checked.</li>
-<li>Entity support is not complete[<a href="http://www.w3.org/TR/xml11/#sec-references">4.1</a>, <a href="http://www.w3.org/TR/xml11/#sec-entity-decl">4.2</a>. <a href="http://www.w3.org/TR/xml11/#TextEntities">4.3</a>]. All XML entities (parameter, internal, external) may be defined; however, general entities may only be referenced from within a character data section between tags generated with <code>xml_NewElement</code>, or within an element attribute value. (In principle it should be possible to start the root element from within an entity reference). </li>
+<li>Unicode support[[2.2]](http://www.w3.org/TR/xml11/#charsets) is limited. Due to the limitations of Fortran, wxmlis unable to manipulate characters outwith 7-bit US-ASCII. wxml will ensure that characters corresponding to those in 7-bit ASCII are output correctly within the constraints of the version of XML in use, for a UTF-8 encoding. Attempts to directly output any other characters will have undefined effects.  Output of other unicode characters is possible through the use of character entities.</li>
 <li>Due to the constraints of the Fortran IO specification, it is impossible to output arbitrary long strings without carriage returns. The size of the limit varies between processors, but may be as low as 1024 characters. To avoid overrunning this limit, wxml will by default insert carriage returns before every new element, and if an unbroken string of attribute or text data is requested greater than 1024 characters, then carriage returns will be inserted as appropriate; within whitespace if possible; to ensure it is broken up into smaller sections to fit within the limits. Thus unwanted text sections are being created, and user output modified. </li>
 </ol>
 
-<p>wxml will try very hard to ensure that output is well-formed. However, it is possible to fool wxml into producing ill-formed XML documents. Avoid doing so if possible; for completeness these ways are listed here. In all cases where ill-formedness is a possibility, a warning will be issued.</p>
+<p>wxml will try very hard to ensure that output is well-formed. However, it is possible to fool wxml into producing ill-formed XML documents. Avoid doing so if possible; for completeness these ways are listed here. In all cases where ill-formedness is a possibility, a warning can be issued. These warnings can be verbose, so are off by default, but if they are desired, they can be switched on by manipulating the <code>warning</code> argument to <code>xml_OpenFile</code>.</p>
 
 <ol>
 <li>If you specify a non-default text encoding, and then run FoX on a platform which does not use this encoding, then the result will be nonsense, and more than likely ill-formed. FoX will issue a warning in this case.</li>
+<li>When adding any text, if any characters are passed in (regardless of character set) which do not have equivalants within 7-bit ASCII, then the results are processor-dependent, and may result in an invalid document on output. A warning will be issued if this occurs. If you need a guarantee that such characters will be passed correctly, use character entities.</li>
 <li>Although entities may be output, their contents are not comprehensively checked. It is therefore possible to output combinations of entities which produce nonsense when referenced and expanded. FoX will issue a warning when this is possible.</li>
 <li>When entity references are made, a check is performed to ensure that the referenced entity exists - but if not it may be an externally-defined reference, in which case the document may or may not be ill-formed. If so, then a warning will be issued.</li>
-<li>When adding text through xml_AddCharacters, or as the value of an attribute, if any characters are passed in which are not within 7-bit ASCII, then the results are processor-dependent, and may result in an invalid document on output. A warning will be issued if this occurs. If you need a guarantee that such characters will be passed correctly, use character entities.</li>
-<li>In order to add non-ASCII characters to an attribute value via character entity references, the function <code>xml_AddAttribute</code> can be told not to escape its input. In this case, however, no checking at all is performed on the validity of the output string. A warning will be issued if this is done.</li>
 <li>When adding ELEMENT and ATTLIST declarations in the DTD, no checking at all is done on the contents of the declarations passed in, neither at the level of mere syntax, nor at the level of consistency; so that if the declaration is invalid syntactically, the resultant XML document will be ill-formed. A warning will be issued if either function is used.</li>
+<li>Within the DTD whenever any External ID is written with a SYSTEM ID, this should be a string which can be resolved to a correctly-formatted URI string. No such check is made by wxml though.</li>
 </ol>
 
-<p>Finally, it should be noted (although it is obvious from the above) that wxml makes no attempt at all to ensure that output documents are valid XML (by any definition of <em>valid</em>.)</p>
+<p>Finally, note that constraints on XML documents are divided into two sets - well-formedness constraints (WFC) and validity constraints (VC. The above only applies to WFC checks. wxml makes some minimal checks on VC checks, but this is by no means complete, nor is it intended to be. If it is necessary to produce invalid but well-formed documents, VC checks may be switched off by manipulating the <code>valid</code> argument to <code>xml_OpenFile</code>.</p>
 
 <h2>References</h2>
 
@@ -1973,13 +1977,61 @@ integer, intent(in), optional :: i</code></li>
 
 <p>Returns a string containing the localName of the <code>i</code>th attribute.</p>
 </div><hr/><div class="DoX">
+<a name="FoX_utils"/>
+<h1>UTILS</h1>
+
+<p><code>FoX_utils</code> is a collection of general utility functions that the rest of FoX depends on, but which may be of independent use. They are documented here.</p>
+
+<p>All functions are accessible from the <code>FoX_utils</code> module. </p>
+
+<p>NB Unlike the APIs of WXML, WCML, and SAX, the UTILS APIs may not remain constant between FoX versions. While some effort will be expended to ensure they don't change unnecessarily, no guarantees are made.</p>
+
+<p>For any end-users interested in the code who are worried about interface changes, it is recommended that the  relevant code (all found in the <code>utils/</code> directory be lifted directly and imported into other projects, rather than accessed through the FoX interfaces.</p>
+
+<p>Currently only one utility function is provided, <code>generate_UUID</code>.</p>
+
+<p><a name="UUID"/></p>
+
+<h2>UUID</h2>
+
+<p>UUIDs (see <a href="http://www.ietf.org/rfc/rfc4122.txt">RFC 4122</a>) are  Universally Unique IDentifiers. They are a 128-bit number, represented as a 36-character string. For example:</p>
+
+<pre><code> f81d4fae-7dec-11d0-a765-00a0c91e6bf6
+</code></pre>
+
+<p>The intention of UUIDs is to enable distributed systems to uniquely identify information without significant central coordination. Thus, anyone can create a UUID and use it to identify something with reasonable confidence that the identifier will never be unintentionally used by anyone for anything else.</p>
+
+<p>This property also makes them useful as Uniform Resource Names, to refer to a given document without requiring a position in a particular URI scheme. Thus the above UUID could be referred to as</p>
+
+<pre><code>urn:uuid:f81d4fae-7dec-11d0-a765-00a0c91e6bf6
+</code></pre>
+
+<p>UUIDs are used by WCML to ensure that every document generated has a unique ID. This enables users to go back later on and have confidence that they are examining the same document, regardless of where it might have ended up in file-system hierarchies or databases.</p>
+
+<p>In addition, UUIDs come in several flavours, one of which stores the time of creation to 100-nanosecond accuracy. This can later be extracted (see, for example <a href="http://www.famkruithof.net/uuid/uuidgen?typeReq=-1">this service</a>) to verify creation time.</p>
+
+<p>This may well be useful for other XML document types, or indeed in non-XML applications. Thus, UUIDs may be generated by the following function, with one optional argument.</p>
+
+<ul>
+<li><code>generate_UUID</code> <br />
+<strong>version</strong>: <em>integer</em></li>
+</ul>
+
+<p>This function returns a 36-character string containing the UUID.</p>
+
+<p><strong>version</strong> identifies the version of UUID to be used (see section 4.1.3 of the RFC). Only versions 0, 1, and 4 are supported. Version 0 generates a nil UUID; version 1 a time-based UUID, and version 4 a pseudo-randomly-generated UUID.</p>
+
+<p>Version 1 is the default, and is recommended.</p>
+
+<p>(Note: all pseudo-random-numbers are generated using the high-quality Mersenne Twister algorithm, using the Fortran implementation of <a href="http://www.coyotegulch.com">Scott Robert Ladd</a>.)</p>
+</div><hr/><div class="DoX">
 <a name="Information"/>
 <h1>Further information</h1>
 
 <p>FoX evolved from the initial codebase of <a href="http://lcdx00.wm.lc.ehu.es/ag/xml/">xmlf90</a>,
-which was written largely by Alberto Garcia &lt;<a href="&#x6D;&#x61;&#105;l&#116;&#111;:&#97;&#x6C;&#x62;e&#x72;&#116;&#x6F;&#103;&#64;&#105;&#99;&#x6D;&#97;&#x62;&#46;&#101;&#x73;">&#97;&#x6C;&#x62;e&#x72;&#116;&#x6F;&#103;&#64;&#105;&#99;&#x6D;&#97;&#x62;&#46;&#101;&#x73;</a>> and Jon Wakelin &lt;<a href="m&#97;&#x69;&#108;&#116;&#111;:&#106;&#111;&#110;&#46;&#119;&#x61;&#x6B;&#101;&#x6C;&#105;&#110;&#64;&#98;&#x72;&#x69;&#x73;&#116;&#111;l.&#x61;&#x63;&#x2E;&#117;k">&#106;&#111;&#110;&#46;&#119;&#x61;&#x6B;&#101;&#x6C;&#105;&#110;&#64;&#98;&#x72;&#x69;&#x73;&#116;&#111;l.&#x61;&#x63;&#x2E;&#117;k</a>>.</p>
+which was written largely by Alberto Garcia &lt;<a href="&#109;&#97;&#x69;&#108;&#116;&#111;:&#x61;&#108;&#98;&#101;&#114;&#x74;&#x6F;g&#64;&#x69;&#x63;&#x6D;&#x61;&#x62;&#x2E;e&#x73;">&#x61;&#108;&#98;&#101;&#114;&#x74;&#x6F;g&#64;&#x69;&#x63;&#x6D;&#x61;&#x62;&#x2E;e&#x73;</a>> and Jon Wakelin &lt;<a href="&#x6D;&#97;&#x69;l&#116;&#111;:&#106;o&#x6E;&#x2E;&#119;&#97;&#107;&#x65;&#108;&#105;&#x6E;&#64;&#x62;&#x72;&#105;&#115;&#116;&#x6F;&#x6C;&#x2E;&#97;c&#46;&#x75;&#107;">&#106;o&#x6E;&#x2E;&#119;&#97;&#107;&#x65;&#108;&#105;&#x6E;&#64;&#x62;&#x72;&#105;&#115;&#116;&#x6F;&#x6C;&#x2E;&#97;c&#46;&#x75;&#107;</a>>.</p>
 
-<p>FoX is the work of Toby White &lt;<a href="&#x6D;&#97;&#x69;&#x6C;&#116;&#x6F;:&#116;&#111;&#119;&#x32;&#49;&#64;&#x63;&#x61;&#109;.&#97;&#99;&#x2E;&#x75;&#x6B;">&#116;&#111;&#119;&#x32;&#49;&#64;&#x63;&#x61;&#109;.&#97;&#99;&#x2E;&#x75;&#x6B;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
+<p>FoX is the work of Toby White &lt;<a href="&#109;&#97;&#105;&#x6C;&#x74;&#111;:t&#111;&#119;&#50;&#49;&#64;&#x63;&#97;&#x6D;&#x2E;&#97;&#99;&#x2E;&#x75;&#107;">t&#111;&#119;&#50;&#49;&#64;&#x63;&#97;&#x6D;&#x2E;&#97;&#99;&#x2E;&#x75;&#107;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
 
 <p>There is a FoX website at <a href="http://www.uszla.me.uk/software/FoX/">http://www.uszla.me.uk/software/FoX/</a>.</p>
 
@@ -2026,6 +2078,35 @@ LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
 DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
 THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE </p>
+
+<h3>Third-party code.</h3>
+
+<p>In addition, FoX includes a random number library, written by <a href="http://www.coyotegulch.com">Scott Robert Ladd</a>, which is licensed as follows:</p>
+
+<p>!  This computer program source file is supplied "AS IS". Scott Robert <br />
+!  Ladd (hereinafter referred to as "Author") disclaims all warranties, <br />
+!  expressed or implied, including, without limitation, the warranties <br />
+!  of merchantability and of fitness for any purpose. The Author <br />
+!  assumes no liability for direct, indirect, incidental, special, <br />
+!  exemplary, or consequential damages, which may result from the use <br />
+!  of this software, even if advised of the possibility of such damage. <br />
+! <br />
+!  The Author hereby grants anyone permission to use, copy, modify, and <br />
+!  distribute this source code, or portions hereof, for any purpose, <br />
+!  without fee, subject to the following restrictions: <br />
+! <br />
+!      1. The origin of this source code must not be misrepresented. <br />
+! <br />
+!      2. Altered versions must be plainly marked as such and must not <br />
+!         be misrepresented as being the original source. <br />
+! <br />
+!      3. This Copyright notice may not be removed or altered from any <br />
+!         source or altered source distribution. <br />
+! <br />
+!  The Author specifically permits (without fee) and encourages the use <br />
+!  of this source code for entertainment, education, or decoration. If <br />
+!  you use this source code in a product, acknowledgment is not required <br />
+!  but would be appreciated.  </p>
 </div><hr/><div class="DoX">
 </div>
 </body>

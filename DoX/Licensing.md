@@ -38,3 +38,32 @@ LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
 DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
 THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
+
+### Third-party code.
+
+In addition, FoX includes a random number library, written by [Scott Robert Ladd](http://www.coyotegulch.com), which is licensed as follows:
+ 
+!  This computer program source file is supplied "AS IS". Scott Robert  
+!  Ladd (hereinafter referred to as "Author") disclaims all warranties,  
+!  expressed or implied, including, without limitation, the warranties  
+!  of merchantability and of fitness for any purpose. The Author  
+!  assumes no liability for direct, indirect, incidental, special,  
+!  exemplary, or consequential damages, which may result from the use   
+!  of this software, even if advised of the possibility of such damage.   
+!    
+!  The Author hereby grants anyone permission to use, copy, modify, and  
+!  distribute this source code, or portions hereof, for any purpose,  
+!  without fee, subject to the following restrictions:  
+!    
+!      1. The origin of this source code must not be misrepresented.  
+!    
+!      2. Altered versions must be plainly marked as such and must not  
+!         be misrepresented as being the original source.   
+!    
+!      3. This Copyright notice may not be removed or altered from any  
+!         source or altered source distribution.  
+!    
+!  The Author specifically permits (without fee) and encourages the use   
+!  of this source code for entertainment, education, or decoration. If  
+!  you use this source code in a product, acknowledgment is not required  
+!  but would be appreciated.  

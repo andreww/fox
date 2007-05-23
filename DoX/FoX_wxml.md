@@ -60,6 +60,10 @@ This is an opaque type representing the XML file handle. Each function requires 
   *default: no, stop at runtime if file already exists*  
 (**addDecl**): *logical*: Should an XML declaration be added at the start of the file?
   *default: yes*
+(**valid**): *logical*: Should wxml carry out any checks on the optional VC constraints specified by XML?
+ *default: yes*
+(**warning**): *logical*: Should wxml emit warnings when it is unable to guarantee well-formedness?
+ *default: no*
 
 Open a file for writing XML
 
@@ -346,25 +350,24 @@ Return the currently open tag of the current XML file (or the empty string if no
 
 <a name="Exceptions"/>
 
-Below are explained areas where wxml fails to implement the whole of XML 1.0/1.1; numerical references below are to the sections in \[[XML11](#XML11)]\]. These are divided into two lists: 
+Below are explained areas where wxml fails to implement the whole of XML 1.0/1.1; numerical references below are to the sections in \[[XML11](#XML11)]\]. These are divided into two lists; where wxml **does not** permit the generation of a particular well-formed XML document, and where it **does** permit the generation of a particular non-well-formed document.
 
 Ways in which wxml renders it impossible to produce a certain sort of well-formed XML document:
 
  1. XML documents which are not namespace-valid may not be produced; that is, attempts to produce documents which are well-formed according to [XML11] but not namespace-well-formed according to [Namespaces] will fail. 
- 1. Unicode support\[[2.2]\](http://www.w3.org/TR/xml11/#charsets) is limited. Due to the limitations of Fortran, wxml will directly only emit characters within the range of the local single-byte encoding. wxml will ensure that characters corresponding to those in 7-bit ASCII are output correctly for a UTF-8 encoding. Any other characters are output without any transcoding, and a warning will be issued. Proper output of other unicode characters is possible through the use of character entities, but only where character data is allowed. No means is offered for output of unicode in XML Names. Unicode character references in the range 0-128 are checked before output according to the constraints of [[XML10]](#XML10) or [[XML11]](#XML11) as appropriate, but characters above 128 are not checked.
- 1. Entity support is not complete\[[4.1](http://www.w3.org/TR/xml11/#sec-references), [4.2](http://www.w3.org/TR/xml11/#sec-entity-decl). [4.3](http://www.w3.org/TR/xml11/#TextEntities)\]. All XML entities (parameter, internal, external) may be defined; however, general entities may only be referenced from within a character data section between tags generated with `xml_NewElement`, or within an element attribute value. (In principle it should be possible to start the root element from within an entity reference). 
+ 1. Unicode support\[[2.2]\](http://www.w3.org/TR/xml11/#charsets) is limited. Due to the limitations of Fortran, wxmlis unable to manipulate characters outwith 7-bit US-ASCII. wxml will ensure that characters corresponding to those in 7-bit ASCII are output correctly within the constraints of the version of XML in use, for a UTF-8 encoding. Attempts to directly output any other characters will have undefined effects.  Output of other unicode characters is possible through the use of character entities.
  1. Due to the constraints of the Fortran IO specification, it is impossible to output arbitrary long strings without carriage returns. The size of the limit varies between processors, but may be as low as 1024 characters. To avoid overrunning this limit, wxml will by default insert carriage returns before every new element, and if an unbroken string of attribute or text data is requested greater than 1024 characters, then carriage returns will be inserted as appropriate; within whitespace if possible; to ensure it is broken up into smaller sections to fit within the limits. Thus unwanted text sections are being created, and user output modified. 
 
-wxml will try very hard to ensure that output is well-formed. However, it is possible to fool wxml into producing ill-formed XML documents. Avoid doing so if possible; for completeness these ways are listed here. In all cases where ill-formedness is a possibility, a warning will be issued.
+wxml will try very hard to ensure that output is well-formed. However, it is possible to fool wxml into producing ill-formed XML documents. Avoid doing so if possible; for completeness these ways are listed here. In all cases where ill-formedness is a possibility, a warning can be issued. These warnings can be verbose, so are off by default, but if they are desired, they can be switched on by manipulating the `warning` argument to `xml_OpenFile`.
 
  1. If you specify a non-default text encoding, and then run FoX on a platform which does not use this encoding, then the result will be nonsense, and more than likely ill-formed. FoX will issue a warning in this case.
+ 4. When adding any text, if any characters are passed in (regardless of character set) which do not have equivalants within 7-bit ASCII, then the results are processor-dependent, and may result in an invalid document on output. A warning will be issued if this occurs. If you need a guarantee that such characters will be passed correctly, use character entities.
  2. Although entities may be output, their contents are not comprehensively checked. It is therefore possible to output combinations of entities which produce nonsense when referenced and expanded. FoX will issue a warning when this is possible.
- 3. When entity references are made, a check is performed to ensure that the referenced entity exists - but if not it may be an externally-defined reference, in which case the document may or may not be ill-formed. If so, then a warning will be issued.
- 4. When adding text through xml_AddCharacters, or as the value of an attribute, if any characters are passed in which are not within 7-bit ASCII, then the results are processor-dependent, and may result in an invalid document on output. A warning will be issued if this occurs. If you need a guarantee that such characters will be passed correctly, use character entities.
- 5. In order to add non-ASCII characters to an attribute value via character entity references, the function `xml_AddAttribute` can be told not to escape its input. In this case, however, no checking at all is performed on the validity of the output string. A warning will be issued if this is done.
+ 3. Whenever an external subset of the DTD is referenced, and the document is not standalone, then FoX is unable to check that any unknown references exist or are used correctly, and can therefore no longer guarantee well-formedness. In this case, a warning will be issued.
  5. When adding ELEMENT and ATTLIST declarations in the DTD, no checking at all is done on the contents of the declarations passed in, neither at the level of mere syntax, nor at the level of consistency; so that if the declaration is invalid syntactically, the resultant XML document will be ill-formed. A warning will be issued if either function is used.
+ 6. Within the DTD whenever any External ID is written with a SYSTEM ID, this should be a string which can be resolved to a correctly-formatted URI string. No such check is made by wxml though.
 
-Finally, it should be noted (although it is obvious from the above) that wxml makes no attempt at all to ensure that output documents are valid XML (by any definition of *valid*.)
+Finally, note that constraints on XML documents are divided into two sets - well-formedness constraints (WFC) and validity constraints (VC. The above only applies to WFC checks. wxml makes some minimal checks on VC checks, but this is by no means complete, nor is it intended to be. If it is necessary to produce invalid but well-formed documents, VC checks may be switched off by manipulating the `valid` argument to `xml_OpenFile`.
 
 ##References
 

@@ -1,3 +1,8 @@
+2007-05-23: version 2.1.1
+        UUID generation
+        Developer control over error handling
+        Minor bugfixes
+
 2007-01-07: version 2.1.0
         Introduce fully-rewritten SAX interface
         Full WCML testsuite
