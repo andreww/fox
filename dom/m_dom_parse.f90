@@ -110,7 +110,7 @@ contains
   subroutine startDocument_handler
     print*,'allocating mainDoc'
 
-    mainDoc = createEmptyDocument()
+    mainDoc => createEmptyDocument()
     current => mainDoc%documentElement
   end subroutine startDocument_handler
 
@@ -120,14 +120,14 @@ contains
     character(len=*), intent(in), optional :: systemId
 
     deallocate(mainDoc%docType%name)
-    mainDoc%docType%name = vs_str_alloc(name)
+    mainDoc%docType%name => vs_str_alloc(name)
     if (present(publicId)) then
       deallocate(mainDoc%docType%publicId)
-      mainDoc%docType%publicId = vs_str_alloc(publicId)
+      mainDoc%docType%publicId => vs_str_alloc(publicId)
     endif
     if (present(systemId)) then
       deallocate(mainDoc%docType%systemId)
-      mainDoc%docType%systemId = vs_str_alloc(systemId)
+      mainDoc%docType%systemId => vs_str_alloc(systemId)
     endif
 
   end subroutine startDTD_handler
