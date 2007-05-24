@@ -24,9 +24,13 @@ module m_dom_types
     character, pointer :: id(:)
   end type DOMImplementation
 
+  type ListNode
+    type(Node), pointer :: this => null()
+  end type ListNode 
+
   type NodeList
-    type(NamedNode), pointer :: head => null()
-    integer :: length
+    type(ListNode), pointer :: nodes(:)
+    integer :: length = 0
   end type NodeList
 
   type NamedNode
@@ -37,7 +41,7 @@ module m_dom_types
   type NamedNodeMap
     type(NamedNode), pointer :: head => null()
     type(NamedNode), pointer :: tail => null()
-    integer :: length
+    integer :: length = 0
   end type NamedNodeMap
 
   type Node
@@ -80,6 +84,7 @@ module m_dom_types
   public :: Node
 
   public :: NamedNode
+  public :: ListNode
   public :: NodeList
   public :: NamedNodeMap
 
