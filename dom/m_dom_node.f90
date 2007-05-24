@@ -1,11 +1,12 @@
 module m_dom_node
 
   use m_common_array_str, only: str_vs
-  use m_dom_types, only: fnode, fnodelist, fnamednodemap, fDocumentNode
-  use m_dom_types, only: createNode
+  use m_dom_types, only: Node, Nodelist, NamedNodeMap
   use m_dom_types, only: ELEMENT_NODE, ATTRIBUTE_NODE, COMMENT_NODE
   use m_dom_types, only: TEXT_NODE, PROCESSING_INSTRUCTION_NODE
-  use m_dom_types, only: CDATA_SECTION_NODE, DOCUMENT_NODE
+  use m_dom_types, only: CDATA_SECTION_NODE, DOCUMENT_NODE, ENTITY_NODE
+  use m_dom_types, only: ENTITY_REFERENCE_NODE, DOCUMENT_TYPE_NODE
+  use m_dom_types, only: DOCUMENT_FRAGMENT_NODE, NOTATION_NODE
   use m_dom_nodelist, only: append
   use m_dom_namednodemap, only: getlength, item, append
   use m_dom_debug, only: dom_debug
@@ -13,563 +14,291 @@ module m_dom_node
   use m_dom_error, only: dom_error
   
   implicit none
-  
   private
   
-  !-------------------------------------------------------   
-  ! METHODS FOR NODES
-  !-------------------------------------------------------   
-
-  public :: getNodeName
-  public :: getNodevalue	
-  public :: getNodeType
+!  public :: getNodeName
+!  public :: getNodevalue	
+!  public :: getNodeType
   public :: hasChildNodes
   public :: hasAttributes
-  public :: getParentNode
-  public :: getFirstChild
-  public :: getLastChild
-  public :: getNextSibling
-  public :: getPreviousSibling
-  public :: getOwnerDocument
-  public :: getAttributes
-  public :: getChildNodes
-  public :: setNodeValue
+!  public :: getParentNode
+!  public :: getFirstChild
+!  public :: getLastChild
+!  public :: getNextSibling
+!  public :: getPreviousSibling
+!  public :: getOwnerDocument
+!  public :: getAttributes
+!  public :: getChildNodes
+!  public :: setNodeValue
   public :: appendChild
   public :: removeChild
   public :: replaceChild
-  public :: cloneNode  
-  public :: isSameNode
-  public :: insertBefore
-  public :: setOwnerDocument
-!!  private :: name_len, value_len
+!  public :: cloneNode  
+!  public :: isSameNode
+!  public :: insertBefore
+!  public :: setOwnerDocument
 
-CONTAINS
+contains
 
-!   pure function name_len(node)
-!     type(fnode), pointer :: node
-!     integer :: name_len
-
-!     name_len = len_trim(node % nodeName)
-
-!   end function name_len
-
-!   pure function value_len(node)
-!     type(fnode), pointer :: node
-!     integer :: value_len
-
-!     value_len = len_trim(node % nodeValue)
-
-!   end function value_len
-
-  !-----------------------------------------------------------
-  !  METHODS FOR NODES
-  !-----------------------------------------------------------
-  function getNodeName(node)
-
-    type(fnode), pointer :: node
-    character(len=merge(size(node%nodeName), 0, associated(node)))  :: getNodeName
-
-    if (.not.associated(node))  &
-               call dom_error("getNodeName",0,"Node not allocated")
-    getNodeName = str_vs(node%nodeName)
-
-  end function getNodeName
-
-  function getNodeValue(node)
-    type(fnode), pointer :: node
-    character(len=merge(size(node%nodeName), 0, associated(node)))  :: getNodeValue
-
-    if (.not.associated(node))  &
-               call dom_error("getNodeValue",0,"Node not allocated")
-    getNodeValue = str_vs(node%nodeValue)
-
-  end function getNodeValue
-
-  !-----------------------------------------------------------
-
-  function getNodeType(node)
-
-    type(fnode), pointer :: node
-    integer :: getNodeType
-
-    if (.not. associated(node)) call dom_error("getNodeType",0,"Node not allocated")
-    getNodeType = node % nodeType
-
-  end function getNodeTYpe
-
-  !-----------------------------------------------------------
-
-  function hasChildNodes(node)
-
-    type(fnode), pointer :: node
-    logical :: hasChildNodes
-
-    if (.not. associated(node)) call dom_error("hasChildNodes",0,"Node not allocated")
-    hasChildNodes = associated(node % firstChild)
-
-  end function hasChildNodes
-
-  !-----------------------------------------------------------
-
-  function hasAttributes(node)
-
-    type(fnode), pointer    :: node
-    logical                 :: hasAttributes
-
-    hasAttributes = .false.
-    if (.not. associated(node)) call dom_error("hasAttributes",0,"Node not allocated")
-    if (node % nodeType /= ELEMENT_NODE) RETURN
-    if ( getLength(node%attributes) > 0) hasAttributes = .true.
-
-  end function hasAttributes
-
-  !-----------------------------------------------------------
-
-  function getParentNode(node)
-
-    type(fnode), pointer    :: node
-    type(fnode), pointer    :: getParentNode
-
-    if (.not. associated(node)) call dom_error("getParentNode",0,"Node not allocated")
-    getParentNode => node % parentNode
+  function insertBefore(arg, newChild, refChild)
+    type(Node), pointer :: insertBefore
+    type(Node), pointer :: arg
+    type(Node), pointer :: newChild
+    type(Node), pointer :: refChild
+    type(Node), pointer :: np
     
-  end function getParentNode
-  
-  !-----------------------------------------------------------
-
-  function getFirstChild(node)
-
-    type(fnode), pointer    :: node
-    type(fnode), pointer    :: getFirstChild
-
-    if (.not. associated(node)) call dom_error("getFirstChild",0,"Node not allocated")
-    getFirstChild => node % firstChild
-
-  end function getFirstChild
-
-  !-----------------------------------------------------------
-
-  function getLastChild(node)
-
-    type(fnode), pointer :: node
-    type(fnode), pointer    :: getLastChild
-
-    if (.not. associated(node)) call dom_error("getLastChild",0,"Node not allocated")
-    getLastChild => node % lastChild
-
-  end function getLastChild
-
-  !-----------------------------------------------------------
-
-  function getNextSibling(node)
-
-    type(fnode), pointer :: node
-    type(fnode), pointer    :: getNextSibling
-
-    if (.not. associated(node)) call dom_error("getNextSibling",0,"Node not allocated")
-    getNextSibling => node % nextSibling
-
-  end function getNextSibling
-
-  !-----------------------------------------------------------
-
-  function getPreviousSibling(node)
-
-    type(fnode), pointer     :: node
-    type(fnode), pointer    :: getPreviousSibling
-
-    if (.not. associated(node)) call dom_error("getPreviousSibling",0,"Node not allocated")
-    getPreviousSibling => node % previousSibling
-
-  end function getPreviousSibling
-
-  !-----------------------------------------------------------
-
-  function getOwnerDocument(node)
-
-    type(fnode), pointer    :: node
-    type(fDocumentNode), pointer    :: getOwnerDocument
-
-    if (.not. associated(node)) call dom_error("getOwnerDocument",0,"Node not allocated")
-    getOwnerDocument => node % ownerDocument
-
-  end function getOwnerDocument
-
-  !----------------------------------------------------------- 
-
-  function getChildNodes(node) result(nodelist)
+    if (.not. associated(arg)) call dom_error("insertBefore",0,"Node not allocated")
+    if ((arg%nodeType /= ELEMENT_NODE) .and. &
+      (arg%nodeType /= DOCUMENT_NODE)) &
+      call dom_error("insertBefore",HIERARCHY_REQUEST_ERR, &
+      "cannot insert node here")
     
-    type(fnode), pointer        :: node
-    type(fnodeList), pointer    :: nodelist      !!! NB nodeList
-
-    type(fnode), pointer        :: np
-
-    if (.not. associated(node)) call dom_error("getChildNodes",0,"Node not allocated")
-    nodelist => null()
-    np => node%firstChild
-    do 
-       if (.not. associated(np)) exit
-       call append(nodelist,np)
-       np => np%nextSibling
-    enddo
-
-  end function getChildNodes
-
-  !----------------------------------------------------------- 
-
-  function getAttributes(node)
-
-    type(fnode), pointer         :: node
-    type(fnamedNodeMap), pointer :: getAttributes       !!! NB namedNodeMap
-    
-    if (.not. associated(node))  &
-               call dom_error("getAttributes",0,"Node not allocated")
-    getAttributes => node % attributes
-
-  end function getAttributes
-
-  !----------------------------------------------------------- 
-
-  subroutine setNodeValue(node, value)
-
-    type(fnode), pointer :: node
-    character(len=*), intent(in) :: value
-    
-    if (.not. associated(node))  &
-               call dom_error("setNodeValue",0,"Node not allocated")
-
-    select case(node % nodeType)
-
-    case(ATTRIBUTE_NODE)
-       node % nodeValue = trim(value)    !!AG: use just value ??
-
-    case(COMMENT_NODE)
-       node % nodeValue = value
-
-    case(TEXT_NODE)
-       node % nodeValue = value
-
-    case(PROCESSING_INSTRUCTION_NODE)
-       node % nodeValue = value
-
-    case(CDATA_SECTION_NODE)
-       node % nodeValue = value
-
-    end select
-
-  end subroutine setNodeValue
-
-  !-----------------------------------------------------------
-  
-  function appendChild(node, newChild)
-    type(fnode), pointer :: node
-    type(fnode), pointer :: newChild
-    type(fnode), pointer :: appendChild
-  
-    if (.not. associated(node))  & 
-               call dom_error("appendChild",0,"Node not allocated")
-
-    if ((node%nodeType /= ELEMENT_NODE) .and. &
-        (node%nodeType /= DOCUMENT_NODE)) &
-        call dom_error("appendChild",HIERARCHY_REQUEST_ERR, &
-           "this node cannot have children")
-    !
-    if (node % nodeType == ELEMENT_NODE) then
-       if (.not. associated(node % ownerDocument, newChild % ownerDocument) ) then
-          call dom_error("appendChild ", WRONG_DOCUMENT_ERR, " Node and childNode have different owner douments")
-       endif
+    if (.not.associated(refChild)) then
+      insertBefore => appendChild(arg, newChild)
+      return
     endif
-
-    !
-    if (.not.(associated(node % firstChild))) then
-       node % firstChild => newChild
-    else 
-       newChild % previousSibling   => node % lastChild
-       node % lastChild % nextSibling => newChild 
-    endif
-
-    node % lastChild               => newChild
-    newChild % parentNode          => node
-!    newChild % ownerDocument       => node % ownerDocument
-    node%nc  = node%nc + 1
-
-    appendChild => newChild
     
-  end function appendChild
-
-  !-----------------------------------------------------------
-  
-  function removeChild(node, oldChild)
-
-    type(fnode), pointer :: removeChild
-    type(fnode), pointer :: node
-    type(fnode), pointer :: oldChild
-    type(fnode), pointer :: np
-    
-    if (.not. associated(node)) call dom_error("removeChild",0,"Node not allocated")
-    np => node % firstChild
-
+    np => arg%firstChild
     do while (associated(np))
-       if (associated(np, oldChild)) then   ! Two argument form 
-                                              !  of associated()
-          if (associated(np,node%firstChild)) then
-             node%firstChild => np%nextSibling
-             if (associated(np % nextSibling)) then
-                np%nextSibling % previousSibling => null()
-             else
-                node%lastChild => null()    ! there was just 1 node
-             endif
-          else if (associated(np,node%lastChild)) then
-             ! one-node-only case covered above
-             node%lastChild => np%previousSibling
-             np%previousSibling%nextSibling => null()
-          else
-             np % previousSibling % nextSibling => np % nextSibling
-             np % nextSibling % previousSibling => np % previousSibling
-          endif
-          node%nc = node%nc -1
-          np % previousSibling => null()    ! Are these necessary?
-          np % nextSibling => null()
-          np % parentNode => null()
-          removeChild => oldChild
-          RETURN
-       endif
-       np => np % nextSibling
+      if (associated(np, refChild)) then
+        if (associated(np, arg%firstChild)) then
+          arg%firstChild => newChild
+        else
+          np%previousSibling%nextSibling => newChild
+        endif
+        refChild%previousSibling => newChild
+        newChild%nextSibling => refChild
+        newChild%parentNode => arg
+        insertBefore => newChild
+        return
+      endif
+      np => np%nextSibling
     enddo
 
-    call dom_error("removeChild",NOT_FOUND_ERR,"oldChild not found")
+    call dom_error("insertBefore",NOT_FOUND_ERR,"refChild not found")
 
-  end function removeChild
-
- !-----------------------------------------------------------
+  end function insertBefore
   
-  function replaceChild(node, newChild, oldChild)
 
-    type(fnode), pointer :: replaceChild
-    type(fnode), pointer :: node
-    type(fnode), pointer :: newChild
-    type(fnode), pointer :: oldChild
+  function replaceChild(arg, newChild, oldChild)
+    type(Node), pointer :: arg
+    type(Node), pointer :: newChild
+    type(Node), pointer :: oldChild
+    type(Node), pointer :: replaceChild
 
-    type(fnode), pointer :: np
+    type(Node), pointer :: np
     
-    if (.not. associated(node)) call dom_error("replaceChild",0,"Node not allocated")
-    if ((node%nodeType /= ELEMENT_NODE) .and. &
-        (node%nodeType /= DOCUMENT_NODE)) &
+    if (.not. associated(arg)) call dom_error("replaceChild",0,"Node not allocated")
+    if ((arg%nodeType /= ELEMENT_NODE) .and. &
+        (arg%nodeType /= DOCUMENT_NODE)) &
     call dom_error("replaceChild",HIERARCHY_REQUEST_ERR, &
            "this node cannot have children")
 
-    np => node % firstChild
+    np => arg%firstChild
 
     do while (associated(np))    
        if (associated(np, oldChild)) then
-          if (associated(np,node%firstChild)) then
-             node%firstChild => newChild
-             if (associated(np % nextSibling)) then
-                oldChild%nextSibling % previousSibling => newChild
+          if (associated(np, arg%firstChild)) then
+             arg%firstChild => newChild
+             if (associated(np%nextSibling)) then
+                np%nextSibling%previousSibling => newChild
              else
-                node%lastChild => newChild    ! there was just 1 node
+                arg%lastChild => newChild    ! there was just 1 node
              endif
-          else if (associated(np,node%lastChild)) then
+          elseif (associated(np, arg%lastChild)) then
              ! one-node-only case covered above
-             node%lastChild => newChild
-             oldChild%previousSibling%nextSibling => newChild
+             arg%lastChild => newChild
+             np%previousSibling%nextSibling => newChild
           else
-             oldChild % previousSibling % nextSibling => newChild
-             oldChild % nextSibling % previousSibling => newChild
+             np%previousSibling%nextSibling => newChild
+             np%nextSibling%previousSibling => newChild
           endif
-
-          newChild % parentNode      => oldChild % parentNode
-          newChild % nextSibling     => oldChild % nextSibling
-          newChild % previousSibling => oldChild % previousSibling
+          newChild%parentNode => arg
+          newChild%nextSibling => oldChild%nextSibling
+          newChild% previousSibling => oldChild%previousSibling
           replaceChild => oldChild
-          RETURN
+          return
        endif
-       np => np % nextSibling
+       np => np%nextSibling
     enddo
 
     call dom_error("replaceChild",NOT_FOUND_ERR,"oldChild not found")
 
   end function replaceChild
 
-  !-----------------------------------------------------------
 
-  function cloneNode(node, deep)             
-    type(fnode), pointer :: cloneNode
-    type(fnode), pointer :: node
-
-    logical, optional :: deep
-    logical           :: do_children
-
-    type(fnode), pointer :: original
-    type(fnode), pointer :: parent_clone
+  function removeChild(arg, oldChild)
+    type(Node), pointer :: removeChild
+    type(Node), pointer :: arg
+    type(Node), pointer :: oldChild
+    type(Node), pointer :: np
     
-    if (.not. associated(node)) call dom_error("cloneNode",0,"Node not allocated")
+    if (.not.associated(arg)) call dom_error("removeChild",0,"Node not allocated")
+    np => arg%firstChild
+    
+    do while (associated(np))
+      if (associated(np, oldChild)) then
+        if (associated(np, arg%firstChild)) then
+          arg%firstChild => np%nextSibling
+          if (associated(np%nextSibling)) then
+            arg%firstChild%previousSibling => null()
+          else
+            arg%lastChild => null()    ! there was just 1 node
+          endif
+        else if (associated(np, arg%lastChild)) then
+          ! one-node-only case covered above
+          arg%lastChild => np%previousSibling
+          np%lastChild%nextSibling => null()
+        else
+          np%previousSibling%nextSibling => np%nextSibling
+          np%nextSibling%previousSibling => np%previousSibling
+        endif
+        arg%nc = arg%nc -1
+        np%previousSibling => null()    ! Are these necessary?
+        np%nextSibling => null()
+        np%parentNode => null()
+        removeChild => oldChild
+        return
+      endif
+      np => np%nextSibling
+    enddo
+    
+    call dom_error("removeChild",NOT_FOUND_ERR,"oldChild not found")
 
-    do_children = .false.
-    if (present(deep)) then
-       do_children = deep
+  end function removeChild
+
+
+  function appendChild(arg, newChild)
+    type(Node), pointer :: arg
+    type(Node), pointer :: newChild
+    type(Node), pointer :: appendChild
+    
+    if (.not. associated(arg))  & 
+      call dom_error("appendChild",0,"Node not allocated")
+    
+    if ((arg%nodeType /= ELEMENT_NODE) .and. &
+      (arg%nodeType /= DOCUMENT_NODE)) &
+      call dom_error("appendChild",HIERARCHY_REQUEST_ERR, &
+      "this node cannot have children")
+    
+    if (arg%nodeType == ELEMENT_NODE) then
+      if (.not. associated(arg%ownerDocument, newChild%ownerDocument) ) then
+        call dom_error("appendChild ", WRONG_DOCUMENT_ERR, " Node and childNode have different owner douments")
+      endif
     endif
     
-    original => node             ! Keep node
-    cloneNode => null()
-    parent_clone => null()
-    call recursive_clone(original, cloneNode)
-    cloneNode%parentNode => null()     ! as per specs   , superfÃluous
- 
-  Contains
-
-    recursive subroutine recursive_clone(original, cloneNode)
-      type(fnode), pointer :: original        ! node to clone
-      type(fnode), pointer :: cloneNode       ! new node
-
-      type(fnode), pointer :: np, clone
-      type(fnode), pointer :: previous_clone, attr, newattr
-      logical :: first_sibling
-      integer :: i
-
-      np => original
-      previous_clone => null()
-      first_sibling = .true.
-      do 
-
-         ! Keep going across siblings
-         ! (2nd and lower levels only)
-
-         if (.not.(associated(np))) EXIT
+    if (.not.(associated(arg%firstChild))) then
+      arg%firstChild => newChild
+    else 
+      newChild%previousSibling => arg%lastChild
+      arg%lastChild%nextSibling => newChild 
+    endif
+    
+    arg%lastChild => newChild
+    newChild%parentNode => arg
+    arg%nc = arg%nc + 1
+    
+    appendChild => newChild
+    
+  end function appendChild
 
 
-         !----------------------------------------------------!
-         clone => createNode()
-         if (first_sibling) then
-            cloneNode => clone       ! Rest of siblings are chained
-                                     ! automatically, but must not
-                                     ! be aliases of cloneNode !!
-            first_sibling = .false.
-         endif
-         allocate(clone%nodeName(size(np%nodeName)))
-         clone%nodeName = np%nodeName
-         if (dom_debug) print *, "Cloning ", str_vs(clone%nodeName)
-         allocate(clone%nodeValue(size(np%nodeValue)))
-         clone%nodeValue = np%nodeValue
-         clone % nodeType    = np % nodeType
-         clone % ownerDocument => np % ownerDocument
-         clone % parentNode  => parent_clone
-         !
-         ! always deep copy attributes, as per specs
-         ! Note that this will not work for "deep" attributes, with
-         ! hanging entity nodes, etc
-         if (associated(np % attributes)) then
-            do i = 0, getLength(np%attributes) - 1
-               attr => item(np%attributes,i)
-               newattr => createNode()
-               newattr%nodeName = getNodeName(attr)
-               newattr%nodeValue = getNodeValue(attr)
-               newattr%nodeType = ATTRIBUTE_NODE
-               call append(clone%attributes, newattr)
-            enddo
-         endif
+  function hasChildNodes(arg)
+    type(Node), pointer :: arg
+    logical :: hasChildNodes
+    
+    if (.not. associated(arg)) call dom_error("hasChildNodes",0,"Node not allocated")
+    hasChildNodes = associated(arg%firstChild)
+    
+  end function hasChildNodes
 
-         ! Deal with first sibling
-         if (associated(previous_clone)) then
-            if (dom_debug) print *, "linking to previous sibling"
-            previous_clone%nextSibling => clone
-            clone%previousSibling => previous_clone
-         else
-            if (dom_debug) print *, "marking as first child of parent"
-            if (associated(parent_clone))  &
-                           parent_clone%firstChild => clone
-         endif
+!!$  recursive function cloneNode(arg, deep) result(np) 
+!!$    type(Node), pointer :: arg
+!!$    logical :: deep
+!!$    type(Node), pointer :: np
+!!$
+!!$    logical :: do_children
+!!$    integer :: i
+!!$
+!!$    type(Node), pointer :: original
+!!$    type(Node), pointer :: dummy
+!!$    
+!!$    if (.not.associated(arg)) call dom_error("cloneNode",0,"Node not allocated")
+!!$
+!!$    do_children = .false.
+!!$    if (present(deep)) then
+!!$      do_children = deep
+!!$    endif
+!!$
+!!$    select case (arg%nodeType)
+!!$    case (ELEMENT_NODE)
+!!$      np => createElementNS(arg%ownerDocument, str_vs(arg%namespaceURI), str_vs(arg%tagName))
+!!$      do i = 1, arg%attributes%length
+!!$        dummy => append(np%attributes, cloneNode(item(arg%attributes, i), .false.))
+!!$        ! FIXME what about children of attribuytes? entities? do these happen?
+!!$      enddo
+!!$    case (ATTRIBUTE_NODE)
+!!$      np => createAttributeNS(arg%ownerDocument, str_vs(arg%namespaceURI), str_vs(arg%tagName), str_vs(arg%value))
+!!$    case (TEXT_NODE)
+!!$      np => createTextNode(arg%ownerDocument, arg%data)
+!!$    case (CDATA_SECTION_NODE)
+!!$      np => createCDataSection(arg%ownerDocument, arg%data)
+!!$    case (ENTITY_REFERENCE_NODE)
+!!$      np => createEntityReference(arg%ownerDocument, arg%nodeName, arg%nodeValue)
+!!$    case (ENTITY_NODE)
+!!$      np => createEntity(arg%ownerDocument, arg%nodeName, arg%nodeValue)
+!!$    case (PROCESSING_INSTRUCTION_NODE)
+!!$      np => createProcessingInstruction(arg%ownerDocument, arg%target, arg%data)
+!!$    case (COMMENT_NODE)
+!!$      np => createComment(arg%ownerDocument, arg%data)
+!!$    case (DOCUMENT_NODE)
+!!$      np => createDocument(arg%ownerDocument, arg%name, arg%publicId, arg%systemId)
+!!$    case (DOCUMENT_TYPE_NODE)
+!!$      np => createDocumentType(arg%ownerDocument, arg%name, arg%entities, &
+!!$        arg%notations, arg%publicId, arg%systemId, arg%internalSubset)
+!!$    case (DOCUMENT_FRAGMENT_NODE)
+!!$      np => createDocumentFragment(arg%ownerDocument)
+!!$    case (NOTATION_NODE)
+!!$      np => createNotation(arg%ownerDocument, arg%publicId, arg%systemId)
+!!$    end select
+!!$      
+!!$    if (deep) then
+!!$      continue
+!!$    endif
+!!$    ! and fix up siblings and parents and stuff
+!!$    ! FIXME FIXME FIXME
+!!$  end function cloneNode
 
-         ! Deal with last sibling
-         if (.not. associated(np%nextSibling)) then
-            if (dom_debug) print *, "this is the last sibling"
-            if (associated(parent_clone)) then
-               if (dom_debug) print *, "marking as last child of parent"
-               parent_clone%lastChild => clone
-            endif
-         endif
-            
-         if (do_children .and. associated(np%firstChild)) then
-            parent_clone => clone
-            if (dom_debug) print *, ".... going for its children"
-            call recursive_clone(np%firstChild,clone%firstChild)
-            parent_clone => clone%parentNode
-         endif
+  
+  function hasAttributes(arg)
+    type(Node), pointer :: arg
+    logical :: hasAttributes
+    
+    if (.not.associated(arg)) call dom_error("hasAttributes",0,"Node not allocated")
+    hasAttributes = (arg%nodeType /= ELEMENT_NODE) .and. (arg%attributes%length > 0)
+    
+  end function hasAttributes
+  
 
-         if (associated(np,node)) then
-            if (dom_debug) print *, "No more siblings of ", str_vs(clone%nodeName)
-            EXIT  ! no siblings of master node
-         endif
-         np => np % nextSibling
-         previous_clone => clone
+  ! FIXME normalize
 
-      enddo 
-
-    end subroutine recursive_clone
-
-  end function cloneNode
-
-  !-----------------------------------------------------------
+  ! FIXME isSupported
 
   function isSameNode(node1, node2)    ! DOM 3.0
-    type(fnode), pointer :: node1
-    type(fnode), pointer :: node2
+    type(Node), pointer :: node1
+    type(Node), pointer :: node2
     logical :: isSameNode
 
     isSameNode = associated(node1, node2)
 
   end function isSameNode
 
-  !-----------------------------------------------------------
 
-  function insertBefore(node, newChild, refChild)
-    type(fnode), pointer :: insertBefore
-    type(fnode), pointer :: node
-    type(fnode), pointer :: newChild
-    type(fnode), pointer :: refChild
-    type(fnode), pointer :: np
+  subroutine setOwnerDocument(arg, doc)
+    type(Node), pointer :: arg
+    type(Node), pointer :: doc
 
-    if (.not. associated(node)) call dom_error("insertBefore",0,"Node not allocated")
-    if ((node%nodeType /= ELEMENT_NODE) .and. &
-        (node%nodeType /= DOCUMENT_NODE)) &
-    call dom_error("insertBefore",HIERARCHY_REQUEST_ERR, &
-           "cannot insert node here")
-
-    if (.not.associated(refChild)) then
-       insertBefore => appendChild(node, newChild)
-       RETURN
-    endif
-
-    np => node % firstChild
-    do while (associated(np))
-       if (associated(np, refChild)) then
-          if (associated(np,node%firstChild)) then
-             node%firstChild => newChild
-          else
-             refChild%previousSibling%nextSibling => newChild
-          endif
-
-          refChild % previousSibling => newChild
-          newChild % nextSibling => refChild
-          newChild % parentNode => node
-!          newChild % ownerDocument => refChild % ownerDocument
-          insertBefore => newChild
-          RETURN
-       endif
-       np => np % nextSibling
-    enddo
-
-    call dom_error("insertBefore",NOT_FOUND_ERR,"refChild not found")
-
-  end function insertBefore
-
-!----------------------------------------------------------------------
-
-  subroutine setOwnerDocument(node, doc)
-    type(fnode), pointer :: node
-    type(fDocumentNode), pointer :: doc
-
-    node % ownerDocument => doc
+    arg%ownerDocument => doc
 
   end subroutine setOwnerDocument
 

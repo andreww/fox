@@ -80,6 +80,19 @@ module m_dom_types
     character, pointer :: data(:) => null()
   end type Node
 
+  public :: ELEMENT_NODE
+  public :: ATTRIBUTE_NODE
+  public :: TEXT_NODE
+  public :: CDATA_SECTION_NODE
+  public :: ENTITY_REFERENCE_NODE
+  public :: ENTITY_NODE
+  public :: PROCESSING_INSTRUCTION_NODE
+  public :: COMMENT_NODE
+  public :: DOCUMENT_NODE
+  public :: DOCUMENT_TYPE_NODE
+  public :: DOCUMENT_FRAGMENT_NODE
+  public :: NOTATION_NODE
+
   public :: DOMImplementation
   public :: Node
 
