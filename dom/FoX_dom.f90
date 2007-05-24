@@ -103,7 +103,7 @@ module FoX_dom
   public :: getNamedItem
   public :: setNamedItem
   public :: removeNamedItem
-  public :: item
+!  public :: item
   public :: getNamedItemNS
   public :: setNamedItemNS
   public :: removeNamedItemNS
@@ -128,7 +128,7 @@ module FoX_dom
   public :: getAttributeNode
   public :: setAttributeNode
   public :: removeAttributeNode
-  public :: getElementsByTagName
+!  public :: getElementsByTagName
   public :: getAttributeNS
   public :: setAttributeNS
   public :: removeAttributeNS
@@ -144,7 +144,7 @@ module FoX_dom
   !DOM CData
 
   !DOM DocumentType
-  public :: documentType
+!  public :: documentType
   
   !DOM Notation
   public :: notation

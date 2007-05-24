@@ -10,18 +10,15 @@ module m_dom_parse
   use m_dom_types, only: createnode, DOCUMENT_NODE, destroynode
   use m_dom_document, only: createcomment
   use m_dom_document, only: createcdatasection
-  use m_dom_document, only: createElement, createElementNS
+  use m_dom_document, only: createElementNS
   use m_dom_document, only: createtextnode
-  use m_dom_implementation, only: createDocument, createDocumentType
+  use m_dom_implementation, only: createEmptyDocument
   use m_dom_node, only: appendchild
   use m_dom_node, only: getparentnode
-  use m_dom_element, only: setattribute
+  use m_dom_element, only: setAttributeNS
   use m_dom_debug, only: dom_debug
 
-  use m_strings, only : string, stringify, assignment(=), operator(==)
-
   implicit none
-  
   private
 
   public :: parsefile
@@ -42,54 +39,42 @@ contains
 
     type(dictionary_t), intent(in) :: attrs
    
-    type(fnode), pointer :: temp
+    type(fnode), pointer :: el, temp
     integer              :: i
-
-    if (.not.associated(documentElement)) &
-      mainDoc = createDocument(URI, name, createDocumentType())
 
     if (dom_debug) &
       write(*,'(4a)') "Adding node for element: {",URI,'}', localname
 
-    temp => createElement(mainDoc, name)
-    temp => createElementNS(mainDoc, URI, name)
-    current => appendChild(current,temp)
+    el => createElementNS(mainDoc, URI, name)
 
-!
-!   Add attributes
-!
     do i = 1, len(attrs)
        if (dom_debug) print *, "Adding attribute: ", &
          getQName(attrs, i), ":",getValue(attrs, i)
-       call setAttributeNS(current,getQName(attrs, i),getValue(attrs, i), getURI(attrs, i), getLocalName(attrs, i))
+        temp => setAttributeNS(el, getURI(attrs, i), getQName(attrs, i), getValue(attrs, i))
     enddo
 
-    current%namespaceURI=vs_str_alloc(URI)
-    if (URI=='') then
-      ! this prefix is not bound to a URI - element localname is full name
-      continue
+    if (.not.associated(current)) then
+      current => el ! This is the document element
+    else
+      current => appendChild(current,el)
     endif
-    current%localname=vs_str_alloc(localname)
-
+    
   end subroutine startElement_handler
-
-!---------------------------------------------------------
 
   subroutine endElement_handler(URI, localName, name)
     character(len=*), intent(in)     :: URI
     character(len=*), intent(in)     :: localname
     character(len=*), intent(in)     :: name
 
-!!AG for IBM    type(fnode), pointer :: np
-
     if (dom_debug) &
       write(*,'(4a)') "Ending node for element: {",URI,'}', localname
-!!AG for IBM    np => getParentNode(current)
-!!AG for IBM    current => np
-    current => getParentNode(current)
-  end subroutine endElement_handler
 
-!---------------------------------------------------------
+    if (associated(mainDoc%documentElement, current)) then
+      current => null()
+    else
+      current => getParentNode(current)
+    endif
+  end subroutine endElement_handler
 
   subroutine characters_handler(chunk)
     character(len=*), intent(in) :: chunk
@@ -102,8 +87,6 @@ contains
     dummy => appendChild(current,temp)
 
   end subroutine characters_handler
-
-!---------------------------------------------------------
 
   subroutine comment_handler(comment)
     character(len=*), intent(in) :: comment
@@ -119,13 +102,28 @@ contains
 
   subroutine startDocument_handler
     print*,'allocating mainDoc'
-    allocate(mainDoc)
-    main => createNode()
-    main % nodeType = DOCUMENT_NODE
+
+    mainDoc = createEmptyDocument()
     current => main
   end subroutine startDocument_handler
 
+  subroutine startDTD_handler(name, publicId, systemId)
+    character(len=*), intent(in) :: name
+    character(len=*), intent(in), optional :: publicId
+    character(len=*), intent(in), optional :: systemId
 
+    deallocate(mainDoc%docType%name)
+    mainDoc%docType%name = vs_str_alloc(name)
+    if (present(publicId)) then
+      deallocate(mainDoc%docType%publicId)
+      mainDoc%docType%publicId = vs_str_alloc(publicId)
+    endif
+    if (present(systemId)) then
+      deallocate(mainDoc%docType%systemId)
+      mainDoc%docType%systemId = vs_str_alloc(systemId)
+    endif
+
+  end subroutine startDTD_handler
 
 !***************************************************
 !   PUBLIC PROCEDURES
@@ -179,12 +177,12 @@ contains
       !elementDecl_handler,           &
       !externalEntityDecl_handler,    &
       !internalEntityDecl_handler,    &
-      comment_handler=comment_handler               &
+      comment_handler=comment_handler,              &
       !endCdata_handler,              &
-      !endDTD_handler,                &
+      !endDTD_handler=endDTD_handler,                &
       !endEntity_handler,             &
       !startCdata_handler,            &
-      !startDTD_handler,              &
+      startDTD_handler=startDTD_handler          &
       !startEntity_handler
       )
     

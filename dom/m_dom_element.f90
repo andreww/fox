@@ -1,6 +1,7 @@
 module m_dom_element
 
   use m_common_array_str, only: str_vs
+  use m_common_namecheck, only: prefixOfQName, localpartOfQName
 
 use m_dom_types, only: fnode, fnodelist, fDocumentNode
 use m_dom_types, only: element_node, document_node
@@ -41,6 +42,7 @@ end interface getElementById
   public :: setAttribute
   public :: setAttributeNS
   public :: setAttributeNode
+  public :: setAttributeNodeNS
   public :: removeAttribute
   public :: normalize
 
@@ -152,53 +154,66 @@ contains
 
   end function getAttributeNode
   
-  !-----------------------------------------------------------
-
-  subroutine setAttributeNode(element, newattr)
+  function setAttributeNode(element, newattr) result(attr)
     type(fnode), pointer :: element
     type(fnode), pointer :: newattr
-
-    type(fnode), pointer :: dummy
+    type(fnode), pointer :: attr
 
     if (element % nodeType /= ELEMENT_NODE) then
        if (dom_debug) print *, "not an element node in setAttributeNode..."
        return
     endif
 
-    dummy => setNamedItem(element%attributes,newattr)
-    nullify(dummy)
-    
-  end subroutine setAttributeNode
+    ! FIXME check does attribute exist already
 
-!-------------------------------------------------------------------
-  subroutine setAttribute(element, name, value)
+    attr => setNamedItem(element%attributes,newattr)
+
+    ! FIXME are we returning the right thing?
+    attr => null()
+    
+  end function setAttributeNode
+
+  function setAttributeNodeNS(element, newattr) result(attr)
+    type(fnode), pointer :: element
+    type(fnode), pointer :: newattr
+    type(fnode), pointer :: attr
+
+    attr = setAttributeNode(element, newattr)
+  end function setAttributenodeNS
+
+  function setAttribute(element, name, value) result(newattr)
     type(fnode), pointer :: element
     character(len=*), intent(in) :: name
     character(len=*), intent(in) :: value
 
     type(fnode), pointer      :: newattr
+
+    ! FIXME: Check does one exist already.
 
     newattr => createAttribute(element % ownerDocument, name)
     call setValue(newattr,value)
-    call setAttributeNode(element,newattr)
+    newattr => setAttributeNode(element,newattr)
 
-  end subroutine setAttribute
-  subroutine setAttributeNS(element, name, value, nsURI, localname)
+  end function setAttribute
+
+  function setAttributeNS(element, nsURI, name, value) result(newattr)
     type(fnode), pointer :: element
+    character(len=*), intent(in) :: nsURI
     character(len=*), intent(in) :: name
     character(len=*), intent(in) :: value
-    character(len=*), intent(in) :: nsURI
-    character(len=*), intent(in) :: localName
 
     type(fnode), pointer      :: newattr
+
+    ! FIXME: Check does one exist already.
 
     newattr => createAttribute(element % ownerDocument, name)
     call setValue(newattr,value)
     call setnsURI(newattr, nsURI)
-    call setlocalName(newattr, localName)
-    call setAttributeNode(element,newattr)
+    call setPrefix(newattr, prefixOfQName(name))
+    call setlocalName(newattr, localPartOfQName(name))
+    newattr => setAttributeNodeNS(element,newattr)
 
-  end subroutine setAttributeNS
+  end function setAttributeNS
 
   !-----------------------------------------------------------
 

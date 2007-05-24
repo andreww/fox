@@ -70,16 +70,19 @@ module m_dom_types
   !  DOMImplementation 
   !-----------------------------------------------------------
   type, public :: fDOMImplementation
-     logical :: Core
-     logical :: XML
-     logical :: HTML
+     !logical :: Core
+     !logical :: XML
+     !logical :: HTML
+    character(len=7) :: name = "FoX_DOM"
   end type fDOMImplementation
 
   type, public :: fDocumentNode
-    type(fDocumentType), pointer ::       doctype;
-    type(fDOMImplementation), pointer ::  implementation;
-    type(fNode), pointer ::               documentElement;
+    type(fDocumentType), pointer :: doctype;
+    type(fDOMImplementation), pointer :: implementation;
+    type(fNode), pointer :: documentElement;
   end type fDocumentNode
+
+  type(fDOMImplementation), save, target :: FoX_DOM
 
 
 !========================================================================
@@ -108,6 +111,8 @@ module m_dom_types
 !  public :: destroyNamedNodeMap
 !  public :: destroyNodeList
   public :: getNumberofAllocatedNodes
+
+  public :: FoX_DOM
 
 contains
 

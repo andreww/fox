@@ -1,9 +1,11 @@
 module m_dom_implementation
 
   use m_common_array_str, only: vs_str_alloc
-  use m_dom_types, only : fDocumentNode
-  use m_dom_types, only : fDocumentType
-  use m_dom_types, only : fnode
+  use m_dom_document, only: createElementNS
+  use m_dom_types, only: FoX_DOM
+  use m_dom_types, only: fDocumentNode
+  use m_dom_types, only: fDocumentType
+  use m_dom_types, only: fnode
 
   implicit none
   private
@@ -11,6 +13,9 @@ module m_dom_implementation
   public :: hasFeature
   public :: createDocument
   public :: createDocumentType
+
+  public :: createEmptyDocument
+  public :: createEmptyDocumentType
 
 contains
 
@@ -24,30 +29,28 @@ contains
   end function hasFeature
 
   function createDocumentType(qualifiedName, publicId, systemId) result(dt)
-    character(len=*), intent(in), optional :: qualifiedName
-    character(len=*), intent(in), optional :: publicId
-    character(len=*), intent(in), optional :: systemId
+    character(len=*), intent(in) :: qualifiedName
+    character(len=*), intent(in) :: publicId
+    character(len=*), intent(in) :: systemId
     type(fdocumentType), pointer :: dt
-    if (present(qualifiedName)) then
-      dt%name = vs_str_alloc(qualifiedName)
-    else
-      allocate(dt%name(0))
-    endif
+    dt%name = vs_str_alloc(qualifiedName)
     !dt%entities
     !dt%notations
-      allocate(dt%publicId(len(publicId)))
-    if (present(publicId)) then
-      dt%publicId = vs_str_alloc(publicId)
-    else
-      allocate(dt%publicId(0))
-    endif
-    if (present(systemId)) then
-      dt%systemId = vs_str_alloc(systemId)
-    else
-      allocate(dt%publicId(0))
-    endif
+    dt%publicId = vs_str_alloc(publicId)
+    dt%systemId = vs_str_alloc(systemId)
     allocate(dt%internalSubset(0)) !FIXME
   end function createDocumentType
+
+  function createEmptyDocumentType() result(dt)
+    type(fdocumentType), pointer :: dt
+
+    allocate(dt%name(0))
+    !dt%entities
+    !dt%notations
+    allocate(dt%publicId(0))
+    allocate(dt%systemId(0))
+    allocate(dt%internalSubset(0)) !FIXME
+  end function createEmptyDocumentType
 
   subroutine destroyDocumentType(dt)
     type(fDocumentType), pointer :: dt
@@ -64,17 +67,29 @@ contains
   function createDocument(namespaceURI, qualifiedName, docType) result(doc)
     character(len=*), intent(in) :: namespaceURI
     character(len=*), intent(in) :: qualifiedName
-    type(fDocumentType), pointer :: docType
+    type(fDocumentType), pointer, optional :: docType
     type(fDocumentNode), pointer :: doc
     
-    !DOM implementation ...
-    doc%doctype => docType
+    doc%docType => null()
+    if (present(docType)) then
+      doc%doctype => docType
+    endif
+    if (.not.associated(doc%docType)) then
+      doc%docType => createDocumentType(qualifiedName, "", "")
+    endif
+    doc%implementation => FoX_DOM
+    doc%documentElement => createElementNS(doc, namespaceURI, qualifiedName)
     
-    !   !FIXME
   end function createDocument
 
-  ! function createDocument
-  !   implementation is found in m_dom_document
-  ! end function createDocument
+  function createEmptyDocument() result(doc)
+    type(fDocumentNode), pointer :: doc
+    
+    ! FIXME do something with namespaceURI etc 
+    doc%doctype => createEmptyDocumentType()
+    doc%implementation => FoX_DOM
+    doc%documentElement => null()
+    
+  end function createEmptyDocument
 
 end module m_dom_implementation
