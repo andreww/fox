@@ -108,4 +108,21 @@ TOHW_nodeContents
   public :: NodeList
   public :: NamedNodeMap
 
+  public :: createNode
+  public :: destroyNode
+
+contains
+
+  function createNode() result(np)
+    type(Node), pointer :: np
+
+    allocate(np)
+  end function createNode
+
+  subroutine destroyNode(arg)
+    type(Node), pointer :: arg
+
+    deallocate(arg)
+  end subroutine destroyNode
+
 end module m_dom_types

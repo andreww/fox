@@ -5,14 +5,13 @@ module m_dom_document
   use m_common_array_str, only: vs_str_alloc
   use m_common_namecheck, only: prefixOfQName, localPartOfQName
   
-  use m_dom_types, only: fnode,  createNode, destroyNode, &
+  use m_dom_types, only: Node, createNode, destroyNode, &
     ELEMENT_NODE, ATTRIBUTE_NODE, TEXT_NODE, CDATA_SECTION_NODE, &
     ENTITY_REFERENCE_NODE, ENTITY_NODE, PROCESSING_INSTRUCTION_NODE, &
     COMMENT_NODE, DOCUMENT_NODE, DOCUMENT_TYPE_NODE, DOCUMENT_FRAGMENT_NODE, &
     NOTATION_NODE
-  use m_dom_types, only : fDocumentNode, fDocumentType
   
-  use m_dom_node, only : getChildNodes
+!  use m_dom_node, only : getChildNodes
   
   use m_dom_error, only : NOT_FOUND_ERR, dom_error
   
@@ -61,10 +60,10 @@ CONTAINS
 !  end function createDocument
 
   subroutine attachDocumentElement(doc, main) 
-    type(fDocumentNode), pointer :: doc
-    type(fNode), pointer :: main
+    type(Node), pointer :: doc
+    type(Node), pointer :: main
 
-    type(fnode), pointer :: child
+    type(Node), pointer :: child
 
     if (.not.associated(doc%docType)) then
        !FIXME error out
@@ -87,104 +86,106 @@ CONTAINS
 
 !FIXMETOHW I think I got documentNodes & head nodes mixed up here.
   subroutine destroyDocument(doc)
-    type(fDocumentNode), pointer :: doc
+    type(Node), pointer :: doc
     
-    call destroyNode(doc % documentElement)
+    call destroyNode(doc%documentElement)
     deallocate(doc)
 
   end subroutine destroyDocument
 
   function createElement(doc, tagName)
-    type(fDocumentNode), pointer :: doc
+    type(Node), pointer :: doc
     character(len=*), intent(in) :: tagName
-    type(fnode), pointer :: createElement
+    type(Node), pointer :: createElement
   
-    createElement => createElementNS(doc, tagName, "")
+    createElement => createElementNS(doc, "", tagName)
   
   end function createElement
     
   function createDocumentFragment(doc)
-    type(fDocumentNode), pointer :: doc
-    type(fnode), pointer :: createDocumentFragment
+    type(Node), pointer :: doc
+    type(Node), pointer :: createDocumentFragment
     
     createDocumentFragment => createNode()
-    createDocumentFragment % nodeType = DOCUMENT_FRAGMENT_NODE
-    createDocumentFragment % nodeName = vs_str_alloc("#document-fragment")
-    createDocumentFragment % ownerDocument => doc
+    createDocumentFragment%nodeType = DOCUMENT_FRAGMENT_NODE
+    createDocumentFragment%nodeName => vs_str_alloc("#document-fragment")
+    createDocumentFragment%ownerDocument => doc
     
   end function createDocumentFragment
 
   function createTextNode(doc, data)
-    type(fDocumentNode), pointer :: doc
+    type(Node), pointer :: doc
     character(len=*), intent(in) :: data
-    type(fnode), pointer :: createTextNode
+    type(Node), pointer :: createTextNode
     
     createTextNode => createNode()
-    createTextNode % nodeType = TEXT_NODE
-    createTextNode % nodeName = vs_str_alloc("#text")
-    createTextNode % nodeValue = data
-    createtextNode % ownerDocument => doc
+    createTextNode%nodeType = TEXT_NODE
+    createTextNode%nodeName => vs_str_alloc("#text")
+    createTextNode%nodeValue => vs_str_alloc(data)
+    createTextNode%ownerDocument => doc
+    createTextNode%data => createTextNode%nodeValue
     
   end function createTextNode
 
   function createComment(doc, data)
-    type(fDocumentNode), pointer :: doc
+    type(Node), pointer :: doc
     character(len=*), intent(in) :: data
-    type(fnode), pointer :: createComment
+    type(Node), pointer :: createComment
   
     createComment => createNode()
-    createComment % nodeName = vs_str_alloc("#comment")
-    createComment % nodeValue = data
-    createComment % nodeType = COMMENT_NODE
-    createComment % ownerDocument => doc
+    createComment%nodeName => vs_str_alloc("#comment")
+    createComment%nodeValue = data
+    createComment%nodeType = COMMENT_NODE
+    createComment%ownerDocument => doc
+    createComment%data => createComment%data
   
   end function createComment
 
   function createCdataSection(doc, data)
-    type(fDocumentNode), pointer :: doc
+    type(Node), pointer :: doc
     character(len=*), intent(in) :: data
-    type(fnode), pointer :: createCdataSection
+    type(Node), pointer :: createCdataSection
   
     createCdataSection => createNode()
-    createCdataSection % nodeName = vs_str_alloc("#cdata-section")
-    createCdataSection % nodeValue = data
-    createCdataSection % nodeType = CDATA_SECTION_NODE
-    createCdataSection % ownerDocument => doc
+    createCdataSection%nodeName = vs_str_alloc("#cdata-section")
+    createCdataSection%nodeValue = data
+    createCdataSection%nodeType = CDATA_SECTION_NODE
+    createCdataSection%ownerDocument => doc
   
   end function createCdataSection
 
   function createProcessingInstruction(doc, target, data)
-    type(fDocumentNode), pointer :: doc
+    type(Node), pointer :: doc
     character(len=*), intent(in) :: target
     character(len=*), intent(in) :: data
-    type(fnode), pointer :: createProcessingInstruction
+    type(Node), pointer :: createProcessingInstruction
 
     createProcessingInstruction => createNode()
-    createProcessingInstruction % nodeName = vs_str_alloc(target)
-    createProcessingInstruction % nodeValue = vs_str_alloc(data)
-    createProcessingInstruction % nodeType = PROCESSING_INSTRUCTION_NODE
-    createProcessingInstruction % ownerDocument => doc
+    createProcessingInstruction%nodeName = vs_str_alloc(target)
+    createProcessingInstruction%nodeValue = vs_str_alloc(data)
+    createProcessingInstruction%nodeType = PROCESSING_INSTRUCTION_NODE
+    createProcessingInstruction%ownerDocument => doc
     
   end function createProcessingInstruction
 
   function createAttribute(doc, name)
-    type(fDocumentNode), pointer :: doc
+    type(Node), pointer :: doc
     character(len=*), intent(in) :: name
-    type(fnode), pointer :: createAttribute
+    type(Node), pointer :: createAttribute
   
     createAttribute => createAttributeNS(doc, name, "")
   
   end function createAttribute
 
   function createEntityReference(doc, name)
-    type(fDocumentNode), pointer :: doc
+    type(Node), pointer :: doc
     character(len=*), intent(in) :: name
-    type(fnode), pointer :: createEntityReference  
+    type(Node), pointer :: createEntityReference  
 
     createEntityReference => createNode()
-    createEntityReference % nodeName = vs_str_alloc(name)
-    createEntityReference % nodeType = ENTITY_REFERENCE_NODE
-    createEntityReference % ownerDocument => doc
+    createEntityReference%nodeName = vs_str_alloc(name)
+    createEntityReference%nodeType = ENTITY_REFERENCE_NODE
+    createEntityReference%ownerDocument => doc
 
   end function createEntityReference
 
@@ -205,14 +206,15 @@ CONTAINS
   !end function importNode
 
   function createElementNS(doc, namespaceURI, qualifiedName)
-    type(fDocumentNode), pointer :: doc
+    type(Node), pointer :: doc
     character(len=*), intent(in) :: namespaceURI, qualifiedName
-    type(fnode), pointer :: createElementNS
+    type(Node), pointer :: createElementNS
   
     createElementNS => createNode()
     createElementNS%nodeName => vs_str_alloc(qualifiedName)
     createElementNS%nodeType = ELEMENT_NODE
     createElementNS%ownerDocument => doc
+    createElementNS%tagName => createElementNS%nodeName
     createElementNS%namespaceURI => vs_str_alloc(namespaceURI)
     createElementNS%prefix => vs_str_alloc(prefixOfQName(qualifiedname))
     createElementNS%localName => vs_str_alloc(localpartOfQName(qualifiedname))
@@ -220,9 +222,9 @@ CONTAINS
   end function createElementNS
   
   function createAttributeNS(doc, namespaceURI,  qualifiedname)
-    type(fDocumentNode), pointer :: doc
+    type(Node), pointer :: doc
     character(len=*), intent(in) :: namespaceURI, qualifiedName
-    type(fnode), pointer :: createAttributeNS
+    type(Node), pointer :: createAttributeNS
   
     createAttributeNS => createNode()
     createAttributeNS%nodeName => vs_str_alloc(qualifiedname)
