@@ -1,9 +1,9 @@
 module m_dom_attribute
 
   use m_common_array_str, only: str_vs
-  use m_common_error, only: FoX_error
-  use m_dom_types, only : fnode, ATTRIBUTE_NODE
-  use m_dom_node, only : setNodeValue
+!  use m_common_error, only: FoX_error
+  use m_dom_types, only : Node, ATTRIBUTE_NODE
+!  use m_dom_node, only : setNodeValue
   
   implicit none
   private
@@ -17,10 +17,10 @@ module m_dom_attribute
 CONTAINS
   
   function getName(attribute)
-    type(fnode), intent(in) :: attribute
+    type(Node), intent(in) :: attribute
     character(size(attribute%nodeName))  :: getName
     
-    if (attribute % nodeType == ATTRIBUTE_NODE) then
+    if (attribute%nodeType == ATTRIBUTE_NODE) then
       getName = str_vs(attribute%nodeName)
     else
       getName = ''
@@ -30,10 +30,10 @@ CONTAINS
 
 
   function getValue(attribute)
-    type(fnode), intent(in) :: attribute
+    type(Node), intent(in) :: attribute
     character(size(attribute%nodeValue))  :: getValue
 
-    if (attribute % nodeType == ATTRIBUTE_NODE) then
+    if (attribute%nodeType == ATTRIBUTE_NODE) then
        getValue = str_vs(attribute%nodeValue)
     else
        getValue = ''
