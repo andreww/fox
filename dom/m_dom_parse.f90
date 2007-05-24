@@ -103,8 +103,10 @@ contains
 
     type(fnode), pointer :: temp
 
+    print*,'createPI'
     temp => createProcessingInstruction(mainDoc, target, data)
     temp => appendChild(current, temp)
+    print*,'createPIdone'
   end subroutine processingInstruction_handler
 
   subroutine startDocument_handler
