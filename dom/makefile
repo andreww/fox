@@ -13,7 +13,10 @@ INCFLAGS=$(MOD_PREFIX)../objs/finclude
 #---------NOTHING SHOULD NEED TO BE CHANGED BELOW THIS LINE-----
 #
 include ../arch.make
-
+#
+.m4.f90:
+	m4 -I ../m4 $< > $@ 
+#
 # Uncomment one of the following lines for debugging/profiling support
 #
 #FFLAGS=$(FFLAGS_DEBUG)
