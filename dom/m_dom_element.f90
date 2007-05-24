@@ -1,14 +1,12 @@
 module m_dom_element
 
-  use m_common_array_str, only: str_vs
+  use m_common_array_str, only: str_vs, vs_str_alloc
   use m_common_namecheck, only: prefixOfQName, localpartOfQName
 
 use m_dom_types, only: fnode, fnodelist, fDocumentNode
 use m_dom_types, only: element_node, document_node
 use m_dom_types, only: text_node
 use m_dom_types, only: destroyNode
-
-use m_dom_attribute, only: setValue
 
 use m_dom_node, only: getnodename
 use m_dom_node, only: getfirstchild
@@ -21,7 +19,7 @@ use m_dom_namednodemap, only: removenameditem
 use m_dom_namednodemap, only: setnameditem
 use m_dom_namednodemap, only: getnameditem
 
-use m_dom_document, only: createattribute
+use m_dom_document, only: createAttribute, createAttributeNS
 use m_dom_debug, only: dom_debug
 
 use m_strings, only: string, assignment(=)
@@ -191,7 +189,7 @@ contains
     ! FIXME: Check does one exist already.
 
     newattr => createAttribute(element % ownerDocument, name)
-    call setValue(newattr,value)
+    newattr%nodeValue => vs_str_alloc(value)
     newattr => setAttributeNode(element,newattr)
 
   end function setAttribute
@@ -206,11 +204,8 @@ contains
 
     ! FIXME: Check does one exist already.
 
-    newattr => createAttribute(element % ownerDocument, name)
-    call setValue(newattr,value)
-    call setnsURI(newattr, nsURI)
-    call setPrefix(newattr, prefixOfQName(name))
-    call setlocalName(newattr, localPartOfQName(name))
+    newattr => createAttributeNS(element % ownerDocument, nsURI, name)
+    newattr%nodeValue => vs_str_alloc(value)
     newattr => setAttributeNodeNS(element,newattr)
 
   end function setAttributeNS

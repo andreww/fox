@@ -10,9 +10,9 @@ module m_dom_attribute
 
   public :: getName
   public :: getValue
-  public :: setValue
-  public :: setnsURI
-  public :: setlocalName
+!  public :: setValue
+!  public :: setnsURI
+!  public :: setlocalName
   
 CONTAINS
   
@@ -42,38 +42,39 @@ CONTAINS
   end function getValue
 
 
-  subroutine setValue(attribute, value)
+!!$  subroutine setValue(attribute, value)
+!!$
+!!$    character(len=*), intent(in) :: value
+!!$    type(fnode), pointer  :: attribute
+!!$
+!!$    if (attribute % nodeType == ATTRIBUTE_NODE) then
+!!$       call setNodeValue(attribute,value)
+!!$    endif
+!!$
+!!$  end subroutine setValue
+!!$
+!!$  subroutine setnsURI(attribute, nsURI)
+!!$
+!!$    character(len=*), intent(in) :: nsuRI
+!!$    type(fnode), pointer  :: attribute
+!!$
+!!$    if (attribute % nodeType == ATTRIBUTE_NODE) then
+!!$      deallocate(attribute%nsURI)
+!!$      attribute%nsURI => vs_str_alloc(nsURI)
+!!$    endif
+!!$
+!!$  end subroutine setnsURI
 
-    character(len=*), intent(in) :: value
-    type(fnode), pointer  :: attribute
-
-    if (attribute % nodeType == ATTRIBUTE_NODE) then
-       call setNodeValue(attribute,value)
-    endif
-
-  end subroutine setValue
-
-  subroutine setnsURI(attribute, nsURI)
-
-    character(len=*), intent(in) :: nsuRI
-    type(fnode), pointer  :: attribute
-
-    if (attribute % nodeType == ATTRIBUTE_NODE) then
-       call setNodenamespaceURI(attribute,nsURI)
-    endif
-
-  end subroutine setnsURI
-
-  subroutine setlocalName(attribute, localName)
-
-    character(len=*), intent(in) :: localName
-    type(fnode), pointer  :: attribute
-
-    if (attribute % nodeType == ATTRIBUTE_NODE) then
-       call setNodelocalName(attribute,localName)
-    endif
-
-  end subroutine setlocalName
+!!$  subroutine setlocalName(attribute, localName)
+!!$
+!!$    character(len=*), intent(in) :: localName
+!!$    type(fnode), pointer  :: attribute
+!!$
+!!$    if (attribute % nodeType == ATTRIBUTE_NODE) then
+!!$       call setNodelocalName(attribute,localName)
+!!$    endif
+!!$
+!!$  end subroutine setlocalName
   !-----------------------------------------------------------
 
 

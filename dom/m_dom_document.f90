@@ -210,12 +210,12 @@ CONTAINS
     type(fnode), pointer :: createElementNS
   
     createElementNS => createNode()
-    createElementNS % nodeName = vs_str_alloc(qualifiedName)
-    createElementNS % nodeType = ELEMENT_NODE
-    createElementNS % ownerDocument => doc
-    createElementNS % namespaceURI = vs_str_alloc(namespaceURI)
-    createElementNS % prefix = vs_str_alloc(prefixOfQName(qualifiedname))
-    createElementNS % localName = vs_str_alloc(localpartOfQName(qualifiedname))
+    createElementNS%nodeName => vs_str_alloc(qualifiedName)
+    createElementNS%nodeType = ELEMENT_NODE
+    createElementNS%ownerDocument => doc
+    createElementNS%namespaceURI => vs_str_alloc(namespaceURI)
+    createElementNS%prefix => vs_str_alloc(prefixOfQName(qualifiedname))
+    createElementNS%localName => vs_str_alloc(localpartOfQName(qualifiedname))
   
   end function createElementNS
   
@@ -225,10 +225,12 @@ CONTAINS
     type(fnode), pointer :: createAttributeNS
   
     createAttributeNS => createNode()
-    createAttributeNS % nodeName = vs_str_alloc(qualifiedname)
-    createAttributeNS % nodeType = ATTRIBUTE_NODE
-    createAttributeNS % ownerDocument => doc
-    createAttributeNS % namespaceURI = vs_str_alloc(namespaceURI)
+    createAttributeNS%nodeName => vs_str_alloc(qualifiedname)
+    createAttributeNS%nodeType = ATTRIBUTE_NODE
+    createAttributeNS%ownerDocument => doc
+    createAttributeNS%namespaceURI => vs_str_alloc(namespaceURI)
+    createAttributeNS%localname => vs_str_alloc(localPartofQName(qualifiedname))
+    createAttributeNS%prefix => vs_str_alloc(PrefixofQName(qualifiedname))
     
   end function createAttributeNS
 

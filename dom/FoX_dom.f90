@@ -20,6 +20,12 @@ module FoX_dom
   !Some of the modules above expose symbols only
   !for internal library management, so must be kept private.
 
+  public :: fDOMImplementation
+  public :: fDocumentType
+  public :: fDocument
+  public :: fDocumentNode
+  public :: fNode
+
   ! DOM DOMString
   ! no
 
@@ -155,5 +161,8 @@ module FoX_dom
   !DOM EntityReference
 
   !DOM ProcessingInstruction
+
+  ! FoX-only interfaces
+  public :: parsefile
 
 end module FoX_dom

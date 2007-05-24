@@ -1,12 +1,12 @@
 #!/bin/make
 #
-default: objsdir wxml_lib wcml_lib sax_lib examples_build
+default: objsdir wxml_lib wcml_lib sax_lib dom_lib examples_build
 	touch .FoX
 #
 objsdir:
 	mkdir -p objs/lib objs/finclude
 #
-examples_build:
+examples_build: wxml_lib wcml_lib sax_lib dom_lib
 	(cd examples; make)
 #
 check: dom_check sax_check wxml_check wcml_check

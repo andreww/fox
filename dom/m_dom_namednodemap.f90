@@ -4,7 +4,6 @@ module m_dom_namednodemap
 ! DOM node structure in mind.
 !
 use m_dom_types, only: fnode, fnamednode, fnamednodemap
-use m_strings, only: operator(==), unstring
 
 implicit none
 

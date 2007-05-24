@@ -161,7 +161,7 @@ contains
 !!$    if (.not. associated(nodemap)) return
 !!$    nnp => nodemap%head
 !!$    do while (associated(nnp))
-!!$       call unstring(nnp%name)
+!!$       deallocate(nnp%name)
 !!$       ghost => nnp%node
 !!$       nnp => nnp%next
 !!$       call destroyNode(ghost)      ! We might not want to really destroy
@@ -195,12 +195,12 @@ contains
        if (associated(np%firstChild)) then
           call destroyNode(np%firstChild)
        endif
-       if (associated(np%attributes)) call destroyNamedNodeMap(np%attributes)
-       call unstring(np%nodeName)
-       call unstring(np%nodeValue)
-       call unstring(np%namespaceURI)
-       call unstring(np%prefix)
-       call unstring(np%localName)
+       !if (associated(np%attributes)) call destroyNamedNodeMap(np%attributes)
+       deallocate(np%nodeName)
+       deallocate(np%nodeValue)
+       deallocate(np%namespaceURI)
+       deallocate(np%prefix)
+       deallocate(np%localName)
        if (associated(np%previousSibling)) & 
                 np%previousSibling%nextSibling => np%nextSibling
        if (associated(np%nextSibling)) & 

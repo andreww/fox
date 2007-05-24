@@ -33,6 +33,8 @@ contains
     character(len=*), intent(in) :: publicId
     character(len=*), intent(in) :: systemId
     type(fdocumentType), pointer :: dt
+
+    allocate(dt)
     dt%name = vs_str_alloc(qualifiedName)
     !dt%entities
     !dt%notations
@@ -44,6 +46,7 @@ contains
   function createEmptyDocumentType() result(dt)
     type(fdocumentType), pointer :: dt
 
+    allocate(dt)
     allocate(dt%name(0))
     !dt%entities
     !dt%notations
@@ -54,9 +57,10 @@ contains
 
   subroutine destroyDocumentType(dt)
     type(fDocumentType), pointer :: dt
+    
     deallocate(dt%name)
-    call destroyNamedNodeMap(dt%entities)
-    call destroyNamedNodeMap(dt%notations)
+    !call destroyNamedNodeMap(dt%entities)
+    !call destroyNamedNodeMap(dt%notations)
     deallocate(dt%publicId)
     deallocate(dt%systemId)
     deallocate(dt%internalSubset)
@@ -69,6 +73,8 @@ contains
     character(len=*), intent(in) :: qualifiedName
     type(fDocumentType), pointer, optional :: docType
     type(fDocumentNode), pointer :: doc
+
+    allocate(doc)
     
     doc%docType => null()
     if (present(docType)) then
@@ -85,6 +91,7 @@ contains
   function createEmptyDocument() result(doc)
     type(fDocumentNode), pointer :: doc
     
+    allocate(doc)
     ! FIXME do something with namespaceURI etc 
     doc%doctype => createEmptyDocumentType()
     doc%implementation => FoX_DOM

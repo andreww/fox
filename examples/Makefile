@@ -2,7 +2,7 @@
 
 include ../arch.make
 
-examples: sax_example.exe wxml_example.exe wcml_example.exe
+examples: dom_example.exe sax_example.exe wxml_example.exe wcml_example.exe
 
 OBJS = example_xml_module.o
 INCFLAGS=$$(../FoX-config --fcflags --wxml)

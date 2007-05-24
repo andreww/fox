@@ -1,6 +1,7 @@
 module m_dom_parse
 
   use m_common_array_str, only: vs_str_alloc
+  use m_common_error, only: FoX_error
   use FoX_common, only: dictionary_t, len
   use FoX_common, only: getQName, getValue, getLocalname, getURI
   use FoX_sax, only: parse, xml_t
@@ -24,11 +25,7 @@ module m_dom_parse
   public :: parsefile
 
   type(fDocumentNode), pointer, private, save  :: mainDoc => null()
-  type(fNode), pointer, private, save  :: main => null()
   type(fNode), pointer, private, save  :: current => null()
-  type(fNode), pointer, private, save  :: documentElement => null()
-
-  !type(nsDictionary), save :: nsDict
 
 contains
 
@@ -114,7 +111,7 @@ contains
     print*,'allocating mainDoc'
 
     mainDoc = createEmptyDocument()
-    current => main
+    current => mainDoc%documentElement
   end subroutine startDocument_handler
 
   subroutine startDTD_handler(name, publicId, systemId)
@@ -135,10 +132,6 @@ contains
 
   end subroutine startDTD_handler
 
-!***************************************************
-!   PUBLIC PROCEDURES
-!***************************************************
-
 
   function parsefile(filename, verbose, sax_verbose)
 
@@ -148,8 +141,6 @@ contains
 
     type(fDocumentNode), pointer :: parsefile
 
-    logical :: sax_debug = .false.
-
     type(xml_t) :: fxml
     integer :: iostat
 
@@ -157,10 +148,6 @@ contains
        dom_debug = verbose
     endif
 
-    if (present(sax_verbose)) then
-       sax_debug = sax_verbose
-    endif
-    
     call open_xml_file(fxml, filename, iostat)
     if (iostat /= 0) then
       call FoX_error("Cannot open file")
@@ -172,7 +159,7 @@ contains
       endElement_handler=endElement_handler,            &
       !endPrefixMapping_handler,      &
       !ignorableWhitespace_handler,   &
-      processingInstruction_handler = processingInstruction_handler, &
+      processingInstruction_handler=processingInstruction_handler, &
       ! setDocumentLocator
       !skippedEntity_handler,         &
       startDocument_handler=startDocument_handler,         & 
