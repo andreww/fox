@@ -8,10 +8,10 @@ module m_dom_parse
 
   use m_dom_types, only: fNode, fDocumentNode, getnumberofallocatednodes
   use m_dom_types, only: createnode, DOCUMENT_NODE, destroynode
-  use m_dom_document, only: createcomment
-  use m_dom_document, only: createcdatasection
+  use m_dom_document, only: createProcessingInstruction
+  use m_dom_document, only: createComment
   use m_dom_document, only: createElementNS
-  use m_dom_document, only: createtextnode
+  use m_dom_document, only: createTextNode
   use m_dom_implementation, only: createEmptyDocument
   use m_dom_node, only: appendchild
   use m_dom_node, only: getparentnode
@@ -79,26 +79,36 @@ contains
   subroutine characters_handler(chunk)
     character(len=*), intent(in) :: chunk
 
-    type(fnode), pointer :: temp, dummy
+    type(fnode), pointer :: temp
     
     if (dom_debug) print *, "Got PCDATA: |", chunk, "|"
 
     temp => createTextNode(mainDoc, chunk)
-    dummy => appendChild(current,temp)
+    temp => appendChild(current,temp)
 
   end subroutine characters_handler
 
   subroutine comment_handler(comment)
     character(len=*), intent(in) :: comment
 
-    type(fnode), pointer :: temp, dummy
+    type(fnode), pointer :: temp
 
     if (dom_debug) print *, "Got COMMENT: |", comment, "|"
 
     temp => createComment(mainDoc, comment)
-    dummy => appendChild(current,temp)
+    temp => appendChild(current,temp)
 
   end subroutine comment_handler
+
+  subroutine processingInstruction_handler(target, data)
+    character(len=*), intent(in) :: target
+    character(len=*), intent(in) :: data
+
+    type(fnode), pointer :: temp
+
+    temp => createProcessingInstruction(mainDoc, target, data)
+    temp => appendChild(current, temp)
+  end subroutine processingInstruction_handler
 
   subroutine startDocument_handler
     print*,'allocating mainDoc'
@@ -162,7 +172,7 @@ contains
       endElement_handler=endElement_handler,            &
       !endPrefixMapping_handler,      &
       !ignorableWhitespace_handler,   &
-      !processingInstruction_handler, &
+      processingInstruction_handler = processingInstruction_handler, &
       ! setDocumentLocator
       !skippedEntity_handler,         &
       startDocument_handler=startDocument_handler,         & 
