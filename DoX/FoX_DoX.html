@@ -100,12 +100,19 @@
 
 <p>As of version 2.1.1, FoX has been tested with the following compiler versions.</p>
 
+<p>Successfully:</p>
+
 <ul>
-<li>g95 as of 20/5/7: Fails to compile</li>
+<li>g95 as of 25/5/7: compiles and runs all tests</li>
 <li>NAG version 5.1: compiles and runs all tests</li>
 <li>Intel version 9.1: compiles and runs all tests</li>
 <li>PGI version 6.2-3: compiles (apart from WCML), some mysterious test failures.</li>
 </ul>
+
+<p>Known failures:
+* g95 prior to 25/5/7: fails to compile.
+* PGI version 6.2-3: compilation failure in WCML. All <code>common/</code> tests pass. Several 
+ failures due to memory allocation in <code>wxml/</code>.</p>
 
 <p>Results from other compilers are welcome.</p>
 
@@ -185,7 +192,7 @@ sax_lib
 <p>Known failures: <br />
 * <code>test_xml_Close_2</code> sometimes unexpectedly fails - this is not a problem, ignore it.  </p>
 
-<p>If any other failures occur, please send a message to the mailing list (<a href="&#x6D;&#x61;i&#x6C;&#x74;&#111;:&#70;&#x6F;&#x58;&#64;&#108;&#x69;&#115;&#x74;&#115;&#46;&#x75;&#x73;&#122;&#x6C;&#97;&#x2E;&#109;&#101;&#46;&#x75;&#x6B;">&#70;&#x6F;&#x58;&#64;&#108;&#x69;&#115;&#x74;&#115;&#46;&#x75;&#x73;&#122;&#x6C;&#97;&#x2E;&#109;&#101;&#46;&#x75;&#x6B;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
+<p>If any other failures occur, please send a message to the mailing list (<a href="&#x6D;&#x61;i&#108;&#116;&#x6F;:&#x46;&#111;&#x58;&#64;l&#x69;&#115;&#116;&#x73;&#46;&#117;&#115;&#122;l&#97;&#46;m&#x65;&#46;&#117;&#107;">&#x46;&#111;&#x58;&#64;l&#x69;&#115;&#116;&#x73;&#46;&#117;&#115;&#122;l&#97;&#46;m&#x65;&#46;&#117;&#107;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
 
 <h2>Linking to an existing program</h2>
 
@@ -2045,9 +2052,9 @@ integer, intent(in), optional :: i</code></li>
 <h1>Further information</h1>
 
 <p>FoX evolved from the initial codebase of <a href="http://lcdx00.wm.lc.ehu.es/ag/xml/">xmlf90</a>,
-which was written largely by Alberto Garcia &lt;<a href="&#x6D;&#x61;&#105;&#x6C;&#116;o:&#97;&#x6C;&#x62;&#x65;&#x72;&#x74;&#111;&#x67;&#64;&#105;&#x63;&#x6D;&#x61;&#98;&#x2E;&#101;&#x73;">&#97;&#x6C;&#x62;&#x65;&#x72;&#x74;&#111;&#x67;&#64;&#105;&#x63;&#x6D;&#x61;&#98;&#x2E;&#101;&#x73;</a>> and Jon Wakelin &lt;<a href="&#109;&#97;&#105;l&#116;&#111;:&#106;o&#x6E;&#x2E;&#x77;&#97;&#x6B;&#x65;&#108;&#x69;n&#64;&#98;r&#105;&#x73;&#116;&#111;l&#x2E;&#97;&#x63;&#x2E;&#x75;&#107;">&#106;o&#x6E;&#x2E;&#x77;&#97;&#x6B;&#x65;&#108;&#x69;n&#64;&#98;r&#105;&#x73;&#116;&#111;l&#x2E;&#97;&#x63;&#x2E;&#x75;&#107;</a>>.</p>
+which was written largely by Alberto Garcia &lt;<a href="&#109;&#x61;&#105;&#108;&#116;&#111;:&#x61;&#108;b&#101;&#114;&#116;&#x6F;&#x67;&#64;&#x69;c&#109;&#x61;b&#x2E;&#x65;&#x73;">&#x61;&#108;b&#101;&#114;&#116;&#x6F;&#x67;&#64;&#x69;c&#109;&#x61;b&#x2E;&#x65;&#x73;</a>> and Jon Wakelin &lt;<a href="&#109;&#97;&#105;&#x6C;&#x74;&#111;:&#x6A;&#111;&#x6E;.&#x77;&#97;&#107;&#101;&#108;&#105;&#110;&#64;&#x62;&#x72;i&#115;&#116;o&#x6C;&#x2E;&#97;&#99;&#46;&#117;k">&#x6A;&#111;&#x6E;.&#x77;&#97;&#107;&#101;&#108;&#105;&#110;&#64;&#x62;&#x72;i&#115;&#116;o&#x6C;&#x2E;&#97;&#99;&#46;&#117;k</a>>.</p>
 
-<p>FoX is the work of Toby White &lt;<a href="&#109;&#97;&#105;&#x6C;&#x74;o:&#x74;&#x6F;&#119;&#50;&#49;&#64;&#99;&#97;&#x6D;&#46;&#97;&#99;&#x2E;&#x75;&#x6B;">&#x74;&#x6F;&#119;&#50;&#49;&#64;&#99;&#97;&#x6D;&#46;&#97;&#99;&#x2E;&#x75;&#x6B;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
+<p>FoX is the work of Toby White &lt;<a href="&#109;&#x61;&#105;&#x6C;&#x74;&#x6F;:&#x74;&#x6F;&#x77;2&#x31;&#64;&#99;&#x61;&#109;&#46;&#x61;c&#x2E;&#117;&#107;">&#x74;&#x6F;&#x77;2&#x31;&#64;&#99;&#x61;&#109;&#46;&#x61;c&#x2E;&#117;&#107;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
 
 <p>There is a FoX website at <a href="http://www.uszla.me.uk/software/FoX/">http://www.uszla.me.uk/software/FoX/</a>.</p>
 

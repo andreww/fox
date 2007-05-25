@@ -11,10 +11,17 @@ FoX requires a Fortran 95 compiler - not just Fortran 90. All currently availabl
 
 As of version 2.1.1, FoX has been tested with the following compiler versions.
 
-* g95 as of 20/5/7: Fails to compile
+Successfully:
+
+* g95 as of 25/5/7: compiles and runs all tests
 * NAG version 5.1: compiles and runs all tests
 * Intel version 9.1: compiles and runs all tests
 * PGI version 6.2-3: compiles (apart from WCML), some mysterious test failures.
+
+Known failures:
+* g95 prior to 25/5/7: fails to compile.
+* PGI version 6.2-3: compilation failure in WCML. All `common/` tests pass. Several 
+ failures due to memory allocation in `wxml/`.
 
 Results from other compilers are welcome.
 

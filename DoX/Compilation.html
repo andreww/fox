@@ -19,12 +19,19 @@
 
 <p>As of version 2.1.1, FoX has been tested with the following compiler versions.</p>
 
+<p>Successfully:</p>
+
 <ul>
-<li>g95 as of 20/5/7: Fails to compile</li>
+<li>g95 as of 25/5/7: compiles and runs all tests</li>
 <li>NAG version 5.1: compiles and runs all tests</li>
 <li>Intel version 9.1: compiles and runs all tests</li>
 <li>PGI version 6.2-3: compiles (apart from WCML), some mysterious test failures.</li>
 </ul>
+
+<p>Known failures:
+* g95 prior to 25/5/7: fails to compile.
+* PGI version 6.2-3: compilation failure in WCML. All <code>common/</code> tests pass. Several 
+ failures due to memory allocation in <code>wxml/</code>.</p>
 
 <p>Results from other compilers are welcome.</p>
 
@@ -104,7 +111,7 @@ sax_lib
 <p>Known failures: <br />
 * <code>test_xml_Close_2</code> sometimes unexpectedly fails - this is not a problem, ignore it.  </p>
 
-<p>If any other failures occur, please send a message to the mailing list (<a href="&#x6D;&#x61;&#105;&#108;&#116;&#111;:&#x46;&#111;&#x58;&#64;l&#105;s&#116;&#x73;&#x2E;&#x75;&#x73;zla&#46;&#109;&#x65;&#46;u&#107;">&#x46;&#111;&#x58;&#64;l&#105;s&#116;&#x73;&#x2E;&#x75;&#x73;zla&#46;&#109;&#x65;&#46;u&#107;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
+<p>If any other failures occur, please send a message to the mailing list (<a href="&#109;&#x61;&#x69;&#x6C;&#116;&#x6F;:&#x46;&#111;&#88;&#64;&#x6C;&#105;&#x73;t&#x73;.&#x75;&#115;z&#108;&#x61;&#x2E;m&#101;.&#x75;&#x6B;">&#x46;&#111;&#88;&#64;&#x6C;&#105;&#x73;t&#x73;.&#x75;&#115;z&#108;&#x61;&#x2E;m&#101;.&#x75;&#x6B;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
 
 <h2>Linking to an existing program</h2>
 
