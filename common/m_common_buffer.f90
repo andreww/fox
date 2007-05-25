@@ -83,9 +83,11 @@ contains
 
     if (buffer%size + len(s) > MAX_BUFF_SIZE) then
       if (.not.present(ws_significant)) then
-        call FoX_warning("Output buffer too small. Need to insert a newline. If whitespace might be significant, check your output.")
+        call FoX_warning( &
+        "Output buffer too small. Need to insert a newline. If whitespace might be significant, check your output.")
       elseif (ws_significant) then
-        call FoX_error("Output buffer too small. Need to insert a newline but whitespace is significant. Stopping now.")
+        call FoX_error( &
+        "Output buffer too small. Need to insert a newline but whitespace is significant. Stopping now.")
       else
         continue ! without error or warning
       endif
