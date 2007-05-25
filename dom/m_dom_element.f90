@@ -3,36 +3,26 @@ module m_dom_element
   use m_common_array_str, only: str_vs, vs_str_alloc
   use m_common_namecheck, only: prefixOfQName, localpartOfQName
 
-use m_dom_types, only: fnode, fnodelist, fDocumentNode
-use m_dom_types, only: element_node, document_node
-use m_dom_types, only: text_node
-use m_dom_types, only: destroyNode
-
-use m_dom_node, only: getnodename
-use m_dom_node, only: getfirstchild
-use m_dom_node, only: getnextsibling
-use m_dom_node, only: haschildnodes
-
-use m_dom_nodelist, only: append
-
-use m_dom_namednodemap, only: removenameditem
-use m_dom_namednodemap, only: setnameditem
-use m_dom_namednodemap, only: getnameditem
-
-use m_dom_document, only: createAttribute, createAttributeNS
-use m_dom_debug, only: dom_debug
-
-use m_strings, only: string, assignment(=)
-use m_strings, only: stringify, operator(==)
-use m_strings, only: operator(+)
-
-implicit none
-
-private
-
-interface getElementById
-  module procedure getElementById_doc, getElementById_node
-end interface getElementById
+  use m_dom_types, only: Node, NodeList, Node
+  use m_dom_types, only: destroyNode
+  use m_dom_types, only: DOCUMENT_NODE, ELEMENT_NODE, TEXT_NODE
+  
+  !use m_dom_node, only: getnodename
+  !use m_dom_node, only: getfirstchild
+  !use m_dom_node, only: getnextsibling
+  use m_dom_node, only: haschildnodes
+  
+  use m_dom_nodelist, only: append
+  
+  use m_dom_namednodemap, only: removenameditem
+  use m_dom_namednodemap, only: setnameditem
+  use m_dom_namednodemap, only: getnameditem
+  
+  use m_dom_document, only: createAttribute, createAttributeNS
+  use m_dom_debug, only: dom_debug
+  
+  implicit none
+  private
 
   public :: getTagName
   public :: getAttribute
@@ -50,7 +40,7 @@ end interface getElementById
 contains
 
   function getTagName(element)
-    type(fnode), intent(in) :: element   
+    type(Node), intent(in) :: element   
     character(len=size(element%nodeName)) :: getTagName
     
     if (element % nodeType == ELEMENT_NODE) then
@@ -62,46 +52,39 @@ contains
   end function getTagName
 
     
-  !-----------------------------------------------------------
-  function getElementsByTagName(element, tag) result(nodelist)
-    type(fnode), pointer         :: element
+  function getElementsByTagName(element, tag) result(list)
+    type(Node), pointer         :: element
     character(len=*), intent(in) :: tag
-    type(fnodeList), pointer     :: nodelist 
+    type(NodeList), pointer     :: list 
 
-    type(fnode), pointer        :: np
+    type(Node), pointer        :: np
 
-    nodelist => null()
+    list => null()
 
+    ! FIXME is element an element or a document?
     np => element
     if (dom_debug) print *, "Going into search for tag: ", tag
     call search(np)
 
-    CONTAINS
+  contains
 
     recursive subroutine search(np)
-    type(fnode), pointer        :: np
+    type(Node), pointer        :: np
 
-    type(string)                :: name
-
-    !
-    ! Could replace the calls to helper methods by direct lookups of node 
-    ! components to make it faster.
-    ! 
     do
-       if (.not. associated(np)) exit
+       if (.not.associated(np)) exit
        select case(np%nodeType)
           case(DOCUMENT_NODE) 
              ! special case ... search its children 
-             if (hasChildNodes(np)) call search(getFirstChild(np))
+             if (hasChildNodes(np)) call search(np%firstChild)
              ! will exit for lack of siblings
           case(ELEMENT_NODE)
-             name = getNodeName(np)
-             if (dom_debug) print *, "exploring node: ", stringify(name)
-             if ((tag == "*") .or. (tag == name)) then
-                call append(nodelist,np)
-                if (dom_debug) print *, "found match ", nodelist%length
+             if (dom_debug) print *, "exploring node: ", str_vs(np%nodeName)
+             if ((tag == "*") .or. (tag == str_vs(np%nodeName))) then
+                call append(list,np)
+                if (dom_debug) print *, "found match ", list%length
              endif
-             if (hasChildNodes(np)) call search(getFirstChild(np))
+             if (hasChildNodes(np)) call search(np%firstChild)
           case default
              
              ! do nothing
@@ -109,7 +92,7 @@ contains
         end select
 
         if (associated(np,element)) exit  ! no siblings of element...
-        np => getNextSibling(np)
+        np => np%nextSibling
 
      enddo
     
@@ -117,33 +100,30 @@ contains
 
   end function getElementsByTagName
 
-  !-----------------------------------------------------------
 
-  function getAttribute(element, name)
+  function getAttribute(element, name) result(attr)
     
-    type(fnode), intent(in) :: element
+    type(Node), intent(in) :: element
     character(len=*), intent(in) :: name
-    ! FIXME
-    character(len=100) :: getAttribute
+    character(len=100) :: attr ! FIXME
 
-    type(fnode), pointer :: nn
+    type(Node), pointer :: nn
 
-    getAttribute = ""  ! as per specs, if not found
-    if (element % nodeType /= ELEMENT_NODE) RETURN
+    attr = ""  ! as per specs, if not found
+    if (element % nodeType /= ELEMENT_NODE) return ! or throw an error FIXME?
     nn => getNamedItem(element%attributes,name)
-    if (.not. associated(nn)) RETURN
+    if (.not.associated(nn)) return ! or throw an error FIXME?
     
-    getAttribute = str_vs(nn%nodeValue)
+    attr = str_vs(nn%nodeValue)
 
         
   end function getAttribute
 
-  !-----------------------------------------------------------
 
   function getAttributeNode(element, name)
     
-    type(fnode), intent(in) :: element
-    type(fnode), pointer    :: getAttributeNode
+    type(Node), intent(in) :: element
+    type(Node), pointer    :: getAttributeNode
     character(len=*), intent(in) :: name
 
     getAttributeNode => null()     ! as per specs, if not found
@@ -153,9 +133,9 @@ contains
   end function getAttributeNode
   
   function setAttributeNode(element, newattr) result(attr)
-    type(fnode), pointer :: element
-    type(fnode), pointer :: newattr
-    type(fnode), pointer :: attr
+    type(Node), pointer :: element
+    type(Node), pointer :: newattr
+    type(Node), pointer :: attr
 
     if (element % nodeType /= ELEMENT_NODE) then
        if (dom_debug) print *, "not an element node in setAttributeNode..."
@@ -172,19 +152,19 @@ contains
   end function setAttributeNode
 
   function setAttributeNodeNS(element, newattr) result(attr)
-    type(fnode), pointer :: element
-    type(fnode), pointer :: newattr
-    type(fnode), pointer :: attr
+    type(Node), pointer :: element
+    type(Node), pointer :: newattr
+    type(Node), pointer :: attr
 
     attr = setAttributeNode(element, newattr)
   end function setAttributenodeNS
 
   function setAttribute(element, name, value) result(newattr)
-    type(fnode), pointer :: element
+    type(Node), pointer :: element
     character(len=*), intent(in) :: name
     character(len=*), intent(in) :: value
 
-    type(fnode), pointer      :: newattr
+    type(Node), pointer      :: newattr
 
     ! FIXME: Check does one exist already.
 
@@ -195,12 +175,12 @@ contains
   end function setAttribute
 
   function setAttributeNS(element, nsURI, name, value) result(newattr)
-    type(fnode), pointer :: element
+    type(Node), pointer :: element
     character(len=*), intent(in) :: nsURI
     character(len=*), intent(in) :: name
     character(len=*), intent(in) :: value
 
-    type(fnode), pointer      :: newattr
+    type(Node), pointer      :: newattr
 
     ! FIXME: Check does one exist already.
 
@@ -213,10 +193,10 @@ contains
   !-----------------------------------------------------------
 
   subroutine removeAttribute(element, name)
-    type(fnode), pointer :: element
+    type(Node), pointer :: element
     character(len=*), intent(in) :: name
 
-    type(fnode), pointer :: dummy
+    type(Node), pointer :: dummy
 
     if (element % nodeType /= ELEMENT_NODE) RETURN
     if (.not. associated(element%attributes)) RETURN
@@ -227,12 +207,12 @@ contains
 
   !-----------------------------------------------------------
   recursive subroutine normalize(element)
-    type(fnode), pointer         :: element
+    type(Node), pointer         :: element
 
-    type(fnode), pointer        :: np, ghost
+    type(Node), pointer        :: np, ghost
     logical                     :: first
 
-    type(fnode), pointer        :: head
+    type(Node), pointer        :: head
     character, pointer :: temp(:)
 
     first = .true.  ! next Text node will be first
@@ -249,7 +229,7 @@ contains
                 if (dom_debug) print *, "normalize: found first in chain"
                 head => np
                 first = .false.
-                np => getNextSibling(np)
+                np => np%nextSibling
              else                    ! a contiguous text node
                 if (dom_debug) print *, "normalize: found second in chain"
                 temp => head%nodeValue
@@ -264,7 +244,7 @@ contains
                    np%nextSibling%previousSibling => head
                 endif
                 ghost => np
-                np => getNextSibling(np)
+                np => np%nextSibling
                 call destroyNode(ghost)
              endif
 
@@ -273,14 +253,14 @@ contains
              first = .true.
              if (dom_debug) print *, "element sibling: ", str_vs(np%nodeName)
              if (hasChildNodes(np)) call normalize(np)
-             np => getNextSibling(np)
+             np => np%nextSibling
 
           case default
              
              ! do nothing, just mark that we break the chain of text nodes
              if (dom_debug) print *, "other sibling: ", str_vs(np%nodeName)
              first = .true.
-             np => getNextSibling(np)
+             np => np%nextSibling
 
         end select
 
@@ -288,48 +268,43 @@ contains
 
     end subroutine normalize
 
-  function getElementById_doc(doc, id) result(node)
-    type(fDocumentNode), pointer :: doc
-    type(string), intent(in) :: id
-    type(fNode), pointer :: node
 
-    node => getElementById(doc%documentElement, id)
-  end function getElementById_doc
+  recursive function getElementById(nodeIn, id) result(nodeOut)
+    type(Node), pointer :: nodeIn
+    character(len=*), intent(in) :: id
+    type(Node), pointer :: nodeOut
 
-  recursive function getElementById_node(nodeIn, id) result(nodeOut)
-    type(fnode), pointer :: nodeIn
-    type(string), intent(in) :: id
-    type(fnode), pointer :: nodeOut
+    type(Node), pointer :: child
 
-    type(fnode), pointer :: child
+    ! FIXME which nodes can we call this on?
 
     if (nodeIn%nodeType == ELEMENT_NODE) then
       if (getAttribute(nodeIn, "id") == id) then
         nodeOut => nodeIn
         return
       else
-        child => getFirstChild(nodeIn)
+        child => nodeIn%firstChild
         do while (associated(child))
-          nodeOut => getElementById_node(child, id)
+          nodeOut => getElementById(child, id)
           if (associated(nodeOut)) return
-          child => getNextSibling(child)
+          child => child%nextSibling
         enddo
         nodeOut => null()
       endif
     else
-      nodeOut => null()
+      nodeOut => null() ! or error ...
     endif
-  end function getElementById_node
+  end function getElementById
 
-  function getElementsByTagNameNS(element, tag, namespaceURI) result(nodelist)
-    type(fnode), pointer         :: element
+  function getElementsByTagNameNS(element, tag, namespaceURI) result(list)
+    type(Node), pointer         :: element
     character(len=*), intent(in) :: tag
     character(len=*), intent(in) :: namespaceURI
-    type(fnodeList), pointer     :: nodelist 
+    type(NodeList), pointer     :: list 
 
-    type(fnode), pointer        :: np
+    type(Node), pointer        :: np
 
-    nodelist => null()
+    list => null()
 
     np => element
     if (dom_debug) print *, "Going into search for tag: ", tag
@@ -338,29 +313,26 @@ contains
     CONTAINS
 
     recursive subroutine search(np)
-    type(fnode), pointer        :: np
-
-    type(string)                :: name
+    type(Node), pointer        :: np
 
     !
     ! Could replace the calls to helper methods by direct lookups of node 
     ! components to make it faster.
     ! 
     do
-       if (.not. associated(np)) exit
+       if (.not.associated(np)) exit
        select case(np%nodeType)
           case(DOCUMENT_NODE) 
              ! special case ... search its children 
-             if (hasChildNodes(np)) call search(getFirstChild(np))
+             if (hasChildNodes(np)) call search(np%firstChild)
              ! will exit for lack of siblings
           case(ELEMENT_NODE)
-             name = getNodeName(np)
-             if (dom_debug) print *, "exploring node: ", stringify(name)
-             if ((tag == "*") .or. (tag == name)) then
-                call append(nodelist,np)
-                if (dom_debug) print *, "found match ", nodelist%length
+             if (dom_debug) print *, "exploring node: ", str_vs(np%nodeName)
+             if ((tag == "*") .or. (tag == str_vs(np%nodeName))) then
+                call append(list,np)
+                if (dom_debug) print *, "found match ", list%length
              endif
-             if (hasChildNodes(np)) call search(getFirstChild(np))
+             if (hasChildNodes(np)) call search(np%firstChild)
           case default
              
              ! do nothing
@@ -368,7 +340,7 @@ contains
         end select
 
         if (associated(np,element)) exit  ! no siblings of element...
-        np => getNextSibling(np)
+        np =>np%nextSibling
 
      enddo
     
