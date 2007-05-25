@@ -134,7 +134,7 @@ CONTAINS
   
     createComment => createNode()
     createComment%nodeName => vs_str_alloc("#comment")
-    createComment%nodeValue = data
+    createComment%nodeValue => vs_str_alloc(data)
     createComment%nodeType = COMMENT_NODE
     createComment%ownerDocument => doc
     createComment%data => createComment%data
@@ -147,8 +147,8 @@ CONTAINS
     type(Node), pointer :: createCdataSection
   
     createCdataSection => createNode()
-    createCdataSection%nodeName = vs_str_alloc("#cdata-section")
-    createCdataSection%nodeValue = data
+    createCdataSection%nodeName => vs_str_alloc("#cdata-section")
+    createCdataSection%nodeValue => vs_str_alloc(data)
     createCdataSection%nodeType = CDATA_SECTION_NODE
     createCdataSection%ownerDocument => doc
   
@@ -161,8 +161,8 @@ CONTAINS
     type(Node), pointer :: createProcessingInstruction
 
     createProcessingInstruction => createNode()
-    createProcessingInstruction%nodeName = vs_str_alloc(target)
-    createProcessingInstruction%nodeValue = vs_str_alloc(data)
+    createProcessingInstruction%nodeName => vs_str_alloc(target)
+    createProcessingInstruction%nodeValue => vs_str_alloc(data)
     createProcessingInstruction%nodeType = PROCESSING_INSTRUCTION_NODE
     createProcessingInstruction%ownerDocument => doc
     
@@ -183,7 +183,7 @@ CONTAINS
     type(Node), pointer :: createEntityReference  
 
     createEntityReference => createNode()
-    createEntityReference%nodeName = vs_str_alloc(name)
+    createEntityReference%nodeName => vs_str_alloc(name)
     createEntityReference%nodeType = ENTITY_REFERENCE_NODE
     createEntityReference%ownerDocument => doc
 

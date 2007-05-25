@@ -2,7 +2,7 @@ program dom_example
 
   use FoX_dom
 
-  type(fDocumentNode), pointer :: myDoc
+  type(Node), pointer :: myDoc
 
   myDoc => parsefile('test.xml')
 

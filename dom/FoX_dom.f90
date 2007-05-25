@@ -21,10 +21,7 @@ module FoX_dom
   !for internal library management, so must be kept private.
 
   public :: fDOMImplementation
-  public :: fDocumentType
-  public :: fDocument
-  public :: fDocumentNode
-  public :: fNode
+  public :: Node
 
   ! DOM DOMString
   ! no
