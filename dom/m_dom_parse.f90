@@ -7,7 +7,7 @@ module m_dom_parse
   use FoX_sax, only: parse, xml_t
   use FoX_sax, only: open_xml_file, close_xml_t
 
-  use m_dom_types, only: fNode, fDocumentNode, getnumberofallocatednodes
+  use m_dom_types, only: Node
   use m_dom_types, only: createnode, DOCUMENT_NODE, destroynode
   use m_dom_document, only: createProcessingInstruction
   use m_dom_document, only: createComment
@@ -15,7 +15,6 @@ module m_dom_parse
   use m_dom_document, only: createTextNode
   use m_dom_implementation, only: createEmptyDocument
   use m_dom_node, only: appendchild
-  use m_dom_node, only: getparentnode
   use m_dom_element, only: setAttributeNS
   use m_dom_debug, only: dom_debug
 
@@ -24,8 +23,8 @@ module m_dom_parse
 
   public :: parsefile
 
-  type(fDocumentNode), pointer, private, save  :: mainDoc => null()
-  type(fNode), pointer, private, save  :: current => null()
+  type(Node), pointer, private, save  :: mainDoc => null()
+  type(Node), pointer, private, save  :: current => null()
 
 contains
 
@@ -36,7 +35,7 @@ contains
 
     type(dictionary_t), intent(in) :: attrs
    
-    type(fnode), pointer :: el, temp
+    type(Node), pointer :: el, temp
     integer              :: i
 
     if (dom_debug) &
@@ -69,14 +68,14 @@ contains
     if (associated(mainDoc%documentElement, current)) then
       current => null()
     else
-      current => getParentNode(current)
+      current => current%parentNode
     endif
   end subroutine endElement_handler
 
   subroutine characters_handler(chunk)
     character(len=*), intent(in) :: chunk
 
-    type(fnode), pointer :: temp
+    type(Node), pointer :: temp
     
     if (dom_debug) print *, "Got PCDATA: |", chunk, "|"
 
@@ -88,7 +87,7 @@ contains
   subroutine comment_handler(comment)
     character(len=*), intent(in) :: comment
 
-    type(fnode), pointer :: temp
+    type(Node), pointer :: temp
 
     if (dom_debug) print *, "Got COMMENT: |", comment, "|"
 
@@ -101,7 +100,7 @@ contains
     character(len=*), intent(in) :: target
     character(len=*), intent(in) :: data
 
-    type(fnode), pointer :: temp
+    type(Node), pointer :: temp
 
     print*,'createPI'
     temp => createProcessingInstruction(mainDoc, target, data)
@@ -141,7 +140,7 @@ contains
     logical, intent(in), optional :: verbose
     logical, intent(in), optional :: sax_verbose
 
-    type(fDocumentNode), pointer :: parsefile
+    type(Node), pointer :: parsefile
 
     type(xml_t) :: fxml
     integer :: iostat
@@ -186,7 +185,7 @@ contains
       )
     
     call close_xml_t(fxml)
-    if (dom_debug) print *, "Number of allocated nodes: ", getNumberofAllocatedNodes()
+!    if (dom_debug) print *, "Number of allocated nodes: ", getNumberofAllocatedNodes()
     
     !    call createDocument(mainDoc, main)
     parsefile => mainDoc
