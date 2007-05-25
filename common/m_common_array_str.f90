@@ -21,6 +21,7 @@ module m_common_array_str
   public :: str_vs
   public :: vs_str
   public :: vs_str_alloc
+  public :: vs_vs_alloc
 
   public :: devnull
 
@@ -81,6 +82,14 @@ contains
     allocate(vs(len(s)))
     vs = vs_str(s)
   end function vs_str_alloc
+
+  pure function vs_vs_alloc(s) result(vs)
+    character, dimension(:), intent(in) :: s
+    character, dimension(:), pointer :: vs
+
+    allocate(vs(size(s)))
+    vs = s
+  end function vs_vs_alloc
 
   subroutine devnull(in)
     character(len=*), intent(in) :: in
