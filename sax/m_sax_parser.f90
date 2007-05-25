@@ -523,7 +523,6 @@ contains
           ! FIXME check name is name? ought to be.
           fx%whitespace = WS_MANDATORY
           fx%state = ST_IN_TAG
-          call init_dict(fx%attributes)
         elseif (fx%context == CTXT_AFTER_CONTENT) then
           call add_error(fx%error_stack, "Cannot open second root element")
           goto 100
@@ -1352,6 +1351,7 @@ contains
         getlocalNameofQName(str_vs(fx%name)), &
         str_vs(fx%name), fx%attributes)
       call destroy_dict(fx%attributes)
+      call init_dict(fx%attributes)
       fx%wf_stack(1) = fx%wf_stack(1) + 1
     end subroutine open_tag
 
