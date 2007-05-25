@@ -2,7 +2,7 @@ module m_dom_text
 
   use m_common_array_str, only: str_vs
 
-  use m_dom_types, only: fnode, TEXT_NODE
+  use m_dom_types, only: Node, TEXT_NODE
   !use m_dom_namednodemap
   !use m_dom_nodelist
   !use m_dom_attribute
@@ -28,30 +28,30 @@ module m_dom_text
 
 contains
 
-  function getLengthText(node)
-    type(fnode), intent(in) :: node
+  function getLengthText(arg)
+    type(Node), intent(in) :: arg
     integer :: getLengthText
-    if (node % nodeType == TEXT_NODE) then
-       getLengthText = size(node%nodeValue)
+    if (arg%nodeType == TEXT_NODE) then
+       getLengthText = size(arg%nodeValue)
     else
-       getLengthText = 0
+       getLengthText = 0 ! or error
     endif
   end function getLengthText
 
-  function getData(node)
-    type(fnode), intent(in) :: node
-    character(len=size(node%nodeValue)) :: getData
-    if (node % nodeType == TEXT_NODE) then
-       getData = str_vs(node%nodeValue)
+  function getData(arg)
+    type(Node), intent(in) :: arg
+    character(len=size(arg%nodeValue)) :: getData
+    if (arg%nodeType == TEXT_NODE) then
+       getData = str_vs(arg%nodeValue)
     else
-       getData = ''
+       getData = '' ! or error
     endif
   end function getData
 
 
   !-------------------------------------------------------
 !  function subStringData(node, offset, count) 
-!    type(fnode), intent(in) :: node
+!    type(Node), intent(in) :: node
 !    integer,     intent(in) :: offset
 !    integer,     intent(in) :: count
 !    type(string) :: subStringData
@@ -66,7 +66,7 @@ contains
 
   !-------------------------------------------------------
 !  subroutine appendData(node, data)
-!    type(fnode),      intent(in) :: node
+!    type(Node),      intent(in) :: node
 !    character(len=*), intent(in) :: data
 !    
 !    character :: tmp
@@ -79,7 +79,7 @@ contains
 
   !-------------------------------------------------------
 !  subroutine insertData(node, offset, data)
-!    type(fnode),      intent(in) :: node
+!    type(Node),      intent(in) :: node
 !    integer,          intent(in) :: offset
 !    character(len=*), intent(in) :: data
 !
@@ -94,7 +94,7 @@ contains
 
   !-------------------------------------------------------
 !  subroutine deleteData(node, offset, count)
-!    type(fnode), intent(in) :: node
+!    type(Node), intent(in) :: node
 !    integer,     intent(in) :: offset
 !    integer,     intent(in) :: count
 !
@@ -108,7 +108,7 @@ contains
 
   !-------------------------------------------------------
 !  subroutine replaceData(node, offset, count, data)
-!    type(fnode), intent(in) :: node
+!    type(Node), intent(in) :: node
 !    integer,     intent(in) :: offset
 !    integer,     intent(in) :: count
 !    character(len=*), intent(in) :: data
@@ -132,11 +132,11 @@ contains
   !-------------------------------------------------------
 
 !  subroutine splitText(node, offset)
-!    type(fnode), pointer :: node
+!    type(Node), pointer :: node
 !    integer,     intent(in) :: offset
 !
-!    type(fnode), pointer :: parent
-!    type(fnode), pointer :: newNode
+!    type(Node), pointer :: parent
+!    type(Node), pointer :: newNode
 !
 !    character(len=(len(node%nodeValue)-offset)) :: tmp
 !
