@@ -2,10 +2,8 @@ module m_dom_implementation
 
   use m_common_array_str, only: vs_str_alloc
   use m_dom_document, only: createElementNS
-  use m_dom_types, only: FoX_DOM
-  use m_dom_types, only: fDocumentNode
-  use m_dom_types, only: fDocumentType
-  use m_dom_types, only: fnode
+ ! use m_dom_types, only: FoX_DOM
+  use m_dom_types, only: Node
 
   implicit none
   private
@@ -32,7 +30,7 @@ contains
     character(len=*), intent(in) :: qualifiedName
     character(len=*), intent(in) :: publicId
     character(len=*), intent(in) :: systemId
-    type(fdocumentType), pointer :: dt
+    type(Node), pointer :: dt
 
     allocate(dt)
     dt%name = vs_str_alloc(qualifiedName)
@@ -44,7 +42,7 @@ contains
   end function createDocumentType
 
   function createEmptyDocumentType() result(dt)
-    type(fdocumentType), pointer :: dt
+    type(Node), pointer :: dt
 
     allocate(dt)
     allocate(dt%name(0))
@@ -56,7 +54,7 @@ contains
   end function createEmptyDocumentType
 
   subroutine destroyDocumentType(dt)
-    type(fDocumentType), pointer :: dt
+    type(Node), pointer :: dt
     
     deallocate(dt%name)
     !call destroyNamedNodeMap(dt%entities)
@@ -71,8 +69,8 @@ contains
   function createDocument(namespaceURI, qualifiedName, docType) result(doc)
     character(len=*), intent(in) :: namespaceURI
     character(len=*), intent(in) :: qualifiedName
-    type(fDocumentType), pointer, optional :: docType
-    type(fDocumentNode), pointer :: doc
+    type(Node), pointer, optional :: docType
+    type(Node), pointer :: doc
 
     allocate(doc)
     
@@ -83,18 +81,18 @@ contains
     if (.not.associated(doc%docType)) then
       doc%docType => createDocumentType(qualifiedName, "", "")
     endif
-    doc%implementation => FoX_DOM
+!    doc%implementation => FoX_DOM
     doc%documentElement => createElementNS(doc, namespaceURI, qualifiedName)
     
   end function createDocument
 
   function createEmptyDocument() result(doc)
-    type(fDocumentNode), pointer :: doc
+    type(Node), pointer :: doc
     
     allocate(doc)
     ! FIXME do something with namespaceURI etc 
     doc%doctype => createEmptyDocumentType()
-    doc%implementation => FoX_DOM
+!    doc%implementation => FoX_DOM
     doc%documentElement => null()
     
   end function createEmptyDocument
