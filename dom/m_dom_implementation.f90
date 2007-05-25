@@ -3,7 +3,7 @@ module m_dom_implementation
   use m_common_array_str, only: vs_str_alloc
   use m_dom_document, only: createElementNS
  ! use m_dom_types, only: FoX_DOM
-  use m_dom_types, only: Node
+  use m_dom_types, only: Node, DOCUMENT_NODE
 
   implicit none
   private
@@ -73,6 +73,7 @@ contains
     type(Node), pointer :: doc
 
     allocate(doc)
+    doc%nodeType = DOCUMENT_NODE
     
     doc%docType => null()
     if (present(docType)) then
@@ -90,6 +91,7 @@ contains
     type(Node), pointer :: doc
     
     allocate(doc)
+    doc%nodeType = DOCUMENT_NODE
     ! FIXME do something with namespaceURI etc 
     doc%doctype => createEmptyDocumentType()
 !    doc%implementation => FoX_DOM

@@ -44,15 +44,14 @@ contains
     el => createElementNS(mainDoc, URI, name)
 
     do i = 1, len(attrs)
-       if (dom_debug) print *, "Adding attribute: ", &
-         getQName(attrs, i), ":",getValue(attrs, i)
-        temp => setAttributeNS(el, getURI(attrs, i), getQName(attrs, i), getValue(attrs, i))
+      if (dom_debug) print *, "Adding attribute: ", &
+        getQName(attrs, i), ":",getValue(attrs, i)
+      temp => setAttributeNS(el, getURI(attrs, i), getQName(attrs, i), getValue(attrs, i))
     enddo
 
-    if (.not.associated(current)) then
-      current => el ! This is the document element
-    else
-      current => appendChild(current,el)
+    current => appendChild(current,el)
+    if (current%nodeType==DOCUMENT_NODE) then
+      mainDoc%documentElement => current
     endif
     
   end subroutine startElement_handler
@@ -112,7 +111,7 @@ contains
     print*,'allocating mainDoc'
 
     mainDoc => createEmptyDocument()
-    current => mainDoc%documentElement
+    current => mainDoc
   end subroutine startDocument_handler
 
   subroutine startDTD_handler(name, publicId, systemId)
