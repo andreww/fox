@@ -142,13 +142,8 @@ contains
        return
     endif
 
-    ! FIXME check does attribute exist already
-
+    ! this checks if attribute exist already
     attr => setNamedItem(element%attributes,newattr)
-
-    ! FIXME are we returning the right thing?
-    attr => null()
-    
   end function setAttributeNode
 
   function setAttributeNodeNS(element, newattr) result(attr)
@@ -156,7 +151,8 @@ contains
     type(Node), pointer :: newattr
     type(Node), pointer :: attr
 
-    attr = setAttributeNode(element, newattr)
+    ! FIXME is this right or not - ie what are the rules for replacing here?
+    attr => setAttributeNode(element, newattr)
   end function setAttributenodeNS
 
   function setAttribute(element, name, value) result(newattr)
