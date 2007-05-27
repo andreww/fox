@@ -10,8 +10,6 @@ module FoX_dom
   use m_dom_text
   use m_dom_parse
   use m_dom_utils
-  
-  use m_strings
 
   private
 
@@ -161,5 +159,6 @@ module FoX_dom
 
   ! FoX-only interfaces
   public :: parsefile
+  public :: dumpTree
 
 end module FoX_dom

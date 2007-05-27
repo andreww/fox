@@ -19,11 +19,16 @@ contains
 
   function hasFeature(feature, version) result(p)
     character(len=*), intent(in) :: feature
-    character(len=*), intent(in) :: version
+    character(len=*), intent(in), optional :: version
     logical :: p
-
-    !FIXME
-    p = .true.
+    
+    if (present(version)) then
+      if (version/="1.0".and.version/="2.0") then
+        p = .false.
+        return
+      endif
+    endif
+    p = (feature=="Core".or.feature=="XML")
   end function hasFeature
 
   function createDocumentType(qualifiedName, publicId, systemId) result(dt)
@@ -39,6 +44,9 @@ contains
     dt%publicId = vs_str_alloc(publicId)
     dt%systemId = vs_str_alloc(systemId)
     allocate(dt%internalSubset(0)) !FIXME
+    dt%ownerDocument => null()
+    ! FIXME fill in the rest of the fields ...
+
   end function createDocumentType
 
   function createEmptyDocumentType() result(dt)
@@ -74,6 +82,7 @@ contains
 
     allocate(doc)
     doc%nodeType = DOCUMENT_NODE
+    doc%nodeName = "#document"
     
     doc%docType => null()
     if (present(docType)) then

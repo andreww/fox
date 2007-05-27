@@ -10,7 +10,6 @@ module m_dom_utils
   use m_dom_namednodemap, only: getlength, item
 
   use m_common_attrs, only: dictionary_t, add_item_to_dict, getValue, hasKey
-!  use m_dict, only : dictionary, addKey, getValue, hasKey
 
   use FoX_wxml, only: xmlf_t
   use FoX_wxml, only: xml_OpenFile, xml_Close
@@ -29,13 +28,12 @@ module m_dom_utils
 
   private
 
-CONTAINS
+contains
 
   subroutine dumpTree(startNode)
 
     type(Node), pointer :: startNode   
 
-    character(len=50) :: indent = " "
     integer           :: indent_level
 
     indent_level = 0
@@ -49,8 +47,8 @@ CONTAINS
       type(Node), pointer :: temp     
       temp => input
       do while(associated(temp))
-         write(*,'(3a,i3)') indent(1:indent_level), &
-                        temp%nodeName, " of type ", &
+         write(*,'(3a,i0)') repeat(' ', indent_level), &
+                        str_vs(temp%nodeName), " of type ", &
                         temp%nodeType
          if (hasChildNodes(temp)) then
             indent_level = indent_level + 3
@@ -95,6 +93,9 @@ CONTAINS
     n => input
     if (.not. associated(n)) return
     select case (n%nodeType)
+
+    case (DOCUMENT_NODE)
+      call dump_xml(xf, n%documentElement)
       
     case (ELEMENT_NODE)
       
@@ -110,7 +111,7 @@ CONTAINS
           else
             prefix => vs_str_alloc('ns'//nns)
           endif
-          call addItem(simpleDict, str_vs(n%namespaceURI), str_vs(n%prefix))
+          call add_item_to_dict(simpleDict, str_vs(n%namespaceURI), str_vs(n%prefix))
         endif
         if (size(prefix)==0) then
           elementQName => vs_vs_alloc(n%nodeName)
