@@ -58,6 +58,10 @@ case $FC in
       FC_ID=G77
       ;;
 
+   g95*)
+      FC_ID=G95
+      ;;
+
    gfortran*)
       FC_ID=Gfortran
       ;;

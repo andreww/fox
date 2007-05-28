@@ -5733,6 +5733,10 @@ case $FC in
       FC_ID=G77
       ;;
 
+   g95*)
+      FC_ID=G95
+      ;;
+
    gfortran*)
       FC_ID=Gfortran
       ;;
@@ -5816,6 +5820,11 @@ case $FC_ID in
 
   G77)
      ;;
+
+  G95)
+    FFLAGS_FAST=-O2
+    FFLAGS_DEBUG="-ggdb3 -ftrace=full -fbounds-check -flogical=false -freal=nan -fpointer=invalid -finteger=-1"
+    ;;
 
   Gfortran)
      ;;

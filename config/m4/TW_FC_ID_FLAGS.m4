@@ -62,6 +62,11 @@ case $FC_ID in
   G77)
      ;;
 
+  G95)
+    FFLAGS_FAST=-O2
+    FFLAGS_DEBUG="-ggdb3 -ftrace=full -fbounds-check -flogical=false -freal=nan -fpointer=invalid -finteger=-1"
+    ;;
+
   Gfortran)
      ;;
  
