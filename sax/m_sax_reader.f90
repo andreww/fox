@@ -168,7 +168,11 @@ contains
     fb%eof = .false.
     fb%line = 1
     fb%col = 0
-    fb%filename => vs_str_alloc(file)
+    if (present(file)) then
+      fb%filename => vs_str_alloc(file)
+    else
+      fb%filename => vs_str_alloc("")
+    endif
     fb%pos = 1
     fb%nchars = 0
     allocate(fb%buffer_stack(0))
