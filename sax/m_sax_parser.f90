@@ -59,6 +59,7 @@ contains
     call init_element_list(fx%element_list)
 
     allocate(fx%wf_stack(1))
+    fx%wf_stack(1) = 0
     call init_entity_list(fx%forbidden_ge_list)
     call init_entity_list(fx%forbidden_pe_list)
 
