@@ -199,7 +199,7 @@ contains
     character(len=*), intent(in) :: tagName
     type(NodeList) :: list
 
-    type(NodeList), pointer :: np_stack
+    type(NodeList) :: np_stack
     type(Node), pointer :: np
     logical :: alreadyDone
 
@@ -216,7 +216,9 @@ contains
     endif
 
     ! Use iteration, not recursion, to save stack space.
+    alreadyDone = .false.
     do
+      print*, 'iterating ...', associated(np)
       if (alreadyDone) then
         np => pop_nl(np_stack)
         if (np_stack%length==0) then

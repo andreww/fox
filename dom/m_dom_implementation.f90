@@ -3,7 +3,7 @@ module m_dom_implementation
   use m_common_array_str, only: vs_str_alloc
   use m_dom_document, only: createElementNS
  ! use m_dom_types, only: FoX_DOM
-  use m_dom_types, only: Node, createNode, DOCUMENT_NODE, DOCUMENT_TYPE_NODE
+  use m_dom_types, only: Node, createNode, destroyNode, DOCUMENT_NODE, DOCUMENT_TYPE_NODE
 
   implicit none
   private
@@ -102,5 +102,13 @@ contains
     doc%documentElement => null()
     
   end function createEmptyDocument
+
+  subroutine destroyDocument(doc)
+    type(Node), pointer :: doc
+    
+    call destroyNode(doc%documentElement)
+    deallocate(doc)
+
+  end subroutine destroyDocument
 
 end module m_dom_implementation

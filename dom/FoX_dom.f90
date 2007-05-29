@@ -20,6 +20,8 @@ module FoX_dom
 
   public :: fDOMImplementation
   public :: Node
+  public :: NodeList
+  public :: NamedNodeMap
 
   ! DOM DOMString
   ! no

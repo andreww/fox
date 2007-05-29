@@ -49,10 +49,14 @@ contains
       temp => setAttributeNS(el, getURI(attrs, i), getQName(attrs, i), getValue(attrs, i))
     enddo
 
-    current => appendChild(current,el)
+    print*, 'startingElement!: current', current%nodeType
+
     if (current%nodeType==DOCUMENT_NODE) then
-      mainDoc%documentElement => current
+      print*, 'that was the docuemnt elemtnt'
+      mainDoc%documentElement => el
     endif
+
+    current => appendChild(current,el)
     
   end subroutine startElement_handler
 
@@ -119,8 +123,8 @@ contains
     character(len=*), intent(in), optional :: publicId
     character(len=*), intent(in), optional :: systemId
 
-    deallocate(mainDoc%docType%name)
-    mainDoc%docType%name => vs_str_alloc(name)
+    deallocate(mainDoc%docType%nodeName)
+    mainDoc%docType%nodeName => vs_str_alloc(name)
     if (present(publicId)) then
       deallocate(mainDoc%docType%publicId)
       mainDoc%docType%publicId => vs_str_alloc(publicId)
