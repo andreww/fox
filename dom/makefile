@@ -1,7 +1,7 @@
 #
 default: install
 #
-OBJFILES= m_strings.o m_dict.o m_dom_debug.o m_dom_error.o \
+OBJFILES= m_dom_debug.o m_dom_error.o \
 	  m_dom_types.o m_dom_namednodemap.o m_dom_nodelist.o \
 	  m_dom_node.o m_dom_attribute.o m_dom_document.o \
 	  m_dom_element.o m_dom_text.o m_dom_parse.o \
@@ -37,20 +37,19 @@ clean:
 # DO NOT DELETE THIS LINE - used by make depend
 FoX_dom.o: m_dom_attribute.o m_dom_document.o m_dom_element.o
 FoX_dom.o: m_dom_namednodemap.o m_dom_node.o m_dom_nodelist.o m_dom_parse.o
-FoX_dom.o: m_dom_text.o m_dom_types.o m_dom_utils.o m_strings.o
-m_dict.o: m_strings.o
-m_dom_attribute.o: m_dom_node.o m_dom_types.o
-m_dom_document.o: m_dom_error.o m_dom_node.o m_dom_types.o
+FoX_dom.o: m_dom_text.o m_dom_types.o m_dom_utils.o
+m_dom_attribute.o: m_dom_types.o
+m_dom_document.o: m_dom_error.o m_dom_types.o
 m_dom_documenttype.o: m_dom_types.o
-m_dom_element.o: m_dom_attribute.o m_dom_debug.o m_dom_document.o
-m_dom_element.o: m_dom_namednodemap.o m_dom_node.o m_dom_nodelist.o
-m_dom_element.o: m_dom_types.o m_strings.o
+m_dom_element.o: m_dom_debug.o m_dom_document.o m_dom_namednodemap.o
+m_dom_element.o: m_dom_node.o m_dom_nodelist.o m_dom_types.o
+m_dom_entity.o: m_dom_types.o
 m_dom_implementation.o: m_dom_document.o m_dom_types.o
-m_dom_namednodemap.o: m_dom_types.o m_strings.o
+m_dom_namednodemap.o: m_dom_types.o
 m_dom_node.o: m_dom_debug.o m_dom_error.o m_dom_namednodemap.o m_dom_nodelist.o
 m_dom_node.o: m_dom_types.o
 m_dom_nodelist.o: m_dom_types.o
 m_dom_parse.o: m_dom_debug.o m_dom_document.o m_dom_element.o
-m_dom_parse.o: m_dom_implementation.o m_dom_node.o m_dom_types.o m_strings.o
+m_dom_parse.o: m_dom_implementation.o m_dom_node.o m_dom_types.o
 m_dom_text.o: m_dom_types.o
 m_dom_utils.o: m_dom_namednodemap.o m_dom_node.o m_dom_types.o

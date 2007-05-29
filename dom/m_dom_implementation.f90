@@ -3,7 +3,7 @@ module m_dom_implementation
   use m_common_array_str, only: vs_str_alloc
   use m_dom_document, only: createElementNS
  ! use m_dom_types, only: FoX_DOM
-  use m_dom_types, only: Node, DOCUMENT_NODE
+  use m_dom_types, only: Node, createNode, DOCUMENT_NODE, DOCUMENT_TYPE_NODE
 
   implicit none
   private
@@ -21,7 +21,7 @@ contains
     character(len=*), intent(in) :: feature
     character(len=*), intent(in), optional :: version
     logical :: p
-    
+    ! FIXME squashcase
     if (present(version)) then
       if (version/="1.0".and.version/="2.0") then
         p = .false.
@@ -37,8 +37,8 @@ contains
     character(len=*), intent(in) :: systemId
     type(Node), pointer :: dt
 
-    allocate(dt)
-    dt%name = vs_str_alloc(qualifiedName)
+    dt => createNode(null(), DOCUMENT_TYPE_NODE, qualifiedName, "")
+    dt%ownerDocument => dt
     !dt%entities
     !dt%notations
     dt%publicId = vs_str_alloc(publicId)
@@ -52,8 +52,7 @@ contains
   function createEmptyDocumentType() result(dt)
     type(Node), pointer :: dt
 
-    allocate(dt)
-    allocate(dt%name(0))
+    dt => createNode(null(), DOCUMENT_TYPE_NODE, "", "")
     !dt%entities
     !dt%notations
     allocate(dt%publicId(0))
@@ -64,13 +63,9 @@ contains
   subroutine destroyDocumentType(dt)
     type(Node), pointer :: dt
     
-    deallocate(dt%name)
+    call destroyNode(dt)
     !call destroyNamedNodeMap(dt%entities)
     !call destroyNamedNodeMap(dt%notations)
-    deallocate(dt%publicId)
-    deallocate(dt%systemId)
-    deallocate(dt%internalSubset)
-    deallocate(dt)
   end subroutine destroyDocumentType
 
   
@@ -80,17 +75,16 @@ contains
     type(Node), pointer, optional :: docType
     type(Node), pointer :: doc
 
-    allocate(doc)
-    doc%nodeType = DOCUMENT_NODE
-    doc%nodeName = "#document"
-    
-    doc%docType => null()
+    doc => createNode(null(), DOCUMENT_NODE, "#document", "")
+    doc%ownerDocument => doc
+
     if (present(docType)) then
       doc%doctype => docType
     endif
     if (.not.associated(doc%docType)) then
       doc%docType => createDocumentType(qualifiedName, "", "")
     endif
+
 !    doc%implementation => FoX_DOM
     doc%documentElement => createElementNS(doc, namespaceURI, qualifiedName)
     
@@ -99,8 +93,9 @@ contains
   function createEmptyDocument() result(doc)
     type(Node), pointer :: doc
     
-    allocate(doc)
-    doc%nodeType = DOCUMENT_NODE
+    doc => createNode(null(), DOCUMENT_NODE, "#document", "")
+    doc%ownerDocument => doc
+
     ! FIXME do something with namespaceURI etc 
     doc%doctype => createEmptyDocumentType()
 !    doc%implementation => FoX_DOM
