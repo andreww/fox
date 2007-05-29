@@ -8,7 +8,8 @@ module m_dom_character_data
   private
   
   public :: getLength
-  public :: getData
+!  public :: getData
+!  public :: setData
   public :: substringData
   public :: appendData
   public :: insertData
@@ -29,30 +30,6 @@ contains
       nodeType == COMMENT_NODE .or. &
       nodeType == CDATA_SECTION_NODE)
   end function isCharData
-
-
-  function getData(arg) result(c)
-    type(Node), intent(in) :: arg
-    character(len=size(arg%nodeValue)) :: c
-    if (isCharData(arg%nodeType)) then
-       c = str_vs(arg%nodeValue)
-    else
-       c = '' ! or error
-    endif
-  end function getData
-
-
-  subroutine setData(arg, data)
-    type(Node), intent(inout) :: arg
-    character(len=*) :: data
-    if (isCharData(arg%nodeType)) then
-      deallocate(arg%nodeValue)
-      arg%nodeValue => vs_str_alloc(data)
-    else
-      ! or error
-      continue
-    endif
-  end subroutine setData
 
 
   function getLength_characterdata(arg) result(n)

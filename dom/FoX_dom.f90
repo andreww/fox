@@ -13,6 +13,7 @@ module FoX_dom
   use m_dom_element
   use m_dom_text
   use m_dom_entity
+  use m_dom_processing_instruction
   use m_dom_parse
   use m_dom_utils
 
@@ -122,6 +123,8 @@ module FoX_dom
   ! NB We use the native Fortran string type here
   ! rather than inventing a DOM String, thus no
   ! string type to make public
+! public :: getData
+! public :: setData
   public :: substringData
   public :: appendData
   public :: insertData
@@ -157,6 +160,8 @@ module FoX_dom
   public :: splitText
 
   !DOM CData
+! public :: getData
+! public :: setData
 
   !DOM DocumentType
   public :: getEntities
@@ -170,8 +175,13 @@ module FoX_dom
   !DOM EntityReference
 
   !DOM ProcessingInstruction
+!  public :: getData
+!  public :: setData
+  public :: getTarget
 
   !DOM common
+  public :: getData
+  public :: setData
   public :: getName
   public :: getPublicId
   public :: getSystemId
