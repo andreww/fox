@@ -11,6 +11,8 @@ module m_dom_common
 ! Assorted functions with identical signatures despite belonging to different types.
 
   public :: getName
+  public :: getPublicId
+  public :: getSystemId
 
 contains
   
@@ -26,7 +28,8 @@ contains
     
   end function getName
 
-    function getPublicId(arg) result(c)
+
+  function getPublicId(arg) result(c)
     type(Node), intent(in) :: arg
     character(len=size(arg%publicId)) :: c
 
@@ -39,6 +42,7 @@ contains
     c = str_vs(arg%publicId)
 
   end function getPublicId
+
 
   function getSystemId(arg) result(c)
     type(Node), intent(in) :: arg

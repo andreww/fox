@@ -343,4 +343,26 @@ contains
     ! cannot fix until IDs implemented
   end function getElementById
 
+  ! Internal function, not part of API
+
+  function createEntity(doc, name, publicId, systemId, notationName) result(np)
+    type(Node), pointer :: doc
+    character(len=*), intent(in) :: name
+    character(len=*), intent(in) :: publicId
+    character(len=*), intent(in) :: systemId
+    character(len=*), intent(in) :: notationName
+    type(Node), pointer :: np
+
+    if (doc%nodeType/=DOCUMENT_NODE) then
+      print*,'internal error in createEntity'
+      stop
+    endif
+
+    np => createNode(doc, ENTITY_NODE, name, "")
+    np%publicId => vs_str_alloc(publicId)
+    np%systemId => vs_str_alloc(systemId)
+    np%notationName => vs_str_alloc(notationName)
+
+  end function createEntity
+
 end module m_dom_document

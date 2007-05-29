@@ -12,6 +12,7 @@ module FoX_dom
   use m_dom_node
   use m_dom_element
   use m_dom_text
+  use m_dom_entity
   use m_dom_parse
   use m_dom_utils
 
@@ -129,7 +130,7 @@ module FoX_dom
 
   ! DOM Attr
 !  public :: attrType
-  public :: getName
+!  public :: getName
   public :: getSpecified
   public :: getValue
   public :: setValue
@@ -158,17 +159,22 @@ module FoX_dom
   !DOM CData
 
   !DOM DocumentType
-!  public :: documentType
+  public :: getEntities
+  public :: getNotations
   
   !DOM Notation
-!  public :: notation
 
-  !DOM ENtity
-!  public :: Entity
+  !DOM Entity
+  public :: getNotationName
 
   !DOM EntityReference
 
   !DOM ProcessingInstruction
+
+  !DOM common
+  public :: getName
+  public :: getPublicId
+  public :: getSystemId
 
   ! FoX-only interfaces
   public :: parsefile
