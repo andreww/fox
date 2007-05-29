@@ -1,5 +1,6 @@
 module FoX_dom
 
+  use m_dom_common
   use m_dom_types
   use m_dom_implementation
   use m_dom_namednodemap
@@ -7,6 +8,7 @@ module FoX_dom
   use m_dom_character_data
   use m_dom_attribute
   use m_dom_document
+  use m_dom_document_type
   use m_dom_node
   use m_dom_element
   use m_dom_text

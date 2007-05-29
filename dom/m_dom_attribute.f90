@@ -6,7 +6,7 @@ module m_dom_attribute
   implicit none
   private
 
-  public :: getName
+  !public :: getName
   public :: getSpecified
   public :: getValue
   public :: setValue
@@ -14,17 +14,7 @@ module m_dom_attribute
   
 contains
   
-  function getName(attribute) result(c)
-    type(Node), intent(in) :: attribute
-    character(size(attribute%nodeName)) :: c
-    
-    if (attribute%nodeType == ATTRIBUTE_NODE) then
-      c = str_vs(attribute%nodeName)
-    else
-      c = '' ! FIXME error
-    endif
-    
-  end function getName
+  ! function getName(attribute) result(c) See m_dom_common
 
 
   function getSpecified(attribute) result(p)
