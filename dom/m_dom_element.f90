@@ -32,7 +32,6 @@ module m_dom_element
   public :: setAttributeNode
   public :: setAttributeNodeNS
   public :: removeAttribute
-  public :: normalize
 
 contains
 
@@ -150,66 +149,66 @@ contains
   end subroutine removeAttribute
 
   !-----------------------------------------------------------
-  recursive subroutine normalize(element)
-    type(Node), pointer         :: element
-
-    type(Node), pointer        :: np, ghost
-    logical                     :: first
-
-    type(Node), pointer        :: head
-    character, pointer :: temp(:)
-
-    first = .true.  ! next Text node will be first
-
-    if (dom_debug) print *, "Normalizing: ", str_vs(element%nodeName)
-    np => element%firstChild
-    ! 
-    do
-       if (.not. associated(np)) exit
-       select case(np%nodeType)
-
-          case(TEXT_NODE) 
-             if (first) then
-                if (dom_debug) print *, "normalize: found first in chain"
-                head => np
-                first = .false.
-                np => np%nextSibling
-             else                    ! a contiguous text node
-                if (dom_debug) print *, "normalize: found second in chain"
-                temp => head%nodeValue
-                allocate(head%nodeValue(size(temp)+size(np%nodeValue)))
-                head%nodeValue(:size(temp)) = temp
-                head%nodeValue(size(temp)+1:) = np%nodeValue
-                head%nextSibling => np%nextSibling
-                if (associated(np,np%parentNode%lastChild)) then
-                   np%parentNode%lastChild => head
-                   head%nextSibling => null()
-                else
-                   np%nextSibling%previousSibling => head
-                endif
-                ghost => np
-                np => np%nextSibling
-                call destroyNode(ghost)
-             endif
-
-          case(ELEMENT_NODE)
-
-             first = .true.
-             if (dom_debug) print *, "element sibling: ", str_vs(np%nodeName)
-             if (hasChildNodes(np)) call normalize(np)
-             np => np%nextSibling
-
-          case default
-             
-             ! do nothing, just mark that we break the chain of text nodes
-             if (dom_debug) print *, "other sibling: ", str_vs(np%nodeName)
-             first = .true.
-             np => np%nextSibling
-
-        end select
-
-     enddo
-
-    end subroutine normalize
+!!$  recursive subroutine normalize(element)
+!!$    type(Node), pointer         :: element
+!!$
+!!$    type(Node), pointer        :: np, ghost
+!!$    logical                     :: first
+!!$
+!!$    type(Node), pointer        :: head
+!!$    character, pointer :: temp(:)
+!!$
+!!$    first = .true.  ! next Text node will be first
+!!$
+!!$    if (dom_debug) print *, "Normalizing: ", str_vs(element%nodeName)
+!!$    np => element%firstChild
+!!$    ! 
+!!$    do
+!!$       if (.not. associated(np)) exit
+!!$       select case(np%nodeType)
+!!$
+!!$          case(TEXT_NODE) 
+!!$             if (first) then
+!!$                if (dom_debug) print *, "normalize: found first in chain"
+!!$                head => np
+!!$                first = .false.
+!!$                np => np%nextSibling
+!!$             else                    ! a contiguous text node
+!!$                if (dom_debug) print *, "normalize: found second in chain"
+!!$                temp => head%nodeValue
+!!$                allocate(head%nodeValue(size(temp)+size(np%nodeValue)))
+!!$                head%nodeValue(:size(temp)) = temp
+!!$                head%nodeValue(size(temp)+1:) = np%nodeValue
+!!$                head%nextSibling => np%nextSibling
+!!$                if (associated(np,np%parentNode%lastChild)) then
+!!$                   np%parentNode%lastChild => head
+!!$                   head%nextSibling => null()
+!!$                else
+!!$                   np%nextSibling%previousSibling => head
+!!$                endif
+!!$                ghost => np
+!!$                np => np%nextSibling
+!!$                call destroyNode(ghost)
+!!$             endif
+!!$
+!!$          case(ELEMENT_NODE)
+!!$
+!!$             first = .true.
+!!$             if (dom_debug) print *, "element sibling: ", str_vs(np%nodeName)
+!!$             if (hasChildNodes(np)) call normalize(np)
+!!$             np => np%nextSibling
+!!$
+!!$          case default
+!!$             
+!!$             ! do nothing, just mark that we break the chain of text nodes
+!!$             if (dom_debug) print *, "other sibling: ", str_vs(np%nodeName)
+!!$             first = .true.
+!!$             np => np%nextSibling
+!!$
+!!$        end select
+!!$
+!!$     enddo
+!!$
+!!$    end subroutine normalize
 
 end module m_dom_element

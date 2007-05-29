@@ -1,6 +1,6 @@
 module m_dom_node
 
-  use m_common_array_str, only: str_vs
+  use m_common_array_str, only: str_vs, vs_str_alloc
   use m_dom_types, only: Node, Nodelist, NamedNodeMap
   use m_dom_types, only: ELEMENT_NODE, ATTRIBUTE_NODE, COMMENT_NODE
   use m_dom_types, only: TEXT_NODE, PROCESSING_INSTRUCTION_NODE
@@ -16,29 +16,121 @@ module m_dom_node
   implicit none
   private
   
-!  public :: getNodeName
-!  public :: getNodevalue	
-!  public :: getNodeType
-  public :: hasChildNodes
-  public :: hasAttributes
-!  public :: getParentNode
-!  public :: getFirstChild
-!  public :: getLastChild
-!  public :: getNextSibling
-!  public :: getPreviousSibling
-!  public :: getOwnerDocument
-!  public :: getAttributes
-!  public :: getChildNodes
-!  public :: setNodeValue
-  public :: appendChild
-  public :: removeChild
+  public :: getNodeName
+  public :: getNodevalue	
+  public :: setNodeValue
+  public :: getNodeType
+  public :: getParentNode
+  public :: getChildNodes
+  public :: getFirstChild
+  public :: getLastChild
+  public :: getNextSibling
+  public :: getPreviousSibling
+  public :: getAttributes
+  public :: getOwnerDocument
+  public :: insertBefore
   public :: replaceChild
-!  public :: cloneNode  
+  public :: removeChild
+  public :: appendChild
+  public :: hasChildNodes
+  public :: cloneNode  
+  public :: normalize
+  public :: isSupported
+  public :: getNamespaceURI
+  public :: getPrefix
+  public :: setPrefix
+  public :: getLocalName
+  public :: hasAttributes
 !  public :: isSameNode
-!  public :: insertBefore
-!  public :: setOwnerDocument
 
 contains
+
+  ! Getters and setters
+
+  function getNodeName(arg) result(c)
+    type(Node), intent(in) :: arg
+    character(len=size(arg%nodeName)) :: c
+    
+    c = str_vs(arg%nodeName)
+  end function getNodeName
+
+  function getNodeValue(arg) result(c)
+    type(Node), intent(in) :: arg
+    character(len=size(arg%nodeName)) :: c
+    
+    c = str_vs(arg%nodeName)
+  end function getNodeValue
+  
+  subroutine setNodeValue(arg, nodeValue)
+    type(Node), intent(inout) :: arg
+    character(len=*) :: nodeValue
+
+    deallocate(arg%nodeValue)
+    arg%nodeValue => vs_str_alloc(nodeValue)
+  end subroutine setNodeValue
+
+  function getNodeType(arg) result(n)
+    type(Node), intent(in) :: arg
+    integer :: n
+
+    n = arg%nodeType
+  end function getNodeType
+
+  function getParentNode(arg) result(np)
+    type(Node), intent(in) :: arg
+    type(Node), pointer :: np
+
+    np => arg%parentNode
+  end function getParentNode
+  
+  function getChildNodes(arg) result(nl)
+    type(Node), intent(in) :: arg
+    type(NodeList), pointer :: nl
+
+    nl => arg%childnodes
+  end function getChildNodes
+  
+  function getFirstChild(arg) result(np)
+    type(Node), intent(in) :: arg
+    type(Node), pointer :: np
+
+    np => arg%firstChild
+  end function getFirstChild
+  
+  function getLastChild(arg) result(np)
+    type(Node), intent(in) :: arg
+    type(Node), pointer :: np
+
+    np => arg%lastChild
+  end function getLastChild
+
+  function getPreviousSibling(arg) result(np)
+    type(Node), intent(in) :: arg
+    type(Node), pointer :: np
+
+    np => arg%previousSibling
+  end function getPreviousSibling
+  
+  function getNextSibling(arg) result(np)
+    type(Node), intent(in) :: arg
+    type(Node), pointer :: np
+
+    np => arg%nextSibling
+  end function getNextSibling
+
+  function getAttributes(arg) result(nnm)
+    type(Node), intent(in) :: arg
+    type(NamedNodeMap), pointer :: nnm
+
+    nnm => arg%attributes
+  end function getAttributes
+
+  function getOwnerDocument(arg) result(np)
+    type(Node), intent(in) :: arg
+    type(Node), pointer :: np
+
+    np => arg%ownerDocument
+  end function getOwnerDocument
 
   function insertBefore(arg, newChild, refChild)
     type(Node), pointer :: insertBefore
@@ -212,6 +304,14 @@ contains
     
   end function hasChildNodes
 
+  function cloneNode(arg, deep) result(np)
+    type(Node), pointer :: arg
+    logical :: deep
+    type(Node), pointer :: np
+
+    ! FIXME implement
+  end function cloneNode
+
 !!$  recursive function cloneNode(arg, deep) result(np) 
 !!$    type(Node), pointer :: arg
 !!$    logical :: deep
@@ -279,10 +379,51 @@ contains
     
   end function hasAttributes
   
+  subroutine normalize(arg)
+    type(Node), intent(inout) :: arg
+    
+    ! FIXME implement
+  end subroutine normalize
 
-  ! FIXME normalize
+  function isSupported(arg, feature, version) result(p)
+    type(Node), intent(in) :: arg
+    character(len=*), intent(in) :: feature
+    character(len=*), intent(in) :: version
+    logical :: p
 
-  ! FIXME isSupported
+    ! FIXME implement
+    p = .true.
+  end function isSupported
+
+  ! FIXME should the below instead just decompose the QName on access?
+  function getNamespaceURI(arg) result(c)
+    type(Node), intent(in) :: arg
+    character(len=size(arg%namespaceURI)) :: c
+
+    c = str_vs(arg%namespaceURI)
+  end function getNamespaceURI
+
+  function getPrefix(arg) result(c)
+    type(Node), intent(in) :: arg
+    character(len=size(arg%prefix)) :: c
+
+    c = str_vs(arg%prefix)
+  end function getPrefix
+  
+  subroutine setPrefix(arg, prefix)
+    type(Node), intent(inout) :: arg
+    character(len=*) :: prefix
+
+    deallocate(arg%prefix)
+    arg%prefix => vs_str_alloc(prefix)
+  end subroutine setPrefix
+
+  function getLocalName(arg) result(c)
+    type(Node), intent(in) :: arg
+    character(len=size(arg%localName)) :: c
+
+    c = str_vs(arg%localName)
+  end function getLocalName
 
   function isSameNode(node1, node2)    ! DOM 3.0
     type(Node), pointer :: node1
@@ -294,14 +435,7 @@ contains
   end function isSameNode
 
 
-  subroutine setOwnerDocument(arg, doc)
-    type(Node), pointer :: arg
-    type(Node), pointer :: doc
-
-    arg%ownerDocument => doc
-
-  end subroutine setOwnerDocument
-
+  
 
 end module m_dom_node
 
