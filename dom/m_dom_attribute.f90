@@ -1,105 +1,77 @@
 module m_dom_attribute
 
-  use m_common_array_str, only: str_vs
-!  use m_common_error, only: FoX_error
+  use m_common_array_str, only: str_vs, vs_str_alloc
   use m_dom_types, only : Node, ATTRIBUTE_NODE
-!  use m_dom_node, only : setNodeValue
   
   implicit none
   private
 
   public :: getName
+  public :: getSpecified
   public :: getValue
-!  public :: setValue
-!  public :: setnsURI
-!  public :: setlocalName
+  public :: setValue
+  public :: getOwnerElement
   
-CONTAINS
+contains
   
-  function getName(attribute)
+  function getName(attribute) result(c)
     type(Node), intent(in) :: attribute
-    character(size(attribute%nodeName))  :: getName
+    character(size(attribute%nodeName)) :: c
     
     if (attribute%nodeType == ATTRIBUTE_NODE) then
-      getName = str_vs(attribute%nodeName)
+      c = str_vs(attribute%nodeName)
     else
-      getName = ''
+      c = '' ! FIXME error
     endif
     
   end function getName
 
 
-  function getValue(attribute)
+  function getSpecified(attribute) result(p)
     type(Node), intent(in) :: attribute
-    character(size(attribute%nodeValue))  :: getValue
+    logical :: p
+
+    p = attribute%specified
+  end function getSpecified
+
+
+  function getValue(attribute) result(c)
+    type(Node), intent(in) :: attribute
+    character(size(attribute%nodeValue)) :: c 
 
     if (attribute%nodeType == ATTRIBUTE_NODE) then
-       getValue = str_vs(attribute%nodeValue)
+       c = str_vs(attribute%nodeValue)
     else
-       getValue = ''
+       c = '' ! FIXME error
     endif
 
   end function getValue
 
 
-!!$  subroutine setValue(attribute, value)
-!!$
-!!$    character(len=*), intent(in) :: value
-!!$    type(fnode), pointer  :: attribute
-!!$
-!!$    if (attribute % nodeType == ATTRIBUTE_NODE) then
-!!$       call setNodeValue(attribute,value)
-!!$    endif
-!!$
-!!$  end subroutine setValue
-!!$
-!!$  subroutine setnsURI(attribute, nsURI)
-!!$
-!!$    character(len=*), intent(in) :: nsuRI
-!!$    type(fnode), pointer  :: attribute
-!!$
-!!$    if (attribute % nodeType == ATTRIBUTE_NODE) then
-!!$      deallocate(attribute%nsURI)
-!!$      attribute%nsURI => vs_str_alloc(nsURI)
-!!$    endif
-!!$
-!!$  end subroutine setnsURI
+  subroutine setValue(attribute, value)
+    type(Node), intent(inout) :: attribute
+    character(len=*), intent(in) :: value
 
-!!$  subroutine setlocalName(attribute, localName)
-!!$
-!!$    character(len=*), intent(in) :: localName
-!!$    type(fnode), pointer  :: attribute
-!!$
-!!$    if (attribute % nodeType == ATTRIBUTE_NODE) then
-!!$       call setNodelocalName(attribute,localName)
-!!$    endif
-!!$
-!!$  end subroutine setlocalName
-  !-----------------------------------------------------------
+    if (attribute%nodeType == ATTRIBUTE_NODE) then
+      deallocate(attribute%nodeValue)
+      attribute%nodeValue => vs_str_alloc(value)
+    else
+      ! FIXME error
+    endif
+
+  end subroutine setValue
 
 
-!!! NB Is this a good idea?
-!!! NB pure functions have no side effects
+  function getOwnerElement(attribute) result(np)
+    type(Node), intent(in) :: attribute
+    type(Node), pointer :: np
 
-!  pure function attr_name_len(attribute)
-!    type(fnode), intent(in) :: attribute
-!    integer :: attr_name_len
-!    if (attribute % nodeType == ATTRIBUTE_NODE) then
-!       attr_name_len = len_trim(attribute % nodeName)
-!    else
-!       attr_name_len = 0
-!    end if
-!  end function attr_name_len
-!  
-!  pure function attr_val_len(attribute)   
-!    type(fnode), intent(in) :: attribute
-!    integer :: attr_val_len
-!    if (attribute % nodeType == ATTRIBUTE_NODE) then
-!       attr_val_len = len_trim(attribute % nodeValue)
-!    else
-!       attr_val_len = 0
-!    end if
-!  end function attr_val_len
+    if (attribute%nodeType == ATTRIBUTE_NODE) then
+      np => attribute%ownerElement
+    else
+       ! FIXME error
+    endif
 
+  end function getOwnerElement
 
 end module m_dom_attribute

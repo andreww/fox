@@ -127,6 +127,11 @@ module FoX_dom
 
   ! DOM Attr
 !  public :: attrType
+  public :: getName
+  public :: getSpecified
+  public :: getValue
+  public :: setValue
+  public :: getOwnerElement
 
   ! DOM Element
 !  public :: getAttribute
