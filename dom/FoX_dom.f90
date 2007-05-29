@@ -151,7 +151,7 @@ module FoX_dom
 !  public :: hasAttributeNS
 
   !DOM Text
-!  public :: splitText
+  public :: splitText
 
   !DOM CData
 

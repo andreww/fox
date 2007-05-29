@@ -1,39 +1,37 @@
 module m_dom_text
 
-  use m_common_array_str, only: str_vs
+  use m_common_array_str, only: str_vs, vs_str_alloc
 
+  use m_dom_document, only: createTextNode
+  use m_dom_node, only: insertBefore
   use m_dom_types, only: Node, TEXT_NODE
-  !use m_dom_namednodemap
-  !use m_dom_nodelist
-  !use m_dom_attribute
-  !use m_dom_document
-  !use m_dom_debug
-  !use m_dom_node
 
   implicit none
   private
   
-!  public :: splitText
-!contains
+  public :: splitText
 
+contains
 
+  subroutine splitText(arg, offset)
+    type(Node), pointer :: arg
+    integer, intent(in) :: offset
 
-!  subroutine splitText(node, offset)
-!    type(Node), pointer :: node
-!    integer,     intent(in) :: offset
-!
-!    type(Node), pointer :: parent
-!    type(Node), pointer :: newNode
-!
-!    character(len=(len(node%nodeValue)-offset)) :: tmp
-!
-!    if (node % nodeType == TEXT_NODE) then
-!       tmp = remove(node%nodeValue, offset, len(node%nodeValue)) 
-!       newNode => createTextNode(node%ownerDocument, tmp)
-!       parent  => node%parentNode
-!       newNode => insertBefore(parent, newNode, node)
-!    end if
-!    
-!  end subroutine splitText
+    type(Node), pointer :: newNode
+
+    character, pointer :: tmp(:)
+
+    if (arg%nodeType == TEXT_NODE) then
+      tmp => arg%nodeValue
+      newNode => createTextNode(arg%ownerDocument, str_vs(tmp(:offset)))
+      arg%nodeValue => vs_str_alloc(str_vs(tmp(offset+1:)))
+      deallocate(tmp)
+      newNode => insertBefore(arg%parentNode, newNode, arg)
+    else
+      ! FIXME error
+      continue
+    end if
+   
+  end subroutine splitText
                                      
 end module m_dom_text
