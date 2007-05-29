@@ -7,7 +7,7 @@ program dom_example
 
   myDoc => parsefile('test.xml')
 
-!  call dumpTree(myDoc)
+  call dumpTree(myDoc)
 
 !  interest = getElementsByTagName(myDoc, 'john1')
 

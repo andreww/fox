@@ -73,14 +73,18 @@ contains
 
     np => list%nodes(size(list%nodes))%this
 
-    temp_nl => list%nodes
-    allocate(list%nodes(size(temp_nl)-1))
-    do i = 1, size(temp_nl)-1
-      list%nodes(i)%this => temp_nl(i)%this
-    enddo
-    deallocate(temp_nl)
-
-    list%length = size(list%nodes)
+    if (list%length==1) then
+      deallocate(list%nodes)
+      list%length = 0
+    else
+      temp_nl => list%nodes
+      allocate(list%nodes(size(temp_nl)-1))
+      do i = 1, size(temp_nl)-1
+        list%nodes(i)%this => temp_nl(i)%this
+      enddo
+      deallocate(temp_nl)
+      list%length = size(list%nodes)
+    endif
     
   end function pop_nl
 

@@ -141,6 +141,8 @@ contains
             np => np%nextSibling
             alreadyDone = .false.
           else
+            print*, 'destroying Node', np%nodeType, str_vs(np%nodeName)
+            call destroyNode(np)
             cycle
           endif
         endif
