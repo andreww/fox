@@ -1,19 +1,19 @@
 module FoX_dom
 
-  use m_dom_common
   use m_dom_types
   use m_dom_implementation
-  use m_dom_namednodemap
+  use m_dom_document
+  use m_dom_node
   use m_dom_nodelist
+  use m_dom_namednodemap
   use m_dom_character_data
   use m_dom_attribute
-  use m_dom_document
-  use m_dom_document_type
-  use m_dom_node
   use m_dom_element
   use m_dom_text
+  use m_dom_document_type
   use m_dom_entity
   use m_dom_processing_instruction
+  use m_dom_common
   use m_dom_parse
   use m_dom_utils
 
@@ -62,7 +62,6 @@ module FoX_dom
   public :: destroyDocument
 
   ! DOM Document
-!  public :: documentType
   public :: createDocumentFragment
   public :: createTextNode
   public :: createComment
@@ -78,8 +77,6 @@ module FoX_dom
   public :: getElementById
 
   ! DOM Node
-!  public :: nodeType
-
   public :: ELEMENT_NODE
   public :: ATTRIBUTE_NODE
   public :: TEXT_NODE
@@ -93,14 +90,14 @@ module FoX_dom
   public :: DOCUMENT_FRAGMENT_NODE
   public :: NOTATION_NODE
 
-!  public :: insertBefore
+  public :: insertBefore
   public :: replaceChild
   public :: removeChild
   public :: appendChild
   public :: hasChildNodes
-!  public :: cloneNode
+  public :: cloneNode
   public :: normalize
-!  public :: isSupported
+  public :: isSupported
   public :: hasAttributes
 
   ! DOM NodeList
@@ -109,8 +106,6 @@ module FoX_dom
   public :: destroyNodeList
 
   ! DOM NamedNodeMap
-!  public :: namedNodeMapType
-  
   public :: getNamedItem
   public :: setNamedItem
   public :: removeNamedItem
@@ -132,7 +127,6 @@ module FoX_dom
   public :: replaceData
 
   ! DOM Attr
-!  public :: attrType
 !  public :: getName
   public :: getSpecified
   public :: getValue
@@ -140,21 +134,21 @@ module FoX_dom
   public :: getOwnerElement
 
   ! DOM Element
-!  public :: getAttribute
-!  public :: setAttribute
-!  public :: removeAttribute
-!  public :: getAttributeNode
-!  public :: setAttributeNode
-!  public :: removeAttributeNode
+  public :: getAttribute
+  public :: setAttribute
+  public :: removeAttribute
+  public :: getAttributeNode
+  public :: setAttributeNode
+  public :: removeAttributeNode
 !  public :: getElementsByTagName
-!  public :: getAttributeNS
-!  public :: setAttributeNS
-!  public :: removeAttributeNS
-!  public :: getAttributeNodeNS
-!  public :: setAttributeNodeNS
+  public :: getAttributeNS
+  public :: setAttributeNS
+  public :: removeAttributeNS
+  public :: getAttributeNodeNS
+  public :: setAttributeNodeNS
 !  public :: getElementsByTagNameNS
-!  public :: hasAttribute
-!  public :: hasAttributeNS
+  public :: hasAttribute
+  public :: hasAttributeNS
 
   !DOM Text
   public :: splitText
