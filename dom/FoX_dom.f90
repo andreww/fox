@@ -4,6 +4,7 @@ module FoX_dom
   use m_dom_implementation
   use m_dom_namednodemap
   use m_dom_nodelist
+  use m_dom_character_data
   use m_dom_attribute
   use m_dom_document
   use m_dom_node
@@ -110,19 +111,19 @@ module FoX_dom
   public :: setNamedItem
   public :: removeNamedItem
 !  public :: item
-!  public :: getNamedItemNS
-!  public :: setNamedItemNS
-!  public :: removeNamedItemNS
+  public :: getNamedItemNS
+  public :: setNamedItemNS
+  public :: removeNamedItemNS
 
   ! DOM CharacterData
   ! NB We use the native Fortran string type here
   ! rather than inventing a DOM String, thus no
   ! string type to make public
-!  public :: substringData
-!  public :: appendData
-!  public :: insertData
-!  public :: deleteData
-!  public :: replaceData
+  public :: substringData
+  public :: appendData
+  public :: insertData
+  public :: deleteData
+  public :: replaceData
 
   ! DOM Attr
 !  public :: attrType
