@@ -34,8 +34,6 @@ module m_dom_namednodemap
 
 contains
 
-
-
   function getNamedItem(map, name) result(np)
     type(NamedNodeMap), intent(in) :: map
     character(len=*), intent(in) :: name
@@ -94,7 +92,7 @@ contains
     np => null()
 
     previous => null()
-    nnp => Map%head
+    nnp => map%head
     do while (associated(nnp)) 
       if (str_vs(nnp%this%nodeName)==name) then
         if (nnp%this%nodeType==ATTRIBUTE_NODE) then

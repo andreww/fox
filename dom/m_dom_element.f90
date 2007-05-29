@@ -3,20 +3,16 @@ module m_dom_element
   use m_common_array_str, only: str_vs, vs_str_alloc
   use m_common_namecheck, only: prefixOfQName, localpartOfQName
 
-  use m_dom_types, only: Node, NodeList, Node
+  use m_dom_types, only: Node, NodeList, NamedNode
   use m_dom_types, only: destroyNode
   use m_dom_types, only: DOCUMENT_NODE, ELEMENT_NODE, TEXT_NODE
   
-  !use m_dom_node, only: getnodename
-  !use m_dom_node, only: getfirstchild
-  !use m_dom_node, only: getnextsibling
-  use m_dom_node, only: haschildnodes
-  
   use m_dom_nodelist, only: append
   
-  use m_dom_namednodemap, only: removenameditem
-  use m_dom_namednodemap, only: setnameditem
-  use m_dom_namednodemap, only: getnameditem
+  use m_dom_namednodemap, only: getNamedItem, setNamedItem, removeNamedItem
+  use m_dom_namednodemap, only: getNamedItemNS, setNamedItemNS, removeNamedItemNS
+
+  use m_dom_attribute, only: getValue, setValue
   
   use m_dom_document, only: createAttribute, createAttributeNS
   use m_dom_debug, only: dom_debug
@@ -26,114 +22,68 @@ module m_dom_element
 
   public :: getTagName
   public :: getAttribute
-  public :: getAttributeNode
   public :: setAttribute
-  public :: setAttributeNS
-  public :: setAttributeNode
-  public :: setAttributeNodeNS
   public :: removeAttribute
+  public :: getAttributeNode
+  public :: setAttributeNode
+  public :: removeAttributeNode
+  ! public :: getElementsByTagName
+  public :: getAttributeNS
+  public :: setAttributeNS
+  public :: removeAttributeNS
+  public :: getAttributeNodeNS
+  public :: setAttributeNodeNS
+  public :: removeAttributeNodeNS
+  public :: hasAttribute
+  public :: hasAttributeNS
 
 contains
 
-  function getTagName(element)
+  function getTagName(element) result(c)
     type(Node), intent(in) :: element   
-    character(len=size(element%nodeName)) :: getTagName
+    character(len=size(element%nodeName)) :: c
     
-    if (element % nodeType == ELEMENT_NODE) then
-       getTagName = str_vs(element%nodeName )
+    if (element%nodeType == ELEMENT_NODE) then
+      c = str_vs(element%nodeName )
     else
-       getTagName = ''
+      c = '' ! FIXME error
     endif
     
   end function getTagName
 
     
-  function getAttribute(element, name) result(attr)
-    
+  function getAttribute(element, name) result(c)
     type(Node), intent(in) :: element
     character(len=*), intent(in) :: name
-    character(len=100) :: attr ! FIXME
+    character(len=100) :: c ! FIXME
 
     type(Node), pointer :: nn
 
-    attr = ""  ! as per specs, if not found
-    if (element % nodeType /= ELEMENT_NODE) return ! or throw an error FIXME?
-    nn => getNamedItem(element%attributes,name)
-    if (.not.associated(nn)) return ! or throw an error FIXME?
-    
-    attr = str_vs(nn%nodeValue)
+    c = ""  ! as per specs, if not found Not sure ahout this FIXME
+    if (element%nodeType /= ELEMENT_NODE) return ! or throw an error FIXME?
+    c = getValue(getNamedItem(element%attributes, name))
 
+    ! FIXME catch exception
         
   end function getAttribute
 
 
-  function getAttributeNode(element, name)
-    
+  subroutine setAttribute(element, name, value)
     type(Node), intent(in) :: element
-    type(Node), pointer    :: getAttributeNode
-    character(len=*), intent(in) :: name
-
-    getAttributeNode => null()     ! as per specs, if not found
-    if (element % nodeType /= ELEMENT_NODE) RETURN
-    getAttributeNode => getNamedItem(element%attributes,name)
-
-  end function getAttributeNode
-  
-  function setAttributeNode(element, newattr) result(attr)
-    type(Node), pointer :: element
-    type(Node), pointer :: newattr
-    type(Node), pointer :: attr
-
-    if (element % nodeType /= ELEMENT_NODE) then
-       if (dom_debug) print *, "not an element node in setAttributeNode..."
-       return
-    endif
-
-    ! this checks if attribute exist already
-    attr => setNamedItem(element%attributes,newattr)
-  end function setAttributeNode
-
-  function setAttributeNodeNS(element, newattr) result(attr)
-    type(Node), pointer :: element
-    type(Node), pointer :: newattr
-    type(Node), pointer :: attr
-
-    ! FIXME is this right or not - ie what are the rules for replacing here?
-    attr => setAttributeNode(element, newattr)
-  end function setAttributenodeNS
-
-  function setAttribute(element, name, value) result(newattr)
-    type(Node), pointer :: element
     character(len=*), intent(in) :: name
     character(len=*), intent(in) :: value
 
-    type(Node), pointer      :: newattr
+    type(Node), pointer :: nn
 
-    ! FIXME: Check does one exist already.
+    if (element%nodeType /= ELEMENT_NODE) return ! or throw an error FIXME?
 
-    newattr => createAttribute(element % ownerDocument, name)
-    newattr%nodeValue => vs_str_alloc(value)
-    newattr => setAttributeNode(element,newattr)
+    nn => getNamedItem(element%attributes, name)
+    call setValue(nn, value) 
 
-  end function setAttribute
+    ! FIXME catch exception
 
-  function setAttributeNS(element, nsURI, name, value) result(newattr)
-    type(Node), pointer :: element
-    character(len=*), intent(in) :: nsURI
-    character(len=*), intent(in) :: name
-    character(len=*), intent(in) :: value
+  end subroutine setAttribute
 
-    type(Node), pointer      :: newattr
-
-    ! FIXME: Check does one exist already.
-
-    newattr => createAttributeNS(element % ownerDocument, nsURI, name)
-    newattr%nodeValue => vs_str_alloc(value)
-    newattr => setAttributeNodeNS(element,newattr)
-
-  end function setAttributeNS
-
-  !-----------------------------------------------------------
 
   subroutine removeAttribute(element, name)
     type(Node), pointer :: element
@@ -141,74 +91,221 @@ contains
 
     type(Node), pointer :: dummy
 
-    if (element % nodeType /= ELEMENT_NODE) RETURN
-    if (.not. associated(element%attributes)) RETURN
+    if (element % nodeType /= ELEMENT_NODE) return
+    ! WHat about remove text ...
 
-    dummy => removeNamedItem(element%attributes,name)
+    dummy => removeNamedItem(element%attributes, name)
      
   end subroutine removeAttribute
 
-  !-----------------------------------------------------------
-!!$  recursive subroutine normalize(element)
-!!$    type(Node), pointer         :: element
-!!$
-!!$    type(Node), pointer        :: np, ghost
-!!$    logical                     :: first
-!!$
-!!$    type(Node), pointer        :: head
-!!$    character, pointer :: temp(:)
-!!$
-!!$    first = .true.  ! next Text node will be first
-!!$
-!!$    if (dom_debug) print *, "Normalizing: ", str_vs(element%nodeName)
-!!$    np => element%firstChild
-!!$    ! 
-!!$    do
-!!$       if (.not. associated(np)) exit
-!!$       select case(np%nodeType)
-!!$
-!!$          case(TEXT_NODE) 
-!!$             if (first) then
-!!$                if (dom_debug) print *, "normalize: found first in chain"
-!!$                head => np
-!!$                first = .false.
-!!$                np => np%nextSibling
-!!$             else                    ! a contiguous text node
-!!$                if (dom_debug) print *, "normalize: found second in chain"
-!!$                temp => head%nodeValue
-!!$                allocate(head%nodeValue(size(temp)+size(np%nodeValue)))
-!!$                head%nodeValue(:size(temp)) = temp
-!!$                head%nodeValue(size(temp)+1:) = np%nodeValue
-!!$                head%nextSibling => np%nextSibling
-!!$                if (associated(np,np%parentNode%lastChild)) then
-!!$                   np%parentNode%lastChild => head
-!!$                   head%nextSibling => null()
-!!$                else
-!!$                   np%nextSibling%previousSibling => head
-!!$                endif
-!!$                ghost => np
-!!$                np => np%nextSibling
-!!$                call destroyNode(ghost)
-!!$             endif
-!!$
-!!$          case(ELEMENT_NODE)
-!!$
-!!$             first = .true.
-!!$             if (dom_debug) print *, "element sibling: ", str_vs(np%nodeName)
-!!$             if (hasChildNodes(np)) call normalize(np)
-!!$             np => np%nextSibling
-!!$
-!!$          case default
-!!$             
-!!$             ! do nothing, just mark that we break the chain of text nodes
-!!$             if (dom_debug) print *, "other sibling: ", str_vs(np%nodeName)
-!!$             first = .true.
-!!$             np => np%nextSibling
-!!$
-!!$        end select
-!!$
-!!$     enddo
-!!$
-!!$    end subroutine normalize
+
+  function getAttributeNode(element, name) result(attr)
+    type(Node), intent(in) :: element
+    character(len=*), intent(in) :: name
+    type(Node), pointer :: attr
+
+    attr => null()     ! as per specs, if not found
+    if (element%nodeType /= ELEMENT_NODE) then
+      ! FIXME error
+    endif
+    attr => getNamedItem(element%attributes, name)
+
+    ! FIXME catch and throw awaye xception
+
+  end function getAttributeNode
+  
+
+  function setAttributeNode(element, newattr) result(attr)
+    type(Node), pointer :: element
+    type(Node), pointer :: newattr
+    type(Node), pointer :: attr
+
+    if (element%nodeType /= ELEMENT_NODE) then
+      ! FIXME error
+    endif
+
+    ! this checks if attribute exists already
+    attr => setNamedItem(element%attributes, newattr)
+  end function setAttributeNode
+
+
+  function removeAttributeNode(element, oldattr) result(attr)
+    type(Node), pointer :: element
+    type(Node), pointer :: oldattr
+    type(Node), pointer :: attr
+
+    type(NamedNode), pointer :: nnp
+
+    if (element%nodeType /= ELEMENT_NODE) then
+      ! FIXME error
+    endif
+
+    nnp => element%attributes%head
+    do while (associated(nnp))
+      if (associated(nnp, attr)) then
+    ! WHat about remove text ...
+        attr => removeNamedItem(element%attributes, str_vs(oldattr%nodeName))
+        return
+      endif
+      nnp => nnp%next
+    enddo
+
+    ! FIXME exceptions
+
+  end function removeAttributeNode
+
+
+!  function getElementsByTagName - see m_dom_document
+
+
+  function getAttributeNS(element, namespaceURI, localname) result(c)
+    type(Node), intent(in) :: element
+    character(len=*), intent(in) :: namespaceURI
+    character(len=*), intent(in) :: localName
+    character(len=100) :: c ! FIXME
+
+    type(Node), pointer :: nn
+
+    c = ""  ! as per specs, if not found Not sure ahout this FIXME
+    if (element%nodeType /= ELEMENT_NODE) return ! or throw an error FIXME?
+    c = getValue(getNamedItemNS(element%attributes, namespaceURI, localName))
+
+    ! FIXME catch exception
+        
+  end function getAttributeNS
+
+
+  subroutine setAttributeNS(element, namespaceURI, localname, value)
+    type(Node), intent(in) :: element
+    character(len=*), intent(in) :: namespaceURI
+    character(len=*), intent(in) :: localname
+    character(len=*), intent(in) :: value
+
+    type(Node), pointer :: nn
+
+    if (element%nodeType /= ELEMENT_NODE) return ! or throw an error FIXME?
+
+    nn => getNamedItemNS(element%attributes, namespaceURI, localname)
+    call setValue(nn, value) 
+
+    ! FIXME catch exception
+
+  end subroutine setAttributeNS
+
+
+  subroutine removeAttributeNS(element, namespaceURI, localName)
+    type(Node), pointer :: element
+    character(len=*), intent(in) :: namespaceURI
+    character(len=*), intent(in) :: localName
+
+    type(Node), pointer :: dummy
+
+    if (element % nodeType /= ELEMENT_NODE) return
+    ! WHat about remove text ...
+    dummy => removeNamedItemNS(element%attributes, namespaceURI, localName)
+     
+  end subroutine removeAttributeNS
+
+
+  function getAttributeNodeNS(element, namespaceURI, localName) result(attr)
+    type(Node), intent(in) :: element
+    character(len=*), intent(in) :: namespaceURI
+    character(len=*), intent(in) :: localName
+    type(Node), pointer :: attr
+
+    attr => null()     ! as per specs, if not found
+    if (element%nodeType /= ELEMENT_NODE) then
+      ! FIXME error
+    endif
+    attr => getNamedItemNS(element%attributes, namespaceURI, localname)
+
+    ! FIXME catch and throw awaye xception
+
+  end function getAttributeNodeNS
+  
+
+  function setAttributeNodeNS(element, newattr) result(attr)
+    type(Node), pointer :: element
+    type(Node), pointer :: newattr
+    type(Node), pointer :: attr
+
+    if (element%nodeType /= ELEMENT_NODE) then
+      ! FIXME error
+    endif
+
+    ! this checks if attribute exists already
+    attr => setNamedItemNS(element%attributes, newattr)
+  end function setAttributeNodeNS
+
+
+  function removeAttributeNodeNS(element, oldattr) result(attr)
+    type(Node), pointer :: element
+    type(Node), pointer :: oldattr
+    type(Node), pointer :: attr
+
+    type(NamedNode), pointer :: nnp
+
+    if (element%nodeType /= ELEMENT_NODE) then
+      ! FIXME error
+    endif
+
+    nnp => element%attributes%head
+    do while (associated(nnp))
+      if (associated(nnp, attr)) then
+        attr => removeNamedItemNS(element%attributes, str_vs(oldattr%namespaceURI), str_vs(oldattr%localName))
+        return
+      endif
+      nnp => nnp%next
+    enddo
+
+    ! FIXME exceptions
+
+  end function removeAttributeNodeNS
+
+
+!  function getElementsByTagName - see m_dom_document
+
+
+  function hasAttribute(element, name) result(p)
+    type(Node), intent(in) :: element
+    character(len=*), intent(in) :: name
+    logical :: p
+
+    type(NamedNode), pointer :: nnp
+
+    p = .false.
+    nnp => element%attributes%head
+    do while (associated(nnp))
+      if (str_vs(nnp%this%nodeName)==name) then
+        p = .true.
+        exit
+      endif
+      nnp => nnp%next
+    enddo
+
+  end function hasAttribute
+
+
+  function hasAttributeNS(element, namespaceURI, localName) result(p)
+    type(Node), intent(in) :: element
+    character(len=*), intent(in) :: namespaceURI
+    character(len=*), intent(in) :: localName
+    logical :: p
+
+    type(NamedNode), pointer :: nnp
+
+    p = .false.
+    nnp => element%attributes%head
+    do while (associated(nnp))
+      if (str_vs(nnp%this%namespaceURI)==namespaceURI .and. &
+        str_vs(nnp%this%localName)==localName) then
+        p = .true.
+        exit
+      endif
+      nnp => nnp%next
+    enddo
+
+  end function hasAttributeNS
+
 
 end module m_dom_element

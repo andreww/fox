@@ -195,7 +195,7 @@ contains
   end function createEntityReference
 
   function getElementsByTagName(doc, tagName) result(list)
-    type(Node), intent(in) :: doc
+    type(Node), pointer :: doc
     character(len=*), intent(in) :: tagName
     type(NodeList) :: list
 
@@ -203,15 +203,19 @@ contains
     type(Node), pointer :: np
     logical :: alreadyDone
 
-    if (doc%nodeType/=DOCUMENT_NODE) then
+    if (doc%nodeType/=DOCUMENT_NODE.or.doc%nodeType/=ELEMENT_NODE) then
       ! FIXME throw an error
       continue
     endif
 
-    np => doc%documentElement
+    if (doc%nodeType==DOCUMENT_NODE) then
+      np => doc%documentElement
+    else
+      np => doc
+    endif
 
     if (.not.associated(np)) then
-      ! FIXME internal eror
+      ! FIXME internal error
       continue
     endif
 

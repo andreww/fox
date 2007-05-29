@@ -34,6 +34,7 @@ contains
     p = attribute%specified
   end function getSpecified
 
+  ! FIXME this below is all wrong, should be dealing with text and entityreference children
 
   function getValue(attribute) result(c)
     type(Node), intent(in) :: attribute
@@ -52,6 +53,7 @@ contains
     type(Node), intent(inout) :: attribute
     character(len=*), intent(in) :: value
 
+    ! FIXME should resolve any entity references
     if (attribute%nodeType == ATTRIBUTE_NODE) then
       deallocate(attribute%nodeValue)
       attribute%nodeValue => vs_str_alloc(value)

@@ -46,7 +46,7 @@ contains
     do i = 1, len(attrs)
       if (dom_debug) print *, "Adding attribute: ", &
         getQName(attrs, i), ":",getValue(attrs, i)
-      temp => setAttributeNS(el, getURI(attrs, i), getQName(attrs, i), getValue(attrs, i))
+      call setAttributeNS(el, getURI(attrs, i), getQName(attrs, i), getValue(attrs, i))
     enddo
 
     print*, 'startingElement!: current', current%nodeType
