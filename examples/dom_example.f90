@@ -7,13 +7,13 @@ program dom_example
 
   myDoc => parsefile('test.xml')
 
-  call dumpTree(myDoc)
+!  call dumpTree(myDoc)
 
-  interest = getElementsByTagName(myDoc, 'john1')
+!  interest = getElementsByTagName(myDoc, 'john1')
 
-  print*, interest%length
+!  print*, interest%length
   
 !  call destroyNodeList(interest)
-!  call destroyDocument(myDoc)
+  call destroyDocument(myDoc)
 
 end program dom_example

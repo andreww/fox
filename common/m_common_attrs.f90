@@ -587,6 +587,8 @@ contains
     
     integer :: i
 
+    print*, ' doing init_dict'
+
     allocate(dict%items(DICT_INIT_LEN))
     do i = 1, DICT_INIT_LEN
        nullify(dict%items(i)%key)
@@ -631,6 +633,7 @@ contains
   subroutine destroy_dict(dict)
     type(dictionary_t), intent(inout) :: dict
     integer :: i
+    print*, ' doing destroy_dict'
 
     do i = 1, dict%number_of_items
       deallocate(dict%items(i)%key)

@@ -87,7 +87,8 @@ contains
   subroutine destroyNodeList(nl)
     type(NodeList), intent(inout) :: nl
     
-    deallocate(nl%nodes)
+    if (nl%length>0) deallocate(nl%nodes)
+    nl%length = 0
   end subroutine destroyNodeList
 
 end module m_dom_nodelist

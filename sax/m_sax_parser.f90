@@ -52,7 +52,7 @@ contains
 
     call init_error_stack(fx%error_stack)
     call init_elstack(fx%elstack)
-    call init_dict(fx%attributes)
+    !call init_dict(fx%attributes)
     call initNamespaceDictionary(fx%nsdict)
     call init_notation_list(fx%nlist)
     call init_xml_doc_state(fx%xds)

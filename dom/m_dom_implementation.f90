@@ -1,9 +1,10 @@
 module m_dom_implementation
 
-  use m_common_array_str, only: vs_str_alloc
+  use m_common_array_str, only: str_vs, vs_str_alloc
   use m_dom_document, only: createElementNS
  ! use m_dom_types, only: FoX_DOM
-  use m_dom_types, only: Node, createNode, destroyNode, DOCUMENT_NODE, DOCUMENT_TYPE_NODE
+  use m_dom_types, only: Node, NodeList, createNode, destroyNode, DOCUMENT_NODE, DOCUMENT_TYPE_NODE
+  use m_dom_nodeList, only: append, pop_nl, destroyNodeList
 
   implicit none
   private
@@ -11,6 +12,8 @@ module m_dom_implementation
   public :: hasFeature
   public :: createDocument
   public :: createDocumentType
+
+  public :: destroyDocument
 
   public :: createEmptyDocument
   public :: createEmptyDocumentType
@@ -63,6 +66,9 @@ contains
   subroutine destroyDocumentType(dt)
     type(Node), pointer :: dt
     
+    if (associated(dt%publicId)) deallocate(dt%publicId)
+    if (associated(dt%systemId)) deallocate(dt%systemId)
+    if (associated(dt%internalSubset)) deallocate(dt%internalSubset)
     call destroyNode(dt)
     !call destroyNamedNodeMap(dt%entities)
     !call destroyNamedNodeMap(dt%notations)
@@ -106,8 +112,60 @@ contains
   subroutine destroyDocument(doc)
     type(Node), pointer :: doc
     
-    call destroyNode(doc%documentElement)
-    deallocate(doc)
+    type(NodeList) :: np_stack
+    type(Node), pointer :: np, np_next
+    logical :: alreadyDone
+
+    if (doc%nodeType/=DOCUMENT_NODE) then
+      ! FIXME throw an error
+      continue
+    endif
+
+    np => doc%documentElement
+
+    if (.not.associated(np)) then
+      ! FIXME internal eror
+      continue
+    endif
+
+    ! Use iteration, not recursion, to save stack space.
+    alreadyDone = .false.
+    do
+      print*, 'iterating ...', associated(np), alreadyDONe
+      if (alreadyDone) then
+        if (np_stack%length==0) then
+          exit
+        else
+          np => pop_nl(np_stack)
+          if (associated(np%nextSibling)) then
+            np => np%nextSibling
+            alreadyDone = .false.
+          else
+            cycle
+          endif
+        endif
+      endif
+      if (associated(np%firstChild)) then
+        call append(np_stack, np)
+        np => np%firstChild
+        cycle
+      else
+        np_next => np%nextSibling
+        print*, 'destroying Node', np%nodeType, str_vs(np%nodeName)
+        call destroyNode(np)
+      endif
+      if (associated(np_next)) then
+        np => np_next
+        np_next => null()
+        cycle
+      else
+        alreadyDone = .true.
+      endif
+    enddo
+    call destroyNodeList(np_stack)
+
+    call destroyDocumentType(doc%docType)
+    call destroyNode(doc)
 
   end subroutine destroyDocument
 

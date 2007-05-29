@@ -232,6 +232,7 @@ contains
           endif
         endif
       endif
+      ! FIXME not convinced yet this traverses whole tree ...
       if (np%nodeType/=ELEMENT_NODE) then
         if (associated(np%nextSibling)) then
           np => np%nextSibling

@@ -9,7 +9,7 @@ module m_dom_utils
   use m_dom_node, only: haschildnodes
   use m_dom_namednodemap, only: getlength, item
 
-  use m_common_attrs, only: dictionary_t, add_item_to_dict, getValue, hasKey
+  use m_common_attrs, only: dictionary_t, add_item_to_dict, getValue, hasKey, init_dict, destroy_dict
 
   use FoX_wxml, only: xmlf_t
   use FoX_wxml, only: xml_OpenFile, xml_Close
@@ -90,6 +90,8 @@ contains
     type(dictionary_t), save :: simpleDict
     character, pointer :: prefix(:), elementQName(:)
 
+    call init_dict(simpleDict)
+
     n => input
     if (.not. associated(n)) return
     select case (n%nodeType)
@@ -155,6 +157,7 @@ contains
       call xml_AddComment(xf, str_vs(n%data))
       
     end select
+    call destroy_dict(simpleDict)
 
   end subroutine dump_xml
   
