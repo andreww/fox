@@ -1,26 +1,20 @@
 module m_dom_document
 
-  use m_common_array_str, only: vs_str_alloc
+  use m_common_array_str, only: str_vs, vs_str_alloc
   use m_common_namecheck, only: prefixOfQName, localPartOfQName
   
-  use m_dom_types, only: Node, createNode, destroyNode, &
+  use m_dom_types, only: DOMImplementation, Node, NodeList, createNode, destroyNode, &
     ELEMENT_NODE, ATTRIBUTE_NODE, TEXT_NODE, CDATA_SECTION_NODE, &
     ENTITY_REFERENCE_NODE, ENTITY_NODE, PROCESSING_INSTRUCTION_NODE, &
     COMMENT_NODE, DOCUMENT_NODE, DOCUMENT_TYPE_NODE, DOCUMENT_FRAGMENT_NODE, &
     NOTATION_NODE, DOCUMENT_FRAGMENT_NODE
-  
-!  use m_dom_node, only : getChildNodes
+  use m_dom_nodelist, only: append, pop_nl, destroyNodeList
   
   use m_dom_error, only : NOT_FOUND_ERR, dom_error
   
   implicit none
   private
 
-! from DOMImplementation
-!  public :: createDocument
-  public :: destroyDocument
-
-! from DOMDocument
   public :: createElement
   public :: createDocumentFragment
   public :: createTextNode
@@ -29,51 +23,67 @@ module m_dom_document
   public :: createProcessingInstruction
   public :: createAttribute
   public :: createEntityReference
-!  public :: getElementsByTagName
-!  public :: importNode
+  public :: getElementsByTagName
+  public :: importNode
   public :: createElementNS
   public :: createAttributeNS
-!  public :: getElementsByTagNameNS
-!  public :: getElementById 
-CONTAINS
+  public :: getElementsByTagNameNS
+  public :: getElementById 
 
-  subroutine attachDocumentElement(doc, main) 
-    type(Node), pointer :: doc
-    type(Node), pointer :: main
+contains
 
-    type(Node), pointer :: child
+  ! Getters and setters:
 
-    if (.not.associated(doc%docType)) then
-       !FIXME error out
-    endif
+  function getDocumentType(doc) result(np)
+    type(Node), intent(in) :: doc
+    type(Node), pointer :: np
 
-    if (.not.child % nodeType == ELEMENT_NODE) then
-       !FIXME error out
+    if (doc%nodeType/=DOCUMENT_NODE) then
+      ! FIXME throw an error
+      continue
     endif
     
-    doc%documentElement => main
+    np => doc%docType
 
-    !if (associated(doc % documentElement)) then
-      !if (parsefile % documentElement % namespaceURI == 'http://www.w3.org/1999/xhtml' ) then
-    !  continue
-    !else
-    !  call dom_error('createDocument', NOT_FOUND_ERR, "No documentElement found.")
-   ! endif
+  end function getDocumentType
 
-  end subroutine attachDocumentElement
+  function getImplementation(doc) result(imp)
+    type(Node), intent(in) :: doc
+    type(DOMImplementation), pointer :: imp
 
-  subroutine destroyDocument(doc)
-    type(Node), pointer :: doc
+    if (doc%nodeType/=DOCUMENT_NODE) then
+      ! FIXME throw an error
+      continue
+    endif
     
-    call destroyNode(doc%documentElement)
-    deallocate(doc)
+    imp => doc%implementation
+    
+  end function getImplementation
 
-  end subroutine destroyDocument
+  function getDocumentElement(doc) result(np)
+    type(Node), intent(in) :: doc
+    type(Node), pointer :: np
+
+    if (doc%nodeType/=DOCUMENT_NODE) then
+      ! FIXME throw an error
+      continue
+    endif
+    
+    np => doc%documentElement
+
+  end function getDocumentElement
+
+  ! Methods
 
   function createElement(doc, tagName) result(np)
     type(Node), pointer :: doc
     character(len=*), intent(in) :: tagName
     type(Node), pointer :: np
+
+    if (doc%nodeType/=DOCUMENT_NODE) then
+      ! FIXME throw an error
+      continue
+    endif
   
     np => createElementNS(doc, "", tagName)
   
@@ -82,6 +92,11 @@ CONTAINS
   function createDocumentFragment(doc) result(np)
     type(Node), pointer :: doc
     type(Node), pointer :: np
+
+    if (doc%nodeType/=DOCUMENT_NODE) then
+      ! FIXME throw an error
+      continue
+    endif
     
     np => createNode(doc, DOCUMENT_FRAGMENT_NODE, "", "")
     
@@ -91,6 +106,11 @@ CONTAINS
     type(Node), pointer :: doc
     character(len=*), intent(in) :: data
     type(Node), pointer :: np
+
+    if (doc%nodeType/=DOCUMENT_NODE) then
+      ! FIXME throw an error
+      continue
+    endif
     
     np => createNode(doc, TEXT_NODE, "#text", data)
 
@@ -102,6 +122,11 @@ CONTAINS
     type(Node), pointer :: doc
     character(len=*), intent(in) :: data
     type(Node), pointer :: np
+
+    if (doc%nodeType/=DOCUMENT_NODE) then
+      ! FIXME throw an error
+      continue
+    endif
   
     np => createNode(doc, COMMENT_NODE, "#comment", data)
 
@@ -113,6 +138,11 @@ CONTAINS
     type(Node), pointer :: doc
     character(len=*), intent(in) :: data
     type(Node), pointer :: np
+
+    if (doc%nodeType/=DOCUMENT_NODE) then
+      ! FIXME throw an error
+      continue
+    endif
   
     np => createNode(doc, CDATA_SECTION_NODE, "#text", data)
 
@@ -126,6 +156,11 @@ CONTAINS
     character(len=*), intent(in) :: data
     type(Node), pointer :: np
 
+    if (doc%nodeType/=DOCUMENT_NODE) then
+      ! FIXME throw an error
+      continue
+    endif
+
     ! check target for legal chars else raise INVALID_CHARACTER_ERR
     np => createNode(doc, PROCESSING_INSTRUCTION_NODE, target, data)
 
@@ -135,6 +170,11 @@ CONTAINS
     type(Node), pointer :: doc
     character(len=*), intent(in) :: name
     type(Node), pointer :: np
+
+    if (doc%nodeType/=DOCUMENT_NODE) then
+      ! FIXME throw an error
+      continue
+    endif
   
     np => createAttributeNS(doc, name, "")
   
@@ -145,15 +185,100 @@ CONTAINS
     character(len=*), intent(in) :: name
     type(Node), pointer :: np
 
+    if (doc%nodeType/=DOCUMENT_NODE) then
+      ! FIXME throw an error
+      continue
+    endif
+
     np => createNode(doc, ENTITY_REFERENCE_NODE, name, "")
 
   end function createEntityReference
+
+  function getElementsByTagName(doc, tagName) result(list)
+    type(Node), intent(in) :: doc
+    character(len=*), intent(in) :: tagName
+    type(NodeList) :: list
+
+    type(NodeList), pointer :: np_stack
+    type(Node), pointer :: np
+    logical :: alreadyDone
+
+    if (doc%nodeType/=DOCUMENT_NODE) then
+      ! FIXME throw an error
+      continue
+    endif
+
+    np => doc%documentElement
+
+    if (.not.associated(np)) then
+      ! FIXME internal eror
+      continue
+    endif
+
+    ! Use iteration, not recursion, to save stack space.
+    do
+      if (alreadyDone) then
+        np => pop_nl(np_stack)
+        if (np_stack%length==0) then
+          exit
+        else
+          if (associated(np%nextSibling)) then
+            np => np%nextSibling
+            alreadyDone = .false.
+          else
+            cycle
+          endif
+        endif
+      endif
+      if (np%nodeType/=ELEMENT_NODE) then
+        if (associated(np%nextSibling)) then
+          np => np%nextSibling
+        else
+          alreadyDone = .true.
+        endif
+        cycle
+      endif
+      if (str_vs(np%nodeName) == tagName) then
+        call append(list, np)
+      endif
+      if (associated(np%firstChild)) then
+        call append(np_stack, np)
+        np => np%firstChild
+        cycle
+      else
+        alreadyDone = .true.
+      endif
+    enddo
+    call destroyNodeList(np_stack)
+
+  end function getElementsByTagName
+
+  function importNode(doc, arg, deep) result(np)
+    type(Node), intent(in) :: doc
+    type(Node), intent(in) :: arg
+    logical, intent(in) :: deep
+    type(Node), pointer :: np
+
+    if (doc%nodeType/=DOCUMENT_NODE) then
+      ! FIXME throw an error
+      continue
+    endif
+
+    continue
+
+    ! FIXME logic
+  end function importNode
 
   function createElementNS(doc, namespaceURI, qualifiedName) result(np)
     type(Node), pointer :: doc
     character(len=*), intent(in) :: namespaceURI, qualifiedName
     type(Node), pointer :: np
   
+    if (doc%nodeType/=DOCUMENT_NODE) then
+      ! FIXME throw an error
+      continue
+    endif
+
     np => createNode(doc, ELEMENT_NODE, qualifiedName, "")
     np%namespaceURI => vs_str_alloc(namespaceURI)
     np%prefix => vs_str_alloc(prefixOfQName(qualifiedname))
@@ -167,6 +292,11 @@ CONTAINS
     type(Node), pointer :: doc
     character(len=*), intent(in) :: namespaceURI, qualifiedName
     type(Node), pointer :: np
+
+    if (doc%nodeType/=DOCUMENT_NODE) then
+      ! FIXME throw an error
+      continue
+    endif
   
     np => createNode(doc, ATTRIBUTE_NODE, qualifiedName, "")
     np%namespaceURI => vs_str_alloc(namespaceURI)
@@ -174,5 +304,36 @@ CONTAINS
     np%prefix => vs_str_alloc(PrefixofQName(qualifiedname))
     
   end function createAttributeNS
+
+  function getElementsByTagNameNS(doc, namespaceURI, localName) result(list)
+    type(Node), intent(in) :: doc
+    character(len=*), intent(in) :: namespaceURI
+    character(len=*), intent(in) :: localName
+    type(NodeList) :: list
+
+    if (doc%nodeType/=DOCUMENT_NODE) then
+      ! FIXME throw an error
+      continue
+    endif
+
+    continue
+
+    ! FIXME logic
+  end function getElementsByTagNameNS
+
+  function getElementById(doc, elementId) result(np)
+    type(Node), intent(in) :: doc
+    character(len=*), intent(in) :: elementId
+    type(NodeList), pointer :: np
+    if (doc%nodeType/=DOCUMENT_NODE) then
+      ! FIXME throw an error
+      continue
+    endif
+
+    continue
+
+    ! FIXME logic
+    ! cannot fix until IDs implemented
+  end function getElementById
 
 end module m_dom_document

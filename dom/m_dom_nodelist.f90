@@ -7,6 +7,8 @@ module m_dom_nodelist
 
   public :: item
   public :: append
+  public :: pop_nl
+  public :: destroyNodeList
   
   interface append
     module procedure append_nl
@@ -34,23 +36,59 @@ contains
   end function item_nl
 
   subroutine append_nl(list, arg)
-    type(NodeList), pointer :: list
+    type(NodeList), intent(inout) :: list
     type(Node), pointer :: arg
 
     type(ListNode), pointer :: temp_nl(:)
     integer :: i
 
+    if (.not.associated(list%nodes)) then
+      allocate(list%nodes(1))
+      list%nodes(1)%this => arg
+      list%length = 1
+    else
+      temp_nl => list%nodes
+      allocate(list%nodes(size(temp_nl)+1))
+      do i = 1, size(temp_nl)
+        list%nodes(i)%this => temp_nl(i)%this
+      enddo
+      deallocate(temp_nl)
+      list%nodes(size(list%nodes))%this => arg
+      list%length = size(list%nodes)
+    endif
+    
+  end subroutine append_nl
+
+  function pop_nl(list) result(np)
+    type(NodeList), intent(inout) :: list
+    type(Node), pointer :: np
+
+    type(ListNode), pointer :: temp_nl(:)
+    integer :: i
+
+    if (list%length==0) then
+      ! FIXME internal error
+      continue
+    endif
+
+    np => list%nodes(size(list%nodes))%this
+
     temp_nl => list%nodes
-    allocate(list%nodes(size(temp_nl)+1))
-    do i = 1, size(temp_nl)
+    allocate(list%nodes(size(temp_nl)-1))
+    do i = 1, size(temp_nl)-1
       list%nodes(i)%this => temp_nl(i)%this
     enddo
     deallocate(temp_nl)
-    list%nodes(size(list%nodes))%this => arg
 
     list%length = size(list%nodes)
     
-  end subroutine append_nl
+  end function pop_nl
+
+  subroutine destroyNodeList(nl)
+    type(NodeList), intent(inout) :: nl
+    
+    deallocate(nl%nodes)
+  end subroutine destroyNodeList
 
 end module m_dom_nodelist
 

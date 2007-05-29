@@ -34,9 +34,6 @@ module m_dom_element
   public :: removeAttribute
   public :: normalize
 
-  public :: getElementsByTagName
-  public :: getElementById
-
 contains
 
   function getTagName(element)
@@ -52,55 +49,6 @@ contains
   end function getTagName
 
     
-  function getElementsByTagName(element, tag) result(list)
-    type(Node), pointer         :: element
-    character(len=*), intent(in) :: tag
-    type(NodeList), pointer     :: list 
-
-    type(Node), pointer        :: np
-
-    list => null()
-
-    ! FIXME is element an element or a document?
-    np => element
-    if (dom_debug) print *, "Going into search for tag: ", tag
-    call search(np)
-
-  contains
-
-    recursive subroutine search(np)
-    type(Node), pointer        :: np
-
-    do
-       if (.not.associated(np)) exit
-       select case(np%nodeType)
-          case(DOCUMENT_NODE) 
-             ! special case ... search its children 
-             if (hasChildNodes(np)) call search(np%firstChild)
-             ! will exit for lack of siblings
-          case(ELEMENT_NODE)
-             if (dom_debug) print *, "exploring node: ", str_vs(np%nodeName)
-             if ((tag == "*") .or. (tag == str_vs(np%nodeName))) then
-                call append(list,np)
-                if (dom_debug) print *, "found match ", list%length
-             endif
-             if (hasChildNodes(np)) call search(np%firstChild)
-          case default
-             
-             ! do nothing
-
-        end select
-
-        if (associated(np,element)) exit  ! no siblings of element...
-        np => np%nextSibling
-
-     enddo
-    
-    end subroutine search
-
-  end function getElementsByTagName
-
-
   function getAttribute(element, name) result(attr)
     
     type(Node), intent(in) :: element
@@ -263,87 +211,5 @@ contains
      enddo
 
     end subroutine normalize
-
-
-  recursive function getElementById(nodeIn, id) result(nodeOut)
-    type(Node), pointer :: nodeIn
-    character(len=*), intent(in) :: id
-    type(Node), pointer :: nodeOut
-
-    type(Node), pointer :: child
-
-    ! FIXME which nodes can we call this on?
-
-    if (nodeIn%nodeType == ELEMENT_NODE) then
-      if (getAttribute(nodeIn, "id") == id) then
-        nodeOut => nodeIn
-        return
-      else
-        child => nodeIn%firstChild
-        do while (associated(child))
-          nodeOut => getElementById(child, id)
-          if (associated(nodeOut)) return
-          child => child%nextSibling
-        enddo
-        nodeOut => null()
-      endif
-    else
-      nodeOut => null() ! or error ...
-    endif
-  end function getElementById
-
-  function getElementsByTagNameNS(element, tag, namespaceURI) result(list)
-    type(Node), pointer         :: element
-    character(len=*), intent(in) :: tag
-    character(len=*), intent(in) :: namespaceURI
-    type(NodeList), pointer     :: list 
-
-    type(Node), pointer        :: np
-
-    list => null()
-
-    np => element
-    if (dom_debug) print *, "Going into search for tag: ", tag
-    call search(np)
-
-    CONTAINS
-
-    recursive subroutine search(np)
-    type(Node), pointer        :: np
-
-    !
-    ! Could replace the calls to helper methods by direct lookups of node 
-    ! components to make it faster.
-    ! 
-    do
-       if (.not.associated(np)) exit
-       select case(np%nodeType)
-          case(DOCUMENT_NODE) 
-             ! special case ... search its children 
-             if (hasChildNodes(np)) call search(np%firstChild)
-             ! will exit for lack of siblings
-          case(ELEMENT_NODE)
-             if (dom_debug) print *, "exploring node: ", str_vs(np%nodeName)
-             if ((tag == "*") .or. (tag == str_vs(np%nodeName))) then
-                call append(list,np)
-                if (dom_debug) print *, "found match ", list%length
-             endif
-             if (hasChildNodes(np)) call search(np%firstChild)
-          case default
-             
-             ! do nothing
-
-        end select
-
-        if (associated(np,element)) exit  ! no siblings of element...
-        np =>np%nextSibling
-
-     enddo
-    
-    end subroutine search
-
-  end function getElementsByTagNameNS
-
-
 
 end module m_dom_element
