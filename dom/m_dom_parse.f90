@@ -68,11 +68,7 @@ contains
     if (dom_debug) &
       write(*,'(4a)') "Ending node for element: {",URI,'}', localname
 
-    if (associated(mainDoc%documentElement, current)) then
-      current => null()
-    else
-      current => current%parentNode
-    endif
+    current => current%parentNode
   end subroutine endElement_handler
 
   subroutine characters_handler(chunk)

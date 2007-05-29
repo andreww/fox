@@ -121,7 +121,7 @@ contains
       continue
     endif
 
-    np => doc%documentElement
+    np => doc%firstChild
 
     if (.not.associated(np)) then
       ! FIXME internal eror
@@ -129,36 +129,27 @@ contains
     endif
 
     ! Use iteration, not recursion, to save stack space.
+    call append(np_stack, np)
     alreadyDone = .false.
     do
-      print*, 'iterating ...', associated(np), alreadyDONe
+      print*, 'iterating ...', associated(np), alreadyDONe, np_stack%length
       if (alreadyDone) then
+        np => pop_nl(np_stack)
         if (np_stack%length==0) then
           exit
         else
-          np => pop_nl(np_stack)
-          if (associated(np%nextSibling)) then
-            np => np%nextSibling
-            alreadyDone = .false.
-          else
-            print*, 'destroying Node', np%nodeType, str_vs(np%nodeName)
-            call destroyNode(np)
-            cycle
-          endif
+          alreadyDone = .false.
         endif
-      endif
-      if (associated(np%firstChild)) then
+      else if (associated(np%firstChild)) then
         call append(np_stack, np)
         np => np%firstChild
         cycle
-      else
-        np_next => np%nextSibling
-        print*, 'destroying Node', np%nodeType, str_vs(np%nodeName)
-        call destroyNode(np)
       endif
+      np_next => np%nextSibling
+      print*, 'destroying Node', np%nodeType, str_vs(np%nodeName)
+      call destroyNode(np)
       if (associated(np_next)) then
         np => np_next
-        np_next => null()
         cycle
       else
         alreadyDone = .true.
