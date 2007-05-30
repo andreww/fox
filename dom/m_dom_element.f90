@@ -12,7 +12,7 @@ module m_dom_element
   use m_dom_namednodemap, only: getNamedItem, setNamedItem, removeNamedItem
   use m_dom_namednodemap, only: getNamedItemNS, setNamedItemNS, removeNamedItemNS
 
-  use m_dom_attribute, only: getValue, setValue
+  use m_dom_attribute, only: getValue, setValue, destroyAttribute
   
   use m_dom_document, only: createAttribute, createAttributeNS
   use m_dom_debug, only: dom_debug
@@ -96,6 +96,8 @@ contains
     ! WHat about remove text ...
 
     dummy => removeNamedItem(element%attributes, name)
+    ! FIXME and free memory from dummy
+    ! call destroyAttribute(dummy)
      
   end subroutine removeAttribute
 
@@ -205,6 +207,8 @@ contains
     if (element % nodeType /= ELEMENT_NODE) return
     ! WHat about remove text ...
     dummy => removeNamedItemNS(element%attributes, namespaceURI, localName)
+    ! FIXME and clean up memory
+    ! call destroyAttribute(dummy)
      
   end subroutine removeAttributeNS
 
@@ -318,23 +322,23 @@ contains
   end function hasAttributeNS
 
 
-!!$  subroutine destroyElement(element)
-!!$    type(Node), pointer :: element
-!!$
-!!$    type(NamedNode), pointer :: nnp
-!!$
-!!$    if (element%nodeType /= ELEMENT_NODE) then
-!!$      ! FIXME error
-!!$    endif
-!!$
-!!$    nnp => element%attributes%head
-!!$    do while (associated(nnp))
-!!$      call destroyAttribute(nnp)
-!!$      nnp => nnp%next
-!!$    enddo
-!!$    
-!!$    call destroyNode(element)
-!!$
-!!$  end subroutine destroyElement
+  subroutine destroyElement(element)
+    type(Node), pointer :: element
+
+    type(NamedNode), pointer :: nnp
+
+    if (element%nodeType /= ELEMENT_NODE) then
+      ! FIXME error
+    endif
+
+    nnp => element%attributes%head
+    do while (associated(nnp))
+      call destroyAttribute(nnp%this)
+      nnp => nnp%next
+    enddo
+    
+    call destroyNode(element)
+
+  end subroutine destroyElement
 
 end module m_dom_element

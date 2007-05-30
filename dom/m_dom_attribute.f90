@@ -1,7 +1,8 @@
 module m_dom_attribute
 
   use m_common_array_str, only: str_vs, vs_str_alloc
-  use m_dom_types, only : Node, ATTRIBUTE_NODE
+  use m_dom_types, only : Node, destroyNode, ATTRIBUTE_NODE, &
+    TEXT_NODE, ENTITY_REFERENCE_NODE
   
   implicit none
   private
@@ -11,6 +12,8 @@ module m_dom_attribute
   public :: getValue
   public :: setValue
   public :: getOwnerElement
+
+  public :: destroyAttribute
   
 contains
   
@@ -67,21 +70,34 @@ contains
   end function getOwnerElement
 
 
-!!$  subroutine destroyAttribute(attr)
-!!$    type(Node), pointer :: attr
-!!$
-!!$    type(Node), pointer :: np
-!!$
-!!$    if (attribute%nodeType/=ATTRIBUTE_NODE) then
-!!$       ! FIXME error
-!!$    endif
-!!$
-!!$    np => attr%firstChild
-!!$    do while (associated(np))
-!!$      ! FIXME argh wtf about entityreferences
-!!$      call destroyNode(np)
-!!$      np => np%nextSibling
-!!$    enddo
-!!$  end subroutine destroyAttribute
+  subroutine destroyAttribute(attr)
+    type(Node), pointer :: attr
+
+    type(Node), pointer :: np, np_next
+
+    if (attr%nodeType/=ATTRIBUTE_NODE) then
+       ! FIXME error
+    endif
+
+    np => attr%firstChild
+    do while (associated(np))
+      np_next => np%nextSibling
+      select case (np%nodeType)
+      case (TEXT_NODE)
+        call destroyNode(np)
+      case (ENTITY_REFERENCE_NODE)
+        call destroyNode(np)
+        ! Its children will be taken care of elsewhere
+        continue
+      case default
+         !FIXME internal error
+        continue
+      end select
+      call destroyNode(np)
+      np => np_next
+    enddo
+
+    call destroyNode(attr)
+  end subroutine destroyAttribute
 
 end module m_dom_attribute

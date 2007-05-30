@@ -124,8 +124,10 @@ contains
     np%nodeValue => vs_str_alloc(nodeValue)
   end function createNode
 
-  subroutine destroyNode(np)
+  recursive subroutine destroyNode(np)
     type(Node), pointer :: np
+
+    type(NamedNode), pointer :: nnp
 
     print*, 'destroying a node:', np%nodeType, np%nodeName
 
