@@ -6,7 +6,7 @@ module m_dom_implementation
   use m_dom_node, only: appendChild
   use m_dom_nodeList, only: append, pop_nl, destroyNodeList
   use m_dom_namednodemap, only: destroyNamedNodeMap
-  use m_dom_types, only: Node, NodeList, NamedNode, createNode, destroyNode, &
+  use m_dom_types, only: Node, NodeList, createNode, destroyNode, &
     destroyNodeContents, DOCUMENT_NODE, DOCUMENT_TYPE_NODE
 
   implicit none

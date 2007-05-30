@@ -3,7 +3,7 @@ module m_dom_element
   use m_common_array_str, only: str_vs, vs_str_alloc
   use m_common_namecheck, only: prefixOfQName, localpartOfQName
 
-  use m_dom_types, only: Node, NodeList, NamedNode
+  use m_dom_types, only: Node, NodeList
   use m_dom_types, only: destroyNode
   use m_dom_types, only: DOCUMENT_NODE, ELEMENT_NODE, TEXT_NODE
   

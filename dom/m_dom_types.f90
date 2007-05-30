@@ -32,11 +32,6 @@ module m_dom_types
     integer :: length = 0
   end type NodeList
 
-  type NamedNode
-    type(Node), pointer :: this => null()
-    type(NamedNode), pointer :: next => null()
-  end type NamedNode 
-
   type NamedNodeMap
     type(NodeList) :: list 
   end type NamedNodeMap
@@ -89,7 +84,6 @@ module m_dom_types
   public :: DOMImplementation
   public :: Node
 
-  public :: NamedNode
   public :: ListNode
   public :: NodeList
   public :: NamedNodeMap
@@ -161,6 +155,10 @@ contains
 
     integer :: i
 
+    if (dt%nodeType/=DOCUMENT_TYPE_NODE) then
+       ! FIXME internal error
+    endif
+
     ! Entities need to be destroyed recursively
 
     do i = 1, dt%notations%list%length
@@ -180,7 +178,7 @@ contains
     integer :: i
 
     if (element%nodeType /= ELEMENT_NODE) then
-      ! FIXME error
+      ! FIXME internal error
     endif
 
     do i = 1, element%attributes%list%length
@@ -200,7 +198,7 @@ contains
     type(Node), pointer :: np, np_next
 
     if (attr%nodeType/=ATTRIBUTE_NODE) then
-       ! FIXME error
+       ! FIXME internal error
     endif
 
     np => attr%firstChild

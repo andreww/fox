@@ -47,6 +47,7 @@ module m_dom_error
     "TYPE_MISMATCH_ERR          " /)
 
   public :: dom_error
+  public :: internal_error
 
 contains
 
@@ -59,5 +60,13 @@ contains
     call pxfabort()
 
   end subroutine dom_error
+
+  subroutine internal_error(name,msg)
+    character(len=*), intent(in) :: name, msg
+
+    write(0,'(4a)') "Internal error in ", name, ":", msg
+    call pxfabort()
+
+  end subroutine internal_error
 
 end module m_dom_error
