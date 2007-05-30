@@ -19,6 +19,8 @@ module m_dom_namednodemap
   public :: item
   public :: getLength
   public :: getNamedItemNS
+  public :: getNamedItemNS_Value
+  public :: getNamedItemNS_Value_length
   public :: setNamedItemNS
   public :: removeNamedItemNS
 

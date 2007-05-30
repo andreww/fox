@@ -3,11 +3,11 @@ module m_dom_implementation
   use m_common_array_str, only: str_vs, vs_str_alloc
 
   use m_dom_document, only: createElementNS
-  use m_dom_document_fragment, only: destroyDocumentFragment
   use m_dom_node, only: appendChild
   use m_dom_nodeList, only: append, pop_nl, destroyNodeList
   use m_dom_namednodemap, only: destroyNamedNodeMap
-  use m_dom_types, only: Node, NodeList, NamedNode, createNode, destroyNode, DOCUMENT_NODE, DOCUMENT_TYPE_NODE
+  use m_dom_types, only: Node, NodeList, NamedNode, createNode, destroyNode, &
+    destroyNodeContents, DOCUMENT_NODE, DOCUMENT_TYPE_NODE
 
   implicit none
   private
@@ -69,23 +69,6 @@ contains
   end function createEmptyDocumentType
 
 
-  subroutine destroyDocumentType(dt)
-    type(Node), pointer :: dt
-
-    integer :: i
-
-    ! Entities need to be destroyed recursively
-
-    do i = 1, dt%notations%list%length
-      call destroyNode(dt%notations%list%nodes(i)%this)
-    enddo
-    call destroyNamedNodeMap(dt%notations)
-
-    call destroyNode(dt)
-    
-  end subroutine destroyDocumentType
-
-
   function createDocument(namespaceURI, qualifiedName, docType) result(doc)
     character(len=*), intent(in) :: namespaceURI
     character(len=*), intent(in) :: qualifiedName
@@ -134,13 +117,8 @@ contains
       continue
     endif
 
-    ! First child is always the DOCTYPE, which we will destroy separately
     np => doc%firstChild
-    !if (.not.associated(np)) ! FIXME internal eror
-    np => np%nextSibling
-    !if (.not.associated(np)) ! FIXME internal eror
-
-    call destroyDocumentType(doc%docType)
+    ! if not associated internal error
 
     call append(np_stack, np)
     ascending = .false.
@@ -159,7 +137,6 @@ contains
         cycle
       endif
       np_next => np%nextSibling
-      print*, 'destroying Node', np%nodeType, str_vs(np%nodeName)
       call destroyNode(np)
       if (associated(np_next)) then
         np => np_next
@@ -170,7 +147,9 @@ contains
     enddo
     call destroyNodeList(np_stack)
 
-    call destroyNode(doc)
+    print*, 'destroying a node:', doc%nodeType, doc%nodeName
+    call destroyNodeContents(doc)
+    deallocate(doc)
 
   end subroutine destroyDocument
 

@@ -13,8 +13,6 @@ module m_dom_attribute
   public :: setValue
   public :: getOwnerElement
 
-  public :: destroyAttribute
-  
 contains
   
   ! function getName(attribute) result(c) See m_dom_common
@@ -66,36 +64,5 @@ contains
     endif
 
   end function getOwnerElement
-
-
-  subroutine destroyAttribute(attr)
-    type(Node), pointer :: attr
-
-    type(Node), pointer :: np, np_next
-
-    if (attr%nodeType/=ATTRIBUTE_NODE) then
-       ! FIXME error
-    endif
-
-    np => attr%firstChild
-    do while (associated(np))
-      np_next => np%nextSibling
-      select case (np%nodeType)
-      case (TEXT_NODE)
-        call destroyNode(np)
-      case (ENTITY_REFERENCE_NODE)
-        call destroyNode(np)
-        ! Its children will be taken care of elsewhere
-        continue
-      case default
-         !FIXME internal error
-        continue
-      end select
-      call destroyNode(np)
-      np => np_next
-    enddo
-
-    call destroyNode(attr)
-  end subroutine destroyAttribute
 
 end module m_dom_attribute

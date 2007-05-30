@@ -28,7 +28,7 @@ module m_dom_types
   end type ListNode 
 
   type NodeList
-    type(ListNode), pointer :: nodes(:)
+    type(ListNode), pointer :: nodes(:) => null()
     integer :: length = 0
   end type NodeList
 
@@ -96,6 +96,7 @@ module m_dom_types
 
   public :: createNode
   public :: destroyNode
+  public :: destroyNodeContents
 
 contains
 
@@ -125,10 +126,100 @@ contains
   recursive subroutine destroyNode(np)
     type(Node), pointer :: np
 
-    type(NamedNode), pointer :: nnp
+    select case(np%nodeType)
+    case (ELEMENT_NODE)
+      call destroyElement(np)
+    case (ATTRIBUTE_NODE)
+      call destroyAttribute(np)
+    case (ENTITY_REFERENCE_NODE)
+      ! In principle a DOM might have children here. We don't.
+      call destroyNodeContents(np)
+      deallocate(np)
+    case (ENTITY_NODE)
+      ! ?? FIXME
+      call destroyNodeContents(np)
+      deallocate(np)
+    case (DOCUMENT_NODE)
+      ! well, I don't think this should ever be called, but if it is
+      ! then go to destroy_document
+      !call destroyDocument(np)
+    case (DOCUMENT_TYPE_NODE)
+      call destroyDocumentType(np)
+    case (DOCUMENT_FRAGMENT_NODE)
+      !call destroyDocumentFragment
+    case default
+      print*, 'destroying a node:', np%nodeType, np%nodeName
+      call destroyNodeContents(np)
+      deallocate(np)
+    end select
 
-    print*, 'destroying a node:', np%nodeType, np%nodeName
 
+  end subroutine destroyNode
+
+  subroutine destroyDocumentType(dt)
+    type(Node), pointer :: dt
+
+    integer :: i
+
+    ! Entities need to be destroyed recursively
+
+    do i = 1, dt%notations%list%length
+      call destroyNode(dt%notations%list%nodes(i)%this)
+    enddo
+    if (associated(dt%notations%list%nodes)) deallocate(dt%notations%list%nodes)
+
+    print*, 'destroying a node:', dt%nodeType, dt%nodeName
+    call destroyNodeContents(dt)
+    deallocate(dt)
+
+  end subroutine destroyDocumentType
+
+  subroutine destroyElement(element)
+    type(Node), pointer :: element
+
+    integer :: i
+
+    if (element%nodeType /= ELEMENT_NODE) then
+      ! FIXME error
+    endif
+
+    do i = 1, element%attributes%list%length
+      call destroyNode(element%attributes%list%nodes(i)%this)
+    enddo
+    !    call destroyNamedNodeMap(element%attributes)
+    if (associated(element%attributes%list%nodes)) deallocate(element%attributes%list%nodes)
+    print*, 'destroying a node:', element%nodeType, element%nodeName
+    call destroyNodeContents(element)
+    deallocate(element)
+
+  end subroutine destroyElement
+
+  subroutine destroyAttribute(attr)
+    type(Node), pointer :: attr
+
+    type(Node), pointer :: np, np_next
+
+    if (attr%nodeType/=ATTRIBUTE_NODE) then
+       ! FIXME error
+    endif
+
+    np => attr%firstChild
+    do while (associated(np))
+      np_next => np%nextSibling
+      call destroyNode(np)
+      np => np_next
+    enddo
+
+    print*, 'destroying a node:', attr%nodeType, attr%nodeName
+    call destroyNodeContents(attr)
+    deallocate(attr)
+
+  end subroutine destroyAttribute
+
+
+  subroutine destroyNodeContents(np)
+    type(Node), intent(inout) :: np
+    
     if (associated(np%nodeName)) deallocate(np%nodeName)
     if (associated(np%nodeValue)) deallocate(np%nodeValue)
     if (associated(np%namespaceURI)) deallocate(np%namespaceURI)
@@ -138,8 +229,6 @@ contains
     if (associated(np%systemId)) deallocate(np%systemId)
     if (associated(np%internalSubset)) deallocate(np%internalSubset)
     if (associated(np%notationName)) deallocate(np%notationName)
-
-    deallocate(np)
-  end subroutine destroyNode
+  end subroutine destroyNodeContents
 
 end module m_dom_types

@@ -8,7 +8,7 @@ OBJS = example_xml_module.o
 INCFLAGS=$$(../FoX-config --fcflags --wxml)
 
 dom_example.exe: dom_example.o
-	$(FC) -o $@ $< $$(../FoX-config --libs --dom)
+	$(FC) -ggdb3 -ftrace=full -o $@ $< $$(../FoX-config --libs --dom)
 #
 sax_example.exe: sax_example.o
 	$(FC) -o $@ $< $$(../FoX-config --libs --sax)

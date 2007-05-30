@@ -10,9 +10,10 @@ module m_dom_element
   use m_dom_namednodemap, only: getNamedItem, setNamedItem, removeNamedItem
   use m_dom_namednodemap, only: getNamedItem_Value, getNamedItem_Value_length
   use m_dom_namednodemap, only: getNamedItemNS, setNamedItemNS, removeNamedItemNS
+  use m_dom_namednodemap, only: getNamedItemNS_Value, getNamedItemNS_Value_length
   use m_dom_namednodemap, only: item
 
-  use m_dom_attribute, only: getValue, setValue, destroyAttribute
+  use m_dom_attribute, only: getValue, setValue
   
   use m_dom_document, only: createAttribute, createAttributeNS
   use m_dom_debug, only: dom_debug
@@ -158,17 +159,18 @@ contains
 !  function getElementsByTagName - see m_dom_document
 
 
-  function getAttributeNS(element, namespaceURI, localname) result(c)
+  function getAttributeNS(element, namespaceURI, localName) result(c)
     type(Node), intent(in) :: element
     character(len=*), intent(in) :: namespaceURI
     character(len=*), intent(in) :: localName
-    character(len=100) :: c ! FIXME
+    character(len= &
+      getNamedItemNS_Value_length(element%attributes, namespaceURI, localName)) :: c
 
     type(Node), pointer :: nn
 
     c = ""  ! as per specs, if not found Not sure ahout this FIXME
     if (element%nodeType /= ELEMENT_NODE) return ! or throw an error FIXME?
-    c = getValue(getNamedItemNS(element%attributes, namespaceURI, localName))
+    c = getNamedItemNS_Value(element%attributes, namespaceURI, localName)
 
     ! FIXME catch exception
         
@@ -312,23 +314,5 @@ contains
     enddo
 
   end function hasAttributeNS
-
-
-  subroutine destroyElement(element)
-    type(Node), pointer :: element
-
-    integer :: i
-
-    if (element%nodeType /= ELEMENT_NODE) then
-      ! FIXME error
-    endif
-
-    do i = 1, element%attributes%list%length
-      call destroyAttribute(element%attributes%list%nodes(i)%this)
-    enddo
-
-    call destroyNode(element)
-
-  end subroutine destroyElement
 
 end module m_dom_element
