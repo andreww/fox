@@ -44,6 +44,7 @@ module m_dom_types
   end type NamedNodeMap
 
   type Node
+    logical :: readonly = .false. ! FIXME must check this everywhere
     character, pointer, dimension(:)         :: nodeName => null()
     character, pointer, dimension(:)         :: nodeValue => null()
     integer              :: nc              = 0 
@@ -54,7 +55,7 @@ module m_dom_types
     type(Node), pointer :: previousSibling => null()
     type(Node), pointer :: nextSibling     => null()
     type(Node), pointer :: ownerDocument   => null()
-    type(NamedNodeMap), pointer :: attributes => null()
+    type(NamedNodeMap) :: attributes
     type(NodeList), pointer :: childNodes  => null()  ! New
     ! Introduced in DOM Level 2:
     character, pointer, dimension(:) :: namespaceURI => null()
@@ -63,20 +64,15 @@ module m_dom_types
     type(Node), pointer :: doctype => null()
     type(DOMImplementation), pointer :: implementation => null()
     type(Node), pointer :: documentElement => null()
-    character, pointer :: name(:) => null()
     logical :: specified
-    character, pointer :: value => null()
     ! Introduced in DOM Level 2
     type(Node), pointer :: ownerElement => null()
-    character, pointer :: tagName(:) => null()
-    type(namedNodeMap), pointer :: entities => null()
-    type(namedNodeMap), pointer :: notations => null()
+    type(namedNodeMap) :: entities
+    type(namedNodeMap) :: notations 
     character, pointer :: publicId(:) => null()
     character, pointer :: systemId(:) => null()
     character, pointer :: internalSubset(:) => null()
     character, pointer :: notationName(:) => null()
-    character, pointer :: target(:) => null()
-    character, pointer :: data(:) => null()
   end type Node
 
   public :: ELEMENT_NODE
@@ -119,6 +115,8 @@ contains
       endif
     endif
 
+    print*,'allocating a node:', nodeType, nodeName
+
     allocate(np)
     np%ownerDocument => doc
     np%nodeType = nodeType
@@ -129,47 +127,18 @@ contains
   subroutine destroyNode(np)
     type(Node), pointer :: np
 
+    print*, 'destroying a node:', np%nodeType, np%nodeName
+
     if (associated(np%nodeName)) deallocate(np%nodeName)
-    np%nodeName => null()
     if (associated(np%nodeValue)) deallocate(np%nodeValue)
-    np%nodeValue => null()
-    np%nc = 0
-    np%nodeType = 0
-    
-    np%parentNode => null()
-    np%firstChild => null()
-    np%lastChild => null()
-    np%previousSibling => null()
-    np%nextSibling => null()
-    np%ownerDocument => null()
-
-    np%attributes => null()
-    np%childNodes => null()
     if (associated(np%namespaceURI)) deallocate(np%namespaceURI)
-    np%namespaceURI => null()
     if (associated(np%prefix)) deallocate(np%prefix)
-    np%prefix => null()
     if (associated(np%localname)) deallocate(np%localname)
-    np%localname => null()
+    if (associated(np%publicId)) deallocate(np%publicId)
+    if (associated(np%systemId)) deallocate(np%systemId)
+    if (associated(np%internalSubset)) deallocate(np%internalSubset)
+    if (associated(np%notationName)) deallocate(np%notationName)
 
-    np%docType => null()! FIXME do we deallocate this?
-    np%implementation => null()
-
-    np%documentElement => null()
-
-    if (associated(np%name)) deallocate(np%name)
-    np%name => null()
-    if (associated(np%value)) deallocate(np%value)
-    np%value => null()
-
-    np%ownerElement => null()
-    if (associated(np%tagname)) deallocate(np%tagname)
-    np%tagname => null()
-
-    np%entities => null() ! what about deallocation
-    np%notations => null() ! what about deallocation
-
-    ! FIXME more
     deallocate(np)
   end subroutine destroyNode
 

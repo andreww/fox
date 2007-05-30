@@ -69,7 +69,7 @@ contains
 
 
   subroutine setAttribute(element, name, value)
-    type(Node), intent(in) :: element
+    type(Node), intent(inout) :: element
     character(len=*), intent(in) :: name
     character(len=*), intent(in) :: value
 
@@ -77,8 +77,9 @@ contains
 
     if (element%nodeType /= ELEMENT_NODE) return ! or throw an error FIXME?
 
-    nn => getNamedItem(element%attributes, name)
-    call setValue(nn, value) 
+    nn => createAttribute(element%ownerDocument, name)
+    call setValue(nn, value)
+    nn => setNamedItem(element%attributes, nn)
 
     ! FIXME catch exception
 
@@ -176,7 +177,7 @@ contains
 
 
   subroutine setAttributeNS(element, namespaceURI, localname, value)
-    type(Node), intent(in) :: element
+    type(Node), intent(inout) :: element
     character(len=*), intent(in) :: namespaceURI
     character(len=*), intent(in) :: localname
     character(len=*), intent(in) :: value
@@ -185,8 +186,9 @@ contains
 
     if (element%nodeType /= ELEMENT_NODE) return ! or throw an error FIXME?
 
-    nn => getNamedItemNS(element%attributes, namespaceURI, localname)
-    call setValue(nn, value) 
+    nn => createAttributeNS(element%ownerDocument, namespaceURI, localname)
+    call setValue(nn, value)
+    nn => setNamedItemNS(element%attributes, nn)
 
     ! FIXME catch exception
 
@@ -273,6 +275,10 @@ contains
 
     type(NamedNode), pointer :: nnp
 
+    if (element%nodeType /= ELEMENT_NODE) then
+      ! FIXME error
+    endif
+
     p = .false.
     nnp => element%attributes%head
     do while (associated(nnp))
@@ -294,6 +300,10 @@ contains
 
     type(NamedNode), pointer :: nnp
 
+    if (element%nodeType /= ELEMENT_NODE) then
+      ! FIXME error
+    endif
+
     p = .false.
     nnp => element%attributes%head
     do while (associated(nnp))
@@ -307,5 +317,24 @@ contains
 
   end function hasAttributeNS
 
+
+!!$  subroutine destroyElement(element)
+!!$    type(Node), pointer :: element
+!!$
+!!$    type(NamedNode), pointer :: nnp
+!!$
+!!$    if (element%nodeType /= ELEMENT_NODE) then
+!!$      ! FIXME error
+!!$    endif
+!!$
+!!$    nnp => element%attributes%head
+!!$    do while (associated(nnp))
+!!$      call destroyAttribute(nnp)
+!!$      nnp => nnp%next
+!!$    enddo
+!!$    
+!!$    call destroyNode(element)
+!!$
+!!$  end subroutine destroyElement
 
 end module m_dom_element

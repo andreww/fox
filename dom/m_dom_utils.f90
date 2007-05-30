@@ -146,15 +146,15 @@ contains
       
     case (TEXT_NODE)
       
-      call xml_AddCharacters(xf, str_vs(n%data))
+      call xml_AddCharacters(xf, str_vs(n%nodeValue))
       
     case (CDATA_SECTION_NODE)
       
-      call xml_AddCharacters(xf, str_vs(n%data), parsed=.false.)
+      call xml_AddCharacters(xf, str_vs(n%nodeValue), parsed=.false.)
       
     case (COMMENT_NODE)
       
-      call xml_AddComment(xf, str_vs(n%data))
+      call xml_AddComment(xf, str_vs(n%nodeValue))
       
     end select
     call destroy_dict(simpleDict)

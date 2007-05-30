@@ -66,4 +66,22 @@ contains
 
   end function getOwnerElement
 
+
+!!$  subroutine destroyAttribute(attr)
+!!$    type(Node), pointer :: attr
+!!$
+!!$    type(Node), pointer :: np
+!!$
+!!$    if (attribute%nodeType/=ATTRIBUTE_NODE) then
+!!$       ! FIXME error
+!!$    endif
+!!$
+!!$    np => attr%firstChild
+!!$    do while (associated(np))
+!!$      ! FIXME argh wtf about entityreferences
+!!$      call destroyNode(np)
+!!$      np => np%nextSibling
+!!$    enddo
+!!$  end subroutine destroyAttribute
+
 end module m_dom_attribute

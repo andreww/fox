@@ -2,8 +2,8 @@ module m_dom_implementation
 
   use m_common_array_str, only: str_vs, vs_str_alloc
   use m_dom_document, only: createElementNS
- ! use m_dom_types, only: FoX_DOM
-  use m_dom_types, only: Node, NodeList, createNode, destroyNode, DOCUMENT_NODE, DOCUMENT_TYPE_NODE
+  use m_dom_document_fragment, only: destroyDocumentFragment
+  use m_dom_types, only: Node, NodeList, NamedNode, createNode, destroyNode, DOCUMENT_NODE, DOCUMENT_TYPE_NODE
   use m_dom_nodeList, only: append, pop_nl, destroyNodeList
 
   implicit none
@@ -34,6 +34,7 @@ contains
     p = (feature=="Core".or.feature=="XML")
   end function hasFeature
 
+
   function createDocumentType(qualifiedName, publicId, systemId) result(dt)
     character(len=*), intent(in) :: qualifiedName
     character(len=*), intent(in) :: publicId
@@ -52,6 +53,7 @@ contains
 
   end function createDocumentType
 
+
   function createEmptyDocumentType() result(dt)
     type(Node), pointer :: dt
 
@@ -63,18 +65,27 @@ contains
     allocate(dt%internalSubset(0)) !FIXME
   end function createEmptyDocumentType
 
+
   subroutine destroyDocumentType(dt)
     type(Node), pointer :: dt
+
+    type(NamedNode), pointer :: nnp, nnp_old
+
+    ! entities need to be deallocated recursively
     
-    if (associated(dt%publicId)) deallocate(dt%publicId)
-    if (associated(dt%systemId)) deallocate(dt%systemId)
-    if (associated(dt%internalSubset)) deallocate(dt%internalSubset)
+    nnp => dt%notations%head
+    do while (associated(nnp))
+      call destroyNode(nnp%this)
+      nnp_old => nnp
+      nnp => nnp%next
+      deallocate(nnp_old)
+    enddo
+
     call destroyNode(dt)
-    !call destroyNamedNodeMap(dt%entities)
-    !call destroyNamedNodeMap(dt%notations)
+    
   end subroutine destroyDocumentType
 
-  
+
   function createDocument(namespaceURI, qualifiedName, docType) result(doc)
     character(len=*), intent(in) :: namespaceURI
     character(len=*), intent(in) :: qualifiedName
@@ -96,6 +107,7 @@ contains
     
   end function createDocument
 
+
   function createEmptyDocument() result(doc)
     type(Node), pointer :: doc
     
@@ -109,12 +121,13 @@ contains
     
   end function createEmptyDocument
 
+
   subroutine destroyDocument(doc)
     type(Node), pointer :: doc
     
     type(NodeList) :: np_stack
     type(Node), pointer :: np, np_next
-    logical :: alreadyDone
+    logical :: ascending
 
     if (doc%nodeType/=DOCUMENT_NODE) then
       ! FIXME throw an error
@@ -128,17 +141,16 @@ contains
       continue
     endif
 
-    ! Use iteration, not recursion, to save stack space.
     call append(np_stack, np)
-    alreadyDone = .false.
+    ascending = .false.
     do
-      print*, 'iterating ...', associated(np), alreadyDONe, np_stack%length
-      if (alreadyDone) then
+      print*, 'iterating ...', associated(np), ascending, np_stack%length
+      if (ascending) then
         np => pop_nl(np_stack)
         if (np_stack%length==0) then
           exit
         else
-          alreadyDone = .false.
+          ascending = .false.
         endif
       else if (associated(np%firstChild)) then
         call append(np_stack, np)
@@ -152,7 +164,7 @@ contains
         np => np_next
         cycle
       else
-        alreadyDone = .true.
+        ascending = .true.
       endif
     enddo
     call destroyNodeList(np_stack)

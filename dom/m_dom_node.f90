@@ -122,7 +122,7 @@ contains
     type(Node), intent(in) :: arg
     type(NamedNodeMap), pointer :: nnm
 
-    nnm => arg%attributes
+    nnm = arg%attributes
   end function getAttributes
 
   function getOwnerDocument(arg) result(np)

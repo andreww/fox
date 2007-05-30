@@ -28,7 +28,10 @@ module m_dom_document
   public :: createElementNS
   public :: createAttributeNS
   public :: getElementsByTagNameNS
-  public :: getElementById 
+  public :: getElementById
+
+  public :: createEntity
+  public :: createNotation
 
 contains
 
@@ -364,5 +367,23 @@ contains
     np%notationName => vs_str_alloc(notationName)
 
   end function createEntity
+
+  function createNotation(doc, name, publicId, systemId) result(np)
+    type(Node), pointer :: doc
+    character(len=*), intent(in) :: name
+    character(len=*), intent(in), optional :: publicId
+    character(len=*), intent(in), optional :: systemId
+    type(Node), pointer :: np
+
+    if (doc%nodeType/=DOCUMENT_NODE) then
+      print*,'internal error in createEntity'
+      stop
+    endif
+
+    np => createNode(doc, NOTATION_NODE, name, "")
+    if (present(publicId)) np%publicId => vs_str_alloc(publicId)
+    if (present(systemId)) np%systemId => vs_str_alloc(systemId)
+    
+  end function createNotation
 
 end module m_dom_document

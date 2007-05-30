@@ -6,7 +6,8 @@ OBJFILES= m_dom_debug.o m_dom_error.o m_dom_character_data.o\
 	  m_dom_node.o m_dom_attribute.o m_dom_document.o \
 	  m_dom_element.o m_dom_text.o m_dom_parse.o \
 	  m_dom_utils.o m_dom_implementation.o m_dom_entity.o \
-	  m_dom_processing_instruction.o FoX_dom.o
+	  m_dom_processing_instruction.o m_dom_document_fragment.o \
+	  FoX_dom.o
 #
 LIBRARY=libFoX_dom.a
 INCFLAGS=$(MOD_PREFIX)../objs/finclude
@@ -46,17 +47,20 @@ m_dom_attribute.o: m_dom_types.o
 m_dom_character_data.o: m_dom_types.o
 m_dom_common.o: m_dom_types.o
 m_dom_document.o: m_dom_error.o m_dom_nodelist.o m_dom_types.o
+m_dom_document_fragment.o: m_dom_nodelist.o m_dom_types.o
 m_dom_document_type.o: m_dom_types.o
 m_dom_element.o: m_dom_attribute.o m_dom_debug.o m_dom_document.o
 m_dom_element.o: m_dom_namednodemap.o m_dom_nodelist.o m_dom_types.o
 m_dom_entity.o: m_dom_types.o
-m_dom_implementation.o: m_dom_document.o m_dom_nodelist.o m_dom_types.o
+m_dom_implementation.o: m_dom_document.o m_dom_document_fragment.o
+m_dom_implementation.o: m_dom_nodelist.o m_dom_types.o
 m_dom_namednodemap.o: m_dom_types.o
 m_dom_node.o: m_dom_debug.o m_dom_error.o m_dom_namednodemap.o m_dom_nodelist.o
 m_dom_node.o: m_dom_types.o
 m_dom_nodelist.o: m_dom_types.o
 m_dom_parse.o: m_dom_debug.o m_dom_document.o m_dom_element.o
-m_dom_parse.o: m_dom_implementation.o m_dom_node.o m_dom_types.o
+m_dom_parse.o: m_dom_implementation.o m_dom_namednodemap.o m_dom_node.o
+m_dom_parse.o: m_dom_types.o
 m_dom_processing_instruction.o: m_dom_types.o
 m_dom_text.o: m_dom_document.o m_dom_node.o m_dom_types.o
 m_dom_utils.o: m_dom_namednodemap.o m_dom_node.o m_dom_types.o

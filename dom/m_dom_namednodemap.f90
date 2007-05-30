@@ -83,7 +83,7 @@ contains
   end function setNamedItem
 
   function removeNamedItem(map, name) result(np)
-    type(NamedNodeMap), pointer :: map
+    type(NamedNodeMap), intent(inout) :: map
     character(len=*), intent(in) :: name
     type(Node), pointer :: np
 
@@ -152,19 +152,6 @@ contains
     
   end function getLength_nnm
 
-  !FIXME:
-!!$    // Introduced in DOM Level 2:
-!!$  Node               getNamedItemNS(in DOMString namespaceURI, 
-!!$                                    in DOMString localName);
-!!$  // Introduced in DOM Level 2:
-!!$  Node               setNamedItemNS(in Node arg)
-!!$                                        raises(DOMException);
-!!$  // Introduced in DOM Level 2:
-!!$  Node               removeNamedItemNS(in DOMString namespaceURI, 
-!!$                                       in DOMString localName)
-!!$                                        raises(DOMException);
-
-
   function getNamedItemNS(map, namespaceURI, localName) result(np)
     type(NamedNodeMap), intent(in) :: map
     character(len=*), intent(in) :: namespaceURI
@@ -217,7 +204,7 @@ contains
   end function setNamedItemNS
 
   function removeNamedItemNS(map, namespaceURI, localName) result(np)
-    type(NamedNodeMap), pointer :: map
+    type(NamedNodeMap), intent(inout) :: map
     character(len=*), intent(in) :: namespaceURI
     character(len=*), intent(in) :: localName
     type(Node), pointer :: np
@@ -256,7 +243,7 @@ contains
 
 
   subroutine append_nnm(map, arg)
-    type(namednodeMap), intent(inout) :: map
+    type(namedNodeMap), intent(inout) :: map
     type(node), pointer :: arg
 
     if (.not.associated(map%head)) then

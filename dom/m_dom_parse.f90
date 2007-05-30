@@ -13,7 +13,9 @@ module m_dom_parse
   use m_dom_document, only: createComment
   use m_dom_document, only: createElementNS
   use m_dom_document, only: createTextNode
+  use m_dom_document, only: createNotation
   use m_dom_implementation, only: createEmptyDocument
+  use m_dom_namednodemap, only: append
   use m_dom_node, only: appendchild
   use m_dom_element, only: setAttributeNS
   use m_dom_debug, only: dom_debug
@@ -132,6 +134,17 @@ contains
 
   end subroutine startDTD_handler
 
+  subroutine notationDecl_handler(name, publicId, systemId)
+    character(len=*), intent(in) :: name
+    character(len=*), intent(in), optional :: publicId
+    character(len=*), intent(in), optional :: systemId
+    
+    type(Node), pointer :: np
+
+    np => createNotation(mainDoc, name, publicId, systemId)
+    call append(mainDoc%docType%notations, np)
+
+  end subroutine notationDecl_handler
 
   function parsefile(filename, verbose, sax_verbose)
 
@@ -165,7 +178,7 @@ contains
       startDocument_handler=startDocument_handler,         & 
       startElement_handler=startElement_handler,          &
       !startPrefixMapping_handler,    &
-      !notationDecl_handler,          &
+      notationDecl_handler=notationDecl_handler,          &
       !unparsedEntityDecl_handler,    &
       !error_handler,                 &
       !fatalError_handler,            &
