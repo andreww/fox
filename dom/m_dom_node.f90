@@ -375,7 +375,8 @@ contains
     logical :: hasAttributes
     
     if (.not.associated(arg)) call dom_error("hasAttributes",0,"Node not allocated")
-    hasAttributes = (arg%nodeType /= ELEMENT_NODE) .and. (arg%attributes%length > 0)
+    hasAttributes = (arg%nodeType /= ELEMENT_NODE) &
+      .and. (arg%attributes%list%length > 0)
     
   end function hasAttributes
   

@@ -26,18 +26,16 @@ contains
 
     p = attribute%specified
   end function getSpecified
+    
 
-  ! FIXME this below is all wrong, should be dealing with text and entityreference children
-
-  function getValue(attribute) result(c)
+  pure function getValue(attribute) result(c)
     type(Node), intent(in) :: attribute
     character(size(attribute%nodeValue)) :: c 
 
-    if (attribute%nodeType == ATTRIBUTE_NODE) then
-       c = str_vs(attribute%nodeValue)
-    else
+    if (attribute%nodeType/=ATTRIBUTE_NODE) then
        c = '' ! FIXME error
     endif
+    c = str_vs(attribute%nodeValue)
 
   end function getValue
 

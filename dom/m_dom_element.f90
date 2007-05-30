@@ -7,10 +7,10 @@ module m_dom_element
   use m_dom_types, only: destroyNode
   use m_dom_types, only: DOCUMENT_NODE, ELEMENT_NODE, TEXT_NODE
   
-  use m_dom_nodelist, only: append
-  
   use m_dom_namednodemap, only: getNamedItem, setNamedItem, removeNamedItem
+  use m_dom_namednodemap, only: getNamedItem_Value, getNamedItem_Value_length
   use m_dom_namednodemap, only: getNamedItemNS, setNamedItemNS, removeNamedItemNS
+  use m_dom_namednodemap, only: item
 
   use m_dom_attribute, only: getValue, setValue, destroyAttribute
   
@@ -55,13 +55,13 @@ contains
   function getAttribute(element, name) result(c)
     type(Node), intent(in) :: element
     character(len=*), intent(in) :: name
-    character(len=100) :: c ! FIXME
+    character(len=getNamedItem_Value_length(element%attributes, name)) :: c
 
     type(Node), pointer :: nn
 
     c = ""  ! as per specs, if not found Not sure ahout this FIXME
     if (element%nodeType /= ELEMENT_NODE) return ! or throw an error FIXME?
-    c = getValue(getNamedItem(element%attributes, name))
+    c = getNamedItem_Value(element%attributes, name)
 
     ! FIXME catch exception
         
@@ -137,20 +137,17 @@ contains
     type(Node), pointer :: oldattr
     type(Node), pointer :: attr
 
-    type(NamedNode), pointer :: nnp
+    integer :: i
 
     if (element%nodeType /= ELEMENT_NODE) then
       ! FIXME error
     endif
 
-    nnp => element%attributes%head
-    do while (associated(nnp))
-      if (associated(nnp, attr)) then
-    ! WHat about remove text ...
+    do i = 1, element%attributes%list%length
+      if (associated(item(element%attributes, i), oldattr)) then
         attr => removeNamedItem(element%attributes, str_vs(oldattr%nodeName))
         return
       endif
-      nnp => nnp%next
     enddo
 
     ! FIXME exceptions
@@ -249,19 +246,18 @@ contains
     type(Node), pointer :: oldattr
     type(Node), pointer :: attr
 
-    type(NamedNode), pointer :: nnp
+    integer :: i
 
     if (element%nodeType /= ELEMENT_NODE) then
       ! FIXME error
     endif
 
-    nnp => element%attributes%head
-    do while (associated(nnp))
-      if (associated(nnp, attr)) then
-        attr => removeNamedItemNS(element%attributes, str_vs(oldattr%namespaceURI), str_vs(oldattr%localName))
+    do i = 1, element%attributes%list%length
+      if (associated(item(element%attributes, i), oldattr)) then
+        attr => removeNamedItemNS(element%attributes, &
+          str_vs(oldattr%namespaceURI), str_vs(oldattr%localName))
         return
       endif
-      nnp => nnp%next
     enddo
 
     ! FIXME exceptions
@@ -277,20 +273,18 @@ contains
     character(len=*), intent(in) :: name
     logical :: p
 
-    type(NamedNode), pointer :: nnp
+    integer :: i
 
     if (element%nodeType /= ELEMENT_NODE) then
       ! FIXME error
     endif
 
     p = .false.
-    nnp => element%attributes%head
-    do while (associated(nnp))
-      if (str_vs(nnp%this%nodeName)==name) then
+    do i = 1, element%attributes%list%length
+      if (str_vs(element%attributes%list%nodes(i)%this%nodeName)==name) then
         p = .true.
         exit
       endif
-      nnp => nnp%next
     enddo
 
   end function hasAttribute
@@ -302,21 +296,19 @@ contains
     character(len=*), intent(in) :: localName
     logical :: p
 
-    type(NamedNode), pointer :: nnp
+    integer :: i
 
     if (element%nodeType /= ELEMENT_NODE) then
       ! FIXME error
     endif
 
     p = .false.
-    nnp => element%attributes%head
-    do while (associated(nnp))
-      if (str_vs(nnp%this%namespaceURI)==namespaceURI .and. &
-        str_vs(nnp%this%localName)==localName) then
+    do i = 1, element%attributes%list%length
+      if (str_vs(element%attributes%list%nodes(i)%this%namespaceURI)==namespaceURI &
+        .and. str_vs(element%attributes%list%nodes(i)%this%localName)==localName) then
         p = .true.
         exit
       endif
-      nnp => nnp%next
     enddo
 
   end function hasAttributeNS
@@ -325,18 +317,16 @@ contains
   subroutine destroyElement(element)
     type(Node), pointer :: element
 
-    type(NamedNode), pointer :: nnp
+    integer :: i
 
     if (element%nodeType /= ELEMENT_NODE) then
       ! FIXME error
     endif
 
-    nnp => element%attributes%head
-    do while (associated(nnp))
-      call destroyAttribute(nnp%this)
-      nnp => nnp%next
+    do i = 1, element%attributes%list%length
+      call destroyAttribute(element%attributes%list%nodes(i)%this)
     enddo
-    
+
     call destroyNode(element)
 
   end subroutine destroyElement

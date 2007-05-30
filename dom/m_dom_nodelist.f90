@@ -8,6 +8,7 @@ module m_dom_nodelist
   public :: item
   public :: append
   public :: pop_nl
+  public :: remove_nl
   public :: destroyNodeList
   
   interface append
@@ -21,12 +22,9 @@ module m_dom_nodelist
 contains
 
   function item_nl(list, index) result(np)
-    integer, intent(in)             :: index
-    type(NodeList), pointer        :: list
-    type(Node), pointer            :: np
-    
-    np => null()
-    if (.not. associated(list)) return
+    type(NodeList), intent(in) :: list
+    integer, intent(in) :: index
+    type(Node), pointer :: np
 
 !    if (index > list%length) &
 !      FIXME raise an error
@@ -87,6 +85,23 @@ contains
     endif
     
   end function pop_nl
+
+
+  function remove_nl(nl, index) result(np)
+    type(NodeList), intent(inout) :: nl
+    integer, intent(in) :: index
+    type(Node), pointer :: np
+
+    integer :: i
+
+    np => nl%nodes(index)%this
+
+    do i = index + 1, nl%length
+      nl%nodes(i-1)%this => nl%nodes(i)%this
+    enddo
+
+  end function remove_nl
+
 
   subroutine destroyNodeList(nl)
     type(NodeList), intent(inout) :: nl

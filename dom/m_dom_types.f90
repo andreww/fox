@@ -38,9 +38,7 @@ module m_dom_types
   end type NamedNode 
 
   type NamedNodeMap
-    type(NamedNode), pointer :: head => null()
-    type(NamedNode), pointer :: tail => null()
-    integer :: length = 0
+    type(NodeList) :: list 
   end type NamedNodeMap
 
   type Node
