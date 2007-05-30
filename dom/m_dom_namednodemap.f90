@@ -3,7 +3,7 @@ module m_dom_namednodemap
   use m_common_array_str, only: str_vs
 
   use m_dom_types, only: Node, NamedNodeMap, ATTRIBUTE_NODE
-  use m_dom_nodelist, only: item, append, remove_nl
+  use m_dom_nodelist, only: item, append, remove_nl, destroyNodeList
   
   implicit none
   private
@@ -23,6 +23,7 @@ module m_dom_namednodemap
   public :: removeNamedItemNS
 
   public :: append
+  public :: destroyNamedNodeMap
 
   interface append
     module procedure append_nnm
@@ -265,6 +266,13 @@ contains
     call append(map%list, arg)
 
   end subroutine append_nnm
+
+
+  subroutine destroyNamedNodeMap(map)
+    type(namedNodeMap), intent(inout) :: map
+
+    call destroyNodeList(map%list)
+  end subroutine destroyNamedNodeMap
 
 end module m_dom_namednodemap
 

@@ -6,6 +6,7 @@ module m_dom_implementation
   use m_dom_document_fragment, only: destroyDocumentFragment
   use m_dom_node, only: appendChild
   use m_dom_nodeList, only: append, pop_nl, destroyNodeList
+  use m_dom_namednodemap, only: destroyNamedNodeMap
   use m_dom_types, only: Node, NodeList, NamedNode, createNode, destroyNode, DOCUMENT_NODE, DOCUMENT_TYPE_NODE
 
   implicit none
@@ -71,17 +72,14 @@ contains
   subroutine destroyDocumentType(dt)
     type(Node), pointer :: dt
 
-    type(NamedNode), pointer :: nnp, nnp_old
+    integer :: i
 
-    ! entities need to be deallocated recursively
-    
-    nnp => dt%notations%head
-    do while (associated(nnp))
-      call destroyNode(nnp%this)
-      nnp_old => nnp
-      nnp => nnp%next
-      deallocate(nnp_old)
+    ! Entities need to be destroyed recursively
+
+    do i = 1, dt%notations%list%length
+      call destroyNode(dt%notations%list%nodes(i)%this)
     enddo
+    call destroyNamedNodeMap(dt%notations)
 
     call destroyNode(dt)
     
