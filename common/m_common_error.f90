@@ -13,7 +13,7 @@ module m_common_error
 
   type error_t
     integer :: severity = ERR_NULL
-    integer :: error_code
+    integer :: error_code = 0
     character, dimension(:), pointer :: msg => null()
   end type error_t
 
@@ -120,20 +120,18 @@ contains
     integer, intent(in), optional :: severity
 
     integer :: i, n
-    type(error_t), dimension(size(stack%stack)) :: temp_stack
+    type(error_t), dimension(:), pointer :: temp_stack 
 
     n = size(stack%stack)
-
-    do i = 1, n
-      temp_stack(i)%msg => stack%stack(i)%msg
-      temp_stack(i)%severity = stack%stack(i)%severity
-    enddo
-    deallocate(stack%stack)
+    
+    temp_stack => stack%stack
     allocate(stack%stack(n+1))
-    do i = 1, n
+    do i = 1, size(temp_stack)
       stack%stack(i)%msg => temp_stack(i)%msg
       stack%stack(i)%severity = temp_stack(i)%severity
+      stack%stack(i)%error_code = temp_stack(i)%error_code
     enddo
+    deallocate(temp_stack)
 
     stack%stack(n+1)%msg => vs_str_alloc(msg)
     if (present(severity)) then
