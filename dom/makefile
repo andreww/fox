@@ -52,7 +52,7 @@ m_dom_document_type.o: m_dom_types.o
 m_dom_element.o: m_dom_attribute.o m_dom_debug.o m_dom_document.o
 m_dom_element.o: m_dom_namednodemap.o m_dom_nodelist.o m_dom_types.o
 m_dom_entity.o: m_dom_types.o
-m_dom_implementation.o: m_dom_document.o m_dom_document_fragment.o
+m_dom_implementation.o: m_dom_document.o m_dom_document_fragment.o m_dom_node.o
 m_dom_implementation.o: m_dom_nodelist.o m_dom_types.o
 m_dom_namednodemap.o: m_dom_types.o
 m_dom_node.o: m_dom_debug.o m_dom_error.o m_dom_namednodemap.o m_dom_nodelist.o

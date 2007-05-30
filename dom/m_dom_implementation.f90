@@ -1,10 +1,12 @@
 module m_dom_implementation
 
   use m_common_array_str, only: str_vs, vs_str_alloc
+
   use m_dom_document, only: createElementNS
   use m_dom_document_fragment, only: destroyDocumentFragment
-  use m_dom_types, only: Node, NodeList, NamedNode, createNode, destroyNode, DOCUMENT_NODE, DOCUMENT_TYPE_NODE
+  use m_dom_node, only: appendChild
   use m_dom_nodeList, only: append, pop_nl, destroyNodeList
+  use m_dom_types, only: Node, NodeList, NamedNode, createNode, destroyNode, DOCUMENT_NODE, DOCUMENT_TYPE_NODE
 
   implicit none
   private
@@ -96,14 +98,14 @@ contains
     doc%ownerDocument => doc
 
     if (present(docType)) then
-      doc%doctype => docType
+      doc%doctype => appendChild(doc, doc%docType)
     endif
     if (.not.associated(doc%docType)) then
-      doc%docType => createDocumentType(qualifiedName, "", "")
+      doc%docType => appendChild(doc, createDocumentType(qualifiedName, "", ""))
     endif
 
 !    doc%implementation => FoX_DOM
-    doc%documentElement => createElementNS(doc, namespaceURI, qualifiedName)
+    doc%documentElement => appendChild(doc, createElementNS(doc, namespaceURI, qualifiedName))
     
   end function createDocument
 
@@ -115,7 +117,7 @@ contains
     doc%ownerDocument => doc
 
     ! FIXME do something with namespaceURI etc 
-    doc%doctype => createEmptyDocumentType()
+    doc%doctype => appendChild(doc, createEmptyDocumentType())
 !    doc%implementation => FoX_DOM
     doc%documentElement => null()
     
@@ -134,12 +136,13 @@ contains
       continue
     endif
 
+    ! First child is always the DOCTYPE, which we will destroy separately
     np => doc%firstChild
+    !if (.not.associated(np)) ! FIXME internal eror
+    np => np%nextSibling
+    !if (.not.associated(np)) ! FIXME internal eror
 
-    if (.not.associated(np)) then
-      ! FIXME internal eror
-      continue
-    endif
+    call destroyDocumentType(doc%docType)
 
     call append(np_stack, np)
     ascending = .false.
@@ -169,7 +172,6 @@ contains
     enddo
     call destroyNodeList(np_stack)
 
-    call destroyDocumentType(doc%docType)
     call destroyNode(doc)
 
   end subroutine destroyDocument
