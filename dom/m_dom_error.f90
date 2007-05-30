@@ -3,12 +3,15 @@ module m_dom_error
   use pxf, only: pxfabort
 
   use m_common_error, only: error_stack, add_error
+
   implicit none
   private
 
-  !-------------------------------------------------------
-  ! EXCEPTION CODES
-  !-------------------------------------------------------
+  type DOMException
+    private
+    type(error_stack) :: stack
+  end type DOMException
+
   integer, parameter, public :: INDEX_SIZE_ERR              = 1
   integer, parameter, public :: DOMSTRING_SIZE_ERR          = 2
   integer, parameter, public :: HIERARCHY_REQUEST_ERR       = 3
@@ -53,18 +56,29 @@ module m_dom_error
     "VALIDATION_ERR             ", &
     "TYPE_MISMATCH_ERR          " /)
 
+  public :: DOMException
+  public :: getCode
+  public :: throw_exception
   public :: dom_error
   public :: internal_error
 
 contains
 
+  pure function getCode(ex) result(n)
+    type(DOMException), intent(in) :: ex
+    integer :: n
+
+    n = ex%stack%stack(size(ex%stack%stack))%error_code
+
+  end function getCode
+
   subroutine throw_exception(code, msg, ex)
     integer, intent(in) :: code
     character(len=*), intent(in) :: msg
-    type(error_stack), intent(inout), optional :: ex
+    type(DOMException), intent(inout), optional :: ex
 
     if (present(ex)) then
-      call add_error(ex, msg, 0) ! FIXME
+      call add_error(ex%stack, msg, 0) ! FIXME
     else
       write(0,'(a)') errorString(code)
       write(0,'(a)') msg

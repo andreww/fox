@@ -1,6 +1,7 @@
 module m_dom_node
 
   use m_common_array_str, only: str_vs, vs_str_alloc
+  use m_dom_error, only: DOMException, throw_exception, NO_MODIFICATION_ALLOWED_ERR
   use m_dom_types, only: Node, Nodelist, NamedNodeMap
   use m_dom_types, only: ELEMENT_NODE, ATTRIBUTE_NODE, COMMENT_NODE
   use m_dom_types, only: TEXT_NODE, PROCESSING_INSTRUCTION_NODE
@@ -61,9 +62,15 @@ contains
     c = str_vs(arg%nodeName)
   end function getNodeValue
   
-  subroutine setNodeValue(arg, nodeValue)
+  subroutine setNodeValue(arg, nodeValue, ex)
     type(Node), intent(inout) :: arg
     character(len=*) :: nodeValue
+    type(DOMException), intent(inout), optional :: ex
+
+    if (arg%readonly) &
+      call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setNodeValue", ex)
+      
+    !FIXME check what kind of node is it, what is nodeValue allowed to be ...
 
     deallocate(arg%nodeValue)
     arg%nodeValue => vs_str_alloc(nodeValue)

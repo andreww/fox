@@ -67,6 +67,7 @@ contains
 
   end subroutine FoX_warning_base
 
+
   subroutine FoX_error_base(msg)
     ! Emit error message and stop.
     ! No clean up is done here, but this can
@@ -101,6 +102,7 @@ contains
     
     allocate(stack%stack(0))
   end subroutine init_error_stack
+
 
   subroutine destroy_error_stack(stack)
     type(error_stack), intent(inout) :: stack
@@ -141,6 +143,7 @@ contains
     endif
 
   end subroutine add_error
+
 
   function in_error(stack) result(p)
     type(error_stack), intent(in) :: stack
