@@ -1,13 +1,14 @@
 module m_dom_error
 
   use pxf, only: pxfabort
+
+  use m_common_error, only: error_stack, add_error
   implicit none
   private
 
   !-------------------------------------------------------
   ! EXCEPTION CODES
   !-------------------------------------------------------
-  integer, parameter, public :: XMLF90_ERR                  = 0
   integer, parameter, public :: INDEX_SIZE_ERR              = 1
   integer, parameter, public :: DOMSTRING_SIZE_ERR          = 2
   integer, parameter, public :: HIERARCHY_REQUEST_ERR       = 3
@@ -25,6 +26,12 @@ module m_dom_error
   integer, parameter, public :: INVALID_ACCESS_ERR          = 15
   integer, parameter, public :: VALIDATION_ERR              = 16
   integer, parameter, public :: TYPE_MISMATCH_ERR           = 17
+
+  integer, parameter, public :: FoX_INVALID_CHARACTER       = 201
+  integer, parameter, public :: FoX_INVALID_XML_NAME        = 202
+  integer, parameter, public :: FoX_INVALID_PI_TARGET       = 203
+  integer, parameter, public :: FoX_INVALID_CDATA_SECTION   = 204
+  integer, parameter, public :: FoX_INVALID_COMMENT_DATA    = 205
 
   character(len=27), dimension(0:17), parameter :: errorString = (/ &
     "XMLF90_ERR                 ", &
@@ -51,6 +58,22 @@ module m_dom_error
 
 contains
 
+  subroutine throw_exception(code, msg, ex)
+    integer, intent(in) :: code
+    character(len=*), intent(in) :: msg
+    type(error_stack), intent(inout), optional :: ex
+
+    if (present(ex)) then
+      call add_error(ex, msg, 0) ! FIXME
+    else
+      write(0,'(a)') errorString(code)
+      write(0,'(a)') msg
+      call pxfabort()
+    endif
+      
+  end subroutine throw_exception
+
+
   subroutine dom_error(name,code,msg)
     character(len=*), intent(in) :: name, msg
     integer, intent(in)          :: code
@@ -60,6 +83,7 @@ contains
     call pxfabort()
 
   end subroutine dom_error
+
 
   subroutine internal_error(name,msg)
     character(len=*), intent(in) :: name, msg

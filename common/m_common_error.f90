@@ -13,6 +13,7 @@ module m_common_error
 
   type error_t
     integer :: severity = ERR_NULL
+    integer :: error_code
     character, dimension(:), pointer :: msg => null()
   end type error_t
 
