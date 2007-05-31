@@ -45,7 +45,7 @@ contains
     type(Node), pointer :: dt
 
     dt => createNode(null(), DOCUMENT_TYPE_NODE, qualifiedName, "")
-    dt%ownerDocument => dt
+    dt%readonly = .true.
     !dt%entities
     !dt%notations
     dt%publicId = vs_str_alloc(publicId)
@@ -61,6 +61,7 @@ contains
     type(Node), pointer :: dt
 
     dt => createNode(null(), DOCUMENT_TYPE_NODE, "", "")
+    dt%readonly = .true.
     !dt%entities
     !dt%notations
     allocate(dt%publicId(0))
@@ -85,6 +86,7 @@ contains
       doc%docType => appendChild(doc, createDocumentType(qualifiedName, "", ""))
     endif
 
+    doc%docType%ownerElement => doc
 !    doc%implementation => FoX_DOM
     doc%documentElement => appendChild(doc, createElementNS(doc, namespaceURI, qualifiedName))
     
@@ -99,6 +101,7 @@ contains
 
     ! FIXME do something with namespaceURI etc 
     doc%doctype => appendChild(doc, createEmptyDocumentType())
+    doc%docType%ownerElement => doc
 !    doc%implementation => FoX_DOM
     doc%documentElement => null()
     

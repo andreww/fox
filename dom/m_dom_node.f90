@@ -2,6 +2,7 @@ module m_dom_node
 
   use m_common_array_str, only: str_vs, vs_str_alloc
   use m_dom_error, only: DOMException, throw_exception, NO_MODIFICATION_ALLOWED_ERR
+  use m_dom_error, only: NOT_FOUND_ERR, HIERARCHY_REQUEST_ERR, WRONG_DOCUMENT_ERR
   use m_dom_types, only: Node, Nodelist, NamedNodeMap
   use m_dom_types, only: ELEMENT_NODE, ATTRIBUTE_NODE, COMMENT_NODE
   use m_dom_types, only: TEXT_NODE, PROCESSING_INSTRUCTION_NODE
@@ -11,7 +12,6 @@ module m_dom_node
   use m_dom_nodelist, only: append
   use m_dom_namednodemap, only: getlength, item, append
   use m_dom_debug, only: dom_debug
-  use m_dom_error, only: NOT_FOUND_ERR, HIERARCHY_REQUEST_ERR, WRONG_DOCUMENT_ERR
   use m_dom_error, only: dom_error
   
   implicit none
