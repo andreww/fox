@@ -139,18 +139,53 @@ contains
     np => arg%ownerDocument
   end function getOwnerDocument
 
-  function insertBefore(arg, newChild, refChild)
-    type(Node), pointer :: insertBefore
+  function insertBefore(arg, newChild, refChild, ex)
     type(Node), pointer :: arg
     type(Node), pointer :: newChild
     type(Node), pointer :: refChild
+    type(DOMEXception), intent(inout), optional :: ex
+    type(Node), pointer :: insertBefore
+
     type(Node), pointer :: np
+
+    if (arg%readonly) &
+      call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "insertBefore", ex)
     
     if (.not. associated(arg)) call dom_error("insertBefore",0,"Node not allocated")
-    if ((arg%nodeType /= ELEMENT_NODE) .and. &
-      (arg%nodeType /= DOCUMENT_NODE)) &
-      call dom_error("insertBefore",HIERARCHY_REQUEST_ERR, &
-      "cannot insert node here")
+    select case(arg%nodeType)
+    case (ELEMENT_NODE)
+      if (newChild%nodeType/=ELEMENT_NODE &
+        .and. newChild%nodeType/=TEXT_NODE &
+        .and. newChild%nodeType/=COMMENT_NODE &
+        .and. newChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
+        .and. newChild%nodeType/=CDATA_SECTION_NODE &
+        .and. newChild%nodeType/=ENTITY_REFERENCE_NODE) &
+        call throw_exception(HIERARCHY_REQUEST_ERR, 'insertBefore', ex)
+    case (ATTRIBUTE_NODE)
+      if (newChild%nodeType/=TEXT_NODE &
+        .and. newChild%nodeType/=ENTITY_REFERENCE_NODE) &
+        call throw_exception(HIERARCHY_REQUEST_ERR, 'insertBefore', ex)
+    case (DOCUMENT_NODE)
+      if (newChild%nodeType/=ELEMENT_NODE &
+        .and. newChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
+        .and. newChild%nodeType/=COMMENT_NODE &
+        .and. newChild%nodeType/=DOCUMENT_TYPE_NODE) &
+        call throw_exception(HIERARCHY_REQUEST_ERR, 'insertBefore', ex)
+      ! FIXME what about too many element and dt nodes?
+    case (DOCUMENT_FRAGMENT_NODE)
+      if (newChild%nodeType/=ELEMENT_NODE &
+        .and. newChild%nodeType/=TEXT_NODE &
+        .and. newChild%nodeType/=COMMENT_NODE &
+        .and. newChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
+        .and. newChild%nodeType/=CDATA_SECTION_NODE &
+        .and. newChild%nodeType/=ENTITY_REFERENCE_NODE) &
+        call throw_exception(HIERARCHY_REQUEST_ERR, 'insertBefore', ex)
+    case default
+      call throw_exception(HIERARCHY_REQUEST_ERR, 'insertBefore', ex)
+    end select
+
+    if (.not.associated(arg%ownerDocument, newChild%ownerDocument)) &
+      call throw_exception(WRONG_DOCUMENT_ERR, 'insertBefore',ex)
     
     if (.not.associated(refChild)) then
       insertBefore => appendChild(arg, newChild)
@@ -174,7 +209,7 @@ contains
       np => np%nextSibling
     enddo
 
-    call dom_error("insertBefore",NOT_FOUND_ERR,"refChild not found")
+    call throw_exception(NOT_FOUND_ERR, 'insertBefore',ex)
 
   end function insertBefore
   
