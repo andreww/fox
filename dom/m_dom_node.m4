@@ -1,21 +1,12 @@
-module m_dom_node
+TOHW_m_dom_imports(`
 
   use m_common_array_str, only: str_vs, vs_str_alloc
   use m_dom_error, only: DOMException, throw_exception, NO_MODIFICATION_ALLOWED_ERR
   use m_dom_error, only: NOT_FOUND_ERR, HIERARCHY_REQUEST_ERR, WRONG_DOCUMENT_ERR
-  use m_dom_types, only: Node, Nodelist, NamedNodeMap
-  use m_dom_types, only: ELEMENT_NODE, ATTRIBUTE_NODE, COMMENT_NODE
-  use m_dom_types, only: TEXT_NODE, PROCESSING_INSTRUCTION_NODE
-  use m_dom_types, only: CDATA_SECTION_NODE, DOCUMENT_NODE, ENTITY_NODE
-  use m_dom_types, only: ENTITY_REFERENCE_NODE, DOCUMENT_TYPE_NODE
-  use m_dom_types, only: DOCUMENT_FRAGMENT_NODE, NOTATION_NODE
-  use m_dom_nodelist, only: append
-  use m_dom_namednodemap, only: getlength, item, append
-  use m_dom_debug, only: dom_debug
-  use m_dom_error, only: dom_error
-  
-  implicit none
-  private
+
+')`'dnl
+dnl
+TOHW_m_dom_publics(`
   
   public :: getNodeName
   public :: getNodevalue	
@@ -44,7 +35,8 @@ module m_dom_node
   public :: hasAttributes
 !  public :: isSameNode
 
-contains
+')`'dnl
+TOHW_m_dom_contents(`
 
   ! Getters and setters
 
@@ -160,17 +152,17 @@ contains
         .and. newChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
         .and. newChild%nodeType/=CDATA_SECTION_NODE &
         .and. newChild%nodeType/=ENTITY_REFERENCE_NODE) &
-        call throw_exception(HIERARCHY_REQUEST_ERR, 'insertBefore', ex)
+        call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
     case (ATTRIBUTE_NODE)
       if (newChild%nodeType/=TEXT_NODE &
         .and. newChild%nodeType/=ENTITY_REFERENCE_NODE) &
-        call throw_exception(HIERARCHY_REQUEST_ERR, 'insertBefore', ex)
+        call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
     case (DOCUMENT_NODE)
       if (newChild%nodeType/=ELEMENT_NODE &
         .and. newChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
         .and. newChild%nodeType/=COMMENT_NODE &
         .and. newChild%nodeType/=DOCUMENT_TYPE_NODE) &
-        call throw_exception(HIERARCHY_REQUEST_ERR, 'insertBefore', ex)
+        call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
       ! FIXME what about too many element and dt nodes?
     case (DOCUMENT_FRAGMENT_NODE)
       if (newChild%nodeType/=ELEMENT_NODE &
@@ -179,13 +171,13 @@ contains
         .and. newChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
         .and. newChild%nodeType/=CDATA_SECTION_NODE &
         .and. newChild%nodeType/=ENTITY_REFERENCE_NODE) &
-        call throw_exception(HIERARCHY_REQUEST_ERR, 'insertBefore', ex)
+        call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
     case default
-      call throw_exception(HIERARCHY_REQUEST_ERR, 'insertBefore', ex)
+      call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
     end select
 
     if (.not.associated(arg%ownerDocument, newChild%ownerDocument)) &
-      call throw_exception(WRONG_DOCUMENT_ERR, 'insertBefore',ex)
+      call throw_exception(WRONG_DOCUMENT_ERR, "insertBefore",ex)
     
     if (.not.associated(refChild)) then
       insertBefore => appendChild(arg, newChild)
@@ -209,7 +201,7 @@ contains
       np => np%nextSibling
     enddo
 
-    call throw_exception(NOT_FOUND_ERR, 'insertBefore',ex)
+    call throw_exception(NOT_FOUND_ERR, "insertBefore",ex)
 
   end function insertBefore
   
@@ -477,8 +469,4 @@ contains
 
   end function isSameNode
 
-
-  
-
-end module m_dom_node
-
+')`'dnl

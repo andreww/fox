@@ -1,20 +1,18 @@
-module m_dom_document
+TOHW_m_dom_imports(`
 
   use m_common_array_str, only: str_vs, vs_str_alloc
   use m_common_namecheck, only: prefixOfQName, localPartOfQName
-  
-  use m_dom_types, only: DOMImplementation, Node, NodeList, createNode, destroyNode, &
-    ELEMENT_NODE, ATTRIBUTE_NODE, TEXT_NODE, CDATA_SECTION_NODE, &
-    ENTITY_REFERENCE_NODE, ENTITY_NODE, PROCESSING_INSTRUCTION_NODE, &
-    COMMENT_NODE, DOCUMENT_NODE, DOCUMENT_TYPE_NODE, DOCUMENT_FRAGMENT_NODE, &
-    NOTATION_NODE, DOCUMENT_FRAGMENT_NODE
-  use m_dom_nodelist, only: append, pop_nl, destroyNodeList
-  
   use m_dom_error, only : NOT_FOUND_ERR, dom_error
-  
-  implicit none
-  private
 
+')`'dnl
+dnl
+TOHW_m_dom_publics(`
+
+  public :: getDocumentType
+  public :: getImplementation
+  public :: getDocumentElement
+  public :: setDocumentElement
+  
   public :: createElement
   public :: createDocumentFragment
   public :: createTextNode
@@ -33,7 +31,9 @@ module m_dom_document
   public :: createEntity
   public :: createNotation
 
-contains
+')`'dnl
+dnl
+TOHW_m_dom_contents(`
 
   ! Getters and setters:
 
@@ -75,6 +75,20 @@ contains
     np => doc%documentElement
 
   end function getDocumentElement
+
+  subroutine setDocumentElement(doc, np)
+  ! Only for use by FoX, not exported through FoX_DOM interface
+    type(Node), intent(inout) :: doc
+    type(Node), pointer :: np
+
+    if (doc%nodeType/=DOCUMENT_NODE) then
+      ! FIXME throw an internal error
+      continue
+    endif
+    
+    doc%documentElement => np
+
+  end subroutine setDocumentElement
 
   ! Methods
 
@@ -225,7 +239,7 @@ contains
     ! Use iteration, not recursion, to save stack space.
     alreadyDone = .false.
     do
-      print*, 'iterating ...', associated(np)
+      print*, "iterating ...", associated(np)
       if (alreadyDone) then
         np => pop_nl(np_stack)
         if (np_stack%length==0) then
@@ -357,7 +371,7 @@ contains
     type(Node), pointer :: np
 
     if (doc%nodeType/=DOCUMENT_NODE) then
-      print*,'internal error in createEntity'
+      print*,"internal error in createEntity"
       stop
     endif
 
@@ -376,7 +390,7 @@ contains
     type(Node), pointer :: np
 
     if (doc%nodeType/=DOCUMENT_NODE) then
-      print*,'internal error in createEntity'
+      print*,"internal error in createEntity"
       stop
     endif
 
@@ -386,4 +400,4 @@ contains
     
   end function createNotation
 
-end module m_dom_document
+')`'dnl

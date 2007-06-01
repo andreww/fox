@@ -1,11 +1,10 @@
-module m_dom_attribute
+TOHW_m_dom_imports(`
 
   use m_common_array_str, only: str_vs, vs_str_alloc
-  use m_dom_types, only : Node, destroyNode, ATTRIBUTE_NODE, &
-    TEXT_NODE, ENTITY_REFERENCE_NODE
-  
-  implicit none
-  private
+
+')`'dnl
+dnl
+TOHW_m_dom_publics(`
 
   !public :: getName
   public :: getSpecified
@@ -13,7 +12,9 @@ module m_dom_attribute
   public :: setValue
   public :: getOwnerElement
 
-contains
+')`'dnl
+dnl
+TOHW_m_dom_contents(`
   
   ! function getName(attribute) result(c) See m_dom_common
 
@@ -31,7 +32,7 @@ contains
     character(size(attribute%nodeValue)) :: c 
 
     if (attribute%nodeType/=ATTRIBUTE_NODE) then
-       c = '' ! FIXME error
+       c = "" ! FIXME error
     endif
     c = str_vs(attribute%nodeValue)
 
@@ -65,4 +66,4 @@ contains
 
   end function getOwnerElement
 
-end module m_dom_attribute
+')`'dnl

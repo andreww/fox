@@ -1,15 +1,10 @@
-module m_dom_namednodemap
+TOHW_m_dom_imports(`
 
   use m_common_array_str, only: str_vs
 
-  use m_dom_types, only: Node, NamedNodeMap, ATTRIBUTE_NODE
-  use m_dom_nodelist, only: item, append, remove_nl, destroyNodeList
-  
-  implicit none
-  private
-
-  ! FIXME always create maps separately, don't inline all the ifs.
-  ! Raise appropriate errors
+')`'dnl
+dnl
+TOHW_m_dom_publics(`
 
   public :: getNamedItem
   public :: getNamedItem_Value
@@ -25,6 +20,7 @@ module m_dom_namednodemap
   public :: removeNamedItemNS
 
   public :: append
+  public :: setReadOnly
   public :: destroyNamedNodeMap
 
   interface append
@@ -39,7 +35,9 @@ module m_dom_namednodemap
     module procedure getLength_nnm
   end interface
 
-contains
+')`'dnl
+dnl
+TOHW_m_dom_contents(`
 
   function getNamedItem(map, name) result(np)
     type(NamedNodeMap), intent(in) :: map
@@ -270,11 +268,17 @@ contains
   end subroutine append_nnm
 
 
+  subroutine setReadOnly(map, r)
+    type(namedNodeMap), intent(inout) :: map
+    logical, intent(in) :: r
+
+    map%readonly = r
+  end subroutine setReadOnly
+
   subroutine destroyNamedNodeMap(map)
     type(namedNodeMap), intent(inout) :: map
 
     call destroyNodeList(map%list)
   end subroutine destroyNamedNodeMap
 
-end module m_dom_namednodemap
-
+')`'dnl

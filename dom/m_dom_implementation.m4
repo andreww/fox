@@ -1,16 +1,10 @@
-module m_dom_implementation
+TOHW_m_dom_imports(`
 
   use m_common_array_str, only: str_vs, vs_str_alloc
 
-  use m_dom_document, only: createElementNS
-  use m_dom_node, only: appendChild
-  use m_dom_nodeList, only: append, pop_nl, destroyNodeList
-  use m_dom_namednodemap, only: destroyNamedNodeMap
-  use m_dom_types, only: Node, NodeList, createNode, destroyNode, &
-    destroyNodeContents, DOCUMENT_NODE, DOCUMENT_TYPE_NODE
-
-  implicit none
-  private
+')`'dnl
+dnl
+TOHW_m_dom_publics(`
 
   public :: hasFeature
   public :: createDocument
@@ -21,7 +15,9 @@ module m_dom_implementation
   public :: createEmptyDocument
   public :: createEmptyDocumentType
 
-contains
+')`'dnl
+dnl
+TOHW_m_dom_contents(`
 
   function hasFeature(feature, version) result(p)
     character(len=*), intent(in) :: feature
@@ -126,7 +122,7 @@ contains
     call append(np_stack, np)
     ascending = .false.
     do
-      print*, 'iterating ...', associated(np), ascending, np_stack%length
+      print*, "iterating ...", associated(np), ascending, np_stack%length
       if (ascending) then
         np => pop_nl(np_stack)
         if (np_stack%length==0) then
@@ -150,10 +146,10 @@ contains
     enddo
     call destroyNodeList(np_stack)
 
-    print*, 'destroying a node:', doc%nodeType, doc%nodeName
+    print*, "destroying a node:", doc%nodeType, doc%nodeName
     call destroyNodeContents(doc)
     deallocate(doc)
 
   end subroutine destroyDocument
 
-end module m_dom_implementation
+')`'dnl

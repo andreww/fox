@@ -1,15 +1,16 @@
-module m_dom_processing_instruction
+TOHW_m_dom_imports(`
 
   use m_common_array_str, only: str_vs
 
-  use m_dom_types, only: Node, PROCESSING_INSTRUCTION_NODE
-
-  implicit none
-  private
+')`'dnl
+dnl
+TOHW_m_dom_publics(`
 
   public :: getTarget
 
-contains
+')`'dnl
+dnl
+TOHW_m_dom_contents(`
 
   function getTarget(arg) result(c)
     type(Node), intent(in) :: arg
@@ -22,4 +23,4 @@ contains
     c = str_vs(arg%nodeName)
   end function getTarget
 
-end module m_dom_processing_instruction
+')`'dnl

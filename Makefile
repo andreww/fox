@@ -84,7 +84,7 @@ DoX:
 #
 # Clean
 #
-clean: wxml_lib_clean wcml_lib_clean common_lib_clean fsys_lib_clean sax_lib_clean utils_lib_clean
+clean: wxml_lib_clean wcml_lib_clean common_lib_clean fsys_lib_clean sax_lib_clean dom_lib_clean utils_lib_clean
 	(cd examples;make clean)
 	rm -f objs/lib/* objs/finclude/* .FoX
 #

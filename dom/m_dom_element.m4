@@ -1,26 +1,12 @@
-module m_dom_element
+TOHW_m_dom_imports(`
 
   use m_common_array_str, only: str_vs, vs_str_alloc
   use m_common_namecheck, only: prefixOfQName, localpartOfQName
 
-  use m_dom_types, only: Node, NodeList
-  use m_dom_types, only: destroyNode
-  use m_dom_types, only: DOCUMENT_NODE, ELEMENT_NODE, TEXT_NODE
+')`'dnl
+dnl
+TOHW_m_dom_publics(`
   
-  use m_dom_namednodemap, only: getNamedItem, setNamedItem, removeNamedItem
-  use m_dom_namednodemap, only: getNamedItem_Value, getNamedItem_Value_length
-  use m_dom_namednodemap, only: getNamedItemNS, setNamedItemNS, removeNamedItemNS
-  use m_dom_namednodemap, only: getNamedItemNS_Value, getNamedItemNS_Value_length
-  use m_dom_namednodemap, only: item
-
-  use m_dom_attribute, only: getValue, setValue
-  
-  use m_dom_document, only: createAttribute, createAttributeNS
-  use m_dom_debug, only: dom_debug
-  
-  implicit none
-  private
-
   public :: getTagName
   public :: getAttribute
   public :: setAttribute
@@ -37,8 +23,9 @@ module m_dom_element
   public :: removeAttributeNodeNS
   public :: hasAttribute
   public :: hasAttributeNS
-
-contains
+')`'dnl
+dnl
+TOHW_m_dom_contents(`
 
   function getTagName(element) result(c)
     type(Node), intent(in) :: element   
@@ -47,7 +34,7 @@ contains
     if (element%nodeType == ELEMENT_NODE) then
       c = str_vs(element%nodeName )
     else
-      c = '' ! FIXME error
+      c = "" ! FIXME error
     endif
     
   end function getTagName
@@ -315,4 +302,4 @@ contains
 
   end function hasAttributeNS
 
-end module m_dom_element
+')`'dnl

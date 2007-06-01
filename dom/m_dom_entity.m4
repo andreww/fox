@@ -1,15 +1,16 @@
-module m_dom_entity
+TOHW_m_dom_imports(`
 
   use m_common_array_str, only: str_vs
 
-  use m_dom_types, only: Node, ENTITY_NODE
-
-  implicit none
-  private
+')`'dnl
+dnl
+TOHW_m_dom_publics(`
   
   public :: getNotationName
 
-contains
+')`'dnl
+dnl
+TOHW_m_dom_contents(`
 
   function getNotationName(arg) result(c)
     type(Node), intent(in) :: arg
@@ -23,5 +24,4 @@ contains
 
   end function getNotationName
 
-
-end module m_dom_entity
+')`'dnl

@@ -1,13 +1,10 @@
-module m_dom_common
+TOHW_m_dom_imports(`
 
   use m_common_array_str, only: str_vs, vs_str_alloc
 
-  use m_dom_types, only: Node, NamedNodeMap, ATTRIBUTE_NODE, &
-    DOCUMENT_TYPE_NODE, NOTATION_NODE, ENTITY_NODE, TEXT_NODE, &
-    COMMENT_NODE, CDATA_SECTION_NODE, PROCESSING_INSTRUCTION_NODE
-
-  implicit none
-  private
+')`'dnl
+dnl
+TOHW_m_dom_publics(`
 
 ! Assorted functions with identical signatures despite belonging to different types.
 
@@ -17,7 +14,9 @@ module m_dom_common
   public :: getPublicId
   public :: getSystemId
 
-contains
+')`'dnl
+dnl
+TOHW_m_dom_contents(`
 
   function getData(arg) result(c)
     type(Node), intent(in) :: arg
@@ -28,7 +27,7 @@ contains
       arg%nodeType/=PROCESSING_INSTRUCTION_NODE) then
        c = str_vs(arg%nodeValue)
     else
-       c = '' ! or error
+       c = "" ! or error
     endif
   end function getData
 
@@ -55,7 +54,7 @@ contains
     
     if (arg%nodeType/=ATTRIBUTE_NODE .and. &
       arg%nodeType/=DOCUMENT_TYPE_NODE) then
-      c = '' ! FIXME error
+      c = "" ! FIXME error
     endif
     c = str_vs(arg%nodeName)
     
@@ -91,4 +90,4 @@ contains
 
   end function getSystemId
 
-end module m_dom_common
+')`'dnl

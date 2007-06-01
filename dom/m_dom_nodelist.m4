@@ -1,9 +1,4 @@
-module m_dom_nodelist
-
-  use m_dom_types, only: Node, ListNode, NodeList
-
-  implicit none
-  private
+TOHW_m_dom_publics(`
 
   public :: item
   public :: append
@@ -18,8 +13,9 @@ module m_dom_nodelist
   interface item
     module procedure item_nl
   end interface
-  
-contains
+')`'dnl
+dnl
+TOHW_m_dom_contents(`
 
   function item_nl(list, index) result(np)
     type(NodeList), intent(in) :: list
@@ -110,5 +106,4 @@ contains
     nl%length = 0
   end subroutine destroyNodeList
 
-end module m_dom_nodelist
-
+')`'dnl

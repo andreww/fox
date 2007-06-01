@@ -1,12 +1,11 @@
-module m_dom_character_data
+TOHW_m_dom_imports(`
 
   use m_common_array_str, only: str_vs, vs_str_alloc
 
-  use m_dom_types, only: Node, TEXT_NODE, COMMENT_NODE, CDATA_SECTION_NODE
+')`'dnl
+dnl
+TOHW_m_dom_publics(`
 
-  implicit none
-  private
-  
   public :: getLength
 !  public :: getData
 !  public :: setData
@@ -20,7 +19,9 @@ module m_dom_character_data
     module procedure getLength_characterdata
   end interface
 
-contains
+')`'dnl
+dnl
+TOHW_m_dom_contents(`
 
   pure function isCharData(nodeType) result(p)
     integer, intent(in) :: nodeType
@@ -142,4 +143,4 @@ contains
     
   end subroutine replaceData
  
-end module m_dom_character_data
+')`'dnl

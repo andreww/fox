@@ -1,10 +1,10 @@
-module m_dom_types
+TOHW_m_dom_imports(`
 
   use m_common_array_str, only: vs_str_alloc
 
-  implicit none
-  private
-
+')`'dnl
+dnl
+TOHW_m_dom_publics(`
   integer, parameter ::     ELEMENT_NODE                   = 1
   integer, parameter ::     ATTRIBUTE_NODE                 = 2
   integer, parameter ::     TEXT_NODE                      = 3
@@ -20,23 +20,29 @@ module m_dom_types
 
 
   type DOMImplementation
+    private
     character, pointer :: id(:)
   end type DOMImplementation
 
   type ListNode
+    private
     type(Node), pointer :: this => null()
   end type ListNode 
 
   type NodeList
+    private
     type(ListNode), pointer :: nodes(:) => null()
     integer :: length = 0
   end type NodeList
 
   type NamedNodeMap
+    private
+    logical :: readonly = .false.
     type(NodeList) :: list 
   end type NamedNodeMap
 
   type Node
+    private
     logical :: readonly = .false. ! FIXME must check this everywhere
     character, pointer, dimension(:)         :: nodeName => null()
     character, pointer, dimension(:)         :: nodeValue => null()
@@ -92,7 +98,9 @@ module m_dom_types
   public :: destroyNode
   public :: destroyNodeContents
 
-contains
+')`'dnl
+dnl
+TOHW_m_dom_contents(`
 
   function createNode(doc, nodeType, nodeName, nodeValue) result(np)
     type(Node), pointer :: doc
@@ -107,8 +115,6 @@ contains
         continue
       endif
     endif
-
-    print*,'allocating a node:', nodeType, nodeName
 
     allocate(np)
     np%ownerDocument => doc
@@ -126,7 +132,7 @@ contains
     case (ATTRIBUTE_NODE)
       call destroyAttribute(np)
     case (ENTITY_REFERENCE_NODE)
-      ! In principle a DOM might have children here. We don't.
+      ! In principle a DOM might have children here. We dont.
       call destroyNodeContents(np)
       deallocate(np)
     case (ENTITY_NODE)
@@ -134,7 +140,7 @@ contains
       call destroyNodeContents(np)
       deallocate(np)
     case (DOCUMENT_NODE)
-      ! well, I don't think this should ever be called, but if it is
+      ! well, I dont think this should ever be called, but if it is
       ! then go to destroy_document
       !call destroyDocument(np)
     case (DOCUMENT_TYPE_NODE)
@@ -142,7 +148,6 @@ contains
     case (DOCUMENT_FRAGMENT_NODE)
       !call destroyDocumentFragment
     case default
-      print*, 'destroying a node:', np%nodeType, np%nodeName
       call destroyNodeContents(np)
       deallocate(np)
     end select
@@ -166,7 +171,6 @@ contains
     enddo
     if (associated(dt%notations%list%nodes)) deallocate(dt%notations%list%nodes)
 
-    print*, 'destroying a node:', dt%nodeType, dt%nodeName
     call destroyNodeContents(dt)
     deallocate(dt)
 
@@ -186,7 +190,6 @@ contains
     enddo
     !    call destroyNamedNodeMap(element%attributes)
     if (associated(element%attributes%list%nodes)) deallocate(element%attributes%list%nodes)
-    print*, 'destroying a node:', element%nodeType, element%nodeName
     call destroyNodeContents(element)
     deallocate(element)
 
@@ -208,7 +211,6 @@ contains
       np => np_next
     enddo
 
-    print*, 'destroying a node:', attr%nodeType, attr%nodeName
     call destroyNodeContents(attr)
     deallocate(attr)
 
@@ -229,4 +231,4 @@ contains
     if (associated(np%notationName)) deallocate(np%notationName)
   end subroutine destroyNodeContents
 
-end module m_dom_types
+')`'dnl

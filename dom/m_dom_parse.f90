@@ -7,17 +7,18 @@ module m_dom_parse
   use FoX_sax, only: parse, xml_t
   use FoX_sax, only: open_xml_file, close_xml_t
 
-  use m_dom_types, only: Node
-  use m_dom_types, only: createnode, DOCUMENT_NODE, destroynode
-  use m_dom_document, only: createProcessingInstruction
-  use m_dom_document, only: createComment
-  use m_dom_document, only: createElementNS
-  use m_dom_document, only: createTextNode
-  use m_dom_document, only: createNotation
-  use m_dom_implementation, only: createEmptyDocument
-  use m_dom_namednodemap, only: append
-  use m_dom_node, only: appendchild
-  use m_dom_element, only: setAttributeNS
+  use m_dom_dom, only: Node, NamedNodeMap
+  use m_dom_dom, only: createnode, DOCUMENT_NODE, destroynode
+  use m_dom_dom, only: createProcessingInstruction
+  use m_dom_dom, only: createComment
+  use m_dom_dom, only: createElementNS
+  use m_dom_dom, only: createTextNode
+  use m_dom_dom, only: createNotation
+  use m_dom_dom, only: createEmptyDocument
+  use m_dom_dom, only: getParentNode, setDocumentElement, getDocumentType, setDocumentType
+  use m_dom_dom, only: append, getNodeType, setReadOnly
+  use m_dom_dom, only: appendchild, getNotations
+  use m_dom_dom, only: setAttributeNS
   use m_dom_debug, only: dom_debug
 
   implicit none
@@ -51,11 +52,8 @@ contains
       call setAttributeNS(el, getURI(attrs, i), getQName(attrs, i), getValue(attrs, i))
     enddo
 
-    print*, 'startingElement!: current', current%nodeType
-
-    if (current%nodeType==DOCUMENT_NODE) then
-      print*, 'that was the docuemnt elemtnt'
-      mainDoc%documentElement => el
+    if (getNodeType(current)==DOCUMENT_NODE) then
+      call setDocumentElement(mainDoc, el)
     endif
 
     current => appendChild(current,el)
@@ -70,7 +68,7 @@ contains
     if (dom_debug) &
       write(*,'(4a)') "Ending node for element: {",URI,'}', localname
 
-    current => current%parentNode
+    current => getparentNode(current)
   end subroutine endElement_handler
 
   subroutine characters_handler(chunk)
@@ -121,16 +119,10 @@ contains
     character(len=*), intent(in), optional :: publicId
     character(len=*), intent(in), optional :: systemId
 
-    deallocate(mainDoc%docType%nodeName)
-    mainDoc%docType%nodeName => vs_str_alloc(name)
-    if (present(publicId)) then
-      deallocate(mainDoc%docType%publicId)
-      mainDoc%docType%publicId => vs_str_alloc(publicId)
-    endif
-    if (present(systemId)) then
-      deallocate(mainDoc%docType%systemId)
-      mainDoc%docType%systemId => vs_str_alloc(systemId)
-    endif
+    type(Node), pointer :: np
+
+    np => getDocumentType(mainDoc)
+    call setDocumentType(np, name, publicId, systemId)
 
   end subroutine startDTD_handler
 
@@ -139,10 +131,16 @@ contains
     character(len=*), intent(in), optional :: publicId
     character(len=*), intent(in), optional :: systemId
     
-    type(Node), pointer :: np
+    type(Node), pointer :: np, dt
+
+    type(NamedNodeMap), pointer :: notations
 
     np => createNotation(mainDoc, name, publicId, systemId)
-    call append(mainDoc%docType%notations, np)
+    dt => getDocumentType(mainDoc)
+    notations => getNotations(dt)
+    call setReadonly(notations, .false.)
+    call append(notations, np)
+    call setReadonly(notations, .false.)
 
   end subroutine notationDecl_handler
 

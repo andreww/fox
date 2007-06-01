@@ -1,17 +1,12 @@
-module m_dom_text
+TOHW_m_dom_imports(`
 
   use m_common_array_str, only: str_vs, vs_str_alloc
 
-  use m_dom_document, only: createTextNode, createCdataSection
-  use m_dom_node, only: insertBefore
-  use m_dom_types, only: Node, TEXT_NODE, CDATA_SECTION_NODE
-
-  implicit none
-  private
-  
+')`'dnl
+TOHW_m_dom_publics(`  
   public :: splitText
-
-contains
+')`'dnl
+TOHW_m_dom_contents(`
 
   pure function isTextNode(nodeType) result(p)
     integer, intent(in) :: nodeType
@@ -45,4 +40,4 @@ contains
    
   end subroutine splitText
                                      
-end module m_dom_text
+')`'dnl

@@ -1,15 +1,18 @@
 module m_dom_utils
 
   use m_common_array_str, only: str_vs, vs_str_alloc, vs_vs_alloc
+  use m_common_attrs, only: dictionary_t, add_item_to_dict, getValue, &
+    hasKey, init_dict, destroy_dict
   use m_common_format, only: operator(//)
-  use m_dom_types, only: Node, Namednodemap, Node
-  use m_dom_types, only: DOCUMENT_NODE, ELEMENT_NODE, TEXT_NODE, CDATA_SECTION_NODE
-  use m_dom_types, only: COMMENT_NODE
 
-  use m_dom_node, only: haschildnodes
-  use m_dom_namednodemap, only: getlength, item
+  use m_dom_dom, only: Node, Namednodemap, Node
+  use m_dom_dom, only: DOCUMENT_NODE, ELEMENT_NODE, TEXT_NODE, &
+   CDATA_SECTION_NODE, COMMENT_NODE
+  use m_dom_dom, only: haschildnodes, getNodeName, getNodeType, &
+    getFirstChild, getNextSibling, getlength, item, getDocumentElement, &
+    getNameSpaceURI, getPrefix, getLocalName, getAttributes, &
+    getNodeName, getNodeValue, getData
 
-  use m_common_attrs, only: dictionary_t, add_item_to_dict, getValue, hasKey, init_dict, destroy_dict
 
   use FoX_wxml, only: xmlf_t
   use FoX_wxml, only: xml_OpenFile, xml_Close
@@ -48,14 +51,14 @@ contains
       temp => input
       do while(associated(temp))
          write(*,'(3a,i0)') repeat(' ', indent_level), &
-                        str_vs(temp%nodeName), " of type ", &
-                        temp%nodeType
+                        getNodeName(temp), " of type ", &
+                        getNodeType(temp)
          if (hasChildNodes(temp)) then
             indent_level = indent_level + 3
-            call dump2(temp%firstChild)
+            call dump2(getFirstChild(temp))
             indent_level = indent_level - 3
          endif
-         temp => temp%nextSibling
+         temp => getNextSibling(temp)
       enddo
 
     end subroutine dump2
@@ -71,7 +74,7 @@ contains
     type(xmlf_t)  :: xf
 
     call xml_OpenFile(Name,xf)
-    if (startNode%nodeType==DOCUMENT_NODE) then
+    if (getNodeType(startNode)==DOCUMENT_NODE) then
       ! make sure and dump all document meta-stuff first
       continue
     endif
@@ -94,18 +97,19 @@ contains
 
     n => input
     if (.not. associated(n)) return
-    select case (n%nodeType)
+    select case (getNodeType(n))
 
     case (DOCUMENT_NODE)
-      call dump_xml(xf, n%documentElement)
+      call dump_xml(xf, getDocumentElement(n))
+      ! FIXME what about siblings of document element ...
       
     case (ELEMENT_NODE)
       
-      if (size(n%namespaceURI)==0) then
-        elementQName => vs_vs_alloc(n%nodeName)
+      if (len(getNamespaceURI(n))==0) then
+        elementQName => vs_str_alloc(getnodeName(n))
       else
-        if (hasKey(simpleDict, str_vs(n%namespaceURI))) then
-          prefix = getValue(simpleDict, str_vs(n%namespaceURI))
+        if (hasKey(simpleDict, getNamespaceURI(n))) then
+          prefix = getValue(simpleDict, getNamespaceURI(n))
         else
           nns = nns + 1
           if (nns == 0) then
@@ -113,48 +117,48 @@ contains
           else
             prefix => vs_str_alloc('ns'//nns)
           endif
-          call add_item_to_dict(simpleDict, str_vs(n%namespaceURI), str_vs(n%prefix))
+          call add_item_to_dict(simpleDict, getNamespaceURI(n), getPrefix(n))
         endif
         if (size(prefix)==0) then
-          elementQName => vs_vs_alloc(n%nodeName)
+          elementQName => vs_str_alloc(getNodeName(n))
         else
-          elementQName => vs_str_alloc(str_vs(n%prefix)//":"//str_vs(n%nodeName))
+          elementQName => vs_str_alloc(getPrefix(n)//":"//getLocalName(n))
         endif
       endif
       call xml_NewElement(xf, str_vs(elementQName))
-      if (size(n%namespaceURI)==0) then
+      if (len(getNamespaceURI(n))==0) then
         if (size(prefix)==0) then
-          call xml_DeclareNamespace(xf, str_vs(n%namespaceURI))
+          call xml_DeclareNamespace(xf, getNamespaceURI(n))
         else
-          call xml_DeclareNamespace(xf, str_vs(n%namespaceURI), str_vs(n%prefix))
+          call xml_DeclareNamespace(xf, getNamespaceURI(n), getPrefix(n))
         endif
       endif
       deallocate(prefix)
       !TOHW need to check for & print out attribute namespaces as well.
-      attr_map => n%attributes
+      attr_map => getAttributes(n)
       do i = 0, getLength(attr_map) - 1
         attr => item(attr_map,i)
-        call xml_AddAttribute(xf, str_vs(attr%nodeName), str_vs(attr%nodeValue))
+        call xml_AddAttribute(xf, getNodeName(attr), getNodeValue(attr))
       enddo
-      child => n%firstChild
+      child => getFirstChild(n)
       do while (associated(child))
         call dump_xml(xf, child)
-        child => child%nextSibling
+        child => getNextSibling(child)
       enddo
       call xml_EndElement(xf,str_vs(elementQName))
       deallocate(elementQName)
       
     case (TEXT_NODE)
       
-      call xml_AddCharacters(xf, str_vs(n%nodeValue))
+      call xml_AddCharacters(xf, getData(n))
       
     case (CDATA_SECTION_NODE)
       
-      call xml_AddCharacters(xf, str_vs(n%nodeValue), parsed=.false.)
+      call xml_AddCharacters(xf, getData(n), parsed=.false.)
       
     case (COMMENT_NODE)
       
-      call xml_AddComment(xf, str_vs(n%nodeValue))
+      call xml_AddComment(xf, getData(n))
       
     end select
     call destroy_dict(simpleDict)
