@@ -495,10 +495,10 @@ contains
     c = str_vs(arg%nodeName)
   end function getNodeValue
   
-  subroutine setNodeValue (arg, nodeValue, ex)
+  subroutine setNodeValue(arg, nodeValue, ex)
+    type(DOMException), intent(inout), optional :: ex
     type(Node), intent(inout) :: arg
     character(len=*) :: nodeValue
-    type(DOMException), intent(inout), optional :: ex
 
     if (arg%readonly) then
       call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setNodeValue", ex)
@@ -583,11 +583,11 @@ endif
     np => arg%ownerDocument
   end function getOwnerDocument
 
-  function insertBefore (arg, newChild, refChild, ex)
+  function insertBefore(arg, newChild, refChild, ex)
+    type(DOMException), intent(inout), optional :: ex
     type(Node), pointer :: arg
     type(Node), pointer :: newChild
     type(Node), pointer :: refChild
-    type(DOMEXception), intent(inout), optional :: ex
     type(Node), pointer :: insertBefore
 
     type(Node), pointer :: np
@@ -718,11 +718,11 @@ endif
   end function insertBefore
   
 
-  function replaceChild (arg, newChild, oldChild, ex)
+  function replaceChild(arg, newChild, oldChild, ex)
+    type(DOMException), intent(inout), optional :: ex
     type(Node), pointer :: arg
     type(Node), pointer :: newChild
     type(Node), pointer :: oldChild
-    type(DOMException), intent(inout), optional :: ex
     type(Node), pointer :: replaceChild
 
     type(Node), pointer :: np
@@ -858,14 +858,14 @@ endif
 
 
   function removeChild(arg, oldChild, ex)
+    type(DOMException), intent(inout), optional :: ex
     type(Node), pointer :: removeChild
     type(Node), pointer :: arg
     type(Node), pointer :: oldChild
-    type(DOMException), intent(inout), optional :: ex
     type(Node), pointer :: np
     
     if (arg%readonly) then
-      call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "replaceChild", ex)
+      call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "removeChild", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
 
@@ -905,7 +905,7 @@ endif
       np => np%nextSibling
     enddo
     
-    call throw_exception(NOT_FOUND_ERR, "replaceChild", ex)
+    call throw_exception(NOT_FOUND_ERR, "removeChild", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
 
@@ -917,10 +917,10 @@ endif
   end function removeChild
 
 
-  function appendChild (arg, newChild, ex)
+  function appendChild(arg, newChild, ex)
+    type(DOMException), intent(inout), optional :: ex
     type(Node), pointer :: arg
     type(Node), pointer :: newChild
-    type(DOMException), intent(inout), optional :: ex
     type(Node), pointer :: appendChild
     
     if (arg%readonly) then

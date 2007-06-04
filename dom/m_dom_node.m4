@@ -56,10 +56,9 @@ TOHW_m_dom_contents(`
     c = str_vs(arg%nodeName)
   end function getNodeValue
   
-  TOHW_subroutine(setNodeValue) (arg, nodeValue, ex)
+  TOHW_subroutine(setNodeValue, (arg, nodeValue))
     type(Node), intent(inout) :: arg
     character(len=*) :: nodeValue
-    type(DOMException), intent(inout), optional :: ex
 
     if (arg%readonly) then
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
@@ -137,11 +136,10 @@ TOHW_m_dom_contents(`
     np => arg%ownerDocument
   end function getOwnerDocument
 
-  TOHW_function(insertBefore) (arg, newChild, refChild, ex)
+  TOHW_function(insertBefore, (arg, newChild, refChild))
     type(Node), pointer :: arg
     type(Node), pointer :: newChild
     type(Node), pointer :: refChild
-    type(DOMEXception), intent(inout), optional :: ex
     type(Node), pointer :: insertBefore
 
     type(Node), pointer :: np
@@ -216,11 +214,10 @@ TOHW_m_dom_contents(`
   end function insertBefore
   
 
-  TOHW_function(replaceChild) (arg, newChild, oldChild, ex)
+  TOHW_function(replaceChild, (arg, newChild, oldChild))
     type(Node), pointer :: arg
     type(Node), pointer :: newChild
     type(Node), pointer :: oldChild
-    type(DOMException), intent(inout), optional :: ex
     type(Node), pointer :: replaceChild
 
     type(Node), pointer :: np
@@ -299,11 +296,10 @@ TOHW_m_dom_contents(`
   end function replaceChild
 
 
-  function removeChild(arg, oldChild, ex)
+  TOHW_function(removeChild, (arg, oldChild))
     type(Node), pointer :: removeChild
     type(Node), pointer :: arg
     type(Node), pointer :: oldChild
-    type(DOMException), intent(inout), optional :: ex
     type(Node), pointer :: np
     
     if (arg%readonly) then
@@ -345,10 +341,9 @@ TOHW_m_dom_contents(`
   end function removeChild
 
 
-  TOHW_function(appendChild) (arg, newChild, ex)
+  TOHW_function(appendChild, (arg, newChild))
     type(Node), pointer :: arg
     type(Node), pointer :: newChild
-    type(DOMException), intent(inout), optional :: ex
     type(Node), pointer :: appendChild
     
     if (arg%readonly) then
