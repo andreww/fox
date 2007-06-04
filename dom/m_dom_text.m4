@@ -3,9 +3,11 @@ TOHW_m_dom_imports(`
   use m_common_array_str, only: str_vs, vs_str_alloc
 
 ')`'dnl
+dnl
 TOHW_m_dom_publics(`  
   public :: splitText
 ')`'dnl
+dnl
 TOHW_m_dom_contents(`
 
   pure function isTextNode(nodeType) result(p)

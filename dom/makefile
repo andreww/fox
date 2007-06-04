@@ -7,7 +7,7 @@ M4FILES = m_dom_types.m4 m_dom_node.m4 m_dom_nodelist.m4 \
    	  m_dom_element.m4 m_dom_attribute.m4 \
        	  m_dom_character_data.m4 m_dom_entity.m4 \
           m_dom_processing_instruction.m4 m_dom_text.m4 \
- 	  m_dom_common.m4
+ 	  m_dom_common.m4 m_dom_exception.m4
 OBJFILES= m_dom_debug.o m_dom_error.o \
 	  m_dom_parse.o m_dom_utils.o \
 	  m_dom_dom.o FoX_dom.o

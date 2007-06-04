@@ -1,8 +1,10 @@
+include(`m_dom_exception.m4')`'dnl
 TOHW_m_dom_imports(`
 
   use m_common_array_str, only: str_vs, vs_str_alloc
-  use m_dom_error, only: DOMException, throw_exception, NO_MODIFICATION_ALLOWED_ERR
-  use m_dom_error, only: NOT_FOUND_ERR, HIERARCHY_REQUEST_ERR, WRONG_DOCUMENT_ERR
+  use m_dom_error, only: DOMException, throw_exception, is_in_error, &
+    NO_MODIFICATION_ALLOWED_ERR, NOT_FOUND_ERR, HIERARCHY_REQUEST_ERR, &
+    WRONG_DOCUMENT_ERR
 
 ')`'dnl
 dnl
@@ -59,10 +61,12 @@ TOHW_m_dom_contents(`
     character(len=*) :: nodeValue
     type(DOMException), intent(inout), optional :: ex
 
-    if (arg%readonly) &
-      call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setNodeValue", ex)
+    if (arg%readonly) then
+      TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR, "setNodeValue")
+    endif
       
     !FIXME check what kind of node is it, what is nodeValue allowed to be ...
+    ! if it is an attribute node we need to reset TEXT/ENTITYREF children.
 
     deallocate(arg%nodeValue)
     arg%nodeValue => vs_str_alloc(nodeValue)
@@ -121,6 +125,8 @@ TOHW_m_dom_contents(`
     type(Node), intent(in) :: arg
     type(NamedNodeMap), pointer :: nnm
 
+! FIXME surely only if this is an element node?
+
     nnm = arg%attributes
   end function getAttributes
 
@@ -140,10 +146,14 @@ TOHW_m_dom_contents(`
 
     type(Node), pointer :: np
 
-    if (arg%readonly) &
-      call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "insertBefore", ex)
+    if (arg%readonly) then
+      TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR, "setNodeValue")
+    endif
     
+!   FIXME what about this next?
     if (.not. associated(arg)) call dom_error("insertBefore",0,"Node not allocated")
+
+! FIXME need to special case this for inserting documentElement and documentType on document nodes
     select case(arg%nodeType)
     case (ELEMENT_NODE)
       if (newChild%nodeType/=ELEMENT_NODE &
@@ -152,18 +162,18 @@ TOHW_m_dom_contents(`
         .and. newChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
         .and. newChild%nodeType/=CDATA_SECTION_NODE &
         .and. newChild%nodeType/=ENTITY_REFERENCE_NODE) &
-        call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
+        TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR, "insertBefore")
     case (ATTRIBUTE_NODE)
       if (newChild%nodeType/=TEXT_NODE &
         .and. newChild%nodeType/=ENTITY_REFERENCE_NODE) &
-        call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
+        TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR, "insertBefore")
     case (DOCUMENT_NODE)
       if (newChild%nodeType/=ELEMENT_NODE &
         .and. newChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
         .and. newChild%nodeType/=COMMENT_NODE &
         .and. newChild%nodeType/=DOCUMENT_TYPE_NODE) &
+        TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR, "insertBefore")
         call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
-      ! FIXME what about too many element and dt nodes?
     case (DOCUMENT_FRAGMENT_NODE)
       if (newChild%nodeType/=ELEMENT_NODE &
         .and. newChild%nodeType/=TEXT_NODE &
@@ -171,13 +181,14 @@ TOHW_m_dom_contents(`
         .and. newChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
         .and. newChild%nodeType/=CDATA_SECTION_NODE &
         .and. newChild%nodeType/=ENTITY_REFERENCE_NODE) &
-        call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
+        TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR, "insertBefore")
     case default
-      call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
+      TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR, "insertBefore")
     end select
 
-    if (.not.associated(arg%ownerDocument, newChild%ownerDocument)) &
-      call throw_exception(WRONG_DOCUMENT_ERR, "insertBefore",ex)
+    if (.not.associated(arg%ownerDocument, newChild%ownerDocument)) then
+      TOHW_m_dom_throw_error(WRONG_DOCUMENT_ERR, "insertBefore")
+    endif
     
     if (.not.associated(refChild)) then
       insertBefore => appendChild(arg, newChild)
@@ -201,24 +212,61 @@ TOHW_m_dom_contents(`
       np => np%nextSibling
     enddo
 
-    call throw_exception(NOT_FOUND_ERR, "insertBefore",ex)
+    TOHW_m_dom_throw_error(NOT_FOUND_ERR, "insertBefore")
 
   end function insertBefore
   
 
-  function replaceChild(arg, newChild, oldChild)
+  function replaceChild(arg, newChild, oldChild, ex)
     type(Node), pointer :: arg
     type(Node), pointer :: newChild
     type(Node), pointer :: oldChild
+    type(DOMException), intent(inout), optional :: ex
     type(Node), pointer :: replaceChild
 
     type(Node), pointer :: np
     
     if (.not. associated(arg)) call dom_error("replaceChild",0,"Node not allocated")
     if ((arg%nodeType /= ELEMENT_NODE) .and. &
-        (arg%nodeType /= DOCUMENT_NODE)) &
-    call dom_error("replaceChild",HIERARCHY_REQUEST_ERR, &
-           "this node cannot have children")
+        (arg%nodeType /= DOCUMENT_NODE)) then
+      TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR, "replaceChild")
+    endif
+
+    select case(arg%nodeType)
+    case (ELEMENT_NODE)
+      if (newChild%nodeType/=ELEMENT_NODE &
+        .and. newChild%nodeType/=TEXT_NODE &
+        .and. newChild%nodeType/=COMMENT_NODE &
+        .and. newChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
+        .and. newChild%nodeType/=CDATA_SECTION_NODE &
+        .and. newChild%nodeType/=ENTITY_REFERENCE_NODE) &
+        TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR, "insertBefore")
+    case (ATTRIBUTE_NODE)
+      if (newChild%nodeType/=TEXT_NODE &
+        .and. newChild%nodeType/=ENTITY_REFERENCE_NODE) &
+        TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR, "insertBefore")
+    case (DOCUMENT_NODE)
+      if (newChild%nodeType/=ELEMENT_NODE &
+        .and. newChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
+        .and. newChild%nodeType/=COMMENT_NODE &
+        .and. newChild%nodeType/=DOCUMENT_TYPE_NODE) &
+        TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR, "insertBefore")
+        call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
+    case (DOCUMENT_FRAGMENT_NODE)
+      if (newChild%nodeType/=ELEMENT_NODE &
+        .and. newChild%nodeType/=TEXT_NODE &
+        .and. newChild%nodeType/=COMMENT_NODE &
+        .and. newChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
+        .and. newChild%nodeType/=CDATA_SECTION_NODE &
+        .and. newChild%nodeType/=ENTITY_REFERENCE_NODE) &
+        TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR, "insertBefore")
+    case default
+      TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR, "insertBefore")
+    end select
+
+    if (.not.associated(arg%ownerDocument, newChild%ownerDocument)) then
+      TOHW_m_dom_throw_error(WRONG_DOCUMENT_ERR, "insertBefore")
+    endif
 
     np => arg%firstChild
 
@@ -248,7 +296,7 @@ TOHW_m_dom_contents(`
        np => np%nextSibling
     enddo
 
-    call dom_error("replaceChild",NOT_FOUND_ERR,"oldChild not found")
+    TOHW_m_dom_throw_error(NOT_FOUND_ERR, "insertBefore")
 
   end function replaceChild
 

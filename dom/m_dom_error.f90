@@ -2,7 +2,7 @@ module m_dom_error
 
   use pxf, only: pxfabort
 
-  use m_common_error, only: error_stack, add_error
+  use m_common_error, only: error_stack, add_error, in_error
 
   implicit none
   private
@@ -59,6 +59,7 @@ module m_dom_error
   public :: DOMException
   public :: getCode
   public :: throw_exception
+  public :: is_in_error
   public :: dom_error
   public :: internal_error
 
@@ -106,5 +107,12 @@ contains
     call pxfabort()
 
   end subroutine internal_error
+
+  function is_in_error(ex) result(p)
+    type(DOMException), intent(in) :: ex
+    logical :: p
+
+    p = in_error(ex%stack)
+  end function is_in_error
 
 end module m_dom_error
