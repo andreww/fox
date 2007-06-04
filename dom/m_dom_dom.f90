@@ -495,7 +495,7 @@ contains
     c = str_vs(arg%nodeName)
   end function getNodeValue
   
-  subroutine setNodeValue(arg, nodeValue, ex)
+  subroutine setNodeValue (arg, nodeValue, ex)
     type(Node), intent(inout) :: arg
     character(len=*) :: nodeValue
     type(DOMException), intent(inout), optional :: ex
@@ -583,7 +583,7 @@ endif
     np => arg%ownerDocument
   end function getOwnerDocument
 
-  function insertBefore(arg, newChild, refChild, ex)
+  function insertBefore (arg, newChild, refChild, ex)
     type(Node), pointer :: arg
     type(Node), pointer :: newChild
     type(Node), pointer :: refChild
@@ -593,7 +593,7 @@ endif
     type(Node), pointer :: np
 
     if (arg%readonly) then
-      call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setNodeValue", ex)
+      call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "insertBefore", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
 
@@ -647,7 +647,6 @@ if (present(ex)) then
   endif
 endif
 
-        call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
     case (DOCUMENT_FRAGMENT_NODE)
       if (newChild%nodeType/=ELEMENT_NODE &
         .and. newChild%nodeType/=TEXT_NODE &
@@ -719,7 +718,7 @@ endif
   end function insertBefore
   
 
-  function replaceChild(arg, newChild, oldChild, ex)
+  function replaceChild (arg, newChild, oldChild, ex)
     type(Node), pointer :: arg
     type(Node), pointer :: newChild
     type(Node), pointer :: oldChild
@@ -728,10 +727,8 @@ endif
 
     type(Node), pointer :: np
     
-    if (.not. associated(arg)) call dom_error("replaceChild",0,"Node not allocated")
-    if ((arg%nodeType /= ELEMENT_NODE) .and. &
-        (arg%nodeType /= DOCUMENT_NODE)) then
-      call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
+    if (arg%readonly) then
+      call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "replaceChild", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
 
@@ -741,6 +738,8 @@ endif
 
     endif
 
+    if (.not. associated(arg)) call dom_error("replaceChild",0,"Node not allocated")
+
     select case(arg%nodeType)
     case (ELEMENT_NODE)
       if (newChild%nodeType/=ELEMENT_NODE &
@@ -749,7 +748,7 @@ endif
         .and. newChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
         .and. newChild%nodeType/=CDATA_SECTION_NODE &
         .and. newChild%nodeType/=ENTITY_REFERENCE_NODE) &
-        call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
+        call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
 
@@ -760,7 +759,7 @@ endif
     case (ATTRIBUTE_NODE)
       if (newChild%nodeType/=TEXT_NODE &
         .and. newChild%nodeType/=ENTITY_REFERENCE_NODE) &
-        call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
+        call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
 
@@ -773,7 +772,7 @@ endif
         .and. newChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
         .and. newChild%nodeType/=COMMENT_NODE &
         .and. newChild%nodeType/=DOCUMENT_TYPE_NODE) &
-        call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
+        call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
 
@@ -781,7 +780,6 @@ if (present(ex)) then
   endif
 endif
 
-        call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
     case (DOCUMENT_FRAGMENT_NODE)
       if (newChild%nodeType/=ELEMENT_NODE &
         .and. newChild%nodeType/=TEXT_NODE &
@@ -789,7 +787,7 @@ endif
         .and. newChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
         .and. newChild%nodeType/=CDATA_SECTION_NODE &
         .and. newChild%nodeType/=ENTITY_REFERENCE_NODE) &
-        call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
+        call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
 
@@ -798,7 +796,7 @@ if (present(ex)) then
 endif
 
     case default
-      call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
+      call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
 
@@ -809,7 +807,7 @@ endif
     end select
 
     if (.not.associated(arg%ownerDocument, newChild%ownerDocument)) then
-      call throw_exception(WRONG_DOCUMENT_ERR, "insertBefore", ex)
+      call throw_exception(WRONG_DOCUMENT_ERR, "replaceChild", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
 
@@ -847,7 +845,7 @@ endif
        np => np%nextSibling
     enddo
 
-    call throw_exception(NOT_FOUND_ERR, "insertBefore", ex)
+    call throw_exception(NOT_FOUND_ERR, "replaceChild", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
 
@@ -859,12 +857,24 @@ endif
   end function replaceChild
 
 
-  function removeChild(arg, oldChild)
+  function removeChild(arg, oldChild, ex)
     type(Node), pointer :: removeChild
     type(Node), pointer :: arg
     type(Node), pointer :: oldChild
+    type(DOMException), intent(inout), optional :: ex
     type(Node), pointer :: np
     
+    if (arg%readonly) then
+      call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "replaceChild", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+
+     return
+  endif
+endif
+
+    endif
+
     if (.not.associated(arg)) call dom_error("removeChild",0,"Node not allocated")
     np => arg%firstChild
     
@@ -895,28 +905,113 @@ endif
       np => np%nextSibling
     enddo
     
-    call dom_error("removeChild",NOT_FOUND_ERR,"oldChild not found")
+    call throw_exception(NOT_FOUND_ERR, "replaceChild", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+
+     return
+  endif
+endif
+
 
   end function removeChild
 
 
-  function appendChild(arg, newChild)
+  function appendChild (arg, newChild, ex)
     type(Node), pointer :: arg
     type(Node), pointer :: newChild
+    type(DOMException), intent(inout), optional :: ex
     type(Node), pointer :: appendChild
     
+    if (arg%readonly) then
+      call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "appendChild", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+
+     return
+  endif
+endif
+
+    endif
+
     if (.not. associated(arg))  & 
       call dom_error("appendChild",0,"Node not allocated")
     
-    if ((arg%nodeType /= ELEMENT_NODE) .and. &
-      (arg%nodeType /= DOCUMENT_NODE)) &
-      call dom_error("appendChild",HIERARCHY_REQUEST_ERR, &
-      "this node cannot have children")
-    
-    if (arg%nodeType == ELEMENT_NODE) then
-      if (.not. associated(arg%ownerDocument, newChild%ownerDocument) ) then
-        call dom_error("appendChild ", WRONG_DOCUMENT_ERR, " Node and childNode have different owner douments")
-      endif
+    select case(arg%nodeType)
+    case (ELEMENT_NODE)
+      if (newChild%nodeType/=ELEMENT_NODE &
+        .and. newChild%nodeType/=TEXT_NODE &
+        .and. newChild%nodeType/=COMMENT_NODE &
+        .and. newChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
+        .and. newChild%nodeType/=CDATA_SECTION_NODE &
+        .and. newChild%nodeType/=ENTITY_REFERENCE_NODE) &
+        call throw_exception(HIERARCHY_REQUEST_ERR, "appendChild", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+
+     return
+  endif
+endif
+
+    case (ATTRIBUTE_NODE)
+      if (newChild%nodeType/=TEXT_NODE &
+        .and. newChild%nodeType/=ENTITY_REFERENCE_NODE) &
+        call throw_exception(HIERARCHY_REQUEST_ERR, "appendChild", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+
+     return
+  endif
+endif
+
+    case (DOCUMENT_NODE)
+      if (newChild%nodeType/=ELEMENT_NODE &
+        .and. newChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
+        .and. newChild%nodeType/=COMMENT_NODE &
+        .and. newChild%nodeType/=DOCUMENT_TYPE_NODE) &
+        call throw_exception(HIERARCHY_REQUEST_ERR, "appendChild", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+
+     return
+  endif
+endif
+
+    case (DOCUMENT_FRAGMENT_NODE)
+      if (newChild%nodeType/=ELEMENT_NODE &
+        .and. newChild%nodeType/=TEXT_NODE &
+        .and. newChild%nodeType/=COMMENT_NODE &
+        .and. newChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
+        .and. newChild%nodeType/=CDATA_SECTION_NODE &
+        .and. newChild%nodeType/=ENTITY_REFERENCE_NODE) &
+        call throw_exception(HIERARCHY_REQUEST_ERR, "appendChild", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+
+     return
+  endif
+endif
+
+    case default
+      call throw_exception(HIERARCHY_REQUEST_ERR, "appendChild", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+
+     return
+  endif
+endif
+
+    end select
+
+    if (.not.associated(arg%ownerDocument, newChild%ownerDocument)) then
+      call throw_exception(WRONG_DOCUMENT_ERR, "appendChild", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+
+     return
+  endif
+endif
+
     endif
     
     if (.not.(associated(arg%firstChild))) then

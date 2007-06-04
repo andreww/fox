@@ -56,13 +56,13 @@ TOHW_m_dom_contents(`
     c = str_vs(arg%nodeName)
   end function getNodeValue
   
-  subroutine setNodeValue(arg, nodeValue, ex)
+  TOHW_subroutine(setNodeValue) (arg, nodeValue, ex)
     type(Node), intent(inout) :: arg
     character(len=*) :: nodeValue
     type(DOMException), intent(inout), optional :: ex
 
     if (arg%readonly) then
-      TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR, "setNodeValue")
+      TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
     endif
       
     !FIXME check what kind of node is it, what is nodeValue allowed to be ...
@@ -137,7 +137,7 @@ TOHW_m_dom_contents(`
     np => arg%ownerDocument
   end function getOwnerDocument
 
-  function insertBefore(arg, newChild, refChild, ex)
+  TOHW_function(insertBefore) (arg, newChild, refChild, ex)
     type(Node), pointer :: arg
     type(Node), pointer :: newChild
     type(Node), pointer :: refChild
@@ -147,7 +147,7 @@ TOHW_m_dom_contents(`
     type(Node), pointer :: np
 
     if (arg%readonly) then
-      TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR, "setNodeValue")
+      TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
     endif
     
 !   FIXME what about this next?
@@ -162,18 +162,17 @@ TOHW_m_dom_contents(`
         .and. newChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
         .and. newChild%nodeType/=CDATA_SECTION_NODE &
         .and. newChild%nodeType/=ENTITY_REFERENCE_NODE) &
-        TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR, "insertBefore")
+        TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR)
     case (ATTRIBUTE_NODE)
       if (newChild%nodeType/=TEXT_NODE &
         .and. newChild%nodeType/=ENTITY_REFERENCE_NODE) &
-        TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR, "insertBefore")
+        TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR)
     case (DOCUMENT_NODE)
       if (newChild%nodeType/=ELEMENT_NODE &
         .and. newChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
         .and. newChild%nodeType/=COMMENT_NODE &
         .and. newChild%nodeType/=DOCUMENT_TYPE_NODE) &
-        TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR, "insertBefore")
-        call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
+        TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR)
     case (DOCUMENT_FRAGMENT_NODE)
       if (newChild%nodeType/=ELEMENT_NODE &
         .and. newChild%nodeType/=TEXT_NODE &
@@ -181,13 +180,13 @@ TOHW_m_dom_contents(`
         .and. newChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
         .and. newChild%nodeType/=CDATA_SECTION_NODE &
         .and. newChild%nodeType/=ENTITY_REFERENCE_NODE) &
-        TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR, "insertBefore")
+        TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR)
     case default
-      TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR, "insertBefore")
+      TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR)
     end select
 
     if (.not.associated(arg%ownerDocument, newChild%ownerDocument)) then
-      TOHW_m_dom_throw_error(WRONG_DOCUMENT_ERR, "insertBefore")
+      TOHW_m_dom_throw_error(WRONG_DOCUMENT_ERR)
     endif
     
     if (.not.associated(refChild)) then
@@ -212,12 +211,12 @@ TOHW_m_dom_contents(`
       np => np%nextSibling
     enddo
 
-    TOHW_m_dom_throw_error(NOT_FOUND_ERR, "insertBefore")
+    TOHW_m_dom_throw_error(NOT_FOUND_ERR)
 
   end function insertBefore
   
 
-  function replaceChild(arg, newChild, oldChild, ex)
+  TOHW_function(replaceChild) (arg, newChild, oldChild, ex)
     type(Node), pointer :: arg
     type(Node), pointer :: newChild
     type(Node), pointer :: oldChild
@@ -226,11 +225,11 @@ TOHW_m_dom_contents(`
 
     type(Node), pointer :: np
     
-    if (.not. associated(arg)) call dom_error("replaceChild",0,"Node not allocated")
-    if ((arg%nodeType /= ELEMENT_NODE) .and. &
-        (arg%nodeType /= DOCUMENT_NODE)) then
-      TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR, "replaceChild")
+    if (arg%readonly) then
+      TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
     endif
+
+    if (.not. associated(arg)) call dom_error("replaceChild",0,"Node not allocated")
 
     select case(arg%nodeType)
     case (ELEMENT_NODE)
@@ -240,18 +239,17 @@ TOHW_m_dom_contents(`
         .and. newChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
         .and. newChild%nodeType/=CDATA_SECTION_NODE &
         .and. newChild%nodeType/=ENTITY_REFERENCE_NODE) &
-        TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR, "insertBefore")
+        TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR)
     case (ATTRIBUTE_NODE)
       if (newChild%nodeType/=TEXT_NODE &
         .and. newChild%nodeType/=ENTITY_REFERENCE_NODE) &
-        TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR, "insertBefore")
+        TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR)
     case (DOCUMENT_NODE)
       if (newChild%nodeType/=ELEMENT_NODE &
         .and. newChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
         .and. newChild%nodeType/=COMMENT_NODE &
         .and. newChild%nodeType/=DOCUMENT_TYPE_NODE) &
-        TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR, "insertBefore")
-        call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
+        TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR)
     case (DOCUMENT_FRAGMENT_NODE)
       if (newChild%nodeType/=ELEMENT_NODE &
         .and. newChild%nodeType/=TEXT_NODE &
@@ -259,13 +257,13 @@ TOHW_m_dom_contents(`
         .and. newChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
         .and. newChild%nodeType/=CDATA_SECTION_NODE &
         .and. newChild%nodeType/=ENTITY_REFERENCE_NODE) &
-        TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR, "insertBefore")
+        TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR)
     case default
-      TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR, "insertBefore")
+      TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR)
     end select
 
     if (.not.associated(arg%ownerDocument, newChild%ownerDocument)) then
-      TOHW_m_dom_throw_error(WRONG_DOCUMENT_ERR, "insertBefore")
+      TOHW_m_dom_throw_error(WRONG_DOCUMENT_ERR)
     endif
 
     np => arg%firstChild
@@ -296,17 +294,22 @@ TOHW_m_dom_contents(`
        np => np%nextSibling
     enddo
 
-    TOHW_m_dom_throw_error(NOT_FOUND_ERR, "insertBefore")
+    TOHW_m_dom_throw_error(NOT_FOUND_ERR)
 
   end function replaceChild
 
 
-  function removeChild(arg, oldChild)
+  function removeChild(arg, oldChild, ex)
     type(Node), pointer :: removeChild
     type(Node), pointer :: arg
     type(Node), pointer :: oldChild
+    type(DOMException), intent(inout), optional :: ex
     type(Node), pointer :: np
     
+    if (arg%readonly) then
+      TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
+    endif
+
     if (.not.associated(arg)) call dom_error("removeChild",0,"Node not allocated")
     np => arg%firstChild
     
@@ -337,28 +340,57 @@ TOHW_m_dom_contents(`
       np => np%nextSibling
     enddo
     
-    call dom_error("removeChild",NOT_FOUND_ERR,"oldChild not found")
+    TOHW_m_dom_throw_error(NOT_FOUND_ERR)
 
   end function removeChild
 
 
-  function appendChild(arg, newChild)
+  TOHW_function(appendChild) (arg, newChild, ex)
     type(Node), pointer :: arg
     type(Node), pointer :: newChild
+    type(DOMException), intent(inout), optional :: ex
     type(Node), pointer :: appendChild
     
+    if (arg%readonly) then
+      TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
+    endif
+
     if (.not. associated(arg))  & 
       call dom_error("appendChild",0,"Node not allocated")
     
-    if ((arg%nodeType /= ELEMENT_NODE) .and. &
-      (arg%nodeType /= DOCUMENT_NODE)) &
-      call dom_error("appendChild",HIERARCHY_REQUEST_ERR, &
-      "this node cannot have children")
-    
-    if (arg%nodeType == ELEMENT_NODE) then
-      if (.not. associated(arg%ownerDocument, newChild%ownerDocument) ) then
-        call dom_error("appendChild ", WRONG_DOCUMENT_ERR, " Node and childNode have different owner douments")
-      endif
+    select case(arg%nodeType)
+    case (ELEMENT_NODE)
+      if (newChild%nodeType/=ELEMENT_NODE &
+        .and. newChild%nodeType/=TEXT_NODE &
+        .and. newChild%nodeType/=COMMENT_NODE &
+        .and. newChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
+        .and. newChild%nodeType/=CDATA_SECTION_NODE &
+        .and. newChild%nodeType/=ENTITY_REFERENCE_NODE) &
+        TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR)
+    case (ATTRIBUTE_NODE)
+      if (newChild%nodeType/=TEXT_NODE &
+        .and. newChild%nodeType/=ENTITY_REFERENCE_NODE) &
+        TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR)
+    case (DOCUMENT_NODE)
+      if (newChild%nodeType/=ELEMENT_NODE &
+        .and. newChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
+        .and. newChild%nodeType/=COMMENT_NODE &
+        .and. newChild%nodeType/=DOCUMENT_TYPE_NODE) &
+        TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR)
+    case (DOCUMENT_FRAGMENT_NODE)
+      if (newChild%nodeType/=ELEMENT_NODE &
+        .and. newChild%nodeType/=TEXT_NODE &
+        .and. newChild%nodeType/=COMMENT_NODE &
+        .and. newChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
+        .and. newChild%nodeType/=CDATA_SECTION_NODE &
+        .and. newChild%nodeType/=ENTITY_REFERENCE_NODE) &
+        TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR)
+    case default
+      TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR)
+    end select
+
+    if (.not.associated(arg%ownerDocument, newChild%ownerDocument)) then
+      TOHW_m_dom_throw_error(WRONG_DOCUMENT_ERR)
     endif
     
     if (.not.(associated(arg%firstChild))) then
