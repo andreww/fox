@@ -1161,8 +1161,7 @@ endif
     character(len=*), intent(in) :: version
     logical :: p
 
-    ! FIXME implement
-    p = .true.
+    p = hasFeature(feature, version)
   end function isSupported
 
   ! FIXME should the below instead just decompose the QName on access?
