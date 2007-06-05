@@ -418,65 +418,99 @@ TOHW_m_dom_contents(`
     logical :: deep
     type(Node), pointer :: np
 
-    ! FIXME implement
-  end function cloneNode
+    type(Node), pointer :: np_a1, np_a2, this, that, new, ERchild
+    type(NamedNodeMap), pointer :: nnm
 
-!!$  recursive function cloneNode(arg, deep) result(np) 
-!!$    type(Node), pointer :: arg
-!!$    logical :: deep
-!!$    type(Node), pointer :: np
-!!$
-!!$    logical :: do_children
-!!$    integer :: i
-!!$
-!!$    type(Node), pointer :: original
-!!$    type(Node), pointer :: dummy
-!!$    
-!!$    if (.not.associated(arg)) call dom_error("cloneNode",0,"Node not allocated")
-!!$
-!!$    do_children = .false.
-!!$    if (present(deep)) then
-!!$      do_children = deep
-!!$    endif
-!!$
-!!$    select case (arg%nodeType)
-!!$    case (ELEMENT_NODE)
-!!$      np => createElementNS(arg%ownerDocument, str_vs(arg%namespaceURI), str_vs(arg%tagName))
-!!$      do i = 1, arg%attributes%length
-!!$        dummy => append(np%attributes, cloneNode(item(arg%attributes, i), .false.))
-!!$        ! FIXME what about children of attribuytes? entities? do these happen?
-!!$      enddo
-!!$    case (ATTRIBUTE_NODE)
-!!$      np => createAttributeNS(arg%ownerDocument, str_vs(arg%namespaceURI), str_vs(arg%tagName), str_vs(arg%value))
-!!$    case (TEXT_NODE)
-!!$      np => createTextNode(arg%ownerDocument, arg%data)
-!!$    case (CDATA_SECTION_NODE)
-!!$      np => createCDataSection(arg%ownerDocument, arg%data)
-!!$    case (ENTITY_REFERENCE_NODE)
-!!$      np => createEntityReference(arg%ownerDocument, arg%nodeName, arg%nodeValue)
-!!$    case (ENTITY_NODE)
-!!$      np => createEntity(arg%ownerDocument, arg%nodeName, arg%nodeValue)
-!!$    case (PROCESSING_INSTRUCTION_NODE)
-!!$      np => createProcessingInstruction(arg%ownerDocument, arg%target, arg%data)
-!!$    case (COMMENT_NODE)
-!!$      np => createComment(arg%ownerDocument, arg%data)
-!!$    case (DOCUMENT_NODE)
-!!$      np => createDocument(arg%ownerDocument, arg%name, arg%publicId, arg%systemId)
-!!$    case (DOCUMENT_TYPE_NODE)
-!!$      np => createDocumentType(arg%ownerDocument, arg%name, arg%entities, &
-!!$        arg%notations, arg%publicId, arg%systemId, arg%internalSubset)
-!!$    case (DOCUMENT_FRAGMENT_NODE)
-!!$      np => createDocumentFragment(arg%ownerDocument)
-!!$    case (NOTATION_NODE)
-!!$      np => createNotation(arg%ownerDocument, arg%publicId, arg%systemId)
-!!$    end select
-!!$      
-!!$    if (deep) then
-!!$      continue
-!!$    endif
-!!$    ! and fix up siblings and parents and stuff
-!!$    ! FIXME FIXME FIXME
-!!$  end function cloneNode
+    logical :: noChild, readonly
+    integer :: i
+
+    noChild = .false.
+    readonly = .false.
+    
+    ERchild => null()
+    this => arg
+    do
+      if (noChild) then
+        if (associated(this, arg)) exit
+        if (associated(this, ERchild)) then
+          ! Weve got back up to the top of the topmost ER.
+          readonly = .false.
+          ERchild => null()
+        endif
+        if (associated(this%nextSibling)) then
+          this => this%nextSibling
+          noChild = .false.
+        else
+          this => this%parentNode
+          that => that%parentNode
+          cycle
+        endif
+      endif
+      select case(this%nodeType)
+        case (ELEMENT_NODE)
+          new => createElementNS(this%ownerDocument, &
+            str_vs(this%namespaceURI), str_vs(this%localName))
+          ! loop over attributes cloning them
+          nnm => getAttributes(this)
+          do i = 1, getLength(nnm)
+            np_a1 => item(nnm, i)
+            np_a2 => createAttributeNS(this%ownerDocument, &
+              str_vs(np_a1%namespaceURI), str_vs(np_a1%localName))
+            call setValue(new, getValue(np_a1))
+            call setSpecified(np_a2, np_a1%specified)
+            np_a2 => setAttributeNodeNS(np, np_a2)
+          end do
+        case (ATTRIBUTE_NODE)
+          new => createAttributeNS(this%ownerDocument, &
+            str_vs(this%namespaceURI), str_vs(this%localName))
+          call setValue(new, getValue(np_a2))
+          call setSpecified(new, .true.)
+        case (TEXT_NODE)
+          new => createTextNode(this%ownerDocument, str_vs(this%nodeValue))
+        case (CDATA_SECTION_NODE)
+          new => createCdataSection(this%ownerDocument, str_vs(this%nodeValue))
+        case (ENTITY_REFERENCE_NODE)
+          new => createEntityReference(this%ownerDocument, str_vs(this%nodeName))
+          ERChild => this
+        case (ENTITY_NODE)
+          new => null()
+        case (PROCESSING_INSTRUCTION_NODE)
+          new => createProcessingInstruction(this%ownerDocument, &
+            str_vs(this%nodeName), str_vs(this%nodeValue))
+        case (COMMENT_NODE)
+          new => createComment(this%ownerDocument, str_vs(this%nodeValue))
+        case (DOCUMENT_NODE)
+          new => null()
+        case (DOCUMENT_FRAGMENT_NODE)
+          new => createDocumentFragment(this%ownerDocument)
+        case (NOTATION_NODE)
+          new => null()
+        end select
+        if (readonly) then
+          that%readonly = .true.
+        elseif (associated(ERChild)) then
+          readonly = .true.
+        endif
+        if (associated(this, arg)) then
+          that => new
+          if (.not.deep) exit
+        else
+          new => appendChild(that, new)
+        endif
+        if (associated(this%firstChild)) then
+          this => this%firstChild
+          if (.not.associated(this, arg)) then
+            that => that%lastChild
+            !FIXME logic
+          endif
+        else
+          noChild = .true.
+        endif
+      enddo
+
+      np => that
+
+  end function cloneNode
 
   
   function hasAttributes(arg)
