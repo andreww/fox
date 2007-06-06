@@ -513,7 +513,10 @@ endif
       
     !FIXME check what kind of node is it, what is nodeValue allowed to be ...
     ! if it is an attribute node we need to reset TEXT/ENTITYREF children.
-
+    if (arg%nodeType == ATTRIBUTE_NODE) then
+      ! destroy children
+      ! rebuild new children
+    endif
     deallocate(arg%nodeValue)
     arg%nodeValue => vs_str_alloc(nodeValue)
   end subroutine setNodeValue
@@ -1112,23 +1115,24 @@ endif
         case (NOTATION_NODE)
           new => null()
         end select
+        ! Sort out readonly-ness
         if (readonly) then
-          that%readonly = .true.
+          that%readonly = .true. ! We are under a readonly tree
         elseif (associated(ERChild)) then
-          readonly = .true.
+          readonly = .true. ! This is not readonly, but all nodes below will be
         endif
+        ! Append the new node to the tree
         if (associated(this, arg)) then
-          that => new
-          if (.not.deep) exit
+          that => new ! This is the first we have created, head of the tree
+          if (.not.deep) exit ! We only wanted one node anyway
         else
           new => appendChild(that, new)
         endif
+        ! Do we continue descending?
         if (associated(this%firstChild)) then
-          this => this%firstChild
-          if (.not.associated(this, arg)) then
+          if (.not.associated(this, arg)) &
             that => that%lastChild
-            !FIXME logic
-          endif
+          this => this%firstChild
         else
           noChild = .true.
         endif
@@ -1185,6 +1189,7 @@ endif
 
     deallocate(arg%prefix)
     arg%prefix => vs_str_alloc(prefix)
+    ! FIXME exceptions
   end subroutine setPrefix
 
   function getLocalName(arg) result(c)
