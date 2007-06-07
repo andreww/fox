@@ -8,6 +8,7 @@ module m_dom_dom
 
 
   use m_common_array_str, only: vs_str_alloc
+  use m_common_struct, only: xml_doc_state
 
 
 
@@ -143,11 +144,13 @@ module m_dom_dom
     ! Introduced in DOM Level 3
     character, pointer :: inputEncoding(:) => null()
     character, pointer :: xmlEncoding(:) => null()
-    logical :: xmlStandalone = .false.
-    character, pointer :: xmlVersion(:) => null()
+    ! logical :: xmlStandalone = .false.
+    ! character, pointer :: xmlVersion(:) => null() 
+    ! The two above are held in xds below
     logical :: strictErrorChecking = .false.
     character, pointer :: documentURI(:) => null()
     ! DOMCONFIGURATION
+    type(xml_doc_state), pointer :: xds => null()
   end type Node
 
   public :: ELEMENT_NODE
@@ -412,7 +415,6 @@ contains
       deallocate(np)
     end select
 
-
   end subroutine destroyNode
 
   subroutine destroyDocumentType(dt)
@@ -492,7 +494,7 @@ contains
 
     if (associated(np%inputEncoding)) deallocate(np%inputEncoding)
     if (associated(np%xmlEncoding)) deallocate(np%xmlEncoding)
-    if (associated(np%xmlVersion)) deallocate(np%xmlVersion)
+    !if (associated(np%xmlVersion)) deallocate(np%xmlVersion)
     if (associated(np%documentURI)) deallocate(np%documentURI)
   end subroutine destroyNodeContents
 
@@ -1644,10 +1646,14 @@ endif
     character(len=*), intent(in) :: systemId
     type(Node), pointer :: dt
 
+    allocate(dt%xds)
+
     if (.not.checkChars(qualifiedName, XML1_0)) then
       call throw_exception(INVALID_CHARACTER_ERR, "createDocumentType", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
+
+if (associated(dt%xds)) deallocate(dt%xds)
 
      return
   endif
@@ -1655,10 +1661,12 @@ endif
 
     endif
 
-    if (.not.checkName(qualifiedName)) then
+    if (.not.checkName(qualifiedName, dt%xds)) then
       call throw_exception(NAMESPACE_ERR, "createDocumentType", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
+
+if (associated(dt%xds)) deallocate(dt%xds)
 
      return
   endif
@@ -1670,6 +1678,8 @@ endif
 if (present(ex)) then
   if (is_in_error(ex)) then
 
+if (associated(dt%xds)) deallocate(dt%xds)
+
      return
   endif
 endif
@@ -1678,6 +1688,8 @@ endif
       call throw_exception(FoX_INVALID_SYSTEM_ID, "createDocumentType", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
+
+if (associated(dt%xds)) deallocate(dt%xds)
 
      return
   endif
@@ -1708,6 +1720,8 @@ endif
     allocate(dt%publicId(0))
     allocate(dt%systemId(0))
     allocate(dt%internalSubset(0)) !FIXME
+
+    allocate(dt%xds)
   end function createEmptyDocumentType
 
 
@@ -1731,8 +1745,6 @@ endif
 !    doc%implementation => FoX_DOM
     doc%documentElement => appendChild(doc, createElementNS(doc, namespaceURI, qualifiedName))
 
-    doc%xmlVersion = vs_str_alloc("1.0")
-    
   end function createDocument
 
 
@@ -1748,8 +1760,6 @@ endif
 !    doc%implementation => FoX_DOM
     doc%documentElement => null()
 
-    doc%xmlVersion = vs_str_alloc("1.0")
-    
   end function createEmptyDocument
 
 

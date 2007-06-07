@@ -1,6 +1,7 @@
 TOHW_m_dom_imports(`
 
   use m_common_array_str, only: vs_str_alloc
+  use m_common_struct, only: xml_doc_state
 
 ')`'dnl
 dnl
@@ -75,11 +76,13 @@ TOHW_m_dom_publics(`
     ! Introduced in DOM Level 3
     character, pointer :: inputEncoding(:) => null()
     character, pointer :: xmlEncoding(:) => null()
-    logical :: xmlStandalone = .false.
-    character, pointer :: xmlVersion(:) => null()
+    ! logical :: xmlStandalone = .false.
+    ! character, pointer :: xmlVersion(:) => null() 
+    ! The two above are held in xds below
     logical :: strictErrorChecking = .false.
     character, pointer :: documentURI(:) => null()
     ! DOMCONFIGURATION
+    type(xml_doc_state), pointer :: xds => null()
   end type Node
 
   public :: ELEMENT_NODE
@@ -160,7 +163,6 @@ TOHW_m_dom_contents(`
       deallocate(np)
     end select
 
-
   end subroutine destroyNode
 
   subroutine destroyDocumentType(dt)
@@ -240,7 +242,7 @@ TOHW_m_dom_contents(`
 
     if (associated(np%inputEncoding)) deallocate(np%inputEncoding)
     if (associated(np%xmlEncoding)) deallocate(np%xmlEncoding)
-    if (associated(np%xmlVersion)) deallocate(np%xmlVersion)
+    !if (associated(np%xmlVersion)) deallocate(np%xmlVersion)
     if (associated(np%documentURI)) deallocate(np%documentURI)
   end subroutine destroyNodeContents
 

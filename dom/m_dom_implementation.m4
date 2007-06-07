@@ -46,17 +46,19 @@ TOHW_m_dom_contents(`
     character(len=*), intent(in) :: systemId
     type(Node), pointer :: dt
 
+    allocate(dt%xds)
+
     if (.not.checkChars(qualifiedName, XML1_0)) then
-      TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
+      TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR, (dt%xds))
     endif
 
-    if (.not.checkName(qualifiedName)) then
-      TOHW_m_dom_throw_error(NAMESPACE_ERR)
+    if (.not.checkName(qualifiedName, dt%xds)) then
+      TOHW_m_dom_throw_error(NAMESPACE_ERR, (dt%xds))
     ! FIXME check that prefix etc is declared
     elseif (.not.checkPublicId(publicId)) then
-      TOHW_m_dom_throw_error(FoX_INVALID_PUBLIC_ID)
+      TOHW_m_dom_throw_error(FoX_INVALID_PUBLIC_ID, (dt%xds))
     elseif (.not.checkSystemId(systemId)) then
-      TOHW_m_dom_throw_error(FoX_INVALID_SYSTEM_ID)
+      TOHW_m_dom_throw_error(FoX_INVALID_SYSTEM_ID, (dt%xds))
     endif
 
     dt => createNode(null(), DOCUMENT_TYPE_NODE, qualifiedName, "")
@@ -82,6 +84,8 @@ TOHW_m_dom_contents(`
     allocate(dt%publicId(0))
     allocate(dt%systemId(0))
     allocate(dt%internalSubset(0)) !FIXME
+
+    allocate(dt%xds)
   end function createEmptyDocumentType
 
 
@@ -105,8 +109,6 @@ TOHW_m_dom_contents(`
 !    doc%implementation => FoX_DOM
     doc%documentElement => appendChild(doc, createElementNS(doc, namespaceURI, qualifiedName))
 
-    doc%xmlVersion = vs_str_alloc("1.0")
-    
   end function createDocument
 
 
@@ -122,8 +124,6 @@ TOHW_m_dom_contents(`
 !    doc%implementation => FoX_DOM
     doc%documentElement => null()
 
-    doc%xmlVersion = vs_str_alloc("1.0")
-    
   end function createEmptyDocument
 
 
