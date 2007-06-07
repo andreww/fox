@@ -618,6 +618,7 @@ TOHW_m_dom_contents(`
     arg%prefix => vs_str_alloc(prefix)
 
     print*, "why are you doing this?"
+    ! FIXME we should implement this but raise a FoX-specific exception if used
     stop
     ! FIXME exceptions
   end subroutine setPrefix

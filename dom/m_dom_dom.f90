@@ -23,6 +23,7 @@ module m_dom_dom
 
 
   use m_common_array_str, only: str_vs, vs_str_alloc
+  use m_common_string, only: toLower
 
 
 
@@ -1245,6 +1246,7 @@ endif
     arg%prefix => vs_str_alloc(prefix)
 
     print*, "why are you doing this?"
+    ! FIXME we should implement this but raise a FoX-specific exception if used
     stop
     ! FIXME exceptions
   end subroutine setPrefix
@@ -1606,14 +1608,14 @@ endif
     character(len=*), intent(in) :: feature
     character(len=*), intent(in), optional :: version
     logical :: p
-    ! FIXME squashcase
+
     if (present(version)) then
       if (version/="1.0".and.version/="2.0") then
         p = .false.
         return
       endif
     endif
-    p = (feature=="Core".or.feature=="XML")
+    p = (toLower(feature)=="core".or.toLower(feature)=="xml")
   end function hasFeature
 
 

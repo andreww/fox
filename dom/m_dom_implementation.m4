@@ -1,6 +1,7 @@
 TOHW_m_dom_imports(`
 
   use m_common_array_str, only: str_vs, vs_str_alloc
+  use m_common_string, only: toLower
 
 ')`'dnl
 dnl
@@ -23,14 +24,14 @@ TOHW_m_dom_contents(`
     character(len=*), intent(in) :: feature
     character(len=*), intent(in), optional :: version
     logical :: p
-    ! FIXME squashcase
+
     if (present(version)) then
       if (version/="1.0".and.version/="2.0") then
         p = .false.
         return
       endif
     endif
-    p = (feature=="Core".or.feature=="XML")
+    p = (toLower(feature)=="core".or.toLower(feature)=="xml")
   end function hasFeature
 
 
