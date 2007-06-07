@@ -1243,6 +1243,9 @@ endif
 
     deallocate(arg%prefix)
     arg%prefix => vs_str_alloc(prefix)
+
+    print*, "why are you doing this?"
+    stop
     ! FIXME exceptions
   end subroutine setPrefix
 
