@@ -137,6 +137,7 @@ module m_dom_dom
     type(Node), pointer :: ownerElement => null()
     type(namedNodeMap) :: entities
     type(namedNodeMap) :: notations 
+    ! FIXME The two above should be held in xds below
     character, pointer :: publicId(:) => null()
     character, pointer :: systemId(:) => null()
     character, pointer :: internalSubset(:) => null()
@@ -1699,8 +1700,6 @@ endif
 
     dt => createNode(null(), DOCUMENT_TYPE_NODE, qualifiedName, "")
     dt%readonly = .true.
-    !dt%entities
-    !dt%notations
     dt%publicId = vs_str_alloc(publicId)
     dt%systemId = vs_str_alloc(systemId)
     allocate(dt%internalSubset(0)) !FIXME
@@ -1729,16 +1728,18 @@ endif
     character(len=*), intent(in) :: namespaceURI
     character(len=*), intent(in) :: qualifiedName
     type(Node), pointer, optional :: docType
-    type(Node), pointer :: doc
+    type(Node), pointer :: doc, dt
 
     doc => createNode(null(), DOCUMENT_NODE, "#document", "")
-    doc%ownerDocument => doc
 
     if (present(docType)) then
+      docType%ownerDocument => doc
       doc%doctype => appendChild(doc, doc%docType)
     endif
     if (.not.associated(doc%docType)) then
-      doc%docType => appendChild(doc, createDocumentType(qualifiedName, "", ""))
+      dt => createDocumentType(qualifiedName, "", "")
+      dt%ownerDocument => doc
+      doc%docType => appendChild(doc, dt)
     endif
 
     doc%docType%ownerElement => doc

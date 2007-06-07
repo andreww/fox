@@ -63,8 +63,6 @@ TOHW_m_dom_contents(`
 
     dt => createNode(null(), DOCUMENT_TYPE_NODE, qualifiedName, "")
     dt%readonly = .true.
-    !dt%entities
-    !dt%notations
     dt%publicId = vs_str_alloc(publicId)
     dt%systemId = vs_str_alloc(systemId)
     allocate(dt%internalSubset(0)) !FIXME
@@ -93,16 +91,18 @@ TOHW_m_dom_contents(`
     character(len=*), intent(in) :: namespaceURI
     character(len=*), intent(in) :: qualifiedName
     type(Node), pointer, optional :: docType
-    type(Node), pointer :: doc
+    type(Node), pointer :: doc, dt
 
     doc => createNode(null(), DOCUMENT_NODE, "#document", "")
-    doc%ownerDocument => doc
 
     if (present(docType)) then
+      docType%ownerDocument => doc
       doc%doctype => appendChild(doc, doc%docType)
     endif
     if (.not.associated(doc%docType)) then
-      doc%docType => appendChild(doc, createDocumentType(qualifiedName, "", ""))
+      dt => createDocumentType(qualifiedName, "", "")
+      dt%ownerDocument => doc
+      doc%docType => appendChild(doc, dt)
     endif
 
     doc%docType%ownerElement => doc

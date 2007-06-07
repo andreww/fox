@@ -69,6 +69,7 @@ TOHW_m_dom_publics(`
     type(Node), pointer :: ownerElement => null()
     type(namedNodeMap) :: entities
     type(namedNodeMap) :: notations 
+    ! FIXME The two above should be held in xds below
     character, pointer :: publicId(:) => null()
     character, pointer :: systemId(:) => null()
     character, pointer :: internalSubset(:) => null()
