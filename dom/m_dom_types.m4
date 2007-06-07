@@ -72,6 +72,14 @@ TOHW_m_dom_publics(`
     character, pointer :: systemId(:) => null()
     character, pointer :: internalSubset(:) => null()
     character, pointer :: notationName(:) => null()
+    ! Introduced in DOM Level 3
+    character, pointer :: inputEncoding(:) => null()
+    character, pointer :: xmlEncoding(:) => null()
+    logical :: xmlStandalone = .false.
+    character, pointer :: xmlVersion(:) => null()
+    logical :: strictErrorChecking = .false.
+    character, pointer :: documentURI(:) => null()
+    ! DOMCONFIGURATION
   end type Node
 
   public :: ELEMENT_NODE
@@ -229,6 +237,11 @@ TOHW_m_dom_contents(`
     if (associated(np%systemId)) deallocate(np%systemId)
     if (associated(np%internalSubset)) deallocate(np%internalSubset)
     if (associated(np%notationName)) deallocate(np%notationName)
+
+    if (associated(np%inputEncoding)) deallocate(np%inputEncoding)
+    if (associated(np%xmlEncoding)) deallocate(np%xmlEncoding)
+    if (associated(np%xmlVersion)) deallocate(np%xmlVersion)
+    if (associated(np%documentURI)) deallocate(np%documentURI)
   end subroutine destroyNodeContents
 
 ')`'dnl

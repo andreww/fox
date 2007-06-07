@@ -23,6 +23,11 @@ module m_dom_dom
 
 
   use m_common_array_str, only: str_vs, vs_str_alloc
+  use m_common_charset, only: checkChars, XML1_0
+
+  use m_dom_error, only: DOMException, throw_exception, is_in_error, &
+    INVALID_CHARACTER_ERR, NAMESPACE_ERR, FoX_INVALID_PUBLIC_ID, FoX_INVALID_SYSTEM_ID
+  use m_common_namecheck, only: checkName, checkPublicId, checkSystemId
   use m_common_string, only: toLower
 
 
@@ -135,6 +140,14 @@ module m_dom_dom
     character, pointer :: systemId(:) => null()
     character, pointer :: internalSubset(:) => null()
     character, pointer :: notationName(:) => null()
+    ! Introduced in DOM Level 3
+    character, pointer :: inputEncoding(:) => null()
+    character, pointer :: xmlEncoding(:) => null()
+    logical :: xmlStandalone = .false.
+    character, pointer :: xmlVersion(:) => null()
+    logical :: strictErrorChecking = .false.
+    character, pointer :: documentURI(:) => null()
+    ! DOMCONFIGURATION
   end type Node
 
   public :: ELEMENT_NODE
@@ -476,6 +489,11 @@ contains
     if (associated(np%systemId)) deallocate(np%systemId)
     if (associated(np%internalSubset)) deallocate(np%internalSubset)
     if (associated(np%notationName)) deallocate(np%notationName)
+
+    if (associated(np%inputEncoding)) deallocate(np%inputEncoding)
+    if (associated(np%xmlEncoding)) deallocate(np%xmlEncoding)
+    if (associated(np%xmlVersion)) deallocate(np%xmlVersion)
+    if (associated(np%documentURI)) deallocate(np%documentURI)
   end subroutine destroyNodeContents
 
 
@@ -587,7 +605,7 @@ endif
     np => arg%ownerDocument
   end function getOwnerDocument
 
-  function insertBefore(arg, newChild, refChild, ex)
+  function insertBefore(arg, newChild, refChild, ex) 
     type(DOMException), intent(inout), optional :: ex
     type(Node), pointer :: arg
     type(Node), pointer :: newChild
@@ -722,7 +740,7 @@ endif
   end function insertBefore
   
 
-  function replaceChild(arg, newChild, oldChild, ex)
+  function replaceChild(arg, newChild, oldChild, ex) 
     type(DOMException), intent(inout), optional :: ex
     type(Node), pointer :: arg
     type(Node), pointer :: newChild
@@ -861,7 +879,7 @@ endif
   end function replaceChild
 
 
-  function removeChild(arg, oldChild, ex)
+  function removeChild(arg, oldChild, ex) 
     type(DOMException), intent(inout), optional :: ex
     type(Node), pointer :: removeChild
     type(Node), pointer :: arg
@@ -921,7 +939,7 @@ endif
   end function removeChild
 
 
-  function appendChild(arg, newChild, ex)
+  function appendChild(arg, newChild, ex) 
     type(DOMException), intent(inout), optional :: ex
     type(Node), pointer :: arg
     type(Node), pointer :: newChild
@@ -1619,11 +1637,53 @@ endif
   end function hasFeature
 
 
-  function createDocumentType(qualifiedName, publicId, systemId) result(dt)
+  function createDocumentType(qualifiedName, publicId, systemId, ex)result(dt) 
+    type(DOMException), intent(inout), optional :: ex
     character(len=*), intent(in) :: qualifiedName
     character(len=*), intent(in) :: publicId
     character(len=*), intent(in) :: systemId
     type(Node), pointer :: dt
+
+    if (.not.checkChars(qualifiedName, XML1_0)) then
+      call throw_exception(INVALID_CHARACTER_ERR, "createDocumentType", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+
+     return
+  endif
+endif
+
+    endif
+
+    if (.not.checkName(qualifiedName)) then
+      call throw_exception(NAMESPACE_ERR, "createDocumentType", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+
+     return
+  endif
+endif
+
+    ! FIXME check that prefix etc is declared
+    elseif (.not.checkPublicId(publicId)) then
+      call throw_exception(FoX_INVALID_PUBLIC_ID, "createDocumentType", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+
+     return
+  endif
+endif
+
+    elseif (.not.checkSystemId(systemId)) then
+      call throw_exception(FoX_INVALID_SYSTEM_ID, "createDocumentType", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+
+     return
+  endif
+endif
+
+    endif
 
     dt => createNode(null(), DOCUMENT_TYPE_NODE, qualifiedName, "")
     dt%readonly = .true.
@@ -1670,6 +1730,8 @@ endif
     doc%docType%ownerElement => doc
 !    doc%implementation => FoX_DOM
     doc%documentElement => appendChild(doc, createElementNS(doc, namespaceURI, qualifiedName))
+
+    doc%xmlVersion = vs_str_alloc("1.0")
     
   end function createDocument
 
@@ -1685,6 +1747,8 @@ endif
     doc%docType%ownerElement => doc
 !    doc%implementation => FoX_DOM
     doc%documentElement => null()
+
+    doc%xmlVersion = vs_str_alloc("1.0")
     
   end function createEmptyDocument
 
@@ -1703,7 +1767,7 @@ endif
 
     np => doc%firstChild
     ! if not associated internal error
-
+    ! FIXME DONT NEED STACK
     call append(np_stack, np)
     ascending = .false.
     do

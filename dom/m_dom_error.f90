@@ -34,7 +34,8 @@ module m_dom_error
   integer, parameter, public :: FoX_INVALID_XML_NAME        = 202
   integer, parameter, public :: FoX_INVALID_PI_TARGET       = 203
   integer, parameter, public :: FoX_INVALID_CDATA_SECTION   = 204
-  integer, parameter, public :: FoX_INVALID_COMMENT_DATA    = 205
+  integer, parameter, public :: FoX_INVALID_PUBLIC_ID       = 205
+  integer, parameter, public :: FoX_INVALID_SYSTEM_ID       = 206
 
   character(len=27), dimension(0:17), parameter :: errorString = (/ &
     "XMLF90_ERR                 ", &

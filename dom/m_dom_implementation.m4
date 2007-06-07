@@ -1,6 +1,11 @@
 TOHW_m_dom_imports(`
 
   use m_common_array_str, only: str_vs, vs_str_alloc
+  use m_common_charset, only: checkChars, XML1_0
+
+  use m_dom_error, only: DOMException, throw_exception, is_in_error, &
+    INVALID_CHARACTER_ERR, NAMESPACE_ERR, FoX_INVALID_PUBLIC_ID, FoX_INVALID_SYSTEM_ID
+  use m_common_namecheck, only: checkName, checkPublicId, checkSystemId
   use m_common_string, only: toLower
 
 ')`'dnl
@@ -35,11 +40,24 @@ TOHW_m_dom_contents(`
   end function hasFeature
 
 
-  function createDocumentType(qualifiedName, publicId, systemId) result(dt)
+  TOHW_function(createDocumentType, (qualifiedName, publicId, systemId), dt)
     character(len=*), intent(in) :: qualifiedName
     character(len=*), intent(in) :: publicId
     character(len=*), intent(in) :: systemId
     type(Node), pointer :: dt
+
+    if (.not.checkChars(qualifiedName, XML1_0)) then
+      TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
+    endif
+
+    if (.not.checkName(qualifiedName)) then
+      TOHW_m_dom_throw_error(NAMESPACE_ERR)
+    ! FIXME check that prefix etc is declared
+    elseif (.not.checkPublicId(publicId)) then
+      TOHW_m_dom_throw_error(FoX_INVALID_PUBLIC_ID)
+    elseif (.not.checkSystemId(systemId)) then
+      TOHW_m_dom_throw_error(FoX_INVALID_SYSTEM_ID)
+    endif
 
     dt => createNode(null(), DOCUMENT_TYPE_NODE, qualifiedName, "")
     dt%readonly = .true.
@@ -86,6 +104,8 @@ TOHW_m_dom_contents(`
     doc%docType%ownerElement => doc
 !    doc%implementation => FoX_DOM
     doc%documentElement => appendChild(doc, createElementNS(doc, namespaceURI, qualifiedName))
+
+    doc%xmlVersion = vs_str_alloc("1.0")
     
   end function createDocument
 
@@ -101,6 +121,8 @@ TOHW_m_dom_contents(`
     doc%docType%ownerElement => doc
 !    doc%implementation => FoX_DOM
     doc%documentElement => null()
+
+    doc%xmlVersion = vs_str_alloc("1.0")
     
   end function createEmptyDocument
 
@@ -119,7 +141,7 @@ TOHW_m_dom_contents(`
 
     np => doc%firstChild
     ! if not associated internal error
-
+    ! FIXME DONT NEED STACK
     call append(np_stack, np)
     ascending = .false.
     do
