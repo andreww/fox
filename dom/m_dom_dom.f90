@@ -1153,10 +1153,64 @@ endif
     
   end function hasAttributes
   
-  subroutine normalize(arg)
-    type(Node), intent(inout) :: arg
+  recursive subroutine normalize(arg, ex)
+    type(DOMException), intent(inout), optional :: ex
+    type(Node), pointer :: arg
+  ! NB only ever one level of recursion, for text children of the attributes of an element
+
+    type(Node), pointer :: this, tempNode
+    type(NamedNodeMap), pointer :: nnm
+    integer :: i
+    logical :: noChild
+    character, pointer :: temp(:)
     
-    ! FIXME implement
+    ! This ignores readonly status according to the DOM standard.
+
+    noChild = .false.
+    do
+      if (noChild) then
+        if (associated(this, arg)) exit
+        if (associated(this%nextSibling)) then
+          this => this%nextSibling
+          noChild = .false.
+        else
+          this => this%parentNode
+          cycle
+        endif
+      endif
+      if (associated(tempNode)) then
+        tempNode => removeChild(tempNode%parentNode, tempNode)
+        tempNode => null()
+      endif
+      if (this%nodeType==ELEMENT_NODE.and.hasAttributes(this)) then
+        ! Loop over attributes combining them ...
+        nnm => getAttributes(this)
+        do i = 1, getLength(nnm)
+          tempNode => item(nnm, i)
+          call normalize(tempNode)
+        enddo
+        tempNode => null()
+      elseif (this%nodeType==TEXT_NODE.and.associated(this%nextSibling)) then
+        ! Keep going until all adjacent TEXT_NODEs are consumed.
+        do while (this%nextSibling%nodeType==TEXT_NODE) 
+          temp => this%nodeValue
+          this%nodeValue => vs_str_alloc(str_vs(temp)//getData(this%nextSibling))
+	  deallocate(temp)
+          tempNode => removeChild(this%parentNode, this%nextSibling)
+        enddo
+        tempNode => null()
+        if (size(this%nodeValue)==0) &
+          tempNode => this
+      endif
+      if (associated(this%firstChild)) then
+        this => this%firstChild
+      else
+        noChild = .true.
+      endif
+    enddo
+ 
+    tempNode => removeChild(tempNode%parentNode, tempNode)
+
   end subroutine normalize
 
   function isSupported(arg, feature, version) result(p)
