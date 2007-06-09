@@ -2103,14 +2103,36 @@ endif
 
   end function createProcessingInstruction
 
-  function createAttribute(doc, name) result(np)
+  function createAttribute(doc, name, ex)result(np) 
+    type(DOMException), intent(inout), optional :: ex
     type(Node), pointer :: doc
     character(len=*), intent(in) :: name
     type(Node), pointer :: np
 
     if (doc%nodeType/=DOCUMENT_NODE) then
-      ! FIXME throw an error
-      continue
+      call throw_exception(FoX_INVALID_NODE, "createAttribute", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    elseif (.not.checkChars(name, doc%xds%xml_version)) then
+      call throw_exception(INVALID_CHARACTER_ERR, "createAttribute", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    elseif (.not.checkName(name, doc%xds)) then
+      call throw_exception(FoX_INVALID_XML_NAME, "createAttribute", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
     endif
   
     np => createAttributeNS(doc, name, "")

@@ -198,14 +198,17 @@ TOHW_m_dom_contents(`
 
   end function createProcessingInstruction
 
-  function createAttribute(doc, name) result(np)
+  TOHW_function(createAttribute, (doc, name), np)
     type(Node), pointer :: doc
     character(len=*), intent(in) :: name
     type(Node), pointer :: np
 
     if (doc%nodeType/=DOCUMENT_NODE) then
-      ! FIXME throw an error
-      continue
+      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
+    elseif (.not.checkChars(name, doc%xds%xml_version)) then
+      TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
+    elseif (.not.checkName(name, doc%xds)) then
+      TOHW_m_dom_throw_error(FoX_INVALID_XML_NAME)
     endif
   
     np => createAttributeNS(doc, name, "")
