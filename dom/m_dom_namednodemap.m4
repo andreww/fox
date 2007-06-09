@@ -157,7 +157,7 @@ TOHW_m_dom_contents(`
     if (index<0 .or. index>map%list%length-1) then
       np => null()
     else
-      np => map%list%nodes(index)%this
+      np => map%list%nodes(index+1)%this
     endif
 
    end function item_nnm

@@ -1297,10 +1297,13 @@ endif
     integer, intent(in) :: index
     type(Node), pointer :: np
 
-!    if (index > list%length) &
-!      FIXME raise an error
+    print*,"ITEM", index
 
-    np => list%nodes(index)%this
+    if (index>=0.and.index<list%length)  then
+      np => list%nodes(index+1)%this
+    else
+      np => null()
+    endif
 
   end function item_nl
 
@@ -1532,7 +1535,7 @@ endif
     if (index<0 .or. index>map%list%length-1) then
       np => null()
     else
-      np => map%list%nodes(index)%this
+      np => map%list%nodes(index+1)%this
     endif
 
    end function item_nnm
