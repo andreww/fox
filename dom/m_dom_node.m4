@@ -89,7 +89,7 @@ TOHW_m_dom_contents(`
   end function getParentNode
   
   function getChildNodes(arg) result(nl)
-    type(Node), intent(in) :: arg
+    type(Node), pointer :: arg
     type(NodeList), pointer :: nl
 
     nl => arg%childnodes

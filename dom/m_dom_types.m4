@@ -58,7 +58,7 @@ TOHW_m_dom_publics(`
     type(Node), pointer :: nextSibling     => null()
     type(Node), pointer :: ownerDocument   => null()
     type(NamedNodeMap) :: attributes
-    type(NodeList), pointer :: childNodes  => null()  ! New
+    type(NodeList) :: childNodes
     ! Introduced in DOM Level 2:
     character, pointer, dimension(:) :: namespaceURI => null()
     character, pointer, dimension(:) :: prefix => null()
@@ -141,6 +141,9 @@ TOHW_m_dom_contents(`
     np%nodeType = nodeType
     np%nodeName => vs_str_alloc(nodeName)
     np%nodeValue => vs_str_alloc(nodeValue)
+
+    allocate(np%childNodes%nodes(0))
+
   end function createNode
 
   recursive subroutine destroyNode(np)
