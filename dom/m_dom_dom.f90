@@ -2295,7 +2295,7 @@ endif
     type(Node), pointer :: doc
     character(len=*), intent(in) :: namespaceURI, qualifiedName
     type(Node), pointer :: np
-  
+
     if (doc%nodeType/=DOCUMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "createElementNS", ex)
 if (present(ex)) then
@@ -2339,7 +2339,7 @@ if (present(ex)) then
 endif
 
     ! FIXME is this all possible errors?
-    ! what if prefix = "xmlns"? or other "xml"
+      ! what if prefix = "xmlns"? or other "xml"
     endif
 
     ! FIXME create a namespace node for XPath?
@@ -2351,14 +2351,56 @@ endif
 
   end function createElementNS
   
-  function createAttributeNS(doc, namespaceURI,  qualifiedname) result(np)
+  function createAttributeNS(doc, namespaceURI, qualifiedname, ex)result(np) 
+    type(DOMException), intent(inout), optional :: ex
     type(Node), pointer :: doc
     character(len=*), intent(in) :: namespaceURI, qualifiedName
     type(Node), pointer :: np
 
     if (doc%nodeType/=DOCUMENT_NODE) then
-      ! FIXME throw an error
-      continue
+      call throw_exception(FoX_INVALID_NODE, "createAttributeNS", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    elseif (.not.checkChars(qualifiedName, doc%xds%xml_version)) then
+      call throw_exception(INVALID_CHARACTER_ERR, "createAttributeNS", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    elseif (.not.checkQName(qualifiedName, doc%xds)) then
+      call throw_exception(NAMESPACE_ERR, "createAttributeNS", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    elseif (prefixOfQName(qualifiedName)/="" &
+     .and. namespaceURI=="") then
+      call throw_exception(NAMESPACE_ERR, "createAttributeNS", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    elseif (prefixOfQName(qualifiedName)=="xml" .and. &
+      namespaceURI/="http://www.w3.org/XML/1998/namespace") then
+      call throw_exception(NAMESPACE_ERR, "createAttributeNS", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    ! FIXME is this all possible errors?
+      ! what if prefix = "xmlns"? or other "xml"
     endif
   
     np => createNode(doc, ATTRIBUTE_NODE, qualifiedName, "")

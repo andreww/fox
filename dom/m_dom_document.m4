@@ -324,7 +324,7 @@ TOHW_m_dom_contents(`
     type(Node), pointer :: doc
     character(len=*), intent(in) :: namespaceURI, qualifiedName
     type(Node), pointer :: np
-  
+
     if (doc%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     elseif (.not.checkChars(qualifiedName, doc%xds%xml_version)) then
@@ -338,7 +338,7 @@ TOHW_m_dom_contents(`
       namespaceURI/="http://www.w3.org/XML/1998/namespace") then
       TOHW_m_dom_throw_error(NAMESPACE_ERR)
     ! FIXME is this all possible errors?
-    ! what if prefix = "xmlns"? or other "xml"
+      ! what if prefix = "xmlns"? or other "xml"
     endif
 
     ! FIXME create a namespace node for XPath?
@@ -350,14 +350,25 @@ TOHW_m_dom_contents(`
 
   end function createElementNS
   
-  function createAttributeNS(doc, namespaceURI,  qualifiedname) result(np)
+  TOHW_function(createAttributeNS, (doc, namespaceURI,  qualifiedname), np)
     type(Node), pointer :: doc
     character(len=*), intent(in) :: namespaceURI, qualifiedName
     type(Node), pointer :: np
 
     if (doc%nodeType/=DOCUMENT_NODE) then
-      ! FIXME throw an error
-      continue
+      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
+    elseif (.not.checkChars(qualifiedName, doc%xds%xml_version)) then
+      TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
+    elseif (.not.checkQName(qualifiedName, doc%xds)) then
+      TOHW_m_dom_throw_error(NAMESPACE_ERR)
+    elseif (prefixOfQName(qualifiedName)/="" &
+     .and. namespaceURI=="") then
+      TOHW_m_dom_throw_error(NAMESPACE_ERR)
+    elseif (prefixOfQName(qualifiedName)=="xml" .and. &
+      namespaceURI/="http://www.w3.org/XML/1998/namespace") then
+      TOHW_m_dom_throw_error(NAMESPACE_ERR)
+    ! FIXME is this all possible errors?
+      ! what if prefix = "xmlns"? or other "xml"
     endif
   
     np => createNode(doc, ATTRIBUTE_NODE, qualifiedName, "")
