@@ -30,12 +30,14 @@ module m_dom_error
   integer, parameter, public :: VALIDATION_ERR              = 16
   integer, parameter, public :: TYPE_MISMATCH_ERR           = 17
 
+  integer, parameter, public :: FoX_INVALID_CHARACTER       = 200
   integer, parameter, public :: FoX_INVALID_NODE            = 201
   integer, parameter, public :: FoX_INVALID_XML_NAME        = 202
   integer, parameter, public :: FoX_INVALID_PI_TARGET       = 203
   integer, parameter, public :: FoX_INVALID_CDATA_SECTION   = 204
-  integer, parameter, public :: FoX_INVALID_PUBLIC_ID       = 205
-  integer, parameter, public :: FoX_INVALID_SYSTEM_ID       = 206
+  integer, parameter, public :: FoX_INVALID_TEXT            = 205
+  integer, parameter, public :: FoX_INVALID_PUBLIC_ID       = 206
+  integer, parameter, public :: FoX_INVALID_SYSTEM_ID       = 207
 
   character(len=27), dimension(0:17), parameter :: errorString = (/ &
     "XMLF90_ERR                 ", &

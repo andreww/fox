@@ -36,7 +36,7 @@ module m_dom_dom
   use m_common_array_str, only: str_vs, vs_str_alloc
   use m_common_namecheck, only: prefixOfQName, localPartOfQName
   use m_dom_error, only : NOT_FOUND_ERR, INVALID_CHARACTER_ERR, FoX_INVALID_NODE, &
-    FoX_INVALID_XML_NAME, WRONG_DOCUMENT_ERR
+    FoX_INVALID_XML_NAME, WRONG_DOCUMENT_ERR, FoX_INVALID_TEXT, FoX_INVALID_CHARACTER
 
 
 
@@ -1960,33 +1960,63 @@ endif
   
   end function createElement
     
-  function createDocumentFragment(doc) result(np)
+  function createDocumentFragment(doc, ex)result(np) 
+    type(DOMException), intent(inout), optional :: ex
     type(Node), pointer :: doc
     type(Node), pointer :: np
 
     if (doc%nodeType/=DOCUMENT_NODE) then
-      ! FIXME throw an error
-      continue
+      call throw_exception(FoX_INVALID_NODE, "createDocumentFragment", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+
+     return
+  endif
+endif
+
     endif
     
     np => createNode(doc, DOCUMENT_FRAGMENT_NODE, "", "")
     
   end function createDocumentFragment
 
-  function createTextNode(doc, data) result(np)
+  function createTextNode(doc, data, ex)result(np) 
+    type(DOMException), intent(inout), optional :: ex
     type(Node), pointer :: doc
     character(len=*), intent(in) :: data
     type(Node), pointer :: np
 
     if (doc%nodeType/=DOCUMENT_NODE) then
-      ! FIXME throw an error
-      continue
-    endif
-    
-    np => createNode(doc, TEXT_NODE, "#text", data)
+      call throw_exception(FoX_INVALID_NODE, "createTextNode", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
 
-    ! No exceptions - but what if invalid chars? FIXME
-    
+     return
+  endif
+endif
+
+    elseif (.not.checkChars(data, doc%xds%xml_version)) then
+      call throw_exception(FoX_INVALID_CHARACTER, "createTextNode", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+
+     return
+  endif
+endif
+
+    elseif (scan(data,"&<")>0) then   
+      call throw_exception(FoX_INVALID_TEXT, "createTextNode", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+
+     return
+  endif
+endif
+
+    endif
+
+    np => createNode(doc, TEXT_NODE, "#text", data)
+   
   end function createTextNode
 
   function createComment(doc, data) result(np)

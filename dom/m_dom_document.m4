@@ -3,7 +3,7 @@ TOHW_m_dom_imports(`
   use m_common_array_str, only: str_vs, vs_str_alloc
   use m_common_namecheck, only: prefixOfQName, localPartOfQName
   use m_dom_error, only : NOT_FOUND_ERR, INVALID_CHARACTER_ERR, FoX_INVALID_NODE, &
-    FoX_INVALID_XML_NAME, WRONG_DOCUMENT_ERR
+    FoX_INVALID_XML_NAME, WRONG_DOCUMENT_ERR, FoX_INVALID_TEXT, FoX_INVALID_CHARACTER
 
 ')`'dnl
 dnl
@@ -111,33 +111,33 @@ TOHW_m_dom_contents(`
   
   end function createElement
     
-  function createDocumentFragment(doc) result(np)
+  TOHW_function(createDocumentFragment, (doc), np)
     type(Node), pointer :: doc
     type(Node), pointer :: np
 
     if (doc%nodeType/=DOCUMENT_NODE) then
-      ! FIXME throw an error
-      continue
+      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
     
     np => createNode(doc, DOCUMENT_FRAGMENT_NODE, "", "")
     
   end function createDocumentFragment
 
-  function createTextNode(doc, data) result(np)
+  TOHW_function(createTextNode, (doc, data), np)
     type(Node), pointer :: doc
     character(len=*), intent(in) :: data
     type(Node), pointer :: np
 
     if (doc%nodeType/=DOCUMENT_NODE) then
-      ! FIXME throw an error
-      continue
+      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
+    elseif (.not.checkChars(data, doc%xds%xml_version)) then
+      TOHW_m_dom_throw_error(FoX_INVALID_CHARACTER)
+    elseif (scan(data,"&<")>0) then   
+      TOHW_m_dom_throw_error(FoX_INVALID_TEXT)
     endif
-    
-    np => createNode(doc, TEXT_NODE, "#text", data)
 
-    ! No exceptions - but what if invalid chars? FIXME
-    
+    np => createNode(doc, TEXT_NODE, "#text", data)
+   
   end function createTextNode
 
   function createComment(doc, data) result(np)
