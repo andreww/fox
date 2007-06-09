@@ -4,7 +4,7 @@ TOHW_m_dom_imports(`
   use m_common_array_str, only: str_vs, vs_str_alloc
   use m_dom_error, only: DOMException, throw_exception, is_in_error, &
     NO_MODIFICATION_ALLOWED_ERR, NOT_FOUND_ERR, HIERARCHY_REQUEST_ERR, &
-    WRONG_DOCUMENT_ERR
+    WRONG_DOCUMENT_ERR, dom_error
 
 ')`'dnl
 dnl
@@ -460,14 +460,14 @@ TOHW_m_dom_contents(`
             np_a2 => createAttributeNS(this%ownerDocument, &
               str_vs(np_a1%namespaceURI), str_vs(np_a1%localName))
             call setValue(new, getValue(np_a1))
-            call setSpecified(np_a2, np_a1%specified)
+            np_a2%specified = np_a1%specified
             np_a2 => setAttributeNodeNS(np, np_a2)
           end do
         case (ATTRIBUTE_NODE)
           new => createAttributeNS(this%ownerDocument, &
             str_vs(this%namespaceURI), str_vs(this%localName))
           call setValue(new, getValue(np_a2))
-          call setSpecified(new, .true.)
+          new%specified = .true.
         case (TEXT_NODE)
           new => createTextNode(this%ownerDocument, str_vs(this%nodeValue))
         case (CDATA_SECTION_NODE)
