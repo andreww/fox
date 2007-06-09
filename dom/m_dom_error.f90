@@ -87,7 +87,7 @@ contains
       call add_error(ex%stack, msg, 0) ! FIXME
     else
       write(0,'(a)') errorString(code)
-      write(0,'(a)') msg
+      write(0,'(i0,a)') code, " "//msg
       call pxfabort()
     endif
       

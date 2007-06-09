@@ -2086,14 +2086,6 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (scan(data,"&<")>0) then   
-      call throw_exception(FoX_INVALID_TEXT, "createTextNode", ex)
-if (present(ex)) then
-  if (is_in_error(ex)) then
-     return
-  endif
-endif
-
     endif
 
     np => createNode(doc, TEXT_NODE, "#text", data)

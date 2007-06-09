@@ -134,8 +134,6 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     elseif (.not.checkChars(data, doc%xds%xml_version)) then
       TOHW_m_dom_throw_error(FoX_INVALID_CHARACTER)
-    elseif (scan(data,"&<")>0) then   
-      TOHW_m_dom_throw_error(FoX_INVALID_TEXT)
     endif
 
     np => createNode(doc, TEXT_NODE, "#text", data)
