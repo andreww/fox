@@ -57,6 +57,7 @@ module m_dom_dom
 
 
   use m_common_array_str, only: str_vs, vs_str_alloc
+  use m_dom_error, only: INDEX_SIZE_ERR
 
 
 
@@ -3085,7 +3086,8 @@ endif
   end function getLength_characterdata
 
 
-  function subStringData(arg, offset, count) result(c)
+  function subStringData(arg, offset, count, ex)result(c) 
+    type(DOMException), intent(inout), optional :: ex
     type(Node), intent(in) :: arg
     integer, intent(in) :: offset
     integer, intent(in) :: count
@@ -3093,6 +3095,16 @@ endif
 
     ! FIXME error if offset/count are out of range
     
+    if (offset<0 .or. count<0) then
+      call throw_exception(INDEX_SIZE_ERR, "subStringData", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
     if (isCharData(arg%nodeType)) then
       c = str_vs(arg%nodeValue(offset:offset+count-1))
     else
@@ -3102,25 +3114,41 @@ endif
   end function subStringData
 
 
-  subroutine appendData(arg, data)
+  subroutine appendData(arg, data, ex)
+    type(DOMException), intent(inout), optional :: ex
     type(Node), intent(inout) :: arg
     character(len=*), intent(in) :: data
     
     character, pointer :: tmp(:)
-    
+
     if (isCharData(arg%nodeType)) then
-      tmp => arg%nodeValue
-      arg%nodeValue => vs_str_alloc(str_vs(tmp)//data)
-      deallocate(tmp)
-    else
-      continue
-      ! FIXME error
-    endif  
+      call throw_exception(FoX_INVALID_NODE, "appendData", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    elseif (arg%readonly) then
+      call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "appendData", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+  !FIXME what if data is wrong for node type    
+
+    tmp => arg%nodeValue
+    arg%nodeValue => vs_str_alloc(str_vs(tmp)//data)
+    deallocate(tmp)
 
   end subroutine appendData
   
 
-  subroutine insertData(arg, offset, data)
+  subroutine insertData(arg, offset, data, ex)
+    type(DOMException), intent(inout), optional :: ex
     type(Node), intent(inout) :: arg
     integer, intent(in) :: offset
     character(len=*), intent(in) :: data
@@ -3128,38 +3156,83 @@ endif
     character, pointer :: tmp(:)
 
     if (isCharData(arg%nodeType)) then
-      tmp => arg%nodeValue
-      arg%nodeValue => vs_str_alloc(str_vs(tmp(:offset))//data//str_vs(tmp(offset+1:)))
-      deallocate(tmp)
-    else
-      continue
-      ! FIXME error
+      call throw_exception(FoX_INVALID_NODE, "insertData", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    elseif (arg%readonly) then
+      call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "insertData", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    elseif (offset<0) then
+      call throw_exception(INDEX_SIZE_ERR, "insertData", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
     endif
+  !FIXME what if data is wrong for node type    
+
+    tmp => arg%nodeValue
+    arg%nodeValue => vs_str_alloc(str_vs(tmp(:offset))//data//str_vs(tmp(offset+1:)))
+    deallocate(tmp)
 
   end subroutine insertData
 
 
-  subroutine deleteData(arg, offset, count)
+  subroutine deleteData(arg, offset, count, ex)
+    type(DOMException), intent(inout), optional :: ex
     type(Node), intent(inout) :: arg
     integer, intent(in) :: offset
     integer, intent(in) :: count
 
     character, pointer :: tmp(:)
 
-    ! FIXME offset/count check
-    
     if (isCharData(arg%nodeType)) then
-      tmp => arg%nodeValue
-      arg%nodeValue => vs_str_alloc(str_vs(tmp(:offset))//str_vs(tmp(offset+count:)))
-      deallocate(tmp)
-    else
-      continue
-      ! FIXME error
+      call throw_exception(FoX_INVALID_NODE, "deleteData", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    elseif (arg%readonly) then
+      call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "deleteData", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    elseif (offset<0 .or. count<0) then
+      call throw_exception(INDEX_SIZE_ERR, "deleteData", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
     endif
+   ! FIXME offset/count check
+    
+    tmp => arg%nodeValue
+    arg%nodeValue => vs_str_alloc(str_vs(tmp(:offset))//str_vs(tmp(offset+count:)))
+    deallocate(tmp)
+
   end subroutine deleteData
 
 
-  subroutine replaceData(arg, offset, count, data)
+  subroutine replaceData(arg, offset, count, data, ex)
+    type(DOMException), intent(inout), optional :: ex
     type(Node), intent(inout) :: arg
     integer, intent(in) :: offset
     integer, intent(in) :: count

@@ -1,6 +1,7 @@
 TOHW_m_dom_imports(`
 
   use m_common_array_str, only: str_vs, vs_str_alloc
+  use m_dom_error, only: INDEX_SIZE_ERR
 
 ')`'dnl
 dnl
@@ -44,7 +45,7 @@ TOHW_m_dom_contents(`
   end function getLength_characterdata
 
 
-  function subStringData(arg, offset, count) result(c)
+  TOHW_function(subStringData, (arg, offset, count), c)
     type(Node), intent(in) :: arg
     integer, intent(in) :: offset
     integer, intent(in) :: count
@@ -52,6 +53,10 @@ TOHW_m_dom_contents(`
 
     ! FIXME error if offset/count are out of range
     
+    if (offset<0 .or. count<0) then
+      TOHW_m_dom_throw_error(INDEX_SIZE_ERR)
+    endif
+
     if (isCharData(arg%nodeType)) then
       c = str_vs(arg%nodeValue(offset:offset+count-1))
     else
@@ -61,25 +66,27 @@ TOHW_m_dom_contents(`
   end function subStringData
 
 
-  subroutine appendData(arg, data)
+  TOHW_subroutine(appendData, (arg, data))
     type(Node), intent(inout) :: arg
     character(len=*), intent(in) :: data
     
     character, pointer :: tmp(:)
-    
+
     if (isCharData(arg%nodeType)) then
-      tmp => arg%nodeValue
-      arg%nodeValue => vs_str_alloc(str_vs(tmp)//data)
-      deallocate(tmp)
-    else
-      continue
-      ! FIXME error
-    endif  
+      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
+    elseif (arg%readonly) then
+      TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
+    endif
+  !FIXME what if data is wrong for node type    
+
+    tmp => arg%nodeValue
+    arg%nodeValue => vs_str_alloc(str_vs(tmp)//data)
+    deallocate(tmp)
 
   end subroutine appendData
   
 
-  subroutine insertData(arg, offset, data)
+  TOHW_subroutine(insertData, (arg, offset, data))
     type(Node), intent(inout) :: arg
     integer, intent(in) :: offset
     character(len=*), intent(in) :: data
@@ -87,38 +94,45 @@ TOHW_m_dom_contents(`
     character, pointer :: tmp(:)
 
     if (isCharData(arg%nodeType)) then
-      tmp => arg%nodeValue
-      arg%nodeValue => vs_str_alloc(str_vs(tmp(:offset))//data//str_vs(tmp(offset+1:)))
-      deallocate(tmp)
-    else
-      continue
-      ! FIXME error
+      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
+    elseif (arg%readonly) then
+      TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
+    elseif (offset<0) then
+      TOHW_m_dom_throw_error(INDEX_SIZE_ERR)
     endif
+  !FIXME what if data is wrong for node type    
+
+    tmp => arg%nodeValue
+    arg%nodeValue => vs_str_alloc(str_vs(tmp(:offset))//data//str_vs(tmp(offset+1:)))
+    deallocate(tmp)
 
   end subroutine insertData
 
 
-  subroutine deleteData(arg, offset, count)
+  TOHW_subroutine(deleteData, (arg, offset, count))
     type(Node), intent(inout) :: arg
     integer, intent(in) :: offset
     integer, intent(in) :: count
 
     character, pointer :: tmp(:)
 
-    ! FIXME offset/count check
-    
     if (isCharData(arg%nodeType)) then
-      tmp => arg%nodeValue
-      arg%nodeValue => vs_str_alloc(str_vs(tmp(:offset))//str_vs(tmp(offset+count:)))
-      deallocate(tmp)
-    else
-      continue
-      ! FIXME error
+      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
+    elseif (arg%readonly) then
+      TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
+    elseif (offset<0 .or. count<0) then
+      TOHW_m_dom_throw_error(INDEX_SIZE_ERR)
     endif
+   ! FIXME offset/count check
+    
+    tmp => arg%nodeValue
+    arg%nodeValue => vs_str_alloc(str_vs(tmp(:offset))//str_vs(tmp(offset+count:)))
+    deallocate(tmp)
+
   end subroutine deleteData
 
 
-  subroutine replaceData(arg, offset, count, data)
+  TOHW_subroutine(replaceData, (arg, offset, count, data))
     type(Node), intent(inout) :: arg
     integer, intent(in) :: offset
     integer, intent(in) :: count
