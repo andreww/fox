@@ -210,7 +210,7 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(FoX_INVALID_XML_NAME)
     endif
   
-    np => createAttributeNS(doc, name, "")
+    np => createAttributeNS(doc, "", name)
   
   end function createAttribute
 
@@ -353,6 +353,8 @@ TOHW_m_dom_contents(`
     type(Node), pointer :: doc
     character(len=*), intent(in) :: namespaceURI, qualifiedName
     type(Node), pointer :: np
+
+    print*,"creatingattributens", qualifiedName, checkQName(qualifiedName, doc%xds)
 
     if (doc%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)

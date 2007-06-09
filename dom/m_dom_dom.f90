@@ -2250,7 +2250,7 @@ endif
 
     endif
   
-    np => createAttributeNS(doc, name, "")
+    np => createAttributeNS(doc, "", name)
   
   end function createAttribute
 
@@ -2470,6 +2470,8 @@ endif
     type(Node), pointer :: doc
     character(len=*), intent(in) :: namespaceURI, qualifiedName
     type(Node), pointer :: np
+
+    print*,"creatingattributens", qualifiedName, checkQName(qualifiedName, doc%xds)
 
     if (doc%nodeType/=DOCUMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "createAttributeNS", ex)
