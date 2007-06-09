@@ -36,7 +36,9 @@ module m_dom_dom
   use m_common_array_str, only: str_vs, vs_str_alloc
   use m_common_namecheck, only: prefixOfQName, localPartOfQName
   use m_dom_error, only : NOT_FOUND_ERR, INVALID_CHARACTER_ERR, FoX_INVALID_NODE, &
-    FoX_INVALID_XML_NAME, WRONG_DOCUMENT_ERR, FoX_INVALID_TEXT, FoX_INVALID_CHARACTER
+    FoX_INVALID_XML_NAME, WRONG_DOCUMENT_ERR, FoX_INVALID_TEXT, & 
+    FoX_INVALID_CHARACTER, FoX_INVALID_COMMENT, FoX_INVALID_CDATA_SECTION, &
+    FoX_INVALID_PI_DATA
 
 
 
@@ -527,7 +529,6 @@ contains
       call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setNodeValue", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
-
      return
   endif
 endif
@@ -622,7 +623,6 @@ endif
       call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "insertBefore", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
-
      return
   endif
 endif
@@ -644,7 +644,6 @@ endif
         call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
-
      return
   endif
 endif
@@ -655,7 +654,6 @@ endif
         call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
-
      return
   endif
 endif
@@ -668,7 +666,6 @@ endif
         call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
-
      return
   endif
 endif
@@ -683,7 +680,6 @@ endif
         call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
-
      return
   endif
 endif
@@ -692,7 +688,6 @@ endif
       call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
-
      return
   endif
 endif
@@ -703,7 +698,6 @@ endif
       call throw_exception(WRONG_DOCUMENT_ERR, "insertBefore", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
-
      return
   endif
 endif
@@ -735,7 +729,6 @@ endif
     call throw_exception(NOT_FOUND_ERR, "insertBefore", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
-
      return
   endif
 endif
@@ -757,7 +750,6 @@ endif
       call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "replaceChild", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
-
      return
   endif
 endif
@@ -777,7 +769,6 @@ endif
         call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
-
      return
   endif
 endif
@@ -788,7 +779,6 @@ endif
         call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
-
      return
   endif
 endif
@@ -801,7 +791,6 @@ endif
         call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
-
      return
   endif
 endif
@@ -816,7 +805,6 @@ endif
         call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
-
      return
   endif
 endif
@@ -825,7 +813,6 @@ endif
       call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
-
      return
   endif
 endif
@@ -836,7 +823,6 @@ endif
       call throw_exception(WRONG_DOCUMENT_ERR, "replaceChild", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
-
      return
   endif
 endif
@@ -874,7 +860,6 @@ endif
     call throw_exception(NOT_FOUND_ERR, "replaceChild", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
-
      return
   endif
 endif
@@ -894,7 +879,6 @@ endif
       call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "removeChild", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
-
      return
   endif
 endif
@@ -934,7 +918,6 @@ endif
     call throw_exception(NOT_FOUND_ERR, "removeChild", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
-
      return
   endif
 endif
@@ -953,7 +936,6 @@ endif
       call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "appendChild", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
-
      return
   endif
 endif
@@ -974,7 +956,6 @@ endif
         call throw_exception(HIERARCHY_REQUEST_ERR, "appendChild", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
-
      return
   endif
 endif
@@ -985,7 +966,6 @@ endif
         call throw_exception(HIERARCHY_REQUEST_ERR, "appendChild", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
-
      return
   endif
 endif
@@ -998,7 +978,6 @@ endif
         call throw_exception(HIERARCHY_REQUEST_ERR, "appendChild", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
-
      return
   endif
 endif
@@ -1013,7 +992,6 @@ endif
         call throw_exception(HIERARCHY_REQUEST_ERR, "appendChild", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
-
      return
   endif
 endif
@@ -1022,7 +1000,6 @@ endif
       call throw_exception(HIERARCHY_REQUEST_ERR, "appendChild", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
-
      return
   endif
 endif
@@ -1033,7 +1010,6 @@ endif
       call throw_exception(WRONG_DOCUMENT_ERR, "appendChild", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
-
      return
   endif
 endif
@@ -1656,7 +1632,6 @@ if (present(ex)) then
   if (is_in_error(ex)) then
 
 if (associated(dt%xds)) deallocate(dt%xds)
-
      return
   endif
 endif
@@ -1669,7 +1644,6 @@ if (present(ex)) then
   if (is_in_error(ex)) then
 
 if (associated(dt%xds)) deallocate(dt%xds)
-
      return
   endif
 endif
@@ -1681,7 +1655,6 @@ if (present(ex)) then
   if (is_in_error(ex)) then
 
 if (associated(dt%xds)) deallocate(dt%xds)
-
      return
   endif
 endif
@@ -1692,7 +1665,6 @@ if (present(ex)) then
   if (is_in_error(ex)) then
 
 if (associated(dt%xds)) deallocate(dt%xds)
-
      return
   endif
 endif
@@ -1828,7 +1800,6 @@ endif
       call throw_exception(FoX_INVALID_NODE, "getDocumentType", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
-
      return
   endif
 endif
@@ -1848,7 +1819,6 @@ endif
       call throw_exception(FoX_INVALID_NODE, "getImplementation", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
-
      return
   endif
 endif
@@ -1868,7 +1838,6 @@ endif
       call throw_exception(FoX_INVALID_NODE, "getDocumentElement", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
-
      return
   endif
 endif
@@ -1889,7 +1858,6 @@ endif
       call throw_exception(FoX_INVALID_NODE, "setDocumentElement", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
-
      return
   endif
 endif
@@ -1898,7 +1866,6 @@ endif
       call throw_exception(FoX_INVALID_NODE, "setDocumentElement", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
-
      return
   endif
 endif
@@ -1907,7 +1874,6 @@ endif
       call throw_exception(WRONG_DOCUMENT_ERR, "setDocumentElement", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
-
      return
   endif
 endif
@@ -1930,7 +1896,6 @@ endif
       call throw_exception(FoX_INVALID_NODE, "createElement", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
-
      return
   endif
 endif
@@ -1939,7 +1904,6 @@ endif
       call throw_exception(INVALID_CHARACTER_ERR, "createElement", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
-
      return
   endif
 endif
@@ -1949,7 +1913,6 @@ endif
       call throw_exception(FoX_INVALID_XML_NAME, "createElement", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
-
      return
   endif
 endif
@@ -1969,7 +1932,6 @@ endif
       call throw_exception(FoX_INVALID_NODE, "createDocumentFragment", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
-
      return
   endif
 endif
@@ -1990,7 +1952,6 @@ endif
       call throw_exception(FoX_INVALID_NODE, "createTextNode", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
-
      return
   endif
 endif
@@ -1999,7 +1960,6 @@ endif
       call throw_exception(FoX_INVALID_CHARACTER, "createTextNode", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
-
      return
   endif
 endif
@@ -2008,7 +1968,6 @@ endif
       call throw_exception(FoX_INVALID_TEXT, "createTextNode", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
-
      return
   endif
 endif
@@ -2019,50 +1978,127 @@ endif
    
   end function createTextNode
 
-  function createComment(doc, data) result(np)
+  function createComment(doc, data, ex)result(np) 
+    type(DOMException), intent(inout), optional :: ex
     type(Node), pointer :: doc
     character(len=*), intent(in) :: data
     type(Node), pointer :: np
 
     if (doc%nodeType/=DOCUMENT_NODE) then
-      ! FIXME throw an error
-      continue
+      call throw_exception(FoX_INVALID_NODE, "createComment", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    elseif (.not.checkChars(data, doc%xds%xml_version)) then
+      call throw_exception(FoX_INVALID_CHARACTER, "createComment", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    elseif (-1>0) then   
+      call throw_exception(FoX_INVALID_COMMENT, "createComment", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
     endif
   
     np => createNode(doc, COMMENT_NODE, "#comment", data)
 
-    ! No exceptions - but what if invalid chars or --? FIXME
-  
   end function createComment
 
-  function createCdataSection(doc, data) result(np)
+  function createCdataSection(doc, data, ex)result(np) 
+    type(DOMException), intent(inout), optional :: ex
     type(Node), pointer :: doc
     character(len=*), intent(in) :: data
     type(Node), pointer :: np
 
     if (doc%nodeType/=DOCUMENT_NODE) then
-      ! FIXME throw an error
-      continue
+      call throw_exception(FoX_INVALID_NODE, "createCdataSection", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    elseif (.not.checkChars(data, doc%xds%xml_version)) then
+      call throw_exception(FoX_INVALID_CHARACTER, "createCdataSection", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    elseif (-1>0) then   
+      call throw_exception(FoX_INVALID_CDATA_SECTION, "createCdataSection", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
     endif
   
     np => createNode(doc, CDATA_SECTION_NODE, "#text", data)
-
-    ! No exceptions - but what if invalid chars or --? FIXME
   
   end function createCdataSection
 
-  function createProcessingInstruction(doc, target, data) result(np)
+  function createProcessingInstruction(doc, target, data, ex)result(np) 
+    type(DOMException), intent(inout), optional :: ex
     type(Node), pointer :: doc
     character(len=*), intent(in) :: target
     character(len=*), intent(in) :: data
     type(Node), pointer :: np
 
     if (doc%nodeType/=DOCUMENT_NODE) then
-      ! FIXME throw an error
-      continue
+      call throw_exception(FoX_INVALID_NODE, "createProcessingInstruction", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    elseif (.not.checkChars(target, doc%xds%xml_version)) then
+      call throw_exception(INVALID_CHARACTER_ERR, "createProcessingInstruction", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    elseif (.not.checkChars(data, doc%xds%xml_version)) then
+      call throw_exception(FoX_INVALID_CHARACTER, "createProcessingInstruction", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    elseif (.not.checkName(data, doc%xds)) then
+      call throw_exception(FoX_INVALID_XML_NAME, "createProcessingInstruction", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    elseif (-1>0) then   
+      call throw_exception(FoX_INVALID_PI_DATA, "createProcessingInstruction", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
     endif
 
-    ! check target for legal chars else raise INVALID_CHARACTER_ERR
     np => createNode(doc, PROCESSING_INSTRUCTION_NODE, target, data)
 
   end function createProcessingInstruction

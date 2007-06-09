@@ -8,7 +8,7 @@ if (present(ex)) then
 ifelse($2, `', `', 
      m4_foreach(`x', `$2', `
 if (associated(x)) deallocate(x)
-'))
+'))`'dnl
      return
   endif
 endif

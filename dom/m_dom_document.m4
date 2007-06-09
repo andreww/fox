@@ -3,7 +3,9 @@ TOHW_m_dom_imports(`
   use m_common_array_str, only: str_vs, vs_str_alloc
   use m_common_namecheck, only: prefixOfQName, localPartOfQName
   use m_dom_error, only : NOT_FOUND_ERR, INVALID_CHARACTER_ERR, FoX_INVALID_NODE, &
-    FoX_INVALID_XML_NAME, WRONG_DOCUMENT_ERR, FoX_INVALID_TEXT, FoX_INVALID_CHARACTER
+    FoX_INVALID_XML_NAME, WRONG_DOCUMENT_ERR, FoX_INVALID_TEXT, & 
+    FoX_INVALID_CHARACTER, FoX_INVALID_COMMENT, FoX_INVALID_CDATA_SECTION, &
+    FoX_INVALID_PI_DATA
 
 ')`'dnl
 dnl
@@ -140,50 +142,58 @@ TOHW_m_dom_contents(`
    
   end function createTextNode
 
-  function createComment(doc, data) result(np)
+  TOHW_function(createComment, (doc, data), np)
     type(Node), pointer :: doc
     character(len=*), intent(in) :: data
     type(Node), pointer :: np
 
     if (doc%nodeType/=DOCUMENT_NODE) then
-      ! FIXME throw an error
-      continue
+      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
+    elseif (.not.checkChars(data, doc%xds%xml_version)) then
+      TOHW_m_dom_throw_error(FoX_INVALID_CHARACTER)
+    elseif (index(data,"--")>0) then   
+      TOHW_m_dom_throw_error(FoX_INVALID_COMMENT)
     endif
   
     np => createNode(doc, COMMENT_NODE, "#comment", data)
 
-    ! No exceptions - but what if invalid chars or --? FIXME
-  
   end function createComment
 
-  function createCdataSection(doc, data) result(np)
+  TOHW_function(createCdataSection, (doc, data), np)
     type(Node), pointer :: doc
     character(len=*), intent(in) :: data
     type(Node), pointer :: np
 
     if (doc%nodeType/=DOCUMENT_NODE) then
-      ! FIXME throw an error
-      continue
+      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
+    elseif (.not.checkChars(data, doc%xds%xml_version)) then
+      TOHW_m_dom_throw_error(FoX_INVALID_CHARACTER)
+    elseif (index(data,"]]>")>0) then   
+      TOHW_m_dom_throw_error(FoX_INVALID_CDATA_SECTION)
     endif
   
     np => createNode(doc, CDATA_SECTION_NODE, "#text", data)
-
-    ! No exceptions - but what if invalid chars or --? FIXME
   
   end function createCdataSection
 
-  function createProcessingInstruction(doc, target, data) result(np)
+  TOHW_function(createProcessingInstruction, (doc, target, data), np)
     type(Node), pointer :: doc
     character(len=*), intent(in) :: target
     character(len=*), intent(in) :: data
     type(Node), pointer :: np
 
     if (doc%nodeType/=DOCUMENT_NODE) then
-      ! FIXME throw an error
-      continue
+      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
+    elseif (.not.checkChars(target, doc%xds%xml_version)) then
+      TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
+    elseif (.not.checkChars(data, doc%xds%xml_version)) then
+      TOHW_m_dom_throw_error(FoX_INVALID_CHARACTER)
+    elseif (.not.checkName(data, doc%xds)) then
+      TOHW_m_dom_throw_error(FoX_INVALID_XML_NAME)
+    elseif (index(data,"?>")>0) then   
+      TOHW_m_dom_throw_error(FoX_INVALID_PI_DATA)
     endif
 
-    ! check target for legal chars else raise INVALID_CHARACTER_ERR
     np => createNode(doc, PROCESSING_INSTRUCTION_NODE, target, data)
 
   end function createProcessingInstruction
