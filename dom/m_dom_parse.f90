@@ -112,6 +112,8 @@ contains
 
     mainDoc => createEmptyDocument()
     current => mainDoc
+
+    print*,'mainDoc allocated'
   end subroutine startDocument_handler
 
   subroutine startDTD_handler(name, publicId, systemId)
@@ -120,6 +122,8 @@ contains
     character(len=*), intent(in), optional :: systemId
 
     type(Node), pointer :: np
+
+    print*,'startingDTD'
 
     np => getDocumentType(mainDoc)
     call setDocumentType(np, name, publicId, systemId)
@@ -134,6 +138,8 @@ contains
     type(Node), pointer :: np, dt
 
     type(NamedNodeMap), pointer :: notations
+
+    print*, 'adding notation'
 
     np => createNotation(mainDoc, name, publicId, systemId)
     dt => getDocumentType(mainDoc)

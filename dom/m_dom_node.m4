@@ -186,7 +186,8 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR)
     end select
 
-    if (.not.associated(arg%ownerDocument, newChild%ownerDocument)) then
+    if (.not.(associated(arg%ownerDocument, newChild%ownerDocument) &
+      .or. associated(arg, newChild%ownerDocument))) then
       TOHW_m_dom_throw_error(WRONG_DOCUMENT_ERR)
     endif
     
@@ -262,7 +263,8 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR)
     end select
 
-    if (.not.associated(arg%ownerDocument, newChild%ownerDocument)) then
+    if (.not.(associated(arg%ownerDocument, newChild%ownerDocument) &
+      .or. associated(arg, newChild%ownerDocument))) then
       TOHW_m_dom_throw_error(WRONG_DOCUMENT_ERR)
     endif
 
@@ -387,7 +389,8 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR)
     end select
 
-    if (.not.associated(arg%ownerDocument, newChild%ownerDocument)) then
+    if (.not.(associated(arg%ownerDocument, newChild%ownerDocument) &
+      .or. associated(arg, newChild%ownerDocument))) then
       TOHW_m_dom_throw_error(WRONG_DOCUMENT_ERR)
     endif
     

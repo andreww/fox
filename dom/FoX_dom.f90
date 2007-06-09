@@ -50,6 +50,7 @@ module FoX_dom
 
   ! DOM Document
   public :: createDocumentFragment
+  public :: createElement
   public :: createTextNode
   public :: createComment
   public :: createCDATASection
@@ -77,6 +78,8 @@ module FoX_dom
   public :: DOCUMENT_FRAGMENT_NODE
   public :: NOTATION_NODE
 
+  public :: getFirstChild
+  public :: getAttributes
   public :: insertBefore
   public :: replaceChild
   public :: removeChild

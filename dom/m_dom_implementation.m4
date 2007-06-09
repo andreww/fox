@@ -72,10 +72,11 @@ TOHW_m_dom_contents(`
   end function createDocumentType
 
 
-  function createEmptyDocumentType() result(dt)
+  function createEmptyDocumentType(doc) result(dt)
+    type(Node), pointer :: doc
     type(Node), pointer :: dt
 
-    dt => createNode(null(), DOCUMENT_TYPE_NODE, "", "")
+    dt => createNode(doc, DOCUMENT_TYPE_NODE, "", "")
     dt%readonly = .true.
     !dt%entities
     !dt%notations
@@ -93,7 +94,7 @@ TOHW_m_dom_contents(`
     type(Node), pointer, optional :: docType
     type(Node), pointer :: doc, dt
 
-    !FIXMEFIXMEFIXME optional arguments and errors
+     !FIXMEFIXMEFIXME optional arguments and errors
 
     doc => createNode(null(), DOCUMENT_NODE, "#document", "")
 
@@ -117,11 +118,13 @@ TOHW_m_dom_contents(`
   function createEmptyDocument() result(doc)
     type(Node), pointer :: doc
     
+    print*,"creating empty document"
     doc => createNode(null(), DOCUMENT_NODE, "#document", "")
-    doc%ownerDocument => doc
+    doc%ownerDocument => null()
+    print*,"created"
 
     ! FIXME do something with namespaceURI etc 
-    doc%doctype => appendChild(doc, createEmptyDocumentType())
+    doc%doctype => appendChild(doc, createEmptyDocumentType(doc))
     doc%docType%ownerElement => doc
 !    doc%implementation => FoX_DOM
     doc%documentElement => null()

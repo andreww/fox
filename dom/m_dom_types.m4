@@ -1,3 +1,4 @@
+include(`m_dom_exception.m4')`'dnl
 TOHW_m_dom_imports(`
 
   use m_common_array_str, only: vs_str_alloc
@@ -117,18 +118,22 @@ TOHW_m_dom_publics(`
 dnl
 TOHW_m_dom_contents(`
 
-  function createNode(doc, nodeType, nodeName, nodeValue) result(np)
+  TOHW_function(createNode, (doc, nodeType, nodeName, nodeValue), np)
     type(Node), pointer :: doc
     integer, intent(in) :: nodeType
     character(len=*), intent(in) :: nodeName
     character(len=*), intent(in) :: nodeValue
     type(Node), pointer :: np
 
+    print*,"createNode", nodeType, nodeName, nodeValue
+
     if (associated(doc)) then
       if (doc%nodeType/=DOCUMENT_NODE) then
-        ! internal error
-        continue
+        TOHW_m_dom_throw_error(FoX_INVALID_NODE)
       endif
+    elseif (nodeType/=DOCUMENT_NODE) then
+      print*,"Internal error creating node"
+      stop
     endif
 
     allocate(np)
