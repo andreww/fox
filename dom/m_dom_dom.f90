@@ -2139,15 +2139,40 @@ endif
   
   end function createAttribute
 
-  function createEntityReference(doc, name) result(np)
+  function createEntityReference(doc, name, ex)result(np) 
+    type(DOMException), intent(inout), optional :: ex
     type(Node), pointer :: doc
     character(len=*), intent(in) :: name
     type(Node), pointer :: np
 
     if (doc%nodeType/=DOCUMENT_NODE) then
-      ! FIXME throw an error
-      continue
+      call throw_exception(FoX_INVALID_NODE, "createEntityReference", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    elseif (.not.checkChars(name, doc%xds%xml_version)) then
+      call throw_exception(INVALID_CHARACTER_ERR, "createEntityReference", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    elseif (.not.checkName(name, doc%xds)) then
+      call throw_exception(FoX_INVALID_XML_NAME, "createEntityReference", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
     endif
+
+    ! FIXME check existence of entities + namespace handling,
+    ! see spec
 
     np => createNode(doc, ENTITY_REFERENCE_NODE, name, "")
 

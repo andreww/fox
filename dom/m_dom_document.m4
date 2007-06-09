@@ -215,15 +215,21 @@ TOHW_m_dom_contents(`
   
   end function createAttribute
 
-  function createEntityReference(doc, name) result(np)
+  TOHW_function(createEntityReference, (doc, name), np)
     type(Node), pointer :: doc
     character(len=*), intent(in) :: name
     type(Node), pointer :: np
 
     if (doc%nodeType/=DOCUMENT_NODE) then
-      ! FIXME throw an error
-      continue
+      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
+    elseif (.not.checkChars(name, doc%xds%xml_version)) then
+      TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
+    elseif (.not.checkName(name, doc%xds)) then
+      TOHW_m_dom_throw_error(FoX_INVALID_XML_NAME)
     endif
+
+    ! FIXME check existence of entities + namespace handling,
+    ! see spec
 
     np => createNode(doc, ENTITY_REFERENCE_NODE, name, "")
 
