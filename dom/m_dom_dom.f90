@@ -2178,19 +2178,27 @@ endif
 
   end function createEntityReference
 
-  function getElementsByTagName(doc, tagName) result(list)
+  function getElementsByTagName(doc, tagName, ex)result(list) 
+    type(DOMException), intent(inout), optional :: ex
     type(Node), pointer :: doc
     character(len=*), intent(in) :: tagName
     type(NodeList) :: list
 
-    type(NodeList) :: np_stack
     type(Node), pointer :: np
-    logical :: alreadyDone
+    logical :: noChild, allElements
 
-    if (doc%nodeType/=DOCUMENT_NODE.or.doc%nodeType/=ELEMENT_NODE) then
-      ! FIXME throw an error
-      continue
+    if (doc%nodeType/=DOCUMENT_NODE.and.doc%nodeType/=ELEMENT_NODE) then
+      call throw_exception(FoX_INVALID_NODE, "getElementsByTagName", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
     endif
+
+    if (tagName=="*") &
+      allElements = .true.
 
     if (doc%nodeType==DOCUMENT_NODE) then
       np => doc%documentElement
@@ -2203,44 +2211,28 @@ endif
       continue
     endif
 
-    ! Use iteration, not recursion, to save stack space.
-    alreadyDone = .false.
+    noChild = .false.
     do
-      print*, "iterating ...", associated(np)
-      if (alreadyDone) then
-        np => pop_nl(np_stack)
-        if (np_stack%length==0) then
+      if (noChild) then
+        if (associated(np, doc).or.associated(np, doc%documentElement)) then
           exit
         else
-          if (associated(np%nextSibling)) then
-            np => np%nextSibling
-            alreadyDone = .false.
-          else
-            cycle
-          endif
+          np => np%parentNode
+          noChild=  .false.
         endif
       endif
-      ! FIXME not convinced yet this traverses whole tree ...
-      if (np%nodeType/=ELEMENT_NODE) then
-        if (associated(np%nextSibling)) then
-          np => np%nextSibling
-        else
-          alreadyDone = .true.
-        endif
-        cycle
-      endif
-      if (str_vs(np%nodeName) == tagName) then
+      if ((np%nodeType==ELEMENT_NODE) .and. &
+        (allElements .or. str_vs(np%nodeName)==tagName)) then
         call append(list, np)
       endif
       if (associated(np%firstChild)) then
-        call append(np_stack, np)
         np => np%firstChild
-        cycle
+      elseif (associated(np%nextSibling)) then
+        np => np%nextSibling
       else
-        alreadyDone = .true.
+        noChild = .true.
       endif
     enddo
-    call destroyNodeList(np_stack)
 
   end function getElementsByTagName
 
