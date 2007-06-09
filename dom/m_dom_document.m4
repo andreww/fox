@@ -1,7 +1,7 @@
 TOHW_m_dom_imports(`
 
   use m_common_array_str, only: str_vs, vs_str_alloc
-  use m_common_namecheck, only: prefixOfQName, localPartOfQName
+  use m_common_namecheck, only: checkQName, prefixOfQName, localPartOfQName
   use m_dom_error, only : NOT_FOUND_ERR, INVALID_CHARACTER_ERR, FoX_INVALID_NODE, &
     FoX_INVALID_XML_NAME, WRONG_DOCUMENT_ERR, FoX_INVALID_TEXT, & 
     FoX_INVALID_CHARACTER, FoX_INVALID_COMMENT, FoX_INVALID_CDATA_SECTION, &
@@ -320,23 +320,34 @@ TOHW_m_dom_contents(`
 
   end function importNode
 
-  function createElementNS(doc, namespaceURI, qualifiedName) result(np)
+  TOHW_function(createElementNS, (doc, namespaceURI, qualifiedName), np)
     type(Node), pointer :: doc
     character(len=*), intent(in) :: namespaceURI, qualifiedName
     type(Node), pointer :: np
   
     if (doc%nodeType/=DOCUMENT_NODE) then
-      ! FIXME throw an error
-      continue
+      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
+    elseif (.not.checkChars(qualifiedName, doc%xds%xml_version)) then
+      TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
+    elseif (.not.checkQName(qualifiedName, doc%xds)) then
+      TOHW_m_dom_throw_error(NAMESPACE_ERR)
+    elseif (prefixOfQName(qualifiedName)/="" &
+     .and. namespaceURI=="") then
+      TOHW_m_dom_throw_error(NAMESPACE_ERR)
+    elseif (prefixOfQName(qualifiedName)=="xml" .and. &
+      namespaceURI/="http://www.w3.org/XML/1998/namespace") then
+      TOHW_m_dom_throw_error(NAMESPACE_ERR)
+    ! FIXME is this all possible errors?
+    ! what if prefix = "xmlns"? or other "xml"
     endif
+
+    ! FIXME create a namespace node for XPath?
 
     np => createNode(doc, ELEMENT_NODE, qualifiedName, "")
     np%namespaceURI => vs_str_alloc(namespaceURI)
     np%prefix => vs_str_alloc(prefixOfQName(qualifiedname))
     np%localName => vs_str_alloc(localpartOfQName(qualifiedname))
 
-    ! FIXME not sure about the above ...
-  
   end function createElementNS
   
   function createAttributeNS(doc, namespaceURI,  qualifiedname) result(np)

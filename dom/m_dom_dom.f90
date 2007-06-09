@@ -34,7 +34,7 @@ module m_dom_dom
 
 
   use m_common_array_str, only: str_vs, vs_str_alloc
-  use m_common_namecheck, only: prefixOfQName, localPartOfQName
+  use m_common_namecheck, only: checkQName, prefixOfQName, localPartOfQName
   use m_dom_error, only : NOT_FOUND_ERR, INVALID_CHARACTER_ERR, FoX_INVALID_NODE, &
     FoX_INVALID_XML_NAME, WRONG_DOCUMENT_ERR, FoX_INVALID_TEXT, & 
     FoX_INVALID_CHARACTER, FoX_INVALID_COMMENT, FoX_INVALID_CDATA_SECTION, &
@@ -2290,23 +2290,65 @@ endif
 
   end function importNode
 
-  function createElementNS(doc, namespaceURI, qualifiedName) result(np)
+  function createElementNS(doc, namespaceURI, qualifiedName, ex)result(np) 
+    type(DOMException), intent(inout), optional :: ex
     type(Node), pointer :: doc
     character(len=*), intent(in) :: namespaceURI, qualifiedName
     type(Node), pointer :: np
   
     if (doc%nodeType/=DOCUMENT_NODE) then
-      ! FIXME throw an error
-      continue
+      call throw_exception(FoX_INVALID_NODE, "createElementNS", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    elseif (.not.checkChars(qualifiedName, doc%xds%xml_version)) then
+      call throw_exception(INVALID_CHARACTER_ERR, "createElementNS", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    elseif (.not.checkQName(qualifiedName, doc%xds)) then
+      call throw_exception(NAMESPACE_ERR, "createElementNS", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    elseif (prefixOfQName(qualifiedName)/="" &
+     .and. namespaceURI=="") then
+      call throw_exception(NAMESPACE_ERR, "createElementNS", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    elseif (prefixOfQName(qualifiedName)=="xml" .and. &
+      namespaceURI/="http://www.w3.org/XML/1998/namespace") then
+      call throw_exception(NAMESPACE_ERR, "createElementNS", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    ! FIXME is this all possible errors?
+    ! what if prefix = "xmlns"? or other "xml"
     endif
+
+    ! FIXME create a namespace node for XPath?
 
     np => createNode(doc, ELEMENT_NODE, qualifiedName, "")
     np%namespaceURI => vs_str_alloc(namespaceURI)
     np%prefix => vs_str_alloc(prefixOfQName(qualifiedname))
     np%localName => vs_str_alloc(localpartOfQName(qualifiedname))
 
-    ! FIXME not sure about the above ...
-  
   end function createElementNS
   
   function createAttributeNS(doc, namespaceURI,  qualifiedname) result(np)
