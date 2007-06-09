@@ -1,6 +1,7 @@
 TOHW_m_dom_imports(`
 
   use m_common_array_str, only: str_vs
+  use m_dom_error, only: INUSE_ATTRIBUTE_ERR
 
 ')`'dnl
 dnl
@@ -53,7 +54,7 @@ TOHW_m_dom_contents(`
       endif
     enddo
     
-    !FIXME error
+    np => null()
 
   end function getNamedItem
 
@@ -89,17 +90,25 @@ TOHW_m_dom_contents(`
         return
       endif
     enddo
-    !FIXME error here
+    c = ""
 
   end function getNamedItem_Value
 
 
-  function setNamedItem(map, arg) result(np)
+  TOHW_function(setNamedItem, (map, arg), np)
     type(NamedNodeMap), intent(inout) :: map
     type(Node), pointer :: arg
     type(Node), pointer :: np
 
     integer :: i
+
+    if (map%readonly) then
+      TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
+    elseif (.not.associated(map%ownerElement%ownerDocument, arg%ownerDocument)) then
+      TOHW_m_dom_throw_error(WRONG_DOCUMENT_ERR)
+    elseif (associated(arg%ownerElement)) then
+      TOHW_m_dom_throw_error(INUSE_ATTRIBUTE_ERR)    
+    endif
 
     do i = 1, map%list%length
       if (str_vs(map%list%nodes(i)%this%nodeName)==str_vs(arg%nodeName)) then
@@ -115,12 +124,16 @@ TOHW_m_dom_contents(`
   end function setNamedItem
 
 
-  function removeNamedItem(map, name) result(np)
+  TOHW_function(removeNamedItem, (map, name), np)
     type(NamedNodeMap), intent(inout) :: map
     character(len=*), intent(in) :: name
     type(Node), pointer :: np
 
     integer :: i
+
+    if (map%readonly) then
+      TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
+    endif
 
     do i = 1, map%list%length
       if (str_vs(map%list%nodes(i)%this%nodeName)==name) then
@@ -128,7 +141,8 @@ TOHW_m_dom_contents(`
         return
       endif
     enddo
-    ! FIXME error
+
+    TOHW_m_dom_throw_error(NOT_FOUND_ERR)
 
   end function removeNamedItem
 
@@ -141,9 +155,10 @@ TOHW_m_dom_contents(`
     integer :: n
 
     if (index<0 .or. index>map%list%length-1) then
-      ! FIXME error
+      np => null()
+    else
+      np => map%list%nodes(index)%this
     endif
-    np => map%list%nodes(index)%this
 
    end function item_nnm
 
@@ -172,7 +187,7 @@ TOHW_m_dom_contents(`
       endif
     enddo
     
-    !FIXME error
+    np => null()
 
   end function getNamedItemNS
 
@@ -217,12 +232,20 @@ TOHW_m_dom_contents(`
   end function getNamedItemNS_Value
 
 
-  function setNamedItemNS(map, arg) result(np)
+  TOHW_function(setNamedItemNS, (map, arg), np)
     type(NamedNodeMap), intent(inout) :: map
     type(Node), pointer :: arg
     type(Node), pointer :: np
 
     integer :: i
+
+    if (map%readonly) then
+      TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
+    elseif (.not.associated(map%ownerElement%ownerDocument, arg%ownerDocument)) then
+      TOHW_m_dom_throw_error(WRONG_DOCUMENT_ERR)
+    elseif (associated(arg%ownerElement)) then
+      TOHW_m_dom_throw_error(INUSE_ATTRIBUTE_ERR)    
+    endif
 
     do i = 1, map%list%length
       if (str_vs(map%list%nodes(i)%this%namespaceURI)==str_vs(arg%namespaceURI) &
@@ -239,13 +262,17 @@ TOHW_m_dom_contents(`
   end function setNamedItemNS
 
 
-  function removeNamedItemNS(map, namespaceURI, localName) result(np)
+  TOHW_function(removeNamedItemNS, (map, namespaceURI, localName), np)
     type(NamedNodeMap), intent(inout) :: map
     character(len=*), intent(in) :: namespaceURI
     character(len=*), intent(in) :: localName
     type(Node), pointer :: np
 
     integer :: i
+
+    if (map%readonly) then
+      TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
+    endif
 
     do i = 1, map%list%length
       if (str_vs(map%list%nodes(i)%this%namespaceURI)==namespaceURI &
@@ -254,7 +281,8 @@ TOHW_m_dom_contents(`
         return
       endif
     enddo
-    ! FIXME error
+
+    TOHW_m_dom_throw_error(NOT_FOUND_ERR)
 
   end function removeNamedItemNS
 

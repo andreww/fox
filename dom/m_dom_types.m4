@@ -39,6 +39,7 @@ TOHW_m_dom_publics(`
   type NamedNodeMap
     private
     logical :: readonly = .false.
+    type(Node), pointer :: ownerElement => null()
     type(NodeList) :: list 
   end type NamedNodeMap
 

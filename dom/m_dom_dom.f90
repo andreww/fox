@@ -20,6 +20,7 @@ module m_dom_dom
 
 
   use m_common_array_str, only: str_vs
+  use m_dom_error, only: INUSE_ATTRIBUTE_ERR
 
 
 
@@ -110,6 +111,7 @@ module m_dom_dom
   type NamedNodeMap
     private
     logical :: readonly = .false.
+    type(Node), pointer :: ownerElement => null()
     type(NodeList) :: list 
   end type NamedNodeMap
 
@@ -1375,7 +1377,7 @@ endif
       endif
     enddo
     
-    !FIXME error
+    np => null()
 
   end function getNamedItem
 
@@ -1411,17 +1413,44 @@ endif
         return
       endif
     enddo
-    !FIXME error here
+    c = ""
 
   end function getNamedItem_Value
 
 
-  function setNamedItem(map, arg) result(np)
+  function setNamedItem(map, arg, ex)result(np) 
+    type(DOMException), intent(inout), optional :: ex
     type(NamedNodeMap), intent(inout) :: map
     type(Node), pointer :: arg
     type(Node), pointer :: np
 
     integer :: i
+
+    if (map%readonly) then
+      call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setNamedItem", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    elseif (.not.associated(map%ownerElement%ownerDocument, arg%ownerDocument)) then
+      call throw_exception(WRONG_DOCUMENT_ERR, "setNamedItem", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    elseif (associated(arg%ownerElement)) then
+      call throw_exception(INUSE_ATTRIBUTE_ERR, "setNamedItem", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+    
+    endif
 
     do i = 1, map%list%length
       if (str_vs(map%list%nodes(i)%this%nodeName)==str_vs(arg%nodeName)) then
@@ -1437,12 +1466,23 @@ endif
   end function setNamedItem
 
 
-  function removeNamedItem(map, name) result(np)
+  function removeNamedItem(map, name, ex)result(np) 
+    type(DOMException), intent(inout), optional :: ex
     type(NamedNodeMap), intent(inout) :: map
     character(len=*), intent(in) :: name
     type(Node), pointer :: np
 
     integer :: i
+
+    if (map%readonly) then
+      call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "removeNamedItem", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
 
     do i = 1, map%list%length
       if (str_vs(map%list%nodes(i)%this%nodeName)==name) then
@@ -1450,7 +1490,14 @@ endif
         return
       endif
     enddo
-    ! FIXME error
+
+    call throw_exception(NOT_FOUND_ERR, "removeNamedItem", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
 
   end function removeNamedItem
 
@@ -1463,9 +1510,10 @@ endif
     integer :: n
 
     if (index<0 .or. index>map%list%length-1) then
-      ! FIXME error
+      np => null()
+    else
+      np => map%list%nodes(index)%this
     endif
-    np => map%list%nodes(index)%this
 
    end function item_nnm
 
@@ -1494,7 +1542,7 @@ endif
       endif
     enddo
     
-    !FIXME error
+    np => null()
 
   end function getNamedItemNS
 
@@ -1539,12 +1587,39 @@ endif
   end function getNamedItemNS_Value
 
 
-  function setNamedItemNS(map, arg) result(np)
+  function setNamedItemNS(map, arg, ex)result(np) 
+    type(DOMException), intent(inout), optional :: ex
     type(NamedNodeMap), intent(inout) :: map
     type(Node), pointer :: arg
     type(Node), pointer :: np
 
     integer :: i
+
+    if (map%readonly) then
+      call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setNamedItemNS", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    elseif (.not.associated(map%ownerElement%ownerDocument, arg%ownerDocument)) then
+      call throw_exception(WRONG_DOCUMENT_ERR, "setNamedItemNS", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    elseif (associated(arg%ownerElement)) then
+      call throw_exception(INUSE_ATTRIBUTE_ERR, "setNamedItemNS", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+    
+    endif
 
     do i = 1, map%list%length
       if (str_vs(map%list%nodes(i)%this%namespaceURI)==str_vs(arg%namespaceURI) &
@@ -1561,13 +1636,24 @@ endif
   end function setNamedItemNS
 
 
-  function removeNamedItemNS(map, namespaceURI, localName) result(np)
+  function removeNamedItemNS(map, namespaceURI, localName, ex)result(np) 
+    type(DOMException), intent(inout), optional :: ex
     type(NamedNodeMap), intent(inout) :: map
     character(len=*), intent(in) :: namespaceURI
     character(len=*), intent(in) :: localName
     type(Node), pointer :: np
 
     integer :: i
+
+    if (map%readonly) then
+      call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "removeNamedItemNS", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
 
     do i = 1, map%list%length
       if (str_vs(map%list%nodes(i)%this%namespaceURI)==namespaceURI &
@@ -1576,7 +1662,14 @@ endif
         return
       endif
     enddo
-    ! FIXME error
+
+    call throw_exception(NOT_FOUND_ERR, "removeNamedItemNS", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
 
   end function removeNamedItemNS
 
