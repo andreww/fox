@@ -84,6 +84,8 @@ TOHW_m_dom_publics(`
     character, pointer :: documentURI(:) => null()
     ! DOMCONFIGURATION
     type(xml_doc_state), pointer :: xds => null()
+    !TYPEINFO schemaTypeInfo
+    logical :: isId
   end type Node
 
   public :: ELEMENT_NODE

@@ -155,6 +155,8 @@ module m_dom_dom
     character, pointer :: documentURI(:) => null()
     ! DOMCONFIGURATION
     type(xml_doc_state), pointer :: xds => null()
+    !TYPEINFO schemaTypeInfo
+    logical :: isId
   end type Node
 
   public :: ELEMENT_NODE
@@ -2472,19 +2474,58 @@ endif
   end function getElementsByTagNameNS
 
 
-  function getElementById(doc, elementId) result(np)
-    type(Node), intent(in) :: doc
+  function getElementById(doc, elementId, ex)result(np) 
+    type(DOMException), intent(inout), optional :: ex
+    type(Node), pointer :: doc
     character(len=*), intent(in) :: elementId
-    type(NodeList), pointer :: np
+    type(Node), pointer :: np
+
+    type(Node), pointer :: attr
+    type(NamedNodeMap), pointer :: nnm
+    integer :: i
+    logical :: noChild
+
     if (doc%nodeType/=DOCUMENT_NODE) then
-      ! FIXME throw an error
-      continue
+      call throw_exception(FoX_INVALID_NODE, "getElementById", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
     endif
 
-    continue
+    np => doc%documentELement
 
-    ! FIXME logic
-    ! cannot fix until IDs implemented
+    noChild = .false.
+    do
+      if (noChild) then
+        if (associated(np, doc).or.associated(np, doc%documentElement)) then
+          exit
+        else
+          np => np%parentNode
+          noChild=  .false.
+        endif
+      endif
+      if (np%nodeType==ELEMENT_NODE) then
+        nnm => np%attributes
+        do i = 1, getLength(nnm)
+          attr => item(nnm, i)
+          if (attr%isId.and.getValue(attr)==elementId) &
+            return
+        enddo
+      endif
+      if (associated(np%firstChild)) then
+        np => np%firstChild
+      elseif (associated(np%nextSibling)) then
+        np => np%nextSibling
+      else
+        noChild = .true.
+      endif
+    enddo
+
+    np => null()
+
   end function getElementById
 
   ! Internal function, not part of API
