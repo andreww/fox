@@ -49,7 +49,7 @@ TOHW_m_dom_publics(`
     logical :: readonly = .false. ! FIXME must check this everywhere
     character, pointer, dimension(:)         :: nodeName => null()
     character, pointer, dimension(:)         :: nodeValue => null()
-    integer              :: nc              = 0 
+   integer              :: nc              = 0  ! FIXME dont need this
     integer              :: nodeType        = 0
     type(Node), pointer :: parentNode      => null()
     type(Node), pointer :: firstChild      => null()
@@ -143,6 +143,7 @@ TOHW_m_dom_contents(`
     np%nodeValue => vs_str_alloc(nodeValue)
 
     allocate(np%childNodes%nodes(0))
+    np%attributes%ownerElement => np
 
   end function createNode
 
