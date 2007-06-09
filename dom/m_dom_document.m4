@@ -182,6 +182,7 @@ TOHW_m_dom_contents(`
     character(len=*), intent(in) :: data
     type(Node), pointer :: np
 
+
     if (doc%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     elseif (.not.checkChars(target, doc%xds%xml_version)) then

@@ -112,6 +112,8 @@ TOHW_m_dom_contents(`
 !    doc%implementation => FoX_DOM
     doc%documentElement => appendChild(doc, createElementNS(doc, namespaceURI, qualifiedName))
 
+    doc%xds => doc%docType%xds
+
   end function createDocument
 
 
@@ -128,6 +130,7 @@ TOHW_m_dom_contents(`
     doc%docType%ownerElement => doc
 !    doc%implementation => FoX_DOM
     doc%documentElement => null()
+    doc%xds => doc%docType%xds
 
   end function createEmptyDocument
 

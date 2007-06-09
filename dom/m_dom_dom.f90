@@ -1834,6 +1834,8 @@ endif
 !    doc%implementation => FoX_DOM
     doc%documentElement => appendChild(doc, createElementNS(doc, namespaceURI, qualifiedName))
 
+    doc%xds => doc%docType%xds
+
   end function createDocument
 
 
@@ -1850,6 +1852,7 @@ endif
     doc%docType%ownerElement => doc
 !    doc%implementation => FoX_DOM
     doc%documentElement => null()
+    doc%xds => doc%docType%xds
 
   end function createEmptyDocument
 
@@ -2171,6 +2174,7 @@ endif
     character(len=*), intent(in) :: target
     character(len=*), intent(in) :: data
     type(Node), pointer :: np
+
 
     if (doc%nodeType/=DOCUMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "createProcessingInstruction", ex)
