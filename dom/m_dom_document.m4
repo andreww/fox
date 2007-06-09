@@ -5,7 +5,7 @@ TOHW_m_dom_imports(`
   use m_dom_error, only : NOT_FOUND_ERR, INVALID_CHARACTER_ERR, FoX_INVALID_NODE, &
     FoX_INVALID_XML_NAME, WRONG_DOCUMENT_ERR, FoX_INVALID_TEXT, & 
     FoX_INVALID_CHARACTER, FoX_INVALID_COMMENT, FoX_INVALID_CDATA_SECTION, &
-    FoX_INVALID_PI_DATA
+    FoX_INVALID_PI_DATA, NOT_SUPPORTED_ERR
 
 ')`'dnl
 dnl
@@ -286,20 +286,38 @@ TOHW_m_dom_contents(`
 
   end function getElementsByTagName
 
-  function importNode(doc, arg, deep) result(np)
-    type(Node), intent(in) :: doc
-    type(Node), intent(in) :: arg
+  TOHW_function(importNode, (doc, arg, deep) , np)
+    type(Node), pointer :: doc
+    type(Node), pointer :: arg
     logical, intent(in) :: deep
     type(Node), pointer :: np
 
     if (doc%nodeType/=DOCUMENT_NODE) then
-      ! FIXME throw an error
-      continue
+      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
 
-    continue
+    select case(arg%nodeType)
+    case (ATTRIBUTE_NODE)
+      np => cloneNode(arg, deep, ex)
+      np%ownerElement => null()
+      np%specified = .true.
+    case (DOCUMENT_NODE)
+      TOHW_m_dom_throw_error(NOT_SUPPORTED_ERR)
+    case (DOCUMENT_TYPE_NODE)
+      TOHW_m_dom_throw_error(NOT_SUPPORTED_ERR)
+    case (ELEMENT_NODE)
+      np => cloneNode(arg, deep, ex)
+! FIXME strip out unspecified attributes unless they are also default in this doc ...
+    case (ENTITY_REFERENCE_NODE)
+      np => cloneNode(arg, .false., ex)
+! FIXME if entity is defined in this doc then add appropriate children
+    case default
+      np => cloneNode(arg, deep, ex)
+    end select
 
-    ! FIXME logic
+    np%ownerDocument => doc
+    np%parentNode => null()
+
   end function importNode
 
   function createElementNS(doc, namespaceURI, qualifiedName) result(np)

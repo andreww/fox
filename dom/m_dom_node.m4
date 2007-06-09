@@ -416,7 +416,7 @@ TOHW_m_dom_contents(`
     
   end function hasChildNodes
 
-  function cloneNode(arg, deep) result(np)
+  TOHW_function(cloneNode, (arg, deep), np)
     type(Node), pointer :: arg
     logical :: deep
     type(Node), pointer :: np

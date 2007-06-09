@@ -38,7 +38,7 @@ module m_dom_dom
   use m_dom_error, only : NOT_FOUND_ERR, INVALID_CHARACTER_ERR, FoX_INVALID_NODE, &
     FoX_INVALID_XML_NAME, WRONG_DOCUMENT_ERR, FoX_INVALID_TEXT, & 
     FoX_INVALID_CHARACTER, FoX_INVALID_COMMENT, FoX_INVALID_CDATA_SECTION, &
-    FoX_INVALID_PI_DATA
+    FoX_INVALID_PI_DATA, NOT_SUPPORTED_ERR
 
 
 
@@ -1041,7 +1041,8 @@ endif
     
   end function hasChildNodes
 
-  function cloneNode(arg, deep) result(np)
+  function cloneNode(arg, deep, ex)result(np) 
+    type(DOMException), intent(inout), optional :: ex
     type(Node), pointer :: arg
     logical :: deep
     type(Node), pointer :: np
@@ -2236,20 +2237,57 @@ endif
 
   end function getElementsByTagName
 
-  function importNode(doc, arg, deep) result(np)
-    type(Node), intent(in) :: doc
-    type(Node), intent(in) :: arg
+  function importNode(doc , arg, deep , ex)result(np) 
+    type(DOMException), intent(inout), optional :: ex
+    type(Node), pointer :: doc
+    type(Node), pointer :: arg
     logical, intent(in) :: deep
     type(Node), pointer :: np
 
     if (doc%nodeType/=DOCUMENT_NODE) then
-      ! FIXME throw an error
-      continue
+      call throw_exception(FoX_INVALID_NODE, "importNode", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
     endif
 
-    continue
+    select case(arg%nodeType)
+    case (ATTRIBUTE_NODE)
+      np => cloneNode(arg, deep, ex)
+      np%ownerElement => null()
+      np%specified = .true.
+    case (DOCUMENT_NODE)
+      call throw_exception(NOT_SUPPORTED_ERR, "importNode", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
 
-    ! FIXME logic
+    case (DOCUMENT_TYPE_NODE)
+      call throw_exception(NOT_SUPPORTED_ERR, "importNode", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    case (ELEMENT_NODE)
+      np => cloneNode(arg, deep, ex)
+! FIXME strip out unspecified attributes unless they are also default in this doc ...
+    case (ENTITY_REFERENCE_NODE)
+      np => cloneNode(arg, .false., ex)
+! FIXME if entity is defined in this doc then add appropriate children
+    case default
+      np => cloneNode(arg, deep, ex)
+    end select
+
+    np%ownerDocument => doc
+    np%parentNode => null()
+
   end function importNode
 
   function createElementNS(doc, namespaceURI, qualifiedName) result(np)
