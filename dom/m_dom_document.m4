@@ -378,21 +378,60 @@ TOHW_m_dom_contents(`
     
   end function createAttributeNS
 
-  function getElementsByTagNameNS(doc, namespaceURI, localName) result(list)
-    type(Node), intent(in) :: doc
-    character(len=*), intent(in) :: namespaceURI
-    character(len=*), intent(in) :: localName
+  TOHW_function(getElementsByTagNameNS, (doc, namespaceURI, localName), list)
+    type(Node), pointer :: doc
+    character(len=*), intent(in) :: namespaceURI, localName
     type(NodeList) :: list
 
-    if (doc%nodeType/=DOCUMENT_NODE) then
-      ! FIXME throw an error
+    type(Node), pointer :: np
+    logical :: noChild, allLocalNames, allNameSpaces
+
+    if (doc%nodeType/=DOCUMENT_NODE.and.doc%nodeType/=ELEMENT_NODE) then
+      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
+    endif
+
+    if (namespaceURI=="*") &
+      allNameSpaces = .true.
+    if (localName=="*") &
+      allLocalNames = .true.
+
+    if (doc%nodeType==DOCUMENT_NODE) then
+      np => doc%documentElement
+    else
+      np => doc
+    endif
+
+    if (.not.associated(np)) then
+      ! FIXME internal error
       continue
     endif
 
-    continue
+    noChild = .false.
+    do
+      if (noChild) then
+        if (associated(np, doc).or.associated(np, doc%documentElement)) then
+          exit
+        else
+          np => np%parentNode
+          noChild=  .false.
+        endif
+      endif
+      if ((np%nodeType==ELEMENT_NODE) &
+        .and. (allNameSpaces .or. str_vs(np%namespaceURI)==namespaceURI) &
+        .and. (allLocalNames .or. str_vs(np%localName)==localName)) then
+        call append(list, np)
+      endif
+      if (associated(np%firstChild)) then
+        np => np%firstChild
+      elseif (associated(np%nextSibling)) then
+        np => np%nextSibling
+      else
+        noChild = .true.
+      endif
+    enddo
 
-    ! FIXME logic
   end function getElementsByTagNameNS
+
 
   function getElementById(doc, elementId) result(np)
     type(Node), intent(in) :: doc
