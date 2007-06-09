@@ -30,7 +30,7 @@ module m_dom_error
   integer, parameter, public :: VALIDATION_ERR              = 16
   integer, parameter, public :: TYPE_MISMATCH_ERR           = 17
 
-  integer, parameter, public :: FoX_INVALID_CHARACTER       = 201
+  integer, parameter, public :: FoX_INVALID_NODE            = 201
   integer, parameter, public :: FoX_INVALID_XML_NAME        = 202
   integer, parameter, public :: FoX_INVALID_PI_TARGET       = 203
   integer, parameter, public :: FoX_INVALID_CDATA_SECTION   = 204

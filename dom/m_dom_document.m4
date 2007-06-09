@@ -2,7 +2,8 @@ TOHW_m_dom_imports(`
 
   use m_common_array_str, only: str_vs, vs_str_alloc
   use m_common_namecheck, only: prefixOfQName, localPartOfQName
-  use m_dom_error, only : NOT_FOUND_ERR, dom_error
+  use m_dom_error, only : NOT_FOUND_ERR, INVALID_CHARACTER_ERR, FoX_INVALID_NODE, &
+    FoX_INVALID_XML_NAME, WRONG_DOCUMENT_ERR
 
 ')`'dnl
 dnl
@@ -37,53 +38,53 @@ TOHW_m_dom_contents(`
 
   ! Getters and setters:
 
-  function getDocumentType(doc) result(np)
+  TOHW_function(getDocumentType, (doc), np)
     type(Node), intent(in) :: doc
     type(Node), pointer :: np
 
     if (doc%nodeType/=DOCUMENT_NODE) then
-      ! FIXME throw an error
-      continue
+      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
     
     np => doc%docType
 
   end function getDocumentType
 
-  function getImplementation(doc) result(imp)
+  TOHW_function(getImplementation, (doc), imp)
     type(Node), intent(in) :: doc
     type(DOMImplementation), pointer :: imp
 
     if (doc%nodeType/=DOCUMENT_NODE) then
-      ! FIXME throw an error
-      continue
+      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
     
     imp => doc%implementation
     
   end function getImplementation
 
-  function getDocumentElement(doc) result(np)
+  TOHW_function(getDocumentElement, (doc), np)
     type(Node), intent(in) :: doc
     type(Node), pointer :: np
 
     if (doc%nodeType/=DOCUMENT_NODE) then
-      ! FIXME throw an error
-      continue
+      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
     
     np => doc%documentElement
 
   end function getDocumentElement
 
-  subroutine setDocumentElement(doc, np)
+  TOHW_subroutine(setDocumentElement, (doc, np))
   ! Only for use by FoX, not exported through FoX_DOM interface
-    type(Node), intent(inout) :: doc
+    type(Node), pointer :: doc
     type(Node), pointer :: np
 
     if (doc%nodeType/=DOCUMENT_NODE) then
-      ! FIXME throw an internal error
-      continue
+      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
+    elseif (np%nodeType/=ELEMENT_NODE) then
+      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
+    elseif (.not.associated(np%ownerDocument, doc)) then
+      TOHW_m_dom_throw_error(WRONG_DOCUMENT_ERR)
     endif
     
     doc%documentElement => np
@@ -92,16 +93,20 @@ TOHW_m_dom_contents(`
 
   ! Methods
 
-  function createElement(doc, tagName) result(np)
+  TOHW_function(createElement, (doc, tagName), np)
     type(Node), pointer :: doc
     character(len=*), intent(in) :: tagName
     type(Node), pointer :: np
 
     if (doc%nodeType/=DOCUMENT_NODE) then
-      ! FIXME throw an error
-      continue
+      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
+    else if (.not.checkChars(tagName, doc%docType%xds%xml_version)) then
+      TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
+    endif  
+    if (.not.checkName(tagName, doc%docType%xds)) then
+      TOHW_m_dom_throw_error(FoX_INVALID_XML_NAME)
     endif
-  
+    
     np => createElementNS(doc, "", tagName)
   
   end function createElement

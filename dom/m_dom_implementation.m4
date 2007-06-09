@@ -88,10 +88,12 @@ TOHW_m_dom_contents(`
 
 
   function createDocument(namespaceURI, qualifiedName, docType) result(doc)
-    character(len=*), intent(in) :: namespaceURI
-    character(len=*), intent(in) :: qualifiedName
+    character(len=*), intent(in), optional :: namespaceURI
+    character(len=*), intent(in), optional :: qualifiedName
     type(Node), pointer, optional :: docType
     type(Node), pointer :: doc, dt
+
+    !FIXMEFIXMEFIXME optional arguments and errors
 
     doc => createNode(null(), DOCUMENT_NODE, "#document", "")
 

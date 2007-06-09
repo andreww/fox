@@ -35,7 +35,8 @@ module m_dom_dom
 
   use m_common_array_str, only: str_vs, vs_str_alloc
   use m_common_namecheck, only: prefixOfQName, localPartOfQName
-  use m_dom_error, only : NOT_FOUND_ERR, dom_error
+  use m_dom_error, only : NOT_FOUND_ERR, INVALID_CHARACTER_ERR, FoX_INVALID_NODE, &
+    FoX_INVALID_XML_NAME, WRONG_DOCUMENT_ERR
 
 
 
@@ -1725,10 +1726,12 @@ endif
 
 
   function createDocument(namespaceURI, qualifiedName, docType) result(doc)
-    character(len=*), intent(in) :: namespaceURI
-    character(len=*), intent(in) :: qualifiedName
+    character(len=*), intent(in), optional :: namespaceURI
+    character(len=*), intent(in), optional :: qualifiedName
     type(Node), pointer, optional :: docType
     type(Node), pointer :: doc, dt
+
+    !FIXMEFIXMEFIXME optional arguments and errors
 
     doc => createNode(null(), DOCUMENT_NODE, "#document", "")
 
@@ -1816,53 +1819,99 @@ endif
 
   ! Getters and setters:
 
-  function getDocumentType(doc) result(np)
+  function getDocumentType(doc, ex)result(np) 
+    type(DOMException), intent(inout), optional :: ex
     type(Node), intent(in) :: doc
     type(Node), pointer :: np
 
     if (doc%nodeType/=DOCUMENT_NODE) then
-      ! FIXME throw an error
-      continue
+      call throw_exception(FoX_INVALID_NODE, "getDocumentType", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+
+     return
+  endif
+endif
+
     endif
     
     np => doc%docType
 
   end function getDocumentType
 
-  function getImplementation(doc) result(imp)
+  function getImplementation(doc, ex)result(imp) 
+    type(DOMException), intent(inout), optional :: ex
     type(Node), intent(in) :: doc
     type(DOMImplementation), pointer :: imp
 
     if (doc%nodeType/=DOCUMENT_NODE) then
-      ! FIXME throw an error
-      continue
+      call throw_exception(FoX_INVALID_NODE, "getImplementation", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+
+     return
+  endif
+endif
+
     endif
     
     imp => doc%implementation
     
   end function getImplementation
 
-  function getDocumentElement(doc) result(np)
+  function getDocumentElement(doc, ex)result(np) 
+    type(DOMException), intent(inout), optional :: ex
     type(Node), intent(in) :: doc
     type(Node), pointer :: np
 
     if (doc%nodeType/=DOCUMENT_NODE) then
-      ! FIXME throw an error
-      continue
+      call throw_exception(FoX_INVALID_NODE, "getDocumentElement", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+
+     return
+  endif
+endif
+
     endif
     
     np => doc%documentElement
 
   end function getDocumentElement
 
-  subroutine setDocumentElement(doc, np)
+  subroutine setDocumentElement(doc, np, ex)
+    type(DOMException), intent(inout), optional :: ex
   ! Only for use by FoX, not exported through FoX_DOM interface
-    type(Node), intent(inout) :: doc
+    type(Node), pointer :: doc
     type(Node), pointer :: np
 
     if (doc%nodeType/=DOCUMENT_NODE) then
-      ! FIXME throw an internal error
-      continue
+      call throw_exception(FoX_INVALID_NODE, "setDocumentElement", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+
+     return
+  endif
+endif
+
+    elseif (np%nodeType/=ELEMENT_NODE) then
+      call throw_exception(FoX_INVALID_NODE, "setDocumentElement", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+
+     return
+  endif
+endif
+
+    elseif (.not.associated(np%ownerDocument, doc)) then
+      call throw_exception(WRONG_DOCUMENT_ERR, "setDocumentElement", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+
+     return
+  endif
+endif
+
     endif
     
     doc%documentElement => np
@@ -1871,16 +1920,42 @@ endif
 
   ! Methods
 
-  function createElement(doc, tagName) result(np)
+  function createElement(doc, tagName, ex)result(np) 
+    type(DOMException), intent(inout), optional :: ex
     type(Node), pointer :: doc
     character(len=*), intent(in) :: tagName
     type(Node), pointer :: np
 
     if (doc%nodeType/=DOCUMENT_NODE) then
-      ! FIXME throw an error
-      continue
+      call throw_exception(FoX_INVALID_NODE, "createElement", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+
+     return
+  endif
+endif
+
+    else if (.not.checkChars(tagName, doc%docType%xds%xml_version)) then
+      call throw_exception(INVALID_CHARACTER_ERR, "createElement", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+
+     return
+  endif
+endif
+
+    endif  
+    if (.not.checkName(tagName, doc%docType%xds)) then
+      call throw_exception(FoX_INVALID_XML_NAME, "createElement", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+
+     return
+  endif
+endif
+
     endif
-  
+    
     np => createElementNS(doc, "", tagName)
   
   end function createElement
