@@ -431,12 +431,21 @@ TOHW_m_dom_contents(`
       newChild => removeChild(newChild%parentNode, newChild, ex) 
 
     allocate(temp_nl(size(arg%childNodes%nodes)+1))
+    i = 1
     do i = 1, size(arg%childNodes%nodes)
       temp_nl(i)%this => arg%childNodes%nodes(i)%this
     enddo
     temp_nl(i)%this => newChild
-    temp_nl(i-1)%this%nextSibling => newChild
-    newChild%previousSibling => temp_nl(i)%this
+
+    if (i>1) print*, associated(temp_nl(i-1)%this)
+    if (i==1) then
+      arg%firstChild => newChild
+      newChild%previousSibling => null()
+    else
+      temp_nl(i-1)%this%nextSibling => newChild
+      newChild%previousSibling => temp_nl(i)%this     
+    endif
+
     newChild%nextSibling => null()
 
     deallocate(arg%childNodes%nodes)
