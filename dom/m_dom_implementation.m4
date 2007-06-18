@@ -150,35 +150,7 @@ TOHW_m_dom_contents(`
       continue
     endif
 
-    np => doc%firstChild
-    ! if not associated internal error
-    ! FIXME DONT NEED STACK
-    call append(np_stack, np)
-    ascending = .false.
-    do
-      print*, "iterating ...", associated(np), ascending, np_stack%length
-      if (ascending) then
-        np => pop_nl(np_stack)
-        if (np_stack%length==0) then
-          exit
-        else
-          ascending = .false.
-        endif
-      else if (associated(np%firstChild)) then
-        call append(np_stack, np)
-        np => np%firstChild
-        cycle
-      endif
-      np_next => np%nextSibling
-      call destroyNode(np)
-      if (associated(np_next)) then
-        np => np_next
-        cycle
-      else
-        ascending = .true.
-      endif
-    enddo
-    call destroyNodeList(np_stack)
+    call destroyAllNodesRecursively(doc)
 
     print*, "destroying a node:", doc%nodeType, doc%nodeName
     call destroyNodeContents(doc)

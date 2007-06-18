@@ -47,6 +47,7 @@ module FoX_dom
   public :: createDocumentType
   public :: createDocument
   public :: destroyDocument
+  public :: destroyDocumentFragment
 
   ! DOM Document
   public :: createDocumentFragment

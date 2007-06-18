@@ -113,6 +113,7 @@ TOHW_m_dom_publics(`
   public :: createNode
   public :: destroyNode
   public :: destroyNodeContents
+  public :: destroyDocumentFragment
 
 ')`'dnl
 dnl
@@ -243,6 +244,46 @@ TOHW_m_dom_contents(`
 
   end subroutine destroyAttribute
 
+  TOHW_subroutine(destroyDocumentFragment, (df))
+    type(Node), pointer :: df
+
+    if (df%nodeType/=DOCUMENT_FRAGMENT_NODE) then
+      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
+    endif
+
+    call destroyAllNodesRecursively(df)
+
+  end subroutine destroyDocumentFragment
+
+  subroutine destroyAllNodesRecursively(df)
+    type(Node), pointer :: df
+    
+    type(Node), pointer :: np, np_next
+    logical :: ascending
+
+    np => df%firstChild
+    ! if not associated internal error
+    ! FIXME 
+    ascending = .false.
+    do
+      if (ascending) then
+        np => np%parentNode
+        call destroyNode(np%lastChild)
+        if (associated(np, df)) exit
+        ascending = .false.
+      elseif (associated(np%firstChild)) then
+        np => np%firstChild
+      endif      
+      if (associated(np%nextSibling)) then
+        np => np%nextSibling
+        call destroyNode(np%previousSibling)
+       else
+        ascending = .true.
+      endif
+
+    enddo
+
+  end subroutine destroyAllNodesRecursively
 
   subroutine destroyNodeContents(np)
     type(Node), intent(inout) :: np

@@ -437,13 +437,12 @@ TOHW_m_dom_contents(`
     enddo
     temp_nl(i)%this => newChild
 
-    if (i>1) print*, associated(temp_nl(i-1)%this)
     if (i==1) then
       arg%firstChild => newChild
       newChild%previousSibling => null()
     else
       temp_nl(i-1)%this%nextSibling => newChild
-      newChild%previousSibling => temp_nl(i)%this     
+      newChild%previousSibling => temp_nl(i-1)%this     
     endif
 
     newChild%nextSibling => null()

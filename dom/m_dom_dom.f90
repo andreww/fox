@@ -188,6 +188,7 @@ module m_dom_dom
   public :: createNode
   public :: destroyNode
   public :: destroyNodeContents
+  public :: destroyDocumentFragment
 
 
   
@@ -516,6 +517,53 @@ endif
 
   end subroutine destroyAttribute
 
+  subroutine destroyDocumentFragment(df, ex)
+    type(DOMException), intent(inout), optional :: ex
+    type(Node), pointer :: df
+
+    if (df%nodeType/=DOCUMENT_FRAGMENT_NODE) then
+      call throw_exception(FoX_INVALID_NODE, "destroyDocumentFragment", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    call destroyAllNodesRecursively(df)
+
+  end subroutine destroyDocumentFragment
+
+  subroutine destroyAllNodesRecursively(df)
+    type(Node), pointer :: df
+    
+    type(Node), pointer :: np, np_next
+    logical :: ascending
+
+    np => df%firstChild
+    ! if not associated internal error
+    ! FIXME 
+    ascending = .false.
+    do
+      if (ascending) then
+        np => np%parentNode
+        call destroyNode(np%lastChild)
+        if (associated(np, df)) exit
+        ascending = .false.
+      elseif (associated(np%firstChild)) then
+        np => np%firstChild
+      endif      
+      if (associated(np%nextSibling)) then
+        np => np%nextSibling
+        call destroyNode(np%previousSibling)
+       else
+        ascending = .true.
+      endif
+
+    enddo
+
+  end subroutine destroyAllNodesRecursively
 
   subroutine destroyNodeContents(np)
     type(Node), intent(inout) :: np
@@ -1099,13 +1147,12 @@ endif
     enddo
     temp_nl(i)%this => newChild
 
-    if (i>1) print*, associated(temp_nl(i-1)%this)
     if (i==1) then
       arg%firstChild => newChild
       newChild%previousSibling => null()
     else
       temp_nl(i-1)%this%nextSibling => newChild
-      newChild%previousSibling => temp_nl(i)%this     
+      newChild%previousSibling => temp_nl(i-1)%this     
     endif
 
     newChild%nextSibling => null()
@@ -1945,35 +1992,7 @@ endif
       continue
     endif
 
-    np => doc%firstChild
-    ! if not associated internal error
-    ! FIXME DONT NEED STACK
-    call append(np_stack, np)
-    ascending = .false.
-    do
-      print*, "iterating ...", associated(np), ascending, np_stack%length
-      if (ascending) then
-        np => pop_nl(np_stack)
-        if (np_stack%length==0) then
-          exit
-        else
-          ascending = .false.
-        endif
-      else if (associated(np%firstChild)) then
-        call append(np_stack, np)
-        np => np%firstChild
-        cycle
-      endif
-      np_next => np%nextSibling
-      call destroyNode(np)
-      if (associated(np_next)) then
-        np => np_next
-        cycle
-      else
-        ascending = .true.
-      endif
-    enddo
-    call destroyNodeList(np_stack)
+    call destroyAllNodesRecursively(doc)
 
     print*, "destroying a node:", doc%nodeType, doc%nodeName
     call destroyNodeContents(doc)
