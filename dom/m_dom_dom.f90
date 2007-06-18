@@ -547,18 +547,16 @@ endif
     logical :: ascending
 
     np => df%firstChild
-    ! if not associated internal error
-    ! FIXME 
+    if (.not.associated(np)) return
+
     ascending = .false.
     do
       if (ascending) then
-        print*,"ASCENDING"
         np => np%parentNode
         call destroyNode(np%lastChild)
         if (associated(np, df)) exit
         ascending = .false.
       elseif (associated(np%firstChild)) then
-        print*,"DESCENDING", str_vs(np%nodeName), "=>", str_vs(np%firstChild%nodeName)
         np => np%firstChild
         cycle
       endif      
@@ -568,7 +566,6 @@ endif
        else
         ascending = .true.
       endif
-
     enddo
 
   end subroutine destroyAllNodesRecursively

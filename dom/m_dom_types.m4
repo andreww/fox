@@ -267,8 +267,8 @@ TOHW_m_dom_contents(`
     logical :: ascending
 
     np => df%firstChild
-    ! if not associated internal error
-    ! FIXME 
+    if (.not.associated(df)) return
+
     ascending = .false.
     do
       if (ascending) then
@@ -286,7 +286,6 @@ TOHW_m_dom_contents(`
        else
         ascending = .true.
       endif
-
     enddo
 
   end subroutine destroyAllNodesRecursively
