@@ -230,11 +230,11 @@ TOHW_m_dom_contents(`
   end function insertBefore
   
 
-  TOHW_function(replaceChild, (arg, newChild, oldChild))
+  TOHW_function(replaceChild, (arg, newChild, oldChild), np)
     type(Node), pointer :: arg
     type(Node), pointer :: newChild
     type(Node), pointer :: oldChild
-    type(Node), pointer :: replaceChild
+    type(Node), pointer :: np
 
     integer :: i
     
@@ -282,6 +282,7 @@ TOHW_m_dom_contents(`
 
     do i = 1, size(arg%childNodes%nodes)
       if (associated(arg%childNodes%nodes(i)%this, oldChild)) then
+        np => oldChild
         if (i==0) then
           arg%firstChild => newChild
           newChild%previousSibling => null()
@@ -304,50 +305,63 @@ TOHW_m_dom_contents(`
 
     TOHW_m_dom_throw_error(NOT_FOUND_ERR)
 
+    np%parentNode => null()
+    np%previousSibling => null()
+    np%nextSibling => null()
+
   end function replaceChild
 
 
-  TOHW_function(removeChild, (arg, oldChild))
-    type(Node), pointer :: removeChild
+  TOHW_function(removeChild, (arg, oldChild), np)
     type(Node), pointer :: arg
     type(Node), pointer :: oldChild
     type(Node), pointer :: np
-    
+
+    type(ListNode), pointer :: temp_nl(:)
+    integer :: i, i_t
+
     if (arg%readonly) then
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
     endif
 
     if (.not.associated(arg)) call dom_error("removeChild",0,"Node not allocated")
-    np => arg%firstChild
     
-    do while (associated(np))
-      if (associated(np, oldChild)) then
-        if (associated(np, arg%firstChild)) then
-          arg%firstChild => np%nextSibling
-          if (associated(np%nextSibling)) then
-            arg%firstChild%previousSibling => null()
+    allocate(temp_nl(size(arg%childNodes%nodes)-1))
+    i_t = 1
+    do i = 1, size(arg%childNodes%nodes)
+      if (associated(arg%childNodes%nodes(i)%this, oldChild)) then 
+        if (i==0) then
+          np => arg%childNodes%nodes(i)%this
+          if (size(arg%childNodes%nodes) == 1) then
+            arg%firstChild => null()
+            arg%lastChild => null()
+            exit
           else
-            arg%lastChild => null()    ! there was just 1 node
+            arg%firstChild => arg%childNodes%nodes(1)%this
+            arg%childNodes%nodes(1)%this%previousSibling => null()
           endif
-        else if (associated(np, arg%lastChild)) then
-          ! one-node-only case covered above
-          arg%lastChild => np%previousSibling
-          np%lastChild%nextSibling => null()
         else
-          np%previousSibling%nextSibling => np%nextSibling
-          np%nextSibling%previousSibling => np%previousSibling
+          arg%childNodes%nodes(i+1)%this%previousSibling => arg%childNodes%nodes(i-1)%this
         endif
-        arg%nc = arg%nc -1
-        np%previousSibling => null()    ! Are these necessary?
-        np%nextSibling => null()
-        np%parentNode => null()
-        removeChild => oldChild
-        return
+        if (i==size(arg%childNodes%nodes)) then
+          arg%lastChild => arg%childNodes%nodes(i-1)%this
+          arg%childNodes%nodes(i-1)%this%nextSibling => null()
+        endif
+      else
+        temp_nl(i_t)%this => arg%childNodes%nodes(i)%this
+        i_t = i_t + 1     
       endif
-      np => np%nextSibling
     enddo
-    
-    TOHW_m_dom_throw_error(NOT_FOUND_ERR)
+    deallocate(arg%childNodes%nodes)
+    arg%childNodes%nodes => temp_nl
+
+    if (i==i_t) then
+      TOHW_m_dom_throw_error(NOT_FOUND_ERR)
+    endif
+
+    np%parentNode => null()
+    np%previousSibling => null()
+    np%nextSibling => null()
 
   end function removeChild
 
