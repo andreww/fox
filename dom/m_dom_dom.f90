@@ -408,6 +408,7 @@ endif
     np%nodeName => vs_str_alloc(nodeName)
     np%nodeValue => vs_str_alloc(nodeValue)
 
+    
     allocate(np%childNodes%nodes(0))
     np%attributes%ownerElement => np
 
@@ -487,13 +488,20 @@ endif
 
   end subroutine destroyElement
 
-  subroutine destroyAttribute(attr)
+  subroutine destroyAttribute(attr, ex)
+    type(DOMException), intent(inout), optional :: ex
     type(Node), pointer :: attr
 
     type(Node), pointer :: np, np_next
 
     if (attr%nodeType/=ATTRIBUTE_NODE) then
-       ! FIXME internal error
+      call throw_exception(FoX_INVALID_NODE, "destroyAttribute", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
     endif
 
     np => attr%firstChild
@@ -526,6 +534,9 @@ endif
     if (associated(np%xmlEncoding)) deallocate(np%xmlEncoding)
     !if (associated(np%xmlVersion)) deallocate(np%xmlVersion)
     if (associated(np%documentURI)) deallocate(np%documentURI)
+
+    deallocate(np%childNodes%nodes)
+
   end subroutine destroyNodeContents
 
 
@@ -3447,7 +3458,7 @@ endif
 
   subroutine setValue(attribute, value, ex)
     type(DOMException), intent(inout), optional :: ex
-    type(Node), intent(inout) :: attribute
+    type(Node), pointer :: attribute
     character(len=*), intent(in) :: value
 
     type(Node), pointer :: np
@@ -3483,9 +3494,7 @@ endif
       call destroyNode(attribute%childNodes%nodes(i)%this)
     enddo
     np => createTextNode(attribute%ownerDocument, value)
-    deallocate(attribute%childNodes%nodes)
-    allocate(attribute%childNodes%nodes(1))
-    attribute%childNodes%nodes(1)%this => np
+    np => appendChild(attribute, np)
 
   end subroutine setValue
 

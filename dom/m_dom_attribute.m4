@@ -76,7 +76,7 @@ TOHW_m_dom_contents(`
 
 
   TOHW_subroutine(setValue, (attribute, value))
-    type(Node), intent(inout) :: attribute
+    type(Node), pointer :: attribute
     character(len=*), intent(in) :: value
 
     type(Node), pointer :: np
@@ -94,9 +94,7 @@ TOHW_m_dom_contents(`
       call destroyNode(attribute%childNodes%nodes(i)%this)
     enddo
     np => createTextNode(attribute%ownerDocument, value)
-    deallocate(attribute%childNodes%nodes)
-    allocate(attribute%childNodes%nodes(1))
-    attribute%childNodes%nodes(1)%this => np
+    np => appendChild(attribute, np)
 
   end subroutine setValue
 

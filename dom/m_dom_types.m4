@@ -142,6 +142,7 @@ TOHW_m_dom_contents(`
     np%nodeName => vs_str_alloc(nodeName)
     np%nodeValue => vs_str_alloc(nodeValue)
 
+    
     allocate(np%childNodes%nodes(0))
     np%attributes%ownerElement => np
 
@@ -221,13 +222,13 @@ TOHW_m_dom_contents(`
 
   end subroutine destroyElement
 
-  subroutine destroyAttribute(attr)
+  TOHW_subroutine(destroyAttribute, (attr))
     type(Node), pointer :: attr
 
     type(Node), pointer :: np, np_next
 
     if (attr%nodeType/=ATTRIBUTE_NODE) then
-       ! FIXME internal error
+      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
 
     np => attr%firstChild
@@ -260,6 +261,9 @@ TOHW_m_dom_contents(`
     if (associated(np%xmlEncoding)) deallocate(np%xmlEncoding)
     !if (associated(np%xmlVersion)) deallocate(np%xmlVersion)
     if (associated(np%documentURI)) deallocate(np%documentURI)
+
+    deallocate(np%childNodes%nodes)
+
   end subroutine destroyNodeContents
 
 ')`'dnl
