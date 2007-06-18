@@ -253,12 +253,15 @@ TOHW_m_dom_contents(`
 
     call destroyAllNodesRecursively(df)
 
+    call destroyNodeContents(df)
+    deallocate(df)
+
   end subroutine destroyDocumentFragment
 
   subroutine destroyAllNodesRecursively(df)
     type(Node), pointer :: df
     
-    type(Node), pointer :: np, np_next
+    type(Node), pointer :: np
     logical :: ascending
 
     np => df%firstChild
