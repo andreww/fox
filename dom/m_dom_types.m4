@@ -126,7 +126,7 @@ TOHW_m_dom_contents(`
     character(len=*), intent(in) :: nodeValue
     type(Node), pointer :: np
 
-    print*,"createNode", nodeType, nodeName, nodeValue
+    print*,"createNode", nodeType
 
     if (associated(doc)) then
       if (doc%nodeType/=DOCUMENT_NODE) then
@@ -143,7 +143,6 @@ TOHW_m_dom_contents(`
     np%nodeName => vs_str_alloc(nodeName)
     np%nodeValue => vs_str_alloc(nodeValue)
 
-    
     allocate(np%childNodes%nodes(0))
     np%attributes%ownerElement => np
 
@@ -151,6 +150,9 @@ TOHW_m_dom_contents(`
 
   recursive subroutine destroyNode(np)
     type(Node), pointer :: np
+
+    print*,"destroyNode", np%nodeType
+    if (np%nodeType==TEXT_NODE) print*, "#text", str_vs(np%nodeValue)
 
     select case(np%nodeType)
     case (ELEMENT_NODE)
@@ -276,6 +278,7 @@ TOHW_m_dom_contents(`
         ascending = .false.
       elseif (associated(np%firstChild)) then
         np => np%firstChild
+        cycle
       endif      
       if (associated(np%nextSibling)) then
         np => np%nextSibling

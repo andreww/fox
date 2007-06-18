@@ -7,7 +7,7 @@ module m_dom_parse
   use FoX_sax, only: parse, xml_t
   use FoX_sax, only: open_xml_file, close_xml_t
 
-  use m_dom_dom, only: Node, NamedNodeMap
+  use m_dom_dom, only: Node, NamedNodeMap, hasChildNodes, getFirstChild
   use m_dom_dom, only: createnode, DOCUMENT_NODE, destroynode
   use m_dom_dom, only: createProcessingInstruction
   use m_dom_dom, only: createComment
@@ -79,7 +79,12 @@ contains
     if (dom_debug) print *, "Got PCDATA: |", chunk, "|"
 
     temp => createTextNode(mainDoc, chunk)
-    temp => appendChild(current,temp)
+    print*, "pcdata:", associated(temp)
+    temp => appendChild(current, temp)
+
+    print*, "pcdata:", hasChildNodes(current)
+    temp => getFirstChild(current)
+    print*, "pcdata:", associated(temp)
 
   end subroutine characters_handler
 
@@ -91,7 +96,7 @@ contains
     if (dom_debug) print *, "Got COMMENT: |", comment, "|"
 
     temp => createComment(mainDoc, comment)
-    temp => appendChild(current,temp)
+    temp => appendChild(current, temp)
 
   end subroutine comment_handler
 

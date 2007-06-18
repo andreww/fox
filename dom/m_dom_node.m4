@@ -431,7 +431,7 @@ TOHW_m_dom_contents(`
       newChild => removeChild(newChild%parentNode, newChild, ex) 
 
     allocate(temp_nl(size(arg%childNodes%nodes)+1))
-    i = 1
+
     do i = 1, size(arg%childNodes%nodes)
       temp_nl(i)%this => arg%childNodes%nodes(i)%this
     enddo
@@ -440,21 +440,21 @@ TOHW_m_dom_contents(`
     if (i==1) then
       arg%firstChild => newChild
       newChild%previousSibling => null()
+
     else
       temp_nl(i-1)%this%nextSibling => newChild
       newChild%previousSibling => temp_nl(i-1)%this     
     endif
 
-    newChild%nextSibling => null()
-
     deallocate(arg%childNodes%nodes)
     arg%childNodes%nodes => temp_nl
 
+    newChild%nextSibling => null()
     arg%lastChild => newChild
     newChild%parentNode => arg
     
     appendChild => newChild
-    
+
   end function appendChild
 
 

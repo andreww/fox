@@ -174,5 +174,6 @@ module FoX_dom
   ! FoX-only interfaces
   public :: parsefile
   public :: dumpTree
+  public :: serialize
 
 end module FoX_dom

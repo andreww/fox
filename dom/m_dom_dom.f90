@@ -386,7 +386,7 @@ contains
     character(len=*), intent(in) :: nodeValue
     type(Node), pointer :: np
 
-    print*,"createNode", nodeType, nodeName, nodeValue
+    print*,"createNode", nodeType
 
     if (associated(doc)) then
       if (doc%nodeType/=DOCUMENT_NODE) then
@@ -409,7 +409,6 @@ endif
     np%nodeName => vs_str_alloc(nodeName)
     np%nodeValue => vs_str_alloc(nodeValue)
 
-    
     allocate(np%childNodes%nodes(0))
     np%attributes%ownerElement => np
 
@@ -417,6 +416,9 @@ endif
 
   recursive subroutine destroyNode(np)
     type(Node), pointer :: np
+
+    print*,"destroyNode", np%nodeType
+    if (np%nodeType==TEXT_NODE) print*, "#text", str_vs(np%nodeValue)
 
     select case(np%nodeType)
     case (ELEMENT_NODE)
@@ -550,12 +552,15 @@ endif
     ascending = .false.
     do
       if (ascending) then
+        print*,"ASCENDING"
         np => np%parentNode
         call destroyNode(np%lastChild)
         if (associated(np, df)) exit
         ascending = .false.
       elseif (associated(np%firstChild)) then
+        print*,"DESCENDING", str_vs(np%nodeName), "=>", str_vs(np%firstChild%nodeName)
         np => np%firstChild
+        cycle
       endif      
       if (associated(np%nextSibling)) then
         np => np%nextSibling
@@ -1144,7 +1149,7 @@ endif
       newChild => removeChild(newChild%parentNode, newChild, ex) 
 
     allocate(temp_nl(size(arg%childNodes%nodes)+1))
-    i = 1
+
     do i = 1, size(arg%childNodes%nodes)
       temp_nl(i)%this => arg%childNodes%nodes(i)%this
     enddo
@@ -1153,21 +1158,21 @@ endif
     if (i==1) then
       arg%firstChild => newChild
       newChild%previousSibling => null()
+
     else
       temp_nl(i-1)%this%nextSibling => newChild
       newChild%previousSibling => temp_nl(i-1)%this     
     endif
 
-    newChild%nextSibling => null()
-
     deallocate(arg%childNodes%nodes)
     arg%childNodes%nodes => temp_nl
 
+    newChild%nextSibling => null()
     arg%lastChild => newChild
     newChild%parentNode => arg
     
     appendChild => newChild
-    
+
   end function appendChild
 
 
