@@ -643,7 +643,8 @@ endif
     type(Node), pointer :: refChild
     type(Node), pointer :: insertBefore
 
-    type(Node), pointer :: np
+    type(ListNode), pointer :: temp_nl(:)
+    integer :: i, i_t
 
     if (arg%readonly) then
       call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "insertBefore", ex)
@@ -735,23 +736,34 @@ endif
       insertBefore => appendChild(arg, newChild)
       return
     endif
-    
-    np => arg%firstChild
-    do while (associated(np))
-      if (associated(np, refChild)) then
-        if (associated(np, arg%firstChild)) then
-          arg%firstChild => newChild
-        else
-          np%previousSibling%nextSibling => newChild
-        endif
-        refChild%previousSibling => newChild
-        newChild%nextSibling => refChild
+
+    allocate(temp_nl(size(arg%childNodes%nodes)+1))
+    i_t = 1
+    do i = 1, size(arg%childNodes%nodes)
+      if (associated(arg%childNodes%nodes(i)%this, refChild)) then 
+        i_t = i_t + 1
+        temp_nl(i_t)%this => newChild
         newChild%parentNode => arg
-        insertBefore => newChild
-        return
+        if (i==0) then
+          arg%firstChild => newChild
+          newChild%previousSibling => null()
+        else
+          newChild%previousSibling => arg%childNodes%nodes(i-1)%this
+          arg%childNodes%nodes(i-1)%this%nextSibling => newChild
+        endif
+        if (i==size(arg%childNodes%nodes)) then
+          arg%lastChild => newChild
+          newChild%nextSibling => null()
+        else
+          newChild%nextSibling => arg%childNodes%nodes(i+1)%this
+          arg%childNodes%nodes(i+1)%this%previousSibling => newChild
+        endif
       endif
-      np => np%nextSibling
+      temp_nl(i_t)%this => arg%childNodes%nodes(i)%this
+      i_t = i_t + 1     
     enddo
+    deallocate(arg%childNodes%nodes)
+    arg%childNodes%nodes => temp_nl
 
     call throw_exception(NOT_FOUND_ERR, "insertBefore", ex)
 if (present(ex)) then
@@ -771,7 +783,7 @@ endif
     type(Node), pointer :: oldChild
     type(Node), pointer :: replaceChild
 
-    type(Node), pointer :: np
+    integer :: i
     
     if (arg%readonly) then
       call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "replaceChild", ex)
@@ -857,32 +869,26 @@ endif
 
     endif
 
-    np => arg%firstChild
-
-    do while (associated(np))    
-       if (associated(np, oldChild)) then
-          if (associated(np, arg%firstChild)) then
-             arg%firstChild => newChild
-             if (associated(np%nextSibling)) then
-                np%nextSibling%previousSibling => newChild
-             else
-                arg%lastChild => newChild    ! there was just 1 node
-             endif
-          elseif (associated(np, arg%lastChild)) then
-             ! one-node-only case covered above
-             arg%lastChild => newChild
-             np%previousSibling%nextSibling => newChild
-          else
-             np%previousSibling%nextSibling => newChild
-             np%nextSibling%previousSibling => newChild
-          endif
-          newChild%parentNode => arg
-          newChild%nextSibling => oldChild%nextSibling
-          newChild% previousSibling => oldChild%previousSibling
-          replaceChild => oldChild
-          return
-       endif
-       np => np%nextSibling
+    do i = 1, size(arg%childNodes%nodes)
+      if (associated(arg%childNodes%nodes(i)%this, oldChild)) then
+        if (i==0) then
+          arg%firstChild => newChild
+          newChild%previousSibling => null()
+        else 
+          arg%childNodes%nodes(i-1)%this%nextSibling => newChild
+          newChild%previousSibling => arg%childNodes%nodes(i-1)%this
+        endif
+        arg%childNodes%nodes(i)%this => newChild
+        newChild%parentNode => arg 
+        if (i==size(arg%childNodes%nodes)) then
+          arg%lastChild => newChild
+          newChild%nextSibling => null()
+        else
+          arg%childNodes%nodes(i+1)%this%previousSibling => newChild
+          newChild%nextSibling => arg%childNodes%nodes(i+1)%this
+        endif
+        return
+      endif
     enddo
 
     call throw_exception(NOT_FOUND_ERR, "replaceChild", ex)
