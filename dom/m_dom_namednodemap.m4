@@ -154,6 +154,8 @@ TOHW_m_dom_contents(`
     
     integer :: n
 
+    print*,"ITEM", index, map%list%length
+
     if (index<0 .or. index>map%list%length-1) then
       np => null()
     else

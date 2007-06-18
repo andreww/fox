@@ -1,3 +1,4 @@
+
  
  
 ! ATTENTION
@@ -1532,6 +1533,8 @@ endif
     
     integer :: n
 
+    print*,"ITEM", index, map%list%length
+
     if (index<0 .or. index>map%list%length-1) then
       np => null()
     else
@@ -2117,7 +2120,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (-1>0) then   
+    elseif (index(data,"--")>0) then   
       call throw_exception(FoX_INVALID_COMMENT, "createComment", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -2153,7 +2156,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (-1>0) then   
+    elseif (index(data,"]]>")>0) then   
       call throw_exception(FoX_INVALID_CDATA_SECTION, "createCdataSection", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -2207,7 +2210,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (-1>0) then   
+    elseif (index(data,"?>")>0) then   
       call throw_exception(FoX_INVALID_PI_DATA, "createProcessingInstruction", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -2759,100 +2762,202 @@ endif
 
 
 
-  function getTagName(element) result(c)
+  function getTagName(element, ex)result(c) 
+    type(DOMException), intent(inout), optional :: ex
     type(Node), intent(in) :: element   
     character(len=size(element%nodeName)) :: c
-    
-    if (element%nodeType == ELEMENT_NODE) then
-      c = str_vs(element%nodeName )
-    else
-      c = "" ! FIXME error
+
+    if (element%nodeType /= ELEMENT_NODE) then
+      call throw_exception(FoX_INVALID_NODE, "getTagName", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
     endif
-    
+    c = str_vs(element%nodeName)    
+     
   end function getTagName
 
     
-  function getAttribute(element, name) result(c)
+  function getAttribute(element, name, ex)result(c) 
+    type(DOMException), intent(inout), optional :: ex
     type(Node), intent(in) :: element
     character(len=*), intent(in) :: name
     character(len=getNamedItem_Value_length(element%attributes, name)) :: c
 
     type(Node), pointer :: nn
 
-    c = ""  ! as per specs, if not found Not sure ahout this FIXME
-    if (element%nodeType /= ELEMENT_NODE) return ! or throw an error FIXME?
+    if (element%nodeType /= ELEMENT_NODE) then
+      call throw_exception(FoX_INVALID_NODE, "getAttribute", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+    c = ""  ! as per specs, if not found
     c = getNamedItem_Value(element%attributes, name)
 
-    ! FIXME catch exception
+    ! FIXME do we need to catch the exception above if it doesnt exist?
         
   end function getAttribute
 
 
-  subroutine setAttribute(element, name, value)
+  subroutine setAttribute(element, name, value, ex)
+    type(DOMException), intent(inout), optional :: ex
     type(Node), intent(inout) :: element
     character(len=*), intent(in) :: name
     character(len=*), intent(in) :: value
 
     type(Node), pointer :: nn
 
-    if (element%nodeType /= ELEMENT_NODE) return ! or throw an error FIXME?
+    if (element%nodeType /= ELEMENT_NODE) then
+      call throw_exception(FoX_INVALID_NODE, "setAttribute", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+
+      call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setAttribute", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    elseif (.not.checkChars(name, element%ownerDocument%xds%xml_version)) then
+      call throw_exception(INVALID_CHARACTER_ERR, "setAttribute", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    elseif (.not.checkName(value, element%ownerDocument%xds)) then
+      call throw_exception(FoX_INVALID_XML_NAME, "setAttribute", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    elseif (.not.checkChars(value, element%ownerDocument%xds%xml_version)) then
+      call throw_exception(FoX_INVALID_CHARACTER, "setAttribute", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
 
     nn => createAttribute(element%ownerDocument, name)
     call setValue(nn, value)
     nn => setNamedItem(element%attributes, nn)
 
-    ! FIXME catch exception
-
   end subroutine setAttribute
 
 
-  subroutine removeAttribute(element, name)
+  subroutine removeAttribute(element, name, ex)
+    type(DOMException), intent(inout), optional :: ex
     type(Node), pointer :: element
     character(len=*), intent(in) :: name
 
     type(Node), pointer :: dummy
 
-    if (element % nodeType /= ELEMENT_NODE) return
-    ! WHat about remove text ...
+    if (element%nodeType /= ELEMENT_NODE) then
+      call throw_exception(FoX_INVALID_NODE, "removeAttribute", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
 
+    endif
+    
     dummy => removeNamedItem(element%attributes, name)
-    ! FIXME and free memory from dummy
-    ! call destroyAttribute(dummy)
+    call destroyAttribute(dummy)
+
+  ! FIXME recreate a default value if there is one
      
   end subroutine removeAttribute
 
 
-  function getAttributeNode(element, name) result(attr)
+  function getAttributeNode(element, name, ex)result(attr) 
+    type(DOMException), intent(inout), optional :: ex
     type(Node), intent(in) :: element
     character(len=*), intent(in) :: name
     type(Node), pointer :: attr
 
     attr => null()     ! as per specs, if not found
     if (element%nodeType /= ELEMENT_NODE) then
-      ! FIXME error
+      call throw_exception(FoX_INVALID_NODE, "getAttributeNode", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
     endif
     attr => getNamedItem(element%attributes, name)
 
-    ! FIXME catch and throw awaye xception
+    ! FIXME catch and throw away exception
 
   end function getAttributeNode
   
 
-  function setAttributeNode(element, newattr) result(attr)
+  function setAttributeNode(element, newattr, ex)result(attr) 
+    type(DOMException), intent(inout), optional :: ex
     type(Node), pointer :: element
     type(Node), pointer :: newattr
     type(Node), pointer :: attr
 
     if (element%nodeType /= ELEMENT_NODE) then
-      ! FIXME error
+      call throw_exception(FoX_INVALID_NODE, "setAttributeNode", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    elseif (.not.associated(element%ownerDocument, newattr%ownerDocument)) then
+      call throw_exception(WRONG_DOCUMENT_ERR, "setAttributeNode", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    elseif (element%readonly) then
+      call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setAttributeNode", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    elseif (associated(attr%ownerElement)) then
+      call throw_exception(INUSE_ATTRIBUTE_ERR, "setAttributeNode", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
     endif
 
     ! this checks if attribute exists already
-    attr => setNamedItem(element%attributes, newattr)
+    attr => setNamedItem(element%attributes, newattr, ex)
   end function setAttributeNode
 
 
-  function removeAttributeNode(element, oldattr) result(attr)
+  function removeAttributeNode(element, oldattr, ex)result(attr) 
+    type(DOMException), intent(inout), optional :: ex
     type(Node), pointer :: element
     type(Node), pointer :: oldattr
     type(Node), pointer :: attr
@@ -2860,7 +2965,21 @@ endif
     integer :: i
 
     if (element%nodeType /= ELEMENT_NODE) then
-      ! FIXME error
+      call throw_exception(FoX_INVALID_NODE, "removeAttributeNode", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    elseif (element%readonly) then
+      call throw_exception(WRONG_DOCUMENT_ERR, "removeAttributeNode", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
     endif
 
     do i = 1, element%attributes%list%length
@@ -2870,7 +2989,13 @@ endif
       endif
     enddo
 
-    ! FIXME exceptions
+    call throw_exception(NOT_FOUND_ERR, "removeAttributeNode", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
 
   end function removeAttributeNode
 
@@ -2878,7 +3003,8 @@ endif
 !  function getElementsByTagName - see m_dom_document
 
 
-  function getAttributeNS(element, namespaceURI, localName) result(c)
+  function getAttributeNS(element, namespaceURI, localName, ex)result(c) 
+    type(DOMException), intent(inout), optional :: ex
     type(Node), intent(in) :: element
     character(len=*), intent(in) :: namespaceURI
     character(len=*), intent(in) :: localName
@@ -2887,26 +3013,90 @@ endif
 
     type(Node), pointer :: nn
 
+    if (element%nodeType /= ELEMENT_NODE) then
+      call throw_exception(FoX_INVALID_NODE, "getAttributeNS", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
     c = ""  ! as per specs, if not found Not sure ahout this FIXME
-    if (element%nodeType /= ELEMENT_NODE) return ! or throw an error FIXME?
     c = getNamedItemNS_Value(element%attributes, namespaceURI, localName)
 
-    ! FIXME catch exception
+    ! FIXME dont need both above
         
   end function getAttributeNS
 
 
-  subroutine setAttributeNS(element, namespaceURI, localname, value)
+  subroutine setAttributeNS(element, namespaceURI, qualifiedname, value, ex)
+    type(DOMException), intent(inout), optional :: ex
     type(Node), intent(inout) :: element
     character(len=*), intent(in) :: namespaceURI
-    character(len=*), intent(in) :: localname
+    character(len=*), intent(in) :: qualifiedName
     character(len=*), intent(in) :: value
 
     type(Node), pointer :: nn
 
-    if (element%nodeType /= ELEMENT_NODE) return ! or throw an error FIXME?
+    if (element%nodeType /= ELEMENT_NODE) then
+      call throw_exception(FoX_INVALID_NODE, "setAttributeNS", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
 
-    nn => createAttributeNS(element%ownerDocument, namespaceURI, localname)
+    elseif (.not.checkChars(qualifiedname, element%ownerDocument%xds%xml_version)) then
+      call throw_exception(INVALID_CHARACTER_ERR, "setAttributeNS", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    elseif (element%readonly) then
+      call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setAttributeNS", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    elseif (.not.checkQName(qualifiedname, element%ownerDocument%xds)) then
+      call throw_exception(NAMESPACE_ERR, "setAttributeNS", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    elseif (prefixOfQName(qualifiedName)/="" &
+     .and. namespaceURI=="") then
+      call throw_exception(NAMESPACE_ERR, "setAttributeNS", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    elseif (prefixOfQName(qualifiedName)=="xml" .and. & 
+      namespaceURI/="http://www.w3.org/XML/1998/namespace") then
+      call throw_exception(NAMESPACE_ERR, "setAttributeNS", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    ! FIXME is this all possible errors? 
+      ! what if prefix = "xmlns"? or other "xml"
+    endif
+
+! FIXME what if namespace is undeclared ... will be recreated on serialization,
+! but we might need a new namespace node here for xpath ...
+    nn => createAttributeNS(element%ownerDocument, namespaceURI, qualifiedname)
     call setValue(nn, value)
     nn => setNamedItemNS(element%attributes, nn)
 
@@ -2915,46 +3105,100 @@ endif
   end subroutine setAttributeNS
 
 
-  subroutine removeAttributeNS(element, namespaceURI, localName)
+  subroutine removeAttributeNS(element, namespaceURI, localName, ex)
+    type(DOMException), intent(inout), optional :: ex
     type(Node), pointer :: element
     character(len=*), intent(in) :: namespaceURI
     character(len=*), intent(in) :: localName
 
     type(Node), pointer :: dummy
 
-    if (element % nodeType /= ELEMENT_NODE) return
-    ! WHat about remove text ...
+    if (element%nodeType /= ELEMENT_NODE) then
+      call throw_exception(FoX_INVALID_NODE, "removeAttributeNS", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    elseif (element%readonly) then
+      call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "removeAttributeNS", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
     dummy => removeNamedItemNS(element%attributes, namespaceURI, localName)
-    ! FIXME and clean up memory
-    ! call destroyAttribute(dummy)
+
+    call destroyAttribute(dummy)
      
   end subroutine removeAttributeNS
 
 
-  function getAttributeNodeNS(element, namespaceURI, localName) result(attr)
+  function getAttributeNodeNS(element, namespaceURI, localName, ex)result(attr) 
+    type(DOMException), intent(inout), optional :: ex
     type(Node), intent(in) :: element
     character(len=*), intent(in) :: namespaceURI
     character(len=*), intent(in) :: localName
     type(Node), pointer :: attr
 
-    attr => null()     ! as per specs, if not found
     if (element%nodeType /= ELEMENT_NODE) then
-      ! FIXME error
-    endif
-    attr => getNamedItemNS(element%attributes, namespaceURI, localname)
+      call throw_exception(FoX_INVALID_NODE, "getAttributeNodeNS", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
 
-    ! FIXME catch and throw awaye xception
+    endif
+
+    attr => null()     ! as per specs, if not found
+    attr => getNamedItemNS(element%attributes, namespaceURI, localname)
 
   end function getAttributeNodeNS
   
 
-  function setAttributeNodeNS(element, newattr) result(attr)
+  function setAttributeNodeNS(element, newattr, ex)result(attr) 
+    type(DOMException), intent(inout), optional :: ex
     type(Node), pointer :: element
     type(Node), pointer :: newattr
     type(Node), pointer :: attr
 
     if (element%nodeType /= ELEMENT_NODE) then
-      ! FIXME error
+      call throw_exception(FoX_INVALID_NODE, "setAttributeNodeNS", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    elseif (.not.associated(element%ownerDocument, newattr%ownerDocument)) then
+      call throw_exception(WRONG_DOCUMENT_ERR, "setAttributeNodeNS", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    elseif (element%readonly) then
+      call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setAttributeNodeNS", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    elseif (associated(attr%ownerElement)) then
+      call throw_exception(INUSE_ATTRIBUTE_ERR, "setAttributeNodeNS", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
     endif
 
     ! this checks if attribute exists already
@@ -2962,7 +3206,8 @@ endif
   end function setAttributeNodeNS
 
 
-  function removeAttributeNodeNS(element, oldattr) result(attr)
+  function removeAttributeNodeNS(element, oldattr, ex)result(attr) 
+    type(DOMException), intent(inout), optional :: ex
     type(Node), pointer :: element
     type(Node), pointer :: oldattr
     type(Node), pointer :: attr
@@ -2970,7 +3215,21 @@ endif
     integer :: i
 
     if (element%nodeType /= ELEMENT_NODE) then
-      ! FIXME error
+      call throw_exception(FoX_INVALID_NODE, "removeAttributeNodeNS", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    elseif (element%readonly) then
+      call throw_exception(WRONG_DOCUMENT_ERR, "removeAttributeNodeNS", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
     endif
 
     do i = 1, element%attributes%list%length
@@ -2981,23 +3240,36 @@ endif
       endif
     enddo
 
-    ! FIXME exceptions
+    call throw_exception(NOT_FOUND_ERR, "removeAttributeNodeNS", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
 
   end function removeAttributeNodeNS
 
 
-!  function getElementsByTagName - see m_dom_document
+!  function getElementsByTagNameNS - see m_dom_document
 
 
-  function hasAttribute(element, name) result(p)
+  function hasAttribute(element, name, ex)result(p) 
+    type(DOMException), intent(inout), optional :: ex
     type(Node), intent(in) :: element
     character(len=*), intent(in) :: name
     logical :: p
 
     integer :: i
+ 
+   if (element%nodeType /= ELEMENT_NODE) then
+      call throw_exception(FoX_INVALID_NODE, "hasAttribute", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
 
-    if (element%nodeType /= ELEMENT_NODE) then
-      ! FIXME error
     endif
 
     p = .false.
@@ -3011,7 +3283,8 @@ endif
   end function hasAttribute
 
 
-  function hasAttributeNS(element, namespaceURI, localName) result(p)
+  function hasAttributeNS(element, namespaceURI, localName, ex)result(p) 
+    type(DOMException), intent(inout), optional :: ex
     type(Node), intent(in) :: element
     character(len=*), intent(in) :: namespaceURI
     character(len=*), intent(in) :: localName
@@ -3019,8 +3292,15 @@ endif
 
     integer :: i
 
-    if (element%nodeType /= ELEMENT_NODE) then
-      ! FIXME error
+ 
+   if (element%nodeType /= ELEMENT_NODE) then
+      call throw_exception(FoX_INVALID_NODE, "hasAttributeNS", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
     endif
 
     p = .false.
@@ -3248,11 +3528,40 @@ if (present(ex)) then
 endif
 
     endif
-  !FIXME what if data is wrong for node type    
 
+    if (.not.checkChars(data, arg%ownerDocument%xds%xml_version)) then
+      call throw_exception(FoX_INVALID_CHARACTER, "appendData", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+    
     tmp => arg%nodeValue
     arg%nodeValue => vs_str_alloc(str_vs(tmp)//data)
     deallocate(tmp)
+
+    ! We have to do these checks *after* appending data in case offending string
+    ! spans old & new data
+    if (arg%nodeType==COMMENT_NODE .and. index(str_vs(arg%nodeValue),"--")>0) then
+      call throw_exception(FoX_INVALID_COMMENT, "appendData", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    elseif (arg%nodeType==CDATA_SECTION_NODE .and. index(str_vs(arg%nodeValue), "]]>")>0) then
+      call throw_exception(FoX_INVALID_CDATA_SECTION, "appendData", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
 
   end subroutine appendData
   
@@ -3290,11 +3599,40 @@ if (present(ex)) then
 endif
 
     endif
-  !FIXME what if data is wrong for node type    
+
+    if (.not.checkChars(data, arg%ownerDocument%xds%xml_version)) then
+      call throw_exception(FoX_INVALID_CHARACTER, "insertData", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
 
     tmp => arg%nodeValue
     arg%nodeValue => vs_str_alloc(str_vs(tmp(:offset))//data//str_vs(tmp(offset+1:)))
     deallocate(tmp)
+
+    ! We have to do these checks *after* appending data in case offending string
+    ! spans old & new data
+    if (arg%nodeType==COMMENT_NODE .and. index(str_vs(arg%nodeValue),"--")>0) then
+      call throw_exception(FoX_INVALID_COMMENT, "insertData", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    elseif (arg%nodeType==CDATA_SECTION_NODE .and. index(str_vs(arg%nodeValue), "]]>")>0) then
+      call throw_exception(FoX_INVALID_CDATA_SECTION, "insertData", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
 
   end subroutine insertData
 
@@ -3332,7 +3670,6 @@ if (present(ex)) then
 endif
 
     endif
-   ! FIXME offset/count check
     
     tmp => arg%nodeValue
     arg%nodeValue => vs_str_alloc(str_vs(tmp(:offset))//str_vs(tmp(offset+count:)))
@@ -3350,45 +3687,108 @@ endif
     
     character, pointer :: tmp(:)
 
-    ! FIXME offset >0 check
-    
     if (isCharData(arg%nodeType)) then
-      tmp => arg%nodeValue
-      if (offset+count <= size(arg%nodeValue)) then
-        arg%nodeValue => vs_str_alloc(str_vs(tmp(:offset))//data//str_vs(tmp(offset+count:)))
-      else
-        arg%nodeValue => vs_str_alloc(str_vs(tmp(:offset))//data)
-      endif
-      deallocate(tmp)
-    else
-      continue
-      ! FIXME error
+      call throw_exception(FoX_INVALID_NODE, "replaceData", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    elseif (arg%readonly) then
+      call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "replaceData", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    elseif (offset<0 .or. count<0) then
+      call throw_exception(INDEX_SIZE_ERR, "replaceData", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
     endif
-    
+
+    if (.not.checkChars(data, arg%ownerDocument%xds%xml_version)) then
+      call throw_exception(FoX_INVALID_CHARACTER, "replaceData", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    tmp => arg%nodeValue
+    if (offset+count <= size(arg%nodeValue)) then
+      arg%nodeValue => vs_str_alloc(str_vs(tmp(:offset))//data//str_vs(tmp(offset+count:)))
+    else
+      arg%nodeValue => vs_str_alloc(str_vs(tmp(:offset))//data)
+    endif
+    deallocate(tmp)
+
+    ! We have to do these checks *after* appending data in case offending string
+    ! spans old & new data
+    if (arg%nodeType==COMMENT_NODE .and. index(str_vs(arg%nodeValue),"--")>0) then
+      call throw_exception(FoX_INVALID_COMMENT, "replaceData", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    elseif (arg%nodeType==CDATA_SECTION_NODE .and. index(str_vs(arg%nodeValue), "]]>")>0) then
+      call throw_exception(FoX_INVALID_CDATA_SECTION, "replaceData", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
   end subroutine replaceData
  
 
 
-  function getNotationName(arg) result(c)
+  function getNotationName(arg, ex)result(c) 
+    type(DOMException), intent(inout), optional :: ex
     type(Node), intent(in) :: arg
     character(len=size(arg%notationName)) :: c
 
     if (arg%nodeType/=ENTITY_NODE) then
-      ! FIXME error
-      continue
+      call throw_exception(FoX_INVALID_NODE, "getNotationName", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
     endif
+
     c = str_vs(arg%notationName)
 
   end function getNotationName
 
 
 
-  function getTarget(arg) result(c)
+  function getTarget(arg, ex)result(c) 
+    type(DOMException), intent(inout), optional :: ex
     type(Node), intent(in) :: arg
     character(len=size(arg%nodeName)) :: c
 
     if (arg%nodeType/=PROCESSING_INSTRUCTION_NODE) then
-      ! FIXME error
+      call throw_exception(FoX_INVALID_NODE, "getTarget", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
     endif
 
     c = str_vs(arg%nodeName)
@@ -3403,7 +3803,8 @@ endif
     p = (nodeType==TEXT_NODE.or.nodeType==CDATA_SECTION_NODE)
   end function isTextNode
 
-  subroutine splitText(arg, offset)
+  subroutine splitText(arg, offset, ex)
+    type(DOMException), intent(inout), optional :: ex
     type(Node), pointer :: arg
     integer, intent(in) :: offset
 
@@ -3411,20 +3812,41 @@ endif
 
     character, pointer :: tmp(:)
 
-    if (isTextNode(arg%nodeType)) then
-      tmp => arg%nodeValue
-      if (arg%nodeType==TEXT_NODE) then
-        newNode => createTextNode(arg%ownerDocument, str_vs(tmp(:offset)))
-      elseif (arg%nodeType==CDATA_SECTION_NODE) then
-        newNode => createCdataSection(arg%ownerDocument, str_vs(tmp(:offset)))
-      endif
-      arg%nodeValue => vs_str_alloc(str_vs(tmp(offset+1:)))
-      deallocate(tmp)
-      newNode => insertBefore(arg%parentNode, newNode, arg)
-    else
-      ! FIXME error
-      continue
-    end if
+    if (.not.isTextNode(arg%nodeType)) then
+      call throw_exception(FoX_INVALID_NODE, "splitText", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    elseif (arg%readonly) then
+      call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "splitText", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    elseif (offset<0 .or. offset>size(arg%nodeValue)) then
+      call throw_exception(INDEX_SIZE_ERR, "splitText", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    tmp => arg%nodeValue
+    if (arg%nodeType==TEXT_NODE) then
+      newNode => createTextNode(arg%ownerDocument, str_vs(tmp(:offset)))
+    elseif (arg%nodeType==CDATA_SECTION_NODE) then
+      newNode => createCdataSection(arg%ownerDocument, str_vs(tmp(:offset)))
+    endif
+    arg%nodeValue => vs_str_alloc(str_vs(tmp(offset+1:)))     
+    deallocate(tmp)
+    newNode => insertBefore(arg%parentNode, newNode, arg)
    
   end subroutine splitText
                                      

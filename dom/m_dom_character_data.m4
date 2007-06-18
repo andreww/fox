@@ -77,11 +77,22 @@ TOHW_m_dom_contents(`
     elseif (arg%readonly) then
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
     endif
-  !FIXME what if data is wrong for node type    
 
+    if (.not.checkChars(data, arg%ownerDocument%xds%xml_version)) then
+      TOHW_m_dom_throw_error(FoX_INVALID_CHARACTER)
+    endif
+    
     tmp => arg%nodeValue
     arg%nodeValue => vs_str_alloc(str_vs(tmp)//data)
     deallocate(tmp)
+
+    ! We have to do these checks *after* appending data in case offending string
+    ! spans old & new data
+    if (arg%nodeType==COMMENT_NODE .and. index(str_vs(arg%nodeValue),"--")>0) then
+      TOHW_m_dom_throw_error(FoX_INVALID_COMMENT)
+    elseif (arg%nodeType==CDATA_SECTION_NODE .and. index(str_vs(arg%nodeValue), "]]>")>0) then
+      TOHW_m_dom_throw_error(FoX_INVALID_CDATA_SECTION)
+    endif
 
   end subroutine appendData
   
@@ -100,11 +111,22 @@ TOHW_m_dom_contents(`
     elseif (offset<0) then
       TOHW_m_dom_throw_error(INDEX_SIZE_ERR)
     endif
-  !FIXME what if data is wrong for node type    
+
+    if (.not.checkChars(data, arg%ownerDocument%xds%xml_version)) then
+      TOHW_m_dom_throw_error(FoX_INVALID_CHARACTER)
+    endif
 
     tmp => arg%nodeValue
     arg%nodeValue => vs_str_alloc(str_vs(tmp(:offset))//data//str_vs(tmp(offset+1:)))
     deallocate(tmp)
+
+    ! We have to do these checks *after* appending data in case offending string
+    ! spans old & new data
+    if (arg%nodeType==COMMENT_NODE .and. index(str_vs(arg%nodeValue),"--")>0) then
+      TOHW_m_dom_throw_error(FoX_INVALID_COMMENT)
+    elseif (arg%nodeType==CDATA_SECTION_NODE .and. index(str_vs(arg%nodeValue), "]]>")>0) then
+      TOHW_m_dom_throw_error(FoX_INVALID_CDATA_SECTION)
+    endif
 
   end subroutine insertData
 
@@ -123,7 +145,6 @@ TOHW_m_dom_contents(`
     elseif (offset<0 .or. count<0) then
       TOHW_m_dom_throw_error(INDEX_SIZE_ERR)
     endif
-   ! FIXME offset/count check
     
     tmp => arg%nodeValue
     arg%nodeValue => vs_str_alloc(str_vs(tmp(:offset))//str_vs(tmp(offset+count:)))
@@ -140,21 +161,34 @@ TOHW_m_dom_contents(`
     
     character, pointer :: tmp(:)
 
-    ! FIXME offset >0 check
-    
     if (isCharData(arg%nodeType)) then
-      tmp => arg%nodeValue
-      if (offset+count <= size(arg%nodeValue)) then
-        arg%nodeValue => vs_str_alloc(str_vs(tmp(:offset))//data//str_vs(tmp(offset+count:)))
-      else
-        arg%nodeValue => vs_str_alloc(str_vs(tmp(:offset))//data)
-      endif
-      deallocate(tmp)
-    else
-      continue
-      ! FIXME error
+      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
+    elseif (arg%readonly) then
+      TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
+    elseif (offset<0 .or. count<0) then
+      TOHW_m_dom_throw_error(INDEX_SIZE_ERR)
     endif
-    
+
+    if (.not.checkChars(data, arg%ownerDocument%xds%xml_version)) then
+      TOHW_m_dom_throw_error(FoX_INVALID_CHARACTER)
+    endif
+
+    tmp => arg%nodeValue
+    if (offset+count <= size(arg%nodeValue)) then
+      arg%nodeValue => vs_str_alloc(str_vs(tmp(:offset))//data//str_vs(tmp(offset+count:)))
+    else
+      arg%nodeValue => vs_str_alloc(str_vs(tmp(:offset))//data)
+    endif
+    deallocate(tmp)
+
+    ! We have to do these checks *after* appending data in case offending string
+    ! spans old & new data
+    if (arg%nodeType==COMMENT_NODE .and. index(str_vs(arg%nodeValue),"--")>0) then
+      TOHW_m_dom_throw_error(FoX_INVALID_COMMENT)
+    elseif (arg%nodeType==CDATA_SECTION_NODE .and. index(str_vs(arg%nodeValue), "]]>")>0) then
+      TOHW_m_dom_throw_error(FoX_INVALID_CDATA_SECTION)
+    endif
+
   end subroutine replaceData
  
 ')`'dnl

@@ -1,3 +1,4 @@
+undefine(`index', `len', `format')
 define(`TOHW_m_dom_imports',`divert(1)$1'`divert')dnl
 define(`TOHW_m_dom_publics',`divert(2)$1'`divert')dnl
 define(`TOHW_m_dom_contents',`divert(3)$1'`divert')dnl
