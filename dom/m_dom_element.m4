@@ -243,30 +243,35 @@ TOHW_m_dom_contents(`
   end subroutine removeAttributeNS
 
 
-  function getAttributeNodeNS(element, namespaceURI, localName) result(attr)
+  TOHW_function(getAttributeNodeNS, (element, namespaceURI, localName), attr)
     type(Node), intent(in) :: element
     character(len=*), intent(in) :: namespaceURI
     character(len=*), intent(in) :: localName
     type(Node), pointer :: attr
 
-    attr => null()     ! as per specs, if not found
     if (element%nodeType /= ELEMENT_NODE) then
-      ! FIXME error
+      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
-    attr => getNamedItemNS(element%attributes, namespaceURI, localname)
 
-    ! FIXME catch and throw awaye xception
+    attr => null()     ! as per specs, if not found
+    attr => getNamedItemNS(element%attributes, namespaceURI, localname)
 
   end function getAttributeNodeNS
   
 
-  function setAttributeNodeNS(element, newattr) result(attr)
+  TOHW_function(setAttributeNodeNS, (element, newattr), attr)
     type(Node), pointer :: element
     type(Node), pointer :: newattr
     type(Node), pointer :: attr
 
     if (element%nodeType /= ELEMENT_NODE) then
-      ! FIXME error
+      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
+    elseif (.not.associated(element%ownerDocument, newattr%ownerDocument)) then
+      TOHW_m_dom_throw_error(WRONG_DOCUMENT_ERR)
+    elseif (element%readonly) then
+      TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
+    elseif (associated(attr%ownerElement)) then
+      TOHW_m_dom_throw_error(INUSE_ATTRIBUTE_ERR)
     endif
 
     ! this checks if attribute exists already
@@ -274,7 +279,7 @@ TOHW_m_dom_contents(`
   end function setAttributeNodeNS
 
 
-  function removeAttributeNodeNS(element, oldattr) result(attr)
+  TOHW_function(removeAttributeNodeNS, (element, oldattr), attr)
     type(Node), pointer :: element
     type(Node), pointer :: oldattr
     type(Node), pointer :: attr
@@ -282,7 +287,9 @@ TOHW_m_dom_contents(`
     integer :: i
 
     if (element%nodeType /= ELEMENT_NODE) then
-      ! FIXME error
+      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
+    elseif (element%readonly) then
+      TOHW_m_dom_throw_error(WRONG_DOCUMENT_ERR)
     endif
 
     do i = 1, element%attributes%list%length
@@ -293,23 +300,23 @@ TOHW_m_dom_contents(`
       endif
     enddo
 
-    ! FIXME exceptions
+    TOHW_m_dom_throw_error(NOT_FOUND_ERR)
 
   end function removeAttributeNodeNS
 
 
-!  function getElementsByTagName - see m_dom_document
+!  function getElementsByTagNameNS - see m_dom_document
 
 
-  function hasAttribute(element, name) result(p)
+  TOHW_function(hasAttribute, (element, name), p)
     type(Node), intent(in) :: element
     character(len=*), intent(in) :: name
     logical :: p
 
     integer :: i
-
-    if (element%nodeType /= ELEMENT_NODE) then
-      ! FIXME error
+ 
+   if (element%nodeType /= ELEMENT_NODE) then
+      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
 
     p = .false.
@@ -323,7 +330,7 @@ TOHW_m_dom_contents(`
   end function hasAttribute
 
 
-  function hasAttributeNS(element, namespaceURI, localName) result(p)
+  TOHW_function(hasAttributeNS, (element, namespaceURI, localName), p)
     type(Node), intent(in) :: element
     character(len=*), intent(in) :: namespaceURI
     character(len=*), intent(in) :: localName
@@ -331,8 +338,9 @@ TOHW_m_dom_contents(`
 
     integer :: i
 
-    if (element%nodeType /= ELEMENT_NODE) then
-      ! FIXME error
+ 
+   if (element%nodeType /= ELEMENT_NODE) then
+      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
 
     p = .false.
