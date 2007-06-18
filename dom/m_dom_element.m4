@@ -27,100 +27,117 @@ TOHW_m_dom_publics(`
 dnl
 TOHW_m_dom_contents(`
 
-  function getTagName(element) result(c)
+  TOHW_function(getTagName, (element), c)
     type(Node), intent(in) :: element   
     character(len=size(element%nodeName)) :: c
-    
-    if (element%nodeType == ELEMENT_NODE) then
-      c = str_vs(element%nodeName )
-    else
-      c = "" ! FIXME error
+
+    if (element%nodeType /= ELEMENT_NODE) then
+      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
-    
+    c = str_vs(element%nodeName)    
+     
   end function getTagName
 
     
-  function getAttribute(element, name) result(c)
+  TOHW_function(getAttribute, (element, name), c)
     type(Node), intent(in) :: element
     character(len=*), intent(in) :: name
     character(len=getNamedItem_Value_length(element%attributes, name)) :: c
 
     type(Node), pointer :: nn
 
-    c = ""  ! as per specs, if not found Not sure ahout this FIXME
-    if (element%nodeType /= ELEMENT_NODE) return ! or throw an error FIXME?
+    if (element%nodeType /= ELEMENT_NODE) then
+      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
+    endif
+    c = ""  ! as per specs, if not found
     c = getNamedItem_Value(element%attributes, name)
 
-    ! FIXME catch exception
+    ! FIXME do we need to catch the exception above if it doesnt exist?
         
   end function getAttribute
 
 
-  subroutine setAttribute(element, name, value)
+  TOHW_subroutine(setAttribute, (element, name, value))
     type(Node), intent(inout) :: element
     character(len=*), intent(in) :: name
     character(len=*), intent(in) :: value
 
     type(Node), pointer :: nn
 
-    if (element%nodeType /= ELEMENT_NODE) return ! or throw an error FIXME?
+    if (element%nodeType /= ELEMENT_NODE) then
+      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
+
+      TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
+    elseif (.not.checkChars(name, element%ownerDocument%xds%xml_version)) then
+      TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
+    elseif (.not.checkName(value, element%ownerDocument%xds)) then
+      TOHW_m_dom_throw_error(FoX_INVALID_XML_NAME)
+    elseif (.not.checkChars(value, element%ownerDocument%xds%xml_version)) then
+      TOHW_m_dom_throw_error(FoX_INVALID_CHARACTER)
+    endif
 
     nn => createAttribute(element%ownerDocument, name)
     call setValue(nn, value)
     nn => setNamedItem(element%attributes, nn)
 
-    ! FIXME catch exception
-
   end subroutine setAttribute
 
 
-  subroutine removeAttribute(element, name)
+  TOHW_subroutine(removeAttribute, (element, name))
     type(Node), pointer :: element
     character(len=*), intent(in) :: name
 
     type(Node), pointer :: dummy
 
-    if (element % nodeType /= ELEMENT_NODE) return
-    ! WHat about remove text ...
-
+    if (element%nodeType /= ELEMENT_NODE) then
+      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
+    endif
+    
     dummy => removeNamedItem(element%attributes, name)
-    ! FIXME and free memory from dummy
-    ! call destroyAttribute(dummy)
+    call destroyAttribute(dummy)
+
+  ! FIXME recreate a default value if there is one
      
   end subroutine removeAttribute
 
 
-  function getAttributeNode(element, name) result(attr)
+  TOHW_function(getAttributeNode, (element, name), attr)
     type(Node), intent(in) :: element
     character(len=*), intent(in) :: name
     type(Node), pointer :: attr
 
     attr => null()     ! as per specs, if not found
     if (element%nodeType /= ELEMENT_NODE) then
-      ! FIXME error
+      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
     attr => getNamedItem(element%attributes, name)
 
-    ! FIXME catch and throw awaye xception
+    ! FIXME catch and throw away exception
 
   end function getAttributeNode
   
 
-  function setAttributeNode(element, newattr) result(attr)
+  TOHW_function(setAttributeNode, (element, newattr), attr)
     type(Node), pointer :: element
     type(Node), pointer :: newattr
     type(Node), pointer :: attr
 
     if (element%nodeType /= ELEMENT_NODE) then
-      ! FIXME error
+      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
+    elseif (.not.associated(element%ownerDocument, newattr%ownerDocument)) then
+      TOHW_m_dom_throw_error(WRONG_DOCUMENT_ERR)
+    elseif (element%readonly) then
+      TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
+    elseif (associated(attr%ownerElement)) then
+      TOHW_m_dom_throw_error(INUSE_ATTRIBUTE_ERR)
     endif
 
     ! this checks if attribute exists already
-    attr => setNamedItem(element%attributes, newattr)
+    attr => setNamedItem(element%attributes, newattr, ex)
   end function setAttributeNode
 
 
-  function removeAttributeNode(element, oldattr) result(attr)
+  TOHW_function(removeAttributeNode, (element, oldattr), attr)
     type(Node), pointer :: element
     type(Node), pointer :: oldattr
     type(Node), pointer :: attr
@@ -128,7 +145,9 @@ TOHW_m_dom_contents(`
     integer :: i
 
     if (element%nodeType /= ELEMENT_NODE) then
-      ! FIXME error
+      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
+    elseif (element%readonly) then
+      TOHW_m_dom_throw_error(WRONG_DOCUMENT_ERR)
     endif
 
     do i = 1, element%attributes%list%length
@@ -138,7 +157,7 @@ TOHW_m_dom_contents(`
       endif
     enddo
 
-    ! FIXME exceptions
+    TOHW_m_dom_throw_error(NOT_FOUND_ERR)
 
   end function removeAttributeNode
 
@@ -146,7 +165,7 @@ TOHW_m_dom_contents(`
 !  function getElementsByTagName - see m_dom_document
 
 
-  function getAttributeNS(element, namespaceURI, localName) result(c)
+  TOHW_function(getAttributeNS, (element, namespaceURI, localName), c)
     type(Node), intent(in) :: element
     character(len=*), intent(in) :: namespaceURI
     character(len=*), intent(in) :: localName
@@ -155,26 +174,47 @@ TOHW_m_dom_contents(`
 
     type(Node), pointer :: nn
 
+    if (element%nodeType /= ELEMENT_NODE) then
+      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
+    endif
+
     c = ""  ! as per specs, if not found Not sure ahout this FIXME
-    if (element%nodeType /= ELEMENT_NODE) return ! or throw an error FIXME?
     c = getNamedItemNS_Value(element%attributes, namespaceURI, localName)
 
-    ! FIXME catch exception
+    ! FIXME dont need both above
         
   end function getAttributeNS
 
 
-  subroutine setAttributeNS(element, namespaceURI, localname, value)
+  TOHW_subroutine(setAttributeNS, (element, namespaceURI, qualifiedname, value))
     type(Node), intent(inout) :: element
     character(len=*), intent(in) :: namespaceURI
-    character(len=*), intent(in) :: localname
+    character(len=*), intent(in) :: qualifiedName
     character(len=*), intent(in) :: value
 
     type(Node), pointer :: nn
 
-    if (element%nodeType /= ELEMENT_NODE) return ! or throw an error FIXME?
+    if (element%nodeType /= ELEMENT_NODE) then
+      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
+    elseif (.not.checkChars(qualifiedname, element%ownerDocument%xds%xml_version)) then
+      TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
+    elseif (element%readonly) then
+      TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
+    elseif (.not.checkQName(qualifiedname, element%ownerDocument%xds)) then
+      TOHW_m_dom_throw_error(NAMESPACE_ERR)
+    elseif (prefixOfQName(qualifiedName)/="" &
+     .and. namespaceURI=="") then
+      TOHW_m_dom_throw_error(NAMESPACE_ERR)
+    elseif (prefixOfQName(qualifiedName)=="xml" .and. & 
+      namespaceURI/="http://www.w3.org/XML/1998/namespace") then
+      TOHW_m_dom_throw_error(NAMESPACE_ERR)
+    ! FIXME is this all possible errors? 
+      ! what if prefix = "xmlns"? or other "xml"
+    endif
 
-    nn => createAttributeNS(element%ownerDocument, namespaceURI, localname)
+! FIXME what if namespace is undeclared ... will be recreated on serialization,
+! but we might need a new namespace node here for xpath ...
+    nn => createAttributeNS(element%ownerDocument, namespaceURI, qualifiedname)
     call setValue(nn, value)
     nn => setNamedItemNS(element%attributes, nn)
 
@@ -183,18 +223,22 @@ TOHW_m_dom_contents(`
   end subroutine setAttributeNS
 
 
-  subroutine removeAttributeNS(element, namespaceURI, localName)
+  TOHW_subroutine(removeAttributeNS, (element, namespaceURI, localName))
     type(Node), pointer :: element
     character(len=*), intent(in) :: namespaceURI
     character(len=*), intent(in) :: localName
 
     type(Node), pointer :: dummy
 
-    if (element % nodeType /= ELEMENT_NODE) return
-    ! WHat about remove text ...
+    if (element%nodeType /= ELEMENT_NODE) then
+      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
+    elseif (element%readonly) then
+      TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
+    endif
+
     dummy => removeNamedItemNS(element%attributes, namespaceURI, localName)
-    ! FIXME and clean up memory
-    ! call destroyAttribute(dummy)
+
+    call destroyAttribute(dummy)
      
   end subroutine removeAttributeNS
 
