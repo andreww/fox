@@ -187,8 +187,9 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
     elseif (.not.checkChars(data, doc%xds%xml_version)) then
       TOHW_m_dom_throw_error(FoX_INVALID_CHARACTER)
-    elseif (.not.checkName(data, doc%xds)) then
+    elseif (.not.checkName(target, doc%xds)) then
       TOHW_m_dom_throw_error(FoX_INVALID_XML_NAME)
+! FIXME check validity of PI target 
     elseif (index(data,"?>")>0) then   
       TOHW_m_dom_throw_error(FoX_INVALID_PI_DATA)
     endif

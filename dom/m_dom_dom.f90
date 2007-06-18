@@ -2202,7 +2202,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkName(data, doc%xds)) then
+    elseif (.not.checkName(target, doc%xds)) then
       call throw_exception(FoX_INVALID_XML_NAME, "createProcessingInstruction", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -2210,6 +2210,7 @@ if (present(ex)) then
   endif
 endif
 
+! FIXME check validity of PI target 
     elseif (index(data,"?>")>0) then   
       call throw_exception(FoX_INVALID_PI_DATA, "createProcessingInstruction", ex)
 if (present(ex)) then

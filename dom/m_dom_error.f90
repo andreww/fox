@@ -41,26 +41,6 @@ module m_dom_error
   integer, parameter, public :: FoX_INVALID_SYSTEM_ID       = 208
   integer, parameter, public :: FoX_INVALID_COMMENT         = 209
 
-  character(len=27), dimension(0:17), parameter :: errorString = (/ &
-    "XMLF90_ERR                 ", &
-    "INDEX_SIZE_ERR             ", &
-    "DOMSTRING_SIZE_ERR         ", &
-    "HIERARCHY_REQUEST_ERR      ", &
-    "WRONG_DOCUMENT_ERR         ", &
-    "INVALID_CHARACTER_ERR      ", &
-    "NO_DATA_ALLOWED_ERR        ", &
-    "NO_MODIFICATION_ALLOWED_ERR", &
-    "NOT_FOUND_ERR              ", &
-    "NOT_SUPPORTED_ERR          ", &
-    "INUSE_ATTRIBUTE_ERR        ", &
-    "INVALID_STATE_ERR          ", &
-    "SYNTAX_ERR                 ", &
-    "INVALID_MODIFICATION_ERR   ", &
-    "NAMESPACE_ERR              ", &
-    "INVALID_ACCESS_ERR         ", &
-    "VALIDATION_ERR             ", &
-    "TYPE_MISMATCH_ERR          " /)
-
   public :: DOMException
   public :: getCode
   public :: throw_exception
@@ -69,6 +49,77 @@ module m_dom_error
   public :: internal_error
 
 contains
+
+  pure function errorString(code) result(s)
+    integer, intent(in) :: code
+    character(len=27) :: s
+
+    select case(code)
+    case(0)
+      s = "XMLF90_ERR"
+    case(1)
+      s = "INDEX_SIZE_ERR"
+    case(2)
+      s = "DOMSTRING_SIZE_ERR"
+    case(3)
+      s = "HIERARCHY_REQUEST_ERR"
+    case(4)
+      s = "WRONG_DOCUMENT_ERR"
+    case(5)
+      s = "INVALID_CHARACTER_ERR"
+    case(6)
+      s = "NO_DATA_ALLOWED_ERR"
+    case(7)
+      s = "NO_MODIFICATION_ALLOWED_ERR"
+    case(8)
+      s = "NOT_FOUND_ERR"
+    case(9)
+      s = "NOT_SUPPORTED_ERR"
+    case(10)
+      s = "INUSE_ATTRIBUTE_ERR"
+    case(11)
+      s = "INVALID_STATE_ERR"
+    case(12)
+      s = "SYNTAX_ERR"
+    case(13)
+      s = "INVALID_MODIFICATION_ERR"
+    case(14)
+      s = "NAMESPACE_ERR"
+    case(15)
+      s = "INVALID_ACCESS_ERR"
+    case(16)
+      s = "VALIDATION_ERR"
+    case(18)
+      s = "TYPE_MISMATCH_ERR"
+    case(51)
+      s = "INVALID_EXPRESSION_ERR"
+    case(52)
+      s = "TYPE_ERR"
+    case(200)
+      s = "FoX_INVALID_CHARACTER"
+    case (201)
+      s = "FoX_INVALID_NODE"
+    case(202)
+      s = "FoX_INVALID_XML_NAME"
+    case(203)
+      s = "FoX_INVALID_PI_TARGET"
+    case(204)
+      s = "FoX_INVALID_PI_DATA"
+    case(205)
+      s = "FoX_INVALID_CDATA_SECTION"
+    case(206)
+      s = "FoX_INVALID_TEXT"
+    case(207)
+      s = "FoX_INVALID_PUBLIC_ID"
+    case(208)
+      s = "FoX_INVALID_SYSTEM_ID"
+    case(209)
+      s = "FoX_INVALID_COMMENT"
+    case default
+      s = "INTERNAL ERROR!!!!"
+    end select
+
+  end function errorString
 
   pure function getCode(ex) result(n)
     type(DOMException), intent(in) :: ex
