@@ -12,12 +12,12 @@ TOHW_m_dom_publics(`
 dnl
 TOHW_m_dom_contents(`
 
-  function getTarget(arg) result(c)
+  TOHW_function(getTarget, (arg), c)
     type(Node), intent(in) :: arg
     character(len=size(arg%nodeName)) :: c
 
     if (arg%nodeType/=PROCESSING_INSTRUCTION_NODE) then
-      ! FIXME error
+      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
 
     c = str_vs(arg%nodeName)
