@@ -2,7 +2,7 @@ include(`m_dom_exception.m4')`'dnl
 TOHW_m_dom_imports(`
 
   use m_common_array_str, only: vs_str_alloc
-  use m_common_struct, only: xml_doc_state
+  use m_common_struct, only: xml_doc_state, destroy_xml_doc_state
 
 ')`'dnl
 dnl
@@ -193,6 +193,9 @@ TOHW_m_dom_contents(`
       call destroyNode(dt%notations%list%nodes(i)%this)
     enddo
     if (associated(dt%notations%list%nodes)) deallocate(dt%notations%list%nodes)
+
+    call destroy_xml_doc_state(dt%xds)
+    deallocate(dt%xds)
 
     call destroyNodeContents(dt)
     deallocate(dt)

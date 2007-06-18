@@ -10,7 +10,7 @@ module m_dom_dom
 
 
   use m_common_array_str, only: vs_str_alloc
-  use m_common_struct, only: xml_doc_state
+  use m_common_struct, only: xml_doc_state, destroy_xml_doc_state
 
 
 
@@ -33,6 +33,7 @@ module m_dom_dom
     INVALID_CHARACTER_ERR, NAMESPACE_ERR, FoX_INVALID_PUBLIC_ID, FoX_INVALID_SYSTEM_ID
   use m_common_namecheck, only: checkName, checkPublicId, checkSystemId
   use m_common_string, only: toLower
+  use m_common_struct, only: init_xml_doc_state
 
 
 
@@ -458,6 +459,9 @@ endif
       call destroyNode(dt%notations%list%nodes(i)%this)
     enddo
     if (associated(dt%notations%list%nodes)) deallocate(dt%notations%list%nodes)
+
+    call destroy_xml_doc_state(dt%xds)
+    deallocate(dt%xds)
 
     call destroyNodeContents(dt)
     deallocate(dt)
@@ -1747,6 +1751,7 @@ endif
     type(Node), pointer :: dt
 
     allocate(dt%xds)
+    call init_xml_doc_state(dt%xds)
 
     if (.not.checkChars(qualifiedName, XML1_0)) then
       call throw_exception(INVALID_CHARACTER_ERR, "createDocumentType", ex)
@@ -1817,6 +1822,7 @@ endif
     allocate(dt%internalSubset(0)) !FIXME
 
     allocate(dt%xds)
+    call init_xml_doc_state(dt%xds)
   end function createEmptyDocumentType
 
 

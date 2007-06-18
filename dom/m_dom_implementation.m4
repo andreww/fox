@@ -7,6 +7,7 @@ TOHW_m_dom_imports(`
     INVALID_CHARACTER_ERR, NAMESPACE_ERR, FoX_INVALID_PUBLIC_ID, FoX_INVALID_SYSTEM_ID
   use m_common_namecheck, only: checkName, checkPublicId, checkSystemId
   use m_common_string, only: toLower
+  use m_common_struct, only: init_xml_doc_state
 
 ')`'dnl
 dnl
@@ -47,6 +48,7 @@ TOHW_m_dom_contents(`
     type(Node), pointer :: dt
 
     allocate(dt%xds)
+    call init_xml_doc_state(dt%xds)
 
     if (.not.checkChars(qualifiedName, XML1_0)) then
       TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR, (dt%xds))
@@ -85,6 +87,7 @@ TOHW_m_dom_contents(`
     allocate(dt%internalSubset(0)) !FIXME
 
     allocate(dt%xds)
+    call init_xml_doc_state(dt%xds)
   end function createEmptyDocumentType
 
 
