@@ -12,14 +12,14 @@ TOHW_m_dom_publics(`
 dnl
 TOHW_m_dom_contents(`
 
-  function getNotationName(arg) result(c)
+  TOHW_function(getNotationName, (arg), c)
     type(Node), intent(in) :: arg
     character(len=size(arg%notationName)) :: c
 
     if (arg%nodeType/=ENTITY_NODE) then
-      ! FIXME error
-      continue
+      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
+
     c = str_vs(arg%notationName)
 
   end function getNotationName
