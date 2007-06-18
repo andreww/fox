@@ -191,9 +191,12 @@ TOHW_m_dom_contents(`
       .or. associated(arg, newChild%ownerDocument))) then
       TOHW_m_dom_throw_error(WRONG_DOCUMENT_ERR)
     endif
+
+    if (associated(newChild%parentNode)) &
+      newChild => removeChild(newChild%parentNode, newChild, ex)
     
     if (.not.associated(refChild)) then
-      insertBefore => appendChild(arg, newChild)
+      insertBefore => appendChild(arg, newChild, ex)
       return
     endif
 
@@ -278,6 +281,13 @@ TOHW_m_dom_contents(`
     if (.not.(associated(arg%ownerDocument, newChild%ownerDocument) &
       .or. associated(arg, newChild%ownerDocument))) then
       TOHW_m_dom_throw_error(WRONG_DOCUMENT_ERR)
+    endif
+
+    if (associated(newChild%parentNode)) then
+      newChild => removeChild(newChild%parentNode, newChild, ex)
+    elseif (newChild%nodeType==DOCUMENT_FRAGMENT_NODE) then
+      !FIXME
+
     endif
 
     do i = 1, size(arg%childNodes%nodes)
@@ -371,6 +381,9 @@ TOHW_m_dom_contents(`
     type(Node), pointer :: newChild
     type(Node), pointer :: appendChild
     
+    type(ListNode), pointer :: temp_nl(:)
+    integer :: i
+
     if (arg%readonly) then
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
     endif
@@ -413,17 +426,24 @@ TOHW_m_dom_contents(`
       .or. associated(arg, newChild%ownerDocument))) then
       TOHW_m_dom_throw_error(WRONG_DOCUMENT_ERR)
     endif
-    
-    if (.not.(associated(arg%firstChild))) then
-      arg%firstChild => newChild
-    else 
-      newChild%previousSibling => arg%lastChild
-      arg%lastChild%nextSibling => newChild 
-    endif
-    
+
+    if (associated(newChild%parentNode)) &
+      newChild => removeChild(newChild%parentNode, newChild, ex) 
+
+    allocate(temp_nl(size(arg%childNodes%nodes)+1))
+    do i = 1, size(arg%childNodes%nodes)
+      temp_nl(i)%this => arg%childNodes%nodes(i)%this
+    enddo
+    temp_nl(i)%this => newChild
+    temp_nl(i-1)%this%nextSibling => newChild
+    newChild%previousSibling => temp_nl(i)%this
+    newChild%nextSibling => null()
+
+    deallocate(arg%childNodes%nodes)
+    arg%childNodes%nodes => temp_nl
+
     arg%lastChild => newChild
     newChild%parentNode => arg
-    arg%nc = arg%nc + 1
     
     appendChild => newChild
     

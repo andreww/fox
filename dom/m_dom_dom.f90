@@ -731,9 +731,12 @@ if (present(ex)) then
 endif
 
     endif
+
+    if (associated(newChild%parentNode)) &
+      newChild => removeChild(newChild%parentNode, newChild, ex)
     
     if (.not.associated(refChild)) then
-      insertBefore => appendChild(arg, newChild)
+      insertBefore => appendChild(arg, newChild, ex)
       return
     endif
 
@@ -869,6 +872,13 @@ endif
 
     endif
 
+    if (associated(newChild%parentNode)) then
+      newChild => removeChild(newChild%parentNode, newChild, ex)
+    elseif (newChild%nodeType==DOCUMENT_FRAGMENT_NODE) then
+      !FIXME
+
+    endif
+
     do i = 1, size(arg%childNodes%nodes)
       if (associated(arg%childNodes%nodes(i)%this, oldChild)) then
         np => oldChild
@@ -980,6 +990,9 @@ endif
     type(Node), pointer :: newChild
     type(Node), pointer :: appendChild
     
+    type(ListNode), pointer :: temp_nl(:)
+    integer :: i
+
     if (arg%readonly) then
       call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "appendChild", ex)
 if (present(ex)) then
@@ -1064,17 +1077,24 @@ if (present(ex)) then
 endif
 
     endif
-    
-    if (.not.(associated(arg%firstChild))) then
-      arg%firstChild => newChild
-    else 
-      newChild%previousSibling => arg%lastChild
-      arg%lastChild%nextSibling => newChild 
-    endif
-    
+
+    if (associated(newChild%parentNode)) &
+      newChild => removeChild(newChild%parentNode, newChild, ex) 
+
+    allocate(temp_nl(size(arg%childNodes%nodes)+1))
+    do i = 1, size(arg%childNodes%nodes)
+      temp_nl(i)%this => arg%childNodes%nodes(i)%this
+    enddo
+    temp_nl(i)%this => newChild
+    temp_nl(i-1)%this%nextSibling => newChild
+    newChild%previousSibling => temp_nl(i)%this
+    newChild%nextSibling => null()
+
+    deallocate(arg%childNodes%nodes)
+    arg%childNodes%nodes => temp_nl
+
     arg%lastChild => newChild
     newChild%parentNode => arg
-    arg%nc = arg%nc + 1
     
     appendChild => newChild
     
