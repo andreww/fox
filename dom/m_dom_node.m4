@@ -124,12 +124,12 @@ TOHW_m_dom_contents(`
   end function getNextSibling
 
   function getAttributes(arg) result(nnm)
-    type(Node), intent(in) :: arg
+    type(Node), pointer :: arg
     type(NamedNodeMap), pointer :: nnm
 
 ! FIXME surely only if this is an element node?
 
-    nnm = arg%attributes
+    nnm => arg%attributes
   end function getAttributes
 
   function getOwnerDocument(arg) result(np)
