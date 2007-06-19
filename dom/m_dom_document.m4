@@ -241,7 +241,7 @@ TOHW_m_dom_contents(`
     type(NodeList), pointer :: list
 
     type(Node), pointer :: np
-    logical :: noChild, allElements
+    logical :: ascending, allElements
 
 ! FIXME check name and tagname for doc/element respectively ...
 
@@ -266,26 +266,24 @@ TOHW_m_dom_contents(`
     allocate(list)
     allocate(list%nodes(0))
 
-    noChild = .false.
+    ascending = .false.
     do
-      if (noChild) then
-        if (associated(np, doc).or.associated(np, doc%documentElement)) then
-          exit
-        else
-          np => np%parentNode
-          noChild=  .false.
-        endif
+      if (ascending) then
+        np => np%parentNode
+        if (associated(np, doc).or.associated(np, doc%documentElement)) exit
+        ascending = .false.
+      elseif (associated(np%firstChild)) then
+        np => np%firstChild
+        cycle
       endif
       if ((np%nodeType==ELEMENT_NODE) .and. &
         (allElements .or. str_vs(np%nodeName)==tagName)) then
         call append(list, np)
       endif
-      if (associated(np%firstChild)) then
-        np => np%firstChild
-      elseif (associated(np%nextSibling)) then
+      if (associated(np%nextSibling)) then
         np => np%nextSibling
       else
-        noChild = .true.
+        ascending = .true.
       endif
     enddo
 
