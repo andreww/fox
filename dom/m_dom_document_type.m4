@@ -14,7 +14,7 @@ TOHW_m_dom_publics(`
   public :: getInternalSubset
 
 !  Not part of documented API:
-  public :: setDocumentType
+  public :: setDocType
 
 ')`'dnl
 dnl
@@ -66,7 +66,7 @@ TOHW_m_dom_contents(`
   end function getInternalSubset
 
 
-  subroutine setDocumentType(docType, name, publicId, systemId)
+  subroutine setDocType(docType, name, publicId, systemId)
     type(Node), intent(inout) :: docType
     character(len=*), intent(in) :: name
     character(len=*), intent(in), optional :: publicId
@@ -88,6 +88,6 @@ TOHW_m_dom_contents(`
       docType%systemId => vs_str_alloc(systemId)
     endif
 
-  end subroutine setDocumentType
+  end subroutine setDocType
 
 ')`'dnl

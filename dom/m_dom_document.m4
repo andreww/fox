@@ -11,7 +11,7 @@ TOHW_m_dom_imports(`
 dnl
 TOHW_m_dom_publics(`
 
-  public :: getDocumentType
+  public :: getDocType
   public :: getImplementation
   public :: getDocumentElement
   public :: setDocumentElement
@@ -40,7 +40,7 @@ TOHW_m_dom_contents(`
 
   ! Getters and setters:
 
-  TOHW_function(getDocumentType, (doc), np)
+  TOHW_function(getDocType, (doc), np)
     type(Node), intent(in) :: doc
     type(Node), pointer :: np
 
@@ -50,7 +50,7 @@ TOHW_m_dom_contents(`
     
     np => doc%docType
 
-  end function getDocumentType
+  end function getDocType
 
   TOHW_function(getImplementation, (doc), imp)
     type(Node), intent(in) :: doc

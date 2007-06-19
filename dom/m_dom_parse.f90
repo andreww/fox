@@ -15,7 +15,7 @@ module m_dom_parse
   use m_dom_dom, only: createTextNode
   use m_dom_dom, only: createNotation
   use m_dom_dom, only: createEmptyDocument
-  use m_dom_dom, only: getParentNode, setDocumentElement, getDocumentType, setDocumentType
+  use m_dom_dom, only: getParentNode, setDocumentElement, getDocType, setDocType
   use m_dom_dom, only: append, getNodeType, setReadOnly
   use m_dom_dom, only: appendchild, getNotations
   use m_dom_dom, only: setAttributeNS
@@ -130,8 +130,8 @@ contains
 
     print*,'startingDTD'
 
-    np => getDocumentType(mainDoc)
-    call setDocumentType(np, name, publicId, systemId)
+    np => getDocType(mainDoc)
+    call setDocType(np, name, publicId, systemId)
 
   end subroutine startDTD_handler
 
@@ -147,7 +147,7 @@ contains
     print*, 'adding notation'
 
     np => createNotation(mainDoc, name, publicId, systemId)
-    dt => getDocumentType(mainDoc)
+    dt => getDocType(mainDoc)
     notations => getNotations(dt)
     call setReadonly(notations, .false.)
     call append(notations, np)

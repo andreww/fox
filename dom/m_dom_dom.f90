@@ -282,7 +282,7 @@ module m_dom_dom
 
 
 
-  public :: getDocumentType
+  public :: getDocType
   public :: getImplementation
   public :: getDocumentElement
   public :: setDocumentElement
@@ -315,7 +315,7 @@ module m_dom_dom
   public :: getInternalSubset
 
 !  Not part of documented API:
-  public :: setDocumentType
+  public :: setDocType
 
 
   
@@ -2020,13 +2020,13 @@ endif
 
   ! Getters and setters:
 
-  function getDocumentType(doc, ex)result(np) 
+  function getDocType(doc, ex)result(np) 
     type(DOMException), intent(inout), optional :: ex
     type(Node), intent(in) :: doc
     type(Node), pointer :: np
 
     if (doc%nodeType/=DOCUMENT_NODE) then
-      call throw_exception(FoX_INVALID_NODE, "getDocumentType", ex)
+      call throw_exception(FoX_INVALID_NODE, "getDocType", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
      return
@@ -2037,7 +2037,7 @@ endif
     
     np => doc%docType
 
-  end function getDocumentType
+  end function getDocType
 
   function getImplementation(doc, ex)result(imp) 
     type(DOMException), intent(inout), optional :: ex
@@ -2844,7 +2844,7 @@ endif
   end function getInternalSubset
 
 
-  subroutine setDocumentType(docType, name, publicId, systemId)
+  subroutine setDocType(docType, name, publicId, systemId)
     type(Node), intent(inout) :: docType
     character(len=*), intent(in) :: name
     character(len=*), intent(in), optional :: publicId
@@ -2866,7 +2866,7 @@ endif
       docType%systemId => vs_str_alloc(systemId)
     endif
 
-  end subroutine setDocumentType
+  end subroutine setDocType
 
 
 
