@@ -85,12 +85,14 @@ module FoX_dom
   public :: getNodeName
   public :: getNodeValue
   public :: setNodeValue
+  public :: getNodeType
   public :: getFirstChild
   public :: getLastChild
   public :: getAttributes
   public :: getNextSibling
   public :: getPreviousSibling
   public :: getParentNode
+  public :: getChildNodes
   public :: insertBefore
   public :: replaceChild
   public :: removeChild
@@ -107,6 +109,7 @@ module FoX_dom
   public :: destroyNodeList
 
   ! DOM NamedNodeMap
+  public :: getLength
   public :: getNamedItem
   public :: setNamedItem
   public :: removeNamedItem
@@ -185,5 +188,9 @@ module FoX_dom
   public :: parsefile
   public :: dumpTree
   public :: serialize
+
+  ! FIXME rename this
+  public :: is_in_error
+  public :: getCode
 
 end module FoX_dom

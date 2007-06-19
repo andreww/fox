@@ -235,6 +235,10 @@ module m_dom_dom
     module procedure item_nl
   end interface
 
+  interface getLength
+    module procedure getLength_nl
+  end interface getLength
+
 
   public :: getNamedItem
   public :: getNamedItem_Value
@@ -242,7 +246,7 @@ module m_dom_dom
   public :: setNamedItem
   public :: removeNamedItem
   public :: item
-  public :: getLength
+!  public :: getLength
   public :: getNamedItemNS
   public :: getNamedItemNS_Value
   public :: getNamedItemNS_Value_length
@@ -1493,6 +1497,13 @@ endif
 
   end function remove_nl
 
+
+  function getLength_nl(nl) result(n)
+    type(NodeList), intent(in) :: nl
+    integer :: n
+
+    n = size(nl%nodes)
+  end function getLength_nl
 
   subroutine destroyNodeList(nl)
     type(NodeList), intent(inout) :: nl

@@ -13,6 +13,10 @@ TOHW_m_dom_publics(`
   interface item
     module procedure item_nl
   end interface
+
+  interface getLength
+    module procedure getLength_nl
+  end interface getLength
 ')`'dnl
 dnl
 TOHW_m_dom_contents(`
@@ -101,6 +105,13 @@ TOHW_m_dom_contents(`
 
   end function remove_nl
 
+
+  function getLength_nl(nl) result(n)
+    type(NodeList), intent(in) :: nl
+    integer :: n
+
+    n = size(nl%nodes)
+  end function getLength_nl
 
   subroutine destroyNodeList(nl)
     type(NodeList), intent(inout) :: nl

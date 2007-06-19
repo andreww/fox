@@ -13,7 +13,7 @@ TOHW_m_dom_publics(`
   public :: setNamedItem
   public :: removeNamedItem
   public :: item
-  public :: getLength
+!  public :: getLength
   public :: getNamedItemNS
   public :: getNamedItemNS_Value
   public :: getNamedItemNS_Value_length
