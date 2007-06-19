@@ -82,8 +82,15 @@ module FoX_dom
   public :: DOCUMENT_FRAGMENT_NODE
   public :: NOTATION_NODE
 
+  public :: getNodeName
+  public :: getNodeValue
+  public :: setNodeValue
   public :: getFirstChild
+  public :: getLastChild
   public :: getAttributes
+  public :: getNextSibling
+  public :: getPreviousSibling
+  public :: getParentNode
   public :: insertBefore
   public :: replaceChild
   public :: removeChild
