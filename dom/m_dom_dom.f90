@@ -2632,7 +2632,7 @@ endif
     type(DOMException), intent(inout), optional :: ex
     type(Node), pointer :: doc
     character(len=*), intent(in) :: namespaceURI, localName
-    type(NodeList) :: list
+    type(NodeList), pointer :: list
 
     type(Node), pointer :: np
     logical :: noChild, allLocalNames, allNameSpaces
@@ -2662,6 +2662,9 @@ endif
       ! FIXME internal error
       continue
     endif
+
+    allocate(list)
+    allocate(list%nodes(0))
 
     noChild = .false.
     do

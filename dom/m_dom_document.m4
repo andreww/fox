@@ -388,7 +388,7 @@ TOHW_m_dom_contents(`
   TOHW_function(getElementsByTagNameNS, (doc, namespaceURI, localName), list)
     type(Node), pointer :: doc
     character(len=*), intent(in) :: namespaceURI, localName
-    type(NodeList) :: list
+    type(NodeList), pointer :: list
 
     type(Node), pointer :: np
     logical :: noChild, allLocalNames, allNameSpaces
@@ -412,6 +412,9 @@ TOHW_m_dom_contents(`
       ! FIXME internal error
       continue
     endif
+
+    allocate(list)
+    allocate(list%nodes(0))
 
     noChild = .false.
     do
