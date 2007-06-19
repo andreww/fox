@@ -53,6 +53,7 @@ module FoX_dom
   ! DOM Document
   public :: getDocumentElement
   public :: getDocType
+  public :: getImplementation
   public :: createDocumentFragment
   public :: createElement
   public :: createTextNode

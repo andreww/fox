@@ -643,7 +643,7 @@ TOHW_m_dom_contents(`
     character(len=*), intent(in) :: version
     logical :: p
 
-    p = hasFeature(feature, version)
+    p = hasFeature(arg%ownerDocument%implementation, feature, version)
   end function isSupported
 
   ! FIXME should the below instead just decompose the QName on access?

@@ -26,7 +26,8 @@ TOHW_m_dom_publics(`
 dnl
 TOHW_m_dom_contents(`
 
-  function hasFeature(feature, version) result(p)
+  function hasFeature(impl, feature, version) result(p)
+    type(DOMImplementation), intent(in) :: impl
     character(len=*), intent(in) :: feature
     character(len=*), intent(in), optional :: version
     logical :: p

@@ -1364,7 +1364,7 @@ endif
     character(len=*), intent(in) :: version
     logical :: p
 
-    p = hasFeature(feature, version)
+    p = hasFeature(arg%ownerDocument%implementation, feature, version)
   end function isSupported
 
   ! FIXME should the below instead just decompose the QName on access?
@@ -1851,7 +1851,8 @@ endif
 
 
 
-  function hasFeature(feature, version) result(p)
+  function hasFeature(impl, feature, version) result(p)
+    type(DOMImplementation), intent(in) :: impl
     character(len=*), intent(in) :: feature
     character(len=*), intent(in), optional :: version
     logical :: p
