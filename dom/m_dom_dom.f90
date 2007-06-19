@@ -417,8 +417,8 @@ endif
   recursive subroutine destroyNode(np)
     type(Node), pointer :: np
 
-    print*,"destroyNode", np%nodeType
-    if (np%nodeType==TEXT_NODE) print*, "#text", str_vs(np%nodeValue)
+!    print*,"destroyNode", np%nodeType
+    if (.not.associated(np)) return
 
     select case(np%nodeType)
     case (ELEMENT_NODE)
@@ -2394,10 +2394,12 @@ endif
     type(DOMException), intent(inout), optional :: ex
     type(Node), pointer :: doc
     character(len=*), intent(in) :: tagName
-    type(NodeList) :: list
+    type(NodeList), pointer :: list
 
     type(Node), pointer :: np
     logical :: noChild, allElements
+
+! FIXME check name and tagname for doc/element respectively ...
 
     if (doc%nodeType/=DOCUMENT_NODE.and.doc%nodeType/=ELEMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "getElementsByTagName", ex)
@@ -2422,6 +2424,9 @@ endif
       ! FIXME internal error
       continue
     endif
+
+    allocate(list)
+    allocate(list%nodes(0))
 
     noChild = .false.
     do

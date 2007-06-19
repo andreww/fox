@@ -238,10 +238,12 @@ TOHW_m_dom_contents(`
   TOHW_function(getElementsByTagName, (doc, tagName), list)
     type(Node), pointer :: doc
     character(len=*), intent(in) :: tagName
-    type(NodeList) :: list
+    type(NodeList), pointer :: list
 
     type(Node), pointer :: np
     logical :: noChild, allElements
+
+! FIXME check name and tagname for doc/element respectively ...
 
     if (doc%nodeType/=DOCUMENT_NODE.and.doc%nodeType/=ELEMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
@@ -260,6 +262,9 @@ TOHW_m_dom_contents(`
       ! FIXME internal error
       continue
     endif
+
+    allocate(list)
+    allocate(list%nodes(0))
 
     noChild = .false.
     do

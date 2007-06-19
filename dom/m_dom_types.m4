@@ -151,8 +151,8 @@ TOHW_m_dom_contents(`
   recursive subroutine destroyNode(np)
     type(Node), pointer :: np
 
-    print*,"destroyNode", np%nodeType
-    if (np%nodeType==TEXT_NODE) print*, "#text", str_vs(np%nodeValue)
+!    print*,"destroyNode", np%nodeType
+    if (.not.associated(np)) return
 
     select case(np%nodeType)
     case (ELEMENT_NODE)
@@ -267,7 +267,7 @@ TOHW_m_dom_contents(`
     logical :: ascending
 
     np => df%firstChild
-    if (.not.associated(df)) return
+    if (.not.associated(np)) return
 
     ascending = .false.
     do

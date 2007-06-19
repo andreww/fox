@@ -1,6 +1,7 @@
 module FoX_dom
 
   use m_dom_dom
+  use m_dom_error
   use m_dom_parse
   use m_dom_utils
 
@@ -24,23 +25,23 @@ module FoX_dom
 !  public :: DOMTimestamp
 
   ! DOM Exceptions
-!!$  public :: DOMException
-!!$
-!!$  public :: INDEX_SIZE_ERR
-!!$  public :: DOMSTRING_SIZE_ERR
-!!$  public :: HIERARCHY_REQUEST_ERR
-!!$  public :: WRONG_DOCUMENT_ERR
-!!$  public :: INVALID_CHARACTER_ERR
-!!$  public :: NO_DATA_ALLOWED_ERR
-!!$  public :: NO_MODIFICATION_ALLOWED_ERR
-!!$  public :: NOT_FOUND_ERR
-!!$  public :: NOT_SUPPORTED_ERR
-!!$  public :: INUSE_ATTRIBUTE_ERR
-!!$  public :: INVALID_STATE_ERR
-!!$  public :: SYNTAX_ERR
-!!$  public :: INVALID_MODIFICATION_ERR
-!!$  public :: NAMESPACE_ERR
-!!$  public :: INVALID_ACCESS_ERR
+  public :: DOMException
+
+  public :: INDEX_SIZE_ERR
+  public :: DOMSTRING_SIZE_ERR
+  public :: HIERARCHY_REQUEST_ERR
+  public :: WRONG_DOCUMENT_ERR
+  public :: INVALID_CHARACTER_ERR
+  public :: NO_DATA_ALLOWED_ERR
+  public :: NO_MODIFICATION_ALLOWED_ERR
+  public :: NOT_FOUND_ERR
+  public :: NOT_SUPPORTED_ERR
+  public :: INUSE_ATTRIBUTE_ERR
+  public :: INVALID_STATE_ERR
+  public :: SYNTAX_ERR
+  public :: INVALID_MODIFICATION_ERR
+  public :: NAMESPACE_ERR
+  public :: INVALID_ACCESS_ERR
 
   ! DOM Implementation
   public :: hasFeature
@@ -50,6 +51,7 @@ module FoX_dom
   public :: destroyDocumentFragment
 
   ! DOM Document
+  public :: getDocumentElement
   public :: createDocumentFragment
   public :: createElement
   public :: createTextNode
@@ -64,6 +66,7 @@ module FoX_dom
   public :: createAttributeNS
   public :: getElementsByTagNameNS
   public :: getElementById
+  public :: destroyNode
 
   ! DOM Node
   public :: ELEMENT_NODE
