@@ -98,7 +98,7 @@ module m_dom_dom
 
   type DOMImplementation
     private
-    character, pointer :: id(:)
+    character(len=7) :: id = "FoX_DOM"
   end type DOMImplementation
 
   type ListNode
@@ -164,6 +164,8 @@ module m_dom_dom
     !TYPEINFO schemaTypeInfo
     logical :: isId
   end type Node
+
+  type(DOMImplementation), save, target :: FoX_DOM
 
   public :: ELEMENT_NODE
   public :: ATTRIBUTE_NODE
@@ -567,7 +569,7 @@ endif
       if (associated(np%nextSibling)) then
         np => np%nextSibling
         call destroyNode(np%previousSibling)
-       else
+      else
         ascending = .true.
       endif
     enddo
@@ -1867,8 +1869,9 @@ endif
   end function hasFeature
 
 
-  function createDocumentType(qualifiedName, publicId, systemId, ex)result(dt) 
+  function createDocumentType(impl, qualifiedName, publicId, systemId, ex)result(dt) 
     type(DOMException), intent(inout), optional :: ex
+    type(DOMImplementation), intent(in) :: impl
     character(len=*), intent(in) :: qualifiedName
     character(len=*), intent(in) :: publicId
     character(len=*), intent(in) :: systemId
@@ -1950,7 +1953,8 @@ endif
   end function createEmptyDocumentType
 
 
-  function createDocument(namespaceURI, qualifiedName, docType) result(doc)
+  function createDocument(impl, namespaceURI, qualifiedName, docType) result(doc)
+    type(DOMImplementation), intent(in) :: impl
     character(len=*), intent(in), optional :: namespaceURI
     character(len=*), intent(in), optional :: qualifiedName
     type(Node), pointer, optional :: docType
@@ -1965,13 +1969,13 @@ endif
       doc%doctype => appendChild(doc, doc%docType)
     endif
     if (.not.associated(doc%docType)) then
-      dt => createDocumentType(qualifiedName, "", "")
+      dt => createDocumentType(impl, qualifiedName, "", "")
       dt%ownerDocument => doc
       doc%docType => appendChild(doc, dt)
     endif
 
     doc%docType%ownerElement => doc
-!    doc%implementation => FoX_DOM
+    doc%implementation => FoX_DOM
     doc%documentElement => appendChild(doc, createElementNS(doc, namespaceURI, qualifiedName))
 
     doc%xds => doc%docType%xds
@@ -1990,7 +1994,7 @@ endif
     ! FIXME do something with namespaceURI etc 
     doc%doctype => appendChild(doc, createEmptyDocumentType(doc))
     doc%docType%ownerElement => doc
-!    doc%implementation => FoX_DOM
+    doc%implementation => FoX_DOM
     doc%documentElement => null()
     doc%xds => doc%docType%xds
 

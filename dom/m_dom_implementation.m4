@@ -42,7 +42,8 @@ TOHW_m_dom_contents(`
   end function hasFeature
 
 
-  TOHW_function(createDocumentType, (qualifiedName, publicId, systemId), dt)
+  TOHW_function(createDocumentType, (impl, qualifiedName, publicId, systemId), dt)
+    type(DOMImplementation), intent(in) :: impl
     character(len=*), intent(in) :: qualifiedName
     character(len=*), intent(in) :: publicId
     character(len=*), intent(in) :: systemId
@@ -92,7 +93,8 @@ TOHW_m_dom_contents(`
   end function createEmptyDocumentType
 
 
-  function createDocument(namespaceURI, qualifiedName, docType) result(doc)
+  function createDocument(impl, namespaceURI, qualifiedName, docType) result(doc)
+    type(DOMImplementation), intent(in) :: impl
     character(len=*), intent(in), optional :: namespaceURI
     character(len=*), intent(in), optional :: qualifiedName
     type(Node), pointer, optional :: docType
@@ -107,13 +109,13 @@ TOHW_m_dom_contents(`
       doc%doctype => appendChild(doc, doc%docType)
     endif
     if (.not.associated(doc%docType)) then
-      dt => createDocumentType(qualifiedName, "", "")
+      dt => createDocumentType(impl, qualifiedName, "", "")
       dt%ownerDocument => doc
       doc%docType => appendChild(doc, dt)
     endif
 
     doc%docType%ownerElement => doc
-!    doc%implementation => FoX_DOM
+    doc%implementation => FoX_DOM
     doc%documentElement => appendChild(doc, createElementNS(doc, namespaceURI, qualifiedName))
 
     doc%xds => doc%docType%xds
@@ -132,7 +134,7 @@ TOHW_m_dom_contents(`
     ! FIXME do something with namespaceURI etc 
     doc%doctype => appendChild(doc, createEmptyDocumentType(doc))
     doc%docType%ownerElement => doc
-!    doc%implementation => FoX_DOM
+    doc%implementation => FoX_DOM
     doc%documentElement => null()
     doc%xds => doc%docType%xds
 

@@ -23,7 +23,7 @@ TOHW_m_dom_publics(`
 
   type DOMImplementation
     private
-    character, pointer :: id(:)
+    character(len=7) :: id = "FoX_DOM"
   end type DOMImplementation
 
   type ListNode
@@ -89,6 +89,8 @@ TOHW_m_dom_publics(`
     !TYPEINFO schemaTypeInfo
     logical :: isId
   end type Node
+
+  type(DOMImplementation), save, target :: FoX_DOM
 
   public :: ELEMENT_NODE
   public :: ATTRIBUTE_NODE
@@ -283,7 +285,7 @@ TOHW_m_dom_contents(`
       if (associated(np%nextSibling)) then
         np => np%nextSibling
         call destroyNode(np%previousSibling)
-       else
+      else
         ascending = .true.
       endif
     enddo
