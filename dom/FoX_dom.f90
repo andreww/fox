@@ -140,6 +140,7 @@ module FoX_dom
   public :: getOwnerElement
 
   ! DOM Element
+  public :: getTagName
   public :: getAttribute
   public :: setAttribute
   public :: removeAttribute
