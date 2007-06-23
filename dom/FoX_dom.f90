@@ -95,6 +95,7 @@ module FoX_dom
   public :: getPreviousSibling
   public :: getParentNode
   public :: getChildNodes
+  public :: getOwnerDocument
   public :: insertBefore
   public :: replaceChild
   public :: removeChild
