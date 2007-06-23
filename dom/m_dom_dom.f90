@@ -3914,12 +3914,12 @@ endif
     p = (nodeType==TEXT_NODE.or.nodeType==CDATA_SECTION_NODE)
   end function isTextNode
 
-  subroutine splitText(arg, offset, ex)
+  function splitText(arg, offset, ex)result(np) 
     type(DOMException), intent(inout), optional :: ex
     type(Node), pointer :: arg
     integer, intent(in) :: offset
 
-    type(Node), pointer :: newNode
+    type(Node), pointer :: np
 
     character, pointer :: tmp(:)
 
@@ -3951,15 +3951,15 @@ endif
 
     tmp => arg%nodeValue
     if (arg%nodeType==TEXT_NODE) then
-      newNode => createTextNode(arg%ownerDocument, str_vs(tmp(:offset)))
+      np => createTextNode(arg%ownerDocument, str_vs(tmp(:offset)))
     elseif (arg%nodeType==CDATA_SECTION_NODE) then
-      newNode => createCdataSection(arg%ownerDocument, str_vs(tmp(:offset)))
+      np => createCdataSection(arg%ownerDocument, str_vs(tmp(:offset)))
     endif
     arg%nodeValue => vs_str_alloc(str_vs(tmp(offset+1:)))     
     deallocate(tmp)
-    newNode => insertBefore(arg%parentNode, newNode, arg)
+    np => insertBefore(arg%parentNode, np, arg)
    
-  end subroutine splitText
+  end function splitText
                                      
 
 
