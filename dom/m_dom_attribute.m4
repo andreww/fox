@@ -8,6 +8,9 @@ TOHW_m_dom_publics(`
 
   !public :: getName
   public :: getSpecified
+  interface getValue
+    module procedure getValue_DOM
+  end interface	 
   public :: getValue
   public :: setValue
   public :: getOwnerElement
@@ -52,7 +55,7 @@ TOHW_m_dom_contents(`
 
   end function getValue_length
 
-  TOHW_function(getValue, (attribute), c)
+  TOHW_function(getValue_DOM, (attribute), c)
     type(Node), intent(in) :: attribute
     character(len=getValue_length(attribute)) :: c 
 
@@ -63,6 +66,7 @@ TOHW_m_dom_contents(`
     endif
 
     n = 1
+    print*, "we have ",  attribute%childNodes%length, "children."
     do i = 1, attribute%childNodes%length
       if (attribute%childNodes%nodes(i)%this%nodeType==TEXT_NODE) then
         c(n:n+size(attribute%childNodes%nodes(i)%this%nodeValue)-1) = &
@@ -72,7 +76,7 @@ TOHW_m_dom_contents(`
       endif
     enddo
 
-  end function getValue
+  end function getValue_DOM
 
 
   TOHW_subroutine(setValue, (attribute, value))

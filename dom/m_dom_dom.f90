@@ -341,6 +341,9 @@ module m_dom_dom
 
   !public :: getName
   public :: getSpecified
+  interface getValue
+    module procedure getValue_DOM
+  end interface	 
   public :: getValue
   public :: setValue
   public :: getOwnerElement
@@ -3472,7 +3475,7 @@ endif
 
   end function getValue_length
 
-  function getValue(attribute, ex)result(c) 
+  function getValue_DOM(attribute, ex)result(c) 
     type(DOMException), intent(inout), optional :: ex
     type(Node), intent(in) :: attribute
     character(len=getValue_length(attribute)) :: c 
@@ -3480,7 +3483,7 @@ endif
     integer :: i, n
 
     if (attribute%nodeType/=ATTRIBUTE_NODE) then
-      call throw_exception(FoX_INVALID_NODE, "getValue", ex)
+      call throw_exception(FoX_INVALID_NODE, "getValue_DOM", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
      return
@@ -3490,6 +3493,7 @@ endif
     endif
 
     n = 1
+    print*, "we have ",  attribute%childNodes%length, "children."
     do i = 1, attribute%childNodes%length
       if (attribute%childNodes%nodes(i)%this%nodeType==TEXT_NODE) then
         c(n:n+size(attribute%childNodes%nodes(i)%this%nodeValue)-1) = &
@@ -3499,7 +3503,7 @@ endif
       endif
     enddo
 
-  end function getValue
+  end function getValue_DOM
 
 
   subroutine setValue(attribute, value, ex)
