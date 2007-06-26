@@ -93,6 +93,10 @@ TOHW_m_dom_publics(`
 
   type(DOMImplementation), save, target :: FoX_DOM
 
+  interface destroy
+    module procedure destroyNode, destroyNodeList, destroyNamedNodeMap
+  end interface destroy
+
   public :: ELEMENT_NODE
   public :: ATTRIBUTE_NODE
   public :: TEXT_NODE
@@ -117,6 +121,7 @@ TOHW_m_dom_publics(`
   public :: destroyNode
   public :: destroyNodeContents
   public :: destroyDocumentFragment
+  public :: destroy
 
 ')`'dnl
 dnl

@@ -168,6 +168,10 @@ module m_dom_dom
 
   type(DOMImplementation), save, target :: FoX_DOM
 
+  interface destroy
+    module procedure destroyNode, destroyNodeList, destroyNamedNodeMap
+  end interface destroy
+
   public :: ELEMENT_NODE
   public :: ATTRIBUTE_NODE
   public :: TEXT_NODE
@@ -192,6 +196,7 @@ module m_dom_dom
   public :: destroyNode
   public :: destroyNodeContents
   public :: destroyDocumentFragment
+  public :: destroy
 
 
   

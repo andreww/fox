@@ -193,6 +193,8 @@ module FoX_dom
   public :: dumpTree
   public :: serialize
 
+  public :: destroy
+
   ! FIXME rename this
   public :: is_in_error
   public :: getCode

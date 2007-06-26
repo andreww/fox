@@ -18,10 +18,16 @@ module m_common_array_str
   public :: destroy_string_list
   public :: add_string
 
+  interface destroy
+    module procedure destroy_vs
+  end interface destroy
+
   public :: str_vs
   public :: vs_str
   public :: vs_str_alloc
   public :: vs_vs_alloc
+
+  public :: destroy
 
   public :: devnull
 
@@ -90,6 +96,12 @@ contains
     allocate(vs(size(s)))
     vs = s
   end function vs_vs_alloc
+
+  subroutine destroy_vs(vs)
+    character, dimension(:), pointer :: vs
+
+    deallocate(vs)
+  end subroutine destroy_vs
 
   subroutine devnull(in)
     character(len=*), intent(in) :: in
