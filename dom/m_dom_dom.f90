@@ -675,8 +675,11 @@ endif
   
   subroutine setNodeValue(arg, nodeValue, ex)
     type(DOMException), intent(inout), optional :: ex
-    type(Node), intent(inout) :: arg
+    type(Node), pointer :: arg
     character(len=*) :: nodeValue
+
+    type(Node), pointer :: np
+    integer :: i, n
 
     if (arg%readonly) then
       call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setNodeValue", ex)
@@ -687,15 +690,40 @@ if (present(ex)) then
 endif
 
     endif
-      
-    !FIXME check what kind of node is it, what is nodeValue allowed to be ...
-    ! if it is an attribute node we need to reset TEXT/ENTITYREF children.
-    if (arg%nodeType == ATTRIBUTE_NODE) then
-      ! destroy children
-      ! rebuild new children
-    endif
-    deallocate(arg%nodeValue)
-    arg%nodeValue => vs_str_alloc(nodeValue)
+
+    select case(arg%nodeType)
+    case (ATTRIBUTE_NODE)
+      ! FIXME check does string contain wrong characters
+      ! destroy any existing children ... 
+      do i = 1, arg%childNodes%length
+        call destroyNode(arg%childNodes%nodes(i)%this)
+      enddo
+      deallocate(arg%childNodes%nodes)
+      allocate(arg%childNodes%nodes(0))
+      arg%childNodes%length = 0
+      arg%firstChild => null()
+      arg%lastChild => null()
+      ! and add the new one.
+      np => createTextNode(arg%ownerDocument, nodeValue)
+      np => appendChild(arg, np)
+    case (CDATA_SECTION_NODE)
+      ! FIXME check does string contain wrong characters
+      deallocate(arg%nodeValue)
+      arg%nodeValue => vs_str_alloc(nodeValue)
+    case (COMMENT_NODE)
+      ! FIXME check does string contain wrong characters
+      deallocate(arg%nodeValue)
+      arg%nodeValue => vs_str_alloc(nodeValue)
+    case (PROCESSING_INSTRUCTION_NODE)
+      ! FIXME check does string contain wrong characters
+      deallocate(arg%nodeValue)
+      arg%nodeValue => vs_str_alloc(nodeValue)
+    case (TEXT_NODE)
+      ! FIXME check does string contain wrong characters
+      deallocate(arg%nodeValue)
+      arg%nodeValue => vs_str_alloc(nodeValue)
+    end select
+
   end subroutine setNodeValue
 
   function getNodeType(arg) result(n)
