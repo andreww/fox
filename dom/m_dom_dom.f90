@@ -654,7 +654,7 @@ endif
       n = 1
       do i = 1, arg%childNodes%length
         if (arg%childNodes%nodes(i)%this%nodeType == TEXT_NODE) then
-          c(n:size(arg%childNodes%nodes(i)%this%nodeValue)-1) = &
+          c(n:n+size(arg%childNodes%nodes(i)%this%nodeValue)-1) = &
             str_vs(arg%childNodes%nodes(i)%this%nodeValue)
           n = n + size(arg%childNodes%nodes(i)%this%nodeValue)
         else
