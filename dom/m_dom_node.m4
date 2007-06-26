@@ -49,11 +49,64 @@ TOHW_m_dom_contents(`
     c = str_vs(arg%nodeName)
   end function getNodeName
 
+  pure function getNodeValue_len(arg) result(n)
+    type(Node), intent(in) :: arg
+    integer :: n
+
+    integer :: i
+
+    select case(arg%nodeType)
+    case (ATTRIBUTE_NODE)
+      n = 0
+      do i = 1, arg%childNodes%length
+        if (arg%childNodes%nodes(i)%this%nodeType == TEXT_NODE) then
+          n = n + size(arg%childNodes%nodes(i)%this%nodeValue)
+        else
+          !FIXME replace entity references
+        endif
+      enddo
+    case (CDATA_SECTION_NODE)
+      n = size(arg%nodeValue)
+    case (COMMENT_NODE)
+      n = size(arg%nodeValue)
+    case (PROCESSING_INSTRUCTION_NODE)
+      n = size(arg%nodeValue)
+    case (TEXT_NODE)
+      n = size(arg%nodeValue)
+    case default
+      n = 0
+    end select
+
+  end function getNodeValue_len
+
   function getNodeValue(arg) result(c)
     type(Node), intent(in) :: arg
-    character(len=size(arg%nodeName)) :: c
+    character(len=getNodeValue_len(arg)) :: c
+
+    integer :: i, n
+
+    select case(arg%nodeType)
+    case (ATTRIBUTE_NODE)
+      n = 1
+      do i = 1, arg%childNodes%length
+        if (arg%childNodes%nodes(i)%this%nodeType == TEXT_NODE) then
+          c(n:size(arg%childNodes%nodes(i)%this%nodeValue)-1) = &
+            str_vs(arg%childNodes%nodes(i)%this%nodeValue)
+          n = n + size(arg%childNodes%nodes(i)%this%nodeValue)
+        else
+          !FIXME replace entity references
+        endif
+      enddo
+    case (CDATA_SECTION_NODE)
+      c = str_vs(arg%nodeValue)
+    case (COMMENT_NODE)
+      c = str_vs(arg%nodeValue)
+    case (PROCESSING_INSTRUCTION_NODE)
+      c = str_vs(arg%nodeValue)
+    case (TEXT_NODE)
+      c = str_vs(arg%nodeValue)
+    end select
     
-    c = str_vs(arg%nodeName)
   end function getNodeValue
   
   TOHW_subroutine(setNodeValue, (arg, nodeValue))
@@ -227,6 +280,7 @@ TOHW_m_dom_contents(`
     enddo
     deallocate(arg%childNodes%nodes)
     arg%childNodes%nodes => temp_nl
+    arg%childNodes%length = size(temp_nl)
 
     TOHW_m_dom_throw_error(NOT_FOUND_ERR)
 
@@ -364,6 +418,7 @@ TOHW_m_dom_contents(`
     enddo
     deallocate(arg%childNodes%nodes)
     arg%childNodes%nodes => temp_nl
+    arg%childNodes%length = size(temp_nl)
 
     if (i==i_t) then
       TOHW_m_dom_throw_error(NOT_FOUND_ERR)
@@ -440,7 +495,6 @@ TOHW_m_dom_contents(`
     if (i==1) then
       arg%firstChild => newChild
       newChild%previousSibling => null()
-
     else
       temp_nl(i-1)%this%nextSibling => newChild
       newChild%previousSibling => temp_nl(i-1)%this     
@@ -448,6 +502,7 @@ TOHW_m_dom_contents(`
 
     deallocate(arg%childNodes%nodes)
     arg%childNodes%nodes => temp_nl
+    arg%childNodes%length = size(temp_nl)
 
     newChild%nextSibling => null()
     arg%lastChild => newChild
@@ -574,7 +629,7 @@ TOHW_m_dom_contents(`
     
     if (.not.associated(arg)) call dom_error("hasAttributes",0,"Node not allocated")
     hasAttributes = (arg%nodeType /= ELEMENT_NODE) &
-      .and. (arg%attributes%list%length > 0)
+      .and. (arg%attributes%length > 0)
     
   end function hasAttributes
   

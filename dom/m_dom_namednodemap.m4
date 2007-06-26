@@ -47,9 +47,9 @@ TOHW_m_dom_contents(`
 
     integer :: i
 
-    do i = 1, map%list%length
-      if (str_vs(map%list%nodes(i)%this%nodeName)==name) then
-        np => map%list%nodes(i)%this
+    do i = 1, map%length
+      if (str_vs(map%nodes(i)%this%nodeName)==name) then
+        np => map%nodes(i)%this
         return
       endif
     enddo
@@ -66,9 +66,9 @@ TOHW_m_dom_contents(`
 
     integer :: i
 
-    do i = 1, map%list%length
-      if (str_vs(map%list%nodes(i)%this%nodeName)==name) then
-        n = size(map%list%nodes(i)%this%nodeValue)
+    do i = 1, map%length
+      if (str_vs(map%nodes(i)%this%nodeName)==name) then
+        n = size(map%nodes(i)%this%nodeValue)
         exit
       endif
     enddo
@@ -84,9 +84,9 @@ TOHW_m_dom_contents(`
 
     integer :: i
 
-    do i = 1, map%list%length
-      if (str_vs(map%list%nodes(i)%this%nodeName)==name) then
-        c = str_vs(map%list%nodes(i)%this%nodeValue)
+    do i = 1, map%length
+      if (str_vs(map%nodes(i)%this%nodeName)==name) then
+        c = str_vs(map%nodes(i)%this%nodeValue)
         return
       endif
     enddo
@@ -110,10 +110,10 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(INUSE_ATTRIBUTE_ERR)    
     endif
 
-    do i = 1, map%list%length
-      if (str_vs(map%list%nodes(i)%this%nodeName)==str_vs(arg%nodeName)) then
-        np => map%list%nodes(i)%this
-        map%list%nodes(i)%this => arg
+    do i = 1, map%length
+      if (str_vs(map%nodes(i)%this%nodeName)==str_vs(arg%nodeName)) then
+        np => map%nodes(i)%this
+        map%nodes(i)%this => arg
         return
       endif
     enddo
@@ -129,15 +129,28 @@ TOHW_m_dom_contents(`
     character(len=*), intent(in) :: name
     type(Node), pointer :: np
 
-    integer :: i
+    type(ListNode), pointer :: temp_nl(:)
+    integer :: i, i2
 
     if (map%readonly) then
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
     endif
 
-    do i = 1, map%list%length
-      if (str_vs(map%list%nodes(i)%this%nodeName)==name) then
-        np => remove_nl(map%list, i)
+    do i = 1, map%length
+      if (str_vs(map%nodes(i)%this%nodeName)==name) then
+        ! Grab this node
+        np => map%nodes(i)%this
+        ! and shrink the node list
+        temp_nl => map%nodes
+        allocate(map%nodes(size(temp_nl)-1))
+        do i2 = 1, i - 1
+          map%nodes(i2)%this => temp_nl(i2)%this
+        enddo
+        do i2 = i + 1, map%length
+          map%nodes(i2)%this => temp_nl(i2)%this
+        enddo
+        deallocate(temp_nl)
+        ! and finish
         return
       endif
     enddo
@@ -154,12 +167,10 @@ TOHW_m_dom_contents(`
     
     integer :: n
 
-    print*,"ITEM", index, map%list%length
-
-    if (index<0 .or. index>map%list%length-1) then
+    if (index<0 .or. index>map%length-1) then
       np => null()
     else
-      np => map%list%nodes(index+1)%this
+      np => map%nodes(index+1)%this
     endif
 
    end function item_nnm
@@ -168,7 +179,7 @@ TOHW_m_dom_contents(`
     type(namedNodeMap), intent(in) :: map
     integer :: n
 
-    n = map%list%length
+    n = map%length
     
   end function getLength_nnm
 
@@ -181,10 +192,10 @@ TOHW_m_dom_contents(`
 
     integer :: i
 
-    do i = 1, map%list%length
-      if (str_vs(map%list%nodes(i)%this%namespaceURI)==namespaceURI &
-        .and. str_vs(map%list%nodes(i)%this%localName)==localName) then
-        np => map%list%nodes(i)%this
+    do i = 1, map%length
+      if (str_vs(map%nodes(i)%this%namespaceURI)==namespaceURI &
+        .and. str_vs(map%nodes(i)%this%localName)==localName) then
+        np => map%nodes(i)%this
         return
       endif
     enddo
@@ -202,10 +213,10 @@ TOHW_m_dom_contents(`
 
     integer :: i
 
-    do i = 1, map%list%length
-      if (str_vs(map%list%nodes(i)%this%namespaceURI)==namespaceURI &
-        .and. str_vs(map%list%nodes(i)%this%localName)==localName) then
-        n = size(map%list%nodes(i)%this%nodeValue)
+    do i = 1, map%length
+      if (str_vs(map%nodes(i)%this%namespaceURI)==namespaceURI &
+        .and. str_vs(map%nodes(i)%this%localName)==localName) then
+        n = size(map%nodes(i)%this%nodeValue)
         exit
       endif
     enddo
@@ -222,10 +233,10 @@ TOHW_m_dom_contents(`
 
     integer :: i
 
-    do i = 1, map%list%length
-      if (str_vs(map%list%nodes(i)%this%namespaceURI)==namespaceURI &
-        .and. str_vs(map%list%nodes(i)%this%localName)==localName) then
-        c = str_vs(map%list%nodes(i)%this%nodeValue)
+    do i = 1, map%length
+      if (str_vs(map%nodes(i)%this%namespaceURI)==namespaceURI &
+        .and. str_vs(map%nodes(i)%this%localName)==localName) then
+        c = str_vs(map%nodes(i)%this%nodeValue)
         return
       endif
     enddo
@@ -249,11 +260,11 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(INUSE_ATTRIBUTE_ERR)    
     endif
 
-    do i = 1, map%list%length
-      if (str_vs(map%list%nodes(i)%this%namespaceURI)==str_vs(arg%namespaceURI) &
-        .and. str_vs(map%list%nodes(i)%this%localName)==str_vs(arg%localName)) then
-        np => map%list%nodes(i)%this
-        map%list%nodes(i)%this => arg
+    do i = 1, map%length
+      if (str_vs(map%nodes(i)%this%namespaceURI)==str_vs(arg%namespaceURI) &
+        .and. str_vs(map%nodes(i)%this%localName)==str_vs(arg%localName)) then
+        np => map%nodes(i)%this
+        map%nodes(i)%this => arg
         return
       endif
     enddo
@@ -270,16 +281,29 @@ TOHW_m_dom_contents(`
     character(len=*), intent(in) :: localName
     type(Node), pointer :: np
 
-    integer :: i
+    type(ListNode), pointer :: temp_nl(:)
+    integer :: i, i2
 
     if (map%readonly) then
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
     endif
 
-    do i = 1, map%list%length
-      if (str_vs(map%list%nodes(i)%this%namespaceURI)==namespaceURI &
-        .and. str_vs(map%list%nodes(i)%this%localName)==localName) then
-        np => remove_nl(map%list, i)
+    do i = 1, map%length
+      if (str_vs(map%nodes(i)%this%namespaceURI)==namespaceURI &
+        .and. str_vs(map%nodes(i)%this%localName)==localName) then
+        ! Grab this node
+        np => map%nodes(i)%this
+        ! and shrink the node list
+        temp_nl => map%nodes
+        allocate(map%nodes(size(temp_nl)-1))
+        do i2 = 1, i - 1
+          map%nodes(i2)%this => temp_nl(i2)%this
+        enddo
+        do i2 = i + 1, map%length
+          map%nodes(i2-1)%this => temp_nl(i2)%this
+        enddo
+        deallocate(temp_nl)
+        ! and finish
         return
       endif
     enddo
@@ -293,7 +317,23 @@ TOHW_m_dom_contents(`
     type(namedNodeMap), intent(inout) :: map
     type(node), pointer :: arg
 
-    call append(map%list, arg)
+    type(ListNode), pointer :: temp_nl(:)
+    integer :: i
+
+    if (.not.associated(map%nodes)) then
+      allocate(map%nodes(1))
+      map%nodes(1)%this => arg
+      map%length = 1
+    else
+      temp_nl => map%nodes
+      allocate(map%nodes(size(temp_nl)+1))
+      do i = 1, size(temp_nl)
+        map%nodes(i)%this => temp_nl(i)%this
+      enddo
+      deallocate(temp_nl)
+      map%nodes(size(map%nodes))%this => arg
+      map%length = size(map%nodes)
+    endif
 
   end subroutine append_nnm
 
@@ -306,9 +346,10 @@ TOHW_m_dom_contents(`
   end subroutine setReadOnly
 
   subroutine destroyNamedNodeMap(map)
-    type(namedNodeMap), intent(inout) :: map
+    type(namedNodeMap), pointer :: map
 
-    call destroyNodeList(map%list)
-  end subroutine destroyNamedNodeMap
+    if (associated(map%nodes)) deallocate(map%nodes)
+    deallocate(map)
+ end subroutine destroyNamedNodeMap
 
 ')`'dnl

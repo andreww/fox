@@ -235,9 +235,9 @@ TOHW_m_dom_contents(`
 
   end function createEntityReference
 
-  TOHW_function(getElementsByTagName, (doc, tagName), list)
+  TOHW_function(getElementsByTagName, (doc, tagName, name), list)
     type(Node), pointer :: doc
-    character(len=*), intent(in) :: tagName
+    character(len=*), intent(in), optional :: tagName, name
     type(NodeList), pointer :: list
 
     type(Node), pointer :: np

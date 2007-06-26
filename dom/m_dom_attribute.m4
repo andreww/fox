@@ -97,6 +97,11 @@ TOHW_m_dom_contents(`
     do i = 1, attribute%childNodes%length
       call destroyNode(attribute%childNodes%nodes(i)%this)
     enddo
+    deallocate(attribute%childNodes%nodes)
+    allocate(attribute%childNodes%nodes(0))
+    attribute%childNodes%length = 0
+    attribute%firstChild => null()
+    attribute%lastChild => null()
     np => createTextNode(attribute%ownerDocument, value)
     np => appendChild(attribute, np)
 

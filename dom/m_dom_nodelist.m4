@@ -26,8 +26,6 @@ TOHW_m_dom_contents(`
     integer, intent(in) :: index
     type(Node), pointer :: np
 
-    print*,"ITEM", index
-
     if (index>=0.and.index<list%length)  then
       np => list%nodes(index+1)%this
     else
@@ -95,13 +93,21 @@ TOHW_m_dom_contents(`
     integer, intent(in) :: index
     type(Node), pointer :: np
 
+    type(ListNode), pointer :: temp_nl(:)
+
     integer :: i
 
     np => nl%nodes(index)%this
-
-    do i = index + 1, nl%length
-      nl%nodes(i-1)%this => nl%nodes(i)%this
+! FIXME what if index is too small/too big
+    temp_nl => nl%nodes
+    allocate(nl%nodes(size(temp_nl)-1))
+    do i = 1, index - 1
+      nl%nodes(i)%this => temp_nl(i)%this
     enddo
+    do i = index + 1, nl%length
+      nl%nodes(i-1)%this => temp_nl(i)%this
+    enddo
+    deallocate(temp_nl)
 
   end function remove_nl
 
@@ -114,10 +120,10 @@ TOHW_m_dom_contents(`
   end function getLength_nl
 
   subroutine destroyNodeList(nl)
-    type(NodeList), intent(inout) :: nl
+    type(NodeList), pointer :: nl
     
-    if (nl%length>0) deallocate(nl%nodes)
-    nl%length = 0
+    if (associated(nl%nodes)) deallocate(nl%nodes)
+    deallocate(nl)
   end subroutine destroyNodeList
 
 ')`'dnl

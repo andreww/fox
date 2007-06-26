@@ -150,7 +150,7 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(WRONG_DOCUMENT_ERR)
     endif
 
-    do i = 1, element%attributes%list%length
+    do i = 1, element%attributes%length
       if (associated(item(element%attributes, i), oldattr)) then
         attr => removeNamedItem(element%attributes, str_vs(oldattr%nodeName))
         return
@@ -292,7 +292,7 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(WRONG_DOCUMENT_ERR)
     endif
 
-    do i = 1, element%attributes%list%length
+    do i = 1, element%attributes%length
       if (associated(item(element%attributes, i), oldattr)) then
         attr => removeNamedItemNS(element%attributes, &
           str_vs(oldattr%namespaceURI), str_vs(oldattr%localName))
@@ -320,8 +320,8 @@ TOHW_m_dom_contents(`
     endif
 
     p = .false.
-    do i = 1, element%attributes%list%length
-      if (str_vs(element%attributes%list%nodes(i)%this%nodeName)==name) then
+    do i = 1, element%attributes%length
+      if (str_vs(element%attributes%nodes(i)%this%nodeName)==name) then
         p = .true.
         exit
       endif
@@ -344,9 +344,9 @@ TOHW_m_dom_contents(`
     endif
 
     p = .false.
-    do i = 1, element%attributes%list%length
-      if (str_vs(element%attributes%list%nodes(i)%this%namespaceURI)==namespaceURI &
-        .and. str_vs(element%attributes%list%nodes(i)%this%localName)==localName) then
+    do i = 1, element%attributes%length
+      if (str_vs(element%attributes%nodes(i)%this%namespaceURI)==namespaceURI &
+        .and. str_vs(element%attributes%nodes(i)%this%localName)==localName) then
         p = .true.
         exit
       endif

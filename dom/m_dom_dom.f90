@@ -116,7 +116,8 @@ module m_dom_dom
     private
     logical :: readonly = .false.
     type(Node), pointer :: ownerElement => null()
-    type(NodeList) :: list 
+    type(ListNode), pointer :: nodes(:) => null()
+    integer :: length = 0
   end type NamedNodeMap
 
   type Node
@@ -124,7 +125,7 @@ module m_dom_dom
     logical :: readonly = .false. ! FIXME must check this everywhere
     character, pointer, dimension(:)         :: nodeName => null()
     character, pointer, dimension(:)         :: nodeValue => null()
-   integer              :: nc              = 0  ! FIXME dont need this
+!   integer              :: nc              = 0  ! FIXME dont need this
     integer              :: nodeType        = 0
     type(Node), pointer :: parentNode      => null()
     type(Node), pointer :: firstChild      => null()
@@ -468,10 +469,10 @@ endif
 
     ! Entities need to be destroyed recursively
 
-    do i = 1, dt%notations%list%length
-      call destroyNode(dt%notations%list%nodes(i)%this)
+    do i = 1, dt%notations%length
+      call destroyNode(dt%notations%nodes(i)%this)
     enddo
-    if (associated(dt%notations%list%nodes)) deallocate(dt%notations%list%nodes)
+    if (associated(dt%notations%nodes)) deallocate(dt%notations%nodes)
 
     call destroy_xml_doc_state(dt%xds)
     deallocate(dt%xds)
@@ -490,11 +491,11 @@ endif
       ! FIXME internal error
     endif
 
-    do i = 1, element%attributes%list%length
-      call destroyNode(element%attributes%list%nodes(i)%this)
+    do i = 1, element%attributes%length
+      call destroyNode(element%attributes%nodes(i)%this)
     enddo
     !    call destroyNamedNodeMap(element%attributes)
-    if (associated(element%attributes%list%nodes)) deallocate(element%attributes%list%nodes)
+    if (associated(element%attributes%nodes)) deallocate(element%attributes%nodes)
     call destroyNodeContents(element)
     deallocate(element)
 
@@ -612,11 +613,64 @@ endif
     c = str_vs(arg%nodeName)
   end function getNodeName
 
+  pure function getNodeValue_len(arg) result(n)
+    type(Node), intent(in) :: arg
+    integer :: n
+
+    integer :: i
+
+    select case(arg%nodeType)
+    case (ATTRIBUTE_NODE)
+      n = 0
+      do i = 1, arg%childNodes%length
+        if (arg%childNodes%nodes(i)%this%nodeType == TEXT_NODE) then
+          n = n + size(arg%childNodes%nodes(i)%this%nodeValue)
+        else
+          !FIXME replace entity references
+        endif
+      enddo
+    case (CDATA_SECTION_NODE)
+      n = size(arg%nodeValue)
+    case (COMMENT_NODE)
+      n = size(arg%nodeValue)
+    case (PROCESSING_INSTRUCTION_NODE)
+      n = size(arg%nodeValue)
+    case (TEXT_NODE)
+      n = size(arg%nodeValue)
+    case default
+      n = 0
+    end select
+
+  end function getNodeValue_len
+
   function getNodeValue(arg) result(c)
     type(Node), intent(in) :: arg
-    character(len=size(arg%nodeName)) :: c
+    character(len=getNodeValue_len(arg)) :: c
+
+    integer :: i, n
+
+    select case(arg%nodeType)
+    case (ATTRIBUTE_NODE)
+      n = 1
+      do i = 1, arg%childNodes%length
+        if (arg%childNodes%nodes(i)%this%nodeType == TEXT_NODE) then
+          c(n:size(arg%childNodes%nodes(i)%this%nodeValue)-1) = &
+            str_vs(arg%childNodes%nodes(i)%this%nodeValue)
+          n = n + size(arg%childNodes%nodes(i)%this%nodeValue)
+        else
+          !FIXME replace entity references
+        endif
+      enddo
+    case (CDATA_SECTION_NODE)
+      c = str_vs(arg%nodeValue)
+    case (COMMENT_NODE)
+      c = str_vs(arg%nodeValue)
+    case (PROCESSING_INSTRUCTION_NODE)
+      c = str_vs(arg%nodeValue)
+    case (TEXT_NODE)
+      c = str_vs(arg%nodeValue)
+    end select
     
-    c = str_vs(arg%nodeName)
   end function getNodeValue
   
   subroutine setNodeValue(arg, nodeValue, ex)
@@ -840,6 +894,7 @@ endif
     enddo
     deallocate(arg%childNodes%nodes)
     arg%childNodes%nodes => temp_nl
+    arg%childNodes%length = size(temp_nl)
 
     call throw_exception(NOT_FOUND_ERR, "insertBefore", ex)
 if (present(ex)) then
@@ -1039,6 +1094,7 @@ endif
     enddo
     deallocate(arg%childNodes%nodes)
     arg%childNodes%nodes => temp_nl
+    arg%childNodes%length = size(temp_nl)
 
     if (i==i_t) then
       call throw_exception(NOT_FOUND_ERR, "removeChild", ex)
@@ -1164,7 +1220,6 @@ endif
     if (i==1) then
       arg%firstChild => newChild
       newChild%previousSibling => null()
-
     else
       temp_nl(i-1)%this%nextSibling => newChild
       newChild%previousSibling => temp_nl(i-1)%this     
@@ -1172,6 +1227,7 @@ endif
 
     deallocate(arg%childNodes%nodes)
     arg%childNodes%nodes => temp_nl
+    arg%childNodes%length = size(temp_nl)
 
     newChild%nextSibling => null()
     arg%lastChild => newChild
@@ -1299,7 +1355,7 @@ endif
     
     if (.not.associated(arg)) call dom_error("hasAttributes",0,"Node not allocated")
     hasAttributes = (arg%nodeType /= ELEMENT_NODE) &
-      .and. (arg%attributes%list%length > 0)
+      .and. (arg%attributes%length > 0)
     
   end function hasAttributes
   
@@ -1423,8 +1479,6 @@ endif
     integer, intent(in) :: index
     type(Node), pointer :: np
 
-    print*,"ITEM", index
-
     if (index>=0.and.index<list%length)  then
       np => list%nodes(index+1)%this
     else
@@ -1492,13 +1546,21 @@ endif
     integer, intent(in) :: index
     type(Node), pointer :: np
 
+    type(ListNode), pointer :: temp_nl(:)
+
     integer :: i
 
     np => nl%nodes(index)%this
-
-    do i = index + 1, nl%length
-      nl%nodes(i-1)%this => nl%nodes(i)%this
+! FIXME what if index is too small/too big
+    temp_nl => nl%nodes
+    allocate(nl%nodes(size(temp_nl)-1))
+    do i = 1, index - 1
+      nl%nodes(i)%this => temp_nl(i)%this
     enddo
+    do i = index + 1, nl%length
+      nl%nodes(i-1)%this => temp_nl(i)%this
+    enddo
+    deallocate(temp_nl)
 
   end function remove_nl
 
@@ -1511,10 +1573,10 @@ endif
   end function getLength_nl
 
   subroutine destroyNodeList(nl)
-    type(NodeList), intent(inout) :: nl
+    type(NodeList), pointer :: nl
     
-    if (nl%length>0) deallocate(nl%nodes)
-    nl%length = 0
+    if (associated(nl%nodes)) deallocate(nl%nodes)
+    deallocate(nl)
   end subroutine destroyNodeList
 
 
@@ -1526,9 +1588,9 @@ endif
 
     integer :: i
 
-    do i = 1, map%list%length
-      if (str_vs(map%list%nodes(i)%this%nodeName)==name) then
-        np => map%list%nodes(i)%this
+    do i = 1, map%length
+      if (str_vs(map%nodes(i)%this%nodeName)==name) then
+        np => map%nodes(i)%this
         return
       endif
     enddo
@@ -1545,9 +1607,9 @@ endif
 
     integer :: i
 
-    do i = 1, map%list%length
-      if (str_vs(map%list%nodes(i)%this%nodeName)==name) then
-        n = size(map%list%nodes(i)%this%nodeValue)
+    do i = 1, map%length
+      if (str_vs(map%nodes(i)%this%nodeName)==name) then
+        n = size(map%nodes(i)%this%nodeValue)
         exit
       endif
     enddo
@@ -1563,9 +1625,9 @@ endif
 
     integer :: i
 
-    do i = 1, map%list%length
-      if (str_vs(map%list%nodes(i)%this%nodeName)==name) then
-        c = str_vs(map%list%nodes(i)%this%nodeValue)
+    do i = 1, map%length
+      if (str_vs(map%nodes(i)%this%nodeName)==name) then
+        c = str_vs(map%nodes(i)%this%nodeValue)
         return
       endif
     enddo
@@ -1608,10 +1670,10 @@ endif
     
     endif
 
-    do i = 1, map%list%length
-      if (str_vs(map%list%nodes(i)%this%nodeName)==str_vs(arg%nodeName)) then
-        np => map%list%nodes(i)%this
-        map%list%nodes(i)%this => arg
+    do i = 1, map%length
+      if (str_vs(map%nodes(i)%this%nodeName)==str_vs(arg%nodeName)) then
+        np => map%nodes(i)%this
+        map%nodes(i)%this => arg
         return
       endif
     enddo
@@ -1628,7 +1690,8 @@ endif
     character(len=*), intent(in) :: name
     type(Node), pointer :: np
 
-    integer :: i
+    type(ListNode), pointer :: temp_nl(:)
+    integer :: i, i2
 
     if (map%readonly) then
       call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "removeNamedItem", ex)
@@ -1640,9 +1703,21 @@ endif
 
     endif
 
-    do i = 1, map%list%length
-      if (str_vs(map%list%nodes(i)%this%nodeName)==name) then
-        np => remove_nl(map%list, i)
+    do i = 1, map%length
+      if (str_vs(map%nodes(i)%this%nodeName)==name) then
+        ! Grab this node
+        np => map%nodes(i)%this
+        ! and shrink the node list
+        temp_nl => map%nodes
+        allocate(map%nodes(size(temp_nl)-1))
+        do i2 = 1, i - 1
+          map%nodes(i2)%this => temp_nl(i2)%this
+        enddo
+        do i2 = i + 1, map%length
+          map%nodes(i2)%this => temp_nl(i2)%this
+        enddo
+        deallocate(temp_nl)
+        ! and finish
         return
       endif
     enddo
@@ -1665,12 +1740,10 @@ endif
     
     integer :: n
 
-    print*,"ITEM", index, map%list%length
-
-    if (index<0 .or. index>map%list%length-1) then
+    if (index<0 .or. index>map%length-1) then
       np => null()
     else
-      np => map%list%nodes(index+1)%this
+      np => map%nodes(index+1)%this
     endif
 
    end function item_nnm
@@ -1679,7 +1752,7 @@ endif
     type(namedNodeMap), intent(in) :: map
     integer :: n
 
-    n = map%list%length
+    n = map%length
     
   end function getLength_nnm
 
@@ -1692,10 +1765,10 @@ endif
 
     integer :: i
 
-    do i = 1, map%list%length
-      if (str_vs(map%list%nodes(i)%this%namespaceURI)==namespaceURI &
-        .and. str_vs(map%list%nodes(i)%this%localName)==localName) then
-        np => map%list%nodes(i)%this
+    do i = 1, map%length
+      if (str_vs(map%nodes(i)%this%namespaceURI)==namespaceURI &
+        .and. str_vs(map%nodes(i)%this%localName)==localName) then
+        np => map%nodes(i)%this
         return
       endif
     enddo
@@ -1713,10 +1786,10 @@ endif
 
     integer :: i
 
-    do i = 1, map%list%length
-      if (str_vs(map%list%nodes(i)%this%namespaceURI)==namespaceURI &
-        .and. str_vs(map%list%nodes(i)%this%localName)==localName) then
-        n = size(map%list%nodes(i)%this%nodeValue)
+    do i = 1, map%length
+      if (str_vs(map%nodes(i)%this%namespaceURI)==namespaceURI &
+        .and. str_vs(map%nodes(i)%this%localName)==localName) then
+        n = size(map%nodes(i)%this%nodeValue)
         exit
       endif
     enddo
@@ -1733,10 +1806,10 @@ endif
 
     integer :: i
 
-    do i = 1, map%list%length
-      if (str_vs(map%list%nodes(i)%this%namespaceURI)==namespaceURI &
-        .and. str_vs(map%list%nodes(i)%this%localName)==localName) then
-        c = str_vs(map%list%nodes(i)%this%nodeValue)
+    do i = 1, map%length
+      if (str_vs(map%nodes(i)%this%namespaceURI)==namespaceURI &
+        .and. str_vs(map%nodes(i)%this%localName)==localName) then
+        c = str_vs(map%nodes(i)%this%nodeValue)
         return
       endif
     enddo
@@ -1779,11 +1852,11 @@ endif
     
     endif
 
-    do i = 1, map%list%length
-      if (str_vs(map%list%nodes(i)%this%namespaceURI)==str_vs(arg%namespaceURI) &
-        .and. str_vs(map%list%nodes(i)%this%localName)==str_vs(arg%localName)) then
-        np => map%list%nodes(i)%this
-        map%list%nodes(i)%this => arg
+    do i = 1, map%length
+      if (str_vs(map%nodes(i)%this%namespaceURI)==str_vs(arg%namespaceURI) &
+        .and. str_vs(map%nodes(i)%this%localName)==str_vs(arg%localName)) then
+        np => map%nodes(i)%this
+        map%nodes(i)%this => arg
         return
       endif
     enddo
@@ -1801,7 +1874,8 @@ endif
     character(len=*), intent(in) :: localName
     type(Node), pointer :: np
 
-    integer :: i
+    type(ListNode), pointer :: temp_nl(:)
+    integer :: i, i2
 
     if (map%readonly) then
       call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "removeNamedItemNS", ex)
@@ -1813,10 +1887,22 @@ endif
 
     endif
 
-    do i = 1, map%list%length
-      if (str_vs(map%list%nodes(i)%this%namespaceURI)==namespaceURI &
-        .and. str_vs(map%list%nodes(i)%this%localName)==localName) then
-        np => remove_nl(map%list, i)
+    do i = 1, map%length
+      if (str_vs(map%nodes(i)%this%namespaceURI)==namespaceURI &
+        .and. str_vs(map%nodes(i)%this%localName)==localName) then
+        ! Grab this node
+        np => map%nodes(i)%this
+        ! and shrink the node list
+        temp_nl => map%nodes
+        allocate(map%nodes(size(temp_nl)-1))
+        do i2 = 1, i - 1
+          map%nodes(i2)%this => temp_nl(i2)%this
+        enddo
+        do i2 = i + 1, map%length
+          map%nodes(i2-1)%this => temp_nl(i2)%this
+        enddo
+        deallocate(temp_nl)
+        ! and finish
         return
       endif
     enddo
@@ -1836,7 +1922,23 @@ endif
     type(namedNodeMap), intent(inout) :: map
     type(node), pointer :: arg
 
-    call append(map%list, arg)
+    type(ListNode), pointer :: temp_nl(:)
+    integer :: i
+
+    if (.not.associated(map%nodes)) then
+      allocate(map%nodes(1))
+      map%nodes(1)%this => arg
+      map%length = 1
+    else
+      temp_nl => map%nodes
+      allocate(map%nodes(size(temp_nl)+1))
+      do i = 1, size(temp_nl)
+        map%nodes(i)%this => temp_nl(i)%this
+      enddo
+      deallocate(temp_nl)
+      map%nodes(size(map%nodes))%this => arg
+      map%length = size(map%nodes)
+    endif
 
   end subroutine append_nnm
 
@@ -1849,10 +1951,11 @@ endif
   end subroutine setReadOnly
 
   subroutine destroyNamedNodeMap(map)
-    type(namedNodeMap), intent(inout) :: map
+    type(namedNodeMap), pointer :: map
 
-    call destroyNodeList(map%list)
-  end subroutine destroyNamedNodeMap
+    if (associated(map%nodes)) deallocate(map%nodes)
+    deallocate(map)
+ end subroutine destroyNamedNodeMap
 
 
 
@@ -2409,10 +2512,10 @@ endif
 
   end function createEntityReference
 
-  function getElementsByTagName(doc, tagName, ex)result(list) 
+  function getElementsByTagName(doc, tagName, name, ex)result(list) 
     type(DOMException), intent(inout), optional :: ex
     type(Node), pointer :: doc
-    character(len=*), intent(in) :: tagName
+    character(len=*), intent(in), optional :: tagName, name
     type(NodeList), pointer :: list
 
     type(Node), pointer :: np
@@ -3098,7 +3201,7 @@ endif
 
     endif
 
-    do i = 1, element%attributes%list%length
+    do i = 1, element%attributes%length
       if (associated(item(element%attributes, i), oldattr)) then
         attr => removeNamedItem(element%attributes, str_vs(oldattr%nodeName))
         return
@@ -3348,7 +3451,7 @@ endif
 
     endif
 
-    do i = 1, element%attributes%list%length
+    do i = 1, element%attributes%length
       if (associated(item(element%attributes, i), oldattr)) then
         attr => removeNamedItemNS(element%attributes, &
           str_vs(oldattr%namespaceURI), str_vs(oldattr%localName))
@@ -3389,8 +3492,8 @@ endif
     endif
 
     p = .false.
-    do i = 1, element%attributes%list%length
-      if (str_vs(element%attributes%list%nodes(i)%this%nodeName)==name) then
+    do i = 1, element%attributes%length
+      if (str_vs(element%attributes%nodes(i)%this%nodeName)==name) then
         p = .true.
         exit
       endif
@@ -3420,9 +3523,9 @@ endif
     endif
 
     p = .false.
-    do i = 1, element%attributes%list%length
-      if (str_vs(element%attributes%list%nodes(i)%this%namespaceURI)==namespaceURI &
-        .and. str_vs(element%attributes%list%nodes(i)%this%localName)==localName) then
+    do i = 1, element%attributes%length
+      if (str_vs(element%attributes%nodes(i)%this%namespaceURI)==namespaceURI &
+        .and. str_vs(element%attributes%nodes(i)%this%localName)==localName) then
         p = .true.
         exit
       endif
@@ -3543,6 +3646,11 @@ endif
     do i = 1, attribute%childNodes%length
       call destroyNode(attribute%childNodes%nodes(i)%this)
     enddo
+    deallocate(attribute%childNodes%nodes)
+    allocate(attribute%childNodes%nodes(0))
+    attribute%childNodes%length = 0
+    attribute%firstChild => null()
+    attribute%lastChild => null()
     np => createTextNode(attribute%ownerDocument, value)
     np => appendChild(attribute, np)
 

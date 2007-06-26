@@ -41,7 +41,8 @@ TOHW_m_dom_publics(`
     private
     logical :: readonly = .false.
     type(Node), pointer :: ownerElement => null()
-    type(NodeList) :: list 
+    type(ListNode), pointer :: nodes(:) => null()
+    integer :: length = 0
   end type NamedNodeMap
 
   type Node
@@ -49,7 +50,7 @@ TOHW_m_dom_publics(`
     logical :: readonly = .false. ! FIXME must check this everywhere
     character, pointer, dimension(:)         :: nodeName => null()
     character, pointer, dimension(:)         :: nodeValue => null()
-   integer              :: nc              = 0  ! FIXME dont need this
+!   integer              :: nc              = 0  ! FIXME dont need this
     integer              :: nodeType        = 0
     type(Node), pointer :: parentNode      => null()
     type(Node), pointer :: firstChild      => null()
@@ -195,10 +196,10 @@ TOHW_m_dom_contents(`
 
     ! Entities need to be destroyed recursively
 
-    do i = 1, dt%notations%list%length
-      call destroyNode(dt%notations%list%nodes(i)%this)
+    do i = 1, dt%notations%length
+      call destroyNode(dt%notations%nodes(i)%this)
     enddo
-    if (associated(dt%notations%list%nodes)) deallocate(dt%notations%list%nodes)
+    if (associated(dt%notations%nodes)) deallocate(dt%notations%nodes)
 
     call destroy_xml_doc_state(dt%xds)
     deallocate(dt%xds)
@@ -217,11 +218,11 @@ TOHW_m_dom_contents(`
       ! FIXME internal error
     endif
 
-    do i = 1, element%attributes%list%length
-      call destroyNode(element%attributes%list%nodes(i)%this)
+    do i = 1, element%attributes%length
+      call destroyNode(element%attributes%nodes(i)%this)
     enddo
     !    call destroyNamedNodeMap(element%attributes)
-    if (associated(element%attributes%list%nodes)) deallocate(element%attributes%list%nodes)
+    if (associated(element%attributes%nodes)) deallocate(element%attributes%nodes)
     call destroyNodeContents(element)
     deallocate(element)
 
