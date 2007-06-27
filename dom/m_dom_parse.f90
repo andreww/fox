@@ -18,7 +18,7 @@ module m_dom_parse
   use m_dom_dom, only: createElementNS, getNotations
   use m_dom_dom, only: createTextNode, createEntity
   use m_dom_dom, only: createNotation, setNamedItem
-  use m_dom_dom, only: createEmptyDocument
+  use m_dom_dom, only: createEmptyDocument, getXMLVersion
   use m_dom_dom, only: getParentNode, setDocumentElement, getDocType, setDocType
   use m_dom_dom, only: append, getNodeType, setReadOnly
   use m_dom_dom, only: appendchild, getNotations
@@ -44,6 +44,8 @@ contains
    
     type(Node), pointer :: el, temp
     integer              :: i
+
+    print*, 'XML', getXmlVersion(mainDoc)
 
     if (dom_debug) &
       write(*,'(4a)') "Adding node for element: {",URI,'}', localname
@@ -152,7 +154,7 @@ contains
 
     dt => getDocType(mainDoc)
     call replace_xds(dt, state)
-    
+
     entities => getEntities(dt)
     notations => getNotations(dt)
     do i = 1, ubound(state%entityList%list, 1)

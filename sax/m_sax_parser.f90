@@ -715,10 +715,10 @@ contains
             if (present(endEntity_handler)) &
               call endEntity_handler(str_vs(tempString))
           elseif (likeCharacterEntityReference(str_vs(tempString))) then
-            if (checkRepCharEntityReference(str_vs(tempString), fx%xml_version)) then
+            if (checkRepCharEntityReference(str_vs(tempString), fx%xds%xml_version)) then
               if (present(characters_handler)) &
                 call characters_handler(expand_char_entity(str_vs(tempString)))
-            elseif (checkCharacterEntityReference(str_vs(tempString), fx%xml_version)) then
+            elseif (checkCharacterEntityReference(str_vs(tempString), fx%xds%xml_version)) then
               call add_error(fx%error_stack, "Unable to digest character entity reference in content, sorry.")
               goto 100
             else
@@ -982,9 +982,9 @@ contains
         else
           !token is everything up to >
           if (processDTD) then
-            call parse_dtd_attlist(str_vs(fx%token), fx%xml_version, fx%error_stack, elem)
+            call parse_dtd_attlist(str_vs(fx%token), fx%xds%xml_version, fx%error_stack, elem)
           else
-            call parse_dtd_attlist(str_vs(fx%token), fx%xml_version, fx%error_stack)
+            call parse_dtd_attlist(str_vs(fx%token), fx%xds%xml_version, fx%error_stack)
           endif
           if (in_error(fx%error_stack)) goto 100
           ! Normalize attribute values in attlist
@@ -1032,15 +1032,15 @@ contains
           else
             ! Ignore contents ...
             nullify(elem)
-            call parse_dtd_element(str_vs(fx%token), fx%xml_version, fx%error_stack)
+            call parse_dtd_element(str_vs(fx%token), fx%xds%xml_version, fx%error_stack)
           endif
         else
           if (processDTD) then
             elem => add_element(fx%element_list, str_vs(fx%name))
-            call parse_dtd_element(str_vs(fx%token), fx%xml_version, fx%error_stack, elem)
+            call parse_dtd_element(str_vs(fx%token), fx%xds%xml_version, fx%error_stack, elem)
           else
             nullify(elem)
-            call parse_dtd_element(str_vs(fx%token), fx%xml_version, fx%error_stack)
+            call parse_dtd_element(str_vs(fx%token), fx%xds%xml_version, fx%error_stack)
           endif
         endif
         if (in_error(fx%error_stack)) goto 100
@@ -1311,6 +1311,14 @@ contains
         ! token must be '>'
         if (present(endDTD_handler)) &
           call endDTD_handler
+          ! Here we hand over responsibility for the xds object
+          ! The SAX caller must take care of it, and we don't
+          ! need it any more. (We will destroy it shortly anyway)
+          if (present(FoX_endDTD_handler)) then
+            fx%xds_used = .true.
+            call FoX_endDTD_handler(fx%xds)
+          endif
+
         fx%state = ST_MISC
         fx%context = CTXT_BEFORE_CONTENT
 
@@ -1353,7 +1361,7 @@ contains
         fx%attributes)
       ! Check for namespace changes
       call checkNamespaces(fx%attributes, fx%nsDict, &
-        len(fx%elstack), fx%xml_version, startPrefixMapping_handler)
+        len(fx%elstack), fx%xds%xml_version, startPrefixMapping_handler)
       if (getURIofQName(fx,str_vs(fx%name))==invalidNS) then
         ! no namespace was found for the current element
         call add_error(fx%error_stack, "No namespace found for current element")

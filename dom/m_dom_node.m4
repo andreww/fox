@@ -501,6 +501,12 @@ TOHW_m_dom_contents(`
         .and. newChild%nodeType/=CDATA_SECTION_NODE &
         .and. newChild%nodeType/=ENTITY_REFERENCE_NODE) &
         TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR)
+    case (ENTITY_NODE)
+      continue ! only allowed by DOM parser, not by user.
+               ! but entity nodes are always readonly anyway, so no problem
+    case (ENTITY_REFERENCE_NODE)
+      continue ! only allowed by DOM parser, not by user.
+               ! but entity nodes are always readonly anyway, so no problem
     case default
       TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR)
     end select
@@ -555,98 +561,99 @@ TOHW_m_dom_contents(`
     logical :: deep
     type(Node), pointer :: np
 
-    type(Node), pointer :: np_a1, np_a2, this, that, new, ERchild
+    type(Node), pointer :: np_a1, np_a2, this, thatParent, new, ERchild
     type(NamedNodeMap), pointer :: nnm
 
-    logical :: noChild, readonly
+    logical :: ascending, readonly
     integer :: i
 
-    noChild = .false.
+    ascending = .false.
     readonly = .false.
     
     ERchild => null()
     this => arg
+
     do
-      if (noChild) then
+      if (ascending) then
+        this => this%parentNode
         if (associated(this, arg)) exit
+        thatParent => thatParent%parentNode
         if (associated(this, ERchild)) then
           ! Weve got back up to the top of the topmost ER.
           readonly = .false.
           ERchild => null()
         endif
+        ascending = .false.
+      endif
+      print*,"ASSOCIATEDNODE", associated(this), this%nodeType
+      select case(this%nodeType)
+      case (ELEMENT_NODE)
+        new => createElementNS(this%ownerDocument, &
+          str_vs(this%namespaceURI), str_vs(this%localName))
+        ! loop over attributes cloning them
+        nnm => getAttributes(this)
+        do i = 1, getLength(nnm)
+          np_a1 => item(nnm, i)
+          np_a2 => createAttributeNS(this%ownerDocument, &
+            str_vs(np_a1%namespaceURI), str_vs(np_a1%localName))
+          call setValue(new, getValue(np_a1))
+          np_a2%specified = np_a1%specified
+          np_a2 => setAttributeNodeNS(np, np_a2)
+        end do
+      case (ATTRIBUTE_NODE)
+        new => createAttributeNS(this%ownerDocument, &
+          str_vs(this%namespaceURI), str_vs(this%localName))
+        call setValue(new, getValue(np_a2))
+        new%specified = .true.
+      case (TEXT_NODE)
+        new => createTextNode(this%ownerDocument, str_vs(this%nodeValue))
+      case (CDATA_SECTION_NODE)
+        new => createCdataSection(this%ownerDocument, str_vs(this%nodeValue))
+      case (ENTITY_REFERENCE_NODE)
+        new => createEntityReference(this%ownerDocument, str_vs(this%nodeName))
+        ERChild => this
+      case (ENTITY_NODE)
+        new => null()
+      case (PROCESSING_INSTRUCTION_NODE)
+        new => createProcessingInstruction(this%ownerDocument, &
+          str_vs(this%nodeName), str_vs(this%nodeValue))
+      case (COMMENT_NODE)
+        new => createComment(this%ownerDocument, str_vs(this%nodeValue))
+      case (DOCUMENT_NODE)
+        new => null()
+      case (DOCUMENT_FRAGMENT_NODE)
+        new => createDocumentFragment(this%ownerDocument)
+      case (NOTATION_NODE)
+        new => null() 
+      end select
+      ! Sort out readonly-ness
+      new%readonly = readonly
+      if (associated(ERChild)) readonly = .true. ! This is not readonly, but all nodes below will be
+      ! Append the new node to the tree
+      if (associated(this, arg)) then
+        thatParent => new ! This is the first we have created, head of the tree
+        if (.not.deep) exit ! We only wanted one node anyway
+      else
+        new => appendChild(thatParent, new)
+      endif
+      ! Do we continue descending?
+      if (associated(this%firstChild)) then
+        this => this%firstChild
+        if (.not.associated(this, arg)) &
+          thatParent => thatParent%lastChild
+      elseif (.not.associated(this, arg)) then
         if (associated(this%nextSibling)) then
           this => this%nextSibling
-          noChild = .false.
+          ! but leave thatParent unchanged
         else
-          this => this%parentNode
-          that => that%parentNode
-          cycle
+          ascending = .true.
         endif
+      else ! the top node has no children, so we are finished
+        exit
       endif
-      select case(this%nodeType)
-        case (ELEMENT_NODE)
-          new => createElementNS(this%ownerDocument, &
-            str_vs(this%namespaceURI), str_vs(this%localName))
-          ! loop over attributes cloning them
-          nnm => getAttributes(this)
-          do i = 1, getLength(nnm)
-            np_a1 => item(nnm, i)
-            np_a2 => createAttributeNS(this%ownerDocument, &
-              str_vs(np_a1%namespaceURI), str_vs(np_a1%localName))
-            call setValue(new, getValue(np_a1))
-            np_a2%specified = np_a1%specified
-            np_a2 => setAttributeNodeNS(np, np_a2)
-          end do
-        case (ATTRIBUTE_NODE)
-          new => createAttributeNS(this%ownerDocument, &
-            str_vs(this%namespaceURI), str_vs(this%localName))
-          call setValue(new, getValue(np_a2))
-          new%specified = .true.
-        case (TEXT_NODE)
-          new => createTextNode(this%ownerDocument, str_vs(this%nodeValue))
-        case (CDATA_SECTION_NODE)
-          new => createCdataSection(this%ownerDocument, str_vs(this%nodeValue))
-        case (ENTITY_REFERENCE_NODE)
-          new => createEntityReference(this%ownerDocument, str_vs(this%nodeName))
-          ERChild => this
-        case (ENTITY_NODE)
-          new => null()
-        case (PROCESSING_INSTRUCTION_NODE)
-          new => createProcessingInstruction(this%ownerDocument, &
-            str_vs(this%nodeName), str_vs(this%nodeValue))
-        case (COMMENT_NODE)
-          new => createComment(this%ownerDocument, str_vs(this%nodeValue))
-        case (DOCUMENT_NODE)
-          new => null()
-        case (DOCUMENT_FRAGMENT_NODE)
-          new => createDocumentFragment(this%ownerDocument)
-        case (NOTATION_NODE)
-          new => null()
-        end select
-        ! Sort out readonly-ness
-        if (readonly) then
-          that%readonly = .true. ! We are under a readonly tree
-        elseif (associated(ERChild)) then
-          readonly = .true. ! This is not readonly, but all nodes below will be
-        endif
-        ! Append the new node to the tree
-        if (associated(this, arg)) then
-          that => new ! This is the first we have created, head of the tree
-          if (.not.deep) exit ! We only wanted one node anyway
-        else
-          new => appendChild(that, new)
-        endif
-        ! Do we continue descending?
-        if (associated(this%firstChild)) then
-          if (.not.associated(this, arg)) &
-            that => that%lastChild
-          this => this%firstChild
-        else
-          noChild = .true.
-        endif
-      enddo
+    enddo
 
-      np => that
+    np => thatParent
 
   end function cloneNode
 

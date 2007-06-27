@@ -73,6 +73,8 @@ TOHW_m_dom_contents(`
     dt%systemId = vs_str_alloc(systemId)
     allocate(dt%internalSubset(0)) !FIXME
     dt%ownerDocument => null()
+    dt%entities%ownerElement => dt
+    dt%notations%ownerElement => dt
     ! FIXME fill in the rest of the fields ...
 
   end function createDocumentType
@@ -90,6 +92,9 @@ TOHW_m_dom_contents(`
     allocate(dt%systemId(0))
     allocate(dt%internalSubset(0)) !FIXME
 
+    dt%entities%ownerElement => dt
+    dt%notations%ownerElement => dt
+
     allocate(dt%xds)
     call init_xml_doc_state(dt%xds)
   end function createEmptyDocumentType
@@ -98,6 +103,8 @@ TOHW_m_dom_contents(`
   subroutine replace_xds(dt, xds)
     type(Node), pointer :: dt
     type(xml_doc_state), pointer :: xds
+
+    print*, "XDS", xds%xml_version
 
     call destroy_xml_doc_state(dt%xds)
     deallocate(dt%xds)

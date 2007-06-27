@@ -1,6 +1,7 @@
 TOHW_m_dom_imports(`
 
   use m_common_array_str, only: str_vs, vs_str_alloc
+  use m_common_charset, only: XML1_0, XML1_1
   use m_common_namecheck, only: checkQName, prefixOfQName, localPartOfQName
   use m_dom_error, only : NOT_FOUND_ERR, INVALID_CHARACTER_ERR, FoX_INVALID_NODE, &
     FoX_INVALID_XML_NAME, WRONG_DOCUMENT_ERR, FoX_INVALID_TEXT, & 
@@ -30,6 +31,8 @@ TOHW_m_dom_publics(`
   public :: createAttributeNS
   public :: getElementsByTagNameNS
   public :: getElementById
+  public :: getXmlVersion
+  public :: setXmlVersion
 
   public :: createEntity
   public :: createNotation
@@ -109,7 +112,8 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(FoX_INVALID_XML_NAME)
     endif
     
-    np => createElementNS(doc, "", tagName)
+    np => createNode(doc, ELEMENT_NODE, tagName, "")
+    np%attributes%ownerElement => np
   
   end function createElement
     
@@ -132,7 +136,7 @@ TOHW_m_dom_contents(`
 
     if (doc%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    elseif (.not.checkChars(data, doc%xds%xml_version)) then
+    elseif (.not.checkChars(data, doc%docType%xds%xml_version)) then
       TOHW_m_dom_throw_error(FoX_INVALID_CHARACTER)
     endif
 
@@ -147,7 +151,7 @@ TOHW_m_dom_contents(`
 
     if (doc%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    elseif (.not.checkChars(data, doc%xds%xml_version)) then
+    elseif (.not.checkChars(data, doc%docType%xds%xml_version)) then
       TOHW_m_dom_throw_error(FoX_INVALID_CHARACTER)
     elseif (index(data,"--")>0) then   
       TOHW_m_dom_throw_error(FoX_INVALID_COMMENT)
@@ -164,7 +168,7 @@ TOHW_m_dom_contents(`
 
     if (doc%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    elseif (.not.checkChars(data, doc%xds%xml_version)) then
+    elseif (.not.checkChars(data, doc%docType%xds%xml_version)) then
       TOHW_m_dom_throw_error(FoX_INVALID_CHARACTER)
     elseif (index(data,"]]>")>0) then   
       TOHW_m_dom_throw_error(FoX_INVALID_CDATA_SECTION)
@@ -183,11 +187,11 @@ TOHW_m_dom_contents(`
 
     if (doc%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    elseif (.not.checkChars(target, doc%xds%xml_version)) then
+    elseif (.not.checkChars(target, doc%docType%xds%xml_version)) then
       TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
-    elseif (.not.checkChars(data, doc%xds%xml_version)) then
+    elseif (.not.checkChars(data, doc%docType%xds%xml_version)) then
       TOHW_m_dom_throw_error(FoX_INVALID_CHARACTER)
-    elseif (.not.checkName(target, doc%xds)) then
+    elseif (.not.checkName(target, doc%docType%xds)) then
       TOHW_m_dom_throw_error(FoX_INVALID_XML_NAME)
 ! FIXME check validity of PI target 
     elseif (index(data,"?>")>0) then   
@@ -205,9 +209,9 @@ TOHW_m_dom_contents(`
 
     if (doc%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    elseif (.not.checkChars(name, doc%xds%xml_version)) then
+    elseif (.not.checkChars(name, doc%docType%xds%xml_version)) then
       TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
-    elseif (.not.checkName(name, doc%xds)) then
+    elseif (.not.checkName(name, doc%docType%xds)) then
       TOHW_m_dom_throw_error(FoX_INVALID_XML_NAME)
     endif
   
@@ -224,20 +228,26 @@ TOHW_m_dom_contents(`
 
     if (doc%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    elseif (.not.checkChars(name, doc%xds%xml_version)) then
+    elseif (.not.checkChars(name, doc%docType%xds%xml_version)) then
       TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
-    elseif (.not.checkName(name, doc%xds)) then
+    elseif (.not.checkName(name, doc%docType%xds)) then
       TOHW_m_dom_throw_error(FoX_INVALID_XML_NAME)
     endif
-
-    ! FIXME check existence of entities + namespace handling,
-    ! see spec
 
     np => createNode(doc, ENTITY_REFERENCE_NODE, name, "")
 
     ent => getNamedItem(doc%docType%entities, name)
 
-    ent => appendChild(np, cloneNode(ent, .true., ex))
+    print*,"CREATING ENTITIES", name
+    print*, "LENGTH", getLength(doc%docType%entities)
+    print*, associated(ent)
+
+    if (associated(ent)) then
+      ! FIXME here we should actually parse the entity reference
+      ! and add all its children.
+      ! This works if it is just text though.
+      ent => appendChild(np, cloneNode(ent%firstChild, .true., ex))
+    endif
     ! FIXME all children should be readonly at this stage.
 
   end function createEntityReference
@@ -337,9 +347,9 @@ TOHW_m_dom_contents(`
 
     if (doc%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    elseif (.not.checkChars(qualifiedName, doc%xds%xml_version)) then
+    elseif (.not.checkChars(qualifiedName, doc%docType%xds%xml_version)) then
       TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
-    elseif (.not.checkQName(qualifiedName, doc%xds)) then
+    elseif (.not.checkQName(qualifiedName, doc%docType%xds)) then
       TOHW_m_dom_throw_error(NAMESPACE_ERR)
     elseif (prefixOfQName(qualifiedName)/="" &
      .and. namespaceURI=="") then
@@ -358,6 +368,8 @@ TOHW_m_dom_contents(`
     np%prefix => vs_str_alloc(prefixOfQName(qualifiedname))
     np%localName => vs_str_alloc(localpartOfQName(qualifiedname))
 
+    np%attributes%ownerElement => np
+
   end function createElementNS
   
   TOHW_function(createAttributeNS, (doc, namespaceURI,  qualifiedname), np)
@@ -365,13 +377,11 @@ TOHW_m_dom_contents(`
     character(len=*), intent(in) :: namespaceURI, qualifiedName
     type(Node), pointer :: np
 
-    print*,"creatingattributens", qualifiedName, checkQName(qualifiedName, doc%xds)
-
     if (doc%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    elseif (.not.checkChars(qualifiedName, doc%xds%xml_version)) then
+    elseif (.not.checkChars(qualifiedName, doc%docType%xds%xml_version)) then
       TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
-    elseif (.not.checkQName(qualifiedName, doc%xds)) then
+    elseif (.not.checkQName(qualifiedName, doc%docType%xds)) then
       TOHW_m_dom_throw_error(NAMESPACE_ERR)
     elseif (prefixOfQName(qualifiedName)/="" &
      .and. namespaceURI=="") then
@@ -494,6 +504,44 @@ TOHW_m_dom_contents(`
     np => null()
 
   end function getElementById
+
+!  function getInputEncoding
+!  function getXmlEncoding
+!  function getXmlStandalone
+!  function setXmlStandalone
+
+
+  TOHW_function(getXmlVersion, (doc), s)
+    type(Node), pointer :: doc
+    character(len=3) :: s
+
+    if (doc%docType%xds%xml_version==XML1_0) then
+      s = "1.0"
+    elseif (doc%docType%xds%xml_version==XML1_1) then
+      s = "1.1"
+    endif
+
+  end function getXmlVersion
+
+  TOHW_subroutine(setXmlVersion, (doc, s))
+    type(Node), pointer :: doc
+    character(len=*) :: s
+
+    if (s=="1.0") then
+      doc%docType%xds%xml_version = XML1_0
+    elseif (s=="1.1") then
+      doc%docType%xds%xml_version = XML1_1
+    else
+      TOHW_m_dom_throw_error(NOT_SUPPORTED_ERR)
+    endif
+
+  end subroutine setXmlVersion
+
+
+!  function getStrictErrorChecking
+!  function setStrictErrorChecking
+!  function getDocumentURI
+!  function setDocumentURI
 
   ! Internal function, not part of API
 

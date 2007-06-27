@@ -38,6 +38,7 @@ module m_dom_dom
 
 
   use m_common_array_str, only: str_vs, vs_str_alloc
+  use m_common_charset, only: XML1_0, XML1_1
   use m_common_namecheck, only: checkQName, prefixOfQName, localPartOfQName
   use m_dom_error, only : NOT_FOUND_ERR, INVALID_CHARACTER_ERR, FoX_INVALID_NODE, &
     FoX_INVALID_XML_NAME, WRONG_DOCUMENT_ERR, FoX_INVALID_TEXT, & 
@@ -311,6 +312,8 @@ module m_dom_dom
   public :: createAttributeNS
   public :: getElementsByTagNameNS
   public :: getElementById
+  public :: getXmlVersion
+  public :: setXmlVersion
 
   public :: createEntity
   public :: createNotation
@@ -1216,6 +1219,12 @@ if (present(ex)) then
   endif
 endif
 
+    case (ENTITY_NODE)
+      continue ! only allowed by DOM parser, not by user.
+               ! but entity nodes are always readonly anyway, so no problem
+    case (ENTITY_REFERENCE_NODE)
+      continue ! only allowed by DOM parser, not by user.
+               ! but entity nodes are always readonly anyway, so no problem
     case default
       call throw_exception(HIERARCHY_REQUEST_ERR, "appendChild", ex)
 if (present(ex)) then
@@ -1283,98 +1292,99 @@ endif
     logical :: deep
     type(Node), pointer :: np
 
-    type(Node), pointer :: np_a1, np_a2, this, that, new, ERchild
+    type(Node), pointer :: np_a1, np_a2, this, thatParent, new, ERchild
     type(NamedNodeMap), pointer :: nnm
 
-    logical :: noChild, readonly
+    logical :: ascending, readonly
     integer :: i
 
-    noChild = .false.
+    ascending = .false.
     readonly = .false.
     
     ERchild => null()
     this => arg
+
     do
-      if (noChild) then
+      if (ascending) then
+        this => this%parentNode
         if (associated(this, arg)) exit
+        thatParent => thatParent%parentNode
         if (associated(this, ERchild)) then
           ! Weve got back up to the top of the topmost ER.
           readonly = .false.
           ERchild => null()
         endif
+        ascending = .false.
+      endif
+      print*,"ASSOCIATEDNODE", associated(this), this%nodeType
+      select case(this%nodeType)
+      case (ELEMENT_NODE)
+        new => createElementNS(this%ownerDocument, &
+          str_vs(this%namespaceURI), str_vs(this%localName))
+        ! loop over attributes cloning them
+        nnm => getAttributes(this)
+        do i = 1, getLength(nnm)
+          np_a1 => item(nnm, i)
+          np_a2 => createAttributeNS(this%ownerDocument, &
+            str_vs(np_a1%namespaceURI), str_vs(np_a1%localName))
+          call setValue(new, getValue(np_a1))
+          np_a2%specified = np_a1%specified
+          np_a2 => setAttributeNodeNS(np, np_a2)
+        end do
+      case (ATTRIBUTE_NODE)
+        new => createAttributeNS(this%ownerDocument, &
+          str_vs(this%namespaceURI), str_vs(this%localName))
+        call setValue(new, getValue(np_a2))
+        new%specified = .true.
+      case (TEXT_NODE)
+        new => createTextNode(this%ownerDocument, str_vs(this%nodeValue))
+      case (CDATA_SECTION_NODE)
+        new => createCdataSection(this%ownerDocument, str_vs(this%nodeValue))
+      case (ENTITY_REFERENCE_NODE)
+        new => createEntityReference(this%ownerDocument, str_vs(this%nodeName))
+        ERChild => this
+      case (ENTITY_NODE)
+        new => null()
+      case (PROCESSING_INSTRUCTION_NODE)
+        new => createProcessingInstruction(this%ownerDocument, &
+          str_vs(this%nodeName), str_vs(this%nodeValue))
+      case (COMMENT_NODE)
+        new => createComment(this%ownerDocument, str_vs(this%nodeValue))
+      case (DOCUMENT_NODE)
+        new => null()
+      case (DOCUMENT_FRAGMENT_NODE)
+        new => createDocumentFragment(this%ownerDocument)
+      case (NOTATION_NODE)
+        new => null() 
+      end select
+      ! Sort out readonly-ness
+      new%readonly = readonly
+      if (associated(ERChild)) readonly = .true. ! This is not readonly, but all nodes below will be
+      ! Append the new node to the tree
+      if (associated(this, arg)) then
+        thatParent => new ! This is the first we have created, head of the tree
+        if (.not.deep) exit ! We only wanted one node anyway
+      else
+        new => appendChild(thatParent, new)
+      endif
+      ! Do we continue descending?
+      if (associated(this%firstChild)) then
+        this => this%firstChild
+        if (.not.associated(this, arg)) &
+          thatParent => thatParent%lastChild
+      elseif (.not.associated(this, arg)) then
         if (associated(this%nextSibling)) then
           this => this%nextSibling
-          noChild = .false.
+          ! but leave thatParent unchanged
         else
-          this => this%parentNode
-          that => that%parentNode
-          cycle
+          ascending = .true.
         endif
+      else ! the top node has no children, so we are finished
+        exit
       endif
-      select case(this%nodeType)
-        case (ELEMENT_NODE)
-          new => createElementNS(this%ownerDocument, &
-            str_vs(this%namespaceURI), str_vs(this%localName))
-          ! loop over attributes cloning them
-          nnm => getAttributes(this)
-          do i = 1, getLength(nnm)
-            np_a1 => item(nnm, i)
-            np_a2 => createAttributeNS(this%ownerDocument, &
-              str_vs(np_a1%namespaceURI), str_vs(np_a1%localName))
-            call setValue(new, getValue(np_a1))
-            np_a2%specified = np_a1%specified
-            np_a2 => setAttributeNodeNS(np, np_a2)
-          end do
-        case (ATTRIBUTE_NODE)
-          new => createAttributeNS(this%ownerDocument, &
-            str_vs(this%namespaceURI), str_vs(this%localName))
-          call setValue(new, getValue(np_a2))
-          new%specified = .true.
-        case (TEXT_NODE)
-          new => createTextNode(this%ownerDocument, str_vs(this%nodeValue))
-        case (CDATA_SECTION_NODE)
-          new => createCdataSection(this%ownerDocument, str_vs(this%nodeValue))
-        case (ENTITY_REFERENCE_NODE)
-          new => createEntityReference(this%ownerDocument, str_vs(this%nodeName))
-          ERChild => this
-        case (ENTITY_NODE)
-          new => null()
-        case (PROCESSING_INSTRUCTION_NODE)
-          new => createProcessingInstruction(this%ownerDocument, &
-            str_vs(this%nodeName), str_vs(this%nodeValue))
-        case (COMMENT_NODE)
-          new => createComment(this%ownerDocument, str_vs(this%nodeValue))
-        case (DOCUMENT_NODE)
-          new => null()
-        case (DOCUMENT_FRAGMENT_NODE)
-          new => createDocumentFragment(this%ownerDocument)
-        case (NOTATION_NODE)
-          new => null()
-        end select
-        ! Sort out readonly-ness
-        if (readonly) then
-          that%readonly = .true. ! We are under a readonly tree
-        elseif (associated(ERChild)) then
-          readonly = .true. ! This is not readonly, but all nodes below will be
-        endif
-        ! Append the new node to the tree
-        if (associated(this, arg)) then
-          that => new ! This is the first we have created, head of the tree
-          if (.not.deep) exit ! We only wanted one node anyway
-        else
-          new => appendChild(that, new)
-        endif
-        ! Do we continue descending?
-        if (associated(this%firstChild)) then
-          if (.not.associated(this, arg)) &
-            that => that%lastChild
-          this => this%firstChild
-        else
-          noChild = .true.
-        endif
-      enddo
+    enddo
 
-      np => that
+    np => thatParent
 
   end function cloneNode
 
@@ -2067,6 +2077,8 @@ endif
     dt%systemId = vs_str_alloc(systemId)
     allocate(dt%internalSubset(0)) !FIXME
     dt%ownerDocument => null()
+    dt%entities%ownerElement => dt
+    dt%notations%ownerElement => dt
     ! FIXME fill in the rest of the fields ...
 
   end function createDocumentType
@@ -2084,6 +2096,9 @@ endif
     allocate(dt%systemId(0))
     allocate(dt%internalSubset(0)) !FIXME
 
+    dt%entities%ownerElement => dt
+    dt%notations%ownerElement => dt
+
     allocate(dt%xds)
     call init_xml_doc_state(dt%xds)
   end function createEmptyDocumentType
@@ -2092,6 +2107,8 @@ endif
   subroutine replace_xds(dt, xds)
     type(Node), pointer :: dt
     type(xml_doc_state), pointer :: xds
+
+    print*, "XDS", xds%xml_version
 
     call destroy_xml_doc_state(dt%xds)
     deallocate(dt%xds)
@@ -2299,7 +2316,8 @@ endif
 
     endif
     
-    np => createElementNS(doc, "", tagName)
+    np => createNode(doc, ELEMENT_NODE, tagName, "")
+    np%attributes%ownerElement => np
   
   end function createElement
     
@@ -2336,7 +2354,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkChars(data, doc%xds%xml_version)) then
+    elseif (.not.checkChars(data, doc%docType%xds%xml_version)) then
       call throw_exception(FoX_INVALID_CHARACTER, "createTextNode", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -2364,7 +2382,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkChars(data, doc%xds%xml_version)) then
+    elseif (.not.checkChars(data, doc%docType%xds%xml_version)) then
       call throw_exception(FoX_INVALID_CHARACTER, "createComment", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -2400,7 +2418,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkChars(data, doc%xds%xml_version)) then
+    elseif (.not.checkChars(data, doc%docType%xds%xml_version)) then
       call throw_exception(FoX_INVALID_CHARACTER, "createCdataSection", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -2438,7 +2456,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkChars(target, doc%xds%xml_version)) then
+    elseif (.not.checkChars(target, doc%docType%xds%xml_version)) then
       call throw_exception(INVALID_CHARACTER_ERR, "createProcessingInstruction", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -2446,7 +2464,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkChars(data, doc%xds%xml_version)) then
+    elseif (.not.checkChars(data, doc%docType%xds%xml_version)) then
       call throw_exception(FoX_INVALID_CHARACTER, "createProcessingInstruction", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -2454,7 +2472,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkName(target, doc%xds)) then
+    elseif (.not.checkName(target, doc%docType%xds)) then
       call throw_exception(FoX_INVALID_XML_NAME, "createProcessingInstruction", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -2491,7 +2509,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkChars(name, doc%xds%xml_version)) then
+    elseif (.not.checkChars(name, doc%docType%xds%xml_version)) then
       call throw_exception(INVALID_CHARACTER_ERR, "createAttribute", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -2499,7 +2517,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkName(name, doc%xds)) then
+    elseif (.not.checkName(name, doc%docType%xds)) then
       call throw_exception(FoX_INVALID_XML_NAME, "createAttribute", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -2529,7 +2547,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkChars(name, doc%xds%xml_version)) then
+    elseif (.not.checkChars(name, doc%docType%xds%xml_version)) then
       call throw_exception(INVALID_CHARACTER_ERR, "createEntityReference", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -2537,7 +2555,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkName(name, doc%xds)) then
+    elseif (.not.checkName(name, doc%docType%xds)) then
       call throw_exception(FoX_INVALID_XML_NAME, "createEntityReference", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -2547,14 +2565,20 @@ endif
 
     endif
 
-    ! FIXME check existence of entities + namespace handling,
-    ! see spec
-
     np => createNode(doc, ENTITY_REFERENCE_NODE, name, "")
 
     ent => getNamedItem(doc%docType%entities, name)
 
-    ent => appendChild(np, cloneNode(ent, .true., ex))
+    print*,"CREATING ENTITIES", name
+    print*, "LENGTH", getLength(doc%docType%entities)
+    print*, associated(ent)
+
+    if (associated(ent)) then
+      ! FIXME here we should actually parse the entity reference
+      ! and add all its children.
+      ! This works if it is just text though.
+      ent => appendChild(np, cloneNode(ent%firstChild, .true., ex))
+    endif
     ! FIXME all children should be readonly at this stage.
 
   end function createEntityReference
@@ -2687,7 +2711,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkChars(qualifiedName, doc%xds%xml_version)) then
+    elseif (.not.checkChars(qualifiedName, doc%docType%xds%xml_version)) then
       call throw_exception(INVALID_CHARACTER_ERR, "createElementNS", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -2695,7 +2719,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkQName(qualifiedName, doc%xds)) then
+    elseif (.not.checkQName(qualifiedName, doc%docType%xds)) then
       call throw_exception(NAMESPACE_ERR, "createElementNS", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -2732,6 +2756,8 @@ endif
     np%prefix => vs_str_alloc(prefixOfQName(qualifiedname))
     np%localName => vs_str_alloc(localpartOfQName(qualifiedname))
 
+    np%attributes%ownerElement => np
+
   end function createElementNS
   
   function createAttributeNS(doc, namespaceURI, qualifiedname, ex)result(np) 
@@ -2739,8 +2765,6 @@ endif
     type(Node), pointer :: doc
     character(len=*), intent(in) :: namespaceURI, qualifiedName
     type(Node), pointer :: np
-
-    print*,"creatingattributens", qualifiedName, checkQName(qualifiedName, doc%xds)
 
     if (doc%nodeType/=DOCUMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "createAttributeNS", ex)
@@ -2750,7 +2774,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkChars(qualifiedName, doc%xds%xml_version)) then
+    elseif (.not.checkChars(qualifiedName, doc%docType%xds%xml_version)) then
       call throw_exception(INVALID_CHARACTER_ERR, "createAttributeNS", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -2758,7 +2782,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkQName(qualifiedName, doc%xds)) then
+    elseif (.not.checkQName(qualifiedName, doc%docType%xds)) then
       call throw_exception(NAMESPACE_ERR, "createAttributeNS", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -2913,6 +2937,52 @@ endif
     np => null()
 
   end function getElementById
+
+!  function getInputEncoding
+!  function getXmlEncoding
+!  function getXmlStandalone
+!  function setXmlStandalone
+
+
+  function getXmlVersion(doc, ex)result(s) 
+    type(DOMException), intent(inout), optional :: ex
+    type(Node), pointer :: doc
+    character(len=3) :: s
+
+    if (doc%docType%xds%xml_version==XML1_0) then
+      s = "1.0"
+    elseif (doc%docType%xds%xml_version==XML1_1) then
+      s = "1.1"
+    endif
+
+  end function getXmlVersion
+
+  subroutine setXmlVersion(doc, s, ex)
+    type(DOMException), intent(inout), optional :: ex
+    type(Node), pointer :: doc
+    character(len=*) :: s
+
+    if (s=="1.0") then
+      doc%docType%xds%xml_version = XML1_0
+    elseif (s=="1.1") then
+      doc%docType%xds%xml_version = XML1_1
+    else
+      call throw_exception(NOT_SUPPORTED_ERR, "setXmlVersion", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+  end subroutine setXmlVersion
+
+
+!  function getStrictErrorChecking
+!  function setStrictErrorChecking
+!  function getDocumentURI
+!  function setDocumentURI
 
   ! Internal function, not part of API
 
@@ -3096,7 +3166,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkChars(name, element%ownerDocument%xds%xml_version)) then
+    elseif (.not.checkChars(name, element%ownerDocument%docType%xds%xml_version)) then
       call throw_exception(INVALID_CHARACTER_ERR, "setAttribute", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -3104,7 +3174,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkName(value, element%ownerDocument%xds)) then
+    elseif (.not.checkName(value, element%ownerDocument%docType%xds)) then
       call throw_exception(FoX_INVALID_XML_NAME, "setAttribute", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -3112,7 +3182,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkChars(value, element%ownerDocument%xds%xml_version)) then
+    elseif (.not.checkChars(value, element%ownerDocument%docType%xds%xml_version)) then
       call throw_exception(FoX_INVALID_CHARACTER, "setAttribute", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -3314,7 +3384,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkChars(qualifiedname, element%ownerDocument%xds%xml_version)) then
+    elseif (.not.checkChars(qualifiedname, element%ownerDocument%docType%xds%xml_version)) then
       call throw_exception(INVALID_CHARACTER_ERR, "setAttributeNS", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -3330,7 +3400,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkQName(qualifiedname, element%ownerDocument%xds)) then
+    elseif (.not.checkQName(qualifiedname, element%ownerDocument%docType%xds)) then
       call throw_exception(NAMESPACE_ERR, "setAttributeNS", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then

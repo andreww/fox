@@ -49,14 +49,14 @@ contains
     if (fx%state==ST_START_PI) then
       c = get_characters(fb, 1, iostat)
       if (iostat/=0) return
-      if (.not.isInitialNameChar(c, fx%xml_version)) then
+      if (.not.isInitialNameChar(c, fx%xds%xml_version)) then
         call add_error(fx%error_stack, &
           'Invalid PI Name')
         return
       endif
-      if (fx%xml_version==XML1_0) then
+      if (fx%xds%xml_version==XML1_0) then
         call get_characters_until_condition(fb, isXML1_0_NameChar, .false., iostat)
-      elseif (fx%xml_version==XML1_1) then
+      elseif (fx%xds%xml_version==XML1_1) then
         call get_characters_until_condition(fb, isXML1_1_NameChar, .false., iostat)
       endif
       fx%token => vs_str_alloc(c//str_vs(fb%namebuffer))
@@ -200,10 +200,10 @@ contains
           if (c=='>') then
             fx%token => vs_str_alloc('/>')
           endif
-        elseif (isInitialNameChar(c, fx%xml_version)) then 
-          if (fx%xml_version==XML1_0) then
+        elseif (isInitialNameChar(c, fx%xds%xml_version)) then 
+          if (fx%xds%xml_version==XML1_0) then
             call get_characters_until_condition(fb, isXML1_0_NameChar, .false., iostat)
-          elseif (fx%xml_version==XML1_1) then
+          elseif (fx%xds%xml_version==XML1_1) then
             call get_characters_until_condition(fb, isXML1_1_NameChar, .false., iostat)
           endif
           fx%token => vs_str_alloc(c//str_vs(fb%namebuffer))
@@ -278,9 +278,9 @@ contains
           deallocate(fb%namebuffer)
         else !it must be a NAME for some reason
           call put_characters(fb, 1)
-          if (fx%xml_version==XML1_0) then
+          if (fx%xds%xml_version==XML1_0) then
             call get_characters_until_condition(fb, isXML1_0_NameChar, .false., iostat)
-          elseif (fx%xml_version==XML1_1) then
+          elseif (fx%xds%xml_version==XML1_1) then
             call get_characters_until_condition(fb, isXML1_1_NameChar, .false., iostat)
           endif
           fx%token => fb%namebuffer
@@ -309,9 +309,9 @@ contains
           endif
         elseif (c=='%') then
           !It ought to be a parameter entity reference
-          if (fx%xml_version==XML1_0) then
+          if (fx%xds%xml_version==XML1_0) then
             call get_characters_until_condition(fb, isXML1_0_NameChar, .false., iostat)
-          elseif (fx%xml_version==XML1_1) then
+          elseif (fx%xds%xml_version==XML1_1) then
             call get_characters_until_condition(fb, isXML1_1_NameChar, .false., iostat)
           endif
           c = get_characters(fb, 1, iostat)
@@ -351,10 +351,10 @@ contains
         !No further investigation needed, that's the token
         fx%token => vs_str_alloc(c)
 
-      elseif (isInitialNameChar(c, fx%xml_version)) then
-        if (fx%xml_version==XML1_0) then
+      elseif (isInitialNameChar(c, fx%xds%xml_version)) then
+        if (fx%xds%xml_version==XML1_0) then
           call get_characters_until_condition(fb, isXML1_0_NameChar, .false., iostat)
-        elseif (fx%xml_version==XML1_1) then
+        elseif (fx%xds%xml_version==XML1_1) then
           call get_characters_until_condition(fb, isXML1_1_NameChar, .false., iostat)
         endif
         if (iostat/=0) return
@@ -373,7 +373,7 @@ contains
             fx%token => vs_str_alloc('<!')
           elseif (c=='/') then
             fx%token => vs_str_alloc('</')
-          elseif (isInitialNameChar(c, fx%xml_version)) then
+          elseif (isInitialNameChar(c, fx%xds%xml_version)) then
             call put_characters(fb, 1)
             fx%token => vs_str_alloc('<')
           else
@@ -425,10 +425,10 @@ contains
             else
               call add_error(fx%error_stack, 'Illegal character entity reference')
             endif
-          elseif (isInitialNameChar(c, fx%xml_version)) then
-            if (fx%xml_version==XML1_0) then
+          elseif (isInitialNameChar(c, fx%xds%xml_version)) then
+            if (fx%xds%xml_version==XML1_0) then
               call get_characters_until_condition(fb, isXML1_0_NameChar, .false., iostat)
-            elseif (fx%xml_version==XML1_1) then
+            elseif (fx%xds%xml_version==XML1_1) then
               call get_characters_until_condition(fb, isXML1_1_NameChar, .false., iostat)
             endif
             if (iostat/=0) return
@@ -493,7 +493,7 @@ contains
     character(len=5) :: xml = "<?xml"
     character, allocatable :: ch(:)
     ! default values ...
-    fx%xml_version = XML1_0
+    fx%xds%xml_version = XML1_0
     allocate(fx%encoding(5))
     fx%encoding = vs_str("UTF-8")
     fx%xds%standalone = .false.
@@ -633,7 +633,7 @@ contains
         call add_error(fx%error_stack, "Unknown XML version"); return
       endif
       if (c=="1") then
-        fx%xml_version = XML1_1
+        fx%xds%xml_version = XML1_1
       endif
       c = read_char(fb, iostat); if (iostat/=0) return
       if (c/=quotechar) then
@@ -789,7 +789,7 @@ contains
           s_temp(i2) = expand_entity_text(fx%predefined_e_list, str_vs(tempString))
           i = i + j + 1
           i2 = i2 + 1
-        elseif (checkCharacterEntityReference(str_vs(tempString), fx%xml_version)) then
+        elseif (checkCharacterEntityReference(str_vs(tempString), fx%xds%xml_version)) then
           ! Expand all character entities
           s_temp(i2) = expand_char_entity(str_vs(tempString)) ! FIXME ascii
           i = i + j  + 1

@@ -55,8 +55,6 @@ contains
     character(len=27) :: s
 
     select case(code)
-    case(0)
-      s = "XMLF90_ERR"
     case(1)
       s = "INDEX_SIZE_ERR"
     case(2)

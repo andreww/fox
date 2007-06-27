@@ -68,6 +68,8 @@ module FoX_dom
   public :: createAttributeNS
   public :: getElementsByTagNameNS
   public :: getElementById
+  public :: getXmlVersion
+  public :: setXmlVersion
   public :: destroyNode
 
   ! DOM Node
