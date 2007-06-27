@@ -233,6 +233,11 @@ TOHW_m_dom_contents(`
 
     np => createNode(doc, ENTITY_REFERENCE_NODE, name, "")
 
+    ent => getNamedNode(doc%docType%entities, name)
+
+    ent => appendChild(np, cloneNode(ent, deep))
+    ! FIXME all children should be readonly at this stage.
+
   end function createEntityReference
 
   TOHW_function(getElementsByTagName, (doc, tagName, name), list)
