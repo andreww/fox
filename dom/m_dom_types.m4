@@ -168,7 +168,7 @@ TOHW_m_dom_contents(`
     case (ATTRIBUTE_NODE)
       call destroyAttribute(np)
     case (ENTITY_REFERENCE_NODE)
-      ! In principle a DOM might have children here. We dont.
+      ! In principle a DOM might have children here. We dont. ! FIXME we do
       call destroyNodeContents(np)
       deallocate(np)
     case (ENTITY_NODE)
@@ -200,6 +200,20 @@ TOHW_m_dom_contents(`
     endif
 
     ! Entities need to be destroyed recursively - if they are done properly ...
+
+    if (associated(dt%entities%nodes)) then
+      do i = 1, size(dt%entities%nodes)
+        call destroyAllNodesRecursively(dt%entities%nodes(i)%this)
+        call destroy(dt%entities%nodes(i)%this)
+      enddo
+      deallocate(dt%entities%nodes)
+    endif
+    if (associated(dt%notations%nodes)) then
+      do i = 1, size(dt%notations%nodes)
+        call destroy(dt%notations%nodes(i)%this)
+      enddo
+      deallocate(dt%notations%nodes)
+    endif
 
     call destroy_xml_doc_state(dt%xds)
     deallocate(dt%xds)
