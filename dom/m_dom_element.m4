@@ -106,7 +106,8 @@ TOHW_m_dom_contents(`
     character(len=*), intent(in) :: name
     type(Node), pointer :: attr
 
-    attr => null()     ! as per specs, if not found
+    attr => null()     ! as per specs, if not foundo
+
     if (element%nodeType /= ELEMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif

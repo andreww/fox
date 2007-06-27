@@ -288,7 +288,7 @@ TOHW_m_dom_contents(`
         i_t = i_t + 1
         temp_nl(i_t)%this => newChild
         newChild%parentNode => arg
-        if (i==0) then
+        if (i==1) then
           arg%firstChild => newChild
           newChild%previousSibling => null()
         else
@@ -306,11 +306,13 @@ TOHW_m_dom_contents(`
       temp_nl(i_t)%this => arg%childNodes%nodes(i)%this
       i_t = i_t + 1     
     enddo
+    if (i_t == i) then
+      TOHW_m_dom_throw_error(NOT_FOUND_ERR, (temp_nl))
+    endif
+
     deallocate(arg%childNodes%nodes)
     arg%childNodes%nodes => temp_nl
     arg%childNodes%length = size(temp_nl)
-
-    TOHW_m_dom_throw_error(NOT_FOUND_ERR)
 
   end function insertBefore
   
@@ -375,7 +377,7 @@ TOHW_m_dom_contents(`
     do i = 1, size(arg%childNodes%nodes)
       if (associated(arg%childNodes%nodes(i)%this, oldChild)) then
         np => oldChild
-        if (i==0) then
+        if (i==1) then
           arg%firstChild => newChild
           newChild%previousSibling => null()
         else 
@@ -422,7 +424,7 @@ TOHW_m_dom_contents(`
     i_t = 1
     do i = 1, size(arg%childNodes%nodes)
       if (associated(arg%childNodes%nodes(i)%this, oldChild)) then 
-        if (i==0) then
+        if (i==1) then
           np => arg%childNodes%nodes(i)%this
           if (size(arg%childNodes%nodes) == 1) then
             arg%firstChild => null()

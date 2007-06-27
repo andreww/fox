@@ -35,14 +35,20 @@ TOHW_m_dom_contents(`
 
     tmp => arg%nodeValue
     if (arg%nodeType==TEXT_NODE) then
-      np => createTextNode(arg%ownerDocument, str_vs(tmp(:offset)))
+      np => createTextNode(arg%ownerDocument, str_vs(tmp(offset+1:)))
     elseif (arg%nodeType==CDATA_SECTION_NODE) then
-      np => createCdataSection(arg%ownerDocument, str_vs(tmp(:offset)))
+      np => createCdataSection(arg%ownerDocument, str_vs(tmp(offset+1:)))
     endif
-    arg%nodeValue => vs_str_alloc(str_vs(tmp(offset+1:)))     
+    arg%nodeValue => vs_str_alloc(str_vs(tmp(:offset)))     
     deallocate(tmp)
-    np => insertBefore(arg%parentNode, np, arg)
-   
+    if (associated(arg%parentNode)) then
+      if (associated(arg%nextSibling)) then
+        np => insertBefore(arg%parentNode, np, arg%nextSibling)
+      else
+        np => appendChild(arg%parentNode, np)
+      endif
+    endif
+
   end function splitText
                                      
 ')`'dnl

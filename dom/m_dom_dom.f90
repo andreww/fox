@@ -907,7 +907,7 @@ endif
         i_t = i_t + 1
         temp_nl(i_t)%this => newChild
         newChild%parentNode => arg
-        if (i==0) then
+        if (i==1) then
           arg%firstChild => newChild
           newChild%previousSibling => null()
         else
@@ -925,17 +925,21 @@ endif
       temp_nl(i_t)%this => arg%childNodes%nodes(i)%this
       i_t = i_t + 1     
     enddo
-    deallocate(arg%childNodes%nodes)
-    arg%childNodes%nodes => temp_nl
-    arg%childNodes%length = size(temp_nl)
-
-    call throw_exception(NOT_FOUND_ERR, "insertBefore", ex)
+    if (i_t == i) then
+      call throw_exception(NOT_FOUND_ERR, "insertBefore", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
+
+if (associated(temp_nl)) deallocate(temp_nl)
      return
   endif
 endif
 
+    endif
+
+    deallocate(arg%childNodes%nodes)
+    arg%childNodes%nodes => temp_nl
+    arg%childNodes%length = size(temp_nl)
 
   end function insertBefore
   
@@ -1043,7 +1047,7 @@ endif
     do i = 1, size(arg%childNodes%nodes)
       if (associated(arg%childNodes%nodes(i)%this, oldChild)) then
         np => oldChild
-        if (i==0) then
+        if (i==1) then
           arg%firstChild => newChild
           newChild%previousSibling => null()
         else 
@@ -1103,7 +1107,7 @@ endif
     i_t = 1
     do i = 1, size(arg%childNodes%nodes)
       if (associated(arg%childNodes%nodes(i)%this, oldChild)) then 
-        if (i==0) then
+        if (i==1) then
           np => arg%childNodes%nodes(i)%this
           if (size(arg%childNodes%nodes) == 1) then
             arg%firstChild => null()
@@ -3230,7 +3234,8 @@ endif
     character(len=*), intent(in) :: name
     type(Node), pointer :: attr
 
-    attr => null()     ! as per specs, if not found
+    attr => null()     ! as per specs, if not foundo
+
     if (element%nodeType /= ELEMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "getAttributeNode", ex)
 if (present(ex)) then
@@ -4180,14 +4185,20 @@ endif
 
     tmp => arg%nodeValue
     if (arg%nodeType==TEXT_NODE) then
-      np => createTextNode(arg%ownerDocument, str_vs(tmp(:offset)))
+      np => createTextNode(arg%ownerDocument, str_vs(tmp(offset+1:)))
     elseif (arg%nodeType==CDATA_SECTION_NODE) then
-      np => createCdataSection(arg%ownerDocument, str_vs(tmp(:offset)))
+      np => createCdataSection(arg%ownerDocument, str_vs(tmp(offset+1:)))
     endif
-    arg%nodeValue => vs_str_alloc(str_vs(tmp(offset+1:)))     
+    arg%nodeValue => vs_str_alloc(str_vs(tmp(:offset)))     
     deallocate(tmp)
-    np => insertBefore(arg%parentNode, np, arg)
-   
+    if (associated(arg%parentNode)) then
+      if (associated(arg%nextSibling)) then
+        np => insertBefore(arg%parentNode, np, arg%nextSibling)
+      else
+        np => appendChild(arg%parentNode, np)
+      endif
+    endif
+
   end function splitText
                                      
 
