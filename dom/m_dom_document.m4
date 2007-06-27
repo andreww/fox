@@ -220,6 +220,8 @@ TOHW_m_dom_contents(`
     character(len=*), intent(in) :: name
     type(Node), pointer :: np
 
+    type(Node), pointer :: ent
+
     if (doc%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     elseif (.not.checkChars(name, doc%xds%xml_version)) then
@@ -233,9 +235,9 @@ TOHW_m_dom_contents(`
 
     np => createNode(doc, ENTITY_REFERENCE_NODE, name, "")
 
-    ent => getNamedNode(doc%docType%entities, name)
+    ent => getNamedItem(doc%docType%entities, name)
 
-    ent => appendChild(np, cloneNode(ent, deep))
+    ent => appendChild(np, cloneNode(ent, .true., ex))
     ! FIXME all children should be readonly at this stage.
 
   end function createEntityReference

@@ -82,7 +82,9 @@ module m_sax_types
   integer, parameter :: WS_DISCARD = 3
   
   type sax_parser_t
-    type(xml_doc_state) :: xds
+    type(xml_doc_state), pointer :: xds
+    logical :: xds_used = .false. ! is the xds used by DOM? If so, we must
+                                  ! not destroy it once we are finished
     integer :: whitespace
     integer :: context 
     integer :: state

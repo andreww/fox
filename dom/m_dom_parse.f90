@@ -1,24 +1,28 @@
 module m_dom_parse
 
-  use m_common_array_str, only: vs_str_alloc
+  use m_common_array_str, only: str_vs, vs_str_alloc
   use m_common_error, only: FoX_error
+  use m_common_entities, only: entity_t
+  use m_common_notations, only: notation
+  use m_common_struct, only: xml_doc_state
   use FoX_common, only: dictionary_t, len
   use FoX_common, only: getQName, getValue, getLocalname, getURI
-  use FoX_sax, only: parse, xml_t
+  use m_sax_parser, only: sax_parse
+  use FoX_sax, only: xml_t
   use FoX_sax, only: open_xml_file, close_xml_t
 
   use m_dom_dom, only: Node, NamedNodeMap, hasChildNodes, getFirstChild
   use m_dom_dom, only: createnode, DOCUMENT_NODE, destroynode
-  use m_dom_dom, only: createProcessingInstruction
-  use m_dom_dom, only: createComment
-  use m_dom_dom, only: createElementNS
-  use m_dom_dom, only: createTextNode
-  use m_dom_dom, only: createNotation
+  use m_dom_dom, only: createProcessingInstruction, getDocType
+  use m_dom_dom, only: createComment, getEntities
+  use m_dom_dom, only: createElementNS, getNotations
+  use m_dom_dom, only: createTextNode, createEntity
+  use m_dom_dom, only: createNotation, setNamedItem
   use m_dom_dom, only: createEmptyDocument
   use m_dom_dom, only: getParentNode, setDocumentElement, getDocType, setDocType
   use m_dom_dom, only: append, getNodeType, setReadOnly
   use m_dom_dom, only: appendchild, getNotations
-  use m_dom_dom, only: setAttributeNS
+  use m_dom_dom, only: setAttributeNS, replace_xds
   use m_dom_debug, only: dom_debug
 
   implicit none
@@ -135,25 +139,49 @@ contains
 
   end subroutine startDTD_handler
 
-  subroutine notationDecl_handler(name, publicId, systemId)
-    character(len=*), intent(in) :: name
-    character(len=*), intent(in), optional :: publicId
-    character(len=*), intent(in), optional :: systemId
-    
-    type(Node), pointer :: np, dt
+  subroutine FoX_endDTD_handler(state)
+    type(xml_doc_state), pointer :: state
 
-    type(NamedNodeMap), pointer :: notations
+    type(Node), pointer :: dt, np, nt
+    type(NamedNodeMap), pointer :: entities, notations
+    type(entity_t), pointer :: thisEntity
+    type(notation), pointer :: thisNotation
+    integer :: i
 
-    print*, 'adding notation'
+!FIXME set readonly appropriately below
 
-    np => createNotation(mainDoc, name, publicId, systemId)
     dt => getDocType(mainDoc)
+    call replace_xds(dt, state)
+    
+    entities => getEntities(dt)
     notations => getNotations(dt)
-    call setReadonly(notations, .false.)
-    call append(notations, np)
-    call setReadonly(notations, .false.)
+    do i = 1, ubound(state%entityList%list, 1)
+      thisEntity => state%entityList%list(i)
+      np => createEntity(mainDoc, str_vs(thisEntity%code), &
+                         str_vs(thisEntity%publicId), &
+                         str_vs(thisEntity%systemId), &
+                         str_vs(thisEntity%notation))
+      if (.not.(thisEntity%external)) then
+        ! Here we assume all internal entities are simply text
+        ! FIXME in fact if they hold markup, we should indicate
+        ! that this is so. We cannot parse them, because this
+        ! might fail, but the failure only matters if someone
+        ! tries to add an entity reference later on.
+        ! They contain markup iff there is a '<' in them.
+        nt => createTextNode(mainDoc, str_vs(thisEntity%repl))
+        nt => appendChild(np, nt)
+      endif
+      np => setNamedItem(entities, np)
+    enddo
+    do i = 1, ubound(state%nlist%notations, 1)
+      thisNotation => state%nlist%notations(i)
+      np => createNotation(mainDoc, str_vs(thisNotation%name), &
+                         str_vs(thisEntity%publicId), &
+                         str_vs(thisEntity%systemId))
+      np => setNamedItem(notations, np)
+    enddo
 
-  end subroutine notationDecl_handler
+  end subroutine FoX_endDTD_handler
 
   function parsefile(filename, verbose, sax_verbose)
 
@@ -161,10 +189,12 @@ contains
     logical, intent(in), optional :: verbose
     logical, intent(in), optional :: sax_verbose
 
-    type(Node), pointer :: parsefile
-
+    type(Node), pointer :: parsefile, dt, np, nt
+    type(NamedNodeMap), pointer :: entities, notations
+    type(entity_t), pointer :: thisEntity
+    type(notation), pointer :: thisNotation
     type(xml_t) :: fxml
-    integer :: iostat
+    integer :: i, iostat
 
     if (present(verbose)) then
        dom_debug = verbose
@@ -175,7 +205,9 @@ contains
       call FoX_error("Cannot open file")
     endif
 
-    call parse(fxml,&
+! We use internal sax_parse rather than public interface in order
+! to use internal callbacks to get extra info.
+    call sax_parse(fxml%fx, fxml%fb,&
       characters_handler,            &
       !endDocument_handler,           &
       endElement_handler=endElement_handler,            &
@@ -187,7 +219,7 @@ contains
       startDocument_handler=startDocument_handler,         & 
       startElement_handler=startElement_handler,          &
       !startPrefixMapping_handler,    &
-      notationDecl_handler=notationDecl_handler,          &
+      !notationDecl_handler=notationDecl_handler,          &
       !unparsedEntityDecl_handler,    &
       !error_handler,                 &
       !fatalError_handler,            &
@@ -201,14 +233,12 @@ contains
       !endDTD_handler=endDTD_handler,                &
       !endEntity_handler,             &
       !startCdata_handler,            &
-      startDTD_handler=startDTD_handler          &
+      startDTD_handler=startDTD_handler,          &
       !startEntity_handler
-      )
-    
+      FoX_endDTD_handler=FoX_endDTD_handler)
+
     call close_xml_t(fxml)
-!    if (dom_debug) print *, "Number of allocated nodes: ", getNumberofAllocatedNodes()
-    
-    !    call createDocument(mainDoc, main)
+
     parsefile => mainDoc
     mainDoc => null()
     

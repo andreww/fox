@@ -29,8 +29,9 @@ module m_sax_parser
     initNamespaceDictionary, destroyNamespaceDictionary
   use m_common_notations, only: init_notation_list, destroy_notation_list, &
     add_notation, notation_exists
-  use m_common_struct, only: init_xml_doc_state, destroy_xml_doc_state, &
-    register_internal_PE, register_external_PE, register_internal_GE, register_external_GE
+  use m_common_struct, only: xml_doc_state, init_xml_doc_state, &
+    destroy_xml_doc_state, register_internal_PE, register_external_PE, &
+    register_internal_GE, register_external_GE
 
   use m_sax_reader, only: file_buffer_t, pop_buffer_stack, push_buffer_stack
   use m_sax_tokenizer, only: sax_tokenize, parse_xml_declaration, normalize_text
@@ -55,13 +56,13 @@ contains
     !call init_dict(fx%attributes)
     call initNamespaceDictionary(fx%nsdict)
     call init_notation_list(fx%nlist)
+    allocate(fx%xds)
     call init_xml_doc_state(fx%xds)
     call init_element_list(fx%element_list)
 
     allocate(fx%wf_stack(1))
     call init_entity_list(fx%forbidden_ge_list)
     call init_entity_list(fx%forbidden_pe_list)
-
     call init_entity_list(fx%predefined_e_list)
 
     call add_internal_entity(fx%predefined_e_list, 'amp', '&')
@@ -86,7 +87,10 @@ contains
     call destroy_dict(fx%attributes)
     call destroyNamespaceDictionary(fx%nsdict)
     call destroy_notation_list(fx%nlist)
-    call destroy_xml_doc_state(fx%xds)
+    if (.not.fx%xds_used) then
+      call destroy_xml_doc_state(fx%xds)
+      deallocate(fx%xds)
+    endif
     call destroy_element_list(fx%element_list)
 
     deallocate(fx%wf_stack)
@@ -139,7 +143,8 @@ contains
     startCdata_handler,            &
     startDTD_handler,              &
     startEntity_handler,           &
-    validate)
+    validate,                      &
+    FoX_endDTD_handler)
 
     type(sax_parser_t), intent(inout) :: fx
     type(file_buffer_t), intent(inout) :: fb
@@ -166,6 +171,7 @@ contains
     optional :: endCdata_handler
     optional :: endEntity_handler
     optional :: endDTD_handler
+    optional :: FoX_endDTD_handler
     optional :: startCdata_handler
     optional :: startDTD_handler
     optional :: startEntity_handler
@@ -276,8 +282,10 @@ contains
       subroutine endCdata_handler()
       end subroutine endCdata_handler
 
-      subroutine endDTD_handler()
-      end subroutine endDTD_handler
+      subroutine FoX_endDTD_handler(state)
+        use m_common_struct, only: xml_doc_state
+        type(xml_doc_state), pointer :: state
+      end subroutine FoX_endDTD_handler
 
       subroutine endEntity_handler(name)
         character(len=*), intent(in) :: name
@@ -879,6 +887,13 @@ contains
           if (associated(fx%publicId)) deallocate(fx%publicId)
           if (present(endDTD_handler)) &
             call endDTD_handler
+          ! Here we hand over responsibility for the xds object
+          ! The SAX caller must take care of it, and we don't
+          ! need it any more. (We will destroy it shortly anyway)
+          if (present(FoX_endDTD_handler)) then
+            fx%xds_used = .true.
+            call FoX_endDTD_handler(fx%xds)
+          endif
           fx%context = CTXT_BEFORE_CONTENT
           fx%state = ST_MISC
         else

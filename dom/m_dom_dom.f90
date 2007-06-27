@@ -33,7 +33,7 @@ module m_dom_dom
     INVALID_CHARACTER_ERR, NAMESPACE_ERR, FoX_INVALID_PUBLIC_ID, FoX_INVALID_SYSTEM_ID
   use m_common_namecheck, only: checkName, checkPublicId, checkSystemId
   use m_common_string, only: toLower
-  use m_common_struct, only: init_xml_doc_state
+  use m_common_struct, only: init_xml_doc_state, destroy_xml_doc_state
 
 
 
@@ -288,6 +288,8 @@ module m_dom_dom
   public :: createEmptyDocument
   public :: createEmptyDocumentType
 
+  public :: replace_xds
+
 
 
   public :: getDocType
@@ -472,12 +474,7 @@ endif
        ! FIXME internal error
     endif
 
-    ! Entities need to be destroyed recursively
-
-    do i = 1, dt%notations%length
-      call destroyNode(dt%notations%nodes(i)%this)
-    enddo
-    if (associated(dt%notations%nodes)) deallocate(dt%notations%nodes)
+    ! Entities need to be destroyed recursively - if they are done properly ...
 
     call destroy_xml_doc_state(dt%xds)
     deallocate(dt%xds)
@@ -2092,6 +2089,16 @@ endif
   end function createEmptyDocumentType
 
 
+  subroutine replace_xds(dt, xds)
+    type(Node), pointer :: dt
+    type(xml_doc_state), pointer :: xds
+
+    call destroy_xml_doc_state(dt%xds)
+    deallocate(dt%xds)
+    dt%xds => xds
+  end subroutine replace_xds
+
+
   function createDocument(impl, namespaceURI, qualifiedName, docType) result(doc)
     type(DOMImplementation), intent(in) :: impl
     character(len=*), intent(in), optional :: namespaceURI
@@ -2512,6 +2519,8 @@ endif
     character(len=*), intent(in) :: name
     type(Node), pointer :: np
 
+    type(Node), pointer :: ent
+
     if (doc%nodeType/=DOCUMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "createEntityReference", ex)
 if (present(ex)) then
@@ -2542,6 +2551,11 @@ endif
     ! see spec
 
     np => createNode(doc, ENTITY_REFERENCE_NODE, name, "")
+
+    ent => getNamedItem(doc%docType%entities, name)
+
+    ent => appendChild(np, cloneNode(ent, .true., ex))
+    ! FIXME all children should be readonly at this stage.
 
   end function createEntityReference
 

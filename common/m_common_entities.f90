@@ -32,7 +32,6 @@ module m_common_entities
   end type entity_t
 
   type entity_list
-    private
     type(entity_t), dimension(:), pointer :: list => null()
   end type entity_list
 
@@ -48,6 +47,7 @@ module m_common_entities
   public :: expand_entity
   public :: expand_entity_len
 
+  public :: entity_t
   public :: entity_list
   public :: init_entity_list
   public :: reset_entity_list

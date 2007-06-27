@@ -7,7 +7,7 @@ TOHW_m_dom_imports(`
     INVALID_CHARACTER_ERR, NAMESPACE_ERR, FoX_INVALID_PUBLIC_ID, FoX_INVALID_SYSTEM_ID
   use m_common_namecheck, only: checkName, checkPublicId, checkSystemId
   use m_common_string, only: toLower
-  use m_common_struct, only: init_xml_doc_state
+  use m_common_struct, only: init_xml_doc_state, destroy_xml_doc_state
 
 ')`'dnl
 dnl
@@ -21,6 +21,8 @@ TOHW_m_dom_publics(`
 
   public :: createEmptyDocument
   public :: createEmptyDocumentType
+
+  public :: replace_xds
 
 ')`'dnl
 dnl
@@ -91,6 +93,16 @@ TOHW_m_dom_contents(`
     allocate(dt%xds)
     call init_xml_doc_state(dt%xds)
   end function createEmptyDocumentType
+
+
+  subroutine replace_xds(dt, xds)
+    type(Node), pointer :: dt
+    type(xml_doc_state), pointer :: xds
+
+    call destroy_xml_doc_state(dt%xds)
+    deallocate(dt%xds)
+    dt%xds => xds
+  end subroutine replace_xds
 
 
   function createDocument(impl, namespaceURI, qualifiedName, docType) result(doc)

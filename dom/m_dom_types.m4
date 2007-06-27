@@ -199,12 +199,7 @@ TOHW_m_dom_contents(`
        ! FIXME internal error
     endif
 
-    ! Entities need to be destroyed recursively
-
-    do i = 1, dt%notations%length
-      call destroyNode(dt%notations%nodes(i)%this)
-    enddo
-    if (associated(dt%notations%nodes)) deallocate(dt%notations%nodes)
+    ! Entities need to be destroyed recursively - if they are done properly ...
 
     call destroy_xml_doc_state(dt%xds)
     deallocate(dt%xds)
