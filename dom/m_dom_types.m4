@@ -33,9 +33,10 @@ TOHW_m_dom_publics(`
 
   type NodeList
     private
-    character, pointer :: localName(:) => null()
-    character, pointer :: namespaceURI(:) => null()
-    type(Node), pointer :: ownerDocument => null()
+    character, pointer :: nodeName(:) => null() ! What was getByTagName run on?
+    character, pointer :: localName(:) => null() ! What was getByTagNameNS run on?
+    character, pointer :: namespaceURI(:) => null() ! What was getByTagNameNS run on?
+    type(Node), pointer :: element => null() ! which element or document was the getByTagName run from?
     type(ListNode), pointer :: nodes(:) => null()
     integer :: length = 0
   end type NodeList
