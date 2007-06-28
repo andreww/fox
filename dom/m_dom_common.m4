@@ -21,13 +21,14 @@ TOHW_m_dom_contents(`
   function getData(arg) result(c)
     type(Node), intent(in) :: arg
     character(len=size(arg%nodeValue)) :: c
-    if (arg%nodeType/=TEXT_NODE .and. &
-      arg%nodeType/=COMMENT_NODE .and. &
-      arg%nodeType/=CDATA_SECTION_NODE .and. &
-      arg%nodeType/=PROCESSING_INSTRUCTION_NODE) then
+
+    if (arg%nodeType==TEXT_NODE .or. &
+      arg%nodeType==COMMENT_NODE .or. &
+      arg%nodeType==CDATA_SECTION_NODE .or. &
+      arg%nodeType==PROCESSING_INSTRUCTION_NODE) then
        c = str_vs(arg%nodeValue)
     else
-       c = "" ! or error
+       c = ""
     endif
   end function getData
 

@@ -15,13 +15,13 @@ module m_dom_parse
   use m_dom_dom, only: createnode, DOCUMENT_NODE, destroynode
   use m_dom_dom, only: createProcessingInstruction, getDocType
   use m_dom_dom, only: createComment, getEntities
-  use m_dom_dom, only: createElementNS, getNotations
+  use m_dom_dom, only: createElementNS, getNotations, getLastChild
   use m_dom_dom, only: createTextNode, createEntity
-  use m_dom_dom, only: createNotation, setNamedItem
-  use m_dom_dom, only: createEmptyDocument, getXMLVersion
+  use m_dom_dom, only: createNotation, setNamedItem, getNodeName
+  use m_dom_dom, only: createEmptyDocument, getXMLVersion, createDocumentType
   use m_dom_dom, only: getParentNode, setDocumentElement, getDocType, setDocType
-  use m_dom_dom, only: append, getNodeType, setReadOnly
-  use m_dom_dom, only: appendchild, getNotations
+  use m_dom_dom, only: append, getNodeType, setReadOnly, getLength, getChildNodes
+  use m_dom_dom, only: removeChild, appendChild, getNotations
   use m_dom_dom, only: setAttributeNS, replace_xds
   use m_dom_debug, only: dom_debug
 
@@ -134,10 +134,12 @@ contains
 
     type(Node), pointer :: np
 
-    print*,'startingDTD'
-
     np => getDocType(mainDoc)
+    ! If we have added any more document children by now (comments or PIs), we
+    ! need to move the docType node to the end of the list of document children ...
+    np => removeChild(mainDoc, np)
     call setDocType(np, name, publicId, systemId)
+    np => appendChild(mainDoc, np)
 
   end subroutine startDTD_handler
 

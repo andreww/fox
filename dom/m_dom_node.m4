@@ -424,22 +424,23 @@ TOHW_m_dom_contents(`
     i_t = 1
     do i = 1, size(arg%childNodes%nodes)
       if (associated(arg%childNodes%nodes(i)%this, oldChild)) then 
-        if (i==1) then
-          np => arg%childNodes%nodes(i)%this
-          if (size(arg%childNodes%nodes) == 1) then
-            arg%firstChild => null()
-            arg%lastChild => null()
-            exit
-          else
-            arg%firstChild => arg%childNodes%nodes(1)%this
-            arg%childNodes%nodes(1)%this%previousSibling => null()
-          endif
-        else
-          arg%childNodes%nodes(i+1)%this%previousSibling => arg%childNodes%nodes(i-1)%this
-        endif
-        if (i==size(arg%childNodes%nodes)) then
+        np => arg%childNodes%nodes(i)%this
+        if (associated(arg%firstChild, arg%lastChild)) then
+          ! There is only one child, we are removing it.
+          arg%firstChild => null()
+          arg%lastChild => null()
+        elseif (i==1) then
+          ! We are removing the first child, but there is a second
+          arg%firstChild => arg%childNodes%nodes(2)%this
+          arg%childNodes%nodes(2)%this%previousSibling => null()
+        elseif (i==size(arg%childNodes%nodes)) then
+          ! We are removing the last child, but there is a second-to-last
           arg%lastChild => arg%childNodes%nodes(i-1)%this
           arg%childNodes%nodes(i-1)%this%nextSibling => null()
+        else
+          ! We are removing a child in the middle
+          arg%childNodes%nodes(i-1)%this%nextSibling => arg%childNodes%nodes(i+1)%this
+          arg%childNodes%nodes(i+1)%this%previousSibling => arg%childNodes%nodes(i-1)%this
         endif
       else
         temp_nl(i_t)%this => arg%childNodes%nodes(i)%this
