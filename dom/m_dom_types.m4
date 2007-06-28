@@ -33,6 +33,9 @@ TOHW_m_dom_publics(`
 
   type NodeList
     private
+    character, pointer :: localName(:) => null()
+    character, pointer :: namespaceURI(:) => null()
+    type(Node), pointer :: ownerDocument => null()
     type(ListNode), pointer :: nodes(:) => null()
     integer :: length = 0
   end type NodeList
@@ -89,6 +92,8 @@ TOHW_m_dom_publics(`
     type(xml_doc_state), pointer :: xds => null()
     !TYPEINFO schemaTypeInfo
     logical :: isId
+    ! In order to keep all node lists live ..
+    type(NodeList), pointer :: nodelists(:)
   end type Node
 
   type(DOMImplementation), save, target :: FoX_DOM
