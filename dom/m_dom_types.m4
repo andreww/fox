@@ -41,6 +41,11 @@ TOHW_m_dom_publics(`
     integer :: length = 0
   end type NodeList
 
+  type NodeListptr
+    private
+    type(NodeList), pointer :: this
+  end type NodeListptr
+
   type NamedNodeMap
     private
     logical :: readonly = .false.
@@ -94,7 +99,9 @@ TOHW_m_dom_publics(`
     !TYPEINFO schemaTypeInfo
     logical :: isId
     ! In order to keep all node lists live ..
-    type(NodeList), pointer :: nodelists(:)
+    type(NodeListPtr), pointer :: nodelists(:)
+    ! In order to keep track of all nodes not connected to the document
+    type(NodeList) :: hangingNodes
   end type Node
 
   type(DOMImplementation), save, target :: FoX_DOM

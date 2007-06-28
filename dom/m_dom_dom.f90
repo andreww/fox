@@ -117,6 +117,11 @@ module m_dom_dom
     integer :: length = 0
   end type NodeList
 
+  type NodeListptr
+    private
+    type(NodeList), pointer :: this
+  end type NodeListptr
+
   type NamedNodeMap
     private
     logical :: readonly = .false.
@@ -170,7 +175,9 @@ module m_dom_dom
     !TYPEINFO schemaTypeInfo
     logical :: isId
     ! In order to keep all node lists live ..
-    type(NodeList), pointer :: nodelists(:)
+    type(NodeListPtr), pointer :: nodelists(:)
+    ! In order to keep track of all nodes not connected to the document
+    type(NodeList) :: hangingNodes
   end type Node
 
   type(DOMImplementation), save, target :: FoX_DOM
@@ -1652,45 +1659,70 @@ endif
     character, pointer :: oldLocalName(:), newLocalName(:)
     character, pointer :: oldNamespaceURI(:), newNamespaceURI(:)
 
-    type(NodeList), pointer :: nl, temp_nll(:)
+    type(NodeList), pointer :: nl, nl_orig
+    type(NodeListPtr), pointer :: temp_nll(:)
     integer :: i, i_t
 ! FIXME FIXME FIXME
 
     if (.not.associated(doc%nodelists)) return
 
-    temp_nll => doc%nodelists
+    allocate(temp_nll(size(doc%nodelists)))
     i_t = 0
-    do i = 1, size(temp_nll)
+    do i = 1, size(doc%nodelists)
       ! A nodelist will need updated if it was keyed to the old or new Names.
-      if (temp_nll(i)%element%nodeType==ELEMENT_NODE) then
-        if (.not.associated(temp_nll(i)%element%parentNode)) then
+      nl_orig => doc%nodelists(i)%this
+      if (nl_orig%element%nodeType==ELEMENT_NODE) then
+        if (.not.associated(nl_orig%element%parentNode)) then
           ! We have just removed this element from the tree
-          deallocate(temp_nll(i)%nodes)
+          deallocate(nl_orig%nodes)
+          cycle
         endif
       endif
-      if (associated(temp_nll(i)%nodeName)) then ! this was made by getElementsByTagName
-        if (str_vs(temp_nll(i)%nodeName)==str_vs(oldName) &
-          .or. str_vs(temp_nll(i)%nodeName)==str_vs(newName)) then
-          ! destroy oldNL
-          nl => getElementsByTagName(temp_nll(i)%element, str_vs(temp_nll(i)%nodeName)) ! FIXME mutating nodelist
+      ! we definitely keep this nodelist.
+      i_t = i_t + 1
+      ! Although all nodes should be searched whatever the result, we should only do the
+      ! appropriate sort of search for this list - according to namespaces or not.
+      if (associated(nl_orig%nodeName)) then ! this was made by getElementsByTagName
+        if (str_vs(nl_orig%nodeName)==str_vs(oldName) &
+          .or. str_vs(nl_orig%nodeName)==str_vs(newName)) then
+          nl => getElementsByTagName(nl_orig%element, str_vs(nl_orig%nodeName)) ! FIXME mutating nodelist
+          ! That appended a nodelist to the end of doc%nodelists. But it does not matter,
+          ! the whole of the original nodelists will be thrown away anyway. We do have to do:
+          deallocate(nl_orig)
+          ! and then grab the new list for our new list of lists.
+          temp_nll(i_t)%this => nl
         endif
-      elseif (associated(temp_nll(i)%namespaceURI)) then ! FIXME is this enough - what is nsURI of ns-less nodes?
+      elseif (associated(nl_orig%namespaceURI)) then
         ! This was made by getElementsByTagNameNS
-        if (str_vs(temp_nll(i)%localName)==str_vs(oldLocalName) &
-          .or. str_vs(temp_nll(i)%localName)==str_vs(newLocalName) &
-          .or. str_vs(temp_nll(i)%namespaceURI)==str_vs(oldNamespaceURI) &
-          .or. str_vs(temp_nll(i)%namespaceURI)==str_vs(newNamespaceURI)) then
+        if (str_vs(nl_orig%localName)==str_vs(oldLocalName) &
+          .or. str_vs(nl_orig%localName)==str_vs(newLocalName) &
+          .or. str_vs(nl_orig%namespaceURI)==str_vs(oldNamespaceURI) &
+          .or. str_vs(nl_orig%namespaceURI)==str_vs(newNamespaceURI)) then
           ! destroy newNL
-          nl => getElementsByTagNameNS(temp_nll(i)%element, str_vs(temp_nll(i)%localName), str_vs(temp_nll(i)%namespaceURI)) ! FIXME mutating nodelist
+          nl => getElementsByTagNameNS(nl_orig%element, str_vs(nl_orig%localName), str_vs(nl_orig%namespaceURI))
+          ! That appended a nodelist to the end of doc%nodelists. But it does not matter,
+          ! the whole of the original nodelists will be thrown away anyway. We do have to do:
+          deallocate(nl_orig)
+          ! and then grab the new list for our new list of lists.
+          temp_nll(i_t)%this => nl
         endif
       else
-        nl => temp_nll(i)
+        temp_nll(i_t)%this => doc%nodelists(i)%this
       endif
-      i_t = i_t + 1
     enddo
 
+    !Now, destroy all nodelist pointers from old list:
+    do i = 1, size(doc%nodelists) !Note, this size may be different if we have done more searches above.
+      deallocate(doc%nodelists(i)%this)
+    enddo
+    deallocate(doc%nodelists)
+    ! Now put everything back from temp_nll, but discard any lost nodelists
     allocate(doc%nodelists(i_t))
-    doc%nodelists => temp_nll(:i_t)
+    do i = 1, i_t
+      doc%nodelists(i)%this => temp_nll(i)%this
+    enddo
+    ! And finally, get rid of the temporary list of lists
+    deallocate(temp_nll)
 
   end subroutine updateNodeLists
 
@@ -2666,8 +2698,10 @@ endif
     character(len=*), intent(in), optional :: tagName, name
     type(NodeList), pointer :: list
 
+    type(NodeListPtr), pointer :: nll(:), temp_nll(:)
     type(Node), pointer :: np
     logical :: ascending, allElements
+    integer :: i
 
 ! FIXME check name and tagname for doc/element respectively ...
 
@@ -2697,6 +2731,19 @@ endif
 
     allocate(list)
     allocate(list%nodes(0))
+    list%element => doc
+    list%nodeName => vs_str_alloc(name) ! FIXME or tagName
+
+    if (doc%nodeType==DOCUMENT_NODE) then
+      nll => doc%nodeLists
+    elseif (doc%nodeType==ELEMENT_NODE) then
+      nll => doc%ownerDocument%nodeLists
+    endif
+    allocate(temp_nll(size(nll)+1))
+    do i = 1, size(nll)
+      temp_nll(i)%this => nll(i)%this
+    enddo
+    temp_nll(i)%this => list
 
     ascending = .false.
     do
@@ -2902,8 +2949,10 @@ endif
     character(len=*), intent(in) :: namespaceURI, localName
     type(NodeList), pointer :: list
 
+    type(NodeListPtr), pointer :: nll(:), temp_nll(:)
     type(Node), pointer :: np
     logical :: noChild, allLocalNames, allNameSpaces
+    integer :: i
 
     if (doc%nodeType/=DOCUMENT_NODE.and.doc%nodeType/=ELEMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "getElementsByTagNameNS", ex)
@@ -2933,6 +2982,20 @@ endif
 
     allocate(list)
     allocate(list%nodes(0))
+    list%element => doc
+    list%localName => vs_str_alloc(localName)
+    list%namespaceURI => vs_str_alloc(namespaceURI)
+
+    if (doc%nodeType==DOCUMENT_NODE) then
+      nll => doc%nodeLists
+    elseif (doc%nodeType==ELEMENT_NODE) then
+      nll => doc%ownerDocument%nodeLists
+    endif
+    allocate(temp_nll(size(nll)+1))
+    do i = 1, size(nll)
+      temp_nll(i)%this => nll(i)%this
+    enddo
+    temp_nll(i)%this => list
 
     noChild = .false.
     do

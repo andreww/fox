@@ -257,8 +257,10 @@ TOHW_m_dom_contents(`
     character(len=*), intent(in), optional :: tagName, name
     type(NodeList), pointer :: list
 
+    type(NodeListPtr), pointer :: nll(:), temp_nll(:)
     type(Node), pointer :: np
     logical :: ascending, allElements
+    integer :: i
 
 ! FIXME check name and tagname for doc/element respectively ...
 
@@ -282,6 +284,19 @@ TOHW_m_dom_contents(`
 
     allocate(list)
     allocate(list%nodes(0))
+    list%element => doc
+    list%nodeName => vs_str_alloc(name) ! FIXME or tagName
+
+    if (doc%nodeType==DOCUMENT_NODE) then
+      nll => doc%nodeLists
+    elseif (doc%nodeType==ELEMENT_NODE) then
+      nll => doc%ownerDocument%nodeLists
+    endif
+    allocate(temp_nll(size(nll)+1))
+    do i = 1, size(nll)
+      temp_nll(i)%this => nll(i)%this
+    enddo
+    temp_nll(i)%this => list
 
     ascending = .false.
     do
@@ -405,8 +420,10 @@ TOHW_m_dom_contents(`
     character(len=*), intent(in) :: namespaceURI, localName
     type(NodeList), pointer :: list
 
+    type(NodeListPtr), pointer :: nll(:), temp_nll(:)
     type(Node), pointer :: np
     logical :: noChild, allLocalNames, allNameSpaces
+    integer :: i
 
     if (doc%nodeType/=DOCUMENT_NODE.and.doc%nodeType/=ELEMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
@@ -430,6 +447,20 @@ TOHW_m_dom_contents(`
 
     allocate(list)
     allocate(list%nodes(0))
+    list%element => doc
+    list%localName => vs_str_alloc(localName)
+    list%namespaceURI => vs_str_alloc(namespaceURI)
+
+    if (doc%nodeType==DOCUMENT_NODE) then
+      nll => doc%nodeLists
+    elseif (doc%nodeType==ELEMENT_NODE) then
+      nll => doc%ownerDocument%nodeLists
+    endif
+    allocate(temp_nll(size(nll)+1))
+    do i = 1, size(nll)
+      temp_nll(i)%this => nll(i)%this
+    enddo
+    temp_nll(i)%this => list
 
     noChild = .false.
     do

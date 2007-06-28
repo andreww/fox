@@ -134,45 +134,70 @@ TOHW_m_dom_contents(`
     character, pointer :: oldLocalName(:), newLocalName(:)
     character, pointer :: oldNamespaceURI(:), newNamespaceURI(:)
 
-    type(NodeList), pointer :: nl, temp_nll(:)
+    type(NodeList), pointer :: nl, nl_orig
+    type(NodeListPtr), pointer :: temp_nll(:)
     integer :: i, i_t
 ! FIXME FIXME FIXME
 
     if (.not.associated(doc%nodelists)) return
 
-    temp_nll => doc%nodelists
+    allocate(temp_nll(size(doc%nodelists)))
     i_t = 0
-    do i = 1, size(temp_nll)
+    do i = 1, size(doc%nodelists)
       ! A nodelist will need updated if it was keyed to the old or new Names.
-      if (temp_nll(i)%element%nodeType==ELEMENT_NODE) then
-        if (.not.associated(temp_nll(i)%element%parentNode)) then
+      nl_orig => doc%nodelists(i)%this
+      if (nl_orig%element%nodeType==ELEMENT_NODE) then
+        if (.not.associated(nl_orig%element%parentNode)) then
           ! We have just removed this element from the tree
-          deallocate(temp_nll(i)%nodes)
+          deallocate(nl_orig%nodes)
+          cycle
         endif
       endif
-      if (associated(temp_nll(i)%nodeName)) then ! this was made by getElementsByTagName
-        if (str_vs(temp_nll(i)%nodeName)==str_vs(oldName) &
-          .or. str_vs(temp_nll(i)%nodeName)==str_vs(newName)) then
-          ! destroy oldNL
-          nl => getElementsByTagName(temp_nll(i)%element, str_vs(temp_nll(i)%nodeName)) ! FIXME mutating nodelist
+      ! we definitely keep this nodelist.
+      i_t = i_t + 1
+      ! Although all nodes should be searched whatever the result, we should only do the
+      ! appropriate sort of search for this list - according to namespaces or not.
+      if (associated(nl_orig%nodeName)) then ! this was made by getElementsByTagName
+        if (str_vs(nl_orig%nodeName)==str_vs(oldName) &
+          .or. str_vs(nl_orig%nodeName)==str_vs(newName)) then
+          nl => getElementsByTagName(nl_orig%element, str_vs(nl_orig%nodeName)) ! FIXME mutating nodelist
+          ! That appended a nodelist to the end of doc%nodelists. But it does not matter,
+          ! the whole of the original nodelists will be thrown away anyway. We do have to do:
+          deallocate(nl_orig)
+          ! and then grab the new list for our new list of lists.
+          temp_nll(i_t)%this => nl
         endif
-      elseif (associated(temp_nll(i)%namespaceURI)) then ! FIXME is this enough - what is nsURI of ns-less nodes?
+      elseif (associated(nl_orig%namespaceURI)) then
         ! This was made by getElementsByTagNameNS
-        if (str_vs(temp_nll(i)%localName)==str_vs(oldLocalName) &
-          .or. str_vs(temp_nll(i)%localName)==str_vs(newLocalName) &
-          .or. str_vs(temp_nll(i)%namespaceURI)==str_vs(oldNamespaceURI) &
-          .or. str_vs(temp_nll(i)%namespaceURI)==str_vs(newNamespaceURI)) then
+        if (str_vs(nl_orig%localName)==str_vs(oldLocalName) &
+          .or. str_vs(nl_orig%localName)==str_vs(newLocalName) &
+          .or. str_vs(nl_orig%namespaceURI)==str_vs(oldNamespaceURI) &
+          .or. str_vs(nl_orig%namespaceURI)==str_vs(newNamespaceURI)) then
           ! destroy newNL
-          nl => getElementsByTagNameNS(temp_nll(i)%element, str_vs(temp_nll(i)%localName), str_vs(temp_nll(i)%namespaceURI)) ! FIXME mutating nodelist
+          nl => getElementsByTagNameNS(nl_orig%element, str_vs(nl_orig%localName), str_vs(nl_orig%namespaceURI))
+          ! That appended a nodelist to the end of doc%nodelists. But it does not matter,
+          ! the whole of the original nodelists will be thrown away anyway. We do have to do:
+          deallocate(nl_orig)
+          ! and then grab the new list for our new list of lists.
+          temp_nll(i_t)%this => nl
         endif
       else
-        nl => temp_nll(i)
+        temp_nll(i_t)%this => doc%nodelists(i)%this
       endif
-      i_t = i_t + 1
     enddo
 
+    !Now, destroy all nodelist pointers from old list:
+    do i = 1, size(doc%nodelists) !Note, this size may be different if we have done more searches above.
+      deallocate(doc%nodelists(i)%this)
+    enddo
+    deallocate(doc%nodelists)
+    ! Now put everything back from temp_nll, but discard any lost nodelists
     allocate(doc%nodelists(i_t))
-    doc%nodelists => temp_nll(:i_t)
+    do i = 1, i_t
+      doc%nodelists(i)%this => temp_nll(i)%this
+    enddo
+    ! And finally, get rid of the temporary list of lists
+    deallocate(temp_nll)
 
   end subroutine updateNodeLists
 
