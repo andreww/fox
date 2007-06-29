@@ -114,6 +114,8 @@ TOHW_m_dom_contents(`
     
     np => createNode(doc, ELEMENT_NODE, tagName, "")
     np%attributes%ownerElement => np
+
+    ! FIXME set namespaceURI and localName appropriately
   
   end function createElement
     
@@ -384,6 +386,8 @@ TOHW_m_dom_contents(`
     np%localName => vs_str_alloc(localpartOfQName(qualifiedname))
 
     np%attributes%ownerElement => np
+
+    ! FIXME updateNodeLists
 
   end function createElementNS
   

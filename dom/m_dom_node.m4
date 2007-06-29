@@ -314,6 +314,9 @@ TOHW_m_dom_contents(`
     arg%childNodes%nodes => temp_nl
     arg%childNodes%length = size(temp_nl)
 
+    ! FIXME updateNodeLists(*) in case of children
+    ! but only if we are adding to a child of the document
+
   end function insertBefore
   
 
@@ -403,6 +406,9 @@ TOHW_m_dom_contents(`
     np%previousSibling => null()
     np%nextSibling => null()
 
+    ! FIXME updateNodeLists(*) in case of children
+    ! but only if we are replacing a child of the document
+
   end function replaceChild
 
 
@@ -458,6 +464,9 @@ TOHW_m_dom_contents(`
     np%parentNode => null()
     np%previousSibling => null()
     np%nextSibling => null()
+
+    ! FIXME updateNodeLists(*) in case of children
+    ! but only if we are removing a child of the document
 
   end function removeChild
 
@@ -546,6 +555,9 @@ TOHW_m_dom_contents(`
     newChild%parentNode => arg
     
     appendChild => newChild
+
+    ! FIXME updateNodeLists(*) in case of children
+    ! but only if we are appending to a child of the document!
 
   end function appendChild
 

@@ -139,6 +139,7 @@ TOHW_m_dom_contents(`
     integer :: i, i_t
 ! FIXME FIXME FIXME
 
+    if (.not.doc%liveNodeLists) return
     if (.not.associated(doc%nodelists)) return
 
     allocate(temp_nll(size(doc%nodelists)))

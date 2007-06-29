@@ -177,7 +177,9 @@ module m_dom_dom
     ! In order to keep all node lists live ..
     type(NodeListPtr), pointer :: nodelists(:)
     ! In order to keep track of all nodes not connected to the document
-    type(NodeList) :: hangingNodes
+    logical :: liveNodeLists ! For the document, are nodelists live? (FIXME should be in xds)
+    type(NodeList) :: hangingNodes ! For the document. list of nodes not associated with doc
+    logical :: inDocument = .false.! For a node, is this node associated to the doc?
   end type Node
 
   type(DOMImplementation), save, target :: FoX_DOM
@@ -968,6 +970,9 @@ endif
     arg%childNodes%nodes => temp_nl
     arg%childNodes%length = size(temp_nl)
 
+    ! FIXME updateNodeLists(*) in case of children
+    ! but only if we are adding to a child of the document
+
   end function insertBefore
   
 
@@ -1106,6 +1111,9 @@ endif
     np%previousSibling => null()
     np%nextSibling => null()
 
+    ! FIXME updateNodeLists(*) in case of children
+    ! but only if we are replacing a child of the document
+
   end function replaceChild
 
 
@@ -1174,6 +1182,9 @@ endif
     np%parentNode => null()
     np%previousSibling => null()
     np%nextSibling => null()
+
+    ! FIXME updateNodeLists(*) in case of children
+    ! but only if we are removing a child of the document
 
   end function removeChild
 
@@ -1305,6 +1316,9 @@ endif
     newChild%parentNode => arg
     
     appendChild => newChild
+
+    ! FIXME updateNodeLists(*) in case of children
+    ! but only if we are appending to a child of the document!
 
   end function appendChild
 
@@ -1664,6 +1678,7 @@ endif
     integer :: i, i_t
 ! FIXME FIXME FIXME
 
+    if (.not.doc%liveNodeLists) return
     if (.not.associated(doc%nodelists)) return
 
     allocate(temp_nll(size(doc%nodelists)))
@@ -2273,19 +2288,29 @@ endif
   end function createEmptyDocument
 
 
-  subroutine destroyDocument(doc)
+  subroutine destroyDocument(doc, ex)
+    type(DOMException), intent(inout), optional :: ex
     type(Node), pointer :: doc
     
     type(NodeList) :: np_stack
-    type(Node), pointer :: np, np_next
-    logical :: ascending
+    integer :: i
 
     if (doc%nodeType/=DOCUMENT_NODE) then
-      ! FIXME throw an error
-      continue
+      call throw_exception(FoX_INVALID_NODE, "destroyDocument", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
     endif
 
     call destroyAllNodesRecursively(doc)
+
+    do i = 1, size(doc%nodelists)
+      call destroy(doc%nodelists(i)%this)
+    enddo
+    deallocate(doc%nodelists)
 
     print*, "destroying a node:", doc%nodeType, doc%nodeName
     call destroyNodeContents(doc)
@@ -2427,6 +2452,8 @@ endif
     
     np => createNode(doc, ELEMENT_NODE, tagName, "")
     np%attributes%ownerElement => np
+
+    ! FIXME set namespaceURI and localName appropriately
   
   end function createElement
     
@@ -2881,6 +2908,8 @@ endif
     np%localName => vs_str_alloc(localpartOfQName(qualifiedname))
 
     np%attributes%ownerElement => np
+
+    ! FIXME updateNodeLists
 
   end function createElementNS
   

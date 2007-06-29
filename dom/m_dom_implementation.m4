@@ -160,19 +160,22 @@ TOHW_m_dom_contents(`
   end function createEmptyDocument
 
 
-  subroutine destroyDocument(doc)
+  TOHW_subroutine(destroyDocument, (doc))
     type(Node), pointer :: doc
     
     type(NodeList) :: np_stack
-    type(Node), pointer :: np, np_next
-    logical :: ascending
+    integer :: i
 
     if (doc%nodeType/=DOCUMENT_NODE) then
-      ! FIXME throw an error
-      continue
+      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
 
     call destroyAllNodesRecursively(doc)
+
+    do i = 1, size(doc%nodelists)
+      call destroy(doc%nodelists(i)%this)
+    enddo
+    deallocate(doc%nodelists)
 
     print*, "destroying a node:", doc%nodeType, doc%nodeName
     call destroyNodeContents(doc)

@@ -101,7 +101,9 @@ TOHW_m_dom_publics(`
     ! In order to keep all node lists live ..
     type(NodeListPtr), pointer :: nodelists(:)
     ! In order to keep track of all nodes not connected to the document
-    type(NodeList) :: hangingNodes
+    logical :: liveNodeLists ! For the document, are nodelists live? (FIXME should be in xds)
+    type(NodeList) :: hangingNodes ! For the document. list of nodes not associated with doc
+    logical :: inDocument = .false.! For a node, is this node associated to the doc?
   end type Node
 
   type(DOMImplementation), save, target :: FoX_DOM
