@@ -970,11 +970,80 @@ endif
     arg%childNodes%nodes => temp_nl
     arg%childNodes%length = size(temp_nl)
 
+!!$    if (.not.arg%ownerDocument%buildDoc) then
+!!$      if (arg%inDocument) then
+!!$        ! FIXME do this recursively for all, including attributes etc
+!!$        newChild%inDocument = .true.
+!!$        call remove(arg%ownerDocument%hangingNodes, newChild)
+!!$      endif
+!!$    endif
+
     ! FIXME updateNodeLists(*) in case of children
     ! but only if we are adding to a child of the document
 
   end function insertBefore
-  
+
+!!$  subroutine putNodesInDocument(np)
+!!$    type(Node), pointer :: np
+!!$    logical :: ascending
+!!$    ascending = .false.
+!!$    do
+!!$      if (ascending) then 
+!!$        if (associated(np%ownerElement)) then
+!!$          np => np%ownerElement
+!!$        else
+!!$          np => np%parentNode
+!!$        endif
+!!$        if (associated(np, doc).or.associated(np, doc%documentElement)) exit
+!!$        ascending = .false.
+!!$      elseif (associated(np%firstChild)) then
+!!$        np => np%firstChild
+!!$        cycle
+!!$      elseif (np%nodeType==ELEMENT_NODE) then
+!!$        np => item(getAttributes(np), 0)
+!!$        cycle
+!!$      endif
+!!$      np%inDocument = .true.
+!!$      call remove(np%doc%hangingNodes, np)
+!!$      if (np%nodeType==ELEMENT_NODE)
+!!$        np => FIRSTATTRIBUTENODE
+!!$      ! FIXME do the same for all the attribute nodes
+!!$      endif
+!!$      if (associated(np%nextSibling)) then
+!!$        np => np%nextSibling
+!!$      elseif (associated(np%nextAttribute)) then
+!!$        np => np%nextAttribute
+!!$      else
+!!$        ascending = .true.
+!!$      endif
+!!$    enddo
+!!$  end subroutine putNodesInDocument
+!!$
+!!$  subroutine removeNodesFromDocument(np)
+!!$    type(Node), pointer :: np
+!!$    logical :: ascending
+!!$    ascending = .false.
+!!$    do
+!!$      if (ascending) then
+!!$        np => np%parentNode
+!!$        if (associated(np, doc).or.associated(np, doc%documentElement)) exit
+!!$        ascending = .false.
+!!$      elseif (associated(np%firstChild)) then
+!!$        np => np%firstChild
+!!$        cycle
+!!$      endif
+!!$      np%inDocument = .false.
+!!$      call add(np%doc%hangingNodes, np)
+!!$      if (np%nodeType==ELEMENT_NODE)
+!!$      ! FIXME do the same for all the attribute nodes
+!!$      endif
+!!$      if (associated(np%nextSibling)) then
+!!$        np => np%nextSibling
+!!$      else
+!!$        ascending = .true.
+!!$      endif
+!!$    enddo
+!!$  end subroutine removeNodesFromDocument
 
   function replaceChild(arg, newChild, oldChild, ex)result(np) 
     type(DOMException), intent(inout), optional :: ex
@@ -1698,15 +1767,18 @@ endif
       ! Although all nodes should be searched whatever the result, we should only do the
       ! appropriate sort of search for this list - according to namespaces or not.
       if (associated(nl_orig%nodeName)) then ! this was made by getElementsByTagName
-        if (str_vs(nl_orig%nodeName)==str_vs(oldName) &
-          .or. str_vs(nl_orig%nodeName)==str_vs(newName)) then
-          nl => getElementsByTagName(nl_orig%element, str_vs(nl_orig%nodeName)) ! FIXME mutating nodelist
-          ! That appended a nodelist to the end of doc%nodelists. But it does not matter,
-          ! the whole of the original nodelists will be thrown away anyway. We do have to do:
-          deallocate(nl_orig)
-          ! and then grab the new list for our new list of lists.
-          temp_nll(i_t)%this => nl
-        endif
+!!$        if (oldName=="*" &
+!!$          .or. str_vs(nl_orig%nodeName)=="*" .or. &
+!!$          str_vs(nl_orig%nodeName)==str_vs(oldName) &
+!!$          .or. str_vs(nl_orig%nodeName)==str_vs(newName)) then
+!!$          ! FIXME check logic above for wildcards
+!!$          nl => getElementsByTagName(nl_orig%element, str_vs(nl_orig%nodeName))
+!!$          ! That appended a nodelist to the end of doc%nodelists. But it does not matter,
+!!$          ! the whole of the original nodelists will be thrown away anyway. We do have to do:
+!!$          deallocate(nl_orig)
+!!$          ! and then grab the new list for our new list of lists.
+!!$          temp_nll(i_t)%this => nl
+!!$        endif
       elseif (associated(nl_orig%namespaceURI)) then
         ! This was made by getElementsByTagNameNS
         if (str_vs(nl_orig%localName)==str_vs(oldLocalName) &

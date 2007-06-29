@@ -159,15 +159,18 @@ TOHW_m_dom_contents(`
       ! Although all nodes should be searched whatever the result, we should only do the
       ! appropriate sort of search for this list - according to namespaces or not.
       if (associated(nl_orig%nodeName)) then ! this was made by getElementsByTagName
-        if (str_vs(nl_orig%nodeName)==str_vs(oldName) &
-          .or. str_vs(nl_orig%nodeName)==str_vs(newName)) then
-          nl => getElementsByTagName(nl_orig%element, str_vs(nl_orig%nodeName)) ! FIXME mutating nodelist
-          ! That appended a nodelist to the end of doc%nodelists. But it does not matter,
-          ! the whole of the original nodelists will be thrown away anyway. We do have to do:
-          deallocate(nl_orig)
-          ! and then grab the new list for our new list of lists.
-          temp_nll(i_t)%this => nl
-        endif
+!!$        if (oldName=="*" &
+!!$          .or. str_vs(nl_orig%nodeName)=="*" .or. &
+!!$          str_vs(nl_orig%nodeName)==str_vs(oldName) &
+!!$          .or. str_vs(nl_orig%nodeName)==str_vs(newName)) then
+!!$          ! FIXME check logic above for wildcards
+!!$          nl => getElementsByTagName(nl_orig%element, str_vs(nl_orig%nodeName))
+!!$          ! That appended a nodelist to the end of doc%nodelists. But it does not matter,
+!!$          ! the whole of the original nodelists will be thrown away anyway. We do have to do:
+!!$          deallocate(nl_orig)
+!!$          ! and then grab the new list for our new list of lists.
+!!$          temp_nll(i_t)%this => nl
+!!$        endif
       elseif (associated(nl_orig%namespaceURI)) then
         ! This was made by getElementsByTagNameNS
         if (str_vs(nl_orig%localName)==str_vs(oldLocalName) &
