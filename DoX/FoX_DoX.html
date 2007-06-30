@@ -185,7 +185,7 @@ sax_lib
 <p>Known failures: <br />
 * <code>test_xml_Close_2</code> sometimes unexpectedly fails - this is not a problem, ignore it.  </p>
 
-<p>If any other failures occur, please send a message to the mailing list (<a href="&#x6D;&#x61;i&#x6C;&#x74;&#111;:&#70;&#x6F;&#x58;&#64;&#108;&#x69;&#115;&#x74;&#115;&#46;&#x75;&#x73;&#122;&#x6C;&#97;&#x2E;&#109;&#101;&#46;&#x75;&#x6B;">&#70;&#x6F;&#x58;&#64;&#108;&#x69;&#115;&#x74;&#115;&#46;&#x75;&#x73;&#122;&#x6C;&#97;&#x2E;&#109;&#101;&#46;&#x75;&#x6B;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
+<p>If any other failures occur, please send a message to the mailing list (<a href="&#x6D;&#97;&#105;&#108;&#116;o:&#70;&#111;&#x58;&#64;&#108;&#105;s&#x74;&#115;&#x2E;&#117;&#115;&#122;&#108;&#x61;&#x2E;&#109;&#x65;&#46;&#x75;&#107;">&#70;&#111;&#x58;&#64;&#108;&#105;s&#x74;&#115;&#x2E;&#117;&#115;&#122;&#108;&#x61;&#x2E;&#109;&#x65;&#46;&#x75;&#107;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
 
 <h2>Linking to an existing program</h2>
 
@@ -1993,6 +1993,159 @@ integer, intent(in), optional :: i</code></li>
 
 <p>Returns a string containing the localName of the <code>i</code>th attribute.</p>
 </div><hr/><div class="DoX">
+<a name="FoX_DOM"/>
+<h1>DOM</h1>
+
+<h2>Overview</h2>
+
+<p>DOM stands for Document Object Model. Any interface which represents the structure of an XML document in memory as a linked structure of objects is a DOM.</p>
+
+<p>In particular, there is a series of W3C specifications ... which describe one particular set of DOM interfaces.</p>
+
+<p>FoX implements essentially all of DOM Core Levels 1 and 2. (There are a number of minor exceptions which are listed  ... ) and a substantial portion of DOM Core Level 3.</p>
+
+<p>It was decided to implement W3C DOM interfaces primarily because they are specified in a language-agnostic fashion, and thus made Fortran implementation possible. A number of criticisms have been levelled at the W3C DOM (...), but may apply only from the perspective of Java developers. However, also, the W3c DOM suffers from a lack of sufficient rror checking so it is very easy to create a DOM tree, or manipulate an existing DOM treeinto a state, that cannot be serialized into a legal XML document.</p>
+
+<p>Therefore, FoX will by default produce errors about any attempts to manipulate the DOM in such a way as would result in invalid XML. These errors can be switched off if standards-compliant behaviour is wanted. Although extensive, there are a some areas where the nature of the DOM API makes complete checking impractical. These are noted below.</p>
+
+<p>Due to the nature of Fortran, there are a few other areas where the FoX implementation differs from the W3C DOM. These are largely unimportant, but are noted in ...</p>
+
+<h3>Error handling</h3>
+
+<p>Error handilng is important to the DOM. The W3C DOM standards provide not only interfaces to the DOM, but also specifies the error handling that should take place when invalid calls are made.</p>
+
+<p>The DOM specifies these in terms of a <code>DOMException</code> object, which carries a numeric code whose value reports the kind of error generated. Depending upon the features available in a particular computer language, this DOMException object should be generated and thrown, to be caught by the end-user application.</p>
+
+<p>Fortran of course has no mechanism for throwing and catching exceptions. However, the behaviour of an exception can be modelled using Fortran features.</p>
+
+<p>FoX defines an opaque<code>DOMException</code> object.
+Every DOM subroutine and function implemented by FoX will take an optional argument, 'ex', of type <code>DOMException</code>. </p>
+
+<p>If the optional argument is not supplied, any errors within the DOM will cause an immediate abort, with a suitable error message. However, if the optional argument <em>is</em> supplied, then the error will be captured within the <code>DOMException</code> object, and returned to the caller for inspection. It is then up to the application to decide how to proceed.</p>
+
+<p>Functions for inspecting and manipulating the <code>DOMException</code> object are described in (#ExceptionHandling).</p>
+
+<h3>String handling</h3>
+
+<p>The W3C DOM requires that a <code>DOMString</code> object exist, capable of holding Unicode strings; and that all DOM functions accept and emit DOMString objects when string data is to be transferred.</p>
+
+<p>FoX does not follow this model. Since (as mentioned elsewhere) it is impossible to perform Unicode I/O in standard Fortran, it would be obtuse to require users to manipulate additional objects merely to transfer strings. Therefore, wherever the DOM mandates use of a <code>DOMString</code>, FoX merely uses standard Fortran strings.</p>
+
+<h2>Documenting DOM functions</h2>
+
+<p>This manual will not exhaustively document the functions available through the <code>Fox_DOM</code> interface. Primary documentation may be found in ...</p>
+
+<p>However, in translating these calls to Fortran, certain systematics need to be understood.</p>
+
+<h3>Object model</h3>
+
+<p>The DOM is written in terms of an object model involving inheritance, but also permits a flattened model. FoX implements this flattened model - all objects descending from the Node are of the opaque type <code>Node</code>. Nodes carry their own type, and inappropriate calls may not be made.</p>
+
+<p>The other types available through the DOM are:</p>
+
+<ul>
+<li><code>DOMException</code>  </li>
+<li><code>DOMImplementation</code>  </li>
+<li><code>NodeList</code>  </li>
+<li><code>NamedNodeMap</code>  </li>
+</ul>
+
+<h3>Object attributes and methods</h3>
+
+<p>The DOM objects have attributes (some of which are readonly) and methods. These cannot be directly translated into Fortran 95. The following translations should be performed.</p>
+
+<ul>
+<li>Attribute access. All access to attributes is through get/set functions. Reading attributes is done by a function <code>get</code>Attribute, while writing is done by a subroutine called <code>set</code>Attribute.</li>
+</ul>
+
+<p>Thus, for example</p>
+
+<ul>
+<li>AttribSince Fortran does not permit method calls on objects, nor readonly members of</li>
+<li>Att types, all attribute accesses and methods are done through subroutines or functions which take the requisite object as their first argument. Thus: <br />
+`el.</li>
+</ul>
+
+<h3>Memory handling</h3>
+
+<p>Fortran offers no garbage collection facility, so unfortunately a small degree of memory
+handling is necessarily exposed to the user.</p>
+
+<p>However, this has been kept to a minimum. FoX keeps track of all memory allocated and used when calling DOM routines, and keeps references to all DOM objects created.</p>
+
+<p>The only memory handling that the user needs to take care of is destroying any
+DOM Documents (whether created manually, or by the parse() routine. All other nodes or node structures created will be destroyed automatically by the relevant destroyDocument() call.</p>
+
+<p>As a consequence of this, all DOM objects which are part of a given document will become inaccessible after the document object is destroyed.</p>
+
+<h3>Live nodelists</h3>
+
+<p>The DOM specification requires that all NodeList objects are <em>live</em> - that is, that any change in the document structure is immediately reflected in the contents of any nodelists.</p>
+
+<p>For example, any nodelists returned by getElementsByTagName or getElementsByTagNameNS must be updated whenever nodes are added to or removed from the document; and the order of nodes in the nodelists must be changed if the document structure changes.</p>
+
+<p>Though FoX does keep all nodelists live, this can impose a significant performance penalty when manipulating large documents. Therefore, FoX can be instructed to inly use 'dead' nodelists - that is, nodelists which reflect a snapshot of the document structure at the point they were created. To do this, call <code>setLiveNodeLists</code> (see API documentation).</p>
+
+<p>However, note that the nodes within the nodelist remain live - any changes made to the nodes will be reflected in accessing them through the nodelist.</p>
+
+<p>Furthermore, since the nodeslists are still associated with the document, they and their contents will be rendered inaccessible when the document is destroyed.</p>
+
+<h3>FoX DOM and pointers</h3>
+
+<p>All DOM objects exposed to the user may only be manipulated through pointers. Attempts to access them directly will reulst in either compile-time or run-time failures according to your environment.</p>
+
+<p>This should have little effect on your programs, except that you must always remember, when calling a DOM function, to perform pointer assignment, not direct assignment, thus:</p>
+
+<pre><code>child =&gt; getFirstChild(parent)
+</code></pre>
+
+<p>and <em>not</em></p>
+
+<pre><code>child = getFirstChild(parent)
+</code></pre>
+
+<h2>DOM Particulars:</h2>
+
+<p>Note that the FoX Dom is built on top of the FoX SAX processor, which makes certain choices in reporting events. This has repercussions on the DOM tree made available.</p>
+
+<h3>Entity References</h3>
+
+<p>The SAX processor fully expands all entity references before reporting events.</p>
+
+<p>Therefore, the DOM tree provided directly by FoX will never contain any EntityReference nodes, regardless of the syntax of the document. However, all entities declared within the document are still accessible through the standard W3C DOM API, and EntityReference nodes may be created referencing them.</p>
+
+<h3>CDATA Sections</h3>
+
+<p>The SAX processor converts all CDATA sections to character data before reporting events.</p>
+
+<p>Therefore, the DOM tree provided directly by FoX will never contain any CDATASection nodes, regardless of the syntax of the document. However, CDATASection nodes may be created and appended to the document.</p>
+
+<h3>Multiple text nodes</h3>
+
+<p>XML APIs permit processors to represent character data as multiple adjacent items, which may need normalization. The FoX SAX processor reports all character data as single nodes, requiring no normalization, except in the presence of CDATA Sections, which are (although converted to normal text nodes first) always represented as separate text nodes.</p>
+
+<p>Normalization may therefore be required on a DOM tree iif the initial XML document contained CDATA sections.</p>
+
+<h3>External entities</h3>
+
+<p>The FoX SAX processor does not read external entities,  therefore these will not be made available through the DOM interface, nor will the document represented be affected by any declarations made in referenced external entities (thus, for example, any externally-declared default attributes will not be made available.)</p>
+
+<h2>Creating non-serializable DOM trees.</h2>
+
+<p>It is possible to create non-serializable DOM trees in the following ways.</p>
+
+<ul>
+<li><code>setXMLVersion</code> (DOM 3 only) <br />
+When changing the XML version, no checking is made that on the charset of all the document nodes, nor of any XML names, to ensure that they are compliant with the standard. Since FoX does not support Unicode, the only relevant incompatibilities between XML 1.0 and 1.1 are in having characters blah blah blah in text sections, which is permitted in XML 1.0 but not 1.1</li>
+</ul>
+
+<h2>Other issues</h2>
+
+<ul>
+<li><p>As mentioned in the documentation for WXML, it is impossible within Fortran to reliably output lines longer than 1024 characters. While text nodes containing such lines may be created in the DOM, on serialization newlines will be inserted as described in the documentation for WXML.</p></li>
+<li><p>All caveats with regard to the FoX SAX processor apply to reading documents through the DOM interface. In particular, note that documents containing characters beyond the US-ASCII set will not be readable.</p></li>
+</ul>
+</div><hr/><div class="DoX">
 <a name="FoX_utils"/>
 <h1>UTILS</h1>
 
@@ -2045,9 +2198,9 @@ integer, intent(in), optional :: i</code></li>
 <h1>Further information</h1>
 
 <p>FoX evolved from the initial codebase of <a href="http://lcdx00.wm.lc.ehu.es/ag/xml/">xmlf90</a>,
-which was written largely by Alberto Garcia &lt;<a href="&#x6D;&#x61;&#105;&#x6C;&#116;o:&#97;&#x6C;&#x62;&#x65;&#x72;&#x74;&#111;&#x67;&#64;&#105;&#x63;&#x6D;&#x61;&#98;&#x2E;&#101;&#x73;">&#97;&#x6C;&#x62;&#x65;&#x72;&#x74;&#111;&#x67;&#64;&#105;&#x63;&#x6D;&#x61;&#98;&#x2E;&#101;&#x73;</a>> and Jon Wakelin &lt;<a href="&#109;&#97;&#105;l&#116;&#111;:&#106;o&#x6E;&#x2E;&#x77;&#97;&#x6B;&#x65;&#108;&#x69;n&#64;&#98;r&#105;&#x73;&#116;&#111;l&#x2E;&#97;&#x63;&#x2E;&#x75;&#107;">&#106;o&#x6E;&#x2E;&#x77;&#97;&#x6B;&#x65;&#108;&#x69;n&#64;&#98;r&#105;&#x73;&#116;&#111;l&#x2E;&#97;&#x63;&#x2E;&#x75;&#107;</a>>.</p>
+which was written largely by Alberto Garcia &lt;<a href="&#109;&#x61;&#105;&#108;&#116;&#111;:a&#x6C;&#98;&#101;r&#x74;&#x6F;&#x67;&#64;&#105;cm&#x61;&#x62;.&#101;&#x73;">a&#x6C;&#98;&#101;r&#x74;&#x6F;&#x67;&#64;&#105;cm&#x61;&#x62;.&#101;&#x73;</a>> and Jon Wakelin &lt;<a href="&#109;&#97;i&#108;&#x74;&#111;:j&#x6F;&#110;&#x2E;&#x77;&#x61;&#x6B;&#x65;&#x6C;i&#x6E;&#64;&#x62;&#x72;&#105;&#115;&#x74;&#x6F;&#x6C;&#x2E;&#x61;&#99;&#x2E;&#x75;&#x6B;">j&#x6F;&#110;&#x2E;&#x77;&#x61;&#x6B;&#x65;&#x6C;i&#x6E;&#64;&#x62;&#x72;&#105;&#115;&#x74;&#x6F;&#x6C;&#x2E;&#x61;&#99;&#x2E;&#x75;&#x6B;</a>>.</p>
 
-<p>FoX is the work of Toby White &lt;<a href="&#109;&#97;&#105;&#x6C;&#x74;o:&#x74;&#x6F;&#119;&#50;&#49;&#64;&#99;&#97;&#x6D;&#46;&#97;&#99;&#x2E;&#x75;&#x6B;">&#x74;&#x6F;&#119;&#50;&#49;&#64;&#99;&#97;&#x6D;&#46;&#97;&#99;&#x2E;&#x75;&#x6B;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
+<p>FoX is the work of Toby White &lt;<a href="&#x6D;&#x61;&#105;&#x6C;&#x74;&#111;:&#116;&#111;&#119;&#50;&#49;&#64;&#x63;&#x61;&#109;&#46;&#x61;&#x63;&#x2E;&#117;&#107;">&#116;&#111;&#119;&#50;&#49;&#64;&#x63;&#x61;&#109;&#46;&#x61;&#x63;&#x2E;&#117;&#107;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
 
 <p>There is a FoX website at <a href="http://www.uszla.me.uk/software/FoX/">http://www.uszla.me.uk/software/FoX/</a>.</p>
 
