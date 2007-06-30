@@ -527,9 +527,9 @@ endif
       ! FIXME internal error
     endif
 
-    do i = 1, element%attributes%length
-      call destroyNode(element%attributes%nodes(i)%this)
-    enddo
+    !do i = 1, element%attributes%length
+    !  call destroyNode(element%attributes%nodes(i)%this)
+    !enddo
     !    call destroyNamedNodeMap(element%attributes)
     if (associated(element%attributes%nodes)) deallocate(element%attributes%nodes)
     call destroyNodeContents(element)
@@ -590,22 +590,50 @@ endif
     type(Node), pointer :: df
     
     type(Node), pointer :: np
-    logical :: ascending
+    logical :: ascending, attributesdone
+    integer :: i
 
     np => df%firstChild
     if (.not.associated(np)) return
 
     ascending = .false.
+    attributesdone = .false.
+    i = 0
     do
       if (ascending) then
-        np => np%parentNode
-        call destroyNode(np%lastChild)
+        if (np%nodeType==ATTRIBUTE_NODE) then
+          np => np%ownerElement
+          attributesdone = .true.
+          if (i>0) then
+            call destroyNode(np%ownerElement%attributes%nodes(i)%this)
+          endif
+        else
+          np => np%parentNode
+          call destroyNode(np%lastChild)
+        endif
         if (associated(np, df)) exit
         ascending = .false.
+      elseif (np%nodeType==ELEMENT_NODE.and..not.attributesdone) then
+        if (np%attributes%length>0) then
+          i = 1
+          np => item(getAttributes(np), i)
+          cycle
+        endif
       elseif (associated(np%firstChild)) then
         np => np%firstChild
         cycle
-      endif      
+      endif
+      if (np%nodeType==ATTRIBUTE_NODE) then
+        ! Go to the next attribute
+        if (i==np%ownerElement%attributes%length) then
+          i = 0
+          ascending = .true.
+        else
+          i = i + 1
+          np => np%ownerElement%attributes%nodes(i)%this
+          call destroyNode(np%ownerElement%attributes%nodes(i-1)%this)
+        endif
+      endif
       if (associated(np%nextSibling)) then
         np => np%nextSibling
         call destroyNode(np%previousSibling)
@@ -831,8 +859,12 @@ endif
   function getOwnerDocument(arg) result(np)
     type(Node), intent(in) :: arg
     type(Node), pointer :: np
-
-    np => arg%ownerDocument
+    
+    if (np%nodeType==DOCUMENT_NODE) then
+      np => null()
+    else
+      np => arg%ownerDocument
+    endif
   end function getOwnerDocument
 
   function insertBefore(arg, newChild, refChild, ex) 
@@ -980,80 +1012,111 @@ endif
     arg%childNodes%nodes => temp_nl
     arg%childNodes%length = size(temp_nl)
 
-!!$    if (.not.arg%ownerDocument%buildDoc) then
-!!$      if (arg%inDocument) then
-!!$        ! FIXME do this recursively for all, including attributes etc
-!!$        newChild%inDocument = .true.
-!!$        call remove(arg%ownerDocument%hangingNodes, newChild)
-!!$      endif
-!!$    endif
-
-    ! FIXME updateNodeLists(*) in case of children
-    ! but only if we are adding to a child of the document
+    if (.not.arg%ownerDocument%xds%building) then
+      if (arg%inDocument) then
+        call putNodesInDocument(arg%ownerDocument, newChild)
+      endif
+    endif
 
   end function insertBefore
 
-!!$  subroutine putNodesInDocument(np)
-!!$    type(Node), pointer :: np
-!!$    logical :: ascending
-!!$    ascending = .false.
-!!$    do
-!!$      if (ascending) then 
-!!$        if (associated(np%ownerElement)) then
-!!$          np => np%ownerElement
-!!$        else
-!!$          np => np%parentNode
-!!$        endif
-!!$        if (associated(np, doc).or.associated(np, doc%documentElement)) exit
-!!$        ascending = .false.
-!!$      elseif (associated(np%firstChild)) then
-!!$        np => np%firstChild
-!!$        cycle
-!!$      elseif (np%nodeType==ELEMENT_NODE) then
-!!$        np => item(getAttributes(np), 0)
-!!$        cycle
-!!$      endif
-!!$      np%inDocument = .true.
-!!$      call remove(np%doc%hangingNodes, np)
-!!$      if (np%nodeType==ELEMENT_NODE)
-!!$        np => FIRSTATTRIBUTENODE
-!!$      ! FIXME do the same for all the attribute nodes
-!!$      endif
-!!$      if (associated(np%nextSibling)) then
-!!$        np => np%nextSibling
-!!$      elseif (associated(np%nextAttribute)) then
-!!$        np => np%nextAttribute
-!!$      else
-!!$        ascending = .true.
-!!$      endif
-!!$    enddo
-!!$  end subroutine putNodesInDocument
-!!$
-!!$  subroutine removeNodesFromDocument(np)
-!!$    type(Node), pointer :: np
-!!$    logical :: ascending
-!!$    ascending = .false.
-!!$    do
-!!$      if (ascending) then
-!!$        np => np%parentNode
-!!$        if (associated(np, doc).or.associated(np, doc%documentElement)) exit
-!!$        ascending = .false.
-!!$      elseif (associated(np%firstChild)) then
-!!$        np => np%firstChild
-!!$        cycle
-!!$      endif
-!!$      np%inDocument = .false.
-!!$      call add(np%doc%hangingNodes, np)
-!!$      if (np%nodeType==ELEMENT_NODE)
-!!$      ! FIXME do the same for all the attribute nodes
-!!$      endif
-!!$      if (associated(np%nextSibling)) then
-!!$        np => np%nextSibling
-!!$      else
-!!$        ascending = .true.
-!!$      endif
-!!$    enddo
-!!$  end subroutine removeNodesFromDocument
+  subroutine putNodesInDocument(doc, np_orig)
+    type(Node), pointer :: doc, np_orig
+    type(Node), pointer :: np
+    logical :: ascending, attributesdone
+    integer :: i
+    np => np_orig
+    ascending = .false.
+    attributesdone = .false.
+    i = 0
+    do
+      if (ascending) then 
+        if (np%nodeType==ELEMENT_NODE) then
+          np => np%ownerElement
+          attributesdone = .true.
+        else
+          np => np%parentNode
+        endif
+        if (associated(np, np_orig)) exit
+        ascending = .false.
+      elseif (np%nodeType==ELEMENT_NODE.and..not.attributesdone) then
+        if (np%ownerElement%attributes%length>0) then
+          i = 1
+          np => item(getAttributes(np), i)
+          cycle
+        endif
+      elseif (associated(np%firstChild)) then
+        np => np%firstChild
+        cycle
+      endif
+      np%inDocument = .true.
+      call remove_node_nl(doc%hangingNodes, np)
+      if (np%nodeType==ATTRIBUTE_NODE) then
+        ! Go to the next attribute
+        if (i==np%ownerElement%attributes%length) then
+          i = 0
+          ascending = .true.
+        else
+          i = i + 1
+          np => np%ownerElement%attributes%nodes(i)%this
+        endif
+      endif
+      if (associated(np%nextSibling)) then
+        np => np%nextSibling
+      else
+        ascending = .true.
+      endif
+    enddo
+  end subroutine putNodesInDocument
+
+  subroutine removeNodesFromDocument(np_orig, np)
+    type(Node), pointer :: np_orig
+    type(Node), pointer :: np
+    logical :: ascending, attributesdone
+    integer :: i
+    np => np_orig
+    ascending = .false.
+    attributesdone = .false.
+    i = 0
+    do
+      if (ascending) then 
+        if (associated(np%ownerElement)) then
+          np => np%ownerElement
+          attributesdone = .true.
+        else
+          np => np%parentNode
+        endif
+        if (associated(np, np_orig)) exit
+        ascending = .false.
+      elseif (np%nodeType==ELEMENT_NODE.and..not.attributesdone) then
+        if (np%ownerElement%attributes%length>0) then
+          i = 1
+          np => item(getAttributes(np), i)
+          cycle
+        endif
+      elseif (associated(np%firstChild)) then
+        np => np%firstChild
+        cycle
+      endif
+      np%inDocument = .false.
+      call append(np%ownerDocument%hangingNodes, np)
+      if (np%nodeType==ATTRIBUTE_NODE) then
+        ! Go to the next attribute
+        if (i==np%ownerElement%attributes%length) then
+          i = 0
+          ascending = .true.
+        else
+          i = i + 1
+          np => np%ownerElement%attributes%nodes(i)%this
+        endif
+      endif
+      if (associated(np%nextSibling)) then
+        np => np%nextSibling
+      else
+        ascending = .true.
+      endif
+    enddo
+  end subroutine removeNodesFromDocument
 
   function replaceChild(arg, newChild, oldChild, ex)result(np) 
     type(DOMException), intent(inout), optional :: ex
@@ -1192,6 +1255,16 @@ endif
 
     ! FIXME updateNodeLists(*) in case of children
     ! but only if we are replacing a child of the document
+    if (.not.arg%ownerDocument%xds%building) then
+      if (arg%inDocument) then
+        call removeNodesFromDocument(arg%ownerDocument, oldChild)
+      endif
+    endif
+    if (.not.arg%ownerDocument%xds%building) then
+      if (arg%inDocument) then
+        call putNodesInDocument(arg%ownerDocument, newChild)
+      endif
+    endif
 
   end function replaceChild
 
@@ -1262,8 +1335,11 @@ endif
     np%previousSibling => null()
     np%nextSibling => null()
 
-    ! FIXME updateNodeLists(*) in case of children
-    ! but only if we are removing a child of the document
+    if (.not.arg%ownerDocument%xds%building) then
+      if (arg%inDocument) then
+        call removeNodesFromDocument(arg%ownerDocument, oldChild)
+      endif
+    endif
 
   end function removeChild
 
@@ -1396,8 +1472,12 @@ endif
     
     appendChild => newChild
 
-    ! FIXME updateNodeLists(*) in case of children
-    ! but only if we are appending to a child of the document!
+    if (.not.arg%ownerDocument%xds%building) then
+      if (arg%inDocument) then
+        call putNodesInDocument(arg%ownerDocument, newChild)
+      endif
+    endif
+
 
   end function appendChild
 
@@ -1453,6 +1533,7 @@ endif
           np_a2 => createAttributeNS(this%ownerDocument, &
             str_vs(np_a1%namespaceURI), str_vs(np_a1%localName))
           call setValue(new, getValue(np_a1))
+          !FIXME what if the value is an entity reference?
           np_a2%specified = np_a1%specified
           np_a2 => setAttributeNodeNS(np, np_a2)
         end do
@@ -1528,7 +1609,7 @@ endif
     type(DOMException), intent(inout), optional :: ex
     type(Node), pointer :: arg
   ! NB only ever one level of recursion, for text children of the attributes of an element
-
+    ! FIXME shoulndt be recursive
     type(Node), pointer :: this, tempNode
     type(NamedNodeMap), pointer :: nnm
     integer :: i
@@ -1719,6 +1800,7 @@ endif
 ! FIXME what if index is too small/too big
     temp_nl => nl%nodes
     allocate(nl%nodes(size(temp_nl)-1))
+    nl%length = nl%length - 1 
     do i = 1, index - 1
       nl%nodes(i)%this => temp_nl(i)%this
     enddo
@@ -1728,6 +1810,22 @@ endif
     deallocate(temp_nl)
 
   end function remove_nl
+
+
+  subroutine remove_node_nl(nl, np)
+    type(NodeList), intent(inout) :: nl
+    type(Node), pointer :: np
+
+    type(ListNode), pointer :: temp_nl(:)
+
+    integer :: i
+
+    do i = 1, nl%length
+      if (associated(nl%nodes(i)%this, np)) exit
+    enddo
+    np => remove_nl(nl, i)
+
+  end subroutine remove_node_nl
 
 
   function getLength_nl(nl) result(n)
@@ -2330,6 +2428,7 @@ endif
     type(Node), pointer :: doc, dt
 
      !FIXMEFIXMEFIXME optional arguments and errors
+    ! FIXME change to match empytdocument below
 
     doc => createNode(null(), DOCUMENT_NODE, "#document", "")
 
@@ -2348,24 +2447,27 @@ endif
     doc%documentElement => appendChild(doc, createElementNS(doc, namespaceURI, qualifiedName))
 
     doc%xds => doc%docType%xds
+    allocate(doc%nodelists(0))
 
   end function createDocument
 
 
   function createEmptyDocument() result(doc)
     type(Node), pointer :: doc
+    type(Node), pointer :: dt
     
     print*,"creating empty document"
     doc => createNode(null(), DOCUMENT_NODE, "#document", "")
-    doc%ownerDocument => null()
     print*,"created"
+    dt => createEmptyDocumentType(doc)
+    doc%xds => dt%xds
+    doc%ownerDocument => doc
 
     ! FIXME do something with namespaceURI etc 
-    doc%doctype => appendChild(doc, createEmptyDocumentType(doc))
-    doc%docType%ownerElement => doc
+    doc%doctype => appendChild(doc, dt)
     doc%implementation => FoX_DOM
     doc%documentElement => null()
-    doc%xds => doc%docType%xds
+    allocate(doc%nodelists(0))
 
   end function createEmptyDocument
 
@@ -2376,6 +2478,9 @@ endif
     
     type(NodeList) :: np_stack
     integer :: i
+
+! Switch off all GC - since this is GC!
+    call setDocBuilding(doc, .true.)
 
     if (doc%nodeType/=DOCUMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "destroyDocument", ex)
@@ -2389,10 +2494,16 @@ endif
 
     call destroyAllNodesRecursively(doc)
 
+    ! Destroy all remaining nodelists
     do i = 1, size(doc%nodelists)
       call destroy(doc%nodelists(i)%this)
     enddo
     deallocate(doc%nodelists)
+
+    ! Destroy all remaining hanging nodes
+    do i = 1, doc%hangingNodes%length
+      call destroy(doc%hangingNodes%nodes(i)%this)
+    enddo
 
     print*, "destroying a node:", doc%nodeType, doc%nodeName
     call destroyNodeContents(doc)

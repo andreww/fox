@@ -216,8 +216,12 @@ TOHW_m_dom_contents(`
   function getOwnerDocument(arg) result(np)
     type(Node), intent(in) :: arg
     type(Node), pointer :: np
-
-    np => arg%ownerDocument
+    
+    if (np%nodeType==DOCUMENT_NODE) then
+      np => null()
+    else
+      np => arg%ownerDocument
+    endif
   end function getOwnerDocument
 
   TOHW_function(insertBefore, (arg, newChild, refChild))
@@ -314,80 +318,111 @@ TOHW_m_dom_contents(`
     arg%childNodes%nodes => temp_nl
     arg%childNodes%length = size(temp_nl)
 
-!!$    if (.not.arg%ownerDocument%buildDoc) then
-!!$      if (arg%inDocument) then
-!!$        ! FIXME do this recursively for all, including attributes etc
-!!$        newChild%inDocument = .true.
-!!$        call remove(arg%ownerDocument%hangingNodes, newChild)
-!!$      endif
-!!$    endif
-
-    ! FIXME updateNodeLists(*) in case of children
-    ! but only if we are adding to a child of the document
+    if (.not.arg%ownerDocument%xds%building) then
+      if (arg%inDocument) then
+        call putNodesInDocument(arg%ownerDocument, newChild)
+      endif
+    endif
 
   end function insertBefore
 
-!!$  subroutine putNodesInDocument(np)
-!!$    type(Node), pointer :: np
-!!$    logical :: ascending
-!!$    ascending = .false.
-!!$    do
-!!$      if (ascending) then 
-!!$        if (associated(np%ownerElement)) then
-!!$          np => np%ownerElement
-!!$        else
-!!$          np => np%parentNode
-!!$        endif
-!!$        if (associated(np, doc).or.associated(np, doc%documentElement)) exit
-!!$        ascending = .false.
-!!$      elseif (associated(np%firstChild)) then
-!!$        np => np%firstChild
-!!$        cycle
-!!$      elseif (np%nodeType==ELEMENT_NODE) then
-!!$        np => item(getAttributes(np), 0)
-!!$        cycle
-!!$      endif
-!!$      np%inDocument = .true.
-!!$      call remove(np%doc%hangingNodes, np)
-!!$      if (np%nodeType==ELEMENT_NODE)
-!!$        np => FIRSTATTRIBUTENODE
-!!$      ! FIXME do the same for all the attribute nodes
-!!$      endif
-!!$      if (associated(np%nextSibling)) then
-!!$        np => np%nextSibling
-!!$      elseif (associated(np%nextAttribute)) then
-!!$        np => np%nextAttribute
-!!$      else
-!!$        ascending = .true.
-!!$      endif
-!!$    enddo
-!!$  end subroutine putNodesInDocument
-!!$
-!!$  subroutine removeNodesFromDocument(np)
-!!$    type(Node), pointer :: np
-!!$    logical :: ascending
-!!$    ascending = .false.
-!!$    do
-!!$      if (ascending) then
-!!$        np => np%parentNode
-!!$        if (associated(np, doc).or.associated(np, doc%documentElement)) exit
-!!$        ascending = .false.
-!!$      elseif (associated(np%firstChild)) then
-!!$        np => np%firstChild
-!!$        cycle
-!!$      endif
-!!$      np%inDocument = .false.
-!!$      call add(np%doc%hangingNodes, np)
-!!$      if (np%nodeType==ELEMENT_NODE)
-!!$      ! FIXME do the same for all the attribute nodes
-!!$      endif
-!!$      if (associated(np%nextSibling)) then
-!!$        np => np%nextSibling
-!!$      else
-!!$        ascending = .true.
-!!$      endif
-!!$    enddo
-!!$  end subroutine removeNodesFromDocument
+  subroutine putNodesInDocument(doc, np_orig)
+    type(Node), pointer :: doc, np_orig
+    type(Node), pointer :: np
+    logical :: ascending, attributesdone
+    integer :: i
+    np => np_orig
+    ascending = .false.
+    attributesdone = .false.
+    i = 0
+    do
+      if (ascending) then 
+        if (np%nodeType==ELEMENT_NODE) then
+          np => np%ownerElement
+          attributesdone = .true.
+        else
+          np => np%parentNode
+        endif
+        if (associated(np, np_orig)) exit
+        ascending = .false.
+      elseif (np%nodeType==ELEMENT_NODE.and..not.attributesdone) then
+        if (np%ownerElement%attributes%length>0) then
+          i = 1
+          np => item(getAttributes(np), i)
+          cycle
+        endif
+      elseif (associated(np%firstChild)) then
+        np => np%firstChild
+        cycle
+      endif
+      np%inDocument = .true.
+      call remove_node_nl(doc%hangingNodes, np)
+      if (np%nodeType==ATTRIBUTE_NODE) then
+        ! Go to the next attribute
+        if (i==np%ownerElement%attributes%length) then
+          i = 0
+          ascending = .true.
+        else
+          i = i + 1
+          np => np%ownerElement%attributes%nodes(i)%this
+        endif
+      endif
+      if (associated(np%nextSibling)) then
+        np => np%nextSibling
+      else
+        ascending = .true.
+      endif
+    enddo
+  end subroutine putNodesInDocument
+
+  subroutine removeNodesFromDocument(np_orig, np)
+    type(Node), pointer :: np_orig
+    type(Node), pointer :: np
+    logical :: ascending, attributesdone
+    integer :: i
+    np => np_orig
+    ascending = .false.
+    attributesdone = .false.
+    i = 0
+    do
+      if (ascending) then 
+        if (associated(np%ownerElement)) then
+          np => np%ownerElement
+          attributesdone = .true.
+        else
+          np => np%parentNode
+        endif
+        if (associated(np, np_orig)) exit
+        ascending = .false.
+      elseif (np%nodeType==ELEMENT_NODE.and..not.attributesdone) then
+        if (np%ownerElement%attributes%length>0) then
+          i = 1
+          np => item(getAttributes(np), i)
+          cycle
+        endif
+      elseif (associated(np%firstChild)) then
+        np => np%firstChild
+        cycle
+      endif
+      np%inDocument = .false.
+      call append(np%ownerDocument%hangingNodes, np)
+      if (np%nodeType==ATTRIBUTE_NODE) then
+        ! Go to the next attribute
+        if (i==np%ownerElement%attributes%length) then
+          i = 0
+          ascending = .true.
+        else
+          i = i + 1
+          np => np%ownerElement%attributes%nodes(i)%this
+        endif
+      endif
+      if (associated(np%nextSibling)) then
+        np => np%nextSibling
+      else
+        ascending = .true.
+      endif
+    enddo
+  end subroutine removeNodesFromDocument
 
   TOHW_function(replaceChild, (arg, newChild, oldChild), np)
     type(Node), pointer :: arg
@@ -477,6 +512,16 @@ TOHW_m_dom_contents(`
 
     ! FIXME updateNodeLists(*) in case of children
     ! but only if we are replacing a child of the document
+    if (.not.arg%ownerDocument%xds%building) then
+      if (arg%inDocument) then
+        call removeNodesFromDocument(arg%ownerDocument, oldChild)
+      endif
+    endif
+    if (.not.arg%ownerDocument%xds%building) then
+      if (arg%inDocument) then
+        call putNodesInDocument(arg%ownerDocument, newChild)
+      endif
+    endif
 
   end function replaceChild
 
@@ -534,8 +579,11 @@ TOHW_m_dom_contents(`
     np%previousSibling => null()
     np%nextSibling => null()
 
-    ! FIXME updateNodeLists(*) in case of children
-    ! but only if we are removing a child of the document
+    if (.not.arg%ownerDocument%xds%building) then
+      if (arg%inDocument) then
+        call removeNodesFromDocument(arg%ownerDocument, oldChild)
+      endif
+    endif
 
   end function removeChild
 
@@ -625,8 +673,12 @@ TOHW_m_dom_contents(`
     
     appendChild => newChild
 
-    ! FIXME updateNodeLists(*) in case of children
-    ! but only if we are appending to a child of the document!
+    if (.not.arg%ownerDocument%xds%building) then
+      if (arg%inDocument) then
+        call putNodesInDocument(arg%ownerDocument, newChild)
+      endif
+    endif
+
 
   end function appendChild
 
@@ -681,6 +733,7 @@ TOHW_m_dom_contents(`
           np_a2 => createAttributeNS(this%ownerDocument, &
             str_vs(np_a1%namespaceURI), str_vs(np_a1%localName))
           call setValue(new, getValue(np_a1))
+          !FIXME what if the value is an entity reference?
           np_a2%specified = np_a1%specified
           np_a2 => setAttributeNodeNS(np, np_a2)
         end do
@@ -755,7 +808,7 @@ TOHW_m_dom_contents(`
   recursive TOHW_subroutine(normalize, (arg))
     type(Node), pointer :: arg
   ! NB only ever one level of recursion, for text children of the attributes of an element
-
+    ! FIXME shoulndt be recursive
     type(Node), pointer :: this, tempNode
     type(NamedNodeMap), pointer :: nnm
     integer :: i

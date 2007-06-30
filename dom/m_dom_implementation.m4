@@ -120,6 +120,7 @@ TOHW_m_dom_contents(`
     type(Node), pointer :: doc, dt
 
      !FIXMEFIXMEFIXME optional arguments and errors
+    ! FIXME change to match empytdocument below
 
     doc => createNode(null(), DOCUMENT_NODE, "#document", "")
 
@@ -138,24 +139,27 @@ TOHW_m_dom_contents(`
     doc%documentElement => appendChild(doc, createElementNS(doc, namespaceURI, qualifiedName))
 
     doc%xds => doc%docType%xds
+    allocate(doc%nodelists(0))
 
   end function createDocument
 
 
   function createEmptyDocument() result(doc)
     type(Node), pointer :: doc
+    type(Node), pointer :: dt
     
     print*,"creating empty document"
     doc => createNode(null(), DOCUMENT_NODE, "#document", "")
-    doc%ownerDocument => null()
     print*,"created"
+    dt => createEmptyDocumentType(doc)
+    doc%xds => dt%xds
+    doc%ownerDocument => doc
 
     ! FIXME do something with namespaceURI etc 
-    doc%doctype => appendChild(doc, createEmptyDocumentType(doc))
-    doc%docType%ownerElement => doc
+    doc%doctype => appendChild(doc, dt)
     doc%implementation => FoX_DOM
     doc%documentElement => null()
-    doc%xds => doc%docType%xds
+    allocate(doc%nodelists(0))
 
   end function createEmptyDocument
 
@@ -166,16 +170,25 @@ TOHW_m_dom_contents(`
     type(NodeList) :: np_stack
     integer :: i
 
+! Switch off all GC - since this is GC!
+    call setDocBuilding(doc, .true.)
+
     if (doc%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
 
     call destroyAllNodesRecursively(doc)
 
+    ! Destroy all remaining nodelists
     do i = 1, size(doc%nodelists)
       call destroy(doc%nodelists(i)%this)
     enddo
     deallocate(doc%nodelists)
+
+    ! Destroy all remaining hanging nodes
+    do i = 1, doc%hangingNodes%length
+      call destroy(doc%hangingNodes%nodes(i)%this)
+    enddo
 
     print*, "destroying a node:", doc%nodeType, doc%nodeName
     call destroyNodeContents(doc)

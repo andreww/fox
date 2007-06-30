@@ -249,9 +249,9 @@ TOHW_m_dom_contents(`
       ! FIXME internal error
     endif
 
-    do i = 1, element%attributes%length
-      call destroyNode(element%attributes%nodes(i)%this)
-    enddo
+    !do i = 1, element%attributes%length
+    !  call destroyNode(element%attributes%nodes(i)%this)
+    !enddo
     !    call destroyNamedNodeMap(element%attributes)
     if (associated(element%attributes%nodes)) deallocate(element%attributes%nodes)
     call destroyNodeContents(element)
@@ -298,22 +298,50 @@ TOHW_m_dom_contents(`
     type(Node), pointer :: df
     
     type(Node), pointer :: np
-    logical :: ascending
+    logical :: ascending, attributesdone
+    integer :: i
 
     np => df%firstChild
     if (.not.associated(np)) return
 
     ascending = .false.
+    attributesdone = .false.
+    i = 0
     do
       if (ascending) then
-        np => np%parentNode
-        call destroyNode(np%lastChild)
+        if (np%nodeType==ATTRIBUTE_NODE) then
+          np => np%ownerElement
+          attributesdone = .true.
+          if (i>0) then
+            call destroyNode(np%ownerElement%attributes%nodes(i)%this)
+          endif
+        else
+          np => np%parentNode
+          call destroyNode(np%lastChild)
+        endif
         if (associated(np, df)) exit
         ascending = .false.
+      elseif (np%nodeType==ELEMENT_NODE.and..not.attributesdone) then
+        if (np%attributes%length>0) then
+          i = 1
+          np => item(getAttributes(np), i)
+          cycle
+        endif
       elseif (associated(np%firstChild)) then
         np => np%firstChild
         cycle
-      endif      
+      endif
+      if (np%nodeType==ATTRIBUTE_NODE) then
+        ! Go to the next attribute
+        if (i==np%ownerElement%attributes%length) then
+          i = 0
+          ascending = .true.
+        else
+          i = i + 1
+          np => np%ownerElement%attributes%nodes(i)%this
+          call destroyNode(np%ownerElement%attributes%nodes(i-1)%this)
+        endif
+      endif
       if (associated(np%nextSibling)) then
         np => np%nextSibling
         call destroyNode(np%previousSibling)

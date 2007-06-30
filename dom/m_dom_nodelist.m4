@@ -101,6 +101,7 @@ TOHW_m_dom_contents(`
 ! FIXME what if index is too small/too big
     temp_nl => nl%nodes
     allocate(nl%nodes(size(temp_nl)-1))
+    nl%length = nl%length - 1 
     do i = 1, index - 1
       nl%nodes(i)%this => temp_nl(i)%this
     enddo
@@ -110,6 +111,22 @@ TOHW_m_dom_contents(`
     deallocate(temp_nl)
 
   end function remove_nl
+
+
+  subroutine remove_node_nl(nl, np)
+    type(NodeList), intent(inout) :: nl
+    type(Node), pointer :: np
+
+    type(ListNode), pointer :: temp_nl(:)
+
+    integer :: i
+
+    do i = 1, nl%length
+      if (associated(nl%nodes(i)%this, np)) exit
+    enddo
+    np => remove_nl(nl, i)
+
+  end subroutine remove_node_nl
 
 
   function getLength_nl(nl) result(n)
