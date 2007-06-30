@@ -609,6 +609,8 @@ endif
             call destroyNode(np%attributes%nodes(i)%this)
             i = 0
           endif
+          ascending = .false.
+          cycle
         else
           np => np%parentNode
           call destroyNode(np%lastChild)
@@ -619,8 +621,10 @@ endif
         if (np%attributes%length>0) then
           i = 1
           np => np%attributes%nodes(i)%this
-          cycle
+        else
+          attributesdone = .true.
         endif
+        cycle
       elseif (associated(np%firstChild)) then
         np => np%firstChild
         attributesdone = .false.
