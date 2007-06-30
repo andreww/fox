@@ -138,6 +138,8 @@ TOHW_m_dom_publics(`
   public :: destroyDocumentFragment
   public :: destroy
 
+  public :: setDocBuilding
+
 ')`'dnl
 dnl
 TOHW_m_dom_contents(`
@@ -343,5 +345,13 @@ TOHW_m_dom_contents(`
     deallocate(np%childNodes%nodes)
 
   end subroutine destroyNodeContents
+
+! Some convenience functions for internal use:
+
+  subroutine setDocBuilding(doc,b)
+    type(Node), pointer :: doc
+    logical, intent(in) :: b
+    doc%docType%xds%building = b
+  end subroutine setDocBuilding
 
 ')`'dnl

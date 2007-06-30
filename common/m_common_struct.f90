@@ -11,6 +11,7 @@ module m_common_struct
   private
 
   type xml_doc_state
+    logical :: building = .false. ! Are we in the middle of building this doc?
     integer :: xml_version = XML1_0
     logical :: standalone_declared = .false.
     logical :: standalone = .true.
@@ -19,6 +20,7 @@ module m_common_struct
     type(notation_list) :: nList
     logical :: warning = .false. ! Do we care about warnings?
     logical :: valid = .true. ! Do we care about validity?
+    logical :: liveNodeLists = .true. ! Do we want live nodelists?
   end type xml_doc_state
 
   public :: xml_doc_state

@@ -22,7 +22,7 @@ module m_dom_parse
   use m_dom_dom, only: getParentNode, setDocumentElement, getDocType, setDocType
   use m_dom_dom, only: append, getNodeType, setReadOnly, getLength, getChildNodes
   use m_dom_dom, only: removeChild, appendChild, getNotations
-  use m_dom_dom, only: setAttributeNS, replace_xds
+  use m_dom_dom, only: setAttributeNS, replace_xds, setDocBuilding
   use m_dom_debug, only: dom_debug
 
   implicit none
@@ -123,9 +123,14 @@ contains
 
     mainDoc => createEmptyDocument()
     current => mainDoc
+    call setDocBuilding(mainDoc, .true.)
 
     print*,'mainDoc allocated'
   end subroutine startDocument_handler
+
+  subroutine endDocument_Handler
+    call setDocBuilding(mainDoc, .true.)
+  end subroutine endDocument_Handler
 
   subroutine startDTD_handler(name, publicId, systemId)
     character(len=*), intent(in) :: name
@@ -212,8 +217,8 @@ contains
 ! We use internal sax_parse rather than public interface in order
 ! to use internal callbacks to get extra info.
     call sax_parse(fxml%fx, fxml%fb,&
-      characters_handler,            &
-      !endDocument_handler,           &
+      characters_handler=characters_handler,            &
+      endDocument_handler=endDocument_handler,           &
       endElement_handler=endElement_handler,            &
       !endPrefixMapping_handler,      &
       !ignorableWhitespace_handler,   &

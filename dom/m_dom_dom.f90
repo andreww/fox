@@ -214,6 +214,8 @@ module m_dom_dom
   public :: destroyDocumentFragment
   public :: destroy
 
+  public :: setDocBuilding
+
 
   
   public :: getNodeName
@@ -635,6 +637,14 @@ endif
     deallocate(np%childNodes%nodes)
 
   end subroutine destroyNodeContents
+
+! Some convenience functions for internal use:
+
+  subroutine setDocBuilding(doc,b)
+    type(Node), pointer :: doc
+    logical, intent(in) :: b
+    doc%docType%xds%building = b
+  end subroutine setDocBuilding
 
 
 
