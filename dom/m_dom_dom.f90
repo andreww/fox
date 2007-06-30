@@ -2960,6 +2960,9 @@ endif
     np%ownerDocument => doc
     np%parentNode => null()
 
+    ! FIXME need to ensure that inDocument & hanging nodes are set
+    ! appropriately.
+
   end function importNode
 
   function createElementNS(doc, namespaceURI, qualifiedName, ex)result(np) 
@@ -3023,6 +3026,11 @@ endif
 
     np%attributes%ownerElement => np
 
+    np%inDocument = .false.
+    if (.not.doc%docType%xds%building) &
+       call append(doc%hangingnodes, np)
+
+
     ! FIXME updateNodeLists
 
   end function createElementNS
@@ -3083,7 +3091,11 @@ endif
     np%namespaceURI => vs_str_alloc(namespaceURI)
     np%localname => vs_str_alloc(localPartofQName(qualifiedname))
     np%prefix => vs_str_alloc(PrefixofQName(qualifiedname))
-    
+
+    np%inDocument = .false.
+    if (.not.doc%docType%xds%building) &
+       call append(doc%hangingnodes, np)
+
   end function createAttributeNS
 
   function getElementsByTagNameNS(doc, namespaceURI, localName, ex)result(list) 

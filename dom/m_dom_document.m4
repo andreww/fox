@@ -387,6 +387,9 @@ TOHW_m_dom_contents(`
     np%ownerDocument => doc
     np%parentNode => null()
 
+    ! FIXME need to ensure that inDocument & hanging nodes are set
+    ! appropriately.
+
   end function importNode
 
   TOHW_function(createElementNS, (doc, namespaceURI, qualifiedName), np)
@@ -419,6 +422,11 @@ TOHW_m_dom_contents(`
 
     np%attributes%ownerElement => np
 
+    np%inDocument = .false.
+    if (.not.doc%docType%xds%building) &
+       call append(doc%hangingnodes, np)
+
+
     ! FIXME updateNodeLists
 
   end function createElementNS
@@ -448,7 +456,11 @@ TOHW_m_dom_contents(`
     np%namespaceURI => vs_str_alloc(namespaceURI)
     np%localname => vs_str_alloc(localPartofQName(qualifiedname))
     np%prefix => vs_str_alloc(PrefixofQName(qualifiedname))
-    
+
+    np%inDocument = .false.
+    if (.not.doc%docType%xds%building) &
+       call append(doc%hangingnodes, np)
+
   end function createAttributeNS
 
   TOHW_function(getElementsByTagNameNS, (doc, namespaceURI, localName), list)
