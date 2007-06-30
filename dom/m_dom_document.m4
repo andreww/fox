@@ -153,7 +153,7 @@ TOHW_m_dom_contents(`
     np => createNode(doc, TEXT_NODE, "#text", data)
 
     np%inDocument = .false.
-    if (.not.doc%docType%xds%building) &
+    if (.not.doc%xds%building) &
        call append(doc%hangingnodes, np)
    
   end function createTextNode
@@ -165,7 +165,7 @@ TOHW_m_dom_contents(`
 
     if (doc%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    elseif (.not.checkChars(data, doc%docType%xds%xml_version)) then
+    elseif (.not.checkChars(data, doc%xds%xml_version)) then
       TOHW_m_dom_throw_error(FoX_INVALID_CHARACTER)
     elseif (index(data,"--")>0) then   
       TOHW_m_dom_throw_error(FoX_INVALID_COMMENT)
@@ -174,7 +174,7 @@ TOHW_m_dom_contents(`
     np => createNode(doc, COMMENT_NODE, "#comment", data)
 
     np%inDocument = .false.
-    if (.not.doc%docType%xds%building) &
+    if (.not.doc%xds%building) &
        call append(doc%hangingnodes, np)
 
   end function createComment
@@ -186,7 +186,7 @@ TOHW_m_dom_contents(`
 
     if (doc%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    elseif (.not.checkChars(data, doc%docType%xds%xml_version)) then
+    elseif (.not.checkChars(data, doc%xds%xml_version)) then
       TOHW_m_dom_throw_error(FoX_INVALID_CHARACTER)
     elseif (index(data,"]]>")>0) then   
       TOHW_m_dom_throw_error(FoX_INVALID_CDATA_SECTION)
@@ -195,7 +195,7 @@ TOHW_m_dom_contents(`
     np => createNode(doc, CDATA_SECTION_NODE, "#text", data)
 
     np%inDocument = .false.
-    if (.not.doc%docType%xds%building) &
+    if (.not.doc%xds%building) &
        call append(doc%hangingnodes, np)
   
   end function createCdataSection
@@ -209,11 +209,11 @@ TOHW_m_dom_contents(`
 
     if (doc%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    elseif (.not.checkChars(target, doc%docType%xds%xml_version)) then
+    elseif (.not.checkChars(target, doc%xds%xml_version)) then
       TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
-    elseif (.not.checkChars(data, doc%docType%xds%xml_version)) then
+    elseif (.not.checkChars(data, doc%xds%xml_version)) then
       TOHW_m_dom_throw_error(FoX_INVALID_CHARACTER)
-    elseif (.not.checkName(target, doc%docType%xds)) then
+    elseif (.not.checkName(target, doc%xds)) then
       TOHW_m_dom_throw_error(FoX_INVALID_XML_NAME)
 ! FIXME check validity of PI target 
     elseif (index(data,"?>")>0) then   
@@ -223,7 +223,7 @@ TOHW_m_dom_contents(`
     np => createNode(doc, PROCESSING_INSTRUCTION_NODE, target, data)
 
     np%inDocument = .false.
-    if (.not.doc%docType%xds%building) &
+    if (.not.doc%xds%building) &
        call append(doc%hangingnodes, np)
 
   end function createProcessingInstruction
@@ -235,16 +235,16 @@ TOHW_m_dom_contents(`
 
     if (doc%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    elseif (.not.checkChars(name, doc%docType%xds%xml_version)) then
+    elseif (.not.checkChars(name, doc%xds%xml_version)) then
       TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
-    elseif (.not.checkName(name, doc%docType%xds)) then
+    elseif (.not.checkName(name, doc%xds)) then
       TOHW_m_dom_throw_error(FoX_INVALID_XML_NAME)
     endif
   
     np => createAttributeNS(doc, "", name)
 
     np%inDocument = .false.
-    if (.not.doc%docType%xds%building) &
+    if (.not.doc%xds%building) &
        call append(doc%hangingnodes, np)
   
   end function createAttribute
@@ -258,9 +258,9 @@ TOHW_m_dom_contents(`
 
     if (doc%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    elseif (.not.checkChars(name, doc%docType%xds%xml_version)) then
+    elseif (.not.checkChars(name, doc%xds%xml_version)) then
       TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
-    elseif (.not.checkName(name, doc%docType%xds)) then
+    elseif (.not.checkName(name, doc%xds)) then
       TOHW_m_dom_throw_error(FoX_INVALID_XML_NAME)
     endif
 
@@ -281,7 +281,7 @@ TOHW_m_dom_contents(`
     ! FIXME all children should be readonly at this stage.
     ! FIXME all cloned children need to be marked ...
     np%inDocument = .false.
-    if (.not.doc%docType%xds%building) &
+    if (.not.doc%xds%building) &
        call append(doc%hangingnodes, np)
 
   end function createEntityReference
@@ -399,9 +399,9 @@ TOHW_m_dom_contents(`
 
     if (doc%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    elseif (.not.checkChars(qualifiedName, doc%docType%xds%xml_version)) then
+    elseif (.not.checkChars(qualifiedName, doc%xds%xml_version)) then
       TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
-    elseif (.not.checkQName(qualifiedName, doc%docType%xds)) then
+    elseif (.not.checkQName(qualifiedName, doc%xds)) then
       TOHW_m_dom_throw_error(NAMESPACE_ERR)
     elseif (prefixOfQName(qualifiedName)/="" &
      .and. namespaceURI=="") then
@@ -423,7 +423,7 @@ TOHW_m_dom_contents(`
     np%attributes%ownerElement => np
 
     np%inDocument = .false.
-    if (.not.doc%docType%xds%building) &
+    if (.not.doc%xds%building) &
        call append(doc%hangingnodes, np)
 
 
@@ -438,9 +438,9 @@ TOHW_m_dom_contents(`
 
     if (doc%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    elseif (.not.checkChars(qualifiedName, doc%docType%xds%xml_version)) then
+    elseif (.not.checkChars(qualifiedName, doc%xds%xml_version)) then
       TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
-    elseif (.not.checkQName(qualifiedName, doc%docType%xds)) then
+    elseif (.not.checkQName(qualifiedName, doc%xds)) then
       TOHW_m_dom_throw_error(NAMESPACE_ERR)
     elseif (prefixOfQName(qualifiedName)/="" &
      .and. namespaceURI=="") then
@@ -458,7 +458,7 @@ TOHW_m_dom_contents(`
     np%prefix => vs_str_alloc(PrefixofQName(qualifiedname))
 
     np%inDocument = .false.
-    if (.not.doc%docType%xds%building) &
+    if (.not.doc%xds%building) &
        call append(doc%hangingnodes, np)
 
   end function createAttributeNS
@@ -594,9 +594,9 @@ TOHW_m_dom_contents(`
     type(Node), pointer :: doc
     character(len=3) :: s
 
-    if (doc%docType%xds%xml_version==XML1_0) then
+    if (doc%xds%xml_version==XML1_0) then
       s = "1.0"
-    elseif (doc%docType%xds%xml_version==XML1_1) then
+    elseif (doc%xds%xml_version==XML1_1) then
       s = "1.1"
     endif
 
@@ -607,9 +607,9 @@ TOHW_m_dom_contents(`
     character(len=*) :: s
 
     if (s=="1.0") then
-      doc%docType%xds%xml_version = XML1_0
+      doc%xds%xml_version = XML1_0
     elseif (s=="1.1") then
-      doc%docType%xds%xml_version = XML1_1
+      doc%xds%xml_version = XML1_1
     else
       TOHW_m_dom_throw_error(NOT_SUPPORTED_ERR)
     endif

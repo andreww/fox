@@ -596,6 +596,8 @@ TOHW_m_dom_contents(`
     type(ListNode), pointer :: temp_nl(:)
     integer :: i
 
+    print*,"APPENDINGCHILD to", str_vs(arg%nodeName)
+
     if (arg%readonly) then
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
     endif

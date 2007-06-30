@@ -215,6 +215,7 @@ TOHW_m_dom_contents(`
        ! FIXME internal error
     endif
 
+    print*,"DESTROYDT"
     ! Entities need to be destroyed recursively - if they are done properly ...
 
     if (associated(dt%entities%nodes)) then
@@ -236,6 +237,8 @@ TOHW_m_dom_contents(`
 
     call destroyNodeContents(dt)
     deallocate(dt)
+
+    print*,"DONEDESTROYDT"
 
   end subroutine destroyDocumentType
 
@@ -307,7 +310,7 @@ TOHW_m_dom_contents(`
     attributesdone = .false.
     i = 0
     do
-      print*,"Looping", associated(np), np%nodeType, associated(np%firstChild)
+      print*,"Looping", associated(np), np%nodeType, associated(np%firstChild), str_vs(np%nodeName), ascending
       if (ascending) then
         ascending = .false.
         if (np%nodeType==ATTRIBUTE_NODE) then
@@ -358,6 +361,8 @@ TOHW_m_dom_contents(`
         ascending = .true.
       endif
     enddo
+
+    print*,"DONE RECURSING"
 
   end subroutine destroyAllNodesRecursively
 

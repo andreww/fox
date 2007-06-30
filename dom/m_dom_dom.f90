@@ -493,6 +493,7 @@ endif
        ! FIXME internal error
     endif
 
+    print*,"DESTROYDT"
     ! Entities need to be destroyed recursively - if they are done properly ...
 
     if (associated(dt%entities%nodes)) then
@@ -514,6 +515,8 @@ endif
 
     call destroyNodeContents(dt)
     deallocate(dt)
+
+    print*,"DONEDESTROYDT"
 
   end subroutine destroyDocumentType
 
@@ -599,7 +602,7 @@ endif
     attributesdone = .false.
     i = 0
     do
-      print*,"Looping", associated(np), np%nodeType, associated(np%firstChild)
+      print*,"Looping", associated(np), np%nodeType, associated(np%firstChild), str_vs(np%nodeName), ascending
       if (ascending) then
         ascending = .false.
         if (np%nodeType==ATTRIBUTE_NODE) then
@@ -650,6 +653,8 @@ endif
         ascending = .true.
       endif
     enddo
+
+    print*,"DONE RECURSING"
 
   end subroutine destroyAllNodesRecursively
 
@@ -1361,6 +1366,8 @@ endif
     
     type(ListNode), pointer :: temp_nl(:)
     integer :: i
+
+    print*,"APPENDINGCHILD to", str_vs(arg%nodeName)
 
     if (arg%readonly) then
       call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "appendChild", ex)
@@ -2511,6 +2518,7 @@ endif
 
     ! Destroy all remaining hanging nodes
     do i = 1, doc%hangingNodes%length
+      print*,"killing dangling nodes"
       call destroy(doc%hangingNodes%nodes(i)%this)
     enddo
 
@@ -2713,7 +2721,7 @@ endif
     np => createNode(doc, TEXT_NODE, "#text", data)
 
     np%inDocument = .false.
-    if (.not.doc%docType%xds%building) &
+    if (.not.doc%xds%building) &
        call append(doc%hangingnodes, np)
    
   end function createTextNode
@@ -2732,7 +2740,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkChars(data, doc%docType%xds%xml_version)) then
+    elseif (.not.checkChars(data, doc%xds%xml_version)) then
       call throw_exception(FoX_INVALID_CHARACTER, "createComment", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -2753,7 +2761,7 @@ endif
     np => createNode(doc, COMMENT_NODE, "#comment", data)
 
     np%inDocument = .false.
-    if (.not.doc%docType%xds%building) &
+    if (.not.doc%xds%building) &
        call append(doc%hangingnodes, np)
 
   end function createComment
@@ -2772,7 +2780,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkChars(data, doc%docType%xds%xml_version)) then
+    elseif (.not.checkChars(data, doc%xds%xml_version)) then
       call throw_exception(FoX_INVALID_CHARACTER, "createCdataSection", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -2793,7 +2801,7 @@ endif
     np => createNode(doc, CDATA_SECTION_NODE, "#text", data)
 
     np%inDocument = .false.
-    if (.not.doc%docType%xds%building) &
+    if (.not.doc%xds%building) &
        call append(doc%hangingnodes, np)
   
   end function createCdataSection
@@ -2814,7 +2822,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkChars(target, doc%docType%xds%xml_version)) then
+    elseif (.not.checkChars(target, doc%xds%xml_version)) then
       call throw_exception(INVALID_CHARACTER_ERR, "createProcessingInstruction", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -2822,7 +2830,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkChars(data, doc%docType%xds%xml_version)) then
+    elseif (.not.checkChars(data, doc%xds%xml_version)) then
       call throw_exception(FoX_INVALID_CHARACTER, "createProcessingInstruction", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -2830,7 +2838,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkName(target, doc%docType%xds)) then
+    elseif (.not.checkName(target, doc%xds)) then
       call throw_exception(FoX_INVALID_XML_NAME, "createProcessingInstruction", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -2852,7 +2860,7 @@ endif
     np => createNode(doc, PROCESSING_INSTRUCTION_NODE, target, data)
 
     np%inDocument = .false.
-    if (.not.doc%docType%xds%building) &
+    if (.not.doc%xds%building) &
        call append(doc%hangingnodes, np)
 
   end function createProcessingInstruction
@@ -2871,7 +2879,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkChars(name, doc%docType%xds%xml_version)) then
+    elseif (.not.checkChars(name, doc%xds%xml_version)) then
       call throw_exception(INVALID_CHARACTER_ERR, "createAttribute", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -2879,7 +2887,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkName(name, doc%docType%xds)) then
+    elseif (.not.checkName(name, doc%xds)) then
       call throw_exception(FoX_INVALID_XML_NAME, "createAttribute", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -2892,7 +2900,7 @@ endif
     np => createAttributeNS(doc, "", name)
 
     np%inDocument = .false.
-    if (.not.doc%docType%xds%building) &
+    if (.not.doc%xds%building) &
        call append(doc%hangingnodes, np)
   
   end function createAttribute
@@ -2913,7 +2921,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkChars(name, doc%docType%xds%xml_version)) then
+    elseif (.not.checkChars(name, doc%xds%xml_version)) then
       call throw_exception(INVALID_CHARACTER_ERR, "createEntityReference", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -2921,7 +2929,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkName(name, doc%docType%xds)) then
+    elseif (.not.checkName(name, doc%xds)) then
       call throw_exception(FoX_INVALID_XML_NAME, "createEntityReference", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -2948,7 +2956,7 @@ endif
     ! FIXME all children should be readonly at this stage.
     ! FIXME all cloned children need to be marked ...
     np%inDocument = .false.
-    if (.not.doc%docType%xds%building) &
+    if (.not.doc%xds%building) &
        call append(doc%hangingnodes, np)
 
   end function createEntityReference
@@ -3099,7 +3107,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkChars(qualifiedName, doc%docType%xds%xml_version)) then
+    elseif (.not.checkChars(qualifiedName, doc%xds%xml_version)) then
       call throw_exception(INVALID_CHARACTER_ERR, "createElementNS", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -3107,7 +3115,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkQName(qualifiedName, doc%docType%xds)) then
+    elseif (.not.checkQName(qualifiedName, doc%xds)) then
       call throw_exception(NAMESPACE_ERR, "createElementNS", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -3147,7 +3155,7 @@ endif
     np%attributes%ownerElement => np
 
     np%inDocument = .false.
-    if (.not.doc%docType%xds%building) &
+    if (.not.doc%xds%building) &
        call append(doc%hangingnodes, np)
 
 
@@ -3169,7 +3177,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkChars(qualifiedName, doc%docType%xds%xml_version)) then
+    elseif (.not.checkChars(qualifiedName, doc%xds%xml_version)) then
       call throw_exception(INVALID_CHARACTER_ERR, "createAttributeNS", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -3177,7 +3185,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkQName(qualifiedName, doc%docType%xds)) then
+    elseif (.not.checkQName(qualifiedName, doc%xds)) then
       call throw_exception(NAMESPACE_ERR, "createAttributeNS", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -3213,7 +3221,7 @@ endif
     np%prefix => vs_str_alloc(PrefixofQName(qualifiedname))
 
     np%inDocument = .false.
-    if (.not.doc%docType%xds%building) &
+    if (.not.doc%xds%building) &
        call append(doc%hangingnodes, np)
 
   end function createAttributeNS
@@ -3364,9 +3372,9 @@ endif
     type(Node), pointer :: doc
     character(len=3) :: s
 
-    if (doc%docType%xds%xml_version==XML1_0) then
+    if (doc%xds%xml_version==XML1_0) then
       s = "1.0"
-    elseif (doc%docType%xds%xml_version==XML1_1) then
+    elseif (doc%xds%xml_version==XML1_1) then
       s = "1.1"
     endif
 
@@ -3378,9 +3386,9 @@ endif
     character(len=*) :: s
 
     if (s=="1.0") then
-      doc%docType%xds%xml_version = XML1_0
+      doc%xds%xml_version = XML1_0
     elseif (s=="1.1") then
-      doc%docType%xds%xml_version = XML1_1
+      doc%xds%xml_version = XML1_1
     else
       call throw_exception(NOT_SUPPORTED_ERR, "setXmlVersion", ex)
 if (present(ex)) then

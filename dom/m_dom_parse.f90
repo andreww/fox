@@ -82,7 +82,7 @@ contains
 
     type(Node), pointer :: temp
     
-    if (dom_debug) print *, "Got PCDATA: |", chunk, "|"
+    print *, "Got PCDATA: |", chunk, "|"
 
     temp => createTextNode(mainDoc, chunk)
     print*, "pcdata:", associated(temp)
@@ -161,6 +161,7 @@ contains
 
     dt => getDocType(mainDoc)
     call replace_xds(dt, state)
+    call setDocBuilding(mainDoc, .true.)
 
     entities => getEntities(dt)
     notations => getNotations(dt)
