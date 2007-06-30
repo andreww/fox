@@ -2536,6 +2536,10 @@ endif
     np%attributes%ownerElement => np
 
     ! FIXME set namespaceURI and localName appropriately
+
+    np%inDocument = .false.
+    if (.not.doc%docType%xds%building) &
+       call append(doc%hangingnodes, np)
   
   end function createElement
     
@@ -2555,6 +2559,10 @@ endif
     endif
     
     np => createNode(doc, DOCUMENT_FRAGMENT_NODE, "", "")
+
+    np%inDocument = .false.
+    if (.not.doc%docType%xds%building) &
+       call append(doc%hangingnodes, np)
     
   end function createDocumentFragment
 
@@ -2583,6 +2591,10 @@ endif
     endif
 
     np => createNode(doc, TEXT_NODE, "#text", data)
+
+    np%inDocument = .false.
+    if (.not.doc%docType%xds%building) &
+       call append(doc%hangingnodes, np)
    
   end function createTextNode
 
@@ -2620,6 +2632,10 @@ endif
   
     np => createNode(doc, COMMENT_NODE, "#comment", data)
 
+    np%inDocument = .false.
+    if (.not.doc%docType%xds%building) &
+       call append(doc%hangingnodes, np)
+
   end function createComment
 
   function createCdataSection(doc, data, ex)result(np) 
@@ -2655,6 +2671,10 @@ endif
     endif
   
     np => createNode(doc, CDATA_SECTION_NODE, "#text", data)
+
+    np%inDocument = .false.
+    if (.not.doc%docType%xds%building) &
+       call append(doc%hangingnodes, np)
   
   end function createCdataSection
 
@@ -2711,6 +2731,10 @@ endif
 
     np => createNode(doc, PROCESSING_INSTRUCTION_NODE, target, data)
 
+    np%inDocument = .false.
+    if (.not.doc%docType%xds%building) &
+       call append(doc%hangingnodes, np)
+
   end function createProcessingInstruction
 
   function createAttribute(doc, name, ex)result(np) 
@@ -2746,6 +2770,10 @@ endif
     endif
   
     np => createAttributeNS(doc, "", name)
+
+    np%inDocument = .false.
+    if (.not.doc%docType%xds%building) &
+       call append(doc%hangingnodes, np)
   
   end function createAttribute
 
@@ -2798,6 +2826,10 @@ endif
       ent => appendChild(np, cloneNode(ent%firstChild, .true., ex))
     endif
     ! FIXME all children should be readonly at this stage.
+    ! FIXME all cloned children need to be marked ...
+    np%inDocument = .false.
+    if (.not.doc%docType%xds%building) &
+       call append(doc%hangingnodes, np)
 
   end function createEntityReference
 
