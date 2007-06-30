@@ -307,8 +307,9 @@ TOHW_m_dom_contents(`
     attributesdone = .false.
     i = 0
     do
-      print*,"Looping", associated(np), np%nodeType
+      print*,"Looping", associated(np), np%nodeType, associated(np%firstChild)
       if (ascending) then
+        ascending = .false.
         if (np%nodeType==ATTRIBUTE_NODE) then
           np => np%ownerElement
           attributesdone = .true.
@@ -317,14 +318,12 @@ TOHW_m_dom_contents(`
             call destroyNode(np%attributes%nodes(i)%this)
             i = 0
           endif
-          ascending = .false.
           cycle
         else
           np => np%parentNode
           call destroyNode(np%lastChild)
         endif
         if (associated(np, df)) exit
-        ascending = .false.
       elseif (np%nodeType==ELEMENT_NODE.and..not.attributesdone) then
         if (np%attributes%length>0) then
           i = 1
@@ -341,14 +340,17 @@ TOHW_m_dom_contents(`
       if (np%nodeType==ATTRIBUTE_NODE) then
         ! Go to the next attribute
         if (i==np%ownerElement%attributes%length) then
+          print*,"FINISHED ATTS"
           ascending = .true.
         else
+          print*, "second attribute", i
           i = i + 1
           np => np%ownerElement%attributes%nodes(i)%this
+          print*,"d1"
           call destroyNode(np%ownerElement%attributes%nodes(i-1)%this)
+          print*,"d2"
         endif
-      endif
-      if (associated(np%nextSibling)) then
+      elseif (associated(np%nextSibling)) then
         np => np%nextSibling
         attributesdone = .false.
         call destroyNode(np%previousSibling)
