@@ -58,11 +58,11 @@ TOHW_m_dom_contents(`
 
 
   TOHW_subroutine(setAttribute, (element, name, value))
-    type(Node), intent(inout) :: element
+    type(Node), pointer :: element
     character(len=*), intent(in) :: name
     character(len=*), intent(in) :: value
 
-    type(Node), pointer :: nn
+    type(Node), pointer :: nn, dummy
 
     if (element%nodeType /= ELEMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
@@ -78,7 +78,9 @@ TOHW_m_dom_contents(`
 
     nn => createAttribute(element%ownerDocument, name)
     call setValue(nn, value)
-    nn => setNamedItem(element%attributes, nn)
+
+    dummy => setNamedItem(element%attributes, nn)
+    nn%ownerElement => element
 
   end subroutine setAttribute
 
@@ -122,6 +124,7 @@ TOHW_m_dom_contents(`
     type(Node), pointer :: element
     type(Node), pointer :: newattr
     type(Node), pointer :: attr
+    type(Node), pointer :: dummy
 
     if (element%nodeType /= ELEMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
@@ -134,7 +137,9 @@ TOHW_m_dom_contents(`
     endif
 
     ! this checks if attribute exists already
-    attr => setNamedItem(element%attributes, newattr, ex)
+    dummy => setNamedItem(element%attributes, newattr, ex)
+    attr%ownerElement => element
+
   end function setAttributeNode
 
 
@@ -159,6 +164,8 @@ TOHW_m_dom_contents(`
     enddo
 
     TOHW_m_dom_throw_error(NOT_FOUND_ERR)
+
+    attr%ownerElement => null()
 
   end function removeAttributeNode
 
@@ -188,12 +195,12 @@ TOHW_m_dom_contents(`
 
 
   TOHW_subroutine(setAttributeNS, (element, namespaceURI, qualifiedname, value))
-    type(Node), intent(inout) :: element
+    type(Node), pointer :: element
     character(len=*), intent(in) :: namespaceURI
     character(len=*), intent(in) :: qualifiedName
     character(len=*), intent(in) :: value
 
-    type(Node), pointer :: nn
+    type(Node), pointer :: nn, dummy
 
     if (element%nodeType /= ELEMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
@@ -217,7 +224,9 @@ TOHW_m_dom_contents(`
 ! but we might need a new namespace node here for xpath ...
     nn => createAttributeNS(element%ownerDocument, namespaceURI, qualifiedname)
     call setValue(nn, value)
-    nn => setNamedItemNS(element%attributes, nn)
+
+    dummy => setNamedItemNS(element%attributes, nn)
+    nn%ownerElement => element
 
     ! FIXME catch exception
 
@@ -264,6 +273,7 @@ TOHW_m_dom_contents(`
     type(Node), pointer :: element
     type(Node), pointer :: newattr
     type(Node), pointer :: attr
+    type(Node), pointer :: dummy
 
     if (element%nodeType /= ELEMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
@@ -276,7 +286,9 @@ TOHW_m_dom_contents(`
     endif
 
     ! this checks if attribute exists already
-    attr => setNamedItemNS(element%attributes, newattr)
+    dummy => setNamedItemNS(element%attributes, newattr)
+    attr%ownerElement => element
+
   end function setAttributeNodeNS
 
 
@@ -302,6 +314,8 @@ TOHW_m_dom_contents(`
     enddo
 
     TOHW_m_dom_throw_error(NOT_FOUND_ERR)
+
+    attr%ownerElement => null()
 
   end function removeAttributeNodeNS
 

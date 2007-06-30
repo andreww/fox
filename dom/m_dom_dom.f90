@@ -447,14 +447,13 @@ endif
     np%nodeValue => vs_str_alloc(nodeValue)
 
     allocate(np%childNodes%nodes(0))
-    np%attributes%ownerElement => np
 
   end function createNode
 
-  recursive subroutine destroyNode(np)
+  subroutine destroyNode(np)
     type(Node), pointer :: np
 
-!    print*,"destroyNode", np%nodeType
+    print*,"destroyNode", np%nodeType
     if (.not.associated(np)) return
 
     select case(np%nodeType)
@@ -553,12 +552,12 @@ endif
 
     endif
 
-    np => attr%firstChild
-    do while (associated(np))
-      np_next => np%nextSibling
-      call destroyNode(np)
-      np => np_next
-    enddo
+ !    np => attr%firstChild
+ !   do while (associated(np))
+ !     np_next => np%nextSibling
+ !     call destroyNode(np)
+ !     np => np_next
+ !   enddo
 
     call destroyNodeContents(attr)
     deallocate(attr)
@@ -600,12 +599,15 @@ endif
     attributesdone = .false.
     i = 0
     do
+      print*,"Looping", associated(np), np%nodeType
       if (ascending) then
         if (np%nodeType==ATTRIBUTE_NODE) then
           np => np%ownerElement
           attributesdone = .true.
+          print*,"up into attnode", i
           if (i>0) then
-            call destroyNode(np%ownerElement%attributes%nodes(i)%this)
+            call destroyNode(np%attributes%nodes(i)%this)
+            i = 0
           endif
         else
           np => np%parentNode
@@ -616,17 +618,17 @@ endif
       elseif (np%nodeType==ELEMENT_NODE.and..not.attributesdone) then
         if (np%attributes%length>0) then
           i = 1
-          np => item(getAttributes(np), i)
+          np => np%attributes%nodes(i)%this
           cycle
         endif
       elseif (associated(np%firstChild)) then
         np => np%firstChild
+        attributesdone = .false.
         cycle
       endif
       if (np%nodeType==ATTRIBUTE_NODE) then
         ! Go to the next attribute
         if (i==np%ownerElement%attributes%length) then
-          i = 0
           ascending = .true.
         else
           i = i + 1
@@ -636,6 +638,7 @@ endif
       endif
       if (associated(np%nextSibling)) then
         np => np%nextSibling
+        attributesdone = .false.
         call destroyNode(np%previousSibling)
       else
         ascending = .true.
@@ -3550,11 +3553,11 @@ endif
 
   subroutine setAttribute(element, name, value, ex)
     type(DOMException), intent(inout), optional :: ex
-    type(Node), intent(inout) :: element
+    type(Node), pointer :: element
     character(len=*), intent(in) :: name
     character(len=*), intent(in) :: value
 
-    type(Node), pointer :: nn
+    type(Node), pointer :: nn, dummy
 
     if (element%nodeType /= ELEMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "setAttribute", ex)
@@ -3600,7 +3603,9 @@ endif
 
     nn => createAttribute(element%ownerDocument, name)
     call setValue(nn, value)
-    nn => setNamedItem(element%attributes, nn)
+
+    dummy => setNamedItem(element%attributes, nn)
+    nn%ownerElement => element
 
   end subroutine setAttribute
 
@@ -3659,6 +3664,7 @@ endif
     type(Node), pointer :: element
     type(Node), pointer :: newattr
     type(Node), pointer :: attr
+    type(Node), pointer :: dummy
 
     if (element%nodeType /= ELEMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "setAttributeNode", ex)
@@ -3695,7 +3701,9 @@ endif
     endif
 
     ! this checks if attribute exists already
-    attr => setNamedItem(element%attributes, newattr, ex)
+    dummy => setNamedItem(element%attributes, newattr, ex)
+    attr%ownerElement => element
+
   end function setAttributeNode
 
 
@@ -3740,6 +3748,8 @@ if (present(ex)) then
 endif
 
 
+    attr%ownerElement => null()
+
   end function removeAttributeNode
 
 
@@ -3776,12 +3786,12 @@ endif
 
   subroutine setAttributeNS(element, namespaceURI, qualifiedname, value, ex)
     type(DOMException), intent(inout), optional :: ex
-    type(Node), intent(inout) :: element
+    type(Node), pointer :: element
     character(len=*), intent(in) :: namespaceURI
     character(len=*), intent(in) :: qualifiedName
     character(len=*), intent(in) :: value
 
-    type(Node), pointer :: nn
+    type(Node), pointer :: nn, dummy
 
     if (element%nodeType /= ELEMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "setAttributeNS", ex)
@@ -3841,7 +3851,9 @@ endif
 ! but we might need a new namespace node here for xpath ...
     nn => createAttributeNS(element%ownerDocument, namespaceURI, qualifiedname)
     call setValue(nn, value)
-    nn => setNamedItemNS(element%attributes, nn)
+
+    dummy => setNamedItemNS(element%attributes, nn)
+    nn%ownerElement => element
 
     ! FIXME catch exception
 
@@ -3909,6 +3921,7 @@ endif
     type(Node), pointer :: element
     type(Node), pointer :: newattr
     type(Node), pointer :: attr
+    type(Node), pointer :: dummy
 
     if (element%nodeType /= ELEMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "setAttributeNodeNS", ex)
@@ -3945,7 +3958,9 @@ endif
     endif
 
     ! this checks if attribute exists already
-    attr => setNamedItemNS(element%attributes, newattr)
+    dummy => setNamedItemNS(element%attributes, newattr)
+    attr%ownerElement => element
+
   end function setAttributeNodeNS
 
 
@@ -3990,6 +4005,8 @@ if (present(ex)) then
   endif
 endif
 
+
+    attr%ownerElement => null()
 
   end function removeAttributeNodeNS
 

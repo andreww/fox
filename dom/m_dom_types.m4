@@ -169,14 +169,13 @@ TOHW_m_dom_contents(`
     np%nodeValue => vs_str_alloc(nodeValue)
 
     allocate(np%childNodes%nodes(0))
-    np%attributes%ownerElement => np
 
   end function createNode
 
-  recursive subroutine destroyNode(np)
+  subroutine destroyNode(np)
     type(Node), pointer :: np
 
-!    print*,"destroyNode", np%nodeType
+    print*,"destroyNode", np%nodeType
     if (.not.associated(np)) return
 
     select case(np%nodeType)
@@ -268,12 +267,12 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
 
-    np => attr%firstChild
-    do while (associated(np))
-      np_next => np%nextSibling
-      call destroyNode(np)
-      np => np_next
-    enddo
+ !    np => attr%firstChild
+ !   do while (associated(np))
+ !     np_next => np%nextSibling
+ !     call destroyNode(np)
+ !     np => np_next
+ !   enddo
 
     call destroyNodeContents(attr)
     deallocate(attr)
@@ -308,12 +307,15 @@ TOHW_m_dom_contents(`
     attributesdone = .false.
     i = 0
     do
+      print*,"Looping", associated(np), np%nodeType
       if (ascending) then
         if (np%nodeType==ATTRIBUTE_NODE) then
           np => np%ownerElement
           attributesdone = .true.
+          print*,"up into attnode", i
           if (i>0) then
-            call destroyNode(np%ownerElement%attributes%nodes(i)%this)
+            call destroyNode(np%attributes%nodes(i)%this)
+            i = 0
           endif
         else
           np => np%parentNode
@@ -324,17 +326,17 @@ TOHW_m_dom_contents(`
       elseif (np%nodeType==ELEMENT_NODE.and..not.attributesdone) then
         if (np%attributes%length>0) then
           i = 1
-          np => item(getAttributes(np), i)
+          np => np%attributes%nodes(i)%this
           cycle
         endif
       elseif (associated(np%firstChild)) then
         np => np%firstChild
+        attributesdone = .false.
         cycle
       endif
       if (np%nodeType==ATTRIBUTE_NODE) then
         ! Go to the next attribute
         if (i==np%ownerElement%attributes%length) then
-          i = 0
           ascending = .true.
         else
           i = i + 1
@@ -344,6 +346,7 @@ TOHW_m_dom_contents(`
       endif
       if (associated(np%nextSibling)) then
         np => np%nextSibling
+        attributesdone = .false.
         call destroyNode(np%previousSibling)
       else
         ascending = .true.
