@@ -354,6 +354,12 @@ TOHW_m_dom_contents(`
       temp_nll(i)%this => nll(i)%this
     enddo
     temp_nll(i)%this => list
+    deallocate(nll)
+    if (doc%nodeType==DOCUMENT_NODE) then
+      doc%nodeLists => temp_nll
+    elseif (doc%nodeType==ELEMENT_NODE) then
+      doc%ownerDocument%nodeLists => temp_nll
+    endif
 
     ascending = .false.
     do

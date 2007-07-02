@@ -48,7 +48,6 @@ module FoX_dom
   public :: createDocumentType
   public :: createDocument
   public :: destroyDocument
-  public :: destroyDocumentFragment
 
   ! DOM Document
   public :: getDocumentElement
@@ -70,7 +69,6 @@ module FoX_dom
   public :: getElementById
   public :: getXmlVersion
   public :: setXmlVersion
-  public :: destroyNode
 
   ! DOM Node
   public :: ELEMENT_NODE
@@ -111,7 +109,6 @@ module FoX_dom
   ! DOM NodeList
   public :: item
   public :: append
-  public :: destroyNodeList
 
   ! DOM NamedNodeMap
   public :: getLength
@@ -194,8 +191,6 @@ module FoX_dom
   public :: parsefile
   public :: dumpTree
   public :: serialize
-
-  public :: destroy
 
   ! FIXME rename this
   public :: is_in_error

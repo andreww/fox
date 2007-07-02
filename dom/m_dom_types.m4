@@ -132,12 +132,6 @@ TOHW_m_dom_publics(`
   public :: NodeList
   public :: NamedNodeMap
 
-  public :: createNode
-  public :: destroyNode
-  public :: destroyNodeContents
-  public :: destroyDocumentFragment
-  public :: destroy
-
   public :: setDocBuilding
 
 ')`'dnl

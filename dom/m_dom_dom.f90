@@ -208,12 +208,6 @@ module m_dom_dom
   public :: NodeList
   public :: NamedNodeMap
 
-  public :: createNode
-  public :: destroyNode
-  public :: destroyNodeContents
-  public :: destroyDocumentFragment
-  public :: destroy
-
   public :: setDocBuilding
 
 
@@ -1857,6 +1851,9 @@ endif
     type(NodeList), pointer :: nl
     
     if (associated(nl%nodes)) deallocate(nl%nodes)
+    if (associated(nl%nodeName)) deallocate(nl%nodeName)
+    if (associated(nl%localName)) deallocate(nl%localName)
+    if (associated(nl%namespaceURI)) deallocate(nl%namespaceURI)
     deallocate(nl)
   end subroutine destroyNodeList
 
@@ -3059,6 +3056,12 @@ endif
       temp_nll(i)%this => nll(i)%this
     enddo
     temp_nll(i)%this => list
+    deallocate(nll)
+    if (doc%nodeType==DOCUMENT_NODE) then
+      doc%nodeLists => temp_nll
+    elseif (doc%nodeType==ELEMENT_NODE) then
+      doc%ownerDocument%nodeLists => temp_nll
+    endif
 
     ascending = .false.
     do

@@ -12,7 +12,7 @@ module m_dom_parse
   use FoX_sax, only: open_xml_file, close_xml_t
 
   use m_dom_dom, only: Node, NamedNodeMap, hasChildNodes, getFirstChild
-  use m_dom_dom, only: createnode, DOCUMENT_NODE, destroynode
+  use m_dom_dom, only: DOCUMENT_NODE
   use m_dom_dom, only: createProcessingInstruction, getDocType
   use m_dom_dom, only: createComment, getEntities
   use m_dom_dom, only: createElementNS, getNotations, getLastChild

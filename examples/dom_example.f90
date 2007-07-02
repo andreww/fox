@@ -25,14 +25,13 @@ program dom_example
   print*,getNodeType(np)
   np => item(getChildNodes(np), 1)
 
-  print*,getNodeType(getAttributeNode(np, "e"))
-  np => getAttributeNode(np, "e")
-!  np => removeAttributeNode(np, getAttributeNode(np, "e"))
-  np => removeAttributeNode(getOwnerElement(np), np)
+  np => removeAttributeNode(np, getAttributeNode(np, "e"))
+
+  np => removeChild(np2, getFirstChild(np2))
 
 !  call dumpTree(myDoc)
 
-!  interest = getElementsByTagName(myDoc, 'john1')
+  interest = getElementsByTagName(myDoc, 'a')
 
   call destroyDocument(myDoc)
 

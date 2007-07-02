@@ -140,6 +140,9 @@ TOHW_m_dom_contents(`
     type(NodeList), pointer :: nl
     
     if (associated(nl%nodes)) deallocate(nl%nodes)
+    if (associated(nl%nodeName)) deallocate(nl%nodeName)
+    if (associated(nl%localName)) deallocate(nl%localName)
+    if (associated(nl%namespaceURI)) deallocate(nl%namespaceURI)
     deallocate(nl)
   end subroutine destroyNodeList
 
