@@ -238,6 +238,8 @@ TOHW_m_dom_contents(`
     type(ListNode), pointer :: temp_nl(:)
     integer :: i, i_t
 
+    ! FIXME DOCUMENTFRAGMENT
+
     if (arg%readonly) then
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
     endif
@@ -332,7 +334,6 @@ TOHW_m_dom_contents(`
   end function insertBefore
 
 
-
   TOHW_function(replaceChild, (arg, newChild, oldChild), np)
     type(Node), pointer :: arg
     type(Node), pointer :: newChild
@@ -340,6 +341,8 @@ TOHW_m_dom_contents(`
     type(Node), pointer :: np
 
     integer :: i
+
+! FIXME DocFrag argument
     
     if (arg%readonly) then
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
@@ -502,10 +505,9 @@ TOHW_m_dom_contents(`
     type(Node), pointer :: newChild
     type(Node), pointer :: appendChild
     
+    type(Node), pointer :: testChild, testParent
     type(ListNode), pointer :: temp_nl(:)
     integer :: i
-
-    print*,"APPENDINGCHILD to", str_vs(arg%nodeName)
 
     if (arg%readonly) then
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
@@ -513,82 +515,78 @@ TOHW_m_dom_contents(`
 
     if (.not. associated(arg))  & 
       call dom_error("appendChild",0,"Node not allocated")
-    
-    select case(arg%nodeType)
-    case (ELEMENT_NODE)
-      if (newChild%nodeType/=ELEMENT_NODE &
-        .and. newChild%nodeType/=TEXT_NODE &
-        .and. newChild%nodeType/=COMMENT_NODE &
-        .and. newChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
-        .and. newChild%nodeType/=CDATA_SECTION_NODE &
-        .and. newChild%nodeType/=ENTITY_REFERENCE_NODE) &
-        TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR)
-    case (ATTRIBUTE_NODE)
-      if (newChild%nodeType/=TEXT_NODE &
-        .and. newChild%nodeType/=ENTITY_REFERENCE_NODE) &
-        TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR)
-    case (DOCUMENT_NODE)
-      if (newChild%nodeType/=ELEMENT_NODE &
-        .and. newChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
-        .and. newChild%nodeType/=COMMENT_NODE &
-        .and. newChild%nodeType/=DOCUMENT_TYPE_NODE) &
-        TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR)
-    case (DOCUMENT_FRAGMENT_NODE)
-      if (newChild%nodeType/=ELEMENT_NODE &
-        .and. newChild%nodeType/=TEXT_NODE &
-        .and. newChild%nodeType/=COMMENT_NODE &
-        .and. newChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
-        .and. newChild%nodeType/=CDATA_SECTION_NODE &
-        .and. newChild%nodeType/=ENTITY_REFERENCE_NODE) &
-        TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR)
-    case (ENTITY_NODE)
-      continue ! only allowed by DOM parser, not by user.
-               ! but entity nodes are always readonly anyway, so no problem
-    case (ENTITY_REFERENCE_NODE)
-      continue ! only allowed by DOM parser, not by user.
-               ! but entity nodes are always readonly anyway, so no problem
-    case default
-      TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR)
-    end select
+
+    testParent => arg    
+    if (newChild%nodeType==DOCUMENT_FRAGMENT_NODE) then
+      do i = 1, newChild%childNodes%length
+        testChild => newChild%childNodes%nodes(i)%this
+        TOHW_m_dom_hierarchy_test
+      enddo
+    else
+      testChild => newChild
+      TOHW_m_dom_hierarchy_test
+    endif
 
     if (.not.(associated(arg%ownerDocument, newChild%ownerDocument) &
       .or. associated(arg, newChild%ownerDocument))) then
       TOHW_m_dom_throw_error(WRONG_DOCUMENT_ERR)
     endif
 
+    if (newChild%nodeType==DOCUMENT_FRAGMENT_NODE &
+      .and. newChild%childNodes%length==0) return
+    ! Nothing to do
+
     if (associated(newChild%parentNode)) &
       newChild => removeChild(newChild%parentNode, newChild, ex) 
 
-    allocate(temp_nl(size(arg%childNodes%nodes)+1))
+    if (newChild%nodeType==DOCUMENT_FRAGMENT_NODE) then
+      allocate(temp_nl(arg%childNodes%length+newChild%childNodes%length))
+    else
+      allocate(temp_nl(arg%childNodes%length+1))
+    endif
 
-    do i = 1, size(arg%childNodes%nodes)
+    do i = 1, arg%childNodes%length
       temp_nl(i)%this => arg%childNodes%nodes(i)%this
     enddo
-    temp_nl(i)%this => newChild
-
-    if (i==1) then
-      arg%firstChild => newChild
-      newChild%previousSibling => null()
+    
+    if (newChild%nodeType==DOCUMENT_FRAGMENT_NODE) then
+      do i = arg%childNodes%length+1, arg%childNodes%length+newChild%childNodes%length
+        temp_nl(i)%this => newChild%childNodes%nodes(i)%this
+        if (arg%inDocument) &
+          call putNodesInDocument(arg%ownerDocument, newChild%childNodes%nodes(i)%this)
+        newChild%childNodes%nodes(i)%this%parentNode => arg
+      enddo
+      if (arg%childNodes%length==0) then
+        arg%firstChild => newChild%firstChild
+      else
+        newChild%firstChild%previousSibling => arg%lastChild
+        arg%lastChild%nextSibling => newChild%firstChild
+      endif
+      arg%lastChild => newChild%lastChild
     else
-      temp_nl(i-1)%this%nextSibling => newChild
-      newChild%previousSibling => temp_nl(i-1)%this     
+      temp_nl(i)%this => newChild
+      if (i==1) then
+        arg%firstChild => newChild
+        newChild%previousSibling => null()
+      else
+        temp_nl(i-1)%this%nextSibling => newChild
+        newChild%previousSibling => temp_nl(i-1)%this     
+      endif
+      if (.not.arg%ownerDocument%xds%building) then
+        if (arg%inDocument) then
+          call putNodesInDocument(arg%ownerDocument, newChild)
+        endif
+      endif
+      newChild%nextSibling => null()
+      arg%lastChild => newChild
+      newChild%parentNode => arg
     endif
 
     deallocate(arg%childNodes%nodes)
     arg%childNodes%nodes => temp_nl
     arg%childNodes%length = size(temp_nl)
 
-    newChild%nextSibling => null()
-    arg%lastChild => newChild
-    newChild%parentNode => arg
-    
     appendChild => newChild
-
-    if (.not.arg%ownerDocument%xds%building) then
-      if (arg%inDocument) then
-        call putNodesInDocument(arg%ownerDocument, newChild)
-      endif
-    endif
 
   end function appendChild
 

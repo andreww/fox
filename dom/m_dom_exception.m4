@@ -24,3 +24,41 @@ define(`TOHW_subroutine', `define(`m4f_thisfunc', `$1')`'subroutine $1`'dnl
     type(DOMException), intent(inout), optional :: ex`'dnl
 ')`'dnl
 dnl
+define(`TOHW_m_dom_hierarchy_test',`dnl
+      select case(testParent%nodeType)
+      case (ELEMENT_NODE)
+        if (testChild%nodeType/=ELEMENT_NODE &
+          .and. testChild%nodeType/=TEXT_NODE &
+          .and. testChild%nodeType/=COMMENT_NODE &
+          .and. testChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
+          .and. testChild%nodeType/=CDATA_SECTION_NODE &
+          .and. testChild%nodeType/=ENTITY_REFERENCE_NODE) &
+          TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR)
+      case (ATTRIBUTE_NODE)
+        if (testChild%nodeType/=TEXT_NODE &
+          .and. testChild%nodeType/=ENTITY_REFERENCE_NODE) &
+          TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR)
+      case (DOCUMENT_NODE)
+        if (testChild%nodeType/=ELEMENT_NODE &
+          .and. testChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
+          .and. testChild%nodeType/=COMMENT_NODE &
+          .and. testChild%nodeType/=DOCUMENT_TYPE_NODE) &
+          TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR)
+      case (DOCUMENT_FRAGMENT_NODE)
+        if (testChild%nodeType/=ELEMENT_NODE &
+          .and. testChild%nodeType/=TEXT_NODE &
+          .and. testChild%nodeType/=COMMENT_NODE &
+          .and. testChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
+          .and. testChild%nodeType/=CDATA_SECTION_NODE &
+          .and. testChild%nodeType/=ENTITY_REFERENCE_NODE) &
+          TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR)
+      case (ENTITY_NODE)
+        continue ! only allowed by DOM parser, not by user.
+        ! but entity nodes are always readonly anyway, so no problem
+      case (ENTITY_REFERENCE_NODE)
+        continue ! only allowed by DOM parser, not by user.
+        ! but entity nodes are always readonly anyway, so no problem
+      case default
+        TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR)
+      end select
+')
