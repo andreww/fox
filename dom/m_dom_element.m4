@@ -150,6 +150,8 @@ TOHW_m_dom_contents(`
     dummy => setNamedItem(element%attributes, newattr, ex)
     attr%ownerElement => element
 
+    ! FIXME hangingnodes
+
   end function setAttributeNode
 
 
@@ -176,6 +178,8 @@ TOHW_m_dom_contents(`
     TOHW_m_dom_throw_error(NOT_FOUND_ERR)
 
     attr%ownerElement => null()
+
+    ! FIXME hangingnodes
 
   end function removeAttributeNode
 
@@ -310,6 +314,8 @@ TOHW_m_dom_contents(`
     dummy => setNamedItemNS(element%attributes, newattr)
     attr%ownerElement => element
 
+    ! FIXME hangingnodes
+
   end function setAttributeNodeNS
 
 
@@ -337,7 +343,7 @@ TOHW_m_dom_contents(`
     TOHW_m_dom_throw_error(NOT_FOUND_ERR)
 
     attr%ownerElement => null()
-
+    ! FIXME hangingnodes
   end function removeAttributeNodeNS
 
 

@@ -3769,6 +3769,8 @@ endif
     dummy => setNamedItem(element%attributes, newattr, ex)
     attr%ownerElement => element
 
+    ! FIXME hangingnodes
+
   end function setAttributeNode
 
 
@@ -3814,6 +3816,8 @@ endif
 
 
     attr%ownerElement => null()
+
+    ! FIXME hangingnodes
 
   end function removeAttributeNode
 
@@ -4037,6 +4041,8 @@ endif
     dummy => setNamedItemNS(element%attributes, newattr)
     attr%ownerElement => element
 
+    ! FIXME hangingnodes
+
   end function setAttributeNodeNS
 
 
@@ -4083,7 +4089,7 @@ endif
 
 
     attr%ownerElement => null()
-
+    ! FIXME hangingnodes
   end function removeAttributeNodeNS
 
 
