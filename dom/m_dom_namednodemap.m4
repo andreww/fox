@@ -289,6 +289,17 @@ TOHW_m_dom_contents(`
     np => null()
     call append(map, arg)
 
+    if (.not.map%ownerElement%ownerDocument%xds%building) then
+      ! We need to worry about importing this node
+      if (map%ownerElement%inDocument) then
+        if (.not.arg%inDocument) &
+          call putNodesInDocument(map%ownerElement%ownerDocument, arg)
+      else
+        if (arg%inDocument) &
+          call removeNodesFromDocument(map%ownerElement%ownerDocument, arg)
+        endif
+    endif
+
   end function setNamedItemNS
 
 
@@ -321,7 +332,9 @@ TOHW_m_dom_contents(`
         enddo
         map%length = size(map%nodes)
         deallocate(temp_nl)
-        call removeNodesFromDocument(map%ownerElement%ownerDocument, np)
+        if (.not.map%ownerElement%ownerDocument%xds%building) &
+          call removeNodesFromDocument(map%ownerElement%ownerDocument, np)
+        !otherwise we are only going to destroy these nodes anyway,
         ! and finish
         return
       endif
