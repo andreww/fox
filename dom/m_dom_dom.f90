@@ -1450,10 +1450,10 @@ endif
     
     if (newChild%nodeType==DOCUMENT_FRAGMENT_NODE) then
       do i = arg%childNodes%length+1, arg%childNodes%length+newChild%childNodes%length
-        temp_nl(i)%this => newChild%childNodes%nodes(i)%this
+        temp_nl(i)%this => newChild%childNodes%nodes(i-arg%childNodes%length)%this
         if (arg%inDocument) &
-          call putNodesInDocument(arg%ownerDocument, newChild%childNodes%nodes(i)%this)
-        newChild%childNodes%nodes(i)%this%parentNode => arg
+          call putNodesInDocument(arg%ownerDocument, temp_nl(i)%this)
+        temp_nl(i)%this%parentNode => arg
       enddo
       if (arg%childNodes%length==0) then
         arg%firstChild => newChild%firstChild

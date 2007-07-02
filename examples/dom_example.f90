@@ -13,7 +13,6 @@ program dom_example
 
   dummy => createDocumentFragment(myDoc)
   dummy => createDocumentFragment(myDoc)
-  dummy => createDocumentFragment(myDoc)
 
   np2 => getDocumentElement(myDoc)
 
@@ -36,10 +35,9 @@ program dom_example
   np => removeChild(np2, getFirstChild(np2))
   np => createDocumentFragment(myDoc)
 
-  np => appendChild(np, createTextNode(myDoc, "lalal"))
-  dummy => getOwnerDocument(np)
-!  print*,associated(dummy)
-  dummy => appendChild(np2, np)
+  dummy => createDocumentFragment(myDoc)
+  np => appendChild(dummy, createTextNode(myDoc, "lalal"))
+  dummy => appendChild(np2, dummy)
 !  call dumpTree(myDoc)
 
   interest = getElementsByTagName(myDoc, 'a')
