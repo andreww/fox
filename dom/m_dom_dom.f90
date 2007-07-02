@@ -4150,6 +4150,10 @@ endif
 
   end function hasAttributeNS
 
+! setIdAttribute
+! setIdAttributeNS
+! setIdAttributeNode
+
 
   
   ! function getName(attribute) result(c) See m_dom_common

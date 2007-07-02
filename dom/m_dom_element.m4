@@ -390,4 +390,8 @@ TOHW_m_dom_contents(`
 
   end function hasAttributeNS
 
+! setIdAttribute
+! setIdAttributeNS
+! setIdAttributeNode
+
 ')`'dnl
