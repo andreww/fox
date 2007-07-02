@@ -310,13 +310,11 @@ TOHW_m_dom_contents(`
     attributesdone = .false.
     i = 0
     do
-      print*,"Looping", associated(np), np%nodeType, associated(np%firstChild), str_vs(np%nodeName), ascending
       if (ascending) then
         ascending = .false.
         if (np%nodeType==ATTRIBUTE_NODE) then
           np => np%ownerElement
           attributesdone = .true.
-          print*,"up into attnode", i
           if (i>0) then
             call destroyNode(np%attributes%nodes(i)%this)
             i = 0
@@ -341,17 +339,12 @@ TOHW_m_dom_contents(`
         cycle
       endif
       if (np%nodeType==ATTRIBUTE_NODE) then
-        ! Go to the next attribute
         if (i==np%ownerElement%attributes%length) then
-          print*,"FINISHED ATTS"
           ascending = .true.
         else
-          print*, "second attribute", i
           i = i + 1
           np => np%ownerElement%attributes%nodes(i)%this
-          print*,"d1"
           call destroyNode(np%ownerElement%attributes%nodes(i-1)%this)
-          print*,"d2"
         endif
       elseif (associated(np%nextSibling)) then
         np => np%nextSibling
@@ -361,8 +354,6 @@ TOHW_m_dom_contents(`
         ascending = .true.
       endif
     enddo
-
-    print*,"DONE RECURSING"
 
   end subroutine destroyAllNodesRecursively
 

@@ -326,103 +326,7 @@ TOHW_m_dom_contents(`
 
   end function insertBefore
 
-  subroutine putNodesInDocument(doc, np_orig)
-    type(Node), pointer :: doc, np_orig
-    type(Node), pointer :: np
-    logical :: ascending, attributesdone
-    integer :: i
-    np => np_orig
-    ascending = .false.
-    attributesdone = .false.
-    i = 0
-    do
-      if (ascending) then 
-        if (np%nodeType==ELEMENT_NODE) then
-          np => np%ownerElement
-          attributesdone = .true.
-        else
-          np => np%parentNode
-        endif
-        if (associated(np, np_orig)) exit
-        ascending = .false.
-      elseif (np%nodeType==ELEMENT_NODE.and..not.attributesdone) then
-        if (np%ownerElement%attributes%length>0) then
-          i = 1
-          np => item(getAttributes(np), i)
-          cycle
-        endif
-      elseif (associated(np%firstChild)) then
-        np => np%firstChild
-        cycle
-      endif
-      np%inDocument = .true.
-      call remove_node_nl(doc%hangingNodes, np)
-      if (np%nodeType==ATTRIBUTE_NODE) then
-        ! Go to the next attribute
-        if (i==np%ownerElement%attributes%length) then
-          i = 0
-          ascending = .true.
-        else
-          i = i + 1
-          np => np%ownerElement%attributes%nodes(i)%this
-        endif
-      endif
-      if (associated(np%nextSibling)) then
-        np => np%nextSibling
-      else
-        ascending = .true.
-      endif
-    enddo
-  end subroutine putNodesInDocument
 
-  subroutine removeNodesFromDocument(np_orig, np)
-    type(Node), pointer :: np_orig
-    type(Node), pointer :: np
-    logical :: ascending, attributesdone
-    integer :: i
-    np => np_orig
-    ascending = .false.
-    attributesdone = .false.
-    i = 0
-    do
-      if (ascending) then 
-        if (associated(np%ownerElement)) then
-          np => np%ownerElement
-          attributesdone = .true.
-        else
-          np => np%parentNode
-        endif
-        if (associated(np, np_orig)) exit
-        ascending = .false.
-      elseif (np%nodeType==ELEMENT_NODE.and..not.attributesdone) then
-        if (np%ownerElement%attributes%length>0) then
-          i = 1
-          np => item(getAttributes(np), i)
-          cycle
-        endif
-      elseif (associated(np%firstChild)) then
-        np => np%firstChild
-        cycle
-      endif
-      np%inDocument = .false.
-      call append(np%ownerDocument%hangingNodes, np)
-      if (np%nodeType==ATTRIBUTE_NODE) then
-        ! Go to the next attribute
-        if (i==np%ownerElement%attributes%length) then
-          i = 0
-          ascending = .true.
-        else
-          i = i + 1
-          np => np%ownerElement%attributes%nodes(i)%this
-        endif
-      endif
-      if (associated(np%nextSibling)) then
-        np => np%nextSibling
-      else
-        ascending = .true.
-      endif
-    enddo
-  end subroutine removeNodesFromDocument
 
   TOHW_function(replaceChild, (arg, newChild, oldChild), np)
     type(Node), pointer :: arg
@@ -918,5 +822,109 @@ TOHW_m_dom_contents(`
     isSameNode = associated(node1, node2)
 
   end function isSameNode
+
+  subroutine putNodesInDocument(doc, np_orig)
+    type(Node), pointer :: doc, np_orig
+    type(Node), pointer :: np
+    logical :: ascending, attributesdone
+    integer :: i
+
+    print*,"PUTTING NODES IN DOCUMENT"
+    np => np_orig
+    ascending = .false.
+    attributesdone = .false.
+    i = 0
+    do
+      if (ascending) then
+        if (associated(np, np_orig)) exit
+        ascending = .false.
+        if (np%nodeType==ATTRIBUTE_NODE) then
+          np => np%ownerElement
+          attributesdone = .true.
+          cycle
+        else
+          np => np%parentNode
+        endif
+      elseif (np%nodeType==ELEMENT_NODE.and..not.attributesdone) then
+        if (np%attributes%length>0) then
+          i = 1
+          np => np%attributes%nodes(i)%this
+        else
+          attributesdone = .true.
+        endif
+        cycle
+      elseif (associated(np%firstChild)) then
+        np => np%firstChild
+        attributesdone = .false.
+        cycle
+      endif
+      np%inDocument = .true.
+      call remove_node_nl(np%ownerDocument%hangingNodes, np)
+      if (np%nodeType==ATTRIBUTE_NODE) then
+        if (i==np%ownerElement%attributes%length) then
+          ascending = .true.
+        else
+          i = i + 1
+          np => np%ownerElement%attributes%nodes(i)%this
+        endif
+      elseif (associated(np%nextSibling)) then
+        np => np%nextSibling
+        attributesdone = .false.
+      else
+        ascending = .true.
+      endif
+    enddo
+  end subroutine putNodesInDocument
+
+  subroutine removeNodesFromDocument(np_orig, np)
+    type(Node), pointer :: np_orig
+    type(Node), pointer :: np
+    logical :: ascending, attributesdone
+    integer :: i
+    np => np_orig
+    ascending = .false.
+    attributesdone = .false.
+    i = 0
+    do
+      if (ascending) then
+        if (associated(np, np_orig)) exit
+        ascending = .false.
+        if (np%nodeType==ATTRIBUTE_NODE) then
+          np => np%ownerElement
+          attributesdone = .true.
+          cycle
+        else
+          np => np%parentNode
+        endif
+      elseif (np%nodeType==ELEMENT_NODE.and..not.attributesdone) then
+        if (np%attributes%length>0) then
+          i = 1
+          np => np%attributes%nodes(i)%this
+        else
+          attributesdone = .true.
+        endif
+        cycle
+      elseif (associated(np%firstChild)) then
+        np => np%firstChild
+        attributesdone = .false.
+        cycle
+      endif
+      np%inDocument = .false.
+      call append_nl(np%ownerDocument%hangingNodes, np)
+      if (np%nodeType==ATTRIBUTE_NODE) then
+        if (i==np%ownerElement%attributes%length) then
+          ascending = .true.
+        else
+          i = i + 1
+          np => np%ownerElement%attributes%nodes(i)%this
+        endif
+      elseif (associated(np%nextSibling)) then
+        np => np%nextSibling
+        attributesdone = .false.
+      else
+        ascending = .true.
+      endif
+    enddo
+  end subroutine removeNodesFromDocument
 
 ')`'dnl

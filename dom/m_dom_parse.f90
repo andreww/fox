@@ -129,7 +129,7 @@ contains
   end subroutine startDocument_handler
 
   subroutine endDocument_Handler
-    call setDocBuilding(mainDoc, .true.)
+    call setDocBuilding(mainDoc, .false.)
   end subroutine endDocument_Handler
 
   subroutine startDTD_handler(name, publicId, systemId)

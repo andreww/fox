@@ -117,10 +117,13 @@ TOHW_m_dom_contents(`
 
     ! FIXME set namespaceURI and localName appropriately
 
-    np%inDocument = .false.
-    if (.not.doc%docType%xds%building) &
-       call append(doc%hangingnodes, np)
-  
+    if (.not.doc%docType%xds%building) then
+      np%inDocument = .false.
+      call append(doc%hangingnodes, np)
+    else
+      np%inDocument = .true.
+    endif
+
   end function createElement
     
   TOHW_function(createDocumentFragment, (doc), np)
@@ -132,11 +135,13 @@ TOHW_m_dom_contents(`
     endif
     
     np => createNode(doc, DOCUMENT_FRAGMENT_NODE, "", "")
+    if (.not.doc%docType%xds%building) then
+      np%inDocument = .false.
+      call append(doc%hangingnodes, np)
+    else
+      np%inDocument = .true.
+    endif
 
-    np%inDocument = .false.
-    if (.not.doc%docType%xds%building) &
-       call append(doc%hangingnodes, np)
-    
   end function createDocumentFragment
 
   TOHW_function(createTextNode, (doc, data), np)
@@ -152,9 +157,12 @@ TOHW_m_dom_contents(`
 
     np => createNode(doc, TEXT_NODE, "#text", data)
 
-    np%inDocument = .false.
-    if (.not.doc%xds%building) &
-       call append(doc%hangingnodes, np)
+    if (.not.doc%docType%xds%building) then
+      np%inDocument = .false.
+      call append(doc%hangingnodes, np)
+    else
+      np%inDocument = .true.
+    endif
    
   end function createTextNode
 
@@ -173,9 +181,12 @@ TOHW_m_dom_contents(`
   
     np => createNode(doc, COMMENT_NODE, "#comment", data)
 
-    np%inDocument = .false.
-    if (.not.doc%xds%building) &
-       call append(doc%hangingnodes, np)
+    if (.not.doc%docType%xds%building) then
+      np%inDocument = .false.
+      call append(doc%hangingnodes, np)
+    else
+      np%inDocument = .true.
+    endif
 
   end function createComment
 
@@ -194,9 +205,12 @@ TOHW_m_dom_contents(`
   
     np => createNode(doc, CDATA_SECTION_NODE, "#text", data)
 
-    np%inDocument = .false.
-    if (.not.doc%xds%building) &
-       call append(doc%hangingnodes, np)
+    if (.not.doc%docType%xds%building) then
+      np%inDocument = .false.
+      call append(doc%hangingnodes, np)
+    else
+      np%inDocument = .true.
+    endif
   
   end function createCdataSection
 
@@ -222,9 +236,12 @@ TOHW_m_dom_contents(`
 
     np => createNode(doc, PROCESSING_INSTRUCTION_NODE, target, data)
 
-    np%inDocument = .false.
-    if (.not.doc%xds%building) &
-       call append(doc%hangingnodes, np)
+    if (.not.doc%docType%xds%building) then
+      np%inDocument = .false.
+      call append(doc%hangingnodes, np)
+    else
+      np%inDocument = .true.
+    endif
 
   end function createProcessingInstruction
 
@@ -243,9 +260,12 @@ TOHW_m_dom_contents(`
   
     np => createAttributeNS(doc, "", name)
 
-    np%inDocument = .false.
-    if (.not.doc%xds%building) &
-       call append(doc%hangingnodes, np)
+    if (.not.doc%docType%xds%building) then
+      np%inDocument = .false.
+      call append(doc%hangingnodes, np)
+    else
+      np%inDocument = .true.
+    endif
   
   end function createAttribute
 
@@ -280,9 +300,12 @@ TOHW_m_dom_contents(`
     endif
     ! FIXME all children should be readonly at this stage.
     ! FIXME all cloned children need to be marked ...
-    np%inDocument = .false.
-    if (.not.doc%xds%building) &
-       call append(doc%hangingnodes, np)
+    if (.not.doc%docType%xds%building) then
+      np%inDocument = .false.
+      call append(doc%hangingnodes, np)
+    else
+      np%inDocument = .true.
+    endif
 
   end function createEntityReference
 
@@ -422,10 +445,12 @@ TOHW_m_dom_contents(`
 
     np%attributes%ownerElement => np
 
-    np%inDocument = .false.
-    if (.not.doc%xds%building) &
-       call append(doc%hangingnodes, np)
-
+    if (.not.doc%docType%xds%building) then
+      np%inDocument = .false.
+      call append(doc%hangingnodes, np)
+    else
+      np%inDocument = .true.
+    endif
 
     ! FIXME updateNodeLists
 
@@ -457,9 +482,12 @@ TOHW_m_dom_contents(`
     np%localname => vs_str_alloc(localPartofQName(qualifiedname))
     np%prefix => vs_str_alloc(PrefixofQName(qualifiedname))
 
-    np%inDocument = .false.
-    if (.not.doc%xds%building) &
-       call append(doc%hangingnodes, np)
+    if (.not.doc%docType%xds%building) then
+      np%inDocument = .false.
+      call append(doc%hangingnodes, np)
+    else
+      np%inDocument = .true.
+    endif
 
   end function createAttributeNS
 
