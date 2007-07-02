@@ -469,8 +469,6 @@ endif
       !call destroyDocument(np)
     case (DOCUMENT_TYPE_NODE)
       call destroyDocumentType(np)
-    case (DOCUMENT_FRAGMENT_NODE)
-      !call destroyDocumentFragment
     case default
       call destroyNodeContents(np)
       deallocate(np)
@@ -1463,6 +1461,11 @@ endif
         arg%lastChild%nextSibling => newChild%firstChild
       endif
       arg%lastChild => newChild%lastChild
+      newChild%firstChild => null()
+      newChild%lastChild => null()
+      deallocate(newChild%childNodes%nodes)
+      allocate(newChild%childNodes%nodes(0))
+      newChild%childNodes%length = 0
     else
       temp_nl(i)%this => newChild
       if (i==1) then
@@ -1473,8 +1476,10 @@ endif
         newChild%previousSibling => temp_nl(i-1)%this     
       endif
       if (.not.arg%ownerDocument%xds%building) then
-        if (arg%inDocument) then
+        if (arg%inDocument.and..not.newChild%inDocument) then
+          print*,"ADDHN", associated(arg%ownerDocument%hangingnodes%nodes(arg%ownerDocument%hangingnodes%length)%this)
           call putNodesInDocument(arg%ownerDocument, newChild)
+          print*,"ADDHN", associated(arg%ownerDocument%hangingnodes%nodes(arg%ownerDocument%hangingnodes%length)%this)
         endif
       endif
       newChild%nextSibling => null()
@@ -1733,7 +1738,7 @@ endif
     logical :: ascending, attributesdone
     integer :: i
 
-    print*,"PUTTING NODES IN DOCUMENT"
+    print*,"PUTTING NODES IN DOCUMENT", doc%hangingNodes%length
     np => np_orig
     ascending = .false.
     attributesdone = .false.
@@ -1778,6 +1783,7 @@ endif
         ascending = .true.
       endif
     enddo
+    print*,"DONE PUTTING NODES IN DOCUMENT", doc%hangingNodes%length
   end subroutine putNodesInDocument
 
   subroutine removeNodesFromDocument(doc, np_orig)
@@ -1920,8 +1926,8 @@ endif
     do i = 1, index - 1
       nl%nodes(i)%this => temp_nl(i)%this
     enddo
-    do i = index + 1, nl%length
-      nl%nodes(i-1)%this => temp_nl(i)%this
+    do i = index, nl%length
+      nl%nodes(i)%this => temp_nl(i+1)%this
     enddo
     deallocate(temp_nl)
 
@@ -2654,7 +2660,7 @@ endif
     ! Destroy all remaining hanging nodes
     print*,"DANGLING NODES", doc%hangingNodes%length
     do i = 1, doc%hangingNodes%length
-      print*,"killing dangling nodes"
+      print*,"killing dangling nodes", associated(doc%hangingNodes%nodes(i)%this)
       call destroy(doc%hangingNodes%nodes(i)%this)
     enddo
     deallocate(doc%hangingNodes%nodes)
@@ -2826,10 +2832,11 @@ endif
 
     endif
     
-    np => createNode(doc, DOCUMENT_FRAGMENT_NODE, "", "")
-    if (.not.doc%docType%xds%building) then
+    np => createNode(doc, DOCUMENT_FRAGMENT_NODE, "#document-fragment", "")
+    if (.not.doc%xds%building) then
       np%inDocument = .false.
       call append(doc%hangingnodes, np)
+      print*, "MADEDOCFRAG", associated(doc%hangingnodes%nodes(1)%this)
     else
       np%inDocument = .true.
     endif

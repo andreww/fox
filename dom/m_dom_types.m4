@@ -191,8 +191,6 @@ TOHW_m_dom_contents(`
       !call destroyDocument(np)
     case (DOCUMENT_TYPE_NODE)
       call destroyDocumentType(np)
-    case (DOCUMENT_FRAGMENT_NODE)
-      !call destroyDocumentFragment
     case default
       call destroyNodeContents(np)
       deallocate(np)

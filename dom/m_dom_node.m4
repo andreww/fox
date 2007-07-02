@@ -563,6 +563,11 @@ TOHW_m_dom_contents(`
         arg%lastChild%nextSibling => newChild%firstChild
       endif
       arg%lastChild => newChild%lastChild
+      newChild%firstChild => null()
+      newChild%lastChild => null()
+      deallocate(newChild%childNodes%nodes)
+      allocate(newChild%childNodes%nodes(0))
+      newChild%childNodes%length = 0
     else
       temp_nl(i)%this => newChild
       if (i==1) then
@@ -573,8 +578,10 @@ TOHW_m_dom_contents(`
         newChild%previousSibling => temp_nl(i-1)%this     
       endif
       if (.not.arg%ownerDocument%xds%building) then
-        if (arg%inDocument) then
+        if (arg%inDocument.and..not.newChild%inDocument) then
+          print*,"ADDHN", associated(arg%ownerDocument%hangingnodes%nodes(arg%ownerDocument%hangingnodes%length)%this)
           call putNodesInDocument(arg%ownerDocument, newChild)
+          print*,"ADDHN", associated(arg%ownerDocument%hangingnodes%nodes(arg%ownerDocument%hangingnodes%length)%this)
         endif
       endif
       newChild%nextSibling => null()
@@ -831,7 +838,7 @@ TOHW_m_dom_contents(`
     logical :: ascending, attributesdone
     integer :: i
 
-    print*,"PUTTING NODES IN DOCUMENT"
+    print*,"PUTTING NODES IN DOCUMENT", doc%hangingNodes%length
     np => np_orig
     ascending = .false.
     attributesdone = .false.
@@ -876,6 +883,7 @@ TOHW_m_dom_contents(`
         ascending = .true.
       endif
     enddo
+    print*,"DONE PUTTING NODES IN DOCUMENT", doc%hangingNodes%length
   end subroutine putNodesInDocument
 
   subroutine removeNodesFromDocument(doc, np_orig)

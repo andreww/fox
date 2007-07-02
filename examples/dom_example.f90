@@ -3,12 +3,16 @@ program dom_example
   use m_common_array_str
   use FoX_dom
 
-  type(Node), pointer :: myDoc, np, np2
+  type(Node), pointer :: myDoc, np, np2, dummy
   type(NodeList) :: interest
 
   myDoc => parsefile('test.xml')
 
   np => createElement(myDoc, 'a')
+
+  dummy => createDocumentFragment(myDoc)
+  dummy => createDocumentFragment(myDoc)
+  dummy => createDocumentFragment(myDoc)
 
   np2 => getDocumentElement(myDoc)
 
@@ -30,6 +34,9 @@ program dom_example
   np => removeAttributeNode(np, getAttributeNode(np, "e"))
 
   np => removeChild(np2, getFirstChild(np2))
+
+!  dummy => appendChild(np, createTextNode("lalal")
+!  dummy => appendChild(np2, np)
 
 !  call dumpTree(myDoc)
 

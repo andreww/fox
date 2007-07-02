@@ -188,7 +188,7 @@ TOHW_m_dom_contents(`
     ! Destroy all remaining hanging nodes
     print*,"DANGLING NODES", doc%hangingNodes%length
     do i = 1, doc%hangingNodes%length
-      print*,"killing dangling nodes"
+      print*,"killing dangling nodes", associated(doc%hangingNodes%nodes(i)%this)
       call destroy(doc%hangingNodes%nodes(i)%this)
     enddo
     deallocate(doc%hangingNodes%nodes)

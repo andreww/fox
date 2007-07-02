@@ -105,8 +105,8 @@ TOHW_m_dom_contents(`
     do i = 1, index - 1
       nl%nodes(i)%this => temp_nl(i)%this
     enddo
-    do i = index + 1, nl%length
-      nl%nodes(i-1)%this => temp_nl(i)%this
+    do i = index, nl%length
+      nl%nodes(i)%this => temp_nl(i+1)%this
     enddo
     deallocate(temp_nl)
 

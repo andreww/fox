@@ -134,10 +134,11 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
     
-    np => createNode(doc, DOCUMENT_FRAGMENT_NODE, "", "")
-    if (.not.doc%docType%xds%building) then
+    np => createNode(doc, DOCUMENT_FRAGMENT_NODE, "#document-fragment", "")
+    if (.not.doc%xds%building) then
       np%inDocument = .false.
       call append(doc%hangingnodes, np)
+      print*, "MADEDOCFRAG", associated(doc%hangingnodes%nodes(1)%this)
     else
       np%inDocument = .true.
     endif
