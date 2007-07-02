@@ -25,6 +25,8 @@ program dom_example
   print*,getNodeType(np)
   np => item(getChildNodes(np), 1)
 
+  call setNodeValue(getAttributeNode(np, "e"), "fg")
+
   np => removeAttributeNode(np, getAttributeNode(np, "e"))
 
   np => removeChild(np2, getFirstChild(np2))

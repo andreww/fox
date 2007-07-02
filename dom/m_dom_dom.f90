@@ -767,6 +767,8 @@ endif
       ! FIXME check does string contain wrong characters
       ! destroy any existing children ... 
       do i = 1, arg%childNodes%length
+        if (.not.arg%inDocument) &
+          call remove_node_nl(arg%ownerDocument%hangingNodes, arg%childNodes%nodes(i)%this)
         call destroyNode(arg%childNodes%nodes(i)%this)
       enddo
       deallocate(arg%childNodes%nodes)
@@ -775,8 +777,11 @@ endif
       arg%firstChild => null()
       arg%lastChild => null()
       ! and add the new one.
+      ! Avoid manipulaing hangingnode lists
+      call setDocBuilding(arg%ownerDocument, .true.)
       np => createTextNode(arg%ownerDocument, nodeValue)
       np => appendChild(arg, np)
+      call setDocBuilding(arg%ownerDocument, .false.)
     case (CDATA_SECTION_NODE)
       ! FIXME check does string contain wrong characters
       deallocate(arg%nodeValue)
@@ -1382,7 +1387,6 @@ endif
         call putNodesInDocument(arg%ownerDocument, newChild)
       endif
     endif
-
 
   end function appendChild
 
