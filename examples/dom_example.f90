@@ -16,6 +16,12 @@ program dom_example
 
   call setAttribute(np, "a", "b")
 
+  call setAttributeNS(np, "http://www.xml-cml.org/schema", "a:b", "c")
+
+  np => getNextSibling(getFirstChild(np2))
+!  print*,getNodeType(np)
+  call removeAttribute(np, "b")
+
 !  call dumpTree(myDoc)
 
 !  interest = getElementsByTagName(myDoc, 'john1')

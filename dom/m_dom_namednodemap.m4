@@ -161,7 +161,11 @@ TOHW_m_dom_contents(`
         do i2 = i + 1, map%length
           map%nodes(i2)%this => temp_nl(i2)%this
         enddo
+        map%length = size(map%nodes)
         deallocate(temp_nl)
+        if (.not.map%ownerElement%ownerDocument%xds%building) &
+          call removeNodesFromDocument(map%ownerElement%ownerDocument, np)
+        !otherwise we are only going to destroy these nodes anyway,
         ! and finish
         return
       endif
@@ -314,7 +318,9 @@ TOHW_m_dom_contents(`
         do i2 = i + 1, map%length
           map%nodes(i2-1)%this => temp_nl(i2)%this
         enddo
+        map%length = size(map%nodes)
         deallocate(temp_nl)
+        call removeNodesFromDocument(map%ownerElement%ownerDocument, np)
         ! and finish
         return
       endif

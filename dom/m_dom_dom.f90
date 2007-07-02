@@ -2087,7 +2087,11 @@ endif
         do i2 = i + 1, map%length
           map%nodes(i2)%this => temp_nl(i2)%this
         enddo
+        map%length = size(map%nodes)
         deallocate(temp_nl)
+        if (.not.map%ownerElement%ownerDocument%xds%building) &
+          call removeNodesFromDocument(map%ownerElement%ownerDocument, np)
+        !otherwise we are only going to destroy these nodes anyway,
         ! and finish
         return
       endif
@@ -2272,7 +2276,9 @@ endif
         do i2 = i + 1, map%length
           map%nodes(i2-1)%this => temp_nl(i2)%this
         enddo
+        map%length = size(map%nodes)
         deallocate(temp_nl)
+        call removeNodesFromDocument(map%ownerElement%ownerDocument, np)
         ! and finish
         return
       endif
@@ -3692,8 +3698,16 @@ endif
 
     endif
     
+    if (element%inDocument) &
+      call setDocBuilding(element%ownerDocument, .true.)
+
     dummy => removeNamedItem(element%attributes, name)
-    call destroyAttribute(dummy)
+    print*,"DESTROYING ATTRIBUTE:"
+    call destroyAllNodesRecursively(dummy)
+    call destroyNode(dummy)
+
+    if (element%inDocument) &
+      call setDocBuilding(element%ownerDocument, .false.)
 
   ! FIXME recreate a default value if there is one
      
@@ -3766,10 +3780,9 @@ endif
     endif
 
     ! this checks if attribute exists already
+    ! It also does any adding/removing of hangingnodes
     dummy => setNamedItem(element%attributes, newattr, ex)
     attr%ownerElement => element
-
-    ! FIXME hangingnodes
 
   end function setAttributeNode
 

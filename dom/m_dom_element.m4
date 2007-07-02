@@ -105,8 +105,16 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
     
+    if (element%inDocument) &
+      call setDocBuilding(element%ownerDocument, .true.)
+
     dummy => removeNamedItem(element%attributes, name)
-    call destroyAttribute(dummy)
+    print*,"DESTROYING ATTRIBUTE:"
+    call destroyAllNodesRecursively(dummy)
+    call destroyNode(dummy)
+
+    if (element%inDocument) &
+      call setDocBuilding(element%ownerDocument, .false.)
 
   ! FIXME recreate a default value if there is one
      
@@ -147,10 +155,9 @@ TOHW_m_dom_contents(`
     endif
 
     ! this checks if attribute exists already
+    ! It also does any adding/removing of hangingnodes
     dummy => setNamedItem(element%attributes, newattr, ex)
     attr%ownerElement => element
-
-    ! FIXME hangingnodes
 
   end function setAttributeNode
 
