@@ -14,6 +14,8 @@ program dom_example
 
   np => appendChild(np2, np)
 
+  call setAttribute(np, "a", "b")
+
 !  call dumpTree(myDoc)
 
 !  interest = getElementsByTagName(myDoc, 'john1')

@@ -63,6 +63,7 @@ TOHW_m_dom_contents(`
     character(len=*), intent(in) :: value
 
     type(Node), pointer :: nn, dummy
+    logical :: quickFix
 
     if (element%nodeType /= ELEMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
@@ -76,11 +77,20 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(FoX_INVALID_CHARACTER)
     endif
 
+    quickFix = .not.element%ownerDocument%xds%building &
+      .and. element%inDocument
+
+    if (quickFix) call setDocBuilding(element%ownerDocument, .true.)
+    ! then the created attribute is going straight into the document,
+    ! so dont faff with hanging-node lists.
+
     nn => createAttribute(element%ownerDocument, name)
     call setValue(nn, value)
 
     dummy => setNamedItem(element%attributes, nn)
     nn%ownerElement => element
+
+    if (quickFix) call setDocBuilding(element%ownerDocument, .true.)
 
   end subroutine setAttribute
 
@@ -201,6 +211,7 @@ TOHW_m_dom_contents(`
     character(len=*), intent(in) :: value
 
     type(Node), pointer :: nn, dummy
+    logical :: quickfix
 
     if (element%nodeType /= ELEMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
@@ -222,13 +233,23 @@ TOHW_m_dom_contents(`
 
 ! FIXME what if namespace is undeclared ... will be recreated on serialization,
 ! but we might need a new namespace node here for xpath ...
+
+    quickFix = .not.element%ownerDocument%xds%building &
+      .and. element%inDocument
+
+    if (quickFix) call setDocBuilding(element%ownerDocument, .true.)
+    ! then the created attribute is going straight into the document,
+    ! so dont faff with hanging-node lists.
+
     nn => createAttributeNS(element%ownerDocument, namespaceURI, qualifiedname)
     call setValue(nn, value)
 
     dummy => setNamedItemNS(element%attributes, nn)
     nn%ownerElement => element
 
-    ! FIXME catch exception
+    if (quickFix) call setDocBuilding(element%ownerDocument, .true.)
+
+    !FIXME catch exception
 
   end subroutine setAttributeNS
 

@@ -2036,9 +2036,21 @@ endif
         return
       endif
     enddo
+
     !   If not found, insert it at the end of the linked list
     np => null()
     call append(map, arg)
+
+    if (.not.map%ownerElement%ownerDocument%xds%building) then
+      ! We need to worry about importing this node
+      if (map%ownerElement%inDocument) then
+        if (.not.arg%inDocument) &
+          call putNodesInDocument(map%ownerElement%ownerDocument, arg)
+      else
+        if (arg%inDocument) &
+          call removeNodesFromDocument(map%ownerElement%ownerDocument, arg)
+        endif
+    endif
 
   end function setNamedItem
 
@@ -3601,6 +3613,7 @@ endif
     character(len=*), intent(in) :: value
 
     type(Node), pointer :: nn, dummy
+    logical :: quickFix
 
     if (element%nodeType /= ELEMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "setAttribute", ex)
@@ -3644,11 +3657,20 @@ endif
 
     endif
 
+    quickFix = .not.element%ownerDocument%xds%building &
+      .and. element%inDocument
+
+    if (quickFix) call setDocBuilding(element%ownerDocument, .true.)
+    ! then the created attribute is going straight into the document,
+    ! so dont faff with hanging-node lists.
+
     nn => createAttribute(element%ownerDocument, name)
     call setValue(nn, value)
 
     dummy => setNamedItem(element%attributes, nn)
     nn%ownerElement => element
+
+    if (quickFix) call setDocBuilding(element%ownerDocument, .true.)
 
   end subroutine setAttribute
 
@@ -3835,6 +3857,7 @@ endif
     character(len=*), intent(in) :: value
 
     type(Node), pointer :: nn, dummy
+    logical :: quickfix
 
     if (element%nodeType /= ELEMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "setAttributeNS", ex)
@@ -3892,13 +3915,23 @@ endif
 
 ! FIXME what if namespace is undeclared ... will be recreated on serialization,
 ! but we might need a new namespace node here for xpath ...
+
+    quickFix = .not.element%ownerDocument%xds%building &
+      .and. element%inDocument
+
+    if (quickFix) call setDocBuilding(element%ownerDocument, .true.)
+    ! then the created attribute is going straight into the document,
+    ! so dont faff with hanging-node lists.
+
     nn => createAttributeNS(element%ownerDocument, namespaceURI, qualifiedname)
     call setValue(nn, value)
 
     dummy => setNamedItemNS(element%attributes, nn)
     nn%ownerElement => element
 
-    ! FIXME catch exception
+    if (quickFix) call setDocBuilding(element%ownerDocument, .true.)
+
+    !FIXME catch exception
 
   end subroutine setAttributeNS
 
