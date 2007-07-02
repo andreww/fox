@@ -12,7 +12,7 @@ module m_dom_parse
   use FoX_sax, only: open_xml_file, close_xml_t
 
   use m_dom_dom, only: Node, NamedNodeMap, hasChildNodes, getFirstChild
-  use m_dom_dom, only: DOCUMENT_NODE
+  use m_dom_dom, only: DOCUMENT_NODE, getOwnerDocument, getDocumentElement
   use m_dom_dom, only: createProcessingInstruction, getDocType
   use m_dom_dom, only: createComment, getEntities
   use m_dom_dom, only: createElementNS, getNotations, getLastChild
@@ -58,11 +58,16 @@ contains
       call setAttributeNS(el, getURI(attrs, i), getQName(attrs, i), getValue(attrs, i))
     enddo
 
+    !print*,"ELASS"
+    !print*,associated(getOwnerDocument(el))
+
     if (getNodeType(current)==DOCUMENT_NODE) then
       call setDocumentElement(mainDoc, el)
     endif
-
+    !print*, associated(getOwnerDocument(getDocumentElement(mainDoc)))
     current => appendChild(current,el)
+    print*,getNodeType(el)
+    if (associated(getOwnerDocument(el))) print*,"YES"
     
   end subroutine startElement_handler
 

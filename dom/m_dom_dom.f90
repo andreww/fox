@@ -859,7 +859,7 @@ endif
   end function getAttributes
 
   function getOwnerDocument(arg) result(np)
-    type(Node), intent(in) :: arg
+    type(Node), pointer :: arg
     type(Node), pointer :: np
     
     if (np%nodeType==DOCUMENT_NODE) then
@@ -1198,12 +1198,10 @@ endif
     endif
 
     if (.not.associated(arg)) call dom_error("removeChild",0,"Node not allocated")
-    
     allocate(temp_nl(size(arg%childNodes%nodes)-1))
     i_t = 1
     do i = 1, size(arg%childNodes%nodes)
       if (associated(arg%childNodes%nodes(i)%this, oldChild)) then 
-        np => arg%childNodes%nodes(i)%this
         if (associated(arg%firstChild, arg%lastChild)) then
           ! There is only one child, we are removing it.
           arg%firstChild => null()
@@ -1229,7 +1227,6 @@ endif
     deallocate(arg%childNodes%nodes)
     arg%childNodes%nodes => temp_nl
     arg%childNodes%length = size(temp_nl)
-
     if (i==i_t) then
       call throw_exception(NOT_FOUND_ERR, "removeChild", ex)
 if (present(ex)) then
@@ -1240,15 +1237,19 @@ endif
 
     endif
 
-    np%parentNode => null()
-    np%previousSibling => null()
-    np%nextSibling => null()
-
+! NOTE BELOW FUCKED-UP WORKAROUND FOR G95!!
+    np => arg
+    oldChild%parentNode => null()
+    oldChild%previousSibling => null()
+    oldChild%nextSibling => null()
+    arg => np
     if (.not.arg%ownerDocument%xds%building) then
       if (arg%inDocument) then
         call removeNodesFromDocument(arg%ownerDocument, oldChild)
       endif
     endif
+
+    np => oldChild
 
   end function removeChild
 
@@ -1477,9 +1478,7 @@ endif
       endif
       if (.not.arg%ownerDocument%xds%building) then
         if (arg%inDocument.and..not.newChild%inDocument) then
-          print*,"ADDHN", associated(arg%ownerDocument%hangingnodes%nodes(arg%ownerDocument%hangingnodes%length)%this)
           call putNodesInDocument(arg%ownerDocument, newChild)
-          print*,"ADDHN", associated(arg%ownerDocument%hangingnodes%nodes(arg%ownerDocument%hangingnodes%length)%this)
         endif
       endif
       newChild%nextSibling => null()
@@ -1535,7 +1534,6 @@ endif
         endif
         ascending = .false.
       endif
-      print*,"ASSOCIATEDNODE", associated(this), this%nodeType
       select case(this%nodeType)
       case (ELEMENT_NODE)
         new => createElementNS(this%ownerDocument, &
@@ -1818,7 +1816,6 @@ endif
         cycle
       endif
       np%inDocument = .false.
-      print*,np%nodeType, str_vs(np%nodeName)
       call append_nl(np%ownerDocument%hangingNodes, np)
       if (np%nodeType==ATTRIBUTE_NODE) then
         if (i==np%ownerElement%attributes%length) then
@@ -2723,7 +2720,7 @@ if (present(ex)) then
 endif
 
     endif
-    
+
     np => doc%documentElement
 
   end function getDocumentElement
@@ -2832,7 +2829,6 @@ endif
     if (.not.doc%xds%building) then
       np%inDocument = .false.
       call append(doc%hangingnodes, np)
-      print*, "MADEDOCFRAG", associated(doc%hangingnodes%nodes(1)%this)
     else
       np%inDocument = .true.
     endif
@@ -3102,10 +3098,6 @@ endif
     np => createNode(doc, ENTITY_REFERENCE_NODE, name, "")
 
     ent => getNamedItem(doc%docType%entities, name)
-
-    print*,"CREATING ENTITIES", name
-    print*, "LENGTH", getLength(doc%docType%entities)
-    print*, associated(ent)
 
     if (associated(ent)) then
       ! FIXME here we should actually parse the entity reference

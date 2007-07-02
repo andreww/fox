@@ -74,7 +74,7 @@ TOHW_m_dom_contents(`
     if (doc%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
-    
+
     np => doc%documentElement
 
   end function getDocumentElement
@@ -138,7 +138,6 @@ TOHW_m_dom_contents(`
     if (.not.doc%xds%building) then
       np%inDocument = .false.
       call append(doc%hangingnodes, np)
-      print*, "MADEDOCFRAG", associated(doc%hangingnodes%nodes(1)%this)
     else
       np%inDocument = .true.
     endif
@@ -288,10 +287,6 @@ TOHW_m_dom_contents(`
     np => createNode(doc, ENTITY_REFERENCE_NODE, name, "")
 
     ent => getNamedItem(doc%docType%entities, name)
-
-    print*,"CREATING ENTITIES", name
-    print*, "LENGTH", getLength(doc%docType%entities)
-    print*, associated(ent)
 
     if (associated(ent)) then
       ! FIXME here we should actually parse the entity reference

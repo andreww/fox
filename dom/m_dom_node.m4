@@ -219,7 +219,7 @@ TOHW_m_dom_contents(`
   end function getAttributes
 
   function getOwnerDocument(arg) result(np)
-    type(Node), intent(in) :: arg
+    type(Node), pointer :: arg
     type(Node), pointer :: np
     
     if (np%nodeType==DOCUMENT_NODE) then
@@ -451,12 +451,10 @@ TOHW_m_dom_contents(`
     endif
 
     if (.not.associated(arg)) call dom_error("removeChild",0,"Node not allocated")
-    
     allocate(temp_nl(size(arg%childNodes%nodes)-1))
     i_t = 1
     do i = 1, size(arg%childNodes%nodes)
       if (associated(arg%childNodes%nodes(i)%this, oldChild)) then 
-        np => arg%childNodes%nodes(i)%this
         if (associated(arg%firstChild, arg%lastChild)) then
           ! There is only one child, we are removing it.
           arg%firstChild => null()
@@ -482,20 +480,23 @@ TOHW_m_dom_contents(`
     deallocate(arg%childNodes%nodes)
     arg%childNodes%nodes => temp_nl
     arg%childNodes%length = size(temp_nl)
-
     if (i==i_t) then
       TOHW_m_dom_throw_error(NOT_FOUND_ERR)
     endif
 
-    np%parentNode => null()
-    np%previousSibling => null()
-    np%nextSibling => null()
-
+! NOTE BELOW FUCKED-UP WORKAROUND FOR G95!!
+    np => arg
+    oldChild%parentNode => null()
+    oldChild%previousSibling => null()
+    oldChild%nextSibling => null()
+    arg => np
     if (.not.arg%ownerDocument%xds%building) then
       if (arg%inDocument) then
         call removeNodesFromDocument(arg%ownerDocument, oldChild)
       endif
     endif
+
+    np => oldChild
 
   end function removeChild
 
@@ -579,9 +580,7 @@ TOHW_m_dom_contents(`
       endif
       if (.not.arg%ownerDocument%xds%building) then
         if (arg%inDocument.and..not.newChild%inDocument) then
-          print*,"ADDHN", associated(arg%ownerDocument%hangingnodes%nodes(arg%ownerDocument%hangingnodes%length)%this)
           call putNodesInDocument(arg%ownerDocument, newChild)
-          print*,"ADDHN", associated(arg%ownerDocument%hangingnodes%nodes(arg%ownerDocument%hangingnodes%length)%this)
         endif
       endif
       newChild%nextSibling => null()
@@ -636,7 +635,6 @@ TOHW_m_dom_contents(`
         endif
         ascending = .false.
       endif
-      print*,"ASSOCIATEDNODE", associated(this), this%nodeType
       select case(this%nodeType)
       case (ELEMENT_NODE)
         new => createElementNS(this%ownerDocument, &
@@ -918,7 +916,6 @@ TOHW_m_dom_contents(`
         cycle
       endif
       np%inDocument = .false.
-      print*,np%nodeType, str_vs(np%nodeName)
       call append_nl(np%ownerDocument%hangingNodes, np)
       if (np%nodeType==ATTRIBUTE_NODE) then
         if (i==np%ownerElement%attributes%length) then

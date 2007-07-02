@@ -2,6 +2,7 @@ program dom_example
 
   use m_common_array_str
   use FoX_dom
+  implicit none
 
   type(Node), pointer :: myDoc, np, np2, dummy
   type(NodeList) :: interest
@@ -32,12 +33,13 @@ program dom_example
   call setNodeValue(getAttributeNode(np, "e"), "fg")
 
   np => removeAttributeNode(np, getAttributeNode(np, "e"))
-
   np => removeChild(np2, getFirstChild(np2))
+  np => createDocumentFragment(myDoc)
 
-!  dummy => appendChild(np, createTextNode("lalal")
-!  dummy => appendChild(np2, np)
-
+  np => appendChild(np, createTextNode(myDoc, "lalal"))
+  dummy => getOwnerDocument(np)
+!  print*,associated(dummy)
+  dummy => appendChild(np2, np)
 !  call dumpTree(myDoc)
 
   interest = getElementsByTagName(myDoc, 'a')
