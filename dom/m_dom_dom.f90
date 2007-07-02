@@ -1682,8 +1682,8 @@ endif
     enddo
   end subroutine putNodesInDocument
 
-  subroutine removeNodesFromDocument(np_orig, np)
-    type(Node), pointer :: np_orig
+  subroutine removeNodesFromDocument(doc, np_orig)
+    type(Node), pointer :: doc, np_orig
     type(Node), pointer :: np
     logical :: ascending, attributesdone
     integer :: i
@@ -1716,7 +1716,10 @@ endif
         cycle
       endif
       np%inDocument = .false.
+      print*,"HNLEN", np%ownerDocument%hangingNodes%length
+      print*,np%nodeType, str_vs(np%nodeName)
       call append_nl(np%ownerDocument%hangingNodes, np)
+      print*,"HNLEN", np%ownerDocument%hangingNodes%length
       if (np%nodeType==ATTRIBUTE_NODE) then
         if (i==np%ownerElement%attributes%length) then
           ascending = .true.
@@ -2089,6 +2092,7 @@ endif
         enddo
         map%length = size(map%nodes)
         deallocate(temp_nl)
+        print*,"ABOUT TO REMOVE HANGINGNODES", .not.map%ownerElement%ownerDocument%xds%building
         if (.not.map%ownerElement%ownerDocument%xds%building) &
           call removeNodesFromDocument(map%ownerElement%ownerDocument, np)
         !otherwise we are only going to destroy these nodes anyway,
@@ -3814,7 +3818,7 @@ endif
     endif
 
     do i = 1, element%attributes%length
-      if (associated(item(element%attributes, i), oldattr)) then
+      if (associated(element%attributes%nodes(i)%this, oldattr)) then
         attr => removeNamedItem(element%attributes, str_vs(oldattr%nodeName))
         return
       endif
@@ -3829,8 +3833,6 @@ endif
 
 
     attr%ownerElement => null()
-
-    ! FIXME hangingnodes
 
   end function removeAttributeNode
 

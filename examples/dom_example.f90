@@ -19,16 +19,20 @@ program dom_example
   call setAttributeNS(np, "http://www.xml-cml.org/schema", "a:b", "c")
 
   np => getNextSibling(getFirstChild(np2))
-!  print*,getNodeType(np)
+
   call removeAttribute(np, "b")
+
+  print*,getNodeType(np)
+  np => item(getChildNodes(np), 1)
+
+  print*,getNodeType(getAttributeNode(np, "e"))
+  np => getAttributeNode(np, "e")
+!  np => removeAttributeNode(np, getAttributeNode(np, "e"))
+  np => removeAttributeNode(getOwnerElement(np), np)
 
 !  call dumpTree(myDoc)
 
 !  interest = getElementsByTagName(myDoc, 'john1')
-
-!  print*, interest%length
-  
-!  call destroyNodeList(interest)
 
   call destroyDocument(myDoc)
 

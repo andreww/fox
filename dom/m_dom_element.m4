@@ -176,7 +176,7 @@ TOHW_m_dom_contents(`
     endif
 
     do i = 1, element%attributes%length
-      if (associated(item(element%attributes, i), oldattr)) then
+      if (associated(element%attributes%nodes(i)%this, oldattr)) then
         attr => removeNamedItem(element%attributes, str_vs(oldattr%nodeName))
         return
       endif
@@ -185,8 +185,6 @@ TOHW_m_dom_contents(`
     TOHW_m_dom_throw_error(NOT_FOUND_ERR)
 
     attr%ownerElement => null()
-
-    ! FIXME hangingnodes
 
   end function removeAttributeNode
 
