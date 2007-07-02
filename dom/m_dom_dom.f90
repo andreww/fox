@@ -1738,7 +1738,6 @@ endif
     logical :: ascending, attributesdone
     integer :: i
 
-    print*,"PUTTING NODES IN DOCUMENT", doc%hangingNodes%length
     np => np_orig
     ascending = .false.
     attributesdone = .false.
@@ -1783,7 +1782,6 @@ endif
         ascending = .true.
       endif
     enddo
-    print*,"DONE PUTTING NODES IN DOCUMENT", doc%hangingNodes%length
   end subroutine putNodesInDocument
 
   subroutine removeNodesFromDocument(doc, np_orig)
@@ -1820,10 +1818,8 @@ endif
         cycle
       endif
       np%inDocument = .false.
-      print*,"HNLEN", np%ownerDocument%hangingNodes%length
       print*,np%nodeType, str_vs(np%nodeName)
       call append_nl(np%ownerDocument%hangingNodes, np)
-      print*,"HNLEN", np%ownerDocument%hangingNodes%length
       if (np%nodeType==ATTRIBUTE_NODE) then
         if (i==np%ownerElement%attributes%length) then
           ascending = .true.
