@@ -104,23 +104,23 @@ contains
     do
       select case(getNodeType(np))
       case (ELEMENT_NODE)
-        print*,"found an element", doneChildren, doneAttributes
         if (doneChildren) then
-        print*,"close element ", getTagName(np)
+          doneAttributes = .true.
           call xml_EndElement(xf, getTagName(np))
-        elseif (.not.doneAttributes) then
+        elseif (doneAttributes) then
+          if (.not.hasChildNodes(np)) then
+            call xml_EndElement(xf, getTagName(np))
+          endif
+        else
           ! Are there any new prefixes or namespaces to be declared?
           ! FIXME
-          print*,"open element ", getTagName(np)
           call xml_NewElement(xf, getTagName(np))
         endif
       case (ATTRIBUTE_NODE)
 !        FIXME NODEVALUE WHEN ENTREF PRESENT
-        print*,"AT"
         call xml_AddAttribute(xf, getName(np), getValue(np))
         doneChildren = .true. ! Ignore entity references for the moment.
       case (TEXT_NODE)
-        print*,"TXT "
         call xml_AddCharacters(xf, getData(np))
       case (CDATA_SECTION_NODE)
         call xml_AddCharacters(xf, getData(np), parsed = .false.)
@@ -131,15 +131,12 @@ contains
         ! FIXME
         continue
       case (PROCESSING_INSTRUCTION_NODE)
-        print*,"PI"
         call xml_AddXMLPI(xf, getTarget(np), getData(np))
       case (COMMENT_NODE)
         call xml_AddComment(xf, getData(np))
       case (DOCUMENT_NODE)
-        print*,"DOC"
         continue
       case (DOCUMENT_TYPE_NODE)
-        print*,"DT"
         ! FIXME
         continue
       case (DOCUMENT_FRAGMENT_NODE)
@@ -163,15 +160,14 @@ contains
           i = -1
           np => getOwnerElement(np)
           doneAttributes = .true.
+          doneChildren = .false.
         endif
       elseif (hasChildNodes(np).and..not.doneChildren) then
         np => getFirstChild(np)
-        print*,"GETTINGFIRSTCHILD", getNodeType(np)
         doneChildren = .false.
         doneAttributes = .false.
       elseif (associated(getNextSibling(np))) then
         np => getNextSibling(np)
-        print*,"GETTINGSIBLING", getNodeType(np)
         doneChildren = .false.
         doneAttributes = .false.
       else
