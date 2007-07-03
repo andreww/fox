@@ -2777,7 +2777,7 @@ endif
       print*,"killing dangling nodes", associated(doc%hangingNodes%nodes(i)%this)
       call destroy(doc%hangingNodes%nodes(i)%this)
     enddo
-    deallocate(doc%hangingNodes%nodes)
+    if (associated(doc%hangingNodes%nodes)) deallocate(doc%hangingNodes%nodes)
 
     print*, "destroying a node:", doc%nodeType, doc%nodeName
     call destroyNodeContents(doc)
