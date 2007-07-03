@@ -350,6 +350,7 @@ TOHW_m_dom_contents(`
 
     if (.not. associated(arg)) call dom_error("replaceChild",0,"Node not allocated")
 
+    testParent => arg 
     if (newChild%nodeType==DOCUMENT_FRAGMENT_NODE) then
       do i = 1, newChild%childNodes%length
         testChild => newChild%childNodes%nodes(i)%this
