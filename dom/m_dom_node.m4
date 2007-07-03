@@ -340,84 +340,81 @@ TOHW_m_dom_contents(`
     type(Node), pointer :: oldChild
     type(Node), pointer :: np
 
-    integer :: i
+    type(Node), pointer :: testChild, testParent
+    type(ListNode), pointer :: temp_nl(:)
+    integer :: i, i2, i_t
 
-! FIXME DocFrag argument
-    
     if (arg%readonly) then
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
     endif
 
     if (.not. associated(arg)) call dom_error("replaceChild",0,"Node not allocated")
 
-    select case(arg%nodeType)
-    case (ELEMENT_NODE)
-      if (newChild%nodeType/=ELEMENT_NODE &
-        .and. newChild%nodeType/=TEXT_NODE &
-        .and. newChild%nodeType/=COMMENT_NODE &
-        .and. newChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
-        .and. newChild%nodeType/=CDATA_SECTION_NODE &
-        .and. newChild%nodeType/=ENTITY_REFERENCE_NODE) &
-        TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR)
-    case (ATTRIBUTE_NODE)
-      if (newChild%nodeType/=TEXT_NODE &
-        .and. newChild%nodeType/=ENTITY_REFERENCE_NODE) &
-        TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR)
-    case (DOCUMENT_NODE)
-      if (newChild%nodeType/=ELEMENT_NODE &
-        .and. newChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
-        .and. newChild%nodeType/=COMMENT_NODE &
-        .and. newChild%nodeType/=DOCUMENT_TYPE_NODE) &
-        TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR)
-    case (DOCUMENT_FRAGMENT_NODE)
-      if (newChild%nodeType/=ELEMENT_NODE &
-        .and. newChild%nodeType/=TEXT_NODE &
-        .and. newChild%nodeType/=COMMENT_NODE &
-        .and. newChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
-        .and. newChild%nodeType/=CDATA_SECTION_NODE &
-        .and. newChild%nodeType/=ENTITY_REFERENCE_NODE) &
-        TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR)
-    case default
-      TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR)
-    end select
+    if (newChild%nodeType==DOCUMENT_FRAGMENT_NODE) then
+      do i = 1, newChild%childNodes%length
+        testChild => newChild%childNodes%nodes(i)%this
+        TOHW_m_dom_hierarchy_test
+      enddo
+    else
+      testChild => newChild
+      TOHW_m_dom_hierarchy_test
+    endif
 
     if (.not.(associated(arg%ownerDocument, newChild%ownerDocument) &
       .or. associated(arg, newChild%ownerDocument))) then
       TOHW_m_dom_throw_error(WRONG_DOCUMENT_ERR)
     endif
 
-    if (associated(newChild%parentNode)) then
-      newChild => removeChild(newChild%parentNode, newChild, ex)
-    elseif (newChild%nodeType==DOCUMENT_FRAGMENT_NODE) then
-      !FIXME
+    if (associated(newChild%parentNode)) &
+      newChild => removeChild(newChild%parentNode, newChild, ex) 
 
+    if (arg%childNodes%length==0) then
+      TOHW_m_dom_throw_error(NOT_FOUND_ERR)
+    elseif (newChild%nodeType==DOCUMENT_FRAGMENT_NODE) then
+      allocate(temp_nl(arg%childNodes%length+newChild%childNodes%length-1))
+    else
+      temp_nl => arg%childNodes%nodes
     endif
 
-    do i = 1, size(arg%childNodes%nodes)
+    i_t = 0
+    np => null()
+    do i = 1, arg%childNodes%length
       if (associated(arg%childNodes%nodes(i)%this, oldChild)) then
         np => oldChild
-        if (i==1) then
-          arg%firstChild => newChild
-          newChild%previousSibling => null()
-        else 
-          arg%childNodes%nodes(i-1)%this%nextSibling => newChild
-          newChild%previousSibling => arg%childNodes%nodes(i-1)%this
-        endif
-        arg%childNodes%nodes(i)%this => newChild
-        newChild%parentNode => arg 
-        if (i==size(arg%childNodes%nodes)) then
-          arg%lastChild => newChild
-          newChild%nextSibling => null()
+        if (newChild%nodeType==DOCUMENT_FRAGMENT_NODE) then
+          do i2 = 1, newChild%childNodes%length
+            i_t = i_t + 1
+            temp_nl(i_t)%this => newChild%childNodes%nodes(i2)%this
+            temp_nl(i_t)%this%parentNode => arg
+          enddo
         else
-          arg%childNodes%nodes(i+1)%this%previousSibling => newChild
-          newChild%nextSibling => arg%childNodes%nodes(i+1)%this
+          i_t = i_t + 1
+          temp_nl(i_t)%this => newChild
+          temp_nl(i_t)%this%parentNode => arg
         endif
-        return
+        if (i==1) then
+          arg%firstChild => temp_nl(1)%this
+          temp_nl(1)%this%previousSibling => null() ! FIXME no-op
+        else 
+          temp_nl(i-1)%this%nextSibling => temp_nl(i)%this
+          temp_nl(i)%this%previousSibling => temp_nl(i-1)%this
+        endif
+        if (i==arg%childNodes%length) then
+          arg%lastChild => temp_nl(i_t)%this
+          temp_nl(i_t)%this%nextSibling => null() ! FIXME no-op
+        else
+          arg%childNodes%nodes(i+1)%this%previousSibling => temp_nl(i_t)%this
+          temp_nl(i_t)%this%nextSibling => arg%childNodes%nodes(i+1)%this
+        endif
+      else
+        i_t = i_t + 1
+        temp_nl(i_t)%this => arg%childNodes%nodes(i)%this
       endif
     enddo
 
-    TOHW_m_dom_throw_error(NOT_FOUND_ERR)
-
+    if (.not.associated(np)) then
+      TOHW_m_dom_throw_error(NOT_FOUND_ERR)
+    endif
     np%parentNode => null()
     np%previousSibling => null()
     np%nextSibling => null()
@@ -431,8 +428,23 @@ TOHW_m_dom_contents(`
     endif
     if (.not.arg%ownerDocument%xds%building) then
       if (arg%inDocument) then
-        call putNodesInDocument(arg%ownerDocument, newChild)
+        if (newChild%nodeType==DOCUMENT_FRAGMENT_NODE) then
+          do i2 = 1, newChild%childNodes%length
+            call putNodesInDocument(arg%ownerDocument, newChild%childNodes%nodes(i)%this)
+          enddo
+        else
+          call putNodesInDocument(arg%ownerDocument, newChild)
+        endif
       endif
+    endif
+
+    if (newChild%nodeType==DOCUMENT_FRAGMENT_NODE) then
+      deallocate(newChild%childNodes%nodes)
+      allocate(newChild%childNodes%nodes(0))
+      newChild%childNodes%length = 0
+      deallocate(arg%childNodes%nodes)
+      arg%childNodes%nodes => temp_nl
+      arg%childNodes%length = size(arg%childNodes%nodes)
     endif
 
   end function replaceChild

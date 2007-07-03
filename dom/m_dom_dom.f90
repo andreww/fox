@@ -1032,10 +1032,10 @@ endif
     type(Node), pointer :: oldChild
     type(Node), pointer :: np
 
-    integer :: i
+    type(Node), pointer :: testChild, testParent
+    type(ListNode), pointer :: temp_nl(:)
+    integer :: i, i2, i_t
 
-! FIXME DocFrag argument
-    
     if (arg%readonly) then
       call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "replaceChild", ex)
 if (present(ex)) then
@@ -1048,14 +1048,67 @@ endif
 
     if (.not. associated(arg)) call dom_error("replaceChild",0,"Node not allocated")
 
-    select case(arg%nodeType)
-    case (ELEMENT_NODE)
-      if (newChild%nodeType/=ELEMENT_NODE &
-        .and. newChild%nodeType/=TEXT_NODE &
-        .and. newChild%nodeType/=COMMENT_NODE &
-        .and. newChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
-        .and. newChild%nodeType/=CDATA_SECTION_NODE &
-        .and. newChild%nodeType/=ENTITY_REFERENCE_NODE) &
+    if (newChild%nodeType==DOCUMENT_FRAGMENT_NODE) then
+      do i = 1, newChild%childNodes%length
+        testChild => newChild%childNodes%nodes(i)%this
+              select case(testParent%nodeType)
+      case (ELEMENT_NODE)
+        if (testChild%nodeType/=ELEMENT_NODE &
+          .and. testChild%nodeType/=TEXT_NODE &
+          .and. testChild%nodeType/=COMMENT_NODE &
+          .and. testChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
+          .and. testChild%nodeType/=CDATA_SECTION_NODE &
+          .and. testChild%nodeType/=ENTITY_REFERENCE_NODE) &
+          call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+      case (ATTRIBUTE_NODE)
+        if (testChild%nodeType/=TEXT_NODE &
+          .and. testChild%nodeType/=ENTITY_REFERENCE_NODE) &
+          call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+      case (DOCUMENT_NODE)
+        if (testChild%nodeType/=ELEMENT_NODE &
+          .and. testChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
+          .and. testChild%nodeType/=COMMENT_NODE &
+          .and. testChild%nodeType/=DOCUMENT_TYPE_NODE) &
+          call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+      case (DOCUMENT_FRAGMENT_NODE)
+        if (testChild%nodeType/=ELEMENT_NODE &
+          .and. testChild%nodeType/=TEXT_NODE &
+          .and. testChild%nodeType/=COMMENT_NODE &
+          .and. testChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
+          .and. testChild%nodeType/=CDATA_SECTION_NODE &
+          .and. testChild%nodeType/=ENTITY_REFERENCE_NODE) &
+          call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+      case (ENTITY_NODE)
+        continue ! only allowed by DOM parser, not by user.
+        ! but entity nodes are always readonly anyway, so no problem
+      case (ENTITY_REFERENCE_NODE)
+        continue ! only allowed by DOM parser, not by user.
+        ! but entity nodes are always readonly anyway, so no problem
+      case default
         call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -1063,9 +1116,69 @@ if (present(ex)) then
   endif
 endif
 
-    case (ATTRIBUTE_NODE)
-      if (newChild%nodeType/=TEXT_NODE &
-        .and. newChild%nodeType/=ENTITY_REFERENCE_NODE) &
+      end select
+
+      enddo
+    else
+      testChild => newChild
+            select case(testParent%nodeType)
+      case (ELEMENT_NODE)
+        if (testChild%nodeType/=ELEMENT_NODE &
+          .and. testChild%nodeType/=TEXT_NODE &
+          .and. testChild%nodeType/=COMMENT_NODE &
+          .and. testChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
+          .and. testChild%nodeType/=CDATA_SECTION_NODE &
+          .and. testChild%nodeType/=ENTITY_REFERENCE_NODE) &
+          call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+      case (ATTRIBUTE_NODE)
+        if (testChild%nodeType/=TEXT_NODE &
+          .and. testChild%nodeType/=ENTITY_REFERENCE_NODE) &
+          call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+      case (DOCUMENT_NODE)
+        if (testChild%nodeType/=ELEMENT_NODE &
+          .and. testChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
+          .and. testChild%nodeType/=COMMENT_NODE &
+          .and. testChild%nodeType/=DOCUMENT_TYPE_NODE) &
+          call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+      case (DOCUMENT_FRAGMENT_NODE)
+        if (testChild%nodeType/=ELEMENT_NODE &
+          .and. testChild%nodeType/=TEXT_NODE &
+          .and. testChild%nodeType/=COMMENT_NODE &
+          .and. testChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
+          .and. testChild%nodeType/=CDATA_SECTION_NODE &
+          .and. testChild%nodeType/=ENTITY_REFERENCE_NODE) &
+          call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+      case (ENTITY_NODE)
+        continue ! only allowed by DOM parser, not by user.
+        ! but entity nodes are always readonly anyway, so no problem
+      case (ENTITY_REFERENCE_NODE)
+        continue ! only allowed by DOM parser, not by user.
+        ! but entity nodes are always readonly anyway, so no problem
+      case default
         call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -1073,41 +1186,9 @@ if (present(ex)) then
   endif
 endif
 
-    case (DOCUMENT_NODE)
-      if (newChild%nodeType/=ELEMENT_NODE &
-        .and. newChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
-        .and. newChild%nodeType/=COMMENT_NODE &
-        .and. newChild%nodeType/=DOCUMENT_TYPE_NODE) &
-        call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
-if (present(ex)) then
-  if (is_in_error(ex)) then
-     return
-  endif
-endif
+      end select
 
-    case (DOCUMENT_FRAGMENT_NODE)
-      if (newChild%nodeType/=ELEMENT_NODE &
-        .and. newChild%nodeType/=TEXT_NODE &
-        .and. newChild%nodeType/=COMMENT_NODE &
-        .and. newChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
-        .and. newChild%nodeType/=CDATA_SECTION_NODE &
-        .and. newChild%nodeType/=ENTITY_REFERENCE_NODE) &
-        call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
-if (present(ex)) then
-  if (is_in_error(ex)) then
-     return
-  endif
-endif
-
-    case default
-      call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
-if (present(ex)) then
-  if (is_in_error(ex)) then
-     return
-  endif
-endif
-
-    end select
+    endif
 
     if (.not.(associated(arg%ownerDocument, newChild%ownerDocument) &
       .or. associated(arg, newChild%ownerDocument))) then
@@ -1120,44 +1201,68 @@ endif
 
     endif
 
-    if (associated(newChild%parentNode)) then
-      newChild => removeChild(newChild%parentNode, newChild, ex)
-    elseif (newChild%nodeType==DOCUMENT_FRAGMENT_NODE) then
-      !FIXME
+    if (associated(newChild%parentNode)) &
+      newChild => removeChild(newChild%parentNode, newChild, ex) 
 
-    endif
-
-    do i = 1, size(arg%childNodes%nodes)
-      if (associated(arg%childNodes%nodes(i)%this, oldChild)) then
-        np => oldChild
-        if (i==1) then
-          arg%firstChild => newChild
-          newChild%previousSibling => null()
-        else 
-          arg%childNodes%nodes(i-1)%this%nextSibling => newChild
-          newChild%previousSibling => arg%childNodes%nodes(i-1)%this
-        endif
-        arg%childNodes%nodes(i)%this => newChild
-        newChild%parentNode => arg 
-        if (i==size(arg%childNodes%nodes)) then
-          arg%lastChild => newChild
-          newChild%nextSibling => null()
-        else
-          arg%childNodes%nodes(i+1)%this%previousSibling => newChild
-          newChild%nextSibling => arg%childNodes%nodes(i+1)%this
-        endif
-        return
-      endif
-    enddo
-
-    call throw_exception(NOT_FOUND_ERR, "replaceChild", ex)
+    if (arg%childNodes%length==0) then
+      call throw_exception(NOT_FOUND_ERR, "replaceChild", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
      return
   endif
 endif
 
+    elseif (newChild%nodeType==DOCUMENT_FRAGMENT_NODE) then
+      allocate(temp_nl(arg%childNodes%length+newChild%childNodes%length-1))
+    else
+      temp_nl => arg%childNodes%nodes
+    endif
 
+    i_t = 0
+    np => null()
+    do i = 1, arg%childNodes%length
+      if (associated(arg%childNodes%nodes(i)%this, oldChild)) then
+        np => oldChild
+        if (newChild%nodeType==DOCUMENT_FRAGMENT_NODE) then
+          do i2 = 1, newChild%childNodes%length
+            i_t = i_t + 1
+            temp_nl(i_t)%this => newChild%childNodes%nodes(i2)%this
+            temp_nl(i_t)%this%parentNode => arg
+          enddo
+        else
+          i_t = i_t + 1
+          temp_nl(i_t)%this => newChild
+          temp_nl(i_t)%this%parentNode => arg
+        endif
+        if (i==1) then
+          arg%firstChild => temp_nl(1)%this
+          temp_nl(1)%this%previousSibling => null() ! FIXME no-op
+        else 
+          temp_nl(i-1)%this%nextSibling => temp_nl(i)%this
+          temp_nl(i)%this%previousSibling => temp_nl(i-1)%this
+        endif
+        if (i==arg%childNodes%length) then
+          arg%lastChild => temp_nl(i_t)%this
+          temp_nl(i_t)%this%nextSibling => null() ! FIXME no-op
+        else
+          arg%childNodes%nodes(i+1)%this%previousSibling => temp_nl(i_t)%this
+          temp_nl(i_t)%this%nextSibling => arg%childNodes%nodes(i+1)%this
+        endif
+      else
+        i_t = i_t + 1
+        temp_nl(i_t)%this => arg%childNodes%nodes(i)%this
+      endif
+    enddo
+
+    if (.not.associated(np)) then
+      call throw_exception(NOT_FOUND_ERR, "replaceChild", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
     np%parentNode => null()
     np%previousSibling => null()
     np%nextSibling => null()
@@ -1171,8 +1276,23 @@ endif
     endif
     if (.not.arg%ownerDocument%xds%building) then
       if (arg%inDocument) then
-        call putNodesInDocument(arg%ownerDocument, newChild)
+        if (newChild%nodeType==DOCUMENT_FRAGMENT_NODE) then
+          do i2 = 1, newChild%childNodes%length
+            call putNodesInDocument(arg%ownerDocument, newChild%childNodes%nodes(i)%this)
+          enddo
+        else
+          call putNodesInDocument(arg%ownerDocument, newChild)
+        endif
       endif
+    endif
+
+    if (newChild%nodeType==DOCUMENT_FRAGMENT_NODE) then
+      deallocate(newChild%childNodes%nodes)
+      allocate(newChild%childNodes%nodes(0))
+      newChild%childNodes%length = 0
+      deallocate(arg%childNodes%nodes)
+      arg%childNodes%nodes => temp_nl
+      arg%childNodes%length = size(arg%childNodes%nodes)
     endif
 
   end function replaceChild
