@@ -804,7 +804,7 @@ contains
         fx%state = ST_DTD_NAME
 
       case (ST_DTD_NAME)
-        !write(*,*) 'ST_DTD_NAME'
+        !write(*,*) 'ST_DTD_NAME ', str_vs(fx%token)
         if (str_vs(fx%token)=='SYSTEM') then
           fx%state = ST_DTD_SYSTEM
         elseif (str_vs(fx%token)=='PUBLIC') then
@@ -853,7 +853,7 @@ contains
         fx%state = ST_DTD_DECL
 
       case (ST_DTD_DECL)
-        !write(*,*) 'ST_DTD_DECL'
+        !write(*,*) 'ST_DTD_DECL ', str_vs(fx%token)
         if (str_vs(fx%token)=='[') then
           if (associated(fx%publicId).or.associated(fx%systemId)) &
             fx%skippedExternal = .true.
@@ -902,7 +902,7 @@ contains
         endif
 
       case (ST_INT_SUBSET)
-        write(*,*) 'ST_INT_SUBSET'
+        !write(*,*) 'ST_INT_SUBSET'
         if (str_vs(fx%token)==']') then
           fx%state = ST_CLOSE_DTD
         elseif (fx%token(1)=='%') then

@@ -862,7 +862,8 @@ endif
     type(Node), pointer :: arg
     type(Node), pointer :: np
     
-    if (np%nodeType==DOCUMENT_NODE) then
+    if (.not.associated(arg)) call abort()
+    if (arg%nodeType==DOCUMENT_NODE) then
       np => null()
     else
       np => arg%ownerDocument
@@ -3277,7 +3278,8 @@ endif
     allocate(list)
     allocate(list%nodes(0))
     list%element => doc
-    list%nodeName => vs_str_alloc(name) ! FIXME or tagName
+    if (present(name)) list%nodeName => vs_str_alloc(name) ! FIXME or tagName
+    if (present(tagName)) list%nodeName => vs_str_alloc(tagName) ! FIXME or tagName
 
     if (doc%nodeType==DOCUMENT_NODE) then
       nll => doc%nodeLists

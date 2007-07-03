@@ -172,7 +172,8 @@ contains
     else
       decl = .true.
     endif
-    
+    if (present(iostat)) iostat = 0
+
     allocate(xf%filename(len(filename)))
     xf%filename = vs_str(filename)
     allocate(xf%name(0))
@@ -181,7 +182,7 @@ contains
       if (unit==-1) then
         call get_unit(xf%lun,iostat_)
         if (iostat_ /= 0) then
-          iostat = iostat_
+          if (present(iostat)) iostat = iostat_
           return
         endif
       else
@@ -190,7 +191,7 @@ contains
     else
       call get_unit(xf%lun,iostat_)
       if (iostat_ /= 0) then
-        iostat = iostat_
+        if (present(iostat)) iostat = iostat_
         return
       endif
     endif
@@ -202,20 +203,16 @@ contains
     ! a newline. The buffer must not be larger than this, but its size 
     ! can be tuned for performance.
     
-    if(repl) then
+    if (repl) then
       open(unit=xf%lun, file=filename, form="formatted", status="replace", &
-        action="write", recl=xml_recl, iostat=iostat_)
+        action="write", recl=xml_recl, iostat=iostat)
     else 
       open(unit=xf%lun, file=filename, form="formatted", status="new", &
-        action="write", recl=xml_recl, iostat=iostat_)
-    endif
-    if (iostat_/=0) then
-      iostat = iostat_
-      return
+        action="write", recl=xml_recl, iostat=iostat)
     endif
 
     call init_elstack(xf%stack)
-    
+
     call init_dict(xf%dict)
     !NB it can make no difference which XML version we are using
     !until after we output the XML declaration. So we set it to
@@ -955,6 +952,7 @@ contains
     logical, intent(in), optional :: ws_significant
 
     logical :: pc
+    integer :: i
 
     call check_xf(xf)
     if (.not.checkChars(chars, xf%xds%xml_version)) call wxml_error("xml_AddCharacters: Invalid character in chars")
@@ -969,7 +967,15 @@ contains
     endif
     
     call close_start_tag(xf)
-
+    print*,"ESCAPE"
+    print*,len(chars)
+    do i = 1, len(chars)
+         print*,iachar(chars(i:i))
+      enddo
+    print*, "ESCAPE2"
+!    print*, escape_string(chars, xf%xds%xml_version)
+    print*
+    print*,'ESCAPE3'
     if (pc) then
       call add_to_buffer(escape_string(chars, xf%xds%xml_version), xf%buffer, ws_significant)
     else

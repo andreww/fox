@@ -222,7 +222,7 @@ TOHW_m_dom_contents(`
     type(Node), pointer :: arg
     type(Node), pointer :: np
     
-    if (np%nodeType==DOCUMENT_NODE) then
+    if (arg%nodeType==DOCUMENT_NODE) then
       np => null()
     else
       np => arg%ownerDocument
@@ -400,7 +400,7 @@ TOHW_m_dom_contents(`
           temp_nl(i-1)%this%nextSibling => temp_nl(i)%this
           temp_nl(i)%this%previousSibling => temp_nl(i-1)%this
         endif
-        if (i==arg%childNodes%length) then
+        iomf (i==arg%childNodes%length) then
           arg%lastChild => temp_nl(i_t)%this
           temp_nl(i_t)%this%nextSibling => null() ! FIXME no-op
         else

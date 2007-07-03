@@ -338,7 +338,8 @@ TOHW_m_dom_contents(`
     allocate(list)
     allocate(list%nodes(0))
     list%element => doc
-    list%nodeName => vs_str_alloc(name) ! FIXME or tagName
+    if (present(name)) list%nodeName => vs_str_alloc(name) ! FIXME or tagName
+    if (present(tagName)) list%nodeName => vs_str_alloc(tagName) ! FIXME or tagName
 
     if (doc%nodeType==DOCUMENT_NODE) then
       nll => doc%nodeLists
