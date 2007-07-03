@@ -56,7 +56,7 @@ contains
          write(*,'(3a,i0)') repeat(' ', indent_level), &
                         getNodeName(temp), " of type ", &
                         getNodeType(temp)
-         write(*,'(2a)') 'containing value : ', getNodeValue(temp)
+         !write(*,'(2a)') 'containing value : ', getNodeValue(temp)
          if (hasChildNodes(temp)) then
             indent_level = indent_level + 3
             call dump2(getFirstChild(temp))
@@ -77,8 +77,9 @@ contains
 
     type(xmlf_t)  :: xf
     integer :: iostat
-
-    call xml_OpenFile(name, xf, iostat=iostat, unit=-1)
+    
+    !FIXME several of the below should be optional to serialize
+    call xml_OpenFile(name, xf, iostat=iostat, unit=-1, preserve_whitespace=.true.)
     if (iostat/=0) then
       print*,"IOSTAT", iostat
       stop

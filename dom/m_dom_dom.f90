@@ -1048,7 +1048,8 @@ endif
 
     if (.not. associated(arg)) call dom_error("replaceChild",0,"Node not allocated")
 
-    testParent => arg 
+    testParent => arg
+    ! Check if you are allowed to put a newChild nodetype under a arg nodetype
     if (newChild%nodeType==DOCUMENT_FRAGMENT_NODE) then
       do i = 1, newChild%childNodes%length
         testChild => newChild%childNodes%nodes(i)%this
@@ -1189,6 +1190,21 @@ endif
 
       end select
 
+      ! And then check that newChild is not one of args ancestors
+      ! (this would never be true if newChild is a documentFragment)
+      testParent => arg%parentNode
+      do while (associated(testParent))
+        if (associated(testParent, newChild)) then
+          call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+        endif
+        testParent => testParent%parentNode
+      enddo
     endif
 
     if (.not.(associated(arg%ownerDocument, newChild%ownerDocument) &
@@ -1268,23 +1284,21 @@ endif
     np%previousSibling => null()
     np%nextSibling => null()
 
-    ! FIXME updateNodeLists(*) in case of children
-    ! but only if we are replacing a child of the document
     if (.not.arg%ownerDocument%xds%building) then
       if (arg%inDocument) then
         call removeNodesFromDocument(arg%ownerDocument, oldChild)
-      endif
-    endif
-    if (.not.arg%ownerDocument%xds%building) then
-      if (arg%inDocument) then
         if (newChild%nodeType==DOCUMENT_FRAGMENT_NODE) then
-          do i2 = 1, newChild%childNodes%length
+          do i = 1, newChild%childNodes%length
             call putNodesInDocument(arg%ownerDocument, newChild%childNodes%nodes(i)%this)
           enddo
         else
           call putNodesInDocument(arg%ownerDocument, newChild)
         endif
+        ! If newChild was originally in document, it was removed above so must be re-added FIXME
       endif
+      ! If arg was not in the document, then newChildren were either 
+      ! a) removed above in call to removeChild or
+      ! b) in a document fragment and therefore not part of doc either
     endif
 
     if (newChild%nodeType==DOCUMENT_FRAGMENT_NODE) then
