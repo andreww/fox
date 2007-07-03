@@ -165,7 +165,7 @@ contains
 !FIXME set readonly appropriately below
 
     dt => getDocType(mainDoc)
-    call replace_xds(dt, state)
+    call replace_xds(mainDoc, state)
     call setDocBuilding(mainDoc, .true.)
 
     entities => getEntities(dt)
@@ -183,6 +183,7 @@ contains
         ! might fail, but the failure only matters if someone
         ! tries to add an entity reference later on.
         ! They contain markup iff there is a '<' in them.
+        ! Unless maybe there is an & - have we expanded at this point?
         nt => createTextNode(mainDoc, str_vs(thisEntity%repl))
         nt => appendChild(np, nt)
       endif

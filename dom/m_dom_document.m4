@@ -628,6 +628,8 @@ TOHW_m_dom_contents(`
       s = "1.0"
     elseif (doc%xds%xml_version==XML1_1) then
       s = "1.1"
+    else
+      s = "XXX"
     endif
 
   end function getXmlVersion

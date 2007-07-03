@@ -100,15 +100,15 @@ TOHW_m_dom_contents(`
   end function createEmptyDocumentType
 
 
-  subroutine replace_xds(dt, xds)
-    type(Node), pointer :: dt
+  subroutine replace_xds(doc, xds)
+    type(Node), pointer :: doc
     type(xml_doc_state), pointer :: xds
 
-    print*, "XDS", xds%xml_version
+    call destroy_xml_doc_state(doc%xds)
+    deallocate(doc%xds)
+    doc%xds => xds
+    doc%docType%xds => xds
 
-    call destroy_xml_doc_state(dt%xds)
-    deallocate(dt%xds)
-    dt%xds => xds
   end subroutine replace_xds
 
 
