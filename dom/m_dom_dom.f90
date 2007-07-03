@@ -1398,7 +1398,8 @@ endif
     if (.not. associated(arg))  & 
       call dom_error("appendChild",0,"Node not allocated")
 
-    testParent => arg    
+    testParent => arg
+    ! Check if you are allowed to put a newChild nodetype under a arg nodetype
     if (newChild%nodeType==DOCUMENT_FRAGMENT_NODE) then
       do i = 1, newChild%childNodes%length
         testChild => newChild%childNodes%nodes(i)%this
@@ -1539,6 +1540,21 @@ endif
 
       end select
 
+      ! And then check that newChild is not one of args ancestors
+      ! (this would never be true if newChild is a documentFragment)
+      testParent => arg%parentNode
+      do while (associated(testParent))
+        if (associated(testParent, newChild)) then
+          call throw_exception(HIERARCHY_REQUEST_ERR, "appendChild", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+        endif
+        testParent => testParent%parentNode
+      enddo
     endif
 
     if (.not.(associated(arg%ownerDocument, newChild%ownerDocument) &
@@ -1553,8 +1569,13 @@ endif
     endif
 
     if (newChild%nodeType==DOCUMENT_FRAGMENT_NODE &
-      .and. newChild%childNodes%length==0) return
-    ! Nothing to do
+      .and. newChild%childNodes%length==0) then
+      appendChild => null()
+      return
+      ! Nothing to do
+    endif
+
+
 
     if (associated(newChild%parentNode)) &
       newChild => removeChild(newChild%parentNode, newChild, ex) 
