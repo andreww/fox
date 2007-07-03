@@ -952,7 +952,6 @@ contains
     logical, intent(in), optional :: ws_significant
 
     logical :: pc
-    integer :: i
 
     call check_xf(xf)
     if (.not.checkChars(chars, xf%xds%xml_version)) call wxml_error("xml_AddCharacters: Invalid character in chars")
@@ -967,15 +966,7 @@ contains
     endif
     
     call close_start_tag(xf)
-    print*,"ESCAPE"
-    print*,len(chars)
-    do i = 1, len(chars)
-         print*,iachar(chars(i:i))
-      enddo
-    print*, "ESCAPE2"
-!    print*, escape_string(chars, xf%xds%xml_version)
-    print*
-    print*,'ESCAPE3'
+
     if (pc) then
       call add_to_buffer(escape_string(chars, xf%xds%xml_version), xf%buffer, ws_significant)
     else

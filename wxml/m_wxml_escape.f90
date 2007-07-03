@@ -38,9 +38,11 @@ contains
         c = c + 5
       case (APOS)
         c = c + 5
-      case (1:9)
+      case (1:8)
         c = c + 3
-      case (10:31)
+      case (11:12)
+        c = c + 4
+      case (14:31)
         c = c + 4
       case (127:)
         c = c + 5

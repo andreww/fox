@@ -96,13 +96,11 @@ contains
     type(Node), pointer :: np
     integer :: i
     logical :: doneChildren, doneAttributes
-
     np => doc
 
     i = -1
     doneChildren = .false.
     doneAttributes = .false.
-    print*,"STARTDUMP"
     do
       select case(getNodeType(np))
       case (ELEMENT_NODE)
@@ -122,7 +120,7 @@ contains
         call xml_AddAttribute(xf, getName(np), getValue(np))
         doneChildren = .true. ! Ignore entity references for the moment.
       case (TEXT_NODE)
-        print*,"TXT"
+        print*,"TXT "
         call xml_AddCharacters(xf, getData(np))
       case (CDATA_SECTION_NODE)
         call xml_AddCharacters(xf, getData(np), parsed = .false.)

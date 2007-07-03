@@ -862,7 +862,6 @@ endif
     type(Node), pointer :: arg
     type(Node), pointer :: np
     
-    if (.not.associated(arg)) call abort()
     if (arg%nodeType==DOCUMENT_NODE) then
       np => null()
     else
