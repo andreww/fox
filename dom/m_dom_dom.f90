@@ -1383,7 +1383,7 @@ endif
     
     type(Node), pointer :: testChild, testParent
     type(ListNode), pointer :: temp_nl(:)
-    integer :: i
+    integer :: i, i_t
 
     if (arg%readonly) then
       call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "appendChild", ex)
@@ -1575,8 +1575,6 @@ endif
       ! Nothing to do
     endif
 
-
-
     if (associated(newChild%parentNode)) &
       newChild => removeChild(newChild%parentNode, newChild, ex) 
 
@@ -1591,11 +1589,14 @@ endif
     enddo
     
     if (newChild%nodeType==DOCUMENT_FRAGMENT_NODE) then
-      do i = arg%childNodes%length+1, arg%childNodes%length+newChild%childNodes%length
-        temp_nl(i)%this => newChild%childNodes%nodes(i-arg%childNodes%length)%this
+      i_t = arg%childNodes%length
+      do i = 1, newChild%childNodes%length
+        i_t = i_t + 1
+        temp_nl(i_t)%this => newChild%childNodes%nodes(i)%this
+        print*,"ASS", i_t, associated(temp_nl(i_t)%this)
         if (arg%inDocument) &
-          call putNodesInDocument(arg%ownerDocument, temp_nl(i)%this)
-        temp_nl(i)%this%parentNode => arg
+          call putNodesInDocument(arg%ownerDocument, temp_nl(i_t)%this)
+        temp_nl(i_t)%this%parentNode => arg
       enddo
       if (arg%childNodes%length==0) then
         arg%firstChild => newChild%firstChild
@@ -1915,7 +1916,7 @@ endif
           i = i + 1
           np => np%ownerElement%attributes%nodes(i)%this
         endif
-      elseif (associated(np%nextSibling)) then
+      elseif (associated(np%nextSibling).and..not.associated(np, np_orig)) then
         np => np%nextSibling
         attributesdone = .false.
       else
@@ -1966,7 +1967,7 @@ endif
           i = i + 1
           np => np%ownerElement%attributes%nodes(i)%this
         endif
-      elseif (associated(np%nextSibling)) then
+      elseif (associated(np%nextSibling).and..not.associated(np, np_orig)) then
         np => np%nextSibling
         attributesdone = .false.
       else
