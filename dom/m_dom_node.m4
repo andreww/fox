@@ -135,7 +135,7 @@ TOHW_m_dom_contents(`
       arg%firstChild => null()
       arg%lastChild => null()
       ! and add the new one.
-      ! Avoid manipulaing hangingnode lists
+      ! Avoid manipulating hangingnode lists
       call setDocBuilding(arg%ownerDocument, .true.)
       np => createTextNode(arg%ownerDocument, nodeValue)
       np => appendChild(arg, np)
@@ -229,107 +229,128 @@ TOHW_m_dom_contents(`
     endif
   end function getOwnerDocument
 
-  TOHW_function(insertBefore, (arg, newChild, refChild))
+  TOHW_function(insertBefore, (arg, newChild, refChild), np)
     type(Node), pointer :: arg
     type(Node), pointer :: newChild
     type(Node), pointer :: refChild
-    type(Node), pointer :: insertBefore
+    type(Node), pointer :: np
 
+    type(Node), pointer :: testChild, testParent
     type(ListNode), pointer :: temp_nl(:)
-    integer :: i, i_t
+    integer :: i, i2, i_t
 
-    ! FIXME DOCUMENTFRAGMENT
+    if (.not.associated(refChild)) then
+      np => appendChild(arg, newChild, ex)
+    endif
 
     if (arg%readonly) then
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
     endif
-    
-!   FIXME what about this next?
-    if (.not. associated(arg)) call dom_error("insertBefore",0,"Node not allocated")
 
-! FIXME need to special case this for inserting documentElement and documentType on document nodes
-    select case(arg%nodeType)
-    case (ELEMENT_NODE)
-      if (newChild%nodeType/=ELEMENT_NODE &
-        .and. newChild%nodeType/=TEXT_NODE &
-        .and. newChild%nodeType/=COMMENT_NODE &
-        .and. newChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
-        .and. newChild%nodeType/=CDATA_SECTION_NODE &
-        .and. newChild%nodeType/=ENTITY_REFERENCE_NODE) &
-        TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR)
-    case (ATTRIBUTE_NODE)
-      if (newChild%nodeType/=TEXT_NODE &
-        .and. newChild%nodeType/=ENTITY_REFERENCE_NODE) &
-        TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR)
-    case (DOCUMENT_NODE)
-      if (newChild%nodeType/=ELEMENT_NODE &
-        .and. newChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
-        .and. newChild%nodeType/=COMMENT_NODE &
-        .and. newChild%nodeType/=DOCUMENT_TYPE_NODE) &
-        TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR)
-    case (DOCUMENT_FRAGMENT_NODE)
-      if (newChild%nodeType/=ELEMENT_NODE &
-        .and. newChild%nodeType/=TEXT_NODE &
-        .and. newChild%nodeType/=COMMENT_NODE &
-        .and. newChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
-        .and. newChild%nodeType/=CDATA_SECTION_NODE &
-        .and. newChild%nodeType/=ENTITY_REFERENCE_NODE) &
-        TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR)
-    case default
-      TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR)
-    end select
+    if (.not. associated(arg)) call dom_error("replaceChild",0,"Node not allocated")
+
+    testParent => arg
+    ! Check if you are allowed to put a newChild nodetype under a arg nodetype
+    if (newChild%nodeType==DOCUMENT_FRAGMENT_NODE) then
+      do i = 1, newChild%childNodes%length
+        testChild => newChild%childNodes%nodes(i)%this
+        TOHW_m_dom_hierarchy_test
+      enddo
+    else
+      testChild => newChild
+      TOHW_m_dom_hierarchy_test
+      ! And then check that newChild is not one of args ancestors
+      ! (this would never be true if newChild is a documentFragment)
+      testParent => arg%parentNode
+      do while (associated(testParent))
+        if (associated(testParent, newChild)) then
+          TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR)
+        endif
+        testParent => testParent%parentNode
+      enddo
+    endif
 
     if (.not.(associated(arg%ownerDocument, newChild%ownerDocument) &
       .or. associated(arg, newChild%ownerDocument))) then
       TOHW_m_dom_throw_error(WRONG_DOCUMENT_ERR)
     endif
 
-    if (associated(newChild%parentNode)) &
-      newChild => removeChild(newChild%parentNode, newChild, ex)
-    
-    if (.not.associated(refChild)) then
-      insertBefore => appendChild(arg, newChild, ex)
+    if (newChild%nodeType==DOCUMENT_FRAGMENT_NODE &
+      .and. newChild%childNodes%length==0) then
+      np => newChild
       return
+      ! Nothing to do
     endif
 
-    allocate(temp_nl(size(arg%childNodes%nodes)+1))
-    i_t = 1
-    do i = 1, size(arg%childNodes%nodes)
-      if (associated(arg%childNodes%nodes(i)%this, refChild)) then 
-        i_t = i_t + 1
-        temp_nl(i_t)%this => newChild
-        newChild%parentNode => arg
+    if (associated(newChild%parentNode)) &
+      newChild => removeChild(newChild%parentNode, newChild, ex) 
+
+    if (arg%childNodes%length==0) then
+      TOHW_m_dom_throw_error(NOT_FOUND_ERR)
+    elseif (newChild%nodeType==DOCUMENT_FRAGMENT_NODE) then
+      allocate(temp_nl(arg%childNodes%length+newChild%childNodes%length))
+    else
+      allocate(temp_nl(arg%childNodes%length+1))
+    endif
+
+    i_t = 0
+    np => null()
+    do i = 1, arg%childNodes%length
+      if (associated(arg%childNodes%nodes(i)%this, refChild)) then
+        np => refChild
+        if (newChild%nodeType==DOCUMENT_FRAGMENT_NODE) then
+          do i2 = 1, newChild%childNodes%length
+            i_t = i_t + 1
+            temp_nl(i_t)%this => newChild%childNodes%nodes(i2)%this
+            temp_nl(i_t)%this%parentNode => arg
+          enddo
+        else
+          i_t = i_t + 1
+          temp_nl(i_t)%this => newChild
+          temp_nl(i_t)%this%parentNode => arg
+        endif
         if (i==1) then
-          arg%firstChild => newChild
-          newChild%previousSibling => null()
-        else
-          newChild%previousSibling => arg%childNodes%nodes(i-1)%this
-          arg%childNodes%nodes(i-1)%this%nextSibling => newChild
+          arg%firstChild => temp_nl(1)%this
+          temp_nl(1)%this%previousSibling => null() ! FIXME no-op
+        else 
+          temp_nl(i-1)%this%nextSibling => temp_nl(i)%this
+          temp_nl(i)%this%previousSibling => temp_nl(i-1)%this
         endif
-        if (i==size(arg%childNodes%nodes)) then
-          arg%lastChild => newChild
-          newChild%nextSibling => null()
-        else
-          newChild%nextSibling => arg%childNodes%nodes(i+1)%this
-          arg%childNodes%nodes(i+1)%this%previousSibling => newChild
-        endif
+        arg%childNodes%nodes(i)%this%previousSibling => temp_nl(i_t)%this
+        temp_nl(i_t)%this%nextSibling => arg%childNodes%nodes(i)%this
       endif
+      i_t = i_t + 1
       temp_nl(i_t)%this => arg%childNodes%nodes(i)%this
-      i_t = i_t + 1     
     enddo
-    if (i_t == i) then
-      TOHW_m_dom_throw_error(NOT_FOUND_ERR, (temp_nl))
-    endif
 
-    deallocate(arg%childNodes%nodes)
-    arg%childNodes%nodes => temp_nl
-    arg%childNodes%length = size(temp_nl)
+    if (.not.associated(np)) then
+      TOHW_m_dom_throw_error(NOT_FOUND_ERR)
+    endif
 
     if (.not.arg%ownerDocument%xds%building) then
       if (arg%inDocument) then
-        call putNodesInDocument(arg%ownerDocument, newChild)
+        if (newChild%nodeType==DOCUMENT_FRAGMENT_NODE) then
+          do i = 1, newChild%childNodes%length
+            call putNodesInDocument(arg%ownerDocument, newChild%childNodes%nodes(i)%this)
+          enddo
+        else
+          call putNodesInDocument(arg%ownerDocument, newChild)
+        endif
+        ! If newChild was originally in document, it was removed above so must be re-added FIXME
       endif
+      ! If arg was not in the document, then newChildren were either 
+      ! a) removed above in call to removeChild or
+      ! b) in a document fragment and therefore not part of doc either
     endif
+
+    if (newChild%nodeType==DOCUMENT_FRAGMENT_NODE) then
+      deallocate(newChild%childNodes%nodes)
+      allocate(newChild%childNodes%nodes(0))
+      newChild%childNodes%length = 0
+    endif
+    deallocate(arg%childNodes%nodes)
+    arg%childNodes%nodes => temp_nl
+    arg%childNodes%length = size(arg%childNodes%nodes)
 
   end function insertBefore
 
@@ -522,10 +543,10 @@ TOHW_m_dom_contents(`
   end function removeChild
 
 
-  TOHW_function(appendChild, (arg, newChild))
+  TOHW_function(appendChild, (arg, newChild), np)
     type(Node), pointer :: arg
     type(Node), pointer :: newChild
-    type(Node), pointer :: appendChild
+    type(Node), pointer :: np
     
     type(Node), pointer :: testChild, testParent
     type(ListNode), pointer :: temp_nl(:)
@@ -566,7 +587,7 @@ TOHW_m_dom_contents(`
 
     if (newChild%nodeType==DOCUMENT_FRAGMENT_NODE &
       .and. newChild%childNodes%length==0) then
-      appendChild => null()
+      np => newChild
       return
       ! Nothing to do
     endif
@@ -629,7 +650,7 @@ TOHW_m_dom_contents(`
     arg%childNodes%nodes => temp_nl
     arg%childNodes%length = size(temp_nl)
 
-    appendChild => newChild
+    np => newChild
 
   end function appendChild
 

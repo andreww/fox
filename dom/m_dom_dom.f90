@@ -775,7 +775,7 @@ endif
       arg%firstChild => null()
       arg%lastChild => null()
       ! and add the new one.
-      ! Avoid manipulaing hangingnode lists
+      ! Avoid manipulating hangingnode lists
       call setDocBuilding(arg%ownerDocument, .true.)
       np => createTextNode(arg%ownerDocument, nodeValue)
       np => appendChild(arg, np)
@@ -869,17 +869,20 @@ endif
     endif
   end function getOwnerDocument
 
-  function insertBefore(arg, newChild, refChild, ex) 
+  function insertBefore(arg, newChild, refChild, ex)result(np) 
     type(DOMException), intent(inout), optional :: ex
     type(Node), pointer :: arg
     type(Node), pointer :: newChild
     type(Node), pointer :: refChild
-    type(Node), pointer :: insertBefore
+    type(Node), pointer :: np
 
+    type(Node), pointer :: testChild, testParent
     type(ListNode), pointer :: temp_nl(:)
-    integer :: i, i_t
+    integer :: i, i2, i_t
 
-    ! FIXME DOCUMENTFRAGMENT
+    if (.not.associated(refChild)) then
+      np => appendChild(arg, newChild, ex)
+    endif
 
     if (arg%readonly) then
       call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "insertBefore", ex)
@@ -890,19 +893,72 @@ if (present(ex)) then
 endif
 
     endif
-    
-!   FIXME what about this next?
-    if (.not. associated(arg)) call dom_error("insertBefore",0,"Node not allocated")
 
-! FIXME need to special case this for inserting documentElement and documentType on document nodes
-    select case(arg%nodeType)
-    case (ELEMENT_NODE)
-      if (newChild%nodeType/=ELEMENT_NODE &
-        .and. newChild%nodeType/=TEXT_NODE &
-        .and. newChild%nodeType/=COMMENT_NODE &
-        .and. newChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
-        .and. newChild%nodeType/=CDATA_SECTION_NODE &
-        .and. newChild%nodeType/=ENTITY_REFERENCE_NODE) &
+    if (.not. associated(arg)) call dom_error("replaceChild",0,"Node not allocated")
+
+    testParent => arg
+    ! Check if you are allowed to put a newChild nodetype under a arg nodetype
+    if (newChild%nodeType==DOCUMENT_FRAGMENT_NODE) then
+      do i = 1, newChild%childNodes%length
+        testChild => newChild%childNodes%nodes(i)%this
+              select case(testParent%nodeType)
+      case (ELEMENT_NODE)
+        if (testChild%nodeType/=ELEMENT_NODE &
+          .and. testChild%nodeType/=TEXT_NODE &
+          .and. testChild%nodeType/=COMMENT_NODE &
+          .and. testChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
+          .and. testChild%nodeType/=CDATA_SECTION_NODE &
+          .and. testChild%nodeType/=ENTITY_REFERENCE_NODE) &
+          call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+      case (ATTRIBUTE_NODE)
+        if (testChild%nodeType/=TEXT_NODE &
+          .and. testChild%nodeType/=ENTITY_REFERENCE_NODE) &
+          call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+      case (DOCUMENT_NODE)
+        if (testChild%nodeType/=ELEMENT_NODE &
+          .and. testChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
+          .and. testChild%nodeType/=COMMENT_NODE &
+          .and. testChild%nodeType/=DOCUMENT_TYPE_NODE) &
+          call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+      case (DOCUMENT_FRAGMENT_NODE)
+        if (testChild%nodeType/=ELEMENT_NODE &
+          .and. testChild%nodeType/=TEXT_NODE &
+          .and. testChild%nodeType/=COMMENT_NODE &
+          .and. testChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
+          .and. testChild%nodeType/=CDATA_SECTION_NODE &
+          .and. testChild%nodeType/=ENTITY_REFERENCE_NODE) &
+          call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+      case (ENTITY_NODE)
+        continue ! only allowed by DOM parser, not by user.
+        ! but entity nodes are always readonly anyway, so no problem
+      case (ENTITY_REFERENCE_NODE)
+        continue ! only allowed by DOM parser, not by user.
+        ! but entity nodes are always readonly anyway, so no problem
+      case default
         call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -910,9 +966,69 @@ if (present(ex)) then
   endif
 endif
 
-    case (ATTRIBUTE_NODE)
-      if (newChild%nodeType/=TEXT_NODE &
-        .and. newChild%nodeType/=ENTITY_REFERENCE_NODE) &
+      end select
+
+      enddo
+    else
+      testChild => newChild
+            select case(testParent%nodeType)
+      case (ELEMENT_NODE)
+        if (testChild%nodeType/=ELEMENT_NODE &
+          .and. testChild%nodeType/=TEXT_NODE &
+          .and. testChild%nodeType/=COMMENT_NODE &
+          .and. testChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
+          .and. testChild%nodeType/=CDATA_SECTION_NODE &
+          .and. testChild%nodeType/=ENTITY_REFERENCE_NODE) &
+          call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+      case (ATTRIBUTE_NODE)
+        if (testChild%nodeType/=TEXT_NODE &
+          .and. testChild%nodeType/=ENTITY_REFERENCE_NODE) &
+          call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+      case (DOCUMENT_NODE)
+        if (testChild%nodeType/=ELEMENT_NODE &
+          .and. testChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
+          .and. testChild%nodeType/=COMMENT_NODE &
+          .and. testChild%nodeType/=DOCUMENT_TYPE_NODE) &
+          call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+      case (DOCUMENT_FRAGMENT_NODE)
+        if (testChild%nodeType/=ELEMENT_NODE &
+          .and. testChild%nodeType/=TEXT_NODE &
+          .and. testChild%nodeType/=COMMENT_NODE &
+          .and. testChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
+          .and. testChild%nodeType/=CDATA_SECTION_NODE &
+          .and. testChild%nodeType/=ENTITY_REFERENCE_NODE) &
+          call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+      case (ENTITY_NODE)
+        continue ! only allowed by DOM parser, not by user.
+        ! but entity nodes are always readonly anyway, so no problem
+      case (ENTITY_REFERENCE_NODE)
+        continue ! only allowed by DOM parser, not by user.
+        ! but entity nodes are always readonly anyway, so no problem
+      case default
         call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -920,41 +1036,24 @@ if (present(ex)) then
   endif
 endif
 
-    case (DOCUMENT_NODE)
-      if (newChild%nodeType/=ELEMENT_NODE &
-        .and. newChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
-        .and. newChild%nodeType/=COMMENT_NODE &
-        .and. newChild%nodeType/=DOCUMENT_TYPE_NODE) &
-        call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
+      end select
+
+      ! And then check that newChild is not one of args ancestors
+      ! (this would never be true if newChild is a documentFragment)
+      testParent => arg%parentNode
+      do while (associated(testParent))
+        if (associated(testParent, newChild)) then
+          call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
      return
   endif
 endif
 
-    case (DOCUMENT_FRAGMENT_NODE)
-      if (newChild%nodeType/=ELEMENT_NODE &
-        .and. newChild%nodeType/=TEXT_NODE &
-        .and. newChild%nodeType/=COMMENT_NODE &
-        .and. newChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
-        .and. newChild%nodeType/=CDATA_SECTION_NODE &
-        .and. newChild%nodeType/=ENTITY_REFERENCE_NODE) &
-        call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
-if (present(ex)) then
-  if (is_in_error(ex)) then
-     return
-  endif
-endif
-
-    case default
-      call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
-if (present(ex)) then
-  if (is_in_error(ex)) then
-     return
-  endif
-endif
-
-    end select
+        endif
+        testParent => testParent%parentNode
+      enddo
+    endif
 
     if (.not.(associated(arg%ownerDocument, newChild%ownerDocument) &
       .or. associated(arg, newChild%ownerDocument))) then
@@ -967,60 +1066,94 @@ endif
 
     endif
 
-    if (associated(newChild%parentNode)) &
-      newChild => removeChild(newChild%parentNode, newChild, ex)
-    
-    if (.not.associated(refChild)) then
-      insertBefore => appendChild(arg, newChild, ex)
+    if (newChild%nodeType==DOCUMENT_FRAGMENT_NODE &
+      .and. newChild%childNodes%length==0) then
+      np => newChild
       return
+      ! Nothing to do
     endif
 
-    allocate(temp_nl(size(arg%childNodes%nodes)+1))
-    i_t = 1
-    do i = 1, size(arg%childNodes%nodes)
-      if (associated(arg%childNodes%nodes(i)%this, refChild)) then 
-        i_t = i_t + 1
-        temp_nl(i_t)%this => newChild
-        newChild%parentNode => arg
-        if (i==1) then
-          arg%firstChild => newChild
-          newChild%previousSibling => null()
-        else
-          newChild%previousSibling => arg%childNodes%nodes(i-1)%this
-          arg%childNodes%nodes(i-1)%this%nextSibling => newChild
-        endif
-        if (i==size(arg%childNodes%nodes)) then
-          arg%lastChild => newChild
-          newChild%nextSibling => null()
-        else
-          newChild%nextSibling => arg%childNodes%nodes(i+1)%this
-          arg%childNodes%nodes(i+1)%this%previousSibling => newChild
-        endif
-      endif
-      temp_nl(i_t)%this => arg%childNodes%nodes(i)%this
-      i_t = i_t + 1     
-    enddo
-    if (i_t == i) then
+    if (associated(newChild%parentNode)) &
+      newChild => removeChild(newChild%parentNode, newChild, ex) 
+
+    if (arg%childNodes%length==0) then
       call throw_exception(NOT_FOUND_ERR, "insertBefore", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
+     return
+  endif
+endif
 
-if (associated(temp_nl)) deallocate(temp_nl)
+    elseif (newChild%nodeType==DOCUMENT_FRAGMENT_NODE) then
+      allocate(temp_nl(arg%childNodes%length+newChild%childNodes%length))
+    else
+      allocate(temp_nl(arg%childNodes%length+1))
+    endif
+
+    i_t = 0
+    np => null()
+    do i = 1, arg%childNodes%length
+      if (associated(arg%childNodes%nodes(i)%this, refChild)) then
+        np => refChild
+        if (newChild%nodeType==DOCUMENT_FRAGMENT_NODE) then
+          do i2 = 1, newChild%childNodes%length
+            i_t = i_t + 1
+            temp_nl(i_t)%this => newChild%childNodes%nodes(i2)%this
+            temp_nl(i_t)%this%parentNode => arg
+          enddo
+        else
+          i_t = i_t + 1
+          temp_nl(i_t)%this => newChild
+          temp_nl(i_t)%this%parentNode => arg
+        endif
+        if (i==1) then
+          arg%firstChild => temp_nl(1)%this
+          temp_nl(1)%this%previousSibling => null() ! FIXME no-op
+        else 
+          temp_nl(i-1)%this%nextSibling => temp_nl(i)%this
+          temp_nl(i)%this%previousSibling => temp_nl(i-1)%this
+        endif
+        arg%childNodes%nodes(i)%this%previousSibling => temp_nl(i_t)%this
+        temp_nl(i_t)%this%nextSibling => arg%childNodes%nodes(i)%this
+      endif
+      i_t = i_t + 1
+      temp_nl(i_t)%this => arg%childNodes%nodes(i)%this
+    enddo
+
+    if (.not.associated(np)) then
+      call throw_exception(NOT_FOUND_ERR, "insertBefore", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
      return
   endif
 endif
 
     endif
 
-    deallocate(arg%childNodes%nodes)
-    arg%childNodes%nodes => temp_nl
-    arg%childNodes%length = size(temp_nl)
-
     if (.not.arg%ownerDocument%xds%building) then
       if (arg%inDocument) then
-        call putNodesInDocument(arg%ownerDocument, newChild)
+        if (newChild%nodeType==DOCUMENT_FRAGMENT_NODE) then
+          do i = 1, newChild%childNodes%length
+            call putNodesInDocument(arg%ownerDocument, newChild%childNodes%nodes(i)%this)
+          enddo
+        else
+          call putNodesInDocument(arg%ownerDocument, newChild)
+        endif
+        ! If newChild was originally in document, it was removed above so must be re-added FIXME
       endif
+      ! If arg was not in the document, then newChildren were either 
+      ! a) removed above in call to removeChild or
+      ! b) in a document fragment and therefore not part of doc either
     endif
+
+    if (newChild%nodeType==DOCUMENT_FRAGMENT_NODE) then
+      deallocate(newChild%childNodes%nodes)
+      allocate(newChild%childNodes%nodes(0))
+      newChild%childNodes%length = 0
+    endif
+    deallocate(arg%childNodes%nodes)
+    arg%childNodes%nodes => temp_nl
+    arg%childNodes%length = size(arg%childNodes%nodes)
 
   end function insertBefore
 
@@ -1389,11 +1522,11 @@ endif
   end function removeChild
 
 
-  function appendChild(arg, newChild, ex) 
+  function appendChild(arg, newChild, ex)result(np) 
     type(DOMException), intent(inout), optional :: ex
     type(Node), pointer :: arg
     type(Node), pointer :: newChild
-    type(Node), pointer :: appendChild
+    type(Node), pointer :: np
     
     type(Node), pointer :: testChild, testParent
     type(ListNode), pointer :: temp_nl(:)
@@ -1584,7 +1717,7 @@ endif
 
     if (newChild%nodeType==DOCUMENT_FRAGMENT_NODE &
       .and. newChild%childNodes%length==0) then
-      appendChild => null()
+      np => newChild
       return
       ! Nothing to do
     endif
@@ -1647,7 +1780,7 @@ endif
     arg%childNodes%nodes => temp_nl
     arg%childNodes%length = size(temp_nl)
 
-    appendChild => newChild
+    np => newChild
 
   end function appendChild
 

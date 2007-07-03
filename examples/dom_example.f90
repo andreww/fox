@@ -35,12 +35,12 @@ program dom_example
 
   np => removeAttributeNode(np, getAttributeNode(np, "e"))
   np => removeChild(np2, getFirstChild(np2))
-  print*,getLength(getChildNodes(np2))
   np => createDocumentFragment(myDoc)
   dummy => createDocumentFragment(myDoc)
   np => appendChild(dummy, createTextNode(myDoc, "lalal"))
   np => appendChild(dummy, createTextNode(myDoc, " lalal"))
-  dummy => replaceChild(np2, dummy, item(getChildNodes(np2), 2))
+  print*,getLength(getChildNodes(np2))
+  dummy => insertBefore(np2, dummy, null())
   call serialize(myDoc, "out321.xml")
   stop
   call dumpTree(myDoc)
