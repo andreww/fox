@@ -54,52 +54,83 @@ TOHW_m_dom_publics(`
     integer :: length = 0
   end type NamedNodeMap
 
+  type documentExtras
+    type(DOMImplementation), pointer :: implementation => null() ! only for doctype
+    type(Node), pointer :: docType
+    type(Node), pointer :: documentElement
+    character, pointer :: inputEncoding
+    character, pointer :: xmlEncoding
+    type(NodeListPtr), pointer :: nodelists(:) ! document
+    ! In order to keep track of all nodes not connected to the document
+    logical :: liveNodeLists ! For the document, are nodelists live? (FIXME should be in xds)
+    type(NodeList) :: hangingNodes ! For the document. list of nodes not associated with doc
+  end type documentExtras
+
+  type ElementOrAttributeExtras
+    type(NamedNodeMap) :: attributes
+    character, pointer, dimension(:) :: namespaceURI => null() ! \
+    character, pointer, dimension(:) :: prefix => null()       !  - only useful for element & attribute
+    character, pointer, dimension(:) :: localName => null()    ! /
+    logical :: specified
+    type(Node), pointer :: ownerElement => null()
+    logical :: isId
+    type(NodeList) :: namespaceNodes
+  end type ElementOrAttributeExtras
+
+  type DTDExtras
+    type(namedNodeMap) :: entities ! only for doctype
+    type(namedNodeMap) :: notations ! only for doctype
+    character, pointer :: publicId(:) => null() ! doctype, entity, notation 
+    character, pointer :: systemId(:) => null() ! doctype, entity, notation
+    character, pointer :: internalSubset(:) => null() ! doctype
+    character, pointer :: notationName(:) => null() ! entity
+  end type DTDExtras
+
   type Node
     private
     logical :: readonly = .false. ! FIXME must check this everywhere
     character, pointer, dimension(:)         :: nodeName => null()
     character, pointer, dimension(:)         :: nodeValue => null()
-!   integer              :: nc              = 0  ! FIXME dont need this
-    integer              :: nodeType        = 0
+    integer             :: nodeType        = 0
     type(Node), pointer :: parentNode      => null()
     type(Node), pointer :: firstChild      => null()
     type(Node), pointer :: lastChild       => null()
     type(Node), pointer :: previousSibling => null()
     type(Node), pointer :: nextSibling     => null()
     type(Node), pointer :: ownerDocument   => null()
-    type(NamedNodeMap) :: attributes
-    type(NodeList) :: childNodes
+    type(NamedNodeMap) :: attributes ! only for elements
+    type(NodeList) :: childNodes ! not for text, cdata, PI, comment, notation,  docType, XPath
     ! Introduced in DOM Level 2:
-    character, pointer, dimension(:) :: namespaceURI => null()
-    character, pointer, dimension(:) :: prefix => null()
-    character, pointer, dimension(:) :: localName => null()
-    type(Node), pointer :: doctype => null()
-    type(DOMImplementation), pointer :: implementation => null()
-    type(Node), pointer :: documentElement => null()
-    logical :: specified
+    character, pointer, dimension(:) :: namespaceURI => null() ! \
+    character, pointer, dimension(:) :: prefix => null()       !  - only useful for element & attribute
+    character, pointer, dimension(:) :: localName => null()    ! /
+    type(Node), pointer :: doctype => null()  ! only for document
+    type(DOMImplementation), pointer :: implementation => null() ! only for doctype
+    type(Node), pointer :: documentElement => null() ! only for document
+    logical :: specified ! only for attribute
     ! Introduced in DOM Level 2
-    type(Node), pointer :: ownerElement => null()
-    type(namedNodeMap) :: entities
-    type(namedNodeMap) :: notations 
+    type(Node), pointer :: ownerElement => null() ! only for attribute
+    type(namedNodeMap) :: entities ! only for doctype
+    type(namedNodeMap) :: notations ! only for doctype
     ! FIXME The two above should be held in xds below
-    character, pointer :: publicId(:) => null()
-    character, pointer :: systemId(:) => null()
-    character, pointer :: internalSubset(:) => null()
-    character, pointer :: notationName(:) => null()
+    character, pointer :: publicId(:) => null() ! doctype, entity, notation 
+    character, pointer :: systemId(:) => null() ! doctype, entity, notation
+    character, pointer :: internalSubset(:) => null() ! doctype
+    character, pointer :: notationName(:) => null() ! entity
     ! Introduced in DOM Level 3
-    character, pointer :: inputEncoding(:) => null()
-    character, pointer :: xmlEncoding(:) => null()
+    character, pointer :: inputEncoding(:) => null() ! document/doctype?
+    character, pointer :: xmlEncoding(:) => null()   ! document/doctype?
     ! logical :: xmlStandalone = .false.
     ! character, pointer :: xmlVersion(:) => null() 
     ! The two above are held in xds below
-    logical :: strictErrorChecking = .false.
-    character, pointer :: documentURI(:) => null()
+    logical :: strictErrorChecking = .false. ! document/doctype
+    character, pointer :: documentURI(:) => null() ! document/doctype
     ! DOMCONFIGURATION
     type(xml_doc_state), pointer :: xds => null()
     !TYPEINFO schemaTypeInfo
-    logical :: isId
+    logical :: isId ! attribute
     ! In order to keep all node lists live ..
-    type(NodeListPtr), pointer :: nodelists(:)
+    type(NodeListPtr), pointer :: nodelists(:) ! document
     ! In order to keep track of all nodes not connected to the document
     logical :: liveNodeLists ! For the document, are nodelists live? (FIXME should be in xds)
     type(NodeList) :: hangingNodes ! For the document. list of nodes not associated with doc
