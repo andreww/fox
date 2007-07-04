@@ -30,10 +30,14 @@ program dom_example
 
   print*,getNodeType(np)
   np => item(getChildNodes(np), 1)
-
+  print*, getNodeType(np)
+  do i = 1, getLength(getAttributes(np))
+    print*, getName(item(getAttributes(np), i-1))
+  enddo
   call setNodeValue(getAttributeNode(np, "e"), "fg")
 
   np => removeAttributeNode(np, getAttributeNode(np, "e"))
+  stop
   np => removeChild(np2, getFirstChild(np2))
   np => createDocumentFragment(myDoc)
   dummy => createDocumentFragment(myDoc)
@@ -50,6 +54,7 @@ program dom_example
   dummy => appendChild(np2, cloneNode(np2, .true.))
 
   call serialize(myDoc, "out321.xml")
+  stop
   call dumpTree(myDoc)
 !  call dumpTree(myDoc)
 

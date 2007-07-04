@@ -122,7 +122,7 @@ TOHW_m_dom_contents(`
 
 
   TOHW_function(getAttributeNode, (element, name), attr)
-    type(Node), intent(in) :: element
+    type(Node), pointer :: element
     character(len=*), intent(in) :: name
     type(Node), pointer :: attr
 
@@ -131,7 +131,7 @@ TOHW_m_dom_contents(`
     if (element%nodeType /= ELEMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
-    attr => getNamedItem(element%attributes, name)
+    attr => getNamedItem(getAttributes(element), name)
 
     ! FIXME catch and throw away exception
 
@@ -150,14 +150,15 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(WRONG_DOCUMENT_ERR)
     elseif (element%readonly) then
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
-    elseif (associated(attr%ownerElement)) then
+    elseif (associated(newattr%ownerElement)) then
       TOHW_m_dom_throw_error(INUSE_ATTRIBUTE_ERR)
     endif
 
     ! this checks if attribute exists already
     ! It also does any adding/removing of hangingnodes
     dummy => setNamedItem(element%attributes, newattr, ex)
-    attr%ownerElement => element
+    newattr%ownerElement => element
+    attr => newattr
 
   end function setAttributeNode
 
@@ -311,14 +312,14 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(WRONG_DOCUMENT_ERR)
     elseif (element%readonly) then
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
-    elseif (associated(attr%ownerElement)) then
+    elseif (associated(newattr%ownerElement)) then
       TOHW_m_dom_throw_error(INUSE_ATTRIBUTE_ERR)
     endif
 
     ! this checks if attribute exists already
     dummy => setNamedItemNS(element%attributes, newattr)
-    attr%ownerElement => element
-
+    newattr%ownerElement => element
+    attr => newattr
     ! FIXME hangingnodes
 
   end function setAttributeNodeNS
@@ -338,7 +339,7 @@ TOHW_m_dom_contents(`
     endif
 
     do i = 1, element%attributes%length
-      if (associated(item(element%attributes, i), oldattr)) then
+      if (associated(item(getAttributes(element), i-1), oldattr)) then
         attr => removeNamedItemNS(element%attributes, &
           str_vs(oldattr%namespaceURI), str_vs(oldattr%localName))
         return

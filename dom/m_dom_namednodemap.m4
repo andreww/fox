@@ -159,12 +159,11 @@ TOHW_m_dom_contents(`
           map%nodes(i2)%this => temp_nl(i2)%this
         enddo
         do i2 = i + 1, map%length
-          map%nodes(i2)%this => temp_nl(i2)%this
+          map%nodes(i2-1)%this => temp_nl(i2)%this
         enddo
         map%length = size(map%nodes)
         deallocate(temp_nl)
-        print*,"ABOUT TO REMOVE HANGINGNODES", .not.map%ownerElement%ownerDocument%xds%building
-        if (.not.map%ownerElement%ownerDocument%xds%building) &
+        if (np%inDocument.and..not.map%ownerElement%ownerDocument%xds%building) &
           call removeNodesFromDocument(map%ownerElement%ownerDocument, np)
         !otherwise we are only going to destroy these nodes anyway,
         ! and finish

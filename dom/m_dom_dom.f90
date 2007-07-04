@@ -1813,6 +1813,7 @@ endif
     doneChildren = .false.
     doneAttributes = .false.
     do
+      print*,"llop"
       new => null()
       select case(getNodeType(this))
       case (ELEMENT_NODE)
@@ -1848,18 +1849,28 @@ endif
       end select
 
       if (.not.associated(np)) then
+        print*,"starting clone tree"
         np => new
-      elseif (this%nodeType==ATTRIBUTE_NODE) then
-        if (associated(new)) call append_nnmp(getAttributes(np), new)
-      else
-        if (associated(new)) new => appendChild(np, new)
+        print*,"ok"
+      elseif (associated(new)) then
+        if (this%nodeType==ATTRIBUTE_NODE) then
+          print*,"appending attribute...", getNodeType(np), getNodeType(new), associated(getOwnerElement(new))
+          new => setAttributeNode(np, new)
+          print*,"ok"
+        else
+          print*,"appending child ...", getNodeType(np), getNodeType(new)
+          new => appendChild(np, new)
+          print*,"ok"
+        endif
       endif
 
       if (.not.deep) then
         if (getNodeType(arg)/=ELEMENT_NODE.and.getNodeType(arg)/=ATTRIBUTE_NODE) return
       endif
 
-      if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
+      if (doneChildren.and.associated(this, arg)) then
+        exit
+      elseif (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
         if (getLength(getAttributes(this))>0) then
           if (.not.associated(this, arg)) np => getLastChild(np)
           this => item(getAttributes(this), 0)
@@ -1868,19 +1879,27 @@ endif
           doneAttributes = .true.
         endif
       elseif (getNodeType(this)==ATTRIBUTE_NODE) then
-        i = i + 1
-        if (i==getLength(getAttributes(getOwnerElement(this)))) then
-          this => item(getAttributes(getOwnerElement(this)), i)
+        if (doneChildren) then
+          if (i==getLength(getAttributes(getOwnerElement(this)))) then
+            this => item(getAttributes(getOwnerElement(this)), i)
+            if (.not.associated(this, arg)) np => getOwnerElement(np)
+          else
+            i = -1
+            if (.not.associated(this, arg)) np => getParentNode(np)
+            this => getOwnerElement(this)
+            doneAttributes = .true.
+            doneChildren = .false.
+          endif
         else
-          i = -1
-          this => getOwnerElement(this)
-          if (.not.associated(this, arg)) np => getParentNode(np)
-          doneAttributes = .true.
+          i = i + 1
+          if (.not.associated(this, arg)) np => item(getAttributes(np), i)
+          this => getFirstChild(this)
           doneChildren = .false.
+          doneAttributes = .false.
         endif
       elseif (hasChildNodes(this).and..not.doneChildren) then
-        this => getFirstChild(this)
         if (.not.associated(this, arg)) np => getLastChild(np)
+        this => getFirstChild(this)
         doneChildren = .false.
         doneAttributes = .false.
       elseif (associated(getNextSibling(this))) then
@@ -1890,10 +1909,12 @@ endif
       else
         doneChildren = .true.
         this => getParentNode(this)
-        if (associated(this, arg)) then
-          exit
-        else
-          np => getParentNode(np)
+        if (.not.associated(this, arg)) then
+          if (getNodeType(this)==ATTRIBUTE_NODE) then
+            np => getOwnerElement(np)
+          else
+            np => getParentNode(np)
+          endif
         endif
       endif
     enddo
@@ -2162,6 +2183,7 @@ endif
       np%inDocument = .true.
       call remove_node_nl(np%ownerDocument%hangingNodes, np)
       if (np%nodeType==ATTRIBUTE_NODE) then
+        if (associated(np, np_orig)) exit
         if (i==np%ownerElement%attributes%length) then
           ascending = .true.
         else
@@ -2213,6 +2235,7 @@ endif
       np%inDocument = .false.
       call append_nl(np%ownerDocument%hangingNodes, np)
       if (np%nodeType==ATTRIBUTE_NODE) then
+        if (associated(np, np_orig)) exit
         if (i==np%ownerElement%attributes%length) then
           ascending = .true.
         else
@@ -2583,12 +2606,11 @@ endif
           map%nodes(i2)%this => temp_nl(i2)%this
         enddo
         do i2 = i + 1, map%length
-          map%nodes(i2)%this => temp_nl(i2)%this
+          map%nodes(i2-1)%this => temp_nl(i2)%this
         enddo
         map%length = size(map%nodes)
         deallocate(temp_nl)
-        print*,"ABOUT TO REMOVE HANGINGNODES", .not.map%ownerElement%ownerDocument%xds%building
-        if (.not.map%ownerElement%ownerDocument%xds%building) &
+        if (np%inDocument.and..not.map%ownerElement%ownerDocument%xds%building) &
           call removeNodesFromDocument(map%ownerElement%ownerDocument, np)
         !otherwise we are only going to destroy these nodes anyway,
         ! and finish
@@ -4256,7 +4278,7 @@ endif
 
   function getAttributeNode(element, name, ex)result(attr) 
     type(DOMException), intent(inout), optional :: ex
-    type(Node), intent(in) :: element
+    type(Node), pointer :: element
     character(len=*), intent(in) :: name
     type(Node), pointer :: attr
 
@@ -4271,7 +4293,7 @@ if (present(ex)) then
 endif
 
     endif
-    attr => getNamedItem(element%attributes, name)
+    attr => getNamedItem(getAttributes(element), name)
 
     ! FIXME catch and throw away exception
 
@@ -4309,7 +4331,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (associated(attr%ownerElement)) then
+    elseif (associated(newattr%ownerElement)) then
       call throw_exception(INUSE_ATTRIBUTE_ERR, "setAttributeNode", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -4322,7 +4344,8 @@ endif
     ! this checks if attribute exists already
     ! It also does any adding/removing of hangingnodes
     dummy => setNamedItem(element%attributes, newattr, ex)
-    attr%ownerElement => element
+    newattr%ownerElement => element
+    attr => newattr
 
   end function setAttributeNode
 
@@ -4578,7 +4601,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (associated(attr%ownerElement)) then
+    elseif (associated(newattr%ownerElement)) then
       call throw_exception(INUSE_ATTRIBUTE_ERR, "setAttributeNodeNS", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -4590,8 +4613,8 @@ endif
 
     ! this checks if attribute exists already
     dummy => setNamedItemNS(element%attributes, newattr)
-    attr%ownerElement => element
-
+    newattr%ownerElement => element
+    attr => newattr
     ! FIXME hangingnodes
 
   end function setAttributeNodeNS

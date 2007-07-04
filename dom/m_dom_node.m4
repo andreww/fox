@@ -682,6 +682,7 @@ TOHW_m_dom_contents(`
     doneChildren = .false.
     doneAttributes = .false.
     do
+      print*,"llop"
       new => null()
       select case(getNodeType(this))
       case (ELEMENT_NODE)
@@ -717,18 +718,28 @@ TOHW_m_dom_contents(`
       end select
 
       if (.not.associated(np)) then
+        print*,"starting clone tree"
         np => new
-      elseif (this%nodeType==ATTRIBUTE_NODE) then
-        if (associated(new)) call append_nnmp(getAttributes(np), new)
-      else
-        if (associated(new)) new => appendChild(np, new)
+        print*,"ok"
+      elseif (associated(new)) then
+        if (this%nodeType==ATTRIBUTE_NODE) then
+          print*,"appending attribute...", getNodeType(np), getNodeType(new), associated(getOwnerElement(new))
+          new => setAttributeNode(np, new)
+          print*,"ok"
+        else
+          print*,"appending child ...", getNodeType(np), getNodeType(new)
+          new => appendChild(np, new)
+          print*,"ok"
+        endif
       endif
 
       if (.not.deep) then
         if (getNodeType(arg)/=ELEMENT_NODE.and.getNodeType(arg)/=ATTRIBUTE_NODE) return
       endif
 
-      if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
+      if (doneChildren.and.associated(this, arg)) then
+        exit
+      elseif (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
         if (getLength(getAttributes(this))>0) then
           if (.not.associated(this, arg)) np => getLastChild(np)
           this => item(getAttributes(this), 0)
@@ -737,19 +748,27 @@ TOHW_m_dom_contents(`
           doneAttributes = .true.
         endif
       elseif (getNodeType(this)==ATTRIBUTE_NODE) then
-        i = i + 1
-        if (i==getLength(getAttributes(getOwnerElement(this)))) then
-          this => item(getAttributes(getOwnerElement(this)), i)
+        if (doneChildren) then
+          if (i==getLength(getAttributes(getOwnerElement(this)))) then
+            this => item(getAttributes(getOwnerElement(this)), i)
+            if (.not.associated(this, arg)) np => getOwnerElement(np)
+          else
+            i = -1
+            if (.not.associated(this, arg)) np => getParentNode(np)
+            this => getOwnerElement(this)
+            doneAttributes = .true.
+            doneChildren = .false.
+          endif
         else
-          i = -1
-          this => getOwnerElement(this)
-          if (.not.associated(this, arg)) np => getParentNode(np)
-          doneAttributes = .true.
+          i = i + 1
+          if (.not.associated(this, arg)) np => item(getAttributes(np), i)
+          this => getFirstChild(this)
           doneChildren = .false.
+          doneAttributes = .false.
         endif
       elseif (hasChildNodes(this).and..not.doneChildren) then
-        this => getFirstChild(this)
         if (.not.associated(this, arg)) np => getLastChild(np)
+        this => getFirstChild(this)
         doneChildren = .false.
         doneAttributes = .false.
       elseif (associated(getNextSibling(this))) then
@@ -759,10 +778,12 @@ TOHW_m_dom_contents(`
       else
         doneChildren = .true.
         this => getParentNode(this)
-        if (associated(this, arg)) then
-          exit
-        else
-          np => getParentNode(np)
+        if (.not.associated(this, arg)) then
+          if (getNodeType(this)==ATTRIBUTE_NODE) then
+            np => getOwnerElement(np)
+          else
+            np => getParentNode(np)
+          endif
         endif
       endif
     enddo
@@ -1030,6 +1051,7 @@ TOHW_m_dom_contents(`
       np%inDocument = .true.
       call remove_node_nl(np%ownerDocument%hangingNodes, np)
       if (np%nodeType==ATTRIBUTE_NODE) then
+        if (associated(np, np_orig)) exit
         if (i==np%ownerElement%attributes%length) then
           ascending = .true.
         else
@@ -1081,6 +1103,7 @@ TOHW_m_dom_contents(`
       np%inDocument = .false.
       call append_nl(np%ownerDocument%hangingNodes, np)
       if (np%nodeType==ATTRIBUTE_NODE) then
+        if (associated(np, np_orig)) exit
         if (i==np%ownerElement%attributes%length) then
           ascending = .true.
         else
