@@ -723,13 +723,9 @@ TOHW_m_dom_contents(`
         print*,"ok"
       elseif (associated(new)) then
         if (this%nodeType==ATTRIBUTE_NODE) then
-          print*,"appending attribute...", getNodeType(np), getNodeType(new), associated(getOwnerElement(new))
           new => setAttributeNode(np, new)
-          print*,"ok"
         else
-          print*,"appending child ...", getNodeType(np), getNodeType(new)
           new => appendChild(np, new)
-          print*,"ok"
         endif
       endif
 
@@ -1072,6 +1068,7 @@ TOHW_m_dom_contents(`
     type(Node), pointer :: np
     logical :: ascending, attributesdone
     integer :: i
+    print*,"REMOVE"
     np => np_orig
     ascending = .false.
     attributesdone = .false.

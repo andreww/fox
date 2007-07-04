@@ -1854,13 +1854,9 @@ endif
         print*,"ok"
       elseif (associated(new)) then
         if (this%nodeType==ATTRIBUTE_NODE) then
-          print*,"appending attribute...", getNodeType(np), getNodeType(new), associated(getOwnerElement(new))
           new => setAttributeNode(np, new)
-          print*,"ok"
         else
-          print*,"appending child ...", getNodeType(np), getNodeType(new)
           new => appendChild(np, new)
-          print*,"ok"
         endif
       endif
 
@@ -2204,6 +2200,7 @@ endif
     type(Node), pointer :: np
     logical :: ascending, attributesdone
     integer :: i
+    print*,"REMOVE"
     np => np_orig
     ascending = .false.
     attributesdone = .false.
@@ -3093,7 +3090,6 @@ endif
     ! Destroy all remaining hanging nodes
     print*,"DANGLING NODES", doc%hangingNodes%length
     do i = 1, doc%hangingNodes%length
-      print*,"killing dangling nodes", associated(doc%hangingNodes%nodes(i)%this)
       call destroy(doc%hangingNodes%nodes(i)%this)
     enddo
     if (associated(doc%hangingNodes%nodes)) deallocate(doc%hangingNodes%nodes)
@@ -3490,7 +3486,10 @@ endif
 
     endif
   
-    np => createAttributeNS(doc, "", name)
+    np => createNode(doc, ATTRIBUTE_NODE, name, "")
+    np%namespaceURI => vs_str_alloc("")
+    np%localname => vs_str_alloc(name)
+    np%prefix => vs_str_alloc(name)
 
     if (.not.doc%docType%xds%building) then
       np%inDocument = .false.

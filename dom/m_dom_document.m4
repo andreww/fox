@@ -258,7 +258,10 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(FoX_INVALID_XML_NAME)
     endif
   
-    np => createAttributeNS(doc, "", name)
+    np => createNode(doc, ATTRIBUTE_NODE, name, "")
+    np%namespaceURI => vs_str_alloc("")
+    np%localname => vs_str_alloc(name)
+    np%prefix => vs_str_alloc(name)
 
     if (.not.doc%docType%xds%building) then
       np%inDocument = .false.
