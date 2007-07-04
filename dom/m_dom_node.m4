@@ -676,11 +676,13 @@ TOHW_m_dom_contents(`
 
     this => arg
     np => null()
+    ERchild => null()
     doc => getOwnerDocument(arg)
 
     i = -1
     doneChildren = .false.
     doneAttributes = .false.
+    readonly = .false.
     do
       print*,"llop"
       new => null()
@@ -694,13 +696,27 @@ TOHW_m_dom_contents(`
           new => createElement(doc, getTagName(this))
         endif
       case (ATTRIBUTE_NODE)
-        if (.not.doneChildren) new => createAttribute(doc, getName(this))
+        if (.not.doneChildren) then
+          new => createAttribute(doc, getName(this))
+          if (associated(this, arg)) then
+            new%specified = .true.
+          else
+            new%specified = this%specified
+          endif
+        endif
       case (TEXT_NODE)
         new => createTextNode(doc, getData(this))
       case (CDATA_SECTION_NODE)
         new => createCDataSection(doc, getData(this))
       case (ENTITY_REFERENCE_NODE)
-        if (.not.doneChildren) new => createEntityReference(doc, getNodeName(this))
+        if (.not.doneChildren) then
+          ERchild => this
+          readonly = .true.
+          new => createEntityReference(doc, getNodeName(this))
+        elseif (associated(ERchild, this)) then
+          ERchild => null()
+          readonly = .false.
+        endif
       case (ENTITY_NODE)
         return
       case (PROCESSING_INSTRUCTION_NODE)
@@ -722,6 +738,7 @@ TOHW_m_dom_contents(`
         np => new
         print*,"ok"
       elseif (associated(new)) then
+        new%readonly = readonly
         if (this%nodeType==ATTRIBUTE_NODE) then
           new => setAttributeNode(np, new)
         else

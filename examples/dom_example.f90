@@ -37,6 +37,7 @@ program dom_example
   call setNodeValue(getAttributeNode(np, "e"), "fg")
 
   np => removeAttributeNode(np, getAttributeNode(np, "e"))
+  dummy => cloneNode(np, .true.)
   np => removeChild(np2, getFirstChild(np2))
   np => createDocumentFragment(myDoc)
   dummy => createDocumentFragment(myDoc)
@@ -49,8 +50,7 @@ program dom_example
     print*, "NT", getNodeType(item(getChildNodes(np2), i-1))
   enddo
 
-  dummy => cloneNode(np2, .true.)
-!  dummy => appendChild(np2, cloneNode(np2, .true.))
+  dummy => appendChild(np2, cloneNode(np2, .true.))
 
   call serialize(myDoc, "out321.xml")
   call dumpTree(myDoc)
