@@ -120,7 +120,7 @@ TOHW_m_dom_contents(`
 
     !   If not found, insert it at the end of the linked list
     np => null()
-    call append(map, arg)
+    call append_nnm(map, arg)
 
     if (.not.map%ownerElement%ownerDocument%xds%building) then
       ! We need to worry about importing this node
@@ -178,7 +178,7 @@ TOHW_m_dom_contents(`
 
 
   function item_nnm(map, index) result(np)
-    type(NamedNodeMap), intent(in) :: map
+    type(NamedNodeMap), pointer :: map
     integer, intent(in) :: index
     type(Node), pointer :: np
     
@@ -287,7 +287,7 @@ TOHW_m_dom_contents(`
     enddo
     !   If not found, insert it at the end of the linked list
     np => null()
-    call append(map, arg)
+    call append_nnm(map, arg)
 
     if (.not.map%ownerElement%ownerDocument%xds%building) then
       ! We need to worry about importing this node
@@ -368,6 +368,29 @@ TOHW_m_dom_contents(`
     endif
 
   end subroutine append_nnm
+  subroutine append_nnmp(map, arg)
+    type(namedNodeMap), pointer :: map
+    type(node), pointer :: arg
+
+    type(ListNode), pointer :: temp_nl(:)
+    integer :: i
+
+    if (.not.associated(map%nodes)) then
+      allocate(map%nodes(1))
+      map%nodes(1)%this => arg
+      map%length = 1
+    else
+      temp_nl => map%nodes
+      allocate(map%nodes(size(temp_nl)+1))
+      do i = 1, size(temp_nl)
+        map%nodes(i)%this => temp_nl(i)%this
+      enddo
+      deallocate(temp_nl)
+      map%nodes(size(map%nodes))%this => arg
+      map%length = size(map%nodes)
+    endif
+
+  end subroutine append_nnmp
 
 
   subroutine setReadOnly(map, r)

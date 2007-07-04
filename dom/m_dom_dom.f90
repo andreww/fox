@@ -1800,101 +1800,196 @@ endif
     logical :: deep
     type(Node), pointer :: np
 
-    type(Node), pointer :: np_a1, np_a2, this, thatParent, new, ERchild
-    type(NamedNodeMap), pointer :: nnm
+    type(Node), pointer :: doc, this, new, ERchild
 
-    logical :: ascending, readonly
+    logical :: doneAttributes, doneChildren, readonly
     integer :: i
 
-    ascending = .false.
-    readonly = .false.
-    
-    ERchild => null()
     this => arg
+    np => null()
+    doc => getOwnerDocument(arg)
 
+    i = -1
+    doneChildren = .false.
+    doneAttributes = .false.
     do
-      if (ascending) then
-        this => this%parentNode
-        if (associated(this, arg)) exit
-        thatParent => thatParent%parentNode
-        if (associated(this, ERchild)) then
-          ! Weve got back up to the top of the topmost ER.
-          readonly = .false.
-          ERchild => null()
-        endif
-        ascending = .false.
-      endif
-      select case(this%nodeType)
+      new => null()
+      select case(getNodeType(this))
       case (ELEMENT_NODE)
-        new => createElementNS(this%ownerDocument, &
-          str_vs(this%namespaceURI), str_vs(this%localName))
-        ! loop over attributes cloning them
-        nnm => getAttributes(this)
-        do i = 1, getLength(nnm)
-          np_a1 => item(nnm, i)
-          np_a2 => createAttributeNS(this%ownerDocument, &
-            str_vs(np_a1%namespaceURI), str_vs(np_a1%localName))
-          call setValue(new, getValue(np_a1))
-          !FIXME what if the value is an entity reference?
-          np_a2%specified = np_a1%specified
-          np_a2 => setAttributeNodeNS(np, np_a2)
-        end do
-      case (ATTRIBUTE_NODE)
-        new => createAttributeNS(this%ownerDocument, &
-          str_vs(this%namespaceURI), str_vs(this%localName))
-        call setValue(new, getValue(np_a2))
-        new%specified = .true.
-      case (TEXT_NODE)
-        new => createTextNode(this%ownerDocument, str_vs(this%nodeValue))
-      case (CDATA_SECTION_NODE)
-        new => createCdataSection(this%ownerDocument, str_vs(this%nodeValue))
-      case (ENTITY_REFERENCE_NODE)
-        new => createEntityReference(this%ownerDocument, str_vs(this%nodeName))
-        ERChild => this
-      case (ENTITY_NODE)
-        new => null()
-      case (PROCESSING_INSTRUCTION_NODE)
-        new => createProcessingInstruction(this%ownerDocument, &
-          str_vs(this%nodeName), str_vs(this%nodeValue))
-      case (COMMENT_NODE)
-        new => createComment(this%ownerDocument, str_vs(this%nodeValue))
-      case (DOCUMENT_NODE)
-        new => null()
-      case (DOCUMENT_FRAGMENT_NODE)
-        new => createDocumentFragment(this%ownerDocument)
-      case (NOTATION_NODE)
-        new => null() 
-      end select
-      ! Sort out readonly-ness
-      new%readonly = readonly
-      if (associated(ERChild)) readonly = .true. ! This is not readonly, but all nodes below will be
-      ! Append the new node to the tree
-      if (associated(this, arg)) then
-        thatParent => new ! This is the first we have created, head of the tree
-        if (.not.deep) exit ! We only wanted one node anyway
-      else
-        new => appendChild(thatParent, new)
-      endif
-      ! Do we continue descending?
-      if (associated(this%firstChild)) then
-        this => this%firstChild
-        if (.not.associated(this, arg)) &
-          thatParent => thatParent%lastChild
-      elseif (.not.associated(this, arg)) then
-        if (associated(this%nextSibling)) then
-          this => this%nextSibling
-          ! but leave thatParent unchanged
-        else
-          ascending = .true.
+        if (doneChildren) then
+          doneAttributes = .true.
+        elseif (.not.doneAttributes) then
+          ! Are there any new prefixes or namespaces to be declared?
+          ! FIXME
+          new => createElement(doc, getTagName(this))
         endif
-      else ! the top node has no children, so we are finished
-        exit
+      case (ATTRIBUTE_NODE)
+        if (.not.doneChildren) new => createAttribute(doc, getName(this))
+      case (TEXT_NODE)
+        new => createTextNode(doc, getData(this))
+      case (CDATA_SECTION_NODE)
+        new => createCDataSection(doc, getData(this))
+      case (ENTITY_REFERENCE_NODE)
+        if (.not.doneChildren) new => createEntityReference(doc, getNodeName(this))
+      case (ENTITY_NODE)
+        return
+      case (PROCESSING_INSTRUCTION_NODE)
+        new => createProcessingInstruction(doc, getTarget(this), getData(this))
+      case (COMMENT_NODE)
+        new => createEntityReference(doc, getNodeValue(this))
+      case (DOCUMENT_NODE)
+        return
+      case (DOCUMENT_TYPE_NODE)
+        return
+      case (DOCUMENT_FRAGMENT_NODE)
+        if (.not.doneChildren) new => createDocumentFragment(doc)
+      case (NOTATION_NODE)
+        return
+      end select
+
+      if (.not.associated(np)) then
+        np => new
+      elseif (this%nodeType==ATTRIBUTE_NODE) then
+        if (associated(new)) call append_nnmp(getAttributes(np), new)
+      else
+        if (associated(new)) new => appendChild(np, new)
+      endif
+
+      if (.not.deep) then
+        if (getNodeType(arg)/=ELEMENT_NODE.and.getNodeType(arg)/=ATTRIBUTE_NODE) return
+      endif
+
+      if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
+        if (getLength(getAttributes(this))>0) then
+          if (.not.associated(this, arg)) np => getLastChild(np)
+          this => item(getAttributes(this), 0)
+        else
+          if (.not.deep) return
+          doneAttributes = .true.
+        endif
+      elseif (getNodeType(this)==ATTRIBUTE_NODE) then
+        i = i + 1
+        if (i==getLength(getAttributes(getOwnerElement(this)))) then
+          this => item(getAttributes(getOwnerElement(this)), i)
+        else
+          i = -1
+          this => getOwnerElement(this)
+          if (.not.associated(this, arg)) np => getParentNode(np)
+          doneAttributes = .true.
+          doneChildren = .false.
+        endif
+      elseif (hasChildNodes(this).and..not.doneChildren) then
+        this => getFirstChild(this)
+        if (.not.associated(this, arg)) np => getLastChild(np)
+        doneChildren = .false.
+        doneAttributes = .false.
+      elseif (associated(getNextSibling(this))) then
+        this => getNextSibling(this)
+        doneChildren = .false.
+        doneAttributes = .false.
+      else
+        doneChildren = .true.
+        this => getParentNode(this)
+        if (associated(this, arg)) then
+          exit
+        else
+          np => getParentNode(np)
+        endif
       endif
     enddo
 
-    np => thatParent
-
   end function cloneNode
+!!$
+!!$
+!!$    ascending = .false.
+!!$    readonly = .false.
+!!$    
+!!$    ERchild => null()
+!!$    this => arg
+!!$
+!!$    do
+!!$      if (ascending) then
+!!$        this => this%parentNode
+!!$        if (associated(this, arg)) exit
+!!$        thatParent => thatParent%parentNode
+!!$        if (associated(this, ERchild)) then
+!!$          ! Weve got back up to the top of the topmost ER.
+!!$          readonly = .false.
+!!$          ERchild => null()
+!!$        endif
+!!$        ascending = .false.
+!!$      endif
+!!$      select case(this%nodeType)
+!!$      case (ELEMENT_NODE)
+!!$        new => createElementNS(this%ownerDocument, &
+!!$          str_vs(this%namespaceURI), str_vs(this%localName))
+!!$        ! loop over attributes cloning them
+!!$        nnm => getAttributes(this)
+!!$        do i = 1, getLength(nnm)
+!!$          np_a1 => item(nnm, i)
+!!$          np_a2 => createAttributeNS(this%ownerDocument, &
+!!$            str_vs(np_a1%namespaceURI), str_vs(np_a1%localName))
+!!$          call setValue(new, getValue(np_a1))
+!!$          !FIXME what if the value is an entity reference?
+!!$          np_a2%specified = np_a1%specified
+!!$          np_a2 => setAttributeNodeNS(np, np_a2)
+!!$        end do
+!!$      case (ATTRIBUTE_NODE)
+!!$        new => createAttributeNS(this%ownerDocument, &
+!!$          str_vs(this%namespaceURI), str_vs(this%localName))
+!!$        call setValue(new, getValue(np_a2))
+!!$        new%specified = .true.
+!!$      case (TEXT_NODE)
+!!$        new => createTextNode(this%ownerDocument, str_vs(this%nodeValue))
+!!$      case (CDATA_SECTION_NODE)
+!!$        new => createCdataSection(this%ownerDocument, str_vs(this%nodeValue))
+!!$      case (ENTITY_REFERENCE_NODE)
+!!$        new => createEntityReference(this%ownerDocument, str_vs(this%nodeName))
+!!$        ERChild => this
+!!$      case (ENTITY_NODE)
+!!$        new => null()
+!!$      case (PROCESSING_INSTRUCTION_NODE)
+!!$        new => createProcessingInstruction(this%ownerDocument, &
+!!$          str_vs(this%nodeName), str_vs(this%nodeValue))
+!!$      case (COMMENT_NODE)
+!!$        new => createComment(this%ownerDocument, str_vs(this%nodeValue))
+!!$      case (DOCUMENT_NODE)
+!!$        new => null()
+!!$      case (DOCUMENT_FRAGMENT_NODE)
+!!$        new => createDocumentFragment(this%ownerDocument)
+!!$      case (NOTATION_NODE)
+!!$        new => null() 
+!!$      end select
+!!$      ! Sort out readonly-ness
+!!$      new%readonly = readonly
+!!$      if (associated(ERChild)) readonly = .true. ! This is not readonly, but all nodes below will be
+!!$      ! Append the new node to the tree
+!!$      if (associated(this, arg)) then
+!!$        thatParent => new ! This is the first we have created, head of the tree
+!!$        if (.not.deep) exit ! We only wanted one node anyway
+!!$      else
+!!$        new => appendChild(thatParent, new)
+!!$      endif
+!!$      ! Do we continue descending?
+!!$      if (associated(this%firstChild)) then
+!!$        this => this%firstChild
+!!$        if (.not.associated(this, arg)) &
+!!$          thatParent => thatParent%lastChild
+!!$      elseif (.not.associated(this, arg)) then
+!!$        if (associated(this%nextSibling)) then
+!!$          this => this%nextSibling
+!!$          ! but leave thatParent unchanged
+!!$        else
+!!$          ascending = .true.
+!!$        endif
+!!$      else ! the top node has no children, so we are finished
+!!$        exit
+!!$      endif
+!!$    enddo
+!!$
+!!$    np => thatParent
+!!$
+!!$  end function cloneNode
 
   
   function hasAttributes(arg)
@@ -2011,14 +2106,24 @@ endif
     c = str_vs(arg%localName)
   end function getLocalName
 
-  function isSameNode(node1, node2)    ! DOM 3.0
-    type(Node), pointer :: node1
-    type(Node), pointer :: node2
+  ! function isDefaultNamespace
+  ! function isEqualNode(np, arg)
+
+  function isSameNode(np, other)    ! DOM 3.0
+    type(Node), pointer :: np
+    type(Node), pointer :: other
     logical :: isSameNode
 
-    isSameNode = associated(node1, node2)
+    isSameNode = associated(np, other)
 
   end function isSameNode
+
+  ! function lookupNamespaceURI
+  ! function lookupPrefix
+
+  ! function getUserData
+  ! function setUserData
+  ! will not implement ...
 
   subroutine putNodesInDocument(doc, np_orig)
     type(Node), pointer :: doc, np_orig
@@ -2432,7 +2537,7 @@ endif
 
     !   If not found, insert it at the end of the linked list
     np => null()
-    call append(map, arg)
+    call append_nnm(map, arg)
 
     if (.not.map%ownerElement%ownerDocument%xds%building) then
       ! We need to worry about importing this node
@@ -2503,7 +2608,7 @@ endif
 
 
   function item_nnm(map, index) result(np)
-    type(NamedNodeMap), intent(in) :: map
+    type(NamedNodeMap), pointer :: map
     integer, intent(in) :: index
     type(Node), pointer :: np
     
@@ -2631,7 +2736,7 @@ endif
     enddo
     !   If not found, insert it at the end of the linked list
     np => null()
-    call append(map, arg)
+    call append_nnm(map, arg)
 
     if (.not.map%ownerElement%ownerDocument%xds%building) then
       ! We need to worry about importing this node
@@ -2725,6 +2830,29 @@ endif
     endif
 
   end subroutine append_nnm
+  subroutine append_nnmp(map, arg)
+    type(namedNodeMap), pointer :: map
+    type(node), pointer :: arg
+
+    type(ListNode), pointer :: temp_nl(:)
+    integer :: i
+
+    if (.not.associated(map%nodes)) then
+      allocate(map%nodes(1))
+      map%nodes(1)%this => arg
+      map%length = 1
+    else
+      temp_nl => map%nodes
+      allocate(map%nodes(size(temp_nl)+1))
+      do i = 1, size(temp_nl)
+        map%nodes(i)%this => temp_nl(i)%this
+      enddo
+      deallocate(temp_nl)
+      map%nodes(size(map%nodes))%this => arg
+      map%length = size(map%nodes)
+    endif
+
+  end subroutine append_nnmp
 
 
   subroutine setReadOnly(map, r)
@@ -4496,7 +4624,7 @@ endif
     endif
 
     do i = 1, element%attributes%length
-      if (associated(item(element%attributes, i), oldattr)) then
+      if (associated(item(getAttributes(element), i-1), oldattr)) then
         attr => removeNamedItemNS(element%attributes, &
           str_vs(oldattr%namespaceURI), str_vs(oldattr%localName))
         return

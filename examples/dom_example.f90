@@ -41,14 +41,16 @@ program dom_example
   np => appendChild(dummy, createTextNode(myDoc, " lalal"))
   print*,getLength(getChildNodes(np2))
   dummy => insertBefore(np2, dummy, null())
-  call serialize(myDoc, "out321.xml")
-  stop
-  call dumpTree(myDoc)
   print*,"LEN", getLength(getChildNodes(np2))
   do i = 1, getLength(getChildNodes(np2))
     print*, "NT", getNodeType(item(getChildNodes(np2), i-1))
   enddo
 
+  dummy => cloneNode(np2, .false.)
+  dummy => appendChild(np2, cloneNode(np2, .true.))
+
+  call serialize(myDoc, "out321.xml")
+  call dumpTree(myDoc)
 !  call dumpTree(myDoc)
 
   interest = getElementsByTagName(myDoc, 'a')
