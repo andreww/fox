@@ -3599,10 +3599,15 @@ endif
     type(DOMException), intent(inout), optional :: ex
     type(Node), pointer :: doc
     type(Node), pointer :: arg
-    logical, intent(in) :: deep
+    logical :: deep
     type(Node), pointer :: np
 
-    if (doc%nodeType/=DOCUMENT_NODE) then
+    type(Node), pointer :: this, new
+
+    logical :: doneAttributes, doneChildren
+    integer :: i
+
+    if (getNodeType(doc)/=DOCUMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "importNode", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -3612,42 +3617,199 @@ endif
 
     endif
 
-    select case(arg%nodeType)
-    case (ATTRIBUTE_NODE)
-      np => cloneNode(arg, deep, ex)
-      np%ownerElement => null()
-      np%specified = .true.
-    case (DOCUMENT_NODE)
-      call throw_exception(NOT_SUPPORTED_ERR, "importNode", ex)
+    if (associated(doc, getOwnerDocument(arg))) then
+      np => cloneNode(arg, deep)
+      return
+    endif
+
+    this => arg
+    np => null()
+
+    i = -1
+    doneChildren = .false.
+    doneAttributes = .false.
+    do
+      print*,"llop"
+      new => null()
+      select case(getNodeType(this))
+      case (ELEMENT_NODE)
+        if (doneChildren) then
+          doneAttributes = .true.
+        elseif (.not.doneAttributes) then
+          ! Are there any new prefixes or namespaces to be declared?
+          ! FIXME
+          new => createElement(doc, getTagName(this))
+        endif
+      case (ATTRIBUTE_NODE)
+        if (.not.doneChildren) then
+          if (associated(this, arg)) then
+            new => createAttribute(doc, getName(this))
+            new%specified = .true.
+          elseif (getSpecified(this)) then
+            new => createAttribute(doc, getName(this))
+            new%specified = .true.
+          else
+            ! FIXME if (thereIsADefault(getName(this))
+            ! new => createAttribute(doc, getName(this))
+            ! call setValue(new, defaultValue)
+            ! new%specified => .false.
+            continue
+          endif
+        endif
+      case (TEXT_NODE)
+        new => createTextNode(doc, getData(this))
+      case (CDATA_SECTION_NODE)
+        new => createCDataSection(doc, getData(this))
+      case (ENTITY_REFERENCE_NODE)
+        if (.not.doneChildren) then
+          new => createEntityReference(doc, getNodeName(this))
+          ! FIXME DOES ENTREF EXIST IN NEW DOC?
+        endif
+      case (ENTITY_NODE)
+        if (.not.doneChildren) new => createEntity(doc, getName(this), getPublicId(this), getSystemId(this), getNotationName(this))
+      case (PROCESSING_INSTRUCTION_NODE)
+        new => createProcessingInstruction(doc, getTarget(this), getData(this))
+      case (COMMENT_NODE)
+        new => createEntityReference(doc, getNodeValue(this))
+      case (DOCUMENT_NODE)
+        call throw_exception(NOT_SUPPORTED_ERR, "importNode", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
      return
   endif
 endif
 
-    case (DOCUMENT_TYPE_NODE)
-      call throw_exception(NOT_SUPPORTED_ERR, "importNode", ex)
+      case (DOCUMENT_TYPE_NODE)
+        call throw_exception(NOT_SUPPORTED_ERR, "importNode", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
      return
   endif
 endif
 
-    case (ELEMENT_NODE)
-      np => cloneNode(arg, deep, ex)
-! FIXME strip out unspecified attributes unless they are also default in this doc ...
-    case (ENTITY_REFERENCE_NODE)
-      np => cloneNode(arg, .false., ex)
-! FIXME if entity is defined in this doc then add appropriate children
-    case default
-      np => cloneNode(arg, deep, ex)
-    end select
+      case (DOCUMENT_FRAGMENT_NODE)
+        if (.not.doneChildren) new => createDocumentFragment(doc)
+      case (NOTATION_NODE)
+        new => createNotation(doc, getName(this), getPublicId(this), getSystemId(this))
+      end select
 
-    np%ownerDocument => doc
-    np%parentNode => null()
+      if (.not.associated(np)) then
+        print*,"starting import tree"
+        np => new
+        print*,"ok"
+      elseif (associated(new)) then
+        if (this%nodeType==ATTRIBUTE_NODE) then
+          new => setAttributeNode(np, new)
+        else
+          new => appendChild(np, new)
+        endif
+      endif
 
-    ! FIXME need to ensure that inDocument & hanging nodes are set
-    ! appropriately.
+      if (.not.deep) then
+        if (getNodeType(arg)/=ELEMENT_NODE.and.getNodeType(arg)/=ATTRIBUTE_NODE) return
+      endif
+
+      if (doneChildren.and.associated(this, arg)) then
+        exit
+      elseif (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
+        if (getLength(getAttributes(this))>0) then
+          if (.not.associated(this, arg)) np => getLastChild(np)
+          this => item(getAttributes(this), 0)
+        else
+          if (.not.deep) return
+          doneAttributes = .true.
+        endif
+      elseif (getNodeType(this)==ATTRIBUTE_NODE) then
+        if (doneChildren) then
+          if (i==getLength(getAttributes(getOwnerElement(this)))) then
+            this => item(getAttributes(getOwnerElement(this)), i)
+            if (.not.associated(this, arg)) np => getOwnerElement(np)
+          else
+            i = -1
+            if (.not.associated(this, arg)) np => getParentNode(np)
+            this => getOwnerElement(this)
+            doneAttributes = .true.
+            doneChildren = .false.
+          endif
+        else
+          i = i + 1
+          if (.not.associated(this, arg)) np => item(getAttributes(np), i)
+          this => getFirstChild(this)
+          doneChildren = .false.
+          doneAttributes = .false.
+        endif
+      elseif (hasChildNodes(this).and..not.doneChildren) then
+        if (.not.associated(this, arg)) np => getLastChild(np)
+        this => getFirstChild(this)
+        doneChildren = .false.
+        doneAttributes = .false.
+      elseif (associated(getNextSibling(this))) then
+        this => getNextSibling(this)
+        doneChildren = .false.
+        doneAttributes = .false.
+      else
+        doneChildren = .true.
+        this => getParentNode(this)
+        if (.not.associated(this, arg)) then
+          if (getNodeType(this)==ATTRIBUTE_NODE) then
+            np => getOwnerElement(np)
+          else
+            np => getParentNode(np)
+          endif
+        endif
+      endif
+    enddo
+!!$    type(Node), pointer :: doc
+!!$    type(Node), pointer :: arg
+!!$    logical, intent(in) :: deep
+!!$    type(Node), pointer :: np
+!!$
+!!$    if (doc%nodeType/=DOCUMENT_NODE) then
+!!$      call throw_exception(FoX_INVALID_NODE, "importNode", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+!!$    endif
+!!$
+!!$    select case(arg%nodeType)
+!!$    case (ATTRIBUTE_NODE)
+!!$      np => cloneNode(arg, deep, ex)
+!!$      np%ownerElement => null()
+!!$      np%specified = .true.
+!!$    case (DOCUMENT_NODE)
+!!$      call throw_exception(NOT_SUPPORTED_ERR, "importNode", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+!!$    case (DOCUMENT_TYPE_NODE)
+!!$      call throw_exception(NOT_SUPPORTED_ERR, "importNode", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+!!$    case (ELEMENT_NODE)
+!!$      np => cloneNode(arg, deep, ex)
+!!$! FIXME strip out unspecified attributes unless they are also default in this doc ...
+!!$    case (ENTITY_REFERENCE_NODE)
+!!$      np => cloneNode(arg, .false., ex)
+!!$! FIXME if entity is defined in this doc then add appropriate children
+!!$    case default
+!!$      np => cloneNode(arg, deep, ex)
+!!$    end select
+!!$
+!!$    np%ownerDocument => doc
+!!$    np%parentNode => null()
+!!$
+!!$    ! FIXME need to ensure that inDocument & hanging nodes are set
+!!$    ! appropriately.
 
   end function importNode
 
