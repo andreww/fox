@@ -211,6 +211,9 @@ module m_dom_dom
     logical :: liveNodeLists ! For the document, are nodelists live? (FIXME should be in xds)
     type(NodeList) :: hangingNodes ! For the document. list of nodes not associated with doc
     logical :: inDocument = .false.! For a node, is this node associated to the doc?
+!!
+!!
+    type(documentExtras), pointer :: docExtras
   end type Node
 
   type(DOMImplementation), save, target :: FoX_DOM
@@ -3117,6 +3120,8 @@ endif
 
     doc => createNode(null(), DOCUMENT_NODE, "#document", "")
 
+    allocate(doc%docExtras)
+
     if (present(docType)) then
       docType%ownerDocument => doc
       doc%doctype => appendChild(doc, doc%docType)
@@ -3141,9 +3146,10 @@ endif
     type(Node), pointer :: doc
     type(Node), pointer :: dt
     
-    print*,"creating empty document"
     doc => createNode(null(), DOCUMENT_NODE, "#document", "")
-    print*,"created"
+
+    allocate(doc%docExtras)
+
     dt => createEmptyDocumentType(doc)
     doc%xds => dt%xds
     doc%ownerDocument => doc
@@ -3177,7 +3183,7 @@ endif
 
     endif
 
-    call destroyAllNodesRecursively(doc)
+    deallocate(doc%docExtras)
 
     ! Destroy all remaining nodelists
     do i = 1, size(doc%nodelists)
@@ -3194,6 +3200,7 @@ endif
 
     print*, "destroying a node:", doc%nodeType, doc%nodeName
     call destroyNodeContents(doc)
+    call destroyAllNodesRecursively(doc)
     deallocate(doc)
 
   end subroutine destroyDocument

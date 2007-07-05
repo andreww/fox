@@ -124,6 +124,8 @@ TOHW_m_dom_contents(`
 
     doc => createNode(null(), DOCUMENT_NODE, "#document", "")
 
+    allocate(doc%docExtras)
+
     if (present(docType)) then
       docType%ownerDocument => doc
       doc%doctype => appendChild(doc, doc%docType)
@@ -148,9 +150,10 @@ TOHW_m_dom_contents(`
     type(Node), pointer :: doc
     type(Node), pointer :: dt
     
-    print*,"creating empty document"
     doc => createNode(null(), DOCUMENT_NODE, "#document", "")
-    print*,"created"
+
+    allocate(doc%docExtras)
+
     dt => createEmptyDocumentType(doc)
     doc%xds => dt%xds
     doc%ownerDocument => doc
@@ -177,7 +180,7 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
 
-    call destroyAllNodesRecursively(doc)
+    deallocate(doc%docExtras)
 
     ! Destroy all remaining nodelists
     do i = 1, size(doc%nodelists)
@@ -194,6 +197,7 @@ TOHW_m_dom_contents(`
 
     print*, "destroying a node:", doc%nodeType, doc%nodeName
     call destroyNodeContents(doc)
+    call destroyAllNodesRecursively(doc)
     deallocate(doc)
 
   end subroutine destroyDocument
