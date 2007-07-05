@@ -207,7 +207,7 @@ module m_dom_dom
     ! In order to keep all node lists live ..
     type(NodeListPtr), pointer :: nodelists(:) ! document
     ! In order to keep track of all nodes not connected to the document
-    logical :: liveNodeLists ! For the document, are nodelists live? (FIXME should be in xds)
+
     type(NodeList) :: hangingNodes ! For the document. list of nodes not associated with doc
     logical :: inDocument = .false.! For a node, is this node associated to the doc?
 !!
@@ -2488,7 +2488,7 @@ endif
     integer :: i, i_t
 ! FIXME FIXME FIXME
 
-    if (.not.doc%liveNodeLists) return
+    if (.not.doc%docExtras%liveNodeLists) return
     if (.not.associated(doc%nodelists)) return
 
     allocate(temp_nll(size(doc%nodelists)))
