@@ -809,12 +809,12 @@ TOHW_m_dom_treewalk(`
   end subroutine normalize
 
   function isSupported(arg, feature, version) result(p)
-    type(Node), intent(in) :: arg
+    type(Node), pointer :: arg
     character(len=*), intent(in) :: feature
     character(len=*), intent(in) :: version
     logical :: p
 
-    p = hasFeature(arg%ownerDocument%implementation, feature, version)
+    p = hasFeature(getImplementation(getOwnerDocument(arg)), feature, version)
   end function isSupported
 
   ! FIXME should the below instead just decompose the QName on access?
