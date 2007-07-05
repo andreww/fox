@@ -13,16 +13,16 @@ module m_dom_parse
 
   use m_dom_dom, only: Node, NamedNodeMap, hasChildNodes, getFirstChild
   use m_dom_dom, only: DOCUMENT_NODE, getOwnerDocument, getDocumentElement
-  use m_dom_dom, only: createProcessingInstruction, getDocType
-  use m_dom_dom, only: createComment, getEntities
+  use m_dom_dom, only: createProcessingInstruction, getDocType, createAttributeNS
+  use m_dom_dom, only: createComment, getEntities, item, setSpecified
   use m_dom_dom, only: createElementNS, getNotations, getLastChild
-  use m_dom_dom, only: createTextNode, createEntity
+  use m_dom_dom, only: createTextNode, createEntity, getAttributes
   use m_dom_dom, only: createNotation, setNamedItem, getNodeName
   use m_dom_dom, only: createEmptyDocument, getXMLVersion, createDocumentType
   use m_dom_dom, only: getParentNode, setDocumentElement, getDocType, setDocType
   use m_dom_dom, only: append, getNodeType, setReadOnly, getLength, getChildNodes
-  use m_dom_dom, only: removeChild, appendChild, getNotations
-  use m_dom_dom, only: setAttributeNS, replace_xds, setDocBuilding
+  use m_dom_dom, only: removeChild, appendChild, getNotations, setAttributeNodeNS, setvalue
+  use m_dom_dom, only: setAttributeNodeNS, replace_xds, setDocBuilding
   use m_dom_debug, only: dom_debug
 
   implicit none
@@ -55,7 +55,11 @@ contains
     do i = 1, len(attrs)
       if (dom_debug) print *, "Adding attribute: ", &
         getQName(attrs, i), ":",getValue(attrs, i)
-      call setAttributeNS(el, getURI(attrs, i), getQName(attrs, i), getValue(attrs, i))
+      temp => createAttributeNS(mainDoc, getURI(attrs, i), getQName(attrs, i))
+      call setValue(temp, getValue(attrs, i))
+      call setSpecified(temp, .true.)
+      temp =>  setAttributeNodeNS(el, temp)
+      ! FIXME check specifiedness
     enddo
 
     !print*,"ELASS"

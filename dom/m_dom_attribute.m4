@@ -8,6 +8,7 @@ TOHW_m_dom_publics(`
 
   !public :: getName
   public :: getSpecified
+  public :: setSpecified
   interface getValue
     module procedure getValue_DOM
   end interface	 
@@ -28,7 +29,7 @@ TOHW_m_dom_contents(`
 
 
   TOHW_function(getSpecified, (attribute), p)
-    type(Node), intent(in) :: attribute
+    type(Node), pointer :: attribute
     logical :: p
 
     if (attribute%nodeType/=ATTRIBUTE_NODE) then
@@ -37,6 +38,17 @@ TOHW_m_dom_contents(`
 
     p = attribute%specified
   end function getSpecified
+
+  TOHW_subroutine(setSpecified, (attribute, p))
+    type(Node), pointer :: attribute
+    logical, intent(in) :: p
+
+    if (attribute%nodeType/=ATTRIBUTE_NODE) then
+      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
+    endif
+
+    attribute%specified = p
+  end subroutine setSpecified
     
   pure function getValue_length(attribute) result(n)
     type(Node), intent(in) :: attribute

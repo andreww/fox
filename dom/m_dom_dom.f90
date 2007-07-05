@@ -394,6 +394,7 @@ module m_dom_dom
 
   !public :: getName
   public :: getSpecified
+  public :: setSpecified
   interface getValue
     module procedure getValue_DOM
   end interface	 
@@ -1976,63 +1977,99 @@ endif
     
   end function hasAttributes
   
-  recursive subroutine normalize(arg, ex)
+  subroutine normalize(arg, ex)
     type(DOMException), intent(inout), optional :: ex
     type(Node), pointer :: arg
-  ! NB only ever one level of recursion, for text children of the attributes of an element
-    ! FIXME shoulndt be recursive
-    type(Node), pointer :: this, tempNode
-    type(NamedNodeMap), pointer :: nnm
-    integer :: i
-    logical :: noChild
+    type(Node), pointer :: np, tempNode, oldNode
+    integer :: i, i_t
+    logical :: doneChildren, doneAttributes
     character, pointer :: temp(:)
-    
-    ! This ignores readonly status according to the DOM standard.
 
-    noChild = .false.
+! DOM standard requires we ignore readonly status
+
     do
-      if (noChild) then
-        if (associated(this, arg)) exit
-        if (associated(this%nextSibling)) then
-          this => this%nextSibling
-          noChild = .false.
+      select case(getNodeType(np))
+      case (ELEMENT_NODE)
+        if (doneChildren) doneAttributes = .true.
+      case (TEXT_NODE)
+        if (associated(np, arg)) exit
+        i_t = getLength(np)
+! If we are called on a text node itself, then do nothing.
+        tempNode => getNextSibling(np)
+        do while (associated(tempNode))
+          if (getNodeType(tempNode)/=TEXT_NODE) exit
+          i_t = i_t + getLength(tempNode)
+          tempNode => getNextSibling(tempNode)
+        enddo
+        if (i_t > getLength(np)) then
+          allocate(temp(i_t))
+          temp(:getLength(np)) = getData(np)
+          i_t = 1
+          tempNode => getNextSibling(np)
+          do while (associated(tempNode))
+            if (getNodeType(tempNode)/=TEXT_NODE) exit
+            temp(i_t:getLength(tempNode)-1) = getData(tempNode)
+            i_t = i_t + getLength(tempNode)
+            tempNode => getNextSibling(tempNode)
+          enddo
+          deallocate(np%nodeValue)
+          np%nodeValue => temp
+          call setData(np, str_vs(temp))
+          do while (associated(tempNode))
+            if (getNodeType(tempNode)/=TEXT_NODE) exit
+            if (.not.arg%inDocument) call remove_node_nl(arg%ownerDocument%hangingNodes, tempNode)
+            oldNode => removeChild(getParentNode(tempNode), tempNode)
+            tempNode => tempNode%nextSibling
+            call destroy(oldNode)
+          enddo
+        endif
+      end select
+
+
+      if (doneChildren.and.associated(np, arg)) then
+        exit
+      elseif (getNodeType(np)==ELEMENT_NODE.and..not.doneAttributes) then
+        if (getLength(getAttributes(np))>0) then
+          np => item(getAttributes(np), 0)
         else
-          this => this%parentNode
-          cycle
+          doneAttributes = .true.
+        endif
+      elseif (getNodeType(np)==ATTRIBUTE_NODE) then
+        if (doneChildren) then
+          if (i==getLength(getAttributes(getOwnerElement(np)))) then
+            np => item(getAttributes(getOwnerElement(np)), i)
+          else
+            i = -1
+            np => getOwnerElement(np)
+            doneAttributes = .true.
+            doneChildren = .false.
+          endif
+        else
+          i = i + 1
+          np => getFirstChild(np)
+          doneChildren = .false.
+          doneAttributes = .false.
+        endif
+      elseif (hasChildNodes(np).and..not.doneChildren) then
+        np => getFirstChild(np)
+        doneChildren = .false.
+        doneAttributes = .false.
+      elseif (associated(getNextSibling(np))) then
+        np => getNextSibling(np)
+        doneChildren = .false.
+        doneAttributes = .false.
+      else
+        doneChildren = .true.
+        np => getParentNode(np)
+        if (.not.associated(np, arg)) then
+          if (getNodeType(np)==ATTRIBUTE_NODE) then
+            np => getOwnerElement(np)
+          else
+            np => getParentNode(np)
+          endif
         endif
       endif
-      if (associated(tempNode)) then
-        tempNode => removeChild(tempNode%parentNode, tempNode)
-        tempNode => null()
-      endif
-      if (this%nodeType==ELEMENT_NODE.and.hasAttributes(this)) then
-        ! Loop over attributes combining them ...
-        nnm => getAttributes(this)
-        do i = 1, getLength(nnm)
-          tempNode => item(nnm, i)
-          call normalize(tempNode)
-        enddo
-        tempNode => null()
-      elseif (this%nodeType==TEXT_NODE.and.associated(this%nextSibling)) then
-        ! Keep going until all adjacent TEXT_NODEs are consumed.
-        do while (this%nextSibling%nodeType==TEXT_NODE) 
-          temp => this%nodeValue
-          this%nodeValue => vs_str_alloc(str_vs(temp)//getData(this%nextSibling))
-	  deallocate(temp)
-          tempNode => removeChild(this%parentNode, this%nextSibling)
-        enddo
-        tempNode => null()
-        if (size(this%nodeValue)==0) &
-          tempNode => this
-      endif
-      if (associated(this%firstChild)) then
-        this => this%firstChild
-      else
-        noChild = .true.
-      endif
     enddo
- 
-    tempNode => removeChild(tempNode%parentNode, tempNode)
 
   end subroutine normalize
 
@@ -3625,11 +3662,10 @@ endif
     this => arg
     np => null()
 
-    i = -1
+    i = 0
     doneChildren = .false.
     doneAttributes = .false.
     do
-      print*,"llop"
       new => null()
       select case(getNodeType(this))
       case (ELEMENT_NODE)
@@ -3644,33 +3680,33 @@ endif
         if (.not.doneChildren) then
           if (associated(this, arg)) then
             new => createAttribute(doc, getName(this))
-            new%specified = .true.
+            call setSpecified(new, .true.)
           elseif (getSpecified(this)) then
             new => createAttribute(doc, getName(this))
-            new%specified = .true.
-          else
-            ! FIXME if (thereIsADefault(getName(this))
+            call setSpecified(new, .true.)
+            ! elseif (thereIsADefault(getName(this)) FIXME
             ! new => createAttribute(doc, getName(this))
             ! call setValue(new, defaultValue)
-            ! new%specified => .false.
-            continue
+            ! call setSpecified(new, .false.)
+          else
+            doneChildren = .true.
           endif
         endif
       case (TEXT_NODE)
-        new => createTextNode(doc, getData(this))
+        if (.not.doneChildren) new => createTextNode(doc, getData(this))
       case (CDATA_SECTION_NODE)
-        new => createCDataSection(doc, getData(this))
+        if (.not.doneChildren) new => createCDataSection(doc, getData(this))
       case (ENTITY_REFERENCE_NODE)
         if (.not.doneChildren) then
           new => createEntityReference(doc, getNodeName(this))
-          ! FIXME DOES ENTREF EXIST IN NEW DOC?
+          ! FIXME DOES ENTREF EXIST IN NEW DOC? Switch "this" appropriately & carry on cloning
         endif
       case (ENTITY_NODE)
         if (.not.doneChildren) new => createEntity(doc, getName(this), getPublicId(this), getSystemId(this), getNotationName(this))
       case (PROCESSING_INSTRUCTION_NODE)
-        new => createProcessingInstruction(doc, getTarget(this), getData(this))
+        if (.not.doneChildren) new => createProcessingInstruction(doc, getTarget(this), getData(this))
       case (COMMENT_NODE)
-        new => createEntityReference(doc, getNodeValue(this))
+        if (.not.doneChildren) new => createEntityReference(doc, getNodeValue(this))
       case (DOCUMENT_NODE)
         call throw_exception(NOT_SUPPORTED_ERR, "importNode", ex)
 if (present(ex)) then
@@ -3690,13 +3726,10 @@ endif
       case (DOCUMENT_FRAGMENT_NODE)
         if (.not.doneChildren) new => createDocumentFragment(doc)
       case (NOTATION_NODE)
-        new => createNotation(doc, getName(this), getPublicId(this), getSystemId(this))
+        if (.not.doneChildren) new => createNotation(doc, getName(this), getPublicId(this), getSystemId(this))
       end select
-
       if (.not.associated(np)) then
-        print*,"starting import tree"
         np => new
-        print*,"ok"
       elseif (associated(new)) then
         if (this%nodeType==ATTRIBUTE_NODE) then
           new => setAttributeNode(np, new)
@@ -3709,107 +3742,64 @@ endif
         if (getNodeType(arg)/=ELEMENT_NODE.and.getNodeType(arg)/=ATTRIBUTE_NODE) return
       endif
 
-      if (doneChildren.and.associated(this, arg)) then
-        exit
-      elseif (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
-        if (getLength(getAttributes(this))>0) then
-          if (.not.associated(this, arg)) np => getLastChild(np)
-          this => item(getAttributes(this), 0)
-        else
-          if (.not.deep) return
-          doneAttributes = .true.
-        endif
-      elseif (getNodeType(this)==ATTRIBUTE_NODE) then
-        if (doneChildren) then
-          if (i==getLength(getAttributes(getOwnerElement(this)))) then
-            this => item(getAttributes(getOwnerElement(this)), i)
-            if (.not.associated(this, arg)) np => getOwnerElement(np)
+      if (.not.doneChildren) then
+
+        if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
+          if (getLength(getAttributes(this))>0) then
+            if (.not.associated(this, arg)) np => getLastChild(np)
+            this => item(getAttributes(this), 0)
           else
-            i = -1
-            if (.not.associated(this, arg)) np => getParentNode(np)
+            if (.not.deep) return
+            doneAttributes = .true.
+          endif
+        elseif (hasChildNodes(this)) then
+          if (.not.associated(this, arg)) then
+            if (getNodeType(this)==ATTRIBUTE_NODE) then
+              np => item(getAttributes(np), i)
+            else
+              np => getLastChild(np)
+            endif
+          endif
+          this => getFirstChild(this)
+          doneChildren = .false.
+          doneAttributes = .false.
+        else
+          doneChildren = .true.
+        endif
+
+      else ! if doneChildren
+
+        if (associated(this, arg)) exit
+        if (getNodeType(this)==ATTRIBUTE_NODE) then
+          if (i<getLength(getAttributes(getOwnerElement(this)))-1) then
+            i = i + 1
+            this => item(getAttributes(getOwnerElement(this)), i)
+            doneChildren = .false.
+          else
+            i = 0
+            if (associated(getParentNode(np))) np => getParentNode(np)
             this => getOwnerElement(this)
             doneAttributes = .true.
             doneChildren = .false.
           endif
-        else
-          i = i + 1
-          if (.not.associated(this, arg)) np => item(getAttributes(np), i)
-          this => getFirstChild(this)
+        elseif (associated(getNextSibling(this))) then
+          this => getNextSibling(this)
           doneChildren = .false.
           doneAttributes = .false.
-        endif
-      elseif (hasChildNodes(this).and..not.doneChildren) then
-        if (.not.associated(this, arg)) np => getLastChild(np)
-        this => getFirstChild(this)
-        doneChildren = .false.
-        doneAttributes = .false.
-      elseif (associated(getNextSibling(this))) then
-        this => getNextSibling(this)
-        doneChildren = .false.
-        doneAttributes = .false.
-      else
-        doneChildren = .true.
-        this => getParentNode(this)
-        if (.not.associated(this, arg)) then
-          if (getNodeType(this)==ATTRIBUTE_NODE) then
-            np => getOwnerElement(np)
-          else
-            np => getParentNode(np)
+        else
+          this => getParentNode(this)
+          if (.not.associated(this, arg)) then
+            if (getNodeType(this)==ATTRIBUTE_NODE) then
+              np => getOwnerElement(np)
+            else
+              np => getParentNode(np)
+            endif
           endif
         endif
+
       endif
+
     enddo
-!!$    type(Node), pointer :: doc
-!!$    type(Node), pointer :: arg
-!!$    logical, intent(in) :: deep
-!!$    type(Node), pointer :: np
-!!$
-!!$    if (doc%nodeType/=DOCUMENT_NODE) then
-!!$      call throw_exception(FoX_INVALID_NODE, "importNode", ex)
-if (present(ex)) then
-  if (is_in_error(ex)) then
-     return
-  endif
-endif
-
-!!$    endif
-!!$
-!!$    select case(arg%nodeType)
-!!$    case (ATTRIBUTE_NODE)
-!!$      np => cloneNode(arg, deep, ex)
-!!$      np%ownerElement => null()
-!!$      np%specified = .true.
-!!$    case (DOCUMENT_NODE)
-!!$      call throw_exception(NOT_SUPPORTED_ERR, "importNode", ex)
-if (present(ex)) then
-  if (is_in_error(ex)) then
-     return
-  endif
-endif
-
-!!$    case (DOCUMENT_TYPE_NODE)
-!!$      call throw_exception(NOT_SUPPORTED_ERR, "importNode", ex)
-if (present(ex)) then
-  if (is_in_error(ex)) then
-     return
-  endif
-endif
-
-!!$    case (ELEMENT_NODE)
-!!$      np => cloneNode(arg, deep, ex)
-!!$! FIXME strip out unspecified attributes unless they are also default in this doc ...
-!!$    case (ENTITY_REFERENCE_NODE)
-!!$      np => cloneNode(arg, .false., ex)
-!!$! FIXME if entity is defined in this doc then add appropriate children
-!!$    case default
-!!$      np => cloneNode(arg, deep, ex)
-!!$    end select
-!!$
-!!$    np%ownerDocument => doc
-!!$    np%parentNode => null()
-!!$
-!!$    ! FIXME need to ensure that inDocument & hanging nodes are set
-!!$    ! appropriately.
 
   end function importNode
 
@@ -4864,7 +4854,7 @@ endif
 
   function getSpecified(attribute, ex)result(p) 
     type(DOMException), intent(inout), optional :: ex
-    type(Node), intent(in) :: attribute
+    type(Node), pointer :: attribute
     logical :: p
 
     if (attribute%nodeType/=ATTRIBUTE_NODE) then
@@ -4879,6 +4869,24 @@ endif
 
     p = attribute%specified
   end function getSpecified
+
+  subroutine setSpecified(attribute, p, ex)
+    type(DOMException), intent(inout), optional :: ex
+    type(Node), pointer :: attribute
+    logical, intent(in) :: p
+
+    if (attribute%nodeType/=ATTRIBUTE_NODE) then
+      call throw_exception(FoX_INVALID_NODE, "setSpecified", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    attribute%specified = p
+  end subroutine setSpecified
     
   pure function getValue_length(attribute) result(n)
     type(Node), intent(in) :: attribute

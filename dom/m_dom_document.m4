@@ -407,11 +407,10 @@ TOHW_m_dom_contents(`
     this => arg
     np => null()
 
-    i = -1
+    i = 0
     doneChildren = .false.
     doneAttributes = .false.
     do
-      print*,"llop"
       new => null()
       select case(getNodeType(this))
       case (ELEMENT_NODE)
@@ -426,22 +425,22 @@ TOHW_m_dom_contents(`
         if (.not.doneChildren) then
           if (associated(this, arg)) then
             new => createAttribute(doc, getName(this))
-            new%specified = .true.
+            call setSpecified(new, .true.)
           elseif (getSpecified(this)) then
             new => createAttribute(doc, getName(this))
-            new%specified = .true.
-          else
-            ! FIXME if (thereIsADefault(getName(this))
+            call setSpecified(new, .true.)
+            ! elseif (thereIsADefault(getName(this)) FIXME
             ! new => createAttribute(doc, getName(this))
             ! call setValue(new, defaultValue)
-            ! new%specified => .false.
-            continue
+            ! call setSpecified(new, .false.)
+          else
+            doneChildren = .true.
           endif
         endif
       case (TEXT_NODE)
-        new => createTextNode(doc, getData(this))
+        if (.not.doneChildren) new => createTextNode(doc, getData(this))
       case (CDATA_SECTION_NODE)
-        new => createCDataSection(doc, getData(this))
+        if (.not.doneChildren) new => createCDataSection(doc, getData(this))
       case (ENTITY_REFERENCE_NODE)
         if (.not.doneChildren) then
           new => createEntityReference(doc, getNodeName(this))
@@ -450,9 +449,9 @@ TOHW_m_dom_contents(`
       case (ENTITY_NODE)
         if (.not.doneChildren) new => createEntity(doc, getName(this), getPublicId(this), getSystemId(this), getNotationName(this))
       case (PROCESSING_INSTRUCTION_NODE)
-        new => createProcessingInstruction(doc, getTarget(this), getData(this))
+        if (.not.doneChildren) new => createProcessingInstruction(doc, getTarget(this), getData(this))
       case (COMMENT_NODE)
-        new => createEntityReference(doc, getNodeValue(this))
+        if (.not.doneChildren) new => createEntityReference(doc, getNodeValue(this))
       case (DOCUMENT_NODE)
         TOHW_m_dom_throw_error(NOT_SUPPORTED_ERR)
       case (DOCUMENT_TYPE_NODE)
@@ -460,13 +459,10 @@ TOHW_m_dom_contents(`
       case (DOCUMENT_FRAGMENT_NODE)
         if (.not.doneChildren) new => createDocumentFragment(doc)
       case (NOTATION_NODE)
-        new => createNotation(doc, getName(this), getPublicId(this), getSystemId(this))
+        if (.not.doneChildren) new => createNotation(doc, getName(this), getPublicId(this), getSystemId(this))
       end select
-
       if (.not.associated(np)) then
-        print*,"starting import tree"
         np => new
-        print*,"ok"
       elseif (associated(new)) then
         if (this%nodeType==ATTRIBUTE_NODE) then
           new => setAttributeNode(np, new)
@@ -479,89 +475,64 @@ TOHW_m_dom_contents(`
         if (getNodeType(arg)/=ELEMENT_NODE.and.getNodeType(arg)/=ATTRIBUTE_NODE) return
       endif
 
-      if (doneChildren.and.associated(this, arg)) then
-        exit
-      elseif (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
-        if (getLength(getAttributes(this))>0) then
-          if (.not.associated(this, arg)) np => getLastChild(np)
-          this => item(getAttributes(this), 0)
-        else
-          if (.not.deep) return
-          doneAttributes = .true.
-        endif
-      elseif (getNodeType(this)==ATTRIBUTE_NODE) then
-        if (doneChildren) then
-          if (i==getLength(getAttributes(getOwnerElement(this)))) then
-            this => item(getAttributes(getOwnerElement(this)), i)
-            if (.not.associated(this, arg)) np => getOwnerElement(np)
+      if (.not.doneChildren) then
+
+        if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
+          if (getLength(getAttributes(this))>0) then
+            if (.not.associated(this, arg)) np => getLastChild(np)
+            this => item(getAttributes(this), 0)
           else
-            i = -1
-            if (.not.associated(this, arg)) np => getParentNode(np)
+            if (.not.deep) return
+            doneAttributes = .true.
+          endif
+        elseif (hasChildNodes(this)) then
+          if (.not.associated(this, arg)) then
+            if (getNodeType(this)==ATTRIBUTE_NODE) then
+              np => item(getAttributes(np), i)
+            else
+              np => getLastChild(np)
+            endif
+          endif
+          this => getFirstChild(this)
+          doneChildren = .false.
+          doneAttributes = .false.
+        else
+          doneChildren = .true.
+        endif
+
+      else ! if doneChildren
+
+        if (associated(this, arg)) exit
+        if (getNodeType(this)==ATTRIBUTE_NODE) then
+          if (i<getLength(getAttributes(getOwnerElement(this)))-1) then
+            i = i + 1
+            this => item(getAttributes(getOwnerElement(this)), i)
+            doneChildren = .false.
+          else
+            i = 0
+            if (associated(getParentNode(np))) np => getParentNode(np)
             this => getOwnerElement(this)
             doneAttributes = .true.
             doneChildren = .false.
           endif
-        else
-          i = i + 1
-          if (.not.associated(this, arg)) np => item(getAttributes(np), i)
-          this => getFirstChild(this)
+        elseif (associated(getNextSibling(this))) then
+          this => getNextSibling(this)
           doneChildren = .false.
           doneAttributes = .false.
-        endif
-      elseif (hasChildNodes(this).and..not.doneChildren) then
-        if (.not.associated(this, arg)) np => getLastChild(np)
-        this => getFirstChild(this)
-        doneChildren = .false.
-        doneAttributes = .false.
-      elseif (associated(getNextSibling(this))) then
-        this => getNextSibling(this)
-        doneChildren = .false.
-        doneAttributes = .false.
-      else
-        doneChildren = .true.
-        this => getParentNode(this)
-        if (.not.associated(this, arg)) then
-          if (getNodeType(this)==ATTRIBUTE_NODE) then
-            np => getOwnerElement(np)
-          else
-            np => getParentNode(np)
+        else
+          this => getParentNode(this)
+          if (.not.associated(this, arg)) then
+            if (getNodeType(this)==ATTRIBUTE_NODE) then
+              np => getOwnerElement(np)
+            else
+              np => getParentNode(np)
+            endif
           endif
         endif
+
       endif
+
     enddo
-!!$    type(Node), pointer :: doc
-!!$    type(Node), pointer :: arg
-!!$    logical, intent(in) :: deep
-!!$    type(Node), pointer :: np
-!!$
-!!$    if (doc%nodeType/=DOCUMENT_NODE) then
-!!$      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-!!$    endif
-!!$
-!!$    select case(arg%nodeType)
-!!$    case (ATTRIBUTE_NODE)
-!!$      np => cloneNode(arg, deep, ex)
-!!$      np%ownerElement => null()
-!!$      np%specified = .true.
-!!$    case (DOCUMENT_NODE)
-!!$      TOHW_m_dom_throw_error(NOT_SUPPORTED_ERR)
-!!$    case (DOCUMENT_TYPE_NODE)
-!!$      TOHW_m_dom_throw_error(NOT_SUPPORTED_ERR)
-!!$    case (ELEMENT_NODE)
-!!$      np => cloneNode(arg, deep, ex)
-!!$! FIXME strip out unspecified attributes unless they are also default in this doc ...
-!!$    case (ENTITY_REFERENCE_NODE)
-!!$      np => cloneNode(arg, .false., ex)
-!!$! FIXME if entity is defined in this doc then add appropriate children
-!!$    case default
-!!$      np => cloneNode(arg, deep, ex)
-!!$    end select
-!!$
-!!$    np%ownerDocument => doc
-!!$    np%parentNode => null()
-!!$
-!!$    ! FIXME need to ensure that inDocument & hanging nodes are set
-!!$    ! appropriately.
 
   end function importNode
 

@@ -814,62 +814,98 @@ TOHW_m_dom_contents(`
     
   end function hasAttributes
   
-  recursive TOHW_subroutine(normalize, (arg))
+  TOHW_subroutine(normalize, (arg))
     type(Node), pointer :: arg
-  ! NB only ever one level of recursion, for text children of the attributes of an element
-    ! FIXME shoulndt be recursive
-    type(Node), pointer :: this, tempNode
-    type(NamedNodeMap), pointer :: nnm
-    integer :: i
-    logical :: noChild
+    type(Node), pointer :: np, tempNode, oldNode
+    integer :: i, i_t
+    logical :: doneChildren, doneAttributes
     character, pointer :: temp(:)
-    
-    ! This ignores readonly status according to the DOM standard.
 
-    noChild = .false.
+! DOM standard requires we ignore readonly status
+
     do
-      if (noChild) then
-        if (associated(this, arg)) exit
-        if (associated(this%nextSibling)) then
-          this => this%nextSibling
-          noChild = .false.
+      select case(getNodeType(np))
+      case (ELEMENT_NODE)
+        if (doneChildren) doneAttributes = .true.
+      case (TEXT_NODE)
+        if (associated(np, arg)) exit
+        i_t = getLength(np)
+! If we are called on a text node itself, then do nothing.
+        tempNode => getNextSibling(np)
+        do while (associated(tempNode))
+          if (getNodeType(tempNode)/=TEXT_NODE) exit
+          i_t = i_t + getLength(tempNode)
+          tempNode => getNextSibling(tempNode)
+        enddo
+        if (i_t > getLength(np)) then
+          allocate(temp(i_t))
+          temp(:getLength(np)) = getData(np)
+          i_t = 1
+          tempNode => getNextSibling(np)
+          do while (associated(tempNode))
+            if (getNodeType(tempNode)/=TEXT_NODE) exit
+            temp(i_t:getLength(tempNode)-1) = getData(tempNode)
+            i_t = i_t + getLength(tempNode)
+            tempNode => getNextSibling(tempNode)
+          enddo
+          deallocate(np%nodeValue)
+          np%nodeValue => temp
+          call setData(np, str_vs(temp))
+          do while (associated(tempNode))
+            if (getNodeType(tempNode)/=TEXT_NODE) exit
+            if (.not.arg%inDocument) call remove_node_nl(arg%ownerDocument%hangingNodes, tempNode)
+            oldNode => removeChild(getParentNode(tempNode), tempNode)
+            tempNode => tempNode%nextSibling
+            call destroy(oldNode)
+          enddo
+        endif
+      end select
+
+
+      if (doneChildren.and.associated(np, arg)) then
+        exit
+      elseif (getNodeType(np)==ELEMENT_NODE.and..not.doneAttributes) then
+        if (getLength(getAttributes(np))>0) then
+          np => item(getAttributes(np), 0)
         else
-          this => this%parentNode
-          cycle
+          doneAttributes = .true.
+        endif
+      elseif (getNodeType(np)==ATTRIBUTE_NODE) then
+        if (doneChildren) then
+          if (i==getLength(getAttributes(getOwnerElement(np)))) then
+            np => item(getAttributes(getOwnerElement(np)), i)
+          else
+            i = -1
+            np => getOwnerElement(np)
+            doneAttributes = .true.
+            doneChildren = .false.
+          endif
+        else
+          i = i + 1
+          np => getFirstChild(np)
+          doneChildren = .false.
+          doneAttributes = .false.
+        endif
+      elseif (hasChildNodes(np).and..not.doneChildren) then
+        np => getFirstChild(np)
+        doneChildren = .false.
+        doneAttributes = .false.
+      elseif (associated(getNextSibling(np))) then
+        np => getNextSibling(np)
+        doneChildren = .false.
+        doneAttributes = .false.
+      else
+        doneChildren = .true.
+        np => getParentNode(np)
+        if (.not.associated(np, arg)) then
+          if (getNodeType(np)==ATTRIBUTE_NODE) then
+            np => getOwnerElement(np)
+          else
+            np => getParentNode(np)
+          endif
         endif
       endif
-      if (associated(tempNode)) then
-        tempNode => removeChild(tempNode%parentNode, tempNode)
-        tempNode => null()
-      endif
-      if (this%nodeType==ELEMENT_NODE.and.hasAttributes(this)) then
-        ! Loop over attributes combining them ...
-        nnm => getAttributes(this)
-        do i = 1, getLength(nnm)
-          tempNode => item(nnm, i)
-          call normalize(tempNode)
-        enddo
-        tempNode => null()
-      elseif (this%nodeType==TEXT_NODE.and.associated(this%nextSibling)) then
-        ! Keep going until all adjacent TEXT_NODEs are consumed.
-        do while (this%nextSibling%nodeType==TEXT_NODE) 
-          temp => this%nodeValue
-          this%nodeValue => vs_str_alloc(str_vs(temp)//getData(this%nextSibling))
-	  deallocate(temp)
-          tempNode => removeChild(this%parentNode, this%nextSibling)
-        enddo
-        tempNode => null()
-        if (size(this%nodeValue)==0) &
-          tempNode => this
-      endif
-      if (associated(this%firstChild)) then
-        this => this%firstChild
-      else
-        noChild = .true.
-      endif
     enddo
- 
-    tempNode => removeChild(tempNode%parentNode, tempNode)
 
   end subroutine normalize
 

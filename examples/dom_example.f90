@@ -4,11 +4,12 @@ program dom_example
   use FoX_dom
   implicit none
 
-  type(Node), pointer :: myDoc, np, np2, dummy
+  type(Node), pointer :: myDoc, myOtherDoc, np, np2, dummy
   type(NodeList) :: interest
   integer :: i
 
   myDoc => parsefile('test.xml')
+  myOtherDoc => parsefile('test.xml')
   print*,"LEN", getLength(getChildNodes(getDocumentElement(myDoc)))
   np => createElement(myDoc, 'a')
 
@@ -17,6 +18,11 @@ program dom_example
 
   np2 => getDocumentElement(myDoc)
 
+  np => importNode(myDoc, getDocumentElement(myOtherDoc), .true.)
+
+  np => appendChild(np2, np)
+  call serialize(myDoc, 'myDoc.xml')
+  call serialize(myOtherDoc, 'myOtherDoc.xml')
 
   np => appendChild(np2, np)
 
@@ -57,6 +63,7 @@ program dom_example
 !  call dumpTree(myDoc)
 
   interest = getElementsByTagName(myDoc, 'a')
-  call destroyDocument(myDoc)
 
+  call destroyDocument(myDoc)
+  call destroyDocument(myOtherDoc)
 end program dom_example
