@@ -553,10 +553,6 @@ endif
       ! FIXME internal error
     endif
 
-    !do i = 1, element%attributes%length
-    !  call destroyNode(element%attributes%nodes(i)%this)
-    !enddo
-    !    call destroyNamedNodeMap(element%attributes)
     if (associated(element%attributes%nodes)) deallocate(element%attributes%nodes)
     call destroyNodeContents(element)
     deallocate(element)
@@ -578,13 +574,6 @@ if (present(ex)) then
 endif
 
     endif
-
- !    np => attr%firstChild
- !   do while (associated(np))
- !     np_next => np%nextSibling
- !     call destroyNode(np)
- !     np => np_next
- !   enddo
 
     call destroyNodeContents(attr)
     deallocate(attr)
@@ -612,64 +601,85 @@ endif
 
   end subroutine destroyDocumentFragment
 
-  subroutine destroyAllNodesRecursively(df)
-    type(Node), pointer :: df
+  subroutine destroyAllNodesRecursively(arg)
+    type(Node), pointer :: arg
     
-    type(Node), pointer :: np
-    logical :: ascending, attributesdone
+    type(Node), pointer :: this, deadNode
+    logical :: doneChildren, doneAttributes
     integer :: i
 
-    np => df%firstChild
-    if (.not.associated(np)) return
+    if (.not.associated(arg)) return
+    this => arg
 
-    ascending = .false.
-    attributesdone = .false.
+
     i = 0
+    doneChildren = .false.
+    doneAttributes = .false.
+
+      deadNode => null()
     do
-      if (ascending) then
-        ascending = .false.
-        if (np%nodeType==ATTRIBUTE_NODE) then
-          np => np%ownerElement
-          attributesdone = .true.
-          if (i>0) then
-            call destroyNode(np%attributes%nodes(i)%this)
-            i = 0
-          endif
-          cycle
-        else
-          np => np%parentNode
-          call destroyNode(np%lastChild)
-        endif
-        if (associated(np, df)) exit
-      elseif (np%nodeType==ELEMENT_NODE.and..not.attributesdone) then
-        if (np%attributes%length>0) then
-          i = 1
-          np => np%attributes%nodes(i)%this
-        else
-          attributesdone = .true.
-        endif
-        cycle
-      elseif (associated(np%firstChild)) then
-        np => np%firstChild
-        attributesdone = .false.
-        cycle
-      endif
-      if (np%nodeType==ATTRIBUTE_NODE) then
-        if (i==np%ownerElement%attributes%length) then
-          ascending = .true.
-        else
-          i = i + 1
-          np => np%ownerElement%attributes%nodes(i)%this
-          call destroyNode(np%ownerElement%attributes%nodes(i-1)%this)
-        endif
-      elseif (associated(np%nextSibling)) then
-        np => np%nextSibling
-        attributesdone = .false.
-        call destroyNode(np%previousSibling)
+
+      if (.not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
+      if (.not.doneChildren) then
+
+
+
       else
-        ascending = .true.
+        if (getNodeType(this)==ELEMENT_NODE) doneAttributes = .true.
+
+
+
       endif
+      endif
+
+
+      deadNode => null()
+      if (.not.doneChildren) then
+
+        if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
+          if (getLength(getAttributes(this))>0) then
+                      this => item(getAttributes(this), 0)
+          else
+            doneAttributes = .true.
+          endif
+        elseif (hasChildNodes(this)) then
+          this => getFirstChild(this)
+          doneChildren = .false.
+          doneAttributes = .false.
+        else
+          doneChildren = .true.
+        endif
+
+      else ! if doneChildren
+
+        deadNode => this
+        if (associated(this, arg)) exit
+        if (getNodeType(this)==ATTRIBUTE_NODE) then
+          if (i<getLength(getAttributes(getOwnerElement(this)))-1) then
+            i = i + 1
+            this => item(getAttributes(getOwnerElement(this)), i)
+            doneChildren = .false.
+          else
+            i = 0
+            this => getOwnerElement(this)
+            doneAttributes = .true.
+            doneChildren = .false.
+          endif
+        elseif (associated(getNextSibling(this))) then
+
+          this => getNextSibling(this)
+          doneChildren = .false.
+          doneAttributes = .false.
+        else
+          this => getParentNode(this)
+        endif
+
+        call destroy(deadNode)
+      endif
+
     enddo
+
+
 
   end subroutine destroyAllNodesRecursively
 
@@ -1968,6 +1978,7 @@ endif
             doneChildren = .false.
           endif
         elseif (associated(getNextSibling(this))) then
+
           this => getNextSibling(this)
           doneChildren = .false.
           doneAttributes = .false.
@@ -1981,7 +1992,6 @@ endif
             endif
           endif
         endif
-
       endif
 
     enddo
@@ -2099,13 +2109,13 @@ endif
             doneChildren = .false.
           endif
         elseif (associated(getNextSibling(this))) then
+
           this => getNextSibling(this)
           doneChildren = .false.
           doneAttributes = .false.
         else
           this => getParentNode(this)
         endif
-
       endif
 
     enddo
@@ -2238,13 +2248,13 @@ endif
             doneChildren = .false.
           endif
         elseif (associated(getNextSibling(this))) then
+
           this => getNextSibling(this)
           doneChildren = .false.
           doneAttributes = .false.
         else
           this => getParentNode(this)
         endif
-
       endif
 
     enddo
@@ -2314,13 +2324,13 @@ endif
             doneChildren = .false.
           endif
         elseif (associated(getNextSibling(this))) then
+
           this => getNextSibling(this)
           doneChildren = .false.
           doneAttributes = .false.
         else
           this => getParentNode(this)
         endif
-
       endif
 
     enddo
@@ -3894,6 +3904,7 @@ endif
             doneChildren = .false.
           endif
         elseif (associated(getNextSibling(this))) then
+
           this => getNextSibling(this)
           doneChildren = .false.
           doneAttributes = .false.
@@ -3907,7 +3918,6 @@ endif
             endif
           endif
         endif
-
       endif
 
     enddo

@@ -19,13 +19,17 @@ dnl may be walked which represents its parent for a cloned tree
 dnl That must be called "thatParent"
 dnl This can be switched on with $3 = thatParent
 dnl For destroyNode, another node can be tracked which represents the
-dnl last node hit which we can delete. It will be called "deadNode"
+dnl last node hit which we can delete. It will be called "deadNode",
+dnl and will be destroyed as soon as it is finished with.
 dnl That can be switched on with $3 = deadNode
 dnl
 
     i = 0
     doneChildren = .false.
     doneAttributes = .false.
+ifelse(`$3', `deadNode',`
+      deadNode => null()
+')dnl
     do
 
       if (.not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
@@ -41,6 +45,9 @@ $2
       endif
       endif
 
+ifelse(`$3', `deadNode',`
+      deadNode => null()
+')dnl
       if (.not.doneChildren) then
 
         if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
@@ -74,6 +81,9 @@ ifelse(`$3', `parentNode', `dnl
 
       else ! if doneChildren
 
+ifelse(`$3', `deadNode', `dnl
+        deadNode => this
+')dnl
         if (associated(this, arg)) exit
         if (getNodeType(this)==ATTRIBUTE_NODE) then
           if (i<getLength(getAttributes(getOwnerElement(this)))-1) then
@@ -90,6 +100,7 @@ ifelse(`$3', `parentNode', `dnl
             doneChildren = .false.
           endif
         elseif (associated(getNextSibling(this))) then
+
           this => getNextSibling(this)
           doneChildren = .false.
           doneAttributes = .false.
@@ -105,7 +116,9 @@ ifelse(`$3', `parentNode', `dnl
           endif
 ')dnl
         endif
-
+ifelse(`$3', `deadNode',`
+        call destroy(deadNode)
+')dnl
       endif
 
     enddo
