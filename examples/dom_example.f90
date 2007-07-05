@@ -57,6 +57,25 @@ program dom_example
 
   dummy => appendChild(np2, cloneNode(np2, .true.))
 
+  dummy => appendChild(np2, createTextNode(myDoc, 'a'))
+  dummy => appendChild(np2, createTextNode(myDoc, 'a'))
+  dummy => appendChild(np2, createTextNode(myDoc, 'a'))
+  dummy => appendChild(np2, createTextNode(myDoc, 'a'))
+  dummy => appendChild(np2, createTextNode(myDoc, 'a'))
+  dummy => appendChild(np2, createTextNode(myDoc, 'a'))
+  dummy => appendChild(np2, createTextNode(myDoc, 'a'))
+  dummy => appendChild(np2, createTextNode(myDoc, 'a'))
+  dummy => appendChild(np2, createTextNode(myDoc, 'a'))
+  dummy => appendChild(np2, createTextNode(myDoc, 'a'))
+  dummy => appendChild(np2, createTextNode(myDoc, 'a'))
+  dummy => appendChild(np2, createTextNode(myDoc, 'a'))
+  dummy => appendChild(np2, createTextNode(myDoc, 'a'))
+  dummy => appendChild(np2, createTextNode(myDoc, 'a'))
+  dummy => appendChild(np2, createTextNode(myDoc, 'a'))
+  dummy => appendChild(np2, createTextNode(myDoc, 'a'))
+
+  call normalize(np2)
+
   call serialize(myDoc, "out321.xml")
   call dumpTree(myDoc)
 !  call dumpTree(myDoc)

@@ -778,36 +778,33 @@ TOHW_m_dom_treewalk(`
       if (getNodeType(this)==TEXT_NODE) then
         if (associated(this, arg)) exit ! If we are called on a text node itself, then do nothing.
         i_t = getLength(this)
-
         tempNode => getNextSibling(this)
         do while (associated(tempNode))
           if (getNodeType(tempNode)/=TEXT_NODE) exit
           i_t = i_t + getLength(tempNode)
           tempNode => getNextSibling(tempNode)
         enddo
-        if (i_t > getLength(this)) then
+        if (.not.associated(tempNode, getNextSibling(this))) then
           allocate(temp(i_t))
           temp(:getLength(this)) = getData(this)
-          i_t = 1
+          i_t = getLength(this)
           tempNode => getNextSibling(this)
           do while (associated(tempNode))
             if (getNodeType(tempNode)/=TEXT_NODE) exit
-            temp(i_t:getLength(tempNode)-1) = getData(tempNode)
+            temp(i_t+1:i_t+getLength(tempNode)) = getData(tempNode)
             i_t = i_t + getLength(tempNode)
+            oldNode => tempNode
             tempNode => getNextSibling(tempNode)
+            oldNode => removeChild(getParentNode(oldNode), oldNode)
+            call remove_node_nl(arg%ownerDocument%hangingNodes, oldNode)
+            call destroy(oldNode)
           enddo
           deallocate(this%nodeValue)
           this%nodeValue => temp
-          do while (associated(tempNode))
-            if (getNodeType(tempNode)/=TEXT_NODE) exit
-            if (.not.arg%inDocument) call remove_node_nl(arg%ownerDocument%hangingNodes, tempNode)
-            oldNode => removeChild(getParentNode(tempNode), tempNode)
-            tempNode => tempNode%nextSibling
-            call destroy(oldNode)
-          enddo
         endif
       end if
 ',`',`')
+
 
   end subroutine normalize
 
