@@ -669,54 +669,44 @@ TOHW_m_dom_contents(`
     logical :: deep
     type(Node), pointer :: np
 
-    type(Node), pointer :: doc, this, new, ERchild
+    type(Node), pointer :: doc, thatParent, this, new, ERchild
 
     logical :: doneAttributes, doneChildren, readonly
     integer :: i
 
     this => arg
-    np => null()
+    thatParent => null()
     ERchild => null()
     doc => getOwnerDocument(arg)
+    np => null()
 
-    i = -1
-    doneChildren = .false.
-    doneAttributes = .false.
     readonly = .false.
-    do
-      print*,"llop"
+
+TOHW_m_dom_treewalk(`
+
       new => null()
       select case(getNodeType(this))
       case (ELEMENT_NODE)
-        if (doneChildren) then
-          doneAttributes = .true.
-        elseif (.not.doneAttributes) then
+        if (.not.doneAttributes) then
           ! Are there any new prefixes or namespaces to be declared?
           ! FIXME
           new => createElement(doc, getTagName(this))
         endif
       case (ATTRIBUTE_NODE)
-        if (.not.doneChildren) then
-          new => createAttribute(doc, getName(this))
-          if (associated(this, arg)) then
-            new%specified = .true.
-          else
-            new%specified = this%specified
-          endif
+        new => createAttribute(doc, getName(this))
+        if (associated(this, arg)) then
+          call setSpecified(new, .true.)
+        else
+          call setSpecified(new, getSpecified(this))
         endif
       case (TEXT_NODE)
         new => createTextNode(doc, getData(this))
       case (CDATA_SECTION_NODE)
         new => createCDataSection(doc, getData(this))
       case (ENTITY_REFERENCE_NODE)
-        if (.not.doneChildren) then
-          ERchild => this
-          readonly = .true.
-          new => createEntityReference(doc, getNodeName(this))
-        elseif (associated(ERchild, this)) then
-          ERchild => null()
-          readonly = .false.
-        endif
+        ERchild => this
+        readonly = .true.
+        new => createEntityReference(doc, getNodeName(this))
       case (ENTITY_NODE)
         return
       case (PROCESSING_INSTRUCTION_NODE)
@@ -728,78 +718,38 @@ TOHW_m_dom_contents(`
       case (DOCUMENT_TYPE_NODE)
         return
       case (DOCUMENT_FRAGMENT_NODE)
-        if (.not.doneChildren) new => createDocumentFragment(doc)
+        new => createDocumentFragment(doc)
       case (NOTATION_NODE)
         return
       end select
 
-      if (.not.associated(np)) then
-        print*,"starting clone tree"
-        np => new
-        print*,"ok"
+      if (.not.associated(thatParent)) then
+        thatParent => new
       elseif (associated(new)) then
         new%readonly = readonly
         if (this%nodeType==ATTRIBUTE_NODE) then
-          new => setAttributeNode(np, new)
+          new => setAttributeNode(thatParent, new)
         else
-          new => appendChild(np, new)
+          new => appendChild(thatParent, new)
         endif
       endif
 
       if (.not.deep) then
         if (getNodeType(arg)/=ELEMENT_NODE.and.getNodeType(arg)/=ATTRIBUTE_NODE) return
       endif
+', `
+      select case(getNodeType(this))
+      case (ELEMENT_NODE)
+        doneAttributes = .true.
+      case (ENTITY_REFERENCE_NODE)
+        if (associated(ERchild, this)) then
+          ERchild => null()
+          readonly = .false.
+        endif
+      end select
+')
 
-      if (doneChildren.and.associated(this, arg)) then
-        exit
-      elseif (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
-        if (getLength(getAttributes(this))>0) then
-          if (.not.associated(this, arg)) np => getLastChild(np)
-          this => item(getAttributes(this), 0)
-        else
-          if (.not.deep) return
-          doneAttributes = .true.
-        endif
-      elseif (getNodeType(this)==ATTRIBUTE_NODE) then
-        if (doneChildren) then
-          if (i==getLength(getAttributes(getOwnerElement(this)))) then
-            this => item(getAttributes(getOwnerElement(this)), i)
-            if (.not.associated(this, arg)) np => getOwnerElement(np)
-          else
-            i = -1
-            if (.not.associated(this, arg)) np => getParentNode(np)
-            this => getOwnerElement(this)
-            doneAttributes = .true.
-            doneChildren = .false.
-          endif
-        else
-          i = i + 1
-          if (.not.associated(this, arg)) np => item(getAttributes(np), i)
-          this => getFirstChild(this)
-          doneChildren = .false.
-          doneAttributes = .false.
-        endif
-      elseif (hasChildNodes(this).and..not.doneChildren) then
-        if (.not.associated(this, arg)) np => getLastChild(np)
-        this => getFirstChild(this)
-        doneChildren = .false.
-        doneAttributes = .false.
-      elseif (associated(getNextSibling(this))) then
-        this => getNextSibling(this)
-        doneChildren = .false.
-        doneAttributes = .false.
-      else
-        doneChildren = .true.
-        this => getParentNode(this)
-        if (.not.associated(this, arg)) then
-          if (getNodeType(this)==ATTRIBUTE_NODE) then
-            np => getOwnerElement(np)
-          else
-            np => getParentNode(np)
-          endif
-        endif
-      endif
-    enddo
+    np => thatParent
 
   end function cloneNode
 

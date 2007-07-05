@@ -1832,54 +1832,52 @@ endif
     logical :: deep
     type(Node), pointer :: np
 
-    type(Node), pointer :: doc, this, new, ERchild
+    type(Node), pointer :: doc, thatParent, this, new, ERchild
 
     logical :: doneAttributes, doneChildren, readonly
     integer :: i
 
     this => arg
-    np => null()
+    thatParent => null()
     ERchild => null()
     doc => getOwnerDocument(arg)
+    np => null()
 
-    i = -1
+    readonly = .false.
+
+
+    i = 0
     doneChildren = .false.
     doneAttributes = .false.
-    readonly = .false.
     do
-      print*,"llop"
+
+      if (.not.doneChildren) then
+
+
+
       new => null()
       select case(getNodeType(this))
       case (ELEMENT_NODE)
-        if (doneChildren) then
-          doneAttributes = .true.
-        elseif (.not.doneAttributes) then
+        if (.not.doneAttributes) then
           ! Are there any new prefixes or namespaces to be declared?
           ! FIXME
           new => createElement(doc, getTagName(this))
         endif
       case (ATTRIBUTE_NODE)
-        if (.not.doneChildren) then
-          new => createAttribute(doc, getName(this))
-          if (associated(this, arg)) then
-            new%specified = .true.
-          else
-            new%specified = this%specified
-          endif
+        new => createAttribute(doc, getName(this))
+        if (associated(this, arg)) then
+          call setSpecified(new, .true.)
+        else
+          call setSpecified(new, getSpecified(this))
         endif
       case (TEXT_NODE)
         new => createTextNode(doc, getData(this))
       case (CDATA_SECTION_NODE)
         new => createCDataSection(doc, getData(this))
       case (ENTITY_REFERENCE_NODE)
-        if (.not.doneChildren) then
-          ERchild => this
-          readonly = .true.
-          new => createEntityReference(doc, getNodeName(this))
-        elseif (associated(ERchild, this)) then
-          ERchild => null()
-          readonly = .false.
-        endif
+        ERchild => this
+        readonly = .true.
+        new => createEntityReference(doc, getNodeName(this))
       case (ENTITY_NODE)
         return
       case (PROCESSING_INSTRUCTION_NODE)
@@ -1891,21 +1889,19 @@ endif
       case (DOCUMENT_TYPE_NODE)
         return
       case (DOCUMENT_FRAGMENT_NODE)
-        if (.not.doneChildren) new => createDocumentFragment(doc)
+        new => createDocumentFragment(doc)
       case (NOTATION_NODE)
         return
       end select
 
-      if (.not.associated(np)) then
-        print*,"starting clone tree"
-        np => new
-        print*,"ok"
+      if (.not.associated(thatParent)) then
+        thatParent => new
       elseif (associated(new)) then
         new%readonly = readonly
         if (this%nodeType==ATTRIBUTE_NODE) then
-          new => setAttributeNode(np, new)
+          new => setAttributeNode(thatParent, new)
         else
-          new => appendChild(np, new)
+          new => appendChild(thatParent, new)
         endif
       endif
 
@@ -1913,56 +1909,85 @@ endif
         if (getNodeType(arg)/=ELEMENT_NODE.and.getNodeType(arg)/=ATTRIBUTE_NODE) return
       endif
 
-      if (doneChildren.and.associated(this, arg)) then
-        exit
-      elseif (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
-        if (getLength(getAttributes(this))>0) then
-          if (.not.associated(this, arg)) np => getLastChild(np)
-          this => item(getAttributes(this), 0)
-        else
-          if (.not.deep) return
-          doneAttributes = .true.
+
+      else
+
+
+      select case(getNodeType(this))
+      case (ELEMENT_NODE)
+        doneAttributes = .true.
+      case (ENTITY_REFERENCE_NODE)
+        if (associated(ERchild, this)) then
+          ERchild => null()
+          readonly = .false.
         endif
-      elseif (getNodeType(this)==ATTRIBUTE_NODE) then
-        if (doneChildren) then
-          if (i==getLength(getAttributes(getOwnerElement(this)))) then
-            this => item(getAttributes(getOwnerElement(this)), i)
-            if (.not.associated(this, arg)) np => getOwnerElement(np)
+      end select
+
+
+      endif
+
+      if (.not.doneChildren) then
+
+        if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
+          if (getLength(getAttributes(this))>0) then
+            if (.not.associated(this, arg)) thatParent => getLastChild(thatParent)
+            this => item(getAttributes(this), 0)
           else
-            i = -1
-            if (.not.associated(this, arg)) np => getParentNode(np)
+            if (.not.deep) return
+            doneAttributes = .true.
+          endif
+        elseif (hasChildNodes(this)) then
+          if (.not.associated(this, arg)) then
+            if (getNodeType(this)==ATTRIBUTE_NODE) then
+              thatParent => item(getAttributes(thatParent), i)
+            else
+              thatParent => getLastChild(thatParent)
+            endif
+          endif
+          this => getFirstChild(this)
+          doneChildren = .false.
+          doneAttributes = .false.
+        else
+          doneChildren = .true.
+        endif
+
+      else ! if doneChildren
+
+        if (associated(this, arg)) exit
+        if (getNodeType(this)==ATTRIBUTE_NODE) then
+          if (i<getLength(getAttributes(getOwnerElement(this)))-1) then
+            i = i + 1
+            this => item(getAttributes(getOwnerElement(this)), i)
+            doneChildren = .false.
+          else
+            i = 0
+            if (associated(getParentNode(thatParent))) thatParent => getParentNode(thatParent)
             this => getOwnerElement(this)
             doneAttributes = .true.
             doneChildren = .false.
           endif
-        else
-          i = i + 1
-          if (.not.associated(this, arg)) np => item(getAttributes(np), i)
-          this => getFirstChild(this)
+        elseif (associated(getNextSibling(this))) then
+          this => getNextSibling(this)
           doneChildren = .false.
           doneAttributes = .false.
-        endif
-      elseif (hasChildNodes(this).and..not.doneChildren) then
-        if (.not.associated(this, arg)) np => getLastChild(np)
-        this => getFirstChild(this)
-        doneChildren = .false.
-        doneAttributes = .false.
-      elseif (associated(getNextSibling(this))) then
-        this => getNextSibling(this)
-        doneChildren = .false.
-        doneAttributes = .false.
-      else
-        doneChildren = .true.
-        this => getParentNode(this)
-        if (.not.associated(this, arg)) then
-          if (getNodeType(this)==ATTRIBUTE_NODE) then
-            np => getOwnerElement(np)
-          else
-            np => getParentNode(np)
+        else
+          this => getParentNode(this)
+          if (.not.associated(this, arg)) then
+            if (getNodeType(this)==ATTRIBUTE_NODE) then
+              thatParent => getOwnerElement(thatParent)
+            else
+              thatParent => getParentNode(thatParent)
+            endif
           endif
         endif
+
       endif
+
     enddo
+
+
+
+    np => thatParent
 
   end function cloneNode
 
@@ -3663,17 +3688,16 @@ endif
     this => arg
     thatParent => null()
 
+    
     i = 0
     doneChildren = .false.
     doneAttributes = .false.
     do
-      ! First, do stuff to the node
-      ! Every node will be hit once on the way down, once on the way up.
-      ! Except for Element nodes, which will be hit three times, once additionally
-      ! after attributes are done, before children are done
 
-      ! a) the first time we 
       if (.not.doneChildren) then
+
+
+
         new => null()
         select case (getNodeType(this))
         case (ELEMENT_NODE)
@@ -3753,16 +3777,15 @@ endif
         if (.not.deep) then
           if (getNodeType(arg)/=ELEMENT_NODE.and.getNodeType(arg)/=ATTRIBUTE_NODE) return
         endif
-        
-      else ! if doneChildren
+
+
+      else
+
 
         if (getNodeType(thatParent)==ELEMENT_NODE) doneAttributes = .true.
 
-      endif
-      
-      print*,"moving pointers on"
 
-      ! Now move pointers on ...
+      endif
 
       if (.not.doneChildren) then
 
@@ -3822,6 +3845,8 @@ endif
       endif
 
     enddo
+
+
 
     np => thatParent
     print*,"importDone"

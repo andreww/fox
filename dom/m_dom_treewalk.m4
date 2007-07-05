@@ -15,10 +15,12 @@ dnl logical :: doneChildren, doneAttributes
 dnl
 dnl The primary node being walked must be called "this"
 dnl In addition, for cloneNode/importNode, a secondary node
-dnl will be walked which represents its parent for a cloned tree
+dnl may be walked which represents its parent for a cloned tree
 dnl That must be called "thatParent"
-dnl For destroyNode, another node is tracked which represents the
+dnl This can be switched on with $3 = thatParent
+dnl For destroyNode, another node can be tracked which represents the
 dnl last node hit which we can delete. It will be called "deadNode"
+dnl That can be switched on with $4 = deadNode
 dnl
 
     i = 0
@@ -40,7 +42,7 @@ $2
 
         if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
           if (getLength(getAttributes(this))>0) then
-            if (.not.associated(this, arg)) np => getLastChild(np)
+            if (.not.associated(this, arg)) thatParent => getLastChild(thatParent)
             this => item(getAttributes(this), 0)
           else
             if (.not.deep) return
@@ -49,9 +51,9 @@ $2
         elseif (hasChildNodes(this)) then
           if (.not.associated(this, arg)) then
             if (getNodeType(this)==ATTRIBUTE_NODE) then
-              np => item(getAttributes(np), i)
+              thatParent => item(getAttributes(thatParent), i)
             else
-              np => getLastChild(np)
+              thatParent => getLastChild(thatParent)
             endif
           endif
           this => getFirstChild(this)
@@ -71,7 +73,7 @@ $2
             doneChildren = .false.
           else
             i = 0
-            if (associated(getParentNode(np))) np => getParentNode(np)
+            if (associated(getParentNode(thatParent))) thatParent => getParentNode(thatParent)
             this => getOwnerElement(this)
             doneAttributes = .true.
             doneChildren = .false.
@@ -84,9 +86,9 @@ $2
           this => getParentNode(this)
           if (.not.associated(this, arg)) then
             if (getNodeType(this)==ATTRIBUTE_NODE) then
-              np => getOwnerElement(np)
+              thatParent => getOwnerElement(thatParent)
             else
-              np => getParentNode(np)
+              thatParent => getParentNode(thatParent)
             endif
           endif
         endif

@@ -408,17 +408,8 @@ TOHW_m_dom_contents(`
     this => arg
     thatParent => null()
 
-    i = 0
-    doneChildren = .false.
-    doneAttributes = .false.
-    do
-      ! First, do stuff to the node
-      ! Every node will be hit once on the way down, once on the way up.
-      ! Except for Element nodes, which will be hit three times, once additionally
-      ! after attributes are done, before children are done
+    TOHW_m_dom_treewalk(`
 
-      ! a) the first time we 
-      if (.not.doneChildren) then
         new => null()
         select case (getNodeType(this))
         case (ELEMENT_NODE)
@@ -486,75 +477,9 @@ TOHW_m_dom_contents(`
         if (.not.deep) then
           if (getNodeType(arg)/=ELEMENT_NODE.and.getNodeType(arg)/=ATTRIBUTE_NODE) return
         endif
-        
-      else ! if doneChildren
-
+', `
         if (getNodeType(thatParent)==ELEMENT_NODE) doneAttributes = .true.
-
-      endif
-      
-      print*,"moving pointers on"
-
-      ! Now move pointers on ...
-
-      if (.not.doneChildren) then
-
-        if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
-          if (getLength(getAttributes(this))>0) then
-            if (.not.associated(this, arg)) thatParent => getLastChild(thatParent)
-            this => item(getAttributes(this), 0)
-          else
-            if (.not.deep) return
-            doneAttributes = .true.
-          endif
-        elseif (hasChildNodes(this)) then
-          if (.not.associated(this, arg)) then
-            if (getNodeType(this)==ATTRIBUTE_NODE) then
-              thatParent => item(getAttributes(thatParent), i)
-            else
-              thatParent => getLastChild(thatParent)
-            endif
-          endif
-          this => getFirstChild(this)
-          doneChildren = .false.
-          doneAttributes = .false.
-        else
-          doneChildren = .true.
-        endif
-
-      else ! if doneChildren
-
-        if (associated(this, arg)) exit
-        if (getNodeType(this)==ATTRIBUTE_NODE) then
-          if (i<getLength(getAttributes(getOwnerElement(this)))-1) then
-            i = i + 1
-            this => item(getAttributes(getOwnerElement(this)), i)
-            doneChildren = .false.
-          else
-            i = 0
-            if (associated(getParentNode(thatParent))) thatParent => getParentNode(thatParent)
-            this => getOwnerElement(this)
-            doneAttributes = .true.
-            doneChildren = .false.
-          endif
-        elseif (associated(getNextSibling(this))) then
-          this => getNextSibling(this)
-          doneChildren = .false.
-          doneAttributes = .false.
-        else
-          this => getParentNode(this)
-          if (.not.associated(this, arg)) then
-            if (getNodeType(this)==ATTRIBUTE_NODE) then
-              thatParent => getOwnerElement(thatParent)
-            else
-              thatParent => getParentNode(thatParent)
-            endif
-          endif
-        endif
-
-      endif
-
-    enddo
+')
 
     np => thatParent
     print*,"importDone"
