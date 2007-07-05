@@ -20,7 +20,7 @@ dnl That must be called "thatParent"
 dnl This can be switched on with $3 = thatParent
 dnl For destroyNode, another node can be tracked which represents the
 dnl last node hit which we can delete. It will be called "deadNode"
-dnl That can be switched on with $4 = deadNode
+dnl That can be switched on with $3 = deadNode
 dnl
 
     i = 0
@@ -28,14 +28,17 @@ dnl
     doneAttributes = .false.
     do
 
+      if (.not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
       if (.not.doneChildren) then
 
 $1
 
       else
+        if (getNodeType(this)==ELEMENT_NODE) doneAttributes = .true.
 
 $2
 
+      endif
       endif
 
       if (.not.doneChildren) then
@@ -44,7 +47,7 @@ $2
           if (getLength(getAttributes(this))>0) then
           ifelse(`$3', `parentNode', `dnl
             if (.not.associated(this, arg)) thatParent => getLastChild(thatParent)
-')
+')dnl
             this => item(getAttributes(this), 0)
           else
 ifelse(`$3', `parentNode', `dnl
@@ -100,7 +103,7 @@ ifelse(`$3', `parentNode', `dnl
               thatParent => getParentNode(thatParent)
             endif
           endif
-')
+')dnl
         endif
 
       endif

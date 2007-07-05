@@ -17,7 +17,7 @@ module m_dom_dom
   use m_common_array_str, only: str_vs, vs_str_alloc
   use m_dom_error, only: DOMException, throw_exception, is_in_error, &
     NO_MODIFICATION_ALLOWED_ERR, NOT_FOUND_ERR, HIERARCHY_REQUEST_ERR, &
-    WRONG_DOCUMENT_ERR, dom_error
+    WRONG_DOCUMENT_ERR, dom_error, FoX_INTERNAL_ERROR
 
 
 
@@ -1851,6 +1851,7 @@ endif
     doneAttributes = .false.
     do
 
+      if (.not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
       if (.not.doneChildren) then
 
 
@@ -1911,6 +1912,7 @@ endif
 
 
       else
+        if (getNodeType(this)==ELEMENT_NODE) doneAttributes = .true.
 
 
 
@@ -1923,13 +1925,13 @@ endif
 
 
       endif
+      endif
 
       if (.not.doneChildren) then
 
         if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
           if (getLength(getAttributes(this))>0) then
                       if (.not.associated(this, arg)) thatParent => getLastChild(thatParent)
-
             this => item(getAttributes(this), 0)
           else
             if (.not.deep) return
@@ -1978,7 +1980,6 @@ endif
               thatParent => getParentNode(thatParent)
             endif
           endif
-
         endif
 
       endif
@@ -2020,6 +2021,7 @@ endif
     doneAttributes = .false.
     do
 
+      if (.not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
       if (.not.doneChildren) then
 
 
@@ -2059,17 +2061,18 @@ endif
 
 
       else
+        if (getNodeType(this)==ELEMENT_NODE) doneAttributes = .true.
 
 
 
+      endif
       endif
 
       if (.not.doneChildren) then
 
         if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
           if (getLength(getAttributes(this))>0) then
-          
-            this => item(getAttributes(this), 0)
+                      this => item(getAttributes(this), 0)
           else
             doneAttributes = .true.
           endif
@@ -2101,7 +2104,6 @@ endif
           doneAttributes = .false.
         else
           this => getParentNode(this)
-
         endif
 
       endif
@@ -2175,110 +2177,156 @@ endif
   ! function setUserData
   ! will not implement ...
 
-  subroutine putNodesInDocument(doc, np_orig)
-    type(Node), pointer :: doc, np_orig
-    type(Node), pointer :: np
-    logical :: ascending, attributesdone
+  subroutine putNodesInDocument(doc, arg)
+    type(Node), pointer :: doc, arg
+    type(Node), pointer :: this
+    logical :: doneChildren, doneAttributes
     integer :: i
 
-    np => np_orig
-    ascending = .false.
-    attributesdone = .false.
+    this => arg
+
+
     i = 0
+    doneChildren = .false.
+    doneAttributes = .false.
     do
-      if (ascending) then
-        if (associated(np, np_orig)) exit
-        ascending = .false.
-        if (np%nodeType==ATTRIBUTE_NODE) then
-          np => np%ownerElement
-          attributesdone = .true.
-          cycle
-        else
-          np => np%parentNode
-        endif
-      elseif (np%nodeType==ELEMENT_NODE.and..not.attributesdone) then
-        if (np%attributes%length>0) then
-          i = 1
-          np => np%attributes%nodes(i)%this
-        else
-          attributesdone = .true.
-        endif
-        cycle
-      elseif (associated(np%firstChild)) then
-        np => np%firstChild
-        attributesdone = .false.
-        cycle
-      endif
-      np%inDocument = .true.
-      call remove_node_nl(np%ownerDocument%hangingNodes, np)
-      if (np%nodeType==ATTRIBUTE_NODE) then
-        if (associated(np, np_orig)) exit
-        if (i==np%ownerElement%attributes%length) then
-          ascending = .true.
-        else
-          i = i + 1
-          np => np%ownerElement%attributes%nodes(i)%this
-        endif
-      elseif (associated(np%nextSibling).and..not.associated(np, np_orig)) then
-        np => np%nextSibling
-        attributesdone = .false.
+
+      if (.not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
+      if (.not.doneChildren) then
+
+
+        this%inDocument = .true.
+        call remove_node_nl(doc%hangingNodes, this)
+
+
       else
-        ascending = .true.
+        if (getNodeType(this)==ELEMENT_NODE) doneAttributes = .true.
+
+
+
       endif
+      endif
+
+      if (.not.doneChildren) then
+
+        if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
+          if (getLength(getAttributes(this))>0) then
+                      this => item(getAttributes(this), 0)
+          else
+            doneAttributes = .true.
+          endif
+        elseif (hasChildNodes(this)) then
+          this => getFirstChild(this)
+          doneChildren = .false.
+          doneAttributes = .false.
+        else
+          doneChildren = .true.
+        endif
+
+      else ! if doneChildren
+
+        if (associated(this, arg)) exit
+        if (getNodeType(this)==ATTRIBUTE_NODE) then
+          if (i<getLength(getAttributes(getOwnerElement(this)))-1) then
+            i = i + 1
+            this => item(getAttributes(getOwnerElement(this)), i)
+            doneChildren = .false.
+          else
+            i = 0
+            this => getOwnerElement(this)
+            doneAttributes = .true.
+            doneChildren = .false.
+          endif
+        elseif (associated(getNextSibling(this))) then
+          this => getNextSibling(this)
+          doneChildren = .false.
+          doneAttributes = .false.
+        else
+          this => getParentNode(this)
+        endif
+
+      endif
+
     enddo
+
+
+
   end subroutine putNodesInDocument
 
-  subroutine removeNodesFromDocument(doc, np_orig)
-    type(Node), pointer :: doc, np_orig
-    type(Node), pointer :: np
-    logical :: ascending, attributesdone
+  subroutine removeNodesFromDocument(doc, arg)
+    type(Node), pointer :: doc, arg
+    type(Node), pointer :: this
+    logical :: doneChildren, doneAttributes
     integer :: i
-    print*,"REMOVE"
-    np => np_orig
-    ascending = .false.
-    attributesdone = .false.
+
+    this => arg
+
+
     i = 0
+    doneChildren = .false.
+    doneAttributes = .false.
     do
-      if (ascending) then
-        if (associated(np, np_orig)) exit
-        ascending = .false.
-        if (np%nodeType==ATTRIBUTE_NODE) then
-          np => np%ownerElement
-          attributesdone = .true.
-          cycle
-        else
-          np => np%parentNode
-        endif
-      elseif (np%nodeType==ELEMENT_NODE.and..not.attributesdone) then
-        if (np%attributes%length>0) then
-          i = 1
-          np => np%attributes%nodes(i)%this
-        else
-          attributesdone = .true.
-        endif
-        cycle
-      elseif (associated(np%firstChild)) then
-        np => np%firstChild
-        attributesdone = .false.
-        cycle
-      endif
-      np%inDocument = .false.
-      call append_nl(np%ownerDocument%hangingNodes, np)
-      if (np%nodeType==ATTRIBUTE_NODE) then
-        if (associated(np, np_orig)) exit
-        if (i==np%ownerElement%attributes%length) then
-          ascending = .true.
-        else
-          i = i + 1
-          np => np%ownerElement%attributes%nodes(i)%this
-        endif
-      elseif (associated(np%nextSibling).and..not.associated(np, np_orig)) then
-        np => np%nextSibling
-        attributesdone = .false.
+
+      if (.not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
+      if (.not.doneChildren) then
+
+
+        this%inDocument = .false.
+        call append_nl(doc%hangingNodes, this)
+
+
       else
-        ascending = .true.
+        if (getNodeType(this)==ELEMENT_NODE) doneAttributes = .true.
+
+
+
       endif
+      endif
+
+      if (.not.doneChildren) then
+
+        if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
+          if (getLength(getAttributes(this))>0) then
+                      this => item(getAttributes(this), 0)
+          else
+            doneAttributes = .true.
+          endif
+        elseif (hasChildNodes(this)) then
+          this => getFirstChild(this)
+          doneChildren = .false.
+          doneAttributes = .false.
+        else
+          doneChildren = .true.
+        endif
+
+      else ! if doneChildren
+
+        if (associated(this, arg)) exit
+        if (getNodeType(this)==ATTRIBUTE_NODE) then
+          if (i<getLength(getAttributes(getOwnerElement(this)))-1) then
+            i = i + 1
+            this => item(getAttributes(getOwnerElement(this)), i)
+            doneChildren = .false.
+          else
+            i = 0
+            this => getOwnerElement(this)
+            doneAttributes = .true.
+            doneChildren = .false.
+          endif
+        elseif (associated(getNextSibling(this))) then
+          this => getNextSibling(this)
+          doneChildren = .false.
+          doneAttributes = .false.
+        else
+          this => getParentNode(this)
+        endif
+
+      endif
+
     enddo
+
+
+
   end subroutine removeNodesFromDocument
 
 
@@ -2350,7 +2398,8 @@ endif
   end function pop_nl
 
 
-  function remove_nl(nl, index) result(np)
+  function remove_nl(nl, index, ex)result(np) 
+    type(DOMException), intent(inout), optional :: ex
     type(NodeList), intent(inout) :: nl
     integer, intent(in) :: index
     type(Node), pointer :: np
@@ -2359,8 +2408,17 @@ endif
 
     integer :: i
 
+    if (index>nl%length) then
+      call throw_exception(FoX_INTERNAL_ERROR, "remove_nl", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
     np => nl%nodes(index)%this
-! FIXME what if index is too small/too big
     temp_nl => nl%nodes
     allocate(nl%nodes(size(temp_nl)-1))
     nl%length = nl%length - 1 
@@ -3708,6 +3766,7 @@ endif
     doneAttributes = .false.
     do
 
+      if (.not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
       if (.not.doneChildren) then
 
 
@@ -3718,9 +3777,7 @@ endif
           if (.not.doneAttributes) then
             ! Are there any new prefixes or namespaces to be declared?
             ! FIXME
-            print*,"creating element"
             new => createElement(doc, getTagName(this))
-            print*,"done creating element"
           endif
         case (ATTRIBUTE_NODE)
           if (associated(this, arg)) then
@@ -3771,7 +3828,6 @@ endif
           new => createNotation(doc, getName(this), getPublicId(this), getSystemId(this))
         end select
  
-        print*,"done creating elemen 2t", associated(thatParent), associated(new), getNodeType(this)
         if (associated(thatParent).and.associated(new)) print*, getNodeType(thatParent), getNodeType(new)
 
         if (.not.associated(thatParent)) then
@@ -3780,23 +3836,21 @@ endif
           if (getNodeType(this)==ATTRIBUTE_NODE) then
             new => setAttributeNode(thatParent, new)
           else
-            print*, "appending Child"
             new => appendChild(thatParent, new)
-            print*, "done appending Child"
           endif
         endif
 
-        print*,"done creating elemen 2t 3"
-        
         if (.not.deep) then
           if (getNodeType(arg)/=ELEMENT_NODE.and.getNodeType(arg)/=ATTRIBUTE_NODE) return
         endif
 
 
       else
+        if (getNodeType(this)==ELEMENT_NODE) doneAttributes = .true.
 
 
 
+      endif
       endif
 
       if (.not.doneChildren) then
@@ -3804,7 +3858,6 @@ endif
         if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
           if (getLength(getAttributes(this))>0) then
                       if (.not.associated(this, arg)) thatParent => getLastChild(thatParent)
-
             this => item(getAttributes(this), 0)
           else
             if (.not.deep) return
@@ -3853,7 +3906,6 @@ endif
               thatParent => getParentNode(thatParent)
             endif
           endif
-
         endif
 
       endif

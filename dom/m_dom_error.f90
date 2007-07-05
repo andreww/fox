@@ -41,6 +41,8 @@ module m_dom_error
   integer, parameter, public :: FoX_INVALID_SYSTEM_ID       = 208
   integer, parameter, public :: FoX_INVALID_COMMENT         = 209
 
+  integer, parameter, public :: FoX_INTERNAL_ERROR          = 999
+
   public :: DOMException
   public :: getCode
   public :: throw_exception

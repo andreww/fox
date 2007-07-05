@@ -23,7 +23,6 @@ program dom_example
   np => appendChild(np2, np)
   call serialize(myDoc, 'myDoc.xml')
   call serialize(myOtherDoc, 'myOtherDoc.xml')
-
   np => appendChild(np2, np)
 
   call setAttribute(np, "a", "b")

@@ -416,9 +416,7 @@ TOHW_m_dom_contents(`
           if (.not.doneAttributes) then
             ! Are there any new prefixes or namespaces to be declared?
             ! FIXME
-            print*,"creating element"
             new => createElement(doc, getTagName(this))
-            print*,"done creating element"
           endif
         case (ATTRIBUTE_NODE)
           if (associated(this, arg)) then
@@ -457,7 +455,6 @@ TOHW_m_dom_contents(`
           new => createNotation(doc, getName(this), getPublicId(this), getSystemId(this))
         end select
  
-        print*,"done creating elemen 2t", associated(thatParent), associated(new), getNodeType(this)
         if (associated(thatParent).and.associated(new)) print*, getNodeType(thatParent), getNodeType(new)
 
         if (.not.associated(thatParent)) then
@@ -466,14 +463,10 @@ TOHW_m_dom_contents(`
           if (getNodeType(this)==ATTRIBUTE_NODE) then
             new => setAttributeNode(thatParent, new)
           else
-            print*, "appending Child"
             new => appendChild(thatParent, new)
-            print*, "done appending Child"
           endif
         endif
 
-        print*,"done creating elemen 2t 3"
-        
         if (.not.deep) then
           if (getNodeType(arg)/=ELEMENT_NODE.and.getNodeType(arg)/=ATTRIBUTE_NODE) return
         endif

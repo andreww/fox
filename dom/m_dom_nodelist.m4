@@ -88,7 +88,7 @@ TOHW_m_dom_contents(`
   end function pop_nl
 
 
-  function remove_nl(nl, index) result(np)
+  TOHW_function(remove_nl, (nl, index), np)
     type(NodeList), intent(inout) :: nl
     integer, intent(in) :: index
     type(Node), pointer :: np
@@ -97,8 +97,11 @@ TOHW_m_dom_contents(`
 
     integer :: i
 
+    if (index>nl%length) then
+      TOHW_m_dom_throw_error(FoX_INTERNAL_ERROR)
+    endif
+
     np => nl%nodes(index)%this
-! FIXME what if index is too small/too big
     temp_nl => nl%nodes
     allocate(nl%nodes(size(temp_nl)-1))
     nl%length = nl%length - 1 
