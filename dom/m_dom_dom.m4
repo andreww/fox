@@ -1,8 +1,9 @@
-undefine(`index', `len', `format')
+undefine(`index', `len', `format')dnl
 define(`TOHW_m_dom_imports',`divert(1)$1'`divert')dnl
 define(`TOHW_m_dom_publics',`divert(2)$1'`divert')dnl
 define(`TOHW_m_dom_contents',`divert(3)$1'`divert')dnl
 dnl
+include(`m_dom_treewalk.m4')dnl
 include(`m_dom_types.m4')dnl
 include(`m_dom_node.m4')dnl
 include(`m_dom_nodelist.m4')dnl

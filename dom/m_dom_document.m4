@@ -390,7 +390,7 @@ TOHW_m_dom_contents(`
     logical :: deep
     type(Node), pointer :: np
 
-    type(Node), pointer :: this, new
+    type(Node), pointer :: this, thatParent, new
 
     logical :: doneAttributes, doneChildren
     integer :: i
@@ -406,7 +406,7 @@ TOHW_m_dom_contents(`
     endif
 
     this => arg
-    np => null()
+    thatParent => null()
 
     i = 0
     doneChildren = .false.
@@ -466,17 +466,17 @@ TOHW_m_dom_contents(`
           new => createNotation(doc, getName(this), getPublicId(this), getSystemId(this))
         end select
  
-        print*,"done creating elemen 2t", associated(np), associated(new), getNodeType(this)
-        if (associated(np).and.associated(new)) print*, getNodeType(np), getNodeType(new)
+        print*,"done creating elemen 2t", associated(thatParent), associated(new), getNodeType(this)
+        if (associated(thatParent).and.associated(new)) print*, getNodeType(thatParent), getNodeType(new)
 
-        if (.not.associated(np)) then
-          np => new
+        if (.not.associated(thatParent)) then
+          thatParent => new
         elseif (associated(new)) then
           if (getNodeType(this)==ATTRIBUTE_NODE) then
-            new => setAttributeNode(np, new)
+            new => setAttributeNode(thatParent, new)
           else
             print*, "appending Child"
-            new => appendChild(np, new)
+            new => appendChild(thatParent, new)
             print*, "done appending Child"
           endif
         endif
@@ -489,7 +489,7 @@ TOHW_m_dom_contents(`
         
       else ! if doneChildren
 
-        if (getNodeType(np)==ELEMENT_NODE) doneAttributes = .true.
+        if (getNodeType(thatParent)==ELEMENT_NODE) doneAttributes = .true.
 
       endif
       
@@ -501,7 +501,7 @@ TOHW_m_dom_contents(`
 
         if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
           if (getLength(getAttributes(this))>0) then
-            if (.not.associated(this, arg)) np => getLastChild(np)
+            if (.not.associated(this, arg)) thatParent => getLastChild(thatParent)
             this => item(getAttributes(this), 0)
           else
             if (.not.deep) return
@@ -510,9 +510,9 @@ TOHW_m_dom_contents(`
         elseif (hasChildNodes(this)) then
           if (.not.associated(this, arg)) then
             if (getNodeType(this)==ATTRIBUTE_NODE) then
-              np => item(getAttributes(np), i)
+              thatParent => item(getAttributes(thatParent), i)
             else
-              np => getLastChild(np)
+              thatParent => getLastChild(thatParent)
             endif
           endif
           this => getFirstChild(this)
@@ -532,7 +532,7 @@ TOHW_m_dom_contents(`
             doneChildren = .false.
           else
             i = 0
-            if (associated(getParentNode(np))) np => getParentNode(np)
+            if (associated(getParentNode(thatParent))) thatParent => getParentNode(thatParent)
             this => getOwnerElement(this)
             doneAttributes = .true.
             doneChildren = .false.
@@ -545,9 +545,9 @@ TOHW_m_dom_contents(`
           this => getParentNode(this)
           if (.not.associated(this, arg)) then
             if (getNodeType(this)==ATTRIBUTE_NODE) then
-              np => getOwnerElement(np)
+              thatParent => getOwnerElement(thatParent)
             else
-              np => getParentNode(np)
+              thatParent => getParentNode(thatParent)
             endif
           endif
         endif
@@ -556,6 +556,7 @@ TOHW_m_dom_contents(`
 
     enddo
 
+    np => thatParent
     print*,"importDone"
 
   end function importNode
