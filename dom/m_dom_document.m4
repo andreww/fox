@@ -477,9 +477,7 @@ TOHW_m_dom_contents(`
         if (.not.deep) then
           if (getNodeType(arg)/=ELEMENT_NODE.and.getNodeType(arg)/=ATTRIBUTE_NODE) return
         endif
-', `
-        if (getNodeType(thatParent)==ELEMENT_NODE) doneAttributes = .true.
-')
+', `', `parentNode')
 
     np => thatParent
     print*,"importDone"

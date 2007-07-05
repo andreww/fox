@@ -42,13 +42,18 @@ $2
 
         if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
           if (getLength(getAttributes(this))>0) then
+          ifelse(`$3', `parentNode', `dnl
             if (.not.associated(this, arg)) thatParent => getLastChild(thatParent)
+')
             this => item(getAttributes(this), 0)
           else
+ifelse(`$3', `parentNode', `dnl
             if (.not.deep) return
+')dnl
             doneAttributes = .true.
           endif
         elseif (hasChildNodes(this)) then
+ifelse(`$3', `parentNode', `dnl
           if (.not.associated(this, arg)) then
             if (getNodeType(this)==ATTRIBUTE_NODE) then
               thatParent => item(getAttributes(thatParent), i)
@@ -56,6 +61,7 @@ $2
               thatParent => getLastChild(thatParent)
             endif
           endif
+')dnl
           this => getFirstChild(this)
           doneChildren = .false.
           doneAttributes = .false.
@@ -73,7 +79,9 @@ $2
             doneChildren = .false.
           else
             i = 0
+ifelse(`$3', `parentNode', `dnl
             if (associated(getParentNode(thatParent))) thatParent => getParentNode(thatParent)
+')dnl
             this => getOwnerElement(this)
             doneAttributes = .true.
             doneChildren = .false.
@@ -84,6 +92,7 @@ $2
           doneAttributes = .false.
         else
           this => getParentNode(this)
+ifelse(`$3', `parentNode', `dnl
           if (.not.associated(this, arg)) then
             if (getNodeType(this)==ATTRIBUTE_NODE) then
               thatParent => getOwnerElement(thatParent)
@@ -91,6 +100,7 @@ $2
               thatParent => getParentNode(thatParent)
             endif
           endif
+')
         endif
 
       endif

@@ -11,7 +11,7 @@ dnl
 TOHW_m_dom_publics(`
   
   public :: getNodeName
-  public :: getNodevalue	
+  public :: getNodeValue	
   public :: setNodeValue
   public :: getNodeType
   public :: getParentNode
@@ -738,16 +738,14 @@ TOHW_m_dom_treewalk(`
         if (getNodeType(arg)/=ELEMENT_NODE.and.getNodeType(arg)/=ATTRIBUTE_NODE) return
       endif
 ', `
-      select case(getNodeType(this))
-      case (ELEMENT_NODE)
-        doneAttributes = .true.
-      case (ENTITY_REFERENCE_NODE)
-        if (associated(ERchild, this)) then
+
+      if (getNodeType(this)==ENTITY_REFERENCE_NODE &
+        .and.associated(ERchild, this)) then
           ERchild => null()
           readonly = .false.
-        endif
-      end select
-')
+      endif
+      
+', `parentNode')
 
     np => thatParent
 
@@ -766,41 +764,40 @@ TOHW_m_dom_treewalk(`
   
   TOHW_subroutine(normalize, (arg))
     type(Node), pointer :: arg
-    type(Node), pointer :: np, tempNode, oldNode
+    type(Node), pointer :: this, tempNode, oldNode
     integer :: i, i_t
     logical :: doneChildren, doneAttributes
     character, pointer :: temp(:)
 
 ! DOM standard requires we ignore readonly status
 
-    do
-      select case(getNodeType(np))
-      case (ELEMENT_NODE)
-        if (doneChildren) doneAttributes = .true.
-      case (TEXT_NODE)
-        if (associated(np, arg)) exit
-        i_t = getLength(np)
-! If we are called on a text node itself, then do nothing.
-        tempNode => getNextSibling(np)
+    this => arg
+
+TOHW_m_dom_treewalk(`
+
+      if (getNodeType(this)==TEXT_NODE) then
+        if (associated(this, arg)) exit ! If we are called on a text node itself, then do nothing.
+        i_t = getLength(this)
+
+        tempNode => getNextSibling(this)
         do while (associated(tempNode))
           if (getNodeType(tempNode)/=TEXT_NODE) exit
           i_t = i_t + getLength(tempNode)
           tempNode => getNextSibling(tempNode)
         enddo
-        if (i_t > getLength(np)) then
+        if (i_t > getLength(this)) then
           allocate(temp(i_t))
-          temp(:getLength(np)) = getData(np)
+          temp(:getLength(this)) = getData(this)
           i_t = 1
-          tempNode => getNextSibling(np)
+          tempNode => getNextSibling(this)
           do while (associated(tempNode))
             if (getNodeType(tempNode)/=TEXT_NODE) exit
             temp(i_t:getLength(tempNode)-1) = getData(tempNode)
             i_t = i_t + getLength(tempNode)
             tempNode => getNextSibling(tempNode)
           enddo
-          deallocate(np%nodeValue)
-          np%nodeValue => temp
-          call setData(np, str_vs(temp))
+          deallocate(this%nodeValue)
+          this%nodeValue => temp
           do while (associated(tempNode))
             if (getNodeType(tempNode)/=TEXT_NODE) exit
             if (.not.arg%inDocument) call remove_node_nl(arg%ownerDocument%hangingNodes, tempNode)
@@ -809,53 +806,8 @@ TOHW_m_dom_treewalk(`
             call destroy(oldNode)
           enddo
         endif
-      end select
-
-
-      if (doneChildren.and.associated(np, arg)) then
-        exit
-      elseif (getNodeType(np)==ELEMENT_NODE.and..not.doneAttributes) then
-        if (getLength(getAttributes(np))>0) then
-          np => item(getAttributes(np), 0)
-        else
-          doneAttributes = .true.
-        endif
-      elseif (getNodeType(np)==ATTRIBUTE_NODE) then
-        if (doneChildren) then
-          if (i==getLength(getAttributes(getOwnerElement(np)))) then
-            np => item(getAttributes(getOwnerElement(np)), i)
-          else
-            i = -1
-            np => getOwnerElement(np)
-            doneAttributes = .true.
-            doneChildren = .false.
-          endif
-        else
-          i = i + 1
-          np => getFirstChild(np)
-          doneChildren = .false.
-          doneAttributes = .false.
-        endif
-      elseif (hasChildNodes(np).and..not.doneChildren) then
-        np => getFirstChild(np)
-        doneChildren = .false.
-        doneAttributes = .false.
-      elseif (associated(getNextSibling(np))) then
-        np => getNextSibling(np)
-        doneChildren = .false.
-        doneAttributes = .false.
-      else
-        doneChildren = .true.
-        np => getParentNode(np)
-        if (.not.associated(np, arg)) then
-          if (getNodeType(np)==ATTRIBUTE_NODE) then
-            np => getOwnerElement(np)
-          else
-            np => getParentNode(np)
-          endif
-        endif
-      endif
-    enddo
+      end if
+',`',`')
 
   end subroutine normalize
 

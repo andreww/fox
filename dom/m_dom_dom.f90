@@ -244,7 +244,7 @@ module m_dom_dom
 
   
   public :: getNodeName
-  public :: getNodevalue	
+  public :: getNodeValue	
   public :: setNodeValue
   public :: getNodeType
   public :: getParentNode
@@ -1913,15 +1913,13 @@ endif
       else
 
 
-      select case(getNodeType(this))
-      case (ELEMENT_NODE)
-        doneAttributes = .true.
-      case (ENTITY_REFERENCE_NODE)
-        if (associated(ERchild, this)) then
+
+      if (getNodeType(this)==ENTITY_REFERENCE_NODE &
+        .and.associated(ERchild, this)) then
           ERchild => null()
           readonly = .false.
-        endif
-      end select
+      endif
+      
 
 
       endif
@@ -1930,7 +1928,8 @@ endif
 
         if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
           if (getLength(getAttributes(this))>0) then
-            if (.not.associated(this, arg)) thatParent => getLastChild(thatParent)
+                      if (.not.associated(this, arg)) thatParent => getLastChild(thatParent)
+
             this => item(getAttributes(this), 0)
           else
             if (.not.deep) return
@@ -1979,6 +1978,7 @@ endif
               thatParent => getParentNode(thatParent)
             endif
           endif
+
         endif
 
       endif
@@ -2005,41 +2005,48 @@ endif
   subroutine normalize(arg, ex)
     type(DOMException), intent(inout), optional :: ex
     type(Node), pointer :: arg
-    type(Node), pointer :: np, tempNode, oldNode
+    type(Node), pointer :: this, tempNode, oldNode
     integer :: i, i_t
     logical :: doneChildren, doneAttributes
     character, pointer :: temp(:)
 
 ! DOM standard requires we ignore readonly status
 
+    this => arg
+
+
+    i = 0
+    doneChildren = .false.
+    doneAttributes = .false.
     do
-      select case(getNodeType(np))
-      case (ELEMENT_NODE)
-        if (doneChildren) doneAttributes = .true.
-      case (TEXT_NODE)
-        if (associated(np, arg)) exit
-        i_t = getLength(np)
-! If we are called on a text node itself, then do nothing.
-        tempNode => getNextSibling(np)
+
+      if (.not.doneChildren) then
+
+
+
+      if (getNodeType(this)==TEXT_NODE) then
+        if (associated(this, arg)) exit ! If we are called on a text node itself, then do nothing.
+        i_t = getLength(this)
+
+        tempNode => getNextSibling(this)
         do while (associated(tempNode))
           if (getNodeType(tempNode)/=TEXT_NODE) exit
           i_t = i_t + getLength(tempNode)
           tempNode => getNextSibling(tempNode)
         enddo
-        if (i_t > getLength(np)) then
+        if (i_t > getLength(this)) then
           allocate(temp(i_t))
-          temp(:getLength(np)) = getData(np)
+          temp(:getLength(this)) = getData(this)
           i_t = 1
-          tempNode => getNextSibling(np)
+          tempNode => getNextSibling(this)
           do while (associated(tempNode))
             if (getNodeType(tempNode)/=TEXT_NODE) exit
             temp(i_t:getLength(tempNode)-1) = getData(tempNode)
             i_t = i_t + getLength(tempNode)
             tempNode => getNextSibling(tempNode)
           enddo
-          deallocate(np%nodeValue)
-          np%nodeValue => temp
-          call setData(np, str_vs(temp))
+          deallocate(this%nodeValue)
+          this%nodeValue => temp
           do while (associated(tempNode))
             if (getNodeType(tempNode)/=TEXT_NODE) exit
             if (.not.arg%inDocument) call remove_node_nl(arg%ownerDocument%hangingNodes, tempNode)
@@ -2048,53 +2055,60 @@ endif
             call destroy(oldNode)
           enddo
         endif
-      end select
+      end if
 
 
-      if (doneChildren.and.associated(np, arg)) then
-        exit
-      elseif (getNodeType(np)==ELEMENT_NODE.and..not.doneAttributes) then
-        if (getLength(getAttributes(np))>0) then
-          np => item(getAttributes(np), 0)
-        else
-          doneAttributes = .true.
-        endif
-      elseif (getNodeType(np)==ATTRIBUTE_NODE) then
-        if (doneChildren) then
-          if (i==getLength(getAttributes(getOwnerElement(np)))) then
-            np => item(getAttributes(getOwnerElement(np)), i)
+      else
+
+
+
+      endif
+
+      if (.not.doneChildren) then
+
+        if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
+          if (getLength(getAttributes(this))>0) then
+          
+            this => item(getAttributes(this), 0)
           else
-            i = -1
-            np => getOwnerElement(np)
+            doneAttributes = .true.
+          endif
+        elseif (hasChildNodes(this)) then
+          this => getFirstChild(this)
+          doneChildren = .false.
+          doneAttributes = .false.
+        else
+          doneChildren = .true.
+        endif
+
+      else ! if doneChildren
+
+        if (associated(this, arg)) exit
+        if (getNodeType(this)==ATTRIBUTE_NODE) then
+          if (i<getLength(getAttributes(getOwnerElement(this)))-1) then
+            i = i + 1
+            this => item(getAttributes(getOwnerElement(this)), i)
+            doneChildren = .false.
+          else
+            i = 0
+            this => getOwnerElement(this)
             doneAttributes = .true.
             doneChildren = .false.
           endif
-        else
-          i = i + 1
-          np => getFirstChild(np)
+        elseif (associated(getNextSibling(this))) then
+          this => getNextSibling(this)
           doneChildren = .false.
           doneAttributes = .false.
+        else
+          this => getParentNode(this)
+
         endif
-      elseif (hasChildNodes(np).and..not.doneChildren) then
-        np => getFirstChild(np)
-        doneChildren = .false.
-        doneAttributes = .false.
-      elseif (associated(getNextSibling(np))) then
-        np => getNextSibling(np)
-        doneChildren = .false.
-        doneAttributes = .false.
-      else
-        doneChildren = .true.
-        np => getParentNode(np)
-        if (.not.associated(np, arg)) then
-          if (getNodeType(np)==ATTRIBUTE_NODE) then
-            np => getOwnerElement(np)
-          else
-            np => getParentNode(np)
-          endif
-        endif
+
       endif
+
     enddo
+
+
 
   end subroutine normalize
 
@@ -3782,8 +3796,6 @@ endif
       else
 
 
-        if (getNodeType(thatParent)==ELEMENT_NODE) doneAttributes = .true.
-
 
       endif
 
@@ -3791,7 +3803,8 @@ endif
 
         if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
           if (getLength(getAttributes(this))>0) then
-            if (.not.associated(this, arg)) thatParent => getLastChild(thatParent)
+                      if (.not.associated(this, arg)) thatParent => getLastChild(thatParent)
+
             this => item(getAttributes(this), 0)
           else
             if (.not.deep) return
@@ -3840,6 +3853,7 @@ endif
               thatParent => getParentNode(thatParent)
             endif
           endif
+
         endif
 
       endif
