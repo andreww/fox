@@ -394,6 +394,7 @@ TOHW_m_dom_contents(`
 
     logical :: doneAttributes, doneChildren
     integer :: i
+    print*,"importing Nodes"
 
     if (getNodeType(doc)/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
@@ -411,18 +412,24 @@ TOHW_m_dom_contents(`
     doneChildren = .false.
     doneAttributes = .false.
     do
-      new => null()
-      select case(getNodeType(this))
-      case (ELEMENT_NODE)
-        if (doneChildren) then
-          doneAttributes = .true.
-        elseif (.not.doneAttributes) then
-          ! Are there any new prefixes or namespaces to be declared?
-          ! FIXME
-          new => createElement(doc, getTagName(this))
-        endif
-      case (ATTRIBUTE_NODE)
-        if (.not.doneChildren) then
+      ! First, do stuff to the node
+      ! Every node will be hit once on the way down, once on the way up.
+      ! Except for Element nodes, which will be hit three times, once additionally
+      ! after attributes are done, before children are done
+
+      ! a) the first time we 
+      if (.not.doneChildren) then
+        new => null()
+        select case (getNodeType(this))
+        case (ELEMENT_NODE)
+          if (.not.doneAttributes) then
+            ! Are there any new prefixes or namespaces to be declared?
+            ! FIXME
+            print*,"creating element"
+            new => createElement(doc, getTagName(this))
+            print*,"done creating element"
+          endif
+        case (ATTRIBUTE_NODE)
           if (associated(this, arg)) then
             new => createAttribute(doc, getName(this))
             call setSpecified(new, .true.)
@@ -436,44 +443,59 @@ TOHW_m_dom_contents(`
           else
             doneChildren = .true.
           endif
-        endif
-      case (TEXT_NODE)
-        if (.not.doneChildren) new => createTextNode(doc, getData(this))
-      case (CDATA_SECTION_NODE)
-        if (.not.doneChildren) new => createCDataSection(doc, getData(this))
-      case (ENTITY_REFERENCE_NODE)
-        if (.not.doneChildren) then
+        case (TEXT_NODE)
+          new => createTextNode(doc, getData(this))
+        case (CDATA_SECTION_NODE)
+          new => createCDataSection(doc, getData(this))
+        case (ENTITY_REFERENCE_NODE)
           new => createEntityReference(doc, getNodeName(this))
           ! FIXME DOES ENTREF EXIST IN NEW DOC? Switch "this" appropriately & carry on cloning
-        endif
-      case (ENTITY_NODE)
-        if (.not.doneChildren) new => createEntity(doc, getName(this), getPublicId(this), getSystemId(this), getNotationName(this))
-      case (PROCESSING_INSTRUCTION_NODE)
-        if (.not.doneChildren) new => createProcessingInstruction(doc, getTarget(this), getData(this))
-      case (COMMENT_NODE)
-        if (.not.doneChildren) new => createEntityReference(doc, getNodeValue(this))
-      case (DOCUMENT_NODE)
-        TOHW_m_dom_throw_error(NOT_SUPPORTED_ERR)
-      case (DOCUMENT_TYPE_NODE)
-        TOHW_m_dom_throw_error(NOT_SUPPORTED_ERR)
-      case (DOCUMENT_FRAGMENT_NODE)
-        if (.not.doneChildren) new => createDocumentFragment(doc)
-      case (NOTATION_NODE)
-        if (.not.doneChildren) new => createNotation(doc, getName(this), getPublicId(this), getSystemId(this))
-      end select
-      if (.not.associated(np)) then
-        np => new
-      elseif (associated(new)) then
-        if (this%nodeType==ATTRIBUTE_NODE) then
-          new => setAttributeNode(np, new)
-        else
-          new => appendChild(np, new)
-        endif
-      endif
+        case (ENTITY_NODE)
+          new => createEntity(doc, getName(this), getPublicId(this), getSystemId(this), getNotationName(this))
+        case (PROCESSING_INSTRUCTION_NODE)
+          new => createProcessingInstruction(doc, getTarget(this), getData(this))
+        case (COMMENT_NODE)
+          new => createEntityReference(doc, getNodeValue(this))
+        case (DOCUMENT_NODE)
+          TOHW_m_dom_throw_error(NOT_SUPPORTED_ERR)
+        case (DOCUMENT_TYPE_NODE)
+          TOHW_m_dom_throw_error(NOT_SUPPORTED_ERR)
+        case (DOCUMENT_FRAGMENT_NODE)
+          new => createDocumentFragment(doc)
+        case (NOTATION_NODE)
+          new => createNotation(doc, getName(this), getPublicId(this), getSystemId(this))
+        end select
+ 
+        print*,"done creating elemen 2t", associated(np), associated(new), getNodeType(this)
+        if (associated(np).and.associated(new)) print*, getNodeType(np), getNodeType(new)
 
-      if (.not.deep) then
-        if (getNodeType(arg)/=ELEMENT_NODE.and.getNodeType(arg)/=ATTRIBUTE_NODE) return
+        if (.not.associated(np)) then
+          np => new
+        elseif (associated(new)) then
+          if (getNodeType(this)==ATTRIBUTE_NODE) then
+            new => setAttributeNode(np, new)
+          else
+            print*, "appending Child"
+            new => appendChild(np, new)
+            print*, "done appending Child"
+          endif
+        endif
+
+        print*,"done creating elemen 2t 3"
+        
+        if (.not.deep) then
+          if (getNodeType(arg)/=ELEMENT_NODE.and.getNodeType(arg)/=ATTRIBUTE_NODE) return
+        endif
+        
+      else ! if doneChildren
+
+        if (getNodeType(np)==ELEMENT_NODE) doneAttributes = .true.
+
       endif
+      
+      print*,"moving pointers on"
+
+      ! Now move pointers on ...
 
       if (.not.doneChildren) then
 
@@ -533,6 +555,8 @@ TOHW_m_dom_contents(`
       endif
 
     enddo
+
+    print*,"importDone"
 
   end function importNode
 
