@@ -138,8 +138,9 @@ module m_dom_dom
     character, pointer :: xmlEncoding => null()
     type(NodeListPtr), pointer :: nodelists(:) => null() ! document
     ! In order to keep track of all nodes not connected to the document
-    logical :: liveNodeLists ! For the document, are nodelists live? (FIXME should be in xds)
+    logical :: liveNodeLists ! For the document, are nodelists live?
     type(NodeList) :: hangingNodes ! For the document. list of nodes not associated with doc
+    type(xml_doc_state), pointer :: xds => null()
   end type documentExtras
 
   type ElementOrAttributeExtras
@@ -709,7 +710,7 @@ endif
   subroutine setDocBuilding(doc,b)
     type(Node), pointer :: doc
     logical, intent(in) :: b
-    doc%docType%xds%building = b
+    doc%xds%building = b
   end subroutine setDocBuilding
 
 
@@ -3315,7 +3316,7 @@ if (present(ex)) then
   endif
 endif
 
-    else if (.not.checkChars(tagName, doc%docType%xds%xml_version)) then
+    else if (.not.checkChars(tagName, doc%xds%xml_version)) then
       call throw_exception(INVALID_CHARACTER_ERR, "createElement", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -3324,7 +3325,7 @@ if (present(ex)) then
 endif
 
     endif  
-    if (.not.checkName(tagName, doc%docType%xds)) then
+    if (.not.checkName(tagName, doc%xds)) then
       call throw_exception(FoX_INVALID_XML_NAME, "createElement", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -3339,7 +3340,7 @@ endif
 
     ! FIXME set namespaceURI and localName appropriately
 
-    if (.not.doc%docType%xds%building) then
+    if (.not.doc%xds%building) then
       np%inDocument = .false.
       call append(doc%docExtras%hangingnodes, np)
     else
@@ -3387,7 +3388,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkChars(data, doc%docType%xds%xml_version)) then
+    elseif (.not.checkChars(data, doc%xds%xml_version)) then
       call throw_exception(FoX_INVALID_CHARACTER, "createTextNode", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -3399,7 +3400,7 @@ endif
 
     np => createNode(doc, TEXT_NODE, "#text", data)
 
-    if (.not.doc%docType%xds%building) then
+    if (.not.doc%xds%building) then
       np%inDocument = .false.
       call append(doc%docExtras%hangingnodes, np)
     else
@@ -3442,7 +3443,7 @@ endif
   
     np => createNode(doc, COMMENT_NODE, "#comment", data)
 
-    if (.not.doc%docType%xds%building) then
+    if (.not.doc%xds%building) then
       np%inDocument = .false.
       call append(doc%docExtras%hangingnodes, np)
     else
@@ -3485,7 +3486,7 @@ endif
   
     np => createNode(doc, CDATA_SECTION_NODE, "#text", data)
 
-    if (.not.doc%docType%xds%building) then
+    if (.not.doc%xds%building) then
       np%inDocument = .false.
       call append(doc%docExtras%hangingnodes, np)
     else
@@ -3547,7 +3548,7 @@ endif
 
     np => createNode(doc, PROCESSING_INSTRUCTION_NODE, target, data)
 
-    if (.not.doc%docType%xds%building) then
+    if (.not.doc%xds%building) then
       np%inDocument = .false.
       call append(doc%docExtras%hangingnodes, np)
     else
@@ -3593,7 +3594,7 @@ endif
     np%localname => vs_str_alloc(name)
     np%prefix => vs_str_alloc(name)
 
-    if (.not.doc%docType%xds%building) then
+    if (.not.doc%xds%building) then
       np%inDocument = .false.
       call append(doc%docExtras%hangingnodes, np)
     else
@@ -3648,7 +3649,7 @@ endif
     endif
     ! FIXME all children should be readonly at this stage.
     ! FIXME all cloned children need to be marked ...
-    if (.not.doc%docType%xds%building) then
+    if (.not.doc%xds%building) then
       np%inDocument = .false.
       call append(doc%docExtras%hangingnodes, np)
     else
@@ -3991,7 +3992,7 @@ endif
 
     np%attributes%ownerElement => np
 
-    if (.not.doc%docType%xds%building) then
+    if (.not.doc%xds%building) then
       np%inDocument = .false.
       call append(doc%docExtras%hangingnodes, np)
     else
@@ -4059,7 +4060,7 @@ endif
     np%localname => vs_str_alloc(localPartofQName(qualifiedname))
     np%prefix => vs_str_alloc(PrefixofQName(qualifiedname))
 
-    if (.not.doc%docType%xds%building) then
+    if (.not.doc%xds%building) then
       np%inDocument = .false.
       call append(doc%docExtras%hangingnodes, np)
     else
@@ -4434,7 +4435,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkChars(name, element%ownerDocument%docType%xds%xml_version)) then
+    elseif (.not.checkChars(name, element%ownerDocument%xds%xml_version)) then
       call throw_exception(INVALID_CHARACTER_ERR, "setAttribute", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -4442,7 +4443,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkName(value, element%ownerDocument%docType%xds)) then
+    elseif (.not.checkName(value, element%ownerDocument%xds)) then
       call throw_exception(FoX_INVALID_XML_NAME, "setAttribute", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -4450,7 +4451,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkChars(value, element%ownerDocument%docType%xds%xml_version)) then
+    elseif (.not.checkChars(value, element%ownerDocument%xds%xml_version)) then
       call throw_exception(FoX_INVALID_CHARACTER, "setAttribute", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -4680,7 +4681,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkChars(qualifiedname, element%ownerDocument%docType%xds%xml_version)) then
+    elseif (.not.checkChars(qualifiedname, element%ownerDocument%xds%xml_version)) then
       call throw_exception(INVALID_CHARACTER_ERR, "setAttributeNS", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -4696,7 +4697,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkQName(qualifiedname, element%ownerDocument%docType%xds)) then
+    elseif (.not.checkQName(qualifiedname, element%ownerDocument%xds)) then
       call throw_exception(NAMESPACE_ERR, "setAttributeNS", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then

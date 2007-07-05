@@ -105,10 +105,10 @@ TOHW_m_dom_contents(`
 
     if (doc%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    else if (.not.checkChars(tagName, doc%docType%xds%xml_version)) then
+    else if (.not.checkChars(tagName, doc%xds%xml_version)) then
       TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
     endif  
-    if (.not.checkName(tagName, doc%docType%xds)) then
+    if (.not.checkName(tagName, doc%xds)) then
       TOHW_m_dom_throw_error(FoX_INVALID_XML_NAME)
     endif
     
@@ -117,7 +117,7 @@ TOHW_m_dom_contents(`
 
     ! FIXME set namespaceURI and localName appropriately
 
-    if (.not.doc%docType%xds%building) then
+    if (.not.doc%xds%building) then
       np%inDocument = .false.
       call append(doc%docExtras%hangingnodes, np)
     else
@@ -151,13 +151,13 @@ TOHW_m_dom_contents(`
 
     if (doc%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    elseif (.not.checkChars(data, doc%docType%xds%xml_version)) then
+    elseif (.not.checkChars(data, doc%xds%xml_version)) then
       TOHW_m_dom_throw_error(FoX_INVALID_CHARACTER)
     endif
 
     np => createNode(doc, TEXT_NODE, "#text", data)
 
-    if (.not.doc%docType%xds%building) then
+    if (.not.doc%xds%building) then
       np%inDocument = .false.
       call append(doc%docExtras%hangingnodes, np)
     else
@@ -181,7 +181,7 @@ TOHW_m_dom_contents(`
   
     np => createNode(doc, COMMENT_NODE, "#comment", data)
 
-    if (.not.doc%docType%xds%building) then
+    if (.not.doc%xds%building) then
       np%inDocument = .false.
       call append(doc%docExtras%hangingnodes, np)
     else
@@ -205,7 +205,7 @@ TOHW_m_dom_contents(`
   
     np => createNode(doc, CDATA_SECTION_NODE, "#text", data)
 
-    if (.not.doc%docType%xds%building) then
+    if (.not.doc%xds%building) then
       np%inDocument = .false.
       call append(doc%docExtras%hangingnodes, np)
     else
@@ -236,7 +236,7 @@ TOHW_m_dom_contents(`
 
     np => createNode(doc, PROCESSING_INSTRUCTION_NODE, target, data)
 
-    if (.not.doc%docType%xds%building) then
+    if (.not.doc%xds%building) then
       np%inDocument = .false.
       call append(doc%docExtras%hangingnodes, np)
     else
@@ -263,7 +263,7 @@ TOHW_m_dom_contents(`
     np%localname => vs_str_alloc(name)
     np%prefix => vs_str_alloc(name)
 
-    if (.not.doc%docType%xds%building) then
+    if (.not.doc%xds%building) then
       np%inDocument = .false.
       call append(doc%docExtras%hangingnodes, np)
     else
@@ -299,7 +299,7 @@ TOHW_m_dom_contents(`
     endif
     ! FIXME all children should be readonly at this stage.
     ! FIXME all cloned children need to be marked ...
-    if (.not.doc%docType%xds%building) then
+    if (.not.doc%xds%building) then
       np%inDocument = .false.
       call append(doc%docExtras%hangingnodes, np)
     else
@@ -507,7 +507,7 @@ TOHW_m_dom_contents(`
 
     np%attributes%ownerElement => np
 
-    if (.not.doc%docType%xds%building) then
+    if (.not.doc%xds%building) then
       np%inDocument = .false.
       call append(doc%docExtras%hangingnodes, np)
     else
@@ -544,7 +544,7 @@ TOHW_m_dom_contents(`
     np%localname => vs_str_alloc(localPartofQName(qualifiedname))
     np%prefix => vs_str_alloc(PrefixofQName(qualifiedname))
 
-    if (.not.doc%docType%xds%building) then
+    if (.not.doc%xds%building) then
       np%inDocument = .false.
       call append(doc%docExtras%hangingnodes, np)
     else

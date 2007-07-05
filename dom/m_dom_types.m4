@@ -62,8 +62,9 @@ TOHW_m_dom_publics(`
     character, pointer :: xmlEncoding => null()
     type(NodeListPtr), pointer :: nodelists(:) => null() ! document
     ! In order to keep track of all nodes not connected to the document
-    logical :: liveNodeLists ! For the document, are nodelists live? (FIXME should be in xds)
+    logical :: liveNodeLists ! For the document, are nodelists live?
     type(NodeList) :: hangingNodes ! For the document. list of nodes not associated with doc
+    type(xml_doc_state), pointer :: xds => null()
   end type documentExtras
 
   type ElementOrAttributeExtras
@@ -348,7 +349,7 @@ TOHW_m_dom_treewalk(`',`',`deadNode')
   subroutine setDocBuilding(doc,b)
     type(Node), pointer :: doc
     logical, intent(in) :: b
-    doc%docType%xds%building = b
+    doc%xds%building = b
   end subroutine setDocBuilding
 
 ')`'dnl

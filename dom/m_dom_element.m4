@@ -69,11 +69,11 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
 
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
-    elseif (.not.checkChars(name, element%ownerDocument%docType%xds%xml_version)) then
+    elseif (.not.checkChars(name, element%ownerDocument%xds%xml_version)) then
       TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
-    elseif (.not.checkName(value, element%ownerDocument%docType%xds)) then
+    elseif (.not.checkName(value, element%ownerDocument%xds)) then
       TOHW_m_dom_throw_error(FoX_INVALID_XML_NAME)
-    elseif (.not.checkChars(value, element%ownerDocument%docType%xds%xml_version)) then
+    elseif (.not.checkChars(value, element%ownerDocument%xds%xml_version)) then
       TOHW_m_dom_throw_error(FoX_INVALID_CHARACTER)
     endif
 
@@ -225,11 +225,11 @@ TOHW_m_dom_contents(`
 
     if (element%nodeType /= ELEMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    elseif (.not.checkChars(qualifiedname, element%ownerDocument%docType%xds%xml_version)) then
+    elseif (.not.checkChars(qualifiedname, element%ownerDocument%xds%xml_version)) then
       TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
     elseif (element%readonly) then
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
-    elseif (.not.checkQName(qualifiedname, element%ownerDocument%docType%xds)) then
+    elseif (.not.checkQName(qualifiedname, element%ownerDocument%xds)) then
       TOHW_m_dom_throw_error(NAMESPACE_ERR)
     elseif (prefixOfQName(qualifiedName)/="" &
      .and. namespaceURI=="") then
