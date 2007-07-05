@@ -56,11 +56,11 @@ TOHW_m_dom_publics(`
 
   type documentExtras
     type(DOMImplementation), pointer :: implementation => null() ! only for doctype
-    type(Node), pointer :: docType
-    type(Node), pointer :: documentElement
-    character, pointer :: inputEncoding
-    character, pointer :: xmlEncoding
-    type(NodeListPtr), pointer :: nodelists(:) ! document
+    type(Node), pointer :: docType => null()
+    type(Node), pointer :: documentElement => null()
+    character, pointer :: inputEncoding => null()
+    character, pointer :: xmlEncoding => null()
+    type(NodeListPtr), pointer :: nodelists(:) => null() ! document
     ! In order to keep track of all nodes not connected to the document
     logical :: liveNodeLists ! For the document, are nodelists live? (FIXME should be in xds)
     type(NodeList) :: hangingNodes ! For the document. list of nodes not associated with doc
@@ -106,7 +106,6 @@ TOHW_m_dom_publics(`
     character, pointer, dimension(:) :: localName => null()    ! /
     type(Node), pointer :: doctype => null()  ! only for document
 
-    type(Node), pointer :: documentElement => null() ! only for document
     logical :: specified ! only for attribute
     ! Introduced in DOM Level 2
     type(Node), pointer :: ownerElement => null() ! only for attribute

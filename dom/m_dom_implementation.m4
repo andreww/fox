@@ -139,7 +139,7 @@ TOHW_m_dom_contents(`
 
     doc%docType%ownerElement => doc
 
-    doc%documentElement => appendChild(doc, createElementNS(doc, namespaceURI, qualifiedName))
+    call setDocumentElement(doc, appendChild(doc, createElementNS(doc, namespaceURI, qualifiedName)))
 
     doc%xds => doc%docType%xds
     allocate(doc%nodelists(0))
@@ -163,7 +163,6 @@ TOHW_m_dom_contents(`
     ! FIXME do something with namespaceURI etc 
     doc%doctype => appendChild(doc, dt)
 
-    doc%documentElement => null()
     allocate(doc%nodelists(0))
 
   end function createEmptyDocument

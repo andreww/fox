@@ -75,7 +75,7 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
 
-    np => doc%documentElement
+    np => doc%docExtras%documentElement
 
   end function getDocumentElement
 
@@ -92,7 +92,7 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(WRONG_DOCUMENT_ERR)
     endif
     
-    doc%documentElement => np
+    doc%docExtras%documentElement => np
 
   end subroutine setDocumentElement
 
@@ -328,7 +328,7 @@ TOHW_m_dom_contents(`
       allElements = .true.
 
     if (doc%nodeType==DOCUMENT_NODE) then
-      np => doc%documentElement
+      np => getDocumentElement(doc)
     else
       np => doc
     endif
@@ -365,7 +365,7 @@ TOHW_m_dom_contents(`
     do
       if (ascending) then
         np => np%parentNode
-        if (associated(np, doc).or.associated(np, doc%documentElement)) exit
+        if (associated(np, doc).or.associated(np, getDocumentElement(doc))) exit
         ascending = .false.
       elseif (associated(np%firstChild)) then
         np => np%firstChild
@@ -573,7 +573,7 @@ TOHW_m_dom_contents(`
       allLocalNames = .true.
 
     if (doc%nodeType==DOCUMENT_NODE) then
-      np => doc%documentElement
+      np => getDocumentElement(doc)
     else
       np => doc
     endif
@@ -603,7 +603,7 @@ TOHW_m_dom_contents(`
     noChild = .false.
     do
       if (noChild) then
-        if (associated(np, doc).or.associated(np, doc%documentElement)) then
+        if (associated(np, doc).or.associated(np, getDocumentElement(doc))) then
           exit
         else
           np => np%parentNode
@@ -641,12 +641,12 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
 
-    np => doc%documentELement
+    np => getDocumentElement(doc)
 
     noChild = .false.
     do
       if (noChild) then
-        if (associated(np, doc).or.associated(np, doc%documentElement)) then
+        if (associated(np, doc).or.associated(np, getDocumentElement(doc))) then
           exit
         else
           np => np%parentNode

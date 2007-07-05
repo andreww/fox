@@ -132,11 +132,11 @@ module m_dom_dom
 
   type documentExtras
     type(DOMImplementation), pointer :: implementation => null() ! only for doctype
-    type(Node), pointer :: docType
-    type(Node), pointer :: documentElement
-    character, pointer :: inputEncoding
-    character, pointer :: xmlEncoding
-    type(NodeListPtr), pointer :: nodelists(:) ! document
+    type(Node), pointer :: docType => null()
+    type(Node), pointer :: documentElement => null()
+    character, pointer :: inputEncoding => null()
+    character, pointer :: xmlEncoding => null()
+    type(NodeListPtr), pointer :: nodelists(:) => null() ! document
     ! In order to keep track of all nodes not connected to the document
     logical :: liveNodeLists ! For the document, are nodelists live? (FIXME should be in xds)
     type(NodeList) :: hangingNodes ! For the document. list of nodes not associated with doc
@@ -182,7 +182,6 @@ module m_dom_dom
     character, pointer, dimension(:) :: localName => null()    ! /
     type(Node), pointer :: doctype => null()  ! only for document
 
-    type(Node), pointer :: documentElement => null() ! only for document
     logical :: specified ! only for attribute
     ! Introduced in DOM Level 2
     type(Node), pointer :: ownerElement => null() ! only for attribute
@@ -3135,7 +3134,7 @@ endif
 
     doc%docType%ownerElement => doc
 
-    doc%documentElement => appendChild(doc, createElementNS(doc, namespaceURI, qualifiedName))
+    call setDocumentElement(doc, appendChild(doc, createElementNS(doc, namespaceURI, qualifiedName)))
 
     doc%xds => doc%docType%xds
     allocate(doc%nodelists(0))
@@ -3159,7 +3158,6 @@ endif
     ! FIXME do something with namespaceURI etc 
     doc%doctype => appendChild(doc, dt)
 
-    doc%documentElement => null()
     allocate(doc%nodelists(0))
 
   end function createEmptyDocument
@@ -3264,7 +3262,7 @@ endif
 
     endif
 
-    np => doc%documentElement
+    np => doc%docExtras%documentElement
 
   end function getDocumentElement
 
@@ -3300,7 +3298,7 @@ endif
 
     endif
     
-    doc%documentElement => np
+    doc%docExtras%documentElement => np
 
   end subroutine setDocumentElement
 
@@ -3689,7 +3687,7 @@ endif
       allElements = .true.
 
     if (doc%nodeType==DOCUMENT_NODE) then
-      np => doc%documentElement
+      np => getDocumentElement(doc)
     else
       np => doc
     endif
@@ -3726,7 +3724,7 @@ endif
     do
       if (ascending) then
         np => np%parentNode
-        if (associated(np, doc).or.associated(np, doc%documentElement)) exit
+        if (associated(np, doc).or.associated(np, getDocumentElement(doc))) exit
         ascending = .false.
       elseif (associated(np%firstChild)) then
         np => np%firstChild
@@ -4100,7 +4098,7 @@ endif
       allLocalNames = .true.
 
     if (doc%nodeType==DOCUMENT_NODE) then
-      np => doc%documentElement
+      np => getDocumentElement(doc)
     else
       np => doc
     endif
@@ -4130,7 +4128,7 @@ endif
     noChild = .false.
     do
       if (noChild) then
-        if (associated(np, doc).or.associated(np, doc%documentElement)) then
+        if (associated(np, doc).or.associated(np, getDocumentElement(doc))) then
           exit
         else
           np => np%parentNode
@@ -4175,12 +4173,12 @@ endif
 
     endif
 
-    np => doc%documentELement
+    np => getDocumentElement(doc)
 
     noChild = .false.
     do
       if (noChild) then
-        if (associated(np, doc).or.associated(np, doc%documentElement)) then
+        if (associated(np, doc).or.associated(np, getDocumentElement(doc))) then
           exit
         else
           np => np%parentNode
