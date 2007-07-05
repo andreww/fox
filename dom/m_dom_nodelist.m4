@@ -163,13 +163,13 @@ TOHW_m_dom_contents(`
 ! FIXME FIXME FIXME
 
     if (.not.doc%docExtras%liveNodeLists) return
-    if (.not.associated(doc%nodelists)) return
+    if (.not.associated(doc%docExtras%nodelists)) return
 
-    allocate(temp_nll(size(doc%nodelists)))
+    allocate(temp_nll(size(doc%docExtras%nodelists)))
     i_t = 0
-    do i = 1, size(doc%nodelists)
+    do i = 1, size(doc%docExtras%nodelists)
       ! A nodelist will need updated if it was keyed to the old or new Names.
-      nl_orig => doc%nodelists(i)%this
+      nl_orig => doc%docExtras%nodelists(i)%this
       if (nl_orig%element%nodeType==ELEMENT_NODE) then
         if (.not.associated(nl_orig%element%parentNode)) then
           ! We have just removed this element from the tree
@@ -209,19 +209,19 @@ TOHW_m_dom_contents(`
           temp_nll(i_t)%this => nl
         endif
       else
-        temp_nll(i_t)%this => doc%nodelists(i)%this
+        temp_nll(i_t)%this => doc%docExtras%nodelists(i)%this
       endif
     enddo
 
     !Now, destroy all nodelist pointers from old list:
-    do i = 1, size(doc%nodelists) !Note, this size may be different if we have done more searches above.
-      deallocate(doc%nodelists(i)%this)
+    do i = 1, size(doc%docExtras%nodelists) !Note, this size may be different if we have done more searches above.
+      deallocate(doc%docExtras%nodelists(i)%this)
     enddo
-    deallocate(doc%nodelists)
+    deallocate(doc%docExtras%nodelists)
     ! Now put everything back from temp_nll, but discard any lost nodelists
-    allocate(doc%nodelists(i_t))
+    allocate(doc%docExtras%nodelists(i_t))
     do i = 1, i_t
-      doc%nodelists(i)%this => temp_nll(i)%this
+      doc%docExtras%nodelists(i)%this => temp_nll(i)%this
     enddo
     ! And finally, get rid of the temporary list of lists
     deallocate(temp_nll)

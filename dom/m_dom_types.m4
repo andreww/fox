@@ -129,8 +129,6 @@ TOHW_m_dom_publics(`
     !TYPEINFO schemaTypeInfo
     logical :: isId ! attribute
     ! In order to keep all node lists live ..
-    type(NodeListPtr), pointer :: nodelists(:) ! document
-    ! In order to keep track of all nodes not connected to the document
 
     logical :: inDocument = .false.! For a node, is this node associated to the doc?
 !!

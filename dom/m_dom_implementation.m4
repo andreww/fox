@@ -126,6 +126,7 @@ TOHW_m_dom_contents(`
 
     allocate(doc%docExtras)
     doc%docExtras%implementation => FoX_DOM
+    allocate(doc%docExtras%nodelists(0))
 
     if (present(docType)) then
       docType%ownerDocument => doc
@@ -142,7 +143,6 @@ TOHW_m_dom_contents(`
     call setDocumentElement(doc, appendChild(doc, createElementNS(doc, namespaceURI, qualifiedName)))
 
     doc%xds => doc%docType%xds
-    allocate(doc%nodelists(0))
 
   end function createDocument
 
@@ -155,6 +155,7 @@ TOHW_m_dom_contents(`
 
     allocate(doc%docExtras)
     doc%docExtras%implementation => FoX_DOM
+    allocate(doc%docExtras%nodelists(0))
 
     dt => createEmptyDocumentType(doc)
     doc%xds => dt%xds
@@ -162,8 +163,6 @@ TOHW_m_dom_contents(`
 
     ! FIXME do something with namespaceURI etc 
     doc%doctype => appendChild(doc, dt)
-
-    allocate(doc%nodelists(0))
 
   end function createEmptyDocument
 
@@ -181,19 +180,21 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
 
-    deallocate(doc%docExtras)
-
     ! Destroy all remaining nodelists
-    do i = 1, size(doc%nodelists)
-      call destroy(doc%nodelists(i)%this)
+
+    do i = 1, size(doc%docExtras%nodelists)
+     call destroy(doc%docExtras%nodelists(i)%this)
     enddo
-    deallocate(doc%nodelists)
+    deallocate(doc%docExtras%nodelists)
+
 
     ! Destroy all remaining hanging nodes
     do i = 1, doc%docExtras%hangingNodes%length
       call destroy(doc%docExtras%hangingNodes%nodes(i)%this)
     enddo
     if (associated(doc%docExtras%hangingNodes%nodes)) deallocate(doc%docExtras%hangingNodes%nodes)
+
+    deallocate(doc%docExtras)
 
     print*, "destroying a node:", doc%nodeType, doc%nodeName
     call destroyNodeContents(doc)

@@ -205,8 +205,6 @@ module m_dom_dom
     !TYPEINFO schemaTypeInfo
     logical :: isId ! attribute
     ! In order to keep all node lists live ..
-    type(NodeListPtr), pointer :: nodelists(:) ! document
-    ! In order to keep track of all nodes not connected to the document
 
     logical :: inDocument = .false.! For a node, is this node associated to the doc?
 !!
@@ -2488,13 +2486,13 @@ endif
 ! FIXME FIXME FIXME
 
     if (.not.doc%docExtras%liveNodeLists) return
-    if (.not.associated(doc%nodelists)) return
+    if (.not.associated(doc%docExtras%nodelists)) return
 
-    allocate(temp_nll(size(doc%nodelists)))
+    allocate(temp_nll(size(doc%docExtras%nodelists)))
     i_t = 0
-    do i = 1, size(doc%nodelists)
+    do i = 1, size(doc%docExtras%nodelists)
       ! A nodelist will need updated if it was keyed to the old or new Names.
-      nl_orig => doc%nodelists(i)%this
+      nl_orig => doc%docExtras%nodelists(i)%this
       if (nl_orig%element%nodeType==ELEMENT_NODE) then
         if (.not.associated(nl_orig%element%parentNode)) then
           ! We have just removed this element from the tree
@@ -2534,19 +2532,19 @@ endif
           temp_nll(i_t)%this => nl
         endif
       else
-        temp_nll(i_t)%this => doc%nodelists(i)%this
+        temp_nll(i_t)%this => doc%docExtras%nodelists(i)%this
       endif
     enddo
 
     !Now, destroy all nodelist pointers from old list:
-    do i = 1, size(doc%nodelists) !Note, this size may be different if we have done more searches above.
-      deallocate(doc%nodelists(i)%this)
+    do i = 1, size(doc%docExtras%nodelists) !Note, this size may be different if we have done more searches above.
+      deallocate(doc%docExtras%nodelists(i)%this)
     enddo
-    deallocate(doc%nodelists)
+    deallocate(doc%docExtras%nodelists)
     ! Now put everything back from temp_nll, but discard any lost nodelists
-    allocate(doc%nodelists(i_t))
+    allocate(doc%docExtras%nodelists(i_t))
     do i = 1, i_t
-      doc%nodelists(i)%this => temp_nll(i)%this
+      doc%docExtras%nodelists(i)%this => temp_nll(i)%this
     enddo
     ! And finally, get rid of the temporary list of lists
     deallocate(temp_nll)
@@ -3120,6 +3118,7 @@ endif
 
     allocate(doc%docExtras)
     doc%docExtras%implementation => FoX_DOM
+    allocate(doc%docExtras%nodelists(0))
 
     if (present(docType)) then
       docType%ownerDocument => doc
@@ -3136,7 +3135,6 @@ endif
     call setDocumentElement(doc, appendChild(doc, createElementNS(doc, namespaceURI, qualifiedName)))
 
     doc%xds => doc%docType%xds
-    allocate(doc%nodelists(0))
 
   end function createDocument
 
@@ -3149,6 +3147,7 @@ endif
 
     allocate(doc%docExtras)
     doc%docExtras%implementation => FoX_DOM
+    allocate(doc%docExtras%nodelists(0))
 
     dt => createEmptyDocumentType(doc)
     doc%xds => dt%xds
@@ -3156,8 +3155,6 @@ endif
 
     ! FIXME do something with namespaceURI etc 
     doc%doctype => appendChild(doc, dt)
-
-    allocate(doc%nodelists(0))
 
   end function createEmptyDocument
 
@@ -3183,10 +3180,12 @@ endif
     endif
 
     ! Destroy all remaining nodelists
-    do i = 1, size(doc%nodelists)
-      call destroy(doc%nodelists(i)%this)
+
+    do i = 1, size(doc%docExtras%nodelists)
+     call destroy(doc%docExtras%nodelists(i)%this)
     enddo
-    deallocate(doc%nodelists)
+    deallocate(doc%docExtras%nodelists)
+
 
     ! Destroy all remaining hanging nodes
     do i = 1, doc%docExtras%hangingNodes%length
@@ -3702,9 +3701,9 @@ endif
     if (present(tagName)) list%nodeName => vs_str_alloc(tagName) ! FIXME or tagName
 
     if (doc%nodeType==DOCUMENT_NODE) then
-      nll => doc%nodeLists
+      nll => doc%docExtras%nodelists
     elseif (doc%nodeType==ELEMENT_NODE) then
-      nll => doc%ownerDocument%nodeLists
+      nll => doc%ownerDocument%docExtras%nodelists
     endif
     allocate(temp_nll(size(nll)+1))
     do i = 1, size(nll)
@@ -3713,9 +3712,9 @@ endif
     temp_nll(i)%this => list
     deallocate(nll)
     if (doc%nodeType==DOCUMENT_NODE) then
-      doc%nodeLists => temp_nll
+      doc%docExtras%nodelists => temp_nll
     elseif (doc%nodeType==ELEMENT_NODE) then
-      doc%ownerDocument%nodeLists => temp_nll
+      doc%ownerDocument%docExtras%nodelists => temp_nll
     endif
 
     ascending = .false.
@@ -4113,9 +4112,9 @@ endif
     list%namespaceURI => vs_str_alloc(namespaceURI)
 
     if (doc%nodeType==DOCUMENT_NODE) then
-      nll => doc%nodeLists
+      nll => doc%docExtras%nodelists
     elseif (doc%nodeType==ELEMENT_NODE) then
-      nll => doc%ownerDocument%nodeLists
+      nll => doc%ownerDocument%docExtras%nodelists
     endif
     allocate(temp_nll(size(nll)+1))
     do i = 1, size(nll)

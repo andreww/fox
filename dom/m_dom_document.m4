@@ -345,9 +345,9 @@ TOHW_m_dom_contents(`
     if (present(tagName)) list%nodeName => vs_str_alloc(tagName) ! FIXME or tagName
 
     if (doc%nodeType==DOCUMENT_NODE) then
-      nll => doc%nodeLists
+      nll => doc%docExtras%nodelists
     elseif (doc%nodeType==ELEMENT_NODE) then
-      nll => doc%ownerDocument%nodeLists
+      nll => doc%ownerDocument%docExtras%nodelists
     endif
     allocate(temp_nll(size(nll)+1))
     do i = 1, size(nll)
@@ -356,9 +356,9 @@ TOHW_m_dom_contents(`
     temp_nll(i)%this => list
     deallocate(nll)
     if (doc%nodeType==DOCUMENT_NODE) then
-      doc%nodeLists => temp_nll
+      doc%docExtras%nodelists => temp_nll
     elseif (doc%nodeType==ELEMENT_NODE) then
-      doc%ownerDocument%nodeLists => temp_nll
+      doc%ownerDocument%docExtras%nodelists => temp_nll
     endif
 
     ascending = .false.
@@ -590,9 +590,9 @@ TOHW_m_dom_contents(`
     list%namespaceURI => vs_str_alloc(namespaceURI)
 
     if (doc%nodeType==DOCUMENT_NODE) then
-      nll => doc%nodeLists
+      nll => doc%docExtras%nodelists
     elseif (doc%nodeType==ELEMENT_NODE) then
-      nll => doc%ownerDocument%nodeLists
+      nll => doc%ownerDocument%docExtras%nodelists
     endif
     allocate(temp_nll(size(nll)+1))
     do i = 1, size(nll)
