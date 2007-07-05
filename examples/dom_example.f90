@@ -4,6 +4,7 @@ program dom_example
   use FoX_dom
   implicit none
 
+  type(DomImplementation), pointer :: imp
   type(Node), pointer :: myDoc, myOtherDoc, np, np2, dummy
   type(NodeList) :: interest
   integer :: i
@@ -12,6 +13,8 @@ program dom_example
   myOtherDoc => parsefile('test.xml')
   print*,"LEN", getLength(getChildNodes(getDocumentElement(myDoc)))
   np => createElement(myDoc, 'a')
+
+  imp => getImplementation(myDoc)
 
   dummy => createDocumentFragment(myDoc)
   dummy => createDocumentFragment(myDoc)

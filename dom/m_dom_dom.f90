@@ -181,7 +181,7 @@ module m_dom_dom
     character, pointer, dimension(:) :: prefix => null()       !  - only useful for element & attribute
     character, pointer, dimension(:) :: localName => null()    ! /
     type(Node), pointer :: doctype => null()  ! only for document
-    type(DOMImplementation), pointer :: implementation => null() ! only for doctype
+
     type(Node), pointer :: documentElement => null() ! only for document
     logical :: specified ! only for attribute
     ! Introduced in DOM Level 2
@@ -3121,6 +3121,7 @@ endif
     doc => createNode(null(), DOCUMENT_NODE, "#document", "")
 
     allocate(doc%docExtras)
+    doc%docExtras%implementation => FoX_DOM
 
     if (present(docType)) then
       docType%ownerDocument => doc
@@ -3133,7 +3134,7 @@ endif
     endif
 
     doc%docType%ownerElement => doc
-    doc%implementation => FoX_DOM
+
     doc%documentElement => appendChild(doc, createElementNS(doc, namespaceURI, qualifiedName))
 
     doc%xds => doc%docType%xds
@@ -3149,6 +3150,7 @@ endif
     doc => createNode(null(), DOCUMENT_NODE, "#document", "")
 
     allocate(doc%docExtras)
+    doc%docExtras%implementation => FoX_DOM
 
     dt => createEmptyDocumentType(doc)
     doc%xds => dt%xds
@@ -3156,7 +3158,7 @@ endif
 
     ! FIXME do something with namespaceURI etc 
     doc%doctype => appendChild(doc, dt)
-    doc%implementation => FoX_DOM
+
     doc%documentElement => null()
     allocate(doc%nodelists(0))
 
@@ -3243,7 +3245,7 @@ endif
 
     endif
     
-    imp => doc%implementation
+    imp => doc%docExtras%implementation
     
   end function getImplementation
 

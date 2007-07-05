@@ -63,7 +63,7 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
     
-    imp => doc%implementation
+    imp => doc%docExtras%implementation
     
   end function getImplementation
 

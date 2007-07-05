@@ -125,6 +125,7 @@ TOHW_m_dom_contents(`
     doc => createNode(null(), DOCUMENT_NODE, "#document", "")
 
     allocate(doc%docExtras)
+    doc%docExtras%implementation => FoX_DOM
 
     if (present(docType)) then
       docType%ownerDocument => doc
@@ -137,7 +138,7 @@ TOHW_m_dom_contents(`
     endif
 
     doc%docType%ownerElement => doc
-    doc%implementation => FoX_DOM
+
     doc%documentElement => appendChild(doc, createElementNS(doc, namespaceURI, qualifiedName))
 
     doc%xds => doc%docType%xds
@@ -153,6 +154,7 @@ TOHW_m_dom_contents(`
     doc => createNode(null(), DOCUMENT_NODE, "#document", "")
 
     allocate(doc%docExtras)
+    doc%docExtras%implementation => FoX_DOM
 
     dt => createEmptyDocumentType(doc)
     doc%xds => dt%xds
@@ -160,7 +162,7 @@ TOHW_m_dom_contents(`
 
     ! FIXME do something with namespaceURI etc 
     doc%doctype => appendChild(doc, dt)
-    doc%implementation => FoX_DOM
+
     doc%documentElement => null()
     allocate(doc%nodelists(0))
 
