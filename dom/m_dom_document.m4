@@ -36,7 +36,7 @@ TOHW_m_dom_publics(`
 
   public :: createEntity
   public :: createNotation
-
+  public :: setGCstate
 ')`'dnl
 dnl
 TOHW_m_dom_contents(`
@@ -51,7 +51,7 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
     
-    np => doc%docType
+    np => doc%docExtras%docType
 
   end function getDocType
 
@@ -105,10 +105,10 @@ TOHW_m_dom_contents(`
 
     if (doc%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    else if (.not.checkChars(tagName, doc%xds%xml_version)) then
+    elseif (.not.checkChars(tagName, getXmlVersionEnum(doc))) then
       TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
     endif  
-    if (.not.checkName(tagName, doc%xds)) then
+    if (.not.checkName(tagName, getXds(doc))) then
       TOHW_m_dom_throw_error(FoX_INVALID_XML_NAME)
     endif
     
@@ -117,7 +117,7 @@ TOHW_m_dom_contents(`
 
     ! FIXME set namespaceURI and localName appropriately
 
-    if (.not.doc%xds%building) then
+    if (getGCstate(doc)) then
       np%inDocument = .false.
       call append(doc%docExtras%hangingnodes, np)
     else
@@ -135,7 +135,7 @@ TOHW_m_dom_contents(`
     endif
     
     np => createNode(doc, DOCUMENT_FRAGMENT_NODE, "#document-fragment", "")
-    if (.not.doc%xds%building) then
+    if (getGCstate(doc)) then
       np%inDocument = .false.
       call append(doc%docExtras%hangingnodes, np)
     else
@@ -151,13 +151,13 @@ TOHW_m_dom_contents(`
 
     if (doc%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    elseif (.not.checkChars(data, doc%xds%xml_version)) then
+    elseif (.not.checkChars(data, getXmlVersionEnum(doc))) then
       TOHW_m_dom_throw_error(FoX_INVALID_CHARACTER)
     endif
 
     np => createNode(doc, TEXT_NODE, "#text", data)
 
-    if (.not.doc%xds%building) then
+    if (getGCstate(doc)) then
       np%inDocument = .false.
       call append(doc%docExtras%hangingnodes, np)
     else
@@ -173,7 +173,7 @@ TOHW_m_dom_contents(`
 
     if (doc%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    elseif (.not.checkChars(data, doc%xds%xml_version)) then
+    elseif (.not.checkChars(data, getXmlVersionEnum(doc))) then
       TOHW_m_dom_throw_error(FoX_INVALID_CHARACTER)
     elseif (index(data,"--")>0) then   
       TOHW_m_dom_throw_error(FoX_INVALID_COMMENT)
@@ -181,7 +181,7 @@ TOHW_m_dom_contents(`
   
     np => createNode(doc, COMMENT_NODE, "#comment", data)
 
-    if (.not.doc%xds%building) then
+    if (getGCstate(doc)) then
       np%inDocument = .false.
       call append(doc%docExtras%hangingnodes, np)
     else
@@ -197,7 +197,7 @@ TOHW_m_dom_contents(`
 
     if (doc%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    elseif (.not.checkChars(data, doc%xds%xml_version)) then
+    elseif (.not.checkChars(data, getXmlVersionEnum(doc))) then
       TOHW_m_dom_throw_error(FoX_INVALID_CHARACTER)
     elseif (index(data,"]]>")>0) then   
       TOHW_m_dom_throw_error(FoX_INVALID_CDATA_SECTION)
@@ -205,7 +205,7 @@ TOHW_m_dom_contents(`
   
     np => createNode(doc, CDATA_SECTION_NODE, "#text", data)
 
-    if (.not.doc%xds%building) then
+    if (getGCstate(doc)) then
       np%inDocument = .false.
       call append(doc%docExtras%hangingnodes, np)
     else
@@ -223,11 +223,11 @@ TOHW_m_dom_contents(`
 
     if (doc%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    elseif (.not.checkChars(target, doc%xds%xml_version)) then
+    elseif (.not.checkChars(target, getXmlVersionEnum(doc))) then
       TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
-    elseif (.not.checkChars(data, doc%xds%xml_version)) then
+    elseif (.not.checkChars(data, getXmlVersionEnum(doc))) then
       TOHW_m_dom_throw_error(FoX_INVALID_CHARACTER)
-    elseif (.not.checkName(target, doc%xds)) then
+    elseif (.not.checkName(target, getXds(doc))) then
       TOHW_m_dom_throw_error(FoX_INVALID_XML_NAME)
 ! FIXME check validity of PI target 
     elseif (index(data,"?>")>0) then   
@@ -236,7 +236,7 @@ TOHW_m_dom_contents(`
 
     np => createNode(doc, PROCESSING_INSTRUCTION_NODE, target, data)
 
-    if (.not.doc%xds%building) then
+    if (getGCstate(doc)) then
       np%inDocument = .false.
       call append(doc%docExtras%hangingnodes, np)
     else
@@ -252,9 +252,9 @@ TOHW_m_dom_contents(`
 
     if (doc%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    elseif (.not.checkChars(name, doc%xds%xml_version)) then
+    elseif (.not.checkChars(name, getXmlVersionEnum(doc))) then
       TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
-    elseif (.not.checkName(name, doc%xds)) then
+    elseif (.not.checkName(name, getXds(doc))) then
       TOHW_m_dom_throw_error(FoX_INVALID_XML_NAME)
     endif
   
@@ -263,7 +263,7 @@ TOHW_m_dom_contents(`
     np%localname => vs_str_alloc(name)
     np%prefix => vs_str_alloc(name)
 
-    if (.not.doc%xds%building) then
+    if (getGCstate(doc)) then
       np%inDocument = .false.
       call append(doc%docExtras%hangingnodes, np)
     else
@@ -281,15 +281,15 @@ TOHW_m_dom_contents(`
 
     if (doc%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    elseif (.not.checkChars(name, doc%xds%xml_version)) then
+    elseif (.not.checkChars(name, getXmlVersionEnum(doc))) then
       TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
-    elseif (.not.checkName(name, doc%xds)) then
+    elseif (.not.checkName(name, getXds(doc))) then
       TOHW_m_dom_throw_error(FoX_INVALID_XML_NAME)
     endif
 
     np => createNode(doc, ENTITY_REFERENCE_NODE, name, "")
 
-    ent => getNamedItem(doc%docType%entities, name)
+    ent => getNamedItem(getEntities(getDocType(doc)), name)
 
     if (associated(ent)) then
       ! FIXME here we should actually parse the entity reference
@@ -299,7 +299,7 @@ TOHW_m_dom_contents(`
     endif
     ! FIXME all children should be readonly at this stage.
     ! FIXME all cloned children need to be marked ...
-    if (.not.doc%xds%building) then
+    if (getGCstate(doc)) then
       np%inDocument = .false.
       call append(doc%docExtras%hangingnodes, np)
     else
@@ -484,9 +484,9 @@ TOHW_m_dom_contents(`
 
     if (doc%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    elseif (.not.checkChars(qualifiedName, doc%xds%xml_version)) then
+    elseif (.not.checkChars(qualifiedName, getXmlVersionEnum(doc))) then
       TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
-    elseif (.not.checkQName(qualifiedName, doc%xds)) then
+    elseif (.not.checkQName(qualifiedName, getXds(doc))) then
       TOHW_m_dom_throw_error(NAMESPACE_ERR)
     elseif (prefixOfQName(qualifiedName)/="" &
      .and. namespaceURI=="") then
@@ -507,7 +507,7 @@ TOHW_m_dom_contents(`
 
     np%attributes%ownerElement => np
 
-    if (.not.doc%xds%building) then
+    if (getGCstate(doc)) then
       np%inDocument = .false.
       call append(doc%docExtras%hangingnodes, np)
     else
@@ -525,9 +525,9 @@ TOHW_m_dom_contents(`
 
     if (doc%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    elseif (.not.checkChars(qualifiedName, doc%xds%xml_version)) then
+    elseif (.not.checkChars(qualifiedName, getXmlVersionEnum(doc))) then
       TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
-    elseif (.not.checkQName(qualifiedName, doc%xds)) then
+    elseif (.not.checkQName(qualifiedName, getXds(doc))) then
       TOHW_m_dom_throw_error(NAMESPACE_ERR)
     elseif (prefixOfQName(qualifiedName)/="" &
      .and. namespaceURI=="") then
@@ -544,7 +544,7 @@ TOHW_m_dom_contents(`
     np%localname => vs_str_alloc(localPartofQName(qualifiedname))
     np%prefix => vs_str_alloc(PrefixofQName(qualifiedname))
 
-    if (.not.doc%xds%building) then
+    if (getGCstate(doc)) then
       np%inDocument = .false.
       call append(doc%docExtras%hangingnodes, np)
     else
@@ -684,9 +684,9 @@ TOHW_m_dom_contents(`
     type(Node), pointer :: doc
     character(len=3) :: s
 
-    if (doc%xds%xml_version==XML1_0) then
+    if (getXmlVersionEnum(doc)==XML1_0) then
       s = "1.0"
-    elseif (doc%xds%xml_version==XML1_1) then
+    elseif (getXmlVersionEnum(doc)==XML1_1) then
       s = "1.1"
     else
       s = "XXX"
@@ -699,9 +699,9 @@ TOHW_m_dom_contents(`
     character(len=*) :: s
 
     if (s=="1.0") then
-      doc%xds%xml_version = XML1_0
+      doc%docExtras%xds%xml_version = XML1_0
     elseif (s=="1.1") then
-      doc%xds%xml_version = XML1_1
+      doc%docExtras%xds%xml_version = XML1_1
     else
       TOHW_m_dom_throw_error(NOT_SUPPORTED_ERR)
     endif
@@ -753,5 +753,39 @@ TOHW_m_dom_contents(`
     if (present(systemId)) np%systemId => vs_str_alloc(systemId)
     
   end function createNotation
+
+
+  TOHW_function(getXmlVersionEnum, (doc), n)
+    type(Node), pointer :: doc
+    integer :: n
+
+    n = doc%docExtras%xds%xml_version
+
+  end function getXmlVersionEnum
+
+  TOHW_function(getXds, (doc), xds)
+    type(Node), pointer :: doc
+    type(xml_doc_state) :: xds
+
+    xds = doc%docExtras%xds
+
+  end function getXds
+
+
+  TOHW_function(getGCstate, (doc), b)
+    type(Node), pointer :: doc
+    logical :: b
+
+    b = doc%docExtras%xds%building
+
+  end function getGCstate
+
+  TOHW_subroutine(setGCstate, (doc, b))
+    type(Node), pointer :: doc
+    logical, intent(in) :: b
+
+    doc%docExtras%xds%building = b
+
+  end subroutine setGCstate
 
 ')`'dnl

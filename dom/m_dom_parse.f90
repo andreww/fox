@@ -22,7 +22,7 @@ module m_dom_parse
   use m_dom_dom, only: getParentNode, setDocumentElement, getDocType, setDocType
   use m_dom_dom, only: append, getNodeType, setReadOnly, getLength, getChildNodes
   use m_dom_dom, only: removeChild, appendChild, getNotations, setAttributeNodeNS, setvalue
-  use m_dom_dom, only: setAttributeNodeNS, replace_xds, setDocBuilding
+  use m_dom_dom, only: setAttributeNodeNS, replace_xds, setGCstate
   use m_dom_debug, only: dom_debug
 
   implicit none
@@ -132,13 +132,13 @@ contains
 
     mainDoc => createEmptyDocument()
     current => mainDoc
-    call setDocBuilding(mainDoc, .true.)
+    call setGCstate(mainDoc, .false.)
 
     print*,'mainDoc allocated'
   end subroutine startDocument_handler
 
   subroutine endDocument_Handler
-    call setDocBuilding(mainDoc, .false.)
+    call setGCstate(mainDoc, .true.)
   end subroutine endDocument_Handler
 
   subroutine startDTD_handler(name, publicId, systemId)
@@ -170,7 +170,7 @@ contains
 
     dt => getDocType(mainDoc)
     call replace_xds(mainDoc, state)
-    call setDocBuilding(mainDoc, .true.)
+    call setGCstate(mainDoc, .false.)
 
     entities => getEntities(dt)
     notations => getNotations(dt)

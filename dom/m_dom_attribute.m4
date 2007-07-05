@@ -102,7 +102,7 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     elseif (attribute%readonly) then
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
-    elseif (.not.checkChars(value, attribute%ownerDocument%xds%xml_version)) then
+    elseif (.not.checkChars(value, getXmlVersionEnum(getOwnerDocument(attribute)))) then
       TOHW_m_dom_throw_error(FoX_INVALID_CHARACTER)
     endif
 

@@ -122,14 +122,14 @@ TOHW_m_dom_contents(`
     np => null()
     call append_nnm(map, arg)
 
-    if (.not.map%ownerElement%ownerDocument%xds%building) then
+    if (getGCstate(getOwnerDocument(map%ownerElement))) then
       ! We need to worry about importing this node
       if (map%ownerElement%inDocument) then
         if (.not.arg%inDocument) &
-          call putNodesInDocument(map%ownerElement%ownerDocument, arg)
+          call putNodesInDocument(getOwnerDocument(map%ownerElement), arg)
       else
         if (arg%inDocument) &
-          call removeNodesFromDocument(map%ownerElement%ownerDocument, arg)
+          call removeNodesFromDocument(getOwnerDocument(map%ownerElement), arg)
         endif
     endif
 
@@ -163,8 +163,8 @@ TOHW_m_dom_contents(`
         enddo
         map%length = size(map%nodes)
         deallocate(temp_nl)
-        if (np%inDocument.and..not.map%ownerElement%ownerDocument%xds%building) &
-          call removeNodesFromDocument(map%ownerElement%ownerDocument, np)
+        if (np%inDocument.and.getGCstate(getOwnerDocument(map%ownerElement))) &
+          call removeNodesFromDocument(getOwnerDocument(map%ownerElement), np)
         !otherwise we are only going to destroy these nodes anyway,
         ! and finish
         return
@@ -288,14 +288,14 @@ TOHW_m_dom_contents(`
     np => null()
     call append_nnm(map, arg)
 
-    if (.not.map%ownerElement%ownerDocument%xds%building) then
+    if (getGCstate(getOwnerDocument(map%ownerElement))) then
       ! We need to worry about importing this node
       if (map%ownerElement%inDocument) then
         if (.not.arg%inDocument) &
-          call putNodesInDocument(map%ownerElement%ownerDocument, arg)
+          call putNodesInDocument(getOwnerDocument(map%ownerElement), arg)
       else
         if (arg%inDocument) &
-          call removeNodesFromDocument(map%ownerElement%ownerDocument, arg)
+          call removeNodesFromDocument(getOwnerDocument(map%ownerElement), arg)
         endif
     endif
 
@@ -331,8 +331,8 @@ TOHW_m_dom_contents(`
         enddo
         map%length = size(map%nodes)
         deallocate(temp_nl)
-        if (.not.map%ownerElement%ownerDocument%xds%building) &
-          call removeNodesFromDocument(map%ownerElement%ownerDocument, np)
+        if (np%inDocument.and.getGCstate(getOwnerDocument(map%ownerElement))) &
+          call removeNodesFromDocument(getOwnerDocument(map%ownerElement), np)
         !otherwise we are only going to destroy these nodes anyway,
         ! and finish
         return

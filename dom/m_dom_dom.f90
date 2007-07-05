@@ -181,7 +181,6 @@ module m_dom_dom
     character, pointer, dimension(:) :: namespaceURI => null() ! \
     character, pointer, dimension(:) :: prefix => null()       !  - only useful for element & attribute
     character, pointer, dimension(:) :: localName => null()    ! /
-    type(Node), pointer :: doctype => null()  ! only for document
 
     logical :: specified ! only for attribute
     ! Introduced in DOM Level 2
@@ -202,7 +201,7 @@ module m_dom_dom
     logical :: strictErrorChecking = .false. ! document/doctype
     character, pointer :: documentURI(:) => null() ! document/doctype
     ! DOMCONFIGURATION
-    type(xml_doc_state), pointer :: xds => null()
+
     !TYPEINFO schemaTypeInfo
     logical :: isId ! attribute
     ! In order to keep all node lists live ..
@@ -238,8 +237,6 @@ module m_dom_dom
   public :: ListNode
   public :: NodeList
   public :: NamedNodeMap
-
-  public :: setDocBuilding
 
 
   
@@ -359,7 +356,7 @@ module m_dom_dom
 
   public :: createEntity
   public :: createNotation
-
+  public :: setGCstate
 
 
   !public :: getName
@@ -534,9 +531,6 @@ endif
       deallocate(dt%notations%nodes)
     endif
 
-    call destroy_xml_doc_state(dt%xds)
-    deallocate(dt%xds)
-
     call destroyNodeContents(dt)
     deallocate(dt)
 
@@ -705,14 +699,6 @@ endif
 
   end subroutine destroyNodeContents
 
-! Some convenience functions for internal use:
-
-  subroutine setDocBuilding(doc,b)
-    type(Node), pointer :: doc
-    logical, intent(in) :: b
-    doc%xds%building = b
-  end subroutine setDocBuilding
-
 
 
   ! Getters and setters
@@ -818,10 +804,10 @@ endif
       arg%lastChild => null()
       ! and add the new one.
       ! Avoid manipulating hangingnode lists
-      call setDocBuilding(arg%ownerDocument, .true.)
+      call setGCstate(arg%ownerDocument, .false.)
       np => createTextNode(arg%ownerDocument, nodeValue)
       np => appendChild(arg, np)
-      call setDocBuilding(arg%ownerDocument, .false.)
+      call setGCstate(arg%ownerDocument, .true.)
     case (CDATA_SECTION_NODE)
       ! FIXME check does string contain wrong characters
       deallocate(arg%nodeValue)
@@ -1172,7 +1158,7 @@ endif
 
     endif
 
-    if (.not.arg%ownerDocument%xds%building) then
+    if (getGCstate(getownerDocument(arg))) then
       if (arg%inDocument) then
         if (newChild%nodeType==DOCUMENT_FRAGMENT_NODE) then
           do i = 1, newChild%childNodes%length
@@ -1459,7 +1445,7 @@ endif
     np%previousSibling => null()
     np%nextSibling => null()
 
-    if (.not.arg%ownerDocument%xds%building) then
+    if (getGCstate(arg%ownerDocument)) then
       if (arg%inDocument) then
         call removeNodesFromDocument(arg%ownerDocument, oldChild)
         if (newChild%nodeType==DOCUMENT_FRAGMENT_NODE) then
@@ -1553,7 +1539,7 @@ endif
     oldChild%previousSibling => null()
     oldChild%nextSibling => null()
     arg => np
-    if (.not.arg%ownerDocument%xds%building) then
+    if (getGCstate(arg%ownerDocument)) then
       if (arg%inDocument) then
         call removeNodesFromDocument(arg%ownerDocument, oldChild)
       endif
@@ -1808,7 +1794,7 @@ endif
         temp_nl(i-1)%this%nextSibling => newChild
         newChild%previousSibling => temp_nl(i-1)%this     
       endif
-      if (.not.arg%ownerDocument%xds%building) then
+      if (getGCstate(arg%ownerDocument)) then
         if (arg%inDocument.and..not.newChild%inDocument) then
           call putNodesInDocument(arg%ownerDocument, newChild)
         endif
@@ -2127,7 +2113,7 @@ endif
     character(len=*), intent(in) :: version
     logical :: p
 
-    p = hasFeature(getImplementation(getOwnerDocument(arg)), feature, version)
+    p = hasFeature(getImplementation(arg%ownerDocument), feature, version)
   end function isSupported
 
   ! FIXME should the below instead just decompose the QName on access?
@@ -2657,14 +2643,14 @@ endif
     np => null()
     call append_nnm(map, arg)
 
-    if (.not.map%ownerElement%ownerDocument%xds%building) then
+    if (getGCstate(getOwnerDocument(map%ownerElement))) then
       ! We need to worry about importing this node
       if (map%ownerElement%inDocument) then
         if (.not.arg%inDocument) &
-          call putNodesInDocument(map%ownerElement%ownerDocument, arg)
+          call putNodesInDocument(getOwnerDocument(map%ownerElement), arg)
       else
         if (arg%inDocument) &
-          call removeNodesFromDocument(map%ownerElement%ownerDocument, arg)
+          call removeNodesFromDocument(getOwnerDocument(map%ownerElement), arg)
         endif
     endif
 
@@ -2705,8 +2691,8 @@ endif
         enddo
         map%length = size(map%nodes)
         deallocate(temp_nl)
-        if (np%inDocument.and..not.map%ownerElement%ownerDocument%xds%building) &
-          call removeNodesFromDocument(map%ownerElement%ownerDocument, np)
+        if (np%inDocument.and.getGCstate(getOwnerDocument(map%ownerElement))) &
+          call removeNodesFromDocument(getOwnerDocument(map%ownerElement), np)
         !otherwise we are only going to destroy these nodes anyway,
         ! and finish
         return
@@ -2855,14 +2841,14 @@ endif
     np => null()
     call append_nnm(map, arg)
 
-    if (.not.map%ownerElement%ownerDocument%xds%building) then
+    if (getGCstate(getOwnerDocument(map%ownerElement))) then
       ! We need to worry about importing this node
       if (map%ownerElement%inDocument) then
         if (.not.arg%inDocument) &
-          call putNodesInDocument(map%ownerElement%ownerDocument, arg)
+          call putNodesInDocument(getOwnerDocument(map%ownerElement), arg)
       else
         if (arg%inDocument) &
-          call removeNodesFromDocument(map%ownerElement%ownerDocument, arg)
+          call removeNodesFromDocument(getOwnerDocument(map%ownerElement), arg)
         endif
     endif
 
@@ -2905,8 +2891,8 @@ endif
         enddo
         map%length = size(map%nodes)
         deallocate(temp_nl)
-        if (.not.map%ownerElement%ownerDocument%xds%building) &
-          call removeNodesFromDocument(map%ownerElement%ownerDocument, np)
+        if (np%inDocument.and.getGCstate(getOwnerDocument(map%ownerElement))) &
+          call removeNodesFromDocument(getOwnerDocument(map%ownerElement), np)
         !otherwise we are only going to destroy these nodes anyway,
         ! and finish
         return
@@ -3011,28 +2997,22 @@ endif
     character(len=*), intent(in) :: publicId
     character(len=*), intent(in) :: systemId
     type(Node), pointer :: dt
-
-    allocate(dt%xds)
-    call init_xml_doc_state(dt%xds)
+    type(xml_doc_state) :: temp_xds
 
     if (.not.checkChars(qualifiedName, XML1_0)) then
       call throw_exception(INVALID_CHARACTER_ERR, "createDocumentType", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
-
-if (associated(dt%xds)) deallocate(dt%xds)
      return
   endif
 endif
 
     endif
 
-    if (.not.checkName(qualifiedName, dt%xds)) then
+    if (.not.checkName(qualifiedName, temp_xds))  then
       call throw_exception(NAMESPACE_ERR, "createDocumentType", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
-
-if (associated(dt%xds)) deallocate(dt%xds)
      return
   endif
 endif
@@ -3042,8 +3022,6 @@ endif
       call throw_exception(FoX_INVALID_PUBLIC_ID, "createDocumentType", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
-
-if (associated(dt%xds)) deallocate(dt%xds)
      return
   endif
 endif
@@ -3052,8 +3030,6 @@ endif
       call throw_exception(FoX_INVALID_SYSTEM_ID, "createDocumentType", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
-
-if (associated(dt%xds)) deallocate(dt%xds)
      return
   endif
 endif
@@ -3088,8 +3064,6 @@ endif
     dt%entities%ownerElement => dt
     dt%notations%ownerElement => dt
 
-    allocate(dt%xds)
-    call init_xml_doc_state(dt%xds)
   end function createEmptyDocumentType
 
 
@@ -3097,10 +3071,9 @@ endif
     type(Node), pointer :: doc
     type(xml_doc_state), pointer :: xds
 
-    call destroy_xml_doc_state(doc%xds)
-    deallocate(doc%xds)
-    doc%xds => xds
-    doc%docType%xds => xds
+    call destroy_xml_doc_state(doc%docExtras%xds)
+    deallocate(doc%docExtras%xds)
+    doc%docExtras%xds => xds
 
   end subroutine replace_xds
 
@@ -3109,33 +3082,32 @@ endif
     type(DOMImplementation), intent(in) :: impl
     character(len=*), intent(in), optional :: namespaceURI
     character(len=*), intent(in), optional :: qualifiedName
-    type(Node), pointer, optional :: docType
+    type(Node), pointer :: docType
     type(Node), pointer :: doc, dt
 
      !FIXMEFIXMEFIXME optional arguments and errors
     ! FIXME change to match empytdocument below
 
     doc => createNode(null(), DOCUMENT_NODE, "#document", "")
+    doc%ownerDocument => doc ! Makes life easier. DOM compliance in getter
 
     allocate(doc%docExtras)
     doc%docExtras%implementation => FoX_DOM
     allocate(doc%docExtras%nodelists(0))
+    allocate(doc%docExtras%xds)
+    call init_xml_doc_state(doc%docExtras%xds)
 
-    if (present(docType)) then
-      docType%ownerDocument => doc
-      doc%doctype => appendChild(doc, doc%docType)
-    endif
-    if (.not.associated(doc%docType)) then
+    if (associated(docType)) then
+      dt => docType
+      dt%ownerDocument => doc
+    else
       dt => createDocumentType(impl, qualifiedName, "", "")
       dt%ownerDocument => doc
-      doc%docType => appendChild(doc, dt)
     endif
 
-    doc%docType%ownerElement => doc
-
+    doc%docExtras%docType => appendChild(doc, dt)
+    
     call setDocumentElement(doc, appendChild(doc, createElementNS(doc, namespaceURI, qualifiedName)))
-
-    doc%xds => doc%docType%xds
 
   end function createDocument
 
@@ -3145,17 +3117,19 @@ endif
     type(Node), pointer :: dt
     
     doc => createNode(null(), DOCUMENT_NODE, "#document", "")
+    doc%ownerDocument => doc ! Makes life easier. DOM compliance in getter
 
     allocate(doc%docExtras)
     doc%docExtras%implementation => FoX_DOM
     allocate(doc%docExtras%nodelists(0))
+    allocate(doc%docExtras%xds)
+    call init_xml_doc_state(doc%docExtras%xds)
 
     dt => createEmptyDocumentType(doc)
-    doc%xds => dt%xds
-    doc%ownerDocument => doc
+    dt%ownerDocument => doc
 
     ! FIXME do something with namespaceURI etc 
-    doc%doctype => appendChild(doc, dt)
+    doc%docExtras%doctype => appendChild(doc, dt)
 
   end function createEmptyDocument
 
@@ -3168,7 +3142,7 @@ endif
     integer :: i
 
 ! Switch off all GC - since this is GC!
-    call setDocBuilding(doc, .true.)
+    call setGCstate(doc, .false.)
 
     if (doc%nodeType/=DOCUMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "destroyDocument", ex)
@@ -3194,6 +3168,8 @@ endif
     enddo
     if (associated(doc%docExtras%hangingNodes%nodes)) deallocate(doc%docExtras%hangingNodes%nodes)
 
+    call destroy_xml_doc_state(doc%docExtras%xds)
+    deallocate(doc%docExtras%xds)
     deallocate(doc%docExtras)
 
     print*, "destroying a node:", doc%nodeType, doc%nodeName
@@ -3222,7 +3198,7 @@ endif
 
     endif
     
-    np => doc%docType
+    np => doc%docExtras%docType
 
   end function getDocType
 
@@ -3316,7 +3292,7 @@ if (present(ex)) then
   endif
 endif
 
-    else if (.not.checkChars(tagName, doc%xds%xml_version)) then
+    elseif (.not.checkChars(tagName, getXmlVersionEnum(doc))) then
       call throw_exception(INVALID_CHARACTER_ERR, "createElement", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -3325,7 +3301,7 @@ if (present(ex)) then
 endif
 
     endif  
-    if (.not.checkName(tagName, doc%xds)) then
+    if (.not.checkName(tagName, getXds(doc))) then
       call throw_exception(FoX_INVALID_XML_NAME, "createElement", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -3340,7 +3316,7 @@ endif
 
     ! FIXME set namespaceURI and localName appropriately
 
-    if (.not.doc%xds%building) then
+    if (getGCstate(doc)) then
       np%inDocument = .false.
       call append(doc%docExtras%hangingnodes, np)
     else
@@ -3365,7 +3341,7 @@ endif
     endif
     
     np => createNode(doc, DOCUMENT_FRAGMENT_NODE, "#document-fragment", "")
-    if (.not.doc%xds%building) then
+    if (getGCstate(doc)) then
       np%inDocument = .false.
       call append(doc%docExtras%hangingnodes, np)
     else
@@ -3388,7 +3364,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkChars(data, doc%xds%xml_version)) then
+    elseif (.not.checkChars(data, getXmlVersionEnum(doc))) then
       call throw_exception(FoX_INVALID_CHARACTER, "createTextNode", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -3400,7 +3376,7 @@ endif
 
     np => createNode(doc, TEXT_NODE, "#text", data)
 
-    if (.not.doc%xds%building) then
+    if (getGCstate(doc)) then
       np%inDocument = .false.
       call append(doc%docExtras%hangingnodes, np)
     else
@@ -3423,7 +3399,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkChars(data, doc%xds%xml_version)) then
+    elseif (.not.checkChars(data, getXmlVersionEnum(doc))) then
       call throw_exception(FoX_INVALID_CHARACTER, "createComment", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -3443,7 +3419,7 @@ endif
   
     np => createNode(doc, COMMENT_NODE, "#comment", data)
 
-    if (.not.doc%xds%building) then
+    if (getGCstate(doc)) then
       np%inDocument = .false.
       call append(doc%docExtras%hangingnodes, np)
     else
@@ -3466,7 +3442,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkChars(data, doc%xds%xml_version)) then
+    elseif (.not.checkChars(data, getXmlVersionEnum(doc))) then
       call throw_exception(FoX_INVALID_CHARACTER, "createCdataSection", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -3486,7 +3462,7 @@ endif
   
     np => createNode(doc, CDATA_SECTION_NODE, "#text", data)
 
-    if (.not.doc%xds%building) then
+    if (getGCstate(doc)) then
       np%inDocument = .false.
       call append(doc%docExtras%hangingnodes, np)
     else
@@ -3511,7 +3487,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkChars(target, doc%xds%xml_version)) then
+    elseif (.not.checkChars(target, getXmlVersionEnum(doc))) then
       call throw_exception(INVALID_CHARACTER_ERR, "createProcessingInstruction", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -3519,7 +3495,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkChars(data, doc%xds%xml_version)) then
+    elseif (.not.checkChars(data, getXmlVersionEnum(doc))) then
       call throw_exception(FoX_INVALID_CHARACTER, "createProcessingInstruction", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -3527,7 +3503,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkName(target, doc%xds)) then
+    elseif (.not.checkName(target, getXds(doc))) then
       call throw_exception(FoX_INVALID_XML_NAME, "createProcessingInstruction", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -3548,7 +3524,7 @@ endif
 
     np => createNode(doc, PROCESSING_INSTRUCTION_NODE, target, data)
 
-    if (.not.doc%xds%building) then
+    if (getGCstate(doc)) then
       np%inDocument = .false.
       call append(doc%docExtras%hangingnodes, np)
     else
@@ -3571,7 +3547,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkChars(name, doc%xds%xml_version)) then
+    elseif (.not.checkChars(name, getXmlVersionEnum(doc))) then
       call throw_exception(INVALID_CHARACTER_ERR, "createAttribute", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -3579,7 +3555,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkName(name, doc%xds)) then
+    elseif (.not.checkName(name, getXds(doc))) then
       call throw_exception(FoX_INVALID_XML_NAME, "createAttribute", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -3594,7 +3570,7 @@ endif
     np%localname => vs_str_alloc(name)
     np%prefix => vs_str_alloc(name)
 
-    if (.not.doc%xds%building) then
+    if (getGCstate(doc)) then
       np%inDocument = .false.
       call append(doc%docExtras%hangingnodes, np)
     else
@@ -3619,7 +3595,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkChars(name, doc%xds%xml_version)) then
+    elseif (.not.checkChars(name, getXmlVersionEnum(doc))) then
       call throw_exception(INVALID_CHARACTER_ERR, "createEntityReference", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -3627,7 +3603,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkName(name, doc%xds)) then
+    elseif (.not.checkName(name, getXds(doc))) then
       call throw_exception(FoX_INVALID_XML_NAME, "createEntityReference", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -3639,7 +3615,7 @@ endif
 
     np => createNode(doc, ENTITY_REFERENCE_NODE, name, "")
 
-    ent => getNamedItem(doc%docType%entities, name)
+    ent => getNamedItem(getEntities(getDocType(doc)), name)
 
     if (associated(ent)) then
       ! FIXME here we should actually parse the entity reference
@@ -3649,7 +3625,7 @@ endif
     endif
     ! FIXME all children should be readonly at this stage.
     ! FIXME all cloned children need to be marked ...
-    if (.not.doc%xds%building) then
+    if (getGCstate(doc)) then
       np%inDocument = .false.
       call append(doc%docExtras%hangingnodes, np)
     else
@@ -3945,7 +3921,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkChars(qualifiedName, doc%xds%xml_version)) then
+    elseif (.not.checkChars(qualifiedName, getXmlVersionEnum(doc))) then
       call throw_exception(INVALID_CHARACTER_ERR, "createElementNS", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -3953,7 +3929,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkQName(qualifiedName, doc%xds)) then
+    elseif (.not.checkQName(qualifiedName, getXds(doc))) then
       call throw_exception(NAMESPACE_ERR, "createElementNS", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -3992,7 +3968,7 @@ endif
 
     np%attributes%ownerElement => np
 
-    if (.not.doc%xds%building) then
+    if (getGCstate(doc)) then
       np%inDocument = .false.
       call append(doc%docExtras%hangingnodes, np)
     else
@@ -4017,7 +3993,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkChars(qualifiedName, doc%xds%xml_version)) then
+    elseif (.not.checkChars(qualifiedName, getXmlVersionEnum(doc))) then
       call throw_exception(INVALID_CHARACTER_ERR, "createAttributeNS", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -4025,7 +4001,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkQName(qualifiedName, doc%xds)) then
+    elseif (.not.checkQName(qualifiedName, getXds(doc))) then
       call throw_exception(NAMESPACE_ERR, "createAttributeNS", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -4060,7 +4036,7 @@ endif
     np%localname => vs_str_alloc(localPartofQName(qualifiedname))
     np%prefix => vs_str_alloc(PrefixofQName(qualifiedname))
 
-    if (.not.doc%xds%building) then
+    if (getGCstate(doc)) then
       np%inDocument = .false.
       call append(doc%docExtras%hangingnodes, np)
     else
@@ -4215,9 +4191,9 @@ endif
     type(Node), pointer :: doc
     character(len=3) :: s
 
-    if (doc%xds%xml_version==XML1_0) then
+    if (getXmlVersionEnum(doc)==XML1_0) then
       s = "1.0"
-    elseif (doc%xds%xml_version==XML1_1) then
+    elseif (getXmlVersionEnum(doc)==XML1_1) then
       s = "1.1"
     else
       s = "XXX"
@@ -4231,9 +4207,9 @@ endif
     character(len=*) :: s
 
     if (s=="1.0") then
-      doc%xds%xml_version = XML1_0
+      doc%docExtras%xds%xml_version = XML1_0
     elseif (s=="1.1") then
-      doc%xds%xml_version = XML1_1
+      doc%docExtras%xds%xml_version = XML1_1
     else
       call throw_exception(NOT_SUPPORTED_ERR, "setXmlVersion", ex)
 if (present(ex)) then
@@ -4291,6 +4267,44 @@ endif
     if (present(systemId)) np%systemId => vs_str_alloc(systemId)
     
   end function createNotation
+
+
+  function getXmlVersionEnum(doc, ex)result(n) 
+    type(DOMException), intent(inout), optional :: ex
+    type(Node), pointer :: doc
+    integer :: n
+
+    n = doc%docExtras%xds%xml_version
+
+  end function getXmlVersionEnum
+
+  function getXds(doc, ex)result(xds) 
+    type(DOMException), intent(inout), optional :: ex
+    type(Node), pointer :: doc
+    type(xml_doc_state) :: xds
+
+    xds = doc%docExtras%xds
+
+  end function getXds
+
+
+  function getGCstate(doc, ex)result(b) 
+    type(DOMException), intent(inout), optional :: ex
+    type(Node), pointer :: doc
+    logical :: b
+
+    b = doc%docExtras%xds%building
+
+  end function getGCstate
+
+  subroutine setGCstate(doc, b, ex)
+    type(DOMException), intent(inout), optional :: ex
+    type(Node), pointer :: doc
+    logical, intent(in) :: b
+
+    doc%docExtras%xds%building = b
+
+  end subroutine setGCstate
 
 
 
@@ -4435,7 +4449,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkChars(name, element%ownerDocument%xds%xml_version)) then
+    elseif (.not.checkChars(name, getXmlVersionEnum(getOwnerDocument(element)))) then
       call throw_exception(INVALID_CHARACTER_ERR, "setAttribute", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -4443,7 +4457,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkName(value, element%ownerDocument%xds)) then
+    elseif (.not.checkName(value, getXds(getOwnerDocument(element)))) then
       call throw_exception(FoX_INVALID_XML_NAME, "setAttribute", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -4451,7 +4465,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkChars(value, element%ownerDocument%xds%xml_version)) then
+    elseif (.not.checkChars(value, getXmlVersionEnum(getOwnerDocument(element)))) then
       call throw_exception(FoX_INVALID_CHARACTER, "setAttribute", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -4461,10 +4475,10 @@ endif
 
     endif
 
-    quickFix = .not.element%ownerDocument%xds%building &
+    quickFix = .not.getGCstate(getOwnerDocument(element)) &
       .and. element%inDocument
 
-    if (quickFix) call setDocBuilding(element%ownerDocument, .true.)
+    if (quickFix) call setGCstate(getOwnerDocument(element), .false.)
     ! then the created attribute is going straight into the document,
     ! so dont faff with hanging-node lists.
 
@@ -4474,7 +4488,7 @@ endif
     dummy => setNamedItem(element%attributes, nn)
     nn%ownerElement => element
 
-    if (quickFix) call setDocBuilding(element%ownerDocument, .true.)
+    if (quickFix) call setGCstate(getOwnerDocument(element), .true.)
 
   end subroutine setAttribute
 
@@ -4497,7 +4511,7 @@ endif
     endif
     
     if (element%inDocument) &
-      call setDocBuilding(element%ownerDocument, .true.)
+      call setGCstate(getOwnerDocument(element), .false.)
 
     dummy => removeNamedItem(element%attributes, name)
     print*,"DESTROYING ATTRIBUTE:"
@@ -4505,7 +4519,7 @@ endif
     call destroyNode(dummy)
 
     if (element%inDocument) &
-      call setDocBuilding(element%ownerDocument, .false.)
+      call setGCstate(element%ownerDocument, .true.)
 
   ! FIXME recreate a default value if there is one
      
@@ -4681,7 +4695,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkChars(qualifiedname, element%ownerDocument%xds%xml_version)) then
+    elseif (.not.checkChars(qualifiedname, getXmlVersionEnum(getOwnerDocument(element)))) then
       call throw_exception(INVALID_CHARACTER_ERR, "setAttributeNS", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -4697,7 +4711,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkQName(qualifiedname, element%ownerDocument%xds)) then
+    elseif (.not.checkQName(qualifiedname, getXds(getOwnerDocument(element)))) then
       call throw_exception(NAMESPACE_ERR, "setAttributeNS", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -4730,10 +4744,10 @@ endif
 ! FIXME what if namespace is undeclared ... will be recreated on serialization,
 ! but we might need a new namespace node here for xpath ...
 
-    quickFix = .not.element%ownerDocument%xds%building &
+    quickFix = getGCstate(getOwnerDocument(element)) &
       .and. element%inDocument
 
-    if (quickFix) call setDocBuilding(element%ownerDocument, .true.)
+    if (quickFix) call setGCstate(getOwnerDocument(element), .false.)
     ! then the created attribute is going straight into the document,
     ! so dont faff with hanging-node lists.
 
@@ -4743,7 +4757,7 @@ endif
     dummy => setNamedItemNS(element%attributes, nn)
     nn%ownerElement => element
 
-    if (quickFix) call setDocBuilding(element%ownerDocument, .true.)
+    if (quickFix) call setGCstate(getOwnerDocument(element), .true.)
 
     !FIXME catch exception
 
@@ -5087,7 +5101,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkChars(value, attribute%ownerDocument%xds%xml_version)) then
+    elseif (.not.checkChars(value, getXmlVersionEnum(getOwnerDocument(attribute)))) then
       call throw_exception(FoX_INVALID_CHARACTER, "setValue", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -5143,7 +5157,7 @@ endif
 
 
   function getLength_characterdata(arg) result(n)
-    type(Node), intent(in) :: arg
+    type(Node), pointer :: arg
     integer :: n
     if (isCharData(arg%nodeType)) then
        n = size(arg%nodeValue)
@@ -5155,7 +5169,7 @@ endif
 
   function subStringData(arg, offset, count, ex)result(c) 
     type(DOMException), intent(inout), optional :: ex
-    type(Node), intent(in) :: arg
+    type(Node), pointer :: arg
     integer, intent(in) :: offset
     integer, intent(in) :: count
     character(len=count) :: c
@@ -5183,7 +5197,7 @@ endif
 
   subroutine appendData(arg, data, ex)
     type(DOMException), intent(inout), optional :: ex
-    type(Node), intent(inout) :: arg
+    type(Node), pointer :: arg
     character(len=*), intent(in) :: data
     
     character, pointer :: tmp(:)
@@ -5206,7 +5220,7 @@ endif
 
     endif
 
-    if (.not.checkChars(data, arg%ownerDocument%xds%xml_version)) then
+    if (.not.checkChars(data, getXmlVersionEnum(getOwnerDocument(arg)))) then
       call throw_exception(FoX_INVALID_CHARACTER, "appendData", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -5245,7 +5259,7 @@ endif
 
   subroutine insertData(arg, offset, data, ex)
     type(DOMException), intent(inout), optional :: ex
-    type(Node), intent(inout) :: arg
+    type(Node), pointer :: arg
     integer, intent(in) :: offset
     character(len=*), intent(in) :: data
 
@@ -5277,7 +5291,7 @@ endif
 
     endif
 
-    if (.not.checkChars(data, arg%ownerDocument%xds%xml_version)) then
+    if (.not.checkChars(data, getXmlVersionEnum(getOwnerDocument(arg)))) then
       call throw_exception(FoX_INVALID_CHARACTER, "insertData", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -5316,7 +5330,7 @@ endif
 
   subroutine deleteData(arg, offset, count, ex)
     type(DOMException), intent(inout), optional :: ex
-    type(Node), intent(inout) :: arg
+    type(Node), pointer :: arg
     integer, intent(in) :: offset
     integer, intent(in) :: count
 
@@ -5357,7 +5371,7 @@ endif
 
   subroutine replaceData(arg, offset, count, data, ex)
     type(DOMException), intent(inout), optional :: ex
-    type(Node), intent(inout) :: arg
+    type(Node), pointer :: arg
     integer, intent(in) :: offset
     integer, intent(in) :: count
     character(len=*), intent(in) :: data
@@ -5390,7 +5404,7 @@ endif
 
     endif
 
-    if (.not.checkChars(data, arg%ownerDocument%xds%xml_version)) then
+    if (.not.checkChars(data, getXmlVersionEnum(getOwnerDocument(arg)))) then
       call throw_exception(FoX_INVALID_CHARACTER, "replaceData", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then

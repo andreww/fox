@@ -35,7 +35,7 @@ TOHW_m_dom_contents(`
 
 
   function getLength_characterdata(arg) result(n)
-    type(Node), intent(in) :: arg
+    type(Node), pointer :: arg
     integer :: n
     if (isCharData(arg%nodeType)) then
        n = size(arg%nodeValue)
@@ -46,7 +46,7 @@ TOHW_m_dom_contents(`
 
 
   TOHW_function(subStringData, (arg, offset, count), c)
-    type(Node), intent(in) :: arg
+    type(Node), pointer :: arg
     integer, intent(in) :: offset
     integer, intent(in) :: count
     character(len=count) :: c
@@ -67,7 +67,7 @@ TOHW_m_dom_contents(`
 
 
   TOHW_subroutine(appendData, (arg, data))
-    type(Node), intent(inout) :: arg
+    type(Node), pointer :: arg
     character(len=*), intent(in) :: data
     
     character, pointer :: tmp(:)
@@ -78,7 +78,7 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
     endif
 
-    if (.not.checkChars(data, arg%ownerDocument%xds%xml_version)) then
+    if (.not.checkChars(data, getXmlVersionEnum(getOwnerDocument(arg)))) then
       TOHW_m_dom_throw_error(FoX_INVALID_CHARACTER)
     endif
     
@@ -98,7 +98,7 @@ TOHW_m_dom_contents(`
   
 
   TOHW_subroutine(insertData, (arg, offset, data))
-    type(Node), intent(inout) :: arg
+    type(Node), pointer :: arg
     integer, intent(in) :: offset
     character(len=*), intent(in) :: data
 
@@ -112,7 +112,7 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(INDEX_SIZE_ERR)
     endif
 
-    if (.not.checkChars(data, arg%ownerDocument%xds%xml_version)) then
+    if (.not.checkChars(data, getXmlVersionEnum(getOwnerDocument(arg)))) then
       TOHW_m_dom_throw_error(FoX_INVALID_CHARACTER)
     endif
 
@@ -132,7 +132,7 @@ TOHW_m_dom_contents(`
 
 
   TOHW_subroutine(deleteData, (arg, offset, count))
-    type(Node), intent(inout) :: arg
+    type(Node), pointer :: arg
     integer, intent(in) :: offset
     integer, intent(in) :: count
 
@@ -154,7 +154,7 @@ TOHW_m_dom_contents(`
 
 
   TOHW_subroutine(replaceData, (arg, offset, count, data))
-    type(Node), intent(inout) :: arg
+    type(Node), pointer :: arg
     integer, intent(in) :: offset
     integer, intent(in) :: count
     character(len=*), intent(in) :: data
@@ -169,7 +169,7 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(INDEX_SIZE_ERR)
     endif
 
-    if (.not.checkChars(data, arg%ownerDocument%xds%xml_version)) then
+    if (.not.checkChars(data, getXmlVersionEnum(getOwnerDocument(arg)))) then
       TOHW_m_dom_throw_error(FoX_INVALID_CHARACTER)
     endif
 

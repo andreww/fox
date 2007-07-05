@@ -136,10 +136,10 @@ TOHW_m_dom_contents(`
       arg%lastChild => null()
       ! and add the new one.
       ! Avoid manipulating hangingnode lists
-      call setDocBuilding(arg%ownerDocument, .true.)
+      call setGCstate(arg%ownerDocument, .false.)
       np => createTextNode(arg%ownerDocument, nodeValue)
       np => appendChild(arg, np)
-      call setDocBuilding(arg%ownerDocument, .false.)
+      call setGCstate(arg%ownerDocument, .true.)
     case (CDATA_SECTION_NODE)
       ! FIXME check does string contain wrong characters
       deallocate(arg%nodeValue)
@@ -327,7 +327,7 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(NOT_FOUND_ERR)
     endif
 
-    if (.not.arg%ownerDocument%xds%building) then
+    if (getGCstate(getownerDocument(arg))) then
       if (arg%inDocument) then
         if (newChild%nodeType==DOCUMENT_FRAGMENT_NODE) then
           do i = 1, newChild%childNodes%length
@@ -451,7 +451,7 @@ TOHW_m_dom_contents(`
     np%previousSibling => null()
     np%nextSibling => null()
 
-    if (.not.arg%ownerDocument%xds%building) then
+    if (getGCstate(arg%ownerDocument)) then
       if (arg%inDocument) then
         call removeNodesFromDocument(arg%ownerDocument, oldChild)
         if (newChild%nodeType==DOCUMENT_FRAGMENT_NODE) then
@@ -532,7 +532,7 @@ TOHW_m_dom_contents(`
     oldChild%previousSibling => null()
     oldChild%nextSibling => null()
     arg => np
-    if (.not.arg%ownerDocument%xds%building) then
+    if (getGCstate(arg%ownerDocument)) then
       if (arg%inDocument) then
         call removeNodesFromDocument(arg%ownerDocument, oldChild)
       endif
@@ -636,7 +636,7 @@ TOHW_m_dom_contents(`
         temp_nl(i-1)%this%nextSibling => newChild
         newChild%previousSibling => temp_nl(i-1)%this     
       endif
-      if (.not.arg%ownerDocument%xds%building) then
+      if (getGCstate(arg%ownerDocument)) then
         if (arg%inDocument.and..not.newChild%inDocument) then
           call putNodesInDocument(arg%ownerDocument, newChild)
         endif
@@ -814,7 +814,7 @@ TOHW_m_dom_treewalk(`
     character(len=*), intent(in) :: version
     logical :: p
 
-    p = hasFeature(getImplementation(getOwnerDocument(arg)), feature, version)
+    p = hasFeature(getImplementation(arg%ownerDocument), feature, version)
   end function isSupported
 
   ! FIXME should the below instead just decompose the QName on access?

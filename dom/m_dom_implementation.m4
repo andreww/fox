@@ -50,21 +50,19 @@ TOHW_m_dom_contents(`
     character(len=*), intent(in) :: publicId
     character(len=*), intent(in) :: systemId
     type(Node), pointer :: dt
-
-    allocate(dt%xds)
-    call init_xml_doc_state(dt%xds)
+    type(xml_doc_state) :: temp_xds
 
     if (.not.checkChars(qualifiedName, XML1_0)) then
-      TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR, (dt%xds))
+      TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
     endif
 
-    if (.not.checkName(qualifiedName, dt%xds)) then
-      TOHW_m_dom_throw_error(NAMESPACE_ERR, (dt%xds))
+    if (.not.checkName(qualifiedName, temp_xds))  then
+      TOHW_m_dom_throw_error(NAMESPACE_ERR)
     ! FIXME check that prefix etc is declared
     elseif (.not.checkPublicId(publicId)) then
-      TOHW_m_dom_throw_error(FoX_INVALID_PUBLIC_ID, (dt%xds))
+      TOHW_m_dom_throw_error(FoX_INVALID_PUBLIC_ID)
     elseif (.not.checkSystemId(systemId)) then
-      TOHW_m_dom_throw_error(FoX_INVALID_SYSTEM_ID, (dt%xds))
+      TOHW_m_dom_throw_error(FoX_INVALID_SYSTEM_ID)
     endif
 
     dt => createNode(null(), DOCUMENT_TYPE_NODE, qualifiedName, "")
@@ -95,8 +93,6 @@ TOHW_m_dom_contents(`
     dt%entities%ownerElement => dt
     dt%notations%ownerElement => dt
 
-    allocate(dt%xds)
-    call init_xml_doc_state(dt%xds)
   end function createEmptyDocumentType
 
 
@@ -104,10 +100,9 @@ TOHW_m_dom_contents(`
     type(Node), pointer :: doc
     type(xml_doc_state), pointer :: xds
 
-    call destroy_xml_doc_state(doc%xds)
-    deallocate(doc%xds)
-    doc%xds => xds
-    doc%docType%xds => xds
+    call destroy_xml_doc_state(doc%docExtras%xds)
+    deallocate(doc%docExtras%xds)
+    doc%docExtras%xds => xds
 
   end subroutine replace_xds
 
@@ -116,33 +111,32 @@ TOHW_m_dom_contents(`
     type(DOMImplementation), intent(in) :: impl
     character(len=*), intent(in), optional :: namespaceURI
     character(len=*), intent(in), optional :: qualifiedName
-    type(Node), pointer, optional :: docType
+    type(Node), pointer :: docType
     type(Node), pointer :: doc, dt
 
      !FIXMEFIXMEFIXME optional arguments and errors
     ! FIXME change to match empytdocument below
 
     doc => createNode(null(), DOCUMENT_NODE, "#document", "")
+    doc%ownerDocument => doc ! Makes life easier. DOM compliance in getter
 
     allocate(doc%docExtras)
     doc%docExtras%implementation => FoX_DOM
     allocate(doc%docExtras%nodelists(0))
+    allocate(doc%docExtras%xds)
+    call init_xml_doc_state(doc%docExtras%xds)
 
-    if (present(docType)) then
-      docType%ownerDocument => doc
-      doc%doctype => appendChild(doc, doc%docType)
-    endif
-    if (.not.associated(doc%docType)) then
+    if (associated(docType)) then
+      dt => docType
+      dt%ownerDocument => doc
+    else
       dt => createDocumentType(impl, qualifiedName, "", "")
       dt%ownerDocument => doc
-      doc%docType => appendChild(doc, dt)
     endif
 
-    doc%docType%ownerElement => doc
-
+    doc%docExtras%docType => appendChild(doc, dt)
+    
     call setDocumentElement(doc, appendChild(doc, createElementNS(doc, namespaceURI, qualifiedName)))
-
-    doc%xds => doc%docType%xds
 
   end function createDocument
 
@@ -152,17 +146,19 @@ TOHW_m_dom_contents(`
     type(Node), pointer :: dt
     
     doc => createNode(null(), DOCUMENT_NODE, "#document", "")
+    doc%ownerDocument => doc ! Makes life easier. DOM compliance in getter
 
     allocate(doc%docExtras)
     doc%docExtras%implementation => FoX_DOM
     allocate(doc%docExtras%nodelists(0))
+    allocate(doc%docExtras%xds)
+    call init_xml_doc_state(doc%docExtras%xds)
 
     dt => createEmptyDocumentType(doc)
-    doc%xds => dt%xds
-    doc%ownerDocument => doc
+    dt%ownerDocument => doc
 
     ! FIXME do something with namespaceURI etc 
-    doc%doctype => appendChild(doc, dt)
+    doc%docExtras%doctype => appendChild(doc, dt)
 
   end function createEmptyDocument
 
@@ -174,7 +170,7 @@ TOHW_m_dom_contents(`
     integer :: i
 
 ! Switch off all GC - since this is GC!
-    call setDocBuilding(doc, .true.)
+    call setGCstate(doc, .false.)
 
     if (doc%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
@@ -194,6 +190,8 @@ TOHW_m_dom_contents(`
     enddo
     if (associated(doc%docExtras%hangingNodes%nodes)) deallocate(doc%docExtras%hangingNodes%nodes)
 
+    call destroy_xml_doc_state(doc%docExtras%xds)
+    deallocate(doc%docExtras%xds)
     deallocate(doc%docExtras)
 
     print*, "destroying a node:", doc%nodeType, doc%nodeName

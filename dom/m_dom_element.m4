@@ -69,18 +69,18 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
 
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
-    elseif (.not.checkChars(name, element%ownerDocument%xds%xml_version)) then
+    elseif (.not.checkChars(name, getXmlVersionEnum(getOwnerDocument(element)))) then
       TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
-    elseif (.not.checkName(value, element%ownerDocument%xds)) then
+    elseif (.not.checkName(value, getXds(getOwnerDocument(element)))) then
       TOHW_m_dom_throw_error(FoX_INVALID_XML_NAME)
-    elseif (.not.checkChars(value, element%ownerDocument%xds%xml_version)) then
+    elseif (.not.checkChars(value, getXmlVersionEnum(getOwnerDocument(element)))) then
       TOHW_m_dom_throw_error(FoX_INVALID_CHARACTER)
     endif
 
-    quickFix = .not.element%ownerDocument%xds%building &
+    quickFix = .not.getGCstate(getOwnerDocument(element)) &
       .and. element%inDocument
 
-    if (quickFix) call setDocBuilding(element%ownerDocument, .true.)
+    if (quickFix) call setGCstate(getOwnerDocument(element), .false.)
     ! then the created attribute is going straight into the document,
     ! so dont faff with hanging-node lists.
 
@@ -90,7 +90,7 @@ TOHW_m_dom_contents(`
     dummy => setNamedItem(element%attributes, nn)
     nn%ownerElement => element
 
-    if (quickFix) call setDocBuilding(element%ownerDocument, .true.)
+    if (quickFix) call setGCstate(getOwnerDocument(element), .true.)
 
   end subroutine setAttribute
 
@@ -106,7 +106,7 @@ TOHW_m_dom_contents(`
     endif
     
     if (element%inDocument) &
-      call setDocBuilding(element%ownerDocument, .true.)
+      call setGCstate(getOwnerDocument(element), .false.)
 
     dummy => removeNamedItem(element%attributes, name)
     print*,"DESTROYING ATTRIBUTE:"
@@ -114,7 +114,7 @@ TOHW_m_dom_contents(`
     call destroyNode(dummy)
 
     if (element%inDocument) &
-      call setDocBuilding(element%ownerDocument, .false.)
+      call setGCstate(element%ownerDocument, .true.)
 
   ! FIXME recreate a default value if there is one
      
@@ -225,11 +225,11 @@ TOHW_m_dom_contents(`
 
     if (element%nodeType /= ELEMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    elseif (.not.checkChars(qualifiedname, element%ownerDocument%xds%xml_version)) then
+    elseif (.not.checkChars(qualifiedname, getXmlVersionEnum(getOwnerDocument(element)))) then
       TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
     elseif (element%readonly) then
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
-    elseif (.not.checkQName(qualifiedname, element%ownerDocument%xds)) then
+    elseif (.not.checkQName(qualifiedname, getXds(getOwnerDocument(element)))) then
       TOHW_m_dom_throw_error(NAMESPACE_ERR)
     elseif (prefixOfQName(qualifiedName)/="" &
      .and. namespaceURI=="") then
@@ -244,10 +244,10 @@ TOHW_m_dom_contents(`
 ! FIXME what if namespace is undeclared ... will be recreated on serialization,
 ! but we might need a new namespace node here for xpath ...
 
-    quickFix = .not.element%ownerDocument%xds%building &
+    quickFix = getGCstate(getOwnerDocument(element)) &
       .and. element%inDocument
 
-    if (quickFix) call setDocBuilding(element%ownerDocument, .true.)
+    if (quickFix) call setGCstate(getOwnerDocument(element), .false.)
     ! then the created attribute is going straight into the document,
     ! so dont faff with hanging-node lists.
 
@@ -257,7 +257,7 @@ TOHW_m_dom_contents(`
     dummy => setNamedItemNS(element%attributes, nn)
     nn%ownerElement => element
 
-    if (quickFix) call setDocBuilding(element%ownerDocument, .true.)
+    if (quickFix) call setGCstate(getOwnerDocument(element), .true.)
 
     !FIXME catch exception
 

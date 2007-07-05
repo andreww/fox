@@ -105,7 +105,6 @@ TOHW_m_dom_publics(`
     character, pointer, dimension(:) :: namespaceURI => null() ! \
     character, pointer, dimension(:) :: prefix => null()       !  - only useful for element & attribute
     character, pointer, dimension(:) :: localName => null()    ! /
-    type(Node), pointer :: doctype => null()  ! only for document
 
     logical :: specified ! only for attribute
     ! Introduced in DOM Level 2
@@ -126,7 +125,7 @@ TOHW_m_dom_publics(`
     logical :: strictErrorChecking = .false. ! document/doctype
     character, pointer :: documentURI(:) => null() ! document/doctype
     ! DOMCONFIGURATION
-    type(xml_doc_state), pointer :: xds => null()
+
     !TYPEINFO schemaTypeInfo
     logical :: isId ! attribute
     ! In order to keep all node lists live ..
@@ -162,8 +161,6 @@ TOHW_m_dom_publics(`
   public :: ListNode
   public :: NodeList
   public :: NamedNodeMap
-
-  public :: setDocBuilding
 
 ')`'dnl
 dnl
@@ -255,9 +252,6 @@ TOHW_m_dom_contents(`
       deallocate(dt%notations%nodes)
     endif
 
-    call destroy_xml_doc_state(dt%xds)
-    deallocate(dt%xds)
-
     call destroyNodeContents(dt)
     deallocate(dt)
 
@@ -343,13 +337,5 @@ TOHW_m_dom_treewalk(`',`',`deadNode')
     deallocate(np%childNodes%nodes)
 
   end subroutine destroyNodeContents
-
-! Some convenience functions for internal use:
-
-  subroutine setDocBuilding(doc,b)
-    type(Node), pointer :: doc
-    logical, intent(in) :: b
-    doc%xds%building = b
-  end subroutine setDocBuilding
 
 ')`'dnl
