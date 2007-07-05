@@ -126,7 +126,7 @@ TOHW_m_dom_contents(`
       ! destroy any existing children ... 
       do i = 1, arg%childNodes%length
         if (.not.arg%inDocument) &
-          call remove_node_nl(arg%ownerDocument%hangingNodes, arg%childNodes%nodes(i)%this)
+          call remove_node_nl(arg%ownerDocument%docExtras%hangingNodes, arg%childNodes%nodes(i)%this)
         call destroyNode(arg%childNodes%nodes(i)%this)
       enddo
       deallocate(arg%childNodes%nodes)
@@ -796,7 +796,7 @@ TOHW_m_dom_treewalk(`
             oldNode => tempNode
             tempNode => getNextSibling(tempNode)
             oldNode => removeChild(getParentNode(oldNode), oldNode)
-            call remove_node_nl(arg%ownerDocument%hangingNodes, oldNode)
+            call remove_node_nl(arg%ownerDocument%docExtras%hangingNodes, oldNode)
             call destroy(oldNode)
           enddo
           deallocate(this%nodeValue)
@@ -881,7 +881,7 @@ TOHW_m_dom_treewalk(`
 
 TOHW_m_dom_treewalk(`
         this%inDocument = .true.
-        call remove_node_nl(doc%hangingNodes, this)
+        call remove_node_nl(doc%docExtras%hangingNodes, this)
 ',`')
 
   end subroutine putNodesInDocument
@@ -896,7 +896,7 @@ TOHW_m_dom_treewalk(`
 
 TOHW_m_dom_treewalk(`
         this%inDocument = .false.
-        call append_nl(doc%hangingNodes, this)
+        call append_nl(doc%docExtras%hangingNodes, this)
 ',`')
 
   end subroutine removeNodesFromDocument

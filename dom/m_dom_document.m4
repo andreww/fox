@@ -119,7 +119,7 @@ TOHW_m_dom_contents(`
 
     if (.not.doc%docType%xds%building) then
       np%inDocument = .false.
-      call append(doc%hangingnodes, np)
+      call append(doc%docExtras%hangingnodes, np)
     else
       np%inDocument = .true.
     endif
@@ -137,7 +137,7 @@ TOHW_m_dom_contents(`
     np => createNode(doc, DOCUMENT_FRAGMENT_NODE, "#document-fragment", "")
     if (.not.doc%xds%building) then
       np%inDocument = .false.
-      call append(doc%hangingnodes, np)
+      call append(doc%docExtras%hangingnodes, np)
     else
       np%inDocument = .true.
     endif
@@ -159,7 +159,7 @@ TOHW_m_dom_contents(`
 
     if (.not.doc%docType%xds%building) then
       np%inDocument = .false.
-      call append(doc%hangingnodes, np)
+      call append(doc%docExtras%hangingnodes, np)
     else
       np%inDocument = .true.
     endif
@@ -183,7 +183,7 @@ TOHW_m_dom_contents(`
 
     if (.not.doc%docType%xds%building) then
       np%inDocument = .false.
-      call append(doc%hangingnodes, np)
+      call append(doc%docExtras%hangingnodes, np)
     else
       np%inDocument = .true.
     endif
@@ -207,7 +207,7 @@ TOHW_m_dom_contents(`
 
     if (.not.doc%docType%xds%building) then
       np%inDocument = .false.
-      call append(doc%hangingnodes, np)
+      call append(doc%docExtras%hangingnodes, np)
     else
       np%inDocument = .true.
     endif
@@ -238,7 +238,7 @@ TOHW_m_dom_contents(`
 
     if (.not.doc%docType%xds%building) then
       np%inDocument = .false.
-      call append(doc%hangingnodes, np)
+      call append(doc%docExtras%hangingnodes, np)
     else
       np%inDocument = .true.
     endif
@@ -265,7 +265,7 @@ TOHW_m_dom_contents(`
 
     if (.not.doc%docType%xds%building) then
       np%inDocument = .false.
-      call append(doc%hangingnodes, np)
+      call append(doc%docExtras%hangingnodes, np)
     else
       np%inDocument = .true.
     endif
@@ -301,7 +301,7 @@ TOHW_m_dom_contents(`
     ! FIXME all cloned children need to be marked ...
     if (.not.doc%docType%xds%building) then
       np%inDocument = .false.
-      call append(doc%hangingnodes, np)
+      call append(doc%docExtras%hangingnodes, np)
     else
       np%inDocument = .true.
     endif
@@ -509,7 +509,7 @@ TOHW_m_dom_contents(`
 
     if (.not.doc%docType%xds%building) then
       np%inDocument = .false.
-      call append(doc%hangingnodes, np)
+      call append(doc%docExtras%hangingnodes, np)
     else
       np%inDocument = .true.
     endif
@@ -546,7 +546,7 @@ TOHW_m_dom_contents(`
 
     if (.not.doc%docType%xds%building) then
       np%inDocument = .false.
-      call append(doc%hangingnodes, np)
+      call append(doc%docExtras%hangingnodes, np)
     else
       np%inDocument = .true.
     endif

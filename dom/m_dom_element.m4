@@ -316,11 +316,10 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(INUSE_ATTRIBUTE_ERR)
     endif
 
-    ! this checks if attribute exists already
+    ! this checks if attribute exists already, and does hangingnodes
     dummy => setNamedItemNS(element%attributes, newattr)
     newattr%ownerElement => element
     attr => newattr
-    ! FIXME hangingnodes
 
   end function setAttributeNodeNS
 
@@ -349,7 +348,7 @@ TOHW_m_dom_contents(`
     TOHW_m_dom_throw_error(NOT_FOUND_ERR)
 
     attr%ownerElement => null()
-    ! FIXME hangingnodes
+
   end function removeAttributeNodeNS
 
 

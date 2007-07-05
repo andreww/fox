@@ -132,7 +132,6 @@ TOHW_m_dom_publics(`
     type(NodeListPtr), pointer :: nodelists(:) ! document
     ! In order to keep track of all nodes not connected to the document
 
-    type(NodeList) :: hangingNodes ! For the document. list of nodes not associated with doc
     logical :: inDocument = .false.! For a node, is this node associated to the doc?
 !!
 !!

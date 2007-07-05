@@ -208,7 +208,6 @@ module m_dom_dom
     type(NodeListPtr), pointer :: nodelists(:) ! document
     ! In order to keep track of all nodes not connected to the document
 
-    type(NodeList) :: hangingNodes ! For the document. list of nodes not associated with doc
     logical :: inDocument = .false.! For a node, is this node associated to the doc?
 !!
 !!
@@ -810,7 +809,7 @@ endif
       ! destroy any existing children ... 
       do i = 1, arg%childNodes%length
         if (.not.arg%inDocument) &
-          call remove_node_nl(arg%ownerDocument%hangingNodes, arg%childNodes%nodes(i)%this)
+          call remove_node_nl(arg%ownerDocument%docExtras%hangingNodes, arg%childNodes%nodes(i)%this)
         call destroyNode(arg%childNodes%nodes(i)%this)
       enddo
       deallocate(arg%childNodes%nodes)
@@ -2059,7 +2058,7 @@ endif
             oldNode => tempNode
             tempNode => getNextSibling(tempNode)
             oldNode => removeChild(getParentNode(oldNode), oldNode)
-            call remove_node_nl(arg%ownerDocument%hangingNodes, oldNode)
+            call remove_node_nl(arg%ownerDocument%docExtras%hangingNodes, oldNode)
             call destroy(oldNode)
           enddo
           deallocate(this%nodeValue)
@@ -2205,7 +2204,7 @@ endif
 
 
         this%inDocument = .true.
-        call remove_node_nl(doc%hangingNodes, this)
+        call remove_node_nl(doc%docExtras%hangingNodes, this)
 
 
       else
@@ -2281,7 +2280,7 @@ endif
 
 
         this%inDocument = .false.
-        call append_nl(doc%hangingNodes, this)
+        call append_nl(doc%docExtras%hangingNodes, this)
 
 
       else
@@ -3183,8 +3182,6 @@ endif
 
     endif
 
-    deallocate(doc%docExtras)
-
     ! Destroy all remaining nodelists
     do i = 1, size(doc%nodelists)
       call destroy(doc%nodelists(i)%this)
@@ -3192,11 +3189,12 @@ endif
     deallocate(doc%nodelists)
 
     ! Destroy all remaining hanging nodes
-    print*,"DANGLING NODES", doc%hangingNodes%length
-    do i = 1, doc%hangingNodes%length
-      call destroy(doc%hangingNodes%nodes(i)%this)
+    do i = 1, doc%docExtras%hangingNodes%length
+      call destroy(doc%docExtras%hangingNodes%nodes(i)%this)
     enddo
-    if (associated(doc%hangingNodes%nodes)) deallocate(doc%hangingNodes%nodes)
+    if (associated(doc%docExtras%hangingNodes%nodes)) deallocate(doc%docExtras%hangingNodes%nodes)
+
+    deallocate(doc%docExtras)
 
     print*, "destroying a node:", doc%nodeType, doc%nodeName
     call destroyNodeContents(doc)
@@ -3344,7 +3342,7 @@ endif
 
     if (.not.doc%docType%xds%building) then
       np%inDocument = .false.
-      call append(doc%hangingnodes, np)
+      call append(doc%docExtras%hangingnodes, np)
     else
       np%inDocument = .true.
     endif
@@ -3369,7 +3367,7 @@ endif
     np => createNode(doc, DOCUMENT_FRAGMENT_NODE, "#document-fragment", "")
     if (.not.doc%xds%building) then
       np%inDocument = .false.
-      call append(doc%hangingnodes, np)
+      call append(doc%docExtras%hangingnodes, np)
     else
       np%inDocument = .true.
     endif
@@ -3404,7 +3402,7 @@ endif
 
     if (.not.doc%docType%xds%building) then
       np%inDocument = .false.
-      call append(doc%hangingnodes, np)
+      call append(doc%docExtras%hangingnodes, np)
     else
       np%inDocument = .true.
     endif
@@ -3447,7 +3445,7 @@ endif
 
     if (.not.doc%docType%xds%building) then
       np%inDocument = .false.
-      call append(doc%hangingnodes, np)
+      call append(doc%docExtras%hangingnodes, np)
     else
       np%inDocument = .true.
     endif
@@ -3490,7 +3488,7 @@ endif
 
     if (.not.doc%docType%xds%building) then
       np%inDocument = .false.
-      call append(doc%hangingnodes, np)
+      call append(doc%docExtras%hangingnodes, np)
     else
       np%inDocument = .true.
     endif
@@ -3552,7 +3550,7 @@ endif
 
     if (.not.doc%docType%xds%building) then
       np%inDocument = .false.
-      call append(doc%hangingnodes, np)
+      call append(doc%docExtras%hangingnodes, np)
     else
       np%inDocument = .true.
     endif
@@ -3598,7 +3596,7 @@ endif
 
     if (.not.doc%docType%xds%building) then
       np%inDocument = .false.
-      call append(doc%hangingnodes, np)
+      call append(doc%docExtras%hangingnodes, np)
     else
       np%inDocument = .true.
     endif
@@ -3653,7 +3651,7 @@ endif
     ! FIXME all cloned children need to be marked ...
     if (.not.doc%docType%xds%building) then
       np%inDocument = .false.
-      call append(doc%hangingnodes, np)
+      call append(doc%docExtras%hangingnodes, np)
     else
       np%inDocument = .true.
     endif
@@ -3996,7 +3994,7 @@ endif
 
     if (.not.doc%docType%xds%building) then
       np%inDocument = .false.
-      call append(doc%hangingnodes, np)
+      call append(doc%docExtras%hangingnodes, np)
     else
       np%inDocument = .true.
     endif
@@ -4064,7 +4062,7 @@ endif
 
     if (.not.doc%docType%xds%building) then
       np%inDocument = .false.
-      call append(doc%hangingnodes, np)
+      call append(doc%docExtras%hangingnodes, np)
     else
       np%inDocument = .true.
     endif
@@ -4849,11 +4847,10 @@ endif
 
     endif
 
-    ! this checks if attribute exists already
+    ! this checks if attribute exists already, and does hangingnodes
     dummy => setNamedItemNS(element%attributes, newattr)
     newattr%ownerElement => element
     attr => newattr
-    ! FIXME hangingnodes
 
   end function setAttributeNodeNS
 
@@ -4901,7 +4898,7 @@ endif
 
 
     attr%ownerElement => null()
-    ! FIXME hangingnodes
+
   end function removeAttributeNodeNS
 
 
