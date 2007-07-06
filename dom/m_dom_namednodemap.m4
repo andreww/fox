@@ -51,7 +51,10 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif
 
+    print*,"LOOKING FOR NAMED ITEM", map%length
+
     do i = 1, map%length
+      print*, i, str_vs(map%nodes(i)%this%nodeName)
       if (str_vs(map%nodes(i)%this%nodeName)==name) then
         np => map%nodes(i)%this
         return
