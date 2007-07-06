@@ -86,7 +86,6 @@ TOHW_m_dom_contents(`
 
     nn => createAttribute(element%ownerDocument, name)
     call setValue(nn, value)
-
     dummy => setNamedItem(element%attributes, nn)
     nn%ownerElement => element
 

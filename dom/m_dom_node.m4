@@ -213,9 +213,11 @@ TOHW_m_dom_contents(`
     type(Node), pointer :: arg
     type(NamedNodeMap), pointer :: nnm
 
-! FIXME surely only if this is an element node?
-
-    nnm => arg%attributes
+    if (getNodeType(arg)==ELEMENT_NODE) then
+      nnm => arg%attributes
+    else
+      nnm => null()
+    endif
   end function getAttributes
 
   function getOwnerDocument(arg) result(np)

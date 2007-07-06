@@ -182,7 +182,7 @@ module m_dom_dom
     character, pointer, dimension(:) :: prefix => null()       !  - only useful for element & attribute
     character, pointer, dimension(:) :: localName => null()    ! /
 
-    logical :: specified ! only for attribute
+    logical :: specified = .true. ! only for attribute
     ! Introduced in DOM Level 2
     type(Node), pointer :: ownerElement => null() ! only for attribute
     type(namedNodeMap) :: entities ! only for doctype
@@ -881,9 +881,11 @@ endif
     type(Node), pointer :: arg
     type(NamedNodeMap), pointer :: nnm
 
-! FIXME surely only if this is an element node?
-
-    nnm => arg%attributes
+    if (getNodeType(arg)==ELEMENT_NODE) then
+      nnm => arg%attributes
+    else
+      nnm => null()
+    endif
   end function getAttributes
 
   function getOwnerDocument(arg) result(np)
@@ -2549,7 +2551,9 @@ endif
 
     integer :: i
 
+    print*, "GETNAMEDITEM", map%length
     do i = 1, map%length
+      print*, "GETNAMEDITEM", i, str_vs(map%nodes(i)%this%nodeName)
       if (str_vs(map%nodes(i)%this%nodeName)==name) then
         np => map%nodes(i)%this
         return
@@ -4484,7 +4488,6 @@ endif
 
     nn => createAttribute(element%ownerDocument, name)
     call setValue(nn, value)
-
     dummy => setNamedItem(element%attributes, nn)
     nn%ownerElement => element
 
