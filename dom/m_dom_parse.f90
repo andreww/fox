@@ -203,6 +203,17 @@ contains
 
   end subroutine FoX_endDTD_handler
 
+  subroutine notationDecl_handler(name, publicId, systemId)
+    character(len=*), intent(in) :: name
+    character(len=*), intent(in), optional :: publicId
+    character(len=*), intent(in) :: systemId
+    
+    type(Node), pointer :: np
+
+    np => createNotation(mainDoc, name, publicId, systemId) 
+    np => setNamedItem(getNotations(getDocType(mainDoc)), np)
+  end subroutine notationDecl_handler
+
   subroutine startCdata_handler()
     cdata = .true.
   end subroutine startCdata_handler
@@ -259,7 +270,7 @@ contains
         startDocument_handler=startDocument_handler,         & 
         startElement_handler=startElement_handler,          &
         !startPrefixMapping_handler,    &
-        !notationDecl_handler=notationDecl_handler,          &
+        notationDecl_handler=notationDecl_handler,          &
         !unparsedEntityDecl_handler,    &
         !error_handler,                 &
         !fatalError_handler,            &
@@ -289,7 +300,7 @@ contains
         startDocument_handler=startDocument_handler,         & 
         startElement_handler=startElement_handler,          &
         !startPrefixMapping_handler,    &
-        !notationDecl_handler=notationDecl_handler,          &
+        notationDecl_handler=notationDecl_handler,          &
         !unparsedEntityDecl_handler,    &
         !error_handler,                 &
         !fatalError_handler,            &
