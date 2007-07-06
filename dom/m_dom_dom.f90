@@ -4479,7 +4479,7 @@ endif
 
     endif
 
-    quickFix = .not.getGCstate(getOwnerDocument(element)) &
+    quickFix = getGCstate(getOwnerDocument(element)) &
       .and. element%inDocument
 
     if (quickFix) call setGCstate(getOwnerDocument(element), .false.)
@@ -4489,6 +4489,13 @@ endif
     nn => createAttribute(element%ownerDocument, name)
     call setValue(nn, value)
     dummy => setNamedItem(element%attributes, nn)
+    if (associated(dummy)) then
+      if (getGCstate(getOwnerDocument(element)).and..not.dummy%inDocument) &
+        call putNodesInDocument(getOwnerDocument(element), dummy) 
+      ! ... so that dummy & children are removed from hangingNodes list.
+      call destroyAllNodesRecursively(dummy)
+      call destroyNode(dummy)
+    endif
     nn%ownerElement => element
 
     if (quickFix) call setGCstate(getOwnerDocument(element), .true.)
@@ -4756,6 +4763,13 @@ endif
 
     nn => createAttributeNS(element%ownerDocument, namespaceURI, qualifiedname)
     call setValue(nn, value)
+    if (associated(dummy)) then
+      if (getGCstate(getOwnerDocument(element)).and..not.dummy%inDocument) &
+        call putNodesInDocument(getOwnerDocument(element), dummy) 
+      ! ... so that dummy & children are removed from hangingNodes list.
+      call destroyAllNodesRecursively(dummy)
+      call destroyNode(dummy)
+    endif
 
     dummy => setNamedItemNS(element%attributes, nn)
     nn%ownerElement => element
