@@ -2,7 +2,7 @@ module m_dom_error
 
   use pxf, only: pxfabort
 
-  use m_common_error, only: error_stack, add_error, in_error
+  use m_common_error, only: error_stack, add_error, in_error, destroy_error_stack
 
   implicit none
   private
@@ -42,6 +42,7 @@ module m_dom_error
   integer, parameter, public :: FoX_INVALID_COMMENT         = 209
 
   integer, parameter, public :: FoX_INTERNAL_ERROR          = 999
+
 
   public :: DOMException
   public :: getCode
@@ -121,11 +122,13 @@ contains
 
   end function errorString
 
-  pure function getCode(ex) result(n)
-    type(DOMException), intent(in) :: ex
+  function getCode(ex) result(n)
+    type(DOMException), intent(inout) :: ex
     integer :: n
 
     n = ex%stack%stack(size(ex%stack%stack))%error_code
+
+    call destroy_error_stack(ex%stack)
 
   end function getCode
 
@@ -135,7 +138,7 @@ contains
     type(DOMException), intent(inout), optional :: ex
 
     if (present(ex)) then
-      call add_error(ex%stack, msg, 0) ! FIXME
+      call add_error(ex%stack, msg, error_code=code) ! FIXME
     else
       write(0,'(a)') errorString(code)
       write(0,'(i0,a)') code, " "//msg
@@ -154,6 +157,13 @@ contains
     call pxfabort()
 
   end subroutine dom_error
+
+  
+  subroutine destroyDOMException(ex)
+    type(DOMException), intent(inout) :: ex
+
+    call destroy_error_stack(ex%stack)
+  end subroutine destroyDOMException
 
 
   subroutine internal_error(name,msg)

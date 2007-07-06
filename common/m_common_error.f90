@@ -116,13 +116,17 @@ contains
   end subroutine destroy_error_stack
 
 
-  subroutine add_error(stack, msg, severity)
+  subroutine add_error(stack, msg, severity, error_code)
     type(error_stack), intent(inout) :: stack
     character(len=*), intent(in) :: msg
     integer, intent(in), optional :: severity
+    integer, intent(in), optional :: error_code
 
     integer :: i, n
     type(error_t), dimension(:), pointer :: temp_stack 
+
+    if (.not.associated(stack%stack)) &
+      call init_error_stack(stack)
 
     n = size(stack%stack)
     
@@ -140,6 +144,11 @@ contains
       stack%stack(n+1)%severity = severity
     else
       stack%stack(n+1)%severity = ERR_ERROR
+    endif
+    if (present(error_code)) then
+      stack%stack(n+1)%error_code = error_code
+    else
+      stack%stack(n+1)%error_code = -1
     endif
 
   end subroutine add_error
