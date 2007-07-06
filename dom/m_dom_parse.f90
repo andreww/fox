@@ -373,7 +373,7 @@ contains
       internalEntityDecl_handler=internalEntityDecl_handler,    &
       comment_handler=comment_handler,              &
       endCdata_handler=endCdata_handler,             &
-      !endDTD_handler=endDTD_handler,                &
+      endDTD_handler=endDTD_handler,                &
       endEntity_handler=endEntity_handler,             &
       startCdata_handler=startCdata_handler,    &
       startDTD_handler=startDTD_handler,          &
