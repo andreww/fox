@@ -117,6 +117,8 @@ contains
       s = "FoX_INVALID_SYSTEM_ID"
     case(209)
       s = "FoX_INVALID_COMMENT"
+    case(210)
+      s = "FoX_NODE_IS_NULL"
     case default
       s = "INTERNAL ERROR!!!!"
     end select

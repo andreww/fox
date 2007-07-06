@@ -152,9 +152,6 @@ contains
     type(Node), pointer :: np
 
     np => getDocType(mainDoc)
-    ! If we have added any more document children by now (comments or PIs), we
-    ! need to move the docType node to the end of the list of document children ...
-    np => removeChild(mainDoc, np)
     call setDocType(np, name, publicId, systemId)
     np => appendChild(mainDoc, np)
 

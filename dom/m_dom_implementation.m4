@@ -129,12 +129,11 @@ TOHW_m_dom_contents(`
     if (associated(docType)) then
       dt => docType
       dt%ownerDocument => doc
+      doc%docExtras%docType => appendChild(doc, dt)
     else
       dt => createDocumentType(impl, qualifiedName, "", "")
       dt%ownerDocument => doc
     endif
-
-    doc%docExtras%docType => appendChild(doc, dt)
     
     call setDocumentElement(doc, appendChild(doc, createElementNS(doc, namespaceURI, qualifiedName)))
 
@@ -156,9 +155,9 @@ TOHW_m_dom_contents(`
 
     dt => createEmptyDocumentType(doc)
     dt%ownerDocument => doc
+    doc%docExtras%doctype => dt
 
     ! FIXME do something with namespaceURI etc 
-    doc%docExtras%doctype => appendChild(doc, dt)
 
   end function createEmptyDocument
 
@@ -166,6 +165,7 @@ TOHW_m_dom_contents(`
   TOHW_subroutine(destroyDocument, (doc))
     type(Node), pointer :: doc
     
+    type(Node), pointer :: dt
     type(NodeList) :: np_stack
     integer :: i
 
@@ -196,6 +196,9 @@ TOHW_m_dom_contents(`
 
     print*, "destroying a node:", doc%nodeType, doc%nodeName
     call destroyNodeContents(doc)
+    ! Remove docType from tree before destruction:
+    dt => removeChild(doc, getDocType(doc))
+    call destroyDocumentType(dt)
     call destroyAllNodesRecursively(doc)
     deallocate(doc)
 
