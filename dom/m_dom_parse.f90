@@ -9,7 +9,7 @@ module m_dom_parse
   use FoX_common, only: getQName, getValue, getLocalname, getURI
   use m_sax_parser, only: sax_parse
   use FoX_sax, only: xml_t
-  use FoX_sax, only: open_xml_file, close_xml_t
+  use FoX_sax, only: open_xml_file, open_xml_string, close_xml_t
 
   use m_dom_dom, only: Node, NamedNodeMap, hasChildNodes, getFirstChild
   use m_dom_dom, only: DOCUMENT_NODE, getOwnerDocument, getDocumentElement
@@ -33,7 +33,7 @@ module m_dom_parse
   type(Node), pointer, private, save  :: mainDoc => null()
   type(Node), pointer, private, save  :: current => null()
 
-  logical :: cdata
+  logical :: cdata_sections, cdata
 
 contains
 
@@ -215,11 +215,62 @@ contains
   end subroutine notationDecl_handler
 
   subroutine startCdata_handler()
-    cdata = .true.
+    if (cdata_sections) cdata = .true.
   end subroutine startCdata_handler
   subroutine endCdata_handler()
-    cdata = .false.
+    if (cdata_sections) cdata = .false.
   end subroutine endCdata_handler
+
+  subroutine internalEntityDecl_handler(name, value)
+    character(len=*), intent(in) :: name
+    character(len=*), intent(in) :: value
+    
+    type(Node), pointer :: oldcurrent
+    type(xml_t) :: subsax
+
+    oldcurrent => current
+    current => createEntity(mainDoc, name, "", "", "")
+
+    call open_xml_string(subsax, value)
+    ! parse value with given namespaces & entities, with only necessary handlers:
+    !
+    ! call sax_parse(startElement_handler=startElement_handler, &
+    !                endElement_handler=endElement_handler,     & 
+    !                characters_handler=characters_handler,     &
+    !                cdataSection_handler=CdataSection_handler, &
+    !                comment_handler=comment_handler,           &
+    !                processingInstruction_handler,             &
+    !                error_handler = ,
+    !                nsDict= , entityList= )
+    ! and need sax_parse to start off well-formed, in character context
+    call close_xml_t(subsax)
+
+    current => oldcurrent
+
+  end subroutine internalEntityDecl_handler
+
+  subroutine externalEntityDecl_handler(name, publicId, systemId)
+    character(len=*), intent(in) :: name
+    character(len=*), intent(in) :: publicId
+    character(len=*), intent(in) :: systemId
+!FIXME which are optional, check order
+    type(Node), pointer :: np
+
+    np => createEntity(mainDoc, name, publicId, systemId, "")    
+
+  end subroutine externalEntityDecl_handler
+
+  subroutine unparsedEntityDecl_handler(name, publicId, systemId, notationName)
+    character(len=*), intent(in) :: name
+    character(len=*), intent(in) :: publicId
+    character(len=*), intent(in) :: systemId
+    character(len=*), intent(in) :: notationName
+!FIXME which are optional, check order
+    type(Node), pointer :: np
+
+    np => createEntity(mainDoc, name, publicId, systemId, notationName)    
+
+  end subroutine unparsedEntityDecl_handler
 
   function parsefile(filename, configuration, verbose, sax_verbose)
 
@@ -237,8 +288,6 @@ contains
     type(xml_t) :: fxml
     integer :: i, iostat
     
-    logical :: cdata_sections
-
     if (present(configuration)) then
       cdata_sections = .true.
     else
@@ -257,67 +306,37 @@ contains
 ! We use internal sax_parse rather than public interface in order
 ! to use internal callbacks to get extra info.
 
-    if (cdata_sections) then
-      call sax_parse(fxml%fx, fxml%fb,&
-        characters_handler=characters_handler,            &
-        endDocument_handler=endDocument_handler,           &
-        endElement_handler=endElement_handler,            &
-        !endPrefixMapping_handler,      &
-        !ignorableWhitespace_handler,   &
-        processingInstruction_handler=processingInstruction_handler, &
-        ! setDocumentLocator
-        !skippedEntity_handler,         &
-        startDocument_handler=startDocument_handler,         & 
-        startElement_handler=startElement_handler,          &
-        !startPrefixMapping_handler,    &
-        notationDecl_handler=notationDecl_handler,          &
-        !unparsedEntityDecl_handler,    &
-        !error_handler,                 &
-        !fatalError_handler,            &
-        !warning_handler,               &
-        !attributeDecl_handler,         &
-        !elementDecl_handler,           &
-        !externalEntityDecl_handler,    &
-        !internalEntityDecl_handler,    &
-        comment_handler=comment_handler,              &
-        endCdata_handler=endCdata_handler,             &
-        !endDTD_handler=endDTD_handler,                &
-        !endEntity_handler,             &
-        startCdata_handler=startCdata_handler,    &
-        startDTD_handler=startDTD_handler,          &
-        !startEntity_handler
-        FoX_endDTD_handler=FoX_endDTD_handler)
-    else
-      call sax_parse(fxml%fx, fxml%fb,&
-        characters_handler=characters_handler,            &
-        endDocument_handler=endDocument_handler,           &
-        endElement_handler=endElement_handler,            &
-        !endPrefixMapping_handler,      &
-        !ignorableWhitespace_handler,   &
-        processingInstruction_handler=processingInstruction_handler, &
-        ! setDocumentLocator
-        !skippedEntity_handler,         &
-        startDocument_handler=startDocument_handler,         & 
-        startElement_handler=startElement_handler,          &
-        !startPrefixMapping_handler,    &
-        notationDecl_handler=notationDecl_handler,          &
-        !unparsedEntityDecl_handler,    &
-        !error_handler,                 &
-        !fatalError_handler,            &
-        !warning_handler,               &
-        !attributeDecl_handler,         &
-        !elementDecl_handler,           &
-        !externalEntityDecl_handler,    &
-        !internalEntityDecl_handler,    &
-        comment_handler=comment_handler,              &
-        !endCdata_handler=endCdata_handler,             &
-        !endDTD_handler=endDTD_handler,                &
-        !endEntity_handler,             &
-        !startCdata_handler=startCdata_handler,    &
-        startDTD_handler=startDTD_handler,          &
-        !startEntity_handler
-        FoX_endDTD_handler=FoX_endDTD_handler)
-    endif
+
+    call sax_parse(fxml%fx, fxml%fb,&
+      characters_handler=characters_handler,            &
+      endDocument_handler=endDocument_handler,           &
+      endElement_handler=endElement_handler,            &
+      !endPrefixMapping_handler,      &
+      !ignorableWhitespace_handler,   &
+      processingInstruction_handler=processingInstruction_handler, &
+      ! setDocumentLocator
+      !skippedEntity_handler,         &
+      startDocument_handler=startDocument_handler,         & 
+      startElement_handler=startElement_handler,          &
+      !startPrefixMapping_handler,    &
+      notationDecl_handler=notationDecl_handler,          &
+      unparsedEntityDecl_handler=unparsedEntityDecl_handler, &
+      !error_handler,                 &
+      !fatalError_handler,            &
+      !warning_handler,               &
+      !attributeDecl_handler,         &
+      !elementDecl_handler,           &
+      externalEntityDecl_handler=externalEntityDecl_handler, &
+      internalEntityDecl_handler=internalEntityDecl_handler,    &
+      comment_handler=comment_handler,              &
+      endCdata_handler=endCdata_handler,             &
+      !endDTD_handler=endDTD_handler,                &
+      !endEntity_handler,             &
+      startCdata_handler=startCdata_handler,    &
+      startDTD_handler=startDTD_handler,          &
+      !startEntity_handler
+      FoX_endDTD_handler=FoX_endDTD_handler)
+
 
     call close_xml_t(fxml)
 
