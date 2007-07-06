@@ -17,7 +17,7 @@ module m_dom_dom
   use m_common_array_str, only: str_vs, vs_str_alloc
   use m_dom_error, only: DOMException, throw_exception, is_in_error, &
     NO_MODIFICATION_ALLOWED_ERR, NOT_FOUND_ERR, HIERARCHY_REQUEST_ERR, &
-    WRONG_DOCUMENT_ERR, dom_error, FoX_INTERNAL_ERROR
+    WRONG_DOCUMENT_ERR, FoX_INTERNAL_ERROR, FoX_NODE_IS_NULL
 
 
 
@@ -703,10 +703,21 @@ endif
 
   ! Getters and setters
 
-  function getNodeName(arg) result(c)
-    type(Node), intent(in) :: arg
+  function getNodeName(arg, ex)result(c) 
+    type(DOMException), intent(inout), optional :: ex
+    type(Node), pointer :: arg
     character(len=size(arg%nodeName)) :: c
     
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "getNodeName", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
     c = str_vs(arg%nodeName)
   end function getNodeName
 
@@ -740,11 +751,22 @@ endif
 
   end function getNodeValue_len
 
-  function getNodeValue(arg) result(c)
-    type(Node), intent(in) :: arg
+  function getNodeValue(arg, ex)result(c) 
+    type(DOMException), intent(inout), optional :: ex
+    type(Node), pointer :: arg
     character(len=getNodeValue_len(arg)) :: c
 
     integer :: i, n
+
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "getNodeValue", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
 
     select case(arg%nodeType)
     case (ATTRIBUTE_NODE)
@@ -777,6 +799,16 @@ endif
 
     type(Node), pointer :: np
     integer :: i, n
+
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "setNodeValue", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
 
     if (arg%readonly) then
       call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setNodeValue", ex)
@@ -828,58 +860,146 @@ endif
 
   end subroutine setNodeValue
 
-  function getNodeType(arg) result(n)
-    type(Node), intent(in) :: arg
+  function getNodeType(arg, ex)result(n) 
+    type(DOMException), intent(inout), optional :: ex
+    type(Node), pointer :: arg
     integer :: n
+
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "getNodeType", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
 
     n = arg%nodeType
   end function getNodeType
 
-  function getParentNode(arg) result(np)
-    type(Node), intent(in) :: arg
+  function getParentNode(arg, ex)result(np) 
+    type(DOMException), intent(inout), optional :: ex
+    type(Node), pointer :: arg
     type(Node), pointer :: np
+
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "getParentNode", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
 
     np => arg%parentNode
   end function getParentNode
   
-  function getChildNodes(arg) result(nl)
+  function getChildNodes(arg, ex)result(nl) 
+    type(DOMException), intent(inout), optional :: ex
     type(Node), pointer :: arg
     type(NodeList), pointer :: nl
+
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "getChildNodes", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
 
     nl => arg%childnodes
   end function getChildNodes
   
-  function getFirstChild(arg) result(np)
-    type(Node), intent(in) :: arg
+  function getFirstChild(arg, ex)result(np) 
+    type(DOMException), intent(inout), optional :: ex
+    type(Node), pointer :: arg
     type(Node), pointer :: np
+
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "getFirstChild", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
 
     np => arg%firstChild
   end function getFirstChild
   
-  function getLastChild(arg) result(np)
-    type(Node), intent(in) :: arg
+  function getLastChild(arg, ex)result(np) 
+    type(DOMException), intent(inout), optional :: ex
+    type(Node), pointer :: arg
     type(Node), pointer :: np
+
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "getLastChild", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
 
     np => arg%lastChild
   end function getLastChild
 
-  function getPreviousSibling(arg) result(np)
-    type(Node), intent(in) :: arg
+  function getPreviousSibling(arg, ex)result(np) 
+    type(DOMException), intent(inout), optional :: ex
+    type(Node), pointer :: arg
     type(Node), pointer :: np
+
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "getPreviousSibling", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
 
     np => arg%previousSibling
   end function getPreviousSibling
   
-  function getNextSibling(arg) result(np)
-    type(Node), intent(in) :: arg
+  function getNextSibling(arg, ex)result(np) 
+    type(DOMException), intent(inout), optional :: ex
+    type(Node), pointer :: arg
     type(Node), pointer :: np
+
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "getNextSibling", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
 
     np => arg%nextSibling
   end function getNextSibling
 
-  function getAttributes(arg) result(nnm)
+  function getAttributes(arg, ex)result(nnm) 
+    type(DOMException), intent(inout), optional :: ex
     type(Node), pointer :: arg
     type(NamedNodeMap), pointer :: nnm
+
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "getAttributes", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
 
     if (getNodeType(arg)==ELEMENT_NODE) then
       nnm => arg%attributes
@@ -888,9 +1008,20 @@ endif
     endif
   end function getAttributes
 
-  function getOwnerDocument(arg) result(np)
+  function getOwnerDocument(arg, ex)result(np) 
+    type(DOMException), intent(inout), optional :: ex
     type(Node), pointer :: arg
     type(Node), pointer :: np
+
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "getOwnerDocument", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
     
     if (arg%nodeType==DOCUMENT_NODE) then
       np => null()
@@ -910,6 +1041,16 @@ endif
     type(ListNode), pointer :: temp_nl(:)
     integer :: i, i2, i_t
 
+    if (.not.associated(arg).or..not.associated(newChild)) then
+      call throw_exception(FoX_NODE_IS_NULL, "insertBefore", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
     if (.not.associated(refChild)) then
       np => appendChild(arg, newChild, ex)
     endif
@@ -923,8 +1064,6 @@ if (present(ex)) then
 endif
 
     endif
-
-    if (.not. associated(arg)) call dom_error("replaceChild",0,"Node not allocated")
 
     testParent => arg
     ! Check if you are allowed to put a newChild nodetype under a arg nodetype
@@ -1068,9 +1207,9 @@ endif
 
       end select
 
-      ! And then check that newChild is not one of args ancestors
+      ! And then check that newChild is not arg or one of args ancestors
       ! (this would never be true if newChild is a documentFragment)
-      testParent => arg%parentNode
+      testParent => arg
       do while (associated(testParent))
         if (associated(testParent, newChild)) then
           call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
@@ -1199,6 +1338,16 @@ endif
     type(ListNode), pointer :: temp_nl(:)
     integer :: i, i2, i_t
 
+    if (.not.associated(arg).or..not.associated(newChild).or..not.associated(oldChild)) then
+      call throw_exception(FoX_NODE_IS_NULL, "replaceChild", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
     if (arg%readonly) then
       call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "replaceChild", ex)
 if (present(ex)) then
@@ -1208,8 +1357,6 @@ if (present(ex)) then
 endif
 
     endif
-
-    if (.not. associated(arg)) call dom_error("replaceChild",0,"Node not allocated")
 
     testParent => arg
     ! Check if you are allowed to put a newChild nodetype under a arg nodetype
@@ -1353,9 +1500,9 @@ endif
 
       end select
 
-      ! And then check that newChild is not one of args ancestors
+      ! And then check that newChild is not arg or one of args ancestors
       ! (this would never be true if newChild is a documentFragment)
-      testParent => arg%parentNode
+      testParent => arg
       do while (associated(testParent))
         if (associated(testParent, newChild)) then
           call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
@@ -1485,6 +1632,16 @@ endif
     type(ListNode), pointer :: temp_nl(:)
     integer :: i, i_t
 
+    if (.not.associated(arg).or..not.associated(oldChild)) then
+      call throw_exception(FoX_NODE_IS_NULL, "removeChild", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
     if (arg%readonly) then
       call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "removeChild", ex)
 if (present(ex)) then
@@ -1495,7 +1652,6 @@ endif
 
     endif
 
-    if (.not.associated(arg)) call dom_error("removeChild",0,"Node not allocated")
     allocate(temp_nl(size(arg%childNodes%nodes)-1))
     i_t = 1
     do i = 1, size(arg%childNodes%nodes)
@@ -1562,6 +1718,16 @@ endif
     type(ListNode), pointer :: temp_nl(:)
     integer :: i, i_t
 
+    if (.not.associated(arg).or..not.associated(newChild)) then
+      call throw_exception(FoX_NODE_IS_NULL, "appendChild", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
     if (arg%readonly) then
       call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "appendChild", ex)
 if (present(ex)) then
@@ -1571,9 +1737,6 @@ if (present(ex)) then
 endif
 
     endif
-
-    if (.not. associated(arg))  & 
-      call dom_error("appendChild",0,"Node not allocated")
 
     testParent => arg
     ! Check if you are allowed to put a newChild nodetype under a arg nodetype
@@ -1717,9 +1880,9 @@ endif
 
       end select
 
-      ! And then check that newChild is not one of args ancestors
+      ! And then check that newChild is not arg or one of args ancestors
       ! (this would never be true if newChild is a documentFragment)
-      testParent => arg%parentNode
+      testParent => arg
       do while (associated(testParent))
         if (associated(testParent, newChild)) then
           call throw_exception(HIERARCHY_REQUEST_ERR, "appendChild", ex)
@@ -1815,11 +1978,21 @@ endif
   end function appendChild
 
 
-  function hasChildNodes(arg)
+  function hasChildNodes(arg, ex) 
+    type(DOMException), intent(inout), optional :: ex
     type(Node), pointer :: arg
     logical :: hasChildNodes
     
-    if (.not. associated(arg)) call dom_error("hasChildNodes",0,"Node not allocated")
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "hasChildNodes", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
     hasChildNodes = associated(arg%firstChild)
     
   end function hasChildNodes
@@ -1834,6 +2007,16 @@ endif
 
     logical :: doneAttributes, doneChildren, readonly
     integer :: i
+
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "cloneNode", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
 
     this => arg
     thatParent => null()
@@ -1991,11 +2174,21 @@ endif
   end function cloneNode
 
   
-  function hasAttributes(arg)
+  function hasAttributes(arg, ex) 
+    type(DOMException), intent(inout), optional :: ex
     type(Node), pointer :: arg
     logical :: hasAttributes
+
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "hasAttributes", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
     
-    if (.not.associated(arg)) call dom_error("hasAttributes",0,"Node not allocated")
     hasAttributes = (arg%nodeType /= ELEMENT_NODE) &
       .and. (arg%attributes%length > 0)
     
@@ -2008,6 +2201,16 @@ endif
     integer :: i, i_t
     logical :: doneChildren, doneAttributes
     character, pointer :: temp(:)
+
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "normalize", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
 
 ! DOM standard requires we ignore readonly status
 
@@ -2109,33 +2312,77 @@ endif
 
   end subroutine normalize
 
-  function isSupported(arg, feature, version) result(p)
+  function isSupported(arg, feature, version, ex)result(p) 
+    type(DOMException), intent(inout), optional :: ex
     type(Node), pointer :: arg
     character(len=*), intent(in) :: feature
     character(len=*), intent(in) :: version
     logical :: p
 
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "isSupported", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
     p = hasFeature(getImplementation(arg%ownerDocument), feature, version)
   end function isSupported
 
   ! FIXME should the below instead just decompose the QName on access?
-  function getNamespaceURI(arg) result(c)
-    type(Node), intent(in) :: arg
+  function getNamespaceURI(arg, ex)result(c) 
+    type(DOMException), intent(inout), optional :: ex
+    type(Node), pointer :: arg
     character(len=size(arg%namespaceURI)) :: c
+
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "getNamespaceURI", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
 
     c = str_vs(arg%namespaceURI)
   end function getNamespaceURI
 
-  function getPrefix(arg) result(c)
-    type(Node), intent(in) :: arg
+  function getPrefix(arg, ex)result(c) 
+    type(DOMException), intent(inout), optional :: ex
+    type(Node), pointer :: arg
     character(len=size(arg%prefix)) :: c
+
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "getPrefix", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
 
     c = str_vs(arg%prefix)
   end function getPrefix
   
-  subroutine setPrefix(arg, prefix)
-    type(Node), intent(inout) :: arg
+  subroutine setPrefix(arg, prefix, ex)
+    type(DOMException), intent(inout), optional :: ex
+    type(Node), pointer :: arg
     character(len=*) :: prefix
+
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "setPrefix", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
 
     deallocate(arg%prefix)
     arg%prefix => vs_str_alloc(prefix)
@@ -2146,9 +2393,20 @@ endif
     ! FIXME exceptions
   end subroutine setPrefix
 
-  function getLocalName(arg) result(c)
-    type(Node), intent(in) :: arg
+  function getLocalName(arg, ex)result(c) 
+    type(DOMException), intent(inout), optional :: ex
+    type(Node), pointer :: arg
     character(len=size(arg%localName)) :: c
+
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "getLocalName", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
 
     c = str_vs(arg%localName)
   end function getLocalName
@@ -2156,12 +2414,23 @@ endif
   ! function isDefaultNamespace
   ! function isEqualNode(np, arg)
 
-  function isSameNode(np, other)    ! DOM 3.0
-    type(Node), pointer :: np
+  function isSameNode(arg, other, ex) 
+    type(DOMException), intent(inout), optional :: ex
+    type(Node), pointer :: arg
     type(Node), pointer :: other
     logical :: isSameNode
 
-    isSameNode = associated(np, other)
+    if (.not.associated(arg).or..not.associated(other)) then
+      call throw_exception(FoX_NODE_IS_NULL, "isSameNode", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    isSameNode = associated(arg, other)
 
   end function isSameNode
 

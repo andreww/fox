@@ -40,6 +40,7 @@ module m_dom_error
   integer, parameter, public :: FoX_INVALID_PUBLIC_ID       = 207
   integer, parameter, public :: FoX_INVALID_SYSTEM_ID       = 208
   integer, parameter, public :: FoX_INVALID_COMMENT         = 209
+  integer, parameter, public :: FoX_NODE_IS_NULL            = 210
 
   integer, parameter, public :: FoX_INTERNAL_ERROR          = 999
 

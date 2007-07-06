@@ -4,7 +4,7 @@ TOHW_m_dom_imports(`
   use m_common_array_str, only: str_vs, vs_str_alloc
   use m_dom_error, only: DOMException, throw_exception, is_in_error, &
     NO_MODIFICATION_ALLOWED_ERR, NOT_FOUND_ERR, HIERARCHY_REQUEST_ERR, &
-    WRONG_DOCUMENT_ERR, dom_error, FoX_INTERNAL_ERROR
+    WRONG_DOCUMENT_ERR, FoX_INTERNAL_ERROR, FoX_NODE_IS_NULL
 
 ')`'dnl
 dnl
@@ -42,10 +42,14 @@ TOHW_m_dom_contents(`
 
   ! Getters and setters
 
-  function getNodeName(arg) result(c)
-    type(Node), intent(in) :: arg
+  TOHW_function(getNodeName, (arg), c)
+    type(Node), pointer :: arg
     character(len=size(arg%nodeName)) :: c
     
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+
     c = str_vs(arg%nodeName)
   end function getNodeName
 
@@ -79,11 +83,15 @@ TOHW_m_dom_contents(`
 
   end function getNodeValue_len
 
-  function getNodeValue(arg) result(c)
-    type(Node), intent(in) :: arg
+  TOHW_function(getNodeValue, (arg), c)
+    type(Node), pointer :: arg
     character(len=getNodeValue_len(arg)) :: c
 
     integer :: i, n
+
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
 
     select case(arg%nodeType)
     case (ATTRIBUTE_NODE)
@@ -115,6 +123,10 @@ TOHW_m_dom_contents(`
 
     type(Node), pointer :: np
     integer :: i, n
+
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
 
     if (arg%readonly) then
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
@@ -160,58 +172,90 @@ TOHW_m_dom_contents(`
 
   end subroutine setNodeValue
 
-  function getNodeType(arg) result(n)
-    type(Node), intent(in) :: arg
+  TOHW_function(getNodeType, (arg), n)
+    type(Node), pointer :: arg
     integer :: n
+
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
 
     n = arg%nodeType
   end function getNodeType
 
-  function getParentNode(arg) result(np)
-    type(Node), intent(in) :: arg
+  TOHW_function(getParentNode, (arg), np)
+    type(Node), pointer :: arg
     type(Node), pointer :: np
+
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
 
     np => arg%parentNode
   end function getParentNode
   
-  function getChildNodes(arg) result(nl)
+  TOHW_function(getChildNodes, (arg), nl)
     type(Node), pointer :: arg
     type(NodeList), pointer :: nl
+
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
 
     nl => arg%childnodes
   end function getChildNodes
   
-  function getFirstChild(arg) result(np)
-    type(Node), intent(in) :: arg
+  TOHW_function(getFirstChild, (arg), np)
+    type(Node), pointer :: arg
     type(Node), pointer :: np
+
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
 
     np => arg%firstChild
   end function getFirstChild
   
-  function getLastChild(arg) result(np)
-    type(Node), intent(in) :: arg
+  TOHW_function(getLastChild, (arg), np)
+    type(Node), pointer :: arg
     type(Node), pointer :: np
+
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
 
     np => arg%lastChild
   end function getLastChild
 
-  function getPreviousSibling(arg) result(np)
-    type(Node), intent(in) :: arg
+  TOHW_function(getPreviousSibling, (arg), np)
+    type(Node), pointer :: arg
     type(Node), pointer :: np
+
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
 
     np => arg%previousSibling
   end function getPreviousSibling
   
-  function getNextSibling(arg) result(np)
-    type(Node), intent(in) :: arg
+  TOHW_function(getNextSibling, (arg), np)
+    type(Node), pointer :: arg
     type(Node), pointer :: np
+
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
 
     np => arg%nextSibling
   end function getNextSibling
 
-  function getAttributes(arg) result(nnm)
+  TOHW_function(getAttributes, (arg), nnm)
     type(Node), pointer :: arg
     type(NamedNodeMap), pointer :: nnm
+
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
 
     if (getNodeType(arg)==ELEMENT_NODE) then
       nnm => arg%attributes
@@ -220,9 +264,13 @@ TOHW_m_dom_contents(`
     endif
   end function getAttributes
 
-  function getOwnerDocument(arg) result(np)
+  TOHW_function(getOwnerDocument, (arg), np)
     type(Node), pointer :: arg
     type(Node), pointer :: np
+
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
     
     if (arg%nodeType==DOCUMENT_NODE) then
       np => null()
@@ -241,6 +289,10 @@ TOHW_m_dom_contents(`
     type(ListNode), pointer :: temp_nl(:)
     integer :: i, i2, i_t
 
+    if (.not.associated(arg).or..not.associated(newChild)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+
     if (.not.associated(refChild)) then
       np => appendChild(arg, newChild, ex)
     endif
@@ -248,8 +300,6 @@ TOHW_m_dom_contents(`
     if (arg%readonly) then
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
     endif
-
-    if (.not. associated(arg)) call dom_error("replaceChild",0,"Node not allocated")
 
     testParent => arg
     ! Check if you are allowed to put a newChild nodetype under a arg nodetype
@@ -261,9 +311,9 @@ TOHW_m_dom_contents(`
     else
       testChild => newChild
       TOHW_m_dom_hierarchy_test
-      ! And then check that newChild is not one of args ancestors
+      ! And then check that newChild is not arg or one of args ancestors
       ! (this would never be true if newChild is a documentFragment)
-      testParent => arg%parentNode
+      testParent => arg
       do while (associated(testParent))
         if (associated(testParent, newChild)) then
           TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR)
@@ -367,11 +417,13 @@ TOHW_m_dom_contents(`
     type(ListNode), pointer :: temp_nl(:)
     integer :: i, i2, i_t
 
+    if (.not.associated(arg).or..not.associated(newChild).or..not.associated(oldChild)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+
     if (arg%readonly) then
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
     endif
-
-    if (.not. associated(arg)) call dom_error("replaceChild",0,"Node not allocated")
 
     testParent => arg
     ! Check if you are allowed to put a newChild nodetype under a arg nodetype
@@ -383,9 +435,9 @@ TOHW_m_dom_contents(`
     else
       testChild => newChild
       TOHW_m_dom_hierarchy_test
-      ! And then check that newChild is not one of args ancestors
+      ! And then check that newChild is not arg or one of args ancestors
       ! (this would never be true if newChild is a documentFragment)
-      testParent => arg%parentNode
+      testParent => arg
       do while (associated(testParent))
         if (associated(testParent, newChild)) then
           TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR)
@@ -490,12 +542,14 @@ TOHW_m_dom_contents(`
     type(ListNode), pointer :: temp_nl(:)
     integer :: i, i_t
 
+    if (.not.associated(arg).or..not.associated(oldChild)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+
     if (arg%readonly) then
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
     endif
 
-    if (.not.associated(arg)) call dom_error("removeChild",0,"Node not allocated")
-    allocate(temp_nl(size(arg%childNodes%nodes)-1))
     i_t = 1
     do i = 1, size(arg%childNodes%nodes)
       if (associated(arg%childNodes%nodes(i)%this, oldChild)) then 
@@ -554,12 +608,13 @@ TOHW_m_dom_contents(`
     type(ListNode), pointer :: temp_nl(:)
     integer :: i, i_t
 
+    if (.not.associated(arg).or..not.associated(newChild)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+
     if (arg%readonly) then
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
     endif
-
-    if (.not. associated(arg))  & 
-      call dom_error("appendChild",0,"Node not allocated")
 
     testParent => arg
     ! Check if you are allowed to put a newChild nodetype under a arg nodetype
@@ -571,9 +626,9 @@ TOHW_m_dom_contents(`
     else
       testChild => newChild
       TOHW_m_dom_hierarchy_test
-      ! And then check that newChild is not one of args ancestors
+      ! And then check that newChild is not arg or one of args ancestors
       ! (this would never be true if newChild is a documentFragment)
-      testParent => arg%parentNode
+      testParent => arg
       do while (associated(testParent))
         if (associated(testParent, newChild)) then
           TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR)
@@ -657,11 +712,14 @@ TOHW_m_dom_contents(`
   end function appendChild
 
 
-  function hasChildNodes(arg)
+  TOHW_function(hasChildNodes, (arg))
     type(Node), pointer :: arg
     logical :: hasChildNodes
     
-    if (.not. associated(arg)) call dom_error("hasChildNodes",0,"Node not allocated")
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+
     hasChildNodes = associated(arg%firstChild)
     
   end function hasChildNodes
@@ -675,6 +733,10 @@ TOHW_m_dom_contents(`
 
     logical :: doneAttributes, doneChildren, readonly
     integer :: i
+
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
 
     this => arg
     thatParent => null()
@@ -754,11 +816,14 @@ TOHW_m_dom_treewalk(`
   end function cloneNode
 
   
-  function hasAttributes(arg)
+  TOHW_function(hasAttributes, (arg))
     type(Node), pointer :: arg
     logical :: hasAttributes
+
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
     
-    if (.not.associated(arg)) call dom_error("hasAttributes",0,"Node not allocated")
     hasAttributes = (arg%nodeType /= ELEMENT_NODE) &
       .and. (arg%attributes%length > 0)
     
@@ -770,6 +835,10 @@ TOHW_m_dom_treewalk(`
     integer :: i, i_t
     logical :: doneChildren, doneAttributes
     character, pointer :: temp(:)
+
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
 
 ! DOM standard requires we ignore readonly status
 
@@ -810,33 +879,49 @@ TOHW_m_dom_treewalk(`
 
   end subroutine normalize
 
-  function isSupported(arg, feature, version) result(p)
+  TOHW_function(isSupported, (arg, feature, version), p)
     type(Node), pointer :: arg
     character(len=*), intent(in) :: feature
     character(len=*), intent(in) :: version
     logical :: p
 
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+
     p = hasFeature(getImplementation(arg%ownerDocument), feature, version)
   end function isSupported
 
   ! FIXME should the below instead just decompose the QName on access?
-  function getNamespaceURI(arg) result(c)
-    type(Node), intent(in) :: arg
+  TOHW_function(getNamespaceURI, (arg), c)
+    type(Node), pointer :: arg
     character(len=size(arg%namespaceURI)) :: c
+
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
 
     c = str_vs(arg%namespaceURI)
   end function getNamespaceURI
 
-  function getPrefix(arg) result(c)
-    type(Node), intent(in) :: arg
+  TOHW_function(getPrefix, (arg), c)
+    type(Node), pointer :: arg
     character(len=size(arg%prefix)) :: c
+
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
 
     c = str_vs(arg%prefix)
   end function getPrefix
   
-  subroutine setPrefix(arg, prefix)
-    type(Node), intent(inout) :: arg
+  TOHW_subroutine(setPrefix, (arg, prefix))
+    type(Node), pointer :: arg
     character(len=*) :: prefix
+
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
 
     deallocate(arg%prefix)
     arg%prefix => vs_str_alloc(prefix)
@@ -847,9 +932,13 @@ TOHW_m_dom_treewalk(`
     ! FIXME exceptions
   end subroutine setPrefix
 
-  function getLocalName(arg) result(c)
-    type(Node), intent(in) :: arg
+  TOHW_function(getLocalName, (arg), c)
+    type(Node), pointer :: arg
     character(len=size(arg%localName)) :: c
+
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
 
     c = str_vs(arg%localName)
   end function getLocalName
@@ -857,12 +946,16 @@ TOHW_m_dom_treewalk(`
   ! function isDefaultNamespace
   ! function isEqualNode(np, arg)
 
-  function isSameNode(np, other)    ! DOM 3.0
-    type(Node), pointer :: np
+  TOHW_function(isSameNode, (arg, other))
+    type(Node), pointer :: arg
     type(Node), pointer :: other
     logical :: isSameNode
 
-    isSameNode = associated(np, other)
+    if (.not.associated(arg).or..not.associated(other)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+
+    isSameNode = associated(arg, other)
 
   end function isSameNode
 
