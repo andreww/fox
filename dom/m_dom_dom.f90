@@ -4660,28 +4660,60 @@ endif
 
 !  function getName(docType) result(c) See m_dom_common
 
-  function getEntities(docType) result(nnp)
-    type(Node), pointer :: docType
+  function getEntities(arg, ex)result(nnp) 
+    type(DOMException), intent(inout), optional :: ex
+    type(Node), pointer :: arg
     type(NamedNodeMap), pointer :: nnp
 
-    if (docType%nodeType/=DOCUMENT_TYPE_NODE) then
-      ! FIXME error
-      continue
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "getEntities", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
     endif
 
-    nnp => docType%entities
+    if (arg%nodeType/=DOCUMENT_TYPE_NODE) then
+       call throw_exception(FoX_INVALID_NODE, "getEntities", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    nnp => arg%entities
   end function getEntities
 
-  function getNotations(docType) result(nnp)
-    type(Node), pointer :: docType
+  function getNotations(arg, ex)result(nnp) 
+    type(DOMException), intent(inout), optional :: ex
+    type(Node), pointer :: arg
     type(NamedNodeMap), pointer :: nnp
 
-    if (docType%nodeType/=DOCUMENT_TYPE_NODE) then
-      ! FIXME error
-      continue
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "getNotations", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
     endif
 
-    nnp => docType%notations
+    if (arg%nodeType/=DOCUMENT_TYPE_NODE) then
+       call throw_exception(FoX_INVALID_NODE, "getNotations", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    nnp => arg%notations
   end function getNotations
 
 
@@ -4690,40 +4722,85 @@ endif
 
 !  function getSystemId(docType) result(c) See m_dom_common
 
+    pure function getInternalSubset_len(arg, p) result(n)
+    type(Node), intent(in) :: arg
+    logical, intent(in) :: p
+    integer :: n
 
-  function getInternalSubset(docType) result(c)
-    type(Node), intent(in) :: docType
-    character(len=size(docType%internalSubset)) :: c
+    if (p) then 
+      n = size(arg%internalSubset)
+    else
+      n = 0
+    endif
+  end function getInternalSubset_len
 
-    if (docType%nodeType/=DOCUMENT_TYPE_NODE) then
-      ! FIXME error
-      continue
+  function getInternalSubset(arg, ex)result(c) 
+    type(DOMException), intent(inout), optional :: ex
+    type(Node), pointer :: arg
+    character(len=getInternalSubset_len(arg, associated(arg))) :: c
+
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "getInternalSubset", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
     endif
 
-    c = str_vs(docType%internalSubset)
+    if (arg%nodeType/=DOCUMENT_TYPE_NODE) then
+       call throw_exception(FoX_INVALID_NODE, "getInternalSubset", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    c = str_vs(arg%internalSubset)
   end function getInternalSubset
 
 
-  subroutine setDocType(docType, name, publicId, systemId)
-    type(Node), intent(inout) :: docType
+  subroutine setDocType(arg, name, publicId, systemId, ex)
+    type(DOMException), intent(inout), optional :: ex
+    type(Node), pointer :: arg
     character(len=*), intent(in) :: name
     character(len=*), intent(in), optional :: publicId
     character(len=*), intent(in), optional :: systemId
 
-    if (docType%nodeType/=DOCUMENT_TYPE_NODE) then
-      ! FIXME throw an internal error
-      continue
+    ! FIXME optional args
+
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "setDocType", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    if (arg%nodeType/=DOCUMENT_TYPE_NODE) then
+       call throw_exception(FoX_INVALID_NODE, "setDocType", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
     endif
     
-    deallocate(docType%nodeName)
-    docType%nodeName => vs_str_alloc(name)
+    deallocate(arg%nodeName)
+    arg%nodeName => vs_str_alloc(name)
     if (present(publicId)) then
-      deallocate(docType%publicId)
-      docType%publicId => vs_str_alloc(publicId)
+      deallocate(arg%publicId)
+      arg%publicId => vs_str_alloc(publicId)
     endif
     if (present(systemId)) then
-      deallocate(docType%systemId)
-      docType%systemId => vs_str_alloc(systemId)
+      deallocate(arg%systemId)
+      arg%systemId => vs_str_alloc(systemId)
     endif
 
   end subroutine setDocType

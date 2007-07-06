@@ -22,28 +22,34 @@ TOHW_m_dom_contents(`
 
 !  function getName(docType) result(c) See m_dom_common
 
-  function getEntities(docType) result(nnp)
-    type(Node), pointer :: docType
+  TOHW_function(getEntities, (arg), nnp)
+    type(Node), pointer :: arg
     type(NamedNodeMap), pointer :: nnp
 
-    if (docType%nodeType/=DOCUMENT_TYPE_NODE) then
-      ! FIXME error
-      continue
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif
 
-    nnp => docType%entities
+    if (arg%nodeType/=DOCUMENT_TYPE_NODE) then
+       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
+    endif
+
+    nnp => arg%entities
   end function getEntities
 
-  function getNotations(docType) result(nnp)
-    type(Node), pointer :: docType
+  TOHW_function(getNotations, (arg), nnp)
+    type(Node), pointer :: arg
     type(NamedNodeMap), pointer :: nnp
 
-    if (docType%nodeType/=DOCUMENT_TYPE_NODE) then
-      ! FIXME error
-      continue
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif
 
-    nnp => docType%notations
+    if (arg%nodeType/=DOCUMENT_TYPE_NODE) then
+       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
+    endif
+
+    nnp => arg%notations
   end function getNotations
 
 
@@ -52,40 +58,59 @@ TOHW_m_dom_contents(`
 
 !  function getSystemId(docType) result(c) See m_dom_common
 
+    pure function getInternalSubset_len(arg, p) result(n)
+    type(Node), intent(in) :: arg
+    logical, intent(in) :: p
+    integer :: n
 
-  function getInternalSubset(docType) result(c)
-    type(Node), intent(in) :: docType
-    character(len=size(docType%internalSubset)) :: c
+    if (p) then 
+      n = size(arg%internalSubset)
+    else
+      n = 0
+    endif
+  end function getInternalSubset_len
 
-    if (docType%nodeType/=DOCUMENT_TYPE_NODE) then
-      ! FIXME error
-      continue
+  TOHW_function(getInternalSubset, (arg), c)
+    type(Node), pointer :: arg
+    character(len=getInternalSubset_len(arg, associated(arg))) :: c
+
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif
 
-    c = str_vs(docType%internalSubset)
+    if (arg%nodeType/=DOCUMENT_TYPE_NODE) then
+       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
+    endif
+
+    c = str_vs(arg%internalSubset)
   end function getInternalSubset
 
 
-  subroutine setDocType(docType, name, publicId, systemId)
-    type(Node), intent(inout) :: docType
+  TOHW_subroutine(setDocType, (arg, name, publicId, systemId))
+    type(Node), pointer :: arg
     character(len=*), intent(in) :: name
     character(len=*), intent(in), optional :: publicId
     character(len=*), intent(in), optional :: systemId
 
-    if (docType%nodeType/=DOCUMENT_TYPE_NODE) then
-      ! FIXME throw an internal error
-      continue
+    ! FIXME optional args
+
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+
+    if (arg%nodeType/=DOCUMENT_TYPE_NODE) then
+       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
     
-    deallocate(docType%nodeName)
-    docType%nodeName => vs_str_alloc(name)
+    deallocate(arg%nodeName)
+    arg%nodeName => vs_str_alloc(name)
     if (present(publicId)) then
-      deallocate(docType%publicId)
-      docType%publicId => vs_str_alloc(publicId)
+      deallocate(arg%publicId)
+      arg%publicId => vs_str_alloc(publicId)
     endif
     if (present(systemId)) then
-      deallocate(docType%systemId)
-      docType%systemId => vs_str_alloc(systemId)
+      deallocate(arg%systemId)
+      arg%systemId => vs_str_alloc(systemId)
     endif
 
   end subroutine setDocType
