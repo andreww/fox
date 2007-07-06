@@ -176,6 +176,12 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
 
+    ! Remove docType from tree before destruction:
+    dt =>  getDocType(doc)
+    if (associated(getParentNode(dt))) &
+      dt => removeChild(doc, dt)
+    call destroyDocumentType(dt)
+
     ! Destroy all remaining nodelists
 
     do i = 1, size(doc%docExtras%nodelists)
@@ -192,14 +198,13 @@ TOHW_m_dom_contents(`
 
     call destroy_xml_doc_state(doc%docExtras%xds)
     deallocate(doc%docExtras%xds)
+
     deallocate(doc%docExtras)
 
     print*, "destroying a node:", doc%nodeType, doc%nodeName
-    call destroyNodeContents(doc)
-    ! Remove docType from tree before destruction:
-    dt => removeChild(doc, getDocType(doc))
-    call destroyDocumentType(dt)
+
     call destroyAllNodesRecursively(doc)
+    call destroyNodeContents(doc)
     deallocate(doc)
 
   end subroutine destroyDocument
