@@ -550,6 +550,7 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
     endif
 
+    allocate(temp_nl(size(arg%childNodes%nodes)-1))
     i_t = 1
     do i = 1, size(arg%childNodes%nodes)
       if (associated(arg%childNodes%nodes(i)%this, oldChild)) then 

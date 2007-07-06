@@ -2813,16 +2813,25 @@ endif
 
 
 
-  function getNamedItem(map, name) result(np)
-    type(NamedNodeMap), intent(in) :: map
+  function getNamedItem(map, name, ex)result(np) 
+    type(DOMException), intent(inout), optional :: ex
+    type(NamedNodeMap), pointer :: map
     character(len=*), intent(in) :: name
     type(Node), pointer :: np
 
     integer :: i
 
-    print*, "GETNAMEDITEM", map%length
+    if (.not.associated(map)) then
+      call throw_exception(FoX_NODE_IS_NULL, "getNamedItem", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
     do i = 1, map%length
-      print*, "GETNAMEDITEM", i, str_vs(map%nodes(i)%this%nodeName)
       if (str_vs(map%nodes(i)%this%nodeName)==name) then
         np => map%nodes(i)%this
         return
@@ -2872,11 +2881,21 @@ endif
 
   function setNamedItem(map, arg, ex)result(np) 
     type(DOMException), intent(inout), optional :: ex
-    type(NamedNodeMap), intent(inout) :: map
+    type(NamedNodeMap), pointer :: map
     type(Node), pointer :: arg
     type(Node), pointer :: np
 
     integer :: i
+
+    if (.not.associated(map)) then
+      call throw_exception(FoX_NODE_IS_NULL, "setNamedItem", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
 
     if (map%readonly) then
       call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setNamedItem", ex)
@@ -2932,12 +2951,22 @@ endif
 
   function removeNamedItem(map, name, ex)result(np) 
     type(DOMException), intent(inout), optional :: ex
-    type(NamedNodeMap), intent(inout) :: map
+    type(NamedNodeMap), pointer :: map
     character(len=*), intent(in) :: name
     type(Node), pointer :: np
 
     type(ListNode), pointer :: temp_nl(:)
     integer :: i, i2
+
+    if (.not.associated(map)) then
+      call throw_exception(FoX_NODE_IS_NULL, "removeNamedItem", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
 
     if (map%readonly) then
       call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "removeNamedItem", ex)
@@ -2983,12 +3012,23 @@ endif
   end function removeNamedItem
 
 
-  function item_nnm(map, index) result(np)
+  function item_nnm(map, index, ex)result(np) 
+    type(DOMException), intent(inout), optional :: ex
     type(NamedNodeMap), pointer :: map
     integer, intent(in) :: index
     type(Node), pointer :: np
     
     integer :: n
+
+    if (.not.associated(map)) then
+      call throw_exception(FoX_NODE_IS_NULL, "item_nnm", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
 
     if (index<0 .or. index>map%length-1) then
       np => null()
@@ -3007,13 +3047,24 @@ endif
   end function getLength_nnm
 
 
-  function getNamedItemNS(map, namespaceURI, localName) result(np)
-    type(NamedNodeMap), intent(in) :: map
+  function getNamedItemNS(map, namespaceURI, localName, ex)result(np) 
+    type(DOMException), intent(inout), optional :: ex
+    type(NamedNodeMap), pointer :: map
     character(len=*), intent(in) :: namespaceURI
     character(len=*), intent(in) :: localName
     type(Node), pointer :: np
 
     integer :: i
+
+    if (.not.associated(map)) then
+      call throw_exception(FoX_NODE_IS_NULL, "getNamedItemNS", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
 
     do i = 1, map%length
       if (str_vs(map%nodes(i)%this%namespaceURI)==namespaceURI &
@@ -3070,11 +3121,21 @@ endif
 
   function setNamedItemNS(map, arg, ex)result(np) 
     type(DOMException), intent(inout), optional :: ex
-    type(NamedNodeMap), intent(inout) :: map
+    type(NamedNodeMap), pointer :: map
     type(Node), pointer :: arg
     type(Node), pointer :: np
 
     integer :: i
+
+    if (.not.associated(map)) then
+      call throw_exception(FoX_NODE_IS_NULL, "setNamedItemNS", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
 
     if (map%readonly) then
       call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setNamedItemNS", ex)
@@ -3130,13 +3191,23 @@ endif
 
   function removeNamedItemNS(map, namespaceURI, localName, ex)result(np) 
     type(DOMException), intent(inout), optional :: ex
-    type(NamedNodeMap), intent(inout) :: map
+    type(NamedNodeMap), pointer :: map
     character(len=*), intent(in) :: namespaceURI
     character(len=*), intent(in) :: localName
     type(Node), pointer :: np
 
     type(ListNode), pointer :: temp_nl(:)
     integer :: i, i2
+
+    if (.not.associated(map)) then
+      call throw_exception(FoX_NODE_IS_NULL, "removeNamedItemNS", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
 
     if (map%readonly) then
       call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "removeNamedItemNS", ex)
@@ -3232,7 +3303,7 @@ endif
 
 
   subroutine setReadOnly(map, r)
-    type(namedNodeMap), intent(inout) :: map
+    type(namedNodeMap), pointer :: map
     logical, intent(in) :: r
 
     map%readonly = r
@@ -4674,7 +4745,7 @@ endif
     
   function getAttribute(element, name, ex)result(c) 
     type(DOMException), intent(inout), optional :: ex
-    type(Node), intent(in) :: element
+    type(Node), pointer :: element
     character(len=*), intent(in) :: name
     character(len=getNamedItem_Value_length(element%attributes, name)) :: c
 
@@ -4690,7 +4761,7 @@ endif
 
     endif
     c = ""  ! as per specs, if not found
-    c = getNamedItem_Value(element%attributes, name)
+    c = getNamedItem_Value(getAttributes(element), name)
 
     ! FIXME do we need to catch the exception above if it doesnt exist?
         
@@ -4757,7 +4828,7 @@ endif
 
     nn => createAttribute(element%ownerDocument, name)
     call setValue(nn, value)
-    dummy => setNamedItem(element%attributes, nn)
+    dummy => setNamedItem(getAttributes(element), nn)
     if (associated(dummy)) then
       if (getGCstate(getOwnerDocument(element)).and..not.dummy%inDocument) &
         call putNodesInDocument(getOwnerDocument(element), dummy) 
@@ -4792,8 +4863,9 @@ endif
     if (element%inDocument) &
       call setGCstate(getOwnerDocument(element), .false.)
 
-    dummy => removeNamedItem(element%attributes, name)
+    dummy => removeNamedItem(getAttributes(element), name)
     print*,"DESTROYING ATTRIBUTE:"
+    ! FIXME need to remove dummy from hangingnodeslist
     call destroyAllNodesRecursively(dummy)
     call destroyNode(dummy)
 
@@ -4872,7 +4944,7 @@ endif
 
     ! this checks if attribute exists already
     ! It also does any adding/removing of hangingnodes
-    dummy => setNamedItem(element%attributes, newattr, ex)
+    dummy => setNamedItem(getAttributes(element), newattr, ex)
     newattr%ownerElement => element
     attr => newattr
 
@@ -4907,7 +4979,7 @@ endif
 
     do i = 1, element%attributes%length
       if (associated(element%attributes%nodes(i)%this, oldattr)) then
-        attr => removeNamedItem(element%attributes, str_vs(oldattr%nodeName))
+        attr => removeNamedItem(getAttributes(element), str_vs(oldattr%nodeName))
         return
       endif
     enddo
@@ -4930,7 +5002,7 @@ endif
 
   function getAttributeNS(element, namespaceURI, localName, ex)result(c) 
     type(DOMException), intent(inout), optional :: ex
-    type(Node), intent(in) :: element
+    type(Node), pointer :: element
     character(len=*), intent(in) :: namespaceURI
     character(len=*), intent(in) :: localName
     character(len= &
@@ -4949,7 +5021,7 @@ endif
     endif
 
     c = ""  ! as per specs, if not found Not sure ahout this FIXME
-    c = getNamedItemNS_Value(element%attributes, namespaceURI, localName)
+    c = getNamedItemNS_Value(getAttributes(element), namespaceURI, localName)
 
     ! FIXME dont need both above
         
@@ -5040,7 +5112,7 @@ endif
       call destroyNode(dummy)
     endif
 
-    dummy => setNamedItemNS(element%attributes, nn)
+    dummy => setNamedItemNS(getAttributes(element), nn)
     nn%ownerElement => element
 
     if (quickFix) call setGCstate(getOwnerDocument(element), .true.)
@@ -5076,7 +5148,7 @@ endif
 
     endif
 
-    dummy => removeNamedItemNS(element%attributes, namespaceURI, localName)
+    dummy => removeNamedItemNS(getAttributes(element), namespaceURI, localName)
 
     call destroyAttribute(dummy)
      
@@ -5085,7 +5157,7 @@ endif
 
   function getAttributeNodeNS(element, namespaceURI, localName, ex)result(attr) 
     type(DOMException), intent(inout), optional :: ex
-    type(Node), intent(in) :: element
+    type(Node), pointer :: element
     character(len=*), intent(in) :: namespaceURI
     character(len=*), intent(in) :: localName
     type(Node), pointer :: attr
@@ -5101,7 +5173,7 @@ endif
     endif
 
     attr => null()     ! as per specs, if not found
-    attr => getNamedItemNS(element%attributes, namespaceURI, localname)
+    attr => getNamedItemNS(getAttributes(element), namespaceURI, localname)
 
   end function getAttributeNodeNS
   
@@ -5148,7 +5220,7 @@ endif
     endif
 
     ! this checks if attribute exists already, and does hangingnodes
-    dummy => setNamedItemNS(element%attributes, newattr)
+    dummy => setNamedItemNS(getAttributes(element), newattr)
     newattr%ownerElement => element
     attr => newattr
 
@@ -5183,7 +5255,7 @@ endif
 
     do i = 1, element%attributes%length
       if (associated(item(getAttributes(element), i-1), oldattr)) then
-        attr => removeNamedItemNS(element%attributes, &
+        attr => removeNamedItemNS(getAttributes(element), &
           str_vs(oldattr%namespaceURI), str_vs(oldattr%localName))
         return
       endif

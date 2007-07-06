@@ -40,7 +40,7 @@ TOHW_m_dom_contents(`
 
     
   TOHW_function(getAttribute, (element, name), c)
-    type(Node), intent(in) :: element
+    type(Node), pointer :: element
     character(len=*), intent(in) :: name
     character(len=getNamedItem_Value_length(element%attributes, name)) :: c
 
@@ -50,7 +50,7 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
     c = ""  ! as per specs, if not found
-    c = getNamedItem_Value(element%attributes, name)
+    c = getNamedItem_Value(getAttributes(element), name)
 
     ! FIXME do we need to catch the exception above if it doesnt exist?
         
@@ -86,7 +86,7 @@ TOHW_m_dom_contents(`
 
     nn => createAttribute(element%ownerDocument, name)
     call setValue(nn, value)
-    dummy => setNamedItem(element%attributes, nn)
+    dummy => setNamedItem(getAttributes(element), nn)
     if (associated(dummy)) then
       if (getGCstate(getOwnerDocument(element)).and..not.dummy%inDocument) &
         call putNodesInDocument(getOwnerDocument(element), dummy) 
@@ -114,8 +114,9 @@ TOHW_m_dom_contents(`
     if (element%inDocument) &
       call setGCstate(getOwnerDocument(element), .false.)
 
-    dummy => removeNamedItem(element%attributes, name)
+    dummy => removeNamedItem(getAttributes(element), name)
     print*,"DESTROYING ATTRIBUTE:"
+    ! FIXME need to remove dummy from hangingnodeslist
     call destroyAllNodesRecursively(dummy)
     call destroyNode(dummy)
 
@@ -162,7 +163,7 @@ TOHW_m_dom_contents(`
 
     ! this checks if attribute exists already
     ! It also does any adding/removing of hangingnodes
-    dummy => setNamedItem(element%attributes, newattr, ex)
+    dummy => setNamedItem(getAttributes(element), newattr, ex)
     newattr%ownerElement => element
     attr => newattr
 
@@ -184,7 +185,7 @@ TOHW_m_dom_contents(`
 
     do i = 1, element%attributes%length
       if (associated(element%attributes%nodes(i)%this, oldattr)) then
-        attr => removeNamedItem(element%attributes, str_vs(oldattr%nodeName))
+        attr => removeNamedItem(getAttributes(element), str_vs(oldattr%nodeName))
         return
       endif
     enddo
@@ -200,7 +201,7 @@ TOHW_m_dom_contents(`
 
 
   TOHW_function(getAttributeNS, (element, namespaceURI, localName), c)
-    type(Node), intent(in) :: element
+    type(Node), pointer :: element
     character(len=*), intent(in) :: namespaceURI
     character(len=*), intent(in) :: localName
     character(len= &
@@ -213,7 +214,7 @@ TOHW_m_dom_contents(`
     endif
 
     c = ""  ! as per specs, if not found Not sure ahout this FIXME
-    c = getNamedItemNS_Value(element%attributes, namespaceURI, localName)
+    c = getNamedItemNS_Value(getAttributes(element), namespaceURI, localName)
 
     ! FIXME dont need both above
         
@@ -267,7 +268,7 @@ TOHW_m_dom_contents(`
       call destroyNode(dummy)
     endif
 
-    dummy => setNamedItemNS(element%attributes, nn)
+    dummy => setNamedItemNS(getAttributes(element), nn)
     nn%ownerElement => element
 
     if (quickFix) call setGCstate(getOwnerDocument(element), .true.)
@@ -290,7 +291,7 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
     endif
 
-    dummy => removeNamedItemNS(element%attributes, namespaceURI, localName)
+    dummy => removeNamedItemNS(getAttributes(element), namespaceURI, localName)
 
     call destroyAttribute(dummy)
      
@@ -298,7 +299,7 @@ TOHW_m_dom_contents(`
 
 
   TOHW_function(getAttributeNodeNS, (element, namespaceURI, localName), attr)
-    type(Node), intent(in) :: element
+    type(Node), pointer :: element
     character(len=*), intent(in) :: namespaceURI
     character(len=*), intent(in) :: localName
     type(Node), pointer :: attr
@@ -308,7 +309,7 @@ TOHW_m_dom_contents(`
     endif
 
     attr => null()     ! as per specs, if not found
-    attr => getNamedItemNS(element%attributes, namespaceURI, localname)
+    attr => getNamedItemNS(getAttributes(element), namespaceURI, localname)
 
   end function getAttributeNodeNS
   
@@ -330,7 +331,7 @@ TOHW_m_dom_contents(`
     endif
 
     ! this checks if attribute exists already, and does hangingnodes
-    dummy => setNamedItemNS(element%attributes, newattr)
+    dummy => setNamedItemNS(getAttributes(element), newattr)
     newattr%ownerElement => element
     attr => newattr
 
@@ -352,7 +353,7 @@ TOHW_m_dom_contents(`
 
     do i = 1, element%attributes%length
       if (associated(item(getAttributes(element), i-1), oldattr)) then
-        attr => removeNamedItemNS(element%attributes, &
+        attr => removeNamedItemNS(getAttributes(element), &
           str_vs(oldattr%namespaceURI), str_vs(oldattr%localName))
         return
       endif

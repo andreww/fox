@@ -40,16 +40,18 @@ TOHW_m_dom_publics(`
 dnl
 TOHW_m_dom_contents(`
 
-  function getNamedItem(map, name) result(np)
-    type(NamedNodeMap), intent(in) :: map
+  TOHW_function(getNamedItem, (map, name), np)
+    type(NamedNodeMap), pointer :: map
     character(len=*), intent(in) :: name
     type(Node), pointer :: np
 
     integer :: i
 
-    print*, "GETNAMEDITEM", map%length
+    if (.not.associated(map)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+
     do i = 1, map%length
-      print*, "GETNAMEDITEM", i, str_vs(map%nodes(i)%this%nodeName)
       if (str_vs(map%nodes(i)%this%nodeName)==name) then
         np => map%nodes(i)%this
         return
@@ -98,11 +100,15 @@ TOHW_m_dom_contents(`
 
 
   TOHW_function(setNamedItem, (map, arg), np)
-    type(NamedNodeMap), intent(inout) :: map
+    type(NamedNodeMap), pointer :: map
     type(Node), pointer :: arg
     type(Node), pointer :: np
 
     integer :: i
+
+    if (.not.associated(map)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
 
     if (map%readonly) then
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
@@ -139,12 +145,16 @@ TOHW_m_dom_contents(`
 
 
   TOHW_function(removeNamedItem, (map, name), np)
-    type(NamedNodeMap), intent(inout) :: map
+    type(NamedNodeMap), pointer :: map
     character(len=*), intent(in) :: name
     type(Node), pointer :: np
 
     type(ListNode), pointer :: temp_nl(:)
     integer :: i, i2
+
+    if (.not.associated(map)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
 
     if (map%readonly) then
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
@@ -178,12 +188,16 @@ TOHW_m_dom_contents(`
   end function removeNamedItem
 
 
-  function item_nnm(map, index) result(np)
+  TOHW_function(item_nnm, (map, index), np)
     type(NamedNodeMap), pointer :: map
     integer, intent(in) :: index
     type(Node), pointer :: np
     
     integer :: n
+
+    if (.not.associated(map)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
 
     if (index<0 .or. index>map%length-1) then
       np => null()
@@ -202,13 +216,17 @@ TOHW_m_dom_contents(`
   end function getLength_nnm
 
 
-  function getNamedItemNS(map, namespaceURI, localName) result(np)
-    type(NamedNodeMap), intent(in) :: map
+  TOHW_function(getNamedItemNS, (map, namespaceURI, localName), np)
+    type(NamedNodeMap), pointer :: map
     character(len=*), intent(in) :: namespaceURI
     character(len=*), intent(in) :: localName
     type(Node), pointer :: np
 
     integer :: i
+
+    if (.not.associated(map)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
 
     do i = 1, map%length
       if (str_vs(map%nodes(i)%this%namespaceURI)==namespaceURI &
@@ -264,11 +282,15 @@ TOHW_m_dom_contents(`
 
 
   TOHW_function(setNamedItemNS, (map, arg), np)
-    type(NamedNodeMap), intent(inout) :: map
+    type(NamedNodeMap), pointer :: map
     type(Node), pointer :: arg
     type(Node), pointer :: np
 
     integer :: i
+
+    if (.not.associated(map)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
 
     if (map%readonly) then
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
@@ -305,13 +327,17 @@ TOHW_m_dom_contents(`
 
 
   TOHW_function(removeNamedItemNS, (map, namespaceURI, localName), np)
-    type(NamedNodeMap), intent(inout) :: map
+    type(NamedNodeMap), pointer :: map
     character(len=*), intent(in) :: namespaceURI
     character(len=*), intent(in) :: localName
     type(Node), pointer :: np
 
     type(ListNode), pointer :: temp_nl(:)
     integer :: i, i2
+
+    if (.not.associated(map)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
 
     if (map%readonly) then
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
@@ -395,7 +421,7 @@ TOHW_m_dom_contents(`
 
 
   subroutine setReadOnly(map, r)
-    type(namedNodeMap), intent(inout) :: map
+    type(namedNodeMap), pointer :: map
     logical, intent(in) :: r
 
     map%readonly = r
