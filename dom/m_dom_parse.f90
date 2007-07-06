@@ -23,6 +23,7 @@ module m_dom_parse
   use m_dom_dom, only: append, getNodeType, setReadOnly, getLength, getChildNodes
   use m_dom_dom, only: removeChild, appendChild, getNotations, setAttributeNodeNS, setvalue
   use m_dom_dom, only: setAttributeNodeNS, replace_xds, setGCstate, createCdataSection
+  use m_dom_dom, only: createEntityReference
   use m_dom_debug, only: dom_debug
 
   implicit none
@@ -34,6 +35,8 @@ module m_dom_parse
   type(Node), pointer, private, save  :: current => null()
 
   logical :: cdata_sections, cdata
+  logical :: entities_expand
+  character, pointer :: inEntity(:) => null()
 
 contains
 
@@ -46,6 +49,8 @@ contains
    
     type(Node), pointer :: el, temp
     integer              :: i
+
+    if (associated(inEntity)) return
 
     print*, 'XML', getXmlVersion(mainDoc)
 
@@ -84,6 +89,8 @@ contains
     character(len=*), intent(in)     :: localname
     character(len=*), intent(in)     :: name
 
+    if (associated(inEntity)) return
+
     if (dom_debug) &
       write(*,'(4a)') "Ending node for element: {",URI,'}', localname
 
@@ -95,6 +102,8 @@ contains
 
     type(Node), pointer :: temp
     
+    if (associated(inEntity)) return
+
     if (cdata) then
       temp => createCdataSection(mainDoc, chunk)
     else
@@ -111,6 +120,8 @@ contains
 
     type(Node), pointer :: temp
 
+    if (associated(inEntity)) return
+
     if (dom_debug) print *, "Got COMMENT: |", comment, "|"
 
     temp => createComment(mainDoc, comment)
@@ -123,6 +134,8 @@ contains
     character(len=*), intent(in) :: data
 
     type(Node), pointer :: temp
+
+    if (associated(inEntity)) return
 
     print*,'createPI'
     temp => createProcessingInstruction(mainDoc, target, data)
@@ -172,6 +185,8 @@ contains
     call replace_xds(mainDoc, state)
     call setGCstate(mainDoc, .false.)
 
+
+! FIXME this is having no effect below, why?
     entities => getEntities(dt)
     notations => getNotations(dt)
     do i = 1, ubound(state%entityList%list, 1)
@@ -200,6 +215,11 @@ contains
                          str_vs(thisEntity%systemId))
       np => setNamedItem(notations, np)
     enddo
+
+    ! FIXME also copy internalSubset from xds
+
+    ! FIXME also walk across tree, and fix all entityReference nodes
+    ! so they have appropriate children
 
   end subroutine FoX_endDTD_handler
 
@@ -272,14 +292,39 @@ contains
 
   end subroutine unparsedEntityDecl_handler
 
-  function parsefile(filename, configuration, verbose, sax_verbose)
+  subroutine startEntity_handler(name)
+    character(len=*), intent(in) :: name
+    
+    if (entities_expand) then
+      if (.not.associated(inEntity)) then
+        current => appendChild(current, createEntityReference(mainDoc, name))
+        inEntity => vs_str_alloc(name)
+      endif
+    endif
+  end subroutine startEntity_handler
+
+  subroutine endEntity_handler(name)
+    character(len=*), intent(in) :: name
+    
+    if (entities_expand) then
+      if (str_vs(inEntity)==name) deallocate(inEntity)
+    endif
+
+  end subroutine endEntity_handler
+
+  subroutine skippedEntity_handler(name)
+    character(len=*), intent(in) :: name
+    
+    if (associated(inEntity)) return
+    current => appendChild(current, createEntityReference(mainDoc, name))
+  end subroutine skippedEntity_handler
+
+  function parsefile(filename, configuration)
 
 ! FIXME should do string too.
 
     character(len=*), intent(in) :: filename
     character(len=*), intent(in), optional :: configuration
-    logical, intent(in), optional :: verbose
-    logical, intent(in), optional :: sax_verbose
 
     type(Node), pointer :: parsefile, dt, np, nt
     type(NamedNodeMap), pointer :: entities, notations
@@ -289,13 +334,11 @@ contains
     integer :: i, iostat
     
     if (present(configuration)) then
-      cdata_sections = .true.
+      cdata_sections = (scan("cdata-sections", configuration)>0)
+      entities_expand = (scan("entities", configuration)>0)
     else
       cdata_sections = .false.
-    endif
-
-    if (present(verbose)) then
-       dom_debug = verbose
+      entities_expand = .false.
     endif
 
     call open_xml_file(fxml, filename, iostat)
@@ -315,7 +358,7 @@ contains
       !ignorableWhitespace_handler,   &
       processingInstruction_handler=processingInstruction_handler, &
       ! setDocumentLocator
-      !skippedEntity_handler,         &
+      skippedEntity_handler=skippedEntity_handler,         &
       startDocument_handler=startDocument_handler,         & 
       startElement_handler=startElement_handler,          &
       !startPrefixMapping_handler,    &
@@ -331,10 +374,10 @@ contains
       comment_handler=comment_handler,              &
       endCdata_handler=endCdata_handler,             &
       !endDTD_handler=endDTD_handler,                &
-      !endEntity_handler,             &
+      endEntity_handler=endEntity_handler,             &
       startCdata_handler=startCdata_handler,    &
       startDTD_handler=startDTD_handler,          &
-      !startEntity_handler
+      startEntity_handler=startEntity_handler, &
       FoX_endDTD_handler=FoX_endDTD_handler)
 
 
