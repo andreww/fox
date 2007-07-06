@@ -22,7 +22,7 @@ module m_dom_parse
   use m_dom_dom, only: getParentNode, setDocumentElement, getDocType, setDocType
   use m_dom_dom, only: append, getNodeType, setReadOnly, getLength, getChildNodes
   use m_dom_dom, only: removeChild, appendChild, getNotations, setAttributeNodeNS, setvalue
-  use m_dom_dom, only: setAttributeNodeNS, replace_xds, setGCstate
+  use m_dom_dom, only: setAttributeNodeNS, replace_xds, setGCstate, createCdataSection
   use m_dom_debug, only: dom_debug
 
   implicit none
@@ -32,6 +32,8 @@ module m_dom_parse
 
   type(Node), pointer, private, save  :: mainDoc => null()
   type(Node), pointer, private, save  :: current => null()
+
+  logical :: cdata
 
 contains
 
@@ -72,6 +74,8 @@ contains
     current => appendChild(current,el)
     print*,getNodeType(el)
     if (associated(getOwnerDocument(el))) print*,"YES"
+
+    cdata = .false.
     
   end subroutine startElement_handler
 
@@ -91,15 +95,14 @@ contains
 
     type(Node), pointer :: temp
     
-    print *, "Got PCDATA: |", chunk, "|"
-
-    temp => createTextNode(mainDoc, chunk)
-    print*, "pcdata:", associated(temp)
+    if (cdata) then
+      temp => createCdataSection(mainDoc, chunk)
+    else
+      temp => createTextNode(mainDoc, chunk)
+    endif
     temp => appendChild(current, temp)
 
-    print*, "pcdata:", hasChildNodes(current)
-    temp => getFirstChild(current)
-    print*, "pcdata:", associated(temp)
+!    temp => getFirstChild(current)
 
   end subroutine characters_handler
 
@@ -203,9 +206,19 @@ contains
 
   end subroutine FoX_endDTD_handler
 
-  function parsefile(filename, verbose, sax_verbose)
+  subroutine startCdata_handler()
+    cdata = .true.
+  end subroutine startCdata_handler
+  subroutine endCdata_handler()
+    cdata = .false.
+  end subroutine endCdata_handler
+
+  function parsefile(filename, configuration, verbose, sax_verbose)
+
+! FIXME should do string too.
 
     character(len=*), intent(in) :: filename
+    character(len=*), intent(in), optional :: configuration
     logical, intent(in), optional :: verbose
     logical, intent(in), optional :: sax_verbose
 
@@ -215,6 +228,14 @@ contains
     type(notation), pointer :: thisNotation
     type(xml_t) :: fxml
     integer :: i, iostat
+    
+    logical :: cdata_sections
+
+    if (present(configuration)) then
+      cdata_sections = .true.
+    else
+      cdata_sections = .false.
+    endif
 
     if (present(verbose)) then
        dom_debug = verbose
@@ -227,35 +248,68 @@ contains
 
 ! We use internal sax_parse rather than public interface in order
 ! to use internal callbacks to get extra info.
-    call sax_parse(fxml%fx, fxml%fb,&
-      characters_handler=characters_handler,            &
-      endDocument_handler=endDocument_handler,           &
-      endElement_handler=endElement_handler,            &
-      !endPrefixMapping_handler,      &
-      !ignorableWhitespace_handler,   &
-      processingInstruction_handler=processingInstruction_handler, &
-      ! setDocumentLocator
-      !skippedEntity_handler,         &
-      startDocument_handler=startDocument_handler,         & 
-      startElement_handler=startElement_handler,          &
-      !startPrefixMapping_handler,    &
-      !notationDecl_handler=notationDecl_handler,          &
-      !unparsedEntityDecl_handler,    &
-      !error_handler,                 &
-      !fatalError_handler,            &
-      !warning_handler,               &
-      !attributeDecl_handler,         &
-      !elementDecl_handler,           &
-      !externalEntityDecl_handler,    &
-      !internalEntityDecl_handler,    &
-      comment_handler=comment_handler,              &
-      !endCdata_handler,              &
-      !endDTD_handler=endDTD_handler,                &
-      !endEntity_handler,             &
-      !startCdata_handler,            &
-      startDTD_handler=startDTD_handler,          &
-      !startEntity_handler
-      FoX_endDTD_handler=FoX_endDTD_handler)
+
+    if (cdata_sections) then
+      call sax_parse(fxml%fx, fxml%fb,&
+        characters_handler=characters_handler,            &
+        endDocument_handler=endDocument_handler,           &
+        endElement_handler=endElement_handler,            &
+        !endPrefixMapping_handler,      &
+        !ignorableWhitespace_handler,   &
+        processingInstruction_handler=processingInstruction_handler, &
+        ! setDocumentLocator
+        !skippedEntity_handler,         &
+        startDocument_handler=startDocument_handler,         & 
+        startElement_handler=startElement_handler,          &
+        !startPrefixMapping_handler,    &
+        !notationDecl_handler=notationDecl_handler,          &
+        !unparsedEntityDecl_handler,    &
+        !error_handler,                 &
+        !fatalError_handler,            &
+        !warning_handler,               &
+        !attributeDecl_handler,         &
+        !elementDecl_handler,           &
+        !externalEntityDecl_handler,    &
+        !internalEntityDecl_handler,    &
+        comment_handler=comment_handler,              &
+        endCdata_handler=endCdata_handler,             &
+        !endDTD_handler=endDTD_handler,                &
+        !endEntity_handler,             &
+        startCdata_handler=startCdata_handler,    &
+        startDTD_handler=startDTD_handler,          &
+        !startEntity_handler
+        FoX_endDTD_handler=FoX_endDTD_handler)
+    else
+      call sax_parse(fxml%fx, fxml%fb,&
+        characters_handler=characters_handler,            &
+        endDocument_handler=endDocument_handler,           &
+        endElement_handler=endElement_handler,            &
+        !endPrefixMapping_handler,      &
+        !ignorableWhitespace_handler,   &
+        processingInstruction_handler=processingInstruction_handler, &
+        ! setDocumentLocator
+        !skippedEntity_handler,         &
+        startDocument_handler=startDocument_handler,         & 
+        startElement_handler=startElement_handler,          &
+        !startPrefixMapping_handler,    &
+        !notationDecl_handler=notationDecl_handler,          &
+        !unparsedEntityDecl_handler,    &
+        !error_handler,                 &
+        !fatalError_handler,            &
+        !warning_handler,               &
+        !attributeDecl_handler,         &
+        !elementDecl_handler,           &
+        !externalEntityDecl_handler,    &
+        !internalEntityDecl_handler,    &
+        comment_handler=comment_handler,              &
+        !endCdata_handler=endCdata_handler,             &
+        !endDTD_handler=endDTD_handler,                &
+        !endEntity_handler,             &
+        !startCdata_handler=startCdata_handler,    &
+        startDTD_handler=startDTD_handler,          &
+        !startEntity_handler
+        FoX_endDTD_handler=FoX_endDTD_handler)
+    endif
 
     call close_xml_t(fxml)
 
