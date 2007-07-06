@@ -24,9 +24,6 @@ TOHW_m_dom_publics(`
   public :: setReadOnly
   public :: destroyNamedNodeMap
 
-  interface append
-    module procedure append_nnm
-  end interface
 
   interface item
     module procedure item_nnm
@@ -376,29 +373,6 @@ TOHW_m_dom_contents(`
 
 
   subroutine append_nnm(map, arg)
-    type(namedNodeMap), intent(inout) :: map
-    type(node), pointer :: arg
-
-    type(ListNode), pointer :: temp_nl(:)
-    integer :: i
-
-    if (.not.associated(map%nodes)) then
-      allocate(map%nodes(1))
-      map%nodes(1)%this => arg
-      map%length = 1
-    else
-      temp_nl => map%nodes
-      allocate(map%nodes(size(temp_nl)+1))
-      do i = 1, size(temp_nl)
-        map%nodes(i)%this => temp_nl(i)%this
-      enddo
-      deallocate(temp_nl)
-      map%nodes(size(map%nodes))%this => arg
-      map%length = size(map%nodes)
-    endif
-
-  end subroutine append_nnm
-  subroutine append_nnmp(map, arg)
     type(namedNodeMap), pointer :: map
     type(node), pointer :: arg
 
@@ -420,7 +394,7 @@ TOHW_m_dom_contents(`
       map%length = size(map%nodes)
     endif
 
-  end subroutine append_nnmp
+  end subroutine append_nnm
 
 
   subroutine setReadOnly(map, r)
