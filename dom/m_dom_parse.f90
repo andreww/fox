@@ -1,3 +1,4 @@
+
 module m_dom_parse
 
   use m_common_array_str, only: str_vs, vs_str_alloc
@@ -6,7 +7,7 @@ module m_dom_parse
   use m_common_notations, only: notation
   use m_common_struct, only: xml_doc_state
   use FoX_common, only: dictionary_t, len
-  use FoX_common, only: getQName, getValue, getLocalname, getURI
+  use FoX_common, only: getQName, getValue, getLocalname, getURI, getQName
   use m_sax_parser, only: sax_parse
   use FoX_sax, only: xml_t
   use FoX_sax, only: open_xml_file, open_xml_string, close_xml_t
@@ -20,10 +21,12 @@ module m_dom_parse
   use m_dom_dom, only: createNotation, setNamedItem, getNodeName, setNodeValue
   use m_dom_dom, only: createEmptyDocument, getXMLVersion, createDocumentType
   use m_dom_dom, only: getParentNode, setDocumentElement, getDocType, setDocType
-  use m_dom_dom, only: append, getNodeType, setReadOnly, getLength, getChildNodes
+  use m_dom_dom, only: append, getNodeType, getLength, getChildNodes
   use m_dom_dom, only: removeChild, appendChild, getNotations, setAttributeNodeNS, setvalue
   use m_dom_dom, only: setAttributeNodeNS, replace_xds, setGCstate, createCdataSection
   use m_dom_dom, only: createEntityReference, destroyAllNodesRecursively, setIllFormed
+  use m_dom_dom, only: createElement, createAttribute, getNamedItem, getTagName
+  use m_dom_dom, only: setReadonlyNode, setReadOnlyMap
   use m_dom_debug, only: dom_debug
 
   implicit none
@@ -50,35 +53,31 @@ contains
     type(Node), pointer :: el, temp
     integer              :: i
 
-    if (associated(inEntity)) return
-
-    print*, 'XML', getXmlVersion(mainDoc)
-
-    if (dom_debug) &
-      write(*,'(4a)') "Adding node for element: {",URI,'}', localname
-
-    el => createElementNS(mainDoc, URI, name)
+    if (len(URI)>0) then
+      el => createElementNS(mainDoc, URI, name)
+    else
+      el => createElement(mainDoc, name)
+    endif
 
     do i = 1, len(attrs)
-      if (dom_debug) print *, "Adding attribute: ", &
-        getQName(attrs, i), ":",getValue(attrs, i)
-      temp => createAttributeNS(mainDoc, getURI(attrs, i), getQName(attrs, i))
+      if (len(getURI(attrs, i))>0) then
+        temp => createAttributeNS(mainDoc, getURI(attrs, i), getQName(attrs, i))
+      else
+        temp => createAttribute(mainDoc, getQName(attrs, i))
+      endif
       call setValue(temp, getValue(attrs, i))
       call setSpecified(temp, .true.)
       temp =>  setAttributeNodeNS(el, temp)
       ! FIXME check specifiedness
+      if (associated(inEntity)) call setReadOnlyNode(current, .true.)
+      ! FIXME recursive readonly
     enddo
-
-    !print*,"ELASS"
-    !print*,associated(getOwnerDocument(el))
 
     if (getNodeType(current)==DOCUMENT_NODE) then
       call setDocumentElement(mainDoc, el)
     endif
-    !print*, associated(getOwnerDocument(getDocumentElement(mainDoc)))
     current => appendChild(current,el)
-    print*,getNodeType(el)
-    if (associated(getOwnerDocument(el))) print*,"YES"
+    if (associated(inEntity)) call setReadOnlyMap(getAttributes(current), .true.)
 
     cdata = .false.
     
@@ -89,12 +88,7 @@ contains
     character(len=*), intent(in)     :: localname
     character(len=*), intent(in)     :: name
 
-    if (associated(inEntity)) return
-
-    if (dom_debug) &
-      write(*,'(4a)') "Ending node for element: {",URI,'}', localname
-
-    current => getparentNode(current)
+    current => getParentNode(current)
   end subroutine endElement_handler
 
   subroutine characters_handler(chunk)
@@ -102,16 +96,14 @@ contains
 
     type(Node), pointer :: temp
     
-    if (associated(inEntity)) return
-
     if (cdata) then
       temp => createCdataSection(mainDoc, chunk)
     else
       temp => createTextNode(mainDoc, chunk)
     endif
     temp => appendChild(current, temp)
-
-!    temp => getFirstChild(current)
+    
+    if (associated(inEntity)) call setReadOnlyNode(temp, .true.)
 
   end subroutine characters_handler
 
@@ -120,12 +112,9 @@ contains
 
     type(Node), pointer :: temp
 
-    if (associated(inEntity)) return
+    temp => appendChild(current, createComment(mainDoc, comment))
 
-    if (dom_debug) print *, "Got COMMENT: |", comment, "|"
-
-    temp => createComment(mainDoc, comment)
-    temp => appendChild(current, temp)
+    if (associated(inEntity)) call setReadOnlyNode(temp, .true.)
 
   end subroutine comment_handler
 
@@ -135,28 +124,20 @@ contains
 
     type(Node), pointer :: temp
 
-    if (associated(inEntity)) return
+    temp => appendChild(current, &
+      createProcessingInstruction(mainDoc, target, data))
 
-    print*,'createPI'
-    temp => createProcessingInstruction(mainDoc, target, data)
-    temp => appendChild(current, temp)
-    print*,'createPIdone'
+    if (associated(inEntity)) call setReadOnlyNode(temp, .true.)
   end subroutine processingInstruction_handler
 
   subroutine startDocument_handler
-    print*,'allocating mainDoc'
-
     mainDoc => createEmptyDocument()
     current => mainDoc
     call setGCstate(mainDoc, .false.)
 
-    print*,'mainDoc allocated'
   end subroutine startDocument_handler
 
   subroutine endDocument_Handler
-    ! FIXME also walk across tree, and fix all entityReference nodes
-    ! so they have appropriate children
-    !FIXME set readonly appropriately
     call setGCstate(mainDoc, .true.)
   end subroutine endDocument_Handler
 
@@ -280,9 +261,9 @@ contains
     
     if (entities_expand) then
       if (.not.associated(inEntity)) then
-        current => appendChild(current, createEntityReference(mainDoc, name))
         inEntity => vs_str_alloc(name)
       endif
+      current => appendChild(current, createEntityReference(mainDoc, name))
     endif
   end subroutine startEntity_handler
 
@@ -291,6 +272,7 @@ contains
     
     if (entities_expand) then
       if (str_vs(inEntity)==name) deallocate(inEntity)
+      current => getParentNode(current)
     endif
 
   end subroutine endEntity_handler
@@ -298,8 +280,10 @@ contains
   subroutine skippedEntity_handler(name)
     character(len=*), intent(in) :: name
     
-    if (associated(inEntity)) return
-    current => appendChild(current, createEntityReference(mainDoc, name))
+    type(Node), pointer :: temp
+
+    temp => appendChild(current, createEntityReference(mainDoc, name))
+    if (associated(inEntity)) call setReadonlyNode(temp, .true.)
   end subroutine skippedEntity_handler
 
   function parsefile(filename, configuration)

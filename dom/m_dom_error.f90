@@ -41,6 +41,7 @@ module m_dom_error
   integer, parameter, public :: FoX_INVALID_SYSTEM_ID       = 208
   integer, parameter, public :: FoX_INVALID_COMMENT         = 209
   integer, parameter, public :: FoX_NODE_IS_NULL            = 210
+  integer, parameter, public :: FoX_INVALID_ENTITY          = 211
 
   integer, parameter, public :: FoX_INTERNAL_ERROR          = 999
 
@@ -119,6 +120,8 @@ contains
       s = "FoX_INVALID_COMMENT"
     case(210)
       s = "FoX_NODE_IS_NULL"
+    case(211)
+      s = "FoX_INVALID_ENTITY"
     case default
       s = "INTERNAL ERROR!!!!"
     end select

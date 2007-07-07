@@ -10,8 +10,9 @@ program dom_example
   integer :: i
 
   myDoc => parsefile('test.xml', "entities")
+  call dumpTree(myDoc)
+  stop
   call serialize(myDoc, 'myDoc.xml')
-stop
   myOtherDoc => parsefile('test.xml')
   print*,"LEN", getLength(getChildNodes(getDocumentElement(myDoc)))
   np => createElement(myDoc, 'a')
@@ -56,7 +57,6 @@ stop
   do i = 1, getLength(getChildNodes(np2))
     print*, "NT", getNodeType(item(getChildNodes(np2), i-1))
   enddo
-
   dummy => appendChild(np2, cloneNode(np2, .true.))
 
   dummy => appendChild(np2, createTextNode(myDoc, 'a'))

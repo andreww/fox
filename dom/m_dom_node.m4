@@ -39,6 +39,7 @@ TOHW_m_dom_publics(`
 
   public :: setStringValue
   public :: getStringValue
+  public :: setReadonlyNode
 
 ')`'dnl
 TOHW_m_dom_contents(`
@@ -792,7 +793,7 @@ TOHW_m_dom_contents(`
     ERchild => null()
     doc => getOwnerDocument(arg)
     np => null()
-
+    
     readonly = .false.
 
 TOHW_m_dom_treewalk(`
@@ -839,7 +840,6 @@ TOHW_m_dom_treewalk(`
       if (.not.associated(thatParent)) then
         thatParent => new
       elseif (associated(new)) then
-        new%readonly = readonly
         if (this%nodeType==ATTRIBUTE_NODE) then
           new => setAttributeNode(thatParent, new)
         else
@@ -857,6 +857,7 @@ TOHW_m_dom_treewalk(`
           ERchild => null()
           readonly = .false.
       endif
+      this%readonly = readonly
       
 ', `parentNode')
 
@@ -1044,5 +1045,21 @@ TOHW_m_dom_treewalk(`
 ',`')
 
   end subroutine removeNodesFromDocument
+
+  subroutine setReadOnlyNode(arg, p)
+    type(Node), pointer :: arg
+    logical, intent(in) :: p
+
+    type(Node), pointer :: this
+    integer :: i
+    logical :: doneAttributes, doneChildren
+
+    this => arg
+
+TOHW_m_dom_treewalk(`
+    this%readonly = p
+',`')
+
+  end subroutine setReadOnlyNode
 
 ')`'dnl

@@ -1,4 +1,4 @@
-TOHW_m_dom_imports(`
+ TOHW_m_dom_imports(`
 
   use m_common_array_str, only: str_vs
   use m_dom_error, only: INUSE_ATTRIBUTE_ERR
@@ -21,7 +21,7 @@ TOHW_m_dom_publics(`
   public :: removeNamedItemNS
 
   public :: append
-  public :: setReadOnly
+  public :: setReadOnlyMap
   public :: destroyNamedNodeMap
 
 
@@ -397,12 +397,12 @@ TOHW_m_dom_contents(`
   end subroutine append_nnm
 
 
-  subroutine setReadOnly(map, r)
+  subroutine setReadOnlyMap(map, r)
     type(namedNodeMap), pointer :: map
     logical, intent(in) :: r
 
     map%readonly = r
-  end subroutine setReadOnly
+  end subroutine setReadOnlyMap
 
   subroutine destroyNamedNodeMap(map)
     type(namedNodeMap), pointer :: map

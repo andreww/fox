@@ -6,7 +6,7 @@ TOHW_m_dom_imports(`
   use m_dom_error, only : NOT_FOUND_ERR, INVALID_CHARACTER_ERR, FoX_INVALID_NODE, &
     FoX_INVALID_XML_NAME, WRONG_DOCUMENT_ERR, FoX_INVALID_TEXT, & 
     FoX_INVALID_CHARACTER, FoX_INVALID_COMMENT, FoX_INVALID_CDATA_SECTION, &
-    FoX_INVALID_PI_DATA, NOT_SUPPORTED_ERR
+    FoX_INVALID_PI_DATA, NOT_SUPPORTED_ERR, FoX_INVALID_ENTITY
 
 ')`'dnl
 dnl
@@ -278,6 +278,7 @@ TOHW_m_dom_contents(`
     type(Node), pointer :: np
 
     type(Node), pointer :: ent
+    integer :: i
 
     if (doc%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
@@ -288,17 +289,20 @@ TOHW_m_dom_contents(`
     endif
 
     np => createNode(doc, ENTITY_REFERENCE_NODE, name, "")
-
-    ent => getNamedItem(getEntities(getDocType(doc)), name)
-
-    if (associated(ent)) then
-      ! FIXME here we should actually parse the entity reference
-      ! and add all its children.
-      ! This works if it is just text though.
-      ent => appendChild(np, cloneNode(ent%firstChild, .true., ex))
+    if (getGCstate(doc)) then ! otherwise the parser will fill these nodes in itself
+      ! FIXME except I think that gets switched off when creating atts sometimes ... need to check
+      ent => getNamedItem(getEntities(getDocType(doc)), name)
+      if (ent%illFormed) then
+        TOHW_m_dom_throw_error(FoX_INVALID_ENTITY)
+      endif
+      if (associated(ent)) then
+        do i = 0, getLength(getChildNodes(ent)) - 1
+          ent => appendChild(np, cloneNode(item(getChildNodes(ent), i), .true., ex))
+          call setReadOnlyNode(ent, .true.)
+        enddo
+      endif
+      ! FIXME in case of recursive entity references?
     endif
-    ! FIXME all children should be readonly at this stage.
-    ! FIXME all cloned children need to be marked ...
     if (getGCstate(doc)) then
       np%inDocument = .false.
       call append(doc%docExtras%hangingnodes, np)

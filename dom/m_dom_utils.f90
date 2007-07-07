@@ -58,7 +58,6 @@ contains
          write(*,"(3a,i0)") repeat(" ", indent_level), &
                         getNodeName(temp), " of type ", &
                         getNodeType(temp)
-         !write(*,"(2a)") "containing value : ", getNodeValue(temp)
          if (hasChildNodes(temp)) then
             indent_level = indent_level + 3
             call dump2(getFirstChild(temp))
@@ -70,7 +69,7 @@ contains
     end subroutine dump2
 
   end subroutine dumpTree
-!----------------------------------------------------------------
+
 
   subroutine serialize(startNode,Name)
 
@@ -103,8 +102,6 @@ contains
     this => arg
 
 !FIXME options for entityrefs & cdata ...
-
-!FIXME output doctype
 
 
     i = 0
