@@ -13,14 +13,15 @@ module m_dom_utils
   use m_dom_dom, only: haschildnodes, getNodeName, getNodeType, &
     getFirstChild, getNextSibling, getlength, item, getDocumentElement, getOwnerElement, &
     getNameSpaceURI, getPrefix, getLocalName, getAttributes, getParentNode, &
-    getNodeName, getNodeValue, getData, getName, getTagName, getValue, getTarget
+    getNodeName, getNodeValue, getData, getName, getTagName, getValue, getTarget, &
+    getEntities, getNotations, item, getSystemId, getPublicId, getNotationName, getNodeValue
 
 
   use FoX_wxml, only: xmlf_t
   use FoX_wxml, only: xml_OpenFile, xml_Close
   use FoX_wxml, only: xml_AddXMLDeclaration
-  use FoX_wxml, only: xml_DeclareNamespace
-  use FoX_wxml, only: xml_AddAttribute
+  use FoX_wxml, only: xml_DeclareNamespace, xml_AddDOCTYPE, xml_AddInternalEntity
+  use FoX_wxml, only: xml_AddAttribute, xml_AddExternalEntity, xml_AddNotation
   use FoX_wxml, only: xml_AddCharacters
   use FoX_wxml, only: xml_NewElement
   use FoX_wxml, only: xml_EndElement
@@ -96,7 +97,8 @@ contains
     type(Node), pointer :: doc
 
     type(Node), pointer :: this, arg
-    integer :: i
+    type(NamedNodeMap), pointer :: nnm
+    integer :: i, j
     logical :: doneChildren, doneAttributes
     this => arg
 
@@ -113,7 +115,6 @@ contains
       if (.not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
       if (.not.doneChildren) then
 
-print*,"GOING DOWN", getNodeType(this), getNodeName(this)
     select case(getNodeType(this))
     case (ELEMENT_NODE)
       call xml_NewElement(xf, getTagName(this))
@@ -131,6 +132,36 @@ print*,"GOING DOWN", getNodeType(this), getNodeName(this)
       call xml_AddXMLPI(xf, getTarget(this), getData(this))
     case (COMMENT_NODE)
       call xml_AddComment(xf, getData(this))
+    case (DOCUMENT_TYPE_NODE)
+      call xml_AddDOCTYPE(xf, getName(this))
+      nnm => getNotations(this)
+      do j = 0, getLength(nnm)-1
+        if (getSystemId(item(nnm, j))=="") then
+          call xml_AddNotation(xf, getNodeName(item(nnm, j)), public=getPublicId(item(nnm, j)))
+        elseif (getPublicId(item(nnm, j))=="") then
+          call xml_AddNotation(xf, getNodeName(item(nnm, j)), system=getSystemId(item(nnm, j)))
+        else
+          call xml_AddNotation(xf, getNodeName(item(nnm, j)), system=getSystemId(item(nnm, j)), &
+            public=getPublicId(item(nnm, j)))
+        endif
+      enddo
+      nnm => getEntities(this)
+      do j = 0, getLength(nnm)-1
+        if (getSystemId(item(nnm, j))=="") then
+          call xml_AddInternalEntity(xf, getNodeName(item(nnm, j)), getNodeValue(item(nnm, j)))
+        elseif (getPublicId(item(nnm, j))=="".and.getNotationName(item(nnm, j))=="") then
+          call xml_AddExternalEntity(xf, getNodeName(item(nnm, j)), system=getSystemId(item(nnm, j)))
+        elseif (getNotationName(item(nnm, j))=="") then
+          call xml_AddExternalEntity(xf, getNodeName(item(nnm, j)), system=getSystemId(item(nnm, j)), &
+            public=getPublicId(item(nnm, j)))
+        elseif (getPublicId(item(nnm, j))=="") then
+          call xml_AddExternalEntity(xf, getNodeName(item(nnm, j)), system=getSystemId(item(nnm, j)), &
+            notation=getNotationName(item(nnm, j)))
+        else
+          call xml_AddExternalEntity(xf, getNodeName(item(nnm, j)), system=getSystemId(item(nnm, j)), &
+            public=getPublicId(item(nnm, j)), notation=getNotationName(item(nnm, j)))
+        endif
+      enddo
     end select
 
 
@@ -138,7 +169,6 @@ print*,"GOING DOWN", getNodeType(this), getNodeName(this)
         if (getNodeType(this)==ELEMENT_NODE) doneAttributes = .true.
 
 
-print*,"GOING UP", getNodeType(this), getNodeName(this)
     if (getNodeType(this)==ELEMENT_NODE) then
       call xml_EndElement(xf, getTagName(this))
     endif

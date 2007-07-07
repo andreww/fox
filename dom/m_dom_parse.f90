@@ -17,7 +17,7 @@ module m_dom_parse
   use m_dom_dom, only: createComment, getEntities, item, setSpecified
   use m_dom_dom, only: createElementNS, getNotations, getLastChild
   use m_dom_dom, only: createTextNode, createEntity, getAttributes
-  use m_dom_dom, only: createNotation, setNamedItem, getNodeName
+  use m_dom_dom, only: createNotation, setNamedItem, getNodeName, setNodeValue
   use m_dom_dom, only: createEmptyDocument, getXMLVersion, createDocumentType
   use m_dom_dom, only: getParentNode, setDocumentElement, getDocType, setDocType
   use m_dom_dom, only: append, getNodeType, setReadOnly, getLength, getChildNodes
@@ -197,7 +197,7 @@ contains
     
     type(Node), pointer :: np
 
-    np => createNotation(mainDoc, name, publicId, systemId)
+    np => createNotation(mainDoc, name, publicId=publicId, systemId=systemId)
 ! FIXME what if two entities with the same name
     np => setNamedItem(getNotations(getDocType(mainDoc)), np)
   end subroutine notationDecl_handler
@@ -218,6 +218,7 @@ contains
 
     oldcurrent => current
     current => createEntity(mainDoc, name, "", "", "")
+    call setNodeValue(current, value)
 
     call open_xml_string(subsax, value)
     call sax_parse(subsax%fx, subsax%fb,                                        &
@@ -234,7 +235,6 @@ contains
 
 ! FIXME what if two entities with the same name
     current => setNamedItem(getEntities(getDocType(mainDoc)), current)
-
     current => oldcurrent
 
   end subroutine internalEntityDecl_handler
@@ -303,7 +303,6 @@ contains
   end subroutine skippedEntity_handler
 
   function parsefile(filename, configuration)
-
 ! FIXME should do string too.
 
     character(len=*), intent(in) :: filename

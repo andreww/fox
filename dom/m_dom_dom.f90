@@ -4598,8 +4598,8 @@ endif
   function createNotation(doc, name, publicId, systemId) result(np)
     type(Node), pointer :: doc
     character(len=*), intent(in) :: name
-    character(len=*), intent(in), optional :: publicId
-    character(len=*), intent(in), optional :: systemId
+    character(len=*), intent(in) :: publicId
+    character(len=*), intent(in) :: systemId
     type(Node), pointer :: np
 
     if (doc%nodeType/=DOCUMENT_NODE) then
@@ -4608,8 +4608,8 @@ endif
     endif
 
     np => createNode(doc, NOTATION_NODE, name, "")
-    if (present(publicId)) np%publicId => vs_str_alloc(publicId)
-    if (present(systemId)) np%systemId => vs_str_alloc(systemId)
+    np%publicId => vs_str_alloc(publicId)
+    np%systemId => vs_str_alloc(systemId)
     
   end function createNotation
 

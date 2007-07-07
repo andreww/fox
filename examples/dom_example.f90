@@ -9,7 +9,7 @@ program dom_example
   type(NodeList) :: interest
   integer :: i
 
-  myDoc => parsefile('test.xml')
+  myDoc => parsefile('test.xml', "entities")
   call serialize(myDoc, 'myDoc.xml')
 stop
   myOtherDoc => parsefile('test.xml')
