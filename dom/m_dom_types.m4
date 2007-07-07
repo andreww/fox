@@ -127,8 +127,10 @@ TOHW_m_dom_publics(`
     ! DOMCONFIGURATION
 
     !TYPEINFO schemaTypeInfo
-    logical :: isId ! attribute
+    logical :: isId = .false. ! attribute
     ! In order to keep all node lists live ..
+
+    logical :: illFormed = .false. ! entity
 
     logical :: inDocument = .false.! For a node, is this node associated to the doc?
 !!
@@ -161,6 +163,9 @@ TOHW_m_dom_publics(`
   public :: ListNode
   public :: NodeList
   public :: NamedNodeMap
+
+  public :: destroyAllNodesRecursively
+  public :: setIllFormed
 
 ')`'dnl
 dnl
@@ -313,6 +318,11 @@ TOHW_m_dom_contents(`
     this => arg
 
 TOHW_m_dom_treewalk(`',`',`deadNode')
+
+    deallocate(arg%childNodes%nodes)
+    allocate(arg%childNodes%nodes(0))
+    arg%firstChild => null()
+    arg%lastChild => null()
 
   end subroutine destroyAllNodesRecursively
 

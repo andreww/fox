@@ -12,6 +12,13 @@ TOHW_m_dom_publics(`
 dnl
 TOHW_m_dom_contents(`
 
+  TOHW_subroutine(setIllFormed, (arg, p))
+    type(Node), pointer :: arg
+    logical, intent(in) :: p
+    
+    arg%illFormed = p
+  end subroutine setIllFormed    
+
   TOHW_function(getNotationName, (arg), c)
     type(Node), intent(in) :: arg
     character(len=size(arg%notationName)) :: c

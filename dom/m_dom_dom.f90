@@ -203,8 +203,10 @@ module m_dom_dom
     ! DOMCONFIGURATION
 
     !TYPEINFO schemaTypeInfo
-    logical :: isId ! attribute
+    logical :: isId = .false. ! attribute
     ! In order to keep all node lists live ..
+
+    logical :: illFormed = .false. ! entity
 
     logical :: inDocument = .false.! For a node, is this node associated to the doc?
 !!
@@ -237,6 +239,9 @@ module m_dom_dom
   public :: ListNode
   public :: NodeList
   public :: NamedNodeMap
+
+  public :: destroyAllNodesRecursively
+  public :: setIllFormed
 
 
   
@@ -671,6 +676,11 @@ endif
     enddo
 
 
+
+    deallocate(arg%childNodes%nodes)
+    allocate(arg%childNodes%nodes(0))
+    arg%firstChild => null()
+    arg%lastChild => null()
 
   end subroutine destroyAllNodesRecursively
 
@@ -5865,6 +5875,14 @@ endif
   end subroutine replaceData
  
 
+
+  subroutine setIllFormed(arg, p, ex)
+    type(DOMException), intent(inout), optional :: ex
+    type(Node), pointer :: arg
+    logical, intent(in) :: p
+    
+    arg%illFormed = p
+  end subroutine setIllFormed    
 
   function getNotationName(arg, ex)result(c) 
     type(DOMException), intent(inout), optional :: ex

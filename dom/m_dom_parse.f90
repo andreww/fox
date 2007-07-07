@@ -23,7 +23,7 @@ module m_dom_parse
   use m_dom_dom, only: append, getNodeType, setReadOnly, getLength, getChildNodes
   use m_dom_dom, only: removeChild, appendChild, getNotations, setAttributeNodeNS, setvalue
   use m_dom_dom, only: setAttributeNodeNS, replace_xds, setGCstate, createCdataSection
-  use m_dom_dom, only: createEntityReference
+  use m_dom_dom, only: createEntityReference, destroyAllNodesRecursively, setIllFormed
   use m_dom_debug, only: dom_debug
 
   implicit none
@@ -154,6 +154,9 @@ contains
   end subroutine startDocument_handler
 
   subroutine endDocument_Handler
+    ! FIXME also walk across tree, and fix all entityReference nodes
+    ! so they have appropriate children
+    !FIXME set readonly appropriately
     call setGCstate(mainDoc, .true.)
   end subroutine endDocument_Handler
 
@@ -179,47 +182,11 @@ contains
     type(notation), pointer :: thisNotation
     integer :: i
 
-!FIXME set readonly appropriately below
-
     dt => getDocType(mainDoc)
     call replace_xds(mainDoc, state)
     call setGCstate(mainDoc, .false.)
 
-
-! FIXME this is having no effect below, why?
-    entities => getEntities(dt)
-    notations => getNotations(dt)
-    do i = 1, ubound(state%entityList%list, 1)
-      thisEntity => state%entityList%list(i)
-      np => createEntity(mainDoc, str_vs(thisEntity%code), &
-                         str_vs(thisEntity%publicId), &
-                         str_vs(thisEntity%systemId), &
-                         str_vs(thisEntity%notation))
-      if (.not.(thisEntity%external)) then
-        ! Here we assume all internal entities are simply text
-        ! FIXME in fact if they hold markup, we should indicate
-        ! that this is so. We cannot parse them, because this
-        ! might fail, but the failure only matters if someone
-        ! tries to add an entity reference later on.
-        ! They contain markup iff there is a '<' in them.
-        ! Unless maybe there is an & - have we expanded at this point?
-        nt => createTextNode(mainDoc, str_vs(thisEntity%repl))
-        nt => appendChild(np, nt)
-      endif
-      np => setNamedItem(entities, np)
-    enddo
-    do i = 1, ubound(state%nlist%notations, 1)
-      thisNotation => state%nlist%notations(i)
-      np => createNotation(mainDoc, str_vs(thisNotation%name), &
-                         str_vs(thisEntity%publicId), &
-                         str_vs(thisEntity%systemId))
-      np => setNamedItem(notations, np)
-    enddo
-
     ! FIXME also copy internalSubset from xds
-
-    ! FIXME also walk across tree, and fix all entityReference nodes
-    ! so they have appropriate children
 
   end subroutine FoX_endDTD_handler
 
@@ -230,7 +197,8 @@ contains
     
     type(Node), pointer :: np
 
-    np => createNotation(mainDoc, name, publicId, systemId) 
+    np => createNotation(mainDoc, name, publicId, systemId)
+! FIXME what if two entities with the same name
     np => setNamedItem(getNotations(getDocType(mainDoc)), np)
   end subroutine notationDecl_handler
 
@@ -252,22 +220,37 @@ contains
     current => createEntity(mainDoc, name, "", "", "")
 
     call open_xml_string(subsax, value)
-    ! parse value with given namespaces & entities, with only necessary handlers:
-    !
-    ! call sax_parse(startElement_handler=startElement_handler, &
-    !                endElement_handler=endElement_handler,     & 
-    !                characters_handler=characters_handler,     &
-    !                cdataSection_handler=CdataSection_handler, &
-    !                comment_handler=comment_handler,           &
-    !                processingInstruction_handler,             &
-    !                error_handler = ,
-    !                nsDict= , entityList= )
-    ! and need sax_parse to start off well-formed, in character context
+    call sax_parse(subsax%fx, subsax%fb,                                        &
+                   startElement_handler=startElement_handler,                   &
+                   endElement_handler=endElement_handler,                       &
+                   characters_handler=characters_handler,                       &
+                   startCdata_handler=startCdata_handler,                       &
+                   endCdata_handler=endCdata_handler,                           &
+                   comment_handler=comment_handler,                             &
+                   processingInstruction_handler=processingInstruction_handler, &
+                   error_handler=entityErrorHandler,                            &
+                   startInCharData = .true.)
     call close_xml_t(subsax)
+
+! FIXME what if two entities with the same name
+    current => setNamedItem(getEntities(getDocType(mainDoc)), current)
 
     current => oldcurrent
 
   end subroutine internalEntityDecl_handler
+
+  subroutine entityErrorHandler(msg)
+    character(len=*), intent(in) :: msg
+
+    !This gets called if parsing of an internal entity failed. If so,
+    !then we need to destroy all nodes which were being generated as
+    !children of this entity, then mark the entity as ill-formed - but
+    !otherwise carry on parsing the document, and only throw an error
+    !if a reference is made to it.
+
+    call destroyAllNodesRecursively(current)
+    call setIllFormed(current, .true.)
+  end subroutine entityErrorHandler
 
   subroutine externalEntityDecl_handler(name, publicId, systemId)
     character(len=*), intent(in) :: name
@@ -373,7 +356,7 @@ contains
       internalEntityDecl_handler=internalEntityDecl_handler,    &
       comment_handler=comment_handler,              &
       endCdata_handler=endCdata_handler,             &
-      endDTD_handler=endDTD_handler,                &
+      !endDTD_handler=endDTD_handler,                &
       endEntity_handler=endEntity_handler,             &
       startCdata_handler=startCdata_handler,    &
       startDTD_handler=startDTD_handler,          &
