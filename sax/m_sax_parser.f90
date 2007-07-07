@@ -25,7 +25,7 @@ module m_sax_parser
     checkCharacterEntityReference, likeCharacterEntityReference, &
     checkQName, checkPITarget, resolveSystemId, checkRepCharEntityReference
   use m_common_namespaces, only: getnamespaceURI, invalidNS, &
-    checkNamespaces, checkEndNamespaces, &
+    checkNamespaces, checkEndNamespaces, namespaceDictionary, &
     initNamespaceDictionary, destroyNamespaceDictionary
   use m_common_notations, only: init_notation_list, destroy_notation_list, &
     add_notation, notation_exists
@@ -144,7 +144,8 @@ contains
     startDTD_handler,              &
     startEntity_handler,           &
     validate,                      &
-    FoX_endDTD_handler)
+    FoX_endDTD_handler,            &
+    startInCharData)
 
     type(sax_parser_t), intent(inout) :: fx
     type(file_buffer_t), intent(inout) :: fb
@@ -177,6 +178,7 @@ contains
     optional :: startEntity_handler
 
     logical, intent(in), optional :: validate
+    logical, intent(in), optional :: startInCharData
 
     interface
 
@@ -306,7 +308,7 @@ contains
 
     end interface
 
-    logical :: validCheck, processDTD, pe
+    logical :: validCheck, startInCharData_, processDTD, pe
     integer :: i, iostat, temp_i
     character, pointer :: tempString(:)
     type(element_t), pointer :: elem
@@ -320,10 +322,19 @@ contains
     else
       validCheck = .false.
     endif
+    if (present(startInCharData)) then
+      startInCharData_ = startInCharData
+    else
+      startInCharData_ = .false.
+    endif
     processDTD = .true.
     iostat = 0
 
-    if (fx%parse_stack==0) then
+    if (startInCharData_) then
+      fx%context = CTXT_IN_CONTENT
+      fx%state = ST_CHAR_IN_CONTENT
+      fx%whitespace = WS_PRESERVE
+    elseif (fx%parse_stack==0) then
       call parse_xml_declaration(fx, fb, iostat)
       if (iostat/=0) goto 100
       fx%context = CTXT_BEFORE_DTD
@@ -683,9 +694,6 @@ contains
         if (size(fx%token)>0) then
           if (present(characters_handler)) call characters_handler(str_vs(fx%token))
         endif
-        !FIXME If current element is not ANY or EMPTY or MIXED then
-        ! any whitespace here is not significant, and we should call
-        ! back to ignorableWhitespace.
         fx%whitespace = WS_FORBIDDEN
         fx%state = ST_TAG_IN_CONTENT
 
@@ -781,11 +789,17 @@ contains
           if (in_error(fx%error_stack)) goto 100
           deallocate(fx%name)
           if (is_empty(fx%elstack)) then
-            !we're done
-            fx%well_formed = .true.
-            fx%state = ST_MISC
-            fx%context = CTXT_AFTER_CONTENT
-            fx%whitespace = WS_DISCARD
+            if (startInCharData_) then
+              fx%well_formed = .true.
+              fx%state = ST_CHAR_IN_CONTENT
+              fx%whitespace = WS_PRESERVE
+            else
+              !we're done
+              fx%well_formed = .true.
+              fx%state = ST_MISC
+              fx%context = CTXT_AFTER_CONTENT
+              fx%whitespace = WS_DISCARD
+            endif
           else
             fx%whitespace = WS_PRESERVE
             fx%state = ST_CHAR_IN_CONTENT
@@ -1330,7 +1344,15 @@ contains
 
     if (iostat==io_eof) then ! error is end of file then
       ! EOF of main file
-      if (fx%well_formed.and.fx%state==ST_MISC) then
+      if (startInChardata_) then
+        if (fx%well_formed) then
+          if (fx%state==ST_CHAR_IN_CONTENT.and.size(fx%token)>0) then
+            if (present(characters_handler)) call characters_handler(str_vs(fx%token))
+          endif
+        else
+          if (present(error_handler)) call error_handler("Ill-formed XML fragment")
+        endif
+      elseif (fx%well_formed.and.fx%state==ST_MISC) then
         if (present(endDocument_handler)) &
           call endDocument_handler()
       else

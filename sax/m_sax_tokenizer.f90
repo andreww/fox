@@ -133,9 +133,9 @@ contains
 
     elseif (fx%state==ST_CHAR_IN_CONTENT) then
       call get_characters_until_one_of(fb, '<&', iostat)
-      if (iostat/=0) return
       fx%token => fb%namebuffer
       nullify(fb%namebuffer)
+      if (iostat/=0) return
 
     elseif (fx%state==ST_DTD_ELEMENT_CONTENTS) then
       c = get_characters(fb, 1, iostat)
