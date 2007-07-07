@@ -35,7 +35,10 @@ TOHW_m_dom_publics(`
   public :: setPrefix
   public :: getLocalName
   public :: hasAttributes
-!  public :: isSameNode
+  public :: isSameNode
+
+  public :: setStringValue
+  public :: getStringValue
 
 ')`'dnl
 TOHW_m_dom_contents(`
@@ -116,7 +119,52 @@ TOHW_m_dom_contents(`
     end select
     
   end function getNodeValue
+
+  TOHW_subroutine(setStringValue, (arg, stringValue))
+    type(Node), pointer :: arg
+    character(len=*) :: stringValue
   
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+
+    if (getNodeType(arg)/=ENTITY_NODE) then
+      TOHW_m_dom_throw_error(FoX_INTERNAL_ERROR)
+    endif
+
+    if (associated(arg%nodeValue)) deallocate(arg%nodeValue)
+    arg%nodeValue => vs_str_alloc(stringValue)
+
+  end subroutine setStringValue
+
+  pure function getStringValue_len(arg, p) result(n)
+    type(Node), pointer :: arg
+    logical, intent(in) :: p
+    integer :: n
+
+    if (p) then
+      n = size(arg%nodeValue)
+    else
+      n = 0
+    endif
+  end function getStringValue_len
+
+  TOHW_function(getStringValue, (arg), s)
+    type(Node), pointer :: arg
+    character(len=getStringValue_len(arg, associated(arg))) :: s
+  
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+
+    if (getNodeType(arg)/=ENTITY_NODE) then
+      TOHW_m_dom_throw_error(FoX_INTERNAL_ERROR)
+    endif
+
+    s = str_vs(arg%nodeValue)
+
+  end function getStringValue
+    
   TOHW_subroutine(setNodeValue, (arg, nodeValue))
     type(Node), pointer :: arg
     character(len=*) :: nodeValue

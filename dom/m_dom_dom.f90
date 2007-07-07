@@ -270,7 +270,10 @@ module m_dom_dom
   public :: setPrefix
   public :: getLocalName
   public :: hasAttributes
-!  public :: isSameNode
+  public :: isSameNode
+
+  public :: setStringValue
+  public :: getStringValue
 
 
 
@@ -799,7 +802,78 @@ endif
     end select
     
   end function getNodeValue
+
+  subroutine setStringValue(arg, stringValue, ex)
+    type(DOMException), intent(inout), optional :: ex
+    type(Node), pointer :: arg
+    character(len=*) :: stringValue
   
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "setStringValue", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    if (getNodeType(arg)/=ENTITY_NODE) then
+      call throw_exception(FoX_INTERNAL_ERROR, "setStringValue", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    if (associated(arg%nodeValue)) deallocate(arg%nodeValue)
+    arg%nodeValue => vs_str_alloc(stringValue)
+
+  end subroutine setStringValue
+
+  pure function getStringValue_len(arg, p) result(n)
+    type(Node), pointer :: arg
+    logical, intent(in) :: p
+    integer :: n
+
+    if (p) then
+      n = size(arg%nodeValue)
+    else
+      n = 0
+    endif
+  end function getStringValue_len
+
+  function getStringValue(arg, ex)result(s) 
+    type(DOMException), intent(inout), optional :: ex
+    type(Node), pointer :: arg
+    character(len=getStringValue_len(arg, associated(arg))) :: s
+  
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "getStringValue", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    if (getNodeType(arg)/=ENTITY_NODE) then
+      call throw_exception(FoX_INTERNAL_ERROR, "getStringValue", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    s = str_vs(arg%nodeValue)
+
+  end function getStringValue
+    
   subroutine setNodeValue(arg, nodeValue, ex)
     type(DOMException), intent(inout), optional :: ex
     type(Node), pointer :: arg

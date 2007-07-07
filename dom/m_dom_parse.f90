@@ -15,8 +15,8 @@ module m_dom_parse
   use m_dom_dom, only: DOCUMENT_NODE, getOwnerDocument, getDocumentElement
   use m_dom_dom, only: createProcessingInstruction, getDocType, createAttributeNS
   use m_dom_dom, only: createComment, getEntities, item, setSpecified
-  use m_dom_dom, only: createElementNS, getNotations, getLastChild
-  use m_dom_dom, only: createTextNode, createEntity, getAttributes
+  use m_dom_dom, only: createElementNS, getNotations, getLastChild, getNodeValue
+  use m_dom_dom, only: createTextNode, createEntity, getAttributes, setStringValue
   use m_dom_dom, only: createNotation, setNamedItem, getNodeName, setNodeValue
   use m_dom_dom, only: createEmptyDocument, getXMLVersion, createDocumentType
   use m_dom_dom, only: getParentNode, setDocumentElement, getDocType, setDocType
@@ -218,7 +218,7 @@ contains
 
     oldcurrent => current
     current => createEntity(mainDoc, name, "", "", "")
-    call setNodeValue(current, value)
+    call setStringValue(current, value)
 
     call open_xml_string(subsax, value)
     call sax_parse(subsax%fx, subsax%fb,                                        &

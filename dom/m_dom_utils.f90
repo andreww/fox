@@ -14,7 +14,7 @@ module m_dom_utils
     getFirstChild, getNextSibling, getlength, item, getDocumentElement, getOwnerElement, &
     getNameSpaceURI, getPrefix, getLocalName, getAttributes, getParentNode, &
     getNodeName, getNodeValue, getData, getName, getTagName, getValue, getTarget, &
-    getEntities, getNotations, item, getSystemId, getPublicId, getNotationName, getNodeValue
+    getEntities, getNotations, item, getSystemId, getPublicId, getNotationName, getStringValue
 
 
   use FoX_wxml, only: xmlf_t
@@ -148,7 +148,7 @@ contains
       nnm => getEntities(this)
       do j = 0, getLength(nnm)-1
         if (getSystemId(item(nnm, j))=="") then
-          call xml_AddInternalEntity(xf, getNodeName(item(nnm, j)), getNodeValue(item(nnm, j)))
+          call xml_AddInternalEntity(xf, getNodeName(item(nnm, j)), getStringValue(item(nnm, j)))
         elseif (getPublicId(item(nnm, j))=="".and.getNotationName(item(nnm, j))=="") then
           call xml_AddExternalEntity(xf, getNodeName(item(nnm, j)), system=getSystemId(item(nnm, j)))
         elseif (getNotationName(item(nnm, j))=="") then
