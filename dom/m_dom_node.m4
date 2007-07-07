@@ -781,9 +781,10 @@ TOHW_m_dom_contents(`
 
     type(Node), pointer :: doc, thatParent, this, new, ERchild
 
-    logical :: doneAttributes, doneChildren, readonly
+    logical :: doneAttributes, doneChildren, readonly, quickFix
     integer :: i
 
+print*,"ENTERING CLONENODE..."
     if (.not.associated(arg)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif
@@ -820,7 +821,7 @@ TOHW_m_dom_treewalk(`
       case (ENTITY_REFERENCE_NODE)
         ERchild => this
         readonly = .true.
-        new => createEntityReference(doc, getNodeName(this))
+        new => createEmptyEntityReference(doc, getNodeName(this))
       case (ENTITY_NODE)
         return
       case (PROCESSING_INSTRUCTION_NODE)

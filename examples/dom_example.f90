@@ -13,7 +13,6 @@ program dom_example
   call dumpTree(myDoc)
   call serialize(myDoc, 'myDoc.xml')
   myOtherDoc => parsefile('test.xml')
-  print*,"LEN", getLength(getChildNodes(getDocumentElement(myDoc)))
   np => createElement(myDoc, 'a')
 
   imp => getImplementation(myDoc)
@@ -22,7 +21,6 @@ program dom_example
   dummy => createDocumentFragment(myDoc)
 
   np2 => getDocumentElement(myDoc)
-
   np => importNode(myDoc, getDocumentElement(myOtherDoc), .true.)
 
   np => appendChild(np2, np)
@@ -35,12 +33,7 @@ program dom_example
 
   call removeAttribute(np, "b")
 
-  print*,getNodeType(np)
   np => item(getChildNodes(np), 1)
-  print*, getNodeType(np)
-  do i = 1, getLength(getAttributes(np))
-    print*, getName(item(getAttributes(np), i-1))
-  enddo
   call setNodeValue(getAttributeNode(np, "e"), "fg")
 
   np => removeAttributeNode(np, getAttributeNode(np, "e"))
@@ -50,14 +43,8 @@ program dom_example
   dummy => createDocumentFragment(myDoc)
   np => appendChild(dummy, createTextNode(myDoc, "lalal"))
   np => appendChild(dummy, createTextNode(myDoc, " lalal"))
-  print*,getLength(getChildNodes(np2))
   dummy => insertBefore(np2, dummy, null())
-  print*,"LEN", getLength(getChildNodes(np2))
-  do i = 1, getLength(getChildNodes(np2))
-    print*, "NT", getNodeType(item(getChildNodes(np2), i-1))
-  enddo
   dummy => appendChild(np2, cloneNode(np2, .true.))
-stop
 
   dummy => appendChild(np2, createTextNode(myDoc, 'a'))
   dummy => appendChild(np2, createTextNode(myDoc, 'a'))

@@ -351,6 +351,7 @@ module m_dom_dom
   public :: createProcessingInstruction
   public :: createAttribute
   public :: createEntityReference
+  public :: createEmptyEntityReference
   public :: getElementsByTagName
   public :: importNode
   public :: createElementNS
@@ -2088,9 +2089,10 @@ endif
 
     type(Node), pointer :: doc, thatParent, this, new, ERchild
 
-    logical :: doneAttributes, doneChildren, readonly
+    logical :: doneAttributes, doneChildren, readonly, quickFix
     integer :: i
 
+print*,"ENTERING CLONENODE..."
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "cloneNode", ex)
 if (present(ex)) then
@@ -2142,7 +2144,7 @@ endif
       case (ENTITY_REFERENCE_NODE)
         ERchild => this
         readonly = .true.
-        new => createEntityReference(doc, getNodeName(this))
+        new => createEmptyEntityReference(doc, getNodeName(this))
       case (ENTITY_NODE)
         return
       case (PROCESSING_INSTRUCTION_NODE)
@@ -4140,6 +4142,51 @@ endif
     endif
 
   end function createEntityReference
+
+  function createEmptyEntityReference(doc, name, ex)result(np) 
+    type(DOMException), intent(inout), optional :: ex
+    type(Node), pointer :: doc
+    character(len=*), intent(in) :: name
+    type(Node), pointer :: np
+
+    type(Node), pointer :: ent
+    integer :: i
+
+    if (doc%nodeType/=DOCUMENT_NODE) then
+      call throw_exception(FoX_INVALID_NODE, "createEmptyEntityReference", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    elseif (.not.checkChars(name, getXmlVersionEnum(doc))) then
+      call throw_exception(INVALID_CHARACTER_ERR, "createEmptyEntityReference", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    elseif (.not.checkName(name, getXds(doc))) then
+      call throw_exception(FoX_INVALID_XML_NAME, "createEmptyEntityReference", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    np => createNode(doc, ENTITY_REFERENCE_NODE, name, "")
+    if (getGCstate(doc)) then
+      np%inDocument = .false.
+      call append(doc%docExtras%hangingnodes, np)
+    else
+      np%inDocument = .true.
+    endif
+
+  end function createEmptyEntityReference
 
   function getElementsByTagName(doc, tagName, name, ex)result(list) 
     type(DOMException), intent(inout), optional :: ex

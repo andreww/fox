@@ -25,6 +25,7 @@ TOHW_m_dom_publics(`
   public :: createProcessingInstruction
   public :: createAttribute
   public :: createEntityReference
+  public :: createEmptyEntityReference
   public :: getElementsByTagName
   public :: importNode
   public :: createElementNS
@@ -311,6 +312,32 @@ TOHW_m_dom_contents(`
     endif
 
   end function createEntityReference
+
+  TOHW_function(createEmptyEntityReference, (doc, name), np)
+    type(Node), pointer :: doc
+    character(len=*), intent(in) :: name
+    type(Node), pointer :: np
+
+    type(Node), pointer :: ent
+    integer :: i
+
+    if (doc%nodeType/=DOCUMENT_NODE) then
+      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
+    elseif (.not.checkChars(name, getXmlVersionEnum(doc))) then
+      TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
+    elseif (.not.checkName(name, getXds(doc))) then
+      TOHW_m_dom_throw_error(FoX_INVALID_XML_NAME)
+    endif
+
+    np => createNode(doc, ENTITY_REFERENCE_NODE, name, "")
+    if (getGCstate(doc)) then
+      np%inDocument = .false.
+      call append(doc%docExtras%hangingnodes, np)
+    else
+      np%inDocument = .true.
+    endif
+
+  end function createEmptyEntityReference
 
   TOHW_function(getElementsByTagName, (doc, tagName, name), list)
     type(Node), pointer :: doc

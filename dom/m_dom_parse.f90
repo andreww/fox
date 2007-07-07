@@ -26,7 +26,7 @@ module m_dom_parse
   use m_dom_dom, only: setAttributeNodeNS, replace_xds, setGCstate, createCdataSection
   use m_dom_dom, only: createEntityReference, destroyAllNodesRecursively, setIllFormed
   use m_dom_dom, only: createElement, createAttribute, getNamedItem, getTagName
-  use m_dom_dom, only: setReadonlyNode, setReadOnlyMap
+  use m_dom_dom, only: setReadonlyNode, setReadOnlyMap, createEmptyEntityReference
   use m_dom_debug, only: dom_debug
 
   implicit none
@@ -76,7 +76,6 @@ contains
     if (getNodeType(current)==DOCUMENT_NODE) then
       call setDocumentElement(mainDoc, el)
     endif
-
     current => appendChild(current,el)
     if (associated(inEntity)) call setReadOnlyMap(getAttributes(current), .true.)
 
@@ -102,7 +101,6 @@ contains
     else
       temp => createTextNode(mainDoc, chunk)
     endif
-
     temp => appendChild(current, temp)
     
     if (associated(inEntity)) call setReadOnlyNode(temp, .true.)
@@ -152,7 +150,6 @@ contains
 
     np => getDocType(mainDoc)
     call setDocType(np, name, publicId, systemId)
-
     np => appendChild(mainDoc, np)
 
   end subroutine startDTD_handler
@@ -266,7 +263,7 @@ contains
       if (.not.associated(inEntity)) then
         inEntity => vs_str_alloc(name)
       endif
-      current => appendChild(current, createEntityReference(mainDoc, name))
+      current => appendChild(current, createEmptyEntityReference(mainDoc, name))
     endif
   end subroutine startEntity_handler
 
