@@ -11,7 +11,6 @@ program dom_example
 
   myDoc => parsefile('test.xml', "entities")
   call dumpTree(myDoc)
-  stop
   call serialize(myDoc, 'myDoc.xml')
   myOtherDoc => parsefile('test.xml')
   print*,"LEN", getLength(getChildNodes(getDocumentElement(myDoc)))
@@ -58,6 +57,7 @@ program dom_example
     print*, "NT", getNodeType(item(getChildNodes(np2), i-1))
   enddo
   dummy => appendChild(np2, cloneNode(np2, .true.))
+stop
 
   dummy => appendChild(np2, createTextNode(myDoc, 'a'))
   dummy => appendChild(np2, createTextNode(myDoc, 'a'))

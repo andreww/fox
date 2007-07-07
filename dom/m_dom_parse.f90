@@ -69,13 +69,14 @@ contains
       call setSpecified(temp, .true.)
       temp =>  setAttributeNodeNS(el, temp)
       ! FIXME check specifiedness
-      if (associated(inEntity)) call setReadOnlyNode(current, .true.)
+      if (associated(inEntity)) call setReadOnlyNode(temp, .true.)
       ! FIXME recursive readonly
     enddo
 
     if (getNodeType(current)==DOCUMENT_NODE) then
       call setDocumentElement(mainDoc, el)
     endif
+
     current => appendChild(current,el)
     if (associated(inEntity)) call setReadOnlyMap(getAttributes(current), .true.)
 
@@ -101,6 +102,7 @@ contains
     else
       temp => createTextNode(mainDoc, chunk)
     endif
+
     temp => appendChild(current, temp)
     
     if (associated(inEntity)) call setReadOnlyNode(temp, .true.)
@@ -150,6 +152,7 @@ contains
 
     np => getDocType(mainDoc)
     call setDocType(np, name, publicId, systemId)
+
     np => appendChild(mainDoc, np)
 
   end subroutine startDTD_handler
