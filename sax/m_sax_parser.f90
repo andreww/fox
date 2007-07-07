@@ -1347,8 +1347,8 @@ contains
       ! EOF of main file
       if (startInChardata_) then
         if (fx%well_formed) then
-          if (fx%state==ST_CHAR_IN_CONTENT.and.size(fx%token)>0) then
-            if (present(characters_handler)) call characters_handler(str_vs(fx%token))
+          if (fx%state==ST_CHAR_IN_CONTENT.and.associated(fx%token)) then
+            if (size(fx%token)>0.and.present(characters_handler)) call characters_handler(str_vs(fx%token))
           endif
         else
           if (present(error_handler)) call error_handler("Ill-formed XML fragment")
