@@ -334,6 +334,7 @@ contains
       fx%context = CTXT_IN_CONTENT
       fx%state = ST_CHAR_IN_CONTENT
       fx%whitespace = WS_PRESERVE
+      fx%well_formed = .true.
     elseif (fx%parse_stack==0) then
       call parse_xml_declaration(fx, fb, iostat)
       if (iostat/=0) goto 100
