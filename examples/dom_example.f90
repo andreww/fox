@@ -4,12 +4,14 @@ program dom_example
   use FoX_dom
   implicit none
 
-  type(DomImplementation), pointer :: imp
+  type(DOMImplementation), pointer :: imp
   type(Node), pointer :: myDoc, myOtherDoc, np, np2, dummy
   type(NodeList) :: interest
   integer :: i
 
   myDoc => parsefile('test.xml')
+  call serialize(myDoc, 'myDoc.xml')
+stop
   myOtherDoc => parsefile('test.xml')
   print*,"LEN", getLength(getChildNodes(getDocumentElement(myDoc)))
   np => createElement(myDoc, 'a')
@@ -24,13 +26,10 @@ program dom_example
   np => importNode(myDoc, getDocumentElement(myOtherDoc), .true.)
 
   np => appendChild(np2, np)
-  call serialize(myDoc, 'myDoc.xml')
   call serialize(myOtherDoc, 'myOtherDoc.xml')
   np => appendChild(np2, np)
 
   call setAttribute(np, "a", "b")
-
-  call setAttributeNS(np, "http://www.xml-cml.org/schema", "a:b", "c")
 
   np => getNextSibling(getFirstChild(np2))
 

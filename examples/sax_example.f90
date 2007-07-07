@@ -260,11 +260,11 @@ program sax_example
   integer :: iostat
   type(xml_t)  :: fxml
 
-  call open_xml_file(fxml, "test.xml", iostat)
-  if (iostat /= 0) then
-    write(*,*) "Cannot open file."
-    stop
-  endif
+  call open_xml_string(fxml, "kjhg")
+!  if (iostat /= 0) then
+!    write(*,*) "Cannot open file."
+!    stop
+!  endif
 
   call parse(fxml,&
     characters_handler,            &

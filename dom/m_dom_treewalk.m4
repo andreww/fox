@@ -77,6 +77,7 @@ ifelse(`$3', `parentNode', `dnl
           doneAttributes = .false.
         else
           doneChildren = .true.
+          doneAttributes = .false.
         endif
 
       else ! if doneChildren

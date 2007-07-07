@@ -644,6 +644,7 @@ endif
           doneAttributes = .false.
         else
           doneChildren = .true.
+          doneAttributes = .false.
         endif
 
       else ! if doneChildren
@@ -2138,6 +2139,7 @@ endif
           doneAttributes = .false.
         else
           doneChildren = .true.
+          doneAttributes = .false.
         endif
 
       else ! if doneChildren
@@ -2286,6 +2288,7 @@ endif
           doneAttributes = .false.
         else
           doneChildren = .true.
+          doneAttributes = .false.
         endif
 
       else ! if doneChildren
@@ -2492,6 +2495,7 @@ endif
           doneAttributes = .false.
         else
           doneChildren = .true.
+          doneAttributes = .false.
         endif
 
       else ! if doneChildren
@@ -2568,6 +2572,7 @@ endif
           doneAttributes = .false.
         else
           doneChildren = .true.
+          doneAttributes = .false.
         endif
 
       else ! if doneChildren
@@ -4203,6 +4208,7 @@ endif
           doneAttributes = .false.
         else
           doneChildren = .true.
+          doneAttributes = .false.
         endif
 
       else ! if doneChildren

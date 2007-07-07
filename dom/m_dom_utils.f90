@@ -1,3 +1,4 @@
+
 module m_dom_utils
 
   use m_common_array_str, only: str_vs, vs_str_alloc, vs_vs_alloc
@@ -53,10 +54,10 @@ contains
       type(Node), pointer :: temp     
       temp => input
       do while(associated(temp))
-         write(*,'(3a,i0)') repeat(' ', indent_level), &
+         write(*,"(3a,i0)") repeat(" ", indent_level), &
                         getNodeName(temp), " of type ", &
                         getNodeType(temp)
-         !write(*,'(2a)') 'containing value : ', getNodeValue(temp)
+         !write(*,"(2a)") "containing value : ", getNodeValue(temp)
          if (hasChildNodes(temp)) then
             indent_level = indent_level + 3
             call dump2(getFirstChild(temp))
@@ -90,183 +91,107 @@ contains
 
   end subroutine serialize
 
-  subroutine iter_dmp_xml(xf, doc)
+  subroutine iter_dmp_xml(xf, arg)
     type(xmlf_t), intent(inout) :: xf
     type(Node), pointer :: doc
 
-    type(Node), pointer :: np
+    type(Node), pointer :: this, arg
     integer :: i
     logical :: doneChildren, doneAttributes
-    np => doc
+    this => arg
 
-    i = -1
+!FIXME options for entityrefs & cdata ...
+
+!FIXME output doctype
+
+
+    i = 0
     doneChildren = .false.
     doneAttributes = .false.
     do
-      select case(getNodeType(np))
-      case (ELEMENT_NODE)
-        if (doneChildren) then
-          doneAttributes = .true.
-          call xml_EndElement(xf, getTagName(np))
-        elseif (doneAttributes) then
-          if (.not.hasChildNodes(np)) then
-            call xml_EndElement(xf, getTagName(np))
-          endif
-        else
-          ! Are there any new prefixes or namespaces to be declared?
-          ! FIXME
-          call xml_NewElement(xf, getTagName(np))
-        endif
-      case (ATTRIBUTE_NODE)
-!        FIXME NODEVALUE WHEN ENTREF PRESENT
-        call xml_AddAttribute(xf, getName(np), getValue(np))
-        doneChildren = .true. ! Ignore entity references for the moment.
-      case (TEXT_NODE)
-        call xml_AddCharacters(xf, getData(np))
-      case (CDATA_SECTION_NODE)
-        call xml_AddCharacters(xf, getData(np), parsed = .false.)
-      case (ENTITY_REFERENCE_NODE)
-        call xml_AddEntityReference(xf, getNodeName(np))
-        doneChildren = .true. ! Do not serialize children, they are part of entity
-      case (ENTITY_NODE)
-        ! FIXME
-        continue
-      case (PROCESSING_INSTRUCTION_NODE)
-        call xml_AddXMLPI(xf, getTarget(np), getData(np))
-      case (COMMENT_NODE)
-        call xml_AddComment(xf, getData(np))
-      case (DOCUMENT_NODE)
-        continue
-      case (DOCUMENT_TYPE_NODE)
-        ! FIXME
-        continue
-      case (DOCUMENT_FRAGMENT_NODE)
-        continue
-      case (NOTATION_NODE)
-        ! FIXME
-        continue
-      end select
 
-      if (getNodeType(np)==ELEMENT_NODE.and..not.doneAttributes) then
-        if (getLength(getAttributes(np))>0) then
-          np => item(getAttributes(np), 0)
-        else
-          doneAttributes = .true.
-        endif
-      elseif (getNodeType(np)==ATTRIBUTE_NODE) then
-        i = i + 1
-        if (i==getLength(getAttributes(getOwnerElement(np)))) then
-          np => item(getAttributes(getOwnerElement(np)), i)
-        else
-          i = -1
-          np => getOwnerElement(np)
-          doneAttributes = .true.
-          doneChildren = .false.
-        endif
-      elseif (hasChildNodes(np).and..not.doneChildren) then
-        np => getFirstChild(np)
-        doneChildren = .false.
-        doneAttributes = .false.
-      elseif (associated(getNextSibling(np))) then
-        np => getNextSibling(np)
-        doneChildren = .false.
-        doneAttributes = .false.
+      if (.not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
+      if (.not.doneChildren) then
+
+print*,"GOING DOWN", getNodeType(this), getNodeName(this)
+    select case(getNodeType(this))
+    case (ELEMENT_NODE)
+      call xml_NewElement(xf, getTagName(this))
+    case (ATTRIBUTE_NODE)
+      call xml_AddAttribute(xf, getName(this), getValue(this))
+      doneChildren = .true.
+    case (TEXT_NODE)
+      call xml_AddCharacters(xf, getData(this))
+    case (CDATA_SECTION_NODE)
+      call xml_AddCharacters(xf, getData(this), parsed = .false.)
+    case (ENTITY_REFERENCE_NODE)
+      call xml_AddEntityReference(xf, getNodeName(this))
+      doneChildren = .true.
+    case (PROCESSING_INSTRUCTION_NODE)
+      call xml_AddXMLPI(xf, getTarget(this), getData(this))
+    case (COMMENT_NODE)
+      call xml_AddComment(xf, getData(this))
+    end select
+
+
       else
-        doneChildren = .true.
-        np => getParentNode(np)
-        if (associated(np, doc)) exit
+        if (getNodeType(this)==ELEMENT_NODE) doneAttributes = .true.
+
+
+print*,"GOING UP", getNodeType(this), getNodeName(this)
+    if (getNodeType(this)==ELEMENT_NODE) then
+      call xml_EndElement(xf, getTagName(this))
+    endif
+
+
       endif
+      endif
+
+      if (.not.doneChildren) then
+
+        if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
+          if (getLength(getAttributes(this))>0) then
+                      this => item(getAttributes(this), 0)
+          else
+            doneAttributes = .true.
+          endif
+        elseif (hasChildNodes(this)) then
+          this => getFirstChild(this)
+          doneChildren = .false.
+          doneAttributes = .false.
+        else
+          doneChildren = .true.
+          doneAttributes = .false.
+        endif
+
+      else ! if doneChildren
+
+        if (associated(this, arg)) exit
+        if (getNodeType(this)==ATTRIBUTE_NODE) then
+          if (i<getLength(getAttributes(getOwnerElement(this)))-1) then
+            i = i + 1
+            this => item(getAttributes(getOwnerElement(this)), i)
+            doneChildren = .false.
+          else
+            i = 0
+            this => getOwnerElement(this)
+            doneAttributes = .true.
+            doneChildren = .false.
+          endif
+        elseif (associated(getNextSibling(this))) then
+
+          this => getNextSibling(this)
+          doneChildren = .false.
+          doneAttributes = .false.
+        else
+          this => getParentNode(this)
+        endif
+      endif
+
     enddo
 
+
+
   end subroutine iter_dmp_xml
-!!$  recursive subroutine dump_xml(xf, input)
-!!$    type(xmlf_t)  :: xf
-!!$    type(Node), pointer         :: input
-!!$    type(Node), pointer         :: n, attr, child
-!!$    type(NamedNodeMap), pointer :: attr_map
-!!$    integer  ::  i
-!!$    integer, save :: nns = -1
-!!$    type(dictionary_t), save :: simpleDict
-!!$    character, pointer :: prefix(:), elementQName(:)
-!!$    character(len=100) :: abc
-!!$    call init_dict(simpleDict)
-!!$
-!!$    n => input
-!!$    if (.not. associated(n)) return
-!!$    select case (getNodeType(n))
-!!$
-!!$    case (DOCUMENT_NODE)
-!!$      call dump_xml(xf, getDocumentElement(n))
-!!$      ! FIXME what about siblings of document element ...
-!!$      
-!!$    case (ELEMENT_NODE)
-!!$      
-!!$      if (len(getNamespaceURI(n))==0) then
-!!$        elementQName => vs_str_alloc(getnodeName(n))
-!!$        allocate(prefix(0))
-!!$      else
-!!$        if (hasKey(simpleDict, getNamespaceURI(n))) then
-!!$          prefix => vs_str_alloc(getValue(simpleDict, getNamespaceURI(n)))
-!!$        else
-!!$          nns = nns + 1
-!!$          if (nns == 0) then
-!!$            allocate(prefix(0))
-!!$          else
-!!$            prefix => vs_str_alloc('ns'//nns)
-!!$          endif
-!!$          call add_item_to_dict(simpleDict, getNamespaceURI(n), getPrefix(n))
-!!$        endif
-!!$        if (size(prefix)==0) then
-!!$          elementQName => vs_str_alloc(getNodeName(n))
-!!$        else
-!!$          elementQName => vs_str_alloc(getPrefix(n)//":"//getLocalName(n))
-!!$        endif
-!!$      endif
-!!$      call xml_NewElement(xf, str_vs(elementQName))
-!!$      if (len(getNamespaceURI(n))>0) then
-!!$        if (size(prefix)==0) then
-!!$          call xml_DeclareNamespace(xf, getNamespaceURI(n))
-!!$        else
-!!$          call xml_DeclareNamespace(xf, getNamespaceURI(n), getPrefix(n))
-!!$        endif
-!!$      endif
-!!$      deallocate(prefix)
-!!$      !TOHW need to check for & print out attribute namespaces as well.
-!!$      attr_map => getAttributes(n)
-!!$      do i = 0, getLength(attr_map) - 1
-!!$        attr => item(attr_map,i)
-!!$        call xml_AddAttribute(xf, getNodeName(attr), getNodeValue(attr))
-!!$      enddo
-!!$      child => getFirstChild(n)
-!!$      do while (associated(child))
-!!$        call dump_xml(xf, child)
-!!$        child => getNextSibling(child)
-!!$      enddo
-!!$      call xml_EndElement(xf,str_vs(elementQName))
-!!$      deallocate(elementQName)
-!!$      
-!!$    case (TEXT_NODE)
-!!$      abc = getData(n)
-!!$      print*,'THis data:'
-!!$      do i = 1, len(getData(n))
-!!$         print*,iachar(abc(i:i))
-!!$      enddo
-!!$      print*,'done'
-!!$      
-!!$      print*,'about to add chars'
-!!$      call xml_AddCharacters(xf, getData(n))
-!!$      print*,'done adding chars'
-!!$    case (CDATA_SECTION_NODE)
-!!$
-!!$      call xml_AddCharacters(xf, getData(n), parsed=.false.)
-!!$      
-!!$    case (COMMENT_NODE)
-!!$      
-!!$      call xml_AddComment(xf, getData(n))
-!!$      
-!!$    end select
-!!$    call destroy_dict(simpleDict)
-!!$
-!!$  end subroutine dump_xml
-  
+
 end module m_dom_utils
