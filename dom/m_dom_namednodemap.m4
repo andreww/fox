@@ -70,6 +70,8 @@ TOHW_m_dom_contents(`
 
     integer :: i
 
+! FIXME edit to do right thing with unallocated map
+
     do i = 1, map%length
       if (str_vs(map%nodes(i)%this%nodeName)==name) then
         n = size(map%nodes(i)%this%nodeValue)

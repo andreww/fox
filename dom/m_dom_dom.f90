@@ -53,6 +53,7 @@ module m_dom_dom
 
   use m_common_array_str, only: str_vs, vs_str_alloc
   use m_common_namecheck, only: prefixOfQName, localpartOfQName
+  use m_dom_error, only: is_in_error, getCode
 
 
 
@@ -3020,6 +3021,8 @@ endif
 
     integer :: i
 
+! FIXME edit to do right thing with unallocated map
+
     do i = 1, map%length
       if (str_vs(map%nodes(i)%this%nodeName)==name) then
         n = size(map%nodes(i)%this%nodeValue)
@@ -5157,12 +5160,22 @@ endif
 
 
 
-  function getTagName(element, ex)result(c) 
+  function getTagName(arg, ex)result(c) 
     type(DOMException), intent(inout), optional :: ex
-    type(Node), intent(in) :: element   
-    character(len=size(element%nodeName)) :: c
+    type(Node), pointer :: arg   
+    character(len=size(arg%nodeName)) :: c
 
-    if (element%nodeType /= ELEMENT_NODE) then
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "getTagName", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    if (getNodeType(arg) /= ELEMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "getTagName", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -5171,20 +5184,48 @@ if (present(ex)) then
 endif
 
     endif
-    c = str_vs(element%nodeName)    
+    c = str_vs(arg%nodeName)    
      
   end function getTagName
 
-    
-  function getAttribute(element, name, ex)result(c) 
-    type(DOMException), intent(inout), optional :: ex
-    type(Node), pointer :: element
+  pure function getAttributes_len(arg, p, name) result(n)
+    type(Node), intent(in) :: arg
+    logical, intent(in) :: p
     character(len=*), intent(in) :: name
-    character(len=getNamedItem_Value_length(element%attributes, name)) :: c
+    integer :: n
+    
+    integer :: i
+    
+    n = 0
+    if (.not.p) return
+    if (arg%nodeType/=ELEMENT_NODE) return
 
-    type(Node), pointer :: nn
+    do i = 1, arg%attributes%length
+      if (str_vs(arg%attributes%nodes(i)%this%nodeName)==name) then
+        n = getValue_len(arg%attributes%nodes(i)%this, .true.)
+        exit
+      endif
+    enddo
 
-    if (element%nodeType /= ELEMENT_NODE) then
+  end function getAttributes_len
+
+  function getAttribute(arg, name, ex)result(c) 
+    type(DOMException), intent(inout), optional :: ex
+    type(Node), pointer :: arg
+    character(len=*), intent(in) :: name
+    character(len=getAttributes_len(arg, associated(arg), name)) :: c
+
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "getAttribute", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    if (getNodeType(arg) /= ELEMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "getAttribute", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -5193,24 +5234,32 @@ if (present(ex)) then
 endif
 
     endif
-    c = ""  ! as per specs, if not found
-    c = getNamedItem_Value(getAttributes(element), name)
 
-    ! FIXME do we need to catch the exception above if it doesnt exist?
+    c = getValue(getNamedItem(getAttributes(arg), name))
         
   end function getAttribute
 
 
-  subroutine setAttribute(element, name, value, ex)
+  subroutine setAttribute(arg, name, value, ex)
     type(DOMException), intent(inout), optional :: ex
-    type(Node), pointer :: element
+    type(Node), pointer :: arg
     character(len=*), intent(in) :: name
     character(len=*), intent(in) :: value
 
     type(Node), pointer :: nn, dummy
     logical :: quickFix
 
-    if (element%nodeType /= ELEMENT_NODE) then
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "setAttribute", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    if (getNodetype(arg)/=ELEMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "setAttribute", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -5218,7 +5267,7 @@ if (present(ex)) then
   endif
 endif
 
-
+    elseif (arg%readonly) then
       call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setAttribute", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -5226,7 +5275,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkChars(name, getXmlVersionEnum(getOwnerDocument(element)))) then
+    elseif (.not.checkName(name, getXds(getOwnerDocument(arg)))) then
       call throw_exception(INVALID_CHARACTER_ERR, "setAttribute", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -5234,15 +5283,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkName(value, getXds(getOwnerDocument(element)))) then
-      call throw_exception(FoX_INVALID_XML_NAME, "setAttribute", ex)
-if (present(ex)) then
-  if (is_in_error(ex)) then
-     return
-  endif
-endif
-
-    elseif (.not.checkChars(value, getXmlVersionEnum(getOwnerDocument(element)))) then
+    elseif (.not.checkChars(value, getXmlVersionEnum(getOwnerDocument(arg)))) then
       call throw_exception(FoX_INVALID_CHARACTER, "setAttribute", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -5252,39 +5293,58 @@ endif
 
     endif
 
-    quickFix = getGCstate(getOwnerDocument(element)) &
-      .and. element%inDocument
+    quickFix = getGCstate(getOwnerDocument(arg)) &
+      .and. arg%inDocument
 
-    if (quickFix) call setGCstate(getOwnerDocument(element), .false.)
+    if (quickFix) call setGCstate(getOwnerDocument(arg), .false.)
     ! then the created attribute is going straight into the document,
     ! so dont faff with hanging-node lists.
 
-    nn => createAttribute(element%ownerDocument, name)
+    nn => createAttribute(arg%ownerDocument, name)
     call setValue(nn, value)
-    dummy => setNamedItem(getAttributes(element), nn)
+    dummy => setNamedItem(getAttributes(arg), nn)
     if (associated(dummy)) then
-      if (getGCstate(getOwnerDocument(element)).and..not.dummy%inDocument) &
-        call putNodesInDocument(getOwnerDocument(element), dummy) 
+      if (getGCstate(getOwnerDocument(arg)).and..not.dummy%inDocument) &
+        call putNodesInDocument(getOwnerDocument(arg), dummy) 
       ! ... so that dummy & children are removed from hangingNodes list.
       call destroyAllNodesRecursively(dummy)
       call destroyNode(dummy)
     endif
-    nn%ownerElement => element
+    nn%ownerElement => arg
 
-    if (quickFix) call setGCstate(getOwnerDocument(element), .true.)
+    if (quickFix) call setGCstate(getOwnerDocument(arg), .true.)
 
   end subroutine setAttribute
 
 
-  subroutine removeAttribute(element, name, ex)
+  subroutine removeAttribute(arg, name, ex)
     type(DOMException), intent(inout), optional :: ex
-    type(Node), pointer :: element
+    type(Node), pointer :: arg
     character(len=*), intent(in) :: name
 
     type(Node), pointer :: dummy
+    integer :: e
 
-    if (element%nodeType /= ELEMENT_NODE) then
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "removeAttribute", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    if (getNodetype(arg)/=ELEMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "removeAttribute", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    elseif (arg%readonly) then
+      call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "removeAttribute", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
      return
@@ -5293,32 +5353,56 @@ endif
 
     endif
     
-    if (element%inDocument) &
-      call setGCstate(getOwnerDocument(element), .false.)
+    if (arg%inDocument) &
+      call setGCstate(getOwnerDocument(arg), .false.)
 
-    dummy => removeNamedItem(getAttributes(element), name)
-    print*,"DESTROYING ATTRIBUTE:"
-    ! FIXME need to remove dummy from hangingnodeslist
-    call destroyAllNodesRecursively(dummy)
-    call destroyNode(dummy)
+    dummy => removeNamedItem(getAttributes(arg), name, ex)
+    if (is_in_error(ex)) then
+      e = getCode(ex)
+      if (e/=NOT_FOUND_ERR) then
+        call throw_exception(e, "removeAttribute", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
 
-    if (element%inDocument) &
-      call setGCstate(element%ownerDocument, .true.)
+      endif
+    else
+      if (.not.arg%inDocument) then
+        ! dummy was not in the doc, so was on hangingNode list.
+        ! To remove it from the list:
+        call putNodesInDocument(arg%ownerDocument, arg)
+      endif
+      call destroyAllNodesRecursively(dummy)
+      call destroyNode(dummy)
+    endif
+      
+    if (arg%inDocument) &
+      call setGCstate(arg%ownerDocument, .true.)
 
   ! FIXME recreate a default value if there is one
      
   end subroutine removeAttribute
 
 
-  function getAttributeNode(element, name, ex)result(attr) 
+  function getAttributeNode(arg, name, ex)result(attr) 
     type(DOMException), intent(inout), optional :: ex
-    type(Node), pointer :: element
+    type(Node), pointer :: arg
     character(len=*), intent(in) :: name
     type(Node), pointer :: attr
 
-    attr => null()     ! as per specs, if not foundo
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "getAttributeNode", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
 
-    if (element%nodeType /= ELEMENT_NODE) then
+    endif
+
+    if (arg%nodeType /= ELEMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "getAttributeNode", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -5327,21 +5411,30 @@ if (present(ex)) then
 endif
 
     endif
-    attr => getNamedItem(getAttributes(element), name)
 
-    ! FIXME catch and throw away exception
+    attr => getNamedItem(getAttributes(arg), name)
 
   end function getAttributeNode
   
 
-  function setAttributeNode(element, newattr, ex)result(attr) 
+  function setAttributeNode(arg, newattr, ex)result(attr) 
     type(DOMException), intent(inout), optional :: ex
-    type(Node), pointer :: element
+    type(Node), pointer :: arg
     type(Node), pointer :: newattr
     type(Node), pointer :: attr
     type(Node), pointer :: dummy
 
-    if (element%nodeType /= ELEMENT_NODE) then
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "setAttributeNode", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    if (arg%nodeType /= ELEMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "setAttributeNode", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -5349,7 +5442,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.associated(element%ownerDocument, newattr%ownerDocument)) then
+    elseif (.not.associated(arg%ownerDocument, newattr%ownerDocument)) then
       call throw_exception(WRONG_DOCUMENT_ERR, "setAttributeNode", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -5357,7 +5450,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (element%readonly) then
+    elseif (arg%readonly) then
       call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setAttributeNode", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -5377,31 +5470,23 @@ endif
 
     ! this checks if attribute exists already
     ! It also does any adding/removing of hangingnodes
-    dummy => setNamedItem(getAttributes(element), newattr, ex)
-    newattr%ownerElement => element
-    attr => newattr
+    dummy => setNamedItem(getAttributes(arg), newattr, ex)
+    newattr%ownerElement => arg
+    attr => dummy
 
   end function setAttributeNode
 
 
-  function removeAttributeNode(element, oldattr, ex)result(attr) 
+  function removeAttributeNode(arg, oldattr, ex)result(attr) 
     type(DOMException), intent(inout), optional :: ex
-    type(Node), pointer :: element
+    type(Node), pointer :: arg
     type(Node), pointer :: oldattr
     type(Node), pointer :: attr
 
     integer :: i
 
-    if (element%nodeType /= ELEMENT_NODE) then
-      call throw_exception(FoX_INVALID_NODE, "removeAttributeNode", ex)
-if (present(ex)) then
-  if (is_in_error(ex)) then
-     return
-  endif
-endif
-
-    elseif (element%readonly) then
-      call throw_exception(WRONG_DOCUMENT_ERR, "removeAttributeNode", ex)
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "removeAttributeNode", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
      return
@@ -5410,9 +5495,36 @@ endif
 
     endif
 
-    do i = 1, element%attributes%length
-      if (associated(element%attributes%nodes(i)%this, oldattr)) then
-        attr => removeNamedItem(getAttributes(element), str_vs(oldattr%nodeName))
+    if (arg%nodeType /= ELEMENT_NODE) then
+      call throw_exception(FoX_INVALID_NODE, "removeAttributeNode", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    elseif (.not.associated(arg%ownerDocument, oldattr%ownerDocument)) then
+      call throw_exception(WRONG_DOCUMENT_ERR, "removeAttributeNode", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    elseif (arg%readonly) then
+      call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "removeAttributeNode", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    do i = 1, arg%attributes%length
+      if (associated(arg%attributes%nodes(i)%this, oldattr)) then
+        attr => removeNamedItem(getAttributes(arg), str_vs(oldattr%nodeName))
+        attr%ownerElement => null()
         return
       endif
     enddo
@@ -5425,25 +5537,33 @@ if (present(ex)) then
 endif
 
 
-    attr%ownerElement => null()
-
   end function removeAttributeNode
 
 
 !  function getElementsByTagName - see m_dom_document
 
 
-  function getAttributeNS(element, namespaceURI, localName, ex)result(c) 
+  function getAttributeNS(arg, namespaceURI, localName, ex)result(c) 
     type(DOMException), intent(inout), optional :: ex
-    type(Node), pointer :: element
+    type(Node), pointer :: arg
     character(len=*), intent(in) :: namespaceURI
     character(len=*), intent(in) :: localName
     character(len= &
-      getNamedItemNS_Value_length(element%attributes, namespaceURI, localName)) :: c
+      getNamedItemNS_Value_length(arg%attributes, namespaceURI, localName)) :: c
 
     type(Node), pointer :: nn
 
-    if (element%nodeType /= ELEMENT_NODE) then
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "getAttributeNS", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    if (arg%nodeType /= ELEMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "getAttributeNS", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -5454,16 +5574,16 @@ endif
     endif
 
     c = ""  ! as per specs, if not found Not sure ahout this FIXME
-    c = getNamedItemNS_Value(getAttributes(element), namespaceURI, localName)
+    c = getNamedItemNS_Value(getAttributes(arg), namespaceURI, localName)
 
     ! FIXME dont need both above
         
   end function getAttributeNS
 
 
-  subroutine setAttributeNS(element, namespaceURI, qualifiedname, value, ex)
+  subroutine setAttributeNS(arg, namespaceURI, qualifiedname, value, ex)
     type(DOMException), intent(inout), optional :: ex
-    type(Node), pointer :: element
+    type(Node), pointer :: arg
     character(len=*), intent(in) :: namespaceURI
     character(len=*), intent(in) :: qualifiedName
     character(len=*), intent(in) :: value
@@ -5471,7 +5591,17 @@ endif
     type(Node), pointer :: nn, dummy
     logical :: quickfix
 
-    if (element%nodeType /= ELEMENT_NODE) then
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "setAttributeNS", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    if (arg%nodeType /= ELEMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "setAttributeNS", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -5479,7 +5609,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkChars(qualifiedname, getXmlVersionEnum(getOwnerDocument(element)))) then
+    elseif (.not.checkChars(qualifiedname, getXmlVersionEnum(getOwnerDocument(arg)))) then
       call throw_exception(INVALID_CHARACTER_ERR, "setAttributeNS", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -5487,7 +5617,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (element%readonly) then
+    elseif (arg%readonly) then
       call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setAttributeNS", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -5495,7 +5625,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkQName(qualifiedname, getXds(getOwnerDocument(element)))) then
+    elseif (.not.checkQName(qualifiedname, getXds(getOwnerDocument(arg)))) then
       call throw_exception(NAMESPACE_ERR, "setAttributeNS", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -5528,42 +5658,52 @@ endif
 ! FIXME what if namespace is undeclared ... will be recreated on serialization,
 ! but we might need a new namespace node here for xpath ...
 
-    quickFix = getGCstate(getOwnerDocument(element)) &
-      .and. element%inDocument
+    quickFix = getGCstate(getOwnerDocument(arg)) &
+      .and. arg%inDocument
 
-    if (quickFix) call setGCstate(getOwnerDocument(element), .false.)
+    if (quickFix) call setGCstate(getOwnerDocument(arg), .false.)
     ! then the created attribute is going straight into the document,
     ! so dont faff with hanging-node lists.
 
-    nn => createAttributeNS(element%ownerDocument, namespaceURI, qualifiedname)
+    nn => createAttributeNS(arg%ownerDocument, namespaceURI, qualifiedname)
     call setValue(nn, value)
     if (associated(dummy)) then
-      if (getGCstate(getOwnerDocument(element)).and..not.dummy%inDocument) &
-        call putNodesInDocument(getOwnerDocument(element), dummy) 
+      if (getGCstate(getOwnerDocument(arg)).and..not.dummy%inDocument) &
+        call putNodesInDocument(getOwnerDocument(arg), dummy) 
       ! ... so that dummy & children are removed from hangingNodes list.
       call destroyAllNodesRecursively(dummy)
       call destroyNode(dummy)
     endif
 
-    dummy => setNamedItemNS(getAttributes(element), nn)
-    nn%ownerElement => element
+    dummy => setNamedItemNS(getAttributes(arg), nn)
+    nn%ownerElement => arg
 
-    if (quickFix) call setGCstate(getOwnerDocument(element), .true.)
+    if (quickFix) call setGCstate(getOwnerDocument(arg), .true.)
 
     !FIXME catch exception
 
   end subroutine setAttributeNS
 
 
-  subroutine removeAttributeNS(element, namespaceURI, localName, ex)
+  subroutine removeAttributeNS(arg, namespaceURI, localName, ex)
     type(DOMException), intent(inout), optional :: ex
-    type(Node), pointer :: element
+    type(Node), pointer :: arg
     character(len=*), intent(in) :: namespaceURI
     character(len=*), intent(in) :: localName
 
     type(Node), pointer :: dummy
 
-    if (element%nodeType /= ELEMENT_NODE) then
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "removeAttributeNS", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    if (arg%nodeType /= ELEMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "removeAttributeNS", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -5571,7 +5711,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (element%readonly) then
+    elseif (arg%readonly) then
       call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "removeAttributeNS", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -5581,21 +5721,31 @@ endif
 
     endif
 
-    dummy => removeNamedItemNS(getAttributes(element), namespaceURI, localName)
+    dummy => removeNamedItemNS(getAttributes(arg), namespaceURI, localName)
 
     call destroyAttribute(dummy)
      
   end subroutine removeAttributeNS
 
 
-  function getAttributeNodeNS(element, namespaceURI, localName, ex)result(attr) 
+  function getAttributeNodeNS(arg, namespaceURI, localName, ex)result(attr) 
     type(DOMException), intent(inout), optional :: ex
-    type(Node), pointer :: element
+    type(Node), pointer :: arg
     character(len=*), intent(in) :: namespaceURI
     character(len=*), intent(in) :: localName
     type(Node), pointer :: attr
 
-    if (element%nodeType /= ELEMENT_NODE) then
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "getAttributeNodeNS", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    if (arg%nodeType /= ELEMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "getAttributeNodeNS", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -5606,19 +5756,29 @@ endif
     endif
 
     attr => null()     ! as per specs, if not found
-    attr => getNamedItemNS(getAttributes(element), namespaceURI, localname)
+    attr => getNamedItemNS(getAttributes(arg), namespaceURI, localname)
 
   end function getAttributeNodeNS
   
 
-  function setAttributeNodeNS(element, newattr, ex)result(attr) 
+  function setAttributeNodeNS(arg, newattr, ex)result(attr) 
     type(DOMException), intent(inout), optional :: ex
-    type(Node), pointer :: element
+    type(Node), pointer :: arg
     type(Node), pointer :: newattr
     type(Node), pointer :: attr
     type(Node), pointer :: dummy
 
-    if (element%nodeType /= ELEMENT_NODE) then
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "setAttributeNodeNS", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    if (arg%nodeType /= ELEMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "setAttributeNodeNS", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -5626,7 +5786,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.associated(element%ownerDocument, newattr%ownerDocument)) then
+    elseif (.not.associated(arg%ownerDocument, newattr%ownerDocument)) then
       call throw_exception(WRONG_DOCUMENT_ERR, "setAttributeNodeNS", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -5634,7 +5794,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (element%readonly) then
+    elseif (arg%readonly) then
       call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setAttributeNodeNS", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -5653,22 +5813,32 @@ endif
     endif
 
     ! this checks if attribute exists already, and does hangingnodes
-    dummy => setNamedItemNS(getAttributes(element), newattr)
-    newattr%ownerElement => element
+    dummy => setNamedItemNS(getAttributes(arg), newattr)
+    newattr%ownerElement => arg
     attr => newattr
 
   end function setAttributeNodeNS
 
 
-  function removeAttributeNodeNS(element, oldattr, ex)result(attr) 
+  function removeAttributeNodeNS(arg, oldattr, ex)result(attr) 
     type(DOMException), intent(inout), optional :: ex
-    type(Node), pointer :: element
+    type(Node), pointer :: arg
     type(Node), pointer :: oldattr
     type(Node), pointer :: attr
 
     integer :: i
 
-    if (element%nodeType /= ELEMENT_NODE) then
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "removeAttributeNodeNS", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    if (arg%nodeType /= ELEMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "removeAttributeNodeNS", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -5676,7 +5846,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (element%readonly) then
+    elseif (arg%readonly) then
       call throw_exception(WRONG_DOCUMENT_ERR, "removeAttributeNodeNS", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -5686,9 +5856,9 @@ endif
 
     endif
 
-    do i = 1, element%attributes%length
-      if (associated(item(getAttributes(element), i-1), oldattr)) then
-        attr => removeNamedItemNS(getAttributes(element), &
+    do i = 1, arg%attributes%length
+      if (associated(item(getAttributes(arg), i-1), oldattr)) then
+        attr => removeNamedItemNS(getAttributes(arg), &
           str_vs(oldattr%namespaceURI), str_vs(oldattr%localName))
         return
       endif
@@ -5710,15 +5880,25 @@ endif
 !  function getElementsByTagNameNS - see m_dom_document
 
 
-  function hasAttribute(element, name, ex)result(p) 
+  function hasAttribute(arg, name, ex)result(p) 
     type(DOMException), intent(inout), optional :: ex
-    type(Node), intent(in) :: element
+    type(Node), pointer :: arg
     character(len=*), intent(in) :: name
     logical :: p
 
     integer :: i
+
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "hasAttribute", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
  
-   if (element%nodeType /= ELEMENT_NODE) then
+   if (arg%nodeType /= ELEMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "hasAttribute", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -5729,8 +5909,8 @@ endif
     endif
 
     p = .false.
-    do i = 1, element%attributes%length
-      if (str_vs(element%attributes%nodes(i)%this%nodeName)==name) then
+    do i = 1, arg%attributes%length
+      if (str_vs(arg%attributes%nodes(i)%this%nodeName)==name) then
         p = .true.
         exit
       endif
@@ -5739,17 +5919,26 @@ endif
   end function hasAttribute
 
 
-  function hasAttributeNS(element, namespaceURI, localName, ex)result(p) 
+  function hasAttributeNS(arg, namespaceURI, localName, ex)result(p) 
     type(DOMException), intent(inout), optional :: ex
-    type(Node), intent(in) :: element
+    type(Node), pointer :: arg
     character(len=*), intent(in) :: namespaceURI
     character(len=*), intent(in) :: localName
     logical :: p
 
     integer :: i
 
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "hasAttributeNS", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
  
-   if (element%nodeType /= ELEMENT_NODE) then
+   if (arg%nodeType /= ELEMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "hasAttributeNS", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -5760,9 +5949,9 @@ endif
     endif
 
     p = .false.
-    do i = 1, element%attributes%length
-      if (str_vs(element%attributes%nodes(i)%this%namespaceURI)==namespaceURI &
-        .and. str_vs(element%attributes%nodes(i)%this%localName)==localName) then
+    do i = 1, arg%attributes%length
+      if (str_vs(arg%attributes%nodes(i)%this%namespaceURI)==namespaceURI &
+        .and. str_vs(arg%attributes%nodes(i)%this%localName)==localName) then
         p = .true.
         exit
       endif
