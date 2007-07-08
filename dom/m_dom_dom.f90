@@ -3465,19 +3465,19 @@ endif
 
 
 
-  function hasFeature(impl, feature, version) result(p)
+  function hasFeature(impl, feature, version, ex)result(p) 
+    type(DOMException), intent(inout), optional :: ex
     type(DOMImplementation), intent(in) :: impl
     character(len=*), intent(in) :: feature
-    character(len=*), intent(in), optional :: version
+    character(len=*), intent(in) :: version
     logical :: p
 
-    if (present(version)) then
-      if (version/="1.0".and.version/="2.0") then
-        p = .false.
-        return
-      endif
+    if (version=="1.0".or.version=="2.0".or.version=="") then
+      p = (toLower(feature)=="core".or.toLower(feature)=="xml")
+    else
+      p = .false.
     endif
-    p = (toLower(feature)=="core".or.toLower(feature)=="xml")
+
   end function hasFeature
 
 
