@@ -34,9 +34,14 @@ TOHW_m_dom_contents(`
   end function isCharData
 
 
-  function getLength_characterdata(arg) result(n)
+  TOHW_function(getLength_characterdata, (arg), n)
     type(Node), pointer :: arg
     integer :: n
+
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+
     if (isCharData(arg%nodeType)) then
        n = size(arg%nodeValue)
     else
@@ -72,7 +77,11 @@ TOHW_m_dom_contents(`
     
     character, pointer :: tmp(:)
 
-    if (isCharData(arg%nodeType)) then
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+
+    if (.not.isCharData(arg%nodeType)) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     elseif (arg%readonly) then
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
@@ -104,7 +113,11 @@ TOHW_m_dom_contents(`
 
     character, pointer :: tmp(:)
 
-    if (isCharData(arg%nodeType)) then
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+
+    if (.not.isCharData(arg%nodeType)) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     elseif (arg%readonly) then
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
@@ -138,7 +151,11 @@ TOHW_m_dom_contents(`
 
     character, pointer :: tmp(:)
 
-    if (isCharData(arg%nodeType)) then
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+
+    if (.not.isCharData(arg%nodeType)) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     elseif (arg%readonly) then
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
@@ -161,7 +178,11 @@ TOHW_m_dom_contents(`
     
     character, pointer :: tmp(:)
 
-    if (isCharData(arg%nodeType)) then
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+
+    if (.not.isCharData(arg%nodeType)) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     elseif (arg%readonly) then
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)

@@ -5802,9 +5802,21 @@ endif
   end function isCharData
 
 
-  function getLength_characterdata(arg) result(n)
+  function getLength_characterdata(arg, ex)result(n) 
+    type(DOMException), intent(inout), optional :: ex
     type(Node), pointer :: arg
     integer :: n
+
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "getLength_characterdata", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
     if (isCharData(arg%nodeType)) then
        n = size(arg%nodeValue)
     else
@@ -5848,7 +5860,17 @@ endif
     
     character, pointer :: tmp(:)
 
-    if (isCharData(arg%nodeType)) then
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "appendData", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    if (.not.isCharData(arg%nodeType)) then
       call throw_exception(FoX_INVALID_NODE, "appendData", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -5911,7 +5933,17 @@ endif
 
     character, pointer :: tmp(:)
 
-    if (isCharData(arg%nodeType)) then
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "insertData", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    if (.not.isCharData(arg%nodeType)) then
       call throw_exception(FoX_INVALID_NODE, "insertData", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -5982,7 +6014,17 @@ endif
 
     character, pointer :: tmp(:)
 
-    if (isCharData(arg%nodeType)) then
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "deleteData", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    if (.not.isCharData(arg%nodeType)) then
       call throw_exception(FoX_INVALID_NODE, "deleteData", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -6024,7 +6066,17 @@ endif
     
     character, pointer :: tmp(:)
 
-    if (isCharData(arg%nodeType)) then
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "replaceData", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    if (.not.isCharData(arg%nodeType)) then
       call throw_exception(FoX_INVALID_NODE, "replaceData", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
