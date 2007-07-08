@@ -63,7 +63,7 @@ TOHW_m_dom_contents(`
     endif
 
     if (isCharData(arg%nodeType)) then
-      c = str_vs(arg%nodeValue(offset:offset+count-1))
+      c = str_vs(arg%nodeValue(offset+1:offset+count))
     else
       continue
       ! FIXME error
@@ -164,7 +164,7 @@ TOHW_m_dom_contents(`
     endif
     
     tmp => arg%nodeValue
-    arg%nodeValue => vs_str_alloc(str_vs(tmp(:offset))//str_vs(tmp(offset+count:)))
+    arg%nodeValue => vs_str_alloc(str_vs(tmp(:offset))//str_vs(tmp(offset+count+1:)))
     deallocate(tmp)
 
   end subroutine deleteData
@@ -196,7 +196,7 @@ TOHW_m_dom_contents(`
 
     tmp => arg%nodeValue
     if (offset+count <= size(arg%nodeValue)) then
-      arg%nodeValue => vs_str_alloc(str_vs(tmp(:offset))//data//str_vs(tmp(offset+count:)))
+      arg%nodeValue => vs_str_alloc(str_vs(tmp(:offset))//data//str_vs(tmp(offset+count+1:)))
     else
       arg%nodeValue => vs_str_alloc(str_vs(tmp(:offset))//data)
     endif
