@@ -6314,10 +6314,10 @@ endif
 
     endif
 
-    if (arg%nodeType/=TEXT_NODE .and. &
-      arg%nodeType/=COMMENT_NODE .and. &
-      arg%nodeType/=CDATA_SECTION_NODE .and. &
-      arg%nodeType/=PROCESSING_INSTRUCTION_NODE) then
+    if (arg%nodeType==TEXT_NODE .or. &
+      arg%nodeType==COMMENT_NODE .or. &
+      arg%nodeType==CDATA_SECTION_NODE .or. &
+      arg%nodeType==PROCESSING_INSTRUCTION_NODE) then
       if (arg%readonly) then
         call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setData", ex)
 if (present(ex)) then

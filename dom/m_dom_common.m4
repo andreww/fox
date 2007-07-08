@@ -57,10 +57,10 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif
 
-    if (arg%nodeType/=TEXT_NODE .and. &
-      arg%nodeType/=COMMENT_NODE .and. &
-      arg%nodeType/=CDATA_SECTION_NODE .and. &
-      arg%nodeType/=PROCESSING_INSTRUCTION_NODE) then
+    if (arg%nodeType==TEXT_NODE .or. &
+      arg%nodeType==COMMENT_NODE .or. &
+      arg%nodeType==CDATA_SECTION_NODE .or. &
+      arg%nodeType==PROCESSING_INSTRUCTION_NODE) then
       if (arg%readonly) then
         TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
       endif
