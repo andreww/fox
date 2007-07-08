@@ -179,7 +179,7 @@ contains
     type(Node), pointer :: np
 
     np => createNotation(mainDoc, name, publicId=publicId, systemId=systemId)
-! FIXME what if two entities with the same name
+! FIXME what if two notations with the same name
     np => setNamedItem(getNotations(getDocType(mainDoc)), np)
   end subroutine notationDecl_handler
 

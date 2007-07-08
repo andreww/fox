@@ -4084,7 +4084,7 @@ endif
     character(len=*), intent(in) :: name
     type(Node), pointer :: np
 
-    type(Node), pointer :: ent
+    type(Node), pointer :: ent, newNode
     integer :: i
 
     if (doc%nodeType/=DOCUMENT_NODE) then
@@ -4128,8 +4128,8 @@ endif
       endif
       if (associated(ent)) then
         do i = 0, getLength(getChildNodes(ent)) - 1
-          ent => appendChild(np, cloneNode(item(getChildNodes(ent), i), .true., ex))
-          call setReadOnlyNode(ent, .true.)
+          newNode => appendChild(np, cloneNode(item(getChildNodes(ent), i), .true., ex))
+          call setReadOnlyNode(newNode, .true.)
         enddo
       endif
       ! FIXME in case of recursive entity references?
