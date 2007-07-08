@@ -3791,17 +3791,8 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkChars(tagName, getXmlVersionEnum(doc))) then
+    elseif (.not.checkName(tagName, getXds(doc))) then
       call throw_exception(INVALID_CHARACTER_ERR, "createElement", ex)
-if (present(ex)) then
-  if (is_in_error(ex)) then
-     return
-  endif
-endif
-
-    endif  
-    if (.not.checkName(tagName, getXds(doc))) then
-      call throw_exception(FoX_INVALID_XML_NAME, "createElement", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
      return
@@ -3986,7 +3977,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkChars(target, getXmlVersionEnum(doc))) then
+    elseif (.not.checkName(target, getXds(doc))) then
       call throw_exception(INVALID_CHARACTER_ERR, "createProcessingInstruction", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -4002,15 +3993,6 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkName(target, getXds(doc))) then
-      call throw_exception(FoX_INVALID_XML_NAME, "createProcessingInstruction", ex)
-if (present(ex)) then
-  if (is_in_error(ex)) then
-     return
-  endif
-endif
-
-! FIXME check validity of PI target 
     elseif (index(data,"?>")>0) then   
       call throw_exception(FoX_INVALID_PI_DATA, "createProcessingInstruction", ex)
 if (present(ex)) then
@@ -4046,16 +4028,8 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkChars(name, getXmlVersionEnum(doc))) then
-      call throw_exception(INVALID_CHARACTER_ERR, "createAttribute", ex)
-if (present(ex)) then
-  if (is_in_error(ex)) then
-     return
-  endif
-endif
-
     elseif (.not.checkName(name, getXds(doc))) then
-      call throw_exception(FoX_INVALID_XML_NAME, "createAttribute", ex)
+      call throw_exception(INVALID_CHARACTER_ERR, "createAttribute", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
      return
@@ -4095,16 +4069,8 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkChars(name, getXmlVersionEnum(doc))) then
-      call throw_exception(INVALID_CHARACTER_ERR, "createEntityReference", ex)
-if (present(ex)) then
-  if (is_in_error(ex)) then
-     return
-  endif
-endif
-
     elseif (.not.checkName(name, getXds(doc))) then
-      call throw_exception(FoX_INVALID_XML_NAME, "createEntityReference", ex)
+      call throw_exception(INVALID_CHARACTER_ERR, "createEntityReference", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
      return

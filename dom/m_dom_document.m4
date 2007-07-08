@@ -106,11 +106,8 @@ TOHW_m_dom_contents(`
 
     if (doc%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    elseif (.not.checkChars(tagName, getXmlVersionEnum(doc))) then
+    elseif (.not.checkName(tagName, getXds(doc))) then
       TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
-    endif  
-    if (.not.checkName(tagName, getXds(doc))) then
-      TOHW_m_dom_throw_error(FoX_INVALID_XML_NAME)
     endif
     
     np => createNode(doc, ELEMENT_NODE, tagName, "")
@@ -224,13 +221,10 @@ TOHW_m_dom_contents(`
 
     if (doc%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    elseif (.not.checkChars(target, getXmlVersionEnum(doc))) then
+    elseif (.not.checkName(target, getXds(doc))) then
       TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
     elseif (.not.checkChars(data, getXmlVersionEnum(doc))) then
       TOHW_m_dom_throw_error(FoX_INVALID_CHARACTER)
-    elseif (.not.checkName(target, getXds(doc))) then
-      TOHW_m_dom_throw_error(FoX_INVALID_XML_NAME)
-! FIXME check validity of PI target 
     elseif (index(data,"?>")>0) then   
       TOHW_m_dom_throw_error(FoX_INVALID_PI_DATA)
     endif
@@ -253,10 +247,8 @@ TOHW_m_dom_contents(`
 
     if (doc%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    elseif (.not.checkChars(name, getXmlVersionEnum(doc))) then
-      TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
     elseif (.not.checkName(name, getXds(doc))) then
-      TOHW_m_dom_throw_error(FoX_INVALID_XML_NAME)
+      TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
     endif
   
     np => createNode(doc, ATTRIBUTE_NODE, name, "")
@@ -283,10 +275,8 @@ TOHW_m_dom_contents(`
 
     if (doc%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    elseif (.not.checkChars(name, getXmlVersionEnum(doc))) then
-      TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
     elseif (.not.checkName(name, getXds(doc))) then
-      TOHW_m_dom_throw_error(FoX_INVALID_XML_NAME)
+      TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
     endif
 
     np => createNode(doc, ENTITY_REFERENCE_NODE, name, "")
