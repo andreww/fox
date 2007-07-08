@@ -66,7 +66,11 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(INDEX_SIZE_ERR)
     endif
 
-    c = str_vs(arg%nodeValue(offset+1:offset+count))
+    if (offset+count>size(arg%nodeValue)) then
+      c = str_vs(arg%nodeValue(offset+1:))
+    else
+      c = str_vs(arg%nodeValue(offset+1:offset+count))
+    endif
 
   end function subStringData
 

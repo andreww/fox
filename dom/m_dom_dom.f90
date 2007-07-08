@@ -5860,7 +5860,11 @@ endif
 
     endif
 
-    c = str_vs(arg%nodeValue(offset+1:offset+count))
+    if (offset+count>size(arg%nodeValue)) then
+      c = str_vs(arg%nodeValue(offset+1:))
+    else
+      c = str_vs(arg%nodeValue(offset+1:offset+count))
+    endif
 
   end function subStringData
 
