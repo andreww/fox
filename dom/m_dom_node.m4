@@ -827,7 +827,7 @@ TOHW_m_dom_treewalk(`
       case (PROCESSING_INSTRUCTION_NODE)
         new => createProcessingInstruction(doc, getTarget(this), getData(this))
       case (COMMENT_NODE)
-        new => createEntityReference(doc, getNodeValue(this))
+        new => createComment(doc, getData(this))
       case (DOCUMENT_NODE)
         return
       case (DOCUMENT_TYPE_NODE)
