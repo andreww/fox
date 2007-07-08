@@ -28,61 +28,75 @@ TOHW_m_dom_contents(`
 ! can be explicitly kept up to dat.
 
 
-  TOHW_function(getSpecified, (attribute), p)
-    type(Node), pointer :: attribute
+  TOHW_function(getSpecified, (arg), p)
+    type(Node), pointer :: arg
     logical :: p
 
-    if (attribute%nodeType/=ATTRIBUTE_NODE) then
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+
+    if (getNodeType(arg)/=ATTRIBUTE_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
 
-    p = attribute%specified
+    p = arg%specified
   end function getSpecified
 
-  TOHW_subroutine(setSpecified, (attribute, p))
-    type(Node), pointer :: attribute
+  TOHW_subroutine(setSpecified, (arg, p))
+    type(Node), pointer :: arg
     logical, intent(in) :: p
 
-    if (attribute%nodeType/=ATTRIBUTE_NODE) then
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+
+    if (getNodeType(arg)/=ATTRIBUTE_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
 
-    attribute%specified = p
+    arg%specified = p
   end subroutine setSpecified
     
-  pure function getValue_length(attribute) result(n)
-    type(Node), intent(in) :: attribute
+  pure function getValue_len(arg, p) result(n)
+    type(Node), intent(in) :: arg
+    logical, intent(in) :: p
     integer :: n
 
     integer :: i
 
-    n = 0
-    do i = 1, attribute%childNodes%length
-      if (attribute%childNodes%nodes(i)%this%nodeType==TEXT_NODE) then
-        n = n + size(attribute%childNodes%nodes(i)%this%nodeValue)
+    n = 0 
+    if (.not.p) return
+
+    do i = 1, arg%childNodes%length
+      if (arg%childNodes%nodes(i)%this%nodeType==TEXT_NODE) then
+        n = n + size(arg%childNodes%nodes(i)%this%nodeValue)
       else
     ! FIXME get entity length
       endif
     enddo
 
-  end function getValue_length
+  end function getValue_len
 
-  TOHW_function(getValue_DOM, (attribute), c)
-    type(Node), intent(in) :: attribute
-    character(len=getValue_length(attribute)) :: c 
+  TOHW_function(getValue_DOM, (arg), c)
+    type(Node), pointer :: arg
+    character(len=getValue_len(arg, associated(arg))) :: c 
 
     integer :: i, n
 
-    if (attribute%nodeType/=ATTRIBUTE_NODE) then
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+
+    if (getNodeType(arg)/=ATTRIBUTE_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
 
     n = 1
-    print*, "we have ",  attribute%childNodes%length, "children."
-    do i = 1, attribute%childNodes%length
-      if (attribute%childNodes%nodes(i)%this%nodeType==TEXT_NODE) then
-        c(n:n+size(attribute%childNodes%nodes(i)%this%nodeValue)-1) = &
-          str_vs(attribute%childNodes%nodes(i)%this%nodeValue)
+    do i = 1, arg%childNodes%length
+      if (arg%childNodes%nodes(i)%this%nodeType==TEXT_NODE) then
+        c(n:n+size(arg%childNodes%nodes(i)%this%nodeValue)-1) = &
+          str_vs(arg%childNodes%nodes(i)%this%nodeValue)
       else
     ! FIXME get entity value
       endif
@@ -91,45 +105,85 @@ TOHW_m_dom_contents(`
   end function getValue_DOM
 
 
-  TOHW_subroutine(setValue, (attribute, value))
-    type(Node), pointer :: attribute
+  TOHW_subroutine(setValue, (arg, value))
+    type(Node), pointer :: arg
     character(len=*), intent(in) :: value
 
     type(Node), pointer :: np
     integer :: i
 
-    if (attribute%nodeType/=ATTRIBUTE_NODE) then
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+
+    if (getNodeType(arg)/=ATTRIBUTE_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    elseif (attribute%readonly) then
+    elseif (arg%readonly) then
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
-    elseif (.not.checkChars(value, getXmlVersionEnum(getOwnerDocument(attribute)))) then
+    elseif (.not.checkChars(value, getXmlVersionEnum(getOwnerDocument(arg)))) then
       TOHW_m_dom_throw_error(FoX_INVALID_CHARACTER)
     endif
 
-    do i = 1, attribute%childNodes%length
-      call destroyNode(attribute%childNodes%nodes(i)%this)
+    do i = 1, getLength(getChildNodes(arg))
+      call destroyNode(arg%childNodes%nodes(i)%this)
     enddo
-    deallocate(attribute%childNodes%nodes)
-    allocate(attribute%childNodes%nodes(0))
-    attribute%childNodes%length = 0
-    attribute%firstChild => null()
-    attribute%lastChild => null()
-    np => createTextNode(attribute%ownerDocument, value)
-    np => appendChild(attribute, np)
+    deallocate(arg%childNodes%nodes)
+    allocate(arg%childNodes%nodes(0))
+    arg%childNodes%length = 0
+    arg%firstChild => null()
+    arg%lastChild => null()
+    np => createTextNode(getOwnerDocument(arg), value)
+    np => appendChild(arg, np)
 
   end subroutine setValue
 
 
-  TOHW_function(getOwnerElement, (attribute), np)
-    type(Node), intent(in) :: attribute
+  TOHW_function(getOwnerElement, (arg), np)
+    type(Node), pointer :: arg
     type(Node), pointer :: np
 
-    if (attribute%nodeType /= ATTRIBUTE_NODE) then
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+
+    if (getNodeType(arg) /= ATTRIBUTE_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
 
-    np => attribute%ownerElement
+    np => arg%ownerElement
 
   end function getOwnerElement
+
+  TOHW_function(getIsId, (arg), p)
+    type(Node), pointer :: arg
+    logical :: p
+
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+
+    if (getNodeType(arg) /= ATTRIBUTE_NODE) then
+      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
+    endif
+
+    p = arg%isId
+
+  end function getIsId
+
+  TOHW_subroutine(setIsId, (arg, p))
+    type(Node), pointer :: arg
+    logical, intent(in) :: p
+
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+
+    if (getNodeType(arg) /= ATTRIBUTE_NODE) then
+      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
+    endif
+
+    arg%isId = p
+
+  end subroutine setIsId
 
 ')`'dnl

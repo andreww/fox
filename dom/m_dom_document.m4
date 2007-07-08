@@ -204,7 +204,7 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(FoX_INVALID_CDATA_SECTION)
     endif
   
-    np => createNode(doc, CDATA_SECTION_NODE, "#text", data)
+    np => createNode(doc, CDATA_SECTION_NODE, "#cdata-section", data)
 
     if (getGCstate(doc)) then
       np%inDocument = .false.
@@ -345,13 +345,23 @@ TOHW_m_dom_contents(`
     type(NodeList), pointer :: list
 
     type(NodeListPtr), pointer :: nll(:), temp_nll(:)
-    type(Node), pointer :: np
-    logical :: ascending, allElements
+    type(Node), pointer :: arg, this
+    logical :: doneChildren, doneAttributes, allElements
     integer :: i
 
-! FIXME check name and tagname for doc/element respectively ...
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
 
-    if (doc%nodeType/=DOCUMENT_NODE.and.doc%nodeType/=ELEMENT_NODE) then
+    if (doc%nodeType==DOCUMENT_NODE) then
+      if (present(name).or..not.present(tagName)) then
+        TOHW_m_dom_throw_error(FoX_INVALID_NODE)
+      endif
+    elseif (doc%nodeType==ELEMENT_NODE) then
+      if (present(name).or..not.present(tagName)) then
+        TOHW_m_dom_throw_error(FoX_INVALID_NODE)
+      endif
+    else      
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
 
@@ -359,21 +369,19 @@ TOHW_m_dom_contents(`
       allElements = .true.
 
     if (doc%nodeType==DOCUMENT_NODE) then
-      np => getDocumentElement(doc)
+      arg => getDocumentElement(doc)
     else
-      np => doc
-    endif
-
-    if (.not.associated(np)) then
-      ! FIXME internal error
-      continue
+      arg => doc
     endif
 
     allocate(list)
     allocate(list%nodes(0))
     list%element => doc
-    if (present(name)) list%nodeName => vs_str_alloc(name) ! FIXME or tagName
-    if (present(tagName)) list%nodeName => vs_str_alloc(tagName) ! FIXME or tagName
+    if (present(name)) list%nodeName => vs_str_alloc(name)
+    if (present(tagName)) list%nodeName => vs_str_alloc(tagName)
+
+    if (str_vs(list%nodeName)=="*") &
+      allElements = .true.
 
     if (doc%nodeType==DOCUMENT_NODE) then
       nll => doc%docExtras%nodelists
@@ -392,26 +400,15 @@ TOHW_m_dom_contents(`
       doc%ownerDocument%docExtras%nodelists => temp_nll
     endif
 
-    ascending = .false.
-    do
-      if (ascending) then
-        np => np%parentNode
-        if (associated(np, doc).or.associated(np, getDocumentElement(doc))) exit
-        ascending = .false.
-      elseif (associated(np%firstChild)) then
-        np => np%firstChild
-        cycle
-      endif
-      if ((np%nodeType==ELEMENT_NODE) .and. &
-        (allElements .or. str_vs(np%nodeName)==tagName)) then
-        call append(list, np)
-      endif
-      if (associated(np%nextSibling)) then
-        np => np%nextSibling
-      else
-        ascending = .true.
-      endif
-    enddo
+    this => arg
+
+TOHW_m_dom_treewalk(`dnl
+        if ((this%nodeType==ELEMENT_NODE) .and. &
+          (allElements .or. str_vs(this%nodeName)==tagName)) then
+          call append(list, this)
+          doneAttributes = .true.
+        endif
+',`')
 
   end function getElementsByTagName
 
@@ -501,7 +498,7 @@ TOHW_m_dom_contents(`
         if (.not.deep) then
           if (getNodeType(arg)/=ELEMENT_NODE.and.getNodeType(arg)/=ATTRIBUTE_NODE) return
         endif
-', `', `parentNode')
+', `', `parentNode', `')
 
     np => thatParent
     print*,"importDone"
@@ -590,11 +587,15 @@ TOHW_m_dom_contents(`
     type(NodeList), pointer :: list
 
     type(NodeListPtr), pointer :: nll(:), temp_nll(:)
-    type(Node), pointer :: np
-    logical :: noChild, allLocalNames, allNameSpaces
+    type(Node), pointer :: this, arg
+    logical :: doneChildren, doneAttributes, allLocalNames, allNameSpaces
     integer :: i
 
-    if (doc%nodeType/=DOCUMENT_NODE.and.doc%nodeType/=ELEMENT_NODE) then
+    if (.not.associated(doc)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+
+    if (doc%nodeType/=DOCUMENT_NODE.or.doc%nodeType/=ELEMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
 
@@ -604,14 +605,9 @@ TOHW_m_dom_contents(`
       allLocalNames = .true.
 
     if (doc%nodeType==DOCUMENT_NODE) then
-      np => getDocumentElement(doc)
+      arg => getDocumentElement(doc)
     else
-      np => doc
-    endif
-
-    if (.not.associated(np)) then
-      ! FIXME internal error
-      continue
+      arg => doc
     endif
 
     allocate(list)
@@ -630,30 +626,23 @@ TOHW_m_dom_contents(`
       temp_nll(i)%this => nll(i)%this
     enddo
     temp_nll(i)%this => list
+    deallocate(nll)
+    if (doc%nodeType==DOCUMENT_NODE) then
+      doc%docExtras%nodelists => temp_nll
+    elseif (doc%nodeType==ELEMENT_NODE) then
+      doc%ownerDocument%docExtras%nodelists => temp_nll
+    endif
 
-    noChild = .false.
-    do
-      if (noChild) then
-        if (associated(np, doc).or.associated(np, getDocumentElement(doc))) then
-          exit
-        else
-          np => np%parentNode
-          noChild=  .false.
+    this => arg
+
+TOHW_m_dom_treewalk(`dnl
+      if ((this%nodeType==ELEMENT_NODE) &
+        .and. (allNameSpaces .or. str_vs(arg%namespaceURI)==namespaceURI) &
+        .and. (allLocalNames .or. str_vs(arg%localName)==localName)) then
+        call append(list, this)
+          doneAttributes = .true.
         endif
-      endif
-      if ((np%nodeType==ELEMENT_NODE) &
-        .and. (allNameSpaces .or. str_vs(np%namespaceURI)==namespaceURI) &
-        .and. (allLocalNames .or. str_vs(np%localName)==localName)) then
-        call append(list, np)
-      endif
-      if (associated(np%firstChild)) then
-        np => np%firstChild
-      elseif (associated(np%nextSibling)) then
-        np => np%nextSibling
-      else
-        noChild = .true.
-      endif
-    enddo
+',`')
 
   end function getElementsByTagNameNS
 
@@ -663,43 +652,26 @@ TOHW_m_dom_contents(`
     character(len=*), intent(in) :: elementId
     type(Node), pointer :: np
 
-    type(Node), pointer :: attr
+    type(Node), pointer :: this, arg
     type(NamedNodeMap), pointer :: nnm
     integer :: i
-    logical :: noChild
+    logical :: doneChildren, doneAttributes
 
     if (doc%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
 
-    np => getDocumentElement(doc)
+    arg => getDocumentElement(doc)
 
-    noChild = .false.
-    do
-      if (noChild) then
-        if (associated(np, doc).or.associated(np, getDocumentElement(doc))) then
-          exit
-        else
-          np => np%parentNode
-          noChild=  .false.
+    np => null()
+TOHW_m_dom_treewalk(`dnl
+      if (this%nodeType==ATTRIBUTE_NODE)  then
+        if (getIsId(this).and.getName(this)==elementId) then
+          np => this
+          return
         endif
       endif
-      if (np%nodeType==ELEMENT_NODE) then
-        nnm => np%attributes
-        do i = 1, getLength(nnm)
-          attr => item(nnm, i)
-          if (attr%isId.and.getValue(attr)==elementId) &
-            return
-        enddo
-      endif
-      if (associated(np%firstChild)) then
-        np => np%firstChild
-      elseif (associated(np%nextSibling)) then
-        np => np%nextSibling
-      else
-        noChild = .true.
-      endif
-    enddo
+',`')
 
     np => null()
 

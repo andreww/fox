@@ -3959,7 +3959,7 @@ endif
 
     endif
   
-    np => createNode(doc, CDATA_SECTION_NODE, "#text", data)
+    np => createNode(doc, CDATA_SECTION_NODE, "#cdata-section", data)
 
     if (getGCstate(doc)) then
       np%inDocument = .false.
@@ -4195,13 +4195,41 @@ endif
     type(NodeList), pointer :: list
 
     type(NodeListPtr), pointer :: nll(:), temp_nll(:)
-    type(Node), pointer :: np
-    logical :: ascending, allElements
+    type(Node), pointer :: arg, this
+    logical :: doneChildren, doneAttributes, allElements
     integer :: i
 
-! FIXME check name and tagname for doc/element respectively ...
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "getElementsByTagName", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
 
-    if (doc%nodeType/=DOCUMENT_NODE.and.doc%nodeType/=ELEMENT_NODE) then
+    endif
+
+    if (doc%nodeType==DOCUMENT_NODE) then
+      if (present(name).or..not.present(tagName)) then
+        call throw_exception(FoX_INVALID_NODE, "getElementsByTagName", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+      endif
+    elseif (doc%nodeType==ELEMENT_NODE) then
+      if (present(name).or..not.present(tagName)) then
+        call throw_exception(FoX_INVALID_NODE, "getElementsByTagName", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+      endif
+    else      
       call throw_exception(FoX_INVALID_NODE, "getElementsByTagName", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -4215,21 +4243,19 @@ endif
       allElements = .true.
 
     if (doc%nodeType==DOCUMENT_NODE) then
-      np => getDocumentElement(doc)
+      arg => getDocumentElement(doc)
     else
-      np => doc
-    endif
-
-    if (.not.associated(np)) then
-      ! FIXME internal error
-      continue
+      arg => doc
     endif
 
     allocate(list)
     allocate(list%nodes(0))
     list%element => doc
-    if (present(name)) list%nodeName => vs_str_alloc(name) ! FIXME or tagName
-    if (present(tagName)) list%nodeName => vs_str_alloc(tagName) ! FIXME or tagName
+    if (present(name)) list%nodeName => vs_str_alloc(name)
+    if (present(tagName)) list%nodeName => vs_str_alloc(tagName)
+
+    if (str_vs(list%nodeName)=="*") &
+      allElements = .true.
 
     if (doc%nodeType==DOCUMENT_NODE) then
       nll => doc%docExtras%nodelists
@@ -4248,26 +4274,76 @@ endif
       doc%ownerDocument%docExtras%nodelists => temp_nll
     endif
 
-    ascending = .false.
+    this => arg
+
+
+    i = 0
+    doneChildren = .false.
+    doneAttributes = .false.
     do
-      if (ascending) then
-        np => np%parentNode
-        if (associated(np, doc).or.associated(np, getDocumentElement(doc))) exit
-        ascending = .false.
-      elseif (associated(np%firstChild)) then
-        np => np%firstChild
-        cycle
-      endif
-      if ((np%nodeType==ELEMENT_NODE) .and. &
-        (allElements .or. str_vs(np%nodeName)==tagName)) then
-        call append(list, np)
-      endif
-      if (associated(np%nextSibling)) then
-        np => np%nextSibling
+
+      if (.not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
+      if (.not.doneChildren) then
+
+        if ((this%nodeType==ELEMENT_NODE) .and. &
+          (allElements .or. str_vs(this%nodeName)==tagName)) then
+          call append(list, this)
+          doneAttributes = .true.
+        endif
+
+
       else
-        ascending = .true.
+        if (getNodeType(this)==ELEMENT_NODE) doneAttributes = .true.
+
+
+
       endif
+      endif
+
+      if (.not.doneChildren) then
+
+        if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
+          if (getLength(getAttributes(this))>0) then
+                      this => item(getAttributes(this), 0)
+          else
+            doneAttributes = .true.
+          endif
+        elseif (hasChildNodes(this)) then
+          this => getFirstChild(this)
+          doneChildren = .false.
+          doneAttributes = .false.
+        else
+          doneChildren = .true.
+          doneAttributes = .false.
+        endif
+
+      else ! if doneChildren
+
+        if (associated(this, arg)) exit
+        if (getNodeType(this)==ATTRIBUTE_NODE) then
+          if (i<getLength(getAttributes(getOwnerElement(this)))-1) then
+            i = i + 1
+            this => item(getAttributes(getOwnerElement(this)), i)
+            doneChildren = .false.
+          else
+            i = 0
+            this => getOwnerElement(this)
+            doneAttributes = .true.
+            doneChildren = .false.
+          endif
+        elseif (associated(getNextSibling(this))) then
+
+          this => getNextSibling(this)
+          doneChildren = .false.
+          doneAttributes = .false.
+        else
+          this => getParentNode(this)
+        endif
+      endif
+
     enddo
+
+
 
   end function getElementsByTagName
 
@@ -4607,11 +4683,21 @@ endif
     type(NodeList), pointer :: list
 
     type(NodeListPtr), pointer :: nll(:), temp_nll(:)
-    type(Node), pointer :: np
-    logical :: noChild, allLocalNames, allNameSpaces
+    type(Node), pointer :: this, arg
+    logical :: doneChildren, doneAttributes, allLocalNames, allNameSpaces
     integer :: i
 
-    if (doc%nodeType/=DOCUMENT_NODE.and.doc%nodeType/=ELEMENT_NODE) then
+    if (.not.associated(doc)) then
+      call throw_exception(FoX_NODE_IS_NULL, "getElementsByTagNameNS", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    if (doc%nodeType/=DOCUMENT_NODE.or.doc%nodeType/=ELEMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "getElementsByTagNameNS", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -4627,14 +4713,9 @@ endif
       allLocalNames = .true.
 
     if (doc%nodeType==DOCUMENT_NODE) then
-      np => getDocumentElement(doc)
+      arg => getDocumentElement(doc)
     else
-      np => doc
-    endif
-
-    if (.not.associated(np)) then
-      ! FIXME internal error
-      continue
+      arg => doc
     endif
 
     allocate(list)
@@ -4653,30 +4734,84 @@ endif
       temp_nll(i)%this => nll(i)%this
     enddo
     temp_nll(i)%this => list
+    deallocate(nll)
+    if (doc%nodeType==DOCUMENT_NODE) then
+      doc%docExtras%nodelists => temp_nll
+    elseif (doc%nodeType==ELEMENT_NODE) then
+      doc%ownerDocument%docExtras%nodelists => temp_nll
+    endif
 
-    noChild = .false.
+    this => arg
+
+
+    i = 0
+    doneChildren = .false.
+    doneAttributes = .false.
     do
-      if (noChild) then
-        if (associated(np, doc).or.associated(np, getDocumentElement(doc))) then
-          exit
+
+      if (.not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
+      if (.not.doneChildren) then
+
+      if ((this%nodeType==ELEMENT_NODE) &
+        .and. (allNameSpaces .or. str_vs(arg%namespaceURI)==namespaceURI) &
+        .and. (allLocalNames .or. str_vs(arg%localName)==localName)) then
+        call append(list, this)
+          doneAttributes = .true.
+        endif
+
+
+      else
+        if (getNodeType(this)==ELEMENT_NODE) doneAttributes = .true.
+
+
+
+      endif
+      endif
+
+      if (.not.doneChildren) then
+
+        if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
+          if (getLength(getAttributes(this))>0) then
+                      this => item(getAttributes(this), 0)
+          else
+            doneAttributes = .true.
+          endif
+        elseif (hasChildNodes(this)) then
+          this => getFirstChild(this)
+          doneChildren = .false.
+          doneAttributes = .false.
         else
-          np => np%parentNode
-          noChild=  .false.
+          doneChildren = .true.
+          doneAttributes = .false.
+        endif
+
+      else ! if doneChildren
+
+        if (associated(this, arg)) exit
+        if (getNodeType(this)==ATTRIBUTE_NODE) then
+          if (i<getLength(getAttributes(getOwnerElement(this)))-1) then
+            i = i + 1
+            this => item(getAttributes(getOwnerElement(this)), i)
+            doneChildren = .false.
+          else
+            i = 0
+            this => getOwnerElement(this)
+            doneAttributes = .true.
+            doneChildren = .false.
+          endif
+        elseif (associated(getNextSibling(this))) then
+
+          this => getNextSibling(this)
+          doneChildren = .false.
+          doneAttributes = .false.
+        else
+          this => getParentNode(this)
         endif
       endif
-      if ((np%nodeType==ELEMENT_NODE) &
-        .and. (allNameSpaces .or. str_vs(np%namespaceURI)==namespaceURI) &
-        .and. (allLocalNames .or. str_vs(np%localName)==localName)) then
-        call append(list, np)
-      endif
-      if (associated(np%firstChild)) then
-        np => np%firstChild
-      elseif (associated(np%nextSibling)) then
-        np => np%nextSibling
-      else
-        noChild = .true.
-      endif
+
     enddo
+
+
 
   end function getElementsByTagNameNS
 
@@ -4687,10 +4822,10 @@ endif
     character(len=*), intent(in) :: elementId
     type(Node), pointer :: np
 
-    type(Node), pointer :: attr
+    type(Node), pointer :: this, arg
     type(NamedNodeMap), pointer :: nnm
     integer :: i
-    logical :: noChild
+    logical :: doneChildren, doneAttributes
 
     if (doc%nodeType/=DOCUMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "getElementById", ex)
@@ -4702,34 +4837,78 @@ endif
 
     endif
 
-    np => getDocumentElement(doc)
+    arg => getDocumentElement(doc)
 
-    noChild = .false.
+    np => null()
+
+    i = 0
+    doneChildren = .false.
+    doneAttributes = .false.
     do
-      if (noChild) then
-        if (associated(np, doc).or.associated(np, getDocumentElement(doc))) then
-          exit
-        else
-          np => np%parentNode
-          noChild=  .false.
+
+      if (.not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
+      if (.not.doneChildren) then
+
+      if (this%nodeType==ATTRIBUTE_NODE)  then
+        if (getIsId(this).and.getName(this)==elementId) then
+          np => this
+          return
         endif
       endif
-      if (np%nodeType==ELEMENT_NODE) then
-        nnm => np%attributes
-        do i = 1, getLength(nnm)
-          attr => item(nnm, i)
-          if (attr%isId.and.getValue(attr)==elementId) &
-            return
-        enddo
-      endif
-      if (associated(np%firstChild)) then
-        np => np%firstChild
-      elseif (associated(np%nextSibling)) then
-        np => np%nextSibling
+
+
       else
-        noChild = .true.
+        if (getNodeType(this)==ELEMENT_NODE) doneAttributes = .true.
+
+
+
       endif
+      endif
+
+      if (.not.doneChildren) then
+
+        if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
+          if (getLength(getAttributes(this))>0) then
+                      this => item(getAttributes(this), 0)
+          else
+            doneAttributes = .true.
+          endif
+        elseif (hasChildNodes(this)) then
+          this => getFirstChild(this)
+          doneChildren = .false.
+          doneAttributes = .false.
+        else
+          doneChildren = .true.
+          doneAttributes = .false.
+        endif
+
+      else ! if doneChildren
+
+        if (associated(this, arg)) exit
+        if (getNodeType(this)==ATTRIBUTE_NODE) then
+          if (i<getLength(getAttributes(getOwnerElement(this)))-1) then
+            i = i + 1
+            this => item(getAttributes(getOwnerElement(this)), i)
+            doneChildren = .false.
+          else
+            i = 0
+            this => getOwnerElement(this)
+            doneAttributes = .true.
+            doneChildren = .false.
+          endif
+        elseif (associated(getNextSibling(this))) then
+
+          this => getNextSibling(this)
+          doneChildren = .false.
+          doneAttributes = .false.
+        else
+          this => getParentNode(this)
+        endif
+      endif
+
     enddo
+
+
 
     np => null()
 
@@ -5639,12 +5818,22 @@ endif
 ! can be explicitly kept up to dat.
 
 
-  function getSpecified(attribute, ex)result(p) 
+  function getSpecified(arg, ex)result(p) 
     type(DOMException), intent(inout), optional :: ex
-    type(Node), pointer :: attribute
+    type(Node), pointer :: arg
     logical :: p
 
-    if (attribute%nodeType/=ATTRIBUTE_NODE) then
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "getSpecified", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    if (getNodeType(arg)/=ATTRIBUTE_NODE) then
       call throw_exception(FoX_INVALID_NODE, "getSpecified", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -5654,15 +5843,25 @@ endif
 
     endif
 
-    p = attribute%specified
+    p = arg%specified
   end function getSpecified
 
-  subroutine setSpecified(attribute, p, ex)
+  subroutine setSpecified(arg, p, ex)
     type(DOMException), intent(inout), optional :: ex
-    type(Node), pointer :: attribute
+    type(Node), pointer :: arg
     logical, intent(in) :: p
 
-    if (attribute%nodeType/=ATTRIBUTE_NODE) then
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "setSpecified", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    if (getNodeType(arg)/=ATTRIBUTE_NODE) then
       call throw_exception(FoX_INVALID_NODE, "setSpecified", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -5672,34 +5871,47 @@ endif
 
     endif
 
-    attribute%specified = p
+    arg%specified = p
   end subroutine setSpecified
     
-  pure function getValue_length(attribute) result(n)
-    type(Node), intent(in) :: attribute
+  pure function getValue_len(arg, p) result(n)
+    type(Node), intent(in) :: arg
+    logical, intent(in) :: p
     integer :: n
 
     integer :: i
 
-    n = 0
-    do i = 1, attribute%childNodes%length
-      if (attribute%childNodes%nodes(i)%this%nodeType==TEXT_NODE) then
-        n = n + size(attribute%childNodes%nodes(i)%this%nodeValue)
+    n = 0 
+    if (.not.p) return
+
+    do i = 1, arg%childNodes%length
+      if (arg%childNodes%nodes(i)%this%nodeType==TEXT_NODE) then
+        n = n + size(arg%childNodes%nodes(i)%this%nodeValue)
       else
     ! FIXME get entity length
       endif
     enddo
 
-  end function getValue_length
+  end function getValue_len
 
-  function getValue_DOM(attribute, ex)result(c) 
+  function getValue_DOM(arg, ex)result(c) 
     type(DOMException), intent(inout), optional :: ex
-    type(Node), intent(in) :: attribute
-    character(len=getValue_length(attribute)) :: c 
+    type(Node), pointer :: arg
+    character(len=getValue_len(arg, associated(arg))) :: c 
 
     integer :: i, n
 
-    if (attribute%nodeType/=ATTRIBUTE_NODE) then
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "getValue_DOM", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    if (getNodeType(arg)/=ATTRIBUTE_NODE) then
       call throw_exception(FoX_INVALID_NODE, "getValue_DOM", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -5710,11 +5922,10 @@ endif
     endif
 
     n = 1
-    print*, "we have ",  attribute%childNodes%length, "children."
-    do i = 1, attribute%childNodes%length
-      if (attribute%childNodes%nodes(i)%this%nodeType==TEXT_NODE) then
-        c(n:n+size(attribute%childNodes%nodes(i)%this%nodeValue)-1) = &
-          str_vs(attribute%childNodes%nodes(i)%this%nodeValue)
+    do i = 1, arg%childNodes%length
+      if (arg%childNodes%nodes(i)%this%nodeType==TEXT_NODE) then
+        c(n:n+size(arg%childNodes%nodes(i)%this%nodeValue)-1) = &
+          str_vs(arg%childNodes%nodes(i)%this%nodeValue)
       else
     ! FIXME get entity value
       endif
@@ -5723,15 +5934,25 @@ endif
   end function getValue_DOM
 
 
-  subroutine setValue(attribute, value, ex)
+  subroutine setValue(arg, value, ex)
     type(DOMException), intent(inout), optional :: ex
-    type(Node), pointer :: attribute
+    type(Node), pointer :: arg
     character(len=*), intent(in) :: value
 
     type(Node), pointer :: np
     integer :: i
 
-    if (attribute%nodeType/=ATTRIBUTE_NODE) then
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "setValue", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    if (getNodeType(arg)/=ATTRIBUTE_NODE) then
       call throw_exception(FoX_INVALID_NODE, "setValue", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -5739,7 +5960,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (attribute%readonly) then
+    elseif (arg%readonly) then
       call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setValue", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -5747,7 +5968,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkChars(value, getXmlVersionEnum(getOwnerDocument(attribute)))) then
+    elseif (.not.checkChars(value, getXmlVersionEnum(getOwnerDocument(arg)))) then
       call throw_exception(FoX_INVALID_CHARACTER, "setValue", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -5757,26 +5978,36 @@ endif
 
     endif
 
-    do i = 1, attribute%childNodes%length
-      call destroyNode(attribute%childNodes%nodes(i)%this)
+    do i = 1, getLength(getChildNodes(arg))
+      call destroyNode(arg%childNodes%nodes(i)%this)
     enddo
-    deallocate(attribute%childNodes%nodes)
-    allocate(attribute%childNodes%nodes(0))
-    attribute%childNodes%length = 0
-    attribute%firstChild => null()
-    attribute%lastChild => null()
-    np => createTextNode(attribute%ownerDocument, value)
-    np => appendChild(attribute, np)
+    deallocate(arg%childNodes%nodes)
+    allocate(arg%childNodes%nodes(0))
+    arg%childNodes%length = 0
+    arg%firstChild => null()
+    arg%lastChild => null()
+    np => createTextNode(getOwnerDocument(arg), value)
+    np => appendChild(arg, np)
 
   end subroutine setValue
 
 
-  function getOwnerElement(attribute, ex)result(np) 
+  function getOwnerElement(arg, ex)result(np) 
     type(DOMException), intent(inout), optional :: ex
-    type(Node), intent(in) :: attribute
+    type(Node), pointer :: arg
     type(Node), pointer :: np
 
-    if (attribute%nodeType /= ATTRIBUTE_NODE) then
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "getOwnerElement", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    if (getNodeType(arg) /= ATTRIBUTE_NODE) then
       call throw_exception(FoX_INVALID_NODE, "getOwnerElement", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -5786,9 +6017,67 @@ endif
 
     endif
 
-    np => attribute%ownerElement
+    np => arg%ownerElement
 
   end function getOwnerElement
+
+  function getIsId(arg, ex)result(p) 
+    type(DOMException), intent(inout), optional :: ex
+    type(Node), pointer :: arg
+    logical :: p
+
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "getIsId", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    if (getNodeType(arg) /= ATTRIBUTE_NODE) then
+      call throw_exception(FoX_INVALID_NODE, "getIsId", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    p = arg%isId
+
+  end function getIsId
+
+  subroutine setIsId(arg, p, ex)
+    type(DOMException), intent(inout), optional :: ex
+    type(Node), pointer :: arg
+    logical, intent(in) :: p
+
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "setIsId", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    if (getNodeType(arg) /= ATTRIBUTE_NODE) then
+      call throw_exception(FoX_INVALID_NODE, "setIsId", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    arg%isId = p
+
+  end subroutine setIsId
 
 
 
