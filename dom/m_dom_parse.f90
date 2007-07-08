@@ -197,26 +197,28 @@ contains
     type(Node), pointer :: oldcurrent
     type(xml_t) :: subsax
 
-    oldcurrent => current
-    current => createEntity(mainDoc, name, "", "", "")
-    call setStringValue(current, value)
-
-    call open_xml_string(subsax, value)
-    call sax_parse(subsax%fx, subsax%fb,                                        &
-                   startElement_handler=startElement_handler,                   &
-                   endElement_handler=endElement_handler,                       &
-                   characters_handler=characters_handler,                       &
-                   startCdata_handler=startCdata_handler,                       &
-                   endCdata_handler=endCdata_handler,                           &
-                   comment_handler=comment_handler,                             &
-                   processingInstruction_handler=processingInstruction_handler, &
-                   error_handler=entityErrorHandler,                            &
-                   startInCharData = .true.)
-    call close_xml_t(subsax)
-
-! FIXME what if two entities with the same name
-    current => setNamedItem(getEntities(getDocType(mainDoc)), current)
-    current => oldcurrent
+    oldcurrent => getNamedItem(getEntities(getDocType(mainDoc)), name)
+    if (.not.associated(oldcurrent)) then
+      oldcurrent => current
+      current => createEntity(mainDoc, name, "", "", "")
+      call setStringValue(current, value)
+      
+      call open_xml_string(subsax, value)
+      call sax_parse(subsax%fx, subsax%fb,                                        &
+        startElement_handler=startElement_handler,                   &
+        endElement_handler=endElement_handler,                       &
+        characters_handler=characters_handler,                       &
+        startCdata_handler=startCdata_handler,                       &
+        endCdata_handler=endCdata_handler,                           &
+        comment_handler=comment_handler,                             &
+        processingInstruction_handler=processingInstruction_handler, &
+        error_handler=entityErrorHandler,                            &
+        startInCharData = .true.)
+      call close_xml_t(subsax)
+      
+      current => setNamedItem(getEntities(getDocType(mainDoc)), current)
+      current => oldcurrent
+    endif
 
   end subroutine internalEntityDecl_handler
 
@@ -240,7 +242,13 @@ contains
 !FIXME which are optional, check order
     type(Node), pointer :: np
 
-    np => createEntity(mainDoc, name, publicId, systemId, "")    
+    np => createEntity(mainDoc, name, publicId, systemId, "")
+
+    np => getNamedItem(getEntities(getDocType(mainDoc)), name)
+    if (.not.associated(np)) then
+      np => createEntity(mainDoc, name, publicId, systemId, "")
+      np => setNamedItem(getEntities(getDocType(mainDoc)), np)
+    endif    
 
   end subroutine externalEntityDecl_handler
 
@@ -252,7 +260,11 @@ contains
 !FIXME which are optional, check order
     type(Node), pointer :: np
 
-    np => createEntity(mainDoc, name, publicId, systemId, notationName)    
+    np => getNamedItem(getEntities(getDocType(mainDoc)), name)
+    if (.not.associated(np)) then
+      np => createEntity(mainDoc, name, publicId, systemId, notationName)
+      np => setNamedItem(getEntities(getDocType(mainDoc)), np)
+    endif
 
   end subroutine unparsedEntityDecl_handler
 
