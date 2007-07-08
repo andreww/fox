@@ -121,7 +121,7 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     elseif (arg%readonly) then
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
-    elseif (offset<0) then
+    elseif (offset<0.or.offset>size(arg%nodeValue)) then
       TOHW_m_dom_throw_error(INDEX_SIZE_ERR)
     endif
 
@@ -159,7 +159,7 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     elseif (arg%readonly) then
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
-    elseif (offset<0 .or. count<0) then
+    elseif (offset<0.or.offset>size(arg%nodeValue).or.count<0) then
       TOHW_m_dom_throw_error(INDEX_SIZE_ERR)
     endif
     
@@ -186,7 +186,7 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     elseif (arg%readonly) then
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
-    elseif (offset<0 .or. count<0) then
+    elseif (offset<0.or.offset>size(arg%nodeValue).or.count<0) then
       TOHW_m_dom_throw_error(INDEX_SIZE_ERR)
     endif
 

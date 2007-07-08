@@ -5959,7 +5959,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (offset<0) then
+    elseif (offset<0.or.offset>size(arg%nodeValue)) then
       call throw_exception(INDEX_SIZE_ERR, "insertData", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -6040,7 +6040,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (offset<0 .or. count<0) then
+    elseif (offset<0.or.offset>size(arg%nodeValue).or.count<0) then
       call throw_exception(INDEX_SIZE_ERR, "deleteData", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -6092,7 +6092,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (offset<0 .or. count<0) then
+    elseif (offset<0.or.offset>size(arg%nodeValue).or.count<0) then
       call throw_exception(INDEX_SIZE_ERR, "replaceData", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
