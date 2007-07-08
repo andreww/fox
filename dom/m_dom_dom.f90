@@ -5832,9 +5832,25 @@ endif
     integer, intent(in) :: count
     character(len=count) :: c
 
-    ! FIXME error if offset/count are out of range
-    
-    if (offset<0 .or. count<0) then
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "subStringData", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    if (.not.isCharData(arg%nodeType)) then
+      call throw_exception(FoX_INVALID_NODE, "subStringData", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    elseif (offset<0.or.offset>size(arg%nodeValue).or.count<0) then
       call throw_exception(INDEX_SIZE_ERR, "subStringData", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -5844,12 +5860,8 @@ endif
 
     endif
 
-    if (isCharData(arg%nodeType)) then
-      c = str_vs(arg%nodeValue(offset+1:offset+count))
-    else
-      continue
-      ! FIXME error
-    endif
+    c = str_vs(arg%nodeValue(offset+1:offset+count))
+
   end function subStringData
 
 

@@ -56,18 +56,18 @@ TOHW_m_dom_contents(`
     integer, intent(in) :: count
     character(len=count) :: c
 
-    ! FIXME error if offset/count are out of range
-    
-    if (offset<0 .or. count<0) then
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+
+    if (.not.isCharData(arg%nodeType)) then
+      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
+    elseif (offset<0.or.offset>size(arg%nodeValue).or.count<0) then
       TOHW_m_dom_throw_error(INDEX_SIZE_ERR)
     endif
 
-    if (isCharData(arg%nodeType)) then
-      c = str_vs(arg%nodeValue(offset+1:offset+count))
-    else
-      continue
-      ! FIXME error
-    endif
+    c = str_vs(arg%nodeValue(offset+1:offset+count))
+
   end function subStringData
 
 
