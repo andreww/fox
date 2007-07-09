@@ -14,7 +14,7 @@ module m_dom_dom
 
 
 
-  use m_common_array_str, only: str_vs, vs_str_alloc
+  use m_common_array_str, only: vs_str, str_vs, vs_str_alloc
   use m_dom_error, only: DOMException, throw_exception, is_in_error, &
     NO_MODIFICATION_ALLOWED_ERR, NOT_FOUND_ERR, HIERARCHY_REQUEST_ERR, &
     WRONG_DOCUMENT_ERR, FoX_INTERNAL_ERROR, FoX_NODE_IS_NULL
@@ -2018,7 +2018,6 @@ endif
       do i = 1, newChild%childNodes%length
         i_t = i_t + 1
         temp_nl(i_t)%this => newChild%childNodes%nodes(i)%this
-        print*,"ASS", i_t, associated(temp_nl(i_t)%this)
         if (arg%inDocument) &
           call putNodesInDocument(arg%ownerDocument, temp_nl(i_t)%this)
         temp_nl(i_t)%this%parentNode => arg
@@ -2093,7 +2092,6 @@ endif
     logical :: doneAttributes, doneChildren, readonly, quickFix
     integer :: i
 
-print*,"ENTERING CLONENODE..."
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "cloneNode", ex)
 if (present(ex)) then
@@ -2325,12 +2323,12 @@ endif
         enddo
         if (.not.associated(tempNode, getNextSibling(this))) then
           allocate(temp(i_t))
-          temp(:getLength(this)) = getData(this)
+          temp(:getLength(this)) = vs_str(getData(this))
           i_t = getLength(this)
           tempNode => getNextSibling(this)
           do while (associated(tempNode))
             if (getNodeType(tempNode)/=TEXT_NODE) exit
-            temp(i_t+1:i_t+getLength(tempNode)) = getData(tempNode)
+            temp(i_t+1:i_t+getLength(tempNode)) = vs_str(getData(tempNode))
             i_t = i_t + getLength(tempNode)
             oldNode => tempNode
             tempNode => getNextSibling(tempNode)
