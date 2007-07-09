@@ -200,12 +200,19 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif
 
+
     if (arg%nodeType /= ELEMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     elseif (.not.associated(arg%ownerDocument, newattr%ownerDocument)) then
       TOHW_m_dom_throw_error(WRONG_DOCUMENT_ERR)
     elseif (arg%readonly) then
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
+    endif
+
+    if (associated(newattr%ownerElement, arg)) then
+      attr => newattr
+      return
+      ! Nothing to do, this attribute is already in this element
     elseif (associated(newattr%ownerElement)) then
       TOHW_m_dom_throw_error(INUSE_ATTRIBUTE_ERR)
     endif

@@ -5539,6 +5539,7 @@ endif
 
     endif
 
+
     if (arg%nodeType /= ELEMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "setAttributeNode", ex)
 if (present(ex)) then
@@ -5563,6 +5564,12 @@ if (present(ex)) then
   endif
 endif
 
+    endif
+
+    if (associated(newattr%ownerElement, arg)) then
+      attr => newattr
+      return
+      ! Nothing to do, this attribute is already in this element
     elseif (associated(newattr%ownerElement)) then
       call throw_exception(INUSE_ATTRIBUTE_ERR, "setAttributeNode", ex)
 if (present(ex)) then
