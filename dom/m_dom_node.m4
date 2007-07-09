@@ -177,12 +177,11 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif
 
-    if (arg%readonly) then
-      TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
-    endif
-
     select case(arg%nodeType)
     case (ATTRIBUTE_NODE)
+      if (arg%readonly) then
+        TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
+      endif
       ! FIXME check does string contain wrong characters
       ! destroy any existing children ... 
       do i = 1, arg%childNodes%length
@@ -202,18 +201,30 @@ TOHW_m_dom_contents(`
       np => appendChild(arg, np)
       call setGCstate(arg%ownerDocument, .true.)
     case (CDATA_SECTION_NODE)
+      if (arg%readonly) then
+        TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
+      endif
       ! FIXME check does string contain wrong characters
       deallocate(arg%nodeValue)
       arg%nodeValue => vs_str_alloc(nodeValue)
     case (COMMENT_NODE)
+      if (arg%readonly) then
+        TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
+      endif
       ! FIXME check does string contain wrong characters
       deallocate(arg%nodeValue)
       arg%nodeValue => vs_str_alloc(nodeValue)
     case (PROCESSING_INSTRUCTION_NODE)
+      if (arg%readonly) then
+        TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
+      endif
       ! FIXME check does string contain wrong characters
       deallocate(arg%nodeValue)
       arg%nodeValue => vs_str_alloc(nodeValue)
     case (TEXT_NODE)
+      if (arg%readonly) then
+        TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
+      endif
       ! FIXME check does string contain wrong characters
       deallocate(arg%nodeValue)
       arg%nodeValue => vs_str_alloc(nodeValue)

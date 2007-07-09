@@ -874,18 +874,17 @@ endif
 
     endif
 
-    if (arg%readonly) then
-      call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setNodeValue", ex)
+    select case(arg%nodeType)
+    case (ATTRIBUTE_NODE)
+      if (arg%readonly) then
+        call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setNodeValue", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
      return
   endif
 endif
 
-    endif
-
-    select case(arg%nodeType)
-    case (ATTRIBUTE_NODE)
+      endif
       ! FIXME check does string contain wrong characters
       ! destroy any existing children ... 
       do i = 1, arg%childNodes%length
@@ -905,18 +904,54 @@ endif
       np => appendChild(arg, np)
       call setGCstate(arg%ownerDocument, .true.)
     case (CDATA_SECTION_NODE)
+      if (arg%readonly) then
+        call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setNodeValue", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+      endif
       ! FIXME check does string contain wrong characters
       deallocate(arg%nodeValue)
       arg%nodeValue => vs_str_alloc(nodeValue)
     case (COMMENT_NODE)
+      if (arg%readonly) then
+        call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setNodeValue", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+      endif
       ! FIXME check does string contain wrong characters
       deallocate(arg%nodeValue)
       arg%nodeValue => vs_str_alloc(nodeValue)
     case (PROCESSING_INSTRUCTION_NODE)
+      if (arg%readonly) then
+        call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setNodeValue", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+      endif
       ! FIXME check does string contain wrong characters
       deallocate(arg%nodeValue)
       arg%nodeValue => vs_str_alloc(nodeValue)
     case (TEXT_NODE)
+      if (arg%readonly) then
+        call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setNodeValue", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+      endif
       ! FIXME check does string contain wrong characters
       deallocate(arg%nodeValue)
       arg%nodeValue => vs_str_alloc(nodeValue)
