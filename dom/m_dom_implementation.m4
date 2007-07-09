@@ -143,6 +143,7 @@ TOHW_m_dom_contents(`
     deallocate(doc%docExtras%nodelists)
 
     ! Destroy all remaining hanging nodes
+    print*,"DESTROYING HANGING NODES"
     do i = 1, doc%docExtras%hangingNodes%length
       call destroy(doc%docExtras%hangingNodes%nodes(i)%this)
     enddo
@@ -152,7 +153,7 @@ TOHW_m_dom_contents(`
     deallocate(doc%docExtras%xds)
 
     deallocate(doc%docExtras)
-
+    print*,"DESTROYING DOCUMENT NODES"
     call destroyAllNodesRecursively(doc)
     call destroyNodeContents(doc)
     deallocate(doc)

@@ -48,16 +48,13 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif
 
-    print*,"LOOKING FOR NAMED ITEM", map%length
-
     do i = 1, map%length
-      print*, i, str_vs(map%nodes(i)%this%nodeName)
       if (str_vs(map%nodes(i)%this%nodeName)==name) then
         np => map%nodes(i)%this
         return
       endif
     enddo
-    
+
     np => null()
 
   end function getNamedItem
@@ -112,31 +109,44 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif
 
+!FIXME what if you try and add a non-attribute node to an attribute NNM?
+!FIXME at the very least you will bugger up all the tree-walking algorithms,
+!FIXME including the clean-up ones, and memory will leak.
+!FIXME ANSWER in DOM 3- HIERARCHY_REQUEST_ERR
+
     if (map%readonly) then
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
     elseif (.not.associated(map%ownerElement%ownerDocument, arg%ownerDocument)) then
       TOHW_m_dom_throw_error(WRONG_DOCUMENT_ERR)
+    endif
+    if (associated(map%ownerElement, arg%ownerElement)) then
+      np => null()
+      return
+      ! Nothing to do, this attribute is already in this element
     elseif (associated(arg%ownerElement)) then
       TOHW_m_dom_throw_error(INUSE_ATTRIBUTE_ERR)    
     endif
 
+    np => null()
     do i = 1, map%length
       if (str_vs(map%nodes(i)%this%nodeName)==str_vs(arg%nodeName)) then
         np => map%nodes(i)%this
         map%nodes(i)%this => arg
-        return
+        arg%ownerElement => map%ownerElement
+        exit
       endif
     enddo
 
     !   If not found, insert it at the end of the linked list
-    np => null()
-    call append_nnm(map, arg)
+    if (.not.associated(np)) call append_nnm(map, arg)
 
     if (getGCstate(getOwnerDocument(map%ownerElement))) then
       ! We need to worry about importing this node
       if (map%ownerElement%inDocument) then
         if (.not.arg%inDocument) &
           call putNodesInDocument(getOwnerDocument(map%ownerElement), arg)
+        if (associated(np)) &
+          call removeNodesFromDocument(getOwnerDocument(map%ownerElement), np)
       else
         if (arg%inDocument) &
           call removeNodesFromDocument(getOwnerDocument(map%ownerElement), arg)
@@ -395,6 +405,7 @@ TOHW_m_dom_contents(`
       map%nodes(size(map%nodes))%this => arg
       map%length = size(map%nodes)
     endif
+    arg%ownerElement => map%ownerElement
 
   end subroutine append_nnm
 

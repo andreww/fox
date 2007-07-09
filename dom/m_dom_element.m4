@@ -196,10 +196,11 @@ TOHW_m_dom_contents(`
     type(Node), pointer :: attr
     type(Node), pointer :: dummy
 
+    integer :: i
+
     if (.not.associated(arg)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif
-
 
     if (arg%nodeType /= ELEMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
@@ -210,7 +211,7 @@ TOHW_m_dom_contents(`
     endif
 
     if (associated(newattr%ownerElement, arg)) then
-      attr => newattr
+      attr => null()
       return
       ! Nothing to do, this attribute is already in this element
     elseif (associated(newattr%ownerElement)) then
@@ -219,8 +220,8 @@ TOHW_m_dom_contents(`
 
     ! this checks if attribute exists already
     ! It also does any adding/removing of hangingnodes
+    ! and sets ownerElement appropriately
     dummy => setNamedItem(getAttributes(arg), newattr, ex)
-    newattr%ownerElement => arg
     attr => dummy
 
   end function setAttributeNode

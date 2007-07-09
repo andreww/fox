@@ -191,7 +191,7 @@ TOHW_m_dom_contents(`
   subroutine destroyNode(np)
     type(Node), pointer :: np
 
-    print*,"destroyNode", np%nodeType
+    print*,"destroyNode", np%nodeType, str_vs(np%nodeName)
     if (.not.associated(np)) return
 
     select case(np%nodeType)

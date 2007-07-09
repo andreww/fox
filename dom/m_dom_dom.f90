@@ -463,7 +463,7 @@ contains
   subroutine destroyNode(np)
     type(Node), pointer :: np
 
-    print*,"destroyNode", np%nodeType
+    print*,"destroyNode", np%nodeType, str_vs(np%nodeName)
     if (.not.associated(np)) return
 
     select case(np%nodeType)
@@ -2986,16 +2986,13 @@ endif
 
     endif
 
-    print*,"LOOKING FOR NAMED ITEM", map%length
-
     do i = 1, map%length
-      print*, i, str_vs(map%nodes(i)%this%nodeName)
       if (str_vs(map%nodes(i)%this%nodeName)==name) then
         np => map%nodes(i)%this
         return
       endif
     enddo
-    
+
     np => null()
 
   end function getNamedItem
@@ -3057,6 +3054,11 @@ endif
 
     endif
 
+!FIXME what if you try and add a non-attribute node to an attribute NNM?
+!FIXME at the very least you will bugger up all the tree-walking algorithms,
+!FIXME including the clean-up ones, and memory will leak.
+!FIXME ANSWER in DOM 3- HIERARCHY_REQUEST_ERR
+
     if (map%readonly) then
       call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setNamedItem", ex)
 if (present(ex)) then
@@ -3073,6 +3075,11 @@ if (present(ex)) then
   endif
 endif
 
+    endif
+    if (associated(map%ownerElement, arg%ownerElement)) then
+      np => null()
+      return
+      ! Nothing to do, this attribute is already in this element
     elseif (associated(arg%ownerElement)) then
       call throw_exception(INUSE_ATTRIBUTE_ERR, "setNamedItem", ex)
 if (present(ex)) then
@@ -3083,23 +3090,26 @@ endif
     
     endif
 
+    np => null()
     do i = 1, map%length
       if (str_vs(map%nodes(i)%this%nodeName)==str_vs(arg%nodeName)) then
         np => map%nodes(i)%this
         map%nodes(i)%this => arg
-        return
+        arg%ownerElement => map%ownerElement
+        exit
       endif
     enddo
 
     !   If not found, insert it at the end of the linked list
-    np => null()
-    call append_nnm(map, arg)
+    if (.not.associated(np)) call append_nnm(map, arg)
 
     if (getGCstate(getOwnerDocument(map%ownerElement))) then
       ! We need to worry about importing this node
       if (map%ownerElement%inDocument) then
         if (.not.arg%inDocument) &
           call putNodesInDocument(getOwnerDocument(map%ownerElement), arg)
+        if (associated(np)) &
+          call removeNodesFromDocument(getOwnerDocument(map%ownerElement), np)
       else
         if (arg%inDocument) &
           call removeNodesFromDocument(getOwnerDocument(map%ownerElement), arg)
@@ -3435,6 +3445,7 @@ endif
       map%nodes(size(map%nodes))%this => arg
       map%length = size(map%nodes)
     endif
+    arg%ownerElement => map%ownerElement
 
   end subroutine append_nnm
 
@@ -3606,6 +3617,7 @@ endif
     deallocate(doc%docExtras%nodelists)
 
     ! Destroy all remaining hanging nodes
+    print*,"DESTROYING HANGING NODES"
     do i = 1, doc%docExtras%hangingNodes%length
       call destroy(doc%docExtras%hangingNodes%nodes(i)%this)
     enddo
@@ -3615,7 +3627,7 @@ endif
     deallocate(doc%docExtras%xds)
 
     deallocate(doc%docExtras)
-
+    print*,"DESTROYING DOCUMENT NODES"
     call destroyAllNodesRecursively(doc)
     call destroyNodeContents(doc)
     deallocate(doc)
@@ -5529,6 +5541,8 @@ endif
     type(Node), pointer :: attr
     type(Node), pointer :: dummy
 
+    integer :: i
+
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "setAttributeNode", ex)
 if (present(ex)) then
@@ -5538,7 +5552,6 @@ if (present(ex)) then
 endif
 
     endif
-
 
     if (arg%nodeType /= ELEMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "setAttributeNode", ex)
@@ -5567,7 +5580,7 @@ endif
     endif
 
     if (associated(newattr%ownerElement, arg)) then
-      attr => newattr
+      attr => null()
       return
       ! Nothing to do, this attribute is already in this element
     elseif (associated(newattr%ownerElement)) then
@@ -5582,8 +5595,8 @@ endif
 
     ! this checks if attribute exists already
     ! It also does any adding/removing of hangingnodes
+    ! and sets ownerElement appropriately
     dummy => setNamedItem(getAttributes(arg), newattr, ex)
-    newattr%ownerElement => arg
     attr => dummy
 
   end function setAttributeNode
