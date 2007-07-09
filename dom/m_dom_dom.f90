@@ -1117,6 +1117,7 @@ endif
 
     if (.not.associated(refChild)) then
       np => appendChild(arg, newChild, ex)
+      return
     endif
 
     if (arg%readonly) then
@@ -2155,6 +2156,7 @@ endif
       endif
 
       if (.not.deep) then
+        
         if (getNodeType(arg)/=ELEMENT_NODE.and.getNodeType(arg)/=ATTRIBUTE_NODE) exit
       endif
 

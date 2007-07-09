@@ -344,6 +344,7 @@ TOHW_m_dom_contents(`
 
     if (.not.associated(refChild)) then
       np => appendChild(arg, newChild, ex)
+      return
     endif
 
     if (arg%readonly) then
@@ -850,6 +851,7 @@ TOHW_m_dom_treewalk(`
       endif
 
       if (.not.deep) then
+        
         if (getNodeType(arg)/=ELEMENT_NODE.and.getNodeType(arg)/=ATTRIBUTE_NODE) exit
       endif
 ', `
