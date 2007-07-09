@@ -4084,16 +4084,16 @@ endif
     if (getGCstate(doc)) then ! otherwise the parser will fill these nodes in itself
       ! FIXME except I think that gets switched off when creating atts sometimes ... need to check
       ent => getNamedItem(getEntities(getDocType(doc)), name)
-      if (ent%illFormed) then
-        call throw_exception(FoX_INVALID_ENTITY, "createEntityReference", ex)
+      if (associated(ent)) then
+        if (ent%illFormed) then
+          call throw_exception(FoX_INVALID_ENTITY, "createEntityReference", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
      return
   endif
 endif
 
-      endif
-      if (associated(ent)) then
+        endif
         do i = 0, getLength(getChildNodes(ent)) - 1
           newNode => appendChild(np, cloneNode(item(getChildNodes(ent), i), .true., ex))
           call setReadOnlyNode(newNode, .true.)

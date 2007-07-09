@@ -88,6 +88,8 @@ contains
     character(len=*), intent(in)     :: localname
     character(len=*), intent(in)     :: name
 
+    if (associated(inEntity)) call setReadOnlyNode(current, .true.)
+
     current => getParentNode(current)
   end subroutine endElement_handler
 
