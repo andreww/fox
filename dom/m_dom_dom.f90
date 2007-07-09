@@ -1744,6 +1744,7 @@ endif
           arg%childNodes%nodes(i+1)%this%previousSibling => arg%childNodes%nodes(i-1)%this
         endif
       else
+        if (i_t==size(arg%childNodes%nodes)) exit ! We have failed to find the child
         temp_nl(i_t)%this => arg%childNodes%nodes(i)%this
         i_t = i_t + 1     
       endif
