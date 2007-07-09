@@ -425,7 +425,7 @@ TOHW_m_dom_contents(`
     enddo
 
     if (.not.associated(np)) then
-      TOHW_m_dom_throw_error(NOT_FOUND_ERR)
+      TOHW_m_dom_throw_error(NOT_FOUND_ERR, (temp_nl))
     endif
 
     np => newChild
@@ -446,7 +446,8 @@ TOHW_m_dom_contents(`
       ! b) in a document fragment and therefore not part of doc either
     endif
 
-    if (newChild%nodeType==DOCUMENT_FRAGMENT_NODE) then
+
+    if (getNodeType(newChild)==DOCUMENT_FRAGMENT_NODE) then
       deallocate(newChild%childNodes%nodes)
       allocate(newChild%childNodes%nodes(0))
       newChild%childNodes%length = 0

@@ -1357,6 +1357,8 @@ endif
       call throw_exception(NOT_FOUND_ERR, "insertBefore", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
+
+if (associated(temp_nl)) deallocate(temp_nl)
      return
   endif
 endif
@@ -1381,7 +1383,8 @@ endif
       ! b) in a document fragment and therefore not part of doc either
     endif
 
-    if (newChild%nodeType==DOCUMENT_FRAGMENT_NODE) then
+
+    if (getNodeType(newChild)==DOCUMENT_FRAGMENT_NODE) then
       deallocate(newChild%childNodes%nodes)
       allocate(newChild%childNodes%nodes(0))
       newChild%childNodes%length = 0
