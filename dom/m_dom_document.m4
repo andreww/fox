@@ -393,9 +393,10 @@ TOHW_m_dom_contents(`
     this => arg
 
 TOHW_m_dom_treewalk(`dnl
-        if ((this%nodeType==ELEMENT_NODE) .and. &
-          (allElements .or. str_vs(this%nodeName)==tagName)) then
-          call append(list, this)
+        if (this%nodeType==ELEMENT_NODE) then
+          if ((allElements .or. str_vs(this%nodeName)==tagName) &
+            .and..not.(getNodeType(doc)==ELEMENT_NODE.and.associated(this, arg))) &
+            call append(list, this)
           doneAttributes = .true.
         endif
 ',`')
