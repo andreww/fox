@@ -69,7 +69,7 @@ contains
       call setSpecified(temp, .true.)
       temp =>  setAttributeNodeNS(el, temp)
       ! FIXME check specifiedness
-      if (associated(inEntity)) call setReadOnlyNode(temp, .true.)
+      if (associated(inEntity)) call setReadOnlyNode(temp, .true., .true.)
       ! FIXME recursive readonly
     enddo
 
@@ -88,7 +88,7 @@ contains
     character(len=*), intent(in)     :: localname
     character(len=*), intent(in)     :: name
 
-    if (associated(inEntity)) call setReadOnlyNode(current, .true.)
+    if (associated(inEntity)) call setReadOnlyNode(current, .true., .false.)
 
     current => getParentNode(current)
   end subroutine endElement_handler
@@ -105,7 +105,7 @@ contains
     endif
     temp => appendChild(current, temp)
     
-    if (associated(inEntity)) call setReadOnlyNode(temp, .true.)
+    if (associated(inEntity)) call setReadOnlyNode(temp, .true., .false.)
 
   end subroutine characters_handler
 
@@ -116,7 +116,7 @@ contains
 
     temp => appendChild(current, createComment(mainDoc, comment))
 
-    if (associated(inEntity)) call setReadOnlyNode(temp, .true.)
+    if (associated(inEntity)) call setReadOnlyNode(temp, .true., .false.)
 
   end subroutine comment_handler
 
@@ -129,7 +129,7 @@ contains
     temp => appendChild(current, &
       createProcessingInstruction(mainDoc, target, data))
 
-    if (associated(inEntity)) call setReadOnlyNode(temp, .true.)
+    if (associated(inEntity)) call setReadOnlyNode(temp, .true., .false.)
   end subroutine processingInstruction_handler
 
   subroutine startDocument_handler
@@ -285,6 +285,7 @@ contains
     character(len=*), intent(in) :: name
     
     if (entities_expand) then
+      call setReadOnlyNode(current, .true., .false.)
       if (str_vs(inEntity)==name) deallocate(inEntity)
       current => getParentNode(current)
     endif
@@ -297,7 +298,7 @@ contains
     type(Node), pointer :: temp
 
     temp => appendChild(current, createEntityReference(mainDoc, name))
-    if (associated(inEntity)) call setReadonlyNode(temp, .true.)
+    if (associated(inEntity)) call setReadonlyNode(temp, .true., .false.)
   end subroutine skippedEntity_handler
 
   function parsefile(filename, configuration)

@@ -289,11 +289,14 @@ TOHW_m_dom_contents(`
         endif
         do i = 0, getLength(getChildNodes(ent)) - 1
           newNode => appendChild(np, cloneNode(item(getChildNodes(ent), i), .true., ex))
+          call setReadOnlyNode(newNode, .true., .true.)
         enddo
       endif
       ! FIXME in case of recursive entity references?
     endif
-    call setReadOnlyNode(np, .true.)
+
+    call setReadOnlyNode(np, .true., .false.)
+
     if (getGCstate(doc)) then
       np%inDocument = .false.
       call append(doc%docExtras%hangingnodes, np)

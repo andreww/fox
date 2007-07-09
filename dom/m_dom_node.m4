@@ -1047,19 +1047,24 @@ TOHW_m_dom_treewalk(`
 
   end subroutine removeNodesFromDocument
 
-  subroutine setReadOnlyNode(arg, p)
+  subroutine setReadOnlyNode(arg, p, deep)
     type(Node), pointer :: arg
     logical, intent(in) :: p
+    logical, intent(in) :: deep
 
     type(Node), pointer :: this
     integer :: i
     logical :: doneAttributes, doneChildren
 
-    this => arg
+    if (deep) then
+      this => arg
 
 TOHW_m_dom_treewalk(`
-    this%readonly = p
+      this%readonly = p
 ',`')
+    else
+      arg%readonly = p
+    endif
 
   end subroutine setReadOnlyNode
 
