@@ -7049,12 +7049,19 @@ if (present(ex)) then
 endif
 
     endif
+    
+    if (.not.isCharData(arg%nodeType)) then
+      call throw_exception(FoX_INVALID_NODE, "getLength_characterdata", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
 
-    if (isCharData(arg%nodeType)) then
-       n = size(arg%nodeValue)
-    else
-       n = 0 ! FIXME error
     endif
+
+    n = size(arg%nodeValue)
+    
   end function getLength_characterdata
 
 

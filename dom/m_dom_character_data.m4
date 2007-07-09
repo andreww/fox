@@ -41,12 +41,13 @@ TOHW_m_dom_contents(`
     if (.not.associated(arg)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif
-
-    if (isCharData(arg%nodeType)) then
-       n = size(arg%nodeValue)
-    else
-       n = 0 ! FIXME error
+    
+    if (.not.isCharData(arg%nodeType)) then
+      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
+
+    n = size(arg%nodeValue)
+    
   end function getLength_characterdata
 
 
