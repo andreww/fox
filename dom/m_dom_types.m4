@@ -299,13 +299,13 @@ TOHW_m_dom_contents(`
   subroutine destroyAllNodesRecursively(arg)
     type(Node), pointer :: arg
     
-    type(Node), pointer :: this, deadNode
+    type(Node), pointer :: this, deadNode, treeroot
     logical :: doneChildren, doneAttributes
-    integer :: i
+    integer :: i_tree
 
     if (.not.associated(arg)) return
-    this => arg
 
+    treeroot => arg
 TOHW_m_dom_treewalk(`',`',`deadNode', `')
 
     deallocate(arg%childNodes%nodes)

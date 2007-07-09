@@ -13,6 +13,8 @@ dnl This requires declarations of:
 dnl integer :: i
 dnl logical :: doneChildren, doneAttributes
 dnl
+dnl The root of the tree to be walked must be pointed to by the 
+dnl variable "treeroot"
 dnl The primary node being walked must be called "this"
 dnl In addition, for cloneNode/importNode, a secondary node
 dnl may be walked which represents its parent for a cloned tree
@@ -24,9 +26,10 @@ dnl and will be destroyed as soon as it is finished with.
 dnl That can be switched on with $3 = deadNode
 dnl
 
-    i = 0
+    i_tree = 0
     doneChildren = .false.
     doneAttributes = .false.
+    this => treeroot
 ifelse(`$3', `deadNode',`
       deadNode => null()
 ')dnl
@@ -66,7 +69,7 @@ ifelse(`$3', `parentNode', `dnl
 ifelse(`$3', `parentNode', `dnl
           if (.not.associated(this, arg)) then
             if (getNodeType(this)==ATTRIBUTE_NODE) then
-              thatParent => item(getAttributes(thatParent), i)
+              thatParent => item(getAttributes(thatParent), i_tree)
             else
               thatParent => getLastChild(thatParent)
             endif
@@ -87,12 +90,12 @@ ifelse(`$3', `deadNode', `dnl
 ')dnl
         if (associated(this, arg)) exit
         if (getNodeType(this)==ATTRIBUTE_NODE) then
-          if (i<getLength(getAttributes(getOwnerElement(this)))-1) then
-            i = i + 1
-            this => item(getAttributes(getOwnerElement(this)), i)
+          if (i_tree<getLength(getAttributes(getOwnerElement(this)))-1) then
+            i_tree= i_tree+ 1
+            this => item(getAttributes(getOwnerElement(this)), i_tree)
             doneChildren = .false.
           else
-            i = 0
+            i_tree= 0
 ifelse(`$3', `parentNode', `dnl
             if (associated(getParentNode(thatParent))) thatParent => getParentNode(thatParent)
 ')dnl

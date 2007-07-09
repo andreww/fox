@@ -71,10 +71,10 @@ contains
   end subroutine dumpTree
 
 
-  subroutine serialize(startNode,Name)
+  subroutine serialize(startNode, name)
 
     type(Node), pointer :: startNode   
-    character(len=*), intent(in) :: Name
+    character(len=*), intent(in) :: name
 
     type(xmlf_t)  :: xf
     integer :: iostat
@@ -95,18 +95,18 @@ contains
     type(xmlf_t), intent(inout) :: xf
     type(Node), pointer :: doc
 
-    type(Node), pointer :: this, arg
+    type(Node), pointer :: this, arg, treeroot
     type(NamedNodeMap), pointer :: nnm
-    integer :: i, j
+    integer :: i_tree, j
     logical :: doneChildren, doneAttributes
-    this => arg
 
 !FIXME options for entityrefs & cdata ...
+    treeroot => arg
 
-
-    i = 0
+    i_tree = 0
     doneChildren = .false.
     doneAttributes = .false.
+    this => treeroot
     do
 
       if (.not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
@@ -195,12 +195,12 @@ contains
 
         if (associated(this, arg)) exit
         if (getNodeType(this)==ATTRIBUTE_NODE) then
-          if (i<getLength(getAttributes(getOwnerElement(this)))-1) then
-            i = i + 1
-            this => item(getAttributes(getOwnerElement(this)), i)
+          if (i_tree<getLength(getAttributes(getOwnerElement(this)))-1) then
+            i_tree= i_tree+ 1
+            this => item(getAttributes(getOwnerElement(this)), i_tree)
             doneChildren = .false.
           else
-            i = 0
+            i_tree= 0
             this => getOwnerElement(this)
             doneAttributes = .true.
             doneChildren = .false.

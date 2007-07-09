@@ -25,7 +25,8 @@ module m_dom_parse
   use m_dom_dom, only: setAttributeNodeNS, setGCstate, createCdataSection, setXds
   use m_dom_dom, only: createEntityReference, destroyAllNodesRecursively, setIllFormed
   use m_dom_dom, only: createElement, createAttribute, getNamedItem, getTagName
-  use m_dom_dom, only: setReadonlyNode, setReadOnlyMap, createEmptyEntityReference
+  use m_dom_dom, only: setReadonlyNode, setReadOnlyMap, createEmptyEntityReference, &
+    setEntityReferenceValue
   use m_dom_debug, only: dom_debug
 
   implicit none
@@ -282,6 +283,7 @@ contains
     character(len=*), intent(in) :: name
     
     if (entities_expand) then
+      call setEntityReferenceValue(current)
       call setReadOnlyNode(current, .true., .false.)
       if (str_vs(inEntity)==name) deallocate(inEntity)
       current => getParentNode(current)

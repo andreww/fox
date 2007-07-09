@@ -69,11 +69,7 @@ TOHW_m_dom_contents(`
     if (.not.p) return
 
     do i = 1, arg%childNodes%length
-      if (arg%childNodes%nodes(i)%this%nodeType==TEXT_NODE) then
-        n = n + size(arg%childNodes%nodes(i)%this%nodeValue)
-      else
-    ! FIXME get entity length
-      endif
+      n = n + size(arg%childNodes%nodes(i)%this%nodeValue)
     enddo
 
   end function getValue_len
@@ -94,16 +90,11 @@ TOHW_m_dom_contents(`
 
     n = 1
     do i = 1, arg%childNodes%length
-      if (arg%childNodes%nodes(i)%this%nodeType==TEXT_NODE) then
-        c(n:n+size(arg%childNodes%nodes(i)%this%nodeValue)-1) = &
-          str_vs(arg%childNodes%nodes(i)%this%nodeValue)
-      else
-    ! FIXME get entity value
-      endif
+      c(n:n+size(arg%childNodes%nodes(i)%this%nodeValue)-1) = &
+        str_vs(arg%childNodes%nodes(i)%this%nodeValue)
     enddo
 
   end function getValue_DOM
-
 
   TOHW_subroutine(setValue, (arg, value))
     type(Node), pointer :: arg
@@ -136,7 +127,6 @@ TOHW_m_dom_contents(`
     np => appendChild(arg, np)
 
   end subroutine setValue
-
 
   TOHW_function(getOwnerElement, (arg), np)
     type(Node), pointer :: arg

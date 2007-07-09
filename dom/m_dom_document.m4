@@ -37,6 +37,7 @@ TOHW_m_dom_publics(`
 
   public :: setDocType
   public :: setXds
+  public :: setEntityReferenceValue
   public :: createEntity
   public :: createNotation
   public :: setGCstate
@@ -345,6 +346,37 @@ TOHW_m_dom_contents(`
   
   end function createAttribute
 
+  subroutine setEntityReferenceValue(arg)
+    type(Node), pointer :: arg
+
+    type(Node), pointer :: this, treeroot
+    integer :: i_tree, n
+    logical :: doneAttributes, doneChildren
+
+    ! Calculate value of any entity references that are only textual:
+    n = 0
+    treeroot => arg
+TOHW_m_dom_treewalk(`
+      if (getNodeType(this)==TEXT_NODE) then
+        n = n + len(getData(this))
+      elseif (getNodeType(this)/=ENTITY_REFERENCE_NODE) then
+        n = 0
+        exit
+      endif
+',`')
+    deallocate(arg%nodeValue)
+    allocate(arg%nodeValue(n))
+    if (n>0) then
+      n = 0
+TOHW_m_dom_treewalk(`
+        if (getNodeType(this)==TEXT_NODE) then
+          arg%nodeValue(n+1:n+len(getData(this))) = getData(this)
+          n = n + len(getData(this))
+        endif
+',`')
+    endif
+  end subroutine setEntityReferenceValue
+
   TOHW_function(createEntityReference, (arg, name), np)
     type(Node), pointer :: arg
     character(len=*), intent(in) :: name
@@ -384,6 +416,8 @@ TOHW_m_dom_contents(`
         ! FIXME in case of recursive entity references?
       endif
     endif
+
+    call setEntityReferenceValue(np)
 
     call setReadOnlyNode(np, .true., .false.)
 
@@ -432,9 +466,9 @@ TOHW_m_dom_contents(`
     type(NodeList), pointer :: list
 
     type(NodeListPtr), pointer :: nll(:), temp_nll(:)
-    type(Node), pointer :: arg, this
+    type(Node), pointer :: arg, this, treeroot
     logical :: doneChildren, doneAttributes, allElements
-    integer :: i
+    integer :: i, i_tree
 
     if (.not.associated(doc)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
@@ -487,8 +521,7 @@ TOHW_m_dom_contents(`
       doc%ownerDocument%docExtras%nodelists => temp_nll
     endif
 
-    this => arg
-
+    treeroot => arg
 TOHW_m_dom_treewalk(`dnl
         if (this%nodeType==ELEMENT_NODE) then
           if ((allElements .or. str_vs(this%nodeName)==tagName) &
@@ -506,10 +539,10 @@ TOHW_m_dom_treewalk(`dnl
     logical :: deep
     type(Node), pointer :: np
 
-    type(Node), pointer :: this, thatParent, new
+    type(Node), pointer :: this, thatParent, new, treeroot
 
     logical :: doneAttributes, doneChildren
-    integer :: i
+    integer :: i_tree
     print*,"importing Nodes"
 
     if (getNodeType(doc)/=DOCUMENT_NODE) then
@@ -521,9 +554,8 @@ TOHW_m_dom_treewalk(`dnl
       return
     endif
 
-    this => arg
     thatParent => null()
-
+    treeroot => arg
     TOHW_m_dom_treewalk(`
 
         new => null()
@@ -675,9 +707,9 @@ TOHW_m_dom_treewalk(`dnl
     type(NodeList), pointer :: list
 
     type(NodeListPtr), pointer :: nll(:), temp_nll(:)
-    type(Node), pointer :: this, arg
+    type(Node), pointer :: this, arg, treeroot
     logical :: doneChildren, doneAttributes, allLocalNames, allNameSpaces
-    integer :: i
+    integer :: i, i_tree
 
     if (.not.associated(doc)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
@@ -721,8 +753,7 @@ TOHW_m_dom_treewalk(`dnl
       doc%ownerDocument%docExtras%nodelists => temp_nll
     endif
 
-    this => arg
-
+    treeroot => arg
 TOHW_m_dom_treewalk(`dnl
       if ((this%nodeType==ELEMENT_NODE) &
         .and. (allNameSpaces .or. str_vs(arg%namespaceURI)==namespaceURI) &
@@ -740,9 +771,9 @@ TOHW_m_dom_treewalk(`dnl
     character(len=*), intent(in) :: elementId
     type(Node), pointer :: np
 
-    type(Node), pointer :: this, arg
+    type(Node), pointer :: this, arg, treeroot
     type(NamedNodeMap), pointer :: nnm
-    integer :: i
+    integer :: i_tree
     logical :: doneChildren, doneAttributes
 
     if (doc%nodeType/=DOCUMENT_NODE) then
@@ -752,6 +783,7 @@ TOHW_m_dom_treewalk(`dnl
     arg => getDocumentElement(doc)
 
     np => null()
+    treeroot => arg
 TOHW_m_dom_treewalk(`dnl
       if (this%nodeType==ATTRIBUTE_NODE)  then
         if (getIsId(this).and.getName(this)==elementId) then
@@ -760,8 +792,6 @@ TOHW_m_dom_treewalk(`dnl
         endif
       endif
 ',`')
-
-    np => null()
 
   end function getElementById
 

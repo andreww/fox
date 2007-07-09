@@ -57,39 +57,30 @@ TOHW_m_dom_contents(`
     c = str_vs(arg%nodeName)
   end function getNodeName
 
-  pure function getNodeValue_len(arg) result(n)
+  pure function getNodeValue_len(arg, p) result(n)
     type(Node), intent(in) :: arg
+    logical, intent(in) :: p
     integer :: n
 
     integer :: i
 
+    n = 0 
+    if (.not.p) return
+
     select case(arg%nodeType)
     case (ATTRIBUTE_NODE)
-      n = 0
       do i = 1, arg%childNodes%length
-        if (arg%childNodes%nodes(i)%this%nodeType == TEXT_NODE) then
-          n = n + size(arg%childNodes%nodes(i)%this%nodeValue)
-        else
-          !FIXME replace entity references
-        endif
+        n = n + size(arg%childNodes%nodes(i)%this%nodeValue)
       enddo
-    case (CDATA_SECTION_NODE)
+    case (CDATA_SECTION_NODE, COMMENT_NODE, PROCESSING_INSTRUCTION_NODE, TEXT_NODE)
       n = size(arg%nodeValue)
-    case (COMMENT_NODE)
-      n = size(arg%nodeValue)
-    case (PROCESSING_INSTRUCTION_NODE)
-      n = size(arg%nodeValue)
-    case (TEXT_NODE)
-      n = size(arg%nodeValue)
-    case default
-      n = 0
     end select
 
   end function getNodeValue_len
 
   TOHW_function(getNodeValue, (arg), c)
     type(Node), pointer :: arg
-    character(len=getNodeValue_len(arg)) :: c
+    character(len=getNodeValue_len(arg, associated(arg))) :: c
 
     integer :: i, n
 
@@ -101,22 +92,13 @@ TOHW_m_dom_contents(`
     case (ATTRIBUTE_NODE)
       n = 1
       do i = 1, arg%childNodes%length
-        if (arg%childNodes%nodes(i)%this%nodeType == TEXT_NODE) then
-          c(n:n+size(arg%childNodes%nodes(i)%this%nodeValue)-1) = &
-            str_vs(arg%childNodes%nodes(i)%this%nodeValue)
-          n = n + size(arg%childNodes%nodes(i)%this%nodeValue)
-        else
-          !FIXME replace entity references
-        endif
+        c(n:n+size(arg%childNodes%nodes(i)%this%nodeValue)-1) = &
+          str_vs(arg%childNodes%nodes(i)%this%nodeValue)
       enddo
-    case (CDATA_SECTION_NODE)
+    case (CDATA_SECTION_NODE, COMMENT_NODE, PROCESSING_INSTRUCTION_NODE, TEXT_NODE)
       c = str_vs(arg%nodeValue)
-    case (COMMENT_NODE)
-      c = str_vs(arg%nodeValue)
-    case (PROCESSING_INSTRUCTION_NODE)
-      c = str_vs(arg%nodeValue)
-    case (TEXT_NODE)
-      c = str_vs(arg%nodeValue)
+    case default
+      c = ""
     end select
     
   end function getNodeValue
@@ -345,9 +327,10 @@ TOHW_m_dom_contents(`
     type(Node), pointer :: refChild
     type(Node), pointer :: np
 
-    type(Node), pointer :: testChild, testParent
+    type(Node), pointer :: testChild, testParent, treeroot, this
     type(ListNode), pointer :: temp_nl(:)
-    integer :: i, i2, i_t
+    integer :: i, i2, i_t, i_tree
+    logical :: doneChildren, doneAttributes
 
     if (.not.associated(arg).or..not.associated(newChild)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
@@ -477,9 +460,10 @@ TOHW_m_dom_contents(`
     type(Node), pointer :: oldChild
     type(Node), pointer :: np
 
-    type(Node), pointer :: testChild, testParent
+    type(Node), pointer :: testChild, testParent, treeroot, this
     type(ListNode), pointer :: temp_nl(:)
-    integer :: i, i2, i_t
+    integer :: i, i2, i_t, i_tree
+    logical :: doneChildren, doneAttributes
 
     if (.not.associated(arg).or..not.associated(newChild).or..not.associated(oldChild)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
@@ -670,9 +654,10 @@ TOHW_m_dom_contents(`
     type(Node), pointer :: newChild
     type(Node), pointer :: np
     
-    type(Node), pointer :: testChild, testParent
+    type(Node), pointer :: testChild, testParent, treeroot, this
     type(ListNode), pointer :: temp_nl(:)
-    integer :: i, i_t
+    integer :: i, i_t, i_tree
+    logical :: doneChildren, doneAttributes
 
     if (.not.associated(arg).or..not.associated(newChild)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
@@ -794,16 +779,15 @@ TOHW_m_dom_contents(`
     logical :: deep
     type(Node), pointer :: np
 
-    type(Node), pointer :: doc, thatParent, this, new, ERchild
+    type(Node), pointer :: doc, treeroot, thatParent, this, new, ERchild
 
     logical :: doneAttributes, doneChildren, readonly, quickFix
-    integer :: i
+    integer :: i_tree
 
     if (.not.associated(arg)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif
 
-    this => arg
     thatParent => null()
     ERchild => null()
     doc => getOwnerDocument(arg)
@@ -811,6 +795,7 @@ TOHW_m_dom_contents(`
     
     readonly = .false.
 
+    treeroot => arg
 TOHW_m_dom_treewalk(`
 
       new => null()
@@ -897,8 +882,8 @@ TOHW_m_dom_treewalk(`
   
   TOHW_subroutine(normalize, (arg))
     type(Node), pointer :: arg
-    type(Node), pointer :: this, tempNode, oldNode
-    integer :: i, i_t
+    type(Node), pointer :: this, tempNode, oldNode, treeroot
+    integer :: i_tree, i_t
     logical :: doneChildren, doneAttributes
     character, pointer :: temp(:)
 
@@ -907,9 +892,7 @@ TOHW_m_dom_treewalk(`
     endif
 
 ! DOM standard requires we ignore readonly status
-
-    this => arg
-
+    treeroot => arg
 TOHW_m_dom_treewalk(`
 
       if (getNodeType(this)==TEXT_NODE) then
@@ -1034,12 +1017,11 @@ TOHW_m_dom_treewalk(`
 
   subroutine putNodesInDocument(doc, arg)
     type(Node), pointer :: doc, arg
-    type(Node), pointer :: this
+    type(Node), pointer :: this, treeroot
     logical :: doneChildren, doneAttributes
-    integer :: i
+    integer :: i_tree
 
-    this => arg
-
+    treeroot => arg
 TOHW_m_dom_treewalk(`
         this%inDocument = .true.
         call remove_node_nl(doc%docExtras%hangingNodes, this)
@@ -1049,12 +1031,11 @@ TOHW_m_dom_treewalk(`
 
   subroutine removeNodesFromDocument(doc, arg)
     type(Node), pointer :: doc, arg
-    type(Node), pointer :: this
+    type(Node), pointer :: this, treeroot
     logical :: doneChildren, doneAttributes
-    integer :: i
+    integer :: i_tree
 
-    this => arg
-
+    treeroot => arg
 TOHW_m_dom_treewalk(`
         this%inDocument = .false.
         call append_nl(doc%docExtras%hangingNodes, this)
@@ -1067,13 +1048,12 @@ TOHW_m_dom_treewalk(`
     logical, intent(in) :: p
     logical, intent(in) :: deep
 
-    type(Node), pointer :: this
-    integer :: i
+    type(Node), pointer :: this, treeroot
+    integer :: i_tree
     logical :: doneAttributes, doneChildren
 
     if (deep) then
-      this => arg
-
+      treeroot => arg
 TOHW_m_dom_treewalk(`
       this%readonly = p
 ',`')

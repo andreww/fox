@@ -1,4 +1,5 @@
 include(`foreach.m4')`'dnl
+include(`m_dom_treewalk.m4')`'dnl
 define(`TOHW_m_dom_throw_error',`dnl
 dnl 1 is numerical code
 dnl 2 is list of things to deallocate
@@ -32,26 +33,38 @@ define(`TOHW_m_dom_hierarchy_test',`dnl
           .and. testChild%nodeType/=COMMENT_NODE &
           .and. testChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
           .and. testChild%nodeType/=CDATA_SECTION_NODE &
-          .and. testChild%nodeType/=ENTITY_REFERENCE_NODE) &
+          .and. testChild%nodeType/=ENTITY_REFERENCE_NODE) then
           TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR)
+        endif
       case (ATTRIBUTE_NODE)
         if (testChild%nodeType/=TEXT_NODE &
-          .and. testChild%nodeType/=ENTITY_REFERENCE_NODE) &
+          .and. testChild%nodeType/=ENTITY_REFERENCE_NODE) then
           TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR)
+        endif
+        if (testChild%nodeType==ENTITY_REFERENCE_NODE) then
+          treeroot => testChild
+TOHW_m_dom_treewalk(`
+          if (getNodeType(this)/=TEXT_NODE.and.getNodeType(this)/=ENTITY_REFERENCE_NODE) then
+            TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR)
+          endif
+',`')
+        endif
       case (DOCUMENT_NODE)
         if (testChild%nodeType/=ELEMENT_NODE &
           .and. testChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
           .and. testChild%nodeType/=COMMENT_NODE &
-          .and. testChild%nodeType/=DOCUMENT_TYPE_NODE) &
+          .and. testChild%nodeType/=DOCUMENT_TYPE_NODE)  then
           TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR)
+        endif
       case (DOCUMENT_FRAGMENT_NODE)
         if (testChild%nodeType/=ELEMENT_NODE &
           .and. testChild%nodeType/=TEXT_NODE &
           .and. testChild%nodeType/=COMMENT_NODE &
           .and. testChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
           .and. testChild%nodeType/=CDATA_SECTION_NODE &
-          .and. testChild%nodeType/=ENTITY_REFERENCE_NODE) &
+          .and. testChild%nodeType/=ENTITY_REFERENCE_NODE) then
           TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR)
+        endif
       case (ENTITY_NODE)
         continue ! only allowed by DOM parser, not by user.
         ! but entity nodes are always readonly anyway, so no problem
