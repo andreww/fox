@@ -1,0 +1,3 @@
+ALl functions returning strings should have a ***_len function taking associated(satatus
+
+Check for null ndoes everywhere
