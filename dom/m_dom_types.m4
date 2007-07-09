@@ -171,26 +171,15 @@ TOHW_m_dom_publics(`
 dnl
 TOHW_m_dom_contents(`
 
-  TOHW_function(createNode, (doc, nodeType, nodeName, nodeValue), np)
-    type(Node), pointer :: doc
+  TOHW_function(createNode, (arg, nodeType, nodeName, nodeValue), np)
+    type(Node), pointer :: arg
     integer, intent(in) :: nodeType
     character(len=*), intent(in) :: nodeName
     character(len=*), intent(in) :: nodeValue
     type(Node), pointer :: np
 
-    print*,"createNode", nodeType
-
-    if (associated(doc)) then
-      if (doc%nodeType/=DOCUMENT_NODE) then
-        TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-      endif
-    elseif (nodeType/=DOCUMENT_NODE) then
-      print*,"Internal error creating node"
-      stop
-    endif
-
     allocate(np)
-    np%ownerDocument => doc
+    np%ownerDocument => arg
     np%nodeType = nodeType
     np%nodeName => vs_str_alloc(nodeName)
     np%nodeValue => vs_str_alloc(nodeValue)
@@ -317,7 +306,7 @@ TOHW_m_dom_contents(`
     if (.not.associated(arg)) return
     this => arg
 
-TOHW_m_dom_treewalk(`',`',`deadNode')
+TOHW_m_dom_treewalk(`',`',`deadNode', `')
 
     deallocate(arg%childNodes%nodes)
     allocate(arg%childNodes%nodes(0))

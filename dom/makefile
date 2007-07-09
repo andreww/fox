@@ -19,9 +19,6 @@ INCFLAGS=$(MOD_PREFIX)../objs/finclude
 #
 include ../arch.make
 #
-m_dom_parse.f90: m_dom_parse.m4
-	m4 -I. $< > $@
-#
 m_dom_utils.f90: m_dom_utils.m4
 	m4 -I. $< > $@
 #

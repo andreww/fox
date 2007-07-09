@@ -1,4 +1,3 @@
-
 module m_dom_parse
 
   use m_common_array_str, only: str_vs, vs_str_alloc
@@ -21,9 +20,9 @@ module m_dom_parse
   use m_dom_dom, only: createNotation, setNamedItem, getNodeName, setNodeValue
   use m_dom_dom, only: createEmptyDocument, getXMLVersion, createDocumentType
   use m_dom_dom, only: getParentNode, setDocumentElement, getDocType, setDocType
-  use m_dom_dom, only: append, getNodeType, getLength, getChildNodes
+  use m_dom_dom, only: append, getNodeType, getLength, getChildNodes, getImplementation
   use m_dom_dom, only: removeChild, appendChild, getNotations, setAttributeNodeNS, setvalue
-  use m_dom_dom, only: setAttributeNodeNS, replace_xds, setGCstate, createCdataSection
+  use m_dom_dom, only: setAttributeNodeNS, setGCstate, createCdataSection, setXds
   use m_dom_dom, only: createEntityReference, destroyAllNodesRecursively, setIllFormed
   use m_dom_dom, only: createElement, createAttribute, getNamedItem, getTagName
   use m_dom_dom, only: setReadonlyNode, setReadOnlyMap, createEmptyEntityReference
@@ -150,8 +149,16 @@ contains
 
     type(Node), pointer :: np
 
-    np => getDocType(mainDoc)
-    call setDocType(np, name, publicId, systemId)
+    if (present(publicId).and.present(systemId)) then
+      np => createDocumentType(getImplementation(mainDoc), name, publicId=publicId, systemId=systemId)
+    elseif (present(publicId)) then
+      np => createDocumentType(getImplementation(mainDoc), name, publicId=publicId, systemId="")
+    elseif (present(systemId)) then
+      np => createDocumentType(getImplementation(mainDoc), name, publicid="", systemId=systemId)
+    else
+      np => createDocumentType(getImplementation(mainDoc), name, publicId="", systemId="")
+    endif
+    call setDocType(mainDoc, np)
     np => appendChild(mainDoc, np)
 
   end subroutine startDTD_handler
@@ -159,17 +166,7 @@ contains
   subroutine FoX_endDTD_handler(state)
     type(xml_doc_state), pointer :: state
 
-    type(Node), pointer :: dt, np, nt
-    type(NamedNodeMap), pointer :: entities, notations
-    type(entity_t), pointer :: thisEntity
-    type(notation), pointer :: thisNotation
-    integer :: i
-
-    dt => getDocType(mainDoc)
-    call replace_xds(mainDoc, state)
-    call setGCstate(mainDoc, .false.)
-
-    ! FIXME also copy internalSubset from xds
+    call setXds(mainDoc, state)
 
   end subroutine FoX_endDTD_handler
 
@@ -329,7 +326,6 @@ contains
 
 ! We use internal sax_parse rather than public interface in order
 ! to use internal callbacks to get extra info.
-
 
     call sax_parse(fxml%fx, fxml%fb,&
       characters_handler=characters_handler,            &

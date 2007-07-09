@@ -13,9 +13,6 @@ TOHW_m_dom_publics(`
 !  public :: getSystemId
   public :: getInternalSubset
 
-!  Not part of documented API:
-  public :: setDocType
-
 ')`'dnl
 dnl
 TOHW_m_dom_contents(`
@@ -85,34 +82,5 @@ TOHW_m_dom_contents(`
     c = str_vs(arg%internalSubset)
   end function getInternalSubset
 
-
-  TOHW_subroutine(setDocType, (arg, name, publicId, systemId))
-    type(Node), pointer :: arg
-    character(len=*), intent(in) :: name
-    character(len=*), intent(in), optional :: publicId
-    character(len=*), intent(in), optional :: systemId
-
-    ! FIXME optional args
-
-    if (.not.associated(arg)) then
-      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
-    endif
-
-    if (arg%nodeType/=DOCUMENT_TYPE_NODE) then
-       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    endif
-    
-    deallocate(arg%nodeName)
-    arg%nodeName => vs_str_alloc(name)
-    if (present(publicId)) then
-      deallocate(arg%publicId)
-      arg%publicId => vs_str_alloc(publicId)
-    endif
-    if (present(systemId)) then
-      deallocate(arg%systemId)
-      arg%systemId => vs_str_alloc(systemId)
-    endif
-
-  end subroutine setDocType
 
 ')`'dnl

@@ -43,7 +43,7 @@ module m_dom_dom
   use m_dom_error, only : NOT_FOUND_ERR, INVALID_CHARACTER_ERR, FoX_INVALID_NODE, &
     FoX_INVALID_XML_NAME, WRONG_DOCUMENT_ERR, FoX_INVALID_TEXT, & 
     FoX_INVALID_CHARACTER, FoX_INVALID_COMMENT, FoX_INVALID_CDATA_SECTION, &
-    FoX_INVALID_PI_DATA, NOT_SUPPORTED_ERR, FoX_INVALID_ENTITY
+    FoX_INVALID_PI_DATA, NOT_SUPPORTED_ERR, FoX_INVALID_ENTITY, FoX_NO_DOCTYPE
 
 
 
@@ -333,9 +333,6 @@ module m_dom_dom
   public :: destroyDocument
 
   public :: createEmptyDocument
-  public :: createEmptyDocumentType
-
-  public :: replace_xds
 
 
 
@@ -362,6 +359,8 @@ module m_dom_dom
   public :: getXmlVersion
   public :: setXmlVersion
 
+  public :: setDocType
+  public :: setXds
   public :: createEntity
   public :: createNotation
   public :: setGCstate
@@ -373,9 +372,6 @@ module m_dom_dom
 !  public :: getPublicId
 !  public :: getSystemId
   public :: getInternalSubset
-
-!  Not part of documented API:
-  public :: setDocType
 
 
   
@@ -446,33 +442,16 @@ module m_dom_dom
 contains
 
 
-  function createNode(doc, nodeType, nodeName, nodeValue, ex)result(np) 
+  function createNode(arg, nodeType, nodeName, nodeValue, ex)result(np) 
     type(DOMException), intent(inout), optional :: ex
-    type(Node), pointer :: doc
+    type(Node), pointer :: arg
     integer, intent(in) :: nodeType
     character(len=*), intent(in) :: nodeName
     character(len=*), intent(in) :: nodeValue
     type(Node), pointer :: np
 
-    print*,"createNode", nodeType
-
-    if (associated(doc)) then
-      if (doc%nodeType/=DOCUMENT_NODE) then
-        call throw_exception(FoX_INVALID_NODE, "createNode", ex)
-if (present(ex)) then
-  if (is_in_error(ex)) then
-     return
-  endif
-endif
-
-      endif
-    elseif (nodeType/=DOCUMENT_NODE) then
-      print*,"Internal error creating node"
-      stop
-    endif
-
     allocate(np)
-    np%ownerDocument => doc
+    np%ownerDocument => arg
     np%nodeType = nodeType
     np%nodeName => vs_str_alloc(nodeName)
     np%nodeValue => vs_str_alloc(nodeValue)
@@ -3537,8 +3516,8 @@ endif
 
     dt => createNode(null(), DOCUMENT_TYPE_NODE, qualifiedName, "")
     dt%readonly = .true.
-    dt%publicId = vs_str_alloc(publicId)
-    dt%systemId = vs_str_alloc(systemId)
+    dt%publicId => vs_str_alloc(publicId)
+    dt%systemId => vs_str_alloc(systemId)
     allocate(dt%internalSubset(0)) !FIXME
     dt%ownerDocument => null()
     dt%entities%ownerElement => dt
@@ -3546,35 +3525,6 @@ endif
     ! FIXME fill in the rest of the fields ...
 
   end function createDocumentType
-
-
-  function createEmptyDocumentType(doc) result(dt)
-    type(Node), pointer :: doc
-    type(Node), pointer :: dt
-
-    dt => createNode(doc, DOCUMENT_TYPE_NODE, "", "")
-    dt%readonly = .true.
-    !dt%entities
-    !dt%notations
-    allocate(dt%publicId(0))
-    allocate(dt%systemId(0))
-    allocate(dt%internalSubset(0)) !FIXME
-
-    dt%entities%ownerElement => dt
-    dt%notations%ownerElement => dt
-
-  end function createEmptyDocumentType
-
-
-  subroutine replace_xds(doc, xds)
-    type(Node), pointer :: doc
-    type(xml_doc_state), pointer :: xds
-
-    call destroy_xml_doc_state(doc%docExtras%xds)
-    deallocate(doc%docExtras%xds)
-    doc%docExtras%xds => xds
-
-  end subroutine replace_xds
 
 
   function createDocument(impl, namespaceURI, qualifiedName, docType) result(doc)
@@ -3600,9 +3550,6 @@ endif
       dt => docType
       dt%ownerDocument => doc
       doc%docExtras%docType => appendChild(doc, dt)
-    else
-      dt => createDocumentType(impl, qualifiedName, "", "")
-      dt%ownerDocument => doc
     endif
     
     call setDocumentElement(doc, appendChild(doc, createElementNS(doc, namespaceURI, qualifiedName)))
@@ -3612,20 +3559,15 @@ endif
 
   function createEmptyDocument() result(doc)
     type(Node), pointer :: doc
-    type(Node), pointer :: dt
     
     doc => createNode(null(), DOCUMENT_NODE, "#document", "")
-    doc%ownerDocument => doc ! Makes life easier. DOM compliance in getter
+    doc%ownerDocument => doc ! Makes life easier. DOM compliance maintained in getter
 
     allocate(doc%docExtras)
     doc%docExtras%implementation => FoX_DOM
     allocate(doc%docExtras%nodelists(0))
     allocate(doc%docExtras%xds)
     call init_xml_doc_state(doc%docExtras%xds)
-
-    dt => createEmptyDocumentType(doc)
-    dt%ownerDocument => doc
-    doc%docExtras%doctype => dt
 
     ! FIXME do something with namespaceURI etc 
 
@@ -3653,19 +3595,12 @@ endif
 
     endif
 
-    ! Remove docType from tree before destruction:
-    dt =>  getDocType(doc)
-    if (associated(getParentNode(dt))) &
-      dt => removeChild(doc, dt)
-    call destroyDocumentType(dt)
-
     ! Destroy all remaining nodelists
 
     do i = 1, size(doc%docExtras%nodelists)
      call destroy(doc%docExtras%nodelists(i)%this)
     enddo
     deallocate(doc%docExtras%nodelists)
-
 
     ! Destroy all remaining hanging nodes
     do i = 1, doc%docExtras%hangingNodes%length
@@ -3678,8 +3613,6 @@ endif
 
     deallocate(doc%docExtras)
 
-    print*, "destroying a node:", doc%nodeType, doc%nodeName
-
     call destroyAllNodesRecursively(doc)
     call destroyNodeContents(doc)
     deallocate(doc)
@@ -3690,12 +3623,22 @@ endif
 
   ! Getters and setters:
 
-  function getDocType(doc, ex)result(np) 
+  function getDocType(arg, ex)result(np) 
     type(DOMException), intent(inout), optional :: ex
-    type(Node), intent(in) :: doc
+    type(Node), pointer :: arg
     type(Node), pointer :: np
 
-    if (doc%nodeType/=DOCUMENT_NODE) then
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "getDocType", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    if (arg%nodeType/=DOCUMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "getDocType", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -3705,16 +3648,87 @@ endif
 
     endif
     
-    np => doc%docExtras%docType
+    np => arg%docExtras%docType
 
   end function getDocType
 
-  function getImplementation(doc, ex)result(imp) 
+  subroutine setDocType(arg, np, ex)
     type(DOMException), intent(inout), optional :: ex
-    type(Node), intent(in) :: doc
+    type(Node), pointer :: arg
+    type(Node), pointer :: np
+
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "setDocType", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    if (arg%nodeType/=DOCUMENT_NODE) then
+      call throw_exception(FoX_INVALID_NODE, "setDocType", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+    
+    arg%docExtras%docType => np
+    np%ownerDocument => arg
+
+  end subroutine setDocType
+
+
+  subroutine setXds(arg, xds, ex)
+    type(DOMException), intent(inout), optional :: ex
+    type(Node), pointer :: arg
+    type(xml_doc_state), pointer :: xds
+
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "setXds", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    if (arg%nodeType/=DOCUMENT_NODE) then
+       call throw_exception(FoX_INVALID_NODE, "setXds", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+    call destroy_xml_doc_state(arg%docExtras%xds)
+    deallocate(arg%docExtras%xds)
+    arg%docExtras%xds => xds
+  end subroutine setXds
+
+
+  function getImplementation(arg, ex)result(imp) 
+    type(DOMException), intent(inout), optional :: ex
+    type(Node), pointer :: arg
     type(DOMImplementation), pointer :: imp
 
-    if (doc%nodeType/=DOCUMENT_NODE) then
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "getImplementation", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    if (arg%nodeType/=DOCUMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "getImplementation", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -3724,16 +3738,26 @@ endif
 
     endif
     
-    imp => doc%docExtras%implementation
+    imp => arg%docExtras%implementation
     
   end function getImplementation
 
-  function getDocumentElement(doc, ex)result(np) 
+  function getDocumentElement(arg, ex)result(np) 
     type(DOMException), intent(inout), optional :: ex
-    type(Node), intent(in) :: doc
+    type(Node), pointer :: arg
     type(Node), pointer :: np
 
-    if (doc%nodeType/=DOCUMENT_NODE) then
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "getDocumentElement", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    if (arg%nodeType/=DOCUMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "getDocumentElement", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -3743,17 +3767,27 @@ endif
 
     endif
 
-    np => doc%docExtras%documentElement
+    np => arg%docExtras%documentElement
 
   end function getDocumentElement
 
-  subroutine setDocumentElement(doc, np, ex)
+  subroutine setDocumentElement(arg, np, ex)
     type(DOMException), intent(inout), optional :: ex
   ! Only for use by FoX, not exported through FoX_DOM interface
-    type(Node), pointer :: doc
+    type(Node), pointer :: arg
     type(Node), pointer :: np
 
-    if (doc%nodeType/=DOCUMENT_NODE) then
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "setDocumentElement", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    if (arg%nodeType/=DOCUMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "setDocumentElement", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -3769,7 +3803,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.associated(np%ownerDocument, doc)) then
+    elseif (.not.associated(np%ownerDocument, arg)) then
       call throw_exception(WRONG_DOCUMENT_ERR, "setDocumentElement", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -3779,19 +3813,29 @@ endif
 
     endif
     
-    doc%docExtras%documentElement => np
+    arg%docExtras%documentElement => np
 
   end subroutine setDocumentElement
 
   ! Methods
 
-  function createElement(doc, tagName, ex)result(np) 
+  function createElement(arg, tagName, ex)result(np) 
     type(DOMException), intent(inout), optional :: ex
-    type(Node), pointer :: doc
+    type(Node), pointer :: arg
     character(len=*), intent(in) :: tagName
     type(Node), pointer :: np
 
-    if (doc%nodeType/=DOCUMENT_NODE) then
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "createElement", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    if (arg%nodeType/=DOCUMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "createElement", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -3799,7 +3843,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkName(tagName, getXds(doc))) then
+    elseif (.not.checkName(tagName, getXds(arg))) then
       call throw_exception(INVALID_CHARACTER_ERR, "createElement", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -3809,26 +3853,36 @@ endif
 
     endif
     
-    np => createNode(doc, ELEMENT_NODE, tagName, "")
+    np => createNode(arg, ELEMENT_NODE, tagName, "")
     np%attributes%ownerElement => np
 
     ! FIXME set namespaceURI and localName appropriately
 
-    if (getGCstate(doc)) then
+    if (getGCstate(arg)) then
       np%inDocument = .false.
-      call append(doc%docExtras%hangingnodes, np)
+      call append(arg%docExtras%hangingnodes, np)
     else
       np%inDocument = .true.
     endif
 
   end function createElement
     
-  function createDocumentFragment(doc, ex)result(np) 
+  function createDocumentFragment(arg, ex)result(np) 
     type(DOMException), intent(inout), optional :: ex
-    type(Node), pointer :: doc
+    type(Node), pointer :: arg
     type(Node), pointer :: np
 
-    if (doc%nodeType/=DOCUMENT_NODE) then
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "createDocumentFragment", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    if (arg%nodeType/=DOCUMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "createDocumentFragment", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -3838,23 +3892,33 @@ endif
 
     endif
     
-    np => createNode(doc, DOCUMENT_FRAGMENT_NODE, "#document-fragment", "")
-    if (getGCstate(doc)) then
+    np => createNode(arg, DOCUMENT_FRAGMENT_NODE, "#document-fragment", "")
+    if (getGCstate(arg)) then
       np%inDocument = .false.
-      call append(doc%docExtras%hangingnodes, np)
+      call append(arg%docExtras%hangingnodes, np)
     else
       np%inDocument = .true.
     endif
 
   end function createDocumentFragment
 
-  function createTextNode(doc, data, ex)result(np) 
+  function createTextNode(arg, data, ex)result(np) 
     type(DOMException), intent(inout), optional :: ex
-    type(Node), pointer :: doc
+    type(Node), pointer :: arg
     character(len=*), intent(in) :: data
     type(Node), pointer :: np
 
-    if (doc%nodeType/=DOCUMENT_NODE) then
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "createTextNode", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    if (arg%nodeType/=DOCUMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "createTextNode", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -3862,7 +3926,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkChars(data, getXmlVersionEnum(doc))) then
+    elseif (.not.checkChars(data, getXmlVersionEnum(arg))) then
       call throw_exception(FoX_INVALID_CHARACTER, "createTextNode", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -3872,24 +3936,34 @@ endif
 
     endif
 
-    np => createNode(doc, TEXT_NODE, "#text", data)
+    np => createNode(arg, TEXT_NODE, "#text", data)
 
-    if (getGCstate(doc)) then
+    if (getGCstate(arg)) then
       np%inDocument = .false.
-      call append(doc%docExtras%hangingnodes, np)
+      call append(arg%docExtras%hangingnodes, np)
     else
       np%inDocument = .true.
     endif
    
   end function createTextNode
 
-  function createComment(doc, data, ex)result(np) 
+  function createComment(arg, data, ex)result(np) 
     type(DOMException), intent(inout), optional :: ex
-    type(Node), pointer :: doc
+    type(Node), pointer :: arg
     character(len=*), intent(in) :: data
     type(Node), pointer :: np
 
-    if (doc%nodeType/=DOCUMENT_NODE) then
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "createComment", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    if (arg%nodeType/=DOCUMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "createComment", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -3897,7 +3971,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkChars(data, getXmlVersionEnum(doc))) then
+    elseif (.not.checkChars(data, getXmlVersionEnum(arg))) then
       call throw_exception(FoX_INVALID_CHARACTER, "createComment", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -3915,24 +3989,34 @@ endif
 
     endif
   
-    np => createNode(doc, COMMENT_NODE, "#comment", data)
+    np => createNode(arg, COMMENT_NODE, "#comment", data)
 
-    if (getGCstate(doc)) then
+    if (getGCstate(arg)) then
       np%inDocument = .false.
-      call append(doc%docExtras%hangingnodes, np)
+      call append(arg%docExtras%hangingnodes, np)
     else
       np%inDocument = .true.
     endif
 
   end function createComment
 
-  function createCdataSection(doc, data, ex)result(np) 
+  function createCdataSection(arg, data, ex)result(np) 
     type(DOMException), intent(inout), optional :: ex
-    type(Node), pointer :: doc
+    type(Node), pointer :: arg
     character(len=*), intent(in) :: data
     type(Node), pointer :: np
 
-    if (doc%nodeType/=DOCUMENT_NODE) then
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "createCdataSection", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    if (arg%nodeType/=DOCUMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "createCdataSection", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -3940,7 +4024,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkChars(data, getXmlVersionEnum(doc))) then
+    elseif (.not.checkChars(data, getXmlVersionEnum(arg))) then
       call throw_exception(FoX_INVALID_CHARACTER, "createCdataSection", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -3958,26 +4042,35 @@ endif
 
     endif
   
-    np => createNode(doc, CDATA_SECTION_NODE, "#cdata-section", data)
+    np => createNode(arg, CDATA_SECTION_NODE, "#cdata-section", data)
 
-    if (getGCstate(doc)) then
+    if (getGCstate(arg)) then
       np%inDocument = .false.
-      call append(doc%docExtras%hangingnodes, np)
+      call append(arg%docExtras%hangingnodes, np)
     else
       np%inDocument = .true.
     endif
   
   end function createCdataSection
 
-  function createProcessingInstruction(doc, target, data, ex)result(np) 
+  function createProcessingInstruction(arg, target, data, ex)result(np) 
     type(DOMException), intent(inout), optional :: ex
-    type(Node), pointer :: doc
+    type(Node), pointer :: arg
     character(len=*), intent(in) :: target
     character(len=*), intent(in) :: data
     type(Node), pointer :: np
 
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "createProcessingInstruction", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
 
-    if (doc%nodeType/=DOCUMENT_NODE) then
+    endif
+
+    if (arg%nodeType/=DOCUMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "createProcessingInstruction", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -3985,7 +4078,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkName(target, getXds(doc))) then
+    elseif (.not.checkName(target, getXds(arg))) then
       call throw_exception(INVALID_CHARACTER_ERR, "createProcessingInstruction", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -3993,7 +4086,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkChars(data, getXmlVersionEnum(doc))) then
+    elseif (.not.checkChars(data, getXmlVersionEnum(arg))) then
       call throw_exception(FoX_INVALID_CHARACTER, "createProcessingInstruction", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -4011,24 +4104,34 @@ endif
 
     endif
 
-    np => createNode(doc, PROCESSING_INSTRUCTION_NODE, target, data)
+    np => createNode(arg, PROCESSING_INSTRUCTION_NODE, target, data)
 
-    if (getGCstate(doc)) then
+    if (getGCstate(arg)) then
       np%inDocument = .false.
-      call append(doc%docExtras%hangingnodes, np)
+      call append(arg%docExtras%hangingnodes, np)
     else
       np%inDocument = .true.
     endif
 
   end function createProcessingInstruction
 
-  function createAttribute(doc, name, ex)result(np) 
+  function createAttribute(arg, name, ex)result(np) 
     type(DOMException), intent(inout), optional :: ex
-    type(Node), pointer :: doc
+    type(Node), pointer :: arg
     character(len=*), intent(in) :: name
     type(Node), pointer :: np
 
-    if (doc%nodeType/=DOCUMENT_NODE) then
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "createAttribute", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    if (arg%nodeType/=DOCUMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "createAttribute", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -4036,7 +4139,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkName(name, getXds(doc))) then
+    elseif (.not.checkName(name, getXds(arg))) then
       call throw_exception(INVALID_CHARACTER_ERR, "createAttribute", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -4046,30 +4149,40 @@ endif
 
     endif
   
-    np => createNode(doc, ATTRIBUTE_NODE, name, "")
+    np => createNode(arg, ATTRIBUTE_NODE, name, "")
     np%namespaceURI => vs_str_alloc("")
     np%localname => vs_str_alloc(name)
     np%prefix => vs_str_alloc(name)
 
-    if (getGCstate(doc)) then
+    if (getGCstate(arg)) then
       np%inDocument = .false.
-      call append(doc%docExtras%hangingnodes, np)
+      call append(arg%docExtras%hangingnodes, np)
     else
       np%inDocument = .true.
     endif
   
   end function createAttribute
 
-  function createEntityReference(doc, name, ex)result(np) 
+  function createEntityReference(arg, name, ex)result(np) 
     type(DOMException), intent(inout), optional :: ex
-    type(Node), pointer :: doc
+    type(Node), pointer :: arg
     character(len=*), intent(in) :: name
     type(Node), pointer :: np
 
     type(Node), pointer :: ent, newNode
     integer :: i
 
-    if (doc%nodeType/=DOCUMENT_NODE) then
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "createEntityReference", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    if (arg%nodeType/=DOCUMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "createEntityReference", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -4077,7 +4190,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkName(name, getXds(doc))) then
+    elseif (.not.checkName(name, getXds(arg))) then
       call throw_exception(INVALID_CHARACTER_ERR, "createEntityReference", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -4087,49 +4200,71 @@ endif
 
     endif
 
-    np => createNode(doc, ENTITY_REFERENCE_NODE, name, "")
-    if (getGCstate(doc)) then ! otherwise the parser will fill these nodes in itself
-      ! FIXME except I think that gets switched off when creating atts sometimes ... need to check
-      ent => getNamedItem(getEntities(getDocType(doc)), name)
-      if (associated(ent)) then
-        if (ent%illFormed) then
-          call throw_exception(FoX_INVALID_ENTITY, "createEntityReference", ex)
+    if (.not.associated(getDocType(arg))) then
+      call throw_exception(FoX_NO_DOCTYPE, "createEntityReference", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
      return
   endif
 endif
 
+    endif
+
+    np => createNode(arg, ENTITY_REFERENCE_NODE, name, "")
+    if (getGCstate(arg)) then ! otherwise the parser will fill these nodes in itself
+      ! FIXME except I think that gets switched off when creating atts sometimes ... need to check
+      if (associated(getDocType(arg))) then
+        ent => getNamedItem(getEntities(getDocType(arg)), name)
+        if (associated(ent)) then
+          if (ent%illFormed) then
+            call throw_exception(FoX_INVALID_ENTITY, "createEntityReference", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+          endif
+          do i = 0, getLength(getChildNodes(ent)) - 1
+            newNode => appendChild(np, cloneNode(item(getChildNodes(ent), i), .true., ex))
+            call setReadOnlyNode(newNode, .true., .true.)
+          enddo
         endif
-        do i = 0, getLength(getChildNodes(ent)) - 1
-          newNode => appendChild(np, cloneNode(item(getChildNodes(ent), i), .true., ex))
-          call setReadOnlyNode(newNode, .true., .true.)
-        enddo
+        ! FIXME in case of recursive entity references?
       endif
-      ! FIXME in case of recursive entity references?
     endif
 
     call setReadOnlyNode(np, .true., .false.)
 
-    if (getGCstate(doc)) then
+    if (getGCstate(arg)) then
       np%inDocument = .false.
-      call append(doc%docExtras%hangingnodes, np)
+      call append(arg%docExtras%hangingnodes, np)
     else
       np%inDocument = .true.
     endif
 
   end function createEntityReference
 
-  function createEmptyEntityReference(doc, name, ex)result(np) 
+  function createEmptyEntityReference(arg, name, ex)result(np) 
     type(DOMException), intent(inout), optional :: ex
-    type(Node), pointer :: doc
+    type(Node), pointer :: arg
     character(len=*), intent(in) :: name
     type(Node), pointer :: np
 
     type(Node), pointer :: ent
     integer :: i
 
-    if (doc%nodeType/=DOCUMENT_NODE) then
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "createEmptyEntityReference", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    if (arg%nodeType/=DOCUMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "createEmptyEntityReference", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -4137,7 +4272,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkChars(name, getXmlVersionEnum(doc))) then
+    elseif (.not.checkChars(name, getXmlVersionEnum(arg))) then
       call throw_exception(INVALID_CHARACTER_ERR, "createEmptyEntityReference", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -4145,7 +4280,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkName(name, getXds(doc))) then
+    elseif (.not.checkName(name, getXds(arg))) then
       call throw_exception(FoX_INVALID_XML_NAME, "createEmptyEntityReference", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -4155,10 +4290,10 @@ endif
 
     endif
 
-    np => createNode(doc, ENTITY_REFERENCE_NODE, name, "")
-    if (getGCstate(doc)) then
+    np => createNode(arg, ENTITY_REFERENCE_NODE, name, "")
+    if (getGCstate(arg)) then
       np%inDocument = .false.
-      call append(doc%docExtras%hangingnodes, np)
+      call append(arg%docExtras%hangingnodes, np)
     else
       np%inDocument = .true.
     endif
@@ -4176,7 +4311,7 @@ endif
     logical :: doneChildren, doneAttributes, allElements
     integer :: i
 
-    if (.not.associated(arg)) then
+    if (.not.associated(doc)) then
       call throw_exception(FoX_NODE_IS_NULL, "getElementsByTagName", ex)
 if (present(ex)) then
   if (is_in_error(ex)) then
@@ -5124,48 +5259,6 @@ endif
     c = str_vs(arg%internalSubset)
   end function getInternalSubset
 
-
-  subroutine setDocType(arg, name, publicId, systemId, ex)
-    type(DOMException), intent(inout), optional :: ex
-    type(Node), pointer :: arg
-    character(len=*), intent(in) :: name
-    character(len=*), intent(in), optional :: publicId
-    character(len=*), intent(in), optional :: systemId
-
-    ! FIXME optional args
-
-    if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "setDocType", ex)
-if (present(ex)) then
-  if (is_in_error(ex)) then
-     return
-  endif
-endif
-
-    endif
-
-    if (arg%nodeType/=DOCUMENT_TYPE_NODE) then
-       call throw_exception(FoX_INVALID_NODE, "setDocType", ex)
-if (present(ex)) then
-  if (is_in_error(ex)) then
-     return
-  endif
-endif
-
-    endif
-    
-    deallocate(arg%nodeName)
-    arg%nodeName => vs_str_alloc(name)
-    if (present(publicId)) then
-      deallocate(arg%publicId)
-      arg%publicId => vs_str_alloc(publicId)
-    endif
-    if (present(systemId)) then
-      deallocate(arg%systemId)
-      arg%systemId => vs_str_alloc(systemId)
-    endif
-
-  end subroutine setDocType
 
 
 

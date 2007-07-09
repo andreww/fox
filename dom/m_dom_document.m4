@@ -6,7 +6,7 @@ TOHW_m_dom_imports(`
   use m_dom_error, only : NOT_FOUND_ERR, INVALID_CHARACTER_ERR, FoX_INVALID_NODE, &
     FoX_INVALID_XML_NAME, WRONG_DOCUMENT_ERR, FoX_INVALID_TEXT, & 
     FoX_INVALID_CHARACTER, FoX_INVALID_COMMENT, FoX_INVALID_CDATA_SECTION, &
-    FoX_INVALID_PI_DATA, NOT_SUPPORTED_ERR, FoX_INVALID_ENTITY
+    FoX_INVALID_PI_DATA, NOT_SUPPORTED_ERR, FoX_INVALID_ENTITY, FoX_NO_DOCTYPE
 
 ')`'dnl
 dnl
@@ -35,6 +35,8 @@ TOHW_m_dom_publics(`
   public :: getXmlVersion
   public :: setXmlVersion
 
+  public :: setDocType
+  public :: setXds
   public :: createEntity
   public :: createNotation
   public :: setGCstate
@@ -44,288 +46,380 @@ TOHW_m_dom_contents(`
 
   ! Getters and setters:
 
-  TOHW_function(getDocType, (doc), np)
-    type(Node), intent(in) :: doc
+  TOHW_function(getDocType, (arg), np)
+    type(Node), pointer :: arg
     type(Node), pointer :: np
 
-    if (doc%nodeType/=DOCUMENT_NODE) then
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+
+    if (arg%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
     
-    np => doc%docExtras%docType
+    np => arg%docExtras%docType
 
   end function getDocType
 
-  TOHW_function(getImplementation, (doc), imp)
-    type(Node), intent(in) :: doc
-    type(DOMImplementation), pointer :: imp
+  TOHW_subroutine(setDocType, (arg, np))
+    type(Node), pointer :: arg
+    type(Node), pointer :: np
 
-    if (doc%nodeType/=DOCUMENT_NODE) then
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+
+    if (arg%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
     
-    imp => doc%docExtras%implementation
+    arg%docExtras%docType => np
+    np%ownerDocument => arg
+
+  end subroutine setDocType
+
+
+  TOHW_subroutine(setXds, (arg, xds))
+    type(Node), pointer :: arg
+    type(xml_doc_state), pointer :: xds
+
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+
+    if (arg%nodeType/=DOCUMENT_NODE) then
+       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
+    endif
+    call destroy_xml_doc_state(arg%docExtras%xds)
+    deallocate(arg%docExtras%xds)
+    arg%docExtras%xds => xds
+  end subroutine setXds
+
+
+  TOHW_function(getImplementation, (arg), imp)
+    type(Node), pointer :: arg
+    type(DOMImplementation), pointer :: imp
+
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+
+    if (arg%nodeType/=DOCUMENT_NODE) then
+      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
+    endif
+    
+    imp => arg%docExtras%implementation
     
   end function getImplementation
 
-  TOHW_function(getDocumentElement, (doc), np)
-    type(Node), intent(in) :: doc
+  TOHW_function(getDocumentElement, (arg), np)
+    type(Node), pointer :: arg
     type(Node), pointer :: np
 
-    if (doc%nodeType/=DOCUMENT_NODE) then
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+
+    if (arg%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
 
-    np => doc%docExtras%documentElement
+    np => arg%docExtras%documentElement
 
   end function getDocumentElement
 
-  TOHW_subroutine(setDocumentElement, (doc, np))
+  TOHW_subroutine(setDocumentElement, (arg, np))
   ! Only for use by FoX, not exported through FoX_DOM interface
-    type(Node), pointer :: doc
+    type(Node), pointer :: arg
     type(Node), pointer :: np
 
-    if (doc%nodeType/=DOCUMENT_NODE) then
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+
+    if (arg%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     elseif (np%nodeType/=ELEMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    elseif (.not.associated(np%ownerDocument, doc)) then
+    elseif (.not.associated(np%ownerDocument, arg)) then
       TOHW_m_dom_throw_error(WRONG_DOCUMENT_ERR)
     endif
     
-    doc%docExtras%documentElement => np
+    arg%docExtras%documentElement => np
 
   end subroutine setDocumentElement
 
   ! Methods
 
-  TOHW_function(createElement, (doc, tagName), np)
-    type(Node), pointer :: doc
+  TOHW_function(createElement, (arg, tagName), np)
+    type(Node), pointer :: arg
     character(len=*), intent(in) :: tagName
     type(Node), pointer :: np
 
-    if (doc%nodeType/=DOCUMENT_NODE) then
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+
+    if (arg%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    elseif (.not.checkName(tagName, getXds(doc))) then
+    elseif (.not.checkName(tagName, getXds(arg))) then
       TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
     endif
     
-    np => createNode(doc, ELEMENT_NODE, tagName, "")
+    np => createNode(arg, ELEMENT_NODE, tagName, "")
     np%attributes%ownerElement => np
 
     ! FIXME set namespaceURI and localName appropriately
 
-    if (getGCstate(doc)) then
+    if (getGCstate(arg)) then
       np%inDocument = .false.
-      call append(doc%docExtras%hangingnodes, np)
+      call append(arg%docExtras%hangingnodes, np)
     else
       np%inDocument = .true.
     endif
 
   end function createElement
     
-  TOHW_function(createDocumentFragment, (doc), np)
-    type(Node), pointer :: doc
+  TOHW_function(createDocumentFragment, (arg), np)
+    type(Node), pointer :: arg
     type(Node), pointer :: np
 
-    if (doc%nodeType/=DOCUMENT_NODE) then
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+
+    if (arg%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
     
-    np => createNode(doc, DOCUMENT_FRAGMENT_NODE, "#document-fragment", "")
-    if (getGCstate(doc)) then
+    np => createNode(arg, DOCUMENT_FRAGMENT_NODE, "#document-fragment", "")
+    if (getGCstate(arg)) then
       np%inDocument = .false.
-      call append(doc%docExtras%hangingnodes, np)
+      call append(arg%docExtras%hangingnodes, np)
     else
       np%inDocument = .true.
     endif
 
   end function createDocumentFragment
 
-  TOHW_function(createTextNode, (doc, data), np)
-    type(Node), pointer :: doc
+  TOHW_function(createTextNode, (arg, data), np)
+    type(Node), pointer :: arg
     character(len=*), intent(in) :: data
     type(Node), pointer :: np
 
-    if (doc%nodeType/=DOCUMENT_NODE) then
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+
+    if (arg%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    elseif (.not.checkChars(data, getXmlVersionEnum(doc))) then
+    elseif (.not.checkChars(data, getXmlVersionEnum(arg))) then
       TOHW_m_dom_throw_error(FoX_INVALID_CHARACTER)
     endif
 
-    np => createNode(doc, TEXT_NODE, "#text", data)
+    np => createNode(arg, TEXT_NODE, "#text", data)
 
-    if (getGCstate(doc)) then
+    if (getGCstate(arg)) then
       np%inDocument = .false.
-      call append(doc%docExtras%hangingnodes, np)
+      call append(arg%docExtras%hangingnodes, np)
     else
       np%inDocument = .true.
     endif
    
   end function createTextNode
 
-  TOHW_function(createComment, (doc, data), np)
-    type(Node), pointer :: doc
+  TOHW_function(createComment, (arg, data), np)
+    type(Node), pointer :: arg
     character(len=*), intent(in) :: data
     type(Node), pointer :: np
 
-    if (doc%nodeType/=DOCUMENT_NODE) then
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+
+    if (arg%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    elseif (.not.checkChars(data, getXmlVersionEnum(doc))) then
+    elseif (.not.checkChars(data, getXmlVersionEnum(arg))) then
       TOHW_m_dom_throw_error(FoX_INVALID_CHARACTER)
     elseif (index(data,"--")>0) then   
       TOHW_m_dom_throw_error(FoX_INVALID_COMMENT)
     endif
   
-    np => createNode(doc, COMMENT_NODE, "#comment", data)
+    np => createNode(arg, COMMENT_NODE, "#comment", data)
 
-    if (getGCstate(doc)) then
+    if (getGCstate(arg)) then
       np%inDocument = .false.
-      call append(doc%docExtras%hangingnodes, np)
+      call append(arg%docExtras%hangingnodes, np)
     else
       np%inDocument = .true.
     endif
 
   end function createComment
 
-  TOHW_function(createCdataSection, (doc, data), np)
-    type(Node), pointer :: doc
+  TOHW_function(createCdataSection, (arg, data), np)
+    type(Node), pointer :: arg
     character(len=*), intent(in) :: data
     type(Node), pointer :: np
 
-    if (doc%nodeType/=DOCUMENT_NODE) then
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+
+    if (arg%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    elseif (.not.checkChars(data, getXmlVersionEnum(doc))) then
+    elseif (.not.checkChars(data, getXmlVersionEnum(arg))) then
       TOHW_m_dom_throw_error(FoX_INVALID_CHARACTER)
     elseif (index(data,"]]>")>0) then   
       TOHW_m_dom_throw_error(FoX_INVALID_CDATA_SECTION)
     endif
   
-    np => createNode(doc, CDATA_SECTION_NODE, "#cdata-section", data)
+    np => createNode(arg, CDATA_SECTION_NODE, "#cdata-section", data)
 
-    if (getGCstate(doc)) then
+    if (getGCstate(arg)) then
       np%inDocument = .false.
-      call append(doc%docExtras%hangingnodes, np)
+      call append(arg%docExtras%hangingnodes, np)
     else
       np%inDocument = .true.
     endif
   
   end function createCdataSection
 
-  TOHW_function(createProcessingInstruction, (doc, target, data), np)
-    type(Node), pointer :: doc
+  TOHW_function(createProcessingInstruction, (arg, target, data), np)
+    type(Node), pointer :: arg
     character(len=*), intent(in) :: target
     character(len=*), intent(in) :: data
     type(Node), pointer :: np
 
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
 
-    if (doc%nodeType/=DOCUMENT_NODE) then
+    if (arg%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    elseif (.not.checkName(target, getXds(doc))) then
+    elseif (.not.checkName(target, getXds(arg))) then
       TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
-    elseif (.not.checkChars(data, getXmlVersionEnum(doc))) then
+    elseif (.not.checkChars(data, getXmlVersionEnum(arg))) then
       TOHW_m_dom_throw_error(FoX_INVALID_CHARACTER)
     elseif (index(data,"?>")>0) then   
       TOHW_m_dom_throw_error(FoX_INVALID_PI_DATA)
     endif
 
-    np => createNode(doc, PROCESSING_INSTRUCTION_NODE, target, data)
+    np => createNode(arg, PROCESSING_INSTRUCTION_NODE, target, data)
 
-    if (getGCstate(doc)) then
+    if (getGCstate(arg)) then
       np%inDocument = .false.
-      call append(doc%docExtras%hangingnodes, np)
+      call append(arg%docExtras%hangingnodes, np)
     else
       np%inDocument = .true.
     endif
 
   end function createProcessingInstruction
 
-  TOHW_function(createAttribute, (doc, name), np)
-    type(Node), pointer :: doc
+  TOHW_function(createAttribute, (arg, name), np)
+    type(Node), pointer :: arg
     character(len=*), intent(in) :: name
     type(Node), pointer :: np
 
-    if (doc%nodeType/=DOCUMENT_NODE) then
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+
+    if (arg%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    elseif (.not.checkName(name, getXds(doc))) then
+    elseif (.not.checkName(name, getXds(arg))) then
       TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
     endif
   
-    np => createNode(doc, ATTRIBUTE_NODE, name, "")
+    np => createNode(arg, ATTRIBUTE_NODE, name, "")
     np%namespaceURI => vs_str_alloc("")
     np%localname => vs_str_alloc(name)
     np%prefix => vs_str_alloc(name)
 
-    if (getGCstate(doc)) then
+    if (getGCstate(arg)) then
       np%inDocument = .false.
-      call append(doc%docExtras%hangingnodes, np)
+      call append(arg%docExtras%hangingnodes, np)
     else
       np%inDocument = .true.
     endif
   
   end function createAttribute
 
-  TOHW_function(createEntityReference, (doc, name), np)
-    type(Node), pointer :: doc
+  TOHW_function(createEntityReference, (arg, name), np)
+    type(Node), pointer :: arg
     character(len=*), intent(in) :: name
     type(Node), pointer :: np
 
     type(Node), pointer :: ent, newNode
     integer :: i
 
-    if (doc%nodeType/=DOCUMENT_NODE) then
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+
+    if (arg%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    elseif (.not.checkName(name, getXds(doc))) then
+    elseif (.not.checkName(name, getXds(arg))) then
       TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
     endif
 
-    np => createNode(doc, ENTITY_REFERENCE_NODE, name, "")
-    if (getGCstate(doc)) then ! otherwise the parser will fill these nodes in itself
+    if (.not.associated(getDocType(arg))) then
+      TOHW_m_dom_throw_error(FoX_NO_DOCTYPE)
+    endif
+
+    np => createNode(arg, ENTITY_REFERENCE_NODE, name, "")
+    if (getGCstate(arg)) then ! otherwise the parser will fill these nodes in itself
       ! FIXME except I think that gets switched off when creating atts sometimes ... need to check
-      ent => getNamedItem(getEntities(getDocType(doc)), name)
-      if (associated(ent)) then
-        if (ent%illFormed) then
-          TOHW_m_dom_throw_error(FoX_INVALID_ENTITY)
+      if (associated(getDocType(arg))) then
+        ent => getNamedItem(getEntities(getDocType(arg)), name)
+        if (associated(ent)) then
+          if (ent%illFormed) then
+            TOHW_m_dom_throw_error(FoX_INVALID_ENTITY)
+          endif
+          do i = 0, getLength(getChildNodes(ent)) - 1
+            newNode => appendChild(np, cloneNode(item(getChildNodes(ent), i), .true., ex))
+            call setReadOnlyNode(newNode, .true., .true.)
+          enddo
         endif
-        do i = 0, getLength(getChildNodes(ent)) - 1
-          newNode => appendChild(np, cloneNode(item(getChildNodes(ent), i), .true., ex))
-          call setReadOnlyNode(newNode, .true., .true.)
-        enddo
+        ! FIXME in case of recursive entity references?
       endif
-      ! FIXME in case of recursive entity references?
     endif
 
     call setReadOnlyNode(np, .true., .false.)
 
-    if (getGCstate(doc)) then
+    if (getGCstate(arg)) then
       np%inDocument = .false.
-      call append(doc%docExtras%hangingnodes, np)
+      call append(arg%docExtras%hangingnodes, np)
     else
       np%inDocument = .true.
     endif
 
   end function createEntityReference
 
-  TOHW_function(createEmptyEntityReference, (doc, name), np)
-    type(Node), pointer :: doc
+  TOHW_function(createEmptyEntityReference, (arg, name), np)
+    type(Node), pointer :: arg
     character(len=*), intent(in) :: name
     type(Node), pointer :: np
 
     type(Node), pointer :: ent
     integer :: i
 
-    if (doc%nodeType/=DOCUMENT_NODE) then
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+
+    if (arg%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    elseif (.not.checkChars(name, getXmlVersionEnum(doc))) then
+    elseif (.not.checkChars(name, getXmlVersionEnum(arg))) then
       TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
-    elseif (.not.checkName(name, getXds(doc))) then
+    elseif (.not.checkName(name, getXds(arg))) then
       TOHW_m_dom_throw_error(FoX_INVALID_XML_NAME)
     endif
 
-    np => createNode(doc, ENTITY_REFERENCE_NODE, name, "")
-    if (getGCstate(doc)) then
+    np => createNode(arg, ENTITY_REFERENCE_NODE, name, "")
+    if (getGCstate(arg)) then
       np%inDocument = .false.
-      call append(doc%docExtras%hangingnodes, np)
+      call append(arg%docExtras%hangingnodes, np)
     else
       np%inDocument = .true.
     endif
@@ -342,7 +436,7 @@ TOHW_m_dom_contents(`
     logical :: doneChildren, doneAttributes, allElements
     integer :: i
 
-    if (.not.associated(arg)) then
+    if (.not.associated(doc)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif
 

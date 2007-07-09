@@ -42,6 +42,7 @@ module m_dom_error
   integer, parameter, public :: FoX_INVALID_COMMENT         = 209
   integer, parameter, public :: FoX_NODE_IS_NULL            = 210
   integer, parameter, public :: FoX_INVALID_ENTITY          = 211
+  integer, parameter, public :: FoX_NO_DOCTYPE              = 212
 
   integer, parameter, public :: FoX_INTERNAL_ERROR          = 999
 
