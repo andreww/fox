@@ -3302,7 +3302,8 @@ endif
     
   end subroutine append_nl
 
-  function pop_nl(list) result(np)
+  function pop_nl(list, ex)result(np) 
+    type(DOMException), intent(inout), optional :: ex
     type(NodeList), intent(inout) :: list
     type(Node), pointer :: np
 
@@ -3310,8 +3311,13 @@ endif
     integer :: i
 
     if (list%length==0) then
-      ! FIXME internal error
-      continue
+      call throw_exception(FoX_INTERNAL_ERROR, "pop_nl", ex)
+if (present(ex)) then
+  if (is_in_error(ex)) then
+     return
+  endif
+endif
+
     endif
 
     np => list%nodes(size(list%nodes))%this
@@ -3411,7 +3417,7 @@ endif
     type(NodeList), pointer :: nl, nl_orig
     type(NodeListPtr), pointer :: temp_nll(:)
     integer :: i, i_t
-! FIXME FIXME FIXME
+! FIXME FIXME FIXME for DOM level 2
 
     if (.not.doc%docExtras%liveNodeLists) return
     if (.not.associated(doc%docExtras%nodelists)) return

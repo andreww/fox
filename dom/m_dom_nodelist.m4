@@ -58,7 +58,7 @@ TOHW_m_dom_contents(`
     
   end subroutine append_nl
 
-  function pop_nl(list) result(np)
+  TOHW_function(pop_nl, (list), np)
     type(NodeList), intent(inout) :: list
     type(Node), pointer :: np
 
@@ -66,8 +66,7 @@ TOHW_m_dom_contents(`
     integer :: i
 
     if (list%length==0) then
-      ! FIXME internal error
-      continue
+      TOHW_m_dom_throw_error(FoX_INTERNAL_ERROR)
     endif
 
     np => list%nodes(size(list%nodes))%this
@@ -160,7 +159,7 @@ TOHW_m_dom_contents(`
     type(NodeList), pointer :: nl, nl_orig
     type(NodeListPtr), pointer :: temp_nll(:)
     integer :: i, i_t
-! FIXME FIXME FIXME
+! FIXME FIXME FIXME for DOM level 2
 
     if (.not.doc%docExtras%liveNodeLists) return
     if (.not.associated(doc%docExtras%nodelists)) return
