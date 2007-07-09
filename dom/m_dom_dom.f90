@@ -1384,6 +1384,8 @@ endif
 
     endif
 
+    np => newChild
+
     if (getGCstate(getownerDocument(arg))) then
       if (arg%inDocument) then
         if (newChild%nodeType==DOCUMENT_FRAGMENT_NODE) then

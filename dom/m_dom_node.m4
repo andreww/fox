@@ -428,6 +428,8 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(NOT_FOUND_ERR)
     endif
 
+    np => newChild
+
     if (getGCstate(getownerDocument(arg))) then
       if (arg%inDocument) then
         if (newChild%nodeType==DOCUMENT_FRAGMENT_NODE) then
@@ -923,7 +925,7 @@ TOHW_m_dom_treewalk(`
           this%nodeValue => temp
         endif
       end if
-',`',`')
+',`',)
 
 
   end subroutine normalize
