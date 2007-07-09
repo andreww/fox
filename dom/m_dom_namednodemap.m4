@@ -120,7 +120,7 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(WRONG_DOCUMENT_ERR)
     endif
     if (associated(map%ownerElement, arg%ownerElement)) then
-      np => null()
+      np => arg
       return
       ! Nothing to do, this attribute is already in this element
     elseif (associated(arg%ownerElement)) then

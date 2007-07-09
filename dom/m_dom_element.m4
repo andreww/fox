@@ -211,7 +211,7 @@ TOHW_m_dom_contents(`
     endif
 
     if (associated(newattr%ownerElement, arg)) then
-      attr => null()
+      attr => newattr
       return
       ! Nothing to do, this attribute is already in this element
     elseif (associated(newattr%ownerElement)) then

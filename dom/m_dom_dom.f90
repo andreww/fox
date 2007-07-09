@@ -3080,7 +3080,7 @@ endif
 
     endif
     if (associated(map%ownerElement, arg%ownerElement)) then
-      np => null()
+      np => arg
       return
       ! Nothing to do, this attribute is already in this element
     elseif (associated(arg%ownerElement)) then
@@ -5583,7 +5583,7 @@ endif
     endif
 
     if (associated(newattr%ownerElement, arg)) then
-      attr => null()
+      attr => newattr
       return
       ! Nothing to do, this attribute is already in this element
     elseif (associated(newattr%ownerElement)) then
