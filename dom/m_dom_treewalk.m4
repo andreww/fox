@@ -58,7 +58,7 @@ ifelse(`$3', `deadNode',`
             this => item(getAttributes(this), 0)
           else
 ifelse(`$3', `parentNode', `dnl
-            if (.not.deep) return
+            if (.not.deep) exit
 ')dnl
             doneAttributes = .true.
           endif

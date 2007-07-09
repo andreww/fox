@@ -2155,7 +2155,7 @@ endif
       endif
 
       if (.not.deep) then
-        if (getNodeType(arg)/=ELEMENT_NODE.and.getNodeType(arg)/=ATTRIBUTE_NODE) return
+        if (getNodeType(arg)/=ELEMENT_NODE.and.getNodeType(arg)/=ATTRIBUTE_NODE) exit
       endif
 
 
@@ -2183,7 +2183,7 @@ endif
                       if (.not.associated(this, arg)) thatParent => getLastChild(thatParent)
             this => item(getAttributes(this), 0)
           else
-            if (.not.deep) return
+            if (.not.deep) exit
             doneAttributes = .true.
           endif
         elseif (hasChildNodes(this)) then
@@ -4587,7 +4587,7 @@ endif
         endif
 
         if (.not.deep) then
-          if (getNodeType(arg)/=ELEMENT_NODE.and.getNodeType(arg)/=ATTRIBUTE_NODE) return
+          if (getNodeType(arg)/=ELEMENT_NODE.and.getNodeType(arg)/=ATTRIBUTE_NODE) exit
         endif
 
 
@@ -4606,7 +4606,7 @@ endif
                       if (.not.associated(this, arg)) thatParent => getLastChild(thatParent)
             this => item(getAttributes(this), 0)
           else
-            if (.not.deep) return
+            if (.not.deep) exit
             doneAttributes = .true.
           endif
         elseif (hasChildNodes(this)) then

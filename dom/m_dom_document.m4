@@ -584,7 +584,7 @@ TOHW_m_dom_treewalk(`dnl
         endif
 
         if (.not.deep) then
-          if (getNodeType(arg)/=ELEMENT_NODE.and.getNodeType(arg)/=ATTRIBUTE_NODE) return
+          if (getNodeType(arg)/=ELEMENT_NODE.and.getNodeType(arg)/=ATTRIBUTE_NODE) exit
         endif
 ', `', `parentNode', `')
 
