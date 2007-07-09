@@ -22,7 +22,7 @@ define(`TOHW_function', `define(`m4f_thisfunc', `$1')`'function $1`'dnl
 dnl
 define(`TOHW_subroutine', `define(`m4f_thisfunc', `$1')`'subroutine $1`'dnl
 (m4_foreach(`x', `$2', `x, ')ex)
-    type(DOMException), intent(inout), optional :: ex`'dnl
+    type(DOMException), intent(out), optional :: ex`'dnl
 ')`'dnl
 dnl
 define(`TOHW_m_dom_hierarchy_test',`dnl

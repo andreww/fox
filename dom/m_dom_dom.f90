@@ -546,7 +546,7 @@ contains
   end subroutine destroyElement
 
   subroutine destroyAttribute(attr, ex)
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: attr
 
     type(Node), pointer :: np, np_next
@@ -567,7 +567,7 @@ endif
   end subroutine destroyAttribute
 
   subroutine destroyDocumentFragment(df, ex)
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: df
 
     if (df%nodeType/=DOCUMENT_FRAGMENT_NODE) then
@@ -774,7 +774,7 @@ endif
   end function getNodeValue
 
   subroutine setStringValue(arg, stringValue, ex)
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*) :: stringValue
   
@@ -845,7 +845,7 @@ endif
   end function getStringValue
     
   subroutine setNodeValue(arg, nodeValue, ex)
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*) :: nodeValue
 
@@ -2780,7 +2780,7 @@ endif
   end function hasAttributes
   
   subroutine normalize(arg, ex)
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     type(Node), pointer :: this, tempNode, oldNode, treeroot
     integer :: i_tree, i_t
@@ -2955,7 +2955,7 @@ endif
   end function getPrefix
   
   subroutine setPrefix(arg, prefix, ex)
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*) :: prefix
 
@@ -4110,7 +4110,7 @@ endif
 
 
   subroutine destroyDocument(doc, ex)
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: doc
     
     type(Node), pointer :: dt
@@ -4189,7 +4189,7 @@ endif
   end function getDocType
 
   subroutine setDocType(arg, np, ex)
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     type(Node), pointer :: np
 
@@ -4220,7 +4220,7 @@ endif
 
 
   subroutine setXds(arg, xds, ex)
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     type(xml_doc_state), pointer :: xds
 
@@ -4308,7 +4308,7 @@ endif
   end function getDocumentElement
 
   subroutine setDocumentElement(arg, np, ex)
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
   ! Only for use by FoX, not exported through FoX_DOM interface
     type(Node), pointer :: arg
     type(Node), pointer :: np
@@ -5744,7 +5744,7 @@ endif
   end function getXmlVersion
 
   subroutine setXmlVersion(doc, s, ex)
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: doc
     character(len=*) :: s
 
@@ -5840,7 +5840,7 @@ endif
   end function getGCstate
 
   subroutine setGCstate(doc, b, ex)
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: doc
     logical, intent(in) :: b
 
@@ -6038,7 +6038,7 @@ endif
 
 
   subroutine setAttribute(arg, name, value, ex)
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*), intent(in) :: name
     character(len=*), intent(in) :: value
@@ -6115,7 +6115,7 @@ endif
 
 
   subroutine removeAttribute(arg, name, ex)
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*), intent(in) :: name
 
@@ -6387,7 +6387,7 @@ endif
 
 
   subroutine setAttributeNS(arg, namespaceURI, qualifiedname, value, ex)
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*), intent(in) :: namespaceURI
     character(len=*), intent(in) :: qualifiedName
@@ -6491,7 +6491,7 @@ endif
 
 
   subroutine removeAttributeNS(arg, namespaceURI, localName, ex)
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*), intent(in) :: namespaceURI
     character(len=*), intent(in) :: localName
@@ -6807,7 +6807,7 @@ endif
   end function getSpecified
 
   subroutine setSpecified(arg, p, ex)
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     logical, intent(in) :: p
 
@@ -6886,7 +6886,7 @@ endif
   end function getValue_DOM
 
   subroutine setValue(arg, value, ex)
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*), intent(in) :: value
 
@@ -7001,7 +7001,7 @@ endif
   end function getIsId
 
   subroutine setIsId(arg, p, ex)
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     logical, intent(in) :: p
 
@@ -7116,7 +7116,7 @@ endif
 
 
   subroutine appendData(arg, data, ex)
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*), intent(in) :: data
     
@@ -7188,7 +7188,7 @@ endif
   
 
   subroutine insertData(arg, offset, data, ex)
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     integer, intent(in) :: offset
     character(len=*), intent(in) :: data
@@ -7269,7 +7269,7 @@ endif
 
 
   subroutine deleteData(arg, offset, count, ex)
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     integer, intent(in) :: offset
     integer, intent(in) :: count
@@ -7320,7 +7320,7 @@ endif
 
 
   subroutine replaceData(arg, offset, count, data, ex)
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     integer, intent(in) :: offset
     integer, intent(in) :: count
@@ -7407,7 +7407,7 @@ endif
 
 
   subroutine setIllFormed(arg, p, ex)
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     logical, intent(in) :: p
     
@@ -7562,7 +7562,7 @@ endif
 
 
   subroutine setData(arg, data, ex)
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*) :: data
 
