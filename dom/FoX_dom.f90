@@ -1,5 +1,6 @@
 module FoX_dom
 
+  use m_common_array_str
   use m_dom_dom
   use m_dom_error
   use m_dom_parse
@@ -7,6 +8,8 @@ module FoX_dom
 
   implicit none
   private
+
+  public :: str_vs, vs_str_alloc
 
   !We make public only features from the DOM Core Level 2,
   !plus a couple of our own devising for input & output.
