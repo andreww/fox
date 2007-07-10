@@ -5165,7 +5165,16 @@ endif
 
     logical :: doneAttributes, doneChildren
     integer :: i_tree
-    print*,"importing Nodes"
+
+    if (.not.associated(doc).or..not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "importNode", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
+    endif
 
     if (getNodeType(doc)/=DOCUMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "importNode", ex)
@@ -5341,17 +5350,26 @@ endif
 
 
     np => thatParent
-    print*,"importDone"
 
   end function importNode
 
-  function createElementNS(doc, namespaceURI, qualifiedName, ex)result(np) 
+  function createElementNS(arg, namespaceURI, qualifiedName, ex)result(np) 
     type(DOMException), intent(out), optional :: ex
-    type(Node), pointer :: doc
+    type(Node), pointer :: arg
     character(len=*), intent(in) :: namespaceURI, qualifiedName
     type(Node), pointer :: np
 
-    if (doc%nodeType/=DOCUMENT_NODE) then
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "createElementNS", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    if (arg%nodeType/=DOCUMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "createElementNS", ex)
 if (present(ex)) then
   if (inException(ex)) then
@@ -5359,7 +5377,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkChars(qualifiedName, getXmlVersionEnum(doc))) then
+    elseif (.not.checkChars(qualifiedName, getXmlVersionEnum(arg))) then
       call throw_exception(INVALID_CHARACTER_ERR, "createElementNS", ex)
 if (present(ex)) then
   if (inException(ex)) then
@@ -5367,7 +5385,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkQName(qualifiedName, getXds(doc))) then
+    elseif (.not.checkQName(qualifiedName, getXds(arg))) then
       call throw_exception(NAMESPACE_ERR, "createElementNS", ex)
 if (present(ex)) then
   if (inException(ex)) then
@@ -5399,16 +5417,16 @@ endif
 
     ! FIXME create a namespace node for XPath?
 
-    np => createNode(doc, ELEMENT_NODE, qualifiedName, "")
+    np => createNode(arg, ELEMENT_NODE, qualifiedName, "")
     np%namespaceURI => vs_str_alloc(namespaceURI)
     np%prefix => vs_str_alloc(prefixOfQName(qualifiedname))
     np%localName => vs_str_alloc(localpartOfQName(qualifiedname))
 
     np%attributes%ownerElement => np
 
-    if (getGCstate(doc)) then
+    if (getGCstate(arg)) then
       np%inDocument = .false.
-      call append(doc%docExtras%hangingnodes, np)
+      call append(arg%docExtras%hangingnodes, np)
     else
       np%inDocument = .true.
     endif
@@ -5417,13 +5435,23 @@ endif
 
   end function createElementNS
   
-  function createAttributeNS(doc, namespaceURI, qualifiedname, ex)result(np) 
+  function createAttributeNS(arg, namespaceURI, qualifiedname, ex)result(np) 
     type(DOMException), intent(out), optional :: ex
-    type(Node), pointer :: doc
+    type(Node), pointer :: arg
     character(len=*), intent(in) :: namespaceURI, qualifiedName
     type(Node), pointer :: np
 
-    if (doc%nodeType/=DOCUMENT_NODE) then
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "createAttributeNS", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    if (arg%nodeType/=DOCUMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "createAttributeNS", ex)
 if (present(ex)) then
   if (inException(ex)) then
@@ -5431,7 +5459,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkChars(qualifiedName, getXmlVersionEnum(doc))) then
+    elseif (.not.checkChars(qualifiedName, getXmlVersionEnum(arg))) then
       call throw_exception(INVALID_CHARACTER_ERR, "createAttributeNS", ex)
 if (present(ex)) then
   if (inException(ex)) then
@@ -5439,7 +5467,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkQName(qualifiedName, getXds(doc))) then
+    elseif (.not.checkQName(qualifiedName, getXds(arg))) then
       call throw_exception(NAMESPACE_ERR, "createAttributeNS", ex)
 if (present(ex)) then
   if (inException(ex)) then
@@ -5469,14 +5497,14 @@ endif
       ! what if prefix = "xmlns"? or other "xml"
     endif
   
-    np => createNode(doc, ATTRIBUTE_NODE, qualifiedName, "")
+    np => createNode(arg, ATTRIBUTE_NODE, qualifiedName, "")
     np%namespaceURI => vs_str_alloc(namespaceURI)
     np%localname => vs_str_alloc(localPartofQName(qualifiedname))
     np%prefix => vs_str_alloc(PrefixofQName(qualifiedname))
 
-    if (getGCstate(doc)) then
+    if (getGCstate(arg)) then
       np%inDocument = .false.
-      call append(doc%docExtras%hangingnodes, np)
+      call append(arg%docExtras%hangingnodes, np)
     else
       np%inDocument = .true.
     endif
@@ -5623,18 +5651,28 @@ endif
   end function getElementsByTagNameNS
 
 
-  function getElementById(doc, elementId, ex)result(np) 
+  function getElementById(arg, elementId, ex)result(np) 
     type(DOMException), intent(out), optional :: ex
-    type(Node), pointer :: doc
+    type(Node), pointer :: arg
     character(len=*), intent(in) :: elementId
     type(Node), pointer :: np
 
-    type(Node), pointer :: this, arg, treeroot
+    type(Node), pointer :: this, treeroot
     type(NamedNodeMap), pointer :: nnm
     integer :: i_tree
     logical :: doneChildren, doneAttributes
 
-    if (doc%nodeType/=DOCUMENT_NODE) then
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "getElementById", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    if (arg%nodeType/=DOCUMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "getElementById", ex)
 if (present(ex)) then
   if (inException(ex)) then
@@ -5644,10 +5682,8 @@ endif
 
     endif
 
-    arg => getDocumentElement(doc)
-
     np => null()
-    treeroot => arg
+    treeroot => getDocumentElement(arg)
 
     i_tree = 0
     doneChildren = .false.
@@ -5727,14 +5763,34 @@ endif
 !  function setXmlStandalone
 
 
-  function getXmlVersion(doc, ex)result(s) 
+  function getXmlVersion(arg, ex)result(s) 
     type(DOMException), intent(out), optional :: ex
-    type(Node), pointer :: doc
+    type(Node), pointer :: arg
     character(len=3) :: s
 
-    if (getXmlVersionEnum(doc)==XML1_0) then
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "getXmlVersion", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    if (arg%nodeType/=DOCUMENT_NODE) then
+      call throw_exception(FoX_INVALID_NODE, "getXmlVersion", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    if (getXmlVersionEnum(arg)==XML1_0) then
       s = "1.0"
-    elseif (getXmlVersionEnum(doc)==XML1_1) then
+    elseif (getXmlVersionEnum(arg)==XML1_1) then
       s = "1.1"
     else
       s = "XXX"
@@ -5742,15 +5798,35 @@ endif
 
   end function getXmlVersion
 
-  subroutine setXmlVersion(doc, s, ex)
+  subroutine setXmlVersion(arg, s, ex)
     type(DOMException), intent(out), optional :: ex
-    type(Node), pointer :: doc
+    type(Node), pointer :: arg
     character(len=*) :: s
 
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "setXmlVersion", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    if (arg%nodeType/=DOCUMENT_NODE) then
+      call throw_exception(FoX_INVALID_NODE, "setXmlVersion", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
+    endif
+
     if (s=="1.0") then
-      doc%docExtras%xds%xml_version = XML1_0
+      arg%docExtras%xds%xml_version = XML1_0
     elseif (s=="1.1") then
-      doc%docExtras%xds%xml_version = XML1_1
+      arg%docExtras%xds%xml_version = XML1_1
     else
       call throw_exception(NOT_SUPPORTED_ERR, "setXmlVersion", ex)
 if (present(ex)) then
@@ -5771,79 +5847,110 @@ endif
 
   ! Internal function, not part of API
 
-  function createEntity(doc, name, publicId, systemId, notationName) result(np)
-    type(Node), pointer :: doc
+  function createEntity(arg, name, publicId, systemId, notationName, ex)result(np) 
+    type(DOMException), intent(out), optional :: ex
+    type(Node), pointer :: arg
     character(len=*), intent(in) :: name
     character(len=*), intent(in) :: publicId
     character(len=*), intent(in) :: systemId
     character(len=*), intent(in) :: notationName
     type(Node), pointer :: np
 
-    if (doc%nodeType/=DOCUMENT_NODE) then
-      print*,"internal error in createEntity"
-      stop
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "createEntity", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
     endif
 
-    np => createNode(doc, ENTITY_NODE, name, "")
+    if (arg%nodeType/=DOCUMENT_NODE) then
+      call throw_exception(FoX_INVALID_NODE, "createEntity", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    np => createNode(arg, ENTITY_NODE, name, "")
     np%publicId => vs_str_alloc(publicId)
     np%systemId => vs_str_alloc(systemId)
     np%notationName => vs_str_alloc(notationName)
 
   end function createEntity
 
-  function createNotation(doc, name, publicId, systemId) result(np)
-    type(Node), pointer :: doc
+  function createNotation(arg, name, publicId, systemId, ex)result(np) 
+    type(DOMException), intent(out), optional :: ex
+    type(Node), pointer :: arg
     character(len=*), intent(in) :: name
     character(len=*), intent(in) :: publicId
     character(len=*), intent(in) :: systemId
     type(Node), pointer :: np
 
-    if (doc%nodeType/=DOCUMENT_NODE) then
-      print*,"internal error in createEntity"
-      stop
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "createNotation", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
     endif
 
-    np => createNode(doc, NOTATION_NODE, name, "")
+    if (arg%nodeType/=DOCUMENT_NODE) then
+      call throw_exception(FoX_INVALID_NODE, "createNotation", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    np => createNode(arg, NOTATION_NODE, name, "")
     np%publicId => vs_str_alloc(publicId)
     np%systemId => vs_str_alloc(systemId)
     
   end function createNotation
 
-
-  function getXmlVersionEnum(doc, ex)result(n) 
+  function getXmlVersionEnum(arg, ex)result(n) 
     type(DOMException), intent(out), optional :: ex
-    type(Node), pointer :: doc
+    type(Node), pointer :: arg
     integer :: n
 
-    n = doc%docExtras%xds%xml_version
+    n = arg%docExtras%xds%xml_version
 
   end function getXmlVersionEnum
 
-  function getXds(doc, ex)result(xds) 
+  function getXds(arg, ex)result(xds) 
     type(DOMException), intent(out), optional :: ex
-    type(Node), pointer :: doc
+    type(Node), pointer :: arg
     type(xml_doc_state) :: xds
 
-    xds = doc%docExtras%xds
+    xds = arg%docExtras%xds
 
   end function getXds
 
 
-  function getGCstate(doc, ex)result(b) 
+  function getGCstate(arg, ex)result(b) 
     type(DOMException), intent(out), optional :: ex
-    type(Node), pointer :: doc
+    type(Node), pointer :: arg
     logical :: b
 
-    b = doc%docExtras%xds%building
+    b = arg%docExtras%xds%building
 
   end function getGCstate
 
-  subroutine setGCstate(doc, b, ex)
+  subroutine setGCstate(arg, b, ex)
     type(DOMException), intent(out), optional :: ex
-    type(Node), pointer :: doc
+    type(Node), pointer :: arg
     logical, intent(in) :: b
 
-    doc%docExtras%xds%building = b
+    arg%docExtras%xds%building = b
 
   end subroutine setGCstate
 

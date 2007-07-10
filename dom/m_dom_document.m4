@@ -543,7 +543,10 @@ TOHW_m_dom_treewalk(`dnl
 
     logical :: doneAttributes, doneChildren
     integer :: i_tree
-    print*,"importing Nodes"
+
+    if (.not.associated(doc).or..not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
 
     if (getNodeType(doc)/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
@@ -621,20 +624,23 @@ TOHW_m_dom_treewalk(`dnl
 ', `', `parentNode', `')
 
     np => thatParent
-    print*,"importDone"
 
   end function importNode
 
-  TOHW_function(createElementNS, (doc, namespaceURI, qualifiedName), np)
-    type(Node), pointer :: doc
+  TOHW_function(createElementNS, (arg, namespaceURI, qualifiedName), np)
+    type(Node), pointer :: arg
     character(len=*), intent(in) :: namespaceURI, qualifiedName
     type(Node), pointer :: np
 
-    if (doc%nodeType/=DOCUMENT_NODE) then
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+
+    if (arg%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    elseif (.not.checkChars(qualifiedName, getXmlVersionEnum(doc))) then
+    elseif (.not.checkChars(qualifiedName, getXmlVersionEnum(arg))) then
       TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
-    elseif (.not.checkQName(qualifiedName, getXds(doc))) then
+    elseif (.not.checkQName(qualifiedName, getXds(arg))) then
       TOHW_m_dom_throw_error(NAMESPACE_ERR)
     elseif (prefixOfQName(qualifiedName)/="" &
      .and. namespaceURI=="") then
@@ -648,16 +654,16 @@ TOHW_m_dom_treewalk(`dnl
 
     ! FIXME create a namespace node for XPath?
 
-    np => createNode(doc, ELEMENT_NODE, qualifiedName, "")
+    np => createNode(arg, ELEMENT_NODE, qualifiedName, "")
     np%namespaceURI => vs_str_alloc(namespaceURI)
     np%prefix => vs_str_alloc(prefixOfQName(qualifiedname))
     np%localName => vs_str_alloc(localpartOfQName(qualifiedname))
 
     np%attributes%ownerElement => np
 
-    if (getGCstate(doc)) then
+    if (getGCstate(arg)) then
       np%inDocument = .false.
-      call append(doc%docExtras%hangingnodes, np)
+      call append(arg%docExtras%hangingnodes, np)
     else
       np%inDocument = .true.
     endif
@@ -666,16 +672,20 @@ TOHW_m_dom_treewalk(`dnl
 
   end function createElementNS
   
-  TOHW_function(createAttributeNS, (doc, namespaceURI,  qualifiedname), np)
-    type(Node), pointer :: doc
+  TOHW_function(createAttributeNS, (arg, namespaceURI,  qualifiedname), np)
+    type(Node), pointer :: arg
     character(len=*), intent(in) :: namespaceURI, qualifiedName
     type(Node), pointer :: np
 
-    if (doc%nodeType/=DOCUMENT_NODE) then
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+
+    if (arg%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    elseif (.not.checkChars(qualifiedName, getXmlVersionEnum(doc))) then
+    elseif (.not.checkChars(qualifiedName, getXmlVersionEnum(arg))) then
       TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
-    elseif (.not.checkQName(qualifiedName, getXds(doc))) then
+    elseif (.not.checkQName(qualifiedName, getXds(arg))) then
       TOHW_m_dom_throw_error(NAMESPACE_ERR)
     elseif (prefixOfQName(qualifiedName)/="" &
      .and. namespaceURI=="") then
@@ -687,14 +697,14 @@ TOHW_m_dom_treewalk(`dnl
       ! what if prefix = "xmlns"? or other "xml"
     endif
   
-    np => createNode(doc, ATTRIBUTE_NODE, qualifiedName, "")
+    np => createNode(arg, ATTRIBUTE_NODE, qualifiedName, "")
     np%namespaceURI => vs_str_alloc(namespaceURI)
     np%localname => vs_str_alloc(localPartofQName(qualifiedname))
     np%prefix => vs_str_alloc(PrefixofQName(qualifiedname))
 
-    if (getGCstate(doc)) then
+    if (getGCstate(arg)) then
       np%inDocument = .false.
-      call append(doc%docExtras%hangingnodes, np)
+      call append(arg%docExtras%hangingnodes, np)
     else
       np%inDocument = .true.
     endif
@@ -766,24 +776,26 @@ TOHW_m_dom_treewalk(`dnl
   end function getElementsByTagNameNS
 
 
-  TOHW_function(getElementById, (doc, elementId), np)
-    type(Node), pointer :: doc
+  TOHW_function(getElementById, (arg, elementId), np)
+    type(Node), pointer :: arg
     character(len=*), intent(in) :: elementId
     type(Node), pointer :: np
 
-    type(Node), pointer :: this, arg, treeroot
+    type(Node), pointer :: this, treeroot
     type(NamedNodeMap), pointer :: nnm
     integer :: i_tree
     logical :: doneChildren, doneAttributes
 
-    if (doc%nodeType/=DOCUMENT_NODE) then
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+
+    if (arg%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
 
-    arg => getDocumentElement(doc)
-
     np => null()
-    treeroot => arg
+    treeroot => getDocumentElement(arg)
 TOHW_m_dom_treewalk(`dnl
       if (this%nodeType==ATTRIBUTE_NODE)  then
         if (getIsId(this).and.getName(this)==elementId) then
@@ -801,13 +813,21 @@ TOHW_m_dom_treewalk(`dnl
 !  function setXmlStandalone
 
 
-  TOHW_function(getXmlVersion, (doc), s)
-    type(Node), pointer :: doc
+  TOHW_function(getXmlVersion, (arg), s)
+    type(Node), pointer :: arg
     character(len=3) :: s
 
-    if (getXmlVersionEnum(doc)==XML1_0) then
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+
+    if (arg%nodeType/=DOCUMENT_NODE) then
+      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
+    endif
+
+    if (getXmlVersionEnum(arg)==XML1_0) then
       s = "1.0"
-    elseif (getXmlVersionEnum(doc)==XML1_1) then
+    elseif (getXmlVersionEnum(arg)==XML1_1) then
       s = "1.1"
     else
       s = "XXX"
@@ -815,14 +835,22 @@ TOHW_m_dom_treewalk(`dnl
 
   end function getXmlVersion
 
-  TOHW_subroutine(setXmlVersion, (doc, s))
-    type(Node), pointer :: doc
+  TOHW_subroutine(setXmlVersion, (arg, s))
+    type(Node), pointer :: arg
     character(len=*) :: s
 
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+
+    if (arg%nodeType/=DOCUMENT_NODE) then
+      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
+    endif
+
     if (s=="1.0") then
-      doc%docExtras%xds%xml_version = XML1_0
+      arg%docExtras%xds%xml_version = XML1_0
     elseif (s=="1.1") then
-      doc%docExtras%xds%xml_version = XML1_1
+      arg%docExtras%xds%xml_version = XML1_1
     else
       TOHW_m_dom_throw_error(NOT_SUPPORTED_ERR)
     endif
@@ -837,75 +865,80 @@ TOHW_m_dom_treewalk(`dnl
 
   ! Internal function, not part of API
 
-  function createEntity(doc, name, publicId, systemId, notationName) result(np)
-    type(Node), pointer :: doc
+  TOHW_function(createEntity, (arg, name, publicId, systemId, notationName), np)
+    type(Node), pointer :: arg
     character(len=*), intent(in) :: name
     character(len=*), intent(in) :: publicId
     character(len=*), intent(in) :: systemId
     character(len=*), intent(in) :: notationName
     type(Node), pointer :: np
 
-    if (doc%nodeType/=DOCUMENT_NODE) then
-      print*,"internal error in createEntity"
-      stop
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif
 
-    np => createNode(doc, ENTITY_NODE, name, "")
+    if (arg%nodeType/=DOCUMENT_NODE) then
+      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
+    endif
+
+    np => createNode(arg, ENTITY_NODE, name, "")
     np%publicId => vs_str_alloc(publicId)
     np%systemId => vs_str_alloc(systemId)
     np%notationName => vs_str_alloc(notationName)
 
   end function createEntity
 
-  function createNotation(doc, name, publicId, systemId) result(np)
-    type(Node), pointer :: doc
+  TOHW_function(createNotation, (arg, name, publicId, systemId), np)
+    type(Node), pointer :: arg
     character(len=*), intent(in) :: name
     character(len=*), intent(in) :: publicId
     character(len=*), intent(in) :: systemId
     type(Node), pointer :: np
 
-    if (doc%nodeType/=DOCUMENT_NODE) then
-      print*,"internal error in createEntity"
-      stop
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif
 
-    np => createNode(doc, NOTATION_NODE, name, "")
+    if (arg%nodeType/=DOCUMENT_NODE) then
+      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
+    endif
+
+    np => createNode(arg, NOTATION_NODE, name, "")
     np%publicId => vs_str_alloc(publicId)
     np%systemId => vs_str_alloc(systemId)
     
   end function createNotation
 
-
-  TOHW_function(getXmlVersionEnum, (doc), n)
-    type(Node), pointer :: doc
+  TOHW_function(getXmlVersionEnum, (arg), n)
+    type(Node), pointer :: arg
     integer :: n
 
-    n = doc%docExtras%xds%xml_version
+    n = arg%docExtras%xds%xml_version
 
   end function getXmlVersionEnum
 
-  TOHW_function(getXds, (doc), xds)
-    type(Node), pointer :: doc
+  TOHW_function(getXds, (arg), xds)
+    type(Node), pointer :: arg
     type(xml_doc_state) :: xds
 
-    xds = doc%docExtras%xds
+    xds = arg%docExtras%xds
 
   end function getXds
 
 
-  TOHW_function(getGCstate, (doc), b)
-    type(Node), pointer :: doc
+  TOHW_function(getGCstate, (arg), b)
+    type(Node), pointer :: arg
     logical :: b
 
-    b = doc%docExtras%xds%building
+    b = arg%docExtras%xds%building
 
   end function getGCstate
 
-  TOHW_subroutine(setGCstate, (doc, b))
-    type(Node), pointer :: doc
+  TOHW_subroutine(setGCstate, (arg, b))
+    type(Node), pointer :: arg
     logical, intent(in) :: b
 
-    doc%docExtras%xds%building = b
+    arg%docExtras%xds%building = b
 
   end subroutine setGCstate
 
