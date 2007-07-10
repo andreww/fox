@@ -46,7 +46,7 @@ module m_dom_dom
   use m_common_charset, only: XML1_0, XML1_1
   use m_common_namecheck, only: checkQName, prefixOfQName, localPartOfQName
   use m_dom_error, only : NOT_FOUND_ERR, INVALID_CHARACTER_ERR, FoX_INVALID_NODE, &
-    FoX_INVALID_XML_NAME, WRONG_DOCUMENT_ERR, FoX_INVALID_TEXT, & 
+    WRONG_DOCUMENT_ERR, FoX_INVALID_TEXT, & 
     FoX_INVALID_CHARACTER, FoX_INVALID_COMMENT, FoX_INVALID_CDATA_SECTION, &
     FoX_INVALID_PI_DATA, NOT_SUPPORTED_ERR, FoX_INVALID_ENTITY, FoX_NO_DOCTYPE
 
@@ -5088,16 +5088,8 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkChars(name, getXmlVersionEnum(arg))) then
-      call throw_exception(INVALID_CHARACTER_ERR, "createEmptyEntityReference", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
-  endif
-endif
-
     elseif (.not.checkName(name, getXds(arg))) then
-      call throw_exception(FoX_INVALID_XML_NAME, "createEmptyEntityReference", ex)
+      call throw_exception(INVALID_CHARACTER_ERR, "createEmptyEntityReference", ex)
 if (present(ex)) then
   if (inException(ex)) then
      return

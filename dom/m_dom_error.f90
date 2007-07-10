@@ -30,9 +30,8 @@ module m_dom_error
   integer, parameter, public :: VALIDATION_ERR              = 16
   integer, parameter, public :: TYPE_MISMATCH_ERR           = 17
 
-  integer, parameter, public :: FoX_INVALID_CHARACTER       = 200
   integer, parameter, public :: FoX_INVALID_NODE            = 201
-  integer, parameter, public :: FoX_INVALID_XML_NAME        = 202
+  integer, parameter, public :: FoX_INVALID_CHARACTER       = 202
   integer, parameter, public :: FoX_INVALID_PI_TARGET       = 203
   integer, parameter, public :: FoX_INVALID_PI_DATA         = 204
   integer, parameter, public :: FoX_INVALID_CDATA_SECTION   = 205
@@ -102,12 +101,10 @@ contains
       s = "INVALID_EXPRESSION_ERR"
     case(52)
       s = "TYPE_ERR"
-    case(200)
-      s = "FoX_INVALID_CHARACTER"
-    case (201)
+    case(201)
       s = "FoX_INVALID_NODE"
     case(202)
-      s = "FoX_INVALID_XML_NAME"
+      s = "FoX_INVALID_CHARACTER"
     case(203)
       s = "FoX_INVALID_PI_TARGET"
     case(204)
