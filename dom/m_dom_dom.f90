@@ -26,7 +26,7 @@ module m_dom_dom
 
 
   use m_common_array_str, only: str_vs
-  use m_dom_error, only: INUSE_ATTRIBUTE_ERR
+  use m_dom_error, only: INUSE_ATTRIBUTE_ERR, FoX_MAP_IS_NULL
 
 
 
@@ -3498,7 +3498,7 @@ endif
     integer :: i
 
     if (.not.associated(map)) then
-      call throw_exception(FoX_NODE_IS_NULL, "getNamedItem", ex)
+      call throw_exception(FoX_MAP_IS_NULL, "getNamedItem", ex)
 if (present(ex)) then
   if (inException(ex)) then
      return
@@ -3526,8 +3526,6 @@ endif
 
     integer :: i
 
-! FIXME edit to do right thing with unallocated map
-
     do i = 1, map%length
       if (str_vs(map%nodes(i)%this%nodeName)==name) then
         n = size(map%nodes(i)%this%nodeValue)
@@ -3539,12 +3537,23 @@ endif
   end function getNamedItem_Value_length
 
 
-  pure function getNamedItem_Value(map, name) result(c)
-    type(NamedNodeMap), intent(in) :: map
+  function getNamedItem_Value(map, name, ex)result(c) 
+    type(DOMException), intent(out), optional :: ex
+    type(NamedNodeMap), pointer :: map
     character(len=*), intent(in) :: name
     character(len=getNamedItem_Value_length(map, name)) :: c
 
     integer :: i
+
+    if (.not.associated(map)) then
+      call throw_exception(FoX_MAP_IS_NULL, "getNamedItem_Value", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
+    endif
 
     do i = 1, map%length
       if (str_vs(map%nodes(i)%this%nodeName)==name) then
@@ -3566,6 +3575,16 @@ endif
     integer :: i
 
     if (.not.associated(map)) then
+      call throw_exception(FoX_MAP_IS_NULL, "setNamedItem", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "setNamedItem", ex)
 if (present(ex)) then
   if (inException(ex)) then
@@ -3650,7 +3669,7 @@ endif
     integer :: i, i2
 
     if (.not.associated(map)) then
-      call throw_exception(FoX_NODE_IS_NULL, "removeNamedItem", ex)
+      call throw_exception(FoX_MAP_IS_NULL, "removeNamedItem", ex)
 if (present(ex)) then
   if (inException(ex)) then
      return
@@ -3712,7 +3731,7 @@ endif
     integer :: n
 
     if (.not.associated(map)) then
-      call throw_exception(FoX_NODE_IS_NULL, "item_nnm", ex)
+      call throw_exception(FoX_MAP_IS_NULL, "item_nnm", ex)
 if (present(ex)) then
   if (inException(ex)) then
      return
@@ -3729,9 +3748,20 @@ endif
 
    end function item_nnm
 
-  function getLength_nnm(map) result(n)
-    type(namedNodeMap), intent(in) :: map
+  function getLength_nnm(map, ex)result(n) 
+    type(DOMException), intent(out), optional :: ex
+    type(namedNodeMap), pointer :: map
     integer :: n
+
+    if (.not.associated(map)) then
+       call throw_exception(FoX_MAP_IS_NULL, "getLength_nnm", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
+    endif
 
     n = map%length
     
@@ -3748,7 +3778,7 @@ endif
     integer :: i
 
     if (.not.associated(map)) then
-      call throw_exception(FoX_NODE_IS_NULL, "getNamedItemNS", ex)
+      call throw_exception(FoX_MAP_IS_NULL, "getNamedItemNS", ex)
 if (present(ex)) then
   if (inException(ex)) then
      return
@@ -3790,13 +3820,24 @@ endif
   end function getNamedItemNS_Value_length
 
 
-  pure function getNamedItemNS_Value(map, namespaceURI, localName) result(c)
-    type(NamedNodeMap), intent(in) :: map
+  function getNamedItemNS_Value(map, namespaceURI, localName, ex)result(c) 
+    type(DOMException), intent(out), optional :: ex
+    type(NamedNodeMap), pointer :: map
     character(len=*), intent(in) :: namespaceURI
     character(len=*), intent(in) :: localName
     character(len=getNamedItemNS_Value_length(map, namespaceURI, localName)) :: c
 
     integer :: i
+
+    if (.not.associated(map)) then
+       call throw_exception(FoX_MAP_IS_NULL, "getNamedItemNS_Value", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
+    endif
 
     do i = 1, map%length
       if (str_vs(map%nodes(i)%this%namespaceURI)==namespaceURI &
@@ -3819,6 +3860,16 @@ endif
     integer :: i
 
     if (.not.associated(map)) then
+      call throw_exception(FoX_MAP_IS_NULL, "setNamedItemNS", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "setNamedItemNS", ex)
 if (present(ex)) then
   if (inException(ex)) then
@@ -3891,7 +3942,7 @@ endif
     integer :: i, i2
 
     if (.not.associated(map)) then
-      call throw_exception(FoX_NODE_IS_NULL, "removeNamedItemNS", ex)
+      call throw_exception(FoX_MAP_IS_NULL, "removeNamedItemNS", ex)
 if (present(ex)) then
   if (inException(ex)) then
      return

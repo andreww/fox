@@ -44,6 +44,7 @@ module m_dom_error
   integer, parameter, public :: FoX_INVALID_ENTITY          = 211
   integer, parameter, public :: FoX_NO_DOCTYPE              = 212
   integer, parameter, public :: FoX_IMPL_IS_NULL            = 213
+  integer, parameter, public :: FoX_MAP_IS_NULL            = 214
 
   integer, parameter, public :: FoX_INTERNAL_ERROR          = 999
 
@@ -128,6 +129,8 @@ contains
       s = "FoX_NO_DOCTYPE"
     case(213)
       s = "FoX_IMPL_IS_NULL"
+    case(214)
+      s = "FoX_MAP_IS_NULL"
     case default
       s = "INTERNAL ERROR!!!!"
     end select

@@ -1,7 +1,7 @@
  TOHW_m_dom_imports(`
 
   use m_common_array_str, only: str_vs
-  use m_dom_error, only: INUSE_ATTRIBUTE_ERR
+  use m_dom_error, only: INUSE_ATTRIBUTE_ERR, FoX_MAP_IS_NULL
 
 ')`'dnl
 dnl
@@ -45,7 +45,7 @@ TOHW_m_dom_contents(`
     integer :: i
 
     if (.not.associated(map)) then
-      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+      TOHW_m_dom_throw_error(FoX_MAP_IS_NULL)
     endif
 
     do i = 1, map%length
@@ -67,8 +67,6 @@ TOHW_m_dom_contents(`
 
     integer :: i
 
-! FIXME edit to do right thing with unallocated map
-
     do i = 1, map%length
       if (str_vs(map%nodes(i)%this%nodeName)==name) then
         n = size(map%nodes(i)%this%nodeValue)
@@ -80,12 +78,16 @@ TOHW_m_dom_contents(`
   end function getNamedItem_Value_length
 
 
-  pure function getNamedItem_Value(map, name) result(c)
-    type(NamedNodeMap), intent(in) :: map
+  TOHW_function(getNamedItem_Value, (map, name), c)
+    type(NamedNodeMap), pointer :: map
     character(len=*), intent(in) :: name
     character(len=getNamedItem_Value_length(map, name)) :: c
 
     integer :: i
+
+    if (.not.associated(map)) then
+      TOHW_m_dom_throw_error(FoX_MAP_IS_NULL)
+    endif
 
     do i = 1, map%length
       if (str_vs(map%nodes(i)%this%nodeName)==name) then
@@ -106,6 +108,10 @@ TOHW_m_dom_contents(`
     integer :: i
 
     if (.not.associated(map)) then
+      TOHW_m_dom_throw_error(FoX_MAP_IS_NULL)
+    endif
+
+    if (.not.associated(arg)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif
 
@@ -165,7 +171,7 @@ TOHW_m_dom_contents(`
     integer :: i, i2
 
     if (.not.associated(map)) then
-      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+      TOHW_m_dom_throw_error(FoX_MAP_IS_NULL)
     endif
 
     if (map%readonly) then
@@ -208,7 +214,7 @@ TOHW_m_dom_contents(`
     integer :: n
 
     if (.not.associated(map)) then
-      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+      TOHW_m_dom_throw_error(FoX_MAP_IS_NULL)
     endif
 
     if (index<0 .or. index>map%length-1) then
@@ -219,9 +225,13 @@ TOHW_m_dom_contents(`
 
    end function item_nnm
 
-  function getLength_nnm(map) result(n)
-    type(namedNodeMap), intent(in) :: map
+  TOHW_function(getLength_nnm, (map), n)
+    type(namedNodeMap), pointer :: map
     integer :: n
+
+    if (.not.associated(map)) then
+       TOHW_m_dom_throw_error(FoX_MAP_IS_NULL)
+    endif
 
     n = map%length
     
@@ -237,7 +247,7 @@ TOHW_m_dom_contents(`
     integer :: i
 
     if (.not.associated(map)) then
-      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+      TOHW_m_dom_throw_error(FoX_MAP_IS_NULL)
     endif
 
     do i = 1, map%length
@@ -273,13 +283,17 @@ TOHW_m_dom_contents(`
   end function getNamedItemNS_Value_length
 
 
-  pure function getNamedItemNS_Value(map, namespaceURI, localName) result(c)
-    type(NamedNodeMap), intent(in) :: map
+  TOHW_function(getNamedItemNS_Value, (map, namespaceURI, localName), c)
+    type(NamedNodeMap), pointer :: map
     character(len=*), intent(in) :: namespaceURI
     character(len=*), intent(in) :: localName
     character(len=getNamedItemNS_Value_length(map, namespaceURI, localName)) :: c
 
     integer :: i
+
+    if (.not.associated(map)) then
+       TOHW_m_dom_throw_error(FoX_MAP_IS_NULL)
+    endif
 
     do i = 1, map%length
       if (str_vs(map%nodes(i)%this%namespaceURI)==namespaceURI &
@@ -301,6 +315,10 @@ TOHW_m_dom_contents(`
     integer :: i
 
     if (.not.associated(map)) then
+      TOHW_m_dom_throw_error(FoX_MAP_IS_NULL)
+    endif
+
+    if (.not.associated(arg)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif
 
@@ -348,7 +366,7 @@ TOHW_m_dom_contents(`
     integer :: i, i2
 
     if (.not.associated(map)) then
-      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+      TOHW_m_dom_throw_error(FoX_MAP_IS_NULL)
     endif
 
     if (map%readonly) then
