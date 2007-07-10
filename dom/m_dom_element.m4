@@ -132,6 +132,7 @@ TOHW_m_dom_contents(`
     type(Node), pointer :: arg
     character(len=*), intent(in) :: name
 
+    type(DOMException) :: ex2
     type(Node), pointer :: dummy
     integer :: e
 
@@ -148,9 +149,9 @@ TOHW_m_dom_contents(`
     if (arg%inDocument) &
       call setGCstate(getOwnerDocument(arg), .false.)
 
-    dummy => removeNamedItem(getAttributes(arg), name, ex)
-    if (is_in_error(ex)) then
-      e = getCode(ex)
+    dummy => removeNamedItem(getAttributes(arg), name, ex2)
+    if (is_in_error(ex2)) then
+      e = getCode(ex2)
       if (e/=NOT_FOUND_ERR) then
         TOHW_m_dom_throw_error(e)
       endif

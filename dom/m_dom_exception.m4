@@ -17,7 +17,7 @@ endif
 dnl
 define(`TOHW_function', `define(`m4f_thisfunc', `$1')`'function $1`'dnl
 (m4_foreach(`x', `$2', `x, ')ex)ifelse($3, `', `', `result($3)') 
-    type(DOMException), intent(inout), optional :: ex`'dnl
+    type(DOMException), intent(out), optional :: ex`'dnl
 ')`'dnl
 dnl
 define(`TOHW_subroutine', `define(`m4f_thisfunc', `$1')`'subroutine $1`'dnl

@@ -22,7 +22,8 @@ program dom_example
   dummy => createDocumentFragment(myDoc)
 
   np2 => getDocumentElement(myDoc)
-  np => importNode(myDoc, getDocumentElement(myOtherDoc), .true.)
+!  np => importNode(myDoc, getDocumentElement(myOtherDoc), .true.)
+  np => cloneNode(np2, .true.)
 
   np => appendChild(np2, np)
   call serialize(myOtherDoc, 'myOtherDoc.xml')

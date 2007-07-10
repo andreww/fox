@@ -448,7 +448,7 @@ contains
 
 
   function createNode(arg, nodeType, nodeName, nodeValue, ex)result(np) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     integer, intent(in) :: nodeType
     character(len=*), intent(in) :: nodeName
@@ -703,7 +703,7 @@ endif
   ! Getters and setters
 
   function getNodeName(arg, ex)result(c) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=size(arg%nodeName)) :: c
     
@@ -742,7 +742,7 @@ endif
   end function getNodeValue_len
 
   function getNodeValue(arg, ex)result(c) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=getNodeValue_len(arg, associated(arg))) :: c
 
@@ -816,7 +816,7 @@ endif
   end function getStringValue_len
 
   function getStringValue(arg, ex)result(s) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=getStringValue_len(arg, associated(arg))) :: s
   
@@ -948,7 +948,7 @@ endif
   end subroutine setNodeValue
 
   function getNodeType(arg, ex)result(n) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     integer :: n
 
@@ -966,7 +966,7 @@ endif
   end function getNodeType
 
   function getParentNode(arg, ex)result(np) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     type(Node), pointer :: np
 
@@ -984,7 +984,7 @@ endif
   end function getParentNode
   
   function getChildNodes(arg, ex)result(nl) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     type(NodeList), pointer :: nl
 
@@ -1002,7 +1002,7 @@ endif
   end function getChildNodes
   
   function getFirstChild(arg, ex)result(np) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     type(Node), pointer :: np
 
@@ -1020,7 +1020,7 @@ endif
   end function getFirstChild
   
   function getLastChild(arg, ex)result(np) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     type(Node), pointer :: np
 
@@ -1038,7 +1038,7 @@ endif
   end function getLastChild
 
   function getPreviousSibling(arg, ex)result(np) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     type(Node), pointer :: np
 
@@ -1056,7 +1056,7 @@ endif
   end function getPreviousSibling
   
   function getNextSibling(arg, ex)result(np) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     type(Node), pointer :: np
 
@@ -1074,7 +1074,7 @@ endif
   end function getNextSibling
 
   function getAttributes(arg, ex)result(nnm) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     type(NamedNodeMap), pointer :: nnm
 
@@ -1096,7 +1096,7 @@ endif
   end function getAttributes
 
   function getOwnerDocument(arg, ex)result(np) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     type(Node), pointer :: np
 
@@ -1118,7 +1118,7 @@ endif
   end function getOwnerDocument
 
   function insertBefore(arg, newChild, refChild, ex)result(np) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     type(Node), pointer :: newChild
     type(Node), pointer :: refChild
@@ -1584,7 +1584,7 @@ endif
 
 
   function replaceChild(arg, newChild, oldChild, ex)result(np) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     type(Node), pointer :: newChild
     type(Node), pointer :: oldChild
@@ -2043,7 +2043,7 @@ endif
 
 
   function removeChild(arg, oldChild, ex)result(np) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     type(Node), pointer :: oldChild
     type(Node), pointer :: np
@@ -2129,7 +2129,7 @@ endif
 
 
   function appendChild(arg, newChild, ex)result(np) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     type(Node), pointer :: newChild
     type(Node), pointer :: np
@@ -2561,7 +2561,7 @@ endif
 
 
   function hasChildNodes(arg, ex) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     logical :: hasChildNodes
     
@@ -2580,7 +2580,7 @@ endif
   end function hasChildNodes
 
   function cloneNode(arg, deep, ex)result(np) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     logical :: deep
     type(Node), pointer :: np
@@ -2760,7 +2760,7 @@ endif
 
   
   function hasAttributes(arg, ex) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     logical :: hasAttributes
 
@@ -2898,7 +2898,7 @@ endif
   end subroutine normalize
 
   function isSupported(arg, feature, version, ex)result(p) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*), intent(in) :: feature
     character(len=*), intent(in) :: version
@@ -2919,7 +2919,7 @@ endif
 
   ! FIXME should the below instead just decompose the QName on access?
   function getNamespaceURI(arg, ex)result(c) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=size(arg%namespaceURI)) :: c
 
@@ -2937,7 +2937,7 @@ endif
   end function getNamespaceURI
 
   function getPrefix(arg, ex)result(c) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=size(arg%prefix)) :: c
 
@@ -2979,7 +2979,7 @@ endif
   end subroutine setPrefix
 
   function getLocalName(arg, ex)result(c) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=size(arg%localName)) :: c
 
@@ -3000,7 +3000,7 @@ endif
   ! function isEqualNode(np, arg)
 
   function isSameNode(arg, other, ex) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     type(Node), pointer :: other
     logical :: isSameNode
@@ -3303,7 +3303,7 @@ endif
   end subroutine append_nl
 
   function pop_nl(list, ex)result(np) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(NodeList), intent(inout) :: list
     type(Node), pointer :: np
 
@@ -3339,7 +3339,7 @@ endif
 
 
   function remove_nl(nl, index, ex)result(np) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(NodeList), intent(inout) :: nl
     integer, intent(in) :: index
     type(Node), pointer :: np
@@ -3490,7 +3490,7 @@ endif
 
 
   function getNamedItem(map, name, ex)result(np) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(NamedNodeMap), pointer :: map
     character(len=*), intent(in) :: name
     type(Node), pointer :: np
@@ -3558,7 +3558,7 @@ endif
 
 
   function setNamedItem(map, arg, ex)result(np) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(NamedNodeMap), pointer :: map
     type(Node), pointer :: arg
     type(Node), pointer :: np
@@ -3641,7 +3641,7 @@ endif
 
 
   function removeNamedItem(map, name, ex)result(np) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(NamedNodeMap), pointer :: map
     character(len=*), intent(in) :: name
     type(Node), pointer :: np
@@ -3704,7 +3704,7 @@ endif
 
 
   function item_nnm(map, index, ex)result(np) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(NamedNodeMap), pointer :: map
     integer, intent(in) :: index
     type(Node), pointer :: np
@@ -3739,7 +3739,7 @@ endif
 
 
   function getNamedItemNS(map, namespaceURI, localName, ex)result(np) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(NamedNodeMap), pointer :: map
     character(len=*), intent(in) :: namespaceURI
     character(len=*), intent(in) :: localName
@@ -3811,7 +3811,7 @@ endif
 
 
   function setNamedItemNS(map, arg, ex)result(np) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(NamedNodeMap), pointer :: map
     type(Node), pointer :: arg
     type(Node), pointer :: np
@@ -3881,7 +3881,7 @@ endif
 
 
   function removeNamedItemNS(map, namespaceURI, localName, ex)result(np) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(NamedNodeMap), pointer :: map
     character(len=*), intent(in) :: namespaceURI
     character(len=*), intent(in) :: localName
@@ -3988,7 +3988,7 @@ endif
 
 
   function hasFeature(impl, feature, version, ex)result(p) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(DOMImplementation), intent(in) :: impl
     character(len=*), intent(in) :: feature
     character(len=*), intent(in) :: version
@@ -4004,7 +4004,7 @@ endif
 
 
   function createDocumentType(impl, qualifiedName, publicId, systemId, ex)result(dt) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(DOMImplementation), intent(in) :: impl
     character(len=*), intent(in) :: qualifiedName
     character(len=*), intent(in) :: publicId
@@ -4160,7 +4160,7 @@ endif
   ! Getters and setters:
 
   function getDocType(arg, ex)result(np) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     type(Node), pointer :: np
 
@@ -4250,7 +4250,7 @@ endif
 
 
   function getImplementation(arg, ex)result(imp) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     type(DOMImplementation), pointer :: imp
 
@@ -4279,7 +4279,7 @@ endif
   end function getImplementation
 
   function getDocumentElement(arg, ex)result(np) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     type(Node), pointer :: np
 
@@ -4356,7 +4356,7 @@ endif
   ! Methods
 
   function createElement(arg, tagName, ex)result(np) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*), intent(in) :: tagName
     type(Node), pointer :: np
@@ -4404,7 +4404,7 @@ endif
   end function createElement
     
   function createDocumentFragment(arg, ex)result(np) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     type(Node), pointer :: np
 
@@ -4439,7 +4439,7 @@ endif
   end function createDocumentFragment
 
   function createTextNode(arg, data, ex)result(np) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*), intent(in) :: data
     type(Node), pointer :: np
@@ -4484,7 +4484,7 @@ endif
   end function createTextNode
 
   function createComment(arg, data, ex)result(np) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*), intent(in) :: data
     type(Node), pointer :: np
@@ -4537,7 +4537,7 @@ endif
   end function createComment
 
   function createCdataSection(arg, data, ex)result(np) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*), intent(in) :: data
     type(Node), pointer :: np
@@ -4590,7 +4590,7 @@ endif
   end function createCdataSection
 
   function createProcessingInstruction(arg, target, data, ex)result(np) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*), intent(in) :: target
     character(len=*), intent(in) :: data
@@ -4652,7 +4652,7 @@ endif
   end function createProcessingInstruction
 
   function createAttribute(arg, name, ex)result(np) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*), intent(in) :: name
     type(Node), pointer :: np
@@ -4857,7 +4857,7 @@ endif
   end subroutine setEntityReferenceValue
 
   function createEntityReference(arg, name, ex)result(np) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*), intent(in) :: name
     type(Node), pointer :: np
@@ -4941,7 +4941,7 @@ endif
   end function createEntityReference
 
   function createEmptyEntityReference(arg, name, ex)result(np) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*), intent(in) :: name
     type(Node), pointer :: np
@@ -4996,7 +4996,7 @@ endif
   end function createEmptyEntityReference
 
   function getElementsByTagName(doc, tagName, name, ex)result(list) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: doc
     character(len=*), intent(in), optional :: tagName, name
     type(NodeList), pointer :: list
@@ -5156,7 +5156,7 @@ endif
   end function getElementsByTagName
 
   function importNode(doc , arg, deep , ex)result(np) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: doc
     type(Node), pointer :: arg
     logical :: deep
@@ -5347,7 +5347,7 @@ endif
   end function importNode
 
   function createElementNS(doc, namespaceURI, qualifiedName, ex)result(np) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: doc
     character(len=*), intent(in) :: namespaceURI, qualifiedName
     type(Node), pointer :: np
@@ -5419,7 +5419,7 @@ endif
   end function createElementNS
   
   function createAttributeNS(doc, namespaceURI, qualifiedname, ex)result(np) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: doc
     character(len=*), intent(in) :: namespaceURI, qualifiedName
     type(Node), pointer :: np
@@ -5485,7 +5485,7 @@ endif
   end function createAttributeNS
 
   function getElementsByTagNameNS(doc, namespaceURI, localName, ex)result(list) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: doc
     character(len=*), intent(in) :: namespaceURI, localName
     type(NodeList), pointer :: list
@@ -5625,7 +5625,7 @@ endif
 
 
   function getElementById(doc, elementId, ex)result(np) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: doc
     character(len=*), intent(in) :: elementId
     type(Node), pointer :: np
@@ -5729,7 +5729,7 @@ endif
 
 
   function getXmlVersion(doc, ex)result(s) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: doc
     character(len=3) :: s
 
@@ -5812,7 +5812,7 @@ endif
 
 
   function getXmlVersionEnum(doc, ex)result(n) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: doc
     integer :: n
 
@@ -5821,7 +5821,7 @@ endif
   end function getXmlVersionEnum
 
   function getXds(doc, ex)result(xds) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: doc
     type(xml_doc_state) :: xds
 
@@ -5831,7 +5831,7 @@ endif
 
 
   function getGCstate(doc, ex)result(b) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: doc
     logical :: b
 
@@ -5853,7 +5853,7 @@ endif
 !  function getName(docType) result(c) See m_dom_common
 
   function getEntities(arg, ex)result(nnp) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     type(NamedNodeMap), pointer :: nnp
 
@@ -5881,7 +5881,7 @@ endif
   end function getEntities
 
   function getNotations(arg, ex)result(nnp) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     type(NamedNodeMap), pointer :: nnp
 
@@ -5927,7 +5927,7 @@ endif
   end function getInternalSubset_len
 
   function getInternalSubset(arg, ex)result(c) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=getInternalSubset_len(arg, associated(arg))) :: c
 
@@ -5958,7 +5958,7 @@ endif
 
 
   function getTagName(arg, ex)result(c) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg   
     character(len=size(arg%nodeName)) :: c
 
@@ -6007,7 +6007,7 @@ endif
   end function getAttributes_len
 
   function getAttribute(arg, name, ex)result(c) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*), intent(in) :: name
     character(len=getAttributes_len(arg, associated(arg), name)) :: c
@@ -6119,6 +6119,7 @@ endif
     type(Node), pointer :: arg
     character(len=*), intent(in) :: name
 
+    type(DOMException) :: ex2
     type(Node), pointer :: dummy
     integer :: e
 
@@ -6153,9 +6154,9 @@ endif
     if (arg%inDocument) &
       call setGCstate(getOwnerDocument(arg), .false.)
 
-    dummy => removeNamedItem(getAttributes(arg), name, ex)
-    if (is_in_error(ex)) then
-      e = getCode(ex)
+    dummy => removeNamedItem(getAttributes(arg), name, ex2)
+    if (is_in_error(ex2)) then
+      e = getCode(ex2)
       if (e/=NOT_FOUND_ERR) then
         call throw_exception(e, "removeAttribute", ex)
 if (present(ex)) then
@@ -6184,7 +6185,7 @@ endif
 
 
   function getAttributeNode(arg, name, ex)result(attr) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*), intent(in) :: name
     type(Node), pointer :: attr
@@ -6215,7 +6216,7 @@ endif
   
 
   function setAttributeNode(arg, newattr, ex)result(attr) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     type(Node), pointer :: newattr
     type(Node), pointer :: attr
@@ -6283,7 +6284,7 @@ endif
 
 
   function removeAttributeNode(arg, oldattr, ex)result(attr) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     type(Node), pointer :: oldattr
     type(Node), pointer :: attr
@@ -6349,7 +6350,7 @@ endif
 
 
   function getAttributeNS(arg, namespaceURI, localName, ex)result(c) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*), intent(in) :: namespaceURI
     character(len=*), intent(in) :: localName
@@ -6534,7 +6535,7 @@ endif
 
 
   function getAttributeNodeNS(arg, namespaceURI, localName, ex)result(attr) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*), intent(in) :: namespaceURI
     character(len=*), intent(in) :: localName
@@ -6567,7 +6568,7 @@ endif
   
 
   function setAttributeNodeNS(arg, newattr, ex)result(attr) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     type(Node), pointer :: newattr
     type(Node), pointer :: attr
@@ -6626,7 +6627,7 @@ endif
 
 
   function removeAttributeNodeNS(arg, oldattr, ex)result(attr) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     type(Node), pointer :: oldattr
     type(Node), pointer :: attr
@@ -6686,7 +6687,7 @@ endif
 
 
   function hasAttribute(arg, name, ex)result(p) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*), intent(in) :: name
     logical :: p
@@ -6725,7 +6726,7 @@ endif
 
 
   function hasAttributeNS(arg, namespaceURI, localName, ex)result(p) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*), intent(in) :: namespaceURI
     character(len=*), intent(in) :: localName
@@ -6779,7 +6780,7 @@ endif
 
 
   function getSpecified(arg, ex)result(p) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     logical :: p
 
@@ -6851,7 +6852,7 @@ endif
   end function getValue_len
 
   function getValue_DOM(arg, ex)result(c) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=getValue_len(arg, associated(arg))) :: c 
 
@@ -6943,7 +6944,7 @@ endif
   end subroutine setValue
 
   function getOwnerElement(arg, ex)result(np) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     type(Node), pointer :: np
 
@@ -6972,7 +6973,7 @@ endif
   end function getOwnerElement
 
   function getIsId(arg, ex)result(p) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     logical :: p
 
@@ -7042,7 +7043,7 @@ endif
 
 
   function getLength_characterdata(arg, ex)result(n) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     integer :: n
 
@@ -7072,7 +7073,7 @@ endif
 
 
   function subStringData(arg, offset, count, ex)result(c) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     integer, intent(in) :: offset
     integer, intent(in) :: count
@@ -7415,7 +7416,7 @@ endif
   end subroutine setIllFormed    
 
   function getNotationName(arg, ex)result(c) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), intent(in) :: arg
     character(len=size(arg%notationName)) :: c
 
@@ -7436,7 +7437,7 @@ endif
 
 
   function getTarget(arg, ex)result(c) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), intent(in) :: arg
     character(len=size(arg%nodeName)) :: c
 
@@ -7463,7 +7464,7 @@ endif
   end function isTextNode
 
   function splitText(arg, offset, ex)result(np) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     integer, intent(in) :: offset
 
@@ -7530,7 +7531,7 @@ endif
   end function getData_len
   
   function getData(arg, ex)result(c) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=getData_len(arg, associated(arg))) :: c
 
@@ -7615,7 +7616,7 @@ endif
   end function getName_len
   
   function getName(arg, ex)result(c) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(getName_len(arg, associated(arg))) :: c
 
@@ -7656,7 +7657,7 @@ endif
   end function getPublicId_len
 
   function getPublicId(arg, ex)result(c) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=getPublicId_len(arg, associated(arg))) :: c
 
@@ -7698,7 +7699,7 @@ endif
   end function getSystemId_len
 
   function getSystemId(arg, ex)result(c) 
-    type(DOMException), intent(inout), optional :: ex
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=getSystemId_len(arg, associated(arg))) :: c
 
