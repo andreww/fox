@@ -21,10 +21,14 @@ TOHW_m_dom_publics(`
 dnl
 TOHW_m_dom_contents(`
 
-  function item_nl(list, index) result(np)
-    type(NodeList), intent(in) :: list
+  TOHW_function(item_nl, (list, index), np)
+    type(NodeList), pointer :: list
     integer, intent(in) :: index
     type(Node), pointer :: np
+
+    if (.not.associated(list)) then
+      TOHW_m_dom_throw_error(FoX_LIST_IS_NULL)
+    endif
 
     if (index>=0.and.index<list%length)  then
       np => list%nodes(index+1)%this
@@ -59,7 +63,7 @@ TOHW_m_dom_contents(`
   end subroutine append_nl
 
   TOHW_function(pop_nl, (list), np)
-    type(NodeList), intent(inout) :: list
+    type(NodeList), pointer :: list
     type(Node), pointer :: np
 
     type(ListNode), pointer :: temp_nl(:)
@@ -131,9 +135,13 @@ TOHW_m_dom_contents(`
   end subroutine remove_node_nl
 
 
-  function getLength_nl(nl) result(n)
-    type(NodeList), intent(in) :: nl
+  TOHW_function(getLength_nl, (nl), n)
+    type(NodeList), pointer :: nl
     integer :: n
+
+    if (.not.associated(nl)) then
+      TOHW_m_dom_throw_error(FoX_LIST_IS_NULL)
+    endif
 
     n = size(nl%nodes)
   end function getLength_nl

@@ -21,7 +21,7 @@ module m_dom_dom
   use m_common_array_str, only: vs_str, str_vs, vs_str_alloc
   use m_dom_error, only: DOMException, throw_exception, inException, &
     NO_MODIFICATION_ALLOWED_ERR, NOT_FOUND_ERR, HIERARCHY_REQUEST_ERR, &
-    WRONG_DOCUMENT_ERR, FoX_INTERNAL_ERROR, FoX_NODE_IS_NULL
+    WRONG_DOCUMENT_ERR, FoX_INTERNAL_ERROR, FoX_NODE_IS_NULL, FoX_LIST_IS_NULL
 
 
 
@@ -3265,10 +3265,21 @@ endif
 
 
 
-  function item_nl(list, index) result(np)
-    type(NodeList), intent(in) :: list
+  function item_nl(list, index, ex)result(np) 
+    type(DOMException), intent(out), optional :: ex
+    type(NodeList), pointer :: list
     integer, intent(in) :: index
     type(Node), pointer :: np
+
+    if (.not.associated(list)) then
+      call throw_exception(FoX_LIST_IS_NULL, "item_nl", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
+    endif
 
     if (index>=0.and.index<list%length)  then
       np => list%nodes(index+1)%this
@@ -3304,7 +3315,7 @@ endif
 
   function pop_nl(list, ex)result(np) 
     type(DOMException), intent(out), optional :: ex
-    type(NodeList), intent(inout) :: list
+    type(NodeList), pointer :: list
     type(Node), pointer :: np
 
     type(ListNode), pointer :: temp_nl(:)
@@ -3389,9 +3400,20 @@ endif
   end subroutine remove_node_nl
 
 
-  function getLength_nl(nl) result(n)
-    type(NodeList), intent(in) :: nl
+  function getLength_nl(nl, ex)result(n) 
+    type(DOMException), intent(out), optional :: ex
+    type(NodeList), pointer :: nl
     integer :: n
+
+    if (.not.associated(nl)) then
+      call throw_exception(FoX_LIST_IS_NULL, "getLength_nl", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
+    endif
 
     n = size(nl%nodes)
   end function getLength_nl
