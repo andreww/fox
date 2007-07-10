@@ -4,7 +4,8 @@ TOHW_m_dom_imports(`
   use m_common_charset, only: checkChars, XML1_0
 
   use m_dom_error, only: DOMException, throw_exception, inException, &
-    INVALID_CHARACTER_ERR, NAMESPACE_ERR, FoX_INVALID_PUBLIC_ID, FoX_INVALID_SYSTEM_ID
+    INVALID_CHARACTER_ERR, NAMESPACE_ERR, FoX_INVALID_PUBLIC_ID, FoX_INVALID_SYSTEM_ID, &
+    FoX_IMPL_IS_NULL
   use m_common_namecheck, only: checkName, checkPublicId, checkSystemId
   use m_common_string, only: toLower
   use m_common_struct, only: init_xml_doc_state, destroy_xml_doc_state
@@ -26,10 +27,14 @@ dnl
 TOHW_m_dom_contents(`
 
   TOHW_function(hasFeature, (impl, feature, version), p)
-    type(DOMImplementation), intent(in) :: impl
+    type(DOMImplementation), pointer :: impl
     character(len=*), intent(in) :: feature
     character(len=*), intent(in) :: version
     logical :: p
+
+    if (.not.associated(impl)) then
+      TOHW_m_dom_throw_error(FoX_IMPL_IS_NULL)
+    endif
 
     if (version=="1.0".or.version=="2.0".or.version=="") then
       p = (toLower(feature)=="core".or.toLower(feature)=="xml")
@@ -41,12 +46,16 @@ TOHW_m_dom_contents(`
 
 
   TOHW_function(createDocumentType, (impl, qualifiedName, publicId, systemId), dt)
-    type(DOMImplementation), intent(in) :: impl
+    type(DOMImplementation), pointer :: impl
     character(len=*), intent(in) :: qualifiedName
     character(len=*), intent(in) :: publicId
     character(len=*), intent(in) :: systemId
     type(Node), pointer :: dt
     type(xml_doc_state) :: temp_xds
+
+    if (.not.associated(impl)) then
+      TOHW_m_dom_throw_error(FoX_IMPL_IS_NULL)
+    endif
 
     if (.not.checkChars(qualifiedName, XML1_0)) then
       TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
@@ -65,24 +74,25 @@ TOHW_m_dom_contents(`
     dt%readonly = .true.
     dt%publicId => vs_str_alloc(publicId)
     dt%systemId => vs_str_alloc(systemId)
-    allocate(dt%internalSubset(0)) !FIXME
+    allocate(dt%internalSubset(0)) ! FIXME This is valid behaviour, but we should
+                                   ! really be able to get the intSubset from SAX
     dt%ownerDocument => null()
     dt%entities%ownerElement => dt
     dt%notations%ownerElement => dt
-    ! FIXME fill in the rest of the fields ...
 
   end function createDocumentType
 
 
-  function createDocument(impl, namespaceURI, qualifiedName, docType) result(doc)
-    type(DOMImplementation), intent(in) :: impl
+  TOHW_function(createDocument, (impl, namespaceURI, qualifiedName, docType), doc)
+    type(DOMImplementation), pointer :: impl
     character(len=*), intent(in), optional :: namespaceURI
     character(len=*), intent(in), optional :: qualifiedName
     type(Node), pointer :: docType
     type(Node), pointer :: doc, dt
 
-     !FIXMEFIXMEFIXME optional arguments and errors
-    ! FIXME change to match empytdocument below
+    if (.not.associated(impl)) then
+      TOHW_m_dom_throw_error(FoX_IMPL_IS_NULL)
+    endif
 
     doc => createNode(null(), DOCUMENT_NODE, "#document", "")
     doc%ownerDocument => doc ! Makes life easier. DOM compliance in getter
@@ -121,42 +131,50 @@ TOHW_m_dom_contents(`
   end function createEmptyDocument
 
 
-  TOHW_subroutine(destroyDocument, (doc))
-    type(Node), pointer :: doc
+  TOHW_subroutine(destroyDocument, (arg))
+    type(Node), pointer :: arg
     
     type(Node), pointer :: dt
     type(NodeList) :: np_stack
     integer :: i
 
-! Switch off all GC - since this is GC!
-    call setGCstate(doc, .false.)
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
 
-    if (doc%nodeType/=DOCUMENT_NODE) then
+    if (arg%nodeType /= DOCUMENT_NODE) then
+      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
+    endif
+
+! Switch off all GC - since this is GC!
+    call setGCstate(arg, .false.)
+
+    if (arg%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
 
     ! Destroy all remaining nodelists
 
-    do i = 1, size(doc%docExtras%nodelists)
-     call destroy(doc%docExtras%nodelists(i)%this)
+    do i = 1, size(arg%docExtras%nodelists)
+     call destroy(arg%docExtras%nodelists(i)%this)
     enddo
-    deallocate(doc%docExtras%nodelists)
+    deallocate(arg%docExtras%nodelists)
 
     ! Destroy all remaining hanging nodes
     print*,"DESTROYING HANGING NODES"
-    do i = 1, doc%docExtras%hangingNodes%length
-      call destroy(doc%docExtras%hangingNodes%nodes(i)%this)
+    do i = 1, arg%docExtras%hangingNodes%length
+      call destroy(arg%docExtras%hangingNodes%nodes(i)%this)
     enddo
-    if (associated(doc%docExtras%hangingNodes%nodes)) deallocate(doc%docExtras%hangingNodes%nodes)
+    if (associated(arg%docExtras%hangingNodes%nodes)) deallocate(arg%docExtras%hangingNodes%nodes)
 
-    call destroy_xml_doc_state(doc%docExtras%xds)
-    deallocate(doc%docExtras%xds)
+    call destroy_xml_doc_state(arg%docExtras%xds)
+    deallocate(arg%docExtras%xds)
 
-    deallocate(doc%docExtras)
+    deallocate(arg%docExtras)
     print*,"DESTROYING DOCUMENT NODES"
-    call destroyAllNodesRecursively(doc)
-    call destroyNodeContents(doc)
-    deallocate(doc)
+    call destroyAllNodesRecursively(arg)
+    call destroyNodeContents(arg)
+    deallocate(arg)
 
   end subroutine destroyDocument
 

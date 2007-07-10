@@ -43,6 +43,7 @@ module m_dom_error
   integer, parameter, public :: FoX_NODE_IS_NULL            = 210
   integer, parameter, public :: FoX_INVALID_ENTITY          = 211
   integer, parameter, public :: FoX_NO_DOCTYPE              = 212
+  integer, parameter, public :: FoX_IMPL_IS_NULL            = 213
 
   integer, parameter, public :: FoX_INTERNAL_ERROR          = 999
 
@@ -123,6 +124,10 @@ contains
       s = "FoX_NODE_IS_NULL"
     case(211)
       s = "FoX_INVALID_ENTITY"
+    case(212)
+      s = "FoX_NO_DOCTYPE"
+    case(213)
+      s = "FoX_IMPL_IS_NULL"
     case default
       s = "INTERNAL ERROR!!!!"
     end select
