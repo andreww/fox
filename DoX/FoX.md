@@ -34,6 +34,7 @@ The materials for this workshop included several talks, a set of documentation, 
 ### INPUT interface
 
 * [FoX_sax](|FoX_sax|)
+* [FoX_dom](|FoX_dom|)
 
 These documents describe all publically usable APIs.
 

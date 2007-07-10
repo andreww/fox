@@ -3,7 +3,7 @@
 .SUFFIXES:
 .SUFFIXES: .html .md
 
-OBJECTS = FoX.html Versioning.html Compilation.html Embedding.html FoX_common.html StringFormatting.html FoX_wxml.html FoX_wcml.html Debugging.html FoX_sax.html AttributeDictionaries.html FoX_DOM.html FoX_utils.html Information.html Licensing.html
+OBJECTS = FoX.html Versioning.html Compilation.html Embedding.html FoX_common.html StringFormatting.html FoX_wxml.html FoX_wcml.html Debugging.html FoX_sax.html AttributeDictionaries.html FoX_dom.html FoX_utils.html Information.html Licensing.html
 
 default: FoX_DoX.html
 	ln -sf FoX.html index.html
