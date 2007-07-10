@@ -7658,20 +7658,43 @@ endif
  
 
 
-  subroutine setIllFormed(arg, p, ex)
+  subroutine setIllFormed(np, p, ex)
     type(DOMException), intent(out), optional :: ex
-    type(Node), pointer :: arg
+    type(Node), pointer :: np
     logical, intent(in) :: p
     
-    arg%illFormed = p
-  end subroutine setIllFormed    
+    np%illFormed = p
+  end subroutine setIllFormed
 
-  function getNotationName(arg, ex)result(c) 
+  pure function getNotationName_len(np, p) result(n)
+    type(Node), intent(in) :: np
+    logical, intent(in) :: p
+    integer :: n
+
+    if (p) then
+      n = size(np%notationName)
+    else
+      n = 0
+    endif
+
+  end function getNotationName_len
+
+  function getNotationName(np, ex)result(c) 
     type(DOMException), intent(out), optional :: ex
-    type(Node), intent(in) :: arg
-    character(len=size(arg%notationName)) :: c
+    type(Node), pointer :: np
+    character(len=getNotationName_len(np, associated(np))) :: c
 
-    if (arg%nodeType/=ENTITY_NODE) then
+    if (.not.associated(np)) then
+      call throw_exception(FoX_NODE_IS_NULL, "getNotationName", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    if (np%nodeType/=ENTITY_NODE) then
       call throw_exception(FoX_INVALID_NODE, "getNotationName", ex)
 if (present(ex)) then
   if (inException(ex)) then
@@ -7681,7 +7704,7 @@ endif
 
     endif
 
-    c = str_vs(arg%notationName)
+    c = str_vs(np%notationName)
 
   end function getNotationName
 

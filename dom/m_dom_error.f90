@@ -32,7 +32,7 @@ module m_dom_error
 
   integer, parameter, public :: FoX_INVALID_NODE            = 201
   integer, parameter, public :: FoX_INVALID_CHARACTER       = 202
-  integer, parameter, public :: FoX_INVALID_PI_TARGET       = 203
+!  integer, parameter, public :: FoX_INVALID_PI_TARGET       = 203
   integer, parameter, public :: FoX_INVALID_PI_DATA         = 204
   integer, parameter, public :: FoX_INVALID_CDATA_SECTION   = 205
   integer, parameter, public :: FoX_INVALID_TEXT            = 206
