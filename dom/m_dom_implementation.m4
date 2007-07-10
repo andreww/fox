@@ -3,7 +3,7 @@ TOHW_m_dom_imports(`
   use m_common_array_str, only: str_vs, vs_str_alloc
   use m_common_charset, only: checkChars, XML1_0
 
-  use m_dom_error, only: DOMException, throw_exception, is_in_error, &
+  use m_dom_error, only: DOMException, throw_exception, inException, &
     INVALID_CHARACTER_ERR, NAMESPACE_ERR, FoX_INVALID_PUBLIC_ID, FoX_INVALID_SYSTEM_ID
   use m_common_namecheck, only: checkName, checkPublicId, checkSystemId
   use m_common_string, only: toLower

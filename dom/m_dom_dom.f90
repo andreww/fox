@@ -19,7 +19,7 @@ module m_dom_dom
 
 
   use m_common_array_str, only: vs_str, str_vs, vs_str_alloc
-  use m_dom_error, only: DOMException, throw_exception, is_in_error, &
+  use m_dom_error, only: DOMException, throw_exception, inException, &
     NO_MODIFICATION_ALLOWED_ERR, NOT_FOUND_ERR, HIERARCHY_REQUEST_ERR, &
     WRONG_DOCUMENT_ERR, FoX_INTERNAL_ERROR, FoX_NODE_IS_NULL
 
@@ -33,7 +33,7 @@ module m_dom_dom
   use m_common_array_str, only: str_vs, vs_str_alloc
   use m_common_charset, only: checkChars, XML1_0
 
-  use m_dom_error, only: DOMException, throw_exception, is_in_error, &
+  use m_dom_error, only: DOMException, throw_exception, inException, &
     INVALID_CHARACTER_ERR, NAMESPACE_ERR, FoX_INVALID_PUBLIC_ID, FoX_INVALID_SYSTEM_ID
   use m_common_namecheck, only: checkName, checkPublicId, checkSystemId
   use m_common_string, only: toLower
@@ -57,7 +57,7 @@ module m_dom_dom
 
   use m_common_array_str, only: str_vs, vs_str_alloc
   use m_common_namecheck, only: prefixOfQName, localpartOfQName
-  use m_dom_error, only: is_in_error, getCode
+  use m_dom_error, only: inException, getExceptionCode
 
 
 
@@ -387,7 +387,6 @@ module m_dom_dom
   public :: getAttributeNode
   public :: setAttributeNode
   public :: removeAttributeNode
-  ! public :: getElementsByTagName
   public :: getAttributeNS
   public :: setAttributeNS
   public :: removeAttributeNS
@@ -554,7 +553,7 @@ contains
     if (attr%nodeType/=ATTRIBUTE_NODE) then
       call throw_exception(FoX_INVALID_NODE, "destroyAttribute", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -573,7 +572,7 @@ endif
     if (df%nodeType/=DOCUMENT_FRAGMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "destroyDocumentFragment", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -710,7 +709,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "getNodeName", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -751,7 +750,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "getNodeValue", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -781,7 +780,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "setStringValue", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -791,7 +790,7 @@ endif
     if (getNodeType(arg)/=ENTITY_NODE) then
       call throw_exception(FoX_INTERNAL_ERROR, "setStringValue", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -823,7 +822,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "getStringValue", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -833,7 +832,7 @@ endif
     if (getNodeType(arg)/=ENTITY_NODE) then
       call throw_exception(FoX_INTERNAL_ERROR, "getStringValue", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -855,7 +854,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "setNodeValue", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -867,7 +866,7 @@ endif
       if (arg%readonly) then
         call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setNodeValue", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -895,7 +894,7 @@ endif
       if (arg%readonly) then
         call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setNodeValue", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -908,7 +907,7 @@ endif
       if (arg%readonly) then
         call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setNodeValue", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -921,7 +920,7 @@ endif
       if (arg%readonly) then
         call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setNodeValue", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -934,7 +933,7 @@ endif
       if (arg%readonly) then
         call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setNodeValue", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -955,7 +954,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "getNodeType", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -973,7 +972,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "getParentNode", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -991,7 +990,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "getChildNodes", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -1009,7 +1008,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "getFirstChild", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -1027,7 +1026,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "getLastChild", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -1045,7 +1044,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "getPreviousSibling", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -1063,7 +1062,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "getNextSibling", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -1081,7 +1080,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "getAttributes", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -1103,7 +1102,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "getOwnerDocument", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -1132,7 +1131,7 @@ endif
     if (.not.associated(arg).or..not.associated(newChild)) then
       call throw_exception(FoX_NODE_IS_NULL, "insertBefore", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -1147,7 +1146,7 @@ endif
     if (arg%readonly) then
       call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "insertBefore", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -1169,7 +1168,7 @@ endif
           .and. testChild%nodeType/=ENTITY_REFERENCE_NODE) then
           call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -1180,7 +1179,7 @@ endif
           .and. testChild%nodeType/=ENTITY_REFERENCE_NODE) then
           call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -1202,7 +1201,7 @@ endif
           if (getNodeType(this)/=TEXT_NODE.and.getNodeType(this)/=ENTITY_REFERENCE_NODE) then
             call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -1270,7 +1269,7 @@ endif
           .and. testChild%nodeType/=DOCUMENT_TYPE_NODE)  then
           call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -1285,7 +1284,7 @@ endif
           .and. testChild%nodeType/=ENTITY_REFERENCE_NODE) then
           call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -1300,7 +1299,7 @@ endif
       case default
         call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -1320,7 +1319,7 @@ endif
           .and. testChild%nodeType/=ENTITY_REFERENCE_NODE) then
           call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -1331,7 +1330,7 @@ endif
           .and. testChild%nodeType/=ENTITY_REFERENCE_NODE) then
           call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -1353,7 +1352,7 @@ endif
           if (getNodeType(this)/=TEXT_NODE.and.getNodeType(this)/=ENTITY_REFERENCE_NODE) then
             call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -1421,7 +1420,7 @@ endif
           .and. testChild%nodeType/=DOCUMENT_TYPE_NODE)  then
           call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -1436,7 +1435,7 @@ endif
           .and. testChild%nodeType/=ENTITY_REFERENCE_NODE) then
           call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -1451,7 +1450,7 @@ endif
       case default
         call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -1465,7 +1464,7 @@ endif
         if (associated(testParent, newChild)) then
           call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -1479,7 +1478,7 @@ endif
       .or. associated(arg, newChild%ownerDocument))) then
       call throw_exception(WRONG_DOCUMENT_ERR, "insertBefore", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -1499,7 +1498,7 @@ endif
     if (arg%childNodes%length==0) then
       call throw_exception(NOT_FOUND_ERR, "insertBefore", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -1543,7 +1542,7 @@ endif
     if (.not.associated(np)) then
       call throw_exception(NOT_FOUND_ERR, "insertBefore", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
 
 if (associated(temp_nl)) deallocate(temp_nl)
      return
@@ -1598,7 +1597,7 @@ endif
     if (.not.associated(arg).or..not.associated(newChild).or..not.associated(oldChild)) then
       call throw_exception(FoX_NODE_IS_NULL, "replaceChild", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -1608,7 +1607,7 @@ endif
     if (arg%readonly) then
       call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "replaceChild", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -1630,7 +1629,7 @@ endif
           .and. testChild%nodeType/=ENTITY_REFERENCE_NODE) then
           call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -1641,7 +1640,7 @@ endif
           .and. testChild%nodeType/=ENTITY_REFERENCE_NODE) then
           call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -1663,7 +1662,7 @@ endif
           if (getNodeType(this)/=TEXT_NODE.and.getNodeType(this)/=ENTITY_REFERENCE_NODE) then
             call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -1731,7 +1730,7 @@ endif
           .and. testChild%nodeType/=DOCUMENT_TYPE_NODE)  then
           call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -1746,7 +1745,7 @@ endif
           .and. testChild%nodeType/=ENTITY_REFERENCE_NODE) then
           call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -1761,7 +1760,7 @@ endif
       case default
         call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -1781,7 +1780,7 @@ endif
           .and. testChild%nodeType/=ENTITY_REFERENCE_NODE) then
           call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -1792,7 +1791,7 @@ endif
           .and. testChild%nodeType/=ENTITY_REFERENCE_NODE) then
           call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -1814,7 +1813,7 @@ endif
           if (getNodeType(this)/=TEXT_NODE.and.getNodeType(this)/=ENTITY_REFERENCE_NODE) then
             call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -1882,7 +1881,7 @@ endif
           .and. testChild%nodeType/=DOCUMENT_TYPE_NODE)  then
           call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -1897,7 +1896,7 @@ endif
           .and. testChild%nodeType/=ENTITY_REFERENCE_NODE) then
           call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -1912,7 +1911,7 @@ endif
       case default
         call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -1926,7 +1925,7 @@ endif
         if (associated(testParent, newChild)) then
           call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -1940,7 +1939,7 @@ endif
       .or. associated(arg, newChild%ownerDocument))) then
       call throw_exception(WRONG_DOCUMENT_ERR, "replaceChild", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -1953,7 +1952,7 @@ endif
     if (arg%childNodes%length==0) then
       call throw_exception(NOT_FOUND_ERR, "replaceChild", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -2003,7 +2002,7 @@ endif
     if (.not.associated(np)) then
       call throw_exception(NOT_FOUND_ERR, "replaceChild", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -2054,7 +2053,7 @@ endif
     if (.not.associated(arg).or..not.associated(oldChild)) then
       call throw_exception(FoX_NODE_IS_NULL, "removeChild", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -2064,7 +2063,7 @@ endif
     if (arg%readonly) then
       call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "removeChild", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -2104,7 +2103,7 @@ endif
     if (i==i_t) then
       call throw_exception(NOT_FOUND_ERR, "removeChild", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -2142,7 +2141,7 @@ endif
     if (.not.associated(arg).or..not.associated(newChild)) then
       call throw_exception(FoX_NODE_IS_NULL, "appendChild", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -2152,7 +2151,7 @@ endif
     if (arg%readonly) then
       call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "appendChild", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -2174,7 +2173,7 @@ endif
           .and. testChild%nodeType/=ENTITY_REFERENCE_NODE) then
           call throw_exception(HIERARCHY_REQUEST_ERR, "appendChild", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -2185,7 +2184,7 @@ endif
           .and. testChild%nodeType/=ENTITY_REFERENCE_NODE) then
           call throw_exception(HIERARCHY_REQUEST_ERR, "appendChild", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -2207,7 +2206,7 @@ endif
           if (getNodeType(this)/=TEXT_NODE.and.getNodeType(this)/=ENTITY_REFERENCE_NODE) then
             call throw_exception(HIERARCHY_REQUEST_ERR, "appendChild", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -2275,7 +2274,7 @@ endif
           .and. testChild%nodeType/=DOCUMENT_TYPE_NODE)  then
           call throw_exception(HIERARCHY_REQUEST_ERR, "appendChild", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -2290,7 +2289,7 @@ endif
           .and. testChild%nodeType/=ENTITY_REFERENCE_NODE) then
           call throw_exception(HIERARCHY_REQUEST_ERR, "appendChild", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -2305,7 +2304,7 @@ endif
       case default
         call throw_exception(HIERARCHY_REQUEST_ERR, "appendChild", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -2325,7 +2324,7 @@ endif
           .and. testChild%nodeType/=ENTITY_REFERENCE_NODE) then
           call throw_exception(HIERARCHY_REQUEST_ERR, "appendChild", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -2336,7 +2335,7 @@ endif
           .and. testChild%nodeType/=ENTITY_REFERENCE_NODE) then
           call throw_exception(HIERARCHY_REQUEST_ERR, "appendChild", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -2358,7 +2357,7 @@ endif
           if (getNodeType(this)/=TEXT_NODE.and.getNodeType(this)/=ENTITY_REFERENCE_NODE) then
             call throw_exception(HIERARCHY_REQUEST_ERR, "appendChild", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -2426,7 +2425,7 @@ endif
           .and. testChild%nodeType/=DOCUMENT_TYPE_NODE)  then
           call throw_exception(HIERARCHY_REQUEST_ERR, "appendChild", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -2441,7 +2440,7 @@ endif
           .and. testChild%nodeType/=ENTITY_REFERENCE_NODE) then
           call throw_exception(HIERARCHY_REQUEST_ERR, "appendChild", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -2456,7 +2455,7 @@ endif
       case default
         call throw_exception(HIERARCHY_REQUEST_ERR, "appendChild", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -2470,7 +2469,7 @@ endif
         if (associated(testParent, newChild)) then
           call throw_exception(HIERARCHY_REQUEST_ERR, "appendChild", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -2484,7 +2483,7 @@ endif
       .or. associated(arg, newChild%ownerDocument))) then
       call throw_exception(WRONG_DOCUMENT_ERR, "appendChild", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -2568,7 +2567,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "hasChildNodes", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -2593,7 +2592,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "cloneNode", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -2767,7 +2766,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "hasAttributes", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -2790,7 +2789,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "normalize", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -2907,7 +2906,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "isSupported", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -2926,7 +2925,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "getNamespaceURI", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -2944,7 +2943,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "getPrefix", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -2962,7 +2961,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "setPrefix", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -2986,7 +2985,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "getLocalName", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -3008,7 +3007,7 @@ endif
     if (.not.associated(arg).or..not.associated(other)) then
       call throw_exception(FoX_NODE_IS_NULL, "isSameNode", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -3313,7 +3312,7 @@ endif
     if (list%length==0) then
       call throw_exception(FoX_INTERNAL_ERROR, "pop_nl", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -3351,7 +3350,7 @@ endif
     if (index>nl%length) then
       call throw_exception(FoX_INTERNAL_ERROR, "remove_nl", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -3500,7 +3499,7 @@ endif
     if (.not.associated(map)) then
       call throw_exception(FoX_NODE_IS_NULL, "getNamedItem", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -3568,7 +3567,7 @@ endif
     if (.not.associated(map)) then
       call throw_exception(FoX_NODE_IS_NULL, "setNamedItem", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -3583,7 +3582,7 @@ endif
     if (map%readonly) then
       call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setNamedItem", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -3591,7 +3590,7 @@ endif
     elseif (.not.associated(map%ownerElement%ownerDocument, arg%ownerDocument)) then
       call throw_exception(WRONG_DOCUMENT_ERR, "setNamedItem", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -3604,7 +3603,7 @@ endif
     elseif (associated(arg%ownerElement)) then
       call throw_exception(INUSE_ATTRIBUTE_ERR, "setNamedItem", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -3652,7 +3651,7 @@ endif
     if (.not.associated(map)) then
       call throw_exception(FoX_NODE_IS_NULL, "removeNamedItem", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -3662,7 +3661,7 @@ endif
     if (map%readonly) then
       call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "removeNamedItem", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -3694,7 +3693,7 @@ endif
 
     call throw_exception(NOT_FOUND_ERR, "removeNamedItem", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -3714,7 +3713,7 @@ endif
     if (.not.associated(map)) then
       call throw_exception(FoX_NODE_IS_NULL, "item_nnm", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -3750,7 +3749,7 @@ endif
     if (.not.associated(map)) then
       call throw_exception(FoX_NODE_IS_NULL, "getNamedItemNS", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -3821,7 +3820,7 @@ endif
     if (.not.associated(map)) then
       call throw_exception(FoX_NODE_IS_NULL, "setNamedItemNS", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -3831,7 +3830,7 @@ endif
     if (map%readonly) then
       call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setNamedItemNS", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -3839,7 +3838,7 @@ endif
     elseif (.not.associated(map%ownerElement%ownerDocument, arg%ownerDocument)) then
       call throw_exception(WRONG_DOCUMENT_ERR, "setNamedItemNS", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -3847,7 +3846,7 @@ endif
     elseif (associated(arg%ownerElement)) then
       call throw_exception(INUSE_ATTRIBUTE_ERR, "setNamedItemNS", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -3893,7 +3892,7 @@ endif
     if (.not.associated(map)) then
       call throw_exception(FoX_NODE_IS_NULL, "removeNamedItemNS", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -3903,7 +3902,7 @@ endif
     if (map%readonly) then
       call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "removeNamedItemNS", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -3936,7 +3935,7 @@ endif
 
     call throw_exception(NOT_FOUND_ERR, "removeNamedItemNS", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -4015,7 +4014,7 @@ endif
     if (.not.checkChars(qualifiedName, XML1_0)) then
       call throw_exception(INVALID_CHARACTER_ERR, "createDocumentType", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -4025,7 +4024,7 @@ endif
     if (.not.checkName(qualifiedName, temp_xds))  then
       call throw_exception(NAMESPACE_ERR, "createDocumentType", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -4034,7 +4033,7 @@ endif
     elseif (.not.checkPublicId(publicId)) then
       call throw_exception(FoX_INVALID_PUBLIC_ID, "createDocumentType", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -4042,7 +4041,7 @@ endif
     elseif (.not.checkSystemId(systemId)) then
       call throw_exception(FoX_INVALID_SYSTEM_ID, "createDocumentType", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -4123,7 +4122,7 @@ endif
     if (doc%nodeType/=DOCUMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "destroyDocument", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -4167,7 +4166,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "getDocType", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -4177,7 +4176,7 @@ endif
     if (arg%nodeType/=DOCUMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "getDocType", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -4196,7 +4195,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "setDocType", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -4206,7 +4205,7 @@ endif
     if (arg%nodeType/=DOCUMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "setDocType", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -4227,7 +4226,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "setXds", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -4237,7 +4236,7 @@ endif
     if (arg%nodeType/=DOCUMENT_NODE) then
        call throw_exception(FoX_INVALID_NODE, "setXds", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -4257,7 +4256,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "getImplementation", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -4267,7 +4266,7 @@ endif
     if (arg%nodeType/=DOCUMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "getImplementation", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -4286,7 +4285,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "getDocumentElement", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -4296,7 +4295,7 @@ endif
     if (arg%nodeType/=DOCUMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "getDocumentElement", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -4316,7 +4315,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "setDocumentElement", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -4326,7 +4325,7 @@ endif
     if (arg%nodeType/=DOCUMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "setDocumentElement", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -4334,7 +4333,7 @@ endif
     elseif (np%nodeType/=ELEMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "setDocumentElement", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -4342,7 +4341,7 @@ endif
     elseif (.not.associated(np%ownerDocument, arg)) then
       call throw_exception(WRONG_DOCUMENT_ERR, "setDocumentElement", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -4364,7 +4363,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "createElement", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -4374,7 +4373,7 @@ endif
     if (arg%nodeType/=DOCUMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "createElement", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -4382,7 +4381,7 @@ endif
     elseif (.not.checkName(tagName, getXds(arg))) then
       call throw_exception(INVALID_CHARACTER_ERR, "createElement", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -4411,7 +4410,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "createDocumentFragment", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -4421,7 +4420,7 @@ endif
     if (arg%nodeType/=DOCUMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "createDocumentFragment", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -4447,7 +4446,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "createTextNode", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -4457,7 +4456,7 @@ endif
     if (arg%nodeType/=DOCUMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "createTextNode", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -4465,7 +4464,7 @@ endif
     elseif (.not.checkChars(data, getXmlVersionEnum(arg))) then
       call throw_exception(FoX_INVALID_CHARACTER, "createTextNode", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -4492,7 +4491,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "createComment", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -4502,7 +4501,7 @@ endif
     if (arg%nodeType/=DOCUMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "createComment", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -4510,7 +4509,7 @@ endif
     elseif (.not.checkChars(data, getXmlVersionEnum(arg))) then
       call throw_exception(FoX_INVALID_CHARACTER, "createComment", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -4518,7 +4517,7 @@ endif
     elseif (index(data,"--")>0) then   
       call throw_exception(FoX_INVALID_COMMENT, "createComment", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -4545,7 +4544,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "createCdataSection", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -4555,7 +4554,7 @@ endif
     if (arg%nodeType/=DOCUMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "createCdataSection", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -4563,7 +4562,7 @@ endif
     elseif (.not.checkChars(data, getXmlVersionEnum(arg))) then
       call throw_exception(FoX_INVALID_CHARACTER, "createCdataSection", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -4571,7 +4570,7 @@ endif
     elseif (index(data,"]]>")>0) then   
       call throw_exception(FoX_INVALID_CDATA_SECTION, "createCdataSection", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -4599,7 +4598,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "createProcessingInstruction", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -4609,7 +4608,7 @@ endif
     if (arg%nodeType/=DOCUMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "createProcessingInstruction", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -4617,7 +4616,7 @@ endif
     elseif (.not.checkName(target, getXds(arg))) then
       call throw_exception(INVALID_CHARACTER_ERR, "createProcessingInstruction", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -4625,7 +4624,7 @@ endif
     elseif (.not.checkChars(data, getXmlVersionEnum(arg))) then
       call throw_exception(FoX_INVALID_CHARACTER, "createProcessingInstruction", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -4633,7 +4632,7 @@ endif
     elseif (index(data,"?>")>0) then   
       call throw_exception(FoX_INVALID_PI_DATA, "createProcessingInstruction", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -4660,7 +4659,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "createAttribute", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -4670,7 +4669,7 @@ endif
     if (arg%nodeType/=DOCUMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "createAttribute", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -4678,7 +4677,7 @@ endif
     elseif (.not.checkName(name, getXds(arg))) then
       call throw_exception(INVALID_CHARACTER_ERR, "createAttribute", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -4868,7 +4867,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "createEntityReference", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -4878,7 +4877,7 @@ endif
     if (arg%nodeType/=DOCUMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "createEntityReference", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -4886,7 +4885,7 @@ endif
     elseif (.not.checkName(name, getXds(arg))) then
       call throw_exception(INVALID_CHARACTER_ERR, "createEntityReference", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -4896,7 +4895,7 @@ endif
     if (.not.associated(getDocType(arg))) then
       call throw_exception(FoX_NO_DOCTYPE, "createEntityReference", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -4912,7 +4911,7 @@ endif
           if (ent%illFormed) then
             call throw_exception(FoX_INVALID_ENTITY, "createEntityReference", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -4952,7 +4951,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "createEmptyEntityReference", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -4962,7 +4961,7 @@ endif
     if (arg%nodeType/=DOCUMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "createEmptyEntityReference", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -4970,7 +4969,7 @@ endif
     elseif (.not.checkChars(name, getXmlVersionEnum(arg))) then
       call throw_exception(INVALID_CHARACTER_ERR, "createEmptyEntityReference", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -4978,7 +4977,7 @@ endif
     elseif (.not.checkName(name, getXds(arg))) then
       call throw_exception(FoX_INVALID_XML_NAME, "createEmptyEntityReference", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -5009,7 +5008,7 @@ endif
     if (.not.associated(doc)) then
       call throw_exception(FoX_NODE_IS_NULL, "getElementsByTagName", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -5020,7 +5019,7 @@ endif
       if (present(name).or..not.present(tagName)) then
         call throw_exception(FoX_INVALID_NODE, "getElementsByTagName", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -5030,7 +5029,7 @@ endif
       if (present(name).or..not.present(tagName)) then
         call throw_exception(FoX_INVALID_NODE, "getElementsByTagName", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -5039,7 +5038,7 @@ endif
     else      
       call throw_exception(FoX_INVALID_NODE, "getElementsByTagName", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -5171,7 +5170,7 @@ endif
     if (getNodeType(doc)/=DOCUMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "importNode", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -5235,7 +5234,7 @@ endif
         case (DOCUMENT_NODE)
           call throw_exception(NOT_SUPPORTED_ERR, "importNode", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -5243,7 +5242,7 @@ endif
         case (DOCUMENT_TYPE_NODE)
           call throw_exception(NOT_SUPPORTED_ERR, "importNode", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -5355,7 +5354,7 @@ endif
     if (doc%nodeType/=DOCUMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "createElementNS", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -5363,7 +5362,7 @@ endif
     elseif (.not.checkChars(qualifiedName, getXmlVersionEnum(doc))) then
       call throw_exception(INVALID_CHARACTER_ERR, "createElementNS", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -5371,7 +5370,7 @@ endif
     elseif (.not.checkQName(qualifiedName, getXds(doc))) then
       call throw_exception(NAMESPACE_ERR, "createElementNS", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -5380,7 +5379,7 @@ endif
      .and. namespaceURI=="") then
       call throw_exception(NAMESPACE_ERR, "createElementNS", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -5389,7 +5388,7 @@ endif
       namespaceURI/="http://www.w3.org/XML/1998/namespace") then
       call throw_exception(NAMESPACE_ERR, "createElementNS", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -5427,7 +5426,7 @@ endif
     if (doc%nodeType/=DOCUMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "createAttributeNS", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -5435,7 +5434,7 @@ endif
     elseif (.not.checkChars(qualifiedName, getXmlVersionEnum(doc))) then
       call throw_exception(INVALID_CHARACTER_ERR, "createAttributeNS", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -5443,7 +5442,7 @@ endif
     elseif (.not.checkQName(qualifiedName, getXds(doc))) then
       call throw_exception(NAMESPACE_ERR, "createAttributeNS", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -5452,7 +5451,7 @@ endif
      .and. namespaceURI=="") then
       call throw_exception(NAMESPACE_ERR, "createAttributeNS", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -5461,7 +5460,7 @@ endif
       namespaceURI/="http://www.w3.org/XML/1998/namespace") then
       call throw_exception(NAMESPACE_ERR, "createAttributeNS", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -5498,7 +5497,7 @@ endif
     if (.not.associated(doc)) then
       call throw_exception(FoX_NODE_IS_NULL, "getElementsByTagNameNS", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -5508,7 +5507,7 @@ endif
     if (doc%nodeType/=DOCUMENT_NODE.or.doc%nodeType/=ELEMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "getElementsByTagNameNS", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -5638,7 +5637,7 @@ endif
     if (doc%nodeType/=DOCUMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "getElementById", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -5755,7 +5754,7 @@ endif
     else
       call throw_exception(NOT_SUPPORTED_ERR, "setXmlVersion", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -5860,7 +5859,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "getEntities", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -5870,7 +5869,7 @@ endif
     if (arg%nodeType/=DOCUMENT_TYPE_NODE) then
        call throw_exception(FoX_INVALID_NODE, "getEntities", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -5888,7 +5887,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "getNotations", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -5898,7 +5897,7 @@ endif
     if (arg%nodeType/=DOCUMENT_TYPE_NODE) then
        call throw_exception(FoX_INVALID_NODE, "getNotations", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -5934,7 +5933,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "getInternalSubset", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -5944,7 +5943,7 @@ endif
     if (arg%nodeType/=DOCUMENT_TYPE_NODE) then
        call throw_exception(FoX_INVALID_NODE, "getInternalSubset", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -5965,7 +5964,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "getTagName", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -5975,7 +5974,7 @@ endif
     if (getNodeType(arg) /= ELEMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "getTagName", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6015,7 +6014,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "getAttribute", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6025,7 +6024,7 @@ endif
     if (getNodeType(arg) /= ELEMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "getAttribute", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6049,7 +6048,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "setAttribute", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6059,7 +6058,7 @@ endif
     if (getNodetype(arg)/=ELEMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "setAttribute", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6067,7 +6066,7 @@ endif
     elseif (arg%readonly) then
       call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setAttribute", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6075,7 +6074,7 @@ endif
     elseif (.not.checkName(name, getXds(getOwnerDocument(arg)))) then
       call throw_exception(INVALID_CHARACTER_ERR, "setAttribute", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6083,7 +6082,7 @@ endif
     elseif (.not.checkChars(value, getXmlVersionEnum(getOwnerDocument(arg)))) then
       call throw_exception(FoX_INVALID_CHARACTER, "setAttribute", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6126,7 +6125,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "removeAttribute", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6136,7 +6135,7 @@ endif
     if (getNodetype(arg)/=ELEMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "removeAttribute", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6144,7 +6143,7 @@ endif
     elseif (arg%readonly) then
       call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "removeAttribute", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6155,12 +6154,12 @@ endif
       call setGCstate(getOwnerDocument(arg), .false.)
 
     dummy => removeNamedItem(getAttributes(arg), name, ex2)
-    if (is_in_error(ex2)) then
-      e = getCode(ex2)
+    if (inException(ex2)) then
+      e = getExceptionCode(ex2)
       if (e/=NOT_FOUND_ERR) then
         call throw_exception(e, "removeAttribute", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6193,7 +6192,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "getAttributeNode", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6203,7 +6202,7 @@ endif
     if (arg%nodeType /= ELEMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "getAttributeNode", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6227,7 +6226,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "setAttributeNode", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6237,7 +6236,7 @@ endif
     if (arg%nodeType /= ELEMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "setAttributeNode", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6245,7 +6244,7 @@ endif
     elseif (.not.associated(arg%ownerDocument, newattr%ownerDocument)) then
       call throw_exception(WRONG_DOCUMENT_ERR, "setAttributeNode", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6253,7 +6252,7 @@ endif
     elseif (arg%readonly) then
       call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setAttributeNode", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6267,7 +6266,7 @@ endif
     elseif (associated(newattr%ownerElement)) then
       call throw_exception(INUSE_ATTRIBUTE_ERR, "setAttributeNode", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6294,7 +6293,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "removeAttributeNode", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6304,7 +6303,7 @@ endif
     if (arg%nodeType /= ELEMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "removeAttributeNode", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6312,7 +6311,7 @@ endif
     elseif (.not.associated(arg%ownerDocument, oldattr%ownerDocument)) then
       call throw_exception(WRONG_DOCUMENT_ERR, "removeAttributeNode", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6320,7 +6319,7 @@ endif
     elseif (arg%readonly) then
       call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "removeAttributeNode", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6337,7 +6336,7 @@ endif
 
     call throw_exception(NOT_FOUND_ERR, "removeAttributeNode", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6362,7 +6361,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "getAttributeNS", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6372,7 +6371,7 @@ endif
     if (arg%nodeType /= ELEMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "getAttributeNS", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6400,7 +6399,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "setAttributeNS", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6410,7 +6409,7 @@ endif
     if (arg%nodeType /= ELEMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "setAttributeNS", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6418,7 +6417,7 @@ endif
     elseif (.not.checkChars(qualifiedname, getXmlVersionEnum(getOwnerDocument(arg)))) then
       call throw_exception(INVALID_CHARACTER_ERR, "setAttributeNS", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6426,7 +6425,7 @@ endif
     elseif (arg%readonly) then
       call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setAttributeNS", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6434,7 +6433,7 @@ endif
     elseif (.not.checkQName(qualifiedname, getXds(getOwnerDocument(arg)))) then
       call throw_exception(NAMESPACE_ERR, "setAttributeNS", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6443,7 +6442,7 @@ endif
      .and. namespaceURI=="") then
       call throw_exception(NAMESPACE_ERR, "setAttributeNS", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6452,7 +6451,7 @@ endif
       namespaceURI/="http://www.w3.org/XML/1998/namespace") then
       call throw_exception(NAMESPACE_ERR, "setAttributeNS", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6502,7 +6501,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "removeAttributeNS", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6512,7 +6511,7 @@ endif
     if (arg%nodeType /= ELEMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "removeAttributeNS", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6520,7 +6519,7 @@ endif
     elseif (arg%readonly) then
       call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "removeAttributeNS", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6544,7 +6543,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "getAttributeNodeNS", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6554,7 +6553,7 @@ endif
     if (arg%nodeType /= ELEMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "getAttributeNodeNS", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6577,7 +6576,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "setAttributeNodeNS", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6587,7 +6586,7 @@ endif
     if (arg%nodeType /= ELEMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "setAttributeNodeNS", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6595,7 +6594,7 @@ endif
     elseif (.not.associated(arg%ownerDocument, newattr%ownerDocument)) then
       call throw_exception(WRONG_DOCUMENT_ERR, "setAttributeNodeNS", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6603,7 +6602,7 @@ endif
     elseif (arg%readonly) then
       call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setAttributeNodeNS", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6611,7 +6610,7 @@ endif
     elseif (associated(newattr%ownerElement)) then
       call throw_exception(INUSE_ATTRIBUTE_ERR, "setAttributeNodeNS", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6637,7 +6636,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "removeAttributeNodeNS", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6647,7 +6646,7 @@ endif
     if (arg%nodeType /= ELEMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "removeAttributeNodeNS", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6655,7 +6654,7 @@ endif
     elseif (arg%readonly) then
       call throw_exception(WRONG_DOCUMENT_ERR, "removeAttributeNodeNS", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6672,7 +6671,7 @@ endif
 
     call throw_exception(NOT_FOUND_ERR, "removeAttributeNodeNS", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6697,7 +6696,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "hasAttribute", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6707,7 +6706,7 @@ endif
    if (arg%nodeType /= ELEMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "hasAttribute", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6737,7 +6736,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "hasAttributeNS", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6747,7 +6746,7 @@ endif
    if (arg%nodeType /= ELEMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "hasAttributeNS", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6787,7 +6786,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "getSpecified", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6797,7 +6796,7 @@ endif
     if (getNodeType(arg)/=ATTRIBUTE_NODE) then
       call throw_exception(FoX_INVALID_NODE, "getSpecified", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6815,7 +6814,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "setSpecified", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6825,7 +6824,7 @@ endif
     if (getNodeType(arg)/=ATTRIBUTE_NODE) then
       call throw_exception(FoX_INVALID_NODE, "setSpecified", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6861,7 +6860,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "getValue_DOM", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6871,7 +6870,7 @@ endif
     if (getNodeType(arg)/=ATTRIBUTE_NODE) then
       call throw_exception(FoX_INVALID_NODE, "getValue_DOM", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6897,7 +6896,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "setValue", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6907,7 +6906,7 @@ endif
     if (getNodeType(arg)/=ATTRIBUTE_NODE) then
       call throw_exception(FoX_INVALID_NODE, "setValue", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6915,7 +6914,7 @@ endif
     elseif (arg%readonly) then
       call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setValue", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6923,7 +6922,7 @@ endif
     elseif (.not.checkChars(value, getXmlVersionEnum(getOwnerDocument(arg)))) then
       call throw_exception(FoX_INVALID_CHARACTER, "setValue", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6951,7 +6950,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "getOwnerElement", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6961,7 +6960,7 @@ endif
     if (getNodeType(arg) /= ATTRIBUTE_NODE) then
       call throw_exception(FoX_INVALID_NODE, "getOwnerElement", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6980,7 +6979,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "getIsId", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -6990,7 +6989,7 @@ endif
     if (getNodeType(arg) /= ATTRIBUTE_NODE) then
       call throw_exception(FoX_INVALID_NODE, "getIsId", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -7009,7 +7008,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "setIsId", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -7019,7 +7018,7 @@ endif
     if (getNodeType(arg) /= ATTRIBUTE_NODE) then
       call throw_exception(FoX_INVALID_NODE, "setIsId", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -7050,7 +7049,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "getLength_characterdata", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -7060,7 +7059,7 @@ endif
     if (.not.isCharData(arg%nodeType)) then
       call throw_exception(FoX_INVALID_NODE, "getLength_characterdata", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -7082,7 +7081,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "subStringData", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -7092,7 +7091,7 @@ endif
     if (.not.isCharData(arg%nodeType)) then
       call throw_exception(FoX_INVALID_NODE, "subStringData", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -7100,7 +7099,7 @@ endif
     elseif (offset<0.or.offset>size(arg%nodeValue).or.count<0) then
       call throw_exception(INDEX_SIZE_ERR, "subStringData", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -7126,7 +7125,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "appendData", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -7136,7 +7135,7 @@ endif
     if (.not.isCharData(arg%nodeType)) then
       call throw_exception(FoX_INVALID_NODE, "appendData", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -7144,7 +7143,7 @@ endif
     elseif (arg%readonly) then
       call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "appendData", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -7154,7 +7153,7 @@ endif
     if (.not.checkChars(data, getXmlVersionEnum(getOwnerDocument(arg)))) then
       call throw_exception(FoX_INVALID_CHARACTER, "appendData", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -7170,7 +7169,7 @@ endif
     if (arg%nodeType==COMMENT_NODE .and. index(str_vs(arg%nodeValue),"--")>0) then
       call throw_exception(FoX_INVALID_COMMENT, "appendData", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -7178,7 +7177,7 @@ endif
     elseif (arg%nodeType==CDATA_SECTION_NODE .and. index(str_vs(arg%nodeValue), "]]>")>0) then
       call throw_exception(FoX_INVALID_CDATA_SECTION, "appendData", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -7199,7 +7198,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "insertData", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -7209,7 +7208,7 @@ endif
     if (.not.isCharData(arg%nodeType)) then
       call throw_exception(FoX_INVALID_NODE, "insertData", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -7217,7 +7216,7 @@ endif
     elseif (arg%readonly) then
       call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "insertData", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -7225,7 +7224,7 @@ endif
     elseif (offset<0.or.offset>size(arg%nodeValue)) then
       call throw_exception(INDEX_SIZE_ERR, "insertData", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -7235,7 +7234,7 @@ endif
     if (.not.checkChars(data, getXmlVersionEnum(getOwnerDocument(arg)))) then
       call throw_exception(FoX_INVALID_CHARACTER, "insertData", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -7251,7 +7250,7 @@ endif
     if (arg%nodeType==COMMENT_NODE .and. index(str_vs(arg%nodeValue),"--")>0) then
       call throw_exception(FoX_INVALID_COMMENT, "insertData", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -7259,7 +7258,7 @@ endif
     elseif (arg%nodeType==CDATA_SECTION_NODE .and. index(str_vs(arg%nodeValue), "]]>")>0) then
       call throw_exception(FoX_INVALID_CDATA_SECTION, "insertData", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -7280,7 +7279,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "deleteData", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -7290,7 +7289,7 @@ endif
     if (.not.isCharData(arg%nodeType)) then
       call throw_exception(FoX_INVALID_NODE, "deleteData", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -7298,7 +7297,7 @@ endif
     elseif (arg%readonly) then
       call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "deleteData", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -7306,7 +7305,7 @@ endif
     elseif (offset<0.or.offset>size(arg%nodeValue).or.count<0) then
       call throw_exception(INDEX_SIZE_ERR, "deleteData", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -7332,7 +7331,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "replaceData", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -7342,7 +7341,7 @@ endif
     if (.not.isCharData(arg%nodeType)) then
       call throw_exception(FoX_INVALID_NODE, "replaceData", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -7350,7 +7349,7 @@ endif
     elseif (arg%readonly) then
       call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "replaceData", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -7358,7 +7357,7 @@ endif
     elseif (offset<0.or.offset>size(arg%nodeValue).or.count<0) then
       call throw_exception(INDEX_SIZE_ERR, "replaceData", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -7368,7 +7367,7 @@ endif
     if (.not.checkChars(data, getXmlVersionEnum(getOwnerDocument(arg)))) then
       call throw_exception(FoX_INVALID_CHARACTER, "replaceData", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -7388,7 +7387,7 @@ endif
     if (arg%nodeType==COMMENT_NODE .and. index(str_vs(arg%nodeValue),"--")>0) then
       call throw_exception(FoX_INVALID_COMMENT, "replaceData", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -7396,7 +7395,7 @@ endif
     elseif (arg%nodeType==CDATA_SECTION_NODE .and. index(str_vs(arg%nodeValue), "]]>")>0) then
       call throw_exception(FoX_INVALID_CDATA_SECTION, "replaceData", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -7423,7 +7422,7 @@ endif
     if (arg%nodeType/=ENTITY_NODE) then
       call throw_exception(FoX_INVALID_NODE, "getNotationName", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -7444,7 +7443,7 @@ endif
     if (arg%nodeType/=PROCESSING_INSTRUCTION_NODE) then
       call throw_exception(FoX_INVALID_NODE, "getTarget", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -7475,7 +7474,7 @@ endif
     if (.not.isTextNode(arg%nodeType)) then
       call throw_exception(FoX_INVALID_NODE, "splitText", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -7483,7 +7482,7 @@ endif
     elseif (arg%readonly) then
       call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "splitText", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -7491,7 +7490,7 @@ endif
     elseif (offset<0 .or. offset>size(arg%nodeValue)) then
       call throw_exception(INDEX_SIZE_ERR, "splitText", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -7538,7 +7537,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "getData", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -7553,7 +7552,7 @@ endif
     else
        call throw_exception(FoX_INVALID_NODE, "getData", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -7570,7 +7569,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "setData", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -7584,7 +7583,7 @@ endif
       if (arg%readonly) then
         call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setData", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -7595,7 +7594,7 @@ endif
     else
        call throw_exception(FoX_INVALID_NODE, "setData", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -7623,7 +7622,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "getName", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -7634,7 +7633,7 @@ endif
       arg%nodeType/=DOCUMENT_TYPE_NODE) then
        call throw_exception(FoX_INVALID_NODE, "getName", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -7664,7 +7663,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "getPublicId", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -7676,7 +7675,7 @@ endif
       arg%nodeType/=ENTITY_NODE) then
        call throw_exception(FoX_INVALID_NODE, "getPublicId", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -7706,7 +7705,7 @@ endif
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "getSystemId", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif
@@ -7718,7 +7717,7 @@ endif
       arg%nodeType/=ENTITY_NODE) then
        call throw_exception(FoX_INVALID_NODE, "getSystemId", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
      return
   endif
 endif

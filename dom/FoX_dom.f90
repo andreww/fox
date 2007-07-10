@@ -26,6 +26,8 @@ module FoX_dom
 
   ! DOM Exceptions
   public :: DOMException
+  public :: inException
+  public :: getExceptionCode
 
   public :: INDEX_SIZE_ERR
   public :: DOMSTRING_SIZE_ERR
@@ -191,9 +193,5 @@ module FoX_dom
   public :: parsefile
   public :: dumpTree
   public :: serialize
-
-  ! FIXME rename this
-  public :: is_in_error
-  public :: getCode
 
 end module FoX_dom

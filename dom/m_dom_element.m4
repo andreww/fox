@@ -2,7 +2,7 @@ TOHW_m_dom_imports(`
 
   use m_common_array_str, only: str_vs, vs_str_alloc
   use m_common_namecheck, only: prefixOfQName, localpartOfQName
-  use m_dom_error, only: is_in_error, getCode
+  use m_dom_error, only: inException, getExceptionCode
 
 ')`'dnl
 dnl
@@ -15,7 +15,6 @@ TOHW_m_dom_publics(`
   public :: getAttributeNode
   public :: setAttributeNode
   public :: removeAttributeNode
-  ! public :: getElementsByTagName
   public :: getAttributeNS
   public :: setAttributeNS
   public :: removeAttributeNS
@@ -150,8 +149,8 @@ TOHW_m_dom_contents(`
       call setGCstate(getOwnerDocument(arg), .false.)
 
     dummy => removeNamedItem(getAttributes(arg), name, ex2)
-    if (is_in_error(ex2)) then
-      e = getCode(ex2)
+    if (inException(ex2)) then
+      e = getExceptionCode(ex2)
       if (e/=NOT_FOUND_ERR) then
         TOHW_m_dom_throw_error(e)
       endif

@@ -48,9 +48,9 @@ module m_dom_error
 
 
   public :: DOMException
-  public :: getCode
+  public :: getExceptionCode
   public :: throw_exception
-  public :: is_in_error
+  public :: inException
   public :: dom_error
   public :: internal_error
 
@@ -129,7 +129,7 @@ contains
 
   end function errorString
 
-  function getCode(ex) result(n)
+  function getExceptionCode(ex) result(n)
     type(DOMException), intent(inout) :: ex
     integer :: n
 
@@ -137,7 +137,7 @@ contains
 
     call destroy_error_stack(ex%stack)
 
-  end function getCode
+  end function getExceptionCode
 
   subroutine throw_exception(code, msg, ex)
     integer, intent(in) :: code
@@ -181,11 +181,11 @@ contains
 
   end subroutine internal_error
 
-  function is_in_error(ex) result(p)
+  function inException(ex) result(p)
     type(DOMException), intent(in) :: ex
     logical :: p
 
     p = in_error(ex%stack)
-  end function is_in_error
+  end function inException
 
 end module m_dom_error

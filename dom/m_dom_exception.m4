@@ -5,7 +5,7 @@ dnl 1 is numerical code
 dnl 2 is list of things to deallocate
 call throw_exception($1, "m4f_thisfunc", ex)
 if (present(ex)) then
-  if (is_in_error(ex)) then
+  if (inException(ex)) then
 ifelse($2, `', `', 
      m4_foreach(`x', `$2', `
 if (associated(x)) deallocate(x)

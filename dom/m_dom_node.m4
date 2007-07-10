@@ -2,7 +2,7 @@ include(`m_dom_exception.m4')`'dnl
 TOHW_m_dom_imports(`
 
   use m_common_array_str, only: vs_str, str_vs, vs_str_alloc
-  use m_dom_error, only: DOMException, throw_exception, is_in_error, &
+  use m_dom_error, only: DOMException, throw_exception, inException, &
     NO_MODIFICATION_ALLOWED_ERR, NOT_FOUND_ERR, HIERARCHY_REQUEST_ERR, &
     WRONG_DOCUMENT_ERR, FoX_INTERNAL_ERROR, FoX_NODE_IS_NULL
 
