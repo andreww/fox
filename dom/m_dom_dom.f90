@@ -6485,10 +6485,7 @@ endif
 
     endif
 
-    c = ""  ! as per specs, if not found Not sure ahout this FIXME
     c = getNamedItemNS_Value(getAttributes(arg), namespaceURI, localName)
-
-    ! FIXME dont need both above
         
   end function getAttributeNS
 

@@ -279,10 +279,7 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
 
-    c = ""  ! as per specs, if not found Not sure ahout this FIXME
     c = getNamedItemNS_Value(getAttributes(arg), namespaceURI, localName)
-
-    ! FIXME dont need both above
         
   end function getAttributeNS
 
