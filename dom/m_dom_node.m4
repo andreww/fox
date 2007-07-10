@@ -46,19 +46,32 @@ TOHW_m_dom_contents(`
 
   ! Getters and setters
 
-  TOHW_function(getNodeName, (arg), c)
-    type(Node), pointer :: arg
-    character(len=size(arg%nodeName)) :: c
+  pure function getNodeName_len(np, p) result(n)
+    type(Node), intent(in) :: np
+    logical, intent(in) :: p
+    integer :: n
+
+    if (p) then
+      n = size(np%nodeName)
+    else
+      n = 0
+    endif
+
+  end function getNodeName_len
+
+  TOHW_function(getNodeName, (np), c)
+    type(Node), pointer :: np
+    character(len=getNodeName_len(np, associated(np))) :: c
     
-    if (.not.associated(arg)) then
+    if (.not.associated(np)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif
 
-    c = str_vs(arg%nodeName)
+    c = str_vs(np%nodeName)
   end function getNodeName
 
-  pure function getNodeValue_len(arg, p) result(n)
-    type(Node), intent(in) :: arg
+  pure function getNodeValue_len(np, p) result(n)
+    type(Node), intent(in) :: np
     logical, intent(in) :: p
     integer :: n
 
@@ -67,84 +80,84 @@ TOHW_m_dom_contents(`
     n = 0 
     if (.not.p) return
 
-    select case(arg%nodeType)
+    select case(np%nodeType)
     case (ATTRIBUTE_NODE)
-      do i = 1, arg%childNodes%length
-        n = n + size(arg%childNodes%nodes(i)%this%nodeValue)
+      do i = 1, np%childNodes%length
+        n = n + size(np%childNodes%nodes(i)%this%nodeValue)
       enddo
     case (CDATA_SECTION_NODE, COMMENT_NODE, PROCESSING_INSTRUCTION_NODE, TEXT_NODE)
-      n = size(arg%nodeValue)
+      n = size(np%nodeValue)
     end select
 
   end function getNodeValue_len
 
-  TOHW_function(getNodeValue, (arg), c)
-    type(Node), pointer :: arg
-    character(len=getNodeValue_len(arg, associated(arg))) :: c
+  TOHW_function(getNodeValue, (np), c)
+    type(Node), pointer :: np
+    character(len=getNodeValue_len(np, associated(np))) :: c
 
     integer :: i, n
 
-    if (.not.associated(arg)) then
+    if (.not.associated(np)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif
 
-    select case(arg%nodeType)
+    select case(np%nodeType)
     case (ATTRIBUTE_NODE)
       n = 1
-      do i = 1, arg%childNodes%length
-        c(n:n+size(arg%childNodes%nodes(i)%this%nodeValue)-1) = &
-          str_vs(arg%childNodes%nodes(i)%this%nodeValue)
+      do i = 1, np%childNodes%length
+        c(n:n+size(np%childNodes%nodes(i)%this%nodeValue)-1) = &
+          str_vs(np%childNodes%nodes(i)%this%nodeValue)
       enddo
     case (CDATA_SECTION_NODE, COMMENT_NODE, PROCESSING_INSTRUCTION_NODE, TEXT_NODE)
-      c = str_vs(arg%nodeValue)
+      c = str_vs(np%nodeValue)
     case default
       c = ""
     end select
     
   end function getNodeValue
 
-  TOHW_subroutine(setStringValue, (arg, stringValue))
-    type(Node), pointer :: arg
+  TOHW_subroutine(setStringValue, (np, stringValue))
+    type(Node), pointer :: np
     character(len=*) :: stringValue
   
-    if (.not.associated(arg)) then
+    if (.not.associated(np)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif
 
-    if (getNodeType(arg)/=ENTITY_NODE) then
+    if (getNodeType(np)/=ENTITY_NODE) then
       TOHW_m_dom_throw_error(FoX_INTERNAL_ERROR)
     endif
 
-    if (associated(arg%nodeValue)) deallocate(arg%nodeValue)
-    arg%nodeValue => vs_str_alloc(stringValue)
+    if (associated(np%nodeValue)) deallocate(np%nodeValue)
+    np%nodeValue => vs_str_alloc(stringValue)
 
   end subroutine setStringValue
 
-  pure function getStringValue_len(arg, p) result(n)
-    type(Node), pointer :: arg
+  pure function getStringValue_len(np, p) result(n)
+    type(Node), intent(in) :: np
     logical, intent(in) :: p
     integer :: n
 
     if (p) then
-      n = size(arg%nodeValue)
+      n = size(np%nodeValue)
     else
       n = 0
     endif
   end function getStringValue_len
 
-  TOHW_function(getStringValue, (arg), s)
-    type(Node), pointer :: arg
-    character(len=getStringValue_len(arg, associated(arg))) :: s
+  TOHW_function(getStringValue, (np), s)
+    type(Node), pointer :: np
+    character(len=getStringValue_len(np, associated(np))) :: s
   
-    if (.not.associated(arg)) then
+    if (.not.associated(np)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif
 
-    if (getNodeType(arg)/=ENTITY_NODE) then
+    if (getNodeType(np)/=ENTITY_NODE) then
       TOHW_m_dom_throw_error(FoX_INTERNAL_ERROR)
     endif
 
-    s = str_vs(arg%nodeValue)
+    s = str_vs(np%nodeValue)
 
   end function getStringValue
     
@@ -851,7 +864,7 @@ TOHW_m_dom_treewalk(`
         
         if (getNodeType(arg)/=ELEMENT_NODE.and.getNodeType(arg)/=ATTRIBUTE_NODE) exit
       endif
-', `
+', `'`
 
       if (getNodeType(this)==ENTITY_REFERENCE_NODE &
         .and.associated(ERchild, this)) then
@@ -860,7 +873,7 @@ TOHW_m_dom_treewalk(`
       endif
       this%readonly = readonly
       
-', `parentNode',`')
+', `parentNode')
 
     np => thatParent
 

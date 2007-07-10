@@ -702,12 +702,25 @@ endif
 
   ! Getters and setters
 
-  function getNodeName(arg, ex)result(c) 
+  pure function getNodeName_len(np, p) result(n)
+    type(Node), intent(in) :: np
+    logical, intent(in) :: p
+    integer :: n
+
+    if (p) then
+      n = size(np%nodeName)
+    else
+      n = 0
+    endif
+
+  end function getNodeName_len
+
+  function getNodeName(np, ex)result(c) 
     type(DOMException), intent(out), optional :: ex
-    type(Node), pointer :: arg
-    character(len=size(arg%nodeName)) :: c
+    type(Node), pointer :: np
+    character(len=getNodeName_len(np, associated(np))) :: c
     
-    if (.not.associated(arg)) then
+    if (.not.associated(np)) then
       call throw_exception(FoX_NODE_IS_NULL, "getNodeName", ex)
 if (present(ex)) then
   if (inException(ex)) then
@@ -717,11 +730,11 @@ endif
 
     endif
 
-    c = str_vs(arg%nodeName)
+    c = str_vs(np%nodeName)
   end function getNodeName
 
-  pure function getNodeValue_len(arg, p) result(n)
-    type(Node), intent(in) :: arg
+  pure function getNodeValue_len(np, p) result(n)
+    type(Node), intent(in) :: np
     logical, intent(in) :: p
     integer :: n
 
@@ -730,25 +743,25 @@ endif
     n = 0 
     if (.not.p) return
 
-    select case(arg%nodeType)
+    select case(np%nodeType)
     case (ATTRIBUTE_NODE)
-      do i = 1, arg%childNodes%length
-        n = n + size(arg%childNodes%nodes(i)%this%nodeValue)
+      do i = 1, np%childNodes%length
+        n = n + size(np%childNodes%nodes(i)%this%nodeValue)
       enddo
     case (CDATA_SECTION_NODE, COMMENT_NODE, PROCESSING_INSTRUCTION_NODE, TEXT_NODE)
-      n = size(arg%nodeValue)
+      n = size(np%nodeValue)
     end select
 
   end function getNodeValue_len
 
-  function getNodeValue(arg, ex)result(c) 
+  function getNodeValue(np, ex)result(c) 
     type(DOMException), intent(out), optional :: ex
-    type(Node), pointer :: arg
-    character(len=getNodeValue_len(arg, associated(arg))) :: c
+    type(Node), pointer :: np
+    character(len=getNodeValue_len(np, associated(np))) :: c
 
     integer :: i, n
 
-    if (.not.associated(arg)) then
+    if (.not.associated(np)) then
       call throw_exception(FoX_NODE_IS_NULL, "getNodeValue", ex)
 if (present(ex)) then
   if (inException(ex)) then
@@ -758,27 +771,27 @@ endif
 
     endif
 
-    select case(arg%nodeType)
+    select case(np%nodeType)
     case (ATTRIBUTE_NODE)
       n = 1
-      do i = 1, arg%childNodes%length
-        c(n:n+size(arg%childNodes%nodes(i)%this%nodeValue)-1) = &
-          str_vs(arg%childNodes%nodes(i)%this%nodeValue)
+      do i = 1, np%childNodes%length
+        c(n:n+size(np%childNodes%nodes(i)%this%nodeValue)-1) = &
+          str_vs(np%childNodes%nodes(i)%this%nodeValue)
       enddo
     case (CDATA_SECTION_NODE, COMMENT_NODE, PROCESSING_INSTRUCTION_NODE, TEXT_NODE)
-      c = str_vs(arg%nodeValue)
+      c = str_vs(np%nodeValue)
     case default
       c = ""
     end select
     
   end function getNodeValue
 
-  subroutine setStringValue(arg, stringValue, ex)
+  subroutine setStringValue(np, stringValue, ex)
     type(DOMException), intent(out), optional :: ex
-    type(Node), pointer :: arg
+    type(Node), pointer :: np
     character(len=*) :: stringValue
   
-    if (.not.associated(arg)) then
+    if (.not.associated(np)) then
       call throw_exception(FoX_NODE_IS_NULL, "setStringValue", ex)
 if (present(ex)) then
   if (inException(ex)) then
@@ -788,7 +801,7 @@ endif
 
     endif
 
-    if (getNodeType(arg)/=ENTITY_NODE) then
+    if (getNodeType(np)/=ENTITY_NODE) then
       call throw_exception(FoX_INTERNAL_ERROR, "setStringValue", ex)
 if (present(ex)) then
   if (inException(ex)) then
@@ -798,29 +811,29 @@ endif
 
     endif
 
-    if (associated(arg%nodeValue)) deallocate(arg%nodeValue)
-    arg%nodeValue => vs_str_alloc(stringValue)
+    if (associated(np%nodeValue)) deallocate(np%nodeValue)
+    np%nodeValue => vs_str_alloc(stringValue)
 
   end subroutine setStringValue
 
-  pure function getStringValue_len(arg, p) result(n)
-    type(Node), pointer :: arg
+  pure function getStringValue_len(np, p) result(n)
+    type(Node), intent(in) :: np
     logical, intent(in) :: p
     integer :: n
 
     if (p) then
-      n = size(arg%nodeValue)
+      n = size(np%nodeValue)
     else
       n = 0
     endif
   end function getStringValue_len
 
-  function getStringValue(arg, ex)result(s) 
+  function getStringValue(np, ex)result(s) 
     type(DOMException), intent(out), optional :: ex
-    type(Node), pointer :: arg
-    character(len=getStringValue_len(arg, associated(arg))) :: s
+    type(Node), pointer :: np
+    character(len=getStringValue_len(np, associated(np))) :: s
   
-    if (.not.associated(arg)) then
+    if (.not.associated(np)) then
       call throw_exception(FoX_NODE_IS_NULL, "getStringValue", ex)
 if (present(ex)) then
   if (inException(ex)) then
@@ -830,7 +843,7 @@ endif
 
     endif
 
-    if (getNodeType(arg)/=ENTITY_NODE) then
+    if (getNodeType(np)/=ENTITY_NODE) then
       call throw_exception(FoX_INTERNAL_ERROR, "getStringValue", ex)
 if (present(ex)) then
   if (inException(ex)) then
@@ -840,7 +853,7 @@ endif
 
     endif
 
-    s = str_vs(arg%nodeValue)
+    s = str_vs(np%nodeValue)
 
   end function getStringValue
     
