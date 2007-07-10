@@ -27,9 +27,21 @@ TOHW_m_dom_publics(`
 dnl
 TOHW_m_dom_contents(`
 
+  pure function getTagName_len(arg, p) result(n)
+    type(Node), intent(in) :: arg
+    logical, intent(in) :: p
+    integer :: n
+
+    if (p) then
+      n = size(arg%nodeName)
+    else
+      n = 0
+    endif
+  end function getTagName_len
+
   TOHW_function(getTagName, (arg), c)
     type(Node), pointer :: arg   
-    character(len=size(arg%nodeName)) :: c
+    character(len=getTagName_len(arg, associated(arg))) :: c
 
     if (.not.associated(arg)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
@@ -262,12 +274,34 @@ TOHW_m_dom_contents(`
 !  function getElementsByTagName - see m_dom_document
 
 
+  pure function getAttributesNS_len(arg, p, localname, namespaceURI) result(n)
+    type(Node), intent(in) :: arg
+    logical, intent(in) :: p
+    character(len=*), intent(in) :: localname
+    character(len=*), intent(in) :: namespaceURI
+    integer :: n
+    
+    integer :: i
+    
+    n = 0
+    if (.not.p) return
+    if (arg%nodeType/=ELEMENT_NODE) return
+
+    do i = 1, arg%attributes%length
+      if (str_vs(arg%attributes%nodes(i)%this%localName)==localname &
+        .and. str_vs(arg%attributes%nodes(i)%this%namespaceURI)==namespaceURI) then
+        n = getValue_len(arg%attributes%nodes(i)%this, .true.)
+        exit
+      endif
+    enddo
+
+  end function getAttributesNS_len
+
   TOHW_function(getAttributeNS, (arg, namespaceURI, localName), c)
     type(Node), pointer :: arg
     character(len=*), intent(in) :: namespaceURI
     character(len=*), intent(in) :: localName
-    character(len= &
-      getNamedItemNS_Value_length(arg%attributes, namespaceURI, localName)) :: c
+    character(len=getAttributesNS_len(arg, associated(arg), localname, namespaceURI)) :: c
 
     type(Node), pointer :: nn
 
