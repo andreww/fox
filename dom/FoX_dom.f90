@@ -9,7 +9,7 @@ module FoX_dom
   implicit none
   private
 
-  public :: str_vs, vs_str_alloc
+  public :: str_vs, vs_vs_alloc, vs_str_alloc
 
   !We make public only features from the DOM Core Level 2,
   !plus a couple of our own devising for input & output.
