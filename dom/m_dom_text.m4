@@ -10,13 +10,6 @@ TOHW_m_dom_publics(`
 dnl
 TOHW_m_dom_contents(`
 
-  pure function isTextNode(nodeType) result(p)
-    integer, intent(in) :: nodeType
-    logical :: p
-
-    p = (nodeType==TEXT_NODE.or.nodeType==CDATA_SECTION_NODE)
-  end function isTextNode
-
   TOHW_function(splitText, (arg, offset), np)
     type(Node), pointer :: arg
     integer, intent(in) :: offset
@@ -25,7 +18,11 @@ TOHW_m_dom_contents(`
 
     character, pointer :: tmp(:)
 
-    if (.not.isTextNode(arg%nodeType)) then
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+
+    if (.not.(arg%nodeType==TEXT_NODE.or.arg%nodeType==CDATA_SECTION_NODE)) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     elseif (arg%readonly) then
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)

@@ -7743,13 +7743,6 @@ endif
 
 
 
-  pure function isTextNode(nodeType) result(p)
-    integer, intent(in) :: nodeType
-    logical :: p
-
-    p = (nodeType==TEXT_NODE.or.nodeType==CDATA_SECTION_NODE)
-  end function isTextNode
-
   function splitText(arg, offset, ex)result(np) 
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
@@ -7759,7 +7752,17 @@ endif
 
     character, pointer :: tmp(:)
 
-    if (.not.isTextNode(arg%nodeType)) then
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "splitText", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    if (.not.(arg%nodeType==TEXT_NODE.or.arg%nodeType==CDATA_SECTION_NODE)) then
       call throw_exception(FoX_INVALID_NODE, "splitText", ex)
 if (present(ex)) then
   if (inException(ex)) then
