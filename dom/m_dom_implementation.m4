@@ -124,8 +124,6 @@ TOHW_m_dom_contents(`
   TOHW_subroutine(destroyDocument, (arg))
     type(Node), pointer :: arg
     
-    type(Node), pointer :: dt
-    type(NodeList) :: np_stack
     integer :: i
 
     if (.not.associated(arg)) then

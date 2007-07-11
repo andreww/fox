@@ -190,8 +190,6 @@ TOHW_m_dom_contents(`
   TOHW_subroutine(destroyElement, (element))
     type(Node), pointer :: element
 
-    integer :: i
-
     if (element%nodeType /= ELEMENT_NODE) then
        TOHW_m_dom_throw_error(FoX_INTERNAL_ERROR)
     endif

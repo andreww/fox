@@ -423,9 +423,6 @@ TOHW_m_dom_treewalk(`
     character(len=*), intent(in) :: name
     type(Node), pointer :: np
 
-    type(Node), pointer :: ent
-    integer :: i
-
     if (.not.associated(arg)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif
@@ -764,7 +761,6 @@ TOHW_m_dom_treewalk(`dnl
     type(Node), pointer :: np
 
     type(Node), pointer :: this, treeroot
-    type(NamedNodeMap), pointer :: nnm
     integer :: i_tree
     logical :: doneChildren, doneAttributes
 
@@ -781,7 +777,7 @@ TOHW_m_dom_treewalk(`dnl
 TOHW_m_dom_treewalk(`dnl
       if (this%nodeType==ATTRIBUTE_NODE)  then
         if (getIsId(this).and.getName(this)==elementId) then
-          np => this
+          np => getOwnerElement(this)
           return
         endif
       endif
@@ -895,6 +891,10 @@ TOHW_m_dom_treewalk(`dnl
     type(Node), pointer :: arg
     integer :: n
 
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_INTERNAL_ERROR)
+    endif
+
     n = arg%docExtras%xds%xml_version
 
   end function getXmlVersionEnum
@@ -902,6 +902,10 @@ TOHW_m_dom_treewalk(`dnl
   TOHW_function(getXds, (arg), xds)
     type(Node), pointer :: arg
     type(xml_doc_state) :: xds
+
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_INTERNAL_ERROR)
+    endif
 
     xds = arg%docExtras%xds
 
@@ -912,6 +916,10 @@ TOHW_m_dom_treewalk(`dnl
     type(Node), pointer :: arg
     logical :: b
 
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_INTERNAL_ERROR)
+    endif
+
     b = arg%docExtras%xds%building
 
   end function getGCstate
@@ -919,6 +927,10 @@ TOHW_m_dom_treewalk(`dnl
   TOHW_subroutine(setGCstate, (arg, b))
     type(Node), pointer :: arg
     logical, intent(in) :: b
+
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_INTERNAL_ERROR)
+    endif
 
     arg%docExtras%xds%building = b
 

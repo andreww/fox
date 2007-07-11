@@ -123,8 +123,6 @@ TOHW_m_dom_contents(`
     type(NodeList), intent(inout) :: nl
     type(Node), pointer :: np
 
-    type(ListNode), pointer :: temp_nl(:)
-
     integer :: i
 
     do i = 1, nl%length

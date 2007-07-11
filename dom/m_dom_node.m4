@@ -156,7 +156,7 @@ TOHW_m_dom_contents(`
     character(len=*) :: nodeValue
 
     type(Node), pointer :: np
-    integer :: i, n
+    integer :: i
 
     if (.not.associated(arg)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
@@ -793,7 +793,7 @@ TOHW_m_dom_contents(`
 
     type(Node), pointer :: doc, treeroot, thatParent, this, new, ERchild
 
-    logical :: doneAttributes, doneChildren, readonly, quickFix
+    logical :: doneAttributes, doneChildren, readonly
     integer :: i_tree
 
     if (.not.associated(arg)) then

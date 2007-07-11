@@ -422,8 +422,6 @@ endif
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: element
 
-    integer :: i
-
     if (element%nodeType /= ELEMENT_NODE) then
        call throw_exception(FoX_INTERNAL_ERROR, "destroyElement", ex)
 if (present(ex)) then
@@ -716,7 +714,7 @@ endif
     character(len=*) :: nodeValue
 
     type(Node), pointer :: np
-    integer :: i, n
+    integer :: i
 
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "setNodeValue", ex)
@@ -2486,7 +2484,7 @@ endif
 
     type(Node), pointer :: doc, treeroot, thatParent, this, new, ERchild
 
-    logical :: doneAttributes, doneChildren, readonly, quickFix
+    logical :: doneAttributes, doneChildren, readonly
     integer :: i_tree
 
     if (.not.associated(arg)) then
@@ -3287,8 +3285,6 @@ endif
     type(NodeList), intent(inout) :: nl
     type(Node), pointer :: np
 
-    type(ListNode), pointer :: temp_nl(:)
-
     integer :: i
 
     do i = 1, nl%length
@@ -3662,8 +3658,6 @@ endif
     integer, intent(in) :: index
     type(Node), pointer :: np
     
-    integer :: n
-
     if (.not.associated(map)) then
       call throw_exception(FoX_MAP_IS_NULL, "item_nnm", ex)
 if (present(ex)) then
@@ -4153,8 +4147,6 @@ endif
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     
-    type(Node), pointer :: dt
-    type(NodeList) :: np_stack
     integer :: i
 
     if (.not.associated(arg)) then
@@ -5022,9 +5014,6 @@ endif
     character(len=*), intent(in) :: name
     type(Node), pointer :: np
 
-    type(Node), pointer :: ent
-    integer :: i
-
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "createEmptyEntityReference", ex)
 if (present(ex)) then
@@ -5723,7 +5712,6 @@ endif
     type(Node), pointer :: np
 
     type(Node), pointer :: this, treeroot
-    type(NamedNodeMap), pointer :: nnm
     integer :: i_tree
     logical :: doneChildren, doneAttributes
 
@@ -5761,7 +5749,7 @@ endif
 
       if (this%nodeType==ATTRIBUTE_NODE)  then
         if (getIsId(this).and.getName(this)==elementId) then
-          np => this
+          np => getOwnerElement(this)
           return
         endif
       endif
@@ -5987,6 +5975,16 @@ endif
     type(Node), pointer :: arg
     integer :: n
 
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_INTERNAL_ERROR, "getXmlVersionEnum", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
+    endif
+
     n = arg%docExtras%xds%xml_version
 
   end function getXmlVersionEnum
@@ -5995,6 +5993,16 @@ endif
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     type(xml_doc_state) :: xds
+
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_INTERNAL_ERROR, "getXds", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
+    endif
 
     xds = arg%docExtras%xds
 
@@ -6006,6 +6014,16 @@ endif
     type(Node), pointer :: arg
     logical :: b
 
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_INTERNAL_ERROR, "getGCstate", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
+    endif
+
     b = arg%docExtras%xds%building
 
   end function getGCstate
@@ -6014,6 +6032,16 @@ endif
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     logical, intent(in) :: b
+
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_INTERNAL_ERROR, "setGCstate", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
+    endif
 
     arg%docExtras%xds%building = b
 
@@ -6405,8 +6433,6 @@ endif
     type(Node), pointer :: attr
     type(Node), pointer :: dummy
 
-    integer :: i
-
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "setAttributeNode", ex)
 if (present(ex)) then
@@ -6561,8 +6587,6 @@ endif
     character(len=*), intent(in) :: namespaceURI
     character(len=*), intent(in) :: localName
     character(len=getAttributesNS_len(arg, associated(arg), localname, namespaceURI)) :: c
-
-    type(Node), pointer :: nn
 
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "getAttributeNS", ex)
@@ -7614,7 +7638,17 @@ endif
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: np
     logical, intent(in) :: p
-    
+
+    if (.not.associated(np)) then
+      call throw_exception(FoX_NODE_IS_NULL, "setIllFormed", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
+    endif
+
     np%illFormed = p
   end subroutine setIllFormed
 

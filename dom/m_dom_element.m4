@@ -201,8 +201,6 @@ TOHW_m_dom_contents(`
     type(Node), pointer :: attr
     type(Node), pointer :: dummy
 
-    integer :: i
-
     if (.not.associated(arg)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif
@@ -295,8 +293,6 @@ TOHW_m_dom_contents(`
     character(len=*), intent(in) :: namespaceURI
     character(len=*), intent(in) :: localName
     character(len=getAttributesNS_len(arg, associated(arg), localname, namespaceURI)) :: c
-
-    type(Node), pointer :: nn
 
     if (.not.associated(arg)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)

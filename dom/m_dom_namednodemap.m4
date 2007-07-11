@@ -211,8 +211,6 @@ TOHW_m_dom_contents(`
     integer, intent(in) :: index
     type(Node), pointer :: np
     
-    integer :: n
-
     if (.not.associated(map)) then
       TOHW_m_dom_throw_error(FoX_MAP_IS_NULL)
     endif

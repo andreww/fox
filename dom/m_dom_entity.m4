@@ -9,7 +9,11 @@ TOHW_m_dom_contents(`
   TOHW_subroutine(setIllFormed, (np, p))
     type(Node), pointer :: np
     logical, intent(in) :: p
-    
+
+    if (.not.associated(np)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+
     np%illFormed = p
   end subroutine setIllFormed
 
