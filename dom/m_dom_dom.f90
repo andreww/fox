@@ -825,7 +825,7 @@ endif
       ! Avoid manipulating hangingnode lists
       call setGCstate(arg%ownerDocument, .false.)
       np => createTextNode(arg%ownerDocument, nodeValue)
-      np => appendChild(arg, np)
+      np => appendChild(arg, np, ex)
       call setGCstate(arg%ownerDocument, .true.)
     case (CDATA_SECTION_NODE)
       if (arg%readonly) then
@@ -1452,8 +1452,8 @@ endif
       ! Nothing to do
     endif
 
-    if (associated(newChild%parentNode)) &
-      newChild => removeChild(newChild%parentNode, newChild, ex) 
+    if (associated(getParentNode(newChild))) &
+      newChild => removeChild(getParentNode(newChild), newChild, ex) 
 
     if (arg%childNodes%length==0) then
       call throw_exception(NOT_FOUND_ERR, "insertBefore", ex)
@@ -1907,8 +1907,8 @@ endif
 
     endif
 
-    if (associated(newChild%parentNode)) &
-      newChild => removeChild(newChild%parentNode, newChild, ex) 
+    if (associated(getParentNode(newChild))) &
+      newChild => removeChild(getParentNode(newChild), newChild, ex) 
 
     if (arg%childNodes%length==0) then
       call throw_exception(NOT_FOUND_ERR, "replaceChild", ex)
@@ -2072,12 +2072,9 @@ endif
 
     endif
 
-! NOTE BELOW FUCKED-UP WORKAROUND FOR G95!!
-    np => arg
     oldChild%parentNode => null()
     oldChild%previousSibling => null()
     oldChild%nextSibling => null()
-    arg => np
     if (getGCstate(arg%ownerDocument)) then
       if (arg%inDocument) then
         call removeNodesFromDocument(arg%ownerDocument, oldChild)

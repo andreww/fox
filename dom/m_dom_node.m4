@@ -196,7 +196,7 @@ TOHW_m_dom_contents(`
       ! Avoid manipulating hangingnode lists
       call setGCstate(arg%ownerDocument, .false.)
       np => createTextNode(arg%ownerDocument, nodeValue)
-      np => appendChild(arg, np)
+      np => appendChild(arg, np, ex)
       call setGCstate(arg%ownerDocument, .true.)
     case (CDATA_SECTION_NODE)
       if (arg%readonly) then
@@ -399,8 +399,8 @@ TOHW_m_dom_contents(`
       ! Nothing to do
     endif
 
-    if (associated(newChild%parentNode)) &
-      newChild => removeChild(newChild%parentNode, newChild, ex) 
+    if (associated(getParentNode(newChild))) &
+      newChild => removeChild(getParentNode(newChild), newChild, ex) 
 
     if (arg%childNodes%length==0) then
       TOHW_m_dom_throw_error(NOT_FOUND_ERR)
@@ -521,8 +521,8 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(WRONG_DOCUMENT_ERR)
     endif
 
-    if (associated(newChild%parentNode)) &
-      newChild => removeChild(newChild%parentNode, newChild, ex) 
+    if (associated(getParentNode(newChild))) &
+      newChild => removeChild(getParentNode(newChild), newChild, ex) 
 
     if (arg%childNodes%length==0) then
       TOHW_m_dom_throw_error(NOT_FOUND_ERR)
@@ -655,12 +655,9 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(NOT_FOUND_ERR)
     endif
 
-! NOTE BELOW FUCKED-UP WORKAROUND FOR G95!!
-    np => arg
     oldChild%parentNode => null()
     oldChild%previousSibling => null()
     oldChild%nextSibling => null()
-    arg => np
     if (getGCstate(arg%ownerDocument)) then
       if (arg%inDocument) then
         call removeNodesFromDocument(arg%ownerDocument, oldChild)
