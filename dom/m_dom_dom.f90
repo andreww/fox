@@ -4856,7 +4856,7 @@ endif
 
 
       if (getNodeType(this)==TEXT_NODE) then
-        n = n + 13
+        n = n + len(getData(this))
       elseif (getNodeType(this)/=ENTITY_REFERENCE_NODE) then
         n = 0
         exit
@@ -4931,8 +4931,8 @@ endif
 
 
         if (getNodeType(this)==TEXT_NODE) then
-          arg%nodeValue(n+1:n+13) = getData(this)
-          n = n + 13
+          arg%nodeValue(n+1:n+len(getData(this))) = getData(this)
+          n = n + len(getData(this))
         endif
 
 
@@ -5173,9 +5173,6 @@ endif
 
     endif
 
-    if (tagName=="*") &
-      allElements = .true.
-
     if (doc%nodeType==DOCUMENT_NODE) then
       arg => getDocumentElement(doc)
     else
@@ -5188,8 +5185,7 @@ endif
     if (present(name)) list%nodeName => vs_str_alloc(name)
     if (present(tagName)) list%nodeName => vs_str_alloc(tagName)
 
-    if (str_vs(list%nodeName)=="*") &
-      allElements = .true.
+    allElements = (str_vs(list%nodeName)=="*")
 
     if (doc%nodeType==DOCUMENT_NODE) then
       nll => doc%docExtras%nodelists

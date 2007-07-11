@@ -484,9 +484,6 @@ TOHW_m_dom_treewalk(`
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
 
-    if (tagName=="*") &
-      allElements = .true.
-
     if (doc%nodeType==DOCUMENT_NODE) then
       arg => getDocumentElement(doc)
     else
@@ -499,8 +496,7 @@ TOHW_m_dom_treewalk(`
     if (present(name)) list%nodeName => vs_str_alloc(name)
     if (present(tagName)) list%nodeName => vs_str_alloc(tagName)
 
-    if (str_vs(list%nodeName)=="*") &
-      allElements = .true.
+    allElements = (str_vs(list%nodeName)=="*")
 
     if (doc%nodeType==DOCUMENT_NODE) then
       nll => doc%docExtras%nodelists

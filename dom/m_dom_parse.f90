@@ -50,7 +50,7 @@ contains
 
     type(dictionary_t), intent(in) :: attrs
    
-    type(Node), pointer :: el, temp
+    type(Node), pointer :: el, attr, dummy
     integer              :: i
 
     if (len(URI)>0) then
@@ -61,19 +61,19 @@ contains
 
     do i = 1, len(attrs)
       if (len(getURI(attrs, i))>0) then
-        temp => createAttributeNS(mainDoc, getURI(attrs, i), getQName(attrs, i))
+        attr => createAttributeNS(mainDoc, getURI(attrs, i), getQName(attrs, i))
       else
-        temp => createAttribute(mainDoc, getQName(attrs, i))
+        attr => createAttribute(mainDoc, getQName(attrs, i))
       endif
-      call setValue(temp, getValue(attrs, i))
-      call setSpecified(temp, .true.)
+      call setValue(attr, getValue(attrs, i))
+      call setSpecified(attr, .true.)
       if (len(getURI(attrs, i))>0) then
-        temp =>  setAttributeNodeNS(el, temp)
+        dummy =>  setAttributeNodeNS(el, attr)
       else
-        temp => setAttributeNode(el, temp)
+        dummy => setAttributeNode(el, attr)
       endif
       ! FIXME check specifiedness
-      if (associated(inEntity)) call setReadOnlyNode(temp, .true., .true.)
+      if (associated(inEntity)) call setReadOnlyNode(attr, .true., .true.)
       ! FIXME recursive readonly
     enddo
 
