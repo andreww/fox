@@ -329,35 +329,52 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif
 
-    if (map%readonly) then
+   if (map%readonly) then
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
-    elseif (.not.associated(map%ownerElement%ownerDocument, arg%ownerDocument)) then
-      TOHW_m_dom_throw_error(WRONG_DOCUMENT_ERR)
+    elseif (map%ownerElement%nodeType==ELEMENT_NODE) then
+      if (.not.associated(map%ownerElement%ownerDocument, arg%ownerDocument)) then
+        TOHW_m_dom_throw_error(WRONG_DOCUMENT_ERR)
+      elseif (getNodeType(arg)/=ATTRIBUTE_NODE) then
+        !Additional check from DOM 3
+        TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR)
+      endif
+    endif
+    ! Note that the user can never add to the Entities/Notations
+    ! namedNodeMaps, so we do not have any checks for that.
+
+    if (associated(map%ownerElement, arg%ownerElement)) then
+      np => arg
+      return
+      ! Nothing to do, this attribute is already in this element
     elseif (associated(arg%ownerElement)) then
       TOHW_m_dom_throw_error(INUSE_ATTRIBUTE_ERR)    
     endif
 
+    np => null()
     do i = 1, map%length
       if (str_vs(map%nodes(i)%this%namespaceURI)==str_vs(arg%namespaceURI) &
         .and. str_vs(map%nodes(i)%this%localName)==str_vs(arg%localName)) then
         np => map%nodes(i)%this
         map%nodes(i)%this => arg
-        return
+        arg%ownerElement => map%ownerElement
+        exit
       endif
     enddo
-    !   If not found, insert it at the end of the linked list
-    np => null()
-    call append_nnm(map, arg)
 
-    if (getGCstate(getOwnerDocument(map%ownerElement))) then
-      ! We need to worry about importing this node
-      if (map%ownerElement%inDocument) then
-        if (.not.arg%inDocument) &
-          call putNodesInDocument(getOwnerDocument(map%ownerElement), arg)
-      else
-        if (arg%inDocument) &
-          call removeNodesFromDocument(getOwnerDocument(map%ownerElement), arg)
+    !   If not found, insert it at the end of the linked list
+    if (.not.associated(np)) call append_nnm(map, arg)
+
+    if (map%ownerElement%nodeType==ELEMENT_NODE) then
+      if (getGCstate(getOwnerDocument(map%ownerElement))) then
+        ! We need to worry about importing this node
+        if (map%ownerElement%inDocument) then
+          if (.not.arg%inDocument) &
+            call putNodesInDocument(getOwnerDocument(map%ownerElement), arg)
+        else
+          if (arg%inDocument) &
+            call removeNodesFromDocument(getOwnerDocument(map%ownerElement), arg)
         endif
+      endif
     endif
 
   end function setNamedItemNS

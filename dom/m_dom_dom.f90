@@ -3872,7 +3872,7 @@ endif
 
     endif
 
-    if (map%readonly) then
+   if (map%readonly) then
       call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setNamedItemNS", ex)
 if (present(ex)) then
   if (inException(ex)) then
@@ -3880,14 +3880,33 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.associated(map%ownerElement%ownerDocument, arg%ownerDocument)) then
-      call throw_exception(WRONG_DOCUMENT_ERR, "setNamedItemNS", ex)
+    elseif (map%ownerElement%nodeType==ELEMENT_NODE) then
+      if (.not.associated(map%ownerElement%ownerDocument, arg%ownerDocument)) then
+        call throw_exception(WRONG_DOCUMENT_ERR, "setNamedItemNS", ex)
 if (present(ex)) then
   if (inException(ex)) then
      return
   endif
 endif
 
+      elseif (getNodeType(arg)/=ATTRIBUTE_NODE) then
+        !Additional check from DOM 3
+        call throw_exception(HIERARCHY_REQUEST_ERR, "setNamedItemNS", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
+      endif
+    endif
+    ! Note that the user can never add to the Entities/Notations
+    ! namedNodeMaps, so we do not have any checks for that.
+
+    if (associated(map%ownerElement, arg%ownerElement)) then
+      np => arg
+      return
+      ! Nothing to do, this attribute is already in this element
     elseif (associated(arg%ownerElement)) then
       call throw_exception(INUSE_ATTRIBUTE_ERR, "setNamedItemNS", ex)
 if (present(ex)) then
@@ -3898,27 +3917,31 @@ endif
     
     endif
 
+    np => null()
     do i = 1, map%length
       if (str_vs(map%nodes(i)%this%namespaceURI)==str_vs(arg%namespaceURI) &
         .and. str_vs(map%nodes(i)%this%localName)==str_vs(arg%localName)) then
         np => map%nodes(i)%this
         map%nodes(i)%this => arg
-        return
+        arg%ownerElement => map%ownerElement
+        exit
       endif
     enddo
-    !   If not found, insert it at the end of the linked list
-    np => null()
-    call append_nnm(map, arg)
 
-    if (getGCstate(getOwnerDocument(map%ownerElement))) then
-      ! We need to worry about importing this node
-      if (map%ownerElement%inDocument) then
-        if (.not.arg%inDocument) &
-          call putNodesInDocument(getOwnerDocument(map%ownerElement), arg)
-      else
-        if (arg%inDocument) &
-          call removeNodesFromDocument(getOwnerDocument(map%ownerElement), arg)
+    !   If not found, insert it at the end of the linked list
+    if (.not.associated(np)) call append_nnm(map, arg)
+
+    if (map%ownerElement%nodeType==ELEMENT_NODE) then
+      if (getGCstate(getOwnerDocument(map%ownerElement))) then
+        ! We need to worry about importing this node
+        if (map%ownerElement%inDocument) then
+          if (.not.arg%inDocument) &
+            call putNodesInDocument(getOwnerDocument(map%ownerElement), arg)
+        else
+          if (arg%inDocument) &
+            call removeNodesFromDocument(getOwnerDocument(map%ownerElement), arg)
         endif
+      endif
     endif
 
   end function setNamedItemNS
@@ -4833,7 +4856,7 @@ endif
 
 
       if (getNodeType(this)==TEXT_NODE) then
-        n = n + len(getData(this))
+        n = n + 13
       elseif (getNodeType(this)/=ENTITY_REFERENCE_NODE) then
         n = 0
         exit
@@ -4908,8 +4931,8 @@ endif
 
 
         if (getNodeType(this)==TEXT_NODE) then
-          arg%nodeValue(n+1:n+len(getData(this))) = getData(this)
-          n = n + len(getData(this))
+          arg%nodeValue(n+1:n+13) = getData(this)
+          n = n + 13
         endif
 
 

@@ -26,7 +26,7 @@ module m_dom_parse
   use m_dom_dom, only: createEntityReference, destroyAllNodesRecursively, setIllFormed
   use m_dom_dom, only: createElement, createAttribute, getNamedItem, getTagName
   use m_dom_dom, only: setReadonlyNode, setReadOnlyMap, createEmptyEntityReference, &
-    setEntityReferenceValue
+    setEntityReferenceValue, setAttributeNode
   use m_dom_debug, only: dom_debug
 
   implicit none
@@ -67,7 +67,11 @@ contains
       endif
       call setValue(temp, getValue(attrs, i))
       call setSpecified(temp, .true.)
-      temp =>  setAttributeNodeNS(el, temp)
+      if (len(getURI(attrs, i))>0) then
+        temp =>  setAttributeNodeNS(el, temp)
+      else
+        temp => setAttributeNode(el, temp)
+      endif
       ! FIXME check specifiedness
       if (associated(inEntity)) call setReadOnlyNode(temp, .true., .true.)
       ! FIXME recursive readonly
