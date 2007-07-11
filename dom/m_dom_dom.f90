@@ -46,7 +46,7 @@ module m_dom_dom
   use m_common_charset, only: XML1_0, XML1_1
   use m_common_namecheck, only: checkQName, prefixOfQName, localPartOfQName
   use m_dom_error, only : NOT_FOUND_ERR, INVALID_CHARACTER_ERR, FoX_INVALID_NODE, &
-    WRONG_DOCUMENT_ERR, FoX_INVALID_TEXT, & 
+    WRONG_DOCUMENT_ERR, & 
     FoX_INVALID_CHARACTER, FoX_INVALID_COMMENT, FoX_INVALID_CDATA_SECTION, &
     FoX_INVALID_PI_DATA, NOT_SUPPORTED_ERR, FoX_INVALID_ENTITY, FoX_NO_DOCTYPE
 
@@ -875,6 +875,16 @@ endif
 
     endif
 
+    if (.not.checkChars(nodeValue, getXmlVersionEnum(getOwnerDocument(arg)))) then
+      call throw_exception(FoX_INVALID_CHARACTER, "setNodeValue", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
+    endif
+
     select case(arg%nodeType)
     case (ATTRIBUTE_NODE)
       if (arg%readonly) then
@@ -914,7 +924,15 @@ if (present(ex)) then
 endif
 
       endif
-      ! FIXME check does string contain wrong characters
+      if (index(str_vs(arg%nodeValue),"]]>")>0) then
+        call throw_exception(FoX_INVALID_CDATA_SECTION, "setNodeValue", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
+      endif
       deallocate(arg%nodeValue)
       arg%nodeValue => vs_str_alloc(nodeValue)
     case (COMMENT_NODE)
@@ -927,7 +945,15 @@ if (present(ex)) then
 endif
 
       endif
-      ! FIXME check does string contain wrong characters
+      if (index(str_vs(arg%nodeValue),"--")>0) then
+        call throw_exception(FoX_INVALID_COMMENT, "setNodeValue", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
+      endif
       deallocate(arg%nodeValue)
       arg%nodeValue => vs_str_alloc(nodeValue)
     case (PROCESSING_INSTRUCTION_NODE)
@@ -940,7 +966,15 @@ if (present(ex)) then
 endif
 
       endif
-      ! FIXME check does string contain wrong characters
+      if (index(str_vs(arg%nodeValue),"?>")>0) then
+        call throw_exception(FoX_INVALID_PI_DATA, "setNodeValue", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
+      endif
       deallocate(arg%nodeValue)
       arg%nodeValue => vs_str_alloc(nodeValue)
     case (TEXT_NODE)
@@ -953,7 +987,6 @@ if (present(ex)) then
 endif
 
       endif
-      ! FIXME check does string contain wrong characters
       deallocate(arg%nodeValue)
       arg%nodeValue => vs_str_alloc(nodeValue)
     end select

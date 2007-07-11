@@ -35,7 +35,7 @@ module m_dom_error
 !  integer, parameter, public :: FoX_INVALID_PI_TARGET       = 203
   integer, parameter, public :: FoX_INVALID_PI_DATA         = 204
   integer, parameter, public :: FoX_INVALID_CDATA_SECTION   = 205
-  integer, parameter, public :: FoX_INVALID_TEXT            = 206
+!  integer, parameter, public :: FoX_INVALID_TEXT            = 206
   integer, parameter, public :: FoX_INVALID_PUBLIC_ID       = 207
   integer, parameter, public :: FoX_INVALID_SYSTEM_ID       = 208
   integer, parameter, public :: FoX_INVALID_COMMENT         = 209
