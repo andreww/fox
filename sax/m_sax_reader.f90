@@ -137,6 +137,7 @@ contains
       endif
       fb%lun = -1
       fb%input_string => vs_str_alloc(string)
+      allocate(fb%filename(0))
       fb%input_pos = 1
     else
       if (present(lun)) then
@@ -154,6 +155,7 @@ contains
         if (fb%debug) write(*,'(a)') "Cannot open file "//file//" iostat: "//str(iostat)
         return
       endif
+      fb%filename => vs_str_alloc(file)
       allocate(fb%input_string(0))
     endif
 
@@ -168,7 +170,6 @@ contains
     fb%eof = .false.
     fb%line = 1
     fb%col = 0
-    fb%filename => vs_str_alloc(file)
     fb%pos = 1
     fb%nchars = 0
     allocate(fb%buffer_stack(0))
