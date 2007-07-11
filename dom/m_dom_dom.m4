@@ -36,7 +36,7 @@ dnl
   use m_common_namecheck, only: checkQName, prefixOfQName, localPartOfQName, &
     checkName, checkPublicId, checkSystemId
   use m_common_string, only: toLower
-  use m_common_struct, only: xml_doc_state, destroy_xml_doc_state
+  use m_common_struct, only: xml_doc_state, init_xml_doc_state, destroy_xml_doc_state
 
   use m_dom_error, only: DOMException, throw_exception, inException, getExceptionCode, &
     NO_MODIFICATION_ALLOWED_ERR, NOT_FOUND_ERR, HIERARCHY_REQUEST_ERR, &
