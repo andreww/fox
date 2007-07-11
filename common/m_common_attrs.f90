@@ -26,7 +26,7 @@ module m_common_attrs
 
   type dictionary_t
     private
-    integer                                :: number_of_items ! = 0
+    integer                                :: number_of_items = 0
     type(dict_item), dimension(:), pointer :: items => null()
   end type dictionary_t
 
@@ -587,8 +587,6 @@ contains
     
     integer :: i
 
-    print*, ' doing init_dict'
-
     allocate(dict%items(DICT_INIT_LEN))
     do i = 1, DICT_INIT_LEN
        nullify(dict%items(i)%key)
@@ -598,7 +596,7 @@ contains
        nullify(dict%items(i)%localName)
     enddo
     
-    dict % number_of_items = 0
+    dict%number_of_items = 0
     
   end subroutine init_dict
 
@@ -633,7 +631,6 @@ contains
   subroutine destroy_dict(dict)
     type(dictionary_t), intent(inout) :: dict
     integer :: i
-    print*, ' doing destroy_dict'
 
     do i = 1, dict%number_of_items
       deallocate(dict%items(i)%key)
