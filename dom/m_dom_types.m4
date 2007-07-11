@@ -16,6 +16,7 @@ TOHW_m_dom_publics(`
   type DOMImplementation
     private
     character(len=7) :: id = "FoX_DOM"
+    logical :: FoX_checks = .true. ! Do extra checks not mandated by DOM
   end type DOMImplementation
 
   type ListNode
@@ -172,7 +173,6 @@ TOHW_m_dom_contents(`
   TOHW_subroutine(destroyNode, (np))
     type(Node), pointer :: np
 
-    print*,"destroyNode", np%nodeType, str_vs(np%nodeName)
     if (.not.associated(np)) return
 
     select case(np%nodeType)

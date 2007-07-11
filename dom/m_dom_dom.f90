@@ -45,6 +45,7 @@ module m_dom_dom
   type DOMImplementation
     private
     character(len=7) :: id = "FoX_DOM"
+    logical :: FoX_checks = .true. ! Do extra checks not mandated by DOM
   end type DOMImplementation
 
   type ListNode
@@ -397,7 +398,6 @@ contains
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: np
 
-    print*,"destroyNode", np%nodeType, str_vs(np%nodeName)
     if (.not.associated(np)) return
 
     select case(np%nodeType)
@@ -4206,7 +4206,6 @@ endif
     deallocate(arg%docExtras%nodelists)
 
     ! Destroy all remaining hanging nodes
-    print*,"DESTROYING HANGING NODES"
     do i = 1, arg%docExtras%hangingNodes%length
       call destroy(arg%docExtras%hangingNodes%nodes(i)%this)
     enddo
@@ -4216,7 +4215,6 @@ endif
     deallocate(arg%docExtras%xds)
 
     deallocate(arg%docExtras)
-    print*,"DESTROYING DOCUMENT NODES"
     call destroyAllNodesRecursively(arg)
     call destroyNodeContents(arg)
     deallocate(arg)
@@ -5316,8 +5314,6 @@ endif
           new => createNotation(doc, getName(this), getPublicId(this), getSystemId(this))
         end select
  
-        if (associated(thatParent).and.associated(new)) print*, getNodeType(thatParent), getNodeType(new)
-
         if (.not.associated(thatParent)) then
           thatParent => new
         elseif (associated(new)) then

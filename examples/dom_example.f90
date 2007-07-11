@@ -9,10 +9,15 @@ program dom_example
   type(NodeList) :: interest
   integer :: i
 
-  myDoc => parsefile(filename='test.xml', configuration="entities")
-  call dumpTree(myDoc)
-  call serialize(myDoc, 'myDoc.xml')
+  myDoc => parsestring('<a/>')
 
+  !np => createEntityReference(myDoc, "ent1")
+  
+!  print*,getValue(getFirstChild(getDocumentElement(myDoc)))
+
+!  call dumpTree(myDoc)
+  call serialize(myDoc, 'myDoc.xml')
+  stop
   myOtherDoc => parsefile('test.xml')
   np => createElement(myDoc, 'a')
 
@@ -68,7 +73,7 @@ program dom_example
   call normalize(np2)
 
   call serialize(myDoc, "out321.xml")
-  call dumpTree(myDoc)
+!  call dumpTree(myDoc)
 !  call dumpTree(myDoc)
 
   interest = getElementsByTagName(myDoc, 'a')

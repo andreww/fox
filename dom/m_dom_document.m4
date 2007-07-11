@@ -585,8 +585,6 @@ TOHW_m_dom_treewalk(`dnl
           new => createNotation(doc, getName(this), getPublicId(this), getSystemId(this))
         end select
  
-        if (associated(thatParent).and.associated(new)) print*, getNodeType(thatParent), getNodeType(new)
-
         if (.not.associated(thatParent)) then
           thatParent => new
         elseif (associated(new)) then

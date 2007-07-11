@@ -16,7 +16,8 @@ module m_dom_utils
     getAttributes, getParentNode, &
     getNodeName, getData, getName, getTagName, getValue, getTarget, &
     getEntities, getNotations, item, getSystemId, getPublicId, getNotationName, getStringValue
-  use m_dom_error, only: DOMException, inException, FoX_INVALID_NODE, throw_exception
+  use m_dom_error, only: DOMException, inException, throw_exception, &
+    FoX_INVALID_NODE, SERIALIZE_ERR
 
   use FoX_wxml, only: xmlf_t
   use FoX_wxml, only: xml_OpenFile, xml_Close
@@ -95,9 +96,13 @@ endif
     !FIXME several of the below should be optional to serialize
     call xml_OpenFile(name, xf, iostat=iostat, unit=-1, preserve_whitespace=.true., warning=.false.)
     if (iostat/=0) then
-      print*,"IOSTAT", iostat
-      stop
-      continue
+      call throw_exception(SERIALIZE_ERR, "serialize", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
     endif
     call iter_dmp_xml(xf, startNode)
     call xml_Close(xf)
