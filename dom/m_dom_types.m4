@@ -65,6 +65,10 @@ TOHW_m_dom_publics(`
     logical :: liveNodeLists ! For the document, are nodelists live?
     type(NodeList) :: hangingNodes ! For the document. list of nodes not associated with doc
     type(xml_doc_state), pointer :: xds => null()
+    type(namedNodeMap) :: entities ! actually for doctype
+    type(namedNodeMap) :: notations ! actually for doctype
+    logical :: strictErrorChecking = .false.
+    character, pointer :: documentURI(:) => null()
   end type documentExtras
 
   type ElementOrAttributeExtras
@@ -79,8 +83,6 @@ TOHW_m_dom_publics(`
   end type ElementOrAttributeExtras
 
   type DTDExtras
-    type(namedNodeMap) :: entities ! only for doctype
-    type(namedNodeMap) :: notations ! only for doctype
     character, pointer :: publicId(:) => null() ! doctype, entity, notation 
     character, pointer :: systemId(:) => null() ! doctype, entity, notation
     character, pointer :: internalSubset(:) => null() ! doctype
@@ -89,7 +91,7 @@ TOHW_m_dom_publics(`
 
   type Node
     private
-    logical :: readonly = .false. ! FIXME must check this everywhere
+    logical :: readonly = .false.
     character, pointer, dimension(:)         :: nodeName => null()
     character, pointer, dimension(:)         :: nodeValue => null()
     integer             :: nodeType        = 0
@@ -109,9 +111,6 @@ TOHW_m_dom_publics(`
     logical :: specified = .true. ! only for attribute
     ! Introduced in DOM Level 2
     type(Node), pointer :: ownerElement => null() ! only for attribute
-    type(namedNodeMap) :: entities ! only for doctype
-    type(namedNodeMap) :: notations ! only for doctype
-    ! FIXME The two above should be held in xds below
     character, pointer :: publicId(:) => null() ! doctype, entity, notation 
     character, pointer :: systemId(:) => null() ! doctype, entity, notation
     character, pointer :: internalSubset(:) => null() ! doctype
@@ -119,22 +118,12 @@ TOHW_m_dom_publics(`
     ! Introduced in DOM Level 3
     character, pointer :: inputEncoding(:) => null() ! document/doctype?
     character, pointer :: xmlEncoding(:) => null()   ! document/doctype?
-    ! logical :: xmlStandalone = .false.
-    ! character, pointer :: xmlVersion(:) => null() 
-    ! The two above are held in xds below
     logical :: strictErrorChecking = .false. ! document/doctype
     character, pointer :: documentURI(:) => null() ! document/doctype
     ! DOMCONFIGURATION
-
-    !TYPEINFO schemaTypeInfo
     logical :: isId = .false. ! attribute
-    ! In order to keep all node lists live ..
-
     logical :: illFormed = .false. ! entity
-
     logical :: inDocument = .false.! For a node, is this node associated to the doc?
-!!
-!!
     type(documentExtras), pointer :: docExtras
   end type Node
 
@@ -188,7 +177,7 @@ TOHW_m_dom_contents(`
 
   end function createNode
 
-  subroutine destroyNode(np)
+  TOHW_subroutine(destroyNode, (np))
     type(Node), pointer :: np
 
     print*,"destroyNode", np%nodeType, str_vs(np%nodeName)
@@ -197,22 +186,8 @@ TOHW_m_dom_contents(`
     select case(np%nodeType)
     case (ELEMENT_NODE)
       call destroyElement(np)
-    case (ATTRIBUTE_NODE)
-      call destroyAttribute(np)
-    case (ENTITY_REFERENCE_NODE)
-      ! In principle a DOM might have children here. We dont. ! FIXME we do
-      call destroyNodeContents(np)
-      deallocate(np)
-    case (ENTITY_NODE)
-      ! ?? FIXME
-      call destroyNodeContents(np)
-      deallocate(np)
     case (DOCUMENT_NODE)
-      ! well, I dont think this should ever be called, but if it is
-      ! then go to destroy_document
-      !call destroyDocument(np)
-    case (DOCUMENT_TYPE_NODE)
-      call destroyDocumentType(np)
+      TOHW_m_dom_throw_error(FoX_INTERNAL_ERROR)
     case default
       call destroyNodeContents(np)
       deallocate(np)
@@ -220,46 +195,13 @@ TOHW_m_dom_contents(`
 
   end subroutine destroyNode
 
-  subroutine destroyDocumentType(dt)
-    type(Node), pointer :: dt
-
-    integer :: i
-
-    if (dt%nodeType/=DOCUMENT_TYPE_NODE) then
-       ! FIXME internal error
-    endif
-
-    print*,"DESTROYDT"
-    ! Entities need to be destroyed recursively - if they are done properly ...
-
-    if (associated(dt%entities%nodes)) then
-      do i = 1, size(dt%entities%nodes)
-        call destroyAllNodesRecursively(dt%entities%nodes(i)%this)
-        call destroy(dt%entities%nodes(i)%this)
-      enddo
-      deallocate(dt%entities%nodes)
-    endif
-    if (associated(dt%notations%nodes)) then
-      do i = 1, size(dt%notations%nodes)
-        call destroy(dt%notations%nodes(i)%this)
-      enddo
-      deallocate(dt%notations%nodes)
-    endif
-
-    call destroyNodeContents(dt)
-    deallocate(dt)
-
-    print*,"DONEDESTROYDT"
-
-  end subroutine destroyDocumentType
-
-  subroutine destroyElement(element)
+  TOHW_subroutine(destroyElement, (element))
     type(Node), pointer :: element
 
     integer :: i
 
     if (element%nodeType /= ELEMENT_NODE) then
-      ! FIXME internal error
+       TOHW_m_dom_throw_error(FoX_INTERNAL_ERROR)
     endif
 
     if (associated(element%attributes%nodes)) deallocate(element%attributes%nodes)
@@ -267,34 +209,6 @@ TOHW_m_dom_contents(`
     deallocate(element)
 
   end subroutine destroyElement
-
-  TOHW_subroutine(destroyAttribute, (attr))
-    type(Node), pointer :: attr
-
-    type(Node), pointer :: np, np_next
-
-    if (attr%nodeType/=ATTRIBUTE_NODE) then
-      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    endif
-
-    call destroyNodeContents(attr)
-    deallocate(attr)
-
-  end subroutine destroyAttribute
-
-  TOHW_subroutine(destroyDocumentFragment, (df))
-    type(Node), pointer :: df
-
-    if (df%nodeType/=DOCUMENT_FRAGMENT_NODE) then
-      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    endif
-
-    call destroyAllNodesRecursively(df)
-
-    call destroyNodeContents(df)
-    deallocate(df)
-
-  end subroutine destroyDocumentFragment
 
   subroutine destroyAllNodesRecursively(arg)
     type(Node), pointer :: arg

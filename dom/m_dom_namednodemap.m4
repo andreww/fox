@@ -117,13 +117,17 @@ TOHW_m_dom_contents(`
 
     if (map%readonly) then
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
-    elseif (.not.associated(map%ownerElement%ownerDocument, arg%ownerDocument)) then
-      TOHW_m_dom_throw_error(WRONG_DOCUMENT_ERR)
-    elseif (getNodeType(map%ownerElement)==ELEMENT_NODE &
-      .and.getNodeType(arg)/=ATTRIBUTE_NODE) then
-      !Additional check from DOM 3
-      TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR)
+    elseif (map%ownerElement%nodeType==ELEMENT_NODE) then
+      if (.not.associated(map%ownerElement%ownerDocument, arg%ownerDocument)) then
+        TOHW_m_dom_throw_error(WRONG_DOCUMENT_ERR)
+      elseif (getNodeType(arg)/=ATTRIBUTE_NODE) then
+        !Additional check from DOM 3
+        TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR)
+      endif
     endif
+    ! Note that the user can never add to the Entities/Notations
+    ! namedNodeMaps, so we do not have any checks for that.
+
     if (associated(map%ownerElement, arg%ownerElement)) then
       np => arg
       return
@@ -145,18 +149,22 @@ TOHW_m_dom_contents(`
     !   If not found, insert it at the end of the linked list
     if (.not.associated(np)) call append_nnm(map, arg)
 
-    if (getGCstate(getOwnerDocument(map%ownerElement))) then
-      ! We need to worry about importing this node
-      if (map%ownerElement%inDocument) then
-        if (.not.arg%inDocument) &
-          call putNodesInDocument(getOwnerDocument(map%ownerElement), arg)
-        if (associated(np)) &
-          call removeNodesFromDocument(getOwnerDocument(map%ownerElement), np)
-      else
-        if (arg%inDocument) &
-          call removeNodesFromDocument(getOwnerDocument(map%ownerElement), arg)
-        endif
+    if (map%ownerElement%nodeType==ELEMENT_NODE) then
+      if (getGCstate(getOwnerDocument(map%ownerElement))) then
+        ! We need to worry about importing this node
+        if (map%ownerElement%inDocument) then
+          if (.not.arg%inDocument) &
+            call putNodesInDocument(getOwnerDocument(map%ownerElement), arg)
+          if (associated(np)) &
+            call removeNodesFromDocument(getOwnerDocument(map%ownerElement), np)
+        else
+          if (arg%inDocument) &
+            call removeNodesFromDocument(getOwnerDocument(map%ownerElement), arg)
+          endif
+      endif
     endif
+    ! Otherwise we only ever setNNM when building the doc, so we know this
+    ! does not matter
 
   end function setNamedItem
 

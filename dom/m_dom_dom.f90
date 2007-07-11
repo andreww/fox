@@ -147,6 +147,10 @@ module m_dom_dom
     logical :: liveNodeLists ! For the document, are nodelists live?
     type(NodeList) :: hangingNodes ! For the document. list of nodes not associated with doc
     type(xml_doc_state), pointer :: xds => null()
+    type(namedNodeMap) :: entities ! actually for doctype
+    type(namedNodeMap) :: notations ! actually for doctype
+    logical :: strictErrorChecking = .false.
+    character, pointer :: documentURI(:) => null()
   end type documentExtras
 
   type ElementOrAttributeExtras
@@ -161,8 +165,6 @@ module m_dom_dom
   end type ElementOrAttributeExtras
 
   type DTDExtras
-    type(namedNodeMap) :: entities ! only for doctype
-    type(namedNodeMap) :: notations ! only for doctype
     character, pointer :: publicId(:) => null() ! doctype, entity, notation 
     character, pointer :: systemId(:) => null() ! doctype, entity, notation
     character, pointer :: internalSubset(:) => null() ! doctype
@@ -171,7 +173,7 @@ module m_dom_dom
 
   type Node
     private
-    logical :: readonly = .false. ! FIXME must check this everywhere
+    logical :: readonly = .false.
     character, pointer, dimension(:)         :: nodeName => null()
     character, pointer, dimension(:)         :: nodeValue => null()
     integer             :: nodeType        = 0
@@ -191,9 +193,6 @@ module m_dom_dom
     logical :: specified = .true. ! only for attribute
     ! Introduced in DOM Level 2
     type(Node), pointer :: ownerElement => null() ! only for attribute
-    type(namedNodeMap) :: entities ! only for doctype
-    type(namedNodeMap) :: notations ! only for doctype
-    ! FIXME The two above should be held in xds below
     character, pointer :: publicId(:) => null() ! doctype, entity, notation 
     character, pointer :: systemId(:) => null() ! doctype, entity, notation
     character, pointer :: internalSubset(:) => null() ! doctype
@@ -201,22 +200,12 @@ module m_dom_dom
     ! Introduced in DOM Level 3
     character, pointer :: inputEncoding(:) => null() ! document/doctype?
     character, pointer :: xmlEncoding(:) => null()   ! document/doctype?
-    ! logical :: xmlStandalone = .false.
-    ! character, pointer :: xmlVersion(:) => null() 
-    ! The two above are held in xds below
     logical :: strictErrorChecking = .false. ! document/doctype
     character, pointer :: documentURI(:) => null() ! document/doctype
     ! DOMCONFIGURATION
-
-    !TYPEINFO schemaTypeInfo
     logical :: isId = .false. ! attribute
-    ! In order to keep all node lists live ..
-
     logical :: illFormed = .false. ! entity
-
     logical :: inDocument = .false.! For a node, is this node associated to the doc?
-!!
-!!
     type(documentExtras), pointer :: docExtras
   end type Node
 
@@ -465,7 +454,8 @@ contains
 
   end function createNode
 
-  subroutine destroyNode(np)
+  subroutine destroyNode(np, ex)
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: np
 
     print*,"destroyNode", np%nodeType, str_vs(np%nodeName)
@@ -474,22 +464,14 @@ contains
     select case(np%nodeType)
     case (ELEMENT_NODE)
       call destroyElement(np)
-    case (ATTRIBUTE_NODE)
-      call destroyAttribute(np)
-    case (ENTITY_REFERENCE_NODE)
-      ! In principle a DOM might have children here. We dont. ! FIXME we do
-      call destroyNodeContents(np)
-      deallocate(np)
-    case (ENTITY_NODE)
-      ! ?? FIXME
-      call destroyNodeContents(np)
-      deallocate(np)
     case (DOCUMENT_NODE)
-      ! well, I dont think this should ever be called, but if it is
-      ! then go to destroy_document
-      !call destroyDocument(np)
-    case (DOCUMENT_TYPE_NODE)
-      call destroyDocumentType(np)
+      call throw_exception(FoX_INTERNAL_ERROR, "destroyNode", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
     case default
       call destroyNodeContents(np)
       deallocate(np)
@@ -497,46 +479,20 @@ contains
 
   end subroutine destroyNode
 
-  subroutine destroyDocumentType(dt)
-    type(Node), pointer :: dt
-
-    integer :: i
-
-    if (dt%nodeType/=DOCUMENT_TYPE_NODE) then
-       ! FIXME internal error
-    endif
-
-    print*,"DESTROYDT"
-    ! Entities need to be destroyed recursively - if they are done properly ...
-
-    if (associated(dt%entities%nodes)) then
-      do i = 1, size(dt%entities%nodes)
-        call destroyAllNodesRecursively(dt%entities%nodes(i)%this)
-        call destroy(dt%entities%nodes(i)%this)
-      enddo
-      deallocate(dt%entities%nodes)
-    endif
-    if (associated(dt%notations%nodes)) then
-      do i = 1, size(dt%notations%nodes)
-        call destroy(dt%notations%nodes(i)%this)
-      enddo
-      deallocate(dt%notations%nodes)
-    endif
-
-    call destroyNodeContents(dt)
-    deallocate(dt)
-
-    print*,"DONEDESTROYDT"
-
-  end subroutine destroyDocumentType
-
-  subroutine destroyElement(element)
+  subroutine destroyElement(element, ex)
+    type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: element
 
     integer :: i
 
     if (element%nodeType /= ELEMENT_NODE) then
-      ! FIXME internal error
+       call throw_exception(FoX_INTERNAL_ERROR, "destroyElement", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
     endif
 
     if (associated(element%attributes%nodes)) deallocate(element%attributes%nodes)
@@ -544,48 +500,6 @@ contains
     deallocate(element)
 
   end subroutine destroyElement
-
-  subroutine destroyAttribute(attr, ex)
-    type(DOMException), intent(out), optional :: ex
-    type(Node), pointer :: attr
-
-    type(Node), pointer :: np, np_next
-
-    if (attr%nodeType/=ATTRIBUTE_NODE) then
-      call throw_exception(FoX_INVALID_NODE, "destroyAttribute", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
-  endif
-endif
-
-    endif
-
-    call destroyNodeContents(attr)
-    deallocate(attr)
-
-  end subroutine destroyAttribute
-
-  subroutine destroyDocumentFragment(df, ex)
-    type(DOMException), intent(out), optional :: ex
-    type(Node), pointer :: df
-
-    if (df%nodeType/=DOCUMENT_FRAGMENT_NODE) then
-      call throw_exception(FoX_INVALID_NODE, "destroyDocumentFragment", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
-  endif
-endif
-
-    endif
-
-    call destroyAllNodesRecursively(df)
-
-    call destroyNodeContents(df)
-    deallocate(df)
-
-  end subroutine destroyDocumentFragment
 
   subroutine destroyAllNodesRecursively(arg)
     type(Node), pointer :: arg
@@ -3671,25 +3585,29 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.associated(map%ownerElement%ownerDocument, arg%ownerDocument)) then
-      call throw_exception(WRONG_DOCUMENT_ERR, "setNamedItem", ex)
+    elseif (map%ownerElement%nodeType==ELEMENT_NODE) then
+      if (.not.associated(map%ownerElement%ownerDocument, arg%ownerDocument)) then
+        call throw_exception(WRONG_DOCUMENT_ERR, "setNamedItem", ex)
 if (present(ex)) then
   if (inException(ex)) then
      return
   endif
 endif
 
-    elseif (getNodeType(map%ownerElement)==ELEMENT_NODE &
-      .and.getNodeType(arg)/=ATTRIBUTE_NODE) then
-      !Additional check from DOM 3
-      call throw_exception(HIERARCHY_REQUEST_ERR, "setNamedItem", ex)
+      elseif (getNodeType(arg)/=ATTRIBUTE_NODE) then
+        !Additional check from DOM 3
+        call throw_exception(HIERARCHY_REQUEST_ERR, "setNamedItem", ex)
 if (present(ex)) then
   if (inException(ex)) then
      return
   endif
 endif
 
+      endif
     endif
+    ! Note that the user can never add to the Entities/Notations
+    ! namedNodeMaps, so we do not have any checks for that.
+
     if (associated(map%ownerElement, arg%ownerElement)) then
       np => arg
       return
@@ -3717,18 +3635,22 @@ endif
     !   If not found, insert it at the end of the linked list
     if (.not.associated(np)) call append_nnm(map, arg)
 
-    if (getGCstate(getOwnerDocument(map%ownerElement))) then
-      ! We need to worry about importing this node
-      if (map%ownerElement%inDocument) then
-        if (.not.arg%inDocument) &
-          call putNodesInDocument(getOwnerDocument(map%ownerElement), arg)
-        if (associated(np)) &
-          call removeNodesFromDocument(getOwnerDocument(map%ownerElement), np)
-      else
-        if (arg%inDocument) &
-          call removeNodesFromDocument(getOwnerDocument(map%ownerElement), arg)
-        endif
+    if (map%ownerElement%nodeType==ELEMENT_NODE) then
+      if (getGCstate(getOwnerDocument(map%ownerElement))) then
+        ! We need to worry about importing this node
+        if (map%ownerElement%inDocument) then
+          if (.not.arg%inDocument) &
+            call putNodesInDocument(getOwnerDocument(map%ownerElement), arg)
+          if (associated(np)) &
+            call removeNodesFromDocument(getOwnerDocument(map%ownerElement), np)
+        else
+          if (arg%inDocument) &
+            call removeNodesFromDocument(getOwnerDocument(map%ownerElement), arg)
+          endif
+      endif
     endif
+    ! Otherwise we only ever setNNM when building the doc, so we know this
+    ! does not matter
 
   end function setNamedItem
 
@@ -4201,8 +4123,6 @@ endif
     allocate(dt%internalSubset(0)) ! FIXME This is valid behaviour, but we should
                                    ! really be able to get the intSubset from SAX
     dt%ownerDocument => null()
-    dt%entities%ownerElement => dt
-    dt%notations%ownerElement => dt
 
   end function createDocumentType
 
@@ -4234,6 +4154,9 @@ endif
     allocate(doc%docExtras%xds)
     call init_xml_doc_state(doc%docExtras%xds)
 
+    doc%docExtras%entities%ownerElement => doc
+    doc%docExtras%notations%ownerElement => doc
+
     if (associated(docType)) then
       dt => docType
       dt%ownerDocument => doc
@@ -4256,6 +4179,9 @@ endif
     allocate(doc%docExtras%nodelists(0))
     allocate(doc%docExtras%xds)
     call init_xml_doc_state(doc%docExtras%xds)
+
+    doc%docExtras%entities%ownerElement => doc
+    doc%docExtras%notations%ownerElement => doc
 
     ! FIXME do something with namespaceURI etc 
 
@@ -4303,7 +4229,23 @@ endif
 
     endif
 
-    ! Destroy all remaining nodelists
+! Destroy all entities & notations:
+
+    if (associated(arg%docExtras%entities%nodes)) then
+      do i = 1, size(arg%docExtras%entities%nodes)
+        call destroyAllNodesRecursively(arg%docExtras%entities%nodes(i)%this)
+        call destroy(arg%docExtras%entities%nodes(i)%this)
+      enddo
+      deallocate(arg%docExtras%entities%nodes)
+    endif
+    if (associated(arg%docExtras%notations%nodes)) then
+      do i = 1, size(arg%docExtras%notations%nodes)
+        call destroy(arg%docExtras%notations%nodes(i)%this)
+      enddo
+      deallocate(arg%docExtras%notations%nodes)
+    endif
+
+! Destroy all remaining nodelists
 
     do i = 1, size(arg%docExtras%nodelists)
      call destroy(arg%docExtras%nodelists(i)%this)
@@ -6149,7 +6091,7 @@ endif
 
     endif
 
-    nnp => arg%entities
+    nnp => arg%ownerDocument%docExtras%entities
   end function getEntities
 
   function getNotations(arg, ex)result(nnp) 
@@ -6177,7 +6119,7 @@ endif
 
     endif
 
-    nnp => arg%notations
+    nnp => arg%ownerDocument%docExtras%notations
   end function getNotations
 
 
@@ -6832,7 +6774,8 @@ endif
 
     dummy => removeNamedItemNS(getAttributes(arg), namespaceURI, localName)
 
-    call destroyAttribute(dummy)
+    call destroyAllNodesRecursively(dummy)
+    call destroyNode(dummy)
      
   end subroutine removeAttributeNS
 

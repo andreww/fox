@@ -31,7 +31,7 @@ TOHW_m_dom_contents(`
        TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
 
-    nnp => arg%entities
+    nnp => arg%ownerDocument%docExtras%entities
   end function getEntities
 
   TOHW_function(getNotations, (arg), nnp)
@@ -46,7 +46,7 @@ TOHW_m_dom_contents(`
        TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
 
-    nnp => arg%notations
+    nnp => arg%ownerDocument%docExtras%notations
   end function getNotations
 
 

@@ -398,7 +398,8 @@ TOHW_m_dom_contents(`
 
     dummy => removeNamedItemNS(getAttributes(arg), namespaceURI, localName)
 
-    call destroyAttribute(dummy)
+    call destroyAllNodesRecursively(dummy)
+    call destroyNode(dummy)
      
   end subroutine removeAttributeNS
 

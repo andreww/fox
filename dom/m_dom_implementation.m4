@@ -77,8 +77,6 @@ TOHW_m_dom_contents(`
     allocate(dt%internalSubset(0)) ! FIXME This is valid behaviour, but we should
                                    ! really be able to get the intSubset from SAX
     dt%ownerDocument => null()
-    dt%entities%ownerElement => dt
-    dt%notations%ownerElement => dt
 
   end function createDocumentType
 
@@ -103,6 +101,9 @@ TOHW_m_dom_contents(`
     allocate(doc%docExtras%xds)
     call init_xml_doc_state(doc%docExtras%xds)
 
+    doc%docExtras%entities%ownerElement => doc
+    doc%docExtras%notations%ownerElement => doc
+
     if (associated(docType)) then
       dt => docType
       dt%ownerDocument => doc
@@ -125,6 +126,9 @@ TOHW_m_dom_contents(`
     allocate(doc%docExtras%nodelists(0))
     allocate(doc%docExtras%xds)
     call init_xml_doc_state(doc%docExtras%xds)
+
+    doc%docExtras%entities%ownerElement => doc
+    doc%docExtras%notations%ownerElement => doc
 
     ! FIXME do something with namespaceURI etc 
 
@@ -153,7 +157,23 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
 
-    ! Destroy all remaining nodelists
+! Destroy all entities & notations:
+
+    if (associated(arg%docExtras%entities%nodes)) then
+      do i = 1, size(arg%docExtras%entities%nodes)
+        call destroyAllNodesRecursively(arg%docExtras%entities%nodes(i)%this)
+        call destroy(arg%docExtras%entities%nodes(i)%this)
+      enddo
+      deallocate(arg%docExtras%entities%nodes)
+    endif
+    if (associated(arg%docExtras%notations%nodes)) then
+      do i = 1, size(arg%docExtras%notations%nodes)
+        call destroy(arg%docExtras%notations%nodes(i)%this)
+      enddo
+      deallocate(arg%docExtras%notations%nodes)
+    endif
+
+! Destroy all remaining nodelists
 
     do i = 1, size(arg%docExtras%nodelists)
      call destroy(arg%docExtras%nodelists(i)%this)
