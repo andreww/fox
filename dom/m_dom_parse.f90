@@ -1,7 +1,6 @@
-undefine(`index')dnl
-undefine(`len')dnl
-undefine(`format')dnl
-include(`m_dom_exception.m4')dnl
+ 
+
+
 module m_dom_parse
 
   use m_common_array_str, only: str_vs, vs_str_alloc
@@ -299,7 +298,8 @@ contains
     if (associated(inEntity)) call setReadonlyNode(temp, .true., .false.)
   end subroutine skippedEntity_handler
 
-  TOHW_function(parsefile, (filename, configuration))
+  function parsefile(filename, configuration, ex) 
+    type(DOMException), intent(out), optional :: ex
     character(len=*), intent(in) :: filename
     character(len=*), intent(in), optional :: configuration
 
@@ -357,7 +357,13 @@ contains
     call close_xml_t(fxml)
 
     if (error) then
-      TOHW_m_dom_throw_error(PARSE_ERR)
+      call throw_exception(PARSE_ERR, "parsefile", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
     endif
 
     parsefile => mainDoc
@@ -365,7 +371,8 @@ contains
     
   end function parsefile
 
-  TOHW_function(parsestring, (string, configuration))
+  function parsestring(string, configuration, ex) 
+    type(DOMException), intent(out), optional :: ex
     character(len=*), intent(in) :: string
     character(len=*), intent(in), optional :: configuration
 
@@ -418,7 +425,13 @@ contains
     call close_xml_t(fxml)
 
     if (error) then
-      TOHW_m_dom_throw_error(PARSE_ERR)
+      call throw_exception(PARSE_ERR, "parsestring", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
     endif
 
     parsestring => mainDoc

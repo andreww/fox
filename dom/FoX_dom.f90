@@ -193,8 +193,8 @@ module FoX_dom
   public :: getSystemId
 
   ! FoX-only interfaces
-  public :: parsefile
-  public :: dumpTree
+  public :: parseFile
+  public :: parseString
   public :: serialize
 
 end module FoX_dom
