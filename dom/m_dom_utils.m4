@@ -87,7 +87,7 @@ contains
     endif
     
     !FIXME several of the below should be optional to serialize
-    call xml_OpenFile(name, xf, iostat=iostat, unit=-1, preserve_whitespace=.true.)
+    call xml_OpenFile(name, xf, iostat=iostat, unit=-1, preserve_whitespace=.true., warning=.false.)
     if (iostat/=0) then
       print*,"IOSTAT", iostat
       stop
