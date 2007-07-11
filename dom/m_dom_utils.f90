@@ -1,21 +1,22 @@
+ 
+
+
 
 module m_dom_utils
 
-  use m_common_array_str, only: str_vs, vs_str_alloc, vs_vs_alloc
-  use m_common_attrs, only: dictionary_t, add_item_to_dict, getValue, &
-    hasKey, init_dict, destroy_dict
+  use m_common_attrs, only: getValue
   use m_common_format, only: operator(//)
 
   use m_dom_dom, only: Node, Namednodemap, Node
   use m_dom_dom, only: DOCUMENT_NODE, ELEMENT_NODE, TEXT_NODE, &
-   CDATA_SECTION_NODE, COMMENT_NODE, DOCUMENT_TYPE_NODE, DOCUMENT_FRAGMENT_NODE, &
-   ATTRIBUTE_NODE, ENTITY_NODE, NOTATION_NODE, ENTITY_REFERENCE_NODE, PROCESSING_INSTRUCTION_NODE
+   CDATA_SECTION_NODE, COMMENT_NODE, DOCUMENT_TYPE_NODE, &
+   ATTRIBUTE_NODE, ENTITY_REFERENCE_NODE, PROCESSING_INSTRUCTION_NODE
   use m_dom_dom, only: haschildnodes, getNodeName, getNodeType, &
-    getFirstChild, getNextSibling, getlength, item, getDocumentElement, getOwnerElement, &
-    getNameSpaceURI, getPrefix, getLocalName, getAttributes, getParentNode, &
-    getNodeName, getNodeValue, getData, getName, getTagName, getValue, getTarget, &
+    getFirstChild, getNextSibling, getlength, item, getOwnerElement, &
+    getAttributes, getParentNode, &
+    getNodeName, getData, getName, getTagName, getValue, getTarget, &
     getEntities, getNotations, item, getSystemId, getPublicId, getNotationName, getStringValue
-
+  use m_dom_error, only: DOMException, inException, FoX_INVALID_NODE
 
   use FoX_wxml, only: xmlf_t
   use FoX_wxml, only: xml_OpenFile, xml_Close
@@ -71,13 +72,25 @@ contains
   end subroutine dumpTree
 
 
-  subroutine serialize(startNode, name)
+  subroutine serialize(startNode, name, ex)
+    type(DOMException), intent(out), optional :: ex
 
     type(Node), pointer :: startNode   
     character(len=*), intent(in) :: name
 
     type(xmlf_t)  :: xf
     integer :: iostat
+
+    if (getNodeType(startNode)/=DOCUMENT_NODE &
+      .and.getNodeType(startNode)/=ELEMENT_NODE) then
+      call throw_exception(FoX_INVALID_NODE, "serialize", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
+    endif
     
     !FIXME several of the below should be optional to serialize
     call xml_OpenFile(name, xf, iostat=iostat, unit=-1, preserve_whitespace=.true.)
@@ -93,7 +106,6 @@ contains
 
   subroutine iter_dmp_xml(xf, arg)
     type(xmlf_t), intent(inout) :: xf
-    type(Node), pointer :: doc
 
     type(Node), pointer :: this, arg, treeroot
     type(NamedNodeMap), pointer :: nnm
