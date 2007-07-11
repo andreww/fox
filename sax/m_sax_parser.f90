@@ -108,7 +108,7 @@ contains
 
   end subroutine sax_parser_destroy
 
-  subroutine sax_parse(fx, fb, &
+  recursive subroutine sax_parse(fx, fb, &
 ! org.xml.sax
 ! SAX ContentHandler
     characters_handler,            &
