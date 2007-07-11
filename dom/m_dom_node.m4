@@ -181,7 +181,6 @@ TOHW_m_dom_contents(`
       if (arg%readonly) then
         TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
       endif
-      ! FIXME check does string contain wrong characters
       ! destroy any existing children ... 
       do i = 1, arg%childNodes%length
         if (.not.arg%inDocument) &
@@ -429,7 +428,7 @@ TOHW_m_dom_contents(`
         endif
         if (i==1) then
           arg%firstChild => temp_nl(1)%this
-          temp_nl(1)%this%previousSibling => null() ! FIXME no-op
+          !temp_nl(1)%this%previousSibling => null() ! This is a no-op
         else 
           temp_nl(i-1)%this%nextSibling => temp_nl(i)%this
           temp_nl(i)%this%previousSibling => temp_nl(i-1)%this
@@ -456,7 +455,8 @@ TOHW_m_dom_contents(`
         else
           call putNodesInDocument(arg%ownerDocument, newChild)
         endif
-        ! If newChild was originally in document, it was removed above so must be re-added FIXME
+        ! If newChild was originally in document, it was removed above so must be re-added
+        ! Ideally we would avoid the cost of removal & readding to hanging nodelist
       endif
       ! If arg was not in the document, then newChildren were either 
       ! a) removed above in call to removeChild or
@@ -550,14 +550,14 @@ TOHW_m_dom_contents(`
         endif
         if (i==1) then
           arg%firstChild => temp_nl(1)%this
-          temp_nl(1)%this%previousSibling => null() ! FIXME no-op
+          !temp_nl(1)%this%previousSibling => null() ! This is a no-op
         else 
           temp_nl(i-1)%this%nextSibling => temp_nl(i)%this
           temp_nl(i)%this%previousSibling => temp_nl(i-1)%this
         endif
         if (i==arg%childNodes%length) then
           arg%lastChild => temp_nl(i_t)%this
-          temp_nl(i_t)%this%nextSibling => null() ! FIXME no-op
+          !temp_nl(i_t)%this%nextSibling => null() ! This is a no-op
         else
           arg%childNodes%nodes(i+1)%this%previousSibling => temp_nl(i_t)%this
           temp_nl(i_t)%this%nextSibling => arg%childNodes%nodes(i+1)%this
@@ -585,7 +585,8 @@ TOHW_m_dom_contents(`
         else
           call putNodesInDocument(arg%ownerDocument, newChild)
         endif
-        ! If newChild was originally in document, it was removed above so must be re-added FIXME
+        ! If newChild was originally in document, it was removed above so must be re-added
+        ! Ideally we would avoid the cost of removing & re-adding to hangingnodelist
       endif
       ! If arg was not in the document, then newChildren were either 
       ! a) removed above in call to removeChild or
