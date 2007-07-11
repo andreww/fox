@@ -12,7 +12,7 @@ TOHW_m_dom_publics(`
   public :: getNamedItem_Value_length
   public :: setNamedItem
   public :: removeNamedItem
-  public :: item
+!  public :: item
 !  public :: getLength
   public :: getNamedItemNS
   public :: getNamedItemNS_Value
@@ -20,7 +20,7 @@ TOHW_m_dom_publics(`
   public :: setNamedItemNS
   public :: removeNamedItemNS
 
-  public :: append
+!  public :: append
   public :: setReadOnlyMap
   public :: destroyNamedNodeMap
 
