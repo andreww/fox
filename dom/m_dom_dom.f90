@@ -3629,11 +3629,6 @@ endif
 
     endif
 
-!FIXME what if you try and add a non-attribute node to an attribute NNM?
-!FIXME at the very least you will bugger up all the tree-walking algorithms,
-!FIXME including the clean-up ones, and memory will leak.
-!FIXME ANSWER in DOM 3- HIERARCHY_REQUEST_ERR
-
     if (map%readonly) then
       call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setNamedItem", ex)
 if (present(ex)) then
@@ -3644,6 +3639,16 @@ endif
 
     elseif (.not.associated(map%ownerElement%ownerDocument, arg%ownerDocument)) then
       call throw_exception(WRONG_DOCUMENT_ERR, "setNamedItem", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
+    elseif (getNodeType(map%ownerElement)==ELEMENT_NODE &
+      .and.getNodeType(arg)/=ATTRIBUTE_NODE) then
+      !Additional check from DOM 3
+      call throw_exception(HIERARCHY_REQUEST_ERR, "setNamedItem", ex)
 if (present(ex)) then
   if (inException(ex)) then
      return

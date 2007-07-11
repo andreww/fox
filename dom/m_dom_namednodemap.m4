@@ -115,15 +115,14 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif
 
-!FIXME what if you try and add a non-attribute node to an attribute NNM?
-!FIXME at the very least you will bugger up all the tree-walking algorithms,
-!FIXME including the clean-up ones, and memory will leak.
-!FIXME ANSWER in DOM 3- HIERARCHY_REQUEST_ERR
-
     if (map%readonly) then
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
     elseif (.not.associated(map%ownerElement%ownerDocument, arg%ownerDocument)) then
       TOHW_m_dom_throw_error(WRONG_DOCUMENT_ERR)
+    elseif (getNodeType(map%ownerElement)==ELEMENT_NODE &
+      .and.getNodeType(arg)/=ATTRIBUTE_NODE) then
+      !Additional check from DOM 3
+      TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR)
     endif
     if (associated(map%ownerElement, arg%ownerElement)) then
       np => arg
