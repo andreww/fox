@@ -1,3 +1,7 @@
+undefine(`index')dnl
+undefine(`len')dnl
+undefine(`format')dnl
+include(`m_dom_exception.m4')dnl
 module m_dom_parse
 
   use m_common_array_str, only: str_vs, vs_str_alloc
@@ -19,6 +23,7 @@ module m_dom_parse
     createEntityReference, destroyAllNodesRecursively, setIllFormed, createElement, &
     createAttribute, getNamedItem, setReadonlyNode, setReadOnlyMap, &
     createEmptyEntityReference, setEntityReferenceValue, setAttributeNode
+  use m_dom_error, only: DOMException, inException, throw_exception, PARSE_ERR
 
   implicit none
   private
@@ -30,6 +35,7 @@ module m_dom_parse
 
   logical :: cdata_sections, cdata
   logical :: entities_expand
+  logical :: error
   character, pointer :: inEntity(:) => null()
 
 contains
@@ -140,20 +146,12 @@ contains
 
   subroutine startDTD_handler(name, publicId, systemId)
     character(len=*), intent(in) :: name
-    character(len=*), intent(in), optional :: publicId
-    character(len=*), intent(in), optional :: systemId
+    character(len=*), intent(in) :: publicId
+    character(len=*), intent(in) :: systemId
 
     type(Node), pointer :: np
 
-    if (present(publicId).and.present(systemId)) then
-      np => createDocumentType(getImplementation(mainDoc), name, publicId=publicId, systemId=systemId)
-    elseif (present(publicId)) then
-      np => createDocumentType(getImplementation(mainDoc), name, publicId=publicId, systemId="")
-    elseif (present(systemId)) then
-      np => createDocumentType(getImplementation(mainDoc), name, publicid="", systemId=systemId)
-    else
-      np => createDocumentType(getImplementation(mainDoc), name, publicId="", systemId="")
-    endif
+    np => createDocumentType(getImplementation(mainDoc), name, publicId=publicId, systemId=systemId)
     call setDocType(mainDoc, np)
     np => appendChild(mainDoc, np)
 
@@ -168,7 +166,7 @@ contains
 
   subroutine notationDecl_handler(name, publicId, systemId)
     character(len=*), intent(in) :: name
-    character(len=*), intent(in), optional :: publicId
+    character(len=*), intent(in) ::  publicId
     character(len=*), intent(in) :: systemId
     
     type(Node), pointer :: np
@@ -217,6 +215,13 @@ contains
 
   end subroutine internalEntityDecl_handler
 
+  subroutine normalErrorHandler(msg)
+    character(len=*), intent(in) :: msg
+
+    ! This is called if the main parsing routine fails
+    error = .true.
+  end subroutine normalErrorHandler
+
   subroutine entityErrorHandler(msg)
     character(len=*), intent(in) :: msg
 
@@ -234,14 +239,13 @@ contains
     character(len=*), intent(in) :: name
     character(len=*), intent(in) :: publicId
     character(len=*), intent(in) :: systemId
-!FIXME which are optional, check order
     type(Node), pointer :: np
 
-    np => createEntity(mainDoc, name, publicId, systemId, "")
+    np => createEntity(mainDoc, name, publicId=publicId, systemId=systemId, notationName="")
 
     np => getNamedItem(getEntities(getDocType(mainDoc)), name)
     if (.not.associated(np)) then
-      np => createEntity(mainDoc, name, publicId, systemId, "")
+      np => createEntity(mainDoc, name, publicId=publicId, systemId=systemId, notationName="")
       np => setNamedItem(getEntities(getDocType(mainDoc)), np)
     endif    
 
@@ -252,12 +256,11 @@ contains
     character(len=*), intent(in) :: publicId
     character(len=*), intent(in) :: systemId
     character(len=*), intent(in) :: notationName
-!FIXME which are optional, check order
     type(Node), pointer :: np
 
     np => getNamedItem(getEntities(getDocType(mainDoc)), name)
     if (.not.associated(np)) then
-      np => createEntity(mainDoc, name, publicId, systemId, notationName)
+      np => createEntity(mainDoc, name, publicId=publicId, systemId=systemId, notationName=notationName)
       np => setNamedItem(getEntities(getDocType(mainDoc)), np)
     endif
 
@@ -295,9 +298,7 @@ contains
     if (associated(inEntity)) call setReadonlyNode(temp, .true., .false.)
   end subroutine skippedEntity_handler
 
-  function parsefile(filename, configuration)
-! FIXME should do string too.
-
+  TOHW_function(parsefile, (filename, configuration))
     character(len=*), intent(in) :: filename
     character(len=*), intent(in), optional :: configuration
 
@@ -320,6 +321,7 @@ contains
 
 ! We use internal sax_parse rather than public interface in order
 ! to use internal callbacks to get extra info.
+    error = .false.
 
     call sax_parse(fxml%fx, fxml%fb,&
       characters_handler=characters_handler,            &
@@ -335,7 +337,7 @@ contains
       !startPrefixMapping_handler,    &
       notationDecl_handler=notationDecl_handler,          &
       unparsedEntityDecl_handler=unparsedEntityDecl_handler, &
-      !error_handler,                 &
+      error_handler = normalErrorHandler,                 &
       !fatalError_handler,            &
       !warning_handler,               &
       !attributeDecl_handler,         &
@@ -351,12 +353,76 @@ contains
       startEntity_handler=startEntity_handler, &
       FoX_endDTD_handler=FoX_endDTD_handler)
 
-
     call close_xml_t(fxml)
+
+    if (error) then
+      TOHW_m_dom_throw_error(PARSE_ERR)
+    endif
 
     parsefile => mainDoc
     mainDoc => null()
     
   end function parsefile
+
+  TOHW_function(parsestring, (string, configuration))
+    character(len=*), intent(in) :: string
+    character(len=*), intent(in), optional :: configuration
+
+    type(Node), pointer :: parsestring
+    type(xml_t) :: fxml
+    
+    if (present(configuration)) then
+      cdata_sections = (scan("cdata-sections", configuration)>0)
+      entities_expand = (scan("entities", configuration)>0)
+    else
+      cdata_sections = .false.
+      entities_expand = .false.
+    endif
+
+    call open_xml_string(fxml, string)
+
+! We use internal sax_parse rather than public interface in order
+! to use internal callbacks to get extra info.
+
+    call sax_parse(fxml%fx, fxml%fb,&
+      characters_handler=characters_handler,            &
+      endDocument_handler=endDocument_handler,           &
+      endElement_handler=endElement_handler,            &
+      !endPrefixMapping_handler,      &
+      !ignorableWhitespace_handler,   &
+      processingInstruction_handler=processingInstruction_handler, &
+      ! setDocumentLocator
+      skippedEntity_handler=skippedEntity_handler,         &
+      startDocument_handler=startDocument_handler,         & 
+      startElement_handler=startElement_handler,          &
+      !startPrefixMapping_handler,    &
+      notationDecl_handler=notationDecl_handler,          &
+      unparsedEntityDecl_handler=unparsedEntityDecl_handler, &
+      error_handler=normalErrorHandler,                 &
+      !fatalError_handler,            &
+      !warning_handler,               &
+      !attributeDecl_handler,         &
+      !elementDecl_handler,           &
+      externalEntityDecl_handler=externalEntityDecl_handler, &
+      internalEntityDecl_handler=internalEntityDecl_handler,    &
+      comment_handler=comment_handler,              &
+      endCdata_handler=endCdata_handler,             &
+      !endDTD_handler=endDTD_handler,                &
+      endEntity_handler=endEntity_handler,             &
+      startCdata_handler=startCdata_handler,    &
+      startDTD_handler=startDTD_handler,          &
+      startEntity_handler=startEntity_handler, &
+      FoX_endDTD_handler=FoX_endDTD_handler)
+
+    call close_xml_t(fxml)
+
+    if (error) then
+      TOHW_m_dom_throw_error(PARSE_ERR)
+    endif
+
+    parsestring => mainDoc
+    mainDoc => null()
+    
+  end function parsestring
 
 end module m_dom_parse
