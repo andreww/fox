@@ -1,3 +1,17 @@
-ALl functions returning strings should have a ***_len function taking associated(satatus
+make a parseString function
 
-Check for null ndoes everywhere
+catch parse errors in parseFile & issue a PARSE_ERR exception
+
+check parsing without entities on - no entity references
+
+check recursive entity references produce expected result
+
+update list of exceptions in documentation
+
+tidy up documentation
+
+document no DOMTimeStamp
+
+setFoXChecks - and how do we carry that around?
+
+check liveNodelists on/off
