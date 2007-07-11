@@ -17,7 +17,7 @@ module m_dom_utils
     getAttributes, getParentNode, &
     getNodeName, getData, getName, getTagName, getValue, getTarget, &
     getEntities, getNotations, item, getSystemId, getPublicId, getNotationName, getStringValue
-  use m_dom_error, only: DOMException, inException, FoX_INVALID_NODE
+  use m_dom_error, only: DOMException, inException, FoX_INVALID_NODE, throw_exception
 
   use FoX_wxml, only: xmlf_t
   use FoX_wxml, only: xml_OpenFile, xml_Close
