@@ -578,7 +578,7 @@ contains
     
     call add_to_buffer('<!ENTITY '//name, xf%buffer, .false.)
     if (present(public)) then
-      call add_to_buffer("PUBLIC ", xf%buffer, .false.)
+      call add_to_buffer(" PUBLIC ", xf%buffer, .false.)
       call add_to_buffer('"'//public//'"', xf%buffer, .true.)
       call add_to_buffer(" ", xf%buffer, .false.)
     else
@@ -651,7 +651,7 @@ contains
       call add_to_buffer('"'//public//'"', xf%buffer, .true.)
       call add_to_buffer(" ", xf%buffer, .false.)
     elseif (present(system)) then
-      call add_to_buffer('SYSTEM ', xf%buffer, .false.)
+      call add_to_buffer(' SYSTEM ', xf%buffer, .false.)
     endif
     if (present(system)) then
       if (index(system, '"') > 0) then
