@@ -2,32 +2,23 @@ module m_dom_parse
 
   use m_common_array_str, only: str_vs, vs_str_alloc
   use m_common_error, only: FoX_error
-  use m_common_entities, only: entity_t
-  use m_common_notations, only: notation
   use m_common_struct, only: xml_doc_state
   use FoX_common, only: dictionary_t, len
-  use FoX_common, only: getQName, getValue, getLocalname, getURI, getQName
+  use FoX_common, only: getQName, getValue, getURI, getQName
   use m_sax_parser, only: sax_parse
   use FoX_sax, only: xml_t
   use FoX_sax, only: open_xml_file, open_xml_string, close_xml_t
 
-  use m_dom_dom, only: Node, NamedNodeMap, hasChildNodes, getFirstChild
-  use m_dom_dom, only: DOCUMENT_NODE, getOwnerDocument, getDocumentElement
-  use m_dom_dom, only: createProcessingInstruction, getDocType, createAttributeNS
-  use m_dom_dom, only: createComment, getEntities, item, setSpecified
-  use m_dom_dom, only: createElementNS, getNotations, getLastChild, getNodeValue
-  use m_dom_dom, only: createTextNode, createEntity, getAttributes, setStringValue
-  use m_dom_dom, only: createNotation, setNamedItem, getNodeName, setNodeValue
-  use m_dom_dom, only: createEmptyDocument, getXMLVersion, createDocumentType
-  use m_dom_dom, only: getParentNode, setDocumentElement, getDocType, setDocType
-  use m_dom_dom, only: append, getNodeType, getLength, getChildNodes, getImplementation
-  use m_dom_dom, only: removeChild, appendChild, getNotations, setAttributeNodeNS, setvalue
-  use m_dom_dom, only: setAttributeNodeNS, setGCstate, createCdataSection, setXds
-  use m_dom_dom, only: createEntityReference, destroyAllNodesRecursively, setIllFormed
-  use m_dom_dom, only: createElement, createAttribute, getNamedItem, getTagName
-  use m_dom_dom, only: setReadonlyNode, setReadOnlyMap, createEmptyEntityReference, &
-    setEntityReferenceValue, setAttributeNode
-  use m_dom_debug, only: dom_debug
+  use m_dom_dom, only: DOCUMENT_NODE, getNodeType, getDocType, Node, setDocType, &
+    createProcessingInstruction, createAttributeNS, createComment, getEntities, &
+    setSpecified, createElementNS, getNotations, createTextNode, createEntity, &
+    getAttributes, setStringValue, createNotation, setNamedItem, &
+    createEmptyDocument, createDocumentType, getParentNode, setDocumentElement, &
+    getNodeType, getImplementation, appendChild, getNotations, setAttributeNodeNS, &
+    setvalue, setAttributeNodeNS, setGCstate, createCdataSection, setXds, &
+    createEntityReference, destroyAllNodesRecursively, setIllFormed, createElement, &
+    createAttribute, getNamedItem, setReadonlyNode, setReadOnlyMap, &
+    createEmptyEntityReference, setEntityReferenceValue, setAttributeNode
 
   implicit none
   private
@@ -310,12 +301,9 @@ contains
     character(len=*), intent(in) :: filename
     character(len=*), intent(in), optional :: configuration
 
-    type(Node), pointer :: parsefile, dt, np, nt
-    type(NamedNodeMap), pointer :: entities, notations
-    type(entity_t), pointer :: thisEntity
-    type(notation), pointer :: thisNotation
+    type(Node), pointer :: parsefile
     type(xml_t) :: fxml
-    integer :: i, iostat
+    integer :: iostat
     
     if (present(configuration)) then
       cdata_sections = (scan("cdata-sections", configuration)>0)
