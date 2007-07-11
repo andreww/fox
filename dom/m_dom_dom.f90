@@ -789,15 +789,17 @@ endif
 
     endif
 
-    if (.not.checkChars(nodeValue, getXmlVersionEnum(getOwnerDocument(arg)))) then
-      call throw_exception(FoX_INVALID_CHARACTER, "setNodeValue", ex)
+    if (associated(getOwnerDocument(arg))) then
+      if (.not.checkChars(nodeValue, getXmlVersionEnum(getOwnerDocument(arg)))) then
+        call throw_exception(FoX_INVALID_CHARACTER, "setNodeValue", ex)
 if (present(ex)) then
   if (inException(ex)) then
      return
   endif
 endif
 
-    endif
+      endif
+    endif ! Otherwise its a document node, and nothing will happen anyway
 
     select case(arg%nodeType)
     case (ATTRIBUTE_NODE)
@@ -2456,8 +2458,8 @@ endif
       ! Nothing to do
     endif
 
-    if (associated(newChild%parentNode)) &
-      newChild => removeChild(newChild%parentNode, newChild, ex) 
+    if (associated(getParentNode(newChild))) &
+      newChild => removeChild(getParentNode(newChild), newChild, ex) 
 
     if (newChild%nodeType==DOCUMENT_FRAGMENT_NODE) then
       allocate(temp_nl(arg%childNodes%length+newChild%childNodes%length))

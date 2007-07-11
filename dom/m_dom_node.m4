@@ -172,9 +172,11 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif
 
-    if (.not.checkChars(nodeValue, getXmlVersionEnum(getOwnerDocument(arg)))) then
-      TOHW_m_dom_throw_error(FoX_INVALID_CHARACTER)
-    endif
+    if (associated(getOwnerDocument(arg))) then
+      if (.not.checkChars(nodeValue, getXmlVersionEnum(getOwnerDocument(arg)))) then
+        TOHW_m_dom_throw_error(FoX_INVALID_CHARACTER)
+      endif
+    endif ! Otherwise its a document node, and nothing will happen anyway
 
     select case(arg%nodeType)
     case (ATTRIBUTE_NODE)
@@ -720,8 +722,8 @@ TOHW_m_dom_contents(`
       ! Nothing to do
     endif
 
-    if (associated(newChild%parentNode)) &
-      newChild => removeChild(newChild%parentNode, newChild, ex) 
+    if (associated(getParentNode(newChild))) &
+      newChild => removeChild(getParentNode(newChild), newChild, ex) 
 
     if (newChild%nodeType==DOCUMENT_FRAGMENT_NODE) then
       allocate(temp_nl(arg%childNodes%length+newChild%childNodes%length))
