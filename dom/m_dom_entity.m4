@@ -1,9 +1,3 @@
-TOHW_m_dom_imports(`
-
-  use m_common_array_str, only: str_vs
-
-')`'dnl
-dnl
 TOHW_m_dom_publics(`
   
   public :: getNotationName

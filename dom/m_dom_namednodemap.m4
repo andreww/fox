@@ -1,10 +1,3 @@
- TOHW_m_dom_imports(`
-
-  use m_common_array_str, only: str_vs
-  use m_dom_error, only: INUSE_ATTRIBUTE_ERR, FoX_MAP_IS_NULL
-
-')`'dnl
-dnl
 TOHW_m_dom_publics(`
 
   public :: getNamedItem

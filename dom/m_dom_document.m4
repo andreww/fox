@@ -1,15 +1,3 @@
-TOHW_m_dom_imports(`
-
-  use m_common_array_str, only: str_vs, vs_str_alloc
-  use m_common_charset, only: XML1_0, XML1_1
-  use m_common_namecheck, only: checkQName, prefixOfQName, localPartOfQName
-  use m_dom_error, only : NOT_FOUND_ERR, INVALID_CHARACTER_ERR, FoX_INVALID_NODE, &
-    WRONG_DOCUMENT_ERR, & 
-    FoX_INVALID_CHARACTER, FoX_INVALID_COMMENT, FoX_INVALID_CDATA_SECTION, &
-    FoX_INVALID_PI_DATA, NOT_SUPPORTED_ERR, FoX_INVALID_ENTITY, FoX_NO_DOCTYPE
-
-')`'dnl
-dnl
 TOHW_m_dom_publics(`
 
   public :: getDocType

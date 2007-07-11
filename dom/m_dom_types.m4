@@ -1,11 +1,3 @@
-include(`m_dom_exception.m4')`'dnl
-TOHW_m_dom_imports(`
-
-  use m_common_array_str, only: vs_str_alloc
-  use m_common_struct, only: xml_doc_state, destroy_xml_doc_state
-
-')`'dnl
-dnl
 TOHW_m_dom_publics(`
   integer, parameter ::     ELEMENT_NODE                   = 1
   integer, parameter ::     ATTRIBUTE_NODE                 = 2

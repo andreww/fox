@@ -1,17 +1,3 @@
-TOHW_m_dom_imports(`
-
-  use m_common_array_str, only: str_vs, vs_str_alloc
-  use m_common_charset, only: checkChars, XML1_0
-
-  use m_dom_error, only: DOMException, throw_exception, inException, &
-    INVALID_CHARACTER_ERR, NAMESPACE_ERR, FoX_INVALID_PUBLIC_ID, FoX_INVALID_SYSTEM_ID, &
-    FoX_IMPL_IS_NULL
-  use m_common_namecheck, only: checkName, checkPublicId, checkSystemId
-  use m_common_string, only: toLower
-  use m_common_struct, only: init_xml_doc_state, destroy_xml_doc_state
-
-')`'dnl
-dnl
 TOHW_m_dom_publics(`
 
   public :: hasFeature
