@@ -162,13 +162,13 @@ contains
 
       subroutine notationDecl_handler(name, publicId, systemId)
         character(len=*), intent(in) :: name
-        character(len=*), optional, intent(in) :: publicId
-        character(len=*), optional, intent(in) :: systemId
+        character(len=*), intent(in) :: publicId
+        character(len=*), intent(in) :: systemId
       end subroutine notationDecl_handler
 
       subroutine unparsedEntityDecl_handler(name, publicId, systemId, notation)
         character(len=*), intent(in) :: name
-        character(len=*), optional, intent(in) :: publicId
+        character(len=*), intent(in) :: publicId
         character(len=*), intent(in) :: systemId
         character(len=*), intent(in) :: notation
       end subroutine unparsedEntityDecl_handler
@@ -228,8 +228,8 @@ contains
 
       subroutine startDTD_handler(name, publicId, systemId)
         character(len=*), intent(in) :: name
-        character(len=*), optional, intent(in) :: publicId
-        character(len=*), optional, intent(in) :: systemId
+        character(len=*), intent(in) :: publicId
+        character(len=*), intent(in) :: systemId
       end subroutine startDTD_handler
 
       subroutine startEntity_handler(name)

@@ -54,6 +54,7 @@ contains
     call init_error_stack(fx%error_stack)
     call init_elstack(fx%elstack)
     !call init_dict(fx%attributes)
+
     call initNamespaceDictionary(fx%nsdict)
     call init_notation_list(fx%nlist)
     allocate(fx%xds)
@@ -230,13 +231,13 @@ contains
 
       subroutine notationDecl_handler(name, publicId, systemId)
         character(len=*), intent(in) :: name
-        character(len=*), optional, intent(in) :: publicId
-        character(len=*), optional, intent(in) :: systemId
+        character(len=*), intent(in) :: publicId
+        character(len=*), intent(in) :: systemId
       end subroutine notationDecl_handler
 
       subroutine unparsedEntityDecl_handler(name, publicId, systemId, notation)
         character(len=*), intent(in) :: name
-        character(len=*), optional, intent(in) :: publicId
+        character(len=*), intent(in) :: publicId
         character(len=*), intent(in) :: systemId
         character(len=*), intent(in) :: notation
       end subroutine unparsedEntityDecl_handler
@@ -298,8 +299,8 @@ contains
 
       subroutine startDTD_handler(name, publicId, systemId)
         character(len=*), intent(in) :: name
-        character(len=*), optional, intent(in) :: publicId
-        character(len=*), optional, intent(in) :: systemId
+        character(len=*), intent(in) :: publicId
+        character(len=*), intent(in) :: systemId
       end subroutine startDTD_handler
 
       subroutine startEntity_handler(name)
@@ -826,12 +827,12 @@ contains
           fx%state = ST_DTD_PUBLIC
         elseif (str_vs(fx%token)=='[') then
           if (present(startDTD_handler)) &
-            call startDTD_handler(str_vs(fx%root_element))
+            call startDTD_handler(str_vs(fx%root_element), "", "")
           fx%whitespace = WS_DISCARD
           fx%state = ST_INT_SUBSET
         elseif (str_vs(fx%token)=='>') then
           if (present(startDTD_handler)) &
-            call startDTD_handler(str_vs(fx%root_element))
+            call startDTD_handler(str_vs(fx%root_element), "", "")
           fx%context = CTXT_BEFORE_CONTENT
           fx%state = ST_MISC
         else
@@ -876,9 +877,9 @@ contains
             if (associated(fx%publicId)) then
               call startDTD_handler(str_vs(fx%root_element), publicId=str_vs(fx%publicId), systemId=str_vs(fx%systemId))
             elseif (associated(fx%systemId)) then
-              call startDTD_handler(str_vs(fx%root_element), systemId=str_vs(fx%systemId))
+              call startDTD_handler(str_vs(fx%root_element), publicId="", systemId=str_vs(fx%systemId))
             else
-              call startDTD_handler(str_vs(fx%root_element))
+              call startDTD_handler(str_vs(fx%root_element), "", "")
             endif
           endif
           if (associated(fx%systemId)) deallocate(fx%systemId)
@@ -893,9 +894,9 @@ contains
               call startDTD_handler(str_vs(fx%root_element), publicId=str_vs(fx%publicId), systemId=str_vs(fx%systemId))
               deallocate(fx%publicId)
             elseif (associated(fx%systemId)) then
-              call startDTD_handler(str_vs(fx%root_element), systemId=str_vs(fx%systemId))
+              call startDTD_handler(str_vs(fx%root_element), publicId="", systemId=str_vs(fx%systemId))
             else
-              call startDTD_handler(str_vs(fx%root_element))
+              call startDTD_handler(str_vs(fx%root_element), "", "")
             endif
           endif
           if (associated(fx%systemId)) deallocate(fx%systemId)
@@ -1271,7 +1272,7 @@ contains
           if (processDTD) then
             call add_notation(fx%nlist, str_vs(fx%name), publicId=str_vs(fx%publicId))
             if (present(notationDecl_handler)) &
-              call notationDecl_handler(str_vs(fx%name), publicId=str_vs(fx%publicId)) 
+              call notationDecl_handler(str_vs(fx%name), publicId=str_vs(fx%publicId), systemId="") 
           endif
           deallocate(fx%name)
           deallocate(fx%publicId)
@@ -1308,7 +1309,7 @@ contains
                 systemId=str_vs(fx%systemId))
               if (present(notationDecl_handler)) &
                 call notationDecl_handler(str_vs(fx%name), &
-                systemId=str_vs(fx%systemId)) 
+                publicId="", systemId=str_vs(fx%systemId)) 
             endif
           endif
           if (associated(fx%publicId)) deallocate(fx%publicId)
@@ -1466,7 +1467,7 @@ contains
             elseif (associated(fx%Ndata)) then
               call register_external_GE(fx%xds, str_vs(fx%name), str_vs(fx%systemId), notation=str_vs(fx%Ndata))
               if (present(unparsedEntityDecl_handler)) &
-                call unparsedEntityDecl_handler(str_vs(fx%name), &
+                call unparsedEntityDecl_handler(str_vs(fx%name), publicId="", &
                 systemId=resolveSystemId(str_vs(fx%systemId)), notation=str_vs(fx%Ndata))
             elseif (associated(fx%publicId)) then
               call register_external_GE(fx%xds, str_vs(fx%name), str_vs(fx%systemId), public=str_vs(fx%publicId))
