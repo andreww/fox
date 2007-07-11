@@ -30,6 +30,12 @@ module m_dom_error
   integer, parameter, public :: VALIDATION_ERR              = 16
   integer, parameter, public :: TYPE_MISMATCH_ERR           = 17
 
+  integer, parameter, public :: INVALID_EXPRESSION_ERR      = 51
+  integer, parameter, public :: TYPE_ERR                    = 52
+
+  integer, parameter, public :: PARSE_ERR                   = 81
+  integer, parameter, public :: SERIALIZE_ERR               = 82
+
   integer, parameter, public :: FoX_INVALID_NODE            = 201
   integer, parameter, public :: FoX_INVALID_CHARACTER       = 202
 !  integer, parameter, public :: FoX_INVALID_PI_TARGET       = 203
@@ -101,6 +107,10 @@ contains
       s = "INVALID_EXPRESSION_ERR"
     case(52)
       s = "TYPE_ERR"
+    case(81)
+      s = "PARSE_ERR"
+    case(82)
+      s = "SERIALIZE_ERR"
     case(201)
       s = "FoX_INVALID_NODE"
     case(202)
