@@ -7723,12 +7723,25 @@ endif
 
 
 
-  function getTarget(arg, ex)result(c) 
-    type(DOMException), intent(out), optional :: ex
-    type(Node), intent(in) :: arg
-    character(len=size(arg%nodeName)) :: c
+  pure function getTarget_len(np, p) result(n)
+    type(Node), intent(in) :: np
+    logical, intent(in) :: p
+    integer :: n
 
-    if (arg%nodeType/=PROCESSING_INSTRUCTION_NODE) then
+    if (p) then
+      n = size(np%nodeName)
+    else
+      n = 0
+    endif
+
+  end function getTarget_len
+
+  function getTarget(np, ex)result(c) 
+    type(DOMException), intent(out), optional :: ex
+    type(Node), pointer :: np
+    character(len=getTarget_len(np, associated(np))) :: c
+
+    if (np%nodeType/=PROCESSING_INSTRUCTION_NODE) then
       call throw_exception(FoX_INVALID_NODE, "getTarget", ex)
 if (present(ex)) then
   if (inException(ex)) then
@@ -7738,7 +7751,7 @@ endif
 
     endif
 
-    c = str_vs(arg%nodeName)
+    c = str_vs(np%nodeName)
   end function getTarget
 
 

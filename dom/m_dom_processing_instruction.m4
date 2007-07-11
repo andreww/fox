@@ -12,15 +12,28 @@ TOHW_m_dom_publics(`
 dnl
 TOHW_m_dom_contents(`
 
-  TOHW_function(getTarget, (arg), c)
-    type(Node), intent(in) :: arg
-    character(len=size(arg%nodeName)) :: c
+  pure function getTarget_len(np, p) result(n)
+    type(Node), intent(in) :: np
+    logical, intent(in) :: p
+    integer :: n
 
-    if (arg%nodeType/=PROCESSING_INSTRUCTION_NODE) then
+    if (p) then
+      n = size(np%nodeName)
+    else
+      n = 0
+    endif
+
+  end function getTarget_len
+
+  TOHW_function(getTarget, (np), c)
+    type(Node), pointer :: np
+    character(len=getTarget_len(np, associated(np))) :: c
+
+    if (np%nodeType/=PROCESSING_INSTRUCTION_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
 
-    c = str_vs(arg%nodeName)
+    c = str_vs(np%nodeName)
   end function getTarget
 
 ')`'dnl
