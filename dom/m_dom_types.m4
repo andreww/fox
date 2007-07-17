@@ -95,7 +95,6 @@ TOHW_m_dom_publics(`
     type(Node), pointer :: previousSibling => null()
     type(Node), pointer :: nextSibling     => null()
     type(Node), pointer :: ownerDocument   => null()
-    type(NamedNodeMap) :: attributes ! only for elements
     type(NodeList) :: childNodes ! not for text, cdata, PI, comment, notation,  docType, XPath
     ! Introduced in DOM Level 2:
     character, pointer, dimension(:) :: namespaceURI => null() ! \
@@ -196,7 +195,8 @@ TOHW_m_dom_contents(`
        TOHW_m_dom_throw_error(FoX_INTERNAL_ERROR)
     endif
 
-    if (associated(element%attributes%nodes)) deallocate(element%attributes%nodes)
+    if (associated(element%elExtras%attributes%nodes)) deallocate(element%elExtras%attributes%nodes)
+    deallocate(element%elExtras)
     call destroyNodeContents(element)
     deallocate(element)
 

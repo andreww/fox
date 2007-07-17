@@ -59,9 +59,9 @@ TOHW_m_dom_contents(`
     if (.not.p) return
     if (arg%nodeType/=ELEMENT_NODE) return
 
-    do i = 1, arg%attributes%length
-      if (str_vs(arg%attributes%nodes(i)%this%nodeName)==name) then
-        n = getValue_len(arg%attributes%nodes(i)%this, .true.)
+    do i = 1, arg%elExtras%attributes%length
+      if (str_vs(arg%elExtras%attributes%nodes(i)%this%nodeName)==name) then
+        n = getValue_len(arg%elExtras%attributes%nodes(i)%this, .true.)
         exit
       endif
     enddo
@@ -249,8 +249,8 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
     endif
 
-    do i = 1, arg%attributes%length
-      if (associated(arg%attributes%nodes(i)%this, oldattr)) then
+    do i = 1, getLength(getAttributes(arg))
+      if (associated(item(getAttributes(arg), i-1), oldattr)) then
         attr => removeNamedItem(getAttributes(arg), str_vs(oldattr%nodeName))
         attr%ownerElement => null()
         return
@@ -278,10 +278,10 @@ TOHW_m_dom_contents(`
     if (.not.p) return
     if (arg%nodeType/=ELEMENT_NODE) return
 
-    do i = 1, arg%attributes%length
-      if (str_vs(arg%attributes%nodes(i)%this%localName)==localname &
-        .and. str_vs(arg%attributes%nodes(i)%this%namespaceURI)==namespaceURI) then
-        n = getValue_len(arg%attributes%nodes(i)%this, .true.)
+    do i = 1, arg%elExtras%attributes%length
+      if (str_vs(arg%elExtras%attributes%nodes(i)%this%localName)==localname &
+        .and. str_vs(arg%elExtras%attributes%nodes(i)%this%namespaceURI)==namespaceURI) then
+        n = getValue_len(arg%elExtras%attributes%nodes(i)%this, .true.)
         exit
       endif
     enddo
@@ -458,7 +458,7 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(WRONG_DOCUMENT_ERR)
     endif
 
-    do i = 1, arg%attributes%length
+    do i = 1, getLength(getAttributes(arg))
       if (associated(item(getAttributes(arg), i-1), oldattr)) then
         attr => removeNamedItemNS(getAttributes(arg), &
           str_vs(oldattr%namespaceURI), str_vs(oldattr%localName))
@@ -492,8 +492,8 @@ TOHW_m_dom_contents(`
     endif
 
     p = .false.
-    do i = 1, arg%attributes%length
-      if (str_vs(arg%attributes%nodes(i)%this%nodeName)==name) then
+    do i = 1, getLength(getAttributes(arg))
+      if (getNodeName(item(getAttributes(arg), i-1))==name) then
         p = .true.
         exit
       endif
@@ -519,9 +519,9 @@ TOHW_m_dom_contents(`
     endif
 
     p = .false.
-    do i = 1, arg%attributes%length
-      if (str_vs(arg%attributes%nodes(i)%this%namespaceURI)==namespaceURI &
-        .and. str_vs(arg%attributes%nodes(i)%this%localName)==localName) then
+    do i = 1, getLength(getAttributes(arg))
+      if (getNamespaceURI(item(getAttributes(arg), i-1))==namespaceURI &
+        .and. getLocalName(item(getAttributes(arg), i-1))==localName) then
         p = .true.
         exit
       endif

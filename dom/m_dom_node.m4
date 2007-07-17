@@ -313,7 +313,7 @@ TOHW_m_dom_contents(`
     endif
 
     if (getNodeType(arg)==ELEMENT_NODE) then
-      nnm => arg%attributes
+      nnm => arg%elExtras%attributes
     else
       nnm => null()
     endif
@@ -887,8 +887,11 @@ TOHW_m_dom_treewalk(`
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif
     
-    hasAttributes = (arg%nodeType /= ELEMENT_NODE) &
-      .and. (arg%attributes%length > 0)
+    if (arg%nodeType /= ELEMENT_NODE) then
+      hasAttributes = (getLength(getAttributes(arg)) > 0)
+    else
+      hasAttributes = .false.
+    endif
     
   end function hasAttributes
   

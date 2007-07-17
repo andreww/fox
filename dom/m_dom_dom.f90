@@ -124,7 +124,6 @@ module m_dom_dom
     type(Node), pointer :: previousSibling => null()
     type(Node), pointer :: nextSibling     => null()
     type(Node), pointer :: ownerDocument   => null()
-    type(NamedNodeMap) :: attributes ! only for elements
     type(NodeList) :: childNodes ! not for text, cdata, PI, comment, notation,  docType, XPath
     ! Introduced in DOM Level 2:
     character, pointer, dimension(:) :: namespaceURI => null() ! \
@@ -435,7 +434,8 @@ endif
 
     endif
 
-    if (associated(element%attributes%nodes)) deallocate(element%attributes%nodes)
+    if (associated(element%elExtras%attributes%nodes)) deallocate(element%elExtras%attributes%nodes)
+    deallocate(element%elExtras)
     call destroyNodeContents(element)
     deallocate(element)
 
@@ -990,7 +990,7 @@ endif
     endif
 
     if (getNodeType(arg)==ELEMENT_NODE) then
-      nnm => arg%attributes
+      nnm => arg%elExtras%attributes
     else
       nnm => null()
     endif
@@ -2674,8 +2674,11 @@ endif
 
     endif
     
-    hasAttributes = (arg%nodeType /= ELEMENT_NODE) &
-      .and. (arg%attributes%length > 0)
+    if (arg%nodeType /= ELEMENT_NODE) then
+      hasAttributes = (getLength(getAttributes(arg)) > 0)
+    else
+      hasAttributes = .false.
+    endif
     
   end function hasAttributes
   
@@ -4459,7 +4462,8 @@ endif
     endif
     
     np => createNode(arg, ELEMENT_NODE, tagName, "")
-    np%attributes%ownerElement => np
+    allocate(np%elExtras)
+    np%elExtras%attributes%ownerElement => np
 
     ! FIXME set namespaceURI and localName appropriately
 
@@ -5475,7 +5479,8 @@ endif
     np%prefix => vs_str_alloc(prefixOfQName(qualifiedname))
     np%localName => vs_str_alloc(localpartOfQName(qualifiedname))
 
-    np%attributes%ownerElement => np
+    allocate(np%elExtras)
+    np%elExtras%attributes%ownerElement => np
 
     if (getGCstate(arg)) then
       np%inDocument = .false.
@@ -6240,9 +6245,9 @@ endif
     if (.not.p) return
     if (arg%nodeType/=ELEMENT_NODE) return
 
-    do i = 1, arg%attributes%length
-      if (str_vs(arg%attributes%nodes(i)%this%nodeName)==name) then
-        n = getValue_len(arg%attributes%nodes(i)%this, .true.)
+    do i = 1, arg%elExtras%attributes%length
+      if (str_vs(arg%elExtras%attributes%nodes(i)%this%nodeName)==name) then
+        n = getValue_len(arg%elExtras%attributes%nodes(i)%this, .true.)
         exit
       endif
     enddo
@@ -6568,8 +6573,8 @@ endif
 
     endif
 
-    do i = 1, arg%attributes%length
-      if (associated(arg%attributes%nodes(i)%this, oldattr)) then
+    do i = 1, getLength(getAttributes(arg))
+      if (associated(item(getAttributes(arg), i-1), oldattr)) then
         attr => removeNamedItem(getAttributes(arg), str_vs(oldattr%nodeName))
         attr%ownerElement => null()
         return
@@ -6603,10 +6608,10 @@ endif
     if (.not.p) return
     if (arg%nodeType/=ELEMENT_NODE) return
 
-    do i = 1, arg%attributes%length
-      if (str_vs(arg%attributes%nodes(i)%this%localName)==localname &
-        .and. str_vs(arg%attributes%nodes(i)%this%namespaceURI)==namespaceURI) then
-        n = getValue_len(arg%attributes%nodes(i)%this, .true.)
+    do i = 1, arg%elExtras%attributes%length
+      if (str_vs(arg%elExtras%attributes%nodes(i)%this%localName)==localname &
+        .and. str_vs(arg%elExtras%attributes%nodes(i)%this%namespaceURI)==namespaceURI) then
+        n = getValue_len(arg%elExtras%attributes%nodes(i)%this, .true.)
         exit
       endif
     enddo
@@ -6921,7 +6926,7 @@ endif
 
     endif
 
-    do i = 1, arg%attributes%length
+    do i = 1, getLength(getAttributes(arg))
       if (associated(item(getAttributes(arg), i-1), oldattr)) then
         attr => removeNamedItemNS(getAttributes(arg), &
           str_vs(oldattr%namespaceURI), str_vs(oldattr%localName))
@@ -6974,8 +6979,8 @@ endif
     endif
 
     p = .false.
-    do i = 1, arg%attributes%length
-      if (str_vs(arg%attributes%nodes(i)%this%nodeName)==name) then
+    do i = 1, getLength(getAttributes(arg))
+      if (getNodeName(item(getAttributes(arg), i-1))==name) then
         p = .true.
         exit
       endif
@@ -7014,9 +7019,9 @@ endif
     endif
 
     p = .false.
-    do i = 1, arg%attributes%length
-      if (str_vs(arg%attributes%nodes(i)%this%namespaceURI)==namespaceURI &
-        .and. str_vs(arg%attributes%nodes(i)%this%localName)==localName) then
+    do i = 1, getLength(getAttributes(arg))
+      if (getNamespaceURI(item(getAttributes(arg), i-1))==namespaceURI &
+        .and. getLocalName(item(getAttributes(arg), i-1))==localName) then
         p = .true.
         exit
       endif

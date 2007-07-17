@@ -158,7 +158,8 @@ TOHW_m_dom_contents(`
     endif
     
     np => createNode(arg, ELEMENT_NODE, tagName, "")
-    np%attributes%ownerElement => np
+    allocate(np%elExtras)
+    np%elExtras%attributes%ownerElement => np
 
     ! FIXME set namespaceURI and localName appropriately
 
@@ -637,7 +638,8 @@ TOHW_m_dom_treewalk(`dnl
     np%prefix => vs_str_alloc(prefixOfQName(qualifiedname))
     np%localName => vs_str_alloc(localpartOfQName(qualifiedname))
 
-    np%attributes%ownerElement => np
+    allocate(np%elExtras)
+    np%elExtras%attributes%ownerElement => np
 
     if (getGCstate(arg)) then
       np%inDocument = .false.
