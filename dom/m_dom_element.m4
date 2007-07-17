@@ -279,8 +279,8 @@ TOHW_m_dom_contents(`
     if (arg%nodeType/=ELEMENT_NODE) return
 
     do i = 1, arg%elExtras%attributes%length
-      if (str_vs(arg%elExtras%attributes%nodes(i)%this%localName)==localname &
-        .and. str_vs(arg%elExtras%attributes%nodes(i)%this%namespaceURI)==namespaceURI) then
+      if (str_vs(arg%elExtras%attributes%nodes(i)%this%elExtras%localName)==localname &
+        .and. str_vs(arg%elExtras%attributes%nodes(i)%this%elExtras%namespaceURI)==namespaceURI) then
         n = getValue_len(arg%elExtras%attributes%nodes(i)%this, .true.)
         exit
       endif
@@ -461,7 +461,7 @@ TOHW_m_dom_contents(`
     do i = 1, getLength(getAttributes(arg))
       if (associated(item(getAttributes(arg), i-1), oldattr)) then
         attr => removeNamedItemNS(getAttributes(arg), &
-          str_vs(oldattr%namespaceURI), str_vs(oldattr%localName))
+          getNamespaceURI(oldattr), getLocalName(oldattr))
         return
       endif
     enddo

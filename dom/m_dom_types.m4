@@ -66,14 +66,17 @@ TOHW_m_dom_publics(`
   end type documentExtras
 
   type elementOrAttributeExtras
+    ! Needed for all:
+    character, pointer, dimension(:) :: namespaceURI => null()
+    character, pointer, dimension(:) :: prefix => null()
+    character, pointer, dimension(:) :: localName => null()
+    ! Needed for elements:
     type(NamedNodeMap) :: attributes
-    character, pointer, dimension(:) :: namespaceURI => null() ! \
-    character, pointer, dimension(:) :: prefix => null()       !  - only useful for element & attribute
-    character, pointer, dimension(:) :: localName => null()    ! /
-    logical :: specified
-    type(Node), pointer :: ownerElement => null()
-    logical :: isId
     type(NodeList) :: namespaceNodes
+    ! Needed for attributes:
+    type(Node), pointer :: ownerElement => null()
+    logical :: specified
+    logical :: isId
   end type elementOrAttributeExtras
 
   type DTDExtras
@@ -97,9 +100,9 @@ TOHW_m_dom_publics(`
     type(Node), pointer :: ownerDocument   => null()
     type(NodeList) :: childNodes ! not for text, cdata, PI, comment, notation,  docType, XPath
     ! Introduced in DOM Level 2:
-    character, pointer, dimension(:) :: namespaceURI => null() ! \
-    character, pointer, dimension(:) :: prefix => null()       !  - only useful for element & attribute
-    character, pointer, dimension(:) :: localName => null()    ! /
+    !character, pointer, dimension(:) :: namespaceURI => null() ! \
+    !character, pointer, dimension(:) :: prefix => null()       !  - only useful for element & attribute
+    !character, pointer, dimension(:) :: localName => null()    ! /
 
     ! Introduced in DOM Level 2
     type(Node), pointer :: ownerElement => null() ! only for attribute
@@ -175,8 +178,8 @@ TOHW_m_dom_contents(`
     if (.not.associated(np)) return
 
     select case(np%nodeType)
-    case (ELEMENT_NODE)
-      call destroyElement(np)
+    case (ELEMENT_NODE, ATTRIBUTE_NODE)
+      call destroyElementOrAttribute(np)
     case (DOCUMENT_NODE)
       TOHW_m_dom_throw_error(FoX_INTERNAL_ERROR)
     case default
@@ -186,19 +189,24 @@ TOHW_m_dom_contents(`
 
   end subroutine destroyNode
 
-  TOHW_subroutine(destroyElement, (element))
+  TOHW_subroutine(destroyElementOrAttribute, (element))
     type(Node), pointer :: element
 
-    if (element%nodeType /= ELEMENT_NODE) then
+    if (element%nodeType /= ELEMENT_NODE &
+      .and. element%nodeType /= ATTRIBUTE_NODE &
+      .and. element%nodeType /= XPATH_NAMESPACE_NODE) then
        TOHW_m_dom_throw_error(FoX_INTERNAL_ERROR)
     endif
 
     if (associated(element%elExtras%attributes%nodes)) deallocate(element%elExtras%attributes%nodes)
+    if (associated(element%elExtras%namespaceURI)) deallocate(element%elExtras%namespaceURI)
+    if (associated(element%elExtras%prefix)) deallocate(element%elExtras%prefix)
+    if (associated(element%elExtras%localName)) deallocate(element%elExtras%localName)
     deallocate(element%elExtras)
     call destroyNodeContents(element)
     deallocate(element)
 
-  end subroutine destroyElement
+  end subroutine destroyElementOrAttribute
 
   subroutine destroyAllNodesRecursively(arg)
     type(Node), pointer :: arg
@@ -224,9 +232,6 @@ TOHW_m_dom_treewalk(`',`',`deadNode', `')
     
     if (associated(np%nodeName)) deallocate(np%nodeName)
     if (associated(np%nodeValue)) deallocate(np%nodeValue)
-    if (associated(np%namespaceURI)) deallocate(np%namespaceURI)
-    if (associated(np%prefix)) deallocate(np%prefix)
-    if (associated(np%localname)) deallocate(np%localname)
     if (associated(np%publicId)) deallocate(np%publicId)
     if (associated(np%systemId)) deallocate(np%systemId)
     if (associated(np%internalSubset)) deallocate(np%internalSubset)

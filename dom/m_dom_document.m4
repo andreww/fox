@@ -323,9 +323,10 @@ TOHW_m_dom_contents(`
     endif
   
     np => createNode(arg, ATTRIBUTE_NODE, name, "")
-    np%namespaceURI => vs_str_alloc("")
-    np%localname => vs_str_alloc(name)
-    np%prefix => vs_str_alloc(name)
+    allocate(np%elExtras)
+    np%elExtras%namespaceURI => vs_str_alloc("")
+    np%elExtras%localname => vs_str_alloc(name)
+    np%elExtras%prefix => vs_str_alloc(name)
 
     if (getGCstate(arg)) then
       np%inDocument = .false.
@@ -634,11 +635,11 @@ TOHW_m_dom_treewalk(`dnl
     ! FIXME create a namespace node for XPath?
 
     np => createNode(arg, ELEMENT_NODE, qualifiedName, "")
-    np%namespaceURI => vs_str_alloc(namespaceURI)
-    np%prefix => vs_str_alloc(prefixOfQName(qualifiedname))
-    np%localName => vs_str_alloc(localpartOfQName(qualifiedname))
-
     allocate(np%elExtras)
+    np%elExtras%namespaceURI => vs_str_alloc(namespaceURI)
+    np%elExtras%prefix => vs_str_alloc(prefixOfQName(qualifiedname))
+    np%elExtras%localName => vs_str_alloc(localpartOfQName(qualifiedname))
+
     np%elExtras%attributes%ownerElement => np
 
     if (getGCstate(arg)) then
@@ -678,9 +679,10 @@ TOHW_m_dom_treewalk(`dnl
     endif
   
     np => createNode(arg, ATTRIBUTE_NODE, qualifiedName, "")
-    np%namespaceURI => vs_str_alloc(namespaceURI)
-    np%localname => vs_str_alloc(localPartofQName(qualifiedname))
-    np%prefix => vs_str_alloc(PrefixofQName(qualifiedname))
+    allocate(np%elExtras)
+    np%elExtras%namespaceURI => vs_str_alloc(namespaceURI)
+    np%elExtras%localname => vs_str_alloc(localPartofQName(qualifiedname))
+    np%elExtras%prefix => vs_str_alloc(PrefixofQName(qualifiedname))
 
     if (getGCstate(arg)) then
       np%inDocument = .false.
@@ -746,8 +748,8 @@ TOHW_m_dom_treewalk(`dnl
     treeroot => arg
 TOHW_m_dom_treewalk(`dnl
       if ((this%nodeType==ELEMENT_NODE) &
-        .and. (allNameSpaces .or. str_vs(arg%namespaceURI)==namespaceURI) &
-        .and. (allLocalNames .or. str_vs(arg%localName)==localName)) then
+        .and. (allNameSpaces .or. getNameSpaceURI(arg)==namespaceURI) &
+        .and. (allLocalNames .or. getLocalName(arg)==localName)) then
         call append(list, this)
           doneAttributes = .true.
         endif
@@ -859,8 +861,9 @@ TOHW_m_dom_treewalk(`dnl
     endif
 
     np => createNode(arg, XPATH_NAMESPACE_NODE, "#namespace", URI)
-    np%prefix => vs_str_alloc(prefix)
-    np%namespaceURI => vs_str_alloc(URI)
+    allocate(np%elExtras)
+    np%elExtras%prefix => vs_str_alloc(prefix)
+    np%elExtras%namespaceURI => vs_str_alloc(URI)
 
   end function createNamespaceNode
 

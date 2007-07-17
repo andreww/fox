@@ -956,27 +956,69 @@ TOHW_m_dom_treewalk(`
     p = hasFeature(getImplementation(arg%ownerDocument), feature, version)
   end function isSupported
 
-  ! FIXME should the below instead just decompose the QName on access?
+  pure function getNamespaceURI_len(arg, p) result(n)
+    type(Node), intent(in) :: arg
+    logical, intent(in) :: p
+    integer :: n
+
+    n = 0
+    if (p) then
+      if (arg%nodeType==ELEMENT_NODE &
+        .or. arg%nodeType==ATTRIBUTE_NODE &
+        .or. arg%nodeType==XPATH_NAMESPACE_NODE) &
+        n = size(arg%elExtras%namespaceURI)
+    endif
+
+  end function getNamespaceURI_len
+
   TOHW_function(getNamespaceURI, (arg), c)
     type(Node), pointer :: arg
-    character(len=size(arg%namespaceURI)) :: c
+    character(len=getNamespaceURI_len(arg, associated(arg))) :: c
 
     if (.not.associated(arg)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif
 
-    c = str_vs(arg%namespaceURI)
+    if (arg%nodeType==ELEMENT_NODE &
+      .or. arg%nodeType==ATTRIBUTE_NODE &
+      .or. arg%nodeType==XPATH_NAMESPACE_NODE) then
+      c = str_vs(arg%elExtras%namespaceURI)
+    else
+      c = ""
+    endif
   end function getNamespaceURI
+
+  pure function getPrefix_len(arg, p) result(n)
+    type(Node), intent(in) :: arg
+    logical, intent(in) :: p
+    integer :: n
+
+    n = 0
+    if (p) then
+      if (arg%nodeType==ELEMENT_NODE &
+        .or. arg%nodeType==ATTRIBUTE_NODE &
+        .or. arg%nodeType==XPATH_NAMESPACE_NODE) &
+        n = size(arg%elExtras%prefix)
+    endif
+
+  end function getPrefix_len
 
   TOHW_function(getPrefix, (arg), c)
     type(Node), pointer :: arg
-    character(len=size(arg%prefix)) :: c
+    character(len=getPrefix_len(arg, associated(arg))) :: c
 
     if (.not.associated(arg)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif
 
-    c = str_vs(arg%prefix)
+    if (arg%nodeType==ELEMENT_NODE &
+      .or. arg%nodeType==ATTRIBUTE_NODE &
+      .or. arg%nodeType==XPATH_NAMESPACE_NODE) then
+      c = str_vs(arg%elExtras%prefix)
+    else
+      c = ""
+    endif
+
   end function getPrefix
   
   TOHW_subroutine(setPrefix, (arg, prefix))
@@ -987,24 +1029,57 @@ TOHW_m_dom_treewalk(`
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif
 
-    deallocate(arg%prefix)
-    arg%prefix => vs_str_alloc(prefix)
+    if (arg%nodeType==ELEMENT_NODE &
+      .or. arg%nodeType==ATTRIBUTE_NODE &
+      .or. arg%nodeType==XPATH_NAMESPACE_NODE) then
+      if (arg%readonly) then
+        TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
+      endif
+      ! FIXME lots of checks
+      ! and change nodeName, and affect namespaces ...
+      deallocate(arg%elExtras%prefix)
+      arg%elExtras%prefix = vs_str_alloc(prefix)
+    else
+      ! Do nothing
+      continue
+    endif
 
     print*, "why are you doing this?"
-    ! FIXME we should implement this but raise a FoX-specific exception if used
     stop
     ! FIXME exceptions
   end subroutine setPrefix
 
+  pure function getLocalName_len(arg, p) result(n)
+    type(Node), intent(in) :: arg
+    logical, intent(in) :: p
+    integer :: n
+
+    n = 0
+    if (p) then
+      if (arg%nodeType==ELEMENT_NODE &
+        .or. arg%nodeType==ATTRIBUTE_NODE &
+        .or. arg%nodeType==XPATH_NAMESPACE_NODE) &
+      n = size(arg%elExtras%localName)
+    endif
+
+  end function getLocalName_len
+
   TOHW_function(getLocalName, (arg), c)
     type(Node), pointer :: arg
-    character(len=size(arg%localName)) :: c
+    character(len=getLocalName_len(arg, associated(arg))) :: c
 
     if (.not.associated(arg)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif
 
-    c = str_vs(arg%localName)
+    if (arg%nodeType==ELEMENT_NODE &
+      .or. arg%nodeType==ATTRIBUTE_NODE &
+      .or. arg%nodeType==XPATH_NAMESPACE_NODE) then
+      c = str_vs(arg%elExtras%localName)
+    else
+      c = ""
+    endif
+
   end function getLocalName
 
   ! function isDefaultNamespace

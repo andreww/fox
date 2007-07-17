@@ -126,9 +126,9 @@ module m_dom_dom
     type(Node), pointer :: ownerDocument   => null()
     type(NodeList) :: childNodes ! not for text, cdata, PI, comment, notation,  docType, XPath
     ! Introduced in DOM Level 2:
-    character, pointer, dimension(:) :: namespaceURI => null() ! \
-    character, pointer, dimension(:) :: prefix => null()       !  - only useful for element & attribute
-    character, pointer, dimension(:) :: localName => null()    ! /
+    !character, pointer, dimension(:) :: namespaceURI => null() ! \
+    !character, pointer, dimension(:) :: prefix => null()       !  - only useful for element & attribute
+    !character, pointer, dimension(:) :: localName => null()    ! /
 
     ! Introduced in DOM Level 2
     type(Node), pointer :: ownerElement => null() ! only for attribute
@@ -401,8 +401,8 @@ contains
     if (.not.associated(np)) return
 
     select case(np%nodeType)
-    case (ELEMENT_NODE)
-      call destroyElement(np)
+    case (ELEMENT_NODE, ATTRIBUTE_NODE)
+      call destroyElementOrAttribute(np)
     case (DOCUMENT_NODE)
       call throw_exception(FoX_INTERNAL_ERROR, "destroyNode", ex)
 if (present(ex)) then
@@ -418,12 +418,14 @@ endif
 
   end subroutine destroyNode
 
-  subroutine destroyElement(element, ex)
+  subroutine destroyElementOrAttribute(element, ex)
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: element
 
-    if (element%nodeType /= ELEMENT_NODE) then
-       call throw_exception(FoX_INTERNAL_ERROR, "destroyElement", ex)
+    if (element%nodeType /= ELEMENT_NODE &
+      .and. element%nodeType /= ATTRIBUTE_NODE &
+      .and. element%nodeType /= XPATH_NAMESPACE_NODE) then
+       call throw_exception(FoX_INTERNAL_ERROR, "destroyElementOrAttribute", ex)
 if (present(ex)) then
   if (inException(ex)) then
      return
@@ -433,11 +435,14 @@ endif
     endif
 
     if (associated(element%elExtras%attributes%nodes)) deallocate(element%elExtras%attributes%nodes)
+    if (associated(element%elExtras%namespaceURI)) deallocate(element%elExtras%namespaceURI)
+    if (associated(element%elExtras%prefix)) deallocate(element%elExtras%prefix)
+    if (associated(element%elExtras%localName)) deallocate(element%elExtras%localName)
     deallocate(element%elExtras)
     call destroyNodeContents(element)
     deallocate(element)
 
-  end subroutine destroyElement
+  end subroutine destroyElementOrAttribute
 
   subroutine destroyAllNodesRecursively(arg)
     type(Node), pointer :: arg
@@ -533,9 +538,6 @@ endif
     
     if (associated(np%nodeName)) deallocate(np%nodeName)
     if (associated(np%nodeValue)) deallocate(np%nodeValue)
-    if (associated(np%namespaceURI)) deallocate(np%namespaceURI)
-    if (associated(np%prefix)) deallocate(np%prefix)
-    if (associated(np%localname)) deallocate(np%localname)
     if (associated(np%publicId)) deallocate(np%publicId)
     if (associated(np%systemId)) deallocate(np%systemId)
     if (associated(np%internalSubset)) deallocate(np%internalSubset)
@@ -2818,11 +2820,25 @@ endif
     p = hasFeature(getImplementation(arg%ownerDocument), feature, version)
   end function isSupported
 
-  ! FIXME should the below instead just decompose the QName on access?
+  pure function getNamespaceURI_len(arg, p) result(n)
+    type(Node), intent(in) :: arg
+    logical, intent(in) :: p
+    integer :: n
+
+    n = 0
+    if (p) then
+      if (arg%nodeType==ELEMENT_NODE &
+        .or. arg%nodeType==ATTRIBUTE_NODE &
+        .or. arg%nodeType==XPATH_NAMESPACE_NODE) &
+        n = size(arg%elExtras%namespaceURI)
+    endif
+
+  end function getNamespaceURI_len
+
   function getNamespaceURI(arg, ex)result(c) 
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
-    character(len=size(arg%namespaceURI)) :: c
+    character(len=getNamespaceURI_len(arg, associated(arg))) :: c
 
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "getNamespaceURI", ex)
@@ -2834,13 +2850,34 @@ endif
 
     endif
 
-    c = str_vs(arg%namespaceURI)
+    if (arg%nodeType==ELEMENT_NODE &
+      .or. arg%nodeType==ATTRIBUTE_NODE &
+      .or. arg%nodeType==XPATH_NAMESPACE_NODE) then
+      c = str_vs(arg%elExtras%namespaceURI)
+    else
+      c = ""
+    endif
   end function getNamespaceURI
+
+  pure function getPrefix_len(arg, p) result(n)
+    type(Node), intent(in) :: arg
+    logical, intent(in) :: p
+    integer :: n
+
+    n = 0
+    if (p) then
+      if (arg%nodeType==ELEMENT_NODE &
+        .or. arg%nodeType==ATTRIBUTE_NODE &
+        .or. arg%nodeType==XPATH_NAMESPACE_NODE) &
+        n = size(arg%elExtras%prefix)
+    endif
+
+  end function getPrefix_len
 
   function getPrefix(arg, ex)result(c) 
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
-    character(len=size(arg%prefix)) :: c
+    character(len=getPrefix_len(arg, associated(arg))) :: c
 
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "getPrefix", ex)
@@ -2852,7 +2889,14 @@ endif
 
     endif
 
-    c = str_vs(arg%prefix)
+    if (arg%nodeType==ELEMENT_NODE &
+      .or. arg%nodeType==ATTRIBUTE_NODE &
+      .or. arg%nodeType==XPATH_NAMESPACE_NODE) then
+      c = str_vs(arg%elExtras%prefix)
+    else
+      c = ""
+    endif
+
   end function getPrefix
   
   subroutine setPrefix(arg, prefix, ex)
@@ -2870,19 +2914,51 @@ endif
 
     endif
 
-    deallocate(arg%prefix)
-    arg%prefix => vs_str_alloc(prefix)
+    if (arg%nodeType==ELEMENT_NODE &
+      .or. arg%nodeType==ATTRIBUTE_NODE &
+      .or. arg%nodeType==XPATH_NAMESPACE_NODE) then
+      if (arg%readonly) then
+        call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setPrefix", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
+      endif
+      ! FIXME lots of checks
+      ! and change nodeName, and affect namespaces ...
+      deallocate(arg%elExtras%prefix)
+      arg%elExtras%prefix = vs_str_alloc(prefix)
+    else
+      ! Do nothing
+      continue
+    endif
 
     print*, "why are you doing this?"
-    ! FIXME we should implement this but raise a FoX-specific exception if used
     stop
     ! FIXME exceptions
   end subroutine setPrefix
 
+  pure function getLocalName_len(arg, p) result(n)
+    type(Node), intent(in) :: arg
+    logical, intent(in) :: p
+    integer :: n
+
+    n = 0
+    if (p) then
+      if (arg%nodeType==ELEMENT_NODE &
+        .or. arg%nodeType==ATTRIBUTE_NODE &
+        .or. arg%nodeType==XPATH_NAMESPACE_NODE) &
+      n = size(arg%elExtras%localName)
+    endif
+
+  end function getLocalName_len
+
   function getLocalName(arg, ex)result(c) 
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
-    character(len=size(arg%localName)) :: c
+    character(len=getLocalName_len(arg, associated(arg))) :: c
 
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "getLocalName", ex)
@@ -2894,7 +2970,14 @@ endif
 
     endif
 
-    c = str_vs(arg%localName)
+    if (arg%nodeType==ELEMENT_NODE &
+      .or. arg%nodeType==ATTRIBUTE_NODE &
+      .or. arg%nodeType==XPATH_NAMESPACE_NODE) then
+      c = str_vs(arg%elExtras%localName)
+    else
+      c = ""
+    endif
+
   end function getLocalName
 
   ! function isDefaultNamespace
@@ -3719,10 +3802,10 @@ endif
 
     endif
 
-    do i = 1, map%length
-      if (str_vs(map%nodes(i)%this%namespaceURI)==namespaceURI &
-        .and. str_vs(map%nodes(i)%this%localName)==localName) then
-        np => map%nodes(i)%this
+    do i = 1, getLength(map)
+      if (getNamespaceURI(item(map, i-1))==namespaceURI &
+        .and. getLocalName(item(map, i-1))==localName) then
+        np => item(map, i-1)
         return
       endif
     enddo
@@ -3741,8 +3824,8 @@ endif
     integer :: i
 
     do i = 1, map%length
-      if (str_vs(map%nodes(i)%this%namespaceURI)==namespaceURI &
-        .and. str_vs(map%nodes(i)%this%localName)==localName) then
+      if (str_vs(map%nodes(i)%this%elExtras%namespaceURI)==namespaceURI &
+        .and. str_vs(map%nodes(i)%this%elExtras%localName)==localName) then
         n = size(map%nodes(i)%this%nodeValue)
         exit
       endif
@@ -3771,10 +3854,10 @@ endif
 
     endif
 
-    do i = 1, map%length
-      if (str_vs(map%nodes(i)%this%namespaceURI)==namespaceURI &
-        .and. str_vs(map%nodes(i)%this%localName)==localName) then
-        c = str_vs(map%nodes(i)%this%nodeValue)
+    do i = 1, getLength(map)
+      if (getNamespaceURI(item(map, i-1))==namespaceURI &
+        .and. getLocalName(item(map, i-1))==localName) then
+        c = getNodeValue(item(map, i-1))
         return
       endif
     enddo
@@ -3857,10 +3940,10 @@ endif
     endif
 
     np => null()
-    do i = 1, map%length
-      if (str_vs(map%nodes(i)%this%namespaceURI)==str_vs(arg%namespaceURI) &
-        .and. str_vs(map%nodes(i)%this%localName)==str_vs(arg%localName)) then
-        np => map%nodes(i)%this
+    do i = 1, getLength(map)
+      if (getNamespaceURI(item(map, i-1))==getNamespaceURI(arg) &
+        .and. getLocalName(item(map, i-1))==getLocalName(arg)) then
+        np => item(map, i-1)
         map%nodes(i)%this => arg
         arg%ownerElement => map%ownerElement
         exit
@@ -3916,11 +3999,11 @@ endif
 
     endif
 
-    do i = 1, map%length
-      if (str_vs(map%nodes(i)%this%namespaceURI)==namespaceURI &
-        .and. str_vs(map%nodes(i)%this%localName)==localName) then
+    do i = 1, getLength(map)
+      if (getNamespaceURI(item(map, i-1))==namespaceURI &
+        .and. getLocalName(item(map, i-1))==localName) then
         ! Grab this node
-        np => map%nodes(i)%this
+        np => item(map, i-1)
         ! and shrink the node list
         temp_nl => map%nodes
         allocate(map%nodes(size(temp_nl)-1))
@@ -4757,9 +4840,10 @@ endif
     endif
   
     np => createNode(arg, ATTRIBUTE_NODE, name, "")
-    np%namespaceURI => vs_str_alloc("")
-    np%localname => vs_str_alloc(name)
-    np%prefix => vs_str_alloc(name)
+    allocate(np%elExtras)
+    np%elExtras%namespaceURI => vs_str_alloc("")
+    np%elExtras%localname => vs_str_alloc(name)
+    np%elExtras%prefix => vs_str_alloc(name)
 
     if (getGCstate(arg)) then
       np%inDocument = .false.
@@ -5473,11 +5557,11 @@ endif
     ! FIXME create a namespace node for XPath?
 
     np => createNode(arg, ELEMENT_NODE, qualifiedName, "")
-    np%namespaceURI => vs_str_alloc(namespaceURI)
-    np%prefix => vs_str_alloc(prefixOfQName(qualifiedname))
-    np%localName => vs_str_alloc(localpartOfQName(qualifiedname))
-
     allocate(np%elExtras)
+    np%elExtras%namespaceURI => vs_str_alloc(namespaceURI)
+    np%elExtras%prefix => vs_str_alloc(prefixOfQName(qualifiedname))
+    np%elExtras%localName => vs_str_alloc(localpartOfQName(qualifiedname))
+
     np%elExtras%attributes%ownerElement => np
 
     if (getGCstate(arg)) then
@@ -5554,9 +5638,10 @@ endif
     endif
   
     np => createNode(arg, ATTRIBUTE_NODE, qualifiedName, "")
-    np%namespaceURI => vs_str_alloc(namespaceURI)
-    np%localname => vs_str_alloc(localPartofQName(qualifiedname))
-    np%prefix => vs_str_alloc(PrefixofQName(qualifiedname))
+    allocate(np%elExtras)
+    np%elExtras%namespaceURI => vs_str_alloc(namespaceURI)
+    np%elExtras%localname => vs_str_alloc(localPartofQName(qualifiedname))
+    np%elExtras%prefix => vs_str_alloc(PrefixofQName(qualifiedname))
 
     if (getGCstate(arg)) then
       np%inDocument = .false.
@@ -5644,8 +5729,8 @@ endif
       if (.not.doneChildren) then
 
       if ((this%nodeType==ELEMENT_NODE) &
-        .and. (allNameSpaces .or. str_vs(arg%namespaceURI)==namespaceURI) &
-        .and. (allLocalNames .or. str_vs(arg%localName)==localName)) then
+        .and. (allNameSpaces .or. getNameSpaceURI(arg)==namespaceURI) &
+        .and. (allLocalNames .or. getLocalName(arg)==localName)) then
         call append(list, this)
           doneAttributes = .true.
         endif
@@ -5930,8 +6015,9 @@ endif
     endif
 
     np => createNode(arg, XPATH_NAMESPACE_NODE, "#namespace", URI)
-    np%prefix => vs_str_alloc(prefix)
-    np%namespaceURI => vs_str_alloc(URI)
+    allocate(np%elExtras)
+    np%elExtras%prefix => vs_str_alloc(prefix)
+    np%elExtras%namespaceURI => vs_str_alloc(URI)
 
   end function createNamespaceNode
 
@@ -6607,8 +6693,8 @@ endif
     if (arg%nodeType/=ELEMENT_NODE) return
 
     do i = 1, arg%elExtras%attributes%length
-      if (str_vs(arg%elExtras%attributes%nodes(i)%this%localName)==localname &
-        .and. str_vs(arg%elExtras%attributes%nodes(i)%this%namespaceURI)==namespaceURI) then
+      if (str_vs(arg%elExtras%attributes%nodes(i)%this%elExtras%localName)==localname &
+        .and. str_vs(arg%elExtras%attributes%nodes(i)%this%elExtras%namespaceURI)==namespaceURI) then
         n = getValue_len(arg%elExtras%attributes%nodes(i)%this, .true.)
         exit
       endif
@@ -6927,7 +7013,7 @@ endif
     do i = 1, getLength(getAttributes(arg))
       if (associated(item(getAttributes(arg), i-1), oldattr)) then
         attr => removeNamedItemNS(getAttributes(arg), &
-          str_vs(oldattr%namespaceURI), str_vs(oldattr%localName))
+          getNamespaceURI(oldattr), getLocalName(oldattr))
         return
       endif
     enddo

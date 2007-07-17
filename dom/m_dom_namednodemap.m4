@@ -248,10 +248,10 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(FoX_MAP_IS_NULL)
     endif
 
-    do i = 1, map%length
-      if (str_vs(map%nodes(i)%this%namespaceURI)==namespaceURI &
-        .and. str_vs(map%nodes(i)%this%localName)==localName) then
-        np => map%nodes(i)%this
+    do i = 1, getLength(map)
+      if (getNamespaceURI(item(map, i-1))==namespaceURI &
+        .and. getLocalName(item(map, i-1))==localName) then
+        np => item(map, i-1)
         return
       endif
     enddo
@@ -270,8 +270,8 @@ TOHW_m_dom_contents(`
     integer :: i
 
     do i = 1, map%length
-      if (str_vs(map%nodes(i)%this%namespaceURI)==namespaceURI &
-        .and. str_vs(map%nodes(i)%this%localName)==localName) then
+      if (str_vs(map%nodes(i)%this%elExtras%namespaceURI)==namespaceURI &
+        .and. str_vs(map%nodes(i)%this%elExtras%localName)==localName) then
         n = size(map%nodes(i)%this%nodeValue)
         exit
       endif
@@ -293,10 +293,10 @@ TOHW_m_dom_contents(`
        TOHW_m_dom_throw_error(FoX_MAP_IS_NULL)
     endif
 
-    do i = 1, map%length
-      if (str_vs(map%nodes(i)%this%namespaceURI)==namespaceURI &
-        .and. str_vs(map%nodes(i)%this%localName)==localName) then
-        c = str_vs(map%nodes(i)%this%nodeValue)
+    do i = 1, getLength(map)
+      if (getNamespaceURI(item(map, i-1))==namespaceURI &
+        .and. getLocalName(item(map, i-1))==localName) then
+        c = getNodeValue(item(map, i-1))
         return
       endif
     enddo
@@ -342,10 +342,10 @@ TOHW_m_dom_contents(`
     endif
 
     np => null()
-    do i = 1, map%length
-      if (str_vs(map%nodes(i)%this%namespaceURI)==str_vs(arg%namespaceURI) &
-        .and. str_vs(map%nodes(i)%this%localName)==str_vs(arg%localName)) then
-        np => map%nodes(i)%this
+    do i = 1, getLength(map)
+      if (getNamespaceURI(item(map, i-1))==getNamespaceURI(arg) &
+        .and. getLocalName(item(map, i-1))==getLocalName(arg)) then
+        np => item(map, i-1)
         map%nodes(i)%this => arg
         arg%ownerElement => map%ownerElement
         exit
@@ -388,11 +388,11 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
     endif
 
-    do i = 1, map%length
-      if (str_vs(map%nodes(i)%this%namespaceURI)==namespaceURI &
-        .and. str_vs(map%nodes(i)%this%localName)==localName) then
+    do i = 1, getLength(map)
+      if (getNamespaceURI(item(map, i-1))==namespaceURI &
+        .and. getLocalName(item(map, i-1))==localName) then
         ! Grab this node
-        np => map%nodes(i)%this
+        np => item(map, i-1)
         ! and shrink the node list
         temp_nl => map%nodes
         allocate(map%nodes(size(temp_nl)-1))
