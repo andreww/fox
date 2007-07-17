@@ -142,7 +142,6 @@ module m_dom_dom
     logical :: strictErrorChecking = .false. ! document/doctype
     character, pointer :: documentURI(:) => null() ! document/doctype
     ! DOMCONFIGURATION
-    logical :: isId = .false. ! attribute
     logical :: illFormed = .false. ! entity
     logical :: inDocument = .false.! For a node, is this node associated to the doc?
     type(documentExtras), pointer :: docExtras
@@ -7290,7 +7289,7 @@ endif
 
     endif
 
-    p = arg%isId
+    p = arg%elExtras%isId
 
   end function getIsId
 
@@ -7319,7 +7318,7 @@ endif
 
     endif
 
-    arg%isId = p
+    arg%elExtras%isId = p
 
   end subroutine setIsId
 

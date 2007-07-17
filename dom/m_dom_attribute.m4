@@ -150,7 +150,7 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
 
-    p = arg%isId
+    p = arg%elExtras%isId
 
   end function getIsId
 
@@ -166,7 +166,7 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
 
-    arg%isId = p
+    arg%elExtras%isId = p
 
   end subroutine setIsId
 

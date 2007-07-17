@@ -113,7 +113,6 @@ TOHW_m_dom_publics(`
     logical :: strictErrorChecking = .false. ! document/doctype
     character, pointer :: documentURI(:) => null() ! document/doctype
     ! DOMCONFIGURATION
-    logical :: isId = .false. ! attribute
     logical :: illFormed = .false. ! entity
     logical :: inDocument = .false.! For a node, is this node associated to the doc?
     type(documentExtras), pointer :: docExtras
