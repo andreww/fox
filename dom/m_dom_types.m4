@@ -101,7 +101,6 @@ TOHW_m_dom_publics(`
     character, pointer, dimension(:) :: prefix => null()       !  - only useful for element & attribute
     character, pointer, dimension(:) :: localName => null()    ! /
 
-    logical :: specified = .true. ! only for attribute
     ! Introduced in DOM Level 2
     type(Node), pointer :: ownerElement => null() ! only for attribute
     character, pointer :: publicId(:) => null() ! doctype, entity, notation 

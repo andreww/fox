@@ -34,7 +34,7 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
 
-    p = arg%specified
+    p = arg%elExtras%specified
   end function getSpecified
 
   TOHW_subroutine(setSpecified, (arg, p))
@@ -49,7 +49,7 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
 
-    arg%specified = p
+    arg%elExtras%specified = p
   end subroutine setSpecified
     
   pure function getValue_len(arg, p) result(n)

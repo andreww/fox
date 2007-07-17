@@ -130,7 +130,6 @@ module m_dom_dom
     character, pointer, dimension(:) :: prefix => null()       !  - only useful for element & attribute
     character, pointer, dimension(:) :: localName => null()    ! /
 
-    logical :: specified = .true. ! only for attribute
     ! Introduced in DOM Level 2
     type(Node), pointer :: ownerElement => null() ! only for attribute
     character, pointer :: publicId(:) => null() ! doctype, entity, notation 
@@ -7098,7 +7097,7 @@ endif
 
     endif
 
-    p = arg%specified
+    p = arg%elExtras%specified
   end function getSpecified
 
   subroutine setSpecified(arg, p, ex)
@@ -7126,7 +7125,7 @@ endif
 
     endif
 
-    arg%specified = p
+    arg%elExtras%specified = p
   end subroutine setSpecified
     
   pure function getValue_len(arg, p) result(n)
