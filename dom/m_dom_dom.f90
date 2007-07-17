@@ -40,6 +40,7 @@ module m_dom_dom
   integer, parameter ::     DOCUMENT_TYPE_NODE             = 10
   integer, parameter ::     DOCUMENT_FRAGMENT_NODE         = 11
   integer, parameter ::     NOTATION_NODE                  = 12
+  integer, parameter ::     XPATH_NAMESPACE_NODE           = 13
 
 
   type DOMImplementation
@@ -93,7 +94,7 @@ module m_dom_dom
     character, pointer :: documentURI(:) => null()
   end type documentExtras
 
-  type ElementOrAttributeExtras
+  type elementOrAttributeExtras
     type(NamedNodeMap) :: attributes
     character, pointer, dimension(:) :: namespaceURI => null() ! \
     character, pointer, dimension(:) :: prefix => null()       !  - only useful for element & attribute
@@ -102,7 +103,7 @@ module m_dom_dom
     type(Node), pointer :: ownerElement => null()
     logical :: isId
     type(NodeList) :: namespaceNodes
-  end type ElementOrAttributeExtras
+  end type elementOrAttributeExtras
 
   type DTDExtras
     character, pointer :: publicId(:) => null() ! doctype, entity, notation 
@@ -147,6 +148,7 @@ module m_dom_dom
     logical :: illFormed = .false. ! entity
     logical :: inDocument = .false.! For a node, is this node associated to the doc?
     type(documentExtras), pointer :: docExtras
+    type(elementOrAttributeExtras), pointer :: elExtras
   end type Node
 
   type(DOMImplementation), save, target :: FoX_DOM
@@ -296,6 +298,7 @@ module m_dom_dom
   public :: setDocType
   public :: setXds
   public :: setEntityReferenceValue
+  public :: createNamespaceNode
   public :: createEntity
   public :: createNotation
   public :: setGCstate
@@ -5896,6 +5899,39 @@ endif
 
   ! Internal function, not part of API
 
+  function createNamespaceNode(arg, prefix, URI, ex)result(np) 
+    type(DOMException), intent(out), optional :: ex
+    type(Node), pointer :: arg
+    character(len=*), intent(in) :: prefix
+    character(len=*), intent(in) :: URI
+    type(Node), pointer :: np
+
+    if (.not.associated(arg)) then
+      call throw_exception(FoX_NODE_IS_NULL, "createNamespaceNode", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    if (arg%nodeType/=DOCUMENT_NODE) then
+      call throw_exception(FoX_INVALID_NODE, "createNamespaceNode", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    np => createNode(arg, XPATH_NAMESPACE_NODE, "#namespace", URI)
+    np%prefix => vs_str_alloc(prefix)
+    np%namespaceURI => vs_str_alloc(URI)
+
+  end function createNamespaceNode
+
   function createEntity(arg, name, publicId, systemId, notationName, ex)result(np) 
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
@@ -6991,6 +7027,36 @@ endif
 ! setIdAttribute
 ! setIdAttributeNS
 ! setIdAttributeNode
+
+  subroutine appendNSNode(np, prefix, namespaceURI, ex)
+    type(DOMException), intent(out), optional :: ex
+    type(Node), pointer :: np
+    character(len=*), intent(in) :: prefix
+    character(len=*), intent(in) :: namespaceURI
+!!$
+!!$    if (.not.associated(arg)) then
+!!$      call throw_exception(FoX_NODE_IS_NULL, "appendNSNode", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
+!!$    endif
+!!$    
+!!$    if (arg%nodeType /= ELEMENT_NODE) then
+!!$      call throw_exception(FoX_INVALID_NODE, "appendNSNode", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
+!!$    endif
+!!$    
+!!$    call append_nl(np%nsnodes, createNamespaceNode(np, prefix, namespaceURI))
+  end subroutine appendNSNode
+    
 
 
   

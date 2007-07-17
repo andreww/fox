@@ -11,6 +11,7 @@ TOHW_m_dom_publics(`
   integer, parameter ::     DOCUMENT_TYPE_NODE             = 10
   integer, parameter ::     DOCUMENT_FRAGMENT_NODE         = 11
   integer, parameter ::     NOTATION_NODE                  = 12
+  integer, parameter ::     XPATH_NAMESPACE_NODE           = 13
 
 
   type DOMImplementation
@@ -64,7 +65,7 @@ TOHW_m_dom_publics(`
     character, pointer :: documentURI(:) => null()
   end type documentExtras
 
-  type ElementOrAttributeExtras
+  type elementOrAttributeExtras
     type(NamedNodeMap) :: attributes
     character, pointer, dimension(:) :: namespaceURI => null() ! \
     character, pointer, dimension(:) :: prefix => null()       !  - only useful for element & attribute
@@ -73,7 +74,7 @@ TOHW_m_dom_publics(`
     type(Node), pointer :: ownerElement => null()
     logical :: isId
     type(NodeList) :: namespaceNodes
-  end type ElementOrAttributeExtras
+  end type elementOrAttributeExtras
 
   type DTDExtras
     character, pointer :: publicId(:) => null() ! doctype, entity, notation 
@@ -118,6 +119,7 @@ TOHW_m_dom_publics(`
     logical :: illFormed = .false. ! entity
     logical :: inDocument = .false.! For a node, is this node associated to the doc?
     type(documentExtras), pointer :: docExtras
+    type(elementOrAttributeExtras), pointer :: elExtras
   end type Node
 
   type(DOMImplementation), save, target :: FoX_DOM

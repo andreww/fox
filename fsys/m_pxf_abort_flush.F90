@@ -86,7 +86,7 @@ CONTAINS
 
 #ifdef FC_HAVE_ABORT
 !FIXME should test in autoconfo does abort take an argument.
-    call abort("")
+    call abort()
 #elif defined (xlC)
     call abort_()
 #else

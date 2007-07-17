@@ -9,7 +9,7 @@ program dom_example
   type(NodeList) :: interest
   integer :: i
 
-  myDoc => parsestring('<a/>')
+  myDoc => parseFile("test.xml")
 
   !np => createEntityReference(myDoc, "ent1")
   

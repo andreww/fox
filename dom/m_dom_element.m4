@@ -533,4 +533,21 @@ TOHW_m_dom_contents(`
 ! setIdAttributeNS
 ! setIdAttributeNode
 
+  TOHW_subroutine(appendNSNode, (np, prefix, namespaceURI))
+    type(Node), pointer :: np
+    character(len=*), intent(in) :: prefix
+    character(len=*), intent(in) :: namespaceURI
+!!$
+!!$    if (.not.associated(arg)) then
+!!$      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+!!$    endif
+!!$    
+!!$    if (arg%nodeType /= ELEMENT_NODE) then
+!!$      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
+!!$    endif
+!!$    
+!!$    call append_nl(np%nsnodes, createNamespaceNode(np, prefix, namespaceURI))
+  end subroutine appendNSNode
+    
+
 ')`'dnl

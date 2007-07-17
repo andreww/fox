@@ -26,6 +26,7 @@ TOHW_m_dom_publics(`
   public :: setDocType
   public :: setXds
   public :: setEntityReferenceValue
+  public :: createNamespaceNode
   public :: createEntity
   public :: createNotation
   public :: setGCstate
@@ -840,6 +841,26 @@ TOHW_m_dom_treewalk(`dnl
 !  function setDocumentURI
 
   ! Internal function, not part of API
+
+  TOHW_function(createNamespaceNode, (arg, prefix, URI), np)
+    type(Node), pointer :: arg
+    character(len=*), intent(in) :: prefix
+    character(len=*), intent(in) :: URI
+    type(Node), pointer :: np
+
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+
+    if (arg%nodeType/=DOCUMENT_NODE) then
+      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
+    endif
+
+    np => createNode(arg, XPATH_NAMESPACE_NODE, "#namespace", URI)
+    np%prefix => vs_str_alloc(prefix)
+    np%namespaceURI => vs_str_alloc(URI)
+
+  end function createNamespaceNode
 
   TOHW_function(createEntity, (arg, name, publicId, systemId, notationName), np)
     type(Node), pointer :: arg

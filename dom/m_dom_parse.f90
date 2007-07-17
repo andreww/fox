@@ -5,6 +5,7 @@ module m_dom_parse
 
   use m_common_array_str, only: str_vs, vs_str_alloc
   use m_common_error, only: FoX_error
+  use m_common_namespaces, only: namespaceDictionary
   use m_common_struct, only: xml_doc_state
   use FoX_common, only: dictionary_t, len
   use FoX_common, only: getQName, getValue, getURI, getQName
@@ -15,7 +16,7 @@ module m_dom_parse
   use m_dom_dom, only: DOCUMENT_NODE, getNodeType, getDocType, Node, setDocType, &
     createProcessingInstruction, createAttributeNS, createComment, getEntities, &
     setSpecified, createElementNS, getNotations, createTextNode, createEntity, &
-    getAttributes, setStringValue, createNotation, setNamedItem, &
+    getAttributes, setStringValue, createNamespaceNode, createNotation, setNamedItem, &
     createEmptyDocument, createDocumentType, getParentNode, setDocumentElement, &
     getNodeType, getImplementation, appendChild, getNotations, setAttributeNodeNS, &
     setvalue, setAttributeNodeNS, setGCstate, createCdataSection, setXds, &
@@ -30,9 +31,10 @@ module m_dom_parse
   public :: parsefile
   public :: parsestring
 
-  type(Node), pointer, private, save  :: mainDoc => null()
-  type(Node), pointer, private, save  :: current => null()
-
+  type(xml_t), target, save :: fxml
+  type(Node), pointer, save  :: mainDoc => null()
+  type(Node), pointer, save  :: current => null()
+  
   logical :: cdata_sections, cdata
   logical :: entities_expand
   logical :: error
@@ -48,6 +50,7 @@ contains
     type(dictionary_t), intent(in) :: attrs
    
     type(Node), pointer :: el, attr, dummy
+    type(namespaceDictionary), pointer :: nsd
     integer              :: i
 
     if (len(URI)>0) then
@@ -73,6 +76,15 @@ contains
       if (associated(inEntity)) call setReadOnlyNode(attr, .true., .true.)
       ! FIXME recursive readonly
     enddo
+
+!!$    ! Attach all in-scope namespaces:
+!!$    call appendNSNode(el, createNamespaceNode(mainDoc, "xml", "http://www.w3.org/XML/1998/namespace"))
+!!$    nsd => getnsDict(fxml)
+!!$    if (isDefaultNSInForce(xsd)) call appendNSNode(el, "", getnamespaceURI(nsd))
+!!$    do i = 1, ubound(nsd%prefixes)
+!!$      call appendNSNode(el, str_vs(nsd%prefixs(i)%prefix), getNamespaceURI(nsd, nsd%prefixs(i)%prefix))
+!!$    enddo
+!!$    !FIXME DOM-XPath section 1.2.3 - implicit declaration of prefix?
 
     if (getNodeType(current)==DOCUMENT_NODE) then
       call setDocumentElement(mainDoc, el)
@@ -377,7 +389,6 @@ endif
     character(len=*), intent(in), optional :: configuration
 
     type(Node), pointer :: parsestring
-    type(xml_t) :: fxml
     
     if (present(configuration)) then
       cdata_sections = (scan("cdata-sections", configuration)>0)
