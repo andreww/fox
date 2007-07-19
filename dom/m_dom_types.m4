@@ -101,15 +101,8 @@ TOHW_m_dom_publics(`
     type(Node), pointer :: ownerDocument   => null()
     type(NodeList) :: childNodes ! not for text, cdata, PI, comment, notation, docType, XPath
 
-    ! Introduced in DOM Level 2
-    character, pointer :: publicId(:) => null() ! doctype, entity, notation 
-    character, pointer :: systemId(:) => null() ! doctype, entity, notation
-    character, pointer :: internalSubset(:) => null() ! doctype
-    character, pointer :: notationName(:) => null() ! entity
-    ! Introduced in DOM Level 3
-    ! DOMCONFIGURATION
-    logical :: illFormed = .false. ! entity
     logical :: inDocument = .false.! For a node, is this node associated to the doc?
+
     type(documentExtras), pointer :: docExtras
     type(elementOrAttributeExtras), pointer :: elExtras
     type(docTypeExtras), pointer :: dtdExtras
@@ -173,6 +166,8 @@ TOHW_m_dom_contents(`
     select case(np%nodeType)
     case (ELEMENT_NODE, ATTRIBUTE_NODE)
       call destroyElementOrAttribute(np)
+    case (DOCUMENT_TYPE_NODE, ENTITY_NODE, NOTATION_NODE)
+      call destroyEntityOrNotation(np)
     case (DOCUMENT_NODE)
       TOHW_m_dom_throw_error(FoX_INTERNAL_ERROR)
     case default
@@ -182,24 +177,43 @@ TOHW_m_dom_contents(`
 
   end subroutine destroyNode
 
-  TOHW_subroutine(destroyElementOrAttribute, (element))
-    type(Node), pointer :: element
+  TOHW_subroutine(destroyElementOrAttribute, (np))
+    type(Node), pointer :: np
 
-    if (element%nodeType /= ELEMENT_NODE &
-      .and. element%nodeType /= ATTRIBUTE_NODE &
-      .and. element%nodeType /= XPATH_NAMESPACE_NODE) then
+    if (np%nodeType /= ELEMENT_NODE &
+      .and. np%nodeType /= ATTRIBUTE_NODE &
+      .and. np%nodeType /= XPATH_NAMESPACE_NODE) then
        TOHW_m_dom_throw_error(FoX_INTERNAL_ERROR)
     endif
 
-    if (associated(element%elExtras%attributes%nodes)) deallocate(element%elExtras%attributes%nodes)
-    if (associated(element%elExtras%namespaceURI)) deallocate(element%elExtras%namespaceURI)
-    if (associated(element%elExtras%prefix)) deallocate(element%elExtras%prefix)
-    if (associated(element%elExtras%localName)) deallocate(element%elExtras%localName)
-    deallocate(element%elExtras)
-    call destroyNodeContents(element)
-    deallocate(element)
+    if (associated(np%elExtras%attributes%nodes)) deallocate(np%elExtras%attributes%nodes)
+    if (associated(np%elExtras%namespaceURI)) deallocate(np%elExtras%namespaceURI)
+    if (associated(np%elExtras%prefix)) deallocate(np%elExtras%prefix)
+    if (associated(np%elExtras%localName)) deallocate(np%elExtras%localName)
+    deallocate(np%elExtras)
+    call destroyNodeContents(np)
+    deallocate(np)
 
   end subroutine destroyElementOrAttribute
+
+  TOHW_subroutine(destroyEntityOrNotation, (np))
+    type(Node), pointer :: np
+
+    if (np%nodeType /= DOCUMENT_TYPE_NODE &
+      .and. np%nodeType /= ENTITY_NODE &
+      .and. np%nodeType /= NOTATION_NODE) then
+       TOHW_m_dom_throw_error(FoX_INTERNAL_ERROR)
+    endif
+
+    if (associated(np%dtdExtras%publicId)) deallocate(np%dtdExtras%publicId)
+    if (associated(np%dtdExtras%systemId)) deallocate(np%dtdExtras%systemId)
+    if (associated(np%dtdExtras%internalSubset)) deallocate(np%dtdExtras%internalSubset)
+    if (associated(np%dtdExtras%notationName)) deallocate(np%dtdExtras%notationName)
+    deallocate(np%dtdExtras)
+    call destroyNodeContents(np)
+    deallocate(np)
+
+  end subroutine destroyEntityOrNotation
 
   subroutine destroyAllNodesRecursively(arg)
     type(Node), pointer :: arg
@@ -225,10 +239,6 @@ TOHW_m_dom_treewalk(`',`',`deadNode', `')
     
     if (associated(np%nodeName)) deallocate(np%nodeName)
     if (associated(np%nodeValue)) deallocate(np%nodeValue)
-    if (associated(np%publicId)) deallocate(np%publicId)
-    if (associated(np%systemId)) deallocate(np%systemId)
-    if (associated(np%internalSubset)) deallocate(np%internalSubset)
-    if (associated(np%notationName)) deallocate(np%notationName)
 
     deallocate(np%childNodes%nodes)
 

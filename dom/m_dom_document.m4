@@ -396,7 +396,7 @@ TOHW_m_dom_treewalk(`
       if (associated(getDocType(arg))) then
         ent => getNamedItem(getEntities(getDocType(arg)), name)
         if (associated(ent)) then
-          if (ent%illFormed) then
+          if (getIllFormed(ent)) then
             TOHW_m_dom_throw_error(FoX_INVALID_ENTITY)
           endif
           do i = 0, getLength(getChildNodes(ent)) - 1
@@ -884,9 +884,10 @@ TOHW_m_dom_treewalk(`dnl
     endif
 
     np => createNode(arg, ENTITY_NODE, name, "")
-    np%publicId => vs_str_alloc(publicId)
-    np%systemId => vs_str_alloc(systemId)
-    np%notationName => vs_str_alloc(notationName)
+    allocate(np%dtdExtras)
+    np%dtdExtras%publicId => vs_str_alloc(publicId)
+    np%dtdExtras%systemId => vs_str_alloc(systemId)
+    np%dtdExtras%notationName => vs_str_alloc(notationName)
 
   end function createEntity
 
@@ -906,8 +907,9 @@ TOHW_m_dom_treewalk(`dnl
     endif
 
     np => createNode(arg, NOTATION_NODE, name, "")
-    np%publicId => vs_str_alloc(publicId)
-    np%systemId => vs_str_alloc(systemId)
+    allocate(np%dtdExtras)
+    np%dtdExtras%publicId => vs_str_alloc(publicId)
+    np%dtdExtras%systemId => vs_str_alloc(systemId)
     
   end function createNotation
 

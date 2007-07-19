@@ -7,6 +7,7 @@ define(`TOHW_m_dom_contents',`divert(3)$1'`divert')dnl
 dnl
 include(`m_dom_exception.m4')dnl
 include(`m_dom_treewalk.m4')dnl
+include(`m_dom_object.m4')dnl
 dnl
 include(`m_dom_types.m4')dnl
 include(`m_dom_node.m4')dnl

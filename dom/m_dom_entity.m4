@@ -6,44 +6,9 @@ TOHW_m_dom_publics(`
 dnl
 TOHW_m_dom_contents(`
 
-  TOHW_subroutine(setIllFormed, (np, p))
-    type(Node), pointer :: np
-    logical, intent(in) :: p
+  TOHW_m_dom_get(logical, illFormed, np%dtdExtras%illFormed, (ENTITY_NODE))
+  TOHW_m_dom_set(logical, illFormed, np%dtdExtras%illFormed, (ENTITY_NODE))
 
-    if (.not.associated(np)) then
-      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
-    endif
-
-    np%illFormed = p
-  end subroutine setIllFormed
-
-  pure function getNotationName_len(np, p) result(n)
-    type(Node), intent(in) :: np
-    logical, intent(in) :: p
-    integer :: n
-
-    if (p) then
-      n = size(np%notationName)
-    else
-      n = 0
-    endif
-
-  end function getNotationName_len
-
-  TOHW_function(getNotationName, (np), c)
-    type(Node), pointer :: np
-    character(len=getNotationName_len(np, associated(np))) :: c
-
-    if (.not.associated(np)) then
-      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
-    endif
-
-    if (np%nodeType/=ENTITY_NODE) then
-      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    endif
-
-    c = str_vs(np%notationName)
-
-  end function getNotationName
+  TOHW_m_dom_get(DOMString, notationName, np%dtdExtras%notationName, (ENTITY_NODE))
 
 ')`'dnl

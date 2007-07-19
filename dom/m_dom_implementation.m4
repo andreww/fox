@@ -57,10 +57,11 @@ TOHW_m_dom_contents(`
     endif
 
     dt => createNode(null(), DOCUMENT_TYPE_NODE, qualifiedName, "")
+    allocate(dt%dtdExtras)
     dt%readonly = .true.
-    dt%publicId => vs_str_alloc(publicId)
-    dt%systemId => vs_str_alloc(systemId)
-    allocate(dt%internalSubset(0)) ! FIXME This is valid behaviour, but we should
+    dt%dtdExtras%publicId => vs_str_alloc(publicId)
+    dt%dtdExtras%systemId => vs_str_alloc(systemId)
+    allocate(dt%dtdExtras%internalSubset(0)) ! FIXME This is valid behaviour, but we should
                                    ! really be able to get the intSubset from SAX
     dt%ownerDocument => null()
 
