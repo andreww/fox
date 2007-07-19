@@ -22,7 +22,7 @@ module m_dom_parse
     getNodeType, getImplementation, appendChild, getNotations, setAttributeNodeNS, &
     setvalue, setAttributeNodeNS, setGCstate, createCdataSection, setXds, &
     createEntityReference, destroyAllNodesRecursively, setIllFormed, createElement, &
-    createAttribute, getNamedItem, setReadonlyNode, setReadOnlyMap, &
+    createAttribute, getNamedItem, setReadonlyNode, setReadOnlyMap, appendNSNode, &
     createEmptyEntityReference, setEntityReferenceValue, setAttributeNode
   use m_dom_error, only: DOMException, inException, throw_exception, PARSE_ERR
 
@@ -75,11 +75,10 @@ contains
       endif
       ! FIXME check specifiedness
       if (associated(inEntity)) call setReadOnlyNode(attr, .true., .true.)
-      ! FIXME recursive readonly
     enddo
 
-!!$    ! Attach all in-scope namespaces:
-!!$    call appendNSNode(el, createNamespaceNode(mainDoc, "xml", "http://www.w3.org/XML/1998/namespace"))
+    ! Attach all in-scope namespaces:
+!    call appendNSNode(el, createNamespaceNode(mainDoc, "xml", "http://www.w3.org/XML/1998/namespace"))
 !!$    nsd => getnsDict(fxml)
 !!$    if (isDefaultNSInForce(xsd)) call appendNSNode(el, "", getnamespaceURI(nsd))
 !!$    do i = 1, ubound(nsd%prefixes)

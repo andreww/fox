@@ -16,6 +16,8 @@ TOHW_m_dom_publics(`
   public :: removeAttributeNodeNS
   public :: hasAttribute
   public :: hasAttributeNS
+
+  public :: appendNSNode
 ')`'dnl
 dnl
 TOHW_m_dom_contents(`
@@ -513,16 +515,27 @@ TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
     type(Node), pointer :: np
     character(len=*), intent(in) :: prefix
     character(len=*), intent(in) :: namespaceURI
-!!$
-!!$    if (.not.associated(arg)) then
-!!$      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
-!!$    endif
-!!$    
-!!$    if (arg%nodeType /= ELEMENT_NODE) then
-!!$      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-!!$    endif
-!!$    
-!!$    call append_nl(np%nsnodes, createNamespaceNode(np, prefix, namespaceURI))
+
+    type(Node), pointer :: nnp
+    logical :: quickFix
+
+    if (.not.associated(np)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+    
+    if (np%nodeType /= ELEMENT_NODE) then
+      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
+    endif
+    
+    ! We never put namespace nodes in the hanging nodes
+    ! list since they can never be separated from their
+    ! parent element node, so will always be destroyed alongside it.
+
+    quickFix = getGCState(getOwnerDocument(np))
+    call append_nl(np%elExtras%namespaceNodes, &
+      createNamespaceNode(np, prefix, namespaceURI))
+    call setGCState(getOwnerDocument(np), quickFix)
+
   end subroutine appendNSNode
     
 

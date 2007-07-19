@@ -316,6 +316,8 @@ module m_dom_dom
   public :: hasAttribute
   public :: hasAttributeNS
 
+  public :: appendNSNode
+
 
   !public :: getName
   public :: getSpecified
@@ -414,6 +416,8 @@ endif
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: np
 
+    integer :: i
+
     if (np%nodeType /= ELEMENT_NODE &
       .and. np%nodeType /= ATTRIBUTE_NODE &
       .and. np%nodeType /= XPATH_NAMESPACE_NODE) then
@@ -427,6 +431,11 @@ endif
     endif
 
     if (associated(np%elExtras%attributes%nodes)) deallocate(np%elExtras%attributes%nodes)
+    do i = 1, np%elExtras%namespaceNodes%length
+!FIXME or will these be destroyed by hanging node list?
+      call destroyNode(np%elExtras%namespaceNodes%nodes(i)%this)
+    enddo
+    if (associated(np%elExtras%namespaceNodes%nodes)) deallocate(np%elExtras%namespaceNodes%nodes)
     if (associated(np%elExtras%namespaceURI)) deallocate(np%elExtras%namespaceURI)
     if (associated(np%elExtras%prefix)) deallocate(np%elExtras%prefix)
     if (associated(np%elExtras%localName)) deallocate(np%elExtras%localName)
@@ -7127,28 +7136,39 @@ endif
     type(Node), pointer :: np
     character(len=*), intent(in) :: prefix
     character(len=*), intent(in) :: namespaceURI
-!!$
-!!$    if (.not.associated(arg)) then
-!!$      call throw_exception(FoX_NODE_IS_NULL, "appendNSNode", ex)
+
+    type(Node), pointer :: nnp
+    logical :: quickFix
+
+    if (.not.associated(np)) then
+      call throw_exception(FoX_NODE_IS_NULL, "appendNSNode", ex)
 if (present(ex)) then
   if (inException(ex)) then
      return
   endif
 endif
 
-!!$    endif
-!!$    
-!!$    if (arg%nodeType /= ELEMENT_NODE) then
-!!$      call throw_exception(FoX_INVALID_NODE, "appendNSNode", ex)
+    endif
+    
+    if (np%nodeType /= ELEMENT_NODE) then
+      call throw_exception(FoX_INVALID_NODE, "appendNSNode", ex)
 if (present(ex)) then
   if (inException(ex)) then
      return
   endif
 endif
 
-!!$    endif
-!!$    
-!!$    call append_nl(np%nsnodes, createNamespaceNode(np, prefix, namespaceURI))
+    endif
+    
+    ! We never put namespace nodes in the hanging nodes
+    ! list since they can never be separated from their
+    ! parent element node, so will always be destroyed alongside it.
+
+    quickFix = getGCState(getOwnerDocument(np))
+    call append_nl(np%elExtras%namespaceNodes, &
+      createNamespaceNode(np, prefix, namespaceURI))
+    call setGCState(getOwnerDocument(np), quickFix)
+
   end subroutine appendNSNode
     
 

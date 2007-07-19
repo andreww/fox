@@ -180,6 +180,8 @@ TOHW_m_dom_contents(`
   TOHW_subroutine(destroyElementOrAttribute, (np))
     type(Node), pointer :: np
 
+    integer :: i
+
     if (np%nodeType /= ELEMENT_NODE &
       .and. np%nodeType /= ATTRIBUTE_NODE &
       .and. np%nodeType /= XPATH_NAMESPACE_NODE) then
@@ -187,6 +189,11 @@ TOHW_m_dom_contents(`
     endif
 
     if (associated(np%elExtras%attributes%nodes)) deallocate(np%elExtras%attributes%nodes)
+    do i = 1, np%elExtras%namespaceNodes%length
+!FIXME or will these be destroyed by hanging node list?
+      call destroyNode(np%elExtras%namespaceNodes%nodes(i)%this)
+    enddo
+    if (associated(np%elExtras%namespaceNodes%nodes)) deallocate(np%elExtras%namespaceNodes%nodes)
     if (associated(np%elExtras%namespaceURI)) deallocate(np%elExtras%namespaceURI)
     if (associated(np%elExtras%prefix)) deallocate(np%elExtras%prefix)
     if (associated(np%elExtras%localName)) deallocate(np%elExtras%localName)
