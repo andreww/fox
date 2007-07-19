@@ -79,12 +79,13 @@ TOHW_m_dom_publics(`
     logical :: isId
   end type elementOrAttributeExtras
 
-  type DTDExtras
+  type docTypeExtras
     character, pointer :: publicId(:) => null() ! doctype, entity, notation 
     character, pointer :: systemId(:) => null() ! doctype, entity, notation
     character, pointer :: internalSubset(:) => null() ! doctype
     character, pointer :: notationName(:) => null() ! entity
-  end type DTDExtras
+    logical :: illFormed = .false. ! entity
+  end type docTypeExtras
 
   type Node
     private
@@ -98,28 +99,20 @@ TOHW_m_dom_publics(`
     type(Node), pointer :: previousSibling => null()
     type(Node), pointer :: nextSibling     => null()
     type(Node), pointer :: ownerDocument   => null()
-    type(NodeList) :: childNodes ! not for text, cdata, PI, comment, notation,  docType, XPath
-    ! Introduced in DOM Level 2:
-    !character, pointer, dimension(:) :: namespaceURI => null() ! \
-    !character, pointer, dimension(:) :: prefix => null()       !  - only useful for element & attribute
-    !character, pointer, dimension(:) :: localName => null()    ! /
+    type(NodeList) :: childNodes ! not for text, cdata, PI, comment, notation, docType, XPath
 
     ! Introduced in DOM Level 2
-    type(Node), pointer :: ownerElement => null() ! only for attribute
     character, pointer :: publicId(:) => null() ! doctype, entity, notation 
     character, pointer :: systemId(:) => null() ! doctype, entity, notation
     character, pointer :: internalSubset(:) => null() ! doctype
     character, pointer :: notationName(:) => null() ! entity
     ! Introduced in DOM Level 3
-    character, pointer :: inputEncoding(:) => null() ! document/doctype?
-    character, pointer :: xmlEncoding(:) => null()   ! document/doctype?
-    logical :: strictErrorChecking = .false. ! document/doctype
-    character, pointer :: documentURI(:) => null() ! document/doctype
     ! DOMCONFIGURATION
     logical :: illFormed = .false. ! entity
     logical :: inDocument = .false.! For a node, is this node associated to the doc?
     type(documentExtras), pointer :: docExtras
     type(elementOrAttributeExtras), pointer :: elExtras
+    type(docTypeExtras), pointer :: dtdExtras
   end type Node
 
   type(DOMImplementation), save, target :: FoX_DOM
@@ -236,11 +229,6 @@ TOHW_m_dom_treewalk(`',`',`deadNode', `')
     if (associated(np%systemId)) deallocate(np%systemId)
     if (associated(np%internalSubset)) deallocate(np%internalSubset)
     if (associated(np%notationName)) deallocate(np%notationName)
-
-    if (associated(np%inputEncoding)) deallocate(np%inputEncoding)
-    if (associated(np%xmlEncoding)) deallocate(np%xmlEncoding)
-    !if (associated(np%xmlVersion)) deallocate(np%xmlVersion)
-    if (associated(np%documentURI)) deallocate(np%documentURI)
 
     deallocate(np%childNodes%nodes)
 

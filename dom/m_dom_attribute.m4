@@ -134,7 +134,7 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
 
-    np => arg%ownerElement
+    np => arg%elExtras%ownerElement
 
   end function getOwnerElement
 

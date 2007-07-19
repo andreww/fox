@@ -95,14 +95,17 @@ module m_dom_dom
   end type documentExtras
 
   type elementOrAttributeExtras
+    ! Needed for all:
+    character, pointer, dimension(:) :: namespaceURI => null()
+    character, pointer, dimension(:) :: prefix => null()
+    character, pointer, dimension(:) :: localName => null()
+    ! Needed for elements:
     type(NamedNodeMap) :: attributes
-    character, pointer, dimension(:) :: namespaceURI => null() ! \
-    character, pointer, dimension(:) :: prefix => null()       !  - only useful for element & attribute
-    character, pointer, dimension(:) :: localName => null()    ! /
-    logical :: specified
-    type(Node), pointer :: ownerElement => null()
-    logical :: isId
     type(NodeList) :: namespaceNodes
+    ! Needed for attributes:
+    type(Node), pointer :: ownerElement => null()
+    logical :: specified
+    logical :: isId
   end type elementOrAttributeExtras
 
   type DTDExtras
@@ -125,22 +128,13 @@ module m_dom_dom
     type(Node), pointer :: nextSibling     => null()
     type(Node), pointer :: ownerDocument   => null()
     type(NodeList) :: childNodes ! not for text, cdata, PI, comment, notation,  docType, XPath
-    ! Introduced in DOM Level 2:
-    !character, pointer, dimension(:) :: namespaceURI => null() ! \
-    !character, pointer, dimension(:) :: prefix => null()       !  - only useful for element & attribute
-    !character, pointer, dimension(:) :: localName => null()    ! /
 
     ! Introduced in DOM Level 2
-    type(Node), pointer :: ownerElement => null() ! only for attribute
     character, pointer :: publicId(:) => null() ! doctype, entity, notation 
     character, pointer :: systemId(:) => null() ! doctype, entity, notation
     character, pointer :: internalSubset(:) => null() ! doctype
     character, pointer :: notationName(:) => null() ! entity
     ! Introduced in DOM Level 3
-    character, pointer :: inputEncoding(:) => null() ! document/doctype?
-    character, pointer :: xmlEncoding(:) => null()   ! document/doctype?
-    logical :: strictErrorChecking = .false. ! document/doctype
-    character, pointer :: documentURI(:) => null() ! document/doctype
     ! DOMCONFIGURATION
     logical :: illFormed = .false. ! entity
     logical :: inDocument = .false.! For a node, is this node associated to the doc?
@@ -542,11 +536,6 @@ endif
     if (associated(np%systemId)) deallocate(np%systemId)
     if (associated(np%internalSubset)) deallocate(np%internalSubset)
     if (associated(np%notationName)) deallocate(np%notationName)
-
-    if (associated(np%inputEncoding)) deallocate(np%inputEncoding)
-    if (associated(np%xmlEncoding)) deallocate(np%xmlEncoding)
-    !if (associated(np%xmlVersion)) deallocate(np%xmlVersion)
-    if (associated(np%documentURI)) deallocate(np%documentURI)
 
     deallocate(np%childNodes%nodes)
 
@@ -3629,18 +3618,23 @@ endif
     ! Note that the user can never add to the Entities/Notations
     ! namedNodeMaps, so we do not have any checks for that.
 
-    if (associated(map%ownerElement, arg%ownerElement)) then
-      np => arg
-      return
-      ! Nothing to do, this attribute is already in this element
-    elseif (associated(arg%ownerElement)) then
-      call throw_exception(INUSE_ATTRIBUTE_ERR, "setNamedItem", ex)
+    if (getNodeType(arg)==ATTRIBUTE_NODE) then
+      ! This is the normal state of affairs. Always the
+      ! case when a user calls this routine. But m_dom_parse
+      ! will call with notations & entities
+      if (associated(map%ownerElement, getOwnerElement(arg))) then
+        np => arg
+        return
+        ! Nothing to do, this attribute is already in this element
+      elseif (associated(getOwnerElement(arg))) then
+        call throw_exception(INUSE_ATTRIBUTE_ERR, "setNamedItem", ex)
 if (present(ex)) then
   if (inException(ex)) then
      return
   endif
 endif
     
+      endif
     endif
 
     np => null()
@@ -3648,7 +3642,7 @@ endif
       if (str_vs(map%nodes(i)%this%nodeName)==str_vs(arg%nodeName)) then
         np => map%nodes(i)%this
         map%nodes(i)%this => arg
-        arg%ownerElement => map%ownerElement
+        arg%elExtras%ownerElement => map%ownerElement
         exit
       endif
     enddo
@@ -3925,18 +3919,24 @@ endif
     ! Note that the user can never add to the Entities/Notations
     ! namedNodeMaps, so we do not have any checks for that.
 
-    if (associated(map%ownerElement, arg%ownerElement)) then
-      np => arg
-      return
-      ! Nothing to do, this attribute is already in this element
-    elseif (associated(arg%ownerElement)) then
-      call throw_exception(INUSE_ATTRIBUTE_ERR, "setNamedItemNS", ex)
+    if (getNodeType(arg)==ATTRIBUTE_NODE) then
+      ! This is the normal state of affairs. Always the
+      ! case when a user calls this routine. But m_dom_parse
+      ! will call with notations & entities
+      if (associated(map%ownerElement, getOwnerElement(arg))) then
+        np => arg
+        return
+        ! Nothing to do, this attribute is already in this element
+      elseif (associated(getOwnerElement(arg))) then
+        ! FIXME unless arg is being set to itself
+        call throw_exception(INUSE_ATTRIBUTE_ERR, "setNamedItemNS", ex)
 if (present(ex)) then
   if (inException(ex)) then
      return
   endif
 endif
     
+      endif
     endif
 
     np => null()
@@ -3945,7 +3945,7 @@ endif
         .and. getLocalName(item(map, i-1))==getLocalName(arg)) then
         np => item(map, i-1)
         map%nodes(i)%this => arg
-        arg%ownerElement => map%ownerElement
+        arg%elExtras%ownerElement => map%ownerElement
         exit
       endif
     enddo
@@ -4055,7 +4055,7 @@ endif
       map%nodes(size(map%nodes))%this => arg
       map%length = size(map%nodes)
     endif
-    arg%ownerElement => map%ownerElement
+    if (getNodeType(arg)==ATTRIBUTE_NODE) arg%elExtras%ownerElement => map%ownerElement
 
   end subroutine append_nnm
 
@@ -6439,7 +6439,7 @@ endif
       call destroyAllNodesRecursively(dummy)
       call destroyNode(dummy)
     endif
-    nn%ownerElement => arg
+    nn%elExtras%ownerElement => arg
 
     if (quickFix) call setGCstate(getOwnerDocument(arg), .true.)
 
@@ -6590,11 +6590,11 @@ endif
 
     endif
 
-    if (associated(newattr%ownerElement, arg)) then
+    if (associated(getOwnerElement(newattr), arg)) then
       attr => newattr
       return
       ! Nothing to do, this attribute is already in this element
-    elseif (associated(newattr%ownerElement)) then
+    elseif (associated(getOwnerElement(newattr))) then
       call throw_exception(INUSE_ATTRIBUTE_ERR, "setAttributeNode", ex)
 if (present(ex)) then
   if (inException(ex)) then
@@ -6660,7 +6660,7 @@ endif
     do i = 1, getLength(getAttributes(arg))
       if (associated(item(getAttributes(arg), i-1), oldattr)) then
         attr => removeNamedItem(getAttributes(arg), str_vs(oldattr%nodeName))
-        attr%ownerElement => null()
+        attr%elExtras%ownerElement => null()
         return
       endif
     enddo
@@ -6829,7 +6829,7 @@ endif
     endif
 
     dummy => setNamedItemNS(getAttributes(arg), nn)
-    nn%ownerElement => arg
+    nn%elExtras%ownerElement => arg
 
     if (quickFix) call setGCstate(getOwnerDocument(arg), .true.)
 
@@ -6956,7 +6956,8 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (associated(newattr%ownerElement)) then
+    elseif (associated(getOwnerElement(newattr))) then
+      ! unless attribute is being set to itself
       call throw_exception(INUSE_ATTRIBUTE_ERR, "setAttributeNodeNS", ex)
 if (present(ex)) then
   if (inException(ex)) then
@@ -6968,7 +6969,7 @@ endif
 
     ! this checks if attribute exists already, and does hangingnodes
     dummy => setNamedItemNS(getAttributes(arg), newattr)
-    newattr%ownerElement => arg
+    newattr%elExtras%ownerElement => arg
     attr => newattr
 
   end function setAttributeNodeNS
@@ -7026,7 +7027,7 @@ if (present(ex)) then
 endif
 
 
-    attr%ownerElement => null()
+    attr%elExtras%ownerElement => null()
 
   end function removeAttributeNodeNS
 
@@ -7337,6 +7338,7 @@ endif
     endif
 
     if (getNodeType(arg) /= ATTRIBUTE_NODE) then
+      print*, arg%nodeName
       call throw_exception(FoX_INVALID_NODE, "getOwnerElement", ex)
 if (present(ex)) then
   if (inException(ex)) then
@@ -7346,7 +7348,7 @@ endif
 
     endif
 
-    np => arg%ownerElement
+    np => arg%elExtras%ownerElement
 
   end function getOwnerElement
 

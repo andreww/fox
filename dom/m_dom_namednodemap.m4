@@ -121,12 +121,17 @@ TOHW_m_dom_contents(`
     ! Note that the user can never add to the Entities/Notations
     ! namedNodeMaps, so we do not have any checks for that.
 
-    if (associated(map%ownerElement, arg%ownerElement)) then
-      np => arg
-      return
-      ! Nothing to do, this attribute is already in this element
-    elseif (associated(arg%ownerElement)) then
-      TOHW_m_dom_throw_error(INUSE_ATTRIBUTE_ERR)    
+    if (getNodeType(arg)==ATTRIBUTE_NODE) then
+      ! This is the normal state of affairs. Always the
+      ! case when a user calls this routine. But m_dom_parse
+      ! will call with notations & entities
+      if (associated(map%ownerElement, getOwnerElement(arg))) then
+        np => arg
+        return
+        ! Nothing to do, this attribute is already in this element
+      elseif (associated(getOwnerElement(arg))) then
+        TOHW_m_dom_throw_error(INUSE_ATTRIBUTE_ERR)    
+      endif
     endif
 
     np => null()
@@ -134,7 +139,7 @@ TOHW_m_dom_contents(`
       if (str_vs(map%nodes(i)%this%nodeName)==str_vs(arg%nodeName)) then
         np => map%nodes(i)%this
         map%nodes(i)%this => arg
-        arg%ownerElement => map%ownerElement
+        arg%elExtras%ownerElement => map%ownerElement
         exit
       endif
     enddo
@@ -333,12 +338,18 @@ TOHW_m_dom_contents(`
     ! Note that the user can never add to the Entities/Notations
     ! namedNodeMaps, so we do not have any checks for that.
 
-    if (associated(map%ownerElement, arg%ownerElement)) then
-      np => arg
-      return
-      ! Nothing to do, this attribute is already in this element
-    elseif (associated(arg%ownerElement)) then
-      TOHW_m_dom_throw_error(INUSE_ATTRIBUTE_ERR)    
+    if (getNodeType(arg)==ATTRIBUTE_NODE) then
+      ! This is the normal state of affairs. Always the
+      ! case when a user calls this routine. But m_dom_parse
+      ! will call with notations & entities
+      if (associated(map%ownerElement, getOwnerElement(arg))) then
+        np => arg
+        return
+        ! Nothing to do, this attribute is already in this element
+      elseif (associated(getOwnerElement(arg))) then
+        ! FIXME unless arg is being set to itself
+        TOHW_m_dom_throw_error(INUSE_ATTRIBUTE_ERR)    
+      endif
     endif
 
     np => null()
@@ -347,7 +358,7 @@ TOHW_m_dom_contents(`
         .and. getLocalName(item(map, i-1))==getLocalName(arg)) then
         np => item(map, i-1)
         map%nodes(i)%this => arg
-        arg%ownerElement => map%ownerElement
+        arg%elExtras%ownerElement => map%ownerElement
         exit
       endif
     enddo
@@ -438,7 +449,7 @@ TOHW_m_dom_contents(`
       map%nodes(size(map%nodes))%this => arg
       map%length = size(map%nodes)
     endif
-    arg%ownerElement => map%ownerElement
+    if (getNodeType(arg)==ATTRIBUTE_NODE) arg%elExtras%ownerElement => map%ownerElement
 
   end subroutine append_nnm
 

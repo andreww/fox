@@ -125,7 +125,7 @@ TOHW_m_dom_contents(`
       call destroyAllNodesRecursively(dummy)
       call destroyNode(dummy)
     endif
-    nn%ownerElement => arg
+    nn%elExtras%ownerElement => arg
 
     if (quickFix) call setGCstate(getOwnerDocument(arg), .true.)
 
@@ -213,11 +213,11 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
     endif
 
-    if (associated(newattr%ownerElement, arg)) then
+    if (associated(getOwnerElement(newattr), arg)) then
       attr => newattr
       return
       ! Nothing to do, this attribute is already in this element
-    elseif (associated(newattr%ownerElement)) then
+    elseif (associated(getOwnerElement(newattr))) then
       TOHW_m_dom_throw_error(INUSE_ATTRIBUTE_ERR)
     endif
 
@@ -252,7 +252,7 @@ TOHW_m_dom_contents(`
     do i = 1, getLength(getAttributes(arg))
       if (associated(item(getAttributes(arg), i-1), oldattr)) then
         attr => removeNamedItem(getAttributes(arg), str_vs(oldattr%nodeName))
-        attr%ownerElement => null()
+        attr%elExtras%ownerElement => null()
         return
       endif
     enddo
@@ -359,7 +359,7 @@ TOHW_m_dom_contents(`
     endif
 
     dummy => setNamedItemNS(getAttributes(arg), nn)
-    nn%ownerElement => arg
+    nn%elExtras%ownerElement => arg
 
     if (quickFix) call setGCstate(getOwnerDocument(arg), .true.)
 
@@ -429,13 +429,14 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(WRONG_DOCUMENT_ERR)
     elseif (arg%readonly) then
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
-    elseif (associated(newattr%ownerElement)) then
+    elseif (associated(getOwnerElement(newattr))) then
+      ! unless attribute is being set to itself
       TOHW_m_dom_throw_error(INUSE_ATTRIBUTE_ERR)
     endif
 
     ! this checks if attribute exists already, and does hangingnodes
     dummy => setNamedItemNS(getAttributes(arg), newattr)
-    newattr%ownerElement => arg
+    newattr%elExtras%ownerElement => arg
     attr => newattr
 
   end function setAttributeNodeNS
@@ -468,7 +469,7 @@ TOHW_m_dom_contents(`
 
     TOHW_m_dom_throw_error(NOT_FOUND_ERR)
 
-    attr%ownerElement => null()
+    attr%elExtras%ownerElement => null()
 
   end function removeAttributeNodeNS
 
