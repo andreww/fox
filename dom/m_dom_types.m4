@@ -57,7 +57,7 @@ TOHW_m_dom_publics(`
     type(NodeListPtr), pointer :: nodelists(:) => null() ! document
     ! In order to keep track of all nodes not connected to the document
     logical :: liveNodeLists ! For the document, are nodelists live?
-    type(NodeList) :: hangingNodes ! For the document. list of nodes not associated with doc
+    type(NodeList) :: hangingNodes ! For the document, list of nodes not associated with doc
     type(xml_doc_state), pointer :: xds => null()
     type(namedNodeMap) :: entities ! actually for doctype
     type(namedNodeMap) :: notations ! actually for doctype

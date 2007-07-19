@@ -34,31 +34,7 @@ TOHW_m_dom_publics(`
 ')`'dnl
 TOHW_m_dom_contents(`
 
-  ! Getters and setters
-
-  pure function getNodeName_len(np, p) result(n)
-    type(Node), intent(in) :: np
-    logical, intent(in) :: p
-    integer :: n
-
-    if (p) then
-      n = size(np%nodeName)
-    else
-      n = 0
-    endif
-
-  end function getNodeName_len
-
-  TOHW_function(getNodeName, (np), c)
-    type(Node), pointer :: np
-    character(len=getNodeName_len(np, associated(np))) :: c
-    
-    if (.not.associated(np)) then
-      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
-    endif
-
-    c = str_vs(np%nodeName)
-  end function getNodeName
+TOHW_m_dom_get(DOMString, nodeName, np%nodeName)
 
   pure function getNodeValue_len(np, p) result(n)
     type(Node), intent(in) :: np
@@ -106,51 +82,6 @@ TOHW_m_dom_contents(`
     
   end function getNodeValue
 
-  TOHW_subroutine(setStringValue, (np, stringValue))
-    type(Node), pointer :: np
-    character(len=*) :: stringValue
-  
-    if (.not.associated(np)) then
-      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
-    endif
-
-    if (getNodeType(np)/=ENTITY_NODE) then
-      TOHW_m_dom_throw_error(FoX_INTERNAL_ERROR)
-    endif
-
-    if (associated(np%nodeValue)) deallocate(np%nodeValue)
-    np%nodeValue => vs_str_alloc(stringValue)
-
-  end subroutine setStringValue
-
-  pure function getStringValue_len(np, p) result(n)
-    type(Node), intent(in) :: np
-    logical, intent(in) :: p
-    integer :: n
-
-    if (p) then
-      n = size(np%nodeValue)
-    else
-      n = 0
-    endif
-  end function getStringValue_len
-
-  TOHW_function(getStringValue, (np), s)
-    type(Node), pointer :: np
-    character(len=getStringValue_len(np, associated(np))) :: s
-  
-    if (.not.associated(np)) then
-      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
-    endif
-
-    if (getNodeType(np)/=ENTITY_NODE) then
-      TOHW_m_dom_throw_error(FoX_INTERNAL_ERROR)
-    endif
-
-    s = str_vs(np%nodeValue)
-
-  end function getStringValue
-    
   TOHW_subroutine(setNodeValue, (arg, nodeValue))
     type(Node), pointer :: arg
     character(len=*) :: nodeValue
@@ -227,82 +158,19 @@ TOHW_m_dom_contents(`
 
   end subroutine setNodeValue
 
-  TOHW_function(getNodeType, (arg), n)
-    type(Node), pointer :: arg
-    integer :: n
+TOHW_m_dom_get(integer, nodeType, np%nodeType)
 
-    if (.not.associated(arg)) then
-      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
-    endif
+TOHW_m_dom_get(Node, parentNode, np%parentNode)
 
-    n = arg%nodeType
-  end function getNodeType
+TOHW_m_dom_get(NodeList, childNodes, np%childNodes)
 
-  TOHW_function(getParentNode, (arg), np)
-    type(Node), pointer :: arg
-    type(Node), pointer :: np
+TOHW_m_dom_get(Node, firstChild, np%firstChild)
 
-    if (.not.associated(arg)) then
-      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
-    endif
+TOHW_m_dom_get(Node, lastChild, np%lastChild)
 
-    np => arg%parentNode
-  end function getParentNode
-  
-  TOHW_function(getChildNodes, (arg), nl)
-    type(Node), pointer :: arg
-    type(NodeList), pointer :: nl
+TOHW_m_dom_get(Node, previousSibling, np%previousSibling)
 
-    if (.not.associated(arg)) then
-      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
-    endif
-
-    nl => arg%childnodes
-  end function getChildNodes
-  
-  TOHW_function(getFirstChild, (arg), np)
-    type(Node), pointer :: arg
-    type(Node), pointer :: np
-
-    if (.not.associated(arg)) then
-      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
-    endif
-
-    np => arg%firstChild
-  end function getFirstChild
-  
-  TOHW_function(getLastChild, (arg), np)
-    type(Node), pointer :: arg
-    type(Node), pointer :: np
-
-    if (.not.associated(arg)) then
-      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
-    endif
-
-    np => arg%lastChild
-  end function getLastChild
-
-  TOHW_function(getPreviousSibling, (arg), np)
-    type(Node), pointer :: arg
-    type(Node), pointer :: np
-
-    if (.not.associated(arg)) then
-      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
-    endif
-
-    np => arg%previousSibling
-  end function getPreviousSibling
-  
-  TOHW_function(getNextSibling, (arg), np)
-    type(Node), pointer :: arg
-    type(Node), pointer :: np
-
-    if (.not.associated(arg)) then
-      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
-    endif
-
-    np => arg%nextSibling
-  end function getNextSibling
+TOHW_m_dom_get(Node, nextSibling, np%nextSibling)
 
   TOHW_function(getAttributes, (arg), nnm)
     type(Node), pointer :: arg

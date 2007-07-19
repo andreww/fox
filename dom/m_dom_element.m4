@@ -20,32 +20,7 @@ TOHW_m_dom_publics(`
 dnl
 TOHW_m_dom_contents(`
 
-  pure function getTagName_len(arg, p) result(n)
-    type(Node), intent(in) :: arg
-    logical, intent(in) :: p
-    integer :: n
-
-    if (p) then
-      n = size(arg%nodeName)
-    else
-      n = 0
-    endif
-  end function getTagName_len
-
-  TOHW_function(getTagName, (arg), c)
-    type(Node), pointer :: arg   
-    character(len=getTagName_len(arg, associated(arg))) :: c
-
-    if (.not.associated(arg)) then
-      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
-    endif
-
-    if (getNodeType(arg) /= ELEMENT_NODE) then
-      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    endif
-    c = str_vs(arg%nodeName)    
-     
-  end function getTagName
+TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
 
   pure function getAttributes_len(arg, p, name) result(n)
     type(Node), intent(in) :: arg

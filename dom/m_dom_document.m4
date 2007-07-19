@@ -34,41 +34,26 @@ TOHW_m_dom_publics(`
 dnl
 TOHW_m_dom_contents(`
 
-  ! Getters and setters:
-
-  TOHW_function(getDocType, (arg), np)
-    type(Node), pointer :: arg
-    type(Node), pointer :: np
-
-    if (.not.associated(arg)) then
-      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
-    endif
-
-    if (arg%nodeType/=DOCUMENT_NODE) then
-      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    endif
-    
-    np => arg%docExtras%docType
-
-  end function getDocType
+TOHW_m_dom_get(Node, docType, np%docExtras%docType, (DOCUMENT_NODE))
 
   TOHW_subroutine(setDocType, (arg, np))
     type(Node), pointer :: arg
     type(Node), pointer :: np
-
+ 
     if (.not.associated(arg)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif
-
+    
     if (arg%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
     
     arg%docExtras%docType => np
+!NB special case in order to set ownerDocument
     np%ownerDocument => arg
-
   end subroutine setDocType
 
+TOHW_m_dom_get(Node, documentElement, np%docExtras%documentElement, (DOCUMENT_NODE))
 
   TOHW_subroutine(setXds, (arg, xds))
     type(Node), pointer :: arg
@@ -81,11 +66,11 @@ TOHW_m_dom_contents(`
     if (arg%nodeType/=DOCUMENT_NODE) then
        TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
+!NB special case in order to destroy_xml_doc_state etc
     call destroy_xml_doc_state(arg%docExtras%xds)
     deallocate(arg%docExtras%xds)
     arg%docExtras%xds => xds
   end subroutine setXds
-
 
   TOHW_function(getImplementation, (arg), imp)
     type(Node), pointer :: arg
@@ -103,21 +88,6 @@ TOHW_m_dom_contents(`
     
   end function getImplementation
 
-  TOHW_function(getDocumentElement, (arg), np)
-    type(Node), pointer :: arg
-    type(Node), pointer :: np
-
-    if (.not.associated(arg)) then
-      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
-    endif
-
-    if (arg%nodeType/=DOCUMENT_NODE) then
-      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    endif
-
-    np => arg%docExtras%documentElement
-
-  end function getDocumentElement
 
   TOHW_subroutine(setDocumentElement, (arg, np))
   ! Only for use by FoX, not exported through FoX_DOM interface
@@ -127,6 +97,8 @@ TOHW_m_dom_contents(`
     if (.not.associated(arg)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif
+
+!NB special case due to additional error conditions:
 
     if (arg%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)

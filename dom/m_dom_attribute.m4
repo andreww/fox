@@ -21,36 +21,15 @@ TOHW_m_dom_contents(`
 ! This is so that getValue_length can be pure,  and the nodeList
 ! can be explicitly kept up to dat.
 
+TOHW_m_dom_get(logical, specified, np%elExtras%specified, (ATTRIBUTE_NODE))
 
-  TOHW_function(getSpecified, (arg), p)
-    type(Node), pointer :: arg
-    logical :: p
+TOHW_m_dom_set(logical, specified, np%elExtras%specified, (ATTRIBUTE_NODE))
 
-    if (.not.associated(arg)) then
-      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
-    endif
+TOHW_m_dom_get(logical, isId, np%elExtras%isId, (ATTRIBUTE_NODE))
 
-    if (getNodeType(arg)/=ATTRIBUTE_NODE) then
-      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    endif
+TOHW_m_dom_set(logical, isId, np%elExtras%isId, (ATTRIBUTE_NODE))
 
-    p = arg%elExtras%specified
-  end function getSpecified
-
-  TOHW_subroutine(setSpecified, (arg, p))
-    type(Node), pointer :: arg
-    logical, intent(in) :: p
-
-    if (.not.associated(arg)) then
-      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
-    endif
-
-    if (getNodeType(arg)/=ATTRIBUTE_NODE) then
-      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    endif
-
-    arg%elExtras%specified = p
-  end subroutine setSpecified
+TOHW_m_dom_get(Node, ownerElement, np%elExtras%ownerElement, (ATTRIBUTE_NODE))
     
   pure function getValue_len(arg, p) result(n)
     type(Node), intent(in) :: arg
@@ -121,53 +100,5 @@ TOHW_m_dom_contents(`
     np => appendChild(arg, np)
 
   end subroutine setValue
-
-  TOHW_function(getOwnerElement, (arg), np)
-    type(Node), pointer :: arg
-    type(Node), pointer :: np
-
-    if (.not.associated(arg)) then
-      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
-    endif
-
-    if (getNodeType(arg) /= ATTRIBUTE_NODE) then
-      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    endif
-
-    np => arg%elExtras%ownerElement
-
-  end function getOwnerElement
-
-  TOHW_function(getIsId, (arg), p)
-    type(Node), pointer :: arg
-    logical :: p
-
-    if (.not.associated(arg)) then
-      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
-    endif
-
-    if (getNodeType(arg) /= ATTRIBUTE_NODE) then
-      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    endif
-
-    p = arg%elExtras%isId
-
-  end function getIsId
-
-  TOHW_subroutine(setIsId, (arg, p))
-    type(Node), pointer :: arg
-    logical, intent(in) :: p
-
-    if (.not.associated(arg)) then
-      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
-    endif
-
-    if (getNodeType(arg) /= ATTRIBUTE_NODE) then
-      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    endif
-
-    arg%elExtras%isId = p
-
-  end subroutine setIsId
 
 ')`'dnl
