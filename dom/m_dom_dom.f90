@@ -104,16 +104,17 @@ module m_dom_dom
     type(NodeList) :: namespaceNodes
     ! Needed for attributes:
     type(Node), pointer :: ownerElement => null()
-    logical :: specified
-    logical :: isId
+    logical :: specified = .true.
+    logical :: isId = .false.
   end type elementOrAttributeExtras
 
-  type DTDExtras
+  type docTypeExtras
     character, pointer :: publicId(:) => null() ! doctype, entity, notation 
     character, pointer :: systemId(:) => null() ! doctype, entity, notation
     character, pointer :: internalSubset(:) => null() ! doctype
     character, pointer :: notationName(:) => null() ! entity
-  end type DTDExtras
+    logical :: illFormed = .false. ! entity
+  end type docTypeExtras
 
   type Node
     private
@@ -127,7 +128,7 @@ module m_dom_dom
     type(Node), pointer :: previousSibling => null()
     type(Node), pointer :: nextSibling     => null()
     type(Node), pointer :: ownerDocument   => null()
-    type(NodeList) :: childNodes ! not for text, cdata, PI, comment, notation,  docType, XPath
+    type(NodeList) :: childNodes ! not for text, cdata, PI, comment, notation, docType, XPath
 
     ! Introduced in DOM Level 2
     character, pointer :: publicId(:) => null() ! doctype, entity, notation 
@@ -140,6 +141,7 @@ module m_dom_dom
     logical :: inDocument = .false.! For a node, is this node associated to the doc?
     type(documentExtras), pointer :: docExtras
     type(elementOrAttributeExtras), pointer :: elExtras
+    type(docTypeExtras), pointer :: dtdExtras
   end type Node
 
   type(DOMImplementation), save, target :: FoX_DOM
@@ -3619,6 +3621,7 @@ endif
     ! namedNodeMaps, so we do not have any checks for that.
 
     if (getNodeType(arg)==ATTRIBUTE_NODE) then
+      call setSpecified(arg, .true.)
       ! This is the normal state of affairs. Always the
       ! case when a user calls this routine. But m_dom_parse
       ! will call with notations & entities
@@ -3721,6 +3724,8 @@ endif
         return
       endif
     enddo
+
+    !FIXME if this was an attribute we may have to replace with default value
 
     call throw_exception(NOT_FOUND_ERR, "removeNamedItem", ex)
 if (present(ex)) then
@@ -3920,6 +3925,7 @@ endif
     ! namedNodeMaps, so we do not have any checks for that.
 
     if (getNodeType(arg)==ATTRIBUTE_NODE) then
+      call setSpecified(arg, .true.)
       ! This is the normal state of affairs. Always the
       ! case when a user calls this routine. But m_dom_parse
       ! will call with notations & entities
@@ -3965,7 +3971,7 @@ endif
         endif
       endif
     endif
-
+    
   end function setNamedItemNS
 
 
@@ -4030,6 +4036,8 @@ if (present(ex)) then
   endif
 endif
 
+
+    ! FIXME if this was attribute we may have to replace by default
 
   end function removeNamedItemNS
 
@@ -7338,7 +7346,6 @@ endif
     endif
 
     if (getNodeType(arg) /= ATTRIBUTE_NODE) then
-      print*, arg%nodeName
       call throw_exception(FoX_INVALID_NODE, "getOwnerElement", ex)
 if (present(ex)) then
   if (inException(ex)) then

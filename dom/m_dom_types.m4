@@ -75,8 +75,8 @@ TOHW_m_dom_publics(`
     type(NodeList) :: namespaceNodes
     ! Needed for attributes:
     type(Node), pointer :: ownerElement => null()
-    logical :: specified
-    logical :: isId
+    logical :: specified = .true.
+    logical :: isId = .false.
   end type elementOrAttributeExtras
 
   type docTypeExtras

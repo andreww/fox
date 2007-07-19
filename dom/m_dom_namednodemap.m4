@@ -122,6 +122,7 @@ TOHW_m_dom_contents(`
     ! namedNodeMaps, so we do not have any checks for that.
 
     if (getNodeType(arg)==ATTRIBUTE_NODE) then
+      call setSpecified(arg, .true.)
       ! This is the normal state of affairs. Always the
       ! case when a user calls this routine. But m_dom_parse
       ! will call with notations & entities
@@ -205,6 +206,8 @@ TOHW_m_dom_contents(`
         return
       endif
     enddo
+
+    !FIXME if this was an attribute we may have to replace with default value
 
     TOHW_m_dom_throw_error(NOT_FOUND_ERR)
 
@@ -339,6 +342,7 @@ TOHW_m_dom_contents(`
     ! namedNodeMaps, so we do not have any checks for that.
 
     if (getNodeType(arg)==ATTRIBUTE_NODE) then
+      call setSpecified(arg, .true.)
       ! This is the normal state of affairs. Always the
       ! case when a user calls this routine. But m_dom_parse
       ! will call with notations & entities
@@ -378,7 +382,7 @@ TOHW_m_dom_contents(`
         endif
       endif
     endif
-
+    
   end function setNamedItemNS
 
 
@@ -424,6 +428,8 @@ TOHW_m_dom_contents(`
     enddo
 
     TOHW_m_dom_throw_error(NOT_FOUND_ERR)
+
+    ! FIXME if this was attribute we may have to replace by default
 
   end function removeNamedItemNS
 
