@@ -966,7 +966,203 @@ TOHW_m_dom_treewalk(`
 
   end function isSameNode
 
-  ! function lookupNamespaceURI
+  TOHW_function(isDefaultNamespace, (np, namespaceURI), p)
+    type(Node), pointer :: np
+    character(len=*), intent(in) :: namespaceURI
+    logical :: p
+
+    type(Node), pointer :: el
+    integer :: i
+
+    if (.not.associated(np)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+
+    el => null()
+    select case(getNodeType(np))
+    case (ELEMENT_NODE)
+      el => np
+    case (ATTRIBUTE_NODE)
+      el => getOwnerElement(np)
+    case (DOCUMENT_NODE)
+      el => getDocumentElement(np)
+    end select
+
+    p = .false.
+    if (associated(el)) then
+      if (associated(el%elExtras%namespaceURI)) then
+        do i = 1, el%elExtras%namespaceNodes%length
+          if (size(el%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)==0) then
+            p = (str_vs(el%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)==namespaceURI)
+            return
+          endif
+        enddo
+      endif
+    endif
+  end function isDefaultNamespace
+
+  pure function lookupNamespaceURI_len(np, prefix, p) result(n)
+    type(Node), pointer :: np
+    character(len=*), intent(in) :: prefix
+    logical, intent(in) :: p
+    integer :: n
+
+    type(Node), pointer :: el
+    integer :: i
+
+    if (.not.p) then
+      n = 0
+      return
+    endif
+
+    select case(np%nodeType)
+    case (ELEMENT_NODE)
+      if (associated(np%elExtras%namespaceURI)) then
+        do i = 1, np%elExtras%namespaceNodes%length
+          if (str_vs(np%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)==prefix) then
+            n = size(np%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)
+            return
+          endif
+        enddo
+      endif
+    case (ATTRIBUTE_NODE)
+      if (associated(np%elExtras%ownerElement%elExtras%namespaceURI)) then
+        do i = 1, np%elExtras%ownerElement%elExtras%namespaceNodes%length
+          if (str_vs(np%elExtras%ownerElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)==prefix) then
+            n = size(np%elExtras%ownerElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)
+            return
+          endif
+        enddo
+      endif
+    case (DOCUMENT_NODE)
+      if (associated(np%docExtras%documentElement%elExtras%namespaceURI)) then
+        do i = 1, np%docExtras%documentElement%elExtras%namespaceNodes%length
+          if (str_vs(np%docExtras%documentElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)==prefix) then
+            n = size(np%docExtras%documentElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)
+            return
+          endif
+        enddo
+      endif
+    end select
+
+    end function lookupNamespaceURI_len
+
+  TOHW_function(lookupNamespaceURI, (np, prefix), c)
+    type(Node), pointer :: np
+    character(len=*), intent(in) :: prefix
+    character(len=lookupNamespaceURI_len(np, prefix, associated(np))) :: c
+
+    type(Node), pointer :: el
+    integer :: i
+
+    if (.not.associated(np)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+
+    el => null()
+    select case(getNodeType(np))
+    case (ELEMENT_NODE)
+      el => np
+    case (ATTRIBUTE_NODE)
+      el => getOwnerElement(np)
+    case (DOCUMENT_NODE)
+      el => getDocumentElement(np)
+    end select
+
+    c = ""
+    if (associated(el)) then
+      if (associated(el%elExtras%namespaceURI)) then
+        do i = 1, el%elExtras%namespaceNodes%length
+          if (str_vs(el%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)==prefix) then
+            c = str_vs(el%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)
+            return
+          endif
+        enddo
+      endif
+    endif
+    end function lookupNamespaceURI
+
+  pure function lookupPrefix_len(np, namespaceURI, p) result(n)
+    type(Node), pointer :: np
+    character(len=*), intent(in) :: namespaceURI
+    logical, intent(in) :: p
+    integer :: n
+
+    type(Node), pointer :: el
+    integer :: i
+
+    if (.not.p) then
+      n = 0
+      return
+    endif
+
+    select case(np%nodeType)
+    case (ELEMENT_NODE)
+      if (associated(np%elExtras%namespaceURI)) then
+        do i = 1, np%elExtras%namespaceNodes%length
+          if (str_vs(np%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)==namespaceURI) then
+            n = size(np%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)
+            return
+          endif
+        enddo
+      endif
+    case (ATTRIBUTE_NODE)
+      if (associated(np%elExtras%ownerElement%elExtras%namespaceURI)) then
+        do i = 1, np%elExtras%ownerElement%elExtras%namespaceNodes%length
+          if (str_vs(np%elExtras%ownerElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)==namespaceURI) then
+            n = size(np%elExtras%ownerElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)
+            return
+          endif
+        enddo
+      endif
+    case (DOCUMENT_NODE)
+      if (associated(np%docExtras%documentElement%elExtras%namespaceURI)) then
+        do i = 1, np%docExtras%documentElement%elExtras%namespaceNodes%length
+          if (str_vs(np%docExtras%documentElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)==namespaceURI) then
+            n = size(np%docExtras%documentElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)
+            return
+          endif
+        enddo
+      endif
+    end select
+
+    end function lookupPrefix_len
+
+  TOHW_function(lookupPrefix, (np, namespaceURI), c)
+    type(Node), pointer :: np
+    character(len=*), intent(in) :: namespaceURI
+    character(len=lookupPrefix_len(np, namespaceURI, associated(np))) :: c
+
+    type(Node), pointer :: el
+    integer :: i
+
+    if (.not.associated(np)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+
+    el => null()
+    select case(getNodeType(np))
+    case (ELEMENT_NODE)
+      el => np
+    case (ATTRIBUTE_NODE)
+      el => getOwnerElement(np)
+    case (DOCUMENT_NODE)
+      el => getDocumentElement(np)
+    end select
+
+    c = ""
+    if (associated(el)) then
+      if (associated(el%elExtras%namespaceURI)) then
+        do i = 1, el%elExtras%namespaceNodes%length
+          if (str_vs(el%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)==namespaceURI) then
+            c = str_vs(el%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)
+            return
+          endif
+        enddo
+      endif
+    endif
+    end function lookupPrefix
+
   ! function lookupPrefix
 
   ! function getUserData

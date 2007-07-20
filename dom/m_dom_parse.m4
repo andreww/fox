@@ -6,7 +6,8 @@ module m_dom_parse
 
   use m_common_array_str, only: str_vs, vs_str_alloc
   use m_common_error, only: FoX_error
-  use m_common_namespaces, only: namespaceDictionary
+  use m_common_namespaces, only: namespaceDictionary, isDefaultNSInForce, getNumberOfPrefixes, &
+    getPrefixByIndex, getNamespaceURI
   use m_common_struct, only: xml_doc_state
   use FoX_common, only: dictionary_t, len
   use FoX_common, only: getQName, getValue, getURI, getQName
@@ -77,14 +78,16 @@ contains
       if (associated(inEntity)) call setReadOnlyNode(attr, .true., .true.)
     enddo
 
-    ! Attach all in-scope namespaces:
-    call appendNSNode(el, "xml", "http://www.w3.org/XML/1998/namespace")
-    nsd => getnsDict(fxml%fx)
-!!$    if (isDefaultNSInForce(xsd)) call appendNSNode(el, "", getnamespaceURI(nsd))
-!!$    do i = 1, ubound(nsd%prefixes)
-!!$      call appendNSNode(el, str_vs(nsd%prefixs(i)%prefix), getNamespaceURI(nsd, nsd%prefixs(i)%prefix))
-!!$    enddo
+    if (len(URI)>0) then
+      ! Attach all in-scope namespaces:
+      call appendNSNode(el, "xml", "http://www.w3.org/XML/1998/namespace")
+      nsd => getnsDict(fxml%fx)
+      if (isDefaultNSInForce(nsd)) call appendNSNode(el, "", getNamespaceURI(nsd))
+      do i = 1, getNumberOfPrefixes(nsd)
+        call appendNSNode(el, getPrefixByIndex(nsd, i), getNamespaceURI(nsd, getPrefixByIndex(nsd, i)))
+      enddo
 !!$    !FIXME DOM-XPath section 1.2.3 - implicit declaration of prefix?
+    endif
 
     if (getNodeType(current)==DOCUMENT_NODE) then
       call setDocumentElement(mainDoc, el)

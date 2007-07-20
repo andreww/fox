@@ -2,7 +2,7 @@ undefine(`index')dnl
 undefine(`len')dnl
 undefine(`format')dnl
 include(`m_dom_exception.m4')dnl
-include(`m_dom_treewalk.m4')dnl
+include(`m_dom_treewalk.m4')`'dnl
 module m_dom_utils
 
   use m_common_attrs, only: getValue
@@ -55,12 +55,19 @@ contains
 
     recursive subroutine dump2(input)
       type(Node), pointer :: input
-      type(Node), pointer :: temp     
+      type(Node), pointer :: temp
+      integer :: i
       temp => input
       do while(associated(temp))
          write(*,"(3a,i0)") repeat(" ", indent_level), &
                         getNodeName(temp), " of type ", &
                         getNodeType(temp)
+         if (getNodeType(temp)==ELEMENT_NODE) then
+           do i = 1, getLength(getAttributes(temp))
+             write(*, "(3a)") repeat(" ", indent_level), "  ", &
+               getName(item(getAttributes(temp), i-1))
+           enddo
+         endif
          if (hasChildNodes(temp)) then
             indent_level = indent_level + 3
             call dump2(getFirstChild(temp))

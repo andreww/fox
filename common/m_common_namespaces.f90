@@ -50,6 +50,8 @@ module m_common_namespaces
   end interface
   public :: isPrefixInForce
   public :: isDefaultNSInForce
+  public :: getNumberOfPrefixes
+  public :: getPrefixByIndex
 
   public :: dumpnsdict !FIXME
 
@@ -653,6 +655,22 @@ contains
        endif
     enddo
   end function getPrefixIndex
+
+  
+  function getNumberOfPrefixes(nsDict) result(n)
+    type(namespaceDictionary), intent(in) :: nsDict
+    integer :: n
+    n = ubound(nsDict%prefixes, 1)
+  end function getNumberOfPrefixes
+
+
+  function getPrefixByIndex(nsDict, i) result(c)
+    type(namespaceDictionary), intent(in) :: nsDict
+    integer, intent(in) :: i
+    character(len=size(nsDict%prefixes(i)%prefix)) :: c
+
+    c = str_vs(nsDict%prefixes(i)%prefix)
+  end function getPrefixByIndex
 
 
   pure function getURIofPrefixedNS(nsDict, prefix) result(uri)
