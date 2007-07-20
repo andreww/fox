@@ -82,7 +82,11 @@ contains
     endEntity_handler,             &
     startCdata_handler,            &
     startDTD_handler,              &
-    startEntity_handler)
+    startEntity_handler,           &
+! Features / properties
+    namespaces,                    &
+    namespace_prefixes,            &
+    xmlns_uris)
 
     type(xml_t), intent(inout) :: xt
     optional :: characters_handler
@@ -111,6 +115,10 @@ contains
     optional :: startCdata_handler
     optional :: startDTD_handler
     optional :: startEntity_handler
+
+    logical, intent(in), optional :: namespaces
+    logical, intent(in), optional :: namespace_prefixes
+    logical, intent(in), optional :: xmlns_uris
 
     interface
 
@@ -267,7 +275,10 @@ contains
       endEntity_handler,             &
       startCdata_handler,            &
       startDTD_handler,              &
-      startEntity_handler)
+      startEntity_handler,           &
+      namespaces=namespaces,                 &
+      namespace_prefixes=namespace_prefixes, &
+      xmlns_uris=xmlns_uris)
 
   end subroutine parse
 

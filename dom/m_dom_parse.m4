@@ -366,7 +366,10 @@ contains
       startCdata_handler=startCdata_handler,    &
       startDTD_handler=startDTD_handler,          &
       startEntity_handler=startEntity_handler, &
-      FoX_endDTD_handler=FoX_endDTD_handler)
+      FoX_endDTD_handler=FoX_endDTD_handler, &
+      namespaces = .true.,     &
+      namespace_prefixes = .true., &
+      xmlns_uris = .true.)
 
     call close_xml_t(fxml)
 
@@ -426,7 +429,10 @@ contains
       startCdata_handler=startCdata_handler,    &
       startDTD_handler=startDTD_handler,          &
       startEntity_handler=startEntity_handler, &
-      FoX_endDTD_handler=FoX_endDTD_handler)
+      FoX_endDTD_handler=FoX_endDTD_handler, &
+      namespaces = .true.,     &
+      namespace_prefixes = .true., &
+      xmlns_uris = .true.)
 
     call close_xml_t(fxml)
 

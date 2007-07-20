@@ -152,6 +152,9 @@ contains
     startCdata_handler,            &
     startDTD_handler,              &
     startEntity_handler,           &
+    namespaces,                    &
+    namespace_prefixes,            &
+    xmlns_uris,                    &
     validate,                      &
     FoX_endDTD_handler,            &
     startInCharData)
@@ -185,6 +188,10 @@ contains
     optional :: startCdata_handler
     optional :: startDTD_handler
     optional :: startEntity_handler
+
+    logical, intent(in), optional :: namespaces
+    logical, intent(in), optional :: namespace_prefixes
+    logical, intent(in), optional :: xmlns_uris
 
     logical, intent(in), optional :: validate
     logical, intent(in), optional :: startInCharData
@@ -318,6 +325,7 @@ contains
     end interface
 
     logical :: validCheck, startInCharData_, processDTD, pe
+    logical :: namespaces_, namespace_prefixes_, xmlns_uris_
     integer :: i, iostat, temp_i
     character, pointer :: tempString(:)
     type(element_t), pointer :: elem
@@ -326,6 +334,21 @@ contains
     nullify(tempString)
     nullify(elem)
 
+    if (present(namespaces)) then
+      namespaces_ = namespaces
+    else
+      namespaces_ = .true.
+    endif
+    if (present(namespace_prefixes)) then
+      namespace_prefixes_ = namespace_prefixes
+    else
+      namespace_prefixes_ = .false.
+    endif
+    if (present(xmlns_uris)) then
+      xmlns_uris_ = xmlns_uris
+    else
+      xmlns_uris_ = .false.
+    endif
     if (present(validate)) then
       validCheck = validate
     else
@@ -1392,8 +1415,10 @@ contains
       call checkImplicitAttributes(fx%element_list, str_vs(fx%name), &
         fx%attributes)
       ! Check for namespace changes
-      call checkNamespaces(fx%attributes, fx%nsDict, &
-        len(fx%elstack), fx%xds%xml_version, startPrefixMapping_handler)
+      if (namespaces_) &
+        call checkNamespaces(fx%attributes, fx%nsDict, &
+        len(fx%elstack), fx%xds%xml_version, namespace_prefixes_, xmlns_uris_, &
+        startPrefixMapping_handler)
       if (getURIofQName(fx,str_vs(fx%name))==invalidNS) then
         ! no namespace was found for the current element
         call add_error(fx%error_stack, "No namespace found for current element")
@@ -1425,7 +1450,8 @@ contains
         call endElement_handler(getURIofQName(fx, str_vs(fx%name)), &
         getlocalnameofQName(str_vs(fx%name)), &
         str_vs(fx%name))
-      call checkEndNamespaces(fx%nsDict, len(fx%elstack)+1, &
+      if (namespaces_) &
+        call checkEndNamespaces(fx%nsDict, len(fx%elstack)+1, &
         endPrefixMapping_handler)
     end subroutine close_tag
 
