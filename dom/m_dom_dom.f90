@@ -393,7 +393,7 @@ contains
     if (.not.associated(np)) return
 
     select case(np%nodeType)
-    case (ELEMENT_NODE, ATTRIBUTE_NODE)
+    case (ELEMENT_NODE, ATTRIBUTE_NODE, XPATH_NAMESPACE_NODE)
       call destroyElementOrAttribute(np)
     case (DOCUMENT_TYPE_NODE, ENTITY_NODE, NOTATION_NODE)
       call destroyEntityOrNotation(np)
@@ -432,7 +432,6 @@ endif
 
     if (associated(np%elExtras%attributes%nodes)) deallocate(np%elExtras%attributes%nodes)
     do i = 1, np%elExtras%namespaceNodes%length
-!FIXME or will these be destroyed by hanging node list?
       call destroyNode(np%elExtras%namespaceNodes%nodes(i)%this)
     enddo
     if (associated(np%elExtras%namespaceNodes%nodes)) deallocate(np%elExtras%namespaceNodes%nodes)
@@ -7165,6 +7164,7 @@ endif
     ! parent element node, so will always be destroyed alongside it.
 
     quickFix = getGCState(getOwnerDocument(np))
+    call setGCState(getOwnerDocument(np), .false.)
     call append_nl(np%elExtras%namespaceNodes, &
       createNamespaceNode(getOwnerDocument(np), prefix, namespaceURI))
     call setGCState(getOwnerDocument(np), quickFix)

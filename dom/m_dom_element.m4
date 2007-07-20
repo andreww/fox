@@ -532,6 +532,7 @@ TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
     ! parent element node, so will always be destroyed alongside it.
 
     quickFix = getGCState(getOwnerDocument(np))
+    call setGCState(getOwnerDocument(np), .false.)
     call append_nl(np%elExtras%namespaceNodes, &
       createNamespaceNode(getOwnerDocument(np), prefix, namespaceURI))
     call setGCState(getOwnerDocument(np), quickFix)
