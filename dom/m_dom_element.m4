@@ -533,7 +533,7 @@ TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
 
     quickFix = getGCState(getOwnerDocument(np))
     call append_nl(np%elExtras%namespaceNodes, &
-      createNamespaceNode(np, prefix, namespaceURI))
+      createNamespaceNode(getOwnerDocument(np), prefix, namespaceURI))
     call setGCState(getOwnerDocument(np), quickFix)
 
   end subroutine appendNSNode

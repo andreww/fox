@@ -78,7 +78,7 @@ contains
     enddo
 
     ! Attach all in-scope namespaces:
-!    call appendNSNode(el, createNamespaceNode(mainDoc, "xml", "http://www.w3.org/XML/1998/namespace"))
+    call appendNSNode(el, "xml", "http://www.w3.org/XML/1998/namespace")
 !!$    nsd => getnsDict(fxml)
 !!$    if (isDefaultNSInForce(xsd)) call appendNSNode(el, "", getnamespaceURI(nsd))
 !!$    do i = 1, ubound(nsd%prefixes)
