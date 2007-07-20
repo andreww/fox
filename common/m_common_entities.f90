@@ -12,9 +12,8 @@ module m_common_entities
   !    2. External unparsed entities
   ! Though nothing is done with them currently elsewhere in FoX.
 
-  !FIXME need to worry about removing entities from a list.
 
-  use m_common_array_str, only: str_vs, vs_str_alloc
+  use m_common_array_str, only: str_vs, vs_str_alloc, vs_vs_alloc
   use m_common_charset, only: digits, hexdigits
   use m_common_error, only: FoX_error
   use m_common_format, only: str_to_int_10, str_to_int_16
@@ -23,6 +22,7 @@ module m_common_entities
   private
 
   type entity_t
+    private
     logical :: external
     character(len=1), dimension(:), pointer :: code => null()
     character(len=1), dimension(:), pointer :: repl => null()
@@ -32,6 +32,7 @@ module m_common_entities
   end type entity_t
 
   type entity_list
+    private
     type(entity_t), dimension(:), pointer :: list => null()
   end type entity_list
 
@@ -57,8 +58,16 @@ module m_common_entities
   public :: add_external_entity
   public :: pop_entity_list
 
-contains
+  interface size
+    module procedure size_el
+  end interface
 
+  public :: getEntityByIndex
+  public :: getEntityNameByIndex
+  public :: getEntityTextByIndex
+  public :: size
+
+contains
 
   function shallow_copy_entity(ent1) result(ent2)
     type(entity_t), intent(in) :: ent1
@@ -72,6 +81,38 @@ contains
     ent2%notation => ent1%notation
 
   end function shallow_copy_entity
+
+  function getEntityByIndex(el, i) result(e)
+    type(entity_list), intent(in) :: el
+    integer, intent(in) :: i
+    type(entity_t) :: e
+
+    e = el%list(i)
+  end function getEntityByIndex
+
+  function getEntityNameByIndex(el, i) result(c)
+    type(entity_list), intent(in) :: el
+    integer, intent(in) :: i
+    character(len=size(el%list(i)%code)) :: c
+
+    c = str_vs(el%list(i)%code)
+  end function getEntityNameByIndex
+
+  function getEntityTextByIndex(el, i) result(c)
+    type(entity_list), intent(in) :: el
+    integer, intent(in) :: i
+    character(len=size(el%list(i)%repl)) :: c
+
+    c = str_vs(el%list(i)%repl)
+  end function getEntityTextByIndex
+
+  function size_el(el) result(n)
+    type(entity_list), intent(in) :: el
+    integer :: n
+    print*, "S", size(el%list)
+    stop
+    n = ubound(el%list, 1)
+  end function size_el
 
 
   subroutine destroy_entity(ent)

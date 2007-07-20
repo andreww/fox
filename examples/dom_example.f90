@@ -13,6 +13,7 @@ program dom_example
   myDoc => parseFile("testNS.xml")
 
   call dumpTree(myDoc)
+  call serialize(myDoc, "out.xml")
 
   call destroyDocument(myDoc)
 end program dom_example

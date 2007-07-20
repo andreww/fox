@@ -16,7 +16,8 @@ module m_sax_parser
   use m_common_entities, only: existing_entity, init_entity_list, &
     destroy_entity_list, add_internal_entity, &
     is_external_entity, expand_entity, expand_char_entity, &
-    is_unparsed_entity, pop_entity_list
+    is_unparsed_entity, pop_entity_list, size, &
+    getEntityTextByIndex, getEntityNameByIndex
   use m_common_entity_expand, only: expand_entity_value_alloc
   use m_common_error, only: FoX_error, add_error, &
     init_error_stack, destroy_error_stack, in_error
@@ -41,6 +42,7 @@ module m_sax_parser
   private
 
   public :: getNSDict
+  public :: getEntityList
   public :: sax_parser_init
   public :: sax_parser_destroy
   public :: sax_parse
@@ -53,6 +55,13 @@ contains
 
     ns => fx%nsDict
   end function getNSDict
+
+  function getEntityList(fx) result(el)
+    type(sax_parser_t), target :: fx
+    type(entity_list), pointer :: el
+
+    el => fx%xds%entityList
+  end function getEntityList
 
   subroutine sax_parser_init(fx)
     type(sax_parser_t), intent(out) :: fx
@@ -157,7 +166,8 @@ contains
     xmlns_uris,                    &
     validate,                      &
     FoX_endDTD_handler,            &
-    startInCharData)
+    startInCharData,               &
+    initial_entities)
 
     type(sax_parser_t), intent(inout) :: fx
     type(file_buffer_t), intent(inout) :: fb
@@ -195,6 +205,8 @@ contains
 
     logical, intent(in), optional :: validate
     logical, intent(in), optional :: startInCharData
+
+    type(entity_list), optional :: initial_entities
 
     interface
 
@@ -334,6 +346,7 @@ contains
     nullify(tempString)
     nullify(elem)
 
+! FIXME we don't do anything with the namespaces option at present
     if (present(namespaces)) then
       namespaces_ = namespaces
     else
@@ -359,6 +372,13 @@ contains
     else
       startInCharData_ = .false.
     endif
+    if (present(initial_entities)) then
+      do i = 1, size(initial_entities)
+        if (.not.is_external_entity(initial_entities, getEntityNameByIndex(initial_entities, i))) &
+          call register_internal_PE(fx%xds, getEntityNameByIndex(initial_entities, i), getEntityTextByIndex(initial_entities, i))
+      enddo
+    endif
+
     processDTD = .true.
     iostat = 0
 

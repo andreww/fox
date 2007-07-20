@@ -5,13 +5,14 @@ include(`m_dom_exception.m4')dnl
 module m_dom_parse
 
   use m_common_array_str, only: str_vs, vs_str_alloc
+  use m_common_entities, only: entity_list, size
   use m_common_error, only: FoX_error
   use m_common_namespaces, only: namespaceDictionary, isDefaultNSInForce, getNumberOfPrefixes, &
     getPrefixByIndex, getNamespaceURI
   use m_common_struct, only: xml_doc_state
   use FoX_common, only: dictionary_t, len
   use FoX_common, only: getQName, getValue, getURI, getQName
-  use m_sax_parser, only: sax_parse, getNSDict
+  use m_sax_parser, only: sax_parse, getNSDict, getEntityList
   use FoX_sax, only: xml_t
   use FoX_sax, only: open_xml_file, open_xml_string, close_xml_t
 
@@ -204,14 +205,23 @@ contains
     
     type(Node), pointer :: oldcurrent
     type(xml_t) :: subsax
+    type(entity_list), pointer :: el
 
     oldcurrent => getNamedItem(getEntities(getDocType(mainDoc)), name)
+    ! If oldcurrent is associated, then this is a duplicate entity
+    ! declaration & should be ignored
     if (.not.associated(oldcurrent)) then
       oldcurrent => current
       current => createEntity(mainDoc, name, "", "", "")
+      el => getEntityList(fxml%fx)
+      print*, associated(el)
+
+      print*, size(el)
+      stop
       call setStringValue(current, value)
       
       call open_xml_string(subsax, value)
+      ! Run the parser over 
       call sax_parse(subsax%fx, subsax%fb,                                        &
         startElement_handler=startElement_handler,                   &
         endElement_handler=endElement_handler,                       &
@@ -221,7 +231,8 @@ contains
         comment_handler=comment_handler,                             &
         processingInstruction_handler=processingInstruction_handler, &
         error_handler=entityErrorHandler,                            &
-        startInCharData = .true.)
+        startInCharData = .true., initial_entities = el)
+      ! FIXME we should be doing this while *not* resolving NS declarations
       call close_xml_t(subsax)
       
       current => setNamedItem(getEntities(getDocType(mainDoc)), current)
@@ -401,7 +412,7 @@ contains
 ! We use internal sax_parse rather than public interface in order
 ! to use internal callbacks to get extra info.
 
-    call sax_parse(fxml%fx, fxml%fb,&
+    call sax_parse(fx=fxml%fx, fb=fxml%fb,&
       characters_handler=characters_handler,            &
       endDocument_handler=endDocument_handler,           &
       endElement_handler=endElement_handler,            &
