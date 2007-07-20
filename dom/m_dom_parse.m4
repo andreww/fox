@@ -10,7 +10,7 @@ module m_dom_parse
   use m_common_struct, only: xml_doc_state
   use FoX_common, only: dictionary_t, len
   use FoX_common, only: getQName, getValue, getURI, getQName
-  use m_sax_parser, only: sax_parse
+  use m_sax_parser, only: sax_parse, getNSDict
   use FoX_sax, only: xml_t
   use FoX_sax, only: open_xml_file, open_xml_string, close_xml_t
 
@@ -79,7 +79,7 @@ contains
 
     ! Attach all in-scope namespaces:
     call appendNSNode(el, "xml", "http://www.w3.org/XML/1998/namespace")
-!!$    nsd => getnsDict(fxml)
+    nsd => getnsDict(fxml%fx)
 !!$    if (isDefaultNSInForce(xsd)) call appendNSNode(el, "", getnamespaceURI(nsd))
 !!$    do i = 1, ubound(nsd%prefixes)
 !!$      call appendNSNode(el, str_vs(nsd%prefixs(i)%prefix), getNamespaceURI(nsd, nsd%prefixs(i)%prefix))

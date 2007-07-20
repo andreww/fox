@@ -40,11 +40,19 @@ module m_sax_parser
   implicit none
   private
 
+  public :: getNSDict
   public :: sax_parser_init
   public :: sax_parser_destroy
   public :: sax_parse
 
 contains
+
+  function getNSDict(fx) result(ns)
+    type(sax_parser_t), target :: fx
+    type(namespaceDictionary), pointer :: ns
+
+    ns => fx%nsDict
+  end function getNSDict
 
   subroutine sax_parser_init(fx)
     type(sax_parser_t), intent(out) :: fx
