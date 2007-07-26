@@ -10,7 +10,7 @@ program dom_example
   type(NodeList) :: interest
   integer :: i
 
-  myDoc => parseFile("testNS.xml")
+  myDoc => parseFile("testNS.xml", "entities")
 
   call dumpTree(myDoc)
   call serialize(myDoc, "out.xml")

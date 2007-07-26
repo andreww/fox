@@ -7,6 +7,7 @@ module m_dom_utils
 
   use m_common_attrs, only: getValue
   use m_common_format, only: operator(//)
+  use m_common_array_str, only: str_vs, vs_str
 
   use m_dom_dom, only: Node, Namednodemap, Node
   use m_dom_dom, only: DOCUMENT_NODE, ELEMENT_NODE, TEXT_NODE, &
@@ -14,11 +15,11 @@ module m_dom_utils
    ATTRIBUTE_NODE, ENTITY_REFERENCE_NODE, PROCESSING_INSTRUCTION_NODE
   use m_dom_dom, only: haschildnodes, getNodeName, getNodeType, &
     getFirstChild, getNextSibling, getlength, item, getOwnerElement, &
-    getAttributes, getParentNode, &
+    getAttributes, getParentNode, getChildNodes, &
     getNodeName, getData, getName, getTagName, getValue, getTarget, &
     getEntities, getNotations, item, getSystemId, getPublicId, getNotationName, getStringValue
   use m_dom_error, only: DOMException, inException, throw_exception, &
-    FoX_INVALID_NODE, SERIALIZE_ERR
+    FoX_INVALID_NODE, SERIALIZE_ERR, FoX_INTERNAL_ERROR
 
   use FoX_wxml, only: xmlf_t
   use FoX_wxml, only: xml_OpenFile, xml_Close
@@ -100,35 +101,69 @@ contains
     if (iostat/=0) then
       TOHW_m_dom_throw_error(SERIALIZE_ERR)
     endif
-    call iter_dmp_xml(xf, startNode)
+    call iter_dmp_xml(xf, startNode, ex)
     call xml_Close(xf)
 
   end subroutine serialize
 
-  subroutine iter_dmp_xml(xf, arg)
+  TOHW_subroutine(iter_dmp_xml, (xf, arg))
     type(xmlf_t), intent(inout) :: xf
 
-    type(Node), pointer :: this, arg, treeroot
+    type(Node), pointer :: this, arg, treeroot, attrchild
     type(NamedNodeMap), pointer :: nnm
     integer :: i_tree, j
     logical :: doneChildren, doneAttributes
+    logical :: cdata, entities
+    character, pointer :: attrvalue(:), tmp(:)
 
 !FIXME options for entityrefs & cdata ...
+    cdata = .false.
+    entities = .true.
     treeroot => arg
 TOHW_m_dom_treewalk(`dnl
     select case(getNodeType(this))
     case (ELEMENT_NODE)
       call xml_NewElement(xf, getTagName(this))
     case (ATTRIBUTE_NODE)
-      call xml_AddAttribute(xf, getName(this), getValue(this))
+      if (entities) then
+        allocate(attrvalue(0))
+        do j = 0, getLength(getChildNodes(this)) - 1
+          attrchild => item(getChildNodes(this), j)
+          if (getNodeType(attrchild)==TEXT_NODE) then
+            tmp => attrvalue
+            allocate(attrvalue(size(tmp)+getLength(attrchild)))
+            attrvalue(:size(tmp)) = tmp
+            attrvalue(size(tmp)+1:) = vs_str(getData(attrChild))
+            deallocate(tmp)
+          elseif (getNodeType(attrchild)==ENTITY_REFERENCE_NODE) then
+            tmp => attrvalue
+            allocate(attrvalue(size(tmp)+len(getNodeName(attrchild))+2))
+            attrvalue(:size(tmp)) = tmp
+            attrvalue(size(tmp)+1:) = vs_str("&"//getData(attrChild)//";")
+            deallocate(tmp)
+          else
+            TOHW_m_dom_throw_error(FoX_INTERNAL_ERROR)
+          endif
+        enddo
+        call xml_AddAttribute(xf, getName(this), str_vs(attrvalue))
+        deallocate(attrvalue)
+      else
+        call xml_AddAttribute(xf, getName(this), getValue(this))
+      endif
       doneChildren = .true.
     case (TEXT_NODE)
       call xml_AddCharacters(xf, getData(this))
     case (CDATA_SECTION_NODE)
-      call xml_AddCharacters(xf, getData(this), parsed = .false.)
+      if (cdata) then
+        call xml_AddCharacters(xf, getData(this), parsed = .false.)
+      else
+        call xml_AddCharacters(xf, getData(this))
+      endif
     case (ENTITY_REFERENCE_NODE)
-      call xml_AddEntityReference(xf, getNodeName(this))
-      doneChildren = .true.
+      if (entities) then
+        call xml_AddEntityReference(xf, getNodeName(this))
+        doneChildren = .true.
+      endif
     case (PROCESSING_INSTRUCTION_NODE)
       call xml_AddXMLPI(xf, getTarget(this), getData(this))
     case (COMMENT_NODE)
