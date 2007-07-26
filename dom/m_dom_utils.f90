@@ -66,6 +66,7 @@ contains
              write(*, "(3a)") repeat(" ", indent_level), "  ", &
                getName(item(getAttributes(temp), i-1))
            enddo
+          ! do i = 1, 
          endif
          if (hasChildNodes(temp)) then
             indent_level = indent_level + 3

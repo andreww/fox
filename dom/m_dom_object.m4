@@ -89,7 +89,7 @@ dnl
 TOHW_subroutine(`set$2', (np, c))
     type(Node), pointer :: np
 ifelse(`$1', `DOMString', `dnl
-    character(len=get$2_len(np, associated(np))) :: c
+    character(len=*) :: c
 ', `$1', `Node',`dnl
     type(Node), pointer :: c
 ', `$1', `NodeList',`dnl

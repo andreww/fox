@@ -8202,7 +8202,7 @@ endif
   subroutine setstringValue(np, c, ex)
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: np
-    character(len=getstringValue_len(np, associated(np))) :: c
+    character(len=*) :: c
 
 
     if (.not.associated(np)) then

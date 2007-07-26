@@ -109,8 +109,7 @@ contains
   function size_el(el) result(n)
     type(entity_list), intent(in) :: el
     integer :: n
-    print*, "S", size(el%list)
-    stop
+
     n = ubound(el%list, 1)
   end function size_el
 
@@ -213,7 +212,6 @@ contains
     ! requires.
 
     n = size(ents%list)
-
     ents_tmp => ents%list
     allocate(ents%list(n+1))
     do i = 1, n

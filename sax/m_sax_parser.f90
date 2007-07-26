@@ -42,7 +42,7 @@ module m_sax_parser
   private
 
   public :: getNSDict
-  public :: getEntityList
+
   public :: sax_parser_init
   public :: sax_parser_destroy
   public :: sax_parse
@@ -55,13 +55,6 @@ contains
 
     ns => fx%nsDict
   end function getNSDict
-
-  function getEntityList(fx) result(el)
-    type(sax_parser_t), target :: fx
-    type(entity_list), pointer :: el
-
-    el => fx%xds%entityList
-  end function getEntityList
 
   subroutine sax_parser_init(fx)
     type(sax_parser_t), intent(out) :: fx
