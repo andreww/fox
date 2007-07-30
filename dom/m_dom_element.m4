@@ -511,10 +511,11 @@ TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
 ! setIdAttributeNS
 ! setIdAttributeNode
 
-  TOHW_subroutine(appendNSNode, (np, prefix, namespaceURI))
+  TOHW_subroutine(appendNSNode, (np, prefix, namespaceURI, specified))
     type(Node), pointer :: np
     character(len=*), intent(in) :: prefix
     character(len=*), intent(in) :: namespaceURI
+    logical, intent(in) :: specified
 
     type(Node), pointer :: nnp
     logical :: quickFix
@@ -534,10 +535,65 @@ TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
     quickFix = getGCState(getOwnerDocument(np))
     call setGCState(getOwnerDocument(np), .false.)
     call append_nl(np%elExtras%namespaceNodes, &
-      createNamespaceNode(getOwnerDocument(np), prefix, namespaceURI))
+      createNamespaceNode(getOwnerDocument(np), prefix, namespaceURI, specified))
     call setGCState(getOwnerDocument(np), quickFix)
 
   end subroutine appendNSNode
-    
+
+dnl  subroutine rationalizeNS(np)
+dnl    type(Node), pointer :: np
+dnl
+dnl    if (.not.associated(np)) then
+dnl      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+dnl    endif
+dnl
+dnl          nsParent => current
+dnl      if (getNodeType(nsParent)==DOCUMENT_NODE) then
+dnl        nsParent => null()
+dnl      else
+dnl        ! it is either an element or an entity reference node;
+dnl        ! if the latter, we must climb the tree to find the first element ancestor.
+dnl        do while (getNodeType(nsParent)/=ELEMENT_NODE)
+dnl          nsParent => getParentNode(nsParent)
+dnl        enddo
+dnl      endif
+dnl      if (associated(nsParent)) then
+dnl        do while (getNodeType(nsParent)/=ELEMENT_NODE)
+dnl          if (nsPa
+dnl        parentNS: do i = 0, getLength(getNamespaces(getParentNode(el))) - 1
+dnl          do j = 1, getNumberOfPrefixes(nsd)
+dnl            if (getPrefixByIndex(nsd, j) == getPrefix(item(getNamespaces(el), i))) cycle parentNS
+dnl          enddo
+dnl          call appendNSNode(el, getPrefix(item(getNamespaces(el), i))), getNamespaceURI(item(getNamespaces(el), i)), specified=.false.)
+dnl        enddo parentNS
+dnl      endif
+dnl    !FIXME DOM-XPath section 1.2.3 - implicit declaration of prefix?
+dnl    endif
+dnl    xml = .false.
+dnl    ! By XML Infoset 2.2, the xmlns namespace should not appear.
+dnl    do i = 0, getLength(getNamespaces(el)) - 1
+dnl      if (getPrefix(item(getNamespaces(el), i)) == "xml") then
+dnl        xml = .true.
+dnl        exit
+dnl      endif
+dnl    enddo
+dnl    if (.not.xml) call appendNSNode(el, "xml", "http://www.w3.org/XML/1998/namespace", .false.)
+dnl
+dnl  end subroutine rationalizeNS
+
+dnl    if (len(URI)>0) then
+dnl      ! This is a namespace-aware element node.
+dnl      ! Do all namespace resolution by creating namespace nodes ...
+dnl
+dnl      ! First, attach all nodes specified directly on the current node.
+dnl      nsd => getnsDict(fxml%fx)
+dnl      ! FIXME check specified properly
+dnl      if (isDefaultNSInForce(nsd)) call appendNSNode(el, "", getNamespaceURI(nsd), specified=.true.)
+dnl      do i = 1, getNumberOfPrefixes(nsd)
+dnl        if (getNamespaceURI(nsd, getPrefixByIndex(nsd, i))/="") then
+dnl          call appendNSNode(el, getPrefixByIndex(nsd, i), getNamespaceURI(nsd, getPrefixByIndex(nsd, i)), specified=.true.)
+dnl        endif
+dnl      enddo
+dnl    endif
 
 ')`'dnl

@@ -15,7 +15,7 @@ module m_dom_utils
    ATTRIBUTE_NODE, ENTITY_REFERENCE_NODE, PROCESSING_INSTRUCTION_NODE
   use m_dom_dom, only: haschildnodes, getNodeName, getNodeType, &
     getFirstChild, getNextSibling, getlength, item, getOwnerElement, &
-    getAttributes, getParentNode, getChildNodes, &
+    getAttributes, getParentNode, getChildNodes, getPrefix, getLocalName, &
     getNodeName, getData, getName, getTagName, getValue, getTarget, &
     getEntities, getNotations, item, getSystemId, getPublicId, getNotationName, getStringValue
   use m_dom_error, only: DOMException, inException, throw_exception, &
@@ -68,7 +68,7 @@ contains
              write(*, "(3a)") repeat(" ", indent_level), "  ", &
                getName(item(getAttributes(temp), i-1))
            enddo
-          ! do i = 1, 
+!           do i = 1, getLength(
          endif
          if (hasChildNodes(temp)) then
             indent_level = indent_level + 3
@@ -123,32 +123,44 @@ contains
 TOHW_m_dom_treewalk(`dnl
     select case(getNodeType(this))
     case (ELEMENT_NODE)
+      nnm => getAttributes(this)
+      do j = 0, getLength(nnm) - 1
+        attrchild => item(nnm, j)
+        if (getLocalName(attrchild)=="xmlns") then
+          call xml_DeclareNamespace(xf, getValue(attrchild))
+        elseif (getPrefix(attrchild)=="xmlns") then
+          call xml_DeclareNamespace(xf, getValue(attrchild), &
+            getLocalName(attrchild))
+        endif
+      enddo
       call xml_NewElement(xf, getTagName(this))
     case (ATTRIBUTE_NODE)
-      if (entities) then
-        allocate(attrvalue(0))
-        do j = 0, getLength(getChildNodes(this)) - 1
-          attrchild => item(getChildNodes(this), j)
-          if (getNodeType(attrchild)==TEXT_NODE) then
-            tmp => attrvalue
-            allocate(attrvalue(size(tmp)+getLength(attrchild)))
-            attrvalue(:size(tmp)) = tmp
-            attrvalue(size(tmp)+1:) = vs_str(getData(attrChild))
-            deallocate(tmp)
-          elseif (getNodeType(attrchild)==ENTITY_REFERENCE_NODE) then
-            tmp => attrvalue
-            allocate(attrvalue(size(tmp)+len(getNodeName(attrchild))+2))
-            attrvalue(:size(tmp)) = tmp
-            attrvalue(size(tmp)+1:) = vs_str("&"//getData(attrChild)//";")
-            deallocate(tmp)
-          else
-            TOHW_m_dom_throw_error(FoX_INTERNAL_ERROR)
-          endif
-        enddo
-        call xml_AddAttribute(xf, getName(this), str_vs(attrvalue))
-        deallocate(attrvalue)
-      else
-        call xml_AddAttribute(xf, getName(this), getValue(this))
+      if (getPrefix(this)/="xmlns".and.getLocalName(this)/="xmlns") then
+        if (entities) then
+          allocate(attrvalue(0))
+          do j = 0, getLength(getChildNodes(this)) - 1
+            attrchild => item(getChildNodes(this), j)
+            if (getNodeType(attrchild)==TEXT_NODE) then
+              tmp => attrvalue
+              allocate(attrvalue(size(tmp)+getLength(attrchild)))
+              attrvalue(:size(tmp)) = tmp
+              attrvalue(size(tmp)+1:) = vs_str(getData(attrChild))
+              deallocate(tmp)
+            elseif (getNodeType(attrchild)==ENTITY_REFERENCE_NODE) then
+              tmp => attrvalue
+              allocate(attrvalue(size(tmp)+len(getNodeName(attrchild))+2))
+              attrvalue(:size(tmp)) = tmp
+              attrvalue(size(tmp)+1:) = vs_str("&"//getData(attrChild)//";")
+              deallocate(tmp)
+            else
+              TOHW_m_dom_throw_error(FoX_INTERNAL_ERROR)
+            endif
+          enddo
+          call xml_AddAttribute(xf, getName(this), str_vs(attrvalue))
+          deallocate(attrvalue)
+        else
+          call xml_AddAttribute(xf, getName(this), getValue(this))
+        endif
       endif
       doneChildren = .true.
     case (TEXT_NODE)

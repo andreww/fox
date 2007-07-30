@@ -6201,13 +6201,43 @@ endif
 !  function getDocumentURI
 !  function setDocumentURI
 
+  subroutine normalizeDocument(np, ex)
+    type(DOMException), intent(out), optional :: ex
+    type(Node), pointer :: np
+   
+    if (.not.associated(np)) then
+      call throw_exception(FoX_NODE_IS_NULL, "normalizeDocument", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    if (np%nodeType/=DOCUMENT_NODE) then
+      call throw_exception(FoX_INVALID_NODE, "normalizeDocument", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    ! FIXME check domConfig features.
+    ! normalize text()
+    ! fixup namespaces
+  end subroutine normalizeDocument
+
   ! Internal function, not part of API
 
-  function createNamespaceNode(arg, prefix, URI, ex)result(np) 
+  function createNamespaceNode(arg, prefix, URI, specified, ex)result(np) 
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*), intent(in) :: prefix
     character(len=*), intent(in) :: URI
+    logical, intent(in) :: specified
     type(Node), pointer :: np
 
     if (.not.associated(arg)) then
@@ -6234,6 +6264,7 @@ endif
     allocate(np%elExtras)
     np%elExtras%prefix => vs_str_alloc(prefix)
     np%elExtras%namespaceURI => vs_str_alloc(URI)
+    np%elExtras%specified = specified
 
   end function createNamespaceNode
 
@@ -7347,11 +7378,12 @@ endif
 ! setIdAttributeNS
 ! setIdAttributeNode
 
-  subroutine appendNSNode(np, prefix, namespaceURI, ex)
+  subroutine appendNSNode(np, prefix, namespaceURI, specified, ex)
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: np
     character(len=*), intent(in) :: prefix
     character(len=*), intent(in) :: namespaceURI
+    logical, intent(in) :: specified
 
     type(Node), pointer :: nnp
     logical :: quickFix
@@ -7383,11 +7415,12 @@ endif
     quickFix = getGCState(getOwnerDocument(np))
     call setGCState(getOwnerDocument(np), .false.)
     call append_nl(np%elExtras%namespaceNodes, &
-      createNamespaceNode(getOwnerDocument(np), prefix, namespaceURI))
+      createNamespaceNode(getOwnerDocument(np), prefix, namespaceURI, specified))
     call setGCState(getOwnerDocument(np), quickFix)
 
   end subroutine appendNSNode
-    
+
+
 
 
   

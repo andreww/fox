@@ -816,12 +816,29 @@ TOHW_m_dom_treewalk(`dnl
 !  function getDocumentURI
 !  function setDocumentURI
 
+  TOHW_subroutine(normalizeDocument, (np))
+    type(Node), pointer :: np
+   
+    if (.not.associated(np)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+
+    if (np%nodeType/=DOCUMENT_NODE) then
+      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
+    endif
+
+    ! FIXME check domConfig features.
+    ! normalize text()
+    ! fixup namespaces
+  end subroutine normalizeDocument
+
   ! Internal function, not part of API
 
-  TOHW_function(createNamespaceNode, (arg, prefix, URI), np)
+  TOHW_function(createNamespaceNode, (arg, prefix, URI, specified), np)
     type(Node), pointer :: arg
     character(len=*), intent(in) :: prefix
     character(len=*), intent(in) :: URI
+    logical, intent(in) :: specified
     type(Node), pointer :: np
 
     if (.not.associated(arg)) then
@@ -836,6 +853,7 @@ TOHW_m_dom_treewalk(`dnl
     allocate(np%elExtras)
     np%elExtras%prefix => vs_str_alloc(prefix)
     np%elExtras%namespaceURI => vs_str_alloc(URI)
+    np%elExtras%specified = specified
 
   end function createNamespaceNode
 
