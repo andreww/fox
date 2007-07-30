@@ -601,8 +601,6 @@ TOHW_m_dom_treewalk(`dnl
       ! what if prefix = "xmlns"? or other "xml"
     endif
 
-    print*, "creating a namespaced element", namespaceURI, qualifiedName
-
     np => createNode(arg, ELEMENT_NODE, qualifiedName, "")
     allocate(np%elExtras)
     np%elExtras%namespaceURI => vs_str_alloc(namespaceURI)
@@ -716,14 +714,11 @@ TOHW_m_dom_treewalk(`dnl
 
     treeroot => arg
 TOHW_m_dom_treewalk(`dnl
-      if (getNodeType(this)==ELEMENT_NODE .and. getNamespaceURI(arg)/="") then
-        !print*, "checking", getNameSpaceURI(arg), getLocalName(arg)
-        if ((allNameSpaces .or. getNameSpaceURI(arg)==namespaceURI) &
-          .and. (allLocalNames .or. getLocalName(arg)==localName)) &
+      if (getNodeType(this)==ELEMENT_NODE .and. getNamespaceURI(this)/="") then
+        if ((allNameSpaces .or. getNameSpaceURI(this)==namespaceURI) &
+          .and. (allLocalNames .or. getLocalName(this)==localName)) &
         call append(list, this)
       doneAttributes = .true.
-      elseif (getNodeType(this)==ELEMENT_NODE) then
-        !print*, "checking", getNameSpaceURI(arg)
       endif
 ',`')
 

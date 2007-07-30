@@ -850,13 +850,10 @@ TOHW_m_dom_treewalk(`
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif
 
-    print*,"checking", len(c)
-
     c = ""
     if (arg%nodeType==ELEMENT_NODE &
       .or. arg%nodeType==ATTRIBUTE_NODE &
       .or. arg%nodeType==XPATH_NAMESPACE_NODE) then
-      print*,"trying", associated(arg%elExtras%namespaceURI)
       if (associated(arg%elExtras%namespaceURI)) &
         c = str_vs(arg%elExtras%namespaceURI)
     endif

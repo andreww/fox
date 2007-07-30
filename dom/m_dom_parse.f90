@@ -7,7 +7,7 @@ module m_dom_parse
   use m_common_entities, only: entity_list, init_entity_list, destroy_entity_list, add_internal_entity
   use m_common_error, only: FoX_error
   use m_common_namespaces, only: namespaceDictionary, isDefaultNSInForce, getNumberOfPrefixes, &
-    getPrefixByIndex, getNamespaceURI
+    getPrefixByIndex
   use m_common_struct, only: xml_doc_state
   use FoX_common, only: dictionary_t, len
   use FoX_common, only: getQName, getValue, getURI, getQName
@@ -16,7 +16,7 @@ module m_dom_parse
   use FoX_sax, only: open_xml_file, open_xml_string, close_xml_t
 
   use m_dom_dom, only: DOCUMENT_NODE, TEXT_NODE, CDATA_SECTION_NODE, getNodeType, &
-    getDocType, Node, setDocType, getReadOnly, getData, setData, &
+    getDocType, Node, setDocType, getReadOnly, getData, setData, getNamespaceURI,&
     createProcessingInstruction, createAttributeNS, createComment, getEntities, &
     setSpecified, createElementNS, getNotations, createTextNode, createEntity, &
     getAttributes, setStringValue, createNamespaceNode, createNotation, setNamedItem, &
@@ -65,9 +65,7 @@ contains
     type(namespaceDictionary), pointer :: nsd
     integer              :: i
 
-
     if (len(URI)>0) then
-      print*,"startElement:", URI,"=", localname, "=", name
       el => createElementNS(mainDoc, URI, name)
     else
       el => createElement(mainDoc, name)
@@ -97,7 +95,7 @@ contains
     if (associated(inEntity)) call setReadOnlyMap(getAttributes(current), .true.)
 
     cdata = .false.
-    
+
   end subroutine startElement_handler
 
   subroutine endElement_handler(URI, localName, name)

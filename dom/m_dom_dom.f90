@@ -2828,13 +2828,10 @@ endif
 
     endif
 
-    print*,"checking", len(c)
-
     c = ""
     if (arg%nodeType==ELEMENT_NODE &
       .or. arg%nodeType==ATTRIBUTE_NODE &
       .or. arg%nodeType==XPATH_NAMESPACE_NODE) then
-      print*,"trying", associated(arg%elExtras%namespaceURI)
       if (associated(arg%elExtras%namespaceURI)) &
         c = str_vs(arg%elExtras%namespaceURI)
     endif
@@ -5804,8 +5801,6 @@ endif
       ! what if prefix = "xmlns"? or other "xml"
     endif
 
-    print*, "creating a namespaced element", namespaceURI, qualifiedName
-
     np => createNode(arg, ELEMENT_NODE, qualifiedName, "")
     allocate(np%elExtras)
     np%elExtras%namespaceURI => vs_str_alloc(namespaceURI)
@@ -5978,14 +5973,11 @@ endif
       if (.not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
       if (.not.doneChildren) then
 
-      if (getNodeType(this)==ELEMENT_NODE .and. getNamespaceURI(arg)/="") then
-        !print*, "checking", getNameSpaceURI(arg), getLocalName(arg)
-        if ((allNameSpaces .or. getNameSpaceURI(arg)==namespaceURI) &
-          .and. (allLocalNames .or. getLocalName(arg)==localName)) &
+      if (getNodeType(this)==ELEMENT_NODE .and. getNamespaceURI(this)/="") then
+        if ((allNameSpaces .or. getNameSpaceURI(this)==namespaceURI) &
+          .and. (allLocalNames .or. getLocalName(this)==localName)) &
         call append(list, this)
       doneAttributes = .true.
-      elseif (getNodeType(this)==ELEMENT_NODE) then
-        !print*, "checking", getNameSpaceURI(arg)
       endif
 
 
