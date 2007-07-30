@@ -108,7 +108,12 @@ module FoX_dom
   public :: hasChildNodes
   public :: cloneNode
   public :: normalize
+
   public :: isSupported
+  public :: getNamespaceURI
+  public :: getPrefix
+  public :: setPrefix
+  public :: getLocalName
   public :: hasAttributes
 
   ! DOM NodeList
@@ -172,6 +177,7 @@ module FoX_dom
   !DOM DocumentType
   public :: getEntities
   public :: getNotations
+  public :: getInternalSubset
   
   !DOM Notation
 
