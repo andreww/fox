@@ -678,10 +678,8 @@ TOHW_m_dom_treewalk(`dnl
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
 
-    if (namespaceURI=="*") &
-      allNameSpaces = .true.
-    if (localName=="*") &
-      allLocalNames = .true.
+    allNamespaces = (namespaceURI=="*")
+    allLocalNames = (localName=="*")
 
     if (doc%nodeType==DOCUMENT_NODE) then
       arg => getDocumentElement(doc)
@@ -714,11 +712,19 @@ TOHW_m_dom_treewalk(`dnl
 
     treeroot => arg
 TOHW_m_dom_treewalk(`dnl
-      if (getNodeType(this)==ELEMENT_NODE .and. getNamespaceURI(this)/="") then
-        if ((allNameSpaces .or. getNameSpaceURI(this)==namespaceURI) &
-          .and. (allLocalNames .or. getLocalName(this)==localName)) &
-        call append(list, this)
-      doneAttributes = .true.
+      !if (getNodeType(this)==ELEMENT_NODE .and. getNamespaceURI(this)/="") then
+! FIXME again DOM seems contradictory
+      if (getNodeType(this)==ELEMENT_NODE) then
+        if (getNamespaceURI(this)/="") then
+          if ((allNameSpaces .or. getNameSpaceURI(this)==namespaceURI) &
+            .and. (allLocalNames .or. getLocalName(this)==localName)) &
+            call append(list, this)
+        else
+          if ((allNameSpaces .or. namespaceURI=="") &
+            .and. (allLocalNames .or. getNodeName(this)==localName)) &
+            call append(list, this)
+        endif
+        doneAttributes = .true.
       endif
 ',`')
 

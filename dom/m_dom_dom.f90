@@ -4037,8 +4037,10 @@ endif
     endif
 
     do i = 1, getLength(map)
-      if (getNamespaceURI(item(map, i-1))==namespaceURI &
-        .and. getLocalName(item(map, i-1))==localName) then
+      if ((getNamespaceURI(item(map, i-1))==namespaceURI &
+        .and. getLocalName(item(map, i-1))==localName) &
+! FIXME the DOM standard is contradictory on this point ...
+        .or. (namespaceURI=="" .and.getNodeName(item(map, i-1))==localName)) then
         np => item(map, i-1)
         return
       endif
@@ -5928,10 +5930,8 @@ endif
 
     endif
 
-    if (namespaceURI=="*") &
-      allNameSpaces = .true.
-    if (localName=="*") &
-      allLocalNames = .true.
+    allNamespaces = (namespaceURI=="*")
+    allLocalNames = (localName=="*")
 
     if (doc%nodeType==DOCUMENT_NODE) then
       arg => getDocumentElement(doc)
@@ -5973,11 +5973,19 @@ endif
       if (.not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
       if (.not.doneChildren) then
 
-      if (getNodeType(this)==ELEMENT_NODE .and. getNamespaceURI(this)/="") then
-        if ((allNameSpaces .or. getNameSpaceURI(this)==namespaceURI) &
-          .and. (allLocalNames .or. getLocalName(this)==localName)) &
-        call append(list, this)
-      doneAttributes = .true.
+      !if (getNodeType(this)==ELEMENT_NODE .and. getNamespaceURI(this)/="") then
+! FIXME again DOM seems contradictory
+      if (getNodeType(this)==ELEMENT_NODE) then
+        if (getNamespaceURI(this)/="") then
+          if ((allNameSpaces .or. getNameSpaceURI(this)==namespaceURI) &
+            .and. (allLocalNames .or. getLocalName(this)==localName)) &
+            call append(list, this)
+        else
+          if ((allNameSpaces .or. namespaceURI=="") &
+            .and. (allLocalNames .or. getNodeName(this)==localName)) &
+            call append(list, this)
+        endif
+        doneAttributes = .true.
       endif
 
 

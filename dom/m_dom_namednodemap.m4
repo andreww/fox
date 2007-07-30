@@ -257,8 +257,10 @@ TOHW_m_dom_contents(`
     endif
 
     do i = 1, getLength(map)
-      if (getNamespaceURI(item(map, i-1))==namespaceURI &
-        .and. getLocalName(item(map, i-1))==localName) then
+      if ((getNamespaceURI(item(map, i-1))==namespaceURI &
+        .and. getLocalName(item(map, i-1))==localName) &
+! FIXME the DOM standard is contradictory on this point ...
+        .or. (namespaceURI=="" .and.getNodeName(item(map, i-1))==localName)) then
         np => item(map, i-1)
         return
       endif
