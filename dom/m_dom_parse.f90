@@ -65,7 +65,9 @@ contains
     type(namespaceDictionary), pointer :: nsd
     integer              :: i
 
+
     if (len(URI)>0) then
+      print*,"startElement:", URI,"=", localname, "=", name
       el => createElementNS(mainDoc, URI, name)
     else
       el => createElement(mainDoc, name)

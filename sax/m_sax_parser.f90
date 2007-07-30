@@ -1464,7 +1464,7 @@ contains
         getlocalnameofQName(str_vs(fx%name)), &
         str_vs(fx%name))
       if (namespaces_) &
-        call checkEndNamespaces(fx%nsDict, len(fx%elstack)+1, &
+        call checkEndNamespaces(fx%nsDict, len(fx%elstack), &
         endPrefixMapping_handler)
     end subroutine close_tag
 
