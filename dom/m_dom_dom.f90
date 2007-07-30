@@ -199,6 +199,7 @@ module m_dom_dom
   public :: setStringValue
   public :: getStringValue
   public :: setReadonlyNode
+  public :: getReadOnly
 
 
 
@@ -2804,8 +2805,10 @@ endif
     if (p) then
       if (arg%nodeType==ELEMENT_NODE &
         .or. arg%nodeType==ATTRIBUTE_NODE &
-        .or. arg%nodeType==XPATH_NAMESPACE_NODE) &
-        n = size(arg%elExtras%namespaceURI)
+        .or. arg%nodeType==XPATH_NAMESPACE_NODE) then
+        if (associated(arg%elExtras%namespaceURI)) &
+          n = size(arg%elExtras%namespaceURI)
+      endif
     endif
 
   end function getNamespaceURI_len
@@ -2825,12 +2828,15 @@ endif
 
     endif
 
+    print*,"checking", len(c)
+
+    c = ""
     if (arg%nodeType==ELEMENT_NODE &
       .or. arg%nodeType==ATTRIBUTE_NODE &
       .or. arg%nodeType==XPATH_NAMESPACE_NODE) then
-      c = str_vs(arg%elExtras%namespaceURI)
-    else
-      c = ""
+      print*,"trying", associated(arg%elExtras%namespaceURI)
+      if (associated(arg%elExtras%namespaceURI)) &
+        c = str_vs(arg%elExtras%namespaceURI)
     endif
   end function getNamespaceURI
 
@@ -2843,8 +2849,10 @@ endif
     if (p) then
       if (arg%nodeType==ELEMENT_NODE &
         .or. arg%nodeType==ATTRIBUTE_NODE &
-        .or. arg%nodeType==XPATH_NAMESPACE_NODE) &
-        n = size(arg%elExtras%prefix)
+        .or. arg%nodeType==XPATH_NAMESPACE_NODE) then
+        if (associated(arg%elExtras%namespaceURI)) &
+          n = size(arg%elExtras%prefix)
+      endif
     endif
 
   end function getPrefix_len
@@ -2864,12 +2872,12 @@ endif
 
     endif
 
+    c = ""
     if (arg%nodeType==ELEMENT_NODE &
       .or. arg%nodeType==ATTRIBUTE_NODE &
       .or. arg%nodeType==XPATH_NAMESPACE_NODE) then
-      c = str_vs(arg%elExtras%prefix)
-    else
-      c = ""
+      if (associated(arg%elExtras%namespaceURI)) &
+        c = str_vs(arg%elExtras%prefix)
     endif
 
   end function getPrefix
@@ -2900,6 +2908,14 @@ if (present(ex)) then
   endif
 endif
 
+      elseif (.not.associated(arg%elExtras%namespaceURI)) then
+        call throw_exception(NAMESPACE_ERR, "setPrefix", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
       endif
       ! FIXME lots of checks
       ! and change nodeName, and affect namespaces ...
@@ -2910,9 +2926,6 @@ endif
       continue
     endif
 
-    print*, "why are you doing this?"
-    stop
-    ! FIXME exceptions
   end subroutine setPrefix
 
   pure function getLocalName_len(arg, p) result(n)
@@ -2924,8 +2937,10 @@ endif
     if (p) then
       if (arg%nodeType==ELEMENT_NODE &
         .or. arg%nodeType==ATTRIBUTE_NODE &
-        .or. arg%nodeType==XPATH_NAMESPACE_NODE) &
-      n = size(arg%elExtras%localName)
+        .or. arg%nodeType==XPATH_NAMESPACE_NODE) then
+        if (associated(arg%elExtras%namespaceURI)) &
+          n = size(arg%elExtras%localName)
+      endif
     endif
 
   end function getLocalName_len
@@ -2945,12 +2960,12 @@ endif
 
     endif
 
+    c = ""
     if (arg%nodeType==ELEMENT_NODE &
       .or. arg%nodeType==ATTRIBUTE_NODE &
       .or. arg%nodeType==XPATH_NAMESPACE_NODE) then
-      c = str_vs(arg%elExtras%localName)
-    else
-      c = ""
+      if (associated(arg%elExtras%namespaceURI)) &
+        c = str_vs(arg%elExtras%localName)
     endif
 
   end function getLocalName
@@ -3438,6 +3453,28 @@ endif
     endif
 
   end subroutine setReadOnlyNode
+
+function getreadonly(np, ex)result(c) 
+    type(DOMException), intent(out), optional :: ex
+    type(Node), pointer :: np
+    logical :: c
+
+
+    if (.not.associated(np)) then
+      call throw_exception(FoX_NODE_IS_NULL, "getreadonly", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+
+    c = np%readonly
+
+  end function getreadonly
+
 
 
 
@@ -5057,9 +5094,6 @@ endif
   
     np => createNode(arg, ATTRIBUTE_NODE, name, "")
     allocate(np%elExtras)
-    np%elExtras%namespaceURI => vs_str_alloc("")
-    np%elExtras%localname => vs_str_alloc(name)
-    np%elExtras%prefix => vs_str_alloc(name)
 
     if (getGCstate(arg)) then
       np%inDocument = .false.
@@ -5770,7 +5804,7 @@ endif
       ! what if prefix = "xmlns"? or other "xml"
     endif
 
-    ! FIXME create a namespace node for XPath?
+    print*, "creating a namespaced element", namespaceURI, qualifiedName
 
     np => createNode(arg, ELEMENT_NODE, qualifiedName, "")
     allocate(np%elExtras)
@@ -5889,7 +5923,7 @@ endif
 
     endif
 
-    if (doc%nodeType/=DOCUMENT_NODE.or.doc%nodeType/=ELEMENT_NODE) then
+    if (doc%nodeType/=DOCUMENT_NODE.and.doc%nodeType/=ELEMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "getElementsByTagNameNS", ex)
 if (present(ex)) then
   if (inException(ex)) then
@@ -5944,12 +5978,15 @@ endif
       if (.not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
       if (.not.doneChildren) then
 
-      if ((this%nodeType==ELEMENT_NODE) &
-        .and. (allNameSpaces .or. getNameSpaceURI(arg)==namespaceURI) &
-        .and. (allLocalNames .or. getLocalName(arg)==localName)) then
+      if (getNodeType(this)==ELEMENT_NODE .and. getNamespaceURI(arg)/="") then
+        !print*, "checking", getNameSpaceURI(arg), getLocalName(arg)
+        if ((allNameSpaces .or. getNameSpaceURI(arg)==namespaceURI) &
+          .and. (allLocalNames .or. getLocalName(arg)==localName)) &
         call append(list, this)
-          doneAttributes = .true.
-        endif
+      doneAttributes = .true.
+      elseif (getNodeType(this)==ELEMENT_NODE) then
+        !print*, "checking", getNameSpaceURI(arg)
+      endif
 
 
       else

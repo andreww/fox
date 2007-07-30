@@ -30,6 +30,7 @@ TOHW_m_dom_publics(`
   public :: setStringValue
   public :: getStringValue
   public :: setReadonlyNode
+  public :: getReadOnly
 
 ')`'dnl
 TOHW_m_dom_contents(`
@@ -833,8 +834,10 @@ TOHW_m_dom_treewalk(`
     if (p) then
       if (arg%nodeType==ELEMENT_NODE &
         .or. arg%nodeType==ATTRIBUTE_NODE &
-        .or. arg%nodeType==XPATH_NAMESPACE_NODE) &
-        n = size(arg%elExtras%namespaceURI)
+        .or. arg%nodeType==XPATH_NAMESPACE_NODE) then
+        if (associated(arg%elExtras%namespaceURI)) &
+          n = size(arg%elExtras%namespaceURI)
+      endif
     endif
 
   end function getNamespaceURI_len
@@ -847,12 +850,15 @@ TOHW_m_dom_treewalk(`
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif
 
+    print*,"checking", len(c)
+
+    c = ""
     if (arg%nodeType==ELEMENT_NODE &
       .or. arg%nodeType==ATTRIBUTE_NODE &
       .or. arg%nodeType==XPATH_NAMESPACE_NODE) then
-      c = str_vs(arg%elExtras%namespaceURI)
-    else
-      c = ""
+      print*,"trying", associated(arg%elExtras%namespaceURI)
+      if (associated(arg%elExtras%namespaceURI)) &
+        c = str_vs(arg%elExtras%namespaceURI)
     endif
   end function getNamespaceURI
 
@@ -865,8 +871,10 @@ TOHW_m_dom_treewalk(`
     if (p) then
       if (arg%nodeType==ELEMENT_NODE &
         .or. arg%nodeType==ATTRIBUTE_NODE &
-        .or. arg%nodeType==XPATH_NAMESPACE_NODE) &
-        n = size(arg%elExtras%prefix)
+        .or. arg%nodeType==XPATH_NAMESPACE_NODE) then
+        if (associated(arg%elExtras%namespaceURI)) &
+          n = size(arg%elExtras%prefix)
+      endif
     endif
 
   end function getPrefix_len
@@ -879,12 +887,12 @@ TOHW_m_dom_treewalk(`
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif
 
+    c = ""
     if (arg%nodeType==ELEMENT_NODE &
       .or. arg%nodeType==ATTRIBUTE_NODE &
       .or. arg%nodeType==XPATH_NAMESPACE_NODE) then
-      c = str_vs(arg%elExtras%prefix)
-    else
-      c = ""
+      if (associated(arg%elExtras%namespaceURI)) &
+        c = str_vs(arg%elExtras%prefix)
     endif
 
   end function getPrefix
@@ -902,6 +910,8 @@ TOHW_m_dom_treewalk(`
       .or. arg%nodeType==XPATH_NAMESPACE_NODE) then
       if (arg%readonly) then
         TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
+      elseif (.not.associated(arg%elExtras%namespaceURI)) then
+        TOHW_m_dom_throw_error(NAMESPACE_ERR)
       endif
       ! FIXME lots of checks
       ! and change nodeName, and affect namespaces ...
@@ -912,9 +922,6 @@ TOHW_m_dom_treewalk(`
       continue
     endif
 
-    print*, "why are you doing this?"
-    stop
-    ! FIXME exceptions
   end subroutine setPrefix
 
   pure function getLocalName_len(arg, p) result(n)
@@ -926,8 +933,10 @@ TOHW_m_dom_treewalk(`
     if (p) then
       if (arg%nodeType==ELEMENT_NODE &
         .or. arg%nodeType==ATTRIBUTE_NODE &
-        .or. arg%nodeType==XPATH_NAMESPACE_NODE) &
-      n = size(arg%elExtras%localName)
+        .or. arg%nodeType==XPATH_NAMESPACE_NODE) then
+        if (associated(arg%elExtras%namespaceURI)) &
+          n = size(arg%elExtras%localName)
+      endif
     endif
 
   end function getLocalName_len
@@ -940,12 +949,12 @@ TOHW_m_dom_treewalk(`
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif
 
+    c = ""
     if (arg%nodeType==ELEMENT_NODE &
       .or. arg%nodeType==ATTRIBUTE_NODE &
       .or. arg%nodeType==XPATH_NAMESPACE_NODE) then
-      c = str_vs(arg%elExtras%localName)
-    else
-      c = ""
+      if (associated(arg%elExtras%namespaceURI)) &
+        c = str_vs(arg%elExtras%localName)
     endif
 
   end function getLocalName
@@ -1216,5 +1225,7 @@ TOHW_m_dom_treewalk(`
     endif
 
   end subroutine setReadOnlyNode
+
+TOHW_m_dom_get(logical, readonly, np%readonly)
 
 ')`'dnl

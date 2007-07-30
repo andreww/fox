@@ -296,9 +296,6 @@ TOHW_m_dom_get(Node, documentElement, np%docExtras%documentElement, (DOCUMENT_NO
   
     np => createNode(arg, ATTRIBUTE_NODE, name, "")
     allocate(np%elExtras)
-    np%elExtras%namespaceURI => vs_str_alloc("")
-    np%elExtras%localname => vs_str_alloc(name)
-    np%elExtras%prefix => vs_str_alloc(name)
 
     if (getGCstate(arg)) then
       np%inDocument = .false.
@@ -604,7 +601,7 @@ TOHW_m_dom_treewalk(`dnl
       ! what if prefix = "xmlns"? or other "xml"
     endif
 
-    ! FIXME create a namespace node for XPath?
+    print*, "creating a namespaced element", namespaceURI, qualifiedName
 
     np => createNode(arg, ELEMENT_NODE, qualifiedName, "")
     allocate(np%elExtras)
@@ -679,7 +676,7 @@ TOHW_m_dom_treewalk(`dnl
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif
 
-    if (doc%nodeType/=DOCUMENT_NODE.or.doc%nodeType/=ELEMENT_NODE) then
+    if (doc%nodeType/=DOCUMENT_NODE.and.doc%nodeType/=ELEMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
 
@@ -719,12 +716,15 @@ TOHW_m_dom_treewalk(`dnl
 
     treeroot => arg
 TOHW_m_dom_treewalk(`dnl
-      if ((this%nodeType==ELEMENT_NODE) &
-        .and. (allNameSpaces .or. getNameSpaceURI(arg)==namespaceURI) &
-        .and. (allLocalNames .or. getLocalName(arg)==localName)) then
+      if (getNodeType(this)==ELEMENT_NODE .and. getNamespaceURI(arg)/="") then
+        !print*, "checking", getNameSpaceURI(arg), getLocalName(arg)
+        if ((allNameSpaces .or. getNameSpaceURI(arg)==namespaceURI) &
+          .and. (allLocalNames .or. getLocalName(arg)==localName)) &
         call append(list, this)
-          doneAttributes = .true.
-        endif
+      doneAttributes = .true.
+      elseif (getNodeType(this)==ELEMENT_NODE) then
+        !print*, "checking", getNameSpaceURI(arg)
+      endif
 ',`')
 
   end function getElementsByTagNameNS

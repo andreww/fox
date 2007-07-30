@@ -15,7 +15,8 @@ module m_dom_parse
   use FoX_sax, only: xml_t
   use FoX_sax, only: open_xml_file, open_xml_string, close_xml_t
 
-  use m_dom_dom, only: DOCUMENT_NODE, getNodeType, getDocType, Node, setDocType, &
+  use m_dom_dom, only: DOCUMENT_NODE, TEXT_NODE, CDATA_SECTION_NODE, getNodeType, &
+    getDocType, Node, setDocType, getReadOnly, getData, setData, &
     createProcessingInstruction, createAttributeNS, createComment, getEntities, &
     setSpecified, createElementNS, getNotations, createTextNode, createEntity, &
     getAttributes, setStringValue, createNamespaceNode, createNotation, setNamedItem, &
@@ -24,7 +25,7 @@ module m_dom_parse
     setvalue, setAttributeNodeNS, setGCstate, createCdataSection, setXds,  &
     createEntityReference, destroyAllNodesRecursively, setIllFormed, createElement, &
     createAttribute, getNamedItem, setReadonlyNode, setReadOnlyMap, appendNSNode, &
-    createEmptyEntityReference, setEntityReferenceValue, setAttributeNode
+    createEmptyEntityReference, setEntityReferenceValue, setAttributeNode, getLastChild
   use m_dom_error, only: DOMException, inException, throw_exception, PARSE_ERR
 
   implicit none
@@ -87,21 +88,6 @@ contains
       if (associated(inEntity)) call setReadOnlyNode(attr, .true., .true.)
     enddo
 
-    if (len(URI)>0) then
-      ! This is a namespace-aware element node.
-      ! Do all namespace resolution by creating namespace nodes ...
-
-      ! First, attach all nodes specified directly on the current node.
-      nsd => getnsDict(fxml%fx)
-      ! FIXME check specified properly
-      if (isDefaultNSInForce(nsd)) call appendNSNode(el, "", getNamespaceURI(nsd), specified=.true.)
-      do i = 1, getNumberOfPrefixes(nsd)
-        if (getNamespaceURI(nsd, getPrefixByIndex(nsd, i))/="") then
-          call appendNSNode(el, getPrefixByIndex(nsd, i), getNamespaceURI(nsd, getPrefixByIndex(nsd, i)), specified=.true.)
-        endif
-      enddo
-    endif
-
     if (getNodeType(current)==DOCUMENT_NODE) then
       call setDocumentElement(mainDoc, el)
     endif
@@ -128,17 +114,31 @@ contains
     character(len=*), intent(in) :: chunk
 
     type(Node), pointer :: temp
+    logical :: readonly
     
-    if (cdata) then
+    temp => getLastChild(current)
+    if (associated(temp)) then
+      if (cdata.and.getNodeType(temp)==CDATA_SECTION_NODE) then
+        !FIXME Only if we are coalescing CDATA sections ...
+        readonly = getReadOnly(temp) ! Reset readonly status quickly
+        call setReadOnlyNode(temp, .false., .false.)
+        call setData(temp, getData(temp)//chunk)
+        call setReadOnlyNode(temp, readonly, .false.)
+      elseif (getNodeType(temp)==TEXT_NODE) then
+        readonly = getReadOnly(temp) ! Reset readonly status quickly
+        call setReadOnlyNode(temp, .false., .false.)
+        call setData(temp, getData(temp)//chunk)
+        call setReadOnlyNode(temp, readonly, .false.)
+      endif
+    elseif (cdata) then
       temp => createCdataSection(mainDoc, chunk)
+      temp => appendChild(current, temp)
     else
       temp => createTextNode(mainDoc, chunk)
+      temp => appendChild(current, temp)
     endif
-    temp => appendChild(current, temp)
-    
-    if (associated(inEntity)) call setReadOnlyNode(temp, .true., .false.)
 
-    ! fixme normalize here.
+    if (associated(inEntity)) call setReadOnlyNode(temp, .true., .false.)
 
   end subroutine characters_handler
 
