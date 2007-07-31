@@ -910,6 +910,9 @@ TOHW_m_dom_treewalk(`
     type(Node), pointer :: arg
     character(len=*) :: prefix
 
+    character, pointer :: tmp(:)
+    integer :: i
+
     if (.not.associated(arg)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif
@@ -921,14 +924,24 @@ TOHW_m_dom_treewalk(`
         TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
       elseif (.not.associated(arg%elExtras%namespaceURI)) then
         TOHW_m_dom_throw_error(NAMESPACE_ERR)
+      elseif (prefix=="xml" .and. &
+        str_vs(arg%elExtras%namespaceURI)/="http://www.w3.org/XML/1998/namespace") then
+        TOHW_m_dom_throw_error(NAMESPACE_ERR)
+      elseif (prefix=="xmlns" .and. (getNodeType(arg)/=ATTRIBUTE_NODE &
+        .or. str_vs(arg%elExtras%namespaceURI)/="http://www.w3.org/2000/xmlns/")) then
+        TOHW_m_dom_throw_error(NAMESPACE_ERR)
       endif
-      ! FIXME lots of checks
-      ! and change nodeName, and affect namespaces ...
+! FIXME check if prefix is declared ...
       deallocate(arg%elExtras%prefix)
       arg%elExtras%prefix = vs_str_alloc(prefix)
-    else
-      ! Do nothing
-      continue
+      tmp => arg%nodeName
+      i = index(str_vs(arg%nodeName), ":")
+      if (i==0) then
+        arg%nodeName => vs_str_alloc(prefix//":"//str_vs(tmp))
+      else
+        arg%nodeName => vs_str_alloc(prefix//str_vs(tmp(i+1:)))
+      endif
+      deallocate(tmp)
     endif
 
   end subroutine setPrefix

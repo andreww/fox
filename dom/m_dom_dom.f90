@@ -2842,6 +2842,9 @@ endif
     type(Node), pointer :: arg
     character(len=*) :: prefix
 
+    character, pointer :: tmp(:)
+    integer :: i
+
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "setPrefix", ex)
 if (present(ex)) then
@@ -2871,14 +2874,36 @@ if (present(ex)) then
   endif
 endif
 
+      elseif (prefix=="xml" .and. &
+        str_vs(arg%elExtras%namespaceURI)/="http://www.w3.org/XML/1998/namespace") then
+        call throw_exception(NAMESPACE_ERR, "setPrefix", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
+      elseif (prefix=="xmlns" .and. (getNodeType(arg)/=ATTRIBUTE_NODE &
+        .or. str_vs(arg%elExtras%namespaceURI)/="http://www.w3.org/2000/xmlns/")) then
+        call throw_exception(NAMESPACE_ERR, "setPrefix", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
       endif
-      ! FIXME lots of checks
-      ! and change nodeName, and affect namespaces ...
+! FIXME check if prefix is declared ...
       deallocate(arg%elExtras%prefix)
       arg%elExtras%prefix = vs_str_alloc(prefix)
-    else
-      ! Do nothing
-      continue
+      tmp => arg%nodeName
+      i = index(str_vs(arg%nodeName), ":")
+      if (i==0) then
+        arg%nodeName => vs_str_alloc(prefix//":"//str_vs(tmp))
+      else
+        arg%nodeName => vs_str_alloc(prefix//str_vs(tmp(i+1:)))
+      endif
+      deallocate(tmp)
     endif
 
   end subroutine setPrefix
@@ -5612,7 +5637,7 @@ endif
         case (PROCESSING_INSTRUCTION_NODE)
           new => createProcessingInstruction(doc, getTarget(this), getData(this))
         case (COMMENT_NODE)
-          new => createEntityReference(doc, getNodeValue(this))
+          new => createComment(doc, getData(this))
         case (DOCUMENT_NODE)
           call throw_exception(NOT_SUPPORTED_ERR, "importNode", ex)
 if (present(ex)) then
