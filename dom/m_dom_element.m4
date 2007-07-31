@@ -407,15 +407,22 @@ TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
       TOHW_m_dom_throw_error(WRONG_DOCUMENT_ERR)
     elseif (arg%readonly) then
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
+    endif
+
+    if (associated(getOwnerElement(newattr), arg)) then
+      attr => newattr
+      return
+      ! Nothing to do, this attribute is already in this element
     elseif (associated(getOwnerElement(newattr))) then
-      ! unless attribute is being set to itself
       TOHW_m_dom_throw_error(INUSE_ATTRIBUTE_ERR)
     endif
 
-    ! this checks if attribute exists already, and does hangingnodes
-    dummy => setNamedItemNS(getAttributes(arg), newattr)
+    ! this checks if attribute exists already
+    ! It also does any adding/removing of hangingnodes
+    ! and sets ownerElement appropriately
+    dummy => setNamedItemNS(getAttributes(arg), newattr, ex)
     newattr%elExtras%ownerElement => arg
-    attr => newattr
+    attr => dummy
 
   end function setAttributeNodeNS
 

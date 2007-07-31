@@ -7296,8 +7296,13 @@ if (present(ex)) then
   endif
 endif
 
+    endif
+
+    if (associated(getOwnerElement(newattr), arg)) then
+      attr => newattr
+      return
+      ! Nothing to do, this attribute is already in this element
     elseif (associated(getOwnerElement(newattr))) then
-      ! unless attribute is being set to itself
       call throw_exception(INUSE_ATTRIBUTE_ERR, "setAttributeNodeNS", ex)
 if (present(ex)) then
   if (inException(ex)) then
@@ -7307,10 +7312,12 @@ endif
 
     endif
 
-    ! this checks if attribute exists already, and does hangingnodes
-    dummy => setNamedItemNS(getAttributes(arg), newattr)
+    ! this checks if attribute exists already
+    ! It also does any adding/removing of hangingnodes
+    ! and sets ownerElement appropriately
+    dummy => setNamedItemNS(getAttributes(arg), newattr, ex)
     newattr%elExtras%ownerElement => arg
-    attr => newattr
+    attr => dummy
 
   end function setAttributeNodeNS
 
