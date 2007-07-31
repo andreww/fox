@@ -490,17 +490,11 @@ endif
       deadNode => null()
     do
 
-      if (.not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
       if (.not.doneChildren) then
-
-
 
       else
         if (getNodeType(this)==ELEMENT_NODE) doneAttributes = .true.
 
-
-
-      endif
       endif
 
 
@@ -1072,9 +1066,7 @@ endif
     this => treeroot
     do
 
-      if (.not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
       if (.not.doneChildren) then
-
 
           if (getNodeType(this)/=TEXT_NODE.and.getNodeType(this)/=ENTITY_REFERENCE_NODE) then
             call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
@@ -1086,13 +1078,9 @@ endif
 
           endif
 
-
       else
         if (getNodeType(this)==ELEMENT_NODE) doneAttributes = .true.
 
-
-
-      endif
       endif
 
       if (.not.doneChildren) then
@@ -1223,9 +1211,7 @@ endif
     this => treeroot
     do
 
-      if (.not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
       if (.not.doneChildren) then
-
 
           if (getNodeType(this)/=TEXT_NODE.and.getNodeType(this)/=ENTITY_REFERENCE_NODE) then
             call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
@@ -1237,13 +1223,9 @@ endif
 
           endif
 
-
       else
         if (getNodeType(this)==ELEMENT_NODE) doneAttributes = .true.
 
-
-
-      endif
       endif
 
       if (.not.doneChildren) then
@@ -1534,9 +1516,7 @@ endif
     this => treeroot
     do
 
-      if (.not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
       if (.not.doneChildren) then
-
 
           if (getNodeType(this)/=TEXT_NODE.and.getNodeType(this)/=ENTITY_REFERENCE_NODE) then
             call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
@@ -1548,13 +1528,9 @@ endif
 
           endif
 
-
       else
         if (getNodeType(this)==ELEMENT_NODE) doneAttributes = .true.
 
-
-
-      endif
       endif
 
       if (.not.doneChildren) then
@@ -1685,9 +1661,7 @@ endif
     this => treeroot
     do
 
-      if (.not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
       if (.not.doneChildren) then
-
 
           if (getNodeType(this)/=TEXT_NODE.and.getNodeType(this)/=ENTITY_REFERENCE_NODE) then
             call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
@@ -1699,13 +1673,9 @@ endif
 
           endif
 
-
       else
         if (getNodeType(this)==ELEMENT_NODE) doneAttributes = .true.
 
-
-
-      endif
       endif
 
       if (.not.doneChildren) then
@@ -2076,9 +2046,7 @@ endif
     this => treeroot
     do
 
-      if (.not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
       if (.not.doneChildren) then
-
 
           if (getNodeType(this)/=TEXT_NODE.and.getNodeType(this)/=ENTITY_REFERENCE_NODE) then
             call throw_exception(HIERARCHY_REQUEST_ERR, "appendChild", ex)
@@ -2090,13 +2058,9 @@ endif
 
           endif
 
-
       else
         if (getNodeType(this)==ELEMENT_NODE) doneAttributes = .true.
 
-
-
-      endif
       endif
 
       if (.not.doneChildren) then
@@ -2227,9 +2191,7 @@ endif
     this => treeroot
     do
 
-      if (.not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
       if (.not.doneChildren) then
-
 
           if (getNodeType(this)/=TEXT_NODE.and.getNodeType(this)/=ENTITY_REFERENCE_NODE) then
             call throw_exception(HIERARCHY_REQUEST_ERR, "appendChild", ex)
@@ -2241,13 +2203,9 @@ endif
 
           endif
 
-
       else
         if (getNodeType(this)==ELEMENT_NODE) doneAttributes = .true.
 
-
-
-      endif
       endif
 
       if (.not.doneChildren) then
@@ -2458,7 +2416,7 @@ endif
   function cloneNode(arg, deep, ex)result(np) 
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
-    logical :: deep
+    logical, intent(in) :: deep
     type(Node), pointer :: np
 
     type(Node), pointer :: doc, treeroot, thatParent, this, new, ERchild
@@ -2491,9 +2449,7 @@ endif
     this => treeroot
     do
 
-      if (.not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
       if (.not.doneChildren) then
-
 
 
       new => null()
@@ -2554,14 +2510,16 @@ endif
       endif
 
       if (.not.deep) then
-        
-        if (getNodeType(arg)/=ELEMENT_NODE.and.getNodeType(arg)/=ATTRIBUTE_NODE) exit
+        if ((getNodeType(arg)==ELEMENT_NODE.and..not.doneAttributes) &
+          .or.getNodeType(arg)==ATTRIBUTE_NODE) then
+          continue
+        else
+          exit
+        endif
       endif
-
 
       else
         if (getNodeType(this)==ELEMENT_NODE) doneAttributes = .true.
-
 
 
       if (getNodeType(this)==ENTITY_REFERENCE_NODE &
@@ -2572,8 +2530,6 @@ endif
       this%readonly = readonly
       
 
-
-      endif
       endif
 
       if (.not.doneChildren) then
@@ -2693,9 +2649,7 @@ endif
     this => treeroot
     do
 
-      if (.not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
       if (.not.doneChildren) then
-
 
 
       if (getNodeType(this)==TEXT_NODE) then
@@ -2727,13 +2681,9 @@ endif
         endif
       end if
 
-
       else
         if (getNodeType(this)==ELEMENT_NODE) doneAttributes = .true.
 
-
-
-      endif
       endif
 
       if (.not.doneChildren) then
@@ -3236,20 +3186,14 @@ endif
     this => treeroot
     do
 
-      if (.not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
       if (.not.doneChildren) then
-
 
         this%inDocument = .true.
         call remove_node_nl(doc%docExtras%hangingNodes, this)
 
-
       else
         if (getNodeType(this)==ELEMENT_NODE) doneAttributes = .true.
 
-
-
-      endif
       endif
 
       if (.not.doneChildren) then
@@ -3313,20 +3257,14 @@ endif
     this => treeroot
     do
 
-      if (.not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
       if (.not.doneChildren) then
-
 
         this%inDocument = .false.
         call append_nl(doc%docExtras%hangingNodes, this)
 
-
       else
         if (getNodeType(this)==ELEMENT_NODE) doneAttributes = .true.
 
-
-
-      endif
       endif
 
       if (.not.doneChildren) then
@@ -3394,19 +3332,13 @@ endif
     this => treeroot
     do
 
-      if (.not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
       if (.not.doneChildren) then
 
-
       this%readonly = p
-
 
       else
         if (getNodeType(this)==ELEMENT_NODE) doneAttributes = .true.
 
-
-
-      endif
       endif
 
       if (.not.doneChildren) then
@@ -4374,7 +4306,7 @@ endif
 
     endif
 
-    if (.not.checkChars(qualifiedName, XML1_0)) then
+    if (.not.checkName(qualifiedName, temp_xds)) then
       call throw_exception(INVALID_CHARACTER_ERR, "createDocumentType", ex)
 if (present(ex)) then
   if (inException(ex)) then
@@ -4382,9 +4314,7 @@ if (present(ex)) then
   endif
 endif
 
-    endif
-
-    if (.not.checkQName(qualifiedName, temp_xds))  then
+    elseif (.not.checkQName(qualifiedName, temp_xds))  then
       call throw_exception(NAMESPACE_ERR, "createDocumentType", ex)
 if (present(ex)) then
   if (inException(ex)) then
@@ -5162,9 +5092,7 @@ endif
     this => treeroot
     do
 
-      if (.not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
       if (.not.doneChildren) then
-
 
       if (getNodeType(this)==TEXT_NODE) then
         n = n + len(getData(this))
@@ -5173,13 +5101,9 @@ endif
         exit
       endif
 
-
       else
         if (getNodeType(this)==ELEMENT_NODE) doneAttributes = .true.
 
-
-
-      endif
       endif
 
       if (.not.doneChildren) then
@@ -5237,22 +5161,16 @@ endif
     this => treeroot
     do
 
-      if (.not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
       if (.not.doneChildren) then
-
 
         if (getNodeType(this)==TEXT_NODE) then
           arg%nodeValue(n+1:n+len(getData(this))) = getData(this)
           n = n + len(getData(this))
         endif
 
-
       else
         if (getNodeType(this)==ELEMENT_NODE) doneAttributes = .true.
 
-
-
-      endif
       endif
 
       if (.not.doneChildren) then
@@ -5520,9 +5438,7 @@ endif
     this => treeroot
     do
 
-      if (.not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
       if (.not.doneChildren) then
-
         if (this%nodeType==ELEMENT_NODE) then
           if ((allElements .or. str_vs(this%nodeName)==tagName) &
             .and..not.(getNodeType(doc)==ELEMENT_NODE.and.associated(this, arg))) &
@@ -5530,13 +5446,9 @@ endif
           doneAttributes = .true.
         endif
 
-
       else
         if (getNodeType(this)==ELEMENT_NODE) doneAttributes = .true.
 
-
-
-      endif
       endif
 
       if (.not.doneChildren) then
@@ -5590,7 +5502,7 @@ endif
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: doc
     type(Node), pointer :: arg
-    logical :: deep
+    logical, intent(in) :: deep
     type(Node), pointer :: np
 
     type(Node), pointer :: this, thatParent, new, treeroot
@@ -5641,9 +5553,7 @@ endif
     this => treeroot
     do
 
-      if (.not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
       if (.not.doneChildren) then
-
 
 
         new => null()
@@ -5726,16 +5636,17 @@ endif
         endif
 
         if (.not.deep) then
-          if (getNodeType(arg)/=ELEMENT_NODE.and.getNodeType(arg)/=ATTRIBUTE_NODE) exit
+          if ((getNodeType(arg)==ELEMENT_NODE.and..not.doneAttributes) &
+            .or.getNodeType(arg)==ATTRIBUTE_NODE) then
+            continue
+          else
+            exit
+          endif
         endif
-
 
       else
         if (getNodeType(this)==ELEMENT_NODE) doneAttributes = .true.
 
-
-
-      endif
       endif
 
       if (.not.doneChildren) then
@@ -6046,9 +5957,7 @@ endif
     this => treeroot
     do
 
-      if (.not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
       if (.not.doneChildren) then
-
       !if (getNodeType(this)==ELEMENT_NODE .and. getNamespaceURI(this)/="") then
 ! FIXME again DOM seems contradictory
       if (getNodeType(this)==ELEMENT_NODE) then
@@ -6064,13 +5973,9 @@ endif
         doneAttributes = .true.
       endif
 
-
       else
         if (getNodeType(this)==ELEMENT_NODE) doneAttributes = .true.
 
-
-
-      endif
       endif
 
       if (.not.doneChildren) then
@@ -6160,9 +6065,7 @@ endif
     this => treeroot
     do
 
-      if (.not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
       if (.not.doneChildren) then
-
       if (this%nodeType==ATTRIBUTE_NODE)  then
         if (getIsId(this).and.getName(this)==elementId) then
           np => getOwnerElement(this)
@@ -6170,13 +6073,9 @@ endif
         endif
       endif
 
-
       else
         if (getNodeType(this)==ELEMENT_NODE) doneAttributes = .true.
 
-
-
-      endif
       endif
 
       if (.not.doneChildren) then

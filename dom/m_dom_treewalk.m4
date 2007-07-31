@@ -35,17 +35,11 @@ ifelse(`$3', `deadNode',`
 ')dnl
     do
 
-      if (.not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
       if (.not.doneChildren) then
-
 $1
-
       else
         if (getNodeType(this)==ELEMENT_NODE) doneAttributes = .true.
-
 $2
-
-      endif
       endif
 
 ifelse(`$3', `deadNode',`

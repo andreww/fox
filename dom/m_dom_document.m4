@@ -487,7 +487,7 @@ TOHW_m_dom_treewalk(`dnl
   TOHW_function(importNode, (doc, arg, deep) , np)
     type(Node), pointer :: doc
     type(Node), pointer :: arg
-    logical :: deep
+    logical, intent(in) :: deep
     type(Node), pointer :: np
 
     type(Node), pointer :: this, thatParent, new, treeroot
@@ -583,7 +583,12 @@ TOHW_m_dom_treewalk(`dnl
         endif
 
         if (.not.deep) then
-          if (getNodeType(arg)/=ELEMENT_NODE.and.getNodeType(arg)/=ATTRIBUTE_NODE) exit
+          if ((getNodeType(arg)==ELEMENT_NODE.and..not.doneAttributes) &
+            .or.getNodeType(arg)==ATTRIBUTE_NODE) then
+            continue
+          else
+            exit
+          endif
         endif
 ', `', `parentNode', `')
 

@@ -43,11 +43,9 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(FoX_IMPL_IS_NULL)
     endif
 
-    if (.not.checkChars(qualifiedName, XML1_0)) then
+    if (.not.checkName(qualifiedName, temp_xds)) then
       TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
-    endif
-
-    if (.not.checkQName(qualifiedName, temp_xds))  then
+    elseif (.not.checkQName(qualifiedName, temp_xds))  then
       TOHW_m_dom_throw_error(NAMESPACE_ERR)
     ! FIXME check that prefix etc is declared
     elseif (.not.checkPublicId(publicId)) then
