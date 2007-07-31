@@ -193,7 +193,7 @@ contains
     type(xml_doc_state), pointer :: state
 
     call setXds(mainDoc, state)
-
+! FIXME readonly entities & notations
   end subroutine FoX_endDTD_handler
 
   subroutine notationDecl_handler(name, publicId, systemId)

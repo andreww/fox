@@ -62,6 +62,8 @@ TOHW_m_dom_contents(`
 
     do i = 1, map%length
       if (str_vs(map%nodes(i)%this%nodeName)==name) then
+        ! FIXME this needs changed I think to cope with
+        ! attributes nodeValue/=value
         n = size(map%nodes(i)%this%nodeValue)
         exit
       endif
@@ -82,13 +84,13 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(FoX_MAP_IS_NULL)
     endif
 
+    c = ""
     do i = 1, map%length
       if (str_vs(map%nodes(i)%this%nodeName)==name) then
-        c = str_vs(map%nodes(i)%this%nodeValue)
+        c = getNodeValue(map%nodes(i)%this)
         return
       endif
     enddo
-    c = ""
 
   end function getNamedItem_Value
 
@@ -254,6 +256,9 @@ TOHW_m_dom_contents(`
 
     if (.not.associated(map)) then
       TOHW_m_dom_throw_error(FoX_MAP_IS_NULL)
+    elseif (map%ownerElement%nodeType/=ELEMENT_NODE) then
+      np => null()
+      return
     endif
 
     do i = 1, getLength(map)
@@ -271,22 +276,26 @@ TOHW_m_dom_contents(`
   end function getNamedItemNS
 
 
-  pure function getNamedItemNS_Value_length(map, namespaceURI, localName) result(n)
+  pure function getNamedItemNS_Value_length(map, p, namespaceURI, localName) result(n)
     type(NamedNodeMap), intent(in) :: map
+    logical, intent(in) :: p
     character(len=*), intent(in) :: namespaceURI
     character(len=*), intent(in) :: localName
     integer :: n
 
     integer :: i
 
+    n = 0
+    if (.not.p) return
+    if (map%ownerElement%nodeType/=ELEMENT_NODE) return
+
     do i = 1, map%length
       if (str_vs(map%nodes(i)%this%elExtras%namespaceURI)==namespaceURI &
         .and. str_vs(map%nodes(i)%this%elExtras%localName)==localName) then
-        n = size(map%nodes(i)%this%nodeValue)
+        n = getValue_len(map%nodes(i)%this, .true.)
         exit
       endif
     enddo
-    n = 0
 
   end function getNamedItemNS_Value_length
 
@@ -295,7 +304,7 @@ TOHW_m_dom_contents(`
     type(NamedNodeMap), pointer :: map
     character(len=*), intent(in) :: namespaceURI
     character(len=*), intent(in) :: localName
-    character(len=getNamedItemNS_Value_length(map, namespaceURI, localName)) :: c
+    character(len=getNamedItemNS_Value_length(map, associated(map), namespaceURI, localName)) :: c
 
     integer :: i
 
@@ -303,14 +312,15 @@ TOHW_m_dom_contents(`
        TOHW_m_dom_throw_error(FoX_MAP_IS_NULL)
     endif
 
+    c = ""
+    if (map%ownerElement%nodeType/=ELEMENT_NODE) return
     do i = 1, getLength(map)
       if (getNamespaceURI(item(map, i-1))==namespaceURI &
         .and. getLocalName(item(map, i-1))==localName) then
-        c = getNodeValue(item(map, i-1))
+        c = getValue(item(map, i-1))
         return
       endif
     enddo
-    !FIXME error here
 
   end function getNamedItemNS_Value
 
@@ -330,7 +340,7 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif
 
-   if (map%readonly) then
+    if (map%readonly) then
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
     elseif (map%ownerElement%nodeType==ELEMENT_NODE) then
       if (.not.associated(map%ownerElement%ownerDocument, arg%ownerDocument)) then
