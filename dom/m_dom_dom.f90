@@ -2908,6 +2908,14 @@ if (present(ex)) then
   endif
 endif
 
+      elseif (getNodeType(arg)==ATTRIBUTE_NODE.and.getName(arg)=="xmlns") then
+        call throw_exception(NAMESPACE_ERR, "setPrefix", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
       endif
 ! FIXME check if prefix is declared ...
       deallocate(arg%elExtras%prefix)

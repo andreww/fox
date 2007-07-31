@@ -934,6 +934,8 @@ TOHW_m_dom_treewalk(`
       elseif (prefix=="xmlns" .and. (getNodeType(arg)/=ATTRIBUTE_NODE &
         .or. str_vs(arg%elExtras%namespaceURI)/="http://www.w3.org/2000/xmlns/")) then
         TOHW_m_dom_throw_error(NAMESPACE_ERR)
+      elseif (getNodeType(arg)==ATTRIBUTE_NODE.and.getName(arg)=="xmlns") then
+        TOHW_m_dom_throw_error(NAMESPACE_ERR)
       endif
 ! FIXME check if prefix is declared ...
       deallocate(arg%elExtras%prefix)
