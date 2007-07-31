@@ -501,6 +501,9 @@ TOHW_m_dom_treewalk(`dnl
 
     if (getNodeType(doc)/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
+    elseif (getNodeType(arg)==DOCUMENT_NODE .or. &
+      getNodeType(arg)==DOCUMENT_TYPE_NODE) then
+      TOHW_m_dom_throw_error(NOT_SUPPORTED_ERR)
     endif
 
     if (associated(doc, getOwnerDocument(arg))) then

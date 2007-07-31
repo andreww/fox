@@ -2502,10 +2502,18 @@ endif
         if (.not.doneAttributes) then
           ! Are there any new prefixes or namespaces to be declared?
           ! FIXME
-          new => createElement(doc, getTagName(this))
+          if (getNamespaceURI(this)=="") then
+            new => createElement(doc, getTagName(this))
+          else
+            new => createElementNS(doc, getNamespaceURI(this), getTagName(this))
+          endif
         endif
       case (ATTRIBUTE_NODE)
-        new => createAttribute(doc, getName(this))
+        if (getNamespaceURI(this)=="") then 
+          new => createAttribute(doc, getName(this))
+        else
+          new => createAttributeNS(doc, getNamespaceURI(this), getName(this))
+        endif
         if (associated(this, arg)) then
           call setSpecified(new, .true.)
         else
@@ -5602,6 +5610,15 @@ endif
 
     if (getNodeType(doc)/=DOCUMENT_NODE) then
       call throw_exception(FoX_INVALID_NODE, "importNode", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
+    elseif (getNodeType(arg)==DOCUMENT_NODE .or. &
+      getNodeType(arg)==DOCUMENT_TYPE_NODE) then
+      call throw_exception(NOT_SUPPORTED_ERR, "importNode", ex)
 if (present(ex)) then
   if (inException(ex)) then
      return

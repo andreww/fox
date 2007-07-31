@@ -685,10 +685,18 @@ TOHW_m_dom_treewalk(`
         if (.not.doneAttributes) then
           ! Are there any new prefixes or namespaces to be declared?
           ! FIXME
-          new => createElement(doc, getTagName(this))
+          if (getNamespaceURI(this)=="") then
+            new => createElement(doc, getTagName(this))
+          else
+            new => createElementNS(doc, getNamespaceURI(this), getTagName(this))
+          endif
         endif
       case (ATTRIBUTE_NODE)
-        new => createAttribute(doc, getName(this))
+        if (getNamespaceURI(this)=="") then 
+          new => createAttribute(doc, getName(this))
+        else
+          new => createAttributeNS(doc, getNamespaceURI(this), getName(this))
+        endif
         if (associated(this, arg)) then
           call setSpecified(new, .true.)
         else
