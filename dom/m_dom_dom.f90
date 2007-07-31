@@ -2866,8 +2866,16 @@ if (present(ex)) then
   endif
 endif
 
-      elseif (.not.checkNCName(prefix, getXmlVersionEnum(getOwnerDocument(arg)))) then
+      elseif (.not.checkName(prefix, getXds(getOwnerDocument(arg)))) then
         call throw_exception(INVALID_CHARACTER_ERR, "setPrefix", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
+      elseif (.not.checkNCName(prefix, getXmlVersionEnum(getOwnerDocument(arg)))) then
+        call throw_exception(NAMESPACE_ERR, "setPrefix", ex)
 if (present(ex)) then
   if (inException(ex)) then
      return
