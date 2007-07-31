@@ -5635,15 +5635,27 @@ endif
           if (.not.doneAttributes) then
             ! Are there any new prefixes or namespaces to be declared?
             ! FIXME
-            new => createElement(doc, getTagName(this))
+            if (getNamespaceURI(this)=="") then
+              new => createElement(doc, getTagName(this))
+            else
+              new => createElementNS(doc, getNamespaceURI(this), getTagName(this))
+            endif
           endif
         case (ATTRIBUTE_NODE)
-          if (associated(this, arg)) then
-            new => createAttribute(doc, getName(this))
+          if (associated(this, arg).or.getSpecified(this)) then
+            ! We are importing just this attribute node
+            ! or this was an explicitly specified attribute; either
+            ! way, we import it as is, and it remains specified.
+            if (getNamespaceURI(this)=="") then
+              new => createAttribute(doc, getName(this))
+            else
+              new => createAttributeNS(doc, getNamespaceURI(this), getName(this))
+            endif
             call setSpecified(new, .true.)
-          elseif (getSpecified(this)) then
-            new => createAttribute(doc, getName(this))
-            call setSpecified(new, .true.)
+            !else FIXME
+            ! This is an attribute being imported as part of a hierarchy,
+            ! but its only here by default. Is there a default attribute
+            ! of this name in the new document?
             ! elseif (thereIsADefault(getName(this)) FIXME
             ! new => createAttribute(doc, getName(this))
             ! call setValue(new, defaultValue)
