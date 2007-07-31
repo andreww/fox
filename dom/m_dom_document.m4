@@ -738,11 +738,13 @@ TOHW_m_dom_treewalk(`dnl
       if (getNodeType(this)==ELEMENT_NODE) then
         if (getNamespaceURI(this)/="") then
           if ((allNameSpaces .or. getNameSpaceURI(this)==namespaceURI) &
-            .and. (allLocalNames .or. getLocalName(this)==localName)) &
+            .and. (allLocalNames .or. getLocalName(this)==localName) &
+            .and..not.(getNodeType(doc)==ELEMENT_NODE.and.associated(this, arg))) &
             call append(list, this)
         else
           if ((allNameSpaces .or. namespaceURI=="") &
-            .and. (allLocalNames .or. getNodeName(this)==localName)) &
+            .and. (allLocalNames .or. getNodeName(this)==localName) &
+            .and..not.(getNodeType(doc)==ELEMENT_NODE.and.associated(this, arg))) &
             call append(list, this)
         endif
         doneAttributes = .true.
