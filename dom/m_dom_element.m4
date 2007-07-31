@@ -299,20 +299,21 @@ TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
 
     if (arg%nodeType /= ELEMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    elseif (.not.checkChars(qualifiedname, getXmlVersionEnum(getOwnerDocument(arg)))) then
-      TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
     elseif (arg%readonly) then
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
+    elseif (.not.checkName(qualifiedname, getXds(getOwnerDocument(arg)))) then
+      TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
     elseif (.not.checkQName(qualifiedname, getXds(getOwnerDocument(arg)))) then
       TOHW_m_dom_throw_error(NAMESPACE_ERR)
     elseif (prefixOfQName(qualifiedName)/="" &
      .and. namespaceURI=="") then
       TOHW_m_dom_throw_error(NAMESPACE_ERR)
-    elseif (prefixOfQName(qualifiedName)=="xml" .and. & 
-      namespaceURI/="http://www.w3.org/XML/1998/namespace") then
+    elseif (prefixOfQName(qualifiedName)=="xml" .neqv. & 
+      namespaceURI=="http://www.w3.org/XML/1998/namespace") then
       TOHW_m_dom_throw_error(NAMESPACE_ERR)
-    ! FIXME is this all possible errors? 
-      ! what if prefix = "xmlns"? or other "xml"
+    elseif (namespaceURI=="http://www.w3.org/2000/xmlns/" .neqv. &
+      (qualifiedName=="xmlns" .or. prefixOfQName(qualifiedName)=="xmlns")) then
+      TOHW_m_dom_throw_error(NAMESPACE_ERR)
     endif
 
 ! FIXME what if namespace is undeclared ... will be recreated on serialization,

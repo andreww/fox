@@ -7034,16 +7034,16 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkChars(qualifiedname, getXmlVersionEnum(getOwnerDocument(arg)))) then
-      call throw_exception(INVALID_CHARACTER_ERR, "setAttributeNS", ex)
+    elseif (arg%readonly) then
+      call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setAttributeNS", ex)
 if (present(ex)) then
   if (inException(ex)) then
      return
   endif
 endif
 
-    elseif (arg%readonly) then
-      call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setAttributeNS", ex)
+    elseif (.not.checkName(qualifiedname, getXds(getOwnerDocument(arg)))) then
+      call throw_exception(INVALID_CHARACTER_ERR, "setAttributeNS", ex)
 if (present(ex)) then
   if (inException(ex)) then
      return
@@ -7067,8 +7067,8 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (prefixOfQName(qualifiedName)=="xml" .and. & 
-      namespaceURI/="http://www.w3.org/XML/1998/namespace") then
+    elseif (prefixOfQName(qualifiedName)=="xml" .neqv. & 
+      namespaceURI=="http://www.w3.org/XML/1998/namespace") then
       call throw_exception(NAMESPACE_ERR, "setAttributeNS", ex)
 if (present(ex)) then
   if (inException(ex)) then
@@ -7076,8 +7076,15 @@ if (present(ex)) then
   endif
 endif
 
-    ! FIXME is this all possible errors? 
-      ! what if prefix = "xmlns"? or other "xml"
+    elseif (namespaceURI=="http://www.w3.org/2000/xmlns/" .neqv. &
+      (qualifiedName=="xmlns" .or. prefixOfQName(qualifiedName)=="xmlns")) then
+      call throw_exception(NAMESPACE_ERR, "setAttributeNS", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
     endif
 
 ! FIXME what if namespace is undeclared ... will be recreated on serialization,
