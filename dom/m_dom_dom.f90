@@ -2614,7 +2614,7 @@ endif
 
     endif
     
-    if (arg%nodeType /= ELEMENT_NODE) then
+    if (arg%nodeType == ELEMENT_NODE) then
       hasAttributes = (getLength(getAttributes(arg)) > 0)
     else
       hasAttributes = .false.

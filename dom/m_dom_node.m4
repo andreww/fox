@@ -768,7 +768,7 @@ TOHW_m_dom_treewalk(`
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif
     
-    if (arg%nodeType /= ELEMENT_NODE) then
+    if (arg%nodeType == ELEMENT_NODE) then
       hasAttributes = (getLength(getAttributes(arg)) > 0)
     else
       hasAttributes = .false.
