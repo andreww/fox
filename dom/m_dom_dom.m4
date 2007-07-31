@@ -35,7 +35,7 @@ dnl
   use m_common_array_str, only: str_vs, vs_str, vs_str_alloc
   use m_common_charset, only: checkChars, XML1_0, XML1_1
   use m_common_namecheck, only: checkQName, prefixOfQName, localPartOfQName, &
-    checkName, checkPublicId, checkSystemId
+    checkName, checkPublicId, checkSystemId, checkNCName
   use m_common_string, only: toLower
   use m_common_struct, only: xml_doc_state, init_xml_doc_state, destroy_xml_doc_state
 

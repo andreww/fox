@@ -922,6 +922,8 @@ TOHW_m_dom_treewalk(`
       .or. arg%nodeType==XPATH_NAMESPACE_NODE) then
       if (arg%readonly) then
         TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
+      elseif (.not.checkNCName(prefix, getXmlVersionEnum(getOwnerDocument(arg)))) then
+        TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
       elseif (.not.associated(arg%elExtras%namespaceURI)) then
         TOHW_m_dom_throw_error(NAMESPACE_ERR)
       elseif (prefix=="xml" .and. &

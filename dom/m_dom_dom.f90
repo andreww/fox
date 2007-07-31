@@ -13,7 +13,7 @@ module m_dom_dom
   use m_common_array_str, only: str_vs, vs_str, vs_str_alloc
   use m_common_charset, only: checkChars, XML1_0, XML1_1
   use m_common_namecheck, only: checkQName, prefixOfQName, localPartOfQName, &
-    checkName, checkPublicId, checkSystemId
+    checkName, checkPublicId, checkSystemId, checkNCName
   use m_common_string, only: toLower
   use m_common_struct, only: xml_doc_state, init_xml_doc_state, destroy_xml_doc_state
 
@@ -2860,6 +2860,14 @@ endif
       .or. arg%nodeType==XPATH_NAMESPACE_NODE) then
       if (arg%readonly) then
         call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setPrefix", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
+      elseif (.not.checkNCName(prefix, getXmlVersionEnum(getOwnerDocument(arg)))) then
+        call throw_exception(INVALID_CHARACTER_ERR, "setPrefix", ex)
 if (present(ex)) then
   if (inException(ex)) then
      return
