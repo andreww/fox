@@ -47,7 +47,7 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
     endif
 
-    if (.not.checkName(qualifiedName, temp_xds))  then
+    if (.not.checkQName(qualifiedName, temp_xds))  then
       TOHW_m_dom_throw_error(NAMESPACE_ERR)
     ! FIXME check that prefix etc is declared
     elseif (.not.checkPublicId(publicId)) then
@@ -74,9 +74,21 @@ TOHW_m_dom_contents(`
     character(len=*), intent(in), optional :: qualifiedName
     type(Node), pointer :: docType
     type(Node), pointer :: doc, dt
+    type(xml_doc_state), pointer :: xds
 
     if (.not.associated(impl)) then
       TOHW_m_dom_throw_error(FoX_IMPL_IS_NULL)
+    elseif (associated(docType)) then 
+      if (associated(getOwnerDocument(docType))) then
+        TOHW_m_dom_throw_error(WRONG_DOCUMENT_ERR)
+      endif
+    endif
+
+    allocate(xds)
+    if (.not.checkQName(qualifiedName, xds)) then
+      TOHW_m_dom_throw_error(NAMESPACE_ERR, (xds))
+    elseif (qualifiedName=="xmlns" .or. prefixOfQName(qualifiedName)=="xmlns") then
+      TOHW_m_dom_throw_error(NAMESPACE_ERR, (xds))
     endif
 
     doc => createNode(null(), DOCUMENT_NODE, "#document", "")
@@ -85,7 +97,7 @@ TOHW_m_dom_contents(`
     allocate(doc%docExtras)
     doc%docExtras%implementation => FoX_DOM
     allocate(doc%docExtras%nodelists(0))
-    allocate(doc%docExtras%xds)
+    doc%docExtras%xds => xds
     call init_xml_doc_state(doc%docExtras%xds)
 
     doc%docExtras%entities%ownerElement => doc

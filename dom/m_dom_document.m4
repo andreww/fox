@@ -587,18 +587,18 @@ TOHW_m_dom_treewalk(`dnl
 
     if (arg%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    elseif (.not.checkChars(qualifiedName, getXmlVersionEnum(arg))) then
+    elseif (.not.checkName(qualifiedName, getXds(arg))) then
       TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
     elseif (.not.checkQName(qualifiedName, getXds(arg))) then
       TOHW_m_dom_throw_error(NAMESPACE_ERR)
     elseif (prefixOfQName(qualifiedName)/="" &
      .and. namespaceURI=="") then
       TOHW_m_dom_throw_error(NAMESPACE_ERR)
-    elseif (prefixOfQName(qualifiedName)=="xml" .and. &
-      namespaceURI/="http://www.w3.org/XML/1998/namespace") then
+    elseif (namespaceURI=="http://www.w3.org/XML/1998/namespace" .neqv. &
+      prefixOfQName(qualifiedName)=="xml") then
       TOHW_m_dom_throw_error(NAMESPACE_ERR)
-    ! FIXME is this all possible errors?
-      ! what if prefix = "xmlns"? or other "xml"
+    elseif (namespaceURI=="http://www.w3.org/2000/xmlns/") then
+      TOHW_m_dom_throw_error(NAMESPACE_ERR)
     endif
 
     np => createNode(arg, ELEMENT_NODE, qualifiedName, "")
@@ -631,18 +631,19 @@ TOHW_m_dom_treewalk(`dnl
 
     if (arg%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    elseif (.not.checkChars(qualifiedName, getXmlVersionEnum(arg))) then
+    elseif (.not.checkName(qualifiedName, getXds(arg))) then
       TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
     elseif (.not.checkQName(qualifiedName, getXds(arg))) then
       TOHW_m_dom_throw_error(NAMESPACE_ERR)
     elseif (prefixOfQName(qualifiedName)/="" &
      .and. namespaceURI=="") then
       TOHW_m_dom_throw_error(NAMESPACE_ERR)
-    elseif (prefixOfQName(qualifiedName)=="xml" .and. &
-      namespaceURI/="http://www.w3.org/XML/1998/namespace") then
+    elseif (namespaceURI=="http://www.w3.org/XML/1998/namespace" .neqv. &
+      prefixOfQName(qualifiedName)=="xml") then
       TOHW_m_dom_throw_error(NAMESPACE_ERR)
-    ! FIXME is this all possible errors?
-      ! what if prefix = "xmlns"? or other "xml"
+    elseif (namespaceURI=="http://www.w3.org/2000/xmlns/" .neqv. &
+      (qualifiedName=="xmlns" .or. prefixOfQName(qualifiedName)=="xmlns")) then
+      TOHW_m_dom_throw_error(NAMESPACE_ERR)
     endif
   
     np => createNode(arg, ATTRIBUTE_NODE, qualifiedName, "")

@@ -4376,7 +4376,7 @@ endif
 
     endif
 
-    if (.not.checkName(qualifiedName, temp_xds))  then
+    if (.not.checkQName(qualifiedName, temp_xds))  then
       call throw_exception(NAMESPACE_ERR, "createDocumentType", ex)
 if (present(ex)) then
   if (inException(ex)) then
@@ -4422,11 +4422,45 @@ endif
     character(len=*), intent(in), optional :: qualifiedName
     type(Node), pointer :: docType
     type(Node), pointer :: doc, dt
+    type(xml_doc_state), pointer :: xds
 
     if (.not.associated(impl)) then
       call throw_exception(FoX_IMPL_IS_NULL, "createDocument", ex)
 if (present(ex)) then
   if (inException(ex)) then
+     return
+  endif
+endif
+
+    elseif (associated(docType)) then 
+      if (associated(getOwnerDocument(docType))) then
+        call throw_exception(WRONG_DOCUMENT_ERR, "createDocument", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
+      endif
+    endif
+
+    allocate(xds)
+    if (.not.checkQName(qualifiedName, xds)) then
+      call throw_exception(NAMESPACE_ERR, "createDocument", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+
+if (associated(xds)) deallocate(xds)
+     return
+  endif
+endif
+
+    elseif (qualifiedName=="xmlns" .or. prefixOfQName(qualifiedName)=="xmlns") then
+      call throw_exception(NAMESPACE_ERR, "createDocument", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+
+if (associated(xds)) deallocate(xds)
      return
   endif
 endif
@@ -4439,7 +4473,7 @@ endif
     allocate(doc%docExtras)
     doc%docExtras%implementation => FoX_DOM
     allocate(doc%docExtras%nodelists(0))
-    allocate(doc%docExtras%xds)
+    doc%docExtras%xds => xds
     call init_xml_doc_state(doc%docExtras%xds)
 
     doc%docExtras%entities%ownerElement => doc
@@ -5765,7 +5799,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkChars(qualifiedName, getXmlVersionEnum(arg))) then
+    elseif (.not.checkName(qualifiedName, getXds(arg))) then
       call throw_exception(INVALID_CHARACTER_ERR, "createElementNS", ex)
 if (present(ex)) then
   if (inException(ex)) then
@@ -5790,8 +5824,8 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (prefixOfQName(qualifiedName)=="xml" .and. &
-      namespaceURI/="http://www.w3.org/XML/1998/namespace") then
+    elseif (namespaceURI=="http://www.w3.org/XML/1998/namespace" .neqv. &
+      prefixOfQName(qualifiedName)=="xml") then
       call throw_exception(NAMESPACE_ERR, "createElementNS", ex)
 if (present(ex)) then
   if (inException(ex)) then
@@ -5799,8 +5833,14 @@ if (present(ex)) then
   endif
 endif
 
-    ! FIXME is this all possible errors?
-      ! what if prefix = "xmlns"? or other "xml"
+    elseif (namespaceURI=="http://www.w3.org/2000/xmlns/") then
+      call throw_exception(NAMESPACE_ERR, "createElementNS", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
     endif
 
     np => createNode(arg, ELEMENT_NODE, qualifiedName, "")
@@ -5846,7 +5886,7 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (.not.checkChars(qualifiedName, getXmlVersionEnum(arg))) then
+    elseif (.not.checkName(qualifiedName, getXds(arg))) then
       call throw_exception(INVALID_CHARACTER_ERR, "createAttributeNS", ex)
 if (present(ex)) then
   if (inException(ex)) then
@@ -5871,8 +5911,8 @@ if (present(ex)) then
   endif
 endif
 
-    elseif (prefixOfQName(qualifiedName)=="xml" .and. &
-      namespaceURI/="http://www.w3.org/XML/1998/namespace") then
+    elseif (namespaceURI=="http://www.w3.org/XML/1998/namespace" .neqv. &
+      prefixOfQName(qualifiedName)=="xml") then
       call throw_exception(NAMESPACE_ERR, "createAttributeNS", ex)
 if (present(ex)) then
   if (inException(ex)) then
@@ -5880,8 +5920,15 @@ if (present(ex)) then
   endif
 endif
 
-    ! FIXME is this all possible errors?
-      ! what if prefix = "xmlns"? or other "xml"
+    elseif (namespaceURI=="http://www.w3.org/2000/xmlns/" .neqv. &
+      (qualifiedName=="xmlns" .or. prefixOfQName(qualifiedName)=="xmlns")) then
+      call throw_exception(NAMESPACE_ERR, "createAttributeNS", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
     endif
   
     np => createNode(arg, ATTRIBUTE_NODE, qualifiedName, "")
