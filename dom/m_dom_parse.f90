@@ -193,6 +193,8 @@ contains
     type(xml_doc_state), pointer :: state
 
     call setXds(mainDoc, state)
+    call setReadonlyMap(getEntities(getDocType(mainDoc)), .true.)
+    call setReadonlyMap(getNotations(getDocType(mainDoc)), .true.)
 ! FIXME readonly entities & notations
   end subroutine FoX_endDTD_handler
 

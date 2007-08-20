@@ -261,12 +261,12 @@ TOHW_m_dom_contents(`
       return
     endif
 
-    do i = 1, getLength(map)
-      if ((getNamespaceURI(item(map, i-1))==namespaceURI &
-        .and. getLocalName(item(map, i-1))==localName) &
+    do i = 0, getLength(map) - 1
+      if ((getNamespaceURI(item(map, i))==namespaceURI &
+        .and. getLocalName(item(map, i))==localName) &
 ! FIXME the DOM standard is contradictory on this point ...
-        .or. (namespaceURI=="" .and.getNodeName(item(map, i-1))==localName)) then
-        np => item(map, i-1)
+        .or. (namespaceURI=="" .and.getNodeName(item(map, i))==localName)) then
+        np => item(map, i)
         return
       endif
     enddo
@@ -363,7 +363,6 @@ TOHW_m_dom_contents(`
         return
         ! Nothing to do, this attribute is already in this element
       elseif (associated(getOwnerElement(arg))) then
-        ! FIXME unless arg is being set to itself
         TOHW_m_dom_throw_error(INUSE_ATTRIBUTE_ERR)    
       endif
     endif
