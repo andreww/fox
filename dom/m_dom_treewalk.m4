@@ -35,7 +35,7 @@ ifelse(`$3', `deadNode',`
 ')dnl
     do
 
-      if (.not.doneChildren) then
+      if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
 $1
       else
         if (getNodeType(this)==ELEMENT_NODE) doneAttributes = .true.
@@ -45,12 +45,12 @@ $2
 ifelse(`$3', `deadNode',`
       deadNode => null()
 ')dnl
-      if (.not.doneChildren) then
 
+      if (.not.doneChildren) then
         if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
           if (getLength(getAttributes(this))>0) then
           ifelse(`$3', `parentNode', `dnl
-            if (.not.associated(this, arg)) thatParent => getLastChild(thatParent)
+            if (.not.associated(this, treeroot)) thatParent => getLastChild(thatParent)
 ')dnl
             this => item(getAttributes(this), 0)
           else
@@ -61,7 +61,7 @@ ifelse(`$3', `parentNode', `dnl
           endif
         elseif (hasChildNodes(this)) then
 ifelse(`$3', `parentNode', `dnl
-          if (.not.associated(this, arg)) then
+          if (.not.associated(this, treeroot)) then
             if (getNodeType(this)==ATTRIBUTE_NODE) then
               thatParent => item(getAttributes(thatParent), i_tree)
             else
@@ -82,7 +82,7 @@ ifelse(`$3', `parentNode', `dnl
 ifelse(`$3', `deadNode', `dnl
         deadNode => this
 ')dnl
-        if (associated(this, arg)) exit
+        if (associated(this, treeroot)) exit
         if (getNodeType(this)==ATTRIBUTE_NODE) then
           if (i_tree<getLength(getAttributes(getOwnerElement(this)))-1) then
             i_tree= i_tree+ 1
@@ -105,7 +105,7 @@ ifelse(`$3', `parentNode', `dnl
         else
           this => getParentNode(this)
 ifelse(`$3', `parentNode', `dnl
-          if (.not.associated(this, arg)) then
+          if (.not.associated(this, treeroot)) then
             if (getNodeType(this)==ATTRIBUTE_NODE) then
               thatParent => getOwnerElement(thatParent)
             else

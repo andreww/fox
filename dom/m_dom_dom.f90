@@ -490,7 +490,7 @@ endif
       deadNode => null()
     do
 
-      if (.not.doneChildren) then
+      if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
 
       else
         if (getNodeType(this)==ELEMENT_NODE) doneAttributes = .true.
@@ -499,8 +499,8 @@ endif
 
 
       deadNode => null()
-      if (.not.doneChildren) then
 
+      if (.not.doneChildren) then
         if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
           if (getLength(getAttributes(this))>0) then
                       this => item(getAttributes(this), 0)
@@ -519,7 +519,7 @@ endif
       else ! if doneChildren
 
         deadNode => this
-        if (associated(this, arg)) exit
+        if (associated(this, treeroot)) exit
         if (getNodeType(this)==ATTRIBUTE_NODE) then
           if (i_tree<getLength(getAttributes(getOwnerElement(this)))-1) then
             i_tree= i_tree+ 1
@@ -707,10 +707,11 @@ endif
       arg%lastChild => null()
       ! and add the new one.
       ! Avoid manipulating hangingnode lists
-      call setGCstate(arg%ownerDocument, .false.)
+      !      call setGCstate(arg%ownerDocument, .false.)
       np => createTextNode(arg%ownerDocument, nodeValue)
       np => appendChild(arg, np, ex)
-      call setGCstate(arg%ownerDocument, .true.)
+      !      call setGCstate(arg%ownerDocument, .true.)
+      !      if (.not.arg%inDocument) call append(arg%document%blah, ...)
     case (CDATA_SECTION_NODE)
       if (arg%readonly) then
         call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setNodeValue", ex)
@@ -1066,7 +1067,7 @@ endif
     this => treeroot
     do
 
-      if (.not.doneChildren) then
+      if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
 
           if (getNodeType(this)/=TEXT_NODE.and.getNodeType(this)/=ENTITY_REFERENCE_NODE) then
             call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
@@ -1083,8 +1084,8 @@ endif
 
       endif
 
-      if (.not.doneChildren) then
 
+      if (.not.doneChildren) then
         if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
           if (getLength(getAttributes(this))>0) then
                       this => item(getAttributes(this), 0)
@@ -1102,7 +1103,7 @@ endif
 
       else ! if doneChildren
 
-        if (associated(this, arg)) exit
+        if (associated(this, treeroot)) exit
         if (getNodeType(this)==ATTRIBUTE_NODE) then
           if (i_tree<getLength(getAttributes(getOwnerElement(this)))-1) then
             i_tree= i_tree+ 1
@@ -1211,7 +1212,7 @@ endif
     this => treeroot
     do
 
-      if (.not.doneChildren) then
+      if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
 
           if (getNodeType(this)/=TEXT_NODE.and.getNodeType(this)/=ENTITY_REFERENCE_NODE) then
             call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
@@ -1228,8 +1229,8 @@ endif
 
       endif
 
-      if (.not.doneChildren) then
 
+      if (.not.doneChildren) then
         if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
           if (getLength(getAttributes(this))>0) then
                       this => item(getAttributes(this), 0)
@@ -1247,7 +1248,7 @@ endif
 
       else ! if doneChildren
 
-        if (associated(this, arg)) exit
+        if (associated(this, treeroot)) exit
         if (getNodeType(this)==ATTRIBUTE_NODE) then
           if (i_tree<getLength(getAttributes(getOwnerElement(this)))-1) then
             i_tree= i_tree+ 1
@@ -1516,7 +1517,7 @@ endif
     this => treeroot
     do
 
-      if (.not.doneChildren) then
+      if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
 
           if (getNodeType(this)/=TEXT_NODE.and.getNodeType(this)/=ENTITY_REFERENCE_NODE) then
             call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
@@ -1533,8 +1534,8 @@ endif
 
       endif
 
-      if (.not.doneChildren) then
 
+      if (.not.doneChildren) then
         if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
           if (getLength(getAttributes(this))>0) then
                       this => item(getAttributes(this), 0)
@@ -1552,7 +1553,7 @@ endif
 
       else ! if doneChildren
 
-        if (associated(this, arg)) exit
+        if (associated(this, treeroot)) exit
         if (getNodeType(this)==ATTRIBUTE_NODE) then
           if (i_tree<getLength(getAttributes(getOwnerElement(this)))-1) then
             i_tree= i_tree+ 1
@@ -1661,7 +1662,7 @@ endif
     this => treeroot
     do
 
-      if (.not.doneChildren) then
+      if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
 
           if (getNodeType(this)/=TEXT_NODE.and.getNodeType(this)/=ENTITY_REFERENCE_NODE) then
             call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
@@ -1678,8 +1679,8 @@ endif
 
       endif
 
-      if (.not.doneChildren) then
 
+      if (.not.doneChildren) then
         if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
           if (getLength(getAttributes(this))>0) then
                       this => item(getAttributes(this), 0)
@@ -1697,7 +1698,7 @@ endif
 
       else ! if doneChildren
 
-        if (associated(this, arg)) exit
+        if (associated(this, treeroot)) exit
         if (getNodeType(this)==ATTRIBUTE_NODE) then
           if (i_tree<getLength(getAttributes(getOwnerElement(this)))-1) then
             i_tree= i_tree+ 1
@@ -1947,6 +1948,7 @@ endif
         i_t = i_t + 1     
       endif
     enddo
+
     deallocate(arg%childNodes%nodes)
     arg%childNodes%nodes => temp_nl
     arg%childNodes%length = size(temp_nl)
@@ -1959,7 +1961,6 @@ if (present(ex)) then
 endif
 
     endif
-
     oldChild%parentNode => null()
     oldChild%previousSibling => null()
     oldChild%nextSibling => null()
@@ -2046,7 +2047,7 @@ endif
     this => treeroot
     do
 
-      if (.not.doneChildren) then
+      if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
 
           if (getNodeType(this)/=TEXT_NODE.and.getNodeType(this)/=ENTITY_REFERENCE_NODE) then
             call throw_exception(HIERARCHY_REQUEST_ERR, "appendChild", ex)
@@ -2063,8 +2064,8 @@ endif
 
       endif
 
-      if (.not.doneChildren) then
 
+      if (.not.doneChildren) then
         if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
           if (getLength(getAttributes(this))>0) then
                       this => item(getAttributes(this), 0)
@@ -2082,7 +2083,7 @@ endif
 
       else ! if doneChildren
 
-        if (associated(this, arg)) exit
+        if (associated(this, treeroot)) exit
         if (getNodeType(this)==ATTRIBUTE_NODE) then
           if (i_tree<getLength(getAttributes(getOwnerElement(this)))-1) then
             i_tree= i_tree+ 1
@@ -2191,7 +2192,7 @@ endif
     this => treeroot
     do
 
-      if (.not.doneChildren) then
+      if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
 
           if (getNodeType(this)/=TEXT_NODE.and.getNodeType(this)/=ENTITY_REFERENCE_NODE) then
             call throw_exception(HIERARCHY_REQUEST_ERR, "appendChild", ex)
@@ -2208,8 +2209,8 @@ endif
 
       endif
 
-      if (.not.doneChildren) then
 
+      if (.not.doneChildren) then
         if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
           if (getLength(getAttributes(this))>0) then
                       this => item(getAttributes(this), 0)
@@ -2227,7 +2228,7 @@ endif
 
       else ! if doneChildren
 
-        if (associated(this, arg)) exit
+        if (associated(this, treeroot)) exit
         if (getNodeType(this)==ATTRIBUTE_NODE) then
           if (i_tree<getLength(getAttributes(getOwnerElement(this)))-1) then
             i_tree= i_tree+ 1
@@ -2449,20 +2450,18 @@ endif
     this => treeroot
     do
 
-      if (.not.doneChildren) then
+      if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
 
 
       new => null()
       select case(getNodeType(this))
       case (ELEMENT_NODE)
-        if (.not.doneAttributes) then
-          ! Are there any new prefixes or namespaces to be declared?
-          ! FIXME
-          if (getNamespaceURI(this)=="") then
-            new => createElement(doc, getTagName(this))
-          else
-            new => createElementNS(doc, getNamespaceURI(this), getTagName(this))
-          endif
+        ! Are there any new prefixes or namespaces to be declared?
+        ! FIXME
+        if (getNamespaceURI(this)=="") then
+          new => createElement(doc, getTagName(this))
+        else
+          new => createElementNS(doc, getNamespaceURI(this), getTagName(this))
         endif
       case (ATTRIBUTE_NODE)
         if (getNamespaceURI(this)=="") then 
@@ -2510,8 +2509,7 @@ endif
       endif
 
       if (.not.deep) then
-        if ((getNodeType(arg)==ELEMENT_NODE.and..not.doneAttributes) &
-          .or.getNodeType(arg)==ATTRIBUTE_NODE) then
+        if (getNodeType(arg)==ATTRIBUTE_NODE) then
           continue
         else
           exit
@@ -2532,18 +2530,18 @@ endif
 
       endif
 
-      if (.not.doneChildren) then
 
+      if (.not.doneChildren) then
         if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
           if (getLength(getAttributes(this))>0) then
-                      if (.not.associated(this, arg)) thatParent => getLastChild(thatParent)
+                      if (.not.associated(this, treeroot)) thatParent => getLastChild(thatParent)
             this => item(getAttributes(this), 0)
           else
             if (.not.deep) exit
             doneAttributes = .true.
           endif
         elseif (hasChildNodes(this)) then
-          if (.not.associated(this, arg)) then
+          if (.not.associated(this, treeroot)) then
             if (getNodeType(this)==ATTRIBUTE_NODE) then
               thatParent => item(getAttributes(thatParent), i_tree)
             else
@@ -2560,7 +2558,7 @@ endif
 
       else ! if doneChildren
 
-        if (associated(this, arg)) exit
+        if (associated(this, treeroot)) exit
         if (getNodeType(this)==ATTRIBUTE_NODE) then
           if (i_tree<getLength(getAttributes(getOwnerElement(this)))-1) then
             i_tree= i_tree+ 1
@@ -2580,7 +2578,7 @@ endif
           doneAttributes = .false.
         else
           this => getParentNode(this)
-          if (.not.associated(this, arg)) then
+          if (.not.associated(this, treeroot)) then
             if (getNodeType(this)==ATTRIBUTE_NODE) then
               thatParent => getOwnerElement(thatParent)
             else
@@ -2649,7 +2647,7 @@ endif
     this => treeroot
     do
 
-      if (.not.doneChildren) then
+      if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
 
 
       if (getNodeType(this)==TEXT_NODE) then
@@ -2686,8 +2684,8 @@ endif
 
       endif
 
-      if (.not.doneChildren) then
 
+      if (.not.doneChildren) then
         if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
           if (getLength(getAttributes(this))>0) then
                       this => item(getAttributes(this), 0)
@@ -2705,7 +2703,7 @@ endif
 
       else ! if doneChildren
 
-        if (associated(this, arg)) exit
+        if (associated(this, treeroot)) exit
         if (getNodeType(this)==ATTRIBUTE_NODE) then
           if (i_tree<getLength(getAttributes(getOwnerElement(this)))-1) then
             i_tree= i_tree+ 1
@@ -3235,9 +3233,13 @@ endif
     this => treeroot
     do
 
-      if (.not.doneChildren) then
+      if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
 
         this%inDocument = .true.
+        if (this%nodeType==ELEMENT_NODE.and.doc%docExtras%liveNodeLists) &
+          call updateNodeLists(doc, "", getNodeName(this), "", getLocalName(this), "", getNamespaceURI(this))
+        ! The above is a bit inefficient; really we should construct a list of all
+        ! element names added/removed and then call updateNodeLists on all of them only at the end.
         call remove_node_nl(doc%docExtras%hangingNodes, this)
 
       else
@@ -3245,8 +3247,8 @@ endif
 
       endif
 
-      if (.not.doneChildren) then
 
+      if (.not.doneChildren) then
         if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
           if (getLength(getAttributes(this))>0) then
                       this => item(getAttributes(this), 0)
@@ -3264,7 +3266,7 @@ endif
 
       else ! if doneChildren
 
-        if (associated(this, arg)) exit
+        if (associated(this, treeroot)) exit
         if (getNodeType(this)==ATTRIBUTE_NODE) then
           if (i_tree<getLength(getAttributes(getOwnerElement(this)))-1) then
             i_tree= i_tree+ 1
@@ -3290,6 +3292,8 @@ endif
 
 
 
+!FIXME need to call updateNodeLists elsewhere as well (For name changes)
+
   end subroutine putNodesInDocument
 
   subroutine removeNodesFromDocument(doc, arg)
@@ -3306,9 +3310,13 @@ endif
     this => treeroot
     do
 
-      if (.not.doneChildren) then
+      if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
 
         this%inDocument = .false.
+        if (this%nodeType==ELEMENT_NODE.and.doc%docExtras%liveNodeLists) &
+          call updateNodeLists(doc, getNodeName(this), "", getLocalName(this), "", getNamespaceURI(this), "")
+        ! The above is a bit inefficient; really we should construct a list of all
+        ! element names added/removed and then call updateNodeLists on all of them only at the end.
         call append_nl(doc%docExtras%hangingNodes, this)
 
       else
@@ -3316,8 +3324,8 @@ endif
 
       endif
 
-      if (.not.doneChildren) then
 
+      if (.not.doneChildren) then
         if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
           if (getLength(getAttributes(this))>0) then
                       this => item(getAttributes(this), 0)
@@ -3335,7 +3343,7 @@ endif
 
       else ! if doneChildren
 
-        if (associated(this, arg)) exit
+        if (associated(this, treeroot)) exit
         if (getNodeType(this)==ATTRIBUTE_NODE) then
           if (i_tree<getLength(getAttributes(getOwnerElement(this)))-1) then
             i_tree= i_tree+ 1
@@ -3381,7 +3389,7 @@ endif
     this => treeroot
     do
 
-      if (.not.doneChildren) then
+      if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
 
       this%readonly = p
 
@@ -3390,8 +3398,8 @@ endif
 
       endif
 
-      if (.not.doneChildren) then
 
+      if (.not.doneChildren) then
         if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
           if (getLength(getAttributes(this))>0) then
                       this => item(getAttributes(this), 0)
@@ -3409,7 +3417,7 @@ endif
 
       else ! if doneChildren
 
-        if (associated(this, arg)) exit
+        if (associated(this, treeroot)) exit
         if (getNodeType(this)==ATTRIBUTE_NODE) then
           if (i_tree<getLength(getAttributes(getOwnerElement(this)))-1) then
             i_tree= i_tree+ 1
@@ -3629,14 +3637,16 @@ endif
     ! When triggered, (by addition or movement of an Element Node, or a change of its nodeName, localName, or namespaceURI)
     ! then see if any nodelists need updated.
     type(Node), pointer :: doc
-    character, pointer :: oldName(:), newName(:)
-    character, pointer :: oldLocalName(:), newLocalName(:)
-    character, pointer :: oldNamespaceURI(:), newNamespaceURI(:)
+    character(len=*) :: oldName, newName
+    character(len=*) :: oldLocalName, newLocalName
+    character(len=*) :: oldNamespaceURI, newNamespaceURI
 
     type(NodeList), pointer :: nl, nl_orig
     type(NodeListPtr), pointer :: temp_nll(:)
     integer :: i, i_t
 ! FIXME FIXME FIXME for DOM level 2
+
+    print*,"...UPDATING NODELISTS"
 
     if (.not.doc%docExtras%liveNodeLists) return
     if (.not.associated(doc%docExtras%nodelists)) return
@@ -3658,25 +3668,25 @@ endif
       ! Although all nodes should be searched whatever the result, we should only do the
       ! appropriate sort of search for this list - according to namespaces or not.
       if (associated(nl_orig%nodeName)) then ! this was made by getElementsByTagName
-!!$        if (oldName=="*" &
-!!$          .or. str_vs(nl_orig%nodeName)=="*" .or. &
-!!$          str_vs(nl_orig%nodeName)==str_vs(oldName) &
-!!$          .or. str_vs(nl_orig%nodeName)==str_vs(newName)) then
-!!$          ! FIXME check logic above for wildcards
-!!$          nl => getElementsByTagName(nl_orig%element, str_vs(nl_orig%nodeName))
-!!$          ! That appended a nodelist to the end of doc%nodelists. But it does not matter,
-!!$          ! the whole of the original nodelists will be thrown away anyway. We do have to do:
-!!$          deallocate(nl_orig)
-!!$          ! and then grab the new list for our new list of lists.
-!!$          temp_nll(i_t)%this => nl
-!!$        endif
+        if (str_vs(nl_orig%nodeName)=="*" &
+          .or. str_vs(nl_orig%nodeName)==oldName &
+          .or. str_vs(nl_orig%nodeName)==newName) then
+          nl => getElementsByTagName(nl_orig%element, str_vs(nl_orig%nodeName))
+          ! That appended a nodelist to the end of doc%nodelists. But it does not matter,
+          ! the whole of the original nodelists will be thrown away anyway. We do have to do:
+          deallocate(nl_orig)
+          ! and then grab the new list for our new list of lists.
+          temp_nll(i_t)%this => nl
+        endif
       elseif (associated(nl_orig%namespaceURI)) then
         ! This was made by getElementsByTagNameNS
-        if (str_vs(nl_orig%localName)==str_vs(oldLocalName) &
-          .or. str_vs(nl_orig%localName)==str_vs(newLocalName) &
-          .or. str_vs(nl_orig%namespaceURI)==str_vs(oldNamespaceURI) &
-          .or. str_vs(nl_orig%namespaceURI)==str_vs(newNamespaceURI)) then
-          ! destroy newNL
+        if ((str_vs(nl_orig%localName)=="*".or. &
+             str_vs(nl_orig%localName)==oldLocalName.or. &
+             str_vs(nl_orig%localName)==newLocalName) &
+          .and. &
+            (str_vs(nl_orig%namespaceURI)=="*".or. &
+             str_vs(nl_orig%namespaceURI)==oldNamespaceURI.or. &
+             str_vs(nl_orig%namespaceURI)==newNamespaceURI)) then
           nl => getElementsByTagNameNS(nl_orig%element, str_vs(nl_orig%localName), str_vs(nl_orig%namespaceURI))
           ! That appended a nodelist to the end of doc%nodelists. But it does not matter,
           ! the whole of the original nodelists will be thrown away anyway. We do have to do:
@@ -4569,7 +4579,9 @@ endif
     deallocate(arg%docExtras%nodelists)
 
     ! Destroy all remaining hanging nodes
+    print*,"HANGING NODES", arg%docExtras%hangingNodes%length
     do i = 1, arg%docExtras%hangingNodes%length
+      print*, "i", i
       call destroy(arg%docExtras%hangingNodes%nodes(i)%this)
     enddo
     if (associated(arg%docExtras%hangingNodes%nodes)) deallocate(arg%docExtras%hangingNodes%nodes)
@@ -5150,7 +5162,7 @@ endif
     this => treeroot
     do
 
-      if (.not.doneChildren) then
+      if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
 
       if (getNodeType(this)==TEXT_NODE) then
         n = n + len(getData(this))
@@ -5164,8 +5176,8 @@ endif
 
       endif
 
-      if (.not.doneChildren) then
 
+      if (.not.doneChildren) then
         if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
           if (getLength(getAttributes(this))>0) then
                       this => item(getAttributes(this), 0)
@@ -5183,7 +5195,7 @@ endif
 
       else ! if doneChildren
 
-        if (associated(this, arg)) exit
+        if (associated(this, treeroot)) exit
         if (getNodeType(this)==ATTRIBUTE_NODE) then
           if (i_tree<getLength(getAttributes(getOwnerElement(this)))-1) then
             i_tree= i_tree+ 1
@@ -5219,7 +5231,7 @@ endif
     this => treeroot
     do
 
-      if (.not.doneChildren) then
+      if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
 
         if (getNodeType(this)==TEXT_NODE) then
           arg%nodeValue(n+1:n+len(getData(this))) = getData(this)
@@ -5231,8 +5243,8 @@ endif
 
       endif
 
-      if (.not.doneChildren) then
 
+      if (.not.doneChildren) then
         if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
           if (getLength(getAttributes(this))>0) then
                       this => item(getAttributes(this), 0)
@@ -5250,7 +5262,7 @@ endif
 
       else ! if doneChildren
 
-        if (associated(this, arg)) exit
+        if (associated(this, treeroot)) exit
         if (getNodeType(this)==ATTRIBUTE_NODE) then
           if (i_tree<getLength(getAttributes(getOwnerElement(this)))-1) then
             i_tree= i_tree+ 1
@@ -5355,7 +5367,7 @@ endif
 
     if (getGCstate(arg)) then
       np%inDocument = .false.
-      call append(arg%docExtras%hangingnodes, np)
+      call removeNodesFromDocument(arg, np)
     else
       np%inDocument = .true.
     endif
@@ -5496,7 +5508,7 @@ endif
     this => treeroot
     do
 
-      if (.not.doneChildren) then
+      if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
         if (this%nodeType==ELEMENT_NODE) then
           if ((allElements .or. str_vs(this%nodeName)==tagName) &
             .and..not.(getNodeType(doc)==ELEMENT_NODE.and.associated(this, arg))) &
@@ -5509,8 +5521,8 @@ endif
 
       endif
 
-      if (.not.doneChildren) then
 
+      if (.not.doneChildren) then
         if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
           if (getLength(getAttributes(this))>0) then
                       this => item(getAttributes(this), 0)
@@ -5528,7 +5540,7 @@ endif
 
       else ! if doneChildren
 
-        if (associated(this, arg)) exit
+        if (associated(this, treeroot)) exit
         if (getNodeType(this)==ATTRIBUTE_NODE) then
           if (i_tree<getLength(getAttributes(getOwnerElement(this)))-1) then
             i_tree= i_tree+ 1
@@ -5611,7 +5623,7 @@ endif
     this => treeroot
     do
 
-      if (.not.doneChildren) then
+      if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
 
 
         new => null()
@@ -5707,18 +5719,18 @@ endif
 
       endif
 
-      if (.not.doneChildren) then
 
+      if (.not.doneChildren) then
         if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
           if (getLength(getAttributes(this))>0) then
-                      if (.not.associated(this, arg)) thatParent => getLastChild(thatParent)
+                      if (.not.associated(this, treeroot)) thatParent => getLastChild(thatParent)
             this => item(getAttributes(this), 0)
           else
             if (.not.deep) exit
             doneAttributes = .true.
           endif
         elseif (hasChildNodes(this)) then
-          if (.not.associated(this, arg)) then
+          if (.not.associated(this, treeroot)) then
             if (getNodeType(this)==ATTRIBUTE_NODE) then
               thatParent => item(getAttributes(thatParent), i_tree)
             else
@@ -5735,7 +5747,7 @@ endif
 
       else ! if doneChildren
 
-        if (associated(this, arg)) exit
+        if (associated(this, treeroot)) exit
         if (getNodeType(this)==ATTRIBUTE_NODE) then
           if (i_tree<getLength(getAttributes(getOwnerElement(this)))-1) then
             i_tree= i_tree+ 1
@@ -5755,7 +5767,7 @@ endif
           doneAttributes = .false.
         else
           this => getParentNode(this)
-          if (.not.associated(this, arg)) then
+          if (.not.associated(this, treeroot)) then
             if (getNodeType(this)==ATTRIBUTE_NODE) then
               thatParent => getOwnerElement(thatParent)
             else
@@ -5855,8 +5867,6 @@ endif
     else
       np%inDocument = .true.
     endif
-
-    ! FIXME updateNodeLists
 
   end function createElementNS
   
@@ -6015,7 +6025,7 @@ endif
     this => treeroot
     do
 
-      if (.not.doneChildren) then
+      if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
       !if (getNodeType(this)==ELEMENT_NODE .and. getNamespaceURI(this)/="") then
 ! FIXME again DOM seems contradictory
       if (getNodeType(this)==ELEMENT_NODE) then
@@ -6030,7 +6040,7 @@ endif
             .and..not.(getNodeType(doc)==ELEMENT_NODE.and.associated(this, arg))) &
             call append(list, this)
         endif
-        doneAttributes = .true.
+        doneAttributes = .true. ! Never search attributes
       endif
 
       else
@@ -6038,8 +6048,8 @@ endif
 
       endif
 
-      if (.not.doneChildren) then
 
+      if (.not.doneChildren) then
         if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
           if (getLength(getAttributes(this))>0) then
                       this => item(getAttributes(this), 0)
@@ -6057,7 +6067,7 @@ endif
 
       else ! if doneChildren
 
-        if (associated(this, arg)) exit
+        if (associated(this, treeroot)) exit
         if (getNodeType(this)==ATTRIBUTE_NODE) then
           if (i_tree<getLength(getAttributes(getOwnerElement(this)))-1) then
             i_tree= i_tree+ 1
@@ -6125,7 +6135,7 @@ endif
     this => treeroot
     do
 
-      if (.not.doneChildren) then
+      if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
       if (this%nodeType==ATTRIBUTE_NODE)  then
         if (getIsId(this).and.getName(this)==elementId) then
           np => getOwnerElement(this)
@@ -6138,8 +6148,8 @@ endif
 
       endif
 
-      if (.not.doneChildren) then
 
+      if (.not.doneChildren) then
         if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
           if (getLength(getAttributes(this))>0) then
                       this => item(getAttributes(this), 0)
@@ -6157,7 +6167,7 @@ endif
 
       else ! if doneChildren
 
-        if (associated(this, arg)) exit
+        if (associated(this, treeroot)) exit
         if (getNodeType(this)==ATTRIBUTE_NODE) then
           if (i_tree<getLength(getAttributes(getOwnerElement(this)))-1) then
             i_tree= i_tree+ 1

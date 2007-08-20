@@ -383,7 +383,7 @@ TOHW_m_dom_treewalk(`
 
     if (getGCstate(arg)) then
       np%inDocument = .false.
-      call append(arg%docExtras%hangingnodes, np)
+      call removeNodesFromDocument(arg, np)
     else
       np%inDocument = .true.
     endif
@@ -636,8 +636,6 @@ TOHW_m_dom_treewalk(`dnl
       np%inDocument = .true.
     endif
 
-    ! FIXME updateNodeLists
-
   end function createElementNS
   
   TOHW_function(createAttributeNS, (arg, namespaceURI,  qualifiedname), np)
@@ -747,7 +745,7 @@ TOHW_m_dom_treewalk(`dnl
             .and..not.(getNodeType(doc)==ELEMENT_NODE.and.associated(this, arg))) &
             call append(list, this)
         endif
-        doneAttributes = .true.
+        doneAttributes = .true. ! Never search attributes
       endif
 ',`')
 

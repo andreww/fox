@@ -118,10 +118,11 @@ TOHW_m_dom_get(DOMString, nodeName, np%nodeName)
       arg%lastChild => null()
       ! and add the new one.
       ! Avoid manipulating hangingnode lists
-      call setGCstate(arg%ownerDocument, .false.)
+      !      call setGCstate(arg%ownerDocument, .false.)
       np => createTextNode(arg%ownerDocument, nodeValue)
       np => appendChild(arg, np, ex)
-      call setGCstate(arg%ownerDocument, .true.)
+      !      call setGCstate(arg%ownerDocument, .true.)
+      !      if (.not.arg%inDocument) call append(arg%document%blah, ...)
     case (CDATA_SECTION_NODE)
       if (arg%readonly) then
         TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
@@ -509,13 +510,13 @@ TOHW_m_dom_get(Node, nextSibling, np%nextSibling)
         i_t = i_t + 1     
       endif
     enddo
+
     deallocate(arg%childNodes%nodes)
     arg%childNodes%nodes => temp_nl
     arg%childNodes%length = size(temp_nl)
     if (i==i_t) then
       TOHW_m_dom_throw_error(NOT_FOUND_ERR)
     endif
-
     oldChild%parentNode => null()
     oldChild%previousSibling => null()
     oldChild%nextSibling => null()
@@ -682,14 +683,12 @@ TOHW_m_dom_treewalk(`
       new => null()
       select case(getNodeType(this))
       case (ELEMENT_NODE)
-        if (.not.doneAttributes) then
-          ! Are there any new prefixes or namespaces to be declared?
-          ! FIXME
-          if (getNamespaceURI(this)=="") then
-            new => createElement(doc, getTagName(this))
-          else
-            new => createElementNS(doc, getNamespaceURI(this), getTagName(this))
-          endif
+        ! Are there any new prefixes or namespaces to be declared?
+        ! FIXME
+        if (getNamespaceURI(this)=="") then
+          new => createElement(doc, getTagName(this))
+        else
+          new => createElementNS(doc, getNamespaceURI(this), getTagName(this))
         endif
       case (ATTRIBUTE_NODE)
         if (getNamespaceURI(this)=="") then 
@@ -737,8 +736,7 @@ TOHW_m_dom_treewalk(`
       endif
 
       if (.not.deep) then
-        if ((getNodeType(arg)==ELEMENT_NODE.and..not.doneAttributes) &
-          .or.getNodeType(arg)==ATTRIBUTE_NODE) then
+        if (getNodeType(arg)==ATTRIBUTE_NODE) then
           continue
         else
           exit
@@ -1215,8 +1213,14 @@ TOHW_m_dom_treewalk(`
     treeroot => arg
 TOHW_m_dom_treewalk(`
         this%inDocument = .true.
+        if (this%nodeType==ELEMENT_NODE.and.doc%docExtras%liveNodeLists) &
+          call updateNodeLists(doc, "", getNodeName(this), "", getLocalName(this), "", getNamespaceURI(this))
+        ! The above is a bit inefficient; really we should construct a list of all
+        ! element names added/removed and then call updateNodeLists on all of them only at the end.
         call remove_node_nl(doc%docExtras%hangingNodes, this)
 ',`')
+
+!FIXME need to call updateNodeLists elsewhere as well (For name changes)
 
   end subroutine putNodesInDocument
 
@@ -1229,6 +1233,10 @@ TOHW_m_dom_treewalk(`
     treeroot => arg
 TOHW_m_dom_treewalk(`
         this%inDocument = .false.
+        if (this%nodeType==ELEMENT_NODE.and.doc%docExtras%liveNodeLists) &
+          call updateNodeLists(doc, getNodeName(this), "", getLocalName(this), "", getNamespaceURI(this), "")
+        ! The above is a bit inefficient; really we should construct a list of all
+        ! element names added/removed and then call updateNodeLists on all of them only at the end.
         call append_nl(doc%docExtras%hangingNodes, this)
 ',`')
 
