@@ -560,28 +560,29 @@ contains
     l_d = ubound(nsDict%defaults,1)
     do while (nsDict%defaults(l_d)%ix == ix)
       if (present(end_prefix_handler)) &
-           call end_prefix_handler("")
+        call end_prefix_handler("")
       call removeDefaultNS(nsDict)
       l_d = ubound(nsDict%defaults,1)
     enddo
 
     l_p = ubound(nsDict%prefixes, 1)
     i = 1
-    prefixes: do while (i <= l_p)
+    do while (i <= l_p)
       l_ps = ubound(nsDict%prefixes(l_p)%urilist,1)
-      do while (nsDict%prefixes(l_p)%urilist(l_ps)%ix == ix)
+      if (nsDict%prefixes(i)%urilist(l_ps)%ix == ix) then
         if (present(end_prefix_handler)) &
-             call end_prefix_handler(str_vs(nsDict%prefixes(i)%prefix))
+          call end_prefix_handler(str_vs(nsDict%prefixes(i)%prefix))
         call removePrefixedNS(nsDict, nsDict%prefixes(i)%prefix)
         if (l_p > ubound(nsDict%prefixes, 1)) then
-          ! since we might have just removed a prefix
-          l_p = ubound(nsDict%prefixes, 1)
-          cycle prefixes
+          ! we just removed the last reference to that prefix,
+          ! so our list of prefixes has shrunk - update the running total.
+          ! and go to the next prefix, which is at the same index
+          l_p = l_p - 1
+          cycle
         endif
-        l_ps = ubound(nsDict%prefixes(l_p)%urilist,1)
-      enddo
+      endif
       i = i + 1
-    enddo prefixes
+    enddo
 
   end subroutine checkEndNamespaces
 
