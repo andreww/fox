@@ -4579,9 +4579,7 @@ endif
     deallocate(arg%docExtras%nodelists)
 
     ! Destroy all remaining hanging nodes
-    print*,"HANGING NODES", arg%docExtras%hangingNodes%length
     do i = 1, arg%docExtras%hangingNodes%length
-      print*, "i", i
       call destroy(arg%docExtras%hangingNodes%nodes(i)%this)
     enddo
     if (associated(arg%docExtras%hangingNodes%nodes)) deallocate(arg%docExtras%hangingNodes%nodes)
@@ -5609,11 +5607,6 @@ endif
 
     endif
 
-    if (associated(doc, getOwnerDocument(arg))) then
-      np => cloneNode(arg, deep)
-      return
-    endif
-
     thatParent => null()
     treeroot => arg
     
@@ -5706,8 +5699,7 @@ endif
         endif
 
         if (.not.deep) then
-          if ((getNodeType(arg)==ELEMENT_NODE.and..not.doneAttributes) &
-            .or.getNodeType(arg)==ATTRIBUTE_NODE) then
+          if (getNodeType(arg)==ATTRIBUTE_NODE) then
             continue
           else
             exit
