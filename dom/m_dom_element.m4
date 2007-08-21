@@ -140,7 +140,7 @@ TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
       if (.not.arg%inDocument) then
         ! dummy was not in the doc, so was on hangingNode list.
         ! To remove it from the list:
-        call putNodesInDocument(arg%ownerDocument, arg)
+        call putNodesInDocument(arg%ownerDocument, dummy)
       endif
       call destroyAllNodesRecursively(dummy)
       call destroyNode(dummy)
@@ -351,7 +351,9 @@ TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
     character(len=*), intent(in) :: namespaceURI
     character(len=*), intent(in) :: localName
 
+    type(DOMException) :: ex2
     type(Node), pointer :: dummy
+    integer :: e
 
     if (.not.associated(arg)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
@@ -363,11 +365,31 @@ TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
     endif
 
-    dummy => removeNamedItemNS(getAttributes(arg), namespaceURI, localName)
+    if (arg%inDocument) &
+      call setGCstate(getOwnerDocument(arg), .false.)
+    ! So we dont add the removed nodes to the hanging node list
 
-    call destroyAllNodesRecursively(dummy)
-    call destroyNode(dummy)
-     
+    dummy => removeNamedItemNS(getAttributes(arg), namespaceURI, localName, ex2)
+    if (inException(ex2)) then
+      e = getExceptionCode(ex2)
+      if (e/=NOT_FOUND_ERR) then
+        TOHW_m_dom_throw_error(e)
+      endif
+    else
+      if (.not.arg%inDocument) then
+        ! dummy was not in the doc, so was already on hangingNode list.
+        ! To remove it from the list:
+        call putNodesInDocument(arg%ownerDocument, dummy)
+      endif
+      call destroyAllNodesRecursively(dummy)
+      call destroyNode(dummy)
+    endif
+      
+    if (arg%inDocument) &
+      call setGCstate(arg%ownerDocument, .true.)
+
+  ! FIXME recreate a default value if there is one
+
   end subroutine removeAttributeNS
 
 

@@ -6962,7 +6962,7 @@ endif
       if (.not.arg%inDocument) then
         ! dummy was not in the doc, so was on hangingNode list.
         ! To remove it from the list:
-        call putNodesInDocument(arg%ownerDocument, arg)
+        call putNodesInDocument(arg%ownerDocument, dummy)
       endif
       call destroyAllNodesRecursively(dummy)
       call destroyNode(dummy)
@@ -7311,7 +7311,9 @@ endif
     character(len=*), intent(in) :: namespaceURI
     character(len=*), intent(in) :: localName
 
+    type(DOMException) :: ex2
     type(Node), pointer :: dummy
+    integer :: e
 
     if (.not.associated(arg)) then
       call throw_exception(FoX_NODE_IS_NULL, "removeAttributeNS", ex)
@@ -7341,11 +7343,37 @@ endif
 
     endif
 
-    dummy => removeNamedItemNS(getAttributes(arg), namespaceURI, localName)
+    if (arg%inDocument) &
+      call setGCstate(getOwnerDocument(arg), .false.)
+    ! So we dont add the removed nodes to the hanging node list
 
-    call destroyAllNodesRecursively(dummy)
-    call destroyNode(dummy)
-     
+    dummy => removeNamedItemNS(getAttributes(arg), namespaceURI, localName, ex2)
+    if (inException(ex2)) then
+      e = getExceptionCode(ex2)
+      if (e/=NOT_FOUND_ERR) then
+        call throw_exception(e, "removeAttributeNS", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
+      endif
+    else
+      if (.not.arg%inDocument) then
+        ! dummy was not in the doc, so was already on hangingNode list.
+        ! To remove it from the list:
+        call putNodesInDocument(arg%ownerDocument, dummy)
+      endif
+      call destroyAllNodesRecursively(dummy)
+      call destroyNode(dummy)
+    endif
+      
+    if (arg%inDocument) &
+      call setGCstate(arg%ownerDocument, .true.)
+
+  ! FIXME recreate a default value if there is one
+
   end subroutine removeAttributeNS
 
 
