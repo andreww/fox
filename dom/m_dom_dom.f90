@@ -23,8 +23,8 @@ module m_dom_dom
     INUSE_ATTRIBUTE_ERR, FoX_MAP_IS_NULL, INVALID_CHARACTER_ERR, NAMESPACE_ERR, &
     FoX_INVALID_PUBLIC_ID, FoX_INVALID_SYSTEM_ID, FoX_IMPL_IS_NULL, FoX_INVALID_NODE, &
     FoX_INVALID_CHARACTER, FoX_INVALID_COMMENT, FoX_INVALID_CDATA_SECTION, &
-    FoX_INVALID_PI_DATA, NOT_SUPPORTED_ERR, FoX_INVALID_ENTITY, FoX_NO_DOCTYPE, &
-    INDEX_SIZE_ERR
+    FoX_INVALID_PI_DATA, NOT_SUPPORTED_ERR, FoX_INVALID_ENTITY, &
+    INDEX_SIZE_ERR, FoX_NO_SUCH_ENTITY
 
   implicit none
   private
@@ -93,6 +93,7 @@ module m_dom_dom
     type(namedNodeMap) :: notations ! actually for doctype
     logical :: strictErrorChecking = .false.
     character, pointer :: documentURI(:) => null()
+    logical :: xmlStandalone = .false.
   end type documentExtras
 
   type elementOrAttributeExtras
@@ -280,6 +281,8 @@ module m_dom_dom
   public :: createAttributeNS
   public :: getElementsByTagNameNS
   public :: getElementById
+  public :: getXmlStandalone
+  public :: setXmlStandalone
   public :: getXmlVersion
   public :: setXmlVersion
 
@@ -5373,8 +5376,8 @@ endif
 
     endif
 
-    if (.not.associated(getDocType(arg))) then
-      call throw_exception(FoX_NO_DOCTYPE, "createEntityReference", ex)
+    if (getXmlStandalone(arg).and..not.associated(getDocType(arg))) then
+      call throw_exception(FoX_NO_SUCH_ENTITY, "createEntityReference", ex)
 if (present(ex)) then
   if (inException(ex)) then
      return
@@ -5402,6 +5405,16 @@ endif
             newNode => appendChild(np, cloneNode(item(getChildNodes(ent), i), .true., ex))
             call setReadOnlyNode(newNode, .true., .true.)
           enddo
+        elseif (getXmlStandalone(arg)) then
+          call throw_exception(FoX_NO_SUCH_ENTITY, "createEntityReference", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+
+if (associated(np)) deallocate(np)
+     return
+  endif
+endif
+
         endif
         ! FIXME in case of recursive entity references?
       endif
@@ -6237,9 +6250,70 @@ endif
 
 !  function getInputEncoding
 !  function getXmlEncoding
-!  function getXmlStandalone
-!  function setXmlStandalone
 
+function getxmlStandalone(np, ex)result(c) 
+    type(DOMException), intent(out), optional :: ex
+    type(Node), pointer :: np
+    logical :: c
+
+
+    if (.not.associated(np)) then
+      call throw_exception(FoX_NODE_IS_NULL, "getxmlStandalone", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+   if (getNodeType(np)/=DOCUMENT_NODE .and. &
+      .true.) then
+      call throw_exception(FoX_INVALID_NODE, "getxmlStandalone", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    c = np%docExtras%xmlStandalone
+
+  end function getxmlStandalone
+
+subroutine setxmlStandalone(np, c, ex)
+    type(DOMException), intent(out), optional :: ex
+    type(Node), pointer :: np
+    logical :: c
+
+
+    if (.not.associated(np)) then
+      call throw_exception(FoX_NODE_IS_NULL, "setxmlStandalone", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+   if (getNodeType(np)/=DOCUMENT_NODE .and. &
+      .true.) then
+      call throw_exception(FoX_INVALID_NODE, "setxmlStandalone", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+     return
+  endif
+endif
+
+    endif
+
+    np%docExtras%xmlStandalone = c
+
+  end subroutine setxmlStandalone
+
+! FIXME additional check on setting - do we have any undefined entrefs present?
 
   function getXmlVersion(arg, ex)result(s) 
     type(DOMException), intent(out), optional :: ex

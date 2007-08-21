@@ -38,7 +38,7 @@ module m_dom_error
 
   integer, parameter, public :: FoX_INVALID_NODE            = 201
   integer, parameter, public :: FoX_INVALID_CHARACTER       = 202
-!  integer, parameter, public :: FoX_INVALID_PI_TARGET       = 203
+  integer, parameter, public :: FoX_NO_SUCH_ENTITY          = 203
   integer, parameter, public :: FoX_INVALID_PI_DATA         = 204
   integer, parameter, public :: FoX_INVALID_CDATA_SECTION   = 205
 !  integer, parameter, public :: FoX_INVALID_TEXT            = 206
@@ -47,7 +47,7 @@ module m_dom_error
   integer, parameter, public :: FoX_INVALID_COMMENT         = 209
   integer, parameter, public :: FoX_NODE_IS_NULL            = 210
   integer, parameter, public :: FoX_INVALID_ENTITY          = 211
-  integer, parameter, public :: FoX_NO_DOCTYPE              = 212
+!  integer, parameter, public :: FoX_NO_DOCTYPE              = 212
   integer, parameter, public :: FoX_IMPL_IS_NULL            = 213
   integer, parameter, public :: FoX_MAP_IS_NULL             = 214
   integer, parameter, public :: FoX_LIST_IS_NULL            = 215
@@ -116,7 +116,7 @@ contains
     case(202)
       s = "FoX_INVALID_CHARACTER"
     case(203)
-      s = "FoX_INVALID_PI_TARGET"
+      s = "FoX_NO_SUCH_ENTITY"
     case(204)
       s = "FoX_INVALID_PI_DATA"
     case(205)

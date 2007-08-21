@@ -72,6 +72,8 @@ module FoX_dom
   public :: createAttributeNS
   public :: getElementsByTagNameNS
   public :: getElementById
+  public :: getXmlStandalone
+  public :: setXmlStandalone
   public :: getXmlVersion
   public :: setXmlVersion
 

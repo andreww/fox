@@ -20,6 +20,8 @@ TOHW_m_dom_publics(`
   public :: createAttributeNS
   public :: getElementsByTagNameNS
   public :: getElementById
+  public :: getXmlStandalone
+  public :: setXmlStandalone
   public :: getXmlVersion
   public :: setXmlVersion
 
@@ -361,8 +363,8 @@ TOHW_m_dom_treewalk(`
       TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
     endif
 
-    if (.not.associated(getDocType(arg))) then
-      TOHW_m_dom_throw_error(FoX_NO_DOCTYPE)
+    if (getXmlStandalone(arg).and..not.associated(getDocType(arg))) then
+      TOHW_m_dom_throw_error(FoX_NO_SUCH_ENTITY)
     endif
 
     np => createNode(arg, ENTITY_REFERENCE_NODE, name, "")
@@ -378,6 +380,8 @@ TOHW_m_dom_treewalk(`
             newNode => appendChild(np, cloneNode(item(getChildNodes(ent), i), .true., ex))
             call setReadOnlyNode(newNode, .true., .true.)
           enddo
+        elseif (getXmlStandalone(arg)) then
+          TOHW_m_dom_throw_error(FoX_NO_SUCH_ENTITY, (np))
         endif
         ! FIXME in case of recursive entity references?
       endif
@@ -784,9 +788,10 @@ TOHW_m_dom_treewalk(`dnl
 
 !  function getInputEncoding
 !  function getXmlEncoding
-!  function getXmlStandalone
-!  function setXmlStandalone
 
+TOHW_m_dom_get(logical, xmlStandalone, np%docExtras%xmlStandalone, (DOCUMENT_NODE))
+TOHW_m_dom_set(logical, xmlStandalone, np%docExtras%xmlStandalone, (DOCUMENT_NODE))
+! FIXME additional check on setting - do we have any undefined entrefs present?
 
   TOHW_function(getXmlVersion, (arg), s)
     type(Node), pointer :: arg
