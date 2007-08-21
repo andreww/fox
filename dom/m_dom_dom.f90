@@ -6899,7 +6899,6 @@ endif
       call destroyAllNodesRecursively(dummy)
       call destroyNode(dummy)
     endif
-    nn%elExtras%ownerElement => arg
 
     if (quickFix) call setGCstate(getOwnerDocument(arg), .true.)
 
@@ -7287,6 +7286,8 @@ endif
 
     nn => createAttributeNS(arg%ownerDocument, namespaceURI, qualifiedname)
     call setValue(nn, value)
+    dummy => setNamedItemNS(getAttributes(arg), nn)
+
     if (associated(dummy)) then
       if (getGCstate(getOwnerDocument(arg)).and..not.dummy%inDocument) &
         call putNodesInDocument(getOwnerDocument(arg), dummy) 
@@ -7294,9 +7295,6 @@ endif
       call destroyAllNodesRecursively(dummy)
       call destroyNode(dummy)
     endif
-
-    dummy => setNamedItemNS(getAttributes(arg), nn)
-    nn%elExtras%ownerElement => arg
 
     if (quickFix) call setGCstate(getOwnerDocument(arg), .true.)
 

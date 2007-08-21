@@ -102,7 +102,6 @@ TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
       call destroyAllNodesRecursively(dummy)
       call destroyNode(dummy)
     endif
-    nn%elExtras%ownerElement => arg
 
     if (quickFix) call setGCstate(getOwnerDocument(arg), .true.)
 
@@ -328,6 +327,8 @@ TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
 
     nn => createAttributeNS(arg%ownerDocument, namespaceURI, qualifiedname)
     call setValue(nn, value)
+    dummy => setNamedItemNS(getAttributes(arg), nn)
+
     if (associated(dummy)) then
       if (getGCstate(getOwnerDocument(arg)).and..not.dummy%inDocument) &
         call putNodesInDocument(getOwnerDocument(arg), dummy) 
@@ -335,9 +336,6 @@ TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
       call destroyAllNodesRecursively(dummy)
       call destroyNode(dummy)
     endif
-
-    dummy => setNamedItemNS(getAttributes(arg), nn)
-    nn%elExtras%ownerElement => arg
 
     if (quickFix) call setGCstate(getOwnerDocument(arg), .true.)
 
