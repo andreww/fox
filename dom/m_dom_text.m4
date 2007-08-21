@@ -41,5 +41,9 @@ TOHW_m_dom_contents(`
     endif
 
   end function splitText
-                                     
+
+! function getIsElementContentWhitespace
+! function getWholeText
+! function replaceWholeText
+
 ')`'dnl

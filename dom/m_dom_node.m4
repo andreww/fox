@@ -771,6 +771,15 @@ TOHW_m_dom_treewalk(`
     endif
     
   end function hasAttributes
+
+!  function getBaseURI FIXME
+
+!  function compareDocumentPosition FIXME
+
+!  function getTextContent FIXME
+!  function setTextContent FIXME
+
+
   
   TOHW_subroutine(normalize, (arg))
     type(Node), pointer :: arg
@@ -979,7 +988,6 @@ TOHW_m_dom_treewalk(`
 
   end function getLocalName
 
-  ! function isDefaultNamespace
   ! function isEqualNode(np, arg)
 
   TOHW_function(isSameNode, (arg, other))

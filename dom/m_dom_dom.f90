@@ -2615,6 +2615,15 @@ endif
     endif
     
   end function hasAttributes
+
+!  function getBaseURI FIXME
+
+!  function compareDocumentPosition FIXME
+
+!  function getTextContent FIXME
+!  function setTextContent FIXME
+
+
   
   subroutine normalize(arg, ex)
     type(DOMException), intent(out), optional :: ex
@@ -2964,7 +2973,6 @@ endif
 
   end function getLocalName
 
-  ! function isDefaultNamespace
   ! function isEqualNode(np, arg)
 
   function isSameNode(arg, other, ex) 
@@ -6396,10 +6404,13 @@ endif
   end subroutine setXmlVersion
 
 
-!  function getStrictErrorChecking
-!  function setStrictErrorChecking
-!  function getDocumentURI
-!  function setDocumentURI
+!  function getStrictErrorChecking FIXME
+!  function setStrictErrorChecking FIXME
+!  function getDocumentURI FIXME
+!  function setDocumentURI FIXME
+
+!  function adoptNode FIXME
+!  DOMConfiguration ... FIXME
 
   subroutine normalizeDocument(np, ex)
     type(DOMException), intent(out), optional :: ex
@@ -6429,6 +6440,8 @@ endif
     ! normalize text()
     ! fixup namespaces
   end subroutine normalizeDocument
+
+!  function renameNode FIXME
 
   ! Internal function, not part of API
 
@@ -8616,7 +8629,11 @@ endif
     endif
 
   end function splitText
-                                     
+
+! function getIsElementContentWhitespace
+! function getWholeText
+! function replaceWholeText
+
 
 
   

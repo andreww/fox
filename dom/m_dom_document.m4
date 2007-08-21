@@ -841,10 +841,13 @@ TOHW_m_dom_set(logical, xmlStandalone, np%docExtras%xmlStandalone, (DOCUMENT_NOD
   end subroutine setXmlVersion
 
 
-!  function getStrictErrorChecking
-!  function setStrictErrorChecking
-!  function getDocumentURI
-!  function setDocumentURI
+!  function getStrictErrorChecking FIXME
+!  function setStrictErrorChecking FIXME
+!  function getDocumentURI FIXME
+!  function setDocumentURI FIXME
+
+!  function adoptNode FIXME
+!  DOMConfiguration ... FIXME
 
   TOHW_subroutine(normalizeDocument, (np))
     type(Node), pointer :: np
@@ -861,6 +864,8 @@ TOHW_m_dom_set(logical, xmlStandalone, np%docExtras%xmlStandalone, (DOCUMENT_NOD
     ! normalize text()
     ! fixup namespaces
   end subroutine normalizeDocument
+
+!  function renameNode FIXME
 
   ! Internal function, not part of API
 
