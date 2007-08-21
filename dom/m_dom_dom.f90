@@ -3895,8 +3895,6 @@ endif
         if (map%ownerElement%inDocument) then
           if (.not.arg%inDocument) &
             call putNodesInDocument(getOwnerDocument(map%ownerElement), arg)
-          if (associated(np)) &
-            call removeNodesFromDocument(getOwnerDocument(map%ownerElement), np)
         else
           if (arg%inDocument) &
             call removeNodesFromDocument(getOwnerDocument(map%ownerElement), arg)
