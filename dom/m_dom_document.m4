@@ -73,19 +73,25 @@ TOHW_m_dom_get(Node, documentElement, np%docExtras%documentElement, (DOCUMENT_NO
   end subroutine setXds
 
   TOHW_function(getImplementation, (arg), imp)
-    type(Node), pointer :: arg
+    type(Node), pointer, optional :: arg
     type(DOMImplementation), pointer :: imp
 
-    if (.not.associated(arg)) then
-      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    ! According to the testsuite, you get to call
+    ! getImplementation with no args. Dont know
+    ! where they get that from ...
+    if (present(arg)) then
+      if (.not.associated(arg)) then
+        TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+      endif
+      
+      if (arg%nodeType/=DOCUMENT_NODE) then
+        TOHW_m_dom_throw_error(FoX_INVALID_NODE)
+      endif
+      
+      imp => arg%docExtras%implementation
+    else
+      imp => FoX_DOM
     endif
-
-    if (arg%nodeType/=DOCUMENT_NODE) then
-      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    endif
-    
-    imp => arg%docExtras%implementation
-    
   end function getImplementation
 
 

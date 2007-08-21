@@ -4764,31 +4764,37 @@ endif
 
   function getImplementation(arg, ex)result(imp) 
     type(DOMException), intent(out), optional :: ex
-    type(Node), pointer :: arg
+    type(Node), pointer, optional :: arg
     type(DOMImplementation), pointer :: imp
 
-    if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "getImplementation", ex)
+    ! According to the testsuite, you get to call
+    ! getImplementation with no args. Dont know
+    ! where they get that from ...
+    if (present(arg)) then
+      if (.not.associated(arg)) then
+        call throw_exception(FoX_NODE_IS_NULL, "getImplementation", ex)
 if (present(ex)) then
   if (inException(ex)) then
      return
   endif
 endif
 
-    endif
-
-    if (arg%nodeType/=DOCUMENT_NODE) then
-      call throw_exception(FoX_INVALID_NODE, "getImplementation", ex)
+      endif
+      
+      if (arg%nodeType/=DOCUMENT_NODE) then
+        call throw_exception(FoX_INVALID_NODE, "getImplementation", ex)
 if (present(ex)) then
   if (inException(ex)) then
      return
   endif
 endif
 
+      endif
+      
+      imp => arg%docExtras%implementation
+    else
+      imp => FoX_DOM
     endif
-    
-    imp => arg%docExtras%implementation
-    
   end function getImplementation
 
 
