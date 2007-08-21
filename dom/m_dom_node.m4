@@ -683,8 +683,6 @@ TOHW_m_dom_treewalk(`
       new => null()
       select case(getNodeType(this))
       case (ELEMENT_NODE)
-        ! Are there any new prefixes or namespaces to be declared?
-        ! FIXME
         if (getNamespaceURI(this)=="") then
           new => createElement(doc, getTagName(this))
         else
@@ -943,6 +941,8 @@ TOHW_m_dom_treewalk(`
       endif
       deallocate(tmp)
     endif
+
+!FIXME do updateNodeLists
 
   end subroutine setPrefix
 
@@ -1214,7 +1214,6 @@ TOHW_m_dom_treewalk(`
         call remove_node_nl(doc%docExtras%hangingNodes, this)
 ',`')
 
-!FIXME need to call updateNodeLists elsewhere as well (For name changes)
 
   end subroutine putNodesInDocument
 
