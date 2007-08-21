@@ -165,7 +165,6 @@ TOHW_m_dom_contents(`
     type(NodeList), pointer :: nl, nl_orig
     type(NodeListPtr), pointer :: temp_nll(:)
     integer :: i, i_t
-! FIXME FIXME FIXME for DOM level 2
 
     print*,"...UPDATING NODELISTS"
     return
