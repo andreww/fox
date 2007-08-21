@@ -393,7 +393,8 @@ TOHW_m_dom_treewalk(`
 
     if (getGCstate(arg)) then
       np%inDocument = .false.
-      call removeNodesFromDocument(arg, np)
+      call append_nl(arg%docExtras%hangingNodes, np)
+      ! All child nodes were created outside the document by cloneNode above
     else
       np%inDocument = .true.
     endif

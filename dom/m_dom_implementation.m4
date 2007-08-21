@@ -119,6 +119,8 @@ TOHW_m_dom_contents(`
     de => appendChild(doc, de, ex)
     call setDocumentElement(doc, de, ex)
 
+    call setGCstate(doc, .true.)
+
   end function createDocument
 
 
