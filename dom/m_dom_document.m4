@@ -144,8 +144,6 @@ TOHW_m_dom_get(Node, documentElement, np%docExtras%documentElement, (DOCUMENT_NO
     allocate(np%elExtras%prefix(0))
     allocate(np%elExtras%localname(0))
 
-    ! FIXME set namespaceURI and localName appropriately
-
     if (getGCstate(arg)) then
       np%inDocument = .false.
       call append(arg%docExtras%hangingnodes, np)
@@ -375,7 +373,6 @@ TOHW_m_dom_treewalk(`
 
     np => createNode(arg, ENTITY_REFERENCE_NODE, name, "")
     if (getGCstate(arg)) then ! otherwise the parser will fill these nodes in itself
-      ! FIXME except I think that gets switched off when creating atts sometimes ... need to check
       if (associated(getDocType(arg))) then
         ent => getNamedItem(getEntities(getDocType(arg)), name)
         if (associated(ent)) then
@@ -384,6 +381,7 @@ TOHW_m_dom_treewalk(`
           endif
           do i = 0, getLength(getChildNodes(ent)) - 1
             newNode => appendChild(np, cloneNode(item(getChildNodes(ent), i), .true., ex))
+            ! FIXME and need to do namespace calcs again ...
             call setReadOnlyNode(newNode, .true., .true.)
           enddo
         elseif (getXmlStandalone(arg)) then
@@ -531,8 +529,6 @@ TOHW_m_dom_treewalk(`dnl
         select case (getNodeType(this))
         case (ELEMENT_NODE)
           if (.not.doneAttributes) then
-            ! Are there any new prefixes or namespaces to be declared?
-            ! FIXME
             if (getNamespaceURI(this)=="") then
               new => createElement(doc, getTagName(this))
             else
@@ -743,8 +739,7 @@ TOHW_m_dom_treewalk(`dnl
 
     treeroot => arg
 TOHW_m_dom_treewalk(`dnl
-      !if (getNodeType(this)==ELEMENT_NODE .and. getNamespaceURI(this)/="") then
-! FIXME again DOM seems contradictory
+
       if (getNodeType(this)==ELEMENT_NODE) then
         if (getNamespaceURI(this)/="") then
           if ((allNameSpaces .or. getNameSpaceURI(this)==namespaceURI) &
