@@ -914,6 +914,13 @@ TOHW_m_dom_set(logical, xmlStandalone, np%docExtras%xmlStandalone, (DOCUMENT_NOD
     np%dtdExtras%systemId => vs_str_alloc(systemId)
     np%dtdExtras%notationName => vs_str_alloc(notationName)
 
+    if (getGCstate(arg)) then
+      np%inDocument = .false.
+      call append(arg%docExtras%hangingnodes, np)
+    else
+      np%inDocument = .true.
+    endif
+
   end function createEntity
 
   TOHW_function(createNotation, (arg, name, publicId, systemId), np)
@@ -936,6 +943,13 @@ TOHW_m_dom_set(logical, xmlStandalone, np%docExtras%xmlStandalone, (DOCUMENT_NOD
     np%dtdExtras%publicId => vs_str_alloc(publicId)
     np%dtdExtras%systemId => vs_str_alloc(systemId)
     
+    if (getGCstate(arg)) then
+      np%inDocument = .false.
+      call append(arg%docExtras%hangingnodes, np)
+    else
+      np%inDocument = .true.
+    endif
+
   end function createNotation
 
   TOHW_function(getXmlVersionEnum, (arg), n)

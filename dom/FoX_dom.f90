@@ -52,7 +52,6 @@ module FoX_dom
   public :: hasFeature
   public :: createDocumentType
   public :: createDocument
-  public :: destroyDocument
 
   ! DOM Document
   public :: getDocumentElement
@@ -204,5 +203,7 @@ module FoX_dom
   public :: parseFile
   public :: parseString
   public :: serialize
+
+  public :: destroy
 
 end module FoX_dom

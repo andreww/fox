@@ -165,6 +165,7 @@ module m_dom_dom
   public :: NodeList
   public :: NamedNodeMap
 
+  public :: destroy
   public :: destroyAllNodesRecursively
   public :: setIllFormed
 
@@ -390,7 +391,7 @@ contains
 
   end function createNode
 
-  subroutine destroyNode(np, ex)
+  recursive subroutine destroyNode(np, ex)
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: np
 
@@ -402,13 +403,7 @@ contains
     case (DOCUMENT_TYPE_NODE, ENTITY_NODE, NOTATION_NODE)
       call destroyEntityOrNotation(np)
     case (DOCUMENT_NODE)
-      call throw_exception(FoX_INTERNAL_ERROR, "destroyNode", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
-  endif
-endif
-
+      call destroyDocument(np)
     case default
       call destroyNodeContents(np)
       deallocate(np)
@@ -6508,6 +6503,13 @@ endif
     np%dtdExtras%systemId => vs_str_alloc(systemId)
     np%dtdExtras%notationName => vs_str_alloc(notationName)
 
+    if (getGCstate(arg)) then
+      np%inDocument = .false.
+      call append(arg%docExtras%hangingnodes, np)
+    else
+      np%inDocument = .true.
+    endif
+
   end function createEntity
 
   function createNotation(arg, name, publicId, systemId, ex)result(np) 
@@ -6543,6 +6545,13 @@ endif
     np%dtdExtras%publicId => vs_str_alloc(publicId)
     np%dtdExtras%systemId => vs_str_alloc(systemId)
     
+    if (getGCstate(arg)) then
+      np%inDocument = .false.
+      call append(arg%docExtras%hangingnodes, np)
+    else
+      np%inDocument = .true.
+    endif
+
   end function createNotation
 
   function getXmlVersionEnum(arg, ex)result(n) 

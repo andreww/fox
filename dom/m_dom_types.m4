@@ -135,6 +135,7 @@ TOHW_m_dom_publics(`
   public :: NodeList
   public :: NamedNodeMap
 
+  public :: destroy
   public :: destroyAllNodesRecursively
   public :: setIllFormed
 
@@ -159,7 +160,7 @@ TOHW_m_dom_contents(`
 
   end function createNode
 
-  TOHW_subroutine(destroyNode, (np))
+  recursive TOHW_subroutine(destroyNode, (np))
     type(Node), pointer :: np
 
     if (.not.associated(np)) return
@@ -170,7 +171,7 @@ TOHW_m_dom_contents(`
     case (DOCUMENT_TYPE_NODE, ENTITY_NODE, NOTATION_NODE)
       call destroyEntityOrNotation(np)
     case (DOCUMENT_NODE)
-      TOHW_m_dom_throw_error(FoX_INTERNAL_ERROR)
+      call destroyDocument(np)
     case default
       call destroyNodeContents(np)
       deallocate(np)
