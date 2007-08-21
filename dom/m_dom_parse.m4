@@ -48,7 +48,7 @@ module m_dom_parse
   type(Node), pointer, save  :: mainDoc => null()
   type(Node), pointer, save  :: current => null()
   
-  logical :: cdata_sections, cdata
+  logical :: cdata_sections, cdata, split_cdata_sections
   logical :: entities_expand
   logical :: error
   character, pointer :: inEntity(:) => null()
@@ -119,19 +119,17 @@ contains
     
     temp => getLastChild(current)
     if (associated(temp)) then
-      if (cdata.and.getNodeType(temp)==CDATA_SECTION_NODE) then
-        !FIXME Only if we are coalescing CDATA sections ...
+      if ((cdata.and.getNodeType(temp)==CDATA_SECTION_NODE &
+        .and.split_cdata_sections) &
+        .or.getNodeType(temp)==TEXT_NODE) then
         readonly = getReadOnly(temp) ! Reset readonly status quickly
         call setReadOnlyNode(temp, .false., .false.)
         call setData(temp, getData(temp)//chunk)
         call setReadOnlyNode(temp, readonly, .false.)
-      elseif (getNodeType(temp)==TEXT_NODE) then
-        readonly = getReadOnly(temp) ! Reset readonly status quickly
-        call setReadOnlyNode(temp, .false., .false.)
-        call setData(temp, getData(temp)//chunk)
-        call setReadOnlyNode(temp, readonly, .false.)
+        return
       endif
-    elseif (cdata) then
+    endif
+    if (cdata) then
       temp => createCdataSection(mainDoc, chunk)
       temp => appendChild(current, temp)
     else
@@ -194,7 +192,9 @@ contains
     type(xml_doc_state), pointer :: state
 
     call setXds(mainDoc, state)
-! FIXME readonly entities & notations
+    call setReadonlyMap(getEntities(getDocType(mainDoc)), .true.)
+    call setReadonlyMap(getNotations(getDocType(mainDoc)), .true.)
+
   end subroutine FoX_endDTD_handler
 
   subroutine notationDecl_handler(name, publicId, systemId)
@@ -420,11 +420,14 @@ contains
     type(Node), pointer :: parsestring
     
     if (present(configuration)) then
-      cdata_sections = (scan("cdata-sections", configuration)>0)
+      cdata_sections = (index("cdata-sections", configuration)==1).or.(scan(" cdata-sections", configuration)>0) 
+      ! need to do double check to avoid finding split-cdata-sections
       entities_expand = (scan("entities", configuration)>0)
+      split_cdata_sections = (scan("split-cdata-sections", configuration)>0)
     else
       cdata_sections = .false.
       entities_expand = .false.
+      split_cdata_sections = .true.
     endif
 
     call open_xml_string(fxml, string)
