@@ -48,7 +48,7 @@ module m_dom_parse
   type(Node), pointer, save  :: current => null()
   
   logical :: cdata_sections, cdata, split_cdata_sections
-  logical :: entities_expand
+  logical :: entities_expand, comments
   logical :: error
   character, pointer :: inEntity(:) => null()
 
@@ -145,9 +145,10 @@ contains
 
     type(Node), pointer :: temp
 
-    temp => appendChild(current, createComment(mainDoc, comment))
-
-    if (associated(inEntity)) call setReadOnlyNode(temp, .true., .false.)
+    if (comments) then
+      temp => appendChild(current, createComment(mainDoc, comment))
+      if (associated(inEntity)) call setReadOnlyNode(temp, .true., .false.)
+    endif
 
   end subroutine comment_handler
 
@@ -351,11 +352,16 @@ contains
     integer :: iostat
     
     if (present(configuration)) then
-      cdata_sections = (scan("cdata-sections", configuration)>0)
+      cdata_sections = (index("cdata-sections", configuration)==1).or.(scan(" cdata-sections", configuration)>0) 
+      ! need to do double check to avoid finding split-cdata-sections
+      comments = (scan("comments", configuration)>0)
       entities_expand = (scan("entities", configuration)>0)
+      split_cdata_sections = (scan("split-cdata-sections", configuration)>0)
     else
       cdata_sections = .false.
+      comments = .true.
       entities_expand = .false.
+      split_cdata_sections = .true.
     endif
 
     call open_xml_file(fxml, filename, iostat)
@@ -429,10 +435,12 @@ endif
     if (present(configuration)) then
       cdata_sections = (index("cdata-sections", configuration)==1).or.(scan(" cdata-sections", configuration)>0) 
       ! need to do double check to avoid finding split-cdata-sections
+      comments = (scan("comments", configuration)>0)
       entities_expand = (scan("entities", configuration)>0)
       split_cdata_sections = (scan("split-cdata-sections", configuration)>0)
     else
       cdata_sections = .false.
+      comments = .true.
       entities_expand = .false.
       split_cdata_sections = .true.
     endif
