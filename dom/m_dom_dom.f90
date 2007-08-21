@@ -4040,7 +4040,6 @@ endif
     do i = 0, getLength(map) - 1
       if ((getNamespaceURI(item(map, i))==namespaceURI &
         .and. getLocalName(item(map, i))==localName) &
-! FIXME the DOM standard is contradictory on this point ...
         .or. (namespaceURI=="" .and.getNodeName(item(map, i))==localName)) then
         np => item(map, i)
         return
@@ -4189,8 +4188,9 @@ endif
 
     np => null()
     do i = 1, getLength(map)
-      if (getNamespaceURI(item(map, i-1))==getNamespaceURI(arg) &
-        .and. getLocalName(item(map, i-1))==getLocalName(arg)) then
+      if ((getLocalName(arg)=="".and.getNodeName(arg)==getNodeName(item(map, i-1))) &
+        .or. (getNamespaceURI(item(map, i-1))==getNamespaceURI(arg) &
+        .and. getLocalName(item(map, i-1))==getLocalName(arg))) then
         np => item(map, i-1)
         map%nodes(i)%this => arg
         arg%elExtras%ownerElement => map%ownerElement
@@ -4248,8 +4248,10 @@ endif
     endif
 
     do i = 1, getLength(map)
-      if (getNamespaceURI(item(map, i-1))==namespaceURI &
-        .and. getLocalName(item(map, i-1))==localName) then
+      if ((getNamespaceURI(item(map, i-1))==namespaceURI &
+          .and. getLocalName(item(map, i-1))==localName) &
+        .or. (getNamespaceURI(item(map, i-1))=="" &
+          .and. getNodeName(item(map, i-1))==localName)) then
         ! Grab this node
         np => item(map, i-1)
         ! and shrink the node list
