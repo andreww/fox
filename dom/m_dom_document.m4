@@ -556,9 +556,9 @@ TOHW_m_dom_treewalk(`dnl
           new => createCDataSection(doc, getData(this))
         case (ENTITY_REFERENCE_NODE)
           new => createEntityReference(doc, getNodeName(this))
-          ! FIXME DOES ENTREF EXIST IN NEW DOC? Switch "this" appropriately & carry on cloning
+          ! This will automatically populate the entity reference if doc defines it
         case (ENTITY_NODE)
-          new => createEntity(doc, getName(this), getPublicId(this), getSystemId(this), getNotationName(this))
+          new => createEntity(doc, getNodeName(this), getPublicId(this), getSystemId(this), getNotationName(this))
         case (PROCESSING_INSTRUCTION_NODE)
           new => createProcessingInstruction(doc, getTarget(this), getData(this))
         case (COMMENT_NODE)
