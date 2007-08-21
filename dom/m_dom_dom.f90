@@ -4451,7 +4451,17 @@ endif
     endif
 
     allocate(xds)
-    if (.not.checkQName(qualifiedName, xds)) then
+    if (.not.checkName(qualifiedName, xds)) then
+      call throw_exception(INVALID_CHARACTER_ERR, "createDocument", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+
+if (associated(xds)) deallocate(xds)
+     return
+  endif
+endif
+
+    elseif(.not.checkQName(qualifiedName, xds)) then
       call throw_exception(NAMESPACE_ERR, "createDocument", ex)
 if (present(ex)) then
   if (inException(ex)) then

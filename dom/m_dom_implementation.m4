@@ -83,7 +83,9 @@ TOHW_m_dom_contents(`
     endif
 
     allocate(xds)
-    if (.not.checkQName(qualifiedName, xds)) then
+    if (.not.checkName(qualifiedName, xds)) then
+      TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR, (xds))
+    elseif(.not.checkQName(qualifiedName, xds)) then
       TOHW_m_dom_throw_error(NAMESPACE_ERR, (xds))
     elseif (qualifiedName=="xmlns" .or. prefixOfQName(qualifiedName)=="xmlns") then
       TOHW_m_dom_throw_error(NAMESPACE_ERR, (xds))
