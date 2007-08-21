@@ -71,7 +71,7 @@ TOHW_m_dom_contents(`
     character(len=*), intent(in), optional :: namespaceURI
     character(len=*), intent(in), optional :: qualifiedName
     type(Node), pointer :: docType
-    type(Node), pointer :: doc, dt
+    type(Node), pointer :: doc, dt, de
     type(xml_doc_state), pointer :: xds
 
     if (.not.associated(impl)) then
@@ -89,8 +89,9 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(NAMESPACE_ERR, (xds))
     elseif (prefixOfQName(qualifiedName)/="".and.namespaceURI=="") then
       TOHW_m_dom_throw_error(NAMESPACE_ERR, (xds))
-    elseif (namespaceURI=="http://www.w3.org/XML/1998/namespace" &
-      .or.namespaceURI=="http://www.w3.org/2000/xmlns/") then
+    elseif (prefixOfQName(qualifiedName)=="xml".neqv.namespaceURI=="http://www.w3.org/XML/1998/namespace") then
+      TOHW_m_dom_throw_error(NAMESPACE_ERR, (xds))
+    elseif (namespaceURI=="http://www.w3.org/2000/xmlns/") then
       TOHW_m_dom_throw_error(NAMESPACE_ERR, (xds))
     elseif (qualifiedName=="xmlns" .or. prefixOfQName(qualifiedName)=="xmlns") then
       TOHW_m_dom_throw_error(NAMESPACE_ERR, (xds))
@@ -114,7 +115,9 @@ TOHW_m_dom_contents(`
       doc%docExtras%docType => appendChild(doc, dt, ex)
     endif
     
-    call setDocumentElement(doc, appendChild(doc, createElementNS(doc, namespaceURI, qualifiedName, ex)), ex)
+    de => createElementNS(doc, namespaceURI, qualifiedName, ex)
+    de => appendChild(doc, de, ex)
+    call setDocumentElement(doc, de, ex)
 
   end function createDocument
 

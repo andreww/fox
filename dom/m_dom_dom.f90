@@ -4427,7 +4427,7 @@ endif
     character(len=*), intent(in), optional :: namespaceURI
     character(len=*), intent(in), optional :: qualifiedName
     type(Node), pointer :: docType
-    type(Node), pointer :: doc, dt
+    type(Node), pointer :: doc, dt, de
     type(xml_doc_state), pointer :: xds
 
     if (.not.associated(impl)) then
@@ -4481,8 +4481,17 @@ if (associated(xds)) deallocate(xds)
   endif
 endif
 
-    elseif (namespaceURI=="http://www.w3.org/XML/1998/namespace"&
-      .or.namespaceURI=="http://www.w3.org/2000/xmlns/") then
+    elseif (prefixOfQName(qualifiedName)=="xml".neqv.namespaceURI=="http://www.w3.org/XML/1998/namespace") then
+      call throw_exception(NAMESPACE_ERR, "createDocument", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+
+if (associated(xds)) deallocate(xds)
+     return
+  endif
+endif
+
+    elseif (namespaceURI=="http://www.w3.org/2000/xmlns/") then
       call throw_exception(NAMESPACE_ERR, "createDocument", ex)
 if (present(ex)) then
   if (inException(ex)) then
@@ -4522,7 +4531,9 @@ endif
       doc%docExtras%docType => appendChild(doc, dt, ex)
     endif
     
-    call setDocumentElement(doc, appendChild(doc, createElementNS(doc, namespaceURI, qualifiedName, ex)), ex)
+    de => createElementNS(doc, namespaceURI, qualifiedName, ex)
+    de => appendChild(doc, de, ex)
+    call setDocumentElement(doc, de, ex)
 
   end function createDocument
 
