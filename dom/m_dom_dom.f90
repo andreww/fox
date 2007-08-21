@@ -2765,8 +2765,7 @@ endif
       if (arg%nodeType==ELEMENT_NODE &
         .or. arg%nodeType==ATTRIBUTE_NODE &
         .or. arg%nodeType==XPATH_NAMESPACE_NODE) then
-        if (associated(arg%elExtras%namespaceURI)) &
-          n = size(arg%elExtras%namespaceURI)
+        n = size(arg%elExtras%namespaceURI)
       endif
     endif
 
@@ -2791,8 +2790,7 @@ endif
     if (arg%nodeType==ELEMENT_NODE &
       .or. arg%nodeType==ATTRIBUTE_NODE &
       .or. arg%nodeType==XPATH_NAMESPACE_NODE) then
-      if (associated(arg%elExtras%namespaceURI)) &
-        c = str_vs(arg%elExtras%namespaceURI)
+      c = str_vs(arg%elExtras%namespaceURI)
     endif
   end function getNamespaceURI
 
@@ -2806,8 +2804,7 @@ endif
       if (arg%nodeType==ELEMENT_NODE &
         .or. arg%nodeType==ATTRIBUTE_NODE &
         .or. arg%nodeType==XPATH_NAMESPACE_NODE) then
-        if (associated(arg%elExtras%namespaceURI)) &
-          n = size(arg%elExtras%prefix)
+        n = size(arg%elExtras%prefix)
       endif
     endif
 
@@ -2832,8 +2829,7 @@ endif
     if (arg%nodeType==ELEMENT_NODE &
       .or. arg%nodeType==ATTRIBUTE_NODE &
       .or. arg%nodeType==XPATH_NAMESPACE_NODE) then
-      if (associated(arg%elExtras%namespaceURI)) &
-        c = str_vs(arg%elExtras%prefix)
+      c = str_vs(arg%elExtras%prefix)
     endif
 
   end function getPrefix
@@ -2883,7 +2879,7 @@ if (present(ex)) then
   endif
 endif
 
-      elseif (.not.associated(arg%elExtras%namespaceURI)) then
+      elseif (size(arg%elExtras%namespaceURI)==0) then
         call throw_exception(NAMESPACE_ERR, "setPrefix", ex)
 if (present(ex)) then
   if (inException(ex)) then
@@ -2943,8 +2939,7 @@ endif
       if (arg%nodeType==ELEMENT_NODE &
         .or. arg%nodeType==ATTRIBUTE_NODE &
         .or. arg%nodeType==XPATH_NAMESPACE_NODE) then
-        if (associated(arg%elExtras%namespaceURI)) &
-          n = size(arg%elExtras%localName)
+        n = size(arg%elExtras%localName)
       endif
     endif
 
@@ -2969,8 +2964,7 @@ endif
     if (arg%nodeType==ELEMENT_NODE &
       .or. arg%nodeType==ATTRIBUTE_NODE &
       .or. arg%nodeType==XPATH_NAMESPACE_NODE) then
-      if (associated(arg%elExtras%namespaceURI)) &
-        c = str_vs(arg%elExtras%localName)
+      c = str_vs(arg%elExtras%localName)
     endif
 
   end function getLocalName
@@ -3029,7 +3023,7 @@ endif
 
     p = .false.
     if (associated(el)) then
-      if (associated(el%elExtras%namespaceURI)) then
+      if (size(el%elExtras%namespaceURI)>0) then
         do i = 1, el%elExtras%namespaceNodes%length
           if (size(el%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)==0) then
             p = (str_vs(el%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)==namespaceURI)
@@ -3056,7 +3050,7 @@ endif
 
     select case(np%nodeType)
     case (ELEMENT_NODE)
-      if (associated(np%elExtras%namespaceURI)) then
+      if (size(np%elExtras%namespaceURI)>0) then
         do i = 1, np%elExtras%namespaceNodes%length
           if (str_vs(np%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)==prefix) then
             n = size(np%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)
@@ -3065,7 +3059,7 @@ endif
         enddo
       endif
     case (ATTRIBUTE_NODE)
-      if (associated(np%elExtras%ownerElement%elExtras%namespaceURI)) then
+      if (size(np%elExtras%ownerElement%elExtras%namespaceURI)>0) then
         do i = 1, np%elExtras%ownerElement%elExtras%namespaceNodes%length
           if (str_vs(np%elExtras%ownerElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)==prefix) then
             n = size(np%elExtras%ownerElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)
@@ -3074,7 +3068,7 @@ endif
         enddo
       endif
     case (DOCUMENT_NODE)
-      if (associated(np%docExtras%documentElement%elExtras%namespaceURI)) then
+      if (size(np%docExtras%documentElement%elExtras%namespaceURI)>0) then
         do i = 1, np%docExtras%documentElement%elExtras%namespaceNodes%length
           if (str_vs(np%docExtras%documentElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)==prefix) then
             n = size(np%docExtras%documentElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)
@@ -3117,7 +3111,7 @@ endif
 
     c = ""
     if (associated(el)) then
-      if (associated(el%elExtras%namespaceURI)) then
+      if (size(el%elExtras%namespaceURI)>0) then
         do i = 1, el%elExtras%namespaceNodes%length
           if (str_vs(el%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)==prefix) then
             c = str_vs(el%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)
@@ -3144,7 +3138,7 @@ endif
 
     select case(np%nodeType)
     case (ELEMENT_NODE)
-      if (associated(np%elExtras%namespaceURI)) then
+      if (size(np%elExtras%namespaceURI)>0) then
         do i = 1, np%elExtras%namespaceNodes%length
           if (str_vs(np%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)==namespaceURI) then
             n = size(np%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)
@@ -3153,7 +3147,7 @@ endif
         enddo
       endif
     case (ATTRIBUTE_NODE)
-      if (associated(np%elExtras%ownerElement%elExtras%namespaceURI)) then
+      if (size(np%elExtras%ownerElement%elExtras%namespaceURI)>0) then
         do i = 1, np%elExtras%ownerElement%elExtras%namespaceNodes%length
           if (str_vs(np%elExtras%ownerElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)==namespaceURI) then
             n = size(np%elExtras%ownerElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)
@@ -3162,7 +3156,7 @@ endif
         enddo
       endif
     case (DOCUMENT_NODE)
-      if (associated(np%docExtras%documentElement%elExtras%namespaceURI)) then
+      if (size(np%docExtras%documentElement%elExtras%namespaceURI)>0) then
         do i = 1, np%docExtras%documentElement%elExtras%namespaceNodes%length
           if (str_vs(np%docExtras%documentElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)==namespaceURI) then
             n = size(np%docExtras%documentElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)
@@ -3205,7 +3199,7 @@ endif
 
     c = ""
     if (associated(el)) then
-      if (associated(el%elExtras%namespaceURI)) then
+      if (size(el%elExtras%namespaceURI)>0) then
         do i = 1, el%elExtras%namespaceNodes%length
           if (str_vs(el%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)==namespaceURI) then
             c = str_vs(el%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)
@@ -4890,6 +4884,9 @@ endif
     np => createNode(arg, ELEMENT_NODE, tagName, "")
     allocate(np%elExtras)
     np%elExtras%attributes%ownerElement => np
+    allocate(np%elExtras%namespaceURI(0))
+    allocate(np%elExtras%prefix(0))
+    allocate(np%elExtras%localname(0))
 
     ! FIXME set namespaceURI and localName appropriately
 
@@ -5186,6 +5183,9 @@ endif
   
     np => createNode(arg, ATTRIBUTE_NODE, name, "")
     allocate(np%elExtras)
+    allocate(np%elExtras%namespaceURI(0))
+    allocate(np%elExtras%prefix(0))
+    allocate(np%elExtras%localname(0))
 
     if (getGCstate(arg)) then
       np%inDocument = .false.

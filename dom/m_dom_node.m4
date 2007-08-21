@@ -845,8 +845,7 @@ TOHW_m_dom_treewalk(`
       if (arg%nodeType==ELEMENT_NODE &
         .or. arg%nodeType==ATTRIBUTE_NODE &
         .or. arg%nodeType==XPATH_NAMESPACE_NODE) then
-        if (associated(arg%elExtras%namespaceURI)) &
-          n = size(arg%elExtras%namespaceURI)
+        n = size(arg%elExtras%namespaceURI)
       endif
     endif
 
@@ -864,8 +863,7 @@ TOHW_m_dom_treewalk(`
     if (arg%nodeType==ELEMENT_NODE &
       .or. arg%nodeType==ATTRIBUTE_NODE &
       .or. arg%nodeType==XPATH_NAMESPACE_NODE) then
-      if (associated(arg%elExtras%namespaceURI)) &
-        c = str_vs(arg%elExtras%namespaceURI)
+      c = str_vs(arg%elExtras%namespaceURI)
     endif
   end function getNamespaceURI
 
@@ -879,8 +877,7 @@ TOHW_m_dom_treewalk(`
       if (arg%nodeType==ELEMENT_NODE &
         .or. arg%nodeType==ATTRIBUTE_NODE &
         .or. arg%nodeType==XPATH_NAMESPACE_NODE) then
-        if (associated(arg%elExtras%namespaceURI)) &
-          n = size(arg%elExtras%prefix)
+        n = size(arg%elExtras%prefix)
       endif
     endif
 
@@ -898,8 +895,7 @@ TOHW_m_dom_treewalk(`
     if (arg%nodeType==ELEMENT_NODE &
       .or. arg%nodeType==ATTRIBUTE_NODE &
       .or. arg%nodeType==XPATH_NAMESPACE_NODE) then
-      if (associated(arg%elExtras%namespaceURI)) &
-        c = str_vs(arg%elExtras%prefix)
+      c = str_vs(arg%elExtras%prefix)
     endif
 
   end function getPrefix
@@ -924,7 +920,7 @@ TOHW_m_dom_treewalk(`
         TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
       elseif (.not.checkNCName(prefix, getXmlVersionEnum(getOwnerDocument(arg)))) then
         TOHW_m_dom_throw_error(NAMESPACE_ERR)
-      elseif (.not.associated(arg%elExtras%namespaceURI)) then
+      elseif (size(arg%elExtras%namespaceURI)==0) then
         TOHW_m_dom_throw_error(NAMESPACE_ERR)
       elseif (prefix=="xml" .and. &
         str_vs(arg%elExtras%namespaceURI)/="http://www.w3.org/XML/1998/namespace") then
@@ -960,8 +956,7 @@ TOHW_m_dom_treewalk(`
       if (arg%nodeType==ELEMENT_NODE &
         .or. arg%nodeType==ATTRIBUTE_NODE &
         .or. arg%nodeType==XPATH_NAMESPACE_NODE) then
-        if (associated(arg%elExtras%namespaceURI)) &
-          n = size(arg%elExtras%localName)
+        n = size(arg%elExtras%localName)
       endif
     endif
 
@@ -979,8 +974,7 @@ TOHW_m_dom_treewalk(`
     if (arg%nodeType==ELEMENT_NODE &
       .or. arg%nodeType==ATTRIBUTE_NODE &
       .or. arg%nodeType==XPATH_NAMESPACE_NODE) then
-      if (associated(arg%elExtras%namespaceURI)) &
-        c = str_vs(arg%elExtras%localName)
+      c = str_vs(arg%elExtras%localName)
     endif
 
   end function getLocalName
@@ -1025,7 +1019,7 @@ TOHW_m_dom_treewalk(`
 
     p = .false.
     if (associated(el)) then
-      if (associated(el%elExtras%namespaceURI)) then
+      if (size(el%elExtras%namespaceURI)>0) then
         do i = 1, el%elExtras%namespaceNodes%length
           if (size(el%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)==0) then
             p = (str_vs(el%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)==namespaceURI)
@@ -1052,7 +1046,7 @@ TOHW_m_dom_treewalk(`
 
     select case(np%nodeType)
     case (ELEMENT_NODE)
-      if (associated(np%elExtras%namespaceURI)) then
+      if (size(np%elExtras%namespaceURI)>0) then
         do i = 1, np%elExtras%namespaceNodes%length
           if (str_vs(np%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)==prefix) then
             n = size(np%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)
@@ -1061,7 +1055,7 @@ TOHW_m_dom_treewalk(`
         enddo
       endif
     case (ATTRIBUTE_NODE)
-      if (associated(np%elExtras%ownerElement%elExtras%namespaceURI)) then
+      if (size(np%elExtras%ownerElement%elExtras%namespaceURI)>0) then
         do i = 1, np%elExtras%ownerElement%elExtras%namespaceNodes%length
           if (str_vs(np%elExtras%ownerElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)==prefix) then
             n = size(np%elExtras%ownerElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)
@@ -1070,7 +1064,7 @@ TOHW_m_dom_treewalk(`
         enddo
       endif
     case (DOCUMENT_NODE)
-      if (associated(np%docExtras%documentElement%elExtras%namespaceURI)) then
+      if (size(np%docExtras%documentElement%elExtras%namespaceURI)>0) then
         do i = 1, np%docExtras%documentElement%elExtras%namespaceNodes%length
           if (str_vs(np%docExtras%documentElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)==prefix) then
             n = size(np%docExtras%documentElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)
@@ -1106,7 +1100,7 @@ TOHW_m_dom_treewalk(`
 
     c = ""
     if (associated(el)) then
-      if (associated(el%elExtras%namespaceURI)) then
+      if (size(el%elExtras%namespaceURI)>0) then
         do i = 1, el%elExtras%namespaceNodes%length
           if (str_vs(el%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)==prefix) then
             c = str_vs(el%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)
@@ -1133,7 +1127,7 @@ TOHW_m_dom_treewalk(`
 
     select case(np%nodeType)
     case (ELEMENT_NODE)
-      if (associated(np%elExtras%namespaceURI)) then
+      if (size(np%elExtras%namespaceURI)>0) then
         do i = 1, np%elExtras%namespaceNodes%length
           if (str_vs(np%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)==namespaceURI) then
             n = size(np%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)
@@ -1142,7 +1136,7 @@ TOHW_m_dom_treewalk(`
         enddo
       endif
     case (ATTRIBUTE_NODE)
-      if (associated(np%elExtras%ownerElement%elExtras%namespaceURI)) then
+      if (size(np%elExtras%ownerElement%elExtras%namespaceURI)>0) then
         do i = 1, np%elExtras%ownerElement%elExtras%namespaceNodes%length
           if (str_vs(np%elExtras%ownerElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)==namespaceURI) then
             n = size(np%elExtras%ownerElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)
@@ -1151,7 +1145,7 @@ TOHW_m_dom_treewalk(`
         enddo
       endif
     case (DOCUMENT_NODE)
-      if (associated(np%docExtras%documentElement%elExtras%namespaceURI)) then
+      if (size(np%docExtras%documentElement%elExtras%namespaceURI)>0) then
         do i = 1, np%docExtras%documentElement%elExtras%namespaceNodes%length
           if (str_vs(np%docExtras%documentElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)==namespaceURI) then
             n = size(np%docExtras%documentElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)
@@ -1187,7 +1181,7 @@ TOHW_m_dom_treewalk(`
 
     c = ""
     if (associated(el)) then
-      if (associated(el%elExtras%namespaceURI)) then
+      if (size(el%elExtras%namespaceURI)>0) then
         do i = 1, el%elExtras%namespaceNodes%length
           if (str_vs(el%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)==namespaceURI) then
             c = str_vs(el%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)

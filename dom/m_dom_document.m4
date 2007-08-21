@@ -140,6 +140,9 @@ TOHW_m_dom_get(Node, documentElement, np%docExtras%documentElement, (DOCUMENT_NO
     np => createNode(arg, ELEMENT_NODE, tagName, "")
     allocate(np%elExtras)
     np%elExtras%attributes%ownerElement => np
+    allocate(np%elExtras%namespaceURI(0))
+    allocate(np%elExtras%prefix(0))
+    allocate(np%elExtras%localname(0))
 
     ! FIXME set namespaceURI and localName appropriately
 
@@ -304,6 +307,9 @@ TOHW_m_dom_get(Node, documentElement, np%docExtras%documentElement, (DOCUMENT_NO
   
     np => createNode(arg, ATTRIBUTE_NODE, name, "")
     allocate(np%elExtras)
+    allocate(np%elExtras%namespaceURI(0))
+    allocate(np%elExtras%prefix(0))
+    allocate(np%elExtras%localname(0))
 
     if (getGCstate(arg)) then
       np%inDocument = .false.
