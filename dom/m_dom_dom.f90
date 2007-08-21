@@ -24,7 +24,7 @@ module m_dom_dom
     FoX_INVALID_PUBLIC_ID, FoX_INVALID_SYSTEM_ID, FoX_IMPL_IS_NULL, FoX_INVALID_NODE, &
     FoX_INVALID_CHARACTER, FoX_INVALID_COMMENT, FoX_INVALID_CDATA_SECTION, &
     FoX_INVALID_PI_DATA, NOT_SUPPORTED_ERR, FoX_INVALID_ENTITY, &
-    INDEX_SIZE_ERR, FoX_NO_SUCH_ENTITY
+    INDEX_SIZE_ERR, FoX_NO_SUCH_ENTITY, FoX_HIERARCHY_REQUEST_ERR
 
   implicit none
   private
@@ -1073,7 +1073,7 @@ endif
       if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
 
           if (getNodeType(this)/=TEXT_NODE.and.getNodeType(this)/=ENTITY_REFERENCE_NODE) then
-            call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
+            call throw_exception(FoX_HIERARCHY_REQUEST_ERR, "insertBefore", ex)
 if (present(ex)) then
   if (inException(ex)) then
      return
@@ -1218,7 +1218,7 @@ endif
       if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
 
           if (getNodeType(this)/=TEXT_NODE.and.getNodeType(this)/=ENTITY_REFERENCE_NODE) then
-            call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
+            call throw_exception(FoX_HIERARCHY_REQUEST_ERR, "insertBefore", ex)
 if (present(ex)) then
   if (inException(ex)) then
      return
@@ -1523,7 +1523,7 @@ endif
       if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
 
           if (getNodeType(this)/=TEXT_NODE.and.getNodeType(this)/=ENTITY_REFERENCE_NODE) then
-            call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
+            call throw_exception(FoX_HIERARCHY_REQUEST_ERR, "replaceChild", ex)
 if (present(ex)) then
   if (inException(ex)) then
      return
@@ -1668,7 +1668,7 @@ endif
       if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
 
           if (getNodeType(this)/=TEXT_NODE.and.getNodeType(this)/=ENTITY_REFERENCE_NODE) then
-            call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
+            call throw_exception(FoX_HIERARCHY_REQUEST_ERR, "replaceChild", ex)
 if (present(ex)) then
   if (inException(ex)) then
      return
@@ -2053,7 +2053,7 @@ endif
       if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
 
           if (getNodeType(this)/=TEXT_NODE.and.getNodeType(this)/=ENTITY_REFERENCE_NODE) then
-            call throw_exception(HIERARCHY_REQUEST_ERR, "appendChild", ex)
+            call throw_exception(FoX_HIERARCHY_REQUEST_ERR, "appendChild", ex)
 if (present(ex)) then
   if (inException(ex)) then
      return
@@ -2198,7 +2198,7 @@ endif
       if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
 
           if (getNodeType(this)/=TEXT_NODE.and.getNodeType(this)/=ENTITY_REFERENCE_NODE) then
-            call throw_exception(HIERARCHY_REQUEST_ERR, "appendChild", ex)
+            call throw_exception(FoX_HIERARCHY_REQUEST_ERR, "appendChild", ex)
 if (present(ex)) then
   if (inException(ex)) then
      return

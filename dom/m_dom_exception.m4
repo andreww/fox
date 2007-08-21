@@ -45,7 +45,7 @@ define(`TOHW_m_dom_hierarchy_test',`dnl
           treeroot => testChild
 TOHW_m_dom_treewalk(`
           if (getNodeType(this)/=TEXT_NODE.and.getNodeType(this)/=ENTITY_REFERENCE_NODE) then
-            TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR)
+            TOHW_m_dom_throw_error(FoX_HIERARCHY_REQUEST_ERR)
           endif
 ',`')
         endif
