@@ -148,7 +148,14 @@ TOHW_m_dom_contents(`
     enddo
 
     !   If not found, insert it at the end of the linked list
-    if (.not.associated(np)) call append_nnm(map, arg)
+    if (associated(np)) then
+      if (getGCstate(getOwnerDocument(map%ownerElement)).and.np%inDocument) then
+        call removeNodesFromDocument(getOwnerDocument(map%ownerElement), np)
+        np%inDocument = .false.
+      endif
+    else
+      call append_nnm(map, arg)
+    endif
 
     if (map%ownerElement%nodeType==ELEMENT_NODE) then
       if (getGCstate(getOwnerDocument(map%ownerElement))) then
@@ -379,7 +386,14 @@ TOHW_m_dom_contents(`
     enddo
 
     !   If not found, insert it at the end of the linked list
-    if (.not.associated(np)) call append_nnm(map, arg)
+    if (associated(np)) then
+      if (getGCstate(getOwnerDocument(map%ownerElement)).and.np%inDocument) then
+        call removeNodesFromDocument(getOwnerDocument(map%ownerElement), np)
+        np%inDocument = .false.
+      endif
+    else
+      call append_nnm(map, arg)
+    endif
 
     if (map%ownerElement%nodeType==ELEMENT_NODE) then
       if (getGCstate(getOwnerDocument(map%ownerElement))) then
