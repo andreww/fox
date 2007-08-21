@@ -4471,6 +4471,27 @@ if (associated(xds)) deallocate(xds)
   endif
 endif
 
+    elseif (prefixOfQName(qualifiedName)/="".and.namespaceURI=="") then
+      call throw_exception(NAMESPACE_ERR, "createDocument", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+
+if (associated(xds)) deallocate(xds)
+     return
+  endif
+endif
+
+    elseif (namespaceURI=="http://www.w3.org/XML/1998/namespace"&
+      .or.namespaceURI=="http://www.w3.org/2000/xmlns/") then
+      call throw_exception(NAMESPACE_ERR, "createDocument", ex)
+if (present(ex)) then
+  if (inException(ex)) then
+
+if (associated(xds)) deallocate(xds)
+     return
+  endif
+endif
+
     elseif (qualifiedName=="xmlns" .or. prefixOfQName(qualifiedName)=="xmlns") then
       call throw_exception(NAMESPACE_ERR, "createDocument", ex)
 if (present(ex)) then
@@ -4498,10 +4519,10 @@ endif
     if (associated(docType)) then
       dt => docType
       dt%ownerDocument => doc
-      doc%docExtras%docType => appendChild(doc, dt)
+      doc%docExtras%docType => appendChild(doc, dt, ex)
     endif
     
-    call setDocumentElement(doc, appendChild(doc, createElementNS(doc, namespaceURI, qualifiedName)))
+    call setDocumentElement(doc, appendChild(doc, createElementNS(doc, namespaceURI, qualifiedName, ex)), ex)
 
   end function createDocument
 

@@ -87,6 +87,11 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR, (xds))
     elseif(.not.checkQName(qualifiedName, xds)) then
       TOHW_m_dom_throw_error(NAMESPACE_ERR, (xds))
+    elseif (prefixOfQName(qualifiedName)/="".and.namespaceURI=="") then
+      TOHW_m_dom_throw_error(NAMESPACE_ERR, (xds))
+    elseif (namespaceURI=="http://www.w3.org/XML/1998/namespace" &
+      .or.namespaceURI=="http://www.w3.org/2000/xmlns/") then
+      TOHW_m_dom_throw_error(NAMESPACE_ERR, (xds))
     elseif (qualifiedName=="xmlns" .or. prefixOfQName(qualifiedName)=="xmlns") then
       TOHW_m_dom_throw_error(NAMESPACE_ERR, (xds))
     endif
@@ -106,10 +111,10 @@ TOHW_m_dom_contents(`
     if (associated(docType)) then
       dt => docType
       dt%ownerDocument => doc
-      doc%docExtras%docType => appendChild(doc, dt)
+      doc%docExtras%docType => appendChild(doc, dt, ex)
     endif
     
-    call setDocumentElement(doc, appendChild(doc, createElementNS(doc, namespaceURI, qualifiedName)))
+    call setDocumentElement(doc, appendChild(doc, createElementNS(doc, namespaceURI, qualifiedName, ex)), ex)
 
   end function createDocument
 
