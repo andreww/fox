@@ -2454,8 +2454,6 @@ endif
       new => null()
       select case(getNodeType(this))
       case (ELEMENT_NODE)
-        ! Are there any new prefixes or namespaces to be declared?
-        ! FIXME
         if (getNamespaceURI(this)=="") then
           new => createElement(doc, getTagName(this))
         else
@@ -2922,6 +2920,8 @@ endif
       deallocate(tmp)
     endif
 
+!FIXME do updateNodeLists
+
   end subroutine setPrefix
 
   pure function getLocalName_len(arg, p) result(n)
@@ -3284,7 +3284,6 @@ endif
 
 
 
-!FIXME need to call updateNodeLists elsewhere as well (For name changes)
 
   end subroutine putNodesInDocument
 
@@ -4395,7 +4394,6 @@ if (present(ex)) then
   endif
 endif
 
-    ! FIXME check that prefix etc is declared
     elseif (.not.checkPublicId(publicId)) then
       call throw_exception(FoX_INVALID_PUBLIC_ID, "createDocumentType", ex)
 if (present(ex)) then
@@ -4561,8 +4559,6 @@ endif
 
     doc%docExtras%entities%ownerElement => doc
     doc%docExtras%notations%ownerElement => doc
-
-    ! FIXME do something with namespaceURI etc 
 
   end function createEmptyDocument
 

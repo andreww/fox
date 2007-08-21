@@ -47,7 +47,6 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
     elseif (.not.checkQName(qualifiedName, temp_xds))  then
       TOHW_m_dom_throw_error(NAMESPACE_ERR)
-    ! FIXME check that prefix etc is declared
     elseif (.not.checkPublicId(publicId)) then
       TOHW_m_dom_throw_error(FoX_INVALID_PUBLIC_ID)
     elseif (.not.checkSystemId(systemId)) then
@@ -140,8 +139,6 @@ TOHW_m_dom_contents(`
 
     doc%docExtras%entities%ownerElement => doc
     doc%docExtras%notations%ownerElement => doc
-
-    ! FIXME do something with namespaceURI etc 
 
   end function createEmptyDocument
 
