@@ -576,7 +576,7 @@ TOHW_m_dom_treewalk(`dnl
         case (DOCUMENT_FRAGMENT_NODE)
           new => createDocumentFragment(doc)
         case (NOTATION_NODE)
-          new => createNotation(doc, getName(this), getPublicId(this), getSystemId(this))
+          new => createNotation(doc, getNodeName(this), getPublicId(this), getSystemId(this))
         end select
  
         if (.not.associated(thatParent)) then
