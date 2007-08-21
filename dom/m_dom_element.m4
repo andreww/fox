@@ -316,8 +316,7 @@ TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
       TOHW_m_dom_throw_error(NAMESPACE_ERR)
     endif
 
-! FIXME what if namespace is undeclared ... will be recreated on serialization,
-! but we might need a new namespace node here for xpath ...
+! FIXME what if namespace is undeclared
 
     quickFix = getGCstate(getOwnerDocument(arg)) &
       .and. arg%inDocument

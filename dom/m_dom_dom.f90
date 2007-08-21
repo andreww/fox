@@ -7299,8 +7299,7 @@ endif
 
     endif
 
-! FIXME what if namespace is undeclared ... will be recreated on serialization,
-! but we might need a new namespace node here for xpath ...
+! FIXME what if namespace is undeclared
 
     quickFix = getGCstate(getOwnerDocument(arg)) &
       .and. arg%inDocument
