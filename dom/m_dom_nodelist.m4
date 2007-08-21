@@ -168,6 +168,7 @@ TOHW_m_dom_contents(`
 ! FIXME FIXME FIXME for DOM level 2
 
     print*,"...UPDATING NODELISTS"
+    return
 
     if (.not.doc%docExtras%liveNodeLists) return
     if (.not.associated(doc%docExtras%nodelists)) return

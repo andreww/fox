@@ -3644,6 +3644,7 @@ endif
 ! FIXME FIXME FIXME for DOM level 2
 
     print*,"...UPDATING NODELISTS"
+    return
 
     if (.not.doc%docExtras%liveNodeLists) return
     if (.not.associated(doc%docExtras%nodelists)) return
@@ -4429,6 +4430,8 @@ endif
     type(Node), pointer :: doc, dt, de
     type(xml_doc_state), pointer :: xds
 
+    doc => null()
+
     if (.not.associated(impl)) then
       call throw_exception(FoX_IMPL_IS_NULL, "createDocument", ex)
 if (present(ex)) then
@@ -4530,9 +4533,9 @@ endif
       doc%docExtras%docType => appendChild(doc, dt, ex)
     endif
     
-    de => createElementNS(doc, namespaceURI, qualifiedName, ex)
-    de => appendChild(doc, de, ex)
-    call setDocumentElement(doc, de, ex)
+    de => createElementNS(doc, namespaceURI, qualifiedName)
+    de => appendChild(doc, de)
+    call setDocumentElement(doc, de)
 
     call setGCstate(doc, .true.)
 
@@ -7154,8 +7157,9 @@ endif
     if (arg%nodeType/=ELEMENT_NODE) return
 
     do i = 1, arg%elExtras%attributes%length
-      if (str_vs(arg%elExtras%attributes%nodes(i)%this%elExtras%localName)==localname &
-        .and. str_vs(arg%elExtras%attributes%nodes(i)%this%elExtras%namespaceURI)==namespaceURI) then
+      if ((str_vs(arg%elExtras%attributes%nodes(i)%this%elExtras%localName)==localname &
+        .and. str_vs(arg%elExtras%attributes%nodes(i)%this%elExtras%namespaceURI)==namespaceURI) &
+        .or. (namespaceURI=="".and.str_vs(arg%elExtras%attributes%nodes(i)%this%nodeName)==localname)) then
         n = getValue_len(arg%elExtras%attributes%nodes(i)%this, .true.)
         exit
       endif

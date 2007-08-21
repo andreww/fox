@@ -255,8 +255,9 @@ TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
     if (arg%nodeType/=ELEMENT_NODE) return
 
     do i = 1, arg%elExtras%attributes%length
-      if (str_vs(arg%elExtras%attributes%nodes(i)%this%elExtras%localName)==localname &
-        .and. str_vs(arg%elExtras%attributes%nodes(i)%this%elExtras%namespaceURI)==namespaceURI) then
+      if ((str_vs(arg%elExtras%attributes%nodes(i)%this%elExtras%localName)==localname &
+        .and. str_vs(arg%elExtras%attributes%nodes(i)%this%elExtras%namespaceURI)==namespaceURI) &
+        .or. (namespaceURI=="".and.str_vs(arg%elExtras%attributes%nodes(i)%this%nodeName)==localname)) then
         n = getValue_len(arg%elExtras%attributes%nodes(i)%this, .true.)
         exit
       endif

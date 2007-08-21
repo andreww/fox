@@ -74,6 +74,8 @@ TOHW_m_dom_contents(`
     type(Node), pointer :: doc, dt, de
     type(xml_doc_state), pointer :: xds
 
+    doc => null()
+
     if (.not.associated(impl)) then
       TOHW_m_dom_throw_error(FoX_IMPL_IS_NULL)
     elseif (associated(docType)) then 
@@ -115,9 +117,9 @@ TOHW_m_dom_contents(`
       doc%docExtras%docType => appendChild(doc, dt, ex)
     endif
     
-    de => createElementNS(doc, namespaceURI, qualifiedName, ex)
-    de => appendChild(doc, de, ex)
-    call setDocumentElement(doc, de, ex)
+    de => createElementNS(doc, namespaceURI, qualifiedName)
+    de => appendChild(doc, de)
+    call setDocumentElement(doc, de)
 
     call setGCstate(doc, .true.)
 
