@@ -206,8 +206,10 @@ contains
     type(Node), pointer :: np
 
     np => createNotation(mainDoc, name, publicId=publicId, systemId=systemId)
-! FIXME what if two notations with the same name
     np => setNamedItem(getNotations(getDocType(mainDoc)), np)
+    ! The SAX parser will never give us duplicate entities,
+    ! so there is no need to check
+
   end subroutine notationDecl_handler
 
   subroutine startCdata_handler()
