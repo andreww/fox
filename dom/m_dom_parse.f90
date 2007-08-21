@@ -115,22 +115,21 @@ contains
 
     type(Node), pointer :: temp
     logical :: readonly
-    
+
     temp => getLastChild(current)
     if (associated(temp)) then
-      if (cdata.and.getNodeType(temp)==CDATA_SECTION_NODE) then
+      if ((cdata.and.getNodeType(temp)==CDATA_SECTION_NODE) &
+        .or.getNodeType(temp)==TEXT_NODE) then
         !FIXME Only if we are coalescing CDATA sections ...
         readonly = getReadOnly(temp) ! Reset readonly status quickly
         call setReadOnlyNode(temp, .false., .false.)
         call setData(temp, getData(temp)//chunk)
         call setReadOnlyNode(temp, readonly, .false.)
-      elseif (getNodeType(temp)==TEXT_NODE) then
-        readonly = getReadOnly(temp) ! Reset readonly status quickly
-        call setReadOnlyNode(temp, .false., .false.)
-        call setData(temp, getData(temp)//chunk)
-        call setReadOnlyNode(temp, readonly, .false.)
+        return
       endif
-    elseif (cdata) then
+    endif
+    
+    if (cdata) then
       temp => createCdataSection(mainDoc, chunk)
       temp => appendChild(current, temp)
     else
@@ -195,7 +194,7 @@ contains
     call setXds(mainDoc, state)
     call setReadonlyMap(getEntities(getDocType(mainDoc)), .true.)
     call setReadonlyMap(getNotations(getDocType(mainDoc)), .true.)
-! FIXME readonly entities & notations
+
   end subroutine FoX_endDTD_handler
 
   subroutine notationDecl_handler(name, publicId, systemId)
@@ -320,6 +319,7 @@ contains
       endif
       current => appendChild(current, createEmptyEntityReference(mainDoc, name))
     endif
+
   end subroutine startEntity_handler
 
   subroutine endEntity_handler(name)

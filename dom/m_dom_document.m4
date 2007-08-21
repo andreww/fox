@@ -560,7 +560,8 @@ TOHW_m_dom_treewalk(`dnl
           new => createCDataSection(doc, getData(this))
         case (ENTITY_REFERENCE_NODE)
           new => createEntityReference(doc, getNodeName(this))
-          ! This will automatically populate the entity reference if doc defines it
+          ! This will automatically populate the entity reference if doc defines it, so no children needed
+          doneChildren = .true.
         case (ENTITY_NODE)
           new => createEntity(doc, getNodeName(this), getPublicId(this), getSystemId(this), getNotationName(this))
         case (PROCESSING_INSTRUCTION_NODE)
