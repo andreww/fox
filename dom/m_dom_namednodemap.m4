@@ -62,9 +62,7 @@ TOHW_m_dom_contents(`
 
     do i = 1, map%length
       if (str_vs(map%nodes(i)%this%nodeName)==name) then
-        ! FIXME this needs changed I think to cope with
-        ! attributes nodeValue/=value
-        n = size(map%nodes(i)%this%nodeValue)
+        n = getValue_len(map%nodes(i)%this, .true.)
         exit
       endif
     enddo
