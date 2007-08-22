@@ -49,8 +49,8 @@ module m_dom_parse
   type(Node), pointer, save  :: mainDoc => null()
   type(Node), pointer, save  :: current => null()
   
-  logical :: cdata_sections, cdata, split_cdata_sections
-  logical :: entities_expand, comments
+  logical :: cdata_sections, cdata, not_split_cdata_sections
+  logical :: entities_expand, not_comments
   logical :: error
   character, pointer :: inEntity(:) => null()
 
@@ -121,7 +121,7 @@ contains
     temp => getLastChild(current)
     if (associated(temp)) then
       if ((cdata.and.getNodeType(temp)==CDATA_SECTION_NODE &
-        .and..not.split_cdata_sections) &
+        .and.not_split_cdata_sections) &
         .or.(.not.cdata.and.getNodeType(temp)==TEXT_NODE)) then
         readonly = getReadOnly(temp) ! Reset readonly status quickly
         call setReadOnlyNode(temp, .false., .false.)
@@ -147,7 +147,7 @@ contains
 
     type(Node), pointer :: temp
 
-    if (comments) then
+    if (.not.not_comments) then
       temp => appendChild(current, createComment(mainDoc, comment))
       if (associated(inEntity)) call setReadOnlyNode(temp, .true., .false.)
     endif
@@ -357,14 +357,14 @@ contains
     if (present(configuration)) then
       cdata_sections = (index("cdata-sections", configuration)==1).or.(scan(" cdata-sections", configuration)>0) 
       ! need to do double check to avoid finding split-cdata-sections
-      comments = (scan("comments", configuration)>0)
+      not_comments = (scan("comments", configuration)>0)
       entities_expand = (scan("entities", configuration)>0)
-      split_cdata_sections = (scan("split-cdata-sections", configuration)>0)
+      not_split_cdata_sections = (scan("split-cdata-sections", configuration)>0)
     else
       cdata_sections = .false.
-      comments = .true.
+      not_comments = .false.
       entities_expand = .false.
-      split_cdata_sections = .true.
+      not_split_cdata_sections = .false.
     endif
 
     call open_xml_file(fxml, filename, iostat)
@@ -431,14 +431,14 @@ contains
     if (present(configuration)) then
       cdata_sections = (index("cdata-sections", configuration)==1).or.(scan(" cdata-sections", configuration)>0) 
       ! need to do double check to avoid finding split-cdata-sections
-      comments = (scan("comments", configuration)>0)
+      not_comments = (scan("comments", configuration)>0)
       entities_expand = (scan("entities", configuration)>0)
-      split_cdata_sections = (scan("split-cdata-sections", configuration)>0)
+      not_split_cdata_sections = (scan("split-cdata-sections", configuration)>0)
     else
       cdata_sections = .false.
-      comments = .true.
+      not_comments = .false.
       entities_expand = .false.
-      split_cdata_sections = .true.
+      not_split_cdata_sections = .false.
     endif
 
     call open_xml_string(fxml, string)

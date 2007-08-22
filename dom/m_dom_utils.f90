@@ -95,7 +95,7 @@ contains
 
     if (getNodeType(startNode)/=DOCUMENT_NODE &
       .and.getNodeType(startNode)/=ELEMENT_NODE) then
-      if (getFoX_checks(getImplementation()).or.FoX_INVALID_NODE<200) then
+      if (getFoX_checks().or.FoX_INVALID_NODE<200) then
   call throw_exception(FoX_INVALID_NODE, "serialize", ex)
   if (present(ex)) then
     if (inException(ex)) then
@@ -116,7 +116,7 @@ endif
     call xml_OpenFile(name, xf, iostat=iostat, unit=-1, &
       preserve_whitespace=.true., warning=.false., addDecl=(getNodeType(startNode)/=DOCUMENT_NODE))
     if (iostat/=0) then
-      if (getFoX_checks(getImplementation()).or.SERIALIZE_ERR<200) then
+      if (getFoX_checks().or.SERIALIZE_ERR<200) then
   call throw_exception(SERIALIZE_ERR, "serialize", ex)
   if (present(ex)) then
     if (inException(ex)) then
@@ -195,7 +195,7 @@ endif
               attrvalue(size(tmp)+1:) = vs_str("&"//getData(attrChild)//";")
               deallocate(tmp)
             else
-              if (getFoX_checks(getImplementation()).or.FoX_INTERNAL_ERROR<200) then
+              if (getFoX_checks().or.FoX_INTERNAL_ERROR<200) then
   call throw_exception(FoX_INTERNAL_ERROR, "iter_dmp_xml", ex)
   if (present(ex)) then
     if (inException(ex)) then

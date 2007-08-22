@@ -207,18 +207,16 @@ TOHW_m_dom_contents(`
 
   end subroutine destroyDocument
 
-  function getFoX_checks(impl) result(FoX_checks)
-    type(DOMImplementation), intent(in) :: impl
+  function getFoX_checks() result(FoX_checks)
     logical :: FoX_checks
 
-    FoX_checks = impl%FoX_checks 
+    FoX_checks = FoX_DOM%FoX_checks 
   end function getFoX_checks
 
-  subroutine setFoX_checks(impl, FoX_checks)
-    type(DOMImplementation), pointer :: impl
+  subroutine setFoX_checks(FoX_checks)
     logical, intent(in) :: FoX_checks
 
-    impl%FoX_checks = FoX_checks
+    FoX_DOM%FoX_checks = FoX_checks
   end subroutine setFoX_checks
 
 

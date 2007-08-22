@@ -3,11 +3,7 @@ include(`m_dom_treewalk.m4')`'dnl
 define(`TOHW_m_dom_throw_error',`dnl
 dnl 1 is numerical code
 dnl 2 is list of things to deallocate
-ifelse(m4f_thisfunc, `getImplementation', `dnl
-if (getFoX_checks(FoX_DOM).or.$1<200) then
-',`dnl
-if (getFoX_checks(getImplementation()).or.$1<200) then
-')`'dnl
+if (getFoX_checks().or.$1<200) then
   call throw_exception($1, "m4f_thisfunc", ex)
   if (present(ex)) then
     if (inException(ex)) then
