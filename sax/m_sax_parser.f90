@@ -305,8 +305,8 @@ contains
       subroutine endCdata_handler()
       end subroutine endCdata_handler
 
-      subroutine FoX_endDTD_handler()
-      end subroutine FoX_endDTD_handler
+      subroutine endDTD_handler()
+      end subroutine endDTD_handler
 
       subroutine FoX_endDTD_handler(state)
         use m_common_struct, only: xml_doc_state
