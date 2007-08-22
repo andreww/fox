@@ -115,12 +115,12 @@ contains
 
     type(Node), pointer :: temp
     logical :: readonly
-    
+
     temp => getLastChild(current)
     if (associated(temp)) then
       if ((cdata.and.getNodeType(temp)==CDATA_SECTION_NODE &
-        .and.split_cdata_sections) &
-        .or.getNodeType(temp)==TEXT_NODE) then
+        .and..not.split_cdata_sections) &
+        .or.(.not.cdata.and.getNodeType(temp)==TEXT_NODE)) then
         readonly = getReadOnly(temp) ! Reset readonly status quickly
         call setReadOnlyNode(temp, .false., .false.)
         call setData(temp, getData(temp)//chunk)
