@@ -204,11 +204,22 @@ contains
     ! can be tuned for performance.
     
     if (repl) then
-      open(unit=xf%lun, file=filename, form="formatted", status="replace", &
-        action="write", recl=xml_recl, iostat=iostat)
+      ! NAG insists on unnecessary duplication of iostat etc here
+      if (present(iostat)) then
+        open(unit=xf%lun, file=filename, form="formatted", status="replace", &
+          action="write", recl=xml_recl, iostat=iostat)
+      else	
+        open(unit=xf%lun, file=filename, form="formatted", status="replace", &
+          action="write", recl=xml_recl)
+      endif
     else 
-      open(unit=xf%lun, file=filename, form="formatted", status="new", &
-        action="write", recl=xml_recl, iostat=iostat)
+      if (present(iostat)) then
+        open(unit=xf%lun, file=filename, form="formatted", status="new", &
+          action="write", recl=xml_recl, iostat=iostat)
+      else	
+        open(unit=xf%lun, file=filename, form="formatted", status="new", &
+          action="write", recl=xml_recl)
+      endif
     endif
 
     call init_elstack(xf%stack)
