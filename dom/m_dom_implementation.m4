@@ -41,6 +41,8 @@ TOHW_m_dom_contents(`
     type(Node), pointer :: dt
     type(xml_doc_state) :: temp_xds
 
+    dt => null()
+
     if (.not.associated(impl)) then
       TOHW_m_dom_throw_error(FoX_IMPL_IS_NULL)
     endif

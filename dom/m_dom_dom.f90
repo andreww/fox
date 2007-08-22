@@ -4585,6 +4585,8 @@ endif
     type(Node), pointer :: dt
     type(xml_doc_state) :: temp_xds
 
+    dt => null()
+
     if (.not.associated(impl)) then
       if (FoX_DOM%FoX_checks.or.FoX_IMPL_IS_NULL<200) then
   call throw_exception(FoX_IMPL_IS_NULL, "createDocumentType", ex)
