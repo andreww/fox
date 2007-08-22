@@ -263,7 +263,7 @@ endif
     end select
 
       else
-        if (getNodeType(this)==ELEMENT_NODE) then
+        if (getNodeType(this)==ELEMENT_NODE.and..not.doneChildren) then
           doneAttributes = .true.
         else
 

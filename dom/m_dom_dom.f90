@@ -497,7 +497,7 @@ endif
       if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
 
       else
-        if (getNodeType(this)==ELEMENT_NODE) then
+        if (getNodeType(this)==ELEMENT_NODE.and..not.doneChildren) then
           doneAttributes = .true.
         else
 
@@ -1139,7 +1139,7 @@ endif
           endif
 
       else
-        if (getNodeType(this)==ELEMENT_NODE) then
+        if (getNodeType(this)==ELEMENT_NODE.and..not.doneChildren) then
           doneAttributes = .true.
         else
 
@@ -1299,7 +1299,7 @@ endif
           endif
 
       else
-        if (getNodeType(this)==ELEMENT_NODE) then
+        if (getNodeType(this)==ELEMENT_NODE.and..not.doneChildren) then
           doneAttributes = .true.
         else
 
@@ -1633,7 +1633,7 @@ endif
           endif
 
       else
-        if (getNodeType(this)==ELEMENT_NODE) then
+        if (getNodeType(this)==ELEMENT_NODE.and..not.doneChildren) then
           doneAttributes = .true.
         else
 
@@ -1793,7 +1793,7 @@ endif
           endif
 
       else
-        if (getNodeType(this)==ELEMENT_NODE) then
+        if (getNodeType(this)==ELEMENT_NODE.and..not.doneChildren) then
           doneAttributes = .true.
         else
 
@@ -2215,7 +2215,7 @@ endif
           endif
 
       else
-        if (getNodeType(this)==ELEMENT_NODE) then
+        if (getNodeType(this)==ELEMENT_NODE.and..not.doneChildren) then
           doneAttributes = .true.
         else
 
@@ -2375,7 +2375,7 @@ endif
           endif
 
       else
-        if (getNodeType(this)==ELEMENT_NODE) then
+        if (getNodeType(this)==ELEMENT_NODE.and..not.doneChildren) then
           doneAttributes = .true.
         else
 
@@ -2704,7 +2704,7 @@ endif
       endif
 
       else
-        if (getNodeType(this)==ELEMENT_NODE) then
+        if (getNodeType(this)==ELEMENT_NODE.and..not.doneChildren) then
           doneAttributes = .true.
         else
 
@@ -2884,7 +2884,7 @@ endif
       end if
 
       else
-        if (getNodeType(this)==ELEMENT_NODE) then
+        if (getNodeType(this)==ELEMENT_NODE.and..not.doneChildren) then
           doneAttributes = .true.
         else
 
@@ -3473,7 +3473,7 @@ endif
         call remove_node_nl(doc%docExtras%hangingNodes, this)
 
       else
-        if (getNodeType(this)==ELEMENT_NODE) then
+        if (getNodeType(this)==ELEMENT_NODE.and..not.doneChildren) then
           doneAttributes = .true.
         else
 
@@ -3548,7 +3548,7 @@ endif
         call append_nl(doc%docExtras%hangingNodes, this)
 
       else
-        if (getNodeType(this)==ELEMENT_NODE) then
+        if (getNodeType(this)==ELEMENT_NODE.and..not.doneChildren) then
           doneAttributes = .true.
         else
 
@@ -3625,7 +3625,7 @@ endif
       this%readonly = p
 
       else
-        if (getNodeType(this)==ELEMENT_NODE) then
+        if (getNodeType(this)==ELEMENT_NODE.and..not.doneChildren) then
           doneAttributes = .true.
         else
 
@@ -5604,7 +5604,7 @@ endif
       endif
 
       else
-        if (getNodeType(this)==ELEMENT_NODE) then
+        if (getNodeType(this)==ELEMENT_NODE.and..not.doneChildren) then
           doneAttributes = .true.
         else
 
@@ -5674,7 +5674,7 @@ endif
         endif
 
       else
-        if (getNodeType(this)==ELEMENT_NODE) then
+        if (getNodeType(this)==ELEMENT_NODE.and..not.doneChildren) then
           doneAttributes = .true.
         else
 
@@ -5992,7 +5992,7 @@ endif
         endif
 
       else
-        if (getNodeType(this)==ELEMENT_NODE) then
+        if (getNodeType(this)==ELEMENT_NODE.and..not.doneChildren) then
           doneAttributes = .true.
         else
 
@@ -6196,7 +6196,7 @@ endif
         endif
 
       else
-        if (getNodeType(this)==ELEMENT_NODE) then
+        if (getNodeType(this)==ELEMENT_NODE.and..not.doneChildren) then
           doneAttributes = .true.
         else
 
@@ -6560,7 +6560,7 @@ endif
       endif
 
       else
-        if (getNodeType(this)==ELEMENT_NODE) then
+        if (getNodeType(this)==ELEMENT_NODE.and..not.doneChildren) then
           doneAttributes = .true.
         else
 
@@ -6667,7 +6667,7 @@ endif
       endif
 
       else
-        if (getNodeType(this)==ELEMENT_NODE) then
+        if (getNodeType(this)==ELEMENT_NODE.and..not.doneChildren) then
           doneAttributes = .true.
         else
 
