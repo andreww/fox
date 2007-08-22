@@ -117,6 +117,8 @@ module FoX_dom
   public :: getLocalName
   public :: hasAttributes
 
+  public :: isSameNode
+
   ! DOM NodeList
   public :: item
   public :: append
@@ -149,6 +151,7 @@ module FoX_dom
   public :: getValue
   public :: setValue
   public :: getOwnerElement
+  public :: getIsId
 
   ! DOM Element
   public :: getTagName
@@ -207,5 +210,7 @@ module FoX_dom
   public :: destroy
   public :: getFoX_checks
   public :: setFoX_checks
+  public :: getLiveNodeLists
+  public :: setLiveNodeLists
 
 end module FoX_dom

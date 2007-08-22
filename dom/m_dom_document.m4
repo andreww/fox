@@ -32,6 +32,9 @@ TOHW_m_dom_publics(`
   public :: createEntity
   public :: createNotation
   public :: setGCstate
+
+  public :: getLiveNodeLists
+  public :: setLiveNodeLists
 ')`'dnl
 dnl
 TOHW_m_dom_contents(`
@@ -977,28 +980,11 @@ TOHW_m_dom_set(logical, xmlStandalone, np%docExtras%xds%standalone_declared, (DO
   end function getXds
 
 
-  TOHW_function(getGCstate, (arg), b)
-    type(Node), pointer :: arg
-    logical :: b
+TOHW_m_dom_get(logical, GCstate, np%docExtras%xds%building, (DOCUMENT_NODE))
+TOHW_m_dom_set(logical, GCstate, np%docExtras%xds%building, (DOCUMENT_NODE))
 
-    if (.not.associated(arg)) then
-      TOHW_m_dom_throw_error(FoX_INTERNAL_ERROR)
-    endif
+TOHW_m_dom_get(logical, liveNodeLists, np%docExtras%liveNodeLists, (DOCUMENT_NODE))
+TOHW_m_dom_set(logical, liveNodeLists, np%docExtras%liveNodeLists, (DOCUMENT_NODE))
 
-    b = arg%docExtras%xds%building
-
-  end function getGCstate
-
-  TOHW_subroutine(setGCstate, (arg, b))
-    type(Node), pointer :: arg
-    logical, intent(in) :: b
-
-    if (.not.associated(arg)) then
-      TOHW_m_dom_throw_error(FoX_INTERNAL_ERROR)
-    endif
-
-    arg%docExtras%xds%building = b
-
-  end subroutine setGCstate
 
 ')`'dnl

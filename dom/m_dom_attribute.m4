@@ -10,6 +10,8 @@ TOHW_m_dom_publics(`
   public :: setValue
   public :: getOwnerElement
 
+  public :: getIsId
+
 ')`'dnl
 dnl
 TOHW_m_dom_contents(`

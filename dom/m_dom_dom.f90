@@ -297,6 +297,9 @@ module m_dom_dom
   public :: createNotation
   public :: setGCstate
 
+  public :: getLiveNodeLists
+  public :: setLiveNodeLists
+
 
   !public :: getName
   public :: getEntities
@@ -335,6 +338,8 @@ module m_dom_dom
   public :: getValue
   public :: setValue
   public :: getOwnerElement
+
+  public :: getIsId
 
 
 
@@ -7103,14 +7108,15 @@ endif
   end function getXds
 
 
-  function getGCstate(arg, ex)result(b) 
+function getGCstate(np, ex)result(c) 
     type(DOMException), intent(out), optional :: ex
-    type(Node), pointer :: arg
-    logical :: b
+    type(Node), pointer :: np
+    logical :: c
 
-    if (.not.associated(arg)) then
-      if (getFoX_checks().or.FoX_INTERNAL_ERROR<200) then
-  call throw_exception(FoX_INTERNAL_ERROR, "getGCstate", ex)
+
+    if (.not.associated(np)) then
+      if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "getGCstate", ex)
   if (present(ex)) then
     if (inException(ex)) then
        return
@@ -7120,18 +7126,32 @@ endif
 
     endif
 
-    b = arg%docExtras%xds%building
+   if (getNodeType(np)/=DOCUMENT_NODE .and. &
+      .true.) then
+      if (getFoX_checks().or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "getGCstate", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    endif
+
+    c = np%docExtras%xds%building
 
   end function getGCstate
 
-  subroutine setGCstate(arg, b, ex)
+subroutine setGCstate(np, c, ex)
     type(DOMException), intent(out), optional :: ex
-    type(Node), pointer :: arg
-    logical, intent(in) :: b
+    type(Node), pointer :: np
+    logical :: c
 
-    if (.not.associated(arg)) then
-      if (getFoX_checks().or.FoX_INTERNAL_ERROR<200) then
-  call throw_exception(FoX_INTERNAL_ERROR, "setGCstate", ex)
+
+    if (.not.associated(np)) then
+      if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "setGCstate", ex)
   if (present(ex)) then
     if (inException(ex)) then
        return
@@ -7141,9 +7161,95 @@ endif
 
     endif
 
-    arg%docExtras%xds%building = b
+   if (getNodeType(np)/=DOCUMENT_NODE .and. &
+      .true.) then
+      if (getFoX_checks().or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "setGCstate", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    endif
+
+    np%docExtras%xds%building = c
 
   end subroutine setGCstate
+
+
+function getliveNodeLists(np, ex)result(c) 
+    type(DOMException), intent(out), optional :: ex
+    type(Node), pointer :: np
+    logical :: c
+
+
+    if (.not.associated(np)) then
+      if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "getliveNodeLists", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    endif
+
+   if (getNodeType(np)/=DOCUMENT_NODE .and. &
+      .true.) then
+      if (getFoX_checks().or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "getliveNodeLists", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    endif
+
+    c = np%docExtras%liveNodeLists
+
+  end function getliveNodeLists
+
+subroutine setliveNodeLists(np, c, ex)
+    type(DOMException), intent(out), optional :: ex
+    type(Node), pointer :: np
+    logical :: c
+
+
+    if (.not.associated(np)) then
+      if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "setliveNodeLists", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    endif
+
+   if (getNodeType(np)/=DOCUMENT_NODE .and. &
+      .true.) then
+      if (getFoX_checks().or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "setliveNodeLists", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    endif
+
+    np%docExtras%liveNodeLists = c
+
+  end subroutine setliveNodeLists
+
+
 
 
 
