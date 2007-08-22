@@ -335,6 +335,8 @@ TOHW_m_dom_get(Node, nextSibling, np%nextSibling)
     arg%childNodes%nodes => temp_nl
     arg%childNodes%length = size(arg%childNodes%nodes)
 
+    call updateNodeLists(arg%ownerDocument)
+
   end function insertBefore
 
 
@@ -464,6 +466,8 @@ TOHW_m_dom_get(Node, nextSibling, np%nextSibling)
       arg%childNodes%length = size(arg%childNodes%nodes)
     endif
 
+    call updateNodeLists(arg%ownerDocument)
+
   end function replaceChild
 
 
@@ -527,6 +531,8 @@ TOHW_m_dom_get(Node, nextSibling, np%nextSibling)
     endif
 
     np => oldChild
+
+    call updateNodeLists(arg%ownerDocument)
 
   end function removeChild
 
@@ -640,6 +646,8 @@ TOHW_m_dom_get(Node, nextSibling, np%nextSibling)
     arg%childNodes%length = size(temp_nl)
 
     np => newChild
+
+    call updateNodeLists(arg%ownerDocument)
 
   end function appendChild
 
@@ -940,7 +948,7 @@ TOHW_m_dom_treewalk(`
       elseif (getNodeType(arg)==ATTRIBUTE_NODE.and.getName(arg)=="xmlns") then
         TOHW_m_dom_throw_error(NAMESPACE_ERR)
       endif
-! FIXME check if prefix is declared ...
+! FIXME check if prefix is declared and already points to same namespace
       deallocate(arg%elExtras%prefix)
       arg%elExtras%prefix = vs_str_alloc(prefix)
       tmp => arg%nodeName
@@ -953,7 +961,7 @@ TOHW_m_dom_treewalk(`
       deallocate(tmp)
     endif
 
-!FIXME do updateNodeLists
+    call updateNodeLists(arg%ownerDocument)
 
   end subroutine setPrefix
 
@@ -1217,10 +1225,6 @@ TOHW_m_dom_treewalk(`
     treeroot => arg
 TOHW_m_dom_treewalk(`
         this%inDocument = .true.
-        if (this%nodeType==ELEMENT_NODE.and.doc%docExtras%liveNodeLists) &
-          call updateNodeLists(doc, "", getNodeName(this), "", getLocalName(this), "", getNamespaceURI(this))
-        ! The above is a bit inefficient; really we should construct a list of all
-        ! element names added/removed and then call updateNodeLists on all of them only at the end.
         call remove_node_nl(doc%docExtras%hangingNodes, this)
 ',`')
 
@@ -1236,10 +1240,6 @@ TOHW_m_dom_treewalk(`
     treeroot => arg
 TOHW_m_dom_treewalk(`
         this%inDocument = .false.
-        if (this%nodeType==ELEMENT_NODE.and.doc%docExtras%liveNodeLists) &
-          call updateNodeLists(doc, getNodeName(this), "", getLocalName(this), "", getNamespaceURI(this), "")
-        ! The above is a bit inefficient; really we should construct a list of all
-        ! element names added/removed and then call updateNodeLists on all of them only at the end.
         call append_nl(doc%docExtras%hangingNodes, this)
 ',`')
 
