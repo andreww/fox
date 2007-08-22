@@ -5669,7 +5669,7 @@ endif
       if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
 
         if (getNodeType(this)==TEXT_NODE) then
-          arg%nodeValue(n+1:n+len(getData(this))) = getData(this)
+          arg%nodeValue(n+1:n+len(getData(this))) = vs_str(getData(this))
           n = n + len(getData(this))
         endif
 

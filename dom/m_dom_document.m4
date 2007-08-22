@@ -342,7 +342,7 @@ TOHW_m_dom_treewalk(`
       n = 0
 TOHW_m_dom_treewalk(`
         if (getNodeType(this)==TEXT_NODE) then
-          arg%nodeValue(n+1:n+len(getData(this))) = getData(this)
+          arg%nodeValue(n+1:n+len(getData(this))) = vs_str(getData(this))
           n = n + len(getData(this))
         endif
 ',`')
