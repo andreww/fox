@@ -9,7 +9,7 @@ module m_dom_utils
   use m_common_format, only: operator(//)
   use m_common_array_str, only: str_vs, vs_str
 
-  use m_dom_dom, only: Node, Namednodemap, Node, DOMImplementation
+  use m_dom_dom, only: Node, Namednodemap, Node
   use m_dom_dom, only: DOCUMENT_NODE, ELEMENT_NODE, TEXT_NODE, &
    CDATA_SECTION_NODE, COMMENT_NODE, DOCUMENT_TYPE_NODE, &
    ATTRIBUTE_NODE, ENTITY_REFERENCE_NODE, PROCESSING_INSTRUCTION_NODE
@@ -141,7 +141,6 @@ contains
 TOHW_m_dom_treewalk(`dnl
     select case(getNodeType(this))
     case (ELEMENT_NODE)
-      print*, "adding element"
       nnm => getAttributes(this)
       do j = 0, getLength(nnm) - 1
         attrchild => item(nnm, j)
@@ -154,7 +153,6 @@ TOHW_m_dom_treewalk(`dnl
       enddo
       call xml_NewElement(xf, getTagName(this))
     case (ATTRIBUTE_NODE)
-      print*, "adding attributem"
       if (getPrefix(this)/="xmlns".and.getLocalName(this)/="xmlns") then
         if (entities) then
           allocate(attrvalue(0))
@@ -184,17 +182,14 @@ TOHW_m_dom_treewalk(`dnl
       endif
       doneChildren = .true.
     case (TEXT_NODE)
-      print*, "adding chars"
       call xml_AddCharacters(xf, getData(this))
     case (CDATA_SECTION_NODE)
-      print*, "adding cdata"
       if (cdata) then
         call xml_AddCharacters(xf, getData(this), parsed = .false.)
       else
         call xml_AddCharacters(xf, getData(this))
       endif
     case (ENTITY_REFERENCE_NODE)
-      print*, "adding entity ref"
       if (entities) then
         call xml_AddEntityReference(xf, getNodeName(this))
         doneChildren = .true.

@@ -497,8 +497,11 @@ endif
       if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
 
       else
-        if (getNodeType(this)==ELEMENT_NODE) doneAttributes = .true.
+        if (getNodeType(this)==ELEMENT_NODE) then
+          doneAttributes = .true.
+        else
 
+        endif
       endif
 
 
@@ -1136,8 +1139,11 @@ endif
           endif
 
       else
-        if (getNodeType(this)==ELEMENT_NODE) doneAttributes = .true.
+        if (getNodeType(this)==ELEMENT_NODE) then
+          doneAttributes = .true.
+        else
 
+        endif
       endif
 
 
@@ -1293,8 +1299,11 @@ endif
           endif
 
       else
-        if (getNodeType(this)==ELEMENT_NODE) doneAttributes = .true.
+        if (getNodeType(this)==ELEMENT_NODE) then
+          doneAttributes = .true.
+        else
 
+        endif
       endif
 
 
@@ -1624,8 +1633,11 @@ endif
           endif
 
       else
-        if (getNodeType(this)==ELEMENT_NODE) doneAttributes = .true.
+        if (getNodeType(this)==ELEMENT_NODE) then
+          doneAttributes = .true.
+        else
 
+        endif
       endif
 
 
@@ -1781,8 +1793,11 @@ endif
           endif
 
       else
-        if (getNodeType(this)==ELEMENT_NODE) doneAttributes = .true.
+        if (getNodeType(this)==ELEMENT_NODE) then
+          doneAttributes = .true.
+        else
 
+        endif
       endif
 
 
@@ -2200,8 +2215,11 @@ endif
           endif
 
       else
-        if (getNodeType(this)==ELEMENT_NODE) doneAttributes = .true.
+        if (getNodeType(this)==ELEMENT_NODE) then
+          doneAttributes = .true.
+        else
 
+        endif
       endif
 
 
@@ -2357,8 +2375,11 @@ endif
           endif
 
       else
-        if (getNodeType(this)==ELEMENT_NODE) doneAttributes = .true.
+        if (getNodeType(this)==ELEMENT_NODE) then
+          doneAttributes = .true.
+        else
 
+        endif
       endif
 
 
@@ -2683,7 +2704,9 @@ endif
       endif
 
       else
-        if (getNodeType(this)==ELEMENT_NODE) doneAttributes = .true.
+        if (getNodeType(this)==ELEMENT_NODE) then
+          doneAttributes = .true.
+        else
 
 
       if (getNodeType(this)==ENTITY_REFERENCE_NODE &
@@ -2694,6 +2717,7 @@ endif
       this%readonly = readonly
       
 
+        endif
       endif
 
 
@@ -2860,8 +2884,11 @@ endif
       end if
 
       else
-        if (getNodeType(this)==ELEMENT_NODE) doneAttributes = .true.
+        if (getNodeType(this)==ELEMENT_NODE) then
+          doneAttributes = .true.
+        else
 
+        endif
       endif
 
 
@@ -3446,8 +3473,11 @@ endif
         call remove_node_nl(doc%docExtras%hangingNodes, this)
 
       else
-        if (getNodeType(this)==ELEMENT_NODE) doneAttributes = .true.
+        if (getNodeType(this)==ELEMENT_NODE) then
+          doneAttributes = .true.
+        else
 
+        endif
       endif
 
 
@@ -3518,8 +3548,11 @@ endif
         call append_nl(doc%docExtras%hangingNodes, this)
 
       else
-        if (getNodeType(this)==ELEMENT_NODE) doneAttributes = .true.
+        if (getNodeType(this)==ELEMENT_NODE) then
+          doneAttributes = .true.
+        else
 
+        endif
       endif
 
 
@@ -3592,8 +3625,11 @@ endif
       this%readonly = p
 
       else
-        if (getNodeType(this)==ELEMENT_NODE) doneAttributes = .true.
+        if (getNodeType(this)==ELEMENT_NODE) then
+          doneAttributes = .true.
+        else
 
+        endif
       endif
 
 
@@ -5568,8 +5604,11 @@ endif
       endif
 
       else
-        if (getNodeType(this)==ELEMENT_NODE) doneAttributes = .true.
+        if (getNodeType(this)==ELEMENT_NODE) then
+          doneAttributes = .true.
+        else
 
+        endif
       endif
 
 
@@ -5635,8 +5674,11 @@ endif
         endif
 
       else
-        if (getNodeType(this)==ELEMENT_NODE) doneAttributes = .true.
+        if (getNodeType(this)==ELEMENT_NODE) then
+          doneAttributes = .true.
+        else
 
+        endif
       endif
 
 
@@ -5950,8 +5992,11 @@ endif
         endif
 
       else
-        if (getNodeType(this)==ELEMENT_NODE) doneAttributes = .true.
+        if (getNodeType(this)==ELEMENT_NODE) then
+          doneAttributes = .true.
+        else
 
+        endif
       endif
 
 
@@ -6151,8 +6196,11 @@ endif
         endif
 
       else
-        if (getNodeType(this)==ELEMENT_NODE) doneAttributes = .true.
+        if (getNodeType(this)==ELEMENT_NODE) then
+          doneAttributes = .true.
+        else
 
+        endif
       endif
 
 
@@ -6512,8 +6560,11 @@ endif
       endif
 
       else
-        if (getNodeType(this)==ELEMENT_NODE) doneAttributes = .true.
+        if (getNodeType(this)==ELEMENT_NODE) then
+          doneAttributes = .true.
+        else
 
+        endif
       endif
 
 
@@ -6616,8 +6667,11 @@ endif
       endif
 
       else
-        if (getNodeType(this)==ELEMENT_NODE) doneAttributes = .true.
+        if (getNodeType(this)==ELEMENT_NODE) then
+          doneAttributes = .true.
+        else
 
+        endif
       endif
 
 

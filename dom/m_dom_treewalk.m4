@@ -38,8 +38,11 @@ ifelse(`$3', `deadNode',`
       if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
 $1
       else
-        if (getNodeType(this)==ELEMENT_NODE) doneAttributes = .true.
+        if (getNodeType(this)==ELEMENT_NODE) then
+          doneAttributes = .true.
+        else
 $2
+        endif
       endif
 
 ifelse(`$3', `deadNode',`
