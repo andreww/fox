@@ -4681,7 +4681,8 @@ endif
 
     endif
 
-    dt => createNode(null(), DOCUMENT_TYPE_NODE, qualifiedName, "")
+! Dont use raw null() below or PGI will complain
+    dt => createNode(dt, DOCUMENT_TYPE_NODE, qualifiedName, "")
     allocate(dt%dtdExtras)
     dt%readonly = .true.
     dt%dtdExtras%publicId => vs_str_alloc(publicId)
@@ -4803,7 +4804,8 @@ endif
 
     endif
 
-    doc => createNode(null(), DOCUMENT_NODE, "#document", "")
+! Dont use raw null() below or PGI will complain
+    doc => createNode(doc, DOCUMENT_NODE, "#document", "")
     doc%ownerDocument => doc ! Makes life easier. DOM compliance in getter
 
     allocate(doc%docExtras)
@@ -4832,8 +4834,10 @@ endif
 
   function createEmptyDocument() result(doc)
     type(Node), pointer :: doc
-    
-    doc => createNode(null(), DOCUMENT_NODE, "#document", "")
+
+! PGI again
+    doc => null()
+    doc => createNode(doc, DOCUMENT_NODE, "#document", "")
     doc%ownerDocument => doc ! Makes life easier. DOM compliance maintained in getter
 
     allocate(doc%docExtras)
