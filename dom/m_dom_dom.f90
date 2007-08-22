@@ -260,6 +260,8 @@ module m_dom_dom
 
   public :: createEmptyDocument
 
+  public :: setFoX_checks
+
 
 
   public :: getDocType
@@ -420,10 +422,12 @@ contains
     if (np%nodeType /= ELEMENT_NODE &
       .and. np%nodeType /= ATTRIBUTE_NODE &
       .and. np%nodeType /= XPATH_NAMESPACE_NODE) then
-       call throw_exception(FoX_INTERNAL_ERROR, "destroyElementOrAttribute", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+       if (FoX_DOM%FoX_checks.or.FoX_INTERNAL_ERROR<200) then
+  call throw_exception(FoX_INTERNAL_ERROR, "destroyElementOrAttribute", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -450,10 +454,12 @@ endif
     if (np%nodeType /= DOCUMENT_TYPE_NODE &
       .and. np%nodeType /= ENTITY_NODE &
       .and. np%nodeType /= NOTATION_NODE) then
-       call throw_exception(FoX_INTERNAL_ERROR, "destroyEntityOrNotation", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+       if (FoX_DOM%FoX_checks.or.FoX_INTERNAL_ERROR<200) then
+  call throw_exception(FoX_INTERNAL_ERROR, "destroyEntityOrNotation", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -583,10 +589,12 @@ function getnodeName(np, ex)result(c)
 
 
     if (.not.associated(np)) then
-      call throw_exception(FoX_NODE_IS_NULL, "getnodeName", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "getnodeName", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -627,10 +635,12 @@ endif
     integer :: i, n
 
     if (.not.associated(np)) then
-      call throw_exception(FoX_NODE_IS_NULL, "getNodeValue", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "getNodeValue", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -660,10 +670,12 @@ endif
     integer :: i
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "setNodeValue", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "setNodeValue", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -671,10 +683,12 @@ endif
 
     if (associated(getOwnerDocument(arg))) then
       if (.not.checkChars(nodeValue, getXmlVersionEnum(getOwnerDocument(arg)))) then
-        call throw_exception(FoX_INVALID_CHARACTER, "setNodeValue", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+        if (FoX_DOM%FoX_checks.or.FoX_INVALID_CHARACTER<200) then
+  call throw_exception(FoX_INVALID_CHARACTER, "setNodeValue", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -684,10 +698,12 @@ endif
     select case(arg%nodeType)
     case (ATTRIBUTE_NODE)
       if (arg%readonly) then
-        call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setNodeValue", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+        if (FoX_DOM%FoX_checks.or.NO_MODIFICATION_ALLOWED_ERR<200) then
+  call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setNodeValue", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -712,19 +728,23 @@ endif
       !      if (.not.arg%inDocument) call append(arg%document%blah, ...)
     case (CDATA_SECTION_NODE)
       if (arg%readonly) then
-        call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setNodeValue", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+        if (FoX_DOM%FoX_checks.or.NO_MODIFICATION_ALLOWED_ERR<200) then
+  call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setNodeValue", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
       endif
       if (index(str_vs(arg%nodeValue),"]]>")>0) then
-        call throw_exception(FoX_INVALID_CDATA_SECTION, "setNodeValue", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+        if (FoX_DOM%FoX_checks.or.FoX_INVALID_CDATA_SECTION<200) then
+  call throw_exception(FoX_INVALID_CDATA_SECTION, "setNodeValue", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -733,19 +753,23 @@ endif
       arg%nodeValue => vs_str_alloc(nodeValue)
     case (COMMENT_NODE)
       if (arg%readonly) then
-        call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setNodeValue", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+        if (FoX_DOM%FoX_checks.or.NO_MODIFICATION_ALLOWED_ERR<200) then
+  call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setNodeValue", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
       endif
       if (index(str_vs(arg%nodeValue),"--")>0) then
-        call throw_exception(FoX_INVALID_COMMENT, "setNodeValue", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+        if (FoX_DOM%FoX_checks.or.FoX_INVALID_COMMENT<200) then
+  call throw_exception(FoX_INVALID_COMMENT, "setNodeValue", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -754,19 +778,23 @@ endif
       arg%nodeValue => vs_str_alloc(nodeValue)
     case (PROCESSING_INSTRUCTION_NODE)
       if (arg%readonly) then
-        call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setNodeValue", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+        if (FoX_DOM%FoX_checks.or.NO_MODIFICATION_ALLOWED_ERR<200) then
+  call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setNodeValue", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
       endif
       if (index(str_vs(arg%nodeValue),"?>")>0) then
-        call throw_exception(FoX_INVALID_PI_DATA, "setNodeValue", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+        if (FoX_DOM%FoX_checks.or.FoX_INVALID_PI_DATA<200) then
+  call throw_exception(FoX_INVALID_PI_DATA, "setNodeValue", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -775,10 +803,12 @@ endif
       arg%nodeValue => vs_str_alloc(nodeValue)
     case (TEXT_NODE)
       if (arg%readonly) then
-        call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setNodeValue", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+        if (FoX_DOM%FoX_checks.or.NO_MODIFICATION_ALLOWED_ERR<200) then
+  call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setNodeValue", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -796,10 +826,12 @@ function getnodeType(np, ex)result(c)
 
 
     if (.not.associated(np)) then
-      call throw_exception(FoX_NODE_IS_NULL, "getnodeType", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "getnodeType", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -818,10 +850,12 @@ function getparentNode(np, ex)result(c)
 
 
     if (.not.associated(np)) then
-      call throw_exception(FoX_NODE_IS_NULL, "getparentNode", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "getparentNode", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -840,10 +874,12 @@ function getchildNodes(np, ex)result(c)
 
 
     if (.not.associated(np)) then
-      call throw_exception(FoX_NODE_IS_NULL, "getchildNodes", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "getchildNodes", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -862,10 +898,12 @@ function getfirstChild(np, ex)result(c)
 
 
     if (.not.associated(np)) then
-      call throw_exception(FoX_NODE_IS_NULL, "getfirstChild", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "getfirstChild", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -884,10 +922,12 @@ function getlastChild(np, ex)result(c)
 
 
     if (.not.associated(np)) then
-      call throw_exception(FoX_NODE_IS_NULL, "getlastChild", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "getlastChild", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -906,10 +946,12 @@ function getpreviousSibling(np, ex)result(c)
 
 
     if (.not.associated(np)) then
-      call throw_exception(FoX_NODE_IS_NULL, "getpreviousSibling", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "getpreviousSibling", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -928,10 +970,12 @@ function getnextSibling(np, ex)result(c)
 
 
     if (.not.associated(np)) then
-      call throw_exception(FoX_NODE_IS_NULL, "getnextSibling", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "getnextSibling", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -949,10 +993,12 @@ endif
     type(NamedNodeMap), pointer :: nnm
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "getAttributes", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "getAttributes", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -971,10 +1017,12 @@ endif
     type(Node), pointer :: np
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "getOwnerDocument", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "getOwnerDocument", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -1000,10 +1048,12 @@ endif
     logical :: doneChildren, doneAttributes
 
     if (.not.associated(arg).or..not.associated(newChild)) then
-      call throw_exception(FoX_NODE_IS_NULL, "insertBefore", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "insertBefore", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -1015,10 +1065,12 @@ endif
     endif
 
     if (arg%readonly) then
-      call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "insertBefore", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.NO_MODIFICATION_ALLOWED_ERR<200) then
+  call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "insertBefore", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -1037,10 +1089,12 @@ endif
           .and. testChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
           .and. testChild%nodeType/=CDATA_SECTION_NODE &
           .and. testChild%nodeType/=ENTITY_REFERENCE_NODE) then
-          call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+          if (FoX_DOM%FoX_checks.or.HIERARCHY_REQUEST_ERR<200) then
+  call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -1048,10 +1102,12 @@ endif
       case (ATTRIBUTE_NODE)
         if (testChild%nodeType/=TEXT_NODE &
           .and. testChild%nodeType/=ENTITY_REFERENCE_NODE) then
-          call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+          if (FoX_DOM%FoX_checks.or.HIERARCHY_REQUEST_ERR<200) then
+  call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -1068,10 +1124,12 @@ endif
       if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
 
           if (getNodeType(this)/=TEXT_NODE.and.getNodeType(this)/=ENTITY_REFERENCE_NODE) then
-            call throw_exception(FoX_HIERARCHY_REQUEST_ERR, "insertBefore", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+            if (FoX_DOM%FoX_checks.or.FoX_HIERARCHY_REQUEST_ERR<200) then
+  call throw_exception(FoX_HIERARCHY_REQUEST_ERR, "insertBefore", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -1132,10 +1190,12 @@ endif
           .and. testChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
           .and. testChild%nodeType/=COMMENT_NODE &
           .and. testChild%nodeType/=DOCUMENT_TYPE_NODE)  then
-          call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+          if (FoX_DOM%FoX_checks.or.HIERARCHY_REQUEST_ERR<200) then
+  call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -1147,10 +1207,12 @@ endif
           .and. testChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
           .and. testChild%nodeType/=CDATA_SECTION_NODE &
           .and. testChild%nodeType/=ENTITY_REFERENCE_NODE) then
-          call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+          if (FoX_DOM%FoX_checks.or.HIERARCHY_REQUEST_ERR<200) then
+  call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -1162,10 +1224,12 @@ endif
         continue ! only allowed by DOM parser, not by user.
         ! but entity nodes are always readonly anyway, so no problem
       case default
-        call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+        if (FoX_DOM%FoX_checks.or.HIERARCHY_REQUEST_ERR<200) then
+  call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -1182,10 +1246,12 @@ endif
           .and. testChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
           .and. testChild%nodeType/=CDATA_SECTION_NODE &
           .and. testChild%nodeType/=ENTITY_REFERENCE_NODE) then
-          call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+          if (FoX_DOM%FoX_checks.or.HIERARCHY_REQUEST_ERR<200) then
+  call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -1193,10 +1259,12 @@ endif
       case (ATTRIBUTE_NODE)
         if (testChild%nodeType/=TEXT_NODE &
           .and. testChild%nodeType/=ENTITY_REFERENCE_NODE) then
-          call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+          if (FoX_DOM%FoX_checks.or.HIERARCHY_REQUEST_ERR<200) then
+  call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -1213,10 +1281,12 @@ endif
       if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
 
           if (getNodeType(this)/=TEXT_NODE.and.getNodeType(this)/=ENTITY_REFERENCE_NODE) then
-            call throw_exception(FoX_HIERARCHY_REQUEST_ERR, "insertBefore", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+            if (FoX_DOM%FoX_checks.or.FoX_HIERARCHY_REQUEST_ERR<200) then
+  call throw_exception(FoX_HIERARCHY_REQUEST_ERR, "insertBefore", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -1277,10 +1347,12 @@ endif
           .and. testChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
           .and. testChild%nodeType/=COMMENT_NODE &
           .and. testChild%nodeType/=DOCUMENT_TYPE_NODE)  then
-          call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+          if (FoX_DOM%FoX_checks.or.HIERARCHY_REQUEST_ERR<200) then
+  call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -1292,10 +1364,12 @@ endif
           .and. testChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
           .and. testChild%nodeType/=CDATA_SECTION_NODE &
           .and. testChild%nodeType/=ENTITY_REFERENCE_NODE) then
-          call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+          if (FoX_DOM%FoX_checks.or.HIERARCHY_REQUEST_ERR<200) then
+  call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -1307,10 +1381,12 @@ endif
         continue ! only allowed by DOM parser, not by user.
         ! but entity nodes are always readonly anyway, so no problem
       case default
-        call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+        if (FoX_DOM%FoX_checks.or.HIERARCHY_REQUEST_ERR<200) then
+  call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -1321,10 +1397,12 @@ endif
       testParent => arg
       do while (associated(testParent))
         if (associated(testParent, newChild)) then
-          call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+          if (FoX_DOM%FoX_checks.or.HIERARCHY_REQUEST_ERR<200) then
+  call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -1335,10 +1413,12 @@ endif
 
     if (.not.(associated(arg%ownerDocument, newChild%ownerDocument) &
       .or. associated(arg, newChild%ownerDocument))) then
-      call throw_exception(WRONG_DOCUMENT_ERR, "insertBefore", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.WRONG_DOCUMENT_ERR<200) then
+  call throw_exception(WRONG_DOCUMENT_ERR, "insertBefore", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -1355,10 +1435,12 @@ endif
       newChild => removeChild(getParentNode(newChild), newChild, ex) 
 
     if (arg%childNodes%length==0) then
-      call throw_exception(NOT_FOUND_ERR, "insertBefore", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.NOT_FOUND_ERR<200) then
+  call throw_exception(NOT_FOUND_ERR, "insertBefore", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -1399,12 +1481,14 @@ endif
     enddo
 
     if (.not.associated(np)) then
-      call throw_exception(NOT_FOUND_ERR, "insertBefore", ex)
-if (present(ex)) then
-  if (inException(ex)) then
+      if (FoX_DOM%FoX_checks.or.NOT_FOUND_ERR<200) then
+  call throw_exception(NOT_FOUND_ERR, "insertBefore", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
 
-if (associated(temp_nl)) deallocate(temp_nl)
-     return
+  if (associated(temp_nl)) deallocate(temp_nl)
+       return
+    endif
   endif
 endif
 
@@ -1457,20 +1541,24 @@ endif
     logical :: doneChildren, doneAttributes
 
     if (.not.associated(arg).or..not.associated(newChild).or..not.associated(oldChild)) then
-      call throw_exception(FoX_NODE_IS_NULL, "replaceChild", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "replaceChild", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
 
     if (arg%readonly) then
-      call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "replaceChild", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.NO_MODIFICATION_ALLOWED_ERR<200) then
+  call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "replaceChild", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -1489,10 +1577,12 @@ endif
           .and. testChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
           .and. testChild%nodeType/=CDATA_SECTION_NODE &
           .and. testChild%nodeType/=ENTITY_REFERENCE_NODE) then
-          call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+          if (FoX_DOM%FoX_checks.or.HIERARCHY_REQUEST_ERR<200) then
+  call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -1500,10 +1590,12 @@ endif
       case (ATTRIBUTE_NODE)
         if (testChild%nodeType/=TEXT_NODE &
           .and. testChild%nodeType/=ENTITY_REFERENCE_NODE) then
-          call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+          if (FoX_DOM%FoX_checks.or.HIERARCHY_REQUEST_ERR<200) then
+  call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -1520,10 +1612,12 @@ endif
       if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
 
           if (getNodeType(this)/=TEXT_NODE.and.getNodeType(this)/=ENTITY_REFERENCE_NODE) then
-            call throw_exception(FoX_HIERARCHY_REQUEST_ERR, "replaceChild", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+            if (FoX_DOM%FoX_checks.or.FoX_HIERARCHY_REQUEST_ERR<200) then
+  call throw_exception(FoX_HIERARCHY_REQUEST_ERR, "replaceChild", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -1584,10 +1678,12 @@ endif
           .and. testChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
           .and. testChild%nodeType/=COMMENT_NODE &
           .and. testChild%nodeType/=DOCUMENT_TYPE_NODE)  then
-          call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+          if (FoX_DOM%FoX_checks.or.HIERARCHY_REQUEST_ERR<200) then
+  call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -1599,10 +1695,12 @@ endif
           .and. testChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
           .and. testChild%nodeType/=CDATA_SECTION_NODE &
           .and. testChild%nodeType/=ENTITY_REFERENCE_NODE) then
-          call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+          if (FoX_DOM%FoX_checks.or.HIERARCHY_REQUEST_ERR<200) then
+  call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -1614,10 +1712,12 @@ endif
         continue ! only allowed by DOM parser, not by user.
         ! but entity nodes are always readonly anyway, so no problem
       case default
-        call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+        if (FoX_DOM%FoX_checks.or.HIERARCHY_REQUEST_ERR<200) then
+  call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -1634,10 +1734,12 @@ endif
           .and. testChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
           .and. testChild%nodeType/=CDATA_SECTION_NODE &
           .and. testChild%nodeType/=ENTITY_REFERENCE_NODE) then
-          call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+          if (FoX_DOM%FoX_checks.or.HIERARCHY_REQUEST_ERR<200) then
+  call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -1645,10 +1747,12 @@ endif
       case (ATTRIBUTE_NODE)
         if (testChild%nodeType/=TEXT_NODE &
           .and. testChild%nodeType/=ENTITY_REFERENCE_NODE) then
-          call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+          if (FoX_DOM%FoX_checks.or.HIERARCHY_REQUEST_ERR<200) then
+  call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -1665,10 +1769,12 @@ endif
       if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
 
           if (getNodeType(this)/=TEXT_NODE.and.getNodeType(this)/=ENTITY_REFERENCE_NODE) then
-            call throw_exception(FoX_HIERARCHY_REQUEST_ERR, "replaceChild", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+            if (FoX_DOM%FoX_checks.or.FoX_HIERARCHY_REQUEST_ERR<200) then
+  call throw_exception(FoX_HIERARCHY_REQUEST_ERR, "replaceChild", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -1729,10 +1835,12 @@ endif
           .and. testChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
           .and. testChild%nodeType/=COMMENT_NODE &
           .and. testChild%nodeType/=DOCUMENT_TYPE_NODE)  then
-          call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+          if (FoX_DOM%FoX_checks.or.HIERARCHY_REQUEST_ERR<200) then
+  call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -1744,10 +1852,12 @@ endif
           .and. testChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
           .and. testChild%nodeType/=CDATA_SECTION_NODE &
           .and. testChild%nodeType/=ENTITY_REFERENCE_NODE) then
-          call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+          if (FoX_DOM%FoX_checks.or.HIERARCHY_REQUEST_ERR<200) then
+  call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -1759,10 +1869,12 @@ endif
         continue ! only allowed by DOM parser, not by user.
         ! but entity nodes are always readonly anyway, so no problem
       case default
-        call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+        if (FoX_DOM%FoX_checks.or.HIERARCHY_REQUEST_ERR<200) then
+  call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -1773,10 +1885,12 @@ endif
       testParent => arg
       do while (associated(testParent))
         if (associated(testParent, newChild)) then
-          call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+          if (FoX_DOM%FoX_checks.or.HIERARCHY_REQUEST_ERR<200) then
+  call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -1787,10 +1901,12 @@ endif
 
     if (.not.(associated(arg%ownerDocument, newChild%ownerDocument) &
       .or. associated(arg, newChild%ownerDocument))) then
-      call throw_exception(WRONG_DOCUMENT_ERR, "replaceChild", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.WRONG_DOCUMENT_ERR<200) then
+  call throw_exception(WRONG_DOCUMENT_ERR, "replaceChild", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -1800,10 +1916,12 @@ endif
       newChild => removeChild(getParentNode(newChild), newChild, ex) 
 
     if (arg%childNodes%length==0) then
-      call throw_exception(NOT_FOUND_ERR, "replaceChild", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.NOT_FOUND_ERR<200) then
+  call throw_exception(NOT_FOUND_ERR, "replaceChild", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -1850,10 +1968,12 @@ endif
     enddo
 
     if (.not.associated(np)) then
-      call throw_exception(NOT_FOUND_ERR, "replaceChild", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.NOT_FOUND_ERR<200) then
+  call throw_exception(NOT_FOUND_ERR, "replaceChild", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -1904,20 +2024,24 @@ endif
     integer :: i, i_t
 
     if (.not.associated(arg).or..not.associated(oldChild)) then
-      call throw_exception(FoX_NODE_IS_NULL, "removeChild", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "removeChild", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
 
     if (arg%readonly) then
-      call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "removeChild", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.NO_MODIFICATION_ALLOWED_ERR<200) then
+  call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "removeChild", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -1955,10 +2079,12 @@ endif
     arg%childNodes%nodes => temp_nl
     arg%childNodes%length = size(temp_nl)
     if (i==i_t) then
-      call throw_exception(NOT_FOUND_ERR, "removeChild", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.NOT_FOUND_ERR<200) then
+  call throw_exception(NOT_FOUND_ERR, "removeChild", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -1991,20 +2117,24 @@ endif
     logical :: doneChildren, doneAttributes
 
     if (.not.associated(arg).or..not.associated(newChild)) then
-      call throw_exception(FoX_NODE_IS_NULL, "appendChild", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "appendChild", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
 
     if (arg%readonly) then
-      call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "appendChild", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.NO_MODIFICATION_ALLOWED_ERR<200) then
+  call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "appendChild", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -2023,10 +2153,12 @@ endif
           .and. testChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
           .and. testChild%nodeType/=CDATA_SECTION_NODE &
           .and. testChild%nodeType/=ENTITY_REFERENCE_NODE) then
-          call throw_exception(HIERARCHY_REQUEST_ERR, "appendChild", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+          if (FoX_DOM%FoX_checks.or.HIERARCHY_REQUEST_ERR<200) then
+  call throw_exception(HIERARCHY_REQUEST_ERR, "appendChild", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -2034,10 +2166,12 @@ endif
       case (ATTRIBUTE_NODE)
         if (testChild%nodeType/=TEXT_NODE &
           .and. testChild%nodeType/=ENTITY_REFERENCE_NODE) then
-          call throw_exception(HIERARCHY_REQUEST_ERR, "appendChild", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+          if (FoX_DOM%FoX_checks.or.HIERARCHY_REQUEST_ERR<200) then
+  call throw_exception(HIERARCHY_REQUEST_ERR, "appendChild", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -2054,10 +2188,12 @@ endif
       if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
 
           if (getNodeType(this)/=TEXT_NODE.and.getNodeType(this)/=ENTITY_REFERENCE_NODE) then
-            call throw_exception(FoX_HIERARCHY_REQUEST_ERR, "appendChild", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+            if (FoX_DOM%FoX_checks.or.FoX_HIERARCHY_REQUEST_ERR<200) then
+  call throw_exception(FoX_HIERARCHY_REQUEST_ERR, "appendChild", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -2118,10 +2254,12 @@ endif
           .and. testChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
           .and. testChild%nodeType/=COMMENT_NODE &
           .and. testChild%nodeType/=DOCUMENT_TYPE_NODE)  then
-          call throw_exception(HIERARCHY_REQUEST_ERR, "appendChild", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+          if (FoX_DOM%FoX_checks.or.HIERARCHY_REQUEST_ERR<200) then
+  call throw_exception(HIERARCHY_REQUEST_ERR, "appendChild", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -2133,10 +2271,12 @@ endif
           .and. testChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
           .and. testChild%nodeType/=CDATA_SECTION_NODE &
           .and. testChild%nodeType/=ENTITY_REFERENCE_NODE) then
-          call throw_exception(HIERARCHY_REQUEST_ERR, "appendChild", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+          if (FoX_DOM%FoX_checks.or.HIERARCHY_REQUEST_ERR<200) then
+  call throw_exception(HIERARCHY_REQUEST_ERR, "appendChild", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -2148,10 +2288,12 @@ endif
         continue ! only allowed by DOM parser, not by user.
         ! but entity nodes are always readonly anyway, so no problem
       case default
-        call throw_exception(HIERARCHY_REQUEST_ERR, "appendChild", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+        if (FoX_DOM%FoX_checks.or.HIERARCHY_REQUEST_ERR<200) then
+  call throw_exception(HIERARCHY_REQUEST_ERR, "appendChild", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -2168,10 +2310,12 @@ endif
           .and. testChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
           .and. testChild%nodeType/=CDATA_SECTION_NODE &
           .and. testChild%nodeType/=ENTITY_REFERENCE_NODE) then
-          call throw_exception(HIERARCHY_REQUEST_ERR, "appendChild", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+          if (FoX_DOM%FoX_checks.or.HIERARCHY_REQUEST_ERR<200) then
+  call throw_exception(HIERARCHY_REQUEST_ERR, "appendChild", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -2179,10 +2323,12 @@ endif
       case (ATTRIBUTE_NODE)
         if (testChild%nodeType/=TEXT_NODE &
           .and. testChild%nodeType/=ENTITY_REFERENCE_NODE) then
-          call throw_exception(HIERARCHY_REQUEST_ERR, "appendChild", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+          if (FoX_DOM%FoX_checks.or.HIERARCHY_REQUEST_ERR<200) then
+  call throw_exception(HIERARCHY_REQUEST_ERR, "appendChild", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -2199,10 +2345,12 @@ endif
       if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
 
           if (getNodeType(this)/=TEXT_NODE.and.getNodeType(this)/=ENTITY_REFERENCE_NODE) then
-            call throw_exception(FoX_HIERARCHY_REQUEST_ERR, "appendChild", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+            if (FoX_DOM%FoX_checks.or.FoX_HIERARCHY_REQUEST_ERR<200) then
+  call throw_exception(FoX_HIERARCHY_REQUEST_ERR, "appendChild", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -2263,10 +2411,12 @@ endif
           .and. testChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
           .and. testChild%nodeType/=COMMENT_NODE &
           .and. testChild%nodeType/=DOCUMENT_TYPE_NODE)  then
-          call throw_exception(HIERARCHY_REQUEST_ERR, "appendChild", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+          if (FoX_DOM%FoX_checks.or.HIERARCHY_REQUEST_ERR<200) then
+  call throw_exception(HIERARCHY_REQUEST_ERR, "appendChild", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -2278,10 +2428,12 @@ endif
           .and. testChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
           .and. testChild%nodeType/=CDATA_SECTION_NODE &
           .and. testChild%nodeType/=ENTITY_REFERENCE_NODE) then
-          call throw_exception(HIERARCHY_REQUEST_ERR, "appendChild", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+          if (FoX_DOM%FoX_checks.or.HIERARCHY_REQUEST_ERR<200) then
+  call throw_exception(HIERARCHY_REQUEST_ERR, "appendChild", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -2293,10 +2445,12 @@ endif
         continue ! only allowed by DOM parser, not by user.
         ! but entity nodes are always readonly anyway, so no problem
       case default
-        call throw_exception(HIERARCHY_REQUEST_ERR, "appendChild", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+        if (FoX_DOM%FoX_checks.or.HIERARCHY_REQUEST_ERR<200) then
+  call throw_exception(HIERARCHY_REQUEST_ERR, "appendChild", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -2307,10 +2461,12 @@ endif
       testParent => arg
       do while (associated(testParent))
         if (associated(testParent, newChild)) then
-          call throw_exception(HIERARCHY_REQUEST_ERR, "appendChild", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+          if (FoX_DOM%FoX_checks.or.HIERARCHY_REQUEST_ERR<200) then
+  call throw_exception(HIERARCHY_REQUEST_ERR, "appendChild", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -2321,10 +2477,12 @@ endif
 
     if (.not.(associated(arg%ownerDocument, newChild%ownerDocument) &
       .or. associated(arg, newChild%ownerDocument))) then
-      call throw_exception(WRONG_DOCUMENT_ERR, "appendChild", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.WRONG_DOCUMENT_ERR<200) then
+  call throw_exception(WRONG_DOCUMENT_ERR, "appendChild", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -2407,10 +2565,12 @@ endif
     logical :: hasChildNodes
     
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "hasChildNodes", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "hasChildNodes", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -2432,10 +2592,12 @@ endif
     integer :: i_tree
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "cloneNode", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "cloneNode", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -2607,10 +2769,12 @@ endif
     logical :: hasAttributes
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "hasAttributes", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "hasAttributes", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -2642,10 +2806,12 @@ endif
     character, pointer :: temp(:)
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "normalize", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "normalize", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -2753,10 +2919,12 @@ endif
     logical :: p
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "isSupported", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "isSupported", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -2787,10 +2955,12 @@ endif
     character(len=getNamespaceURI_len(arg, associated(arg))) :: c
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "getNamespaceURI", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "getNamespaceURI", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -2826,10 +2996,12 @@ endif
     character(len=getPrefix_len(arg, associated(arg))) :: c
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "getPrefix", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "getPrefix", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -2853,10 +3025,12 @@ endif
     integer :: i
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "setPrefix", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "setPrefix", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -2866,60 +3040,74 @@ endif
       .or. arg%nodeType==ATTRIBUTE_NODE &
       .or. arg%nodeType==XPATH_NAMESPACE_NODE) then
       if (arg%readonly) then
-        call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setPrefix", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+        if (FoX_DOM%FoX_checks.or.NO_MODIFICATION_ALLOWED_ERR<200) then
+  call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setPrefix", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
       elseif (.not.checkName(prefix, getXds(getOwnerDocument(arg)))) then
-        call throw_exception(INVALID_CHARACTER_ERR, "setPrefix", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+        if (FoX_DOM%FoX_checks.or.INVALID_CHARACTER_ERR<200) then
+  call throw_exception(INVALID_CHARACTER_ERR, "setPrefix", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
       elseif (.not.checkNCName(prefix, getXmlVersionEnum(getOwnerDocument(arg)))) then
-        call throw_exception(NAMESPACE_ERR, "setPrefix", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+        if (FoX_DOM%FoX_checks.or.NAMESPACE_ERR<200) then
+  call throw_exception(NAMESPACE_ERR, "setPrefix", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
       elseif (size(arg%elExtras%namespaceURI)==0) then
-        call throw_exception(NAMESPACE_ERR, "setPrefix", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+        if (FoX_DOM%FoX_checks.or.NAMESPACE_ERR<200) then
+  call throw_exception(NAMESPACE_ERR, "setPrefix", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
       elseif (prefix=="xml" .and. &
         str_vs(arg%elExtras%namespaceURI)/="http://www.w3.org/XML/1998/namespace") then
-        call throw_exception(NAMESPACE_ERR, "setPrefix", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+        if (FoX_DOM%FoX_checks.or.NAMESPACE_ERR<200) then
+  call throw_exception(NAMESPACE_ERR, "setPrefix", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
       elseif (prefix=="xmlns" .and. (getNodeType(arg)/=ATTRIBUTE_NODE &
         .or. str_vs(arg%elExtras%namespaceURI)/="http://www.w3.org/2000/xmlns/")) then
-        call throw_exception(NAMESPACE_ERR, "setPrefix", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+        if (FoX_DOM%FoX_checks.or.NAMESPACE_ERR<200) then
+  call throw_exception(NAMESPACE_ERR, "setPrefix", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
       elseif (getNodeType(arg)==ATTRIBUTE_NODE.and.getName(arg)=="xmlns") then
-        call throw_exception(NAMESPACE_ERR, "setPrefix", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+        if (FoX_DOM%FoX_checks.or.NAMESPACE_ERR<200) then
+  call throw_exception(NAMESPACE_ERR, "setPrefix", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -2963,10 +3151,12 @@ endif
     character(len=getLocalName_len(arg, associated(arg))) :: c
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "getLocalName", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "getLocalName", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -2990,10 +3180,12 @@ endif
     logical :: isSameNode
 
     if (.not.associated(arg).or..not.associated(other)) then
-      call throw_exception(FoX_NODE_IS_NULL, "isSameNode", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "isSameNode", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -3013,10 +3205,12 @@ endif
     integer :: i
 
     if (.not.associated(np)) then
-      call throw_exception(FoX_NODE_IS_NULL, "isDefaultNamespace", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "isDefaultNamespace", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -3101,10 +3295,12 @@ endif
     integer :: i
 
     if (.not.associated(np)) then
-      call throw_exception(FoX_NODE_IS_NULL, "lookupNamespaceURI", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "lookupNamespaceURI", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -3189,10 +3385,12 @@ endif
     integer :: i
 
     if (.not.associated(np)) then
-      call throw_exception(FoX_NODE_IS_NULL, "lookupPrefix", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "lookupPrefix", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -3454,10 +3652,12 @@ function getreadonly(np, ex)result(c)
 
 
     if (.not.associated(np)) then
-      call throw_exception(FoX_NODE_IS_NULL, "getreadonly", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "getreadonly", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -3478,10 +3678,12 @@ endif
     type(Node), pointer :: np
 
     if (.not.associated(list)) then
-      call throw_exception(FoX_LIST_IS_NULL, "item_nl", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_LIST_IS_NULL<200) then
+  call throw_exception(FoX_LIST_IS_NULL, "item_nl", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -3528,10 +3730,12 @@ endif
     integer :: i
 
     if (list%length==0) then
-      call throw_exception(FoX_INTERNAL_ERROR, "pop_nl", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INTERNAL_ERROR<200) then
+  call throw_exception(FoX_INTERNAL_ERROR, "pop_nl", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -3566,10 +3770,12 @@ endif
     integer :: i
 
     if (index>nl%length) then
-      call throw_exception(FoX_INTERNAL_ERROR, "remove_nl", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INTERNAL_ERROR<200) then
+  call throw_exception(FoX_INTERNAL_ERROR, "remove_nl", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -3610,10 +3816,12 @@ endif
     integer :: n
 
     if (.not.associated(nl)) then
-      call throw_exception(FoX_LIST_IS_NULL, "getLength_nl", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_LIST_IS_NULL<200) then
+  call throw_exception(FoX_LIST_IS_NULL, "getLength_nl", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -3677,10 +3885,12 @@ endif
     integer :: i
 
     if (.not.associated(map)) then
-      call throw_exception(FoX_MAP_IS_NULL, "getNamedItem", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_MAP_IS_NULL<200) then
+  call throw_exception(FoX_MAP_IS_NULL, "getNamedItem", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -3725,10 +3935,12 @@ endif
     integer :: i
 
     if (.not.associated(map)) then
-      call throw_exception(FoX_MAP_IS_NULL, "getNamedItem_Value", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_MAP_IS_NULL<200) then
+  call throw_exception(FoX_MAP_IS_NULL, "getNamedItem_Value", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -3754,48 +3966,58 @@ endif
     integer :: i
 
     if (.not.associated(map)) then
-      call throw_exception(FoX_MAP_IS_NULL, "setNamedItem", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_MAP_IS_NULL<200) then
+  call throw_exception(FoX_MAP_IS_NULL, "setNamedItem", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "setNamedItem", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "setNamedItem", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
 
     if (map%readonly) then
-      call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setNamedItem", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.NO_MODIFICATION_ALLOWED_ERR<200) then
+  call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setNamedItem", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (map%ownerElement%nodeType==ELEMENT_NODE) then
       if (.not.associated(map%ownerElement%ownerDocument, arg%ownerDocument)) then
-        call throw_exception(WRONG_DOCUMENT_ERR, "setNamedItem", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+        if (FoX_DOM%FoX_checks.or.WRONG_DOCUMENT_ERR<200) then
+  call throw_exception(WRONG_DOCUMENT_ERR, "setNamedItem", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
       elseif (getNodeType(arg)/=ATTRIBUTE_NODE) then
         !Additional check from DOM 3
-        call throw_exception(HIERARCHY_REQUEST_ERR, "setNamedItem", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+        if (FoX_DOM%FoX_checks.or.HIERARCHY_REQUEST_ERR<200) then
+  call throw_exception(HIERARCHY_REQUEST_ERR, "setNamedItem", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -3814,10 +4036,12 @@ endif
         return
         ! Nothing to do, this attribute is already in this element
       elseif (associated(getOwnerElement(arg))) then
-        call throw_exception(INUSE_ATTRIBUTE_ERR, "setNamedItem", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+        if (FoX_DOM%FoX_checks.or.INUSE_ATTRIBUTE_ERR<200) then
+  call throw_exception(INUSE_ATTRIBUTE_ERR, "setNamedItem", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
     
@@ -3872,20 +4096,24 @@ endif
     integer :: i, i2
 
     if (.not.associated(map)) then
-      call throw_exception(FoX_MAP_IS_NULL, "removeNamedItem", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_MAP_IS_NULL<200) then
+  call throw_exception(FoX_MAP_IS_NULL, "removeNamedItem", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
 
     if (map%readonly) then
-      call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "removeNamedItem", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.NO_MODIFICATION_ALLOWED_ERR<200) then
+  call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "removeNamedItem", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -3916,10 +4144,12 @@ endif
 
     !FIXME if this was an attribute we may have to replace with default value
 
-    call throw_exception(NOT_FOUND_ERR, "removeNamedItem", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+    if (FoX_DOM%FoX_checks.or.NOT_FOUND_ERR<200) then
+  call throw_exception(NOT_FOUND_ERR, "removeNamedItem", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -3934,10 +4164,12 @@ endif
     type(Node), pointer :: np
     
     if (.not.associated(map)) then
-      call throw_exception(FoX_MAP_IS_NULL, "item_nnm", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_MAP_IS_NULL<200) then
+  call throw_exception(FoX_MAP_IS_NULL, "item_nnm", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -3957,10 +4189,12 @@ endif
     integer :: n
 
     if (.not.associated(map)) then
-       call throw_exception(FoX_MAP_IS_NULL, "getLength_nnm", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+       if (FoX_DOM%FoX_checks.or.FoX_MAP_IS_NULL<200) then
+  call throw_exception(FoX_MAP_IS_NULL, "getLength_nnm", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -3981,10 +4215,12 @@ endif
     integer :: i
 
     if (.not.associated(map)) then
-      call throw_exception(FoX_MAP_IS_NULL, "getNamedItemNS", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_MAP_IS_NULL<200) then
+  call throw_exception(FoX_MAP_IS_NULL, "getNamedItemNS", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -4041,10 +4277,12 @@ endif
     integer :: i
 
     if (.not.associated(map)) then
-       call throw_exception(FoX_MAP_IS_NULL, "getNamedItemNS_Value", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+       if (FoX_DOM%FoX_checks.or.FoX_MAP_IS_NULL<200) then
+  call throw_exception(FoX_MAP_IS_NULL, "getNamedItemNS_Value", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -4072,48 +4310,58 @@ endif
     integer :: i
 
     if (.not.associated(map)) then
-      call throw_exception(FoX_MAP_IS_NULL, "setNamedItemNS", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_MAP_IS_NULL<200) then
+  call throw_exception(FoX_MAP_IS_NULL, "setNamedItemNS", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "setNamedItemNS", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "setNamedItemNS", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
 
     if (map%readonly) then
-      call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setNamedItemNS", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.NO_MODIFICATION_ALLOWED_ERR<200) then
+  call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setNamedItemNS", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (map%ownerElement%nodeType==ELEMENT_NODE) then
       if (.not.associated(map%ownerElement%ownerDocument, arg%ownerDocument)) then
-        call throw_exception(WRONG_DOCUMENT_ERR, "setNamedItemNS", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+        if (FoX_DOM%FoX_checks.or.WRONG_DOCUMENT_ERR<200) then
+  call throw_exception(WRONG_DOCUMENT_ERR, "setNamedItemNS", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
       elseif (getNodeType(arg)/=ATTRIBUTE_NODE) then
         !Additional check from DOM 3
-        call throw_exception(HIERARCHY_REQUEST_ERR, "setNamedItemNS", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+        if (FoX_DOM%FoX_checks.or.HIERARCHY_REQUEST_ERR<200) then
+  call throw_exception(HIERARCHY_REQUEST_ERR, "setNamedItemNS", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -4132,10 +4380,12 @@ endif
         return
         ! Nothing to do, this attribute is already in this element
       elseif (associated(getOwnerElement(arg))) then
-        call throw_exception(INUSE_ATTRIBUTE_ERR, "setNamedItemNS", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+        if (FoX_DOM%FoX_checks.or.INUSE_ATTRIBUTE_ERR<200) then
+  call throw_exception(INUSE_ATTRIBUTE_ERR, "setNamedItemNS", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
     
@@ -4191,20 +4441,24 @@ endif
     integer :: i, i2
 
     if (.not.associated(map)) then
-      call throw_exception(FoX_MAP_IS_NULL, "removeNamedItemNS", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_MAP_IS_NULL<200) then
+  call throw_exception(FoX_MAP_IS_NULL, "removeNamedItemNS", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
 
     if (map%readonly) then
-      call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "removeNamedItemNS", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.NO_MODIFICATION_ALLOWED_ERR<200) then
+  call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "removeNamedItemNS", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -4236,10 +4490,12 @@ endif
       endif
     enddo
 
-    call throw_exception(NOT_FOUND_ERR, "removeNamedItemNS", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+    if (FoX_DOM%FoX_checks.or.NOT_FOUND_ERR<200) then
+  call throw_exception(NOT_FOUND_ERR, "removeNamedItemNS", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -4299,10 +4555,12 @@ endif
     logical :: p
 
     if (.not.associated(impl)) then
-      call throw_exception(FoX_IMPL_IS_NULL, "hasFeature", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_IMPL_IS_NULL<200) then
+  call throw_exception(FoX_IMPL_IS_NULL, "hasFeature", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -4327,44 +4585,54 @@ endif
     type(xml_doc_state) :: temp_xds
 
     if (.not.associated(impl)) then
-      call throw_exception(FoX_IMPL_IS_NULL, "createDocumentType", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_IMPL_IS_NULL<200) then
+  call throw_exception(FoX_IMPL_IS_NULL, "createDocumentType", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
 
     if (.not.checkName(qualifiedName, temp_xds)) then
-      call throw_exception(INVALID_CHARACTER_ERR, "createDocumentType", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.INVALID_CHARACTER_ERR<200) then
+  call throw_exception(INVALID_CHARACTER_ERR, "createDocumentType", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (.not.checkQName(qualifiedName, temp_xds))  then
-      call throw_exception(NAMESPACE_ERR, "createDocumentType", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.NAMESPACE_ERR<200) then
+  call throw_exception(NAMESPACE_ERR, "createDocumentType", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (.not.checkPublicId(publicId)) then
-      call throw_exception(FoX_INVALID_PUBLIC_ID, "createDocumentType", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_PUBLIC_ID<200) then
+  call throw_exception(FoX_INVALID_PUBLIC_ID, "createDocumentType", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (.not.checkSystemId(systemId)) then
-      call throw_exception(FoX_INVALID_SYSTEM_ID, "createDocumentType", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_SYSTEM_ID<200) then
+  call throw_exception(FoX_INVALID_SYSTEM_ID, "createDocumentType", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -4394,19 +4662,23 @@ endif
     doc => null()
 
     if (.not.associated(impl)) then
-      call throw_exception(FoX_IMPL_IS_NULL, "createDocument", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_IMPL_IS_NULL<200) then
+  call throw_exception(FoX_IMPL_IS_NULL, "createDocument", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (associated(docType)) then 
       if (associated(getOwnerDocument(docType))) then
-        call throw_exception(WRONG_DOCUMENT_ERR, "createDocument", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+        if (FoX_DOM%FoX_checks.or.WRONG_DOCUMENT_ERR<200) then
+  call throw_exception(WRONG_DOCUMENT_ERR, "createDocument", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -4415,62 +4687,74 @@ endif
 
     allocate(xds)
     if (.not.checkName(qualifiedName, xds)) then
-      call throw_exception(INVALID_CHARACTER_ERR, "createDocument", ex)
-if (present(ex)) then
-  if (inException(ex)) then
+      if (FoX_DOM%FoX_checks.or.INVALID_CHARACTER_ERR<200) then
+  call throw_exception(INVALID_CHARACTER_ERR, "createDocument", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
 
-if (associated(xds)) deallocate(xds)
-     return
+  if (associated(xds)) deallocate(xds)
+       return
+    endif
   endif
 endif
 
     elseif(.not.checkQName(qualifiedName, xds)) then
-      call throw_exception(NAMESPACE_ERR, "createDocument", ex)
-if (present(ex)) then
-  if (inException(ex)) then
+      if (FoX_DOM%FoX_checks.or.NAMESPACE_ERR<200) then
+  call throw_exception(NAMESPACE_ERR, "createDocument", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
 
-if (associated(xds)) deallocate(xds)
-     return
+  if (associated(xds)) deallocate(xds)
+       return
+    endif
   endif
 endif
 
     elseif (prefixOfQName(qualifiedName)/="".and.namespaceURI=="") then
-      call throw_exception(NAMESPACE_ERR, "createDocument", ex)
-if (present(ex)) then
-  if (inException(ex)) then
+      if (FoX_DOM%FoX_checks.or.NAMESPACE_ERR<200) then
+  call throw_exception(NAMESPACE_ERR, "createDocument", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
 
-if (associated(xds)) deallocate(xds)
-     return
+  if (associated(xds)) deallocate(xds)
+       return
+    endif
   endif
 endif
 
     elseif (prefixOfQName(qualifiedName)=="xml".neqv.namespaceURI=="http://www.w3.org/XML/1998/namespace") then
-      call throw_exception(NAMESPACE_ERR, "createDocument", ex)
-if (present(ex)) then
-  if (inException(ex)) then
+      if (FoX_DOM%FoX_checks.or.NAMESPACE_ERR<200) then
+  call throw_exception(NAMESPACE_ERR, "createDocument", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
 
-if (associated(xds)) deallocate(xds)
-     return
+  if (associated(xds)) deallocate(xds)
+       return
+    endif
   endif
 endif
 
     elseif (namespaceURI=="http://www.w3.org/2000/xmlns/") then
-      call throw_exception(NAMESPACE_ERR, "createDocument", ex)
-if (present(ex)) then
-  if (inException(ex)) then
+      if (FoX_DOM%FoX_checks.or.NAMESPACE_ERR<200) then
+  call throw_exception(NAMESPACE_ERR, "createDocument", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
 
-if (associated(xds)) deallocate(xds)
-     return
+  if (associated(xds)) deallocate(xds)
+       return
+    endif
   endif
 endif
 
     elseif (qualifiedName=="xmlns" .or. prefixOfQName(qualifiedName)=="xmlns") then
-      call throw_exception(NAMESPACE_ERR, "createDocument", ex)
-if (present(ex)) then
-  if (inException(ex)) then
+      if (FoX_DOM%FoX_checks.or.NAMESPACE_ERR<200) then
+  call throw_exception(NAMESPACE_ERR, "createDocument", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
 
-if (associated(xds)) deallocate(xds)
-     return
+  if (associated(xds)) deallocate(xds)
+       return
+    endif
   endif
 endif
 
@@ -4528,20 +4812,24 @@ endif
     integer :: i
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "destroyDocument", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "destroyDocument", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
 
     if (arg%nodeType /= DOCUMENT_NODE) then
-      call throw_exception(FoX_INVALID_NODE, "destroyDocument", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "destroyDocument", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -4551,10 +4839,12 @@ endif
     call setGCstate(arg, .false.)
 
     if (arg%nodeType/=DOCUMENT_NODE) then
-      call throw_exception(FoX_INVALID_NODE, "destroyDocument", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "destroyDocument", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -4599,6 +4889,13 @@ endif
 
   end subroutine destroyDocument
 
+  subroutine setFoX_checks(impl, FoX_checks)
+    type(DOMImplementation), pointer :: impl
+    logical, intent(in) :: FoX_checks
+
+    impl%FoX_checks = FoX_checks
+  end subroutine setFoX_checks
+
 
 
 function getdocType(np, ex)result(c) 
@@ -4608,10 +4905,12 @@ function getdocType(np, ex)result(c)
 
 
     if (.not.associated(np)) then
-      call throw_exception(FoX_NODE_IS_NULL, "getdocType", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "getdocType", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -4619,10 +4918,12 @@ endif
 
    if (getNodeType(np)/=DOCUMENT_NODE .and. &
       .true.) then
-      call throw_exception(FoX_INVALID_NODE, "getdocType", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "getdocType", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -4639,20 +4940,24 @@ endif
     type(Node), pointer :: np
  
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "setDocType", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "setDocType", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
     
     if (arg%nodeType/=DOCUMENT_NODE) then
-      call throw_exception(FoX_INVALID_NODE, "setDocType", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "setDocType", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -4670,10 +4975,12 @@ function getdocumentElement(np, ex)result(c)
 
 
     if (.not.associated(np)) then
-      call throw_exception(FoX_NODE_IS_NULL, "getdocumentElement", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "getdocumentElement", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -4681,10 +4988,12 @@ endif
 
    if (getNodeType(np)/=DOCUMENT_NODE .and. &
       .true.) then
-      call throw_exception(FoX_INVALID_NODE, "getdocumentElement", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "getdocumentElement", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -4701,20 +5010,24 @@ endif
     type(xml_doc_state), pointer :: xds
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "setXds", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "setXds", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
 
     if (arg%nodeType/=DOCUMENT_NODE) then
-       call throw_exception(FoX_INVALID_NODE, "setXds", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+       if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "setXds", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -4735,20 +5048,24 @@ endif
     ! where they get that from ...
     if (present(arg)) then
       if (.not.associated(arg)) then
-        call throw_exception(FoX_NODE_IS_NULL, "getImplementation", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+        if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "getImplementation", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
       endif
       
       if (arg%nodeType/=DOCUMENT_NODE) then
-        call throw_exception(FoX_INVALID_NODE, "getImplementation", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+        if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "getImplementation", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -4768,10 +5085,12 @@ endif
     type(Node), pointer :: np
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "setDocumentElement", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "setDocumentElement", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -4780,26 +5099,32 @@ endif
 !NB special case due to additional error conditions:
 
     if (arg%nodeType/=DOCUMENT_NODE) then
-      call throw_exception(FoX_INVALID_NODE, "setDocumentElement", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "setDocumentElement", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (np%nodeType/=ELEMENT_NODE) then
-      call throw_exception(FoX_INVALID_NODE, "setDocumentElement", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "setDocumentElement", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (.not.associated(np%ownerDocument, arg)) then
-      call throw_exception(WRONG_DOCUMENT_ERR, "setDocumentElement", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.WRONG_DOCUMENT_ERR<200) then
+  call throw_exception(WRONG_DOCUMENT_ERR, "setDocumentElement", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -4818,28 +5143,34 @@ endif
     type(Node), pointer :: np
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "createElement", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "createElement", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
 
     if (arg%nodeType/=DOCUMENT_NODE) then
-      call throw_exception(FoX_INVALID_NODE, "createElement", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "createElement", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (.not.checkName(tagName, getXds(arg))) then
-      call throw_exception(INVALID_CHARACTER_ERR, "createElement", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.INVALID_CHARACTER_ERR<200) then
+  call throw_exception(INVALID_CHARACTER_ERR, "createElement", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -4867,20 +5198,24 @@ endif
     type(Node), pointer :: np
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "createDocumentFragment", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "createDocumentFragment", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
 
     if (arg%nodeType/=DOCUMENT_NODE) then
-      call throw_exception(FoX_INVALID_NODE, "createDocumentFragment", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "createDocumentFragment", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -4903,28 +5238,34 @@ endif
     type(Node), pointer :: np
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "createTextNode", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "createTextNode", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
 
     if (arg%nodeType/=DOCUMENT_NODE) then
-      call throw_exception(FoX_INVALID_NODE, "createTextNode", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "createTextNode", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (.not.checkChars(data, getXmlVersionEnum(arg))) then
-      call throw_exception(FoX_INVALID_CHARACTER, "createTextNode", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_CHARACTER<200) then
+  call throw_exception(FoX_INVALID_CHARACTER, "createTextNode", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -4948,36 +5289,44 @@ endif
     type(Node), pointer :: np
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "createComment", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "createComment", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
 
     if (arg%nodeType/=DOCUMENT_NODE) then
-      call throw_exception(FoX_INVALID_NODE, "createComment", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "createComment", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (.not.checkChars(data, getXmlVersionEnum(arg))) then
-      call throw_exception(FoX_INVALID_CHARACTER, "createComment", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_CHARACTER<200) then
+  call throw_exception(FoX_INVALID_CHARACTER, "createComment", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (index(data,"--")>0) then   
-      call throw_exception(FoX_INVALID_COMMENT, "createComment", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_COMMENT<200) then
+  call throw_exception(FoX_INVALID_COMMENT, "createComment", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -5001,36 +5350,44 @@ endif
     type(Node), pointer :: np
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "createCdataSection", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "createCdataSection", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
 
     if (arg%nodeType/=DOCUMENT_NODE) then
-      call throw_exception(FoX_INVALID_NODE, "createCdataSection", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "createCdataSection", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (.not.checkChars(data, getXmlVersionEnum(arg))) then
-      call throw_exception(FoX_INVALID_CHARACTER, "createCdataSection", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_CHARACTER<200) then
+  call throw_exception(FoX_INVALID_CHARACTER, "createCdataSection", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (index(data,"]]>")>0) then   
-      call throw_exception(FoX_INVALID_CDATA_SECTION, "createCdataSection", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_CDATA_SECTION<200) then
+  call throw_exception(FoX_INVALID_CDATA_SECTION, "createCdataSection", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -5055,44 +5412,54 @@ endif
     type(Node), pointer :: np
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "createProcessingInstruction", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "createProcessingInstruction", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
 
     if (arg%nodeType/=DOCUMENT_NODE) then
-      call throw_exception(FoX_INVALID_NODE, "createProcessingInstruction", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "createProcessingInstruction", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (.not.checkName(target, getXds(arg))) then
-      call throw_exception(INVALID_CHARACTER_ERR, "createProcessingInstruction", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.INVALID_CHARACTER_ERR<200) then
+  call throw_exception(INVALID_CHARACTER_ERR, "createProcessingInstruction", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (.not.checkChars(data, getXmlVersionEnum(arg))) then
-      call throw_exception(FoX_INVALID_CHARACTER, "createProcessingInstruction", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_CHARACTER<200) then
+  call throw_exception(FoX_INVALID_CHARACTER, "createProcessingInstruction", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (index(data,"?>")>0) then   
-      call throw_exception(FoX_INVALID_PI_DATA, "createProcessingInstruction", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_PI_DATA<200) then
+  call throw_exception(FoX_INVALID_PI_DATA, "createProcessingInstruction", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -5116,28 +5483,34 @@ endif
     type(Node), pointer :: np
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "createAttribute", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "createAttribute", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
 
     if (arg%nodeType/=DOCUMENT_NODE) then
-      call throw_exception(FoX_INVALID_NODE, "createAttribute", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "createAttribute", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (.not.checkName(name, getXds(arg))) then
-      call throw_exception(INVALID_CHARACTER_ERR, "createAttribute", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.INVALID_CHARACTER_ERR<200) then
+  call throw_exception(INVALID_CHARACTER_ERR, "createAttribute", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -5313,38 +5686,46 @@ endif
     integer :: i
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "createEntityReference", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "createEntityReference", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
 
     if (arg%nodeType/=DOCUMENT_NODE) then
-      call throw_exception(FoX_INVALID_NODE, "createEntityReference", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "createEntityReference", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (.not.checkName(name, getXds(arg))) then
-      call throw_exception(INVALID_CHARACTER_ERR, "createEntityReference", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.INVALID_CHARACTER_ERR<200) then
+  call throw_exception(INVALID_CHARACTER_ERR, "createEntityReference", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
 
     if (getXmlStandalone(arg).and..not.associated(getDocType(arg))) then
-      call throw_exception(FoX_NO_SUCH_ENTITY, "createEntityReference", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NO_SUCH_ENTITY<200) then
+  call throw_exception(FoX_NO_SUCH_ENTITY, "createEntityReference", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -5356,10 +5737,12 @@ endif
         ent => getNamedItem(getEntities(getDocType(arg)), name)
         if (associated(ent)) then
           if (getIllFormed(ent)) then
-            call throw_exception(FoX_INVALID_ENTITY, "createEntityReference", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+            if (FoX_DOM%FoX_checks.or.FoX_INVALID_ENTITY<200) then
+  call throw_exception(FoX_INVALID_ENTITY, "createEntityReference", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -5370,12 +5753,14 @@ endif
             call setReadOnlyNode(newNode, .true., .true.)
           enddo
         elseif (getXmlStandalone(arg)) then
-          call throw_exception(FoX_NO_SUCH_ENTITY, "createEntityReference", ex)
-if (present(ex)) then
-  if (inException(ex)) then
+          if (FoX_DOM%FoX_checks.or.FoX_NO_SUCH_ENTITY<200) then
+  call throw_exception(FoX_NO_SUCH_ENTITY, "createEntityReference", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
 
-if (associated(np)) deallocate(np)
-     return
+  if (associated(np)) deallocate(np)
+       return
+    endif
   endif
 endif
 
@@ -5405,28 +5790,34 @@ endif
     type(Node), pointer :: np
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "createEmptyEntityReference", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "createEmptyEntityReference", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
 
     if (arg%nodeType/=DOCUMENT_NODE) then
-      call throw_exception(FoX_INVALID_NODE, "createEmptyEntityReference", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "createEmptyEntityReference", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (.not.checkName(name, getXds(arg))) then
-      call throw_exception(INVALID_CHARACTER_ERR, "createEmptyEntityReference", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.INVALID_CHARACTER_ERR<200) then
+  call throw_exception(INVALID_CHARACTER_ERR, "createEmptyEntityReference", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -5454,10 +5845,12 @@ endif
     integer :: i, i_tree
 
     if (.not.associated(doc)) then
-      call throw_exception(FoX_NODE_IS_NULL, "getElementsByTagName", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "getElementsByTagName", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -5465,29 +5858,35 @@ endif
 
     if (doc%nodeType==DOCUMENT_NODE) then
       if (present(name).or..not.present(tagName)) then
-        call throw_exception(FoX_INVALID_NODE, "getElementsByTagName", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+        if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "getElementsByTagName", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
       endif
     elseif (doc%nodeType==ELEMENT_NODE) then
       if (present(name).or..not.present(tagName)) then
-        call throw_exception(FoX_INVALID_NODE, "getElementsByTagName", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+        if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "getElementsByTagName", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
       endif
     else      
-      call throw_exception(FoX_INVALID_NODE, "getElementsByTagName", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "getElementsByTagName", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -5605,29 +6004,35 @@ endif
     integer :: i_tree
 
     if (.not.associated(doc).or..not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "importNode", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "importNode", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
 
     if (getNodeType(doc)/=DOCUMENT_NODE) then
-      call throw_exception(FoX_INVALID_NODE, "importNode", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "importNode", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (getNodeType(arg)==DOCUMENT_NODE .or. &
       getNodeType(arg)==DOCUMENT_TYPE_NODE) then
-      call throw_exception(NOT_SUPPORTED_ERR, "importNode", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.NOT_SUPPORTED_ERR<200) then
+  call throw_exception(NOT_SUPPORTED_ERR, "importNode", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -5692,18 +6097,22 @@ endif
         case (COMMENT_NODE)
           new => createComment(doc, getData(this))
         case (DOCUMENT_NODE)
-          call throw_exception(NOT_SUPPORTED_ERR, "importNode", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+          if (FoX_DOM%FoX_checks.or.NOT_SUPPORTED_ERR<200) then
+  call throw_exception(NOT_SUPPORTED_ERR, "importNode", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
         case (DOCUMENT_TYPE_NODE)
-          call throw_exception(NOT_SUPPORTED_ERR, "importNode", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+          if (FoX_DOM%FoX_checks.or.NOT_SUPPORTED_ERR<200) then
+  call throw_exception(NOT_SUPPORTED_ERR, "importNode", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -5809,62 +6218,76 @@ endif
     type(Node), pointer :: np
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "createElementNS", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "createElementNS", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
 
     if (arg%nodeType/=DOCUMENT_NODE) then
-      call throw_exception(FoX_INVALID_NODE, "createElementNS", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "createElementNS", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (.not.checkName(qualifiedName, getXds(arg))) then
-      call throw_exception(INVALID_CHARACTER_ERR, "createElementNS", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.INVALID_CHARACTER_ERR<200) then
+  call throw_exception(INVALID_CHARACTER_ERR, "createElementNS", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (.not.checkQName(qualifiedName, getXds(arg))) then
-      call throw_exception(NAMESPACE_ERR, "createElementNS", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.NAMESPACE_ERR<200) then
+  call throw_exception(NAMESPACE_ERR, "createElementNS", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (prefixOfQName(qualifiedName)/="" &
      .and. namespaceURI=="") then
-      call throw_exception(NAMESPACE_ERR, "createElementNS", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.NAMESPACE_ERR<200) then
+  call throw_exception(NAMESPACE_ERR, "createElementNS", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (namespaceURI=="http://www.w3.org/XML/1998/namespace" .neqv. &
       prefixOfQName(qualifiedName)=="xml") then
-      call throw_exception(NAMESPACE_ERR, "createElementNS", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.NAMESPACE_ERR<200) then
+  call throw_exception(NAMESPACE_ERR, "createElementNS", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (namespaceURI=="http://www.w3.org/2000/xmlns/") then
-      call throw_exception(NAMESPACE_ERR, "createElementNS", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.NAMESPACE_ERR<200) then
+  call throw_exception(NAMESPACE_ERR, "createElementNS", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -5894,63 +6317,77 @@ endif
     type(Node), pointer :: np
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "createAttributeNS", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "createAttributeNS", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
 
     if (arg%nodeType/=DOCUMENT_NODE) then
-      call throw_exception(FoX_INVALID_NODE, "createAttributeNS", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "createAttributeNS", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (.not.checkName(qualifiedName, getXds(arg))) then
-      call throw_exception(INVALID_CHARACTER_ERR, "createAttributeNS", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.INVALID_CHARACTER_ERR<200) then
+  call throw_exception(INVALID_CHARACTER_ERR, "createAttributeNS", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (.not.checkQName(qualifiedName, getXds(arg))) then
-      call throw_exception(NAMESPACE_ERR, "createAttributeNS", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.NAMESPACE_ERR<200) then
+  call throw_exception(NAMESPACE_ERR, "createAttributeNS", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (prefixOfQName(qualifiedName)/="" &
      .and. namespaceURI=="") then
-      call throw_exception(NAMESPACE_ERR, "createAttributeNS", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.NAMESPACE_ERR<200) then
+  call throw_exception(NAMESPACE_ERR, "createAttributeNS", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (namespaceURI=="http://www.w3.org/XML/1998/namespace" .neqv. &
       prefixOfQName(qualifiedName)=="xml") then
-      call throw_exception(NAMESPACE_ERR, "createAttributeNS", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.NAMESPACE_ERR<200) then
+  call throw_exception(NAMESPACE_ERR, "createAttributeNS", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (namespaceURI=="http://www.w3.org/2000/xmlns/" .neqv. &
       (qualifiedName=="xmlns" .or. prefixOfQName(qualifiedName)=="xmlns")) then
-      call throw_exception(NAMESPACE_ERR, "createAttributeNS", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.NAMESPACE_ERR<200) then
+  call throw_exception(NAMESPACE_ERR, "createAttributeNS", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -5983,20 +6420,24 @@ endif
     integer :: i, i_tree
 
     if (.not.associated(doc)) then
-      call throw_exception(FoX_NODE_IS_NULL, "getElementsByTagNameNS", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "getElementsByTagNameNS", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
 
     if (doc%nodeType/=DOCUMENT_NODE.and.doc%nodeType/=ELEMENT_NODE) then
-      call throw_exception(FoX_INVALID_NODE, "getElementsByTagNameNS", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "getElementsByTagNameNS", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -6123,20 +6564,24 @@ endif
     logical :: doneChildren, doneAttributes
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "getElementById", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "getElementById", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
 
     if (arg%nodeType/=DOCUMENT_NODE) then
-      call throw_exception(FoX_INVALID_NODE, "getElementById", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "getElementById", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -6221,10 +6666,12 @@ function getxmlStandalone(np, ex)result(c)
 
 
     if (.not.associated(np)) then
-      call throw_exception(FoX_NODE_IS_NULL, "getxmlStandalone", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "getxmlStandalone", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -6232,10 +6679,12 @@ endif
 
    if (getNodeType(np)/=DOCUMENT_NODE .and. &
       .true.) then
-      call throw_exception(FoX_INVALID_NODE, "getxmlStandalone", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "getxmlStandalone", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -6252,10 +6701,12 @@ subroutine setxmlStandalone(np, c, ex)
 
 
     if (.not.associated(np)) then
-      call throw_exception(FoX_NODE_IS_NULL, "setxmlStandalone", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "setxmlStandalone", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -6263,10 +6714,12 @@ endif
 
    if (getNodeType(np)/=DOCUMENT_NODE .and. &
       .true.) then
-      call throw_exception(FoX_INVALID_NODE, "setxmlStandalone", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "setxmlStandalone", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -6284,20 +6737,24 @@ endif
     character(len=3) :: s
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "getXmlVersion", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "getXmlVersion", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
 
     if (arg%nodeType/=DOCUMENT_NODE) then
-      call throw_exception(FoX_INVALID_NODE, "getXmlVersion", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "getXmlVersion", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -6319,20 +6776,24 @@ endif
     character(len=*) :: s
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "setXmlVersion", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "setXmlVersion", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
 
     if (arg%nodeType/=DOCUMENT_NODE) then
-      call throw_exception(FoX_INVALID_NODE, "setXmlVersion", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "setXmlVersion", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -6343,10 +6804,12 @@ endif
     elseif (s=="1.1") then
       arg%docExtras%xds%xml_version = XML1_1
     else
-      call throw_exception(NOT_SUPPORTED_ERR, "setXmlVersion", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.NOT_SUPPORTED_ERR<200) then
+  call throw_exception(NOT_SUPPORTED_ERR, "setXmlVersion", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -6368,20 +6831,24 @@ endif
     type(Node), pointer :: np
    
     if (.not.associated(np)) then
-      call throw_exception(FoX_NODE_IS_NULL, "normalizeDocument", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "normalizeDocument", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
 
     if (np%nodeType/=DOCUMENT_NODE) then
-      call throw_exception(FoX_INVALID_NODE, "normalizeDocument", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "normalizeDocument", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -6405,20 +6872,24 @@ endif
     type(Node), pointer :: np
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "createNamespaceNode", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "createNamespaceNode", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
 
     if (arg%nodeType/=DOCUMENT_NODE) then
-      call throw_exception(FoX_INVALID_NODE, "createNamespaceNode", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "createNamespaceNode", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -6442,20 +6913,24 @@ endif
     type(Node), pointer :: np
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "createEntity", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "createEntity", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
 
     if (arg%nodeType/=DOCUMENT_NODE) then
-      call throw_exception(FoX_INVALID_NODE, "createEntity", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "createEntity", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -6485,20 +6960,24 @@ endif
     type(Node), pointer :: np
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "createNotation", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "createNotation", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
 
     if (arg%nodeType/=DOCUMENT_NODE) then
-      call throw_exception(FoX_INVALID_NODE, "createNotation", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "createNotation", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -6524,10 +7003,12 @@ endif
     integer :: n
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_INTERNAL_ERROR, "getXmlVersionEnum", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INTERNAL_ERROR<200) then
+  call throw_exception(FoX_INTERNAL_ERROR, "getXmlVersionEnum", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -6543,10 +7024,12 @@ endif
     type(xml_doc_state) :: xds
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_INTERNAL_ERROR, "getXds", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INTERNAL_ERROR<200) then
+  call throw_exception(FoX_INTERNAL_ERROR, "getXds", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -6563,10 +7046,12 @@ endif
     logical :: b
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_INTERNAL_ERROR, "getGCstate", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INTERNAL_ERROR<200) then
+  call throw_exception(FoX_INTERNAL_ERROR, "getGCstate", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -6582,10 +7067,12 @@ endif
     logical, intent(in) :: b
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_INTERNAL_ERROR, "setGCstate", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INTERNAL_ERROR<200) then
+  call throw_exception(FoX_INTERNAL_ERROR, "setGCstate", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -6605,20 +7092,24 @@ endif
     type(NamedNodeMap), pointer :: nnp
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "getEntities", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "getEntities", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
 
     if (arg%nodeType/=DOCUMENT_TYPE_NODE) then
-       call throw_exception(FoX_INVALID_NODE, "getEntities", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+       if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "getEntities", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -6633,20 +7124,24 @@ endif
     type(NamedNodeMap), pointer :: nnp
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "getNotations", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "getNotations", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
 
     if (arg%nodeType/=DOCUMENT_TYPE_NODE) then
-       call throw_exception(FoX_INVALID_NODE, "getNotations", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+       if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "getNotations", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -6682,10 +7177,12 @@ function getinternalSubset(np, ex)result(c)
 
 
     if (.not.associated(np)) then
-      call throw_exception(FoX_NODE_IS_NULL, "getinternalSubset", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "getinternalSubset", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -6693,10 +7190,12 @@ endif
 
    if (getNodeType(np)/=DOCUMENT_TYPE_NODE .and. &
       .true.) then
-      call throw_exception(FoX_INVALID_NODE, "getinternalSubset", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "getinternalSubset", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -6730,10 +7229,12 @@ function gettagName(np, ex)result(c)
 
 
     if (.not.associated(np)) then
-      call throw_exception(FoX_NODE_IS_NULL, "gettagName", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "gettagName", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -6741,10 +7242,12 @@ endif
 
    if (getNodeType(np)/=ELEMENT_NODE .and. &
       .true.) then
-      call throw_exception(FoX_INVALID_NODE, "gettagName", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "gettagName", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -6783,20 +7286,24 @@ endif
     character(len=getAttributes_len(arg, associated(arg), name)) :: c
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "getAttribute", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "getAttribute", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
 
     if (getNodeType(arg) /= ELEMENT_NODE) then
-      call throw_exception(FoX_INVALID_NODE, "getAttribute", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "getAttribute", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -6817,44 +7324,54 @@ endif
     logical :: quickFix
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "setAttribute", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "setAttribute", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
 
     if (getNodetype(arg)/=ELEMENT_NODE) then
-      call throw_exception(FoX_INVALID_NODE, "setAttribute", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "setAttribute", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (arg%readonly) then
-      call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setAttribute", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.NO_MODIFICATION_ALLOWED_ERR<200) then
+  call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setAttribute", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (.not.checkName(name, getXds(getOwnerDocument(arg)))) then
-      call throw_exception(INVALID_CHARACTER_ERR, "setAttribute", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.INVALID_CHARACTER_ERR<200) then
+  call throw_exception(INVALID_CHARACTER_ERR, "setAttribute", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (.not.checkChars(value, getXmlVersionEnum(getOwnerDocument(arg)))) then
-      call throw_exception(FoX_INVALID_CHARACTER, "setAttribute", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_CHARACTER<200) then
+  call throw_exception(FoX_INVALID_CHARACTER, "setAttribute", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -6893,28 +7410,34 @@ endif
     integer :: e
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "removeAttribute", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "removeAttribute", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
 
     if (getNodetype(arg)/=ELEMENT_NODE) then
-      call throw_exception(FoX_INVALID_NODE, "removeAttribute", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "removeAttribute", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (arg%readonly) then
-      call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "removeAttribute", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.NO_MODIFICATION_ALLOWED_ERR<200) then
+  call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "removeAttribute", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -6927,10 +7450,12 @@ endif
     if (inException(ex2)) then
       e = getExceptionCode(ex2)
       if (e/=NOT_FOUND_ERR) then
-        call throw_exception(e, "removeAttribute", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+        if (FoX_DOM%FoX_checks.or.e<200) then
+  call throw_exception(e, "removeAttribute", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -6960,20 +7485,24 @@ endif
     type(Node), pointer :: attr
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "getAttributeNode", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "getAttributeNode", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
 
     if (arg%nodeType /= ELEMENT_NODE) then
-      call throw_exception(FoX_INVALID_NODE, "getAttributeNode", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "getAttributeNode", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -6992,36 +7521,44 @@ endif
     type(Node), pointer :: dummy
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "setAttributeNode", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "setAttributeNode", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
 
     if (arg%nodeType /= ELEMENT_NODE) then
-      call throw_exception(FoX_INVALID_NODE, "setAttributeNode", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "setAttributeNode", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (.not.associated(arg%ownerDocument, newattr%ownerDocument)) then
-      call throw_exception(WRONG_DOCUMENT_ERR, "setAttributeNode", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.WRONG_DOCUMENT_ERR<200) then
+  call throw_exception(WRONG_DOCUMENT_ERR, "setAttributeNode", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (arg%readonly) then
-      call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setAttributeNode", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.NO_MODIFICATION_ALLOWED_ERR<200) then
+  call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setAttributeNode", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -7032,10 +7569,12 @@ endif
       return
       ! Nothing to do, this attribute is already in this element
     elseif (associated(getOwnerElement(newattr))) then
-      call throw_exception(INUSE_ATTRIBUTE_ERR, "setAttributeNode", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.INUSE_ATTRIBUTE_ERR<200) then
+  call throw_exception(INUSE_ATTRIBUTE_ERR, "setAttributeNode", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -7059,36 +7598,44 @@ endif
     integer :: i
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "removeAttributeNode", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "removeAttributeNode", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
 
     if (arg%nodeType /= ELEMENT_NODE) then
-      call throw_exception(FoX_INVALID_NODE, "removeAttributeNode", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "removeAttributeNode", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (.not.associated(arg%ownerDocument, oldattr%ownerDocument)) then
-      call throw_exception(WRONG_DOCUMENT_ERR, "removeAttributeNode", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.WRONG_DOCUMENT_ERR<200) then
+  call throw_exception(WRONG_DOCUMENT_ERR, "removeAttributeNode", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (arg%readonly) then
-      call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "removeAttributeNode", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.NO_MODIFICATION_ALLOWED_ERR<200) then
+  call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "removeAttributeNode", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -7102,10 +7649,12 @@ endif
       endif
     enddo
 
-    call throw_exception(NOT_FOUND_ERR, "removeAttributeNode", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+    if (FoX_DOM%FoX_checks.or.NOT_FOUND_ERR<200) then
+  call throw_exception(NOT_FOUND_ERR, "removeAttributeNode", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -7148,20 +7697,24 @@ endif
     character(len=getAttributesNS_len(arg, associated(arg), localname, namespaceURI)) :: c
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "getAttributeNS", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "getAttributeNS", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
 
     if (arg%nodeType /= ELEMENT_NODE) then
-      call throw_exception(FoX_INVALID_NODE, "getAttributeNS", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "getAttributeNS", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -7183,71 +7736,87 @@ endif
     logical :: quickfix
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "setAttributeNS", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "setAttributeNS", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
 
     if (arg%nodeType /= ELEMENT_NODE) then
-      call throw_exception(FoX_INVALID_NODE, "setAttributeNS", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "setAttributeNS", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (arg%readonly) then
-      call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setAttributeNS", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.NO_MODIFICATION_ALLOWED_ERR<200) then
+  call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setAttributeNS", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (.not.checkName(qualifiedname, getXds(getOwnerDocument(arg)))) then
-      call throw_exception(INVALID_CHARACTER_ERR, "setAttributeNS", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.INVALID_CHARACTER_ERR<200) then
+  call throw_exception(INVALID_CHARACTER_ERR, "setAttributeNS", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (.not.checkQName(qualifiedname, getXds(getOwnerDocument(arg)))) then
-      call throw_exception(NAMESPACE_ERR, "setAttributeNS", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.NAMESPACE_ERR<200) then
+  call throw_exception(NAMESPACE_ERR, "setAttributeNS", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (prefixOfQName(qualifiedName)/="" &
      .and. namespaceURI=="") then
-      call throw_exception(NAMESPACE_ERR, "setAttributeNS", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.NAMESPACE_ERR<200) then
+  call throw_exception(NAMESPACE_ERR, "setAttributeNS", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (prefixOfQName(qualifiedName)=="xml" .neqv. & 
       namespaceURI=="http://www.w3.org/XML/1998/namespace") then
-      call throw_exception(NAMESPACE_ERR, "setAttributeNS", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.NAMESPACE_ERR<200) then
+  call throw_exception(NAMESPACE_ERR, "setAttributeNS", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (namespaceURI=="http://www.w3.org/2000/xmlns/" .neqv. &
       (qualifiedName=="xmlns" .or. prefixOfQName(qualifiedName)=="xmlns")) then
-      call throw_exception(NAMESPACE_ERR, "setAttributeNS", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.NAMESPACE_ERR<200) then
+  call throw_exception(NAMESPACE_ERR, "setAttributeNS", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -7292,28 +7861,34 @@ endif
     integer :: e
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "removeAttributeNS", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "removeAttributeNS", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
 
     if (arg%nodeType /= ELEMENT_NODE) then
-      call throw_exception(FoX_INVALID_NODE, "removeAttributeNS", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "removeAttributeNS", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (arg%readonly) then
-      call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "removeAttributeNS", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.NO_MODIFICATION_ALLOWED_ERR<200) then
+  call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "removeAttributeNS", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -7327,10 +7902,12 @@ endif
     if (inException(ex2)) then
       e = getExceptionCode(ex2)
       if (e/=NOT_FOUND_ERR) then
-        call throw_exception(e, "removeAttributeNS", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+        if (FoX_DOM%FoX_checks.or.e<200) then
+  call throw_exception(e, "removeAttributeNS", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -7361,20 +7938,24 @@ endif
     type(Node), pointer :: attr
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "getAttributeNodeNS", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "getAttributeNodeNS", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
 
     if (arg%nodeType /= ELEMENT_NODE) then
-      call throw_exception(FoX_INVALID_NODE, "getAttributeNodeNS", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "getAttributeNodeNS", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -7394,36 +7975,44 @@ endif
     type(Node), pointer :: dummy
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "setAttributeNodeNS", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "setAttributeNodeNS", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
 
     if (arg%nodeType /= ELEMENT_NODE) then
-      call throw_exception(FoX_INVALID_NODE, "setAttributeNodeNS", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "setAttributeNodeNS", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (.not.associated(arg%ownerDocument, newattr%ownerDocument)) then
-      call throw_exception(WRONG_DOCUMENT_ERR, "setAttributeNodeNS", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.WRONG_DOCUMENT_ERR<200) then
+  call throw_exception(WRONG_DOCUMENT_ERR, "setAttributeNodeNS", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (arg%readonly) then
-      call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setAttributeNodeNS", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.NO_MODIFICATION_ALLOWED_ERR<200) then
+  call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setAttributeNodeNS", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -7434,10 +8023,12 @@ endif
       return
       ! Nothing to do, this attribute is already in this element
     elseif (associated(getOwnerElement(newattr))) then
-      call throw_exception(INUSE_ATTRIBUTE_ERR, "setAttributeNodeNS", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.INUSE_ATTRIBUTE_ERR<200) then
+  call throw_exception(INUSE_ATTRIBUTE_ERR, "setAttributeNodeNS", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -7462,28 +8053,34 @@ endif
     integer :: i
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "removeAttributeNodeNS", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "removeAttributeNodeNS", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
 
     if (arg%nodeType /= ELEMENT_NODE) then
-      call throw_exception(FoX_INVALID_NODE, "removeAttributeNodeNS", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "removeAttributeNodeNS", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (arg%readonly) then
-      call throw_exception(WRONG_DOCUMENT_ERR, "removeAttributeNodeNS", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.WRONG_DOCUMENT_ERR<200) then
+  call throw_exception(WRONG_DOCUMENT_ERR, "removeAttributeNodeNS", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -7497,10 +8094,12 @@ endif
       endif
     enddo
 
-    call throw_exception(NOT_FOUND_ERR, "removeAttributeNodeNS", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+    if (FoX_DOM%FoX_checks.or.NOT_FOUND_ERR<200) then
+  call throw_exception(NOT_FOUND_ERR, "removeAttributeNodeNS", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -7522,20 +8121,24 @@ endif
     integer :: i
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "hasAttribute", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "hasAttribute", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
  
    if (arg%nodeType /= ELEMENT_NODE) then
-      call throw_exception(FoX_INVALID_NODE, "hasAttribute", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "hasAttribute", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -7562,20 +8165,24 @@ endif
     integer :: i
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "hasAttributeNS", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "hasAttributeNS", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
  
    if (arg%nodeType /= ELEMENT_NODE) then
-      call throw_exception(FoX_INVALID_NODE, "hasAttributeNS", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "hasAttributeNS", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -7607,20 +8214,24 @@ endif
     logical :: quickFix
 
     if (.not.associated(np)) then
-      call throw_exception(FoX_NODE_IS_NULL, "appendNSNode", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "appendNSNode", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
     
     if (np%nodeType /= ELEMENT_NODE) then
-      call throw_exception(FoX_INVALID_NODE, "appendNSNode", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "appendNSNode", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -7656,10 +8267,12 @@ function getspecified(np, ex)result(c)
 
 
     if (.not.associated(np)) then
-      call throw_exception(FoX_NODE_IS_NULL, "getspecified", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "getspecified", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -7667,10 +8280,12 @@ endif
 
    if (getNodeType(np)/=ATTRIBUTE_NODE .and. &
       .true.) then
-      call throw_exception(FoX_INVALID_NODE, "getspecified", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "getspecified", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -7688,10 +8303,12 @@ subroutine setspecified(np, c, ex)
 
 
     if (.not.associated(np)) then
-      call throw_exception(FoX_NODE_IS_NULL, "setspecified", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "setspecified", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -7699,10 +8316,12 @@ endif
 
    if (getNodeType(np)/=ATTRIBUTE_NODE .and. &
       .true.) then
-      call throw_exception(FoX_INVALID_NODE, "setspecified", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "setspecified", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -7720,10 +8339,12 @@ function getisId(np, ex)result(c)
 
 
     if (.not.associated(np)) then
-      call throw_exception(FoX_NODE_IS_NULL, "getisId", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "getisId", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -7731,10 +8352,12 @@ endif
 
    if (getNodeType(np)/=ATTRIBUTE_NODE .and. &
       .true.) then
-      call throw_exception(FoX_INVALID_NODE, "getisId", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "getisId", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -7752,10 +8375,12 @@ subroutine setisId(np, c, ex)
 
 
     if (.not.associated(np)) then
-      call throw_exception(FoX_NODE_IS_NULL, "setisId", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "setisId", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -7763,10 +8388,12 @@ endif
 
    if (getNodeType(np)/=ATTRIBUTE_NODE .and. &
       .true.) then
-      call throw_exception(FoX_INVALID_NODE, "setisId", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "setisId", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -7784,10 +8411,12 @@ function getownerElement(np, ex)result(c)
 
 
     if (.not.associated(np)) then
-      call throw_exception(FoX_NODE_IS_NULL, "getownerElement", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "getownerElement", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -7795,10 +8424,12 @@ endif
 
    if (getNodeType(np)/=ATTRIBUTE_NODE .and. &
       .true.) then
-      call throw_exception(FoX_INVALID_NODE, "getownerElement", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "getownerElement", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -7833,20 +8464,24 @@ endif
     integer :: i, n
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "getValue_DOM", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "getValue_DOM", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
 
     if (getNodeType(arg)/=ATTRIBUTE_NODE) then
-      call throw_exception(FoX_INVALID_NODE, "getValue_DOM", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "getValue_DOM", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -7869,36 +8504,44 @@ endif
     integer :: i
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "setValue", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "setValue", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
 
     if (getNodeType(arg)/=ATTRIBUTE_NODE) then
-      call throw_exception(FoX_INVALID_NODE, "setValue", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "setValue", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (arg%readonly) then
-      call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setValue", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.NO_MODIFICATION_ALLOWED_ERR<200) then
+  call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setValue", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (.not.checkChars(value, getXmlVersionEnum(getOwnerDocument(arg)))) then
-      call throw_exception(FoX_INVALID_CHARACTER, "setValue", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_CHARACTER<200) then
+  call throw_exception(FoX_INVALID_CHARACTER, "setValue", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -7935,20 +8578,24 @@ endif
     integer :: n
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "getLength_characterdata", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "getLength_characterdata", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
     
     if (.not.isCharData(arg%nodeType)) then
-      call throw_exception(FoX_INVALID_NODE, "getLength_characterdata", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "getLength_characterdata", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -7967,28 +8614,34 @@ endif
     character(len=count) :: c
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "subStringData", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "subStringData", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
 
     if (.not.isCharData(arg%nodeType)) then
-      call throw_exception(FoX_INVALID_NODE, "subStringData", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "subStringData", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (offset<0.or.offset>size(arg%nodeValue).or.count<0) then
-      call throw_exception(INDEX_SIZE_ERR, "subStringData", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.INDEX_SIZE_ERR<200) then
+  call throw_exception(INDEX_SIZE_ERR, "subStringData", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -8011,38 +8664,46 @@ endif
     character, pointer :: tmp(:)
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "appendData", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "appendData", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
 
     if (.not.isCharData(arg%nodeType)) then
-      call throw_exception(FoX_INVALID_NODE, "appendData", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "appendData", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (arg%readonly) then
-      call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "appendData", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.NO_MODIFICATION_ALLOWED_ERR<200) then
+  call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "appendData", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
 
     if (.not.checkChars(data, getXmlVersionEnum(getOwnerDocument(arg)))) then
-      call throw_exception(FoX_INVALID_CHARACTER, "appendData", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_CHARACTER<200) then
+  call throw_exception(FoX_INVALID_CHARACTER, "appendData", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -8055,18 +8716,22 @@ endif
     ! We have to do these checks *after* appending data in case offending string
     ! spans old & new data
     if (arg%nodeType==COMMENT_NODE .and. index(str_vs(arg%nodeValue),"--")>0) then
-      call throw_exception(FoX_INVALID_COMMENT, "appendData", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_COMMENT<200) then
+  call throw_exception(FoX_INVALID_COMMENT, "appendData", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (arg%nodeType==CDATA_SECTION_NODE .and. index(str_vs(arg%nodeValue), "]]>")>0) then
-      call throw_exception(FoX_INVALID_CDATA_SECTION, "appendData", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_CDATA_SECTION<200) then
+  call throw_exception(FoX_INVALID_CDATA_SECTION, "appendData", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -8084,46 +8749,56 @@ endif
     character, pointer :: tmp(:)
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "insertData", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "insertData", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
 
     if (.not.isCharData(arg%nodeType)) then
-      call throw_exception(FoX_INVALID_NODE, "insertData", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "insertData", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (arg%readonly) then
-      call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "insertData", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.NO_MODIFICATION_ALLOWED_ERR<200) then
+  call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "insertData", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (offset<0.or.offset>size(arg%nodeValue)) then
-      call throw_exception(INDEX_SIZE_ERR, "insertData", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.INDEX_SIZE_ERR<200) then
+  call throw_exception(INDEX_SIZE_ERR, "insertData", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
 
     if (.not.checkChars(data, getXmlVersionEnum(getOwnerDocument(arg)))) then
-      call throw_exception(FoX_INVALID_CHARACTER, "insertData", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_CHARACTER<200) then
+  call throw_exception(FoX_INVALID_CHARACTER, "insertData", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -8136,18 +8811,22 @@ endif
     ! We have to do these checks *after* appending data in case offending string
     ! spans old & new data
     if (arg%nodeType==COMMENT_NODE .and. index(str_vs(arg%nodeValue),"--")>0) then
-      call throw_exception(FoX_INVALID_COMMENT, "insertData", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_COMMENT<200) then
+  call throw_exception(FoX_INVALID_COMMENT, "insertData", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (arg%nodeType==CDATA_SECTION_NODE .and. index(str_vs(arg%nodeValue), "]]>")>0) then
-      call throw_exception(FoX_INVALID_CDATA_SECTION, "insertData", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_CDATA_SECTION<200) then
+  call throw_exception(FoX_INVALID_CDATA_SECTION, "insertData", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -8165,36 +8844,44 @@ endif
     character, pointer :: tmp(:)
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "deleteData", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "deleteData", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
 
     if (.not.isCharData(arg%nodeType)) then
-      call throw_exception(FoX_INVALID_NODE, "deleteData", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "deleteData", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (arg%readonly) then
-      call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "deleteData", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.NO_MODIFICATION_ALLOWED_ERR<200) then
+  call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "deleteData", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (offset<0.or.offset>size(arg%nodeValue).or.count<0) then
-      call throw_exception(INDEX_SIZE_ERR, "deleteData", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.INDEX_SIZE_ERR<200) then
+  call throw_exception(INDEX_SIZE_ERR, "deleteData", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -8217,46 +8904,56 @@ endif
     character, pointer :: tmp(:)
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "replaceData", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "replaceData", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
 
     if (.not.isCharData(arg%nodeType)) then
-      call throw_exception(FoX_INVALID_NODE, "replaceData", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "replaceData", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (arg%readonly) then
-      call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "replaceData", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.NO_MODIFICATION_ALLOWED_ERR<200) then
+  call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "replaceData", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (offset<0.or.offset>size(arg%nodeValue).or.count<0) then
-      call throw_exception(INDEX_SIZE_ERR, "replaceData", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.INDEX_SIZE_ERR<200) then
+  call throw_exception(INDEX_SIZE_ERR, "replaceData", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
 
     if (.not.checkChars(data, getXmlVersionEnum(getOwnerDocument(arg)))) then
-      call throw_exception(FoX_INVALID_CHARACTER, "replaceData", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_CHARACTER<200) then
+  call throw_exception(FoX_INVALID_CHARACTER, "replaceData", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -8273,18 +8970,22 @@ endif
     ! We have to do these checks *after* appending data in case offending string
     ! spans old & new data
     if (arg%nodeType==COMMENT_NODE .and. index(str_vs(arg%nodeValue),"--")>0) then
-      call throw_exception(FoX_INVALID_COMMENT, "replaceData", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_COMMENT<200) then
+  call throw_exception(FoX_INVALID_COMMENT, "replaceData", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (arg%nodeType==CDATA_SECTION_NODE .and. index(str_vs(arg%nodeValue), "]]>")>0) then
-      call throw_exception(FoX_INVALID_CDATA_SECTION, "replaceData", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_CDATA_SECTION<200) then
+  call throw_exception(FoX_INVALID_CDATA_SECTION, "replaceData", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -8315,10 +9016,12 @@ function getnotationName(np, ex)result(c)
 
 
     if (.not.associated(np)) then
-      call throw_exception(FoX_NODE_IS_NULL, "getnotationName", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "getnotationName", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -8326,10 +9029,12 @@ endif
 
    if (getNodeType(np)/=ENTITY_NODE .and. &
       .true.) then
-      call throw_exception(FoX_INVALID_NODE, "getnotationName", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "getnotationName", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -8349,10 +9054,12 @@ endif
 
 
     if (.not.associated(np)) then
-      call throw_exception(FoX_NODE_IS_NULL, "getillFormed", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "getillFormed", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -8360,10 +9067,12 @@ endif
 
    if (getNodeType(np)/=ENTITY_NODE .and. &
       .true.) then
-      call throw_exception(FoX_INVALID_NODE, "getillFormed", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "getillFormed", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -8380,10 +9089,12 @@ endif
 
 
     if (.not.associated(np)) then
-      call throw_exception(FoX_NODE_IS_NULL, "setillFormed", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "setillFormed", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -8391,10 +9102,12 @@ endif
 
    if (getNodeType(np)/=ENTITY_NODE .and. &
       .true.) then
-      call throw_exception(FoX_INVALID_NODE, "setillFormed", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "setillFormed", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -8426,10 +9139,12 @@ function getstringValue(np, ex)result(c)
 
 
     if (.not.associated(np)) then
-      call throw_exception(FoX_NODE_IS_NULL, "getstringValue", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "getstringValue", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -8437,10 +9152,12 @@ endif
 
    if (getNodeType(np)/=ENTITY_NODE .and. &
       .true.) then
-      call throw_exception(FoX_INVALID_NODE, "getstringValue", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "getstringValue", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -8457,10 +9174,12 @@ endif
 
 
     if (.not.associated(np)) then
-      call throw_exception(FoX_NODE_IS_NULL, "setstringValue", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "setstringValue", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -8468,10 +9187,12 @@ endif
 
    if (getNodeType(np)/=ENTITY_NODE .and. &
       .true.) then
-      call throw_exception(FoX_INVALID_NODE, "setstringValue", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "setstringValue", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -8504,10 +9225,12 @@ endif
     character(len=getTarget_len(np, associated(np))) :: c
 
     if (np%nodeType/=PROCESSING_INSTRUCTION_NODE) then
-      call throw_exception(FoX_INVALID_NODE, "getTarget", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "getTarget", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -8528,36 +9251,44 @@ endif
     character, pointer :: tmp(:)
 
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "splitText", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "splitText", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
 
     if (.not.(arg%nodeType==TEXT_NODE.or.arg%nodeType==CDATA_SECTION_NODE)) then
-      call throw_exception(FoX_INVALID_NODE, "splitText", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "splitText", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (arg%readonly) then
-      call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "splitText", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.NO_MODIFICATION_ALLOWED_ERR<200) then
+  call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "splitText", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     elseif (offset<0 .or. offset>size(arg%nodeValue)) then
-      call throw_exception(INDEX_SIZE_ERR, "splitText", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.INDEX_SIZE_ERR<200) then
+  call throw_exception(INDEX_SIZE_ERR, "splitText", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -8611,10 +9342,12 @@ function getdata(np, ex)result(c)
 
 
     if (.not.associated(np)) then
-      call throw_exception(FoX_NODE_IS_NULL, "getdata", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "getdata", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -8625,10 +9358,12 @@ getNodeType(np)/=COMMENT_NODE .and. &
 getNodeType(np)/=CDATA_SECTION_NODE .and. &
 getNodeType(np)/=PROCESSING_INSTRUCTION_NODE .and. &
       .true.) then
-      call throw_exception(FoX_INVALID_NODE, "getdata", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "getdata", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -8645,10 +9380,12 @@ endif
     character(len=*) :: data
     
     if (.not.associated(arg)) then
-      call throw_exception(FoX_NODE_IS_NULL, "setData", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "setData", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -8660,10 +9397,12 @@ endif
       arg%nodeType==CDATA_SECTION_NODE .or. &
       arg%nodeType==PROCESSING_INSTRUCTION_NODE) then
       if (arg%readonly) then
-        call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setData", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+        if (FoX_DOM%FoX_checks.or.NO_MODIFICATION_ALLOWED_ERR<200) then
+  call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setData", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -8671,10 +9410,12 @@ endif
       deallocate(arg%nodeValue)
       arg%nodeValue => vs_str_alloc(data)
     else
-      call throw_exception(FoX_INVALID_NODE, "setData", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "setData", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -8703,10 +9444,12 @@ function getname(np, ex)result(c)
 
 
     if (.not.associated(np)) then
-      call throw_exception(FoX_NODE_IS_NULL, "getname", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "getname", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -8715,10 +9458,12 @@ endif
    if (getNodeType(np)/=DOCUMENT_TYPE_NODE .and. &
 getNodeType(np)/=ATTRIBUTE_NODE .and. &
       .true.) then
-      call throw_exception(FoX_INVALID_NODE, "getname", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "getname", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -8752,10 +9497,12 @@ function getpublicId(np, ex)result(c)
 
 
     if (.not.associated(np)) then
-      call throw_exception(FoX_NODE_IS_NULL, "getpublicId", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "getpublicId", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -8765,10 +9512,12 @@ endif
 getNodeType(np)/=NOTATION_NODE .and. &
 getNodeType(np)/=ENTITY_NODE .and. &
       .true.) then
-      call throw_exception(FoX_INVALID_NODE, "getpublicId", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "getpublicId", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -8802,10 +9551,12 @@ function getsystemId(np, ex)result(c)
 
 
     if (.not.associated(np)) then
-      call throw_exception(FoX_NODE_IS_NULL, "getsystemId", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "getsystemId", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -8815,10 +9566,12 @@ endif
 getNodeType(np)/=NOTATION_NODE .and. &
 getNodeType(np)/=ENTITY_NODE .and. &
       .true.) then
-      call throw_exception(FoX_INVALID_NODE, "getsystemId", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (FoX_DOM%FoX_checks.or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "getsystemId", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 

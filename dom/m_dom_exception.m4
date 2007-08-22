@@ -3,24 +3,32 @@ include(`m_dom_treewalk.m4')`'dnl
 define(`TOHW_m_dom_throw_error',`dnl
 dnl 1 is numerical code
 dnl 2 is list of things to deallocate
-call throw_exception($1, "m4f_thisfunc", ex)
-if (present(ex)) then
-  if (inException(ex)) then
+if (m4f_DOMImpl%FoX_checks.or.$1<200) then
+  call throw_exception($1, "m4f_thisfunc", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
 ifelse($2, `', `', 
      m4_foreach(`x', `$2', `
-if (associated(x)) deallocate(x)
+  if (associated(x)) deallocate(x)
 '))`'dnl
-     return
+       return
+    endif
   endif
 endif
 ')`'dnl
 dnl
-define(`TOHW_function', `define(`m4f_thisfunc', `$1')`'function $1`'dnl
+define(`TOHW_function', `dnl
+define(`m4f_thisfunc', `$1')dnl
+define(`m4f_DOMImpl', `ifelse($4, `', `FoX_DOM', `$4')')dnl
+`'function $1`'dnl
 (m4_foreach(`x', `$2', `x, ')ex)ifelse($3, `', `', `result($3)') 
     type(DOMException), intent(out), optional :: ex`'dnl
 ')`'dnl
 dnl
-define(`TOHW_subroutine', `define(`m4f_thisfunc', `$1')`'subroutine $1`'dnl
+define(`TOHW_subroutine', `dnl
+define(`m4f_thisfunc', `$1')dnl
+define(`m4f_DOMImpl', `ifelse($3, `', `FoX_DOM', `$3')')dnl
+subroutine $1`'dnl
 (m4_foreach(`x', `$2', `x, ')ex)
     type(DOMException), intent(out), optional :: ex`'dnl
 ')`'dnl

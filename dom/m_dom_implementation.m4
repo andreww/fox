@@ -8,6 +8,8 @@ TOHW_m_dom_publics(`
 
   public :: createEmptyDocument
 
+  public :: setFoX_checks
+
 ')`'dnl
 dnl
 TOHW_m_dom_contents(`
@@ -201,5 +203,12 @@ TOHW_m_dom_contents(`
     deallocate(arg)
 
   end subroutine destroyDocument
+
+  subroutine setFoX_checks(impl, FoX_checks)
+    type(DOMImplementation), pointer :: impl
+    logical, intent(in) :: FoX_checks
+
+    impl%FoX_checks = FoX_checks
+  end subroutine setFoX_checks
 
 ')`'dnl
