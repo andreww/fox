@@ -85,15 +85,18 @@ CONTAINS
     call pxfflush(6)
 
 #ifdef FC_HAVE_ABORT
-!FIXME should test in autoconfo does abort take an argument.
-    call abort()
-#elif defined (xlC)
+#ifdef FC_ABORT_UNDERSCORE
     call abort_()
+#elif defined(FC_ABORT_ARG)
+    call abort("")
+#else
+    call abort()
+#endif ! FC_ABORT_TYPE
 #else
     Integer, Pointer :: i
     i=>null()
     Print*,i
-#endif
+#endif ! FC_HAVE_ABORT
     stop
 
   end subroutine pxfabort
