@@ -63,7 +63,6 @@ TOHW_m_dom_publics(`
     type(namedNodeMap) :: notations ! actually for doctype
     logical :: strictErrorChecking = .false.
     character, pointer :: documentURI(:) => null()
-    logical :: xmlStandalone = .false.
   end type documentExtras
 
   type elementOrAttributeExtras

@@ -26,7 +26,8 @@ module m_dom_parse
     setvalue, setAttributeNodeNS, setGCstate, createCdataSection, setXds,  &
     createEntityReference, destroyAllNodesRecursively, setIllFormed, createElement, &
     createAttribute, getNamedItem, setReadonlyNode, setReadOnlyMap, appendNSNode, &
-    createEmptyEntityReference, setEntityReferenceValue, setAttributeNode, getLastChild
+    createEmptyEntityReference, setEntityReferenceValue, setAttributeNode, getLastChild, &
+    getFoX_checks, getImplementation
   use m_dom_error, only: DOMException, inException, throw_exception, PARSE_ERR
 
   implicit none

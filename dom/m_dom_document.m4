@@ -792,8 +792,8 @@ TOHW_m_dom_treewalk(`dnl
 !  function getInputEncoding
 !  function getXmlEncoding
 
-TOHW_m_dom_get(logical, xmlStandalone, np%docExtras%xmlStandalone, (DOCUMENT_NODE))
-TOHW_m_dom_set(logical, xmlStandalone, np%docExtras%xmlStandalone, (DOCUMENT_NODE))
+TOHW_m_dom_get(logical, xmlStandalone, np%docExtras%xds%standalone_declared, (DOCUMENT_NODE))
+TOHW_m_dom_set(logical, xmlStandalone, np%docExtras%xds%standalone_declared, (DOCUMENT_NODE))
 ! FIXME additional check on setting - do we have any undefined entrefs present?
 
   TOHW_function(getXmlVersion, (arg), s)

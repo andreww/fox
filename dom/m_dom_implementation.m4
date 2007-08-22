@@ -8,6 +8,7 @@ TOHW_m_dom_publics(`
 
   public :: createEmptyDocument
 
+  public :: getFoX_checks
   public :: setFoX_checks
 
 ')`'dnl
@@ -206,11 +207,19 @@ TOHW_m_dom_contents(`
 
   end subroutine destroyDocument
 
+  function getFoX_checks(impl) result(FoX_checks)
+    type(DOMImplementation), intent(in) :: impl
+    logical :: FoX_checks
+
+    FoX_checks = impl%FoX_checks 
+  end function getFoX_checks
+
   subroutine setFoX_checks(impl, FoX_checks)
     type(DOMImplementation), pointer :: impl
     logical, intent(in) :: FoX_checks
 
     impl%FoX_checks = FoX_checks
   end subroutine setFoX_checks
+
 
 ')`'dnl

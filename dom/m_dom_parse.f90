@@ -25,7 +25,8 @@ module m_dom_parse
     setvalue, setAttributeNodeNS, setGCstate, createCdataSection, setXds,  &
     createEntityReference, destroyAllNodesRecursively, setIllFormed, createElement, &
     createAttribute, getNamedItem, setReadonlyNode, setReadOnlyMap, appendNSNode, &
-    createEmptyEntityReference, setEntityReferenceValue, setAttributeNode, getLastChild
+    createEmptyEntityReference, setEntityReferenceValue, setAttributeNode, getLastChild, &
+    getFoX_checks, getImplementation
   use m_dom_error, only: DOMException, inException, throw_exception, PARSE_ERR
 
   implicit none
@@ -413,10 +414,12 @@ contains
     call destroy_entity_list(elist)
 
     if (error) then
-      call throw_exception(PARSE_ERR, "parsefile", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (getFoX_checks(getImplementation()).or.PARSE_ERR<200) then
+  call throw_exception(PARSE_ERR, "parsefile", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -489,10 +492,12 @@ endif
     call destroy_entity_list(elist)
 
     if (error) then
-      call throw_exception(PARSE_ERR, "parsestring", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (getFoX_checks(getImplementation()).or.PARSE_ERR<200) then
+  call throw_exception(PARSE_ERR, "parsestring", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 

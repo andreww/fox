@@ -8,14 +8,14 @@ module m_dom_utils
   use m_common_format, only: operator(//)
   use m_common_array_str, only: str_vs, vs_str
 
-  use m_dom_dom, only: Node, Namednodemap, Node
+  use m_dom_dom, only: Node, Namednodemap, Node, DOMImplementation
   use m_dom_dom, only: DOCUMENT_NODE, ELEMENT_NODE, TEXT_NODE, &
    CDATA_SECTION_NODE, COMMENT_NODE, DOCUMENT_TYPE_NODE, &
    ATTRIBUTE_NODE, ENTITY_REFERENCE_NODE, PROCESSING_INSTRUCTION_NODE
-  use m_dom_dom, only: haschildnodes, getNodeName, getNodeType, &
-    getFirstChild, getNextSibling, getlength, item, getOwnerElement, &
-    getAttributes, getParentNode, getChildNodes, getPrefix, getLocalName, &
-    getNodeName, getData, getName, getTagName, getValue, getTarget, &
+  use m_dom_dom, only: haschildnodes, getNodeName, getNodeType, getFoX_checks, &
+    getFirstChild, getNextSibling, getlength, item, getOwnerElement, getXmlStandalone, &
+    getAttributes, getParentNode, getChildNodes, getPrefix, getLocalName, getXmlVersion, &
+    getNodeName, getData, getName, getTagName, getValue, getTarget, getImplementation, &
     getEntities, getNotations, item, getSystemId, getPublicId, getNotationName, getStringValue
   use m_dom_error, only: DOMException, inException, throw_exception, &
     FoX_INVALID_NODE, SERIALIZE_ERR, FoX_INTERNAL_ERROR
@@ -90,29 +90,51 @@ contains
 
     type(xmlf_t)  :: xf
     integer :: iostat
+    logical :: standalone
+    character(3) :: xmlVersion
 
     if (getNodeType(startNode)/=DOCUMENT_NODE &
       .and.getNodeType(startNode)/=ELEMENT_NODE) then
-      call throw_exception(FoX_INVALID_NODE, "serialize", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (getFoX_checks(getImplementation()).or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "serialize", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
     
-    !FIXME several of the below should be optional to serialize
-    call xml_OpenFile(name, xf, iostat=iostat, unit=-1, preserve_whitespace=.true., warning=.false.)
+    standalone = .false.
+    if (getNodeType(startNode)==DOCUMENT_NODE) then
+      standalone = getXmlStandalone(startNode)
+      xmlVersion = getXmlVersion(startNode)
+    endif
+
+    !FIXME preserve_whitespace should be optional to serialize
+    call xml_OpenFile(name, xf, iostat=iostat, unit=-1, &
+      preserve_whitespace=.true., warning=.false., addDecl=(getNodeType(startNode)/=DOCUMENT_NODE))
     if (iostat/=0) then
-      call throw_exception(SERIALIZE_ERR, "serialize", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+      if (getFoX_checks(getImplementation()).or.SERIALIZE_ERR<200) then
+  call throw_exception(SERIALIZE_ERR, "serialize", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
     endif
+
+    if (getNodeType(startNode)==DOCUMENT_NODE) then
+      if (standalone) then
+        call xml_AddXMLDeclaration(xf, version=XmlVersion, standalone=standalone)
+      else
+        call xml_AddXMLDeclaration(xf, version=XmlVersion)
+      endif
+    endif
+
     call iter_dmp_xml(xf, startNode, ex)
     call xml_Close(xf)
 
@@ -140,11 +162,10 @@ endif
     this => treeroot
     do
 
-      if (.not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
-      if (.not.doneChildren) then
-
+      if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
     select case(getNodeType(this))
     case (ELEMENT_NODE)
+      print*, "adding element"
       nnm => getAttributes(this)
       do j = 0, getLength(nnm) - 1
         attrchild => item(nnm, j)
@@ -157,6 +178,7 @@ endif
       enddo
       call xml_NewElement(xf, getTagName(this))
     case (ATTRIBUTE_NODE)
+      print*, "adding attributem"
       if (getPrefix(this)/="xmlns".and.getLocalName(this)/="xmlns") then
         if (entities) then
           allocate(attrvalue(0))
@@ -175,10 +197,12 @@ endif
               attrvalue(size(tmp)+1:) = vs_str("&"//getData(attrChild)//";")
               deallocate(tmp)
             else
-              call throw_exception(FoX_INTERNAL_ERROR, "iter_dmp_xml", ex)
-if (present(ex)) then
-  if (inException(ex)) then
-     return
+              if (getFoX_checks(getImplementation()).or.FoX_INTERNAL_ERROR<200) then
+  call throw_exception(FoX_INTERNAL_ERROR, "iter_dmp_xml", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
   endif
 endif
 
@@ -192,14 +216,17 @@ endif
       endif
       doneChildren = .true.
     case (TEXT_NODE)
+      print*, "adding chars"
       call xml_AddCharacters(xf, getData(this))
     case (CDATA_SECTION_NODE)
+      print*, "adding cdata"
       if (cdata) then
         call xml_AddCharacters(xf, getData(this), parsed = .false.)
       else
         call xml_AddCharacters(xf, getData(this))
       endif
     case (ENTITY_REFERENCE_NODE)
+      print*, "adding entity ref"
       if (entities) then
         call xml_AddEntityReference(xf, getNodeName(this))
         doneChildren = .true.
@@ -240,21 +267,17 @@ endif
       enddo
     end select
 
-
       else
         if (getNodeType(this)==ELEMENT_NODE) doneAttributes = .true.
-
 
     if (getNodeType(this)==ELEMENT_NODE) then
       call xml_EndElement(xf, getTagName(this))
     endif
 
+      endif
 
-      endif
-      endif
 
       if (.not.doneChildren) then
-
         if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
           if (getLength(getAttributes(this))>0) then
                       this => item(getAttributes(this), 0)
@@ -272,7 +295,7 @@ endif
 
       else ! if doneChildren
 
-        if (associated(this, arg)) exit
+        if (associated(this, treeroot)) exit
         if (getNodeType(this)==ATTRIBUTE_NODE) then
           if (i_tree<getLength(getAttributes(getOwnerElement(this)))-1) then
             i_tree= i_tree+ 1

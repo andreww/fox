@@ -205,5 +205,7 @@ module FoX_dom
   public :: serialize
 
   public :: destroy
+  public :: getFoX_checks
+  public :: setFoX_checks
 
 end module FoX_dom

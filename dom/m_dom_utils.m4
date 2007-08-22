@@ -9,14 +9,14 @@ module m_dom_utils
   use m_common_format, only: operator(//)
   use m_common_array_str, only: str_vs, vs_str
 
-  use m_dom_dom, only: Node, Namednodemap, Node
+  use m_dom_dom, only: Node, Namednodemap, Node, DOMImplementation
   use m_dom_dom, only: DOCUMENT_NODE, ELEMENT_NODE, TEXT_NODE, &
    CDATA_SECTION_NODE, COMMENT_NODE, DOCUMENT_TYPE_NODE, &
    ATTRIBUTE_NODE, ENTITY_REFERENCE_NODE, PROCESSING_INSTRUCTION_NODE
-  use m_dom_dom, only: haschildnodes, getNodeName, getNodeType, &
-    getFirstChild, getNextSibling, getlength, item, getOwnerElement, &
-    getAttributes, getParentNode, getChildNodes, getPrefix, getLocalName, &
-    getNodeName, getData, getName, getTagName, getValue, getTarget, &
+  use m_dom_dom, only: haschildnodes, getNodeName, getNodeType, getFoX_checks, &
+    getFirstChild, getNextSibling, getlength, item, getOwnerElement, getXmlStandalone, &
+    getAttributes, getParentNode, getChildNodes, getPrefix, getLocalName, getXmlVersion, &
+    getNodeName, getData, getName, getTagName, getValue, getTarget, getImplementation, &
     getEntities, getNotations, item, getSystemId, getPublicId, getNotationName, getStringValue
   use m_dom_error, only: DOMException, inException, throw_exception, &
     FoX_INVALID_NODE, SERIALIZE_ERR, FoX_INTERNAL_ERROR
@@ -90,17 +90,35 @@ contains
 
     type(xmlf_t)  :: xf
     integer :: iostat
+    logical :: standalone
+    character(3) :: xmlVersion
 
     if (getNodeType(startNode)/=DOCUMENT_NODE &
       .and.getNodeType(startNode)/=ELEMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
     
-    !FIXME several of the below should be optional to serialize
-    call xml_OpenFile(name, xf, iostat=iostat, unit=-1, preserve_whitespace=.true., warning=.false.)
+    standalone = .false.
+    if (getNodeType(startNode)==DOCUMENT_NODE) then
+      standalone = getXmlStandalone(startNode)
+      xmlVersion = getXmlVersion(startNode)
+    endif
+
+    !FIXME preserve_whitespace should be optional to serialize
+    call xml_OpenFile(name, xf, iostat=iostat, unit=-1, &
+      preserve_whitespace=.true., warning=.false., addDecl=(getNodeType(startNode)/=DOCUMENT_NODE))
     if (iostat/=0) then
       TOHW_m_dom_throw_error(SERIALIZE_ERR)
     endif
+
+    if (getNodeType(startNode)==DOCUMENT_NODE) then
+      if (standalone) then
+        call xml_AddXMLDeclaration(xf, version=XmlVersion, standalone=standalone)
+      else
+        call xml_AddXMLDeclaration(xf, version=XmlVersion)
+      endif
+    endif
+
     call iter_dmp_xml(xf, startNode, ex)
     call xml_Close(xf)
 
@@ -123,6 +141,7 @@ contains
 TOHW_m_dom_treewalk(`dnl
     select case(getNodeType(this))
     case (ELEMENT_NODE)
+      print*, "adding element"
       nnm => getAttributes(this)
       do j = 0, getLength(nnm) - 1
         attrchild => item(nnm, j)
@@ -135,6 +154,7 @@ TOHW_m_dom_treewalk(`dnl
       enddo
       call xml_NewElement(xf, getTagName(this))
     case (ATTRIBUTE_NODE)
+      print*, "adding attributem"
       if (getPrefix(this)/="xmlns".and.getLocalName(this)/="xmlns") then
         if (entities) then
           allocate(attrvalue(0))
@@ -164,14 +184,17 @@ TOHW_m_dom_treewalk(`dnl
       endif
       doneChildren = .true.
     case (TEXT_NODE)
+      print*, "adding chars"
       call xml_AddCharacters(xf, getData(this))
     case (CDATA_SECTION_NODE)
+      print*, "adding cdata"
       if (cdata) then
         call xml_AddCharacters(xf, getData(this), parsed = .false.)
       else
         call xml_AddCharacters(xf, getData(this))
       endif
     case (ENTITY_REFERENCE_NODE)
+      print*, "adding entity ref"
       if (entities) then
         call xml_AddEntityReference(xf, getNodeName(this))
         doneChildren = .true.
