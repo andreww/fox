@@ -6381,7 +6381,11 @@ echo $ECHO_N "checking how to compile a call to ABORT... $ECHO_C" >&6; }
 tw_abort_ok=no
 if test $tw_abort_ok = no; then
   cat >conftest.$ac_ext <<_ACEOF
-_TW_TRY_ABORT_INTEL
+
+      PROGRAM TESTABORT
+      CALL ABORT("")
+      END PROGRAM TESTABORT
+
 _ACEOF
 rm -f conftest.$ac_objext conftest$ac_exeext
 if { (ac_try="$ac_link"
