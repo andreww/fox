@@ -592,7 +592,7 @@ TOHW_m_dom_treewalk(`dnl
         endif
 
         if (.not.deep) then
-          if (getNodeType(arg)==ATTRIBUTE_NODE) then
+          if (getNodeType(arg)==ATTRIBUTE_NODE.or.getNodeType(arg)==ELEMENT_NODE) then
             continue
           else
             exit

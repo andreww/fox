@@ -2454,12 +2454,14 @@ endif
       new => null()
       select case(getNodeType(this))
       case (ELEMENT_NODE)
+        print*, "cloning the ELEMENT"
         if (getNamespaceURI(this)=="") then
           new => createElement(doc, getTagName(this))
         else
           new => createElementNS(doc, getNamespaceURI(this), getTagName(this))
         endif
       case (ATTRIBUTE_NODE)
+        print*, "cloning the ATTRIBUTE"
         if (getNamespaceURI(this)=="") then 
           new => createAttribute(doc, getName(this))
         else
@@ -2505,7 +2507,7 @@ endif
       endif
 
       if (.not.deep) then
-        if (getNodeType(arg)==ATTRIBUTE_NODE) then
+        if (getNodeType(arg)==ATTRIBUTE_NODE.or.getNodeType(arg)==ELEMENT_NODE) then
           continue
         else
           exit
@@ -5773,7 +5775,7 @@ endif
         endif
 
         if (.not.deep) then
-          if (getNodeType(arg)==ATTRIBUTE_NODE) then
+          if (getNodeType(arg)==ATTRIBUTE_NODE.or.getNodeType(arg)==ELEMENT_NODE) then
             continue
           else
             exit
