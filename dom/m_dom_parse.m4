@@ -355,11 +355,11 @@ contains
     integer :: iostat
     
     if (present(configuration)) then
-      cdata_sections = (index("cdata-sections", configuration)==1).or.(index(" cdata-sections", configuration)>0) 
+      cdata_sections = (index(configuration, "cdata-sections")==1).or.(index(configuration, " cdata-sections")>0) 
       ! need to do double check to avoid finding split-cdata-sections
-      not_comments = (index("comments", configuration)>0)
-      entities_expand = (index("entities", configuration)>0)
-      not_split_cdata_sections = (index("split-cdata-sections", configuration)>0)
+      not_comments = (index(configuration, "comments")>0)
+      entities_expand = (index(configuration, "entities")>0)
+      not_split_cdata_sections = (index(configuration, "split-cdata-sections")>0)
     else
       cdata_sections = .false.
       not_comments = .false.
@@ -429,11 +429,11 @@ contains
     type(Node), pointer :: parsestring
     
     if (present(configuration)) then
-      cdata_sections = (index("cdata-sections", configuration)==1).or.(index(" cdata-sections", configuration)>0) 
+      cdata_sections = (index(configuration, "cdata-sections")==1).or.(index(configuration, " cdata-sections")>0) 
       ! need to do double check to avoid finding split-cdata-sections
-      not_comments = (index("comments", configuration)>0)
-      entities_expand = (index("entities", configuration)>0)
-      not_split_cdata_sections = (index("split-cdata-sections", configuration)>0)
+      not_comments = (index(configuration, "comments")>0)
+      entities_expand = (index(configuration, "entities")>0)
+      not_split_cdata_sections = (index(configuration, "split-cdata-sections")>0)
     else
       cdata_sections = .false.
       not_comments = .false.
