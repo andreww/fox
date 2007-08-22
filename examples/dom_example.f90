@@ -15,5 +15,5 @@ program dom_example
   call dumpTree(myDoc)
   call serialize(myDoc, "out.xml")
 
-  call destroyDocument(myDoc)
+  call destroy(myDoc)
 end program dom_example
