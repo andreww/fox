@@ -691,14 +691,12 @@ TOHW_m_dom_treewalk(`
       new => null()
       select case(getNodeType(this))
       case (ELEMENT_NODE)
-        print*, "cloning the ELEMENT"
         if (getNamespaceURI(this)=="") then
           new => createElement(doc, getTagName(this))
         else
           new => createElementNS(doc, getNamespaceURI(this), getTagName(this))
         endif
       case (ATTRIBUTE_NODE)
-        print*, "cloning the ATTRIBUTE"
         if (getNamespaceURI(this)=="") then 
           new => createAttribute(doc, getName(this))
         else

@@ -169,7 +169,7 @@ TOHW_m_dom_contents(`
     ! We point the old list of nodelists to temp_nll, then recalculate them all (which repopulates nodelists)
     temp_nll => doc%docExtras%nodelists
     i_t = size(temp_nll)
-    deallocate(doc%docExtras%nodelists)
+    allocate(doc%docExtras%nodelists(0))
     do i = 1, i_t
       nl_orig => temp_nll(i)%this
       !
