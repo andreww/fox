@@ -1,4 +1,4 @@
-define(`TOHW_m_dom_treewalk',`dnl
+define(`TOHW_m_dom_treewalk',``'dnl
 dnl Walk a DOM tree, including attributes & their children
 dnl
 dnl Every node will be hit twice, once on the way down, once
@@ -32,7 +32,7 @@ dnl
     this => treeroot
 ifelse(`$3', `deadNode',`
       deadNode => null()
-')dnl
+'`')dnl
     do
 
       if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
@@ -44,23 +44,24 @@ $2
 
 ifelse(`$3', `deadNode',`
       deadNode => null()
-')dnl
+'`')dnl
 
       if (.not.doneChildren) then
         if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
           if (getLength(getAttributes(this))>0) then
           ifelse(`$3', `parentNode', `dnl
             if (.not.associated(this, treeroot)) thatParent => getLastChild(thatParent)
-')dnl
+'`')dnl
             this => item(getAttributes(this), 0)
           else
 ifelse(`$3', `parentNode', `dnl
             if (.not.deep) exit
-')dnl
+'`')dnl
             doneAttributes = .true.
           endif
         elseif (hasChildNodes(this)) then
 ifelse(`$3', `parentNode', `dnl
+          if (getNodeType(this)==ELEMENT_NODE.and..not.deep) exit
           if (.not.associated(this, treeroot)) then
             if (getNodeType(this)==ATTRIBUTE_NODE) then
               thatParent => item(getAttributes(thatParent), i_tree)
@@ -68,7 +69,7 @@ ifelse(`$3', `parentNode', `dnl
               thatParent => getLastChild(thatParent)
             endif
           endif
-')dnl
+'`')dnl
           this => getFirstChild(this)
           doneChildren = .false.
           doneAttributes = .false.
@@ -81,7 +82,7 @@ ifelse(`$3', `parentNode', `dnl
 
 ifelse(`$3', `deadNode', `dnl
         deadNode => this
-')dnl
+'`')dnl
         if (associated(this, treeroot)) exit
         if (getNodeType(this)==ATTRIBUTE_NODE) then
           if (i_tree<getLength(getAttributes(getOwnerElement(this)))-1) then
@@ -92,7 +93,7 @@ ifelse(`$3', `deadNode', `dnl
             i_tree= 0
 ifelse(`$3', `parentNode', `dnl
             if (associated(getParentNode(thatParent))) thatParent => getParentNode(thatParent)
-')dnl
+'`')dnl
             this => getOwnerElement(this)
             doneAttributes = .true.
             doneChildren = .false.
@@ -112,11 +113,11 @@ ifelse(`$3', `parentNode', `dnl
               thatParent => getParentNode(thatParent)
             endif
           endif
-')dnl
+'`')dnl
         endif
 ifelse(`$3', `deadNode',`
         call destroy(deadNode)
-')dnl
+'`')dnl
       endif
 
     enddo

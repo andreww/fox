@@ -2707,6 +2707,7 @@ endif
             doneAttributes = .true.
           endif
         elseif (hasChildNodes(this)) then
+          if (getNodeType(this)==ELEMENT_NODE.and..not.deep) exit
           if (.not.associated(this, treeroot)) then
             if (getNodeType(this)==ATTRIBUTE_NODE) then
               thatParent => item(getAttributes(thatParent), i_tree)
@@ -6156,6 +6157,7 @@ endif
             doneAttributes = .true.
           endif
         elseif (hasChildNodes(this)) then
+          if (getNodeType(this)==ELEMENT_NODE.and..not.deep) exit
           if (.not.associated(this, treeroot)) then
             if (getNodeType(this)==ATTRIBUTE_NODE) then
               thatParent => item(getAttributes(thatParent), i_tree)
