@@ -25,6 +25,29 @@ echo Matrices:
 ./test_str.sh "reshape((/0,1,2,3,4,5/), (/3,2/))" "0 1 2 3 4 5"
 ./test_str.sh "reshape((/0,1,2,3,4,5,4,5,6,7,8,9/),(/3,4/))" "0 1 2 3 4 5 4 5 6 7 8 9"
 
+echo "Testing integer to hex string conversion"
+echo Scalars:
+for i in '0,"x" 0' '1,"x" 1' '-1,"x" -1' '10,"x" a' '-356,"x" -164'
+do
+  ./test_str.sh $i
+done
+for i in '0,"x2" 00' '1,"x2" 01' '10,"x2" 0a' '20,"x2" 14'
+do
+  ./test_str.sh $i
+done
+echo Arrays:
+./test_str.sh "(/0, 1, 2, 3/)" "0 1 2 3"
+./test_str.sh "(/0, 1, -2, -100/)" "0 1 -2 -100"
+./test_str.sh "(/0/)" "0"
+./test_str.sh '(/0, 1, 2, 3/),"x"' "0 1 2 3"
+./test_str.sh '(/0, 1, 2, 3/),"x2"' "00 01 02 03"
+./test_str.sh '(/0, 1, -2, -100/),"x"' "0 1 -2 -64"
+./test_str.sh '(/0, 1, 2, 100/),"x2"' "00 01 02 64"
+./test_str.sh '(/0/),"x"' "0"
+./test_str.sh '(/0/),"x2"' "00"
+echo Matrices:
+./test_str.sh "reshape((/0,1,2,3,4,5/), (/3,2/))" "0 1 2 3 4 5"
+./test_str.sh "reshape((/0,1,2,3,4,5,4,5,6,7,8,9/),(/3,4/))" "0 1 2 3 4 5 4 5 6 7 8 9"
 echo "Testing logical to string conversion"
 
 echo Scalars:

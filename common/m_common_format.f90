@@ -33,6 +33,7 @@ module m_common_format
 ! All *_chk subroutines check that the fmt they are passed is valid.
     module procedure str_string, str_string_array, str_string_matrix, &
                      str_integer, str_integer_array, str_integer_matrix, &
+                     str_integer_fmt, str_integer_array_fmt, str_integer_matrix_fmt, &
                      str_logical, str_logical_array, str_logical_matrix, &
                      str_real_sp, str_real_sp_fmt_chk, &
                      str_real_sp_array, str_real_sp_array_fmt_chk, &
@@ -70,6 +71,7 @@ module m_common_format
 
   interface len
     module procedure str_integer_len, str_integer_array_len, str_integer_matrix_len, &
+                     str_integer_fmt_len, str_integer_array_fmt_len, str_integer_matrix_fmt_len, &
                      str_logical_len, str_logical_array_len, str_logical_matrix_len, &
                      str_real_sp_len, str_real_sp_fmt_len, &
                      str_real_sp_array_len, str_real_sp_array_fmt_len, &
@@ -229,7 +231,6 @@ contains
     n = len(st) * size(st) + size(st) - 1
   end function str_string_matrix_len
 
-
   pure function str_string_matrix(st, delimiter) result(s)
     character(len=*), dimension(:, :), intent(in) :: st
     character(len=1), intent(in), optional :: delimiter
@@ -260,7 +261,7 @@ contains
   end function str_string_matrix
 
 
-  pure function str_integer_len(i) result (n)
+  pure function str_integer_len(i) result(n)
     integer, intent(in) :: i
     integer :: n
     
@@ -268,13 +269,52 @@ contains
 
   end function str_integer_len
 
+  pure function str_integer_base_len(i, b) result(n)
+    integer, intent(in) :: i, b
+    integer :: n
+    
+    n = int(log10(real(max(abs(i),1)))/log10(real(b))) &
+      + 1 + dim(-i,0)/max(abs(i),1)
+
+  end function str_integer_base_len
+
+
+  pure function str_integer_fmt_len(i, fmt) result(n)
+    integer, intent(in) :: i
+    character(len=*), intent(in) :: fmt
+    integer :: n
+    
+    select case (len(fmt))
+    case(0)
+      n = 0
+    case(1)
+      if (fmt=="x") then
+        n = int(log10(real(max(abs(i),1)))/log10(16.0)) + 1 + dim(-i,0)/max(abs(i),1)
+      elseif (fmt=="d") then
+        n = int(log10(real(max(abs(i),1)))) + 1 + dim(-i,0)/max(abs(i),1)
+      else
+        return
+      endif
+    case default
+      if (fmt(1:1)/='x'.and.fmt(1:1)/='d') then
+        n = 0
+      elseif (verify(fmt(2:), digit)==0) then
+        n = str_to_int_10(fmt(2:))
+      else
+        n = 0 
+      endif
+    end select
+
+  end function str_integer_fmt_len
+
 
   pure function str_integer(i) result(s)
     integer, intent(in) :: i
-    character(len=int(log10(real(max(abs(i),1)))) + 1 + dim(-i,0)/max(abs(i),1)) :: s
+    character(len=str_integer_len(i)) :: s
 
-    integer :: ii, j, k, n
+    integer :: b, ii, j, k, n
 
+    b = 10
 
     if (i < 0) then
       s(1:1) = "-"
@@ -284,13 +324,65 @@ contains
     endif
     ii = abs(i)
     do k = len(s) - n, 0, -1
-      j = ii/(10**k)
-      ii = ii - j*(10**k)
+      j = ii/(b**k)
+      ii = ii - j*(b**k)
       s(n:n) = digit(j+1:j+1)
       n = n + 1
     enddo
 
   end function str_integer
+
+
+  pure function str_integer_fmt(i, fmt) result(s)
+    integer, intent(in) :: i
+    character(len=*), intent(in):: fmt
+    character(len=str_integer_fmt_len(i, fmt)) :: s
+
+    character :: f
+    integer :: b, ii, j, k, n, ls
+ 
+    if (len(fmt)>0) then
+      if (fmt(1:1)=="d") then
+        f = 'd'
+        b = 10
+      elseif (fmt(1:1)=="x") then
+        f = 'x'
+        b = 16
+      else
+        ! Undefined outcome
+        s = ""
+        return
+      endif
+    else
+      ! Undefined outcome
+      s = ""
+      return
+    endif
+
+    ls = str_integer_base_len(i, b)
+    n = len(s) - ls + 1
+
+    if (i < 0) then
+      if (n>0) s(:n) = "-"//repeat("0", n-1)
+      n = n + 1
+    else
+      if (n>1) s(:n) = repeat("0", n)
+    endif
+
+    ii = abs(i)
+    do k = 1, -n + 1
+      j = ii/(b**k)
+      ii = ii - j*(b**k)
+      n = n + 1
+    enddo
+    do k = len(s) - n, 0, -1
+      j = ii/(b**k)
+      ii = ii - j*(b**k)
+      s(n:n) = hexdigit(j+1:j+1)
+      n = n + 1
+    enddo
+
+  end function str_integer_fmt
 
 
   pure function str_integer_array_len(ia) result(n)
@@ -308,28 +400,55 @@ contains
   end function str_integer_array_len
 
 
-  pure function str_integer_array(ia, delimiter) result(s)
+  pure function str_integer_array_fmt_len(ia, fmt) result(n)
     integer, dimension(:), intent(in) :: ia
-    character(len=1), optional, intent(in) :: delimiter
-    character(len=len(ia)) :: s
+    character, intent(in) :: fmt
+    integer :: n
+    
+    integer :: j
+
+    n = size(ia) - 1
+
+    do j = 1, size(ia)
+      n = n + len(ia(j), fmt)
+    enddo
+
+  end function str_integer_array_fmt_len
+
+
+  pure function str_integer_array(ia) result(s)
+    integer, dimension(:), intent(in) :: ia
+    character(len=len(ia, "d")) :: s
 
     integer :: j, k, n
-    character(len=1) :: d
-    if (present(delimiter)) then
-      d = delimiter
-    else
-      d = " "
-    endif
 
     n = 1
     do k = 1, size(ia) - 1
-      j = len(str(ia(k)))
-      s(n:n+j) = str(ia(k))//d
+      j = len(ia(k))
+      s(n:n+j) = str(ia(k))//" "
       n = n + j + 1
     enddo
     s(n:) = str(ia(k))
 
   end function str_integer_array
+
+
+  pure function str_integer_array_fmt(ia, fmt) result(s)
+    integer, dimension(:), intent(in) :: ia
+    character, intent(in) :: fmt
+    character(len=len(ia, fmt)) :: s
+
+    integer :: j, k, n
+
+    n = 1
+    do k = 1, size(ia) - 1
+      j = len(ia(k), fmt)
+      s(n:n+j) = str(ia(k), fmt)//" "
+      n = n + j + 1
+    enddo
+    s(n:) = str(ia(k), fmt)
+
+  end function str_integer_array_fmt
 
  
   pure function str_integer_matrix_len(ia) result(n)
@@ -342,43 +461,73 @@ contains
 
     do k = 1, size(ia, 2)
       do j = 1, size(ia, 1)
-        n = n + len(str(ia(j, k)))
+        n = n + len(ia(j, k))
       enddo
     enddo
 
-   end function str_integer_matrix_len
+  end function str_integer_matrix_len
 
 
-  pure function str_integer_matrix(ia, delimiter) result(s)
+  pure function str_integer_matrix_fmt_len(ia, fmt) result(n)
     integer, dimension(:,:), intent(in) :: ia
-    character(len=1), optional, intent(in) :: delimiter
-    character(len=len(ia)) :: s
+    character, intent(in) :: fmt
+    integer :: n
 
-    character :: d
+    integer :: j, k
+
+    n = size(ia) - 1
+
+    do k = 1, size(ia, 2)
+      do j = 1, size(ia, 1)
+        n = n + len(ia(j, k), fmt)
+      enddo
+    enddo
+
+   end function str_integer_matrix_fmt_len
+
+  pure function str_integer_matrix(ia) result(s)
+    integer, dimension(:,:), intent(in) :: ia
+    character(len=len(ia, "d")) :: s
 
     integer :: j, k, n
 
-    if (present(delimiter)) then
-      d = delimiter
-    else
-      d = " "
-    endif
-
-    s(1:len(str(ia(1,1)))) = str(ia(1,1))
-    n = len(str(ia(1,1))) + 1
+    s(:len(ia(1,1))) = str(ia(1,1))
+    n = len(ia(1,1)) + 1
     do j = 2, size(ia, 1)
-      s(n:n+len(str(ia(j,1)))) = d//str(ia(j,1))
-        n = n + len(str(ia(j,1))) + 1
+      s(n:n+len(ia(j,1))) = " "//str(ia(j,1))
+      n = n + len(ia(j,1)) + 1
     enddo
     do k = 2, size(ia, 2) 
       do j = 1, size(ia, 1)
-        s(n:n+len(str(ia(j,k)))) = d//str(ia(j,k))
-        n = n + len(str(ia(j,k))) + 1
+        s(n:n+len(ia(j,k))) = " "//str(ia(j,k))
+        n = n + len(ia(j,k)) + 1
       enddo
     enddo
 
   end function str_integer_matrix
 
+
+  pure function str_integer_matrix_fmt(ia, fmt) result(s)
+    integer, dimension(:,:), intent(in) :: ia
+    character, intent(in) :: fmt
+    character(len=len(ia, fmt)) :: s
+
+    integer :: j, k, n
+
+    s(:len(ia(1,1), fmt)) = str(ia(1,1), fmt)
+    n = len(ia(1,1), fmt) + 1
+    do j = 2, size(ia, 1)
+      s(n:n+len(ia(j,1), fmt)) = " "//str(ia(j,1), fmt)
+      n = n + len(ia(j,1), fmt) + 1
+    enddo
+    do k = 2, size(ia, 2) 
+      do j = 1, size(ia, 1)
+        s(n:n+len(ia(j,k), fmt)) = " "//str(ia(j,k), fmt)
+        n = n + len(ia(j,k), fmt) + 1
+      enddo
+    enddo
+
+  end function str_integer_matrix_fmt
 
   pure function str_logical_len(l) result (n)
     logical, intent(in) :: l
