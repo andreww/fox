@@ -3868,7 +3868,6 @@ endif
       elseif (associated(nl_orig%namespaceURI)) then ! this was made by getElementsByTagNameNS
         nl => getElementsByTagNameNS(nl_orig%element, str_vs(nl_orig%localName), str_vs(nl_orig%namespaceURI))
       endif
-      deallocate(nl_orig)
     enddo
 
     deallocate(temp_nll)    
