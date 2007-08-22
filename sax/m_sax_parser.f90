@@ -305,6 +305,9 @@ contains
       subroutine endCdata_handler()
       end subroutine endCdata_handler
 
+      subroutine FoX_endDTD_handler()
+      end subroutine FoX_endDTD_handler
+
       subroutine FoX_endDTD_handler(state)
         use m_common_struct, only: xml_doc_state
         type(xml_doc_state), pointer :: state
