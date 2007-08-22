@@ -10,7 +10,7 @@ INCFLAGS=$$(../FoX-config --fcflags --wxml)
 # Note that we cannot use $< below since IBM make doesn't understand it.
 
 dom_example.exe: dom_example.o
-	$(FC) $(FFLAGS) $(LDFLAGS) -o $@ dom_eample.o $$(../FoX-config --libs --dom)
+	$(FC) $(FFLAGS) $(LDFLAGS) -o $@ dom_example.o $$(../FoX-config --libs --dom)
 #
 sax_example.exe: sax_example.o
 	$(FC) $(FFLAGS) $(LDFLAGS) -o $@ sax_example.o $$(../FoX-config --libs --sax)
