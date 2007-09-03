@@ -13,6 +13,7 @@ module m_common_error
 
   type error_t
     integer :: severity = ERR_NULL
+    integer :: error_code = 0
     character, dimension(:), pointer :: msg => null()
   end type error_t
 
@@ -66,6 +67,7 @@ contains
 
   end subroutine FoX_warning_base
 
+
   subroutine FoX_error_base(msg)
     ! Emit error message and stop.
     ! No clean up is done here, but this can
@@ -101,6 +103,7 @@ contains
     allocate(stack%stack(0))
   end subroutine init_error_stack
 
+
   subroutine destroy_error_stack(stack)
     type(error_stack), intent(inout) :: stack
     
@@ -113,26 +116,28 @@ contains
   end subroutine destroy_error_stack
 
 
-  subroutine add_error(stack, msg, severity)
+  subroutine add_error(stack, msg, severity, error_code)
     type(error_stack), intent(inout) :: stack
     character(len=*), intent(in) :: msg
     integer, intent(in), optional :: severity
+    integer, intent(in), optional :: error_code
 
     integer :: i, n
-    type(error_t), dimension(size(stack%stack)) :: temp_stack
+    type(error_t), dimension(:), pointer :: temp_stack 
+
+    if (.not.associated(stack%stack)) &
+      call init_error_stack(stack)
 
     n = size(stack%stack)
-
-    do i = 1, n
-      temp_stack(i)%msg => stack%stack(i)%msg
-      temp_stack(i)%severity = stack%stack(i)%severity
-    enddo
-    deallocate(stack%stack)
+    
+    temp_stack => stack%stack
     allocate(stack%stack(n+1))
-    do i = 1, n
+    do i = 1, size(temp_stack)
       stack%stack(i)%msg => temp_stack(i)%msg
       stack%stack(i)%severity = temp_stack(i)%severity
+      stack%stack(i)%error_code = temp_stack(i)%error_code
     enddo
+    deallocate(temp_stack)
 
     stack%stack(n+1)%msg => vs_str_alloc(msg)
     if (present(severity)) then
@@ -140,8 +145,14 @@ contains
     else
       stack%stack(n+1)%severity = ERR_ERROR
     endif
+    if (present(error_code)) then
+      stack%stack(n+1)%error_code = error_code
+    else
+      stack%stack(n+1)%error_code = -1
+    endif
 
   end subroutine add_error
+
 
   function in_error(stack) result(p)
     type(error_stack), intent(in) :: stack

@@ -82,7 +82,11 @@ contains
     endEntity_handler,             &
     startCdata_handler,            &
     startDTD_handler,              &
-    startEntity_handler)
+    startEntity_handler,           &
+! Features / properties
+    namespaces,                    &
+    namespace_prefixes,            &
+    xmlns_uris)
 
     type(xml_t), intent(inout) :: xt
     optional :: characters_handler
@@ -111,6 +115,10 @@ contains
     optional :: startCdata_handler
     optional :: startDTD_handler
     optional :: startEntity_handler
+
+    logical, intent(in), optional :: namespaces
+    logical, intent(in), optional :: namespace_prefixes
+    logical, intent(in), optional :: xmlns_uris
 
     interface
 
@@ -162,13 +170,13 @@ contains
 
       subroutine notationDecl_handler(name, publicId, systemId)
         character(len=*), intent(in) :: name
-        character(len=*), optional, intent(in) :: publicId
-        character(len=*), optional, intent(in) :: systemId
+        character(len=*), intent(in) :: publicId
+        character(len=*), intent(in) :: systemId
       end subroutine notationDecl_handler
 
       subroutine unparsedEntityDecl_handler(name, publicId, systemId, notation)
         character(len=*), intent(in) :: name
-        character(len=*), optional, intent(in) :: publicId
+        character(len=*), intent(in) :: publicId
         character(len=*), intent(in) :: systemId
         character(len=*), intent(in) :: notation
       end subroutine unparsedEntityDecl_handler
@@ -228,8 +236,8 @@ contains
 
       subroutine startDTD_handler(name, publicId, systemId)
         character(len=*), intent(in) :: name
-        character(len=*), optional, intent(in) :: publicId
-        character(len=*), optional, intent(in) :: systemId
+        character(len=*), intent(in) :: publicId
+        character(len=*), intent(in) :: systemId
       end subroutine startDTD_handler
 
       subroutine startEntity_handler(name)
@@ -267,7 +275,10 @@ contains
       endEntity_handler,             &
       startCdata_handler,            &
       startDTD_handler,              &
-      startEntity_handler)
+      startEntity_handler,           &
+      namespaces=namespaces,                 &
+      namespace_prefixes=namespace_prefixes, &
+      xmlns_uris=xmlns_uris)
 
   end subroutine parse
 

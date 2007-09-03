@@ -13,10 +13,10 @@ module m_common_notations
   end type notation
 
   type notation_list
-    private
     type(notation), dimension(:), pointer :: notations
   end type notation_list
-  
+
+  public :: notation
   public :: notation_list
   public :: init_notation_list
   public :: destroy_notation_list

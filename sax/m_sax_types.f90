@@ -82,7 +82,9 @@ module m_sax_types
   integer, parameter :: WS_DISCARD = 3
   
   type sax_parser_t
-    type(xml_doc_state) :: xds
+    type(xml_doc_state), pointer :: xds
+    logical :: xds_used = .false. ! is the xds used by DOM? If so, we must
+                                  ! not destroy it once we are finished
     integer :: whitespace
     integer :: context 
     integer :: state
@@ -97,7 +99,7 @@ module m_sax_types
     logical :: error = .false.
     type(error_stack) :: error_stack 
     ! Aspects of document structure
-    integer :: xml_version
+!    integer :: xml_version
     character, dimension(:), pointer :: encoding => null()
     character, dimension(:), pointer :: root_element => null()
     type(elstack_t) :: elstack

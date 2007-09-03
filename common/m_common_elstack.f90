@@ -18,11 +18,13 @@ module m_common_elstack
     character, dimension(:), pointer :: data
   end type elstack_item
 
-  type, public :: elstack_t
+  type :: elstack_t
     private
     integer                                   :: n_items
     type(elstack_item), pointer, dimension(:) :: stack
   end type elstack_t
+
+  public :: elstack_t
 
   public  :: push_elstack, pop_elstack, init_elstack, destroy_elstack, reset_elstack, print_elstack
   public  :: get_top_elstack, is_empty, get_elstack_signature

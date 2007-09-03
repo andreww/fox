@@ -26,7 +26,7 @@ module m_common_attrs
 
   type dictionary_t
     private
-    integer                                :: number_of_items ! = 0
+    integer                                :: number_of_items = 0
     type(dict_item), dimension(:), pointer :: items => null()
   end type dictionary_t
 
@@ -596,7 +596,7 @@ contains
        nullify(dict%items(i)%localName)
     enddo
     
-    dict % number_of_items = 0
+    dict%number_of_items = 0
     
   end subroutine init_dict
 

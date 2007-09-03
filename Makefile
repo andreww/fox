@@ -1,12 +1,12 @@
 #!/bin/make
 #
-default: objsdir wxml_lib wcml_lib sax_lib examples_build
+default: objsdir wxml_lib wcml_lib sax_lib dom_lib examples_build
 	touch .FoX
 #
 objsdir:
 	mkdir -p objs/lib objs/finclude
 #
-examples_build:
+examples_build: wxml_lib wcml_lib sax_lib dom_lib
 	(cd examples; make)
 #
 check: dom_check sax_check wxml_check wcml_check
@@ -84,7 +84,7 @@ DoX:
 #
 # Clean
 #
-clean: wxml_lib_clean wcml_lib_clean common_lib_clean fsys_lib_clean sax_lib_clean utils_lib_clean
+clean: wxml_lib_clean wcml_lib_clean common_lib_clean fsys_lib_clean sax_lib_clean dom_lib_clean utils_lib_clean
 	(cd examples;make clean)
 	rm -f objs/lib/* objs/finclude/* .FoX
 #

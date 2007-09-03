@@ -1009,6 +1009,12 @@ AC_DEFUN([_TW_TRY_ABORT_NAG],
       CALL ABORT
       END PROGRAM TESTABORT
 ])
+AC_DEFUN([_TW_TRY_ABORT_INTEL],
+[
+      PROGRAM TESTABORT
+      CALL ABORT("")
+      END PROGRAM TESTABORT
+])
 AC_DEFUN([_TW_TRY_ABORT_XLF],
 [
       PROGRAM TESTABORT
@@ -1025,10 +1031,37 @@ dnl Try first with nothing
 dnl
 tw_abort_ok=no
 dnl
-AC_LINK_IFELSE(
+dnl First check with one arg (this will fail if no args are necessary; testing
+dnl in the opposite order will succeed when it shouldnt)
+dnl
+if test $tw_abort_ok = no; then
+  AC_LINK_IFELSE(
+   [AC_LANG_SOURCE([_TW_TRY_ABORT_INTEL])],
+    [tw_abort_ok=yes; TW_ABORT=INTEL;tw_method="with argument";DEFS="$DEFS FC_HAVE_ABORT FC_ABORT_ARG"],
+    [])
+fi
+if test $tw_abort_ok = no; then
+  AC_LINK_IFELSE(
+   [AC_LANG_SOURCE([_TW_TRY_ABORT_XLF])],
+    [tw_abort_ok=yes; TW_ABORT=UNDERSCORE;tw_method="with underscore";DEFS="$DEFS FC_HAVE_ABORT FC_ABORT_UNDERSCORE"],
+    [])
+fi
+if test $tw_abort_ok = no; then
+  AC_LINK_IFELSE(
    [AC_LANG_SOURCE([_TW_TRY_ABORT_BARE])],
     [tw_abort_ok=yes; TW_ABORT=bare;tw_method=default;DEFS="$DEFS FC_HAVE_ABORT"],
     [])
+fi
+if test $tw_abort_ok = no; then
+  AC_LINK_IFELSE(
+   [AC_LANG_SOURCE([_TW_TRY_ABORT_NAG])],
+    [tw_abort_ok=yes; TW_ABORT=NAG;tw_method="with f90_unix_proc";DEFS="$DEFS FC_HAVE_ABORT"],
+    [])
+fi
+dnl
+dnl Cant get it to compile alone - need a compiler flag.
+dnl Now try with -Vaxlib for intel:
+dnl
 if test $tw_abort_ok = no; then
    save_LDFLAGS=$LDFLAGS
    LDFLAGS="$LDFLAGS -Vaxlib"
@@ -1039,18 +1072,6 @@ if test $tw_abort_ok = no; then
    if test $tw_abort_ok = no; then
       LDFLAGS=$save_LDFLAGS
    fi
-fi
-if test $tw_abort_ok = no; then
-  AC_LINK_IFELSE(
-   [AC_LANG_SOURCE([_TW_TRY_ABORT_NAG])],
-    [tw_abort_ok=yes; TW_ABORT=NAG;tw_method="with f90_unix_proc";DEFS="$DEFS FC_HAVE_ABORT"],
-    [])
-fi
-if test $tw_abort_ok = no; then
-  AC_LINK_IFELSE(
-   [AC_LANG_SOURCE([_TW_TRY_ABORT_XLF])],
-    [tw_abort_ok=yes; TW_ABORT=XLF;tw_method="with underscore"],
-    [])
 fi
 AC_MSG_RESULT([$tw_method])
 dnl

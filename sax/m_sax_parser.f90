@@ -16,7 +16,8 @@ module m_sax_parser
   use m_common_entities, only: existing_entity, init_entity_list, &
     destroy_entity_list, add_internal_entity, &
     is_external_entity, expand_entity, expand_char_entity, &
-    is_unparsed_entity, pop_entity_list
+    is_unparsed_entity, pop_entity_list, size, &
+    getEntityTextByIndex, getEntityNameByIndex
   use m_common_entity_expand, only: expand_entity_value_alloc
   use m_common_error, only: FoX_error, add_error, &
     init_error_stack, destroy_error_stack, in_error
@@ -25,12 +26,13 @@ module m_sax_parser
     checkCharacterEntityReference, likeCharacterEntityReference, &
     checkQName, checkPITarget, resolveSystemId, checkRepCharEntityReference
   use m_common_namespaces, only: getnamespaceURI, invalidNS, &
-    checkNamespaces, checkEndNamespaces, &
+    checkNamespaces, checkEndNamespaces, namespaceDictionary, &
     initNamespaceDictionary, destroyNamespaceDictionary
   use m_common_notations, only: init_notation_list, destroy_notation_list, &
     add_notation, notation_exists
-  use m_common_struct, only: init_xml_doc_state, destroy_xml_doc_state, &
-    register_internal_PE, register_external_PE, register_internal_GE, register_external_GE
+  use m_common_struct, only: xml_doc_state, init_xml_doc_state, &
+    destroy_xml_doc_state, register_internal_PE, register_external_PE, &
+    register_internal_GE, register_external_GE
 
   use m_sax_reader, only: file_buffer_t, pop_buffer_stack, push_buffer_stack
   use m_sax_tokenizer, only: sax_tokenize, parse_xml_declaration, normalize_text
@@ -39,11 +41,20 @@ module m_sax_parser
   implicit none
   private
 
+  public :: getNSDict
+
   public :: sax_parser_init
   public :: sax_parser_destroy
   public :: sax_parse
 
 contains
+
+  function getNSDict(fx) result(ns)
+    type(sax_parser_t), target :: fx
+    type(namespaceDictionary), pointer :: ns
+
+    ns => fx%nsDict
+  end function getNSDict
 
   subroutine sax_parser_init(fx)
     type(sax_parser_t), intent(out) :: fx
@@ -52,9 +63,11 @@ contains
 
     call init_error_stack(fx%error_stack)
     call init_elstack(fx%elstack)
-    call init_dict(fx%attributes)
+    !call init_dict(fx%attributes)
+
     call initNamespaceDictionary(fx%nsdict)
     call init_notation_list(fx%nlist)
+    allocate(fx%xds)
     call init_xml_doc_state(fx%xds)
     call init_element_list(fx%element_list)
 
@@ -62,7 +75,6 @@ contains
     fx%wf_stack(1) = 0
     call init_entity_list(fx%forbidden_ge_list)
     call init_entity_list(fx%forbidden_pe_list)
-
     call init_entity_list(fx%predefined_e_list)
 
     call add_internal_entity(fx%predefined_e_list, 'amp', '&')
@@ -87,7 +99,10 @@ contains
     call destroy_dict(fx%attributes)
     call destroyNamespaceDictionary(fx%nsdict)
     call destroy_notation_list(fx%nlist)
-    call destroy_xml_doc_state(fx%xds)
+    if (.not.fx%xds_used) then
+      call destroy_xml_doc_state(fx%xds)
+      deallocate(fx%xds)
+    endif
     call destroy_element_list(fx%element_list)
 
     deallocate(fx%wf_stack)
@@ -105,7 +120,7 @@ contains
 
   end subroutine sax_parser_destroy
 
-  subroutine sax_parse(fx, fb, &
+  recursive subroutine sax_parse(fx, fb, &
 ! org.xml.sax
 ! SAX ContentHandler
     characters_handler,            &
@@ -140,7 +155,13 @@ contains
     startCdata_handler,            &
     startDTD_handler,              &
     startEntity_handler,           &
-    validate)
+    namespaces,                    &
+    namespace_prefixes,            &
+    xmlns_uris,                    &
+    validate,                      &
+    FoX_endDTD_handler,            &
+    startInCharData,               &
+    initial_entities)
 
     type(sax_parser_t), intent(inout) :: fx
     type(file_buffer_t), intent(inout) :: fb
@@ -167,11 +188,19 @@ contains
     optional :: endCdata_handler
     optional :: endEntity_handler
     optional :: endDTD_handler
+    optional :: FoX_endDTD_handler
     optional :: startCdata_handler
     optional :: startDTD_handler
     optional :: startEntity_handler
 
+    logical, intent(in), optional :: namespaces
+    logical, intent(in), optional :: namespace_prefixes
+    logical, intent(in), optional :: xmlns_uris
+
     logical, intent(in), optional :: validate
+    logical, intent(in), optional :: startInCharData
+
+    type(entity_list), optional :: initial_entities
 
     interface
 
@@ -223,13 +252,13 @@ contains
 
       subroutine notationDecl_handler(name, publicId, systemId)
         character(len=*), intent(in) :: name
-        character(len=*), optional, intent(in) :: publicId
-        character(len=*), optional, intent(in) :: systemId
+        character(len=*), intent(in) :: publicId
+        character(len=*), intent(in) :: systemId
       end subroutine notationDecl_handler
 
       subroutine unparsedEntityDecl_handler(name, publicId, systemId, notation)
         character(len=*), intent(in) :: name
-        character(len=*), optional, intent(in) :: publicId
+        character(len=*), intent(in) :: publicId
         character(len=*), intent(in) :: systemId
         character(len=*), intent(in) :: notation
       end subroutine unparsedEntityDecl_handler
@@ -280,6 +309,11 @@ contains
       subroutine endDTD_handler()
       end subroutine endDTD_handler
 
+      subroutine FoX_endDTD_handler(state)
+        use m_common_struct, only: xml_doc_state
+        type(xml_doc_state), pointer :: state
+      end subroutine FoX_endDTD_handler
+
       subroutine endEntity_handler(name)
         character(len=*), intent(in) :: name
       end subroutine endEntity_handler
@@ -289,8 +323,8 @@ contains
 
       subroutine startDTD_handler(name, publicId, systemId)
         character(len=*), intent(in) :: name
-        character(len=*), optional, intent(in) :: publicId
-        character(len=*), optional, intent(in) :: systemId
+        character(len=*), intent(in) :: publicId
+        character(len=*), intent(in) :: systemId
       end subroutine startDTD_handler
 
       subroutine startEntity_handler(name)
@@ -299,7 +333,8 @@ contains
 
     end interface
 
-    logical :: validCheck, processDTD, pe
+    logical :: validCheck, startInCharData_, processDTD, pe
+    logical :: namespaces_, namespace_prefixes_, xmlns_uris_
     integer :: i, iostat, temp_i
     character, pointer :: tempString(:)
     type(element_t), pointer :: elem
@@ -308,15 +343,48 @@ contains
     nullify(tempString)
     nullify(elem)
 
+! FIXME we don't do anything with the namespaces option at present
+    if (present(namespaces)) then
+      namespaces_ = namespaces
+    else
+      namespaces_ = .true.
+    endif
+    if (present(namespace_prefixes)) then
+      namespace_prefixes_ = namespace_prefixes
+    else
+      namespace_prefixes_ = .false.
+    endif
+    if (present(xmlns_uris)) then
+      xmlns_uris_ = xmlns_uris
+    else
+      xmlns_uris_ = .false.
+    endif
     if (present(validate)) then
       validCheck = validate
     else
       validCheck = .false.
     endif
+    if (present(startInCharData)) then
+      startInCharData_ = startInCharData
+    else
+      startInCharData_ = .false.
+    endif
+    if (present(initial_entities)) then
+      do i = 1, size(initial_entities)
+        if (.not.is_external_entity(initial_entities, getEntityNameByIndex(initial_entities, i))) &
+          call register_internal_PE(fx%xds, getEntityNameByIndex(initial_entities, i), getEntityTextByIndex(initial_entities, i))
+      enddo
+    endif
+
     processDTD = .true.
     iostat = 0
 
-    if (fx%parse_stack==0) then
+    if (startInCharData_) then
+      fx%context = CTXT_IN_CONTENT
+      fx%state = ST_CHAR_IN_CONTENT
+      fx%whitespace = WS_PRESERVE
+      fx%well_formed = .true.
+    elseif (fx%parse_stack==0) then
       call parse_xml_declaration(fx, fb, iostat)
       if (iostat/=0) goto 100
       fx%context = CTXT_BEFORE_DTD
@@ -675,9 +743,6 @@ contains
         if (size(fx%token)>0) then
           if (present(characters_handler)) call characters_handler(str_vs(fx%token))
         endif
-        !FIXME If current element is not ANY or EMPTY or MIXED then
-        ! any whitespace here is not significant, and we should call
-        ! back to ignorableWhitespace.
         fx%whitespace = WS_FORBIDDEN
         fx%state = ST_TAG_IN_CONTENT
 
@@ -707,10 +772,10 @@ contains
             if (present(endEntity_handler)) &
               call endEntity_handler(str_vs(tempString))
           elseif (likeCharacterEntityReference(str_vs(tempString))) then
-            if (checkRepCharEntityReference(str_vs(tempString), fx%xml_version)) then
+            if (checkRepCharEntityReference(str_vs(tempString), fx%xds%xml_version)) then
               if (present(characters_handler)) &
                 call characters_handler(expand_char_entity(str_vs(tempString)))
-            elseif (checkCharacterEntityReference(str_vs(tempString), fx%xml_version)) then
+            elseif (checkCharacterEntityReference(str_vs(tempString), fx%xds%xml_version)) then
               call add_error(fx%error_stack, "Unable to digest character entity reference in content, sorry.")
               goto 100
             else
@@ -773,11 +838,17 @@ contains
           if (in_error(fx%error_stack)) goto 100
           deallocate(fx%name)
           if (is_empty(fx%elstack)) then
-            !we're done
-            fx%well_formed = .true.
-            fx%state = ST_MISC
-            fx%context = CTXT_AFTER_CONTENT
-            fx%whitespace = WS_DISCARD
+            if (startInCharData_) then
+              fx%well_formed = .true.
+              fx%state = ST_CHAR_IN_CONTENT
+              fx%whitespace = WS_PRESERVE
+            else
+              !we're done
+              fx%well_formed = .true.
+              fx%state = ST_MISC
+              fx%context = CTXT_AFTER_CONTENT
+              fx%whitespace = WS_DISCARD
+            endif
           else
             fx%whitespace = WS_PRESERVE
             fx%state = ST_CHAR_IN_CONTENT
@@ -796,19 +867,19 @@ contains
         fx%state = ST_DTD_NAME
 
       case (ST_DTD_NAME)
-        !write(*,*) 'ST_DTD_NAME'
+        !write(*,*) 'ST_DTD_NAME ', str_vs(fx%token)
         if (str_vs(fx%token)=='SYSTEM') then
           fx%state = ST_DTD_SYSTEM
         elseif (str_vs(fx%token)=='PUBLIC') then
           fx%state = ST_DTD_PUBLIC
         elseif (str_vs(fx%token)=='[') then
           if (present(startDTD_handler)) &
-            call startDTD_handler(str_vs(fx%root_element))
+            call startDTD_handler(str_vs(fx%root_element), "", "")
           fx%whitespace = WS_DISCARD
           fx%state = ST_INT_SUBSET
         elseif (str_vs(fx%token)=='>') then
           if (present(startDTD_handler)) &
-            call startDTD_handler(str_vs(fx%root_element))
+            call startDTD_handler(str_vs(fx%root_element), "", "")
           fx%context = CTXT_BEFORE_CONTENT
           fx%state = ST_MISC
         else
@@ -845,7 +916,7 @@ contains
         fx%state = ST_DTD_DECL
 
       case (ST_DTD_DECL)
-        !write(*,*) 'ST_DTD_DECL'
+        !write(*,*) 'ST_DTD_DECL ', str_vs(fx%token)
         if (str_vs(fx%token)=='[') then
           if (associated(fx%publicId).or.associated(fx%systemId)) &
             fx%skippedExternal = .true.
@@ -853,9 +924,9 @@ contains
             if (associated(fx%publicId)) then
               call startDTD_handler(str_vs(fx%root_element), publicId=str_vs(fx%publicId), systemId=str_vs(fx%systemId))
             elseif (associated(fx%systemId)) then
-              call startDTD_handler(str_vs(fx%root_element), systemId=str_vs(fx%systemId))
+              call startDTD_handler(str_vs(fx%root_element), publicId="", systemId=str_vs(fx%systemId))
             else
-              call startDTD_handler(str_vs(fx%root_element))
+              call startDTD_handler(str_vs(fx%root_element), "", "")
             endif
           endif
           if (associated(fx%systemId)) deallocate(fx%systemId)
@@ -870,15 +941,22 @@ contains
               call startDTD_handler(str_vs(fx%root_element), publicId=str_vs(fx%publicId), systemId=str_vs(fx%systemId))
               deallocate(fx%publicId)
             elseif (associated(fx%systemId)) then
-              call startDTD_handler(str_vs(fx%root_element), systemId=str_vs(fx%systemId))
+              call startDTD_handler(str_vs(fx%root_element), publicId="", systemId=str_vs(fx%systemId))
             else
-              call startDTD_handler(str_vs(fx%root_element))
+              call startDTD_handler(str_vs(fx%root_element), "", "")
             endif
           endif
           if (associated(fx%systemId)) deallocate(fx%systemId)
           if (associated(fx%publicId)) deallocate(fx%publicId)
           if (present(endDTD_handler)) &
             call endDTD_handler
+          ! Here we hand over responsibility for the xds object
+          ! The SAX caller must take care of it, and we don't
+          ! need it any more. (We will destroy it shortly anyway)
+          if (present(FoX_endDTD_handler)) then
+            fx%xds_used = .true.
+            call FoX_endDTD_handler(fx%xds)
+          endif
           fx%context = CTXT_BEFORE_CONTENT
           fx%state = ST_MISC
         else
@@ -887,7 +965,7 @@ contains
         endif
 
       case (ST_INT_SUBSET)
-        write(*,*) 'ST_INT_SUBSET'
+        !write(*,*) 'ST_INT_SUBSET'
         if (str_vs(fx%token)==']') then
           fx%state = ST_CLOSE_DTD
         elseif (fx%token(1)=='%') then
@@ -967,9 +1045,9 @@ contains
         else
           !token is everything up to >
           if (processDTD) then
-            call parse_dtd_attlist(str_vs(fx%token), fx%xml_version, fx%error_stack, elem)
+            call parse_dtd_attlist(str_vs(fx%token), fx%xds%xml_version, fx%error_stack, elem)
           else
-            call parse_dtd_attlist(str_vs(fx%token), fx%xml_version, fx%error_stack)
+            call parse_dtd_attlist(str_vs(fx%token), fx%xds%xml_version, fx%error_stack)
           endif
           if (in_error(fx%error_stack)) goto 100
           ! Normalize attribute values in attlist
@@ -1017,15 +1095,15 @@ contains
           else
             ! Ignore contents ...
             nullify(elem)
-            call parse_dtd_element(str_vs(fx%token), fx%xml_version, fx%error_stack)
+            call parse_dtd_element(str_vs(fx%token), fx%xds%xml_version, fx%error_stack)
           endif
         else
           if (processDTD) then
             elem => add_element(fx%element_list, str_vs(fx%name))
-            call parse_dtd_element(str_vs(fx%token), fx%xml_version, fx%error_stack, elem)
+            call parse_dtd_element(str_vs(fx%token), fx%xds%xml_version, fx%error_stack, elem)
           else
             nullify(elem)
-            call parse_dtd_element(str_vs(fx%token), fx%xml_version, fx%error_stack)
+            call parse_dtd_element(str_vs(fx%token), fx%xds%xml_version, fx%error_stack)
           endif
         endif
         if (in_error(fx%error_stack)) goto 100
@@ -1241,7 +1319,7 @@ contains
           if (processDTD) then
             call add_notation(fx%nlist, str_vs(fx%name), publicId=str_vs(fx%publicId))
             if (present(notationDecl_handler)) &
-              call notationDecl_handler(str_vs(fx%name), publicId=str_vs(fx%publicId)) 
+              call notationDecl_handler(str_vs(fx%name), publicId=str_vs(fx%publicId), systemId="") 
           endif
           deallocate(fx%name)
           deallocate(fx%publicId)
@@ -1278,7 +1356,7 @@ contains
                 systemId=str_vs(fx%systemId))
               if (present(notationDecl_handler)) &
                 call notationDecl_handler(str_vs(fx%name), &
-                systemId=str_vs(fx%systemId)) 
+                publicId="", systemId=str_vs(fx%systemId)) 
             endif
           endif
           if (associated(fx%publicId)) deallocate(fx%publicId)
@@ -1296,6 +1374,14 @@ contains
         ! token must be '>'
         if (present(endDTD_handler)) &
           call endDTD_handler
+          ! Here we hand over responsibility for the xds object
+          ! The SAX caller must take care of it, and we don't
+          ! need it any more. (We will destroy it shortly anyway)
+          if (present(FoX_endDTD_handler)) then
+            fx%xds_used = .true.
+            call FoX_endDTD_handler(fx%xds)
+          endif
+
         fx%state = ST_MISC
         fx%context = CTXT_BEFORE_CONTENT
 
@@ -1307,7 +1393,15 @@ contains
 
     if (iostat==io_eof) then ! error is end of file then
       ! EOF of main file
-      if (fx%well_formed.and.fx%state==ST_MISC) then
+      if (startInChardata_) then
+        if (fx%well_formed) then
+          if (fx%state==ST_CHAR_IN_CONTENT.and.associated(fx%token)) then
+            if (size(fx%token)>0.and.present(characters_handler)) call characters_handler(str_vs(fx%token))
+          endif
+        else
+          if (present(error_handler)) call error_handler("Ill-formed XML fragment")
+        endif
+      elseif (fx%well_formed.and.fx%state==ST_MISC) then
         if (present(endDocument_handler)) &
           call endDocument_handler()
       else
@@ -1337,8 +1431,10 @@ contains
       call checkImplicitAttributes(fx%element_list, str_vs(fx%name), &
         fx%attributes)
       ! Check for namespace changes
-      call checkNamespaces(fx%attributes, fx%nsDict, &
-        len(fx%elstack), fx%xml_version, startPrefixMapping_handler)
+      if (namespaces_) &
+        call checkNamespaces(fx%attributes, fx%nsDict, &
+        len(fx%elstack), fx%xds%xml_version, namespace_prefixes_, xmlns_uris_, &
+        startPrefixMapping_handler)
       if (getURIofQName(fx,str_vs(fx%name))==invalidNS) then
         ! no namespace was found for the current element
         call add_error(fx%error_stack, "No namespace found for current element")
@@ -1371,7 +1467,8 @@ contains
         call endElement_handler(getURIofQName(fx, str_vs(fx%name)), &
         getlocalnameofQName(str_vs(fx%name)), &
         str_vs(fx%name))
-      call checkEndNamespaces(fx%nsDict, len(fx%elstack)+1, &
+      if (namespaces_) &
+        call checkEndNamespaces(fx%nsDict, len(fx%elstack), &
         endPrefixMapping_handler)
     end subroutine close_tag
 
@@ -1421,7 +1518,7 @@ contains
             elseif (associated(fx%Ndata)) then
               call register_external_GE(fx%xds, str_vs(fx%name), str_vs(fx%systemId), notation=str_vs(fx%Ndata))
               if (present(unparsedEntityDecl_handler)) &
-                call unparsedEntityDecl_handler(str_vs(fx%name), &
+                call unparsedEntityDecl_handler(str_vs(fx%name), publicId="", &
                 systemId=resolveSystemId(str_vs(fx%systemId)), notation=str_vs(fx%Ndata))
             elseif (associated(fx%publicId)) then
               call register_external_GE(fx%xds, str_vs(fx%name), str_vs(fx%systemId), public=str_vs(fx%publicId))

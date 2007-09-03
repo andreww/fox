@@ -172,7 +172,8 @@ contains
     else
       decl = .true.
     endif
-    
+    if (present(iostat)) iostat = 0
+
     allocate(xf%filename(len(filename)))
     xf%filename = vs_str(filename)
     allocate(xf%name(0))
@@ -181,7 +182,7 @@ contains
       if (unit==-1) then
         call get_unit(xf%lun,iostat_)
         if (iostat_ /= 0) then
-          iostat = iostat_
+          if (present(iostat)) iostat = iostat_
           return
         endif
       else
@@ -190,7 +191,7 @@ contains
     else
       call get_unit(xf%lun,iostat_)
       if (iostat_ /= 0) then
-        iostat = iostat_
+        if (present(iostat)) iostat = iostat_
         return
       endif
     endif
@@ -202,20 +203,27 @@ contains
     ! a newline. The buffer must not be larger than this, but its size 
     ! can be tuned for performance.
     
-    if(repl) then
-      open(unit=xf%lun, file=filename, form="formatted", status="replace", &
-        action="write", recl=xml_recl, iostat=iostat_)
+    if (repl) then
+      ! NAG insists on unnecessary duplication of iostat etc here
+      if (present(iostat)) then
+        open(unit=xf%lun, file=filename, form="formatted", status="replace", &
+          action="write", recl=xml_recl, iostat=iostat)
+      else	
+        open(unit=xf%lun, file=filename, form="formatted", status="replace", &
+          action="write", recl=xml_recl)
+      endif
     else 
-      open(unit=xf%lun, file=filename, form="formatted", status="new", &
-        action="write", recl=xml_recl, iostat=iostat_)
-    endif
-    if (iostat_/=0) then
-      iostat = iostat_
-      return
+      if (present(iostat)) then
+        open(unit=xf%lun, file=filename, form="formatted", status="new", &
+          action="write", recl=xml_recl, iostat=iostat)
+      else	
+        open(unit=xf%lun, file=filename, form="formatted", status="new", &
+          action="write", recl=xml_recl)
+      endif
     endif
 
     call init_elstack(xf%stack)
-    
+
     call init_dict(xf%dict)
     !NB it can make no difference which XML version we are using
     !until after we output the XML declaration. So we set it to
@@ -285,7 +293,7 @@ contains
       if (.not.checkEncName(encoding)) &
         call wxml_error("Invalid encoding name: "//encoding)
       if (encoding /= 'UTF-8' .and. encoding /= 'utf-8') &
-        call wxml_warning("Non-default encoding specified: "//encoding)
+        call wxml_warning(xf, "Non-default encoding specified: "//encoding)
       call xml_AddPseudoAttribute(xf, "encoding", encoding)
     endif
     if (present(standalone)) then
@@ -416,7 +424,7 @@ contains
           call wxml_error("Tried to reference unregistered parameter entity")
       else
         if (.not.checkExistingRefs()) &
-          call wxml_warning("Reference to unknown parameter entity")
+          call wxml_warning(xf, "Reference to unknown parameter entity")
       endif
       call register_internal_PE(xf%xds, name, PEdef)
     else
@@ -557,7 +565,7 @@ contains
     if (present(notation)) then
       if (.not.notation_exists(xf%xds%nList, notation)) then
         if (.not.xf%xds%standalone) then
-          call wxml_warning("Tried to add possibly unregistered notation to entity: "//name)
+          call wxml_warning(xf, "Tried to add possibly unregistered notation to entity: "//name)
           if (.not.checkName(notation, xf%xds)) &
             call wxml_error("xml_AddExternalEntity: Invalid notation "//notation)
         else
@@ -581,7 +589,7 @@ contains
     
     call add_to_buffer('<!ENTITY '//name, xf%buffer, .false.)
     if (present(public)) then
-      call add_to_buffer("PUBLIC ", xf%buffer, .false.)
+      call add_to_buffer(" PUBLIC ", xf%buffer, .false.)
       call add_to_buffer('"'//public//'"', xf%buffer, .true.)
       call add_to_buffer(" ", xf%buffer, .false.)
     else
@@ -654,7 +662,7 @@ contains
       call add_to_buffer('"'//public//'"', xf%buffer, .true.)
       call add_to_buffer(" ", xf%buffer, .false.)
     elseif (present(system)) then
-      call add_to_buffer('SYSTEM ', xf%buffer, .false.)
+      call add_to_buffer(' SYSTEM ', xf%buffer, .false.)
     endif
     if (present(system)) then
       if (index(system, '"') > 0) then
@@ -681,7 +689,7 @@ contains
       call wxml_error("Element name is illegal in xml_AddElementToDTD: "//name)
 
     !FIXME we should check declaration syntax too.
-    call wxml_warning("Adding ELEMENT declaration to DTD. Cannot guarantee well-formedness")
+    call wxml_warning(xf, "Adding ELEMENT declaration to DTD. Cannot guarantee well-formedness")
     
     if (xf%state_3 == WXML_STATE_3_DURING_DTD) then
       call add_to_buffer(" [", xf%buffer, .false.)
@@ -715,7 +723,7 @@ contains
       call wxml_error("Attlist name is illegal in xml_AddAttlistToDTD: "//name)
 
     !FIXME we should check declaration syntax too.
-    call wxml_warning("Adding ATTLIST declaration to DTD. Cannot guarantee well-formedness")
+    call wxml_warning(xf, "Adding ATTLIST declaration to DTD. Cannot guarantee well-formedness")
     
     if (xf%state_3 == WXML_STATE_3_DURING_DTD) then
       call add_to_buffer(" [", xf%buffer, .false.)
@@ -746,10 +754,10 @@ contains
     if (.not.checkName(name, xf%xds)) &
       call wxml_error("Trying to add illegal name in xml_AddPEReferenceToDTD: "//name)
 
-    call wxml_warning("Adding PEReference to DTD. Cannot guarantee well-formedness")
+    call wxml_warning(xf, "Adding PEReference to DTD. Cannot guarantee well-formedness")
     if (.not.existing_entity(xf%xds%PEList, name)) then
       if (.not.xf%xds%standalone) then
-        call wxml_warning("Tried to reference possibly unregistered parameter entity in DTD: "//name)
+        call wxml_warning(xf, "Tried to reference possibly unregistered parameter entity in DTD: "//name)
       else
         call wxml_error("Tried to reference unregistered parameter entity in DTD "//name)
       endif
@@ -1010,12 +1018,12 @@ contains
 
     if (.not.checkCharacterEntityReference(entityref, xf%xds%xml_version)) then
       !it's not just a unicode entity
-      call wxml_warning("Entity reference added - document may not be well-formed")
+      call wxml_warning(xf, "Entity reference added - document may not be well-formed")
       if (.not.existing_entity(xf%xds%entityList, entityref)) then
         if (xf%xds%standalone) then
           call wxml_error("Tried to reference unregistered entity")
         else
-          call wxml_warning("Tried to reference unregistered entity")
+          call wxml_warning(xf, "Tried to reference unregistered entity")
         endif
       else
         if (is_unparsed_entity(xf%xds%entityList, entityref)) &
