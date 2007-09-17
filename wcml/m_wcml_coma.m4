@@ -156,6 +156,9 @@ module m_wcml_coma
   use FoX_wxml, only: xml_EndElement, xml_AddCharacters
   use m_wcml_stml, only: stmAddValue
 
+! Fix for pgi, requires this explicitly:
+  use m_wxml_overloads
+
   implicit none
   private
 

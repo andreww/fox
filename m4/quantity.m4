@@ -72,6 +72,9 @@ module m_wcml_$1
   use FoX_wxml, only: xml_EndElement
   use m_wcml_stml, only: stmAddValue
 
+! Fix for pgi, requires this explicitly:
+  use m_wxml_overloads
+
   implicit none
   private
 
