@@ -14,6 +14,7 @@ As of version 2.1.1, FoX has been tested with the following compiler versions.
 Successfully:
 
 * g95 as of 25/5/7: compiles and runs all tests
+* gfortran as of version 4.1.2
 * NAG version 5.1: compiles and runs all tests
 * Intel version 9.1: compiles and runs all tests
 * PGI version 6.2-3: compiles (apart from WCML), some mysterious test failures.

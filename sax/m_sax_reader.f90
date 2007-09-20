@@ -416,7 +416,10 @@ contains
       i = 1
       if (fb%xml_version == XML1_0) then
         n = scan(string(:p), achar(10))
-      elseif (fb%xml_version == XML1_0) then
+      elseif (fb%xml_version == XML1_1) then
+        ! n = scan(string(:p), achar(10)//achar(133))
+        ! Really we should check for 133, but we can't do >128 chars
+        ! anywhere else, and some compilers complain when we try.
         n = scan(string(:p), achar(10)//achar(133))
       endif
       do while (n > 0) 
@@ -426,8 +429,9 @@ contains
           ! unless this is the end of the file
           if (iostat /= 0) then
             if ((fb%xml_version==XML1_0.and.c/=achar(13)).or. &
-              (fb%xml_version==XML1_1.and.c/=achar(13).and.c/=achar(133))) then
-              ! FIXME we need to store the character somewhere.
+              ! (fb%xml_version==XML1_1.and.c/=achar(13).and.c/=achar(133))) then
+              ! Really we should check for 133, but we can't do >128 chars
+              (fb%xml_version==XML1_0.and.c/=achar(13))) then
               continue
               ! else we'd be throwing it away below anyway
             endif
@@ -438,7 +442,9 @@ contains
           ! else it really is the end of the file, carry on for the moment.
           ! Now: it's not the end of the string, what's the next character?
         elseif ((fb%xml_version==XML1_0.and.string(n+1:n+1)==achar(13)).or. &
-          (fb%xml_version==XML1_1.and.string(n+1:n+1)/=achar(13).and.string(n+1:n+1)/=achar(133))) then
+          ! Really we should check for 133, but we can't do >128 chars
+          ! (fb%xml_version==XML1_1.and.string(n+1:n+1)/=achar(13).and.string(n+1:n+1)/=achar(133))) then
+          (fb%xml_version==XML1_1.and.string(n+1:n+1)/=achar(13))) then
           ! We must discard it, and thus shorten the string we have.
           string(n+1:p-1) = string(n+2:p)
           p = p - 1
@@ -449,8 +455,10 @@ contains
         ! and find the next one ...
         if (fb%xml_version == XML1_0) then
           n = index(string(n+1:p), achar(10))
-        elseif (fb%xml_version == XML1_0) then
-          n = scan(string(n+1:p), achar(10)//achar(133))
+        elseif (fb%xml_version == XML1_1) then
+          ! Really we should check for 133, but we can't do >128 chars
+          ! n = scan(string(n+1:p), achar(10)//achar(133))
+          n = scan(string(n+1:p), achar(10))
         endif
       enddo
 
