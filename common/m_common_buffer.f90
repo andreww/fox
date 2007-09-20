@@ -63,6 +63,7 @@ contains
     character(len=(buffer%size+len(s))) :: s2
 
     ! Is whitespace significant in this context?
+
     ! If not, we can adjust the buffer without worrying
     ! about it.
     ! But if we are not told, we warn about it.
@@ -93,13 +94,10 @@ contains
       endif
     endif
 
-    ! FIXME this is wrong. We should not ever insert whitespace into the
-    ! existing buffer, we don't know if it might be whitespace-significant.
-
     s2 = buffer%str(:buffer%size)//s
 
     n = 1
-    do while (n < len(s2)-MAX_BUFF_SIZE)
+    do while (n <= len(s2)-MAX_BUFF_SIZE)
       i = scan(s2(n:n+MAX_BUFF_SIZE-1), whitespace, back=.true.)
       write(buffer%unit, '(a)') s2(n:n+i-1)
       n = n + i 
