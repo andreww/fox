@@ -109,8 +109,6 @@ dnl
 dnl Check whether we need to pass a flag to get at the flush intrinsic.
 TW_FC_CHECK_FLUSH
 TW_FC_CHECK_ABORT
-dnl this next flag only actually needed if compiling siesta blas & lapack.
-TW_FC_CHECK_DCFUNS
 dnl
 dnl Fix up DEFS -> FPPFLAGS conversion.
 for i in $DEFS; do
