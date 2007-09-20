@@ -9,6 +9,9 @@ module m_wcml_stml
   use FoX_wxml, only: xml_NewElement, xml_EndElement
   use FoX_wxml, only: xml_AddCharacters, xml_AddAttribute
 
+! Fix for pgi, requires this explicitly:
+  use m_wxml_overloads
+
   implicit none
   private
 
