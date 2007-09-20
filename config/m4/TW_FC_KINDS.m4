@@ -60,7 +60,6 @@ AC_CACHE_CHECK([for kind number produced by $1],
 AC_LANG_PUSH([Fortran])
 FCFLAGS_save="$FCFLAGS"
 FCFLAGS="$FCFLAGS $FCFLAGS_free_f90"
-AC_MSG_CHECKING([for kind number produced by $1])
 ac_fc_kind_test=1
 ac_fc_kind_found=no
 while test $ac_fc_kind_test -lt 100
@@ -133,7 +132,6 @@ AC_CACHE_CHECK([for kind number produced by $1],
 AC_LANG_PUSH([Fortran])
 FCFLAGS_save="$FCFLAGS"
 FCFLAGS="$FCFLAGS $FCFLAGS_free_f90"
-AC_MSG_CHECKING([for kind number produced by $1])
 ac_fc_kind_test=1
 ac_fc_kind_found=no
 while test $ac_fc_kind_test -lt 100
