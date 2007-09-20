@@ -1,6 +1,8 @@
 #!/bin/make
 #
-default: objsdir wxml_lib wcml_lib sax_lib dom_lib examples_build
+include arch.make
+#
+default: objsdir $(BUILD_TARGETS)
 	touch .FoX
 #
 objsdir:
@@ -10,8 +12,6 @@ examples_build: wxml_lib wcml_lib sax_lib dom_lib
 	(cd examples; make)
 #
 check: dom_check sax_check wxml_check wcml_check
-#
-include arch.make
 #---------------------------
 INCFLAGS=-Iobjs/finclude
 #
@@ -86,7 +86,7 @@ DoX:
 #
 clean: wxml_lib_clean wcml_lib_clean common_lib_clean fsys_lib_clean sax_lib_clean dom_lib_clean utils_lib_clean
 	(cd examples;make clean)
-	rm -f objs/lib/* objs/finclude/* .FoX
+	rm -rf objs .FoX
 #
 distclean: clean
 	rm -f FoX-config arch.make config.log config.status .config

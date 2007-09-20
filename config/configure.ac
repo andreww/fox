@@ -1,7 +1,7 @@
 AC_INIT([FoX],[2.0],[tow21@cam.ac.uk])
 AC_CONFIG_SRCDIR([config.sub])
 dnl
-dnl All macros are kept in Src/m4:
+dnl All macros are kept in ./m4:
 dnl AC_CONFIG_MACRO_DIR([m4])
 dnl FIXME that doesn't work. Why not?
 dnl
@@ -53,14 +53,14 @@ dnl
 AC_ARG_ENABLE([debug],
   AC_HELP_STRING([--enable-debug], [Compile with debugging support]),
   [use_debug=$enableval], [use_debug=no])
-if test $use_debug = yes; then
+if test x$use_debug = xyes; then
   FCFLAGS="$FCFLAGS $FFLAGS_DEBUG"
 fi
 dnl
 AC_ARG_ENABLE([fast],
   AC_HELP_STRING([--enable-fast], [Compile with best known optimization flags]),
   [use_debug=$enableval], [use_debug=no])
-if test $use_debug = yes; then
+if test x$use_debug = xyes; then
   FCFLAGS="$FCFLAGS $FFLAGS_FAST"
 fi
 dnl
@@ -78,16 +78,51 @@ dnl
 AC_ARG_ENABLE([debug],
   AC_HELP_STRING([--enable-debug], [Compile with debugging support]),
   [use_debug=$enableval], [use_debug=no])
-if test $use_debug = yes; then
+if test x$use_debug = xyes; then
   FCFLAGS="$FCFLAGS $FFLAGS_DEBUG"
 fi
 
 AC_ARG_ENABLE([fast],
   AC_HELP_STRING([--enable-fast], [Compile with best known optimization flags]),
   [use_debug=$enableval], [use_debug=no])
-if test $use_debug = yes; then
+if test x$use_debug = xyes; then
   FCFLAGS="$FCFLAGS $FFLAGS_FAST"
 fi
+dnl
+dnl Now check for whether we have been asked for any particular
+dnl subsystems - wcml, wkml, sax, dom.
+AC_ARG_ENABLE([wcml],
+  AC_HELP_STRING([--enable-wcml], [Compile wcml subsystem (for CML output)]),
+  [eval WCML_$enableval=wcml_lib])
+AC_ARG_ENABLE([wkml],
+  AC_HELP_STRING([--enable-wkml], [Compile wkml subsystem (for KML output)]),
+  [eval WKML_$enableval=wkml_lib])
+AC_ARG_ENABLE([sax],
+  AC_HELP_STRING([--enable-sax], [Compile SAX parser]),
+  [eval SAX_$enableval=sax_lib])
+AC_ARG_ENABLE([dom],
+  AC_HELP_STRING([--enable-dom], [Compile dom subsystem (for DOM output)]),
+  [eval DOM_$enableval=dom_lib])
+dnl
+dnl If nothing was explicitly enabled, then enable everything that wasn't disabled.n
+dnl Otherwise we only enable whatever was explicitly enabled.
+if test x$WCML_yes$WKML_yes$SAX_yes$DOM_yes = x; then
+  if test x$WCML_no = x; then WCML_yes=wcml_lib; fi
+  if test x$WKML_no = x; then WKML_yes=wcml_lib; fi
+  if test x$SAX_no = x; then SAX_yes=wcml_lib; fi
+  if test x$DOM_no = x; then DOM_yes=wcml_lib; fi
+fi
+dnl ensure that if sax is disabled, so is dom
+dnl so if the user explicitly disables sax but enables dom
+dnl they'll get neither. So don't do that then!
+if test x$SAX_no = xsax_lib; then
+  $DOM_no=dom_lib
+  $DOM_yes=
+fi
+dnl Finally, construct the build targets
+dnl wxml_lib is always included.
+BUILD_TARGETS="wxml_lib $WCML_yes $WKML_yes $SAX_yes $DOM_yes"
+AC_SUBST(BUILD_TARGETS)
 dnl
 dnl Check compiler characteristics; it must support F95
 dnl to use the cpu_time intrinsic. Otherwise, SYS must

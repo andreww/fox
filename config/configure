@@ -639,6 +639,7 @@ F90_RULE
 RANLIB
 SIESTA_ARCH
 FFLAGS_MPI
+BUILD_TARGETS
 SYS
 SP_KIND
 DP_KIND
@@ -1238,6 +1239,10 @@ Optional Features:
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
   --enable-debug          Compile with debugging support
   --enable-fast           Compile with best known optimization flags
+  --enable-wcml           Compile wcml subsystem (for CML output)
+  --enable-wkml           Compile wkml subsystem (for KML output)
+  --enable-sax            Compile SAX parser
+  --enable-dom            Compile dom subsystem (for DOM output)
 
 Some influential environment variables:
   FC          Fortran compiler command
@@ -1911,7 +1916,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:1914:" \
+echo "$as_me:1919:" \
      "checking for Fortran compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -5708,7 +5713,7 @@ else
   use_debug=no
 fi
 
-if test $use_debug = yes; then
+if test x$use_debug = xyes; then
   FCFLAGS="$FCFLAGS $FFLAGS_DEBUG"
 fi
 # Check whether --enable-fast was given.
@@ -5718,7 +5723,7 @@ else
   use_debug=no
 fi
 
-if test $use_debug = yes; then
+if test x$use_debug = xyes; then
   FCFLAGS="$FCFLAGS $FFLAGS_FAST"
 fi
 
@@ -5878,7 +5883,7 @@ else
   use_debug=no
 fi
 
-if test $use_debug = yes; then
+if test x$use_debug = xyes; then
   FCFLAGS="$FCFLAGS $FFLAGS_DEBUG"
 fi
 
@@ -5889,9 +5894,41 @@ else
   use_debug=no
 fi
 
-if test $use_debug = yes; then
+if test x$use_debug = xyes; then
   FCFLAGS="$FCFLAGS $FFLAGS_FAST"
 fi
+# Check whether --enable-wcml was given.
+if test "${enable_wcml+set}" = set; then
+  enableval=$enable_wcml; eval WCML_$enableval=wcml_lib
+fi
+
+# Check whether --enable-wkml was given.
+if test "${enable_wkml+set}" = set; then
+  enableval=$enable_wkml; eval WKML_$enableval=wkml_lib
+fi
+
+# Check whether --enable-sax was given.
+if test "${enable_sax+set}" = set; then
+  enableval=$enable_sax; eval SAX_$enableval=sax_lib
+fi
+
+# Check whether --enable-dom was given.
+if test "${enable_dom+set}" = set; then
+  enableval=$enable_dom; eval DOM_$enableval=dom_lib
+fi
+
+if test x$WCML_yes$WKML_yes$SAX_yes$DOM_yes = x; then
+  if test x$WCML_no = x; then WCML_yes=wcml_lib; fi
+  if test x$WKML_no = x; then WKML_yes=wcml_lib; fi
+  if test x$SAX_no = x; then SAX_yes=wcml_lib; fi
+  if test x$DOM_no = x; then DOM_yes=wcml_lib; fi
+fi
+if test x$SAX_no = xsax_lib; then
+  $DOM_no=dom_lib
+  $DOM_yes=
+fi
+BUILD_TARGETS="wxml_lib $WCML_yes $WKML_yes $SAX_yes $DOM_yes"
+
 
 
 
@@ -7479,6 +7516,7 @@ F90_RULE!$F90_RULE$ac_delim
 RANLIB!$RANLIB$ac_delim
 SIESTA_ARCH!$SIESTA_ARCH$ac_delim
 FFLAGS_MPI!$FFLAGS_MPI$ac_delim
+BUILD_TARGETS!$BUILD_TARGETS$ac_delim
 SYS!$SYS$ac_delim
 SP_KIND!$SP_KIND$ac_delim
 DP_KIND!$DP_KIND$ac_delim
@@ -7491,7 +7529,7 @@ LIBOBJS!$LIBOBJS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 84; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 85; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5
