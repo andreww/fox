@@ -68,6 +68,7 @@
 <p>This should suffice for most installations. However:</p>
 
 <ol>
+<li><p>You may not be interested in all of the modules that FoX supplies. For example, you may only be interested in output, not input. If so, you can select which modules you want using <code>--enable-MODULENAME</code> where MODULENAME is one of <code>wxml</code>, <code>wcml</code>, <code>wkml</code>, <code>sax</code>, <code>dom</code>. If none are explicitly enabled, then all will be built. (Alternatively, you can exclude modules one at a time with <code>--disable-MODULENAME</code>)</p></li>
 <li><p>If you have more than one Fortran compiler available, or it is not on your <code>PATH</code>, you can force the choice by doing:</p>
 
 <p><code>config/configure FC=/path/to/compiler/of/choice</code></p></li>
@@ -97,7 +98,9 @@ However, you may only be interested in building the libraries, or perhaps a subs
 
 <pre><code>wxml_lib
 wcml_lib
+wkml_lib
 sax_lib
+dom_lib
 </code></pre>
 
 <h2>Testing</h2>
@@ -111,7 +114,7 @@ sax_lib
 <p>Known failures: <br />
 * <code>test_xml_Close_2</code> sometimes unexpectedly fails - this is not a problem, ignore it.  </p>
 
-<p>If any other failures occur, please send a message to the mailing list (<a href="&#109;&#x61;&#x69;&#x6C;&#x74;&#111;:F&#x6F;&#88;&#64;&#108;&#x69;&#115;&#116;&#115;&#x2E;&#117;&#115;&#x7A;&#108;&#97;&#46;&#x6D;e.&#x75;&#x6B;">F&#x6F;&#88;&#64;&#108;&#x69;&#115;&#116;&#115;&#x2E;&#117;&#115;&#x7A;&#108;&#97;&#46;&#x6D;e.&#x75;&#x6B;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
+<p>If any other failures occur, please send a message to the mailing list (<a href="&#109;&#97;&#x69;&#108;&#116;&#x6F;:&#70;&#111;&#88;&#64;&#108;i&#x73;&#x74;&#x73;&#46;&#x75;s&#122;&#108;&#97;&#46;&#x6D;e&#x2E;&#117;&#107;">&#70;&#111;&#88;&#64;&#108;i&#x73;&#x74;&#x73;&#46;&#x75;s&#122;&#108;&#97;&#46;&#x6D;e&#x2E;&#117;&#107;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
 
 <h2>Linking to an existing program</h2>
 

@@ -91,6 +91,9 @@ fi
 dnl
 dnl Now check for whether we have been asked for any particular
 dnl subsystems - wcml, wkml, sax, dom.
+AC_ARG_ENABLE([wxml],
+  AC_HELP_STRING([--enable-wxml], [Compile wxml subsystem (for XML output)]),
+  [eval WXML_$enableval=wxml_lib])
 AC_ARG_ENABLE([wcml],
   AC_HELP_STRING([--enable-wcml], [Compile wcml subsystem (for CML output)]),
   [eval WCML_$enableval=wcml_lib])
@@ -106,22 +109,21 @@ AC_ARG_ENABLE([dom],
 dnl
 dnl If nothing was explicitly enabled, then enable everything that wasn't disabled.n
 dnl Otherwise we only enable whatever was explicitly enabled.
-if test x$WCML_yes$WKML_yes$SAX_yes$DOM_yes = x; then
+if test x$WXML_yes$WCML_yes$WKML_yes$SAX_yes$DOM_yes = x; then
+  if test x$WXML_no = x; then WXML_yes=wxml_lib; fi
   if test x$WCML_no = x; then WCML_yes=wcml_lib; fi
   if test x$WKML_no = x; then WKML_yes=wcml_lib; fi
   if test x$SAX_no = x; then SAX_yes=wcml_lib; fi
   if test x$DOM_no = x; then DOM_yes=wcml_lib; fi
 fi
-dnl ensure that if sax is disabled, so is dom
-dnl so if the user explicitly disables sax but enables dom
-dnl they'll get neither. So don't do that then!
-if test x$SAX_no = xsax_lib; then
-  $DOM_no=dom_lib
-  $DOM_yes=
-fi
+dnl Note that if we try to exclude something which an
+dnl included module depends upon, then the inclusion
+dnl will happen anyway. eg if we exclude wxml, but include
+dnl wkml, then wxml will get built as a dependency by the
+dnl makefile. 
+dnl
 dnl Finally, construct the build targets
-dnl wxml_lib is always included.
-BUILD_TARGETS="wxml_lib $WCML_yes $WKML_yes $SAX_yes $DOM_yes"
+BUILD_TARGETS="$WXML_yes $WCML_yes $WKML_yes $SAX_yes $DOM_yes"
 AC_SUBST(BUILD_TARGETS)
 dnl
 dnl Check compiler characteristics; it must support F95

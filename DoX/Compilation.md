@@ -51,15 +51,17 @@ and the following compilers tested and known to fail
 
 This should suffice for most installations. However:
 
-1. If you have more than one Fortran compiler available, or it is not on your `PATH`, you can force the choice by doing:
+1. You may not be interested in all of the modules that FoX supplies. For example, you may only be interested in output, not input. If so, you can select which modules you want using `--enable-MODULENAME` where MODULENAME is one of `wxml`, `wcml`, `wkml`, `sax`, `dom`. If none are explicitly enabled, then all will be built. (Alternatively, you can exclude modules one at a time with `--disable-MODULENAME`)
+
+2. If you have more than one Fortran compiler available, or it is not on your `PATH`, you can force the choice by doing:
 
    `config/configure FC=/path/to/compiler/of/choice`
 
-2. It is possible that the configuration fails. In this case
+3. It is possible that the configuration fails. In this case
 	* please tell me about it so I can fix it
   	* all relevant compiler details are placed in the file arch.make; you may be able to edit that file to allow compilation. Again, if so, please let me know what you need to do.
 
-3. By default the resultant files are installed under the objs directory. If you wish them to be installed elsewhere, you may do
+4. By default the resultant files are installed under the objs directory. If you wish them to be installed elsewhere, you may do
 
     `config/configure --prefix=/path/to/installation`
 
@@ -77,7 +79,9 @@ However, you may only be interested in building the libraries, or perhaps a subs
 
     wxml_lib
     wcml_lib
+    wkml_lib
     sax_lib
+    dom_lib
 
 ##Testing
 

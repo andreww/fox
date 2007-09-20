@@ -1239,6 +1239,7 @@ Optional Features:
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
   --enable-debug          Compile with debugging support
   --enable-fast           Compile with best known optimization flags
+  --enable-wxml           Compile wxml subsystem (for XML output)
   --enable-wcml           Compile wcml subsystem (for CML output)
   --enable-wkml           Compile wkml subsystem (for KML output)
   --enable-sax            Compile SAX parser
@@ -1916,7 +1917,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:1919:" \
+echo "$as_me:1920:" \
      "checking for Fortran compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -5897,6 +5898,11 @@ fi
 if test x$use_debug = xyes; then
   FCFLAGS="$FCFLAGS $FFLAGS_FAST"
 fi
+# Check whether --enable-wxml was given.
+if test "${enable_wxml+set}" = set; then
+  enableval=$enable_wxml; eval WXML_$enableval=wxml_lib
+fi
+
 # Check whether --enable-wcml was given.
 if test "${enable_wcml+set}" = set; then
   enableval=$enable_wcml; eval WCML_$enableval=wcml_lib
@@ -5917,17 +5923,14 @@ if test "${enable_dom+set}" = set; then
   enableval=$enable_dom; eval DOM_$enableval=dom_lib
 fi
 
-if test x$WCML_yes$WKML_yes$SAX_yes$DOM_yes = x; then
+if test x$WXML_yes$WCML_yes$WKML_yes$SAX_yes$DOM_yes = x; then
+  if test x$WXML_no = x; then WXML_yes=wxml_lib; fi
   if test x$WCML_no = x; then WCML_yes=wcml_lib; fi
   if test x$WKML_no = x; then WKML_yes=wcml_lib; fi
   if test x$SAX_no = x; then SAX_yes=wcml_lib; fi
   if test x$DOM_no = x; then DOM_yes=wcml_lib; fi
 fi
-if test x$SAX_no = xsax_lib; then
-  $DOM_no=dom_lib
-  $DOM_yes=
-fi
-BUILD_TARGETS="wxml_lib $WCML_yes $WKML_yes $SAX_yes $DOM_yes"
+BUILD_TARGETS="$WXML_yes $WCML_yes $WKML_yes $SAX_yes $DOM_yes"
 
 
 
