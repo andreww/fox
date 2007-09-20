@@ -16,3 +16,5 @@ sax_example
 .FoX
 .config
 *.exe
+.gdb_history
+autom4te.cache
