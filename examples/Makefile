@@ -14,6 +14,12 @@ dom_example.exe: dom_example.o
 #
 sax_example.exe: sax_example.o
 	$(FC) $(FFLAGS) $(LDFLAGS) -o $@ sax_example.o $$(../FoX-config --libs --sax)
+sax_well_formed.exe: sax_well_formed.o
+	$(FC) $(FFLAGS) $(LDFLAGS) -o $@ sax_well_formed.o $$(../FoX-config --libs --sax)
+sax_valid.exe: sax_valid.o
+	$(FC) $(FFLAGS) $(LDFLAGS) -o $@ sax_valid.o $$(../FoX-config --libs --sax)
+sax_canonicalize.exe: sax_canonicalize.o
+	$(FC) $(FFLAGS) $(LDFLAGS) -o $@ sax_canonicalize.o $$(../FoX-config --libs --sax)
 #
 wxml_example.exe: wxml_example.o 
 	$(FC) $(FFLAGS) $(LDFLAGS) -o $@ wxml_example.o $$(../FoX-config --libs --wxml) 

@@ -46,8 +46,8 @@ program sax_well_formed
   endif
 
   call parse(fxml,&
-    error_handler,                 &
-    fatalError_handler)
+    error_handler=error_handler,                 &
+    fatalError_handler=fatalError_handler)
 
   call close_xml_t(fxml)
 
