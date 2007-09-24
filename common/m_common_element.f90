@@ -91,6 +91,7 @@ module m_common_element
   public :: init_element_list
   public :: destroy_element_list
   public :: existing_element
+  public :: declared_element
   public :: get_element
   public :: add_element
 
@@ -158,6 +159,22 @@ contains
     enddo
   end function existing_element
 
+  function declared_element(e_list, name) result(p)
+    type(element_list), intent(in) :: e_list
+    character(len=*), intent(in) :: name
+    logical :: p
+
+    integer :: i
+
+    p = .false.
+    do i = 1, size(e_list%list)
+      if (str_vs(e_list%list(i)%name)==name) then
+        p = associated(e_list%list(i)%model)
+        exit
+      endif
+    enddo
+  end function declared_element
+
   function get_element(e_list, name) result(e)
     type(element_list), intent(in) :: e_list
     character(len=*), intent(in) :: name
@@ -204,7 +221,7 @@ contains
     character(len=*), intent(in) :: contents
     integer, intent(in) :: xv
     type(error_stack), intent(inout) :: stack
-    type(element_t), intent(inout), optional :: element
+    type(element_t), pointer, optional :: element
 
     integer :: state
     integer :: i, nbrackets
@@ -597,16 +614,17 @@ contains
     enddo
 
     if (state/=ST_END) then
-      if (associated(order)) deallocate(order)
-      if (associated(name)) deallocate(name)
+      call add_error(stack, "Error in parsing contents of element declaration")
       goto 100
     endif
 
     if (present(element)) then
-      element%any = any
-      element%empty = empty
-      element%mixed = mixed
-      element%model => vs_str_alloc(trim(strip_spaces(contents)))
+      if (associated(element)) then
+        element%any = any
+        element%empty = empty
+        element%mixed = mixed
+        element%model => vs_str_alloc(trim(strip_spaces(contents)))
+      endif
     endif
     return
 

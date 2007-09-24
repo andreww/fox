@@ -86,6 +86,7 @@ contains
 ! Features / properties
     namespaces,                    &
     namespace_prefixes,            &
+    validation,                    &
     xmlns_uris)
 
     type(xml_t), intent(inout) :: xt
@@ -118,6 +119,7 @@ contains
 
     logical, intent(in), optional :: namespaces
     logical, intent(in), optional :: namespace_prefixes
+    logical, intent(in), optional :: validation
     logical, intent(in), optional :: xmlns_uris
 
     interface
@@ -278,6 +280,7 @@ contains
       startEntity_handler,           &
       namespaces=namespaces,                 &
       namespace_prefixes=namespace_prefixes, &
+      validate=validation,                   &
       xmlns_uris=xmlns_uris)
 
   end subroutine parse

@@ -1,5 +1,3 @@
-! XML tokenizer
-
 module m_sax_tokenizer
 
   use m_common_array_str, only: vs_str, str_vs, vs_str_alloc, devnull
@@ -394,8 +392,10 @@ contains
 
         case ('&')
           c = get_characters(fb, 1, iostat)
-          if (iostat/=0) return
-          if (c=='#') then
+          if (iostat/=0) then
+            call add_error(fx%error_stack, 'Bare ampersand found.')
+            return
+          elseif (c=='#') then
             c = get_characters(fb, 1, iostat)
             if (iostat/=0) return
             if (c=='x') then
@@ -600,7 +600,7 @@ contains
       endif
     endif
 
-    if (str_vs(fx%encoding)/="UTF-8") then
+    if (str_vs(fx%encoding)/="UTF-8".and.str_vs(fx%encoding)/="utf-8") then
       call add_error(fx%error_stack, "Unknown character encoding in XML declaration", ERR_WARNING)
     endif
 

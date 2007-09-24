@@ -8,7 +8,7 @@ module m_sax_parser
   use m_common_element, only: element_t, element_list, init_element_list, &
     destroy_element_list, existing_element, add_element, get_element, &
     parse_dtd_element, parse_dtd_attlist, report_declarations, get_att_type, &
-    get_default_atts, ATT_CDATA
+    get_default_atts, declared_element, ATT_CDATA
   use m_common_elstack, only: push_elstack, pop_elstack, init_elstack, &
     destroy_elstack, is_empty, len
   use m_common_entities, only: existing_entity, init_entity_list, &
@@ -1103,24 +1103,24 @@ contains
       case (ST_DTD_ELEMENT_CONTENTS)
         !token is everything up to >
         !write(*,*)'ST_DTD_ELEMENT_CONTENTS'
-        if (existing_element(fx%element_list, str_vs(fx%name))) then
+        if (declared_element(fx%element_list, str_vs(fx%name))) then
           if (validCheck) then
             call add_error(fx%error_stack, "Duplicate Element declaration")
             goto 100
           else
             ! Ignore contents ...
             nullify(elem)
-            call parse_dtd_element(str_vs(fx%token), fx%xds%xml_version, fx%error_stack)
+          endif
+        elseif (processDTD) then
+          if (existing_element(fx%element_list, str_vs(fx%name))) then
+            elem => get_element(fx%element_list, str_vs(fx%name))
+          else
+            elem => add_element(fx%element_list, str_vs(fx%name))
           endif
         else
-          if (processDTD) then
-            elem => add_element(fx%element_list, str_vs(fx%name))
-            call parse_dtd_element(str_vs(fx%token), fx%xds%xml_version, fx%error_stack, elem)
-          else
-            nullify(elem)
-            call parse_dtd_element(str_vs(fx%token), fx%xds%xml_version, fx%error_stack)
-          endif
+          nullify(elem)
         endif
+        call parse_dtd_element(str_vs(fx%token), fx%xds%xml_version, fx%error_stack, elem)
         if (in_error(fx%error_stack)) goto 100
         fx%state = ST_DTD_ELEMENT_END
 
