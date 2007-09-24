@@ -110,16 +110,16 @@ contains
 
     n = index(name, ':')
     if (n == 0) then
-      good = checkNCName(name, xds%xml_version)
+      good = checkNCName(name, xds)
     else
-      good = (checkNCName(name(:n-1), xds%xml_version) .and. checkNCName(name(n+1:), xds%xml_version))
+      good = (checkNCName(name(:n-1), xds) .and. checkNCName(name(n+1:), xds))
     endif
   end function checkQName
 
 
-  pure function checkNCName(name, xv) result(good)
+  pure function checkNCName(name, xds) result(good)
     character(len=*), intent(in) :: name
-    integer, intent(in) :: xv
+    type(xml_doc_state), intent(in) :: xds
     logical :: good
     ! Validates a string against the XML requirements for an NCNAME
     ! Is not fully compliant; ignores UTF issues.
@@ -128,9 +128,9 @@ contains
 
     good = .false.
     if (len(name)>0) then
-      if (.not.isInitialNCNameChar(name(1:1), xv)) return
+      if (.not.isInitialNCNameChar(name(1:1), xds%xml_version)) return
       do i = 2, len(name)
-        if (.not.isNCNameChar(name(i:i), xv)) return
+        if (.not.isNCNameChar(name(i:i), xds%xml_version)) return
       enddo
       good = .true.
     endif

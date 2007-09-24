@@ -1,10 +1,12 @@
 module m_common_namespaces
 
   use m_common_array_str, only: str_vs, vs_str, vs_str_alloc
-  use m_common_attrs, only: dictionary_t, get_key, get_value, remove_key, getLength
+  use m_common_attrs, only: dictionary_t, get_key, get_value, remove_key, getLength, hasKey
   use m_common_attrs, only: set_nsURI, set_localName, get_prefix, add_item_to_dict
-  use m_common_error, only: FoX_error
+  use m_common_charset, only: XML1_0, XML1_1
+  use m_common_error, only: FoX_error, FoX_warning, error_stack, add_error, in_error
   use m_common_namecheck, only: checkNCName, checkIRI
+  use m_common_struct, only: xml_doc_state
 
   implicit none
   private
@@ -124,13 +126,28 @@ contains
   end subroutine copyURIMapping
     
   
-  subroutine addDefaultNS(nsDict, uri, ix)
+  subroutine addDefaultNS(nsDict, uri, ix, es)
     type(namespaceDictionary), intent(inout) :: nsDict
     character(len=*), intent(in) :: uri
     integer, intent(in) :: ix
+    type(error_stack), intent(inout), optional :: es
 
     type(URIMapping), dimension(:), allocatable :: tempMap
     integer :: l_m, l_s
+
+    if (uri=="http://www.w3.org/XML/1998/namespace") then
+      if (present(es)) then
+        call add_error(es, "Attempt to assign incorrect URI to prefix 'xml'")
+      else
+        call FoX_error("Attempt to assign incorrect URI to prefix 'xml'")
+      endif
+    elseif (uri=="http://www.w3.org/2000/xmlns/") then
+      if (present(es)) then
+        call add_error(es, "Attempt to assign prefix to xmlns namespace")
+      else
+        call FoX_error("Attempt to assign prefix to xmlns namespace")
+      endif
+    endif
 
     if (.not.checkIRI(URI)) &
       call FoX_error("Attempt to declare invalid namespace IRI: "//URI)
@@ -222,13 +239,14 @@ contains
 
   end subroutine removePrefixedURI
 
-  subroutine addPrefixedNS(nsDict, prefix, URI, ix, xv, xml)
+  subroutine addPrefixedNS(nsDict, prefix, URI, ix, xds, xml, es)
     type(namespaceDictionary), intent(inout) :: nsDict
     character(len=*), intent(in) :: prefix
     character(len=*), intent(in) :: uri
     integer, intent(in) :: ix
-    integer, intent(in) :: xv
+    type(xml_doc_state), intent(in) :: xds
     logical, intent(in), optional :: xml
+    type(error_stack), intent(inout), optional :: es
     
     integer :: l_p, p_i, i
     logical :: xml_
@@ -239,24 +257,48 @@ contains
       xml_ = .false.
     endif
 
-    !check prefix is not reserved
-    if (len(prefix) > 2) then
+    if (prefix=='xml' .and. &
+      URI/='http://www.w3.org/XML/1998/namespace') then
+      if (present(es)) then
+        call add_error(es, "Attempt to assign incorrect URI to prefix 'xml'")
+      else
+        call FoX_error("Attempt to assign incorrect URI to prefix 'xml'")
+      endif
+    elseif (prefix/='xml' .and. &
+      URI=='http://www.w3.org/XML/1998/namespace') then
+      if (present(es)) then
+        call add_error(es, "Attempt to assign incorrect prefix to XML namespace")
+      else
+        call FoX_error("Attempt to assign incorrect prefix to XML namespace")
+      endif
+    elseif (prefix == 'xmlns') then
+      if (present(es)) then
+        call add_error(es, "Attempt to declare 'xmlns' prefix")
+      else
+        call FoX_error("Attempt to declare 'xmlns' prefix")
+      endif
+    elseif (URI=="http://www.w3.org/2000/xmlns/") then
+      if (present(es)) then
+        call add_error(es, "Attempt to assign prefix to xmlns namespace")
+      else
+        call FoX_error("Attempt to assign prefix to xmlns namespace")
+      endif
+    elseif (len(prefix) > 2) then
       if ((verify(prefix(1:1), 'xX') == 0) &
-           .and. (verify(prefix(2:2), 'mM') == 0) &
-           .and. (verify(prefix(3:3), 'lL') == 0)) then
-        if (prefix == 'xml' .and. &
-          .not. URI == 'http://www.w3.org/XML/1998/namespace') then
-          call FoX_error("Attempt to assign incorrect URI to prefix 'xml'")
-        elseif (prefix == 'xmlns') then
-          call FoX_error("Attempt to declare 'xmlns' prefix")
-        else
-          if (.not.xml_) &
-            call FoX_error("Attempt to declare reserved prefix: "//prefix)
+        .and. (verify(prefix(2:2), 'mM') == 0) &
+        .and. (verify(prefix(3:3), 'lL') == 0)) then
+        if (.not.xml_) then
+          ! FIXME need working warning infrastructure
+          !if (present(es)) then
+          !  call add_error(es, "Attempt to declare reserved prefix: "//prefix)
+          !else
+          call FoX_warning("Attempt to declare reserved prefix: "//prefix)
+          !endif
         endif
       endif
     endif
 
-    if (.not.checkNCName(prefix, xv)) &
+    if (.not.checkNCName(prefix, xds)) &
       call FoX_error("Attempt to declare invalid prefix: "//prefix)
 
     if (.not.checkIRI(URI)) &
@@ -396,20 +438,24 @@ contains
   end subroutine removePrefix
 
 
-  subroutine checkNamespaces(atts, nsDict, ix, xv, namespace_prefixes, xmlns_uris, start_prefix_handler)
+  subroutine checkNamespaces(atts, nsDict, ix, xds, namespace_prefixes, xmlns_uris, es, &
+    start_prefix_handler, end_prefix_handler)
     type(dictionary_t), intent(inout) :: atts
     type(namespaceDictionary), intent(inout) :: nsDict
     integer, intent(in) :: ix ! depth of nesting of current element.
-    integer, intent(in) :: xv
+    type(xml_doc_state), intent(in) :: xds
     logical, intent(in) :: namespace_prefixes, xmlns_uris
-
-    optional :: start_prefix_handler ! what to do when we find a new prefix
+    type(error_stack), intent(inout) :: es
+    optional :: start_prefix_handler, end_prefix_handler
 
     interface
       subroutine start_prefix_handler(namespaceURI, prefix)
         character(len=*), intent(in) :: namespaceURI
         character(len=*), intent(in) :: prefix
       end subroutine start_prefix_handler
+      subroutine end_prefix_handler(prefix)
+        character(len=*), intent(in) :: prefix
+      end subroutine end_prefix_handler
     end interface
 
     character(len=6) :: xmlns
@@ -423,65 +469,100 @@ contains
     ! because we need to remove some as we go along ...
     i = 1
     do while (i <= getLength(atts))
-       xmlns = get_key(atts, i)
-       if (xmlns == 'xmlns ') then
-          !Default namespace is being set
-          URI => vs_str_alloc(get_value(atts, i))
+      xmlns = get_key(atts, i)
+      if (xmlns == 'xmlns ') then
+        !Default namespace is being set
+        URI => vs_str_alloc(get_value(atts, i))
+        if (str_vs(URI)=="") then
+          if (xds%xml_version==XML1_0) then
+            call add_error(es, "Empty nsURI is invalid in XML 1.0")
+            return
+          elseif (xds%xml_version==XML1_1) then
+            if (present(end_prefix_handler)) &
+              call end_prefix_handler("")
+            call addDefaultNS(nsDict, invalidNS, ix)
+            deallocate(URI)
+          endif
+        else
           call checkURI(URI)
           if (present(start_prefix_handler)) &
-               call start_prefix_handler(str_vs(URI), "")
+            call start_prefix_handler(str_vs(URI), "")
           call addDefaultNS(nsDict, str_vs(URI), ix)
           deallocate(URI)
-          if (namespace_prefixes) then
-            i = i + 1
-          else
-            call remove_key(atts, i)
+        endif
+        if (namespace_prefixes) then
+          i = i + 1
+        else
+          call remove_key(atts, i)
+        endif
+      elseif (xmlns == 'xmlns:') then
+        !Prefixed namespace is being set
+        QName => vs_str_alloc(get_key(atts, i))
+        URI => vs_str_alloc(get_value(atts, i))
+        if (str_vs(URI)=="") then
+          if (xds%xml_version==XML1_0) then
+            call add_error(es, "Empty nsURI is invalid in XML 1.0")
+            return
+          elseif (xds%xml_version==XML1_1) then
+            if (present(end_prefix_handler)) &
+              call end_prefix_handler(str_vs(QName(7:)))
+            call addPrefixedNS(nsDict, str_vs(QName(7:)), invalidNS, ix, xds, es=es)
+            if (in_error(es)) return
+            deallocate(URI)
           endif
-       elseif (xmlns == 'xmlns:') then
-          !Prefixed namespace is being set
-          URI => vs_str_alloc(get_value(atts, i))
+        else
           call checkURI(URI)
-          QName => vs_str_alloc(get_key(atts, i))
-          call addPrefixedNS(nsDict, str_vs(QName(7:)), str_vs(URI), ix, xv)
+          call addPrefixedNS(nsDict, str_vs(QName(7:)), str_vs(URI), ix, xds, es=es)
+          if (in_error(es)) return
           if (present(start_prefix_handler)) &
-               call start_prefix_handler(str_vs(URI), str_vs(QName(7:)))
+            call start_prefix_handler(str_vs(URI), str_vs(QName(7:)))
           deallocate(URI)
           deallocate(QName)
-          if (namespace_prefixes) then
-            i = i + 1
-          else
-            call remove_key(atts, i)
-          endif
-       else
-          ! we only increment if we haven't removed a key
+        endif
+        if (namespace_prefixes) then
           i = i + 1
-       endif
+        else
+          call remove_key(atts, i)
+        endif
+      else
+        ! we only increment if we haven't removed a key
+        i = i + 1
+      endif
     enddo
 
     ! having done that, now resolve all attribute namespaces:
     do i = 1, getLength(atts)
-       QName => vs_str_alloc(get_key(atts,i))
-       n = index(str_vs(QName), ':')
-       if (n > 0) then
-         if (str_vs(QName(1:n-1))=='xmlns') then
-           ! FIXME but this can be controlled by SAX configuration xmlns-uris
-           if (xmlns_uris) then
-             call set_nsURI(atts, i, 'http://www.w3.org/2000/xmlns/')
-           else
-             call set_nsURI(atts, i, '')
-           endif
-         else
-           call set_nsURI(atts, i, getnamespaceURI(nsDict, str_vs(QName(1:n-1))))
-         endif
-       else
-         if (xmlns_uris.and.str_vs(QName)=='xmlns') then
-           call set_nsURI(atts, i, 'http://www.w3.org/2000/xmlns/')
-         else
-           call set_nsURI(atts, i, '') ! no such thing as a default namespace on attributes
-         endif
-       endif
-       call set_localName(atts, i, QName(n+1:))
-       deallocate(QName)
+      QName => vs_str_alloc(get_key(atts,i))
+      n = index(str_vs(QName), ':')
+      if (n > 0) then
+        if (str_vs(QName(1:n-1))=='xmlns') then
+          ! FIXME but this can be controlled by SAX configuration xmlns-uris
+          if (xmlns_uris) then
+            call set_nsURI(atts, i, 'http://www.w3.org/2000/xmlns/')
+          else
+            call set_nsURI(atts, i, '')
+          endif
+        else
+          if (getnamespaceURI(nsDict, str_vs(QName(1:n-1)))==invalidNS) then
+            call add_error(es, "Unbound namespace prefix")
+            return
+          endif
+          call set_nsURI(atts, i, getnamespaceURI(nsDict, str_vs(QName(1:n-1))))
+        endif
+      else
+        if (xmlns_uris.and.str_vs(QName)=='xmlns') then
+          call set_nsURI(atts, i, 'http://www.w3.org/2000/xmlns/')
+        else
+          call set_nsURI(atts, i, '') ! no such thing as a default namespace on attributes
+        endif
+      endif
+      ! Check for duplicates
+      if (hasKey(atts, getnamespaceURI(nsDict, str_vs(QName(1:n-1))), str_vs(QName(n+1:)))) then
+        call add_error(es, "Duplicate attribute names after namespace processing")
+        return
+      endif
+      call set_localName(atts, i, QName(n+1:))
+      deallocate(QName)
     enddo
 
   end subroutine checkNamespaces

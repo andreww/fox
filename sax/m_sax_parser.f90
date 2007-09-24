@@ -1,11 +1,9 @@
-! XML parser
-
 module m_sax_parser
 
   use m_common_array_str, only: str_vs, string_list, &
     destroy_string_list, devnull, vs_str_alloc
-  use m_common_attrs, only: init_dict, destroy_dict, add_item_to_dict, &
-    has_key, get_value
+  use m_common_attrs, only: init_dict, destroy_dict, reset_dict, &
+    add_item_to_dict, has_key, get_value
   use m_common_charset, only: XML_WHITESPACE, operator(.in.)
   use m_common_element, only: element_t, element_list, init_element_list, &
     destroy_element_list, existing_element, add_element, get_element, &
@@ -24,7 +22,8 @@ module m_sax_parser
   use m_common_io, only: io_eof, io_err
   use m_common_namecheck, only: checkName, checkPublicId, &
     checkCharacterEntityReference, likeCharacterEntityReference, &
-    checkQName, checkPITarget, resolveSystemId, checkRepCharEntityReference
+    checkQName, checkNCName, checkPITarget, resolveSystemId, &
+    checkRepCharEntityReference
   use m_common_namespaces, only: getnamespaceURI, invalidNS, &
     checkNamespaces, checkEndNamespaces, namespaceDictionary, &
     initNamespaceDictionary, destroyNamespaceDictionary
@@ -63,7 +62,7 @@ contains
 
     call init_error_stack(fx%error_stack)
     call init_elstack(fx%elstack)
-    !call init_dict(fx%attributes)
+    call init_dict(fx%attributes)
 
     call initNamespaceDictionary(fx%nsdict)
     call init_notation_list(fx%nlist)
@@ -333,7 +332,7 @@ contains
 
     end interface
 
-    logical :: validCheck, startInCharData_, processDTD, pe
+    logical :: validCheck, startInCharData_, processDTD, pe, nameOK
     logical :: namespaces_, namespace_prefixes_, xmlns_uris_
     integer :: i, iostat, temp_i
     character, pointer :: tempString(:)
@@ -386,7 +385,11 @@ contains
       fx%well_formed = .true.
     elseif (fx%parse_stack==0) then
       call parse_xml_declaration(fx, fb, iostat)
-      if (iostat/=0) goto 100
+      if (iostat/=0) then
+        call add_error(fx%error_stack, "Error in XML declaration")
+        call sax_error(fx, error_handler)
+        return
+      endif
       fx%context = CTXT_BEFORE_DTD
       fx%state = ST_MISC
       fx%whitespace = WS_DISCARD
@@ -490,7 +493,12 @@ contains
 
       case (ST_START_PI)
         !write(*,*)'ST_START_PI'
-        if (checkName(str_vs(fx%token), fx%xds)) then
+        if (namespaces_) then
+          nameOk = checkNCName(str_vs(fx%token), fx%xds)
+        else
+          nameOk = checkName(str_vs(fx%token), fx%xds)
+        endif
+        if (nameOk) then
           if (str_vs(fx%token)=='xml') then
             call add_error(fx%error_stack, "XML declaration must be at start of document")
             goto 100
@@ -713,8 +721,13 @@ contains
         !write(*,*)'ST_ATT_EQUALS'
         ! token is pre-processed attribute value.
         ! fx%name still contains attribute name
-        if (.not.checkQName(str_vs(fx%attname), fx%xds)) then
-          call add_error(fx%error_stack, "Invalid QName for attribute name")
+        if (namespaces_) then
+          nameOk = checkQName(str_vs(fx%attname), fx%xds)
+        else
+          nameOk = checkName(str_vs(fx%attname), fx%xds)
+        endif
+        if (.not.nameOk) then
+          call add_error(fx%error_stack, "Invalid attribute name")
           goto 100
         endif
         !Have we already had this dictionary item?
@@ -1034,6 +1047,7 @@ contains
         fx%state = ST_DTD_ATTLIST_CONTENTS
 
       case (ST_DTD_ATTLIST_CONTENTS)
+        !write(*,*) 'ST_DTD_ATTLIST_CONTENTS'
         if (str_vs(fx%token)==">") then
           deallocate(fx%name)
           if (processDTD) then
@@ -1063,6 +1077,7 @@ contains
         endif
 
       case (ST_DTD_ATTLIST_END)
+        !write(*,*) 'ST_DTD_ATTLIST_END'
         if (str_vs(fx%token)=='>') then
           deallocate(fx%name)
           if (processDTD) then
@@ -1133,7 +1148,12 @@ contains
           fx%state = ST_DTD_ENTITY_PE
         else
           pe = .false.
-          if (.not.checkName(str_vs(fx%token), fx%xds)) then
+          if (namespaces_) then
+            nameOk = checkNCName(str_vs(fx%token), fx%xds)
+          else
+            nameOk = checkName(str_vs(fx%token), fx%xds)
+          endif
+          if (.not.nameOk) then
             call add_error(fx%error_stack, &
               "Illegal name for general entity")
             goto 100
@@ -1145,7 +1165,12 @@ contains
 
       case (ST_DTD_ENTITY_PE)
         !write(*,*) 'ST_DTD_ENTITY_PE'
-        if (.not.checkName(str_vs(fx%token), fx%xds)) then
+        if (namespaces_) then
+          nameOk = checkNCName(str_vs(fx%token), fx%xds)
+        else
+          nameOk = checkName(str_vs(fx%token), fx%xds)
+        endif
+        if (.not.nameOk) then
           call add_error(fx%error_stack, &
             "Illegal name for parameter entity")
           goto 100
@@ -1224,7 +1249,12 @@ contains
       case (ST_DTD_ENTITY_NDATA_VALUE)
         !write(*,*) 'ST_DTD_ENTITY_NDATA_VALUE'
         !check is a name and exists in notationlist
-        if (.not.checkName(str_vs(fx%token), fx%xds)) then
+        if (namespaces_) then
+          nameOk = checkNCName(str_vs(fx%token), fx%xds)
+        else
+          nameOk = checkName(str_vs(fx%token), fx%xds)
+        endif
+        if (.not.nameOk) then
           call add_error(fx%error_stack, "Invalid name for Notation")
           goto 100
         endif
@@ -1261,7 +1291,12 @@ contains
 
       case (ST_DTD_NOTATION)
         !write(*,*) 'ST_DTD_NOTATION'
-        if (.not.checkName(str_vs(fx%token), fx%xds)) then
+        if (namespaces_) then
+          nameOk = checkNCName(str_vs(fx%token), fx%xds)
+        else
+          nameOk = checkName(str_vs(fx%token), fx%xds)
+        endif
+        if (.not.nameOk) then
           call add_error(fx%error_stack, "Invalid name for Notation")
           goto 100
         endif
@@ -1423,8 +1458,13 @@ contains
 
     subroutine open_tag
       ! Is Name a valid QName?
-      if (.not.checkQName(str_vs(fx%name), fx%xds)) then
-        call add_error(fx%error_stack, "Invalid QName")
+      if (namespaces_) then
+        nameOk = checkQName(str_vs(fx%name), fx%xds)
+      else
+        nameOk = checkName(str_vs(fx%name), fx%xds)
+      endif
+      if (.not.nameOk) then
+        call add_error(fx%error_stack, "Invalid element name")
         return
       endif
       ! Are there any default values missing?
@@ -1433,8 +1473,9 @@ contains
       ! Check for namespace changes
       if (namespaces_) &
         call checkNamespaces(fx%attributes, fx%nsDict, &
-        len(fx%elstack), fx%xds%xml_version, namespace_prefixes_, xmlns_uris_, &
-        startPrefixMapping_handler)
+        len(fx%elstack), fx%xds, namespace_prefixes_, xmlns_uris_, &
+        fx%error_stack, startPrefixMapping_handler, endPrefixMapping_handler)
+      if (in_error(fx%error_stack)) return
       if (getURIofQName(fx,str_vs(fx%name))==invalidNS) then
         ! no namespace was found for the current element
         call add_error(fx%error_stack, "No namespace found for current element")
@@ -1447,8 +1488,7 @@ contains
         call startElement_handler(getURIofQName(fx, str_vs(fx%name)), &
         getlocalNameofQName(str_vs(fx%name)), &
         str_vs(fx%name), fx%attributes)
-      call destroy_dict(fx%attributes)
-      call init_dict(fx%attributes)
+      call reset_dict(fx%attributes)
       fx%wf_stack(1) = fx%wf_stack(1) + 1
     end subroutine open_tag
 
