@@ -37,6 +37,8 @@ contains
 
     character :: c, c2
 
+! FIXME when we return because iostat/=0, do we leak memory?
+
     if (associated(fx%token)) deallocate(fx%token)
     nullify(fx%token)
     if (associated(fx%next_token)) then
@@ -59,6 +61,7 @@ contains
       elseif (fx%xds%xml_version==XML1_1) then
         call get_characters_until_condition(fb, isXML1_1_NameChar, .false., iostat)
       endif
+      if (iostat/=0) return
       fx%token => vs_str_alloc(c//str_vs(fb%namebuffer))
       deallocate(fb%namebuffer)
 

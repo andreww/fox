@@ -276,6 +276,7 @@ contains
       character :: rc
       character, dimension(:), pointer :: nc
       if (size(fb%next_chars)>0) then
+        iostat = 0
         rc = fb%next_chars(1)
         allocate(nc(size(fb%next_chars)-1))
         nc = fb%next_chars(2:)
@@ -477,7 +478,6 @@ contains
       ! This should only return EOF if it is EOF , and we've read no
       ! character at all.
 
-
       ! We may have a pending newline
       if (fb%eor) then
         string(1:1) = achar(13)
@@ -526,9 +526,9 @@ contains
             fb%eor = .true.
           endif
           iostat = 0 ! and forget about the error
-        elseif (iostat == io_eof.and.ncr > 0) then
+        elseif (iostat == io_eof) then
           fb%eof = .true.
-          iostat = 0 ! since we're still returning some characters
+          iostat = 0 ! since we may still be returning some chars
           return
         elseif (iostat/=0) then
           !either we've read an eof, or we've hit an error. Either way:
@@ -593,7 +593,6 @@ contains
     ! Which is current buffer?
     if (size(fb%buffer_stack) > 0) then
       cb => fb%buffer_stack(1)
-
       n_held = size(cb%s) - cb%pos + 1
       if (n <= n_held) then
         string = str_vs(cb%s(cb%pos:cb%pos+n-1))
@@ -646,7 +645,6 @@ contains
     character, dimension(:), pointer :: tempbuf, buf
     integer :: m_i
 
-
     if (size(fb%buffer_stack)>0) then
       cb => fb%buffer_stack(1)
       if (cb%pos>size(cb%s)) then
@@ -669,13 +667,10 @@ contains
       fb%pos = fb%nchars + 1
       call fill_buffer(fb, iostat)
       if (iostat==io_eof) then
-        iostat = 0! just return with what we have
+        ! just return with what we have
+        ! we'll reset iostat = 0 below
         m_i = fb%nchars - fb%pos + 1
-        if (m_i==0) then 
-          m_i = 1
-        else
-          iostat = 0 
-        endif
+        if (m_i==0) m_i = 1
         exit
       elseif (iostat/=0) then
         return
@@ -683,6 +678,8 @@ contains
         m_i = check_fb(fb, condition, true)
       endif
     enddo
+    ! We're ok, and we'll definitely return something
+    iostat = 0
 
     if (size(fb%buffer_stack)>0) then
       deallocate(buf)
@@ -744,17 +741,15 @@ contains
       call fill_buffer(fb, iostat)
       if (iostat==io_eof) then
         m_i = fb%nchars - fb%pos + 1
-        if (m_i==0) then 
-          m_i = 1
-        else
-          iostat = 0 
-        endif
+        if (m_i==0) m_i = 1
+        exit
       elseif (iostat/=0) then
         return
       else
         m_i = condition(fb, marker)
       endif
     enddo
+    iostat = 0
 
     if (size(fb%buffer_stack)>0) then
       deallocate(buf)
