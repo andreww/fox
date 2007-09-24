@@ -65,6 +65,7 @@ module m_common_entities
   public :: getEntityByIndex
   public :: getEntityNameByIndex
   public :: getEntityTextByIndex
+  public :: getEntityNotationByIndex
   public :: size
 
 contains
@@ -105,6 +106,14 @@ contains
 
     c = str_vs(el%list(i)%repl)
   end function getEntityTextByIndex
+
+  function getEntityNotationByIndex(el, i) result(c)
+    type(entity_list), intent(in) :: el
+    integer, intent(in) :: i
+    character(len=size(el%list(i)%notation)) :: c
+
+    c = str_vs(el%list(i)%notation)
+  end function getEntityNotationByIndex
 
   function size_el(el) result(n)
     type(entity_list), intent(in) :: el

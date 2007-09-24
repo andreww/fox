@@ -15,7 +15,7 @@ module m_sax_parser
     destroy_entity_list, add_internal_entity, &
     is_external_entity, expand_entity, expand_char_entity, &
     is_unparsed_entity, pop_entity_list, size, &
-    getEntityTextByIndex, getEntityNameByIndex
+    getEntityTextByIndex, getEntityNameByIndex, getEntityNotationByIndex
   use m_common_entity_expand, only: expand_entity_value_alloc
   use m_common_error, only: FoX_error, add_error, &
     init_error_stack, destroy_error_stack, in_error
@@ -1258,17 +1258,9 @@ contains
           call add_error(fx%error_stack, "Invalid name for Notation")
           goto 100
         endif
-        if (notation_exists(fx%nlist, str_vs(fx%token))) then
-          fx%Ndata => fx%token
-          nullify(fx%token)
-        else
-          if (validCheck) then
-            call add_error(fx%error_stack, "Attempt to use undeclared notation")
-            goto 100
-          endif
-          fx%Ndata => fx%token
-          nullify(fx%token)
-        endif
+        fx%Ndata => fx%token
+        nullify(fx%token)
+
         fx%state = ST_DTD_ENTITY_END
         fx%whitespace = WS_DISCARD
 
@@ -1409,14 +1401,24 @@ contains
         ! token must be '>'
         if (present(endDTD_handler)) &
           call endDTD_handler
-          ! Here we hand over responsibility for the xds object
-          ! The SAX caller must take care of it, and we don't
-          ! need it any more. (We will destroy it shortly anyway)
-          if (present(FoX_endDTD_handler)) then
-            fx%xds_used = .true.
-            call FoX_endDTD_handler(fx%xds)
-          endif
-
+        ! Here we hand over responsibility for the xds object
+        ! The SAX caller must take care of it, and we don't
+        ! need it any more. (We will destroy it shortly anyway)
+        if (present(FoX_endDTD_handler)) then
+          fx%xds_used = .true.
+          call FoX_endDTD_handler(fx%xds)
+        endif
+        ! Check that all notations used have been declared:
+        if (validCheck) then
+          do i = 1, size(fx%xds%entityList)
+            if (getEntityNotationByIndex(fx%xds%entityList, i)/="" &
+              .and..not.notation_exists(fx%nlist, getEntityNotationByIndex(fx%xds%entityList, i))) then
+              call add_error(fx%error_stack, "Attempt to use undeclared notation")
+              goto 100
+            endif
+          enddo
+        endif
+          
         fx%state = ST_MISC
         fx%context = CTXT_BEFORE_CONTENT
 
