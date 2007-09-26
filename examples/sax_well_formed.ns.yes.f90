@@ -15,14 +15,12 @@ contains
     character(len=*), intent(in) :: msg
     write(*,'(a)') "Error encountered and caught"
     write(*,'(a)') msg
-    stop
   end subroutine error_handler
 
   subroutine fatalError_handler(msg)
     character(len=*), intent(in) :: msg
     write(*,'(a)') "Fatal error encountered and caught"
     write(*,'(a)') msg
-    stop
   end subroutine fatalError_handler
 
 end module m_handlers
@@ -51,5 +49,7 @@ program sax_well_formed
     namespaces=.true., validation=.false.)
 
   call close_xml_t(fxml)
+
+  print*, "Finished"
 
 end program sax_well_formed
