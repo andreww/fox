@@ -1052,6 +1052,7 @@ contains
     ! However, that value can be obscured behind entities,
     ! and we can't check that without full entity expansion
     ! available to the output processor.
+    ! FIXME check when we have the ability
 
     if (present(type)) then
       if (type/='CDATA'.and.type/='ID'.and.type/='IDREF'.and.type/='IDREFS'.and.type/='NMTOKEN'.and.type/='NMTOKENS' &
