@@ -10,12 +10,13 @@ module m_sax_parser
     parse_dtd_element, parse_dtd_attlist, report_declarations, get_att_type, &
     get_default_atts, declared_element, ATT_CDATA
   use m_common_elstack, only: push_elstack, pop_elstack, init_elstack, &
-    destroy_elstack, is_empty, len
+    destroy_elstack, is_empty, len, get_top_elstack
   use m_common_entities, only: existing_entity, init_entity_list, &
     destroy_entity_list, add_internal_entity, &
     is_external_entity, expand_entity, expand_char_entity, &
     is_unparsed_entity, pop_entity_list, size, &
-    getEntityTextByIndex, getEntityNameByIndex, getEntityNotationByIndex
+    getEntityTextByIndex, getEntityNameByIndex, getEntityNotationByIndex, &
+    getEntityTextByName
   use m_common_entity_expand, only: expand_entity_value_alloc
   use m_common_error, only: FoX_error, add_error, &
     init_error_stack, destroy_error_stack, in_error
@@ -446,7 +447,7 @@ contains
       select case (fx%state)
 
       case (ST_MISC)
-        !write(*,*) 'ST_MISC'
+        !write(*,*) 'ST_MISC', str_vs(fx%token)
         if (str_vs(fx%token) == '<?') then
           fx%state = ST_START_PI
           fx%whitespace = WS_FORBIDDEN
@@ -518,6 +519,12 @@ contains
 
       case (ST_PI_CONTENTS)
         !write(*,*)'ST_PI_CONTENTS'
+        if (validCheck.and.len(fx%elstack)>0) then
+          elem => get_element(fx%element_list, get_top_elstack(fx%elstack))
+          if (elem%empty) then
+            call add_error(fx%error_stack, "Content inside empty element")
+          endif
+        endif
         if (str_vs(fx%token)=='?>') then
           ! No data for this PI
           if (present(processingInstruction_handler)) &
@@ -572,6 +579,12 @@ contains
       case (ST_COMMENT_END_2)
         !write(*,*)'ST_COMMENT_END_2'
         if (str_vs(fx%token)=='>') then
+          if (validCheck.and.len(fx%elstack)>0) then
+            elem => get_element(fx%element_list, get_top_elstack(fx%elstack))
+            if (elem%empty) then
+              call add_error(fx%error_stack, "Content inside empty element")
+            endif
+          endif
           if (present(comment_handler)) &
             call comment_handler(str_vs(fx%name))
           deallocate(fx%name)
@@ -635,6 +648,18 @@ contains
 
       case (ST_CDATA_END)
         !write(*,*)'ST_CDATA_END'
+        if (validCheck) then
+          elem => get_element(fx%element_list, get_top_elstack(fx%elstack))
+          if (elem%empty) then
+            call add_error(fx%error_stack, "Content inside empty element")
+            goto 100
+          elseif (.not.elem%mixed.and..not.elem%any) then
+            ! NB even whitespace-only CDATA section forbidden
+            ! FIXME but is an empty CDATA section allowed?
+            call add_error(fx%error_stack, "Forbidden content inside element")
+            goto 100
+          endif
+        endif
         if (str_vs(fx%token) == ']]>') then
           if (present(startCdata_handler)) &
             call startCdata_handler
@@ -663,6 +688,9 @@ contains
                 endif
               endif
               deallocate(fx%root_element)
+            elseif (validCheck) then
+              call add_error(fx%error_stack, "No DTD defined")
+              goto 100
             endif
             fx%context = CTXT_IN_CONTENT
           endif
@@ -684,6 +712,9 @@ contains
                 endif
               endif
               deallocate(fx%root_element)
+            elseif (validCheck) then
+              call add_error(fx%error_stack, "No DTD defined")
+              goto 100
             endif
           endif
           call open_tag
@@ -754,13 +785,30 @@ contains
           goto 100
         endif
         if (size(fx%token)>0) then
-          if (present(characters_handler)) call characters_handler(str_vs(fx%token))
+          if (validCheck) then
+            elem => get_element(fx%element_list, get_top_elstack(fx%elstack))
+            if (elem%empty) then
+              call add_error(fx%error_stack, "Content inside empty element")
+            elseif (.not.elem%mixed.and..not.elem%any) then
+              if (verify(str_vs(fx%token), XML_WHITESPACE)==0) then
+                if (present(ignorableWhitespace_handler)) &
+                  call ignorableWhitespace_handler(str_vs(fx%token))
+              else
+                call add_error(fx%error_stack, "Forbidden content inside element: "//get_top_elstack(fx%elstack))
+                goto 100
+              endif
+            else ! FIXME check properly if allowed
+              if (present(characters_handler)) call characters_handler(str_vs(fx%token))
+            endif
+          else
+            if (present(characters_handler)) call characters_handler(str_vs(fx%token))
+          endif
         endif
         fx%whitespace = WS_FORBIDDEN
         fx%state = ST_TAG_IN_CONTENT
 
       case (ST_TAG_IN_CONTENT)
-        !write(*,*)'ST_TAG_IN_CONTENT'
+        !write(*,*)'ST_TAG_IN_CONTENT', str_vs(fx%token)
         if (str_vs(fx%token)=='<') then
           fx%state = ST_START_TAG
         elseif (str_vs(fx%token)=='<!') then
@@ -771,13 +819,17 @@ contains
           fx%state = ST_CLOSING_TAG
         elseif (fx%token(1)=='&') then
           tempString => vs_str_alloc(str_vs(fx%token(2:size(fx%token)-1)))
+          elem => get_element(fx%element_list, get_top_elstack(fx%elstack))
           ! tell tokenizer to expand it
           if (existing_entity(fx%forbidden_ge_list, str_vs(tempString))) then
             call add_error(fx%error_stack, 'Recursive entity reference')
             goto 100
           endif
           if (existing_entity(fx%predefined_e_list, str_vs(tempString))) then
-            ! Expand immediately
+            if (validCheck.and..not.elem%mixed.and..not.elem%any) then
+              call add_error(fx%error_stack, "Forbidden content inside element")
+              goto 100
+            endif
             if (present(startEntity_handler)) &
               call startEntity_handler(str_vs(tempString))
             if (present(characters_handler)) &
@@ -786,6 +838,15 @@ contains
               call endEntity_handler(str_vs(tempString))
           elseif (likeCharacterEntityReference(str_vs(tempString))) then
             if (checkRepCharEntityReference(str_vs(tempString), fx%xds%xml_version)) then
+              if (validCheck) then
+                if (elem%empty) then
+                  call add_error(fx%error_stack, "Forbidden content inside element")
+                  goto 100
+                elseif (.not.elem%mixed.and..not.elem%any) then
+                  call add_error(fx%error_stack, "Forbidden content inside element")
+                  goto 100 
+                endif
+              endif
               if (present(characters_handler)) &
                 call characters_handler(expand_char_entity(str_vs(tempString)))
             elseif (checkCharacterEntityReference(str_vs(tempString), fx%xds%xml_version)) then
@@ -804,6 +865,19 @@ contains
               if (present(skippedEntity_handler)) &
                 call skippedEntity_handler(str_vs(fx%token))
             else
+              if (validCheck) then
+                if (elem%empty) then
+                  call add_error(fx%error_stack, "Forbidden content inside element")
+                  goto 100
+                  !elseif (.not.elem%mixed.and..not.elem%any) then FIXME
+                  !c1 = getEntityTextByName(fx%xds%entityList, str_vs(tempString)
+                  !if (verify(getEntityTextByName(fx%xds%entityList, str_vs(tempString)), XML_WHITESPACE)/=0 & 
+                    !.and. c1/="<") then
+                    !call add_error(fx%error_stack, "Forbidden content inside element")
+                    !goto 100
+                  !endif
+                endif
+              endif
               if (present(startEntity_handler)) &
                 call startEntity_handler(str_vs(tempString))
               call add_internal_entity(fx%forbidden_ge_list, str_vs(tempString), "")
@@ -1470,15 +1544,25 @@ contains
         return
       endif
       ! Are there any default values missing?
-      call checkImplicitAttributes(fx%element_list, str_vs(fx%name), &
-        fx%attributes)
+      if (validCheck) then
+        elem => get_element(fx%element_list, get_top_elstack(fx%elstack))
+        call checkImplicitAttributes(elem, fx%attributes)
+        ! FIXME and also check that attribute declarations fit the ATTLIST
+        ! FIXME and if we read external subset, is this element declared ok
+        if (get_top_elstack(fx%elstack)/="") then
+          if (elem%empty) then
+            call add_error(fx%error_stack, "Content inside empty element")
+          endif
+        endif
+        ! FIXME and ideally do a proper check of is this element allowed here
+      endif
       ! Check for namespace changes
       if (namespaces_) &
         call checkNamespaces(fx%attributes, fx%nsDict, &
         len(fx%elstack), fx%xds, namespace_prefixes_, xmlns_uris_, &
         fx%error_stack, startPrefixMapping_handler, endPrefixMapping_handler)
       if (in_error(fx%error_stack)) return
-      if (getURIofQName(fx,str_vs(fx%name))==invalidNS) then
+      if (namespaces_.and.getURIofQName(fx,str_vs(fx%name))==invalidNS) then
         ! no namespace was found for the current element
         call add_error(fx%error_stack, "No namespace found for current element")
         return
@@ -1597,26 +1681,21 @@ contains
       s2(i2:) = ''
     end function NotCDataNormalize
 
-    subroutine checkImplicitAttributes(e_list, eName, dict)
-      type(element_list), intent(in) :: e_list
-      character(len=*), intent(in) :: eName
+    subroutine checkImplicitAttributes(elem, dict)
+      type(element_t), pointer :: elem
       type(dictionary_t), intent(inout) :: dict
 
       integer :: i
-      type(element_t), pointer :: e
       type(string_list) :: default_atts
 
-      if (existing_element(e_list, eName)) then
-        e => get_element(e_list, eName)
-        default_atts = get_default_atts(e%attlist)
-        do i = 1, size(default_atts%list), 2
-          if (.not.has_key(dict, str_vs(default_atts%list(i)%s))) then
-            call add_item_to_dict(dict, str_vs(default_atts%list(i)%s), &
-              str_vs(default_atts%list(i+1)%s))
-          endif
-        enddo
-        call destroy_string_list(default_atts)
-      endif
+      default_atts = get_default_atts(elem%attlist)
+      do i = 1, size(default_atts%list), 2
+        if (.not.has_key(dict, str_vs(default_atts%list(i)%s))) then
+          call add_item_to_dict(dict, str_vs(default_atts%list(i)%s), &
+            str_vs(default_atts%list(i+1)%s))
+        endif
+      enddo
+      call destroy_string_list(default_atts)
 
     end subroutine checkImplicitAttributes
 
