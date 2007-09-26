@@ -52,4 +52,5 @@ program sax_well_formed
   call close_xml_t(fxml)
 
   print*, "Finished"
+
 end program sax_well_formed
