@@ -273,7 +273,7 @@ Triggered when a namespace prefix mapping goes out of scope.
         character(len=*), intent(in) :: chars  
       end subroutine ignorableWhitespace_handler`
 
-Triggered when whitespace is encountered within an element declared as `EMPTY`. (Only active in validating mode.)
+Triggered when whitespace is encountered within an element declared as having no PCDATA. (Only active in validating mode.)
 
 * `processingInstruction_handler  
       subroutine processingInstruction_handler(name, content)  
@@ -317,8 +317,8 @@ Triggered when a namespace prefix mapping start.
 * `notationDecl_handler  
       subroutine notationDecl_handler(name, publicId, systemId)  
         character(len=*), intent(in) :: name  
-        character(len=*), optional, intent(in) :: publicId  
-        character(len=*), optional, intent(in) :: systemId  
+        character(len=*), intent(in) :: publicId  
+        character(len=*), intent(in) :: systemId  
       end subroutine notationDecl_handler`
 
 Triggered when a NOTATION declaration is made in the DTD
@@ -326,7 +326,7 @@ Triggered when a NOTATION declaration is made in the DTD
 * `unparsedEntityDecl_handler  
       subroutine unparsedEntityDecl_handler(name, publicId, systemId, notation)  
         character(len=*), intent(in) :: name  
-        character(len=*), optional, intent(in) :: publicId  
+        character(len=*), intent(in) :: publicId  
         character(len=*), intent(in) :: systemId  
         character(len=*), intent(in) :: notation  
       end subroutine unparsedEntityDecl_handler`
@@ -338,14 +338,24 @@ Triggered when an unparsed entity is declared
         character(len=*), intent(in)     :: msg  
       end subroutine error_handler`
 
-Triggered when a normal parsing error is encountered. Parsing will cease after this event.
+Triggered when a [error](http://www.w3.org/TR/REC-xml/#dt-error) is encountered in parsing. Parsing will cease after this event.
+(NB Note that according to the XML specification, 
+parsers MAY recoved continue parsing after an error. FoX will not.)
+
+Note that FoX is not entirely compliant with the standard; both normal
+errors and fatal errors will be reported through the error_handler; fatalError_handler
+below is currently inactive.
 
 * `fatalError_handler  
       subroutine fatalError_handler(msg)  
         character(len=*), intent(in)     :: msg  
       end subroutine fatalError_handler`
 
-Triggered when a fatal parsing error is encountered. Parsing will cease after this event.
+Triggered when a [fatal error](http://www.w3.org/TR/REC-xml/#dt-fatal) is encountered in parsing. Parsing will cease after this event.
+
+Note that FoX is not entirely compliant with the standard; both normal
+errors and fatal errors will be reported through the error_handler above; fatalError_handler
+is currently inactive.
 
 * `warning_handler  
       subroutine warning_handler(msg)  
@@ -359,8 +369,8 @@ Triggered when a parser warning is generated. Parsing will continue after this e
         character(len=*), intent(in) :: eName  
         character(len=*), intent(in) :: aName  
         character(len=*), intent(in) :: type  
-        character(len=*), intent(in), optional :: mode  
-        character(len=*), intent(in), optional :: value  
+        character(len=*), intent(in) :: mode  
+        character(len=*), intent(in) :: value  
       end subroutine attributeDecl_handler`
 
 Triggered when an attribute declaration is encountered in the DTD.
@@ -376,7 +386,7 @@ Triggered when an element declaration is enountered in the DTD.
 * `externalEntityDecl_handler  
       subroutine externalEntityDecl_handler(name, publicId, systemId)  
         character(len=*), intent(in) :: name  
-        character(len=*), optional, intent(in) :: publicId  
+        character(len=*), intent(in) :: publicId  
         character(len=*), intent(in) :: systemId  
       end subroutine externalEntityDecl_handler`
 
@@ -425,8 +435,8 @@ Triggered by the start of a CData section.
 * `startDTD_handler  
       subroutine startDTD_handler(name, publicId, systemId)  
         character(len=*), intent(in) :: name  
-        character(len=*), optional, intent(in) :: publicId  
-        character(len=*), optional, intent(in) :: systemId   
+        character(len=*), intent(in) :: publicId  
+        character(len=*), intent(in) :: systemId   
       end subroutine startDTD_handler`
 
 Triggered by the start of a DTD section.
