@@ -1318,7 +1318,7 @@ contains
       call wxml_error(xf, "adding namespace with empty URI")
     
     if (present(prefix)) then
-      call addPrefixedNS(xf%nsDict, prefix, nsURI, len(xf%stack)+1, xf%xds%xml_version, xml)
+      call addPrefixedNS(xf%nsDict, prefix, nsURI, len(xf%stack)+1, xf%xds, xml)
     else
       call addDefaultNS(xf%nsDict, nsURI, len(xf%stack)+1)
     endif
@@ -1340,7 +1340,7 @@ contains
       call wxml_error(xf, "Undeclaring namespace outside element content")
     
     if (present(prefix)) then
-      call addPrefixedNS(xf%nsDict, prefix, "", len(xf%stack)+1, XML1_1)
+      call addPrefixedNS(xf%nsDict, prefix, "", len(xf%stack)+1, xf%xds)
     else
       call addDefaultNS(xf%nsDict, "", len(xf%stack)+1)
     endif
