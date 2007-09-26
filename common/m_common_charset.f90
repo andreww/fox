@@ -3,6 +3,7 @@ module m_common_charset
   ! Written to use ASCII charset only. Full UNICODE would
   ! take much more work and need a proper unicode library.
 
+  use m_common_string, only: toLower
   implicit none
   private
 
@@ -92,6 +93,8 @@ module m_common_charset
   public :: isXML1_0_NameChar
   public :: isXML1_1_NameChar
   public :: checkChars
+
+  public :: allowed_encoding
 
 contains
 
@@ -253,6 +256,35 @@ contains
       endif
     enddo
   end function checkChars
+
+
+  function allowed_encoding(encoding) result(p)
+    character(len=*), intent(in) :: encoding
+    logical :: p
+
+    character(len=len(encoding)) :: enc
+
+    enc = toLower(encoding)
+
+    ! From http://www.iana.org/assignments/character-sets
+    ! We can only reliably do US-ASCII (the below is mostly
+    ! a list of synonyms for US-ASCII) but we also accept
+    ! UTF-8 as a practicality. We bail out if any non-ASCII
+    ! characters are used later on.
+
+    p = (  enc=="utf-8" &
+      .or. enc=="ansi_x3.4-1968" &
+      .or. enc=="ansi_x3.4-1986" &
+      .or. enc=="iso_646.irv:1991" &
+      .or. enc=="ascii" &
+      .or. enc=="iso646-us" &
+      .or. enc=="us-ascii" &
+      .or. enc=="us" &
+      .or. enc=="ibm367" &
+      .or. enc=="cp367" &
+      .or. enc=="csascii")
+
+  end function allowed_encoding
 
 end module m_common_charset
 

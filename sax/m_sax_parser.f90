@@ -4,7 +4,7 @@ module m_sax_parser
     destroy_string_list, devnull, vs_str_alloc
   use m_common_attrs, only: init_dict, destroy_dict, reset_dict, &
     add_item_to_dict, has_key, get_value
-  use m_common_charset, only: XML_WHITESPACE, operator(.in.)
+  use m_common_charset, only: XML_WHITESPACE, operator(.in.), allowed_encoding
   use m_common_element, only: element_t, element_list, init_element_list, &
     destroy_element_list, existing_element, add_element, get_element, &
     parse_dtd_element, parse_dtd_attlist, report_declarations, get_att_type, &
@@ -388,6 +388,10 @@ contains
       call parse_xml_declaration(fx, fb, iostat)
       if (iostat/=0) then
         call add_error(fx%error_stack, "Error in XML declaration")
+      elseif (.not.allowed_encoding(str_vs(fx%encoding))) then
+        call add_error(fx%error_stack, "Unknown character encoding in XML declaration")
+      endif
+      if (in_error(fx%error_stack)) then ! double check since we might be in error, but iostat==0
         call sax_error(fx, error_handler)
         return
       endif

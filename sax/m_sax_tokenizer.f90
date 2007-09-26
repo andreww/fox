@@ -554,11 +554,11 @@ contains
       endif
       deallocate(ch)
       call check_standalone
-      if (iostat/=0) return
+      if (iostat/=0.or.in_error(fx%error_stack)) return
     else
       deallocate(ch)
       call check_encoding
-      if (iostat/=0) return
+      if (iostat/=0.or.in_error(fx%error_stack)) return
       c = read_char(fb, iostat); if (iostat/=0) return
       if (.not.(c.in.XML_WHITESPACE).and.c/='?') then
         call add_error(fx%error_stack, "Missing whitespace in XML declaration");return
@@ -583,7 +583,7 @@ contains
       endif
       deallocate(ch)
       call check_standalone
-      if (iostat/=0) return
+      if (iostat/=0.or.in_error(fx%error_stack)) return
     endif
     c = read_char(fb, iostat); if (iostat/=0) return
     if (.not.(c.in.XML_WHITESPACE).and.c/='?') then
@@ -598,10 +598,6 @@ contains
       if (c/='>') then
         call add_error(fx%error_stack, "Expecting > to end XML declaration"); return
       endif
-    endif
-
-    if (str_vs(fx%encoding)/="UTF-8".and.str_vs(fx%encoding)/="utf-8") then
-      call add_error(fx%error_stack, "Unknown character encoding in XML declaration", ERR_WARNING)
     endif
 
   contains
