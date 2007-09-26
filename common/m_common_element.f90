@@ -185,7 +185,7 @@ contains
     do i = 1, size(e_list%list)
       if (str_vs(e_list%list(i)%name)==name) then
         e => e_list%list(i)
-        exit
+        return
       endif
     enddo
     e => null()

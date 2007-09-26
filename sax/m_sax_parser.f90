@@ -1153,14 +1153,16 @@ contains
           endif
           if (in_error(fx%error_stack)) goto 100
           ! Normalize attribute values in attlist
-          do i = 1, size(elem%attlist%list)
-            if (associated(elem%attlist%list(i)%default)) then
-              tempString => elem%attlist%list(i)%default
-              elem%attlist%list(i)%default => normalize_text(fx, tempString)
-              deallocate(tempString)
-              if (in_error(fx%error_stack)) goto 100
-            endif
-          enddo
+          if (processDTD) then
+            do i = 1, size(elem%attlist%list)
+              if (associated(elem%attlist%list(i)%default)) then
+                tempString => elem%attlist%list(i)%default
+                elem%attlist%list(i)%default => normalize_text(fx, tempString)
+                deallocate(tempString)
+                if (in_error(fx%error_stack)) goto 100
+              endif
+            enddo
+          endif
           fx%state = ST_DTD_ATTLIST_END
         endif
 
