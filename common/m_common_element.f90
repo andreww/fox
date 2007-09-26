@@ -188,6 +188,7 @@ contains
         exit
       endif
     enddo
+    e => null()
   end function get_element
 
   function add_element(e_list, name) result(e)

@@ -525,8 +525,10 @@ contains
         !write(*,*)'ST_PI_CONTENTS'
         if (validCheck.and.len(fx%elstack)>0) then
           elem => get_element(fx%element_list, get_top_elstack(fx%elstack))
-          if (elem%empty) then
-            call add_error(fx%error_stack, "Content inside empty element")
+          if (associated(elem)) then
+            if (elem%empty) then
+              call add_error(fx%error_stack, "Content inside empty element")
+            endif
           endif
         endif
         if (str_vs(fx%token)=='?>') then
@@ -585,8 +587,10 @@ contains
         if (str_vs(fx%token)=='>') then
           if (validCheck.and.len(fx%elstack)>0) then
             elem => get_element(fx%element_list, get_top_elstack(fx%elstack))
-            if (elem%empty) then
-              call add_error(fx%error_stack, "Content inside empty element")
+            if (associated(elem)) then
+              if (elem%empty) then
+                call add_error(fx%error_stack, "Content inside empty element")
+              endif
             endif
           endif
           if (present(comment_handler)) &
@@ -654,14 +658,16 @@ contains
         !write(*,*)'ST_CDATA_END'
         if (validCheck) then
           elem => get_element(fx%element_list, get_top_elstack(fx%elstack))
-          if (elem%empty) then
-            call add_error(fx%error_stack, "Content inside empty element")
-            goto 100
-          elseif (.not.elem%mixed.and..not.elem%any) then
-            ! NB even whitespace-only CDATA section forbidden
-            ! FIXME but is an empty CDATA section allowed?
-            call add_error(fx%error_stack, "Forbidden content inside element")
-            goto 100
+          if (associated(elem)) then
+            if (elem%empty) then
+              call add_error(fx%error_stack, "Content inside empty element")
+              goto 100
+            elseif (.not.elem%mixed.and..not.elem%any) then
+              ! NB even whitespace-only CDATA section forbidden
+              ! FIXME but is an empty CDATA section allowed?
+              call add_error(fx%error_stack, "Forbidden content inside element")
+              goto 100
+            endif
           endif
         endif
         if (str_vs(fx%token) == ']]>') then
@@ -791,18 +797,20 @@ contains
         if (size(fx%token)>0) then
           if (validCheck) then
             elem => get_element(fx%element_list, get_top_elstack(fx%elstack))
-            if (elem%empty) then
-              call add_error(fx%error_stack, "Content inside empty element")
-            elseif (.not.elem%mixed.and..not.elem%any) then
-              if (verify(str_vs(fx%token), XML_WHITESPACE)==0) then
-                if (present(ignorableWhitespace_handler)) &
+            if (associated(elem)) then
+              if (elem%empty) then
+                call add_error(fx%error_stack, "Content inside empty element")
+              elseif (.not.elem%mixed.and..not.elem%any) then
+                if (verify(str_vs(fx%token), XML_WHITESPACE)==0) then
+                  if (present(ignorableWhitespace_handler)) &
                   call ignorableWhitespace_handler(str_vs(fx%token))
-              else
-                call add_error(fx%error_stack, "Forbidden content inside element: "//get_top_elstack(fx%elstack))
-                goto 100
+                else
+                  call add_error(fx%error_stack, "Forbidden content inside element: "//get_top_elstack(fx%elstack))
+                  goto 100
+                endif
+              else ! FIXME check properly if allowed
+                if (present(characters_handler)) call characters_handler(str_vs(fx%token))
               endif
-            else ! FIXME check properly if allowed
-              if (present(characters_handler)) call characters_handler(str_vs(fx%token))
             endif
           else
             if (present(characters_handler)) call characters_handler(str_vs(fx%token))
@@ -830,9 +838,11 @@ contains
             goto 100
           endif
           if (existing_entity(fx%predefined_e_list, str_vs(tempString))) then
-            if (validCheck.and..not.elem%mixed.and..not.elem%any) then
-              call add_error(fx%error_stack, "Forbidden content inside element")
-              goto 100
+            if (validCheck.and.associated(elem)) then
+              if (.not.elem%mixed.and..not.elem%any) then
+                call add_error(fx%error_stack, "Forbidden content inside element")
+                goto 100
+              endif
             endif
             if (present(startEntity_handler)) &
               call startEntity_handler(str_vs(tempString))
@@ -842,7 +852,7 @@ contains
               call endEntity_handler(str_vs(tempString))
           elseif (likeCharacterEntityReference(str_vs(tempString))) then
             if (checkRepCharEntityReference(str_vs(tempString), fx%xds%xml_version)) then
-              if (validCheck) then
+              if (validCheck.and.associated(elem)) then
                 if (elem%empty) then
                   call add_error(fx%error_stack, "Forbidden content inside element")
                   goto 100
@@ -869,7 +879,7 @@ contains
               if (present(skippedEntity_handler)) &
                 call skippedEntity_handler(str_vs(fx%token))
             else
-              if (validCheck) then
+              if (validCheck.and.associated(elem)) then
                 if (elem%empty) then
                   call add_error(fx%error_stack, "Forbidden content inside element")
                   goto 100
@@ -1550,15 +1560,17 @@ contains
       ! Are there any default values missing?
       if (validCheck) then
         elem => get_element(fx%element_list, get_top_elstack(fx%elstack))
-        call checkImplicitAttributes(elem, fx%attributes)
-        ! FIXME and also check that attribute declarations fit the ATTLIST
-        ! FIXME and if we read external subset, is this element declared ok
-        if (get_top_elstack(fx%elstack)/="") then
-          if (elem%empty) then
-            call add_error(fx%error_stack, "Content inside empty element")
+        if (associated(elem)) then
+          call checkImplicitAttributes(elem, fx%attributes)
+          ! FIXME and also check that attribute declarations fit the ATTLIST
+          ! FIXME and if we read external subset, is this element declared ok
+          if (get_top_elstack(fx%elstack)/="") then
+            if (elem%empty) then
+              call add_error(fx%error_stack, "Content inside empty element")
+            endif
           endif
+          ! FIXME and ideally do a proper check of is this element allowed here
         endif
-        ! FIXME and ideally do a proper check of is this element allowed here
       endif
       ! Check for namespace changes
       if (namespaces_) &
