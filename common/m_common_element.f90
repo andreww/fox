@@ -918,10 +918,12 @@ contains
           value(size(value)) = c
           deallocate(temp)
         elseif (c.in.XML_WHITESPACE) then
+          !FIXME normalize value here
           call add_string(ca%enumerations, str_vs(value))
           deallocate(value)
           state = ST_SEPARATOR
         elseif (c=='|') then
+          !FIXME normalize value here
           call add_string(ca%enumerations, str_vs(value))
           deallocate(value)
           if (ca%attType==ATT_NOTATION) then
@@ -936,6 +938,7 @@ contains
               'Missing token in Enumeration list')
             goto 200
           endif
+          !FIXME normalize value here
           call add_string(ca%enumerations, str_vs(value))
           deallocate(value)
           state = ST_AFTER_ATTTYPE_SPACE
@@ -966,7 +969,7 @@ contains
       elseif (state==ST_AFTER_ATTTYPE_SPACE) then
         if (.not.(c.in.XML_WHITESPACE)) then
           call add_error(stack, &
-            'Missing xwhitespace in attlist enumeration')
+            'Missing whitespace in attlist enumeration')
           goto 200
         endif
         state = ST_AFTER_ATTTYPE
@@ -1045,6 +1048,7 @@ contains
       elseif (state==ST_DEFAULTVALUE) then
         !print*,'ST_DEFAULTVALUE'
         if (c==q) then
+          ! Normalize value
           ca%default => value
           nullify(value)
           state = ST_START
@@ -1065,6 +1069,9 @@ contains
         'Incomplete Attlist declaration')
       goto 200
     endif
+
+    ! FIXME all normalization of values *is* done in the SAX
+    ! parser, but really it should be done here.
 
     if (associated(ignore_att%name)) deallocate(ignore_att%name)
     if (associated(ignore_att%default)) deallocate(ignore_att%default)

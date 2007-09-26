@@ -143,20 +143,19 @@ contains
 
   !-----------------------------------------------------------------
   pure function get_top_elstack(elstack) result(item)
-    !
     ! Get the top element of the stack, *without popping it*.
-    !
     type(elstack_t), intent(in)        :: elstack
     character(len=merge(size(elstack%stack(elstack%n_items)%data), 0, elstack%n_items > 0)) :: item 
 
-    integer   :: i, n
+    integer :: n
 
     n = elstack%n_items
 
-    if (n == 0) &
-      i = pure_pxfabort()
-
-    item = str_vs(elstack%stack(n)%data)
+    if (n==0) then
+      item = ""
+    else
+      item = str_vs(elstack%stack(n)%data)
+    endif
 
   end function get_top_elstack
 

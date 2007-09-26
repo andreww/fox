@@ -65,6 +65,7 @@ module m_common_entities
   public :: getEntityByIndex
   public :: getEntityNameByIndex
   public :: getEntityTextByIndex
+  public :: getEntityTextByName
   public :: getEntityNotationByIndex
   public :: size
 
@@ -106,6 +107,36 @@ contains
 
     c = str_vs(el%list(i)%repl)
   end function getEntityTextByIndex
+
+  pure function getEntityTextByName_len(el, name) result(n)
+    type(entity_list), intent(in) :: el
+    character(len=*), intent(in) :: name
+    integer :: n
+
+    integer :: i
+    n = 0
+    do i = 1, size(el%list)
+      if (str_vs(el%list(i)%code)==name) then
+        n = size(el%list(i)%repl)
+        exit
+      endif
+    enddo
+  end function getEntityTextByName_len
+  
+  function getEntityTextByName(el, name) result(c)
+    type(entity_list), intent(in) :: el
+    character(len=*), intent(in) :: name
+    character(len=getEntityTextByName_len(el, name)) :: c
+
+    integer :: i
+    c = ""
+    do i = 1, size(el%list)
+      if (str_vs(el%list(i)%code)==name) then
+        c = str_vs(el%list(i)%repl)
+        exit
+      endif
+    enddo
+  end function getEntityTextByName
 
   function getEntityNotationByIndex(el, i) result(c)
     type(entity_list), intent(in) :: el
