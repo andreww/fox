@@ -5,6 +5,7 @@ module m_common_struct
   use m_common_charset, only: XML1_0, XML1_1
   use m_common_entities, only: entity_list, init_entity_list, destroy_entity_list, &
     add_internal_entity, add_external_entity
+  use m_common_element, only: element_list, init_element_list, destroy_element_list
   use m_common_notations, only: notation_list, init_notation_list, destroy_notation_list
 
   implicit none
@@ -18,6 +19,7 @@ module m_common_struct
     type(entity_list) :: entityList
     type(entity_list) :: PEList
     type(notation_list) :: nList
+    type(element_list) :: element_list
     logical :: warning = .false. ! Do we care about warnings?
     logical :: valid = .true. ! Do we care about validity?
     logical :: liveNodeLists = .true. ! Do we want live nodelists?
@@ -40,6 +42,7 @@ contains
     call init_entity_list(xds%entityList)
     call init_entity_list(xds%PEList)
     call init_notation_list(xds%nList)
+    call init_element_list(xds%element_list)
   end subroutine init_xml_doc_state
 
   subroutine destroy_xml_doc_state(xds)
@@ -47,6 +50,7 @@ contains
     call destroy_entity_list(xds%entityList)
     call destroy_entity_list(xds%PEList)
     call destroy_notation_list(xds%nList)
+    call destroy_element_list(xds%element_list)
   end subroutine destroy_xml_doc_state
 
   subroutine register_internal_PE(xds, name, value)

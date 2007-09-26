@@ -3092,7 +3092,7 @@ endif
   endif
 endif
 
-      elseif (.not.checkNCName(prefix, getXmlVersionEnum(getOwnerDocument(arg)))) then
+      elseif (.not.checkNCName(prefix, getXds(getOwnerDocument(arg)))) then
         if (getFoX_checks().or.NAMESPACE_ERR<200) then
   call throw_exception(NAMESPACE_ERR, "setPrefix", ex)
   if (present(ex)) then

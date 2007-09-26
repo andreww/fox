@@ -21,6 +21,7 @@ module m_common_attrs
     character(len=1), pointer, dimension(:) :: prefix => null()
     character(len=1), pointer, dimension(:) :: key => null()
     character(len=1), pointer, dimension(:) :: value => null()
+    logical :: specified
     integer :: type = 11
   end type dict_item
 
@@ -49,6 +50,7 @@ module m_common_attrs
   public :: getURI
   public :: getValue
   public :: getType
+  public :: getSpecified
   public :: hasKey
 
   public :: len
@@ -119,6 +121,10 @@ module m_common_attrs
 
   interface getType
     module procedure getType_by_index, getType_by_keyname
+  end interface
+
+  interface getSpecified
+    module procedure getSpecified_by_index
   end interface
 
 contains
@@ -313,7 +319,7 @@ contains
     
   end function get_key
   
-  subroutine add_item_to_dict(dict, key, value, prefix, nsURI, type, itype)
+  subroutine add_item_to_dict(dict, key, value, prefix, nsURI, type, itype, specified)
     
     type(dictionary_t), intent(inout) :: dict
     character(len=*), intent(in)           :: key
@@ -322,6 +328,7 @@ contains
     character(len=*), intent(in), optional :: nsURI
     character(len=*), intent(in), optional :: type
     integer, intent(in), optional :: itype
+    logical, intent(in), optional :: specified
     
     integer  :: n
 
@@ -336,11 +343,6 @@ contains
     if (n == size(dict%items)) then
        call resize_dict(dict)
     endif
-    
-    !FIXME why is this commented out?
-    !if (.not.check_Name(key)) then
-    !  call wxml_fatal('attribute name is invalid')
-    !endif
     
     n = n + 1
     dict%items(n)%value => vs_str_alloc(value)
@@ -388,7 +390,11 @@ contains
     else
       dict%items(n)%type = ATT_CDAMB
     endif
-        
+    if (present(specified)) then
+      dict%items(n)%specified = specified
+    else
+      dict%items(n)%specified = .true.
+    endif
 
     dict%number_of_items = n
 
@@ -562,6 +568,18 @@ contains
 
   end function getType_by_keyname
 
+  function getSpecified_by_index(dict, i) result(p)
+    type(dictionary_t), intent(in) :: dict
+    integer, intent(in) :: i
+    logical :: p
+
+    if (i>0 .and. i<=dict%number_of_items) then
+      p = dict%items(i)%specified
+    else
+      p = .false.
+    endif
+  end function getSpecified_by_index
+
   function getWhitespaceHandling(dict, i) result(j)
     type(dictionary_t), intent(in) :: dict
     integer, intent(in) :: i
@@ -613,6 +631,7 @@ contains
        tempDict(i)%nsURI => dict%items(i)%nsURI
        tempDict(i)%localName => dict%items(i)%localName
        tempDict(i)%type = dict%items(i)%type
+       tempDict(i)%specified = dict%items(i)%specified
     enddo
     deallocate(dict%items)
     l_d_new = l_d_old * DICT_LEN_MULT
@@ -624,6 +643,7 @@ contains
        dict%items(i)%prefix => tempDict(i)%prefix
        dict%items(i)%localName => tempDict(i)%localName
        dict%items(i)%type = tempDict(i)%type
+       dict%items(i)%specified = tempDict(i)%specified
     enddo
 
   end subroutine resize_dict

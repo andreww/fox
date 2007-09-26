@@ -106,6 +106,7 @@ module m_common_element
 
   public :: get_att_type
   public :: get_default_atts
+  public :: default_att_index
 
   public :: ATT_NULL
   public :: ATT_CDATA
@@ -1266,5 +1267,21 @@ contains
       endif
     enddo
   end function get_default_atts
+
+  function default_att_index(a_list, name) result(n)
+    type(attribute_list), intent(in) :: a_list
+    character(len=*), intent(in) :: name
+    integer :: n
+    integer :: i
+
+    do i = 1, size(a_list%list)
+      if (a_list%list(i)%attDefault==ATT_DEFAULT &
+        .and.str_vs(a_list%list(i)%name)==name) then
+        n = i ! FIXME this is not a clean way to do this
+        return
+      endif
+    enddo
+    n = 0
+  end function default_att_index
   
 end module m_common_element

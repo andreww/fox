@@ -31,7 +31,8 @@ contains
     if (present(iostat)) then
       iostat = i
     else
-      call FoX_error("Error opening file in open_xml_file")
+      if (i/=0) &
+        call FoX_error("Error opening file in open_xml_file")
     endif
     call sax_parser_init(xt%fx)
 

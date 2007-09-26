@@ -11,7 +11,7 @@ module m_dom_parse
     getPrefixByIndex
   use m_common_struct, only: xml_doc_state
   use FoX_common, only: dictionary_t, len
-  use FoX_common, only: getQName, getValue, getURI, getQName
+  use FoX_common, only: getQName, getValue, getURI, getQName, getSpecified
   use m_sax_parser, only: sax_parse, getNSDict
   use FoX_sax, only: xml_t
   use FoX_sax, only: open_xml_file, open_xml_string, close_xml_t
@@ -80,7 +80,7 @@ contains
         attr => createAttribute(mainDoc, getQName(attrs, i))
       endif
       call setValue(attr, getValue(attrs, i))
-      call setSpecified(attr, .true.)
+      call setSpecified(attr, getSpecified(attrs, i))
       if (len(getURI(attrs, i))>0) then
         dummy =>  setAttributeNodeNS(el, attr)
       else
@@ -353,6 +353,7 @@ contains
     type(Node), pointer :: parsefile
     type(xml_t) :: fxml
     integer :: iostat
+    logical :: validate
     
     if (present(configuration)) then
       cdata_sections = (index(configuration, "cdata-sections")==1).or.(index(configuration, " cdata-sections")>0) 
@@ -360,11 +361,13 @@ contains
       not_comments = (index(configuration, "comments")>0)
       entities_expand = (index(configuration, "entities")>0)
       not_split_cdata_sections = (index(configuration, "split-cdata-sections")>0)
+      validate = (index(configuration, "validate")>0)
     else
       cdata_sections = .false.
       not_comments = .false.
       entities_expand = .false.
       not_split_cdata_sections = .false.
+      validate = .false.
     endif
 
     call open_xml_file(fxml, filename, iostat)
@@ -408,6 +411,7 @@ contains
       FoX_endDTD_handler=FoX_endDTD_handler, &
       namespaces = .true.,     &
       namespace_prefixes = .true., &
+      validate = validate, &
       xmlns_uris = .true.)
 
     call close_xml_t(fxml)
@@ -427,6 +431,7 @@ contains
     character(len=*), intent(in), optional :: configuration
 
     type(Node), pointer :: parsestring
+    logical :: validate
     
     if (present(configuration)) then
       cdata_sections = (index(configuration, "cdata-sections")==1).or.(index(configuration, " cdata-sections")>0) 
@@ -434,11 +439,13 @@ contains
       not_comments = (index(configuration, "comments")>0)
       entities_expand = (index(configuration, "entities")>0)
       not_split_cdata_sections = (index(configuration, "split-cdata-sections")>0)
+      validate = (index(configuration, "validate")>0)
     else
       cdata_sections = .false.
       not_comments = .false.
       entities_expand = .false.
       not_split_cdata_sections = .false.
+      validate = .false.
     endif
 
     call open_xml_string(fxml, string)
@@ -477,6 +484,7 @@ contains
       FoX_endDTD_handler=FoX_endDTD_handler, &
       namespaces = .true.,     &
       namespace_prefixes = .true., &
+      validate = validate, &
       xmlns_uris = .true.)
 
     call close_xml_t(fxml)

@@ -23,6 +23,8 @@ module FoX_common
   public :: getURI
   public :: getValue
   public :: getType
+! Additional non-sax function that's pretty useful
+  public :: getSpecified
 !For convenience
   public :: len
   public :: hasKey

@@ -5,10 +5,9 @@ module m_sax_parser
   use m_common_attrs, only: init_dict, destroy_dict, reset_dict, &
     add_item_to_dict, has_key, get_value
   use m_common_charset, only: XML_WHITESPACE, operator(.in.), allowed_encoding
-  use m_common_element, only: element_t, element_list, init_element_list, &
-    destroy_element_list, existing_element, add_element, get_element, &
-    parse_dtd_element, parse_dtd_attlist, report_declarations, get_att_type, &
-    get_default_atts, declared_element, ATT_CDATA
+  use m_common_element, only: element_t, existing_element, add_element, &
+    get_element, parse_dtd_element, parse_dtd_attlist, report_declarations, &
+    get_att_type, get_default_atts, declared_element, ATT_CDATA
   use m_common_elstack, only: push_elstack, pop_elstack, init_elstack, &
     destroy_elstack, is_empty, len, get_top_elstack
   use m_common_entities, only: existing_entity, init_entity_list, &
@@ -69,7 +68,6 @@ contains
     call init_notation_list(fx%nlist)
     allocate(fx%xds)
     call init_xml_doc_state(fx%xds)
-    call init_element_list(fx%element_list)
 
     allocate(fx%wf_stack(1))
     fx%wf_stack(1) = 0
@@ -103,7 +101,6 @@ contains
       call destroy_xml_doc_state(fx%xds)
       deallocate(fx%xds)
     endif
-    call destroy_element_list(fx%element_list)
 
     deallocate(fx%wf_stack)
     call destroy_entity_list(fx%forbidden_ge_list)
@@ -524,7 +521,7 @@ contains
       case (ST_PI_CONTENTS)
         !write(*,*)'ST_PI_CONTENTS'
         if (validCheck.and.len(fx%elstack)>0) then
-          elem => get_element(fx%element_list, get_top_elstack(fx%elstack))
+          elem => get_element(fx%xds%element_list, get_top_elstack(fx%elstack))
           if (associated(elem)) then
             if (elem%empty) then
               call add_error(fx%error_stack, "Content inside empty element")
@@ -586,7 +583,7 @@ contains
         !write(*,*)'ST_COMMENT_END_2'
         if (str_vs(fx%token)=='>') then
           if (validCheck.and.len(fx%elstack)>0) then
-            elem => get_element(fx%element_list, get_top_elstack(fx%elstack))
+            elem => get_element(fx%xds%element_list, get_top_elstack(fx%elstack))
             if (associated(elem)) then
               if (elem%empty) then
                 call add_error(fx%error_stack, "Content inside empty element")
@@ -657,7 +654,7 @@ contains
       case (ST_CDATA_END)
         !write(*,*)'ST_CDATA_END'
         if (validCheck) then
-          elem => get_element(fx%element_list, get_top_elstack(fx%elstack))
+          elem => get_element(fx%xds%element_list, get_top_elstack(fx%elstack))
           if (associated(elem)) then
             if (elem%empty) then
               call add_error(fx%error_stack, "Content inside empty element")
@@ -777,7 +774,7 @@ contains
           goto 100
         endif
         !If this attribute is not CDATA, we must process further;
-        temp_i = get_att_type(fx%element_list, str_vs(fx%name), str_vs(fx%attname))
+        temp_i = get_att_type(fx%xds%element_list, str_vs(fx%name), str_vs(fx%attname))
         if (temp_i==ATT_CDATA) then
           call add_item_to_dict(fx%attributes, str_vs(fx%attname), &
             str_vs(fx%token), itype=ATT_CDATA)
@@ -796,7 +793,7 @@ contains
         endif
         if (size(fx%token)>0) then
           if (validCheck) then
-            elem => get_element(fx%element_list, get_top_elstack(fx%elstack))
+            elem => get_element(fx%xds%element_list, get_top_elstack(fx%elstack))
             if (associated(elem)) then
               if (elem%empty) then
                 call add_error(fx%error_stack, "Content inside empty element")
@@ -831,7 +828,7 @@ contains
           fx%state = ST_CLOSING_TAG
         elseif (fx%token(1)=='&') then
           tempString => vs_str_alloc(str_vs(fx%token(2:size(fx%token)-1)))
-          elem => get_element(fx%element_list, get_top_elstack(fx%elstack))
+          elem => get_element(fx%xds%element_list, get_top_elstack(fx%elstack))
           ! tell tokenizer to expand it
           if (existing_entity(fx%forbidden_ge_list, str_vs(tempString))) then
             call add_error(fx%error_stack, 'Recursive entity reference')
@@ -1126,10 +1123,10 @@ contains
         !write(*,*) 'ST_DTD_ATTLIST'
         ! check is name
         fx%name => fx%token
-        if (existing_element(fx%element_list, str_vs(fx%name))) then
-          elem => get_element(fx%element_list, str_vs(fx%name))
+        if (existing_element(fx%xds%element_list, str_vs(fx%name))) then
+          elem => get_element(fx%xds%element_list, str_vs(fx%name))
         else
-          elem => add_element(fx%element_list, str_vs(fx%name))
+          elem => add_element(fx%xds%element_list, str_vs(fx%name))
         endif
         nullify(fx%token)
         fx%state = ST_DTD_ATTLIST_CONTENTS
@@ -1193,7 +1190,7 @@ contains
       case (ST_DTD_ELEMENT_CONTENTS)
         !token is everything up to >
         !write(*,*)'ST_DTD_ELEMENT_CONTENTS'
-        if (declared_element(fx%element_list, str_vs(fx%name))) then
+        if (declared_element(fx%xds%element_list, str_vs(fx%name))) then
           if (validCheck) then
             call add_error(fx%error_stack, "Duplicate Element declaration")
             goto 100
@@ -1202,10 +1199,10 @@ contains
             nullify(elem)
           endif
         elseif (processDTD) then
-          if (existing_element(fx%element_list, str_vs(fx%name))) then
-            elem => get_element(fx%element_list, str_vs(fx%name))
+          if (existing_element(fx%xds%element_list, str_vs(fx%name))) then
+            elem => get_element(fx%xds%element_list, str_vs(fx%name))
           else
-            elem => add_element(fx%element_list, str_vs(fx%name))
+            elem => add_element(fx%xds%element_list, str_vs(fx%name))
           endif
         else
           nullify(elem)
@@ -1561,15 +1558,16 @@ contains
       endif
       ! Are there any default values missing?
       if (validCheck) then
-        elem => get_element(fx%element_list, get_top_elstack(fx%elstack))
-        if (associated(elem)) then
+        elem => get_element(fx%xds%element_list, str_vs(fx%name))
+        if (associated(elem)) &
           call checkImplicitAttributes(elem, fx%attributes)
-          ! FIXME and also check that attribute declarations fit the ATTLIST
-          ! FIXME and if we read external subset, is this element declared ok
-          if (get_top_elstack(fx%elstack)/="") then
-            if (elem%empty) then
-              call add_error(fx%error_stack, "Content inside empty element")
-            endif
+        ! FIXME and also check that attribute declarations fit the ATTLIST
+        ! FIXME and if we read external subset, is this element declared ok
+        elem => get_element(fx%xds%element_list, get_top_elstack(fx%elstack))
+        ! This will return null anyway if we are opening root element
+        if (associated(elem)) then
+          if (elem%empty) then
+            call add_error(fx%error_stack, "Content inside empty element")
           endif
           ! FIXME and ideally do a proper check of is this element allowed here
         endif
@@ -1710,7 +1708,7 @@ contains
       do i = 1, size(default_atts%list), 2
         if (.not.has_key(dict, str_vs(default_atts%list(i)%s))) then
           call add_item_to_dict(dict, str_vs(default_atts%list(i)%s), &
-            str_vs(default_atts%list(i+1)%s))
+            str_vs(default_atts%list(i+1)%s), specified=.false.)
         endif
       enddo
       call destroy_string_list(default_atts)
