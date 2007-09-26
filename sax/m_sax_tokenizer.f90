@@ -598,6 +598,8 @@ contains
       if (c/='>') then
         call add_error(fx%error_stack, "Expecting > to end XML declaration"); return
       endif
+    else
+      call add_error(fx%error_stack, "Expecting '?>' to end XML declaration"); return
     endif
 
   contains
