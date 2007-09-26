@@ -1047,6 +1047,12 @@ contains
     logical :: esc
     character, pointer :: type_(:)
 
+    ! if (name=="xml:space") then
+    ! The value can only be "default" or "preserve", by 2.10
+    ! However, that value can be obscured behind entities,
+    ! and we can't check that without full entity expansion
+    ! available to the output processor.
+
     if (present(type)) then
       if (type/='CDATA'.and.type/='ID'.and.type/='IDREF'.and.type/='IDREFS'.and.type/='NMTOKEN'.and.type/='NMTOKENS' &
         .and.type/='ENTITY'.and.type/='ENTITIES'.and.type/='NOTATION') then
