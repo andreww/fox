@@ -3,6 +3,7 @@
 include ../arch.make
 
 examples: dom_example.exe sax_example.exe wxml_example.exe wcml_example.exe
+sax_tests: sax_well_formed.ns.no.exe sax_valid.ns.no.exe sax_well_formed.ns.yes.exe sax_valid.ns.yes.exe 
 
 OBJS = example_xml_module.o
 INCFLAGS=$$(../FoX-config --fcflags --wxml)
@@ -14,10 +15,14 @@ dom_example.exe: dom_example.o
 #
 sax_example.exe: sax_example.o
 	$(FC) $(FFLAGS) $(LDFLAGS) -o $@ sax_example.o $$(../FoX-config --libs --sax)
-sax_well_formed.exe: sax_well_formed.o
-	$(FC) $(FFLAGS) $(LDFLAGS) -o $@ sax_well_formed.o $$(../FoX-config --libs --sax)
-sax_valid.exe: sax_valid.o
-	$(FC) $(FFLAGS) $(LDFLAGS) -o $@ sax_valid.o $$(../FoX-config --libs --sax)
+sax_well_formed.ns.no.exe: sax_well_formed.ns.no.o
+	$(FC) $(FFLAGS) $(LDFLAGS) -o $@ sax_well_formed.ns.no.o $$(../FoX-config --libs --sax)
+sax_valid.ns.no.exe: sax_valid.ns.no.o
+	$(FC) $(FFLAGS) $(LDFLAGS) -o $@ sax_valid.ns.no.o $$(../FoX-config --libs --sax)
+sax_well_formed.ns.yes.exe: sax_well_formed.ns.yes.o
+	$(FC) $(FFLAGS) $(LDFLAGS) -o $@ sax_well_formed.ns.yes.o $$(../FoX-config --libs --sax)
+sax_valid.ns.yes.exe: sax_valid.ns.yes.o
+	$(FC) $(FFLAGS) $(LDFLAGS) -o $@ sax_valid.ns.yes.o $$(../FoX-config --libs --sax)
 sax_canonicalize.exe: sax_canonicalize.o
 	$(FC) $(FFLAGS) $(LDFLAGS) -o $@ sax_canonicalize.o $$(../FoX-config --libs --sax)
 #

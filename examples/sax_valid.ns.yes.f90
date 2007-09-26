@@ -47,7 +47,9 @@ program sax_well_formed
 
   call parse(fxml,&
     error_handler=error_handler,                 &
-    fatalError_handler=fatalError_handler)
+    fatalError_handler=fatalError_handler, &
+    namespaces=.true.,  &
+    validation=.true.)
 
   call close_xml_t(fxml)
 
