@@ -84,7 +84,7 @@ contains
     allocate(nsDict%prefixes(0)%urilist(0)%URI(len(invalidNS)))
     nsDict%prefixes(0)%urilist(0)%URI = vs_str(invalidNS)
     nsDict%prefixes(0)%urilist(0)%ix = -1
-    
+
   end subroutine initNamespaceDictionary
 
 
@@ -543,11 +543,14 @@ contains
             call set_nsURI(atts, i, '')
           endif
         else
-          if (getnamespaceURI(nsDict, str_vs(QName(1:n-1)))==invalidNS) then
+          if (str_vs(QName(1:n-1))=="xml") then
+            call set_nsURI(atts, i, "http://www.w3.org/XML/1998/namespace")
+          elseif (getnamespaceURI(nsDict, str_vs(QName(1:n-1)))==invalidNS) then
             call add_error(es, "Unbound namespace prefix")
             return
+          else
+            call set_nsURI(atts, i, getnamespaceURI(nsDict, str_vs(QName(1:n-1))))
           endif
-          call set_nsURI(atts, i, getnamespaceURI(nsDict, str_vs(QName(1:n-1))))
         endif
       else
         if (xmlns_uris.and.str_vs(QName)=='xmlns') then
