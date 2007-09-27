@@ -161,6 +161,8 @@ TOHW_m_dom_get(Node, documentElement, np%docExtras%documentElement, (DOCUMENT_NO
       if (associated(elem)) then
         do i = 1, size(elem%attlist%list)
           if (elem%attlist%list(i)%attDefault==ATT_DEFAULT) then
+            ! Do *nothing* about namespace handling at this stage,
+            ! wait until we are asked for namespace normalization
             call setAttribute(np, str_vs(elem%attlist%list(i)%name), &
               str_vs(elem%attlist%list(i)%default))
           endif
@@ -576,7 +578,8 @@ TOHW_m_dom_treewalk(`dnl
               i_default = default_att_index(elem%attlist, getName(this))
               if (i_default>0) then ! there is a default value
                 ! Create the new default:
-                ! FIXME what about NS attributes of new node ...
+                ! Do *nothing* about namespace handling at this stage,
+                ! wait until we are asked for namespace normalization
                 new => createAttribute(doc, getName(this))
                 call setValue(new, str_vs(elem%attlist%list(i_default)%default))
                 call setSpecified(new, .false.)
@@ -682,6 +685,8 @@ TOHW_m_dom_treewalk(`dnl
       if (associated(elem)) then
         do i = 1, size(elem%attlist%list)
           if (elem%attlist%list(i)%attDefault==ATT_DEFAULT) then
+            ! Do *nothing* about namespace handling at this stage,
+            ! wait until we are asked for namespace normalization
             call setAttribute(np, str_vs(elem%attlist%list(i)%name), &
               str_vs(elem%attlist%list(i)%default))
           endif

@@ -199,6 +199,8 @@ TOHW_m_dom_contents(`
           i_default = default_att_index(elem%attlist, name)
           if (i_default>0) then ! there is a default value
             ! Well swap the old one out & put a new one in.
+            ! Do *nothing* about namespace handling at this stage,
+            ! wait until we are asked for namespace normalization
             np => createAttribute(getOwnerDocument(map%ownerElement), name)
             call setValue(np, str_vs(elem%attlist%list(i_default)%default))
             call setSpecified(np, .false.)
@@ -454,7 +456,8 @@ TOHW_m_dom_contents(`
           i_default = default_att_index(elem%attlist, getName(np))
           if (i_default>0) then ! there is a default value
             ! Well swap the old one out & put a new one in.
-            ! FIXME what about namespace resolution
+            ! Do *nothing* about namespace handling at this stage,
+            ! wait until we are asked for namespace normalization
             np => createAttribute(getOwnerDocument(map%ownerElement), getName(np))
             call setValue(np, str_vs(elem%attlist%list(i_default)%default))
             call setSpecified(np, .false.)
