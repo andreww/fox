@@ -12,6 +12,7 @@ module m_dom_dom
 
   use m_common_array_str, only: str_vs, vs_str, vs_str_alloc
   use m_common_charset, only: checkChars, XML1_0, XML1_1
+  use m_common_element, only: element_t, get_element, default_att_index, ATT_DEFAULT
   use m_common_namecheck, only: checkQName, prefixOfQName, localPartOfQName, &
     checkName, checkPublicId, checkSystemId, checkNCName
   use m_common_string, only: toLower
@@ -4133,8 +4134,10 @@ endif
     character(len=*), intent(in) :: name
     type(Node), pointer :: np
 
+    type(xml_doc_state), pointer :: xds
+    type(element_t), pointer :: elem
     type(ListNode), pointer :: temp_nl(:)
-    integer :: i, i2
+    integer :: i, i2, i_default
 
     if (.not.associated(map)) then
       if (getFoX_checks().or.FoX_MAP_IS_NULL<200) then
@@ -4162,6 +4165,21 @@ endif
 
     do i = 1, map%length
       if (str_vs(map%nodes(i)%this%nodeName)==name) then
+        xds => getXds(getOwnerDocument(map%ownerElement))
+        elem => get_element(xds%element_list, getNodeName(map%ownerElement))
+        if (associated(elem)) then
+          i_default = default_att_index(elem%attlist, name)
+          if (i_default>0) then ! there is a default value
+            ! Well swap the old one out & put a new one in.
+            np => createAttribute(getOwnerDocument(map%ownerElement), name)
+            call setValue(np, str_vs(elem%attlist%list(i_default)%default))
+            call setSpecified(np, .false.)
+            np => setNamedItem(map, np)
+            call setSpecified(np, .true.)
+            return
+          endif
+        endif
+        ! Otherwise there was no default value, so we just remove the node.
         ! Grab this node
         np => map%nodes(i)%this
         ! and shrink the node list
@@ -4182,8 +4200,6 @@ endif
         return
       endif
     enddo
-
-    !FIXME if this was an attribute we may have to replace with default value
 
     if (getFoX_checks().or.NOT_FOUND_ERR<200) then
   call throw_exception(NOT_FOUND_ERR, "removeNamedItem", ex)
@@ -4478,8 +4494,10 @@ endif
     character(len=*), intent(in) :: localName
     type(Node), pointer :: np
 
+    type(xml_doc_state), pointer :: xds
+    type(element_t), pointer :: elem
     type(ListNode), pointer :: temp_nl(:)
-    integer :: i, i2
+    integer :: i, i2, i_default
 
     if (.not.associated(map)) then
       if (getFoX_checks().or.FoX_MAP_IS_NULL<200) then
@@ -4511,7 +4529,23 @@ endif
         .or. (getNamespaceURI(item(map, i-1))=="" &
           .and. getNodeName(item(map, i-1))==localName)) then
         ! Grab this node
-        np => item(map, i-1)
+        np => map%nodes(i)%this
+        xds => getXds(getOwnerDocument(map%ownerElement))
+        elem => get_element(xds%element_list, getNodeName(map%ownerElement))
+        if (associated(elem)) then
+          i_default = default_att_index(elem%attlist, getName(np))
+          if (i_default>0) then ! there is a default value
+            ! Well swap the old one out & put a new one in.
+            ! FIXME what about namespace resolution
+            np => createAttribute(getOwnerDocument(map%ownerElement), getName(np))
+            call setValue(np, str_vs(elem%attlist%list(i_default)%default))
+            call setSpecified(np, .false.)
+            np => setNamedItem(map, np)
+            call setSpecified(np, .true.)
+            return
+          endif
+        endif
+        ! Otherwise there was no default value, so we just remove the node.
         ! and shrink the node list
         temp_nl => map%nodes
         allocate(map%nodes(size(temp_nl)-1))
@@ -4540,8 +4574,6 @@ endif
   endif
 endif
 
-
-    ! FIXME if this was attribute we may have to replace by default
 
   end function removeNamedItemNS
 
@@ -5195,6 +5227,10 @@ endif
     character(len=*), intent(in) :: tagName
     type(Node), pointer :: np
 
+    type(xml_doc_state), pointer :: xds
+    type(element_t), pointer :: elem
+    integer :: i
+
     if (.not.associated(arg)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
   call throw_exception(FoX_NODE_IS_NULL, "createElement", ex)
@@ -5239,6 +5275,17 @@ endif
     if (getGCstate(arg)) then
       np%inDocument = .false.
       call append(arg%docExtras%hangingnodes, np)
+      ! We only add default attributes if we are *not* building the doc
+      xds => getXds(arg)
+      elem => get_element(xds%element_list, tagName)
+      if (associated(elem)) then
+        do i = 1, size(elem%attlist%list)
+          if (elem%attlist%list(i)%attDefault==ATT_DEFAULT) then
+            call setAttribute(np, str_vs(elem%attlist%list(i)%name), &
+              str_vs(elem%attlist%list(i)%default))
+          endif
+        enddo
+      endif
     else
       np%inDocument = .true.
     endif
@@ -6061,9 +6108,10 @@ endif
     type(Node), pointer :: np
 
     type(Node), pointer :: this, thatParent, new, treeroot
-
+    type(xml_doc_state), pointer :: xds
+    type(element_t), pointer :: elem
     logical :: doneAttributes, doneChildren
-    integer :: i_tree
+    integer :: i_tree, i_default
 
     if (.not.associated(doc).or..not.associated(arg)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
@@ -6100,6 +6148,7 @@ endif
 
     endif
 
+    xds => getXds(getOwnerDocument(doc))
     thatParent => null()
     treeroot => arg
     
@@ -6133,16 +6182,24 @@ endif
               new => createAttributeNS(doc, getNamespaceURI(this), getName(this))
             endif
             call setSpecified(new, .true.)
-            !else FIXME
+          else
             ! This is an attribute being imported as part of a hierarchy,
             ! but its only here by default. Is there a default attribute
             ! of this name in the new document?
-            ! elseif (thereIsADefault(getName(this)) FIXME
-            ! new => createAttribute(doc, getName(this))
-            ! call setValue(new, defaultValue)
-            ! call setSpecified(new, .false.)
-          else
-            doneChildren = .true.
+            elem => get_element(xds%element_list, getTagName(getOwnerElement(this)))
+            if (associated(elem)) then
+              i_default = default_att_index(elem%attlist, getName(this))
+              if (i_default>0) then ! there is a default value
+                ! Create the new default:
+                ! FIXME what about NS attributes of new node ...
+                new => createAttribute(doc, getName(this))
+                call setValue(new, str_vs(elem%attlist%list(i_default)%default))
+                call setSpecified(new, .false.)
+              endif
+              ! Otherwise no attribute here
+            endif
+            ! In any case, we dont want to copy the children of this node.
+            doneChildren=.true.
           endif
         case (TEXT_NODE)
           new => createTextNode(doc, getData(this))
@@ -6283,6 +6340,10 @@ endif
     character(len=*), intent(in) :: namespaceURI, qualifiedName
     type(Node), pointer :: np
 
+    type(xml_doc_state), pointer :: xds
+    type(element_t), pointer :: elem
+    integer :: i
+
     if (.not.associated(arg)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
   call throw_exception(FoX_NODE_IS_NULL, "createElementNS", ex)
@@ -6370,6 +6431,17 @@ endif
     if (getGCstate(arg)) then
       np%inDocument = .false.
       call append(arg%docExtras%hangingnodes, np)
+      ! We only add default attributes if we are *not* building the doc
+      xds => getXds(arg)
+      elem => get_element(xds%element_list, qualifiedName)
+      if (associated(elem)) then
+        do i = 1, size(elem%attlist%list)
+          if (elem%attlist%list(i)%attDefault==ATT_DEFAULT) then
+            call setAttribute(np, str_vs(elem%attlist%list(i)%name), &
+              str_vs(elem%attlist%list(i)%default))
+          endif
+        enddo
+      endif
     else
       np%inDocument = .true.
     endif
@@ -7093,7 +7165,7 @@ endif
   function getXds(arg, ex)result(xds) 
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
-    type(xml_doc_state) :: xds
+    type(xml_doc_state), pointer :: xds
 
     if (.not.associated(arg)) then
       if (getFoX_checks().or.FoX_INTERNAL_ERROR<200) then
@@ -7107,7 +7179,7 @@ endif
 
     endif
 
-    xds = arg%docExtras%xds
+    xds => arg%docExtras%xds
 
   end function getXds
 
@@ -7620,6 +7692,7 @@ endif
       call setGCstate(getOwnerDocument(arg), .false.)
 
     dummy => removeNamedItem(getAttributes(arg), name, ex2)
+    ! removeNamedItem took care of any default attributes
     if (inException(ex2)) then
       e = getExceptionCode(ex2)
       if (e/=NOT_FOUND_ERR) then
@@ -7646,8 +7719,6 @@ endif
     if (arg%inDocument) &
       call setGCstate(arg%ownerDocument, .true.)
 
-  ! FIXME recreate a default value if there is one
-     
   end subroutine removeAttribute
 
 
@@ -7817,6 +7888,7 @@ endif
     do i = 1, getLength(getAttributes(arg))
       if (associated(item(getAttributes(arg), i-1), oldattr)) then
         attr => removeNamedItem(getAttributes(arg), str_vs(oldattr%nodeName))
+        ! removeNamedItem took care of any default attributes
         attr%elExtras%ownerElement => null()
         return
       endif
@@ -7995,7 +8067,7 @@ endif
 
     endif
 
-! FIXME what if namespace is undeclared
+! FIXME what if namespace is undeclared? Throw an error *only* if FoX_errors is on, otherwise its taken care of by namespace fixup on serialization
 
     quickFix = getGCstate(getOwnerDocument(arg)) &
       .and. arg%inDocument
@@ -8017,8 +8089,6 @@ endif
     endif
 
     if (quickFix) call setGCstate(getOwnerDocument(arg), .true.)
-
-    !FIXME catch exception
 
   end subroutine setAttributeNS
 
@@ -8072,6 +8142,7 @@ endif
     ! So we dont add the removed nodes to the hanging node list
 
     dummy => removeNamedItemNS(getAttributes(arg), namespaceURI, localName, ex2)
+    ! removeNamedItemNS took care of any default attributes
     if (inException(ex2)) then
       e = getExceptionCode(ex2)
       if (e/=NOT_FOUND_ERR) then
@@ -8097,8 +8168,6 @@ endif
       
     if (arg%inDocument) &
       call setGCstate(arg%ownerDocument, .true.)
-
-  ! FIXME recreate a default value if there is one
 
   end subroutine removeAttributeNS
 
@@ -8263,6 +8332,7 @@ endif
       if (associated(item(getAttributes(arg), i-1), oldattr)) then
         attr => removeNamedItemNS(getAttributes(arg), &
           getNamespaceURI(oldattr), getLocalName(oldattr))
+        ! removeNamedItemNS took care of any default attributes
         return
       endif
     enddo

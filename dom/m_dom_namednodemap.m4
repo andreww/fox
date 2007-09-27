@@ -178,8 +178,10 @@ TOHW_m_dom_contents(`
     character(len=*), intent(in) :: name
     type(Node), pointer :: np
 
+    type(xml_doc_state), pointer :: xds
+    type(element_t), pointer :: elem
     type(ListNode), pointer :: temp_nl(:)
-    integer :: i, i2
+    integer :: i, i2, i_default
 
     if (.not.associated(map)) then
       TOHW_m_dom_throw_error(FoX_MAP_IS_NULL)
@@ -191,6 +193,21 @@ TOHW_m_dom_contents(`
 
     do i = 1, map%length
       if (str_vs(map%nodes(i)%this%nodeName)==name) then
+        xds => getXds(getOwnerDocument(map%ownerElement))
+        elem => get_element(xds%element_list, getNodeName(map%ownerElement))
+        if (associated(elem)) then
+          i_default = default_att_index(elem%attlist, name)
+          if (i_default>0) then ! there is a default value
+            ! Well swap the old one out & put a new one in.
+            np => createAttribute(getOwnerDocument(map%ownerElement), name)
+            call setValue(np, str_vs(elem%attlist%list(i_default)%default))
+            call setSpecified(np, .false.)
+            np => setNamedItem(map, np)
+            call setSpecified(np, .true.)
+            return
+          endif
+        endif
+        ! Otherwise there was no default value, so we just remove the node.
         ! Grab this node
         np => map%nodes(i)%this
         ! and shrink the node list
@@ -211,8 +228,6 @@ TOHW_m_dom_contents(`
         return
       endif
     enddo
-
-    !FIXME if this was an attribute we may have to replace with default value
 
     TOHW_m_dom_throw_error(NOT_FOUND_ERR)
 
@@ -413,8 +428,10 @@ TOHW_m_dom_contents(`
     character(len=*), intent(in) :: localName
     type(Node), pointer :: np
 
+    type(xml_doc_state), pointer :: xds
+    type(element_t), pointer :: elem
     type(ListNode), pointer :: temp_nl(:)
-    integer :: i, i2
+    integer :: i, i2, i_default
 
     if (.not.associated(map)) then
       TOHW_m_dom_throw_error(FoX_MAP_IS_NULL)
@@ -430,7 +447,23 @@ TOHW_m_dom_contents(`
         .or. (getNamespaceURI(item(map, i-1))=="" &
           .and. getNodeName(item(map, i-1))==localName)) then
         ! Grab this node
-        np => item(map, i-1)
+        np => map%nodes(i)%this
+        xds => getXds(getOwnerDocument(map%ownerElement))
+        elem => get_element(xds%element_list, getNodeName(map%ownerElement))
+        if (associated(elem)) then
+          i_default = default_att_index(elem%attlist, getName(np))
+          if (i_default>0) then ! there is a default value
+            ! Well swap the old one out & put a new one in.
+            ! FIXME what about namespace resolution
+            np => createAttribute(getOwnerDocument(map%ownerElement), getName(np))
+            call setValue(np, str_vs(elem%attlist%list(i_default)%default))
+            call setSpecified(np, .false.)
+            np => setNamedItem(map, np)
+            call setSpecified(np, .true.)
+            return
+          endif
+        endif
+        ! Otherwise there was no default value, so we just remove the node.
         ! and shrink the node list
         temp_nl => map%nodes
         allocate(map%nodes(size(temp_nl)-1))
@@ -451,8 +484,6 @@ TOHW_m_dom_contents(`
     enddo
 
     TOHW_m_dom_throw_error(NOT_FOUND_ERR)
-
-    ! FIXME if this was attribute we may have to replace by default
 
   end function removeNamedItemNS
 

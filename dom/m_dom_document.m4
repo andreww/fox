@@ -130,6 +130,10 @@ TOHW_m_dom_get(Node, documentElement, np%docExtras%documentElement, (DOCUMENT_NO
     character(len=*), intent(in) :: tagName
     type(Node), pointer :: np
 
+    type(xml_doc_state), pointer :: xds
+    type(element_t), pointer :: elem
+    integer :: i
+
     if (.not.associated(arg)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif
@@ -150,6 +154,17 @@ TOHW_m_dom_get(Node, documentElement, np%docExtras%documentElement, (DOCUMENT_NO
     if (getGCstate(arg)) then
       np%inDocument = .false.
       call append(arg%docExtras%hangingnodes, np)
+      ! We only add default attributes if we are *not* building the doc
+      xds => getXds(arg)
+      elem => get_element(xds%element_list, tagName)
+      if (associated(elem)) then
+        do i = 1, size(elem%attlist%list)
+          if (elem%attlist%list(i)%attDefault==ATT_DEFAULT) then
+            call setAttribute(np, str_vs(elem%attlist%list(i)%name), &
+              str_vs(elem%attlist%list(i)%default))
+          endif
+        enddo
+      endif
     else
       np%inDocument = .true.
     endif
@@ -509,9 +524,10 @@ TOHW_m_dom_treewalk(`dnl
     type(Node), pointer :: np
 
     type(Node), pointer :: this, thatParent, new, treeroot
-
+    type(xml_doc_state), pointer :: xds
+    type(element_t), pointer :: elem
     logical :: doneAttributes, doneChildren
-    integer :: i_tree
+    integer :: i_tree, i_default
 
     if (.not.associated(doc).or..not.associated(arg)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
@@ -524,6 +540,7 @@ TOHW_m_dom_treewalk(`dnl
       TOHW_m_dom_throw_error(NOT_SUPPORTED_ERR)
     endif
 
+    xds => getXds(getOwnerDocument(doc))
     thatParent => null()
     treeroot => arg
     TOHW_m_dom_treewalk(`
@@ -549,16 +566,24 @@ TOHW_m_dom_treewalk(`dnl
               new => createAttributeNS(doc, getNamespaceURI(this), getName(this))
             endif
             call setSpecified(new, .true.)
-            !else FIXME
+          else
             ! This is an attribute being imported as part of a hierarchy,
             ! but its only here by default. Is there a default attribute
             ! of this name in the new document?
-            ! elseif (thereIsADefault(getName(this)) FIXME
-            ! new => createAttribute(doc, getName(this))
-            ! call setValue(new, defaultValue)
-            ! call setSpecified(new, .false.)
-          else
-            doneChildren = .true.
+            elem => get_element(xds%element_list, getTagName(getOwnerElement(this)))
+            if (associated(elem)) then
+              i_default = default_att_index(elem%attlist, getName(this))
+              if (i_default>0) then ! there is a default value
+                ! Create the new default:
+                ! FIXME what about NS attributes of new node ...
+                new => createAttribute(doc, getName(this))
+                call setValue(new, str_vs(elem%attlist%list(i_default)%default))
+                call setSpecified(new, .false.)
+              endif
+              ! Otherwise no attribute here
+            endif
+            ! In any case, we dont want to copy the children of this node.
+            doneChildren=.true.
           endif
         case (TEXT_NODE)
           new => createTextNode(doc, getData(this))
@@ -612,6 +637,10 @@ TOHW_m_dom_treewalk(`dnl
     character(len=*), intent(in) :: namespaceURI, qualifiedName
     type(Node), pointer :: np
 
+    type(xml_doc_state), pointer :: xds
+    type(element_t), pointer :: elem
+    integer :: i
+
     if (.not.associated(arg)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif
@@ -643,6 +672,17 @@ TOHW_m_dom_treewalk(`dnl
     if (getGCstate(arg)) then
       np%inDocument = .false.
       call append(arg%docExtras%hangingnodes, np)
+      ! We only add default attributes if we are *not* building the doc
+      xds => getXds(arg)
+      elem => get_element(xds%element_list, qualifiedName)
+      if (associated(elem)) then
+        do i = 1, size(elem%attlist%list)
+          if (elem%attlist%list(i)%attDefault==ATT_DEFAULT) then
+            call setAttribute(np, str_vs(elem%attlist%list(i)%name), &
+              str_vs(elem%attlist%list(i)%default))
+          endif
+        enddo
+      endif
     else
       np%inDocument = .true.
     endif
@@ -969,13 +1009,13 @@ TOHW_m_dom_set(logical, xmlStandalone, np%docExtras%xds%standalone_declared, (DO
 
   TOHW_function(getXds, (arg), xds)
     type(Node), pointer :: arg
-    type(xml_doc_state) :: xds
+    type(xml_doc_state), pointer :: xds
 
     if (.not.associated(arg)) then
       TOHW_m_dom_throw_error(FoX_INTERNAL_ERROR)
     endif
 
-    xds = arg%docExtras%xds
+    xds => arg%docExtras%xds
 
   end function getXds
 

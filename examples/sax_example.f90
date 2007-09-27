@@ -260,11 +260,11 @@ program sax_example
   integer :: iostat
   type(xml_t)  :: fxml
 
-  call open_xml_string(fxml, "kjhg")
-!  if (iostat /= 0) then
-!    write(*,*) "Cannot open file."
-!    stop
-!  endif
+  call open_xml_file(fxml, "test.xml", iostat=iostat)
+  if (iostat /= 0) then
+    write(*,*) "Cannot open file."
+    stop
+  endif
 
   call parse(fxml,&
     characters_handler,            &
@@ -293,7 +293,7 @@ program sax_example
     endEntity_handler,             &
     startCdata_handler,            &
     startDTD_handler,              &
-    startEntity_handler)
+    startEntity_handler, validation=.true.)
 
   call close_xml_t(fxml)
 

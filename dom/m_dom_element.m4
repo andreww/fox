@@ -130,6 +130,7 @@ TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
       call setGCstate(getOwnerDocument(arg), .false.)
 
     dummy => removeNamedItem(getAttributes(arg), name, ex2)
+    ! removeNamedItem took care of any default attributes
     if (inException(ex2)) then
       e = getExceptionCode(ex2)
       if (e/=NOT_FOUND_ERR) then
@@ -148,8 +149,6 @@ TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
     if (arg%inDocument) &
       call setGCstate(arg%ownerDocument, .true.)
 
-  ! FIXME recreate a default value if there is one
-     
   end subroutine removeAttribute
 
 
@@ -228,6 +227,7 @@ TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
     do i = 1, getLength(getAttributes(arg))
       if (associated(item(getAttributes(arg), i-1), oldattr)) then
         attr => removeNamedItem(getAttributes(arg), str_vs(oldattr%nodeName))
+        ! removeNamedItem took care of any default attributes
         attr%elExtras%ownerElement => null()
         return
       endif
@@ -316,7 +316,7 @@ TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
       TOHW_m_dom_throw_error(NAMESPACE_ERR)
     endif
 
-! FIXME what if namespace is undeclared
+! FIXME what if namespace is undeclared? Throw an error *only* if FoX_errors is on, otherwise its taken care of by namespace fixup on serialization
 
     quickFix = getGCstate(getOwnerDocument(arg)) &
       .and. arg%inDocument
@@ -338,8 +338,6 @@ TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
     endif
 
     if (quickFix) call setGCstate(getOwnerDocument(arg), .true.)
-
-    !FIXME catch exception
 
   end subroutine setAttributeNS
 
@@ -368,6 +366,7 @@ TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
     ! So we dont add the removed nodes to the hanging node list
 
     dummy => removeNamedItemNS(getAttributes(arg), namespaceURI, localName, ex2)
+    ! removeNamedItemNS took care of any default attributes
     if (inException(ex2)) then
       e = getExceptionCode(ex2)
       if (e/=NOT_FOUND_ERR) then
@@ -385,8 +384,6 @@ TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
       
     if (arg%inDocument) &
       call setGCstate(arg%ownerDocument, .true.)
-
-  ! FIXME recreate a default value if there is one
 
   end subroutine removeAttributeNS
 
@@ -468,6 +465,7 @@ TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
       if (associated(item(getAttributes(arg), i-1), oldattr)) then
         attr => removeNamedItemNS(getAttributes(arg), &
           getNamespaceURI(oldattr), getLocalName(oldattr))
+        ! removeNamedItemNS took care of any default attributes
         return
       endif
     enddo

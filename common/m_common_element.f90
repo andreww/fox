@@ -122,6 +122,7 @@ module m_common_element
   public :: ATT_CDANO
   public :: ATT_CDAMB
   public :: ATT_TYPELENGTHS
+  public :: ATT_DEFAULT
 
 contains
 
