@@ -278,7 +278,7 @@ contains
     !otherwise carry on parsing the document, and only throw an error
     !if a reference is made to it.
 
-    call destroyAllNodesRecursively(current)
+    call destroyAllNodesRecursively(current, except=.true.)
     call setIllFormed(current, .true.)
   end subroutine entityErrorHandler
 

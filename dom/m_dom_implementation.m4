@@ -177,7 +177,6 @@ TOHW_m_dom_contents(`
     if (associated(arg%docExtras%entities%nodes)) then
       do i = 1, size(arg%docExtras%entities%nodes)
         call destroyAllNodesRecursively(arg%docExtras%entities%nodes(i)%this)
-        call destroy(arg%docExtras%entities%nodes(i)%this)
       enddo
       deallocate(arg%docExtras%entities%nodes)
     endif
@@ -205,9 +204,7 @@ TOHW_m_dom_contents(`
     deallocate(arg%docExtras%xds)
 
     deallocate(arg%docExtras)
-    call destroyAllNodesRecursively(arg)
-    call destroyNodeContents(arg)
-    deallocate(arg)
+    call destroyAllNodesRecursively(arg, except=.true.)
 
   end subroutine destroyDocument
 

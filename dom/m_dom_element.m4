@@ -100,7 +100,6 @@ TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
         call putNodesInDocument(getOwnerDocument(arg), dummy) 
       ! ... so that dummy & children are removed from hangingNodes list.
       call destroyAllNodesRecursively(dummy)
-      call destroyNode(dummy)
     endif
 
     if (quickFix) call setGCstate(getOwnerDocument(arg), .true.)
@@ -143,7 +142,6 @@ TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
         call putNodesInDocument(arg%ownerDocument, dummy)
       endif
       call destroyAllNodesRecursively(dummy)
-      call destroyNode(dummy)
     endif
       
     if (arg%inDocument) &
@@ -334,7 +332,6 @@ TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
         call putNodesInDocument(getOwnerDocument(arg), dummy) 
       ! ... so that dummy & children are removed from hangingNodes list.
       call destroyAllNodesRecursively(dummy)
-      call destroyNode(dummy)
     endif
 
     if (quickFix) call setGCstate(getOwnerDocument(arg), .true.)
@@ -379,7 +376,6 @@ TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
         call putNodesInDocument(arg%ownerDocument, dummy)
       endif
       call destroyAllNodesRecursively(dummy)
-      call destroyNode(dummy)
     endif
       
     if (arg%inDocument) &

@@ -171,14 +171,13 @@ TOHW_m_dom_contents(`
       call destroyEntityOrNotation(np)
     case (DOCUMENT_NODE)
       call destroyDocument(np)
-    case default
-      call destroyNodeContents(np)
-      deallocate(np)
     end select
+    call destroyNodeContents(np)
+    deallocate(np)
 
   end subroutine destroyNode
 
-  TOHW_subroutine(destroyElementOrAttribute, (np))
+  recursive TOHW_subroutine(destroyElementOrAttribute, (np))
     type(Node), pointer :: np
 
     integer :: i
@@ -198,8 +197,6 @@ TOHW_m_dom_contents(`
     if (associated(np%elExtras%prefix)) deallocate(np%elExtras%prefix)
     if (associated(np%elExtras%localName)) deallocate(np%elExtras%localName)
     deallocate(np%elExtras)
-    call destroyNodeContents(np)
-    deallocate(np)
 
   end subroutine destroyElementOrAttribute
 
@@ -217,13 +214,12 @@ TOHW_m_dom_contents(`
     if (associated(np%dtdExtras%internalSubset)) deallocate(np%dtdExtras%internalSubset)
     if (associated(np%dtdExtras%notationName)) deallocate(np%dtdExtras%notationName)
     deallocate(np%dtdExtras)
-    call destroyNodeContents(np)
-    deallocate(np)
 
   end subroutine destroyEntityOrNotation
 
-  subroutine destroyAllNodesRecursively(arg)
+  subroutine destroyAllNodesRecursively(arg, except)
     type(Node), pointer :: arg
+    logical, intent(in), optional :: except
     
     type(Node), pointer :: this, deadNode, treeroot
     logical :: doneChildren, doneAttributes
@@ -238,6 +234,8 @@ TOHW_m_dom_treewalk(`',`',`deadNode', `')
     allocate(arg%childNodes%nodes(0))
     arg%firstChild => null()
     arg%lastChild => null()
+
+    if (.not.present(except)) call destroyNode(arg)
 
   end subroutine destroyAllNodesRecursively
 

@@ -412,14 +412,13 @@ contains
       call destroyEntityOrNotation(np)
     case (DOCUMENT_NODE)
       call destroyDocument(np)
-    case default
-      call destroyNodeContents(np)
-      deallocate(np)
     end select
+    call destroyNodeContents(np)
+    deallocate(np)
 
   end subroutine destroyNode
 
-  subroutine destroyElementOrAttribute(np, ex)
+  recursive subroutine destroyElementOrAttribute(np, ex)
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: np
 
@@ -448,8 +447,6 @@ endif
     if (associated(np%elExtras%prefix)) deallocate(np%elExtras%prefix)
     if (associated(np%elExtras%localName)) deallocate(np%elExtras%localName)
     deallocate(np%elExtras)
-    call destroyNodeContents(np)
-    deallocate(np)
 
   end subroutine destroyElementOrAttribute
 
@@ -476,13 +473,12 @@ endif
     if (associated(np%dtdExtras%internalSubset)) deallocate(np%dtdExtras%internalSubset)
     if (associated(np%dtdExtras%notationName)) deallocate(np%dtdExtras%notationName)
     deallocate(np%dtdExtras)
-    call destroyNodeContents(np)
-    deallocate(np)
 
   end subroutine destroyEntityOrNotation
 
-  subroutine destroyAllNodesRecursively(arg)
+  subroutine destroyAllNodesRecursively(arg, except)
     type(Node), pointer :: arg
+    logical, intent(in), optional :: except
     
     type(Node), pointer :: this, deadNode, treeroot
     logical :: doneChildren, doneAttributes
@@ -564,6 +560,8 @@ endif
     allocate(arg%childNodes%nodes(0))
     arg%firstChild => null()
     arg%lastChild => null()
+
+    if (.not.present(except)) call destroyNode(arg)
 
   end subroutine destroyAllNodesRecursively
 
@@ -4934,7 +4932,6 @@ endif
     if (associated(arg%docExtras%entities%nodes)) then
       do i = 1, size(arg%docExtras%entities%nodes)
         call destroyAllNodesRecursively(arg%docExtras%entities%nodes(i)%this)
-        call destroy(arg%docExtras%entities%nodes(i)%this)
       enddo
       deallocate(arg%docExtras%entities%nodes)
     endif
@@ -4962,9 +4959,7 @@ endif
     deallocate(arg%docExtras%xds)
 
     deallocate(arg%docExtras)
-    call destroyAllNodesRecursively(arg)
-    call destroyNodeContents(arg)
-    deallocate(arg)
+    call destroyAllNodesRecursively(arg, except=.true.)
 
   end subroutine destroyDocument
 
@@ -7637,7 +7632,6 @@ endif
         call putNodesInDocument(getOwnerDocument(arg), dummy) 
       ! ... so that dummy & children are removed from hangingNodes list.
       call destroyAllNodesRecursively(dummy)
-      call destroyNode(dummy)
     endif
 
     if (quickFix) call setGCstate(getOwnerDocument(arg), .true.)
@@ -7713,7 +7707,6 @@ endif
         call putNodesInDocument(arg%ownerDocument, dummy)
       endif
       call destroyAllNodesRecursively(dummy)
-      call destroyNode(dummy)
     endif
       
     if (arg%inDocument) &
@@ -8085,7 +8078,6 @@ endif
         call putNodesInDocument(getOwnerDocument(arg), dummy) 
       ! ... so that dummy & children are removed from hangingNodes list.
       call destroyAllNodesRecursively(dummy)
-      call destroyNode(dummy)
     endif
 
     if (quickFix) call setGCstate(getOwnerDocument(arg), .true.)
@@ -8163,7 +8155,6 @@ endif
         call putNodesInDocument(arg%ownerDocument, dummy)
       endif
       call destroyAllNodesRecursively(dummy)
-      call destroyNode(dummy)
     endif
       
     if (arg%inDocument) &
