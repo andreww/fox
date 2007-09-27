@@ -212,5 +212,6 @@ module FoX_dom
   public :: setFoX_checks
   public :: getLiveNodeLists
   public :: setLiveNodeLists
+  public :: getNamespaceNodes
 
 end module FoX_dom

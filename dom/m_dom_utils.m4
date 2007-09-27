@@ -9,15 +9,16 @@ module m_dom_utils
   use m_common_format, only: operator(//)
   use m_common_array_str, only: str_vs, vs_str
 
-  use m_dom_dom, only: Node, Namednodemap, Node
+  use m_dom_dom, only: Node, Namednodemap, NodeList
   use m_dom_dom, only: DOCUMENT_NODE, ELEMENT_NODE, TEXT_NODE, &
    CDATA_SECTION_NODE, COMMENT_NODE, DOCUMENT_TYPE_NODE, &
    ATTRIBUTE_NODE, ENTITY_REFERENCE_NODE, PROCESSING_INSTRUCTION_NODE
   use m_dom_dom, only: haschildnodes, getNodeName, getNodeType, getFoX_checks, &
     getFirstChild, getNextSibling, getlength, item, getOwnerElement, getXmlStandalone, &
     getAttributes, getParentNode, getChildNodes, getPrefix, getLocalName, getXmlVersion, &
-    getNodeName, getData, getName, getTagName, getValue, getTarget, getImplementation, &
-    getEntities, getNotations, item, getSystemId, getPublicId, getNotationName, getStringValue
+    getNodeName, getData, getName, getTagName, getValue, getTarget, getNamespaceNodes, &
+    getEntities, getNotations, item, getSystemId, getPublicId, getNotationName, getStringValue, &
+    getNamespaceURI
   use m_dom_error, only: DOMException, inException, throw_exception, &
     FoX_INVALID_NODE, SERIALIZE_ERR, FoX_INTERNAL_ERROR
 
@@ -57,6 +58,8 @@ contains
     recursive subroutine dump2(input)
       type(Node), pointer :: input
       type(Node), pointer :: temp
+      type(NamedNodeMap), pointer :: attrs
+      type(NodeList), pointer :: nsnodes
       integer :: i
       temp => input
       do while(associated(temp))
@@ -64,11 +67,21 @@ contains
                         getNodeName(temp), " of type ", &
                         getNodeType(temp)
          if (getNodeType(temp)==ELEMENT_NODE) then
-           do i = 1, getLength(getAttributes(temp))
-             write(*, "(3a)") repeat(" ", indent_level), "  ", &
-               getName(item(getAttributes(temp), i-1))
+           write(*,"(2a)") repeat(" ", indent_level), &
+                        "  ATTRIBUTES:"
+           attrs => getAttributes(temp)
+           do i = 1, getLength(attrs)
+             write(*, "(2a)") repeat(" ", indent_level)//"  ", &
+               getName(item(attrs, i-1))
            enddo
-!           do i = 1, getLength(
+           write(*,"(2a)") repeat(" ", indent_level), &
+                        "  IN-SCOPE NAMESPACES:"
+           nsnodes => getNamespaceNodes(temp)
+           do i = 1, getLength(nsnodes)
+             write(*,"(4a)") repeat(" ", indent_level)//"  ", &
+               getPrefix(item(nsnodes, i-1)), ':', &
+               getNamespaceURI(item(nsnodes, i-1))
+           enddo
          endif
          if (hasChildNodes(temp)) then
             indent_level = indent_level + 3

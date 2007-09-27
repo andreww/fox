@@ -17,7 +17,6 @@ TOHW_m_dom_publics(`
   public :: hasAttribute
   public :: hasAttributeNS
 
-  public :: appendNSNode
 ')`'dnl
 dnl
 TOHW_m_dom_contents(`
@@ -533,34 +532,22 @@ TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
 ! setIdAttributeNS
 ! setIdAttributeNode
 
-  TOHW_subroutine(appendNSNode, (np, prefix, namespaceURI, specified))
-    type(Node), pointer :: np
-    character(len=*), intent(in) :: prefix
-    character(len=*), intent(in) :: namespaceURI
-    logical, intent(in) :: specified
-
-    type(Node), pointer :: nnp
-    logical :: quickFix
-
-    if (.not.associated(np)) then
-      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
-    endif
-    
-    if (np%nodeType /= ELEMENT_NODE) then
-      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    endif
-    
-    ! We never put namespace nodes in the hanging nodes
-    ! list since they can never be separated from their
-    ! parent element node, so will always be destroyed alongside it.
-
-    quickFix = getGCState(getOwnerDocument(np))
-    call setGCState(getOwnerDocument(np), .false.)
-    call append_nl(np%elExtras%namespaceNodes, &
-      createNamespaceNode(getOwnerDocument(np), prefix, namespaceURI, specified))
-    call setGCState(getOwnerDocument(np), quickFix)
-
-  end subroutine appendNSNode
+dnl  subroutine normalizeNamespace(np)
+dnl    ! As B.1 of http://www.w3.org/TR/DOM-Level-3-Core/namespaces-algorithms.html
+dnl
+dnl    check np is an element
+dnl
+dnl    attrs = getAttributes(np)
+dnl    do i = 0, getLength(attrs)-1
+dnl      attr = item(attrs, i)
+dnl      ! I dont think theres any way this can be invalid ...
+dnl    enddo
+dnl
+dnl    if (getNamespaceURI(np)/="") then
+dnl      ! namespaced node ...
+dnl      if (getNamespaceURI(np)/=lookupNamespaceURI(getPrefix(np))) then
+dnl        ! We need to fixup this node.
+dnl        ! Create a new ns attribute
 
 dnl  subroutine rationalizeNS(np)
 dnl    type(Node), pointer :: np

@@ -609,6 +609,8 @@ TOHW_m_dom_get(Node, nextSibling, np%nextSibling)
         if (arg%inDocument) &
           call putNodesInDocument(arg%ownerDocument, temp_nl(i_t)%this)
         temp_nl(i_t)%this%parentNode => arg
+        if (getNodeType(temp_nl(i_t)%this)==ELEMENT_NODE) &
+          call namespaceFixup(temp_nl(i_t)%this)
       enddo
       if (arg%childNodes%length==0) then
         arg%firstChild => newChild%firstChild
@@ -639,6 +641,8 @@ TOHW_m_dom_get(Node, nextSibling, np%nextSibling)
       newChild%nextSibling => null()
       arg%lastChild => newChild
       newChild%parentNode => arg
+      if (getNodeType(newChild)==ELEMENT_NODE) &
+        call namespaceFixup(newChild)
     endif
 
     deallocate(arg%childNodes%nodes)
@@ -1207,8 +1211,6 @@ TOHW_m_dom_treewalk(`
       endif
     endif
     end function lookupPrefix
-
-  ! function lookupPrefix
 
   ! function getUserData
   ! function setUserData

@@ -327,7 +327,6 @@ module m_dom_dom
   public :: hasAttribute
   public :: hasAttributeNS
 
-  public :: appendNSNode
 
 
   !public :: getName
@@ -376,6 +375,10 @@ module m_dom_dom
   public :: getName
   public :: getPublicId
   public :: getSystemId
+
+
+  
+  public :: getNamespaceNodes
 
 
 contains
@@ -2541,6 +2544,8 @@ endif
         if (arg%inDocument) &
           call putNodesInDocument(arg%ownerDocument, temp_nl(i_t)%this)
         temp_nl(i_t)%this%parentNode => arg
+        if (getNodeType(temp_nl(i_t)%this)==ELEMENT_NODE) &
+          call namespaceFixup(temp_nl(i_t)%this)
       enddo
       if (arg%childNodes%length==0) then
         arg%firstChild => newChild%firstChild
@@ -2571,6 +2576,8 @@ endif
       newChild%nextSibling => null()
       arg%lastChild => newChild
       newChild%parentNode => arg
+      if (getNodeType(newChild)==ELEMENT_NODE) &
+        call namespaceFixup(newChild)
     endif
 
     deallocate(arg%childNodes%nodes)
@@ -3450,8 +3457,6 @@ endif
       endif
     endif
     end function lookupPrefix
-
-  ! function lookupPrefix
 
   ! function getUserData
   ! function setUserData
@@ -5266,6 +5271,7 @@ endif
     allocate(np%elExtras%namespaceURI(0))
     allocate(np%elExtras%prefix(0))
     allocate(np%elExtras%localname(0))
+    allocate(np%elExtras%namespaceNodes%nodes(0))
 
     if (getGCstate(arg)) then
       np%inDocument = .false.
@@ -6420,6 +6426,7 @@ endif
     np%elExtras%namespaceURI => vs_str_alloc(namespaceURI)
     np%elExtras%prefix => vs_str_alloc(prefixOfQName(qualifiedname))
     np%elExtras%localName => vs_str_alloc(localpartOfQName(qualifiedname))
+    allocate(np%elExtras%namespaceNodes%nodes(0))
 
     np%elExtras%attributes%ownerElement => np
 
@@ -8437,51 +8444,6 @@ endif
 ! setIdAttributeNS
 ! setIdAttributeNode
 
-  subroutine appendNSNode(np, prefix, namespaceURI, specified, ex)
-    type(DOMException), intent(out), optional :: ex
-    type(Node), pointer :: np
-    character(len=*), intent(in) :: prefix
-    character(len=*), intent(in) :: namespaceURI
-    logical, intent(in) :: specified
-
-    type(Node), pointer :: nnp
-    logical :: quickFix
-
-    if (.not.associated(np)) then
-      if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
-  call throw_exception(FoX_NODE_IS_NULL, "appendNSNode", ex)
-  if (present(ex)) then
-    if (inException(ex)) then
-       return
-    endif
-  endif
-endif
-
-    endif
-    
-    if (np%nodeType /= ELEMENT_NODE) then
-      if (getFoX_checks().or.FoX_INVALID_NODE<200) then
-  call throw_exception(FoX_INVALID_NODE, "appendNSNode", ex)
-  if (present(ex)) then
-    if (inException(ex)) then
-       return
-    endif
-  endif
-endif
-
-    endif
-    
-    ! We never put namespace nodes in the hanging nodes
-    ! list since they can never be separated from their
-    ! parent element node, so will always be destroyed alongside it.
-
-    quickFix = getGCState(getOwnerDocument(np))
-    call setGCState(getOwnerDocument(np), .false.)
-    call append_nl(np%elExtras%namespaceNodes, &
-      createNamespaceNode(getOwnerDocument(np), prefix, namespaceURI, specified))
-    call setGCState(getOwnerDocument(np), quickFix)
-
-  end subroutine appendNSNode
 
 
 
@@ -9815,6 +9777,154 @@ endif
 
   end function getsystemId
 
+
+
+
+  function getnamespaceNodes(np, ex)result(c) 
+    type(DOMException), intent(out), optional :: ex
+    type(Node), pointer :: np
+    type(NodeList), pointer :: c
+
+
+    if (.not.associated(np)) then
+      if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "getnamespaceNodes", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    endif
+
+   if (getNodeType(np)/=ELEMENT_NODE .and. &
+      .true.) then
+      if (getFoX_checks().or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "getnamespaceNodes", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    endif
+
+    c => np%elExtras%namespaceNodes
+
+  end function getnamespaceNodes
+
+
+  subroutine appendNSNode(np, prefix, namespaceURI, specified, ex)
+    type(DOMException), intent(out), optional :: ex
+    type(Node), pointer :: np
+    character(len=*), intent(in) :: prefix
+    character(len=*), intent(in) :: namespaceURI
+    logical, intent(in) :: specified
+
+    type(Node), pointer :: nnp, dummy
+    type(NodeList), pointer :: nsnodes
+    integer :: i
+    logical :: quickFix
+
+    if (.not.associated(np)) then
+      if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "appendNSNode", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    endif
+    
+    if (np%nodeType /= ELEMENT_NODE) then
+      if (getFoX_checks().or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "appendNSNode", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    endif
+    
+    ! We never put namespace nodes in the hanging nodes
+    ! list since they can never be separated from their
+    ! parent element node, so will always be destroyed alongside it.
+    quickFix = getGCState(getOwnerDocument(np))
+    call setGCState(getOwnerDocument(np), .false.)
+    nsnodes => getNamespaceNodes(np)
+    ! If we already have this prefix registered in the list, then remove it
+    do i = 0, getLength(nsNodes)-1
+      if (getPrefix(item(nsNodes, i))==prefix) then
+        dummy => remove_nl(nsNodes, i)
+        exit
+      endif
+    enddo
+
+    call append_nl(nsNodes, &
+      createNamespaceNode(getOwnerDocument(np), &
+        prefix, namespaceURI, specified))
+    call setGCState(getOwnerDocument(np), quickFix)
+
+  end subroutine appendNSNode
+
+  subroutine namespaceFixup(np, ex)
+    type(DOMException), intent(out), optional :: ex
+    type(Node), pointer :: np
+
+    type(Node), pointer :: relevantAncestor
+    type(NamedNodeMap), pointer :: attrs
+    type(NodeList), pointer :: nsNodes, nsNodesParent
+    integer :: i
+
+    ! Clear all current namespace nodes:
+    nsnodes => getNamespaceNodes(np)
+    do i = 1, getLength(nsNodes)
+      call destroyNode(nsNodes%nodes(i)%this)
+    enddo
+    deallocate(nsNodes%nodes)
+
+    relevantAncestor => getParentNode(np)
+    do while (associated(relevantAncestor))
+      ! Go up (through perhaps multiple entref nodes)
+      if (getNodeType(relevantAncestor)==ELEMENT_NODE) exit
+      relevantAncestor => getParentNode(relevantAncestor)
+    enddo
+    ! Inherit from parent (or not ...)
+    if (associated(relevantAncestor)) then
+      nsNodesParent => getNamespaceNodes(relevantAncestor)
+      allocate(nsNodes%nodes(getLength(nsNodesParent)))
+      nsNodes%length = getLength(nsNodesParent)
+      do i = 1, getLength(nsNodes)
+        nsNodes%nodes(i)%this => &
+          createNamespaceNode(getOwnerDocument(np), &
+            getPrefix(item(nsNodesParent, i-1)), &
+            getNamespaceURI(item(nsNodesParent, i-1)), &
+            specified=.false.)
+      enddo
+    else
+      allocate(nsNodes%nodes(0))
+    endif
+
+    ! Override according to declarations
+    attrs => getAttributes(np)
+    do i = 0, getLength(attrs)-1
+      if (getNamespaceURI(item(attrs, i))=="http://www.w3.org/2000/xmlns/") then
+        if (getLocalName(item(attrs, i))=="xmlns") then
+          call appendNSNode(np, "", getValue(item(attrs, i)), specified=.true.)
+        else
+          call appendNSNode(np, getLocalName(item(attrs, i)), &
+            getValue(item(attrs, i)), specified=.true.)
+        endif
+      endif
+    enddo
+
+  end subroutine namespaceFixup
 
 
 end module m_dom_dom

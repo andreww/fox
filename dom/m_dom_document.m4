@@ -150,6 +150,7 @@ TOHW_m_dom_get(Node, documentElement, np%docExtras%documentElement, (DOCUMENT_NO
     allocate(np%elExtras%namespaceURI(0))
     allocate(np%elExtras%prefix(0))
     allocate(np%elExtras%localname(0))
+    allocate(np%elExtras%namespaceNodes%nodes(0))
 
     if (getGCstate(arg)) then
       np%inDocument = .false.
@@ -666,6 +667,7 @@ TOHW_m_dom_treewalk(`dnl
     np%elExtras%namespaceURI => vs_str_alloc(namespaceURI)
     np%elExtras%prefix => vs_str_alloc(prefixOfQName(qualifiedname))
     np%elExtras%localName => vs_str_alloc(localpartOfQName(qualifiedname))
+    allocate(np%elExtras%namespaceNodes%nodes(0))
 
     np%elExtras%attributes%ownerElement => np
 
