@@ -541,7 +541,7 @@ TOHW_m_dom_treewalk(`dnl
       TOHW_m_dom_throw_error(NOT_SUPPORTED_ERR)
     endif
 
-    xds => getXds(getOwnerDocument(doc))
+    xds => getXds(doc)
     thatParent => null()
     treeroot => arg
     TOHW_m_dom_treewalk(`
@@ -630,6 +630,8 @@ TOHW_m_dom_treewalk(`dnl
 ', `', `parentNode', `')
 
     np => thatParent
+
+    call namespaceFixup(np)
 
   end function importNode
 

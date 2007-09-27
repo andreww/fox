@@ -282,11 +282,13 @@ TOHW_m_dom_get(Node, nextSibling, np%nextSibling)
             i_t = i_t + 1
             temp_nl(i_t)%this => newChild%childNodes%nodes(i2)%this
             temp_nl(i_t)%this%parentNode => arg
+            call namespaceFixup(temp_nl(i_t)%this)
           enddo
         else
           i_t = i_t + 1
           temp_nl(i_t)%this => newChild
           temp_nl(i_t)%this%parentNode => arg
+          call namespaceFixup(temp_nl(i_t)%this)
         endif
         if (i==1) then
           arg%firstChild => temp_nl(1)%this
@@ -406,11 +408,13 @@ TOHW_m_dom_get(Node, nextSibling, np%nextSibling)
             i_t = i_t + 1
             temp_nl(i_t)%this => newChild%childNodes%nodes(i2)%this
             temp_nl(i_t)%this%parentNode => arg
+            call namespaceFixup(temp_nl(i_t)%this)
           enddo
         else
           i_t = i_t + 1
           temp_nl(i_t)%this => newChild
           temp_nl(i_t)%this%parentNode => arg
+          call namespaceFixup(temp_nl(i_t)%this)
         endif
         if (i==1) then
           arg%firstChild => temp_nl(1)%this
@@ -438,6 +442,8 @@ TOHW_m_dom_get(Node, nextSibling, np%nextSibling)
     np%parentNode => null()
     np%previousSibling => null()
     np%nextSibling => null()
+
+    call namespaceFixup(np)
 
     if (getGCstate(arg%ownerDocument)) then
       if (arg%inDocument) then
@@ -524,6 +530,9 @@ TOHW_m_dom_get(Node, nextSibling, np%nextSibling)
     oldChild%parentNode => null()
     oldChild%previousSibling => null()
     oldChild%nextSibling => null()
+
+    call namespaceFixup(oldChild)
+
     if (getGCstate(arg%ownerDocument)) then
       if (arg%inDocument) then
         call removeNodesFromDocument(arg%ownerDocument, oldChild)
@@ -609,8 +618,7 @@ TOHW_m_dom_get(Node, nextSibling, np%nextSibling)
         if (arg%inDocument) &
           call putNodesInDocument(arg%ownerDocument, temp_nl(i_t)%this)
         temp_nl(i_t)%this%parentNode => arg
-        if (getNodeType(temp_nl(i_t)%this)==ELEMENT_NODE) &
-          call namespaceFixup(temp_nl(i_t)%this)
+        call namespaceFixup(temp_nl(i_t)%this)
       enddo
       if (arg%childNodes%length==0) then
         arg%firstChild => newChild%firstChild
@@ -641,8 +649,7 @@ TOHW_m_dom_get(Node, nextSibling, np%nextSibling)
       newChild%nextSibling => null()
       arg%lastChild => newChild
       newChild%parentNode => arg
-      if (getNodeType(newChild)==ELEMENT_NODE) &
-        call namespaceFixup(newChild)
+      call namespaceFixup(newChild)
     endif
 
     deallocate(arg%childNodes%nodes)
@@ -764,6 +771,8 @@ TOHW_m_dom_treewalk(`
 ', `parentNode')
 
     np => thatParent
+
+    call namespaceFixup(np)
 
   end function cloneNode
 
@@ -1059,10 +1068,8 @@ TOHW_m_dom_treewalk(`
     type(Node), pointer :: el
     integer :: i
 
-    if (.not.p) then
-      n = 0
-      return
-    endif
+    n = 0
+    if (.not.p) return
 
     select case(np%nodeType)
     case (ELEMENT_NODE)
@@ -1075,22 +1082,26 @@ TOHW_m_dom_treewalk(`
         enddo
       endif
     case (ATTRIBUTE_NODE)
-      if (size(np%elExtras%ownerElement%elExtras%namespaceURI)>0) then
-        do i = 1, np%elExtras%ownerElement%elExtras%namespaceNodes%length
-          if (str_vs(np%elExtras%ownerElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)==prefix) then
-            n = size(np%elExtras%ownerElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)
-            return
-          endif
-        enddo
+      if (associated(np%elExtras%ownerElement)) then
+        if (size(np%elExtras%ownerElement%elExtras%namespaceURI)>0) then
+          do i = 1, np%elExtras%ownerElement%elExtras%namespaceNodes%length
+            if (str_vs(np%elExtras%ownerElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)==prefix) then
+              n = size(np%elExtras%ownerElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)
+              return
+            endif
+          enddo
+        endif
       endif
     case (DOCUMENT_NODE)
-      if (size(np%docExtras%documentElement%elExtras%namespaceURI)>0) then
-        do i = 1, np%docExtras%documentElement%elExtras%namespaceNodes%length
-          if (str_vs(np%docExtras%documentElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)==prefix) then
-            n = size(np%docExtras%documentElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)
-            return
-          endif
-        enddo
+      if (associated(np%docExtras%documentElement)) then
+        if (size(np%docExtras%documentElement%elExtras%namespaceURI)>0) then
+          do i = 1, np%docExtras%documentElement%elExtras%namespaceNodes%length
+            if (str_vs(np%docExtras%documentElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)==prefix) then
+              n = size(np%docExtras%documentElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)
+              return
+            endif
+          enddo
+        endif
       endif
     end select
 
@@ -1140,10 +1151,8 @@ TOHW_m_dom_treewalk(`
     type(Node), pointer :: el
     integer :: i
 
-    if (.not.p) then
-      n = 0
-      return
-    endif
+    n = 0
+    if (.not.p) return
 
     select case(np%nodeType)
     case (ELEMENT_NODE)
@@ -1156,26 +1165,30 @@ TOHW_m_dom_treewalk(`
         enddo
       endif
     case (ATTRIBUTE_NODE)
-      if (size(np%elExtras%ownerElement%elExtras%namespaceURI)>0) then
-        do i = 1, np%elExtras%ownerElement%elExtras%namespaceNodes%length
-          if (str_vs(np%elExtras%ownerElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)==namespaceURI) then
-            n = size(np%elExtras%ownerElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)
-            return
-          endif
-        enddo
+      if (associated(np%elExtras%ownerElement)) then
+        if (size(np%elExtras%ownerElement%elExtras%namespaceURI)>0) then
+          do i = 1, np%elExtras%ownerElement%elExtras%namespaceNodes%length
+            if (str_vs(np%elExtras%ownerElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)==namespaceURI) then
+              n = size(np%elExtras%ownerElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)
+              return
+            endif
+          enddo
+        endif
       endif
     case (DOCUMENT_NODE)
-      if (size(np%docExtras%documentElement%elExtras%namespaceURI)>0) then
-        do i = 1, np%docExtras%documentElement%elExtras%namespaceNodes%length
-          if (str_vs(np%docExtras%documentElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)==namespaceURI) then
-            n = size(np%docExtras%documentElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)
-            return
-          endif
-        enddo
+      if (associated(np%docExtras%documentElement)) then
+        if (size(np%docExtras%documentElement%elExtras%namespaceURI)>0) then
+          do i = 1, np%docExtras%documentElement%elExtras%namespaceNodes%length
+            if (str_vs(np%docExtras%documentElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)==namespaceURI) then
+              n = size(np%docExtras%documentElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)
+              return
+            endif
+          enddo
+        endif
       endif
     end select
 
-    end function lookupPrefix_len
+  end function lookupPrefix_len
 
   TOHW_function(lookupPrefix, (np, namespaceURI), c)
     type(Node), pointer :: np

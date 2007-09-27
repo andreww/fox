@@ -1476,11 +1476,13 @@ endif
             i_t = i_t + 1
             temp_nl(i_t)%this => newChild%childNodes%nodes(i2)%this
             temp_nl(i_t)%this%parentNode => arg
+            call namespaceFixup(temp_nl(i_t)%this)
           enddo
         else
           i_t = i_t + 1
           temp_nl(i_t)%this => newChild
           temp_nl(i_t)%this%parentNode => arg
+          call namespaceFixup(temp_nl(i_t)%this)
         endif
         if (i==1) then
           arg%firstChild => temp_nl(1)%this
@@ -1963,11 +1965,13 @@ endif
             i_t = i_t + 1
             temp_nl(i_t)%this => newChild%childNodes%nodes(i2)%this
             temp_nl(i_t)%this%parentNode => arg
+            call namespaceFixup(temp_nl(i_t)%this)
           enddo
         else
           i_t = i_t + 1
           temp_nl(i_t)%this => newChild
           temp_nl(i_t)%this%parentNode => arg
+          call namespaceFixup(temp_nl(i_t)%this)
         endif
         if (i==1) then
           arg%firstChild => temp_nl(1)%this
@@ -2003,6 +2007,8 @@ endif
     np%parentNode => null()
     np%previousSibling => null()
     np%nextSibling => null()
+
+    call namespaceFixup(np)
 
     if (getGCstate(arg%ownerDocument)) then
       if (arg%inDocument) then
@@ -2114,6 +2120,9 @@ endif
     oldChild%parentNode => null()
     oldChild%previousSibling => null()
     oldChild%nextSibling => null()
+
+    call namespaceFixup(oldChild)
+
     if (getGCstate(arg%ownerDocument)) then
       if (arg%inDocument) then
         call removeNodesFromDocument(arg%ownerDocument, oldChild)
@@ -2544,8 +2553,7 @@ endif
         if (arg%inDocument) &
           call putNodesInDocument(arg%ownerDocument, temp_nl(i_t)%this)
         temp_nl(i_t)%this%parentNode => arg
-        if (getNodeType(temp_nl(i_t)%this)==ELEMENT_NODE) &
-          call namespaceFixup(temp_nl(i_t)%this)
+        call namespaceFixup(temp_nl(i_t)%this)
       enddo
       if (arg%childNodes%length==0) then
         arg%firstChild => newChild%firstChild
@@ -2576,8 +2584,7 @@ endif
       newChild%nextSibling => null()
       arg%lastChild => newChild
       newChild%parentNode => arg
-      if (getNodeType(newChild)==ELEMENT_NODE) &
-        call namespaceFixup(newChild)
+      call namespaceFixup(newChild)
     endif
 
     deallocate(arg%childNodes%nodes)
@@ -2795,6 +2802,8 @@ endif
 
 
     np => thatParent
+
+    call namespaceFixup(np)
 
   end function cloneNode
 
@@ -3287,10 +3296,8 @@ endif
     type(Node), pointer :: el
     integer :: i
 
-    if (.not.p) then
-      n = 0
-      return
-    endif
+    n = 0
+    if (.not.p) return
 
     select case(np%nodeType)
     case (ELEMENT_NODE)
@@ -3303,22 +3310,26 @@ endif
         enddo
       endif
     case (ATTRIBUTE_NODE)
-      if (size(np%elExtras%ownerElement%elExtras%namespaceURI)>0) then
-        do i = 1, np%elExtras%ownerElement%elExtras%namespaceNodes%length
-          if (str_vs(np%elExtras%ownerElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)==prefix) then
-            n = size(np%elExtras%ownerElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)
-            return
-          endif
-        enddo
+      if (associated(np%elExtras%ownerElement)) then
+        if (size(np%elExtras%ownerElement%elExtras%namespaceURI)>0) then
+          do i = 1, np%elExtras%ownerElement%elExtras%namespaceNodes%length
+            if (str_vs(np%elExtras%ownerElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)==prefix) then
+              n = size(np%elExtras%ownerElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)
+              return
+            endif
+          enddo
+        endif
       endif
     case (DOCUMENT_NODE)
-      if (size(np%docExtras%documentElement%elExtras%namespaceURI)>0) then
-        do i = 1, np%docExtras%documentElement%elExtras%namespaceNodes%length
-          if (str_vs(np%docExtras%documentElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)==prefix) then
-            n = size(np%docExtras%documentElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)
-            return
-          endif
-        enddo
+      if (associated(np%docExtras%documentElement)) then
+        if (size(np%docExtras%documentElement%elExtras%namespaceURI)>0) then
+          do i = 1, np%docExtras%documentElement%elExtras%namespaceNodes%length
+            if (str_vs(np%docExtras%documentElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)==prefix) then
+              n = size(np%docExtras%documentElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)
+              return
+            endif
+          enddo
+        endif
       endif
     end select
 
@@ -3377,10 +3388,8 @@ endif
     type(Node), pointer :: el
     integer :: i
 
-    if (.not.p) then
-      n = 0
-      return
-    endif
+    n = 0
+    if (.not.p) return
 
     select case(np%nodeType)
     case (ELEMENT_NODE)
@@ -3393,26 +3402,30 @@ endif
         enddo
       endif
     case (ATTRIBUTE_NODE)
-      if (size(np%elExtras%ownerElement%elExtras%namespaceURI)>0) then
-        do i = 1, np%elExtras%ownerElement%elExtras%namespaceNodes%length
-          if (str_vs(np%elExtras%ownerElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)==namespaceURI) then
-            n = size(np%elExtras%ownerElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)
-            return
-          endif
-        enddo
+      if (associated(np%elExtras%ownerElement)) then
+        if (size(np%elExtras%ownerElement%elExtras%namespaceURI)>0) then
+          do i = 1, np%elExtras%ownerElement%elExtras%namespaceNodes%length
+            if (str_vs(np%elExtras%ownerElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)==namespaceURI) then
+              n = size(np%elExtras%ownerElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)
+              return
+            endif
+          enddo
+        endif
       endif
     case (DOCUMENT_NODE)
-      if (size(np%docExtras%documentElement%elExtras%namespaceURI)>0) then
-        do i = 1, np%docExtras%documentElement%elExtras%namespaceNodes%length
-          if (str_vs(np%docExtras%documentElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)==namespaceURI) then
-            n = size(np%docExtras%documentElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)
-            return
-          endif
-        enddo
+      if (associated(np%docExtras%documentElement)) then
+        if (size(np%docExtras%documentElement%elExtras%namespaceURI)>0) then
+          do i = 1, np%docExtras%documentElement%elExtras%namespaceNodes%length
+            if (str_vs(np%docExtras%documentElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)==namespaceURI) then
+              n = size(np%docExtras%documentElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)
+              return
+            endif
+          enddo
+        endif
       endif
     end select
 
-    end function lookupPrefix_len
+  end function lookupPrefix_len
 
   function lookupPrefix(np, namespaceURI, ex)result(c) 
     type(DOMException), intent(out), optional :: ex
@@ -6149,7 +6162,7 @@ endif
 
     endif
 
-    xds => getXds(getOwnerDocument(doc))
+    xds => getXds(doc)
     thatParent => null()
     treeroot => arg
     
@@ -6332,6 +6345,8 @@ endif
 
 
     np => thatParent
+
+    call namespaceFixup(np)
 
   end function importNode
 
@@ -9873,55 +9888,70 @@ endif
 
   end subroutine appendNSNode
 
-  subroutine namespaceFixup(np, ex)
+  recursive subroutine namespaceFixup(np, ex)
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: np
 
-    type(Node), pointer :: relevantAncestor
+    type(Node), pointer :: relevantAncestor, child
     type(NamedNodeMap), pointer :: attrs
     type(NodeList), pointer :: nsNodes, nsNodesParent
     integer :: i
 
-    ! Clear all current namespace nodes:
-    nsnodes => getNamespaceNodes(np)
-    do i = 1, getLength(nsNodes)
-      call destroyNode(nsNodes%nodes(i)%this)
-    enddo
-    deallocate(nsNodes%nodes)
+    if (getNodeType(np) /= ELEMENT_NODE &
+      .and. getNodeType(np) /= ENTITY_REFERENCE_NODE &
+      .and. getNodeType(np)/=DOCUMENT_FRAGMENT_NODE) then
+      return
+    endif
 
-    relevantAncestor => getParentNode(np)
-    do while (associated(relevantAncestor))
-      ! Go up (through perhaps multiple entref nodes)
-      if (getNodeType(relevantAncestor)==ELEMENT_NODE) exit
-      relevantAncestor => getParentNode(relevantAncestor)
-    enddo
-    ! Inherit from parent (or not ...)
-    if (associated(relevantAncestor)) then
-      nsNodesParent => getNamespaceNodes(relevantAncestor)
-      allocate(nsNodes%nodes(getLength(nsNodesParent)))
-      nsNodes%length = getLength(nsNodesParent)
+    if (np%nodeType==ELEMENT_NODE) then
+      ! Clear all current namespace nodes:
+      nsnodes => getNamespaceNodes(np)
       do i = 1, getLength(nsNodes)
-        nsNodes%nodes(i)%this => &
-          createNamespaceNode(getOwnerDocument(np), &
+        call destroyNode(nsNodes%nodes(i)%this)
+      enddo
+      deallocate(nsNodes%nodes)
+      
+      relevantAncestor => getParentNode(np)
+      do while (associated(relevantAncestor))
+        ! Go up (through perhaps multiple entref nodes)
+        if (getNodeType(relevantAncestor)==ELEMENT_NODE) exit
+        relevantAncestor => getParentNode(relevantAncestor)
+      enddo
+      ! Inherit from parent (or not ...)
+      if (associated(relevantAncestor)) then
+        nsNodesParent => getNamespaceNodes(relevantAncestor)
+        allocate(nsNodes%nodes(getLength(nsNodesParent)))
+        nsNodes%length = getLength(nsNodesParent)
+        do i = 1, getLength(nsNodes)
+          nsNodes%nodes(i)%this => &
+            createNamespaceNode(getOwnerDocument(np), &
             getPrefix(item(nsNodesParent, i-1)), &
             getNamespaceURI(item(nsNodesParent, i-1)), &
             specified=.false.)
-      enddo
-    else
-      allocate(nsNodes%nodes(0))
-    endif
-
-    ! Override according to declarations
-    attrs => getAttributes(np)
-    do i = 0, getLength(attrs)-1
-      if (getNamespaceURI(item(attrs, i))=="http://www.w3.org/2000/xmlns/") then
-        if (getLocalName(item(attrs, i))=="xmlns") then
-          call appendNSNode(np, "", getValue(item(attrs, i)), specified=.true.)
-        else
-          call appendNSNode(np, getLocalName(item(attrs, i)), &
-            getValue(item(attrs, i)), specified=.true.)
-        endif
+        enddo
+      else
+        allocate(nsNodes%nodes(0))
+        nsNodes%length = 0
       endif
+      
+      ! Override according to declarations
+      attrs => getAttributes(np)
+      do i = 0, getLength(attrs)-1
+        if (getNamespaceURI(item(attrs, i))=="http://www.w3.org/2000/xmlns/") then
+          if (getLocalName(item(attrs, i))=="xmlns") then
+            call appendNSNode(np, "", getValue(item(attrs, i)), specified=.true.)
+          else
+            call appendNSNode(np, getLocalName(item(attrs, i)), &
+              getValue(item(attrs, i)), specified=.true.)
+          endif
+        endif
+      enddo
+    endif
+    ! And now call this on all appropriate children ...
+    child => getFirstChild(np)
+    do while (associated(child))
+      call namespaceFixup(child)
+      child => getNextSibling(child)
     enddo
 
   end subroutine namespaceFixup
