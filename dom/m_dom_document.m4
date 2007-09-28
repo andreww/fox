@@ -25,6 +25,7 @@ TOHW_m_dom_publics(`
   public :: getXmlVersion
   public :: setXmlVersion
   public :: getXmlEncoding
+  public :: getInputEncoding
 
   public :: setDocType
   public :: setXds
@@ -842,9 +843,6 @@ TOHW_m_dom_treewalk(`dnl
 
   end function getElementById
 
-!  function getInputEncoding
-!  function getXmlEncoding
-
 TOHW_m_dom_get(logical, xmlStandalone, np%docExtras%xds%standalone, (DOCUMENT_NODE))
 TOHW_m_dom_set(logical, xmlStandalone, np%docExtras%xds%standalone, (DOCUMENT_NODE))
 ! FIXME additional check on setting - do we have any undefined entrefs present?
@@ -922,6 +920,40 @@ TOHW_m_dom_set(logical, xmlStandalone, np%docExtras%xds%standalone, (DOCUMENT_NO
     endif
 
   end function getXmlEncoding
+
+  pure function getInputEncoding_len(arg, p) result(n)
+    type(Node), pointer :: arg
+    logical, intent(in) :: p
+    integer :: n
+
+    n = 0
+    if (.not.p) return
+    if (arg%nodeType==DOCUMENT_NODE) &
+      n = 8
+  end function getInputEncoding_len
+
+  TOHW_function(getInputEncoding, (arg), s)
+    type(Node), pointer :: arg
+    character(len=getInputEncoding_len(arg, associated(arg))) :: s
+
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+
+    if (arg%nodeType==DOCUMENT_NODE) then
+      s = "us-ascii"             
+    elseif (arg%nodeType==ENTITY_NODE) then
+      s = "" !FIXME revisit when we have working external entities
+    else
+      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
+    endif
+
+    ! This is a bit of a cheat, since it may not  
+    ! be true, but we dont have access to the information
+    ! and we only ever treat docs as though they have been
+    ! parsed as US-ASCII as detailed all over the place.
+
+  end function getInputEncoding
 
 !  function getStrictErrorChecking FIXME
 !  function setStrictErrorChecking FIXME

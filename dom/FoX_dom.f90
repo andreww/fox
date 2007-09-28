@@ -79,6 +79,7 @@ module FoX_dom
   public :: lookupNamespaceURI
   public :: lookupPrefix
   public :: getXmlEncoding
+  public :: getInputEncoding
 
   ! DOM Node
   public :: ELEMENT_NODE

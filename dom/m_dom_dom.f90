@@ -292,6 +292,7 @@ module m_dom_dom
   public :: getXmlVersion
   public :: setXmlVersion
   public :: getXmlEncoding
+  public :: getInputEncoding
 
   public :: setDocType
   public :: setXds
@@ -6858,9 +6859,6 @@ endif
 
   end function getElementById
 
-!  function getInputEncoding
-!  function getXmlEncoding
-
 function getxmlStandalone(np, ex)result(c) 
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: np
@@ -7065,6 +7063,57 @@ endif
     endif
 
   end function getXmlEncoding
+
+  pure function getInputEncoding_len(arg, p) result(n)
+    type(Node), pointer :: arg
+    logical, intent(in) :: p
+    integer :: n
+
+    n = 0
+    if (.not.p) return
+    if (arg%nodeType==DOCUMENT_NODE) &
+      n = 8
+  end function getInputEncoding_len
+
+  function getInputEncoding(arg, ex)result(s) 
+    type(DOMException), intent(out), optional :: ex
+    type(Node), pointer :: arg
+    character(len=getInputEncoding_len(arg, associated(arg))) :: s
+
+    if (.not.associated(arg)) then
+      if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "getInputEncoding", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    endif
+
+    if (arg%nodeType==DOCUMENT_NODE) then
+      s = "us-ascii"             
+    elseif (arg%nodeType==ENTITY_NODE) then
+      s = "" !FIXME revisit when we have working external entities
+    else
+      if (getFoX_checks().or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "getInputEncoding", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    endif
+
+    ! This is a bit of a cheat, since it may not  
+    ! be true, but we dont have access to the information
+    ! and we only ever treat docs as though they have been
+    ! parsed as US-ASCII as detailed all over the place.
+
+  end function getInputEncoding
 
 !  function getStrictErrorChecking FIXME
 !  function setStrictErrorChecking FIXME
