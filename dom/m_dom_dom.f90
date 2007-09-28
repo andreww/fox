@@ -197,6 +197,9 @@ module m_dom_dom
   public :: getLocalName
   public :: hasAttributes
   public :: isSameNode
+  public :: isDefaultNamespace
+  public :: lookupNamespaceURI
+  public :: lookupPrefix
 
   public :: setStringValue
   public :: getStringValue

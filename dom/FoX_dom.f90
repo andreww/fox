@@ -75,6 +75,9 @@ module FoX_dom
   public :: setXmlStandalone
   public :: getXmlVersion
   public :: setXmlVersion
+  public :: isDefaultNamespace
+  public :: lookupNamespaceURI
+  public :: lookupPrefix
 
   ! DOM Node
   public :: ELEMENT_NODE
