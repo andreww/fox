@@ -7072,7 +7072,7 @@ endif
     n = 0
     if (.not.p) return
     if (arg%nodeType==DOCUMENT_NODE) &
-      n = 8
+      n = size(arg%docExtras%xds%inputEncoding)
   end function getInputEncoding_len
 
   function getInputEncoding(arg, ex)result(s) 
@@ -7093,7 +7093,7 @@ endif
     endif
 
     if (arg%nodeType==DOCUMENT_NODE) then
-      s = "us-ascii"             
+      s = str_vs(arg%docExtras%xds%inputEncoding)    
     elseif (arg%nodeType==ENTITY_NODE) then
       s = "" !FIXME revisit when we have working external entities
     else
@@ -7107,11 +7107,6 @@ endif
 endif
 
     endif
-
-    ! This is a bit of a cheat, since it may not  
-    ! be true, but we dont have access to the information
-    ! and we only ever treat docs as though they have been
-    ! parsed as US-ASCII as detailed all over the place.
 
   end function getInputEncoding
 

@@ -1,6 +1,6 @@
 module m_sax_parser
 
-  use m_common_array_str, only: str_vs, string_list, &
+  use m_common_array_str, only: str_vs, vs_str, string_list, &
     destroy_string_list, devnull, vs_str_alloc
   use m_common_attrs, only: init_dict, destroy_dict, reset_dict, &
     add_item_to_dict, has_key, get_value
@@ -68,6 +68,8 @@ contains
     call init_notation_list(fx%nlist)
     allocate(fx%xds)
     call init_xml_doc_state(fx%xds)
+    fx%xds%inputEncoding => vs_str_alloc("us-ascii")
+    ! because it always is ...
 
     allocate(fx%wf_stack(1))
     fx%wf_stack(1) = 0

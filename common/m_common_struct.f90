@@ -24,6 +24,7 @@ module m_common_struct
     logical :: valid = .true. ! Do we care about validity?
     logical :: liveNodeLists = .true. ! Do we want live nodelists?
     character, pointer :: encoding(:) => null()
+    character, pointer :: inputEncoding(:) => null()
   end type xml_doc_state
 
   public :: xml_doc_state
@@ -44,6 +45,7 @@ contains
     call init_entity_list(xds%PEList)
     call init_notation_list(xds%nList)
     call init_element_list(xds%element_list)
+    allocate(xds%inputEncoding(0))
   end subroutine init_xml_doc_state
 
   subroutine destroy_xml_doc_state(xds)
@@ -53,6 +55,7 @@ contains
     call destroy_notation_list(xds%nList)
     call destroy_element_list(xds%element_list)
     if (associated(xds%encoding)) deallocate(xds%encoding)
+    if (associated(xds%inputEncoding)) deallocate(xds%inputEncoding)
   end subroutine destroy_xml_doc_state
 
   subroutine register_internal_PE(xds, name, value)

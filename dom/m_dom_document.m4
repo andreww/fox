@@ -929,7 +929,7 @@ TOHW_m_dom_set(logical, xmlStandalone, np%docExtras%xds%standalone, (DOCUMENT_NO
     n = 0
     if (.not.p) return
     if (arg%nodeType==DOCUMENT_NODE) &
-      n = 8
+      n = size(arg%docExtras%xds%inputEncoding)
   end function getInputEncoding_len
 
   TOHW_function(getInputEncoding, (arg), s)
@@ -941,17 +941,12 @@ TOHW_m_dom_set(logical, xmlStandalone, np%docExtras%xds%standalone, (DOCUMENT_NO
     endif
 
     if (arg%nodeType==DOCUMENT_NODE) then
-      s = "us-ascii"             
+      s = str_vs(arg%docExtras%xds%inputEncoding)    
     elseif (arg%nodeType==ENTITY_NODE) then
       s = "" !FIXME revisit when we have working external entities
     else
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
-
-    ! This is a bit of a cheat, since it may not  
-    ! be true, but we dont have access to the information
-    ! and we only ever treat docs as though they have been
-    ! parsed as US-ASCII as detailed all over the place.
 
   end function getInputEncoding
 
