@@ -291,6 +291,7 @@ module m_dom_dom
   public :: setXmlStandalone
   public :: getXmlVersion
   public :: setXmlVersion
+  public :: getXmlEncoding
 
   public :: setDocType
   public :: setXds
@@ -5854,7 +5855,6 @@ endif
 endif
 
     endif
-
     if (arg%nodeType/=DOCUMENT_NODE) then
       if (getFoX_checks().or.FoX_INVALID_NODE<200) then
   call throw_exception(FoX_INVALID_NODE, "createEntityReference", ex)
@@ -6950,7 +6950,8 @@ endif
 
     endif
 
-    if (arg%nodeType/=DOCUMENT_NODE) then
+    if (arg%nodeType/=DOCUMENT_NODE &
+    .and.arg%nodeType/=ENTITY_NODE) then
       if (getFoX_checks().or.FoX_INVALID_NODE<200) then
   call throw_exception(FoX_INVALID_NODE, "getXmlVersion", ex)
   if (present(ex)) then
@@ -7019,6 +7020,51 @@ endif
 
   end subroutine setXmlVersion
 
+  pure function getXmlEncoding_len(arg, p) result(n)
+    type(Node), pointer :: arg
+    logical, intent(in) :: p
+    integer :: n
+
+    n = 0
+    if (.not.p) return
+    if (arg%nodeType==DOCUMENT_NODE) &
+      n = size(arg%docExtras%xds%encoding)
+  end function getXmlEncoding_len
+
+  function getXmlEncoding(arg, ex)result(s) 
+    type(DOMException), intent(out), optional :: ex
+    type(Node), pointer :: arg
+    character(len=getXmlEncoding_len(arg, associated(arg))) :: s
+
+    if (.not.associated(arg)) then
+      if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "getXmlEncoding", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    endif
+
+    if (arg%nodeType==DOCUMENT_NODE) then
+      s = str_vs(arg%docExtras%xds%encoding)
+    elseif (arg%nodeType==ENTITY_NODE) then
+      s = "" !FIXME revisit when we have working external entities
+    else
+      if (getFoX_checks().or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "getXmlEncoding", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    endif
+
+  end function getXmlEncoding
 
 !  function getStrictErrorChecking FIXME
 !  function setStrictErrorChecking FIXME

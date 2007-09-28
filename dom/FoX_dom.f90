@@ -78,6 +78,7 @@ module FoX_dom
   public :: isDefaultNamespace
   public :: lookupNamespaceURI
   public :: lookupPrefix
+  public :: getXmlEncoding
 
   ! DOM Node
   public :: ELEMENT_NODE

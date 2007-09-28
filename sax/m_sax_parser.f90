@@ -88,7 +88,6 @@ contains
     fx%context = CTXT_NULL
     fx%state = ST_NULL
 
-    if (associated(fx%encoding)) deallocate(fx%encoding)
     if (associated(fx%token)) deallocate(fx%token)
     if (associated(fx%root_element)) deallocate(fx%root_element)
 
@@ -385,7 +384,7 @@ contains
       call parse_xml_declaration(fx, fb, iostat)
       if (iostat/=0) then
         call add_error(fx%error_stack, "Error in XML declaration")
-      elseif (.not.allowed_encoding(str_vs(fx%encoding))) then
+      elseif (.not.allowed_encoding(str_vs(fx%xds%encoding))) then
         call add_error(fx%error_stack, "Unknown character encoding in XML declaration")
       endif
       if (in_error(fx%error_stack)) then ! double check since we might be in error, but iostat==0
@@ -892,7 +891,7 @@ contains
               goto 100
             elseif (is_external_entity(fx%xds%entityList, str_vs(tempString))) then
               if (present(skippedEntity_handler)) &
-                call skippedEntity_handler(str_vs(fx%token))
+                call skippedEntity_handler(str_vs(tempString))
             else
               if (validCheck.and.associated(elem)) then
                 if (elem%empty) then
@@ -922,7 +921,7 @@ contains
             ! Unknown entity check standalone etc
             if (fx%skippedExternal.and..not.fx%xds%standalone) then
               if (present(skippedEntity_handler)) &
-                call skippedEntity_handler(str_vs(fx%token))
+                call skippedEntity_handler(str_vs(tempString))
             else
               call add_error(fx%error_stack, &
                 'Encountered reference to undeclared entity')

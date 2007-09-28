@@ -497,8 +497,8 @@ contains
     character, allocatable :: ch(:)
     ! default values ...
     fx%xds%xml_version = XML1_0
-    allocate(fx%encoding(5))
-    fx%encoding = vs_str("UTF-8")
+    allocate(fx%xds%encoding(5))
+    fx%xds%encoding = vs_str("UTF-8")
     fx%xds%standalone = .false.
     do i = 1, 5
       c = read_char(fb, iostat); if (iostat/=0) return
@@ -690,8 +690,8 @@ contains
         deallocate(buf)
         return
       endif
-      deallocate(fx%encoding)
-      fx%encoding => buf
+      deallocate(fx%xds%encoding)
+      fx%xds%encoding => buf
     end subroutine check_encoding
 
     subroutine check_standalone

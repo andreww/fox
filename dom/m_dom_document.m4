@@ -24,6 +24,7 @@ TOHW_m_dom_publics(`
   public :: setXmlStandalone
   public :: getXmlVersion
   public :: setXmlVersion
+  public :: getXmlEncoding
 
   public :: setDocType
   public :: setXds
@@ -382,7 +383,6 @@ TOHW_m_dom_treewalk(`
     if (.not.associated(arg)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif
-
     if (arg%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     elseif (.not.checkName(name, getXds(arg))) then
@@ -857,7 +857,8 @@ TOHW_m_dom_set(logical, xmlStandalone, np%docExtras%xds%standalone, (DOCUMENT_NO
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif
 
-    if (arg%nodeType/=DOCUMENT_NODE) then
+    if (arg%nodeType/=DOCUMENT_NODE &
+    .and.arg%nodeType/=ENTITY_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
 
@@ -893,6 +894,34 @@ TOHW_m_dom_set(logical, xmlStandalone, np%docExtras%xds%standalone, (DOCUMENT_NO
 
   end subroutine setXmlVersion
 
+  pure function getXmlEncoding_len(arg, p) result(n)
+    type(Node), pointer :: arg
+    logical, intent(in) :: p
+    integer :: n
+
+    n = 0
+    if (.not.p) return
+    if (arg%nodeType==DOCUMENT_NODE) &
+      n = size(arg%docExtras%xds%encoding)
+  end function getXmlEncoding_len
+
+  TOHW_function(getXmlEncoding, (arg), s)
+    type(Node), pointer :: arg
+    character(len=getXmlEncoding_len(arg, associated(arg))) :: s
+
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+
+    if (arg%nodeType==DOCUMENT_NODE) then
+      s = str_vs(arg%docExtras%xds%encoding)
+    elseif (arg%nodeType==ENTITY_NODE) then
+      s = "" !FIXME revisit when we have working external entities
+    else
+      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
+    endif
+
+  end function getXmlEncoding
 
 !  function getStrictErrorChecking FIXME
 !  function setStrictErrorChecking FIXME

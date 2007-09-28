@@ -98,8 +98,6 @@ module m_sax_types
     logical :: error = .false.
     type(error_stack) :: error_stack 
     ! Aspects of document structure
-!    integer :: xml_version
-    character, dimension(:), pointer :: encoding => null()
     character, dimension(:), pointer :: root_element => null()
     type(elstack_t) :: elstack
     type(dictionary_t) :: attributes
