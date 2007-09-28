@@ -738,6 +738,8 @@ contains
       if (c/=quotechar) then
         call add_error(fx%error_stack, "Expecting "" or '"); return
       endif
+      fx%xds%standalone_declared = .true.
+
     end subroutine check_standalone
 
   end subroutine parse_xml_declaration

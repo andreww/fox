@@ -699,6 +699,15 @@ contains
               call add_error(fx%error_stack, "No DTD defined")
               goto 100
             endif
+            ! This is the root node, so we've finished populating
+            ! the xml_doc_state. Hand it over to DOM if necessary:
+            ! Here we hand over responsibility for the xds object
+            ! The SAX caller must take care of it, and we don't
+            ! need it any more. (We will destroy it shortly anyway)
+            if (present(FoX_endDTD_handler)) then
+              fx%xds_used = .true.
+              call FoX_endDTD_handler(fx%xds)
+            endif
             fx%context = CTXT_IN_CONTENT
           endif
           call open_tag
@@ -722,6 +731,15 @@ contains
             elseif (validCheck) then
               call add_error(fx%error_stack, "No DTD defined")
               goto 100
+            endif
+            ! This is the root node, so we've finished populating
+            ! the xml_doc_state. Hand it over to DOM if necessary:
+            ! Here we hand over responsibility for the xds object
+            ! The SAX caller must take care of it, and we don't
+            ! need it any more. (We will destroy it shortly anyway)
+            if (present(FoX_endDTD_handler)) then
+              fx%xds_used = .true.
+              call FoX_endDTD_handler(fx%xds)
             endif
           endif
           call open_tag
@@ -1048,13 +1066,7 @@ contains
           if (associated(fx%publicId)) deallocate(fx%publicId)
           if (present(endDTD_handler)) &
             call endDTD_handler
-          ! Here we hand over responsibility for the xds object
-          ! The SAX caller must take care of it, and we don't
-          ! need it any more. (We will destroy it shortly anyway)
-          if (present(FoX_endDTD_handler)) then
-            fx%xds_used = .true.
-            call FoX_endDTD_handler(fx%xds)
-          endif
+
           fx%context = CTXT_BEFORE_CONTENT
           fx%state = ST_MISC
         else
@@ -1488,13 +1500,6 @@ contains
         ! token must be '>'
         if (present(endDTD_handler)) &
           call endDTD_handler
-        ! Here we hand over responsibility for the xds object
-        ! The SAX caller must take care of it, and we don't
-        ! need it any more. (We will destroy it shortly anyway)
-        if (present(FoX_endDTD_handler)) then
-          fx%xds_used = .true.
-          call FoX_endDTD_handler(fx%xds)
-        endif
         ! Check that all notations used have been declared:
         if (validCheck) then
           do i = 1, size(fx%xds%entityList)

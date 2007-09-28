@@ -5162,6 +5162,7 @@ endif
     call destroy_xml_doc_state(arg%docExtras%xds)
     deallocate(arg%docExtras%xds)
     arg%docExtras%xds => xds
+
   end subroutine setXds
 
   function getImplementation(arg, ex)result(imp) 
@@ -6884,7 +6885,7 @@ endif
 
     endif
 
-    c = np%docExtras%xds%standalone_declared
+    c = np%docExtras%xds%standalone
 
   end function getxmlStandalone
 
@@ -6919,7 +6920,7 @@ endif
 
     endif
 
-    np%docExtras%xds%standalone_declared = c
+    np%docExtras%xds%standalone = c
 
   end subroutine setxmlStandalone
 

@@ -15,7 +15,7 @@ module m_common_struct
     logical :: building = .false. ! Are we in the middle of building this doc?
     integer :: xml_version = XML1_0
     logical :: standalone_declared = .false.
-    logical :: standalone = .true.
+    logical :: standalone = .false.
     type(entity_list) :: entityList
     type(entity_list) :: PEList
     type(notation_list) :: nList
