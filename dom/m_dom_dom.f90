@@ -1205,7 +1205,7 @@ endif
           .and. testChild%nodeType/=COMMENT_NODE &
           .and. (testChild%nodeType/=DOCUMENT_TYPE_NODE .or. &
             (testChild%nodeType==DOCUMENT_TYPE_NODE &
-              .and.associated(testParent%docExtras%docType))))  then
+              .and.associated(testParent%docExtras%docType)))) then
           if (getFoX_checks().or.HIERARCHY_REQUEST_ERR<200) then
   call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
   if (present(ex)) then
@@ -1369,7 +1369,7 @@ endif
           .and. testChild%nodeType/=COMMENT_NODE &
           .and. (testChild%nodeType/=DOCUMENT_TYPE_NODE .or. &
             (testChild%nodeType==DOCUMENT_TYPE_NODE &
-              .and.associated(testParent%docExtras%docType))))  then
+              .and.associated(testParent%docExtras%docType)))) then
           if (getFoX_checks().or.HIERARCHY_REQUEST_ERR<200) then
   call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
   if (present(ex)) then
@@ -1703,12 +1703,14 @@ endif
       case (DOCUMENT_NODE)
         if ((testChild%nodeType/=ELEMENT_NODE .or. &
             (testChild%nodeType==ELEMENT_NODE &
-              .and.associated(testParent%docExtras%documentElement))) &
+              .and.associated(testParent%docExtras%documentElement) &
+              .and.oldChild%nodeType/=ELEMENT_NODE)) &
           .and. testChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
           .and. testChild%nodeType/=COMMENT_NODE &
           .and. (testChild%nodeType/=DOCUMENT_TYPE_NODE .or. &
             (testChild%nodeType==DOCUMENT_TYPE_NODE &
-              .and.associated(testParent%docExtras%docType))))  then
+              .and.associated(testParent%docExtras%docType) &
+              .and.oldChild%nodeType/=DOCUMENT_TYPE_NODE))) then
           if (getFoX_checks().or.HIERARCHY_REQUEST_ERR<200) then
   call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
   if (present(ex)) then
@@ -1867,12 +1869,14 @@ endif
       case (DOCUMENT_NODE)
         if ((testChild%nodeType/=ELEMENT_NODE .or. &
             (testChild%nodeType==ELEMENT_NODE &
-              .and.associated(testParent%docExtras%documentElement))) &
+              .and.associated(testParent%docExtras%documentElement) &
+              .and.oldChild%nodeType/=ELEMENT_NODE)) &
           .and. testChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
           .and. testChild%nodeType/=COMMENT_NODE &
           .and. (testChild%nodeType/=DOCUMENT_TYPE_NODE .or. &
             (testChild%nodeType==DOCUMENT_TYPE_NODE &
-              .and.associated(testParent%docExtras%docType))))  then
+              .and.associated(testParent%docExtras%docType) &
+              .and.oldChild%nodeType/=DOCUMENT_TYPE_NODE))) then
           if (getFoX_checks().or.HIERARCHY_REQUEST_ERR<200) then
   call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
   if (present(ex)) then
@@ -2306,7 +2310,7 @@ endif
           .and. testChild%nodeType/=COMMENT_NODE &
           .and. (testChild%nodeType/=DOCUMENT_TYPE_NODE .or. &
             (testChild%nodeType==DOCUMENT_TYPE_NODE &
-              .and.associated(testParent%docExtras%docType))))  then
+              .and.associated(testParent%docExtras%docType)))) then
           if (getFoX_checks().or.HIERARCHY_REQUEST_ERR<200) then
   call throw_exception(HIERARCHY_REQUEST_ERR, "appendChild", ex)
   if (present(ex)) then
@@ -2470,7 +2474,7 @@ endif
           .and. testChild%nodeType/=COMMENT_NODE &
           .and. (testChild%nodeType/=DOCUMENT_TYPE_NODE .or. &
             (testChild%nodeType==DOCUMENT_TYPE_NODE &
-              .and.associated(testParent%docExtras%docType))))  then
+              .and.associated(testParent%docExtras%docType)))) then
           if (getFoX_checks().or.HIERARCHY_REQUEST_ERR<200) then
   call throw_exception(HIERARCHY_REQUEST_ERR, "appendChild", ex)
   if (present(ex)) then
