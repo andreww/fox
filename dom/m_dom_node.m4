@@ -249,8 +249,9 @@ TOHW_m_dom_get(Node, nextSibling, np%nextSibling)
       enddo
     endif
 
-    if (.not.(associated(arg%ownerDocument, newChild%ownerDocument) &
-      .or. associated(arg, newChild%ownerDocument))) then
+    if (getNodeType(newChild)/=DOCUMENT_TYPE_NODE.and. &
+      .not.(associated(arg%ownerDocument, newChild%ownerDocument) &
+        .or.associated(arg, newChild%ownerDocument))) then
       TOHW_m_dom_throw_error(WRONG_DOCUMENT_ERR)
     endif
 
@@ -260,7 +261,6 @@ TOHW_m_dom_get(Node, nextSibling, np%nextSibling)
       return
       ! Nothing to do
     endif
-
     if (associated(getParentNode(newChild))) &
       newChild => removeChild(getParentNode(newChild), newChild, ex) 
 
@@ -309,8 +309,7 @@ TOHW_m_dom_get(Node, nextSibling, np%nextSibling)
     endif
 
     np => newChild
-
-    if (getGCstate(getownerDocument(arg))) then
+    if (getGCstate(arg%ownerDocument)) then
       if (arg%inDocument) then
         if (newChild%nodeType==DOCUMENT_FRAGMENT_NODE) then
           do i = 1, newChild%childNodes%length
@@ -382,8 +381,9 @@ TOHW_m_dom_get(Node, nextSibling, np%nextSibling)
       enddo
     endif
 
-    if (.not.(associated(arg%ownerDocument, newChild%ownerDocument) &
-      .or. associated(arg, newChild%ownerDocument))) then
+    if (getNodeType(newChild)/=DOCUMENT_TYPE_NODE.and. &
+      .not.(associated(arg%ownerDocument, newChild%ownerDocument) &
+        .or.associated(arg, newChild%ownerDocument))) then
       TOHW_m_dom_throw_error(WRONG_DOCUMENT_ERR)
     endif
 
@@ -585,8 +585,9 @@ TOHW_m_dom_get(Node, nextSibling, np%nextSibling)
       enddo
     endif
 
-    if (.not.(associated(arg%ownerDocument, newChild%ownerDocument) &
-      .or. associated(arg, newChild%ownerDocument))) then
+    if (getNodeType(newChild)/=DOCUMENT_TYPE_NODE.and. &
+      .not.(associated(arg%ownerDocument, newChild%ownerDocument) &
+            .or.associated(arg, newChild%ownerDocument))) then
       TOHW_m_dom_throw_error(WRONG_DOCUMENT_ERR)
     endif
 

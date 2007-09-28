@@ -56,10 +56,14 @@ TOHW_m_dom_treewalk(`
 ',`')
         endif
       case (DOCUMENT_NODE)
-        if (testChild%nodeType/=ELEMENT_NODE &
+        if ((testChild%nodeType/=ELEMENT_NODE .or. &
+            (testChild%nodeType==ELEMENT_NODE &
+              .and.associated(testParent%docExtras%documentElement))) &
           .and. testChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
           .and. testChild%nodeType/=COMMENT_NODE &
-          .and. testChild%nodeType/=DOCUMENT_TYPE_NODE)  then
+          .and. (testChild%nodeType/=DOCUMENT_TYPE_NODE .or. &
+            (testChild%nodeType==DOCUMENT_TYPE_NODE &
+              .and.associated(testParent%docExtras%docType))))  then
           TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR)
         endif
       case (DOCUMENT_FRAGMENT_NODE)

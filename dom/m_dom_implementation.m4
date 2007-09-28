@@ -5,7 +5,6 @@ TOHW_m_dom_publics(`
   public :: createDocumentType
 
   public :: destroyDocument
-
   public :: createEmptyDocument
 
   public :: getFoX_checks
@@ -32,7 +31,6 @@ TOHW_m_dom_contents(`
     endif
 
   end function hasFeature
-
 
   TOHW_function(createDocumentType, (impl, qualifiedName, publicId, systemId), dt)
     type(DOMImplementation), pointer :: impl
@@ -107,6 +105,7 @@ TOHW_m_dom_contents(`
 ! Dont use raw null() below or PGI will complain
     doc => createNode(doc, DOCUMENT_NODE, "#document", "")
     doc%ownerDocument => doc ! Makes life easier. DOM compliance in getter
+    doc%inDocument = .true.
 
     allocate(doc%docExtras)
     doc%docExtras%implementation => FoX_DOM
@@ -139,6 +138,7 @@ TOHW_m_dom_contents(`
     doc => null()
     doc => createNode(doc, DOCUMENT_NODE, "#document", "")
     doc%ownerDocument => doc ! Makes life easier. DOM compliance maintained in getter
+    doc%inDocument = .true.
 
     allocate(doc%docExtras)
     doc%docExtras%implementation => FoX_DOM
@@ -202,8 +202,8 @@ TOHW_m_dom_contents(`
 
     call destroy_xml_doc_state(arg%docExtras%xds)
     deallocate(arg%docExtras%xds)
-
     deallocate(arg%docExtras)
+
     call destroyAllNodesRecursively(arg, except=.true.)
 
   end subroutine destroyDocument

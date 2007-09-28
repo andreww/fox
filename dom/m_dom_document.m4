@@ -402,7 +402,7 @@ TOHW_m_dom_treewalk(`
           endif
           do i = 0, getLength(getChildNodes(ent)) - 1
             newNode => appendChild(np, cloneNode(item(getChildNodes(ent), i), .true., ex))
-            ! FIXME and need to do namespace calcs again ...
+            ! No namespace calcs here - wait for a namespace normalization
             call setReadOnlyNode(newNode, .true., .true.)
           enddo
         elseif (getXmlStandalone(arg)) then

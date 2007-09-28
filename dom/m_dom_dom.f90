@@ -257,7 +257,6 @@ module m_dom_dom
   public :: createDocumentType
 
   public :: destroyDocument
-
   public :: createEmptyDocument
 
   public :: getFoX_checks
@@ -1199,10 +1198,14 @@ endif
 
         endif
       case (DOCUMENT_NODE)
-        if (testChild%nodeType/=ELEMENT_NODE &
+        if ((testChild%nodeType/=ELEMENT_NODE .or. &
+            (testChild%nodeType==ELEMENT_NODE &
+              .and.associated(testParent%docExtras%documentElement))) &
           .and. testChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
           .and. testChild%nodeType/=COMMENT_NODE &
-          .and. testChild%nodeType/=DOCUMENT_TYPE_NODE)  then
+          .and. (testChild%nodeType/=DOCUMENT_TYPE_NODE .or. &
+            (testChild%nodeType==DOCUMENT_TYPE_NODE &
+              .and.associated(testParent%docExtras%docType))))  then
           if (getFoX_checks().or.HIERARCHY_REQUEST_ERR<200) then
   call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
   if (present(ex)) then
@@ -1359,10 +1362,14 @@ endif
 
         endif
       case (DOCUMENT_NODE)
-        if (testChild%nodeType/=ELEMENT_NODE &
+        if ((testChild%nodeType/=ELEMENT_NODE .or. &
+            (testChild%nodeType==ELEMENT_NODE &
+              .and.associated(testParent%docExtras%documentElement))) &
           .and. testChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
           .and. testChild%nodeType/=COMMENT_NODE &
-          .and. testChild%nodeType/=DOCUMENT_TYPE_NODE)  then
+          .and. (testChild%nodeType/=DOCUMENT_TYPE_NODE .or. &
+            (testChild%nodeType==DOCUMENT_TYPE_NODE &
+              .and.associated(testParent%docExtras%docType))))  then
           if (getFoX_checks().or.HIERARCHY_REQUEST_ERR<200) then
   call throw_exception(HIERARCHY_REQUEST_ERR, "insertBefore", ex)
   if (present(ex)) then
@@ -1427,8 +1434,9 @@ endif
       enddo
     endif
 
-    if (.not.(associated(arg%ownerDocument, newChild%ownerDocument) &
-      .or. associated(arg, newChild%ownerDocument))) then
+    if (getNodeType(newChild)/=DOCUMENT_TYPE_NODE.and. &
+      .not.(associated(arg%ownerDocument, newChild%ownerDocument) &
+        .or.associated(arg, newChild%ownerDocument))) then
       if (getFoX_checks().or.WRONG_DOCUMENT_ERR<200) then
   call throw_exception(WRONG_DOCUMENT_ERR, "insertBefore", ex)
   if (present(ex)) then
@@ -1446,7 +1454,6 @@ endif
       return
       ! Nothing to do
     endif
-
     if (associated(getParentNode(newChild))) &
       newChild => removeChild(getParentNode(newChild), newChild, ex) 
 
@@ -1513,8 +1520,7 @@ endif
     endif
 
     np => newChild
-
-    if (getGCstate(getownerDocument(arg))) then
+    if (getGCstate(arg%ownerDocument)) then
       if (arg%inDocument) then
         if (newChild%nodeType==DOCUMENT_FRAGMENT_NODE) then
           do i = 1, newChild%childNodes%length
@@ -1695,10 +1701,14 @@ endif
 
         endif
       case (DOCUMENT_NODE)
-        if (testChild%nodeType/=ELEMENT_NODE &
+        if ((testChild%nodeType/=ELEMENT_NODE .or. &
+            (testChild%nodeType==ELEMENT_NODE &
+              .and.associated(testParent%docExtras%documentElement))) &
           .and. testChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
           .and. testChild%nodeType/=COMMENT_NODE &
-          .and. testChild%nodeType/=DOCUMENT_TYPE_NODE)  then
+          .and. (testChild%nodeType/=DOCUMENT_TYPE_NODE .or. &
+            (testChild%nodeType==DOCUMENT_TYPE_NODE &
+              .and.associated(testParent%docExtras%docType))))  then
           if (getFoX_checks().or.HIERARCHY_REQUEST_ERR<200) then
   call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
   if (present(ex)) then
@@ -1855,10 +1865,14 @@ endif
 
         endif
       case (DOCUMENT_NODE)
-        if (testChild%nodeType/=ELEMENT_NODE &
+        if ((testChild%nodeType/=ELEMENT_NODE .or. &
+            (testChild%nodeType==ELEMENT_NODE &
+              .and.associated(testParent%docExtras%documentElement))) &
           .and. testChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
           .and. testChild%nodeType/=COMMENT_NODE &
-          .and. testChild%nodeType/=DOCUMENT_TYPE_NODE)  then
+          .and. (testChild%nodeType/=DOCUMENT_TYPE_NODE .or. &
+            (testChild%nodeType==DOCUMENT_TYPE_NODE &
+              .and.associated(testParent%docExtras%docType))))  then
           if (getFoX_checks().or.HIERARCHY_REQUEST_ERR<200) then
   call throw_exception(HIERARCHY_REQUEST_ERR, "replaceChild", ex)
   if (present(ex)) then
@@ -1923,8 +1937,9 @@ endif
       enddo
     endif
 
-    if (.not.(associated(arg%ownerDocument, newChild%ownerDocument) &
-      .or. associated(arg, newChild%ownerDocument))) then
+    if (getNodeType(newChild)/=DOCUMENT_TYPE_NODE.and. &
+      .not.(associated(arg%ownerDocument, newChild%ownerDocument) &
+        .or.associated(arg, newChild%ownerDocument))) then
       if (getFoX_checks().or.WRONG_DOCUMENT_ERR<200) then
   call throw_exception(WRONG_DOCUMENT_ERR, "replaceChild", ex)
   if (present(ex)) then
@@ -2284,10 +2299,14 @@ endif
 
         endif
       case (DOCUMENT_NODE)
-        if (testChild%nodeType/=ELEMENT_NODE &
+        if ((testChild%nodeType/=ELEMENT_NODE .or. &
+            (testChild%nodeType==ELEMENT_NODE &
+              .and.associated(testParent%docExtras%documentElement))) &
           .and. testChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
           .and. testChild%nodeType/=COMMENT_NODE &
-          .and. testChild%nodeType/=DOCUMENT_TYPE_NODE)  then
+          .and. (testChild%nodeType/=DOCUMENT_TYPE_NODE .or. &
+            (testChild%nodeType==DOCUMENT_TYPE_NODE &
+              .and.associated(testParent%docExtras%docType))))  then
           if (getFoX_checks().or.HIERARCHY_REQUEST_ERR<200) then
   call throw_exception(HIERARCHY_REQUEST_ERR, "appendChild", ex)
   if (present(ex)) then
@@ -2444,10 +2463,14 @@ endif
 
         endif
       case (DOCUMENT_NODE)
-        if (testChild%nodeType/=ELEMENT_NODE &
+        if ((testChild%nodeType/=ELEMENT_NODE .or. &
+            (testChild%nodeType==ELEMENT_NODE &
+              .and.associated(testParent%docExtras%documentElement))) &
           .and. testChild%nodeType/=PROCESSING_INSTRUCTION_NODE &
           .and. testChild%nodeType/=COMMENT_NODE &
-          .and. testChild%nodeType/=DOCUMENT_TYPE_NODE)  then
+          .and. (testChild%nodeType/=DOCUMENT_TYPE_NODE .or. &
+            (testChild%nodeType==DOCUMENT_TYPE_NODE &
+              .and.associated(testParent%docExtras%docType))))  then
           if (getFoX_checks().or.HIERARCHY_REQUEST_ERR<200) then
   call throw_exception(HIERARCHY_REQUEST_ERR, "appendChild", ex)
   if (present(ex)) then
@@ -2512,8 +2535,9 @@ endif
       enddo
     endif
 
-    if (.not.(associated(arg%ownerDocument, newChild%ownerDocument) &
-      .or. associated(arg, newChild%ownerDocument))) then
+    if (getNodeType(newChild)/=DOCUMENT_TYPE_NODE.and. &
+      .not.(associated(arg%ownerDocument, newChild%ownerDocument) &
+            .or.associated(arg, newChild%ownerDocument))) then
       if (getFoX_checks().or.WRONG_DOCUMENT_ERR<200) then
   call throw_exception(WRONG_DOCUMENT_ERR, "appendChild", ex)
   if (present(ex)) then
@@ -4666,7 +4690,6 @@ endif
 
   end function hasFeature
 
-
   function createDocumentType(impl, qualifiedName, publicId, systemId, ex)result(dt) 
     type(DOMException), intent(out), optional :: ex
     type(DOMImplementation), pointer :: impl
@@ -4858,6 +4881,7 @@ endif
 ! Dont use raw null() below or PGI will complain
     doc => createNode(doc, DOCUMENT_NODE, "#document", "")
     doc%ownerDocument => doc ! Makes life easier. DOM compliance in getter
+    doc%inDocument = .true.
 
     allocate(doc%docExtras)
     doc%docExtras%implementation => FoX_DOM
@@ -4890,6 +4914,7 @@ endif
     doc => null()
     doc => createNode(doc, DOCUMENT_NODE, "#document", "")
     doc%ownerDocument => doc ! Makes life easier. DOM compliance maintained in getter
+    doc%inDocument = .true.
 
     allocate(doc%docExtras)
     doc%docExtras%implementation => FoX_DOM
@@ -4978,8 +5003,8 @@ endif
 
     call destroy_xml_doc_state(arg%docExtras%xds)
     deallocate(arg%docExtras%xds)
-
     deallocate(arg%docExtras)
+
     call destroyAllNodesRecursively(arg, except=.true.)
 
   end subroutine destroyDocument
@@ -5874,7 +5899,7 @@ endif
           endif
           do i = 0, getLength(getChildNodes(ent)) - 1
             newNode => appendChild(np, cloneNode(item(getChildNodes(ent), i), .true., ex))
-            ! FIXME and need to do namespace calcs again ...
+            ! No namespace calcs here - wait for a namespace normalization
             call setReadOnlyNode(newNode, .true., .true.)
           enddo
         elseif (getXmlStandalone(arg)) then

@@ -27,7 +27,7 @@ module m_dom_parse
     createEntityReference, destroyAllNodesRecursively, setIllFormed, createElement, &
     createAttribute, getNamedItem, setReadonlyNode, setReadOnlyMap, &
     createEmptyEntityReference, setEntityReferenceValue, setAttributeNode, getLastChild, &
-    getFoX_checks, getImplementation
+    getFoX_checks, getImplementation, getDocumentElement
   use m_dom_error, only: DOMException, inException, throw_exception, PARSE_ERR
 
   implicit none
@@ -89,11 +89,15 @@ contains
       if (associated(inEntity)) call setReadOnlyNode(attr, .true., .true.)
     enddo
 
-    if (getNodeType(current)==DOCUMENT_NODE) then
-      call setDocumentElement(mainDoc, el)
+
+    if (associated(current, mainDoc)) then
+      current => appendChild(current,el)
+      call setDocumentElement(mainDoc, current)
+    else
+      current => appendChild(current,el)
     endif
-    current => appendChild(current,el)
-    if (associated(inEntity)) call setReadOnlyMap(getAttributes(current), .true.)
+    if (associated(inEntity)) &
+      call setReadOnlyMap(getAttributes(current), .true.)
 
     cdata = .false.
 
@@ -184,8 +188,8 @@ contains
     type(Node), pointer :: np
 
     np => createDocumentType(getImplementation(mainDoc), name, publicId=publicId, systemId=systemId)
-    call setDocType(mainDoc, np)
     np => appendChild(mainDoc, np)
+    call setDocType(mainDoc, np)
 
   end subroutine startDTD_handler
 
@@ -422,7 +426,7 @@ contains
 
     parsefile => mainDoc
     mainDoc => null()
-    
+
   end function parsefile
 
   TOHW_function(parsestring, (string, configuration))
