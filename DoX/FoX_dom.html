@@ -280,6 +280,12 @@ end program dom_example
 <p>Document:</p>
 
 <ul>
+<li><code>getDocumentURI(np)</code>  </li>
+<li><code>setDocumentURI(np, documentURI)</code>  </li>
+<li><code>getInputEncoding(np)</code>  </li>
+<li><code>getStrictErrorChecking(np)</code>  </li>
+<li><code>setStrictErrorChecking(np, strictErrorChecking)</code>  </li>
+<li><code>getXmlEncoding(np)</code>  </li>
 <li><code>getXmlStandalone(np)</code>  </li>
 <li><code>setXmlStandalone(np, xmlStandalone)</code>  </li>
 <li><code>getXmlVersion(np)</code>  </li>
@@ -289,13 +295,30 @@ end program dom_example
 <p>Node:</p>
 
 <ul>
-<li><code>isSameNode(np)</code></li>
+<li><code>isDefaultNamespace(np, namespaceURI)</code>  </li>
+<li><code>isSameNode(np)</code>  </li>
+<li><code>lookupPrefix(np, namespaceURI)</code>  </li>
+<li><code>lookupNamespaceURI(np, prefix)</code>  </li>
 </ul>
 
 <p>Attr:</p>
 
 <ul>
 <li><code>getIsId(np)</code></li>
+</ul>
+
+<p>Entity:  </p>
+
+<ul>
+<li><code>getInputEncoding(np)</code>  </li>
+<li><code>getXmlVersion(np)</code>  </li>
+<li><code>getXmlEncoding(np)</code>  </li>
+</ul>
+
+<p>Text:</p>
+
+<ul>
+<li><code>getIsElementContentWhitespace(np)</code>  </li>
 </ul>
 
 <h3>Object Model</h3>

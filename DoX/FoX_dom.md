@@ -241,6 +241,12 @@ In addition, the following DOM Core Level 3 functions are available:
 
 Document:
 
+* `getDocumentURI(np)`  
+* `setDocumentURI(np, documentURI)`  
+* `getInputEncoding(np)`  
+* `getStrictErrorChecking(np)`  
+* `setStrictErrorChecking(np, strictErrorChecking)`  
+* `getXmlEncoding(np)`  
 * `getXmlStandalone(np)`  
 * `setXmlStandalone(np, xmlStandalone)`  
 * `getXmlVersion(np)`  
@@ -248,11 +254,24 @@ Document:
 
 Node:
 
-* `isSameNode(np)`
+* `isDefaultNamespace(np, namespaceURI)`  
+* `isSameNode(np)`  
+* `lookupPrefix(np, namespaceURI)`  
+* `lookupNamespaceURI(np, prefix)`  
 
 Attr:
 
 * `getIsId(np)`
+
+Entity:  
+
+* `getInputEncoding(np)`  
+* `getXmlVersion(np)`  
+* `getXmlEncoding(np)`  
+
+Text:
+
+* `getIsElementContentWhitespace(np)`  
 
 ### Object Model
 
