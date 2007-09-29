@@ -67,7 +67,6 @@ module m_wxml_core
   type xmlf_t
     private
     type(xml_doc_state) :: xds
-    character, pointer        :: filename(:)
     integer                   :: lun = -1
     type(buffer_t)            :: buffer
     type(elstack_t)           :: stack
@@ -174,8 +173,6 @@ contains
     endif
     if (present(iostat)) iostat = 0
 
-    allocate(xf%filename(len(filename)))
-    xf%filename = vs_str(filename)
     allocate(xf%name(0))
     
     if (present(unit)) then
@@ -230,6 +227,8 @@ contains
     !1.0 for the moment & reset below.
     ! Actually, this is done automatically in initializing xf%xds
     call init_xml_doc_state(xf%xds)
+    xf%xds%documentURI => vs_str_alloc(filename)
+
     if (present(warning)) xf%xds%warning = warning
     if (present(valid)) xf%xds%valid = valid 
     
@@ -1402,7 +1401,6 @@ contains
     call destroy_xml_doc_state(xf%xds)
     
     deallocate(xf%name)
-    deallocate(xf%filename)
     
   end subroutine xml_Close
 
@@ -1552,8 +1550,8 @@ contains
 
     pure function xmlf_name(xf) result(fn)
       type (xmlf_t), intent(in) :: xf
-      character(len=size(xf%filename)) :: fn
-      fn = str_vs(xf%filename)
+      character(len=size(xf%xds%documentURI)) :: fn
+      fn = str_vs(xf%xds%documentURI)
     end function xmlf_name
 
     pure function xmlf_opentag_len(xf) result(n)

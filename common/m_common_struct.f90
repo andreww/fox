@@ -25,6 +25,7 @@ module m_common_struct
     logical :: liveNodeLists = .true. ! Do we want live nodelists?
     character, pointer :: encoding(:) => null()
     character, pointer :: inputEncoding(:) => null()
+    character, pointer :: documentURI(:) => null()
   end type xml_doc_state
 
   public :: xml_doc_state
@@ -56,6 +57,7 @@ contains
     call destroy_element_list(xds%element_list)
     if (associated(xds%encoding)) deallocate(xds%encoding)
     if (associated(xds%inputEncoding)) deallocate(xds%inputEncoding)
+    if (associated(xds%documentURI)) deallocate(xds%documentURI)
   end subroutine destroy_xml_doc_state
 
   subroutine register_internal_PE(xds, name, value)

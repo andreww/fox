@@ -112,7 +112,7 @@ TOHW_m_dom_contents(`
     allocate(doc%docExtras%nodelists(0))
     doc%docExtras%xds => xds
     call init_xml_doc_state(doc%docExtras%xds)
-
+    allocate(doc%docExtras%xds%documentURI(0))
     doc%docExtras%entities%ownerElement => doc
     doc%docExtras%notations%ownerElement => doc
 

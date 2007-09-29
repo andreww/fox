@@ -62,7 +62,6 @@ TOHW_m_dom_publics(`
     type(namedNodeMap) :: entities ! actually for doctype
     type(namedNodeMap) :: notations ! actually for doctype
     logical :: strictErrorChecking = .false.
-    character, pointer :: documentURI(:) => null()
   end type documentExtras
 
   type elementOrAttributeExtras

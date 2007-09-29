@@ -80,6 +80,7 @@ module FoX_dom
   public :: lookupPrefix
   public :: getXmlEncoding
   public :: getInputEncoding
+  public :: getDocumentURI
 
   ! DOM Node
   public :: ELEMENT_NODE

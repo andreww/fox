@@ -55,8 +55,9 @@ contains
     ns => fx%nsDict
   end function getNSDict
 
-  subroutine sax_parser_init(fx)
+  subroutine sax_parser_init(fx, filename)
     type(sax_parser_t), intent(out) :: fx
+    character(len=*), intent(in) :: filename
 
     allocate(fx%token(0))
 
@@ -70,6 +71,7 @@ contains
     call init_xml_doc_state(fx%xds)
     fx%xds%inputEncoding => vs_str_alloc("us-ascii")
     ! because it always is ...
+    fx%xds%documentURI => vs_str_alloc(filename)
 
     allocate(fx%wf_stack(1))
     fx%wf_stack(1) = 0

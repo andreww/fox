@@ -93,7 +93,6 @@ module m_dom_dom
     type(namedNodeMap) :: entities ! actually for doctype
     type(namedNodeMap) :: notations ! actually for doctype
     logical :: strictErrorChecking = .false.
-    character, pointer :: documentURI(:) => null()
   end type documentExtras
 
   type elementOrAttributeExtras
@@ -293,6 +292,7 @@ module m_dom_dom
   public :: setXmlVersion
   public :: getXmlEncoding
   public :: getInputEncoding
+  public :: getDocumentURI
 
   public :: setDocType
   public :: setXds
@@ -4897,7 +4897,7 @@ endif
     allocate(doc%docExtras%nodelists(0))
     doc%docExtras%xds => xds
     call init_xml_doc_state(doc%docExtras%xds)
-
+    allocate(doc%docExtras%xds%documentURI(0))
     doc%docExtras%entities%ownerElement => doc
     doc%docExtras%notations%ownerElement => doc
 
@@ -7112,8 +7112,56 @@ endif
 
 !  function getStrictErrorChecking FIXME
 !  function setStrictErrorChecking FIXME
-!  function getDocumentURI FIXME
-!  function setDocumentURI FIXME
+
+
+  pure function getdocumentURI_len(np, p) result(n)
+    type(Node), intent(in) :: np
+    logical, intent(in) :: p
+    integer :: n
+
+    if (p .and. ( &
+      np%nodeType==DOCUMENT_NODE .or. &
+      .false.)) then
+      n = size(np%docExtras%xds%documentURI)
+    else
+      n = 0
+    endif
+  end function getdocumentURI_len
+function getdocumentURI(np, ex)result(c) 
+    type(DOMException), intent(out), optional :: ex
+    type(Node), pointer :: np
+    character(len=getdocumentURI_len(np, associated(np))) :: c
+
+
+    if (.not.associated(np)) then
+      if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "getdocumentURI", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    endif
+
+   if (getNodeType(np)/=DOCUMENT_NODE .and. &
+      .true.) then
+      if (getFoX_checks().or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "getdocumentURI", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    endif
+
+    c = str_vs(np%docExtras%xds%documentURI)
+
+  end function getdocumentURI
+
 
 !  function adoptNode FIXME
 !  DOMConfiguration ... FIXME
