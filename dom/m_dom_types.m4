@@ -61,7 +61,7 @@ TOHW_m_dom_publics(`
     type(xml_doc_state), pointer :: xds => null()
     type(namedNodeMap) :: entities ! actually for doctype
     type(namedNodeMap) :: notations ! actually for doctype
-    logical :: strictErrorChecking = .false.
+    logical :: strictErrorChecking = .true.
   end type documentExtras
 
   type elementOrAttributeExtras
@@ -99,9 +99,8 @@ TOHW_m_dom_publics(`
     type(Node), pointer :: nextSibling     => null()
     type(Node), pointer :: ownerDocument   => null()
     type(NodeList) :: childNodes ! not for text, cdata, PI, comment, notation, docType, XPath
-
     logical :: inDocument = .false.! For a node, is this node associated to the doc?
-
+    logical :: ignorableWhitespace = .false. ! Text nodes only
     type(documentExtras), pointer :: docExtras
     type(elementOrAttributeExtras), pointer :: elExtras
     type(docTypeExtras), pointer :: dtdExtras

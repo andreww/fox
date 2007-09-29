@@ -1,5 +1,7 @@
 TOHW_m_dom_publics(`  
   public :: splitText
+  public :: getIsElementContentWhitespace
+  public :: setIsElementContentWhitespace
 ')`'dnl
 dnl
 TOHW_m_dom_contents(`
@@ -42,7 +44,10 @@ TOHW_m_dom_contents(`
 
   end function splitText
 
-! function getIsElementContentWhitespace
+TOHW_m_dom_get(logical, isElementContentWhitespace, np%ignorableWhitespace, (TEXT_NODE))
+TOHW_m_dom_set(logical, isElementContentWhitespace, np%ignorableWhitespace, (TEXT_NODE))
+    
+
 ! function getWholeText
 ! function replaceWholeText
 

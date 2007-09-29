@@ -26,7 +26,7 @@ module m_dom_parse
     createEntityReference, destroyAllNodesRecursively, setIllFormed, createElement, &
     createAttribute, getNamedItem, setReadonlyNode, setReadOnlyMap, &
     createEmptyEntityReference, setEntityReferenceValue, setAttributeNode, getLastChild, &
-    getFoX_checks, getImplementation, getDocumentElement
+    getFoX_checks, getImplementation, getDocumentElement, setIsElementContentWhitespace
   use m_dom_error, only: DOMException, inException, throw_exception, PARSE_ERR
 
   implicit none
@@ -143,6 +143,31 @@ contains
     if (associated(inEntity)) call setReadOnlyNode(temp, .true., .false.)
 
   end subroutine characters_handler
+
+  subroutine ignorableWhitespace_handler(chunk)
+    character(len=*), intent(in) :: chunk
+
+    type(Node), pointer :: temp
+    logical :: readonly
+
+    temp => getLastChild(current)
+    if (associated(temp)) then
+      if (getNodeType(temp)==TEXT_NODE) then
+        readonly = getReadOnly(temp) ! Reset readonly status quickly
+        call setReadOnlyNode(temp, .false., .false.)
+        call setData(temp, getData(temp)//chunk)
+        call setReadOnlyNode(temp, readonly, .false.)
+        call setIgnorableWhitespace(temp, .true.)
+        return
+      endif
+    endif
+    temp => createTextNode(mainDoc, chunk)
+    temp => appendChild(current, temp)
+    call setIsElementContentWhitespace(temp, .true.)
+
+    if (associated(inEntity)) call setReadOnlyNode(temp, .true., .false.)
+
+  end subroutine ignorableWhitespace_handler
 
   subroutine comment_handler(comment)
     character(len=*), intent(in) :: comment
@@ -388,7 +413,7 @@ contains
       endDocument_handler=endDocument_handler,           &
       endElement_handler=endElement_handler,            &
       !endPrefixMapping_handler,      &
-      !ignorableWhitespace_handler,   &
+      ignorableWhitespace_handler=ignorableWhitespace_handler,   &
       processingInstruction_handler=processingInstruction_handler, &
       ! setDocumentLocator
       skippedEntity_handler=skippedEntity_handler,         &
@@ -470,7 +495,7 @@ endif
       endDocument_handler=endDocument_handler,           &
       endElement_handler=endElement_handler,            &
       !endPrefixMapping_handler,      &
-      !ignorableWhitespace_handler,   &
+      ignorableWhitespace_handler=ignorableWhitespace_handler,   &
       processingInstruction_handler=processingInstruction_handler, &
       ! setDocumentLocator
       skippedEntity_handler=skippedEntity_handler,         &

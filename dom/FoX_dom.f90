@@ -75,12 +75,12 @@ module FoX_dom
   public :: setXmlStandalone
   public :: getXmlVersion
   public :: setXmlVersion
-  public :: isDefaultNamespace
-  public :: lookupNamespaceURI
-  public :: lookupPrefix
   public :: getXmlEncoding
   public :: getInputEncoding
   public :: getDocumentURI
+  public :: setDocumentURI
+  public :: getStrictErrorChecking
+  public :: setStrictErrorChecking
 
   ! DOM Node
   public :: ELEMENT_NODE
@@ -115,6 +115,9 @@ module FoX_dom
   public :: hasChildNodes
   public :: cloneNode
   public :: normalize
+  public :: isDefaultNamespace
+  public :: lookupNamespaceURI
+  public :: lookupPrefix
 
   public :: isSupported
   public :: getNamespaceURI
@@ -179,6 +182,7 @@ module FoX_dom
 
   !DOM Text
   public :: splitText
+  public :: getIsElementContentWhitespace
 
   !DOM CData
 ! public :: getData

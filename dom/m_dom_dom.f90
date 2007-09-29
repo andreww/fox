@@ -92,7 +92,7 @@ module m_dom_dom
     type(xml_doc_state), pointer :: xds => null()
     type(namedNodeMap) :: entities ! actually for doctype
     type(namedNodeMap) :: notations ! actually for doctype
-    logical :: strictErrorChecking = .false.
+    logical :: strictErrorChecking = .true.
   end type documentExtras
 
   type elementOrAttributeExtras
@@ -130,9 +130,8 @@ module m_dom_dom
     type(Node), pointer :: nextSibling     => null()
     type(Node), pointer :: ownerDocument   => null()
     type(NodeList) :: childNodes ! not for text, cdata, PI, comment, notation, docType, XPath
-
     logical :: inDocument = .false.! For a node, is this node associated to the doc?
-
+    logical :: ignorableWhitespace = .false. ! Text nodes only
     type(documentExtras), pointer :: docExtras
     type(elementOrAttributeExtras), pointer :: elExtras
     type(docTypeExtras), pointer :: dtdExtras
@@ -293,6 +292,9 @@ module m_dom_dom
   public :: getXmlEncoding
   public :: getInputEncoding
   public :: getDocumentURI
+  public :: setDocumentURI
+  public :: getStrictErrorChecking
+  public :: setStrictErrorChecking
 
   public :: setDocType
   public :: setXds
@@ -370,6 +372,8 @@ module m_dom_dom
 
   
   public :: splitText
+  public :: getIsElementContentWhitespace
+  public :: setIsElementContentWhitespace
 
 
 ! Assorted functions with identical signatures despite belonging to different types.
@@ -7162,6 +7166,113 @@ endif
 
   end function getdocumentURI
 
+subroutine setdocumentURI(np, c, ex)
+    type(DOMException), intent(out), optional :: ex
+    type(Node), pointer :: np
+    character(len=*) :: c
+
+
+    if (.not.associated(np)) then
+      if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "setdocumentURI", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    endif
+
+   if (getNodeType(np)/=DOCUMENT_NODE .and. &
+      .true.) then
+      if (getFoX_checks().or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "setdocumentURI", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    endif
+
+    if (associated(np%docExtras%xds%documentURI)) deallocate(np%docExtras%xds%documentURI)
+    np%docExtras%xds%documentURI => vs_str_alloc(c)
+
+  end subroutine setdocumentURI
+
+
+function getstrictErrorChecking(np, ex)result(c) 
+    type(DOMException), intent(out), optional :: ex
+    type(Node), pointer :: np
+    logical :: c
+
+
+    if (.not.associated(np)) then
+      if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "getstrictErrorChecking", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    endif
+
+   if (getNodeType(np)/=DOCUMENT_NODE .and. &
+      .true.) then
+      if (getFoX_checks().or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "getstrictErrorChecking", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    endif
+
+    c = np%docExtras%strictErrorChecking
+
+  end function getstrictErrorChecking
+
+subroutine setstrictErrorChecking(np, c, ex)
+    type(DOMException), intent(out), optional :: ex
+    type(Node), pointer :: np
+    logical :: c
+
+
+    if (.not.associated(np)) then
+      if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "setstrictErrorChecking", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    endif
+
+   if (getNodeType(np)/=DOCUMENT_NODE .and. &
+      .true.) then
+      if (getFoX_checks().or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "setstrictErrorChecking", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    endif
+
+    np%docExtras%strictErrorChecking = c
+
+  end subroutine setstrictErrorChecking
+
 
 !  function adoptNode FIXME
 !  DOMConfiguration ... FIXME
@@ -9702,7 +9813,78 @@ endif
 
   end function splitText
 
-! function getIsElementContentWhitespace
+function getisElementContentWhitespace(np, ex)result(c) 
+    type(DOMException), intent(out), optional :: ex
+    type(Node), pointer :: np
+    logical :: c
+
+
+    if (.not.associated(np)) then
+      if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "getisElementContentWhitespace", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    endif
+
+   if (getNodeType(np)/=TEXT_NODE .and. &
+      .true.) then
+      if (getFoX_checks().or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "getisElementContentWhitespace", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    endif
+
+    c = np%ignorableWhitespace
+
+  end function getisElementContentWhitespace
+
+subroutine setisElementContentWhitespace(np, c, ex)
+    type(DOMException), intent(out), optional :: ex
+    type(Node), pointer :: np
+    logical :: c
+
+
+    if (.not.associated(np)) then
+      if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "setisElementContentWhitespace", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    endif
+
+   if (getNodeType(np)/=TEXT_NODE .and. &
+      .true.) then
+      if (getFoX_checks().or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "setisElementContentWhitespace", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    endif
+
+    np%ignorableWhitespace = c
+
+  end subroutine setisElementContentWhitespace
+
+    
+
 ! function getWholeText
 ! function replaceWholeText
 

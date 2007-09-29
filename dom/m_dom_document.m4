@@ -27,6 +27,9 @@ TOHW_m_dom_publics(`
   public :: getXmlEncoding
   public :: getInputEncoding
   public :: getDocumentURI
+  public :: setDocumentURI
+  public :: getStrictErrorChecking
+  public :: setStrictErrorChecking
 
   public :: setDocType
   public :: setXds
@@ -956,6 +959,9 @@ TOHW_m_dom_set(logical, xmlStandalone, np%docExtras%xds%standalone, (DOCUMENT_NO
 
 TOHW_m_dom_get(DOMString, documentURI, np%docExtras%xds%documentURI, (DOCUMENT_NODE))
 TOHW_m_dom_set(DOMString, documentURI, np%docExtras%xds%documentURI, (DOCUMENT_NODE))
+
+TOHW_m_dom_get(logical, strictErrorChecking, np%docExtras%strictErrorChecking, (DOCUMENT_NODE))
+TOHW_m_dom_set(logical, strictErrorChecking, np%docExtras%strictErrorChecking, (DOCUMENT_NODE))
 
 !  function adoptNode FIXME
 !  DOMConfiguration ... FIXME
