@@ -3554,6 +3554,17 @@ endif
 
     n = 0
     if (.not.p) return
+    if (np%nodeType/=ELEMENT_NODE &
+      .and. np%nodeType/=ATTRIBUTE_NODE &
+      .and. np%nodeType/=DOCUMENT_NODE) return
+
+    if (prefix=="xml") then
+      n = len("http://www.w3.org/XML/1998/namespace")
+      return
+    elseif (prefix=="xmlns") then
+      n = len("http://www.w3.org/2000/xmlns/")
+      return
+    endif
 
     select case(np%nodeType)
     case (ELEMENT_NODE)
@@ -3622,7 +3633,15 @@ endif
       el => getDocumentElement(np)
     end select
 
-    c = ""
+    if (prefix=="xml") then
+      c = "http://www.w3.org/XML/1998/namespace"
+      return
+    elseif (prefix=="xmlns") then
+      c = "http://www.w3.org/2000/xmlns/"
+      return
+    else
+      c = ""
+    endif
     if (associated(el)) then
       if (size(el%elExtras%namespaceURI)>0) then
         do i = 1, el%elExtras%namespaceNodes%length
@@ -3646,6 +3665,17 @@ endif
 
     n = 0
     if (.not.p) return
+    if (np%nodeType/=ELEMENT_NODE &
+      .and. np%nodeType/=ATTRIBUTE_NODE &
+      .and. np%nodeType/=DOCUMENT_NODE) return
+
+    if (namespaceURI=="http://www.w3.org/XML/1998/namespace") then
+      n = len("xml")
+      return
+    elseif (namespaceURI=="http://www.w3.org/2000/xmlns/") then
+      n = len("xmlns")
+      return
+    endif
 
     select case(np%nodeType)
     case (ELEMENT_NODE)
@@ -3714,7 +3744,15 @@ endif
       el => getDocumentElement(np)
     end select
 
-    c = ""
+    if (namespaceURI=="http://www.w3.org/XML/1998/namespace") then
+      c = "xml"
+      return
+    elseif (namespaceURI=="http://www.w3.org/2000/xmlns/") then
+      c = "xmlns"
+      return
+    else
+      c = ""
+    endif
     if (associated(el)) then
       if (size(el%elExtras%namespaceURI)>0) then
         do i = 1, el%elExtras%namespaceNodes%length
