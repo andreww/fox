@@ -4478,7 +4478,7 @@ endif
         xds => getXds(getOwnerDocument(map%ownerElement))
         elem => get_element(xds%element_list, getNodeName(map%ownerElement))
         if (associated(elem)) then
-          i_default = default_att_index(elem%attlist, name)
+          i_default = default_att_index(elem, name)
           if (i_default>0) then ! there is a default value
             ! Well swap the old one out & put a new one in.
             ! Do *nothing* about namespace handling at this stage,
@@ -4845,7 +4845,7 @@ endif
         xds => getXds(getOwnerDocument(map%ownerElement))
         elem => get_element(xds%element_list, getNodeName(map%ownerElement))
         if (associated(elem)) then
-          i_default = default_att_index(elem%attlist, getName(np))
+          i_default = default_att_index(elem, getName(np))
           if (i_default>0) then ! there is a default value
             ! Well swap the old one out & put a new one in.
             ! Do *nothing* about namespace handling at this stage,
@@ -5594,8 +5594,8 @@ endif
       if (associated(elem)) then
         do i = 1, size(elem%attlist%list)
           if (elem%attlist%list(i)%attDefault==ATT_DEFAULT) then
-            ! Do *nothing* about namespace handling at this stage,
-            ! wait until we are asked for namespace normalization
+            ! Since this is a non-namespaced function, we create
+            ! a non-namespaced attribute ...
             call setAttribute(np, str_vs(elem%attlist%list(i)%name), &
               str_vs(elem%attlist%list(i)%default))
           endif
@@ -6501,20 +6501,35 @@ endif
             ! but its only here by default. Is there a default attribute
             ! of this name in the new document?
             elem => get_element(xds%element_list, getTagName(getOwnerElement(this)))
-            if (associated(elem)) then
-              i_default = default_att_index(elem%attlist, getName(this))
-              if (i_default>0) then ! there is a default value
-                ! Create the new default:
-                ! Do *nothing* about namespace handling at this stage,
-                ! wait until we are asked for namespace normalization
+            i_default = default_att_index(elem, getName(this))
+            if (i_default>0) then
+              ! Create the new default:
+              if (getParameter(getDomConfig(arg), "namespaces")) then
+                ! We create a namespaced attribute. Of course, its 
+                ! namespaceURI remains empty for the moment unless we know it ...
+                if (prefixOfQName(getName(this))=="xml") then
+                  new => createAttributeNS(np, &
+                    "http://www.w3.org/XML/1998/namespace", &
+                    getName(this))
+                elseif (getName(this)=="xmlns" & 
+                  .or. prefixOfQName(getName(this))=="xmlns") then
+                  new => createAttributeNS(np, &
+                    "http://www.w3.org/2000/xmlns/", &
+                    getName(this))
+                else
+                  ! Wait for namespace fixup ...
+                  new => createAttributeNS(np, "", &
+                    getName(this))
+                endif
+              else
                 new => createAttribute(doc, getName(this))
-                call setValue(new, str_vs(elem%attlist%list(i_default)%default))
-                call setSpecified(new, .false.)
               endif
-              ! Otherwise no attribute here
+              call setValue(new, str_vs(elem%attlist%list(i_default)%default))
+              call setSpecified(new, .false.)
+              ! In any case, we dont want to copy the children of this node.
+              doneChildren=.true.
             endif
-            ! In any case, we dont want to copy the children of this node.
-            doneChildren=.true.
+            ! Otherwise no attribute here
           endif
         case (TEXT_NODE)
           new => createTextNode(doc, getData(this))
@@ -6755,10 +6770,25 @@ endif
       if (associated(elem)) then
         do i = 1, size(elem%attlist%list)
           if (elem%attlist%list(i)%attDefault==ATT_DEFAULT) then
-            ! Do *nothing* about namespace handling at this stage,
-            ! wait until we are asked for namespace normalization
-            call setAttribute(np, str_vs(elem%attlist%list(i)%name), &
-              str_vs(elem%attlist%list(i)%default))
+            ! Since this is a namespaced function, we create a namespaced
+            ! attribute. Of course, its namespaceURI remains empty
+            ! for the moment unless we know it ...
+            if (prefixOfQName(str_vs(elem%attlist%list(i)%name))=="xml") then
+              call setAttributeNS(np, &
+                "http://www.w3.org/XML/1998/namespace", &
+                str_vs(elem%attlist%list(i)%name), &
+                str_vs(elem%attlist%list(i)%default))
+            elseif (str_vs(elem%attlist%list(i)%name)=="xmlns" & 
+              .or. prefixOfQName(str_vs(elem%attlist%list(i)%name))=="xmlns") then
+              call setAttributeNS(np, &
+                "http://www.w3.org/2000/xmlns/", &
+                str_vs(elem%attlist%list(i)%name), &
+                str_vs(elem%attlist%list(i)%default))
+            else
+              ! Wait for namespace fixup ...
+              call setAttributeNS(np, "", str_vs(elem%attlist%list(i)%name), &
+                str_vs(elem%attlist%list(i)%default))
+            endif
           endif
         enddo
       endif

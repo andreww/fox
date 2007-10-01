@@ -196,7 +196,7 @@ TOHW_m_dom_contents(`
         xds => getXds(getOwnerDocument(map%ownerElement))
         elem => get_element(xds%element_list, getNodeName(map%ownerElement))
         if (associated(elem)) then
-          i_default = default_att_index(elem%attlist, name)
+          i_default = default_att_index(elem, name)
           if (i_default>0) then ! there is a default value
             ! Well swap the old one out & put a new one in.
             ! Do *nothing* about namespace handling at this stage,
@@ -453,7 +453,7 @@ TOHW_m_dom_contents(`
         xds => getXds(getOwnerDocument(map%ownerElement))
         elem => get_element(xds%element_list, getNodeName(map%ownerElement))
         if (associated(elem)) then
-          i_default = default_att_index(elem%attlist, getName(np))
+          i_default = default_att_index(elem, getName(np))
           if (i_default>0) then ! there is a default value
             ! Well swap the old one out & put a new one in.
             ! Do *nothing* about namespace handling at this stage,
