@@ -30,6 +30,110 @@ module m_dom_dom
   implicit none
   private
 
+
+  integer, parameter :: configParamLen = 42
+
+  character(len=configParamLen), parameter :: configParams(26) = (/ &
+    ! DOM 3 Core:
+    "canonical-form                           ", &
+    "cdata-sections                           ", &
+    "check-character-normalization            ", &
+    "comments                                 ", &
+    "datatype-normalization                   ", &
+    "element-content-whitespace               ", &
+    "entities                                 ", &
+    "error-handler                            ", &
+    "infoset                                  ", &
+    "namespaces                               ", &
+    "namespace-declarations                   ", &
+    "normalize-characters                     ", &
+    "schema-location                          ", &
+    "schema-type                              ", &
+    "split-cdata-sections                     ", &
+    "validate                                 ", &
+    "validate-if-schema                       ", &
+    "well-formed                              ", &
+    ! DOM 3 LS (Parser):
+    "charset-overrides-xml-encoding           ", &
+    "disallow-doctype                         ", &
+    "ignore-unknown-character-denormalizations", &
+    "resource-resolver                        ", &
+    "supported-media-types-only               ", &
+    ! DOM 3 LS (Serializer)
+    "discard-default-content                  ", &
+    "format-pretty-print                      ", &
+    "xml-declaration                          " /)
+
+!!$  logical, parameter :: paramSettable(26) = (/ &
+!!$    .false., & ! canonical-form
+!!$    .true.,  & ! cdata-sections
+!!$    .false., & ! check-character-normalization
+!!$    .true.,  & ! comments
+!!$    .false., & ! datatype-normalization
+!!$    .true.,  & ! element-content-whitespace
+!!$    .true.,  & ! entities
+!!$    .false., & ! error-handler BREACH OF SPEC
+!!$    .false., & ! infoset
+!!$    .true.,  & ! namespaces
+!!$    .true.,  & ! namespace-declarations
+!!$    .false., & ! normalize-characters
+!!$    .false., & ! schema-location
+!!$    .false., & ! schema-type
+!!$    .true.,  & ! split-cdata-sections
+!!$    .true.,  & ! validate
+!!$    .true.,  & ! validate-if-schema
+!!$    .false., & ! well-formed
+!!$    .false., & ! charset-overrides-xml-encoding
+!!$    .false., & ! disallow-doctype
+!!$    .false., & ! ignore-unknown-character-denormalizations
+!!$    .false., & ! resource-resolver BREACH OF SPEC
+!!$    .false., & ! supported-media-types-only
+!!$    .true.,  & ! discard-default-content
+!!$    .false., & ! format-pretty-print
+!!$    .true.  /) ! xml-declaration
+  integer, parameter :: paramSettable = 84118740
+
+!!$  logical, parameter :: paramDefaults(26) = (/ &
+!!$    .false., & ! canonical-form
+!!$    .true.,  & ! cdata-sections
+!!$    .false., & ! check-character-normalization
+!!$    .true.,  & ! comments
+!!$    .false., & ! datatype-normalization
+!!$    .true.,  & ! element-content-whitespace
+!!$    .true.,  & ! entities
+!!$    .false., & ! error-handler BREACH OF SPEC
+!!$    .true.,  & ! infoset
+!!$    .true.,  & ! namespaces
+!!$    .true.,  & ! namespace-declarations
+!!$    .false., & ! normalize-characters
+!!$    .false., & ! schema-location BREACH OF SPEC
+!!$    .false., & ! schema-type BREACH OF SPEC
+!!$    .true.,  & ! split-cdata-sections
+!!$    .false., & ! validate
+!!$    .false., & ! validate-if-schema
+!!$    .true.,  & ! well-formed
+!!$    .false., & ! charset-overrides-xml-encoding
+!!$    .false., & ! disallow-doctype
+!!$    .true.,  & ! ignore-unknown-character-denormalizations
+!!$    .false., & ! resource-resolver BREACH OF SPEC
+!!$    .false., & ! supported-media-types-only
+!!$    .true.,  & ! discard-default-content
+!!$    .false., & ! format-pretty-print
+!!$    .true.  /) ! xml-declaration
+  integer, parameter :: paramDefaults = 86281940
+
+  type DOMConfiguration
+    private
+    integer :: parameters = paramDefaults
+    ! FIXME make sure this is 32 bit at least.
+  end type DOMConfiguration
+
+  public :: setParameter
+  public :: getParameter
+  public :: canSetParameter
+  public :: getParameterNames
+
+
   integer, parameter ::     ELEMENT_NODE                   = 1
   integer, parameter ::     ATTRIBUTE_NODE                 = 2
   integer, parameter ::     TEXT_NODE                      = 3
@@ -43,7 +147,6 @@ module m_dom_dom
   integer, parameter ::     DOCUMENT_FRAGMENT_NODE         = 11
   integer, parameter ::     NOTATION_NODE                  = 12
   integer, parameter ::     XPATH_NAMESPACE_NODE           = 13
-
 
   type DOMImplementation
     private
@@ -93,6 +196,7 @@ module m_dom_dom
     type(namedNodeMap) :: entities ! actually for doctype
     type(namedNodeMap) :: notations ! actually for doctype
     logical :: strictErrorChecking = .true.
+    type(DOMConfiguration) :: domConfig
   end type documentExtras
 
   type elementOrAttributeExtras
@@ -157,6 +261,7 @@ module m_dom_dom
   public :: NOTATION_NODE
 
   public :: DOMImplementation
+  public :: DOMConfiguration
   public :: Node
 
   public :: ListNode
@@ -390,6 +495,120 @@ module m_dom_dom
 
 
 contains
+
+
+  recursive subroutine setParameter(domConfig, name, value, ex)
+    type(DOMException), intent(out), optional :: ex
+    type(DOMConfiguration), pointer :: domConfig
+    character(len=*), intent(in) :: name
+    logical, intent(in) :: value
+
+    integer :: i, n
+    do i = 1, size(configParams)
+      if (name==trim(configParams(i))) then
+        n = i
+        exit
+      endif
+    enddo
+    if (i > size(configParams)) then
+      if (getFoX_checks().or.NOT_FOUND_ERR<200) then
+  call throw_exception(NOT_FOUND_ERR, "setParameter", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    endif
+    if (.not.canSetParameter(domConfig, name, value)) then
+      if (getFoX_checks().or.NOT_SUPPORTED_ERR<200) then
+  call throw_exception(NOT_SUPPORTED_ERR, "setParameter", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    endif
+    if (value) then
+      domConfig%parameters = ibset(domConfig%parameters, n)
+    else
+      domConfig%parameters = ibclr(domConfig%parameters, n)
+    endif
+
+    select case (trim(name))
+      !case ("canonical-form")
+      !case ("infoset")
+    case("validate")
+      if (value) call setParameter(domConfig, "validate-if-schema", .false.)
+    case ("validate-if-schema")
+      if (value) call setParameter(domConfig, "validate", .false.)
+    end select
+
+  end subroutine setParameter
+
+  function getParameter(domConfig, name, ex)result(value) 
+    type(DOMException), intent(out), optional :: ex
+    type(DOMConfiguration), pointer :: domConfig
+    character(len=*), intent(in) :: name
+    logical :: value
+
+    integer :: i, n
+    do i = 1, size(configParams)
+      if (name==trim(configParams(i))) then
+        n = i
+        exit
+      endif
+    enddo
+    if (i > size(configParams)) then
+      if (getFoX_checks().or.NOT_FOUND_ERR<200) then
+  call throw_exception(NOT_FOUND_ERR, "getParameter", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    endif
+
+    value = btest(domConfig%parameters, n)
+
+  end function getParameter
+
+  function canSetParameter(domConfig, name, value, ex)result(p) 
+    type(DOMException), intent(out), optional :: ex
+    type(DOMConfiguration), pointer :: domConfig
+    character(len=*), intent(in) :: name
+    logical, intent(in) :: value
+
+    logical :: p
+    integer :: i, n
+    do i = 1, size(configParams)
+      if (name==trim(configParams(i))) then
+        n = i
+        exit
+      endif
+    enddo
+    if (i > size(configParams)) then
+      p = .false.
+      return
+    endif
+
+    p = btest(paramSettable, n)
+
+  end function canSetParameter
+
+  function getParameterNames(domConfig, ex)result(s) 
+    type(DOMException), intent(out), optional :: ex
+    type(DOMConfiguration), pointer :: domConfig
+    character(len=configParamLen) :: s(size(configParams))
+
+    s = configParams
+  end function getParameterNames
+
 
 
   function createNode(arg, nodeType, nodeName, nodeValue, ex)result(np) 
@@ -7114,9 +7333,6 @@ endif
 
   end function getInputEncoding
 
-!  function getStrictErrorChecking FIXME
-!  function setStrictErrorChecking FIXME
-
 
   pure function getdocumentURI_len(np, p) result(n)
     type(Node), intent(in) :: np
@@ -7275,7 +7491,42 @@ endif
 
 
 !  function adoptNode FIXME
-!  DOMConfiguration ... FIXME
+
+function getdomConfig(np, ex)result(c) 
+    type(DOMException), intent(out), optional :: ex
+    type(Node), pointer :: np
+    type(DOMConfiguration), pointer :: c
+
+
+    if (.not.associated(np)) then
+      if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "getdomConfig", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    endif
+
+   if (getNodeType(np)/=DOCUMENT_NODE .and. &
+      .true.) then
+      if (getFoX_checks().or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "getdomConfig", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    endif
+
+    c => np%docExtras%domConfig
+
+  end function getdomConfig
+
 
   subroutine normalizeDocument(np, ex)
     type(DOMException), intent(out), optional :: ex
@@ -7631,7 +7882,6 @@ endif
     np%docExtras%liveNodeLists = c
 
   end subroutine setliveNodeLists
-
 
 
 

@@ -13,7 +13,6 @@ TOHW_m_dom_publics(`
   integer, parameter ::     NOTATION_NODE                  = 12
   integer, parameter ::     XPATH_NAMESPACE_NODE           = 13
 
-
   type DOMImplementation
     private
     character(len=7) :: id = "FoX_DOM"
@@ -62,6 +61,7 @@ TOHW_m_dom_publics(`
     type(namedNodeMap) :: entities ! actually for doctype
     type(namedNodeMap) :: notations ! actually for doctype
     logical :: strictErrorChecking = .true.
+    type(DOMConfiguration) :: domConfig
   end type documentExtras
 
   type elementOrAttributeExtras
@@ -126,6 +126,7 @@ TOHW_m_dom_publics(`
   public :: NOTATION_NODE
 
   public :: DOMImplementation
+  public :: DOMConfiguration
   public :: Node
 
   public :: ListNode

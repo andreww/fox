@@ -44,6 +44,8 @@ ifelse(`$1', `DOMString', `dnl
     type(NodeList), pointer :: c
 ', `$1', `NamedNodeMap',`dnl
     type(NamedNodeMap), pointer :: c
+', `$1', `DOMConfiguration',`dnl
+    type(DOMConfiguration), pointer :: c
 ',`dnl
     $1 :: c
 ')
@@ -68,6 +70,8 @@ ifelse(`$1', `DOMString', `dnl
 ', `$1', `NodeList', `dnl
     c => $3
 ', `$1', `NamedNodeMap', `dnl
+    c => $3
+', `$1', `DOMConfiguration', `dnl
     c => $3
 ',`dnl
     c = $3
