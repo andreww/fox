@@ -12,7 +12,7 @@ module m_dom_parse
   use m_common_struct, only: xml_doc_state
   use FoX_common, only: dictionary_t, len
   use FoX_common, only: getQName, getValue, getURI, getLocalName, getSpecified
-  use m_sax_parser, only: sax_parse, getNSDict
+  use m_sax_parser, only: sax_parse
   use FoX_sax, only: xml_t
   use FoX_sax, only: open_xml_file, open_xml_string, close_xml_t
 
@@ -27,7 +27,8 @@ module m_dom_parse
     createEntityReference, destroyAllNodesRecursively, setIllFormed, createElement, &
     createAttribute, getNamedItem, setReadonlyNode, setReadOnlyMap, &
     createEmptyEntityReference, setEntityReferenceValue, setAttributeNode, getLastChild, &
-    getFoX_checks, getImplementation, getDocumentElement, setIsElementContentWhitespace
+    getFoX_checks, getImplementation, getDocumentElement, setIsElementContentWhitespace, &
+    DOMConfiguration, getParameter, destroy, setParameter, setDomConfig
   use m_dom_error, only: DOMException, inException, throw_exception, PARSE_ERR
 
   implicit none
@@ -48,10 +49,13 @@ module m_dom_parse
   type(entity_list), save :: elist
   type(Node), pointer, save  :: mainDoc => null()
   type(Node), pointer, save  :: current => null()
+
+  type(DOMConfiguration), pointer :: domConfig
   
   logical :: cdata_sections, cdata, not_split_cdata_sections
   logical :: entities_expand, not_comments
   logical :: error
+  logical :: context
   character, pointer :: inEntity(:) => null()
 
 contains
@@ -64,31 +68,29 @@ contains
     type(dictionary_t), intent(in) :: attrs
    
     type(Node), pointer :: el, attr, dummy
-    type(namespaceDictionary), pointer :: nsd
     integer              :: i
 
-    if (len(URI)>0) then
+    if (getParameter(domConfig, "namespaces")) then
       el => createElementNS(mainDoc, URI, name)
     else
       el => createElement(mainDoc, name)
     endif
 
     do i = 1, len(attrs)
-      if (len(getURI(attrs, i))>0) then
+      if (getParameter(domConfig, "namespaces")) then
         attr => createAttributeNS(mainDoc, getURI(attrs, i), getQName(attrs, i))
       else
         attr => createAttribute(mainDoc, getQName(attrs, i))
       endif
       call setValue(attr, getValue(attrs, i))
       call setSpecified(attr, getSpecified(attrs, i))
-      if (len(getURI(attrs, i))>0) then
+      if (getParameter(domConfig, "namespaces")) then
         dummy => setAttributeNodeNS(el, attr)
       else
         dummy => setAttributeNode(el, attr)
       endif
       if (associated(inEntity)) call setReadOnlyNode(attr, .true., .true.)
     enddo
-
 
     if (associated(current, mainDoc)) then
       current => appendChild(current,el)
@@ -113,7 +115,8 @@ contains
     current => getParentNode(current)
   end subroutine endElement_handler
 
-  ! FIXME for attributes containing enttities, need separate just_the_element, start_attribute, attribute_text etc. calls.
+  ! FIXME to pick up entity references within attribute values, we need
+  ! separate just_the_element, start_attribute, attribute_text etc. calls.
 
   subroutine characters_handler(chunk)
     character(len=*), intent(in) :: chunk
@@ -124,7 +127,7 @@ contains
     temp => getLastChild(current)
     if (associated(temp)) then
       if ((cdata.and.getNodeType(temp)==CDATA_SECTION_NODE &
-        .and.not_split_cdata_sections) &
+        .and..not.getParameter(domConfig, "split-cdata-sections")) &
         .or.(.not.cdata.and.getNodeType(temp)==TEXT_NODE)) then
         readonly = getReadOnly(temp) ! Reset readonly status quickly
         call setReadOnlyNode(temp, .false., .false.)
@@ -151,22 +154,23 @@ contains
     type(Node), pointer :: temp
     logical :: readonly
 
-    temp => getLastChild(current)
-    if (associated(temp)) then
-      if (getNodeType(temp)==TEXT_NODE) then
-        readonly = getReadOnly(temp) ! Reset readonly status quickly
-        call setReadOnlyNode(temp, .false., .false.)
-        call setData(temp, getData(temp)//chunk)
-        call setReadOnlyNode(temp, readonly, .false.)
-        call setIgnorableWhitespace(temp, .true.)
-        return
+    if (getParameter(domConfig, "element-content-whitespace")) then
+      temp => getLastChild(current)
+      if (associated(temp)) then
+        if (getNodeType(temp)==TEXT_NODE) then
+          readonly = getReadOnly(temp) ! Reset readonly status quickly
+          call setReadOnlyNode(temp, .false., .false.)
+          call setData(temp, getData(temp)//chunk)
+          call setReadOnlyNode(temp, readonly, .false.)
+          call setIsElementContentWhitespace(temp, .true.)
+          return
+        endif
       endif
+      temp => createTextNode(mainDoc, chunk)
+      temp => appendChild(current, temp)
+      call setIsElementContentWhitespace(temp, .true.)
+      if (associated(inEntity)) call setReadOnlyNode(temp, .true., .false.)
     endif
-    temp => createTextNode(mainDoc, chunk)
-    temp => appendChild(current, temp)
-    call setIsElementContentWhitespace(temp, .true.)
-
-    if (associated(inEntity)) call setReadOnlyNode(temp, .true., .false.)
 
   end subroutine ignorableWhitespace_handler
 
@@ -175,7 +179,7 @@ contains
 
     type(Node), pointer :: temp
 
-    if (.not.not_comments) then
+    if (getParameter(domConfig, "comments")) then
       temp => appendChild(current, createComment(mainDoc, comment))
       if (associated(inEntity)) call setReadOnlyNode(temp, .true., .false.)
     endif
@@ -198,7 +202,7 @@ contains
     mainDoc => createEmptyDocument()
     current => mainDoc
     call setGCstate(mainDoc, .false.)
-
+    call setDomConfig(mainDoc, domConfig)
   end subroutine startDocument_handler
 
   subroutine endDocument_Handler
@@ -272,6 +276,8 @@ contains
       ! referenced ...; this will be done automatically for any
       ! entities referenced in the document, but we will need to do
       ! it manually when adding an ENTITY_REFERENCE NODE later on.
+      ! FIXME false. actually we want to do partial namespace resolution
+      ! at this stage, and at least pick up on xml: and xmlns: nodes
       call sax_parse(subsax%fx, subsax%fb,                           &
         startElement_handler=startElement_handler,                   &
         endElement_handler=endElement_handler,                       &
@@ -281,7 +287,10 @@ contains
         comment_handler=comment_handler,                             &
         processingInstruction_handler=processingInstruction_handler, &
         error_handler=entityErrorHandler,                            &
-        startInCharData = .true., namespaces=.false., initial_entities = elist)
+        startInCharData = .true., &
+        namespaces=getParameter(domConfig, "namespaces"), &
+        initial_entities = elist)
+      ! FIXME namespaces take from domConfig
       call close_xml_t(subsax)
       call add_internal_entity(elist, name, value)
 
@@ -345,7 +354,7 @@ contains
   subroutine startEntity_handler(name)
     character(len=*), intent(in) :: name
     
-    if (entities_expand) then
+    if (getParameter(domConfig, "entities")) then
       if (.not.associated(inEntity)) then
         inEntity => vs_str_alloc(name)
       endif
@@ -356,7 +365,7 @@ contains
   subroutine endEntity_handler(name)
     character(len=*), intent(in) :: name
     
-    if (entities_expand) then
+    if (getParameter(domConfig, "entities")) then
       call setEntityReferenceValue(current)
       call setReadOnlyNode(current, .true., .false.)
       if (str_vs(inEntity)==name) deallocate(inEntity)
@@ -374,110 +383,34 @@ contains
     if (associated(inEntity)) call setReadonlyNode(temp, .true., .false.)
   end subroutine skippedEntity_handler
 
-  TOHW_function(parsefile, (filename, configuration))
-    character(len=*), intent(in) :: filename
+
+  subroutine parseDOMOptions(configuration)
     character(len=*), intent(in), optional :: configuration
 
-    type(Node), pointer :: parsefile
-    type(xml_t) :: fxml
-    integer :: iostat
-    logical :: validate
-    
+    allocate(domConfig)
+
     if (present(configuration)) then
-      cdata_sections = (index(configuration, "cdata-sections")==1).or.(index(configuration, " cdata-sections")>0) 
+      call setParameter(domConfig, "cdata-sections", &
+        (index(configuration, "cdata-sections")==1).or.(index(configuration, " cdata-sections")>0))
       ! need to do double check to avoid finding split-cdata-sections
-      not_comments = (index(configuration, "comments")>0)
-      entities_expand = (index(configuration, "entities")>0)
-      not_split_cdata_sections = (index(configuration, "split-cdata-sections")>0)
-      validate = (index(configuration, "validate")>0)
-    else
-      cdata_sections = .false.
-      not_comments = .false.
-      entities_expand = .false.
-      not_split_cdata_sections = .false.
-      validate = .false.
+      call setParameter(domConfig, "comments", &
+        index(configuration, "comments")>0)
+      call setParameter(domConfig, "entities", &
+        index(configuration, "entities")>0)
+      call setParameter(domConfig, "split-cdata-sections", &
+        index(configuration, "split-cdata-sections")>0)
+      call setParameter(domConfig, "validate", &
+        index(configuration, "validate")>0)
     endif
 
-    call open_xml_file(fxml, filename, iostat)
-    if (iostat /= 0) then
-      call FoX_error("Cannot open file")
-    endif
+  end subroutine parseDOMOptions
+
+  TOHW_subroutine(runParser, (fxml))
+    type(xml_t), intent(inout) :: fxml
+
+    logical :: error
 
     error = .false.
-
-! We use internal sax_parse rather than public interface in order
-! to use internal callbacks to get extra info.
-    call init_entity_list(elist)
-    call sax_parse(fxml%fx, fxml%fb,&
-      characters_handler=characters_handler,            &
-      endDocument_handler=endDocument_handler,           &
-      endElement_handler=endElement_handler,            &
-      !endPrefixMapping_handler,      &
-      ignorableWhitespace_handler=ignorableWhitespace_handler,   &
-      processingInstruction_handler=processingInstruction_handler, &
-      ! setDocumentLocator
-      skippedEntity_handler=skippedEntity_handler,         &
-      startDocument_handler=startDocument_handler,         & 
-      startElement_handler=startElement_handler,          &
-      !startPrefixMapping_handler,    &
-      notationDecl_handler=notationDecl_handler,          &
-      unparsedEntityDecl_handler=unparsedEntityDecl_handler, &
-      error_handler = normalErrorHandler,                 &
-      !fatalError_handler,            &
-      !warning_handler,               &
-      !attributeDecl_handler,         &
-      !elementDecl_handler,           &
-      externalEntityDecl_handler=externalEntityDecl_handler, &
-      internalEntityDecl_handler=internalEntityDecl_handler,    &
-      comment_handler=comment_handler,              &
-      endCdata_handler=endCdata_handler,             &
-      !endDTD_handler=endDTD_handler,                &
-      endEntity_handler=endEntity_handler,             &
-      startCdata_handler=startCdata_handler,    &
-      startDTD_handler=startDTD_handler,          &
-      startEntity_handler=startEntity_handler, &
-      FoX_endDTD_handler=FoX_endDTD_handler, &
-      namespaces = .true.,     &
-      namespace_prefixes = .true., &
-      validate = validate, &
-      xmlns_uris = .true.)
-
-    call close_xml_t(fxml)
-    call destroy_entity_list(elist)
-
-    if (error) then
-      TOHW_m_dom_throw_error(PARSE_ERR)
-    endif
-
-    parsefile => mainDoc
-    mainDoc => null()
-
-  end function parsefile
-
-  TOHW_function(parsestring, (string, configuration))
-    character(len=*), intent(in) :: string
-    character(len=*), intent(in), optional :: configuration
-
-    type(Node), pointer :: parsestring
-    logical :: validate
-    
-    if (present(configuration)) then
-      cdata_sections = (index(configuration, "cdata-sections")==1).or.(index(configuration, " cdata-sections")>0) 
-      ! need to do double check to avoid finding split-cdata-sections
-      not_comments = (index(configuration, "comments")>0)
-      entities_expand = (index(configuration, "entities")>0)
-      not_split_cdata_sections = (index(configuration, "split-cdata-sections")>0)
-      validate = (index(configuration, "validate")>0)
-    else
-      cdata_sections = .false.
-      not_comments = .false.
-      entities_expand = .false.
-      not_split_cdata_sections = .false.
-      validate = .false.
-    endif
-
-    call open_xml_string(fxml, string)
-
 ! We use internal sax_parse rather than public interface in order
 ! to use internal callbacks to get extra info.
     call init_entity_list(elist)
@@ -510,17 +443,52 @@ contains
       startDTD_handler=startDTD_handler,          &
       startEntity_handler=startEntity_handler, &
       FoX_endDTD_handler=FoX_endDTD_handler, &
-      namespaces = .true.,     &
+      namespaces = getParameter(domConfig, "namespaces"),     &
       namespace_prefixes = .true., &
-      validate = validate, &
+      validate = getParameter(domConfig, "validate"), & ! FIXME what about validate-if-present ...
       xmlns_uris = .true.)
 
     call close_xml_t(fxml)
     call destroy_entity_list(elist)
 
     if (error) then
+      call destroy(mainDoc)
       TOHW_m_dom_throw_error(PARSE_ERR)
     endif
+  end subroutine runParser
+
+
+  TOHW_function(parsefile, (filename, configuration))
+    character(len=*), intent(in) :: filename
+    character(len=*), intent(in), optional :: configuration
+    type(Node), pointer :: parsefile
+    integer :: iostat
+
+    call parseDOMOptions(configuration)
+
+    call open_xml_file(fxml, filename, iostat)
+    if (iostat /= 0) then
+      call FoX_error("Cannot open file")
+    endif
+
+    call runParser(fxml, ex)
+
+    parsefile => mainDoc
+    mainDoc => null()
+
+  end function parsefile
+
+
+  TOHW_function(parsestring, (string, configuration))
+    character(len=*), intent(in) :: string
+    character(len=*), intent(in), optional :: configuration
+    type(Node), pointer :: parsestring
+
+    call parseDOMOptions(configuration)
+
+    call open_xml_string(fxml, string)
+
+    call runParser(fxml, ex)
 
     parsestring => mainDoc
     mainDoc => null()

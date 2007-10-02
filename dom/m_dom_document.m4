@@ -32,6 +32,7 @@ TOHW_m_dom_publics(`
   public :: setStrictErrorChecking
 
   public :: setDocType
+  public :: setDomConfig
   public :: setXds
   public :: setEntityReferenceValue
   public :: createNamespaceNode
@@ -993,6 +994,7 @@ TOHW_m_dom_set(logical, strictErrorChecking, np%docExtras%strictErrorChecking, (
 !  function adoptNode FIXME
 
 TOHW_m_dom_get(DOMConfiguration, domConfig, np%docExtras%domConfig, (DOCUMENT_NODE))
+TOHW_m_dom_set(DOMConfiguration, domConfig, np%docExtras%domConfig, (DOCUMENT_NODE))
 
   TOHW_subroutine(normalizeDocument, (np))
     type(Node), pointer :: np

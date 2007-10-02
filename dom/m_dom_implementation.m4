@@ -202,6 +202,7 @@ TOHW_m_dom_contents(`
 
     call destroy_xml_doc_state(arg%docExtras%xds)
     deallocate(arg%docExtras%xds)
+    deallocate(arg%docExtras%domConfig)
     deallocate(arg%docExtras)
 
     call destroyAllNodesRecursively(arg, except=.true.)

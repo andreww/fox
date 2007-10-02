@@ -196,7 +196,7 @@ module m_dom_dom
     type(namedNodeMap) :: entities ! actually for doctype
     type(namedNodeMap) :: notations ! actually for doctype
     logical :: strictErrorChecking = .true.
-    type(DOMConfiguration) :: domConfig
+    type(DOMConfiguration), pointer :: domConfig
   end type documentExtras
 
   type elementOrAttributeExtras
@@ -402,6 +402,7 @@ module m_dom_dom
   public :: setStrictErrorChecking
 
   public :: setDocType
+  public :: setDomConfig
   public :: setXds
   public :: setEntityReferenceValue
   public :: createNamespaceNode
@@ -5273,6 +5274,7 @@ endif
 
     call destroy_xml_doc_state(arg%docExtras%xds)
     deallocate(arg%docExtras%xds)
+    deallocate(arg%docExtras%domConfig)
     deallocate(arg%docExtras)
 
     call destroyAllNodesRecursively(arg, except=.true.)
@@ -7594,6 +7596,41 @@ endif
     c => np%docExtras%domConfig
 
   end function getdomConfig
+
+subroutine setdomConfig(np, c, ex)
+    type(DOMException), intent(out), optional :: ex
+    type(Node), pointer :: np
+    type(DOMConfiguration), pointer :: c
+
+
+    if (.not.associated(np)) then
+      if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "setdomConfig", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    endif
+
+   if (getNodeType(np)/=DOCUMENT_NODE .and. &
+      .true.) then
+      if (getFoX_checks().or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "setdomConfig", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    endif
+
+    np%docExtras%domConfig => c
+
+  end subroutine setdomConfig
 
 
   subroutine normalizeDocument(np, ex)
