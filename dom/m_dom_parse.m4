@@ -223,9 +223,14 @@ contains
   subroutine FoX_endDTD_handler(state)
     type(xml_doc_state), pointer :: state
 
+    ! FIXME I think we ought to be able to not bother with this.
+    ! if we do things right.
     call setXds(mainDoc, state)
-    call setReadonlyMap(getEntities(getDocType(mainDoc)), .true.)
-    call setReadonlyMap(getNotations(getDocType(mainDoc)), .true.)
+    ! FIXME these could be just in the endDTD_handler
+    if (associated(getDocType(mainDoc))) then
+      call setReadonlyMap(getEntities(getDocType(mainDoc)), .true.)
+      call setReadonlyMap(getNotations(getDocType(mainDoc)), .true.)
+    endif
 
   end subroutine FoX_endDTD_handler
 
