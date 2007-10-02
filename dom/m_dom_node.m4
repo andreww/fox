@@ -679,7 +679,8 @@ TOHW_m_dom_get(Node, nextSibling, np%nextSibling)
     
   end function hasChildNodes
 
-  TOHW_function(cloneNode, (arg, deep), np)
+  recursive TOHW_function(cloneNode, (arg, deep), np)
+    ! Needs to be recursive in case of entity-references within each other.
     type(Node), pointer :: arg
     logical, intent(in) :: deep
     type(Node), pointer :: np
@@ -729,7 +730,7 @@ TOHW_m_dom_treewalk(`
       case (ENTITY_REFERENCE_NODE)
         ERchild => this
         readonly = .true.
-        new => createEmptyEntityReference(doc, getNodeName(this))
+        new => createEntityReference(doc, getNodeName(this))
       case (ENTITY_NODE)
         return
       case (PROCESSING_INSTRUCTION_NODE)

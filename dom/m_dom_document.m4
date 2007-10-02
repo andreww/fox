@@ -378,7 +378,8 @@ TOHW_m_dom_treewalk(`
     endif
   end subroutine setEntityReferenceValue
 
-  TOHW_function(createEntityReference, (arg, name), np)
+  recursive TOHW_function(createEntityReference, (arg, name), np)
+  ! Needs to be recursive in case of entity-references within each other.
     type(Node), pointer :: arg
     character(len=*), intent(in) :: name
     type(Node), pointer :: np
@@ -415,10 +416,9 @@ TOHW_m_dom_treewalk(`
         elseif (getXmlStandalone(arg)) then
           TOHW_m_dom_throw_error(FoX_NO_SUCH_ENTITY, (np))
         endif
-        ! FIXME in case of recursive entity references?
       endif
     endif
-
+    ! FIXME we could get away with just storing the length here.
     call setEntityReferenceValue(np)
 
     call setReadOnlyNode(np, .true., .false.)

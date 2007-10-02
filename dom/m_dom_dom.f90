@@ -2876,8 +2876,9 @@ endif
     
   end function hasChildNodes
 
-  function cloneNode(arg, deep, ex)result(np) 
+  recursive function cloneNode(arg, deep, ex)result(np) 
     type(DOMException), intent(out), optional :: ex
+    ! Needs to be recursive in case of entity-references within each other.
     type(Node), pointer :: arg
     logical, intent(in) :: deep
     type(Node), pointer :: np
@@ -2943,7 +2944,7 @@ endif
       case (ENTITY_REFERENCE_NODE)
         ERchild => this
         readonly = .true.
-        new => createEmptyEntityReference(doc, getNodeName(this))
+        new => createEntityReference(doc, getNodeName(this))
       case (ENTITY_NODE)
         return
       case (PROCESSING_INSTRUCTION_NODE)
@@ -6099,8 +6100,9 @@ endif
     endif
   end subroutine setEntityReferenceValue
 
-  function createEntityReference(arg, name, ex)result(np) 
+  recursive function createEntityReference(arg, name, ex)result(np) 
     type(DOMException), intent(out), optional :: ex
+  ! Needs to be recursive in case of entity-references within each other.
     type(Node), pointer :: arg
     character(len=*), intent(in) :: name
     type(Node), pointer :: np
@@ -6187,10 +6189,9 @@ endif
 endif
 
         endif
-        ! FIXME in case of recursive entity references?
       endif
     endif
-
+    ! FIXME we could get away with just storing the length here.
     call setEntityReferenceValue(np)
 
     call setReadOnlyNode(np, .true., .false.)
