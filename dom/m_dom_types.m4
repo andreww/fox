@@ -61,6 +61,7 @@ TOHW_m_dom_publics(`
     type(namedNodeMap) :: entities ! actually for doctype
     type(namedNodeMap) :: notations ! actually for doctype
     logical :: strictErrorChecking = .true.
+    logical :: brokenNS = .false. ! FIXME consolidate these logical variables into bitmask
     type(DOMConfiguration), pointer :: domConfig
   end type documentExtras
 

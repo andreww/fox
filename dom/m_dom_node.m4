@@ -285,13 +285,13 @@ TOHW_m_dom_get(Node, nextSibling, np%nextSibling)
             i_t = i_t + 1
             temp_nl(i_t)%this => newChild%childNodes%nodes(i2)%this
             temp_nl(i_t)%this%parentNode => arg
-            call namespaceFixup(temp_nl(i_t)%this)
+!            call namespaceFixup(temp_nl(i_t)%this)
           enddo
         else
           i_t = i_t + 1
           temp_nl(i_t)%this => newChild
           temp_nl(i_t)%this%parentNode => arg
-          call namespaceFixup(temp_nl(i_t)%this)
+!          call namespaceFixup(temp_nl(i_t)%this)
         endif
         if (i==1) then
           arg%firstChild => temp_nl(1)%this
@@ -411,13 +411,13 @@ TOHW_m_dom_get(Node, nextSibling, np%nextSibling)
             i_t = i_t + 1
             temp_nl(i_t)%this => newChild%childNodes%nodes(i2)%this
             temp_nl(i_t)%this%parentNode => arg
-            call namespaceFixup(temp_nl(i_t)%this)
+!            call namespaceFixup(temp_nl(i_t)%this)
           enddo
         else
           i_t = i_t + 1
           temp_nl(i_t)%this => newChild
           temp_nl(i_t)%this%parentNode => arg
-          call namespaceFixup(temp_nl(i_t)%this)
+!          call namespaceFixup(temp_nl(i_t)%this)
         endif
         if (i==1) then
           arg%firstChild => temp_nl(1)%this
@@ -446,7 +446,7 @@ TOHW_m_dom_get(Node, nextSibling, np%nextSibling)
     np%previousSibling => null()
     np%nextSibling => null()
 
-    call namespaceFixup(np)
+!    call namespaceFixup(np)
 
     if (getGCstate(arg%ownerDocument)) then
       if (arg%inDocument) then
@@ -534,7 +534,7 @@ TOHW_m_dom_get(Node, nextSibling, np%nextSibling)
     oldChild%previousSibling => null()
     oldChild%nextSibling => null()
 
-    call namespaceFixup(oldChild)
+!    call namespaceFixup(oldChild)
 
     if (getGCstate(arg%ownerDocument)) then
       if (arg%inDocument) then
@@ -622,7 +622,7 @@ TOHW_m_dom_get(Node, nextSibling, np%nextSibling)
         if (arg%inDocument) &
           call putNodesInDocument(arg%ownerDocument, temp_nl(i_t)%this)
         temp_nl(i_t)%this%parentNode => arg
-        call namespaceFixup(temp_nl(i_t)%this)
+!        call namespaceFixup(temp_nl(i_t)%this)
       enddo
       if (arg%childNodes%length==0) then
         arg%firstChild => newChild%firstChild
@@ -653,7 +653,7 @@ TOHW_m_dom_get(Node, nextSibling, np%nextSibling)
       newChild%nextSibling => null()
       arg%lastChild => newChild
       newChild%parentNode => arg
-      call namespaceFixup(newChild)
+!      call namespaceFixup(newChild)
     endif
 
     deallocate(arg%childNodes%nodes)
@@ -687,7 +687,7 @@ TOHW_m_dom_get(Node, nextSibling, np%nextSibling)
 
     type(Node), pointer :: doc, treeroot, thatParent, this, new, ERchild
 
-    logical :: doneAttributes, doneChildren, readonly
+    logical :: doneAttributes, doneChildren, readonly, brokenNS
     integer :: i_tree
 
     if (.not.associated(arg)) then
@@ -697,8 +697,10 @@ TOHW_m_dom_get(Node, nextSibling, np%nextSibling)
     thatParent => null()
     ERchild => null()
     doc => getOwnerDocument(arg)
+    if (.not.associated(doc)) return
     np => null()
-    
+    brokenNS = doc%docExtras%brokenNS
+    doc%docExtras%brokenNS = .true. ! May need to do stupid NS things
     readonly = .false.
 
     treeroot => arg
@@ -776,8 +778,7 @@ TOHW_m_dom_treewalk(`
 ', `parentNode')
 
     np => thatParent
-
-    call namespaceFixup(np)
+    doc%docExtras%brokenNS = brokenNS
 
   end function cloneNode
 

@@ -196,6 +196,7 @@ module m_dom_dom
     type(namedNodeMap) :: entities ! actually for doctype
     type(namedNodeMap) :: notations ! actually for doctype
     logical :: strictErrorChecking = .true.
+    logical :: brokenNS = .false. ! FIXME consolidate these logical variables into bitmask
     type(DOMConfiguration), pointer :: domConfig
   end type documentExtras
 
@@ -1712,13 +1713,13 @@ endif
             i_t = i_t + 1
             temp_nl(i_t)%this => newChild%childNodes%nodes(i2)%this
             temp_nl(i_t)%this%parentNode => arg
-            call namespaceFixup(temp_nl(i_t)%this)
+!            call namespaceFixup(temp_nl(i_t)%this)
           enddo
         else
           i_t = i_t + 1
           temp_nl(i_t)%this => newChild
           temp_nl(i_t)%this%parentNode => arg
-          call namespaceFixup(temp_nl(i_t)%this)
+!          call namespaceFixup(temp_nl(i_t)%this)
         endif
         if (i==1) then
           arg%firstChild => temp_nl(1)%this
@@ -2213,13 +2214,13 @@ endif
             i_t = i_t + 1
             temp_nl(i_t)%this => newChild%childNodes%nodes(i2)%this
             temp_nl(i_t)%this%parentNode => arg
-            call namespaceFixup(temp_nl(i_t)%this)
+!            call namespaceFixup(temp_nl(i_t)%this)
           enddo
         else
           i_t = i_t + 1
           temp_nl(i_t)%this => newChild
           temp_nl(i_t)%this%parentNode => arg
-          call namespaceFixup(temp_nl(i_t)%this)
+!          call namespaceFixup(temp_nl(i_t)%this)
         endif
         if (i==1) then
           arg%firstChild => temp_nl(1)%this
@@ -2256,7 +2257,7 @@ endif
     np%previousSibling => null()
     np%nextSibling => null()
 
-    call namespaceFixup(np)
+!    call namespaceFixup(np)
 
     if (getGCstate(arg%ownerDocument)) then
       if (arg%inDocument) then
@@ -2369,7 +2370,7 @@ endif
     oldChild%previousSibling => null()
     oldChild%nextSibling => null()
 
-    call namespaceFixup(oldChild)
+!    call namespaceFixup(oldChild)
 
     if (getGCstate(arg%ownerDocument)) then
       if (arg%inDocument) then
@@ -2810,7 +2811,7 @@ endif
         if (arg%inDocument) &
           call putNodesInDocument(arg%ownerDocument, temp_nl(i_t)%this)
         temp_nl(i_t)%this%parentNode => arg
-        call namespaceFixup(temp_nl(i_t)%this)
+!        call namespaceFixup(temp_nl(i_t)%this)
       enddo
       if (arg%childNodes%length==0) then
         arg%firstChild => newChild%firstChild
@@ -2841,7 +2842,7 @@ endif
       newChild%nextSibling => null()
       arg%lastChild => newChild
       newChild%parentNode => arg
-      call namespaceFixup(newChild)
+!      call namespaceFixup(newChild)
     endif
 
     deallocate(arg%childNodes%nodes)
@@ -2885,7 +2886,7 @@ endif
 
     type(Node), pointer :: doc, treeroot, thatParent, this, new, ERchild
 
-    logical :: doneAttributes, doneChildren, readonly
+    logical :: doneAttributes, doneChildren, readonly, brokenNS
     integer :: i_tree
 
     if (.not.associated(arg)) then
@@ -2903,8 +2904,10 @@ endif
     thatParent => null()
     ERchild => null()
     doc => getOwnerDocument(arg)
+    if (.not.associated(doc)) return
     np => null()
-    
+    brokenNS = doc%docExtras%brokenNS
+    doc%docExtras%brokenNS = .true. ! May need to do stupid NS things
     readonly = .false.
 
     treeroot => arg
@@ -3060,8 +3063,7 @@ endif
 
 
     np => thatParent
-
-    call namespaceFixup(np)
+    doc%docExtras%brokenNS = brokenNS
 
   end function cloneNode
 
@@ -5163,6 +5165,7 @@ endif
     allocate(doc%docExtras%xds%documentURI(0))
     doc%docExtras%entities%ownerElement => doc
     doc%docExtras%notations%ownerElement => doc
+    allocate(doc%docExtras%domConfig)
 
     if (associated(docType)) then
       dt => docType
@@ -5170,9 +5173,18 @@ endif
       doc%docExtras%docType => appendChild(doc, dt, ex)
     endif
     
-    de => createElementNS(doc, namespaceURI, qualifiedName)
-    de => appendChild(doc, de)
-    call setDocumentElement(doc, de)
+    if (qualifiedName/="") then
+      ! NB It is impossible to create a non-namespaced document.
+      ! although namespaceURI may be null, which appears to be
+      ! the intended way to do that.
+      if (namespaceURI=="") then
+        de => createElementNS(doc, namespaceURI, qualifiedName)
+      else
+        de => createElement(doc, qualifiedName)
+      endif
+        de => appendChild(doc, de)
+        call setDocumentElement(doc, de)
+    endif
 
     call setGCstate(doc, .true.)
 
@@ -6109,6 +6121,7 @@ endif
 
     type(Node), pointer :: ent, newNode
     integer :: i
+    logical :: brokenNS
 
     if (.not.associated(arg)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
@@ -6171,11 +6184,14 @@ endif
 endif
 
           endif
+          brokenNS = arg%docExtras%brokenNS
+          arg%docExtras%brokenNS = .true. ! We need to not worry about NS errors for a bit
           do i = 0, getLength(getChildNodes(ent)) - 1
             newNode => appendChild(np, cloneNode(item(getChildNodes(ent), i), .true., ex))
             ! No namespace calcs here - wait for a namespace normalization
             call setReadOnlyNode(newNode, .true., .true.)
           enddo
+          arg%docExtras%brokenNS = brokenNS ! FIXME also for all new default attributes
         elseif (getXmlStandalone(arg)) then
           if (getFoX_checks().or.FoX_NO_SUCH_ENTITY<200) then
   call throw_exception(FoX_NO_SUCH_ENTITY, "createEntityReference", ex)
@@ -6427,7 +6443,7 @@ endif
     type(Node), pointer :: this, thatParent, new, treeroot
     type(xml_doc_state), pointer :: xds
     type(element_t), pointer :: elem
-    logical :: doneAttributes, doneChildren
+    logical :: doneAttributes, doneChildren, brokenNS
     integer :: i_tree, i_default
 
     if (.not.associated(doc).or..not.associated(arg)) then
@@ -6464,7 +6480,8 @@ endif
 endif
 
     endif
-
+    brokenNS = doc%docExtras%brokenNS
+    doc%docExtras%brokenNS = .true. ! We need to do stupid NS things
     xds => getXds(doc)
     thatParent => null()
     treeroot => arg
@@ -6482,10 +6499,10 @@ endif
         select case (getNodeType(this))
         case (ELEMENT_NODE)
           if (.not.doneAttributes) then
-            if (getNamespaceURI(this)=="") then
-              new => createElement(doc, getTagName(this))
-            else
+            if (getParameter(getDomConfig(doc), "namespaces")) then
               new => createElementNS(doc, getNamespaceURI(this), getTagName(this))
+            else
+              new => createElement(doc, getTagName(this))
             endif
           endif
         case (ATTRIBUTE_NODE)
@@ -6493,10 +6510,10 @@ endif
             ! We are importing just this attribute node
             ! or this was an explicitly specified attribute; either
             ! way, we import it as is, and it remains specified.
-            if (getNamespaceURI(this)=="") then
-              new => createAttribute(doc, getName(this))
-            else
+            if (getParameter(getDomConfig(doc), "namespaces")) then
               new => createAttributeNS(doc, getNamespaceURI(this), getName(this))
+            else
+              new => createAttribute(doc, getName(this))
             endif
             call setSpecified(new, .true.)
           else
@@ -6664,8 +6681,8 @@ endif
 
 
     np => thatParent
-
-    call namespaceFixup(np)
+    doc%docExtras%brokenNS = brokenNS
+!    call namespaceFixup(np)
 
   end function importNode
 
@@ -6722,7 +6739,7 @@ endif
 endif
 
     elseif (prefixOfQName(qualifiedName)/="" &
-     .and. namespaceURI=="") then
+     .and. namespaceURI=="".and..not.arg%docExtras%brokenNS) then
       if (getFoX_checks().or.NAMESPACE_ERR<200) then
   call throw_exception(NAMESPACE_ERR, "createElementNS", ex)
   if (present(ex)) then
@@ -6850,7 +6867,7 @@ endif
 endif
 
     elseif (prefixOfQName(qualifiedName)/="" &
-     .and. namespaceURI=="") then
+     .and. namespaceURI=="".and..not.arg%docExtras%brokenNS) then
       if (getFoX_checks().or.NAMESPACE_ERR<200) then
   call throw_exception(NAMESPACE_ERR, "createAttributeNS", ex)
   if (present(ex)) then

@@ -386,6 +386,7 @@ TOHW_m_dom_treewalk(`
 
     type(Node), pointer :: ent, newNode
     integer :: i
+    logical :: brokenNS
 
     if (.not.associated(arg)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
@@ -408,11 +409,14 @@ TOHW_m_dom_treewalk(`
           if (getIllFormed(ent)) then
             TOHW_m_dom_throw_error(FoX_INVALID_ENTITY)
           endif
+          brokenNS = arg%docExtras%brokenNS
+          arg%docExtras%brokenNS = .true. ! We need to not worry about NS errors for a bit
           do i = 0, getLength(getChildNodes(ent)) - 1
             newNode => appendChild(np, cloneNode(item(getChildNodes(ent), i), .true., ex))
             ! No namespace calcs here - wait for a namespace normalization
             call setReadOnlyNode(newNode, .true., .true.)
           enddo
+          arg%docExtras%brokenNS = brokenNS ! FIXME also for all new default attributes
         elseif (getXmlStandalone(arg)) then
           TOHW_m_dom_throw_error(FoX_NO_SUCH_ENTITY, (np))
         endif
@@ -536,7 +540,7 @@ TOHW_m_dom_treewalk(`dnl
     type(Node), pointer :: this, thatParent, new, treeroot
     type(xml_doc_state), pointer :: xds
     type(element_t), pointer :: elem
-    logical :: doneAttributes, doneChildren
+    logical :: doneAttributes, doneChildren, brokenNS
     integer :: i_tree, i_default
 
     if (.not.associated(doc).or..not.associated(arg)) then
@@ -549,7 +553,8 @@ TOHW_m_dom_treewalk(`dnl
       getNodeType(arg)==DOCUMENT_TYPE_NODE) then
       TOHW_m_dom_throw_error(NOT_SUPPORTED_ERR)
     endif
-
+    brokenNS = doc%docExtras%brokenNS
+    doc%docExtras%brokenNS = .true. ! We need to do stupid NS things
     xds => getXds(doc)
     thatParent => null()
     treeroot => arg
@@ -559,10 +564,10 @@ TOHW_m_dom_treewalk(`dnl
         select case (getNodeType(this))
         case (ELEMENT_NODE)
           if (.not.doneAttributes) then
-            if (getNamespaceURI(this)=="") then
-              new => createElement(doc, getTagName(this))
-            else
+            if (getParameter(getDomConfig(doc), "namespaces")) then
               new => createElementNS(doc, getNamespaceURI(this), getTagName(this))
+            else
+              new => createElement(doc, getTagName(this))
             endif
           endif
         case (ATTRIBUTE_NODE)
@@ -570,10 +575,10 @@ TOHW_m_dom_treewalk(`dnl
             ! We are importing just this attribute node
             ! or this was an explicitly specified attribute; either
             ! way, we import it as is, and it remains specified.
-            if (getNamespaceURI(this)=="") then
-              new => createAttribute(doc, getName(this))
-            else
+            if (getParameter(getDomConfig(doc), "namespaces")) then
               new => createAttributeNS(doc, getNamespaceURI(this), getName(this))
+            else
+              new => createAttribute(doc, getName(this))
             endif
             call setSpecified(new, .true.)
           else
@@ -655,8 +660,8 @@ TOHW_m_dom_treewalk(`dnl
 ', `', `parentNode', `')
 
     np => thatParent
-
-    call namespaceFixup(np)
+    doc%docExtras%brokenNS = brokenNS
+!    call namespaceFixup(np)
 
   end function importNode
 
@@ -680,7 +685,7 @@ TOHW_m_dom_treewalk(`dnl
     elseif (.not.checkQName(qualifiedName, getXds(arg))) then
       TOHW_m_dom_throw_error(NAMESPACE_ERR)
     elseif (prefixOfQName(qualifiedName)/="" &
-     .and. namespaceURI=="") then
+     .and. namespaceURI=="".and..not.arg%docExtras%brokenNS) then
       TOHW_m_dom_throw_error(NAMESPACE_ERR)
     elseif (namespaceURI=="http://www.w3.org/XML/1998/namespace" .neqv. &
       prefixOfQName(qualifiedName)=="xml") then
@@ -751,7 +756,7 @@ TOHW_m_dom_treewalk(`dnl
     elseif (.not.checkQName(qualifiedName, getXds(arg))) then
       TOHW_m_dom_throw_error(NAMESPACE_ERR)
     elseif (prefixOfQName(qualifiedName)/="" &
-     .and. namespaceURI=="") then
+     .and. namespaceURI=="".and..not.arg%docExtras%brokenNS) then
       TOHW_m_dom_throw_error(NAMESPACE_ERR)
     elseif (namespaceURI=="http://www.w3.org/XML/1998/namespace" .neqv. &
       prefixOfQName(qualifiedName)=="xml") then

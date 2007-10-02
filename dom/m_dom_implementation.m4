@@ -115,6 +115,7 @@ TOHW_m_dom_contents(`
     allocate(doc%docExtras%xds%documentURI(0))
     doc%docExtras%entities%ownerElement => doc
     doc%docExtras%notations%ownerElement => doc
+    allocate(doc%docExtras%domConfig)
 
     if (associated(docType)) then
       dt => docType
@@ -122,9 +123,18 @@ TOHW_m_dom_contents(`
       doc%docExtras%docType => appendChild(doc, dt, ex)
     endif
     
-    de => createElementNS(doc, namespaceURI, qualifiedName)
-    de => appendChild(doc, de)
-    call setDocumentElement(doc, de)
+    if (qualifiedName/="") then
+      ! NB It is impossible to create a non-namespaced document.
+      ! although namespaceURI may be null, which appears to be
+      ! the intended way to do that.
+      if (namespaceURI=="") then
+        de => createElementNS(doc, namespaceURI, qualifiedName)
+      else
+        de => createElement(doc, qualifiedName)
+      endif
+        de => appendChild(doc, de)
+        call setDocumentElement(doc, de)
+    endif
 
     call setGCstate(doc, .true.)
 
