@@ -51,10 +51,8 @@ module m_dom_parse
 
   type(DOMConfiguration), pointer :: domConfig
   
-  logical :: cdata_sections, cdata, not_split_cdata_sections
-  logical :: entities_expand, not_comments
+  logical :: cdata
   logical :: error
-  logical :: context
   character, pointer :: inEntity(:) => null()
 
 contains
@@ -245,10 +243,10 @@ contains
   end subroutine notationDecl_handler
 
   subroutine startCdata_handler()
-    if (cdata_sections) cdata = .true.
+    if (getParameter(domConfig, "cdata-sections")) cdata = .true.
   end subroutine startCdata_handler
   subroutine endCdata_handler()
-    if (cdata_sections) cdata = .false.
+    cdata = .false.
   end subroutine endCdata_handler
 
   subroutine internalEntityDecl_handler(name, value)
@@ -392,8 +390,6 @@ contains
       call setParameter(domConfig, "cdata-sections", &
         (index(configuration, "cdata-sections")==1).or.(index(configuration, " cdata-sections")>0))
       ! need to do double check to avoid finding split-cdata-sections
-      call setParameter(domConfig, "comments", &
-        index(configuration, "comments")>0)
       call setParameter(domConfig, "entities", &
         index(configuration, "entities")>0)
       call setParameter(domConfig, "split-cdata-sections", &
