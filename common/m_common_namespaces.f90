@@ -439,13 +439,14 @@ contains
 
 
   subroutine checkNamespaces(atts, nsDict, ix, xds, namespace_prefixes, xmlns_uris, es, &
-    start_prefix_handler, end_prefix_handler)
+    partial, start_prefix_handler, end_prefix_handler)
     type(dictionary_t), intent(inout) :: atts
     type(namespaceDictionary), intent(inout) :: nsDict
     integer, intent(in) :: ix ! depth of nesting of current element.
     type(xml_doc_state), intent(in) :: xds
     logical, intent(in) :: namespace_prefixes, xmlns_uris
     type(error_stack), intent(inout) :: es
+    logical, intent(in) :: partial ! if so, don't try and resolve anything except xml & xmlns
     optional :: start_prefix_handler, end_prefix_handler
 
     interface
@@ -533,30 +534,36 @@ contains
     ! having done that, now resolve all attribute namespaces:
     do i = 1, getLength(atts)
       QName => vs_str_alloc(get_key(atts,i))
-      n = index(str_vs(QName), ':')
+      n = index(str_vs(QName), ":")
       if (n > 0) then
-        if (str_vs(QName(1:n-1))=='xmlns') then
+        if (str_vs(QName(1:n-1))=="xmlns") then
           ! FIXME but this can be controlled by SAX configuration xmlns-uris
           if (xmlns_uris) then
-            call set_nsURI(atts, i, 'http://www.w3.org/2000/xmlns/')
+            call set_nsURI(atts, i, "http://www.w3.org/2000/xmlns/")
           else
-            call set_nsURI(atts, i, '')
+            call set_nsURI(atts, i, "")
           endif
         else
           if (str_vs(QName(1:n-1))=="xml") then
             call set_nsURI(atts, i, "http://www.w3.org/XML/1998/namespace")
           elseif (getnamespaceURI(nsDict, str_vs(QName(1:n-1)))==invalidNS) then
-            call add_error(es, "Unbound namespace prefix")
-            return
+            ! Sometimes we don't want to worry about unbound prefixes,
+            ! eg if we are in the middle of parsing an entity.
+            if (.not.partial) then
+              call add_error(es, "Unbound namespace prefix")
+              return
+            else
+              call set_nsURI(atts, i, "")
+            endif
           else
             call set_nsURI(atts, i, getnamespaceURI(nsDict, str_vs(QName(1:n-1))))
           endif
         endif
       else
-        if (xmlns_uris.and.str_vs(QName)=='xmlns') then
-          call set_nsURI(atts, i, 'http://www.w3.org/2000/xmlns/')
+        if (xmlns_uris.and.str_vs(QName)=="xmlns") then
+          call set_nsURI(atts, i, "http://www.w3.org/2000/xmlns/")
         else
-          call set_nsURI(atts, i, '') ! no such thing as a default namespace on attributes
+          call set_nsURI(atts, i, "") ! no such thing as a default namespace on attributes
         endif
       endif
       ! Check for duplicates

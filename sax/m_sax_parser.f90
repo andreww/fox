@@ -1584,20 +1584,35 @@ contains
       if (namespaces_) &
         call checkNamespaces(fx%attributes, fx%nsDict, &
         len(fx%elstack), fx%xds, namespace_prefixes_, xmlns_uris_, &
-        fx%error_stack, startPrefixMapping_handler, endPrefixMapping_handler)
+        fx%error_stack, startInCharData_, &
+        startPrefixMapping_handler, endPrefixMapping_handler)
+      if (in_error(fx%error_stack)) return
+      call checkXmlAttributes
       if (in_error(fx%error_stack)) return
       if (namespaces_.and.getURIofQName(fx,str_vs(fx%name))==invalidNS) then
         ! no namespace was found for the current element
-        call add_error(fx%error_stack, "No namespace found for current element")
-        return
+        if (.not.startInCharData_) then
+          ! but we ignore this if we are parsing an entity through DOM
+          call add_error(fx%error_stack, "No namespace found for current element")
+          return
+        elseif (present(startElement_handler)) then
+          ! Record it as having an empty URI
+          call startElement_handler("", &
+            getlocalNameofQName(str_vs(fx%name)), &
+            str_vs(fx%name), fx%attributes)
+        endif
+      elseif (namespaces_) then
+        ! Normal state of affairs
+        if (present(startElement_handler)) &
+          call startElement_handler(getURIofQName(fx, str_vs(fx%name)), &
+          getlocalNameofQName(str_vs(fx%name)), &
+          str_vs(fx%name), fx%attributes)
+      else
+        ! Non-namespace aware processing
+        call startElement_handler("", "", &
+          str_vs(fx%name), fx%attributes)
       endif
-      call checkXmlAttributes
-      if (in_error(fx%error_stack)) return
       call push_elstack(str_vs(fx%name), fx%elstack)
-      if (present(startElement_handler)) &
-        call startElement_handler(getURIofQName(fx, str_vs(fx%name)), &
-        getlocalNameofQName(str_vs(fx%name)), &
-        str_vs(fx%name), fx%attributes)
       call reset_dict(fx%attributes)
       fx%wf_stack(1) = fx%wf_stack(1) + 1
     end subroutine open_tag
@@ -1613,10 +1628,25 @@ contains
         call add_error(fx%error_stack, "Mismatching close tag - expecting "//str_vs(fx%name))
         return
       endif
-      if (present(endElement_handler)) &
-        call endElement_handler(getURIofQName(fx, str_vs(fx%name)), &
-        getlocalnameofQName(str_vs(fx%name)), &
-        str_vs(fx%name))
+      if (present(endElement_handler)) then
+        if (namespaces_.and.getURIofQName(fx,str_vs(fx%name))==invalidNS) then
+          ! no namespace was found for the current element, we must be
+          ! closing inside a DOM entity.
+          ! Record it as having an empty URI
+          call endElement_handler("", &
+            getlocalNameofQName(str_vs(fx%name)), &
+            str_vs(fx%name))
+        elseif (namespaces_) then
+          ! Normal state of affairs
+          call endElement_handler(getURIofQName(fx, str_vs(fx%name)), &
+            getlocalnameofQName(str_vs(fx%name)), &
+            str_vs(fx%name))
+        else
+          ! Non-namespace-aware processing:
+          call endElement_handler("", "", &
+            str_vs(fx%name))
+        endif
+      endif
       if (namespaces_) &
         call checkEndNamespaces(fx%nsDict, len(fx%elstack), &
         endPrefixMapping_handler)
@@ -1724,6 +1754,9 @@ contains
     end subroutine checkImplicitAttributes
 
     subroutine checkXMLAttributes
+      ! This must be done with the name of the attribute,
+      ! not the nsURI/localname pair, in case we are
+      ! processing for a non-namespace aware application
       if (has_key(fx%attributes, 'xml:space')) then
         if (get_value(fx%attributes, 'xml:space')/='default' &
           .and. get_value(fx%attributes, 'xml:space')/='preserve') then
