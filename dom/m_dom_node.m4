@@ -851,7 +851,7 @@ TOHW_m_dom_treewalk(`
           this%nodeValue => temp
         endif
       end if
-',`',)
+',`')
 
 
   end subroutine normalize
@@ -966,6 +966,7 @@ TOHW_m_dom_treewalk(`
         TOHW_m_dom_throw_error(NAMESPACE_ERR)
       endif
 ! FIXME check if prefix is declared and already points to same namespace
+! but only if we ever get full error-checking up and running.
       deallocate(arg%elExtras%prefix)
       arg%elExtras%prefix = vs_str_alloc(prefix)
       tmp => arg%nodeName

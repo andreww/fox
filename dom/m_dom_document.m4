@@ -1005,22 +1005,7 @@ TOHW_m_dom_set(logical, strictErrorChecking, np%docExtras%strictErrorChecking, (
 TOHW_m_dom_get(DOMConfiguration, domConfig, np%docExtras%domConfig, (DOCUMENT_NODE))
 TOHW_m_dom_set(DOMConfiguration, domConfig, np%docExtras%domConfig, (DOCUMENT_NODE))
 
-  TOHW_subroutine(normalizeDocument, (np))
-    type(Node), pointer :: np
-   
-    if (.not.associated(np)) then
-      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
-    endif
-
-    if (np%nodeType/=DOCUMENT_NODE) then
-      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    endif
-
-    ! FIXME check domConfig features.
-    ! normalize text()
-    ! fixup namespaces
-  end subroutine normalizeDocument
-
+dnl subroutine normalizeDocument - see m_dom_namespaces.m4
 !  function renameNode FIXME
 
   ! Internal function, not part of API
