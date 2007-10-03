@@ -34,7 +34,7 @@ module m_dom_dom
 
   integer, parameter :: configParamLen = 42
 
-  character(len=configParamLen), parameter :: configParams(26) = (/ &
+  character(len=configParamLen), parameter :: configParams(23) = (/ &
     ! DOM 3 Core:
     "canonical-form                           ", &
     "cdata-sections                           ", &
@@ -44,12 +44,12 @@ module m_dom_dom
     "element-content-whitespace               ", &
     "entities                                 ", &
     "error-handler                            ", &
-    "infoset                                  ", &
+!    "infoset                                  ", & is not a real config option
     "namespaces                               ", &
     "namespace-declarations                   ", &
     "normalize-characters                     ", &
-    "schema-location                          ", &
-    "schema-type                              ", &
+!    "schema-location                          ", & we dont implement
+!    "schema-type                              ", & we dont implement
     "split-cdata-sections                     ", &
     "validate                                 ", &
     "validate-if-schema                       ", &
@@ -66,7 +66,7 @@ module m_dom_dom
     "xml-declaration                          " /)
 
 !!$  logical, parameter :: paramSettable(26) = (/ &
-!!$    .false., & ! canonical-form
+!!$    .true., & ! canonical-form
 !!$    .true.,  & ! cdata-sections
 !!$    .false., & ! check-character-normalization
 !!$    .true.,  & ! comments
@@ -74,13 +74,11 @@ module m_dom_dom
 !!$    .true.,  & ! element-content-whitespace
 !!$    .true.,  & ! entities
 !!$    .false., & ! error-handler BREACH OF SPEC
-!!$    .false., & ! infoset
+!!$    !.false., & ! infoset
 !!$    .true.,  & ! namespaces
 !!$    .true.,  & ! namespace-declarations
 !!$    .false., & ! normalize-characters
 !!$    .true.,  & ! split-cdata-sections
-!!$    .true.,  & ! validate
-!!$    .true.,  & ! validate-if-schema
 !!$    .false., & ! well-formed
 !!$    .false., & ! charset-overrides-xml-encoding
 !!$    .false., & ! disallow-doctype
@@ -90,7 +88,7 @@ module m_dom_dom
 !!$    .true.,  & ! discard-default-content
 !!$    .false., & ! format-pretty-print
 !!$    .true.  /) ! xml-declaration
-  integer, parameter :: paramSettable = 121695444
+  integer, parameter :: paramSettable = 127956694
 
 !!$  logical, parameter :: paramDefaults(26) = (/ &
 !!$    .false., & ! canonical-form
@@ -101,13 +99,11 @@ module m_dom_dom
 !!$    .true.,  & ! element-content-whitespace
 !!$    .true.,  & ! entities
 !!$    .false., & ! error-handler BREACH OF SPEC
-!!$    .true.,  & ! infoset
+!!$    !.true.,  & ! infoset
 !!$    .true.,  & ! namespaces
 !!$    .true.,  & ! namespace-declarations
 !!$    .false., & ! normalize-characters
 !!$    .true.,  & ! split-cdata-sections
-!!$    .false., & ! validate
-!!$    .false., & ! validate-if-schema
 !!$    .true.,  & ! well-formed
 !!$    .false., & ! charset-overrides-xml-encoding
 !!$    .false., & ! disallow-doctype
@@ -117,7 +113,7 @@ module m_dom_dom
 !!$    .true.,  & ! discard-default-content
 !!$    .false., & ! format-pretty-print
 !!$    .true.  /) ! xml-declaration
-  integer, parameter :: paramDefaults = 55127764
+  integer, parameter :: paramDefaults = 94672596
 
   type DOMConfiguration
     private
@@ -496,13 +492,48 @@ module m_dom_dom
 contains
 
 
+  subroutine resetParameter(domConfig, name)
+    type(DOMConfiguration), pointer :: domConfig
+    character(len=*), intent(in) :: name
+
+    type(DOMConfiguration) :: default
+    integer :: i, n
+    do i = 1, size(configParams)
+      if (name==trim(configParams(i))) then
+        n = i
+        exit
+      endif
+    enddo
+    if (i>size(configParams)) return
+    if (btest(paramDefaults, n)) then
+      domConfig%parameters = ibset(domConfig%parameters, n)
+    else
+      domConfig%parameters = ibclr(domConfig%parameters, n)
+    endif
+  end subroutine resetParameter
+
   recursive subroutine setParameter(domConfig, name, value, ex)
     type(DOMException), intent(out), optional :: ex
     type(DOMConfiguration), pointer :: domConfig
     character(len=*), intent(in) :: name
     logical, intent(in) :: value
-
     integer :: i, n
+
+    if (name=="infoset") then
+      if (value) then
+        call setParameter(domConfig, "validate-if-schema", .false.)
+        call setParameter(domConfig, "entities", .false.)
+        ! cant do datatype-normalization
+        call setParameter(domConfig, "cdata-sections", .false.)
+        call setParameter(domConfig, "namespace-declarations", .true.)
+        ! well-formed cannot be changed
+        call setParameter(domConfig, "element-content-whitespace", .true.)
+        call setParameter(domConfig, "comments", .true.)
+        call setParameter(domConfig, "namespaces", .true.)
+      endif
+      return
+    endif
+
     do i = 1, size(configParams)
       if (name==trim(configParams(i))) then
         n = i
@@ -538,8 +569,34 @@ endif
     endif
 
     select case (trim(name))
-      !case ("canonical-form")
-      !case ("infoset")
+    case ("canonical-form")
+      if (value) then
+        call setParameter(domConfig, "entities", .false.)
+        ! cant do normalize-characters
+        call setParameter(domConfig, "cdata-sections", .false.)
+        call setParameter(domConfig, "namespaces", .true.)
+        call setParameter(domConfig, "namespace-declarations", .true.)
+        ! well-formed cannot be changed
+        call setParameter(domConfig, "element-content-whitespace", .true.)
+      else
+        call resetParameter(domConfig, "entities")
+        ! cant do normalize-characters
+        call resetParameter(domConfig, "cdata-sections")
+        call resetParameter(domConfig, "namespaces")
+        call resetParameter(domConfig, "namespace-declarations")
+        ! well-formed cannot be changed
+        call resetParameter(domConfig, "element-content-whitespace")
+      endif
+    case ("cdata-sections")
+      if (value) call setParameter(domConfig, "canonical-form", .false.)
+    case ("element-content-whitespace")
+      if (.not.value) call setParameter(domConfig, "canonical-form", .false.)
+    case ("entities")
+      if (value) call setParameter(domConfig, "canonical-form", .false.)
+    case ("namespaces")
+      if (.not.value) call setParameter(domConfig, "canonical-form", .false.)
+    case ("namespaces-declarations")
+      if (.not.value) call setParameter(domConfig, "canonical-form", .false.)
     case("validate")
       if (value) call setParameter(domConfig, "validate-if-schema", .false.)
     case ("validate-if-schema")
@@ -548,13 +605,28 @@ endif
 
   end subroutine setParameter
 
-  function getParameter(domConfig, name, ex)result(value) 
+  recursive function getParameter(domConfig, name, ex)result(value) 
     type(DOMException), intent(out), optional :: ex
     type(DOMConfiguration), pointer :: domConfig
     character(len=*), intent(in) :: name
     logical :: value
 
     integer :: i, n
+
+    if (name=="infoset") then
+      value = &
+        .not.getParameter(domConfig, "validate-if-schema") &
+        .and..not.getParameter(domConfig, "entities") &
+        .and..not.getParameter(domConfig, "datatype-normalization") &
+        .and..not.getParameter(domConfig, "cdata-sections") &
+        .and.getParameter(domConfig, "namespace-declarations") &
+        .and.getParameter(domConfig, "well-formed") &
+        .and.getParameter(domConfig, "element-content-whitespace") &
+        .and.getParameter(domConfig, "comments") &
+        .and.getParameter(domConfig, "namespaces")
+      return
+    endif
+
     do i = 1, size(configParams)
       if (name==trim(configParams(i))) then
         n = i
