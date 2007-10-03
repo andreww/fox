@@ -66,11 +66,14 @@ module FoX_dom
   public :: createAttribute
   public :: createEntityReference
   public :: getElementsByTagName
+  public :: getElementById
+
   public :: importNode
   public :: createElementNS
   public :: createAttributeNS
   public :: getElementsByTagNameNS
-  public :: getElementById
+
+
   public :: getXmlStandalone
   public :: setXmlStandalone
   public :: getXmlVersion
@@ -81,6 +84,7 @@ module FoX_dom
   public :: setDocumentURI
   public :: getStrictErrorChecking
   public :: setStrictErrorChecking
+  public :: getDomConfig
 
   ! DOM Node
   public :: ELEMENT_NODE
@@ -115,9 +119,6 @@ module FoX_dom
   public :: hasChildNodes
   public :: cloneNode
   public :: normalize
-  public :: isDefaultNamespace
-  public :: lookupNamespaceURI
-  public :: lookupPrefix
 
   public :: isSupported
   public :: getNamespaceURI
@@ -127,6 +128,9 @@ module FoX_dom
   public :: hasAttributes
 
   public :: isSameNode
+  public :: isDefaultNamespace
+  public :: lookupNamespaceURI
+  public :: lookupPrefix
 
   ! DOM NodeList
   public :: item
@@ -211,6 +215,12 @@ module FoX_dom
   public :: getName
   public :: getPublicId
   public :: getSystemId
+
+  !DOM Configuration
+  public :: DOMConfiguration
+  public :: getParameter
+  public :: setParameter
+  public :: canSetParameter
 
   ! FoX-only interfaces
   public :: parseFile

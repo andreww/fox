@@ -30,6 +30,7 @@ TOHW_m_dom_publics(`
   public :: setDocumentURI
   public :: getStrictErrorChecking
   public :: setStrictErrorChecking
+  public :: getDomConfig
 
   public :: setDocType
   public :: setDomConfig

@@ -394,6 +394,7 @@ module m_dom_dom
   public :: setDocumentURI
   public :: getStrictErrorChecking
   public :: setStrictErrorChecking
+  public :: getDomConfig
 
   public :: setDocType
   public :: setDomConfig
@@ -578,6 +579,9 @@ endif
         call setParameter(domConfig, "namespace-declarations", .true.)
         ! well-formed cannot be changed
         call setParameter(domConfig, "element-content-whitespace", .true.)
+        call setParameter(domConfig, "format-pretty-print", .false.)
+        call setParameter(domConfig, "discard-default-content", .false.)
+        call setParameter(domConfig, "xml-declaration", .false.)
       else
         call resetParameter(domConfig, "entities")
         ! cant do normalize-characters
@@ -586,6 +590,9 @@ endif
         call resetParameter(domConfig, "namespace-declarations")
         ! well-formed cannot be changed
         call resetParameter(domConfig, "element-content-whitespace")
+        call resetParameter(domConfig, "format-pretty-print")
+        call resetParameter(domConfig, "discard-default-content")
+        call resetParameter(domConfig, "xml-declaration")
       endif
     case ("cdata-sections")
       if (value) call setParameter(domConfig, "canonical-form", .false.)
@@ -601,6 +608,12 @@ endif
       if (value) call setParameter(domConfig, "validate-if-schema", .false.)
     case ("validate-if-schema")
       if (value) call setParameter(domConfig, "validate", .false.)
+    case ("format-pretty-print")
+      if (value) call setParameter(domConfig, "canonical-form", .false.)
+    case ("discard-default-content")
+      if (value) call setParameter(domConfig, "canonical-form", .false.)
+    case ("xml-declaration")
+      if (value) call setParameter(domConfig, "canonical-form", .false.)
     end select
 
   end subroutine setParameter

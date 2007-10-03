@@ -18,7 +18,7 @@ module m_dom_utils
     getAttributes, getParentNode, getChildNodes, getPrefix, getLocalName, getXmlVersion, &
     getNodeName, getData, getName, getTagName, getValue, getTarget, getNamespaceNodes, &
     getEntities, getNotations, item, getSystemId, getPublicId, getNotationName, getStringValue, &
-    getNamespaceURI
+    getNamespaceURI, DOMConfiguration, getDomConfig, getParameter, getSpecified, getOwnerDocument
   use m_dom_error, only: DOMException, inException, throw_exception, &
     FoX_INVALID_NODE, SERIALIZE_ERR, FoX_INTERNAL_ERROR
 
@@ -97,38 +97,52 @@ contains
 
 
   TOHW_subroutine(serialize, (startNode, name))
-
     type(Node), pointer :: startNode   
     character(len=*), intent(in) :: name
 
+    type(Node), pointer :: doc
     type(xmlf_t)  :: xf
     integer :: iostat
-    logical :: standalone
-    character(3) :: xmlVersion
+    logical :: xmlDecl
 
     if (getNodeType(startNode)/=DOCUMENT_NODE &
       .and.getNodeType(startNode)/=ELEMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
     
-    standalone = .false.
     if (getNodeType(startNode)==DOCUMENT_NODE) then
-      standalone = getXmlStandalone(startNode)
-      xmlVersion = getXmlVersion(startNode)
+      doc => startNode
+      if (getParameter(getDomConfig(doc), "canonical-form") &
+        .and.getXmlVersion(doc)=="1.1") then
+        TOHW_m_dom_throw_error(SERIALIZE_ERR)
+      endif
+      call normalizeDocument(startNode)
+    else
+      doc => getOwnerDocument(startNode)
+      ! We need to do this namespace fixup or serialization will fail.
+      ! it doesn't change the semantics of the docs, but other
+      ! normalization would, so dont
+      if (getParameter(getDomConfig(doc), "namespaces")) &
+        call namespaceFixup(startNode)
     endif
+    xmlDecl = getParameter(getDomConfig(doc), "xml-declaration")
 
-    !FIXME preserve_whitespace should be optional to serialize
+    ! FIXME we shouldnt really normalize the Document here
+    ! (except for namespace Normalization) but rather just
+    ! pay attention to the DOMConfig values
+
     call xml_OpenFile(name, xf, iostat=iostat, unit=-1, &
-      preserve_whitespace=.true., warning=.false., addDecl=(getNodeType(startNode)/=DOCUMENT_NODE))
+      preserve_whitespace=.not.getParameter(getDomConfig(doc), "format-pretty-print"), &
+      warning=.false., addDecl=xmlDecl)
     if (iostat/=0) then
       TOHW_m_dom_throw_error(SERIALIZE_ERR)
     endif
 
-    if (getNodeType(startNode)==DOCUMENT_NODE) then
-      if (standalone) then
-        call xml_AddXMLDeclaration(xf, version=XmlVersion, standalone=standalone)
+    if (xmlDecl) then
+      if (getXmlStandalone(doc)) then
+        call xml_AddXMLDeclaration(xf, version=getXmlVersion(doc), standalone=.true.)
       else
-        call xml_AddXMLDeclaration(xf, version=XmlVersion)
+        call xml_AddXMLDeclaration(xf, version=getXmlVersion(doc))
       endif
     endif
 
@@ -142,14 +156,17 @@ contains
 
     type(Node), pointer :: this, arg, treeroot, attrchild
     type(NamedNodeMap), pointer :: nnm
+    type(DOMConfiguration), pointer :: dc
     integer :: i_tree, j
     logical :: doneChildren, doneAttributes
-    logical :: cdata, entities
     character, pointer :: attrvalue(:), tmp(:)
 
-!FIXME options for entityrefs & cdata ...
-    cdata = .false.
-    entities = .true.
+    if (getNodeType(arg)==DOCUMENT_NODE) then
+      dc => getDomConfig(arg)
+    else
+      dc => getDomConfig(getOwnerDocument(arg))
+    endif
+
     treeroot => arg
 TOHW_m_dom_treewalk(`dnl
     select case(getNodeType(this))
@@ -166,47 +183,40 @@ TOHW_m_dom_treewalk(`dnl
       enddo
       call xml_NewElement(xf, getTagName(this))
     case (ATTRIBUTE_NODE)
-      if (getPrefix(this)/="xmlns".and.getLocalName(this)/="xmlns") then
-        if (entities) then
-          allocate(attrvalue(0))
-          do j = 0, getLength(getChildNodes(this)) - 1
-            attrchild => item(getChildNodes(this), j)
-            if (getNodeType(attrchild)==TEXT_NODE) then
-              tmp => attrvalue
-              allocate(attrvalue(size(tmp)+getLength(attrchild)))
-              attrvalue(:size(tmp)) = tmp
-              attrvalue(size(tmp)+1:) = vs_str(getData(attrChild))
-              deallocate(tmp)
-            elseif (getNodeType(attrchild)==ENTITY_REFERENCE_NODE) then
-              tmp => attrvalue
-              allocate(attrvalue(size(tmp)+len(getNodeName(attrchild))+2))
-              attrvalue(:size(tmp)) = tmp
-              attrvalue(size(tmp)+1:) = vs_str("&"//getData(attrChild)//";")
-              deallocate(tmp)
-            else
-              TOHW_m_dom_throw_error(FoX_INTERNAL_ERROR)
-            endif
-          enddo
-          call xml_AddAttribute(xf, getName(this), str_vs(attrvalue))
-          deallocate(attrvalue)
-        else
-          call xml_AddAttribute(xf, getName(this), getValue(this))
-        endif
+      if (.not.getParameter(dc, "discard-default_attributes") &
+        .or.getSpecified(this)) then
+        ! only output it if it is not a default, or we are outputting defaults
+        ! we might have to worry about entrefs being preserved in the attvalue
+        ! if we dont, we only go through the loop once anyway.
+        do j = 0, getLength(getChildNodes(this)) - 1
+          attrchild => item(getChildNodes(this), j)
+          if (getNodeType(attrchild)==TEXT_NODE) then
+            tmp => attrvalue
+            allocate(attrvalue(size(tmp)+getLength(attrchild)))
+            attrvalue(:size(tmp)) = tmp
+            attrvalue(size(tmp)+1:) = vs_str(getData(attrChild))
+            deallocate(tmp)
+          elseif (getNodeType(attrchild)==ENTITY_REFERENCE_NODE) then
+            tmp => attrvalue
+            allocate(attrvalue(size(tmp)+len(getNodeName(attrchild))+2))
+            attrvalue(:size(tmp)) = tmp
+            attrvalue(size(tmp)+1:) = vs_str("&"//getData(attrChild)//";")
+            deallocate(tmp)
+          else
+            TOHW_m_dom_throw_error(FoX_INTERNAL_ERROR)
+          endif
+        enddo
+        call xml_AddAttribute(xf, getName(this), str_vs(attrvalue))
+        deallocate(attrvalue)
       endif
       doneChildren = .true.
     case (TEXT_NODE)
       call xml_AddCharacters(xf, getData(this))
     case (CDATA_SECTION_NODE)
-      if (cdata) then
-        call xml_AddCharacters(xf, getData(this), parsed = .false.)
-      else
-        call xml_AddCharacters(xf, getData(this))
-      endif
+      call xml_AddCharacters(xf, getData(this), parsed = .false.)
     case (ENTITY_REFERENCE_NODE)
-      if (entities) then
-        call xml_AddEntityReference(xf, getNodeName(this))
-        doneChildren = .true.
-      endif
+      call xml_AddEntityReference(xf, getNodeName(this))
+      doneChildren = .true.
     case (PROCESSING_INSTRUCTION_NODE)
       call xml_AddXMLPI(xf, getTarget(this), getData(this))
     case (COMMENT_NODE)
@@ -242,7 +252,7 @@ TOHW_m_dom_treewalk(`dnl
         endif
       enddo
     end select
-',`
+'`',`
     if (getNodeType(this)==ELEMENT_NODE) then
       call xml_EndElement(xf, getTagName(this))
     endif
