@@ -78,8 +78,6 @@ module m_dom_dom
 !!$    .true.,  & ! namespaces
 !!$    .true.,  & ! namespace-declarations
 !!$    .false., & ! normalize-characters
-!!$    .false., & ! schema-location
-!!$    .false., & ! schema-type
 !!$    .true.,  & ! split-cdata-sections
 !!$    .true.,  & ! validate
 !!$    .true.,  & ! validate-if-schema
@@ -92,7 +90,7 @@ module m_dom_dom
 !!$    .true.,  & ! discard-default-content
 !!$    .false., & ! format-pretty-print
 !!$    .true.  /) ! xml-declaration
-  integer, parameter :: paramSettable = 84118740
+  integer, parameter :: paramSettable = 121695444
 
 !!$  logical, parameter :: paramDefaults(26) = (/ &
 !!$    .false., & ! canonical-form
@@ -107,8 +105,6 @@ module m_dom_dom
 !!$    .true.,  & ! namespaces
 !!$    .true.,  & ! namespace-declarations
 !!$    .false., & ! normalize-characters
-!!$    .false., & ! schema-location BREACH OF SPEC
-!!$    .false., & ! schema-type BREACH OF SPEC
 !!$    .true.,  & ! split-cdata-sections
 !!$    .false., & ! validate
 !!$    .false., & ! validate-if-schema
@@ -121,7 +117,7 @@ module m_dom_dom
 !!$    .true.,  & ! discard-default-content
 !!$    .false., & ! format-pretty-print
 !!$    .true.  /) ! xml-declaration
-  integer, parameter :: paramDefaults = 86281940
+  integer, parameter :: paramDefaults = 55127764
 
   type DOMConfiguration
     private
