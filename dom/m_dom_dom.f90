@@ -13,6 +13,7 @@ module m_dom_dom
   use m_common_array_str, only: str_vs, vs_str, vs_str_alloc
   use m_common_charset, only: checkChars, XML1_0, XML1_1
   use m_common_element, only: element_t, get_element, default_att_index, ATT_DEFAULT
+  use m_common_format, only: operator(//)
   use m_common_namecheck, only: checkQName, prefixOfQName, localPartOfQName, &
     checkName, checkPublicId, checkSystemId, checkNCName
   use m_common_string, only: toLower
@@ -3503,6 +3504,15 @@ endif
 
   end function isSameNode
 
+  !FIXME all the lookup* functions below are out of spec,
+  ! since they rely on a statically-calculated set of NSnodes
+  ! which is only generated at parse time, and updated after
+  ! normalize.
+  ! the spec reckons it should be dynamic, but because we need
+  ! to know string lengths, which must be calculated inside
+  ! a pure function, we cant do the recursive walk we need to.
+  ! (although isDefaultNamespace could be fixed easily enough)
+
   function isDefaultNamespace(np, namespaceURI, ex)result(p) 
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: np
@@ -3672,8 +3682,10 @@ endif
     if (np%nodeType/=ELEMENT_NODE &
       .and. np%nodeType/=ATTRIBUTE_NODE &
       .and. np%nodeType/=DOCUMENT_NODE) return
-
-    if (namespaceURI=="http://www.w3.org/XML/1998/namespace") then
+    
+    if (namespaceURI=="") then
+      return
+    elseif (namespaceURI=="http://www.w3.org/XML/1998/namespace") then
       n = len("xml")
       return
     elseif (namespaceURI=="http://www.w3.org/2000/xmlns/") then
@@ -3748,7 +3760,10 @@ endif
       el => getDocumentElement(np)
     end select
 
-    if (namespaceURI=="http://www.w3.org/XML/1998/namespace") then
+    if (namespaceURI=="") then
+      c = ""
+      return
+    elseif (namespaceURI=="http://www.w3.org/XML/1998/namespace") then
       c = "xml"
       return
     elseif (namespaceURI=="http://www.w3.org/2000/xmlns/") then
@@ -10630,10 +10645,10 @@ endif
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: np
 
-    type(Node), pointer :: relevantAncestor, child
+    type(Node), pointer :: relevantAncestor, child, attr
     type(NamedNodeMap), pointer :: attrs
     type(NodeList), pointer :: nsNodes, nsNodesParent
-    integer :: i
+    integer :: i, nsIndex
 
     if (getNodeType(np) /= ELEMENT_NODE &
       .and. getNodeType(np) /= ENTITY_REFERENCE_NODE &
@@ -10671,20 +10686,137 @@ endif
         allocate(nsNodes%nodes(0))
         nsNodes%length = 0
       endif
-      
-      ! Override according to declarations
-      attrs => getAttributes(np)
+
+      ! Now check for broken NS declarations, and add namespace
+      ! nodes for all non-broken declarations
       do i = 0, getLength(attrs)-1
-        if (getNamespaceURI(item(attrs, i))=="http://www.w3.org/2000/xmlns/") then
-          if (getLocalName(item(attrs, i))=="xmlns") then
-            call appendNSNode(np, "", getValue(item(attrs, i)), specified=.true.)
+        attr => item(attrs, i)
+        if ((getLocalName(attr)=="xmlns" &
+          .or.getPrefix(attr)=="xmlns") &
+          .and.getNamespaceURI(attr)/="http://www.w3.org/2000/xmlns/") then
+          ! This can only I think happen if we bugger about with setPrefix ...
+          if (getFoX_checks().or.NAMESPACE_ERR<200) then
+  call throw_exception(NAMESPACE_ERR, "namespaceFixup", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+        endif
+        if (getNamespaceURI(attr)=="http://www.w3.org/2000/xmlns/") then
+          if (getLocalName(attr)=="xmlns") then
+            call appendNSNode(np, "", getValue(attr), specified=.true.)
           else
-            call appendNSNode(np, getLocalName(item(attrs, i)), &
-              getValue(item(attrs, i)), specified=.true.)
+            call appendNSNode(np, getLocalName(attr), &
+              getValue(attr), specified=.true.)
           endif
         endif
       enddo
+
+
+      if (getNamespaceURI(np)/="") then
+        if (lookupNamespaceURI(np, getPrefix(np))/=getNamespaceURI(np)) then
+          ! This is a namespaced node, but its nsURI
+          ! is not bound to its prefix.
+          ! This will automatically do any necessary replacements ...
+          if (getPrefix(np)=="") then
+            ! We are dealing with the default prefix
+            call setAttributeNS(np, "http://www.w3.org/2000/xmlns/", &
+              "xmlns", getNamespaceURI(np))
+          else
+            call setAttributeNS(np, "http://www.w3.org/2000/xmlns/", &
+              "xmlns:"//getPrefix(np), getNamespaceURI(np))
+          endif
+          ! and add a namespace node (so that we can do lookups on it)
+          call appendNSNode(np, getPrefix(np), getNamespaceURI(np), specified=.true.)
+        endif ! else it was already declared ...
+      else
+        ! No (or empty) namespace URI ...
+        if (getLocalName(np)=="") then
+          ! DOM level 1 node ... report error
+          if (getFoX_checks().or.NAMESPACE_ERR<200) then
+  call throw_exception(NAMESPACE_ERR, "namespaceFixup", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
     endif
+  endif
+endif
+
+        else
+          ! We must declare the elements prefix to have an empty nsURI
+          if (lookupNamespaceURI(np, getPrefix(np))/="") then
+            if (getPrefix(np)=="") then
+              call setAttributeNS(np, "http://www.w3.org/2000/xmlns/", &
+                "xmlns", "")
+            else
+              call setAttributeNS(np, "http://www.w3.org/2000/xmlns/", &
+                "xmlns:"//getPrefix(np), "")
+            endif
+            ! and add a namespace node for the empty nsURI
+            call appendNSNode(np, getPrefix(np), "", specified=.true.)
+          endif
+        endif
+      endif
+
+      do i = 0, getLength(attrs)-1
+        ! This loops over the number of attrs present initially, so any we
+        ! add within this loop will not get checked - but they will only
+        ! be namespace declarations about which we dont care anyway.
+        attr => item(attrs, i)
+        if (getNamespaceURI(attr)=="http://www.w3.org/2000/xmlns/") then
+          cycle ! We already worried about it above.
+        elseif (getNamespaceURI(attr)/="") then
+          ! This is a namespaced attribute
+          if (getPrefix(attr)=="" &
+            .or. lookupNamespaceURI(np, getPrefix(attr))/=getNamespaceURI(attr)) then
+            ! It has an inappropriate prefix
+            if (lookupPrefix(np, getNamespaceURI(attr))/="") then
+              ! then an appropriate prefix exists, use it.
+              call setPrefix(attr, lookupPrefix(np, getNamespaceURI(attr)))
+              ! FIXME should be "most local" prefix. Make sure lookupPrefix does that.
+            else
+              ! No suitable prefix exists, declare one.
+              if (getPrefix(attr)/="") then
+                ! Then the current prefix is not in use, its just undeclared.
+                call setAttributeNS(np, "http://www.w3.org/2000/xmlns/", &
+                  "xmlns:"//getPrefix(attr), getNamespaceURI(attr))
+                call appendNSNode(np, getPrefix(attr), getNamespaceURI(attr), specified=.true.)
+              else
+                ! This node has no prefix, but needs one. Make it up.
+                nsIndex = 1
+                do while (lookupNamespaceURI(np, "NS"//nsIndex)/="")
+                  ! FIXME this will exit if the namespace is undeclared *or* if it is declared to be empty.
+                  nsIndex = nsIndex+1
+                enddo
+                call setAttributeNS(np, "http://www.w3.org/2000/xmlns/", &
+                  "xmlns:NS"//nsIndex, getNamespaceURI(attr))
+                ! and create namespace node
+                call setPrefix(attr, "NS"//nsIndex)
+              endif
+            endif
+          endif
+        else 
+          ! attribute has no namespace URI
+          if (getLocalName(np)=="") then
+            ! DOM level 1 node ... report error
+            if (getFoX_checks().or.NAMESPACE_ERR<200) then
+  call throw_exception(NAMESPACE_ERR, "namespaceFixup", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+          endif
+          ! otherwise no problem
+        endif
+      enddo
+    endif
+
     ! And now call this on all appropriate children ...
     child => getFirstChild(np)
     do while (associated(child))

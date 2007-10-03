@@ -51,10 +51,10 @@ TOHW_m_dom_contents(`
   recursive TOHW_subroutine(namespaceFixup, (np))
     type(Node), pointer :: np
 
-    type(Node), pointer :: relevantAncestor, child
+    type(Node), pointer :: relevantAncestor, child, attr
     type(NamedNodeMap), pointer :: attrs
     type(NodeList), pointer :: nsNodes, nsNodesParent
-    integer :: i
+    integer :: i, nsIndex
 
     if (getNodeType(np) /= ELEMENT_NODE &
       .and. getNodeType(np) /= ENTITY_REFERENCE_NODE &
@@ -92,20 +92,113 @@ TOHW_m_dom_contents(`
         allocate(nsNodes%nodes(0))
         nsNodes%length = 0
       endif
-      
-      ! Override according to declarations
-      attrs => getAttributes(np)
+
+      ! Now check for broken NS declarations, and add namespace
+      ! nodes for all non-broken declarations
       do i = 0, getLength(attrs)-1
-        if (getNamespaceURI(item(attrs, i))=="http://www.w3.org/2000/xmlns/") then
-          if (getLocalName(item(attrs, i))=="xmlns") then
-            call appendNSNode(np, "", getValue(item(attrs, i)), specified=.true.)
+        attr => item(attrs, i)
+        if ((getLocalName(attr)=="xmlns" &
+          .or.getPrefix(attr)=="xmlns") &
+          .and.getNamespaceURI(attr)/="http://www.w3.org/2000/xmlns/") then
+          ! This can only I think happen if we bugger about with setPrefix ...
+          TOHW_m_dom_throw_error(NAMESPACE_ERR)
+        endif
+        if (getNamespaceURI(attr)=="http://www.w3.org/2000/xmlns/") then
+          if (getLocalName(attr)=="xmlns") then
+            call appendNSNode(np, "", getValue(attr), specified=.true.)
           else
-            call appendNSNode(np, getLocalName(item(attrs, i)), &
-              getValue(item(attrs, i)), specified=.true.)
+            call appendNSNode(np, getLocalName(attr), &
+              getValue(attr), specified=.true.)
           endif
         endif
       enddo
+
+
+      if (getNamespaceURI(np)/="") then
+        if (lookupNamespaceURI(np, getPrefix(np))/=getNamespaceURI(np)) then
+          ! This is a namespaced node, but its nsURI
+          ! is not bound to its prefix.
+          ! This will automatically do any necessary replacements ...
+          if (getPrefix(np)=="") then
+            ! We are dealing with the default prefix
+            call setAttributeNS(np, "http://www.w3.org/2000/xmlns/", &
+              "xmlns", getNamespaceURI(np))
+          else
+            call setAttributeNS(np, "http://www.w3.org/2000/xmlns/", &
+              "xmlns:"//getPrefix(np), getNamespaceURI(np))
+          endif
+          ! and add a namespace node (so that we can do lookups on it)
+          call appendNSNode(np, getPrefix(np), getNamespaceURI(np), specified=.true.)
+        endif ! else it was already declared ...
+      else
+        ! No (or empty) namespace URI ...
+        if (getLocalName(np)=="") then
+          ! DOM level 1 node ... report error
+          TOHW_m_dom_throw_error(NAMESPACE_ERR)
+        else
+          ! We must declare the elements prefix to have an empty nsURI
+          if (lookupNamespaceURI(np, getPrefix(np))/="") then
+            if (getPrefix(np)=="") then
+              call setAttributeNS(np, "http://www.w3.org/2000/xmlns/", &
+                "xmlns", "")
+            else
+              call setAttributeNS(np, "http://www.w3.org/2000/xmlns/", &
+                "xmlns:"//getPrefix(np), "")
+            endif
+            ! and add a namespace node for the empty nsURI
+            call appendNSNode(np, getPrefix(np), "", specified=.true.)
+          endif
+        endif
+      endif
+
+      do i = 0, getLength(attrs)-1
+        ! This loops over the number of attrs present initially, so any we
+        ! add within this loop will not get checked - but they will only
+        ! be namespace declarations about which we dont care anyway.
+        attr => item(attrs, i)
+        if (getNamespaceURI(attr)=="http://www.w3.org/2000/xmlns/") then
+          cycle ! We already worried about it above.
+        elseif (getNamespaceURI(attr)/="") then
+          ! This is a namespaced attribute
+          if (getPrefix(attr)=="" &
+            .or. lookupNamespaceURI(np, getPrefix(attr))/=getNamespaceURI(attr)) then
+            ! It has an inappropriate prefix
+            if (lookupPrefix(np, getNamespaceURI(attr))/="") then
+              ! then an appropriate prefix exists, use it.
+              call setPrefix(attr, lookupPrefix(np, getNamespaceURI(attr)))
+              ! FIXME should be "most local" prefix. Make sure lookupPrefix does that.
+            else
+              ! No suitable prefix exists, declare one.
+              if (getPrefix(attr)/="") then
+                ! Then the current prefix is not in use, its just undeclared.
+                call setAttributeNS(np, "http://www.w3.org/2000/xmlns/", &
+                  "xmlns:"//getPrefix(attr), getNamespaceURI(attr))
+                call appendNSNode(np, getPrefix(attr), getNamespaceURI(attr), specified=.true.)
+              else
+                ! This node has no prefix, but needs one. Make it up.
+                nsIndex = 1
+                do while (lookupNamespaceURI(np, "NS"//nsIndex)/="")
+                  ! FIXME this will exit if the namespace is undeclared *or* if it is declared to be empty.
+                  nsIndex = nsIndex+1
+                enddo
+                call setAttributeNS(np, "http://www.w3.org/2000/xmlns/", &
+                  "xmlns:NS"//nsIndex, getNamespaceURI(attr))
+                ! and create namespace node
+                call setPrefix(attr, "NS"//nsIndex)
+              endif
+            endif
+          endif
+        else 
+          ! attribute has no namespace URI
+          if (getLocalName(np)=="") then
+            ! DOM level 1 node ... report error
+            TOHW_m_dom_throw_error(NAMESPACE_ERR)
+          endif
+          ! otherwise no problem
+        endif
+      enddo
     endif
+
     ! And now call this on all appropriate children ...
     child => getFirstChild(np)
     do while (associated(child))

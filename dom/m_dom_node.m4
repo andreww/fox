@@ -1030,6 +1030,15 @@ TOHW_m_dom_treewalk(`
 
   end function isSameNode
 
+  !FIXME all the lookup* functions below are out of spec,
+  ! since they rely on a statically-calculated set of NSnodes
+  ! which is only generated at parse time, and updated after
+  ! normalize.
+  ! the spec reckons it should be dynamic, but because we need
+  ! to know string lengths, which must be calculated inside
+  ! a pure function, we cant do the recursive walk we need to.
+  ! (although isDefaultNamespace could be fixed easily enough)
+
   TOHW_function(isDefaultNamespace, (np, namespaceURI), p)
     type(Node), pointer :: np
     character(len=*), intent(in) :: namespaceURI
@@ -1181,8 +1190,10 @@ TOHW_m_dom_treewalk(`
     if (np%nodeType/=ELEMENT_NODE &
       .and. np%nodeType/=ATTRIBUTE_NODE &
       .and. np%nodeType/=DOCUMENT_NODE) return
-
-    if (namespaceURI=="http://www.w3.org/XML/1998/namespace") then
+    
+    if (namespaceURI=="") then
+      return
+    elseif (namespaceURI=="http://www.w3.org/XML/1998/namespace") then
       n = len("xml")
       return
     elseif (namespaceURI=="http://www.w3.org/2000/xmlns/") then
@@ -1248,7 +1259,10 @@ TOHW_m_dom_treewalk(`
       el => getDocumentElement(np)
     end select
 
-    if (namespaceURI=="http://www.w3.org/XML/1998/namespace") then
+    if (namespaceURI=="") then
+      c = ""
+      return
+    elseif (namespaceURI=="http://www.w3.org/XML/1998/namespace") then
       c = "xml"
       return
     elseif (namespaceURI=="http://www.w3.org/2000/xmlns/") then
