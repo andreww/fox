@@ -673,6 +673,7 @@ TOHW_m_dom_treewalk(`dnl
     type(xml_doc_state), pointer :: xds
     type(element_t), pointer :: elem
     integer :: i
+    logical :: brokenNS
 
     if (.not.associated(arg)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
@@ -728,8 +729,11 @@ TOHW_m_dom_treewalk(`dnl
                 str_vs(elem%attlist%list(i)%default))
             else
               ! Wait for namespace fixup ...
+              brokenNS = arg%docExtras%brokenNS
+              arg%docExtras%brokenNS = .true.
               call setAttributeNS(np, "", str_vs(elem%attlist%list(i)%name), &
                 str_vs(elem%attlist%list(i)%default))
+              arg%docExtras%brokenNS = brokenNS
             endif
           endif
         enddo

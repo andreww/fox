@@ -6695,6 +6695,7 @@ endif
     type(xml_doc_state), pointer :: xds
     type(element_t), pointer :: elem
     integer :: i
+    logical :: brokenNS
 
     if (.not.associated(arg)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
@@ -6806,8 +6807,11 @@ endif
                 str_vs(elem%attlist%list(i)%default))
             else
               ! Wait for namespace fixup ...
+              brokenNS = arg%docExtras%brokenNS
+              arg%docExtras%brokenNS = .true.
               call setAttributeNS(np, "", str_vs(elem%attlist%list(i)%name), &
                 str_vs(elem%attlist%list(i)%default))
+              arg%docExtras%brokenNS = brokenNS
             endif
           endif
         enddo
