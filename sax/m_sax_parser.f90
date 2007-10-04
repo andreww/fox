@@ -69,6 +69,7 @@ contains
     call init_notation_list(fx%nlist)
     allocate(fx%xds)
     call init_xml_doc_state(fx%xds)
+    deallocate(fx%xds%inputEncoding)
     fx%xds%inputEncoding => vs_str_alloc("us-ascii")
     ! because it always is ...
     fx%xds%documentURI => vs_str_alloc(filename)

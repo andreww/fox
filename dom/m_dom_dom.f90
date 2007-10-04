@@ -10714,10 +10714,11 @@ endif
     logical :: doneAttributes, doneChildren
     integer :: i_tree, i_children
 
-    type(Node), pointer :: relevantAncestor, child, attr
+    type(Node), pointer :: parent, child, attr
     type(NamedNodeMap), pointer :: attrs
     type(NodeList), pointer :: nsNodes, nsNodesParent
     integer :: i, nsIndex
+    logical :: merged
 
     if (.not.associated(doc)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
@@ -10775,15 +10776,15 @@ endif
       enddo
       deallocate(nsNodes%nodes)
       
-      relevantAncestor => getParentNode(this)
-      do while (associated(relevantAncestor))
+      parent => getParentNode(this)
+      do while (associated(parent))
         ! Go up (through perhaps multiple entref nodes)
-        if (getNodeType(relevantAncestor)==ELEMENT_NODE) exit
-        relevantAncestor => getParentNode(relevantAncestor)
+        if (getNodeType(parent)==ELEMENT_NODE) exit
+        parent => getParentNode(parent)
       enddo
       ! Inherit from parent (or not ...)
-      if (associated(relevantAncestor)) then
-        nsNodesParent => getNamespaceNodes(relevantAncestor)
+      if (associated(parent)) then
+        nsNodesParent => getNamespaceNodes(parent)
         allocate(nsNodes%nodes(getLength(nsNodesParent)))
         nsNodes%length = getLength(nsNodesParent)
         do i = 1, getLength(nsNodes)
@@ -10941,21 +10942,23 @@ endif
         ! we may need to reset "this" later on ...
         old => getPreviousSibling(this)
         if (.not.associated(old)) old => getParentNode(this)
-        dummy => null()
+        merged = .false.
         if (getIsElementContentWhitespace(this) &
           .and..not.getParameter(dc, "element-content-whitespace")) then
           dummy => removeChild(getParentNode(this), this)
           call destroy(dummy)
           this => old
+          merged = .true.
         endif
-        if (.not.associated(dummy)) then
+        if (.not.merged) then
           ! We didnt just remove this node.
           ! Do we need to normalize?
           dummy => getPreviousSibling(this)
           if (associated(dummy)) then
             if (getNodeType(dummy)==TEXT_NODE) then
               call appendData(dummy, getData(this))
-              dummy => removeChild(getParentNode(this), this)
+              parent => getParentNode(this)
+              dummy => removeChild(parent, this)
               call destroy(dummy)
               this => old
             endif
@@ -10967,6 +10970,7 @@ endif
           ! we may need to reset "this" later on ...
           old => getPreviousSibling(this)
           if (.not.associated(old)) old => getParentNode(this)
+          merged = .false.
           dummy => getPreviousSibling(this)
           if (associated(dummy)) then
             if (getNodeType(dummy)==TEXT_NODE) then
@@ -10975,12 +10979,13 @@ endif
               dummy => removeChild(getParentNode(this), this)
               call destroy(dummy)
               this => old
+              merged =.true.
             endif
           endif
-          if (associated(dummy, getPreviousSibling(this))) then
+          if (.not.merged) then
             ! we didnt merge it so just convert this to a text node
             new => createTextNode(doc, getData(this))
-            dummy => replaceChild(doc, this, dummy)
+            dummy => replaceChild(getParentNode(this), new, this)
             call destroy(dummy)
             this => new
           endif
@@ -11088,7 +11093,7 @@ endif
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: this
 
-    type(Node), pointer :: relevantAncestor, child, attr
+    type(Node), pointer :: parent, child, attr
     type(NamedNodeMap), pointer :: attrs
     type(NodeList), pointer :: nsNodes, nsNodesParent
     integer :: i, nsIndex
@@ -11108,15 +11113,15 @@ endif
       enddo
       deallocate(nsNodes%nodes)
       
-      relevantAncestor => getParentNode(this)
-      do while (associated(relevantAncestor))
+      parent => getParentNode(this)
+      do while (associated(parent))
         ! Go up (through perhaps multiple entref nodes)
-        if (getNodeType(relevantAncestor)==ELEMENT_NODE) exit
-        relevantAncestor => getParentNode(relevantAncestor)
+        if (getNodeType(parent)==ELEMENT_NODE) exit
+        parent => getParentNode(parent)
       enddo
       ! Inherit from parent (or not ...)
-      if (associated(relevantAncestor)) then
-        nsNodesParent => getNamespaceNodes(relevantAncestor)
+      if (associated(parent)) then
+        nsNodesParent => getNamespaceNodes(parent)
         allocate(nsNodes%nodes(getLength(nsNodesParent)))
         nsNodes%length = getLength(nsNodesParent)
         do i = 1, getLength(nsNodes)

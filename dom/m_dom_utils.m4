@@ -218,9 +218,6 @@ TOHW_m_dom_treewalk(`dnl
             TOHW_m_dom_throw_error(FoX_INTERNAL_ERROR)
           endif
         enddo
-        print*, " this att prefix ", getPrefix(this), "localname ", getLocalName(this), &
-          (getPrefix(this)/="xmlns".and.getLocalName(this)/="xmlns")
-        print*, "adding attribute ", getName(this), " ", str_vs(attrvalue)
         call xml_AddAttribute(xf, getName(this), str_vs(attrvalue))
         deallocate(attrvalue)
       endif

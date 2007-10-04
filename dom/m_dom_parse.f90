@@ -123,9 +123,7 @@ contains
 
     temp => getLastChild(current)
     if (associated(temp)) then
-      if ((cdata.and.getNodeType(temp)==CDATA_SECTION_NODE &
-        .and..not.getParameter(domConfig, "split-cdata-sections")) &
-        .or.(.not.cdata.and.getNodeType(temp)==TEXT_NODE)) then
+      if (.not.cdata.and.getNodeType(temp)==TEXT_NODE) then
         readonly = getReadOnly(temp) ! Reset readonly status quickly
         call setReadOnlyNode(temp, .false., .false.)
         call setData(temp, getData(temp)//chunk)
