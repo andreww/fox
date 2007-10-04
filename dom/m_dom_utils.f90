@@ -4,9 +4,11 @@
 
 module m_dom_utils
 
-  use m_common_attrs, only: getValue
-  use m_common_format, only: operator(//)
   use m_common_array_str, only: str_vs, vs_str
+  use m_common_attrs, only: getValue
+  use m_common_element, only: element_t
+  use m_common_format, only: operator(//)
+  use m_common_struct, only: xml_doc_state
 
   use m_dom_dom, only: Node, Namednodemap, NodeList
   use m_dom_dom, only: DOCUMENT_NODE, ELEMENT_NODE, TEXT_NODE, &
@@ -18,7 +20,7 @@ module m_dom_utils
     getNodeName, getData, getName, getTagName, getValue, getTarget, getNamespaceNodes, &
     getEntities, getNotations, item, getSystemId, getPublicId, getNotationName, getStringValue, &
     getNamespaceURI, DOMConfiguration, getDomConfig, getParameter, getSpecified, getOwnerDocument, &
-    namespaceFixup, normalizeDocument
+    namespaceFixup, normalizeDocument, getXds
   use m_dom_error, only: DOMException, inException, throw_exception, &
     FoX_INVALID_NODE, SERIALIZE_ERR, FoX_INTERNAL_ERROR
 
@@ -33,6 +35,7 @@ module m_dom_utils
   use FoX_wxml, only: xml_AddComment
   use FoX_wxml, only: xml_AddEntityReference
   use FoX_wxml, only: xml_AddXMLPI
+  use FoX_wxml, only: xml_AddElementToDTD
 
   implicit none
 
@@ -150,7 +153,7 @@ endif
 
     call xml_OpenFile(name, xf, iostat=iostat, unit=-1, &
       preserve_whitespace=.not.getParameter(getDomConfig(doc), "format-pretty-print"), &
-      warning=.false., addDecl=xmlDecl)
+      warning=.false., addDecl=.not.xmlDecl)
     if (iostat/=0) then
       if (getFoX_checks().or.SERIALIZE_ERR<200) then
   call throw_exception(SERIALIZE_ERR, "serialize", ex)
@@ -180,18 +183,23 @@ endif
     type(DOMException), intent(out), optional :: ex
     type(xmlf_t), intent(inout) :: xf
 
-    type(Node), pointer :: this, arg, treeroot, attrchild
+    type(Node), pointer :: this, arg, treeroot 
+    type(Node), pointer :: doc, attrchild
     type(NamedNodeMap), pointer :: nnm
     type(DOMConfiguration), pointer :: dc
+    type(xml_doc_state), pointer :: xds
+    type(element_t), pointer :: elem
     integer :: i_tree, j
     logical :: doneChildren, doneAttributes
     character, pointer :: attrvalue(:), tmp(:)
 
     if (getNodeType(arg)==DOCUMENT_NODE) then
-      dc => getDomConfig(arg)
+      doc => arg
     else
-      dc => getDomConfig(getOwnerDocument(arg))
+      doc => getOwnerDocument(arg)
     endif
+    dc => getDomConfig(doc)
+    xds => getXds(doc)
 
     treeroot => arg
 
@@ -216,13 +224,14 @@ endif
       enddo
       call xml_NewElement(xf, getTagName(this))
     case (ATTRIBUTE_NODE)
-      if (.not.getParameter(dc, "discard-default-content") &
-        .or.getSpecified(this) &
+      if ((.not.getParameter(dc, "discard-default-content") &
+        .or.getSpecified(this)) &
         ! only output it if it is not a default, or we are outputting defaults
-        .or. (getPrefix(this)/="xmlns".and.getLocalName(this)/="xmlns")) then
+        .and. (getPrefix(this)/="xmlns".and.getLocalName(this)/="xmlns")) then
         ! and we dont output NS declarations here.
         ! complex loop below is because we might have to worry about entrefs 
         ! being preserved in the attvalue. If we dont, we only go through the loop once anyway.
+        allocate(attrvalue(0))
         do j = 0, getLength(getChildNodes(this)) - 1
           attrchild => item(getChildNodes(this), j)
           if (getNodeType(attrchild)==TEXT_NODE) then
@@ -249,6 +258,9 @@ endif
 
           endif
         enddo
+        print*, " this att prefix ", getPrefix(this), "localname ", getLocalName(this), &
+          (getPrefix(this)/="xmlns".and.getLocalName(this)/="xmlns")
+        print*, "adding attribute ", getName(this), " ", str_vs(attrvalue)
         call xml_AddAttribute(xf, getName(this), str_vs(attrvalue))
         deallocate(attrvalue)
       endif
@@ -294,6 +306,11 @@ endif
             public=getPublicId(item(nnm, j)), notation=getNotationName(item(nnm, j)))
         endif
       enddo
+      do j = 1, size(xds%element_list%list)
+        elem => xds%element_list%list(j)
+        call xml_AddElementToDTD(xf, str_vs(elem%name), str_vs(elem%model))
+      enddo
+      ! FIXME attlists
     end select
 
       else

@@ -404,7 +404,7 @@ module m_dom_dom
   public :: createEntity
   public :: createNotation
   public :: setGCstate
-
+  public :: getXds
   public :: getLiveNodeLists
   public :: setLiveNodeLists
 

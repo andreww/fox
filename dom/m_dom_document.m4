@@ -40,7 +40,7 @@ TOHW_m_dom_publics(`
   public :: createEntity
   public :: createNotation
   public :: setGCstate
-
+  public :: getXds
   public :: getLiveNodeLists
   public :: setLiveNodeLists
 ')`'dnl
