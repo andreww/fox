@@ -487,7 +487,10 @@ module m_dom_dom
 
 
   
+  public :: normalizeDocument
+
   public :: getNamespaceNodes
+  public :: namespaceFixup
 
 
 contains
@@ -647,6 +650,7 @@ endif
       endif
     enddo
     if (i > size(configParams)) then
+      print*,"couldnt find ", name
       if (getFoX_checks().or.NOT_FOUND_ERR<200) then
   call throw_exception(NOT_FOUND_ERR, "getParameter", ex)
   if (present(ex)) then
@@ -10785,6 +10789,7 @@ endif
 
       ! Now check for broken NS declarations, and add namespace
       ! nodes for all non-broken declarations
+      attrs => getAttributes(this)
       do i = 0, getLength(attrs)-1
         attr => item(attrs, i)
         if ((getLocalName(attr)=="xmlns" &
@@ -11001,7 +11006,7 @@ endif
         endif
         
       case (DOCUMENT_TYPE_NODE)
-        if (getParameter(dc, "canonicalize")) then
+        if (getParameter(dc, "canonical-form")) then
           old => getPreviousSibling(this)
           if (.not.associated(old)) old => getParentNode(this)
           dummy => removeChild(getParentNode(this), this)
@@ -11116,6 +11121,7 @@ endif
 
       ! Now check for broken NS declarations, and add namespace
       ! nodes for all non-broken declarations
+      attrs => getAttributes(this)
       do i = 0, getLength(attrs)-1
         attr => item(attrs, i)
         if ((getLocalName(attr)=="xmlns" &

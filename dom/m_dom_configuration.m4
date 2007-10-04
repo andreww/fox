@@ -1,3 +1,21 @@
+dnl This file sort-of implements the DOMConfiguration part of 
+dnl DOM Level 3 Core + LS.
+dnl It falls short of the spec because:
+dnl
+dnl a) it only deals with configuration options which have boolean values.
+dnl    (because getParameter must return only one kind of data)
+dnl    This is fine except for error_handler, which ought to hold an error-handler
+dnl    (which is compulsory, so we are in breach of spec)
+dnl    and schema-location/schema-type which ought to hold strings)
+dnl    (but support is optional, so we exclude)
+dnl
+dnl b) There should be a DOMConfiguration object for documents and for
+dnl    serializers and parsers, each of which has a different list of 
+dnl    available options. Since we dont implement LS serializers
+dnl    parsers per se at the moment, all the options for all three are
+dnl    understood by the same DOMConfiguration object.
+dnl
+dnl
 TOHW_m_dom_publics(`
 
   integer, parameter :: configParamLen = 42
@@ -234,6 +252,7 @@ TOHW_m_dom_contents(`
       endif
     enddo
     if (i > size(configParams)) then
+      print*,"couldnt find ", name
       TOHW_m_dom_throw_error(NOT_FOUND_ERR)
     endif
 

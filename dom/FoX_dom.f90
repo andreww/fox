@@ -85,6 +85,7 @@ module FoX_dom
   public :: getStrictErrorChecking
   public :: setStrictErrorChecking
   public :: getDomConfig
+  public :: normalizeDocument
 
   ! DOM Node
   public :: ELEMENT_NODE

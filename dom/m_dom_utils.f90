@@ -17,7 +17,8 @@ module m_dom_utils
     getAttributes, getParentNode, getChildNodes, getPrefix, getLocalName, getXmlVersion, &
     getNodeName, getData, getName, getTagName, getValue, getTarget, getNamespaceNodes, &
     getEntities, getNotations, item, getSystemId, getPublicId, getNotationName, getStringValue, &
-    getNamespaceURI, DOMConfiguration, getDomConfig, getParameter, getSpecified, getOwnerDocument
+    getNamespaceURI, DOMConfiguration, getDomConfig, getParameter, getSpecified, getOwnerDocument, &
+    namespaceFixup, normalizeDocument
   use m_dom_error, only: DOMException, inException, throw_exception, &
     FoX_INVALID_NODE, SERIALIZE_ERR, FoX_INTERNAL_ERROR
 
@@ -215,11 +216,13 @@ endif
       enddo
       call xml_NewElement(xf, getTagName(this))
     case (ATTRIBUTE_NODE)
-      if (.not.getParameter(dc, "discard-default_attributes") &
-        .or.getSpecified(this)) then
+      if (.not.getParameter(dc, "discard-default-content") &
+        .or.getSpecified(this) &
         ! only output it if it is not a default, or we are outputting defaults
-        ! we might have to worry about entrefs being preserved in the attvalue
-        ! if we dont, we only go through the loop once anyway.
+        .or. (getPrefix(this)/="xmlns".and.getLocalName(this)/="xmlns")) then
+        ! and we dont output NS declarations here.
+        ! complex loop below is because we might have to worry about entrefs 
+        ! being preserved in the attvalue. If we dont, we only go through the loop once anyway.
         do j = 0, getLength(getChildNodes(this)) - 1
           attrchild => item(getChildNodes(this), j)
           if (getNodeType(attrchild)==TEXT_NODE) then

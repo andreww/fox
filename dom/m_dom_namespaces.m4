@@ -31,6 +31,7 @@ define(`TOHW_m_dom_namespaceFixup', `'`
 
       ! Now check for broken NS declarations, and add namespace
       ! nodes for all non-broken declarations
+      attrs => getAttributes(this)
       do i = 0, getLength(attrs)-1
         attr => item(attrs, i)
         if ((getLocalName(attr)=="xmlns" &
@@ -136,7 +137,10 @@ define(`TOHW_m_dom_namespaceFixup', `'`
 ')`'dnl
 TOHW_m_dom_publics(`
   
+  public :: normalizeDocument
+
   public :: getNamespaceNodes
+  public :: namespaceFixup
 
 ')`'dnl
 dnl
@@ -311,7 +315,7 @@ TOHW_m_dom_contents(`
         endif
         
       case (DOCUMENT_TYPE_NODE)
-        if (getParameter(dc, "canonicalize")) then
+        if (getParameter(dc, "canonical-form")) then
           old => getPreviousSibling(this)
           if (.not.associated(old)) old => getParentNode(this)
           dummy => removeChild(getParentNode(this), this)
