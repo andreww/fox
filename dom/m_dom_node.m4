@@ -968,7 +968,7 @@ TOHW_m_dom_treewalk(`
 ! FIXME check if prefix is declared and already points to same namespace
 ! but only if we ever get full error-checking up and running.
       deallocate(arg%elExtras%prefix)
-      arg%elExtras%prefix = vs_str_alloc(prefix)
+      arg%elExtras%prefix => vs_str_alloc(prefix)
       tmp => arg%nodeName
       i = index(str_vs(arg%nodeName), ":")
       if (i==0) then

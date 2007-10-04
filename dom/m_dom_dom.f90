@@ -3509,7 +3509,7 @@ endif
 ! FIXME check if prefix is declared and already points to same namespace
 ! but only if we ever get full error-checking up and running.
       deallocate(arg%elExtras%prefix)
-      arg%elExtras%prefix = vs_str_alloc(prefix)
+      arg%elExtras%prefix => vs_str_alloc(prefix)
       tmp => arg%nodeName
       i = index(str_vs(arg%nodeName), ":")
       if (i==0) then
@@ -10895,6 +10895,7 @@ endif
                 call setAttributeNS(this, "http://www.w3.org/2000/xmlns/", &
                   "xmlns:NS"//nsIndex, getNamespaceURI(attr))
                 ! and create namespace node
+                call appendNSNode(this, "NS"//nsIndex, getNamespaceURI(attr), specified=.true.)
                 call setPrefix(attr, "NS"//nsIndex)
               endif
             endif
@@ -11227,6 +11228,7 @@ endif
                 call setAttributeNS(this, "http://www.w3.org/2000/xmlns/", &
                   "xmlns:NS"//nsIndex, getNamespaceURI(attr))
                 ! and create namespace node
+                call appendNSNode(this, "NS"//nsIndex, getNamespaceURI(attr), specified=.true.)
                 call setPrefix(attr, "NS"//nsIndex)
               endif
             endif

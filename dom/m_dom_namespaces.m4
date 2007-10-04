@@ -121,6 +121,7 @@ define(`TOHW_m_dom_namespaceFixup', `'`
                 call setAttributeNS(this, "http://www.w3.org/2000/xmlns/", &
                   "xmlns:NS"//nsIndex, getNamespaceURI(attr))
                 ! and create namespace node
+                call appendNSNode(this, "NS"//nsIndex, getNamespaceURI(attr), specified=.true.)
                 call setPrefix(attr, "NS"//nsIndex)
               endif
             endif
