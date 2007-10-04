@@ -254,7 +254,6 @@ TOHW_m_dom_contents(`
       endif
     enddo
     if (i > size(configParams)) then
-      print*,"couldnt find ", name
       TOHW_m_dom_throw_error(NOT_FOUND_ERR)
     endif
 
@@ -270,7 +269,6 @@ TOHW_m_dom_contents(`
     logical :: p
     integer :: i, n
 
-    print*, "canSetParameter ", name
     if (name=="infoset") then
       p = .true.
       return
@@ -281,7 +279,6 @@ TOHW_m_dom_contents(`
         exit
       endif
     enddo
-    print*, i
     if (i > size(configParams)) then
       p = .false.
       return

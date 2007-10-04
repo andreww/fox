@@ -652,7 +652,6 @@ endif
       endif
     enddo
     if (i > size(configParams)) then
-      print*,"couldnt find ", name
       if (getFoX_checks().or.NOT_FOUND_ERR<200) then
   call throw_exception(NOT_FOUND_ERR, "getParameter", ex)
   if (present(ex)) then
@@ -677,7 +676,6 @@ endif
     logical :: p
     integer :: i, n
 
-    print*, "canSetParameter ", name
     if (name=="infoset") then
       p = .true.
       return
@@ -688,7 +686,6 @@ endif
         exit
       endif
     enddo
-    print*, i
     if (i > size(configParams)) then
       p = .false.
       return
