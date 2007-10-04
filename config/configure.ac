@@ -112,9 +112,9 @@ dnl Otherwise we only enable whatever was explicitly enabled.
 if test x$WXML_yes$WCML_yes$WKML_yes$SAX_yes$DOM_yes = x; then
   if test x$WXML_no = x; then WXML_yes=wxml_lib; fi
   if test x$WCML_no = x; then WCML_yes=wcml_lib; fi
-  if test x$WKML_no = x; then WKML_yes=wcml_lib; fi
-  if test x$SAX_no = x; then SAX_yes=wcml_lib; fi
-  if test x$DOM_no = x; then DOM_yes=wcml_lib; fi
+  if test x$WKML_no = x; then WKML_yes=wkml_lib; fi
+  if test x$SAX_no = x; then SAX_yes=sax_lib; fi
+  if test x$DOM_no = x; then DOM_yes=dom_lib; fi
 fi
 dnl Note that if we try to exclude something which an
 dnl included module depends upon, then the inclusion
