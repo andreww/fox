@@ -127,7 +127,7 @@ TOHW_m_dom_contents(`
       ! NB It is impossible to create a non-namespaced document.
       ! although namespaceURI may be null, which appears to be
       ! the intended way to do that.
-      if (namespaceURI=="") then
+      if (namespaceURI/="") then
         de => createElementNS(doc, namespaceURI, qualifiedName)
       else
         de => createElement(doc, qualifiedName)

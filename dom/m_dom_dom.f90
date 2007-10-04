@@ -5278,7 +5278,7 @@ endif
       ! NB It is impossible to create a non-namespaced document.
       ! although namespaceURI may be null, which appears to be
       ! the intended way to do that.
-      if (namespaceURI=="") then
+      if (namespaceURI/="") then
         de => createElementNS(doc, namespaceURI, qualifiedName)
       else
         de => createElement(doc, qualifiedName)
@@ -10672,7 +10672,7 @@ endif
 endif
 
     endif
-    
+
     ! We never put namespace nodes in the hanging nodes
     ! list since they can never be separated from their
     ! parent element node, so will always be destroyed alongside it.
@@ -10682,7 +10682,7 @@ endif
     ! If we already have this prefix registered in the list, then remove it
     do i = 0, getLength(nsNodes)-1
       if (getPrefix(item(nsNodes, i))==prefix) then
-        dummy => remove_nl(nsNodes, i)
+        dummy => remove_nl(nsNodes, i+1)
         exit
       endif
     enddo
