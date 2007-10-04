@@ -138,7 +138,7 @@ contains
   end function getLength
 
 
-  function has_key(dict,key) result(found)
+  function has_key(dict, key) result(found)
     type(dictionary_t), intent(in)   :: dict
     character(len=*), intent(in)     :: key
     logical                          :: found
@@ -331,10 +331,6 @@ contains
     logical, intent(in), optional :: specified
     
     integer  :: n
-
-    if (has_key(dict, key)) then
-       call FoX_Error('Duplicate attribute')
-    endif
 
     if (present(prefix) .eqv. .not.present(nsURI)) &
        call FoX_Error('Namespace improperly specified')
