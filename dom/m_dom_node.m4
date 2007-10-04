@@ -264,9 +264,11 @@ TOHW_m_dom_get(Node, nextSibling, np%nextSibling)
       return
       ! Nothing to do
     endif
-    if (associated(getParentNode(newChild))) &
-      newChild => removeChild(getParentNode(newChild), newChild, ex) 
-
+    if (associated(getParentNode(newChild))) then
+      np => removeChild(getParentNode(newChild), newChild, ex) 
+      newChild => np
+    endif
+    
     if (arg%childNodes%length==0) then
       TOHW_m_dom_throw_error(NOT_FOUND_ERR)
     elseif (newChild%nodeType==DOCUMENT_FRAGMENT_NODE) then

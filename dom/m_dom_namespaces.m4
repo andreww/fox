@@ -223,7 +223,7 @@ TOHW_m_dom_contents(`
     ! these should succeed - if they dont then there
     ! is a problem so we need to terminate immediately
     TOHW_m_dom_treewalk(`
-
+    if (.not.getReadonly(this)) then
       select case (getNodeType(this))
       case (ELEMENT_NODE)
         TOHW_m_dom_namespaceFixup
@@ -325,7 +325,7 @@ TOHW_m_dom_contents(`
         endif
 
       end select
-
+    endif
 ', `')
 
   end subroutine normalizeDocument

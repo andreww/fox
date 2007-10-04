@@ -509,6 +509,7 @@ contains
       endif
     enddo
     if (i>size(configParams)) return
+    if (.not.btest(paramSettable, n)) return
     if (btest(paramDefaults, n)) then
       domConfig%parameters = ibset(domConfig%parameters, n)
     else
@@ -582,7 +583,8 @@ endif
         call setParameter(domConfig, "namespace-declarations", .true.)
         ! well-formed cannot be changed
         call setParameter(domConfig, "element-content-whitespace", .true.)
-        call setParameter(domConfig, "format-pretty-print", .false.)
+        ! FIXME when we work out pretty-print/preserve-whitespace semantics
+        ! call setParameter(domConfig, "format-pretty-print", .false.)
         call setParameter(domConfig, "discard-default-content", .false.)
         call setParameter(domConfig, "xml-declaration", .false.)
       else
@@ -674,12 +676,19 @@ endif
 
     logical :: p
     integer :: i, n
+
+    print*, "canSetParameter ", name
+    if (name=="infoset") then
+      p = .true.
+      return
+    endif
     do i = 1, size(configParams)
       if (name==trim(configParams(i))) then
         n = i
         exit
       endif
     enddo
+    print*, i
     if (i > size(configParams)) then
       p = .false.
       return
@@ -1770,9 +1779,11 @@ endif
       return
       ! Nothing to do
     endif
-    if (associated(getParentNode(newChild))) &
-      newChild => removeChild(getParentNode(newChild), newChild, ex) 
-
+    if (associated(getParentNode(newChild))) then
+      np => removeChild(getParentNode(newChild), newChild, ex) 
+      newChild => np
+    endif
+    
     if (arg%childNodes%length==0) then
       if (getFoX_checks().or.NOT_FOUND_ERR<200) then
   call throw_exception(NOT_FOUND_ERR, "insertBefore", ex)
@@ -10753,7 +10764,7 @@ endif
 
       if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
 
-
+    if (.not.getReadonly(this)) then
       select case (getNodeType(this))
       case (ELEMENT_NODE)
         
@@ -11016,7 +11027,7 @@ endif
         endif
 
       end select
-
+    endif
 
       else
         if (getNodeType(this)==ELEMENT_NODE.and..not.doneChildren) then
