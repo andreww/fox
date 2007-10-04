@@ -1,7 +1,8 @@
 module m_wxml_core
 
-  use m_common_attrs, only: dictionary_t, getLength, get_key, get_value, has_key, &
-    add_item_to_dict, init_dict, reset_dict, destroy_dict, getWhitespaceHandling
+  use m_common_attrs, only: dictionary_t, getLength, get_key, get_value, &
+    hasKey, add_item_to_dict, init_dict, reset_dict, destroy_dict, &
+    getWhitespaceHandling
   use m_common_array_str, only: vs_str, str_vs, vs_str_alloc, devnull
   use m_common_buffer, only: buffer_t, len, add_to_buffer, reset_buffer, &
     dump_buffer
@@ -1111,10 +1112,14 @@ contains
 
     if (xf%state_2 /= WXML_STATE_2_INSIDE_ELEMENT) &
          call wxml_error(xf, "attributes outside element content: "//name)
-    
-    if (has_key(xf%dict,name)) &
-         call wxml_error(xf, "duplicate att name: "//name)
-    
+
+    if (hasKey(xf%dict,name)) then
+      call wxml_error(xf, "duplicate att name: "//name)
+    elseif (hasKey(xf%dict, &
+      getnamespaceURI(xf%nsDict,prefixOfQname(name)), localpartofQname(name))) then
+      call wxml_error(xf, "duplicate att after namespace processing: "//name)
+    endif
+
     if (.not.checkQName(name, xf%xds)) &
          call wxml_error(xf, "invalid attribute name: "//name)
 
@@ -1128,6 +1133,7 @@ contains
         call add_item_to_dict(xf%dict, localpartofQname(name), value, prefixOfQName(name), &
           getnamespaceURI(xf%nsDict,prefixOfQName(name)), type=str_vs(type_))
       endif
+
     else
       if (esc) then
         call add_item_to_dict(xf%dict, name, escape_string(value, xf%xds%xml_version), type=str_vs(type_))
@@ -1237,7 +1243,7 @@ contains
     if (.not.checkName(name, xf%xds)) &
          call wxml_error("Invalid pseudo-attribute name: "//name)
 
-    if (has_key(xf%dict,name)) &
+    if (hasKey(xf%dict,name)) &
          call wxml_error(xf, "duplicate pseudo-attribute name: "//name)
 
     if (index(value, '?>') > 0) &
