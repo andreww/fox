@@ -477,6 +477,7 @@ contains
         if (str_vs(URI)=="") then
           if (xds%xml_version==XML1_0) then
             call add_error(es, "Empty nsURI is invalid in XML 1.0")
+            deallocate(URI)
             return
           elseif (xds%xml_version==XML1_1) then
             if (present(end_prefix_handler)) &
@@ -503,22 +504,34 @@ contains
         if (str_vs(URI)=="") then
           if (xds%xml_version==XML1_0) then
             call add_error(es, "Empty nsURI is invalid in XML 1.0")
+            ! FIXME except actually its ok according to DOM Core 2 I think?
+            deallocate(URI)
+            deallocate(QName)
             return
           elseif (xds%xml_version==XML1_1) then
-            if (present(end_prefix_handler)) &
-              call end_prefix_handler(str_vs(QName(7:)))
             call addPrefixedNS(nsDict, str_vs(QName(7:)), invalidNS, ix, xds, es=es)
-            if (in_error(es)) return
-            deallocate(URI)
+            if (in_error(es)) then
+              deallocate(URI)
+              deallocate(QName)
+              return
+            elseif (present(end_prefix_handler)) then
+              call end_prefix_handler(str_vs(QName(7:)))
+              deallocate(URI)
+              deallocate(QName)
+            endif
           endif
         else
           call checkURI(URI)
           call addPrefixedNS(nsDict, str_vs(QName(7:)), str_vs(URI), ix, xds, es=es)
-          if (in_error(es)) return
-          if (present(start_prefix_handler)) &
+          if (in_error(es)) then
+            deallocate(URI)
+            deallocate(QName)
+            return
+          elseif (present(start_prefix_handler)) then
             call start_prefix_handler(str_vs(URI), str_vs(QName(7:)))
-          deallocate(URI)
-          deallocate(QName)
+            deallocate(URI)
+            deallocate(QName)
+          endif
         endif
         if (namespace_prefixes) then
           i = i + 1
@@ -551,6 +564,7 @@ contains
             ! eg if we are in the middle of parsing an entity.
             if (.not.partial) then
               call add_error(es, "Unbound namespace prefix")
+              deallocate(QName)
               return
             else
               call set_nsURI(atts, i, "")
@@ -569,6 +583,7 @@ contains
       ! Check for duplicates
       if (hasKey(atts, getnamespaceURI(nsDict, str_vs(QName(1:n-1))), str_vs(QName(n+1:)))) then
         call add_error(es, "Duplicate attribute names after namespace processing")
+        deallocate(QName)
         return
       endif
       call set_localName(atts, i, QName(n+1:))
