@@ -178,6 +178,7 @@ TOHW_m_dom_contents(`
     do i = 0, getLength(nsNodes)-1
       if (getPrefix(item(nsNodes, i))==prefix) then
         dummy => remove_nl(nsNodes, i+1)
+        call destroy(dummy)
         exit
       endif
     enddo
