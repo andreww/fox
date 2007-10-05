@@ -53,7 +53,7 @@ module m_dom_parse
   type(DOMConfiguration), pointer :: domConfig
   
   logical :: cdata
-  logical :: error
+  character, pointer :: error(:) => null()
   character, pointer :: inEntity(:) => null()
 
 contains
@@ -303,9 +303,8 @@ contains
 
   subroutine normalErrorHandler(msg)
     character(len=*), intent(in) :: msg
-
     ! This is called if the main parsing routine fails
-    error = .true.
+    error => vs_str_alloc(msg)
   end subroutine normalErrorHandler
 
   subroutine entityErrorHandler(msg)
@@ -407,9 +406,6 @@ contains
   TOHW_subroutine(runParser, (fxml))
     type(xml_t), intent(inout) :: fxml
 
-    logical :: error
-
-    error = .false.
 ! We use internal sax_parse rather than public interface in order
 ! to use internal callbacks to get extra info.
     call init_entity_list(elist)
@@ -450,10 +446,13 @@ contains
     call close_xml_t(fxml)
     call destroy_entity_list(elist)
 
-    if (error) then
+    if (associated(error)) then
+      ! FIXME pass the value of the error through
+      ! when we let exceptions do that
       call destroy(mainDoc)
       TOHW_m_dom_throw_error(PARSE_ERR)
     endif
+
   end subroutine runParser
 
 
