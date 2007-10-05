@@ -31,7 +31,7 @@
 <h2>API documentation</h2>
 
 <ul>
-<li>FoX has five sets of publically exported interfaces. These are documented here:</li>
+<li>FoX has six sets of publically exported interfaces. These are documented here:</li>
 </ul>
 
 <h3>COMMON interfaces</h3>
@@ -197,7 +197,7 @@ dom_lib
 <p>Known failures: <br />
 * <code>test_xml_Close_2</code> sometimes unexpectedly fails - this is not a problem, ignore it.  </p>
 
-<p>If any other failures occur, please send a message to the mailing list (<a href="&#x6D;&#97;&#105;&#108;&#x74;&#x6F;:&#x46;&#111;&#x58;&#64;&#x6C;&#x69;&#x73;&#x74;&#115;&#x2E;&#x75;&#x73;&#x7A;&#x6C;&#97;.&#109;e&#x2E;&#x75;&#107;">&#x46;&#111;&#x58;&#64;&#x6C;&#x69;&#x73;&#x74;&#115;&#x2E;&#x75;&#x73;&#x7A;&#x6C;&#97;.&#109;e&#x2E;&#x75;&#107;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
+<p>If any other failures occur, please send a message to the mailing list (<a href="&#x6D;&#x61;&#105;&#108;&#x74;&#111;:&#x46;&#111;X&#64;&#x6C;&#105;&#115;&#116;&#115;&#46;&#117;&#115;&#x7A;&#108;&#97;&#x2E;&#109;&#101;&#46;&#117;&#107;">&#x46;&#111;X&#64;&#x6C;&#105;&#115;&#116;&#115;&#46;&#117;&#115;&#x7A;&#108;&#97;&#x2E;&#109;&#101;&#46;&#117;&#107;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
 
 <h2>Linking to an existing program</h2>
 
@@ -2306,6 +2306,7 @@ end program dom_example
 <ul>
 <li><code>getDocumentURI(np)</code>  </li>
 <li><code>setDocumentURI(np, documentURI)</code>  </li>
+<li><code>getDomConfig(np)</code>  </li>
 <li><code>getInputEncoding(np)</code>  </li>
 <li><code>getStrictErrorChecking(np)</code>  </li>
 <li><code>setStrictErrorChecking(np, strictErrorChecking)</code>  </li>
@@ -2314,6 +2315,7 @@ end program dom_example
 <li><code>setXmlStandalone(np, xmlStandalone)</code>  </li>
 <li><code>getXmlVersion(np)</code>  </li>
 <li><code>setXmlVersion(np, xmlVersion)</code>  </li>
+<li><code>normalizeDocument(np)</code>  </li>
 </ul>
 
 <p>Node:</p>
@@ -2345,6 +2347,18 @@ end program dom_example
 <li><code>getIsElementContentWhitespace(np)</code>  </li>
 </ul>
 
+<p>DOMConfiguration: <br />
+<code>type(DOMConfiguration)</code></p>
+
+<ul>
+<li><code>canSetParameter(arg, name, value)</code>  </li>
+<li><code>getParameter(arg, name)</code> </li>
+<li><code>getParameterNames(arg)</code>  </li>
+<li><code>setParameter(arg, name)</code>  </li>
+</ul>
+
+<p><em>NB For details on DOMConfiguration, see <a href="#DomConfiguration">below</a></em></p>
+
 <h3>Object Model</h3>
 
 <p>The DOM is written in terms of an object model involving inheritance, but also permits a flattened model. FoX implements this flattened model - all objects descending from the Node are of the opaque type <code>Node</code>. Nodes carry their own type, and attempts to call functions defined on the wrong nodetype (for example, getting the <code>target</code> of a node which is not a PI) will result in a <code>FoX_INVALID_NODE</code> exception.</p>
@@ -2352,6 +2366,7 @@ end program dom_example
 <p>The other types available through the FoX DOM are:</p>
 
 <ul>
+<li><code>DOMConfiguration</code>  </li>
 <li><code>DOMException</code>   </li>
 <li><code>DOMImplementation</code>  </li>
 <li><code>NodeList</code>  </li>
@@ -2392,7 +2407,7 @@ DOM Documents (whether created manually, or by the <code>parse()</code> routine.
 <ul>
 <li><code>parseFile</code> <br />
 <strong>filename</strong>: <em>string</em> <br />
-(<strong>configuration</strong>): <em>string</em> <br />
+(<strong>configuration</strong>): <em>DOMConfiguration</em> <br />
 (<strong>ex</strong>): <em>DOMException</em>  </li>
 </ul>
 
@@ -2401,7 +2416,7 @@ DOM Documents (whether created manually, or by the <code>parse()</code> routine.
 <ul>
 <li><code>parseString</code> <br />
 <strong>XMLstring</strong>: <em>string</em> <br />
-(<strong>configuration</strong>): <em>string</em> <br />
+(<strong>configuration</strong>): <em>DOMConfiguration</em> <br />
 (<strong>ex</strong>): <em>DOMException</em></li>
 </ul>
 
@@ -2418,6 +2433,8 @@ DOM Documents (whether created manually, or by the <code>parse()</code> routine.
 </ul>
 
 <p>This will open <code>fileName</code> and serialize the DOM tree by writing into the file. If <code>fileName</code> already exists, it will be overwritten. If an problem arises in serializing the document, then a fatal error will result.</p>
+
+<p>(Control over serialization options is done through the configuration of the <strong>arg</strong>'s ownerDocument, see <a href="#DomConfiguration">below</a>.)</p>
 
 <ul>
 <li><code>setFoX_checks</code> <br />
@@ -2522,26 +2539,57 @@ Every DOM subroutine and function implemented by FoX will take an optional argum
 
 <p><a name="DomConfiguration"/></p>
 
-<p>Multiple valid DOM trees may be produced from a single document. When parsing input, some of these choices are made availablae to the user.</p>
+<p>Multiple valid DOM trees may be produced from a single document. When parsing input, some of these choices are made available to the user.</p>
 
-<p>By default, the DOM tree presented to the user will be canonicalized according to the following criteria:</p>
-
-<ul>
-<li>there will be no adjacent text nodes   </li>
-<li>no Cdata nodes will appear in the DOM tree (they will be represented as Text nodes, and subsumed into neighbouring text nodes)   </li>
-<li>no EntityReference nodes will appear in the DOM tree (they will be fully expanded and their contents appear in the tree), except where the contents of the entity reference are unknown to the parser.</li>
-</ul>
-
-<p>However, if a non-canonical tree is desired, the user may change this. The mechanism for doing this is the optional <code>configuration</code> argument to <code>parseFile</code> and <code>parseString</code>. <code>configuration</code> should be a space-separated list of options which affect the DOM tree. Currently, the following options are available:</p>
+<p>By default, the DOM tree presented to the user will be produced according to the following criteria:</p>
 
 <ul>
-<li><code>cdata-sections</code>: If this is specified, the parse tree will preserve any CData sections from the original document.</li>
-<li><code>entities</code>: If this is specified, the parse tree will preserve entity reference nodes (their contents are made available as children of the entity reference node.)</li>
-<li><code>split-cdata-sections</code>: If this is specified, the parse tree will coalesce immediately-adjacent Cdata sections. (this has no effect when cdata-sections is not specified)</li>
-<li><code>comments</code>: If this is specified, comments will be omitted from the tree.</li>
+<li>there will be no adjacent text nodes  </li>
+<li>Cdata nodes will appear as such in the DOM tree  </li>
+<li>EntityReference nodes will appear in the DOM tree.</li>
 </ul>
 
-<p>NB These options are taked from the DOM Core Level 3 specification; in each case, specifying the option has the effect of reversing its default value.</p>
+<p>However, if another tree is desired, the user may change this. For example, very often you would rather be working with the fully canonicalized tree, with all cdata sections replaced by text nodes and merged, and all entity references replaced with their contents.</p>
+
+<p>The mechanism for doing this is the optional <code>configuration</code> argument to <code>parseFile</code> and <code>parseString</code>. <code>configuration</code> is a <code>DOMConfiguration</code> object (which can be generated by simple declaration), which may be manipulated by <code>setParameter</code> calls.</p>
+
+<p>Note that FoX's implementation of <code>DOMConfiguration</code> does not follow the specification precisely. One <code>DOMConfiguration</code> object controls all of parsing, normalization and serialization. It can be used like so:</p>
+
+<pre><code>! Declare a new configuration object
+type(DOMConfiguration) :: config
+! Request full canonicalization
+! ie convert CDATA sections to text sections, remove all entity references etc.
+call setParameter(config, "canonical-form", .true.)
+! parse the document
+doc =&gt; parseFile("doc.xml", config)
+
+! Do a whole lot of DOM processing ...
+
+! change the configuration to allow cdata-sections to be preserved.
+call setParameter(getDomConfig(doc), "cdata-sections", .true.)
+! normalize the document again 
+call normalizeDocument(doc)
+! change the configuration to influence the output - make sure there is an XML declaration
+call setParameter(getDomConfig(doc), "xml-declaration", .true.)
+! and write the document out.
+call serialize(doc)
+</code></pre>
+
+<p>The available configuration options are fully explained in:</p>
+
+<ul>
+<li><a href="http://www.w3.org/TR/DOM-Level-3-Core/core.html#DOMConfiguration">DOM Core 3</a>  </li>
+<li><a href="http://www.w3.org/TR/2004/REC-DOM-Level-3-LS-20040407/load-save.html#LS-LSParser">DOM Core LSParser</a>  </li>
+<li><a href="http://www.w3.org/TR/2004/REC-DOM-Level-3-LS-20040407/load-save.html#LS-LSSerializer">DOM Core LSSerializer</a>  </li>
+</ul>
+
+<p>and are all implemented, with the exceptions of:</p>
+
+<ul>
+<li><code>error-handler</code>  </li>
+<li><code>schema-location</code></li>
+<li><code>schema-type</code>  </li>
+</ul>
 
 <h3>External entities</h3>
 
@@ -2614,9 +2662,9 @@ Every DOM subroutine and function implemented by FoX will take an optional argum
 <h1>Further information</h1>
 
 <p>FoX evolved from the initial codebase of <a href="http://lcdx00.wm.lc.ehu.es/ag/xml/">xmlf90</a>,
-which was written largely by Alberto Garcia &lt;<a href="&#x6D;&#x61;&#105;&#x6C;&#x74;&#111;:&#97;&#108;&#98;e&#x72;&#116;&#x6F;&#x67;&#64;&#x69;&#x63;&#109;a&#x62;&#x2E;e&#115;">&#97;&#108;&#98;e&#x72;&#116;&#x6F;&#x67;&#64;&#x69;&#x63;&#109;a&#x62;&#x2E;e&#115;</a>> and Jon Wakelin &lt;<a href="&#x6D;&#97;&#x69;&#108;&#116;&#111;:&#x6A;&#x6F;&#110;&#46;&#x77;&#x61;&#107;&#101;&#x6C;&#x69;&#110;&#64;&#x62;&#114;&#105;&#115;&#x74;&#x6F;&#108;&#46;a&#99;&#x2E;u&#x6B;">&#x6A;&#x6F;&#110;&#46;&#x77;&#x61;&#107;&#101;&#x6C;&#x69;&#110;&#64;&#x62;&#114;&#105;&#115;&#x74;&#x6F;&#108;&#46;a&#99;&#x2E;u&#x6B;</a>>.</p>
+which was written largely by Alberto Garcia &lt;<a href="&#109;&#x61;&#105;&#108;&#x74;&#111;:&#97;&#x6C;&#98;e&#114;&#116;&#x6F;&#103;&#64;&#105;&#x63;&#109;&#97;&#x62;.&#101;&#x73;">&#97;&#x6C;&#98;e&#114;&#116;&#x6F;&#103;&#64;&#105;&#x63;&#109;&#97;&#x62;.&#101;&#x73;</a>> and Jon Wakelin &lt;<a href="&#109;&#x61;&#105;&#108;&#x74;&#x6F;:&#x6A;&#x6F;&#x6E;&#x2E;&#119;&#97;&#x6B;e&#108;&#105;&#x6E;&#64;&#98;&#114;&#x69;&#115;&#x74;&#111;&#108;&#x2E;&#x61;&#99;&#46;&#x75;&#x6B;">&#x6A;&#x6F;&#x6E;&#x2E;&#119;&#97;&#x6B;e&#108;&#105;&#x6E;&#64;&#98;&#114;&#x69;&#115;&#x74;&#111;&#108;&#x2E;&#x61;&#99;&#46;&#x75;&#x6B;</a>>.</p>
 
-<p>FoX is the work of Toby White &lt;<a href="&#x6D;&#97;&#105;&#108;&#x74;&#x6F;:&#x74;&#111;w&#50;&#49;&#64;&#99;&#x61;m&#46;&#97;&#99;&#x2E;&#x75;&#107;">&#x74;&#111;w&#50;&#49;&#64;&#99;&#x61;m&#46;&#97;&#99;&#x2E;&#x75;&#107;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
+<p>FoX is the work of Toby White &lt;<a href="&#109;&#97;&#105;&#x6C;&#116;&#111;:&#116;&#111;&#119;&#x32;&#49;&#64;&#x63;&#97;m.a&#99;.&#117;&#x6B;">&#116;&#111;&#119;&#x32;&#49;&#64;&#x63;&#97;m.a&#99;.&#117;&#x6B;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
 
 <p>There is a FoX website at <a href="http://www.uszla.me.uk/software/FoX/">http://www.uszla.me.uk/software/FoX/</a>.</p>
 

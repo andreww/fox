@@ -19,7 +19,7 @@ The materials for this workshop included several talks, a set of documentation, 
 
 ## API documentation
 
-* FoX has five sets of publically exported interfaces. These are documented here:
+* FoX has six sets of publically exported interfaces. These are documented here:
 
 ### COMMON interfaces
 
