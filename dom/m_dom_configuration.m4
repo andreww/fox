@@ -170,6 +170,7 @@ TOHW_m_dom_contents(`
     if (.not.canSetParameter(domConfig, name, value)) then
       TOHW_m_dom_throw_error(NOT_SUPPORTED_ERR)
     endif
+
     if (value) then
       domConfig%parameters = ibset(domConfig%parameters, n)
     else
@@ -179,17 +180,17 @@ TOHW_m_dom_contents(`
     select case (trim(name))
     case ("canonical-form")
       if (value) then
-        call setParameter(domConfig, "entities", .false.)
+        domConfig%parameters = ibclr(domConfig%parameters, 7)
         ! cant do normalize-characters
-        call setParameter(domConfig, "cdata-sections", .false.)
-        call setParameter(domConfig, "namespaces", .true.)
-        call setParameter(domConfig, "namespace-declarations", .true.)
+        domConfig%parameters = ibclr(domConfig%parameters, 2)
+        domConfig%parameters = ibset(domConfig%parameters, 9)
+        domConfig%parameters = ibset(domConfig%parameters, 10)
         ! well-formed cannot be changed
-        call setParameter(domConfig, "element-content-whitespace", .true.)
+        domConfig%parameters = ibset(domConfig%parameters, 6)
         ! FIXME when we work out pretty-print/preserve-whitespace semantics
         ! call setParameter(domConfig, "format-pretty-print", .false.)
-        call setParameter(domConfig, "discard-default-content", .false.)
-        call setParameter(domConfig, "xml-declaration", .false.)
+        domConfig%parameters = ibclr(domConfig%parameters, 21)
+        domConfig%parameters = ibclr(domConfig%parameters, 23)
       else
         call resetParameter(domConfig, "entities")
         ! cant do normalize-characters
@@ -203,25 +204,25 @@ TOHW_m_dom_contents(`
         call resetParameter(domConfig, "xml-declaration")
       endif
     case ("cdata-sections")
-      if (value) call setParameter(domConfig, "canonical-form", .false.)
+      if (value) domConfig%parameters = ibclr(domConfig%parameters, 1)
     case ("element-content-whitespace")
-      if (.not.value) call setParameter(domConfig, "canonical-form", .false.)
+      if (.not.value) domConfig%parameters = ibclr(domConfig%parameters, 1)
     case ("entities")
-      if (value) call setParameter(domConfig, "canonical-form", .false.)
+      if (value) domConfig%parameters = ibclr(domConfig%parameters, 1)
     case ("namespaces")
-      if (.not.value) call setParameter(domConfig, "canonical-form", .false.)
+      if (.not.value) domConfig%parameters = ibclr(domConfig%parameters, 1)
     case ("namespaces-declarations")
-      if (.not.value) call setParameter(domConfig, "canonical-form", .false.)
+      if (.not.value) domConfig%parameters = ibclr(domConfig%parameters, 1)
     case("validate")
-      if (value) call setParameter(domConfig, "validate-if-schema", .false.)
+      if (value) domConfig%parameters = ibclr(domConfig%parameters, 14)
     case ("validate-if-schema")
-      if (value) call setParameter(domConfig, "validate", .false.)
+      if (value) domConfig%parameters = ibclr(domConfig%parameters, 13)
     case ("format-pretty-print")
-      if (value) call setParameter(domConfig, "canonical-form", .false.)
+      if (value) domConfig%parameters = ibclr(domConfig%parameters, 1)
     case ("discard-default-content")
-      if (value) call setParameter(domConfig, "canonical-form", .false.)
+      if (value) domConfig%parameters = ibclr(domConfig%parameters, 1)
     case ("xml-declaration")
-      if (value) call setParameter(domConfig, "canonical-form", .false.)
+      if (value) domConfig%parameters = ibclr(domConfig%parameters, 1)
     end select
 
   end subroutine setParameter
