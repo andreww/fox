@@ -123,7 +123,7 @@ TOHW_m_dom_contents(`
     type(DOMConfiguration) :: default
     integer :: i, n
     do i = 1, size(configParams)
-      if (name==trim(configParams(i))) then
+      if (toLower(name)==trim(configParams(i))) then
         n = i
         exit
       endif
@@ -143,7 +143,7 @@ TOHW_m_dom_contents(`
     logical, intent(in) :: value
     integer :: i, n
 
-    if (name=="infoset") then
+    if (toLower(name)=="infoset") then
       if (value) then
         call setParameter(domConfig, "validate-if-schema", .false.)
         call setParameter(domConfig, "entities", .false.)
@@ -159,7 +159,7 @@ TOHW_m_dom_contents(`
     endif
 
     do i = 1, size(configParams)
-      if (name==trim(configParams(i))) then
+      if (toLower(name)==trim(configParams(i))) then
         n = i
         exit
       endif
@@ -177,7 +177,7 @@ TOHW_m_dom_contents(`
       domConfig%parameters = ibclr(domConfig%parameters, n)
     endif
 
-    select case (trim(name))
+    select case (toLower(name))
     case ("canonical-form")
       if (value) then
         domConfig%parameters = ibclr(domConfig%parameters, 7)
@@ -234,7 +234,7 @@ TOHW_m_dom_contents(`
 
     integer :: i, n
 
-    if (name=="infoset") then
+    if (toLower(name)=="infoset") then
       value = &
         .not.getParameter(domConfig, "validate-if-schema") &
         .and..not.getParameter(domConfig, "entities") &
@@ -249,7 +249,7 @@ TOHW_m_dom_contents(`
     endif
 
     do i = 1, size(configParams)
-      if (name==trim(configParams(i))) then
+      if (toLower(name)==trim(configParams(i))) then
         n = i
         exit
       endif
@@ -270,12 +270,12 @@ TOHW_m_dom_contents(`
     logical :: p
     integer :: i, n
 
-    if (name=="infoset") then
+    if (toLower(name)=="infoset") then
       p = .true.
       return
     endif
     do i = 1, size(configParams)
-      if (name==trim(configParams(i))) then
+      if (toLower(name)==trim(configParams(i))) then
         n = i
         exit
       endif
