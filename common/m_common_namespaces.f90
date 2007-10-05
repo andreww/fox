@@ -516,9 +516,9 @@ contains
               return
             elseif (present(end_prefix_handler)) then
               call end_prefix_handler(str_vs(QName(7:)))
-              deallocate(URI)
-              deallocate(QName)
             endif
+            deallocate(URI)
+            deallocate(QName)
           endif
         else
           call checkURI(URI)
@@ -529,9 +529,9 @@ contains
             return
           elseif (present(start_prefix_handler)) then
             call start_prefix_handler(str_vs(URI), str_vs(QName(7:)))
-            deallocate(URI)
-            deallocate(QName)
           endif
+          deallocate(URI)
+          deallocate(QName)
         endif
         if (namespace_prefixes) then
           i = i + 1
