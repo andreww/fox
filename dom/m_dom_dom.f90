@@ -10717,7 +10717,7 @@ endif
     type(NamedNodeMap), pointer :: attrs
     type(NodeList), pointer :: nsNodes, nsNodesParent
     integer :: i, nsIndex
-    logical :: merged
+    logical :: merged, ns
 
     if (.not.associated(doc)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
@@ -10742,7 +10742,7 @@ endif
 endif
 
     endif
-
+    ns = (getLocalName(getDocumentElement(doc))/="")
     dc => getDomConfig(doc)
     treeroot => doc
 
@@ -10767,7 +10767,8 @@ endif
     if (.not.getReadonly(this)) then
       select case (getNodeType(this))
       case (ELEMENT_NODE)
-        
+        if (ns) then
+          
       ! Clear all current namespace nodes:
       nsnodes => getNamespaceNodes(this)
       do i = 1, getLength(nsNodes)
@@ -10929,6 +10930,7 @@ endif
         endif
       enddo
 
+        endif
 
       case (ATTRIBUTE_NODE)
         if (getParameter(dc, "entities")) then

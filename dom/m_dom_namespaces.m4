@@ -202,7 +202,7 @@ TOHW_m_dom_contents(`
     type(NamedNodeMap), pointer :: attrs
     type(NodeList), pointer :: nsNodes, nsNodesParent
     integer :: i, nsIndex
-    logical :: merged
+    logical :: merged, ns
 
     if (.not.associated(doc)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
@@ -211,7 +211,7 @@ TOHW_m_dom_contents(`
     if (getNodeType(doc)/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
-
+    ns = (getLocalName(getDocumentElement(doc))/="")
     dc => getDomConfig(doc)
     treeroot => doc
 
@@ -228,7 +228,9 @@ TOHW_m_dom_contents(`
     if (.not.getReadonly(this)) then
       select case (getNodeType(this))
       case (ELEMENT_NODE)
-        TOHW_m_dom_namespaceFixup
+        if (ns) then
+          TOHW_m_dom_namespaceFixup
+        endif
 
       case (ATTRIBUTE_NODE)
         if (getParameter(dc, "entities")) then

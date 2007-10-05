@@ -141,8 +141,10 @@ endif
       doc => getOwnerDocument(startNode)
       ! We need to do this namespace fixup or serialization will fail.
       ! it doesn't change the semantics of the docs, but other
-      ! normalization would, so dont
-      if (getParameter(getDomConfig(doc), "namespaces")) &
+      ! normalization would, so we done here
+      ! But only normalize if this is not a DOM level 1 node.
+      if (getLocalName(startNode)/="" &
+        .and.getParameter(getDomConfig(doc), "namespaces")) &
         call namespaceFixup(startNode, .true.)
     endif
     xmlDecl = getParameter(getDomConfig(doc), "xml-declaration")
