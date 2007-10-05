@@ -336,8 +336,9 @@ TOHW_m_dom_contents(`
 
   end subroutine normalizeDocument
 
-  recursive TOHW_subroutine(namespaceFixup, (this))
+  recursive TOHW_subroutine(namespaceFixup, (this, deep))
     type(Node), pointer :: this
+    logical, intent(in) :: deep
 
     type(Node), pointer :: parent, child, attr
     type(NamedNodeMap), pointer :: attrs
@@ -354,12 +355,14 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_namespaceFixup
     endif
 
-    ! And now call this on all appropriate children ...
-    child => getFirstChild(this)
-    do while (associated(child))
-      call namespaceFixup(child)
-      child => getNextSibling(child)
-    enddo
+    if (deep) then
+      ! And now call this on all appropriate children ...
+      child => getFirstChild(this)
+      do while (associated(child))
+        call namespaceFixup(child, .true.)
+        child => getNextSibling(child)
+      enddo
+    endif
 
   end subroutine namespaceFixup
 

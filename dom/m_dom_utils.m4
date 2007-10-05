@@ -127,7 +127,7 @@ contains
       ! it doesn't change the semantics of the docs, but other
       ! normalization would, so dont
       if (getParameter(getDomConfig(doc), "namespaces")) &
-        call namespaceFixup(startNode)
+        call namespaceFixup(startNode, .true.)
     endif
     xmlDecl = getParameter(getDomConfig(doc), "xml-declaration")
 

@@ -28,7 +28,7 @@ module m_dom_parse
     createAttribute, getNamedItem, setReadonlyNode, setReadOnlyMap, &
     createEmptyEntityReference, setEntityReferenceValue, setAttributeNode, getLastChild, &
     getFoX_checks, getImplementation, getDocumentElement, setIsElementContentWhitespace, &
-    DOMConfiguration, getParameter, destroy, setParameter, setDomConfig
+    DOMConfiguration, getParameter, destroy, setParameter, setDomConfig, namespaceFixup
   use m_dom_error, only: DOMException, inException, throw_exception, PARSE_ERR
 
   implicit none
@@ -96,6 +96,9 @@ contains
     else
       current => appendChild(current,el)
     endif
+    
+    call namespaceFixup(current, .false.)
+
     if (associated(inEntity)) &
       call setReadOnlyMap(getAttributes(current), .true.)
 

@@ -11088,9 +11088,10 @@ endif
 
   end subroutine normalizeDocument
 
-  recursive subroutine namespaceFixup(this, ex)
+  recursive subroutine namespaceFixup(this, deep, ex)
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: this
+    logical, intent(in) :: deep
 
     type(Node), pointer :: parent, child, attr
     type(NamedNodeMap), pointer :: attrs
@@ -11268,12 +11269,14 @@ endif
 
     endif
 
-    ! And now call this on all appropriate children ...
-    child => getFirstChild(this)
-    do while (associated(child))
-      call namespaceFixup(child)
-      child => getNextSibling(child)
-    enddo
+    if (deep) then
+      ! And now call this on all appropriate children ...
+      child => getFirstChild(this)
+      do while (associated(child))
+        call namespaceFixup(child, .true.)
+        child => getNextSibling(child)
+      enddo
+    endif
 
   end subroutine namespaceFixup
 
