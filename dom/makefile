@@ -45,7 +45,7 @@ install: $(OBJFILES)
 clean:
 	rm -f *.o  *.$(MOD_EXT) $(LIBRARY)
 # DO NOT DELETE THIS LINE - used by make depend
-FoX_dom.o: m_dom_dom.o m_dom_parse.o m_dom_utils.o
+FoX_dom.o: m_dom_dom.o m_dom_error.o m_dom_parse.o m_dom_utils.o
 m_dom_dom.o: m_dom_error.o
-m_dom_parse.o: m_dom_dom.o
-m_dom_utils.o: m_dom_dom.o
+m_dom_parse.o: m_dom_dom.o m_dom_error.o
+m_dom_utils.o: m_dom_dom.o m_dom_error.o

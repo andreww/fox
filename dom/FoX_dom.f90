@@ -11,11 +11,6 @@ module FoX_dom
 
   public :: str_vs, vs_vs_alloc, vs_str_alloc
 
-  !We make public only features from the DOM Core Level 2,
-  !plus a couple of our own devising for input & output.
-  !Some of the modules above expose symbols only
-  !for internal library management, so must be kept private.
-
   public :: DOMImplementation
   public :: Node
   public :: NodeList
@@ -25,7 +20,7 @@ module FoX_dom
   ! no
 
   ! DOM DOMTimestamp
-!  public :: DOMTimestamp
+  !  public :: DOMTimestamp
 
   ! DOM Exceptions
   public :: DOMException
@@ -47,6 +42,14 @@ module FoX_dom
   public :: INVALID_MODIFICATION_ERR
   public :: NAMESPACE_ERR
   public :: INVALID_ACCESS_ERR
+  public :: VALIDATION_ERR
+  public :: TYPE_MISMATCH_ERR
+  ! XPath
+  public :: INVALID_EXPRESSION_ERR
+  public :: TYPE_ERR
+  ! LS
+  public :: PARSE_ERR
+  public :: SERIALIZE_ERR
 
   ! DOM Implementation
   public :: hasFeature
@@ -72,7 +75,6 @@ module FoX_dom
   public :: createElementNS
   public :: createAttributeNS
   public :: getElementsByTagNameNS
-
 
   public :: getXmlStandalone
   public :: setXmlStandalone
@@ -222,8 +224,10 @@ module FoX_dom
   public :: getParameter
   public :: setParameter
   public :: canSetParameter
-
+  
   ! FoX-only interfaces
+  public :: newDOMConfig
+
   public :: parseFile
   public :: parseString
   public :: serialize

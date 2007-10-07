@@ -10,32 +10,32 @@ module m_dom_utils
   use m_common_format, only: operator(//)
   use m_common_struct, only: xml_doc_state
 
-  use m_dom_dom, only: Node, Namednodemap, NodeList
-  use m_dom_dom, only: DOCUMENT_NODE, ELEMENT_NODE, TEXT_NODE, &
-   CDATA_SECTION_NODE, COMMENT_NODE, DOCUMENT_TYPE_NODE, &
-   ATTRIBUTE_NODE, ENTITY_REFERENCE_NODE, PROCESSING_INSTRUCTION_NODE
-  use m_dom_dom, only: haschildnodes, getNodeName, getNodeType, getFoX_checks, &
-    getFirstChild, getNextSibling, getlength, item, getOwnerElement, getXmlStandalone, &
-    getAttributes, getParentNode, getChildNodes, getPrefix, getLocalName, getXmlVersion, &
-    getNodeName, getData, getName, getTagName, getValue, getTarget, getNamespaceNodes, &
-    getEntities, getNotations, item, getSystemId, getPublicId, getNotationName, getStringValue, &
-    getNamespaceURI, DOMConfiguration, getDomConfig, getParameter, getSpecified, getOwnerDocument, &
-    namespaceFixup, normalizeDocument, getXds
-  use m_dom_error, only: DOMException, inException, throw_exception, &
-    FoX_INVALID_NODE, SERIALIZE_ERR, FoX_INTERNAL_ERROR
+  ! Public interfaces
+  use m_dom_dom, only: DOMConfiguration, NamedNodeMap, Node,     &
+    NodeList,                                                                  &
+    ATTRIBUTE_NODE, CDATA_SECTION_NODE, COMMENT_NODE, DOCUMENT_NODE,           &
+    DOCUMENT_TYPE_NODE, ELEMENT_NODE, ENTITY_REFERENCE_NODE,                   &
+    PROCESSING_INSTRUCTION_NODE, TEXT_NODE,                                    &
+    getAttributes, getChildNodes, getData, getDomConfig, getEntities,          &
+    getFirstChild, getFoX_checks, getLength, getLocalName, getName,            &
+    getNamespaceURI, getNextSibling, getNodeName, getNodeType, getNotationName,&
+    getNotations, getOwnerDocument, getOwnerElement, getParameter,             &
+    getParentNode, getPrefix, getPublicId, getSpecified, getSystemId,          &
+    getTagName, getTarget, getXmlStandalone, getXmlVersion, getValue,          &
+    haschildnodes, item, normalizeDocument
 
-  use FoX_wxml, only: xmlf_t
-  use FoX_wxml, only: xml_OpenFile, xml_Close
-  use FoX_wxml, only: xml_AddXMLDeclaration
-  use FoX_wxml, only: xml_DeclareNamespace, xml_AddDOCTYPE, xml_AddInternalEntity
-  use FoX_wxml, only: xml_AddAttribute, xml_AddExternalEntity, xml_AddNotation
-  use FoX_wxml, only: xml_AddCharacters
-  use FoX_wxml, only: xml_NewElement
-  use FoX_wxml, only: xml_EndElement
-  use FoX_wxml, only: xml_AddComment
-  use FoX_wxml, only: xml_AddEntityReference
-  use FoX_wxml, only: xml_AddXMLPI
-  use FoX_wxml, only: xml_AddElementToDTD
+  ! Private interfaces
+  use m_dom_dom, only: getNamespaceNodes, getStringValue, getXds, namespaceFixup
+
+  use m_dom_error, only: DOMException, inException, throw_exception,           &
+    SERIALIZE_ERR, FoX_INTERNAL_ERROR, FoX_INVALID_NODE
+
+  use FoX_wxml, only: xmlf_t,                                                  &
+    xml_AddAttribute, xml_AddCharacters, xml_AddComment, xml_AddElementToDTD,  &
+    xml_AddEntityReference, xml_AddExternalEntity, xml_AddInternalEntity,      &
+    xml_AddDOCTYPE, xml_AddNotation, xml_AddXMLDeclaration, xml_AddXMLPI,      &
+    xml_EndElement, xml_Close, xml_DeclareNamespace, xml_NewElement,           &
+    xml_OpenFile
 
   implicit none
 

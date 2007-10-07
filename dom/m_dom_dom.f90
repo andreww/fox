@@ -126,6 +126,10 @@ module m_dom_dom
   public :: canSetParameter
   public :: getParameterNames
 
+  public :: newDOMConfig
+
+  public :: copyDOMConfig
+
 
   integer, parameter ::     ELEMENT_NODE                   = 1
   integer, parameter ::     ATTRIBUTE_NODE                 = 2
@@ -516,7 +520,7 @@ contains
       domConfig%parameters = ibclr(domConfig%parameters, n)
     endif
   end subroutine resetParameter
-
+    
   recursive subroutine setParameter(domConfig, name, value, ex)
     type(DOMException), intent(out), optional :: ex
     type(DOMConfiguration), pointer :: domConfig
@@ -703,6 +707,20 @@ endif
 
     s = configParams
   end function getParameterNames
+
+  subroutine copyDOMConfig(dc2, dc1)
+    type(DOMConfiguration), intent(out) :: dc2
+    type(DOMConfiguration), intent(in) :: dc1
+
+    dc2%parameters = dc1%parameters
+  end subroutine copyDOMConfig
+
+  function newDOMConfig(ex)result(dc) 
+    type(DOMException), intent(out), optional :: ex
+    type(DOMConfiguration), pointer :: dc
+
+    allocate(dc)
+  end function newDOMConfig
 
 
 

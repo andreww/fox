@@ -16,20 +16,29 @@ module m_dom_parse
   use FoX_sax, only: xml_t
   use FoX_sax, only: open_xml_file, open_xml_string, close_xml_t
 
-  use m_dom_dom, only: DOCUMENT_NODE, TEXT_NODE, CDATA_SECTION_NODE, getNodeType, &
-    getDocType, Node, setDocType, getReadOnly, getData, setData, getNamespaceURI,&
-    createProcessingInstruction, createAttributeNS, createComment, getEntities, &
-    setSpecified, createElementNS, getNotations, createTextNode, createEntity, &
-    getAttributes, setStringValue, createNamespaceNode, createNotation, setNamedItem, &
-    createEmptyDocument, createDocumentType, getParentNode, setDocumentElement, &
-    getNodeType, getImplementation, appendChild, getNotations, setAttributeNodeNS, &
-    setvalue, setAttributeNodeNS, setGCstate, createCdataSection, setXds,  &
-    createEntityReference, destroyAllNodesRecursively, setIllFormed, createElement, &
-    createAttribute, getNamedItem, setReadonlyNode, setReadOnlyMap, &
-    createEmptyEntityReference, setEntityReferenceValue, setAttributeNode, getLastChild, &
-    getFoX_checks, getImplementation, getDocumentElement, setIsElementContentWhitespace, &
-    DOMConfiguration, getParameter, destroy, setParameter, setDomConfig, namespaceFixup
-  use m_dom_error, only: DOMException, inException, throw_exception, PARSE_ERR
+  ! Public interfaces
+  use m_dom_dom, only: DOMConfiguration, Node,                                 &
+    DOCUMENT_NODE, TEXT_NODE, CDATA_SECTION_NODE,                              &
+    getAttributes, getData, getDocType, getDocumentElement, getEntities,       &
+    getImplementation, getLastChild, getNamespaceURI ,getNodeType,             &
+    getNotations, getParameter, getParentNode,                                 &
+    setData, setParameter, setValue,                                           &
+    appendChild, createAttribute, createAttributeNS, createCdataSection,       &
+    createComment, createDocumentType, createElement, createElementNS,         &
+    createEntityReference, createProcessingInstruction, createTextNode,        &
+    getNamedItem, setAttributeNode, setAttributeNodeNS, setNamedItem,          &
+    getFoX_checks
+
+  ! Private interfaces
+  use m_dom_dom, only: copyDOMConfig, createEmptyDocument, setDocumentElement, &
+    createEmptyEntityReference, createEntity, createNamespaceNode,             &
+    createNotation, getReadOnly, destroy, destroyAllNodesRecursively,          &
+    namespaceFixup, setDocType, setDomConfig, setEntityReferenceValue,         &
+    setGCstate, setIllFormed, setIsElementContentWhitespace, setReadOnlyMap,   &
+    setReadonlyNode, setSpecified, setXds, setStringValue
+    
+  use m_dom_error, only: DOMException, inException, throw_exception,           &
+    PARSE_ERR
 
   implicit none
   private
@@ -387,27 +396,12 @@ contains
   end subroutine skippedEntity_handler
 
 
-  subroutine parseDOMOptions(configuration)
-    character(len=*), intent(in), optional :: configuration
-
-    allocate(domConfig)
-
-    if (present(configuration)) then
-      call setParameter(domConfig, "cdata-sections", &
-        (index(configuration, "cdata-sections")==1).or.(index(configuration, " cdata-sections")>0))
-      ! need to do double check to avoid finding split-cdata-sections
-      call setParameter(domConfig, "entities", &
-        index(configuration, "entities")>0)
-      call setParameter(domConfig, "split-cdata-sections", &
-        index(configuration, "split-cdata-sections")>0)
-      call setParameter(domConfig, "validate", &
-        index(configuration, "validate")>0)
-    endif
-
-  end subroutine parseDOMOptions
-
-  TOHW_subroutine(runParser, (fxml))
+  TOHW_subroutine(runParser, (fxml, configuration))
     type(xml_t), intent(inout) :: fxml
+    type(DOMConfiguration), intent(in), optional :: configuration
+
+    allocate(DOMConfig)
+    if (present(configuration)) call copyDOMConfig(DOMConfig, configuration)
 
 ! We use internal sax_parse rather than public interface in order
 ! to use internal callbacks to get extra info.
@@ -461,18 +455,16 @@ contains
 
   TOHW_function(parsefile, (filename, configuration))
     character(len=*), intent(in) :: filename
-    character(len=*), intent(in), optional :: configuration
+    type(DOMConfiguration), intent(in), optional :: configuration
     type(Node), pointer :: parsefile
     integer :: iostat
-
-    call parseDOMOptions(configuration)
 
     call open_xml_file(fxml, filename, iostat)
     if (iostat /= 0) then
       call FoX_error("Cannot open file")
     endif
 
-    call runParser(fxml, ex)
+    call runParser(fxml, configuration, ex)
 
     parsefile => mainDoc
     mainDoc => null()
@@ -482,14 +474,12 @@ contains
 
   TOHW_function(parsestring, (string, configuration))
     character(len=*), intent(in) :: string
-    character(len=*), intent(in), optional :: configuration
+    type(DOMConfiguration), intent(in), optional :: configuration
     type(Node), pointer :: parsestring
-
-    call parseDOMOptions(configuration)
 
     call open_xml_string(fxml, string)
 
-    call runParser(fxml, ex)
+    call runParser(fxml, configuration, ex)
 
     parsestring => mainDoc
     mainDoc => null()
