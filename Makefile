@@ -18,32 +18,32 @@ INCFLAGS=-Iobjs/finclude
 #
 # Recursive make for each module
 #
-dom_lib: sax_lib wxml_lib
+dom_lib: objsdir sax_lib wxml_lib
 	(cd dom; $(MAKE))
 dom_lib_clean:
 	(cd dom; $(MAKE) clean)
 #
-sax_lib: common_lib fsys_lib
+sax_lib: objsdir common_lib fsys_lib
 	(cd sax; $(MAKE))
 sax_lib_clean:
 	(cd sax; $(MAKE) clean)
 #
-wxml_lib: common_lib fsys_lib 
+wxml_lib: objsdir common_lib fsys_lib 
 	(cd wxml; $(MAKE))
 wxml_lib_clean:
 	(cd wxml; $(MAKE) clean)
 #
-wcml_lib: utils_lib wxml_lib
+wcml_lib: objsdir utils_lib wxml_lib
 	(cd wcml; $(MAKE))
 wcml_lib_clean: 
 	(cd wcml; $(MAKE) clean)
 #
-common_lib: fsys_lib
+common_lib: objsdir fsys_lib
 	(cd common; $(MAKE))
 common_lib_clean:
 	(cd common; $(MAKE) clean)
 #
-utils_lib:
+utils_lib: objsdir
 	(cd utils; $(MAKE))
 utils_lib_clean:
 	(cd utils; $(MAKE) clean)
