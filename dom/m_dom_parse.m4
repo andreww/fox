@@ -10,7 +10,7 @@ module m_dom_parse
   use m_common_namespaces, only: namespaceDictionary, isDefaultNSInForce, getNumberOfPrefixes, &
     getPrefixByIndex
   use m_common_struct, only: xml_doc_state
-  use FoX_common, only: dictionary_t, len
+  use FoX_common, only: dictionary_t, getLength
   use FoX_common, only: getQName, getValue, getURI, getLocalName, getSpecified
   use m_sax_parser, only: sax_parse
   use FoX_sax, only: xml_t
@@ -83,7 +83,7 @@ contains
       el => createElement(mainDoc, name)
     endif
 
-    do i = 1, len(attrs)
+    do i = 1, getLength(attrs)
       if (getParameter(domConfig, "namespaces")) then
         attr => createAttributeNS(mainDoc, getURI(attrs, i), getQName(attrs, i))
       else
