@@ -1,4 +1,4 @@
-AC_INIT([FoX],[2.0],[tow21@cam.ac.uk])
+AC_INIT([FoX],[3.0],[tow21@cam.ac.uk])
 AC_CONFIG_SRCDIR([config.sub])
 dnl
 dnl All macros are kept in ./m4:
@@ -97,9 +97,9 @@ AC_ARG_ENABLE([wxml],
 AC_ARG_ENABLE([wcml],
   AC_HELP_STRING([--enable-wcml], [Compile wcml subsystem (for CML output)]),
   [eval WCML_$enableval=wcml_lib])
-AC_ARG_ENABLE([wkml],
-  AC_HELP_STRING([--enable-wkml], [Compile wkml subsystem (for KML output)]),
-  [eval WKML_$enableval=wkml_lib])
+dnl AC_ARG_ENABLE([wkml],
+dnl   AC_HELP_STRING([--enable-wkml], [Compile wkml subsystem (for KML output)]),
+dnl   [eval WKML_$enableval=wkml_lib])
 AC_ARG_ENABLE([sax],
   AC_HELP_STRING([--enable-sax], [Compile SAX parser]),
   [eval SAX_$enableval=sax_lib])
@@ -112,7 +112,7 @@ dnl Otherwise we only enable whatever was explicitly enabled.
 if test x$WXML_yes$WCML_yes$WKML_yes$SAX_yes$DOM_yes = x; then
   if test x$WXML_no = x; then WXML_yes=wxml_lib; fi
   if test x$WCML_no = x; then WCML_yes=wcml_lib; fi
-  if test x$WKML_no = x; then WKML_yes=wkml_lib; fi
+dnl  if test x$WKML_no = x; then WKML_yes=wkml_lib; fi
   if test x$SAX_no = x; then SAX_yes=sax_lib; fi
   if test x$DOM_no = x; then DOM_yes=dom_lib; fi
 fi
@@ -123,7 +123,8 @@ dnl wkml, then wxml will get built as a dependency by the
 dnl makefile. 
 dnl
 dnl Finally, construct the build targets
-BUILD_TARGETS="$WXML_yes $WCML_yes $WKML_yes $SAX_yes $DOM_yes"
+dnl BUILD_TARGETS="$WXML_yes $WCML_yes $WKML_yes $SAX_yes $DOM_yes"
+BUILD_TARGETS="$WXML_yes $WCML_yes $SAX_yes $DOM_yes"
 AC_SUBST(BUILD_TARGETS)
 dnl
 dnl Check compiler characteristics; it must support F95
