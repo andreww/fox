@@ -126,6 +126,9 @@ module m_dom_dom
   public :: canSetParameter
   public :: getParameterNames
 
+  public :: newDOMConfig
+  public :: copyDOMConfig
+
 
   integer, parameter ::     ELEMENT_NODE                   = 1
   integer, parameter ::     ATTRIBUTE_NODE                 = 2
@@ -703,6 +706,17 @@ endif
 
     s = configParams
   end function getParameterNames
+
+  function newDOMConfig() result(dc)
+    type(DOMConfiguration), pointer :: dc
+    allocate(dc)
+  end function newDOMConfig
+
+  subroutine copyDOMConfig(dc1, dc2)
+    type(DOMConfiguration), pointer :: dc1, dc2
+
+    dc1%parameters = dc2%parameters
+  end subroutine copyDOMConfig
 
 
 

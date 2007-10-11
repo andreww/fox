@@ -398,7 +398,7 @@ contains
   subroutine runParser(fxml, configuration, ex)
     type(DOMException), intent(out), optional :: ex
     type(xml_t), intent(inout) :: fxml
-    type(DOMConfiguration), intent(in), optional :: configuration
+    type(DOMConfiguration), pointer, optional :: configuration
 
     allocate(DOMConfig)
     if (present(configuration)) call copyDOMConfig(DOMConfig, configuration)
@@ -464,7 +464,7 @@ endif
   function parsefile(filename, configuration, ex) 
     type(DOMException), intent(out), optional :: ex
     character(len=*), intent(in) :: filename
-    type(DOMConfiguration), intent(in), optional :: configuration
+    type(DOMConfiguration), pointer, optional :: configuration
     type(Node), pointer :: parsefile
     integer :: iostat
 
@@ -484,7 +484,7 @@ endif
   function parsestring(string, configuration, ex) 
     type(DOMException), intent(out), optional :: ex
     character(len=*), intent(in) :: string
-    type(DOMConfiguration), intent(in), optional :: configuration
+    type(DOMConfiguration), pointer, optional :: configuration
     type(Node), pointer :: parsestring
 
     call open_xml_string(fxml, string)

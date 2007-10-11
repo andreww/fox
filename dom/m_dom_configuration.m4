@@ -112,6 +112,9 @@ TOHW_m_dom_publics(`
   public :: canSetParameter
   public :: getParameterNames
 
+  public :: newDOMConfig
+  public :: copyDOMConfig
+
 ')`'dnl
 dnl
 TOHW_m_dom_contents(`
@@ -295,5 +298,16 @@ TOHW_m_dom_contents(`
 
     s = configParams
   end function getParameterNames
+
+  function newDOMConfig() result(dc)
+    type(DOMConfiguration), pointer :: dc
+    allocate(dc)
+  end function newDOMConfig
+
+  subroutine copyDOMConfig(dc1, dc2)
+    type(DOMConfiguration), pointer :: dc1, dc2
+
+    dc1%parameters = dc2%parameters
+  end subroutine copyDOMConfig
 
 ')`'dnl

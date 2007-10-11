@@ -398,7 +398,7 @@ contains
 
   TOHW_subroutine(runParser, (fxml, configuration))
     type(xml_t), intent(inout) :: fxml
-    type(DOMConfiguration), intent(in), optional :: configuration
+    type(DOMConfiguration), pointer, optional :: configuration
 
     allocate(DOMConfig)
     if (present(configuration)) call copyDOMConfig(DOMConfig, configuration)
@@ -455,7 +455,7 @@ contains
 
   TOHW_function(parsefile, (filename, configuration))
     character(len=*), intent(in) :: filename
-    type(DOMConfiguration), intent(in), optional :: configuration
+    type(DOMConfiguration), pointer, optional :: configuration
     type(Node), pointer :: parsefile
     integer :: iostat
 
@@ -474,7 +474,7 @@ contains
 
   TOHW_function(parsestring, (string, configuration))
     character(len=*), intent(in) :: string
-    type(DOMConfiguration), intent(in), optional :: configuration
+    type(DOMConfiguration), pointer, optional :: configuration
     type(Node), pointer :: parsestring
 
     call open_xml_string(fxml, string)
