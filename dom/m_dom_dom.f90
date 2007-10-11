@@ -126,10 +126,6 @@ module m_dom_dom
   public :: canSetParameter
   public :: getParameterNames
 
-  public :: newDOMConfig
-
-  public :: copyDOMConfig
-
 
   integer, parameter ::     ELEMENT_NODE                   = 1
   integer, parameter ::     ATTRIBUTE_NODE                 = 2
@@ -520,7 +516,7 @@ contains
       domConfig%parameters = ibclr(domConfig%parameters, n)
     endif
   end subroutine resetParameter
-    
+
   recursive subroutine setParameter(domConfig, name, value, ex)
     type(DOMException), intent(out), optional :: ex
     type(DOMConfiguration), pointer :: domConfig
@@ -707,20 +703,6 @@ endif
 
     s = configParams
   end function getParameterNames
-
-  subroutine copyDOMConfig(dc2, dc1)
-    type(DOMConfiguration), intent(out) :: dc2
-    type(DOMConfiguration), intent(in) :: dc1
-
-    dc2%parameters = dc1%parameters
-  end subroutine copyDOMConfig
-
-  function newDOMConfig(ex)result(dc) 
-    type(DOMException), intent(out), optional :: ex
-    type(DOMConfiguration), pointer :: dc
-
-    allocate(dc)
-  end function newDOMConfig
 
 
 
@@ -6093,7 +6075,7 @@ endif
     type(Node), pointer :: arg
 
     type(Node), pointer :: this, treeroot
-    integer :: i_tree, n
+    integer :: i_tree, l, n
     logical :: doneAttributes, doneChildren
 
     ! Calculate value of any entity references that are only textual:
@@ -6181,8 +6163,9 @@ endif
       if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
 
         if (getNodeType(this)==TEXT_NODE) then
-          arg%nodeValue(n+1:n+len(getData(this))) = vs_str(getData(this))
-          n = n + len(getData(this))
+          l = len(getData(this))
+          arg%nodeValue(n+1:n+l) = vs_str(getData(this))
+          n = n + l
         endif
 
       else

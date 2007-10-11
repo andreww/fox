@@ -352,7 +352,7 @@ TOHW_m_dom_get(Node, documentElement, np%docExtras%documentElement, (DOCUMENT_NO
     type(Node), pointer :: arg
 
     type(Node), pointer :: this, treeroot
-    integer :: i_tree, n
+    integer :: i_tree, l, n
     logical :: doneAttributes, doneChildren
 
     ! Calculate value of any entity references that are only textual:
@@ -372,8 +372,9 @@ TOHW_m_dom_treewalk(`
       n = 0
 TOHW_m_dom_treewalk(`
         if (getNodeType(this)==TEXT_NODE) then
-          arg%nodeValue(n+1:n+len(getData(this))) = vs_str(getData(this))
-          n = n + len(getData(this))
+          l = len(getData(this))
+          arg%nodeValue(n+1:n+l) = vs_str(getData(this))
+          n = n + l
         endif
 ',`')
     endif
