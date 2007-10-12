@@ -503,7 +503,6 @@ contains
     type(DOMConfiguration), pointer :: domConfig
     character(len=*), intent(in) :: name
 
-    type(DOMConfiguration) :: default
     integer :: i, n
     do i = 1, size(configParams)
       if (toLower(name)==trim(configParams(i))) then
@@ -3672,7 +3671,6 @@ endif
     logical, intent(in) :: p
     integer :: n
 
-    type(Node), pointer :: el
     integer :: i
 
     n = 0
@@ -3783,7 +3781,6 @@ endif
     logical, intent(in) :: p
     integer :: n
 
-    type(Node), pointer :: el
     integer :: i
 
     n = 0
@@ -4333,22 +4330,29 @@ endif
     if (.not.doc%docExtras%liveNodeLists) return
     if (.not.associated(doc%docExtras%nodelists)) return
 
-    ! We point the old list of nodelists to temp_nll, then recalculate them all (which repopulates nodelists)
+    ! We point the old list of nodelists to temp_nll, then recalculate 
+    ! them all (which repopulates nodelists)
     temp_nll => doc%docExtras%nodelists
     i_t = size(temp_nll)
     allocate(doc%docExtras%nodelists(0))
     do i = 1, i_t
       nl_orig => temp_nll(i)%this
       !
-      ! Although all nodes should be searched whatever the result, we should only do the
-      ! appropriate sort of search for this list - according to namespaces or not.
+      ! Although all nodes should be searched whatever the result,
+      ! we should only do the appropriate sort of search for this
+      ! list - according to namespaces or not.
       !
-      if (associated(nl_orig%nodeName)) then ! this was made by getElementsByTagName
+      if (associated(nl_orig%nodeName)) then 
+        ! this was made by getElementsByTagName
         nl => getElementsByTagName(nl_orig%element, str_vs(nl_orig%nodeName))
-      elseif (associated(nl_orig%namespaceURI)) then ! this was made by getElementsByTagNameNS
-        nl => getElementsByTagNameNS(nl_orig%element, str_vs(nl_orig%localName), str_vs(nl_orig%namespaceURI))
+      elseif (associated(nl_orig%namespaceURI)) then 
+        ! this was made by getElementsByTagNameNS
+        nl => getElementsByTagNameNS(nl_orig%element, &
+          str_vs(nl_orig%localName), str_vs(nl_orig%namespaceURI))
       endif
     enddo
+    ! We dont care about the nodelists weve calculated now
+    nullify(nl)
 
     deallocate(temp_nll)    
 
@@ -10668,7 +10672,7 @@ endif
     character(len=*), intent(in) :: namespaceURI
     logical, intent(in) :: specified
 
-    type(Node), pointer :: nnp, dummy
+    type(Node), pointer :: dummy
     type(NodeList), pointer :: nsnodes
     integer :: i
     logical :: quickFix
@@ -10728,7 +10732,7 @@ endif
     logical :: doneAttributes, doneChildren
     integer :: i_tree, i_children
 
-    type(Node), pointer :: parent, child, attr
+    type(Node), pointer :: parent, attr
     type(NamedNodeMap), pointer :: attrs
     type(NodeList), pointer :: nsNodes, nsNodesParent
     integer :: i, nsIndex

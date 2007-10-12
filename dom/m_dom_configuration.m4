@@ -123,7 +123,6 @@ TOHW_m_dom_contents(`
     type(DOMConfiguration), pointer :: domConfig
     character(len=*), intent(in) :: name
 
-    type(DOMConfiguration) :: default
     integer :: i, n
     do i = 1, size(configParams)
       if (toLower(name)==trim(configParams(i))) then

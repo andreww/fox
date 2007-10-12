@@ -155,7 +155,7 @@ TOHW_m_dom_contents(`
     character(len=*), intent(in) :: namespaceURI
     logical, intent(in) :: specified
 
-    type(Node), pointer :: nnp, dummy
+    type(Node), pointer :: dummy
     type(NodeList), pointer :: nsnodes
     integer :: i
     logical :: quickFix
@@ -198,7 +198,7 @@ TOHW_m_dom_contents(`
     logical :: doneAttributes, doneChildren
     integer :: i_tree, i_children
 
-    type(Node), pointer :: parent, child, attr
+    type(Node), pointer :: parent, attr
     type(NamedNodeMap), pointer :: attrs
     type(NodeList), pointer :: nsNodes, nsNodesParent
     integer :: i, nsIndex

@@ -166,22 +166,29 @@ TOHW_m_dom_contents(`
     if (.not.doc%docExtras%liveNodeLists) return
     if (.not.associated(doc%docExtras%nodelists)) return
 
-    ! We point the old list of nodelists to temp_nll, then recalculate them all (which repopulates nodelists)
+    ! We point the old list of nodelists to temp_nll, then recalculate 
+    ! them all (which repopulates nodelists)
     temp_nll => doc%docExtras%nodelists
     i_t = size(temp_nll)
     allocate(doc%docExtras%nodelists(0))
     do i = 1, i_t
       nl_orig => temp_nll(i)%this
       !
-      ! Although all nodes should be searched whatever the result, we should only do the
-      ! appropriate sort of search for this list - according to namespaces or not.
+      ! Although all nodes should be searched whatever the result,
+      ! we should only do the appropriate sort of search for this
+      ! list - according to namespaces or not.
       !
-      if (associated(nl_orig%nodeName)) then ! this was made by getElementsByTagName
+      if (associated(nl_orig%nodeName)) then 
+        ! this was made by getElementsByTagName
         nl => getElementsByTagName(nl_orig%element, str_vs(nl_orig%nodeName))
-      elseif (associated(nl_orig%namespaceURI)) then ! this was made by getElementsByTagNameNS
-        nl => getElementsByTagNameNS(nl_orig%element, str_vs(nl_orig%localName), str_vs(nl_orig%namespaceURI))
+      elseif (associated(nl_orig%namespaceURI)) then 
+        ! this was made by getElementsByTagNameNS
+        nl => getElementsByTagNameNS(nl_orig%element, &
+          str_vs(nl_orig%localName), str_vs(nl_orig%namespaceURI))
       endif
     enddo
+    ! We dont care about the nodelists weve calculated now
+    nullify(nl)
 
     deallocate(temp_nll)    
 

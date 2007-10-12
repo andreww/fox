@@ -1083,7 +1083,6 @@ TOHW_m_dom_treewalk(`
     logical, intent(in) :: p
     integer :: n
 
-    type(Node), pointer :: el
     integer :: i
 
     n = 0
@@ -1185,7 +1184,6 @@ TOHW_m_dom_treewalk(`
     logical, intent(in) :: p
     integer :: n
 
-    type(Node), pointer :: el
     integer :: i
 
     n = 0
