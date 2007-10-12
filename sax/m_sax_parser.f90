@@ -1,6 +1,6 @@
 module m_sax_parser
 
-  use m_common_array_str, only: str_vs, vs_str, string_list, &
+  use m_common_array_str, only: str_vs, string_list, &
     destroy_string_list, devnull, vs_str_alloc
   use m_common_attrs, only: init_dict, destroy_dict, reset_dict, &
     add_item_to_dict, has_key, get_value
@@ -14,8 +14,7 @@ module m_sax_parser
     destroy_entity_list, add_internal_entity, &
     is_external_entity, expand_entity, expand_char_entity, &
     is_unparsed_entity, pop_entity_list, size, &
-    getEntityTextByIndex, getEntityNameByIndex, getEntityNotationByIndex, &
-    getEntityTextByName
+    getEntityTextByIndex, getEntityNameByIndex, getEntityNotationByIndex
   use m_common_entity_expand, only: expand_entity_value_alloc
   use m_common_error, only: FoX_error, add_error, &
     init_error_stack, destroy_error_stack, in_error
@@ -29,7 +28,7 @@ module m_sax_parser
     initNamespaceDictionary, destroyNamespaceDictionary
   use m_common_notations, only: init_notation_list, destroy_notation_list, &
     add_notation, notation_exists
-  use m_common_struct, only: xml_doc_state, init_xml_doc_state, &
+  use m_common_struct, only: init_xml_doc_state, &
     destroy_xml_doc_state, register_internal_PE, register_external_PE, &
     register_internal_GE, register_external_GE
 
