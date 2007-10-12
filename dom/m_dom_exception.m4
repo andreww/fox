@@ -90,4 +90,4 @@ ifelse(m4f_thisfunc, `replaceChild', ` &
       case default
         TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR)
       end select
-')
+')`'dnl

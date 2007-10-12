@@ -1,7 +1,3 @@
- 
-
-
-
 module m_dom_utils
 
   use m_common_array_str, only: str_vs, vs_str

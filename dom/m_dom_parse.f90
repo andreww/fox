@@ -1,6 +1,3 @@
- 
-
-
 module m_dom_parse
 
   use m_common_array_str, only: str_vs, vs_str_alloc
