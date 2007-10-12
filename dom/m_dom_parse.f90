@@ -6,22 +6,19 @@ module m_dom_parse
   use m_common_array_str, only: str_vs, vs_str_alloc
   use m_common_entities, only: entity_list, init_entity_list, destroy_entity_list, add_internal_entity
   use m_common_error, only: FoX_error
-  use m_common_namespaces, only: namespaceDictionary, isDefaultNSInForce, getNumberOfPrefixes, &
-    getPrefixByIndex
   use m_common_struct, only: xml_doc_state
   use FoX_common, only: dictionary_t, getLength
-  use FoX_common, only: getQName, getValue, getURI, getLocalName, getSpecified
+  use FoX_common, only: getQName, getValue, getURI, getSpecified
   use m_sax_parser, only: sax_parse
   use FoX_sax, only: xml_t
   use FoX_sax, only: open_xml_file, open_xml_string, close_xml_t
 
   ! Public interfaces
   use m_dom_dom, only: DOMConfiguration, Node,                                 &
-    DOCUMENT_NODE, TEXT_NODE, CDATA_SECTION_NODE,                              &
-    getAttributes, getData, getDocType, getDocumentElement, getEntities,       &
-    getImplementation, getLastChild, getNamespaceURI ,getNodeType,             &
-    getNotations, getParameter, getParentNode,                                 &
-    setData, setParameter, setValue,                                           &
+    TEXT_NODE,                                                                 &
+    getAttributes, getData, getDocType, getEntities, getImplementation,        &
+    getLastChild, getNodeType, getNotations, getParameter, getParentNode,      &
+    setData, setValue,                                                         &
     appendChild, createAttribute, createAttributeNS, createCdataSection,       &
     createComment, createDocumentType, createElement, createElementNS,         &
     createEntityReference, createProcessingInstruction, createTextNode,        &
@@ -30,11 +27,11 @@ module m_dom_parse
 
   ! Private interfaces
   use m_dom_dom, only: copyDOMConfig, createEmptyDocument, setDocumentElement, &
-    createEmptyEntityReference, createEntity, createNamespaceNode,             &
-    createNotation, getReadOnly, destroy, destroyAllNodesRecursively,          &
-    namespaceFixup, setDocType, setDomConfig, setEntityReferenceValue,         &
-    setGCstate, setIllFormed, setIsElementContentWhitespace, setReadOnlyMap,   &
-    setReadonlyNode, setSpecified, setXds, setStringValue
+    createEmptyEntityReference, createEntity, createNotation, getReadOnly,     &
+    destroy, destroyAllNodesRecursively, namespaceFixup, setDocType,           &
+    setDomConfig, setEntityReferenceValue, setGCstate, setIllFormed,           &
+    setIsElementContentWhitespace, setReadOnlyMap, setReadonlyNode,            &
+    setSpecified, setXds, setStringValue
     
   use m_dom_error, only: DOMException, inException, throw_exception,           &
     PARSE_ERR
@@ -270,7 +267,6 @@ contains
     
     type(Node), pointer :: oldcurrent
     type(xml_t) :: subsax
-    type(entity_list), pointer :: el
 
     oldcurrent => getNamedItem(getEntities(getDocType(mainDoc)), name)
     ! If oldcurrent is associated, then this is a duplicate entity
