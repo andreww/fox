@@ -6,7 +6,7 @@ module FoX_common
   implicit none
   private
 
-  character(len=*), parameter :: FoX_version = '2.2'
+  character(len=*), parameter :: FoX_version = '3.0'
 
   public :: FoX_version
 
