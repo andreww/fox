@@ -9,40 +9,29 @@ Unpack it as normal, and change directory into the top-level directory, FoX.
 
 FoX requires a Fortran 95 compiler - not just Fortran 90. All currently available versions of Fortran compilers claim to support F95. If your favoured compiler is not listed as working below, I recommend the use of [g95](www.g95.org), which is free to download and use. And if your favourite compiler is listed as not working, then please send a bug report to your compiler vendor.
 
-As of version 2.1.1, FoX has been tested with the following compiler versions.
+The list below shows results as tested at the time of release with the 3.0 release of the FoX code. An up-to-date list of tested compiler version is maintained [here](http://uszla.me.uk/space/software/FoX/compat/)
 
-Successfully:
-
-* g95 as of 25/5/7: compiles and runs all tests
-* gfortran as of version 4.1.2
-* NAG version 5.1: compiles and runs all tests
-* Intel version 9.1: compiles and runs all tests
-* PGI version 6.2-3: compiles (apart from WCML), some mysterious test failures.
+* g95 as of 25/5/7
+* gfortran as of version 4.2
+* Intel version 8.1, 9.1, 10.1
+* NAG version 5.1
+* PGI version 6.1, 6,2, 7.0
+* XLF version 10.01
 
 Known failures:
-* g95 prior to 25/5/7: fails to compile.
-* PGI version 6.2-3: compilation failure in WCML. All `common/` tests pass. Several 
- failures due to memory allocation in `wxml/`.
+
+* g95 prior to 25/5/7  
+* Intel version 7.1  
+* NAG version 5.0  
+* PGI version 5.1  
 
 Results from other compilers are welcome.
 
 As of version 2.0.2, the following other compilers had been tested and are known to work:
 
-* gfortran, version 4.2 (as of 2006-07-09)
-* g95 (version of 2006-08-01, earlier versions untested)
-* Intel Fortran version 9.0 and above (previous versions may compile, but do not work correctly.)
-* Lahey version 6.20 (previous versions untested)
-* NAG version 5.0 (patch 391 and later) or 5.1
-* Pathscale, version 2.4 (previous versions untested)
-* XLF version 9.1 (previous versions untested)
-
-and the following compilers tested and known to fail
-
-* gfortran prior to and including version 4.1
-* Intel Fortran prior to version 9.0
-* NAG versions prior to 5.0-391
-* PGI, all versions (bug reported #3897)
-* Sun Fortran 95 7.1 Patch 112762-16 2005/10/25 (later versions untested)
+* Lahey version 6.20
+* Pathscale, version 2.4
+* XLF version 9.1
 
 ##Configuration
 
