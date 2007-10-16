@@ -1,5 +1,7 @@
 module m_common_array_str
 
+  use m_common_realtypes, only: dp
+
   implicit none
   private
 
@@ -22,10 +24,39 @@ module m_common_array_str
     module procedure destroy_vs
   end interface destroy
 
+  interface concat
+    module procedure vs_s_concat
+  end interface
+
+  interface alloc
+    module procedure vs_str_alloc
+  end interface
+
+  interface logical
+    module procedure vs_logical
+  end interface logical
+  interface int
+    module procedure vs_int
+  end interface int
+  interface real
+    module procedure vs_real
+  end interface
+
   public :: str_vs
   public :: vs_str
   public :: vs_str_alloc
   public :: vs_vs_alloc
+
+  public :: vs_logical
+  public :: vs_int
+  public :: vs_real
+
+  public :: logical
+  public :: int
+  public :: real
+
+  public :: concat
+  public :: alloc
 
   public :: destroy
 
@@ -96,6 +127,55 @@ contains
     allocate(vs(size(s)))
     vs = s
   end function vs_vs_alloc
+
+  pure function vs_s_concat(vs, s) result(vs2)
+    character, dimension(:), intent(in) :: vs
+    character(len=*), intent(in) :: s
+    character, dimension(:), pointer :: vs2
+
+    allocate(vs2(size(vs)+len(s)))
+    vs2(:size(vs)) = vs
+    vs2(size(vs)+1:) = vs_str(s)
+  end function vs_s_concat
+
+  pure function vs_logical(vs) result(p)
+    character, dimension(:), intent(in) :: vs
+    logical :: p
+
+    integer :: ios
+    character(len=size(vs)) :: s
+    s = str_vs(vs)
+! FIXME really this should be done by bit-twiddling
+! to avoid recursive IO
+    read(s, *, iostat=ios) p
+    if (ios/=0) p = .false.
+  end function vs_logical
+
+  pure function vs_int(vs) result(i)
+    character, dimension(:), intent(in) :: vs
+    integer :: i
+
+    integer :: ios
+    character(len=size(vs)) :: s
+    s = str_vs(vs)
+! FIXME really this should be done by bit-twiddling
+! to avoid recursive IO
+    read(s, *, iostat=ios) i
+    if (ios/=0) i = 0
+  end function vs_int
+
+  pure function vs_real(vs) result(r)
+    character, dimension(:), intent(in) :: vs
+    real(dp) :: r
+
+    integer :: ios
+    character(len=size(vs)) :: s
+    s = str_vs(vs)
+! FIXME really this should be done by bit-twiddling
+! to avoid recursive IO
+    read(s, *, iostat=ios) r
+    if (ios/=0) r = 0
+  end function vs_real
 
   subroutine destroy_vs(vs)
     character, dimension(:), pointer :: vs

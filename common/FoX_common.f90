@@ -1,5 +1,6 @@
 module FoX_common
 
+  use m_common_array_str
   use m_common_attrs
   use m_common_format
 
@@ -12,6 +13,17 @@ module FoX_common
 
   public :: str
   public :: operator(//)
+  
+  public :: str_vs
+  public :: vs_str
+  public :: alloc
+  public :: concat
+  public :: vs_logical
+  public :: vs_int
+  public :: vs_real
+  public :: logical
+  public :: int
+  public :: real
 
 !These are all exported through SAX now
   public :: dictionary_t
