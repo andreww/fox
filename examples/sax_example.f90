@@ -6,43 +6,41 @@ module m_handlers
   implicit none
   private
 
-  ! A prototype of a specific language processor.
+  ! This module shows massive overkill with the quantity
+  ! of callbacks specified. You will never need all of these
+  ! unless you are implementing an alternative interface on
+  ! top of SAX. (For example, the DOM interface uses all of 
+  ! these.
 
-  ! It defines the routines that are called from xml_parser in response
-  ! to particular events.
+  ! This is mainly for reference. Please see sax_example_2.f90
+  ! for a more realistic example
 
-  ! In this particular example we just print the names of the elements
-  ! and the content of the pcdata chunks, as well as any comments, XML
-  ! and SGML declarations, etc.
-
-  ! A module such as this could use "utility routines" to convert pcdata
-  ! to numerical arrays, and to populate specific data structures.
-    public :: characters_handler
-    public :: endDocument_handler
-    public :: endElement_handler
-    public :: endPrefixMapping_handler
-    public :: ignorableWhitespace_handler
-    public :: processingInstruction_handler
-    public :: skippedEntity_handler
-    public :: startElement_handler
-    public :: startDocument_handler
-    public :: startPrefixMapping_handler
-    public :: notationDecl_handler
-    public :: unparsedEntityDecl_handler
-    public :: error_handler
-    public :: fatalError_handler
-    public :: warning_handler
-    public :: attributeDecl_handler
-    public :: elementDecl_handler
-    public :: externalEntityDecl_handler
-    public :: internalEntityDecl_handler
-    public :: comment_handler
-    public :: endCdata_handler
-    public :: endEntity_handler
-    public :: endDTD_handler
-    public :: startCdata_handler
-    public :: startDTD_handler
-    public :: startEntity_handler
+  public :: characters_handler
+  public :: endDocument_handler
+  public :: endElement_handler
+  public :: endPrefixMapping_handler
+  public :: ignorableWhitespace_handler
+  public :: processingInstruction_handler
+  public :: skippedEntity_handler
+  public :: startElement_handler
+  public :: startDocument_handler
+  public :: startPrefixMapping_handler
+  public :: notationDecl_handler
+  public :: unparsedEntityDecl_handler
+  public :: error_handler
+  public :: fatalError_handler
+  public :: warning_handler
+  public :: attributeDecl_handler
+  public :: elementDecl_handler
+  public :: externalEntityDecl_handler
+  public :: internalEntityDecl_handler
+  public :: comment_handler
+  public :: endCdata_handler
+  public :: endEntity_handler
+  public :: endDTD_handler
+  public :: startCdata_handler
+  public :: startDTD_handler
+  public :: startEntity_handler
 
 contains
 

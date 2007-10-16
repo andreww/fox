@@ -1,19 +1,26 @@
 program dom_example
 
-  use m_common_array_str
-  use m_dom_utils, only: dumpTree
   use FoX_dom
   implicit none
 
-  type(DOMImplementation), pointer :: imp
-  type(Node), pointer :: myDoc, myOtherDoc, np, np2, dummy
-  type(NodeList) :: interest
-  integer :: i
+  type(Node), pointer :: myDoc
+  real :: t1, t2
 
-  myDoc => parseFile("testNS.xml", "entities")
+  call cpu_time(t1)
+  ! Load in the document
+  myDoc => parseFile("h2o.xml")
 
-  call dumpTree(myDoc)
+  ! Tell the normalizer to canonicalize it
+  call setParameter(getDomConfig(myDoc), "canonical-form", .true.)
+
+  ! and write it out again (which automatically does normalization.
   call serialize(myDoc, "out.xml")
+  call cpu_time(t2)
 
+  print*, "Elapsed time:", t2-t1
+
+  do while (.true.)
+  enddo
+  ! Clear up all allocated memory
   call destroy(myDoc)
 end program dom_example

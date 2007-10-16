@@ -2,7 +2,7 @@
 #
 include arch.make
 #
-default: objsdir $(BUILD_TARGETS)
+default: objsdir $(BUILD_TARGETS) examples_build
 	touch .FoX
 #
 objsdir:
