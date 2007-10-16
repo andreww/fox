@@ -21,9 +21,10 @@ module m_handlers
   ! provided as a convenience by FoX.
 
   public :: characters_handler
+  public :: endDocument_handler
   public :: endElement_handler
-  public :: startElement_handler
   public :: startDocument_handler
+  public :: startElement_handler
 
   logical :: inScalar
   logical :: inParameter
@@ -80,6 +81,10 @@ contains
     inParameter = .false.
   end subroutine startDocument_handler
   
+  subroutine endDocument_handler
+    if (associated(c)) deallocate(c)
+  end subroutine endDocument_handler
+  
   subroutine startElement_handler(URI, localname, name, attributes)
     character(len=*), intent(in)   :: URI
     character(len=*), intent(in)   :: localname
@@ -128,7 +133,8 @@ program sax_example
 
   call parse(fxml,&
     characters_handler=characters_handler, &
-    endElement_handler=endElement_handler, &
+    endDocument_handler=endDocument_handler, & 
+    endElement_handler=endElement_handler, & 
     startDocument_handler=startDocument_handler, & 
     startElement_handler=startElement_handler)
 
