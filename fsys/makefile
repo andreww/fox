@@ -1,7 +1,7 @@
 #
 default: install
 #
-OBJFILES= m_pxf_abort_flush.o pxf.o m_ieee.o
+OBJFILES= m_pxf_abort_flush.o pxf.o # m_ieee.o
 #
 LIBRARY=libfsys.a
 INCFLAGS=
