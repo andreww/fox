@@ -2,8 +2,8 @@ module m_common_attrs
 
   use m_common_array_str, only : str_vs, vs_str_alloc
   use m_common_element, only: ATT_CDATA, ATT_ID, ATT_IDREF, &
-    ATT_IDREFS, ATT_ENTITY, ATT_ENTITIES, ATT_NMTOKEN, &
-    ATT_NMTOKENS, ATT_NOTATION, ATT_ENUM, ATT_CDANO, ATT_CDAMB, &
+    ATT_IDREFS, ATT_ENTITY, ATT_ENTITIES, ATT_NMTOKEN,      &
+    ATT_NMTOKENS, ATT_NOTATION, ATT_CDANO, ATT_CDAMB,       &
     ATT_TYPELENGTHS
   use m_common_error, only : FoX_error, FoX_fatal
 

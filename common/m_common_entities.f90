@@ -13,7 +13,7 @@ module m_common_entities
   ! Though nothing is done with them currently elsewhere in FoX.
 
 
-  use m_common_array_str, only: str_vs, vs_str_alloc, vs_vs_alloc
+  use m_common_array_str, only: str_vs, vs_str_alloc
   use m_common_charset, only: digits, hexdigits
   use m_common_error, only: FoX_error
   use m_common_format, only: str_to_int_10, str_to_int_16

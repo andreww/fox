@@ -2,7 +2,7 @@ module m_common_struct
 
   ! Common parts of an XML document. Shared by both SAX & WXML.
 
-  use m_common_charset, only: XML1_0, XML1_1
+  use m_common_charset, only: XML1_0
   use m_common_entities, only: entity_list, init_entity_list, destroy_entity_list, &
     add_internal_entity, add_external_entity
   use m_common_element, only: element_list, init_element_list, destroy_element_list
