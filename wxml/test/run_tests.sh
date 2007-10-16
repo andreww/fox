@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/sh 
 
 export INCFLAGS=`../../FoX-config --fcflags --wxml`
 make clean
