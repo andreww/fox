@@ -2,11 +2,14 @@
 
 include ../arch.make
 
-examples: dom_example.exe sax_example.exe wxml_example.exe wcml_example.exe
-sax_tests: sax_well_formed.ns.no.exe sax_valid.ns.no.exe sax_well_formed.ns.yes.exe sax_valid.ns.yes.exe 
-
-OBJS = example_xml_module.o
 INCFLAGS=$$(../FoX-config --fcflags --wxml)
+
+default: $(BUILD_TARGETS)
+
+dom_lib: dom_example.exe dom_example_2.exe
+sax_lib: sax_example.exe sax_example_2.exe
+wcml_lib: wcml_example.exe
+wxml_lib: wxml_example.exe
 
 # Note that we cannot use $< below since IBM make doesn't understand it.
 
@@ -25,8 +28,6 @@ wxml_example.exe: wxml_example.o
 #
 wcml_example.exe: wcml_example.o 
 	$(FC) $(FFLAGS) $(LDFLAGS) -o $@ wcml_example.o $$(../FoX-config --libs --wcml) 
-#
-example_xml_program.o: $(OBJS)
 
 clean:
-	rm -f *.o *.*d *.*D *example *.exe
+	rm -f *.o *.*d *.*D *.exe

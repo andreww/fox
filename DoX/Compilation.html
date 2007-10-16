@@ -52,16 +52,16 @@
 <ul>
 <li><p>In order to generate the Makefile, make sure that you have a Fortran compiler in your <code>PATH</code>, and do:</p>
 
-<p><code>config/configure</code></p></li>
+<p><code>./configure</code></p></li>
 </ul>
 
 <p>This should suffice for most installations. However:</p>
 
 <ol>
-<li><p>You may not be interested in all of the modules that FoX supplies. For example, you may only be interested in output, not input. If so, you can select which modules you want using <code>--enable-MODULENAME</code> where MODULENAME is one of <code>wxml</code>, <code>wcml</code>, <code>wkml</code>, <code>sax</code>, <code>dom</code>. If none are explicitly enabled, then all will be built. (Alternatively, you can exclude modules one at a time with <code>--disable-MODULENAME</code>) Thus, for example, if you only care about CML output, and not anything else: <code>config/configure --enable-wcml</code></p></li>
+<li><p>You may not be interested in all of the modules that FoX supplies. For example, you may only be interested in output, not input. If so, you can select which modules you want using <code>--enable-MODULENAME</code> where MODULENAME is one of <code>wxml</code>, <code>wcml</code>, <code>wkml</code>, <code>sax</code>, <code>dom</code>. If none are explicitly enabled, then all will be built. (Alternatively, you can exclude modules one at a time with <code>--disable-MODULENAME</code>) Thus, for example, if you only care about CML output, and not anything else: <code>./configure --enable-wcml</code></p></li>
 <li><p>If you have more than one Fortran compiler available, or it is not on your <code>PATH</code>, you can force the choice by doing:</p>
 
-<p><code>config/configure FC=/path/to/compiler/of/choice</code></p></li>
+<p><code>./configure FC=/path/to/compiler/of/choice</code></p></li>
 <li><p>It is possible that the configuration fails. In this case</p>
 
 <ul>
@@ -70,7 +70,7 @@
 </ul></li>
 <li><p>By default the resultant files are installed under the objs directory. If you wish them to be installed elsewhere, you may do</p>
 
-<p><code>config/configure --prefix=/path/to/installation</code></p></li>
+<p><code>./configure --prefix=/path/to/installation</code></p></li>
 </ol>
 
 <p>Note that the configure process encodes the current directory location in several
@@ -83,28 +83,20 @@ places.  If you move the FoX directory later on, you will need to re-run configu
 <pre><code>make
 </code></pre>
 
-<p>This will build all the FoX modules, and all the examples.
-However, you may only be interested in building the libraries, or perhaps a subset of the libraries. In that case, the following targets are available:</p>
-
-<pre><code>wxml_lib
-wcml_lib
-wkml_lib
-sax_lib
-dom_lib
-</code></pre>
+<p>This will build all the requested FoX modules, and the relevant examples</p>
 
 <h2>Testing</h2>
 
 <p>Three test-suites are supplied; in <code>common/test</code>, <code>wxml/test</code>, and <code>wcml/test</code>. In each case, <code>cd</code> to the relevant directory and then run <code>./run_tests.sh</code>.</p>
 
-<p>(The sax testsuite is available separately. Please contact the author for details.)</p>
+<p>(The sax and dom testsuites are available separately. Please contact the author for details.)</p>
 
 <p>The tests will run and then print out the number of passes and fails. Details of failing tests may be found in the file <code>failed.out</code>.</p>
 
 <p>Known failures: <br />
 * <code>test_xml_Close_2</code> sometimes unexpectedly fails - this is not a problem, ignore it.  </p>
 
-<p>If any other failures occur, please send a message to the mailing list (<a href="&#109;&#x61;&#105;&#x6C;&#116;o:&#70;&#x6F;&#88;&#64;&#108;&#x69;&#x73;t&#x73;&#x2E;u&#115;&#x7A;&#x6C;&#97;&#46;&#109;&#x65;&#46;u&#107;">&#70;&#x6F;&#88;&#64;&#108;&#x69;&#x73;t&#x73;&#x2E;u&#115;&#x7A;&#x6C;&#97;&#46;&#109;&#x65;&#46;u&#107;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
+<p>If any other failures occur, please send a message to the mailing list (<a href="&#x6D;&#97;&#105;&#108;&#x74;&#111;:&#70;&#x6F;&#88;&#64;&#108;&#105;&#x73;t&#115;&#x2E;&#117;&#x73;&#x7A;&#108;&#x61;&#46;m&#x65;&#46;&#117;k">&#70;&#x6F;&#88;&#64;&#108;&#105;&#x73;t&#115;&#x2E;&#117;&#x73;&#x7A;&#108;&#x61;&#46;m&#x65;&#46;&#117;k</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
 
 <h2>Linking to an existing program</h2>
 

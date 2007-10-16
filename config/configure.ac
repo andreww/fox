@@ -1,5 +1,5 @@
 AC_INIT([FoX],[3.0],[tow21@cam.ac.uk])
-AC_CONFIG_SRCDIR([config.sub])
+AC_CONFIG_SRCDIR([README.FoX.txt])
 dnl
 dnl All macros are kept in ./m4:
 dnl AC_CONFIG_MACRO_DIR([m4])
@@ -8,7 +8,7 @@ dnl
 dnl Find system type.
 dnl Uses rewritten AC_CONFIG_AUX_DIR to look for config.sub
 dnl instead of install script
-AC_CONFIG_AUX_DIR(.)
+AC_CONFIG_AUX_DIR([config])
 AC_CANONICAL_HOST
 dnl
 dnl FIXME: just for the moment to work with NG's fpp detection:

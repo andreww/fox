@@ -8,7 +8,7 @@ default: objsdir $(BUILD_TARGETS) examples_build
 objsdir:
 	mkdir -p objs/lib objs/finclude
 #
-examples_build: wxml_lib wcml_lib sax_lib dom_lib
+examples_build:
 	(cd examples; make)
 #
 check: dom_check sax_check wxml_check wcml_check
