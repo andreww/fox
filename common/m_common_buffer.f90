@@ -1,6 +1,6 @@
 module m_common_buffer
 
-  use m_common_charset, only: XML1_0, whitespace
+  use m_common_charset, only: XML1_0
   use m_common_error, only: FoX_error, FoX_warning
   use m_common_format, only: str
 
@@ -20,7 +20,6 @@ module m_common_buffer
   ! 1024 seems to be the biggest available size.
   
   integer, parameter :: MAX_BUFF_SIZE  = 1024
-  integer, parameter :: BUFF_SIZE_WARNING  = 0.9 * MAX_BUFF_SIZE
   
   type buffer_t
     private
@@ -35,7 +34,6 @@ module m_common_buffer
   public :: add_to_buffer
   public :: print_buffer, str, char, len
   public :: buffer_to_chararray
-  public :: buffer_nearly_full
   public :: reset_buffer
   public :: dump_buffer
 
@@ -54,23 +52,35 @@ module m_common_buffer
 contains
 
   subroutine add_to_buffer(s, buffer, ws_significant)
-!FIXME we should call check_buffer from here.
     character(len=*), intent(in)   :: s
     type(buffer_t), intent(inout)  :: buffer
     logical, intent(in), optional :: ws_significant
     
-    integer   :: i, n, len_b
     character(len=(buffer%size+len(s))) :: s2
+    integer :: i, n, len_b
+    logical :: warning, ws_
 
     ! Is whitespace significant in this context?
+    ! We have to assume so unless told otherwise.
+    if (present(ws_significant)) then
+      ws_ = ws_significant
+    else
+      ws_ = .true.
+    endif
 
-    ! If not, we can adjust the buffer without worrying
-    ! about it.
+    ! FIXME The algorithm below unilaterally forces all
+    ! line feeds and carriage returns to native EOL, regardless
+    ! of input document. Thus it is impossible to output a
+    ! document containing a literal non-native newline character
+    ! Ideally we would put this under the control of the user.
+
+    ! We check if whitespace is significant. If not, we can 
+    ! adjust the buffer without worrying about it.
     ! But if we are not told, we warn about it.
     ! And if we are told it definitely is - then we error out.
 
-    !If we overreach our buffer size, we will be unable to
-    !output any more characters without a newline.
+    ! If we overreach our buffer size, we will be unable to
+    ! output any more characters without a newline.
     ! Go through new string, insert newlines
     ! at spaces just before MAX_BUFF_SIZE chars
     ! until we have less than MAX_BUFF_SIZE left to go,
@@ -82,25 +92,47 @@ contains
 
     call check_buffer(s, buffer%xml_version)
 
-    if (buffer%size + len(s) > MAX_BUFF_SIZE) then
-      if (.not.present(ws_significant)) then
-        call FoX_warning( &
-        "Output buffer too small. Need to insert a newline. If whitespace might be significant, check your output.")
-      elseif (ws_significant) then
-        call FoX_error( &
-        "Output buffer too small. Need to insert a newline but whitespace is significant. Stopping now.")
-      else
-        continue ! without error or warning
-      endif
-    endif
-
     s2 = buffer%str(:buffer%size)//s
 
+    ! output as much of this using existing newlines as possible.
+    warning = .false.
     n = 1
-    do while (n <= len(s2)-MAX_BUFF_SIZE)
-      i = scan(s2(n:n+MAX_BUFF_SIZE-1), whitespace, back=.true.)
-      write(buffer%unit, '(a)') s2(n:n+i-1)
-      n = n + i 
+    do while (n<=len(s2))
+      ! Note this is an XML-1.0 only definition of newline
+      i = scan(s2(n:), achar(10)//achar(13))
+      if (i>0) then
+        ! turn that newline into an output newline ...
+        write(buffer%unit, '(a)') s2(n:n+i-2)
+        n = n + i
+      elseif (n<=len(s2)-MAX_BUFF_SIZE) then
+        ! We need to insert a newline, or we'll overrun the buffer
+        ! No suitable newline, so convert a space or tab into a newline.
+        i = scan(s2(n:n+MAX_BUFF_SIZE-1), achar(9)//achar(20), back=.true.)
+        ! If no space or tab is present, we fail.
+        if (i/=MAX_BUFF_SIZE.and..not.present(ws_significant)) then
+          ! We can insert a newline, but we don't know whether it is significant. Warn:
+          if (.not.warning) then
+            ! We only output this warning once.
+            call FoX_warning( &
+            "Fortran made FoX insert a newline. "// &
+            "If whitespace might be significant, check your output.")
+            warning = .true.
+          endif
+        elseif (i==MAX_BUFF_SIZE) then
+          call FoX_error( &
+            "Fortran made FoX insert a newline but it can't. Stopping now.")
+        elseif (ws_) then
+          call FoX_error( &
+            "Fortran made FoX insert a newline but whitespace is significant. Stopping now.")
+        else
+          continue ! without error or warning, because whitespace is not significant
+        endif
+        write(buffer%unit, '(a)') s2(n:n+i-1)
+        n = n + i 
+      else
+        ! We don't need to do anything, just add the remainder to the buffer.
+        exit
+      endif
     enddo
 
     len_b = len(s2) - n + 1
@@ -153,15 +185,6 @@ contains
   end function buffer_to_chararray
 
 
-  function buffer_nearly_full(buffer) result(warn)
-    type(buffer_t), intent(in)          :: buffer
-    logical                             :: warn
-    
-    warn = buffer%size > BUFF_SIZE_WARNING
-    
-  end function buffer_nearly_full
-
-
   function buffer_length(buffer) result(length)
     type(buffer_t), intent(in)          :: buffer
     integer                             :: length
@@ -175,6 +198,7 @@ contains
     type(buffer_t), intent(inout) :: buffer
     logical, intent(in), optional :: lf
 
+    integer :: i, n
     logical :: lf_
 
     if (present(lf)) then
@@ -183,11 +207,23 @@ contains
       lf_ = .true.
     endif
 
-    if (lf_) then
-      write(buffer%unit, '(a)') buffer%str(:buffer%size)
-    else
-      write(buffer%unit, '(a)', advance='no') buffer%str(:buffer%size)
+    i = scan(buffer%str(:buffer%size), achar(10)//achar(13))
+    n = 1
+    do while (i>0)
+      write(buffer%unit, '(a)', advance="yes") buffer%str(n:n+i-2)
+      n = n + i
+      if (n>buffer%size) exit
+      i = scan(buffer%str(n:), achar(10)//achar(13))
+    enddo
+    
+    if (n<=buffer%size) then
+      if (lf_) then
+        write(buffer%unit, '(a)', advance="yes") buffer%str(n:buffer%size)
+      else
+        write(buffer%unit, '(a)', advance="no") buffer%str(n:buffer%size)
+      endif
     endif
+
     buffer%size = 0
   end subroutine dump_buffer
 
