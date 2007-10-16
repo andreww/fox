@@ -6,7 +6,7 @@ rm -f passed.score failed.score
 rm -f tests.out failed.out
 touch passed.score failed.score
 
-for t in test_cml*.sh
+for t in test_cml?*.sh
 do
   ./$t
 done
