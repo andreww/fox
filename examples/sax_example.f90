@@ -258,7 +258,7 @@ program sax_example
   integer :: iostat
   type(xml_t)  :: fxml
 
-  call open_xml_file(fxml, "test.xml", iostat=iostat)
+  call open_xml_file(fxml, "staffNS.xml", iostat=iostat)
   if (iostat /= 0) then
     write(*,*) "Cannot open file."
     stop
