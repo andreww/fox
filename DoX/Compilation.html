@@ -58,7 +58,7 @@
 <p>This should suffice for most installations. However:</p>
 
 <ol>
-<li><p>You may not be interested in all of the modules that FoX supplies. For example, you may only be interested in output, not input. If so, you can select which modules you want using <code>--enable-MODULENAME</code> where MODULENAME is one of <code>wxml</code>, <code>wcml</code>, <code>wkml</code>, <code>sax</code>, <code>dom</code>. If none are explicitly enabled, then all will be built. (Alternatively, you can exclude modules one at a time with <code>--disable-MODULENAME</code>)</p></li>
+<li><p>You may not be interested in all of the modules that FoX supplies. For example, you may only be interested in output, not input. If so, you can select which modules you want using <code>--enable-MODULENAME</code> where MODULENAME is one of <code>wxml</code>, <code>wcml</code>, <code>wkml</code>, <code>sax</code>, <code>dom</code>. If none are explicitly enabled, then all will be built. (Alternatively, you can exclude modules one at a time with <code>--disable-MODULENAME</code>) Thus, for example, if you only care about CML output, and not anything else: <code>config/configure --enable-wcml</code></p></li>
 <li><p>If you have more than one Fortran compiler available, or it is not on your <code>PATH</code>, you can force the choice by doing:</p>
 
 <p><code>config/configure FC=/path/to/compiler/of/choice</code></p></li>
@@ -104,7 +104,7 @@ dom_lib
 <p>Known failures: <br />
 * <code>test_xml_Close_2</code> sometimes unexpectedly fails - this is not a problem, ignore it.  </p>
 
-<p>If any other failures occur, please send a message to the mailing list (<a href="&#109;&#x61;&#105;&#x6C;&#116;&#111;:&#x46;&#111;&#x58;&#64;&#x6C;&#105;&#115;&#x74;s&#x2E;&#x75;s&#x7A;&#x6C;a&#x2E;&#109;&#x65;.&#x75;&#107;">&#x46;&#111;&#x58;&#64;&#x6C;&#105;&#115;&#x74;s&#x2E;&#x75;s&#x7A;&#x6C;a&#x2E;&#109;&#x65;.&#x75;&#107;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
+<p>If any other failures occur, please send a message to the mailing list (<a href="&#109;&#x61;&#105;&#x6C;&#116;o:&#70;&#x6F;&#88;&#64;&#108;&#x69;&#x73;t&#x73;&#x2E;u&#115;&#x7A;&#x6C;&#97;&#46;&#109;&#x65;&#46;u&#107;">&#70;&#x6F;&#88;&#64;&#108;&#x69;&#x73;t&#x73;&#x2E;u&#115;&#x7A;&#x6C;&#97;&#46;&#109;&#x65;&#46;u&#107;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
 
 <h2>Linking to an existing program</h2>
 

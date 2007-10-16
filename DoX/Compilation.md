@@ -41,7 +41,7 @@ As of version 2.0.2, the following other compilers had been tested and are known
 
 This should suffice for most installations. However:
 
-1. You may not be interested in all of the modules that FoX supplies. For example, you may only be interested in output, not input. If so, you can select which modules you want using `--enable-MODULENAME` where MODULENAME is one of `wxml`, `wcml`, `wkml`, `sax`, `dom`. If none are explicitly enabled, then all will be built. (Alternatively, you can exclude modules one at a time with `--disable-MODULENAME`)
+1. You may not be interested in all of the modules that FoX supplies. For example, you may only be interested in output, not input. If so, you can select which modules you want using `--enable-MODULENAME` where MODULENAME is one of `wxml`, `wcml`, `wkml`, `sax`, `dom`. If none are explicitly enabled, then all will be built. (Alternatively, you can exclude modules one at a time with `--disable-MODULENAME`) Thus, for example, if you only care about CML output, and not anything else: `config/configure --enable-wcml`
 
 2. If you have more than one Fortran compiler available, or it is not on your `PATH`, you can force the choice by doing:
 
