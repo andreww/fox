@@ -19,8 +19,6 @@ program dom_example
 
   print*, "Elapsed time:", t2-t1
 
-  do while (.true.)
-  enddo
   ! Clear up all allocated memory
   call destroy(myDoc)
 end program dom_example
