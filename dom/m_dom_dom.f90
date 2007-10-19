@@ -10844,21 +10844,20 @@ endif
 
 
       if (getNamespaceURI(this)/="") then
-        if (lookupNamespaceURI(this, getPrefix(this))/=getNamespaceURI(this)) then
-          ! This is a namespaced node, but its nsURI
-          ! is not bound to its prefix.
-          ! This will automatically do any necessary replacements ...
-          if (getPrefix(this)=="") then
+        ! Is the nsURI of this node bound to its prefix?
+        ! This will automatically do any necessary replacements ...
+        if (getPrefix(this)=="") then
+          if (.not.isDefaultNamespace(this, getNamespaceURI(this))) then
             ! We are dealing with the default prefix
             call setAttributeNS(this, "http://www.w3.org/2000/xmlns/", &
               "xmlns", getNamespaceURI(this))
-          else
-            call setAttributeNS(this, "http://www.w3.org/2000/xmlns/", &
-              "xmlns:"//getPrefix(this), getNamespaceURI(this))
+            call appendNSNode(this, "", getNamespaceURI(this), specified=.true.)
           endif
-          ! and add a namespace node (so that we can do lookups on it)
+        elseif (lookupNamespaceURI(this, getPrefix(this))/=getNamespaceURI(this)) then
+          call setAttributeNS(this, "http://www.w3.org/2000/xmlns/", &
+            "xmlns:"//getPrefix(this), getNamespaceURI(this))
           call appendNSNode(this, getPrefix(this), getNamespaceURI(this), specified=.true.)
-        endif ! else it was already declared ...
+        endif
       else
         ! No (or empty) namespace URI ...
         if (getLocalName(this)=="") then
@@ -11183,21 +11182,20 @@ endif
 
 
       if (getNamespaceURI(this)/="") then
-        if (lookupNamespaceURI(this, getPrefix(this))/=getNamespaceURI(this)) then
-          ! This is a namespaced node, but its nsURI
-          ! is not bound to its prefix.
-          ! This will automatically do any necessary replacements ...
-          if (getPrefix(this)=="") then
+        ! Is the nsURI of this node bound to its prefix?
+        ! This will automatically do any necessary replacements ...
+        if (getPrefix(this)=="") then
+          if (.not.isDefaultNamespace(this, getNamespaceURI(this))) then
             ! We are dealing with the default prefix
             call setAttributeNS(this, "http://www.w3.org/2000/xmlns/", &
               "xmlns", getNamespaceURI(this))
-          else
-            call setAttributeNS(this, "http://www.w3.org/2000/xmlns/", &
-              "xmlns:"//getPrefix(this), getNamespaceURI(this))
+            call appendNSNode(this, "", getNamespaceURI(this), specified=.true.)
           endif
-          ! and add a namespace node (so that we can do lookups on it)
+        elseif (lookupNamespaceURI(this, getPrefix(this))/=getNamespaceURI(this)) then
+          call setAttributeNS(this, "http://www.w3.org/2000/xmlns/", &
+            "xmlns:"//getPrefix(this), getNamespaceURI(this))
           call appendNSNode(this, getPrefix(this), getNamespaceURI(this), specified=.true.)
-        endif ! else it was already declared ...
+        endif
       else
         ! No (or empty) namespace URI ...
         if (getLocalName(this)=="") then
