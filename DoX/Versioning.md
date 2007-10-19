@@ -1,17 +1,27 @@
 # FoX versioning
 
-This documentation describes version 2.1.1 of the FoX library
+This documentation describes version 3.0 of the FoX library.
 
-FoX was originally based on the version 1.2 of the [xmlf90](http://lcdx00.wm.lc.ehu.es/ag/xml/) library, but has since evolved heavily.
+This version includes output modules for general XML, and for CML, and also a Fortran version of the SAX2 input parser, and a Fortran mapping of the W3C DOM interface.
 
-This release version includes output modules for general XML, and for CML, and also a Fortran version of the SAX2 input parser interface
+This is a stable branch, which will be maintained with important bugfixes.
 
-This is a stable branch, which will be maintained with important bugfixes, but on which no further major development will occur.
+<a name="Changes"/>
 
-Version 2.1.1 has support for outputting complete XML documents, with support for all XML objects described in XML11, and XML Namespaces. A detailed description of its precise conformance level is in the WXML documentation.
+## FoX Changes
 
-In addition, there is a large suite of routines available for outputting valid [CML](http://www.xml-cml.org) documents.
+As of FoX-3.0, there is one user-visible change that should be noted.
 
-There is also a SAX input module, compatible with the SAX 2 standard - precise conformance details listed in the SAX documentation.
+### Configuration/compilation
 
-Input modules are under development for DOM and XPath, and will be released with a later version.
+In previous versions of FoX, the configure script was accessible as `config/configure`. Version 3.0 now follows common practice by placing the script in the main directory, so it is now called as `./configure`.
+
+Previous versions of FoX made it quite hard to compile only portions of the library (eg only the CML output portion; or just the SAX input). This is now possible by specifying arguments to the configuration script. For example,
+
+`./configure --enable-wcml`
+
+will cause the generated Makefile to only compile the CML writing module and its dependencies.
+
+See [Compilation](|Compilation|) for further details.
+
+

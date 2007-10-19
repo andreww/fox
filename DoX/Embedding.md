@@ -26,11 +26,11 @@ It is easy to make the use of FoX optional, by the use of preprocessor defines. 
 
 ##To incorporate into the build process:
 
-If you have some sort of automatic Makefile configuration; for picking up which compiler to use, etc. then within whatever script you use to do this, you should insert a sequence of commands like:
+If you have some sort of automatic Makefile configuration; for picking up which compiler to use, etc. then within whatever script you use to do this, you should insert a sequence of commands which instructs FoX to use whichever compiler the rest of your program uses, and ensures that the portion of the FoX libraries you need are compiler. For example, if your Fortran compiler is stored in the variable FORT, and you are using only the WCML part of the library, you should ensure that the following command is run:
 
-	(cd FoX; config/configure; cd ..)
+	(cd FoX; ./configure FC=$(FORT) --enable-wcml; cd ..)
 
-This will instruct FoX to perform its own automatic configuration process.
+This will instruct FoX to perform its own automatic configuration process appropriately.
 
 Within the Makefile itself, you need to alter your compiler flags in the following fashion. Assuming that you have some sort of FFLAGS Makefile variable, then it should be amended like so:
 

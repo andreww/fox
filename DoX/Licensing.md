@@ -9,7 +9,7 @@ The license can also be found within the distributed source, in the file FoX/LIC
 
 Copyright:  
 &copy; 2003, 2004, Alberto Garcia, Jon Wakelin   
-&copy; 2005, 2006, 2007, Toby White  
+&copy; 2005-2007, Toby White  
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without 
@@ -38,6 +38,7 @@ LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
 DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
 THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ### Third-party code.
 

@@ -72,21 +72,29 @@
 <a name="Versioning"/>
 <h1>FoX versioning</h1>
 
-<p>This documentation describes version 2.1.1 of the FoX library</p>
+<p>This documentation describes version 3.0 of the FoX library.</p>
 
-<p>FoX was originally based on the version 1.2 of the <a href="http://lcdx00.wm.lc.ehu.es/ag/xml/">xmlf90</a> library, but has since evolved heavily.</p>
+<p>This version includes output modules for general XML, and for CML, and also a Fortran version of the SAX2 input parser, and a Fortran mapping of the W3C DOM interface.</p>
 
-<p>This release version includes output modules for general XML, and for CML, and also a Fortran version of the SAX2 input parser interface</p>
+<p>This is a stable branch, which will be maintained with important bugfixes.</p>
 
-<p>This is a stable branch, which will be maintained with important bugfixes, but on which no further major development will occur.</p>
+<p><a name="Changes"/></p>
 
-<p>Version 2.1.1 has support for outputting complete XML documents, with support for all XML objects described in XML11, and XML Namespaces. A detailed description of its precise conformance level is in the WXML documentation.</p>
+<h2>FoX Changes</h2>
 
-<p>In addition, there is a large suite of routines available for outputting valid <a href="http://www.xml-cml.org">CML</a> documents.</p>
+<p>As of FoX-3.0, there is one user-visible change that should be noted.</p>
 
-<p>There is also a SAX input module, compatible with the SAX 2 standard - precise conformance details listed in the SAX documentation.</p>
+<h3>Configuration/compilation</h3>
 
-<p>Input modules are under development for DOM and XPath, and will be released with a later version.</p>
+<p>In previous versions of FoX, the configure script was accessible as <code>config/configure</code>. Version 3.0 now follows common practice by placing the script in the main directory, so it is now called as <code>./configure</code>.</p>
+
+<p>Previous versions of FoX made it quite hard to compile only portions of the library (eg only the CML output portion; or just the SAX input). This is now possible by specifying arguments to the configuration script. For example,</p>
+
+<p><code>./configure --enable-wcml</code></p>
+
+<p>will cause the generated Makefile to only compile the CML writing module and its dependencies.</p>
+
+<p>See <a href="#Compilation">Compilation</a> for further details.</p>
 </div><hr/><div class="DoX">
 <a name="Compilation"/>
 <h1>Configuration and compilation</h1>
@@ -178,7 +186,7 @@ places.  If you move the FoX directory later on, you will need to re-run configu
 <p>Known failures: <br />
 * <code>test_xml_Close_2</code> sometimes unexpectedly fails - this is not a problem, ignore it.  </p>
 
-<p>If any other failures occur, please send a message to the mailing list (<a href="&#x6D;&#97;&#105;&#x6C;&#116;&#111;:&#x46;&#111;&#88;&#64;&#x6C;&#x69;&#x73;&#x74;&#x73;.&#x75;&#x73;&#122;&#108;&#97;&#46;&#x6D;&#x65;&#x2E;&#117;&#x6B;">&#x46;&#111;&#88;&#64;&#x6C;&#x69;&#x73;&#x74;&#x73;.&#x75;&#x73;&#122;&#108;&#97;&#46;&#x6D;&#x65;&#x2E;&#117;&#x6B;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
+<p>If any other failures occur, please send a message to the mailing list (<a href="&#x6D;&#x61;&#105;&#108;&#x74;&#x6F;:&#x46;&#111;&#88;&#64;&#108;&#105;&#x73;&#x74;&#115;.&#117;&#115;&#x7A;l&#x61;&#46;&#109;e.&#x75;&#107;">&#x46;&#111;&#88;&#64;&#108;&#105;&#x73;&#x74;&#115;.&#117;&#115;&#x7A;l&#x61;&#46;&#109;e.&#x75;&#107;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
 
 <h2>Linking to an existing program</h2>
 
@@ -251,12 +259,12 @@ save space)</li>
 
 <h2>To incorporate into the build process:</h2>
 
-<p>If you have some sort of automatic Makefile configuration; for picking up which compiler to use, etc. then within whatever script you use to do this, you should insert a sequence of commands like:</p>
+<p>If you have some sort of automatic Makefile configuration; for picking up which compiler to use, etc. then within whatever script you use to do this, you should insert a sequence of commands which instructs FoX to use whichever compiler the rest of your program uses, and ensures that the portion of the FoX libraries you need are compiler. For example, if your Fortran compiler is stored in the variable FORT, and you are using only the WCML part of the library, you should ensure that the following command is run:</p>
 
-<pre><code>(cd FoX; config/configure; cd ..)
+<pre><code>(cd FoX; ./configure FC=$(FORT) --enable-wcml; cd ..)
 </code></pre>
 
-<p>This will instruct FoX to perform its own automatic configuration process.</p>
+<p>This will instruct FoX to perform its own automatic configuration process appropriately.</p>
 
 <p>Within the Makefile itself, you need to alter your compiler flags in the following fashion. Assuming that you have some sort of FFLAGS Makefile variable, then it should be amended like so:</p>
 
@@ -2650,15 +2658,15 @@ In particular, the way the W3C DOM mandates namespace handling makes it trivial 
 <h1>Further information</h1>
 
 <p>FoX evolved from the initial codebase of <a href="http://lcdx00.wm.lc.ehu.es/ag/xml/">xmlf90</a>,
-which was written largely by Alberto Garcia &lt;<a href="&#109;&#x61;i&#x6C;&#x74;&#111;:&#97;&#x6C;b&#101;&#114;t&#111;&#x67;&#64;&#105;&#x63;&#x6D;&#97;&#x62;&#46;&#x65;s">&#97;&#x6C;b&#101;&#114;t&#111;&#x67;&#64;&#105;&#x63;&#x6D;&#97;&#x62;&#46;&#x65;s</a>> and Jon Wakelin &lt;<a href="&#109;&#x61;&#105;l&#116;&#111;:&#106;&#111;&#x6E;.&#119;&#x61;&#x6B;&#101;&#108;&#105;&#110;&#64;&#x62;&#x72;&#x69;s&#x74;&#111;&#108;&#46;&#x61;&#99;&#46;&#x75;&#x6B;">&#106;&#111;&#x6E;.&#119;&#x61;&#x6B;&#101;&#108;&#105;&#110;&#64;&#x62;&#x72;&#x69;s&#x74;&#111;&#108;&#46;&#x61;&#99;&#46;&#x75;&#x6B;</a>>.</p>
+which was written largely by Alberto Garcia &lt;<a href="&#109;&#97;&#x69;&#108;&#x74;&#x6F;:&#97;&#x6C;&#98;e&#114;&#116;&#x6F;g&#64;&#105;&#x63;&#109;&#x61;&#98;&#x2E;&#x65;s">&#97;&#x6C;&#98;e&#114;&#116;&#x6F;g&#64;&#105;&#x63;&#109;&#x61;&#98;&#x2E;&#x65;s</a>> and Jon Wakelin &lt;<a href="&#109;&#x61;&#105;&#x6C;t&#111;:&#x6A;&#x6F;&#110;&#x2E;w&#x61;&#107;&#101;&#108;&#x69;&#x6E;&#64;&#x62;&#x72;&#x69;&#x73;&#x74;&#x6F;&#108;&#46;&#97;&#99;.&#x75;&#107;">&#x6A;&#x6F;&#110;&#x2E;w&#x61;&#107;&#101;&#108;&#x69;&#x6E;&#64;&#x62;&#x72;&#x69;&#x73;&#x74;&#x6F;&#108;&#46;&#97;&#99;.&#x75;&#107;</a>>.</p>
 
-<p>FoX is the work of Toby White &lt;<a href="&#109;&#97;&#x69;&#x6C;&#116;&#x6F;:&#x74;&#x6F;&#x77;&#x32;&#49;&#64;&#x63;&#x61;m&#46;&#x61;&#x63;&#46;&#117;&#x6B;">&#x74;&#x6F;&#x77;&#x32;&#49;&#64;&#x63;&#x61;m&#46;&#x61;&#x63;&#46;&#117;&#x6B;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
+<p>FoX is the work of Toby White &lt;<a href="&#109;&#97;i&#108;&#x74;&#x6F;:&#116;&#x6F;&#119;&#50;1&#64;&#99;am&#46;&#97;&#x63;.&#117;k">&#116;&#x6F;&#119;&#50;1&#64;&#99;am&#46;&#97;&#x63;.&#117;k</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
 
 <p>There is a FoX website at <a href="http://www.uszla.me.uk/software/FoX/">http://www.uszla.me.uk/software/FoX/</a>.</p>
 
 <p>There is also a mailing list for announcements/queries/bug reports. Information on how to subscribe may be found at <a href="http://www.uszla.me.uk/cgi-bin/mailman/listinfo/FoX/">http://www.uszla.me.uk/cgi-bin/mailman/listinfo/FoX/</a>,</p>
 
-<p>This manual is &copy; Toby White 2006.</p>
+<p>This manual is &copy; Toby White 2006-2007.</p>
 </div><hr/><div class="DoX">
 <a name="Licensing"/>
 <h1>Licensing</h1>
@@ -2671,7 +2679,7 @@ which was written largely by Alberto Garcia &lt;<a href="&#109;&#x61;i&#x6C;&#x7
 
 <p>Copyright: <br />
 &copy; 2003, 2004, Alberto Garcia, Jon Wakelin <br />
-&copy; 2005, 2006, 2007, Toby White <br />
+&copy; 2005-2007, Toby White <br />
 All rights reserved.</p>
 
 <p>Redistribution and use in source and binary forms, with or without 
@@ -2698,7 +2706,8 @@ SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
 LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
 DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
 THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE </p>
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</p>
 
 <h3>Third-party code.</h3>
 

@@ -9,4 +9,4 @@ There is a FoX website at <http://www.uszla.me.uk/software/FoX/>.
 
 There is also a mailing list for announcements/queries/bug reports. Information on how to subscribe may be found at <http://www.uszla.me.uk/cgi-bin/mailman/listinfo/FoX/>,
 
-This manual is &copy; Toby White 2006.
+This manual is &copy; Toby White 2006-2007.
