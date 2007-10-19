@@ -3,10 +3,9 @@ program dom_example
   use FoX_dom
   implicit none
 
-  type(Node), pointer :: myDoc, p
-  type(NodeList), pointer :: parameterList
-  integer :: i
-  character :: c
+  type(Node), pointer :: myDoc, p, textNode
+  type(NodeList), pointer :: parameterList, children
+  integer :: i, j
 
   ! Load in the document
   myDoc => parseFile("h2o.xml")
@@ -23,8 +22,18 @@ program dom_example
     p => item(parameterList, i)
     ! Check for the existence of the attribute we're looking for
     if (hasAttribute(p, "name")) then
-      ! and print out its value
-      print*, "Parameter ", i, " is named ", getAttribute(p, "name")
+      if (getAttribute(p, "name")=="DM.EnergyTolerance") then
+        ! The energy is in the text node which is the child of the <scalar> element under this node ...
+        ! Check all the children of the node for the <scalar> element.
+        children => getChildNodes(p)
+        do j = 0, getLength(children)-1
+          if (getLocalName(item(children, j)) =="scalar") then
+            ! This is the scalar node whose child we want:
+            textNode => getFirstChild(item(children, j))
+            print*, "Energy Tolerance is ", trim(getData(textNode))
+          endif
+        enddo
+      endif
     endif
   enddo
 
