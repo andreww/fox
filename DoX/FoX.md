@@ -42,6 +42,8 @@ If a subroutine or function, or indeed one of its arguments, is not mentioned ab
 
 The astute developer is reminded that all times the final reference documentation is the source, which is publically available.
 
+Worked examples of the use of these APIs may be found in the `examples/` subdirectory.
+
 ## Other things
 
 * [Hints for debugging](|Debugging|)
