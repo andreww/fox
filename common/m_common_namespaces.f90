@@ -659,6 +659,7 @@ contains
     end interface
 
     integer :: l_d, l_p, l_ps, i
+    character, pointer :: prefix(:)
 
     !It will only ever be the final elements in the list which
     ! might have expired.
@@ -678,7 +679,10 @@ contains
       if (nsDict%prefixes(i)%urilist(l_ps)%ix == ix) then
         if (present(end_prefix_handler)) &
           call end_prefix_handler(str_vs(nsDict%prefixes(i)%prefix))
-        call removePrefixedNS(nsDict, nsDict%prefixes(i)%prefix)
+        ! We have to assign this pointer explicitly, otherwise the next call
+        ! aliases its arguments illegally.
+        prefix =>  nsDict%prefixes(i)%prefix
+        call removePrefixedNS(nsDict, prefix)
         if (l_p > ubound(nsDict%prefixes, 1)) then
           ! we just removed the last reference to that prefix,
           ! so our list of prefixes has shrunk - update the running total.
