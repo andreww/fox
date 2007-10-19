@@ -51,8 +51,8 @@ TOHW_m_dom_publics(`
     type(DOMImplementation), pointer :: implementation => null() ! only for doctype
     type(Node), pointer :: docType => null()
     type(Node), pointer :: documentElement => null()
-    character, pointer :: inputEncoding => null()
-    character, pointer :: xmlEncoding => null()
+    character, pointer :: inputEncoding(:) => null()
+    character, pointer :: xmlEncoding(:) => null()
     type(NodeListPtr), pointer :: nodelists(:) => null() ! document
     ! In order to keep track of all nodes not connected to the document
     logical :: liveNodeLists ! For the document, are nodelists live?
