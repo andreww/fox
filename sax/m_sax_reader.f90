@@ -24,7 +24,7 @@ module m_sax_reader
   ! IO.
 
 
-  use m_common_array_str, only : vs_str, str_vs, vs_str_alloc
+  use m_common_array_str, only : vs_str, str_vs, vs_str_alloc, vs_vs_alloc
   use m_common_charset, only: XML1_0, XML1_1
   use m_common_error,  only: FoX_error
   use m_common_io, only: setup_io, io_eor, io_eof, get_unit
@@ -278,8 +278,7 @@ contains
       if (size(fb%next_chars)>0) then
         iostat = 0
         rc = fb%next_chars(1)
-        allocate(nc(size(fb%next_chars)-1))
-        nc = fb%next_chars(2:)
+        nc => vs_vs_alloc(fb%next_chars(2:))
         deallocate(fb%next_chars)
         fb%next_chars => nc
       else
@@ -325,8 +324,7 @@ contains
     character, dimension(:), pointer :: nc
 
     allocate(nc(size(fb%next_chars)+len(s)))
-    nc(:size(fb%next_chars)) = fb%next_chars
-    nc(size(fb%next_chars)+1:) = vs_str(s)
+    nc => vs_str_alloc(str_vs(fb%next_chars)//s)
     deallocate(fb%next_chars)
     fb%next_chars => nc
   end subroutine push_chars
@@ -659,9 +657,7 @@ contains
     allocate(buf(0))
     m_i = check_fb(fb, condition, true)
     do while (size(fb%buffer_stack)==0.and.m_i==0)
-      allocate(tempbuf(size(buf)+fb%nchars-fb%pos+1))
-      tempbuf(:size(buf)) = buf
-      tempbuf(size(buf)+1:) = vs_str(fb%buffer(fb%pos:fb%nchars))
+      tempbuf => vs_str_alloc(str_vs(buf)//fb%buffer(fb%pos:fb%nchars))
       deallocate(buf)
       buf => tempbuf
       fb%pos = fb%nchars + 1
@@ -684,18 +680,14 @@ contains
     if (size(fb%buffer_stack)>0) then
       deallocate(buf)
       if (m_i==0) then
-        allocate(buf(size(cb%s)-cb%pos+1))
-        buf = cb%s(cb%pos:)
+        buf => vs_vs_alloc(cb%s(cb%pos:))
         cb%pos = size(cb%s) + 1
       else
-        allocate(buf(m_i-1))
-        buf = cb%s(cb%pos:cb%pos+m_i-1)
+        buf => vs_vs_alloc(cb%s(cb%pos:cb%pos+m_i-2))
         cb%pos = cb%pos + m_i - 1
       endif
     else
-      allocate(tempbuf(size(buf)+m_i-1))
-      tempbuf(:size(buf)) = buf
-      tempbuf(size(buf)+1:) = vs_str(fb%buffer(fb%pos:fb%pos+m_i-2))
+      tempbuf => vs_str_alloc(str_vs(buf)//fb%buffer(fb%pos:fb%pos+m_i-2))
       deallocate(buf)
       buf => tempbuf
       fb%pos = fb%pos + m_i - 1
@@ -732,9 +724,7 @@ contains
     allocate(buf(0))
     m_i = condition(fb, marker)
     do while (size(fb%buffer_stack)==0.and.m_i==0)
-      allocate(tempbuf(size(buf)+fb%nchars-fb%pos+1))
-      tempbuf(:size(buf)) = buf
-      tempbuf(size(buf)+1:) = vs_str(fb%buffer(fb%pos:fb%nchars))
+      tempbuf => vs_str_alloc(str_vs(buf)//fb%buffer(fb%pos:fb%nchars))
       deallocate(buf)
       buf => tempbuf
       fb%pos = fb%nchars + 1
@@ -754,18 +744,14 @@ contains
     if (size(fb%buffer_stack)>0) then
       deallocate(buf)
       if (m_i==0) then
-        allocate(buf(size(cb%s)-cb%pos+1))
-        buf = cb%s(cb%pos:)
+        buf => vs_vs_alloc(cb%s(cb%pos:))
         cb%pos = size(cb%s)+1
       else
-        allocate(buf(m_i-1))
-        buf = cb%s(cb%pos:cb%pos+m_i-1)
+        buf => vs_vs_alloc(cb%s(cb%pos:cb%pos+m_i-2))
         cb%pos = cb%pos + m_i - 1
       endif
     else
-      allocate(tempbuf(size(buf)+m_i-1))
-      tempbuf(:size(buf)) = buf
-      tempbuf(size(buf)+1:) = vs_str(fb%buffer(fb%pos:fb%pos+m_i-2))
+      tempbuf => vs_str_alloc(str_vs(buf)//fb%buffer(fb%pos:fb%pos+m_i-2))
       deallocate(buf)
       buf => tempbuf
       fb%pos = fb%pos + m_i - 1
