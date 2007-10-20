@@ -211,7 +211,7 @@ contains
 
       subroutine externalEntityDecl_handler(name, publicId, systemId)
         character(len=*), intent(in) :: name
-        character(len=*), optional, intent(in) :: publicId
+        character(len=*), intent(in) :: publicId
         character(len=*), intent(in) :: systemId
       end subroutine externalEntityDecl_handler
 

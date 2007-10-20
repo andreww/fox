@@ -119,22 +119,22 @@ contains
 
   subroutine notationDecl_handler(name, publicId, systemId)
     character(len=*), intent(in) :: name
-    character(len=*), optional, intent(in) :: publicId
-    character(len=*), optional, intent(in) :: systemId
+    character(len=*), intent(in) :: publicId
+    character(len=*), intent(in) :: systemId
 
     write(*,'(2a)') "Notation declaration, "//name
-    if (present(publicId)) write(*,'(2a)') "Public ID: ", publicId
-    if (present(systemId)) write(*,'(2a)') "System ID: ", systemId
+    write(*,'(2a)') "Public ID: ", publicId
+    write(*,'(2a)') "System ID: ", systemId
   end subroutine notationDecl_handler
 
   subroutine unparsedEntityDecl_handler(name, publicId, systemId, notation)
     character(len=*), intent(in) :: name
-    character(len=*), optional, intent(in) :: publicId
+    character(len=*), intent(in) :: publicId
     character(len=*), intent(in) :: systemId
     character(len=*), intent(in) :: notation
 
     write(*,'(2a)') "Unparsed entity declaration, "//name
-    if (present(publicId)) write(*,'(2a)') "Public ID: ", publicId
+    write(*,'(2a)') "Public ID: ", publicId
     write(*,'(2a)') "System ID: ", systemId
     write(*,'(2a)') "Notation: ", notation
   end subroutine unparsedEntityDecl_handler
@@ -181,10 +181,10 @@ contains
 
   subroutine externalEntityDecl_handler(name, publicId, systemId)
     character(len=*), intent(in) :: name
-    character(len=*), optional, intent(in) :: publicId
+    character(len=*), intent(in) :: publicId
     character(len=*), intent(in) :: systemId
     write(*,'(a)') "External entity declared: "//name
-    if (present(publicId)) write(*,'(a)') "Public Id "//publicId
+    write(*,'(a)') "Public Id "//publicId
     write(*,'(a)') "System Id "//systemId
   end subroutine externalEntityDecl_handler
   
@@ -220,11 +220,11 @@ contains
 
   subroutine startDTD_handler(name, publicId, systemId)
     character(len=*), intent(in) :: name
-    character(len=*), optional, intent(in) :: publicId
-    character(len=*), optional, intent(in) :: systemId
+    character(len=*), intent(in) :: publicId
+    character(len=*), intent(in) :: systemId
     write(*,'(a)') 'DTD started: '//name
-    if (present(publicId))write(*,'(a)') 'Public Id: '//publicId
-    if (present(systemId))write(*,'(a)') 'System Id: '//systemId
+    write(*,'(a)') 'Public Id: '//publicId
+    write(*,'(a)') 'System Id: '//systemId
   end subroutine startDTD_handler
 
   subroutine startEntity_handler(name)
