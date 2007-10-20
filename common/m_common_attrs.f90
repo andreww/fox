@@ -160,11 +160,15 @@ contains
 
     integer  ::  i
     found = .false.
-    do  i = 1, dict%number_of_items
-      if (uri==str_vs(dict%items(i)%nsURI) &
-        .and.localname==str_vs(dict%items(i)%localname)) then
-        found = .true.
-        exit
+    do i = 1, dict%number_of_items
+      ! FIXME xlf 10.01 segfaults if the below is done as
+      ! an AND rather than two separate ifs. This is
+      ! probably due to the Heisenbug
+      if (uri==str_vs(dict%items(i)%nsURI)) then
+        if (localname==str_vs(dict%items(i)%localname)) then
+          found = .true.
+          exit
+        endif
       endif
     enddo
   end function has_key_ns
