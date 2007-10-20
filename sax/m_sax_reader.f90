@@ -323,7 +323,6 @@ contains
     character(len=*), intent(in) :: s
     character, dimension(:), pointer :: nc
 
-    allocate(nc(size(fb%next_chars)+len(s)))
     nc => vs_str_alloc(str_vs(fb%next_chars)//s)
     deallocate(fb%next_chars)
     fb%next_chars => nc
