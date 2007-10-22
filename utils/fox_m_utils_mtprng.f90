@@ -27,6 +27,12 @@ module fox_m_utils_mtprng
 !           Corrected erroneous unsigned bit manipulations
 !           Doubled resolution by using 64-bit math
 !           Added mtprng_rand64
+
+!  Version for distribution with FoX <http://uszla.me.uk/FoX>
+!  Very small cosmetic changes to fit FoX naming scheme and
+!  avoid additional dependencies.
+!  Toby White <tow@uszla.me.uk>, 2007
+
 !
 !  ORIGINAL ALGORITHM COPYRIGHT
 !  ============================
