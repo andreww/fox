@@ -8,6 +8,11 @@ default: objsdir $(BUILD_TARGETS) examples_build
 objsdir:
 	mkdir -p objs/lib objs/finclude
 #
+install: objsdir $(BUILD_TARGETS)
+	mkdir -p $(install_prefix)/lib $(install_prefix)/finclude
+	cp objs/lib/* $(install_prefix)/lib
+	cp objs/finclude/* $(install_prefix)/finclude
+#
 examples_build:
 	(cd examples; make)
 #

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-comp_prefix=@prefix@
+comp_prefix=@OBJSDIR@
 moddir=$comp_prefix/finclude
 libdir=$comp_prefix/lib
 version=@version@

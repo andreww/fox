@@ -146,7 +146,8 @@ done
 dnl
 dnl Installation instructions ..
 TW_PROG_CYGPATH_W
-AC_PREFIX_DEFAULT([`pwd`/objs])
+OBJSDIR=`pwd`/objs
+AC_SUBST(OBJSDIR)
 AC_FC_MOD_PATH_FLAG
 AC_FC_MOD_SUFFIX
 #

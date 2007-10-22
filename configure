@@ -564,7 +564,6 @@ PACKAGE_STRING='FoX 3.0'
 PACKAGE_BUGREPORT='tow21@cam.ac.uk'
 
 ac_unique_file="README.FoX.txt"
-ac_default_prefix=`pwd`/objs
 ac_subst_vars='SHELL
 PATH_SEPARATOR
 PACKAGE_NAME
@@ -642,6 +641,7 @@ SYS
 SP_KIND
 DP_KIND
 CYGPATH_W
+OBJSDIR
 FC_MOD_FLAG
 FC_MODEXT
 FC_MODUPPERCASE
@@ -6510,6 +6510,7 @@ done
  fi
 
 
+OBJSDIR=`pwd`/objs
 
 
 
@@ -7369,6 +7370,7 @@ SYS!$SYS$ac_delim
 SP_KIND!$SP_KIND$ac_delim
 DP_KIND!$DP_KIND$ac_delim
 CYGPATH_W!$CYGPATH_W$ac_delim
+OBJSDIR!$OBJSDIR$ac_delim
 FC_MOD_FLAG!$FC_MOD_FLAG$ac_delim
 FC_MODEXT!$FC_MODEXT$ac_delim
 FC_MODUPPERCASE!$FC_MODUPPERCASE$ac_delim
@@ -7377,7 +7379,7 @@ LIBOBJS!$LIBOBJS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 83; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 84; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5

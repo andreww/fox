@@ -3,7 +3,8 @@
 
 BUILD_TARGETS=@BUILD_TARGETS@
 
-compile_prefix=@prefix@
+compile_prefix=@OBJSDIR@
+install_prefix=@prefix@
 LIB_DIR=$(compile_prefix)/lib
 MOD_DIR=$(compile_prefix)/finclude
 
