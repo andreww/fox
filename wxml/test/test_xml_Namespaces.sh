@@ -1,1 +1,1 @@
-test.sh
+test_xml.sh
