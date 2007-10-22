@@ -9,21 +9,22 @@ Unpack it as normal, and change directory into the top-level directory, FoX.
 
 FoX requires a Fortran 95 compiler - not just Fortran 90. All currently available versions of Fortran compilers claim to support F95. If your favoured compiler is not listed as working below, I recommend the use of [g95](www.g95.org), which is free to download and use. And if your favourite compiler is listed as not working, then please send a bug report to your compiler vendor.
 
-The list below shows results as tested at the time of release with the 3.0 release of the FoX code. An up-to-date list of tested compiler version is maintained [here](http://uszla.me.uk/space/software/FoX/compat/)
+The list below shows results as tested at the time of release with the 3.0 release of the FoX code (see a special the note on the PGI compilers [below](#PGI).). An up-to-date list of tested compiler version is maintained [here](http://uszla.me.uk/space/software/FoX/compat/).
 
 * g95 as of 25/5/7
 * gfortran as of version 4.2
 * Intel version 8.1, 9.1, 10.1
 * NAG version 5.1
-* PGI version 6.1, 6,2, 7.0
 * XLF version 10.01
 
 Known failures:
 
+* Any version of Compaq Visual Fortran
 * g95 prior to 25/5/7  
 * Intel version 7.1  
 * NAG version 5.0  
-* PGI version 5.1  
+* F version of 16/5/6
+* All PGI versions (see below)
 
 Results from other compilers are welcome.
 
@@ -33,6 +34,17 @@ As of version 2.0.2, the following other compilers had been tested and are known
 * Pathscale, version 2.4
 * XLF version 9.1
 
+#### PGI compilers
+
+<a name="PGI"/>
+
+The Portland group compilers are by far the worst performing and buggiest compilers I have had the misfortune to use. Nevertheless, I have tried hard to make FoX work with them. The results are that:
+
+* PGI 5.1 is completely broken. Compilation is impossible, too few F95 features are supported.
+
+* PGI 6.1-6 and 6.2-3, and 7.0-2 are usable. All of FoX will be compiled, and most of the functionality is available, with the exception of any array-output routines, which the compiler runtime cannot handle. In practice, this means that most of WXML, and all of SAX and DOM are safe for use. Segfaults will be generated in the use of WCML.
+
+I cannot recommend the use of PGI compilers. Patches to work around PGI problems will be welcomed, but please direct bug reports to the Portland Group.
 ##Configuration
 
 * In order to generate the Makefile, make sure that you have a Fortran compiler in your `PATH`, and do:

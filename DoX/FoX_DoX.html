@@ -109,24 +109,25 @@
 
 <p>FoX requires a Fortran 95 compiler - not just Fortran 90. All currently available versions of Fortran compilers claim to support F95. If your favoured compiler is not listed as working below, I recommend the use of <a href="www.g95.org">g95</a>, which is free to download and use. And if your favourite compiler is listed as not working, then please send a bug report to your compiler vendor.</p>
 
-<p>The list below shows results as tested at the time of release with the 3.0 release of the FoX code. An up-to-date list of tested compiler version is maintained <a href="http://uszla.me.uk/space/software/FoX/compat/">here</a></p>
+<p>The list below shows results as tested at the time of release with the 3.0 release of the FoX code (see a special the note on the PGI compilers <a href="#PGI">below</a>.). An up-to-date list of tested compiler version is maintained <a href="http://uszla.me.uk/space/software/FoX/compat/">here</a>.</p>
 
 <ul>
 <li>g95 as of 25/5/7</li>
 <li>gfortran as of version 4.2</li>
 <li>Intel version 8.1, 9.1, 10.1</li>
 <li>NAG version 5.1</li>
-<li>PGI version 6.1, 6,2, 7.0</li>
 <li>XLF version 10.01</li>
 </ul>
 
 <p>Known failures:</p>
 
 <ul>
+<li>Any version of Compaq Visual Fortran</li>
 <li>g95 prior to 25/5/7  </li>
 <li>Intel version 7.1  </li>
 <li>NAG version 5.0  </li>
-<li>PGI version 5.1  </li>
+<li>F version of 16/5/6</li>
+<li>All PGI versions (see below)</li>
 </ul>
 
 <p>Results from other compilers are welcome.</p>
@@ -138,6 +139,19 @@
 <li>Pathscale, version 2.4</li>
 <li>XLF version 9.1</li>
 </ul>
+
+<h4>PGI compilers</h4>
+
+<p><a name="PGI"/></p>
+
+<p>The Portland group compilers are by far the worst performing and buggiest compilers I have had the misfortune to use. Nevertheless, I have tried hard to make FoX work with them. The results are that:</p>
+
+<ul>
+<li><p>PGI 5.1 is completely broken. Compilation is impossible, too few F95 features are supported.</p></li>
+<li><p>PGI 6.1-6 and 6.2-3, and 7.0-2 are usable. All of FoX will be compiled, and most of the functionality is available, with the exception of any array-output routines, which the compiler runtime cannot handle. In practice, this means that most of WXML, and all of SAX and DOM are safe for use. Segfaults will be generated in the use of WCML.</p></li>
+</ul>
+
+<p>I cannot recommend the use of PGI compilers. Patches to work around PGI problems will be welcomed, but please direct bug reports to the Portland Group.</p>
 
 <h2>Configuration</h2>
 
@@ -188,7 +202,7 @@ places.  If you move the FoX directory later on, you will need to re-run configu
 <p>Known failures: <br />
 * <code>test_xml_Close_2</code> sometimes unexpectedly fails - this is not a problem, ignore it.  </p>
 
-<p>If any other failures occur, please send a message to the mailing list (<a href="&#109;&#97;&#x69;&#x6C;&#116;&#x6F;:&#70;&#x6F;&#x58;&#64;&#108;&#x69;s&#x74;&#115;&#46;&#x75;&#x73;&#122;&#108;&#x61;&#46;&#x6D;&#x65;&#46;&#117;&#107;">&#70;&#x6F;&#x58;&#64;&#108;&#x69;s&#x74;&#115;&#46;&#x75;&#x73;&#122;&#108;&#x61;&#46;&#x6D;&#x65;&#46;&#117;&#107;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
+<p>If any other failures occur, please send a message to the mailing list (<a href="&#109;&#x61;&#x69;&#108;&#x74;&#x6F;:&#70;&#x6F;&#88;&#64;&#108;&#105;&#x73;&#x74;&#x73;&#46;&#x75;&#x73;&#x7A;&#x6C;&#97;.&#x6D;&#x65;&#x2E;&#x75;&#x6B;">&#70;&#x6F;&#88;&#64;&#108;&#105;&#x73;&#x74;&#x73;&#46;&#x75;&#x73;&#x7A;&#x6C;&#97;.&#x6D;&#x65;&#x2E;&#x75;&#x6B;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
 
 <h2>Linking to an existing program</h2>
 
@@ -2660,9 +2674,9 @@ In particular, the way the W3C DOM mandates namespace handling makes it trivial 
 <h1>Further information</h1>
 
 <p>FoX evolved from the initial codebase of <a href="http://lcdx00.wm.lc.ehu.es/ag/xml/">xmlf90</a>,
-which was written largely by Alberto Garcia &lt;<a href="&#109;&#97;&#x69;&#x6C;&#116;&#111;:&#97;&#108;&#x62;&#101;&#x72;&#116;&#111;g&#64;&#105;&#x63;&#109;&#x61;&#x62;&#46;&#x65;&#x73;">&#97;&#108;&#x62;&#101;&#x72;&#116;&#111;g&#64;&#105;&#x63;&#109;&#x61;&#x62;&#46;&#x65;&#x73;</a>> and Jon Wakelin &lt;<a href="&#x6D;a&#105;&#108;&#116;&#x6F;:&#106;&#x6F;&#x6E;&#x2E;&#119;&#x61;k&#101;l&#x69;&#x6E;&#64;&#98;&#114;i&#x73;&#x74;&#111;&#108;&#46;a&#99;&#x2E;&#117;&#107;">&#106;&#x6F;&#x6E;&#x2E;&#119;&#x61;k&#101;l&#x69;&#x6E;&#64;&#98;&#114;i&#x73;&#x74;&#111;&#108;&#46;a&#99;&#x2E;&#117;&#107;</a>>.</p>
+which was written largely by Alberto Garcia &lt;<a href="&#x6D;&#97;&#105;&#x6C;&#116;&#111;:&#x61;&#108;&#x62;&#x65;&#114;&#x74;&#111;g&#64;&#105;&#x63;&#109;&#97;&#98;&#46;&#x65;&#x73;">&#x61;&#108;&#x62;&#x65;&#114;&#x74;&#111;g&#64;&#105;&#x63;&#109;&#97;&#98;&#46;&#x65;&#x73;</a>> and Jon Wakelin &lt;<a href="&#109;&#x61;&#105;&#x6C;t&#111;:&#x6A;&#111;&#110;&#x2E;&#x77;&#x61;&#107;&#x65;&#108;&#105;&#110;&#64;&#98;&#114;&#x69;&#x73;&#116;&#111;&#108;&#x2E;&#97;&#99;&#x2E;&#117;&#107;">&#x6A;&#111;&#110;&#x2E;&#x77;&#x61;&#107;&#x65;&#108;&#105;&#110;&#64;&#98;&#114;&#x69;&#x73;&#116;&#111;&#108;&#x2E;&#97;&#99;&#x2E;&#117;&#107;</a>>.</p>
 
-<p>FoX is the work of Toby White &lt;<a href="&#x6D;&#x61;&#x69;&#108;&#x74;&#111;:&#116;&#x6F;&#x77;&#50;&#x31;&#64;&#x63;&#x61;&#x6D;.a&#99;&#x2E;&#x75;&#x6B;">&#116;&#x6F;&#x77;&#50;&#x31;&#64;&#x63;&#x61;&#x6D;.a&#99;&#x2E;&#x75;&#x6B;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
+<p>FoX is the work of Toby White &lt;<a href="&#109;&#x61;&#105;&#108;&#x74;&#x6F;:&#116;&#x6F;&#x77;&#x32;&#49;&#64;&#x63;&#97;&#109;&#46;&#x61;&#x63;&#x2E;&#x75;&#x6B;">&#116;&#x6F;&#x77;&#x32;&#49;&#64;&#x63;&#97;&#109;&#46;&#x61;&#x63;&#x2E;&#x75;&#x6B;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
 
 <p>There is a FoX website at <a href="http://www.uszla.me.uk/software/FoX/">http://www.uszla.me.uk/software/FoX/</a>.</p>
 
