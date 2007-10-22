@@ -18,32 +18,23 @@ dnl
 AC_LANG(Fortran)
 AC_PROG_FC
 dnl
-AC_FC_FIXEDFORM([f])
-AC_SUBST(FCFLAGS_fixed_f)
-dnl
 AC_FC_FREEFORM([f90])
 AC_SUBST(FCFLAGS_free_f90)
 dnl
 AC_LANG_PUSH(Preprocessed Fortran)
 AC_PROG_FPP
 dnl
-AC_FPP_FIXEDFORM([F])
-AC_SUBST(FPPFLAGS_fixed_F)
-dnl
 AC_FPP_FREEFORM([F90])
 AC_SUBST(FPPFLAGS_free_F90)
 AC_LANG_POP(Preprocessed Fortran)
 dnl
 if test $ac_cv_fpp_build_rule = direct; then
-     F_RULE=['$(FC) -c $(FFLAGS) $(INCFLAGS) $(FPPFLAGS) $(FPPFLAGS_fixed_F)  $< ']
      F90_RULE=['$(FC) -c $(FFLAGS) $(INCFLAGS) $(FPPFLAGS) $(FPPFLAGS_free_F90) $< ']
 elif test $ac_cv_fpp_build_rule = indirect; then
-     F_RULE=['$(FPP) $(FPPFLAGS) $< $(FPP_OUTPUT) aux_$*.f && $(FC) -c -o $*.o $(FFLAGS) $(INCFLAGS) $(FCFLAGS_fixed_f) aux_$*.f']
      F90_RULE=['$(FPP) $(FPPFLAGS) $< $(FPP_OUTPUT) aux_$*.f90 && $(FC) -c -o $*.o $(FFLAGS) $(INCFLAGS) $(FCFLAGS_free_f90) aux_$*.f90']
 fi
 dnl Generate dependency rules according to whether we need
 dnl separate preprocessing stage.
-AC_SUBST(F_RULE)
 AC_SUBST(F90_RULE)
 dnl
 AC_PROG_RANLIB

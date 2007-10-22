@@ -16,9 +16,7 @@ FFLAGS=@FCFLAGS@
 FPPFLAGS=@FPPFLAGS@
 LDFLAGS=@LDFLAGS@
 
-FCFLAGS_fixed_f=@FCFLAGS_fixed_f@
 FCFLAGS_free_f90=@FCFLAGS_free_f90@
-FPPFLAGS_fixed_F=@FPPFLAGS_fixed_F@
 FPPFLAGS_free_F90=@FPPFLAGS_free_F90@
 
 INC_PREFIX=-I
@@ -31,12 +29,8 @@ MOD_EXT=@FC_MODEXT@
 
 #Dependency rules are created by autoconf according to whether
 #discrete preprocessing is necessary or not.
-.F.o:
-	@F_RULE@
 .F90.o:
 	@F90_RULE@
-.f.o:
-	$(FC) -c $(FFLAGS) $(INCFLAGS) $(FCFLAGS_fixed_f)  $<
 .f90.o:
 	$(FC) -c $(FFLAGS) $(INCFLAGS) $(FCFLAGS_free_f90)  $<
 
