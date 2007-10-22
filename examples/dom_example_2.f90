@@ -27,9 +27,10 @@ program dom_example
         ! Check all the children of the node for the <scalar> element.
         children => getChildNodes(p)
         do j = 0, getLength(children)-1
-          if (getLocalName(item(children, j)) =="scalar") then
+          p => item(children, j)
+          if (getLocalName(p) =="scalar") then
             ! This is the scalar node whose child we want:
-            textNode => getFirstChild(item(children, j))
+            textNode => getFirstChild(p)
             print*, "Energy Tolerance is ", trim(getData(textNode))
           endif
         enddo
