@@ -903,6 +903,8 @@ TOHW_m_dom_treewalk(`
     endif
   end function getNamespaceURI
 
+TOHW_m_dom_set(DOMString, namespaceURI, np%elExtras%namespaceURI, (XPATH_NAMESPACE_NODE))
+
   pure function getPrefix_len(arg, p) result(n)
     type(Node), intent(in) :: arg
     logical, intent(in) :: p

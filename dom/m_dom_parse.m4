@@ -102,7 +102,6 @@ contains
     else
       current => appendChild(current,el)
     endif
-    
     call namespaceFixup(current, .false.)
 
     if (associated(inEntity)) &

@@ -282,14 +282,12 @@ TOHW_m_dom_contents(`
     endif
 
     do i = 0, getLength(map) - 1
-      if ((getNamespaceURI(item(map, i))==namespaceURI &
-        .and. getLocalName(item(map, i))==localName) &
-        .or. (namespaceURI=="" .and.getNodeName(item(map, i))==localName)) then
-        np => item(map, i)
+      np => item(map, i)
+      if (getNamespaceURI(np)==namespaceURI &
+        .and. getLocalName(np)==localName) then
         return
       endif
     enddo
-    
     np => null()
 
   end function getNamedItemNS
@@ -326,6 +324,7 @@ TOHW_m_dom_contents(`
     character(len=getNamedItemNS_Value_length(map, associated(map), namespaceURI, localName)) :: c
 
     integer :: i
+    type(Node), pointer :: np
 
     if (.not.associated(map)) then
        TOHW_m_dom_throw_error(FoX_MAP_IS_NULL)
@@ -333,10 +332,11 @@ TOHW_m_dom_contents(`
 
     c = ""
     if (map%ownerElement%nodeType/=ELEMENT_NODE) return
-    do i = 1, getLength(map)
-      if (getNamespaceURI(item(map, i-1))==namespaceURI &
-        .and. getLocalName(item(map, i-1))==localName) then
-        c = getValue(item(map, i-1))
+    do i = 0, getLength(map) - 1
+      np => item(map, i)
+      if (getNamespaceURI(np)==namespaceURI &
+        .and. getLocalName(np)==localName) then
+        c = getValue(np)
         return
       endif
     enddo
@@ -350,6 +350,7 @@ TOHW_m_dom_contents(`
     type(Node), pointer :: np
 
     integer :: i
+    character, pointer, dimension(:) :: arg_ns, arg_ln, map_ns, map_ln
 
     if (.not.associated(map)) then
       TOHW_m_dom_throw_error(FoX_MAP_IS_NULL)
@@ -386,20 +387,18 @@ TOHW_m_dom_contents(`
       endif
     endif
 
-    np => null()
-    do i = 1, getLength(map)
-      if ((getLocalName(arg)=="".and.getNodeName(arg)==getNodeName(item(map, i-1))) &
-        .or. (getNamespaceURI(item(map, i-1))==getNamespaceURI(arg) &
-        .and. getLocalName(item(map, i-1))==getLocalName(arg))) then
-        np => item(map, i-1)
-        map%nodes(i)%this => arg
+    do i = 0, getLength(map) - 1
+      np => item(map, i)
+! This will give silly results if you add a DOM level 1 node in here - should we throw an error?
+      if (getLocalName(arg)==getLocalName(np).and.getNamespaceURI(arg)==getNamespaceURI(np)) then
+        map%nodes(i+1)%this => arg
         arg%elExtras%ownerElement => map%ownerElement
         exit
       endif
     enddo
 
     !   If not found, insert it at the end of the linked list
-    if (associated(np)) then
+    if (i<getLength(map)) then
       if (getGCstate(getOwnerDocument(map%ownerElement)).and.np%inDocument) then
         call removeNodesFromDocument(getOwnerDocument(map%ownerElement), np)
         np%inDocument = .false.
@@ -443,13 +442,11 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
     endif
 
-    do i = 1, getLength(map)
-      if ((getNamespaceURI(item(map, i-1))==namespaceURI &
-          .and. getLocalName(item(map, i-1))==localName) &
-        .or. (getNamespaceURI(item(map, i-1))=="" &
-          .and. getNodeName(item(map, i-1))==localName)) then
+    do i = 0, getLength(map) - 1
+      np => item(map, i)
+      if (getNamespaceURI(np)==namespaceURI &
+          .and. getLocalName(np)==localName) then
         ! Grab this node
-        np => map%nodes(i)%this
         xds => getXds(getOwnerDocument(map%ownerElement))
         elem => get_element(xds%element_list, getNodeName(map%ownerElement))
         if (associated(elem)) then
@@ -470,10 +467,10 @@ TOHW_m_dom_contents(`
         ! and shrink the node list
         temp_nl => map%nodes
         allocate(map%nodes(size(temp_nl)-1))
-        do i2 = 1, i - 1
+        do i2 = 1, i
           map%nodes(i2)%this => temp_nl(i2)%this
         enddo
-        do i2 = i + 1, map%length
+        do i2 = i + 2, map%length
           map%nodes(i2-1)%this => temp_nl(i2)%this
         enddo
         map%length = size(map%nodes)
@@ -514,7 +511,7 @@ TOHW_m_dom_contents(`
     endif
     if (getNodeType(arg)==ATTRIBUTE_NODE) arg%elExtras%ownerElement => map%ownerElement
 
-  end subroutine append_nnm
+   end subroutine append_nnm
 
 
   subroutine setReadOnlyMap(map, r)

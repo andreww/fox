@@ -61,7 +61,7 @@ contains
 
     recursive subroutine dump2(input)
       type(Node), pointer :: input
-      type(Node), pointer :: temp
+      type(Node), pointer :: temp, np
       type(NamedNodeMap), pointer :: attrs
       type(NodeList), pointer :: nsnodes
       integer :: i
@@ -74,17 +74,19 @@ contains
            write(*,"(2a)") repeat(" ", indent_level), &
                         "  ATTRIBUTES:"
            attrs => getAttributes(temp)
-           do i = 1, getLength(attrs)
+           do i = 0, getLength(attrs) - 1
+             np => item(attrs, i)
              write(*, "(2a)") repeat(" ", indent_level)//"  ", &
-               getName(item(attrs, i-1))
+               getName(np)
            enddo
            write(*,"(2a)") repeat(" ", indent_level), &
                         "  IN-SCOPE NAMESPACES:"
            nsnodes => getNamespaceNodes(temp)
-           do i = 1, getLength(nsnodes)
+           do i = 0, getLength(nsnodes) - 1
+             np => item(nsnodes, i)
              write(*,"(4a)") repeat(" ", indent_level)//"  ", &
-               getPrefix(item(nsnodes, i-1)), ':', &
-               getNamespaceURI(item(nsnodes, i-1))
+               getPrefix(np), ':', &
+               getNamespaceURI(np)
            enddo
          endif
          if (hasChildNodes(temp)) then
@@ -161,7 +163,7 @@ contains
     type(xmlf_t), intent(inout) :: xf
 
     type(Node), pointer :: this, arg, treeroot 
-    type(Node), pointer :: doc, attrchild
+    type(Node), pointer :: doc, attrchild, np
     type(NamedNodeMap), pointer :: nnm
     type(DOMConfiguration), pointer :: dc
     type(xml_doc_state), pointer :: xds
@@ -239,30 +241,32 @@ TOHW_m_dom_treewalk(`dnl
       call xml_AddDOCTYPE(xf, getName(this))
       nnm => getNotations(this)
       do j = 0, getLength(nnm)-1
-        if (getSystemId(item(nnm, j))=="") then
-          call xml_AddNotation(xf, getNodeName(item(nnm, j)), public=getPublicId(item(nnm, j)))
-        elseif (getPublicId(item(nnm, j))=="") then
-          call xml_AddNotation(xf, getNodeName(item(nnm, j)), system=getSystemId(item(nnm, j)))
+        np => item(nnm, j)
+        if (getSystemId(np)=="") then
+          call xml_AddNotation(xf, getNodeName(np), public=getPublicId(np))
+        elseif (getPublicId(np)=="") then
+          call xml_AddNotation(xf, getNodeName(np), system=getSystemId(np))
         else
-          call xml_AddNotation(xf, getNodeName(item(nnm, j)), system=getSystemId(item(nnm, j)), &
-            public=getPublicId(item(nnm, j)))
+          call xml_AddNotation(xf, getNodeName(np), system=getSystemId(np), &
+            public=getPublicId(np))
         endif
       enddo
       nnm => getEntities(this)
       do j = 0, getLength(nnm)-1
-        if (getSystemId(item(nnm, j))=="") then
-          call xml_AddInternalEntity(xf, getNodeName(item(nnm, j)), getStringValue(item(nnm, j)))
-        elseif (getPublicId(item(nnm, j))=="".and.getNotationName(item(nnm, j))=="") then
-          call xml_AddExternalEntity(xf, getNodeName(item(nnm, j)), system=getSystemId(item(nnm, j)))
-        elseif (getNotationName(item(nnm, j))=="") then
-          call xml_AddExternalEntity(xf, getNodeName(item(nnm, j)), system=getSystemId(item(nnm, j)), &
-            public=getPublicId(item(nnm, j)))
-        elseif (getPublicId(item(nnm, j))=="") then
-          call xml_AddExternalEntity(xf, getNodeName(item(nnm, j)), system=getSystemId(item(nnm, j)), &
-            notation=getNotationName(item(nnm, j)))
+        np => item(nnm, j)
+        if (getSystemId(np)=="") then
+          call xml_AddInternalEntity(xf, getNodeName(np), getStringValue(np))
+        elseif (getPublicId(np)=="".and.getNotationName(np)=="") then
+          call xml_AddExternalEntity(xf, getNodeName(np), system=getSystemId(np))
+        elseif (getNotationName(np)=="") then
+          call xml_AddExternalEntity(xf, getNodeName(np), system=getSystemId(np), &
+            public=getPublicId(np))
+        elseif (getPublicId(np)=="") then
+          call xml_AddExternalEntity(xf, getNodeName(np), system=getSystemId(np), &
+            notation=getNotationName(np))
         else
-          call xml_AddExternalEntity(xf, getNodeName(item(nnm, j)), system=getSystemId(item(nnm, j)), &
-            public=getPublicId(item(nnm, j)), notation=getNotationName(item(nnm, j)))
+          call xml_AddExternalEntity(xf, getNodeName(np), system=getSystemId(np), &
+            public=getPublicId(np), notation=getNotationName(np))
         endif
       enddo
       do j = 1, size(xds%element_list%list)

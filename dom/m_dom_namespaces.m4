@@ -17,11 +17,12 @@ define(`TOHW_m_dom_namespaceFixup', `'`
         nsNodesParent => getNamespaceNodes(parent)
         allocate(nsNodes%nodes(getLength(nsNodesParent)))
         nsNodes%length = getLength(nsNodesParent)
-        do i = 1, getLength(nsNodes)
-          nsNodes%nodes(i)%this => &
+        do i = 0, getLength(nsNodes) - 1
+          ! separate variable for intel
+          nsp => item(nsNodesParent, i)
+          nsNodes%nodes(i+1)%this => &
             createNamespaceNode(getOwnerDocument(this), &
-            getPrefix(item(nsNodesParent, i-1)), &
-            getNamespaceURI(item(nsNodesParent, i-1)), &
+            getPrefix(nsp), getNamespaceURI(nsp), &
             specified=.false.)
         enddo
       else
@@ -154,7 +155,7 @@ TOHW_m_dom_contents(`
     character(len=*), intent(in) :: namespaceURI
     logical, intent(in) :: specified
 
-    type(Node), pointer :: dummy
+    type(Node), pointer :: ns
     type(NodeList), pointer :: nsnodes
     integer :: i
     logical :: quickFix
@@ -175,16 +176,18 @@ TOHW_m_dom_contents(`
     nsnodes => getNamespaceNodes(np)
     ! If we already have this prefix registered in the list, then remove it
     do i = 0, getLength(nsNodes)-1
-      if (getPrefix(item(nsNodes, i))==prefix) then
-        dummy => remove_nl(nsNodes, i+1)
-        call destroy(dummy)
+      ns => item(nsNodes, i)
+! Intel 8.1 & 9.1 insist on separate variable here and just below
+      if (getPrefix(ns)==prefix) then
+        call setNamespaceURI(ns, namespaceURI)
         exit
       endif
     enddo
-
-    call append_nl(nsNodes, &
-      createNamespaceNode(getOwnerDocument(np), &
-        prefix, namespaceURI, specified))
+    if (i==getLength(nsNodes)) then
+      ns => createNamespaceNode(getOwnerDocument(np), &
+        prefix, namespaceURI, specified)
+      call append_nl(nsNodes, ns)
+    endif
     call setGCState(getOwnerDocument(np), quickFix)
 
   end subroutine appendNSNode
@@ -192,7 +195,7 @@ TOHW_m_dom_contents(`
   TOHW_subroutine(normalizeDocument, (doc))
     type(Node), pointer :: doc
 
-    type(Node), pointer :: this, treeroot, dummy, new, old
+    type(Node), pointer :: this, treeroot, dummy, new, old, nsp
     type(DOMConfiguration), pointer :: dc
     logical :: doneAttributes, doneChildren
     integer :: i_tree, i_children
@@ -341,7 +344,7 @@ TOHW_m_dom_contents(`
     type(Node), pointer :: this
     logical, intent(in) :: deep
 
-    type(Node), pointer :: parent, child, attr
+    type(Node), pointer :: parent, child, attr, nsp
     type(NamedNodeMap), pointer :: attrs
     type(NodeList), pointer :: nsNodes, nsNodesParent
     integer :: i, nsIndex

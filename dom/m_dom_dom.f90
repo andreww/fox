@@ -3385,6 +3385,43 @@ endif
     endif
   end function getNamespaceURI
 
+subroutine setnamespaceURI(np, c, ex)
+    type(DOMException), intent(out), optional :: ex
+    type(Node), pointer :: np
+    character(len=*) :: c
+
+
+    if (.not.associated(np)) then
+      if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "setnamespaceURI", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    endif
+
+   if (getNodeType(np)/=XPATH_NAMESPACE_NODE .and. &
+      .true.) then
+      if (getFoX_checks().or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "setnamespaceURI", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    endif
+
+    if (associated(np%elExtras%namespaceURI)) deallocate(np%elExtras%namespaceURI)
+    np%elExtras%namespaceURI => vs_str_alloc(c)
+
+  end subroutine setnamespaceURI
+
+
   pure function getPrefix_len(arg, p) result(n)
     type(Node), intent(in) :: arg
     logical, intent(in) :: p
@@ -4726,14 +4763,12 @@ endif
     endif
 
     do i = 0, getLength(map) - 1
-      if ((getNamespaceURI(item(map, i))==namespaceURI &
-        .and. getLocalName(item(map, i))==localName) &
-        .or. (namespaceURI=="" .and.getNodeName(item(map, i))==localName)) then
-        np => item(map, i)
+      np => item(map, i)
+      if (getNamespaceURI(np)==namespaceURI &
+        .and. getLocalName(np)==localName) then
         return
       endif
     enddo
-    
     np => null()
 
   end function getNamedItemNS
@@ -4771,6 +4806,7 @@ endif
     character(len=getNamedItemNS_Value_length(map, associated(map), namespaceURI, localName)) :: c
 
     integer :: i
+    type(Node), pointer :: np
 
     if (.not.associated(map)) then
        if (getFoX_checks().or.FoX_MAP_IS_NULL<200) then
@@ -4786,10 +4822,11 @@ endif
 
     c = ""
     if (map%ownerElement%nodeType/=ELEMENT_NODE) return
-    do i = 1, getLength(map)
-      if (getNamespaceURI(item(map, i-1))==namespaceURI &
-        .and. getLocalName(item(map, i-1))==localName) then
-        c = getValue(item(map, i-1))
+    do i = 0, getLength(map) - 1
+      np => item(map, i)
+      if (getNamespaceURI(np)==namespaceURI &
+        .and. getLocalName(np)==localName) then
+        c = getValue(np)
         return
       endif
     enddo
@@ -4804,6 +4841,7 @@ endif
     type(Node), pointer :: np
 
     integer :: i
+    character, pointer, dimension(:) :: arg_ns, arg_ln, map_ns, map_ln
 
     if (.not.associated(map)) then
       if (getFoX_checks().or.FoX_MAP_IS_NULL<200) then
@@ -4888,20 +4926,18 @@ endif
       endif
     endif
 
-    np => null()
-    do i = 1, getLength(map)
-      if ((getLocalName(arg)=="".and.getNodeName(arg)==getNodeName(item(map, i-1))) &
-        .or. (getNamespaceURI(item(map, i-1))==getNamespaceURI(arg) &
-        .and. getLocalName(item(map, i-1))==getLocalName(arg))) then
-        np => item(map, i-1)
-        map%nodes(i)%this => arg
+    do i = 0, getLength(map) - 1
+      np => item(map, i)
+! This will give silly results if you add a DOM level 1 node in here - should we throw an error?
+      if (getLocalName(arg)==getLocalName(np).and.getNamespaceURI(arg)==getNamespaceURI(np)) then
+        map%nodes(i+1)%this => arg
         arg%elExtras%ownerElement => map%ownerElement
         exit
       endif
     enddo
 
     !   If not found, insert it at the end of the linked list
-    if (associated(np)) then
+    if (i<getLength(map)) then
       if (getGCstate(getOwnerDocument(map%ownerElement)).and.np%inDocument) then
         call removeNodesFromDocument(getOwnerDocument(map%ownerElement), np)
         np%inDocument = .false.
@@ -4962,13 +4998,11 @@ endif
 
     endif
 
-    do i = 1, getLength(map)
-      if ((getNamespaceURI(item(map, i-1))==namespaceURI &
-          .and. getLocalName(item(map, i-1))==localName) &
-        .or. (getNamespaceURI(item(map, i-1))=="" &
-          .and. getNodeName(item(map, i-1))==localName)) then
+    do i = 0, getLength(map) - 1
+      np => item(map, i)
+      if (getNamespaceURI(np)==namespaceURI &
+          .and. getLocalName(np)==localName) then
         ! Grab this node
-        np => map%nodes(i)%this
         xds => getXds(getOwnerDocument(map%ownerElement))
         elem => get_element(xds%element_list, getNodeName(map%ownerElement))
         if (associated(elem)) then
@@ -4989,10 +5023,10 @@ endif
         ! and shrink the node list
         temp_nl => map%nodes
         allocate(map%nodes(size(temp_nl)-1))
-        do i2 = 1, i - 1
+        do i2 = 1, i
           map%nodes(i2)%this => temp_nl(i2)%this
         enddo
-        do i2 = i + 1, map%length
+        do i2 = i + 2, map%length
           map%nodes(i2-1)%this => temp_nl(i2)%this
         enddo
         map%length = size(map%nodes)
@@ -5041,7 +5075,7 @@ endif
     endif
     if (getNodeType(arg)==ATTRIBUTE_NODE) arg%elExtras%ownerElement => map%ownerElement
 
-  end subroutine append_nnm
+   end subroutine append_nnm
 
 
   subroutine setReadOnlyMap(map, r)
@@ -8278,7 +8312,7 @@ endif
   end function gettagName
 
 
-  pure function getAttributes_len(arg, p, name) result(n)
+  pure function getAttribute_len(arg, p, name) result(n)
     type(Node), intent(in) :: arg
     logical, intent(in) :: p
     character(len=*), intent(in) :: name
@@ -8297,13 +8331,15 @@ endif
       endif
     enddo
 
-  end function getAttributes_len
+  end function getAttribute_len
 
   function getAttribute(arg, name, ex)result(c) 
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*), intent(in) :: name
-    character(len=getAttributes_len(arg, associated(arg), name)) :: c
+    character(len=getAttribute_len(arg, associated(arg), name)) :: c
+
+    type(Node), pointer :: np
 
     if (.not.associated(arg)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
@@ -8329,7 +8365,8 @@ endif
 
     endif
 
-    c = getValue(getNamedItem(getAttributes(arg), name))
+    np => getNamedItem(getAttributes(arg), name)
+    c = getValue(np)
         
   end function getAttribute
 
@@ -8658,8 +8695,9 @@ endif
 
     endif
 
-    do i = 1, getLength(getAttributes(arg))
-      if (associated(item(getAttributes(arg), i-1), oldattr)) then
+    do i = 0, getLength(getAttributes(arg)) - 1
+      attr => item(getAttributes(arg), i)
+      if (associated(attr, oldattr)) then
         attr => removeNamedItem(getAttributes(arg), str_vs(oldattr%nodeName))
         ! removeNamedItem took care of any default attributes
         attr%elExtras%ownerElement => null()
@@ -9099,8 +9137,9 @@ endif
 
     endif
 
-    do i = 1, getLength(getAttributes(arg))
-      if (associated(item(getAttributes(arg), i-1), oldattr)) then
+    do i = 0, getLength(getAttributes(arg)) - 1
+      attr => item(getAttributes(arg), i)
+        if (associated(attr, oldattr)) then
         attr => removeNamedItemNS(getAttributes(arg), &
           getNamespaceURI(oldattr), getLocalName(oldattr))
         ! removeNamedItemNS took care of any default attributes
@@ -9133,6 +9172,7 @@ endif
     logical :: p
 
     integer :: i
+    type(Node), pointer :: attr
 
     if (.not.associated(arg)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
@@ -9159,8 +9199,9 @@ endif
     endif
 
     p = .false.
-    do i = 1, getLength(getAttributes(arg))
-      if (getNodeName(item(getAttributes(arg), i-1))==name) then
+    do i = 0, getLength(getAttributes(arg)) - 1
+      attr => item(getAttributes(arg), i)
+      if (getNodeName(attr)==name) then
         p = .true.
         exit
       endif
@@ -9177,6 +9218,7 @@ endif
     logical :: p
 
     integer :: i
+    type(Node), pointer :: attr
 
     if (.not.associated(arg)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
@@ -9204,8 +9246,9 @@ endif
 
     p = .false.
     do i = 1, getLength(getAttributes(arg))
-      if (getNamespaceURI(item(getAttributes(arg), i-1))==namespaceURI &
-        .and. getLocalName(item(getAttributes(arg), i-1))==localName) then
+     attr => item(getAttributes(arg), i)
+      if (getNamespaceURI(attr)==namespaceURI &
+        .and. getLocalName(attr)==localName) then
         p = .true.
         exit
       endif
@@ -9216,9 +9259,6 @@ endif
 ! setIdAttribute
 ! setIdAttributeNS
 ! setIdAttributeNode
-
-
-
 
 
   
@@ -10667,7 +10707,7 @@ endif
     character(len=*), intent(in) :: namespaceURI
     logical, intent(in) :: specified
 
-    type(Node), pointer :: dummy
+    type(Node), pointer :: ns
     type(NodeList), pointer :: nsnodes
     integer :: i
     logical :: quickFix
@@ -10704,16 +10744,18 @@ endif
     nsnodes => getNamespaceNodes(np)
     ! If we already have this prefix registered in the list, then remove it
     do i = 0, getLength(nsNodes)-1
-      if (getPrefix(item(nsNodes, i))==prefix) then
-        dummy => remove_nl(nsNodes, i+1)
-        call destroy(dummy)
+      ns => item(nsNodes, i)
+! Intel 8.1 & 9.1 insist on separate variable here and just below
+      if (getPrefix(ns)==prefix) then
+        call setNamespaceURI(ns, namespaceURI)
         exit
       endif
     enddo
-
-    call append_nl(nsNodes, &
-      createNamespaceNode(getOwnerDocument(np), &
-        prefix, namespaceURI, specified))
+    if (i==getLength(nsNodes)) then
+      ns => createNamespaceNode(getOwnerDocument(np), &
+        prefix, namespaceURI, specified)
+      call append_nl(nsNodes, ns)
+    endif
     call setGCState(getOwnerDocument(np), quickFix)
 
   end subroutine appendNSNode
@@ -10722,7 +10764,7 @@ endif
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: doc
 
-    type(Node), pointer :: this, treeroot, dummy, new, old
+    type(Node), pointer :: this, treeroot, dummy, new, old, nsp
     type(DOMConfiguration), pointer :: dc
     logical :: doneAttributes, doneChildren
     integer :: i_tree, i_children
@@ -10801,11 +10843,12 @@ endif
         nsNodesParent => getNamespaceNodes(parent)
         allocate(nsNodes%nodes(getLength(nsNodesParent)))
         nsNodes%length = getLength(nsNodesParent)
-        do i = 1, getLength(nsNodes)
-          nsNodes%nodes(i)%this => &
+        do i = 0, getLength(nsNodes) - 1
+          ! separate variable for intel
+          nsp => item(nsNodesParent, i)
+          nsNodes%nodes(i+1)%this => &
             createNamespaceNode(getOwnerDocument(this), &
-            getPrefix(item(nsNodesParent, i-1)), &
-            getNamespaceURI(item(nsNodesParent, i-1)), &
+            getPrefix(nsp), getNamespaceURI(nsp), &
             specified=.false.)
         enddo
       else
@@ -11108,7 +11151,7 @@ endif
     type(Node), pointer :: this
     logical, intent(in) :: deep
 
-    type(Node), pointer :: parent, child, attr
+    type(Node), pointer :: parent, child, attr, nsp
     type(NamedNodeMap), pointer :: attrs
     type(NodeList), pointer :: nsNodes, nsNodesParent
     integer :: i, nsIndex
@@ -11139,11 +11182,12 @@ endif
         nsNodesParent => getNamespaceNodes(parent)
         allocate(nsNodes%nodes(getLength(nsNodesParent)))
         nsNodes%length = getLength(nsNodesParent)
-        do i = 1, getLength(nsNodes)
-          nsNodes%nodes(i)%this => &
+        do i = 0, getLength(nsNodes) - 1
+          ! separate variable for intel
+          nsp => item(nsNodesParent, i)
+          nsNodes%nodes(i+1)%this => &
             createNamespaceNode(getOwnerDocument(this), &
-            getPrefix(item(nsNodesParent, i-1)), &
-            getNamespaceURI(item(nsNodesParent, i-1)), &
+            getPrefix(nsp), getNamespaceURI(nsp), &
             specified=.false.)
         enddo
       else

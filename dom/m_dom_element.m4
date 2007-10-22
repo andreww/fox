@@ -23,7 +23,7 @@ TOHW_m_dom_contents(`
 
 TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
 
-  pure function getAttributes_len(arg, p, name) result(n)
+  pure function getAttribute_len(arg, p, name) result(n)
     type(Node), intent(in) :: arg
     logical, intent(in) :: p
     character(len=*), intent(in) :: name
@@ -42,12 +42,14 @@ TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
       endif
     enddo
 
-  end function getAttributes_len
+  end function getAttribute_len
 
   TOHW_function(getAttribute, (arg, name), c)
     type(Node), pointer :: arg
     character(len=*), intent(in) :: name
-    character(len=getAttributes_len(arg, associated(arg), name)) :: c
+    character(len=getAttribute_len(arg, associated(arg), name)) :: c
+
+    type(Node), pointer :: np
 
     if (.not.associated(arg)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
@@ -57,7 +59,8 @@ TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
 
-    c = getValue(getNamedItem(getAttributes(arg), name))
+    np => getNamedItem(getAttributes(arg), name)
+    c = getValue(np)
         
   end function getAttribute
 
@@ -221,8 +224,9 @@ TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
     endif
 
-    do i = 1, getLength(getAttributes(arg))
-      if (associated(item(getAttributes(arg), i-1), oldattr)) then
+    do i = 0, getLength(getAttributes(arg)) - 1
+      attr => item(getAttributes(arg), i)
+      if (associated(attr, oldattr)) then
         attr => removeNamedItem(getAttributes(arg), str_vs(oldattr%nodeName))
         ! removeNamedItem took care of any default attributes
         attr%elExtras%ownerElement => null()
@@ -456,8 +460,9 @@ TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
       TOHW_m_dom_throw_error(WRONG_DOCUMENT_ERR)
     endif
 
-    do i = 1, getLength(getAttributes(arg))
-      if (associated(item(getAttributes(arg), i-1), oldattr)) then
+    do i = 0, getLength(getAttributes(arg)) - 1
+      attr => item(getAttributes(arg), i)
+        if (associated(attr, oldattr)) then
         attr => removeNamedItemNS(getAttributes(arg), &
           getNamespaceURI(oldattr), getLocalName(oldattr))
         ! removeNamedItemNS took care of any default attributes
@@ -481,6 +486,7 @@ TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
     logical :: p
 
     integer :: i
+    type(Node), pointer :: attr
 
     if (.not.associated(arg)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
@@ -491,8 +497,9 @@ TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
     endif
 
     p = .false.
-    do i = 1, getLength(getAttributes(arg))
-      if (getNodeName(item(getAttributes(arg), i-1))==name) then
+    do i = 0, getLength(getAttributes(arg)) - 1
+      attr => item(getAttributes(arg), i)
+      if (getNodeName(attr)==name) then
         p = .true.
         exit
       endif
@@ -508,6 +515,7 @@ TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
     logical :: p
 
     integer :: i
+    type(Node), pointer :: attr
 
     if (.not.associated(arg)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
@@ -519,8 +527,9 @@ TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
 
     p = .false.
     do i = 1, getLength(getAttributes(arg))
-      if (getNamespaceURI(item(getAttributes(arg), i-1))==namespaceURI &
-        .and. getLocalName(item(getAttributes(arg), i-1))==localName) then
+     attr => item(getAttributes(arg), i)
+      if (getNamespaceURI(attr)==namespaceURI &
+        .and. getLocalName(attr)==localName) then
         p = .true.
         exit
       endif
@@ -531,78 +540,5 @@ TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
 ! setIdAttribute
 ! setIdAttributeNS
 ! setIdAttributeNode
-
-dnl  subroutine normalizeNamespace(np)
-dnl    ! As B.1 of http://www.w3.org/TR/DOM-Level-3-Core/namespaces-algorithms.html
-dnl
-dnl    check np is an element
-dnl
-dnl    attrs = getAttributes(np)
-dnl    do i = 0, getLength(attrs)-1
-dnl      attr = item(attrs, i)
-dnl      ! I dont think theres any way this can be invalid ...
-dnl    enddo
-dnl
-dnl    if (getNamespaceURI(np)/="") then
-dnl      ! namespaced node ...
-dnl      if (getNamespaceURI(np)/=lookupNamespaceURI(getPrefix(np))) then
-dnl        ! We need to fixup this node.
-dnl        ! Create a new ns attribute
-
-dnl  subroutine rationalizeNS(np)
-dnl    type(Node), pointer :: np
-dnl
-dnl    if (.not.associated(np)) then
-dnl      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
-dnl    endif
-dnl
-dnl          nsParent => current
-dnl      if (getNodeType(nsParent)==DOCUMENT_NODE) then
-dnl        nsParent => null()
-dnl      else
-dnl        ! it is either an element or an entity reference node;
-dnl        ! if the latter, we must climb the tree to find the first element ancestor.
-dnl        do while (getNodeType(nsParent)/=ELEMENT_NODE)
-dnl          nsParent => getParentNode(nsParent)
-dnl        enddo
-dnl      endif
-dnl      if (associated(nsParent)) then
-dnl        do while (getNodeType(nsParent)/=ELEMENT_NODE)
-dnl          if (nsPa
-dnl        parentNS: do i = 0, getLength(getNamespaces(getParentNode(el))) - 1
-dnl          do j = 1, getNumberOfPrefixes(nsd)
-dnl            if (getPrefixByIndex(nsd, j) == getPrefix(item(getNamespaces(el), i))) cycle parentNS
-dnl          enddo
-dnl          call appendNSNode(el, getPrefix(item(getNamespaces(el), i))), getNamespaceURI(item(getNamespaces(el), i)), specified=.false.)
-dnl        enddo parentNS
-dnl      endif
-dnl    !FIXME DOM-XPath section 1.2.3 - implicit declaration of prefix?
-dnl    endif
-dnl    xml = .false.
-dnl    ! By XML Infoset 2.2, the xmlns namespace should not appear.
-dnl    do i = 0, getLength(getNamespaces(el)) - 1
-dnl      if (getPrefix(item(getNamespaces(el), i)) == "xml") then
-dnl        xml = .true.
-dnl        exit
-dnl      endif
-dnl    enddo
-dnl    if (.not.xml) call appendNSNode(el, "xml", "http://www.w3.org/XML/1998/namespace", .false.)
-dnl
-dnl  end subroutine rationalizeNS
-
-dnl    if (len(URI)>0) then
-dnl      ! This is a namespace-aware element node.
-dnl      ! Do all namespace resolution by creating namespace nodes ...
-dnl
-dnl      ! First, attach all nodes specified directly on the current node.
-dnl      nsd => getnsDict(fxml%fx)
-dnl      ! FIXME check specified properly
-dnl      if (isDefaultNSInForce(nsd)) call appendNSNode(el, "", getNamespaceURI(nsd), specified=.true.)
-dnl      do i = 1, getNumberOfPrefixes(nsd)
-dnl        if (getNamespaceURI(nsd, getPrefixByIndex(nsd, i))/="") then
-dnl          call appendNSNode(el, getPrefixByIndex(nsd, i), getNamespaceURI(nsd, getPrefixByIndex(nsd, i)), specified=.true.)
-dnl        endif
-dnl      enddo
-dnl    endif
 
 ')`'dnl
