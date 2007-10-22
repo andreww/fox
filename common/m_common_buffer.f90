@@ -107,9 +107,9 @@ contains
       elseif (n<=len(s2)-MAX_BUFF_SIZE) then
         ! We need to insert a newline, or we'll overrun the buffer
         ! No suitable newline, so convert a space or tab into a newline.
-        i = scan(s2(n:n+MAX_BUFF_SIZE-1), achar(9)//achar(20), back=.true.)
+        i = scan(s2(n:n+MAX_BUFF_SIZE-1), achar(9)//achar(32), back=.true.)
         ! If no space or tab is present, we fail.
-        if (i/=MAX_BUFF_SIZE.and..not.present(ws_significant)) then
+        if (i>0.and..not.present(ws_significant)) then
           ! We can insert a newline, but we don't know whether it is significant. Warn:
           if (.not.warning) then
             ! We only output this warning once.
@@ -118,7 +118,7 @@ contains
             "If whitespace might be significant, check your output.")
             warning = .true.
           endif
-        elseif (i==MAX_BUFF_SIZE) then
+        elseif (i==0) then
           call FoX_error( &
             "Fortran made FoX insert a newline but it can't. Stopping now.")
         elseif (ws_) then
