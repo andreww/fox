@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/sh
 
 m4 -DTESTINPUT="$1" test_str.f90.in > test_str.f90
 make test_str.exe > /dev/null 2>&1

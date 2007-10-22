@@ -100,8 +100,15 @@ contains
   pure function str_vs(vs) result(s)
     character, dimension(:), intent(in) :: vs
     character(len=size(vs)) :: s
-
+    integer :: i
+#ifdef PGF90
+!PGI crashes on this use of transfer. Knob-ends.
+    do i = 1, size(vs)
+      s(i:i) = vs(i)
+    enddo
+#else
     s = transfer(vs, s)
+#endif
   end function str_vs
 
 

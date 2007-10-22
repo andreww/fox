@@ -22,8 +22,8 @@ call xml_AddNotation(xf, name="GIF", system="http://lzw.org")
 call xml_AddComment(xf, "a comment ...")
 call xml_AddExternalEntity(xf, "def", "http://blah", public="h", notation="GIF")
 
-!call xml_AddXMLStylesheet(xf,href="simple.css",type="text/css",media="braille")
-!call xml_AddXMLPI(xf,name="ccode", data="{hello_world();}")
+call xml_AddXMLStylesheet(xf,href="simple.css",type="text/css",media="braille")
+call xml_AddXMLPI(xf,name="ccode", data="{hello_world();}")
 
 call xml_NewElement(xf,"john")
 call xml_AddAttribute(xf,"age",age)
@@ -68,7 +68,7 @@ call xml_DeclareNamespace(xf,"http://www.xml-cml.org/schema", "cml")
 call xml_AddAttribute(xf, "cml:convention", "eMinerals")
 call xml_EndElement(xf, "h:head")
 
-call xml_AddCharacters(xf,(/1, 2, 3, 4, 16 /))
+!call xml_AddCharacters(xf,(/1, 2, 3, 4, 16 /))
 
 ! xml_Close will take care to close all outstanding elements
 
