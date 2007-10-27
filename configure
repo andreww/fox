@@ -1945,7 +1945,7 @@ ac_clean_files="$ac_clean_files a.out a.exe b.out"
 # It is nearly always "-o" but Lahey Fortran wants "-out"
 { echo "$as_me:$LINENO: checking for linker flag to name executables" >&5
 echo $ECHO_N "checking for linker flag to name executables... $ECHO_C" >&6; }
-for ac_link_obj_flag in "-o" "-out"; do
+for ac_link_obj_flag in "-out" "-o"; do
 if { (ac_try="$ac_link"
 case "(($ac_try" in
   *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
@@ -1956,16 +1956,19 @@ eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  break
+  ac_link_obj_flag_found=yes; break
 else
-  { { echo "$as_me:$LINENO: error: Could not determine flag to name executables
+  :
+fi
+
+done
+if test x$ac_link_obj_flag_found = x ; then
+{ { echo "$as_me:$LINENO: error: Could not determine flag to name executables
 See \`config.log' for more details." >&5
 echo "$as_me: error: Could not determine flag to name executables
 See \`config.log' for more details." >&2;}
    { (exit 1); exit 1; }; }
 fi
-
-done
 { echo "$as_me:$LINENO: result: $ac_link_obj_flag" >&5
 echo "${ECHO_T}$ac_link_obj_flag" >&6; }
 
