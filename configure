@@ -3249,7 +3249,7 @@ test $ac_fpp_need_CXXSTYLE = yes && ac_fpp_need_cxxstyle=no
 # We first try to use FC for compiling the source directly
 # into object files
 ac_fpp_compile='${FC-fc} -c $FPPFLAGS $FPPFLAGS_SRCEXT $FCFLAGS conftest.$ac_ext >&5'
-ac_fpp_link='${FC-fc} -o conftest${ac_exeext} $FPPFLAGS $FPPFLAGS_SRCEXT $FCFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_fpp_link='${FC-fc} $ac_link_obj_flag conftest${ac_exeext} $FPPFLAGS $FPPFLAGS_SRCEXT $FCFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 
 ac_ext=$FPP_SRC_EXT
 # We need to use variables because compilation depends on whether
@@ -3953,34 +3953,6 @@ else
   { echo "$as_me:$LINENO: result: indirect" >&5
 echo "${ECHO_T}indirect" >&6; }
 
-# Before we go any further, check that we're not courting disaster,
-# here, by using indirect compilation (.F -> .f -> .o) on a
-# case-insensitive filesystem.  If we are, there's nothing we can do
-# other than fail noisily.
-{ echo "$as_me:$LINENO: checking whether the filesystem is case-insensitive" >&5
-echo $ECHO_N "checking whether the filesystem is case-insensitive... $ECHO_C" >&6; }
-if test "${ac_cv_fc_cifs+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  rm -f conftest.*
-        echo wibble >conftest.F
-        if test -f conftest.f && test "`cat conftest.f`" = wibble; then
-            ac_cv_fc_cifs=yes
-        else
-            ac_cv_fc_cifs=no
-        fi
-
-fi
-{ echo "$as_me:$LINENO: result: $ac_cv_fc_cifs" >&5
-echo "${ECHO_T}$ac_cv_fc_cifs" >&6; }
-if test $ac_cv_fc_cifs = yes; then
-    { { echo "$as_me:$LINENO: error: disaster: this Fortran needs indirect compilation, but we
- have a case-insensitive filesystem, so .F -> .f would fail; further compilation isn't going to work -- consider filing a bug" >&5
-echo "$as_me: error: disaster: this Fortran needs indirect compilation, but we
- have a case-insensitive filesystem, so .F -> .f would fail; further compilation isn't going to work -- consider filing a bug" >&2;}
-   { (exit 1); exit 1; }; }
-fi
-
 # Now we check how to invoke a preprocessor that outputs Fortran code
 # that FC can understand
 #FIXME: in a joint C/Fortran project, CPP might have already
@@ -4440,7 +4412,7 @@ else
    ac_tmp=
 fi
 ac_cmd='$FPP $FPPFLAGS conftest.$ac_ext '"$ac_tmp"
-ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $FCFLAGS_SRCEXT conftest.f $LIBS'
+ac_link='$FC $ac_link_obj_flag conftest$ac_exeext $FCFLAGS $LDFLAGS $FCFLAGS_SRCEXT conftest.f $LIBS'
 
 if { (eval echo "$as_me:$LINENO: \"$ac_cmd\"") >&5
   (eval $ac_cmd) 2>&5
@@ -4490,9 +4462,39 @@ else
 fi
 
 
+# Before we go any further, check that we're not courting disaster,
+# here, by using indirect compilation (.F -> .f -> .o) on a
+# case-insensitive filesystem.  If we are, there's nothing we can do
+# other than fail noisily.
+{ echo "$as_me:$LINENO: checking whether the filesystem is case-insensitive" >&5
+echo $ECHO_N "checking whether the filesystem is case-insensitive... $ECHO_C" >&6; }
+if test "${ac_cv_fc_cifs+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  rm -f conftest.*
+        echo wibble >conftest.F
+        if test -f conftest.f && test "`cat conftest.f`" = wibble; then
+            ac_cv_fc_cifs=yes
+        else
+            ac_cv_fc_cifs=no
+        fi
+
+fi
+{ echo "$as_me:$LINENO: result: $ac_cv_fc_cifs" >&5
+echo "${ECHO_T}$ac_cv_fc_cifs" >&6; }
 # Redefine the compile and link commands for indirect compilation
-  ac_fpp_compile='${FPP-fpp} $FPPFLAGS $FPPFLAGS_SRCEXT conftest.$ac_ext '"$ac_fpp_out"' && ${FC-fc} -c $FCFLAGS conftest.f >&5'
-  ac_fpp_link='${FPP-fpp} $FPPFLAGS conftest.$ac_ext $FPPFLAGS_SRCEXT '"$ac_fpp_out"' && ${FC-fc} -o conftest${ac_exeext} $FCFLAGS $LDFLAGS conftest.f $LIBS >&5'
+if test $ac_cv_fc_cifs = yes; then
+  if test x$ac_fpp_out = x ; then
+    { { echo "$as_me:$LINENO: error: Confused in preprocessing on case-insensitive FS - please report to tow@uszla.me.uk" >&5
+echo "$as_me: error: Confused in preprocessing on case-insensitive FS - please report to tow@uszla.me.uk" >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+  ac_fpp_compile='${FPP-fpp} $FPPFLAGS $FPPFLAGS_SRCEXT conftest.$ac_ext > conftest.cpp.f && ${FC-fc} -c $FCFLAGS -o conftest.o conftest.cpp.f >&5; rm conftest.cpp.f'
+  ac_fpp_link='${FPP-fpp} $FPPFLAGS conftest.$ac_ext $FPPFLAGS_SRCEXT > conftest.cpp.f && ${FC-fc} $ac_link_obj_flag conftest${ac_exeext} $FCFLAGS $LDFLAGS conftest.cpp.f $LIBS >&5; rm conftest.cpp.f'
+else
+  ac_fpp_compile='${FPP-fpp} $FPPFLAGS $FPPFLAGS_SRCEXT conftest.$ac_ext '"$ac_fpp_out"' && ${FC-fc} -c $FCFLAGS conftest.f >&5; rm conftest.f'
+  ac_fpp_link='${FPP-fpp} $FPPFLAGS conftest.$ac_ext $FPPFLAGS_SRCEXT '"$ac_fpp_out"' && ${FC-fc} $ac_link_obj_flag conftest${ac_exeext} $FCFLAGS $LDFLAGS conftest.f $LIBS >&5; rm conftest.f'
+fi
 
   ac_compile=$ac_fpp_compile
   ac_link=$ac_fpp_link
@@ -5437,7 +5439,13 @@ ac_compiler_gnu=$ac_cv_fc_compiler_gnu
 if test $ac_cv_fpp_build_rule = direct; then
      F90_RULE='$(FC) -c $(FFLAGS) $(INCFLAGS) $(FPPFLAGS) $(FPPFLAGS_free_F90) $< '
 elif test $ac_cv_fpp_build_rule = indirect; then
-     F90_RULE='$(FPP) $(FPPFLAGS) $< $(FPP_OUTPUT) aux_$*.f90 && $(FC) -c -o $*.o $(FFLAGS) $(INCFLAGS) $(FCFLAGS_free_f90) aux_$*.f90'
+  if test $ac_cv_fc_cifs = yes; then
+     F90_RULE='while [ 0 ]; do FPPFILE=$*.$$RANDOM.f90; if ! test -f $$FPPFILE; then break; fi; done; $(FPP) $(FPPFLAGS) $< > $$FPPFILE && $(FC) -c -o $*.o $(FFLAGS) $(INCFLAGS) $(FCFLAGS_free_f90) $$FPPFILE; rm $$FPPFILE'
+  elif test x$FPP_OUTPUT = x; then
+     F90_RULE='$(FPP) $(FPPFLAGS) $< && $(FC) -c $(FFLAGS) $(INCFLAGS) $(FCFLAGS_free_f90) $*.f90; rm $*.f90'
+  else
+     F90_RULE='$(FPP) $(FPPFLAGS) $< > $*.f90 && $(FC) -c $(FFLAGS) $(INCFLAGS) $(FCFLAGS_free_f90) $*.f90; rm $*.f90'
+  fi
 fi
 
 if test -n "$ac_tool_prefix"; then

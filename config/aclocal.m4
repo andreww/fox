@@ -3958,7 +3958,7 @@ else
    ac_tmp=
 fi
 ac_cmd='$FPP $FPPFLAGS conftest.$ac_ext '"$ac_tmp"
-ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $FCFLAGS_SRCEXT conftest.f $LIBS'
+ac_link='$FC $ac_link_obj_flag conftest$ac_exeext $FCFLAGS $LDFLAGS $FCFLAGS_SRCEXT conftest.f $LIBS'
 
 if AC_TRY_EVAL(ac_cmd) &&
      AC_TRY_EVAL(ac_link) && test -s conftest${ac_exeext}; then
@@ -4408,7 +4408,7 @@ _AC_PROG_FPP_FEATURES([$1])
 # We first try to use FC for compiling the source directly
 # into object files
 ac_fpp_compile='${FC-fc} -c $FPPFLAGS $FPPFLAGS_SRCEXT $FCFLAGS conftest.$ac_ext >&AS_MESSAGE_LOG_FD'
-ac_fpp_link='${FC-fc} -o conftest${ac_exeext} $FPPFLAGS $FPPFLAGS_SRCEXT $FCFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&AS_MESSAGE_LOG_FD'
+ac_fpp_link='${FC-fc} $ac_link_obj_flag conftest${ac_exeext} $FPPFLAGS $FPPFLAGS_SRCEXT $FCFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&AS_MESSAGE_LOG_FD'
 
 AC_LANG_PUSH(Preprocessed Fortran)
 FPP_SRC_EXT=F
@@ -4470,16 +4470,6 @@ else
 # indirect compilation
   AC_MSG_RESULT([indirect])
 
-# Before we go any further, check that we're not courting disaster,
-# here, by using indirect compilation (.F -> .f -> .o) on a
-# case-insensitive filesystem.  If we are, there's nothing we can do
-# other than fail noisily.
-_AC_FC_CHECK_CIFS
-if test $ac_cv_fc_cifs = yes; then
-    AC_MSG_ERROR([disaster: this Fortran needs indirect compilation, but we
- have a case-insensitive filesystem, so .F -> .f would fail; further compilation isn't going to work -- consider filing a bug])
-fi
-
 # Now we check how to invoke a preprocessor that outputs Fortran code
 # that FC can understand
 #FIXME: in a joint C/Fortran project, CPP might have already
@@ -4494,9 +4484,22 @@ fi
 _AC_PROG_FPP
 _AC_PROG_FPP_P
 
+# Before we go any further, check that we're not courting disaster,
+# here, by using indirect compilation (.F -> .f -> .o) on a
+# case-insensitive filesystem.  If we are, there's nothing we can do
+# other than fail noisily.
+_AC_FC_CHECK_CIFS
 # Redefine the compile and link commands for indirect compilation
-  ac_fpp_compile='${FPP-fpp} $FPPFLAGS $FPPFLAGS_SRCEXT conftest.$ac_ext '"$ac_fpp_out"' && ${FC-fc} -c $FCFLAGS conftest.f >&AS_MESSAGE_LOG_FD'
-  ac_fpp_link='${FPP-fpp} $FPPFLAGS conftest.$ac_ext $FPPFLAGS_SRCEXT '"$ac_fpp_out"' && ${FC-fc} -o conftest${ac_exeext} $FCFLAGS $LDFLAGS conftest.f $LIBS >&AS_MESSAGE_LOG_FD'
+if test $ac_cv_fc_cifs = yes; then
+  if test x$ac_fpp_out = x ; then
+    AC_MSG_ERROR([Confused in preprocessing on case-insensitive FS - please report to tow@uszla.me.uk])
+  fi
+  ac_fpp_compile='${FPP-fpp} $FPPFLAGS $FPPFLAGS_SRCEXT conftest.$ac_ext > conftest.cpp.f && ${FC-fc} -c $FCFLAGS -o conftest.o conftest.cpp.f >&AS_MESSAGE_LOG_FD; rm conftest.cpp.f'
+  ac_fpp_link='${FPP-fpp} $FPPFLAGS conftest.$ac_ext $FPPFLAGS_SRCEXT > conftest.cpp.f && ${FC-fc} $ac_link_obj_flag conftest${ac_exeext} $FCFLAGS $LDFLAGS conftest.cpp.f $LIBS >&AS_MESSAGE_LOG_FD; rm conftest.cpp.f'
+else
+  ac_fpp_compile='${FPP-fpp} $FPPFLAGS $FPPFLAGS_SRCEXT conftest.$ac_ext '"$ac_fpp_out"' && ${FC-fc} -c $FCFLAGS conftest.f >&AS_MESSAGE_LOG_FD; rm conftest.f'
+  ac_fpp_link='${FPP-fpp} $FPPFLAGS conftest.$ac_ext $FPPFLAGS_SRCEXT '"$ac_fpp_out"' && ${FC-fc} $ac_link_obj_flag conftest${ac_exeext} $FCFLAGS $LDFLAGS conftest.f $LIBS >&AS_MESSAGE_LOG_FD; rm conftest.f'
+fi
 
   ac_compile=$ac_fpp_compile
   ac_link=$ac_fpp_link

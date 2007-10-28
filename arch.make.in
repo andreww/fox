@@ -1,5 +1,5 @@
 .SUFFIXES:
-.SUFFIXES: .f .F .o .a .f90 .F90 .f95 .F95 .exe .m4
+.SUFFIXES: .o .a .f90 .F90 .exe .m4
 
 BUILD_TARGETS=@BUILD_TARGETS@
 
@@ -9,7 +9,6 @@ LIB_DIR=$(compile_prefix)/lib
 MOD_DIR=$(compile_prefix)/finclude
 
 FPP=@FPP@
-FPP_OUTPUT=@FPP_OUTPUT@
 FC=@FC@
 RANLIB=@RANLIB@
 
