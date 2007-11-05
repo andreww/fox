@@ -32,7 +32,7 @@ if test $ac_cv_fpp_build_rule = direct; then
      F90_RULE=['$(FC) -c $(FFLAGS) $(INCFLAGS) $(FPPFLAGS) $(FPPFLAGS_free_F90) $< ']
 elif test $ac_cv_fpp_build_rule = indirect; then
   if test $ac_cv_fc_cifs = yes; then
-     F90_RULE=['while [ 0 ]; do FPPFILE=$*.$$RANDOM.f90; if ! test -f $$FPPFILE; then break; fi; done; $(FPP) $(FPPFLAGS) $< > $$FPPFILE && $(FC) -c -o $*.o $(FFLAGS) $(INCFLAGS) $(FCFLAGS_free_f90) $$FPPFILE; rm $$FPPFILE']
+     F90_RULE=['while [ 0 ]; do FPPFILE=$*.$$RANDOM.f90; if ! test -f $$FPPFILE; then break; fi; done; $(FPP) $(FPPFLAGS) $< > $$FPPFILE && $(FC) -c -o $*.$(OBJEXT) $(FFLAGS) $(INCFLAGS) $(FCFLAGS_free_f90) $$FPPFILE; rm $$FPPFILE']
   elif test x$FPP_OUTPUT = x; then
      F90_RULE=['$(FPP) $(FPPFLAGS) $< && $(FC) -c $(FFLAGS) $(INCFLAGS) $(FCFLAGS_free_f90) $*.f90; rm $*.f90']
   else

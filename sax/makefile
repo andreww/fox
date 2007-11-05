@@ -1,8 +1,8 @@
 #
 default: install
 #
-OBJFILES= m_sax_types.o m_sax_tokenizer.o m_sax_reader.o \
-          m_sax_parser.o m_sax_operate.o FoX_sax.o
+OBJFILES= m_sax_types.$(OBJEXT) m_sax_tokenizer.$(OBJEXT) m_sax_reader.$(OBJEXT) \
+          m_sax_parser.$(OBJEXT) m_sax_operate.$(OBJEXT) FoX_sax.$(OBJEXT)
 #
 LIBRARY=libFoX_sax.a
 INCFLAGS=$(MOD_PREFIX)../objs/finclude
@@ -27,10 +27,10 @@ install: $(OBJFILES)
            $(CP) $$i $(MOD_DIR);done
 #
 clean:
-	rm -f *.o  *.$(MOD_EXT) $(LIBRARY)
+	rm -f *.$(OBJEXT)  *.$(MOD_EXT) $(LIBRARY)
 # DO NOT DELETE THIS LINE - used by make depend
-FoX_sax.o: m_sax_operate.o
-m_sax_operate.o: m_sax_parser.o m_sax_reader.o m_sax_types.o
-m_sax_parser.o: m_sax_reader.o m_sax_tokenizer.o m_sax_types.o
-m_sax_tokenizer.o: m_sax_reader.o m_sax_types.o
-m_sax_types.o: m_sax_reader.o
+FoX_sax.$(OBJEXT): m_sax_operate.$(OBJEXT)
+m_sax_operate.$(OBJEXT): m_sax_parser.$(OBJEXT) m_sax_reader.$(OBJEXT) m_sax_types.$(OBJEXT)
+m_sax_parser.$(OBJEXT): m_sax_reader.$(OBJEXT) m_sax_tokenizer.$(OBJEXT) m_sax_types.$(OBJEXT)
+m_sax_tokenizer.$(OBJEXT): m_sax_reader.$(OBJEXT) m_sax_types.$(OBJEXT)
+m_sax_types.$(OBJEXT): m_sax_reader.$(OBJEXT)

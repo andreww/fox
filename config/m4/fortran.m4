@@ -2118,6 +2118,9 @@ dnl the text to the file.  We want to end up with TEST\\TEST in the source.
 #
 # Nearly every compiler I have found uses -Ipath for this purpose;
 # Sun F95 v7.1 (at least), uses -Mpath
+# Lahey uses -mod, but it needs to be called as -mod .\; in order
+# to work properly. (so that module files still get written to
+# the current directory.
 # 
 AC_DEFUN([AC_FC_MOD_PATH_FLAG],[
           _AC_FORTRAN_ASSERT
@@ -2134,8 +2137,8 @@ AC_DEFUN([AC_FC_MOD_PATH_FLAG],[
 _ACEOF
           _AC_EVAL_STDERR($ac_compile)
           cd ..
-          for i in -I -M; do
-            if test $ac_cv_fc_mod_path_flag == "no"; then
+          for i in -I -M "-mod .\;"; do
+            if test "$ac_cv_fc_mod_path_flag" == "no"; then
                FCFLAGS_save=$FCFLAGS
                FCFLAGS="$FCFLAGS ${i}conftestdir"
                AC_COMPILE_IFELSE([
@@ -2152,7 +2155,7 @@ _ACEOF
           done
           AC_MSG_RESULT([$ac_cv_fc_mod_path_flag])
           rm -rf conftestdir
-          AS_IF([test $ac_cv_fc_mod_path_flag != "no"],
+          AS_IF([test "$ac_cv_fc_mod_path_flag" != "no"],
                 [$1],
                 [m4_default([$2],[AC_MSG_ERROR([Cannot find flag to alter module search path])])])
 	  AC_SUBST(FC_MOD_FLAG)
@@ -2315,11 +2318,11 @@ test $ac_fpp_need_CXXSTYLE = yes && ac_fpp_need_cxxstyle=no
 ])# _AC_PROG_FPP_FEATURES
 
 
-# _AC_TEST_FPP ([command])
+# _AC_TEST_FPP_FIXED ([command])
 # ------------------------
 # A helper macro to test correct fpp behaviour
 # It sets ac_cv_prog_fpp and ac_fpp_out
-AC_DEFUN([_AC_TEST_FPP],
+AC_DEFUN([_AC_TEST_FPP_FIXED],
 [rm -f conftest*
 cat >conftest.$ac_ext << \_ACEOF
 _AC_LANG_PROGRAM_FPP_ONLY
@@ -2333,24 +2336,68 @@ if eval '$ac_fpp_command conftest.$ac_ext > conftest.log 2>/dev/null'; then
       ac_tmp=
     else
       ac_tmp=conftest.f
+      ac_fpp_fixed_out=
+    fi
+  fi
+  if test -z "$ac_tmp"; then
+    ac_tmp=conftest.log
+    ac_fpp_fixed_out=' > conftest.f'
+  fi
+  if grep '^      REAL A' $ac_tmp >/dev/null 2>&1; then
+    # we have Fortran!  That worked...
+    ac_cv_prog_fpp_fixed=$ac_fpp_command
+  fi
+  if grep 'syntax error' $ac_tmp >/dev/null 2>&1; then
+    # ...oh no it didn't: this line should have been skipped
+    ac_cv_prog_fpp_free=
+  fi
+fi
+rm -f conftest*
+])# _AC_TEST_FPP_FIXED
+
+# _AC_TEST_FPP_FREE ([command])
+# ------------------------
+# A helper macro to test correct fpp behaviour
+# It sets ac_cv_prog_fpp and ac_fpp_out
+AC_DEFUN([_AC_TEST_FPP_FREE],
+[rm -f conftest*
+ac_ext_tmp=$ac_ext
+ac_ext=F90
+cat >conftest.$ac_ext << \_ACEOF
+_AC_LANG_PROGRAM_FPP_ONLY
+_ACEOF
+ac_fpp_command=$1
+if eval '$ac_fpp_command conftest.$ac_ext > conftest.log 2>/dev/null'; then
+  if test -f conftest.f; then
+    if diff conftest.$ac_ext conftest.f90 >/dev/null 2>&1; then
+      # ooops -- these two are the same file, indicating that this is a
+      # case-insensitive filesystem.  So ignore this file.
+      ac_tmp=
+    else
+      ac_tmp=conftest.f90
+      ac_fpp_free_out=
       ac_fpp_out=
     fi
   fi
   if test -z "$ac_tmp"; then
     ac_tmp=conftest.log
-    ac_fpp_out=' > conftest.f'
+    ac_fpp_free_out=' > conftest.f90'
+    ac_fpp_out=' > conftest.f90'
   fi
   if grep '^      REAL A' $ac_tmp >/dev/null 2>&1; then
     # we have Fortran!  That worked...
+    ac_cv_prog_fpp_free=$ac_fpp_command
     ac_cv_prog_fpp=$ac_fpp_command
   fi
   if grep 'syntax error' $ac_tmp >/dev/null 2>&1; then
     # ...oh no it didn't: this line should have been skipped
+    ac_cv_prog_fpp_free=
     ac_cv_prog_fpp=
   fi
 fi
 rm -f conftest*
-])# _AC_TEST_FPP
+ac_ext=$ac_ext_tmp
+])# _AC_TEST_FPP_FREE
 
 
 # _AC_PROG_FPP
@@ -2367,7 +2414,7 @@ AC_LANG_ASSERT(Preprocessed Fortran)
 
 # Let the user specify FPP
 if test -n "$FPP"; then
-  _AC_TEST_FPP([$FPP])
+  _AC_TEST_FPP_FREE([$FPP])
   if test -z "$ac_cv_prog_fpp"; then
     AC_MSG_WARN([user-specified \$FPP ($FPP) does not work])
     FPP=
@@ -2394,7 +2441,7 @@ if test -z "$ac_cv_prog_fpp"; then
   for ac_j in 'fpp' "$CPP" "$CPP -x c" 'cpp' '/lib/cpp' '/usr/ccs/lib/cpp' \
               'g77 -E' '$CC -E' '$CC -E -x c' \
               "$FC -F" "$FC -E" "$F77 -F" "$F77 -E"; do
-    _AC_TEST_FPP([$ac_j])
+    _AC_TEST_FPP_FREE([$ac_j])
     test -n "$ac_cv_prog_fpp" && break;
   done
 fi # test -z "$ac_cv_prog_fpp"
@@ -2423,14 +2470,14 @@ ac_cv_prog_fpp_p,
 [ac_cv_prog_fpp_p=unknown
 AC_LANG_ASSERT(Preprocessed Fortran)
 # This will only be called from AC_PROG_FPP, and as such, the
-# extension *will* be .F.
-ac_ext=F
+# extension *will* be .F90.
+ac_ext=F90
 cat > conftest.$ac_ext << \_ACEOF
 _AC_LANG_PROGRAM_FPP_ONLY
 _ACEOF
 
 AC_LANG_PUSH(Fortran)
-ac_ext=F  # previous line will have reset this
+ac_ext=F90  # previous line will have reset this
 # We must not fail, here, in the case where the filesystem is
 # case-insensitive, so that conftest.F and conftest.f are the same
 # file.
@@ -2440,7 +2487,7 @@ if test -n "$ac_fpp_out"; then
    # the input file as it is being read.  We do clobber it in the
    # end, however, which is why we copy .FPP_SRC_EXT to .$FPP_SRC_EXT
    # each time.
-   ac_tmp='>conftest.tmp && mv conftest.tmp conftest.f'
+   ac_tmp='>conftest.tmp && mv conftest.tmp conftest.f90'
 else
    # conftest.F is preprocessed directly to conftest.f.  We can
    # assume that the filesystem is case-sensitive, since otherwise
@@ -2449,7 +2496,7 @@ else
    ac_tmp=
 fi
 ac_cmd='$FPP $FPPFLAGS conftest.$ac_ext '"$ac_tmp"
-ac_link='$FC $ac_link_obj_flag conftest$ac_exeext $FCFLAGS $LDFLAGS $FCFLAGS_SRCEXT conftest.f $LIBS'
+ac_link='$FC $ac_link_obj_flag conftest$ac_exeext $FCFLAGS $LDFLAGS $FCFLAGS_SRCEXT conftest.f90 $LIBS'
 
 if AC_TRY_EVAL(ac_cmd) &&
      AC_TRY_EVAL(ac_link) && test -s conftest${ac_exeext}; then
@@ -2982,7 +3029,7 @@ _AC_PROG_FPP_P
 _AC_FC_CHECK_CIFS
 # Redefine the compile and link commands for indirect compilation
 if test $ac_cv_fc_cifs = yes; then
-  if test x$ac_fpp_out = x ; then
+  if test "x$ac_fpp_out" = x ; then
     AC_MSG_ERROR([Confused in preprocessing on case-insensitive FS - please report to tow@uszla.me.uk])
   fi
   ac_fpp_compile='${FPP-fpp} $FPPFLAGS $FPPFLAGS_SRCEXT conftest.$ac_ext > conftest.cpp.f && ${FC-fc} -c $FCFLAGS -o conftest.o conftest.cpp.f >&AS_MESSAGE_LOG_FD; rm conftest.cpp.f'

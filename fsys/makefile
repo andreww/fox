@@ -1,12 +1,12 @@
 #
 default: install
 #
-OBJFILES= m_pxf_abort_flush.o pxf.o # m_ieee.o
+OBJFILES= m_pxf_abort_flush.$(OBJEXT) pxf.$(OBJEXT) # m_ieee.o
 #
 LIBRARY=libfsys.a
 INCFLAGS=
 #
-pxf.o: m_pxf_abort_flush.o
+pxf.$(OBJEXT): m_pxf_abort_flush.$(OBJEXT)
 #
 #---------NOTHING SHOULD NEED TO BE CHANGED BELOW THIS LINE-----
 #
@@ -28,4 +28,4 @@ install: $(OBJFILES)
       	    $(CP) $$i $(MOD_DIR); done
 #
 clean:
-	rm -f *.o  *.$(MOD_EXT) $(LIBRARY)
+	rm -f *.$(OBJEXT) *.$(MOD_EXT) $(LIBRARY)

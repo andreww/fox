@@ -9,8 +9,8 @@ M4FILES = m_dom_types.m4 m_dom_node.m4 m_dom_nodelist.m4 \
           m_dom_processing_instruction.m4 m_dom_text.m4 \
  	  m_dom_common.m4 m_dom_exception.m4 m_dom_dom.m4 \
           m_dom_namespaces.m4 m_dom_configuration.m4
-OBJFILES= m_dom_error.o m_dom_parse.o m_dom_utils.o \
-	  m_dom_dom.o FoX_dom.o
+OBJFILES= m_dom_error.$(OBJEXT) m_dom_parse.$(OBJEXT) m_dom_utils.$(OBJEXT) \
+	  m_dom_dom.$(OBJEXT) FoX_dom.$(OBJEXT)
 #
 LIBRARY=libFoX_dom.a
 INCFLAGS=$(MOD_PREFIX)../objs/finclude
@@ -43,9 +43,9 @@ install: $(OBJFILES)
            $(CP) $$i $(MOD_DIR); done
 #
 clean:
-	rm -f *.o  *.$(MOD_EXT) $(LIBRARY)
+	rm -f *.$(OBJEXT)  *.$(MOD_EXT) $(LIBRARY)
 # DO NOT DELETE THIS LINE - used by make depend
-FoX_dom.o: m_dom_dom.o m_dom_error.o m_dom_parse.o m_dom_utils.o
-m_dom_dom.o: m_dom_error.o
-m_dom_parse.o: m_dom_dom.o m_dom_error.o
-m_dom_utils.o: m_dom_dom.o m_dom_error.o
+FoX_dom.$(OBJEXT): m_dom_dom.$(OBJEXT) m_dom_error.$(OBJEXT) m_dom_parse.$(OBJEXT) m_dom_utils.$(OBJEXT)
+m_dom_dom.$(OBJEXT): m_dom_error.$(OBJEXT)
+m_dom_parse.$(OBJEXT): m_dom_dom.$(OBJEXT) m_dom_error.$(OBJEXT)
+m_dom_utils.$(OBJEXT): m_dom_dom.$(OBJEXT) m_dom_error.$(OBJEXT)

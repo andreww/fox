@@ -1,5 +1,8 @@
 *~
 *.o
+*.obj
+*.fwd
+*.map
 *.mod
 *.MOD
 *.m

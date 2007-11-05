@@ -1,8 +1,8 @@
 #
 default: install
 #
-OBJFILES= m_wxml_escape.o m_wxml_core.o \
-          m_wxml_overloads.o FoX_wxml.o
+OBJFILES= m_wxml_escape.$(OBJEXT) m_wxml_core.$(OBJEXT) \
+          m_wxml_overloads.$(OBJEXT) FoX_wxml.$(OBJEXT)
 #
 LIBRARY=libFoX_wxml.a
 INCFLAGS=$(MOD_PREFIX)../objs/finclude
@@ -30,10 +30,10 @@ install: $(OBJFILES)
 	  $(CP) $$i $(MOD_DIR); done
 #
 clean:
-	rm -f *.o  *.$(MOD_EXT) $(LIBRARY)
+	rm -f *.$(OBJEXT) *.$(MOD_EXT) $(LIBRARY)
 
 m_wxml_overloads.f90: m_wxml_overloads.m4
 # DO NOT DELETE THIS LINE - used by make depend
-FoX_wxml.o: m_wxml_core.o m_wxml_overloads.o
-m_wxml_core.o: m_wxml_escape.o
-m_wxml_overloads.o: m_wxml_core.o
+FoX_wxml.$(OBJEXT): m_wxml_core.$(OBJEXT) m_wxml_overloads.$(OBJEXT)
+m_wxml_core.$(OBJEXT): m_wxml_escape.$(OBJEXT)
+m_wxml_overloads.$(OBJEXT): m_wxml_core.$(OBJEXT)

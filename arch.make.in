@@ -1,5 +1,5 @@
 .SUFFIXES:
-.SUFFIXES: .o .a .f90 .F90 .exe .m4
+.SUFFIXES: .@OBJEXT@ .a .f90 .F90 .m4 @EXEEXT@
 
 BUILD_TARGETS=@BUILD_TARGETS@
 
@@ -24,13 +24,15 @@ MOD_PREFIX=@FC_MOD_FLAG@
 LIB_PREFIX=-L
 #
 MOD_EXT=@FC_MODEXT@
+OBJEXT=@OBJEXT@
+EXEEXT=@EXEEXT@
 
 #INCFLAGS must be set by the user makefile
 
 #Dependency rules are created by autoconf according to whether
 #discrete preprocessing is necessary or not.
-.F90.o:
+.F90.@OBJEXT@:
 	@F90_RULE@
-.f90.o:
+.f90.@OBJEXT@:
 	$(FC) -c $(FFLAGS) $(INCFLAGS) $(FCFLAGS_free_f90)  $<
 

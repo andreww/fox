@@ -1,7 +1,7 @@
 #
 default: install
 #
-OBJFILES=FoX_utils.o fox_m_utils_mtprng.o fox_m_utils_uuid.o
+OBJFILES=FoX_utils.$(OBJEXT) fox_m_utils_mtprng.$(OBJEXT) fox_m_utils_uuid.$(OBJEXT)
 #
 LIBRARY=libFoX_utils.a
 INCFLAGS=$(MOD_PREFIX)../objs/finclude
@@ -25,7 +25,7 @@ install: $(OBJFILES)
       	    $(CP) $$i $(MOD_DIR); done
 #
 clean:
-	rm -f *.o  *.$(MOD_EXT) $(LIBRARY)
+	rm -f *.$(OBJEXT)  *.$(MOD_EXT) $(LIBRARY)
 # DO NOT DELETE THIS LINE - used by make depend
-FoX_utils.o: fox_m_utils_uuid.o
-fox_m_utils_uuid.o: fox_m_utils_mtprng.o
+FoX_utils.$(OBJEXT): fox_m_utils_uuid.$(OBJEXT)
+fox_m_utils_uuid.$(OBJEXT): fox_m_utils_mtprng.$(OBJEXT)
