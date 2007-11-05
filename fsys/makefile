@@ -3,7 +3,7 @@ default: install
 #
 OBJFILES= m_pxf_abort_flush.$(OBJEXT) pxf.$(OBJEXT) # m_ieee.o
 #
-LIBRARY=libfsys.a
+LIBRARY=libfsys.$(LIBEXT)
 INCFLAGS=
 #
 pxf.$(OBJEXT): m_pxf_abort_flush.$(OBJEXT)
@@ -20,7 +20,7 @@ include ../arch.make
 #
 CP=cp -p
 install: $(OBJFILES)
-	@echo "  ==> Updating $(LIBRARY) with $(OBJFILES)"
+	@echo "  ==> Creating $(LIBRARY) with $(OBJFILES)"
 	@$(AR) $(ARFLAGS_EXTRA) cru $(LIBRARY) $(OBJFILES)
 	@$(RANLIB) $(LIBRARY)
 	$(CP) $(LIBRARY) $(LIB_DIR) 

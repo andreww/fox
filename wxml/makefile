@@ -4,7 +4,7 @@ default: install
 OBJFILES= m_wxml_escape.$(OBJEXT) m_wxml_core.$(OBJEXT) \
           m_wxml_overloads.$(OBJEXT) FoX_wxml.$(OBJEXT)
 #
-LIBRARY=libFoX_wxml.a
+LIBRARY=libFoX_wxml.$(LIBEXT)
 INCFLAGS=$(MOD_PREFIX)../objs/finclude
 #
 .m4.f90:
@@ -23,6 +23,7 @@ include ../arch.make
 #
 CP=cp -p
 install: $(OBJFILES)
+	@echo "==> Creating $(LIBRARY) with $(OBJFILES)"
 	$(AR) $(ARFLAGS_EXTRA) cru $(LIBRARY) $(OBJFILES)
 	$(RANLIB) $(LIBRARY)
 	$(CP) $(LIBRARY) $(LIB_DIR)

@@ -8,7 +8,7 @@ OBJFILES=m_common_array_str.$(OBJEXT) m_common_attrs.$(OBJEXT) m_common_buffer.$
          m_common_realtypes.$(OBJEXT) m_common_element.$(OBJEXT) m_common_struct.$(OBJEXT) \
 	 m_common_entity_expand.$(OBJEXT) m_common_string.$(OBJEXT)
 #
-LIBRARY=libFoX_common.a
+LIBRARY=libFoX_common.$(LIBEXT)
 INCFLAGS=$(MOD_PREFIX)../objs/finclude
 #
 #
@@ -22,7 +22,7 @@ include ../arch.make
 #
 CP=cp -p
 install: $(OBJFILES)
-	@echo "  ==> Updating $(LIBRARY) with $(OBJFILES)"
+	@echo "  ==> Creating $(LIBRARY) with $(OBJFILES)"
 	@$(AR) $(ARFLAGS_EXTRA) cru $(LIBRARY) $(OBJFILES)
 	@$(RANLIB) $(LIBRARY)
 	$(CP) $(LIBRARY) $(LIB_DIR) 

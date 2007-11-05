@@ -6,7 +6,7 @@ OBJFILES=FoX_wcml.$(OBJEXT) m_wcml_coma.$(OBJEXT) m_wcml_core.$(OBJEXT) m_wcml_s
          m_wcml_lattice.$(OBJEXT) m_wcml_geometry.$(OBJEXT) m_wcml_molecule.$(OBJEXT) \
          m_wcml_lists.$(OBJEXT)
 #
-LIBRARY=libFoX_wcml.a
+LIBRARY=libFoX_wcml.$(LIBEXT)
 INCFLAGS=$(MOD_PREFIX)../objs/finclude
 #
 .m4.f90:
@@ -22,7 +22,7 @@ include ../arch.make
 #
 CP=cp -p
 install: $(OBJFILES)
-	@echo "  ==> Updating $(LIBRARY) with $(OBJFILES)"
+	@echo "  ==> Creating $(LIBRARY) with $(OBJFILES)"
 	@$(AR) $(ARFLAGS_EXTRA) cru $(LIBRARY) $(OBJFILES)
 	@$(RANLIB) $(LIBRARY)
 	$(CP) $(LIBRARY) $(LIB_DIR) ;

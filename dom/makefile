@@ -12,7 +12,7 @@ M4FILES = m_dom_types.m4 m_dom_node.m4 m_dom_nodelist.m4 \
 OBJFILES= m_dom_error.$(OBJEXT) m_dom_parse.$(OBJEXT) m_dom_utils.$(OBJEXT) \
 	  m_dom_dom.$(OBJEXT) FoX_dom.$(OBJEXT)
 #
-LIBRARY=libFoX_dom.a
+LIBRARY=libFoX_dom.$(LIBEXT)
 INCFLAGS=$(MOD_PREFIX)../objs/finclude
 #
 #---------NOTHING SHOULD NEED TO BE CHANGED BELOW THIS LINE-----
@@ -35,9 +35,10 @@ m_dom_dom.f90: $(M4FILES)
 #
 CP=cp -p
 install: $(OBJFILES)
-	@echo "  ==> Updating $(LIBRARY) with $(OBJFILES)"
-	$(AR) $(ARFLAGS_EXTRA) cru $(LIBRARY) $(OBJFILES)
-	$(RANLIB) $(LIBRARY)
+	@echo "  ==> Creating $(LIBRARY) with $(OBJFILES)"
+	lf95 $(OBJFILES) -out $(LIBRARY)
+	# $(AR) $(ARFLAGS_EXTRA) cru $(LIBRARY) $(OBJFILES)
+	# $(RANLIB) $(LIBRARY)
 	$(CP) $(LIBRARY) $(LIB_DIR)
 	for i in *.$(MOD_EXT) ; do  \
            $(CP) $$i $(MOD_DIR); done

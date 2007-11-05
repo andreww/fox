@@ -3,7 +3,7 @@ default: install
 #
 OBJFILES=FoX_utils.$(OBJEXT) fox_m_utils_mtprng.$(OBJEXT) fox_m_utils_uuid.$(OBJEXT)
 #
-LIBRARY=libFoX_utils.a
+LIBRARY=libFoX_utils.$(LIBEXT)
 INCFLAGS=$(MOD_PREFIX)../objs/finclude
 #
 #
@@ -17,7 +17,7 @@ include ../arch.make
 #
 CP=cp -p
 install: $(OBJFILES)
-	@echo "  ==> Updating $(LIBRARY) with $(OBJFILES)"
+	@echo "  ==> Creating $(LIBRARY) with $(OBJFILES)"
 	@$(AR) $(ARFLAGS_EXTRA) cru $(LIBRARY) $(OBJFILES)
 	@$(RANLIB) $(LIBRARY)
 	$(CP) $(LIBRARY) $(LIB_DIR) 
