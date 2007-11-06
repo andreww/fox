@@ -4,6 +4,8 @@ include ../arch.make
 
 default: $(BUILD_TARGETS)
 
+INCFLAGS=$$(../FoX-config --fcflags)
+
 EXAMPLES=dom_example$(EXEEXT) dom_example_2$(EXEEXT) sax_example$(EXEEXT) sax_example_2$(EXEEXT) wcml_example$(EXEEXT) wxml_example$(EXEEXT)
 
 dom_lib: dom_example$(EXEEXT) dom_example_2$(EXEEXT)
