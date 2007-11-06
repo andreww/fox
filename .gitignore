@@ -16,6 +16,9 @@ objs
 wcml_example
 wxml_example
 sax_example
+sax_example_2
+dom_example
+dom_example_2
 .FoX
 .config
 *.exe

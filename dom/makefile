@@ -36,9 +36,8 @@ m_dom_dom.f90: $(M4FILES)
 CP=cp -p
 install: $(OBJFILES)
 	@echo "  ==> Creating $(LIBRARY) with $(OBJFILES)"
-	lf95 $(OBJFILES) -out $(LIBRARY)
-	# $(AR) $(ARFLAGS_EXTRA) cru $(LIBRARY) $(OBJFILES)
-	# $(RANLIB) $(LIBRARY)
+	$(AR) $(ARFLAGS_EXTRA) cru $(LIBRARY) $(OBJFILES)
+	$(RANLIB) $(LIBRARY)
 	$(CP) $(LIBRARY) $(LIB_DIR)
 	for i in *.$(MOD_EXT) ; do  \
            $(CP) $$i $(MOD_DIR); done
