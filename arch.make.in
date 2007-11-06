@@ -26,6 +26,7 @@ LIB_PREFIX=-L
 MOD_EXT=@FC_MODEXT@
 OBJEXT=@OBJEXT@
 EXEEXT=@EXEEXT@
+LIBEXT=@LIBEXT@
 
 #INCFLAGS must be set by the user makefile
 

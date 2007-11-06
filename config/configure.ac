@@ -1,4 +1,4 @@
-AC_INIT([FoX],[3.0],[tow21@cam.ac.uk])
+AC_INIT([FoX],[3.0],[tow@uszla.me.uk])
 AC_CONFIG_SRCDIR([README.FoX.txt])
 dnl
 dnl All macros are kept in ./m4:
@@ -149,6 +149,28 @@ dnl Fix up DEFS -> FPPFLAGS conversion.
 for i in $DEFS; do
    FPPFLAGS="$FPPFLAGS $FPPFLAGS_DEF$i"
 done
+dnl
+dnl Library functionality ...
+dnl How to make a static library ...
+dnl we should test for this, but I don't know how yet.
+dnl
+dnl Most command-line windows compilers will want to use
+dnl the MS linking tools, which require a .lib extension
+dnl g95 & gfortran wont, they use normal Unix conventions.
+dnl Everyone else everywhere uses unix conventions
+case $host_os in
+  *cygwin*)
+     if test $FC_ID = G95 -o $FC_ID = Gfortran; then
+       LIBEXT=a
+     else
+       LIBEXT=lib
+     fi
+     ;;
+  *)
+     LIBEXT=a
+     ;;
+esac
+AC_SUBST(LIBEXT)
 dnl
 dnl Installation instructions ..
 TW_PROG_CYGPATH_W

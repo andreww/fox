@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
 comp_prefix=@OBJSDIR@
-moddir=$comp_prefix/finclude
-libdir=$comp_prefix/lib
-version=@version@
+moddir=$(@CYGPATH_W@ $comp_prefix/finclude)
+libdir=$(@CYGPATH_W@ $comp_prefix/lib)
+version=@PACKAGE_VERSION@
 
 usage()
 {
@@ -68,39 +68,39 @@ while test $# -gt 0; do
 done
 
 if [[ $MODULES = *fsys* ]]; then
-  LIBS=-lfsys
+  LIBS=$libdir/libfsys.@LIBEXT@
 fi
 if [[ $MODULES = *common* ]]; then
-  LIBS="-lFoX_common $LIBS"
+  LIBS="$libdir/libFoX_common.@LIBEXT@ $LIBS"
 fi
 if [[ $MODULES = *utils* ]]; then
-  LIBS="-lFoX_utils $LIBS"
+  LIBS="$libdir/libFoX_utils.@LIBEXT@ $LIBS"
 fi
 if [[ $MODULES = *wxml* ]]; then
-  LIBS="-lFoX_wxml $LIBS"
+  LIBS="$libdir/libFoX_wxml.@LIBEXT@ $LIBS"
 fi
 if [[ $MODULES = *wcml* ]]; then
-  LIBS="-lFoX_wcml $LIBS"
+  LIBS="$libdir/libFoX_wcml.@LIBEXT@ $LIBS"
 fi
 if [[ $MODULES = *sax* ]]; then
-  LIBS="-lFoX_sax $LIBS"
+  LIBS="$libdir/libFoX_sax.@LIBEXT@ $LIBS"
 fi
 if [[ $MODULES = *dom* ]]; then
-  LIBS="-lFoX_dom $LIBS"
+  LIBS="$libdir/libFoX_dom.@LIBEXT@ $LIBS"
 fi
 if [ -z "$LIBS" ]; then
-  LIBS="-lFoX_sax -lFoX_wcml -lFoX_wxml -lFoX_common -lfsys"
+  LIBS="$libdir/libFoX_sax.@LIBEXT@ $libdir/libFoX_wcml.@LIBEXT@ $libdir/libFoX_wxml.@LIBEXT@ $libdir/libFoX_common.@LIBEXT@ $libdir/libfsys.@LIBEXT@"
 fi
 
 case $FLAGS in
   FC)
-    echo @FC_MOD_FLAG@"$(@CYGPATH_W@ $moddir)"
+    echo @FC_MOD_FLAG@"$moddir"
     ;;
   LD)
-    echo -L"$(@CYGPATH_W@ $libdir)" $LIBS
+    echo $LIBS
     ;;
   both)
-    echo @FC_MOD_FLAG@"$(@CYGPATH_W@ $moddir)" -L"$(@CYGPATH_W@ $libdir)" $LIBS
+    echo @FC_MOD_FLAG@"$moddir" $LIBS
 esac 
 
 exit 0
