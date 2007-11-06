@@ -60,7 +60,8 @@ contains
     character(len=*), intent(in), optional :: publicId
 
     integer :: i
-    type(notation), dimension(:), allocatable :: temp
+    type(notation), dimension(:), pointer :: temp
+    ! pointer not allocatable to avoid bug on Lahey
 
     if (.not.present(systemId) .and. .not.present(publicId)) &
       call FoX_error("Neither System nor Public Id specified for notation: "//name)
@@ -79,6 +80,7 @@ contains
       nlist%notations(i)%systemId => temp(i)%systemId
       nlist%notations(i)%publicId => temp(i)%publicId
     enddo
+    deallocate(temp)
 
     allocate(nlist%notations(i)%name(len(name)))
     nlist%notations(i)%name = vs_str(name)
