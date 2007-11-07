@@ -1,6 +1,7 @@
 #!/bin/sh -e
 
-export INCFLAGS=`../../FoX-config --fcflags --wxml`
+INCFLAGS=`../../FoX-config --fcflags`
+export INCFLAGS
 make clean
 rm -f passed.score failed.score
 rm -f tests.out failed.out

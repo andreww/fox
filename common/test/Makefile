@@ -1,9 +1,9 @@
 include ../../arch.make
 
-INCFLAGS=`../../FoX-config --fcflags --wxml`
+INCFLAGS=`../../FoX-config --fcflags`
 
-.f90.exe:
-	$(FC) $(FFLAGS) $(INCFLAGS) $(LDFLAGS) $(FCFLAGS_free_f90) -o $@ $< `../../FoX-config --libs --wxml`
+test_str.exe: test_str.f90
+	$(FC) $(FFLAGS) $(INCFLAGS) $(LDFLAGS) $(FCFLAGS_free_f90) -o $@ test_str.f90 `../../FoX-config --libs --common`
 	
 clean:
 	rm -f *.o *.exe

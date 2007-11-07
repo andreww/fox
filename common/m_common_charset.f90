@@ -4,12 +4,9 @@ module m_common_charset
   ! take much more work and need a proper unicode library.
 
   use m_common_string, only: toLower
+
   implicit none
   private
-
-  interface operator(.in.)
-    module procedure belongs
-  end interface
 
 !!$  character(len=1), parameter :: ASCII = &
 !!$achar(0)//achar(1)//achar(2)//achar(3)//achar(4)//achar(5)//achar(6)//achar(7)//achar(8)//achar(9)//&
@@ -64,8 +61,6 @@ module m_common_charset
   character(len=*), parameter :: XML_INITIALENCODINGCHARS = lowerCase//upperCase
   character(len=*), parameter :: XML_ENCODINGCHARS = lowerCase//upperCase//digits//'._-'
 
-  public :: operator(.in.)
-
   public :: validchars
   public :: whitespace
   public :: uppercase
@@ -97,13 +92,6 @@ module m_common_charset
   public :: allowed_encoding
 
 contains
-
-  function belongs(c, str) result(p)
-    character, intent(in) :: c
-    character(len=*), intent(in) :: str
-    logical :: p
-    p = (verify(c, str)==0)
-  end function belongs
 
   pure function isLegalChar(c, xml_version) result(p)
     character, intent(in) :: c
