@@ -25,6 +25,8 @@ MOD_PREFIX=@FC_MOD_FLAG@
 LIB_PREFIX=-L
 #
 MOD_EXT=@FC_MODEXT@
+MKDIR_P=@MKDIR_P@
+INSTALL=@INSTALL@
 
 #INCFLAGS must be set by the user makefile
 

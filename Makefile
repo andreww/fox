@@ -9,17 +9,16 @@ objsdir:
 	mkdir -p objs/lib objs/finclude
 #
 install: objsdir $(BUILD_TARGETS)
-	mkdir -p $(install_prefix)/lib $(install_prefix)/finclude
-	cp objs/lib/* $(install_prefix)/lib
-	cp objs/finclude/* $(install_prefix)/finclude
+	$(MKDIR_P) $(install_prefix)/lib $(install_prefix)/finclude $(install_prefix)/bin
+	$(INSTALL) objs/lib/* $(install_prefix)/lib
+	$(INSTALL) -m 644 objs/finclude/* $(install_prefix)/finclude
+	$(INSTALL) FoX-config $(install_prefix)/bin
 #
 examples_build:
 	(cd examples; make)
 #
 check: dom_check sax_check wxml_check wcml_check
 #---------------------------
-INCFLAGS=-Iobjs/finclude
-#
 #
 # Recursive make for each module
 #

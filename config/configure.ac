@@ -145,6 +145,8 @@ for i in $DEFS; do
 done
 dnl
 dnl Installation instructions ..
+AC_PROG_INSTALL
+AC_PROG_MKDIR_P
 TW_PROG_CYGPATH_W
 OBJSDIR=`pwd`/objs
 AC_SUBST(OBJSDIR)
