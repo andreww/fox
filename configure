@@ -7174,3 +7174,4 @@ fi
 
 chmod +x FoX-config
 touch .config
+touch */*.f90
