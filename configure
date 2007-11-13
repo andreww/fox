@@ -633,6 +633,7 @@ FPP_COMPILE_EXT
 FPP_OUTPUT
 FPPFLAGS_free_F90
 F90_RULE
+LINK_O_FLAG
 RANLIB
 FFLAGS_MPI
 BUILD_TARGETS
@@ -1913,7 +1914,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:1916:" \
+echo "$as_me:1917:" \
      "checking for Fortran compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -5461,6 +5462,8 @@ elif test $ac_cv_fpp_build_rule = indirect; then
   fi
 fi
 
+LINK_O_FLAG=$ac_link_obj_flag
+
 if test -n "$ac_tool_prefix"; then
   # Extract the first word of "${ac_tool_prefix}ranlib", so it can be a program name with args.
 set dummy ${ac_tool_prefix}ranlib; ac_word=$2
@@ -7421,6 +7424,7 @@ FPP_COMPILE_EXT!$FPP_COMPILE_EXT$ac_delim
 FPP_OUTPUT!$FPP_OUTPUT$ac_delim
 FPPFLAGS_free_F90!$FPPFLAGS_free_F90$ac_delim
 F90_RULE!$F90_RULE$ac_delim
+LINK_O_FLAG!$LINK_O_FLAG$ac_delim
 RANLIB!$RANLIB$ac_delim
 FFLAGS_MPI!$FFLAGS_MPI$ac_delim
 BUILD_TARGETS!$BUILD_TARGETS$ac_delim
@@ -7437,7 +7441,7 @@ LIBOBJS!$LIBOBJS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 83; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 84; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5

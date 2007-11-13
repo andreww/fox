@@ -43,6 +43,10 @@ dnl Generate dependency rules according to whether we need
 dnl separate preprocessing stage.
 AC_SUBST(F90_RULE)
 dnl
+dnl check flag needed to name linked executables
+LINK_O_FLAG=$ac_link_obj_flag
+AC_SUBST(LINK_O_FLAG)
+dnl
 AC_PROG_RANLIB
 dnl
 dnl Compile-type options.

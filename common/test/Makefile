@@ -2,8 +2,11 @@ include ../../arch.make
 
 INCFLAGS=`../../FoX-config --fcflags`
 
-test_str.exe: test_str.f90
-	$(FC) $(FFLAGS) $(INCFLAGS) $(LDFLAGS) $(FCFLAGS_free_f90) -o $@ test_str.f90 `../../FoX-config --libs --common`
-	
+.f90.exe: ../libFoX_common.a
+	$(FC) $(FFLAGS) $(INCFLAGS) $(LDFLAGS) $(FCFLAGS_free_f90) $(LINK_O_FLAG) $@ $< `../../FoX-config --libs --common`
+
+check:
+	OBJEXT=$(OBJEXT) ./run_tests.sh
+
 clean:
-	rm -f *.o *.exe
+	rm -f *.$(OBJEXT) *.exe

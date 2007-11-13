@@ -172,8 +172,8 @@ echo Arrays:
 ./test_str.sh '(/0.0e0, 100e0/),"s3"' "0.00e0 1.00e2"
 ./test_str.sh '(/0.35e0, 0.0e0, 100e0/),"s3"' "3.50e-1 0.00e0 1.00e2"
 echo Matrices
-./test_str.sh 'reshape((/0.0,1.0,3.0,4.0,4.0,5.0/),(/3,2/),"r1"' "0.0 1.0 3.0 4.0 4.0 5.0"
-./test_str.sh 'reshape((/0.0,1.0,2.0,3.0,4.0,5.0/), (/3,2/)),"r1"' "0.0 1.0 2.0 3.0 4.0 5.0"
+./test_str.sh 'reshape((/0.0,1.0,3.0,4.0,4.0,5.0/),(/3,2/)),"r1"' "0.0 1.0 3.0 4.0 4.0 5.0"
+./test_str.sh 'reshape((/0.0,1.0,2.0,3.0,4.0,5.0/),(/3,2/)),"r1"' "0.0 1.0 2.0 3.0 4.0 5.0"
 
 echo "Testing double precision to string conversion"
 echo Scalars:
@@ -285,8 +285,8 @@ echo Arrays:
 ./test_str.sh '(/0.0d0, 100d0/),"s3"' "0.00e0 1.00e2"
 ./test_str.sh '(/0.35d0, 0.0d0, 100d0/),"s3"' "3.50e-1 0.00e0 1.00e2"
 echo Matrices
-./test_str.sh 'reshape((/0.0d0,1.0d0,3.0d0,4.0d0,4.0d0,5.0d0/),(/3,2/),"r1"' "0.0 1.0 3.0 4.0 4.0 5.0"
-./test_str.sh 'reshape((/0.0d0,1.0d0,2.0d0,3.0d0,4.0d0,5.0d0/), (/3,2/)),"r1"' "0.0 1.0 2.0 3.0 4.0 5.0"
+./test_str.sh 'reshape((/0.0d0,1.0d0,3.0d0,4.0d0,4.0d0,5.0d0/),(/3,2/)),"r1"' "0.0 1.0 3.0 4.0 4.0 5.0"
+./test_str.sh 'reshape((/0.0d0,1.0d0,2.0d0,3.0d0,4.0d0,5.0d0/),(/3,2/)),"r1"' "0.0 1.0 2.0 3.0 4.0 5.0"
 
 echo "Testing complex float to string conversion"
 echo "Scalars:"

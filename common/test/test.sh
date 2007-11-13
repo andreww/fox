@@ -13,7 +13,7 @@ then
   if diff test.xml $1.xml > /dev/null; then
      echo $1 >> failed.out
      echo "------------" >> failed.out
-     diff test.xml $1.xml >> failed.out
+     diff -u test.xml $1.xml >> failed.out
      echo "------------" >> failed.out
   else
     passed=yes
@@ -25,7 +25,7 @@ then
   if diff test.out $1.out | grep "^>" > /dev/null; then
      echo $1 >> failed.out
      echo "------------" >> failed.out
-     diff test.out $1.out >> failed.out
+     diff -u test.out $1.out >> failed.out
      echo "------------" >> failed.out
   else
     passed=yes
