@@ -2,7 +2,6 @@
 
 INCFLAGS=`../../FoX-config --fcflags`
 export INCFLAGS
-make clean
 rm -f passed.score failed.score
 rm -f tests.out failed.out
 touch passed.score failed.score
