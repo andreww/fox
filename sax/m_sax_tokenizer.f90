@@ -3,7 +3,7 @@ module m_sax_tokenizer
   use m_common_array_str, only: vs_str, str_vs, vs_str_alloc, devnull
   use m_common_charset, only: XML_WHITESPACE, &
     XML_INITIALENCODINGCHARS, XML_ENCODINGCHARS, &
-    XML1_0, XML1_1, operator(.in.), upperCase, digits, hexdigits, &
+    XML1_0, XML1_1, upperCase, digits, hexdigits, &
     isInitialNameChar, isXML1_0_NameChar, isXML1_1_NameChar
   use m_common_error, only: ERR_WARNING, add_error, in_error
   use m_common_entities, only: existing_entity, &
@@ -101,7 +101,7 @@ contains
         endif
       elseif (c=='[') then
         fx%token => vs_str_alloc('[')
-      elseif (c.in.upperCase) then
+      elseif (verify(c,upperCase)==0) then
         call get_characters_until_not_one_of(fb, upperCase, iostat)
         if (iostat/=0) return
         fx%token => vs_str_alloc(c//str_vs(fb%namebuffer))
@@ -141,7 +141,7 @@ contains
     elseif (fx%state==ST_DTD_ELEMENT_CONTENTS) then
       c = get_characters(fb, 1, iostat)
       if (iostat/=0) return
-      if (c.in.XML_WHITESPACE) then
+      if (verify(c,XML_WHITESPACE)==0) then
         call get_characters_until_all_of(fb, '>', iostat)
         if (iostat/=0) return
         fx%next_token => vs_str_alloc(get_characters(fb, 1, iostat))
@@ -156,7 +156,7 @@ contains
     elseif (fx%state==ST_DTD_ATTLIST_CONTENTS) then
       c = get_characters(fb, 1, iostat)
       if (iostat/=0) return
-      if (c.in.XML_WHITESPACE) then
+      if (verify(c,XML_WHITESPACE)==0) then
         call get_characters_until_all_of(fb, '>', iostat)
         if (iostat/=0) return
         fx%next_token => vs_str_alloc(get_characters(fb, 1, iostat))
@@ -259,7 +259,7 @@ contains
         c = get_characters(fb, 1, iostat)
         if (iostat/=0) return
         ! do some stuff
-        if (c.in."%>[]") then
+        if (verify(c,"%>[]")==0) then
           fx%token => vs_str_alloc(c)
         elseif (c=='<') then
           !it's a comment or a PI ... or a DTD keyword.
@@ -293,7 +293,7 @@ contains
         if (iostat/=0) return
         c = get_characters(fb, 1, iostat)
         if (iostat/=0) return
-        if (c.in.">[]") then
+        if (verify(c,">[]")==0) then
           fx%token => vs_str_alloc(c)
         elseif (c=='<') then
           !it's a comment or a PI ... or a DTD keyword.
@@ -348,7 +348,7 @@ contains
       c = get_characters(fb, 1, iostat)
       if (iostat/=0) return
 
-      if (c.in.'>=[') then
+      if (verify(c,'>=[')==0) then
         !No further investigation needed, that's the token
         fx%token => vs_str_alloc(c)
 
@@ -414,7 +414,7 @@ contains
               endif
               fx%token => vs_str_alloc('&#x'//str_vs(fb%namebuffer)//';')
               deallocate(fb%namebuffer)
-            elseif (c.in.digits) then
+            elseif (verify(c,digits)==0) then
               call get_characters_until_not_one_of(fb, digits, iostat)
               if (iostat/=0) return
               c2 = get_characters(fb, 1, iostat)
@@ -508,11 +508,11 @@ contains
       endif
     enddo
     c = read_char(fb, iostat); if (iostat/=0) return
-    if (.not.(c.in.XML_WHITESPACE)) then
+    if (verify(c,XML_WHITESPACE)/=0) then
       call rewind_file(fb)
       return
     endif
-    do while (c.in.XML_WHITESPACE)
+    do while (verify(c,XML_WHITESPACE)==0)
       c = read_char(fb, iostat); if (iostat/=0) return
     enddo
     call push_chars(fb, c)
@@ -526,10 +526,10 @@ contains
     call check_version
     if (iostat/=0) return
     c = read_char(fb, iostat); if (iostat/=0) return
-    if (.not.(c.in.XML_WHITESPACE).and.c/='?') then
+    if (verify(c,XML_WHITESPACE)/=0.and.c/='?') then
       call add_error(fx%error_stack, "Missing whitespace in XML declaration");return
     endif
-    do while (c.in.XML_WHITESPACE)
+    do while (verify(c,XML_WHITESPACE)==0)
       c = read_char(fb, iostat); if (iostat/=0) return
     enddo
     if (c=='?') then
@@ -560,10 +560,10 @@ contains
       call check_encoding
       if (iostat/=0.or.in_error(fx%error_stack)) return
       c = read_char(fb, iostat); if (iostat/=0) return
-      if (.not.(c.in.XML_WHITESPACE).and.c/='?') then
+      if (verify(c,XML_WHITESPACE)/=0.and.c/='?') then
         call add_error(fx%error_stack, "Missing whitespace in XML declaration");return
       endif
-      do while (c.in.XML_WHITESPACE)
+      do while (verify(c,XML_WHITESPACE)==0)
         c = read_char(fb, iostat); if (iostat/=0) return
       enddo
       if (c=='?') then
@@ -586,10 +586,10 @@ contains
       if (iostat/=0.or.in_error(fx%error_stack)) return
     endif
     c = read_char(fb, iostat); if (iostat/=0) return
-    if (.not.(c.in.XML_WHITESPACE).and.c/='?') then
+    if (verify(c,XML_WHITESPACE)/=0.and.c/='?') then
       call add_error(fx%error_stack, "Missing whitespace in XML declaration");return
     endif
-    do while (c.in.XML_WHITESPACE)
+    do while (verify(c,XML_WHITESPACE)==0)
       c = read_char(fb, iostat); if (iostat/=0) return
     enddo
     if (c=='?') then
@@ -607,14 +607,14 @@ contains
     subroutine check_version
       character :: c, quotechar
       c = read_char(fb, iostat); if (iostat/=0) return
-      do while (c.in.XML_WHITESPACE)
+      do while (verify(c,XML_WHITESPACE)==0)
         c = read_char(fb, iostat); if (iostat/=0) return
       enddo
       if (c/="=") then
         call add_error(fx%error_stack, "Expecting ="); return
       endif
       c = read_char(fb, iostat); if (iostat/=0) return
-      do while (c.in.XML_WHITESPACE)
+      do while (verify(c,XML_WHITESPACE)==0)
         c = read_char(fb, iostat); if (iostat/=0) return
       enddo
       if (c/="'".and.c/='"') then
@@ -647,14 +647,14 @@ contains
       character, dimension(:), pointer :: buf, tempbuf
       integer :: i
       c = read_char(fb, iostat); if (iostat/=0) return
-      do while (c.in.XML_WHITESPACE)
+      do while (verify(c,XML_WHITESPACE)==0)
         c = read_char(fb, iostat); if (iostat/=0) return
       enddo
       if (c/="=") then
         call add_error(fx%error_stack, "Expecting ="); return
       endif
       c = read_char(fb, iostat); if (iostat/=0) return
-      do while (c.in.XML_WHITESPACE)
+      do while (verify(c,XML_WHITESPACE)==0)
         c = read_char(fb, iostat); if (iostat/=0) return
       enddo
       if (c/="'".and.c/='"') then
@@ -662,7 +662,7 @@ contains
       endif
       quotechar = c
       c = read_char(fb, iostat); if (iostat/=0) return
-      if (.not.(c.in.XML_INITIALENCODINGCHARS)) then
+      if (verify(c,XML_INITIALENCODINGCHARS)/=0) then
         call add_error(fx%error_stack, "Illegal character at start of encoding declaration."); return
       endif
       i = 1
@@ -672,7 +672,7 @@ contains
         deallocate(buf)
         return
       endif
-      do while (c.in.XML_ENCODINGCHARS)
+      do while (verify(c,XML_ENCODINGCHARS)==0)
         tempbuf => buf
         i = i+1
         allocate(buf(i))
@@ -697,14 +697,14 @@ contains
     subroutine check_standalone
       character :: c, quotechar
       c = read_char(fb, iostat); if (iostat/=0) return
-      do while (c.in.XML_WHITESPACE)
+      do while (verify(c,XML_WHITESPACE)==0)
         c = read_char(fb, iostat); if (iostat/=0) return
       enddo
       if (c/="=") then
         call add_error(fx%error_stack, "Expecting ="); return
       endif
       c = read_char(fb, iostat); if (iostat/=0) return
-      do while (c.in.XML_WHITESPACE)
+      do while (verify(c,XML_WHITESPACE)==0)
         c = read_char(fb, iostat); if (iostat/=0) return
       enddo
       if (c/="'".and.c/='"') then
@@ -767,7 +767,7 @@ contains
     do 
       if (i > size(s_in)) exit
       ! Firstly, all whitespace must become 0x20
-      if (s_in(i).in.XML_WHITESPACE) then
+      if (verify(s_in(i),XML_WHITESPACE)==0) then
         s_temp(i2) = " "
         ! Then, < is always illegal
         i = i + 1

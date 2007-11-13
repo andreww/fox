@@ -1,14 +1,14 @@
 #
 default: install
 #
-OBJFILES=m_common_array_str.o m_common_attrs.o m_common_buffer.o \
-         m_common_format.o m_common_charset.o m_common_namespaces.o\
-         m_common_error.o m_common_elstack.o m_common_io.o FoX_common.o \
-	 m_common_namecheck.o m_common_entities.o m_common_notations.o \
-         m_common_realtypes.o m_common_element.o m_common_struct.o \
-	 m_common_entity_expand.o m_common_string.o
+OBJFILES=m_common_array_str.$(OBJEXT) m_common_attrs.$(OBJEXT) m_common_buffer.$(OBJEXT) \
+         m_common_format.$(OBJEXT) m_common_charset.$(OBJEXT) m_common_namespaces.$(OBJEXT)\
+         m_common_error.$(OBJEXT) m_common_elstack.$(OBJEXT) m_common_io.$(OBJEXT) FoX_common.$(OBJEXT) \
+	 m_common_namecheck.$(OBJEXT) m_common_entities.$(OBJEXT) m_common_notations.$(OBJEXT) \
+         m_common_realtypes.$(OBJEXT) m_common_element.$(OBJEXT) m_common_struct.$(OBJEXT) \
+	 m_common_entity_expand.$(OBJEXT) m_common_string.$(OBJEXT)
 #
-LIBRARY=libFoX_common.a
+LIBRARY=libFoX_common.$(LIBEXT)
 INCFLAGS=$(MOD_PREFIX)../objs/finclude
 #
 #
@@ -22,34 +22,37 @@ include ../arch.make
 #
 CP=cp -p
 install: $(OBJFILES)
-	@echo "  ==> Updating $(LIBRARY) with $(OBJFILES)"
+	@echo "  ==> Creating $(LIBRARY) with $(OBJFILES)"
 	@$(AR) $(ARFLAGS_EXTRA) cru $(LIBRARY) $(OBJFILES)
 	@$(RANLIB) $(LIBRARY)
 	$(CP) $(LIBRARY) $(LIB_DIR) 
 	for i in *.$(MOD_EXT); do \
       	    $(CP) $$i $(MOD_DIR); done
 #
+check:
+	(cd test; make)
+#
 clean:
-	rm -f *.o  *.$(MOD_EXT) $(LIBRARY)
+	rm -f *.$(OBJEXT)  *.$(MOD_EXT) $(LIBRARY)
 # DO NOT DELETE THIS LINE - used by make depend
-FoX_common.o: m_common_array_str.o m_common_attrs.o m_common_format.o
-m_common_array_str.o: m_common_realtypes.o
-m_common_attrs.o: m_common_array_str.o m_common_element.o m_common_error.o
-m_common_buffer.o: m_common_charset.o m_common_error.o m_common_format.o
-m_common_charset.o: m_common_string.o
-m_common_element.o: m_common_array_str.o m_common_charset.o m_common_error.o
-m_common_elstack.o: m_common_array_str.o m_common_error.o
-m_common_entities.o: m_common_array_str.o m_common_charset.o m_common_error.o
-m_common_entities.o: m_common_format.o
-m_common_entity_expand.o: m_common_array_str.o m_common_entities.o
-m_common_entity_expand.o: m_common_error.o m_common_namecheck.o
-m_common_entity_expand.o: m_common_struct.o
-m_common_error.o: m_common_array_str.o
-m_common_format.o: m_common_error.o m_common_realtypes.o
-m_common_io.o: m_common_error.o
-m_common_namecheck.o: m_common_charset.o m_common_format.o m_common_struct.o
-m_common_namespaces.o: m_common_array_str.o m_common_attrs.o m_common_charset.o
-m_common_namespaces.o: m_common_error.o m_common_namecheck.o m_common_struct.o
-m_common_notations.o: m_common_array_str.o m_common_error.o
-m_common_struct.o: m_common_charset.o m_common_element.o m_common_entities.o
-m_common_struct.o: m_common_notations.o
+FoX_common.$(OBJEXT): m_common_array_str.$(OBJEXT) m_common_attrs.$(OBJEXT) m_common_format.$(OBJEXT)
+m_common_array_str.$(OBJEXT): m_common_realtypes.$(OBJEXT)
+m_common_attrs.$(OBJEXT): m_common_array_str.$(OBJEXT) m_common_element.$(OBJEXT) m_common_error.$(OBJEXT)
+m_common_buffer.$(OBJEXT): m_common_charset.$(OBJEXT) m_common_error.$(OBJEXT) m_common_format.$(OBJEXT)
+m_common_charset.$(OBJEXT): m_common_string.$(OBJEXT)
+m_common_element.$(OBJEXT): m_common_array_str.$(OBJEXT) m_common_charset.$(OBJEXT) m_common_error.$(OBJEXT)
+m_common_elstack.$(OBJEXT): m_common_array_str.$(OBJEXT) m_common_error.$(OBJEXT)
+m_common_entities.$(OBJEXT): m_common_array_str.$(OBJEXT) m_common_charset.$(OBJEXT) m_common_error.$(OBJEXT)
+m_common_entities.$(OBJEXT): m_common_format.$(OBJEXT)
+m_common_entity_expand.$(OBJEXT): m_common_array_str.$(OBJEXT) m_common_entities.$(OBJEXT)
+m_common_entity_expand.$(OBJEXT): m_common_error.$(OBJEXT) m_common_namecheck.$(OBJEXT)
+m_common_entity_expand.$(OBJEXT): m_common_struct.$(OBJEXT)
+m_common_error.$(OBJEXT): m_common_array_str.$(OBJEXT)
+m_common_format.$(OBJEXT): m_common_error.$(OBJEXT) m_common_realtypes.$(OBJEXT)
+m_common_io.$(OBJEXT): m_common_error.$(OBJEXT)
+m_common_namecheck.$(OBJEXT): m_common_charset.$(OBJEXT) m_common_format.$(OBJEXT) m_common_struct.$(OBJEXT)
+m_common_namespaces.$(OBJEXT): m_common_array_str.$(OBJEXT) m_common_attrs.$(OBJEXT) m_common_charset.$(OBJEXT)
+m_common_namespaces.$(OBJEXT): m_common_error.$(OBJEXT) m_common_namecheck.$(OBJEXT) m_common_struct.$(OBJEXT)
+m_common_notations.$(OBJEXT): m_common_array_str.$(OBJEXT) m_common_error.$(OBJEXT)
+m_common_struct.$(OBJEXT): m_common_charset.$(OBJEXT) m_common_element.$(OBJEXT) m_common_entities.$(OBJEXT)
+m_common_struct.$(OBJEXT): m_common_notations.$(OBJEXT)

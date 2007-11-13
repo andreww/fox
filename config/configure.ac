@@ -1,4 +1,4 @@
-AC_INIT([FoX],[3.0],[tow21@cam.ac.uk])
+AC_INIT([FoX],[3.0],[tow@uszla.me.uk])
 AC_CONFIG_SRCDIR([README.FoX.txt])
 dnl
 dnl All macros are kept in ./m4:
@@ -31,11 +31,21 @@ dnl
 if test $ac_cv_fpp_build_rule = direct; then
      F90_RULE=['$(FC) -c $(FFLAGS) $(INCFLAGS) $(FPPFLAGS) $(FPPFLAGS_free_F90) $< ']
 elif test $ac_cv_fpp_build_rule = indirect; then
-     F90_RULE=['$(FPP) $(FPPFLAGS) $< $(FPP_OUTPUT) aux_$*.f90 && $(FC) -c -o $*.o $(FFLAGS) $(INCFLAGS) $(FCFLAGS_free_f90) aux_$*.f90']
+  if test $ac_cv_fc_cifs = yes; then
+     F90_RULE=['while [ 0 ]; do FPPFILE=$*.$$RANDOM.f90; if ! test -f $$FPPFILE; then break; fi; done; $(FPP) $(FPPFLAGS) $< > $$FPPFILE && $(FC) -c -o $*.$(OBJEXT) $(FFLAGS) $(INCFLAGS) $(FCFLAGS_free_f90) $$FPPFILE; rm $$FPPFILE']
+  elif test x$FPP_OUTPUT = x; then
+     F90_RULE=['$(FPP) $(FPPFLAGS) $< && $(FC) -c $(FFLAGS) $(INCFLAGS) $(FCFLAGS_free_f90) $*.f90; rm $*.f90']
+  else
+     F90_RULE=['$(FPP) $(FPPFLAGS) $< > $*.f90 && $(FC) -c $(FFLAGS) $(INCFLAGS) $(FCFLAGS_free_f90) $*.f90; rm $*.f90']
+  fi
 fi
 dnl Generate dependency rules according to whether we need
 dnl separate preprocessing stage.
 AC_SUBST(F90_RULE)
+dnl
+dnl check flag needed to name linked executables
+LINK_O_FLAG=$ac_link_obj_flag
+AC_SUBST(LINK_O_FLAG)
 dnl
 AC_PROG_RANLIB
 dnl
@@ -57,13 +67,8 @@ fi
 dnl
 dnl Generate host/compiler ID string to encode in program
 TW_FC_ID
-SIESTA_ARCH="$host--$FC_ID"
-AC_SUBST(SIESTA_ARCH)
 dnl
-dnl Check for any extra compiler-specific flags necessary
 dnl Also set FFLAGS_DEBUG and FFLAGS_FAST
-dnl SYS will be "nag" (ie standard f95) for almost all cases
-SYS=nag
 TW_FC_ID_FLAGS
 dnl
 AC_ARG_ENABLE([debug],
@@ -118,15 +123,6 @@ dnl BUILD_TARGETS="$WXML_yes $WCML_yes $WKML_yes $SAX_yes $DOM_yes"
 BUILD_TARGETS="$WXML_yes $WCML_yes $SAX_yes $DOM_yes"
 AC_SUBST(BUILD_TARGETS)
 dnl
-dnl Check compiler characteristics; it must support F95
-dnl to use the cpu_time intrinsic. Otherwise, SYS must
-dnl be set appropriately. Only pgf90 should fail this.
-dnl Actually, we should simply check to see if cpu_time is supported.
-dnl TW_CHECK_FC_95([SYS=nag],dnl
-dnl   TW_CHECK_FC_90([SYS=cputim],[])
-dnl                   )
-AC_SUBST(SYS)
-dnl
 dnl Check for compiler kind flags
 dnl
 AC_FC_GET_REAL_KINDS
@@ -136,13 +132,35 @@ AC_SUBST(SP_KIND)
 AC_SUBST(DP_KIND)
 dnl
 dnl Check whether we need to pass a flag to get at the flush intrinsic.
-TW_FC_CHECK_FLUSH
-TW_FC_CHECK_ABORT
+TW_FC_CHECK_FLUSH([],[AC_MSG_RESULT([cannot compile call to FLUSH])])
+TW_FC_CHECK_ABORT([],[AC_MSG_RESULT([cannot compile call to ABORT])])
 dnl
 dnl Fix up DEFS -> FPPFLAGS conversion.
 for i in $DEFS; do
    FPPFLAGS="$FPPFLAGS $FPPFLAGS_DEF$i"
 done
+dnl
+dnl Library functionality ...
+dnl How to make a static library ...
+dnl we should test for this, but I don't know how yet.
+dnl
+dnl Most command-line windows compilers will want to use
+dnl the MS linking tools, which require a .lib extension
+dnl g95 & gfortran wont, they use normal Unix conventions.
+dnl Everyone else everywhere uses unix conventions
+case $host_os in
+  *cygwin*)
+     if test $FC_ID = G95 -o $FC_ID = Gfortran; then
+       LIBEXT=a
+     else
+       LIBEXT=lib
+     fi
+     ;;
+  *)
+     LIBEXT=a
+     ;;
+esac
+AC_SUBST(LIBEXT)
 dnl
 dnl Installation instructions ..
 AC_PROG_INSTALL
@@ -164,4 +182,7 @@ AC_CONFIG_FILES([FoX-config])
 AC_OUTPUT
 chmod +x FoX-config
 touch .config
+dnl and to stop over-eager makes trying to recreate f90 files
+dnl when m4 is not gnu m4 ..
+touch */*.f90 
 dnl

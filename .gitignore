@@ -1,5 +1,8 @@
 *~
 *.o
+*.obj
+*.fwd
+*.map
 *.mod
 *.MOD
 *.m
@@ -13,6 +16,9 @@ objs
 wcml_example
 wxml_example
 sax_example
+sax_example_2
+dom_example
+dom_example_2
 .FoX
 .config
 *.exe
@@ -21,3 +27,15 @@ autom4te.cache
 common/test/*.score
 wxml/test/*.score
 wcml/test/*.score
+sax/test/*.score
+common/test/failed.out
+common/test/test.out
+common/test/tests.out
+sax/test/test.out
+sax/test/tests.out
+wcml/test/test.out
+wcml/test/test.xml
+wcml/test/tests.out
+wxml/test/failed.out
+wxml/test/test.out
+wxml/test/tests.out

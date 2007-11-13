@@ -38,256 +38,6 @@ dnl of the text that was the non-data portion of the version that you started
 dnl with.  (In other words, unless your change moves or copies text from
 dnl the non-data portions to the data portions.)  If your modification has
 dnl such potential, you must delete any notice of this special exception
-dnl to the GPL from your modified version.  
-dnl
-dnl Copyright Steven G. Johnson <stevenj@alum.mit.edu> 
-dnl Modified by Toby White <tow21@cam.ac.uk>
-
-AC_DEFUN([ACX_MPI], [
-AC_PREREQ(2.50) dnl for AC_LANG_CASE
-
-AC_LANG_CASE([C], [
-        AC_REQUIRE([AC_PROG_CC])
-        AC_ARG_VAR(MPICC,[MPI C compiler command])
-        AC_CHECK_PROGS(MPICC, mpicc hcc mpcc mpcc_r mpxlc, $CC)
-        acx_mpi_save_CC="$CC"
-        CC="$MPICC"
-        AC_SUBST(MPICC)
-],
-[C++], [
-        AC_REQUIRE([AC_PROG_CXX])
-        AC_ARG_VAR(MPICXX,[MPI C++ compiler command])
-        AC_CHECK_PROGS(MPICXX, mpiCC mpCC, $CXX)
-        acx_mpi_save_CXX="$CXX"
-        CXX="$MPICXX"
-        AC_SUBST(MPICXX)
-],
-[Fortran 77], [
-        AC_REQUIRE([AC_PROG_F77])
-        AC_ARG_VAR(MPIF77,[MPI Fortran 77 compiler command])
-        AC_CHECK_PROGS(MPIF77, mpif77 hf77 mpxlf mpf77 mpif90 mpf90 mpxlf90 mpxlf95 mpxlf_r, $F77)
-        acx_mpi_save_F77="$F77"
-        F77="$MPIF77"
-        AC_SUBST(MPIF77)
-],
-[Fortran], [
-        AC_REQUIRE([AC_PROG_FC])
-        AC_ARG_VAR(MPIFC,[MPI Fortran compiler command])
-        AC_CHECK_PROGS(MPIFC, mpifc mpxlf mpif90 mpf90 mpxlf90 mpxlf95 mpxlf_r, $FC)
-        acx_mpi_save_FC="$FC"
-        FC="$MPIFC"
-        AC_SUBST(MPIFC)
-])
-
-if test x = x"$MPILIBS"; then
-        AC_LANG_CASE([C], [AC_CHECK_FUNC(MPI_Init, [MPILIBS=" "])],
-                [C++], [AC_CHECK_FUNC(MPI_Init, [MPILIBS=" "])],
-                [Fortran 77], [AC_MSG_CHECKING([for MPI_Init])
-                        AC_TRY_LINK([],[      call MPI_Init], [MPILIBS=" "
-                                AC_MSG_RESULT(yes)], [AC_MSG_RESULT(no)])],
-		[Fortran], [AC_MSG_CHECKING([for MPI_Init])
-                        AC_LINK_IFELSE([      call MPI_Init], [MPILIBS=" "
-                                AC_MSG_RESULT(yes)], [AC_MSG_RESULT(no)])]
-		)
-fi
-if test x = x"$MPILIBS"; then
-        AC_CHECK_LIB(mpi, MPI_Init, [MPILIBS="-lmpi"])
-fi
-if test x = x"$MPILIBS"; then
-        AC_CHECK_LIB(mpich, MPI_Init, [MPILIBS="-lmpich"])
-fi
-
-dnl We have to use AC_TRY_COMPILE and not AC_CHECK_HEADER because the
-dnl latter uses $CPP, not $CC (which may be mpicc).
-AC_LANG_CASE([C], [if test x != x"$MPILIBS"; then
-        AC_MSG_CHECKING([for mpi.h])
-        AC_TRY_COMPILE([#include <mpi.h>],[],[AC_MSG_RESULT(yes)], [MPILIBS=""
-                AC_MSG_RESULT(no)])
-fi],
-[C++], [if test x != x"$MPILIBS"; then
-        AC_MSG_CHECKING([for mpi.h])
-        AC_TRY_COMPILE([#include <mpi.h>],[],[AC_MSG_RESULT(yes)], [MPILIBS=""
-                AC_MSG_RESULT(no)])
-fi])
-
-AC_LANG_CASE([C], [CC="$acx_mpi_save_CC"],
-        [C++], [CXX="$acx_mpi_save_CXX"],
-        [Fortran 77], [F77="$acx_mpi_save_F77"],
-	[Fortran], [FC="$acx_mpi_save_FC"])
-
-AC_SUBST(MPILIBS)
-
-# Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
-if test x = x"$MPILIBS"; then
-        $2
-        :
-else
-        ifelse([$1],,[AC_DEFINE(HAVE_MPI,1,[Define if you have the MPI library.])],[$1])
-        :
-fi
-])dnl ACX_MPI
-dnl This program is free software; you can redistribute it and/or modify
-dnl it under the terms of the GNU General Public License as published by
-dnl the Free Software Foundation; either version 2, or (at your option)
-dnl any later version.
-dnl
-dnl This program is distributed in the hope that it will be useful,
-dnl but WITHOUT ANY WARRANTY; without even the implied warranty of
-dnl MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-dnl GNU General Public License for more details.
-dnl
-dnl You should have received a copy of the GNU General Public License
-dnl along with this program; if not, write to the Free Software
-dnl Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
-dnl 02111-1307, USA.
-dnl
-dnl As a special exception, the Free Software Foundation gives unlimited
-dnl permission to copy, distribute and modify the configure scripts that
-dnl are the output of Autoconf.  You need not follow the terms of the GNU
-dnl General Public License when using or distributing such scripts, even
-dnl though portions of the text of Autoconf appear in them.  The GNU
-dnl General Public License (GPL) does govern all other use of the material
-dnl that constitutes the Autoconf program.
-dnl
-dnl Certain portions of the Autoconf source text are designed to be copied
-dnl (in certain cases, depending on the input) into the output of
-dnl Autoconf.  We call these the "data" portions.  The rest of the Autoconf
-dnl source text consists of comments plus executable code that decides which
-dnl of the data portions to output in any given case.  We call these
-dnl comments and executable code the "non-data" portions.  Autoconf never
-dnl copies any of the non-data portions into its output.
-dnl
-dnl This special exception to the GPL applies to versions of Autoconf
-dnl released by the Free Software Foundation.  When you make and
-dnl distribute a modified version of Autoconf, you may extend this special
-dnl exception to the GPL to apply to your modified version as well, *unless*
-dnl your modified version has the potential to copy into its output some
-dnl of the text that was the non-data portion of the version that you started
-dnl with.  (In other words, unless your change moves or copies text from
-dnl the non-data portions to the data portions.)  If your modification has
-dnl such potential, you must delete any notice of this special exception
-dnl to the GPL from your modified version.
-dnl
-dnl Copyright Toby White <tow21@cam.ac.uk>  2004-2006 
-
-dnl Macro to check that correct flags have been chosen for 
-dnl compilation with BLACS. Only works with Fortran at the moment.
-
-AC_DEFUN([_TW_TRY_BLACS], [
-ac_ext=f
-AC_LINK_IFELSE(
-   [AC_LANG_SOURCE([[
-      PROGRAM BLACS                   
-      INTEGER MYPNUM, NPROCS        
-      CALL BLACS_PINFO(MYPNUM, NPROCS)
-      END PROGRAM
-   ]])],
-[m4_default([$1],[:])],
-[m4_default([$2],[:])]
-)
-])
-
-
-AC_DEFUN([TW_CHECK_BLACS], [
-#AC_REQUIRE(ACX_MPI)
-tw_blacs_ok=no
-
-# All tests must be run with the MPI fortran compiler.
-save_FC=$FC
-FC=$MPIFC
-
-AC_ARG_WITH(blacs,
-        [AC_HELP_STRING([--with-blacs=<lib>], [use BLACS library <lib>])])
-if test x"$with_blacs" != x; then
-   BLACS_LIBS="$with_blacs"
-fi
-
-save_LIBS=$LIBS
-LIBS="$BLACS_LIBS $LIBS"
-AC_MSG_CHECKING([if we can compile a BLACS program])
-_TW_TRY_BLACS([tw_blacs_ok=yes],[])
-AC_MSG_RESULT([$tw_blacs_ok])
-LIBS=$save_LIBS
-
-if test $tw_blacs_ok != yes; then
-   AC_MSG_CHECKING([for BLACS in -lblacs])
-   save_LIBS=$LIBS
-   LIBS="-lblacs $LIBS"
-   _TW_TRY_BLACS([tw_blacs_ok=yes;BLACS_LIBS=-lblacs],[])
-   AC_MSG_RESULT([$tw_blacs_ok])
-   LIBS=$save_LIBS
-fi
-
-if test $tw_blacs_ok != yes; then
-   AC_MSG_CHECKING([for BLACS in -lblacsF77init -lblacs -lblacsF77init])
-   save_LIBS=$LIBS
-   LIBS="-lblacsF77init -lblacs -lblacsF77init $LIBS"
-   _TW_TRY_BLACS([tw_blacs_ok=yes;BLACS_LIBS="-lblacsF77init -lblacs -lblacsF77init"],[])
-   AC_MSG_RESULT([$tw_blacs_ok])
-   LIBS=$save_LIBS
-fi
-
-# Try in Sun performance library
-if test $tw_blacs_ok != yes; then
-   AC_MSG_CHECKING([for BLACS in -ls3l])
-   save_LIBS=$LIBS
-   LIBS="-ls3l $LIBS"
-   _TW_TRY_BLACS([tw_blacs_ok=yes;BLACS_LIBS="-ls3l"],[])
-   AC_MSG_RESULT([$tw_blacs_ok])
-   LIBS=$save_LIBS
-fi
-
-FC=$save_FC
-
-AC_SUBST(BLACS_LIBS)
-
-# Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
-AS_IF([test $tw_blacs_ok = yes],
-      [$1],
-      [m4_default([$2],[AC_MSG_ERROR([Cannot compile correctly with BLACS])])]
-      )
-])dnl TW_CHECK_BLACS
-
-dnl This program is free software; you can redistribute it and/or modify
-dnl it under the terms of the GNU General Public License as published by
-dnl the Free Software Foundation; either version 2, or (at your option)
-dnl any later version.
-dnl
-dnl This program is distributed in the hope that it will be useful,
-dnl but WITHOUT ANY WARRANTY; without even the implied warranty of
-dnl MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-dnl GNU General Public License for more details.
-dnl
-dnl You should have received a copy of the GNU General Public License
-dnl along with this program; if not, write to the Free Software
-dnl Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
-dnl 02111-1307, USA.
-dnl
-dnl As a special exception, the Free Software Foundation gives unlimited
-dnl permission to copy, distribute and modify the configure scripts that
-dnl are the output of Autoconf.  You need not follow the terms of the GNU
-dnl General Public License when using or distributing such scripts, even
-dnl though portions of the text of Autoconf appear in them.  The GNU
-dnl General Public License (GPL) does govern all other use of the material
-dnl that constitutes the Autoconf program.
-dnl
-dnl Certain portions of the Autoconf source text are designed to be copied
-dnl (in certain cases, depending on the input) into the output of
-dnl Autoconf.  We call these the "data" portions.  The rest of the Autoconf
-dnl source text consists of comments plus executable code that decides which
-dnl of the data portions to output in any given case.  We call these
-dnl comments and executable code the "non-data" portions.  Autoconf never
-dnl copies any of the non-data portions into its output.
-dnl
-dnl This special exception to the GPL applies to versions of Autoconf
-dnl released by the Free Software Foundation.  When you make and
-dnl distribute a modified version of Autoconf, you may extend this special
-dnl exception to the GPL to apply to your modified version as well, *unless*
-dnl your modified version has the potential to copy into its output some
-dnl of the text that was the non-data portion of the version that you started
-dnl with.  (In other words, unless your change moves or copies text from
-dnl the non-data portions to the data portions.)  If your modification has
-dnl such potential, you must delete any notice of this special exception
 dnl to the GPL from your modified version.
 dnl
 dnl Copyright Toby White <tow21@cam.ac.uk>  2004-2006
@@ -850,150 +600,6 @@ dnl to the GPL from your modified version.
 dnl
 dnl Copyright Toby White <tow21@cam.ac.uk>  2004-2006     
 
-dnl Macro to find what paramaters must be passed to the compiler
-dnl and linker to compile with scalapack. Currently only works
-dnl with fortran.
-dnl Macro to check that correct flags have been chosen for 
-dnl ScaLAPACK compilation. Only works with Fortran at the moment.
-
-dnl Must use fixed+free format-compatible line continuation, to avoid
-dnl problems with picky compilers. & in column 6 & 81
-
-AC_DEFUN([_TW_TRY_SCALAPACK], [
-ac_ext=f
-AC_LINK_IFELSE(
-   [AC_LANG_SOURCE([[
-      PROGRAM SCALAPACK                                                    
-      CHARACTER        JOBZ, RANGE, UPLO                                   
-      INTEGER          IA, IB, IBTYPE, IL, INFO, IU, IZ, JA, JB, JZ,             & 
-     &                 LIWORK, LWORK, M, N, NZ                                   
-      DOUBLE PRECISION ABSTOL, ORFAC, VL, VU                                     
-      INTEGER          DESCA(1), DESCB(1), DESCZ(1), ICLUSTR(1),                 &
-     &                 IFAIL(1), IWORK(1)                              
-      DOUBLE PRECISION A(1), B(1), GAP(1), W(1), WORK(1), Z(1) 
-      CALL PDSYGVX( IBTYPE, JOBZ, RANGE, UPLO, N, A, IA, JA, DESCA,  B,          &
-     &              IB,  JB,  DESCB,  VL, VU, IL, IU, ABSTOL, M, NZ, W,          &
-     &              ORFAC,  Z,  IZ,  JZ,  DESCZ,  WORK,  LWORK,  IWORK,          &
-     &              LIWORK, IFAIL, ICLUSTR, GAP, INFO )                    
-      END PROGRAM
-   ]])],
-   [m4_ifval([$1],[$1],[])],
-   [m4_ifval([$2],[$2],[])]
-)
-])
-
-AC_DEFUN([_TW_TRY_SCALAPACK_VN], [
-ac_ext=f
-AC_LINK_IFELSE(
-   [AC_LANG_SOURCE([[
-      PROGRAM SCALAPACK                                                    
-      CHARACTER        NAME, OPTS                                   
-      INTEGER          ICTXT, ISPEC, N1, N2, N3, N4
-      CALL PJLAENV( ICTXT, ISPEC, NAME, OPTS, N1, N2, N3, N4 )
-      END PROGRAM
-   ]])],
-   [m4_ifval([$1],[$1],[])],
-   [m4_ifval([$2],[$2],[])]
-)
-])
-
-
-AC_DEFUN([TW_CHECK_SCALAPACK], [
-#AC_REQUIRE([TW_FIND_BLAS])
-#AC_REQUIRE([TW_CHECK_BLACS])
-tw_scalapack_ok=no
-
-# All tests must be run with the MPI fortran compiler.
-save_FC=$FC
-FC=$MPIFC
-
-AC_ARG_WITH(scalapack,
-        [AC_HELP_STRING([--with-scalapack=<lib>], [use ScaLAPACK library <lib>])])
-case $with_scalapack in
-        yes | "") ;;
-        no) tw_scalapack_ok=disable ;;
-        -* | */* | *.a | *.so | *.so.* | *.o) SCALAPACK_LIBS="$with_scalapack" ;;
-        *) SCALAPACK_LIBS="-l$with_scalapack" ;;
-esac
-
-save_LIBS=$LIBS
-LIBS="$LIBS $SCALAPACK_LIBS  $BLACS_LIBS $LAPACK_LIBS $BLAS_LIBS"
-AC_MSG_CHECKING([if we can compile a ScaLAPACK program])
-_TW_TRY_SCALAPACK([tw_scalapack_ok=yes], [])
-LIBS="$save_LIBS"
-
-if test $tw_scalapack_ok = no; then
-  LIBS="$LIBS -lscalapack $BLACS_LIBS $LAPACK_LIBS $BLAS_LIBS"
-  _TW_TRY_SCALAPACK([tw_scalapack_ok=yes; SCALAPACK_LIBS=-lscalapack], [])
-  LIBS="$save_LIBS"
-fi
-
-AC_MSG_RESULT([$tw_scalapack_ok])
-if test $tw_scalapack_ok = yes; then
-   AC_MSG_CHECKING([if ScaLAPACK version is sufficiently recent])
-   LIBS="$LIBS $SCALAPACK_LIBS  $BLACS_LIBS $LAPACK_LIBS $BLAS_LIBS"
-   _TW_TRY_SCALAPACK_VN([AC_MSG_RESULT([yes])],
-                        [COMP_LIBS="scalapack_extra.o $COMP_LIBS";
-                         AC_MSG_RESULT([no - using additional SIESTA routines])])
-   LIBS="$save_LIBS"
-fi
-FC=$save_FC
-
-
-
-
-AC_SUBST(SCALAPACK_LIBS)
-
-# Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
-AS_IF([test $tw_scalapack_ok = yes],
-      [$1],
-      [m4_default([$2],[AC_MSG_ERROR([Cannot compile correctly with ScaLAPACK])])]
-     )
-])# TW_CHECK_SCALAPACK
-dnl This program is free software; you can redistribute it and/or modify
-dnl it under the terms of the GNU General Public License as published by
-dnl the Free Software Foundation; either version 2, or (at your option)
-dnl any later version.
-dnl
-dnl This program is distributed in the hope that it will be useful,
-dnl but WITHOUT ANY WARRANTY; without even the implied warranty of
-dnl MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-dnl GNU General Public License for more details.
-dnl
-dnl You should have received a copy of the GNU General Public License
-dnl along with this program; if not, write to the Free Software
-dnl Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
-dnl 02111-1307, USA.
-dnl
-dnl As a special exception, the Free Software Foundation gives unlimited
-dnl permission to copy, distribute and modify the configure scripts that
-dnl are the output of Autoconf.  You need not follow the terms of the GNU
-dnl General Public License when using or distributing such scripts, even
-dnl though portions of the text of Autoconf appear in them.  The GNU
-dnl General Public License (GPL) does govern all other use of the material
-dnl that constitutes the Autoconf program.
-dnl
-dnl Certain portions of the Autoconf source text are designed to be copied
-dnl (in certain cases, depending on the input) into the output of
-dnl Autoconf.  We call these the "data" portions.  The rest of the Autoconf
-dnl source text consists of comments plus executable code that decides which
-dnl of the data portions to output in any given case.  We call these
-dnl comments and executable code the "non-data" portions.  Autoconf never
-dnl copies any of the non-data portions into its output.
-dnl
-dnl This special exception to the GPL applies to versions of Autoconf
-dnl released by the Free Software Foundation.  When you make and
-dnl distribute a modified version of Autoconf, you may extend this special
-dnl exception to the GPL to apply to your modified version as well, *unless*
-dnl your modified version has the potential to copy into its output some
-dnl of the text that was the non-data portion of the version that you started
-dnl with.  (In other words, unless your change moves or copies text from
-dnl the non-data portions to the data portions.)  If your modification has
-dnl such potential, you must delete any notice of this special exception
-dnl to the GPL from your modified version.
-dnl
-dnl Copyright Toby White <tow21@cam.ac.uk>  2004-2006     
-
 dnl Check how to get at the abort intrinsic.
 
 AC_DEFUN([_TW_TRY_ABORT_BARE],
@@ -1084,89 +690,6 @@ AS_IF([test $tw_abort_ok = yes],
      )
 dnl
 ])# TW_FC_CHECK_ABORT
-dnl This program is free software; you can redistribute it and/or modify
-dnl it under the terms of the GNU General Public License as published by
-dnl the Free Software Foundation; either version 2, or (at your option)
-dnl any later version.
-dnl
-dnl This program is distributed in the hope that it will be useful,
-dnl but WITHOUT ANY WARRANTY; without even the implied warranty of
-dnl MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-dnl GNU General Public License for more details.
-dnl
-dnl You should have received a copy of the GNU General Public License
-dnl along with this program; if not, write to the Free Software
-dnl Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
-dnl 02111-1307, USA.
-dnl
-dnl As a special exception, the Free Software Foundation gives unlimited
-dnl permission to copy, distribute and modify the configure scripts that
-dnl are the output of Autoconf.  You need not follow the terms of the GNU
-dnl General Public License when using or distributing such scripts, even
-dnl though portions of the text of Autoconf appear in them.  The GNU
-dnl General Public License (GPL) does govern all other use of the material
-dnl that constitutes the Autoconf program.
-dnl
-dnl Certain portions of the Autoconf source text are designed to be copied
-dnl (in certain cases, depending on the input) into the output of
-dnl Autoconf.  We call these the "data" portions.  The rest of the Autoconf
-dnl source text consists of comments plus executable code that decides which
-dnl of the data portions to output in any given case.  We call these
-dnl comments and executable code the "non-data" portions.  Autoconf never
-dnl copies any of the non-data portions into its output.
-dnl
-dnl This special exception to the GPL applies to versions of Autoconf
-dnl released by the Free Software Foundation.  When you make and
-dnl distribute a modified version of Autoconf, you may extend this special
-dnl exception to the GPL to apply to your modified version as well, *unless*
-dnl your modified version has the potential to copy into its output some
-dnl of the text that was the non-data portion of the version that you started
-dnl with.  (In other words, unless your change moves or copies text from
-dnl the non-data portions to the data portions.)  If your modification has
-dnl such potential, you must delete any notice of this special exception
-dnl to the GPL from your modified version.
-dnl
-dnl Copyright Toby White <tow21@cam.ac.uk>  2004-2006     
-
-dnl Macro to check how to use functions that NAG requires -dcfuns for.
-dnl DIMAG used.
-
-AC_DEFUN([_TW_DIMAG_PROGRAM],
-[
-      PROGRAM TESTDIMAG
-      DOUBLE PRECISION A
-      DOUBLE COMPLEX B
-      A=DIMAG(B)
-      END PROGRAM
-])
-
-AC_DEFUN([TW_FC_CHECK_DCFUNS], [
-AC_REQUIRE([AC_PROG_FC])
-AC_LANG_ASSERT(Fortran)
-tw_dcfuns_ok=no
-
-
-AC_MSG_CHECKING([how to compile DIMAG])
-
-AC_LINK_IFELSE([_TW_DIMAG_PROGRAM],
-               [tw_dcfuns_ok=yes;
-                AC_MSG_RESULT([default])],[])
-
-if test $tw_dcfuns_ok = no; then
-   FCFLAGS_save=$FCFLAGS
-   FCFLAGS="$FCFLAGS -dcfuns"
-   AC_LINK_IFELSE([_TW_DIMAG_PROGRAM],
-                  [tw_dcfuns_ok=yes;
-                   AC_MSG_RESULT([with -dcfuns])],[]) 
-   if test $tw_dcfuns_ok = no; then
-      FCFLAGS=$FCFLAGS_save
-   fi
-fi
-
-AS_IF([test $tw_dcfuns_ok = yes],
-      [$1],
-      [m4_default([$2],[AC_MSG_ERROR([Cannot compile DIMAG function])])])
-])# TW_FC_CHECK_DCFUNS
 dnl This program is free software; you can redistribute it and/or modify
 dnl it under the terms of the GNU General Public License as published by
 dnl the Free Software Foundation; either version 2, or (at your option)
@@ -1378,6 +901,9 @@ if test x$FC_ID = x; then
             ;;
          *Sun*)
             FC_ID=Sun # there's more than one compiler here ...
+            ;;
+         *Absoft*)
+            FC_ID=Absoft # there's more than one compiler here ...
             ;;
       esac
    fi
@@ -1790,362 +1316,6 @@ dnl to the GPL from your modified version.
 dnl
 dnl Copyright Toby White <tow21@cam.ac.uk>  2004-2006     
 
-dnl
-AC_DEFUN([TW_FIND_FC_BLAS], [
-AC_PREREQ(2.50)
-acx_blas_ok=no
-
-AC_LANG_PUSH([Fortran])
-
-AC_ARG_WITH(blas,
-	[AC_HELP_STRING([--with-blas=<lib>], [use BLAS library <lib>])])
-case $with_blas in
-	yes | "") ;;
-	no) acx_blas_ok=disable ;;
-	-* | */* | *.a | *.so | *.so.* | *.o) BLAS_LIBS="$with_blas" ;;
-	*) BLAS_LIBS="-l$with_blas" ;;
-esac
-
-acx_blas_save_LIBS="$LIBS"
-LIBS="$LIBS $FLIBS"
-
-sgemm=sgemm
-dgemm=dgemm 
-
-# First, check BLAS_LIBS environment variable
-if test "$acx_blas_ok" = no; then
-  if test "x$BLAS_LIBS" != x; then
-    save_LIBS="$LIBS"; LIBS="$BLAS_LIBS $LIBS"
-    AC_MSG_CHECKING([for $sgemm in $BLAS_LIBS])
-    AC_TRY_LINK_FUNC($sgemm, [acx_blas_ok=yes], [BLAS_LIBS=""])
-    AC_MSG_RESULT($acx_blas_ok)
-    LIBS="$save_LIBS"
-  fi
-fi
-
-# BLAS linked to by default?  (happens on some supercomputers)
-if test "$acx_blas_ok" = no; then
-  AC_MSG_CHECKING([is BLAS linked by default])
-  save_LIBS="$LIBS"; LIBS="$LIBS"
-  AC_LINK_IFELSE(
-           AC_LANG_SOURCE([
-      Program test_blas
-      Call sgemm
-      End Program
-  ]), [acx_blas_ok=yes])
-  AC_MSG_RESULT($acx_blas_ok)
-  LIBS="$save_LIBS"
-fi
-
-# BLAS in libblasmt.a? (shipped with Lahey Fortran)
-if test "$acx_blas_ok" = no; then
-  AC_MSG_CHECKING([for BLAS in -lblasmt])
-  save_LIBS="$LIBS"; LIBS="$LIBS -lblasmt"
-  AC_LINK_IFELSE(
-           AC_LANG_SOURCE([
-      Program test_blas
-      Call sgemm
-      End Program
-  ]),
-      [BLAS_LIBS="-lblasmt"
-       acx_blas_ok=yes])
-  AC_MSG_RESULT($acx_blas_ok)
-  LIBS="$save_LIBS"
-fi
-
-
-# BLAS in ATLAS library? (http://math-atlas.sourceforge.net/)
-if test "$acx_blas_ok" = no; then
-  AC_MSG_CHECKING([for BLAS in ATLAS])
-  save_LIBS="$LIBS"; LIBS="$LIBS -lcblas -lf77blas -latlas"
-  AC_LINK_IFELSE(
-           AC_LANG_SOURCE([
-      Program test_blas
-      Call sgemm
-      End Program
-  ]),
-      [BLAS_LIBS="-lcblas -lf77blas -latlas"
-       acx_blas_ok=yes])
-  if test "$acx_blas_ok" = no; then
-  LIBS="$save_LIBS"
-  save_LIBS="$LIBS"; LIBS="$LIBS -lcblas -lf77blas -latlas -lg2c"
-  AC_LINK_IFELSE(
-           AC_LANG_SOURCE([
-      Program test_blas
-      Call sgemm
-      End Program
-  ]),
-      [BLAS_LIBS="-lcblas -lf77blas -latlas -lg2c"
-       acx_blas_ok=yes])
-  fi
-  AC_MSG_RESULT($acx_blas_ok)
-  LIBS="$save_LIBS"
-fi
-
-# BLAS in PhiPACK libraries? (requires generic BLAS lib, too)
-if test $acx_blas_ok = no; then
-	AC_CHECK_LIB(blas, $sgemm,
-		[AC_CHECK_LIB(dgemm, $dgemm,
-		[AC_CHECK_LIB(sgemm, $sgemm,
-			[acx_blas_ok=yes; BLAS_LIBS="-lsgemm -ldgemm -lblas"],
-			[], [-lblas])],
-			[], [-lblas])])
-fi
-
-# BLAS in Alpha CXML library?
-if test $acx_blas_ok = no; then
-	AC_CHECK_LIB(cxml, $sgemm, [acx_blas_ok=yes;BLAS_LIBS="-lcxml"])
-fi
-
-# BLAS in Alpha DXML library? (now called CXML, see above)
-if test $acx_blas_ok = no; then
-	AC_CHECK_LIB(dxml, $sgemm, [acx_blas_ok=yes;BLAS_LIBS="-ldxml"])
-fi
-
-# BLAS in Sun Performance library?
-if test $acx_blas_ok = no; then
-	if test "x$GCC" != xyes; then # only works with Sun CC
-		AC_CHECK_LIB(sunmath, acosp,
-			[AC_CHECK_LIB(sunperf, $sgemm,
-        			[BLAS_LIBS="-xlic_lib=sunperf -lsunmath"
-                                 acx_blas_ok=yes],[],[-lsunmath])])
-	fi
-fi
-
-# BLAS in SCSL library?  (SGI/Cray Scientific Library)
-if test $acx_blas_ok = no; then
-	AC_CHECK_LIB(scs, $sgemm, [acx_blas_ok=yes; BLAS_LIBS="-lscs"])
-fi
-
-# BLAS in SGIMATH library?
-if test $acx_blas_ok = no; then
-	AC_CHECK_LIB(complib.sgimath, $sgemm,
-		     [acx_blas_ok=yes; BLAS_LIBS="-lcomplib.sgimath"])
-fi
-
-# BLAS in IBM ESSL library? (requires generic BLAS lib, too)
-if test $acx_blas_ok = no; then
-	AC_CHECK_LIB(blas, $sgemm,
-		[AC_CHECK_LIB(essl, $sgemm,
-			[acx_blas_ok=yes; BLAS_LIBS="-lessl -lblas"],
-			[], [-lblas $FLIBS])])
-fi
-
-# BLAS in vecLib Framework (MacOSX 10.2 onwards)
-if test $acx_blas_ok = no; then
-  LDFLAGS_save="$LDFLAGS"
-  for ac_flag in "-framework vecLib" "-Wl,-framework -Wl,vecLib"
-  do
-    LDFLAGS="$LDFLAGS $ac_flag"
-    AC_LINK_IFELSE(
-           AC_LANG_SOURCE([
-      Program test_blas
-      Call sgemm
-      End Program
-    ]),
-    [acx_blas_ok=yes;BLAS_LIBS="$ac_flag"],[])
-  LDFLAGS="$LDFLAGS_save"
-  done
-fi
-
-# Generic BLAS library?
-if test $acx_blas_ok = no; then
-	AC_CHECK_LIB(blas, $sgemm, [acx_blas_ok=yes; BLAS_LIBS="-lblas"])
-fi
-dnl
-AC_SUBST(BLAS_LIBS)
-dnl
-LIBS="$acx_blas_save_LIBS"
-dnl
-# Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
-AS_IF([test x"$acx_blas_ok" = xyes],
-      [$1],
-      [m4_default([$2],[AC_MSG_ERROR([Could not find BLAS library])])]
-      )
-AC_LANG_POP
-])
-dnl This program is free software; you can redistribute it and/or modify
-dnl it under the terms of the GNU General Public License as published by
-dnl the Free Software Foundation; either version 2, or (at your option)
-dnl any later version.
-dnl
-dnl This program is distributed in the hope that it will be useful,
-dnl but WITHOUT ANY WARRANTY; without even the implied warranty of
-dnl MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-dnl GNU General Public License for more details.
-dnl
-dnl You should have received a copy of the GNU General Public License
-dnl along with this program; if not, write to the Free Software
-dnl Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
-dnl 02111-1307, USA.
-dnl
-dnl As a special exception, the Free Software Foundation gives unlimited
-dnl permission to copy, distribute and modify the configure scripts that
-dnl are the output of Autoconf.  You need not follow the terms of the GNU
-dnl General Public License when using or distributing such scripts, even
-dnl though portions of the text of Autoconf appear in them.  The GNU
-dnl General Public License (GPL) does govern all other use of the material
-dnl that constitutes the Autoconf program.
-dnl
-dnl Certain portions of the Autoconf source text are designed to be copied
-dnl (in certain cases, depending on the input) into the output of
-dnl Autoconf.  We call these the "data" portions.  The rest of the Autoconf
-dnl source text consists of comments plus executable code that decides which
-dnl of the data portions to output in any given case.  We call these
-dnl comments and executable code the "non-data" portions.  Autoconf never
-dnl copies any of the non-data portions into its output.
-dnl
-dnl This special exception to the GPL applies to versions of Autoconf
-dnl released by the Free Software Foundation.  When you make and
-dnl distribute a modified version of Autoconf, you may extend this special
-dnl exception to the GPL to apply to your modified version as well, *unless*
-dnl your modified version has the potential to copy into its output some
-dnl of the text that was the non-data portion of the version that you started
-dnl with.  (In other words, unless your change moves or copies text from
-dnl the non-data portions to the data portions.)  If your modification has
-dnl such potential, you must delete any notice of this special exception
-dnl to the GPL from your modified version.
-dnl
-dnl Copyright Toby White <tow21@cam.ac.uk>  2004-2006     
-
-AC_DEFUN([_TW_TRY_LAPACK], [
-ac_ext=f
-AC_LINK_IFELSE(
-    [AC_LANG_SOURCE([[
-      PROGRAM LAPACK
-      CHARACTER        JOBZ, UPLO
-      INTEGER          INFO, ITYPE, LDA, LDB, LWORK, N
-      DOUBLE PRECISION A(1,1), B(1,1), W(1), WORK(1)
-      CALL DSYGV( ITYPE, JOBZ, UPLO, N, A, LDA, B, LDB, W, WORK,                 &
-     &            LWORK, INFO )
-      END PROGRAM
-   ]])],
-   [m4_ifval([$1],[$1],[])],
-   [m4_ifval([$2],[$2],[])]
-)
-])
-
-AC_DEFUN([_TW_TRY_LAPACK_OTHER], [
-ac_ext=f
-AC_LINK_IFELSE(
-    [AC_LANG_SOURCE([[
-      PROGRAM LAPACK
-      CHARACTER        JOBZ, UPLO
-      INTEGER          INFO, ITYPE, LDA, LDB, N
-      DOUBLE PRECISION A(1,1), B(1,1)
-      CALL DSYGST( ITYPE, JOBZ, UPLO, N, A, LDA, B, LDB, INFO )
-      END PROGRAM
-   ]])],
-   [m4_ifval([$1],[$1],[])],
-   [m4_ifval([$2],[$2],[])]
-)
-])
-
-
-AC_DEFUN([TW_FIND_LAPACK], [
-AC_REQUIRE([TW_FIND_FC_BLAS])
-acx_lapack_ok=no
-dnl
-AC_ARG_WITH(lapack,
-        [AC_HELP_STRING([--with-lapack=<lib>], [use LAPACK library <lib>])])
-case $with_lapack in
-        yes | "") ;;
-        no) acx_lapack_ok=disable ;;
-        -* | */* | *.a | *.so | *.so.* | *.o) LAPACK_LIBS="$with_lapack" ;;
-        *) LAPACK_LIBS="-l$with_lapack" ;;
-esac
-dnl
-# Get fortran linker name of LAPACK function to check for.
-#AC_FC_FUNC(dsygv)
-dsygv=dsygv
-dnl
-# First, check LAPACK_LIBS environment variable
-if test "x$LAPACK_LIBS" != x; then
-        save_LIBS="$LIBS"; LIBS="$LAPACK_LIBS $BLAS_LIBS $LIBS $FLIBS"
-        AC_MSG_CHECKING([for $dsygv in $LAPACK_LIBS])
-        _TW_TRY_LAPACK([acx_lapack_ok=yes],[:])
-        AC_MSG_RESULT($acx_lapack_ok)
-        LIBS="$save_LIBS"
-        if test acx_lapack_ok = no; then
-                LAPACK_LIBS=""
-        fi
-fi
-
-# LAPACK linked to by default?  (is sometimes included in BLAS lib)
-if test $acx_lapack_ok = no; then
-        save_LIBS="$LIBS"; LIBS="$LIBS $BLAS_LIBS $FLIBS"
-        AC_MSG_CHECKING([LAPACK already linked])
-        _TW_TRY_LAPACK([acx_lapack_ok=yes], [:])
-	AC_MSG_RESULT([$acx_lapack_ok])
-        LIBS="$save_LIBS"
-fi
-
-# Generic LAPACK library?
-for lapack in lapackmt lapack lapack_rs6k; do
-        if test $acx_lapack_ok = no; then
-                save_LIBS="$LIBS"; LIBS="-l$lapack $BLAS_LIBS $LIBS"
-                AC_MSG_CHECKING([for LAPACK in -l$lapack])
-                _TW_TRY_LAPACK([acx_lapack_ok=yes; LAPACK_LIBS="-l$lapack"], [:])
-                AC_MSG_RESULT([$acx_lapack_ok])
-                LIBS="$save_LIBS"
-        fi
-done
-
-AC_SUBST(LAPACK_LIBS)
-
-# Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
-if test x"$acx_lapack_ok" = xyes; then
-        ifelse([$1],,AC_DEFINE(HAVE_LAPACK,1,[Define if you have LAPACK library.]),[$1])
-        :
-else
-        acx_lapack_ok=no
-        $2
-fi
-])dnl ACX_LAPACK
-dnl This program is free software; you can redistribute it and/or modify
-dnl it under the terms of the GNU General Public License as published by
-dnl the Free Software Foundation; either version 2, or (at your option)
-dnl any later version.
-dnl
-dnl This program is distributed in the hope that it will be useful,
-dnl but WITHOUT ANY WARRANTY; without even the implied warranty of
-dnl MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-dnl GNU General Public License for more details.
-dnl
-dnl You should have received a copy of the GNU General Public License
-dnl along with this program; if not, write to the Free Software
-dnl Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
-dnl 02111-1307, USA.
-dnl
-dnl As a special exception, the Free Software Foundation gives unlimited
-dnl permission to copy, distribute and modify the configure scripts that
-dnl are the output of Autoconf.  You need not follow the terms of the GNU
-dnl General Public License when using or distributing such scripts, even
-dnl though portions of the text of Autoconf appear in them.  The GNU
-dnl General Public License (GPL) does govern all other use of the material
-dnl that constitutes the Autoconf program.
-dnl
-dnl Certain portions of the Autoconf source text are designed to be copied
-dnl (in certain cases, depending on the input) into the output of
-dnl Autoconf.  We call these the "data" portions.  The rest of the Autoconf
-dnl source text consists of comments plus executable code that decides which
-dnl of the data portions to output in any given case.  We call these
-dnl comments and executable code the "non-data" portions.  Autoconf never
-dnl copies any of the non-data portions into its output.
-dnl
-dnl This special exception to the GPL applies to versions of Autoconf
-dnl released by the Free Software Foundation.  When you make and
-dnl distribute a modified version of Autoconf, you may extend this special
-dnl exception to the GPL to apply to your modified version as well, *unless*
-dnl your modified version has the potential to copy into its output some
-dnl of the text that was the non-data portion of the version that you started
-dnl with.  (In other words, unless your change moves or copies text from
-dnl the non-data portions to the data portions.)  If your modification has
-dnl such potential, you must delete any notice of this special exception
-dnl to the GPL from your modified version.
-dnl
-dnl Copyright Toby White <tow21@cam.ac.uk>  2004-2006     
-
 dnl autoconf macros for detecting NetCDF (fortan implementation only)
 dnl
 AC_DEFUN([_TW_TRY_NETCDF], [
@@ -2251,85 +1421,6 @@ AC_DEFUN([TW_PROG_CYGPATH_W], [
  fi
  AC_SUBST([CYGPATH_W])
 ])
-dnl This program is free software; you can redistribute it and/or modify
-dnl it under the terms of the GNU General Public License as published by
-dnl the Free Software Foundation; either version 2, or (at your option)
-dnl any later version.
-dnl
-dnl This program is distributed in the hope that it will be useful,
-dnl but WITHOUT ANY WARRANTY; without even the implied warranty of
-dnl MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-dnl GNU General Public License for more details.
-dnl
-dnl You should have received a copy of the GNU General Public License
-dnl along with this program; if not, write to the Free Software
-dnl Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
-dnl 02111-1307, USA.
-dnl
-dnl As a special exception, the Free Software Foundation gives unlimited
-dnl permission to copy, distribute and modify the configure scripts that
-dnl are the output of Autoconf.  You need not follow the terms of the GNU
-dnl General Public License when using or distributing such scripts, even
-dnl though portions of the text of Autoconf appear in them.  The GNU
-dnl General Public License (GPL) does govern all other use of the material
-dnl that constitutes the Autoconf program.
-dnl
-dnl Certain portions of the Autoconf source text are designed to be copied
-dnl (in certain cases, depending on the input) into the output of
-dnl Autoconf.  We call these the "data" portions.  The rest of the Autoconf
-dnl source text consists of comments plus executable code that decides which
-dnl of the data portions to output in any given case.  We call these
-dnl comments and executable code the "non-data" portions.  Autoconf never
-dnl copies any of the non-data portions into its output.
-dnl
-dnl This special exception to the GPL applies to versions of Autoconf
-dnl released by the Free Software Foundation.  When you make and
-dnl distribute a modified version of Autoconf, you may extend this special
-dnl exception to the GPL to apply to your modified version as well, *unless*
-dnl your modified version has the potential to copy into its output some
-dnl of the text that was the non-data portion of the version that you started
-dnl with.  (In other words, unless your change moves or copies text from
-dnl the non-data portions to the data portions.)  If your modification has
-dnl such potential, you must delete any notice of this special exception
-dnl to the GPL from your modified version.
-dnl
-dnl Copyright Toby White <tow21@cam.ac.uk>  2004-2006     
-
-AC_DEFUN([_TW_TRY_DC_LAPACK], [
-ac_ext=f
-AC_LINK_IFELSE(
-    [AC_LANG_SOURCE([[
-      PROGRAM DC_LAPACK
-      CHARACTER        JOBZ, UPLO
-      INTEGER          INFO, ITYPE, LDA, LDB, LIWORK, LRWORK, LWORK, N
-      DOUBLE PRECISION A(1,1), B(1,1), W(1), WORK(1), RWORK(1)
-      CALL ZHEGVD( ITYPE, JOBZ, UPLO, N, A, LDA, B, LDB, W, WORK,                &
-     &            LWORK, RWORK, LRWORK, IWORK, LIWORK, INFO )
-      END PROGRAM
-   ]])],
-   [m4_ifval([$1],[$1],[])],
-   [m4_ifval([$2],[$2],[])]
-)
-])
-
-AC_DEFUN([TW_CHECK_DC_LAPACK], [
-dnl AC_REQUIRE([TW_FIND_LAPACK])
-acx_dc_lapack_ok=no
-dnl
-
-# LAPACK linked to by default?  (is sometimes included in BLAS lib)
-save_LIBS="$LIBS"; LIBS="$LIBS $LAPACK_LIBS $BLAS_LIBS $FLIBS"
-AC_MSG_CHECKING([LAPACK includes divide-and-conquer routines])
-_TW_TRY_DC_LAPACK([acx_dc_lapack_ok=yes], [:])
-AC_MSG_RESULT([$acx_dc_lapack_ok])
-LIBS="$save_LIBS"
-
-# Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
-AS_IF([test $acx_dc_lapack_ok = yes],
-      [m4_default([$1],[:])],
-      [m4_default([$2],[AC_MSG_ERROR([Need a more complete Lapack library])])]
-     )
-])dnl TW_CHECK_DC_LAPACK
 # This file is part of Autoconf.                       -*- Autoconf -*-
 # Fortran languages support.
 # Copyright (C) 2001, 2003-2005
@@ -2487,7 +1578,7 @@ ac_compiler_gnu=$ac_cv_f77_compiler_gnu
 m4_define([AC_LANG(Fortran)],
 [ac_ext=${FC_SRCEXT-f}
 ac_compile='$FC -c $FCFLAGS $FCFLAGS_SRCEXT conftest.$ac_ext >&AS_MESSAGE_LOG_FD'
-ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $FCFLAGS_SRCEXT conftest.$ac_ext $LIBS >&AS_MESSAGE_LOG_FD'
+ac_link='$FC $ac_link_obj_flag conftest$ac_exeext $FCFLAGS $LDFLAGS $FCFLAGS_SRCEXT conftest.$ac_ext $LIBS >&AS_MESSAGE_LOG_FD'
 ac_compiler_gnu=$ac_cv_fc_compiler_gnu
 ])
 
@@ -4450,6 +3541,10 @@ dnl the text to the file.  We want to end up with TEST\\TEST in the source.
 #
 # Nearly every compiler I have found uses -Ipath for this purpose;
 # Sun F95 v7.1 (at least), uses -Mpath
+# Lahey uses -mod, but it needs to be called as -mod .\; in order
+# to work properly. (so that module files still get written to
+# the current directory.
+# Absoft uses -p (with compulsory space after)
 # 
 AC_DEFUN([AC_FC_MOD_PATH_FLAG],[
           _AC_FORTRAN_ASSERT
@@ -4466,8 +3561,8 @@ AC_DEFUN([AC_FC_MOD_PATH_FLAG],[
 _ACEOF
           _AC_EVAL_STDERR($ac_compile)
           cd ..
-          for i in -I -M; do
-            if test $ac_cv_fc_mod_path_flag == "no"; then
+          for i in -I -M "-mod .\;" "-p "; do
+            if test "$ac_cv_fc_mod_path_flag" == "no"; then
                FCFLAGS_save=$FCFLAGS
                FCFLAGS="$FCFLAGS ${i}conftestdir"
                AC_COMPILE_IFELSE([
@@ -4484,7 +3579,7 @@ _ACEOF
           done
           AC_MSG_RESULT([$ac_cv_fc_mod_path_flag])
           rm -rf conftestdir
-          AS_IF([test $ac_cv_fc_mod_path_flag != "no"],
+          AS_IF([test "$ac_cv_fc_mod_path_flag" != "no"],
                 [$1],
                 [m4_default([$2],[AC_MSG_ERROR([Cannot find flag to alter module search path])])])
 	  AC_SUBST(FC_MOD_FLAG)
@@ -4647,11 +3742,11 @@ test $ac_fpp_need_CXXSTYLE = yes && ac_fpp_need_cxxstyle=no
 ])# _AC_PROG_FPP_FEATURES
 
 
-# _AC_TEST_FPP ([command])
+# _AC_TEST_FPP_FIXED ([command])
 # ------------------------
 # A helper macro to test correct fpp behaviour
 # It sets ac_cv_prog_fpp and ac_fpp_out
-AC_DEFUN([_AC_TEST_FPP],
+AC_DEFUN([_AC_TEST_FPP_FIXED],
 [rm -f conftest*
 cat >conftest.$ac_ext << \_ACEOF
 _AC_LANG_PROGRAM_FPP_ONLY
@@ -4665,24 +3760,68 @@ if eval '$ac_fpp_command conftest.$ac_ext > conftest.log 2>/dev/null'; then
       ac_tmp=
     else
       ac_tmp=conftest.f
+      ac_fpp_fixed_out=
+    fi
+  fi
+  if test -z "$ac_tmp"; then
+    ac_tmp=conftest.log
+    ac_fpp_fixed_out=' > conftest.f'
+  fi
+  if grep '^      REAL A' $ac_tmp >/dev/null 2>&1; then
+    # we have Fortran!  That worked...
+    ac_cv_prog_fpp_fixed=$ac_fpp_command
+  fi
+  if grep 'syntax error' $ac_tmp >/dev/null 2>&1; then
+    # ...oh no it didn't: this line should have been skipped
+    ac_cv_prog_fpp_free=
+  fi
+fi
+rm -f conftest*
+])# _AC_TEST_FPP_FIXED
+
+# _AC_TEST_FPP_FREE ([command])
+# ------------------------
+# A helper macro to test correct fpp behaviour
+# It sets ac_cv_prog_fpp and ac_fpp_out
+AC_DEFUN([_AC_TEST_FPP_FREE],
+[rm -f conftest*
+ac_ext_tmp=$ac_ext
+ac_ext=F90
+cat >conftest.$ac_ext << \_ACEOF
+_AC_LANG_PROGRAM_FPP_ONLY
+_ACEOF
+ac_fpp_command=$1
+if eval '$ac_fpp_command conftest.$ac_ext > conftest.log 2>/dev/null'; then
+  if test -f conftest.f; then
+    if diff conftest.$ac_ext conftest.f90 >/dev/null 2>&1; then
+      # ooops -- these two are the same file, indicating that this is a
+      # case-insensitive filesystem.  So ignore this file.
+      ac_tmp=
+    else
+      ac_tmp=conftest.f90
+      ac_fpp_free_out=
       ac_fpp_out=
     fi
   fi
   if test -z "$ac_tmp"; then
     ac_tmp=conftest.log
-    ac_fpp_out=' > conftest.f'
+    ac_fpp_free_out=' > conftest.f90'
+    ac_fpp_out=' > conftest.f90'
   fi
   if grep '^      REAL A' $ac_tmp >/dev/null 2>&1; then
     # we have Fortran!  That worked...
+    ac_cv_prog_fpp_free=$ac_fpp_command
     ac_cv_prog_fpp=$ac_fpp_command
   fi
   if grep 'syntax error' $ac_tmp >/dev/null 2>&1; then
     # ...oh no it didn't: this line should have been skipped
+    ac_cv_prog_fpp_free=
     ac_cv_prog_fpp=
   fi
 fi
 rm -f conftest*
-])# _AC_TEST_FPP
+ac_ext=$ac_ext_tmp
+])# _AC_TEST_FPP_FREE
 
 
 # _AC_PROG_FPP
@@ -4699,7 +3838,7 @@ AC_LANG_ASSERT(Preprocessed Fortran)
 
 # Let the user specify FPP
 if test -n "$FPP"; then
-  _AC_TEST_FPP([$FPP])
+  _AC_TEST_FPP_FREE([$FPP])
   if test -z "$ac_cv_prog_fpp"; then
     AC_MSG_WARN([user-specified \$FPP ($FPP) does not work])
     FPP=
@@ -4724,9 +3863,9 @@ if test -z "$ac_cv_prog_fpp"; then
 # by itself, but there is a small chance that F77 can be persuaded to
 # preprocess, so we try that.
   for ac_j in 'fpp' "$CPP" "$CPP -x c" 'cpp' '/lib/cpp' '/usr/ccs/lib/cpp' \
-              'g77 -E' '$CC -E' \
+              'g77 -E' '$CC -E' '$CC -E -x c' \
               "$FC -F" "$FC -E" "$F77 -F" "$F77 -E"; do
-    _AC_TEST_FPP([$ac_j])
+    _AC_TEST_FPP_FREE([$ac_j])
     test -n "$ac_cv_prog_fpp" && break;
   done
 fi # test -z "$ac_cv_prog_fpp"
@@ -4755,14 +3894,14 @@ ac_cv_prog_fpp_p,
 [ac_cv_prog_fpp_p=unknown
 AC_LANG_ASSERT(Preprocessed Fortran)
 # This will only be called from AC_PROG_FPP, and as such, the
-# extension *will* be .F.
-ac_ext=F
+# extension *will* be .F90.
+ac_ext=F90
 cat > conftest.$ac_ext << \_ACEOF
 _AC_LANG_PROGRAM_FPP_ONLY
 _ACEOF
 
 AC_LANG_PUSH(Fortran)
-ac_ext=F  # previous line will have reset this
+ac_ext=F90  # previous line will have reset this
 # We must not fail, here, in the case where the filesystem is
 # case-insensitive, so that conftest.F and conftest.f are the same
 # file.
@@ -4772,7 +3911,7 @@ if test -n "$ac_fpp_out"; then
    # the input file as it is being read.  We do clobber it in the
    # end, however, which is why we copy .FPP_SRC_EXT to .$FPP_SRC_EXT
    # each time.
-   ac_tmp='>conftest.tmp && mv conftest.tmp conftest.f'
+   ac_tmp='>conftest.tmp && mv conftest.tmp conftest.f90'
 else
    # conftest.F is preprocessed directly to conftest.f.  We can
    # assume that the filesystem is case-sensitive, since otherwise
@@ -4781,7 +3920,7 @@ else
    ac_tmp=
 fi
 ac_cmd='$FPP $FPPFLAGS conftest.$ac_ext '"$ac_tmp"
-ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $FCFLAGS_SRCEXT conftest.f $LIBS'
+ac_link='$FC $ac_link_obj_flag conftest$ac_exeext $FCFLAGS $LDFLAGS $FCFLAGS_SRCEXT conftest.f90 $LIBS'
 
 if AC_TRY_EVAL(ac_cmd) &&
      AC_TRY_EVAL(ac_link) && test -s conftest${ac_exeext}; then
@@ -5231,7 +4370,7 @@ _AC_PROG_FPP_FEATURES([$1])
 # We first try to use FC for compiling the source directly
 # into object files
 ac_fpp_compile='${FC-fc} -c $FPPFLAGS $FPPFLAGS_SRCEXT $FCFLAGS conftest.$ac_ext >&AS_MESSAGE_LOG_FD'
-ac_fpp_link='${FC-fc} -o conftest${ac_exeext} $FPPFLAGS $FPPFLAGS_SRCEXT $FCFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&AS_MESSAGE_LOG_FD'
+ac_fpp_link='${FC-fc} $ac_link_obj_flag conftest${ac_exeext} $FPPFLAGS $FPPFLAGS_SRCEXT $FCFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&AS_MESSAGE_LOG_FD'
 
 AC_LANG_PUSH(Preprocessed Fortran)
 FPP_SRC_EXT=F
@@ -5293,16 +4432,6 @@ else
 # indirect compilation
   AC_MSG_RESULT([indirect])
 
-# Before we go any further, check that we're not courting disaster,
-# here, by using indirect compilation (.F -> .f -> .o) on a
-# case-insensitive filesystem.  If we are, there's nothing we can do
-# other than fail noisily.
-_AC_FC_CHECK_CIFS
-if test $ac_cv_fc_cifs = yes; then
-    AC_MSG_ERROR([disaster: this Fortran needs indirect compilation, but we
- have a case-insensitive filesystem, so .F -> .f would fail; further compilation isn't going to work -- consider filing a bug])
-fi
-
 # Now we check how to invoke a preprocessor that outputs Fortran code
 # that FC can understand
 #FIXME: in a joint C/Fortran project, CPP might have already
@@ -5317,9 +4446,22 @@ fi
 _AC_PROG_FPP
 _AC_PROG_FPP_P
 
+# Before we go any further, check that we're not courting disaster,
+# here, by using indirect compilation (.F -> .f -> .o) on a
+# case-insensitive filesystem.  If we are, there's nothing we can do
+# other than fail noisily.
+_AC_FC_CHECK_CIFS
 # Redefine the compile and link commands for indirect compilation
-  ac_fpp_compile='${FPP-fpp} $FPPFLAGS $FPPFLAGS_SRCEXT conftest.$ac_ext '"$ac_fpp_out"' && ${FC-fc} -c $FCFLAGS conftest.f >&AS_MESSAGE_LOG_FD'
-  ac_fpp_link='${FPP-fpp} $FPPFLAGS conftest.$ac_ext $FPPFLAGS_SRCEXT '"$ac_fpp_out"' && ${FC-fc} -o conftest${ac_exeext} $FCFLAGS $LDFLAGS conftest.f $LIBS >&AS_MESSAGE_LOG_FD'
+if test $ac_cv_fc_cifs = yes; then
+  if test "x$ac_fpp_out" = x ; then
+    AC_MSG_ERROR([Confused in preprocessing on case-insensitive FS - please report to tow@uszla.me.uk])
+  fi
+  ac_fpp_compile='${FPP-fpp} $FPPFLAGS $FPPFLAGS_SRCEXT conftest.$ac_ext > conftest.cpp.f && ${FC-fc} -c $FCFLAGS -o conftest.o conftest.cpp.f >&AS_MESSAGE_LOG_FD; rm conftest.cpp.f'
+  ac_fpp_link='${FPP-fpp} $FPPFLAGS conftest.$ac_ext $FPPFLAGS_SRCEXT > conftest.cpp.f && ${FC-fc} $ac_link_obj_flag conftest${ac_exeext} $FCFLAGS $LDFLAGS conftest.cpp.f $LIBS >&AS_MESSAGE_LOG_FD; rm conftest.cpp.f'
+else
+  ac_fpp_compile='${FPP-fpp} $FPPFLAGS $FPPFLAGS_SRCEXT conftest.$ac_ext '"$ac_fpp_out"' && ${FC-fc} -c $FCFLAGS conftest.f >&AS_MESSAGE_LOG_FD; rm conftest.f'
+  ac_fpp_link='${FPP-fpp} $FPPFLAGS conftest.$ac_ext $FPPFLAGS_SRCEXT '"$ac_fpp_out"' && ${FC-fc} $ac_link_obj_flag conftest${ac_exeext} $FCFLAGS $LDFLAGS conftest.f $LIBS >&AS_MESSAGE_LOG_FD; rm conftest.f'
+fi
 
   ac_compile=$ac_fpp_compile
   ac_link=$ac_fpp_link
@@ -5395,3 +4537,93 @@ _AC_FPP_BUILD_RULE
 AC_LANG_POP(Preprocessed Fortran)
 
 ])# AC_PROG_FPP
+# _AC_COMPILER_EXEEXT_DEFAULT
+# ---------------------------
+# Check for the extension used for the default name for executables.
+#
+# We do this in order to find out what is the extension we must add for
+# creating executables (see _AC_COMPILER_EXEEXT's comments).
+#
+# Beware of `expr' that may return `0' or `'.  Since this macro is
+# the first one in touch with the compiler, it should also check that
+# it compiles properly.
+#
+# On OpenVMS 7.1 system, the DEC C 5.5 compiler when called through a
+# GNV (gnv.sourceforge.net) cc wrapper, produces the output file named
+# `a_out.exe'.
+m4_define([_AC_COMPILER_EXEEXT_DEFAULT],
+[# First try to determine the flag needed to name the executable
+# It is nearly always "-o" but Lahey Fortran wants "-out"
+AC_MSG_CHECKING([for linker flag to name executables])
+for ac_link_obj_flag in "-out" "-o"; do
+AS_IF([_AC_DO_VAR(ac_link)], 
+[ac_link_obj_flag_found=yes; break], 
+[:])
+done
+if test x$ac_link_obj_flag_found = x ; then
+AC_MSG_FAILURE([Could not determine flag to name executables])
+fi
+AC_MSG_RESULT([$ac_link_obj_flag])
+
+# Try to create an executable without -o first, disregard a.out.
+# It will help us diagnose broken compilers, and finding out an intuition
+# of exeext.
+AC_MSG_CHECKING([for _AC_LANG compiler default output file name])
+ac_link_default=`echo "$ac_link" | sed ['s/ $ac_link_obj_flag *conftest[^ ]*//']`
+#
+# List of possible output files, starting from the most likely.
+# The algorithm is not robust to junk in `.', hence go to wildcards (a.*)
+# only as a last resort.  b.out is created by i960 compilers.
+ac_files='a_out.exe a.exe conftest.exe a.out conftest a.* conftest.* b.out'
+#
+# The IRIX 6 linker writes into existing files which may not be
+# executable, retaining their permissions.  Remove them first so a
+# subsequent execution test works.
+ac_rmfiles=
+for ac_file in $ac_files
+do
+  case $ac_file in
+    _AC_COMPILER_EXEEXT_REJECT ) ;;
+    * ) ac_rmfiles="$ac_rmfiles $ac_file";;
+  esac
+done
+rm -f $ac_rmfiles
+
+AS_IF([_AC_DO_VAR(ac_link_default)],
+[# Autoconf-2.13 could set the ac_cv_exeext variable to `no'.
+# So ignore a value of `no', otherwise this would lead to `EXEEXT = no'
+# in a Makefile.  We should not override ac_cv_exeext if it was cached,
+# so that the user can short-circuit this test for compilers unknown to
+# Autoconf.
+for ac_file in $ac_files
+do
+  test -f "$ac_file" || continue
+  case $ac_file in
+    _AC_COMPILER_EXEEXT_REJECT )
+        ;; 
+    [[ab]].out )
+        # We found the default executable, but exeext='' is most
+        # certainly right.
+        break;;
+    *.* )
+        if test "${ac_cv_exeext+set}" = set && test "$ac_cv_exeext" != no;
+        then :; else
+           ac_cv_exeext=`expr "$ac_file" : ['[^.]*\(\..*\)']`
+        fi
+        # We set ac_cv_exeext here because the later test for it is not
+        # safe: cross compilers may not add the suffix if given an `-o'
+        # argument, so we may need to know it at that point already.
+        # Even if this section looks crufty: it has the advantage of
+        # actually working.
+        break;;
+    * )
+        break;; 
+  esac 
+done
+test "$ac_cv_exeext" = no && ac_cv_exeext=
+],
+      [_AC_MSG_LOG_CONFTEST
+AC_MSG_FAILURE([_AC_LANG compiler cannot create executables], 77)])
+ac_exeext=$ac_cv_exeext
+AC_MSG_RESULT([$ac_file])
+])# _AC_COMPILER_EXEEXT_DEFAULT

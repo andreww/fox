@@ -394,7 +394,7 @@ contains
     n = size(ia) - 1
 
     do j = 1, size(ia)
-      n = n + len(str(ia(j)))
+      n = n + len(ia(j))
     enddo
 
   end function str_integer_array_len
@@ -402,7 +402,7 @@ contains
 
   pure function str_integer_array_fmt_len(ia, fmt) result(n)
     integer, dimension(:), intent(in) :: ia
-    character, intent(in) :: fmt
+    character(len=*), intent(in) :: fmt
     integer :: n
     
     integer :: j
@@ -433,9 +433,9 @@ contains
   end function str_integer_array
 
 
-  pure function str_integer_array_fmt(ia, fmt) result(s)
+  function str_integer_array_fmt(ia, fmt) result(s)
     integer, dimension(:), intent(in) :: ia
-    character, intent(in) :: fmt
+    character(len=*), intent(in) :: fmt
     character(len=len(ia, fmt)) :: s
 
     integer :: j, k, n
@@ -470,7 +470,7 @@ contains
 
   pure function str_integer_matrix_fmt_len(ia, fmt) result(n)
     integer, dimension(:,:), intent(in) :: ia
-    character, intent(in) :: fmt
+    character(len=*), intent(in) :: fmt
     integer :: n
 
     integer :: j, k
@@ -509,7 +509,7 @@ contains
 
   pure function str_integer_matrix_fmt(ia, fmt) result(s)
     integer, dimension(:,:), intent(in) :: ia
-    character, intent(in) :: fmt
+    character(len=*), intent(in) :: fmt
     character(len=len(ia, fmt)) :: s
 
     integer :: j, k, n

@@ -4,7 +4,7 @@ module m_sax_parser
     destroy_string_list, devnull, vs_str_alloc
   use m_common_attrs, only: init_dict, destroy_dict, reset_dict, &
     add_item_to_dict, has_key, get_value
-  use m_common_charset, only: XML_WHITESPACE, operator(.in.), allowed_encoding
+  use m_common_charset, only: XML_WHITESPACE, allowed_encoding
   use m_common_element, only: element_t, existing_element, add_element, &
     get_element, parse_dtd_element, parse_dtd_attlist, report_declarations, &
     get_att_type, get_default_atts, declared_element, ATT_CDATA
@@ -1726,11 +1726,11 @@ contains
       i2 = 1
       w = .true.
       do i = 1, len(s1)
-        if (w.and.(s1(i:i).in.XML_WHITESPACE)) cycle
+        if (w.and.(verify(s1(i:i),XML_WHITESPACE)==0)) cycle
         w = .false.
         s2(i2:i2) = s1(i:i)
         i2 = i2 + 1
-        if (s1(i:i).in.XML_WHITESPACE) w = .true.
+        if (verify(s1(i:i),XML_WHITESPACE)==0) w = .true.
       enddo
       s2(i2:) = ''
     end function NotCDataNormalize

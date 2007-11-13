@@ -1,9 +1,14 @@
 #!/bin/sh
 
 m4 -DTESTINPUT="$1" test_str.f90.in > test_str.f90
-make test_str.exe > /dev/null 2>&1
+if ! make test_str.exe > /dev/null 2>&1; then
+  echo FAILED TO MAKE TEST EXECUTABLE
+  echo Failed: $2 >> failed.out
+  echo 1 >> failed.score
+  exit 1
+fi
 OUT=`./test_str.exe`
-rm -f test_str.exe test_str.o test_str.f90
+rm -f test_str.exe test_str$OBJEXT test_str.f90
 
 echo $OUT $2
 

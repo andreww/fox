@@ -877,9 +877,11 @@ contains
     m = 1
     n = index(string, achar(13))
     do while (n /= 0)
+      print*, string(m:m+n-2)
       m = m + n
       n = index(string(m:), achar(13))
     enddo
+    print*, string(m:)
   end subroutine dump_string
 
   function index_fb(fb, marker) result(p)

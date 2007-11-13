@@ -1,10 +1,10 @@
 #
 default: install
 #
-OBJFILES= m_sax_types.o m_sax_tokenizer.o m_sax_reader.o \
-          m_sax_parser.o m_sax_operate.o FoX_sax.o
+OBJFILES= m_sax_types.$(OBJEXT) m_sax_tokenizer.$(OBJEXT) m_sax_reader.$(OBJEXT) \
+          m_sax_parser.$(OBJEXT) m_sax_operate.$(OBJEXT) FoX_sax.$(OBJEXT)
 #
-LIBRARY=libFoX_sax.a
+LIBRARY=libFoX_sax.$(LIBEXT)
 INCFLAGS=$(MOD_PREFIX)../objs/finclude
 #
 #---------NOTHING SHOULD NEED TO BE CHANGED BELOW THIS LINE-----
@@ -19,18 +19,21 @@ include ../arch.make
 #
 CP=cp -p
 install: $(OBJFILES)
-	@echo "  ==> Updating $(LIBRARY) with $(OBJFILES)"
+	@echo "  ==> Creating $(LIBRARY) with $(OBJFILES)"
 	@$(AR) $(ARFLAGS_EXTRA) cru $(LIBRARY) $(OBJFILES)
 	@$(RANLIB) $(LIBRARY)
 	$(CP) $(LIBRARY) $(LIB_DIR) 
 	for i in *.$(MOD_EXT) ; do  \
            $(CP) $$i $(MOD_DIR);done
 #
+check:
+	(cd test; make)
+#
 clean:
-	rm -f *.o  *.$(MOD_EXT) $(LIBRARY)
+	rm -f *.$(OBJEXT)  *.$(MOD_EXT) $(LIBRARY)
 # DO NOT DELETE THIS LINE - used by make depend
-FoX_sax.o: m_sax_operate.o
-m_sax_operate.o: m_sax_parser.o m_sax_reader.o m_sax_types.o
-m_sax_parser.o: m_sax_reader.o m_sax_tokenizer.o m_sax_types.o
-m_sax_tokenizer.o: m_sax_reader.o m_sax_types.o
-m_sax_types.o: m_sax_reader.o
+FoX_sax.$(OBJEXT): m_sax_operate.$(OBJEXT)
+m_sax_operate.$(OBJEXT): m_sax_parser.$(OBJEXT) m_sax_reader.$(OBJEXT) m_sax_types.$(OBJEXT)
+m_sax_parser.$(OBJEXT): m_sax_reader.$(OBJEXT) m_sax_tokenizer.$(OBJEXT) m_sax_types.$(OBJEXT)
+m_sax_tokenizer.$(OBJEXT): m_sax_reader.$(OBJEXT) m_sax_types.$(OBJEXT)
+m_sax_types.$(OBJEXT): m_sax_reader.$(OBJEXT)

@@ -5,7 +5,7 @@ module m_common_element
   use m_common_array_str, only: str_vs, vs_str_alloc, &
     string_list, init_string_list, destroy_string_list, add_string
   use m_common_charset, only: isInitialNameChar, isNameChar, &
-    upperCase, operator(.in.), XML_WHITESPACE
+    upperCase, XML_WHITESPACE
   use m_common_error, only: error_stack, add_error
 
   implicit none
@@ -253,9 +253,9 @@ contains
 
       if (state==ST_START) then
         !print*,'ST_START'
-        if (c.in.XML_WHITESPACE) then
+        if (verify(c, XML_WHITESPACE)==0) then
           continue
-        elseif (c.in.'EMPTYANY') then
+        elseif (verify(c, 'EMPTYANY')==0) then
           allocate(name(1))
           name(1) = c
           state = ST_EMPTYANY
@@ -272,13 +272,13 @@ contains
 
       elseif (state==ST_EMPTYANY) then
         !print*,'ST_EMPTYANY'
-        if (c.in.upperCase) then
+        if (verify(c, upperCase)==0) then
           temp => name
           allocate(name(size(temp)+1))
           name(:size(temp)) = temp
           name(size(name)) = c
           deallocate(temp)
-        elseif (c.in.XML_WHITESPACE) then
+        elseif (verify(c, XML_WHITESPACE)==0) then
           if (str_vs(name)=='EMPTY') then
             empty = .true.
             ! check do we have any notations FIXME
@@ -299,7 +299,7 @@ contains
 
       elseif (state==ST_FIRSTCHILD) then
         !print*,'ST_FIRSTCHILD'
-        if (c.in.XML_WHITESPACE) cycle
+        if (verify(c, XML_WHITESPACE)==0) cycle
         if (c=='#') then
           mixed = .true.
           state = ST_PCDATA
@@ -322,13 +322,13 @@ contains
 
       elseif (state==ST_PCDATA) then
         !print*,'ST_PCDATA'
-        if (c.in.'PCDATA') then
+        if (verify(c, 'PCDATA')==0) then
           temp => name
           allocate(name(size(temp)+1))
           name(:size(temp)) = temp
           name(size(name)) = c
           deallocate(temp)
-        elseif (c.in.XML_WHITESPACE) then
+        elseif (verify(c, XML_WHITESPACE)==0) then
           if (str_vs(name)=='PCDATA') then
             deallocate(name)
           else
@@ -404,7 +404,7 @@ contains
           else
             state = ST_SEPARATOR
           endif
-        elseif (c.in.XML_WHITESPACE) then
+        elseif (verify(c, XML_WHITESPACE)==0) then
           deallocate(name)
           if (mixed) mixed_additional = .true.
           state = ST_SEPARATOR
@@ -451,7 +451,7 @@ contains
 
       elseif (state==ST_CHILD) then
         !print*,'ST_CHILD'
-        if (c.in.XML_WHITESPACE) cycle
+        if (verify(c, XML_WHITESPACE)==0) cycle
         if (c=='#') then
           call add_error(stack, &
             '# forbidden except as first child element')
@@ -480,7 +480,7 @@ contains
 
       elseif (state==ST_SEPARATOR) then
         !print*,'ST_SEPARATOR'
-        if (c.in.XML_WHITESPACE) cycle
+        if (verify(c, XML_WHITESPACE)==0) cycle
         if (c=='#') then
           call add_error(stack, &
             '#PCDATA must be first in list')
@@ -529,7 +529,7 @@ contains
           state = ST_SEPARATOR
         elseif (c=='?') then
           state = ST_SEPARATOR
-        elseif (c.in.XML_WHITESPACE) then
+        elseif (verify(c, XML_WHITESPACE)==0) then
           state = ST_SEPARATOR
         elseif (c ==',') then
           if (order(nbrackets)=='') then
@@ -587,7 +587,7 @@ contains
           else
             state = ST_END
           endif
-        elseif (c.in.XML_WHITESPACE) then
+        elseif (verify(c, XML_WHITESPACE)==0) then
           if (mixed) then
             if (mixed_additional) then
               call add_error(stack, &
@@ -604,7 +604,7 @@ contains
 
       elseif (state==ST_END) then
         !print*,'ST_END'
-        if (c.in.XML_WHITESPACE) then
+        if (verify(c, XML_WHITESPACE)==0) then
           continue
         else
           call add_error(stack, &
@@ -641,7 +641,7 @@ contains
         integer :: i, i2
         i2 = 1
         do i = 1, len(s1)
-          if (s1(i:i).in.XML_WHITESPACE) cycle
+          if (verify(s1(i:i), XML_WHITESPACE)==0) cycle
           s2(i2:i2) = s1(i:i)
           i2 = i2 + 1
         end do
@@ -757,7 +757,7 @@ contains
 
       if (state==ST_START) then
         !print*,'ST_START'
-        if (c.in.XML_WHITESPACE) cycle
+        if (verify(c, XML_WHITESPACE)==0) cycle
         if (isInitialNameChar(c, xv)) then
           name => vs_str_alloc(c)
           state = ST_NAME
@@ -775,7 +775,7 @@ contains
           name(:size(temp)) = temp
           name(size(name)) = c
           deallocate(temp)
-        elseif (c.in.XML_WHITESPACE) then
+        elseif (verify(c, XML_WHITESPACE)==0) then
           if (present(elem)) then
             if (existing_attribute(elem%attlist, str_vs(name))) then
               if (associated(ignore_att%name)) deallocate(name)
@@ -803,8 +803,8 @@ contains
 
       elseif (state==ST_AFTERNAME) then
         !print*,'ST_AFTERNAME'
-        if (c.in.XML_WHITESPACE) cycle
-        if (c.in.upperCase) then
+        if (verify(c, XML_WHITESPACE)==0) cycle
+        if (verify(c, upperCase)==0) then
           type => vs_str_alloc(c)
           state = ST_ATTTYPE
         elseif (c=='(') then
@@ -819,13 +819,13 @@ contains
 
       elseif (state==ST_ATTTYPE) then
         !print*,'ST_ATTTYPE'
-        if (c.in.upperCase) then
+        if (verify(c, upperCase)==0) then
           temp => type
           allocate(type(size(temp)+1))
           type(:size(temp)) = temp
           type(size(type)) = c
           deallocate(temp)
-        elseif (c.in.XML_WHITESPACE) then
+        elseif (verify(c, XML_WHITESPACE)==0) then
           if (str_vs(type)=='CDATA') then
             ca%attType = ATT_CDATA
             state = ST_AFTER_ATTTYPE
@@ -867,7 +867,7 @@ contains
 
       elseif (state==ST_AFTER_NOTATION) then
         !print*,'ST_AFTER_NOTATION'
-        if (c.in.XML_WHITESPACE) cycle
+        if (verify(c, XML_WHITESPACE)==0) cycle
         if (c=='(') then
           state = ST_NOTATION_LIST
         else
@@ -878,7 +878,7 @@ contains
 
       elseif (state==ST_NOTATION_LIST) then
         !print*,'ST_NOTATION_LIST'
-        if (c.in.XML_WHITESPACE) cycle
+        if (verify(c, XML_WHITESPACE)==0) cycle
         if (isInitialNameChar(c, xv)) then
           value => vs_str_alloc(c)
           state = ST_ENUM_NAME
@@ -890,7 +890,7 @@ contains
 
       elseif (state==ST_ENUMERATION) then
         !print*,'ST_ENUMERATION'
-        if (c.in.XML_WHITESPACE) cycle
+        if (verify(c, XML_WHITESPACE)==0) cycle
         if (isNameChar(c, xv)) then
           temp => value
           allocate(value(size(temp)+1))
@@ -920,7 +920,7 @@ contains
           value(:size(temp)) = temp
           value(size(value)) = c
           deallocate(temp)
-        elseif (c.in.XML_WHITESPACE) then
+        elseif (verify(c, XML_WHITESPACE)==0) then
           !FIXME normalize value here
           call add_string(ca%enumerations, str_vs(value))
           deallocate(value)
@@ -953,7 +953,7 @@ contains
 
       elseif (state==ST_SEPARATOR) then
         !print*,'ST_SEPARATOR'
-        if (c.in.XML_WHITESPACE) cycle
+        if (verify(c, XML_WHITESPACE)==0) cycle
         if (c=='|') then
           if (ca%attType==ATT_NOTATION) then
             state = ST_NOTATION_LIST
@@ -970,7 +970,7 @@ contains
         endif
 
       elseif (state==ST_AFTER_ATTTYPE_SPACE) then
-        if (.not.(c.in.XML_WHITESPACE)) then
+        if (verify(c, XML_WHITESPACE)/=0) then
           call add_error(stack, &
             'Missing whitespace in attlist enumeration')
           goto 200
@@ -979,7 +979,7 @@ contains
 
       elseif (state==ST_AFTER_ATTTYPE) then
         !print*,'ST_AFTER_ATTTYPE'
-        if (c.in.XML_WHITESPACE) cycle
+        if (verify(c, XML_WHITESPACE)==0) cycle
         if (c=='#') then
           allocate(default(0))
           state = ST_DEFAULT_DECL
@@ -1001,13 +1001,13 @@ contains
 
       elseif (state==ST_DEFAULT_DECL) then
         !print*,'ST_DEFAULT_DECL'
-        if (c.in.upperCase) then
+        if (verify(c, upperCase)==0) then
           temp => default
           allocate(default(size(temp)+1))
           default(:size(temp)) = temp
           default(size(default)) = c
           deallocate(temp)
-        elseif (c.in.XML_WHITESPACE) then
+        elseif (verify(c, XML_WHITESPACE)==0) then
           if (str_vs(default)=='REQUIRED') then
             ca%attdefault = ATT_REQUIRED
             deallocate(default)
@@ -1033,7 +1033,7 @@ contains
 
       elseif (state==ST_AFTERDEFAULTDECL) then
         !print*,'ST_AFTERDEFAULTDECL'
-        if (c.in.XML_WHITESPACE) cycle
+        if (verify(c, XML_WHITESPACE)==0) cycle
         if (c=='"') then
           q = c
           allocate(value(0))

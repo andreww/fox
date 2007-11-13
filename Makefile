@@ -63,19 +63,20 @@ fsys_lib_clean:
 fsys_check:
 #
 common_check:
-	(cd common/test;./run_tests.sh)
+	(cd common; make check)
 #
 utils_check:
 #
 dom_check:
 #
 sax_check:
+	(cd sax; make check)
 #
 wcml_check:
-	(cd wcml/test;./run_tests.sh)
+	(cd wcml; make check)
 #
 wxml_check:
-	(cd wxml/test;./run_tests.sh)
+	(cd wxml; make check)
 #
 check: common_check wxml_check wcml_check sax_check dom_check
 #

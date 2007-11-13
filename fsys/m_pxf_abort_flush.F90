@@ -81,6 +81,9 @@ CONTAINS
     end interface
 #define FC_HAVE_ABORT
 #endif
+#ifndef FC_HAVE_ABORT
+    integer, pointer :: i
+#endif
 
     call pxfflush(6)
 
@@ -93,7 +96,6 @@ CONTAINS
     call abort()
 #endif ! FC_ABORT_TYPE
 #else
-    Integer, Pointer :: i
     i=>null()
     Print*,i
 #endif ! FC_HAVE_ABORT

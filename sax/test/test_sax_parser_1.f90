@@ -11,13 +11,13 @@ program test_sax_reader
 
   call open_file(fb, file="test_sax_fsm_1.in", iostat=iostat)
 
-  call sax_parser_init(fx)
+  call sax_parser_init(fx, "test_sax_fsm_1.in")
 
-  call sax_parse(fx, fb, iostat)
+  call sax_parse(fx, fb)
 
-  print*, fx%xml_version
-  print*, fx%encoding
-  print*, fx%standalone
+  print*, fx%xds%xml_version
+  print*, fx%xds%encoding
+  print*, fx%xds%standalone
 
   call sax_parser_destroy(fx)
   call close_file(fb) 
