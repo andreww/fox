@@ -902,6 +902,9 @@ if test x$FC_ID = x; then
          *Sun*)
             FC_ID=Sun # there's more than one compiler here ...
             ;;
+         *Absoft*)
+            FC_ID=Absoft # there's more than one compiler here ...
+            ;;
       esac
    fi
 fi
