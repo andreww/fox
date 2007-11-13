@@ -9,7 +9,7 @@ program test_sax_reader
 
   call open_xml_file(xt, "testin.xml", i)
 
-  call sax_parse_go(xt, &
+  call parse(xt, &
        startDocument_handler=start_document_handler, &
        endDocument_handler=end_document_handler, &
        startElement_handler=begin_element_handler, &

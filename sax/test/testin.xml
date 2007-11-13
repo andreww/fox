@@ -53,7 +53,7 @@ lalala
 <?PI pi4?>
 <!-- comment 4 -->
 
-<error xml:space="myarse"/>
+<error xml:space="preserve"/>
 
 </test>
 <?PI pi5?>
