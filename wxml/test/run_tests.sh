@@ -11,8 +11,8 @@ do
   ./$t
 done
 
-echo Test Results:
-echo Passed: `grep -c PASSED tests.out`
-echo Failed: `grep -c FAILED tests.out`
+echo RESULT wxml/ Test Results:
+echo RESULT wxml/ Passed: `grep -c PASSED tests.out`
+echo RESULT wxml/ Failed: `grep -c FAILED tests.out`
 
-echo See failed.out for details of failed tests.
+echo RESULT wxml/ See wxml/test/failed.out for details of failed tests.

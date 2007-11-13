@@ -11,8 +11,8 @@ do
   ./$t
 done
 
-echo Test Results:
-echo Passed: `wc -l passed.score| cut -f 1 -d 'p'`
-echo Failed: `wc -l failed.score| cut -f 1 -d 'f'`
+echo RESULT sax/ Test Results:
+echo RESULT sax/ Passed: `wc -l passed.score| cut -f 1 -d 'p'`
+echo RESULT sax/ Failed: `wc -l failed.score| cut -f 1 -d 'f'`
 
-echo See failed.out for details of failed tests.
+echo RESULT sax/ See sax/test/failed.out for details of failed tests.

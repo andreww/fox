@@ -15,9 +15,8 @@ install: objsdir $(BUILD_TARGETS)
 	$(INSTALL) FoX-config $(install_prefix)/bin
 #
 examples_build:
-	(cd examples; make)
+	(cd examples; $(MAKE))
 #
-check: dom_check sax_check wxml_check wcml_check
 #---------------------------
 #
 # Recursive make for each module
@@ -26,26 +25,41 @@ dom_lib: objsdir sax_lib wxml_lib
 	(cd dom; $(MAKE))
 dom_lib_clean:
 	(cd dom; $(MAKE) clean)
+dom_lib_check: sax_lib_check wxml_lib_check
+	(cd dom; $(MAKE) check)
+	touch dom_lib_check
 #
 sax_lib: objsdir common_lib fsys_lib
 	(cd sax; $(MAKE))
 sax_lib_clean:
 	(cd sax; $(MAKE) clean)
+sax_lib_check: common_lib_check
+	(cd sax; $(MAKE) check)
+	touch sax_lib_check
 #
 wxml_lib: objsdir common_lib fsys_lib 
 	(cd wxml; $(MAKE))
 wxml_lib_clean:
 	(cd wxml; $(MAKE) clean)
+wxml_lib_check: common_lib_check
+	(cd wxml; $(MAKE) check)
+	touch wxml_lib_check
 #
 wcml_lib: objsdir utils_lib wxml_lib
 	(cd wcml; $(MAKE))
 wcml_lib_clean: 
 	(cd wcml; $(MAKE) clean)
+wcml_lib_check: wxml_lib_check
+	(cd wcml; $(MAKE) check)
+	touch wcml_lib_check
 #
 common_lib: objsdir fsys_lib
 	(cd common; $(MAKE))
 common_lib_clean:
 	(cd common; $(MAKE) clean)
+common_lib_check:
+	(cd common; $(MAKE) check)
+	touch common_lib_check
 #
 utils_lib: objsdir
 	(cd utils; $(MAKE))
@@ -57,41 +71,26 @@ fsys_lib: objsdir
 fsys_lib_clean:
 	(cd fsys; $(MAKE) clean)
 #
-#
-# Unit tests (where implemented)
-#
-fsys_check:
-#
-common_check:
-	(cd common; make check)
-#
-utils_check:
-#
-dom_check:
-#
-sax_check:
-	(cd sax; make check)
-#
-wcml_check:
-	(cd wcml; make check)
-#
-wxml_check:
-	(cd wxml; make check)
-#
-check: common_check wxml_check wcml_check sax_check dom_check
+check:
+	@rm -f check.out *_check
+	@touch check.out
+	for i in $(BUILD_TARGETS); do \
+	  $(MAKE) $$i''_check; \
+	done
+	@grep RESULT check.out
 #
 #
 # Documentation
 #
 DoX:
-	(cd DoX; make)
+	(cd DoX; $(MAKE))
 #
 #
 # Clean
 #
 clean: wxml_lib_clean wcml_lib_clean common_lib_clean fsys_lib_clean sax_lib_clean dom_lib_clean utils_lib_clean
-	(cd examples;make clean)
-	rm -rf objs .FoX
+	(cd examples; $(MAKE) clean)
+	rm -rf objs .FoX check.out *_check
 #
 distclean: clean
-	rm -f FoX-config arch.make config.log config.status .config
+	rm -f FoX-config arch.make config.log config.status .config check.out

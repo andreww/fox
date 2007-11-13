@@ -315,8 +315,8 @@ echo "Matrices:"
 ./test_str.sh 'reshape((/(0.50d0, 0.50d0), (1d0, 1d0), (2d0, 2d0), (-2d0, -2d0)/),(/1,4/)),"s1"' '(5e-1)+i(5e-1) (1e0)+i(1e0) (2e0)+i(2e0) (-2e0)+i(-2e0)'
 ./test_str.sh 'reshape((/(0.50d0, 0.50d0), (1d0, 1d0), (2d0, 2d0), (-2d0, -2d0)/),(/2,2/)),"s1"' '(5e-1)+i(5e-1) (1e0)+i(1e0) (2e0)+i(2e0) (-2e0)+i(-2e0)'
 
-echo Test Results:
-echo Passed: `wc -c passed.score`
-echo Failed: `wc -c failed.score`
+echo RESULT common/ Test Results:
+echo RESULT common/ Passed: `wc -c passed.score`
+echo RESULT common/ Failed: `wc -c failed.score`
 
-echo See failed.out for details of failed tests.
+echo RESULT common/ See common/test/failed.out for details of failed tests.

@@ -27,7 +27,7 @@ install: $(OBJFILES)
            $(CP) $$i $(MOD_DIR);done
 #
 check:
-	(cd test; make)
+	(cd test; make) | tee -a ../check.out
 #
 clean:
 	rm -f *.$(OBJEXT)  *.$(MOD_EXT) $(LIBRARY)
