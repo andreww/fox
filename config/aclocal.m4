@@ -3630,6 +3630,7 @@ dnl the text to the file.  We want to end up with TEST\\TEST in the source.
 # Lahey uses -mod, but it needs to be called as -mod .\; in order
 # to work properly. (so that module files still get written to
 # the current directory.
+# Absoft uses -p (with compulsory space after)
 # 
 AC_DEFUN([AC_FC_MOD_PATH_FLAG],[
           _AC_FORTRAN_ASSERT
@@ -3646,7 +3647,7 @@ AC_DEFUN([AC_FC_MOD_PATH_FLAG],[
 _ACEOF
           _AC_EVAL_STDERR($ac_compile)
           cd ..
-          for i in -I -M "-mod .\;"; do
+          for i in -I -M "-mod .\;" "-p "; do
             if test "$ac_cv_fc_mod_path_flag" == "no"; then
                FCFLAGS_save=$FCFLAGS
                FCFLAGS="$FCFLAGS ${i}conftestdir"

@@ -63,13 +63,8 @@ fi
 dnl
 dnl Generate host/compiler ID string to encode in program
 TW_FC_ID
-SIESTA_ARCH="$host--$FC_ID"
-AC_SUBST(SIESTA_ARCH)
 dnl
-dnl Check for any extra compiler-specific flags necessary
 dnl Also set FFLAGS_DEBUG and FFLAGS_FAST
-dnl SYS will be "nag" (ie standard f95) for almost all cases
-SYS=nag
 TW_FC_ID_FLAGS
 dnl
 AC_ARG_ENABLE([debug],
@@ -124,15 +119,6 @@ dnl BUILD_TARGETS="$WXML_yes $WCML_yes $WKML_yes $SAX_yes $DOM_yes"
 BUILD_TARGETS="$WXML_yes $WCML_yes $SAX_yes $DOM_yes"
 AC_SUBST(BUILD_TARGETS)
 dnl
-dnl Check compiler characteristics; it must support F95
-dnl to use the cpu_time intrinsic. Otherwise, SYS must
-dnl be set appropriately. Only pgf90 should fail this.
-dnl Actually, we should simply check to see if cpu_time is supported.
-dnl TW_CHECK_FC_95([SYS=nag],dnl
-dnl   TW_CHECK_FC_90([SYS=cputim],[])
-dnl                   )
-AC_SUBST(SYS)
-dnl
 dnl Check for compiler kind flags
 dnl
 AC_FC_GET_REAL_KINDS
@@ -142,8 +128,8 @@ AC_SUBST(SP_KIND)
 AC_SUBST(DP_KIND)
 dnl
 dnl Check whether we need to pass a flag to get at the flush intrinsic.
-TW_FC_CHECK_FLUSH
-TW_FC_CHECK_ABORT
+TW_FC_CHECK_FLUSH([],[AC_MSG_RESULT([cannot compile call to FLUSH])])
+TW_FC_CHECK_ABORT([],[AC_MSG_RESULT([cannot compile call to ABORT])])
 dnl
 dnl Fix up DEFS -> FPPFLAGS conversion.
 for i in $DEFS; do
