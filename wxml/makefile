@@ -30,6 +30,9 @@ install: $(OBJFILES)
 	for i in *.$(MOD_EXT); do \
 	  $(CP) $$i $(MOD_DIR); done
 #
+check:
+	(cd test; make)
+#
 clean:
 	rm -f *.$(OBJEXT) *.$(MOD_EXT) $(LIBRARY)
 

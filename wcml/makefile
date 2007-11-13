@@ -29,8 +29,12 @@ install: $(OBJFILES)
 	for i in *.$(MOD_EXT) ; do  \
            $(CP) $$i $(MOD_DIR); done
 #
+check:
+	(cd test; make)
+#
 clean:
 	rm -f *.$(OBJEXT)  *.$(MOD_EXT) $(LIBRARY)
+#
 m_wcml_coma.f90: m_wcml_coma.m4
 m_wcml_geometry.f90: m_wcml_geometry.m4
 m_wcml_lattice.f90: m_wcml_lattice.m4
