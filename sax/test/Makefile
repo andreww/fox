@@ -1,9 +1,11 @@
 include ../../arch.make
 
-INCFLAGS=`../../FoX-config --fcflags --sax`
+INCFLAGS=`../../FoX-config --fcflags`
 
-.f90.exe: ../libFoX_wxml.a m_handlers.o
-	$(FC) $(FFLAGS) $(INCFLAGS) $(LDFLAGS) $(FCFLAGS_free_f90) -o $@ $< m_handlers.o `../../FoX-config --libs --sax`
-	
+.f90.exe:
+	$(FC) $(FFLAGS) $(INCFLAGS) $(LDFLAGS) $(FCFLAGS_free_f90) $(LINK_O_FLAG) $@ $< m_handlers.$(OBJEXT) `../../FoX-config --libs --sax`
+
+check: clean m_handlers.$(OBJEXT)
+	./run_tests.sh
 clean:
-	rm -f *.o *.exe
+	rm -f *.$(OBJEXT) *.exe
