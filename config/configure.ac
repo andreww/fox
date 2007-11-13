@@ -1,13 +1,7 @@
-AC_INIT([FoX],[3.0],[tow@uszla.me.uk])
+AC_INIT([FoX],[3.0.1],[tow@uszla.me.uk])
 AC_CONFIG_SRCDIR([README.FoX.txt])
 dnl
-dnl All macros are kept in ./m4:
-dnl AC_CONFIG_MACRO_DIR([m4])
-dnl FIXME that doesn't work. Why not?
-dnl
 dnl Find system type.
-dnl Uses rewritten AC_CONFIG_AUX_DIR to look for config.sub
-dnl instead of install script
 AC_CONFIG_AUX_DIR([config])
 AC_CANONICAL_HOST
 dnl
