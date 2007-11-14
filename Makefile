@@ -71,7 +71,7 @@ fsys_lib: objsdir
 fsys_lib_clean:
 	(cd fsys; $(MAKE) clean)
 #
-check:
+check: default
 	@rm -f check.out *_check
 	@touch check.out
 	for i in $(BUILD_TARGETS); do \

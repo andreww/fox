@@ -6,4 +6,8 @@ Quick start:
 
 2. Type "make"
 
+(Optionally)
+
+3. Type "make check"
+
 Full documentation is in DoX/index.html
