@@ -3,17 +3,12 @@
 
 module m_wcml_molecule
 
-#ifdef WCML_DUMMY
-  integer, parameter :: sp = selected_real_kind(6,30)
-  integer, parameter :: dp = selected_real_kind(14,100)
-  type xmlf_t
-    integer :: i
-  end type xmlf_t
-#else
-  use m_common_format, only: str
   use m_common_realtypes, only: sp, dp
-  use m_common_error, only: FoX_error
   use FoX_wxml, only: xmlf_t
+
+#ifndef DUMMYLIB
+  use m_common_format, only: str
+  use m_common_error, only: FoX_error
   use FoX_wxml, only: xml_NewElement, xml_EndElement
   use FoX_wxml, only: xml_AddAttribute, xml_AddCharacters, xml_AddNewline
 
@@ -35,10 +30,12 @@ module m_wcml_molecule
     module procedure cmlAddMolecule_3_DP_sh
   end interface
 
+#ifndef DUMMYLIB
   interface cmlAddAtom
     module procedure cmlAddAtom_sp
     module procedure cmlAddAtom_dp
   end interface
+#endif
 
   public :: cmlAddMolecule
 
@@ -66,7 +63,7 @@ contains
 
 
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     integer          :: i
 
     if (present(style)) then
@@ -132,7 +129,7 @@ contains
 
 
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     integer          :: i
 
     if (style=="DL_POLY") then
@@ -198,7 +195,7 @@ contains
 
 
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     integer          :: i
 
     if (style=="DL_POLY") then
@@ -263,7 +260,7 @@ contains
     character(len=*), intent(in), optional :: role
 
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     integer          :: i
 
     if (style=="DL_POLY") then
@@ -302,7 +299,7 @@ contains
 #endif
   end subroutine cmlAddMolecule_3_sp_sh
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
   subroutine cmlAddAtom_sp(xf, elem, coords, id, charge, hCount, occupancy, &
        fmt, style)
     type(xmlf_t), intent(inout) :: xf
@@ -484,7 +481,7 @@ contains
 
 
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     integer          :: i
 
     if (present(style)) then
@@ -550,7 +547,7 @@ contains
 
 
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     integer          :: i
 
     if (style=="DL_POLY") then
@@ -616,7 +613,7 @@ contains
 
 
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     integer          :: i
 
     if (style=="DL_POLY") then
@@ -681,7 +678,7 @@ contains
     character(len=*), intent(in), optional :: role
 
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     integer          :: i
 
     if (style=="DL_POLY") then
@@ -720,7 +717,7 @@ contains
 #endif
   end subroutine cmlAddMolecule_3_dp_sh
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
   subroutine cmlAddAtom_dp(xf, elem, coords, id, charge, hCount, occupancy, &
        fmt, style)
     type(xmlf_t), intent(inout) :: xf

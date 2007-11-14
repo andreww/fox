@@ -6,13 +6,10 @@
 
 module m_wcml_lists
 
-#ifdef WCML_DUMMY
-  type xmlf_t
-    integer :: i
-  end type xmlf_t
-#else
-  use FoX_common, only: str
   use FoX_wxml, only: xmlf_t
+
+#ifndef DUMMYLIB
+  use FoX_common, only: str
   use FoX_wxml, only: xml_NewElement, xml_EndElement
   use FoX_wxml, only: xml_AddAttribute
 #endif
@@ -55,7 +52,7 @@ contains
     character(len=*), intent(in), optional :: role
 
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_NewElement(xf, "metadataList")
 
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
@@ -71,7 +68,7 @@ contains
 
   subroutine cmlEndmetadataList(xf)
     type(xmlf_t), intent(inout) :: xf
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_EndElement(xf, "metadataList")
 #endif
   end subroutine cmlEndmetadataList
@@ -90,7 +87,7 @@ contains
     character(len=*), intent(in), optional :: role
 
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_NewElement(xf, "propertyList")
 
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
@@ -106,7 +103,7 @@ contains
 
   subroutine cmlEndpropertyList(xf)
     type(xmlf_t), intent(inout) :: xf
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_EndElement(xf, "propertyList")
 #endif
   end subroutine cmlEndpropertyList
@@ -125,7 +122,7 @@ contains
     character(len=*), intent(in), optional :: role
 
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_NewElement(xf, "parameterList")
 
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
@@ -141,7 +138,7 @@ contains
 
   subroutine cmlEndparameterList(xf)
     type(xmlf_t), intent(inout) :: xf
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_EndElement(xf, "parameterList")
 #endif
   end subroutine cmlEndparameterList
@@ -160,7 +157,7 @@ contains
     character(len=*), intent(in), optional :: role
 
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_NewElement(xf, "bandList")
 
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
@@ -176,7 +173,7 @@ contains
 
   subroutine cmlEndbandList(xf)
     type(xmlf_t), intent(inout) :: xf
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_EndElement(xf, "bandList")
 #endif
   end subroutine cmlEndbandList
@@ -195,7 +192,7 @@ contains
     character(len=*), intent(in), optional :: role
 
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_NewElement(xf, "kpointList")
 
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
@@ -211,7 +208,7 @@ contains
 
   subroutine cmlEndkpointList(xf)
     type(xmlf_t), intent(inout) :: xf
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_EndElement(xf, "kpointList")
 #endif
   end subroutine cmlEndkpointList
@@ -230,7 +227,7 @@ contains
     character(len=*), intent(in), optional :: role
 
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_NewElement(xf, "module")
 
     if (present(serial)) call xml_addAttribute(xf, "serial", serial)
@@ -246,7 +243,7 @@ contains
 
   subroutine cmlEndmodule(xf)
     type(xmlf_t), intent(inout) :: xf
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_EndElement(xf, "module")
 #endif
   end subroutine cmlEndmodule
@@ -261,7 +258,7 @@ contains
     character(len=*), intent(in), optional :: title
     character(len=*), intent(in), optional :: convention
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     if (present(index)) then
       call cmlStartModule(xf=xf, id=id, title=title, convention=convention, &
         dictRef=type, role='step', serial=str(index))
@@ -276,7 +273,7 @@ contains
 
   subroutine cmlEndStep(xf)
     type(xmlf_t), intent(inout) :: xf
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_EndElement(xf, 'module')
 #endif
   end subroutine cmlEndStep

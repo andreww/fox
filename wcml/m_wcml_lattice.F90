@@ -9,15 +9,10 @@ module m_wcml_lattice
 ! conversion between lattices & crystals ...
 ! <lattice> can also contain xtal coords or a <matrix>
 
-#ifdef WCML_DUMMY
-  integer, parameter :: sp = selected_real_kind(6,30)
-  integer, parameter :: dp = selected_real_kind(14,100)
-  type xmlf_t
-    integer :: i
-  end type xmlf_t
-#else
   use m_common_realtypes, only: sp, dp
   use FoX_wxml, only: xmlf_t
+
+#ifndef DUMMYLIB
   use FoX_wxml, only: xml_NewElement, xml_EndElement
   use FoX_wxml, only: xml_AddAttribute, xml_AddCharacters
 
@@ -64,7 +59,7 @@ contains
     character(len=*), intent(in), optional :: lenfmt
     character(len=*), intent(in), optional :: angfmt
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_NewElement(xf=xf, name="crystal")
     if (present(id))      call xml_AddAttribute(xf, "id", id)
     if (present(title))   call xml_AddAttribute(xf, "title", title)
@@ -116,7 +111,7 @@ contains
     character(len=*), intent(in), optional :: spaceType
     character(len=*), intent(in), optional :: fmt
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     integer :: i
 
     call xml_NewElement(xf, "lattice")
@@ -163,7 +158,7 @@ contains
     character(len=*), intent(in), optional :: lenfmt
     character(len=*), intent(in), optional :: angfmt
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_NewElement(xf=xf, name="crystal")
     if (present(id))      call xml_AddAttribute(xf, "id", id)
     if (present(title))   call xml_AddAttribute(xf, "title", title)
@@ -215,7 +210,7 @@ contains
     character(len=*), intent(in), optional :: spaceType
     character(len=*), intent(in), optional :: fmt
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     integer :: i
 
     call xml_NewElement(xf, "lattice")

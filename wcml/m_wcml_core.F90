@@ -1,15 +1,13 @@
 module m_wcml_core
 
-#ifdef WCML_DUMMY
-  type xmlf_t
-    integer :: i
-  end type xmlf_t
-#else
+  use FoX_wxml, only: xmlf_t
+
+#ifndef DUMMYLIB
   use m_common_error, only: FoX_error
 
   use FoX_common, only: FoX_version
   use FoX_utils, only: generate_uuid
-  use FoX_wxml, only: xmlf_t, xml_OpenFile, xml_Close
+  use FoX_wxml, only: xml_OpenFile, xml_Close
   use FoX_wxml, only: xml_NewElement, xml_AddAttribute
   use FoX_wxml, only: xml_EndElement, xml_DeclareNamespace
   use FoX_wxml, only: xmlf_Name, xmlf_OpenTag
@@ -35,7 +33,7 @@ contains
     integer, intent(in) :: unit
     logical, intent(in), optional :: replace
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     if (unit==-1) then
       call xml_OpenFile(filename, xf, preserve_whitespace=.false., replace=replace)
     else
@@ -49,7 +47,7 @@ contains
   subroutine cmlFinishFile(xf)
     type(xmlf_t), intent(inout) :: xf
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_Close(xf)
 #endif
 
@@ -61,7 +59,7 @@ contains
     character(len=*), intent(in) :: prefix
     character(len=*), intent(in) :: URI
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     if (xmlf_OpenTag(xf) /= "") &
       call FoX_error("Cannot do cmlAddNamespace after starting CML output")
 
@@ -80,7 +78,7 @@ contains
     character(len=*), intent(in), optional :: fileId
     character(len=*), intent(in), optional :: version
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_DeclareNamespace(xf, 'http://www.xml-cml.org/schema')
     call xml_DeclareNamespace(xf, 'http://www.w3.org/2001/XMLSchema', 'xsd')
     call xml_DeclareNamespace(xf, 'http://www.uszla.me.uk/fpx', 'fpx')
@@ -121,7 +119,7 @@ contains
   subroutine cmlEndCml(xf)
     type(xmlf_t), intent(inout) :: xf
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call cmlAddMetadata(xf, name='dc:contributor', content='FoX-'//FoX_version//' (http://www.uszla.me.uk/FoX)')
     call xml_EndElement(xf, 'cml')
 #endif

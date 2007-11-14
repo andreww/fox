@@ -42,7 +42,7 @@ ifelse(substr($3,0,4),`Real',`dnl
     character(len=*), intent(in), optional :: fmt
 ')dnl
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_NewElement(xf, "$1")
 dnl
 m4_foreach(`x', `$2', `TOHWM4_dummyarguse(x)')
@@ -68,15 +68,10 @@ include(`foreach.m4')dnl
 !
 module m_wcml_$1
 
-#ifdef WCML_DUMMY
-  integer, parameter :: sp = selected_real_kind(6,30)
-  integer, parameter :: dp = selected_real_kind(14,100)
-  type xmlf_t
-    integer :: i
-  end type xmlf_t
-#else
   use m_common_realtypes, only: sp, dp
   use FoX_wxml, only: xmlf_t
+
+#ifndef DUMMYLIB
   use FoX_wxml, only: xml_NewElement, xml_AddAttribute
   use FoX_wxml, only: xml_EndElement
   use m_wcml_stml, only: stmAddValue

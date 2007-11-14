@@ -1,12 +1,6 @@
 module FoX_wcml
 
-#ifdef WCML_DUMMY
-  type xmlf_t
-    integer :: i
-  end type xmlf_t
-#else
   use FoX_wxml, only: xmlf_t
-#endif
 
   use m_wcml_core
   use m_wcml_coma

@@ -11,7 +11,7 @@ dnl
 m4_foreach(`x', `$2', `TOHWM4_dummyargdecl(x)')
 dnl
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_NewElement(xf, "$1")
 
 dnl
@@ -23,7 +23,7 @@ dnl
 
   subroutine cmlEnd$1(xf)
     type(xmlf_t), intent(inout) :: xf
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_EndElement(xf, "$1")
 #endif
   end subroutine cmlEnd$1
@@ -37,13 +37,10 @@ dnl
 
 module m_wcml_lists
 
-#ifdef WCML_DUMMY
-  type xmlf_t
-    integer :: i
-  end type xmlf_t
-#else
-  use FoX_common, only: str
   use FoX_wxml, only: xmlf_t
+
+#ifndef DUMMYLIB
+  use FoX_common, only: str
   use FoX_wxml, only: xml_NewElement, xml_EndElement
   use FoX_wxml, only: xml_AddAttribute
 #endif
@@ -94,7 +91,7 @@ TOHWM4_list_subs(`module', (serial, title, id, convention, dictRef, role))
     character(len=*), intent(in), optional :: title
     character(len=*), intent(in), optional :: convention
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     if (present(index)) then
       call cmlStartModule(xf=xf, id=id, title=title, convention=convention, &
         dictRef=type, role='step', serial=str(index))
@@ -109,7 +106,7 @@ TOHWM4_list_subs(`module', (serial, title, id, convention, dictRef, role))
 
   subroutine cmlEndStep(xf)
     type(xmlf_t), intent(inout) :: xf
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_EndElement(xf, 'module')
 #endif
   end subroutine cmlEndStep

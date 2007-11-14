@@ -1,17 +1,10 @@
 module m_wcml_coma
   ! Implements routines relating to electronic structure
 
-#ifdef WCML_DUMMY
-  integer, parameter :: sp = selected_real_kind(6,30)
-  integer, parameter :: dp = selected_real_kind(14,100)
-  type xmlf_t
-    integer :: i
-  end type xmlf_t
-#else
   use m_common_realtypes, only: sp, dp
-
-  use FoX_common, only: str
   use FoX_wxml, only: xmlf_t
+#ifndef DUMMYLIB
+  use FoX_common, only: str
   use FoX_wxml, only: xml_NewElement, xml_AddAttribute
   use FoX_wxml, only: xml_EndElement, xml_AddCharacters
   use m_wcml_stml, only: stmAddValue
@@ -63,7 +56,7 @@ contains
 
 
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_NewElement(xf, "band")
     call xml_AddAttribute(xf, "kpointRef", kptref)
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
@@ -96,7 +89,7 @@ contains
 
 
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_NewElement(xf, "kpoint")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -144,7 +137,7 @@ eigenOrientationType, vecfmt, valfmt &
 
 
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_NewElement(xf, "eigen")
     call xml_AddAttribute(xf, "eigenOrientationType", eigenOrientationType)
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
@@ -182,7 +175,7 @@ eigenOrientationType, vecfmt, valfmt &
 
 
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_NewElement(xf, "eigen")
     call xml_AddAttribute(xf, "eigenOrientationType", eigenOrientationType)
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
@@ -218,7 +211,7 @@ eigenOrientationType, vecfmt, valfmt &
 
 
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_NewElement(xf, "band")
     call xml_AddAttribute(xf, "kpointRef", kptref)
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
@@ -251,7 +244,7 @@ eigenOrientationType, vecfmt, valfmt &
 
 
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_NewElement(xf, "kpoint")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -299,7 +292,7 @@ eigenOrientationType, vecfmt, valfmt &
 
 
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_NewElement(xf, "eigen")
     call xml_AddAttribute(xf, "eigenOrientationType", eigenOrientationType)
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
@@ -337,7 +330,7 @@ eigenOrientationType, vecfmt, valfmt &
 
 
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_NewElement(xf, "eigen")
     call xml_AddAttribute(xf, "eigenOrientationType", eigenOrientationType)
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)

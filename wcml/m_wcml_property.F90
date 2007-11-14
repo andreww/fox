@@ -4,15 +4,10 @@
 !
 module m_wcml_property
 
-#ifdef WCML_DUMMY
-  integer, parameter :: sp = selected_real_kind(6,30)
-  integer, parameter :: dp = selected_real_kind(14,100)
-  type xmlf_t
-    integer :: i
-  end type xmlf_t
-#else
   use m_common_realtypes, only: sp, dp
   use FoX_wxml, only: xmlf_t
+
+#ifndef DUMMYLIB
   use FoX_wxml, only: xml_NewElement, xml_AddAttribute
   use FoX_wxml, only: xml_EndElement
   use m_wcml_stml, only: stmAddValue
@@ -82,7 +77,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -112,7 +107,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -142,7 +137,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -172,7 +167,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -201,7 +196,7 @@ contains
 
     character(len=*), intent(in)   :: units
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -229,7 +224,7 @@ contains
     character(len=*), intent(in), optional :: role
 
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -258,7 +253,7 @@ contains
 
     character(len=*), intent(in) , optional  :: units
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -290,7 +285,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -321,7 +316,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -352,7 +347,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -383,7 +378,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -413,7 +408,7 @@ contains
 
     character(len=*), intent(in)   :: units
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -442,7 +437,7 @@ contains
     character(len=*), intent(in), optional :: role
 
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -472,7 +467,7 @@ contains
 
     character(len=*), intent(in) , optional  :: units
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -503,7 +498,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -533,7 +528,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -563,7 +558,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -593,7 +588,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -622,7 +617,7 @@ contains
 
     character(len=*), intent(in)   :: units
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -650,7 +645,7 @@ contains
     character(len=*), intent(in), optional :: role
 
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -679,7 +674,7 @@ contains
 
     character(len=*), intent(in) , optional  :: units
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -712,7 +707,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -744,7 +739,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -776,7 +771,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -808,7 +803,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -839,7 +834,7 @@ contains
 
     character(len=*), intent(in)   :: units
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -869,7 +864,7 @@ contains
     character(len=*), intent(in), optional :: role
 
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -900,7 +895,7 @@ contains
 
     character(len=*), intent(in) , optional  :: units
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -931,7 +926,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -961,7 +956,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -991,7 +986,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -1021,7 +1016,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -1050,7 +1045,7 @@ contains
 
     character(len=*), intent(in)   :: units
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -1078,7 +1073,7 @@ contains
     character(len=*), intent(in), optional :: role
 
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -1107,7 +1102,7 @@ contains
 
     character(len=*), intent(in) , optional  :: units
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)

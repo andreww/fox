@@ -60,7 +60,7 @@ TOHWM4_bandargslist)
     character(len=*), intent(in), optional :: fmt
 TOHWM4_bandargsdecl
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_NewElement(xf, "band")
     call xml_AddAttribute(xf, "kpointRef", kptref)
 TOHWM4_bandargsuse
@@ -79,7 +79,7 @@ TOHWM4_bandargslist)
     character(len=*), intent(in), optional :: kptfmt
 TOHWM4_bandargsdecl
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_NewElement(xf, "kpoint")
 TOHWM4_bandargsuse
     if (present(weight)) then
@@ -114,7 +114,7 @@ TOHWM4_eigenargslist)
 
 TOHWM4_eigenargsdecl
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_NewElement(xf, "eigen")
     call xml_AddAttribute(xf, "eigenOrientationType", eigenOrientationType)
 TOHWM4_eigenargsuse
@@ -140,7 +140,7 @@ TOHWM4_eigenargslist)
 
 TOHWM4_eigenargsdecl
 
-#ifndef WCML_DUMMY
+#ifndef DUMMYLIB
     call xml_NewElement(xf, "eigen")
     call xml_AddAttribute(xf, "eigenOrientationType", eigenOrientationType)
 TOHWM4_eigenargsuse
@@ -156,17 +156,10 @@ dnl
 module m_wcml_coma
   ! Implements routines relating to electronic structure
 
-#ifdef WCML_DUMMY
-  integer, parameter :: sp = selected_real_kind(6,30)
-  integer, parameter :: dp = selected_real_kind(14,100)
-  type xmlf_t
-    integer :: i
-  end type xmlf_t
-#else
   use m_common_realtypes, only: sp, dp
-
-  use FoX_common, only: str
   use FoX_wxml, only: xmlf_t
+#ifndef DUMMYLIB
+  use FoX_common, only: str
   use FoX_wxml, only: xml_NewElement, xml_AddAttribute
   use FoX_wxml, only: xml_EndElement, xml_AddCharacters
   use m_wcml_stml, only: stmAddValue
