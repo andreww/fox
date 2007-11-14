@@ -1244,6 +1244,7 @@ Optional Features:
   --enable-wcml           Compile wcml subsystem (for CML output)
   --enable-sax            Compile SAX parser
   --enable-dom            Compile dom subsystem (for DOM output)
+  --enable-dummy          Compile only dummy interfaces
 
 Some influential environment variables:
   FC          Fortran compiler command
@@ -1919,7 +1920,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:1922:" \
+echo "$as_me:1923:" \
      "checking for Fortran compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -5784,6 +5785,14 @@ if test x$WXML_yes$WCML_yes$WKML_yes$SAX_yes$DOM_yes = x; then
 fi
 BUILD_TARGETS="$WXML_yes $WCML_yes $SAX_yes $DOM_yes"
 
+# Check whether --enable-dummy was given.
+if test "${enable_dummy+set}" = set; then
+  enableval=$enable_dummy; dummy=$enableval
+fi
+
+if test x$dummy = xyes; then
+  DEFS="$DEFS DUMMYLIB"
+fi
 
 
 ac_fc_got_kinds=yes
