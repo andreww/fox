@@ -33,7 +33,7 @@ save space)</li>
 
 <p>In any of the subroutines where you want to output data to the xml file, you should then insert <code>use example_cml_moule</code> at the beginning of the subroutine. You can then use any of the cml output routines with no further worries, as shown in the examples.</p>
 
-<p>It is easy to make the use of FoX optional, by the use of preprocessor defines. This can be done simply by wrapping each call to your XML wrapper routines in <code>#ifdef XML</code>, or similar.</p>
+<p>It is easy to make the use of FoX optional, by the use of preprocessor defines. This can be done simply by wrapping each call to your XML wrapper routines in <code>#ifdef XML</code>, or similar. Alternatively, the use of the dummy FoX interfaces allows you to switch FoX on and off at compile time - see <a href="Compilation.html">Compilation</a>.</p>
 
 <h2>To incorporate into the build process:</h2>
 
