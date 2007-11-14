@@ -8,9 +8,9 @@ INCFLAGS=`../FoX-config --fcflags`
 
 EXAMPLES=dom_example$(EXEEXT) dom_example_2$(EXEEXT) sax_example$(EXEEXT) sax_example_2$(EXEEXT) wcml_example$(EXEEXT) wxml_example$(EXEEXT)
 
-dom_lib: dom_example$(EXEEXT) dom_example_2$(EXEEXT)
+dom_lib: sax_lib wxml_lib dom_example$(EXEEXT) dom_example_2$(EXEEXT)
 sax_lib: sax_example$(EXEEXT) sax_example_2$(EXEEXT)
-wcml_lib: wcml_example$(EXEEXT)
+wcml_lib: wxml_lib wcml_example$(EXEEXT)
 wxml_lib: wxml_example$(EXEEXT)
 
 # Note that we cannot use $< below since IBM make doesn't understand it.
