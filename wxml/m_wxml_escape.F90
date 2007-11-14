@@ -1,5 +1,6 @@
 module m_wxml_escape
-  
+
+#ifndef DUMMYLIB
   !Ensure all characters are safe to go out into XML file.
 
   use m_common_charset, only: XML1_0
@@ -135,4 +136,5 @@ contains
 
   end function escape_string
 
+#endif
 end module m_wxml_escape

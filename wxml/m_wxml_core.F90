@@ -1,5 +1,6 @@
 module m_wxml_core
 
+#ifndef DUMMYLIB
   use m_common_attrs, only: dictionary_t, getLength, get_key, get_value, &
     hasKey, add_item_to_dict, init_dict, reset_dict, destroy_dict, &
     getWhitespaceHandling
@@ -25,10 +26,12 @@ module m_wxml_core
   use m_wxml_escape, only: escape_string
 
   use pxf, only: pxfabort
+#endif
 
   implicit none
   private
 
+#ifndef DUMMYLIB
   integer, parameter :: indent_inc = 2
   ! TOHW should we let this be set?
 
@@ -62,11 +65,14 @@ module m_wxml_core
   !We are inside the internal subset definition
   integer, parameter :: WXML_STATE_3_AFTER_DTD = 3
   ! Finished outputting a DTD
-  
+#endif
 
 
   type xmlf_t
     private
+#ifdef DUMMYLIB
+    integer :: i
+#else
     type(xml_doc_state) :: xds
     integer                   :: lun = -1
     type(buffer_t)            :: buffer
@@ -79,6 +85,7 @@ module m_wxml_core
     integer                   :: indent = 0
     character, pointer        :: name(:)
     type(namespaceDictionary) :: nsDict
+#endif
   end type xmlf_t
 
   public :: xmlf_t
@@ -109,7 +116,7 @@ module m_wxml_core
 
   public :: xmlf_Name
   public :: xmlf_OpenTag
- 
+
   interface xml_AddCharacters
     module procedure xml_AddCharacters_Ch
   end interface
@@ -120,6 +127,7 @@ module m_wxml_core
     module procedure xml_AddPseudoAttribute_Ch
   end interface
  
+#ifndef DUMMYLIB
   !overload error handlers to allow file info
   interface wxml_warning
     module procedure wxml_warning_xf, FoX_warning_base
@@ -140,6 +148,7 @@ module m_wxml_core
   ! can be tuned for performance.
   !lowest value found so far is 4096, for NAG. We use 1024 just in case.
   integer, parameter  :: xml_recl = 1024
+#endif
 
 contains
 
@@ -155,7 +164,7 @@ contains
     logical, intent(in), optional :: warning
     logical, intent(in), optional :: valid
     
-    
+#ifndef DUMMYLIB
     logical :: repl, decl
     integer :: iostat_
 
@@ -255,7 +264,7 @@ contains
     endif
     
     call initNamespaceDictionary(xf%nsDict)
-    
+#endif
   end subroutine xml_OpenFile
 
 
@@ -265,6 +274,7 @@ contains
     character(len=*), intent(in), optional :: encoding
     logical, intent(in), optional :: standalone
 
+#ifndef DUMMYLIB
     call check_xf(xf)
     ! Don't need to call checkChars on args, everything is checked
     ! fully below anyway.
@@ -309,6 +319,7 @@ contains
     ! We have to close explicitly here to ensure nothing gets tied
     ! up in the XML declaration
     xf%state_1 = WXML_STATE_1_BEFORE_ROOT
+#endif
   end subroutine xml_AddXMLDeclaration
 
 
@@ -316,7 +327,7 @@ contains
     type(xmlf_t), intent(inout) :: xf
     character(len=*), intent(in) :: name
     character(len=*), intent(in), optional :: system, public
-    
+#ifndef DUMMYLIB
     call check_xf(xf)
     if (.not.checkChars(name,xf%xds%xml_version)) call wxml_error("xml_AddDOCTYPE: Invalid character in name")
     if (present(system)) then
@@ -368,7 +379,7 @@ contains
           call wxml_error("Invalid SYSTEM ID "//system)
       call add_to_buffer("'"//system//"'", xf%buffer, .true.)
     endif
-    
+#endif
   end subroutine xml_AddDOCTYPE
 
 
@@ -378,7 +389,7 @@ contains
     character(len=*), intent(in), optional :: PEDef
     character(len=*), intent(in), optional :: system
     character(len=*), intent(in), optional :: public
-    
+#ifndef DUMMYLIB
     call check_xf(xf)
     if (.not.checkChars(name,xf%xds%xml_version)) call wxml_error("xml_AddParameterEntity: Invalid character in name")
     if (present(PEDef)) then
@@ -489,7 +500,7 @@ contains
       p = .true.
       
     end function checkExistingRefs
-    
+#endif
   end subroutine xml_AddParameterEntity
 
 
@@ -498,6 +509,7 @@ contains
     character(len=*), intent(in) :: name
     character(len=*), intent(in) :: value
 
+#ifndef DUMMYLIB
     call check_xf(xf)
     if (.not.checkChars(name,xf%xds%xml_version)) call wxml_error("xml_AddInternalEntity: Invalid character in name")
     if (.not.checkChars(value,xf%xds%xml_version)) call wxml_error("xml_AddInternalEntity: Invalid character in value")
@@ -528,7 +540,7 @@ contains
     else
       call add_to_buffer('"'//value//'">', xf%buffer, .true.)
     endif
-
+#endif
   end subroutine xml_AddInternalEntity
 
 
@@ -539,6 +551,7 @@ contains
     character(len=*), intent(in), optional :: public
     character(len=*), intent(in), optional :: notation
 
+#ifndef DUMMYLIB
     call check_xf(xf)
     if (.not.checkChars(name,xf%xds%xml_version)) call wxml_error("xml_AddExternalEntity: Invalid character in name")
     if (.not.checkChars(system,xf%xds%xml_version)) call wxml_error("xml_AddExternalEntity: Invalid character in system")
@@ -607,7 +620,7 @@ contains
       call add_to_buffer(' NDATA '//notation, xf%buffer, .false.) ! notation cannot contain whitespace
     endif
     call add_to_buffer('>', xf%buffer, .false.)
-      
+#endif
   end subroutine xml_AddExternalEntity
 
 
@@ -617,6 +630,7 @@ contains
     character(len=*), intent(in), optional :: system
     character(len=*), intent(in), optional :: public
 
+#ifndef DUMMYLIB
     call check_xf(xf)
     if (.not.checkChars(name,xf%xds%xml_version)) call wxml_error("xml_AddNotation: Invalid character in name")
     if (present(system)) then
@@ -672,7 +686,7 @@ contains
       endif
     endif
     call add_to_buffer('>', xf%buffer, .false.)
-    
+#endif
   end subroutine xml_AddNotation
 
 
@@ -681,6 +695,7 @@ contains
     character(len=*), intent(in) :: name
     character(len=*), intent(in) :: declaration
 
+#ifndef DUMMYLIB
     call check_xf(xf)
     if (.not.checkChars(name,xf%xds%xml_version)) call wxml_error("xml_AddElementToDTD: Invalid character in name")
     if (.not.checkChars(declaration,xf%xds%xml_version)) call wxml_error("xml_AddElementToDTD: Invalid character in declaration")
@@ -706,7 +721,7 @@ contains
 
     call add_eol(xf)
     call add_to_buffer('<!ELEMENT '//name//' '//declaration//'>', xf%buffer, .false.)
-
+#endif
   end subroutine xml_AddElementToDTD
 
 
@@ -715,6 +730,7 @@ contains
     character(len=*), intent(in) :: name
     character(len=*), intent(in) :: declaration
 
+#ifndef DUMMYLIB
     call check_xf(xf)
     if (.not.checkChars(name,xf%xds%xml_version)) call wxml_error("xml_AddAttListToDTD: Invalid character in name")
     if (.not.checkChars(declaration,xf%xds%xml_version)) call wxml_error("xml_AddAttListToDTD: Invalid character in declaration")
@@ -740,7 +756,7 @@ contains
 
     call add_eol(xf)
     call add_to_buffer('<!ATTLIST '//name//' '//declaration//'>', xf%buffer, .false.)
-
+#endif
   end subroutine xml_AddAttlistToDTD
     
 
@@ -748,6 +764,7 @@ contains
     type(xmlf_t), intent(inout) :: xf
     character(len=*), intent(in) :: name
 
+#ifndef DUMMYLIB
     call check_xf(xf)
     if (.not.checkChars(name,xf%xds%xml_version)) call wxml_error("xml_AddPEReferenceToDTD: Invalid character in name")
 
@@ -782,6 +799,7 @@ contains
     call add_eol(xf)
     call add_to_buffer('%'//name//';', xf%buffer, .false.)
 
+#endif
   end subroutine xml_AddPEReferenceToDTD
 
 
@@ -793,7 +811,8 @@ contains
     character(len=*), intent(in), optional :: media
     character(len=*), intent(in), optional :: charset
     logical,          intent(in), optional :: alternate
-    
+
+#ifndef DUMMYLIB
     call check_xf(xf)
     ! Don't bother doing checkChars - all pseudoatts get checked anyway.
     
@@ -820,7 +839,7 @@ contains
     if (xf%state_1 == WXML_STATE_1_JUST_OPENED) &
          xf%state_1 = WXML_STATE_1_BEFORE_ROOT 
     xf%state_2 = WXML_STATE_2_INSIDE_PI
-    
+#endif
   end subroutine xml_AddXMLStylesheet
   
 
@@ -831,6 +850,7 @@ contains
     logical, intent(in), optional :: xml
     logical, intent(in), optional :: ws_significant
 
+#ifndef DUMMYLIB
     call check_xf(xf)
     if (.not.checkChars(name,xf%xds%xml_version)) call wxml_error("xml_AddXMLPI: Invalid character in name")
     if (present(data)) then
@@ -868,7 +888,7 @@ contains
       xf%state_2 = WXML_STATE_2_INSIDE_PI
       call reset_dict(xf%dict)
     endif
-
+#endif
   end subroutine xml_AddXMLPI
 
 
@@ -876,7 +896,8 @@ contains
     type(xmlf_t), intent(inout)   :: xf
     character(len=*), intent(in)  :: comment
     logical, intent(in), optional :: ws_significant
-    
+
+#ifndef DUMMYLIB
     call check_xf(xf)
     if (.not.checkChars(comment,xf%xds%xml_version)) call wxml_error("xml_AddComment: Invalid character in comment")
     
@@ -900,7 +921,7 @@ contains
     call add_to_buffer("<!--", xf%buffer, .false.)
     call add_to_buffer(comment, xf%buffer, ws_significant)
     call add_to_buffer("-->", xf%buffer, .false.)
-
+#endif
   end subroutine xml_AddComment
 
 
@@ -908,6 +929,7 @@ contains
     type(xmlf_t), intent(inout)   :: xf
     character(len=*), intent(in)  :: name
 
+#ifndef DUMMYLIB
     call check_xf(xf)
     if (.not.checkChars(name,xf%xds%xml_version)) call wxml_error("xml_NewElement: Invalid character in name")
     
@@ -952,7 +974,7 @@ contains
     call reset_dict(xf%dict)
     xf%indent = xf%indent + indent_inc
     xf%state_1 = WXML_STATE_1_DURING_ROOT
-
+#endif
   end subroutine xml_NewElement
   
 
@@ -962,6 +984,7 @@ contains
     logical, intent(in), optional :: parsed
     logical, intent(in), optional :: ws_significant
 
+#ifndef DUMMYLIB
     logical :: pc
 
     call check_xf(xf)
@@ -987,14 +1010,17 @@ contains
     endif
     
     xf%state_2 = WXML_STATE_2_IN_CHARDATA
+#endif
   end subroutine xml_AddCharacters_Ch
 
 
   subroutine xml_AddNewline(xf)
     type(xmlf_t), intent(inout) :: xf
-    
+
+#ifndef DUMMYLIB
     call xml_AddCharacters(xf, "") ! FIXME Does this line do anything?
     call add_eol(xf)
+#endif
   end subroutine xml_AddNewline
 
   
@@ -1002,6 +1028,7 @@ contains
     type(xmlf_t), intent(inout) :: xf
     character(len=*), intent(in) :: entityref
 
+#ifndef DUMMYLIB
     call check_xf(xf)
     if (.not.checkChars(entityref, xf%xds%xml_version)) call wxml_error("xml_AddEntityReference: Invalid character in entityref")
     
@@ -1033,6 +1060,7 @@ contains
 
     call add_to_buffer('&'//entityref//';', xf%buffer, .false.)
     xf%state_2 = WXML_STATE_2_IN_CHARDATA
+#endif
   end subroutine xml_AddEntityReference
 
 
@@ -1044,6 +1072,7 @@ contains
     character(len=*), intent(in), optional  :: type
     logical, intent(in), optional           :: ws_significant
 
+#ifndef DUMMYLIB
     logical :: esc
     character, pointer :: type_(:)
 
@@ -1196,7 +1225,7 @@ contains
       p = .true.
 
     end function checkParsedRefsInAttValue
-    
+#endif
   end subroutine xml_AddAttribute_Ch
 
 
@@ -1207,6 +1236,7 @@ contains
     logical, intent(in), optional :: escape
     logical, intent(in), optional :: ws_significant
 
+#ifndef DUMMYLIB
     logical :: esc
     character(len=5) :: type
 
@@ -1254,7 +1284,7 @@ contains
     else
       call add_item_to_dict(xf%dict, name, value, type=type)
     endif
-    
+#endif
   end subroutine xml_AddPseudoAttribute_Ch
 
 
@@ -1262,6 +1292,7 @@ contains
     type(xmlf_t), intent(inout)             :: xf
     character(len=*), intent(in)            :: name
 
+#ifndef DUMMYLIB
     call check_xf(xf)
     ! No point in doing checkChars, name is compared to stack anyway.
 
@@ -1300,7 +1331,7 @@ contains
       xf%state_1 = WXML_STATE_1_AFTER_ROOT
     endif
     xf%state_2 = WXML_STATE_2_OUTSIDE_TAG
-
+#endif
   end subroutine xml_EndElement
 
 
@@ -1310,6 +1341,7 @@ contains
     character(len=*), intent(in), optional :: prefix
     logical, intent(in), optional :: xml
 
+#ifndef DUMMYLIB
     call check_xf(xf)
     if (.not.checkChars(nsURI, xf%xds%xml_version)) call wxml_error("xml_DeclareNamespace: Invalid character in nsURI")
     if (present(prefix)) then
@@ -1327,14 +1359,15 @@ contains
     else
       call addDefaultNS(xf%nsDict, nsURI, len(xf%stack)+1)
     endif
-    
+#endif
   end subroutine xml_DeclareNamespace
 
 
   subroutine xml_UndeclareNamespace(xf, prefix)
     type(xmlf_t), intent(inout)   :: xf
     character(len=*), intent(in), optional :: prefix
-    
+
+#ifndef DUMMYLIB
     call check_xf(xf)
     !No need to checkChars, prfix is checked against stack
 
@@ -1349,7 +1382,7 @@ contains
     else
       call addDefaultNS(xf%nsDict, "", len(xf%stack)+1)
     endif
-    
+#endif
   end subroutine xml_UndeclareNamespace
 
 
@@ -1357,6 +1390,7 @@ contains
     type(xmlf_t), intent(inout)   :: xf
     logical, optional :: empty
 
+#ifndef DUMMYLIB
     logical :: empty_
 
     if (present(empty)) then
@@ -1407,12 +1441,55 @@ contains
     call destroy_xml_doc_state(xf%xds)
     
     deallocate(xf%name)
-    
+#endif
   end subroutine xml_Close
 
 
-!==================================================================
-  !----------------------------------------------------------
+  pure function xmlf_name(xf) result(fn)
+    type (xmlf_t), intent(in) :: xf
+#ifdef DUMMYLIB
+    character(len=0) :: fn
+    fn = ""
+#else
+    character(len=size(xf%xds%documentURI)) :: fn
+    fn = str_vs(xf%xds%documentURI)
+#endif
+  end function xmlf_name
+
+#ifndef DUMMYLIB
+  pure function xmlf_opentag_len(xf) result(n)
+    type (xmlf_t), intent(in) :: xf
+    integer :: n
+    
+    if (xf%lun == -1) then
+      n = 0
+    elseif (is_empty(xf%stack)) then
+      n = 0
+    else
+      n = len(get_top_elstack(xf%stack))
+    endif
+  end function xmlf_opentag_len
+#endif
+
+  function xmlf_opentag(xf) result(fn)
+    type (xmlf_t), intent(in) :: xf
+#ifdef DUMMYLIB
+    character(len=0) :: fn
+    fn = ""
+#else
+    character(len=xmlf_opentag_len(xf)) :: fn
+    
+    if (xf%lun == -1) then
+      fn = ''
+    elseif (is_empty(xf%stack)) then
+      fn = ''
+    else
+      fn = get_top_elstack(xf%stack)
+    endif
+#endif
+  end function xmlf_opentag
+
+#ifndef DUMMYLIB
 
   subroutine check_xf(xf)
     type(xmlf_t), intent(inout)   :: xf
@@ -1443,13 +1520,13 @@ contains
     
     if (.not.xf%preserve_whitespace) &
       call add_to_buffer(repeat(' ',indent_level),xf%buffer, .false.)
-    
+
   end subroutine add_eol
   
 
   subroutine close_start_tag(xf)
     type(xmlf_t), intent(inout)   :: xf
-    
+
     select case (xf%state_2)
     case (WXML_STATE_2_INSIDE_ELEMENT)
       call checkNamespacesWriting(xf%dict, xf%nsDict, len(xf%stack))
@@ -1470,7 +1547,7 @@ contains
     case (WXML_STATE_2_OUTSIDE_TAG)
       continue
     end select
-    
+
   end subroutine close_start_tag
 
 
@@ -1503,87 +1580,52 @@ contains
       endif
       call add_to_buffer('"', xf%buffer, .false.)
     enddo
-    
-    
+
   end subroutine write_attributes
   
-!---------------------------------------------------------
-! Error handling/trapping routines:
-
-    subroutine wxml_warning_xf(xf, msg)
-      ! Emit warning, but carry on.
-      type(xmlf_t), intent(in) :: xf
-      character(len=*), intent(in) :: msg
-
-      if (xf%xds%warning) then
-        write(6,'(a)') 'WARNING(wxml) in writing to file ', xmlf_name(xf)
-        write(6,'(a)')  msg
-      endif
-
-    end subroutine wxml_warning_xf
-
-
-    subroutine wxml_error_xf(xf, msg)
-      ! Emit error message, clean up file and stop.
-      type(xmlf_t), intent(inout) :: xf
-      character(len=*), intent(in) :: msg
-
-      write(6,'(a)') 'ERROR(wxml) in writing to file ', xmlf_name(xf)
+  subroutine wxml_warning_xf(xf, msg)
+    ! Emit warning, but carry on.
+    type(xmlf_t), intent(in) :: xf
+    character(len=*), intent(in) :: msg
+    
+    if (xf%xds%warning) then
+      write(6,'(a)') 'WARNING(wxml) in writing to file ', xmlf_name(xf)
       write(6,'(a)')  msg
+    endif
+    
+  end subroutine wxml_warning_xf
+  
+  
+  subroutine wxml_error_xf(xf, msg)
+    ! Emit error message, clean up file and stop.
+    type(xmlf_t), intent(inout) :: xf
+    character(len=*), intent(in) :: msg
+    
+    write(6,'(a)') 'ERROR(wxml) in writing to file ', xmlf_name(xf)
+    write(6,'(a)')  msg
+    
+    !call xml_Close(xf)
+    stop
+    
+  end subroutine wxml_error_xf
+  
+  
+  subroutine wxml_fatal_xf(xf, msg)
+    !Emit error message and abort with coredump. Does not try to
+    !close file, so should be used from anything xml_Close might
+    !itself call (to avoid infinite recursion!)
+    
+    type(xmlf_t), intent(in) :: xf
+    character(len=*), intent(in) :: msg
+    
+    write(6,'(a)') 'ERROR(wxml) in writing to file ', xmlf_name(xf)
+    write(6,'(a)')  msg
+    
+    call pxfabort()
+    stop
+    
+  end subroutine wxml_fatal_xf
 
-      !call xml_Close(xf)
-      stop
-
-    end subroutine wxml_error_xf
-
-
-    subroutine wxml_fatal_xf(xf, msg)
-      !Emit error message and abort with coredump. Does not try to
-      !close file, so should be used from anything xml_Close might
-      !itself call (to avoid infinite recursion!)
-
-      type(xmlf_t), intent(in) :: xf
-      character(len=*), intent(in) :: msg
-
-      write(6,'(a)') 'ERROR(wxml) in writing to file ', xmlf_name(xf)
-      write(6,'(a)')  msg
-
-      call pxfabort()
-      stop
-
-    end subroutine wxml_fatal_xf
-
-
-    pure function xmlf_name(xf) result(fn)
-      type (xmlf_t), intent(in) :: xf
-      character(len=size(xf%xds%documentURI)) :: fn
-      fn = str_vs(xf%xds%documentURI)
-    end function xmlf_name
-
-    pure function xmlf_opentag_len(xf) result(n)
-      type (xmlf_t), intent(in) :: xf
-      integer :: n
-
-      if (xf%lun == -1) then
-        n = 0
-      elseif (is_empty(xf%stack)) then
-        n = 0
-      else
-        n = len(get_top_elstack(xf%stack))
-      endif
-    end function xmlf_opentag_len
-      
-    function xmlf_opentag(xf) result(fn)
-      type (xmlf_t), intent(in) :: xf
-      character(len=xmlf_opentag_len(xf)) :: fn
-
-      if (xf%lun == -1) then
-        fn = ''
-      elseif (is_empty(xf%stack)) then
-        fn = ''
-      else
-        fn = get_top_elstack(xf%stack)
-      endif
-    end function xmlf_opentag
+#endif
 
 end module m_wxml_core

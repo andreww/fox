@@ -35,6 +35,7 @@ ifelse(substr($3,0,4), `Real', `dnl
     character(len=1), intent(in), optional :: delimiter
 ')dnl
 
+#ifndef DUMMYLIB
 ifelse(substr($3,0,4), `Real', `dnl 
     if (present(fmt)) then
       call xml_Add$1(xf=xf, chars=str(chars, fmt)`'dnl
@@ -59,7 +60,7 @@ ifelse(substr($3,0,4), `Real', `dnl
 ', substr($3,0,5), `Cmplx', `dnl
     endif
 ')`'dnl
-
+#endif
   end subroutine $1$2$3
 ')
 ')dnl
@@ -85,6 +86,7 @@ ifelse(substr($3,0,4), `Real', `dnl
     character(len=1), intent(in), optional :: delimiter
 ')
 dnl
+#ifndef DUMMYLIB
 ifelse(substr($3,0,4),`Real',`dnl 
     if (present(fmt)) then
       call xml_Add$1(xf=xf, name=name, value=str(value, fmt)`'dnl
@@ -107,9 +109,9 @@ ifelse(substr($3,0,4), `Real', `dnl
     endif
 ', substr($3,0,5), `Cmplx', `dnl
     endif
-') dnl
+')`'dnl
 dnl
-
+#endif
   end subroutine $1$2$3
 ')dnl
 ')dnl
@@ -122,7 +124,9 @@ dnl
 !
 module m_wxml_overloads
 
+#ifndef DUMMYLIB
   use m_common_format, only: str
+#endif
   use m_common_realtypes, only: sp, dp
   use m_wxml_core, only: xmlf_t
   use m_wxml_core, only: xml_AddCharacters

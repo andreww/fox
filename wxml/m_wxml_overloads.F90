@@ -4,7 +4,9 @@
 !
 module m_wxml_overloads
 
+#ifndef DUMMYLIB
   use m_common_format, only: str
+#endif
   use m_common_realtypes, only: sp, dp
   use m_wxml_core, only: xmlf_t
   use m_wxml_core, only: xml_AddCharacters
@@ -99,12 +101,13 @@ contains
     complex(dp), intent(in)   :: chars
     character(len=*), intent(in), optional :: fmt
 
+#ifndef DUMMYLIB
     if (present(fmt)) then
       call xml_AddCharacters(xf=xf, chars=str(chars, fmt))
     else
       call xml_AddCharacters(xf=xf, chars=str(chars))
     endif
-
+#endif
   end subroutine CharactersScalarCmplxDp
 
 
@@ -115,12 +118,13 @@ contains
     complex(sp), intent(in)   :: chars
     character(len=*), intent(in), optional :: fmt
 
+#ifndef DUMMYLIB
     if (present(fmt)) then
       call xml_AddCharacters(xf=xf, chars=str(chars, fmt))
     else
       call xml_AddCharacters(xf=xf, chars=str(chars))
     endif
-
+#endif
   end subroutine CharactersScalarCmplxSp
 
 
@@ -131,12 +135,13 @@ contains
     real(dp), intent(in)   :: chars
     character(len=*), intent(in), optional :: fmt
 
+#ifndef DUMMYLIB
     if (present(fmt)) then
       call xml_AddCharacters(xf=xf, chars=str(chars, fmt))
     else
       call xml_AddCharacters(xf=xf, chars=str(chars))
     endif
-
+#endif
   end subroutine CharactersScalarRealDp
 
 
@@ -147,12 +152,13 @@ contains
     real(sp), intent(in)   :: chars
     character(len=*), intent(in), optional :: fmt
 
+#ifndef DUMMYLIB
     if (present(fmt)) then
       call xml_AddCharacters(xf=xf, chars=str(chars, fmt))
     else
       call xml_AddCharacters(xf=xf, chars=str(chars))
     endif
-
+#endif
   end subroutine CharactersScalarRealSp
 
 
@@ -162,8 +168,9 @@ contains
     type(xmlf_t), intent(inout) :: xf
     integer, intent(in)   :: chars
 
+#ifndef DUMMYLIB
     call xml_AddCharacters(xf=xf, chars=str(chars))
-
+#endif
   end subroutine CharactersScalarInt
 
 
@@ -173,8 +180,9 @@ contains
     type(xmlf_t), intent(inout) :: xf
     logical, intent(in)   :: chars
 
+#ifndef DUMMYLIB
     call xml_AddCharacters(xf=xf, chars=str(chars))
-
+#endif
   end subroutine CharactersScalarLg
 
 
@@ -187,12 +195,13 @@ contains
     complex(dp), intent(in) , dimension(:)  :: chars
     character(len=*), intent(in), optional :: fmt
 
+#ifndef DUMMYLIB
     if (present(fmt)) then
       call xml_AddCharacters(xf=xf, chars=str(chars, fmt), ws_significant=.false.)
     else
       call xml_AddCharacters(xf=xf, chars=str(chars), ws_significant=.false.)
     endif
-
+#endif
   end subroutine CharactersArrayCmplxDp
 
 
@@ -203,12 +212,13 @@ contains
     complex(sp), intent(in) , dimension(:)  :: chars
     character(len=*), intent(in), optional :: fmt
 
+#ifndef DUMMYLIB
     if (present(fmt)) then
       call xml_AddCharacters(xf=xf, chars=str(chars, fmt), ws_significant=.false.)
     else
       call xml_AddCharacters(xf=xf, chars=str(chars), ws_significant=.false.)
     endif
-
+#endif
   end subroutine CharactersArrayCmplxSp
 
 
@@ -219,12 +229,13 @@ contains
     real(dp), intent(in) , dimension(:)  :: chars
     character(len=*), intent(in), optional :: fmt
 
+#ifndef DUMMYLIB
     if (present(fmt)) then
       call xml_AddCharacters(xf=xf, chars=str(chars, fmt), ws_significant=.false.)
     else
       call xml_AddCharacters(xf=xf, chars=str(chars), ws_significant=.false.)
     endif
-
+#endif
   end subroutine CharactersArrayRealDp
 
 
@@ -235,12 +246,13 @@ contains
     real(sp), intent(in) , dimension(:)  :: chars
     character(len=*), intent(in), optional :: fmt
 
+#ifndef DUMMYLIB
     if (present(fmt)) then
       call xml_AddCharacters(xf=xf, chars=str(chars, fmt), ws_significant=.false.)
     else
       call xml_AddCharacters(xf=xf, chars=str(chars), ws_significant=.false.)
     endif
-
+#endif
   end subroutine CharactersArrayRealSp
 
 
@@ -250,8 +262,9 @@ contains
     type(xmlf_t), intent(inout) :: xf
     integer, intent(in) , dimension(:)  :: chars
 
+#ifndef DUMMYLIB
     call xml_AddCharacters(xf=xf, chars=str(chars), ws_significant=.false.)
-
+#endif
   end subroutine CharactersArrayInt
 
 
@@ -261,8 +274,9 @@ contains
     type(xmlf_t), intent(inout) :: xf
     logical, intent(in) , dimension(:)  :: chars
 
+#ifndef DUMMYLIB
     call xml_AddCharacters(xf=xf, chars=str(chars), ws_significant=.false.)
-
+#endif
   end subroutine CharactersArrayLg
 
 
@@ -273,8 +287,9 @@ contains
     character(len=*), intent(in) , dimension(:)  :: chars
     character(len=1), intent(in), optional :: delimiter
 
+#ifndef DUMMYLIB
     call xml_AddCharacters(xf=xf, chars=str(chars, delimiter), ws_significant=.false.)
-
+#endif
   end subroutine CharactersArrayCh
 
 
@@ -285,12 +300,13 @@ contains
     complex(dp), intent(in) , dimension(:,:)  :: chars
     character(len=*), intent(in), optional :: fmt
 
+#ifndef DUMMYLIB
     if (present(fmt)) then
       call xml_AddCharacters(xf=xf, chars=str(chars, fmt), ws_significant=.false.)
     else
       call xml_AddCharacters(xf=xf, chars=str(chars), ws_significant=.false.)
     endif
-
+#endif
   end subroutine CharactersMatrixCmplxDp
 
 
@@ -301,12 +317,13 @@ contains
     complex(sp), intent(in) , dimension(:,:)  :: chars
     character(len=*), intent(in), optional :: fmt
 
+#ifndef DUMMYLIB
     if (present(fmt)) then
       call xml_AddCharacters(xf=xf, chars=str(chars, fmt), ws_significant=.false.)
     else
       call xml_AddCharacters(xf=xf, chars=str(chars), ws_significant=.false.)
     endif
-
+#endif
   end subroutine CharactersMatrixCmplxSp
 
 
@@ -317,12 +334,13 @@ contains
     real(dp), intent(in) , dimension(:,:)  :: chars
     character(len=*), intent(in), optional :: fmt
 
+#ifndef DUMMYLIB
     if (present(fmt)) then
       call xml_AddCharacters(xf=xf, chars=str(chars, fmt), ws_significant=.false.)
     else
       call xml_AddCharacters(xf=xf, chars=str(chars), ws_significant=.false.)
     endif
-
+#endif
   end subroutine CharactersMatrixRealDp
 
 
@@ -333,12 +351,13 @@ contains
     real(sp), intent(in) , dimension(:,:)  :: chars
     character(len=*), intent(in), optional :: fmt
 
+#ifndef DUMMYLIB
     if (present(fmt)) then
       call xml_AddCharacters(xf=xf, chars=str(chars, fmt), ws_significant=.false.)
     else
       call xml_AddCharacters(xf=xf, chars=str(chars), ws_significant=.false.)
     endif
-
+#endif
   end subroutine CharactersMatrixRealSp
 
 
@@ -348,8 +367,9 @@ contains
     type(xmlf_t), intent(inout) :: xf
     integer, intent(in) , dimension(:,:)  :: chars
 
+#ifndef DUMMYLIB
     call xml_AddCharacters(xf=xf, chars=str(chars), ws_significant=.false.)
-
+#endif
   end subroutine CharactersMatrixInt
 
 
@@ -359,8 +379,9 @@ contains
     type(xmlf_t), intent(inout) :: xf
     logical, intent(in) , dimension(:,:)  :: chars
 
+#ifndef DUMMYLIB
     call xml_AddCharacters(xf=xf, chars=str(chars), ws_significant=.false.)
-
+#endif
   end subroutine CharactersMatrixLg
 
 
@@ -371,8 +392,9 @@ contains
     character(len=*), intent(in) , dimension(:,:)  :: chars
     character(len=1), intent(in), optional :: delimiter
 
+#ifndef DUMMYLIB
     call xml_AddCharacters(xf=xf, chars=str(chars, delimiter), ws_significant=.false.)
-
+#endif
   end subroutine CharactersMatrixCh
 
 
@@ -385,12 +407,13 @@ contains
     complex(dp), intent(in)   :: value
     character(len=*), intent(in), optional :: fmt
 
+#ifndef DUMMYLIB
     if (present(fmt)) then
       call xml_AddAttribute(xf=xf, name=name, value=str(value, fmt))
     else
       call xml_AddAttribute(xf=xf, name=name, value=str(value))
     endif
- 
+#endif
   end subroutine AttributeScalarCmplxDp
 
   subroutine AttributeScalarCmplxSp &
@@ -401,12 +424,13 @@ contains
     complex(sp), intent(in)   :: value
     character(len=*), intent(in), optional :: fmt
 
+#ifndef DUMMYLIB
     if (present(fmt)) then
       call xml_AddAttribute(xf=xf, name=name, value=str(value, fmt))
     else
       call xml_AddAttribute(xf=xf, name=name, value=str(value))
     endif
- 
+#endif
   end subroutine AttributeScalarCmplxSp
 
   subroutine AttributeScalarRealDp &
@@ -417,12 +441,13 @@ contains
     real(dp), intent(in)   :: value
     character(len=*), intent(in), optional :: fmt
 
+#ifndef DUMMYLIB
     if (present(fmt)) then
       call xml_AddAttribute(xf=xf, name=name, value=str(value, fmt))
     else
       call xml_AddAttribute(xf=xf, name=name, value=str(value))
     endif
- 
+#endif
   end subroutine AttributeScalarRealDp
 
   subroutine AttributeScalarRealSp &
@@ -433,12 +458,13 @@ contains
     real(sp), intent(in)   :: value
     character(len=*), intent(in), optional :: fmt
 
+#ifndef DUMMYLIB
     if (present(fmt)) then
       call xml_AddAttribute(xf=xf, name=name, value=str(value, fmt))
     else
       call xml_AddAttribute(xf=xf, name=name, value=str(value))
     endif
- 
+#endif
   end subroutine AttributeScalarRealSp
 
   subroutine AttributeScalarInt &
@@ -448,8 +474,9 @@ contains
     character(len=*), intent(in) :: name
     integer, intent(in)   :: value
 
+#ifndef DUMMYLIB
     call xml_AddAttribute(xf=xf, name=name, value=str(value))
- 
+#endif
   end subroutine AttributeScalarInt
 
   subroutine AttributeScalarLg &
@@ -459,8 +486,9 @@ contains
     character(len=*), intent(in) :: name
     logical, intent(in)   :: value
 
+#ifndef DUMMYLIB
     call xml_AddAttribute(xf=xf, name=name, value=str(value))
- 
+#endif
   end subroutine AttributeScalarLg
 
 
@@ -472,12 +500,13 @@ contains
     complex(dp), intent(in) , dimension(:)  :: value
     character(len=*), intent(in), optional :: fmt
 
+#ifndef DUMMYLIB
     if (present(fmt)) then
       call xml_AddAttribute(xf=xf, name=name, value=str(value, fmt), ws_significant=.false.)
     else
       call xml_AddAttribute(xf=xf, name=name, value=str(value), ws_significant=.false.)
     endif
- 
+#endif
   end subroutine AttributeArrayCmplxDp
 
   subroutine AttributeArrayCmplxSp &
@@ -488,12 +517,13 @@ contains
     complex(sp), intent(in) , dimension(:)  :: value
     character(len=*), intent(in), optional :: fmt
 
+#ifndef DUMMYLIB
     if (present(fmt)) then
       call xml_AddAttribute(xf=xf, name=name, value=str(value, fmt), ws_significant=.false.)
     else
       call xml_AddAttribute(xf=xf, name=name, value=str(value), ws_significant=.false.)
     endif
- 
+#endif
   end subroutine AttributeArrayCmplxSp
 
   subroutine AttributeArrayRealDp &
@@ -504,12 +534,13 @@ contains
     real(dp), intent(in) , dimension(:)  :: value
     character(len=*), intent(in), optional :: fmt
 
+#ifndef DUMMYLIB
     if (present(fmt)) then
       call xml_AddAttribute(xf=xf, name=name, value=str(value, fmt), ws_significant=.false.)
     else
       call xml_AddAttribute(xf=xf, name=name, value=str(value), ws_significant=.false.)
     endif
- 
+#endif
   end subroutine AttributeArrayRealDp
 
   subroutine AttributeArrayRealSp &
@@ -520,12 +551,13 @@ contains
     real(sp), intent(in) , dimension(:)  :: value
     character(len=*), intent(in), optional :: fmt
 
+#ifndef DUMMYLIB
     if (present(fmt)) then
       call xml_AddAttribute(xf=xf, name=name, value=str(value, fmt), ws_significant=.false.)
     else
       call xml_AddAttribute(xf=xf, name=name, value=str(value), ws_significant=.false.)
     endif
- 
+#endif
   end subroutine AttributeArrayRealSp
 
   subroutine AttributeArrayInt &
@@ -535,8 +567,9 @@ contains
     character(len=*), intent(in) :: name
     integer, intent(in) , dimension(:)  :: value
 
+#ifndef DUMMYLIB
     call xml_AddAttribute(xf=xf, name=name, value=str(value), ws_significant=.false.)
- 
+#endif
   end subroutine AttributeArrayInt
 
   subroutine AttributeArrayLg &
@@ -546,8 +579,9 @@ contains
     character(len=*), intent(in) :: name
     logical, intent(in) , dimension(:)  :: value
 
+#ifndef DUMMYLIB
     call xml_AddAttribute(xf=xf, name=name, value=str(value), ws_significant=.false.)
- 
+#endif
   end subroutine AttributeArrayLg
 
   subroutine AttributeArrayCh &
@@ -558,8 +592,9 @@ contains
     character(len=*), intent(in) , dimension(:)  :: value
     character(len=1), intent(in), optional :: delimiter
 
+#ifndef DUMMYLIB
     call xml_AddAttribute(xf=xf, name=name, value=str(value, delimiter), ws_significant=.false.)
- 
+#endif
   end subroutine AttributeArrayCh
 
   subroutine AttributeMatrixCmplxDp &
@@ -570,12 +605,13 @@ contains
     complex(dp), intent(in) , dimension(:,:)  :: value
     character(len=*), intent(in), optional :: fmt
 
+#ifndef DUMMYLIB
     if (present(fmt)) then
       call xml_AddAttribute(xf=xf, name=name, value=str(value, fmt), ws_significant=.false.)
     else
       call xml_AddAttribute(xf=xf, name=name, value=str(value), ws_significant=.false.)
     endif
- 
+#endif
   end subroutine AttributeMatrixCmplxDp
 
   subroutine AttributeMatrixCmplxSp &
@@ -586,12 +622,13 @@ contains
     complex(sp), intent(in) , dimension(:,:)  :: value
     character(len=*), intent(in), optional :: fmt
 
+#ifndef DUMMYLIB
     if (present(fmt)) then
       call xml_AddAttribute(xf=xf, name=name, value=str(value, fmt), ws_significant=.false.)
     else
       call xml_AddAttribute(xf=xf, name=name, value=str(value), ws_significant=.false.)
     endif
- 
+#endif
   end subroutine AttributeMatrixCmplxSp
 
   subroutine AttributeMatrixRealDp &
@@ -602,12 +639,13 @@ contains
     real(dp), intent(in) , dimension(:,:)  :: value
     character(len=*), intent(in), optional :: fmt
 
+#ifndef DUMMYLIB
     if (present(fmt)) then
       call xml_AddAttribute(xf=xf, name=name, value=str(value, fmt), ws_significant=.false.)
     else
       call xml_AddAttribute(xf=xf, name=name, value=str(value), ws_significant=.false.)
     endif
- 
+#endif
   end subroutine AttributeMatrixRealDp
 
   subroutine AttributeMatrixRealSp &
@@ -618,12 +656,13 @@ contains
     real(sp), intent(in) , dimension(:,:)  :: value
     character(len=*), intent(in), optional :: fmt
 
+#ifndef DUMMYLIB
     if (present(fmt)) then
       call xml_AddAttribute(xf=xf, name=name, value=str(value, fmt), ws_significant=.false.)
     else
       call xml_AddAttribute(xf=xf, name=name, value=str(value), ws_significant=.false.)
     endif
- 
+#endif
   end subroutine AttributeMatrixRealSp
 
   subroutine AttributeMatrixInt &
@@ -633,8 +672,9 @@ contains
     character(len=*), intent(in) :: name
     integer, intent(in) , dimension(:,:)  :: value
 
+#ifndef DUMMYLIB
     call xml_AddAttribute(xf=xf, name=name, value=str(value), ws_significant=.false.)
- 
+#endif
   end subroutine AttributeMatrixInt
 
   subroutine AttributeMatrixLg &
@@ -644,8 +684,9 @@ contains
     character(len=*), intent(in) :: name
     logical, intent(in) , dimension(:,:)  :: value
 
+#ifndef DUMMYLIB
     call xml_AddAttribute(xf=xf, name=name, value=str(value), ws_significant=.false.)
- 
+#endif
   end subroutine AttributeMatrixLg
 
   subroutine AttributeMatrixCh &
@@ -656,8 +697,9 @@ contains
     character(len=*), intent(in) , dimension(:,:)  :: value
     character(len=1), intent(in), optional :: delimiter
 
+#ifndef DUMMYLIB
     call xml_AddAttribute(xf=xf, name=name, value=str(value, delimiter), ws_significant=.false.)
- 
+#endif
   end subroutine AttributeMatrixCh
 
 
@@ -669,12 +711,13 @@ contains
     complex(dp), intent(in)   :: value
     character(len=*), intent(in), optional :: fmt
 
+#ifndef DUMMYLIB
     if (present(fmt)) then
       call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value, fmt))
     else
       call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value))
     endif
- 
+#endif
   end subroutine PseudoAttributeScalarCmplxDp
 
   subroutine PseudoAttributeScalarCmplxSp &
@@ -685,12 +728,13 @@ contains
     complex(sp), intent(in)   :: value
     character(len=*), intent(in), optional :: fmt
 
+#ifndef DUMMYLIB
     if (present(fmt)) then
       call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value, fmt))
     else
       call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value))
     endif
- 
+#endif
   end subroutine PseudoAttributeScalarCmplxSp
 
   subroutine PseudoAttributeScalarRealDp &
@@ -701,12 +745,13 @@ contains
     real(dp), intent(in)   :: value
     character(len=*), intent(in), optional :: fmt
 
+#ifndef DUMMYLIB
     if (present(fmt)) then
       call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value, fmt))
     else
       call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value))
     endif
- 
+#endif
   end subroutine PseudoAttributeScalarRealDp
 
   subroutine PseudoAttributeScalarRealSp &
@@ -717,12 +762,13 @@ contains
     real(sp), intent(in)   :: value
     character(len=*), intent(in), optional :: fmt
 
+#ifndef DUMMYLIB
     if (present(fmt)) then
       call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value, fmt))
     else
       call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value))
     endif
- 
+#endif
   end subroutine PseudoAttributeScalarRealSp
 
   subroutine PseudoAttributeScalarInt &
@@ -732,8 +778,9 @@ contains
     character(len=*), intent(in) :: name
     integer, intent(in)   :: value
 
+#ifndef DUMMYLIB
     call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value))
- 
+#endif
   end subroutine PseudoAttributeScalarInt
 
   subroutine PseudoAttributeScalarLg &
@@ -743,8 +790,9 @@ contains
     character(len=*), intent(in) :: name
     logical, intent(in)   :: value
 
+#ifndef DUMMYLIB
     call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value))
- 
+#endif
   end subroutine PseudoAttributeScalarLg
 
 
@@ -756,12 +804,13 @@ contains
     complex(dp), intent(in) , dimension(:)  :: value
     character(len=*), intent(in), optional :: fmt
 
+#ifndef DUMMYLIB
     if (present(fmt)) then
       call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value, fmt), ws_significant=.false.)
     else
       call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value), ws_significant=.false.)
     endif
- 
+#endif
   end subroutine PseudoAttributeArrayCmplxDp
 
   subroutine PseudoAttributeArrayCmplxSp &
@@ -772,12 +821,13 @@ contains
     complex(sp), intent(in) , dimension(:)  :: value
     character(len=*), intent(in), optional :: fmt
 
+#ifndef DUMMYLIB
     if (present(fmt)) then
       call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value, fmt), ws_significant=.false.)
     else
       call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value), ws_significant=.false.)
     endif
- 
+#endif
   end subroutine PseudoAttributeArrayCmplxSp
 
   subroutine PseudoAttributeArrayRealDp &
@@ -788,12 +838,13 @@ contains
     real(dp), intent(in) , dimension(:)  :: value
     character(len=*), intent(in), optional :: fmt
 
+#ifndef DUMMYLIB
     if (present(fmt)) then
       call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value, fmt), ws_significant=.false.)
     else
       call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value), ws_significant=.false.)
     endif
- 
+#endif
   end subroutine PseudoAttributeArrayRealDp
 
   subroutine PseudoAttributeArrayRealSp &
@@ -804,12 +855,13 @@ contains
     real(sp), intent(in) , dimension(:)  :: value
     character(len=*), intent(in), optional :: fmt
 
+#ifndef DUMMYLIB
     if (present(fmt)) then
       call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value, fmt), ws_significant=.false.)
     else
       call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value), ws_significant=.false.)
     endif
- 
+#endif
   end subroutine PseudoAttributeArrayRealSp
 
   subroutine PseudoAttributeArrayInt &
@@ -819,8 +871,9 @@ contains
     character(len=*), intent(in) :: name
     integer, intent(in) , dimension(:)  :: value
 
+#ifndef DUMMYLIB
     call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value), ws_significant=.false.)
- 
+#endif
   end subroutine PseudoAttributeArrayInt
 
   subroutine PseudoAttributeArrayLg &
@@ -830,8 +883,9 @@ contains
     character(len=*), intent(in) :: name
     logical, intent(in) , dimension(:)  :: value
 
+#ifndef DUMMYLIB
     call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value), ws_significant=.false.)
- 
+#endif
   end subroutine PseudoAttributeArrayLg
 
   subroutine PseudoAttributeArrayCh &
@@ -842,8 +896,9 @@ contains
     character(len=*), intent(in) , dimension(:)  :: value
     character(len=1), intent(in), optional :: delimiter
 
+#ifndef DUMMYLIB
     call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value, delimiter), ws_significant=.false.)
- 
+#endif
   end subroutine PseudoAttributeArrayCh
 
   subroutine PseudoAttributeMatrixCmplxDp &
@@ -854,12 +909,13 @@ contains
     complex(dp), intent(in) , dimension(:,:)  :: value
     character(len=*), intent(in), optional :: fmt
 
+#ifndef DUMMYLIB
     if (present(fmt)) then
       call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value, fmt), ws_significant=.false.)
     else
       call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value), ws_significant=.false.)
     endif
- 
+#endif
   end subroutine PseudoAttributeMatrixCmplxDp
 
   subroutine PseudoAttributeMatrixCmplxSp &
@@ -870,12 +926,13 @@ contains
     complex(sp), intent(in) , dimension(:,:)  :: value
     character(len=*), intent(in), optional :: fmt
 
+#ifndef DUMMYLIB
     if (present(fmt)) then
       call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value, fmt), ws_significant=.false.)
     else
       call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value), ws_significant=.false.)
     endif
- 
+#endif
   end subroutine PseudoAttributeMatrixCmplxSp
 
   subroutine PseudoAttributeMatrixRealDp &
@@ -886,12 +943,13 @@ contains
     real(dp), intent(in) , dimension(:,:)  :: value
     character(len=*), intent(in), optional :: fmt
 
+#ifndef DUMMYLIB
     if (present(fmt)) then
       call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value, fmt), ws_significant=.false.)
     else
       call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value), ws_significant=.false.)
     endif
- 
+#endif
   end subroutine PseudoAttributeMatrixRealDp
 
   subroutine PseudoAttributeMatrixRealSp &
@@ -902,12 +960,13 @@ contains
     real(sp), intent(in) , dimension(:,:)  :: value
     character(len=*), intent(in), optional :: fmt
 
+#ifndef DUMMYLIB
     if (present(fmt)) then
       call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value, fmt), ws_significant=.false.)
     else
       call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value), ws_significant=.false.)
     endif
- 
+#endif
   end subroutine PseudoAttributeMatrixRealSp
 
   subroutine PseudoAttributeMatrixInt &
@@ -917,8 +976,9 @@ contains
     character(len=*), intent(in) :: name
     integer, intent(in) , dimension(:,:)  :: value
 
+#ifndef DUMMYLIB
     call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value), ws_significant=.false.)
- 
+#endif
   end subroutine PseudoAttributeMatrixInt
 
   subroutine PseudoAttributeMatrixLg &
@@ -928,8 +988,9 @@ contains
     character(len=*), intent(in) :: name
     logical, intent(in) , dimension(:,:)  :: value
 
+#ifndef DUMMYLIB
     call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value), ws_significant=.false.)
- 
+#endif
   end subroutine PseudoAttributeMatrixLg
 
   subroutine PseudoAttributeMatrixCh &
@@ -940,8 +1001,9 @@ contains
     character(len=*), intent(in) , dimension(:,:)  :: value
     character(len=1), intent(in), optional :: delimiter
 
+#ifndef DUMMYLIB
     call xml_AddPseudoAttribute(xf=xf, name=name, value=str(value, delimiter), ws_significant=.false.)
- 
+#endif
   end subroutine PseudoAttributeMatrixCh
 
 
