@@ -4,6 +4,13 @@
 !
 module m_wcml_property
 
+#ifdef WCML_DUMMY
+  integer, parameter :: sp = selected_real_kind(6,30)
+  integer, parameter :: dp = selected_real_kind(14,100)
+  type xmlf_t
+    integer :: i
+  end type xmlf_t
+#else
   use m_common_realtypes, only: sp, dp
   use FoX_wxml, only: xmlf_t
   use FoX_wxml, only: xml_NewElement, xml_AddAttribute
@@ -12,6 +19,7 @@ module m_wcml_property
 
 ! Fix for pgi, requires this explicitly:
   use m_wxml_overloads
+#endif
 
   implicit none
   private
@@ -74,6 +82,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -84,6 +93,7 @@ contains
 
     call stmAddValue(xf=xf, value=value, units=units, fmt=fmt)
     call xml_EndElement(xf, "property")
+#endif
  
   end subroutine propertyCmplxDpSca
 
@@ -102,6 +112,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -112,6 +123,7 @@ contains
 
     call stmAddValue(xf=xf, value=value, units=units, fmt=fmt)
     call xml_EndElement(xf, "property")
+#endif
  
   end subroutine propertyCmplxSpSca
 
@@ -130,6 +142,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -140,6 +153,7 @@ contains
 
     call stmAddValue(xf=xf, value=value, units=units, fmt=fmt)
     call xml_EndElement(xf, "property")
+#endif
  
   end subroutine propertyRealDpSca
 
@@ -158,6 +172,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -168,6 +183,7 @@ contains
 
     call stmAddValue(xf=xf, value=value, units=units, fmt=fmt)
     call xml_EndElement(xf, "property")
+#endif
  
   end subroutine propertyRealSpSca
 
@@ -185,6 +201,7 @@ contains
 
     character(len=*), intent(in)   :: units
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -195,6 +212,7 @@ contains
 
     call stmAddValue(xf=xf, value=value, units=units)
     call xml_EndElement(xf, "property")
+#endif
  
   end subroutine propertyIntSca
 
@@ -211,6 +229,7 @@ contains
     character(len=*), intent(in), optional :: role
 
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -221,6 +240,7 @@ contains
 
     call stmAddValue(xf=xf, value=value)
     call xml_EndElement(xf, "property")
+#endif
  
   end subroutine propertyLgSca
 
@@ -238,6 +258,7 @@ contains
 
     character(len=*), intent(in) , optional  :: units
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -248,6 +269,7 @@ contains
 
     call stmAddValue(xf=xf, value=value, units=units)
     call xml_EndElement(xf, "property")
+#endif
  
   end subroutine propertyChSca
 
@@ -268,6 +290,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -278,6 +301,7 @@ contains
 
     call stmAddValue(xf=xf, value=value(:nitems), units=units, fmt=fmt)
     call xml_EndElement(xf, "property")
+#endif
  
   end subroutine propertyCmplxDpArrSi
 
@@ -297,6 +321,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -307,6 +332,7 @@ contains
 
     call stmAddValue(xf=xf, value=value(:nitems), units=units, fmt=fmt)
     call xml_EndElement(xf, "property")
+#endif
  
   end subroutine propertyCmplxSpArrSi
 
@@ -326,6 +352,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -336,6 +363,7 @@ contains
 
     call stmAddValue(xf=xf, value=value(:nitems), units=units, fmt=fmt)
     call xml_EndElement(xf, "property")
+#endif
  
   end subroutine propertyRealDpArrSi
 
@@ -355,6 +383,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -365,6 +394,7 @@ contains
 
     call stmAddValue(xf=xf, value=value(:nitems), units=units, fmt=fmt)
     call xml_EndElement(xf, "property")
+#endif
  
   end subroutine propertyRealSpArrSi
 
@@ -383,6 +413,7 @@ contains
 
     character(len=*), intent(in)   :: units
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -393,6 +424,7 @@ contains
 
     call stmAddValue(xf=xf, value=value(:nitems), units=units)
     call xml_EndElement(xf, "property")
+#endif
  
   end subroutine propertyIntArrSi
 
@@ -410,6 +442,7 @@ contains
     character(len=*), intent(in), optional :: role
 
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -420,6 +453,7 @@ contains
 
     call stmAddValue(xf=xf, value=value(:nitems))
     call xml_EndElement(xf, "property")
+#endif
  
   end subroutine propertyLgArrSi
 
@@ -438,6 +472,7 @@ contains
 
     character(len=*), intent(in) , optional  :: units
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -448,6 +483,7 @@ contains
 
     call stmAddValue(xf=xf, value=value(:nitems), units=units)
     call xml_EndElement(xf, "property")
+#endif
  
   end subroutine propertyChArrSi
 
@@ -467,6 +503,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -477,6 +514,7 @@ contains
 
     call stmAddValue(xf=xf, value=value, units=units, fmt=fmt)
     call xml_EndElement(xf, "property")
+#endif
  
   end subroutine propertyCmplxDpArrSh
 
@@ -495,6 +533,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -505,6 +544,7 @@ contains
 
     call stmAddValue(xf=xf, value=value, units=units, fmt=fmt)
     call xml_EndElement(xf, "property")
+#endif
  
   end subroutine propertyCmplxSpArrSh
 
@@ -523,6 +563,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -533,6 +574,7 @@ contains
 
     call stmAddValue(xf=xf, value=value, units=units, fmt=fmt)
     call xml_EndElement(xf, "property")
+#endif
  
   end subroutine propertyRealDpArrSh
 
@@ -551,6 +593,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -561,6 +604,7 @@ contains
 
     call stmAddValue(xf=xf, value=value, units=units, fmt=fmt)
     call xml_EndElement(xf, "property")
+#endif
  
   end subroutine propertyRealSpArrSh
 
@@ -578,6 +622,7 @@ contains
 
     character(len=*), intent(in)   :: units
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -588,6 +633,7 @@ contains
 
     call stmAddValue(xf=xf, value=value, units=units)
     call xml_EndElement(xf, "property")
+#endif
  
   end subroutine propertyIntArrSh
 
@@ -604,6 +650,7 @@ contains
     character(len=*), intent(in), optional :: role
 
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -614,6 +661,7 @@ contains
 
     call stmAddValue(xf=xf, value=value)
     call xml_EndElement(xf, "property")
+#endif
  
   end subroutine propertyLgArrSh
 
@@ -631,6 +679,7 @@ contains
 
     character(len=*), intent(in) , optional  :: units
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -641,6 +690,7 @@ contains
 
     call stmAddValue(xf=xf, value=value, units=units)
     call xml_EndElement(xf, "property")
+#endif
  
   end subroutine propertyChArrSh
 
@@ -662,6 +712,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -672,6 +723,7 @@ contains
 
     call stmAddValue(xf=xf, value=value(:nrows, :ncols), units=units, fmt=fmt)
     call xml_EndElement(xf, "property")
+#endif
  
   end subroutine propertyCmplxDpMatSi
 
@@ -692,6 +744,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -702,6 +755,7 @@ contains
 
     call stmAddValue(xf=xf, value=value(:nrows, :ncols), units=units, fmt=fmt)
     call xml_EndElement(xf, "property")
+#endif
  
   end subroutine propertyCmplxSpMatSi
 
@@ -722,6 +776,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -732,6 +787,7 @@ contains
 
     call stmAddValue(xf=xf, value=value(:nrows, :ncols), units=units, fmt=fmt)
     call xml_EndElement(xf, "property")
+#endif
  
   end subroutine propertyRealDpMatSi
 
@@ -752,6 +808,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -762,6 +819,7 @@ contains
 
     call stmAddValue(xf=xf, value=value(:nrows, :ncols), units=units, fmt=fmt)
     call xml_EndElement(xf, "property")
+#endif
  
   end subroutine propertyRealSpMatSi
 
@@ -781,6 +839,7 @@ contains
 
     character(len=*), intent(in)   :: units
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -791,6 +850,7 @@ contains
 
     call stmAddValue(xf=xf, value=value(:nrows, :ncols), units=units)
     call xml_EndElement(xf, "property")
+#endif
  
   end subroutine propertyIntMatSi
 
@@ -809,6 +869,7 @@ contains
     character(len=*), intent(in), optional :: role
 
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -819,6 +880,7 @@ contains
 
     call stmAddValue(xf=xf, value=value(:nrows, :ncols))
     call xml_EndElement(xf, "property")
+#endif
  
   end subroutine propertyLgMatSi
 
@@ -838,6 +900,7 @@ contains
 
     character(len=*), intent(in) , optional  :: units
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -848,6 +911,7 @@ contains
 
     call stmAddValue(xf=xf, value=value(:nrows, :ncols), units=units)
     call xml_EndElement(xf, "property")
+#endif
  
   end subroutine propertyChMatSi
 
@@ -867,6 +931,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -877,6 +942,7 @@ contains
 
     call stmAddValue(xf=xf, value=value, units=units, fmt=fmt)
     call xml_EndElement(xf, "property")
+#endif
  
   end subroutine propertyCmplxDpMatSh
 
@@ -895,6 +961,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -905,6 +972,7 @@ contains
 
     call stmAddValue(xf=xf, value=value, units=units, fmt=fmt)
     call xml_EndElement(xf, "property")
+#endif
  
   end subroutine propertyCmplxSpMatSh
 
@@ -923,6 +991,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -933,6 +1002,7 @@ contains
 
     call stmAddValue(xf=xf, value=value, units=units, fmt=fmt)
     call xml_EndElement(xf, "property")
+#endif
  
   end subroutine propertyRealDpMatSh
 
@@ -951,6 +1021,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -961,6 +1032,7 @@ contains
 
     call stmAddValue(xf=xf, value=value, units=units, fmt=fmt)
     call xml_EndElement(xf, "property")
+#endif
  
   end subroutine propertyRealSpMatSh
 
@@ -978,6 +1050,7 @@ contains
 
     character(len=*), intent(in)   :: units
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -988,6 +1061,7 @@ contains
 
     call stmAddValue(xf=xf, value=value, units=units)
     call xml_EndElement(xf, "property")
+#endif
  
   end subroutine propertyIntMatSh
 
@@ -1004,6 +1078,7 @@ contains
     character(len=*), intent(in), optional :: role
 
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -1014,6 +1089,7 @@ contains
 
     call stmAddValue(xf=xf, value=value)
     call xml_EndElement(xf, "property")
+#endif
  
   end subroutine propertyLgMatSh
 
@@ -1031,6 +1107,7 @@ contains
 
     character(len=*), intent(in) , optional  :: units
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "property")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -1041,6 +1118,7 @@ contains
 
     call stmAddValue(xf=xf, value=value, units=units)
     call xml_EndElement(xf, "property")
+#endif
  
   end subroutine propertyChMatSh
 

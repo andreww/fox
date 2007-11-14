@@ -30,6 +30,7 @@ TOHWM4_moleculeargslist)
 
 TOHWM4_moleculeargsdecl
 
+#ifndef WCML_DUMMY
     integer          :: i
 
     if (present(style)) then
@@ -58,6 +59,7 @@ TOHWM4_moleculeargsuse
 
     call xml_EndElement(xf, "atomArray")
     call xml_EndElement(xf, "molecule")
+#endif
 
   end subroutine cmlAddMolecule$1
 
@@ -76,6 +78,7 @@ TOHWM4_moleculeargslist)
 
 TOHWM4_moleculeargsdecl
 
+#ifndef WCML_DUMMY
     integer          :: i
 
     if (style=="DL_POLY") then
@@ -103,7 +106,8 @@ TOHWM4_moleculeargsuse
 
     call xml_EndElement(xf, "atomArray")
     call xml_EndElement(xf, "molecule")
-    
+#endif
+
   end subroutine cmlAddMolecule$1_sh
 
 
@@ -122,6 +126,7 @@ TOHWM4_moleculeargslist)
 
 TOHWM4_moleculeargsdecl
 
+#ifndef WCML_DUMMY
     integer          :: i
 
     if (style=="DL_POLY") then
@@ -148,7 +153,8 @@ TOHWM4_moleculeargsuse
 
     call xml_EndElement(xf, "atomArray")
     call xml_EndElement(xf, "molecule")
-    
+#endif
+
   end subroutine cmlAddMolecule_3_$1
 
 
@@ -167,7 +173,7 @@ TOHWM4_moleculeargslist)
     character(len=*), intent(in), optional :: style
 
 TOHWM4_moleculeargsdecl
-
+#ifndef WCML_DUMMY
     integer          :: i
 
     if (style=="DL_POLY") then
@@ -194,9 +200,10 @@ TOHWM4_moleculeargsuse
 
     call xml_EndElement(xf, "atomArray")
     call xml_EndElement(xf, "molecule")
-    
+#endif
   end subroutine cmlAddMolecule_3_$1_sh
 
+#ifndef WCML_DUMMY
   subroutine cmlAddAtom_$1(xf, elem, coords, id, charge, hCount, occupancy, &
        fmt, style)
     type(xmlf_t), intent(inout) :: xf
@@ -208,7 +215,6 @@ TOHWM4_moleculeargsuse
     character(len=*), intent(in), optional  :: id
     character(len=*), intent(in), optional  :: fmt
     character(len=*), intent(in), optional  :: style
-    
 
     call xml_NewElement(xf, "atom")
     call xml_AddAttribute(xf, "elementType", elem)
@@ -353,7 +359,7 @@ TOHWM4_moleculeargsuse
       call xml_AddNewline(xf)
     enddo
   end subroutine addDlpolyMatrix_3_$1
-
+#endif
 
 ')dnl
 dnl
@@ -362,6 +368,13 @@ dnl
 
 module m_wcml_molecule
 
+#ifdef WCML_DUMMY
+  integer, parameter :: sp = selected_real_kind(6,30)
+  integer, parameter :: dp = selected_real_kind(14,100)
+  type xmlf_t
+    integer :: i
+  end type xmlf_t
+#else
   use m_common_format, only: str
   use m_common_realtypes, only: sp, dp
   use m_common_error, only: FoX_error
@@ -371,6 +384,7 @@ module m_wcml_molecule
 
 ! Fix for pgi, requires this explicitly:
   use m_wxml_overloads
+#endif
 
   implicit none
   private
@@ -394,7 +408,6 @@ module m_wcml_molecule
   public :: cmlAddMolecule
 
 contains
-
 
 TOHWM4_molecule_subs(`sp')
 

@@ -4,6 +4,7 @@
 !
 module m_wcml_stml
 
+#ifndef WCML_DUMMY
   use FoX_wxml, only: xmlf_t
   use FoX_wxml, only: xml_NewElement, xml_EndElement
   use FoX_wxml, only: xml_AddCharacters, xml_AddAttribute
@@ -996,4 +997,5 @@ id, title, dictRef, convention, errorValue, errorBasis, min, max, ref &
   end subroutine stmAddChMat
 
 
+#endif
 end module m_wcml_stml

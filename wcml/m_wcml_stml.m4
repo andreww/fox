@@ -95,6 +95,7 @@ dnl
 !
 module m_wcml_stml
 
+#ifndef WCML_DUMMY
   use FoX_wxml, only: xmlf_t
   use FoX_wxml, only: xml_NewElement, xml_EndElement
   use FoX_wxml, only: xml_AddCharacters, xml_AddAttribute
@@ -139,4 +140,5 @@ m4_foreach(`x', TOHWM4_types, `TOHWM4_stml_sub(x,`(id, title, dictRef, conventio
 ')
 m4_foreach(`x', TOHWM4_types, `TOHWM4_stml_sub(x,`(id, title, dictRef, convention, errorValue, errorBasis, min, max, ref)',`Mat')
 ')
+#endif
 end module m_wcml_stml

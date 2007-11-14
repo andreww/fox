@@ -1,7 +1,13 @@
- 
 module m_wcml_coma
   ! Implements routines relating to electronic structure
 
+#ifdef WCML_DUMMY
+  integer, parameter :: sp = selected_real_kind(6,30)
+  integer, parameter :: dp = selected_real_kind(14,100)
+  type xmlf_t
+    integer :: i
+  end type xmlf_t
+#else
   use m_common_realtypes, only: sp, dp
 
   use FoX_common, only: str
@@ -12,6 +18,7 @@ module m_wcml_coma
 
 ! Fix for pgi, requires this explicitly:
   use m_wxml_overloads
+#endif
 
   implicit none
   private
@@ -56,6 +63,7 @@ contains
 
 
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "band")
     call xml_AddAttribute(xf, "kpointRef", kptref)
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
@@ -68,6 +76,7 @@ contains
 
     call stmAddValue(xf, value=bands, fmt=fmt, units=units)
     call xml_EndElement(xf, "band")
+#endif
 
   end subroutine cmlAddBand_kptref_sp
 
@@ -87,6 +96,7 @@ contains
 
 
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "kpoint")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -111,6 +121,7 @@ contains
     end if
 
     call xml_EndElement(xf, "kpoint")
+#endif
 
   end subroutine cmlAddKPoint_sp
 
@@ -133,6 +144,7 @@ eigenOrientationType, vecfmt, valfmt &
 
 
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "eigen")
     call xml_AddAttribute(xf, "eigenOrientationType", eigenOrientationType)
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
@@ -146,7 +158,8 @@ eigenOrientationType, vecfmt, valfmt &
     call stmAddValue(xf=xf, value=eigval, title="eigenvalues", dictref=dictRef, fmt=valfmt, units=units)
     call stmAddValue(xf=xf, value=eigvec, title="eigenvectors", fmt=vecfmt, units="units:dimensionless")
     call xml_EndElement(xf, "eigen")
-    
+#endif
+
   end subroutine cmlAddEigenvaluespSh
 
   subroutine cmlAddEigenvaluespSi(xf, n, eigvec, eigval, units, &
@@ -169,6 +182,7 @@ eigenOrientationType, vecfmt, valfmt &
 
 
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "eigen")
     call xml_AddAttribute(xf, "eigenOrientationType", eigenOrientationType)
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
@@ -182,6 +196,7 @@ eigenOrientationType, vecfmt, valfmt &
     call stmAddValue(xf=xf, value=eigval(:n), title="eigenvalues", units=units, dictref=dictRef, fmt=valfmt)
     call stmAddValue(xf=xf, value=eigvec(:n,:n), title="eigenvectors", units="units:dimensionless", fmt=vecfmt)
     call xml_EndElement(xf, "eigen")
+#endif
     
   end subroutine cmlAddEigenvaluespSi
 
@@ -203,6 +218,7 @@ eigenOrientationType, vecfmt, valfmt &
 
 
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "band")
     call xml_AddAttribute(xf, "kpointRef", kptref)
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
@@ -215,6 +231,7 @@ eigenOrientationType, vecfmt, valfmt &
 
     call stmAddValue(xf, value=bands, fmt=fmt, units=units)
     call xml_EndElement(xf, "band")
+#endif
 
   end subroutine cmlAddBand_kptref_dp
 
@@ -234,6 +251,7 @@ eigenOrientationType, vecfmt, valfmt &
 
 
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "kpoint")
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -258,6 +276,7 @@ eigenOrientationType, vecfmt, valfmt &
     end if
 
     call xml_EndElement(xf, "kpoint")
+#endif
 
   end subroutine cmlAddKPoint_dp
 
@@ -280,6 +299,7 @@ eigenOrientationType, vecfmt, valfmt &
 
 
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "eigen")
     call xml_AddAttribute(xf, "eigenOrientationType", eigenOrientationType)
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
@@ -293,7 +313,8 @@ eigenOrientationType, vecfmt, valfmt &
     call stmAddValue(xf=xf, value=eigval, title="eigenvalues", dictref=dictRef, fmt=valfmt, units=units)
     call stmAddValue(xf=xf, value=eigvec, title="eigenvectors", fmt=vecfmt, units="units:dimensionless")
     call xml_EndElement(xf, "eigen")
-    
+#endif
+
   end subroutine cmlAddEigenvaluedpSh
 
   subroutine cmlAddEigenvaluedpSi(xf, n, eigvec, eigval, units, &
@@ -316,6 +337,7 @@ eigenOrientationType, vecfmt, valfmt &
 
 
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "eigen")
     call xml_AddAttribute(xf, "eigenOrientationType", eigenOrientationType)
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
@@ -329,6 +351,7 @@ eigenOrientationType, vecfmt, valfmt &
     call stmAddValue(xf=xf, value=eigval(:n), title="eigenvalues", units=units, dictref=dictRef, fmt=valfmt)
     call stmAddValue(xf=xf, value=eigvec(:n,:n), title="eigenvectors", units="units:dimensionless", fmt=vecfmt)
     call xml_EndElement(xf, "eigen")
+#endif
     
   end subroutine cmlAddEigenvaluedpSi
 

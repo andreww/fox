@@ -4,6 +4,13 @@
 
 module m_wcml_geometry
 
+#ifdef WCML_DUMMY
+  integer, parameter :: sp = selected_real_kind(6,30)
+  integer, parameter :: dp = selected_real_kind(14,100)
+  type xmlf_t
+    integer :: i
+  end type xmlf_t
+#else
   use m_common_realtypes, only: sp, dp
   use FoX_wxml, only: xmlf_t
   use FoX_wxml, only: xml_NewElement, xml_EndElement
@@ -11,6 +18,7 @@ module m_wcml_geometry
 
 ! Fix for pgi, requires this explicitly:
   use m_wxml_overloads
+#endif
 
   implicit none
   private
@@ -41,11 +49,13 @@ contains
     real(kind=sp), intent(in)    :: length
     character(len=*), intent(in), optional :: fmt
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "length")
     call xml_AddAttribute(xf, "id", id)
     call xml_AddAttribute(xf, "atomRefs2", atomRef1//" "//atomRef2)
     call xml_AddCharacters(xf, length, fmt)
     call xml_EndElement(xf, "length")
+#endif
 
   end subroutine cmlAddLength_sp
 
@@ -58,11 +68,13 @@ contains
     real(kind=sp), intent(in)     :: angle
     character(len=*), intent(in), optional :: fmt
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "angle")
     call xml_AddAttribute(xf, "id", id)
     call xml_AddAttribute(xf, "atomRefs3", atomRef1//" "//atomRef2//" "//atomRef3)
     call xml_AddCharacters(xf, angle, fmt)
     call xml_EndElement(xf, "angle")
+#endif
 
   end subroutine cmlAddAngle_sp
 
@@ -76,12 +88,14 @@ contains
     real(kind=sp), intent(in)    :: torsion
     character(len=*), intent(in), optional :: fmt
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "torsion")
     call xml_AddAttribute(xf, "id", id)
     call xml_AddAttribute(xf, "atomRefs4", &
          atomRef1//" "//atomRef2//" "//atomRef3//" "//atomRef4)
     call xml_AddCharacters(xf, torsion, fmt)
     call xml_EndElement(xf, "torsion")
+#endif
 
   end subroutine cmlAddTorsion_sp
 
@@ -94,11 +108,13 @@ contains
     real(kind=dp), intent(in)    :: length
     character(len=*), intent(in), optional :: fmt
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "length")
     call xml_AddAttribute(xf, "id", id)
     call xml_AddAttribute(xf, "atomRefs2", atomRef1//" "//atomRef2)
     call xml_AddCharacters(xf, length, fmt)
     call xml_EndElement(xf, "length")
+#endif
 
   end subroutine cmlAddLength_dp
 
@@ -111,11 +127,13 @@ contains
     real(kind=dp), intent(in)     :: angle
     character(len=*), intent(in), optional :: fmt
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "angle")
     call xml_AddAttribute(xf, "id", id)
     call xml_AddAttribute(xf, "atomRefs3", atomRef1//" "//atomRef2//" "//atomRef3)
     call xml_AddCharacters(xf, angle, fmt)
     call xml_EndElement(xf, "angle")
+#endif
 
   end subroutine cmlAddAngle_dp
 
@@ -129,12 +147,14 @@ contains
     real(kind=dp), intent(in)    :: torsion
     character(len=*), intent(in), optional :: fmt
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "torsion")
     call xml_AddAttribute(xf, "id", id)
     call xml_AddAttribute(xf, "atomRefs4", &
          atomRef1//" "//atomRef2//" "//atomRef3//" "//atomRef4)
     call xml_AddCharacters(xf, torsion, fmt)
     call xml_EndElement(xf, "torsion")
+#endif
 
   end subroutine cmlAddTorsion_dp
 

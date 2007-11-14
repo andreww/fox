@@ -1,8 +1,14 @@
 module m_wcml_metadata
 
+#ifdef WCML_DUMMY
+  type xmlf_t
+    integer :: i
+  end type xmlf_t
+#else
   use FoX_wxml, only: xmlf_t
   use FoX_wxml, only: xml_NewElement, xml_EndElement
   use FoX_wxml, only: xml_AddAttribute
+#endif
 
   implicit none
   private
@@ -20,6 +26,7 @@ contains
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "metadata")
     call xml_AddAttribute(xf, "name", name)
     call xml_AddAttribute(xf, name="content", value=content  )
@@ -28,6 +35,7 @@ contains
     if (present(title)) call xml_AddAttribute(xf, "title", title)
     if (present(convention)) call xml_AddAttribute(xf, "convention", convention)
     call xml_EndElement(xf, "metadata")
+#endif
 
    end subroutine cmlAddMetadata
 

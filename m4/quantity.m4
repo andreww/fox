@@ -42,6 +42,7 @@ ifelse(substr($3,0,4),`Real',`dnl
     character(len=*), intent(in), optional :: fmt
 ')dnl
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "$1")
 dnl
 m4_foreach(`x', `$2', `TOHWM4_dummyarguse(x)')
@@ -53,6 +54,7 @@ ifelse(substr($3,0,4),`Real',`, fmt=fmt',substr($3,0,5),`Cmplx',`, fmt=fmt',`')`
 )
 dnl
     call xml_EndElement(xf, "$1")
+#endif
  
   end subroutine `$1'`$3'`$4'
 ')dnl
@@ -66,6 +68,13 @@ include(`foreach.m4')dnl
 !
 module m_wcml_$1
 
+#ifdef WCML_DUMMY
+  integer, parameter :: sp = selected_real_kind(6,30)
+  integer, parameter :: dp = selected_real_kind(14,100)
+  type xmlf_t
+    integer :: i
+  end type xmlf_t
+#else
   use m_common_realtypes, only: sp, dp
   use FoX_wxml, only: xmlf_t
   use FoX_wxml, only: xml_NewElement, xml_AddAttribute
@@ -74,6 +83,7 @@ module m_wcml_$1
 
 ! Fix for pgi, requires this explicitly:
   use m_wxml_overloads
+#endif
 
   implicit none
   private

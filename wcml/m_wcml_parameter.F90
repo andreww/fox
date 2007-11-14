@@ -4,6 +4,13 @@
 !
 module m_wcml_parameter
 
+#ifdef WCML_DUMMY
+  integer, parameter :: sp = selected_real_kind(6,30)
+  integer, parameter :: dp = selected_real_kind(14,100)
+  type xmlf_t
+    integer :: i
+  end type xmlf_t
+#else
   use m_common_realtypes, only: sp, dp
   use FoX_wxml, only: xmlf_t
   use FoX_wxml, only: xml_NewElement, xml_AddAttribute
@@ -12,6 +19,7 @@ module m_wcml_parameter
 
 ! Fix for pgi, requires this explicitly:
   use m_wxml_overloads
+#endif
 
   implicit none
   private
@@ -76,6 +84,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "parameter")
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(title)) call xml_addAttribute(xf, "title", title)
@@ -88,6 +97,7 @@ contains
 
     call stmAddValue(xf=xf, value=value, units=units, fmt=fmt)
     call xml_EndElement(xf, "parameter")
+#endif
  
   end subroutine parameterCmplxDpSca
 
@@ -108,6 +118,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "parameter")
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(title)) call xml_addAttribute(xf, "title", title)
@@ -120,6 +131,7 @@ contains
 
     call stmAddValue(xf=xf, value=value, units=units, fmt=fmt)
     call xml_EndElement(xf, "parameter")
+#endif
  
   end subroutine parameterCmplxSpSca
 
@@ -140,6 +152,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "parameter")
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(title)) call xml_addAttribute(xf, "title", title)
@@ -152,6 +165,7 @@ contains
 
     call stmAddValue(xf=xf, value=value, units=units, fmt=fmt)
     call xml_EndElement(xf, "parameter")
+#endif
  
   end subroutine parameterRealDpSca
 
@@ -172,6 +186,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "parameter")
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(title)) call xml_addAttribute(xf, "title", title)
@@ -184,6 +199,7 @@ contains
 
     call stmAddValue(xf=xf, value=value, units=units, fmt=fmt)
     call xml_EndElement(xf, "parameter")
+#endif
  
   end subroutine parameterRealSpSca
 
@@ -203,6 +219,7 @@ contains
 
     character(len=*), intent(in)   :: units
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "parameter")
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(title)) call xml_addAttribute(xf, "title", title)
@@ -215,6 +232,7 @@ contains
 
     call stmAddValue(xf=xf, value=value, units=units)
     call xml_EndElement(xf, "parameter")
+#endif
  
   end subroutine parameterIntSca
 
@@ -233,6 +251,7 @@ contains
     character(len=*), intent(in), optional :: role
 
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "parameter")
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(title)) call xml_addAttribute(xf, "title", title)
@@ -245,6 +264,7 @@ contains
 
     call stmAddValue(xf=xf, value=value)
     call xml_EndElement(xf, "parameter")
+#endif
  
   end subroutine parameterLgSca
 
@@ -264,6 +284,7 @@ contains
 
     character(len=*), intent(in) , optional  :: units
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "parameter")
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(title)) call xml_addAttribute(xf, "title", title)
@@ -276,6 +297,7 @@ contains
 
     call stmAddValue(xf=xf, value=value, units=units)
     call xml_EndElement(xf, "parameter")
+#endif
  
   end subroutine parameterChSca
 
@@ -298,6 +320,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "parameter")
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(title)) call xml_addAttribute(xf, "title", title)
@@ -310,6 +333,7 @@ contains
 
     call stmAddValue(xf=xf, value=value(:nitems), units=units, fmt=fmt)
     call xml_EndElement(xf, "parameter")
+#endif
  
   end subroutine parameterCmplxDpArrSi
 
@@ -331,6 +355,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "parameter")
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(title)) call xml_addAttribute(xf, "title", title)
@@ -343,6 +368,7 @@ contains
 
     call stmAddValue(xf=xf, value=value(:nitems), units=units, fmt=fmt)
     call xml_EndElement(xf, "parameter")
+#endif
  
   end subroutine parameterCmplxSpArrSi
 
@@ -364,6 +390,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "parameter")
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(title)) call xml_addAttribute(xf, "title", title)
@@ -376,6 +403,7 @@ contains
 
     call stmAddValue(xf=xf, value=value(:nitems), units=units, fmt=fmt)
     call xml_EndElement(xf, "parameter")
+#endif
  
   end subroutine parameterRealDpArrSi
 
@@ -397,6 +425,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "parameter")
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(title)) call xml_addAttribute(xf, "title", title)
@@ -409,6 +438,7 @@ contains
 
     call stmAddValue(xf=xf, value=value(:nitems), units=units, fmt=fmt)
     call xml_EndElement(xf, "parameter")
+#endif
  
   end subroutine parameterRealSpArrSi
 
@@ -429,6 +459,7 @@ contains
 
     character(len=*), intent(in)   :: units
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "parameter")
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(title)) call xml_addAttribute(xf, "title", title)
@@ -441,6 +472,7 @@ contains
 
     call stmAddValue(xf=xf, value=value(:nitems), units=units)
     call xml_EndElement(xf, "parameter")
+#endif
  
   end subroutine parameterIntArrSi
 
@@ -460,6 +492,7 @@ contains
     character(len=*), intent(in), optional :: role
 
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "parameter")
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(title)) call xml_addAttribute(xf, "title", title)
@@ -472,6 +505,7 @@ contains
 
     call stmAddValue(xf=xf, value=value(:nitems))
     call xml_EndElement(xf, "parameter")
+#endif
  
   end subroutine parameterLgArrSi
 
@@ -492,6 +526,7 @@ contains
 
     character(len=*), intent(in) , optional  :: units
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "parameter")
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(title)) call xml_addAttribute(xf, "title", title)
@@ -504,6 +539,7 @@ contains
 
     call stmAddValue(xf=xf, value=value(:nitems), units=units)
     call xml_EndElement(xf, "parameter")
+#endif
  
   end subroutine parameterChArrSi
 
@@ -525,6 +561,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "parameter")
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(title)) call xml_addAttribute(xf, "title", title)
@@ -537,6 +574,7 @@ contains
 
     call stmAddValue(xf=xf, value=value, units=units, fmt=fmt)
     call xml_EndElement(xf, "parameter")
+#endif
  
   end subroutine parameterCmplxDpArrSh
 
@@ -557,6 +595,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "parameter")
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(title)) call xml_addAttribute(xf, "title", title)
@@ -569,6 +608,7 @@ contains
 
     call stmAddValue(xf=xf, value=value, units=units, fmt=fmt)
     call xml_EndElement(xf, "parameter")
+#endif
  
   end subroutine parameterCmplxSpArrSh
 
@@ -589,6 +629,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "parameter")
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(title)) call xml_addAttribute(xf, "title", title)
@@ -601,6 +642,7 @@ contains
 
     call stmAddValue(xf=xf, value=value, units=units, fmt=fmt)
     call xml_EndElement(xf, "parameter")
+#endif
  
   end subroutine parameterRealDpArrSh
 
@@ -621,6 +663,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "parameter")
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(title)) call xml_addAttribute(xf, "title", title)
@@ -633,6 +676,7 @@ contains
 
     call stmAddValue(xf=xf, value=value, units=units, fmt=fmt)
     call xml_EndElement(xf, "parameter")
+#endif
  
   end subroutine parameterRealSpArrSh
 
@@ -652,6 +696,7 @@ contains
 
     character(len=*), intent(in)   :: units
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "parameter")
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(title)) call xml_addAttribute(xf, "title", title)
@@ -664,6 +709,7 @@ contains
 
     call stmAddValue(xf=xf, value=value, units=units)
     call xml_EndElement(xf, "parameter")
+#endif
  
   end subroutine parameterIntArrSh
 
@@ -682,6 +728,7 @@ contains
     character(len=*), intent(in), optional :: role
 
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "parameter")
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(title)) call xml_addAttribute(xf, "title", title)
@@ -694,6 +741,7 @@ contains
 
     call stmAddValue(xf=xf, value=value)
     call xml_EndElement(xf, "parameter")
+#endif
  
   end subroutine parameterLgArrSh
 
@@ -713,6 +761,7 @@ contains
 
     character(len=*), intent(in) , optional  :: units
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "parameter")
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(title)) call xml_addAttribute(xf, "title", title)
@@ -725,6 +774,7 @@ contains
 
     call stmAddValue(xf=xf, value=value, units=units)
     call xml_EndElement(xf, "parameter")
+#endif
  
   end subroutine parameterChArrSh
 
@@ -748,6 +798,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "parameter")
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(title)) call xml_addAttribute(xf, "title", title)
@@ -760,6 +811,7 @@ contains
 
     call stmAddValue(xf=xf, value=value(:nrows, :ncols), units=units, fmt=fmt)
     call xml_EndElement(xf, "parameter")
+#endif
  
   end subroutine parameterCmplxDpMatSi
 
@@ -782,6 +834,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "parameter")
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(title)) call xml_addAttribute(xf, "title", title)
@@ -794,6 +847,7 @@ contains
 
     call stmAddValue(xf=xf, value=value(:nrows, :ncols), units=units, fmt=fmt)
     call xml_EndElement(xf, "parameter")
+#endif
  
   end subroutine parameterCmplxSpMatSi
 
@@ -816,6 +870,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "parameter")
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(title)) call xml_addAttribute(xf, "title", title)
@@ -828,6 +883,7 @@ contains
 
     call stmAddValue(xf=xf, value=value(:nrows, :ncols), units=units, fmt=fmt)
     call xml_EndElement(xf, "parameter")
+#endif
  
   end subroutine parameterRealDpMatSi
 
@@ -850,6 +906,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "parameter")
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(title)) call xml_addAttribute(xf, "title", title)
@@ -862,6 +919,7 @@ contains
 
     call stmAddValue(xf=xf, value=value(:nrows, :ncols), units=units, fmt=fmt)
     call xml_EndElement(xf, "parameter")
+#endif
  
   end subroutine parameterRealSpMatSi
 
@@ -883,6 +941,7 @@ contains
 
     character(len=*), intent(in)   :: units
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "parameter")
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(title)) call xml_addAttribute(xf, "title", title)
@@ -895,6 +954,7 @@ contains
 
     call stmAddValue(xf=xf, value=value(:nrows, :ncols), units=units)
     call xml_EndElement(xf, "parameter")
+#endif
  
   end subroutine parameterIntMatSi
 
@@ -915,6 +975,7 @@ contains
     character(len=*), intent(in), optional :: role
 
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "parameter")
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(title)) call xml_addAttribute(xf, "title", title)
@@ -927,6 +988,7 @@ contains
 
     call stmAddValue(xf=xf, value=value(:nrows, :ncols))
     call xml_EndElement(xf, "parameter")
+#endif
  
   end subroutine parameterLgMatSi
 
@@ -948,6 +1010,7 @@ contains
 
     character(len=*), intent(in) , optional  :: units
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "parameter")
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(title)) call xml_addAttribute(xf, "title", title)
@@ -960,6 +1023,7 @@ contains
 
     call stmAddValue(xf=xf, value=value(:nrows, :ncols), units=units)
     call xml_EndElement(xf, "parameter")
+#endif
  
   end subroutine parameterChMatSi
 
@@ -981,6 +1045,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "parameter")
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(title)) call xml_addAttribute(xf, "title", title)
@@ -993,6 +1058,7 @@ contains
 
     call stmAddValue(xf=xf, value=value, units=units, fmt=fmt)
     call xml_EndElement(xf, "parameter")
+#endif
  
   end subroutine parameterCmplxDpMatSh
 
@@ -1013,6 +1079,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "parameter")
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(title)) call xml_addAttribute(xf, "title", title)
@@ -1025,6 +1092,7 @@ contains
 
     call stmAddValue(xf=xf, value=value, units=units, fmt=fmt)
     call xml_EndElement(xf, "parameter")
+#endif
  
   end subroutine parameterCmplxSpMatSh
 
@@ -1045,6 +1113,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "parameter")
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(title)) call xml_addAttribute(xf, "title", title)
@@ -1057,6 +1126,7 @@ contains
 
     call stmAddValue(xf=xf, value=value, units=units, fmt=fmt)
     call xml_EndElement(xf, "parameter")
+#endif
  
   end subroutine parameterRealDpMatSh
 
@@ -1077,6 +1147,7 @@ contains
     character(len=*), intent(in)   :: units
     character(len=*), intent(in), optional :: fmt
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "parameter")
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(title)) call xml_addAttribute(xf, "title", title)
@@ -1089,6 +1160,7 @@ contains
 
     call stmAddValue(xf=xf, value=value, units=units, fmt=fmt)
     call xml_EndElement(xf, "parameter")
+#endif
  
   end subroutine parameterRealSpMatSh
 
@@ -1108,6 +1180,7 @@ contains
 
     character(len=*), intent(in)   :: units
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "parameter")
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(title)) call xml_addAttribute(xf, "title", title)
@@ -1120,6 +1193,7 @@ contains
 
     call stmAddValue(xf=xf, value=value, units=units)
     call xml_EndElement(xf, "parameter")
+#endif
  
   end subroutine parameterIntMatSh
 
@@ -1138,6 +1212,7 @@ contains
     character(len=*), intent(in), optional :: role
 
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "parameter")
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(title)) call xml_addAttribute(xf, "title", title)
@@ -1150,6 +1225,7 @@ contains
 
     call stmAddValue(xf=xf, value=value)
     call xml_EndElement(xf, "parameter")
+#endif
  
   end subroutine parameterLgMatSh
 
@@ -1169,6 +1245,7 @@ contains
 
     character(len=*), intent(in) , optional  :: units
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "parameter")
     if (present(ref)) call xml_addAttribute(xf, "ref", ref)
     if (present(title)) call xml_addAttribute(xf, "title", title)
@@ -1181,6 +1258,7 @@ contains
 
     call stmAddValue(xf=xf, value=value, units=units)
     call xml_EndElement(xf, "parameter")
+#endif
  
   end subroutine parameterChMatSh
 

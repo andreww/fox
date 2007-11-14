@@ -1,5 +1,10 @@
 module m_wcml_core
 
+#ifdef WCML_DUMMY
+  type xmlf_t
+    integer :: i
+  end type xmlf_t
+#else
   use m_common_error, only: FoX_error
 
   use FoX_common, only: FoX_version
@@ -10,6 +15,7 @@ module m_wcml_core
   use FoX_wxml, only: xmlf_Name, xmlf_OpenTag
 
   use m_wcml_metadata, only: cmlAddMetadata
+#endif
 
   implicit none
   private
@@ -29,11 +35,13 @@ contains
     integer, intent(in) :: unit
     logical, intent(in), optional :: replace
 
+#ifndef WCML_DUMMY
     if (unit==-1) then
       call xml_OpenFile(filename, xf, preserve_whitespace=.false., replace=replace)
     else
       call xml_OpenFile(filename, xf, preserve_whitespace=.false., unit=unit, replace=replace)
     endif
+#endif
 
   end subroutine cmlBeginFile
 
@@ -41,27 +49,30 @@ contains
   subroutine cmlFinishFile(xf)
     type(xmlf_t), intent(inout) :: xf
 
+#ifndef WCML_DUMMY
     call xml_Close(xf)
+#endif
 
   end subroutine cmlFinishFile
 
 
   subroutine cmlAddNamespace(xf, prefix, URI)
-    type(xmlf_t), intent(inout) :: xf
-    
+    type(xmlf_t), intent(inout) :: xf  
     character(len=*), intent(in) :: prefix
     character(len=*), intent(in) :: URI
 
+#ifndef WCML_DUMMY
     if (xmlf_OpenTag(xf) /= "") &
       call FoX_error("Cannot do cmlAddNamespace after starting CML output")
 
     call xml_DeclareNamespace(xf, URI, prefix)
+#endif
+
   end subroutine cmlAddNamespace
 
 
   subroutine cmlStartCml(xf, id, title, convention, dictref, fileId, version)
     type(xmlf_t), intent(inout) :: xf
-
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional :: title
     character(len=*), intent(in), optional :: convention
@@ -69,6 +80,7 @@ contains
     character(len=*), intent(in), optional :: fileId
     character(len=*), intent(in), optional :: version
 
+#ifndef WCML_DUMMY
     call xml_DeclareNamespace(xf, 'http://www.xml-cml.org/schema')
     call xml_DeclareNamespace(xf, 'http://www.w3.org/2001/XMLSchema', 'xsd')
     call xml_DeclareNamespace(xf, 'http://www.uszla.me.uk/fpx', 'fpx')
@@ -101,6 +113,7 @@ contains
     endif
 
     call cmlAddMetadata(xf, name='UUID', content=generate_uuid(1))
+#endif
 
   end subroutine cmlStartCml
 
@@ -108,11 +121,11 @@ contains
   subroutine cmlEndCml(xf)
     type(xmlf_t), intent(inout) :: xf
 
+#ifndef WCML_DUMMY
     call cmlAddMetadata(xf, name='dc:contributor', content='FoX-'//FoX_version//' (http://www.uszla.me.uk/FoX)')
     call xml_EndElement(xf, 'cml')
+#endif
 
   end subroutine cmlEndCml
-
-
 
 end module m_wcml_core

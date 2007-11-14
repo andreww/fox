@@ -60,11 +60,13 @@ TOHWM4_bandargslist)
     character(len=*), intent(in), optional :: fmt
 TOHWM4_bandargsdecl
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "band")
     call xml_AddAttribute(xf, "kpointRef", kptref)
 TOHWM4_bandargsuse
     call stmAddValue(xf, value=bands, fmt=fmt, units=units)
     call xml_EndElement(xf, "band")
+#endif
 
   end subroutine cmlAddBand_kptref_$1
 
@@ -77,6 +79,7 @@ TOHWM4_bandargslist)
     character(len=*), intent(in), optional :: kptfmt
 TOHWM4_bandargsdecl
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "kpoint")
 TOHWM4_bandargsuse
     if (present(weight)) then
@@ -94,6 +97,7 @@ TOHWM4_bandargsuse
     end if
 
     call xml_EndElement(xf, "kpoint")
+#endif
 
   end subroutine cmlAddKPoint_$1
 
@@ -110,6 +114,7 @@ TOHWM4_eigenargslist)
 
 TOHWM4_eigenargsdecl
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "eigen")
     call xml_AddAttribute(xf, "eigenOrientationType", eigenOrientationType)
 TOHWM4_eigenargsuse
@@ -117,7 +122,8 @@ TOHWM4_eigenargsuse
     call stmAddValue(xf=xf, value=eigval, title="eigenvalues", dictref=dictRef, fmt=valfmt, units=units)
     call stmAddValue(xf=xf, value=eigvec, title="eigenvectors", fmt=vecfmt, units="units:dimensionless")
     call xml_EndElement(xf, "eigen")
-    
+#endif
+
   end subroutine cmlAddEigenvalue$1Sh
 
   subroutine cmlAddEigenvalue$1Si(xf, n, eigvec, eigval, units, &
@@ -134,6 +140,7 @@ TOHWM4_eigenargslist)
 
 TOHWM4_eigenargsdecl
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf, "eigen")
     call xml_AddAttribute(xf, "eigenOrientationType", eigenOrientationType)
 TOHWM4_eigenargsuse
@@ -141,6 +148,7 @@ TOHWM4_eigenargsuse
     call stmAddValue(xf=xf, value=eigval(:n), title="eigenvalues", units=units, dictref=dictRef, fmt=valfmt)
     call stmAddValue(xf=xf, value=eigvec(:n,:n), title="eigenvectors", units="units:dimensionless", fmt=vecfmt)
     call xml_EndElement(xf, "eigen")
+#endif
     
   end subroutine cmlAddEigenvalue$1Si
 ')dnl
@@ -148,6 +156,13 @@ dnl
 module m_wcml_coma
   ! Implements routines relating to electronic structure
 
+#ifdef WCML_DUMMY
+  integer, parameter :: sp = selected_real_kind(6,30)
+  integer, parameter :: dp = selected_real_kind(14,100)
+  type xmlf_t
+    integer :: i
+  end type xmlf_t
+#else
   use m_common_realtypes, only: sp, dp
 
   use FoX_common, only: str
@@ -158,6 +173,7 @@ module m_wcml_coma
 
 ! Fix for pgi, requires this explicitly:
   use m_wxml_overloads
+#endif
 
   implicit none
   private

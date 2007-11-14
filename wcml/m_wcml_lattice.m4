@@ -17,6 +17,7 @@ define(`TOHWM4_lattice_subs', `dnl
     character(len=*), intent(in), optional :: lenfmt
     character(len=*), intent(in), optional :: angfmt
 
+#ifndef WCML_DUMMY
     call xml_NewElement(xf=xf, name="crystal")
     if (present(id))      call xml_AddAttribute(xf, "id", id)
     if (present(title))   call xml_AddAttribute(xf, "title", title)
@@ -52,6 +53,7 @@ define(`TOHWM4_lattice_subs', `dnl
       call xml_EndElement(xf, "symmetry")
     endif
     call xml_EndElement(xf, "crystal")
+#endif
 
   end subroutine cmlAddCrystal$1
 
@@ -67,6 +69,7 @@ define(`TOHWM4_lattice_subs', `dnl
     character(len=*), intent(in), optional :: spaceType
     character(len=*), intent(in), optional :: fmt
 
+#ifndef WCML_DUMMY
     integer :: i
 
     call xml_NewElement(xf, "lattice")
@@ -89,6 +92,7 @@ define(`TOHWM4_lattice_subs', `dnl
       call xml_EndElement(xf, "latticeVector")
     enddo
     call xml_EndElement(xf, "lattice")
+#endif
 
   end subroutine cmlAddLattice$1
 
@@ -105,6 +109,13 @@ module m_wcml_lattice
 ! conversion between lattices & crystals ...
 ! <lattice> can also contain xtal coords or a <matrix>
 
+#ifdef WCML_DUMMY
+  integer, parameter :: sp = selected_real_kind(6,30)
+  integer, parameter :: dp = selected_real_kind(14,100)
+  type xmlf_t
+    integer :: i
+  end type xmlf_t
+#else
   use m_common_realtypes, only: sp, dp
   use FoX_wxml, only: xmlf_t
   use FoX_wxml, only: xml_NewElement, xml_EndElement
@@ -112,6 +123,7 @@ module m_wcml_lattice
 
 ! Fix for pgi, requires this explicitly:
   use m_wxml_overloads
+#endif
 
   implicit none
   private
