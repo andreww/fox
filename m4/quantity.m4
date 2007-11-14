@@ -85,7 +85,7 @@ module m_wcml_$1
 
   interface cmlAdd$1
 m4_foreach(`x', TOHWM4_types, `TOHWM4_interfacelist($1, x)')
-  end interface cmlAdd$1
+  end interface
 
   public :: cmlAdd$1
 

@@ -4,10 +4,14 @@ module fox_m_utils_uuid
 
   ! Only types 1 (time-based) and 4 (pseudo-RNG-based) are implemented.
 
+#ifndef DUMMYLIB
   use fox_m_utils_mtprng, only : mtprng_state, mtprng_init, mtprng_rand64
+#endif
+
   implicit none
   private
   
+#ifndef DUMMYLIB
   integer, parameter :: i4b = selected_int_kind(9)
   integer, parameter :: i8b = selected_int_kind(18)
   
@@ -23,6 +27,8 @@ module fox_m_utils_uuid
 ! using this module. That's the best we can do per S 4.1.5
   integer, save :: clock_seq = 0
 
+#endif
+
   public :: generate_uuid
   
 contains
@@ -31,6 +37,7 @@ contains
     integer, intent(in), optional :: version
     character(len=36) :: uuid
 
+#ifndef DUMMYLIB
     integer(kind=i8b) :: timestamp, node
     integer(kind=i4b) :: clock_sequence
 
@@ -158,10 +165,11 @@ contains
       enddo
       
     end function int64ToHexOctets
-    
-  end function generate_uuid
-  
 
+#endif 
+  end function generate_uuid
+
+#ifndef DUMMYLIB
   function get_utc_since_1582(values) result(ns)
     ! This subroutine is a little broken. It only works
     ! for times after 1/1/2006 and takes no account
@@ -225,5 +233,5 @@ contains
 
   end function get_utc_since_1582
 
-
+#endif
 end module fox_m_utils_uuid

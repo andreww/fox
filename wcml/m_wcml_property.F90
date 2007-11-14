@@ -56,7 +56,7 @@ module m_wcml_property
      module procedure propertyChMatSi
      module procedure propertyChMatSh
 
-  end interface cmlAddproperty
+  end interface
 
   public :: cmlAddproperty
 

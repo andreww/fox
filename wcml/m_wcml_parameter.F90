@@ -56,7 +56,7 @@ module m_wcml_parameter
      module procedure parameterChMatSi
      module procedure parameterChMatSh
 
-  end interface cmlAddparameter
+  end interface
 
   public :: cmlAddparameter
 

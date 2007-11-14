@@ -38,7 +38,7 @@ module m_wxml_overloads
     module procedure CharactersMatrixInt
     module procedure CharactersMatrixLg
     module procedure CharactersMatrixCh
- end interface xml_AddCharacters
+ end interface
 
   interface xml_AddAttribute
     module procedure AttributeScalarCmplxDp
@@ -62,7 +62,7 @@ module m_wxml_overloads
     module procedure AttributeMatrixInt
     module procedure AttributeMatrixLg
     module procedure AttributeMatrixCh
- end interface xml_AddAttribute
+ end interface
 
   interface xml_AddPseudoAttribute
     module procedure PseudoAttributeScalarCmplxDp
@@ -86,7 +86,7 @@ module m_wxml_overloads
     module procedure PseudoAttributeMatrixInt
     module procedure PseudoAttributeMatrixLg
     module procedure PseudoAttributeMatrixCh
- end interface xml_AddPseudoAttribute
+ end interface
 
   public :: xml_AddCharacters
   public :: xml_AddAttribute

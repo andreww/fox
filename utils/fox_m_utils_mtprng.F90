@@ -1,4 +1,5 @@
 module fox_m_utils_mtprng
+#ifndef DUMMYLIB
 !---------------------------------------------------------------------
 ! From the Algorithmic Conjurings of Scott Robert Ladd comes...
 !---------------------------------------------------------------------
@@ -355,4 +356,5 @@ contains
         
     end function mtprng_rand_real3
 
+#endif
 end module fox_m_utils_mtprng

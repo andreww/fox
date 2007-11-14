@@ -142,7 +142,7 @@ m4_foreach(`x', TOHWM4_types, `dnl
     TOHWM4_subroutinename(`Characters', type, x)
 ')dnl
 ')dnl
- end interface xml_AddCharacters
+ end interface
 
   interface xml_AddAttribute
 m4_foreach(`type', `(Scalar, Array, Matrix)', `dnl
@@ -150,7 +150,7 @@ m4_foreach(`x', TOHWM4_types, `dnl
     TOHWM4_subroutinename(`Attribute', type, x)
 ')dnl
 ')dnl
- end interface xml_AddAttribute
+ end interface
 
   interface xml_AddPseudoAttribute
 m4_foreach(`type', `(Scalar, Array, Matrix)', `dnl
@@ -158,7 +158,7 @@ m4_foreach(`x', TOHWM4_types, `dnl
     TOHWM4_subroutinename(`PseudoAttribute', type, x)
 ')dnl
 ')dnl
- end interface xml_AddPseudoAttribute
+ end interface
 
   public :: xml_AddCharacters
   public :: xml_AddAttribute

@@ -1,5 +1,5 @@
 module m_common_array_str
-
+#ifndef DUMMYLIB
   use m_common_realtypes, only: dp
 
   implicit none
@@ -195,4 +195,5 @@ contains
     ! just so we can call string functions for their side-effects
   end subroutine devnull
 
+#endif
 end module m_common_array_str
