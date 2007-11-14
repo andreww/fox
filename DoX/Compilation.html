@@ -17,6 +17,8 @@
 
 <p>FoX requires a Fortran 95 compiler - not just Fortran 90. All currently available versions of Fortran compilers claim to support F95. If your favoured compiler is not listed as working below, I recommend the use of <a href="www.g95.org">g95</a>, which is free to download and use. And if your favourite compiler is listed as not working, then please send a bug report to your compiler vendor.</p>
 
+<p>In the event that you need to write a code targetted at multiple compilers, including some which have bugs preventing FoX compilation, please note the possibility of producing a <a href="#dummy_library">dummy library</a>.</p>
+
 <p>The list below shows results as tested at the time of release with the 3.0 release of the FoX code (see a special the note on the PGI compilers <a href="#PGI">below</a>.). An up-to-date list of tested compiler version is maintained <a href="http://uszla.me.uk/space/software/FoX/compat/">here</a>.</p>
 
 <ul>
@@ -90,6 +92,12 @@
 <p>Note that the configure process encodes the current directory location in several
 places.  If you move the FoX directory later on, you will need to re-run configure.</p>
 
+<ul>
+<li><p>You may be interested in <a href="#dummy_library">dummy compilation</a>. This is activated with the <code>--enable-dummy</code> switch (but only works for wxml/wcml currently).</p>
+
+<p><code>./configure --enable-wcml --enable-dummy</code></p></li>
+</ul>
+
 <h2>Compilation</h2>
 
 <p>In order to compile the full library, now simply do:</p>
@@ -101,16 +109,9 @@ places.  If you move the FoX directory later on, you will need to re-run configu
 
 <h2>Testing</h2>
 
-<p>Three test-suites are supplied; in <code>common/test</code>, <code>wxml/test</code>, and <code>wcml/test</code>. In each case, <code>cd</code> to the relevant directory and then run <code>./run_tests.sh</code>.</p>
+<p>Several testsuites are available for the different modules of the library. To run them all, simply run <code>make check</code> from the top-level directory. This will run the individual testsuites, and collate their results.</p>
 
-<p>(The sax and dom testsuites are available separately. Please contact the author for details.)</p>
-
-<p>The tests will run and then print out the number of passes and fails. Details of failing tests may be found in the file <code>failed.out</code>.</p>
-
-<p>Known failures: <br />
-* <code>test_xml_Close_2</code> sometimes unexpectedly fails - this is not a problem, ignore it.  </p>
-
-<p>If any other failures occur, please send a message to the mailing list (<a href="&#109;a&#x69;&#108;t&#x6F;:&#x46;&#x6F;&#x58;&#64;&#108;&#x69;&#x73;&#x74;&#115;&#x2E;&#x75;&#115;&#122;&#x6C;&#97;&#46;m&#101;&#46;&#117;&#107;">&#x46;&#x6F;&#x58;&#64;&#108;&#x69;&#x73;&#x74;&#115;&#x2E;&#x75;&#115;&#122;&#x6C;&#97;&#46;m&#101;&#46;&#117;&#107;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
+<p>If any failures occur (unrelated to known compiler issues, see the <a href="http://uszla.me.uk/space/software/FoX/compat/">up-to-date list</a>), please send a message to the mailing list (<a href="&#109;&#97;&#x69;&#x6C;&#116;&#x6F;:&#x46;&#111;&#x58;&#64;&#x6C;&#x69;&#x73;&#x74;&#115;&#46;&#x75;&#x73;&#x7A;l&#x61;&#46;&#109;&#101;&#46;&#x75;k">&#x46;&#111;&#x58;&#64;&#x6C;&#x69;&#x73;&#x74;&#115;&#46;&#x75;&#x73;&#x7A;l&#x61;&#46;&#109;&#101;&#46;&#x75;k</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
 
 <h2>Linking to an existing program</h2>
 
@@ -151,6 +152,18 @@ places.  If you move the FoX directory later on, you will need to re-run configu
 
 <pre><code>FoX-config --fcflags --wcml
 </code></pre>
+
+<h2>Compiling a dummy library</h2>
+
+<p><a name="dummy_library"/></p>
+
+<p>Because of the shortcomings in some compilers, it is not possible to compile FoX everywhere. Equally, sometimes it is useful to be able to compile a code both with and without support for FoX (perhaps to reduce executable size). Especially where FoX is being used only for additional output, it is useful to be able to run the code and perform computations even without the possibility of XML output.</p>
+
+<p>For this reason, it is possible to compile a dummy version of FoX. This includes all public interfaces, so that your code will compile and link correctly - however none of the subroutines do anything, so you can retain the same version of your code without having to comment out all FoX calls.</p>
+
+<p>Because this dummy version of FoX contains nothing except empty subroutines, it compiles and links with all known Fortran 95 compilers, regardless of compiler bugs.</p>
+
+<p>To compile the dummy code, use the <code>--enable-dummy</code> switch. Note that currently the dummy code is only available for the WXML and WCML modules.</p>
 </div>
 </body>
 </html>

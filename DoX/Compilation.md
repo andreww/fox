@@ -4,10 +4,11 @@ You will have received the FoX source code as a tar.gz file.
 
 Unpack it as normal, and change directory into the top-level directory, FoX.
 
-
 ### Requirements for use
 
 FoX requires a Fortran 95 compiler - not just Fortran 90. All currently available versions of Fortran compilers claim to support F95. If your favoured compiler is not listed as working below, I recommend the use of [g95](www.g95.org), which is free to download and use. And if your favourite compiler is listed as not working, then please send a bug report to your compiler vendor.
+
+In the event that you need to write a code targetted at multiple compilers, including some which have bugs preventing FoX compilation, please note the possibility of producing a [dummy library](#dummy_library).
 
 The list below shows results as tested at the time of release with the 3.0 release of the FoX code (see a special the note on the PGI compilers [below](#PGI).). An up-to-date list of tested compiler version is maintained [here](http://uszla.me.uk/space/software/FoX/compat/).
 
@@ -45,6 +46,7 @@ The Portland group compilers are by far the worst performing and buggiest compil
 * PGI 6.1-6 and 6.2-3, and 7.0-2 are usable. All of FoX will be compiled, and most of the functionality is available, with the exception of any array-output routines, which the compiler runtime cannot handle. In practice, this means that most of WXML, and all of SAX and DOM are safe for use. Segfaults will be generated in the use of WCML.
 
 I cannot recommend the use of PGI compilers. Patches to work around PGI problems will be welcomed, but please direct bug reports to the Portland Group.
+
 ##Configuration
 
 * In order to generate the Makefile, make sure that you have a Fortran compiler in your `PATH`, and do:
@@ -70,6 +72,10 @@ This should suffice for most installations. However:
 Note that the configure process encodes the current directory location in several
 places.  If you move the FoX directory later on, you will need to re-run configure.
 
+* You may be interested in [dummy compilation](#dummy_library). This is activated with the `--enable-dummy` switch (but only works for wxml/wcml currently).
+
+    `./configure --enable-wcml --enable-dummy`
+
 ##Compilation
 
 In order to compile the full library, now simply do:
@@ -80,16 +86,9 @@ This will build all the requested FoX modules, and the relevant examples
 
 ##Testing
 
-Three test-suites are supplied; in `common/test`, `wxml/test`, and `wcml/test`. In each case, `cd` to the relevant directory and then run `./run_tests.sh`.
+Several testsuites are available for the different modules of the library. To run them all, simply run `make check` from the top-level directory. This will run the individual testsuites, and collate their results.
 
-(The sax and dom testsuites are available separately. Please contact the author for details.)
-
-The tests will run and then print out the number of passes and fails. Details of failing tests may be found in the file `failed.out`.
-
-Known failures:     
-* `test_xml_Close_2` sometimes unexpectedly fails - this is not a problem, ignore it.  
-
-If any other failures occur, please send a message to the mailing list (<FoX@lists.uszla.me.uk>) with details of compiler, hardware platform, and the nature of the failure.
+If any failures occur (unrelated to known compiler issues, see the [up-to-date list](http://uszla.me.uk/space/software/FoX/compat/)), please send a message to the mailing list (<FoX@lists.uszla.me.uk>) with details of compiler, hardware platform, and the nature of the failure.
 
 ##Linking to an existing program
 
@@ -122,3 +121,15 @@ or similar, according to your compilation scheme.
 Note that by default, `FoX-config` assumes you are using all modules of the library. If you are only using part, then this can be specified by also passing the name of each module required, like so:
 
 	FoX-config --fcflags --wcml
+
+## Compiling a dummy library
+
+<a name="dummy_library"/>
+
+Because of the shortcomings in some compilers, it is not possible to compile FoX everywhere. Equally, sometimes it is useful to be able to compile a code both with and without support for FoX (perhaps to reduce executable size). Especially where FoX is being used only for additional output, it is useful to be able to run the code and perform computations even without the possibility of XML output.
+
+For this reason, it is possible to compile a dummy version of FoX. This includes all public interfaces, so that your code will compile and link correctly - however none of the subroutines do anything, so you can retain the same version of your code without having to comment out all FoX calls.
+
+Because this dummy version of FoX contains nothing except empty subroutines, it compiles and links with all known Fortran 95 compilers, regardless of compiler bugs.
+
+To compile the dummy code, use the `--enable-dummy` switch. Note that currently the dummy code is only available for the WXML and WCML modules.
