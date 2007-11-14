@@ -1,5 +1,6 @@
 module m_common_format
 
+#ifndef DUMMYLIB
 !Note that there are several oddities to this package,
 !to get round assorted compiler bugs.
 
@@ -2028,4 +2029,6 @@ contains
     character(len=len(s1)+len(s2)) :: s3
     s3 = str(s1)//s2
   end function concat_complex_dp_str
+
+#endif
 end module m_common_format

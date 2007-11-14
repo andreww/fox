@@ -1,5 +1,6 @@
 module m_common_entity_expand
 
+#ifndef DUMMYLIB
   use m_common_array_str, only: str_vs, vs_str
   use m_common_entities, only: expand_char_entity
   use m_common_error, only: error_stack, add_error
@@ -81,4 +82,5 @@ contains
 
   end function expand_entity_value_alloc
 
+#endif
 end module m_common_entity_expand

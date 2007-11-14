@@ -1,5 +1,6 @@
 module m_common_charset
 
+#ifndef DUMMYLIB
   ! Written to use ASCII charset only. Full UNICODE would
   ! take much more work and need a proper unicode library.
 
@@ -274,13 +275,5 @@ contains
 
   end function allowed_encoding
 
+#endif
 end module m_common_charset
-
-
-
-
-
-
-
-
-

@@ -1,5 +1,6 @@
 module FoX_common
 
+#ifndef DUMMYLIB
   use m_common_array_str
   use m_common_attrs
   use m_common_format
@@ -42,5 +43,6 @@ module FoX_common
   public :: hasKey
 
   public :: print_dict
+#endif
 
 end module FoX_common

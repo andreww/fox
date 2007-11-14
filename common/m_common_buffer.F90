@@ -1,5 +1,6 @@
 module m_common_buffer
 
+#ifndef DUMMYLIB
   use m_common_charset, only: XML1_0
   use m_common_error, only: FoX_error, FoX_warning
   use m_common_format, only: str
@@ -255,5 +256,5 @@ contains
 
   end subroutine check_buffer
 
-
+#endif
 end module m_common_buffer

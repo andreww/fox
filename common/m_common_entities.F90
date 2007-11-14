@@ -1,5 +1,6 @@
 module m_common_entities
 
+#ifndef DUMMYLIB
   ! Entity management
 
   ! It deals with: 
@@ -476,4 +477,5 @@ contains
 
   end function expand_entity
 
+#endif
 end module m_common_entities

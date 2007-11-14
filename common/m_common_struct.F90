@@ -1,5 +1,6 @@
 module m_common_struct
 
+#ifndef DUMMYLIB
   ! Common parts of an XML document. Shared by both SAX & WXML.
 
   use m_common_charset, only: XML1_0
@@ -97,4 +98,5 @@ contains
     call add_external_entity(xds%entityList, name, system, public, notation)
   end subroutine register_external_GE
 
+#endif
 end module m_common_struct

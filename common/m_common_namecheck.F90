@@ -1,5 +1,6 @@
 module m_common_namecheck
 
+#ifndef DUMMYLIB
   ! These are basically a collection of what would be regular
   ! expressions in a more sensible language.
   ! The only external dependency should be knowing how these
@@ -396,4 +397,5 @@ contains
     localpart = qname(index(qname,':')+1:)
   end function localpartOfQname
 
+#endif
 end module m_common_namecheck

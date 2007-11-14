@@ -1,5 +1,6 @@
 module m_common_io
 
+#ifndef DUMMYLIB
   use m_common_error, only : FoX_error
 
   implicit none
@@ -90,4 +91,5 @@ contains
 
   end subroutine find_eor_eof
 
+#endif
 end module m_common_io

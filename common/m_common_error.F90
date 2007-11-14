@@ -1,5 +1,6 @@
 module m_common_error
 
+#ifndef DUMMYLIB
   use m_common_array_str, only: vs_str_alloc
   use pxf, only: pxfabort, pxfflush
 
@@ -165,5 +166,5 @@ contains
     endif
   end function in_error
 
-
+#endif
 end module m_common_error

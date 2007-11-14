@@ -1,5 +1,6 @@
 module m_common_elstack
 
+#ifndef DUMMYLIB
   use m_common_array_str, only: str_vs, vs_str
   use m_common_error, only: FoX_fatal
   use pxf, only: pure_pxfabort
@@ -189,4 +190,5 @@ contains
 
   end function get_elstack_signature
 
+#endif
 end module m_common_elstack

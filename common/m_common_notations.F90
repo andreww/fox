@@ -1,5 +1,6 @@
 module m_common_notations
 
+#ifndef DUMMYLIB
   use m_common_array_str, only: vs_str, str_vs
   use m_common_error, only: FoX_error
 
@@ -115,4 +116,5 @@ contains
     enddo
   end function notation_exists
 
+#endif
 end module m_common_notations

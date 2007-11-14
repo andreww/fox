@@ -1,5 +1,6 @@
 module m_common_string
 
+#ifndef DUMMYLIB
   ! Assorted generally useful string manipulation functions
 
   implicit none
@@ -30,6 +31,5 @@ contains
 
   end function toLower
 
+#endif
 end module m_common_string
-    
-

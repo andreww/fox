@@ -1,5 +1,6 @@
 module m_common_element
 
+#ifndef DUMMYLIB
   ! Structure and manipulation of element specification
 
   use m_common_array_str, only: str_vs, vs_str_alloc, &
@@ -1287,4 +1288,5 @@ contains
     n = 0
   end function default_att_index
   
+#endif
 end module m_common_element

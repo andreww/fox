@@ -1,5 +1,6 @@
 module m_common_attrs
 
+#ifndef DUMMYLIB
   use m_common_array_str, only : str_vs, vs_str_alloc
   use m_common_element, only: ATT_CDATA, ATT_ID, ATT_IDREF, &
     ATT_IDREFS, ATT_ENTITY, ATT_ENTITIES, ATT_NMTOKEN,      &
@@ -694,4 +695,5 @@ contains
     
   end subroutine print_dict
 
+#endif
 end module m_common_attrs
