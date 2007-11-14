@@ -1,5 +1,6 @@
 program test_sax_reader
 
+  use m_common_array_str
   use m_sax_parser
   use m_sax_reader
   use m_sax_types
@@ -15,9 +16,9 @@ program test_sax_reader
 
   call sax_parse(fx, fb)
 
-  print*, fx%xds%xml_version
-  print*, fx%xds%encoding
-  print*, fx%xds%standalone
+  write(*,'(i0)'), fx%xds%xml_version
+  write(*,'(a)'), str_vs(fx%xds%encoding)
+  write(*,'(l1)'), fx%xds%standalone
 
   call sax_parser_destroy(fx)
   call close_file(fb) 
