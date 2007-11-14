@@ -7,7 +7,7 @@ OBJFILES= m_wxml_escape.$(OBJEXT) m_wxml_core.$(OBJEXT) \
 LIBRARY=libFoX_wxml.$(LIBEXT)
 INCFLAGS=$(MOD_PREFIX)../objs/finclude
 #
-.m4.f90:
+.m4.F90:
 	m4 -I ../m4 $< > $@
 
 #
@@ -36,7 +36,7 @@ check:
 clean:
 	rm -f *.$(OBJEXT) *.$(MOD_EXT) $(LIBRARY)
 
-m_wxml_overloads.f90: m_wxml_overloads.m4
+m_wxml_overloads.F90: m_wxml_overloads.m4
 # DO NOT DELETE THIS LINE - used by make depend
 FoX_wxml.$(OBJEXT): m_wxml_core.$(OBJEXT) m_wxml_overloads.$(OBJEXT)
 m_wxml_core.$(OBJEXT): m_wxml_escape.$(OBJEXT)
