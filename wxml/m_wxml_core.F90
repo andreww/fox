@@ -1448,8 +1448,8 @@ contains
   pure function xmlf_name(xf) result(fn)
     type (xmlf_t), intent(in) :: xf
 #ifdef DUMMYLIB
-    character(len=0) :: fn
-    fn = ""
+    character(len=1) :: fn
+    fn = " "
 #else
     character(len=size(xf%xds%documentURI)) :: fn
     fn = str_vs(xf%xds%documentURI)
@@ -1474,8 +1474,8 @@ contains
   function xmlf_opentag(xf) result(fn)
     type (xmlf_t), intent(in) :: xf
 #ifdef DUMMYLIB
-    character(len=0) :: fn
-    fn = ""
+    character(len=1) :: fn
+    fn = " "
 #else
     character(len=xmlf_opentag_len(xf)) :: fn
     
