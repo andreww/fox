@@ -1,20 +1,26 @@
 module FoX_common
 
-#ifndef DUMMYLIB
   use m_common_array_str
+#ifndef DUMMYLIB
   use m_common_attrs
   use m_common_format
+#endif
 
   implicit none
   private
 
+#ifdef DUMMYLIB
+  character(len=*), parameter :: FoX_version = '3.0.1-dummy'
+#else
   character(len=*), parameter :: FoX_version = '3.0.1'
+#endif
 
   public :: FoX_version
 
   public :: str
   public :: operator(//)
-  
+
+#ifndef DUMMYLIB
   public :: str_vs
   public :: vs_str
   public :: alloc
