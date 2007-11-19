@@ -3641,7 +3641,174 @@ endif
 
   end function getLocalName
 
-  ! function isEqualNode(np, arg)
+  recursive function isEqualNode(arg, other, ex)result(p) 
+    type(DOMException), intent(out), optional :: ex
+    ! We only have one level of recursion, in case of element attributes
+    type(Node), pointer :: arg
+    type(Node), pointer :: other
+    logical :: p
+
+    type(Node), pointer :: this, that, treeroot, thatParent, att1, att2
+    type(NodeList), pointer :: children1, children2
+    type(NamedNodeMap), pointer :: atts1, atts2
+
+    integer :: i_tree, i_t, i
+    logical :: doneChildren, doneAttributes, deep
+
+    if (.not.associated(arg)) then
+      if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "isEqualNode", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    endif
+
+    p = .false.
+    deep = .true.
+    treeroot => arg
+    thatParent => other
+
+    i_tree = 0
+    doneChildren = .false.
+    doneAttributes = .false.
+    this => treeroot
+    do
+
+      if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
+
+
+      if (getNodeType(this)/=getNodeType(that)) return
+      ! Check necessary equal attributes ...
+      if (getNodeName(this)/=getNodeName(that) &
+        .or. getLocalName(this)/=getLocalName(that) &
+        .or. getNamespaceURI(this)/=getNamespaceURI(that) &
+        .or. getPrefix(this)/=getPrefix(that) &
+        .or. getNodeValue(this)/=getNodeValue(that)) &
+        return
+      children1 => getChildNodes(this)
+      children2 => getChildNodes(that)
+      if (getLength(children1)/=getLength(children2)) return
+      ! Well get to the contents of the children later on anyway.
+      if (getNodeType(this)==ELEMENT_NODE) then
+        ! We must treat attributes specially here (rather than relying on 
+        ! treewalk) since the order can legitimately change.
+        atts1 = getAttributes(this)
+        atts2 = getAttributes(that)
+        if (getLength(atts1)/=getLength(atts2)) return
+        do i = 0, getLength(atts1)-1
+          att1 => item(atts1, i)
+          if (getNamespaceURI(att1)=="") then
+            att2 => getNamedItem(atts2, getNodeName(att1))
+          else
+            att2 => getNamedItemNS(atts2, getLocalName(att1), getNamespaceURI(att1))
+          endif
+          if (.not.associated(att2)) return
+          if (.not.isEqualNode(att1, att2)) return
+        enddo
+        doneAttributes = .true.
+      elseif (getNodeType(this)==DOCUMENT_TYPE_NODE) then
+        if (getPublicId(this)/=getPublicId(that) &
+          .or. getSystemId(this)/=getSystemId(that) &
+          .or. getInternalSubset(this)/=getInternalSubset(that)) return
+        atts1 = getEntities(this)
+        atts2 = getEntities(that)
+        if (getLength(atts1)/=getLength(atts2)) return
+        do i = 0, getLength(atts1)-1
+          att1 => item(atts1, i)
+          att2 => getNamedItem(atts2, getNodeName(att1))
+          if (.not.associated(att2)) return
+          if (.not.isEqualNode(att1, att2)) return
+        enddo
+        atts1 = getNotations(this)
+        atts2 = getNotations(that)
+        if (getLength(atts1)/=getLength(atts2)) return
+        do i = 0, getLength(atts1)-1
+          att1 => item(atts1, i)
+          att2 => getNamedItem(atts2, getNodeName(att1))
+          if (.not.associated(att2)) return
+          if (.not.isEqualNode(att1, att2)) return
+        enddo
+      endif
+
+      else
+        if (getNodeType(this)==ELEMENT_NODE.and..not.doneChildren) then
+          doneAttributes = .true.
+        else
+
+        endif
+      endif
+
+
+      if (.not.doneChildren) then
+        if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
+          if (getLength(getAttributes(this))>0) then
+                      if (.not.associated(this, treeroot)) thatParent => getLastChild(thatParent)
+            this => item(getAttributes(this), 0)
+          else
+            if (.not.deep) exit
+            doneAttributes = .true.
+          endif
+        elseif (hasChildNodes(this)) then
+          if (getNodeType(this)==ELEMENT_NODE.and..not.deep) exit
+          if (.not.associated(this, treeroot)) then
+            if (getNodeType(this)==ATTRIBUTE_NODE) then
+              thatParent => item(getAttributes(thatParent), i_tree)
+            else
+              thatParent => getLastChild(thatParent)
+            endif
+          endif
+          this => getFirstChild(this)
+          doneChildren = .false.
+          doneAttributes = .false.
+        else
+          doneChildren = .true.
+          doneAttributes = .false.
+        endif
+
+      else ! if doneChildren
+
+        if (associated(this, treeroot)) exit
+        if (getNodeType(this)==ATTRIBUTE_NODE) then
+          if (i_tree<getLength(getAttributes(getOwnerElement(this)))-1) then
+            i_tree= i_tree+ 1
+            this => item(getAttributes(getOwnerElement(this)), i_tree)
+            doneChildren = .false.
+          else
+            i_tree= 0
+            if (associated(getParentNode(thatParent))) thatParent => getParentNode(thatParent)
+            this => getOwnerElement(this)
+            doneAttributes = .true.
+            doneChildren = .false.
+          endif
+        elseif (associated(getNextSibling(this))) then
+
+          this => getNextSibling(this)
+          doneChildren = .false.
+          doneAttributes = .false.
+        else
+          this => getParentNode(this)
+          if (.not.associated(this, treeroot)) then
+            if (getNodeType(this)==ATTRIBUTE_NODE) then
+              thatParent => getOwnerElement(thatParent)
+            else
+              thatParent => getParentNode(thatParent)
+            endif
+          endif
+        endif
+      endif
+
+    enddo
+
+
+
+    p = .true.
+
+  end function isEqualNode
+
 
   function isSameNode(arg, other, ex) 
     type(DOMException), intent(out), optional :: ex

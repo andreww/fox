@@ -1021,7 +1021,87 @@ TOHW_m_dom_set(DOMString, namespaceURI, np%elExtras%namespaceURI, (XPATH_NAMESPA
 
   end function getLocalName
 
-  ! function isEqualNode(np, arg)
+  recursive TOHW_function(isEqualNode, (arg, other), p)
+    ! We only have one level of recursion, in case of element attributes
+    type(Node), pointer :: arg
+    type(Node), pointer :: other
+    logical :: p
+
+    type(Node), pointer :: this, that, treeroot, thatParent, att1, att2
+    type(NodeList), pointer :: children1, children2
+    type(NamedNodeMap), pointer :: atts1, atts2
+
+    integer :: i_tree, i_t, i
+    logical :: doneChildren, doneAttributes, deep
+
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+
+    p = .false.
+    deep = .true.
+    treeroot => arg
+    thatParent => other
+TOHW_m_dom_treewalk(`
+
+      if (getNodeType(this)/=getNodeType(that)) return
+      ! Check necessary equal attributes ...
+      if (getNodeName(this)/=getNodeName(that) &
+        .or. getLocalName(this)/=getLocalName(that) &
+        .or. getNamespaceURI(this)/=getNamespaceURI(that) &
+        .or. getPrefix(this)/=getPrefix(that) &
+        .or. getNodeValue(this)/=getNodeValue(that)) &
+        return
+      children1 => getChildNodes(this)
+      children2 => getChildNodes(that)
+      if (getLength(children1)/=getLength(children2)) return
+      ! Well get to the contents of the children later on anyway.
+      if (getNodeType(this)==ELEMENT_NODE) then
+        ! We must treat attributes specially here (rather than relying on 
+        ! treewalk) since the order can legitimately change.
+        atts1 = getAttributes(this)
+        atts2 = getAttributes(that)
+        if (getLength(atts1)/=getLength(atts2)) return
+        do i = 0, getLength(atts1)-1
+          att1 => item(atts1, i)
+          if (getNamespaceURI(att1)=="") then
+            att2 => getNamedItem(atts2, getNodeName(att1))
+          else
+            att2 => getNamedItemNS(atts2, getLocalName(att1), getNamespaceURI(att1))
+          endif
+          if (.not.associated(att2)) return
+          if (.not.isEqualNode(att1, att2)) return
+        enddo
+        doneAttributes = .true.
+      elseif (getNodeType(this)==DOCUMENT_TYPE_NODE) then
+        if (getPublicId(this)/=getPublicId(that) &
+          .or. getSystemId(this)/=getSystemId(that) &
+          .or. getInternalSubset(this)/=getInternalSubset(that)) return
+        atts1 = getEntities(this)
+        atts2 = getEntities(that)
+        if (getLength(atts1)/=getLength(atts2)) return
+        do i = 0, getLength(atts1)-1
+          att1 => item(atts1, i)
+          att2 => getNamedItem(atts2, getNodeName(att1))
+          if (.not.associated(att2)) return
+          if (.not.isEqualNode(att1, att2)) return
+        enddo
+        atts1 = getNotations(this)
+        atts2 = getNotations(that)
+        if (getLength(atts1)/=getLength(atts2)) return
+        do i = 0, getLength(atts1)-1
+          att1 => item(atts1, i)
+          att2 => getNamedItem(atts2, getNodeName(att1))
+          if (.not.associated(att2)) return
+          if (.not.isEqualNode(att1, att2)) return
+        enddo
+      endif
+',`',`parentNode',`')
+
+    p = .true.
+
+  end function isEqualNode
+
 
   TOHW_function(isSameNode, (arg, other))
     type(Node), pointer :: arg
