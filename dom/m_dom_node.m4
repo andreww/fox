@@ -1353,6 +1353,44 @@ TOHW_m_dom_treewalk(`
 '`')
   end function getTextContent
 
+  TOHW_subroutine(setTextContent, (arg, textContent))
+    type(Node), pointer :: arg
+    character(len=*), intent(in) :: textContent
+
+    type(Node), pointer :: np
+    integer :: i
+
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+
+    if (.not.checkChars(textContent, getXmlVersionEnum(getOwnerDocument(arg)))) then
+      TOHW_m_dom_throw_error(FoX_INVALID_CHARACTER)
+    endif
+
+    select case(getNodeType(arg))
+    case (ELEMENT_NODE, ATTRIBUTE_NODE, DOCUMENT_FRAGMENT_NODE)
+      if (arg%readonly) then
+        TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
+      endif
+      do i = 1, getLength(getChildNodes(arg))
+        call destroyNode(arg%childNodes%nodes(i)%this)
+      enddo
+      deallocate(arg%childNodes%nodes)
+      allocate(arg%childNodes%nodes(0))
+      arg%childNodes%length = 0
+      arg%firstChild => null()
+      arg%lastChild => null()
+      arg%textContentLength = 0
+      np => createTextNode(getOwnerDocument(arg), textContent)
+      np => appendChild(arg, np)
+    case (TEXT_NODE, CDATA_SECTION_NODE, PROCESSING_INSTRUCTION_NODE, COMMENT_NODE)
+      call setData(arg, textContent)
+    case (ENTITY_NODE, ENTITY_REFERENCE_NODE)
+      TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
+    end select
+  end subroutine setTextContent     
+
   subroutine putNodesInDocument(doc, arg)
     type(Node), pointer :: doc, arg
     type(Node), pointer :: this, treeroot

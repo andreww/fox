@@ -4122,6 +4122,77 @@ endif
 
   end function getTextContent
 
+  subroutine setTextContent(arg, textContent, ex)
+    type(DOMException), intent(out), optional :: ex
+    type(Node), pointer :: arg
+    character(len=*), intent(in) :: textContent
+
+    type(Node), pointer :: np
+    integer :: i
+
+    if (.not.associated(arg)) then
+      if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "setTextContent", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    endif
+
+    if (.not.checkChars(textContent, getXmlVersionEnum(getOwnerDocument(arg)))) then
+      if (getFoX_checks().or.FoX_INVALID_CHARACTER<200) then
+  call throw_exception(FoX_INVALID_CHARACTER, "setTextContent", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    endif
+
+    select case(getNodeType(arg))
+    case (ELEMENT_NODE, ATTRIBUTE_NODE, DOCUMENT_FRAGMENT_NODE)
+      if (arg%readonly) then
+        if (getFoX_checks().or.NO_MODIFICATION_ALLOWED_ERR<200) then
+  call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setTextContent", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+      endif
+      do i = 1, getLength(getChildNodes(arg))
+        call destroyNode(arg%childNodes%nodes(i)%this)
+      enddo
+      deallocate(arg%childNodes%nodes)
+      allocate(arg%childNodes%nodes(0))
+      arg%childNodes%length = 0
+      arg%firstChild => null()
+      arg%lastChild => null()
+      arg%textContentLength = 0
+      np => createTextNode(getOwnerDocument(arg), textContent)
+      np => appendChild(arg, np)
+    case (TEXT_NODE, CDATA_SECTION_NODE, PROCESSING_INSTRUCTION_NODE, COMMENT_NODE)
+      call setData(arg, textContent)
+    case (ENTITY_NODE, ENTITY_REFERENCE_NODE)
+      if (getFoX_checks().or.NO_MODIFICATION_ALLOWED_ERR<200) then
+  call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setTextContent", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    end select
+  end subroutine setTextContent     
+
   subroutine putNodesInDocument(doc, arg)
     type(Node), pointer :: doc, arg
     type(Node), pointer :: this, treeroot
@@ -9462,61 +9533,7 @@ endif
     type(Node), pointer :: np
     integer :: i
 
-    if (.not.associated(arg)) then
-      if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
-  call throw_exception(FoX_NODE_IS_NULL, "setValue", ex)
-  if (present(ex)) then
-    if (inException(ex)) then
-       return
-    endif
-  endif
-endif
-
-    endif
-
-    if (getNodeType(arg)/=ATTRIBUTE_NODE) then
-      if (getFoX_checks().or.FoX_INVALID_NODE<200) then
-  call throw_exception(FoX_INVALID_NODE, "setValue", ex)
-  if (present(ex)) then
-    if (inException(ex)) then
-       return
-    endif
-  endif
-endif
-
-    elseif (arg%readonly) then
-      if (getFoX_checks().or.NO_MODIFICATION_ALLOWED_ERR<200) then
-  call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setValue", ex)
-  if (present(ex)) then
-    if (inException(ex)) then
-       return
-    endif
-  endif
-endif
-
-    elseif (.not.checkChars(value, getXmlVersionEnum(getOwnerDocument(arg)))) then
-      if (getFoX_checks().or.FoX_INVALID_CHARACTER<200) then
-  call throw_exception(FoX_INVALID_CHARACTER, "setValue", ex)
-  if (present(ex)) then
-    if (inException(ex)) then
-       return
-    endif
-  endif
-endif
-
-    endif
-
-    do i = 1, getLength(getChildNodes(arg))
-      call destroyNode(arg%childNodes%nodes(i)%this)
-    enddo
-    deallocate(arg%childNodes%nodes)
-    allocate(arg%childNodes%nodes(0))
-    arg%childNodes%length = 0
-    arg%firstChild => null()
-    arg%lastChild => null()
-    arg%textContentLength = 0
-    np => createTextNode(getOwnerDocument(arg), value)
-    np => appendChild(arg, np)
+    call setTextContent(arg, value)
 
   end subroutine setValue
 
