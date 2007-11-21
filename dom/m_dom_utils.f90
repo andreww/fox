@@ -233,7 +233,6 @@ endif
     doneAttributes = .false.
     this => treeroot
     do
-
       if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
     select case(getNodeType(this))
     case (ELEMENT_NODE)
@@ -353,7 +352,7 @@ endif
       if (.not.doneChildren) then
         if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
           if (getLength(getAttributes(this))>0) then
-                      this => item(getAttributes(this), 0)
+            this => item(getAttributes(this), 0)
           else
             doneAttributes = .true.
           endif

@@ -62,7 +62,7 @@ TOHW_m_dom_contents(`
 
     do i = 1, map%length
       if (str_vs(map%nodes(i)%this%nodeName)==name) then
-        n = getValue_len(map%nodes(i)%this, .true.)
+        n = getNodeValue_len(map%nodes(i)%this, .true.)
         exit
       endif
     enddo
@@ -305,7 +305,7 @@ TOHW_m_dom_contents(`
     do i = 1, map%length
       if (str_vs(map%nodes(i)%this%elExtras%namespaceURI)==namespaceURI &
         .and. str_vs(map%nodes(i)%this%elExtras%localName)==localName) then
-        n = getValue_len(map%nodes(i)%this, .true.)
+        n = getNodeValue_len(map%nodes(i)%this, .true.)
         exit
       endif
     enddo
@@ -332,7 +332,7 @@ TOHW_m_dom_contents(`
       np => item(map, i)
       if (getNamespaceURI(np)==namespaceURI &
         .and. getLocalName(np)==localName) then
-        c = getValue(np)
+        c = getNodeValue(np)
         return
       endif
     enddo

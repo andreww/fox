@@ -101,6 +101,10 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(FoX_INVALID_CDATA_SECTION)
     endif
 
+    ! And propagate length upwards ...
+    if (getNodeType(arg)/=COMMENT_NODE) &
+      call updateTextContent(arg, len(data))
+
   end subroutine appendData
   
 
@@ -139,6 +143,10 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(FoX_INVALID_CDATA_SECTION)
     endif
 
+    ! And propagate length upwards ...
+    if (getNodeType(arg)/=COMMENT_NODE) &
+      call updateTextContent(arg, len(data))
+
   end subroutine insertData
 
 
@@ -148,6 +156,7 @@ TOHW_m_dom_contents(`
     integer, intent(in) :: count
 
     character, pointer :: tmp(:)
+    integer :: n
 
     if (.not.associated(arg)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
@@ -160,10 +169,20 @@ TOHW_m_dom_contents(`
     elseif (offset<0.or.offset>size(arg%nodeValue).or.count<0) then
       TOHW_m_dom_throw_error(INDEX_SIZE_ERR)
     endif
+
+    if (offset+count>size(arg%nodeValue)) then
+      n = size(arg%nodeValue)-offset
+    else
+      n = count
+    endif
     
     tmp => arg%nodeValue
     arg%nodeValue => vs_str_alloc(str_vs(tmp(:offset))//str_vs(tmp(offset+count+1:)))
     deallocate(tmp)
+
+    ! And propagate length upwards ...
+    if (getNodeType(arg)/=COMMENT_NODE) &
+      call updateTextContent(arg, -n)
 
   end subroutine deleteData
 
@@ -175,6 +194,7 @@ TOHW_m_dom_contents(`
     character(len=*), intent(in) :: data
     
     character, pointer :: tmp(:)
+    integer :: n
 
     if (.not.associated(arg)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
@@ -192,6 +212,12 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(FoX_INVALID_CHARACTER)
     endif
 
+    if (offset+count>size(arg%nodeValue)) then
+      n = len(data)-(size(arg%nodeValue)-offset)
+    else
+      n = len(data)-count
+    endif
+
     tmp => arg%nodeValue
     if (offset+count <= size(arg%nodeValue)) then
       arg%nodeValue => vs_str_alloc(str_vs(tmp(:offset))//data//str_vs(tmp(offset+count+1:)))
@@ -207,6 +233,10 @@ TOHW_m_dom_contents(`
     elseif (arg%nodeType==CDATA_SECTION_NODE .and. index(str_vs(arg%nodeValue), "]]>")>0) then
       TOHW_m_dom_throw_error(FoX_INVALID_CDATA_SECTION)
     endif
+
+    ! And propagate length upwards ...
+    if (getNodeType(arg)/=COMMENT_NODE) &
+      call updateTextContent(arg, n)
 
   end subroutine replaceData
  

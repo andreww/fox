@@ -30,6 +30,7 @@ TOHW_m_dom_publics(`
   public :: isDefaultNamespace
   public :: lookupNamespaceURI
   public :: lookupPrefix
+  public :: getTextContent
 
   public :: setStringValue
   public :: getStringValue
@@ -46,16 +47,12 @@ TOHW_m_dom_get(DOMString, nodeName, np%nodeName)
     logical, intent(in) :: p
     integer :: n
 
-    integer :: i
-
     n = 0 
     if (.not.p) return
 
     select case(np%nodeType)
     case (ATTRIBUTE_NODE)
-      do i = 1, np%childNodes%length
-        n = n + size(np%childNodes%nodes(i)%this%nodeValue)
-      enddo
+      n = np%textContentLength
     case (CDATA_SECTION_NODE, COMMENT_NODE, PROCESSING_INSTRUCTION_NODE, TEXT_NODE)
       n = size(np%nodeValue)
     end select
@@ -66,19 +63,13 @@ TOHW_m_dom_get(DOMString, nodeName, np%nodeName)
     type(Node), pointer :: np
     character(len=getNodeValue_len(np, associated(np))) :: c
 
-    integer :: i, n
-
     if (.not.associated(np)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif
 
     select case(np%nodeType)
     case (ATTRIBUTE_NODE)
-      n = 1
-      do i = 1, np%childNodes%length
-        c(n:n+size(np%childNodes%nodes(i)%this%nodeValue)-1) = &
-          str_vs(np%childNodes%nodes(i)%this%nodeValue)
-      enddo
+      c = getTextContent(np)
     case (CDATA_SECTION_NODE, COMMENT_NODE, PROCESSING_INSTRUCTION_NODE, TEXT_NODE)
       c = str_vs(np%nodeValue)
     case default
@@ -90,9 +81,6 @@ TOHW_m_dom_get(DOMString, nodeName, np%nodeName)
   TOHW_subroutine(setNodeValue, (arg, nodeValue))
     type(Node), pointer :: arg
     character(len=*) :: nodeValue
-
-    type(Node), pointer :: np
-    integer :: i
 
     if (.not.associated(arg)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
@@ -106,60 +94,9 @@ TOHW_m_dom_get(DOMString, nodeName, np%nodeName)
 
     select case(arg%nodeType)
     case (ATTRIBUTE_NODE)
-      if (arg%readonly) then
-        TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
-      endif
-      ! destroy any existing children ... 
-      do i = 1, arg%childNodes%length
-        if (.not.arg%inDocument) &
-          call remove_node_nl(arg%ownerDocument%docExtras%hangingNodes, arg%childNodes%nodes(i)%this)
-        call destroyNode(arg%childNodes%nodes(i)%this)
-      enddo
-      deallocate(arg%childNodes%nodes)
-      allocate(arg%childNodes%nodes(0))
-      arg%childNodes%length = 0
-      arg%firstChild => null()
-      arg%lastChild => null()
-      ! and add the new one.
-      ! Avoid manipulating hangingnode lists
-      !      call setGCstate(arg%ownerDocument, .false.)
-      np => createTextNode(arg%ownerDocument, nodeValue)
-      np => appendChild(arg, np, ex)
-      !      call setGCstate(arg%ownerDocument, .true.)
-      !      if (.not.arg%inDocument) call append(arg%document%blah, ...)
-    case (CDATA_SECTION_NODE)
-      if (arg%readonly) then
-        TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
-      endif
-      if (index(str_vs(arg%nodeValue),"]]>")>0) then
-        TOHW_m_dom_throw_error(FoX_INVALID_CDATA_SECTION)
-      endif
-      deallocate(arg%nodeValue)
-      arg%nodeValue => vs_str_alloc(nodeValue)
-    case (COMMENT_NODE)
-      if (arg%readonly) then
-        TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
-      endif
-      if (index(str_vs(arg%nodeValue),"--")>0) then
-        TOHW_m_dom_throw_error(FoX_INVALID_COMMENT)
-      endif
-      deallocate(arg%nodeValue)
-      arg%nodeValue => vs_str_alloc(nodeValue)
-    case (PROCESSING_INSTRUCTION_NODE)
-      if (arg%readonly) then
-        TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
-      endif
-      if (index(str_vs(arg%nodeValue),"?>")>0) then
-        TOHW_m_dom_throw_error(FoX_INVALID_PI_DATA)
-      endif
-      deallocate(arg%nodeValue)
-      arg%nodeValue => vs_str_alloc(nodeValue)
-    case (TEXT_NODE)
-      if (arg%readonly) then
-        TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
-      endif
-      deallocate(arg%nodeValue)
-      arg%nodeValue => vs_str_alloc(nodeValue)
+      call setValue(arg, nodeValue)
+    case (CDATA_SECTION_NODE, COMMENT_NODE, PROCESSING_INSTRUCTION_NODE, TEXT_NODE)
+      call setData(arg, nodeValue)
     end select
 
   end subroutine setNodeValue
@@ -344,6 +281,8 @@ TOHW_m_dom_get(Node, nextSibling, np%nextSibling)
 
     call updateNodeLists(arg%ownerDocument)
 
+    call updateTextContentLength(arg, newChild%textContentLength)
+
   end function insertBefore
 
 
@@ -480,6 +419,8 @@ TOHW_m_dom_get(Node, nextSibling, np%nextSibling)
 
     call updateNodeLists(arg%ownerDocument)
 
+    call updateTextContentLength(arg, newChild%textContentLength-oldChild%textContentLength)
+
   end function replaceChild
 
 
@@ -548,6 +489,8 @@ TOHW_m_dom_get(Node, nextSibling, np%nextSibling)
     np => oldChild
 
     call updateNodeLists(arg%ownerDocument)
+
+    call updateTextContentLength(arg, -oldChild%textContentLength)
 
   end function removeChild
 
@@ -666,6 +609,8 @@ TOHW_m_dom_get(Node, nextSibling, np%nextSibling)
     np => newChild
 
     call updateNodeLists(arg%ownerDocument)
+
+    call updateTextContentLength(arg, newChild%textContentLength)
 
   end function appendChild
 
@@ -1343,6 +1288,70 @@ TOHW_m_dom_treewalk(`
   ! function getUserData
   ! function setUserData
   ! will not implement ...
+
+  subroutine updateTextContentLength(np, n)
+    type(Node), pointer :: np
+    integer, intent(in) :: n
+
+    if (n/=0) then
+      do while (associated(np))
+        np%textContentLength = np%textContentLength + n
+        np => getParentNode(np)
+        if (associated(np)) then
+          if (getNodeType(np)==DOCUMENT_NODE) exit
+        endif
+      enddo
+    endif
+  end subroutine updateTextContentLength
+
+  pure function getTextContent_len(arg, p) result(n)
+    type(Node), intent(in) :: arg
+    logical, intent(in) :: p
+    integer :: n
+
+    if (p) then
+      n = arg%textContentLength
+    else
+      n = 0
+    endif
+  end function getTextContent_len
+
+  TOHW_function(getTextContent, (arg), c)
+    type(Node), pointer :: arg
+    character(len=getTextContent_len(arg, associated(arg))) :: c
+
+    type(Node), pointer :: this, treeroot
+    integer :: i, i_tree
+    logical :: doneChildren, doneAttributes
+
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+    
+    if (len(c) == 0) then
+      c = ""
+      return
+    endif
+
+    i = 1
+    treeroot => arg
+    TOHW_m_dom_treewalk(`
+      if (associated(this, treeroot).and.isCharData(getNodeType(this))) then
+        c = getData(this)
+        return
+      endif
+      select case(getNodeType(this))
+      case (ELEMENT_NODE)
+        doneAttributes = .true.
+        ! Ignore attributes for text content (unless this is an attribute!)
+      case(TEXT_NODE, CDATA_SECTION_NODE)
+        if (.not.getIsElementContentWhitespace(this)) then
+          c(i:i+size(this%nodeValue)-1) = str_vs(this%nodeValue)
+          i = i + size(this%nodeValue)
+        endif
+      end select
+'`')
+  end function getTextContent
 
   subroutine putNodesInDocument(doc, arg)
     type(Node), pointer :: doc, arg

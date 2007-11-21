@@ -106,6 +106,7 @@ TOHW_m_dom_publics(`
     type(documentExtras), pointer :: docExtras
     type(elementOrAttributeExtras), pointer :: elExtras
     type(docTypeExtras), pointer :: dtdExtras
+    integer :: textContentLength = 0
   end type Node
 
   type(DOMImplementation), save, target :: FoX_DOM

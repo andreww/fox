@@ -36,7 +36,7 @@ TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
 
     do i = 1, arg%elExtras%attributes%length
       if (str_vs(arg%elExtras%attributes%nodes(i)%this%nodeName)==name) then
-        n = getValue_len(arg%elExtras%attributes%nodes(i)%this, .true.)
+        n = getTextContent_len(arg%elExtras%attributes%nodes(i)%this, .true.)
         exit
       endif
     enddo
@@ -249,7 +249,7 @@ TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
       if ((str_vs(arg%elExtras%attributes%nodes(i)%this%elExtras%localName)==localname &
         .and. str_vs(arg%elExtras%attributes%nodes(i)%this%elExtras%namespaceURI)==namespaceURI) &
         .or. (namespaceURI=="".and.str_vs(arg%elExtras%attributes%nodes(i)%this%nodeName)==localname)) then
-        n = getValue_len(arg%elExtras%attributes%nodes(i)%this, .true.)
+        n = getTextContent_len(arg%elExtras%attributes%nodes(i)%this, .true.)
         exit
       endif
     enddo

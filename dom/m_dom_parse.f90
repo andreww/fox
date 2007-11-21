@@ -26,9 +26,8 @@ module m_dom_parse
   use m_dom_dom, only: copyDOMConfig, createEmptyDocument, setDocumentElement, &
     createEmptyEntityReference, createEntity, createNotation, getReadOnly,     &
     destroy, destroyAllNodesRecursively, namespaceFixup, setDocType,           &
-    setDomConfig, setEntityReferenceValue, setGCstate, setIllFormed,           &
-    setIsElementContentWhitespace, setReadOnlyMap, setReadonlyNode,            &
-    setSpecified, setXds, setStringValue
+    setDomConfig, setGCstate, setIllFormed, setIsElementContentWhitespace,     &
+    setReadOnlyMap, setReadonlyNode, setSpecified, setXds, setStringValue
     
   use m_dom_error, only: DOMException, inException, throw_exception,           &
     PARSE_ERR
@@ -368,7 +367,6 @@ contains
     character(len=*), intent(in) :: name
     
     if (getParameter(domConfig, "entities")) then
-      call setEntityReferenceValue(current)
       call setReadOnlyNode(current, .true., .false.)
       if (str_vs(inEntity)==name) deallocate(inEntity)
       current => getParentNode(current)

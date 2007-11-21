@@ -237,6 +237,7 @@ module m_dom_dom
     type(documentExtras), pointer :: docExtras
     type(elementOrAttributeExtras), pointer :: elExtras
     type(docTypeExtras), pointer :: dtdExtras
+    integer :: textContentLength = 0
   end type Node
 
   type(DOMImplementation), save, target :: FoX_DOM
@@ -302,6 +303,7 @@ module m_dom_dom
   public :: isDefaultNamespace
   public :: lookupNamespaceURI
   public :: lookupPrefix
+  public :: getTextContent
 
   public :: setStringValue
   public :: getStringValue
@@ -404,7 +406,6 @@ module m_dom_dom
   public :: setDocType
   public :: setDomConfig
   public :: setXds
-  public :: setEntityReferenceValue
   public :: createNamespaceNode
   public :: createEntity
   public :: createNotation
@@ -1010,16 +1011,12 @@ endif
     logical, intent(in) :: p
     integer :: n
 
-    integer :: i
-
     n = 0 
     if (.not.p) return
 
     select case(np%nodeType)
     case (ATTRIBUTE_NODE)
-      do i = 1, np%childNodes%length
-        n = n + size(np%childNodes%nodes(i)%this%nodeValue)
-      enddo
+      n = np%textContentLength
     case (CDATA_SECTION_NODE, COMMENT_NODE, PROCESSING_INSTRUCTION_NODE, TEXT_NODE)
       n = size(np%nodeValue)
     end select
@@ -1030,8 +1027,6 @@ endif
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: np
     character(len=getNodeValue_len(np, associated(np))) :: c
-
-    integer :: i, n
 
     if (.not.associated(np)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
@@ -1047,11 +1042,7 @@ endif
 
     select case(np%nodeType)
     case (ATTRIBUTE_NODE)
-      n = 1
-      do i = 1, np%childNodes%length
-        c(n:n+size(np%childNodes%nodes(i)%this%nodeValue)-1) = &
-          str_vs(np%childNodes%nodes(i)%this%nodeValue)
-      enddo
+      c = getTextContent(np)
     case (CDATA_SECTION_NODE, COMMENT_NODE, PROCESSING_INSTRUCTION_NODE, TEXT_NODE)
       c = str_vs(np%nodeValue)
     case default
@@ -1064,9 +1055,6 @@ endif
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*) :: nodeValue
-
-    type(Node), pointer :: np
-    integer :: i
 
     if (.not.associated(arg)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
@@ -1096,124 +1084,9 @@ endif
 
     select case(arg%nodeType)
     case (ATTRIBUTE_NODE)
-      if (arg%readonly) then
-        if (getFoX_checks().or.NO_MODIFICATION_ALLOWED_ERR<200) then
-  call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setNodeValue", ex)
-  if (present(ex)) then
-    if (inException(ex)) then
-       return
-    endif
-  endif
-endif
-
-      endif
-      ! destroy any existing children ... 
-      do i = 1, arg%childNodes%length
-        if (.not.arg%inDocument) &
-          call remove_node_nl(arg%ownerDocument%docExtras%hangingNodes, arg%childNodes%nodes(i)%this)
-        call destroyNode(arg%childNodes%nodes(i)%this)
-      enddo
-      deallocate(arg%childNodes%nodes)
-      allocate(arg%childNodes%nodes(0))
-      arg%childNodes%length = 0
-      arg%firstChild => null()
-      arg%lastChild => null()
-      ! and add the new one.
-      ! Avoid manipulating hangingnode lists
-      !      call setGCstate(arg%ownerDocument, .false.)
-      np => createTextNode(arg%ownerDocument, nodeValue)
-      np => appendChild(arg, np, ex)
-      !      call setGCstate(arg%ownerDocument, .true.)
-      !      if (.not.arg%inDocument) call append(arg%document%blah, ...)
-    case (CDATA_SECTION_NODE)
-      if (arg%readonly) then
-        if (getFoX_checks().or.NO_MODIFICATION_ALLOWED_ERR<200) then
-  call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setNodeValue", ex)
-  if (present(ex)) then
-    if (inException(ex)) then
-       return
-    endif
-  endif
-endif
-
-      endif
-      if (index(str_vs(arg%nodeValue),"]]>")>0) then
-        if (getFoX_checks().or.FoX_INVALID_CDATA_SECTION<200) then
-  call throw_exception(FoX_INVALID_CDATA_SECTION, "setNodeValue", ex)
-  if (present(ex)) then
-    if (inException(ex)) then
-       return
-    endif
-  endif
-endif
-
-      endif
-      deallocate(arg%nodeValue)
-      arg%nodeValue => vs_str_alloc(nodeValue)
-    case (COMMENT_NODE)
-      if (arg%readonly) then
-        if (getFoX_checks().or.NO_MODIFICATION_ALLOWED_ERR<200) then
-  call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setNodeValue", ex)
-  if (present(ex)) then
-    if (inException(ex)) then
-       return
-    endif
-  endif
-endif
-
-      endif
-      if (index(str_vs(arg%nodeValue),"--")>0) then
-        if (getFoX_checks().or.FoX_INVALID_COMMENT<200) then
-  call throw_exception(FoX_INVALID_COMMENT, "setNodeValue", ex)
-  if (present(ex)) then
-    if (inException(ex)) then
-       return
-    endif
-  endif
-endif
-
-      endif
-      deallocate(arg%nodeValue)
-      arg%nodeValue => vs_str_alloc(nodeValue)
-    case (PROCESSING_INSTRUCTION_NODE)
-      if (arg%readonly) then
-        if (getFoX_checks().or.NO_MODIFICATION_ALLOWED_ERR<200) then
-  call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setNodeValue", ex)
-  if (present(ex)) then
-    if (inException(ex)) then
-       return
-    endif
-  endif
-endif
-
-      endif
-      if (index(str_vs(arg%nodeValue),"?>")>0) then
-        if (getFoX_checks().or.FoX_INVALID_PI_DATA<200) then
-  call throw_exception(FoX_INVALID_PI_DATA, "setNodeValue", ex)
-  if (present(ex)) then
-    if (inException(ex)) then
-       return
-    endif
-  endif
-endif
-
-      endif
-      deallocate(arg%nodeValue)
-      arg%nodeValue => vs_str_alloc(nodeValue)
-    case (TEXT_NODE)
-      if (arg%readonly) then
-        if (getFoX_checks().or.NO_MODIFICATION_ALLOWED_ERR<200) then
-  call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setNodeValue", ex)
-  if (present(ex)) then
-    if (inException(ex)) then
-       return
-    endif
-  endif
-endif
-
-      endif
-      deallocate(arg%nodeValue)
-      arg%nodeValue => vs_str_alloc(nodeValue)
+      call setValue(arg, nodeValue)
+    case (CDATA_SECTION_NODE, COMMENT_NODE, PROCESSING_INSTRUCTION_NODE, TEXT_NODE)
+      call setData(arg, nodeValue)
     end select
 
   end subroutine setNodeValue
@@ -1939,6 +1812,8 @@ endif
 
     call updateNodeLists(arg%ownerDocument)
 
+    call updateTextContentLength(arg, newChild%textContentLength)
+
   end function insertBefore
 
 
@@ -2446,6 +2321,8 @@ endif
 
     call updateNodeLists(arg%ownerDocument)
 
+    call updateTextContentLength(arg, newChild%textContentLength-oldChild%textContentLength)
+
   end function replaceChild
 
 
@@ -2539,6 +2416,8 @@ endif
     np => oldChild
 
     call updateNodeLists(arg%ownerDocument)
+
+    call updateTextContentLength(arg, -oldChild%textContentLength)
 
   end function removeChild
 
@@ -3008,6 +2887,8 @@ endif
     np => newChild
 
     call updateNodeLists(arg%ownerDocument)
+
+    call updateTextContentLength(arg, newChild%textContentLength)
 
   end function appendChild
 
@@ -4109,6 +3990,138 @@ endif
   ! function setUserData
   ! will not implement ...
 
+  subroutine updateTextContentLength(np, n)
+    type(Node), pointer :: np
+    integer, intent(in) :: n
+
+    if (n/=0) then
+      do while (associated(np))
+        np%textContentLength = np%textContentLength + n
+        np => getParentNode(np)
+        if (associated(np)) then
+          if (getNodeType(np)==DOCUMENT_NODE) exit
+        endif
+      enddo
+    endif
+  end subroutine updateTextContentLength
+
+  pure function getTextContent_len(arg, p) result(n)
+    type(Node), intent(in) :: arg
+    logical, intent(in) :: p
+    integer :: n
+
+    if (p) then
+      n = arg%textContentLength
+    else
+      n = 0
+    endif
+  end function getTextContent_len
+
+  function getTextContent(arg, ex)result(c) 
+    type(DOMException), intent(out), optional :: ex
+    type(Node), pointer :: arg
+    character(len=getTextContent_len(arg, associated(arg))) :: c
+
+    type(Node), pointer :: this, treeroot
+    integer :: i, i_tree
+    logical :: doneChildren, doneAttributes
+
+    if (.not.associated(arg)) then
+      if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "getTextContent", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    endif
+    
+    if (len(c) == 0) then
+      c = ""
+      return
+    endif
+
+    i = 1
+    treeroot => arg
+    
+    i_tree = 0
+    doneChildren = .false.
+    doneAttributes = .false.
+    this => treeroot
+    do
+      if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
+
+      if (associated(this, treeroot).and.isCharData(getNodeType(this))) then
+        c = getData(this)
+        return
+      endif
+      select case(getNodeType(this))
+      case (ELEMENT_NODE)
+        doneAttributes = .true.
+        ! Ignore attributes for text content (unless this is an attribute!)
+      case(TEXT_NODE, CDATA_SECTION_NODE)
+        if (.not.getIsElementContentWhitespace(this)) then
+          c(i:i+size(this%nodeValue)-1) = str_vs(this%nodeValue)
+          i = i + size(this%nodeValue)
+        endif
+      end select
+
+      else
+        if (getNodeType(this)==ELEMENT_NODE.and..not.doneChildren) then
+          doneAttributes = .true.
+        else
+
+        endif
+      endif
+
+
+      if (.not.doneChildren) then
+        if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
+          if (getLength(getAttributes(this))>0) then
+            this => item(getAttributes(this), 0)
+          else
+            doneAttributes = .true.
+          endif
+        elseif (hasChildNodes(this)) then
+          this => getFirstChild(this)
+          doneChildren = .false.
+          doneAttributes = .false.
+        else
+          doneChildren = .true.
+          doneAttributes = .false.
+        endif
+
+      else ! if doneChildren
+
+        if (associated(this, treeroot)) exit
+        if (getNodeType(this)==ATTRIBUTE_NODE) then
+          if (i_tree<getLength(getAttributes(getOwnerElement(this)))-1) then
+            i_tree= i_tree+ 1
+            this => item(getAttributes(getOwnerElement(this)), i_tree)
+            doneChildren = .false.
+          else
+            i_tree= 0
+            this => getOwnerElement(this)
+            doneAttributes = .true.
+            doneChildren = .false.
+          endif
+        elseif (associated(getNextSibling(this))) then
+
+          this => getNextSibling(this)
+          doneChildren = .false.
+          doneAttributes = .false.
+        else
+          this => getParentNode(this)
+        endif
+      endif
+
+    enddo
+
+
+  end function getTextContent
+
   subroutine putNodesInDocument(doc, arg)
     type(Node), pointer :: doc, arg
     type(Node), pointer :: this, treeroot
@@ -4617,7 +4630,7 @@ endif
 
     do i = 1, map%length
       if (str_vs(map%nodes(i)%this%nodeName)==name) then
-        n = getValue_len(map%nodes(i)%this, .true.)
+        n = getNodeValue_len(map%nodes(i)%this, .true.)
         exit
       endif
     enddo
@@ -4970,7 +4983,7 @@ endif
     do i = 1, map%length
       if (str_vs(map%nodes(i)%this%elExtras%namespaceURI)==namespaceURI &
         .and. str_vs(map%nodes(i)%this%elExtras%localName)==localName) then
-        n = getValue_len(map%nodes(i)%this, .true.)
+        n = getNodeValue_len(map%nodes(i)%this, .true.)
         exit
       endif
     enddo
@@ -5006,7 +5019,7 @@ endif
       np => item(map, i)
       if (getNamespaceURI(np)==namespaceURI &
         .and. getLocalName(np)==localName) then
-        c = getValue(np)
+        c = getNodeValue(np)
         return
       endif
     enddo
@@ -6014,6 +6027,7 @@ endif
     endif
 
     np => createNode(arg, TEXT_NODE, "#text", data)
+    np%textContentLength = len(data)
 
     if (getGCstate(arg)) then
       np%inDocument = .false.
@@ -6136,6 +6150,7 @@ endif
     endif
   
     np => createNode(arg, CDATA_SECTION_NODE, "#cdata-section", data)
+    np%textContentLength = len(data)
 
     if (getGCstate(arg)) then
       np%inDocument = .false.
@@ -6274,155 +6289,6 @@ endif
   
   end function createAttribute
 
-  subroutine setEntityReferenceValue(arg)
-    type(Node), pointer :: arg
-
-    type(Node), pointer :: this, treeroot
-    integer :: i_tree, l, n
-    logical :: doneAttributes, doneChildren
-
-    ! Calculate value of any entity references that are only textual:
-    n = 0
-    treeroot => arg
-
-    i_tree = 0
-    doneChildren = .false.
-    doneAttributes = .false.
-    this => treeroot
-    do
-      if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
-
-      if (getNodeType(this)==TEXT_NODE) then
-        n = n + len(getData(this))
-      elseif (getNodeType(this)/=ENTITY_REFERENCE_NODE) then
-        n = 0
-        exit
-      endif
-
-      else
-        if (getNodeType(this)==ELEMENT_NODE.and..not.doneChildren) then
-          doneAttributes = .true.
-        else
-
-        endif
-      endif
-
-
-      if (.not.doneChildren) then
-        if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
-          if (getLength(getAttributes(this))>0) then
-            this => item(getAttributes(this), 0)
-          else
-            doneAttributes = .true.
-          endif
-        elseif (hasChildNodes(this)) then
-          this => getFirstChild(this)
-          doneChildren = .false.
-          doneAttributes = .false.
-        else
-          doneChildren = .true.
-          doneAttributes = .false.
-        endif
-
-      else ! if doneChildren
-
-        if (associated(this, treeroot)) exit
-        if (getNodeType(this)==ATTRIBUTE_NODE) then
-          if (i_tree<getLength(getAttributes(getOwnerElement(this)))-1) then
-            i_tree= i_tree+ 1
-            this => item(getAttributes(getOwnerElement(this)), i_tree)
-            doneChildren = .false.
-          else
-            i_tree= 0
-            this => getOwnerElement(this)
-            doneAttributes = .true.
-            doneChildren = .false.
-          endif
-        elseif (associated(getNextSibling(this))) then
-
-          this => getNextSibling(this)
-          doneChildren = .false.
-          doneAttributes = .false.
-        else
-          this => getParentNode(this)
-        endif
-      endif
-
-    enddo
-
-
-    deallocate(arg%nodeValue)
-    allocate(arg%nodeValue(n))
-    if (n>0) then
-      n = 0
-
-    i_tree = 0
-    doneChildren = .false.
-    doneAttributes = .false.
-    this => treeroot
-    do
-      if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
-
-        if (getNodeType(this)==TEXT_NODE) then
-          l = len(getData(this))
-          arg%nodeValue(n+1:n+l) = vs_str(getData(this))
-          n = n + l
-        endif
-
-      else
-        if (getNodeType(this)==ELEMENT_NODE.and..not.doneChildren) then
-          doneAttributes = .true.
-        else
-
-        endif
-      endif
-
-
-      if (.not.doneChildren) then
-        if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
-          if (getLength(getAttributes(this))>0) then
-            this => item(getAttributes(this), 0)
-          else
-            doneAttributes = .true.
-          endif
-        elseif (hasChildNodes(this)) then
-          this => getFirstChild(this)
-          doneChildren = .false.
-          doneAttributes = .false.
-        else
-          doneChildren = .true.
-          doneAttributes = .false.
-        endif
-
-      else ! if doneChildren
-
-        if (associated(this, treeroot)) exit
-        if (getNodeType(this)==ATTRIBUTE_NODE) then
-          if (i_tree<getLength(getAttributes(getOwnerElement(this)))-1) then
-            i_tree= i_tree+ 1
-            this => item(getAttributes(getOwnerElement(this)), i_tree)
-            doneChildren = .false.
-          else
-            i_tree= 0
-            this => getOwnerElement(this)
-            doneAttributes = .true.
-            doneChildren = .false.
-          endif
-        elseif (associated(getNextSibling(this))) then
-
-          this => getNextSibling(this)
-          doneChildren = .false.
-          doneAttributes = .false.
-        else
-          this => getParentNode(this)
-        endif
-      endif
-
-    enddo
-
-
-    endif
-  end subroutine setEntityReferenceValue
 
   recursive function createEntityReference(arg, name, ex)result(np) 
     type(DOMException), intent(out), optional :: ex
@@ -6519,8 +6385,6 @@ endif
         endif
       endif
     endif
-    ! FIXME we could get away with just storing the length here.
-    call setEntityReferenceValue(np)
 
     call setReadOnlyNode(np, .true., .false.)
 
@@ -8476,7 +8340,7 @@ endif
 
     do i = 1, arg%elExtras%attributes%length
       if (str_vs(arg%elExtras%attributes%nodes(i)%this%nodeName)==name) then
-        n = getValue_len(arg%elExtras%attributes%nodes(i)%this, .true.)
+        n = getTextContent_len(arg%elExtras%attributes%nodes(i)%this, .true.)
         exit
       endif
     enddo
@@ -8863,7 +8727,7 @@ endif
       if ((str_vs(arg%elExtras%attributes%nodes(i)%this%elExtras%localName)==localname &
         .and. str_vs(arg%elExtras%attributes%nodes(i)%this%elExtras%namespaceURI)==namespaceURI) &
         .or. (namespaceURI=="".and.str_vs(arg%elExtras%attributes%nodes(i)%this%nodeName)==localname)) then
-        n = getValue_len(arg%elExtras%attributes%nodes(i)%this, .true.)
+        n = getTextContent_len(arg%elExtras%attributes%nodes(i)%this, .true.)
         exit
       endif
     enddo
@@ -9556,28 +9420,11 @@ endif
   end function getownerElement
 
     
-  pure function getValue_len(arg, p) result(n)
-    type(Node), intent(in) :: arg
-    logical, intent(in) :: p
-    integer :: n
-
-    integer :: i
-
-    n = 0 
-    if (.not.p) return
-
-    do i = 1, arg%childNodes%length
-      n = n + size(arg%childNodes%nodes(i)%this%nodeValue)
-    enddo
-
-  end function getValue_len
 
   function getValue_DOM(arg, ex)result(c) 
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
-    character(len=getValue_len(arg, associated(arg))) :: c 
-
-    integer :: i, n
+    character(len=getTextContent_len(arg, associated(arg))) :: c 
 
     if (.not.associated(arg)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
@@ -9603,11 +9450,7 @@ endif
 
     endif
 
-    n = 1
-    do i = 1, arg%childNodes%length
-      c(n:n+size(arg%childNodes%nodes(i)%this%nodeValue)-1) = &
-        str_vs(arg%childNodes%nodes(i)%this%nodeValue)
-    enddo
+    c = getTextContent(arg)
 
   end function getValue_DOM
 
@@ -9671,6 +9514,7 @@ endif
     arg%childNodes%length = 0
     arg%firstChild => null()
     arg%lastChild => null()
+    arg%textContentLength = 0
     np => createTextNode(getOwnerDocument(arg), value)
     np => appendChild(arg, np)
 
@@ -9853,6 +9697,10 @@ endif
 
     endif
 
+    ! And propagate length upwards ...
+    if (getNodeType(arg)/=COMMENT_NODE) &
+      call updateTextContent(arg, len(data))
+
   end subroutine appendData
   
 
@@ -9948,6 +9796,10 @@ endif
 
     endif
 
+    ! And propagate length upwards ...
+    if (getNodeType(arg)/=COMMENT_NODE) &
+      call updateTextContent(arg, len(data))
+
   end subroutine insertData
 
 
@@ -9958,6 +9810,7 @@ endif
     integer, intent(in) :: count
 
     character, pointer :: tmp(:)
+    integer :: n
 
     if (.not.associated(arg)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
@@ -10002,10 +9855,20 @@ endif
 endif
 
     endif
+
+    if (offset+count>size(arg%nodeValue)) then
+      n = size(arg%nodeValue)-offset
+    else
+      n = count
+    endif
     
     tmp => arg%nodeValue
     arg%nodeValue => vs_str_alloc(str_vs(tmp(:offset))//str_vs(tmp(offset+count+1:)))
     deallocate(tmp)
+
+    ! And propagate length upwards ...
+    if (getNodeType(arg)/=COMMENT_NODE) &
+      call updateTextContent(arg, -n)
 
   end subroutine deleteData
 
@@ -10018,6 +9881,7 @@ endif
     character(len=*), intent(in) :: data
     
     character, pointer :: tmp(:)
+    integer :: n
 
     if (.not.associated(arg)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
@@ -10075,6 +9939,12 @@ endif
 
     endif
 
+    if (offset+count>size(arg%nodeValue)) then
+      n = len(data)-(size(arg%nodeValue)-offset)
+    else
+      n = len(data)-count
+    endif
+
     tmp => arg%nodeValue
     if (offset+count <= size(arg%nodeValue)) then
       arg%nodeValue => vs_str_alloc(str_vs(tmp(:offset))//data//str_vs(tmp(offset+count+1:)))
@@ -10106,6 +9976,10 @@ endif
 endif
 
     endif
+
+    ! And propagate length upwards ...
+    if (getNodeType(arg)/=COMMENT_NODE) &
+      call updateTextContent(arg, n)
 
   end subroutine replaceData
  
@@ -10566,6 +10440,8 @@ endif
     type(Node), pointer :: arg
     character(len=*) :: data
     
+    integer :: n
+
     if (.not.associated(arg)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
   call throw_exception(FoX_NODE_IS_NULL, "setData", ex)
@@ -10607,6 +10483,55 @@ endif
 endif
 
     endif
+
+    select case (arg%nodeType)
+    case (CDATA_SECTION_NODE)
+      if (index(data,"]]>")>0) then
+        if (getFoX_checks().or.FoX_INVALID_CDATA_SECTION<200) then
+  call throw_exception(FoX_INVALID_CDATA_SECTION, "setData", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+      endif
+    case (COMMENT_NODE)
+      if (index(data,"--")>0) then
+        if (getFoX_checks().or.FoX_INVALID_COMMENT<200) then
+  call throw_exception(FoX_INVALID_COMMENT, "setData", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+      endif
+    case (PROCESSING_INSTRUCTION_NODE)
+      if (index(data,"?>")>0) then
+        if (getFoX_checks().or.FoX_INVALID_PI_DATA<200) then
+  call throw_exception(FoX_INVALID_PI_DATA, "setData", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+      endif
+    end select
+
+    deallocate(arg%nodeValue)
+    arg%nodeValue => vs_str_alloc(data)
+
+    if (arg%nodeType==TEXT_NODE .or. &
+      arg%nodeType==CDATA_SECTION_NODE) then
+      n = len(data) - arg%textContentLength
+      call updateTextContentLength(arg, n)
+    endif
+
   end subroutine setData
   
   
