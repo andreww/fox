@@ -44,8 +44,24 @@ TOHW_m_dom_contents(`
 
   end function splitText
 
-TOHW_m_dom_get(logical, isElementContentWhitespace, np%ignorableWhitespace, (TEXT_NODE))
-TOHW_m_dom_set(logical, isElementContentWhitespace, np%ignorableWhitespace, (TEXT_NODE))
+TOHW_m_dom_get(logical, isElementContentWhitespace, np%ignorableWhitespace, (TEXT_NODE, CDATA_SECTION_NODE))
+
+  TOHW_subroutine(setIsElementContentWhitespace, (np, isElementContentWhitespace))
+    type(Node), pointer :: np
+    logical :: isElementContentWhitespace
+
+    integer :: n
+
+    np%ignorableWhitespace = isElementContentWhitespace
+ 
+    if (isElementContentWhitespace) then
+      n = -np%textContentLength
+    else
+      n = size(np%nodeValue)
+    endif
+
+    call updateTextContentLength(np, n)
+  end subroutine setIsElementContentWhitespace
     
 
 ! function getWholeText

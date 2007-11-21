@@ -4063,8 +4063,13 @@ endif
         ! Ignore attributes for text content (unless this is an attribute!)
       case(TEXT_NODE, CDATA_SECTION_NODE)
         if (.not.getIsElementContentWhitespace(this)) then
+<<<<<<< HEAD:dom/m_dom_dom.f90
           c(i:i+size(this%nodeValue)-1) = str_vs(this%nodeValue)
           i = i + size(this%nodeValue)
+=======
+          c(i:i+this%textContentLength-1) = str_vs(this%nodeValue)
+          i = i + this%textContentLength
+>>>>>>> d9a71b1... Make textContent ignore elementContentWhitespace:dom/m_dom_dom.f90
         endif
       end select
 
@@ -10338,6 +10343,7 @@ endif
     endif
 
    if (getNodeType(np)/=TEXT_NODE .and. &
+getNodeType(np)/=CDATA_SECTION_NODE .and. &
       .true.) then
       if (getFoX_checks().or.FoX_INVALID_NODE<200) then
   call throw_exception(FoX_INVALID_NODE, "getisElementContentWhitespace", ex)
@@ -10354,41 +10360,24 @@ endif
 
   end function getisElementContentWhitespace
 
-subroutine setisElementContentWhitespace(np, c, ex)
+
+  subroutine setIsElementContentWhitespace(np, isElementContentWhitespace, ex)
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: np
-    logical :: c
+    logical :: isElementContentWhitespace
 
+    integer :: n
 
-    if (.not.associated(np)) then
-      if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
-  call throw_exception(FoX_NODE_IS_NULL, "setisElementContentWhitespace", ex)
-  if (present(ex)) then
-    if (inException(ex)) then
-       return
-    endif
-  endif
-endif
-
+    np%ignorableWhitespace = isElementContentWhitespace
+ 
+    if (isElementContentWhitespace) then
+      n = -np%textContentLength
+    else
+      n = size(np%nodeValue)
     endif
 
-   if (getNodeType(np)/=TEXT_NODE .and. &
-      .true.) then
-      if (getFoX_checks().or.FoX_INVALID_NODE<200) then
-  call throw_exception(FoX_INVALID_NODE, "setisElementContentWhitespace", ex)
-  if (present(ex)) then
-    if (inException(ex)) then
-       return
-    endif
-  endif
-endif
-
-    endif
-
-    np%ignorableWhitespace = c
-
-  end subroutine setisElementContentWhitespace
-
+    call updateTextContentLength(np, n)
+  end subroutine setIsElementContentWhitespace
     
 
 ! function getWholeText
