@@ -151,10 +151,12 @@ contains
     type(DOMException), intent(inout) :: ex
     integer :: n
 
-    n = ex%stack%stack(size(ex%stack%stack))%error_code
-
-    call destroy_error_stack(ex%stack)
-
+    if (in_error(ex%stack)) then
+      n = ex%stack%stack(size(ex%stack%stack))%error_code
+      call destroy_error_stack(ex%stack)
+    else
+      n = 0
+    endif
   end function getExceptionCode
 
   subroutine throw_exception(code, msg, ex)
