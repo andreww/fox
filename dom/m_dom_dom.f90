@@ -4618,8 +4618,9 @@ endif
 
     endif
 
-    do i = 1, map%length
-      if (str_vs(map%nodes(i)%this%nodeName)==name) then
+    do i = 0, map%length-1
+      np => item(map, i)
+      if (getNodeName(np)==name) then
         xds => getXds(getOwnerDocument(map%ownerElement))
         elem => get_element(xds%element_list, getNodeName(map%ownerElement))
         if (associated(elem)) then
@@ -4638,14 +4639,14 @@ endif
         endif
         ! Otherwise there was no default value, so we just remove the node.
         ! Grab this node
-        np => map%nodes(i)%this
+        if (getNodeType(np)==ATTRIBUTE_NODE) np%elExtras%ownerElement => null()
         ! and shrink the node list
         temp_nl => map%nodes
         allocate(map%nodes(size(temp_nl)-1))
-        do i2 = 1, i - 1
+        do i2 = 1, i
           map%nodes(i2)%this => temp_nl(i2)%this
         enddo
-        do i2 = i + 1, map%length
+        do i2 = i + 2, map%length
           map%nodes(i2-1)%this => temp_nl(i2)%this
         enddo
         map%length = size(map%nodes)
@@ -4997,6 +4998,7 @@ endif
         endif
         ! Otherwise there was no default value, so we just remove the node.
         ! and shrink the node list
+        if (getNodeType(np)==ATTRIBUTE_NODE) np%elExtras%ownerElement => null()
         temp_nl => map%nodes
         allocate(map%nodes(size(temp_nl)-1))
         do i2 = 1, i
@@ -8651,39 +8653,10 @@ endif
   endif
 endif
 
-    elseif (.not.associated(arg%ownerDocument, oldattr%ownerDocument)) then
-      if (getFoX_checks().or.WRONG_DOCUMENT_ERR<200) then
-  call throw_exception(WRONG_DOCUMENT_ERR, "removeAttributeNode", ex)
-  if (present(ex)) then
-    if (inException(ex)) then
-       return
-    endif
-  endif
-endif
-
-    elseif (arg%readonly) then
-      if (getFoX_checks().or.NO_MODIFICATION_ALLOWED_ERR<200) then
-  call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "removeAttributeNode", ex)
-  if (present(ex)) then
-    if (inException(ex)) then
-       return
-    endif
-  endif
-endif
-
     endif
 
-    do i = 0, getLength(getAttributes(arg)) - 1
-      attr => item(getAttributes(arg), i)
-      if (associated(attr, oldattr)) then
-        attr => removeNamedItem(getAttributes(arg), str_vs(oldattr%nodeName))
-        ! removeNamedItem took care of any default attributes
-        attr%elExtras%ownerElement => null()
-        return
-      endif
-    enddo
-
-    if (getFoX_checks().or.NOT_FOUND_ERR<200) then
+    if (.not.associated(arg, getOwnerElement(oldattr))) then
+      if (getFoX_checks().or.NOT_FOUND_ERR<200) then
   call throw_exception(NOT_FOUND_ERR, "removeAttributeNode", ex)
   if (present(ex)) then
     if (inException(ex)) then
@@ -8692,6 +8665,10 @@ endif
   endif
 endif
 
+    endif
+
+    attr => removeNamedItem(getAttributes(arg), &
+      getNodeName(oldattr), ex)
 
   end function removeAttributeNode
 
@@ -9102,29 +9079,10 @@ endif
   endif
 endif
 
-    elseif (arg%readonly) then
-      if (getFoX_checks().or.WRONG_DOCUMENT_ERR<200) then
-  call throw_exception(WRONG_DOCUMENT_ERR, "removeAttributeNodeNS", ex)
-  if (present(ex)) then
-    if (inException(ex)) then
-       return
-    endif
-  endif
-endif
-
     endif
 
-    do i = 0, getLength(getAttributes(arg)) - 1
-      attr => item(getAttributes(arg), i)
-        if (associated(attr, oldattr)) then
-        attr => removeNamedItemNS(getAttributes(arg), &
-          getNamespaceURI(oldattr), getLocalName(oldattr))
-        ! removeNamedItemNS took care of any default attributes
-        return
-      endif
-    enddo
-
-    if (getFoX_checks().or.NOT_FOUND_ERR<200) then
+    if (.not.associated(arg, getOwnerElement(oldattr))) then
+      if (getFoX_checks().or.NOT_FOUND_ERR<200) then
   call throw_exception(NOT_FOUND_ERR, "removeAttributeNodeNS", ex)
   if (present(ex)) then
     if (inException(ex)) then
@@ -9133,8 +9091,10 @@ endif
   endif
 endif
 
+    endif
 
-    attr%elExtras%ownerElement => null()
+    attr => removeNamedItemNS(getAttributes(arg), &
+      getNamespaceURI(oldattr), getLocalName(oldattr), ex)
 
   end function removeAttributeNodeNS
 

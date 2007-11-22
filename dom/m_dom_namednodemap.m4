@@ -186,8 +186,9 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
     endif
 
-    do i = 1, map%length
-      if (str_vs(map%nodes(i)%this%nodeName)==name) then
+    do i = 0, map%length-1
+      np => item(map, i)
+      if (getNodeName(np)==name) then
         xds => getXds(getOwnerDocument(map%ownerElement))
         elem => get_element(xds%element_list, getNodeName(map%ownerElement))
         if (associated(elem)) then
@@ -206,14 +207,14 @@ TOHW_m_dom_contents(`
         endif
         ! Otherwise there was no default value, so we just remove the node.
         ! Grab this node
-        np => map%nodes(i)%this
+        if (getNodeType(np)==ATTRIBUTE_NODE) np%elExtras%ownerElement => null()
         ! and shrink the node list
         temp_nl => map%nodes
         allocate(map%nodes(size(temp_nl)-1))
-        do i2 = 1, i - 1
+        do i2 = 1, i
           map%nodes(i2)%this => temp_nl(i2)%this
         enddo
-        do i2 = i + 1, map%length
+        do i2 = i + 2, map%length
           map%nodes(i2-1)%this => temp_nl(i2)%this
         enddo
         map%length = size(map%nodes)
@@ -455,6 +456,7 @@ TOHW_m_dom_contents(`
         endif
         ! Otherwise there was no default value, so we just remove the node.
         ! and shrink the node list
+        if (getNodeType(np)==ATTRIBUTE_NODE) np%elExtras%ownerElement => null()
         temp_nl => map%nodes
         allocate(map%nodes(size(temp_nl)-1))
         do i2 = 1, i

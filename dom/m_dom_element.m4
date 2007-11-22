@@ -1,4 +1,3 @@
-dnl
 TOHW_m_dom_publics(`
   
   public :: getTagName
@@ -218,23 +217,14 @@ TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
 
     if (arg%nodeType /= ELEMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    elseif (.not.associated(arg%ownerDocument, oldattr%ownerDocument)) then
-      TOHW_m_dom_throw_error(WRONG_DOCUMENT_ERR)
-    elseif (arg%readonly) then
-      TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
     endif
 
-    do i = 0, getLength(getAttributes(arg)) - 1
-      attr => item(getAttributes(arg), i)
-      if (associated(attr, oldattr)) then
-        attr => removeNamedItem(getAttributes(arg), str_vs(oldattr%nodeName))
-        ! removeNamedItem took care of any default attributes
-        attr%elExtras%ownerElement => null()
-        return
-      endif
-    enddo
+    if (.not.associated(arg, getOwnerElement(oldattr))) then
+      TOHW_m_dom_throw_error(NOT_FOUND_ERR)
+    endif
 
-    TOHW_m_dom_throw_error(NOT_FOUND_ERR)
+    attr => removeNamedItem(getAttributes(arg), &
+      getNodeName(oldattr), ex)
 
   end function removeAttributeNode
 
@@ -455,23 +445,14 @@ TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
 
     if (arg%nodeType /= ELEMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    elseif (arg%readonly) then
-      TOHW_m_dom_throw_error(WRONG_DOCUMENT_ERR)
     endif
 
-    do i = 0, getLength(getAttributes(arg)) - 1
-      attr => item(getAttributes(arg), i)
-        if (associated(attr, oldattr)) then
-        attr => removeNamedItemNS(getAttributes(arg), &
-          getNamespaceURI(oldattr), getLocalName(oldattr))
-        ! removeNamedItemNS took care of any default attributes
-        return
-      endif
-    enddo
+    if (.not.associated(arg, getOwnerElement(oldattr))) then
+      TOHW_m_dom_throw_error(NOT_FOUND_ERR)
+    endif
 
-    TOHW_m_dom_throw_error(NOT_FOUND_ERR)
-
-    attr%elExtras%ownerElement => null()
+    attr => removeNamedItemNS(getAttributes(arg), &
+      getNamespaceURI(oldattr), getLocalName(oldattr), ex)
 
   end function removeAttributeNodeNS
 
