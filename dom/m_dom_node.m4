@@ -1322,8 +1322,8 @@ TOHW_m_dom_treewalk(`
 ',`')
     else
       arg%readonly = p
-      if (this%nodeType==ELEMENT_NODE) &
-        this%elExtras%attributes%readonly = p
+      if (arg%nodeType==ELEMENT_NODE) &
+        arg%elExtras%attributes%readonly = p
     endif
 
   end subroutine setReadOnlyNode
