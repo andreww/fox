@@ -3023,6 +3023,7 @@ endif
 
       if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
 
+
       new => null()
       select case(getNodeType(this))
       case (ELEMENT_NODE)
@@ -3569,7 +3570,7 @@ endif
       if (i==0) then
         arg%nodeName => vs_str_alloc(prefix//":"//str_vs(tmp))
       else
-        arg%nodeName => vs_str_alloc(prefix//str_vs(tmp(i+1:)))
+        arg%nodeName => vs_str_alloc(prefix//str_vs(tmp(i:)))
       endif
       deallocate(tmp)
     endif

@@ -979,7 +979,7 @@ TOHW_m_dom_set(DOMString, namespaceURI, np%elExtras%namespaceURI, (XPATH_NAMESPA
       if (i==0) then
         arg%nodeName => vs_str_alloc(prefix//":"//str_vs(tmp))
       else
-        arg%nodeName => vs_str_alloc(prefix//str_vs(tmp(i+1:)))
+        arg%nodeName => vs_str_alloc(prefix//str_vs(tmp(i:)))
       endif
       deallocate(tmp)
     endif
