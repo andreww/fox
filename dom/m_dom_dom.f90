@@ -4525,18 +4525,13 @@ endif
 
       endif
     endif
-    ! Note that the user can never add to the Entities/Notations
-    ! namedNodeMaps, so we do not have any checks for that.
 
     if (getNodeType(arg)==ATTRIBUTE_NODE) then
-      call setSpecified(arg, .true.)
-      ! This is the normal state of affairs. Always the
-      ! case when a user calls this routine. But m_dom_parse
-      ! will call with notations & entities
+      call setSpecified(arg, .true.) ! just in case it isnt already
       if (associated(map%ownerElement, getOwnerElement(arg))) then
+        ! we are looking at literally the same node
         np => arg
         return
-        ! Nothing to do, this attribute is already in this element
       elseif (associated(getOwnerElement(arg))) then
         if (getFoX_checks().or.INUSE_ATTRIBUTE_ERR<200) then
   call throw_exception(INUSE_ATTRIBUTE_ERR, "setNamedItem", ex)
@@ -4548,13 +4543,13 @@ endif
 endif
     
       endif
+      arg%elExtras%ownerElement => map%ownerElement
     endif
 
     do i = 0, getLength(map)-1
       np => item(map, i)
       if (getNodeName(np)==getNodeName(arg)) then
-        map%nodes(i)%this => arg
-        if (getNodeType(arg)==ATTRIBUTE_NODE) arg%elExtras%ownerElement => map%ownerElement
+        map%nodes(i+1)%this => arg
         exit
       endif
     enddo
@@ -4889,14 +4884,11 @@ endif
     endif
 
     if (getNodeType(arg)==ATTRIBUTE_NODE) then
-      call setSpecified(arg, .true.)
-      ! This is the normal state of affairs. Always the
-      ! case when a user calls this routine. But m_dom_parse
-      ! will call with notations & entities
+      call setSpecified(arg, .true.) ! in case it isnt already
       if (associated(map%ownerElement, getOwnerElement(arg))) then
+        ! we are looking at literally the same node, so do nothing else
         np => arg
         return
-        ! Nothing to do, this attribute is already in this element
       elseif (associated(getOwnerElement(arg))) then
         if (getFoX_checks().or.INUSE_ATTRIBUTE_ERR<200) then
   call throw_exception(INUSE_ATTRIBUTE_ERR, "setNamedItemNS", ex)
@@ -4908,13 +4900,13 @@ endif
 endif
     
       endif
+      arg%elExtras%ownerElement => map%ownerElement
     endif
 
     do i = 0, getLength(map) - 1
       np => item(map, i)
       if (getLocalName(arg)==getLocalName(np).and.getNamespaceURI(arg)==getNamespaceURI(np)) then
         map%nodes(i+1)%this => arg
-        if (getNodeType(arg)==ATTRIBUTE_NODE) arg%elExtras%ownerElement => map%ownerElement
         exit
       endif
     enddo
@@ -10783,8 +10775,8 @@ endif
 endif
 
     endif
-    ns = (getLocalName(getDocumentElement(doc))/="")
     dc => getDomConfig(doc)
+    ns = getParameter(dc, "namespaces")
     treeroot => doc
 
     call setGCstate(doc, .false.)

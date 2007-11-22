@@ -213,8 +213,8 @@ TOHW_m_dom_contents(`
     if (getNodeType(doc)/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
-    ns = (getLocalName(getDocumentElement(doc))/="")
     dc => getDomConfig(doc)
+    ns = getParameter(dc, "namespaces")
     treeroot => doc
 
     call setGCstate(doc, .false.)
