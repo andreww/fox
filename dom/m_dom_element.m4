@@ -525,8 +525,8 @@ TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
     endif
 
     p = .false.
-    do i = 1, getLength(getAttributes(arg))
-     attr => item(getAttributes(arg), i)
+    do i = 0, getLength(getAttributes(arg))-1
+      attr => item(getAttributes(arg), i)
       if (getNamespaceURI(attr)==namespaceURI &
         .and. getLocalName(attr)==localName) then
         p = .true.
