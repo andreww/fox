@@ -1317,9 +1317,13 @@ TOHW_m_dom_treewalk(`
       treeroot => arg
 TOHW_m_dom_treewalk(`
       this%readonly = p
+      if (this%nodeType==ELEMENT_NODE) &
+        this%elExtras%attributes%readonly = p
 ',`')
     else
       arg%readonly = p
+      if (this%nodeType==ELEMENT_NODE) &
+        this%elExtras%attributes%readonly = p
     endif
 
   end subroutine setReadOnlyNode

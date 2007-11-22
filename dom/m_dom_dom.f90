@@ -4082,6 +4082,8 @@ endif
       if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
 
       this%readonly = p
+      if (this%nodeType==ELEMENT_NODE) &
+        this%elExtras%attributes%readonly = p
 
       else
         if (getNodeType(this)==ELEMENT_NODE.and..not.doneChildren) then
@@ -4137,6 +4139,8 @@ endif
 
     else
       arg%readonly = p
+      if (this%nodeType==ELEMENT_NODE) &
+        this%elExtras%attributes%readonly = p
     endif
 
   end subroutine setReadOnlyNode
