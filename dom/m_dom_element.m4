@@ -437,7 +437,6 @@ TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
     ! It also does any adding/removing of hangingnodes
     ! and sets ownerElement appropriately
     dummy => setNamedItemNS(getAttributes(arg), newattr, ex)
-    newattr%elExtras%ownerElement => arg
     attr => dummy
 
   end function setAttributeNodeNS

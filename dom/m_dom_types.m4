@@ -77,6 +77,7 @@ TOHW_m_dom_publics(`
     type(Node), pointer :: ownerElement => null()
     logical :: specified = .true.
     logical :: isId = .false.
+    logical :: dom1 = .false.
   end type elementOrAttributeExtras
 
   type docTypeExtras

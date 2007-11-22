@@ -135,23 +135,23 @@ TOHW_m_dom_contents(`
       endif
     endif
 
-    np => null()
-    do i = 1, map%length
-      if (str_vs(map%nodes(i)%this%nodeName)==str_vs(arg%nodeName)) then
-        np => map%nodes(i)%this
+    do i = 0, getLength(map)-1
+      np => item(map, i)
+      if (getNodeName(np)==getNodeName(arg)) then
         map%nodes(i)%this => arg
-        arg%elExtras%ownerElement => map%ownerElement
+        if (getNodeType(arg)==ATTRIBUTE_NODE) arg%elExtras%ownerElement => map%ownerElement
         exit
       endif
     enddo
 
-    !   If not found, insert it at the end of the linked list
-    if (associated(np)) then
+    if (i<getLength(map)) then
       if (getGCstate(getOwnerDocument(map%ownerElement)).and.np%inDocument) then
         call removeNodesFromDocument(getOwnerDocument(map%ownerElement), np)
         np%inDocument = .false.
       endif
     else
+      !   If not found, insert it at the end of the linked list
+      np => null()
       call append_nnm(map, arg)
     endif
 
@@ -370,8 +370,6 @@ TOHW_m_dom_contents(`
         TOHW_m_dom_throw_error(HIERARCHY_REQUEST_ERR)
       endif
     endif
-    ! Note that the user can never add to the Entities/Notations
-    ! namedNodeMaps, so we do not have any checks for that.
 
     if (getNodeType(arg)==ATTRIBUTE_NODE) then
       call setSpecified(arg, .true.)
@@ -389,21 +387,21 @@ TOHW_m_dom_contents(`
 
     do i = 0, getLength(map) - 1
       np => item(map, i)
-! This will give silly results if you add a DOM level 1 node in here - should we throw an error?
       if (getLocalName(arg)==getLocalName(np).and.getNamespaceURI(arg)==getNamespaceURI(np)) then
         map%nodes(i+1)%this => arg
-        arg%elExtras%ownerElement => map%ownerElement
+        if (getNodeType(arg)==ATTRIBUTE_NODE) arg%elExtras%ownerElement => map%ownerElement
         exit
       endif
     enddo
 
-    !   If not found, insert it at the end of the linked list
     if (i<getLength(map)) then
       if (getGCstate(getOwnerDocument(map%ownerElement)).and.np%inDocument) then
         call removeNodesFromDocument(getOwnerDocument(map%ownerElement), np)
-        np%inDocument = .false.
+        arg%inDocument = .false.
       endif
     else
+      !   If not found, insert it at the end of the linked list
+      np => null()
       call append_nnm(map, arg)
     endif
 
@@ -419,7 +417,7 @@ TOHW_m_dom_contents(`
         endif
       endif
     endif
-    
+
   end function setNamedItemNS
 
 

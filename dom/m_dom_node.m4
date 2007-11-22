@@ -711,13 +711,13 @@ TOHW_m_dom_treewalk(`
       new => null()
       select case(getNodeType(this))
       case (ELEMENT_NODE)
-        if (getNamespaceURI(this)=="") then
+        if (this%elExtras%dom1) then
           new => createElement(doc, getTagName(this))
         else
           new => createElementNS(doc, getNamespaceURI(this), getTagName(this))
         endif
       case (ATTRIBUTE_NODE)
-        if (getNamespaceURI(this)=="") then 
+        if (this%elExtras%dom1) then 
           new => createAttribute(doc, getName(this))
         else
           new => createAttributeNS(doc, getNamespaceURI(this), getName(this))

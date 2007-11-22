@@ -155,6 +155,7 @@ TOHW_m_dom_get(Node, documentElement, np%docExtras%documentElement, (DOCUMENT_NO
     
     np => createNode(arg, ELEMENT_NODE, tagName, "")
     allocate(np%elExtras)
+    np%elExtras%dom1 = .true.
     np%elExtras%attributes%ownerElement => np
     allocate(np%elExtras%namespaceURI(0))
     allocate(np%elExtras%prefix(0))
@@ -335,6 +336,7 @@ TOHW_m_dom_get(Node, documentElement, np%docExtras%documentElement, (DOCUMENT_NO
   
     np => createNode(arg, ATTRIBUTE_NODE, name, "")
     allocate(np%elExtras)
+    np%elExtras%dom1 = .true.
     allocate(np%elExtras%namespaceURI(0))
     allocate(np%elExtras%prefix(0))
     allocate(np%elExtras%localname(0))

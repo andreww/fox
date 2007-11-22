@@ -203,6 +203,7 @@ module m_dom_dom
     type(Node), pointer :: ownerElement => null()
     logical :: specified = .true.
     logical :: isId = .false.
+    logical :: dom1 = .false.
   end type elementOrAttributeExtras
 
   type docTypeExtras
@@ -3027,13 +3028,13 @@ endif
       new => null()
       select case(getNodeType(this))
       case (ELEMENT_NODE)
-        if (getNamespaceURI(this)=="") then
+        if (this%elExtras%dom1) then
           new => createElement(doc, getTagName(this))
         else
           new => createElementNS(doc, getNamespaceURI(this), getTagName(this))
         endif
       case (ATTRIBUTE_NODE)
-        if (getNamespaceURI(this)=="") then 
+        if (this%elExtras%dom1) then 
           new => createAttribute(doc, getName(this))
         else
           new => createAttributeNS(doc, getNamespaceURI(this), getName(this))
@@ -4549,23 +4550,23 @@ endif
       endif
     endif
 
-    np => null()
-    do i = 1, map%length
-      if (str_vs(map%nodes(i)%this%nodeName)==str_vs(arg%nodeName)) then
-        np => map%nodes(i)%this
+    do i = 0, getLength(map)-1
+      np => item(map, i)
+      if (getNodeName(np)==getNodeName(arg)) then
         map%nodes(i)%this => arg
-        arg%elExtras%ownerElement => map%ownerElement
+        if (getNodeType(arg)==ATTRIBUTE_NODE) arg%elExtras%ownerElement => map%ownerElement
         exit
       endif
     enddo
 
-    !   If not found, insert it at the end of the linked list
-    if (associated(np)) then
+    if (i<getLength(map)) then
       if (getGCstate(getOwnerDocument(map%ownerElement)).and.np%inDocument) then
         call removeNodesFromDocument(getOwnerDocument(map%ownerElement), np)
         np%inDocument = .false.
       endif
     else
+      !   If not found, insert it at the end of the linked list
+      np => null()
       call append_nnm(map, arg)
     endif
 
@@ -4886,8 +4887,6 @@ endif
 
       endif
     endif
-    ! Note that the user can never add to the Entities/Notations
-    ! namedNodeMaps, so we do not have any checks for that.
 
     if (getNodeType(arg)==ATTRIBUTE_NODE) then
       call setSpecified(arg, .true.)
@@ -4913,21 +4912,21 @@ endif
 
     do i = 0, getLength(map) - 1
       np => item(map, i)
-! This will give silly results if you add a DOM level 1 node in here - should we throw an error?
       if (getLocalName(arg)==getLocalName(np).and.getNamespaceURI(arg)==getNamespaceURI(np)) then
         map%nodes(i+1)%this => arg
-        arg%elExtras%ownerElement => map%ownerElement
+        if (getNodeType(arg)==ATTRIBUTE_NODE) arg%elExtras%ownerElement => map%ownerElement
         exit
       endif
     enddo
 
-    !   If not found, insert it at the end of the linked list
     if (i<getLength(map)) then
       if (getGCstate(getOwnerDocument(map%ownerElement)).and.np%inDocument) then
         call removeNodesFromDocument(getOwnerDocument(map%ownerElement), np)
-        np%inDocument = .false.
+        arg%inDocument = .false.
       endif
     else
+      !   If not found, insert it at the end of the linked list
+      np => null()
       call append_nnm(map, arg)
     endif
 
@@ -4943,7 +4942,7 @@ endif
         endif
       endif
     endif
-    
+
   end function setNamedItemNS
 
 
@@ -5736,6 +5735,7 @@ endif
     
     np => createNode(arg, ELEMENT_NODE, tagName, "")
     allocate(np%elExtras)
+    np%elExtras%dom1 = .true.
     np%elExtras%attributes%ownerElement => np
     allocate(np%elExtras%namespaceURI(0))
     allocate(np%elExtras%prefix(0))
@@ -6090,6 +6090,7 @@ endif
   
     np => createNode(arg, ATTRIBUTE_NODE, name, "")
     allocate(np%elExtras)
+    np%elExtras%dom1 = .true.
     allocate(np%elExtras%namespaceURI(0))
     allocate(np%elExtras%prefix(0))
     allocate(np%elExtras%localname(0))
@@ -9074,7 +9075,6 @@ endif
     ! It also does any adding/removing of hangingnodes
     ! and sets ownerElement appropriately
     dummy => setNamedItemNS(getAttributes(arg), newattr, ex)
-    newattr%elExtras%ownerElement => arg
     attr => dummy
 
   end function setAttributeNodeNS
