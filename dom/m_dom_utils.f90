@@ -24,7 +24,8 @@ module m_dom_utils
   use m_dom_dom, only: getNamespaceNodes, getStringValue, getXds, namespaceFixup
 
   use m_dom_error, only: DOMException, inException, throw_exception,           &
-    SERIALIZE_ERR, FoX_INTERNAL_ERROR, FoX_INVALID_NODE
+    getExceptionCode,                                                          &
+    NAMESPACE_ERR, SERIALIZE_ERR, FoX_INTERNAL_ERROR, FoX_INVALID_NODE
 
   use FoX_wxml, only: xmlf_t,                                                  &
     xml_AddAttribute, xml_AddCharacters, xml_AddComment, xml_AddElementToDTD,  &
@@ -134,7 +135,31 @@ endif
 endif
 
       endif
-      call normalizeDocument(startNode)
+      call normalizeDocument(startNode, ex)
+      if (present(ex)) then
+        ! Only possible error should be namespace error ...
+        if (getExceptionCode(ex)/=NAMESPACE_ERR) then
+          if (getFoX_checks().or.FoX_INTERNAL_ERROR<200) then
+  call throw_exception(FoX_INTERNAL_ERROR, "serialize", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+        else
+          if (getFoX_checks().or.SERIALIZE_ERR<200) then
+  call throw_exception(SERIALIZE_ERR, "serialize", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+        endif
+      endif
     else
       doc => getOwnerDocument(startNode)
       ! We need to do this namespace fixup or serialization will fail.
