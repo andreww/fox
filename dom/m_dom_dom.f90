@@ -3023,7 +3023,6 @@ endif
 
       if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
 
-
       new => null()
       select case(getNodeType(this))
       case (ELEMENT_NODE)
@@ -3051,6 +3050,7 @@ endif
         ERchild => this
         readonly = .true.
         new => createEntityReference(doc, getNodeName(this))
+        doneChildren = .true.
       case (ENTITY_NODE)
         return
       case (PROCESSING_INSTRUCTION_NODE)

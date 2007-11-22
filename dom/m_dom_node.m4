@@ -735,6 +735,7 @@ TOHW_m_dom_treewalk(`
         ERchild => this
         readonly = .true.
         new => createEntityReference(doc, getNodeName(this))
+        doneChildren = .true.
       case (ENTITY_NODE)
         return
       case (PROCESSING_INSTRUCTION_NODE)
