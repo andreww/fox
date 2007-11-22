@@ -1,5 +1,5 @@
 .SUFFIXES:
-.SUFFIXES: .@OBJEXT@ .a .f90 .F90 .m4 .exe
+.SUFFIXES: .@OBJEXT@ .a .f90 .F90 .m4 .exe .xml
 
 BUILD_TARGETS=@BUILD_TARGETS@
 
