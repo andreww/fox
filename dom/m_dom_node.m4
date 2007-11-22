@@ -1069,14 +1069,12 @@ TOHW_m_dom_set(DOMString, namespaceURI, np%elExtras%namespaceURI, (XPATH_NAMESPA
 
     p = .false.
     if (associated(el)) then
-      if (size(el%elExtras%namespaceURI)>0) then
-        do i = 1, el%elExtras%namespaceNodes%length
-          if (size(el%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)==0) then
-            p = (str_vs(el%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)==namespaceURI)
-            return
-          endif
-        enddo
-      endif
+      do i = 1, el%elExtras%namespaceNodes%length
+        if (size(el%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)==0) then
+          p = (str_vs(el%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)==namespaceURI)
+          return
+        endif
+      enddo
     endif
   end function isDefaultNamespace
 
@@ -1104,39 +1102,33 @@ TOHW_m_dom_set(DOMString, namespaceURI, np%elExtras%namespaceURI, (XPATH_NAMESPA
 
     select case(np%nodeType)
     case (ELEMENT_NODE)
-      if (size(np%elExtras%namespaceURI)>0) then
-        do i = 1, np%elExtras%namespaceNodes%length
-          if (str_vs(np%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)==prefix) then
-            n = size(np%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)
+      do i = 1, np%elExtras%namespaceNodes%length
+        if (str_vs(np%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)==prefix) then
+          n = size(np%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)
+          return
+        endif
+      enddo
+    case (ATTRIBUTE_NODE)
+      if (associated(np%elExtras%ownerElement)) then
+        do i = 1, np%elExtras%ownerElement%elExtras%namespaceNodes%length
+          if (str_vs(np%elExtras%ownerElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)==prefix) then
+            n = size(np%elExtras%ownerElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)
             return
           endif
         enddo
       endif
-    case (ATTRIBUTE_NODE)
-      if (associated(np%elExtras%ownerElement)) then
-        if (size(np%elExtras%ownerElement%elExtras%namespaceURI)>0) then
-          do i = 1, np%elExtras%ownerElement%elExtras%namespaceNodes%length
-            if (str_vs(np%elExtras%ownerElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)==prefix) then
-              n = size(np%elExtras%ownerElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)
-              return
-            endif
-          enddo
-        endif
-      endif
     case (DOCUMENT_NODE)
       if (associated(np%docExtras%documentElement)) then
-        if (size(np%docExtras%documentElement%elExtras%namespaceURI)>0) then
-          do i = 1, np%docExtras%documentElement%elExtras%namespaceNodes%length
-            if (str_vs(np%docExtras%documentElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)==prefix) then
-              n = size(np%docExtras%documentElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)
-              return
-            endif
-          enddo
-        endif
+        do i = 1, np%docExtras%documentElement%elExtras%namespaceNodes%length
+          if (str_vs(np%docExtras%documentElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)==prefix) then
+            n = size(np%docExtras%documentElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)
+            return
+          endif
+        enddo
       endif
     end select
 
-    end function lookupNamespaceURI_len
+  end function lookupNamespaceURI_len
 
   TOHW_function(lookupNamespaceURI, (np, prefix), c)
     type(Node), pointer :: np
@@ -1169,17 +1161,17 @@ TOHW_m_dom_set(DOMString, namespaceURI, np%elExtras%namespaceURI, (XPATH_NAMESPA
     else
       c = ""
     endif
+
     if (associated(el)) then
-      if (size(el%elExtras%namespaceURI)>0) then
-        do i = 1, el%elExtras%namespaceNodes%length
-          if (str_vs(el%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)==prefix) then
-            c = str_vs(el%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)
-            return
-          endif
-        enddo
-      endif
+      do i = 1, el%elExtras%namespaceNodes%length
+        if (str_vs(el%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)==prefix) then
+          c = str_vs(el%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)
+          return
+        endif
+      enddo
     endif
-    end function lookupNamespaceURI
+
+  end function lookupNamespaceURI
 
   pure function lookupPrefix_len(np, namespaceURI, p) result(n)
     type(Node), pointer :: np
@@ -1207,35 +1199,29 @@ TOHW_m_dom_set(DOMString, namespaceURI, np%elExtras%namespaceURI, (XPATH_NAMESPA
 
     select case(np%nodeType)
     case (ELEMENT_NODE)
-      if (size(np%elExtras%namespaceURI)>0) then
-        do i = 1, np%elExtras%namespaceNodes%length
-          if (str_vs(np%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)==namespaceURI) then
-            n = size(np%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)
+      do i = 1, np%elExtras%namespaceNodes%length
+        if (str_vs(np%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)==namespaceURI) then
+          n = size(np%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)
+          return
+        endif
+      enddo
+    case (ATTRIBUTE_NODE)
+      if (associated(np%elExtras%ownerElement)) then
+        do i = 1, np%elExtras%ownerElement%elExtras%namespaceNodes%length
+          if (str_vs(np%elExtras%ownerElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)==namespaceURI) then
+            n = size(np%elExtras%ownerElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)
             return
           endif
         enddo
       endif
-    case (ATTRIBUTE_NODE)
-      if (associated(np%elExtras%ownerElement)) then
-        if (size(np%elExtras%ownerElement%elExtras%namespaceURI)>0) then
-          do i = 1, np%elExtras%ownerElement%elExtras%namespaceNodes%length
-            if (str_vs(np%elExtras%ownerElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)==namespaceURI) then
-              n = size(np%elExtras%ownerElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)
-              return
-            endif
-          enddo
-        endif
-      endif
     case (DOCUMENT_NODE)
       if (associated(np%docExtras%documentElement)) then
-        if (size(np%docExtras%documentElement%elExtras%namespaceURI)>0) then
-          do i = 1, np%docExtras%documentElement%elExtras%namespaceNodes%length
-            if (str_vs(np%docExtras%documentElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)==namespaceURI) then
-              n = size(np%docExtras%documentElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)
-              return
-            endif
-          enddo
-        endif
+        do i = 1, np%docExtras%documentElement%elExtras%namespaceNodes%length
+          if (str_vs(np%docExtras%documentElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)==namespaceURI) then
+            n = size(np%docExtras%documentElement%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)
+            return
+          endif
+        enddo
       endif
     end select
 
@@ -1276,16 +1262,14 @@ TOHW_m_dom_set(DOMString, namespaceURI, np%elExtras%namespaceURI, (XPATH_NAMESPA
       c = ""
     endif
     if (associated(el)) then
-      if (size(el%elExtras%namespaceURI)>0) then
-        do i = 1, el%elExtras%namespaceNodes%length
-          if (str_vs(el%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)==namespaceURI) then
-            c = str_vs(el%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)
-            return
-          endif
-        enddo
-      endif
+      do i = 1, el%elExtras%namespaceNodes%length
+        if (str_vs(el%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)==namespaceURI) then
+          c = str_vs(el%elExtras%namespaceNodes%nodes(i)%this%elExtras%prefix)
+          return
+        endif
+      enddo
     endif
-    end function lookupPrefix
+  end function lookupPrefix
 
   ! function getUserData
   ! function setUserData
