@@ -125,15 +125,10 @@ TOHW_m_dom_contents(`
     
     if (qualifiedName/="") then
       ! NB It is impossible to create a non-namespaced document.
-      ! although namespaceURI may be null, which appears to be
-      ! the intended way to do that.
-      if (namespaceURI/="") then
-        de => createElementNS(doc, namespaceURI, qualifiedName)
-      else
-        de => createElement(doc, qualifiedName)
-      endif
-        de => appendChild(doc, de)
-        call setDocumentElement(doc, de)
+      ! since createDocument doesnt exist in DOM Core 1
+      de => createElementNS(doc, namespaceURI, qualifiedName)
+      de => appendChild(doc, de)
+      call setDocumentElement(doc, de)
     endif
 
     call setGCstate(doc, .true.)
