@@ -1153,8 +1153,10 @@ contains
          call wxml_error(xf, "invalid attribute name: "//name)
 
     if (len(prefixOfQName(name))>0) then
-      if (.not.isPrefixInForce(xf%nsDict, prefixOfQName(name))) &
-        call wxml_error(xf, "namespace prefix not registered: "//prefixOfQName(name))
+      if (prefixOfQName(name)/="xml".and.prefixOfQName(name)/="xmlns") then
+        if (.not.isPrefixInForce(xf%nsDict, prefixOfQName(name))) &
+          call wxml_error(xf, "namespace prefix not registered: "//prefixOfQName(name))
+      endif
       if (esc) then
         call add_item_to_dict(xf%dict, localpartofQname(name), escape_string(value, xf%xds%xml_version), prefixOfQName(name), &
           getnamespaceURI(xf%nsDict,prefixOfQname(name)), type=str_vs(type_))
