@@ -1703,12 +1703,12 @@ contains
             elseif (associated(fx%publicId)) then
               call register_external_GE(fx%xds, str_vs(fx%name), str_vs(fx%systemId), public=str_vs(fx%publicId))
               if (present(externalEntityDecl_handler)) &
-                call externalEntityDecl_handler('%'//str_vs(fx%name), &
+                call externalEntityDecl_handler(str_vs(fx%name), &
                 systemId=resolveSystemId(str_vs(fx%systemId)), publicId=str_vs(fx%publicId))
             else
               call register_external_GE(fx%xds, str_vs(fx%name), str_vs(fx%systemId))
               if (present(externalEntityDecl_handler)) &
-                call externalEntityDecl_handler('%'//str_vs(fx%name), &
+                call externalEntityDecl_handler(str_vs(fx%name), &
                 systemId=resolveSystemId(str_vs(fx%systemId)))
             endif
           endif
