@@ -860,12 +860,7 @@ contains
     select case (xf%state_1)
     case (WXML_STATE_1_JUST_OPENED) 
       xf%state_1 = WXML_STATE_1_BEFORE_ROOT
-    case (WXML_STATE_1_BEFORE_ROOT)
-      call close_start_tag(xf)
-      call add_eol(xf)
-    case (WXML_STATE_1_DURING_ROOT)
-      call close_start_tag(xf)
-    case (WXML_STATE_1_AFTER_ROOT)
+    case default
       call close_start_tag(xf)
       call add_eol(xf)
     end select
@@ -1294,6 +1289,7 @@ contains
     type(xmlf_t), intent(inout)             :: xf
     character(len=*), intent(in)            :: name
 
+    character :: dummy
 #ifndef DUMMYLIB
     call check_xf(xf)
     ! No point in doing checkChars, name is compared to stack anyway.
@@ -1314,21 +1310,19 @@ contains
       if (xf%preserve_whitespace) call add_eol(xf)
       call add_to_buffer("/>",xf%buffer, .false.)
       call devnull(pop_elstack(xf%stack))
-    case (WXML_STATE_2_OUTSIDE_TAG, WXML_STATE_2_IN_CHARDATA)
+    case (WXML_STATE_2_OUTSIDE_TAG, WXML_STATE_2_IN_CHARDATA, WXML_STATE_2_INSIDE_PI)
+      if (xf%state_2==WXML_STATE_2_INSIDE_PI) call close_start_tag(xf)
       if (.not.xf%preserve_whitespace.and.xf%state_2==WXML_STATE_2_OUTSIDE_TAG) call add_eol(xf)
 ! XLF does a weird thing here, and if pop_elstack is called as an 
 ! argument to the call, it gets called twice. So we have to separate
 ! out get_top_... from pop_...
       call add_to_buffer("</" //get_top_elstack(xf%stack), xf%buffer, .false.)
-      call devnull(pop_elstack(xf%stack))
+      dummy = pop_elstack(xf%stack)
       if (xf%preserve_whitespace) call add_eol(xf)
       call add_to_buffer(">", xf%buffer, .false.)
-    case (WXML_STATE_2_INSIDE_PI)
-      call close_start_tag(xf)
     end select
 
     call checkEndNamespaces(xf%nsDict, len(xf%stack)+1)
-    
     if (is_empty(xf%stack)) then
       xf%state_1 = WXML_STATE_1_AFTER_ROOT
     endif
@@ -1420,7 +1414,6 @@ contains
     endif
     
     do while (xf%state_1 == WXML_STATE_1_DURING_ROOT)
-      if (xf%state_1 == WXML_STATE_1_AFTER_ROOT) exit
       call xml_EndElement(xf, get_top_elstack(xf%stack))
     enddo
 
