@@ -116,6 +116,11 @@ module m_dom_dom
     ! FIXME make sure this is 32 bit at least.
   end type DOMConfiguration
 
+  interface canSetParameter
+    module procedure canSetParameter_log
+    module procedure canSetParameter_ch
+  end interface canSetParameter
+
   public :: setParameter
   public :: getParameter
   public :: canSetParameter
@@ -666,13 +671,13 @@ endif
 
   end function getParameter
 
-  function canSetParameter(domConfig, name, value, ex)result(p) 
+  function canSetParameter_log(domConfig, name, value, ex)result(p) 
     type(DOMException), intent(out), optional :: ex
     type(DOMConfiguration), pointer :: domConfig
     character(len=*), intent(in) :: name
     logical, intent(in) :: value
-
     logical :: p
+
     integer :: i, n
 
     if (toLower(name)=="infoset") then
@@ -692,7 +697,21 @@ endif
 
     p = btest(paramSettable, n)
 
-  end function canSetParameter
+  end function canSetParameter_log
+
+  function canSetParameter_ch(domConfig, name, value, ex)result(p) 
+    type(DOMException), intent(out), optional :: ex
+    type(DOMConfiguration), pointer :: domConfig
+    character(len=*), intent(in) :: name
+    character(len=*), intent(in) :: value
+    logical :: p
+
+    ! DOM 3 allows some config options to be set to strings
+    ! (eg schemaLocation) but we dont support any of these,
+    ! so no parameter can be set to a string.
+    p = .false.
+
+  end function canSetParameter_ch
 
   function getParameterNames(domConfig, ex)result(s) 
     type(DOMException), intent(out), optional :: ex
