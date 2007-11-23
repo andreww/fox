@@ -334,8 +334,6 @@ contains
     character(len=*), intent(in) :: systemId
     type(Node), pointer :: np
 
-    np => createEntity(mainDoc, name, publicId=publicId, systemId=systemId, notationName="")
-
     np => getNamedItem(getEntities(getDocType(mainDoc)), name)
     if (.not.associated(np)) then
       np => createEntity(mainDoc, name, publicId=publicId, systemId=systemId, notationName="")
