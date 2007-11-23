@@ -369,15 +369,18 @@ contains
       if (present(public)) then
         if (.not.checkPublicId(public)) &
           call wxml_error("Invalid PUBLIC ID "//public)
-        call add_to_buffer(' PUBLIC ', xf%buffer, .false.)
-        call add_to_buffer('"'//public//'"', xf%buffer, .true.)
-        call add_to_buffer(' ', xf%buffer, .false.)
+        call add_to_buffer(' PUBLIC', xf%buffer, .false.)
+        call add_to_buffer(' "'//public//'"', xf%buffer, .true.)
       else
-        call add_to_buffer(' SYSTEM ', xf%buffer, .false.)
+        call add_to_buffer(' SYSTEM', xf%buffer, .false.)
       endif
-      if (.not.checkSystemId(system)) &
+      if (scan(system, "'")/=0) then
+        if (scan(system, '"')/=0) &
           call wxml_error("Invalid SYSTEM ID "//system)
-      call add_to_buffer("'"//system//"'", xf%buffer, .true.)
+        call add_to_buffer(' "'//system//'"', xf%buffer, .true.)
+      else
+        call add_to_buffer(" '"//system//"'", xf%buffer, .true.)
+      endif
     endif
 #endif
   end subroutine xml_AddDOCTYPE
@@ -460,18 +463,17 @@ contains
         call add_to_buffer('>', xf%buffer, .false.)
     else
       if (present(public)) then
-        call add_to_buffer(' PUBLIC ', xf%buffer, .false.)
-        call add_to_buffer('"'//public//'"', xf%buffer, .true.)
-        call add_to_buffer(' ', xf%buffer, .false.)
+        call add_to_buffer(' PUBLIC', xf%buffer, .false.)
+        call add_to_buffer(' "'//public//'"', xf%buffer, .true.)
       else
-        call add_to_buffer(' SYSTEM ', xf%buffer, .false.)
+        call add_to_buffer(' SYSTEM', xf%buffer, .false.)
       endif
       if (scan(system, "'")/=0) then
         if (scan(system, '"')/=0) &
           call wxml_error("Invalid SYSTEM ID "//system)
-        call add_to_buffer('"'//system//'"', xf%buffer, .true.)
+        call add_to_buffer(' "'//system//'"', xf%buffer, .true.)
       else
-        call add_to_buffer("'"//system//"'", xf%buffer, .true.)
+        call add_to_buffer(" '"//system//"'", xf%buffer, .true.)
       endif
       call add_to_buffer(">", xf%buffer)
     endif
@@ -602,18 +604,17 @@ contains
     
     call add_to_buffer('<!ENTITY '//name, xf%buffer, .false.)
     if (present(public)) then
-      call add_to_buffer(" PUBLIC ", xf%buffer, .false.)
-      call add_to_buffer('"'//public//'"', xf%buffer, .true.)
-      call add_to_buffer(" ", xf%buffer, .false.)
+      call add_to_buffer(" PUBLIC", xf%buffer, .false.)
+      call add_to_buffer(' "'//public//'"', xf%buffer, .true.)
     else
-      call add_to_buffer('SYSTEM ', xf%buffer, .false.)
+      call add_to_buffer(' SYSTEM', xf%buffer, .false.)
     endif
     if (scan(system, "'")/=0) then
       if (scan(system, '"')/=0) &
         call wxml_error("Invalid SYSTEM ID "//system)
-      call add_to_buffer('"'//system//'"', xf%buffer, .true.)
+      call add_to_buffer(' "'//system//'"', xf%buffer, .true.)
     else
-      call add_to_buffer("'"//system//"'", xf%buffer, .true.)
+      call add_to_buffer(" '"//system//"'", xf%buffer, .true.)
     endif
     if (present(notation)) then
       ! FIXME Has notation been declared yet?
@@ -672,17 +673,16 @@ contains
     call add_notation(xf%xds%nList, name, system, public)
     call add_to_buffer('<!NOTATION '//name, xf%buffer, .false.)
     if (present(public)) then
-      call add_to_buffer(" PUBLIC ", xf%buffer, .false.)
-      call add_to_buffer('"'//public//'"', xf%buffer, .true.)
-      call add_to_buffer(" ", xf%buffer, .false.)
+      call add_to_buffer(" PUBLIC", xf%buffer, .false.)
+      call add_to_buffer(' "'//public//'"', xf%buffer, .true.)
     elseif (present(system)) then
-      call add_to_buffer(' SYSTEM ', xf%buffer, .false.)
+      call add_to_buffer(' SYSTEM', xf%buffer, .false.)
     endif
     if (present(system)) then
       if (index(system, '"') > 0) then
-        call add_to_buffer('"'//system//'"', xf%buffer, .true.)
+        call add_to_buffer(' "'//system//'"', xf%buffer, .true.)
       else
-        call add_to_buffer("'"//system//"'", xf%buffer, .true.)
+        call add_to_buffer(" '"//system//"'", xf%buffer, .true.)
       endif
     endif
     call add_to_buffer('>', xf%buffer, .false.)
