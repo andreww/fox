@@ -1092,11 +1092,8 @@ TOHW_m_dom_set(DOMString, namespaceURI, np%elExtras%namespaceURI, (XPATH_NAMESPA
       .and. np%nodeType/=ATTRIBUTE_NODE &
       .and. np%nodeType/=DOCUMENT_NODE) return
 
-    if (prefix=="xml") then
-      n = len("http://www.w3.org/XML/1998/namespace")
-      return
-    elseif (prefix=="xmlns") then
-      n = len("http://www.w3.org/2000/xmlns/")
+    if (prefix=="xml".or.prefix=="xmlns") then
+      n = 0
       return
     endif
 
@@ -1142,6 +1139,11 @@ TOHW_m_dom_set(DOMString, namespaceURI, np%elExtras%namespaceURI, (XPATH_NAMESPA
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif
 
+    if (len(c)==0) then
+      c = ""
+      return
+    endif
+
     el => null()
     select case(getNodeType(np))
     case (ELEMENT_NODE)
@@ -1151,16 +1153,6 @@ TOHW_m_dom_set(DOMString, namespaceURI, np%elExtras%namespaceURI, (XPATH_NAMESPA
     case (DOCUMENT_NODE)
       el => getDocumentElement(np)
     end select
-
-    if (prefix=="xml") then
-      c = "http://www.w3.org/XML/1998/namespace"
-      return
-    elseif (prefix=="xmlns") then
-      c = "http://www.w3.org/2000/xmlns/"
-      return
-    else
-      c = ""
-    endif
 
     if (associated(el)) then
       do i = 1, el%elExtras%namespaceNodes%length
@@ -1187,13 +1179,9 @@ TOHW_m_dom_set(DOMString, namespaceURI, np%elExtras%namespaceURI, (XPATH_NAMESPA
       .and. np%nodeType/=ATTRIBUTE_NODE &
       .and. np%nodeType/=DOCUMENT_NODE) return
     
-    if (namespaceURI=="") then
-      return
-    elseif (namespaceURI=="http://www.w3.org/XML/1998/namespace") then
-      n = len("xml")
-      return
-    elseif (namespaceURI=="http://www.w3.org/2000/xmlns/") then
-      n = len("xmlns")
+    if (namespaceURI=="" &
+      .or. namespaceURI=="http://www.w3.org/XML/1998/namespace" &
+      .or. namespaceURI=="http://www.w3.org/2000/xmlns/") then
       return
     endif
 
@@ -1239,6 +1227,11 @@ TOHW_m_dom_set(DOMString, namespaceURI, np%elExtras%namespaceURI, (XPATH_NAMESPA
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif
 
+    if (len(c)==0) then
+      c = ""
+      return
+    endif
+
     el => null()
     select case(getNodeType(np))
     case (ELEMENT_NODE)
@@ -1249,18 +1242,6 @@ TOHW_m_dom_set(DOMString, namespaceURI, np%elExtras%namespaceURI, (XPATH_NAMESPA
       el => getDocumentElement(np)
     end select
 
-    if (namespaceURI=="") then
-      c = ""
-      return
-    elseif (namespaceURI=="http://www.w3.org/XML/1998/namespace") then
-      c = "xml"
-      return
-    elseif (namespaceURI=="http://www.w3.org/2000/xmlns/") then
-      c = "xmlns"
-      return
-    else
-      c = ""
-    endif
     if (associated(el)) then
       do i = 1, el%elExtras%namespaceNodes%length
         if (str_vs(el%elExtras%namespaceNodes%nodes(i)%this%elExtras%namespaceURI)==namespaceURI) then
