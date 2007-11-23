@@ -95,6 +95,8 @@ define(`TOHW_m_dom_namespaceFixup', `'`
         attr => item(attrs, i)
         if (getNamespaceURI(attr)=="http://www.w3.org/2000/xmlns/") then
           cycle ! We already worried about it above.
+        elseif (getNamespaceURI(attr)=="http://www.w3.org/XML/1998/namespace") then
+          cycle ! We dont have to declare these
         elseif (getNamespaceURI(attr)/="") then
           ! This is a namespaced attribute
           if (getPrefix(attr)=="" &
