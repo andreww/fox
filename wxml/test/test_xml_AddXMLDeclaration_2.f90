@@ -8,6 +8,7 @@ program test
 
   call xml_OpenFile(filename, xf, addDecl=.false.)
   call xml_AddXMLDeclaration(xf, encoding='UTF-8')
+  call xml_NewElement(xf, "a")
   call xml_Close(xf)
 
 end program test

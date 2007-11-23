@@ -453,12 +453,12 @@ contains
 
     call add_eol(xf)
 
-    call add_to_buffer('<!ENTITY % '//name//' ', xf%buffer, .false.) ! name can never contain whitespace
+    call add_to_buffer('<!ENTITY % '//name, xf%buffer, .false.) ! name can never contain whitespace
     if (present(PEdef)) then
       if (index(PEdef, '"') > 0) then
-        call add_to_buffer("'"//PEdef//"'", xf%buffer, .true.)
+        call add_to_buffer(" '"//PEdef//"'", xf%buffer, .true.)
       else
-        call add_to_buffer('"'//PEdef//'"', xf%buffer, .true.)
+        call add_to_buffer(' "'//PEdef//'"', xf%buffer, .true.)
       endif
         call add_to_buffer('>', xf%buffer, .false.)
     else
@@ -1118,7 +1118,7 @@ contains
 
     if (.not.esc) then
       if (.not.checkAttValue(value, xf%xds)) &
-        call wxml_error(xf, "Invalid pseudo-attribute value: "//value)
+        call wxml_error(xf, "Invalid attribute value: "//value)
       if (index(value, '&') > 0) then
         ! There are entity references
         ! They should exist (unless we are not standalone) and they must not be unparsed.

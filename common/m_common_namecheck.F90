@@ -277,7 +277,11 @@ contains
     character(len=*), intent(in) :: value
     type(xml_doc_state), intent(in) :: xds
     logical :: p
-
+    ! This function is called basically to make sure
+    ! that any attribute value looks like one. It will
+    ! not flag up out-of-range character entities, and
+    ! is a very weak check. Only used from xml_AddAttribute
+    ! when escaping is off.
     integer :: i1, i2
 
     p = .false.
@@ -287,13 +291,16 @@ contains
       i1 = index(value, '&')
       i2 = 0
       do while (i1 > 0)
-        i1 = i2 + 1
+        i1 = i1 + i2 + 1
         i2 = scan(value(i1+1:),';')
         if (i2 == 0) return
         i2 = i1 + i2
         if (.not.checkName(value(i1+1:i2-1), xds) .and. &
-          .not.checkCharacterEntityReference(value(i1+1:i2-1), xds%xml_version)) &
+          .not.likeCharacterEntityReference(value(i1+1:i2-1))) then
+          print*, value(i1+1:i2-1), " ", &
+            likeCharacterEntityReference(value(i1+1:i2-1))
           return
+        endif
         i1 = index(value(i2+1:), '&')
       enddo
       p = .true.

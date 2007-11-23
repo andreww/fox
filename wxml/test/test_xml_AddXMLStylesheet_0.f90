@@ -1,7 +1,6 @@
 program test
 
-  use FoX_wxml, only : xmlf_t
-  use FoX_wxml, only : xml_AddXMLStylesheet
+  use FoX_wxml
   implicit none
 
   character(len=*), parameter :: filename = 'test.xml'

@@ -1,7 +1,6 @@
 program test
 
-  use FoX_wxml, only : xmlf_t, xml_OpenFile, xml_Close
-  use FoX_wxml, only : xml_AddXMLPI, xml_AddPseudoAttribute
+  use FoX_wxml
   implicit none
 
   character(len=*), parameter :: filename = 'test.xml'
@@ -10,6 +9,7 @@ program test
   call xml_OpenFile(filename, xf)
   call xml_AddXMLPI(xf, "root")
   call xml_AddPseudoAttribute(xf, "att", "value")
+  call xml_NewElement(xf, "a")
   call xml_Close(xf)
 
 end program test
