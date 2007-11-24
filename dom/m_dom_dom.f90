@@ -1940,6 +1940,8 @@ endif
 
     call updateNodeLists(arg%ownerDocument)
 
+    call updateTextContentLength(arg, newChild%textContentLength)
+
   end function insertBefore
 
 
@@ -2447,6 +2449,8 @@ endif
 
     call updateNodeLists(arg%ownerDocument)
 
+    call updateTextContentLength(arg, newChild%textContentLength-oldChild%textContentLength)
+
   end function replaceChild
 
 
@@ -2540,6 +2544,8 @@ endif
     np => oldChild
 
     call updateNodeLists(arg%ownerDocument)
+
+    call updateTextContentLength(arg, -oldChild%textContentLength)
 
   end function removeChild
 
@@ -3009,6 +3015,8 @@ endif
     np => newChild
 
     call updateNodeLists(arg%ownerDocument)
+
+    call updateTextContentLength(arg, newChild%textContentLength)
 
   end function appendChild
 
@@ -4114,12 +4122,15 @@ endif
     type(Node), pointer :: np
     integer, intent(in) :: n
 
-    if (n/=0) then
-      do while (associated(np))
-        np%textContentLength = np%textContentLength + n
-        np => getParentNode(np)
-        if (associated(np)) then
-          if (getNodeType(np)==DOCUMENT_NODE) exit
+    type(Node), pointer :: this
+
+    if (n/=0) then      
+      this => np
+      do while (associated(this))
+        this%textContentLength = this%textContentLength + n
+        this => getParentNode(this)
+        if (associated(this)) then
+          if (getNodeType(this)==DOCUMENT_NODE) exit
         endif
       enddo
     endif
@@ -6036,6 +6047,7 @@ endif
     endif
 
     np => createNode(arg, TEXT_NODE, "#text", data)
+    np%textContentLength = len(data)
 
     if (getGCstate(arg)) then
       np%inDocument = .false.
@@ -6097,6 +6109,7 @@ endif
     endif
   
     np => createNode(arg, COMMENT_NODE, "#comment", data)
+    np%textContentLength = len(data)
 
     if (getGCstate(arg)) then
       np%inDocument = .false.
@@ -6158,6 +6171,7 @@ endif
     endif
   
     np => createNode(arg, CDATA_SECTION_NODE, "#cdata-section", data)
+    np%textContentLength = len(data)
 
     if (getGCstate(arg)) then
       np%inDocument = .false.
@@ -6230,6 +6244,7 @@ endif
     endif
 
     np => createNode(arg, PROCESSING_INSTRUCTION_NODE, target, data)
+    np%textContentLength = len(data)
 
     if (getGCstate(arg)) then
       np%inDocument = .false.
@@ -9875,6 +9890,10 @@ endif
 
     endif
 
+    ! And propagate length upwards ...
+    if (getNodeType(arg)/=COMMENT_NODE) &
+      call updateTextContentLength(arg, len(data))
+
   end subroutine appendData
   
 
@@ -9970,6 +9989,10 @@ endif
 
     endif
 
+    ! And propagate length upwards ...
+    if (getNodeType(arg)/=COMMENT_NODE) &
+      call updateTextContentLength(arg, len(data))
+
   end subroutine insertData
 
 
@@ -9980,6 +10003,7 @@ endif
     integer, intent(in) :: count
 
     character, pointer :: tmp(:)
+    integer :: n
 
     if (.not.associated(arg)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
@@ -10024,10 +10048,20 @@ endif
 endif
 
     endif
+
+    if (offset+count>size(arg%nodeValue)) then
+      n = size(arg%nodeValue)-offset
+    else
+      n = count
+    endif
     
     tmp => arg%nodeValue
     arg%nodeValue => vs_str_alloc(str_vs(tmp(:offset))//str_vs(tmp(offset+count+1:)))
     deallocate(tmp)
+
+    ! And propagate length upwards ...
+    if (getNodeType(arg)/=COMMENT_NODE) &
+      call updateTextContentLength(arg, -n)
 
   end subroutine deleteData
 
@@ -10040,6 +10074,7 @@ endif
     character(len=*), intent(in) :: data
     
     character, pointer :: tmp(:)
+    integer :: n
 
     if (.not.associated(arg)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
@@ -10097,6 +10132,12 @@ endif
 
     endif
 
+    if (offset+count>size(arg%nodeValue)) then
+      n = len(data)-(size(arg%nodeValue)-offset)
+    else
+      n = len(data)-count
+    endif
+
     tmp => arg%nodeValue
     if (offset+count <= size(arg%nodeValue)) then
       arg%nodeValue => vs_str_alloc(str_vs(tmp(:offset))//data//str_vs(tmp(offset+count+1:)))
@@ -10128,6 +10169,10 @@ endif
 endif
 
     endif
+
+    ! And propagate length upwards ...
+    if (getNodeType(arg)/=COMMENT_NODE) &
+      call updateTextContentLength(arg, n)
 
   end subroutine replaceData
  
@@ -10492,7 +10537,17 @@ endif
     type(Node), pointer :: np
     logical :: isElementContentWhitespace
 
+    integer :: n
+
     np%ignorableWhitespace = isElementContentWhitespace
+
+    if (isElementContentWhitespace) then
+      n = -np%textContentLength
+    else
+      n = size(np%nodeValue)
+    endif
+
+    call updateTextContentLength(np, n)
  
   end subroutine setIsElementContentWhitespace
 
@@ -10561,6 +10616,8 @@ endif
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*) :: data
+
+    integer :: n
     
     if (.not.associated(arg)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
@@ -10590,8 +10647,6 @@ endif
 endif
 
       endif
-      deallocate(arg%nodeValue)
-      arg%nodeValue => vs_str_alloc(data)
     else
       if (getFoX_checks().or.FoX_INVALID_NODE<200) then
   call throw_exception(FoX_INVALID_NODE, "setData", ex)
@@ -10603,6 +10658,55 @@ endif
 endif
 
     endif
+
+    select case (arg%nodeType)
+    case (CDATA_SECTION_NODE)
+      if (index(data,"]]>")>0) then
+        if (getFoX_checks().or.FoX_INVALID_CDATA_SECTION<200) then
+  call throw_exception(FoX_INVALID_CDATA_SECTION, "setData", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+      endif
+    case (COMMENT_NODE)
+      if (index(data,"--")>0) then
+        if (getFoX_checks().or.FoX_INVALID_COMMENT<200) then
+  call throw_exception(FoX_INVALID_COMMENT, "setData", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+      endif
+    case (PROCESSING_INSTRUCTION_NODE)
+      if (index(data,"?>")>0) then
+        if (getFoX_checks().or.FoX_INVALID_PI_DATA<200) then
+  call throw_exception(FoX_INVALID_PI_DATA, "setData", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+      endif
+    end select
+
+    deallocate(arg%nodeValue)
+    arg%nodeValue => vs_str_alloc(data)
+
+    if (arg%nodeType==TEXT_NODE .or. &
+      arg%nodeType==CDATA_SECTION_NODE) then
+      n = len(data) - arg%textContentLength
+      call updateTextContentLength(arg, n)
+    endif
+
   end subroutine setData
   
   

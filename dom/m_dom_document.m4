@@ -222,6 +222,7 @@ TOHW_m_dom_get(Node, documentElement, np%docExtras%documentElement, (DOCUMENT_NO
     endif
 
     np => createNode(arg, TEXT_NODE, "#text", data)
+    np%textContentLength = len(data)
 
     if (getGCstate(arg)) then
       np%inDocument = .false.
@@ -250,6 +251,7 @@ TOHW_m_dom_get(Node, documentElement, np%docExtras%documentElement, (DOCUMENT_NO
     endif
   
     np => createNode(arg, COMMENT_NODE, "#comment", data)
+    np%textContentLength = len(data)
 
     if (getGCstate(arg)) then
       np%inDocument = .false.
@@ -278,6 +280,7 @@ TOHW_m_dom_get(Node, documentElement, np%docExtras%documentElement, (DOCUMENT_NO
     endif
   
     np => createNode(arg, CDATA_SECTION_NODE, "#cdata-section", data)
+    np%textContentLength = len(data)
 
     if (getGCstate(arg)) then
       np%inDocument = .false.
@@ -309,6 +312,7 @@ TOHW_m_dom_get(Node, documentElement, np%docExtras%documentElement, (DOCUMENT_NO
     endif
 
     np => createNode(arg, PROCESSING_INSTRUCTION_NODE, target, data)
+    np%textContentLength = len(data)
 
     if (getGCstate(arg)) then
       np%inDocument = .false.

@@ -50,7 +50,17 @@ TOHW_m_dom_get(logical, isElementContentWhitespace, np%ignorableWhitespace, (TEX
     type(Node), pointer :: np
     logical :: isElementContentWhitespace
 
+    integer :: n
+
     np%ignorableWhitespace = isElementContentWhitespace
+
+    if (isElementContentWhitespace) then
+      n = -np%textContentLength
+    else
+      n = size(np%nodeValue)
+    endif
+
+    call updateTextContentLength(np, n)
  
   end subroutine setIsElementContentWhitespace
 

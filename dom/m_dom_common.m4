@@ -17,6 +17,8 @@ TOHW_m_dom_contents(`
   TOHW_subroutine(setData, (arg, data))
     type(Node), pointer :: arg
     character(len=*) :: data
+
+    integer :: n
     
     if (.not.associated(arg)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
@@ -30,11 +32,34 @@ TOHW_m_dom_contents(`
       if (arg%readonly) then
         TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
       endif
-      deallocate(arg%nodeValue)
-      arg%nodeValue => vs_str_alloc(data)
     else
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
+
+    select case (arg%nodeType)
+    case (CDATA_SECTION_NODE)
+      if (index(data,"]]>")>0) then
+        TOHW_m_dom_throw_error(FoX_INVALID_CDATA_SECTION)
+      endif
+    case (COMMENT_NODE)
+      if (index(data,"--")>0) then
+        TOHW_m_dom_throw_error(FoX_INVALID_COMMENT)
+      endif
+    case (PROCESSING_INSTRUCTION_NODE)
+      if (index(data,"?>")>0) then
+        TOHW_m_dom_throw_error(FoX_INVALID_PI_DATA)
+      endif
+    end select
+
+    deallocate(arg%nodeValue)
+    arg%nodeValue => vs_str_alloc(data)
+
+    if (arg%nodeType==TEXT_NODE .or. &
+      arg%nodeType==CDATA_SECTION_NODE) then
+      n = len(data) - arg%textContentLength
+      call updateTextContentLength(arg, n)
+    endif
+
   end subroutine setData
   
   TOHW_m_dom_get(DOMString, name, np%nodeName, (DOCUMENT_TYPE_NODE, ATTRIBUTE_NODE))

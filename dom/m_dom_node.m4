@@ -344,6 +344,8 @@ TOHW_m_dom_get(Node, nextSibling, np%nextSibling)
 
     call updateNodeLists(arg%ownerDocument)
 
+    call updateTextContentLength(arg, newChild%textContentLength)
+
   end function insertBefore
 
 
@@ -480,6 +482,8 @@ TOHW_m_dom_get(Node, nextSibling, np%nextSibling)
 
     call updateNodeLists(arg%ownerDocument)
 
+    call updateTextContentLength(arg, newChild%textContentLength-oldChild%textContentLength)
+
   end function replaceChild
 
 
@@ -548,6 +552,8 @@ TOHW_m_dom_get(Node, nextSibling, np%nextSibling)
     np => oldChild
 
     call updateNodeLists(arg%ownerDocument)
+
+    call updateTextContentLength(arg, -oldChild%textContentLength)
 
   end function removeChild
 
@@ -666,6 +672,8 @@ TOHW_m_dom_get(Node, nextSibling, np%nextSibling)
     np => newChild
 
     call updateNodeLists(arg%ownerDocument)
+
+    call updateTextContentLength(arg, newChild%textContentLength)
 
   end function appendChild
 
@@ -1348,12 +1356,15 @@ TOHW_m_dom_treewalk(`
     type(Node), pointer :: np
     integer, intent(in) :: n
 
-    if (n/=0) then
-      do while (associated(np))
-        np%textContentLength = np%textContentLength + n
-        np => getParentNode(np)
-        if (associated(np)) then
-          if (getNodeType(np)==DOCUMENT_NODE) exit
+    type(Node), pointer :: this
+
+    if (n/=0) then      
+      this => np
+      do while (associated(this))
+        this%textContentLength = this%textContentLength + n
+        this => getParentNode(this)
+        if (associated(this)) then
+          if (getNodeType(this)==DOCUMENT_NODE) exit
         endif
       enddo
     endif
