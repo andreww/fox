@@ -237,6 +237,7 @@ module m_dom_dom
     type(documentExtras), pointer :: docExtras
     type(elementOrAttributeExtras), pointer :: elExtras
     type(docTypeExtras), pointer :: dtdExtras
+    integer :: textContentLength = 0
   end type Node
 
   type(DOMImplementation), save, target :: FoX_DOM
@@ -4108,6 +4109,21 @@ endif
   ! function getUserData
   ! function setUserData
   ! will not implement ...
+
+  subroutine updateTextContentLength(np, n)
+    type(Node), pointer :: np
+    integer, intent(in) :: n
+
+    if (n/=0) then
+      do while (associated(np))
+        np%textContentLength = np%textContentLength + n
+        np => getParentNode(np)
+        if (associated(np)) then
+          if (getNodeType(np)==DOCUMENT_NODE) exit
+        endif
+      enddo
+    endif
+  end subroutine updateTextContentLength
 
   subroutine putNodesInDocument(doc, arg)
     type(Node), pointer :: doc, arg

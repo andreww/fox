@@ -1344,6 +1344,21 @@ TOHW_m_dom_treewalk(`
   ! function setUserData
   ! will not implement ...
 
+  subroutine updateTextContentLength(np, n)
+    type(Node), pointer :: np
+    integer, intent(in) :: n
+
+    if (n/=0) then
+      do while (associated(np))
+        np%textContentLength = np%textContentLength + n
+        np => getParentNode(np)
+        if (associated(np)) then
+          if (getNodeType(np)==DOCUMENT_NODE) exit
+        endif
+      enddo
+    endif
+  end subroutine updateTextContentLength
+
   subroutine putNodesInDocument(doc, arg)
     type(Node), pointer :: doc, arg
     type(Node), pointer :: this, treeroot
