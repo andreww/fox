@@ -7,7 +7,7 @@ program test
   type(xmlf_t) :: xf
 
   call cmlBeginFile(xf, filename, unit=-1)
-  call cmlStartCml(xf, fileId='UUID')
+  call cmlStartCml(xf, fileId='cmltest')
   call cmlFinishFile(xf)
 
 end program test

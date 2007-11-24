@@ -8,7 +8,7 @@
   xmlns:cmlUnits="http://www.xml-cml.org/units/units"
   xmlns:siUnits="http://www.xml-cml.org/units/siUnits"
   xmlns:atomicUnits="http://www.xml-cml.org/units/atomic">
-  <parameter title="name">
-    <array size="2" dataType="fpx:complex" units="siUnits:m">(1.00e0)+i(2.00e0) (3.00e0)+i(-4.00e0)</array>
-  </parameter>
+  <property title="name">
+    <array size="2" dataType="fpx:real" units="siUnits:m">2.00e0 3.00e0</array>
+  </property>
 </cml>

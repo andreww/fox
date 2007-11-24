@@ -8,7 +8,7 @@
   xmlns:cmlUnits="http://www.xml-cml.org/units/units"
   xmlns:siUnits="http://www.xml-cml.org/units/siUnits"
   xmlns:atomicUnits="http://www.xml-cml.org/units/atomic">
-  <parameter title="name">
-    <scalar dataType="xfp:real" units="siUnits:m">2.00e0</scalar>
-  </parameter>
+  <property title="name">
+    <scalar dataType="fpx:real" units="siUnits:m">2.00e0</scalar>
+  </property>
 </cml>

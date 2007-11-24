@@ -8,7 +8,7 @@
   xmlns:cmlUnits="http://www.xml-cml.org/units/units"
   xmlns:siUnits="http://www.xml-cml.org/units/siUnits"
   xmlns:atomicUnits="http://www.xml-cml.org/units/atomic">
-  <parameter title="name">
+  <property title="name">
     <matrix rows="2" columns="2" delimiter=" " dataType="xsd:string">value1 value2 value3 value4</matrix>
-  </parameter>
+  </property>
 </cml>
