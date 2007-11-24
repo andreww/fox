@@ -25,6 +25,7 @@ TOHW_m_dom_publics(`
   public :: setPrefix
   public :: getLocalName
   public :: hasAttributes
+  public :: isEqualNode
   public :: isSameNode
   public :: isDefaultNamespace
   public :: lookupNamespaceURI
@@ -1027,21 +1028,27 @@ TOHW_m_dom_set(DOMString, namespaceURI, np%elExtras%namespaceURI, (XPATH_NAMESPA
     type(Node), pointer :: other
     logical :: p
 
-    type(Node), pointer :: this, that, treeroot, thatParent, att1, att2
+    type(Node), pointer :: this, that, treeroot, treeroot2, att1, att2
     type(NodeList), pointer :: children1, children2
     type(NamedNodeMap), pointer :: atts1, atts2
 
     integer :: i_tree, i_t, i
-    logical :: doneChildren, doneAttributes, deep
+    logical :: doneChildren, doneAttributes, equal
 
     if (.not.associated(arg)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif
 
-    p = .false.
-    deep = .true.
+    if (isSameNode(arg, other)) then
+      ! Shortcut the treewalking
+      p = .true.
+      return
+    else
+      p = .false.
+    endif
+
     treeroot => arg
-    thatParent => other
+    treeroot2 => other
 TOHW_m_dom_treewalk(`
 
       if (getNodeType(this)/=getNodeType(that)) return
@@ -1057,10 +1064,10 @@ TOHW_m_dom_treewalk(`
       if (getLength(children1)/=getLength(children2)) return
       ! Well get to the contents of the children later on anyway.
       if (getNodeType(this)==ELEMENT_NODE) then
-        ! We must treat attributes specially here (rather than relying on 
+        ! We must treat attributes specially here (rather than relying on
         ! treewalk) since the order can legitimately change.
-        atts1 = getAttributes(this)
-        atts2 = getAttributes(that)
+        atts1 => getAttributes(this)
+        atts2 => getAttributes(that)
         if (getLength(atts1)/=getLength(atts2)) return
         do i = 0, getLength(atts1)-1
           att1 => item(atts1, i)
@@ -1077,8 +1084,9 @@ TOHW_m_dom_treewalk(`
         if (getPublicId(this)/=getPublicId(that) &
           .or. getSystemId(this)/=getSystemId(that) &
           .or. getInternalSubset(this)/=getInternalSubset(that)) return
-        atts1 = getEntities(this)
-        atts2 = getEntities(that)
+        print*, "entass", associated(this), associated(that)
+        atts1 => getEntities(this)
+        atts2 => getEntities(that)
         if (getLength(atts1)/=getLength(atts2)) return
         do i = 0, getLength(atts1)-1
           att1 => item(atts1, i)
@@ -1086,8 +1094,8 @@ TOHW_m_dom_treewalk(`
           if (.not.associated(att2)) return
           if (.not.isEqualNode(att1, att2)) return
         enddo
-        atts1 = getNotations(this)
-        atts2 = getNotations(that)
+        atts1 => getNotations(this)
+        atts2 => getNotations(that)
         if (getLength(atts1)/=getLength(atts2)) return
         do i = 0, getLength(atts1)-1
           att1 => item(atts1, i)
@@ -1096,7 +1104,7 @@ TOHW_m_dom_treewalk(`
           if (.not.isEqualNode(att1, att2)) return
         enddo
       endif
-',`',`parentNode',`')
+',`',`double',`')
 
     p = .true.
 

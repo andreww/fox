@@ -297,6 +297,7 @@ module m_dom_dom
   public :: setPrefix
   public :: getLocalName
   public :: hasAttributes
+  public :: isEqualNode
   public :: isSameNode
   public :: isDefaultNamespace
   public :: lookupNamespaceURI
@@ -845,10 +846,8 @@ endif
     doneChildren = .false.
     doneAttributes = .false.
     this => treeroot
-
       deadNode => null()
     do
-
       if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
 
       else
@@ -859,13 +858,12 @@ endif
         endif
       endif
 
-
       deadNode => null()
 
       if (.not.doneChildren) then
         if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
           if (getLength(getAttributes(this))>0) then
-                      this => item(getAttributes(this), 0)
+            this => item(getAttributes(this), 0)
           else
             doneAttributes = .true.
           endif
@@ -901,7 +899,6 @@ endif
         else
           this => getParentNode(this)
         endif
-
         call destroy(deadNode)
       endif
 
@@ -1480,7 +1477,6 @@ endif
     doneAttributes = .false.
     this => treeroot
     do
-
       if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
 
           if (getNodeType(this)/=TEXT_NODE.and.getNodeType(this)/=ENTITY_REFERENCE_NODE) then
@@ -1507,7 +1503,7 @@ endif
       if (.not.doneChildren) then
         if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
           if (getLength(getAttributes(this))>0) then
-                      this => item(getAttributes(this), 0)
+            this => item(getAttributes(this), 0)
           else
             doneAttributes = .true.
           endif
@@ -1644,7 +1640,6 @@ endif
     doneAttributes = .false.
     this => treeroot
     do
-
       if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
 
           if (getNodeType(this)/=TEXT_NODE.and.getNodeType(this)/=ENTITY_REFERENCE_NODE) then
@@ -1671,7 +1666,7 @@ endif
       if (.not.doneChildren) then
         if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
           if (getLength(getAttributes(this))>0) then
-                      this => item(getAttributes(this), 0)
+            this => item(getAttributes(this), 0)
           else
             doneAttributes = .true.
           endif
@@ -1985,7 +1980,6 @@ endif
     doneAttributes = .false.
     this => treeroot
     do
-
       if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
 
           if (getNodeType(this)/=TEXT_NODE.and.getNodeType(this)/=ENTITY_REFERENCE_NODE) then
@@ -2012,7 +2006,7 @@ endif
       if (.not.doneChildren) then
         if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
           if (getLength(getAttributes(this))>0) then
-                      this => item(getAttributes(this), 0)
+            this => item(getAttributes(this), 0)
           else
             doneAttributes = .true.
           endif
@@ -2151,7 +2145,6 @@ endif
     doneAttributes = .false.
     this => treeroot
     do
-
       if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
 
           if (getNodeType(this)/=TEXT_NODE.and.getNodeType(this)/=ENTITY_REFERENCE_NODE) then
@@ -2178,7 +2171,7 @@ endif
       if (.not.doneChildren) then
         if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
           if (getLength(getAttributes(this))>0) then
-                      this => item(getAttributes(this), 0)
+            this => item(getAttributes(this), 0)
           else
             doneAttributes = .true.
           endif
@@ -2587,7 +2580,6 @@ endif
     doneAttributes = .false.
     this => treeroot
     do
-
       if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
 
           if (getNodeType(this)/=TEXT_NODE.and.getNodeType(this)/=ENTITY_REFERENCE_NODE) then
@@ -2614,7 +2606,7 @@ endif
       if (.not.doneChildren) then
         if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
           if (getLength(getAttributes(this))>0) then
-                      this => item(getAttributes(this), 0)
+            this => item(getAttributes(this), 0)
           else
             doneAttributes = .true.
           endif
@@ -2751,7 +2743,6 @@ endif
     doneAttributes = .false.
     this => treeroot
     do
-
       if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
 
           if (getNodeType(this)/=TEXT_NODE.and.getNodeType(this)/=ENTITY_REFERENCE_NODE) then
@@ -2778,7 +2769,7 @@ endif
       if (.not.doneChildren) then
         if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
           if (getLength(getAttributes(this))>0) then
-                      this => item(getAttributes(this), 0)
+            this => item(getAttributes(this), 0)
           else
             doneAttributes = .true.
           endif
@@ -3040,7 +3031,6 @@ endif
     doneAttributes = .false.
     this => treeroot
     do
-
       if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
 
 
@@ -3127,7 +3117,7 @@ endif
       if (.not.doneChildren) then
         if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
           if (getLength(getAttributes(this))>0) then
-                      if (.not.associated(this, treeroot)) thatParent => getLastChild(thatParent)
+            if (.not.associated(this, treeroot)) thatParent => getLastChild(thatParent)
             this => item(getAttributes(this), 0)
           else
             if (.not.deep) exit
@@ -3254,7 +3244,6 @@ endif
     doneAttributes = .false.
     this => treeroot
     do
-
       if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
 
 
@@ -3299,7 +3288,7 @@ endif
       if (.not.doneChildren) then
         if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
           if (getLength(getAttributes(this))>0) then
-                      this => item(getAttributes(this), 0)
+            this => item(getAttributes(this), 0)
           else
             doneAttributes = .true.
           endif
@@ -3648,12 +3637,12 @@ endif
     type(Node), pointer :: other
     logical :: p
 
-    type(Node), pointer :: this, that, treeroot, thatParent, att1, att2
+    type(Node), pointer :: this, that, treeroot, treeroot2, att1, att2
     type(NodeList), pointer :: children1, children2
     type(NamedNodeMap), pointer :: atts1, atts2
 
     integer :: i_tree, i_t, i
-    logical :: doneChildren, doneAttributes, deep
+    logical :: doneChildren, doneAttributes, equal
 
     if (.not.associated(arg)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
@@ -3667,17 +3656,25 @@ endif
 
     endif
 
-    p = .false.
-    deep = .true.
+    if (isSameNode(arg, other)) then
+      ! Shortcut the treewalking
+      p = .true.
+      return
+    else
+      p = .false.
+    endif
+
     treeroot => arg
-    thatParent => other
+    treeroot2 => other
 
     i_tree = 0
     doneChildren = .false.
     doneAttributes = .false.
     this => treeroot
+    that => treeroot2
+    equal = .false.
     do
-
+      if (getNodeType(this)/=getNodeType(that)) exit
       if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
 
 
@@ -3694,10 +3691,10 @@ endif
       if (getLength(children1)/=getLength(children2)) return
       ! Well get to the contents of the children later on anyway.
       if (getNodeType(this)==ELEMENT_NODE) then
-        ! We must treat attributes specially here (rather than relying on 
+        ! We must treat attributes specially here (rather than relying on
         ! treewalk) since the order can legitimately change.
-        atts1 = getAttributes(this)
-        atts2 = getAttributes(that)
+        atts1 => getAttributes(this)
+        atts2 => getAttributes(that)
         if (getLength(atts1)/=getLength(atts2)) return
         do i = 0, getLength(atts1)-1
           att1 => item(atts1, i)
@@ -3714,8 +3711,9 @@ endif
         if (getPublicId(this)/=getPublicId(that) &
           .or. getSystemId(this)/=getSystemId(that) &
           .or. getInternalSubset(this)/=getInternalSubset(that)) return
-        atts1 = getEntities(this)
-        atts2 = getEntities(that)
+        print*, "entass", associated(this), associated(that)
+        atts1 => getEntities(this)
+        atts2 => getEntities(that)
         if (getLength(atts1)/=getLength(atts2)) return
         do i = 0, getLength(atts1)-1
           att1 => item(atts1, i)
@@ -3723,8 +3721,8 @@ endif
           if (.not.associated(att2)) return
           if (.not.isEqualNode(att1, att2)) return
         enddo
-        atts1 = getNotations(this)
-        atts2 = getNotations(that)
+        atts1 => getNotations(this)
+        atts2 => getNotations(that)
         if (getLength(atts1)/=getLength(atts2)) return
         do i = 0, getLength(atts1)-1
           att1 => item(atts1, i)
@@ -3745,23 +3743,17 @@ endif
 
       if (.not.doneChildren) then
         if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
+          if (getLength(getAttributes(this))/=getLength(getAttributes(that))) exit
           if (getLength(getAttributes(this))>0) then
-                      if (.not.associated(this, treeroot)) thatParent => getLastChild(thatParent)
             this => item(getAttributes(this), 0)
+            that => item(getAttributes(that), 0)
           else
-            if (.not.deep) exit
             doneAttributes = .true.
           endif
-        elseif (hasChildNodes(this)) then
-          if (getNodeType(this)==ELEMENT_NODE.and..not.deep) exit
-          if (.not.associated(this, treeroot)) then
-            if (getNodeType(this)==ATTRIBUTE_NODE) then
-              thatParent => item(getAttributes(thatParent), i_tree)
-            else
-              thatParent => getLastChild(thatParent)
-            endif
-          endif
+        elseif (hasChildNodes(this).or.hasChildNodes(that)) then
+          if (getLength(getChildNodes(this))/=getLength(getChildNodes(that))) exit
           this => getFirstChild(this)
+          that => getFirstChild(that)
           doneChildren = .false.
           doneAttributes = .false.
         else
@@ -3776,28 +3768,24 @@ endif
           if (i_tree<getLength(getAttributes(getOwnerElement(this)))-1) then
             i_tree= i_tree+ 1
             this => item(getAttributes(getOwnerElement(this)), i_tree)
+            that => item(getAttributes(getOwnerElement(that)), i_tree)
             doneChildren = .false.
           else
             i_tree= 0
-            if (associated(getParentNode(thatParent))) thatParent => getParentNode(thatParent)
             this => getOwnerElement(this)
+            that => getOwnerElement(that)
             doneAttributes = .true.
             doneChildren = .false.
           endif
         elseif (associated(getNextSibling(this))) then
 
           this => getNextSibling(this)
+          that => getNextSibling(that)
           doneChildren = .false.
           doneAttributes = .false.
         else
           this => getParentNode(this)
-          if (.not.associated(this, treeroot)) then
-            if (getNodeType(this)==ATTRIBUTE_NODE) then
-              thatParent => getOwnerElement(thatParent)
-            else
-              thatParent => getParentNode(thatParent)
-            endif
-          endif
+          that => getParentNode(that)
         endif
       endif
 
@@ -4092,7 +4080,6 @@ endif
     doneAttributes = .false.
     this => treeroot
     do
-
       if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
 
         this%inDocument = .true.
@@ -4110,7 +4097,7 @@ endif
       if (.not.doneChildren) then
         if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
           if (getLength(getAttributes(this))>0) then
-                      this => item(getAttributes(this), 0)
+            this => item(getAttributes(this), 0)
           else
             doneAttributes = .true.
           endif
@@ -4167,7 +4154,6 @@ endif
     doneAttributes = .false.
     this => treeroot
     do
-
       if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
 
         this%inDocument = .false.
@@ -4185,7 +4171,7 @@ endif
       if (.not.doneChildren) then
         if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
           if (getLength(getAttributes(this))>0) then
-                      this => item(getAttributes(this), 0)
+            this => item(getAttributes(this), 0)
           else
             doneAttributes = .true.
           endif
@@ -4245,7 +4231,6 @@ endif
     doneAttributes = .false.
     this => treeroot
     do
-
       if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
 
       this%readonly = p
@@ -4264,7 +4249,7 @@ endif
       if (.not.doneChildren) then
         if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
           if (getLength(getAttributes(this))>0) then
-                      this => item(getAttributes(this), 0)
+            this => item(getAttributes(this), 0)
           else
             doneAttributes = .true.
           endif
@@ -6280,7 +6265,6 @@ endif
     doneAttributes = .false.
     this => treeroot
     do
-
       if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
 
       if (getNodeType(this)==TEXT_NODE) then
@@ -6302,7 +6286,7 @@ endif
       if (.not.doneChildren) then
         if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
           if (getLength(getAttributes(this))>0) then
-                      this => item(getAttributes(this), 0)
+            this => item(getAttributes(this), 0)
           else
             doneAttributes = .true.
           endif
@@ -6352,7 +6336,6 @@ endif
     doneAttributes = .false.
     this => treeroot
     do
-
       if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
 
         if (getNodeType(this)==TEXT_NODE) then
@@ -6373,7 +6356,7 @@ endif
       if (.not.doneChildren) then
         if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
           if (getLength(getAttributes(this))>0) then
-                      this => item(getAttributes(this), 0)
+            this => item(getAttributes(this), 0)
           else
             doneAttributes = .true.
           endif
@@ -6673,7 +6656,6 @@ endif
     doneAttributes = .false.
     this => treeroot
     do
-
       if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
         if (this%nodeType==ELEMENT_NODE) then
           if ((allElements .or. str_vs(this%nodeName)==tagName) &
@@ -6694,7 +6676,7 @@ endif
       if (.not.doneChildren) then
         if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
           if (getLength(getAttributes(this))>0) then
-                      this => item(getAttributes(this), 0)
+            this => item(getAttributes(this), 0)
           else
             doneAttributes = .true.
           endif
@@ -6795,7 +6777,6 @@ endif
     doneAttributes = .false.
     this => treeroot
     do
-
       if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
 
 
@@ -6925,7 +6906,7 @@ endif
       if (.not.doneChildren) then
         if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
           if (getLength(getAttributes(this))>0) then
-                      if (.not.associated(this, treeroot)) thatParent => getLastChild(thatParent)
+            if (.not.associated(this, treeroot)) thatParent => getLastChild(thatParent)
             this => item(getAttributes(this), 0)
           else
             if (.not.deep) exit
@@ -7298,7 +7279,6 @@ endif
     doneAttributes = .false.
     this => treeroot
     do
-
       if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
 
       if (getNodeType(this)==ELEMENT_NODE) then
@@ -7328,7 +7308,7 @@ endif
       if (.not.doneChildren) then
         if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
           if (getLength(getAttributes(this))>0) then
-                      this => item(getAttributes(this), 0)
+            this => item(getAttributes(this), 0)
           else
             doneAttributes = .true.
           endif
@@ -7414,7 +7394,6 @@ endif
     doneAttributes = .false.
     this => treeroot
     do
-
       if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
       if (this%nodeType==ATTRIBUTE_NODE)  then
         if (getIsId(this).and.getName(this)==elementId) then
@@ -7435,7 +7414,7 @@ endif
       if (.not.doneChildren) then
         if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
           if (getLength(getAttributes(this))>0) then
-                      this => item(getAttributes(this), 0)
+            this => item(getAttributes(this), 0)
           else
             doneAttributes = .true.
           endif
@@ -8315,6 +8294,9 @@ endif
 
     endif
 
+    print*,associated(arg)
+    print*,associated(arg%ownerDocument)
+    print*,associated(arg%ownerDocument%docExtras)
     nnp => arg%ownerDocument%docExtras%entities
   end function getEntities
 
@@ -10920,7 +10902,6 @@ endif
     doneAttributes = .false.
     this => treeroot
     do
-
       if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
 
     if (.not.getReadonly(this)) then
@@ -11208,7 +11189,7 @@ endif
       if (.not.doneChildren) then
         if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
           if (getLength(getAttributes(this))>0) then
-                      this => item(getAttributes(this), 0)
+            this => item(getAttributes(this), 0)
           else
             doneAttributes = .true.
           endif
