@@ -1610,7 +1610,8 @@ contains
           str_vs(fx%name), fx%attributes)
       else
         ! Non-namespace aware processing
-        call startElement_handler("", "", &
+        if (present(startElement_handler)) &
+          call startElement_handler("", "", &
           str_vs(fx%name), fx%attributes)
       endif
       call push_elstack(str_vs(fx%name), fx%elstack)
