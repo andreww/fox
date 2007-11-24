@@ -44,9 +44,15 @@ TOHW_m_dom_contents(`
 
   end function splitText
 
-TOHW_m_dom_get(logical, isElementContentWhitespace, np%ignorableWhitespace, (TEXT_NODE))
-TOHW_m_dom_set(logical, isElementContentWhitespace, np%ignorableWhitespace, (TEXT_NODE))
-    
+TOHW_m_dom_get(logical, isElementContentWhitespace, np%ignorableWhitespace, (TEXT_NODE, CDATA_SECTION_NODE))
+
+  TOHW_subroutine(setIsElementContentWhitespace, (np, isElementContentWhitespace))
+    type(Node), pointer :: np
+    logical :: isElementContentWhitespace
+
+    np%ignorableWhitespace = isElementContentWhitespace
+ 
+  end subroutine setIsElementContentWhitespace
 
 ! function getWholeText
 ! function replaceWholeText

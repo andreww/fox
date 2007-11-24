@@ -10453,6 +10453,7 @@ endif
     endif
 
    if (getNodeType(np)/=TEXT_NODE .and. &
+getNodeType(np)/=CDATA_SECTION_NODE .and. &
       .true.) then
       if (getFoX_checks().or.FoX_INVALID_NODE<200) then
   call throw_exception(FoX_INVALID_NODE, "getisElementContentWhitespace", ex)
@@ -10469,42 +10470,15 @@ endif
 
   end function getisElementContentWhitespace
 
-subroutine setisElementContentWhitespace(np, c, ex)
+
+  subroutine setIsElementContentWhitespace(np, isElementContentWhitespace, ex)
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: np
-    logical :: c
+    logical :: isElementContentWhitespace
 
-
-    if (.not.associated(np)) then
-      if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
-  call throw_exception(FoX_NODE_IS_NULL, "setisElementContentWhitespace", ex)
-  if (present(ex)) then
-    if (inException(ex)) then
-       return
-    endif
-  endif
-endif
-
-    endif
-
-   if (getNodeType(np)/=TEXT_NODE .and. &
-      .true.) then
-      if (getFoX_checks().or.FoX_INVALID_NODE<200) then
-  call throw_exception(FoX_INVALID_NODE, "setisElementContentWhitespace", ex)
-  if (present(ex)) then
-    if (inException(ex)) then
-       return
-    endif
-  endif
-endif
-
-    endif
-
-    np%ignorableWhitespace = c
-
-  end subroutine setisElementContentWhitespace
-
-    
+    np%ignorableWhitespace = isElementContentWhitespace
+ 
+  end subroutine setIsElementContentWhitespace
 
 ! function getWholeText
 ! function replaceWholeText
