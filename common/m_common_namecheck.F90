@@ -70,13 +70,11 @@ contains
     ! Is not fully compliant; ignores UTF issues.
 
     good = checkName(name, xds)
-!!$    if (good .and. len(name) > 2) then
-!!$      good = (scan(name(1:1), 'Xx') == 0 .and. &
-!!$        scan(name(2:2), 'Mm') == 0 .and. &
-!!$        scan(name(3:3), 'Ll') == 0)
-!!$    endif
-! FIXME re-enable this check and issue warnings not
-! errors from all callers
+    if (good .and. len(name)==3) then
+      good = (scan(name(1:1), 'Xx') == 0 .and. &
+        scan(name(2:2), 'Mm') == 0 .and. &
+        scan(name(3:3), 'Ll') == 0)
+    endif
   end function checkPITarget
 
 
