@@ -9256,9 +9256,114 @@ endif
 
   end function hasAttributeNS
 
-! setIdAttribute
-! setIdAttributeNS
-! setIdAttributeNode
+  subroutine setIdAttribute(arg, name, isId, ex)
+    type(DOMException), intent(out), optional :: ex
+    type(Node), pointer :: arg
+    character(len=*), intent(in) :: name
+    logical, intent(in) :: isId
+
+    type(Node), pointer :: np
+
+    if (arg%readonly) then
+      if (getFoX_checks().or.NO_MODIFICATION_ALLOWED_ERR<200) then
+  call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setIdAttribute", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    endif
+
+    np => getAttributeNode(arg, name)
+    if (associated(np)) then
+      call setIsId(np, isId)
+    else
+      if (getFoX_checks().or.NOT_FOUND_ERR<200) then
+  call throw_exception(NOT_FOUND_ERR, "setIdAttribute", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    endif
+
+  end subroutine setIdAttribute
+
+  subroutine setIdAttributeNS(arg, namespaceURI, localname, isId, ex)
+    type(DOMException), intent(out), optional :: ex
+    type(Node), pointer :: arg
+    character(len=*), intent(in) :: namespaceURI
+    character(len=*), intent(in) :: localName
+    logical, intent(in) :: isId
+
+    type(Node), pointer :: np
+
+    if (arg%readonly) then
+      if (getFoX_checks().or.NO_MODIFICATION_ALLOWED_ERR<200) then
+  call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setIdAttributeNS", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    endif
+
+    np => getAttributeNodeNS(arg, namespaceURI, localname)
+    if (associated(np)) then
+      call setIsId(np, isId)
+    else
+      if (getFoX_checks().or.NOT_FOUND_ERR<200) then
+  call throw_exception(NOT_FOUND_ERR, "setIdAttributeNS", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    endif
+
+  end subroutine setIdAttributeNS
+
+  subroutine setIdAttributeNode(arg, idAttr, isId, ex)
+    type(DOMException), intent(out), optional :: ex
+    type(Node), pointer :: arg
+    type(Node), pointer :: idAttr
+    logical, intent(in) :: isId
+
+    type(Node), pointer :: np
+
+    if (arg%readonly) then
+      if (getFoX_checks().or.NO_MODIFICATION_ALLOWED_ERR<200) then
+  call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setIdAttributeNode", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    elseif (.not.associated(arg, getOwnerElement(idAttr))) then
+      if (getFoX_checks().or.NOT_FOUND_ERR<200) then
+  call throw_exception(NOT_FOUND_ERR, "setIdAttributeNode", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    endif
+
+    call setIsId(idAttr, isId)
+
+  end subroutine setIdAttributeNode
 
 
   
