@@ -4617,7 +4617,7 @@ endif
 
     do i = 1, map%length
       if (str_vs(map%nodes(i)%this%nodeName)==name) then
-        n = getValue_len(map%nodes(i)%this, .true.)
+        n = getNodeValue_len(map%nodes(i)%this, .true.)
         exit
       endif
     enddo
@@ -4827,7 +4827,13 @@ endif
             ! Well swap the old one out & put a new one in.
             ! Do *nothing* about namespace handling at this stage,
             ! wait until we are asked for namespace normalization
-            np => createAttribute(getOwnerDocument(map%ownerElement), name)
+            if (getParameter( &
+              getDomConfig(getOwnerDocument(map%ownerElement)), &
+                           "namespaces")) then
+              np => createAttributeNS(getOwnerDocument(map%ownerElement), "", name)
+            else
+              np => createAttribute(getOwnerDocument(map%ownerElement), name)
+            endif
             call setValue(np, str_vs(elem%attlist%list(i_default)%default))
             call setSpecified(np, .false.)
             np => setNamedItem(map, np)
@@ -4970,7 +4976,7 @@ endif
     do i = 1, map%length
       if (str_vs(map%nodes(i)%this%elExtras%namespaceURI)==namespaceURI &
         .and. str_vs(map%nodes(i)%this%elExtras%localName)==localName) then
-        n = getValue_len(map%nodes(i)%this, .true.)
+        n = getNodeValue_len(map%nodes(i)%this, .true.)
         exit
       endif
     enddo
@@ -5006,7 +5012,7 @@ endif
       np => item(map, i)
       if (getNamespaceURI(np)==namespaceURI &
         .and. getLocalName(np)==localName) then
-        c = getValue(np)
+        c = getNodeValue(np)
         return
       endif
     enddo
