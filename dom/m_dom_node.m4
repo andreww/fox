@@ -30,6 +30,7 @@ TOHW_m_dom_publics(`
   public :: isDefaultNamespace
   public :: lookupNamespaceURI
   public :: lookupPrefix
+  public :: getTextContent
 
   public :: setStringValue
   public :: getStringValue
@@ -1369,6 +1370,55 @@ TOHW_m_dom_treewalk(`
       enddo
     endif
   end subroutine updateTextContentLength
+
+  pure function getTextContent_len(arg, p) result(n)
+    type(Node), intent(in) :: arg
+    logical, intent(in) :: p
+    integer :: n
+
+    if (p) then
+      n = arg%textContentLength
+    else
+      n = 0
+    endif
+  end function getTextContent_len
+
+  TOHW_function(getTextContent, (arg), c)
+    type(Node), pointer :: arg
+    character(len=getTextContent_len(arg, associated(arg))) :: c
+
+    type(Node), pointer :: this, treeroot
+    integer :: i, i_tree
+    logical :: doneChildren, doneAttributes
+
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+    
+    if (len(c) == 0) then
+      c = ""
+      return
+    endif
+
+    i = 1
+    treeroot => arg
+    TOHW_m_dom_treewalk(`
+      if (associated(this, treeroot).and.isCharData(getNodeType(this))) then
+        c = getData(this)
+        return
+      endif
+      select case(getNodeType(this))
+      case (ELEMENT_NODE)
+        doneAttributes = .true.
+        ! Ignore attributes for text content (unless this is an attribute!)
+      case(TEXT_NODE, CDATA_SECTION_NODE)
+        if (.not.getIsElementContentWhitespace(this)) then
+          c(i:i+size(this%nodeValue)-1) = str_vs(this%nodeValue)
+          i = i + size(this%nodeValue)
+        endif
+      end select
+'`')
+  end function getTextContent
 
   subroutine putNodesInDocument(doc, arg)
     type(Node), pointer :: doc, arg

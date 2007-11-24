@@ -303,6 +303,7 @@ module m_dom_dom
   public :: isDefaultNamespace
   public :: lookupNamespaceURI
   public :: lookupPrefix
+  public :: getTextContent
 
   public :: setStringValue
   public :: getStringValue
@@ -4135,6 +4136,123 @@ endif
       enddo
     endif
   end subroutine updateTextContentLength
+
+  pure function getTextContent_len(arg, p) result(n)
+    type(Node), intent(in) :: arg
+    logical, intent(in) :: p
+    integer :: n
+
+    if (p) then
+      n = arg%textContentLength
+    else
+      n = 0
+    endif
+  end function getTextContent_len
+
+  function getTextContent(arg, ex)result(c) 
+    type(DOMException), intent(out), optional :: ex
+    type(Node), pointer :: arg
+    character(len=getTextContent_len(arg, associated(arg))) :: c
+
+    type(Node), pointer :: this, treeroot
+    integer :: i, i_tree
+    logical :: doneChildren, doneAttributes
+
+    if (.not.associated(arg)) then
+      if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "getTextContent", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    endif
+    
+    if (len(c) == 0) then
+      c = ""
+      return
+    endif
+
+    i = 1
+    treeroot => arg
+    
+    i_tree = 0
+    doneChildren = .false.
+    doneAttributes = .false.
+    this => treeroot
+    do
+      if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
+
+      if (associated(this, treeroot).and.isCharData(getNodeType(this))) then
+        c = getData(this)
+        return
+      endif
+      select case(getNodeType(this))
+      case (ELEMENT_NODE)
+        doneAttributes = .true.
+        ! Ignore attributes for text content (unless this is an attribute!)
+      case(TEXT_NODE, CDATA_SECTION_NODE)
+        if (.not.getIsElementContentWhitespace(this)) then
+          c(i:i+size(this%nodeValue)-1) = str_vs(this%nodeValue)
+          i = i + size(this%nodeValue)
+        endif
+      end select
+
+      else
+        if (getNodeType(this)==ELEMENT_NODE.and..not.doneChildren) then
+          doneAttributes = .true.
+        else
+
+        endif
+      endif
+
+
+      if (.not.doneChildren) then
+        if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
+          if (getLength(getAttributes(this))>0) then
+            this => item(getAttributes(this), 0)
+          else
+            doneAttributes = .true.
+          endif
+        elseif (hasChildNodes(this)) then
+          this => getFirstChild(this)
+          doneChildren = .false.
+          doneAttributes = .false.
+        else
+          doneChildren = .true.
+          doneAttributes = .false.
+        endif
+
+      else ! if doneChildren
+
+        if (associated(this, treeroot)) exit
+        if (getNodeType(this)==ATTRIBUTE_NODE) then
+          if (i_tree<getLength(getAttributes(getOwnerElement(this)))-1) then
+            i_tree= i_tree+ 1
+            this => item(getAttributes(getOwnerElement(this)), i_tree)
+            doneChildren = .false.
+          else
+            i_tree= 0
+            this => getOwnerElement(this)
+            doneAttributes = .true.
+            doneChildren = .false.
+          endif
+        elseif (associated(getNextSibling(this))) then
+
+          this => getNextSibling(this)
+          doneChildren = .false.
+          doneAttributes = .false.
+        else
+          this => getParentNode(this)
+        endif
+      endif
+
+    enddo
+
+
+  end function getTextContent
 
   subroutine putNodesInDocument(doc, arg)
     type(Node), pointer :: doc, arg

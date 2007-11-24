@@ -130,6 +130,7 @@ module FoX_dom
   public :: getLocalName
   public :: hasAttributes
 
+  public :: getTextContent
   public :: isEqualNode
   public :: isSameNode
   public :: isDefaultNamespace
