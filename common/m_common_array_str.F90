@@ -60,8 +60,6 @@ module m_common_array_str
 
   public :: destroy
 
-  public :: devnull
-
 contains
 
   subroutine init_string_list(s_list)
@@ -189,11 +187,6 @@ contains
 
     deallocate(vs)
   end subroutine destroy_vs
-
-  subroutine devnull(in)
-    character(len=*), intent(in) :: in
-    ! just so we can call string functions for their side-effects
-  end subroutine devnull
 
 #endif
 end module m_common_array_str

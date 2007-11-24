@@ -4,7 +4,7 @@ module m_wxml_core
   use m_common_attrs, only: dictionary_t, getLength, get_key, get_value, &
     hasKey, add_item_to_dict, init_dict, reset_dict, destroy_dict, &
     getWhitespaceHandling
-  use m_common_array_str, only: vs_str, str_vs, vs_str_alloc, devnull
+  use m_common_array_str, only: vs_str, str_vs, vs_str_alloc
   use m_common_buffer, only: buffer_t, len, add_to_buffer, reset_buffer, &
     dump_buffer
   use m_common_charset, only: XML1_0, XML1_1, checkChars
@@ -1302,14 +1302,14 @@ contains
       ' is open. Either you have failed to open '//get_top_elstack(xf%stack)//&
       ' or you have failed to close '//name//'.') 
     xf%indent = xf%indent - indent_inc
- 
+
     select case (xf%state_2)
     case (WXML_STATE_2_INSIDE_ELEMENT)
       call checkNamespacesWriting(xf%dict, xf%nsDict, len(xf%stack))
       if (getLength(xf%dict) > 0) call write_attributes(xf)
       if (xf%preserve_whitespace) call add_eol(xf)
       call add_to_buffer("/>",xf%buffer, .false.)
-      call devnull(pop_elstack(xf%stack))
+      dummy = pop_elstack(xf%stack)
     case (WXML_STATE_2_OUTSIDE_TAG, WXML_STATE_2_IN_CHARDATA, WXML_STATE_2_INSIDE_PI)
       if (xf%state_2==WXML_STATE_2_INSIDE_PI) call close_start_tag(xf)
       if (.not.xf%preserve_whitespace.and.xf%state_2==WXML_STATE_2_OUTSIDE_TAG) call add_eol(xf)

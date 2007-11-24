@@ -1,6 +1,6 @@
 module m_sax_tokenizer
 
-  use m_common_array_str, only: vs_str, str_vs, vs_str_alloc, devnull
+  use m_common_array_str, only: vs_str, str_vs, vs_str_alloc
   use m_common_charset, only: XML_WHITESPACE, &
     XML_INITIALENCODINGCHARS, XML_ENCODINGCHARS, &
     XML1_0, XML1_1, upperCase, digits, hexdigits, &
@@ -751,6 +751,7 @@ contains
     character, dimension(:), pointer :: s_out
 
     character, dimension(:), pointer :: s_temp, s_temp2, s_ent, tempString
+    character :: dummy
     integer :: i, i2, j
 
     ! Condense all whitespace, only if we are validating,
@@ -813,7 +814,7 @@ contains
             call add_internal_entity(fx%forbidden_ge_list, str_vs(tempString), "")
             ! Recursively expand entity, checking for errors.
             s_ent => normalize_text(fx, vs_str(expand_entity_text(fx%xds%entityList, str_vs(tempString))))
-            call devnull(pop_entity_list(fx%forbidden_ge_list))
+            dummy = pop_entity_list(fx%forbidden_ge_list)
             if (in_error(fx%error_stack)) then
               goto 100
             endif

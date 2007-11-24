@@ -1,7 +1,7 @@
 module m_sax_parser
 
   use m_common_array_str, only: str_vs, string_list, &
-    destroy_string_list, devnull, vs_str_alloc
+    destroy_string_list, vs_str_alloc
   use m_common_attrs, only: init_dict, destroy_dict, reset_dict, &
     add_item_to_dict, has_key, get_value
   use m_common_charset, only: XML_WHITESPACE, allowed_encoding
@@ -337,6 +337,7 @@ contains
     logical :: namespaces_, namespace_prefixes_, xmlns_uris_
     integer :: i, iostat, temp_i
     character, pointer :: tempString(:)
+    character :: dummy
     type(element_t), pointer :: elem
     integer, pointer :: temp_wf_stack(:)
 
@@ -413,7 +414,7 @@ contains
           if (present(endEntity_handler)) then
             call endEntity_handler('%'//pop_entity_list(fx%forbidden_pe_list))
           else
-            call devnull(pop_entity_list(fx%forbidden_pe_list))
+            dummy = pop_entity_list(fx%forbidden_pe_list)
           endif
         elseif (fx%context==CTXT_IN_CONTENT) then
           if (fx%state==ST_TAG_IN_CONTENT) fx%state = ST_CHAR_IN_CONTENT
@@ -423,7 +424,7 @@ contains
           if (present(endEntity_handler)) then
             call endEntity_handler(pop_entity_list(fx%forbidden_ge_list))
           else
-            call devnull(pop_entity_list(fx%forbidden_ge_list))
+             dummy = pop_entity_list(fx%forbidden_ge_list)
           endif
           if (fx%state/=ST_CHAR_IN_CONTENT.or.fx%wf_stack(1)/=0) then
             call add_error(fx%error_stack, 'Ill-formed entity')
