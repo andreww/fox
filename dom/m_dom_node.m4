@@ -1032,7 +1032,7 @@ TOHW_m_dom_set(DOMString, namespaceURI, np%elExtras%namespaceURI, (XPATH_NAMESPA
     type(NodeList), pointer :: children1, children2
     type(NamedNodeMap), pointer :: atts1, atts2
 
-    integer :: i_tree, i_t, i
+    integer :: i_tree, i
     logical :: doneChildren, doneAttributes, equal
 
     if (.not.associated(arg)) then

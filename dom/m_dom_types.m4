@@ -58,8 +58,6 @@ TOHW_m_dom_publics(`
     logical :: liveNodeLists ! For the document, are nodelists live?
     type(NodeList) :: hangingNodes ! For the document, list of nodes not associated with doc
     type(xml_doc_state), pointer :: xds => null()
-    type(namedNodeMap) :: entities ! actually for doctype
-    type(namedNodeMap) :: notations ! actually for doctype
     logical :: strictErrorChecking = .true.
     logical :: brokenNS = .false. ! FIXME consolidate these logical variables into bitmask
     type(DOMConfiguration), pointer :: domConfig
@@ -86,6 +84,8 @@ TOHW_m_dom_publics(`
     character, pointer :: internalSubset(:) => null() ! doctype
     character, pointer :: notationName(:) => null() ! entity
     logical :: illFormed = .false. ! entity
+    type(namedNodeMap) :: entities ! doctype
+    type(namedNodeMap) :: notations ! doctype
   end type docTypeExtras
 
   type Node
@@ -168,7 +168,9 @@ TOHW_m_dom_contents(`
     select case(np%nodeType)
     case (ELEMENT_NODE, ATTRIBUTE_NODE, XPATH_NAMESPACE_NODE)
       call destroyElementOrAttribute(np)
-    case (DOCUMENT_TYPE_NODE, ENTITY_NODE, NOTATION_NODE)
+    case (DOCUMENT_TYPE_NODE)
+      call destroyDocumentType(np)
+    case (ENTITY_NODE, NOTATION_NODE)
       call destroyEntityOrNotation(np)
     case (DOCUMENT_NODE)
       call destroyDocument(np)
@@ -204,21 +206,52 @@ TOHW_m_dom_contents(`
   TOHW_subroutine(destroyEntityOrNotation, (np))
     type(Node), pointer :: np
 
-    if (np%nodeType /= DOCUMENT_TYPE_NODE &
-      .and. np%nodeType /= ENTITY_NODE &
+    if (np%nodeType /= ENTITY_NODE &
       .and. np%nodeType /= NOTATION_NODE) then
        TOHW_m_dom_throw_error(FoX_INTERNAL_ERROR)
     endif
 
     if (associated(np%dtdExtras%publicId)) deallocate(np%dtdExtras%publicId)
     if (associated(np%dtdExtras%systemId)) deallocate(np%dtdExtras%systemId)
-    if (associated(np%dtdExtras%internalSubset)) deallocate(np%dtdExtras%internalSubset)
     if (associated(np%dtdExtras%notationName)) deallocate(np%dtdExtras%notationName)
+
     deallocate(np%dtdExtras)
 
   end subroutine destroyEntityOrNotation
 
-  subroutine destroyAllNodesRecursively(arg, except)
+  TOHW_subroutine(destroyDocumentType, (np))
+    type(Node), pointer :: np
+
+    integer :: i
+
+    if (np%nodeType /= DOCUMENT_TYPE_NODE) then
+       TOHW_m_dom_throw_error(FoX_INTERNAL_ERROR)
+    endif
+
+    if (associated(np%dtdExtras%publicId)) deallocate(np%dtdExtras%publicId)
+    if (associated(np%dtdExtras%systemId)) deallocate(np%dtdExtras%systemId)
+    if (associated(np%dtdExtras%internalSubset)) deallocate(np%dtdExtras%internalSubset)
+
+    ! Destroy all entities & notations (docType only)
+    if (associated(np%dtdExtras%entities%nodes)) then
+      do i = 1, size(np%dtdExtras%entities%nodes)
+        call destroyAllNodesRecursively(np%dtdExtras%entities%nodes(i)%this)
+      enddo
+      deallocate(np%dtdExtras%entities%nodes)
+    endif
+    if (associated(np%dtdExtras%notations%nodes)) then
+      do i = 1, size(np%dtdExtras%notations%nodes)
+        call destroy(np%dtdExtras%notations%nodes(i)%this)
+      enddo
+      deallocate(np%dtdExtras%notations%nodes)
+    endif
+
+    deallocate(np%dtdExtras)
+
+  end subroutine destroyDocumentType
+
+  recursive subroutine destroyAllNodesRecursively(arg, except)
+    ! Only recurses once into destroyDocumentType
     type(Node), pointer :: arg
     logical, intent(in), optional :: except
     

@@ -189,8 +189,6 @@ module m_dom_dom
     logical :: liveNodeLists ! For the document, are nodelists live?
     type(NodeList) :: hangingNodes ! For the document, list of nodes not associated with doc
     type(xml_doc_state), pointer :: xds => null()
-    type(namedNodeMap) :: entities ! actually for doctype
-    type(namedNodeMap) :: notations ! actually for doctype
     logical :: strictErrorChecking = .true.
     logical :: brokenNS = .false. ! FIXME consolidate these logical variables into bitmask
     type(DOMConfiguration), pointer :: domConfig
@@ -217,6 +215,8 @@ module m_dom_dom
     character, pointer :: internalSubset(:) => null() ! doctype
     character, pointer :: notationName(:) => null() ! entity
     logical :: illFormed = .false. ! entity
+    type(namedNodeMap) :: entities ! doctype
+    type(namedNodeMap) :: notations ! doctype
   end type docTypeExtras
 
   type Node
@@ -762,7 +762,9 @@ endif
     select case(np%nodeType)
     case (ELEMENT_NODE, ATTRIBUTE_NODE, XPATH_NAMESPACE_NODE)
       call destroyElementOrAttribute(np)
-    case (DOCUMENT_TYPE_NODE, ENTITY_NODE, NOTATION_NODE)
+    case (DOCUMENT_TYPE_NODE)
+      call destroyDocumentType(np)
+    case (ENTITY_NODE, NOTATION_NODE)
       call destroyEntityOrNotation(np)
     case (DOCUMENT_NODE)
       call destroyDocument(np)
@@ -808,8 +810,7 @@ endif
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: np
 
-    if (np%nodeType /= DOCUMENT_TYPE_NODE &
-      .and. np%nodeType /= ENTITY_NODE &
+    if (np%nodeType /= ENTITY_NODE &
       .and. np%nodeType /= NOTATION_NODE) then
        if (getFoX_checks().or.FoX_INTERNAL_ERROR<200) then
   call throw_exception(FoX_INTERNAL_ERROR, "destroyEntityOrNotation", ex)
@@ -824,13 +825,54 @@ endif
 
     if (associated(np%dtdExtras%publicId)) deallocate(np%dtdExtras%publicId)
     if (associated(np%dtdExtras%systemId)) deallocate(np%dtdExtras%systemId)
-    if (associated(np%dtdExtras%internalSubset)) deallocate(np%dtdExtras%internalSubset)
     if (associated(np%dtdExtras%notationName)) deallocate(np%dtdExtras%notationName)
+
     deallocate(np%dtdExtras)
 
   end subroutine destroyEntityOrNotation
 
-  subroutine destroyAllNodesRecursively(arg, except)
+  subroutine destroyDocumentType(np, ex)
+    type(DOMException), intent(out), optional :: ex
+    type(Node), pointer :: np
+
+    integer :: i
+
+    if (np%nodeType /= DOCUMENT_TYPE_NODE) then
+       if (getFoX_checks().or.FoX_INTERNAL_ERROR<200) then
+  call throw_exception(FoX_INTERNAL_ERROR, "destroyDocumentType", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    endif
+
+    if (associated(np%dtdExtras%publicId)) deallocate(np%dtdExtras%publicId)
+    if (associated(np%dtdExtras%systemId)) deallocate(np%dtdExtras%systemId)
+    if (associated(np%dtdExtras%internalSubset)) deallocate(np%dtdExtras%internalSubset)
+
+    ! Destroy all entities & notations (docType only)
+    if (associated(np%dtdExtras%entities%nodes)) then
+      do i = 1, size(np%dtdExtras%entities%nodes)
+        call destroyAllNodesRecursively(np%dtdExtras%entities%nodes(i)%this)
+      enddo
+      deallocate(np%dtdExtras%entities%nodes)
+    endif
+    if (associated(np%dtdExtras%notations%nodes)) then
+      do i = 1, size(np%dtdExtras%notations%nodes)
+        call destroy(np%dtdExtras%notations%nodes(i)%this)
+      enddo
+      deallocate(np%dtdExtras%notations%nodes)
+    endif
+
+    deallocate(np%dtdExtras)
+
+  end subroutine destroyDocumentType
+
+  recursive subroutine destroyAllNodesRecursively(arg, except)
+    ! Only recurses once into destroyDocumentType
     type(Node), pointer :: arg
     logical, intent(in), optional :: except
     
@@ -3641,7 +3683,7 @@ endif
     type(NodeList), pointer :: children1, children2
     type(NamedNodeMap), pointer :: atts1, atts2
 
-    integer :: i_tree, i_t, i
+    integer :: i_tree, i
     logical :: doneChildren, doneAttributes, equal
 
     if (.not.associated(arg)) then
@@ -5328,6 +5370,9 @@ endif
     dt%dtdExtras%systemId => vs_str_alloc(systemId)
     allocate(dt%dtdExtras%internalSubset(0)) ! FIXME This is valid behaviour, but we should
                                    ! really be able to get the intSubset from SAX
+    dt%dtdExtras%entities%ownerElement => dt
+    dt%dtdExtras%notations%ownerElement => dt
+
     dt%ownerDocument => null()
 
   end function createDocumentType
@@ -5454,8 +5499,6 @@ endif
     doc%docExtras%xds => xds
     call init_xml_doc_state(doc%docExtras%xds)
     allocate(doc%docExtras%xds%documentURI(0))
-    doc%docExtras%entities%ownerElement => doc
-    doc%docExtras%notations%ownerElement => doc
     allocate(doc%docExtras%domConfig)
 
     if (associated(docType)) then
@@ -5491,9 +5534,6 @@ endif
     allocate(doc%docExtras%nodelists(0))
     allocate(doc%docExtras%xds)
     call init_xml_doc_state(doc%docExtras%xds)
-
-    doc%docExtras%entities%ownerElement => doc
-    doc%docExtras%notations%ownerElement => doc
 
   end function createEmptyDocument
 
@@ -5541,21 +5581,6 @@ endif
   endif
 endif
 
-    endif
-
-! Destroy all entities & notations:
-
-    if (associated(arg%docExtras%entities%nodes)) then
-      do i = 1, size(arg%docExtras%entities%nodes)
-        call destroyAllNodesRecursively(arg%docExtras%entities%nodes(i)%this)
-      enddo
-      deallocate(arg%docExtras%entities%nodes)
-    endif
-    if (associated(arg%docExtras%notations%nodes)) then
-      do i = 1, size(arg%docExtras%notations%nodes)
-        call destroy(arg%docExtras%notations%nodes(i)%this)
-      enddo
-      deallocate(arg%docExtras%notations%nodes)
     endif
 
 ! Destroy all remaining nodelists
@@ -8294,10 +8319,7 @@ endif
 
     endif
 
-    print*,associated(arg)
-    print*,associated(arg%ownerDocument)
-    print*,associated(arg%ownerDocument%docExtras)
-    nnp => arg%ownerDocument%docExtras%entities
+    nnp => arg%dtdExtras%entities
   end function getEntities
 
   function getNotations(arg, ex)result(nnp) 
@@ -8329,7 +8351,7 @@ endif
 
     endif
 
-    nnp => arg%ownerDocument%docExtras%notations
+    nnp => arg%dtdExtras%notations
   end function getNotations
 
 
