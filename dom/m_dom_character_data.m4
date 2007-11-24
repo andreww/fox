@@ -103,7 +103,7 @@ TOHW_m_dom_contents(`
 
     ! And propagate length upwards ...
     if (getNodeType(arg)/=COMMENT_NODE) &
-      call updateTextContent(arg, len(data))
+      call updateTextContentLength(arg, len(data))
 
   end subroutine appendData
   
@@ -145,7 +145,7 @@ TOHW_m_dom_contents(`
 
     ! And propagate length upwards ...
     if (getNodeType(arg)/=COMMENT_NODE) &
-      call updateTextContent(arg, len(data))
+      call updateTextContentLength(arg, len(data))
 
   end subroutine insertData
 
@@ -182,7 +182,7 @@ TOHW_m_dom_contents(`
 
     ! And propagate length upwards ...
     if (getNodeType(arg)/=COMMENT_NODE) &
-      call updateTextContent(arg, -n)
+      call updateTextContentLength(arg, -n)
 
   end subroutine deleteData
 
@@ -236,7 +236,7 @@ TOHW_m_dom_contents(`
 
     ! And propagate length upwards ...
     if (getNodeType(arg)/=COMMENT_NODE) &
-      call updateTextContent(arg, n)
+      call updateTextContentLength(arg, n)
 
   end subroutine replaceData
  

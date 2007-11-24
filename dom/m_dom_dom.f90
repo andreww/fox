@@ -4063,13 +4063,8 @@ endif
         ! Ignore attributes for text content (unless this is an attribute!)
       case(TEXT_NODE, CDATA_SECTION_NODE)
         if (.not.getIsElementContentWhitespace(this)) then
-<<<<<<< HEAD:dom/m_dom_dom.f90
           c(i:i+size(this%nodeValue)-1) = str_vs(this%nodeValue)
           i = i + size(this%nodeValue)
-=======
-          c(i:i+this%textContentLength-1) = str_vs(this%nodeValue)
-          i = i + this%textContentLength
->>>>>>> d9a71b1... Make textContent ignore elementContentWhitespace:dom/m_dom_dom.f90
         endif
       end select
 
@@ -9721,7 +9716,7 @@ endif
 
     ! And propagate length upwards ...
     if (getNodeType(arg)/=COMMENT_NODE) &
-      call updateTextContent(arg, len(data))
+      call updateTextContentLength(arg, len(data))
 
   end subroutine appendData
   
@@ -9820,7 +9815,7 @@ endif
 
     ! And propagate length upwards ...
     if (getNodeType(arg)/=COMMENT_NODE) &
-      call updateTextContent(arg, len(data))
+      call updateTextContentLength(arg, len(data))
 
   end subroutine insertData
 
@@ -9890,7 +9885,7 @@ endif
 
     ! And propagate length upwards ...
     if (getNodeType(arg)/=COMMENT_NODE) &
-      call updateTextContent(arg, -n)
+      call updateTextContentLength(arg, -n)
 
   end subroutine deleteData
 
@@ -10001,7 +9996,7 @@ endif
 
     ! And propagate length upwards ...
     if (getNodeType(arg)/=COMMENT_NODE) &
-      call updateTextContent(arg, n)
+      call updateTextContentLength(arg, n)
 
   end subroutine replaceData
  
