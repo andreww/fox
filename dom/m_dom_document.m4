@@ -35,7 +35,6 @@ TOHW_m_dom_publics(`
   public :: setDocType
   public :: setDomConfig
   public :: setXds
-  public :: setEntityReferenceValue
   public :: createNamespaceNode
   public :: createEntity
   public :: createNotation
@@ -354,37 +353,6 @@ TOHW_m_dom_get(Node, documentElement, np%docExtras%documentElement, (DOCUMENT_NO
   
   end function createAttribute
 
-  subroutine setEntityReferenceValue(arg)
-    type(Node), pointer :: arg
-
-    type(Node), pointer :: this, treeroot
-    integer :: i_tree, l, n
-    logical :: doneAttributes, doneChildren
-
-    ! Calculate value of any entity references that are only textual:
-    n = 0
-    treeroot => arg
-TOHW_m_dom_treewalk(`
-      if (getNodeType(this)==TEXT_NODE) then
-        n = n + len(getData(this))
-      elseif (getNodeType(this)/=ENTITY_REFERENCE_NODE) then
-        n = 0
-        exit
-      endif
-',`')
-    deallocate(arg%nodeValue)
-    allocate(arg%nodeValue(n))
-    if (n>0) then
-      n = 0
-TOHW_m_dom_treewalk(`
-        if (getNodeType(this)==TEXT_NODE) then
-          l = len(getData(this))
-          arg%nodeValue(n+1:n+l) = vs_str(getData(this))
-          n = n + l
-        endif
-',`')
-    endif
-  end subroutine setEntityReferenceValue
 
   recursive TOHW_function(createEntityReference, (arg, name), np)
   ! Needs to be recursive in case of entity-references within each other.
@@ -430,8 +398,6 @@ TOHW_m_dom_treewalk(`
         endif
       endif
     endif
-    ! FIXME we could get away with just storing the length here.
-    call setEntityReferenceValue(np)
 
     call setReadOnlyNode(np, .true., .false.)
 

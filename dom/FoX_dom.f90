@@ -131,6 +131,7 @@ module FoX_dom
   public :: hasAttributes
 
   public :: getTextContent
+  public :: setTextContent
   public :: isEqualNode
   public :: isSameNode
   public :: isDefaultNamespace

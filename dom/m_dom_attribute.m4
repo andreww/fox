@@ -32,26 +32,10 @@ TOHW_m_dom_get(logical, isId, np%elExtras%isId, (ATTRIBUTE_NODE))
 TOHW_m_dom_set(logical, isId, np%elExtras%isId, (ATTRIBUTE_NODE))
 
 TOHW_m_dom_get(Node, ownerElement, np%elExtras%ownerElement, (ATTRIBUTE_NODE))
-    
-  pure function getValue_len(arg, p) result(n)
-    type(Node), intent(in) :: arg
-    logical, intent(in) :: p
-    integer :: n
-
-    integer :: i
-
-    n = 0 
-    if (.not.p) return
-
-    do i = 1, arg%childNodes%length
-      n = n + size(arg%childNodes%nodes(i)%this%nodeValue)
-    enddo
-
-  end function getValue_len
 
   TOHW_function(getValue_DOM, (arg), c)
     type(Node), pointer :: arg
-    character(len=getValue_len(arg, associated(arg))) :: c 
+    character(len=getTextContent_len(arg, associated(arg))) :: c 
 
     integer :: i, n
 
@@ -63,11 +47,7 @@ TOHW_m_dom_get(Node, ownerElement, np%elExtras%ownerElement, (ATTRIBUTE_NODE))
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
 
-    n = 1
-    do i = 1, arg%childNodes%length
-      c(n:n+size(arg%childNodes%nodes(i)%this%nodeValue)-1) = &
-        str_vs(arg%childNodes%nodes(i)%this%nodeValue)
-    enddo
+    c = getTextContent(arg)
 
   end function getValue_DOM
 

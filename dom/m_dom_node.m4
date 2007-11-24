@@ -31,6 +31,7 @@ TOHW_m_dom_publics(`
   public :: lookupNamespaceURI
   public :: lookupPrefix
   public :: getTextContent
+  public :: setTextContent
 
   public :: setStringValue
   public :: getStringValue
@@ -47,16 +48,12 @@ TOHW_m_dom_get(DOMString, nodeName, np%nodeName)
     logical, intent(in) :: p
     integer :: n
 
-    integer :: i
-
     n = 0 
     if (.not.p) return
 
     select case(np%nodeType)
     case (ATTRIBUTE_NODE)
-      do i = 1, np%childNodes%length
-        n = n + size(np%childNodes%nodes(i)%this%nodeValue)
-      enddo
+      n = getTextContent_len(np, .true.)
     case (CDATA_SECTION_NODE, COMMENT_NODE, PROCESSING_INSTRUCTION_NODE, TEXT_NODE)
       n = size(np%nodeValue)
     end select
@@ -67,19 +64,13 @@ TOHW_m_dom_get(DOMString, nodeName, np%nodeName)
     type(Node), pointer :: np
     character(len=getNodeValue_len(np, associated(np))) :: c
 
-    integer :: i, n
-
     if (.not.associated(np)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif
 
     select case(np%nodeType)
     case (ATTRIBUTE_NODE)
-      n = 1
-      do i = 1, np%childNodes%length
-        c(n:n+size(np%childNodes%nodes(i)%this%nodeValue)-1) = &
-          str_vs(np%childNodes%nodes(i)%this%nodeValue)
-      enddo
+      c = getTextContent(np)
     case (CDATA_SECTION_NODE, COMMENT_NODE, PROCESSING_INSTRUCTION_NODE, TEXT_NODE)
       c = str_vs(np%nodeValue)
     case default
@@ -93,7 +84,6 @@ TOHW_m_dom_get(DOMString, nodeName, np%nodeName)
     character(len=*) :: nodeValue
 
     type(Node), pointer :: np
-    integer :: i
 
     if (.not.associated(arg)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
@@ -107,60 +97,10 @@ TOHW_m_dom_get(DOMString, nodeName, np%nodeName)
 
     select case(arg%nodeType)
     case (ATTRIBUTE_NODE)
-      if (arg%readonly) then
-        TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
-      endif
-      ! destroy any existing children ... 
-      do i = 1, arg%childNodes%length
-        if (.not.arg%inDocument) &
-          call remove_node_nl(arg%ownerDocument%docExtras%hangingNodes, arg%childNodes%nodes(i)%this)
-        call destroyNode(arg%childNodes%nodes(i)%this)
-      enddo
-      deallocate(arg%childNodes%nodes)
-      allocate(arg%childNodes%nodes(0))
-      arg%childNodes%length = 0
-      arg%firstChild => null()
-      arg%lastChild => null()
-      ! and add the new one.
-      ! Avoid manipulating hangingnode lists
-      !      call setGCstate(arg%ownerDocument, .false.)
-      np => createTextNode(arg%ownerDocument, nodeValue)
-      np => appendChild(arg, np, ex)
-      !      call setGCstate(arg%ownerDocument, .true.)
-      !      if (.not.arg%inDocument) call append(arg%document%blah, ...)
-    case (CDATA_SECTION_NODE)
-      if (arg%readonly) then
-        TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
-      endif
-      if (index(str_vs(arg%nodeValue),"]]>")>0) then
-        TOHW_m_dom_throw_error(FoX_INVALID_CDATA_SECTION)
-      endif
-      deallocate(arg%nodeValue)
-      arg%nodeValue => vs_str_alloc(nodeValue)
-    case (COMMENT_NODE)
-      if (arg%readonly) then
-        TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
-      endif
-      if (index(str_vs(arg%nodeValue),"--")>0) then
-        TOHW_m_dom_throw_error(FoX_INVALID_COMMENT)
-      endif
-      deallocate(arg%nodeValue)
-      arg%nodeValue => vs_str_alloc(nodeValue)
-    case (PROCESSING_INSTRUCTION_NODE)
-      if (arg%readonly) then
-        TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
-      endif
-      if (index(str_vs(arg%nodeValue),"?>")>0) then
-        TOHW_m_dom_throw_error(FoX_INVALID_PI_DATA)
-      endif
-      deallocate(arg%nodeValue)
-      arg%nodeValue => vs_str_alloc(nodeValue)
-    case (TEXT_NODE)
-      if (arg%readonly) then
-        TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
-      endif
-      deallocate(arg%nodeValue)
-      arg%nodeValue => vs_str_alloc(nodeValue)
+      call setValue(arg, nodeValue)
+    case (CDATA_SECTION_NODE, COMMENT_NODE, PROCESSING_INSTRUCTION_NODE, TEXT_NODE)
+      call setData(arg, nodeValue)
+     
     end select
 
   end subroutine setNodeValue
@@ -816,11 +756,6 @@ TOHW_m_dom_treewalk(`
 
 !  function compareDocumentPosition FIXME
 
-!  function getTextContent FIXME
-!  function setTextContent FIXME
-
-
-  
   TOHW_subroutine(normalize, (arg))
     type(Node), pointer :: arg
     type(Node), pointer :: this, tempNode, oldNode, treeroot
@@ -1419,6 +1354,44 @@ TOHW_m_dom_treewalk(`
       end select
 '`')
   end function getTextContent
+
+  TOHW_subroutine(setTextContent, (arg, textContent))
+    type(Node), pointer :: arg
+    character(len=*), intent(in) :: textContent
+
+    type(Node), pointer :: np
+    integer :: i
+
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif
+
+    if (.not.checkChars(textContent, getXmlVersionEnum(getOwnerDocument(arg)))) then
+      TOHW_m_dom_throw_error(FoX_INVALID_CHARACTER)
+    endif
+
+    select case(getNodeType(arg))
+    case (ELEMENT_NODE, ATTRIBUTE_NODE, DOCUMENT_FRAGMENT_NODE)
+      if (arg%readonly) then
+        TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
+      endif
+      do i = 1, getLength(getChildNodes(arg))
+        call destroyNode(arg%childNodes%nodes(i)%this)
+      enddo
+      deallocate(arg%childNodes%nodes)
+      allocate(arg%childNodes%nodes(0))
+      arg%childNodes%length = 0
+      arg%firstChild => null()
+      arg%lastChild => null()
+      arg%textContentLength = 0
+      np => createTextNode(getOwnerDocument(arg), textContent)
+      np => appendChild(arg, np)
+    case (TEXT_NODE, CDATA_SECTION_NODE, PROCESSING_INSTRUCTION_NODE, COMMENT_NODE)
+      call setData(arg, textContent)
+    case (ENTITY_NODE, ENTITY_REFERENCE_NODE)
+      TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
+    end select
+  end subroutine setTextContent
 
   subroutine putNodesInDocument(doc, arg)
     type(Node), pointer :: doc, arg
