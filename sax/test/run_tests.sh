@@ -6,6 +6,9 @@ rm -f passed.score failed.score
 rm -f tests.out failed.out
 touch passed.score failed.score
 
+# I don't know why make won't do this ...
+
+make m_handlers.o
 for t in test_sax*.sh
 do
   ./$t

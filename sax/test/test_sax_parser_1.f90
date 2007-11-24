@@ -16,9 +16,9 @@ program test_sax_reader
 
   call sax_parse(fx, fb)
 
-  write(*,'(i0)'), fx%xds%xml_version
-  write(*,'(a)'), str_vs(fx%xds%encoding)
-  write(*,'(l1)'), fx%xds%standalone
+  write(*,'(i0)') fx%xds%xml_version
+  write(*,'(a)') str_vs(fx%xds%encoding)
+  write(*,'(l1)') fx%xds%standalone
 
   call sax_parser_destroy(fx)
   call close_file(fb) 

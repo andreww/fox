@@ -4,24 +4,24 @@
 notcdata [ {}notcdata ]  = ab cd
 att [ {}att ]  = arse bum
 PCDATA:
-lalalaPCDATA:
+lalalaPCDATA:
 %PCDATA:
-PCDATA:
+PCDATA:
   PCDATA:
  PCDATA:
 arsePCDATA:
   PCDATA:
  bumPCDATA:
->>Begin Element: {}abc
+>>Begin Element: {}abc
 ---  0 attributes:
 >>End Element: {}abc
 PCDATA:
-PCDATA:
-PCDATA:
->>Begin Element: {}error
+PCDATA:
+PCDATA:
+>>Begin Element: {}error
 ---  1 attributes:
 xml:space [ {http://www.w3.org/XML/1998/namespace}space ]  = preserve
 >>End Element: {}error
 PCDATA:
->>End Element: {}test
+>>End Element: {}test
  Document finished!!
