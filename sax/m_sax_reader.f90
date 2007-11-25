@@ -25,7 +25,7 @@ module m_sax_reader
 
 
   use m_common_array_str, only : vs_str, str_vs, vs_str_alloc, vs_vs_alloc
-  use m_common_charset, only: XML1_0, XML1_1
+  use m_common_charset, only: XML1_0, XML1_1, isLegalChar
   use m_common_error,  only: FoX_error
   use m_common_io, only: setup_io, io_eor, io_eof, get_unit
   use m_common_format, only: str
@@ -68,6 +68,7 @@ module m_sax_reader
     ! remember if we have a pending newline
     character, pointer       :: next_chars(:)  => null()     ! read_really needs its
     ! own pushback buffer
+    character, pointer       :: putchar(:) => null()
     integer                  :: pos                 ! which char are we at?
     integer                  :: nchars              ! How many chars in buffer?
     integer                  :: line                ! which line of file?
@@ -575,6 +576,195 @@ contains
     fb%buffer_stack => tempStack
 
   end subroutine pop_buffer_stack
+
+  function get_characters2(fb, n, iostat) result(string)
+    type(file_buffer_t), intent(inout) :: fb
+    integer, intent(in) :: n
+    integer, intent(out) :: iostat
+    character(len=n) :: string
+
+    type(buffer_t), pointer :: cb
+    integer :: offset, n_left, n_held
+
+    if (.not.fb%connected) then
+      iostat = BUFFER_NOT_CONNECTED
+      return
+    endif
+
+    if (associated(fb%putchar)) then
+      ! FIXME is putchar too long?
+      offset = size(fb%putchar)
+      string(:offset) = str_vs(fb%putchar)
+      deallocate(fb%putchar)
+    else
+      offset = 0
+    endif     
+    n_left = n - offset
+  
+    ! Where are we reading from?
+    if (size(fb%buffer_stack) > 0) then
+      ! We are reading from an internal character buffer.
+      cb => fb%buffer_stack(1)
+      n_held = size(cb%s) - cb%pos + 1
+      if (n_left <= n_held) then
+        string(offset+1:) = str_vs(cb%s(cb%pos:cb%pos+n_left-1))
+        cb%pos = cb%pos + n_left
+        iostat = 0 
+      else
+        ! Not enough characters here
+        string = ''
+        ! put characters back on putchar?
+        iostat = io_eof
+        return
+      endif
+    else
+      ! We are reading from a file
+      string(offset+1:) = get_chars_from_file(fb, n_left, iostat)
+      if (iostat/=0) return ! EOF or Error.
+    endif
+
+    ! FIXME keep track of lines and columns above.
+
+  end function get_characters2
+
+  subroutine get_characters2_until_condition(fb, condition, true, iostat)
+    type(file_buffer_t), intent(inout) :: fb
+    interface
+      function condition(c) result(p)
+        character, intent(in) :: c
+        logical :: p
+      end function condition
+    end interface
+    logical, intent(in) :: true
+    integer, intent(out) :: iostat
+
+    type(buffer_t), pointer :: cb
+    character, dimension(:), pointer :: tempbuf, buf
+    integer :: m_i
+
+    if (associated(fb%putchar)) then
+      ! FIXME shrink putchar in case we only need part of it
+      tempbuf => vs_vs_alloc(fb%putchar)
+    else
+      tempbuf => vs_str_alloc("")
+    endif 
+
+    if (size(fb%buffer_stack)>0) then
+      cb => fb%buffer_stack(1)
+      if (cb%pos>size(cb%s)) then
+        iostat = io_eof
+        return
+      endif
+    elseif (fb%eof.and.fb%pos>fb%nchars) then
+      iostat = io_eof
+      return
+    endif
+
+
+! THIS IS ALL STILL FUCKED
+
+    allocate(buf(0))
+    m_i = check_fb(fb, condition, true)
+    do while (size(fb%buffer_stack)==0.and.m_i==0)
+      tempbuf => vs_str_alloc(str_vs(buf)//fb%buffer(fb%pos:fb%nchars))
+      deallocate(buf)
+      buf => tempbuf
+      fb%pos = fb%nchars + 1
+      call fill_buffer(fb, iostat)
+      if (iostat==io_eof) then
+        ! just return with what we have
+        ! we'll reset iostat = 0 below
+        m_i = fb%nchars - fb%pos + 1
+        if (m_i==0) m_i = 1
+        exit
+      elseif (iostat/=0) then
+        return
+      else
+        m_i = check_fb(fb, condition, true)
+      endif
+    enddo
+    ! We're ok, and we'll definitely return something
+    iostat = 0
+
+    if (size(fb%buffer_stack)>0) then
+      deallocate(buf)
+      if (m_i==0) then
+        buf => vs_vs_alloc(cb%s(cb%pos:))
+        cb%pos = size(cb%s) + 1
+      else
+        buf => vs_vs_alloc(cb%s(cb%pos:cb%pos+m_i-2))
+        cb%pos = cb%pos + m_i - 1
+      endif
+    else
+      tempbuf => vs_str_alloc(str_vs(buf)//fb%buffer(fb%pos:fb%pos+m_i-2))
+      deallocate(buf)
+      buf => tempbuf
+      fb%pos = fb%pos + m_i - 1
+    endif
+
+    if (associated(fb%namebuffer)) deallocate(fb%namebuffer)
+    fb%namebuffer => buf
+    call move_cursor(fb, str_vs(fb%namebuffer))
+
+  end subroutine get_characters2_until_condition
+
+  function get_chars_from_file(fb, n, iostat) result(string)
+    type(file_buffer_t), intent(inout) :: fb
+    integer, intent(in) :: n
+    integer, intent(out) :: iostat
+    character(len=n) :: string
+
+    integer :: i
+    character :: c, c2
+    logical :: pending
+
+    i = 1
+    pending = .false.
+    do while (i<=n)
+      if (pending) then
+        c = c2
+        pending = .false.
+      else
+        read (unit=fb%lun, iostat=iostat, advance="no", fmt="(1a1)") c
+        if (iostat==io_eor) then
+          c = achar(13)
+        elseif (iostat/=0) then
+          ! FIXME do something with the characters we have read.
+          return
+        endif
+      endif
+      if (.not.isLegalChar(c, fb%xml_version)) then
+        ! FIXME throw an error)
+      endif
+      if (c==achar(10)) then
+        read (unit=fb%lun, iostat=iostat, advance="no", fmt="(1a1)") c2
+        if (iostat==io_eof) then
+          ! the file has just ended on a single CR. Report is as a LF.
+          ! Ignore the eof just now, it'll be picked up if we need to 
+          ! perform another read.
+          iostat = 0
+          c = achar(13)
+        elseif (iostat==io_eor.or.c2==achar(13)) then
+          ! (We pretend all ends of lines are LF)
+          ! We can drop the CR
+          c = c2
+        elseif (iostat/=0) then
+          ! Unknown IO error
+          return
+        else
+          c = achar(13)
+          pending = .true.
+        endif
+      endif
+      string(i:i) = c
+    enddo
+
+    if (pending) then
+      ! we have one character left over, put in the pushback buffer
+      allocate(fb%putchar(1))
+      fb%putchar = c2
+    endif
+  end function get_chars_from_file
 
   function get_characters(fb, n, iostat) result(string)
     type(file_buffer_t), intent(inout) :: fb
