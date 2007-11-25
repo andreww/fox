@@ -109,8 +109,6 @@ module m_sax_reader
   public :: get_characters_until_all_of
   public :: put_characters
 
-  public :: next_chars_are
-
   public :: dump_string
 
   public :: push_buffer_stack
@@ -792,27 +790,6 @@ contains
     call get_chars_with_condition(fb, marker, index_fb, iostat)
 
   end subroutine get_characters_until_all_of
-
-  function next_chars_are(fb, string, iostat) result(p)
-    type(file_buffer_t), intent(inout) :: fb
-    character(len=*), intent(in) :: string
-    integer, intent(out) :: iostat
-    logical :: p
-
-    character(len=len(string)) :: s
-
-    p = .false.
-    s = get_characters(fb, len(string), iostat)
-    if (iostat==io_eof) then
-      s = ''
-      return
-    elseif (iostat/=0) then
-      return
-    endif
-    p = (s==string) 
-    if (.not.p) call put_characters(fb, len(string))
-
-  end function next_chars_are
 
 
   subroutine move_cursor(fb, string)
