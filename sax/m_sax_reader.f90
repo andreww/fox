@@ -107,7 +107,7 @@ module m_sax_reader
   public :: get_characters_until_not_one_of
   public :: get_characters_until_one_of
   public :: get_characters_until_all_of
-  public :: put_characters
+  public :: put_character
 
   public :: dump_string
 
@@ -260,7 +260,7 @@ contains
       c2 = really_read_char(iostat)
       if (iostat/=0) return
       if (c2 /= achar(13)) then
-        call put_characters(fb, 1)
+        call put_character(fb)
         ! else discard it.
       endif
       fb%line = fb%line + 1
@@ -808,28 +808,19 @@ contains
   end subroutine move_cursor
 
 
-  subroutine put_characters(fb, n)
+  subroutine put_character(fb)
     type(file_buffer_t), intent(inout) :: fb
-    integer, intent(in) :: n
 
     type(buffer_t), pointer :: cb
 
     if (size(fb%buffer_stack)>0) then
       cb => fb%buffer_stack(1)
-      if (n > cb%pos) then
-        ! make an error
-      else
-        cb%pos = cb%pos - n
-      endif
+      cb%pos = cb%pos - 1
     else
-      if (n > fb%pos) then
-        ! make an error
-      else
-        fb%pos = fb%pos - n
-      endif
+      fb%pos = fb%pos - 1
     endif
 
-  end subroutine put_characters
+  end subroutine put_character
 
 
   function line(fb) result(n)
