@@ -506,11 +506,13 @@ contains
               fb%input_pos = fb%input_pos+n_chars
             endif
           else
-            ! These two initializations to shut the Intel compiler up.
-            nc = 0
+            ! This initialization to shut the Intel compiler up.
             iostat = 0
-            read(unit=fb%lun, iostat=iostat, advance="no", &
-              size=nc, fmt="("//str(n_chars-ncr)//"a1)") string(ncr+1:)
+            do nc = 0, n_chars-ncr-1
+              read (unit=fb%lun, iostat=iostat, advance="no", &
+                fmt="(1a1)") string(ncr+nc+1:ncr+nc+1)
+              if (iostat/=0) exit 
+            enddo
           endif
         endif
         ncr = ncr + nc
