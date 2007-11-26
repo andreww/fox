@@ -517,8 +517,62 @@ TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
 
   end function hasAttributeNS
 
-! setIdAttribute
-! setIdAttributeNS
-! setIdAttributeNode
+  TOHW_subroutine(setIdAttribute, (arg, name, isId))
+    type(Node), pointer :: arg
+    character(len=*), intent(in) :: name
+    logical, intent(in) :: isId
+
+    type(Node), pointer :: np
+
+    if (arg%readonly) then
+      TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
+    endif
+
+    np => getAttributeNode(arg, name)
+    if (associated(np)) then
+      call setIsId(np, isId)
+    else
+      TOHW_m_dom_throw_error(NOT_FOUND_ERR)
+    endif
+
+  end subroutine setIdAttribute
+
+  TOHW_subroutine(setIdAttributeNS, (arg, namespaceURI, localname, isId))
+    type(Node), pointer :: arg
+    character(len=*), intent(in) :: namespaceURI
+    character(len=*), intent(in) :: localName
+    logical, intent(in) :: isId
+
+    type(Node), pointer :: np
+
+    if (arg%readonly) then
+      TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
+    endif
+
+    np => getAttributeNodeNS(arg, namespaceURI, localname)
+    if (associated(np)) then
+      call setIsId(np, isId)
+    else
+      TOHW_m_dom_throw_error(NOT_FOUND_ERR)
+    endif
+
+  end subroutine setIdAttributeNS
+
+  TOHW_subroutine(setIdAttributeNode, (arg, idAttr, isId))
+    type(Node), pointer :: arg
+    type(Node), pointer :: idAttr
+    logical, intent(in) :: isId
+
+    type(Node), pointer :: np
+
+    if (arg%readonly) then
+      TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
+    elseif (.not.associated(arg, getOwnerElement(idAttr))) then
+      TOHW_m_dom_throw_error(NOT_FOUND_ERR)
+    endif
+
+    call setIsId(idAttr, isId)
+
+  end subroutine setIdAttributeNode
 
 ')`'dnl
