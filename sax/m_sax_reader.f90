@@ -68,7 +68,6 @@ module m_sax_reader
     ! remember if we have a pending newline
     character, pointer       :: next_chars(:)  => null()     ! read_really needs its
     ! own pushback buffer
-    character, pointer       :: putchar(:) => null()
     integer                  :: pos                 ! which char are we at?
     integer                  :: nchars              ! How many chars in buffer?
     integer                  :: line                ! which line of file?
@@ -585,21 +584,34 @@ contains
 
     type(buffer_t), pointer :: cb
     integer :: offset, n_left, n_held
+    character, pointer :: temp(:)
 
     if (.not.fb%connected) then
       iostat = BUFFER_NOT_CONNECTED
       return
     endif
 
-    if (associated(fb%putchar)) then
-      ! FIXME is putchar too long?
-      offset = size(fb%putchar)
-      string(:offset) = str_vs(fb%putchar)
-      deallocate(fb%putchar)
+    if (associated(fb%next_chars)) then
+      if (n<size(fb%next_chars)) then
+        string = str_vs(fb%next_chars(:n))
+        temp => vs_vs_alloc(fb%next_chars(n+1:))
+        deallocate(fb%next_chars)
+        fb%next_chars => temp
+        iostat = 0
+        return
+      endif
+      offset = size(fb%next_chars)
+      string(:offset) = str_vs(fb%next_chars)
+      deallocate(fb%next_chars)
+      fb%next_chars => vs_str_alloc("")
     else
       offset = 0
     endif     
     n_left = n - offset
+    if (n_left==0) then
+      iostat = 0
+      return
+    endif
   
     ! Where are we reading from?
     if (size(fb%buffer_stack) > 0) then
@@ -613,7 +625,7 @@ contains
       else
         ! Not enough characters here
         string = ''
-        ! put characters back on putchar?
+        ! put characters back on putchar? FIXME
         iostat = io_eof
         return
       endif
@@ -623,90 +635,83 @@ contains
       if (iostat/=0) return ! EOF or Error.
     endif
 
-    ! FIXME keep track of lines and columns above.
-
   end function get_characters2
 
-  subroutine get_characters2_until_condition(fb, condition, true, iostat)
+
+  subroutine get_chars2_with_condition(fb, marker, condition, iostat)
     type(file_buffer_t), intent(inout) :: fb
+    character(len=*), intent(in) :: marker
+    integer, intent(out) :: iostat
+
     interface
-      function condition(c) result(p)
-        character, intent(in) :: c
+      function condition(c1, c2) result(p)
+        character, intent(in) :: c1, c2
         logical :: p
       end function condition
     end interface
-    logical, intent(in) :: true
-    integer, intent(out) :: iostat
 
-    type(buffer_t), pointer :: cb
     character, dimension(:), pointer :: tempbuf, buf
-    integer :: m_i
-
-    if (associated(fb%putchar)) then
-      ! FIXME shrink putchar in case we only need part of it
-      tempbuf => vs_vs_alloc(fb%putchar)
-    else
-      tempbuf => vs_str_alloc("")
-    endif 
-
-    if (size(fb%buffer_stack)>0) then
-      cb => fb%buffer_stack(1)
-      if (cb%pos>size(cb%s)) then
-        iostat = io_eof
-        return
-      endif
-    elseif (fb%eof.and.fb%pos>fb%nchars) then
-      iostat = io_eof
-      return
-    endif
-
-
-! THIS IS ALL STILL FUCKED
+    character :: c
 
     allocate(buf(0))
-    m_i = check_fb(fb, condition, true)
-    do while (size(fb%buffer_stack)==0.and.m_i==0)
-      tempbuf => vs_str_alloc(str_vs(buf)//fb%buffer(fb%pos:fb%nchars))
+    do while (.not.condition(str_vs(buf), marker))
+      c = get_characters(fb, 1, iostat)
+      if (iostat/=0) return
+      allocate(tempbuf(size(buf)+1))
+      tempbuf = (/buf, c/)
       deallocate(buf)
       buf => tempbuf
-      fb%pos = fb%nchars + 1
-      call fill_buffer(fb, iostat)
-      if (iostat==io_eof) then
-        ! just return with what we have
-        ! we'll reset iostat = 0 below
-        m_i = fb%nchars - fb%pos + 1
-        if (m_i==0) m_i = 1
-        exit
-      elseif (iostat/=0) then
-        return
-      else
-        m_i = check_fb(fb, condition, true)
-      endif
     enddo
-    ! We're ok, and we'll definitely return something
-    iostat = 0
-
-    if (size(fb%buffer_stack)>0) then
-      deallocate(buf)
-      if (m_i==0) then
-        buf => vs_vs_alloc(cb%s(cb%pos:))
-        cb%pos = size(cb%s) + 1
-      else
-        buf => vs_vs_alloc(cb%s(cb%pos:cb%pos+m_i-2))
-        cb%pos = cb%pos + m_i - 1
-      endif
-    else
-      tempbuf => vs_str_alloc(str_vs(buf)//fb%buffer(fb%pos:fb%pos+m_i-2))
-      deallocate(buf)
-      buf => tempbuf
-      fb%pos = fb%pos + m_i - 1
-    endif
 
     if (associated(fb%namebuffer)) deallocate(fb%namebuffer)
     fb%namebuffer => buf
-    call move_cursor(fb, str_vs(fb%namebuffer))
 
-  end subroutine get_characters2_until_condition
+  end subroutine get_chars2_with_condition
+
+  subroutine get_characters2_until_not_one_of(fb, marker, iostat)
+    type(file_buffer_t), intent(inout) :: fb
+    character(len=*) :: marker
+    integer, intent(out) :: iostat
+
+    call get_chars2_with_condition(fb, marker, verify_fb2, iostat)
+
+  end subroutine get_characters2_until_not_one_of
+
+  subroutine get_characters2_until_one_of(fb, marker, iostat)
+    type(file_buffer_t), intent(inout) :: fb
+    character(len=*), intent(in) :: marker
+    integer, intent(out) :: iostat
+
+    call get_chars2_with_condition(fb, marker, scan_fb2, iostat)
+
+  end subroutine get_characters2_until_one_of
+
+  subroutine get_characters2_until_all_of(fb, marker, iostat)
+    type(file_buffer_t), intent(inout) :: fb
+    character(len=*), intent(in) :: marker
+    integer, intent(out) :: iostat
+
+    call get_chars2_with_condition(fb, marker, index_fb2, iostat)
+
+  end subroutine get_characters2_until_all_of
+
+  function verify_fb2(c1, c2) result(p)
+    character(len=*), intent(in) :: c1, c2
+    logical :: p
+    p = (verify(c1,c2)/=0)
+  end function verify_fb2
+
+  function scan_fb2(c1, c2) result(p)
+    character(len=*), intent(in) :: c1, c2
+    logical :: p
+    p = (scan(c1,c2)/=0)
+  end function scan_fb2
+
+  function index_fb2(c1, c2) result(p)
+    character(len=*), intent(in) :: c1, c2
+    logical :: p
+    p = (index(c1,c2)/=0)
+  end function index_fb2
 
   function get_chars_from_file(fb, n, iostat) result(string)
     type(file_buffer_t), intent(inout) :: fb
@@ -738,12 +743,15 @@ contains
       endif
       if (c==achar(10)) then
         read (unit=fb%lun, iostat=iostat, advance="no", fmt="(1a1)") c2
+        fb%col = fb%col + 1
         if (iostat==io_eof) then
           ! the file has just ended on a single CR. Report is as a LF.
           ! Ignore the eof just now, it'll be picked up if we need to 
           ! perform another read.
           iostat = 0
           c = achar(13)
+          fb%line = fb%line + 1
+          fb%col = 0
         elseif (iostat==io_eor.or.c2==achar(13)) then
           ! (We pretend all ends of lines are LF)
           ! We can drop the CR
@@ -761,8 +769,8 @@ contains
 
     if (pending) then
       ! we have one character left over, put in the pushback buffer
-      allocate(fb%putchar(1))
-      fb%putchar = c2
+      allocate(fb%next_chars(1))
+      fb%next_chars = c2
     endif
   end function get_chars_from_file
 
