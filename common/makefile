@@ -6,7 +6,7 @@ OBJFILES=m_common_array_str.$(OBJEXT) m_common_attrs.$(OBJEXT) m_common_buffer.$
          m_common_error.$(OBJEXT) m_common_elstack.$(OBJEXT) m_common_io.$(OBJEXT) FoX_common.$(OBJEXT) \
 	 m_common_namecheck.$(OBJEXT) m_common_entities.$(OBJEXT) m_common_notations.$(OBJEXT) \
          m_common_realtypes.$(OBJEXT) m_common_element.$(OBJEXT) m_common_struct.$(OBJEXT) \
-	 m_common_entity_expand.$(OBJEXT) m_common_string.$(OBJEXT)
+	 m_common_entity_expand.$(OBJEXT) m_common_string.$(OBJEXT) m_common_parse_input.$(OBJEXT)
 #
 LIBRARY=libFoX_common.$(LIBEXT)
 INCFLAGS=$(MOD_PREFIX)../objs/finclude
@@ -34,6 +34,8 @@ check:
 #
 clean:
 	rm -f *.$(OBJEXT)  *.$(MOD_EXT) $(LIBRARY)
+
+m_common_parse_input.F90: m_common_parse_input.m4
 # DO NOT DELETE THIS LINE - used by make depend
 FoX_common.$(OBJEXT): m_common_array_str.$(OBJEXT) m_common_attrs.$(OBJEXT) m_common_format.$(OBJEXT)
 m_common_array_str.$(OBJEXT): m_common_realtypes.$(OBJEXT)
