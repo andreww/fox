@@ -13,12 +13,12 @@ define(`TOHW_defaultargs', `dnl
 ')dnl
 dnl
 define(`TOHW_defaultdecls', `dnl
-    integer :: i, j, ij, k, m, n, s_i, err, ios
+    integer :: i, j, ij, k, s_i, err, ios
     real :: r, c
 ')dnl
 dnl
 define(`TOHW_check_errors', `dnl
-    num = ij
+    if (present(num)) num = ij
     if (ij<size(array)) then
       if (err==0) err = -1
     else
@@ -61,10 +61,13 @@ define(`TOHW_parse_strings', `dnl
       else
         k = s_i + k - 2
       endif
+      print*, s_i, k, "!", s(s_i:k), "!"
       $1 = s(s_i:k)
       ij = ij + 1
       s_i = k + 2
-      if (ij<size(array).and.s_i>len(s)) exit
+      print*, ij, size(array), s_i, len(s), &
+        (ij<size(array).and.s_i>len(s))
+      if (ij<size(array).and.s_i>len(s)) exit loop
 ')dnl
 dnl
 define(`TOHW_parse_logical', `dnl
@@ -146,10 +149,10 @@ define(`TOHW_parse_complex', `dnl
       $1 = cmplx(r, c)
       ij = ij + 1
       s_i = k + 2
-      if (i<n.and.s_i>len(s)) exit
+      if (ij<size(array).and.s_i>len(s)) exit
 ')dnl
 dnl
-module readarrays
+module m_common_parse_input
 
   use m_common_charset, only : XML_WHITESPACE
   use m_common_realtypes, only: sp, dp
@@ -187,20 +190,19 @@ TOHW_defaultargs
 TOHW_defaultdecls
 
     s_i = 1
-    n = size(array)
     err = 0
     array = ""
     ij = 0
-    do i = 1, n
+    loop: do i = 1, size(array)
 TOHW_parse_strings(`array(i)')
-    end do
+    end do loop
 
     if (present(num)) num = ij
-    if (i<=size(array)) then
+    if (ij<size(array)) then
       err = -1
     else
       if (present(separator)) then
-        if (index(s(s_i:), separator)/=0) &
+        if (len(s)-s_i>=0) &
           err = 1
       else
         if (verify(s(s_i:), XML_WHITESPACE)/=0) &
@@ -221,24 +223,21 @@ TOHW_defaultargs
 TOHW_defaultdecls
 
     s_i = 1
-    m = size(array, 1)
-    n = size(array, 2)
     err = 0
     array = ""
     ij = 0
-    do i = 1, n
-    do j = 1, m
-TOHW_parse_strings(`array(m, n)')`'dnl
+    loop: do j = 1, size(array, 2)
+    do i = 1, size(array, 1)
+TOHW_parse_strings(`array(i, j)')`'dnl
     end do
-    end do
+    end do loop
 
-    if (ij<=size(array)) then
-      if (present(num)) num = ij
+    if (present(num)) num = ij
+    if (ij<size(array)) then
       err = -1
     else
-      if (present(num)) num = n
       if (present(separator)) then
-        if (index(s(s_i:), separator)/=0) &
+        if (len(s)-s_i>=0) &
           err = 1
       else
         if (verify(s(s_i:), XML_WHITESPACE)/=0) &
@@ -258,13 +257,12 @@ TOHW_defaultargs
 TOHW_defaultdecls
 
     s_i = 1
-    n = size(array)
     err = 0
     array = .false.
     ij  = 0
-    do i = 1, n
+    loop: do i = 1, size(array)
 TOHW_parse_logical(`array(i)')
-    end do
+    end do loop
 
 TOHW_check_errors
 
@@ -280,16 +278,14 @@ TOHW_defaultargs
 TOHW_defaultdecls
 
     s_i = 1
-    m = size(array, 1)
-    n = size(array, 2)
     err = 0
     array = .false.
     ij = 0
-    do i = 1, n
-    do j = 1, m
-TOHW_parse_logical(`array(m, n)')
+    loop: do i = 1, size(array, 2)
+    do j = 1, size(array, 1)
+TOHW_parse_logical(`array(i, j)')
     end do
-    end do
+    end do loop
 
 TOHW_check_errors
 
@@ -304,13 +300,12 @@ TOHW_defaultargs
 
 TOHW_defaultdecls
     s_i = 1
-    n = size(array)
     err = 0
     array = 0
     ij  = 0
-    do i = 1, n
+    loop: do i = 1, size(array)
 TOHW_parse_numbers(`array(i)')
-    end do
+    end do loop
 
 TOHW_check_errors
 
@@ -326,16 +321,14 @@ TOHW_defaultargs
 TOHW_defaultdecls
 
     s_i = 1
-    m = size(array, 1)
-    n = size(array, 2)
     err = 0
     array = 0
     ij = 0
-    do i = 1, n
-    do j = 1, m
-TOHW_parse_numbers(`array(m, n)')
+    loop: do i = 1, size(array, 2)
+    do j = 1, size(array, 1)
+TOHW_parse_numbers(`array(i, j)')
     end do
-    end do
+    end do loop
 
 TOHW_check_errors
 
@@ -351,13 +344,12 @@ TOHW_defaultargs
 TOHW_defaultdecls
 
     s_i = 1
-    n = size(array)
     err = 0
     array = 0
     ij  = 0
-    do i = 1, n
+    loop: do i = 1, size(array)
 TOHW_parse_numbers(`array(i)')
-    end do
+    end do loop
 
 TOHW_check_errors
 
@@ -373,16 +365,14 @@ TOHW_defaultargs
 TOHW_defaultdecls
 
     s_i = 1
-    m = size(array, 1)
-    n = size(array, 2)
     err = 0
     array = 0
     ij = 0
-    do i = 1, n
-    do j = 1, m
-TOHW_parse_numbers(`array(m, n)')
+    loop: do i = 1, size(array, 2)
+    do j = 1, size(array, 1)
+TOHW_parse_numbers(`array(i, j)')
     end do
-    end do
+    end do loop
 
 TOHW_check_errors
 
@@ -398,13 +388,12 @@ TOHW_defaultargs
 TOHW_defaultdecls
 
     s_i = 1
-    n = size(array)
     err = 0
     array = 0
     ij  = 0
-    do i = 1, n
+    loop: do i = 1, size(array)
 TOHW_parse_numbers(`array(i)')
-    end do
+    end do loop
 
 TOHW_check_errors
 
@@ -420,16 +409,14 @@ TOHW_defaultargs
 TOHW_defaultdecls
 
     s_i = 1
-    m = size(array, 1)
-    n = size(array, 2)
     err = 0
     array = cmplx(0,0)
     ij = 0
-    do i = 1, n
-    do j = 1, m
-TOHW_parse_numbers(`array(m, n)')
+    loop: do i = 1, size(array, 2)
+    do j = 1, size(array, 1)
+TOHW_parse_numbers(`array(i, j)')
     end do
-    end do
+    end do loop
 
 TOHW_check_errors
 
@@ -445,13 +432,12 @@ TOHW_defaultargs
 TOHW_defaultdecls
 
     s_i = 1
-    n = size(array)
     err = 0
     array = cmplx(0,0)
     ij  = 0
-    do i = 1, n
+    loop: do i = 1, size(array)
 TOHW_parse_complex(`array(i)')
-    end do
+    end do loop
 
 TOHW_check_errors
 
@@ -467,16 +453,14 @@ TOHW_defaultargs
 TOHW_defaultdecls
 
     s_i = 1
-    m = size(array, 1)
-    n = size(array, 2)
     err = 0
     array = cmplx(0,0)
     ij = 0
-    do i = 1, n
-    do j = 1, m
-TOHW_parse_complex(`array(m, n)')
+    loop: do i = 1, size(array, 2)
+    do j = 1, size(array, 1)
+TOHW_parse_complex(`array(i, j)')
     end do
-    end do
+    end do loop
 
 TOHW_check_errors
 
@@ -492,13 +476,12 @@ TOHW_defaultargs
 TOHW_defaultdecls
 
     s_i = 1
-    n = size(array)
     err = 0
     array = cmplx(0)
     ij  = 0
-    do i = 1, n
+    loop: do i = 1, size(array)
 TOHW_parse_complex(`array(i)')
-    end do
+    end do loop
 
 TOHW_check_errors
 
@@ -514,16 +497,14 @@ TOHW_defaultargs
 TOHW_defaultdecls
 
     s_i = 1
-    m = size(array, 1)
-    n = size(array, 2)
     err = 0
     array = cmplx(0,0)
     ij = 0
-    do i = 1, n
-    do j = 1, m
-TOHW_parse_complex(`array(m, n)')
+    loop: do i = 1, size(array, 2)
+    do j = 1, size(array, 1)
+TOHW_parse_complex(`array(i, j)')
     end do
-    end do
+    end do loop
 
 TOHW_check_errors
 
@@ -531,5 +512,5 @@ TOHW_output_errors
 
   end subroutine m4f_thisfunc
   
-end module readarrays
+end module m_common_parse_input
 

@@ -14,6 +14,9 @@ INCFLAGS=$(MOD_PREFIX)../objs/finclude
 #
 include ../arch.make
 
+.m4.F90:
+	m4 -I ../m4 $< > $@
+
 # Uncomment one of the following lines for debugging/profiling support
 #
 #FFLAGS=$(FFLAGS_DEBUG)
@@ -35,7 +38,6 @@ check:
 clean:
 	rm -f *.$(OBJEXT)  *.$(MOD_EXT) $(LIBRARY)
 
-m_common_parse_input.F90: m_common_parse_input.m4
 # DO NOT DELETE THIS LINE - used by make depend
 FoX_common.$(OBJEXT): m_common_array_str.$(OBJEXT) m_common_attrs.$(OBJEXT) m_common_format.$(OBJEXT)
 m_common_array_str.$(OBJEXT): m_common_realtypes.$(OBJEXT)

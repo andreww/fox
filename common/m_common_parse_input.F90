@@ -1,4 +1,4 @@
-module readarrays
+module m_common_parse_input
 
   use m_common_charset, only : XML_WHITESPACE
   use m_common_realtypes, only: sp, dp
@@ -35,16 +35,15 @@ contains
     integer, intent(out), optional :: iostat
 
 
-    integer :: i, j, ij, k, m, n, s_i, err, ios
+    integer :: i, j, ij, k, s_i, err, ios
     real :: r, c
 
 
     s_i = 1
-    n = size(array)
     err = 0
     array = ""
     ij = 0
-    do i = 1, n
+    loop: do i = 1, size(array)
       if (present(separator)) then
         k = index(s(s_i:), separator)
       else
@@ -58,19 +57,22 @@ contains
       else
         k = s_i + k - 2
       endif
+      print*, s_i, k, "!", s(s_i:k), "!"
       array(i) = s(s_i:k)
       ij = ij + 1
       s_i = k + 2
-      if (ij<size(array).and.s_i>len(s)) exit
+      print*, ij, size(array), s_i, len(s), &
+        (ij<size(array).and.s_i>len(s))
+      if (ij<size(array).and.s_i>len(s)) exit loop
 
-    end do
+    end do loop
 
     if (present(num)) num = ij
-    if (i<=size(array)) then
+    if (ij<size(array)) then
       err = -1
     else
       if (present(separator)) then
-        if (index(s(s_i:), separator)/=0) &
+        if (len(s)-s_i>=0) &
           err = 1
       else
         if (verify(s(s_i:), XML_WHITESPACE)/=0) &
@@ -108,18 +110,16 @@ contains
     integer, intent(out), optional :: iostat
 
 
-    integer :: i, j, ij, k, m, n, s_i, err, ios
+    integer :: i, j, ij, k, s_i, err, ios
     real :: r, c
 
 
     s_i = 1
-    m = size(array, 1)
-    n = size(array, 2)
     err = 0
     array = ""
     ij = 0
-    do i = 1, n
-    do j = 1, m
+    loop: do j = 1, size(array, 2)
+    do i = 1, size(array, 1)
       if (present(separator)) then
         k = index(s(s_i:), separator)
       else
@@ -133,20 +133,22 @@ contains
       else
         k = s_i + k - 2
       endif
-      array(m, n) = s(s_i:k)
+      print*, s_i, k, "!", s(s_i:k), "!"
+      array(i, j) = s(s_i:k)
       ij = ij + 1
       s_i = k + 2
-      if (ij<size(array).and.s_i>len(s)) exit
+      print*, ij, size(array), s_i, len(s), &
+        (ij<size(array).and.s_i>len(s))
+      if (ij<size(array).and.s_i>len(s)) exit loop
     end do
-    end do
+    end do loop
 
-    if (ij<=size(array)) then
-      if (present(num)) num = ij
+    if (present(num)) num = ij
+    if (ij<size(array)) then
       err = -1
     else
-      if (present(num)) num = n
       if (present(separator)) then
-        if (index(s(s_i:), separator)/=0) &
+        if (len(s)-s_i>=0) &
           err = 1
       else
         if (verify(s(s_i:), XML_WHITESPACE)/=0) &
@@ -183,16 +185,15 @@ contains
     integer, intent(out), optional :: iostat
 
 
-    integer :: i, j, ij, k, m, n, s_i, err, ios
+    integer :: i, j, ij, k, s_i, err, ios
     real :: r, c
 
 
     s_i = 1
-    n = size(array)
     err = 0
     array = .false.
     ij  = 0
-    do i = 1, n
+    loop: do i = 1, size(array)
       k = verify(s(s_i:), XML_WHITESPACE)
       if (k==0) exit
       s_i = s_i + k - 1
@@ -214,9 +215,9 @@ contains
       s_i = k + 2
       if (ij<size(array).and.s_i>len(s)) exit
 
-    end do
+    end do loop
 
-    num = ij
+    if (present(num)) num = ij
     if (ij<size(array)) then
       if (err==0) err = -1
     else
@@ -253,18 +254,16 @@ contains
     integer, intent(out), optional :: iostat
 
 
-    integer :: i, j, ij, k, m, n, s_i, err, ios
+    integer :: i, j, ij, k, s_i, err, ios
     real :: r, c
 
 
     s_i = 1
-    m = size(array, 1)
-    n = size(array, 2)
     err = 0
     array = .false.
     ij = 0
-    do i = 1, n
-    do j = 1, m
+    loop: do i = 1, size(array, 2)
+    do j = 1, size(array, 1)
       k = verify(s(s_i:), XML_WHITESPACE)
       if (k==0) exit
       s_i = s_i + k - 1
@@ -275,9 +274,9 @@ contains
         k = s_i + k - 2
       endif
       if (s(s_i:k)=="true".or.s(s_i:k)=="1") then
-        array(m, n) = .true.
+        array(i, j) = .true.
       elseif (s(s_i:k)=="false".or.s(s_i:k)=="0") then
-        array(m, n) = .false.
+        array(i, j) = .false.
       else
         err = 2
         exit
@@ -287,9 +286,9 @@ contains
       if (ij<size(array).and.s_i>len(s)) exit
 
     end do
-    end do
+    end do loop
 
-    num = ij
+    if (present(num)) num = ij
     if (ij<size(array)) then
       if (err==0) err = -1
     else
@@ -326,15 +325,14 @@ contains
     integer, intent(out), optional :: iostat
 
 
-    integer :: i, j, ij, k, m, n, s_i, err, ios
+    integer :: i, j, ij, k, s_i, err, ios
     real :: r, c
 
     s_i = 1
-    n = size(array)
     err = 0
     array = 0
     ij  = 0
-    do i = 1, n
+    loop: do i = 1, size(array)
       k = verify(s(s_i:), XML_WHITESPACE)
       if (k==0) exit
       s_i = s_i + k - 1
@@ -353,9 +351,9 @@ contains
       s_i = k + 2
       if (ij<size(array).and.s_i>len(s)) exit
 
-    end do
+    end do loop
 
-    num = ij
+    if (present(num)) num = ij
     if (ij<size(array)) then
       if (err==0) err = -1
     else
@@ -392,18 +390,16 @@ contains
     integer, intent(out), optional :: iostat
 
 
-    integer :: i, j, ij, k, m, n, s_i, err, ios
+    integer :: i, j, ij, k, s_i, err, ios
     real :: r, c
 
 
     s_i = 1
-    m = size(array, 1)
-    n = size(array, 2)
     err = 0
     array = 0
     ij = 0
-    do i = 1, n
-    do j = 1, m
+    loop: do i = 1, size(array, 2)
+    do j = 1, size(array, 1)
       k = verify(s(s_i:), XML_WHITESPACE)
       if (k==0) exit
       s_i = s_i + k - 1
@@ -413,7 +409,7 @@ contains
       else
         k = s_i + k - 2
       endif
-      read(s(s_i:k), *, iostat=ios) array(m, n)
+      read(s(s_i:k), *, iostat=ios) array(i, j)
       if (ios/=0) then
         err = 2
         exit
@@ -423,9 +419,9 @@ contains
       if (ij<size(array).and.s_i>len(s)) exit
 
     end do
-    end do
+    end do loop
 
-    num = ij
+    if (present(num)) num = ij
     if (ij<size(array)) then
       if (err==0) err = -1
     else
@@ -462,16 +458,15 @@ contains
     integer, intent(out), optional :: iostat
 
 
-    integer :: i, j, ij, k, m, n, s_i, err, ios
+    integer :: i, j, ij, k, s_i, err, ios
     real :: r, c
 
 
     s_i = 1
-    n = size(array)
     err = 0
     array = 0
     ij  = 0
-    do i = 1, n
+    loop: do i = 1, size(array)
       k = verify(s(s_i:), XML_WHITESPACE)
       if (k==0) exit
       s_i = s_i + k - 1
@@ -490,9 +485,9 @@ contains
       s_i = k + 2
       if (ij<size(array).and.s_i>len(s)) exit
 
-    end do
+    end do loop
 
-    num = ij
+    if (present(num)) num = ij
     if (ij<size(array)) then
       if (err==0) err = -1
     else
@@ -529,18 +524,16 @@ contains
     integer, intent(out), optional :: iostat
 
 
-    integer :: i, j, ij, k, m, n, s_i, err, ios
+    integer :: i, j, ij, k, s_i, err, ios
     real :: r, c
 
 
     s_i = 1
-    m = size(array, 1)
-    n = size(array, 2)
     err = 0
     array = 0
     ij = 0
-    do i = 1, n
-    do j = 1, m
+    loop: do i = 1, size(array, 2)
+    do j = 1, size(array, 1)
       k = verify(s(s_i:), XML_WHITESPACE)
       if (k==0) exit
       s_i = s_i + k - 1
@@ -550,7 +543,7 @@ contains
       else
         k = s_i + k - 2
       endif
-      read(s(s_i:k), *, iostat=ios) array(m, n)
+      read(s(s_i:k), *, iostat=ios) array(i, j)
       if (ios/=0) then
         err = 2
         exit
@@ -560,9 +553,9 @@ contains
       if (ij<size(array).and.s_i>len(s)) exit
 
     end do
-    end do
+    end do loop
 
-    num = ij
+    if (present(num)) num = ij
     if (ij<size(array)) then
       if (err==0) err = -1
     else
@@ -599,16 +592,15 @@ contains
     integer, intent(out), optional :: iostat
 
 
-    integer :: i, j, ij, k, m, n, s_i, err, ios
+    integer :: i, j, ij, k, s_i, err, ios
     real :: r, c
 
 
     s_i = 1
-    n = size(array)
     err = 0
     array = 0
     ij  = 0
-    do i = 1, n
+    loop: do i = 1, size(array)
       k = verify(s(s_i:), XML_WHITESPACE)
       if (k==0) exit
       s_i = s_i + k - 1
@@ -627,9 +619,9 @@ contains
       s_i = k + 2
       if (ij<size(array).and.s_i>len(s)) exit
 
-    end do
+    end do loop
 
-    num = ij
+    if (present(num)) num = ij
     if (ij<size(array)) then
       if (err==0) err = -1
     else
@@ -666,18 +658,16 @@ contains
     integer, intent(out), optional :: iostat
 
 
-    integer :: i, j, ij, k, m, n, s_i, err, ios
+    integer :: i, j, ij, k, s_i, err, ios
     real :: r, c
 
 
     s_i = 1
-    m = size(array, 1)
-    n = size(array, 2)
     err = 0
     array = cmplx(0,0)
     ij = 0
-    do i = 1, n
-    do j = 1, m
+    loop: do i = 1, size(array, 2)
+    do j = 1, size(array, 1)
       k = verify(s(s_i:), XML_WHITESPACE)
       if (k==0) exit
       s_i = s_i + k - 1
@@ -687,7 +677,7 @@ contains
       else
         k = s_i + k - 2
       endif
-      read(s(s_i:k), *, iostat=ios) array(m, n)
+      read(s(s_i:k), *, iostat=ios) array(i, j)
       if (ios/=0) then
         err = 2
         exit
@@ -697,9 +687,9 @@ contains
       if (ij<size(array).and.s_i>len(s)) exit
 
     end do
-    end do
+    end do loop
 
-    num = ij
+    if (present(num)) num = ij
     if (ij<size(array)) then
       if (err==0) err = -1
     else
@@ -736,16 +726,15 @@ contains
     integer, intent(out), optional :: iostat
 
 
-    integer :: i, j, ij, k, m, n, s_i, err, ios
+    integer :: i, j, ij, k, s_i, err, ios
     real :: r, c
 
 
     s_i = 1
-    n = size(array)
     err = 0
     array = cmplx(0,0)
     ij  = 0
-    do i = 1, n
+    loop: do i = 1, size(array)
       k = index(s(s_i:), "(")
       if (k==0) exit
       s_i = s_i + k
@@ -781,11 +770,11 @@ contains
       array(i) = cmplx(r, c)
       ij = ij + 1
       s_i = k + 2
-      if (i<n.and.s_i>len(s)) exit
+      if (ij<size(array).and.s_i>len(s)) exit
 
-    end do
+    end do loop
 
-    num = ij
+    if (present(num)) num = ij
     if (ij<size(array)) then
       if (err==0) err = -1
     else
@@ -822,18 +811,16 @@ contains
     integer, intent(out), optional :: iostat
 
 
-    integer :: i, j, ij, k, m, n, s_i, err, ios
+    integer :: i, j, ij, k, s_i, err, ios
     real :: r, c
 
 
     s_i = 1
-    m = size(array, 1)
-    n = size(array, 2)
     err = 0
     array = cmplx(0,0)
     ij = 0
-    do i = 1, n
-    do j = 1, m
+    loop: do i = 1, size(array, 2)
+    do j = 1, size(array, 1)
       k = index(s(s_i:), "(")
       if (k==0) exit
       s_i = s_i + k
@@ -866,15 +853,15 @@ contains
         err = 2
         exit
       endif
-      array(m, n) = cmplx(r, c)
+      array(i, j) = cmplx(r, c)
       ij = ij + 1
       s_i = k + 2
-      if (i<n.and.s_i>len(s)) exit
+      if (ij<size(array).and.s_i>len(s)) exit
 
     end do
-    end do
+    end do loop
 
-    num = ij
+    if (present(num)) num = ij
     if (ij<size(array)) then
       if (err==0) err = -1
     else
@@ -911,16 +898,15 @@ contains
     integer, intent(out), optional :: iostat
 
 
-    integer :: i, j, ij, k, m, n, s_i, err, ios
+    integer :: i, j, ij, k, s_i, err, ios
     real :: r, c
 
 
     s_i = 1
-    n = size(array)
     err = 0
     array = cmplx(0)
     ij  = 0
-    do i = 1, n
+    loop: do i = 1, size(array)
       k = index(s(s_i:), "(")
       if (k==0) exit
       s_i = s_i + k
@@ -956,11 +942,11 @@ contains
       array(i) = cmplx(r, c)
       ij = ij + 1
       s_i = k + 2
-      if (i<n.and.s_i>len(s)) exit
+      if (ij<size(array).and.s_i>len(s)) exit
 
-    end do
+    end do loop
 
-    num = ij
+    if (present(num)) num = ij
     if (ij<size(array)) then
       if (err==0) err = -1
     else
@@ -997,18 +983,16 @@ contains
     integer, intent(out), optional :: iostat
 
 
-    integer :: i, j, ij, k, m, n, s_i, err, ios
+    integer :: i, j, ij, k, s_i, err, ios
     real :: r, c
 
 
     s_i = 1
-    m = size(array, 1)
-    n = size(array, 2)
     err = 0
     array = cmplx(0,0)
     ij = 0
-    do i = 1, n
-    do j = 1, m
+    loop: do i = 1, size(array, 2)
+    do j = 1, size(array, 1)
       k = index(s(s_i:), "(")
       if (k==0) exit
       s_i = s_i + k
@@ -1041,15 +1025,15 @@ contains
         err = 2
         exit
       endif
-      array(m, n) = cmplx(r, c)
+      array(i, j) = cmplx(r, c)
       ij = ij + 1
       s_i = k + 2
-      if (i<n.and.s_i>len(s)) exit
+      if (ij<size(array).and.s_i>len(s)) exit
 
     end do
-    end do
+    end do loop
 
-    num = ij
+    if (present(num)) num = ij
     if (ij<size(array)) then
       if (err==0) err = -1
     else
@@ -1079,5 +1063,5 @@ contains
 
   end subroutine matrixtocomplexdp
   
-end module readarrays
+end module m_common_parse_input
 
