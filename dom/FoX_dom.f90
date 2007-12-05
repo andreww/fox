@@ -3,6 +3,7 @@ module FoX_dom
   use m_common_array_str
   use m_dom_dom
   use m_dom_error
+  use m_dom_extras
   use m_dom_parse
   use m_dom_utils
 
@@ -230,6 +231,10 @@ module FoX_dom
   
   ! FoX-only interfaces
   public :: newDOMConfig
+
+  public :: extractDataContent
+  public :: extractDataAttribute
+  public :: extractDataAttributeNS
 
   public :: parseFile
   public :: parseString

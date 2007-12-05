@@ -13,13 +13,13 @@ define(`TOHW_defaultargs', `dnl
 ')dnl
 dnl
 define(`TOHW_defaultdecls', `dnl
-    integer :: i, j, ij, k, s_i, err, ios
+    integer :: i, j, ij, k, s_i, err, ios, length
     real :: r, c
 ')dnl
 dnl
 define(`TOHW_check_errors', `dnl
     if (present(num)) num = ij
-    if (ij<size(array)) then
+    if (ij<length) then
       if (err==0) err = -1
     else
       if (verify(s(s_i:), XML_WHITESPACE)/=0) err = 1
@@ -52,7 +52,7 @@ define(`TOHW_parse_strings', `dnl
         k = index(s(s_i:), separator)
       else
         k = verify(s(s_i:), XML_WHITESPACE)
-        if (k==0) exit
+        if (k==0) exit loop
         s_i = s_i + k - 1
         k = scan(s(s_i:), XML_WHITESPACE)
       endif
@@ -64,12 +64,12 @@ define(`TOHW_parse_strings', `dnl
       $1 = s(s_i:k)
       ij = ij + 1
       s_i = k + 2
-      if (ij<size(array).and.s_i>len(s)) exit loop
+      if (ij<length.and.s_i>len(s)) exit loop
 ')dnl
 dnl
 define(`TOHW_parse_logical', `dnl
       k = verify(s(s_i:), XML_WHITESPACE)
-      if (k==0) exit
+      if (k==0) exit loop
       s_i = s_i + k - 1
       k = scan(s(s_i:), XML_WHITESPACE)
       if (k==0) then
@@ -83,16 +83,16 @@ define(`TOHW_parse_logical', `dnl
         $1 = .false.
       else
         err = 2
-        exit
+        exit loop
       endif
       ij = ij + 1
       s_i = k + 2
-      if (ij<size(array).and.s_i>len(s)) exit
+      if (ij<length.and.s_i>len(s)) exit loop
 ')dnl
 dnl
 define(`TOHW_parse_numbers', `dnl
       k = verify(s(s_i:), XML_WHITESPACE)
-      if (k==0) exit
+      if (k==0) exit loop
       s_i = s_i + k - 1
       k = scan(s(s_i:), XML_WHITESPACE)
       if (k==0) then
@@ -103,21 +103,21 @@ define(`TOHW_parse_numbers', `dnl
       read(s(s_i:k), *, iostat=ios) $1
       if (ios/=0) then
         err = 2
-        exit
+        exit loop
       endif
       ij = ij + 1
       s_i = k + 2
-      if (ij<size(array).and.s_i>len(s)) exit
+      if (ij<length.and.s_i>len(s)) exit loop
 ')dnl
 dnl
 define(`TOHW_parse_complex', `dnl
       k = index(s(s_i:), "(")
-      if (k==0) exit
+      if (k==0) exit loop
       s_i = s_i + k
       k = index(s(s_i:), ")+i(")
       if (k==0) then
         err = 2
-        exit
+        exit loop
       else
         k = s_i + k - 2
       endif
@@ -126,13 +126,13 @@ define(`TOHW_parse_complex', `dnl
       read(s(s_i:k), *, iostat=ios) r
       if (ios/=0) then
         err = 2
-        exit
+        exit loop
       endif
       s_i = k + 5
       k = index(s(s_i:), ")")
       if (k==0) then
         err = 2
-        exit
+        exit loop
       else
         k = s_i + k - 2
       endif
@@ -141,12 +141,12 @@ define(`TOHW_parse_complex', `dnl
       read(s(s_i:k), *, iostat=ios) c
       if (ios/=0) then
         err = 2
-        exit
+        exit loop
       endif
       $1 = cmplx(r, c)
       ij = ij + 1
       s_i = k + 2
-      if (ij<size(array).and.s_i>len(s)) exit
+      if (ij<length.and.s_i>len(s)) exit loop
 ')dnl
 dnl
 module m_common_parse_input
@@ -157,7 +157,14 @@ module m_common_parse_input
   implicit none
   private
 
-  interface stringtodata
+  interface rts
+    module procedure scalartostring
+    module procedure scalartological
+    module procedure scalartointeger
+    module procedure scalartorealsp
+    module procedure scalartorealdp
+    module procedure scalartocomplexsp
+    module procedure scalartocomplexdp
     module procedure arraytostring
     module procedure arraytological
     module procedure arraytointeger
@@ -174,13 +181,168 @@ module m_common_parse_input
     module procedure matrixtocomplexdp
   end interface
 
-  public stringtodata
+  public :: rts
 
 contains
 
+define(`m4f_thisfunc', `scalartostring')dnl
+  subroutine m4f_thisfunc`'(s, data, separator, num, iostat)
+    character(len=*), intent(in) :: s
+    character(len=*), intent(out) :: data
+    character, intent(in), optional :: separator
+    integer, intent(out), optional :: num, iostat
+TOHW_defaultdecls
+
+    s_i = 1
+    err = 0
+    data = ""
+    ij = 0
+    length = 1
+    loop: do i = 1, 1
+TOHW_parse_strings(`data')
+    end do loop
+
+TOHW_check_errors
+
+TOHW_output_errors
+  end subroutine m4f_thisfunc
+
+define(`m4f_thisfunc', `scalartological')dnl
+  subroutine m4f_thisfunc`'(s, data, num, iostat)
+    character(len=*), intent(in) :: s
+    logical, intent(out) :: data
+    integer, intent(out), optional :: num, iostat
+TOHW_defaultdecls
+
+    s_i = 1
+    err = 0
+    data = .false.
+    ij = 0
+    length = 1
+    loop: do i = 1, 1
+TOHW_parse_logical(`data')
+    end do loop
+
+TOHW_check_errors
+
+TOHW_output_errors
+  end subroutine m4f_thisfunc
+
+define(`m4f_thisfunc', `scalartointeger')dnl
+  subroutine m4f_thisfunc`'(s, data, num, iostat)
+    character(len=*), intent(in) :: s
+    integer, intent(out) :: data
+    integer, intent(out), optional :: num, iostat
+
+TOHW_defaultdecls
+
+    s_i = 1
+    err = 0
+    data = 0
+    ij = 0
+    length = 1
+    loop: do i = 1, 1
+TOHW_parse_numbers(`data')
+    end do loop
+
+TOHW_check_errors
+
+TOHW_output_errors
+  end subroutine m4f_thisfunc
+
+define(`m4f_thisfunc', `scalartorealsp')dnl
+  subroutine m4f_thisfunc`'(s, data, num, iostat)
+    character(len=*), intent(in) :: s
+    real(sp), intent(out) :: data
+    integer, intent(out), optional :: num, iostat
+
+TOHW_defaultdecls
+
+    s_i = 1
+    err = 0
+    data = 0.0_sp
+    ij = 0
+    length = 1
+    loop: do i = 1, 1
+TOHW_parse_numbers(`data')
+    end do loop
+
+TOHW_check_errors
+
+TOHW_output_errors
+  end subroutine m4f_thisfunc
+
+define(`m4f_thisfunc', `scalartorealdp')dnl
+  subroutine m4f_thisfunc`'(s, data, num, iostat)
+    character(len=*), intent(in) :: s
+    real(dp), intent(out) :: data
+    integer, intent(out), optional :: num, iostat
+
+TOHW_defaultdecls
+
+    s_i = 1
+    err = 0
+    data = 0.0_dp
+    ij = 0
+    length = 1
+    loop: do i = 1, 1
+TOHW_parse_numbers(`data')
+    end do loop
+
+TOHW_check_errors
+
+TOHW_output_errors
+  end subroutine m4f_thisfunc
+
+define(`m4f_thisfunc', `scalartocomplexsp')dnl
+  subroutine m4f_thisfunc`'(s, data, num, iostat)
+    character(len=*), intent(in) :: s
+    complex(sp), intent(out) :: data
+    integer, intent(out), optional :: num, iostat
+
+TOHW_defaultdecls
+
+    s_i = 1
+    err = 0
+    data = 0.0_sp
+    ij = 0
+    length = 1
+    loop: do i = 1, 1
+TOHW_parse_numbers(`data')
+    end do loop
+
+TOHW_check_errors
+
+TOHW_output_errors
+  end subroutine m4f_thisfunc
+
+define(`m4f_thisfunc', `scalartocomplexdp')dnl
+  subroutine m4f_thisfunc`'(s, data, num, iostat)
+    character(len=*), intent(in) :: s
+    complex(dp), intent(out) :: data
+    integer, intent(out), optional :: num, iostat
+
+TOHW_defaultdecls
+
+    s_i = 1
+    err = 0
+    data = 0.0_dp
+    ij = 0
+    length = 1
+    loop: do i = 1, 1
+TOHW_parse_numbers(`data')
+    end do loop
+
+TOHW_check_errors
+
+TOHW_output_errors
+  end subroutine m4f_thisfunc
+
+
+
 define(`m4f_thisfunc', `arraytostring')dnl
-  subroutine m4f_thisfunc`'(s, array, separator, num, iostat)
-    character(len=*) :: array(:)
+  subroutine m4f_thisfunc`'(s, data, separator, num, iostat)
+    character(len=*) :: data(:)
     character, intent(in), optional :: separator
 TOHW_defaultargs
 
@@ -188,14 +350,15 @@ TOHW_defaultdecls
 
     s_i = 1
     err = 0
-    array = ""
+    data = ""
     ij = 0
-    loop: do i = 1, size(array)
-TOHW_parse_strings(`array(i)')
+    length = size(data)
+    loop: do i = 1, size(data)
+TOHW_parse_strings(`data(i)')
     end do loop
 
     if (present(num)) num = ij
-    if (ij<size(array)) then
+    if (ij<size(data)) then
       err = -1
     else
       if (present(separator)) then
@@ -212,8 +375,8 @@ TOHW_output_errors
   end subroutine m4f_thisfunc
 
 define(`m4f_thisfunc', `matrixtostring')dnl
-  subroutine m4f_thisfunc`'(s, array, separator, num, iostat)
-    character(len=*) :: array(:,:)
+  subroutine m4f_thisfunc`'(s, data, separator, num, iostat)
+    character(len=*) :: data(:,:)
     character, intent(in), optional :: separator
 TOHW_defaultargs
 
@@ -221,16 +384,17 @@ TOHW_defaultdecls
 
     s_i = 1
     err = 0
-    array = ""
+    data = ""
     ij = 0
-    loop: do j = 1, size(array, 2)
-    do i = 1, size(array, 1)
-TOHW_parse_strings(`array(i, j)')`'dnl
+    length = size(data)
+    loop: do j = 1, size(data, 2)
+    do i = 1, size(data, 1)
+TOHW_parse_strings(`data(i, j)')`'dnl
     end do
     end do loop
 
     if (present(num)) num = ij
-    if (ij<size(array)) then
+    if (ij<size(data)) then
       err = -1
     else
       if (present(separator)) then
@@ -247,18 +411,19 @@ TOHW_output_errors
   end subroutine m4f_thisfunc
 
 define(`m4f_thisfunc', `arraytological')dnl
-  subroutine m4f_thisfunc`'(s, array, num, iostat)
-    logical, intent(out) :: array(:)
+  subroutine m4f_thisfunc`'(s, data, num, iostat)
+    logical, intent(out) :: data(:)
 TOHW_defaultargs
 
 TOHW_defaultdecls
 
     s_i = 1
     err = 0
-    array = .false.
+    data = .false.
     ij  = 0
-    loop: do i = 1, size(array)
-TOHW_parse_logical(`array(i)')
+    length = size(data)
+    loop: do i = 1, size(data)
+TOHW_parse_logical(`data(i)')
     end do loop
 
 TOHW_check_errors
@@ -268,19 +433,20 @@ TOHW_output_errors
   end subroutine m4f_thisfunc
 
 define(`m4f_thisfunc', `matrixtological')dnl
-  subroutine m4f_thisfunc`'(s, array, num, iostat)
-    logical, intent(out) :: array(:,:)
+  subroutine m4f_thisfunc`'(s, data, num, iostat)
+    logical, intent(out) :: data(:,:)
 TOHW_defaultargs
 
 TOHW_defaultdecls
 
     s_i = 1
     err = 0
-    array = .false.
+    data = .false.
     ij = 0
-    loop: do j = 1, size(array, 2)
-    do i = 1, size(array, 1)
-TOHW_parse_logical(`array(i, j)')
+    length = size(data)
+    loop: do j = 1, size(data, 2)
+    do i = 1, size(data, 1)
+TOHW_parse_logical(`data(i, j)')
     end do
     end do loop
 
@@ -291,17 +457,18 @@ TOHW_output_errors
   end subroutine m4f_thisfunc
 
 define(`m4f_thisfunc', `arraytointeger')dnl
-  subroutine m4f_thisfunc`'(s, array, num, iostat)
-    integer, intent(out) :: array(:)
+  subroutine m4f_thisfunc`'(s, data, num, iostat)
+    integer, intent(out) :: data(:)
 TOHW_defaultargs
 
 TOHW_defaultdecls
     s_i = 1
     err = 0
-    array = 0
+    data = 0
     ij  = 0
-    loop: do i = 1, size(array)
-TOHW_parse_numbers(`array(i)')
+    length = size(data)
+    loop: do i = 1, size(data)
+TOHW_parse_numbers(`data(i)')
     end do loop
 
 TOHW_check_errors
@@ -311,19 +478,20 @@ TOHW_output_errors
   end subroutine m4f_thisfunc
 
 define(`m4f_thisfunc', `matrixtointeger')dnl
-  subroutine m4f_thisfunc`'(s, array, num, iostat)
-    integer, intent(out) :: array(:, :)
+  subroutine m4f_thisfunc`'(s, data, num, iostat)
+    integer, intent(out) :: data(:, :)
 TOHW_defaultargs
 
 TOHW_defaultdecls
 
     s_i = 1
     err = 0
-    array = 0
+    data = 0
     ij = 0
-    loop: do j = 1, size(array, 2)
-    do i = 1, size(array, 1)
-TOHW_parse_numbers(`array(i, j)')
+    length = size(data)
+    loop: do j = 1, size(data, 2)
+    do i = 1, size(data, 1)
+TOHW_parse_numbers(`data(i, j)')
     end do
     end do loop
 
@@ -334,18 +502,19 @@ TOHW_output_errors
   end subroutine m4f_thisfunc
 
 define(`m4f_thisfunc', `arraytorealsp')dnl
-  subroutine m4f_thisfunc`'(s, array, num, iostat)
-    real(sp), intent(out) :: array(:)
+  subroutine m4f_thisfunc`'(s, data, num, iostat)
+    real(sp), intent(out) :: data(:)
 TOHW_defaultargs
 
 TOHW_defaultdecls
 
     s_i = 1
     err = 0
-    array = 0
+    data = 0
     ij  = 0
-    loop: do i = 1, size(array)
-TOHW_parse_numbers(`array(i)')
+    length = size(data)
+    loop: do i = 1, size(data)
+TOHW_parse_numbers(`data(i)')
     end do loop
 
 TOHW_check_errors
@@ -355,19 +524,20 @@ TOHW_output_errors
   end subroutine m4f_thisfunc
 
 define(`m4f_thisfunc', `matrixtorealsp')dnl
-  subroutine m4f_thisfunc`'(s, array, num, iostat)
-    real(sp), intent(out) :: array(:,:)
+  subroutine m4f_thisfunc`'(s, data, num, iostat)
+    real(sp), intent(out) :: data(:,:)
 TOHW_defaultargs
 
 TOHW_defaultdecls
 
     s_i = 1
     err = 0
-    array = 0
+    data = 0
     ij = 0
-    loop: do j = 1, size(array, 2)
-    do i = 1, size(array, 1)
-TOHW_parse_numbers(`array(i, j)')
+    length = size(data)
+    loop: do j = 1, size(data, 2)
+    do i = 1, size(data, 1)
+TOHW_parse_numbers(`data(i, j)')
     end do
     end do loop
 
@@ -378,18 +548,19 @@ TOHW_output_errors
   end subroutine m4f_thisfunc
 
 define(`m4f_thisfunc', `arraytorealdp')dnl
-  subroutine m4f_thisfunc`'(s, array, num, iostat)
-    real(dp), intent(out) :: array(:)
+  subroutine m4f_thisfunc`'(s, data, num, iostat)
+    real(dp), intent(out) :: data(:)
 TOHW_defaultargs
 
 TOHW_defaultdecls
 
     s_i = 1
     err = 0
-    array = 0
+    data = 0
     ij  = 0
-    loop: do i = 1, size(array)
-TOHW_parse_numbers(`array(i)')
+    length = size(data)
+    loop: do i = 1, size(data)
+TOHW_parse_numbers(`data(i)')
     end do loop
 
 TOHW_check_errors
@@ -399,19 +570,20 @@ TOHW_output_errors
   end subroutine m4f_thisfunc
 
 define(`m4f_thisfunc', `matrixtorealdp')dnl
-  subroutine m4f_thisfunc`'(s, array, num, iostat)
-    real(dp), intent(out) :: array(:,:)
+  subroutine m4f_thisfunc`'(s, data, num, iostat)
+    real(dp), intent(out) :: data(:,:)
 TOHW_defaultargs
 
 TOHW_defaultdecls
 
     s_i = 1
     err = 0
-    array = cmplx(0,0)
+    data = cmplx(0,0)
     ij = 0
-    loop: do j = 1, size(array, 2)
-    do i = 1, size(array, 1)
-TOHW_parse_numbers(`array(i, j)')
+    length = size(data)
+    loop: do j = 1, size(data, 2)
+    do i = 1, size(data, 1)
+TOHW_parse_numbers(`data(i, j)')
     end do
     end do loop
 
@@ -422,18 +594,19 @@ TOHW_output_errors
   end subroutine m4f_thisfunc
 
 define(`m4f_thisfunc', `arraytocomplexsp')dnl
-  subroutine m4f_thisfunc`'(s, array, num, iostat)
-    complex(sp), intent(out) :: array(:)
+  subroutine m4f_thisfunc`'(s, data, num, iostat)
+    complex(sp), intent(out) :: data(:)
 TOHW_defaultargs
 
 TOHW_defaultdecls
 
     s_i = 1
     err = 0
-    array = cmplx(0,0)
+    data = cmplx(0,0)
     ij  = 0
-    loop: do i = 1, size(array)
-TOHW_parse_complex(`array(i)')
+    length = size(data)
+    loop: do i = 1, size(data)
+TOHW_parse_complex(`data(i)')
     end do loop
 
 TOHW_check_errors
@@ -443,19 +616,20 @@ TOHW_output_errors
   end subroutine m4f_thisfunc
 
 define(`m4f_thisfunc', `matrixtocomplexsp')dnl
-  subroutine m4f_thisfunc`'(s, array, num, iostat)
-    complex(sp), intent(out) :: array(:,:)
+  subroutine m4f_thisfunc`'(s, data, num, iostat)
+    complex(sp), intent(out) :: data(:,:)
 TOHW_defaultargs
 
 TOHW_defaultdecls
 
     s_i = 1
     err = 0
-    array = cmplx(0,0)
+    data = cmplx(0,0)
     ij = 0
-    loop: do j = 1, size(array, 2)
-    do i = 1, size(array, 1)
-TOHW_parse_complex(`array(i, j)')
+    length = size(data)
+    loop: do j = 1, size(data, 2)
+    do i = 1, size(data, 1)
+TOHW_parse_complex(`data(i, j)')
     end do
     end do loop
 
@@ -466,18 +640,19 @@ TOHW_output_errors
   end subroutine m4f_thisfunc
 
 define(`m4f_thisfunc', `arraytocomplexdp')dnl
-  subroutine m4f_thisfunc`'(s, array, num, iostat)
-    complex(dp), intent(out) :: array(:)
+  subroutine m4f_thisfunc`'(s, data, num, iostat)
+    complex(dp), intent(out) :: data(:)
 TOHW_defaultargs
 
 TOHW_defaultdecls
 
     s_i = 1
     err = 0
-    array = cmplx(0)
+    data = cmplx(0)
     ij  = 0
-    loop: do i = 1, size(array)
-TOHW_parse_complex(`array(i)')
+    length = size(data)
+    loop: do i = 1, size(data)
+TOHW_parse_complex(`data(i)')
     end do loop
 
 TOHW_check_errors
@@ -487,19 +662,20 @@ TOHW_output_errors
   end subroutine m4f_thisfunc
 
 define(`m4f_thisfunc', `matrixtocomplexdp')dnl
-  subroutine m4f_thisfunc`'(s, array, num, iostat)
-    complex(dp), intent(out) :: array(:,:)
+  subroutine m4f_thisfunc`'(s, data, num, iostat)
+    complex(dp), intent(out) :: data(:,:)
 TOHW_defaultargs
 
 TOHW_defaultdecls
 
     s_i = 1
     err = 0
-    array = cmplx(0,0)
+    data = cmplx(0,0)
     ij = 0
-    loop: do j = 1, size(array, 2)
-    do i = 1, size(array, 1)
-TOHW_parse_complex(`array(i, j)')
+    length = size(data)
+    loop: do j = 1, size(data, 2)
+    do i = 1, size(data, 1)
+TOHW_parse_complex(`data(i, j)')
     end do
     end do loop
 

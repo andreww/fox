@@ -6,7 +6,14 @@ module m_common_parse_input
   implicit none
   private
 
-  interface stringtodata
+  interface rts
+    module procedure scalartostring
+    module procedure scalartological
+    module procedure scalartointeger
+    module procedure scalartorealsp
+    module procedure scalartorealdp
+    module procedure scalartocomplexsp
+    module procedure scalartocomplexdp
     module procedure arraytostring
     module procedure arraytological
     module procedure arraytointeger
@@ -23,32 +30,30 @@ module m_common_parse_input
     module procedure matrixtocomplexdp
   end interface
 
-  public stringtodata
+  public :: rts
 
 contains
 
-  subroutine arraytostring(s, array, separator, num, iostat)
-    character(len=*) :: array(:)
-    character, intent(in), optional :: separator
+  subroutine scalartostring(s, data, separator, num, iostat)
     character(len=*), intent(in) :: s
-    integer, intent(out), optional :: num
-    integer, intent(out), optional :: iostat
-
-
-    integer :: i, j, ij, k, s_i, err, ios
+    character(len=*), intent(out) :: data
+    character, intent(in), optional :: separator
+    integer, intent(out), optional :: num, iostat
+    integer :: i, j, ij, k, s_i, err, ios, length
     real :: r, c
 
 
     s_i = 1
     err = 0
-    array = ""
+    data = ""
     ij = 0
-    loop: do i = 1, size(array)
+    length = 1
+    loop: do i = 1, 1
       if (present(separator)) then
         k = index(s(s_i:), separator)
       else
         k = verify(s(s_i:), XML_WHITESPACE)
-        if (k==0) exit
+        if (k==0) exit loop
         s_i = s_i + k - 1
         k = scan(s(s_i:), XML_WHITESPACE)
       endif
@@ -57,15 +62,470 @@ contains
       else
         k = s_i + k - 2
       endif
-      array(i) = s(s_i:k)
+      data = s(s_i:k)
       ij = ij + 1
       s_i = k + 2
-      if (ij<size(array).and.s_i>len(s)) exit loop
+      if (ij<length.and.s_i>len(s)) exit loop
 
     end do loop
 
     if (present(num)) num = ij
-    if (ij<size(array)) then
+    if (ij<length) then
+      if (err==0) err = -1
+    else
+      if (verify(s(s_i:), XML_WHITESPACE)/=0) err = 1
+    endif
+
+
+    if (present(iostat)) then
+      iostat = err
+    else
+      select case (err)
+      case(-1)
+        write(0, *) "Error in scalartostring"
+        write(0, *) "Too few elements found"
+        stop
+      case(1)
+        write(0, *) "Error in scalartostring"
+        write(0, *) "Too many elements found"
+        stop
+      case(2)
+        write(0, *) "Error in scalartostring"
+        write(0, *) "Malformed input"
+        stop
+      end select
+    end if
+
+  end subroutine scalartostring
+
+  subroutine scalartological(s, data, num, iostat)
+    character(len=*), intent(in) :: s
+    logical, intent(out) :: data
+    integer, intent(out), optional :: num, iostat
+    integer :: i, j, ij, k, s_i, err, ios, length
+    real :: r, c
+
+
+    s_i = 1
+    err = 0
+    data = .false.
+    ij = 0
+    length = 1
+    loop: do i = 1, 1
+      k = verify(s(s_i:), XML_WHITESPACE)
+      if (k==0) exit loop
+      s_i = s_i + k - 1
+      k = scan(s(s_i:), XML_WHITESPACE)
+      if (k==0) then
+        k = len(s)
+      else
+        k = s_i + k - 2
+      endif
+      if (s(s_i:k)=="true".or.s(s_i:k)=="1") then
+        data = .true.
+      elseif (s(s_i:k)=="false".or.s(s_i:k)=="0") then
+        data = .false.
+      else
+        err = 2
+        exit loop
+      endif
+      ij = ij + 1
+      s_i = k + 2
+      if (ij<length.and.s_i>len(s)) exit loop
+
+    end do loop
+
+    if (present(num)) num = ij
+    if (ij<length) then
+      if (err==0) err = -1
+    else
+      if (verify(s(s_i:), XML_WHITESPACE)/=0) err = 1
+    endif
+
+
+    if (present(iostat)) then
+      iostat = err
+    else
+      select case (err)
+      case(-1)
+        write(0, *) "Error in scalartological"
+        write(0, *) "Too few elements found"
+        stop
+      case(1)
+        write(0, *) "Error in scalartological"
+        write(0, *) "Too many elements found"
+        stop
+      case(2)
+        write(0, *) "Error in scalartological"
+        write(0, *) "Malformed input"
+        stop
+      end select
+    end if
+
+  end subroutine scalartological
+
+  subroutine scalartointeger(s, data, num, iostat)
+    character(len=*), intent(in) :: s
+    integer, intent(out) :: data
+    integer, intent(out), optional :: num, iostat
+
+    integer :: i, j, ij, k, s_i, err, ios, length
+    real :: r, c
+
+
+    s_i = 1
+    err = 0
+    data = 0
+    ij = 0
+    length = 1
+    loop: do i = 1, 1
+      k = verify(s(s_i:), XML_WHITESPACE)
+      if (k==0) exit loop
+      s_i = s_i + k - 1
+      k = scan(s(s_i:), XML_WHITESPACE)
+      if (k==0) then
+        k = len(s)
+      else
+        k = s_i + k - 2
+      endif
+      read(s(s_i:k), *, iostat=ios) data
+      if (ios/=0) then
+        err = 2
+        exit loop
+      endif
+      ij = ij + 1
+      s_i = k + 2
+      if (ij<length.and.s_i>len(s)) exit loop
+
+    end do loop
+
+    if (present(num)) num = ij
+    if (ij<length) then
+      if (err==0) err = -1
+    else
+      if (verify(s(s_i:), XML_WHITESPACE)/=0) err = 1
+    endif
+
+
+    if (present(iostat)) then
+      iostat = err
+    else
+      select case (err)
+      case(-1)
+        write(0, *) "Error in scalartointeger"
+        write(0, *) "Too few elements found"
+        stop
+      case(1)
+        write(0, *) "Error in scalartointeger"
+        write(0, *) "Too many elements found"
+        stop
+      case(2)
+        write(0, *) "Error in scalartointeger"
+        write(0, *) "Malformed input"
+        stop
+      end select
+    end if
+
+  end subroutine scalartointeger
+
+  subroutine scalartorealsp(s, data, num, iostat)
+    character(len=*), intent(in) :: s
+    real(sp), intent(out) :: data
+    integer, intent(out), optional :: num, iostat
+
+    integer :: i, j, ij, k, s_i, err, ios, length
+    real :: r, c
+
+
+    s_i = 1
+    err = 0
+    data = 0.0_sp
+    ij = 0
+    length = 1
+    loop: do i = 1, 1
+      k = verify(s(s_i:), XML_WHITESPACE)
+      if (k==0) exit loop
+      s_i = s_i + k - 1
+      k = scan(s(s_i:), XML_WHITESPACE)
+      if (k==0) then
+        k = len(s)
+      else
+        k = s_i + k - 2
+      endif
+      read(s(s_i:k), *, iostat=ios) data
+      if (ios/=0) then
+        err = 2
+        exit loop
+      endif
+      ij = ij + 1
+      s_i = k + 2
+      if (ij<length.and.s_i>len(s)) exit loop
+
+    end do loop
+
+    if (present(num)) num = ij
+    if (ij<length) then
+      if (err==0) err = -1
+    else
+      if (verify(s(s_i:), XML_WHITESPACE)/=0) err = 1
+    endif
+
+
+    if (present(iostat)) then
+      iostat = err
+    else
+      select case (err)
+      case(-1)
+        write(0, *) "Error in scalartorealsp"
+        write(0, *) "Too few elements found"
+        stop
+      case(1)
+        write(0, *) "Error in scalartorealsp"
+        write(0, *) "Too many elements found"
+        stop
+      case(2)
+        write(0, *) "Error in scalartorealsp"
+        write(0, *) "Malformed input"
+        stop
+      end select
+    end if
+
+  end subroutine scalartorealsp
+
+  subroutine scalartorealdp(s, data, num, iostat)
+    character(len=*), intent(in) :: s
+    real(dp), intent(out) :: data
+    integer, intent(out), optional :: num, iostat
+
+    integer :: i, j, ij, k, s_i, err, ios, length
+    real :: r, c
+
+
+    s_i = 1
+    err = 0
+    data = 0.0_dp
+    ij = 0
+    length = 1
+    loop: do i = 1, 1
+      k = verify(s(s_i:), XML_WHITESPACE)
+      if (k==0) exit loop
+      s_i = s_i + k - 1
+      k = scan(s(s_i:), XML_WHITESPACE)
+      if (k==0) then
+        k = len(s)
+      else
+        k = s_i + k - 2
+      endif
+      read(s(s_i:k), *, iostat=ios) data
+      if (ios/=0) then
+        err = 2
+        exit loop
+      endif
+      ij = ij + 1
+      s_i = k + 2
+      if (ij<length.and.s_i>len(s)) exit loop
+
+    end do loop
+
+    if (present(num)) num = ij
+    if (ij<length) then
+      if (err==0) err = -1
+    else
+      if (verify(s(s_i:), XML_WHITESPACE)/=0) err = 1
+    endif
+
+
+    if (present(iostat)) then
+      iostat = err
+    else
+      select case (err)
+      case(-1)
+        write(0, *) "Error in scalartorealdp"
+        write(0, *) "Too few elements found"
+        stop
+      case(1)
+        write(0, *) "Error in scalartorealdp"
+        write(0, *) "Too many elements found"
+        stop
+      case(2)
+        write(0, *) "Error in scalartorealdp"
+        write(0, *) "Malformed input"
+        stop
+      end select
+    end if
+
+  end subroutine scalartorealdp
+
+  subroutine scalartocomplexsp(s, data, num, iostat)
+    character(len=*), intent(in) :: s
+    complex(sp), intent(out) :: data
+    integer, intent(out), optional :: num, iostat
+
+    integer :: i, j, ij, k, s_i, err, ios, length
+    real :: r, c
+
+
+    s_i = 1
+    err = 0
+    data = 0.0_sp
+    ij = 0
+    length = 1
+    loop: do i = 1, 1
+      k = verify(s(s_i:), XML_WHITESPACE)
+      if (k==0) exit loop
+      s_i = s_i + k - 1
+      k = scan(s(s_i:), XML_WHITESPACE)
+      if (k==0) then
+        k = len(s)
+      else
+        k = s_i + k - 2
+      endif
+      read(s(s_i:k), *, iostat=ios) data
+      if (ios/=0) then
+        err = 2
+        exit loop
+      endif
+      ij = ij + 1
+      s_i = k + 2
+      if (ij<length.and.s_i>len(s)) exit loop
+
+    end do loop
+
+    if (present(num)) num = ij
+    if (ij<length) then
+      if (err==0) err = -1
+    else
+      if (verify(s(s_i:), XML_WHITESPACE)/=0) err = 1
+    endif
+
+
+    if (present(iostat)) then
+      iostat = err
+    else
+      select case (err)
+      case(-1)
+        write(0, *) "Error in scalartocomplexsp"
+        write(0, *) "Too few elements found"
+        stop
+      case(1)
+        write(0, *) "Error in scalartocomplexsp"
+        write(0, *) "Too many elements found"
+        stop
+      case(2)
+        write(0, *) "Error in scalartocomplexsp"
+        write(0, *) "Malformed input"
+        stop
+      end select
+    end if
+
+  end subroutine scalartocomplexsp
+
+  subroutine scalartocomplexdp(s, data, num, iostat)
+    character(len=*), intent(in) :: s
+    complex(dp), intent(out) :: data
+    integer, intent(out), optional :: num, iostat
+
+    integer :: i, j, ij, k, s_i, err, ios, length
+    real :: r, c
+
+
+    s_i = 1
+    err = 0
+    data = 0.0_dp
+    ij = 0
+    length = 1
+    loop: do i = 1, 1
+      k = verify(s(s_i:), XML_WHITESPACE)
+      if (k==0) exit loop
+      s_i = s_i + k - 1
+      k = scan(s(s_i:), XML_WHITESPACE)
+      if (k==0) then
+        k = len(s)
+      else
+        k = s_i + k - 2
+      endif
+      read(s(s_i:k), *, iostat=ios) data
+      if (ios/=0) then
+        err = 2
+        exit loop
+      endif
+      ij = ij + 1
+      s_i = k + 2
+      if (ij<length.and.s_i>len(s)) exit loop
+
+    end do loop
+
+    if (present(num)) num = ij
+    if (ij<length) then
+      if (err==0) err = -1
+    else
+      if (verify(s(s_i:), XML_WHITESPACE)/=0) err = 1
+    endif
+
+
+    if (present(iostat)) then
+      iostat = err
+    else
+      select case (err)
+      case(-1)
+        write(0, *) "Error in scalartocomplexdp"
+        write(0, *) "Too few elements found"
+        stop
+      case(1)
+        write(0, *) "Error in scalartocomplexdp"
+        write(0, *) "Too many elements found"
+        stop
+      case(2)
+        write(0, *) "Error in scalartocomplexdp"
+        write(0, *) "Malformed input"
+        stop
+      end select
+    end if
+
+  end subroutine scalartocomplexdp
+
+
+
+  subroutine arraytostring(s, data, separator, num, iostat)
+    character(len=*) :: data(:)
+    character, intent(in), optional :: separator
+    character(len=*), intent(in) :: s
+    integer, intent(out), optional :: num
+    integer, intent(out), optional :: iostat
+
+
+    integer :: i, j, ij, k, s_i, err, ios, length
+    real :: r, c
+
+
+    s_i = 1
+    err = 0
+    data = ""
+    ij = 0
+    length = size(data)
+    loop: do i = 1, size(data)
+      if (present(separator)) then
+        k = index(s(s_i:), separator)
+      else
+        k = verify(s(s_i:), XML_WHITESPACE)
+        if (k==0) exit loop
+        s_i = s_i + k - 1
+        k = scan(s(s_i:), XML_WHITESPACE)
+      endif
+      if (k==0) then
+        k = len(s)
+      else
+        k = s_i + k - 2
+      endif
+      data(i) = s(s_i:k)
+      ij = ij + 1
+      s_i = k + 2
+      if (ij<length.and.s_i>len(s)) exit loop
+
+    end do loop
+
+    if (present(num)) num = ij
+    if (ij<size(data)) then
       err = -1
     else
       if (present(separator)) then
@@ -99,29 +559,30 @@ contains
 
   end subroutine arraytostring
 
-  subroutine matrixtostring(s, array, separator, num, iostat)
-    character(len=*) :: array(:,:)
+  subroutine matrixtostring(s, data, separator, num, iostat)
+    character(len=*) :: data(:,:)
     character, intent(in), optional :: separator
     character(len=*), intent(in) :: s
     integer, intent(out), optional :: num
     integer, intent(out), optional :: iostat
 
 
-    integer :: i, j, ij, k, s_i, err, ios
+    integer :: i, j, ij, k, s_i, err, ios, length
     real :: r, c
 
 
     s_i = 1
     err = 0
-    array = ""
+    data = ""
     ij = 0
-    loop: do j = 1, size(array, 2)
-    do i = 1, size(array, 1)
+    length = size(data)
+    loop: do j = 1, size(data, 2)
+    do i = 1, size(data, 1)
       if (present(separator)) then
         k = index(s(s_i:), separator)
       else
         k = verify(s(s_i:), XML_WHITESPACE)
-        if (k==0) exit
+        if (k==0) exit loop
         s_i = s_i + k - 1
         k = scan(s(s_i:), XML_WHITESPACE)
       endif
@@ -130,15 +591,15 @@ contains
       else
         k = s_i + k - 2
       endif
-      array(i, j) = s(s_i:k)
+      data(i, j) = s(s_i:k)
       ij = ij + 1
       s_i = k + 2
-      if (ij<size(array).and.s_i>len(s)) exit loop
+      if (ij<length.and.s_i>len(s)) exit loop
     end do
     end do loop
 
     if (present(num)) num = ij
-    if (ij<size(array)) then
+    if (ij<size(data)) then
       err = -1
     else
       if (present(separator)) then
@@ -172,24 +633,25 @@ contains
 
   end subroutine matrixtostring
 
-  subroutine arraytological(s, array, num, iostat)
-    logical, intent(out) :: array(:)
+  subroutine arraytological(s, data, num, iostat)
+    logical, intent(out) :: data(:)
     character(len=*), intent(in) :: s
     integer, intent(out), optional :: num
     integer, intent(out), optional :: iostat
 
 
-    integer :: i, j, ij, k, s_i, err, ios
+    integer :: i, j, ij, k, s_i, err, ios, length
     real :: r, c
 
 
     s_i = 1
     err = 0
-    array = .false.
+    data = .false.
     ij  = 0
-    loop: do i = 1, size(array)
+    length = size(data)
+    loop: do i = 1, size(data)
       k = verify(s(s_i:), XML_WHITESPACE)
-      if (k==0) exit
+      if (k==0) exit loop
       s_i = s_i + k - 1
       k = scan(s(s_i:), XML_WHITESPACE)
       if (k==0) then
@@ -198,21 +660,21 @@ contains
         k = s_i + k - 2
       endif
       if (s(s_i:k)=="true".or.s(s_i:k)=="1") then
-        array(i) = .true.
+        data(i) = .true.
       elseif (s(s_i:k)=="false".or.s(s_i:k)=="0") then
-        array(i) = .false.
+        data(i) = .false.
       else
         err = 2
-        exit
+        exit loop
       endif
       ij = ij + 1
       s_i = k + 2
-      if (ij<size(array).and.s_i>len(s)) exit
+      if (ij<length.and.s_i>len(s)) exit loop
 
     end do loop
 
     if (present(num)) num = ij
-    if (ij<size(array)) then
+    if (ij<length) then
       if (err==0) err = -1
     else
       if (verify(s(s_i:), XML_WHITESPACE)/=0) err = 1
@@ -241,25 +703,26 @@ contains
 
   end subroutine arraytological
 
-  subroutine matrixtological(s, array, num, iostat)
-    logical, intent(out) :: array(:,:)
+  subroutine matrixtological(s, data, num, iostat)
+    logical, intent(out) :: data(:,:)
     character(len=*), intent(in) :: s
     integer, intent(out), optional :: num
     integer, intent(out), optional :: iostat
 
 
-    integer :: i, j, ij, k, s_i, err, ios
+    integer :: i, j, ij, k, s_i, err, ios, length
     real :: r, c
 
 
     s_i = 1
     err = 0
-    array = .false.
+    data = .false.
     ij = 0
-    loop: do j = 1, size(array, 2)
-    do i = 1, size(array, 1)
+    length = size(data)
+    loop: do j = 1, size(data, 2)
+    do i = 1, size(data, 1)
       k = verify(s(s_i:), XML_WHITESPACE)
-      if (k==0) exit
+      if (k==0) exit loop
       s_i = s_i + k - 1
       k = scan(s(s_i:), XML_WHITESPACE)
       if (k==0) then
@@ -268,22 +731,22 @@ contains
         k = s_i + k - 2
       endif
       if (s(s_i:k)=="true".or.s(s_i:k)=="1") then
-        array(i, j) = .true.
+        data(i, j) = .true.
       elseif (s(s_i:k)=="false".or.s(s_i:k)=="0") then
-        array(i, j) = .false.
+        data(i, j) = .false.
       else
         err = 2
-        exit
+        exit loop
       endif
       ij = ij + 1
       s_i = k + 2
-      if (ij<size(array).and.s_i>len(s)) exit
+      if (ij<length.and.s_i>len(s)) exit loop
 
     end do
     end do loop
 
     if (present(num)) num = ij
-    if (ij<size(array)) then
+    if (ij<length) then
       if (err==0) err = -1
     else
       if (verify(s(s_i:), XML_WHITESPACE)/=0) err = 1
@@ -312,23 +775,24 @@ contains
 
   end subroutine matrixtological
 
-  subroutine arraytointeger(s, array, num, iostat)
-    integer, intent(out) :: array(:)
+  subroutine arraytointeger(s, data, num, iostat)
+    integer, intent(out) :: data(:)
     character(len=*), intent(in) :: s
     integer, intent(out), optional :: num
     integer, intent(out), optional :: iostat
 
 
-    integer :: i, j, ij, k, s_i, err, ios
+    integer :: i, j, ij, k, s_i, err, ios, length
     real :: r, c
 
     s_i = 1
     err = 0
-    array = 0
+    data = 0
     ij  = 0
-    loop: do i = 1, size(array)
+    length = size(data)
+    loop: do i = 1, size(data)
       k = verify(s(s_i:), XML_WHITESPACE)
-      if (k==0) exit
+      if (k==0) exit loop
       s_i = s_i + k - 1
       k = scan(s(s_i:), XML_WHITESPACE)
       if (k==0) then
@@ -336,19 +800,19 @@ contains
       else
         k = s_i + k - 2
       endif
-      read(s(s_i:k), *, iostat=ios) array(i)
+      read(s(s_i:k), *, iostat=ios) data(i)
       if (ios/=0) then
         err = 2
-        exit
+        exit loop
       endif
       ij = ij + 1
       s_i = k + 2
-      if (ij<size(array).and.s_i>len(s)) exit
+      if (ij<length.and.s_i>len(s)) exit loop
 
     end do loop
 
     if (present(num)) num = ij
-    if (ij<size(array)) then
+    if (ij<length) then
       if (err==0) err = -1
     else
       if (verify(s(s_i:), XML_WHITESPACE)/=0) err = 1
@@ -377,25 +841,26 @@ contains
 
   end subroutine arraytointeger
 
-  subroutine matrixtointeger(s, array, num, iostat)
-    integer, intent(out) :: array(:, :)
+  subroutine matrixtointeger(s, data, num, iostat)
+    integer, intent(out) :: data(:, :)
     character(len=*), intent(in) :: s
     integer, intent(out), optional :: num
     integer, intent(out), optional :: iostat
 
 
-    integer :: i, j, ij, k, s_i, err, ios
+    integer :: i, j, ij, k, s_i, err, ios, length
     real :: r, c
 
 
     s_i = 1
     err = 0
-    array = 0
+    data = 0
     ij = 0
-    loop: do j = 1, size(array, 2)
-    do i = 1, size(array, 1)
+    length = size(data)
+    loop: do j = 1, size(data, 2)
+    do i = 1, size(data, 1)
       k = verify(s(s_i:), XML_WHITESPACE)
-      if (k==0) exit
+      if (k==0) exit loop
       s_i = s_i + k - 1
       k = scan(s(s_i:), XML_WHITESPACE)
       if (k==0) then
@@ -403,20 +868,20 @@ contains
       else
         k = s_i + k - 2
       endif
-      read(s(s_i:k), *, iostat=ios) array(i, j)
+      read(s(s_i:k), *, iostat=ios) data(i, j)
       if (ios/=0) then
         err = 2
-        exit
+        exit loop
       endif
       ij = ij + 1
       s_i = k + 2
-      if (ij<size(array).and.s_i>len(s)) exit
+      if (ij<length.and.s_i>len(s)) exit loop
 
     end do
     end do loop
 
     if (present(num)) num = ij
-    if (ij<size(array)) then
+    if (ij<length) then
       if (err==0) err = -1
     else
       if (verify(s(s_i:), XML_WHITESPACE)/=0) err = 1
@@ -445,24 +910,25 @@ contains
 
   end subroutine matrixtointeger
 
-  subroutine arraytorealsp(s, array, num, iostat)
-    real(sp), intent(out) :: array(:)
+  subroutine arraytorealsp(s, data, num, iostat)
+    real(sp), intent(out) :: data(:)
     character(len=*), intent(in) :: s
     integer, intent(out), optional :: num
     integer, intent(out), optional :: iostat
 
 
-    integer :: i, j, ij, k, s_i, err, ios
+    integer :: i, j, ij, k, s_i, err, ios, length
     real :: r, c
 
 
     s_i = 1
     err = 0
-    array = 0
+    data = 0
     ij  = 0
-    loop: do i = 1, size(array)
+    length = size(data)
+    loop: do i = 1, size(data)
       k = verify(s(s_i:), XML_WHITESPACE)
-      if (k==0) exit
+      if (k==0) exit loop
       s_i = s_i + k - 1
       k = scan(s(s_i:), XML_WHITESPACE)
       if (k==0) then
@@ -470,19 +936,19 @@ contains
       else
         k = s_i + k - 2
       endif
-      read(s(s_i:k), *, iostat=ios) array(i)
+      read(s(s_i:k), *, iostat=ios) data(i)
       if (ios/=0) then
         err = 2
-        exit
+        exit loop
       endif
       ij = ij + 1
       s_i = k + 2
-      if (ij<size(array).and.s_i>len(s)) exit
+      if (ij<length.and.s_i>len(s)) exit loop
 
     end do loop
 
     if (present(num)) num = ij
-    if (ij<size(array)) then
+    if (ij<length) then
       if (err==0) err = -1
     else
       if (verify(s(s_i:), XML_WHITESPACE)/=0) err = 1
@@ -511,25 +977,26 @@ contains
 
   end subroutine arraytorealsp
 
-  subroutine matrixtorealsp(s, array, num, iostat)
-    real(sp), intent(out) :: array(:,:)
+  subroutine matrixtorealsp(s, data, num, iostat)
+    real(sp), intent(out) :: data(:,:)
     character(len=*), intent(in) :: s
     integer, intent(out), optional :: num
     integer, intent(out), optional :: iostat
 
 
-    integer :: i, j, ij, k, s_i, err, ios
+    integer :: i, j, ij, k, s_i, err, ios, length
     real :: r, c
 
 
     s_i = 1
     err = 0
-    array = 0
+    data = 0
     ij = 0
-    loop: do j = 1, size(array, 2)
-    do i = 1, size(array, 1)
+    length = size(data)
+    loop: do j = 1, size(data, 2)
+    do i = 1, size(data, 1)
       k = verify(s(s_i:), XML_WHITESPACE)
-      if (k==0) exit
+      if (k==0) exit loop
       s_i = s_i + k - 1
       k = scan(s(s_i:), XML_WHITESPACE)
       if (k==0) then
@@ -537,20 +1004,20 @@ contains
       else
         k = s_i + k - 2
       endif
-      read(s(s_i:k), *, iostat=ios) array(i, j)
+      read(s(s_i:k), *, iostat=ios) data(i, j)
       if (ios/=0) then
         err = 2
-        exit
+        exit loop
       endif
       ij = ij + 1
       s_i = k + 2
-      if (ij<size(array).and.s_i>len(s)) exit
+      if (ij<length.and.s_i>len(s)) exit loop
 
     end do
     end do loop
 
     if (present(num)) num = ij
-    if (ij<size(array)) then
+    if (ij<length) then
       if (err==0) err = -1
     else
       if (verify(s(s_i:), XML_WHITESPACE)/=0) err = 1
@@ -579,24 +1046,25 @@ contains
 
   end subroutine matrixtorealsp
 
-  subroutine arraytorealdp(s, array, num, iostat)
-    real(dp), intent(out) :: array(:)
+  subroutine arraytorealdp(s, data, num, iostat)
+    real(dp), intent(out) :: data(:)
     character(len=*), intent(in) :: s
     integer, intent(out), optional :: num
     integer, intent(out), optional :: iostat
 
 
-    integer :: i, j, ij, k, s_i, err, ios
+    integer :: i, j, ij, k, s_i, err, ios, length
     real :: r, c
 
 
     s_i = 1
     err = 0
-    array = 0
+    data = 0
     ij  = 0
-    loop: do i = 1, size(array)
+    length = size(data)
+    loop: do i = 1, size(data)
       k = verify(s(s_i:), XML_WHITESPACE)
-      if (k==0) exit
+      if (k==0) exit loop
       s_i = s_i + k - 1
       k = scan(s(s_i:), XML_WHITESPACE)
       if (k==0) then
@@ -604,19 +1072,19 @@ contains
       else
         k = s_i + k - 2
       endif
-      read(s(s_i:k), *, iostat=ios) array(i)
+      read(s(s_i:k), *, iostat=ios) data(i)
       if (ios/=0) then
         err = 2
-        exit
+        exit loop
       endif
       ij = ij + 1
       s_i = k + 2
-      if (ij<size(array).and.s_i>len(s)) exit
+      if (ij<length.and.s_i>len(s)) exit loop
 
     end do loop
 
     if (present(num)) num = ij
-    if (ij<size(array)) then
+    if (ij<length) then
       if (err==0) err = -1
     else
       if (verify(s(s_i:), XML_WHITESPACE)/=0) err = 1
@@ -645,25 +1113,26 @@ contains
 
   end subroutine arraytorealdp
 
-  subroutine matrixtorealdp(s, array, num, iostat)
-    real(dp), intent(out) :: array(:,:)
+  subroutine matrixtorealdp(s, data, num, iostat)
+    real(dp), intent(out) :: data(:,:)
     character(len=*), intent(in) :: s
     integer, intent(out), optional :: num
     integer, intent(out), optional :: iostat
 
 
-    integer :: i, j, ij, k, s_i, err, ios
+    integer :: i, j, ij, k, s_i, err, ios, length
     real :: r, c
 
 
     s_i = 1
     err = 0
-    array = cmplx(0,0)
+    data = cmplx(0,0)
     ij = 0
-    loop: do j = 1, size(array, 2)
-    do i = 1, size(array, 1)
+    length = size(data)
+    loop: do j = 1, size(data, 2)
+    do i = 1, size(data, 1)
       k = verify(s(s_i:), XML_WHITESPACE)
-      if (k==0) exit
+      if (k==0) exit loop
       s_i = s_i + k - 1
       k = scan(s(s_i:), XML_WHITESPACE)
       if (k==0) then
@@ -671,20 +1140,20 @@ contains
       else
         k = s_i + k - 2
       endif
-      read(s(s_i:k), *, iostat=ios) array(i, j)
+      read(s(s_i:k), *, iostat=ios) data(i, j)
       if (ios/=0) then
         err = 2
-        exit
+        exit loop
       endif
       ij = ij + 1
       s_i = k + 2
-      if (ij<size(array).and.s_i>len(s)) exit
+      if (ij<length.and.s_i>len(s)) exit loop
 
     end do
     end do loop
 
     if (present(num)) num = ij
-    if (ij<size(array)) then
+    if (ij<length) then
       if (err==0) err = -1
     else
       if (verify(s(s_i:), XML_WHITESPACE)/=0) err = 1
@@ -713,29 +1182,30 @@ contains
 
   end subroutine matrixtorealdp
 
-  subroutine arraytocomplexsp(s, array, num, iostat)
-    complex(sp), intent(out) :: array(:)
+  subroutine arraytocomplexsp(s, data, num, iostat)
+    complex(sp), intent(out) :: data(:)
     character(len=*), intent(in) :: s
     integer, intent(out), optional :: num
     integer, intent(out), optional :: iostat
 
 
-    integer :: i, j, ij, k, s_i, err, ios
+    integer :: i, j, ij, k, s_i, err, ios, length
     real :: r, c
 
 
     s_i = 1
     err = 0
-    array = cmplx(0,0)
+    data = cmplx(0,0)
     ij  = 0
-    loop: do i = 1, size(array)
+    length = size(data)
+    loop: do i = 1, size(data)
       k = index(s(s_i:), "(")
-      if (k==0) exit
+      if (k==0) exit loop
       s_i = s_i + k
       k = index(s(s_i:), ")+i(")
       if (k==0) then
         err = 2
-        exit
+        exit loop
       else
         k = s_i + k - 2
       endif
@@ -744,13 +1214,13 @@ contains
       read(s(s_i:k), *, iostat=ios) r
       if (ios/=0) then
         err = 2
-        exit
+        exit loop
       endif
       s_i = k + 5
       k = index(s(s_i:), ")")
       if (k==0) then
         err = 2
-        exit
+        exit loop
       else
         k = s_i + k - 2
       endif
@@ -759,17 +1229,17 @@ contains
       read(s(s_i:k), *, iostat=ios) c
       if (ios/=0) then
         err = 2
-        exit
+        exit loop
       endif
-      array(i) = cmplx(r, c)
+      data(i) = cmplx(r, c)
       ij = ij + 1
       s_i = k + 2
-      if (ij<size(array).and.s_i>len(s)) exit
+      if (ij<length.and.s_i>len(s)) exit loop
 
     end do loop
 
     if (present(num)) num = ij
-    if (ij<size(array)) then
+    if (ij<length) then
       if (err==0) err = -1
     else
       if (verify(s(s_i:), XML_WHITESPACE)/=0) err = 1
@@ -798,30 +1268,31 @@ contains
 
   end subroutine arraytocomplexsp
 
-  subroutine matrixtocomplexsp(s, array, num, iostat)
-    complex(sp), intent(out) :: array(:,:)
+  subroutine matrixtocomplexsp(s, data, num, iostat)
+    complex(sp), intent(out) :: data(:,:)
     character(len=*), intent(in) :: s
     integer, intent(out), optional :: num
     integer, intent(out), optional :: iostat
 
 
-    integer :: i, j, ij, k, s_i, err, ios
+    integer :: i, j, ij, k, s_i, err, ios, length
     real :: r, c
 
 
     s_i = 1
     err = 0
-    array = cmplx(0,0)
+    data = cmplx(0,0)
     ij = 0
-    loop: do j = 1, size(array, 2)
-    do i = 1, size(array, 1)
+    length = size(data)
+    loop: do j = 1, size(data, 2)
+    do i = 1, size(data, 1)
       k = index(s(s_i:), "(")
-      if (k==0) exit
+      if (k==0) exit loop
       s_i = s_i + k
       k = index(s(s_i:), ")+i(")
       if (k==0) then
         err = 2
-        exit
+        exit loop
       else
         k = s_i + k - 2
       endif
@@ -830,13 +1301,13 @@ contains
       read(s(s_i:k), *, iostat=ios) r
       if (ios/=0) then
         err = 2
-        exit
+        exit loop
       endif
       s_i = k + 5
       k = index(s(s_i:), ")")
       if (k==0) then
         err = 2
-        exit
+        exit loop
       else
         k = s_i + k - 2
       endif
@@ -845,18 +1316,18 @@ contains
       read(s(s_i:k), *, iostat=ios) c
       if (ios/=0) then
         err = 2
-        exit
+        exit loop
       endif
-      array(i, j) = cmplx(r, c)
+      data(i, j) = cmplx(r, c)
       ij = ij + 1
       s_i = k + 2
-      if (ij<size(array).and.s_i>len(s)) exit
+      if (ij<length.and.s_i>len(s)) exit loop
 
     end do
     end do loop
 
     if (present(num)) num = ij
-    if (ij<size(array)) then
+    if (ij<length) then
       if (err==0) err = -1
     else
       if (verify(s(s_i:), XML_WHITESPACE)/=0) err = 1
@@ -885,29 +1356,30 @@ contains
 
   end subroutine matrixtocomplexsp
 
-  subroutine arraytocomplexdp(s, array, num, iostat)
-    complex(dp), intent(out) :: array(:)
+  subroutine arraytocomplexdp(s, data, num, iostat)
+    complex(dp), intent(out) :: data(:)
     character(len=*), intent(in) :: s
     integer, intent(out), optional :: num
     integer, intent(out), optional :: iostat
 
 
-    integer :: i, j, ij, k, s_i, err, ios
+    integer :: i, j, ij, k, s_i, err, ios, length
     real :: r, c
 
 
     s_i = 1
     err = 0
-    array = cmplx(0)
+    data = cmplx(0)
     ij  = 0
-    loop: do i = 1, size(array)
+    length = size(data)
+    loop: do i = 1, size(data)
       k = index(s(s_i:), "(")
-      if (k==0) exit
+      if (k==0) exit loop
       s_i = s_i + k
       k = index(s(s_i:), ")+i(")
       if (k==0) then
         err = 2
-        exit
+        exit loop
       else
         k = s_i + k - 2
       endif
@@ -916,13 +1388,13 @@ contains
       read(s(s_i:k), *, iostat=ios) r
       if (ios/=0) then
         err = 2
-        exit
+        exit loop
       endif
       s_i = k + 5
       k = index(s(s_i:), ")")
       if (k==0) then
         err = 2
-        exit
+        exit loop
       else
         k = s_i + k - 2
       endif
@@ -931,17 +1403,17 @@ contains
       read(s(s_i:k), *, iostat=ios) c
       if (ios/=0) then
         err = 2
-        exit
+        exit loop
       endif
-      array(i) = cmplx(r, c)
+      data(i) = cmplx(r, c)
       ij = ij + 1
       s_i = k + 2
-      if (ij<size(array).and.s_i>len(s)) exit
+      if (ij<length.and.s_i>len(s)) exit loop
 
     end do loop
 
     if (present(num)) num = ij
-    if (ij<size(array)) then
+    if (ij<length) then
       if (err==0) err = -1
     else
       if (verify(s(s_i:), XML_WHITESPACE)/=0) err = 1
@@ -970,30 +1442,31 @@ contains
 
   end subroutine arraytocomplexdp
 
-  subroutine matrixtocomplexdp(s, array, num, iostat)
-    complex(dp), intent(out) :: array(:,:)
+  subroutine matrixtocomplexdp(s, data, num, iostat)
+    complex(dp), intent(out) :: data(:,:)
     character(len=*), intent(in) :: s
     integer, intent(out), optional :: num
     integer, intent(out), optional :: iostat
 
 
-    integer :: i, j, ij, k, s_i, err, ios
+    integer :: i, j, ij, k, s_i, err, ios, length
     real :: r, c
 
 
     s_i = 1
     err = 0
-    array = cmplx(0,0)
+    data = cmplx(0,0)
     ij = 0
-    loop: do j = 1, size(array, 2)
-    do i = 1, size(array, 1)
+    length = size(data)
+    loop: do j = 1, size(data, 2)
+    do i = 1, size(data, 1)
       k = index(s(s_i:), "(")
-      if (k==0) exit
+      if (k==0) exit loop
       s_i = s_i + k
       k = index(s(s_i:), ")+i(")
       if (k==0) then
         err = 2
-        exit
+        exit loop
       else
         k = s_i + k - 2
       endif
@@ -1002,13 +1475,13 @@ contains
       read(s(s_i:k), *, iostat=ios) r
       if (ios/=0) then
         err = 2
-        exit
+        exit loop
       endif
       s_i = k + 5
       k = index(s(s_i:), ")")
       if (k==0) then
         err = 2
-        exit
+        exit loop
       else
         k = s_i + k - 2
       endif
@@ -1017,18 +1490,18 @@ contains
       read(s(s_i:k), *, iostat=ios) c
       if (ios/=0) then
         err = 2
-        exit
+        exit loop
       endif
-      array(i, j) = cmplx(r, c)
+      data(i, j) = cmplx(r, c)
       ij = ij + 1
       s_i = k + 2
-      if (ij<size(array).and.s_i>len(s)) exit
+      if (ij<length.and.s_i>len(s)) exit loop
 
     end do
     end do loop
 
     if (present(num)) num = ij
-    if (ij<size(array)) then
+    if (ij<length) then
       if (err==0) err = -1
     else
       if (verify(s(s_i:), XML_WHITESPACE)/=0) err = 1

@@ -11,7 +11,7 @@ M4FILES = m_dom_types.m4 m_dom_node.m4 m_dom_nodelist.m4 \
           m_dom_namespaces.m4 m_dom_configuration.m4 \
           m_dom_treewalk.m4 m_dom_exception.m4
 OBJFILES= m_dom_error.$(OBJEXT) m_dom_parse.$(OBJEXT) m_dom_utils.$(OBJEXT) \
-	  m_dom_dom.$(OBJEXT) FoX_dom.$(OBJEXT)
+	  m_dom_extras.$(OBJEXT) m_dom_dom.$(OBJEXT) FoX_dom.$(OBJEXT)
 #
 LIBRARY=libFoX_dom.$(LIBEXT)
 INCFLAGS=$(MOD_PREFIX)../objs/finclude
@@ -20,6 +20,8 @@ INCFLAGS=$(MOD_PREFIX)../objs/finclude
 #
 include ../arch.make
 #
+m_dom_extras.f90: m_dom_extras.m4
+	m4 -I ../m4 $< > $@
 m_dom_parse.f90: m_dom_parse.m4
 	m4 -I ../m4 $< > $@
 m_dom_utils.f90: m_dom_utils.m4
@@ -48,7 +50,8 @@ check:
 clean:
 	rm -f *.$(OBJEXT)  *.$(MOD_EXT) $(LIBRARY)
 # DO NOT DELETE THIS LINE - used by make depend
-FoX_dom.$(OBJEXT): m_dom_dom.$(OBJEXT) m_dom_error.$(OBJEXT) m_dom_parse.$(OBJEXT) m_dom_utils.$(OBJEXT)
+FoX_dom.$(OBJEXT): m_dom_dom.$(OBJEXT) m_dom_error.$(OBJEXT) m_dom_extras.$(OBJEXT) m_dom_parse.$(OBJEXT) m_dom_utils.$(OBJEXT)
 m_dom_dom.$(OBJEXT): m_dom_error.$(OBJEXT)
+m_dom_extras.$(OBJEXT): m_dom_dom.$(OBJEXT) m_dom_error.$(OBJEXT)
 m_dom_parse.$(OBJEXT): m_dom_dom.$(OBJEXT) m_dom_error.$(OBJEXT)
 m_dom_utils.$(OBJEXT): m_dom_dom.$(OBJEXT) m_dom_error.$(OBJEXT)
