@@ -12,6 +12,9 @@ do
   ./$t
 done
 
+echo "Testing reading strings"
+./test.sh test_input
+
 echo "Testing integer to string conversion"
 echo Scalars:
 for i in '0 0' '1 1' '-1 -1' '10 10' '-356 -356'

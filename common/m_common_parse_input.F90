@@ -57,12 +57,9 @@ contains
       else
         k = s_i + k - 2
       endif
-      print*, s_i, k, "!", s(s_i:k), "!"
       array(i) = s(s_i:k)
       ij = ij + 1
       s_i = k + 2
-      print*, ij, size(array), s_i, len(s), &
-        (ij<size(array).and.s_i>len(s))
       if (ij<size(array).and.s_i>len(s)) exit loop
 
     end do loop
@@ -133,12 +130,9 @@ contains
       else
         k = s_i + k - 2
       endif
-      print*, s_i, k, "!", s(s_i:k), "!"
       array(i, j) = s(s_i:k)
       ij = ij + 1
       s_i = k + 2
-      print*, ij, size(array), s_i, len(s), &
-        (ij<size(array).and.s_i>len(s))
       if (ij<size(array).and.s_i>len(s)) exit loop
     end do
     end do loop
@@ -262,8 +256,8 @@ contains
     err = 0
     array = .false.
     ij = 0
-    loop: do i = 1, size(array, 2)
-    do j = 1, size(array, 1)
+    loop: do j = 1, size(array, 2)
+    do i = 1, size(array, 1)
       k = verify(s(s_i:), XML_WHITESPACE)
       if (k==0) exit
       s_i = s_i + k - 1
@@ -398,8 +392,8 @@ contains
     err = 0
     array = 0
     ij = 0
-    loop: do i = 1, size(array, 2)
-    do j = 1, size(array, 1)
+    loop: do j = 1, size(array, 2)
+    do i = 1, size(array, 1)
       k = verify(s(s_i:), XML_WHITESPACE)
       if (k==0) exit
       s_i = s_i + k - 1
@@ -532,8 +526,8 @@ contains
     err = 0
     array = 0
     ij = 0
-    loop: do i = 1, size(array, 2)
-    do j = 1, size(array, 1)
+    loop: do j = 1, size(array, 2)
+    do i = 1, size(array, 1)
       k = verify(s(s_i:), XML_WHITESPACE)
       if (k==0) exit
       s_i = s_i + k - 1
@@ -666,8 +660,8 @@ contains
     err = 0
     array = cmplx(0,0)
     ij = 0
-    loop: do i = 1, size(array, 2)
-    do j = 1, size(array, 1)
+    loop: do j = 1, size(array, 2)
+    do i = 1, size(array, 1)
       k = verify(s(s_i:), XML_WHITESPACE)
       if (k==0) exit
       s_i = s_i + k - 1
@@ -819,8 +813,8 @@ contains
     err = 0
     array = cmplx(0,0)
     ij = 0
-    loop: do i = 1, size(array, 2)
-    do j = 1, size(array, 1)
+    loop: do j = 1, size(array, 2)
+    do i = 1, size(array, 1)
       k = index(s(s_i:), "(")
       if (k==0) exit
       s_i = s_i + k
@@ -991,8 +985,8 @@ contains
     err = 0
     array = cmplx(0,0)
     ij = 0
-    loop: do i = 1, size(array, 2)
-    do j = 1, size(array, 1)
+    loop: do j = 1, size(array, 2)
+    do i = 1, size(array, 1)
       k = index(s(s_i:), "(")
       if (k==0) exit
       s_i = s_i + k
