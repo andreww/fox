@@ -638,6 +638,34 @@ contains
   end function get_characters2
 
 
+  subroutine get_chars2_until_not_namechar(fb, xv, iostat)
+    type(file_buffer_t), intent(inout) :: fb
+    integer, intent(in) :: xv
+    integer, intent(out) :: iostat
+
+    character, dimension(:), pointer :: tempbuf, buf
+    character :: c
+
+    allocate(buf(0))
+    do
+      c = get_characters(fb, 1, iostat)
+      if (iostat/=0) return
+      if ((xv==XML1_0.and..not.isXML1_0_NameChar(c)) &
+        .or.(xv==XML1_1.and..not.isXML1_1_NameChar(c))) then
+        call push_chars(fb, c)
+        exit
+      endif
+      allocate(tempbuf(size(buf)+1))
+      tempbuf = (/buf, c/)
+      deallocate(buf)
+      buf => tempbuf
+    enddo
+
+    if (associated(fb%namebuffer)) deallocate(fb%namebuffer)
+    fb%namebuffer => buf
+  end subroutine get_chars2_until_not_namechar
+
+
   subroutine get_chars2_with_condition(fb, marker, condition, iostat)
     type(file_buffer_t), intent(inout) :: fb
     character(len=*), intent(in) :: marker
