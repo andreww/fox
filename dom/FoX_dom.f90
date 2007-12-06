@@ -232,6 +232,8 @@ module FoX_dom
   ! FoX-only interfaces
   public :: newDOMConfig
 
+  public :: getNodePath
+
   public :: extractDataContent
   public :: extractDataAttribute
   public :: extractDataAttributeNS
