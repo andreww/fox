@@ -25,7 +25,7 @@ module m_sax_reader
 
 
   use m_common_array_str, only : vs_str, str_vs, vs_str_alloc, vs_vs_alloc
-  use m_common_charset, only: XML1_0, XML1_1, isLegalChar
+  use m_common_charset, only: XML1_0, XML1_1, isLegalChar, isXML1_0_NameChar, isXML1_1_NameChar
   use m_common_error,  only: FoX_error
   use m_common_io, only: setup_io, io_eor, io_eof, get_unit
   use m_common_format, only: str
@@ -103,7 +103,7 @@ module m_sax_reader
   public :: push_chars
 
   public :: get_characters
-  public :: get_characters_until_condition
+  public :: get_characters_until_not_namechar
   public :: get_characters_until_not_one_of
   public :: get_characters_until_one_of
   public :: get_characters_until_all_of
@@ -827,6 +827,19 @@ contains
 
   end function get_characters
 
+
+  subroutine get_characters_until_not_namechar(fb, xv, iostat)
+    type(file_buffer_t), intent(inout) :: fb
+    integer, intent(in) :: xv
+    integer, intent(out) :: iostat
+
+    if (xv==XML1_0) then
+      call get_characters_until_condition(fb, isXML1_0_NameChar, .false., iostat)
+    elseif (xv==XML1_1) then
+      call get_characters_until_condition(fb, isXML1_0_NameChar, .false., iostat)
+    endif
+
+  end subroutine get_characters_until_not_namechar
 
   subroutine get_characters_until_condition(fb, condition, true, iostat)
     type(file_buffer_t), intent(inout) :: fb

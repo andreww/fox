@@ -16,7 +16,7 @@ module m_sax_tokenizer
     get_characters_until_all_of, &
     get_characters_until_one_of, &
     get_characters_until_not_one_of, &
-    get_characters_until_condition
+    get_characters_until_not_namechar
   use m_sax_types ! everything, really
 
   implicit none
@@ -54,11 +54,7 @@ contains
           'Invalid PI Name')
         return
       endif
-      if (fx%xds%xml_version==XML1_0) then
-        call get_characters_until_condition(fb, isXML1_0_NameChar, .false., iostat)
-      elseif (fx%xds%xml_version==XML1_1) then
-        call get_characters_until_condition(fb, isXML1_1_NameChar, .false., iostat)
-      endif
+      call get_characters_until_not_namechar(fb, fx%xds%xml_version, iostat)
       if (iostat/=0) return
       fx%token => vs_str_alloc(c//str_vs(fb%namebuffer))
       deallocate(fb%namebuffer)
@@ -202,11 +198,8 @@ contains
             fx%token => vs_str_alloc('/>')
           endif
         elseif (isInitialNameChar(c, fx%xds%xml_version)) then 
-          if (fx%xds%xml_version==XML1_0) then
-            call get_characters_until_condition(fb, isXML1_0_NameChar, .false., iostat)
-          elseif (fx%xds%xml_version==XML1_1) then
-            call get_characters_until_condition(fb, isXML1_1_NameChar, .false., iostat)
-          endif
+          call get_characters_until_not_namechar(fb, fx%xds%xml_version, iostat)
+          if (iostat/=0) return
           fx%token => vs_str_alloc(c//str_vs(fb%namebuffer))
           deallocate(fb%namebuffer)
         else
@@ -279,11 +272,8 @@ contains
           deallocate(fb%namebuffer)
         else !it must be a NAME for some reason
           call put_character(fb)
-          if (fx%xds%xml_version==XML1_0) then
-            call get_characters_until_condition(fb, isXML1_0_NameChar, .false., iostat)
-          elseif (fx%xds%xml_version==XML1_1) then
-            call get_characters_until_condition(fb, isXML1_1_NameChar, .false., iostat)
-          endif
+          call get_characters_until_not_namechar(fb, fx%xds%xml_version, iostat)
+          if (iostat/=0) return
           fx%token => fb%namebuffer
           nullify(fb%namebuffer)
         endif
@@ -310,11 +300,7 @@ contains
           endif
         elseif (c=='%') then
           !It ought to be a parameter entity reference
-          if (fx%xds%xml_version==XML1_0) then
-            call get_characters_until_condition(fb, isXML1_0_NameChar, .false., iostat)
-          elseif (fx%xds%xml_version==XML1_1) then
-            call get_characters_until_condition(fb, isXML1_1_NameChar, .false., iostat)
-          endif
+          call get_characters_until_not_namechar(fb, fx%xds%xml_version, iostat)
           c = get_characters(fb, 1, iostat)
           if (iostat/=0) return
           if (c/=';') then
@@ -353,11 +339,7 @@ contains
         fx%token => vs_str_alloc(c)
 
       elseif (isInitialNameChar(c, fx%xds%xml_version)) then
-        if (fx%xds%xml_version==XML1_0) then
-          call get_characters_until_condition(fb, isXML1_0_NameChar, .false., iostat)
-        elseif (fx%xds%xml_version==XML1_1) then
-          call get_characters_until_condition(fb, isXML1_1_NameChar, .false., iostat)
-        endif
+        call get_characters_until_not_namechar(fb, fx%xds%xml_version, iostat)
         if (iostat/=0) return
         fx%token => vs_str_alloc(c//str_vs(fb%namebuffer))
         deallocate(fb%namebuffer)
@@ -429,11 +411,7 @@ contains
               call add_error(fx%error_stack, 'Illegal character entity reference')
             endif
           elseif (isInitialNameChar(c, fx%xds%xml_version)) then
-            if (fx%xds%xml_version==XML1_0) then
-              call get_characters_until_condition(fb, isXML1_0_NameChar, .false., iostat)
-            elseif (fx%xds%xml_version==XML1_1) then
-              call get_characters_until_condition(fb, isXML1_1_NameChar, .false., iostat)
-            endif
+            call get_characters_until_not_namechar(fb, fx%xds%xml_version, iostat)
             if (iostat/=0) return
             c2 = get_characters(fb, 1, iostat)
             if (iostat/=0) return
