@@ -41,30 +41,23 @@ module m_sax_reader
     integer :: pos = 1
   end type buffer_t
 
-  type xml_file_t   
-    logical                  :: connected = .false.
-    integer                  :: lun
-    integer                  :: xml_version = XML1_0
-    character, pointer       :: filename(:) => null()
-    integer                  :: line
-    integer                  :: col
+  type xml_file_t
+    logical            :: connected = .false.
+    integer            :: lun
+    integer            :: xml_version = XML1_0
+    character, pointer :: filename(:) => null()
+    integer            :: line
+    integer            :: col
   end type xml_file_t
 
   type file_buffer_t
     !FIXME private
-    logical                  :: connected=.false.   ! Are we connected?
-    integer                  :: xml_version = XML1_0
-    integer                  :: lun                 ! Which unit number
-    ! If lun = -1, then we are reading from a string ....
-    character, pointer       :: input_string(:) => null()    ! If input is from a string
+    type(xml_file_t)         :: f
+    character, pointer       :: input_string(:) => null()  ! If input is from a string
     integer                  :: input_pos
-    character, pointer       :: filename(:) => null()        ! filename
     type(buffer_t),  pointer :: buffer_stack(:) => null()  ! stack of expansion buffers
     character, pointer       :: namebuffer(:) => null()    ! temporary buffer for retrieving strings
-    character, pointer       :: next_chars(:)  => null()     ! read_really needs its
-    ! own pushback buffer
-    integer                  :: line                ! which line of file?
-    integer                  :: col                 ! which column of file?
+    character, pointer       :: next_chars(:)  => null()   ! pushback buffer
   end type file_buffer_t
 
 
@@ -108,31 +101,31 @@ contains
       elseif (present(lun)) then
         call FoX_error("Cannot specify lun for string input to open_xml")
       endif
-      fb%lun = -1
+      fb%f%lun = -1
       fb%input_string => vs_str_alloc(string)
-      allocate(fb%filename(0))
+      allocate(fb%f%filename(0))
       fb%input_pos = 1
     else
       if (present(lun)) then
-        fb%lun = lun
+        fb%f%lun = lun
       else
-        call get_unit(fb%lun, iostat)
+        call get_unit(fb%f%lun, iostat)
         if (iostat/=0) then
           return
         endif
       endif
-      open(unit=fb%lun, file=file, form="formatted", status="old", &
+      open(unit=fb%f%lun, file=file, form="formatted", status="old", &
         action="read", position="rewind", iostat=iostat)
       if (iostat /= 0) then
         return
       endif
-      fb%filename => vs_str_alloc(file)
+      fb%f%filename => vs_str_alloc(file)
       allocate(fb%input_string(0))
     endif
 
-    fb%connected = .true.
-    fb%line = 1
-    fb%col = 0
+    fb%f%connected = .true.
+    fb%f%line = 1
+    fb%f%col = 0
     allocate(fb%buffer_stack(0))
 
     allocate(fb%next_chars(0))
@@ -145,8 +138,8 @@ contains
 
     integer :: i
 
-    fb%line = 1
-    fb%col = 0
+    fb%f%line = 1
+    fb%f%col = 0
     do i = 1, size(fb%buffer_stack)
       deallocate(fb%buffer_stack(i)%s)
     enddo
@@ -157,8 +150,8 @@ contains
     allocate(fb%next_chars(0))
 
     fb%input_pos = 1
-    if (fb%lun/=-1) then
-      rewind(unit=fb%lun)
+    if (fb%f%lun/=-1) then
+      rewind(unit=fb%f%lun)
     endif
 
   end subroutine rewind_file
@@ -169,17 +162,17 @@ contains
 
     integer :: i
 
-    if (fb%connected) then
-      deallocate(fb%filename)
+    if (fb%f%connected) then
+      deallocate(fb%f%filename)
       if (associated(fb%namebuffer)) deallocate(fb%namebuffer)
       do i = 1, size(fb%buffer_stack)
         deallocate(fb%buffer_stack(i)%s)
       enddo
       deallocate(fb%buffer_stack)
       deallocate(fb%next_chars)
-      if (fb%lun/=-1) close(fb%lun)
+      if (fb%f%lun/=-1) close(fb%f%lun)
       deallocate(fb%input_string)
-      fb%connected = .false.
+      fb%f%connected = .false.
     endif
 
   end subroutine close_file
@@ -221,8 +214,8 @@ contains
         call push_chars(fb, c2)
         ! else discard it.
       endif
-      fb%line = fb%line + 1
-      fb%col = 0
+      fb%f%line = fb%f%line + 1
+      fb%f%col = 0
       c = achar(13)
     endif
 
@@ -238,7 +231,7 @@ contains
         deallocate(fb%next_chars)
         fb%next_chars => nc
       else
-        if (fb%lun==-1) then
+        if (fb%f%lun==-1) then
           if (fb%input_pos>size(fb%input_string)) then
             rc = achar(0)
             iostat = io_eof
@@ -248,7 +241,7 @@ contains
             iostat = 0
           endif
         else
-          read(unit=fb%lun, iostat=iostat, advance="no", fmt="(a1)") rc
+          read(unit=fb%f%lun, iostat=iostat, advance="no", fmt="(a1)") rc
           if (iostat == io_eor) then
             rc = achar(13)
             iostat = 0
@@ -331,7 +324,7 @@ contains
     integer :: offset, n_left, n_held
     character, pointer :: temp(:)
 
-    if (.not.fb%connected) then
+    if (.not.fb%f%connected) then
       iostat = BUFFER_NOT_CONNECTED
       return
     endif
@@ -542,7 +535,7 @@ contains
         c = c2
         pending = .false.
       else
-        read (unit=fb%lun, iostat=iostat, advance="no", fmt="(a1)") c
+        read (unit=fb%f%lun, iostat=iostat, advance="no", fmt="(a1)") c
         if (iostat==io_eor) then
           c = achar(13)
           iostat = 0
@@ -551,20 +544,20 @@ contains
           return
         endif
       endif
-      if (.not.isLegalChar(c, fb%xml_version)) then
+      if (.not.isLegalChar(c, fb%f%xml_version)) then
         ! FIXME throw an error)
       endif
       if (c==achar(10)) then
-        read (unit=fb%lun, iostat=iostat, advance="no", fmt="(a1)") c2
-        fb%col = fb%col + 1
+        read (unit=fb%f%lun, iostat=iostat, advance="no", fmt="(a1)") c2
+        fb%f%col = fb%f%col + 1
         if (iostat==io_eof) then
           ! the file has just ended on a single CR. Report is as a LF.
           ! Ignore the eof just now, it'll be picked up if we need to 
           ! perform another read.
           iostat = 0
           c = achar(13)
-          fb%line = fb%line + 1
-          fb%col = 0
+          fb%f%line = fb%f%line + 1
+          fb%f%col = 0
         elseif (iostat==io_eor.or.c2==achar(13)) then
           ! (We pretend all ends of lines are LF)
           ! We can drop the CR
@@ -593,7 +586,7 @@ contains
     type(file_buffer_t), intent(in) :: fb
     integer :: n
 
-    n = fb%line
+    n = fb%f%line
   end function line
 
 
@@ -601,7 +594,7 @@ contains
     type(file_buffer_t), intent(in) :: fb
     integer :: n
 
-    n = fb%col
+    n = fb%f%col
   end function column
 
 
