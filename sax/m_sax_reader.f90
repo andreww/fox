@@ -16,14 +16,6 @@ module m_sax_reader
   ! Furthermore, readahead and pushback is available on
   ! all buffers.
 
-  ! In addition, it includes a layer for caching, whereby 
-  ! (except during entity expansion) it actually reads from 
-  ! the file READLENGTH(512) characters at a time, into
-  ! a large buffer with all newline conversion already done.
-  ! Thus most of the tokenizer/parser's seeking is done in memory, not through
-  ! IO.
-
-
   use m_common_array_str, only : vs_str, str_vs, vs_str_alloc, vs_vs_alloc
   use m_common_charset, only: XML1_0, XML1_1, isLegalChar, isXML1_0_NameChar, isXML1_1_NameChar
   use m_common_error,  only: FoX_error
