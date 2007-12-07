@@ -41,6 +41,15 @@ module m_sax_reader
     integer :: pos = 1
   end type buffer_t
 
+  type xml_file_t   
+    logical                  :: connected = .false.
+    integer                  :: lun
+    integer                  :: xml_version = XML1_0
+    character, pointer       :: filename(:) => null()
+    integer                  :: line
+    integer                  :: col
+  end type xml_file_t
+
   type file_buffer_t
     !FIXME private
     logical                  :: connected=.false.   ! Are we connected?
@@ -59,7 +68,6 @@ module m_sax_reader
   end type file_buffer_t
 
 
-  public :: buffer_t
   public :: file_buffer_t
   public :: line
   public :: column
