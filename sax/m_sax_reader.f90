@@ -106,33 +106,39 @@ contains
       allocate(fb%f%filename(0))
       fb%input_pos = 1
     else
-      if (present(lun)) then
-        fb%f%lun = lun
-      else
-        call get_unit(fb%f%lun, iostat)
-        if (iostat/=0) then
-          return
-        endif
-      endif
-      open(unit=fb%f%lun, file=file, form="formatted", status="old", &
-        action="read", position="rewind", iostat=iostat)
-      if (iostat /= 0) then
-        return
-      endif
-      fb%f%filename => vs_str_alloc(file)
+      call open_actual_file(fb%f, file, iostat, lun)
+      if (iostat/=0) return
       allocate(fb%input_string(0))
     endif
 
-    fb%f%connected = .true.
-    fb%f%line = 1
-    fb%f%col = 0
     allocate(fb%buffer_stack(0))
 
     allocate(fb%next_chars(0))
 
   end subroutine open_file
 
+  subroutine open_actual_file(f, file, iostat, lun)
+    type(xml_file_t), intent(out)    :: f
+    character(len=*), intent(in)     :: file
+    integer, intent(out)             :: iostat
+    integer, intent(in), optional    :: lun
 
+    if (present(lun)) then
+      f%lun = lun
+    else
+      call get_unit(f%lun, iostat)
+      if (iostat/=0) return
+    endif
+    open(unit=f%lun, file=file, form="formatted", status="old", &
+      action="read", position="rewind", iostat=iostat)
+    if (iostat/=0) return
+    f%filename => vs_str_alloc(file)
+
+    f%connected = .true.
+    f%line = 1
+    f%col = 0
+  end subroutine open_actual_file
+      
   subroutine rewind_file(fb)
     type(file_buffer_t), intent(inout)  :: fb
 
