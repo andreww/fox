@@ -1,0 +1,14 @@
+Fix error reporting infrastructure so that an error stack
+gets passed into every call to m_sax_reader functions
+
+On output check is_error instead of iostat
+
+(check full path back for all errors. Run through full test suite)
+
+Transfer all of parse_xml_declaration to somewhere accessible by m_sax_reader,
+and make it nicer. Ought to be able to write sensible mini-parser with small
+state machine.
+
+Call it automatically on opening a file (from open_file_actually).
+
+Propagate information back (on xml_version) somehow.
