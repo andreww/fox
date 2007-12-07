@@ -12,7 +12,7 @@ module m_sax_tokenizer
   use m_common_namecheck, only: checkName, checkCharacterEntityReference
 
   use m_sax_reader, only: file_buffer_t, rewind_file, &
-    read_char, read_chars, push_chars, get_characters, put_character, &
+    read_char, read_chars, push_chars, get_characters, &
     get_characters_until_all_of, &
     get_characters_until_one_of, &
     get_characters_until_not_one_of, &
@@ -271,7 +271,7 @@ contains
           fx%token => vs_str_alloc(c//str_vs(fb%namebuffer)//c)
           deallocate(fb%namebuffer)
         else !it must be a NAME for some reason
-          call put_character(fb)
+          call push_chars(fb, c)
           call get_characters_until_not_namechar(fb, fx%xds%xml_version, iostat)
           if (iostat/=0) return
           fx%token => fb%namebuffer
@@ -357,7 +357,7 @@ contains
           elseif (c=='/') then
             fx%token => vs_str_alloc('</')
           elseif (isInitialNameChar(c, fx%xds%xml_version)) then
-            call put_character(fb)
+            call push_chars(fb, c)
             fx%token => vs_str_alloc('<')
           else
             call add_error(fx%error_stack,"Unexpected character found.")
