@@ -169,19 +169,29 @@ contains
     integer :: i
 
     if (fb%f%connected) then
-      deallocate(fb%f%filename)
       if (associated(fb%namebuffer)) deallocate(fb%namebuffer)
       do i = 1, size(fb%buffer_stack)
         deallocate(fb%buffer_stack(i)%s)
       enddo
       deallocate(fb%buffer_stack)
       deallocate(fb%next_chars)
-      if (fb%f%lun/=-1) close(fb%f%lun)
       deallocate(fb%input_string)
+      call close_actual_file(fb%f)
       fb%f%connected = .false.
     endif
 
   end subroutine close_file
+
+  subroutine close_actual_file(f)
+    type(xml_file_t), intent(inout)    :: f
+
+    if (f%lun/=-1) close(f%lun)
+    deallocate(f%filename)
+
+    f%connected = .false.
+    f%line = 0
+    f%col = 0
+  end subroutine close_actual_file
 
 
   ! For the first few characters, we need to be reading directly,
