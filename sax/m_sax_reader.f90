@@ -76,19 +76,6 @@ module m_sax_reader
   end type file_buffer_t
 
 
-
-
-  interface index
-    module procedure index_fb
-  end interface
-  interface scan
-    module procedure scan_fb
-  end interface
-  interface verify
-    module procedure verify_fb
-  end interface
-
-
   public :: buffer_t
   public :: file_buffer_t
   public :: line
@@ -107,8 +94,6 @@ module m_sax_reader
   public :: get_characters_until_not_one_of
   public :: get_characters_until_one_of
   public :: get_characters_until_all_of
-
-  public :: dump_string
 
   public :: push_buffer_stack
   public :: pop_buffer_stack
@@ -259,7 +244,7 @@ contains
       c2 = really_read_char(iostat)
       if (iostat/=0) return
       if (c2 /= achar(13)) then
-        call put_character(fb)
+        call push_chars(fb, c2)
         ! else discard it.
       endif
       fb%line = fb%line + 1
@@ -325,219 +310,6 @@ contains
     fb%next_chars => nc
   end subroutine push_chars
 
-  ! This subroutine will read in 512 chars; do XML-compliant new-line
-  ! replacement (shortening the string) and repeat until either it has
-  ! filled a 512-length string, it encounters a file error, or eof.
-  ! In every loop of the recursion, we may have to read one extra
-  ! char to check it. If we do & need to keep it around, we put it back.
-
-  ! It will return a 512-length string. Output from the subroutine
-  ! are l_s, the number of chars in the string (always 512 except in
-  ! case of eof), iostat (either zero, eof, or error).
-
-  ! It will assume XML-1.0 end of line semantics, unless version 1.1
-  ! is specified.
-
-  subroutine fill_buffer(fb, iostat)
-    type(file_buffer_t), intent(inout) :: fb
-    integer, intent(out) :: iostat
-
-    integer :: l_s ! number of chars read
-    integer :: z ! number of chars left to be read
-
-    ! This subroutine has three layers.
-
-    ! read_really actually interacts with the file and provides
-    ! raw characters. It reads lines repeatedly, with non-advancing
-    ! IO, adding 0xD every time it hits a newline (== end of record)
-    ! until enough characters have been gathered.
-
-    ! fill_buffer_really fills the buffer with READLENGTH chars from 
-    ! read_really, then does newline replacement, shortening the
-    ! string in the buffer accordingly.
-
-    ! The main part of the subroutine then calls fill_buffer_really
-    ! repeatedly until we've definitely got 512 characters after
-    ! newline replacement.
-
-    ! The buffer should then only be accessed through one of the 
-    ! get_characters routine below, which take care of the pushback
-    ! buffer.
-
-    ! fill_buffer returns an iostat. This is zero if ok - if we have
-    ! encountered an eof but there are still characters in the buffer,
-    ! it is still zero. It is only non-zero when the buffer is empty,
-    ! and we've hit eof - or when we've hit an IO error in reading.
-
-    if (fb%pos > READLENGTH) then
-      fb%buffer(:READLENGTH) = fb%buffer(READLENGTH+1:)
-      fb%pos = fb%pos - READLENGTH
-      fb%nchars = fb%nchars - READLENGTH
-    endif
-
-    l_s = 0
-    z = READLENGTH - l_s
-
-    do while (z>0)
-      call fill_buffer_really
-      if (iostat/=0) exit
-    enddo
-
-    fb%nchars = fb%nchars + l_s
-
-    if (iostat == io_eof) then
-      if (fb%nchars - fb%pos >= 0) iostat = 0
-    endif
-
-  contains
-
-    subroutine fill_buffer_really
-
-      integer :: i, n, p, q
-      character :: c
-      character(len=z) :: string
-
-      if (z==0) then
-        iostat = 0
-        return
-      endif
-
-      string = read_really(z, p)
-      ! p now holds useful length of current string
-      if (iostat /= 0) return
-
-      ! Now replace newline characters according to 
-      ! XML 1.0/1.1 section 2.11
-      i = 1
-      if (fb%xml_version == XML1_0) then
-        n = scan(string(:p), achar(10))
-      elseif (fb%xml_version == XML1_1) then
-        ! n = scan(string(:p), achar(10)//achar(133))
-        ! Really we should check for 133, but we can't do >128 chars
-        ! anywhere else, and some compilers complain when we try.
-        n = scan(string(:p), achar(10)//achar(133))
-      endif
-      do while (n > 0) 
-        if (n == p) then
-          ! We're at the end of the string ... we need the next character
-          c = read_really(1, q)
-          ! unless this is the end of the file
-          if (iostat /= 0) then
-            if ((fb%xml_version==XML1_0.and.c/=achar(13)).or. &
-              ! (fb%xml_version==XML1_1.and.c/=achar(13).and.c/=achar(133))) then
-              ! Really we should check for 133, but we can't do >128 chars
-              (fb%xml_version==XML1_0.and.c/=achar(13))) then
-              continue
-              ! else we'd be throwing it away below anyway
-            endif
-          else
-            if (iostat /= io_eof) return
-            ! Hard error, return
-          endif
-          ! else it really is the end of the file, carry on for the moment.
-          ! Now: it's not the end of the string, what's the next character?
-        elseif ((fb%xml_version==XML1_0.and.string(n+1:n+1)==achar(13)).or. &
-          ! Really we should check for 133, but we can't do >128 chars
-          ! (fb%xml_version==XML1_1.and.string(n+1:n+1)/=achar(13).and.string(n+1:n+1)/=achar(133))) then
-          (fb%xml_version==XML1_1.and.string(n+1:n+1)/=achar(13))) then
-          ! We must discard it, and thus shorten the string we have.
-          string(n+1:p-1) = string(n+2:p)
-          p = p - 1
-        endif
-        ! Finally, we must change the 
-        ! change the newline char to achar(13) & finish.
-        string(n:n) = achar(13)
-        ! and find the next one ...
-        if (fb%xml_version == XML1_0) then
-          n = index(string(n+1:p), achar(10))
-        elseif (fb%xml_version == XML1_1) then
-          ! Really we should check for 133, but we can't do >128 chars
-          ! n = scan(string(n+1:p), achar(10)//achar(133))
-          n = scan(string(n+1:p), achar(10))
-        endif
-      enddo
-
-      fb%buffer(fb%nchars+l_s+1:fb%nchars+l_s+p) = string(:p)
-      l_s = l_s + p
-      z = READLENGTH - l_s
-
-    end subroutine fill_buffer_really
-
-    function read_really(n_chars, ncr) result (string)
-      integer, intent(in) :: n_chars
-      integer, intent(out) :: ncr ! number characters read
-      character(len=n_chars) :: string
-      integer :: nc
-
-      ! This should only return EOF if it is EOF , and we've read no
-      ! character at all.
-
-      ! We may have a pending newline
-      if (fb%eor) then
-        string(1:1) = achar(13)
-        fb%eor = .false.
-        ncr = 1
-      else
-        ncr = 0
-      endif
-      do while (n_chars > ncr)
-        if (fb%eof) then
-          ! Don't read again if we've already encountered eof
-          nc = 0
-          if (ncr==0) then
-            iostat = io_eof
-            return
-          endif
-          ! else we don't want to return just yet - we might have
-          ! picked up some chars from previous reads
-        else
-          if (fb%lun == -1) then
-            ! get chars from string
-            if (size(fb%input_string) - fb%input_pos + 1 < n_chars) then
-              iostat = io_eof
-              nc = size(fb%input_string) - fb%input_pos + 1
-              string(:nc) = str_vs(fb%input_string(fb%input_pos:))
-              fb%input_pos = size(fb%input_string) + 1
-            else
-              iostat = 0
-              nc = n_chars
-              string(:nc) = str_vs(fb%input_string(fb%input_pos:fb%input_pos+n_chars-1))
-              fb%input_pos = fb%input_pos+n_chars
-            endif
-          else
-            ! This initialization to shut the Intel compiler up.
-            iostat = 0
-            do nc = 0, n_chars-ncr-1
-              read (unit=fb%lun, iostat=iostat, advance="no", &
-                fmt="(1a1)") string(ncr+nc+1:ncr+nc+1)
-              if (iostat/=0) exit 
-            enddo
-          endif
-        endif
-        ncr = ncr + nc
-        if (iostat==io_eor) then ! we hit a newline, need to record it
-          if (ncr < n_chars) then
-            ! we can just add it to the string
-            ncr = ncr + 1
-            string(ncr:ncr) = achar(13)
-          else
-            ! we already have enough characters, remember for next time.
-            fb%eor = .true.
-          endif
-          iostat = 0 ! and forget about the error
-        elseif (iostat == io_eof) then
-          fb%eof = .true.
-          iostat = 0 ! since we may still be returning some chars
-          return
-        elseif (iostat/=0) then
-          !either we've read an eof, or we've hit an error. Either way:
-          return
-        endif
-      enddo
-
-    end function read_really
-
-  end subroutine fill_buffer
 
   subroutine push_buffer_stack(fb, string)
     type(file_buffer_t), intent(inout) :: fb
@@ -843,37 +615,6 @@ contains
   end function get_chars_from_file
 
 
-  subroutine move_cursor(fb, string)
-    type(file_buffer_t), intent(inout) :: fb
-    character(len=*) :: string
-
-    integer :: newlines
-    newlines = count(vs_str(string) == achar(13))
-    if (newlines > 0) then
-      fb%line = fb%line + newlines
-      fb%col = index(string, achar(13), .true.) - 1
-    else
-      fb%col = len(string)
-    endif
-
-  end subroutine move_cursor
-
-
-  subroutine put_character(fb)
-    type(file_buffer_t), intent(inout) :: fb
-
-    type(buffer_t), pointer :: cb
-
-    if (size(fb%buffer_stack)>0) then
-      cb => fb%buffer_stack(1)
-      cb%pos = cb%pos - 1
-    else
-      fb%pos = fb%pos - 1
-    endif
-
-  end subroutine put_character
-
-
   function line(fb) result(n)
     type(file_buffer_t), intent(in) :: fb
     integer :: n
@@ -889,103 +630,5 @@ contains
     n = fb%col
   end function column
 
-
-  subroutine dump_string(string)
-    character(len=*) :: string
-    integer :: m, n
-    m = 1
-    n = index(string, achar(13))
-    do while (n /= 0)
-      m = m + n
-      n = index(string(m:), achar(13))
-    enddo
-  end subroutine dump_string
-
-  function index_fb(fb, marker) result(p)
-    type(file_buffer_t), intent(in) :: fb
-    character(len=*), intent(in) :: marker
-    integer :: p
-
-    type(buffer_t), pointer :: cb
-
-    if (size(fb%buffer_stack) > 0) then
-      cb => fb%buffer_stack(1)
-      p = index(str_vs(cb%s(cb%pos:)), marker)
-    else
-      p = index(fb%buffer(fb%pos:fb%nchars), marker)
-    endif
-
-  end function index_fb
-
-  function scan_fb(fb, marker) result(p)
-    type(file_buffer_t), intent(in) :: fb
-    character(len=*), intent(in) :: marker
-    integer :: p
-
-    type(buffer_t), pointer :: cb
-
-    if (size(fb%buffer_stack) > 0) then
-      cb => fb%buffer_stack(1)
-      p = scan(str_vs(cb%s(cb%pos:)), marker)
-    else
-      p = scan(fb%buffer(fb%pos:fb%nchars), marker)
-    endif
-
-  end function scan_fb
-
-  function verify_fb(fb, marker) result(p)
-    type(file_buffer_t), intent(in) :: fb
-    character(len=*), intent(in) :: marker
-    integer :: p
-
-    type(buffer_t), pointer :: cb
-
-    if (size(fb%buffer_stack) > 0) then
-      cb => fb%buffer_stack(1)
-      p = verify(str_vs(cb%s(cb%pos:)), marker)
-    else
-      p = verify(fb%buffer(fb%pos:fb%nchars), marker)
-    endif
-
-  end function verify_fb
-
-  function check_fb(fb, check, true) result(n)
-    type(file_buffer_t), intent(in) :: fb
-    interface
-      function check(c) result(p)
-        character, intent(in) :: c
-        logical :: p
-      end function check
-    end interface
-    logical, intent(in) :: true
-    integer :: n
-
-    type(buffer_t), pointer :: cb
-    integer :: i
-
-    n = 0
-    i = 1
-    if (size(fb%buffer_stack) > 0) then
-      cb => fb%buffer_stack(1)
-      do while (cb%pos+i-1<=size(cb%s))
-        if (true.eqv.check(cb%s(cb%pos+i-1))) then
-          n = i
-          exit
-        else
-          i = i + 1
-        endif
-      enddo
-    else
-      do while (fb%pos+i-1<=fb%nchars)
-        if (true.eqv.check(fb%buffer(fb%pos+i-1:fb%pos+i-1))) then
-          n = i
-          exit
-        else
-          i = i + 1
-        endif
-      enddo
-    endif
-
-  end function check_fb
 
 end module m_sax_reader
