@@ -52,12 +52,12 @@ module m_sax_reader
 
   type file_buffer_t
     !FIXME private
-    type(xml_file_t)         :: f
-    character, pointer       :: input_string(:) => null()  ! If input is from a string
-    integer                  :: input_pos
-    type(buffer_t),  pointer :: buffer_stack(:) => null()  ! stack of expansion buffers
-    character, pointer       :: namebuffer(:) => null()    ! temporary buffer for retrieving strings
-    character, pointer       :: next_chars(:)  => null()   ! pushback buffer
+    type(xml_file_t), pointer :: f(:) => null()
+    character, pointer        :: input_string(:) => null()  ! If input is from a string
+    integer                   :: input_pos
+    type(buffer_t),  pointer  :: buffer_stack(:) => null()  ! stack of expansion buffers
+    character, pointer        :: namebuffer(:) => null()    ! temporary buffer for retrieving strings
+    character, pointer        :: next_chars(:)  => null()   ! pushback buffer
   end type file_buffer_t
 
 
@@ -94,7 +94,7 @@ contains
     iostat = 0
 
     call setup_io()
-
+    allocate(fb%f(1))
     if (present(string)) then
       if (present(file)) then
         call FoX_error("Cannot specify both file and string input to open_xml")
@@ -103,10 +103,10 @@ contains
       endif
       fb%f%lun = -1
       fb%input_string => vs_str_alloc(string)
-      allocate(fb%f%filename(0))
+      allocate(fb%f(1)%filename(0))
       fb%input_pos = 1
     else
-      call open_actual_file(fb%f, file, iostat, lun)
+      call open_actual_file(fb%f(1), file, iostat, lun)
       if (iostat/=0) return
       allocate(fb%input_string(0))
     endif
@@ -156,8 +156,8 @@ contains
     allocate(fb%next_chars(0))
 
     fb%input_pos = 1
-    if (fb%f%lun/=-1) then
-      rewind(unit=fb%f%lun)
+    if (fb%f(1)%lun/=-1) then
+      rewind(unit=fb%f(1)%lun)
     endif
 
   end subroutine rewind_file
@@ -168,7 +168,7 @@ contains
 
     integer :: i
 
-    if (fb%f%connected) then
+    if (fb%f(1)%connected) then
       if (associated(fb%namebuffer)) deallocate(fb%namebuffer)
       do i = 1, size(fb%buffer_stack)
         deallocate(fb%buffer_stack(i)%s)
@@ -176,7 +176,8 @@ contains
       deallocate(fb%buffer_stack)
       deallocate(fb%next_chars)
       deallocate(fb%input_string)
-      call close_actual_file(fb%f)
+      call close_actual_file(fb%f(1))
+      deallocate(fb%f)
       fb%f%connected = .false.
     endif
 
@@ -219,8 +220,10 @@ contains
     integer, intent(out) :: iostat
     character :: c
 
+    type(xml_file_t), pointer :: f
     character :: c2
 
+    f => fb%f(1)
     c = really_read_char(iostat)
     if (iostat/=0) return
     if (c == achar(10)) then
@@ -230,8 +233,8 @@ contains
         call push_chars(fb, c2)
         ! else discard it.
       endif
-      fb%f%line = fb%f%line + 1
-      fb%f%col = 0
+      f%line = f%line + 1
+      f%col = 0
       c = achar(13)
     endif
 
@@ -247,7 +250,7 @@ contains
         deallocate(fb%next_chars)
         fb%next_chars => nc
       else
-        if (fb%f%lun==-1) then
+        if (f%lun==-1) then
           if (fb%input_pos>size(fb%input_string)) then
             rc = achar(0)
             iostat = io_eof
@@ -257,7 +260,7 @@ contains
             iostat = 0
           endif
         else
-          read(unit=fb%f%lun, iostat=iostat, advance="no", fmt="(a1)") rc
+          read(unit=f%lun, iostat=iostat, advance="no", fmt="(a1)") rc
           if (iostat == io_eor) then
             rc = achar(13)
             iostat = 0
@@ -340,10 +343,6 @@ contains
     integer :: offset, n_left, n_held
     character, pointer :: temp(:)
 
-    if (.not.fb%f%connected) then
-      iostat = BUFFER_NOT_CONNECTED
-      return
-    endif
     if (size(fb%next_chars)>0) then
       if (n<size(fb%next_chars)) then
         string = str_vs(fb%next_chars(:n))
@@ -543,7 +542,9 @@ contains
     integer :: i
     character :: c, c2
     logical :: pending
+    type(xml_file_t), pointer :: f
 
+    f => fb%f(1)
     i = 1
     pending = .false.
     do while (i<=n)
@@ -551,7 +552,7 @@ contains
         c = c2
         pending = .false.
       else
-        read (unit=fb%f%lun, iostat=iostat, advance="no", fmt="(a1)") c
+        read (unit=f%lun, iostat=iostat, advance="no", fmt="(a1)") c
         if (iostat==io_eor) then
           c = achar(13)
           iostat = 0
@@ -560,20 +561,20 @@ contains
           return
         endif
       endif
-      if (.not.isLegalChar(c, fb%f%xml_version)) then
+      if (.not.isLegalChar(c, f%xml_version)) then
         ! FIXME throw an error)
       endif
       if (c==achar(10)) then
-        read (unit=fb%f%lun, iostat=iostat, advance="no", fmt="(a1)") c2
-        fb%f%col = fb%f%col + 1
+        read (unit=f%lun, iostat=iostat, advance="no", fmt="(a1)") c2
+        f%col = f%col + 1
         if (iostat==io_eof) then
           ! the file has just ended on a single CR. Report is as a LF.
           ! Ignore the eof just now, it'll be picked up if we need to 
           ! perform another read.
           iostat = 0
           c = achar(13)
-          fb%f%line = fb%f%line + 1
-          fb%f%col = 0
+          f%line = f%line + 1
+          f%col = 0
         elseif (iostat==io_eor.or.c2==achar(13)) then
           ! (We pretend all ends of lines are LF)
           ! We can drop the CR
@@ -602,7 +603,7 @@ contains
     type(file_buffer_t), intent(in) :: fb
     integer :: n
 
-    n = fb%f%line
+    n = fb%f(1)%line
   end function line
 
 
@@ -610,7 +611,7 @@ contains
     type(file_buffer_t), intent(in) :: fb
     integer :: n
 
-    n = fb%f%col
+    n = fb%f(1)%col
   end function column
 
 
