@@ -1,6 +1,6 @@
 program short_test
 
-  use m_common_parse_input, only : stringtodata
+  use m_common_parse_input, only : rts
 
   
   print*,"test.1.1.1"
@@ -69,6 +69,12 @@ program short_test
   print*, "test.2.1.3"
   call logicaldataarray("true false false false true true", &
     (/.true., .false., .false., .false., .true./), 5, 1)
+  print*, "test.2.1.4"
+  call logicaldataarray("true, false, false, false true", &
+    (/.true., .false., .false., .false., .true./), 5, 0)
+  print*, "test.2.1.5"
+  call logicaldataarray("true, false, false, ,false true", &
+    (/.true., .false., .false., .false., .false./), 3, 2)
 
   print*, "test.2.2.1"
   call logicaldatamatrix("true false false false true true", &
@@ -107,7 +113,7 @@ program short_test
       character(len=len(array)) :: temp(size(array))
       integer :: n, i
 
-      call stringtodata(string, temp, separator=sep, num=n, iostat=i)
+      call rts(string, temp, separator=sep, num=n, iostat=i)
 
       if (any(temp/=array)) &
         print*, "Different array"
@@ -126,7 +132,7 @@ program short_test
       character(len=len(array)) :: temp(size(array,1),size(array,2))
       integer :: n, i
 
-      call stringtodata(string, temp, separator=sep, num=n, iostat=i)
+      call rts(string, temp, separator=sep, num=n, iostat=i)
 
       if (any(temp/=array)) &
         print*, "Different array"
@@ -144,7 +150,7 @@ program short_test
       logical :: temp(size(array))
       integer :: n, i
 
-      call stringtodata(string, temp, n, i)
+      call rts(string, temp, n, i)
 
       if (any(temp.neqv.array)) &
         print*, "Different array"
@@ -162,7 +168,7 @@ program short_test
       logical :: temp(size(array,1),size(array,2))
       integer :: n, i
 
-      call stringtodata(string, temp, n, i)
+      call rts(string, temp, n, i)
 
       if (any(temp.neqv.array)) &
         print*, "Different array"
@@ -180,7 +186,7 @@ program short_test
       integer :: temp(size(array))
       integer :: n, i
 
-      call stringtodata(string, temp, n, i)
+      call rts(string, temp, n, i)
 
       if (any(temp/=array)) &
         print*, "Different array"
@@ -198,7 +204,7 @@ program short_test
       integer :: temp(size(array,1),size(array,2))
       integer :: n, i
 
-      call stringtodata(string, temp, n, i)
+      call rts(string, temp, n, i)
 
       if (any(temp/=array)) &
         print*, "Different array"
@@ -216,7 +222,7 @@ program short_test
       real :: temp(size(array))
       integer :: n, i
 
-      call stringtodata(string, temp, n, i)
+      call rts(string, temp, n, i)
 
       if (any(temp/=array)) &
         print*, "Different array"
@@ -234,7 +240,7 @@ program short_test
       real :: temp(size(array,1),size(array,2))
       integer :: n, i
 
-      call stringtodata(string, temp, n, i)
+      call rts(string, temp, n, i)
 
       if (any(temp/=array)) &
         print*, "Different array"

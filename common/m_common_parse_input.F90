@@ -114,13 +114,19 @@ contains
     loop: do i = 1, 1
       k = verify(s(s_i:), XML_WHITESPACE)
       if (k==0) exit loop
-      s_i = s_i + k - 1
-      k = scan(s(s_i:), XML_WHITESPACE)
+      s_i = s_i + k
+      if (s(s_i:s_i)==",") then
+        k = verify(s(s_i:), XML_WHITESPACE)
+        s_i = s_i + k 
+      endif
+      s_i = s_i - 1
+      k = scan(s(s_i:), XML_WHITESPACE//",")
       if (k==0) then
         k = len(s)
       else
         k = s_i + k - 2
       endif
+      print*,"!", s(s_i:k), "!"
       if (s(s_i:k)=="true".or.s(s_i:k)=="1") then
         data = .true.
       elseif (s(s_i:k)=="false".or.s(s_i:k)=="0") then
@@ -652,13 +658,19 @@ contains
     loop: do i = 1, size(data)
       k = verify(s(s_i:), XML_WHITESPACE)
       if (k==0) exit loop
-      s_i = s_i + k - 1
-      k = scan(s(s_i:), XML_WHITESPACE)
+      s_i = s_i + k
+      if (s(s_i:s_i)==",") then
+        k = verify(s(s_i:), XML_WHITESPACE)
+        s_i = s_i + k 
+      endif
+      s_i = s_i - 1
+      k = scan(s(s_i:), XML_WHITESPACE//",")
       if (k==0) then
         k = len(s)
       else
         k = s_i + k - 2
       endif
+      print*,"!", s(s_i:k), "!"
       if (s(s_i:k)=="true".or.s(s_i:k)=="1") then
         data(i) = .true.
       elseif (s(s_i:k)=="false".or.s(s_i:k)=="0") then
@@ -723,13 +735,19 @@ contains
     do i = 1, size(data, 1)
       k = verify(s(s_i:), XML_WHITESPACE)
       if (k==0) exit loop
-      s_i = s_i + k - 1
-      k = scan(s(s_i:), XML_WHITESPACE)
+      s_i = s_i + k
+      if (s(s_i:s_i)==",") then
+        k = verify(s(s_i:), XML_WHITESPACE)
+        s_i = s_i + k 
+      endif
+      s_i = s_i - 1
+      k = scan(s(s_i:), XML_WHITESPACE//",")
       if (k==0) then
         k = len(s)
       else
         k = s_i + k - 2
       endif
+      print*,"!", s(s_i:k), "!"
       if (s(s_i:k)=="true".or.s(s_i:k)=="1") then
         data(i, j) = .true.
       elseif (s(s_i:k)=="false".or.s(s_i:k)=="0") then

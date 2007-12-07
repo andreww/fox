@@ -70,8 +70,13 @@ dnl
 define(`TOHW_parse_logical', `dnl
       k = verify(s(s_i:), XML_WHITESPACE)
       if (k==0) exit loop
-      s_i = s_i + k - 1
-      k = scan(s(s_i:), XML_WHITESPACE)
+      s_i = s_i + k
+      if (s(s_i:s_i)==",") then
+        k = verify(s(s_i:), XML_WHITESPACE)
+        s_i = s_i + k 
+      endif
+      s_i = s_i - 1
+      k = scan(s(s_i:), XML_WHITESPACE//",")
       if (k==0) then
         k = len(s)
       else
@@ -93,8 +98,13 @@ dnl
 define(`TOHW_parse_numbers', `dnl
       k = verify(s(s_i:), XML_WHITESPACE)
       if (k==0) exit loop
-      s_i = s_i + k - 1
-      k = scan(s(s_i:), XML_WHITESPACE)
+      s_i = s_i + k
+      if (s(s_i:s_i)==",") then
+        k = verify(s(s_i:), XML_WHITESPACE)
+        s_i = s_i + k 
+      endif
+      s_i = s_i - 1
+      k = scan(s(s_i:), XML_WHITESPACE//",")
       if (k==0) then
         k = len(s)
       else
