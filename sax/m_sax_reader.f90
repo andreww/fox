@@ -35,11 +35,6 @@ module m_sax_reader
 
   ! FIXME need to check that io_eor & io_eof cannot be -2048
   integer, parameter             :: BUFFER_NOT_CONNECTED = -2048
-  ! We need a longish character buffer to a) minimize IO and
-  ! b) allow stepping backwards in the lexer/parser.
-  integer, parameter             :: BUFLENGTH = 1024
-  ! The above must be an even number, and greater than 20
-  integer, parameter             :: READLENGTH = BUFLENGTH/2
 
   type buffer_t
     character, dimension(:), pointer :: s
@@ -49,30 +44,18 @@ module m_sax_reader
   type file_buffer_t
     !FIXME private
     logical                  :: connected=.false.   ! Are we connected?
-    logical                  :: xml_decl=.false.    ! Have we seen an XML
-    ! declaration yet? - we need to know for whitespace handling.
     integer                  :: xml_version = XML1_0
     integer                  :: lun                 ! Which unit number
     ! If lun = -1, then we are reading from a string ....
     character, pointer       :: input_string(:) => null()    ! If input is from a string
     integer                  :: input_pos
-    logical                  :: eof                 ! have we read past eof?
-    ! Necessary since we don't want to report eof to user until
-    ! fb%pos gets there, but we don't want to issue another read.
     character, pointer       :: filename(:) => null()        ! filename
-    character(len=BUFLENGTH) :: buffer              ! character buffer.
     type(buffer_t),  pointer :: buffer_stack(:) => null()  ! stack of expansion buffers
-    character, pointer       :: namebuffer(:) => null()    ! temporary buffer for
-    ! retrieving strings potentially greater than 1024 chars
-    logical                  :: eor                 ! read_really needs to
-    ! remember if we have a pending newline
+    character, pointer       :: namebuffer(:) => null()    ! temporary buffer for retrieving strings
     character, pointer       :: next_chars(:)  => null()     ! read_really needs its
     ! own pushback buffer
-    integer                  :: pos                 ! which char are we at?
-    integer                  :: nchars              ! How many chars in buffer?
     integer                  :: line                ! which line of file?
     integer                  :: col                 ! which column of file?
-    logical                  :: debug               ! debug messages?
   end type file_buffer_t
 
 
@@ -127,33 +110,21 @@ contains
       else
         call get_unit(fb%lun, iostat)
         if (iostat/=0) then
-          if (fb%debug) write(*,'(a)') "Cannot find free unit"
           return
         endif
       endif
       open(unit=fb%lun, file=file, form="formatted", status="old", &
         action="read", position="rewind", iostat=iostat)
       if (iostat /= 0) then
-        if (fb%debug) write(*,'(a)') "Cannot open file "//file//" iostat: "//str(iostat)
         return
       endif
       fb%filename => vs_str_alloc(file)
       allocate(fb%input_string(0))
     endif
 
-    if (.true.) then
-      fb%debug = .true.
-    else
-      fb%debug = .false.
-    endif
-
     fb%connected = .true.
-    fb%eor = .false.
-    fb%eof = .false.
     fb%line = 1
     fb%col = 0
-    fb%pos = 1
-    fb%nchars = 0
     allocate(fb%buffer_stack(0))
 
     allocate(fb%next_chars(0))
@@ -166,13 +137,8 @@ contains
 
     integer :: i
 
-    fb%eor = .false.
-    fb%eof = .false.
     fb%line = 1
     fb%col = 0
-    fb%pos = 1
-    fb%nchars = 0
-    fb%buffer = ""
     do i = 1, size(fb%buffer_stack)
       deallocate(fb%buffer_stack(i)%s)
     enddo
