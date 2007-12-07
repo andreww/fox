@@ -33,21 +33,17 @@ module m_sax_reader
   implicit none
   private
 
-  ! FIXME need to check that io_eor & io_eof cannot be -2048
-  integer, parameter             :: BUFFER_NOT_CONNECTED = -2048
-
   type buffer_t
     character, dimension(:), pointer :: s
     integer :: pos = 1
   end type buffer_t
 
   type xml_file_t
-    logical            :: connected = .false.
-    integer            :: lun
+    integer            :: lun = -2
     integer            :: xml_version = XML1_0
     character, pointer :: filename(:) => null()
-    integer            :: line
-    integer            :: col
+    integer            :: line = 0
+    integer            :: col = 0
   end type xml_file_t
 
   type file_buffer_t
@@ -134,7 +130,6 @@ contains
     if (iostat/=0) return
     f%filename => vs_str_alloc(file)
 
-    f%connected = .true.
     f%line = 1
     f%col = 0
   end subroutine open_actual_file
@@ -168,7 +163,7 @@ contains
 
     integer :: i
 
-    if (fb%f(1)%connected) then
+    if (fb%f(1)%lun/=-2) then
       if (associated(fb%namebuffer)) deallocate(fb%namebuffer)
       do i = 1, size(fb%buffer_stack)
         deallocate(fb%buffer_stack(i)%s)
@@ -178,7 +173,6 @@ contains
       deallocate(fb%input_string)
       call close_actual_file(fb%f(1))
       deallocate(fb%f)
-      fb%f%connected = .false.
     endif
 
   end subroutine close_file
@@ -189,7 +183,6 @@ contains
     if (f%lun/=-1) close(f%lun)
     deallocate(f%filename)
 
-    f%connected = .false.
     f%line = 0
     f%col = 0
   end subroutine close_actual_file
