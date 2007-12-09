@@ -1,7 +1,8 @@
 #
 default: install
 #
-OBJFILES= m_sax_types.$(OBJEXT) m_sax_tokenizer.$(OBJEXT) m_sax_reader.$(OBJEXT) \
+OBJFILES= m_sax_types.$(OBJEXT) m_sax_tokenizer.$(OBJEXT) \
+          m_sax_reader.$(OBJEXT) m_sax_parse_decl.$(OBJEXT) \
           m_sax_parser.$(OBJEXT) m_sax_operate.$(OBJEXT) FoX_sax.$(OBJEXT)
 #
 LIBRARY=libFoX_sax.$(LIBEXT)
@@ -35,5 +36,5 @@ clean:
 FoX_sax.$(OBJEXT): m_sax_operate.$(OBJEXT)
 m_sax_operate.$(OBJEXT): m_sax_parser.$(OBJEXT) m_sax_reader.$(OBJEXT) m_sax_types.$(OBJEXT)
 m_sax_parser.$(OBJEXT): m_sax_reader.$(OBJEXT) m_sax_tokenizer.$(OBJEXT) m_sax_types.$(OBJEXT)
-m_sax_tokenizer.$(OBJEXT): m_sax_reader.$(OBJEXT) m_sax_types.$(OBJEXT)
+m_sax_tokenizer.$(OBJEXT): m_sax_reader.$(OBJEXT) m_sax_types.$(OBJEXT) m_sax_parse_decl.$(OBJEXT)
 m_sax_types.$(OBJEXT): m_sax_reader.$(OBJEXT)
