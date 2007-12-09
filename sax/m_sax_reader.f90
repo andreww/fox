@@ -18,7 +18,8 @@ module m_sax_reader
 
   use m_common_array_str, only : vs_str, str_vs, vs_str_alloc, vs_vs_alloc
   use m_common_charset, only: XML1_0, XML1_1, isLegalChar, isXML1_0_NameChar, isXML1_1_NameChar
-  use m_common_error,  only: FoX_error
+  use m_common_error,  only: error_stack, add_error, FoX_error
+  use m_common_format, only: operator(//)
   use m_common_io, only: setup_io, io_eor, io_eof, get_unit
   use m_common_format, only: str
 
@@ -318,10 +319,11 @@ contains
 
   end subroutine pop_buffer_stack
 
-  function get_characters(fb, n, iostat) result(string)
+  function get_characters(fb, n, iostat, es) result(string)
     type(file_buffer_t), intent(inout) :: fb
     integer, intent(in) :: n
     integer, intent(out) :: iostat
+    type(error_stack), intent(inout) :: es
     character(len=n) :: string
 
     type(buffer_t), pointer :: cb
@@ -368,24 +370,25 @@ contains
       endif
     else
       ! We are reading from a file
-      string(offset+1:) = get_chars_from_file(fb, n_left, iostat)
+      string(offset+1:) = get_chars_from_file(fb, n_left, iostat, es)
       if (iostat/=0) return ! EOF or Error.
     endif
 
   end function get_characters
 
 
-  subroutine get_characters_until_not_namechar(fb, xv, iostat)
+  subroutine get_characters_until_not_namechar(fb, xv, iostat, es)
     type(file_buffer_t), intent(inout) :: fb
     integer, intent(in) :: xv
     integer, intent(out) :: iostat
+    type(error_stack), intent(inout) :: es
 
     character, dimension(:), pointer :: tempbuf, buf
     character :: c
 
     allocate(buf(0))
     do
-      c = get_characters(fb, 1, iostat)
+      c = get_characters(fb, 1, iostat, es)
       if (iostat/=0) then
         deallocate(buf)
         return
@@ -406,10 +409,11 @@ contains
   end subroutine get_characters_until_not_namechar
 
 
-  subroutine get_chars_with_condition(fb, marker, condition, iostat)
+  subroutine get_chars_with_condition(fb, marker, condition, iostat, es)
     type(file_buffer_t), intent(inout) :: fb
     character(len=*), intent(in) :: marker
     integer, intent(out) :: iostat
+    type(error_stack), intent(inout) :: es
 
     interface
       function condition(c1, c2) result(p)
@@ -423,7 +427,7 @@ contains
 
     allocate(buf(0))
     do while (.not.condition(str_vs(buf), marker))
-      c = get_characters(fb, 1, iostat)
+      c = get_characters(fb, 1, iostat, es)
       if (iostat/=0) then
         deallocate(buf)
         return
@@ -439,15 +443,16 @@ contains
 
   end subroutine get_chars_with_condition
 
-  subroutine get_characters_until_not_one_of(fb, marker, iostat)
+  subroutine get_characters_until_not_one_of(fb, marker, iostat, es)
     type(file_buffer_t), intent(inout) :: fb
     character(len=*) :: marker
     integer, intent(out) :: iostat
+    type(error_stack), intent(inout) :: es
 
     character, pointer :: tempbuf(:)
     character :: c
 
-    call get_chars_with_condition(fb, marker, verify_fb2, iostat)
+    call get_chars_with_condition(fb, marker, verify_fb2, iostat, es)
 
     if (iostat==0) then
       allocate(tempbuf(size(fb%namebuffer)-1))
@@ -460,15 +465,16 @@ contains
 
   end subroutine get_characters_until_not_one_of
 
-  subroutine get_characters_until_one_of(fb, marker, iostat)
+  subroutine get_characters_until_one_of(fb, marker, iostat, es)
     type(file_buffer_t), intent(inout) :: fb
     character(len=*), intent(in) :: marker
     integer, intent(out) :: iostat
+    type(error_stack), intent(inout) :: es
 
     character, pointer :: tempbuf(:)
     character :: c
 
-    call get_chars_with_condition(fb, marker, scan_fb2, iostat)
+    call get_chars_with_condition(fb, marker, scan_fb2, iostat, es)
 
     if (iostat==0) then
       allocate(tempbuf(size(fb%namebuffer)-1))
@@ -481,14 +487,15 @@ contains
 
   end subroutine get_characters_until_one_of
 
-  subroutine get_characters_until_all_of(fb, marker, iostat)
+  subroutine get_characters_until_all_of(fb, marker, iostat, es)
     type(file_buffer_t), intent(inout) :: fb
     character(len=*), intent(in) :: marker
     integer, intent(out) :: iostat
+    type(error_stack), intent(inout) :: es
 
     character, pointer :: tempbuf(:)
 
-    call get_chars_with_condition(fb, marker, index_fb2, iostat)
+    call get_chars_with_condition(fb, marker, index_fb2, iostat, es)
 
     if (iostat==0) then
       allocate(tempbuf(size(fb%namebuffer)-len(marker)))
@@ -518,10 +525,11 @@ contains
     p = (index(c1,c2)/=0)
   end function index_fb2
 
-  function get_chars_from_file(fb, n, iostat) result(string)
+  function get_chars_from_file(fb, n, iostat, es) result(string)
     type(file_buffer_t), intent(inout) :: fb
     integer, intent(in) :: n
     integer, intent(out) :: iostat
+    type(error_stack), intent(inout) :: es
     character(len=n) :: string
 
     integer :: i
@@ -547,7 +555,8 @@ contains
         endif
       endif
       if (.not.isLegalChar(c, f%xml_version)) then
-        ! FIXME throw an error)
+        call add_error(es, "Illegal character found at " &
+          //str_vs(f%filename)//":"//f%line//":"//f%col)
       endif
       if (c==achar(10)) then
         read (unit=f%lun, iostat=iostat, advance="no", fmt="(a1)") c2
@@ -565,6 +574,7 @@ contains
           ! We can drop the CR
           c = c2
         elseif (iostat/=0) then
+          call add_error(es, "Error reading "//str_vs(f%filename))
           ! Unknown IO error
           return
         else

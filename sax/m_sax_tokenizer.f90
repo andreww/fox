@@ -47,25 +47,25 @@ contains
     endif
 
     if (fx%state==ST_START_PI) then
-      c = get_characters(fb, 1, iostat)
+      c = get_characters(fb, 1, iostat, fx%error_stack)
       if (iostat/=0) return
       if (.not.isInitialNameChar(c, fx%xds%xml_version)) then
         call add_error(fx%error_stack, &
           'Invalid PI Name')
         return
       endif
-      call get_characters_until_not_namechar(fb, fx%xds%xml_version, iostat)
+      call get_characters_until_not_namechar(fb, fx%xds%xml_version, iostat, fx%error_stack)
       if (iostat/=0) return
       fx%token => vs_str_alloc(c//str_vs(fb%namebuffer))
       deallocate(fb%namebuffer)
 
     elseif (fx%state==ST_PI_CONTENTS) then
-      call get_characters_until_not_one_of(fb, XML_WHITESPACE, iostat)
+      call get_characters_until_not_one_of(fb, XML_WHITESPACE, iostat, fx%error_stack)
       if (iostat/=0) return
       if (size(fb%namebuffer)==0) then
         !token had better be '?>'
         deallocate(fb%namebuffer)
-        fx%token => vs_str_alloc(get_characters(fb, 2, iostat))
+        fx%token => vs_str_alloc(get_characters(fb, 2, iostat, fx%error_stack))
         if (iostat/=0) return
         if (str_vs(fx%token)/='?>') then
           call add_error(fx%error_stack, "Unexpected token in PI")
@@ -74,19 +74,19 @@ contains
       else
         ! Otherwise token is all chars after whitespace until '?>'
         deallocate(fb%namebuffer)
-        call get_characters_until_all_of(fb, '?>', iostat)
+        call get_characters_until_all_of(fb, '?>', iostat, fx%error_stack)
         if (iostat/=0) return
-        fx%next_token => vs_str_alloc(get_characters(fb, 2, iostat))
+        fx%next_token => vs_str_alloc(get_characters(fb, 2, iostat, fx%error_stack))
         if (iostat/=0) return
         fx%token => fb%namebuffer
         nullify(fb%namebuffer)
       endif
 
     elseif (fx%state==ST_BANG_TAG) then
-      c = get_characters(fb, 1, iostat)
+      c = get_characters(fb, 1, iostat, fx%error_stack)
       if (iostat/=0) return
       if (c=='-') then
-        c = get_characters(fb, 1, iostat)
+        c = get_characters(fb, 1, iostat, fx%error_stack)
         if (iostat/=0) return
         if (c=='-') then
           fx%token => vs_str_alloc('--')
@@ -98,7 +98,7 @@ contains
       elseif (c=='[') then
         fx%token => vs_str_alloc('[')
       elseif (verify(c,upperCase)==0) then
-        call get_characters_until_not_one_of(fb, upperCase, iostat)
+        call get_characters_until_not_one_of(fb, upperCase, iostat, fx%error_stack)
         if (iostat/=0) return
         fx%token => vs_str_alloc(c//str_vs(fb%namebuffer))
         deallocate(fb%namebuffer)
@@ -109,38 +109,38 @@ contains
       endif
 
     elseif (fx%state==ST_START_COMMENT) then
-      call get_characters_until_all_of(fb, '--', iostat)
+      call get_characters_until_all_of(fb, '--', iostat, fx%error_stack)
       if (iostat/=0) return
-      fx%next_token => vs_str_alloc(get_characters(fb, 2, iostat))
+      fx%next_token => vs_str_alloc(get_characters(fb, 2, iostat, fx%error_stack))
       if (iostat/=0) return
       fx%token => fb%namebuffer
       nullify(fb%namebuffer)
 
     elseif (fx%state==ST_COMMENT_END_2) then
-      fx%token => vs_str_alloc(get_characters(fb, 1, iostat))
+      fx%token => vs_str_alloc(get_characters(fb, 1, iostat, fx%error_stack))
       if (iostat/=0) return
 
     elseif (fx%state==ST_CDATA_CONTENTS) then
-      call get_characters_until_all_of(fb, ']]>', iostat)
+      call get_characters_until_all_of(fb, ']]>', iostat, fx%error_stack)
       if (iostat/=0) return
-      fx%next_token => vs_str_alloc(get_characters(fb, 3, iostat))
+      fx%next_token => vs_str_alloc(get_characters(fb, 3, iostat, fx%error_stack))
       if (iostat/=0) return
       fx%token => fb%namebuffer
       nullify(fb%namebuffer)
 
     elseif (fx%state==ST_CHAR_IN_CONTENT) then
-      call get_characters_until_one_of(fb, '<&', iostat)
+      call get_characters_until_one_of(fb, '<&', iostat, fx%error_stack)
       fx%token => fb%namebuffer
       nullify(fb%namebuffer)
       if (iostat/=0) return
 
     elseif (fx%state==ST_DTD_ELEMENT_CONTENTS) then
-      c = get_characters(fb, 1, iostat)
+      c = get_characters(fb, 1, iostat, fx%error_stack)
       if (iostat/=0) return
       if (verify(c,XML_WHITESPACE)==0) then
-        call get_characters_until_all_of(fb, '>', iostat)
+        call get_characters_until_all_of(fb, '>', iostat, fx%error_stack)
         if (iostat/=0) return
-        fx%next_token => vs_str_alloc(get_characters(fb, 1, iostat))
+        fx%next_token => vs_str_alloc(get_characters(fb, 1, iostat, fx%error_stack))
         if (iostat/=0) return
         fx%token => fb%namebuffer
         nullify(fb%namebuffer)
@@ -150,12 +150,12 @@ contains
       endif
 
     elseif (fx%state==ST_DTD_ATTLIST_CONTENTS) then
-      c = get_characters(fb, 1, iostat)
+      c = get_characters(fb, 1, iostat, fx%error_stack)
       if (iostat/=0) return
       if (verify(c,XML_WHITESPACE)==0) then
-        call get_characters_until_all_of(fb, '>', iostat)
+        call get_characters_until_all_of(fb, '>', iostat, fx%error_stack)
         if (iostat/=0) return
-        fx%next_token => vs_str_alloc(get_characters(fb, 1, iostat))
+        fx%next_token => vs_str_alloc(get_characters(fb, 1, iostat, fx%error_stack))
         if (iostat/=0) return
         fx%token => fb%namebuffer
         nullify(fb%namebuffer)
@@ -167,17 +167,17 @@ contains
       endif
 
     elseif (fx%state==ST_IN_TAG) then
-      call get_characters_until_not_one_of(fb, XML_WHITESPACE, iostat)
+      call get_characters_until_not_one_of(fb, XML_WHITESPACE, iostat, fx%error_stack)
       if (iostat/=0) return
       if (size(fb%namebuffer)==0) then
         deallocate(fb%namebuffer) ! which only contains whitespace now.
         ! This had better be the end of the tag.
-        c = get_characters(fb, 1, iostat)
+        c = get_characters(fb, 1, iostat, fx%error_stack)
         if (iostat/=0) return
         if (c=='>') then
           fx%token => vs_str_alloc('>')
         elseif (c=='/') then
-          c = get_characters(fb, 1, iostat)
+          c = get_characters(fb, 1, iostat, fx%error_stack)
           if (iostat/=0) return
           if (c=='>') then
             fx%token => vs_str_alloc('/>')
@@ -187,18 +187,18 @@ contains
         endif
       else
         deallocate(fb%namebuffer) ! which only contains whitespace now.
-        c = get_characters(fb, 1, iostat)
+        c = get_characters(fb, 1, iostat, fx%error_stack)
         if (iostat/=0) return
         if (c=='>') then
           fx%token => vs_str_alloc('>')
         elseif (c=='/') then
-          c = get_characters(fb, 1, iostat)
+          c = get_characters(fb, 1, iostat, fx%error_stack)
           if (iostat/=0) return
           if (c=='>') then
             fx%token => vs_str_alloc('/>')
           endif
         elseif (isInitialNameChar(c, fx%xds%xml_version)) then 
-          call get_characters_until_not_namechar(fb, fx%xds%xml_version, iostat)
+          call get_characters_until_not_namechar(fb, fx%xds%xml_version, iostat, fx%error_stack)
           if (iostat/=0) return
           fx%token => vs_str_alloc(c//str_vs(fb%namebuffer))
           deallocate(fb%namebuffer)
@@ -208,25 +208,25 @@ contains
       endif
 
     elseif (fx%state==ST_ATT_EQUALS) then
-      call get_characters_until_not_one_of(fb, XML_WHITESPACE, iostat)
+      call get_characters_until_not_one_of(fb, XML_WHITESPACE, iostat, fx%error_stack)
       if (iostat/=0) return
-      c = get_characters(fb, 1, iostat)
+      c = get_characters(fb, 1, iostat, fx%error_stack)
       if (iostat/=0) return
       if (c/='"'.and.c/="'") then
         call add_error(fx%error_stack, "Expecting "" or '")
         return
       endif
-      call get_characters_until_all_of(fb, c, iostat)
+      call get_characters_until_all_of(fb, c, iostat, fx%error_stack)
       if (iostat/=0) return
       fx%token => normalize_text(fx, fb%namebuffer)
       ! Next character is either quotechar or eof.
-      c = get_characters(fb, 1, iostat)
+      c = get_characters(fb, 1, iostat, fx%error_stack)
       ! Either way, we return
 
     elseif (fx%context==CTXT_IN_DTD) then
       if (fx%whitespace==WS_FORBIDDEN) then
         ! This MUST be the end of a comment
-        c = get_characters(fb, 1, iostat)
+        c = get_characters(fb, 1, iostat, fx%error_stack)
         if (iostat/=0) return
         fx%token => vs_str_alloc(c)
         ! it will either be a <!DIRECTIVE or a <?PINAME
@@ -237,10 +237,10 @@ contains
 
       elseif (fx%whitespace==WS_MANDATORY) then
         !We are still allowed a '>' without space, ... check first.
-        call get_characters_until_not_one_of(fb, XML_WHITESPACE, iostat)
+        call get_characters_until_not_one_of(fb, XML_WHITESPACE, iostat, fx%error_stack)
         if (iostat/=0) return
         if (size(fb%namebuffer)==0) then
-          c = get_characters(fb, 1, iostat)
+          c = get_characters(fb, 1, iostat, fx%error_stack)
           if (iostat/=0) return
           if (c=='>') then
             fx%token => vs_str_alloc(c)
@@ -249,14 +249,14 @@ contains
           endif
           return
         endif
-        c = get_characters(fb, 1, iostat)
+        c = get_characters(fb, 1, iostat, fx%error_stack)
         if (iostat/=0) return
         ! do some stuff
         if (verify(c,"%>[]")==0) then
           fx%token => vs_str_alloc(c)
         elseif (c=='<') then
           !it's a comment or a PI ... or a DTD keyword.
-          c = get_characters(fb, 1, iostat)
+          c = get_characters(fb, 1, iostat, fx%error_stack)
           if (iostat/=0) return
           if (c=='?') then
             fx%token => vs_str_alloc('<?')
@@ -264,30 +264,30 @@ contains
             fx%token => vs_str_alloc('<!')
           endif
         elseif (c=='"'.or.c=="'") then ! grab until next quote
-          call get_characters_until_all_of(fb, c, iostat)
+          call get_characters_until_all_of(fb, c, iostat, fx%error_stack)
           if (iostat/=0) return
-          c = get_characters(fb, 1, iostat)
+          c = get_characters(fb, 1, iostat, fx%error_stack)
           if (iostat/=0) return
           fx%token => vs_str_alloc(c//str_vs(fb%namebuffer)//c)
           deallocate(fb%namebuffer)
         else !it must be a NAME for some reason
           call push_chars(fb, c)
-          call get_characters_until_not_namechar(fb, fx%xds%xml_version, iostat)
+          call get_characters_until_not_namechar(fb, fx%xds%xml_version, iostat, fx%error_stack)
           if (iostat/=0) return
           fx%token => fb%namebuffer
           nullify(fb%namebuffer)
         endif
 
       elseif (fx%whitespace==WS_DISCARD) then
-        call get_characters_until_not_one_of(fb, XML_WHITESPACE, iostat)
+        call get_characters_until_not_one_of(fb, XML_WHITESPACE, iostat, fx%error_stack)
         if (iostat/=0) return
-        c = get_characters(fb, 1, iostat)
+        c = get_characters(fb, 1, iostat, fx%error_stack)
         if (iostat/=0) return
         if (verify(c,">[]")==0) then
           fx%token => vs_str_alloc(c)
         elseif (c=='<') then
           !it's a comment or a PI ... or a DTD keyword.
-          c = get_characters(fb, 1, iostat)
+          c = get_characters(fb, 1, iostat, fx%error_stack)
           if (iostat/=0) return
           if (c=='?') then
             fx%token => vs_str_alloc('<?')
@@ -300,8 +300,8 @@ contains
           endif
         elseif (c=='%') then
           !It ought to be a parameter entity reference
-          call get_characters_until_not_namechar(fb, fx%xds%xml_version, iostat)
-          c = get_characters(fb, 1, iostat)
+          call get_characters_until_not_namechar(fb, fx%xds%xml_version, iostat, fx%error_stack)
+          c = get_characters(fb, 1, iostat, fx%error_stack)
           if (iostat/=0) return
           if (c/=';') then
             call add_error(fx%error_stack, "Illegal parameter entity reference.")
@@ -320,18 +320,18 @@ contains
     else
 
       if (fx%whitespace==WS_DISCARD) then
-        call get_characters_until_not_one_of(fb, XML_WHITESPACE, iostat)
+        call get_characters_until_not_one_of(fb, XML_WHITESPACE, iostat, fx%error_stack)
         if (iostat/=0) return
 
       elseif (fx%whitespace==WS_MANDATORY) then
-        call get_characters_until_not_one_of(fb, XML_WHITESPACE, iostat)
+        call get_characters_until_not_one_of(fb, XML_WHITESPACE, iostat, fx%error_stack)
         if (size(fb%namebuffer)==0) then
           call add_error(fx%error_stack, 'Tokenizer expected whitespace')
           return
         endif
       endif
 
-      c = get_characters(fb, 1, iostat)
+      c = get_characters(fb, 1, iostat, fx%error_stack)
       if (iostat/=0) return
 
       if (verify(c,'>=[')==0) then
@@ -339,7 +339,7 @@ contains
         fx%token => vs_str_alloc(c)
 
       elseif (isInitialNameChar(c, fx%xds%xml_version)) then
-        call get_characters_until_not_namechar(fb, fx%xds%xml_version, iostat)
+        call get_characters_until_not_namechar(fb, fx%xds%xml_version, iostat, fx%error_stack)
         if (iostat/=0) return
         fx%token => vs_str_alloc(c//str_vs(fb%namebuffer))
         deallocate(fb%namebuffer)
@@ -348,7 +348,7 @@ contains
         select case(c)
 
         case ('<')
-          c = get_characters(fb, 1, iostat)
+          c = get_characters(fb, 1, iostat, fx%error_stack)
           if (iostat/=0) return
           if (c=='?') then
             fx%token => vs_str_alloc('<?')
@@ -364,7 +364,7 @@ contains
           endif
 
         case ('/')
-          c = get_characters(fb, 1, iostat)
+          c = get_characters(fb, 1, iostat, fx%error_stack)
           if (iostat/=0) return
           if (c=='>') then
             fx%token => vs_str_alloc('/>')
@@ -373,21 +373,21 @@ contains
           endif
 
         case ('&')
-          c = get_characters(fb, 1, iostat)
+          c = get_characters(fb, 1, iostat, fx%error_stack)
           if (iostat/=0) then
             call add_error(fx%error_stack, 'Bare ampersand found.')
             return
           elseif (c=='#') then
-            c = get_characters(fb, 1, iostat)
+            c = get_characters(fb, 1, iostat, fx%error_stack)
             if (iostat/=0) return
             if (c=='x') then
-              call get_characters_until_not_one_of(fb, hexdigits, iostat)
+              call get_characters_until_not_one_of(fb, hexdigits, iostat, fx%error_stack)
               if (size(fb%namebuffer)==0) then
                 call add_error(fx%error_stack, 'Illegal character entity reference')
                 return
               endif
               if (iostat/=0) return
-              c2 = get_characters(fb, 1, iostat)
+              c2 = get_characters(fb, 1, iostat, fx%error_stack)
               if (iostat/=0) return
               if (c2/=';') then
                 call add_error(fx%error_stack, &
@@ -397,9 +397,9 @@ contains
               fx%token => vs_str_alloc('&#x'//str_vs(fb%namebuffer)//';')
               deallocate(fb%namebuffer)
             elseif (verify(c,digits)==0) then
-              call get_characters_until_not_one_of(fb, digits, iostat)
+              call get_characters_until_not_one_of(fb, digits, iostat, fx%error_stack)
               if (iostat/=0) return
-              c2 = get_characters(fb, 1, iostat)
+              c2 = get_characters(fb, 1, iostat, fx%error_stack)
               if (iostat/=0) return
               if (c2/=';') then
                 call add_error(fx%error_stack, 'Illegal character entity reference')
@@ -411,9 +411,9 @@ contains
               call add_error(fx%error_stack, 'Illegal character entity reference')
             endif
           elseif (isInitialNameChar(c, fx%xds%xml_version)) then
-            call get_characters_until_not_namechar(fb, fx%xds%xml_version, iostat)
+            call get_characters_until_not_namechar(fb, fx%xds%xml_version, iostat, fx%error_stack)
             if (iostat/=0) return
-            c2 = get_characters(fb, 1, iostat)
+            c2 = get_characters(fb, 1, iostat, fx%error_stack)
             if (iostat/=0) return
             if (c2/=';') then
               call add_error(fx%error_stack, "Illegal general entity reference")
@@ -429,7 +429,7 @@ contains
 
         case ('"')
           if (fx%context==CTXT_IN_CONTENT) then !.an.d some other condition) then
-            call get_characters_until_one_of(fb, '"', iostat)
+            call get_characters_until_one_of(fb, '"', iostat, fx%error_stack)
             if (iostat/=0) return
             deallocate(fb%namebuffer)
             fx%token => vs_str_alloc('"'//str_vs(fb%namebuffer)//'"')
@@ -439,7 +439,7 @@ contains
 
         case ("'")
           if (fx%context==CTXT_IN_CONTENT) then! .and. some other condition) then
-            call get_characters_until_one_of(fb, "'", iostat)
+            call get_characters_until_one_of(fb, "'", iostat, fx%error_stack)
             if (iostat/=0) return
             deallocate(fb%namebuffer)
             fx%token = vs_str_alloc("'"//str_vs(fb%namebuffer)//"'")
