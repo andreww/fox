@@ -6,7 +6,7 @@ module m_sax_parse_decl
     XML1_0, XML1_1
   use m_common_error, only: ERR_WARNING, add_error, in_error
 
-  use m_sax_reader, only: file_buffer_t, rewind_file, &
+  use m_sax_reader, only: file_buffer_t, get_characters, &
     read_char, read_chars, push_chars
   use m_sax_types ! everything, really
 
@@ -26,23 +26,23 @@ contains
     integer :: i
     character(len=*), parameter :: version="version", encoding="encoding", standalone="standalone"
     character :: c
-    character(len=5) :: xml = "<?xml"
+    character(len=5) :: start
     character, allocatable :: ch(:)
     ! default values ...
     fx%xds%xml_version = XML1_0
     allocate(fx%xds%encoding(5))
     fx%xds%encoding = vs_str("UTF-8")
     fx%xds%standalone = .false.
-    do i = 1, 5
-      c = read_char(fb, iostat); if (iostat/=0) return
-      if (c/=xml(i:i)) then
-        call rewind_file(fb)
-        return
-      endif
-    enddo
-    c = read_char(fb, iostat); if (iostat/=0) return
+    start = get_characters(fb, 5, iostat, fx%error_stack)
+    if (iostat/=0) return
+    if (start/="<?xml") then
+      call push_chars(fb, start)
+      return
+    endif
+    c = get_characters(fb, 1, iostat, fx%error_stack)
+    if (iostat/=0) return
     if (verify(c,XML_WHITESPACE)/=0) then
-      call rewind_file(fb)
+      call push_chars(fb, c)
       return
     endif
     do while (verify(c,XML_WHITESPACE)==0)

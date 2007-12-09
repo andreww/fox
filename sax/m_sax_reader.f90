@@ -55,7 +55,6 @@ module m_sax_reader
   public :: column
 
   public :: open_file
-  public :: rewind_file
   public :: close_file
 
   public :: read_char
@@ -127,30 +126,6 @@ contains
     f%col = 0
   end subroutine open_actual_file
       
-  subroutine rewind_file(fb)
-    type(file_buffer_t), intent(inout)  :: fb
-
-    integer :: i
-
-    fb%f%line = 1
-    fb%f%col = 0
-    do i = 1, size(fb%buffer_stack)
-      deallocate(fb%buffer_stack(i)%s)
-    enddo
-    deallocate(fb%buffer_stack)
-    allocate(fb%buffer_stack(0))
-
-    deallocate(fb%next_chars)
-    allocate(fb%next_chars(0))
-
-    fb%input_pos = 1
-    if (fb%f(1)%lun/=-1) then
-      rewind(unit=fb%f(1)%lun)
-    endif
-
-  end subroutine rewind_file
-
-
   subroutine close_file(fb)
     type(file_buffer_t), intent(inout)  :: fb
 

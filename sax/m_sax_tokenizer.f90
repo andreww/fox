@@ -11,7 +11,7 @@ module m_sax_tokenizer
     expand_char_entity, add_internal_entity, pop_entity_list
   use m_common_namecheck, only: checkName, checkCharacterEntityReference
 
-  use m_sax_reader, only: file_buffer_t, rewind_file, &
+  use m_sax_reader, only: file_buffer_t, &
     read_char, read_chars, push_chars, get_characters, &
     get_characters_until_all_of, &
     get_characters_until_one_of, &
