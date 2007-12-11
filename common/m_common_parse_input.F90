@@ -34,22 +34,97 @@ module m_common_parse_input
 
 contains
 
-  subroutine scalartostring(s, data, separator, num, iostat)
+  subroutine scalartostring(s, data, separator, csv, num, iostat)
     character(len=*), intent(in) :: s
     character(len=*), intent(out) :: data
     character, intent(in), optional :: separator
+    logical, intent(in), optional :: csv
     integer, intent(out), optional :: num, iostat
     logical :: bracketed
     integer :: i, j, ij, k, s_i, err, ios, length
     real :: r, c
 
+    character(len=len(s)) :: s2
+    logical :: csv_, eof
+    integer :: m
+
+    csv_ = .false.
+    if (present(csv)) then
+      csv_ = csv
+    endif
 
     s_i = 1
     err = 0
+    eof = .false.
     data = ""
     ij = 0
     length = 1
     loop: do i = 1, 1
+      if (csv_) then
+      if (s_i>len(s)) then
+        data = ""
+        ij = ij + 1
+        exit loop
+      endif
+      k = verify(s(s_i:), achar(10)//achar(13))
+      if (k==0) then
+        data = ""
+        ij = ij + 1
+        exit loop
+      elseif (s(s_i+k-1:s_i+k-1)=="""") then
+        ! we have a quote-delimited string;
+        s_i = s_i + k
+        s2 = ""
+        quote: do 
+          k = index(s(s_i:), """")
+          if (k==0) then
+            err = 2
+            exit loop
+          endif
+          k = s_i + k - 1
+          s2(m:) = s(s_i:k)
+          m = m + (k-s_i+1)
+          k = k + 2
+          if (k>len(s)) then
+            err = 2
+            exit loop
+          endif
+          if (s(k:k)/="""") exit
+          s_i = k + 1
+          if (s_i > len(s)) then
+            err = 2
+            exit loop
+          endif
+          m = m + 1
+          s2(m:m) = """"
+        enddo quote
+        data = s2
+        k  = scan(s(s_i:), XML_WHITESPACE)
+        if (k==0) then
+          err = 2
+          exit loop
+        endif
+      else
+        s_i = s_i + k - 1
+        k = scan(s(s_i:), achar(10)//achar(13)//",")
+        if (k==0) then
+          eof = .true.
+          k = len(s)
+        else
+          if (ij+1==length.and.s(s_i+k-1:s_i+k-1)==",") err = 1
+          k = s_i + k - 2
+        endif
+        data = s(s_i:k)
+        if (index(data, """")/=0) then
+          err = 2
+          exit loop
+        endif
+      endif
+      ij = ij + 1
+      s_i = k + 2
+      if (eof) exit loop
+
+      else
       if (present(separator)) then
         k = index(s(s_i:), separator)
       else
@@ -68,6 +143,7 @@ contains
       s_i = k + 2
       if (ij<length.and.s_i>len(s)) exit loop
 
+      endif
     end do loop
 
     if (present(num)) num = ij
@@ -541,9 +617,10 @@ contains
 
 
 
-  subroutine arraytostring(s, data, separator, num, iostat)
+  subroutine arraytostring(s, data, separator, csv, num, iostat)
     character(len=*) :: data(:)
     character, intent(in), optional :: separator
+    logical, intent(in), optional :: csv
     character(len=*), intent(in) :: s
     integer, intent(out), optional :: num
     integer, intent(out), optional :: iostat
@@ -553,13 +630,87 @@ contains
     integer :: i, j, ij, k, s_i, err, ios, length
     real :: r, c
 
+    character(len=len(s)) :: s2
+    logical :: csv_, eof
+    integer :: m
+
+    csv_ = .false.
+    if (present(csv)) then
+      if (csv) csv_ = csv
+    endif
 
     s_i = 1
     err = 0
+    eof = .false.
     data = ""
     ij = 0
     length = size(data)
     loop: do i = 1, size(data)
+      if (csv_) then
+      if (s_i>len(s)) then
+        data(i) = ""
+        ij = ij + 1
+        exit loop
+      endif
+      k = verify(s(s_i:), achar(10)//achar(13))
+      if (k==0) then
+        data(i) = ""
+        ij = ij + 1
+        exit loop
+      elseif (s(s_i+k-1:s_i+k-1)=="""") then
+        ! we have a quote-delimited string;
+        s_i = s_i + k
+        s2 = ""
+        quote: do 
+          k = index(s(s_i:), """")
+          if (k==0) then
+            err = 2
+            exit loop
+          endif
+          k = s_i + k - 1
+          s2(m:) = s(s_i:k)
+          m = m + (k-s_i+1)
+          k = k + 2
+          if (k>len(s)) then
+            err = 2
+            exit loop
+          endif
+          if (s(k:k)/="""") exit
+          s_i = k + 1
+          if (s_i > len(s)) then
+            err = 2
+            exit loop
+          endif
+          m = m + 1
+          s2(m:m) = """"
+        enddo quote
+        data(i) = s2
+        k  = scan(s(s_i:), XML_WHITESPACE)
+        if (k==0) then
+          err = 2
+          exit loop
+        endif
+      else
+        s_i = s_i + k - 1
+        k = scan(s(s_i:), achar(10)//achar(13)//",")
+        if (k==0) then
+          eof = .true.
+          k = len(s)
+        else
+          if (ij+1==length.and.s(s_i+k-1:s_i+k-1)==",") err = 1
+          k = s_i + k - 2
+        endif
+        data(i) = s(s_i:k)
+        if (index(data(i), """")/=0) then
+          err = 2
+          exit loop
+        endif
+      endif
+      ij = ij + 1
+      s_i = k + 2
+      if (eof) exit loop
+
+      else
       if (present(separator)) then
         k = index(s(s_i:), separator)
       else
@@ -578,6 +729,7 @@ contains
       s_i = k + 2
       if (ij<length.and.s_i>len(s)) exit loop
 
+      endif
     end do loop
 
     if (present(num)) num = ij
@@ -615,9 +767,10 @@ contains
 
   end subroutine arraytostring
 
-  subroutine matrixtostring(s, data, separator, num, iostat)
+  subroutine matrixtostring(s, data, separator, csv, num, iostat)
     character(len=*) :: data(:,:)
     character, intent(in), optional :: separator
+    logical, intent(in), optional :: csv
     character(len=*), intent(in) :: s
     integer, intent(out), optional :: num
     integer, intent(out), optional :: iostat
@@ -627,14 +780,87 @@ contains
     integer :: i, j, ij, k, s_i, err, ios, length
     real :: r, c
 
+    character(len=len(s)) :: s2
+    logical :: csv_, eof
+    integer :: m
+
+    csv_ = .false.
+    if (present(csv)) then
+      if (csv) csv_ = csv
+    endif
 
     s_i = 1
     err = 0
+    eof = .false.
     data = ""
     ij = 0
     length = size(data)
     loop: do j = 1, size(data, 2)
-    do i = 1, size(data, 1)
+      do i = 1, size(data, 1)
+        if (csv_) then
+      if (s_i>len(s)) then
+        data(i, j) = ""
+        ij = ij + 1
+        exit loop
+      endif
+      k = verify(s(s_i:), achar(10)//achar(13))
+      if (k==0) then
+        data(i, j) = ""
+        ij = ij + 1
+        exit loop
+      elseif (s(s_i+k-1:s_i+k-1)=="""") then
+        ! we have a quote-delimited string;
+        s_i = s_i + k
+        s2 = ""
+        quote: do 
+          k = index(s(s_i:), """")
+          if (k==0) then
+            err = 2
+            exit loop
+          endif
+          k = s_i + k - 1
+          s2(m:) = s(s_i:k)
+          m = m + (k-s_i+1)
+          k = k + 2
+          if (k>len(s)) then
+            err = 2
+            exit loop
+          endif
+          if (s(k:k)/="""") exit
+          s_i = k + 1
+          if (s_i > len(s)) then
+            err = 2
+            exit loop
+          endif
+          m = m + 1
+          s2(m:m) = """"
+        enddo quote
+        data(i, j) = s2
+        k  = scan(s(s_i:), XML_WHITESPACE)
+        if (k==0) then
+          err = 2
+          exit loop
+        endif
+      else
+        s_i = s_i + k - 1
+        k = scan(s(s_i:), achar(10)//achar(13)//",")
+        if (k==0) then
+          eof = .true.
+          k = len(s)
+        else
+          if (ij+1==length.and.s(s_i+k-1:s_i+k-1)==",") err = 1
+          k = s_i + k - 2
+        endif
+        data(i, j) = s(s_i:k)
+        if (index(data(i, j), """")/=0) then
+          err = 2
+          exit loop
+        endif
+      endif
+      ij = ij + 1
+      s_i = k + 2
+      if (eof) exit loop
+        else
       if (present(separator)) then
         k = index(s(s_i:), separator)
       else
@@ -652,7 +878,8 @@ contains
       ij = ij + 1
       s_i = k + 2
       if (ij<length.and.s_i>len(s)) exit loop
-    end do
+        endif
+      end do
     end do loop
 
     if (present(num)) num = ij

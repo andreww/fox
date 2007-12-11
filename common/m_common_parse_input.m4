@@ -48,6 +48,70 @@ define(`TOHW_output_errors', `dnl
     end if
 ')dnl
 dnl
+define(`TOHW_parse_strings_csv', `dnl
+      if (s_i>len(s)) then
+        $1 = ""
+        ij = ij + 1
+        exit loop
+      endif
+      k = verify(s(s_i:), achar(10)//achar(13))
+      if (k==0) then
+        $1 = ""
+        ij = ij + 1
+        exit loop
+      elseif (s(s_i+k-1:s_i+k-1)=="""") then
+        ! we have a quote-delimited string;
+        s_i = s_i + k
+        s2 = ""
+        quote: do 
+          k = index(s(s_i:), """")
+          if (k==0) then
+            err = 2
+            exit loop
+          endif
+          k = s_i + k - 1
+          s2(m:) = s(s_i:k)
+          m = m + (k-s_i+1)
+          k = k + 2
+          if (k>len(s)) then
+            err = 2
+            exit loop
+          endif
+          if (s(k:k)/="""") exit
+          s_i = k + 1
+          if (s_i > len(s)) then
+            err = 2
+            exit loop
+          endif
+          m = m + 1
+          s2(m:m) = """"
+        enddo quote
+        $1 = s2
+        k  = scan(s(s_i:), XML_WHITESPACE)
+        if (k==0) then
+          err = 2
+          exit loop
+        endif
+      else
+        s_i = s_i + k - 1
+        k = scan(s(s_i:), achar(10)//achar(13)//",")
+        if (k==0) then
+          eof = .true.
+          k = len(s)
+        else
+          if (ij+1==length.and.s(s_i+k-1:s_i+k-1)==",") err = 1
+          k = s_i + k - 2
+        endif
+        $1 = s(s_i:k)
+        if (index($1, """")/=0) then
+          err = 2
+          exit loop
+        endif
+      endif
+      ij = ij + 1
+      s_i = k + 2
+      if (eof) exit loop
+')dnl
 define(`TOHW_parse_strings', `dnl
       if (present(separator)) then
         k = index(s(s_i:), separator)
@@ -241,20 +305,34 @@ module m_common_parse_input
 contains
 
 define(`m4f_thisfunc', `scalartostring')dnl
-  subroutine m4f_thisfunc`'(s, data, separator, num, iostat)
+  subroutine m4f_thisfunc`'(s, data, separator, csv, num, iostat)
     character(len=*), intent(in) :: s
     character(len=*), intent(out) :: data
     character, intent(in), optional :: separator
+    logical, intent(in), optional :: csv
     integer, intent(out), optional :: num, iostat
 TOHW_defaultdecls
+    character(len=len(s)) :: s2
+    logical :: csv_, eof
+    integer :: m
+
+    csv_ = .false.
+    if (present(csv)) then
+      csv_ = csv
+    endif
 
     s_i = 1
     err = 0
+    eof = .false.
     data = ""
     ij = 0
     length = 1
     loop: do i = 1, 1
+      if (csv_) then
+TOHW_parse_strings_csv(`data')
+      else
 TOHW_parse_strings(`data')
+      endif
     end do loop
 
 TOHW_check_errors
@@ -396,20 +474,34 @@ TOHW_output_errors
 
 
 define(`m4f_thisfunc', `arraytostring')dnl
-  subroutine m4f_thisfunc`'(s, data, separator, num, iostat)
+  subroutine m4f_thisfunc`'(s, data, separator, csv, num, iostat)
     character(len=*) :: data(:)
     character, intent(in), optional :: separator
+    logical, intent(in), optional :: csv
 TOHW_defaultargs
 
 TOHW_defaultdecls
+    character(len=len(s)) :: s2
+    logical :: csv_, eof
+    integer :: m
+
+    csv_ = .false.
+    if (present(csv)) then
+      if (csv) csv_ = csv
+    endif
 
     s_i = 1
     err = 0
+    eof = .false.
     data = ""
     ij = 0
     length = size(data)
     loop: do i = 1, size(data)
+      if (csv_) then
+TOHW_parse_strings_csv(`data(i)')
+      else
 TOHW_parse_strings(`data(i)')
+      endif
     end do loop
 
     if (present(num)) num = ij
@@ -430,22 +522,36 @@ TOHW_output_errors
   end subroutine m4f_thisfunc
 
 define(`m4f_thisfunc', `matrixtostring')dnl
-  subroutine m4f_thisfunc`'(s, data, separator, num, iostat)
+  subroutine m4f_thisfunc`'(s, data, separator, csv, num, iostat)
     character(len=*) :: data(:,:)
     character, intent(in), optional :: separator
+    logical, intent(in), optional :: csv
 TOHW_defaultargs
 
 TOHW_defaultdecls
+    character(len=len(s)) :: s2
+    logical :: csv_, eof
+    integer :: m
+
+    csv_ = .false.
+    if (present(csv)) then
+      if (csv) csv_ = csv
+    endif
 
     s_i = 1
     err = 0
+    eof = .false.
     data = ""
     ij = 0
     length = size(data)
     loop: do j = 1, size(data, 2)
-    do i = 1, size(data, 1)
+      do i = 1, size(data, 1)
+        if (csv_) then
+TOHW_parse_strings_csv(`data(i, j)')`'dnl
+        else
 TOHW_parse_strings(`data(i, j)')`'dnl
-    end do
+        endif
+      end do
     end do loop
 
     if (present(num)) num = ij

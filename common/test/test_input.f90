@@ -26,6 +26,31 @@ program short_test
   call stringdataarray("a, b, c, d, e,", (/"a ", " b", " c", " d", " e"/), &
     5, 0, ",")
 
+  print*,"test.1.2.6"
+  call stringdataarray("a, b, c, d, e", (/"a ", " b", " c", " d", " e"/), &
+    5, 0, csv=.true.)
+  print*,"test.1.2.7"
+  call stringdataarray("a, b, c, d", (/"a ", " b", " c", " d", "  "/), &
+    4, -1, csv=.true.)
+  print*,"test.1.2.8"
+  call stringdataarray("a, b, c, d, e, f", (/"a ", " b", " c", " d", " e"/), &
+    5, 1, csv=.true.)
+  print*,"test.1.2.9" 
+  call stringdataarray("a, b, c, d, e, ", (/"a ", " b", " c", " d", " e"/), &
+    5, 1, csv=.true.)
+  print*,"test.1.2.10"
+  call stringdataarray("a, b, c, d, e,", (/"a ", " b", " c", " d", " e"/), &
+    5, 1, csv=.true.)
+  print*,"test.1.2.11"
+  call stringdataarray("a, b, c,, e", (/"a ", " b", " c", "  ", " e"/), & 
+    5, 0, csv=.true.)
+  print*,"test.1.2.12"
+  call stringdataarray("a, b, c, d,", (/"a ", " b", " c", " d", "  "/), &  
+    5, 0, csv=.true.)
+  print*,"test.1.2.13"
+  call stringdataarray(", b, c, d, e", (/"  ", " b", " c", " d", " e"/), & 
+    5, 0, csv=.true.)
+
   print*,"test.1.3.1"
   call stringdatamatrix("a b c d e f", &
     reshape((/"a", "b", "c", "d", "e", "f"/), (/2,3/)), &
@@ -171,16 +196,17 @@ program short_test
 
 contains
 
-    subroutine stringdataarray(string, array, num, iostat, sep)
+    subroutine stringdataarray(string, array, num, iostat, sep, csv)
       character(len=*), intent(in) :: string
       character(len=*), dimension(:), intent(in) :: array
       integer, intent(in) :: num, iostat
       character, intent(in), optional :: sep
+      logical, intent(in), optional :: csv
 
       character(len=len(array)) :: temp(size(array))
       integer :: n, i
 
-      call rts(string, temp, separator=sep, num=n, iostat=i)
+      call rts(string, temp, separator=sep, csv=csv, num=n, iostat=i)
 
       if (any(temp/=array)) &
         print*, "Different array"
@@ -188,18 +214,20 @@ contains
         print*, "Wrong iostat"
       if (n/=num) &
         print*, "Wrong num"
+
     end subroutine stringdataarray
 
-    subroutine stringdatamatrix(string, array, num, iostat, sep)
+    subroutine stringdatamatrix(string, array, num, iostat, sep, csv)
       character(len=*), intent(in) :: string
       character(len=*), dimension(:, :), intent(in) :: array
       integer, intent(in) :: num, iostat
       character, intent(in), optional :: sep
+      logical, intent(in), optional :: csv
 
       character(len=len(array)) :: temp(size(array,1),size(array,2))
       integer :: n, i
 
-      call rts(string, temp, separator=sep, num=n, iostat=i)
+      call rts(string, temp, separator=sep, csv=csv, num=n, iostat=i)
 
       if (any(temp/=array)) &
         print*, "Different array"
