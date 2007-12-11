@@ -1,8 +1,8 @@
 program short_test
 
   use m_common_parse_input, only : rts
+  use m_common_realtypes, only: sp, dp
 
-  
   print*,"test.1.1.1"
   call stringdataarray("a b c d e", (/"a", "b", "c", "d", "e"/), 5, 0)
   print*,"test.1.1.2"
@@ -99,10 +99,77 @@ program short_test
   call integerdataarray("1 2 3 4 5 6", &
     (/1, 2, 3, 4, 5/), 5, 1)
 
-! I actually cannot be bothered thinking up test cases
-! for real numbers. So shoot me.
+  print*, "test.3.1.4"
+  call integerdataarray("1, 2, 3, 4, 5", & 
+    (/1, 2, 3, 4, 5/), 5, 0)
+  print*, "test.3.1.5"
+  call integerdataarray("1, 2, 3, 4,", & 
+    (/1, 2, 3, 4, 0/), 4, -1)
+  print*, "test.3.1.6"
+  call integerdataarray("1, 2, 3, 4, 5, 6,", & 
+    (/1, 2, 3, 4, 5/), 5, 1)
 
-  contains
+  print*, "test.4.1.1"
+  call realspdataarray("1.0 -2.e5 +3.44e-3 4. 5.09090909", & 
+    (/1.0e0, -2.e5, 3.44e-3, 4.e0, 5.09090909e0/), 5, 0)
+  print*, "test.4.1.2"
+  call realspdataarray("1.0 -2.e5 +3.44e-3 4.", & 
+    (/1.0e0, -2.e5, 3.44e-3, 4.e0, 0.0e0/), 4, -1)
+  print*, "test.4.1.3"
+  call realspdataarray("1.0 -2.e5 +3.44e-3 4. 5.09090909 -0.3", & 
+    (/1.0e0, -2.e5, 3.44e-3, 4.e0, 5.09090909e0/), 5, 1)
+
+  print*, "test.4.1.4"
+  call realspdataarray("1.0, -2.e5 +3.44e-3, 4. 5.09090909", & 
+    (/1.0e0, -2.e5, 3.44e-3, 4.e0, 5.09090909e0/), 5, 0)
+  print*, "test.4.1.5"
+  call realspdataarray("1.0, -2.e5 +3.44e-3, 4.", &  
+    (/1.0e0, -2.e5, 3.44e-3, 4.e0, 0.0e0/), 4, -1)
+  print*, "test.4.1.6"
+  call realspdataarray("1.0, -2.e5 +3.44e-3, 4. 5.09090909, -0.3", & 
+    (/1.0e0, -2.e5, 3.44e-3, 4.e0, 5.09090909e0/), 5, 1)
+
+  print*, "test.5.1.1"
+  call realdpdataarray("1.0 -2.e5 +3.44e-3 4. 5.09090909", & 
+    (/1.0d0, -2.d5, 3.44d-3, 4.d0, 5.09090909d0/), 5, 0)
+  print*, "test.5.1.2"
+  call realdpdataarray("1.0 -2.e5 +3.44e-3 4.", &  
+    (/1.0d0, -2.d5, 3.44d-3, 4.d0, 0.0d0/), 4, -1)
+  print*, "test.5.1.3"
+  call realdpdataarray("1.0 -2.e5 +3.44e-3 4. 5.09090909 -0.3", & 
+    (/1.0d0, -2.d5, 3.44d-3, 4.d0, 5.09090909d0/), 5, 1)
+
+  print*, "test.5.1.4"
+  call realdpdataarray("1.0, -2.e5 +3.44e-3, 4. 5.09090909", & 
+    (/1.0d0, -2.d5, 3.44d-3, 4.d0, 5.09090909d0/), 5, 0)
+  print*, "test.5.1.5"
+  call realdpdataarray("1.0, -2.e5 +3.44e-3, 4.", &  
+    (/1.0d0, -2.d5, 3.44d-3, 4.d0, 0.0d0/), 4, -1)
+  print*, "test.5.1.6"
+  call realdpdataarray("1.0, -2.e5 +3.44e-3, 4. 5.09090909, -0.3", & 
+    (/1.0d0, -2.d5, 3.44d-3, 4.d0, 5.09090909d0/), 5, 1)
+
+  print*, "test.6.1.1"
+  call cmplxspdataarray("(1.0)+i(-2.e5) (+3.44e-3)+i(4.) (5.09090909)+i(1.0) (-2e5)+i(+3.44e-3) (4.)+i(5.09090909)", & 
+    (/(1.0e0,-2.e5), (3.44e-3,4.e0), (5.09090909e0,1.0e0), (-2e5,3.44e-3), (4.,5.09090909)/), 5, 0)
+  print*, "test.6.1.2"
+  call cmplxspdataarray("(1.0)+i(-2.e5) (+3.44e-3)+i(4.) (5.09090909)+i(1.0) (-2e5)+i(+3.44e-3)", & 
+    (/(1.0e0,-2.e5), (3.44e-3,4.e0), (5.09090909e0,1.0e0), (-2e5,3.44e-3), (0.,0.)/), 4, -1)
+  print*, "test.6.1.3"
+  call cmplxspdataarray("(1.0)+i(-2.e5) (+3.44e-3)+i(4.) (5.09090909)+i(1.0) (-2e5)+i(+3.44e-3) (4.)+i(5.09090909) (1)+i(1)", & 
+    (/(1.0e0,-2.e5), (3.44e-3,4.e0), (5.09090909e0,1.0e0), (-2e5,3.44e-3), (4.,5.09090909)/), 5, 1)
+
+  print*, "test.6.1.4"
+  call cmplxspdataarray("1.0,-2.e5 +3.44e-3,4. 5.09090909,1.0 -2e5,+3.44e-3 4.,5.09090909", & 
+    (/(1.0e0,-2.e5), (3.44e-3,4.e0), (5.09090909e0,1.0e0), (-2e5,3.44e-3), (4.,5.09090909)/), 5, 0)
+  print*, "test.6.1.5"
+  call cmplxspdataarray("1.0,-2.e5 +3.44e-3,4. 5.09090909,1.0 -2e5,+3.44e-3", & 
+    (/(1.0e0,-2.e5), (3.44e-3,4.e0), (5.09090909e0,1.0e0), (-2e5,3.44e-3), (0.,0.)/), 4, -1)
+  print*, "test.6.1.6"
+  call cmplxspdataarray("1.0,-2.e5 +3.44e-3,4. 5.09090909,1.0 -2e5,+3.44e-3 4.,5.09090909 1,1", & 
+    (/(1.0e0,-2.e5), (3.44e-3,4.e0), (5.09090909e0,1.0e0), (-2e5,3.44e-3), (4.,5.09090909)/), 5, 1)
+
+contains
 
     subroutine stringdataarray(string, array, num, iostat, sep)
       character(len=*), intent(in) :: string
@@ -216,16 +283,25 @@ program short_test
 
     subroutine realspdataarray(string, array, num, iostat)
       character(len=*), intent(in) :: string
-      real, dimension(:), intent(in) :: array
+      real(sp), dimension(:), intent(in) :: array
       integer, intent(in) :: num, iostat
 
-      real :: temp(size(array))
-      integer :: n, i
+      real(sp) :: temp(size(array))
+      integer :: n, i, j
 
       call rts(string, temp, n, i)
 
-      if (any(temp/=array)) &
-        print*, "Different array"
+      do j = 1, size(array)
+        if (array(j)==0.0) then
+          if (temp(j)>1e-5) then
+            print*, "Different array"
+            exit
+          endif
+        elseif (abs(temp(j)-array(j))/temp(j)>1e-5) then
+          print*, "Different array"
+          exit
+        endif
+      enddo 
       if (i/=iostat) &
         print*, "Wrong iostat"
       if (n/=num) &
@@ -234,20 +310,218 @@ program short_test
 
     subroutine realspdatamatrix(string, array, num, iostat)
       character(len=*), intent(in) :: string
-      real, dimension(:, :), intent(in) :: array
+      real(sp), dimension(:, :), intent(in) :: array
       integer, intent(in) :: num, iostat
 
-      real :: temp(size(array,1),size(array,2))
-      integer :: n, i
+      real(sp) :: temp(size(array,1),size(array,2))
+      integer :: n, i, j, k
 
       call rts(string, temp, n, i)
 
-      if (any(temp/=array)) &
-        print*, "Different array"
+      loop: do j = 1, size(array,1)
+        do k = 1, size(array,2)
+          if (array(j,k)==0.0) then
+            if (temp(j,k)>1e-5) then
+              exit loop
+            endif
+           elseif (abs(temp(j,k)-array(j,k))/temp(j,k)>1e-5) then
+            print*, "Different array"
+            exit loop
+          endif
+        enddo
+      enddo loop
       if (i/=iostat) &
         print*, "Wrong iostat"
       if (n/=num) &
         print*, "Wrong num"
     end subroutine realspdatamatrix
+
+    subroutine realdpdataarray(string, array, num, iostat)
+      character(len=*), intent(in) :: string
+      real(dp), dimension(:), intent(in) :: array
+      integer, intent(in) :: num, iostat
+
+      real(dp) :: temp(size(array))
+      integer :: n, i, j
+
+      call rts(string, temp, n, i)
+
+      do j = 1, size(array)
+        if (array(j)==0.0) then
+          if (temp(j)>1e-5) then
+            print*, "Different array"
+            exit
+          endif
+        elseif (abs(temp(j)-array(j))/temp(j)>1e-5) then
+          print*, "Different array"
+          exit
+        endif
+      enddo 
+      if (i/=iostat) &
+        print*, "Wrong iostat"
+      if (n/=num) &
+        print*, "Wrong num"
+    end subroutine realdpdataarray
+
+    subroutine realdpdatamatrix(string, array, num, iostat)
+      character(len=*), intent(in) :: string
+      real(dp), dimension(:, :), intent(in) :: array
+      integer, intent(in) :: num, iostat
+
+      real(dp) :: temp(size(array,1),size(array,2))
+      integer :: n, i, j, k
+
+      call rts(string, temp, n, i)
+
+      loop: do j = 1, size(array,1)
+        do k = 1, size(array,2)
+          if (array(j,k)==0.0) then
+            if (temp(j,k)>1e-5) then
+              print*, "Different array"
+              exit loop
+            endif
+           elseif (abs(temp(j,k)-array(j,k))/temp(j,k)>1e-5) then
+            print*, "Different array"
+            exit loop
+          endif
+        enddo
+      enddo loop
+      if (i/=iostat) &
+        print*, "Wrong iostat"
+      if (n/=num) &
+        print*, "Wrong num"
+    end subroutine realdpdatamatrix
+
+    subroutine cmplxspdataarray(string, array, num, iostat)
+      character(len=*), intent(in) :: string
+      complex(sp), dimension(:), intent(in) :: array
+      integer, intent(in) :: num, iostat
+
+      complex(sp) :: temp(size(array))
+      real(sp) :: a(2), t(2)
+      integer :: n, i, j, m
+
+      call rts(string, temp, n, i)
+
+      do j = 1, size(array)
+        a = transfer(array(j), a)
+        t = transfer(array(j), t)
+        do m = 1, 2
+          if (a(m)==0.0) then
+            if (t(m)>1e-5) then
+              print*, "Different array"
+              exit
+            endif
+          elseif (abs(t(m)-a(m))/t(m)>1e-5) then
+            print*, "Different array"
+            exit
+          endif
+        enddo
+      enddo 
+      if (i/=iostat) &
+        print*, "Wrong iostat"
+      if (n/=num) &
+        print*, "Wrong num"
+    end subroutine cmplxspdataarray
+
+    subroutine cmplxspdatamatrix(string, array, num, iostat)
+      character(len=*), intent(in) :: string
+      complex(sp), dimension(:, :), intent(in) :: array
+      integer, intent(in) :: num, iostat
+
+      complex(sp) :: temp(size(array,1),size(array,2))
+      real(sp) :: a(2), t(2)
+      integer :: n, i, j, k, m
+
+      call rts(string, temp, n, i)
+
+      loop: do j = 1, size(array,1)
+        do k = 1, size(array,2)
+          a = transfer(array(j,k), a)
+          t = transfer(array(j,k), t)
+          do m = 1, 2
+            if (a(m)==0.0) then
+              if (t(m)>1e-5) then
+                print*, "Different array"
+                exit loop
+              endif
+            elseif (abs(t(m)-a(m))/t(m)>1e-5) then
+              print*, "Different array"
+              exit loop
+            endif
+          enddo
+        enddo
+      enddo loop
+      if (i/=iostat) &
+        print*, "Wrong iostat"
+      if (n/=num) &
+        print*, "Wrong num"
+    end subroutine cmplxspdatamatrix
+
+    subroutine cmplxdpdataarray(string, array, num, iostat)
+      character(len=*), intent(in) :: string
+      complex(dp), dimension(:), intent(in) :: array
+      integer, intent(in) :: num, iostat
+
+      complex(dp) :: temp(size(array))
+      real(dp) :: a(2), t(2)
+      integer :: n, i, j, m
+
+      call rts(string, temp, n, i)
+
+      do j = 1, size(array)
+        a = transfer(array(j), a)
+        t = transfer(array(j), t)
+        do m = 1, 2
+          if (a(m)==0.0) then
+            if (t(m)>1e-5) then
+              print*, "Different array"
+              exit
+            endif
+          elseif (abs(t(m)-a(m))/t(m)>1e-5) then
+            print*, "Different array"
+            exit
+          endif
+        enddo
+      enddo 
+      if (i/=iostat) &
+        print*, "Wrong iostat"
+      if (n/=num) &
+        print*, "Wrong num"
+    end subroutine cmplxdpdataarray
+
+    subroutine cmplxdpdatamatrix(string, array, num, iostat)
+      character(len=*), intent(in) :: string
+      complex(dp), dimension(:, :), intent(in) :: array
+      integer, intent(in) :: num, iostat
+
+      complex(dp) :: temp(size(array,1),size(array,2))
+      real(dp) :: a(2), t(2)
+      integer :: n, i, j, k, m
+
+      call rts(string, temp, n, i)
+
+      loop: do j = 1, size(array,1)
+        do k = 1, size(array,2)
+          a = transfer(array(j,k), a)
+          t = transfer(array(j,k), t)
+          do m = 1, 2
+            if (a(m)==0.0) then
+              if (t(m)>1e-5) then
+                print*, "Different array"
+                exit loop
+              endif
+            elseif (abs(t(m)-a(m))/t(m)>1e-5) then
+              print*, "Different array"
+              exit loop
+            endif
+          enddo
+        enddo
+      enddo loop
+      if (i/=iostat) &
+        print*, "Wrong iostat"
+      if (n/=num) &
+        print*, "Wrong num"
+    end subroutine cmplxdpdatamatrix
 
 end program short_test

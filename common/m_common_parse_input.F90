@@ -39,6 +39,7 @@ contains
     character(len=*), intent(out) :: data
     character, intent(in), optional :: separator
     integer, intent(out), optional :: num, iostat
+    logical :: bracketed
     integer :: i, j, ij, k, s_i, err, ios, length
     real :: r, c
 
@@ -102,6 +103,7 @@ contains
     character(len=*), intent(in) :: s
     logical, intent(out) :: data
     integer, intent(out), optional :: num, iostat
+    logical :: bracketed
     integer :: i, j, ij, k, s_i, err, ios, length
     real :: r, c
 
@@ -114,19 +116,21 @@ contains
     loop: do i = 1, 1
       k = verify(s(s_i:), XML_WHITESPACE)
       if (k==0) exit loop
-      s_i = s_i + k
+      s_i = s_i + k - 1
       if (s(s_i:s_i)==",") then
-        k = verify(s(s_i:), XML_WHITESPACE)
-        s_i = s_i + k 
+        if (s_i+1>len(s)) then
+          err = 2
+          exit loop
+        endif
+        k = verify(s(s_i+1:), XML_WHITESPACE)
+        s_i = s_i + k - 1
       endif
-      s_i = s_i - 1
       k = scan(s(s_i:), XML_WHITESPACE//",")
       if (k==0) then
         k = len(s)
       else
         k = s_i + k - 2
       endif
-      print*,"!", s(s_i:k), "!"
       if (s(s_i:k)=="true".or.s(s_i:k)=="1") then
         data = .true.
       elseif (s(s_i:k)=="false".or.s(s_i:k)=="0") then
@@ -175,6 +179,7 @@ contains
     integer, intent(out) :: data
     integer, intent(out), optional :: num, iostat
 
+    logical :: bracketed
     integer :: i, j, ij, k, s_i, err, ios, length
     real :: r, c
 
@@ -188,7 +193,15 @@ contains
       k = verify(s(s_i:), XML_WHITESPACE)
       if (k==0) exit loop
       s_i = s_i + k - 1
-      k = scan(s(s_i:), XML_WHITESPACE)
+      if (s(s_i:s_i)==",") then
+        if (s_i+1>len(s)) then
+          err = 2
+          exit loop
+        endif
+        k = verify(s(s_i+1:), XML_WHITESPACE)
+        s_i = s_i + k - 1
+      endif
+      k = scan(s(s_i:), XML_WHITESPACE//",")
       if (k==0) then
         k = len(s)
       else
@@ -239,6 +252,7 @@ contains
     real(sp), intent(out) :: data
     integer, intent(out), optional :: num, iostat
 
+    logical :: bracketed
     integer :: i, j, ij, k, s_i, err, ios, length
     real :: r, c
 
@@ -252,7 +266,15 @@ contains
       k = verify(s(s_i:), XML_WHITESPACE)
       if (k==0) exit loop
       s_i = s_i + k - 1
-      k = scan(s(s_i:), XML_WHITESPACE)
+      if (s(s_i:s_i)==",") then
+        if (s_i+1>len(s)) then
+          err = 2
+          exit loop
+        endif
+        k = verify(s(s_i+1:), XML_WHITESPACE)
+        s_i = s_i + k - 1
+      endif
+      k = scan(s(s_i:), XML_WHITESPACE//",")
       if (k==0) then
         k = len(s)
       else
@@ -303,6 +325,7 @@ contains
     real(dp), intent(out) :: data
     integer, intent(out), optional :: num, iostat
 
+    logical :: bracketed
     integer :: i, j, ij, k, s_i, err, ios, length
     real :: r, c
 
@@ -316,7 +339,15 @@ contains
       k = verify(s(s_i:), XML_WHITESPACE)
       if (k==0) exit loop
       s_i = s_i + k - 1
-      k = scan(s(s_i:), XML_WHITESPACE)
+      if (s(s_i:s_i)==",") then
+        if (s_i+1>len(s)) then
+          err = 2
+          exit loop
+        endif
+        k = verify(s(s_i+1:), XML_WHITESPACE)
+        s_i = s_i + k - 1
+      endif
+      k = scan(s(s_i:), XML_WHITESPACE//",")
       if (k==0) then
         k = len(s)
       else
@@ -367,6 +398,7 @@ contains
     complex(sp), intent(out) :: data
     integer, intent(out), optional :: num, iostat
 
+    logical :: bracketed
     integer :: i, j, ij, k, s_i, err, ios, length
     real :: r, c
 
@@ -380,7 +412,15 @@ contains
       k = verify(s(s_i:), XML_WHITESPACE)
       if (k==0) exit loop
       s_i = s_i + k - 1
-      k = scan(s(s_i:), XML_WHITESPACE)
+      if (s(s_i:s_i)==",") then
+        if (s_i+1>len(s)) then
+          err = 2
+          exit loop
+        endif
+        k = verify(s(s_i+1:), XML_WHITESPACE)
+        s_i = s_i + k - 1
+      endif
+      k = scan(s(s_i:), XML_WHITESPACE//",")
       if (k==0) then
         k = len(s)
       else
@@ -431,6 +471,7 @@ contains
     complex(dp), intent(out) :: data
     integer, intent(out), optional :: num, iostat
 
+    logical :: bracketed
     integer :: i, j, ij, k, s_i, err, ios, length
     real :: r, c
 
@@ -444,7 +485,15 @@ contains
       k = verify(s(s_i:), XML_WHITESPACE)
       if (k==0) exit loop
       s_i = s_i + k - 1
-      k = scan(s(s_i:), XML_WHITESPACE)
+      if (s(s_i:s_i)==",") then
+        if (s_i+1>len(s)) then
+          err = 2
+          exit loop
+        endif
+        k = verify(s(s_i+1:), XML_WHITESPACE)
+        s_i = s_i + k - 1
+      endif
+      k = scan(s(s_i:), XML_WHITESPACE//",")
       if (k==0) then
         k = len(s)
       else
@@ -500,6 +549,7 @@ contains
     integer, intent(out), optional :: iostat
 
 
+    logical :: bracketed
     integer :: i, j, ij, k, s_i, err, ios, length
     real :: r, c
 
@@ -573,6 +623,7 @@ contains
     integer, intent(out), optional :: iostat
 
 
+    logical :: bracketed
     integer :: i, j, ij, k, s_i, err, ios, length
     real :: r, c
 
@@ -646,6 +697,7 @@ contains
     integer, intent(out), optional :: iostat
 
 
+    logical :: bracketed
     integer :: i, j, ij, k, s_i, err, ios, length
     real :: r, c
 
@@ -658,19 +710,21 @@ contains
     loop: do i = 1, size(data)
       k = verify(s(s_i:), XML_WHITESPACE)
       if (k==0) exit loop
-      s_i = s_i + k
+      s_i = s_i + k - 1
       if (s(s_i:s_i)==",") then
-        k = verify(s(s_i:), XML_WHITESPACE)
-        s_i = s_i + k 
+        if (s_i+1>len(s)) then
+          err = 2
+          exit loop
+        endif
+        k = verify(s(s_i+1:), XML_WHITESPACE)
+        s_i = s_i + k - 1
       endif
-      s_i = s_i - 1
       k = scan(s(s_i:), XML_WHITESPACE//",")
       if (k==0) then
         k = len(s)
       else
         k = s_i + k - 2
       endif
-      print*,"!", s(s_i:k), "!"
       if (s(s_i:k)=="true".or.s(s_i:k)=="1") then
         data(i) = .true.
       elseif (s(s_i:k)=="false".or.s(s_i:k)=="0") then
@@ -722,6 +776,7 @@ contains
     integer, intent(out), optional :: iostat
 
 
+    logical :: bracketed
     integer :: i, j, ij, k, s_i, err, ios, length
     real :: r, c
 
@@ -735,19 +790,21 @@ contains
     do i = 1, size(data, 1)
       k = verify(s(s_i:), XML_WHITESPACE)
       if (k==0) exit loop
-      s_i = s_i + k
+      s_i = s_i + k - 1
       if (s(s_i:s_i)==",") then
-        k = verify(s(s_i:), XML_WHITESPACE)
-        s_i = s_i + k 
+        if (s_i+1>len(s)) then
+          err = 2
+          exit loop
+        endif
+        k = verify(s(s_i+1:), XML_WHITESPACE)
+        s_i = s_i + k - 1
       endif
-      s_i = s_i - 1
       k = scan(s(s_i:), XML_WHITESPACE//",")
       if (k==0) then
         k = len(s)
       else
         k = s_i + k - 2
       endif
-      print*,"!", s(s_i:k), "!"
       if (s(s_i:k)=="true".or.s(s_i:k)=="1") then
         data(i, j) = .true.
       elseif (s(s_i:k)=="false".or.s(s_i:k)=="0") then
@@ -800,6 +857,7 @@ contains
     integer, intent(out), optional :: iostat
 
 
+    logical :: bracketed
     integer :: i, j, ij, k, s_i, err, ios, length
     real :: r, c
 
@@ -812,7 +870,15 @@ contains
       k = verify(s(s_i:), XML_WHITESPACE)
       if (k==0) exit loop
       s_i = s_i + k - 1
-      k = scan(s(s_i:), XML_WHITESPACE)
+      if (s(s_i:s_i)==",") then
+        if (s_i+1>len(s)) then
+          err = 2
+          exit loop
+        endif
+        k = verify(s(s_i+1:), XML_WHITESPACE)
+        s_i = s_i + k - 1
+      endif
+      k = scan(s(s_i:), XML_WHITESPACE//",")
       if (k==0) then
         k = len(s)
       else
@@ -866,6 +932,7 @@ contains
     integer, intent(out), optional :: iostat
 
 
+    logical :: bracketed
     integer :: i, j, ij, k, s_i, err, ios, length
     real :: r, c
 
@@ -880,7 +947,15 @@ contains
       k = verify(s(s_i:), XML_WHITESPACE)
       if (k==0) exit loop
       s_i = s_i + k - 1
-      k = scan(s(s_i:), XML_WHITESPACE)
+      if (s(s_i:s_i)==",") then
+        if (s_i+1>len(s)) then
+          err = 2
+          exit loop
+        endif
+        k = verify(s(s_i+1:), XML_WHITESPACE)
+        s_i = s_i + k - 1
+      endif
+      k = scan(s(s_i:), XML_WHITESPACE//",")
       if (k==0) then
         k = len(s)
       else
@@ -935,6 +1010,7 @@ contains
     integer, intent(out), optional :: iostat
 
 
+    logical :: bracketed
     integer :: i, j, ij, k, s_i, err, ios, length
     real :: r, c
 
@@ -948,7 +1024,15 @@ contains
       k = verify(s(s_i:), XML_WHITESPACE)
       if (k==0) exit loop
       s_i = s_i + k - 1
-      k = scan(s(s_i:), XML_WHITESPACE)
+      if (s(s_i:s_i)==",") then
+        if (s_i+1>len(s)) then
+          err = 2
+          exit loop
+        endif
+        k = verify(s(s_i+1:), XML_WHITESPACE)
+        s_i = s_i + k - 1
+      endif
+      k = scan(s(s_i:), XML_WHITESPACE//",")
       if (k==0) then
         k = len(s)
       else
@@ -1002,6 +1086,7 @@ contains
     integer, intent(out), optional :: iostat
 
 
+    logical :: bracketed
     integer :: i, j, ij, k, s_i, err, ios, length
     real :: r, c
 
@@ -1016,7 +1101,15 @@ contains
       k = verify(s(s_i:), XML_WHITESPACE)
       if (k==0) exit loop
       s_i = s_i + k - 1
-      k = scan(s(s_i:), XML_WHITESPACE)
+      if (s(s_i:s_i)==",") then
+        if (s_i+1>len(s)) then
+          err = 2
+          exit loop
+        endif
+        k = verify(s(s_i+1:), XML_WHITESPACE)
+        s_i = s_i + k - 1
+      endif
+      k = scan(s(s_i:), XML_WHITESPACE//",")
       if (k==0) then
         k = len(s)
       else
@@ -1071,6 +1164,7 @@ contains
     integer, intent(out), optional :: iostat
 
 
+    logical :: bracketed
     integer :: i, j, ij, k, s_i, err, ios, length
     real :: r, c
 
@@ -1084,7 +1178,15 @@ contains
       k = verify(s(s_i:), XML_WHITESPACE)
       if (k==0) exit loop
       s_i = s_i + k - 1
-      k = scan(s(s_i:), XML_WHITESPACE)
+      if (s(s_i:s_i)==",") then
+        if (s_i+1>len(s)) then
+          err = 2
+          exit loop
+        endif
+        k = verify(s(s_i+1:), XML_WHITESPACE)
+        s_i = s_i + k - 1
+      endif
+      k = scan(s(s_i:), XML_WHITESPACE//",")
       if (k==0) then
         k = len(s)
       else
@@ -1138,6 +1240,7 @@ contains
     integer, intent(out), optional :: iostat
 
 
+    logical :: bracketed
     integer :: i, j, ij, k, s_i, err, ios, length
     real :: r, c
 
@@ -1152,7 +1255,15 @@ contains
       k = verify(s(s_i:), XML_WHITESPACE)
       if (k==0) exit loop
       s_i = s_i + k - 1
-      k = scan(s(s_i:), XML_WHITESPACE)
+      if (s(s_i:s_i)==",") then
+        if (s_i+1>len(s)) then
+          err = 2
+          exit loop
+        endif
+        k = verify(s(s_i+1:), XML_WHITESPACE)
+        s_i = s_i + k - 1
+      endif
+      k = scan(s(s_i:), XML_WHITESPACE//",")
       if (k==0) then
         k = len(s)
       else
@@ -1207,6 +1318,7 @@ contains
     integer, intent(out), optional :: iostat
 
 
+    logical :: bracketed
     integer :: i, j, ij, k, s_i, err, ios, length
     real :: r, c
 
@@ -1217,33 +1329,71 @@ contains
     ij  = 0
     length = size(data)
     loop: do i = 1, size(data)
-      k = index(s(s_i:), "(")
+      bracketed = .false.
+      k = verify(s(s_i:), XML_WHITESPACE)
       if (k==0) exit loop
-      s_i = s_i + k
-      k = index(s(s_i:), ")+i(")
+      s_i = s_i + k - 1
+      select case (s(s_i:s_i))
+      case ("(")
+        bracketed = .true.
+        k = verify(s(s_i:), XML_WHITESPACE)
+        if (k==0) then
+          err = 2
+          exit loop
+        endif
+        s_i = s_i + k
+      case (",")
+        k = verify(s(s_i:), XML_WHITESPACE)
+        if (k==0) then
+          err = 2
+          exit loop
+        endif
+        s_i = s_i + k - 1
+      case ("+", "-", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9")
+        continue
+      case default
+        err = 2
+        exit loop
+      end select
+      if (bracketed) then
+        k = index(s(s_i:), ")+i(")
+      else
+        k = scan(s(s_i:), XML_WHITESPACE//",")
+      endif
       if (k==0) then
         err = 2
         exit loop
-      else
-        k = s_i + k - 2
       endif
-      ! FIXME should write our own here so it is not recursive I/O
-      ! Also not 100% sure that Fortran standard fp read is same as CMLComp
+      k = s_i + k - 2
       read(s(s_i:k), *, iostat=ios) r
       if (ios/=0) then
         err = 2
         exit loop
       endif
-      s_i = k + 5
-      k = index(s(s_i:), ")")
-      if (k==0) then
-        err = 2
-        exit loop
+      if (bracketed) then
+        s_i = k + 5
+        if (s_i>len(s)) then
+          err = 2
+          exit loop
+        endif
       else
-        k = s_i + k - 2
+        s_i = k + 2
       endif
-      ! FIXME should write our own here so it is not recursive I/O
-      ! Also not 100% sure that Fortran standard fp read is same as CMLComp
+      if (bracketed) then
+        k = index(s(s_i:), ")")
+        if (k==0) then
+          err = 2
+          exit loop
+        endif
+        k = s_i + k - 2
+      else
+        k = scan(s(s_i:), XML_WHITESPACE//",")
+        if (k==0) then
+          k = len(s)
+        else
+          k = s_i + k - 2
+        endif
+      endif
       read(s(s_i:k), *, iostat=ios) c
       if (ios/=0) then
         err = 2
@@ -1293,6 +1443,7 @@ contains
     integer, intent(out), optional :: iostat
 
 
+    logical :: bracketed
     integer :: i, j, ij, k, s_i, err, ios, length
     real :: r, c
 
@@ -1304,33 +1455,71 @@ contains
     length = size(data)
     loop: do j = 1, size(data, 2)
     do i = 1, size(data, 1)
-      k = index(s(s_i:), "(")
+      bracketed = .false.
+      k = verify(s(s_i:), XML_WHITESPACE)
       if (k==0) exit loop
-      s_i = s_i + k
-      k = index(s(s_i:), ")+i(")
+      s_i = s_i + k - 1
+      select case (s(s_i:s_i))
+      case ("(")
+        bracketed = .true.
+        k = verify(s(s_i:), XML_WHITESPACE)
+        if (k==0) then
+          err = 2
+          exit loop
+        endif
+        s_i = s_i + k
+      case (",")
+        k = verify(s(s_i:), XML_WHITESPACE)
+        if (k==0) then
+          err = 2
+          exit loop
+        endif
+        s_i = s_i + k - 1
+      case ("+", "-", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9")
+        continue
+      case default
+        err = 2
+        exit loop
+      end select
+      if (bracketed) then
+        k = index(s(s_i:), ")+i(")
+      else
+        k = scan(s(s_i:), XML_WHITESPACE//",")
+      endif
       if (k==0) then
         err = 2
         exit loop
-      else
-        k = s_i + k - 2
       endif
-      ! FIXME should write our own here so it is not recursive I/O
-      ! Also not 100% sure that Fortran standard fp read is same as CMLComp
+      k = s_i + k - 2
       read(s(s_i:k), *, iostat=ios) r
       if (ios/=0) then
         err = 2
         exit loop
       endif
-      s_i = k + 5
-      k = index(s(s_i:), ")")
-      if (k==0) then
-        err = 2
-        exit loop
+      if (bracketed) then
+        s_i = k + 5
+        if (s_i>len(s)) then
+          err = 2
+          exit loop
+        endif
       else
-        k = s_i + k - 2
+        s_i = k + 2
       endif
-      ! FIXME should write our own here so it is not recursive I/O
-      ! Also not 100% sure that Fortran standard fp read is same as CMLComp
+      if (bracketed) then
+        k = index(s(s_i:), ")")
+        if (k==0) then
+          err = 2
+          exit loop
+        endif
+        k = s_i + k - 2
+      else
+        k = scan(s(s_i:), XML_WHITESPACE//",")
+        if (k==0) then
+          k = len(s)
+        else
+          k = s_i + k - 2
+        endif
+      endif
       read(s(s_i:k), *, iostat=ios) c
       if (ios/=0) then
         err = 2
@@ -1381,6 +1570,7 @@ contains
     integer, intent(out), optional :: iostat
 
 
+    logical :: bracketed
     integer :: i, j, ij, k, s_i, err, ios, length
     real :: r, c
 
@@ -1391,33 +1581,71 @@ contains
     ij  = 0
     length = size(data)
     loop: do i = 1, size(data)
-      k = index(s(s_i:), "(")
+      bracketed = .false.
+      k = verify(s(s_i:), XML_WHITESPACE)
       if (k==0) exit loop
-      s_i = s_i + k
-      k = index(s(s_i:), ")+i(")
+      s_i = s_i + k - 1
+      select case (s(s_i:s_i))
+      case ("(")
+        bracketed = .true.
+        k = verify(s(s_i:), XML_WHITESPACE)
+        if (k==0) then
+          err = 2
+          exit loop
+        endif
+        s_i = s_i + k
+      case (",")
+        k = verify(s(s_i:), XML_WHITESPACE)
+        if (k==0) then
+          err = 2
+          exit loop
+        endif
+        s_i = s_i + k - 1
+      case ("+", "-", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9")
+        continue
+      case default
+        err = 2
+        exit loop
+      end select
+      if (bracketed) then
+        k = index(s(s_i:), ")+i(")
+      else
+        k = scan(s(s_i:), XML_WHITESPACE//",")
+      endif
       if (k==0) then
         err = 2
         exit loop
-      else
-        k = s_i + k - 2
       endif
-      ! FIXME should write our own here so it is not recursive I/O
-      ! Also not 100% sure that Fortran standard fp read is same as CMLComp
+      k = s_i + k - 2
       read(s(s_i:k), *, iostat=ios) r
       if (ios/=0) then
         err = 2
         exit loop
       endif
-      s_i = k + 5
-      k = index(s(s_i:), ")")
-      if (k==0) then
-        err = 2
-        exit loop
+      if (bracketed) then
+        s_i = k + 5
+        if (s_i>len(s)) then
+          err = 2
+          exit loop
+        endif
       else
-        k = s_i + k - 2
+        s_i = k + 2
       endif
-      ! FIXME should write our own here so it is not recursive I/O
-      ! Also not 100% sure that Fortran standard fp read is same as CMLComp
+      if (bracketed) then
+        k = index(s(s_i:), ")")
+        if (k==0) then
+          err = 2
+          exit loop
+        endif
+        k = s_i + k - 2
+      else
+        k = scan(s(s_i:), XML_WHITESPACE//",")
+        if (k==0) then
+          k = len(s)
+        else
+          k = s_i + k - 2
+        endif
+      endif
       read(s(s_i:k), *, iostat=ios) c
       if (ios/=0) then
         err = 2
@@ -1467,6 +1695,7 @@ contains
     integer, intent(out), optional :: iostat
 
 
+    logical :: bracketed
     integer :: i, j, ij, k, s_i, err, ios, length
     real :: r, c
 
@@ -1478,33 +1707,71 @@ contains
     length = size(data)
     loop: do j = 1, size(data, 2)
     do i = 1, size(data, 1)
-      k = index(s(s_i:), "(")
+      bracketed = .false.
+      k = verify(s(s_i:), XML_WHITESPACE)
       if (k==0) exit loop
-      s_i = s_i + k
-      k = index(s(s_i:), ")+i(")
+      s_i = s_i + k - 1
+      select case (s(s_i:s_i))
+      case ("(")
+        bracketed = .true.
+        k = verify(s(s_i:), XML_WHITESPACE)
+        if (k==0) then
+          err = 2
+          exit loop
+        endif
+        s_i = s_i + k
+      case (",")
+        k = verify(s(s_i:), XML_WHITESPACE)
+        if (k==0) then
+          err = 2
+          exit loop
+        endif
+        s_i = s_i + k - 1
+      case ("+", "-", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9")
+        continue
+      case default
+        err = 2
+        exit loop
+      end select
+      if (bracketed) then
+        k = index(s(s_i:), ")+i(")
+      else
+        k = scan(s(s_i:), XML_WHITESPACE//",")
+      endif
       if (k==0) then
         err = 2
         exit loop
-      else
-        k = s_i + k - 2
       endif
-      ! FIXME should write our own here so it is not recursive I/O
-      ! Also not 100% sure that Fortran standard fp read is same as CMLComp
+      k = s_i + k - 2
       read(s(s_i:k), *, iostat=ios) r
       if (ios/=0) then
         err = 2
         exit loop
       endif
-      s_i = k + 5
-      k = index(s(s_i:), ")")
-      if (k==0) then
-        err = 2
-        exit loop
+      if (bracketed) then
+        s_i = k + 5
+        if (s_i>len(s)) then
+          err = 2
+          exit loop
+        endif
       else
-        k = s_i + k - 2
+        s_i = k + 2
       endif
-      ! FIXME should write our own here so it is not recursive I/O
-      ! Also not 100% sure that Fortran standard fp read is same as CMLComp
+      if (bracketed) then
+        k = index(s(s_i:), ")")
+        if (k==0) then
+          err = 2
+          exit loop
+        endif
+        k = s_i + k - 2
+      else
+        k = scan(s(s_i:), XML_WHITESPACE//",")
+        if (k==0) then
+          k = len(s)
+        else
+          k = s_i + k - 2
+        endif
+      endif
       read(s(s_i:k), *, iostat=ios) c
       if (ios/=0) then
         err = 2
