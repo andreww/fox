@@ -133,7 +133,7 @@ TOHWM4_moleculeargslist)
       if (style=="DL_POLY") then
         if (present(atomRefs).or.present(occupancies).or.present(atomIds).or.present(fmt)) &
           call FoX_error("With DL_POLY style, no optional arguments permitted.")
-        call addDlpolyMatrix_$1(xf, coords, elements)
+        call addDlpolyMatrix(xf, coords, elements)
         return
       endif
     endif
@@ -172,7 +172,7 @@ TOHWM4_moleculeargslist)
       if (style=="DL_POLY") then
         if (present(atomRefs).or.present(occupancies).or.present(atomIds).or.present(fmt)) &
           call FoX_error("With DL_POLY style, no optional arguments permitted.")
-        call addDlpolyMatrix_$1(xf, coords(:, :natoms), elements(:natoms))
+        call addDlpolyMatrix(xf, coords(:, :natoms), elements(:natoms))
         return
       endif
     endif
@@ -212,7 +212,7 @@ TOHWM4_moleculeargslist)
       if (style=="DL_POLY") then
         if (present(atomRefs).or.present(occupancies).or.present(atomIds).or.present(fmt)) &
           call FoX_error("With DL_POLY style, no optional arguments permitted.")
-        call addDlpolyMatrix_3_$1(xf, x, y, z, elements)
+        call addDlpolyMatrix(xf, x, y, z, elements)
         return
       endif
     endif
@@ -254,7 +254,7 @@ TOHWM4_moleculeargslist)
       if (style=="DL_POLY") then
         if (present(atomRefs).or.present(occupancies).or.present(atomIds).or.present(fmt)) &
           call FoX_error("With DL_POLY style, no optional arguments permitted.")
-        call addDlpolyMatrix_3_$1(xf, x(:natoms), y(:natoms), z(:natoms), elements(:natoms))
+        call addDlpolyMatrix(xf, x(:natoms), y(:natoms), z(:natoms), elements(:natoms))
         return
       endif
     endif
@@ -275,7 +275,6 @@ TOHWM4_moleculeargslist)
 
   end subroutine cmlAddAtoms_3_$1_sh
 
-
 #ifndef DUMMYLIB
   subroutine cmlAddAtom_$1(xf, elem, coords, id, charge, hCount, occupancy, &
        fmt, style)
@@ -295,6 +294,16 @@ TOHWM4_moleculeargslist)
     if (present(charge))    call xml_AddAttribute(xf, "formalCharge", charge)
     if (present(hCount))    call xml_AddAttribute(xf, "hydrogenCount", hCount)
     if (present(occupancy)) call xml_AddAttribute(xf, "occupancy", occupancy, fmt)
+
+    call cmlAddCoords_$1(xf, coords, style, fmt)
+
+  end subroutine cmlAddAtom_$1
+
+  subroutine cmlAddCoords_$1(xf, coords, style, fmt)
+    type(xmlf_t), intent(inout) :: xf
+    real(kind=$1), intent(in), dimension(:) :: coords
+    character(len=*), intent(in), optional  :: style
+    character(len=*), intent(in), optional  :: fmt
 
     if (present(style)) then
       select case(style)
@@ -317,8 +326,7 @@ TOHWM4_moleculeargslist)
       call addcoords_x3_$1(xf, coords, fmt)
     endif
 
-  end subroutine cmlAddAtom_$1
-
+  end subroutine cmlAddCoords_$1
 
   subroutine addcoords_xyz3_$1(xf, coords, fmt)
     type(xmlf_t), intent(inout)              :: xf
@@ -486,9 +494,22 @@ module m_wcml_molecule
     module procedure cmlAddAtom_sp
     module procedure cmlAddAtom_dp
   end interface
+
+  interface cmlAddCoords
+    module procedure cmlAddCoords_sp
+    module procedure cmlAddCoords_dp
+  end interface
+
+  interface addDlpolyMatrix
+    module procedure addDlpolyMatrix_sp
+    module procedure addDlpolyMatrix_3_sp
+    module procedure addDlpolyMatrix_dp
+    module procedure addDlpolyMatrix_3_dp
+  end interface
 #endif
 
   public :: cmlAddMolecule
+  public :: cmlAddAtoms
 
 contains
 

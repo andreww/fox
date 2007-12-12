@@ -46,9 +46,22 @@ module m_wcml_molecule
     module procedure cmlAddAtom_sp
     module procedure cmlAddAtom_dp
   end interface
+
+  interface cmlAddCoords
+    module procedure cmlAddCoords_sp
+    module procedure cmlAddCoords_dp
+  end interface
+
+  interface addDlpolyMatrix
+    module procedure addDlpolyMatrix_sp
+    module procedure addDlpolyMatrix_3_sp
+    module procedure addDlpolyMatrix_dp
+    module procedure addDlpolyMatrix_3_dp
+  end interface
 #endif
 
   public :: cmlAddMolecule
+  public :: cmlAddAtoms
 
 contains
 
@@ -241,7 +254,7 @@ contains
       if (style=="DL_POLY") then
         if (present(atomRefs).or.present(occupancies).or.present(atomIds).or.present(fmt)) &
           call FoX_error("With DL_POLY style, no optional arguments permitted.")
-        call addDlpolyMatrix_sp(xf, coords, elements)
+        call addDlpolyMatrix(xf, coords, elements)
         return
       endif
     endif
@@ -280,7 +293,7 @@ contains
       if (style=="DL_POLY") then
         if (present(atomRefs).or.present(occupancies).or.present(atomIds).or.present(fmt)) &
           call FoX_error("With DL_POLY style, no optional arguments permitted.")
-        call addDlpolyMatrix_sp(xf, coords(:, :natoms), elements(:natoms))
+        call addDlpolyMatrix(xf, coords(:, :natoms), elements(:natoms))
         return
       endif
     endif
@@ -320,7 +333,7 @@ contains
       if (style=="DL_POLY") then
         if (present(atomRefs).or.present(occupancies).or.present(atomIds).or.present(fmt)) &
           call FoX_error("With DL_POLY style, no optional arguments permitted.")
-        call addDlpolyMatrix_3_sp(xf, x, y, z, elements)
+        call addDlpolyMatrix(xf, x, y, z, elements)
         return
       endif
     endif
@@ -362,7 +375,7 @@ contains
       if (style=="DL_POLY") then
         if (present(atomRefs).or.present(occupancies).or.present(atomIds).or.present(fmt)) &
           call FoX_error("With DL_POLY style, no optional arguments permitted.")
-        call addDlpolyMatrix_3_sp(xf, x(:natoms), y(:natoms), z(:natoms), elements(:natoms))
+        call addDlpolyMatrix(xf, x(:natoms), y(:natoms), z(:natoms), elements(:natoms))
         return
       endif
     endif
@@ -383,7 +396,6 @@ contains
 
   end subroutine cmlAddAtoms_3_sp_sh
 
-
 #ifndef DUMMYLIB
   subroutine cmlAddAtom_sp(xf, elem, coords, id, charge, hCount, occupancy, &
        fmt, style)
@@ -403,6 +415,16 @@ contains
     if (present(charge))    call xml_AddAttribute(xf, "formalCharge", charge)
     if (present(hCount))    call xml_AddAttribute(xf, "hydrogenCount", hCount)
     if (present(occupancy)) call xml_AddAttribute(xf, "occupancy", occupancy, fmt)
+
+    call cmlAddCoords_sp(xf, coords, style, fmt)
+
+  end subroutine cmlAddAtom_sp
+
+  subroutine cmlAddCoords_sp(xf, coords, style, fmt)
+    type(xmlf_t), intent(inout) :: xf
+    real(kind=sp), intent(in), dimension(:) :: coords
+    character(len=*), intent(in), optional  :: style
+    character(len=*), intent(in), optional  :: fmt
 
     if (present(style)) then
       select case(style)
@@ -425,8 +447,7 @@ contains
       call addcoords_x3_sp(xf, coords, fmt)
     endif
 
-  end subroutine cmlAddAtom_sp
-
+  end subroutine cmlAddCoords_sp
 
   subroutine addcoords_xyz3_sp(xf, coords, fmt)
     type(xmlf_t), intent(inout)              :: xf
@@ -698,7 +719,7 @@ contains
       if (style=="DL_POLY") then
         if (present(atomRefs).or.present(occupancies).or.present(atomIds).or.present(fmt)) &
           call FoX_error("With DL_POLY style, no optional arguments permitted.")
-        call addDlpolyMatrix_dp(xf, coords, elements)
+        call addDlpolyMatrix(xf, coords, elements)
         return
       endif
     endif
@@ -737,7 +758,7 @@ contains
       if (style=="DL_POLY") then
         if (present(atomRefs).or.present(occupancies).or.present(atomIds).or.present(fmt)) &
           call FoX_error("With DL_POLY style, no optional arguments permitted.")
-        call addDlpolyMatrix_dp(xf, coords(:, :natoms), elements(:natoms))
+        call addDlpolyMatrix(xf, coords(:, :natoms), elements(:natoms))
         return
       endif
     endif
@@ -777,7 +798,7 @@ contains
       if (style=="DL_POLY") then
         if (present(atomRefs).or.present(occupancies).or.present(atomIds).or.present(fmt)) &
           call FoX_error("With DL_POLY style, no optional arguments permitted.")
-        call addDlpolyMatrix_3_dp(xf, x, y, z, elements)
+        call addDlpolyMatrix(xf, x, y, z, elements)
         return
       endif
     endif
@@ -819,7 +840,7 @@ contains
       if (style=="DL_POLY") then
         if (present(atomRefs).or.present(occupancies).or.present(atomIds).or.present(fmt)) &
           call FoX_error("With DL_POLY style, no optional arguments permitted.")
-        call addDlpolyMatrix_3_dp(xf, x(:natoms), y(:natoms), z(:natoms), elements(:natoms))
+        call addDlpolyMatrix(xf, x(:natoms), y(:natoms), z(:natoms), elements(:natoms))
         return
       endif
     endif
@@ -840,7 +861,6 @@ contains
 
   end subroutine cmlAddAtoms_3_dp_sh
 
-
 #ifndef DUMMYLIB
   subroutine cmlAddAtom_dp(xf, elem, coords, id, charge, hCount, occupancy, &
        fmt, style)
@@ -860,6 +880,16 @@ contains
     if (present(charge))    call xml_AddAttribute(xf, "formalCharge", charge)
     if (present(hCount))    call xml_AddAttribute(xf, "hydrogenCount", hCount)
     if (present(occupancy)) call xml_AddAttribute(xf, "occupancy", occupancy, fmt)
+
+    call cmlAddCoords_dp(xf, coords, style, fmt)
+
+  end subroutine cmlAddAtom_dp
+
+  subroutine cmlAddCoords_dp(xf, coords, style, fmt)
+    type(xmlf_t), intent(inout) :: xf
+    real(kind=dp), intent(in), dimension(:) :: coords
+    character(len=*), intent(in), optional  :: style
+    character(len=*), intent(in), optional  :: fmt
 
     if (present(style)) then
       select case(style)
@@ -882,8 +912,7 @@ contains
       call addcoords_x3_dp(xf, coords, fmt)
     endif
 
-  end subroutine cmlAddAtom_dp
-
+  end subroutine cmlAddCoords_dp
 
   subroutine addcoords_xyz3_dp(xf, coords, fmt)
     type(xmlf_t), intent(inout)              :: xf
