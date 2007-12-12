@@ -243,7 +243,7 @@ contains
     character(len=*), intent(in), optional :: style
 
 #ifndef DUMMYLIB
-    integer          :: i
+    integer          :: i, natoms
 
     if (present(style)) then
       if (style=="DL_POLY") then
@@ -254,9 +254,12 @@ contains
       endif
     endif
 
+
     call xml_NewElement(xf, "atomArray")
 
-    do i = 1, size(coords,2)
+    natoms = size(coords,2)
+
+    do i = 1, natoms
       call xml_NewElement(xf, "atom")
       call xml_AddAttribute(xf, "elementType", trim(elements(i)))
       call cmlAddCoords(xf, coords=coords(:,i), style=style, fmt=fmt)
@@ -265,6 +268,7 @@ contains
       if (present(atomIds)) call xml_AddAttribute(xf, "id", atomIds(i))
       call xml_EndElement(xf, "atom")
      enddo
+
 
     call xml_EndElement(xf, "atomArray")
 #endif
@@ -289,12 +293,14 @@ contains
       if (style=="DL_POLY") then
         if (present(atomRefs).or.present(occupancies).or.present(atomIds).or.present(fmt)) &
           call FoX_error("With DL_POLY style, no optional arguments permitted.")
-        call addDlpolyMatrix(xf, coords(:, :natoms), elements(:natoms))
+        call addDlpolyMatrix(xf, coords(:,:natoms), elements)
         return
       endif
     endif
 
+
     call xml_NewElement(xf, "atomArray")
+
 
     do i = 1, natoms
       call xml_NewElement(xf, "atom")
@@ -305,6 +311,7 @@ contains
       if (present(atomIds)) call xml_AddAttribute(xf, "id", atomIds(i))
       call xml_EndElement(xf, "atom")
      enddo
+
 
     call xml_EndElement(xf, "atomArray")
 #endif
@@ -324,7 +331,7 @@ contains
     character(len=*), intent(in), optional :: style
 
 #ifndef DUMMYLIB
-    integer          :: i
+    integer          :: i, natoms
 
     if (present(style)) then
       if (style=="DL_POLY") then
@@ -335,17 +342,21 @@ contains
       endif
     endif
 
+
     call xml_NewElement(xf, "atomArray")
 
-    do i = 1, size(x)
+    natoms = size(x)
+
+    do i = 1, natoms
       call xml_NewElement(xf, "atom")
       call xml_AddAttribute(xf, "elementType", trim(elements(i)))
-      call cmlAddCoords(xf, coords=(/x(i), y(i), z(i)/), style=style, fmt=fmt)
+      call cmlAddCoords(xf, coords=(/x(i),y(i),z(i)/), style=style, fmt=fmt)
       if (present(occupancies)) call xml_AddAttribute(xf, "occupancy", occupancies(i))
       if (present(atomRefs)) call xml_AddAttribute(xf, "ref", atomRefs(i))
-      if (present(atomIds)) call xml_AddAttribute(xf, "id", atomIDs(i))
+      if (present(atomIds)) call xml_AddAttribute(xf, "id", atomIds(i))
       call xml_EndElement(xf, "atom")
      enddo
+
 
     call xml_EndElement(xf, "atomArray")
 
@@ -373,22 +384,25 @@ contains
       if (style=="DL_POLY") then
         if (present(atomRefs).or.present(occupancies).or.present(atomIds).or.present(fmt)) &
           call FoX_error("With DL_POLY style, no optional arguments permitted.")
-        call addDlpolyMatrix(xf, x(:natoms), y(:natoms), z(:natoms), elements(:natoms))
+        call addDlpolyMatrix(xf, x(:natoms), y(:natoms), z(:natoms), elements)
         return
       endif
     endif
 
+
     call xml_NewElement(xf, "atomArray")
+
 
     do i = 1, natoms
       call xml_NewElement(xf, "atom")
       call xml_AddAttribute(xf, "elementType", trim(elements(i)))
-      call cmlAddCoords(xf, coords=(/x(i), y(i), z(i)/), style=style, fmt=fmt)
+      call cmlAddCoords(xf, coords=(/x(i),y(i),z(i)/), style=style, fmt=fmt)
       if (present(occupancies)) call xml_AddAttribute(xf, "occupancy", occupancies(i))
       if (present(atomRefs)) call xml_AddAttribute(xf, "ref", atomRefs(i))
       if (present(atomIds)) call xml_AddAttribute(xf, "id", atomIds(i))
       call xml_EndElement(xf, "atom")
      enddo
+
 
     call xml_EndElement(xf, "atomArray")
 #endif
@@ -690,7 +704,7 @@ contains
     character(len=*), intent(in), optional :: style
 
 #ifndef DUMMYLIB
-    integer          :: i
+    integer          :: i, natoms
 
     if (present(style)) then
       if (style=="DL_POLY") then
@@ -701,9 +715,12 @@ contains
       endif
     endif
 
+
     call xml_NewElement(xf, "atomArray")
 
-    do i = 1, size(coords,2)
+    natoms = size(coords,2)
+
+    do i = 1, natoms
       call xml_NewElement(xf, "atom")
       call xml_AddAttribute(xf, "elementType", trim(elements(i)))
       call cmlAddCoords(xf, coords=coords(:,i), style=style, fmt=fmt)
@@ -712,6 +729,7 @@ contains
       if (present(atomIds)) call xml_AddAttribute(xf, "id", atomIds(i))
       call xml_EndElement(xf, "atom")
      enddo
+
 
     call xml_EndElement(xf, "atomArray")
 #endif
@@ -736,12 +754,14 @@ contains
       if (style=="DL_POLY") then
         if (present(atomRefs).or.present(occupancies).or.present(atomIds).or.present(fmt)) &
           call FoX_error("With DL_POLY style, no optional arguments permitted.")
-        call addDlpolyMatrix(xf, coords(:, :natoms), elements(:natoms))
+        call addDlpolyMatrix(xf, coords(:,:natoms), elements)
         return
       endif
     endif
 
+
     call xml_NewElement(xf, "atomArray")
+
 
     do i = 1, natoms
       call xml_NewElement(xf, "atom")
@@ -752,6 +772,7 @@ contains
       if (present(atomIds)) call xml_AddAttribute(xf, "id", atomIds(i))
       call xml_EndElement(xf, "atom")
      enddo
+
 
     call xml_EndElement(xf, "atomArray")
 #endif
@@ -771,7 +792,7 @@ contains
     character(len=*), intent(in), optional :: style
 
 #ifndef DUMMYLIB
-    integer          :: i
+    integer          :: i, natoms
 
     if (present(style)) then
       if (style=="DL_POLY") then
@@ -782,17 +803,21 @@ contains
       endif
     endif
 
+
     call xml_NewElement(xf, "atomArray")
 
-    do i = 1, size(x)
+    natoms = size(x)
+
+    do i = 1, natoms
       call xml_NewElement(xf, "atom")
       call xml_AddAttribute(xf, "elementType", trim(elements(i)))
-      call cmlAddCoords(xf, coords=(/x(i), y(i), z(i)/), style=style, fmt=fmt)
+      call cmlAddCoords(xf, coords=(/x(i),y(i),z(i)/), style=style, fmt=fmt)
       if (present(occupancies)) call xml_AddAttribute(xf, "occupancy", occupancies(i))
       if (present(atomRefs)) call xml_AddAttribute(xf, "ref", atomRefs(i))
-      if (present(atomIds)) call xml_AddAttribute(xf, "id", atomIDs(i))
+      if (present(atomIds)) call xml_AddAttribute(xf, "id", atomIds(i))
       call xml_EndElement(xf, "atom")
      enddo
+
 
     call xml_EndElement(xf, "atomArray")
 
@@ -820,22 +845,25 @@ contains
       if (style=="DL_POLY") then
         if (present(atomRefs).or.present(occupancies).or.present(atomIds).or.present(fmt)) &
           call FoX_error("With DL_POLY style, no optional arguments permitted.")
-        call addDlpolyMatrix(xf, x(:natoms), y(:natoms), z(:natoms), elements(:natoms))
+        call addDlpolyMatrix(xf, x(:natoms), y(:natoms), z(:natoms), elements)
         return
       endif
     endif
 
+
     call xml_NewElement(xf, "atomArray")
+
 
     do i = 1, natoms
       call xml_NewElement(xf, "atom")
       call xml_AddAttribute(xf, "elementType", trim(elements(i)))
-      call cmlAddCoords(xf, coords=(/x(i), y(i), z(i)/), style=style, fmt=fmt)
+      call cmlAddCoords(xf, coords=(/x(i),y(i),z(i)/), style=style, fmt=fmt)
       if (present(occupancies)) call xml_AddAttribute(xf, "occupancy", occupancies(i))
       if (present(atomRefs)) call xml_AddAttribute(xf, "ref", atomRefs(i))
       if (present(atomIds)) call xml_AddAttribute(xf, "id", atomIds(i))
       call xml_EndElement(xf, "atom")
      enddo
+
 
     call xml_EndElement(xf, "atomArray")
 #endif
