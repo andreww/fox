@@ -51,6 +51,10 @@ module FoX_wcml
   public :: cmlEndMetadataList
   public :: cmlAddMetadata
 
+  public :: cmlStartMolecule
+  public :: cmlEndMolecule
+  public :: cmlAddAtoms
+  public :: cmlAddParticles
   public :: cmlAddMolecule
 
   public :: cmlAddBand

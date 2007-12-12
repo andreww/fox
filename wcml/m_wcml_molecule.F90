@@ -66,9 +66,13 @@ module m_wcml_molecule
   end interface
 #endif
 
-  public :: cmlAddMolecule
+  public :: cmlStartMolecule
+  public :: cmlEndMolecule
+
   public :: cmlAddAtoms
   public :: cmlAddParticles
+
+  public :: cmlAddMolecule
 
 contains
 
