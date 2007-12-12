@@ -42,11 +42,6 @@ module m_wcml_molecule
   end interface
 
 #ifndef DUMMYLIB
-  interface cmlAddAtom
-    module procedure cmlAddAtom_sp
-    module procedure cmlAddAtom_dp
-  end interface
-
   interface cmlAddCoords
     module procedure cmlAddCoords_sp
     module procedure cmlAddCoords_dp
@@ -262,8 +257,9 @@ contains
     call xml_NewElement(xf, "atomArray")
 
     do i = 1, size(coords,2)
-      call cmlAddAtom(xf=xf, elem=trim(elements(i)), &
-           coords=coords(:, i), style=style, fmt=fmt)
+      call xml_NewElement(xf, "atom")
+      call xml_AddAttribute(xf, "elementType", trim(elements(i)))
+      call cmlAddCoords(xf, coords=coords(:,i), style=style, fmt=fmt)
       if (present(occupancies)) call xml_AddAttribute(xf, "occupancy", occupancies(i))
       if (present(atomRefs)) call xml_AddAttribute(xf, "ref", atomRefs(i))
       if (present(atomIds)) call xml_AddAttribute(xf, "id", atomIds(i))
@@ -301,8 +297,9 @@ contains
     call xml_NewElement(xf, "atomArray")
 
     do i = 1, natoms
-      call cmlAddAtom(xf=xf, elem=trim(elements(i)), &
-           coords=coords(:, i), style=style, fmt=fmt)
+      call xml_NewElement(xf, "atom")
+      call xml_AddAttribute(xf, "elementType", trim(elements(i)))
+      call cmlAddCoords(xf, coords=coords(:,i), style=style, fmt=fmt)
       if (present(occupancies)) call xml_AddAttribute(xf, "occupancy", occupancies(i))
       if (present(atomRefs)) call xml_AddAttribute(xf, "ref", atomRefs(i))
       if (present(atomIds)) call xml_AddAttribute(xf, "id", atomIds(i))
@@ -341,8 +338,9 @@ contains
     call xml_NewElement(xf, "atomArray")
 
     do i = 1, size(x)
-      call cmlAddAtom(xf=xf, elem=trim(elements(i)), &
-           coords=(/x(i), y(i), z(i)/), style=style, fmt=fmt)
+      call xml_NewElement(xf, "atom")
+      call xml_AddAttribute(xf, "elementType", trim(elements(i)))
+      call cmlAddCoords(xf, coords=(/x(i), y(i), z(i)/), style=style, fmt=fmt)
       if (present(occupancies)) call xml_AddAttribute(xf, "occupancy", occupancies(i))
       if (present(atomRefs)) call xml_AddAttribute(xf, "ref", atomRefs(i))
       if (present(atomIds)) call xml_AddAttribute(xf, "id", atomIDs(i))
@@ -383,8 +381,9 @@ contains
     call xml_NewElement(xf, "atomArray")
 
     do i = 1, natoms
-      call cmlAddAtom(xf=xf, elem=trim(elements(i)), &
-           coords=(/x(i), y(i), z(i)/), style=style, fmt=fmt)
+      call xml_NewElement(xf, "atom")
+      call xml_AddAttribute(xf, "elementType", trim(elements(i)))
+      call cmlAddCoords(xf, coords=(/x(i), y(i), z(i)/), style=style, fmt=fmt)
       if (present(occupancies)) call xml_AddAttribute(xf, "occupancy", occupancies(i))
       if (present(atomRefs)) call xml_AddAttribute(xf, "ref", atomRefs(i))
       if (present(atomIds)) call xml_AddAttribute(xf, "id", atomIds(i))
@@ -397,28 +396,6 @@ contains
   end subroutine cmlAddAtoms_3_sp_sh
 
 #ifndef DUMMYLIB
-  subroutine cmlAddAtom_sp(xf, elem, coords, id, charge, hCount, occupancy, &
-       fmt, style)
-    type(xmlf_t), intent(inout) :: xf
-    real(kind=sp), intent(in), dimension(:) :: coords
-    character(len=*), intent(in) :: elem
-    integer, intent(in), optional           :: charge
-    integer, intent(in), optional           :: hCount
-    real(kind=sp), intent(in), optional     :: occupancy
-    character(len=*), intent(in), optional  :: id
-    character(len=*), intent(in), optional  :: fmt
-    character(len=*), intent(in), optional  :: style
-
-    call xml_NewElement(xf, "atom")
-    call xml_AddAttribute(xf, "elementType", elem)
-    if (present(id))        call xml_AddAttribute(xf, "id", id)
-    if (present(charge))    call xml_AddAttribute(xf, "formalCharge", charge)
-    if (present(hCount))    call xml_AddAttribute(xf, "hydrogenCount", hCount)
-    if (present(occupancy)) call xml_AddAttribute(xf, "occupancy", occupancy, fmt)
-
-    call cmlAddCoords_sp(xf, coords, style, fmt)
-
-  end subroutine cmlAddAtom_sp
 
   subroutine cmlAddCoords_sp(xf, coords, style, fmt)
     type(xmlf_t), intent(inout) :: xf
@@ -727,8 +704,9 @@ contains
     call xml_NewElement(xf, "atomArray")
 
     do i = 1, size(coords,2)
-      call cmlAddAtom(xf=xf, elem=trim(elements(i)), &
-           coords=coords(:, i), style=style, fmt=fmt)
+      call xml_NewElement(xf, "atom")
+      call xml_AddAttribute(xf, "elementType", trim(elements(i)))
+      call cmlAddCoords(xf, coords=coords(:,i), style=style, fmt=fmt)
       if (present(occupancies)) call xml_AddAttribute(xf, "occupancy", occupancies(i))
       if (present(atomRefs)) call xml_AddAttribute(xf, "ref", atomRefs(i))
       if (present(atomIds)) call xml_AddAttribute(xf, "id", atomIds(i))
@@ -766,8 +744,9 @@ contains
     call xml_NewElement(xf, "atomArray")
 
     do i = 1, natoms
-      call cmlAddAtom(xf=xf, elem=trim(elements(i)), &
-           coords=coords(:, i), style=style, fmt=fmt)
+      call xml_NewElement(xf, "atom")
+      call xml_AddAttribute(xf, "elementType", trim(elements(i)))
+      call cmlAddCoords(xf, coords=coords(:,i), style=style, fmt=fmt)
       if (present(occupancies)) call xml_AddAttribute(xf, "occupancy", occupancies(i))
       if (present(atomRefs)) call xml_AddAttribute(xf, "ref", atomRefs(i))
       if (present(atomIds)) call xml_AddAttribute(xf, "id", atomIds(i))
@@ -806,8 +785,9 @@ contains
     call xml_NewElement(xf, "atomArray")
 
     do i = 1, size(x)
-      call cmlAddAtom(xf=xf, elem=trim(elements(i)), &
-           coords=(/x(i), y(i), z(i)/), style=style, fmt=fmt)
+      call xml_NewElement(xf, "atom")
+      call xml_AddAttribute(xf, "elementType", trim(elements(i)))
+      call cmlAddCoords(xf, coords=(/x(i), y(i), z(i)/), style=style, fmt=fmt)
       if (present(occupancies)) call xml_AddAttribute(xf, "occupancy", occupancies(i))
       if (present(atomRefs)) call xml_AddAttribute(xf, "ref", atomRefs(i))
       if (present(atomIds)) call xml_AddAttribute(xf, "id", atomIDs(i))
@@ -848,8 +828,9 @@ contains
     call xml_NewElement(xf, "atomArray")
 
     do i = 1, natoms
-      call cmlAddAtom(xf=xf, elem=trim(elements(i)), &
-           coords=(/x(i), y(i), z(i)/), style=style, fmt=fmt)
+      call xml_NewElement(xf, "atom")
+      call xml_AddAttribute(xf, "elementType", trim(elements(i)))
+      call cmlAddCoords(xf, coords=(/x(i), y(i), z(i)/), style=style, fmt=fmt)
       if (present(occupancies)) call xml_AddAttribute(xf, "occupancy", occupancies(i))
       if (present(atomRefs)) call xml_AddAttribute(xf, "ref", atomRefs(i))
       if (present(atomIds)) call xml_AddAttribute(xf, "id", atomIds(i))
@@ -862,28 +843,6 @@ contains
   end subroutine cmlAddAtoms_3_dp_sh
 
 #ifndef DUMMYLIB
-  subroutine cmlAddAtom_dp(xf, elem, coords, id, charge, hCount, occupancy, &
-       fmt, style)
-    type(xmlf_t), intent(inout) :: xf
-    real(kind=dp), intent(in), dimension(:) :: coords
-    character(len=*), intent(in) :: elem
-    integer, intent(in), optional           :: charge
-    integer, intent(in), optional           :: hCount
-    real(kind=dp), intent(in), optional     :: occupancy
-    character(len=*), intent(in), optional  :: id
-    character(len=*), intent(in), optional  :: fmt
-    character(len=*), intent(in), optional  :: style
-
-    call xml_NewElement(xf, "atom")
-    call xml_AddAttribute(xf, "elementType", elem)
-    if (present(id))        call xml_AddAttribute(xf, "id", id)
-    if (present(charge))    call xml_AddAttribute(xf, "formalCharge", charge)
-    if (present(hCount))    call xml_AddAttribute(xf, "hydrogenCount", hCount)
-    if (present(occupancy)) call xml_AddAttribute(xf, "occupancy", occupancy, fmt)
-
-    call cmlAddCoords_dp(xf, coords, style, fmt)
-
-  end subroutine cmlAddAtom_dp
 
   subroutine cmlAddCoords_dp(xf, coords, style, fmt)
     type(xmlf_t), intent(inout) :: xf
