@@ -1,7 +1,7 @@
 dnl
-include(`foreach.m4')dnl
+include(`foreach.m4')`'dnl
 dnl
-include(`common.m4')dnl
+include(`common.m4')`'dnl
 dnl
 dnl Below we only use arguments with a type of xsd:string
 define(`TOHWM4_moleculeargs', `(dictRef,convention,title,id,ref,formula,chirality,role)')dnl
@@ -16,7 +16,7 @@ m4_foreach(`x',TOHWM4_moleculeargs,`TOHWM4_dummyargdecl(x)')
 define(`TOHWM4_moleculeargsuse',`dnl
 m4_foreach(`x',TOHWM4_moleculeargs,`TOHWM4_dummyarguse(x)')
 ')dnl
-define(`TOHWM4_molecule_subs', `dnl
+define(`TOHWM4_molecule_subs', ``'dnl
   subroutine cmlAddMolecule$1(xf, elements, atomRefs, coords, occupancies, atomIds, style, fmt &
 TOHWM4_moleculeargslist)
     type(xmlf_t), intent(inout) :: xf
@@ -31,35 +31,13 @@ TOHWM4_moleculeargslist)
 TOHWM4_moleculeargsdecl
 
 #ifndef DUMMYLIB
-    integer          :: i
 
-    if (present(style)) then
-      if (style=="DL_POLY") then
-        if (present(atomRefs).or.present(occupancies).or.present(atomIds).or.present(fmt)) &
-          call FoX_error("With DL_POLY style, no optional arguments permitted.")
-        call addDlpolyMatrix_$1(xf, coords, elements)
-        return
-      endif
-    endif
+    call cmlStartMolecule(xf &
+TOHWM4_moleculeargslist)
+    call cmlAddAtoms(xf, elements, atomRefs, coords, occupancies, atomIds, style, fmt)
+    call cmlEndMolecule(xf)
 
-    call xml_NewElement(xf, "molecule")
-
-TOHWM4_moleculeargsuse
-
-    call xml_NewElement(xf, "atomArray")
-
-    do i = 1, size(coords,2)
-      call cmlAddAtom(xf=xf, elem=trim(elements(i)), &
-           coords=coords(:, i), style=style, fmt=fmt)
-      if (present(occupancies)) call xml_AddAttribute(xf, "occupancy", occupancies(i))
-      if (present(atomRefs)) call xml_AddAttribute(xf, "ref", atomRefs(i))
-      if (present(atomIds)) call xml_AddAttribute(xf, "id", atomIds(i))
-      call xml_EndElement(xf, "atom")
-     enddo
-
-    call xml_EndElement(xf, "atomArray")
-    call xml_EndElement(xf, "molecule")
-#endif
+#endif DUMMYLIB
 
   end subroutine cmlAddMolecule$1
 
@@ -79,35 +57,10 @@ TOHWM4_moleculeargslist)
 TOHWM4_moleculeargsdecl
 
 #ifndef DUMMYLIB
-    integer          :: i
-
-    if (present(style)) then
-      if (style=="DL_POLY") then
-        if (present(atomRefs).or.present(occupancies).or.present(atomIds).or.present(fmt)) &
-          call FoX_error("With DL_POLY style, no optional arguments permitted.")
-        call addDlpolyMatrix_$1(xf, coords(:, :natoms), elements(:natoms))
-        return
-      endif
-    endif
-
-    call xml_NewElement(xf, "molecule")
-
-TOHWM4_moleculeargsuse
-
-    call xml_NewElement(xf, "atomArray")
-
-
-    do i = 1, natoms
-      call cmlAddAtom(xf=xf, elem=trim(elements(i)), &
-           coords=coords(:, i), style=style, fmt=fmt)
-      if (present(occupancies)) call xml_AddAttribute(xf, "occupancy", occupancies(i))
-      if (present(atomRefs)) call xml_AddAttribute(xf, "ref", atomRefs(i))
-      if (present(atomIds)) call xml_AddAttribute(xf, "id", atomIds(i))
-      call xml_EndElement(xf, "atom")
-     enddo
-
-    call xml_EndElement(xf, "atomArray")
-    call xml_EndElement(xf, "molecule")
+    call cmlStartMolecule(xf &
+TOHWM4_moleculeargslist)
+    call cmlAddAtoms(xf, natoms, elements, atomRefs, coords, occupancies, atomIds, style, fmt)
+    call cmlEndMolecule(xf)
 #endif
 
   end subroutine cmlAddMolecule$1_sh
@@ -129,34 +82,10 @@ TOHWM4_moleculeargslist)
 TOHWM4_moleculeargsdecl
 
 #ifndef DUMMYLIB
-    integer          :: i
-
-    if (present(style)) then
-      if (style=="DL_POLY") then
-        if (present(atomRefs).or.present(occupancies).or.present(atomIds).or.present(fmt)) &
-          call FoX_error("With DL_POLY style, no optional arguments permitted.")
-        call addDlpolyMatrix_3_$1(xf, x, y, z, elements)
-        return
-      endif
-    endif
-
-    call xml_NewElement(xf, "molecule")
-
-TOHWM4_moleculeargsuse
-
-    call xml_NewElement(xf, "atomArray")
-
-    do i = 1, size(x)
-      call cmlAddAtom(xf=xf, elem=trim(elements(i)), &
-           coords=(/x(i), y(i), z(i)/), style=style, fmt=fmt)
-      if (present(occupancies)) call xml_AddAttribute(xf, "occupancy", occupancies(i))
-      if (present(atomRefs)) call xml_AddAttribute(xf, "ref", atomRefs(i))
-      if (present(atomIds)) call xml_AddAttribute(xf, "id", atomIDs(i))
-      call xml_EndElement(xf, "atom")
-     enddo
-
-    call xml_EndElement(xf, "atomArray")
-    call xml_EndElement(xf, "molecule")
+    call cmlStartMolecule(xf &
+TOHWM4_moleculeargslist)
+    call cmlAddAtoms(xf, elements, x, y, z, atomRefs, occupancies, atomIds, style, fmt)
+    call cmlEndMolecule(xf)
 #endif
 
   end subroutine cmlAddMolecule_3_$1
@@ -177,6 +106,147 @@ TOHWM4_moleculeargslist)
     character(len=*), intent(in), optional :: style
 
 TOHWM4_moleculeargsdecl
+
+#ifndef DUMMYLIB
+    call cmlStartMolecule(xf &
+TOHWM4_moleculeargslist)
+    call cmlAddAtoms(xf, natoms, elements, x, y, z, atomRefs, occupancies, atomIds, style, fmt)
+    call cmlEndMolecule(xf)
+#endif
+
+  end subroutine cmlAddMolecule_3_$1_sh
+
+  subroutine cmlAddAtoms$1(xf, elements, atomRefs, coords, occupancies, atomIds, style, fmt)
+    type(xmlf_t), intent(inout) :: xf
+    real(kind=$1), intent(in)              :: coords(:, :)
+    character(len=*), intent(in)           :: elements(:)
+    character(len=*), intent(in), optional :: atomRefs(:) 
+    real(kind=$1), intent(in), optional :: occupancies(:)
+    character(len=*), intent(in), optional :: atomIds(:)
+    character(len=*), intent(in), optional :: fmt
+    character(len=*), intent(in), optional :: style
+
+#ifndef DUMMYLIB
+    integer          :: i
+
+    if (present(style)) then
+      if (style=="DL_POLY") then
+        if (present(atomRefs).or.present(occupancies).or.present(atomIds).or.present(fmt)) &
+          call FoX_error("With DL_POLY style, no optional arguments permitted.")
+        call addDlpolyMatrix_$1(xf, coords, elements)
+        return
+      endif
+    endif
+
+    call xml_NewElement(xf, "atomArray")
+
+    do i = 1, size(coords,2)
+      call cmlAddAtom(xf=xf, elem=trim(elements(i)), &
+           coords=coords(:, i), style=style, fmt=fmt)
+      if (present(occupancies)) call xml_AddAttribute(xf, "occupancy", occupancies(i))
+      if (present(atomRefs)) call xml_AddAttribute(xf, "ref", atomRefs(i))
+      if (present(atomIds)) call xml_AddAttribute(xf, "id", atomIds(i))
+      call xml_EndElement(xf, "atom")
+     enddo
+
+    call xml_EndElement(xf, "atomArray")
+#endif
+
+  end subroutine cmlAddAtoms$1
+
+  subroutine cmlAddAtoms$1_sh(xf, natoms, elements, atomRefs, coords, occupancies, atomIds, style, fmt)
+    type(xmlf_t), intent(inout) :: xf
+    integer, intent(in) :: natoms
+    real(kind=$1), intent(in)              :: coords(3, natoms)
+    character(len=*), intent(in)           :: elements(natoms)
+    character(len=*), intent(in), optional :: atomRefs(natoms) 
+    real(kind=$1), intent(in), optional :: occupancies(natoms) 
+    character(len=*), intent(in), optional :: atomIds(natoms) 
+    character(len=*), intent(in), optional :: fmt
+    character(len=*), intent(in), optional :: style
+
+#ifndef DUMMYLIB
+    integer          :: i
+
+    if (present(style)) then
+      if (style=="DL_POLY") then
+        if (present(atomRefs).or.present(occupancies).or.present(atomIds).or.present(fmt)) &
+          call FoX_error("With DL_POLY style, no optional arguments permitted.")
+        call addDlpolyMatrix_$1(xf, coords(:, :natoms), elements(:natoms))
+        return
+      endif
+    endif
+
+    call xml_NewElement(xf, "atomArray")
+
+    do i = 1, natoms
+      call cmlAddAtom(xf=xf, elem=trim(elements(i)), &
+           coords=coords(:, i), style=style, fmt=fmt)
+      if (present(occupancies)) call xml_AddAttribute(xf, "occupancy", occupancies(i))
+      if (present(atomRefs)) call xml_AddAttribute(xf, "ref", atomRefs(i))
+      if (present(atomIds)) call xml_AddAttribute(xf, "id", atomIds(i))
+      call xml_EndElement(xf, "atom")
+     enddo
+
+    call xml_EndElement(xf, "atomArray")
+#endif
+
+  end subroutine cmlAddAtoms$1_sh
+
+  subroutine cmlAddAtoms_3_$1(xf, elements, x, y, z, atomRefs, occupancies, atomIds, style, fmt)
+    type(xmlf_t), intent(inout) :: xf
+    real(kind=$1), intent(in)              :: x(:)
+    real(kind=$1), intent(in)              :: y(:)
+    real(kind=$1), intent(in)              :: z(:)
+    character(len=*), intent(in)           :: elements(:)
+    character(len=*), intent(in), optional :: atomRefs(:) 
+    character(len=*), intent(in), optional :: atomIds(:) 
+    real(kind=$1), intent(in), optional :: occupancies(:) 
+    character(len=*), intent(in), optional :: fmt
+    character(len=*), intent(in), optional :: style
+
+#ifndef DUMMYLIB
+    integer          :: i
+
+    if (present(style)) then
+      if (style=="DL_POLY") then
+        if (present(atomRefs).or.present(occupancies).or.present(atomIds).or.present(fmt)) &
+          call FoX_error("With DL_POLY style, no optional arguments permitted.")
+        call addDlpolyMatrix_3_$1(xf, x, y, z, elements)
+        return
+      endif
+    endif
+
+    call xml_NewElement(xf, "atomArray")
+
+    do i = 1, size(x)
+      call cmlAddAtom(xf=xf, elem=trim(elements(i)), &
+           coords=(/x(i), y(i), z(i)/), style=style, fmt=fmt)
+      if (present(occupancies)) call xml_AddAttribute(xf, "occupancy", occupancies(i))
+      if (present(atomRefs)) call xml_AddAttribute(xf, "ref", atomRefs(i))
+      if (present(atomIds)) call xml_AddAttribute(xf, "id", atomIDs(i))
+      call xml_EndElement(xf, "atom")
+     enddo
+
+    call xml_EndElement(xf, "atomArray")
+
+#endif
+
+  end subroutine cmlAddAtoms_3_$1
+
+  subroutine cmlAddAtoms_3_$1_sh(xf, natoms, elements, x, y, z, atomRefs, occupancies, atomIds, style, fmt)
+    type(xmlf_t), intent(inout) :: xf
+    integer, intent(in) :: natoms
+    real(kind=$1), intent(in)              :: x(natoms)
+    real(kind=$1), intent(in)              :: y(natoms)
+    real(kind=$1), intent(in)              :: z(natoms)
+    character(len=*), intent(in)           :: elements(natoms)
+    character(len=*), intent(in), optional :: atomRefs(natoms)
+    character(len=*), intent(in), optional :: atomIds(natoms)
+    real(kind=$1), intent(in), optional :: occupancies(natoms)
+    character(len=*), intent(in), optional :: fmt
+    character(len=*), intent(in), optional :: style
+
 #ifndef DUMMYLIB
     integer          :: i
 
@@ -188,10 +258,6 @@ TOHWM4_moleculeargsdecl
         return
       endif
     endif
-
-    call xml_NewElement(xf, "molecule")
-
-TOHWM4_moleculeargsuse
 
     call xml_NewElement(xf, "atomArray")
 
@@ -205,9 +271,10 @@ TOHWM4_moleculeargsuse
      enddo
 
     call xml_EndElement(xf, "atomArray")
-    call xml_EndElement(xf, "molecule")
 #endif
-  end subroutine cmlAddMolecule_3_$1_sh
+
+  end subroutine cmlAddAtoms_3_$1_sh
+
 
 #ifndef DUMMYLIB
   subroutine cmlAddAtom_$1(xf, elem, coords, id, charge, hCount, occupancy, &
@@ -337,6 +404,7 @@ TOHWM4_moleculeargsuse
       call xml_AddCharacters(xf, "0 0 0")
       call xml_AddNewline(xf)
     enddo
+    call xml_EndElement(xf, "matrix")
   end subroutine addDlpolyMatrix_$1
 
   subroutine addDlpolyMatrix_3_$1(xf, x, y, z, elems)
@@ -364,6 +432,7 @@ TOHWM4_moleculeargsuse
       call xml_AddCharacters(xf, "0 0 0")
       call xml_AddNewline(xf)
     enddo
+    call xml_EndElement(xf, "matrix")
   end subroutine addDlpolyMatrix_3_$1
 #endif
 
@@ -401,6 +470,17 @@ module m_wcml_molecule
     module procedure cmlAddMolecule_3_DP_sh
   end interface
 
+  interface cmlAddAtoms
+    module procedure cmlAddAtomsSP
+    module procedure cmlAddAtomsSP_sh
+    module procedure cmlAddAtoms_3_SP
+    module procedure cmlAddAtoms_3_SP_sh
+    module procedure cmlAddAtomsDP
+    module procedure cmlAddAtomsDP_sh
+    module procedure cmlAddAtoms_3_DP
+    module procedure cmlAddAtoms_3_DP_sh
+  end interface
+
 #ifndef DUMMYLIB
   interface cmlAddAtom
     module procedure cmlAddAtom_sp
@@ -411,6 +491,25 @@ module m_wcml_molecule
   public :: cmlAddMolecule
 
 contains
+
+  subroutine cmlStartMolecule(xf &
+TOHWM4_moleculeargslist)
+    type(xmlf_t), intent(inout) :: xf
+
+TOHWM4_moleculeargsdecl
+    
+    call xml_NewElement(xf, "molecule")
+
+TOHWM4_moleculeargsuse
+
+  end subroutine cmlStartMolecule
+
+  subroutine cmlEndMolecule(xf)
+    type(xmlf_t), intent(inout) :: xf
+
+    call xml_EndElement(xf, "molecule")
+
+  end subroutine cmlEndMolecule
 
 TOHWM4_molecule_subs(`sp')
 

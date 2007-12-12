@@ -8,22 +8,24 @@
   xmlns:cmlUnits="http://www.xml-cml.org/units/units"
   xmlns:siUnits="http://www.xml-cml.org/units/siUnits"
   xmlns:atomicUnits="http://www.xml-cml.org/units/atomic">
-  <matrix nrows="4" ncols="11" dataType="xsd:string">
-    C   1
-    0.00000e0 0.00000e0 0.00000e0
-    0 0 0
-    0 0 0
-    O   2
-    0.00000e0 1.20300e0 0.00000e0
-    0 0 0
-    0 0 0
-    H   3
-    0.00000e0 -5.79000e-1 0.00000e0
-    0 0 0
-    0 0 0
-    H   4
-    0.00000e0 -5.79000e-1 0.00000e0
-    0 0 0
-    0 0 0
-    </matrix>
+  <molecule title="Formaldehyde">
+    <matrix nrows="4" ncols="11" dataType="xsd:string">
+      C   1
+      0.00000e0 0.00000e0 0.00000e0
+      0 0 0
+      0 0 0
+      O   2
+      0.00000e0 1.20300e0 0.00000e0
+      0 0 0
+      0 0 0
+      H   3
+      -9.34000e-1 -5.79000e-1 0.00000e0
+      0 0 0
+      0 0 0
+      H   4
+      9.34000e-1 -5.79000e-1 0.00000e0
+      0 0 0
+      0 0 0
+      </matrix>
+  </molecule>
 </cml>

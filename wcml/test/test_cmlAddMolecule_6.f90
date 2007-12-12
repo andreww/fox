@@ -20,7 +20,7 @@ program test
   call cmlBeginFile(xf, filename, unit=-1)
   call cmlStartCml(xf)
   
-  call cmlAddMolecule(xf, x=coords(:,1), y=coords(2,:), z=coords(3,:), elements=elems, title="Formaldehyde", style="DL_POLY")
+  call cmlAddMolecule(xf, x=coords(1,:), y=coords(2,:), z=coords(3,:), elements=elems, title="Formaldehyde", style="DL_POLY")
 
   call cmlFinishFile(xf)
 
