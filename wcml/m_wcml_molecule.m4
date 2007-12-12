@@ -38,6 +38,18 @@ define(`TOHWM4_writeatom', `
       call xml_EndElement(xf, "atom")
      enddo
 ')dnl
+dnl
+define(`TOHWM4_writeparticle', `
+    do i = 1, natoms
+      call xml_NewElement(xf, "particle")
+      if (present(elements)) call xml_AddAttribute(xf, "elementType", trim(elements(i)))
+      call cmlAddCoords(xf, coords=$1, style=style, fmt=fmt)
+      if (present(occupancies)) call xml_AddAttribute(xf, "occupancy", occupancies(i))
+      if (present(atomRefs)) call xml_AddAttribute(xf, "ref", atomRefs(i))
+      if (present(atomIds)) call xml_AddAttribute(xf, "id", atomIds(i))
+      call xml_EndElement(xf, "particle")
+     enddo
+')dnl
 define(`TOHWM4_molecule_subs', ``'dnl
   subroutine cmlAddMolecule$1(xf, elements, atomRefs, coords, occupancies, atomIds, style, fmt &
 TOHWM4_moleculeargslist)
@@ -243,6 +255,111 @@ TOHWM4_writeatom(`(/x(i),y(i),z(i)/)')`'
 
   end subroutine cmlAddAtoms_3_$1_sh
 
+  subroutine cmlAddParticles$1(xf, elements, atomRefs, coords, occupancies, atomIds, style, fmt)
+    type(xmlf_t), intent(inout) :: xf
+    real(kind=$1), intent(in)              :: coords(:, :)
+    character(len=*), intent(in), optional :: elements(:)
+    character(len=*), intent(in), optional :: atomRefs(:) 
+    real(kind=$1), intent(in), optional :: occupancies(:)
+    character(len=*), intent(in), optional :: atomIds(:)
+    character(len=*), intent(in), optional :: fmt
+    character(len=*), intent(in), optional :: style
+
+#ifndef DUMMYLIB
+    integer          :: i, natoms
+
+TOHWM4_dlpolymoleculecheck(`coords')`'
+
+    call xml_NewElement(xf, "atomArray")
+
+    natoms = size(coords,2)
+TOHWM4_writeparticle(`coords(:,i)')`'
+
+    call xml_EndElement(xf, "atomArray")
+#endif
+
+  end subroutine cmlAddParticles$1
+
+  subroutine cmlAddParticles$1_sh(xf, natoms, elements, atomRefs, coords, occupancies, atomIds, style, fmt)
+    type(xmlf_t), intent(inout) :: xf
+    integer, intent(in) :: natoms
+    real(kind=$1), intent(in)              :: coords(3, natoms)
+    character(len=*), intent(in), optional :: elements(natoms)
+    character(len=*), intent(in), optional :: atomRefs(natoms) 
+    real(kind=$1), intent(in), optional :: occupancies(natoms) 
+    character(len=*), intent(in), optional :: atomIds(natoms) 
+    character(len=*), intent(in), optional :: fmt
+    character(len=*), intent(in), optional :: style
+
+#ifndef DUMMYLIB
+    integer          :: i
+
+TOHWM4_dlpolymoleculecheck(`coords(:,:natoms)')`'
+
+    call xml_NewElement(xf, "atomArray")
+
+TOHWM4_writeparticle(`coords(:,i)')`'
+
+    call xml_EndElement(xf, "atomArray")
+#endif
+
+  end subroutine cmlAddParticles$1_sh
+
+  subroutine cmlAddParticles_3_$1(xf, elements, x, y, z, atomRefs, occupancies, atomIds, style, fmt)
+    type(xmlf_t), intent(inout) :: xf
+    real(kind=$1), intent(in)              :: x(:)
+    real(kind=$1), intent(in)              :: y(:)
+    real(kind=$1), intent(in)              :: z(:)
+    character(len=*), intent(in), optional :: elements(:)
+    character(len=*), intent(in), optional :: atomRefs(:) 
+    character(len=*), intent(in), optional :: atomIds(:) 
+    real(kind=$1), intent(in), optional :: occupancies(:) 
+    character(len=*), intent(in), optional :: fmt
+    character(len=*), intent(in), optional :: style
+
+#ifndef DUMMYLIB
+    integer          :: i, natoms
+
+TOHWM4_dlpolymoleculecheck(`x, y, z')`'
+
+    call xml_NewElement(xf, "atomArray")
+
+    natoms = size(x)
+TOHWM4_writeparticle(`(/x(i),y(i),z(i)/)')`'
+
+    call xml_EndElement(xf, "atomArray")
+
+#endif
+
+  end subroutine cmlAddParticles_3_$1
+
+  subroutine cmlAddParticles_3_$1_sh(xf, natoms, elements, x, y, z, atomRefs, occupancies, atomIds, style, fmt)
+    type(xmlf_t), intent(inout) :: xf
+    integer, intent(in) :: natoms
+    real(kind=$1), intent(in)              :: x(natoms)
+    real(kind=$1), intent(in)              :: y(natoms)
+    real(kind=$1), intent(in)              :: z(natoms)
+    character(len=*), intent(in), optional :: elements(natoms)
+    character(len=*), intent(in), optional :: atomRefs(natoms)
+    character(len=*), intent(in), optional :: atomIds(natoms)
+    real(kind=$1), intent(in), optional :: occupancies(natoms)
+    character(len=*), intent(in), optional :: fmt
+    character(len=*), intent(in), optional :: style
+
+#ifndef DUMMYLIB
+    integer          :: i
+
+TOHWM4_dlpolymoleculecheck(`x(:natoms), y(:natoms), z(:natoms)')`'
+
+    call xml_NewElement(xf, "atomArray")
+
+TOHWM4_writeparticle(`(/x(i),y(i),z(i)/)')`'
+
+    call xml_EndElement(xf, "atomArray")
+#endif
+
+  end subroutine cmlAddParticles_3_$1_sh
+
 #ifndef DUMMYLIB
 
   subroutine cmlAddCoords_$1(xf, coords, style, fmt)
@@ -435,6 +552,17 @@ module m_wcml_molecule
     module procedure cmlAddAtoms_3_DP_sh
   end interface
 
+  interface cmlAddParticles
+    module procedure cmlAddParticlesSP
+    module procedure cmlAddParticlesSP_sh
+    module procedure cmlAddParticles_3_SP
+    module procedure cmlAddParticles_3_SP_sh
+    module procedure cmlAddParticlesDP
+    module procedure cmlAddParticlesDP_sh
+    module procedure cmlAddParticles_3_DP
+    module procedure cmlAddParticles_3_DP_sh
+  end interface
+
 #ifndef DUMMYLIB
   interface cmlAddCoords
     module procedure cmlAddCoords_sp
@@ -451,6 +579,7 @@ module m_wcml_molecule
 
   public :: cmlAddMolecule
   public :: cmlAddAtoms
+  public :: cmlAddParticles
 
 contains
 

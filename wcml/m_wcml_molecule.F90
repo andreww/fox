@@ -41,6 +41,17 @@ module m_wcml_molecule
     module procedure cmlAddAtoms_3_DP_sh
   end interface
 
+  interface cmlAddParticles
+    module procedure cmlAddParticlesSP
+    module procedure cmlAddParticlesSP_sh
+    module procedure cmlAddParticles_3_SP
+    module procedure cmlAddParticles_3_SP_sh
+    module procedure cmlAddParticlesDP
+    module procedure cmlAddParticlesDP_sh
+    module procedure cmlAddParticles_3_DP
+    module procedure cmlAddParticles_3_DP_sh
+  end interface
+
 #ifndef DUMMYLIB
   interface cmlAddCoords
     module procedure cmlAddCoords_sp
@@ -57,6 +68,7 @@ module m_wcml_molecule
 
   public :: cmlAddMolecule
   public :: cmlAddAtoms
+  public :: cmlAddParticles
 
 contains
 
@@ -408,6 +420,183 @@ contains
 #endif
 
   end subroutine cmlAddAtoms_3_sp_sh
+
+  subroutine cmlAddParticlessp(xf, elements, atomRefs, coords, occupancies, atomIds, style, fmt)
+    type(xmlf_t), intent(inout) :: xf
+    real(kind=sp), intent(in)              :: coords(:, :)
+    character(len=*), intent(in), optional :: elements(:)
+    character(len=*), intent(in), optional :: atomRefs(:) 
+    real(kind=sp), intent(in), optional :: occupancies(:)
+    character(len=*), intent(in), optional :: atomIds(:)
+    character(len=*), intent(in), optional :: fmt
+    character(len=*), intent(in), optional :: style
+
+#ifndef DUMMYLIB
+    integer          :: i, natoms
+
+    if (present(style)) then
+      if (style=="DL_POLY") then
+        if (present(atomRefs).or.present(occupancies).or.present(atomIds).or.present(fmt)) &
+          call FoX_error("With DL_POLY style, no optional arguments permitted.")
+        call addDlpolyMatrix(xf, coords, elements)
+        return
+      endif
+    endif
+
+
+    call xml_NewElement(xf, "atomArray")
+
+    natoms = size(coords,2)
+
+    do i = 1, natoms
+      call xml_NewElement(xf, "particle")
+      if (present(elements)) call xml_AddAttribute(xf, "elementType", trim(elements(i)))
+      call cmlAddCoords(xf, coords=coords(:,i), style=style, fmt=fmt)
+      if (present(occupancies)) call xml_AddAttribute(xf, "occupancy", occupancies(i))
+      if (present(atomRefs)) call xml_AddAttribute(xf, "ref", atomRefs(i))
+      if (present(atomIds)) call xml_AddAttribute(xf, "id", atomIds(i))
+      call xml_EndElement(xf, "particle")
+     enddo
+
+
+    call xml_EndElement(xf, "atomArray")
+#endif
+
+  end subroutine cmlAddParticlessp
+
+  subroutine cmlAddParticlessp_sh(xf, natoms, elements, atomRefs, coords, occupancies, atomIds, style, fmt)
+    type(xmlf_t), intent(inout) :: xf
+    integer, intent(in) :: natoms
+    real(kind=sp), intent(in)              :: coords(3, natoms)
+    character(len=*), intent(in), optional :: elements(natoms)
+    character(len=*), intent(in), optional :: atomRefs(natoms) 
+    real(kind=sp), intent(in), optional :: occupancies(natoms) 
+    character(len=*), intent(in), optional :: atomIds(natoms) 
+    character(len=*), intent(in), optional :: fmt
+    character(len=*), intent(in), optional :: style
+
+#ifndef DUMMYLIB
+    integer          :: i
+
+    if (present(style)) then
+      if (style=="DL_POLY") then
+        if (present(atomRefs).or.present(occupancies).or.present(atomIds).or.present(fmt)) &
+          call FoX_error("With DL_POLY style, no optional arguments permitted.")
+        call addDlpolyMatrix(xf, coords(:,:natoms), elements)
+        return
+      endif
+    endif
+
+
+    call xml_NewElement(xf, "atomArray")
+
+
+    do i = 1, natoms
+      call xml_NewElement(xf, "particle")
+      if (present(elements)) call xml_AddAttribute(xf, "elementType", trim(elements(i)))
+      call cmlAddCoords(xf, coords=coords(:,i), style=style, fmt=fmt)
+      if (present(occupancies)) call xml_AddAttribute(xf, "occupancy", occupancies(i))
+      if (present(atomRefs)) call xml_AddAttribute(xf, "ref", atomRefs(i))
+      if (present(atomIds)) call xml_AddAttribute(xf, "id", atomIds(i))
+      call xml_EndElement(xf, "particle")
+     enddo
+
+
+    call xml_EndElement(xf, "atomArray")
+#endif
+
+  end subroutine cmlAddParticlessp_sh
+
+  subroutine cmlAddParticles_3_sp(xf, elements, x, y, z, atomRefs, occupancies, atomIds, style, fmt)
+    type(xmlf_t), intent(inout) :: xf
+    real(kind=sp), intent(in)              :: x(:)
+    real(kind=sp), intent(in)              :: y(:)
+    real(kind=sp), intent(in)              :: z(:)
+    character(len=*), intent(in), optional :: elements(:)
+    character(len=*), intent(in), optional :: atomRefs(:) 
+    character(len=*), intent(in), optional :: atomIds(:) 
+    real(kind=sp), intent(in), optional :: occupancies(:) 
+    character(len=*), intent(in), optional :: fmt
+    character(len=*), intent(in), optional :: style
+
+#ifndef DUMMYLIB
+    integer          :: i, natoms
+
+    if (present(style)) then
+      if (style=="DL_POLY") then
+        if (present(atomRefs).or.present(occupancies).or.present(atomIds).or.present(fmt)) &
+          call FoX_error("With DL_POLY style, no optional arguments permitted.")
+        call addDlpolyMatrix(xf, x, y, z, elements)
+        return
+      endif
+    endif
+
+
+    call xml_NewElement(xf, "atomArray")
+
+    natoms = size(x)
+
+    do i = 1, natoms
+      call xml_NewElement(xf, "particle")
+      if (present(elements)) call xml_AddAttribute(xf, "elementType", trim(elements(i)))
+      call cmlAddCoords(xf, coords=(/x(i),y(i),z(i)/), style=style, fmt=fmt)
+      if (present(occupancies)) call xml_AddAttribute(xf, "occupancy", occupancies(i))
+      if (present(atomRefs)) call xml_AddAttribute(xf, "ref", atomRefs(i))
+      if (present(atomIds)) call xml_AddAttribute(xf, "id", atomIds(i))
+      call xml_EndElement(xf, "particle")
+     enddo
+
+
+    call xml_EndElement(xf, "atomArray")
+
+#endif
+
+  end subroutine cmlAddParticles_3_sp
+
+  subroutine cmlAddParticles_3_sp_sh(xf, natoms, elements, x, y, z, atomRefs, occupancies, atomIds, style, fmt)
+    type(xmlf_t), intent(inout) :: xf
+    integer, intent(in) :: natoms
+    real(kind=sp), intent(in)              :: x(natoms)
+    real(kind=sp), intent(in)              :: y(natoms)
+    real(kind=sp), intent(in)              :: z(natoms)
+    character(len=*), intent(in), optional :: elements(natoms)
+    character(len=*), intent(in), optional :: atomRefs(natoms)
+    character(len=*), intent(in), optional :: atomIds(natoms)
+    real(kind=sp), intent(in), optional :: occupancies(natoms)
+    character(len=*), intent(in), optional :: fmt
+    character(len=*), intent(in), optional :: style
+
+#ifndef DUMMYLIB
+    integer          :: i
+
+    if (present(style)) then
+      if (style=="DL_POLY") then
+        if (present(atomRefs).or.present(occupancies).or.present(atomIds).or.present(fmt)) &
+          call FoX_error("With DL_POLY style, no optional arguments permitted.")
+        call addDlpolyMatrix(xf, x(:natoms), y(:natoms), z(:natoms), elements)
+        return
+      endif
+    endif
+
+
+    call xml_NewElement(xf, "atomArray")
+
+
+    do i = 1, natoms
+      call xml_NewElement(xf, "particle")
+      if (present(elements)) call xml_AddAttribute(xf, "elementType", trim(elements(i)))
+      call cmlAddCoords(xf, coords=(/x(i),y(i),z(i)/), style=style, fmt=fmt)
+      if (present(occupancies)) call xml_AddAttribute(xf, "occupancy", occupancies(i))
+      if (present(atomRefs)) call xml_AddAttribute(xf, "ref", atomRefs(i))
+      if (present(atomIds)) call xml_AddAttribute(xf, "id", atomIds(i))
+      call xml_EndElement(xf, "particle")
+     enddo
+
+
+    call xml_EndElement(xf, "atomArray")
+#endif
+
+  end subroutine cmlAddParticles_3_sp_sh
 
 #ifndef DUMMYLIB
 
@@ -869,6 +1058,183 @@ contains
 #endif
 
   end subroutine cmlAddAtoms_3_dp_sh
+
+  subroutine cmlAddParticlesdp(xf, elements, atomRefs, coords, occupancies, atomIds, style, fmt)
+    type(xmlf_t), intent(inout) :: xf
+    real(kind=dp), intent(in)              :: coords(:, :)
+    character(len=*), intent(in), optional :: elements(:)
+    character(len=*), intent(in), optional :: atomRefs(:) 
+    real(kind=dp), intent(in), optional :: occupancies(:)
+    character(len=*), intent(in), optional :: atomIds(:)
+    character(len=*), intent(in), optional :: fmt
+    character(len=*), intent(in), optional :: style
+
+#ifndef DUMMYLIB
+    integer          :: i, natoms
+
+    if (present(style)) then
+      if (style=="DL_POLY") then
+        if (present(atomRefs).or.present(occupancies).or.present(atomIds).or.present(fmt)) &
+          call FoX_error("With DL_POLY style, no optional arguments permitted.")
+        call addDlpolyMatrix(xf, coords, elements)
+        return
+      endif
+    endif
+
+
+    call xml_NewElement(xf, "atomArray")
+
+    natoms = size(coords,2)
+
+    do i = 1, natoms
+      call xml_NewElement(xf, "particle")
+      if (present(elements)) call xml_AddAttribute(xf, "elementType", trim(elements(i)))
+      call cmlAddCoords(xf, coords=coords(:,i), style=style, fmt=fmt)
+      if (present(occupancies)) call xml_AddAttribute(xf, "occupancy", occupancies(i))
+      if (present(atomRefs)) call xml_AddAttribute(xf, "ref", atomRefs(i))
+      if (present(atomIds)) call xml_AddAttribute(xf, "id", atomIds(i))
+      call xml_EndElement(xf, "particle")
+     enddo
+
+
+    call xml_EndElement(xf, "atomArray")
+#endif
+
+  end subroutine cmlAddParticlesdp
+
+  subroutine cmlAddParticlesdp_sh(xf, natoms, elements, atomRefs, coords, occupancies, atomIds, style, fmt)
+    type(xmlf_t), intent(inout) :: xf
+    integer, intent(in) :: natoms
+    real(kind=dp), intent(in)              :: coords(3, natoms)
+    character(len=*), intent(in), optional :: elements(natoms)
+    character(len=*), intent(in), optional :: atomRefs(natoms) 
+    real(kind=dp), intent(in), optional :: occupancies(natoms) 
+    character(len=*), intent(in), optional :: atomIds(natoms) 
+    character(len=*), intent(in), optional :: fmt
+    character(len=*), intent(in), optional :: style
+
+#ifndef DUMMYLIB
+    integer          :: i
+
+    if (present(style)) then
+      if (style=="DL_POLY") then
+        if (present(atomRefs).or.present(occupancies).or.present(atomIds).or.present(fmt)) &
+          call FoX_error("With DL_POLY style, no optional arguments permitted.")
+        call addDlpolyMatrix(xf, coords(:,:natoms), elements)
+        return
+      endif
+    endif
+
+
+    call xml_NewElement(xf, "atomArray")
+
+
+    do i = 1, natoms
+      call xml_NewElement(xf, "particle")
+      if (present(elements)) call xml_AddAttribute(xf, "elementType", trim(elements(i)))
+      call cmlAddCoords(xf, coords=coords(:,i), style=style, fmt=fmt)
+      if (present(occupancies)) call xml_AddAttribute(xf, "occupancy", occupancies(i))
+      if (present(atomRefs)) call xml_AddAttribute(xf, "ref", atomRefs(i))
+      if (present(atomIds)) call xml_AddAttribute(xf, "id", atomIds(i))
+      call xml_EndElement(xf, "particle")
+     enddo
+
+
+    call xml_EndElement(xf, "atomArray")
+#endif
+
+  end subroutine cmlAddParticlesdp_sh
+
+  subroutine cmlAddParticles_3_dp(xf, elements, x, y, z, atomRefs, occupancies, atomIds, style, fmt)
+    type(xmlf_t), intent(inout) :: xf
+    real(kind=dp), intent(in)              :: x(:)
+    real(kind=dp), intent(in)              :: y(:)
+    real(kind=dp), intent(in)              :: z(:)
+    character(len=*), intent(in), optional :: elements(:)
+    character(len=*), intent(in), optional :: atomRefs(:) 
+    character(len=*), intent(in), optional :: atomIds(:) 
+    real(kind=dp), intent(in), optional :: occupancies(:) 
+    character(len=*), intent(in), optional :: fmt
+    character(len=*), intent(in), optional :: style
+
+#ifndef DUMMYLIB
+    integer          :: i, natoms
+
+    if (present(style)) then
+      if (style=="DL_POLY") then
+        if (present(atomRefs).or.present(occupancies).or.present(atomIds).or.present(fmt)) &
+          call FoX_error("With DL_POLY style, no optional arguments permitted.")
+        call addDlpolyMatrix(xf, x, y, z, elements)
+        return
+      endif
+    endif
+
+
+    call xml_NewElement(xf, "atomArray")
+
+    natoms = size(x)
+
+    do i = 1, natoms
+      call xml_NewElement(xf, "particle")
+      if (present(elements)) call xml_AddAttribute(xf, "elementType", trim(elements(i)))
+      call cmlAddCoords(xf, coords=(/x(i),y(i),z(i)/), style=style, fmt=fmt)
+      if (present(occupancies)) call xml_AddAttribute(xf, "occupancy", occupancies(i))
+      if (present(atomRefs)) call xml_AddAttribute(xf, "ref", atomRefs(i))
+      if (present(atomIds)) call xml_AddAttribute(xf, "id", atomIds(i))
+      call xml_EndElement(xf, "particle")
+     enddo
+
+
+    call xml_EndElement(xf, "atomArray")
+
+#endif
+
+  end subroutine cmlAddParticles_3_dp
+
+  subroutine cmlAddParticles_3_dp_sh(xf, natoms, elements, x, y, z, atomRefs, occupancies, atomIds, style, fmt)
+    type(xmlf_t), intent(inout) :: xf
+    integer, intent(in) :: natoms
+    real(kind=dp), intent(in)              :: x(natoms)
+    real(kind=dp), intent(in)              :: y(natoms)
+    real(kind=dp), intent(in)              :: z(natoms)
+    character(len=*), intent(in), optional :: elements(natoms)
+    character(len=*), intent(in), optional :: atomRefs(natoms)
+    character(len=*), intent(in), optional :: atomIds(natoms)
+    real(kind=dp), intent(in), optional :: occupancies(natoms)
+    character(len=*), intent(in), optional :: fmt
+    character(len=*), intent(in), optional :: style
+
+#ifndef DUMMYLIB
+    integer          :: i
+
+    if (present(style)) then
+      if (style=="DL_POLY") then
+        if (present(atomRefs).or.present(occupancies).or.present(atomIds).or.present(fmt)) &
+          call FoX_error("With DL_POLY style, no optional arguments permitted.")
+        call addDlpolyMatrix(xf, x(:natoms), y(:natoms), z(:natoms), elements)
+        return
+      endif
+    endif
+
+
+    call xml_NewElement(xf, "atomArray")
+
+
+    do i = 1, natoms
+      call xml_NewElement(xf, "particle")
+      if (present(elements)) call xml_AddAttribute(xf, "elementType", trim(elements(i)))
+      call cmlAddCoords(xf, coords=(/x(i),y(i),z(i)/), style=style, fmt=fmt)
+      if (present(occupancies)) call xml_AddAttribute(xf, "occupancy", occupancies(i))
+      if (present(atomRefs)) call xml_AddAttribute(xf, "ref", atomRefs(i))
+      if (present(atomIds)) call xml_AddAttribute(xf, "id", atomIds(i))
+      call xml_EndElement(xf, "particle")
+     enddo
+
+
+    call xml_EndElement(xf, "atomArray")
+#endif
+
+  end subroutine cmlAddParticles_3_dp_sh
 
 #ifndef DUMMYLIB
 
