@@ -55,6 +55,7 @@ contains
     character :: c, q
     integer :: xv, phrase, iostat
     logical :: firstChar, ws_discard
+    character, pointer :: tempString(:)
 
     xv = fx%xds%xml_version
 
@@ -127,7 +128,9 @@ contains
             call add_error(fx%error_stack, "Unexpected character after <!-")
           endif
         elseif (verify(c,XML_WHITESPACE)>0) then
-          fx%token => vs_str_alloc(str_vs(fx%token)//c)
+          tempString => fx%token
+          fx%token => vs_str_alloc(str_vs(tempString)//c)
+          deallocate(tempString)
         else
           fx%tokenType = TOK_NAME
         endif
@@ -135,7 +138,9 @@ contains
       case (ST_START_PI)
         ! grab until whitespace or ?
         if (verify(c, XML_WHITESPACE//"?")>0) then
-          fx%token => vs_str_alloc(str_vs(fx%token)//c)
+          tempString => fx%token
+          fx%token => vs_str_alloc(str_vs(tempString)//c)
+          deallocate(tempString)
         else
           fx%tokenType = TOK_NAME
           if (c=="?") call push_chars(fb, c)
@@ -151,18 +156,29 @@ contains
         elseif (phrase==1) then
           if (c==">") then
             phrase = 2
-            fx%tokenType = TOK_CHAR
-            fx%nextTokenType = TOK_PI_END
+            if (associated(fx%token)) then
+               fx%tokenType = TOK_CHAR
+               fx%nextTokenType = TOK_PI_END
+            else
+               fx%tokenType = TOK_PI_END
+            endif
           elseif (c=="?") then
-            fx%token => vs_str_alloc(str_vs(fx%token)//"?")
+            tempString => fx%token
+            fx%token => vs_str_alloc(str_vs(tempString)//"?")
+            deallocate(tempString)
+
           else
             phrase = 0
-            fx%token => vs_str_alloc(str_vs(fx%token)//"?"//c)
+            tempString => fx%token
+            fx%token => vs_str_alloc(str_vs(tempString)//"?"//c)
+            deallocate(tempString)
           endif
         elseif (c=="?") then
           phrase = 1
         else
-          fx%token => vs_str_alloc(str_vs(fx%token)//"?"//c)
+          tempString => fx%token
+          fx%token => vs_str_alloc(str_vs(tempString)//"?"//c)
+          deallocate(tempString)
         endif
 
       case (ST_START_COMMENT)
@@ -171,19 +187,25 @@ contains
           if (c=="-") then
             phrase = 1
           else
-            fx%token => vs_str_alloc(str_vs(fx%token)//c)
+          tempString => fx%token
+          fx%token => vs_str_alloc(str_vs(tempString)//c)
+          deallocate(tempString)
           endif
         case (1)
           if (c=="-") then
             phrase = 2
           else
-            fx%token => vs_str_alloc(str_vs(fx%token)//"-"//c)
+          tempString => fx%token
+          fx%token => vs_str_alloc(str_vs(tempString)//"-"//c)
+          deallocate(tempString)
             phrase = 0
           endif
         case (2)
           if (c==">") then
             fx%tokenType = TOK_CHAR
-            fx%token => vs_str_alloc(str_vs(fx%token)//c)
+            tempString => fx%token
+            fx%token => vs_str_alloc(str_vs(tempString)//c)
+            deallocate(tempString)
             fx%nextTokenType = TOK_COMMENT_END
             exit
           else
@@ -195,7 +217,9 @@ contains
       case (ST_START_TAG)
         ! grab until whitespace or /, >
         if (verify(c, XML_WHITESPACE//"/>")>0) then
-          fx%token => vs_str_alloc(str_vs(fx%token)//c)
+          tempString => fx%token
+          fx%token => vs_str_alloc(str_vs(tempString)//c)
+          deallocate(tempString)
         else
           fx%tokenType = TOK_NAME
           if (verify(c, "/>")>0) call push_chars(fb, c)
@@ -208,7 +232,9 @@ contains
           if (size(fx%token)>5) then
             call add_error(fx%error_stack, &
               "Expecting CDATA[ after <![")
-            fx%token => vs_str_alloc(str_vs(fx%token)//c)
+            tempString => fx%token
+            fx%token => vs_str_alloc(str_vs(tempString)//c)
+            deallocate(tempString)
           elseif (str_vs(fx%token)=="CDATA") then
             if (c=="[") then
               fx%tokenType = TOK_START_CDATA
@@ -229,23 +255,31 @@ contains
           if (c=="]") then
             phrase = 1
           else
-            fx%token => vs_str_alloc(str_vs(fx%token)//c)
+            tempString => fx%token
+            fx%token => vs_str_alloc(str_vs(tempString)//c)
+            deallocate(tempString)
           endif
         case (1)
           if (c=="]") then
             phrase = 2
           else
-            fx%token => vs_str_alloc(str_vs(fx%token)//c)
+            tempString => fx%token
+            fx%token => vs_str_alloc(str_vs(tempString)//c)
+            deallocate(tempString)
             phrase = 0
           endif
         case (2)
           if (c==">") then
             fx%tokenType = TOK_CHAR
-            fx%token => vs_str_alloc(str_vs(fx%token)//c)
+            tempString => fx%token
+            fx%token => vs_str_alloc(str_vs(tempString)//c)
+            deallocate(tempString)
             fx%nextTokenType = TOK_CDATA_END
             exit
           else
-            fx%token => vs_str_alloc(str_vs(fx%token)//c)
+            tempString => fx%token
+            fx%token => vs_str_alloc(str_vs(tempString)//c)
+            deallocate(tempString)
             phrase = 0
           endif
         end select
@@ -279,7 +313,9 @@ contains
             else
               if ((xv==XML1_0.and.isXML1_0_NameChar(c)) &
                 .or.(xv==XML1_1.and.isXML1_1_NameChar(c))) then
-                fx%token => vs_str_alloc(str_vs(fx%token)//c)
+                tempString => fx%token
+                fx%token => vs_str_alloc(str_vs(tempString)//c)
+                deallocate(tempString)
               elseif (verify(c,XML_WHITESPACE)==0) then
                 fx%tokenType = TOK_NAME
               elseif (c=="=") then
@@ -322,16 +358,22 @@ contains
           if (c==q) then
             fx%tokenType = TOK_CHAR
           else
-            fx%token => vs_str_alloc(str_vs(fx%token)//c)
+            tempString => fx%token
+            fx%token => vs_str_alloc(str_vs(tempString)//c)
+            deallocate(tempString)
           endif
         endif
 
       case (ST_CHAR_IN_CONTENT)
         if (verify(c, "<&")>0) then
           if (phrase==1) then
-            fx%token => vs_str_alloc(str_vs(fx%token)//"]")
+            tempString => fx%token
+            fx%token => vs_str_alloc(str_vs(tempString)//"]")
+            deallocate(tempString)
           elseif (phrase==2) then
-            fx%token => vs_str_alloc(str_vs(fx%token)//"]]")
+            tempString => fx%token
+            fx%token => vs_str_alloc(str_vs(tempString)//"]]")
+            deallocate(tempString)
           endif
           call push_chars(fb, c)
           fx%tokenType = TOK_CHAR
@@ -341,16 +383,22 @@ contains
           elseif (phrase==1) then
             phrase = 2
           else
-            fx%token => vs_str_alloc(str_vs(fx%token)//"]]]")
+            tempString => fx%token
+            fx%token => vs_str_alloc(str_vs(tempString)//"]]]")
+            deallocate(tempString)
           endif
         elseif (c==">") then
           if (phrase==2) then
             call add_error(fx%error_stack, "]]> forbidden in character context")
           else
-            fx%token => vs_str_alloc(str_vs(fx%token)//">")
+            tempString => fx%token
+            fx%token => vs_str_alloc(str_vs(tempString)//">")
+            deallocate(tempString)
           endif
         else
-          fx%token => vs_str_alloc(str_vs(fx%token)//c)
+          tempString => fx%token
+          fx%token => vs_str_alloc(str_vs(tempString)//c)
+          deallocate(tempString)
         endif
 
       case (ST_TAG_IN_CONTENT)
@@ -380,7 +428,9 @@ contains
 
       case (ST_START_ENTITY, ST_START_PE)
         if (verify(c,XML_WHITESPACE//";")>0) then
-          fx%token => vs_str_alloc(str_vs(fx%token)//c)
+          tempString => fx%token
+          fx%token => vs_str_alloc(str_vs(tempString)//c)
+          deallocate(tempString)
         elseif (c==";") then
           fx%tokenType = TOK_NAME
         else
@@ -389,7 +439,9 @@ contains
 
       case (ST_CLOSING_TAG)
         if (verify(c,XML_WHITESPACE//">")>0) then
-          fx%token => vs_str_alloc(str_vs(fx%token)//c)
+          tempString => fx%token
+          fx%token => vs_str_alloc(str_vs(tempString)//c)
+          deallocate(tempString)
         else
           fx%tokenType = TOK_NAME
           if (c==">") fx%nextTokenType = TOK_END_TAG
@@ -406,7 +458,9 @@ contains
 
       case (ST_IN_DTD)
         if (verify(c,XML_WHITESPACE//"[>")>0) then
-          fx%token => vs_str_alloc(str_vs(fx%token)//c)
+          tempString => fx%token
+          fx%token => vs_str_alloc(str_vs(tempString)//c)
+          deallocate(tempString)
         else
           fx%tokenType = TOK_NAME
           if (c=="[") then
@@ -445,7 +499,9 @@ contains
             endif
           else
             if (verify(c, XML_WHITESPACE)>0) then
-              fx%token => vs_str_alloc(str_vs(fx%token)//c)
+              tempString => fx%token
+              fx%token => vs_str_alloc(str_vs(tempString)//c)
+              deallocate(tempString)
             elseif (str_vs(fx%token)=="SYSTEM") then
               fx%tokenType = TOK_NAME
             elseif (str_vs(fx%token)=="PUBLIC") then
@@ -472,7 +528,9 @@ contains
           if (c==q) then
             fx%tokenType = TOK_CHAR
           else
-            fx%token => vs_str_alloc(str_vs(fx%token)//c)
+            tempString => fx%token
+            fx%token => vs_str_alloc(str_vs(tempString)//c)
+            deallocate(tempString)
           endif
         endif
         
@@ -485,7 +543,9 @@ contains
             ws_discard = .false.
           endif
         elseif (verify(c,XML_WHITESPACE)>0) then
-          fx%token => vs_str_alloc(str_vs(fx%token)//c)
+          tempString => fx%token
+          fx%token => vs_str_alloc(str_vs(tempString)//c)
+          deallocate(tempString)
         else
           if (str_vs(fx%token)=="%") then
             fx%tokenType = TOK_ENTITY
@@ -499,7 +559,9 @@ contains
           fx%tokenType = TOK_DTD_CONTENTS
           fx%nextTokenType = TOK_END_TAG
         else
-          fx%token => vs_str_alloc(str_vs(fx%token)//c)
+          tempString => fx%token
+          fx%token => vs_str_alloc(str_vs(tempString)//c)
+          deallocate(tempString)
         endif
         
       case (ST_DTD_ENTITY_ID, ST_DTD_ENTITY_PUBLIC, ST_DTD_ENTITY_SYSTEM, &
@@ -524,7 +586,9 @@ contains
           elseif (verify(c, XML_WHITESPACE)==0) then
             fx%tokenType = TOK_NAME
           else
-            fx%token => vs_str_alloc(str_vs(fx%token)//c)
+            tempString => fx%token
+            fx%token => vs_str_alloc(str_vs(tempString)//c)
+            deallocate(tempString)
           endif
         endif
 
