@@ -41,13 +41,12 @@ module m_sax_reader
     integer            :: line = 0
     integer            :: col = 0
     character, pointer :: next_chars(:) => null()   ! pushback buffer
+    type(buffer_t), pointer :: input_string => null()
   end type xml_file_t
 
   type file_buffer_t
     !FIXME private
     type(xml_file_t), pointer :: f(:) => null()
-    character, pointer        :: input_string(:) => null()  ! If input is from a string
-    integer                   :: input_pos
     type(buffer_t),  pointer  :: buffer_stack(:) => null()  ! stack of expansion buffers
     character, pointer        :: namebuffer(:) => null()    ! temporary buffer for retrieving strings
     logical                   :: standalone = .false.
@@ -93,22 +92,28 @@ contains
       elseif (present(lun)) then
         call FoX_error("Cannot specify lun for string input to open_xml")
       endif
-      fb%f%lun = -1
-      fb%input_string => vs_str_alloc(string)
-      allocate(fb%f(1)%filename(0))
-      fb%f%line = 1
-      fb%f%col = 0
-      allocate(fb%f(1)%next_chars(0))
-      fb%input_pos = 1
+      call open_string_as_file(fb%f(1), string)
     else
       call open_actual_file(fb%f(1), file, iostat, lun)
       if (iostat/=0) return
-      allocate(fb%input_string(0))
     endif
 
     allocate(fb%buffer_stack(0))
 
   end subroutine open_file
+
+  subroutine open_string_as_file(f, string)
+    type(xml_file_t), intent(out)    :: f
+    character(len=*), intent(in)     :: string
+
+    f%lun = -1
+    f%input_string%s => vs_str_alloc(string)
+    f%filename => vs_str_alloc("")
+
+    f%line = 1
+    f%col = 0
+    allocate(f%next_chars(0))
+  end subroutine open_string_as_file
 
   subroutine open_actual_file(f, file, iostat, lun)
     type(xml_file_t), intent(out)    :: f
@@ -131,7 +136,7 @@ contains
     f%col = 0
     allocate(f%next_chars(0))
   end subroutine open_actual_file
-      
+
   subroutine close_file(fb)
     type(file_buffer_t), intent(inout)  :: fb
 
@@ -143,7 +148,6 @@ contains
         deallocate(fb%buffer_stack(i)%s)
       enddo
       deallocate(fb%buffer_stack)
-      deallocate(fb%input_string)
       call close_actual_file(fb%f(1))
       deallocate(fb%f)
     endif
@@ -153,7 +157,12 @@ contains
   subroutine close_actual_file(f)
     type(xml_file_t), intent(inout)    :: f
 
-    if (f%lun/=-1) close(f%lun)
+    if (f%lun/=-1) then
+       close(f%lun)
+    else
+       deallocate(f%input_string%s)
+       deallocate(f%input_string)
+    endif
     deallocate(f%filename)
 
     f%line = 0
@@ -478,7 +487,7 @@ contains
         c = c2
         pending = .false.
       else
-        read (unit=f%lun, iostat=iostat, advance="no", fmt="(a1)") c
+        c = read_single_char(f, iostat)
         if (iostat==io_eor) then
           c = achar(13)
           iostat = 0
@@ -492,7 +501,7 @@ contains
           //str_vs(f%filename)//":"//f%line//":"//f%col)
       endif
       if (c==achar(10)) then
-        read (unit=f%lun, iostat=iostat, advance="no", fmt="(a1)") c2
+        c2 = read_single_char(f, iostat)
         f%col = f%col + 1
         if (iostat==io_eof) then
           ! the file has just ended on a single CR. Report is as a LF.
@@ -526,6 +535,23 @@ contains
     endif
   end function get_chars_from_file
 
+  function read_single_char(f, iostat) result(c)
+    type(xml_file_t), intent(inout) :: f
+    integer, intent(out) :: iostat
+    character :: c
+
+    iostat = 0
+    if (f%lun==-1) then
+      f%input_string%pos = f%input_string%pos + 1
+      if (f%input_string%pos>size(f%input_string%s)) then
+        iostat = io_eof
+      else
+        c = f%input_string%s(f%input_string%pos)
+      endif
+    else
+      read (unit=f%lun, iostat=iostat, advance="no", fmt="(a1)") c
+    endif
+  end function read_single_char
 
   function line(fb) result(n)
     type(file_buffer_t), intent(in) :: fb
