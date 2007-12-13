@@ -496,6 +496,7 @@ contains
 
       case (ST_START_PI)
         !write(*,*)'ST_START_PI'
+        ! FIXME why are we checking for nameaspaces here?
         if (namespaces_) then
           nameOk = checkNCName(str_vs(fx%token), fx%xds)
         else

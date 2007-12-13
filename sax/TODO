@@ -1,5 +1,7 @@
 On output check is_error instead of iostat
 
+All iostat returns should be explicit eof_p returns
+
 (check full path back for all errors. Run through full test suite)
 
 Resolve SYSTEM addresses to URIs
