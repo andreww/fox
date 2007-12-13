@@ -805,6 +805,10 @@ contains
           call add_error(fx%error_stack, "Duplicate attribute name")
           goto 100
         endif
+        !First, expand all entities:
+        tempString => normalize_text(fx, fx%token)
+        deallocate(fx%token)
+        fx%token => tempString
         !If this attribute is not CDATA, we must process further;
         temp_i = get_att_type(fx%xds%element_list, str_vs(fx%name), str_vs(fx%attname))
         if (temp_i==ATT_CDATA) then
@@ -1301,6 +1305,7 @@ contains
           fx%state = ST_DTD_ENTITY_PE
         else
           pe = .false.
+          ! FIXME should ignore namespaces here i think ...
           if (namespaces_) then
             nameOk = checkNCName(str_vs(fx%token), fx%xds)
           else

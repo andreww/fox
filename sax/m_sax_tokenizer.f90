@@ -27,19 +27,20 @@ module m_sax_tokenizer
   integer, parameter :: TOK_BANG_TAG = 2 ! <!
   integer, parameter :: TOK_OPEN_TAG = 3 ! <
   integer, parameter :: TOK_OPEN_SB = 4 ! [
-  integer, parameter :: TOK_OPEN_COMMENT = 5 ! --
-  integer, parameter :: TOK_NAME = 6 ! name (+token)
-  integer, parameter :: TOK_CHAR = 7 ! character data (+token)
-  integer, parameter :: TOK_PI_END = 8 ! ?>
-  integer, parameter :: TOK_COMMENT_END = 9 ! -->
-  integer, parameter :: TOK_START_CDATA = 10 ! CDATA[
-  integer, parameter :: TOK_CDATA_END = 11 ! ]]>
-  integer, parameter :: TOK_END_TAG = 12 ! >
-  integer, parameter :: TOK_END_TAG_CLOSE = 13 ! />
-  integer, parameter :: TOK_CLOSE_TAG = 14 ! </
-  integer, parameter :: TOK_ENTITY = 15 ! % or &
-  integer, parameter :: TOK_EQUALS = 16 ! =
-  integer, parameter :: TOK_DTD_CONTENTS = 17 ! for element and attlist
+  integer, parameter :: TOK_CLOSE_SB = 5 ! [
+  integer, parameter :: TOK_OPEN_COMMENT = 6 ! --
+  integer, parameter :: TOK_NAME = 7 ! name (+token)
+  integer, parameter :: TOK_CHAR = 8 ! character data (+token)
+  integer, parameter :: TOK_PI_END = 9 ! ?>
+  integer, parameter :: TOK_COMMENT_END = 10 ! -->
+  integer, parameter :: TOK_START_CDATA = 11 ! CDATA[
+  integer, parameter :: TOK_CDATA_END = 12 ! ]]>
+  integer, parameter :: TOK_END_TAG = 13 ! >
+  integer, parameter :: TOK_END_TAG_CLOSE = 14 ! />
+  integer, parameter :: TOK_CLOSE_TAG = 15 ! </
+  integer, parameter :: TOK_ENTITY = 16 ! % or &
+  integer, parameter :: TOK_EQUALS = 17 ! =
+  integer, parameter :: TOK_DTD_CONTENTS = 18 ! for element and attlist
 
   public :: sax_tokenize
   public :: normalize_text
@@ -421,6 +422,8 @@ contains
           if (verify(c, XML_WHITESPACE)>0) then
             if (c=="[") then
               fx%tokenType = TOK_OPEN_SB
+            elseif (c=="]") then
+              fx%tokenType = TOK_CLOSE_SB
             elseif (c==">") then
               fx%tokenType = TOK_END_TAG
             elseif (c=="%") then
@@ -724,7 +727,8 @@ contains
       endif
       call get_characters_until_all_of(fb, c, iostat, fx%error_stack)
       if (iostat/=0) return
-      fx%token => normalize_text(fx, fb%namebuffer)
+      fx%token => fb%namebuffer
+      nullify(fb%namebuffer)
       ! Next character is either quotechar or eof.
       c = get_characters(fb, 1, iostat, fx%error_stack)
       ! Either way, we return
