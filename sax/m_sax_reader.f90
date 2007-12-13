@@ -543,9 +543,9 @@ contains
     n = fb%f(1)%col
   end function column
 
-  subroutine parse_xml_declaration(xds, fb, iostat, es, standalone)
+  subroutine parse_xml_declaration(xds, f, iostat, es, standalone)
     type(xml_doc_state), intent(inout) :: xds
-    type(file_buffer_t), intent(inout) :: fb
+    type(xml_file_t), intent(inout) :: f
     integer, intent(out) :: iostat
     type(error_stack), intent(inout) :: es
     logical, intent(out), optional :: standalone
@@ -572,15 +572,15 @@ contains
     xds%xml_version = XML1_0
     xds%encoding => vs_str_alloc("utf-8")
     xds%standalone = .false.
-    fb%f(1)%xml_version = XML1_0
-    fb%f(1)%encoding => vs_str_alloc("utf-8")
+    f%xml_version = XML1_0
+    f%encoding => vs_str_alloc("utf-8")
     if (present(standalone)) standalone = .false.
 
     parse_state = XD_0
     xd_par = xd_nothing
     do
 
-       c = get_characters_from_file(fb%f(1), 1, iostat, es)
+       c = get_characters_from_file(f, 1, iostat, es)
        if (iostat/=0) then
           return
        endif
@@ -591,7 +591,7 @@ contains
           if (c=="<") then
              parse_state = XD_START
           else
-             call push_file_chars(fb%f(1), c)
+             call push_file_chars(f, c)
              return
           endif
 
@@ -600,7 +600,7 @@ contains
              parse_state = XD_TARGET
              ch => vs_str_alloc("")
           else
-             call push_file_chars(fb%f(1), "<"//c)
+             call push_file_chars(f, "<"//c)
              return
           endif
 
@@ -614,7 +614,7 @@ contains
              deallocate(ch)
              parse_state = XD_MISC
           else
-             call push_file_chars(fb%f(1), "<?"//str_vs(ch)//c)
+             call push_file_chars(f, "<?"//str_vs(ch)//c)
              deallocate(ch)
              return
           endif
@@ -719,11 +719,11 @@ contains
              case (xd_version)
                 if (str_vs(ch)=="1.0") then
                    xds%xml_version = XML1_0
-                   fb%f(1)%xml_version = XML1_0
+                   f%xml_version = XML1_0
                    deallocate(ch)
                 elseif (str_vs(ch)=="1.1") then
                    xds%xml_version = XML1_1
-                   fb%f(1)%xml_version = XML1_1
+                   f%xml_version = XML1_1
                    deallocate(ch)
                 else
                    call add_error(es, &
@@ -744,7 +744,7 @@ contains
                 else
                    deallocate(xds%encoding)
                    xds%encoding => ch
-                   fb%f(1)%encoding => ch
+                   f%encoding => ch
                 endif
              case (xd_standalone)
                 if (str_vs(ch)=="yes") then
