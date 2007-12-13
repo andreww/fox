@@ -57,8 +57,6 @@ module m_sax_reader
   public :: open_file
   public :: close_file
 
-  public :: read_char
-  public :: read_chars
   public :: push_chars
 
   public :: get_characters
@@ -155,97 +153,6 @@ contains
     f%col = 0
   end subroutine close_actual_file
 
-
-  ! For the first few characters, we need to be reading directly,
-  ! not via the buffering below - in order that we can read the
-  ! XML declaration (if it is there) under special rules.
-  ! We still need to check the dynamic buffer, because we need
-  ! pushback to cope with newline handling
-
-  ! The implementation below is very inefficient, but simple,
-  ! since we must be sure not to read past the end of the XML
-  ! declaration with it (thereafter, rules change - we may be 
-  ! dealing with XML 1.1 newlines.)
-  !  
-  ! It only needs to be used until we have finished dealing
-  ! with the XML declaration though, so inefficiency is not
-  ! important
-
-  ! The put_characters mechanism can't be used here, so we 
-  ! have an additional way to put characters back in the buffer
-  ! through fb%next_chars which are read first.
-
-
-  function read_char(fb, iostat) result(c)
-    type(file_buffer_t), intent(inout) :: fb
-    integer, intent(out) :: iostat
-    character :: c
-
-    type(xml_file_t), pointer :: f
-    character :: c2
-
-    f => fb%f(1)
-    c = really_read_char(iostat)
-    if (iostat/=0) return
-    if (c == achar(10)) then
-      c2 = really_read_char(iostat)
-      if (iostat/=0) return
-      if (c2 /= achar(13)) then
-        call push_chars(fb, c2)
-        ! else discard it.
-      endif
-      f%line = f%line + 1
-      f%col = 0
-      c = achar(13)
-    endif
-
-  contains
-    function really_read_char(iostat) result(rc)
-      integer, intent(out) :: iostat
-      character :: rc
-      character, dimension(:), pointer :: nc
-      if (size(fb%next_chars)>0) then
-        iostat = 0
-        rc = fb%next_chars(1)
-        nc => vs_vs_alloc(fb%next_chars(2:))
-        deallocate(fb%next_chars)
-        fb%next_chars => nc
-      else
-        if (f%lun==-1) then
-          if (fb%input_pos>size(fb%input_string)) then
-            rc = achar(0)
-            iostat = io_eof
-          else
-            rc = fb%input_string(fb%input_pos)
-            fb%input_pos = fb%input_pos + 1
-            iostat = 0
-          endif
-        else
-          read(unit=f%lun, iostat=iostat, advance="no", fmt="(a1)") rc
-          if (iostat == io_eor) then
-            rc = achar(13)
-            iostat = 0
-          endif
-        endif
-        ! Don't need to do any EOF checking here, we are only
-        ! reading one char at a time without buffering
-      endif
-    end function really_read_char
-  end function read_char
-
-  function read_chars(fb, n, iostat) result(s)
-    type(file_buffer_t), intent(inout) :: fb
-    integer, intent(in) :: n
-    integer, intent(out) :: iostat
-    character(len=n) :: s
-
-    integer :: i
-
-    do i = 1, n
-      s(i:i) = read_char(fb, iostat)
-      if (iostat/=0) return
-    enddo
-  end function read_chars
 
   subroutine push_chars(fb, s)
     type(file_buffer_t), intent(inout) :: fb

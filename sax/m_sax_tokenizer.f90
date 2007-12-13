@@ -12,7 +12,7 @@ module m_sax_tokenizer
   use m_common_namecheck, only: checkName, checkCharacterEntityReference
 
   use m_sax_reader, only: file_buffer_t, &
-    read_char, read_chars, push_chars, get_characters, &
+    push_chars, get_characters, &
     get_characters_until_all_of, &
     get_characters_until_one_of, &
     get_characters_until_not_one_of, &
