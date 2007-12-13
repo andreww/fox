@@ -386,7 +386,7 @@ contains
       fx%whitespace = WS_PRESERVE
       fx%well_formed = .true.
     elseif (fx%parse_stack==0) then
-      call parse_xml_declaration(fx, fb, iostat)
+      call parse_xml_declaration(fx%xds, fb, iostat, fx%error_stack)
       if (iostat/=0) then
         call add_error(fx%error_stack, "Error in XML declaration")
       elseif (.not.allowed_encoding(str_vs(fx%xds%encoding))) then
