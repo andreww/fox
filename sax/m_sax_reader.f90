@@ -37,6 +37,7 @@ module m_sax_reader
     character, pointer :: filename(:) => null()
     integer            :: line = 0
     integer            :: col = 0
+    character, pointer :: next_chars(:) => null()   ! pushback buffer
   end type xml_file_t
 
   type file_buffer_t
@@ -46,7 +47,6 @@ module m_sax_reader
     integer                   :: input_pos
     type(buffer_t),  pointer  :: buffer_stack(:) => null()  ! stack of expansion buffers
     character, pointer        :: namebuffer(:) => null()    ! temporary buffer for retrieving strings
-    character, pointer        :: next_chars(:)  => null()   ! pushback buffer
   end type file_buffer_t
 
 
@@ -90,6 +90,9 @@ contains
       fb%f%lun = -1
       fb%input_string => vs_str_alloc(string)
       allocate(fb%f(1)%filename(0))
+      fb%f%line = 1
+      fb%f%col = 0
+      allocate(fb%f(1)%next_chars(0))
       fb%input_pos = 1
     else
       call open_actual_file(fb%f(1), file, iostat, lun)
@@ -98,8 +101,6 @@ contains
     endif
 
     allocate(fb%buffer_stack(0))
-
-    allocate(fb%next_chars(0))
 
   end subroutine open_file
 
@@ -122,6 +123,7 @@ contains
 
     f%line = 1
     f%col = 0
+    allocate(f%next_chars(0))
   end subroutine open_actual_file
       
   subroutine close_file(fb)
@@ -135,7 +137,6 @@ contains
         deallocate(fb%buffer_stack(i)%s)
       enddo
       deallocate(fb%buffer_stack)
-      deallocate(fb%next_chars)
       deallocate(fb%input_string)
       call close_actual_file(fb%f(1))
       deallocate(fb%f)
@@ -151,18 +152,27 @@ contains
 
     f%line = 0
     f%col = 0
+    deallocate(f%next_chars)
   end subroutine close_actual_file
 
 
   subroutine push_chars(fb, s)
     type(file_buffer_t), intent(inout) :: fb
     character(len=*), intent(in) :: s
+
+    call push_file_chars(fb%f(1), s)
+
+  end subroutine push_chars
+
+  subroutine push_file_chars(f, s)
+    type(xml_file_t), intent(inout) :: f
+    character(len=*), intent(in) :: s
     character, dimension(:), pointer :: nc
 
-    nc => vs_str_alloc(str_vs(fb%next_chars)//s)
-    deallocate(fb%next_chars)
-    fb%next_chars => nc
-  end subroutine push_chars
+    nc => vs_str_alloc(str_vs(f%next_chars)//s)
+    deallocate(f%next_chars)
+    f%next_chars => nc
+  end subroutine push_file_chars
 
 
   subroutine push_buffer_stack(fb, string)
@@ -212,19 +222,19 @@ contains
     integer :: offset, n_left, n_held
     character, pointer :: temp(:)
 
-    if (size(fb%next_chars)>0) then
-      if (n<size(fb%next_chars)) then
-        string = str_vs(fb%next_chars(:n))
-        temp => vs_vs_alloc(fb%next_chars(n+1:))
-        deallocate(fb%next_chars)
-        fb%next_chars => temp
+    if (size(fb%f(1)%next_chars)>0) then
+      if (n<size(fb%f(1)%next_chars)) then
+        string = str_vs(fb%f(1)%next_chars(:n))
+        temp => vs_vs_alloc(fb%f(1)%next_chars(n+1:))
+        deallocate(fb%f(1)%next_chars)
+        fb%f(1)%next_chars => temp
         iostat = 0
         return
       endif
-      offset = size(fb%next_chars)
-      string(:offset) = str_vs(fb%next_chars)
-      deallocate(fb%next_chars)
-      fb%next_chars => vs_str_alloc("")
+      offset = size(fb%f(1)%next_chars)
+      string(:offset) = str_vs(fb%f(1)%next_chars)
+      deallocate(fb%f(1)%next_chars)
+      fb%f(1)%next_chars => vs_str_alloc("")
     else
       offset = 0
     endif     
@@ -470,8 +480,8 @@ contains
 
     if (pending) then
       ! we have one character left over, put in the pushback buffer
-      allocate(fb%next_chars(1))
-      fb%next_chars = c2
+      allocate(f%next_chars(1))
+      f%next_chars = c2
     endif
   end function get_chars_from_file
 
