@@ -32,8 +32,9 @@ module m_sax_parser
     destroy_xml_doc_state, register_internal_PE, register_external_PE, &
     register_internal_GE, register_external_GE
 
-  use m_sax_reader, only: file_buffer_t, pop_buffer_stack, push_buffer_stack
-  use m_sax_tokenizer, only: sax_tokenize, parse_xml_declaration, normalize_text
+  use m_sax_reader, only: file_buffer_t, pop_buffer_stack, push_buffer_stack, &
+       parse_xml_declaration
+  use m_sax_tokenizer, only: sax_tokenize, normalize_text
   use m_sax_types ! everything, really
 
   implicit none

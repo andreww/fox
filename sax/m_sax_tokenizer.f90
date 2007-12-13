@@ -17,14 +17,12 @@ module m_sax_tokenizer
     get_characters_until_one_of, &
     get_characters_until_not_one_of, &
     get_characters_until_not_namechar
-  use m_sax_parse_decl, only: parse_xml_declaration
   use m_sax_types ! everything, really
 
   implicit none
   private
 
   public :: sax_tokenize
-  public :: parse_xml_declaration
   public :: normalize_text
 
 contains
