@@ -2,12 +2,6 @@ On output check is_error instead of iostat
 
 (check full path back for all errors. Run through full test suite)
 
-rationalize input_string and buffer stack
+Resolve SYSTEM addresses to URIs
 
-teach parse_xml_declaration to read from input_string
-
-teach open_file about error infrastructure
-
-Call it automatically on opening a file (from open_file_actually).
-
-
+open them

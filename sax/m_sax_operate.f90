@@ -27,7 +27,7 @@ contains
     integer, intent(in), optional :: lun
     integer :: i
 
-    call open_file(xt%fb, file=file, iostat=i, lun=lun)
+    call open_file(xt%fb, file=file, iostat=i, lun=lun, es=xt%fx%error_stack)
 
     if (present(iostat)) then
       iostat = i
@@ -47,7 +47,7 @@ contains
 
     integer :: iostat
 
-    call open_file(xt%fb, string=string, iostat=iostat)
+    call open_file(xt%fb, string=string, iostat=iostat, es=xt%fx%error_stack)
     call sax_parser_init(xt%fx, xt%fb)
 
   end subroutine open_xml_string

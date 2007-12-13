@@ -19,7 +19,7 @@ module m_sax_reader
   use m_common_array_str, only : vs_str, str_vs, vs_str_alloc, vs_vs_alloc
   use m_common_charset, only: XML_WHITESPACE, XML_INITIALENCODINGCHARS, &
     XML_ENCODINGCHARS, XML1_0, XML1_1, isXML1_0_NameChar, isXML1_1_NameChar, &
-    isLegalChar
+    isLegalChar, allowed_encoding
   use m_common_error,  only: error_stack, add_error, FoX_error, in_error
   use m_common_format, only: operator(//)
   use m_common_io, only: setup_io, io_eor, io_eof, get_unit
@@ -71,16 +71,15 @@ module m_sax_reader
   public :: push_buffer_stack
   public :: pop_buffer_stack
 
-  public :: parse_xml_declaration
-
 contains
 
-  subroutine open_file(fb, iostat, file, lun, string)
+  subroutine open_file(fb, iostat, file, lun, string, es)
     type(file_buffer_t), intent(out)  :: fb
     character(len=*), intent(in), optional :: file
     integer, intent(out)              :: iostat
     integer, intent(in), optional     :: lun
     character(len=*), intent(in), optional :: string
+    type(error_stack), intent(inout) :: es
 
     iostat = 0
 
@@ -98,6 +97,7 @@ contains
       if (iostat/=0) return
     endif
 
+    call parse_xml_declaration(fb%f(1), iostat, es, fb%standalone)
     allocate(fb%buffer_stack(0))
 
   end subroutine open_file
@@ -760,6 +760,8 @@ contains
                      .or.verify(str_vs(ch(2:)), XML_ENCODINGCHARS)>0)) then
                    call add_error(es, &
                         "Invalid encoding found in XML declaration; illegal characters in encoding name")
+                elseif (.not.allowed_encoding(str_vs(ch))) then
+                   call add_error(es, "Unknown character encoding in XML declaration")
                 else
                    f%encoding => ch
                 endif

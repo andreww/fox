@@ -32,8 +32,7 @@ module m_sax_parser
     destroy_xml_doc_state, register_internal_PE, register_external_PE, &
     register_internal_GE, register_external_GE
 
-  use m_sax_reader, only: file_buffer_t, pop_buffer_stack, push_buffer_stack, &
-       parse_xml_declaration
+  use m_sax_reader, only: file_buffer_t, pop_buffer_stack, push_buffer_stack
   use m_sax_tokenizer, only: sax_tokenize, normalize_text
   use m_sax_types ! everything, really
 
@@ -73,6 +72,9 @@ contains
     fx%xds%inputEncoding => vs_str_alloc("us-ascii")
     ! because it always is ...
     fx%xds%documentURI => vs_vs_alloc(fb%f(1)%filename)
+    fx%xds%xml_version = fb%f(1)%xml_version
+    fx%xds%encoding => vs_vs_alloc(fb%f(1)%encoding)
+    fx%xds%standalone = fb%standalone
 
     allocate(fx%wf_stack(1))
     fx%wf_stack(1) = 0
@@ -387,18 +389,6 @@ contains
       fx%whitespace = WS_PRESERVE
       fx%well_formed = .true.
     elseif (fx%parse_stack==0) then
-      call parse_xml_declaration(fb%f(1), iostat, fx%error_stack, fx%xds%standalone)
-      fx%xds%xml_version = fb%f(1)%xml_version
-      fx%xds%encoding => fb%f(1)%encoding
-      if (iostat/=0) then
-        call add_error(fx%error_stack, "Error in XML declaration")
-      elseif (.not.allowed_encoding(str_vs(fx%xds%encoding))) then
-        call add_error(fx%error_stack, "Unknown character encoding in XML declaration")
-      endif
-      if (in_error(fx%error_stack)) then ! double check since we might be in error, but iostat==0
-        call sax_error(fx, error_handler)
-        return
-      endif
       fx%context = CTXT_BEFORE_DTD
       fx%state = ST_MISC
       fx%whitespace = WS_DISCARD
