@@ -505,16 +505,16 @@ contains
     n = fb%f(1)%col
   end function column
 
-  subroutine parse_xml_declaration(xds, fb, iostat, es)
+  subroutine parse_xml_declaration(xds, fb, iostat, es, standalone)
     type(xml_doc_state), intent(inout) :: xds
     type(file_buffer_t), intent(inout) :: fb
     integer, intent(out) :: iostat
     type(error_stack), intent(inout) :: es
+    logical, intent(out), optional :: standalone
 
     integer :: parse_state, xd_par
     character :: c, q
     character, pointer :: ch(:), ch2(:)
-    logical :: standalone
 
     integer, parameter :: XD_0      = 0
     integer, parameter :: XD_START  = 1
@@ -536,7 +536,7 @@ contains
     xds%standalone = .false.
     fb%f(1)%xml_version = XML1_0
     fb%f(1)%encoding => vs_str_alloc("utf-8")
-    standalone = .false.
+    if (present(standalone)) standalone = .false.
 
     parse_state = XD_0
     xd_par = xd_nothing
@@ -625,6 +625,9 @@ contains
                 end select
 
              case ("standalone")
+                if (.not.present(standalone)) &
+                      call add_error(es, &
+                        "Cannot specify standalone in text declaration")
                 select case (xd_par)
                 case (xd_nothing)
                    call add_error(es, &
