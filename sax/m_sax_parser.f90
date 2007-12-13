@@ -809,6 +809,7 @@ contains
         tempString => normalize_text(fx, fx%token)
         deallocate(fx%token)
         fx%token => tempString
+        nullify(tempString)
         !If this attribute is not CDATA, we must process further;
         temp_i = get_att_type(fx%xds%element_list, str_vs(fx%name), str_vs(fx%attname))
         if (temp_i==ATT_CDATA) then
@@ -871,109 +872,114 @@ contains
         elseif (str_vs(fx%token)=='</') then
           fx%state = ST_CLOSING_TAG
         elseif (fx%token(1)=='&') then
-          tempString => vs_str_alloc(str_vs(fx%token(2:size(fx%token)-1)))
-          elem => get_element(fx%xds%element_list, get_top_elstack(fx%elstack))
-          ! tell tokenizer to expand it
-          if (existing_entity(fx%forbidden_ge_list, str_vs(tempString))) then
-            call add_error(fx%error_stack, 'Recursive entity reference')
-            goto 100
+          fx%state = ST_START_ENTITY
+          fx%next_token => vs_str_alloc(str_vs(fx%token(2:size(fx%token)-1)))
+        else
+          call add_error(fx%error_stack, "Unexpected token found in character context")
+          goto 100
+        endif
+
+      case (ST_START_ENTITY)
+        elem => get_element(fx%xds%element_list, get_top_elstack(fx%elstack))
+        ! tell tokenizer to expand it
+        if (existing_entity(fx%forbidden_ge_list, str_vs(fx%token))) then
+          call add_error(fx%error_stack, 'Recursive entity reference')
+          goto 100
+        endif
+        if (existing_entity(fx%predefined_e_list, str_vs(fx%token))) then
+          if (validCheck.and.associated(elem)) then
+            if (.not.elem%mixed.and..not.elem%any) then
+              call add_error(fx%error_stack, "Forbidden content inside element")
+              goto 100
+            endif
           endif
-          if (existing_entity(fx%predefined_e_list, str_vs(tempString))) then
+          if (present(startEntity_handler)) then
+            call startEntity_handler(str_vs(fx%token))
+            if (fx%state==ST_STOP) goto 100
+          endif
+          if (present(characters_handler)) then
+            call characters_handler(expand_entity(fx%predefined_e_list, str_vs(fx%token)))
+            if (fx%state==ST_STOP) goto 100
+          endif
+          if (present(endEntity_handler)) then
+            call endEntity_handler(str_vs(fx%token))
+            if (fx%state==ST_STOP) goto 100
+          endif
+        elseif (likeCharacterEntityReference(str_vs(fx%token))) then
+          if (checkRepCharEntityReference(str_vs(fx%token), fx%xds%xml_version)) then
             if (validCheck.and.associated(elem)) then
-              if (.not.elem%mixed.and..not.elem%any) then
+              if (elem%empty) then
                 call add_error(fx%error_stack, "Forbidden content inside element")
                 goto 100
+              elseif (.not.elem%mixed.and..not.elem%any) then
+                call add_error(fx%error_stack, "Forbidden content inside element")
+                goto 100 
               endif
-            endif
-            if (present(startEntity_handler)) then
-              call startEntity_handler(str_vs(tempString))
-              if (fx%state==ST_STOP) goto 100
             endif
             if (present(characters_handler)) then
-              call characters_handler(expand_entity(fx%predefined_e_list, str_vs(tempString)))
+              call characters_handler(expand_char_entity(str_vs(fx%token)))
               if (fx%state==ST_STOP) goto 100
             endif
-            if (present(endEntity_handler)) then
-              call endEntity_handler(str_vs(tempString))
+          elseif (checkCharacterEntityReference(str_vs(fx%token), fx%xds%xml_version)) then
+            call add_error(fx%error_stack, "Unable to digest character entity reference in content, sorry.")
+            goto 100
+          else
+            call add_error(fx%error_stack, "Illegal character reference")
+            goto 100
+          endif
+        elseif (existing_entity(fx%xds%entityList, str_vs(fx%token))) then
+          if (is_unparsed_entity(fx%xds%entityList, str_vs(fx%token))) then
+            call add_error(fx%error_stack, &
+              'Cannot reference unparsed entity in content')
+            goto 100
+          elseif (is_external_entity(fx%xds%entityList, str_vs(fx%token))) then
+            if (present(skippedEntity_handler)) then
+              call skippedEntity_handler(str_vs(fx%token))
               if (fx%state==ST_STOP) goto 100
-            endif
-          elseif (likeCharacterEntityReference(str_vs(tempString))) then
-            if (checkRepCharEntityReference(str_vs(tempString), fx%xds%xml_version)) then
-              if (validCheck.and.associated(elem)) then
-                if (elem%empty) then
-                  call add_error(fx%error_stack, "Forbidden content inside element")
-                  goto 100
-                elseif (.not.elem%mixed.and..not.elem%any) then
-                  call add_error(fx%error_stack, "Forbidden content inside element")
-                  goto 100 
-                endif
-              endif
-              if (present(characters_handler)) then
-                call characters_handler(expand_char_entity(str_vs(tempString)))
-                if (fx%state==ST_STOP) goto 100
-              endif
-            elseif (checkCharacterEntityReference(str_vs(tempString), fx%xds%xml_version)) then
-              call add_error(fx%error_stack, "Unable to digest character entity reference in content, sorry.")
-              goto 100
-            else
-              call add_error(fx%error_stack, "Illegal character reference")
-              goto 100
-            endif
-          elseif (existing_entity(fx%xds%entityList, str_vs(tempString))) then
-            if (is_unparsed_entity(fx%xds%entityList, str_vs(tempString))) then
-              call add_error(fx%error_stack, &
-                'Cannot reference unparsed entity in content')
-              goto 100
-            elseif (is_external_entity(fx%xds%entityList, str_vs(tempString))) then
-              if (present(skippedEntity_handler)) then
-                call skippedEntity_handler(str_vs(tempString))
-                if (fx%state==ST_STOP) goto 100
-              endif
-            else
-              if (validCheck.and.associated(elem)) then
-                if (elem%empty) then
-                  call add_error(fx%error_stack, "Forbidden content inside element")
-                  goto 100
-                  !elseif (.not.elem%mixed.and..not.elem%any) then FIXME
-                  !c1 = getEntityTextByName(fx%xds%entityList, str_vs(tempString)
-                  !if (verify(getEntityTextByName(fx%xds%entityList, str_vs(tempString)), XML_WHITESPACE)/=0 & 
-                    !.and. c1/="<") then
-                    !call add_error(fx%error_stack, "Forbidden content inside element")
-                    !goto 100
-                  !endif
-                endif
-              endif
-              if (present(startEntity_handler)) then
-                call startEntity_handler(str_vs(tempString))
-                if (fx%state==ST_STOP) goto 100
-              endif
-              call add_internal_entity(fx%forbidden_ge_list, str_vs(tempString), "")
-              call push_buffer_stack(fb, expand_entity(fx%xds%entityList, str_vs(tempString)))
-              fx%parse_stack = fx%parse_stack + 1
-              temp_wf_stack => fx%wf_stack
-              allocate(fx%wf_stack(size(temp_wf_stack)+1))
-              fx%wf_stack(2:size(fx%wf_stack)) = temp_wf_stack
-              fx%wf_stack(1) = 0
-              deallocate(temp_wf_stack)
             endif
           else
-            ! Unknown entity check standalone etc
-            if (fx%skippedExternal.and..not.fx%xds%standalone) then
-              if (present(skippedEntity_handler)) then
-                call skippedEntity_handler(str_vs(tempString))
-                if (fx%state==ST_STOP) goto 100
+            if (validCheck.and.associated(elem)) then
+              if (elem%empty) then
+                call add_error(fx%error_stack, "Forbidden content inside element")
+                goto 100
+                !elseif (.not.elem%mixed.and..not.elem%any) then FIXME
+                !c1 = getEntityTextByName(fx%xds%entityList, str_vs(tempString)
+                !if (verify(getEntityTextByName(fx%xds%entityList, str_vs(tempString)), XML_WHITESPACE)/=0 & 
+                !.and. c1/="<") then
+                !call add_error(fx%error_stack, "Forbidden content inside element")
+                !goto 100
+                !endif
               endif
             else
               call add_error(fx%error_stack, &
                 'Encountered reference to undeclared entity')
             endif
+            if (present(startEntity_handler)) then
+              call startEntity_handler(str_vs(fx%token))
+              if (fx%state==ST_STOP) goto 100
+            endif
+            call add_internal_entity(fx%forbidden_ge_list, str_vs(fx%token), "")
+            call push_buffer_stack(fb, expand_entity(fx%xds%entityList, str_vs(fx%token)))
+            fx%parse_stack = fx%parse_stack + 1
+            temp_wf_stack => fx%wf_stack
+            allocate(fx%wf_stack(size(temp_wf_stack)+1))
+            fx%wf_stack(2:size(fx%wf_stack)) = temp_wf_stack
+            fx%wf_stack(1) = 0
+            deallocate(temp_wf_stack)
           endif
-          deallocate(tempString)
-          fx%state = ST_CHAR_IN_CONTENT
         else
-          call add_error(fx%error_stack, "Unexpected token found in character context")
-          goto 100
+          ! Unknown entity check standalone etc
+          if (fx%skippedExternal.and..not.fx%xds%standalone) then
+            if (present(skippedEntity_handler)) then
+              call skippedEntity_handler(str_vs(fx%token))
+              if (fx%state==ST_STOP) goto 100
+            endif
+          else
+            call add_error(fx%error_stack, &
+              'Encountered reference to undeclared entity')
+          endif
         endif
+        fx%state = ST_CHAR_IN_CONTENT
 
       case (ST_CLOSING_TAG)
         !write(*,*)'ST_CLOSING_TAG'
@@ -1125,53 +1131,8 @@ contains
         if (str_vs(fx%token)==']') then
           fx%state = ST_CLOSE_DTD
         elseif (fx%token(1)=='%') then
-          tempString => vs_str_alloc(str_vs(fx%token(2:size(fx%token)-1)))
-          if (existing_entity(fx%forbidden_pe_list, str_vs(tempString))) then
-            call add_error(fx%error_stack, &
-              'Recursive entity reference')
-            goto 100
-          endif
-          if (existing_entity(fx%xds%PEList, str_vs(tempString))) then
-            if (is_external_entity(fx%xds%PEList, str_vs(tempString))) then
-              ! We are not validating, do not include external entities
-              if (present(skippedEntity_handler)) then
-                call skippedEntity_handler('%'//str_vs(tempString))
-                if (fx%state==ST_STOP) goto 100
-              endif
-              !  then are we standalone?
-              !   then look at XML section 5.1
-              fx%skippedExternal = .true.
-              processDTD = fx%xds%standalone !FIXME use this everywhere
-            else
-              ! Expand the entity, 
-              if (present(startEntity_handler)) then
-                call startEntity_handler('%'//str_vs(tempString))
-                if (fx%state==ST_STOP) goto 100
-              endif
-              call add_internal_entity(fx%forbidden_pe_list, &
-                str_vs(tempString), "")
-              call push_buffer_stack(fb, &
-                " "//expand_entity(fx%xds%PEList, str_vs(tempString))//" ")
-              fx%parse_stack = fx%parse_stack + 1
-            endif
-            ! and do nothing else, carry on ...
-          else
-            ! Have we previously skipped an external entity?
-            if (fx%skippedExternal.and..not.fx%xds%standalone) then
-              if (processDTD) then
-                if (present(skippedEntity_handler)) then
-                  call skippedEntity_handler('%'//str_vs(tempString))
-                  if (fx%state==ST_STOP) goto 100
-                endif
-              endif
-            else
-              ! If not, 
-              call add_error(fx%error_stack, &
-                "Reference to undeclared parameter entity.")
-              goto 100
-            endif
-          endif
-          deallocate(tempString)
+          fx%state = ST_START_PE
+          fx%next_token => vs_str_alloc(str_vs(fx%token(2:size(fx%token)-1)))
         elseif (str_vs(fx%token)=='<?') then
           fx%state = ST_START_PI
           fx%whitespace = WS_FORBIDDEN
@@ -1181,6 +1142,53 @@ contains
         else
           call add_error(fx%error_stack, "Unexpected token in internal subset")
           goto 100
+        endif
+
+      case (ST_START_PE)
+        if (existing_entity(fx%forbidden_pe_list, str_vs(fx%token))) then
+          call add_error(fx%error_stack, &
+            'Recursive entity reference')
+          goto 100
+        endif
+        if (existing_entity(fx%xds%PEList, str_vs(fx%token))) then
+          if (is_external_entity(fx%xds%PEList, str_vs(fx%token))) then
+            ! We are not validating, do not include external entities
+            if (present(skippedEntity_handler)) then
+              call skippedEntity_handler('%'//str_vs(fx%token))
+              if (fx%state==ST_STOP) goto 100
+            endif
+            !  then are we standalone?
+            !   then look at XML section 5.1
+            fx%skippedExternal = .true.
+            processDTD = fx%xds%standalone !FIXME use this everywhere
+          else
+            ! Expand the entity, 
+            if (present(startEntity_handler)) then
+              call startEntity_handler('%'//str_vs(fx%token))
+              if (fx%state==ST_STOP) goto 100
+            endif
+            call add_internal_entity(fx%forbidden_pe_list, &
+              str_vs(fx%token), "")
+            call push_buffer_stack(fb, &
+              " "//expand_entity(fx%xds%PEList, str_vs(fx%token))//" ")
+            fx%parse_stack = fx%parse_stack + 1
+          endif
+          ! and do nothing else, carry on ...
+        else
+          ! Have we previously skipped an external entity?
+          if (fx%skippedExternal.and..not.fx%xds%standalone) then
+            if (processDTD) then
+              if (present(skippedEntity_handler)) then
+                call skippedEntity_handler('%'//str_vs(fx%token))
+                if (fx%state==ST_STOP) goto 100
+              endif
+            endif
+          else
+            ! If not, 
+            call add_error(fx%error_stack, &
+              "Reference to undeclared parameter entity.")
+            goto 100
+          endif
         endif
 
       case (ST_DTD_ATTLIST)
