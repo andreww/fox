@@ -3,11 +3,12 @@ module m_sax_tokenizer
   use m_common_array_str, only: vs_str, str_vs, vs_str_alloc
   use m_common_charset, only: XML_WHITESPACE, &
     upperCase, digits, hexdigits, isInitialNameChar, &
-    isXML1_0_NameChar, isXML1_1_NameChar
+    isXML1_0_NameChar, isXML1_1_NameChar, XML1_0, XML1_1
   use m_common_error, only: add_error, in_error
   use m_common_entities, only: existing_entity, &
     is_unparsed_entity, is_external_entity, expand_entity_text, &
     expand_char_entity, add_internal_entity, pop_entity_list
+  use m_common_io, only: io_eof
   use m_common_namecheck, only: checkName, checkCharacterEntityReference
 
   use m_sax_reader, only: file_buffer_t, &
@@ -21,6 +22,25 @@ module m_sax_tokenizer
   implicit none
   private
 
+  integer, parameter :: TOK_NULL = 0
+  integer, parameter :: TOK_PI_TAG = 1 ! <?
+  integer, parameter :: TOK_BANG_TAG = 2 ! <!
+  integer, parameter :: TOK_OPEN_TAG = 3 ! <
+  integer, parameter :: TOK_OPEN_SB = 4 ! [
+  integer, parameter :: TOK_OPEN_COMMENT = 5 ! --
+  integer, parameter :: TOK_NAME = 6 ! name (+token)
+  integer, parameter :: TOK_CHAR = 7 ! character data (+token)
+  integer, parameter :: TOK_PI_END = 8 ! ?>
+  integer, parameter :: TOK_COMMENT_END = 9 ! -->
+  integer, parameter :: TOK_START_CDATA = 10 ! CDATA[
+  integer, parameter :: TOK_CDATA_END = 11 ! ]]>
+  integer, parameter :: TOK_END_TAG = 12 ! >
+  integer, parameter :: TOK_END_TAG_CLOSE = 13 ! />
+  integer, parameter :: TOK_CLOSE_TAG = 14 ! </
+  integer, parameter :: TOK_ENTITY = 15 ! % or &
+  integer, parameter :: TOK_EQUALS = 16 ! =
+  integer, parameter :: TOK_DTD_CONTENTS = 17 ! for element and attlist
+
   public :: sax_tokenize
   public :: normalize_text
 
@@ -31,26 +51,28 @@ contains
     type(file_buffer_t), intent(inout) :: fb
     logical, intent(out) :: eof
 
-    character :: c, c2
-    integer :: xv
+    character :: c, q
+    integer :: xv, phrase, iostat
+    logical :: firstChar, ws_discard
 
     xv = fx%xds%xml_version
 
     eof = .false.
-    fx%tokentype = XT_NULL
+    fx%tokentype = TOK_NULL
     if (associated(fx%token)) deallocate(fx%token)
     fx%token => vs_str_alloc("")
-!FIXME next token
+    !FIXME next token
     if (associated(fx%next_token)) then
       fx%token => fx%next_token
       nullify(fx%next_token)
       return
     endif
 
-! This would all be SO much easier if there were a regular-expression
-! library available. As it is, we essentially do hand-written regex
-! equivalents for each state ...
+    ! This would all be SO much easier if there were a regular-expression
+    ! library available. As it is, we essentially do hand-written regex
+    ! equivalents for each state ...
 
+    q = " "
     phrase = 0
     firstChar = .true.
     do
@@ -62,25 +84,73 @@ contains
         return
       endif
 
-      if (fx%state==ST_START_PI) then
-        ! grab until not a namechar ...
-        if ((xv==XML1_0.and.isXML1_0_NameChar(c)) &
-          .or.(xv==XML1_1.and.isXML1_1_NameChar(c))) then
-          fx%token => vs_str_alloc(str_vs(fx%token)//c)
+      select case (fx%state)
+      case (ST_MISC)
+        if (firstChar) ws_discard = .true.
+        if (ws_discard) then
+          if (verify(c, XML_WHITESPACE)>0) then
+            if (c=="<") then
+              ws_discard = .false.
+            else
+              call add_error(fx%error_stack, "Unexpected character found outside content")
+            endif
+          endif
         else
-          fx%tokenType = TOK_PI_TARGET
-          exit
+          if (c=="?") then
+            fx%tokenType = TOK_PI_TAG
+          elseif (c=="!") then
+            fx%tokenType = TOK_BANG_TAG
+          elseif (isInitialNameChar(c, xv)) then
+            call push_chars(fb, c)
+            fx%tokenType = TOK_OPEN_TAG
+          else
+            call add_error(fx%error_stack, "Unexpected character after <")
+          endif
         endif
 
-      elseif (fx%state==ST_PI_CONTENTS) then
-        if (discarding_space) then
+      case (ST_BANG_TAG)
+        if (firstChar) then
+          if (c=="-") then
+            phrase = 1
+          elseif (c=="[") then
+            fx%tokenType = TOK_OPEN_SB
+          elseif (verify(c,upperCase)==0) then
+            fx%token => vs_str_alloc(c)
+          else
+            call add_error(fx%error_stack, "Unexpected character after <!")
+          endif
+        elseif (phrase==1) then
+          if (c=="-") then
+            fx%tokenType = TOK_OPEN_COMMENT
+          else
+            call add_error(fx%error_stack, "Unexpected character after <!-")
+          endif
+        elseif (verify(c,XML_WHITESPACE)>0) then
+          fx%token => vs_str_alloc(str_vs(fx%token)//c)
+        else
+          fx%tokenType = TOK_NAME
+        endif
+
+      case (ST_START_PI)
+        ! grab until whitespace or ?
+        if (verify(c, XML_WHITESPACE//"?")>0) then
+          fx%token => vs_str_alloc(str_vs(fx%token)//c)
+        else
+          fx%tokenType = TOK_NAME
+          if (c=="?") call push_chars(fb, c)
+        endif
+
+      case (ST_PI_CONTENTS)
+        if (firstChar) ws_discard = .true.
+        if (ws_discard) then
           if (verify(c, XML_WHITESPACE)>0) then
-            discarding_space = .false.
+            fx%token => vs_str_alloc(c)
+            ws_discard = .false.
           endif
         elseif (phrase==1) then
           if (c==">") then
             phrase = 2
-            fx%tokenType = TOK_PI_CONTENTS
+            fx%tokenType = TOK_CHAR
             fx%nextTokenType = TOK_PI_END
           elseif (c=="?") then
             fx%token => vs_str_alloc(str_vs(fx%token)//"?")
@@ -94,32 +164,7 @@ contains
           fx%token => vs_str_alloc(str_vs(fx%token)//"?"//c)
         endif
 
-      elseif (fx%state==ST_BANG_TAG) then
-        if (firstChar) then
-          if (c=="-") then
-            phrase = 1
-          elseif (c=="[") then
-            fx%tokenType = TOK_OPEN_SB
-            exit
-          elseif (verify(c,upperCase)==0) then
-            fx%token => vs_str_alloc(c)
-          else
-            err ...
-          endif
-        elseif (phrase==1) then
-          if (c=="-") then
-            fx%tokenType = TOK_OPEN_COMMENT
-            exit
-          else
-            error ...
-          endif
-        elseif (verify(c,upperCase)==0) then
-          fx%token => vs_str_alloc(str_vs(fx%token)//c)
-        else
-          fx%tokenType = TOK_BANG_TAG_NAME
-        endif
-
-      elseif (fx%state==ST_START_COMMENT) then
+      case (ST_START_COMMENT)
         select case(phrase)
         case (0)
           if (c=="-") then
@@ -131,7 +176,7 @@ contains
           if (c=="-") then
             phrase = 2
           else
-            fx%token => vs_str_alloc(str_vs(fx%token)//c)
+            fx%token => vs_str_alloc(str_vs(fx%token)//"-"//c)
             phrase = 0
           endif
         case (2)
@@ -142,138 +187,351 @@ contains
             exit
           else
             call add_error(fx%error_stack, &
-              "-- inside a comment forbidden.")
+              "Expecting > after -- inside a comment.")
           endif
+        end select
 
-      elseif (fx%state==ST_CDATA_CONTENTS) then
-      select case(phrase)
-      case (0)
-        if (c=="]") then
-          phrase = 1
+      case (ST_START_TAG)
+        ! grab until whitespace or /, >
+        if (verify(c, XML_WHITESPACE//"/>")>0) then
+          fx%token => vs_str_alloc(str_vs(fx%token)//c)
         else
-          fx%token => vs_str_alloc(str_vs(fx%token)//c)
-        endif
-      case (1)
-        if (c=="]") then
-          phrase = 2
-        else
-          fx%token => vs_str_alloc(str_vs(fx%token)//c)
-          phrase = 0
-        endif
-      case (2)
-        if (c==">") then
-          fx%tokenType = TOK_CHAR
-          fx%token => vs_str_alloc(str_vs(fx%token)//c)
-          fx%nextTokenType = TOK_CDATA_END
-          exit
-        else
-          fx%token => vs_str_alloc(str_vs(fx%token)//c)
-          phrase = 0
+          fx%tokenType = TOK_NAME
+          if (verify(c, "/>")>0) call push_chars(fb, c)
         endif
 
-    elseif (fx%state==ST_CHAR_IN_CONTENT) then
-      if (c=="<") then
-        fx%tokenType = TOK_CHAR
-        fx%nextTokenType = TOK_OPEN_TAG
-      elseif (c=="&") then
-        fx%tokenType = TOK_CHAR
-        fx%nextTokenType = TOK_OPEN_ENTITY
-      else
-        fx%token => vs_str_alloc(str_vs(fx%token)//c)
-      endif
-        
-    elseif (fx%state==ST_DTD_ELEMENT_CONTENTS) then
-      if (firstChar) then
-        if (verify(c,XML_WHITESPACE)>0) then
-          call add_error(fx%error_stack, &
-            'Missing whitespace in element declaration')
-        endif
-      elseif (c==">") then
-        fx%tokenType = TOK_ELEM_CONTENTS
-        fx%nextTokenType = TOK_ELEM_END
-      else
-        fx%token => vs_str_alloc(str_vs(fx%token)//c)
-      endif
-
-    elseif (fx%state==ST_DTD_ATTLIST_CONTENTS) then
-      if (firstChar) then
-        if (verify(c,XML_WHITESPACE)>0) then
-          call add_error(fx%error_stack, &
-            'Missing whitespace in attlist declaration')
-        endif
-      elseif (c==">") then
-        fx%tokenType = TOK_ELEM_CONTENTS
-        fx%nextTokenType = TOK_ELEM_END
-      else
-        fx%token => vs_str_alloc(str_vs(fx%token)//c)
-      endif
-
-    elseif (fx%state==ST_IN_TAG) then
-      if (discard_whitespace) then
-        if (verify(c,XML_WHITESPACE)>0) then
-          if (phrase==1) then
-            if (c==">") then
-              fx%tokenType = TOK_END_SINGLE_TAG
-              exit
+      case (ST_START_CDATA_1)
+        ! grab until whitespace
+        if (firstChar) fx%token => vs_str_alloc("")
+        if (verify(c, XML_WHITESPACE//"[")>0) then
+          if (size(fx%token)>5) then
+            call add_error(fx%error_stack, &
+              "Expecting CDATA[ after <![")
+            fx%token => vs_str_alloc(str_vs(fx%token)//c)
+          elseif (str_vs(fx%token)=="CDATA") then
+            if (c=="[") then
+              fx%tokenType = TOK_START_CDATA
+              deallocate(fx%token)
             else
               call add_error(fx%error_stack, &
-                "Unexpected character after / in element tag")
-              exit
+                "Expecting [ after CDATA")
             endif
           else
+            call add_error(fx%error_stack, &
+              "Expecting CDATA[ after <![")
+          endif
+        endif
+
+      case (ST_CDATA_CONTENTS)
+        select case(phrase)
+        case (0)
+          if (c=="]") then
+            phrase = 1
+          else
+            fx%token => vs_str_alloc(str_vs(fx%token)//c)
+          endif
+        case (1)
+          if (c=="]") then
+            phrase = 2
+          else
+            fx%token => vs_str_alloc(str_vs(fx%token)//c)
+            phrase = 0
+          endif
+        case (2)
+          if (c==">") then
+            fx%tokenType = TOK_CHAR
+            fx%token => vs_str_alloc(str_vs(fx%token)//c)
+            fx%nextTokenType = TOK_CDATA_END
+            exit
+          else
+            fx%token => vs_str_alloc(str_vs(fx%token)//c)
+            phrase = 0
+          endif
+        end select
+
+      case (ST_IN_TAG)
+        if (firstChar) ws_discard = .true.
+        if (ws_discard) then
+          if (verify(c,XML_WHITESPACE)>0) then
             if (c==">") then
-              fx%tokenType = TOK_END_OPEN_TAG
+              fx%tokenType = TOK_END_TAG
             elseif (c=="/") then
               phrase = 1
+              ws_discard = .false.
             elseif ((xv==XML1_0.and.isXML1_0_NameChar(c)) &
               .or.(xv==XML1_1.and.isXML1_1_NameChar(c))) then
               fx%token => vs_str_alloc(c)
-              discard_whitespace = .false.
+              ws_discard = .false.
             else
               call add_error(fx%error_stack, &
                 "Unexpected character in element tag")
-              exit
+            endif
+          else
+            if (phrase==1) then
+              if (c==">") then
+                fx%tokenType = TOK_CLOSE_TAG
+              else
+                call add_error(fx%error_stack, &
+                  "Unexpected character after / in element tag")
+                exit
+              endif
+            else
+              if ((xv==XML1_0.and.isXML1_0_NameChar(c)) &
+                .or.(xv==XML1_1.and.isXML1_1_NameChar(c))) then
+                fx%token => vs_str_alloc(str_vs(fx%token)//c)
+              elseif (verify(c,XML_WHITESPACE)==0) then
+                fx%tokenType = TOK_NAME
+              elseif (c=="=") then
+                fx%tokenType = TOK_NAME
+                fx%nextTokenType = TOK_EQUALS
+              else
+                call add_error(fx%error_stack, &
+                  "Unexpected character in element tag")
+                exit
+              endif
             endif
           endif
-        else ! not discarding whitespace
-          if ((xv==XML1_0.and.isXML1_0_NameChar(c)) &
-            .or.(xv==XML1_1.and.isXML1_1_NameChar(c))) then
-            fx%token => vs_str_alloc(str_vs(fx%token)//c)
-          elseif (verify(c,XML_WHITESPACE)==0) then
-            fx%tokenType = TOK_ATT_NAME
-          elseif (c=="=") then
-            fx%tokenType = TOK_ATT_NAME
-            fx%nextTokenType = TOK_ATT_EQUALS
-          else
-            call add_error(fx%error_stack, &
-              "Unexpected character in element tag")
-            exit
+        endif
+
+      case (ST_ATT_NAME)
+        if (firstChar) ws_discard = .true.
+        if (ws_discard) then
+          if (verify(c,XML_WHITESPACE)>0) then
+            if (c=="=") then
+              fx%tokenType = TOK_EQUALS
+            else
+              call add_error(fx%error_stack, &
+                "Unexpected character in element tag, expected =")
+            endif
           endif
         endif
-      endif
 
-    elseif (fx%state==ST_ATT_EQUALS) then
-      if (discard_whitespace) then
-        if (verify(c,XML_WHITESPACE)>0) then
-          if (verify(c,"'""")>0) then
-            call add_error(fx%error_stack, "Expecting "" or '")
-            return
+      case (ST_ATT_EQUALS)
+        if (firstChar) ws_discard = .true.
+        if (ws_discard) then
+          if (verify(c,XML_WHITESPACE)>0) then
+            if (verify(c,"'""")>0) then
+              call add_error(fx%error_stack, "Expecting "" or '")
+            endif
+          else
+            q = c
+            ws_discard = .false.
           endif
         else
-          q = c
-          discard_whitespace = .false.
+          if (c==q) then
+            fx%tokenType = TOK_CHAR
+          else
+            fx%token => vs_str_alloc(str_vs(fx%token)//c)
+          endif
         endif
-      else
-        if (c==q) then
-          fx%tokenType = TOK_ATT_VALUE
+
+      case (ST_CHAR_IN_CONTENT)
+        if (verify(c, "<&")>0) then
+          if (phrase==1) then
+            fx%token => vs_str_alloc(str_vs(fx%token)//"]")
+          elseif (phrase==2) then
+            fx%token => vs_str_alloc(str_vs(fx%token)//"]]")
+          endif
+          call push_chars(fb, c)
+          fx%tokenType = TOK_CHAR
+        elseif (c=="]") then
+          if (phrase==0) then
+            phrase = 1
+          elseif (phrase==1) then
+            phrase = 2
+          else
+            fx%token => vs_str_alloc(str_vs(fx%token)//"]]]")
+          endif
+        elseif (c==">") then
+          if (phrase==2) then
+            call add_error(fx%error_stack, "]]> forbidden in character context")
+          else
+            fx%token => vs_str_alloc(str_vs(fx%token)//">")
+          endif
         else
           fx%token => vs_str_alloc(str_vs(fx%token)//c)
         endif
-      endif
 
+      case (ST_TAG_IN_CONTENT)
+        if (phrase==0) then
+          if (c=="<") then
+            phrase = 1
+            ws_discard = .false.
+          elseif (c=="&") then
+            fx%tokenType = TOK_ENTITY
+          else
+            call add_error(fx%error_stack, "Unexpected character found outside content")
+          endif
+        elseif (phrase==1) then
+          if (c=="?") then
+            fx%tokenType = TOK_PI_TAG
+          elseif (c=="!") then
+            fx%tokenType = TOK_BANG_TAG
+          elseif (c=="/") then
+            fx%tokenType = TOK_CLOSE_TAG
+          elseif (isInitialNameChar(c, xv)) then
+            call push_chars(fb, c)
+            fx%tokenType = TOK_OPEN_TAG
+          else
+            call add_error(fx%error_stack, "Unexpected character after <")
+          endif
+        endif
 
+      case (ST_START_ENTITY, ST_START_PE)
+        if (verify(c,XML_WHITESPACE//";")>0) then
+          fx%token => vs_str_alloc(str_vs(fx%token)//c)
+        elseif (c==";") then
+          fx%tokenType = TOK_NAME
+        else
+          call add_error(fx%error_stack, "Entity reference must be terminated with a ;")
+        endif
 
+      case (ST_CLOSING_TAG)
+        if (verify(c,XML_WHITESPACE//">")>0) then
+          fx%token => vs_str_alloc(str_vs(fx%token)//c)
+        else
+          fx%tokenType = TOK_NAME
+          if (c==">") fx%nextTokenType = TOK_END_TAG
+        endif
 
+      case (ST_IN_CLOSING_TAG)
+        if (verify(c, XML_WHITESPACE)>0) then
+          if (c==">") then
+            fx%nextTokenType = TOK_END_TAG
+          else
+            call add_error(fx%error_stack, "Unexpected character - expecting >")
+          endif
+        endif
+
+      case (ST_IN_DTD)
+        if (verify(c,XML_WHITESPACE//"[>")>0) then
+          fx%token => vs_str_alloc(str_vs(fx%token)//c)
+        else
+          fx%tokenType = TOK_NAME
+          if (c=="[") then
+            fx%nextTokenType = TOK_OPEN_SB
+          elseif (c==">") then
+            fx%nextTokenType = TOK_END_TAG
+          endif
+        endif
+
+      case (ST_DTD_NAME, ST_DTD_DECL, ST_INT_SUBSET)
+        if (firstChar) ws_discard = .true.
+        if (ws_discard) then
+          if (verify(c, XML_WHITESPACE)>0) then
+            if (c=="[") then
+              fx%tokenType = TOK_OPEN_SB
+            elseif (c==">") then
+              fx%tokenType = TOK_END_TAG
+            elseif (c=="%") then
+              fx%tokenType = TOK_ENTITY
+            elseif (c=="<") then
+              phrase = 1
+              ws_discard = .false.
+            else
+              fx%token => vs_str_alloc(c)
+              ws_discard = .false.
+            endif
+          elseif (phrase==1) then
+            if (c=="?") then
+              fx%tokenType = TOK_PI_TAG
+            elseif (c=="!") then
+              fx%tokenType = TOK_BANG_TAG
+            else
+              call add_error(fx%error_stack, "Unexpected character, expecting ! or ?")
+            endif
+          else
+            if (verify(c, XML_WHITESPACE)>0) then
+              fx%token => vs_str_alloc(str_vs(fx%token)//c)
+            elseif (str_vs(fx%token)=="SYSTEM") then
+              fx%tokenType = TOK_NAME
+            elseif (str_vs(fx%token)=="PUBLIC") then
+              fx%tokenType = TOK_NAME
+            else
+              call add_error(fx%error_stack, "Unexpected token - expecting SYSTEM or PUBLIC")
+            endif
+          endif
+        endif
+
+      case (ST_DTD_PUBLIC, ST_DTD_SYSTEM)
+        if (firstChar) ws_discard = .true.
+        if (ws_discard) then
+          if (verify(c, XML_WHITESPACE)>0) then
+            if (verify(c, "'""")==0) then
+              q = c
+              fx%token => vs_str_alloc("")
+              ws_discard = .false.
+            endif
+          else
+            call add_error(fx%error_stack, "Unexpected character - expecting ' or """)
+          endif
+        else
+          if (c==q) then
+            fx%tokenType = TOK_CHAR
+          else
+            fx%token => vs_str_alloc(str_vs(fx%token)//c)
+          endif
+        endif
+        
+      case (ST_DTD_ATTLIST, ST_DTD_ELEMENT, ST_DTD_ENTITY, &
+        ST_DTD_ENTITY_PE, ST_DTD_NOTATION)
+        if (firstChar) ws_discard = .true.
+        if (ws_discard) then
+          if (verify(c,XML_WHITESPACE)>0) then
+            fx%token => vs_str_alloc(c)
+            ws_discard = .false.
+          endif
+        elseif (verify(c,XML_WHITESPACE)>0) then
+          fx%token => vs_str_alloc(str_vs(fx%token)//c)
+        else
+          if (str_vs(fx%token)=="%") then
+            fx%tokenType = TOK_ENTITY
+          else
+            fx%tokenType = TOK_NAME
+          endif
+        endif
+        
+      case (ST_DTD_ATTLIST_CONTENTS, ST_DTD_ELEMENT_CONTENTS)
+        if (c==">") then
+          fx%tokenType = TOK_DTD_CONTENTS
+          fx%nextTokenType = TOK_END_TAG
+        else
+          fx%token => vs_str_alloc(str_vs(fx%token)//c)
+        endif
+        
+      case (ST_DTD_ENTITY_ID, ST_DTD_ENTITY_PUBLIC, ST_DTD_ENTITY_SYSTEM, &
+        ST_DTD_ENTITY_NDATA, ST_DTD_NOTATION_ID, ST_DTD_NOTATION_SYSTEM, &
+        ST_DTD_NOTATION_PUBLIC, ST_DTD_NOTATION_PUBLIC_2)
+        if (firstChar) ws_discard = .true.
+        if (ws_discard) then
+          if (verify(c, XML_WHITESPACE)>0) then
+            if (verify(c, "'""")==0) then
+              q = c
+              fx%token => vs_str_alloc("")
+              ws_discard = .false.
+            elseif (c==">") then
+              fx%tokenType = TOK_END_TAG
+            else
+              fx%token => vs_str_alloc(c)
+            endif
+          endif
+        else
+          if (q/=" ".and.c==q) then
+            fx%tokenType = TOK_CHAR
+          elseif (verify(c, XML_WHITESPACE)==0) then
+            fx%tokenType = TOK_NAME
+          else
+            fx%token => vs_str_alloc(str_vs(fx%token)//c)
+          endif
+        endif
+
+      end select
+      
+      firstChar = .false.
+      if (fx%tokenType/=TOK_NULL) exit
+    enddo
+
+  end subroutine sax_tokenize2
 
   subroutine sax_tokenize(fx, fb, iostat)
     type(sax_parser_t), intent(inout) :: fx
@@ -283,7 +541,7 @@ contains
     character :: c, c2
 
 
-! FIXME when we return because iostat/=0, do we leak memory?
+    ! FIXME when we return because iostat/=0, do we leak memory?
 
     if (associated(fx%token)) deallocate(fx%token)
     nullify(fx%token)
@@ -754,7 +1012,7 @@ contains
         allocate(tempString(j-1))
         tempString = s_in(i+1:i+j-1)
         if (existing_entity(fx%predefined_e_list, str_vs(tempString))) then
-            ! Expand immediately
+          ! Expand immediately
           s_temp(i2) = expand_entity_text(fx%predefined_e_list, str_vs(tempString))
           i = i + j + 1
           i2 = i2 + 1
@@ -812,7 +1070,7 @@ contains
         i2 = i2 + 1
       endif
     enddo
-    
+
     deallocate(s_out)
     allocate(s_out(i2-1))
     s_out = s_temp(:i2-1)
@@ -821,5 +1079,5 @@ contains
     if (associated(tempString)) deallocate(tempString)
 
   end function normalize_text
-    
+
 end module m_sax_tokenizer

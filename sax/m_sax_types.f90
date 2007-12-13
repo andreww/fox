@@ -73,6 +73,8 @@ module m_sax_types
   integer, parameter :: ST_DTD_ATTLIST_END = 45
   integer, parameter :: ST_DTD_ELEMENT_CONTENTS = 46
   integer, parameter :: ST_DTD_ELEMENT_END = 47
+  integer, parameter :: ST_START_ENTITY = 48
+  integer, parameter :: ST_START_PE = 49
   
   ! Whitespace
   
@@ -93,11 +95,13 @@ module m_sax_types
     logical :: well_formed = .false.
     logical :: skippedExternal = .false.
     character, dimension(:), pointer :: token => null()
+    integer :: tokenType
     character, dimension(:), pointer :: next_token => null()
+    integer :: nextTokenType
     character, dimension(:), pointer :: name => null()
     character, dimension(:), pointer :: attname => null()
     logical :: error = .false.
-    type(error_stack) :: error_stack 
+    type(error_stack) :: error_stack
     ! Aspects of document structure
     character, dimension(:), pointer :: root_element => null()
     type(elstack_t) :: elstack
