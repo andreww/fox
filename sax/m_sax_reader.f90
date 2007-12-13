@@ -24,7 +24,6 @@ module m_sax_reader
   use m_common_format, only: operator(//)
   use m_common_io, only: setup_io, io_eor, io_eof, get_unit
   use m_common_format, only: str
-  use m_common_struct, only: xml_doc_state
 
   implicit none
   private
@@ -543,8 +542,7 @@ contains
     n = fb%f(1)%col
   end function column
 
-  subroutine parse_xml_declaration(xds, f, iostat, es, standalone)
-    type(xml_doc_state), intent(inout) :: xds
+  subroutine parse_xml_declaration(f, iostat, es, standalone)
     type(xml_file_t), intent(inout) :: f
     integer, intent(out) :: iostat
     type(error_stack), intent(inout) :: es
@@ -569,9 +567,6 @@ contains
     integer, parameter :: xd_encoding = 2
     integer, parameter :: xd_standalone = 3
 
-    xds%xml_version = XML1_0
-    xds%encoding => vs_str_alloc("utf-8")
-    xds%standalone = .false.
     f%xml_version = XML1_0
     f%encoding => vs_str_alloc("utf-8")
     if (present(standalone)) standalone = .false.
@@ -718,11 +713,9 @@ contains
              select case (xd_par)
              case (xd_version)
                 if (str_vs(ch)=="1.0") then
-                   xds%xml_version = XML1_0
                    f%xml_version = XML1_0
                    deallocate(ch)
                 elseif (str_vs(ch)=="1.1") then
-                   xds%xml_version = XML1_1
                    f%xml_version = XML1_1
                    deallocate(ch)
                 else
@@ -742,17 +735,13 @@ contains
                    call add_error(es, &
                         "Invalid encoding found in XML declaration; illegal characters in encoding name")
                 else
-                   deallocate(xds%encoding)
-                   xds%encoding => ch
                    f%encoding => ch
                 endif
              case (xd_standalone)
                 if (str_vs(ch)=="yes") then
-                   xds%standalone = .true.
                    standalone = .true.
                    deallocate(ch)
                 elseif (str_vs(ch)=="no") then
-                   xds%standalone = .false.
                    standalone = .false.
                    deallocate(ch)
                 else
