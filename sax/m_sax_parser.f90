@@ -1,7 +1,7 @@
 module m_sax_parser
 
   use m_common_array_str, only: str_vs, string_list, &
-    destroy_string_list, vs_str_alloc
+    destroy_string_list, vs_str_alloc, vs_vs_alloc
   use m_common_attrs, only: init_dict, destroy_dict, reset_dict, &
     add_item_to_dict, has_key, get_value
   use m_common_charset, only: XML_WHITESPACE, allowed_encoding
@@ -55,9 +55,9 @@ contains
     ns => fx%nsDict
   end function getNSDict
 
-  subroutine sax_parser_init(fx, filename)
+  subroutine sax_parser_init(fx, fb)
     type(sax_parser_t), intent(out) :: fx
-    character(len=*), intent(in) :: filename
+    type(file_buffer_t), intent(in) :: fb
 
     allocate(fx%token(0))
 
@@ -72,7 +72,7 @@ contains
     deallocate(fx%xds%inputEncoding)
     fx%xds%inputEncoding => vs_str_alloc("us-ascii")
     ! because it always is ...
-    fx%xds%documentURI => vs_str_alloc(filename)
+    fx%xds%documentURI => vs_vs_alloc(fb%f(1)%filename)
 
     allocate(fx%wf_stack(1))
     fx%wf_stack(1) = 0

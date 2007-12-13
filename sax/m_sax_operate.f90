@@ -37,7 +37,7 @@ contains
         call FoX_error("Error opening file in open_xml_file")
     endif
     
-    call sax_parser_init(xt%fx, file)
+    call sax_parser_init(xt%fx, xt%fb)
 
   end subroutine open_xml_file
 
@@ -48,7 +48,7 @@ contains
     integer :: iostat
 
     call open_file(xt%fb, string=string, iostat=iostat)
-    call sax_parser_init(xt%fx, "")
+    call sax_parser_init(xt%fx, xt%fb)
 
   end subroutine open_xml_string
 
