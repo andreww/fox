@@ -77,12 +77,12 @@ contains
              ch2 => vs_str_alloc(str_vs(ch)//c)
              deallocate(ch)
              ch => ch2
-          elseif (isXML1_0_NameChar(c) &
+          elseif (verify(c, XML_WHITESPACE)==0 &
                .and.str_vs(ch)=="xml") then
              deallocate(ch)
              parse_state = XD_MISC
           else
-             call push_chars(fb, "<?"//str_vs(ch))
+             call push_chars(fb, "<?"//str_vs(ch)//c)
              deallocate(ch)
              return
           endif
@@ -93,7 +93,7 @@ contains
           elseif (isXML1_0_NameChar(c)) then
              ch => vs_str_alloc(c)
              parse_state = XD_PA
-          elseif (verify(c, XML_WHITESPACE)==0) then
+          elseif (verify(c, XML_WHITESPACE)>0) then
              call add_error(fx%error_stack, &
                   "Unexpected character in XML declaration")
           endif
@@ -103,7 +103,7 @@ contains
              ch2 => vs_str_alloc(str_vs(ch)//c)
              deallocate(ch)
              ch => ch2
-          elseif (verify(c, XML_WHITESPACE)>0) then
+          elseif (verify(c, XML_WHITESPACE//"=")==0) then
              select case (str_vs(ch))
 
              case ("version")
@@ -150,7 +150,11 @@ contains
              end select
 
              deallocate(ch)
-             parse_state = XD_EQ
+             if (c=="=") then
+                parse_state = XD_QUOTE
+             else
+                parse_state = XD_EQ
+             endif
           else
              call add_error(fx%error_stack, &
                   "Unexpected character found in XML declaration")
@@ -159,17 +163,17 @@ contains
        case (XD_EQ)
           if (c=="=") then
              parse_state = XD_QUOTE
-          elseif (verify(c, XML_WHITESPACE)==0) then
+          elseif (verify(c, XML_WHITESPACE)>0) then
              call add_error(fx%error_stack, &
                   "Unexpected character found in XML declaration; expecting ""=""")
           endif
 
        case (XD_QUOTE)
-          if (verify(c, "'""")>0) then
+          if (verify(c, "'""")==0) then
              q = c
              parse_state = XD_PV
              ch => vs_str_alloc("")
-          else
+          elseif (verify(c, XML_WHITESPACE)>0) then
              call add_error(fx%error_stack, &
                   "Unexpected character found in XML declaration; expecting "" or '")
           endif
@@ -192,12 +196,12 @@ contains
                 if (size(ch)==0) then
                    call add_error(fx%error_stack, &
                         "Empty value for encoding not allowed in XML declaration")
-                elseif (size(ch)==1.and.verify(ch(1), XML_INITIALENCODINGCHARS)==0) then
+                elseif (size(ch)==1.and.verify(ch(1), XML_INITIALENCODINGCHARS)>0) then
                    call add_error(fx%error_stack, &
                         "Invalid encoding found in XML declaration; illegal characters in encoding name")
                 elseif (size(ch)>1.and. &
-                     (verify(ch(1), XML_INITIALENCODINGCHARS)==0 &
-                     .or.verify(str_vs(ch(2:)), XML_ENCODINGCHARS)==0)) then
+                     (verify(ch(1), XML_INITIALENCODINGCHARS)>0 &
+                     .or.verify(str_vs(ch(2:)), XML_ENCODINGCHARS)>0)) then
                    call add_error(fx%error_stack, &
                         "Invalid encoding found in XML declaration; illegal characters in encoding name")
                 else
@@ -217,7 +221,6 @@ contains
 
                 endif
              end select
-             deallocate(ch)
              parse_state = XD_MISC
           else
              ch2 => vs_str_alloc(str_vs(ch)//c)
