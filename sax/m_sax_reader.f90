@@ -262,7 +262,7 @@ contains
       endif
     else
       ! We are reading from a file
-      string(offset+1:) = get_chars_from_file(fb, n_left, iostat, es)
+      string(offset+1:) = get_chars_from_file(fb%f(1), n_left, iostat, es)
       if (iostat/=0) return ! EOF or Error.
     endif
 
@@ -417,8 +417,8 @@ contains
     p = (index(c1,c2)/=0)
   end function index_fb2
 
-  function get_chars_from_file(fb, n, iostat, es) result(string)
-    type(file_buffer_t), intent(inout) :: fb
+  function get_chars_from_file(f, n, iostat, es) result(string)
+    type(xml_file_t), intent(inout) :: f
     integer, intent(in) :: n
     integer, intent(out) :: iostat
     type(error_stack), intent(inout) :: es
@@ -427,9 +427,7 @@ contains
     integer :: i
     character :: c, c2
     logical :: pending
-    type(xml_file_t), pointer :: f
 
-    f => fb%f(1)
     i = 1
     pending = .false.
     do while (i<=n)
