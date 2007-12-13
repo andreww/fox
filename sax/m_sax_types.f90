@@ -116,7 +116,6 @@ module m_sax_types
   type xml_t
     type(file_buffer_t) :: fb
     type(sax_parser_t) :: fx
-    integer :: sax_signal
   end type xml_t
 
 

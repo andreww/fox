@@ -16,14 +16,13 @@ module m_sax_reader
   ! Furthermore, readahead and pushback is available on
   ! all buffers.
 
-  use m_common_array_str, only : vs_str, str_vs, vs_str_alloc, vs_vs_alloc
+  use m_common_array_str, only: str_vs, vs_str_alloc, vs_vs_alloc
   use m_common_charset, only: XML_WHITESPACE, XML_INITIALENCODINGCHARS, &
     XML_ENCODINGCHARS, XML1_0, XML1_1, isXML1_0_NameChar, isXML1_1_NameChar, &
     isLegalChar, allowed_encoding
   use m_common_error,  only: error_stack, add_error, FoX_error, in_error
   use m_common_format, only: operator(//)
   use m_common_io, only: setup_io, io_eor, io_eof, get_unit
-  use m_common_format, only: str
 
   implicit none
   private
@@ -33,7 +32,7 @@ module m_sax_reader
     integer :: pos = 1
   end type buffer_t
 
-  type xml_file_t
+  type xml_source_t
     integer            :: lun = -2
     integer            :: xml_version = XML1_0
     character, pointer :: encoding(:) => null()
@@ -42,11 +41,11 @@ module m_sax_reader
     integer            :: col = 0
     character, pointer :: next_chars(:) => null()   ! pushback buffer
     type(buffer_t), pointer :: input_string => null()
-  end type xml_file_t
+  end type xml_source_t
 
   type file_buffer_t
     !FIXME private
-    type(xml_file_t), pointer :: f(:) => null()
+    type(xml_source_t), pointer :: f(:) => null()
     type(buffer_t),  pointer  :: buffer_stack(:) => null()  ! stack of expansion buffers
     character, pointer        :: namebuffer(:) => null()    ! temporary buffer for retrieving strings
     logical                   :: standalone = .false.
@@ -103,7 +102,7 @@ contains
   end subroutine open_file
 
   subroutine open_string_as_file(f, string)
-    type(xml_file_t), intent(out)    :: f
+    type(xml_source_t), intent(out)    :: f
     character(len=*), intent(in)     :: string
 
     f%lun = -1
@@ -116,7 +115,7 @@ contains
   end subroutine open_string_as_file
 
   subroutine open_actual_file(f, file, iostat, lun)
-    type(xml_file_t), intent(out)    :: f
+    type(xml_source_t), intent(out)    :: f
     character(len=*), intent(in)     :: file
     integer, intent(out)             :: iostat
     integer, intent(in), optional    :: lun
@@ -155,7 +154,7 @@ contains
   end subroutine close_file
 
   subroutine close_actual_file(f)
-    type(xml_file_t), intent(inout)    :: f
+    type(xml_source_t), intent(inout)    :: f
 
     if (f%lun/=-1) then
        close(f%lun)
@@ -180,7 +179,7 @@ contains
   end subroutine push_chars
 
   subroutine push_file_chars(f, s)
-    type(xml_file_t), intent(inout) :: f
+    type(xml_source_t), intent(inout) :: f
     character(len=*), intent(in) :: s
     character, dimension(:), pointer :: nc
 
@@ -284,14 +283,13 @@ contains
   end function get_characters
 
   function get_characters_from_file(f, n, iostat, es) result(string)
-    type(xml_file_t), intent(inout) :: f
+    type(xml_source_t), intent(inout) :: f
     integer, intent(in) :: n
     integer, intent(out) :: iostat
     type(error_stack), intent(inout) :: es
     character(len=n) :: string
 
-    type(buffer_t), pointer :: cb
-    integer :: offset, n_left, n_held
+    integer :: offset, n_left
     character, pointer :: temp(:)
 
     if (size(f%next_chars)>0) then
@@ -470,7 +468,7 @@ contains
   end function index_fb2
 
   function get_chars_from_file(f, n, iostat, es) result(string)
-    type(xml_file_t), intent(inout) :: f
+    type(xml_source_t), intent(inout) :: f
     integer, intent(in) :: n
     integer, intent(out) :: iostat
     type(error_stack), intent(inout) :: es
@@ -536,7 +534,7 @@ contains
   end function get_chars_from_file
 
   function read_single_char(f, iostat) result(c)
-    type(xml_file_t), intent(inout) :: f
+    type(xml_source_t), intent(inout) :: f
     integer, intent(out) :: iostat
     character :: c
 
@@ -569,7 +567,7 @@ contains
   end function column
 
   subroutine parse_xml_declaration(f, iostat, es, standalone)
-    type(xml_file_t), intent(inout) :: f
+    type(xml_source_t), intent(inout) :: f
     integer, intent(out) :: iostat
     type(error_stack), intent(inout) :: es
     logical, intent(out), optional :: standalone
