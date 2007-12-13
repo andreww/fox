@@ -37,6 +37,7 @@ module m_sax_reader
   type xml_file_t
     integer            :: lun = -2
     integer            :: xml_version = XML1_0
+    character, pointer :: encoding(:) => null()
     character, pointer :: filename(:) => null()
     integer            :: line = 0
     integer            :: col = 0
@@ -513,6 +514,7 @@ contains
     integer :: parse_state, xd_par
     character :: c, q
     character, pointer :: ch(:), ch2(:)
+    logical :: standalone
 
     integer, parameter :: XD_0      = 0
     integer, parameter :: XD_START  = 1
@@ -532,6 +534,9 @@ contains
     xds%xml_version = XML1_0
     xds%encoding => vs_str_alloc("utf-8")
     xds%standalone = .false.
+    fb%f(1)%xml_version = XML1_0
+    fb%f(1)%encoding => vs_str_alloc("utf-8")
+    standalone = .false.
 
     parse_state = XD_0
     xd_par = xd_nothing
@@ -673,9 +678,11 @@ contains
              case (xd_version)
                 if (str_vs(ch)=="1.0") then
                    xds%xml_version = XML1_0
+                   fb%f(1)%xml_version = XML1_0
                    deallocate(ch)
                 elseif (str_vs(ch)=="1.1") then
                    xds%xml_version = XML1_1
+                   fb%f(1)%xml_version = XML1_1
                    deallocate(ch)
                 else
                    call add_error(es, &
@@ -696,13 +703,16 @@ contains
                 else
                    deallocate(xds%encoding)
                    xds%encoding => ch
+                   fb%f(1)%encoding => ch
                 endif
              case (xd_standalone)
                 if (str_vs(ch)=="yes") then
                    xds%standalone = .true.
+                   standalone = .true.
                    deallocate(ch)
                 elseif (str_vs(ch)=="no") then
                    xds%standalone = .false.
+                   standalone = .false.
                    deallocate(ch)
                 else
                    call add_error(es, &
