@@ -51,6 +51,7 @@ module m_sax_reader
     integer                   :: input_pos
     type(buffer_t),  pointer  :: buffer_stack(:) => null()  ! stack of expansion buffers
     character, pointer        :: namebuffer(:) => null()    ! temporary buffer for retrieving strings
+    logical                   :: standalone = .false.
   end type file_buffer_t
 
 
@@ -273,6 +274,43 @@ contains
     endif
 
   end function get_characters
+
+  function get_characters_from_file(f, n, iostat, es) result(string)
+    type(xml_file_t), intent(inout) :: f
+    integer, intent(in) :: n
+    integer, intent(out) :: iostat
+    type(error_stack), intent(inout) :: es
+    character(len=n) :: string
+
+    type(buffer_t), pointer :: cb
+    integer :: offset, n_left, n_held
+    character, pointer :: temp(:)
+
+    if (size(f%next_chars)>0) then
+      if (n<size(f%next_chars)) then
+        string = str_vs(f%next_chars(:n))
+        temp => vs_vs_alloc(f%next_chars(n+1:))
+        deallocate(f%next_chars)
+        f%next_chars => temp
+        iostat = 0
+        return
+      endif
+      offset = size(f%next_chars)
+      string(:offset) = str_vs(f%next_chars)
+      deallocate(f%next_chars)
+      f%next_chars => vs_str_alloc("")
+    else
+      offset = 0
+    endif     
+    n_left = n - offset
+    if (n_left==0) then
+      iostat = 0
+      return
+    endif
+  
+    string(offset+1:) = get_chars_from_file(f, n_left, iostat, es)
+
+  end function get_characters_from_file
 
 
   subroutine get_characters_until_not_namechar(fb, xv, iostat, es)
@@ -542,7 +580,7 @@ contains
     xd_par = xd_nothing
     do
 
-       c = get_characters(fb, 1, iostat, es)
+       c = get_characters_from_file(fb%f(1), 1, iostat, es)
        if (iostat/=0) then
           return
        endif
@@ -553,7 +591,7 @@ contains
           if (c=="<") then
              parse_state = XD_START
           else
-             call push_chars(fb, c)
+             call push_file_chars(fb%f(1), c)
              return
           endif
 
@@ -562,7 +600,7 @@ contains
              parse_state = XD_TARGET
              ch => vs_str_alloc("")
           else
-             call push_chars(fb, "<"//c)
+             call push_file_chars(fb%f(1), "<"//c)
              return
           endif
 
@@ -576,7 +614,7 @@ contains
              deallocate(ch)
              parse_state = XD_MISC
           else
-             call push_chars(fb, "<?"//str_vs(ch)//c)
+             call push_file_chars(fb%f(1), "<?"//str_vs(ch)//c)
              deallocate(ch)
              return
           endif
