@@ -3,8 +3,7 @@ module m_dom_extras
   use m_dom_error, only: DOMException, inException, throw_exception,           &
     FoX_NODE_IS_NULL, FoX_INVALID_NODE
   use m_dom_dom, only: Node, ELEMENT_NODE,                                     &
-    getAttribute, getAttributeNS, getTextContent, getNodeType,                 &
-    getFoX_checks
+    getAttribute, getAttributeNS, getTextContent, getNodeType, getFoX_checks
   use m_common_realtypes, only: sp, dp
   use m_common_parse_input, only: rts
 
@@ -251,11 +250,13 @@ endif
 
   end subroutine extractDataContentLgSca
 
-subroutine extractDataContentChSca(arg, data, separator, num, iostat, ex)
+subroutine extractDataContentChSca(arg, data, separator, csv, num, iostat, ex)
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*), intent(out) :: data
-character, intent(in), optional :: separator
+
+    logical, intent(in), optional :: csv
+    character, intent(in), optional :: separator
     integer, intent(out), optional :: num, iostat
 
     if (.not.associated(arg)) then
@@ -270,9 +271,9 @@ endif
 
     endif
     if (present(ex)) then
-      call rts(getTextContent(arg, ex), data, separator, num, iostat)
+      call rts(getTextContent(arg, ex), data, separator, csv, num, iostat)
     else
-      call rts(getTextContent(arg), data, separator, num, iostat)
+      call rts(getTextContent(arg), data, separator, csv, num, iostat)
     endif
 
   end subroutine extractDataContentChSca
@@ -440,11 +441,13 @@ endif
 
   end subroutine extractDataContentLgArr
 
-subroutine extractDataContentChArr(arg, data, separator, num, iostat, ex)
+subroutine extractDataContentChArr(arg, data, separator, csv, num, iostat, ex)
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*), dimension(:), intent(out) :: data
-character, intent(in), optional :: separator
+
+    logical, intent(in), optional :: csv
+    character, intent(in), optional :: separator
     integer, intent(out), optional :: num, iostat
 
     if (.not.associated(arg)) then
@@ -459,9 +462,9 @@ endif
 
     endif
     if (present(ex)) then
-      call rts(getTextContent(arg, ex), data, separator, num, iostat)
+      call rts(getTextContent(arg, ex), data, separator, csv, num, iostat)
     else
-      call rts(getTextContent(arg), data, separator, num, iostat)
+      call rts(getTextContent(arg), data, separator, csv, num, iostat)
     endif
 
   end subroutine extractDataContentChArr
@@ -629,11 +632,13 @@ endif
 
   end subroutine extractDataContentLgMat
 
-subroutine extractDataContentChMat(arg, data, separator, num, iostat, ex)
+subroutine extractDataContentChMat(arg, data, separator, csv, num, iostat, ex)
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*), dimension(:,:), intent(out) :: data
-character, intent(in), optional :: separator
+
+    logical, intent(in), optional :: csv
+    character, intent(in), optional :: separator
     integer, intent(out), optional :: num, iostat
 
     if (.not.associated(arg)) then
@@ -648,9 +653,9 @@ endif
 
     endif
     if (present(ex)) then
-      call rts(getTextContent(arg, ex), data, separator, num, iostat)
+      call rts(getTextContent(arg, ex), data, separator, csv, num, iostat)
     else
-      call rts(getTextContent(arg), data, separator, num, iostat)
+      call rts(getTextContent(arg), data, separator, csv, num, iostat)
     endif
 
   end subroutine extractDataContentChMat
@@ -890,11 +895,13 @@ endif
 
   end subroutine extractDataAttributeLgSca
 
-subroutine extractDataAttributeChSca(arg, name, data, separator, num, iostat, ex)
+subroutine extractDataAttributeChSca(arg, name, data, separator, csv, num, iostat, ex)
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*), intent(in) :: name
-character, intent(in), optional :: separator
+
+    logical, intent(in), optional :: csv
+    character, intent(in), optional :: separator
     character(len=*), intent(out) :: data
     integer, intent(out), optional :: num, iostat
     if (.not.associated(arg)) then
@@ -920,9 +927,9 @@ endif
     endif
 
     if (present(ex)) then
-      call rts(getAttribute(arg, name, ex), data, separator, num, iostat)
+      call rts(getAttribute(arg, name, ex), data, separator, csv, num, iostat)
     else
-      call rts(getAttribute(arg, name), data, separator, num, iostat)
+      call rts(getAttribute(arg, name), data, separator, csv, num, iostat)
     endif
 
 
@@ -1163,11 +1170,13 @@ endif
 
   end subroutine extractDataAttributeLgArr
 
-subroutine extractDataAttributeChArr(arg, name, data, separator, num, iostat, ex)
+subroutine extractDataAttributeChArr(arg, name, data, separator, csv, num, iostat, ex)
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*), intent(in) :: name
-character, intent(in), optional :: separator
+
+    logical, intent(in), optional :: csv
+    character, intent(in), optional :: separator
     character(len=*), dimension(:), intent(out) :: data
     integer, intent(out), optional :: num, iostat
     if (.not.associated(arg)) then
@@ -1193,9 +1202,9 @@ endif
     endif
 
     if (present(ex)) then
-      call rts(getAttribute(arg, name, ex), data, separator, num, iostat)
+      call rts(getAttribute(arg, name, ex), data, separator, csv, num, iostat)
     else
-      call rts(getAttribute(arg, name), data, separator, num, iostat)
+      call rts(getAttribute(arg, name), data, separator, csv, num, iostat)
     endif
 
 
@@ -1436,11 +1445,13 @@ endif
 
   end subroutine extractDataAttributeLgMat
 
-subroutine extractDataAttributeChMat(arg, name, data, separator, num, iostat, ex)
+subroutine extractDataAttributeChMat(arg, name, data, separator, csv, num, iostat, ex)
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*), intent(in) :: name
-character, intent(in), optional :: separator
+
+    logical, intent(in), optional :: csv
+    character, intent(in), optional :: separator
     character(len=*), dimension(:,:), intent(out) :: data
     integer, intent(out), optional :: num, iostat
     if (.not.associated(arg)) then
@@ -1466,9 +1477,9 @@ endif
     endif
 
     if (present(ex)) then
-      call rts(getAttribute(arg, name, ex), data, separator, num, iostat)
+      call rts(getAttribute(arg, name, ex), data, separator, csv, num, iostat)
     else
-      call rts(getAttribute(arg, name), data, separator, num, iostat)
+      call rts(getAttribute(arg, name), data, separator, csv, num, iostat)
     endif
 
 
@@ -1721,12 +1732,14 @@ endif
 
   end subroutine extractDataAttNSLgSca
 
-subroutine extractDataAttNSChSca(arg, namespaceURI, localName, data, separator, num, iostat, ex)
+subroutine extractDataAttNSChSca(arg, namespaceURI, localName, data, separator, csv, num, iostat, ex)
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*), intent(in) :: namespaceURI, localName
     character(len=*), intent(out) :: data
-character, intent(in), optional :: separator
+
+    logical, intent(in), optional :: csv
+    character, intent(in), optional :: separator
     integer, intent(out), optional :: num, iostat
     if (.not.associated(arg)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
@@ -1752,10 +1765,10 @@ endif
 
     if (present(ex)) then
       call rts(getAttributeNS(arg, namespaceURI, localName, ex), &
-        data, separator, num, iostat)
+        data, separator, csv, num, iostat)
     else
       call rts(getAttributeNS(arg, namespaceURI, localName), &
-        data, separator, num, iostat)
+        data, separator, csv, num, iostat)
     endif
 
 
@@ -2008,12 +2021,14 @@ endif
 
   end subroutine extractDataAttNSLgArr
 
-subroutine extractDataAttNSChArr(arg, namespaceURI, localName, data, separator, num, iostat, ex)
+subroutine extractDataAttNSChArr(arg, namespaceURI, localName, data, separator, csv, num, iostat, ex)
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*), intent(in) :: namespaceURI, localName
     character(len=*), dimension(:), intent(out) :: data
-character, intent(in), optional :: separator
+
+    logical, intent(in), optional :: csv
+    character, intent(in), optional :: separator
     integer, intent(out), optional :: num, iostat
     if (.not.associated(arg)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
@@ -2039,10 +2054,10 @@ endif
 
     if (present(ex)) then
       call rts(getAttributeNS(arg, namespaceURI, localName, ex), &
-        data, separator, num, iostat)
+        data, separator, csv, num, iostat)
     else
       call rts(getAttributeNS(arg, namespaceURI, localName), &
-        data, separator, num, iostat)
+        data, separator, csv, num, iostat)
     endif
 
 
@@ -2295,12 +2310,14 @@ endif
 
   end subroutine extractDataAttNSLgMat
 
-subroutine extractDataAttNSChMat(arg, namespaceURI, localName, data, separator, num, iostat, ex)
+subroutine extractDataAttNSChMat(arg, namespaceURI, localName, data, separator, csv, num, iostat, ex)
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*), intent(in) :: namespaceURI, localName
     character(len=*), dimension(:,:), intent(out) :: data
-character, intent(in), optional :: separator
+
+    logical, intent(in), optional :: csv
+    character, intent(in), optional :: separator
     integer, intent(out), optional :: num, iostat
     if (.not.associated(arg)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
@@ -2326,10 +2343,10 @@ endif
 
     if (present(ex)) then
       call rts(getAttributeNS(arg, namespaceURI, localName, ex), &
-        data, separator, num, iostat)
+        data, separator, csv, num, iostat)
     else
       call rts(getAttributeNS(arg, namespaceURI, localName), &
-        data, separator, num, iostat)
+        data, separator, csv, num, iostat)
     endif
 
 
