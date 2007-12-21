@@ -1,8 +1,10 @@
 module FoX_dom
 
   use m_common_array_str
+  use m_common_format
   use m_dom_dom
   use m_dom_error
+  use m_dom_extras
   use m_dom_parse
   use m_dom_utils
 
@@ -10,6 +12,7 @@ module FoX_dom
   private
 
   public :: str_vs, vs_vs_alloc, vs_str_alloc
+  public :: str, operator(//)
 
   public :: DOMImplementation
   public :: Node
@@ -230,6 +233,12 @@ module FoX_dom
   
   ! FoX-only interfaces
   public :: newDOMConfig
+
+  public :: getNodePath
+
+  public :: extractDataContent
+  public :: extractDataAttribute
+  public :: extractDataAttributeNS
 
   public :: parseFile
   public :: parseString

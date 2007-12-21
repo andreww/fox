@@ -23,3 +23,8 @@ define(`TOHWM4_interfacelist', `dnl
      TOHWM4_interfacename(`$1',`$2',`MatSi')
      TOHWM4_interfacename(`$1',`$2',`MatSh')
 ')dnl
+define(`TOHWM4_interfaceshortlist', `dnl
+     TOHWM4_interfacename(`$1',`$2',`Sca')
+     TOHWM4_interfacename(`$1',`$2',`Arr')
+     TOHWM4_interfacename(`$1',`$2',`Mat')
+')dnl

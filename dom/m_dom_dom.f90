@@ -306,6 +306,8 @@ module m_dom_dom
   public :: getTextContent
   public :: setTextContent
 
+  public :: getNodePath
+
   public :: setStringValue
   public :: getStringValue
   public :: setReadonlyNode
@@ -3630,7 +3632,6 @@ endif
         if (getPublicId(this)/=getPublicId(that) &
           .or. getSystemId(this)/=getSystemId(that) &
           .or. getInternalSubset(this)/=getInternalSubset(that)) return
-        print*, "entass", associated(this), associated(that)
         atts1 => getEntities(this)
         atts2 => getEntities(that)
         if (getLength(atts1)/=getLength(atts2)) return
@@ -4191,6 +4192,170 @@ endif
 
     end select
   end subroutine setTextContent
+
+
+  recursive function getNodePath(arg, ex)result(c) 
+    type(DOMException), intent(out), optional :: ex
+    ! recursive only for atts and text
+    type(Node), pointer :: arg
+    character(len=100) :: c
+    
+    type(Node), pointer :: this, this2
+    character(len=len(c)) :: c2
+    integer :: n
+
+    if (.not.associated(arg)) then
+      if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "getNodePath", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    endif
+
+    c = ""
+    if (.not.arg%inDocument) return
+    select case(getNodeType(arg))
+
+    case (ELEMENT_NODE)
+      this => arg
+      do while (getNodeType(this)/=DOCUMENT_NODE)
+        c2 = ""
+        this2 => getPreviousSibling(this)
+        n = 0
+        do while (associated(this2))
+          if (getNodeType(this2)==ELEMENT_NODE &
+            .and.getNodeName(this2)==getNodeName(this)) n = n + 1
+          this2 => getPreviousSibling(this2)
+        enddo
+        if (n==0) then
+          this2 => getNextSibling(this)
+          do while (associated(this2))
+            if (getNodeType(this2)==ELEMENT_NODE &
+              .and.getNodeName(this2)==getNodeName(this)) then
+              n = 1
+              exit
+            endif
+            this2 => getNextSibling(this2)
+          enddo
+        else
+          n = n + 1
+        endif
+        if (n>0) c2 = "["//n//"]"
+        ! What name to use:
+        if (getNamespaceURI(this)/="".and.getPrefix(this)=="") then
+          ! default namespace; need to do the * trick
+          ! how many previous siblings?
+          c2 = "/*"//c2
+        else
+          c2 = "/"//getNodeName(this)//c2
+        endif
+        c = trim(c2)//c
+        this => getParentNode(this)
+      enddo
+
+    case (ATTRIBUTE_NODE)
+      c = trim(getNodePath(getOwnerElement(arg)))//"/@"//getNodeName(arg)
+
+    case (TEXT_NODE, CDATA_SECTION_NODE)
+      ! FIXME this will give wrong answers sometimes if
+      ! the tree contains entity references
+      this => getParentNode(arg)
+      do while (associated(this))
+        if (getNodeType(this)==ELEMENT_NODE) exit
+        this => getParentNode(this)
+      enddo
+      if (getNodeType(this)/=ELEMENT_NODE) &
+        this => getOwnerElement(this)
+      c = trim(getNodePath(this))//"/text()"
+      this => getPreviousSibling(arg)
+      n = 0
+      do while (associated(this))
+        if (getNodeType(this)==TEXT_NODE &
+          .or.getNodeType(this)==CDATA_SECTION_NODE) n = n + 1
+        this => getPreviousSibling(this)
+      enddo
+      if (n==0) then
+        this => getNextSibling(arg)
+        do while (associated(this))
+          if (getNodeType(this)==COMMENT_NODE &
+            .or.getNodeType(this)==CDATA_SECTION_NODE) then
+            n = 1
+            exit
+          endif
+          this => getNextSibling(this)
+        enddo
+      else
+        n = n + 1
+      endif
+      if (n>0) c = trim(c)//"["//n//"]"
+
+    case (PROCESSING_INSTRUCTION_NODE)
+      this => getParentNode(arg)
+      c = trim(getNodePath(this))//"/processing-instruction("//getNodeName(arg)//")"
+      this => getPreviousSibling(arg)
+      n = 0
+      do while (associated(this))
+        if (getNodeType(this)==PROCESSING_INSTRUCTION_NODE &
+          .and.getNodeName(this)==getNodeName(arg)) n = n + 1
+        this => getPreviousSibling(this)
+      enddo
+      if (n==0) then
+        this => getNextSibling(arg)
+        do while (associated(this))
+          if (getNodeType(this)==PROCESSING_INSTRUCTION_NODE &
+            .and.getNodeName(this)==getNodeName(arg)) then
+            n = 1
+            exit
+          endif
+          this => getNextSibling(this)
+        enddo
+      else
+        n = n + 1
+      endif
+      if (n>0) c = trim(c)//"["//n//"]"
+
+    case (COMMENT_NODE)
+      this => getParentNode(arg)
+      c = trim(getNodePath(this))//"/comment()"
+      this => getPreviousSibling(arg)
+      n = 0
+      do while (associated(this))
+        if (getNodeType(this)==COMMENT_NODE) n = n + 1
+        this => getPreviousSibling(this)
+      enddo
+      if (n==0) then
+        this => getNextSibling(arg)
+        do while (associated(this))
+          if (getNodeType(this)==COMMENT_NODE) then
+            n = 1
+            exit
+          endif
+          this => getNextSibling(this)
+        enddo
+      else
+        n = n + 1
+      endif
+      if (n>0) c = trim(c)//"["//n//"]"
+
+    case (DOCUMENT_NODE)
+      c = "/"
+
+    case (XPATH_NAMESPACE_NODE)
+      this => getOwnerElement(arg)
+      if (getPrefix(arg)=="") then
+        c = trim(getNodePath(this))//"/namespace::xmlns"
+      else
+        c = trim(getNodePath(this))//"/namespace::"//getPrefix(arg)
+      endif
+      ! FIXME namespace nodes are not marked as inDocument correctly
+
+    end select
+
+  end function getNodePath
 
   subroutine putNodesInDocument(doc, arg)
     type(Node), pointer :: doc, arg
