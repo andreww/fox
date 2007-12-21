@@ -10,9 +10,9 @@ module FoX_common
   private
 
 #ifdef DUMMYLIB
-  character(len=*), parameter :: FoX_version = '3.0.1-dummy'
+  character(len=*), parameter :: FoX_version = '3.1-dummy'
 #else
-  character(len=*), parameter :: FoX_version = '3.0.1'
+  character(len=*), parameter :: FoX_version = '3.1'
 #endif
 
   public :: FoX_version
