@@ -3,9 +3,11 @@ program dom_example
   use FoX_dom
   implicit none
 
-  type(Node), pointer :: myDoc, p, textNode
+  type(Node), pointer :: myDoc, p
   type(NodeList), pointer :: parameterList, children
   integer :: i, j
+
+  real :: energy
 
   ! Load in the document
   myDoc => parseFile("h2o.xml")
@@ -30,8 +32,8 @@ program dom_example
           p => item(children, j)
           if (getLocalName(p) =="scalar") then
             ! This is the scalar node whose child we want:
-            textNode => getFirstChild(p)
-            print*, "Energy Tolerance is ", trim(getData(textNode))
+            call extractDataContent(p, energy)
+            print*, "Energy Tolerance is ", energy
           endif
         enddo
       endif
