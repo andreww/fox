@@ -83,8 +83,6 @@ TOHW_m_dom_get(DOMString, nodeName, np%nodeName)
     type(Node), pointer :: arg
     character(len=*) :: nodeValue
 
-    type(Node), pointer :: np
-
     if (.not.associated(arg)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif
@@ -100,7 +98,6 @@ TOHW_m_dom_get(DOMString, nodeName, np%nodeName)
       call setValue(arg, nodeValue)
     case (CDATA_SECTION_NODE, COMMENT_NODE, PROCESSING_INSTRUCTION_NODE, TEXT_NODE)
       call setData(arg, nodeValue)
-     
     end select
 
   end subroutine setNodeValue

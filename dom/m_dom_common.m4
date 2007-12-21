@@ -17,9 +17,9 @@ TOHW_m_dom_contents(`
   TOHW_subroutine(setData, (arg, data))
     type(Node), pointer :: arg
     character(len=*) :: data
-
-    integer :: n
     
+    integer :: n
+
     if (.not.associated(arg)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif

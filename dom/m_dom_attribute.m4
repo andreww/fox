@@ -37,8 +37,6 @@ TOHW_m_dom_get(Node, ownerElement, np%elExtras%ownerElement, (ATTRIBUTE_NODE))
     type(Node), pointer :: arg
     character(len=getTextContent_len(arg, associated(arg))) :: c 
 
-    integer :: i, n
-
     if (.not.associated(arg)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif
@@ -58,28 +56,7 @@ TOHW_m_dom_get(Node, ownerElement, np%elExtras%ownerElement, (ATTRIBUTE_NODE))
     type(Node), pointer :: np
     integer :: i
 
-    if (.not.associated(arg)) then
-      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
-    endif
-
-    if (getNodeType(arg)/=ATTRIBUTE_NODE) then
-      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    elseif (arg%readonly) then
-      TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
-    elseif (.not.checkChars(value, getXmlVersionEnum(getOwnerDocument(arg)))) then
-      TOHW_m_dom_throw_error(FoX_INVALID_CHARACTER)
-    endif
-
-    do i = 1, getLength(getChildNodes(arg))
-      call destroyNode(arg%childNodes%nodes(i)%this)
-    enddo
-    deallocate(arg%childNodes%nodes)
-    allocate(arg%childNodes%nodes(0))
-    arg%childNodes%length = 0
-    arg%firstChild => null()
-    arg%lastChild => null()
-    np => createTextNode(getOwnerDocument(arg), value)
-    np => appendChild(arg, np)
+    call setTextContent(arg, value)
 
   end subroutine setValue
 

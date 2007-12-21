@@ -1057,8 +1057,6 @@ endif
     type(Node), pointer :: arg
     character(len=*) :: nodeValue
 
-    type(Node), pointer :: np
-
     if (.not.associated(arg)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
   call throw_exception(FoX_NODE_IS_NULL, "setNodeValue", ex)
@@ -1090,7 +1088,6 @@ endif
       call setValue(arg, nodeValue)
     case (CDATA_SECTION_NODE, COMMENT_NODE, PROCESSING_INSTRUCTION_NODE, TEXT_NODE)
       call setData(arg, nodeValue)
-     
     end select
 
   end subroutine setNodeValue
@@ -9611,8 +9608,6 @@ endif
     type(Node), pointer :: arg
     character(len=getTextContent_len(arg, associated(arg))) :: c 
 
-    integer :: i, n
-
     if (.not.associated(arg)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
   call throw_exception(FoX_NODE_IS_NULL, "getValue_DOM", ex)
@@ -9649,60 +9644,7 @@ endif
     type(Node), pointer :: np
     integer :: i
 
-    if (.not.associated(arg)) then
-      if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
-  call throw_exception(FoX_NODE_IS_NULL, "setValue", ex)
-  if (present(ex)) then
-    if (inException(ex)) then
-       return
-    endif
-  endif
-endif
-
-    endif
-
-    if (getNodeType(arg)/=ATTRIBUTE_NODE) then
-      if (getFoX_checks().or.FoX_INVALID_NODE<200) then
-  call throw_exception(FoX_INVALID_NODE, "setValue", ex)
-  if (present(ex)) then
-    if (inException(ex)) then
-       return
-    endif
-  endif
-endif
-
-    elseif (arg%readonly) then
-      if (getFoX_checks().or.NO_MODIFICATION_ALLOWED_ERR<200) then
-  call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "setValue", ex)
-  if (present(ex)) then
-    if (inException(ex)) then
-       return
-    endif
-  endif
-endif
-
-    elseif (.not.checkChars(value, getXmlVersionEnum(getOwnerDocument(arg)))) then
-      if (getFoX_checks().or.FoX_INVALID_CHARACTER<200) then
-  call throw_exception(FoX_INVALID_CHARACTER, "setValue", ex)
-  if (present(ex)) then
-    if (inException(ex)) then
-       return
-    endif
-  endif
-endif
-
-    endif
-
-    do i = 1, getLength(getChildNodes(arg))
-      call destroyNode(arg%childNodes%nodes(i)%this)
-    enddo
-    deallocate(arg%childNodes%nodes)
-    allocate(arg%childNodes%nodes(0))
-    arg%childNodes%length = 0
-    arg%firstChild => null()
-    arg%lastChild => null()
-    np => createTextNode(getOwnerDocument(arg), value)
-    np => appendChild(arg, np)
+    call setTextContent(arg, value)
 
   end subroutine setValue
 
@@ -10541,7 +10483,6 @@ endif
     endif
 
     call updateTextContentLength(np, n)
- 
   end subroutine setIsElementContentWhitespace
 
 ! function getWholeText
@@ -10609,9 +10550,9 @@ endif
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*) :: data
-
-    integer :: n
     
+    integer :: n
+
     if (.not.associated(arg)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
   call throw_exception(FoX_NODE_IS_NULL, "setData", ex)

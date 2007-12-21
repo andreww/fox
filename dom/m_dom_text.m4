@@ -61,7 +61,6 @@ TOHW_m_dom_get(logical, isElementContentWhitespace, np%ignorableWhitespace, (TEX
     endif
 
     call updateTextContentLength(np, n)
- 
   end subroutine setIsElementContentWhitespace
 
 ! function getWholeText
