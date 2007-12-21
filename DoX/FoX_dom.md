@@ -29,7 +29,7 @@ In all cases, the mapping from DOM interface to Fortran implementation is as fol
 3. All object method calls are modelled as functions or subroutines with the same name, whose first argument is the object. Thus:  
 `aNodelist = aNode.getElementsByTagName(tagName)`  
 should be converted to Fortran as:  
-`aNodelist =&gt; getElementsByTagName(aNode, tagName)`  
+`aNodelist => getElementsByTagName(aNode, tagName)`  
 4. All object method calls whose return type is void are modelled as subroutines. Thus:   
 `aNode.normalize()`  
 becomes
@@ -256,8 +256,11 @@ Document:
 
 Node:
 
-* `isDefaultNamespace(np, namespaceURI)`  
+* `getTextContent(np)`  
+* `setTextContent(np, textContent)`  
+* `isEqualNode(np, other)`
 * `isSameNode(np)`  
+* `isDefaultNamespace(np, namespaceURI)`  
 * `lookupPrefix(np, namespaceURI)`  
 * `lookupNamespaceURI(np, prefix)`  
 
@@ -319,16 +322,15 @@ However, this has been kept to a minimum. FoX keeps track of all memory allocate
 The only memory handling that the user needs to take care of is destroying any
 DOM Documents (whether created manually, or by the `parse()` routine.) All other nodes or node structures created will be destroyed automatically by the relevant `destroy()` call.
 
-(Strictly speaking, it is also possible to create `DocumentType` objects which are not connected to a document. These may be also be cleaned up by calling `destroy()`)
-
 As a consequence of this, all DOM objects which are part of a given document will become inaccessible after the document object is destroyed.
-
 
 ## Additional functions.
 
 <a name="DomUtilityFunctions"/>
 
 Several additional utility functions are provided by FoX.
+
+### Input and output of XML data
 
 Firstly, to construct a DOM tree, from either a file or a string containing XML data.
 
@@ -358,6 +360,110 @@ This will open `fileName` and serialize the DOM tree by writing into the file. I
 
 (Control over serialization options is done through the configuration of the **arg**'s ownerDocument, see [below](#DomConfiguration).)
 
+
+Finally, to clean up all memory associated with the DOM, it is necessary to call:
+
+* `destroy`  
+**np**: *Node, pointer*
+
+This will clear up all memory usage associated with the document (or documentType) node passed in.
+
+
+### Extraction of data from an XML file.
+
+<a name="dataExtraction"/>
+
+The standard DOM functions only deal with string data. When dealing with numerical (or logical) data,
+the following functions may be of use.
+
+* `extractDataContent`  
+* `extractDataAttribute`  
+* `extractDataAttributeNS`
+
+These extract data from, respectively, the text content of an element, from one of its attributes, or from one of its namespaced attributes.
+They are used like so:
+
+(where `p` is an element which has been selected by means of the other DOM functions)
+
+    call extractDataContent(p, data)
+
+The subroutine will look at the text contents of the element, and interpret according to the type of `data`. That is, if `data` has been declared as an `integer`, then the contents of `p` will be read as such an placed into `data`.
+
+`data` may be a `string`, `logical`, `integer`, `real`, `double precision`, `complex` or `double complex` variable.
+
+In addition, if `data` is supplied as a rank-1 or rank-2 variable (ie an array or a matrix) then the data will be read in assuming it to be a space- or comma-separated list of such data items.
+
+Thus, the array of integers within the XML document:
+
+    <element> 1 2 3 4 5 6 </element>
+
+could be extracted by the following Fortran program:
+
+    type(Node), pointer :: doc, p
+    integer :: i_array(6)
+
+    doc => parseFile(filename)
+    p => item(getElementsByTagName(doc, "element"), 0)
+    call extractDataContent(p, i_array)
+
+#### Contents and Attributes
+
+For extracting data from text content, the example above suffices. For data in a non-namespaced attribute (in this case, a 2x2 matrix of real numbers)
+
+    <element att="0.1, 2.3 7.56e23, 93"> Some uninteresting text </element>
+
+then use a Fortran program like:
+
+    type(Node), pointer :: doc, p
+    real :: r_matrix(2,2)
+
+    doc => parseFile(filename)
+    p => item(getElementsByTagName(doc, "element"), 0)
+    call extractDataAttribute(p, "att", r_matrix)
+
+or for extracting from a namespaced attribute (in this case, a length-2 array of complex numbers):
+
+    <myml xmlns:ns="http://www.example.org">
+      <element ns:att="0.1,2.3  3.4e2,5.34"> Some uninteresting text </element>
+    </myml>
+
+then use a Fortran program like:
+
+    type(Node), pointer :: doc, p
+    complex :: c_array(2)
+
+    doc => parseFile(filename)
+    p => item(getElementsByTagName(doc, "element"), 0)
+    call extractDataAttributeNS(p, &
+         namespaceURI="http://www.example.org", localName="att", &
+         data=c_array)
+
+#### Error handling
+
+The extraction may fail of course, if the data is not of the sort specified, or if there are not enough elements to fill the array or matrix. In such a case, this can be detected by the optional arguments `num` and `iostat`. 
+
+`num` will hold the number of items successfully read. Hopefully this should be equal to the expected number of items; but it may be less if reading failed for some reason, or if there were less items than expected in the element.
+
+`iostat` will hold an integer - this will be `0` if the extraction went ok; `-1` if too few elements were found, `1` if although the read went ok, there were still some elements left over, or `2` if the extraction failed due to either a badly formatted number, or due to the wrong data type being found.
+
+#### String arrays
+
+For all data types apart from strings, arrays and matrices are specified by space- or comma-separated lists. For strings, some additional options are available. By default, arrays will be extracted assuming that separators are spaces (and multiple spaces are ignored). So:
+
+    <element> one two     three </element>
+
+will result in the string array `(/"one", "two", "three"/)`.
+
+However, you may specify an optional argument `separator`, which specifies another single-character separator to use (and does not ignore multiple spaces). So:
+
+    <element>one, two, three </element>
+
+will result in the string array `(/"one", " two", " three "/)`. (note the leading and trailing spaces).
+
+Finally, you can also specify an optional logical argument, `csv`. In this case, the `separator` is ignored, and the extraction proceeds assuming that the data is a list of comma-separated values. (see: [CSV](http://en.wikipedia.org/wiki/Comma-separated_values))
+
+### Other utility functions
+
 * `setFoX_checks`  
 **FoX_checks**: *logical*
 
@@ -382,13 +488,6 @@ Note that FoX_checks can only be turned on and off globally, not on a per-docume
 Retrieves the current setting of liveNodeLists.
 
 Note that the live-ness of nodelists is a per-document setting.
-
-Finally, to clean up all memory associated with the DOM, it is necessary to call:
-
-* `destroy`  
-**np**: *Node, pointer*
-
-This will clear up all memory usage associated with the document (or documentType) node passed in.
 
 
 ### Exception handling

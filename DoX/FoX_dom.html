@@ -41,7 +41,7 @@
 <li>All object method calls are modelled as functions or subroutines with the same name, whose first argument is the object. Thus: <br />
 <code>aNodelist = aNode.getElementsByTagName(tagName)</code> <br />
 should be converted to Fortran as: <br />
-<code>aNodelist =&amp;gt; getElementsByTagName(aNode, tagName)</code>  </li>
+<code>aNodelist =&gt; getElementsByTagName(aNode, tagName)</code>  </li>
 <li>All object method calls whose return type is void are modelled as subroutines. Thus: <br />
 <code>aNode.normalize()</code> <br />
 becomes
@@ -297,8 +297,11 @@ end program dom_example
 <p>Node:</p>
 
 <ul>
-<li><code>isDefaultNamespace(np, namespaceURI)</code>  </li>
+<li><code>getTextContent(np)</code>  </li>
+<li><code>setTextContent(np, textContent)</code>  </li>
+<li><code>isEqualNode(np, other)</code></li>
 <li><code>isSameNode(np)</code>  </li>
+<li><code>isDefaultNamespace(np, namespaceURI)</code>  </li>
 <li><code>lookupPrefix(np, namespaceURI)</code>  </li>
 <li><code>lookupNamespaceURI(np, prefix)</code>  </li>
 </ul>
@@ -368,8 +371,6 @@ handling is necessarily exposed to the user.</p>
 <p>The only memory handling that the user needs to take care of is destroying any
 DOM Documents (whether created manually, or by the <code>parse()</code> routine.) All other nodes or node structures created will be destroyed automatically by the relevant <code>destroy()</code> call.</p>
 
-<p>(Strictly speaking, it is also possible to create <code>DocumentType</code> objects which are not connected to a document. These may be also be cleaned up by calling <code>destroy()</code>)</p>
-
 <p>As a consequence of this, all DOM objects which are part of a given document will become inaccessible after the document object is destroyed.</p>
 
 <h2>Additional functions.</h2>
@@ -377,6 +378,8 @@ DOM Documents (whether created manually, or by the <code>parse()</code> routine.
 <p><a name="DomUtilityFunctions"/></p>
 
 <p>Several additional utility functions are provided by FoX.</p>
+
+<h3>Input and output of XML data</h3>
 
 <p>Firstly, to construct a DOM tree, from either a file or a string containing XML data.</p>
 
@@ -412,6 +415,121 @@ DOM Documents (whether created manually, or by the <code>parse()</code> routine.
 
 <p>(Control over serialization options is done through the configuration of the <strong>arg</strong>'s ownerDocument, see <a href="#DomConfiguration">below</a>.)</p>
 
+<p>Finally, to clean up all memory associated with the DOM, it is necessary to call:</p>
+
+<ul>
+<li><code>destroy</code> <br />
+<strong>np</strong>: <em>Node, pointer</em></li>
+</ul>
+
+<p>This will clear up all memory usage associated with the document (or documentType) node passed in.</p>
+
+<h3>Extraction of data from an XML file.</h3>
+
+<p><a name="dataExtraction"/></p>
+
+<p>The standard DOM functions only deal with string data. When dealing with numerical (or logical) data,
+the following functions may be of use.</p>
+
+<ul>
+<li><code>extractDataContent</code>  </li>
+<li><code>extractDataAttribute</code>  </li>
+<li><code>extractDataAttributeNS</code></li>
+</ul>
+
+<p>These extract data from, respectively, the text content of an element, from one of its attributes, or from one of its namespaced attributes.
+They are used like so:</p>
+
+<p>(where <code>p</code> is an element which has been selected by means of the other DOM functions)</p>
+
+<pre><code>call extractDataContent(p, data)
+</code></pre>
+
+<p>The subroutine will look at the text contents of the element, and interpret according to the type of <code>data</code>. That is, if <code>data</code> has been declared as an <code>integer</code>, then the contents of <code>p</code> will be read as such an placed into <code>data</code>.</p>
+
+<p><code>data</code> may be a <code>string</code>, <code>logical</code>, <code>integer</code>, <code>real</code>, <code>double precision</code>, <code>complex</code> or <code>double complex</code> variable.</p>
+
+<p>In addition, if <code>data</code> is supplied as a rank-1 or rank-2 variable (ie an array or a matrix) then the data will be read in assuming it to be a space- or comma-separated list of such data items.</p>
+
+<p>Thus, the array of integers within the XML document:</p>
+
+<pre><code>&lt;element&gt; 1 2 3 4 5 6 &lt;/element&gt;
+</code></pre>
+
+<p>could be extracted by the following Fortran program:</p>
+
+<pre><code>type(Node), pointer :: doc, p
+integer :: i_array(6)
+
+doc =&gt; parseFile(filename)
+p =&gt; item(getElementsByTagName(doc, "element"), 0)
+call extractDataContent(p, i_array)
+</code></pre>
+
+<h4>Contents and Attributes</h4>
+
+<p>For extracting data from text content, the example above suffices. For data in a non-namespaced attribute (in this case, a 2x2 matrix of real numbers)</p>
+
+<pre><code>&lt;element att="0.1, 2.3 7.56e23, 93"&gt; Some uninteresting text &lt;/element&gt;
+</code></pre>
+
+<p>then use a Fortran program like:</p>
+
+<pre><code>type(Node), pointer :: doc, p
+real :: r_matrix(2,2)
+
+doc =&gt; parseFile(filename)
+p =&gt; item(getElementsByTagName(doc, "element"), 0)
+call extractDataAttribute(p, "att", r_matrix)
+</code></pre>
+
+<p>or for extracting from a namespaced attribute (in this case, a length-2 array of complex numbers):</p>
+
+<pre><code>&lt;myml xmlns:ns="http://www.example.org"&gt;
+  &lt;element ns:att="0.1,2.3  3.4e2,5.34"&gt; Some uninteresting text &lt;/element&gt;
+&lt;/myml&gt;
+</code></pre>
+
+<p>then use a Fortran program like:</p>
+
+<pre><code>type(Node), pointer :: doc, p
+complex :: c_array(2)
+
+doc =&gt; parseFile(filename)
+p =&gt; item(getElementsByTagName(doc, "element"), 0)
+call extractDataAttributeNS(p, &amp;
+     namespaceURI="http://www.example.org", localName="att", &amp;
+     data=c_array)
+</code></pre>
+
+<h4>Error handling</h4>
+
+<p>The extraction may fail of course, if the data is not of the sort specified, or if there are not enough elements to fill the array or matrix. In such a case, this can be detected by the optional arguments <code>num</code> and <code>iostat</code>. </p>
+
+<p><code>num</code> will hold the number of items successfully read. Hopefully this should be equal to the expected number of items; but it may be less if reading failed for some reason, or if there were less items than expected in the element.</p>
+
+<p><code>iostat</code> will hold an integer - this will be <code>0</code> if the extraction went ok; <code>-1</code> if too few elements were found, <code>1</code> if although the read went ok, there were still some elements left over, or <code>2</code> if the extraction failed due to either a badly formatted number, or due to the wrong data type being found.</p>
+
+<h4>String arrays</h4>
+
+<p>For all data types apart from strings, arrays and matrices are specified by space- or comma-separated lists. For strings, some additional options are available. By default, arrays will be extracted assuming that separators are spaces (and multiple spaces are ignored). So:</p>
+
+<pre><code>&lt;element&gt; one two     three &lt;/element&gt;
+</code></pre>
+
+<p>will result in the string array <code>(/"one", "two", "three"/)</code>.</p>
+
+<p>However, you may specify an optional argument <code>separator</code>, which specifies another single-character separator to use (and does not ignore multiple spaces). So:</p>
+
+<pre><code>&lt;element&gt;one, two, three &lt;/element&gt;
+</code></pre>
+
+<p>will result in the string array <code>(/"one", " two", " three "/)</code>. (note the leading and trailing spaces).</p>
+
+<p>Finally, you can also specify an optional logical argument, <code>csv</code>. In this case, the <code>separator</code> is ignored, and the extraction proceeds assuming that the data is a list of comma-separated values. (see: <a href="http://en.wikipedia.org/wiki/Comma-separated_values">CSV</a>)</p>
+
+<h3>Other utility functions</h3>
+
 <ul>
 <li><code>setFoX_checks</code> <br />
 <strong>FoX_checks</strong>: <em>logical</em></li>
@@ -444,15 +562,6 @@ DOM Documents (whether created manually, or by the <code>parse()</code> routine.
 <p>Retrieves the current setting of liveNodeLists.</p>
 
 <p>Note that the live-ness of nodelists is a per-document setting.</p>
-
-<p>Finally, to clean up all memory associated with the DOM, it is necessary to call:</p>
-
-<ul>
-<li><code>destroy</code> <br />
-<strong>np</strong>: <em>Node, pointer</em></li>
-</ul>
-
-<p>This will clear up all memory usage associated with the document (or documentType) node passed in.</p>
 
 <h3>Exception handling</h3>
 

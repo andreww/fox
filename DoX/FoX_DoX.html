@@ -203,7 +203,7 @@ places.  If you move the FoX directory later on, you will need to re-run configu
 
 <p>Several testsuites are available for the different modules of the library. To run them all, simply run <code>make check</code> from the top-level directory. This will run the individual testsuites, and collate their results.</p>
 
-<p>If any failures occur (unrelated to known compiler issues, see the <a href="http://uszla.me.uk/space/software/FoX/compat/">up-to-date list</a>), please send a message to the mailing list (<a href="&#109;&#x61;&#x69;&#x6C;&#116;&#x6F;:&#70;&#x6F;&#x58;&#64;&#x6C;&#105;&#x73;t&#x73;&#x2E;&#x75;&#115;z&#x6C;&#x61;&#46;&#109;&#101;&#x2E;u&#x6B;">&#70;&#x6F;&#x58;&#64;&#x6C;&#105;&#x73;t&#x73;&#x2E;&#x75;&#115;z&#x6C;&#x61;&#46;&#109;&#101;&#x2E;u&#x6B;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
+<p>If any failures occur (unrelated to known compiler issues, see the <a href="http://uszla.me.uk/space/software/FoX/compat/">up-to-date list</a>), please send a message to the mailing list (<a href="&#109;&#97;&#x69;&#108;&#x74;o:&#x46;&#x6F;&#88;&#64;&#108;&#x69;&#x73;&#x74;&#115;&#x2E;&#117;&#x73;&#x7A;&#108;&#x61;&#x2E;&#109;&#x65;&#46;&#117;&#x6B;">&#x46;&#x6F;&#88;&#64;&#108;&#x69;&#x73;&#x74;&#115;&#x2E;&#117;&#x73;&#x7A;&#108;&#x61;&#x2E;&#109;&#x65;&#46;&#117;&#x6B;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
 
 <h2>Linking to an existing program</h2>
 
@@ -2083,7 +2083,7 @@ integer, intent(in), optional :: i</code></li>
 <li>All object method calls are modelled as functions or subroutines with the same name, whose first argument is the object. Thus: <br />
 <code>aNodelist = aNode.getElementsByTagName(tagName)</code> <br />
 should be converted to Fortran as: <br />
-<code>aNodelist =&amp;gt; getElementsByTagName(aNode, tagName)</code>  </li>
+<code>aNodelist =&gt; getElementsByTagName(aNode, tagName)</code>  </li>
 <li>All object method calls whose return type is void are modelled as subroutines. Thus: <br />
 <code>aNode.normalize()</code> <br />
 becomes
@@ -2339,8 +2339,11 @@ end program dom_example
 <p>Node:</p>
 
 <ul>
-<li><code>isDefaultNamespace(np, namespaceURI)</code>  </li>
+<li><code>getTextContent(np)</code>  </li>
+<li><code>setTextContent(np, textContent)</code>  </li>
+<li><code>isEqualNode(np, other)</code></li>
 <li><code>isSameNode(np)</code>  </li>
+<li><code>isDefaultNamespace(np, namespaceURI)</code>  </li>
 <li><code>lookupPrefix(np, namespaceURI)</code>  </li>
 <li><code>lookupNamespaceURI(np, prefix)</code>  </li>
 </ul>
@@ -2410,8 +2413,6 @@ handling is necessarily exposed to the user.</p>
 <p>The only memory handling that the user needs to take care of is destroying any
 DOM Documents (whether created manually, or by the <code>parse()</code> routine.) All other nodes or node structures created will be destroyed automatically by the relevant <code>destroy()</code> call.</p>
 
-<p>(Strictly speaking, it is also possible to create <code>DocumentType</code> objects which are not connected to a document. These may be also be cleaned up by calling <code>destroy()</code>)</p>
-
 <p>As a consequence of this, all DOM objects which are part of a given document will become inaccessible after the document object is destroyed.</p>
 
 <h2>Additional functions.</h2>
@@ -2419,6 +2420,8 @@ DOM Documents (whether created manually, or by the <code>parse()</code> routine.
 <p><a name="DomUtilityFunctions"/></p>
 
 <p>Several additional utility functions are provided by FoX.</p>
+
+<h3>Input and output of XML data</h3>
 
 <p>Firstly, to construct a DOM tree, from either a file or a string containing XML data.</p>
 
@@ -2454,6 +2457,121 @@ DOM Documents (whether created manually, or by the <code>parse()</code> routine.
 
 <p>(Control over serialization options is done through the configuration of the <strong>arg</strong>'s ownerDocument, see <a href="#DomConfiguration">below</a>.)</p>
 
+<p>Finally, to clean up all memory associated with the DOM, it is necessary to call:</p>
+
+<ul>
+<li><code>destroy</code> <br />
+<strong>np</strong>: <em>Node, pointer</em></li>
+</ul>
+
+<p>This will clear up all memory usage associated with the document (or documentType) node passed in.</p>
+
+<h3>Extraction of data from an XML file.</h3>
+
+<p><a name="dataExtraction"/></p>
+
+<p>The standard DOM functions only deal with string data. When dealing with numerical (or logical) data,
+the following functions may be of use.</p>
+
+<ul>
+<li><code>extractDataContent</code>  </li>
+<li><code>extractDataAttribute</code>  </li>
+<li><code>extractDataAttributeNS</code></li>
+</ul>
+
+<p>These extract data from, respectively, the text content of an element, from one of its attributes, or from one of its namespaced attributes.
+They are used like so:</p>
+
+<p>(where <code>p</code> is an element which has been selected by means of the other DOM functions)</p>
+
+<pre><code>call extractDataContent(p, data)
+</code></pre>
+
+<p>The subroutine will look at the text contents of the element, and interpret according to the type of <code>data</code>. That is, if <code>data</code> has been declared as an <code>integer</code>, then the contents of <code>p</code> will be read as such an placed into <code>data</code>.</p>
+
+<p><code>data</code> may be a <code>string</code>, <code>logical</code>, <code>integer</code>, <code>real</code>, <code>double precision</code>, <code>complex</code> or <code>double complex</code> variable.</p>
+
+<p>In addition, if <code>data</code> is supplied as a rank-1 or rank-2 variable (ie an array or a matrix) then the data will be read in assuming it to be a space- or comma-separated list of such data items.</p>
+
+<p>Thus, the array of integers within the XML document:</p>
+
+<pre><code>&lt;element&gt; 1 2 3 4 5 6 &lt;/element&gt;
+</code></pre>
+
+<p>could be extracted by the following Fortran program:</p>
+
+<pre><code>type(Node), pointer :: doc, p
+integer :: i_array(6)
+
+doc =&gt; parseFile(filename)
+p =&gt; item(getElementsByTagName(doc, "element"), 0)
+call extractDataContent(p, i_array)
+</code></pre>
+
+<h4>Contents and Attributes</h4>
+
+<p>For extracting data from text content, the example above suffices. For data in a non-namespaced attribute (in this case, a 2x2 matrix of real numbers)</p>
+
+<pre><code>&lt;element att="0.1, 2.3 7.56e23, 93"&gt; Some uninteresting text &lt;/element&gt;
+</code></pre>
+
+<p>then use a Fortran program like:</p>
+
+<pre><code>type(Node), pointer :: doc, p
+real :: r_matrix(2,2)
+
+doc =&gt; parseFile(filename)
+p =&gt; item(getElementsByTagName(doc, "element"), 0)
+call extractDataAttribute(p, "att", r_matrix)
+</code></pre>
+
+<p>or for extracting from a namespaced attribute (in this case, a length-2 array of complex numbers):</p>
+
+<pre><code>&lt;myml xmlns:ns="http://www.example.org"&gt;
+  &lt;element ns:att="0.1,2.3  3.4e2,5.34"&gt; Some uninteresting text &lt;/element&gt;
+&lt;/myml&gt;
+</code></pre>
+
+<p>then use a Fortran program like:</p>
+
+<pre><code>type(Node), pointer :: doc, p
+complex :: c_array(2)
+
+doc =&gt; parseFile(filename)
+p =&gt; item(getElementsByTagName(doc, "element"), 0)
+call extractDataAttributeNS(p, &amp;
+     namespaceURI="http://www.example.org", localName="att", &amp;
+     data=c_array)
+</code></pre>
+
+<h4>Error handling</h4>
+
+<p>The extraction may fail of course, if the data is not of the sort specified, or if there are not enough elements to fill the array or matrix. In such a case, this can be detected by the optional arguments <code>num</code> and <code>iostat</code>. </p>
+
+<p><code>num</code> will hold the number of items successfully read. Hopefully this should be equal to the expected number of items; but it may be less if reading failed for some reason, or if there were less items than expected in the element.</p>
+
+<p><code>iostat</code> will hold an integer - this will be <code>0</code> if the extraction went ok; <code>-1</code> if too few elements were found, <code>1</code> if although the read went ok, there were still some elements left over, or <code>2</code> if the extraction failed due to either a badly formatted number, or due to the wrong data type being found.</p>
+
+<h4>String arrays</h4>
+
+<p>For all data types apart from strings, arrays and matrices are specified by space- or comma-separated lists. For strings, some additional options are available. By default, arrays will be extracted assuming that separators are spaces (and multiple spaces are ignored). So:</p>
+
+<pre><code>&lt;element&gt; one two     three &lt;/element&gt;
+</code></pre>
+
+<p>will result in the string array <code>(/"one", "two", "three"/)</code>.</p>
+
+<p>However, you may specify an optional argument <code>separator</code>, which specifies another single-character separator to use (and does not ignore multiple spaces). So:</p>
+
+<pre><code>&lt;element&gt;one, two, three &lt;/element&gt;
+</code></pre>
+
+<p>will result in the string array <code>(/"one", " two", " three "/)</code>. (note the leading and trailing spaces).</p>
+
+<p>Finally, you can also specify an optional logical argument, <code>csv</code>. In this case, the <code>separator</code> is ignored, and the extraction proceeds assuming that the data is a list of comma-separated values. (see: <a href="http://en.wikipedia.org/wiki/Comma-separated_values">CSV</a>)</p>
+
+<h3>Other utility functions</h3>
+
 <ul>
 <li><code>setFoX_checks</code> <br />
 <strong>FoX_checks</strong>: <em>logical</em></li>
@@ -2486,15 +2604,6 @@ DOM Documents (whether created manually, or by the <code>parse()</code> routine.
 <p>Retrieves the current setting of liveNodeLists.</p>
 
 <p>Note that the live-ness of nodelists is a per-document setting.</p>
-
-<p>Finally, to clean up all memory associated with the DOM, it is necessary to call:</p>
-
-<ul>
-<li><code>destroy</code> <br />
-<strong>np</strong>: <em>Node, pointer</em></li>
-</ul>
-
-<p>This will clear up all memory usage associated with the document (or documentType) node passed in.</p>
 
 <h3>Exception handling</h3>
 
@@ -2687,9 +2796,9 @@ In particular, the way the W3C DOM mandates namespace handling makes it trivial 
 <h1>Further information</h1>
 
 <p>FoX evolved from the initial codebase of <a href="http://lcdx00.wm.lc.ehu.es/ag/xml/">xmlf90</a>,
-which was written largely by Alberto Garcia &lt;<a href="&#x6D;&#97;&#105;&#108;&#x74;&#111;:&#97;&#108;&#x62;&#x65;&#114;&#116;&#111;&#x67;&#64;i&#99;m&#97;&#98;.&#101;&#x73;">&#97;&#108;&#x62;&#x65;&#114;&#116;&#111;&#x67;&#64;i&#99;m&#97;&#98;.&#101;&#x73;</a>> and Jon Wakelin &lt;<a href="&#x6D;&#x61;&#x69;l&#116;&#111;:&#106;&#111;&#x6E;.&#x77;&#97;&#x6B;&#x65;&#x6C;i&#x6E;&#64;&#x62;&#114;&#x69;&#115;&#116;&#x6F;l&#x2E;&#97;&#x63;&#46;&#x75;&#107;">&#106;&#111;&#x6E;.&#x77;&#97;&#x6B;&#x65;&#x6C;i&#x6E;&#64;&#x62;&#114;&#x69;&#115;&#116;&#x6F;l&#x2E;&#97;&#x63;&#46;&#x75;&#107;</a>>.</p>
+which was written largely by Alberto Garcia &lt;<a href="&#x6D;&#x61;&#x69;l&#x74;o:&#x61;&#108;&#98;&#101;&#114;&#116;&#x6F;&#103;&#64;&#x69;&#x63;&#109;&#x61;&#x62;&#x2E;&#x65;&#115;">&#x61;&#108;&#98;&#101;&#114;&#116;&#x6F;&#103;&#64;&#x69;&#x63;&#109;&#x61;&#x62;&#x2E;&#x65;&#115;</a>> and Jon Wakelin &lt;<a href="&#x6D;&#97;&#105;&#108;&#116;&#x6F;:&#x6A;&#111;&#x6E;&#x2E;&#x77;&#x61;&#x6B;e&#108;&#x69;&#x6E;&#64;&#x62;&#x72;&#105;&#115;t&#x6F;&#x6C;&#46;&#x61;&#x63;&#x2E;&#x75;&#107;">&#x6A;&#111;&#x6E;&#x2E;&#x77;&#x61;&#x6B;e&#108;&#x69;&#x6E;&#64;&#x62;&#x72;&#105;&#115;t&#x6F;&#x6C;&#46;&#x61;&#x63;&#x2E;&#x75;&#107;</a>>.</p>
 
-<p>FoX is the work of Toby White &lt;<a href="&#109;&#x61;&#x69;l&#116;&#x6F;:&#116;&#x6F;w&#50;&#x31;&#64;c&#x61;&#x6D;&#x2E;&#97;&#x63;&#46;&#x75;&#x6B;">&#116;&#x6F;w&#50;&#x31;&#64;c&#x61;&#x6D;&#x2E;&#97;&#x63;&#46;&#x75;&#x6B;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
+<p>FoX is the work of Toby White &lt;<a href="&#x6D;&#x61;&#x69;&#x6C;&#116;&#x6F;:&#116;&#111;&#119;&#x32;&#x31;&#64;&#99;&#x61;&#x6D;&#46;&#97;&#x63;&#x2E;&#x75;k">&#116;&#111;&#119;&#x32;&#x31;&#64;&#99;&#x61;&#x6D;&#46;&#97;&#x63;&#x2E;&#x75;k</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
 
 <p>There is a FoX website at <a href="http://www.uszla.me.uk/software/FoX/">http://www.uszla.me.uk/software/FoX/</a>.</p>
 
