@@ -97,9 +97,9 @@ TOHW_m_dom_get(DOMString, nodeName, np%nodeName)
 
     select case(arg%nodeType)
     case (ATTRIBUTE_NODE)
-      call setValue(arg, nodeValue)
+      call setValue(arg, nodeValue, ex)
     case (CDATA_SECTION_NODE, COMMENT_NODE, PROCESSING_INSTRUCTION_NODE, TEXT_NODE)
-      call setData(arg, nodeValue)
+      call setData(arg, nodeValue, ex)
     end select
 
   end subroutine setNodeValue

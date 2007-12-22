@@ -1087,9 +1087,9 @@ endif
 
     select case(arg%nodeType)
     case (ATTRIBUTE_NODE)
-      call setValue(arg, nodeValue)
+      call setValue(arg, nodeValue, ex)
     case (CDATA_SECTION_NODE, COMMENT_NODE, PROCESSING_INSTRUCTION_NODE, TEXT_NODE)
-      call setData(arg, nodeValue)
+      call setData(arg, nodeValue, ex)
     end select
 
   end subroutine setNodeValue
@@ -9797,7 +9797,7 @@ endif
 
     endif
 
-    c = getTextContent(arg)
+    c = getTextContent(arg, ex)
 
   end function getValue_DOM
 
@@ -9809,7 +9809,7 @@ endif
     type(Node), pointer :: np
     integer :: i
 
-    call setTextContent(arg, value)
+    call setTextContent(arg, value, ex)
 
   end subroutine setValue
 

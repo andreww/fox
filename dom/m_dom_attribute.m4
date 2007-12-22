@@ -45,7 +45,7 @@ TOHW_m_dom_get(Node, ownerElement, np%elExtras%ownerElement, (ATTRIBUTE_NODE))
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
 
-    c = getTextContent(arg)
+    c = getTextContent(arg, ex)
 
   end function getValue_DOM
 
@@ -56,7 +56,7 @@ TOHW_m_dom_get(Node, ownerElement, np%elExtras%ownerElement, (ATTRIBUTE_NODE))
     type(Node), pointer :: np
     integer :: i
 
-    call setTextContent(arg, value)
+    call setTextContent(arg, value, ex)
 
   end subroutine setValue
 
