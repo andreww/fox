@@ -879,6 +879,10 @@ case $FC in
       FC_ID=Lahey
       ;;
    
+   path*)
+      FC_ID=Pathscale
+      ;;
+
    pgf*)
       FC_ID=Portland
       ;;
@@ -1017,9 +1021,12 @@ case $FC_ID in
   Nag)
      FFLAGS_DEBUG="-C=all -g -gline -nan"
      DEFS="$DEFS __NAG__"
-     SYS=nag
      ;;
   
+  Pathscale)
+     DEFS="$DEFS RESTRICTED_ASSOCIATED_BUG"
+     ;;
+
   Portland)
      FFLAGS_DEBUG="-g -Mbounds"
      FFLAGS_FAST="-fast"
@@ -1039,7 +1046,6 @@ case $FC_ID in
   Xlf)
      FFLAGS_DEBUG="-g -C -qinitauto -qsave -qmaxmem=16000 -qnolm"
      FFLAGS_FAST="-O3 -qarch=auto -qtune=auto -qcache=auto -qnolm"
-     SYS=xlf
      ;;
 
 esac

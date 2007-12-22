@@ -74,6 +74,10 @@ case $FC in
       FC_ID=Lahey
       ;;
    
+   path*)
+      FC_ID=Pathscale
+      ;;
+
    pgf*)
       FC_ID=Portland
       ;;
