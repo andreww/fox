@@ -590,7 +590,9 @@ contains
     character(len=1) :: s
     s = " "
 #else
-    character(len=merge(4,5,l)) :: s
+! Pathscale 2.5 gets it wrong if we use merge here
+!    character(len=merge(4,5,l)) :: s
+    character(len=len(l)) :: s
     
     if (l) then
       s="true"
