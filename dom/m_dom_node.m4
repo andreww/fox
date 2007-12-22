@@ -64,7 +64,11 @@ TOHW_m_dom_get(DOMString, nodeName, np%nodeName)
 
   TOHW_function(getNodeValue, (np), c)
     type(Node), pointer :: np
+#ifdef RESTRICTED_ASSOCIATED_BUG
+    character(len=getNodeValue_len(np, .true.)) :: c
+#else
     character(len=getNodeValue_len(np, associated(np))) :: c
+#endif
 
     if (.not.associated(np)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
@@ -834,7 +838,11 @@ TOHW_m_dom_treewalk(`
 
   TOHW_function(getNamespaceURI, (arg), c)
     type(Node), pointer :: arg
+#ifdef RESTRICTED_ASSOCIATED_BUG
+    character(len=getNamespaceURI_len(arg, .true.)) :: c
+#else
     character(len=getNamespaceURI_len(arg, associated(arg))) :: c
+#endif
 
     if (.not.associated(arg)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
@@ -868,7 +876,11 @@ TOHW_m_dom_set(DOMString, namespaceURI, np%elExtras%namespaceURI, (XPATH_NAMESPA
 
   TOHW_function(getPrefix, (arg), c)
     type(Node), pointer :: arg
+#ifdef RESTRICTED_ASSOCIATED_BUG
+    character(len=getPrefix_len(arg, .true.)) :: c
+#else
     character(len=getPrefix_len(arg, associated(arg))) :: c
+#endif
 
     if (.not.associated(arg)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
@@ -950,7 +962,11 @@ TOHW_m_dom_set(DOMString, namespaceURI, np%elExtras%namespaceURI, (XPATH_NAMESPA
 
   TOHW_function(getLocalName, (arg), c)
     type(Node), pointer :: arg
+#ifdef RESTRICTED_ASSOCIATED_BUG
+    character(len=getLocalName_len(arg, .true.)) :: c
+#else
     character(len=getLocalName_len(arg, associated(arg))) :: c
+#endif
 
     if (.not.associated(arg)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
@@ -1160,7 +1176,11 @@ TOHW_m_dom_treewalk(`
   TOHW_function(lookupNamespaceURI, (np, prefix), c)
     type(Node), pointer :: np
     character(len=*), intent(in) :: prefix
+#ifdef RESTRICTED_ASSOCIATED_BUG
+    character(len=lookupNamespaceURI_len(np, prefix, .true.)) :: c
+#else
     character(len=lookupNamespaceURI_len(np, prefix, associated(np))) :: c
+#endif
 
     type(Node), pointer :: el
     integer :: i
@@ -1248,7 +1268,11 @@ TOHW_m_dom_treewalk(`
   TOHW_function(lookupPrefix, (np, namespaceURI), c)
     type(Node), pointer :: np
     character(len=*), intent(in) :: namespaceURI
+#ifdef RESTRICTED_ASSOCIATED_BUG
+    character(len=lookupPrefix_len(np, namespaceURI, .true.)) :: c
+#else
     character(len=lookupPrefix_len(np, namespaceURI, associated(np))) :: c
+#endif
 
     type(Node), pointer :: el
     integer :: i
@@ -1318,7 +1342,11 @@ TOHW_m_dom_treewalk(`
 
   TOHW_function(getTextContent, (arg), c)
     type(Node), pointer :: arg
+#ifdef RESTRICTED_ASSOCIATED_BUG
+    character(len=getTextContent_len(arg, .true.)) :: c
+#else
     character(len=getTextContent_len(arg, associated(arg))) :: c
+#endif
 
     type(Node), pointer :: this, treeroot
     integer :: i, i_tree

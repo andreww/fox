@@ -46,7 +46,11 @@ TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
   TOHW_function(getAttribute, (arg, name), c)
     type(Node), pointer :: arg
     character(len=*), intent(in) :: name
+#ifdef RESTRICTED_ASSOCIATED_BUG
+    character(len=getAttribute_len(arg, .true., name)) :: c
+#else
     character(len=getAttribute_len(arg, associated(arg), name)) :: c
+#endif
 
     type(Node), pointer :: np
 
@@ -260,7 +264,11 @@ TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
     type(Node), pointer :: arg
     character(len=*), intent(in) :: namespaceURI
     character(len=*), intent(in) :: localName
+#ifdef RESTRICTED_ASSOCIATED_BUG
+    character(len=getAttributesNS_len(arg, .true., localname, namespaceURI)) :: c
+#else
     character(len=getAttributesNS_len(arg, associated(arg), localname, namespaceURI)) :: c
+#endif
 
     if (.not.associated(arg)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)

@@ -9,7 +9,7 @@ M4FILES = m_dom_types.m4 m_dom_node.m4 m_dom_nodelist.m4 \
           m_dom_processing_instruction.m4 m_dom_text.m4 \
  	  m_dom_common.m4 m_dom_exception.m4 m_dom_dom.m4 \
           m_dom_namespaces.m4 m_dom_configuration.m4 \
-          m_dom_treewalk.m4 m_dom_exception.m4
+          m_dom_treewalk.m4 m_dom_exception.m4 m_dom_object.m4
 OBJFILES= m_dom_error.$(OBJEXT) m_dom_parse.$(OBJEXT) m_dom_utils.$(OBJEXT) \
 	  m_dom_extras.$(OBJEXT) m_dom_dom.$(OBJEXT) FoX_dom.$(OBJEXT)
 #
@@ -27,7 +27,7 @@ m_dom_parse.f90: m_dom_parse.m4
 m_dom_utils.f90: m_dom_utils.m4
 	m4 -I ../m4 $< > $@
 #
-m_dom_dom.f90: $(M4FILES)
+m_dom_dom.F90: $(M4FILES)
 	m4 -I ../m4 m_dom_dom.m4 > $@ 
 #
 # Uncomment one of the following lines for debugging/profiling support

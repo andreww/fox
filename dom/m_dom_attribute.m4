@@ -35,7 +35,11 @@ TOHW_m_dom_get(Node, ownerElement, np%elExtras%ownerElement, (ATTRIBUTE_NODE))
 
   TOHW_function(getValue_DOM, (arg), c)
     type(Node), pointer :: arg
+#ifdef RESTRICTED_ASSOCIATED_BUG
+    character(len=getTextContent_len(arg, .true.)) :: c 
+#else
     character(len=getTextContent_len(arg, associated(arg))) :: c 
+#endif
 
     if (.not.associated(arg)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)

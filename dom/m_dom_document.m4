@@ -923,7 +923,11 @@ TOHW_m_dom_set(logical, xmlStandalone, np%docExtras%xds%standalone, (DOCUMENT_NO
 
   TOHW_function(getXmlEncoding, (arg), s)
     type(Node), pointer :: arg
+#ifdef RESTRICTED_ASSOCIATED_BUG
+    character(len=getXmlEncoding_len(arg, .true.)) :: s
+#else
     character(len=getXmlEncoding_len(arg, associated(arg))) :: s
+#endif
 
     if (.not.associated(arg)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
@@ -952,7 +956,11 @@ TOHW_m_dom_set(logical, xmlStandalone, np%docExtras%xds%standalone, (DOCUMENT_NO
 
   TOHW_function(getInputEncoding, (arg), s)
     type(Node), pointer :: arg
+#ifdef RESTRICTED_ASSOCIATED_BUG
+    character(len=getInputEncoding_len(arg, .true.)) :: s
+#else
     character(len=getInputEncoding_len(arg, associated(arg))) :: s
+#endif
 
     if (.not.associated(arg)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)

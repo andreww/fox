@@ -323,7 +323,11 @@ TOHW_m_dom_contents(`
     type(NamedNodeMap), pointer :: map
     character(len=*), intent(in) :: namespaceURI
     character(len=*), intent(in) :: localName
+#ifdef RESTRICTED_ASSOCIATED_BUG
+    character(len=getNamedItemNS_Value_length(map, .true., namespaceURI, localName)) :: c
+#else
     character(len=getNamedItemNS_Value_length(map, associated(map), namespaceURI, localName)) :: c
+#endif
 
     integer :: i
     type(Node), pointer :: np
