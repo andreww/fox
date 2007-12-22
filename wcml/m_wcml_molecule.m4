@@ -81,11 +81,13 @@ TOHWM4_moleculeargsdecl
 #ifndef DUMMYLIB
     integer          :: i
 
-    if (style=="DL_POLY") then
-      if (present(atomRefs).or.present(occupancies).or.present(atomIds).or.present(fmt)) &
-        call FoX_error("With DL_POLY style, no optional arguments permitted.")
-      call addDlpolyMatrix_$1(xf, coords(:, :natoms), elements(:natoms))
-      return
+    if (present(style)) then
+      if (style=="DL_POLY") then
+        if (present(atomRefs).or.present(occupancies).or.present(atomIds).or.present(fmt)) &
+          call FoX_error("With DL_POLY style, no optional arguments permitted.")
+        call addDlpolyMatrix_$1(xf, coords(:, :natoms), elements(:natoms))
+        return
+      endif
     endif
 
     call xml_NewElement(xf, "molecule")
@@ -129,11 +131,13 @@ TOHWM4_moleculeargsdecl
 #ifndef DUMMYLIB
     integer          :: i
 
-    if (style=="DL_POLY") then
-      if (present(atomRefs).or.present(occupancies).or.present(atomIds).or.present(fmt)) &
-        call FoX_error("With DL_POLY style, no optional arguments permitted.")
-      call addDlpolyMatrix_3_$1(xf, x, y, z, elements)
-      return
+    if (present(style)) then
+      if (style=="DL_POLY") then
+        if (present(atomRefs).or.present(occupancies).or.present(atomIds).or.present(fmt)) &
+          call FoX_error("With DL_POLY style, no optional arguments permitted.")
+        call addDlpolyMatrix_3_$1(xf, x, y, z, elements)
+        return
+      endif
     endif
 
     call xml_NewElement(xf, "molecule")
@@ -176,11 +180,13 @@ TOHWM4_moleculeargsdecl
 #ifndef DUMMYLIB
     integer          :: i
 
-    if (style=="DL_POLY") then
-      if (present(atomRefs).or.present(occupancies).or.present(atomIds).or.present(fmt)) &
-        call FoX_error("With DL_POLY style, no optional arguments permitted.")
-      call addDlpolyMatrix_3_$1(xf, x(:natoms), y(:natoms), z(:natoms), elements(:natoms))
-      return
+    if (present(style)) then
+      if (style=="DL_POLY") then
+        if (present(atomRefs).or.present(occupancies).or.present(atomIds).or.present(fmt)) &
+          call FoX_error("With DL_POLY style, no optional arguments permitted.")
+        call addDlpolyMatrix_3_$1(xf, x(:natoms), y(:natoms), z(:natoms), elements(:natoms))
+        return
+      endif
     endif
 
     call xml_NewElement(xf, "molecule")
