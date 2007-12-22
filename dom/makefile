@@ -20,7 +20,7 @@ INCFLAGS=$(MOD_PREFIX)../objs/finclude
 #
 include ../arch.make
 #
-m_dom_extras.f90: m_dom_extras.m4
+m_dom_extras.F90: m_dom_extras.m4
 	m4 -I ../m4 $< > $@
 m_dom_parse.f90: m_dom_parse.m4
 	m4 -I ../m4 $< > $@
