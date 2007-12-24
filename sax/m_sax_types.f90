@@ -31,16 +31,16 @@ module m_sax_types
   integer, parameter :: ST_START_PI = 2
   integer, parameter :: ST_START_COMMENT = 3
   integer, parameter :: ST_START_TAG = 4 
-  integer, parameter :: ST_START_CDATA_1 = 5
-  integer, parameter :: ST_START_CDATA_2 = 6
+  integer, parameter :: ST_START_CDATA = 5
+
   integer, parameter :: ST_IN_TAG = 7
   integer, parameter :: ST_ATT_NAME = 8
   integer, parameter :: ST_ATT_EQUALS = 9
   integer, parameter :: ST_CHAR_IN_CONTENT = 10
   integer, parameter :: ST_CLOSING_TAG = 11
   integer, parameter :: ST_PI_END = 13
-  integer, parameter :: ST_COMMENT_END_1 = 14
-  integer, parameter :: ST_COMMENT_END_2 = 15
+  integer, parameter :: ST_COMMENT_END = 14
+
   integer, parameter :: ST_PI_CONTENTS = 16
   integer, parameter :: ST_CDATA_CONTENTS = 17
   integer, parameter :: ST_IN_CLOSING_TAG = 18
@@ -76,12 +76,27 @@ module m_sax_types
   integer, parameter :: ST_START_ENTITY = 48
   integer, parameter :: ST_START_PE = 49
   
-  ! Whitespace
-  
-  integer, parameter :: WS_FORBIDDEN = 0
-  integer, parameter :: WS_PRESERVE = 1
-  integer, parameter :: WS_MANDATORY = 2
-  integer, parameter :: WS_DISCARD = 3
+! token types
+
+  integer, parameter :: TOK_NULL = 0
+  integer, parameter :: TOK_PI_TAG = 1 ! <?
+  integer, parameter :: TOK_BANG_TAG = 2 ! <!
+  integer, parameter :: TOK_OPEN_TAG = 3 ! <
+  integer, parameter :: TOK_OPEN_SB = 4 ! [
+  integer, parameter :: TOK_CLOSE_SB = 5 ! [
+  integer, parameter :: TOK_OPEN_COMMENT = 6 ! --
+  integer, parameter :: TOK_NAME = 7 ! name (+token)
+  integer, parameter :: TOK_CHAR = 8 ! character data (+token)
+  integer, parameter :: TOK_PI_END = 9 ! ?>
+  integer, parameter :: TOK_COMMENT_END = 10 ! -->
+  integer, parameter :: TOK_START_CDATA = 11 ! CDATA[
+  integer, parameter :: TOK_CDATA_END = 12 ! ]]>
+  integer, parameter :: TOK_END_TAG = 13 ! >
+  integer, parameter :: TOK_END_TAG_CLOSE = 14 ! />
+  integer, parameter :: TOK_CLOSE_TAG = 15 ! </
+  integer, parameter :: TOK_ENTITY = 16 ! % or &
+  integer, parameter :: TOK_EQUALS = 17 ! =
+  integer, parameter :: TOK_DTD_CONTENTS = 18 ! for element and attlist
   
   type sax_parser_t
     type(xml_doc_state), pointer :: xds
