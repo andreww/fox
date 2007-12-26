@@ -18,7 +18,6 @@ module m_sax_parser
   use m_common_entity_expand, only: expand_entity_value_alloc
   use m_common_error, only: FoX_error, add_error, &
     init_error_stack, destroy_error_stack, in_error
-  use m_common_io, only: io_eof, io_err
   use m_common_namecheck, only: checkName, checkPublicId, &
     checkCharacterEntityReference, likeCharacterEntityReference, &
     checkQName, checkNCName, checkPITarget, resolveSystemId, &
@@ -399,9 +398,11 @@ contains
     do
 
       call sax_tokenize(fx, fb, eof) 
-      ! FIXMe IOSTAT IS UNSET EOF IS UNCHECKED
-      if (in_error(fx%error_stack)) iostat = io_err
-      if (iostat==io_eof.and.fx%parse_stack>0) then
+      if (in_error(fx%error_stack)) then
+        ! Any other error, we want to quit sax_tokenizer
+        call add_error(fx%error_stack, 'Error getting token')
+        goto 100
+      elseif (eof.and.fx%parse_stack>0) then
         if (fx%context==CTXT_IN_DTD) then
           ! that's just the end of a parameter entity expansion.
           ! pop the parse stack, and carry on ..
@@ -431,16 +432,11 @@ contains
           fx%wf_stack = temp_wf_stack(2:size(temp_wf_stack))
           deallocate(temp_wf_stack)
         endif
-        iostat = 0
         call pop_buffer_stack(fb)
         fx%parse_stack = fx%parse_stack - 1
         cycle
-      elseif (iostat/=0) then
-        ! Any other error, we want to quit sax_tokenizer
-        call add_error(fx%error_stack, 'Error getting token')
-        goto 100
       endif
-      if (.not.associated(fx%token)) then
+      if (fx%tokenType==TOK_NULL) then
         call add_error(fx%error_stack, 'Internal error! No token found!')
         goto 100
       endif
@@ -1588,7 +1584,15 @@ contains
 
 100 if (associated(tempString)) deallocate(tempString)
 
-    if (iostat==io_eof) then ! error is end of file then
+    if (.not.eof) then
+      ! We have encountered an error before the end of a file
+      if (fx%parse_stack>0) then !we are parsing an entity
+        call add_error(fx%error_stack, "Error encountered processing entity.")
+        call sax_error(fx, error_handler)
+      else
+        call sax_error(fx, error_handler)
+      endif
+    else
       ! EOF of main file
       if (startInChardata_) then
         if (fx%well_formed) then
@@ -1598,7 +1602,8 @@ contains
             ! No need for check on parser stop, we finish here anyway
           endif
         else
-          if (present(error_handler)) call error_handler("Ill-formed XML fragment")
+          if (present(error_handler)) &
+            call error_handler("Ill-formed XML fragment")
         endif
       elseif (fx%well_formed.and.fx%state==ST_MISC) then
         if (present(endDocument_handler)) &
@@ -1606,15 +1611,6 @@ contains
         ! No need for check on parser stop, we finish here anyway
       else
         call add_error(fx%error_stack, "File is not well-formed")
-        call sax_error(fx, error_handler)
-      endif
-    elseif (iostat==io_err) then ! we generated the error
-      call sax_error(fx, error_handler)
-    else ! Hard error - stop immediately
-      if (fx%parse_stack>0) then !we are parsing an entity
-        call add_error(fx%error_stack, "Error encountered processing entity.")
-        call sax_error(fx, error_handler)
-      else
         call sax_error(fx, error_handler)
       endif
     endif
