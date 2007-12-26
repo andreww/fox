@@ -94,6 +94,7 @@ contains
 
       case (ST_BANG_TAG)
         if (firstChar) then
+          print*, "fc ", c
           if (c=="-") then
             phrase = 1
           elseif (c=="[") then
@@ -212,27 +213,23 @@ contains
         endif
 
       case (ST_START_CDATA)
-        ! grab until whitespace
+        ! grab until [
         if (firstChar) fx%token => vs_str_alloc("")
-        if (verify(c, XML_WHITESPACE//"[")>0) then
+        if (c/="[") then
           if (size(fx%token)>5) then
             call add_error(fx%error_stack, &
               "Expecting CDATA[ after <![")
+          else
             tempString => fx%token
             fx%token => vs_str_alloc(str_vs(tempString)//c)
             deallocate(tempString)
-          elseif (str_vs(fx%token)=="CDATA") then
-            if (c=="[") then
-              fx%tokenType = TOK_START_CDATA
-              deallocate(fx%token)
-            else
-              call add_error(fx%error_stack, &
-                "Expecting [ after CDATA")
-            endif
-          else
-            call add_error(fx%error_stack, &
-              "Expecting CDATA[ after <![")
           endif
+        elseif (str_vs(fx%token)=="CDATA") then
+          fx%tokenType = TOK_START_CDATA
+          deallocate(fx%token)
+        else
+          call add_error(fx%error_stack, &
+            "Expecting CDATA[ after <![")
         endif
 
       case (ST_CDATA_CONTENTS)
