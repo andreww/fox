@@ -354,14 +354,6 @@ contains
         elseif (c=="&") then
           fx%tokenType = TOK_CHAR
           fx%nextTokenType = TOK_ENTITY
-        elseif (phrase==1) then
-          tempString => fx%token
-          fx%token => vs_str_alloc(str_vs(tempString)//"]")
-          deallocate(tempString)
-        elseif (phrase==2) then
-          tempString => fx%token
-          fx%token => vs_str_alloc(str_vs(tempString)//"]]")
-          deallocate(tempString)
         elseif (c=="]") then
           if (phrase==0) then
             phrase = 1
@@ -380,6 +372,14 @@ contains
             fx%token => vs_str_alloc(str_vs(tempString)//">")
             deallocate(tempString)
           endif
+        elseif (phrase==1) then
+          tempString => fx%token
+          fx%token => vs_str_alloc(str_vs(tempString)//"]")
+          deallocate(tempString)
+        elseif (phrase==2) then
+          tempString => fx%token
+          fx%token => vs_str_alloc(str_vs(tempString)//"]]")
+          deallocate(tempString)
         else
           tempString => fx%token
           fx%token => vs_str_alloc(str_vs(tempString)//c)
