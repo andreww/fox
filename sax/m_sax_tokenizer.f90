@@ -40,15 +40,14 @@ contains
     xv = fx%xds%xml_version
 
     eof = .false.
+    if (fx%nextTokenType/=TOK_NULL) then
+      fx%tokenType = fx%nextTokenType
+      fx%nextTokenType = TOK_NULL
+      return
+    endif
     fx%tokentype = TOK_NULL
     if (associated(fx%token)) deallocate(fx%token)
     fx%token => vs_str_alloc("")
-    !FIXME next token
-    if (associated(fx%next_token)) then
-      fx%token => fx%next_token
-      nullify(fx%next_token)
-      return
-    endif
 
     ! This would all be SO much easier if there were a regular-expression
     ! library available. As it is, we essentially do hand-written regex
@@ -135,7 +134,6 @@ contains
           endif
         elseif (phrase==1) then
           if (c==">") then
-            phrase = 2
             if (associated(fx%token)) then
                fx%tokenType = TOK_CHAR
                fx%nextTokenType = TOK_PI_END
@@ -143,10 +141,10 @@ contains
                fx%tokenType = TOK_PI_END
             endif
           elseif (c=="?") then
+            ! The last ? didn't mean anything, but this one might.
             tempString => fx%token
             fx%token => vs_str_alloc(str_vs(tempString)//"?")
             deallocate(tempString)
-
           else
             phrase = 0
             tempString => fx%token
@@ -157,7 +155,7 @@ contains
           phrase = 1
         else
           tempString => fx%token
-          fx%token => vs_str_alloc(str_vs(tempString)//"?"//c)
+          fx%token => vs_str_alloc(str_vs(tempString)//c)
           deallocate(tempString)
         endif
 

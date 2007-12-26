@@ -113,7 +113,6 @@ contains
     call destroy_entity_list(fx%predefined_e_list)
 
     if (associated(fx%token)) deallocate(fx%token)
-    if (associated(fx%next_token)) deallocate(fx%next_token)
     if (associated(fx%name)) deallocate(fx%name)
     if (associated(fx%attname)) deallocate(fx%attname)
     if (associated(fx%publicId)) deallocate(fx%publicId)
@@ -397,7 +396,8 @@ contains
 
     do
 
-      call sax_tokenize(fx, fb, eof) 
+      call sax_tokenize(fx, fb, eof)
+      print*, fx%state, fx%tokenType
       if (in_error(fx%error_stack)) then
         ! Any other error, we want to quit sax_tokenizer
         call add_error(fx%error_stack, 'Error getting token')
@@ -446,7 +446,7 @@ contains
       select case (fx%state)
 
       case (ST_MISC)
-        !write(*,*) 'ST_MISC', str_vs(fx%token)
+        write(*,*) 'ST_MISC', str_vs(fx%token)
         select case (fx%tokenType)
         case (TOK_PI_TAG)
           nextState = ST_START_PI
@@ -457,7 +457,7 @@ contains
         end select
 
       case (ST_BANG_TAG)
-        !write(*,*)'ST_BANG_TAG'
+        write(*,*)'ST_BANG_TAG'
         select case (fx%tokenType)
         case (TOK_OPEN_SB)
           nextState = ST_START_CDATA
@@ -484,8 +484,8 @@ contains
 
 
       case (ST_START_PI)
-        !write(*,*)'ST_START_PI'
-        select case (fx%state)
+        write(*,*)'ST_START_PI'
+        select case (fx%tokenType)
         case (TOK_NAME)
           if (namespaces_) then
             nameOk = checkNCName(str_vs(fx%token), fx%xds)
@@ -499,7 +499,7 @@ contains
             elseif (checkPITarget(str_vs(fx%token), fx%xds)) then
               nextState = ST_PI_CONTENTS
               fx%name => fx%token
-              nullify(fx%token)
+              fx%token => null()
             else
               call add_error(fx%error_stack, "Invalid PI target name")
               goto 100
@@ -508,7 +508,7 @@ contains
         end select
 
       case (ST_PI_CONTENTS)
-        !write(*,*)'ST_PI_CONTENTS'
+        write(*,*)'ST_PI_CONTENTS'
         if (validCheck.and.len(fx%elstack)>0) then
           elem => get_element(fx%xds%element_list, get_top_elstack(fx%elstack))
           if (associated(elem)) then
@@ -517,7 +517,8 @@ contains
             endif
           endif
         endif
-        select case(fx%state)
+
+        select case(fx%tokenType)
         case (TOK_CHAR)
           if (present(processingInstruction_handler)) then
             call processingInstruction_handler(str_vs(fx%name), str_vs(fx%token))
@@ -539,7 +540,7 @@ contains
         end select
 
       case (ST_PI_END)
-        !write(*,*)'ST_PI_END'
+        write(*,*)'ST_PI_END'
         select case(fx%tokenType)
         case (TOK_PI_END)
           if (fx%context==CTXT_IN_CONTENT) then

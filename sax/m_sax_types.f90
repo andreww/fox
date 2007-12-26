@@ -102,17 +102,15 @@ module m_sax_types
     type(xml_doc_state), pointer :: xds
     logical :: xds_used = .false. ! is the xds used by DOM? If so, we must
                                   ! not destroy it once we are finished
-    integer :: whitespace
     integer :: context 
-    integer :: state
+    integer :: state = ST_NULL
     integer :: parse_stack = 0
     integer, pointer :: wf_stack(:) => null()
     logical :: well_formed = .false.
     logical :: skippedExternal = .false.
     character, dimension(:), pointer :: token => null()
-    integer :: tokenType
-    character, dimension(:), pointer :: next_token => null()
-    integer :: nextTokenType
+    integer :: tokenType = TOK_NULL
+    integer :: nextTokenType = TOK_NULL
     character, dimension(:), pointer :: name => null()
     character, dimension(:), pointer :: attname => null()
     logical :: error = .false.
