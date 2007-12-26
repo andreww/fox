@@ -467,26 +467,22 @@ contains
               fx%token => vs_str_alloc(c)
               ws_discard = .false.
             endif
-          elseif (phrase==1) then
-            if (c=="?") then
-              fx%tokenType = TOK_PI_TAG
-            elseif (c=="!") then
-              fx%tokenType = TOK_BANG_TAG
-            else
-              call add_error(fx%error_stack, "Unexpected character, expecting ! or ?")
-            endif
+          endif
+        elseif (phrase==1) then
+          if (c=="?") then
+            fx%tokenType = TOK_PI_TAG
+          elseif (c=="!") then
+            fx%tokenType = TOK_BANG_TAG
           else
-            if (verify(c, XML_WHITESPACE)>0) then
-              tempString => fx%token
-              fx%token => vs_str_alloc(str_vs(tempString)//c)
-              deallocate(tempString)
-            elseif (str_vs(fx%token)=="SYSTEM") then
-              fx%tokenType = TOK_NAME
-            elseif (str_vs(fx%token)=="PUBLIC") then
-              fx%tokenType = TOK_NAME
-            else
-              call add_error(fx%error_stack, "Unexpected token - expecting SYSTEM or PUBLIC")
-            endif
+            call add_error(fx%error_stack, "Unexpected character, expecting ! or ?")
+          endif
+        else
+          if (verify(c, XML_WHITESPACE)>0) then
+            tempString => fx%token
+            fx%token => vs_str_alloc(str_vs(tempString)//c)
+            deallocate(tempString)
+          else
+            fx%tokenType = TOK_NAME
           endif
         endif
 
