@@ -201,6 +201,7 @@ contains
           tempString => fx%token
           fx%token => vs_str_alloc(str_vs(tempString)//c)
           deallocate(tempString)
+          print*, "tokenizing ", str_vs(fx%token)
         else
           fx%tokenType = TOK_NAME
           if (c==">") then
@@ -272,6 +273,7 @@ contains
       case (ST_IN_TAG)
         if (firstChar) ws_discard = .true.
         if (ws_discard) then
+          print*, "intag c", c
           if (verify(c,XML_WHITESPACE)>0) then
             if (c==">") then
               fx%tokenType = TOK_END_TAG
@@ -280,9 +282,12 @@ contains
               ws_discard = .false.
             else
               fx%token => vs_str_alloc(c)
+              print*,"first character captured"
               ws_discard = .false.
             endif
-          elseif (phrase==1) then
+          endif
+        else
+          if (phrase==1) then
             if (c==">") then
               fx%tokenType = TOK_END_TAG
             else
@@ -293,7 +298,7 @@ contains
           else
             if (verify(c,XML_WHITESPACE//"=/>")==0) then
               fx%tokenType = TOK_NAME
-              print*, "ok ", c
+              print*, "sttagok ", c
               if (c=="=") then
                 fx%nextTokenType = TOK_EQUALS
               elseif (c==">") then
@@ -328,12 +333,12 @@ contains
         if (firstChar) ws_discard = .true.
         if (ws_discard) then
           if (verify(c,XML_WHITESPACE)>0) then
-            if (verify(c,"'""")>0) then
+            if (verify(c,"'""")==0) then
+              q = c
+              ws_discard = .false.
+            else
               call add_error(fx%error_stack, "Expecting "" or '")
             endif
-          else
-            q = c
-            ws_discard = .false.
           endif
         else
           if (c==q) then
