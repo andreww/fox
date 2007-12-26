@@ -457,7 +457,7 @@ contains
         end select
 
       case (ST_BANG_TAG)
-        write(*,*)'ST_BANG_TAG'
+        write(*,*) 'ST_BANG_TAG'
         select case (fx%tokenType)
         case (TOK_OPEN_SB)
           nextState = ST_START_CDATA
@@ -562,7 +562,7 @@ contains
         end select
 
       case (ST_COMMENT_END)
-        !write(*,*)'ST_COMMENT_END'
+        write(*,*)'ST_COMMENT_END'
         if (validCheck.and.len(fx%elstack)>0) then
           elem => get_element(fx%xds%element_list, get_top_elstack(fx%elstack))
           if (associated(elem)) then
@@ -589,7 +589,7 @@ contains
         end select
 
       case (ST_START_TAG)
-        !write(*,*)'ST_START_TAG', fx%context
+        write(*,*)'ST_START_TAG', fx%context
         select case (fx%tokenType)
         case (TOK_NAME)
           if (fx%context==CTXT_BEFORE_DTD &
@@ -609,14 +609,14 @@ contains
         end select
 
       case (ST_START_CDATA)
-        !write(*,*)'ST_START_CDATA_1'
+        write(*,*)'ST_START_CDATA'
         select case (fx%tokenType)
         case (TOK_START_CDATA)
           nextState = ST_CDATA_CONTENTS
         end select
 
       case (ST_CDATA_CONTENTS)
-        !write(*,*)'ST_CDATA_CONTENTS'
+        write(*,*)'ST_CDATA_CONTENTS'
         select case (fx%tokenType)
         case (TOK_CHAR)
           fx%name => fx%token
@@ -625,7 +625,7 @@ contains
         end select
 
       case (ST_CDATA_END)
-        !write(*,*)'ST_CDATA_END'
+        write(*,*)'ST_CDATA_END'
         if (validCheck) then
           elem => get_element(fx%xds%element_list, get_top_elstack(fx%elstack))
           if (associated(elem)) then
@@ -662,7 +662,7 @@ contains
         end select
 
       case (ST_IN_TAG)
-        !write(*,*)'ST_IN_TAG'
+        write(*,*)'ST_IN_TAG'
         select case (fx%tokenType)
         case (TOK_END_TAG)
           if (fx%context /= CTXT_IN_CONTENT) then
@@ -740,14 +740,14 @@ contains
         end select
 
       case (ST_ATT_NAME)
-        !write(*,*)'ST_ATT_NAME'
+        write(*,*)'ST_ATT_NAME'
         select case (fx%tokenType)
         case (TOK_EQUALS)
           nextState = ST_ATT_EQUALS
         end select
 
       case (ST_ATT_EQUALS)
-        !write(*,*)'ST_ATT_EQUALS'
+        write(*,*)'ST_ATT_EQUALS'
         ! token is pre-processed attribute value.
         ! fx%name still contains attribute name
         select case (fx%tokenType)
@@ -785,7 +785,7 @@ contains
         end select
 
       case (ST_CHAR_IN_CONTENT)
-        !write(*,*)'ST_CHAR_IN_CONTENT'
+        write(*,*)'ST_CHAR_IN_CONTENT'
         select case (fx%tokenType)
         case (TOK_CHAR)
           if (size(fx%token)>0) then
@@ -823,7 +823,7 @@ contains
         end select
 
       case (ST_TAG_IN_CONTENT)
-        !write(*,*)'ST_TAG_IN_CONTENT', str_vs(fx%token)
+        write(*,*) 'ST_TAG_IN_CONTENT'
         select case (fx%tokenType)
         case (TOK_ENTITY)
           nextState = ST_START_ENTITY
@@ -838,6 +838,7 @@ contains
         end select
 
       case (ST_START_ENTITY)
+        write(*,*) 'ST_START_ENTITY'
         select case (fx%tokenType)
         case (TOK_NAME)
           elem => get_element(fx%xds%element_list, get_top_elstack(fx%elstack))
@@ -942,7 +943,7 @@ contains
         end select
 
       case (ST_CLOSING_TAG)
-        !write(*,*)'ST_CLOSING_TAG'
+        write(*,*)'ST_CLOSING_TAG'
         select case (fx%tokenType)
         case (TOK_NAME)
           if (checkName(str_vs(fx%token), fx%xds)) then
@@ -956,7 +957,7 @@ contains
         end select
 
       case (ST_IN_CLOSING_TAG)
-        !write(*,*)'ST_IN_CLOSING_TAG'
+        write(*,*)'ST_IN_CLOSING_TAG'
         select case (fx%tokenType)
         case (TOK_END_TAG)
           call close_tag
@@ -978,7 +979,7 @@ contains
         end select
 
       case (ST_IN_DTD)
-        !write(*,*)'ST_IN_DTD'
+        write(*,*)'ST_IN_DTD'
         select case (fx%tokenType)
         case (TOK_NAME)
           ! check token is name
@@ -988,7 +989,7 @@ contains
         end select
 
       case (ST_DTD_NAME)
-        !write(*,*) 'ST_DTD_NAME ', str_vs(fx%token)
+        write(*,*) 'ST_DTD_NAME ', str_vs(fx%token)
         select case (fx%tokenType)
         case (TOK_NAME)
           if (str_vs(fx%token)=='SYSTEM') then
@@ -1015,7 +1016,7 @@ contains
         end select
 
       case (ST_DTD_PUBLIC)
-        !write(*,*) 'ST_DTD_PUBLIC'
+        write(*,*) 'ST_DTD_PUBLIC'
         select case (fx%tokenType)
         case (TOK_CHAR)
           if (checkPublicId(str_vs(fx%token))) then
@@ -1029,7 +1030,7 @@ contains
         end select
 
       case (ST_DTD_SYSTEM)
-        !write(*,*) 'ST_DTD_SYSTEM'
+        write(*,*) 'ST_DTD_SYSTEM'
         select case (fx%tokenType)
         case (TOK_CHAR)
           if (checkPublicId(str_vs(fx%token))) then
@@ -1043,7 +1044,7 @@ contains
         end select
 
       case (ST_DTD_DECL)
-        !write(*,*) 'ST_DTD_DECL ', str_vs(fx%token)
+        write(*,*) 'ST_DTD_DECL'
         select case (fx%tokenType)
         case (TOK_OPEN_SB)
           if (associated(fx%publicId).or.associated(fx%systemId)) &
@@ -1088,7 +1089,7 @@ contains
         end select
 
       case (ST_INT_SUBSET)
-        !write(*,*) 'ST_INT_SUBSET'
+        write(*,*) 'ST_INT_SUBSET'
         select case (fx%tokenType)
         case (TOK_CLOSE_SB)
           nextState = ST_CLOSE_DTD
@@ -1104,6 +1105,7 @@ contains
         end select
 
       case (ST_START_PE)
+        write(*,*) 'ST_START_PE'
         select case (fx%tokenType)
         case (TOK_NAME)
           if (existing_entity(fx%forbidden_pe_list, str_vs(fx%token))) then
@@ -1155,7 +1157,7 @@ contains
         end select
 
       case (ST_DTD_ATTLIST)
-        !write(*,*) 'ST_DTD_ATTLIST'
+        write(*,*) 'ST_DTD_ATTLIST'
         ! check is name
         select case (fx%tokenType)
         case (TOK_NAME)
@@ -1170,7 +1172,7 @@ contains
         end select
 
       case (ST_DTD_ATTLIST_CONTENTS)
-        !write(*,*) 'ST_DTD_ATTLIST_CONTENTS'
+        write(*,*) 'ST_DTD_ATTLIST_CONTENTS'
         select case (fx%tokenType)
         case (TOK_DTD_CONTENTS)
           if (processDTD) then
@@ -1194,7 +1196,7 @@ contains
         end select
 
       case (ST_DTD_ATTLIST_END)
-        !write(*,*) 'ST_DTD_ATTLIST_END'
+        write(*,*) 'ST_DTD_ATTLIST_END'
         select case (fx%tokenType)
         case (TOK_END_TAG)
           deallocate(fx%name)
@@ -1208,7 +1210,7 @@ contains
         end select
 
       case (ST_DTD_ELEMENT)
-        !write(*,*) 'ST_DTD_ELEMENT'
+        write(*,*) 'ST_DTD_ELEMENT'
         ! FIXME check is name
         select case (fx%tokenType)
         case (TOK_NAME)
@@ -1218,8 +1220,7 @@ contains
         end select
 
       case (ST_DTD_ELEMENT_CONTENTS)
-        !token is everything up to >
-        !write(*,*)'ST_DTD_ELEMENT_CONTENTS'
+        write(*,*)'ST_DTD_ELEMENT_CONTENTS'
         select case (fx%tokenType)
         case (TOK_DTD_CONTENTS)
           if (declared_element(fx%xds%element_list, str_vs(fx%name))) then
@@ -1245,7 +1246,7 @@ contains
         end select
 
       case (ST_DTD_ELEMENT_END)
-        !write(*,*)'ST_DTD_ELEMENT_END'
+        write(*,*)'ST_DTD_ELEMENT_END'
         select case (fx%tokenType)
         case (TOK_END_TAG)
           if (processDTD.and.associated(elem)) then
@@ -1259,7 +1260,7 @@ contains
         end select
 
       case (ST_DTD_ENTITY)
-        !write(*,*) 'ST_DTD_ENTITY'
+        write(*,*) 'ST_DTD_ENTITY'
         select case (fx%tokenType)
         case (TOK_ENTITY)
           pe = .true.
@@ -1283,7 +1284,7 @@ contains
         end select
 
       case (ST_DTD_ENTITY_PE)
-        !write(*,*) 'ST_DTD_ENTITY_PE'
+        write(*,*) 'ST_DTD_ENTITY_PE'
         select case (fx%tokenType)
         case (TOK_NAME)
           if (namespaces_) then
@@ -1323,7 +1324,7 @@ contains
         end select
 
       case (ST_DTD_ENTITY_PUBLIC)
-        !write(*,*) 'ST_DTD_ENTITY_PUBLIC'
+        write(*,*) 'ST_DTD_ENTITY_PUBLIC'
         select case (fx%tokenType)
         case (TOK_CHAR)
           if (checkPublicId(str_vs(fx%token))) then
@@ -1340,7 +1341,7 @@ contains
         end select
 
       case (ST_DTD_ENTITY_SYSTEM)
-        !write(*,*) 'ST_DTD_ENTITY_SYSTEM'
+        write(*,*) 'ST_DTD_ENTITY_SYSTEM'
         select case (fx%tokenType)
         case (TOK_CHAR)
           fx%systemId => fx%token
@@ -1352,7 +1353,7 @@ contains
         end select
 
       case (ST_DTD_ENTITY_NDATA)
-        !write(*,*) 'ST_DTD_ENTITY_NDATA'
+        write(*,*) 'ST_DTD_ENTITY_NDATA'
         select case (fx%tokenType)
         case (TOK_END_TAG)
           if (processDTD) then
@@ -1381,7 +1382,7 @@ contains
         end select
 
       case (ST_DTD_ENTITY_NDATA_VALUE)
-        !write(*,*) 'ST_DTD_ENTITY_NDATA_VALUE'
+        write(*,*) 'ST_DTD_ENTITY_NDATA_VALUE'
         !check is a name and exists in notationlist
         select case (fx%tokenType)
         case (TOK_NAME)
@@ -1403,7 +1404,7 @@ contains
         end select
 
       case (ST_DTD_ENTITY_END)
-        !write(*,*) 'ST_DTD_ENTITY_END'
+        write(*,*) 'ST_DTD_ENTITY_END'
         select case (fx%tokenType)
         case (TOK_END_TAG)
           if (processDTD) then
@@ -1421,7 +1422,7 @@ contains
         end select
 
       case (ST_DTD_NOTATION)
-        !write(*,*) 'ST_DTD_NOTATION'
+        write(*,*) 'ST_DTD_NOTATION'
         select case (fx%tokenType)
         case (TOK_NAME)
           if (namespaces_) then
@@ -1442,7 +1443,7 @@ contains
         end select
 
       case (ST_DTD_NOTATION_ID)
-        !write(*,*)'ST_DTD_NOTATION_ID'
+        write(*,*)'ST_DTD_NOTATION_ID'
         select case (fx%tokenType)
         case (TOK_NAME)
           if (str_vs(fx%token)=='SYSTEM') then
@@ -1459,7 +1460,7 @@ contains
         end select
 
       case (ST_DTD_NOTATION_SYSTEM)
-        !write(*,*)'ST_DTD_NOTATION_SYSTEM'
+        write(*,*)'ST_DTD_NOTATION_SYSTEM'
         select case (fx%tokenType)
         case (TOK_CHAR)
           fx%systemId => fx%token
@@ -1471,7 +1472,7 @@ contains
         end select
 
       case (ST_DTD_NOTATION_PUBLIC)
-        !write(*,*)'ST_DTD_NOTATION_PUBLIC'
+        write(*,*)'ST_DTD_NOTATION_PUBLIC'
         select case (fx%tokenType)
         case (TOK_CHAR)
           if (checkPublicId(str_vs(fx%token))) then
@@ -1488,7 +1489,7 @@ contains
         end select
 
       case (ST_DTD_NOTATION_PUBLIC_2)
-        !write(*,*)'ST_DTD_NOTATION_PUBLIC_2'
+        write(*,*)'ST_DTD_NOTATION_PUBLIC_2'
         select case (fx%tokenType)
         case (TOK_END_TAG)
           if (validCheck) then
@@ -1514,7 +1515,7 @@ contains
         end select
 
       case (ST_DTD_NOTATION_END)
-        !write(*,*)'ST_DTD_NOTATION_END'
+        write(*,*)'ST_DTD_NOTATION_END'
         select case (fx%tokenType)
         case (TOK_END_TAG)
           if (validCheck) then
@@ -1552,7 +1553,7 @@ contains
         end select
 
       case (ST_CLOSE_DTD)
-        !write(*,*) 'ST_CLOSE_DTD'
+        write(*,*) 'ST_CLOSE_DTD'
         select case (fx%tokenType)
         case (TOK_END_TAG)
           if (present(endDTD_handler)) &
