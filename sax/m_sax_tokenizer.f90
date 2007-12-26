@@ -448,7 +448,7 @@ contains
           endif
         endif
 
-      case (ST_DTD_NAME, ST_DTD_DECL, ST_INT_SUBSET)
+      case (ST_DTD_NAME, ST_DTD_DECL, ST_INT_SUBSET, ST_CLOSE_DTD)
         if (firstChar) ws_discard = .true.
         if (ws_discard) then
           if (verify(c, XML_WHITESPACE)>0) then
@@ -538,10 +538,10 @@ contains
           deallocate(tempString)
         endif
         
-      case (ST_DTD_ENTITY_ID, ST_DTD_ENTITY_PUBLIC, ST_DTD_ENTITY_SYSTEM, &
-        ST_DTD_ENTITY_NDATA, ST_DTD_ENTITY_END, ST_DTD_NOTATION_ID,       &
-        ST_DTD_NOTATION_SYSTEM, ST_DTD_NOTATION_PUBLIC, &
-        ST_DTD_NOTATION_PUBLIC_2)
+      case (ST_DTD_ENTITY_ID, ST_DTD_ENTITY_PUBLIC, ST_DTD_ENTITY_SYSTEM,   &
+        ST_DTD_ENTITY_NDATA, ST_DTD_ENTITY_END, ST_DTD_ENTITY_NDATA_VALUE,  &
+        ST_DTD_NOTATION_ID, ST_DTD_NOTATION_SYSTEM, ST_DTD_NOTATION_PUBLIC, &
+        ST_DTD_NOTATION_PUBLIC_2, ST_DTD_NOTATION_END)
         print*, "this tokenizer"
         if (firstChar) ws_discard = .true.
         if (ws_discard) then
@@ -561,7 +561,8 @@ contains
         else
           if (q/=" ") then
             if (c==q) fx%tokenType = TOK_CHAR
-          elseif (verify(c, XML_WHITESPACE)==0) then
+          elseif (verify(c, XML_WHITESPACE//">")==0) then
+            call push_chars(fb, c)
             fx%tokenType = TOK_NAME
           else
             tempString => fx%token
