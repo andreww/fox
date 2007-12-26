@@ -440,7 +440,7 @@ contains
         goto 100
       endif
       print*, "=============="
-      print*, fx%state, fx%tokenType
+      print*, fx%state, fx%tokenType, fx%nextTokenType
       if (associated(fx%token)) print*, str_vs(fx%token)
 
       nextState = ST_NULL
@@ -694,7 +694,7 @@ contains
           call open_tag
           if (in_error(fx%error_stack)) goto 100
           deallocate(fx%name)
-          fx%state = ST_CHAR_IN_CONTENT
+          nextState = ST_CHAR_IN_CONTENT
 
         case (TOK_CLOSE_TAG)
           if (fx%context==CTXT_IN_CONTENT) then
@@ -1361,7 +1361,7 @@ contains
           if (associated(fx%systemId)) deallocate(fx%systemId)
           if (associated(fx%publicId)) deallocate(fx%publicId)
           if (associated(fx%Ndata)) deallocate(fx%Ndata)
-          fx%state = ST_INT_SUBSET
+          nextState = ST_INT_SUBSET
         case (TOK_NAME)
           if (str_vs(fx%token)=='NDATA') then
             if (pe) then

@@ -39,8 +39,11 @@ contains
 
     xv = fx%xds%xml_version
 
+    print*, "about to tokenize for state ", fx%state
+
     eof = .false.
     if (fx%nextTokenType/=TOK_NULL) then
+      print*, 'got an automatic token', fx%nextTokenType
       fx%tokenType = fx%nextTokenType
       fx%nextTokenType = TOK_NULL
       return
@@ -52,7 +55,6 @@ contains
     ! This would all be SO much easier if there were a regular-expression
     ! library available. As it is, we essentially do hand-written regex
     ! equivalents for each state ...
-
     q = " "
     phrase = 0
     firstChar = .true.
@@ -84,6 +86,7 @@ contains
           elseif (isInitialNameChar(c, xv)) then
             call push_chars(fb, c)
             fx%tokenType = TOK_OPEN_TAG
+            print*,"opentag1"
           else
             call add_error(fx%error_stack, "Unexpected character after <")
           endif
@@ -200,7 +203,11 @@ contains
           deallocate(tempString)
         else
           fx%tokenType = TOK_NAME
-          if (verify(c, "/>")>0) call push_chars(fb, c)
+          if (c==">") then
+            fx%nextTokenType = TOK_END_TAG
+          else
+            call push_chars(fb, c)
+          endif
         endif
 
       case (ST_START_CDATA)
@@ -271,39 +278,34 @@ contains
             elseif (c=="/") then
               phrase = 1
               ws_discard = .false.
-            elseif ((xv==XML1_0.and.isXML1_0_NameChar(c)) &
-              .or.(xv==XML1_1.and.isXML1_1_NameChar(c))) then
+            else
               fx%token => vs_str_alloc(c)
               ws_discard = .false.
+            endif
+          elseif (phrase==1) then
+            if (c==">") then
+              fx%tokenType = TOK_END_TAG
             else
               call add_error(fx%error_stack, &
-                "Unexpected character in element tag")
+                "Unexpected character after / in element tag")
+              exit
             endif
           else
-            if (phrase==1) then
-              if (c==">") then
-                fx%tokenType = TOK_CLOSE_TAG
+            if (verify(c,XML_WHITESPACE//"=/>")==0) then
+              fx%tokenType = TOK_NAME
+              print*, "ok ", c
+              if (c=="=") then
+                fx%nextTokenType = TOK_EQUALS
+              elseif (c==">") then
+                fx%nextTokenType = TOK_END_TAG
               else
-                call add_error(fx%error_stack, &
-                  "Unexpected character after / in element tag")
-                exit
+                call push_chars(fb, c)
               endif
             else
-              if ((xv==XML1_0.and.isXML1_0_NameChar(c)) &
-                .or.(xv==XML1_1.and.isXML1_1_NameChar(c))) then
-                tempString => fx%token
-                fx%token => vs_str_alloc(str_vs(tempString)//c)
-                deallocate(tempString)
-              elseif (verify(c,XML_WHITESPACE)==0) then
-                fx%tokenType = TOK_NAME
-              elseif (c=="=") then
-                fx%tokenType = TOK_NAME
-                fx%nextTokenType = TOK_EQUALS
-              else
-                call add_error(fx%error_stack, &
-                  "Unexpected character in element tag")
-                exit
-              endif
+              tempString => fx%token
+              fx%token => vs_str_alloc(str_vs(tempString)//c)
+              deallocate(tempString)
+              print*, "token ", str_vs(fx%token)
             endif
           endif
         endif
@@ -315,6 +317,7 @@ contains
             if (c=="=") then
               fx%tokenType = TOK_EQUALS
             else
+              print*, "not ok ", c
               call add_error(fx%error_stack, &
                 "Unexpected character in element tag, expected =")
             endif
@@ -343,18 +346,20 @@ contains
         endif
 
       case (ST_CHAR_IN_CONTENT)
-        if (verify(c, "<&")>0) then
-          if (phrase==1) then
-            tempString => fx%token
-            fx%token => vs_str_alloc(str_vs(tempString)//"]")
-            deallocate(tempString)
-          elseif (phrase==2) then
-            tempString => fx%token
-            fx%token => vs_str_alloc(str_vs(tempString)//"]]")
-            deallocate(tempString)
-          endif
-          call push_chars(fb, c)
+        if (c=="<") then
           fx%tokenType = TOK_CHAR
+          call push_chars(fb, c)
+        elseif (c=="&") then
+          fx%tokenType = TOK_CHAR
+          fx%nextTokenType = TOK_ENTITY
+        elseif (phrase==1) then
+          tempString => fx%token
+          fx%token => vs_str_alloc(str_vs(tempString)//"]")
+          deallocate(tempString)
+        elseif (phrase==2) then
+          tempString => fx%token
+          fx%token => vs_str_alloc(str_vs(tempString)//"]]")
+          deallocate(tempString)
         elseif (c=="]") then
           if (phrase==0) then
             phrase = 1
@@ -387,7 +392,8 @@ contains
           elseif (c=="&") then
             fx%tokenType = TOK_ENTITY
           else
-            call add_error(fx%error_stack, "Unexpected character found outside content")
+            print*,"cccc!",c,"!"
+            call add_error(fx%error_stack, "Unexpected character found in content")
           endif
         elseif (phrase==1) then
           if (c=="?") then
@@ -562,8 +568,8 @@ contains
           if (q/=" ") then
             if (c==q) fx%tokenType = TOK_CHAR
           elseif (verify(c, XML_WHITESPACE//">")==0) then
-            call push_chars(fb, c)
             fx%tokenType = TOK_NAME
+            if (c==">") fx%nextTokenType = TOK_END_TAG
           else
             tempString => fx%token
             fx%token => vs_str_alloc(str_vs(tempString)//c)
