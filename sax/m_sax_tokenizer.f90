@@ -494,9 +494,9 @@ contains
               q = c
               fx%token => vs_str_alloc("")
               ws_discard = .false.
+            else
+              call add_error(fx%error_stack, "Unexpected character - expecting ' or """)
             endif
-          else
-            call add_error(fx%error_stack, "Unexpected character - expecting ' or """)
           endif
         else
           if (c==q) then

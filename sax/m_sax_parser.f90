@@ -1033,14 +1033,9 @@ contains
         write(*,*) 'ST_DTD_SYSTEM'
         select case (fx%tokenType)
         case (TOK_CHAR)
-          if (checkPublicId(str_vs(fx%token))) then
-            fx%publicId => fx%token
-            fx%token => null()
-            nextState = ST_DTD_DECL
-          else
-            call add_error(fx%error_stack, "Invalid document public id")
-            goto 100
-          endif
+          fx%systemId => fx%token
+          fx%token => null()
+          nextState = ST_DTD_DECL
         end select
 
       case (ST_DTD_DECL)
