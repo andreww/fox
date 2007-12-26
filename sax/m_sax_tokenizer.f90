@@ -224,7 +224,7 @@ contains
             fx%token => vs_str_alloc(str_vs(tempString)//c)
             deallocate(tempString)
           endif
-        elseif (str_vs(fx%token)=="CDATA") then
+        elseif (str_vs(fx%token)//"["=="CDATA[") then
           fx%tokenType = TOK_START_CDATA
           deallocate(fx%token)
         else
