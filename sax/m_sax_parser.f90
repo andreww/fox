@@ -397,7 +397,6 @@ contains
     do
 
       call sax_tokenize(fx, fb, eof)
-      print*, fx%state, fx%tokenType
       if (in_error(fx%error_stack)) then
         ! Any other error, we want to quit sax_tokenizer
         call add_error(fx%error_stack, 'Error getting token')
@@ -440,6 +439,9 @@ contains
         call add_error(fx%error_stack, 'Internal error! No token found!')
         goto 100
       endif
+      print*, "=============="
+      print*, fx%state, fx%tokenType
+      if (associated(fx%token)) print*, str_vs(fx%token)
 
       nextState = ST_NULL
 
@@ -1298,13 +1300,13 @@ contains
         end select
 
       case (ST_DTD_ENTITY_ID)
-        !write(*,*) 'ST_DTD_ENTITY_ID'
+        write(*,*) 'ST_DTD_ENTITY_ID'
         select case (fx%tokenType)
         case (TOK_NAME)
           if (str_vs(fx%token) == "PUBLIC") then
-            fx%state = ST_DTD_ENTITY_PUBLIC
+            nextState = ST_DTD_ENTITY_PUBLIC
           elseif (str_vs(fx%token) == "SYSTEM") then
-            fx%state = ST_DTD_ENTITY_SYSTEM
+            nextState = ST_DTD_ENTITY_SYSTEM
           else
             call add_error(fx%error_stack, "Unexpected token in ENTITY")
             goto 100
@@ -1572,6 +1574,7 @@ contains
 
       if (nextState/=ST_NULL) then
         fx%state = nextState
+        print*, "newState: ", fx%state
       else
         call add_error(fx%error_stack, "Internal error in parser - no suitable token found")
         goto 100

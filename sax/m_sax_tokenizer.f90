@@ -539,8 +539,10 @@ contains
         endif
         
       case (ST_DTD_ENTITY_ID, ST_DTD_ENTITY_PUBLIC, ST_DTD_ENTITY_SYSTEM, &
-        ST_DTD_ENTITY_NDATA, ST_DTD_NOTATION_ID, ST_DTD_NOTATION_SYSTEM, &
-        ST_DTD_NOTATION_PUBLIC, ST_DTD_NOTATION_PUBLIC_2)
+        ST_DTD_ENTITY_NDATA, ST_DTD_ENTITY_END, ST_DTD_NOTATION_ID,       &
+        ST_DTD_NOTATION_SYSTEM, ST_DTD_NOTATION_PUBLIC, &
+        ST_DTD_NOTATION_PUBLIC_2)
+        print*, "this tokenizer"
         if (firstChar) ws_discard = .true.
         if (ws_discard) then
           if (verify(c, XML_WHITESPACE)>0) then
@@ -552,17 +554,20 @@ contains
               fx%tokenType = TOK_END_TAG
             else
               fx%token => vs_str_alloc(c)
+              ws_discard = .false.
+              print*,"got a char"
             endif
           endif
         else
-          if (q/=" ".and.c==q) then
-            fx%tokenType = TOK_CHAR
+          if (q/=" ") then
+            if (c==q) fx%tokenType = TOK_CHAR
           elseif (verify(c, XML_WHITESPACE)==0) then
             fx%tokenType = TOK_NAME
           else
             tempString => fx%token
             fx%token => vs_str_alloc(str_vs(tempString)//c)
             deallocate(tempString)
+            print*,"Adding to char", str_vs(fx%token)
           endif
         endif
 
