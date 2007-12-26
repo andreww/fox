@@ -247,21 +247,21 @@ contains
             phrase = 2
           else
             tempString => fx%token
-            fx%token => vs_str_alloc(str_vs(tempString)//c)
+            fx%token => vs_str_alloc(str_vs(tempString)//"]"//c)
             deallocate(tempString)
             phrase = 0
           endif
         case (2)
           if (c==">") then
             fx%tokenType = TOK_CHAR
-            tempString => fx%token
-            fx%token => vs_str_alloc(str_vs(tempString)//c)
-            deallocate(tempString)
             fx%nextTokenType = TOK_CDATA_END
-            exit
+          elseif (c=="]") then
+            tempString => fx%token
+            fx%token => vs_str_alloc(str_vs(tempString)//"]"//c)
+            deallocate(tempString)
           else
             tempString => fx%token
-            fx%token => vs_str_alloc(str_vs(tempString)//c)
+            fx%token => vs_str_alloc(str_vs(tempString)//"]]"//c)
             deallocate(tempString)
             phrase = 0
           endif
