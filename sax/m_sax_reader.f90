@@ -61,7 +61,7 @@ module m_sax_reader
 
   public :: push_chars
 
-  public :: get_characters
+  public :: get_character
 
   public :: push_buffer_stack
   public :: pop_buffer_stack
@@ -182,6 +182,7 @@ contains
     nc => vs_str_alloc(str_vs(f%next_chars)//s)
     deallocate(f%next_chars)
     f%next_chars => nc
+
   end subroutine push_file_chars
 
 
@@ -221,165 +222,108 @@ contains
 
   end subroutine pop_buffer_stack
 
-  function get_characters(fb, n, iostat, es) result(string)
+  function get_character(fb, iostat, es) result(string)
     type(file_buffer_t), intent(inout) :: fb
-    integer, intent(in) :: n
     integer, intent(out) :: iostat
     type(error_stack), intent(inout) :: es
-    character(len=n) :: string
+    character(len=1) :: string
 
+    type(xml_source_t), pointer :: f
     type(buffer_t), pointer :: cb
-    integer :: offset, n_left, n_held
     character, pointer :: temp(:)
 
-    if (size(fb%f(1)%next_chars)>0) then
-      if (n<size(fb%f(1)%next_chars)) then
-        string = str_vs(fb%f(1)%next_chars(:n))
-        temp => vs_vs_alloc(fb%f(1)%next_chars(n+1:))
-        deallocate(fb%f(1)%next_chars)
-        fb%f(1)%next_chars => temp
-        iostat = 0
-        return
-      endif
-      offset = size(fb%f(1)%next_chars)
-      string(:offset) = str_vs(fb%f(1)%next_chars)
-      deallocate(fb%f(1)%next_chars)
-      fb%f(1)%next_chars => vs_str_alloc("")
-    else
-      offset = 0
-    endif
-    n_left = n - offset
-    if (n_left==0) then
-      iostat = 0
-      return
-    endif
-
-    ! Where are we reading from?
-    if (size(fb%buffer_stack) > 0) then
-      ! We are reading from an internal character buffer.
-      cb => fb%buffer_stack(1)
-      n_held = size(cb%s) - cb%pos + 1
-      if (n_left <= n_held) then
-        string(offset+1:) = str_vs(cb%s(cb%pos:cb%pos+n_left-1))
-        cb%pos = cb%pos + n_left
-        iostat = 0 
-      else
-        ! Not enough characters here
-        string = ''
-        ! put characters back on putchar? FIXME
-        iostat = io_eof
-        return
-      endif
-    else
-      ! We are reading from a file
-      string(offset+1:) = get_chars_from_file(fb%f(1), n_left, iostat, es)
-      if (iostat/=0) return ! EOF or Error.
-    endif
-
-  end function get_characters
-
-  function get_characters_from_file(f, n, iostat, es) result(string)
-    type(xml_source_t), intent(inout) :: f
-    integer, intent(in) :: n
-    integer, intent(out) :: iostat
-    type(error_stack), intent(inout) :: es
-    character(len=n) :: string
-
-    integer :: offset, n_left
-    character, pointer :: temp(:)
+    f => fb%f(1)
 
     if (size(f%next_chars)>0) then
-      if (n<size(f%next_chars)) then
-        string = str_vs(f%next_chars(:n))
-        temp => vs_vs_alloc(f%next_chars(n+1:))
-        deallocate(f%next_chars)
-        f%next_chars => temp
-        iostat = 0
-        return
+      string = f%next_chars(1)
+      if (size(f%next_chars)>1) then
+        temp => vs_vs_alloc(f%next_chars(2:))
+      else
+        temp => vs_str_alloc("")
       endif
-      offset = size(f%next_chars)
-      string(:offset) = str_vs(f%next_chars)
       deallocate(f%next_chars)
-      f%next_chars => vs_str_alloc("")
-    else
-      offset = 0
-    endif
-    n_left = n - offset
-    if (n_left==0) then
+      f%next_chars => temp
       iostat = 0
-      return
+    else
+      ! Where are we reading from?
+      if (size(fb%buffer_stack) > 0) then
+        ! We are reading from an internal character buffer.
+        cb => fb%buffer_stack(1)
+        if (cb%pos<=size(cb%s)) then
+          string = cb%s(cb%pos)
+          cb%pos = cb%pos + 1
+          iostat = 0 
+        else
+          ! Not enough characters here
+          string = ''
+          ! put characters back on putchar? FIXME
+          iostat = io_eof
+          return
+        endif
+      else
+        ! We are reading from a file
+        string = get_char_from_file(f, iostat, es)
+        if (iostat/=0) return ! EOF or Error.
+      endif
     endif
 
-    string(offset+1:) = get_chars_from_file(f, n_left, iostat, es)
-
-  end function get_characters_from_file
+  end function get_character
 
 
-  function get_chars_from_file(f, n, iostat, es) result(string)
+  function get_char_from_file(f, iostat, es) result(string)
     type(xml_source_t), intent(inout) :: f
-    integer, intent(in) :: n
     integer, intent(out) :: iostat
     type(error_stack), intent(inout) :: es
-    character(len=n) :: string
+    character(len=1) :: string
 
-    integer :: i
-    character :: c, c2
     logical :: pending
+    character :: c, c2
 
-    i = 1
     pending = .false.
-    do while (i<=n)
-      if (pending) then
+    c = read_single_char(f, iostat)
+    if (iostat==io_eor) then
+      c = achar(13)
+      iostat = 0
+    elseif (iostat/=0) then
+      ! FIXME do something with the characters we have read.
+      return
+    endif
+    if (.not.isLegalChar(c, f%xml_version)) then
+      call add_error(es, "Illegal character found at " &
+        //str_vs(f%filename)//":"//f%line//":"//f%col)
+    endif
+    if (c==achar(10)) then
+      c2 = read_single_char(f, iostat)
+      f%col = f%col + 1
+      if (iostat==io_eof) then
+        ! the file has just ended on a single CR. Report is as a LF.
+        ! Ignore the eof just now, it'll be picked up if we need to 
+        ! perform another read.
+        iostat = 0
+        c = achar(13)
+        f%line = f%line + 1
+        f%col = 0
+      elseif (iostat==io_eor.or.c2==achar(13)) then
+        ! (We pretend all ends of lines are LF)
+        ! We can drop the CR
         c = c2
-        pending = .false.
+      elseif (iostat/=0) then
+        call add_error(es, "Error reading "//str_vs(f%filename))
+        ! Unknown IO error
+        return
       else
-        c = read_single_char(f, iostat)
-        if (iostat==io_eor) then
-          c = achar(13)
-          iostat = 0
-        elseif (iostat/=0) then
-          ! FIXME do something with the characters we have read.
-          return
-        endif
+        c = achar(13)
+        pending = .true.
       endif
-      if (.not.isLegalChar(c, f%xml_version)) then
-        call add_error(es, "Illegal character found at " &
-          //str_vs(f%filename)//":"//f%line//":"//f%col)
-      endif
-      if (c==achar(10)) then
-        c2 = read_single_char(f, iostat)
-        f%col = f%col + 1
-        if (iostat==io_eof) then
-          ! the file has just ended on a single CR. Report is as a LF.
-          ! Ignore the eof just now, it'll be picked up if we need to 
-          ! perform another read.
-          iostat = 0
-          c = achar(13)
-          f%line = f%line + 1
-          f%col = 0
-        elseif (iostat==io_eor.or.c2==achar(13)) then
-          ! (We pretend all ends of lines are LF)
-          ! We can drop the CR
-          c = c2
-        elseif (iostat/=0) then
-          call add_error(es, "Error reading "//str_vs(f%filename))
-          ! Unknown IO error
-          return
-        else
-          c = achar(13)
-          pending = .true.
-        endif
-      endif
-      string(i:i) = c
-      i = i + 1
-    enddo
+    endif
+    string = c
 
     if (pending) then
       ! we have one character left over, put in the pushback buffer
       allocate(f%next_chars(1))
       f%next_chars = c2
     endif
-  end function get_chars_from_file
+  end function get_char_from_file
 
   function read_single_char(f, iostat) result(c)
     type(xml_source_t), intent(inout) :: f
@@ -448,7 +392,7 @@ contains
     xd_par = xd_nothing
     do
 
-      c = get_characters_from_file(f, 1, iostat, es)
+      c = get_char_from_file(f, iostat, es)
       if (iostat/=0) then
         return
       endif

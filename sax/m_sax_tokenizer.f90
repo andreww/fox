@@ -12,7 +12,7 @@ module m_sax_tokenizer
   use m_common_namecheck, only: checkName, checkCharacterEntityReference
 
   use m_sax_reader, only: file_buffer_t, &
-    push_chars, get_characters
+    push_chars, get_character
   use m_sax_types ! everything, really
 
   implicit none
@@ -55,7 +55,7 @@ contains
     phrase = 0
     firstChar = .true.
     do
-      c = get_characters(fb, 1, iostat, fx%error_stack)
+      c = get_character(fb, iostat, fx%error_stack)
       if (iostat==io_eof) then
         eof = .true.
         return
@@ -65,6 +65,7 @@ contains
 
       select case (fx%state)
       case (ST_MISC)
+        print*, "got first char ", c
         if (firstChar) ws_discard = .true.
         if (ws_discard) then
           if (verify(c, XML_WHITESPACE)>0) then
@@ -83,7 +84,6 @@ contains
           elseif (isInitialNameChar(c, xv)) then
             call push_chars(fb, c)
             fx%tokenType = TOK_OPEN_TAG
-            print*,"opentag1"
           else
             call add_error(fx%error_stack, "Unexpected character after <")
           endif
