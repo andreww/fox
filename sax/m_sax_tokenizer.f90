@@ -12,11 +12,7 @@ module m_sax_tokenizer
   use m_common_namecheck, only: checkName, checkCharacterEntityReference
 
   use m_sax_reader, only: file_buffer_t, &
-    push_chars, get_characters, &
-    get_characters_until_all_of, &
-    get_characters_until_one_of, &
-    get_characters_until_not_one_of, &
-    get_characters_until_not_namechar
+    push_chars, get_characters
   use m_sax_types ! everything, really
 
   implicit none
@@ -75,6 +71,7 @@ contains
             if (c=="<") then
               ws_discard = .false.
             else
+              print*, "arse ", c
               call add_error(fx%error_stack, "Unexpected character found outside content")
             endif
           endif
@@ -583,7 +580,7 @@ contains
         else
           if (q/=" ".and.c==q) then
             fx%tokenType = TOK_CHAR
-          elseif (verify(c, XML_WHITESPACE//">")==0) then
+          elseif (q==" ".and.verify(c, XML_WHITESPACE//">")==0) then
             fx%tokenType = TOK_NAME
             if (c==">") then
               fx%nextTokenType = TOK_END_TAG
