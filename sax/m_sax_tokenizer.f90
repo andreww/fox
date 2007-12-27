@@ -578,8 +578,8 @@ contains
             endif
           endif
         else
-          if (q/=" ") then
-            if (c==q) fx%tokenType = TOK_CHAR
+          if (q/=" ".and.c==q) then
+            fx%tokenType = TOK_CHAR
           elseif (verify(c, XML_WHITESPACE//">")==0) then
             fx%tokenType = TOK_NAME
             if (c==">") then
