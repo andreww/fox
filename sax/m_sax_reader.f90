@@ -391,7 +391,6 @@ contains
     parse_state = XD_0
     xd_par = xd_nothing
     do
-
       c = get_char_from_file(f, iostat, es)
       if (iostat/=0) then
         return
@@ -539,10 +538,10 @@ contains
         if (c==q) then
           select case (xd_par)
           case (xd_version)
-            if (str_vs(ch)=="1.0") then
+            if (str_vs(ch)//"x"=="1.0x") then
               f%xml_version = XML1_0
               deallocate(ch)
-            elseif (str_vs(ch)=="1.1") then
+            elseif (str_vs(ch)//"x"=="1.1x") then
               f%xml_version = XML1_1
               deallocate(ch)
             else
@@ -567,10 +566,10 @@ contains
               f%encoding => ch
             endif
           case (xd_standalone)
-            if (str_vs(ch)=="yes") then
+            if (str_vs(ch)//"x"=="yesx") then
               standalone = .true.
               deallocate(ch)
-            elseif (str_vs(ch)=="no") then
+            elseif (str_vs(ch)//"x"=="nox") then
               standalone = .false.
               deallocate(ch)
             else
@@ -591,7 +590,7 @@ contains
           exit
         else
           call add_error(es, &
-            "Unexpected character found in XML declaration; expecting >")        
+            "Unexpected character found in XML declaration; expecting >")
         endif
 
       end select
@@ -599,6 +598,7 @@ contains
       if (in_error(es)) then
         if (associated(ch)) deallocate(ch)
         exit
+      else
       endif
 
     end do
