@@ -153,10 +153,10 @@ contains
     type(xml_source_t), intent(inout)    :: f
 
     if (f%lun/=-1) then
-       close(f%lun)
+      close(f%lun)
     else
-       deallocate(f%input_string%s)
-       deallocate(f%input_string)
+      deallocate(f%input_string%s)
+      deallocate(f%input_string)
     endif
     deallocate(f%filename)
 
@@ -247,13 +247,13 @@ contains
       fb%f(1)%next_chars => vs_str_alloc("")
     else
       offset = 0
-    endif     
+    endif
     n_left = n - offset
     if (n_left==0) then
       iostat = 0
       return
     endif
-  
+
     ! Where are we reading from?
     if (size(fb%buffer_stack) > 0) then
       ! We are reading from an internal character buffer.
@@ -303,13 +303,13 @@ contains
       f%next_chars => vs_str_alloc("")
     else
       offset = 0
-    endif     
+    endif
     n_left = n - offset
     if (n_left==0) then
       iostat = 0
       return
     endif
-  
+
     string(offset+1:) = get_chars_from_file(f, n_left, iostat, es)
 
   end function get_characters_from_file
@@ -448,213 +448,213 @@ contains
     xd_par = xd_nothing
     do
 
-       c = get_characters_from_file(f, 1, iostat, es)
-       if (iostat/=0) then
+      c = get_characters_from_file(f, 1, iostat, es)
+      if (iostat/=0) then
+        return
+      endif
+
+      select case (parse_state)
+
+      case (XD_0)
+        if (c=="<") then
+          parse_state = XD_START
+        else
+          call push_file_chars(f, c)
           return
-       endif
+        endif
 
-       select case (parse_state)
+      case (XD_START)
+        if (c=="?") then
+          parse_state = XD_TARGET
+          ch => vs_str_alloc("")
+        else
+          call push_file_chars(f, "<"//c)
+          return
+        endif
 
-       case (XD_0)
-          if (c=="<") then
-             parse_state = XD_START
-          else
-             call push_file_chars(f, c)
-             return
-          endif
+      case (XD_TARGET)
+        if (isXML1_0_NameChar(c)) then
+          ch2 => vs_str_alloc(str_vs(ch)//c)
+          deallocate(ch)
+          ch => ch2
+        elseif (verify(c, XML_WHITESPACE)==0 &
+          .and.str_vs(ch)=="xml") then
+          deallocate(ch)
+          parse_state = XD_SPACE
+        else
+          call push_file_chars(f, "<?"//str_vs(ch)//c)
+          deallocate(ch)
+          return
+        endif
 
-       case (XD_START)
-          if (c=="?") then
-             parse_state = XD_TARGET
-             ch => vs_str_alloc("")
-          else
-             call push_file_chars(f, "<"//c)
-             return
-          endif
+      case (XD_SPACE)
+        if (verify(c, XML_WHITESPACE)==0) then
+          parse_state = XD_MISC
+        else
+          call add_error(es, &
+            "Missing space in XML declaration")
+        endif
 
-       case (XD_TARGET)
-          if (isXML1_0_NameChar(c)) then
-             ch2 => vs_str_alloc(str_vs(ch)//c)
-             deallocate(ch)
-             ch => ch2
-          elseif (verify(c, XML_WHITESPACE)==0 &
-               .and.str_vs(ch)=="xml") then
-             deallocate(ch)
-             parse_state = XD_SPACE
-          else
-             call push_file_chars(f, "<?"//str_vs(ch)//c)
-             deallocate(ch)
-             return
-          endif
+      case (XD_MISC)
+        if (c=="?") then
+          parse_state = XD_END
+        elseif (isXML1_0_NameChar(c)) then
+          ch => vs_str_alloc(c)
+          parse_state = XD_PA
+        elseif (verify(c, XML_WHITESPACE)>0) then
+          call add_error(es, &
+            "Unexpected character in XML declaration")
+        endif
 
-        case (XD_SPACE)
-          if (verify(c, XML_WHITESPACE)==0) then
-            parse_state = XD_MISC
-          else
+      case (XD_PA)
+        if (isXML1_0_NameChar(c)) then
+          ch2 => vs_str_alloc(str_vs(ch)//c)
+          deallocate(ch)
+          ch => ch2
+        elseif (verify(c, XML_WHITESPACE//"=")==0) then
+          select case (str_vs(ch))
+
+          case ("version")
+            select case (xd_par)
+            case (xd_nothing)
+              xd_par = xd_version
+            case default
+              call add_error(es, &
+                "Cannot specify version twice in XML declaration")
+            end select
+
+          case ("encoding")
+            select case (xd_par)
+            case (xd_nothing)
+              call add_error(es, &
+                "Must specify version before encoding in XML declaration")
+            case (xd_version)
+              xd_par = xd_encoding
+            case (xd_encoding)
+              call add_error(es, &
+                "Cannot specify encoding twice in XML declaration")
+            case (xd_standalone)
+              call add_error(es, &
+                "Cannot specify encoding after standalone in XML declaration")
+            end select
+
+          case ("standalone")
+            if (.not.present(standalone)) &
+              call add_error(es, &
+              "Cannot specify standalone in text declaration")
+            select case (xd_par)
+            case (xd_nothing)
+              call add_error(es, &
+                "Must specify version before standalone in XML declaration")
+            case (xd_version, xd_encoding)
+              xd_par = xd_standalone
+            case (xd_standalone)
+              call add_error(es, &
+                "Cannot specify standalone twice in XML declaration")
+            end select
+
+          case default
             call add_error(es, &
-              "Missing space in XML declaration")
-          endif
+              "Unknown parameter "//str_vs(ch)//" in XML declaration, "//&
+              "expecting version, encoding or standalone")
 
-       case (XD_MISC)
-          if (c=="?") then
-             parse_state = XD_END
-          elseif (isXML1_0_NameChar(c)) then
-             ch => vs_str_alloc(c)
-             parse_state = XD_PA
-          elseif (verify(c, XML_WHITESPACE)>0) then
-             call add_error(es, &
-                  "Unexpected character in XML declaration")
-          endif
+          end select
 
-       case (XD_PA)
-          if (isXML1_0_NameChar(c)) then
-             ch2 => vs_str_alloc(str_vs(ch)//c)
-             deallocate(ch)
-             ch => ch2
-          elseif (verify(c, XML_WHITESPACE//"=")==0) then
-             select case (str_vs(ch))
-
-             case ("version")
-                select case (xd_par)
-                case (xd_nothing)
-                   xd_par = xd_version
-                case default
-                   call add_error(es, &
-                        "Cannot specify version twice in XML declaration")
-                end select
-
-             case ("encoding")
-                select case (xd_par)
-                case (xd_nothing)
-                   call add_error(es, &
-                        "Must specify version before encoding in XML declaration")
-                case (xd_version)
-                   xd_par = xd_encoding
-                case (xd_encoding)
-                   call add_error(es, &
-                        "Cannot specify encoding twice in XML declaration")
-                case (xd_standalone)
-                   call add_error(es, &
-                        "Cannot specify encoding after standalone in XML declaration")
-                end select
-
-             case ("standalone")
-                if (.not.present(standalone)) &
-                      call add_error(es, &
-                        "Cannot specify standalone in text declaration")
-                select case (xd_par)
-                case (xd_nothing)
-                   call add_error(es, &
-                        "Must specify version before standalone in XML declaration")
-                case (xd_version, xd_encoding)
-                   xd_par = xd_standalone
-                case (xd_standalone)
-                   call add_error(es, &
-                        "Cannot specify standalone twice in XML declaration")
-                end select
-
-             case default
-                call add_error(es, &
-                     "Unknown parameter "//str_vs(ch)//" in XML declaration, "//&
-                     "expecting version, encoding or standalone")
-
-             end select
-
-             deallocate(ch)
-             if (c=="=") then
-                parse_state = XD_QUOTE
-             else
-                parse_state = XD_EQ
-             endif
-          else
-             call add_error(es, &
-                  "Unexpected character found in XML declaration")
-          endif
-          
-       case (XD_EQ)
+          deallocate(ch)
           if (c=="=") then
-             parse_state = XD_QUOTE
-          elseif (verify(c, XML_WHITESPACE)>0) then
-             call add_error(es, &
-                  "Unexpected character found in XML declaration; expecting ""=""")
-          endif
-
-       case (XD_QUOTE)
-          if (verify(c, "'""")==0) then
-             q = c
-             parse_state = XD_PV
-             ch => vs_str_alloc("")
-          elseif (verify(c, XML_WHITESPACE)>0) then
-             call add_error(es, &
-                  "Unexpected character found in XML declaration; expecting "" or '")
-          endif
-
-       case (XD_PV)
-          if (c==q) then
-             select case (xd_par)
-             case (xd_version)
-                if (str_vs(ch)=="1.0") then
-                   f%xml_version = XML1_0
-                   deallocate(ch)
-                elseif (str_vs(ch)=="1.1") then
-                   f%xml_version = XML1_1
-                   deallocate(ch)
-                else
-                   call add_error(es, &
-                        "Unknown version number "//str_vs(ch)//" found in XML declaration; expecting 1.0 or 1.1")
-                endif
-             case (xd_encoding)
-                if (size(ch)==0) then
-                   call add_error(es, &
-                        "Empty value for encoding not allowed in XML declaration")
-                elseif (size(ch)==1.and.verify(ch(1), XML_INITIALENCODINGCHARS)>0) then
-                   call add_error(es, &
-                        "Invalid encoding found in XML declaration; illegal characters in encoding name")
-                elseif (size(ch)>1.and. &
-                     (verify(ch(1), XML_INITIALENCODINGCHARS)>0 &
-                     .or.verify(str_vs(ch(2:)), XML_ENCODINGCHARS)>0)) then
-                   call add_error(es, &
-                        "Invalid encoding found in XML declaration; illegal characters in encoding name")
-                elseif (.not.allowed_encoding(str_vs(ch))) then
-                   call add_error(es, "Unknown character encoding in XML declaration")
-                else
-                   f%encoding => ch
-                endif
-             case (xd_standalone)
-                if (str_vs(ch)=="yes") then
-                   standalone = .true.
-                   deallocate(ch)
-                elseif (str_vs(ch)=="no") then
-                   standalone = .false.
-                   deallocate(ch)
-                else
-                   call add_error(es, &
-                        "Invalid value for standalone found in XML declaration; expecting yes or no")
-
-                endif
-             end select
-             parse_state = XD_SPACE
+            parse_state = XD_QUOTE
           else
-             ch2 => vs_str_alloc(str_vs(ch)//c)
-             deallocate(ch)
-             ch => ch2
+            parse_state = XD_EQ
           endif
+        else
+          call add_error(es, &
+            "Unexpected character found in XML declaration")
+        endif
 
-       case (XD_END)
-          if (c==">") then
-             exit
-          else
-             call add_error(es, &
-                  "Unexpected character found in XML declaration; expecting >")        
-          endif
+      case (XD_EQ)
+        if (c=="=") then
+          parse_state = XD_QUOTE
+        elseif (verify(c, XML_WHITESPACE)>0) then
+          call add_error(es, &
+            "Unexpected character found in XML declaration; expecting ""=""")
+        endif
 
-       end select
+      case (XD_QUOTE)
+        if (verify(c, "'""")==0) then
+          q = c
+          parse_state = XD_PV
+          ch => vs_str_alloc("")
+        elseif (verify(c, XML_WHITESPACE)>0) then
+          call add_error(es, &
+            "Unexpected character found in XML declaration; expecting "" or '")
+        endif
 
-       if (in_error(es)) then
-          if (associated(ch)) deallocate(ch)
+      case (XD_PV)
+        if (c==q) then
+          select case (xd_par)
+          case (xd_version)
+            if (str_vs(ch)=="1.0") then
+              f%xml_version = XML1_0
+              deallocate(ch)
+            elseif (str_vs(ch)=="1.1") then
+              f%xml_version = XML1_1
+              deallocate(ch)
+            else
+              call add_error(es, &
+                "Unknown version number "//str_vs(ch)//" found in XML declaration; expecting 1.0 or 1.1")
+            endif
+          case (xd_encoding)
+            if (size(ch)==0) then
+              call add_error(es, &
+                "Empty value for encoding not allowed in XML declaration")
+            elseif (size(ch)==1.and.verify(ch(1), XML_INITIALENCODINGCHARS)>0) then
+              call add_error(es, &
+                "Invalid encoding found in XML declaration; illegal characters in encoding name")
+            elseif (size(ch)>1.and. &
+              (verify(ch(1), XML_INITIALENCODINGCHARS)>0 &
+              .or.verify(str_vs(ch(2:)), XML_ENCODINGCHARS)>0)) then
+              call add_error(es, &
+                "Invalid encoding found in XML declaration; illegal characters in encoding name")
+            elseif (.not.allowed_encoding(str_vs(ch))) then
+              call add_error(es, "Unknown character encoding in XML declaration")
+            else
+              f%encoding => ch
+            endif
+          case (xd_standalone)
+            if (str_vs(ch)=="yes") then
+              standalone = .true.
+              deallocate(ch)
+            elseif (str_vs(ch)=="no") then
+              standalone = .false.
+              deallocate(ch)
+            else
+              call add_error(es, &
+                "Invalid value for standalone found in XML declaration; expecting yes or no")
+
+            endif
+          end select
+          parse_state = XD_SPACE
+        else
+          ch2 => vs_str_alloc(str_vs(ch)//c)
+          deallocate(ch)
+          ch => ch2
+        endif
+
+      case (XD_END)
+        if (c==">") then
           exit
-       endif
-       
+        else
+          call add_error(es, &
+            "Unexpected character found in XML declaration; expecting >")        
+        endif
+
+      end select
+
+      if (in_error(es)) then
+        if (associated(ch)) deallocate(ch)
+        exit
+      endif
+
     end do
 
   end subroutine parse_xml_declaration
