@@ -1166,9 +1166,17 @@ contains
 
       case (ST_DTD_ATTLIST)
         write(*,*) 'ST_DTD_ATTLIST'
-        ! check is name
         select case (fx%tokenType)
         case (TOK_NAME)
+          if (namespaces_) then
+            nameOk = checkNCName(str_vs(fx%token), fx%xds)
+          else
+            nameOk = checkName(str_vs(fx%token), fx%xds)
+          endif
+          if (.not.nameOk) then
+            call add_error(fx%error_stack, "Invalid element name for ATTLIST")
+            goto 100
+          endif
           fx%name => fx%token
           if (existing_element(fx%xds%element_list, str_vs(fx%name))) then
             elem => get_element(fx%xds%element_list, str_vs(fx%name))
@@ -1218,10 +1226,18 @@ contains
         end select
 
       case (ST_DTD_ELEMENT)
-        write(*,*) 'ST_DTD_ELEMENT'
         ! FIXME check is name
         select case (fx%tokenType)
         case (TOK_NAME)
+          if (namespaces_) then
+            nameOk = checkNCName(str_vs(fx%token), fx%xds)
+          else
+            nameOk = checkName(str_vs(fx%token), fx%xds)
+          endif
+          if (.not.nameOk) then
+            call add_error(fx%error_stack, "Invalid name for ELEMENT")
+            goto 100
+          endif
           fx%name => fx%token
           fx%token => null()
           nextState = ST_DTD_ELEMENT_CONTENTS
