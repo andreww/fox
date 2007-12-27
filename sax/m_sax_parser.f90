@@ -848,8 +848,11 @@ contains
         write(*,*) 'ST_START_ENTITY'
         select case (fx%tokenType)
         case (TOK_NAME)
-          elem => get_element(fx%xds%element_list, get_top_elstack(fx%elstack))
+          print*, "starting with the entity ..."
+          if (validCheck) &
+            elem => get_element(fx%xds%element_list, get_top_elstack(fx%elstack))
           ! tell tokenizer to expand it
+          print*, "checking forbidden list"
           if (existing_entity(fx%forbidden_ge_list, str_vs(fx%token))) then
             call add_error(fx%error_stack, 'Recursive entity reference')
 	    goto 100
@@ -899,6 +902,7 @@ contains
               goto 100
             endif
           elseif (existing_entity(fx%xds%entityList, str_vs(fx%token))) then
+            print*, "is existing entity"
             if (is_unparsed_entity(fx%xds%entityList, str_vs(fx%token))) then
               call add_error(fx%error_stack, &
                 'Cannot reference unparsed entity in content')
@@ -924,7 +928,9 @@ contains
               endif
               if (present(startEntity_handler)) &
                 call startEntity_handler(str_vs(fx%token))
+              print*, "adding to forbidden list"
               call add_internal_entity(fx%forbidden_ge_list, str_vs(fx%token), "")
+              print*, "adding to buffer stack", expand_entity(fx%xds%entityList, str_vs(fx%token))
               call push_buffer_stack(fb, expand_entity(fx%xds%entityList, str_vs(fx%token)))
               fx%parse_stack = fx%parse_stack + 1
               temp_wf_stack => fx%wf_stack
@@ -1011,7 +1017,7 @@ contains
           endif
           nextState = ST_INT_SUBSET
         case (TOK_END_TAG)
-          if (present(startDTD_handler)) &
+          if (present(startDTD_handler)) then
             call startDTD_handler(str_vs(fx%root_element), "", "")
             if (fx%state==ST_STOP) goto 100
           endif
@@ -1739,10 +1745,10 @@ contains
         if (.not.existing_entity(fx%xds%PEList, str_vs(fx%name))) then
           ! Internal or external?
           if (associated(fx%attname)) then ! it's internal
-            call register_internal_PE(fx%xds, str_vs(fx%name), str_vs(fx%attname(2:size(fx%attname)-1))) ! stripping off quotes
+            call register_internal_PE(fx%xds, str_vs(fx%name), str_vs(fx%attname))
             ! FIXME need to expand value here before reporting ...
             if (present(internalEntityDecl_handler)) then
-              call internalEntityDecl_handler('%'//str_vs(fx%name), str_vs(fx%attname(2:size(fx%attname)-1)))
+              call internalEntityDecl_handler('%'//str_vs(fx%name), str_vs(fx%attname))
               if (fx%state==ST_STOP) return
             endif
           else ! PE can't have Ndata declaration
@@ -1769,10 +1775,9 @@ contains
         if (.not.existing_entity(fx%xds%entityList, str_vs(fx%name))) then
           ! Internal or external?
           if (associated(fx%attname)) then ! it's internal
-            call register_internal_GE(fx%xds, str_vs(fx%name), str_vs(fx%attname(2:size(fx%attname)-1)))
+            call register_internal_GE(fx%xds, str_vs(fx%name), str_vs(fx%attname))
             if (present(internalEntityDecl_handler)) then
-              call internalEntityDecl_handler(str_vs(fx%name),&
-                str_vs(fx%attname(2:size(fx%attname)-1))) ! stripping quotes
+              call internalEntityDecl_handler(str_vs(fx%name), str_vs(fx%attname))
               if (fx%state==ST_STOP) return
             endif
           else

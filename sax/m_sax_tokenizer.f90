@@ -269,9 +269,15 @@ contains
         end select
 
       case (ST_IN_TAG)
-        if (firstChar) ws_discard = .true.
+        if (firstChar) then
+          if (verify(c,XML_WHITESPACE//"/>")>0) then
+            call add_error(fx%error_stack, &
+              "Whitespace required inside tag")
+            exit
+          endif
+          ws_discard = .true.
+        endif
         if (ws_discard) then
-          print*, "intag c", c
           if (verify(c,XML_WHITESPACE)>0) then
             if (c==">") then
               fx%tokenType = TOK_END_TAG
@@ -297,7 +303,6 @@ contains
           else
             if (verify(c,XML_WHITESPACE//"=/>")==0) then
               fx%tokenType = TOK_NAME
-              print*, "sttagok ", c
               if (c=="=") then
                 fx%nextTokenType = TOK_EQUALS
               elseif (c==">") then
@@ -309,7 +314,6 @@ contains
               tempString => fx%token
               fx%token => vs_str_alloc(str_vs(tempString)//c)
               deallocate(tempString)
-              print*, "token ", str_vs(fx%token)
             endif
           endif
         endif
@@ -321,7 +325,6 @@ contains
             if (c=="=") then
               fx%tokenType = TOK_EQUALS
             else
-              print*, "not ok ", c
               call add_error(fx%error_stack, &
                 "Unexpected character in element tag, expected =")
             endif
