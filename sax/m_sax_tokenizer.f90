@@ -136,7 +136,8 @@ contains
             fx%token => vs_str_alloc(c)
             ws_discard = .false.
           endif
-        elseif (phrase==1) then
+        endif
+        if (phrase==1) then
           if (c==">") then
             if (associated(fx%token)) then
                fx%tokenType = TOK_CHAR
@@ -285,8 +286,9 @@ contains
           endif
         else
           if (phrase==1) then
+            print*,"phrase1 ", c
             if (c==">") then
-              fx%tokenType = TOK_END_TAG
+              fx%tokenType = TOK_END_TAG_CLOSE
             else
               call add_error(fx%error_stack, &
                 "Unexpected character after / in element tag")
@@ -434,9 +436,10 @@ contains
         endif
 
       case (ST_IN_CLOSING_TAG)
+        print*, "ok, trying once"
         if (verify(c, XML_WHITESPACE)>0) then
           if (c==">") then
-            fx%nextTokenType = TOK_END_TAG
+            fx%tokenType = TOK_END_TAG
           else
             call add_error(fx%error_stack, "Unexpected character - expecting >")
           endif
@@ -529,6 +532,7 @@ contains
           fx%token => vs_str_alloc(str_vs(tempString)//c)
           deallocate(tempString)
         else
+          call push_chars(fb, c)
           if (str_vs(fx%token)=="%") then
             fx%tokenType = TOK_ENTITY
           else
@@ -550,9 +554,17 @@ contains
         ST_DTD_ENTITY_NDATA, ST_DTD_ENTITY_END, ST_DTD_ENTITY_NDATA_VALUE,  &
         ST_DTD_NOTATION_ID, ST_DTD_NOTATION_SYSTEM, ST_DTD_NOTATION_PUBLIC, &
         ST_DTD_NOTATION_PUBLIC_2, ST_DTD_NOTATION_END)
-        print*, "this tokenizer"
-        if (firstChar) ws_discard = .true.
-        if (ws_discard) then
+        if (firstChar) then
+          if (verify(c, XML_WHITESPACE)>0) then
+            if (c==">") then
+              fx%tokenType = TOK_END_TAG
+            else
+              call add_error(fx%error_stack, "Missing whitespace in DTD.")
+            endif
+          else
+            ws_discard = .true.
+          endif
+        elseif (ws_discard) then
           if (verify(c, XML_WHITESPACE)>0) then
             if (verify(c, "'""")==0) then
               q = c
@@ -563,7 +575,6 @@ contains
             else
               fx%token => vs_str_alloc(c)
               ws_discard = .false.
-              print*,"got a char"
             endif
           endif
         else
@@ -571,12 +582,15 @@ contains
             if (c==q) fx%tokenType = TOK_CHAR
           elseif (verify(c, XML_WHITESPACE//">")==0) then
             fx%tokenType = TOK_NAME
-            if (c==">") fx%nextTokenType = TOK_END_TAG
+            if (c==">") then
+              fx%nextTokenType = TOK_END_TAG
+            else
+              call push_chars(fb, c)
+            endif
           else
             tempString => fx%token
             fx%token => vs_str_alloc(str_vs(tempString)//c)
             deallocate(tempString)
-            print*,"Adding to char", str_vs(fx%token)
           endif
         endif
 

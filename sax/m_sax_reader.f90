@@ -585,6 +585,7 @@ contains
     integer, parameter :: XD_QUOTE  = 6
     integer, parameter :: XD_PV     = 7
     integer, parameter :: XD_END    = 8
+    integer, parameter :: XD_SPACE  = 9
 
     integer, parameter :: xd_nothing = 0
     integer, parameter :: xd_version = 1
@@ -631,11 +632,19 @@ contains
           elseif (verify(c, XML_WHITESPACE)==0 &
                .and.str_vs(ch)=="xml") then
              deallocate(ch)
-             parse_state = XD_MISC
+             parse_state = XD_SPACE
           else
              call push_file_chars(f, "<?"//str_vs(ch)//c)
              deallocate(ch)
              return
+          endif
+
+        case (XD_SPACE)
+          if (verify(c, XML_WHITESPACE)==0) then
+            parse_state = XD_MISC
+          else
+            call add_error(es, &
+              "Missing space in XML declaration")
           endif
 
        case (XD_MISC)
@@ -776,7 +785,7 @@ contains
 
                 endif
              end select
-             parse_state = XD_MISC
+             parse_state = XD_SPACE
           else
              ch2 => vs_str_alloc(str_vs(ch)//c)
              deallocate(ch)

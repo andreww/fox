@@ -701,7 +701,7 @@ contains
           deallocate(fx%name)
           nextState = ST_CHAR_IN_CONTENT
 
-        case (TOK_CLOSE_TAG)
+        case (TOK_END_TAG_CLOSE)
           if (fx%context==CTXT_IN_CONTENT) then
             nextState = ST_CHAR_IN_CONTENT
           else
