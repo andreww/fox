@@ -614,7 +614,12 @@ contains
         write(*,*)'ST_START_CDATA'
         select case (fx%tokenType)
         case (TOK_START_CDATA)
-          nextState = ST_CDATA_CONTENTS
+          if (fx%context/=CTXT_IN_CONTENT) then
+            call add_error(fx%error_stack, "CDATA section only allowed in text content.")
+            goto 100
+          else
+            nextState = ST_CDATA_CONTENTS
+          endif
         end select
 
       case (ST_CDATA_CONTENTS)
