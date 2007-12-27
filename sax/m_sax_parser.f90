@@ -995,7 +995,15 @@ contains
         write(*,*)'ST_IN_DTD'
         select case (fx%tokenType)
         case (TOK_NAME)
-          ! check token is name
+          if (namespaces_) then
+            nameOk = checkNCName(str_vs(fx%token), fx%xds)
+          else
+            nameOk = checkName(str_vs(fx%token), fx%xds)
+          endif
+          if (.not.nameOk) then
+            call add_error(fx%error_stack, "Invalid document name")
+            goto 100
+          endif
           fx%root_element => fx%token
           nullify(fx%token)
           nextState = ST_DTD_NAME
@@ -1177,13 +1185,11 @@ contains
             call add_error(fx%error_stack, "Invalid element name for ATTLIST")
             goto 100
           endif
-          fx%name => fx%token
-          if (existing_element(fx%xds%element_list, str_vs(fx%name))) then
-            elem => get_element(fx%xds%element_list, str_vs(fx%name))
+          if (existing_element(fx%xds%element_list, str_vs(fx%token))) then
+            elem => get_element(fx%xds%element_list, str_vs(fx%token))
           else
-            elem => add_element(fx%xds%element_list, str_vs(fx%name))
+            elem => add_element(fx%xds%element_list, str_vs(fx%token))
           endif
-          nullify(fx%token)
           nextState = ST_DTD_ATTLIST_CONTENTS
         end select
 
@@ -1209,13 +1215,24 @@ contains
             enddo
           endif
           nextState = ST_DTD_ATTLIST_END
+        case (TOK_END_TAG)
+          if (processDTD) then
+            call parse_dtd_attlist("", fx%xds%xml_version, fx%error_stack, elem)
+          else
+            call parse_dtd_attlist("", fx%xds%xml_version, fx%error_stack)
+          endif
+          if (in_error(fx%error_stack)) goto 100
+          if (processDTD) then
+            if (present(attributeDecl_handler)) &
+              call report_declarations(elem, attributeDecl_handler)
+          endif
+          nextState = ST_INT_SUBSET
         end select
 
       case (ST_DTD_ATTLIST_END)
         write(*,*) 'ST_DTD_ATTLIST_END'
         select case (fx%tokenType)
         case (TOK_END_TAG)
-          deallocate(fx%name)
           if (processDTD) then
             if (present(attributeDecl_handler)) then
               call report_declarations(elem, attributeDecl_handler)

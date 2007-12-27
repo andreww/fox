@@ -91,7 +91,6 @@ contains
 
       case (ST_BANG_TAG)
         if (firstChar) then
-          print*, "fc ", c
           if (c=="-") then
             phrase = 1
           elseif (c=="[") then
@@ -112,6 +111,7 @@ contains
           fx%token => vs_str_alloc(str_vs(tempString)//c)
           deallocate(tempString)
         else
+          call push_chars(fb, c)
           fx%tokenType = TOK_NAME
         endif
 
@@ -445,21 +445,7 @@ contains
           endif
         endif
 
-      case (ST_IN_DTD)
-        if (verify(c,XML_WHITESPACE//"[>")>0) then
-          tempString => fx%token
-          fx%token => vs_str_alloc(str_vs(tempString)//c)
-          deallocate(tempString)
-        else
-          fx%tokenType = TOK_NAME
-          if (c=="[") then
-            fx%nextTokenType = TOK_OPEN_SB
-          elseif (c==">") then
-            fx%nextTokenType = TOK_END_TAG
-          endif
-        endif
-
-      case (ST_DTD_NAME, ST_DTD_DECL, ST_INT_SUBSET, ST_CLOSE_DTD)
+      case (ST_IN_DTD, ST_DTD_NAME, ST_DTD_DECL, ST_INT_SUBSET, ST_CLOSE_DTD)
         if (firstChar) ws_discard = .true.
         if (ws_discard) then
           if (verify(c, XML_WHITESPACE)>0) then
@@ -527,12 +513,16 @@ contains
             fx%token => vs_str_alloc(c)
             ws_discard = .false.
           endif
-        elseif (verify(c,XML_WHITESPACE)>0) then
+        elseif (verify(c,XML_WHITESPACE//">")>0) then
           tempString => fx%token
           fx%token => vs_str_alloc(str_vs(tempString)//c)
           deallocate(tempString)
         else
-          call push_chars(fb, c)
+          if (c==">") then
+            fx%nextTokenType = TOK_END_TAG
+          else
+            call push_chars(fb, c)
+          endif
           if (str_vs(fx%token)=="%") then
             fx%tokenType = TOK_ENTITY
           else
