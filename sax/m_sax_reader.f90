@@ -424,7 +424,7 @@ contains
         elseif (verify(c, XML_WHITESPACE)==0 &
           .and.str_vs(ch)=="xml") then
           deallocate(ch)
-          parse_state = XD_SPACE
+          parse_state = XD_MISC
         else
           call push_file_chars(f, "<?"//str_vs(ch)//c)
           deallocate(ch)
@@ -434,6 +434,8 @@ contains
       case (XD_SPACE)
         if (verify(c, XML_WHITESPACE)==0) then
           parse_state = XD_MISC
+        elseif (c=="?") then
+          parse_state = XD_END
         else
           call add_error(es, &
             "Missing space in XML declaration")
