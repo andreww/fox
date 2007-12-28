@@ -472,29 +472,8 @@ contains
             fx%token => vs_str_alloc(str_vs(tempString)//c)
             deallocate(tempString)
           else
+            call push_chars(fb, c)
             fx%tokenType = TOK_NAME
-          endif
-        endif
-
-      case (ST_DTD_PUBLIC, ST_DTD_SYSTEM)
-        if (firstChar) ws_discard = .true.
-        if (ws_discard) then
-          if (verify(c, XML_WHITESPACE)>0) then
-            if (verify(c, "'""")==0) then
-              q = c
-              fx%token => vs_str_alloc("")
-              ws_discard = .false.
-            else
-              call add_error(fx%error_stack, "Unexpected character - expecting ' or """)
-            endif
-          endif
-        else
-          if (c==q) then
-            fx%tokenType = TOK_CHAR
-          else
-            tempString => fx%token
-            fx%token => vs_str_alloc(str_vs(tempString)//c)
-            deallocate(tempString)
           endif
         endif
         
@@ -533,9 +512,10 @@ contains
           deallocate(tempString)
         endif
         
-      case (ST_DTD_ENTITY_ID, ST_DTD_ENTITY_PUBLIC, ST_DTD_ENTITY_SYSTEM,   &
-        ST_DTD_ENTITY_NDATA, ST_DTD_ENTITY_END, ST_DTD_ENTITY_NDATA_VALUE,  &
-        ST_DTD_NOTATION_ID, ST_DTD_NOTATION_SYSTEM, ST_DTD_NOTATION_PUBLIC, &
+      case (ST_DTD_PUBLIC, ST_DTD_SYSTEM, ST_DTD_ENTITY_ID, &
+        ST_DTD_ENTITY_PUBLIC, ST_DTD_ENTITY_SYSTEM, ST_DTD_ENTITY_NDATA, &
+        ST_DTD_ENTITY_END, ST_DTD_ENTITY_NDATA_VALUE, ST_DTD_NOTATION_ID, &
+        ST_DTD_NOTATION_SYSTEM, ST_DTD_NOTATION_PUBLIC, &
         ST_DTD_NOTATION_PUBLIC_2, ST_DTD_NOTATION_END)
         if (firstChar) then
           if (verify(c, XML_WHITESPACE)>0) then
