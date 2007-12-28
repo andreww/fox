@@ -33,7 +33,6 @@ contains
 
     xv = fx%xds%xml_version
 
-
     if (fx%nextTokenType/=TOK_NULL) then
       eof = .false.
       fx%tokenType = fx%nextTokenType

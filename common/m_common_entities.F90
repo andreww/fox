@@ -189,14 +189,13 @@ contains
   end subroutine print_entity_list
 
 
-  subroutine add_entity(ents, name, text, publicId, systemId, notation, external)
+  subroutine add_entity(ents, name, text, publicId, systemId, notation)
     type(entity_list), intent(inout) :: ents
     character(len=*), intent(in) :: name
     character(len=*), intent(in) :: text
     character(len=*), intent(in) :: publicId
     character(len=*), intent(in) :: systemId
     character(len=*), intent(in) :: notation
-    logical, intent(in) :: external
 
     type(entity_t), pointer :: ents_tmp(:)
     integer :: i, n
@@ -215,7 +214,7 @@ contains
       ents%list(i) = shallow_copy_entity(ents_tmp(i))
     enddo
     deallocate(ents_tmp)
-    ents%list(i)%external = external
+    ents%list(i)%external = len(systemId)>0
     ents%list(i)%name => vs_str_alloc(name)
     ents%list(i)%text => vs_str_alloc(text)
     ents%list(i)%publicId => vs_str_alloc(publicId)
@@ -229,7 +228,8 @@ contains
     character(len=*), intent(in) :: name
     character(len=*), intent(in) :: text
 
-    call add_entity(ents, name, text, "", "", "", .false.)
+    call add_entity(ents, name=name, text=text, &
+      publicId="", systemId="", notation="")
   end subroutine add_internal_entity
 
   
@@ -241,13 +241,17 @@ contains
     character(len=*), intent(in), optional :: notation
 
     if (present(publicId) .and. present(notation)) then
-      call add_entity(ents, name, "", systemId, publicId, notation, .true.)
+      call add_entity(ents, name=name, text="", &
+        publicId=publicId, systemId=systemId, notation=notation)
     elseif (present(publicId)) then
-      call add_entity(ents, name, "", systemId, publicId, "", .true.)
+      call add_entity(ents, name=name, text="", &
+        publicId=publicId, systemId=systemId, notation="")
     elseif (present(notation)) then
-      call add_entity(ents, name, "", systemId, "", notation, .true.)
+      call add_entity(ents, name=name, text="", &
+        publicId="", systemId=systemId, notation=notation)
     else
-      call add_entity(ents, name, "", systemId, "", "", .true.)
+      call add_entity(ents, name=name, text="", &
+        publicId="", systemId=systemId, notation="")
     endif
   end subroutine add_external_entity
 

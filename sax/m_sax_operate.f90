@@ -36,8 +36,8 @@ contains
       if (i/=0) &
         call FoX_error("Error opening file in open_xml_file")
     endif
-    
-    call sax_parser_init(xt%fx, xt%fb)
+
+    if (i==0) call sax_parser_init(xt%fx, xt%fb)
 
   end subroutine open_xml_file
 

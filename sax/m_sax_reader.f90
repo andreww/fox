@@ -6,7 +6,7 @@ module m_sax_reader
   use m_common_io, only: setup_io, get_unit
 
   use m_sax_xml_source, only: xml_source_t, buffer_t, &
-    get_char_from_file, push_file_chars, parse_xml_declaration
+    get_char_from_file, push_file_chars, parse_declaration
 
   implicit none
   private
@@ -33,7 +33,8 @@ module m_sax_reader
   public :: open_new_string
   public :: pop_buffer_stack
 
-  public :: parse_main_xml_declaration
+  public :: parse_xml_declaration
+  public :: parse_text_declaration
 
   public :: reading_main_file
 
@@ -270,7 +271,7 @@ contains
     n = fb%f(1)%col
   end function column
 
-  subroutine parse_main_xml_declaration(fb, xv, enc, sa, es)
+  subroutine parse_xml_declaration(fb, xv, enc, sa, es)
     type(file_buffer_t), intent(inout) :: fb
     integer, intent(out) :: xv
     character, pointer :: enc(:)
@@ -279,14 +280,26 @@ contains
 
     logical :: eof
 
-    call parse_xml_declaration(fb%f(1), eof, es, sa)
+    call parse_declaration(fb%f(1), eof, es, sa)
     if (eof.or.in_error(es)) then
       call add_error(es, "Error parsing XML declaration")
     else
       xv = fb%f(1)%xml_version
       enc => vs_vs_alloc(fb%f(1)%encoding)
     endif
-  end subroutine parse_main_xml_declaration
+  end subroutine parse_xml_declaration
+
+  subroutine parse_text_declaration(fb, es)
+    type(file_buffer_t), intent(inout) :: fb
+    type(error_stack), intent(inout) :: es
+
+    logical :: eof
+
+    call parse_declaration(fb%f(1), eof, es)
+    if (eof.or.in_error(es)) &
+      call add_error(es, "Error parsing text declaration")
+
+  end subroutine parse_text_declaration
 
 
   function reading_main_file(fb) result(p)

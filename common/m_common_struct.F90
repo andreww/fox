@@ -61,41 +61,43 @@ contains
     if (associated(xds%documentURI)) deallocate(xds%documentURI)
   end subroutine destroy_xml_doc_state
 
-  subroutine register_internal_PE(xds, name, value)
+  subroutine register_internal_PE(xds, name, text)
     type(xml_doc_state), intent(inout) :: xds
     character(len=*), intent(in) :: name
-    character(len=*), intent(in) :: value
+    character(len=*), intent(in) :: text
 
-    call add_internal_entity(xds%PEList, name, value)
+    call add_internal_entity(xds%PEList, name=name, text=text)
 
   end subroutine register_internal_PE
 
-  subroutine register_external_PE(xds, name, system, public)
+  subroutine register_external_PE(xds, name, systemId, publicId)
     type(xml_doc_state), intent(inout) :: xds
     character(len=*), intent(in) :: name
-    character(len=*), intent(in) :: system
-    character(len=*), intent(in), optional :: public
+    character(len=*), intent(in) :: systemId
+    character(len=*), intent(in), optional :: publicId
 
-    call add_external_entity(xds%PEList, name, system, public)
+    call add_external_entity(xds%PEList, name=name, &
+      publicId=publicId, systemId=systemId)
   end subroutine register_external_PE
 
-  subroutine register_internal_GE(xds, name, value)
+  subroutine register_internal_GE(xds, name, text)
     type(xml_doc_state), intent(inout) :: xds
     character(len=*), intent(in) :: name
-    character(len=*), intent(in) :: value
+    character(len=*), intent(in) :: text
 
-    call add_internal_entity(xds%entityList, name, value)
+    call add_internal_entity(xds%entityList, name=name, text=text)
 
   end subroutine register_internal_GE
 
-  subroutine register_external_GE(xds, name, system, public, notation)
+  subroutine register_external_GE(xds, name, systemId, publicId, notation)
     type(xml_doc_state), intent(inout) :: xds
     character(len=*), intent(in) :: name
-    character(len=*), intent(in) :: system
-    character(len=*), intent(in), optional :: public
+    character(len=*), intent(in) :: systemId
+    character(len=*), intent(in), optional :: publicId
     character(len=*), intent(in), optional :: notation
 
-    call add_external_entity(xds%entityList, name, system, public, notation)
+    call add_external_entity(xds%entityList, name=name, &
+      systemId=systemId, publicId=publicId, notation=notation)
   end subroutine register_external_GE
 
 #endif

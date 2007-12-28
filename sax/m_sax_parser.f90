@@ -31,7 +31,8 @@ module m_sax_parser
     register_internal_GE, register_external_GE
 
   use m_sax_reader, only: file_buffer_t, pop_buffer_stack, open_new_string, &
-    open_new_file, parse_main_xml_declaration, reading_main_file
+    open_new_file, parse_xml_declaration, parse_text_declaration, &
+    reading_main_file
   use m_sax_tokenizer, only: sax_tokenize, normalize_text
   use m_sax_types ! everything, really
 
@@ -70,7 +71,11 @@ contains
     deallocate(fx%xds%inputEncoding)
     fx%xds%inputEncoding => vs_str_alloc("us-ascii")
     ! because it always is ...
-    fx%xds%documentURI => vs_vs_alloc(fb%f(1)%filename)
+    if (fb%f(1)%lun>0) then
+      fx%xds%documentURI => vs_vs_alloc(fb%f(1)%filename)
+    else
+      fx%xds%documentURI => vs_str_alloc("")
+    endif
 
     fx%xds%standalone = fb%standalone
 
@@ -374,7 +379,8 @@ contains
       do i = 1, size(initial_entities)
         ent => getEntityByIndex(initial_entities, i)
         if (.not.ent%external) &
-          call register_internal_PE(fx%xds, str_vs(ent%name), str_vs(ent%text))
+          call register_internal_PE(fx%xds, &
+          name=str_vs(ent%name), text=str_vs(ent%text))
       enddo
     endif
 
@@ -392,7 +398,7 @@ contains
         call startDocument_handler()
         if (fx%state==ST_STOP) goto 100
       endif
-      call parse_main_xml_declaration(fb, fx%xds%xml_version, fx%xds%encoding, fx%xds%standalone, fx%error_stack)
+      call parse_xml_declaration(fb, fx%xds%xml_version, fx%xds%encoding, fx%xds%standalone, fx%error_stack)
       if (in_error(fx%error_stack)) goto 100
     endif
 
@@ -911,32 +917,34 @@ contains
             endif
           elseif (existing_entity(fx%xds%entityList, str_vs(fx%token))) then
             ent => getEntityByName(fx%xds%entityList, str_vs(fx%token))
-            print*, "is existing entity"
+            print*, "is existing entity ", ent%external, str_vs(ent%systemId)
             if (str_vs(ent%notation)/="") then
               call add_error(fx%error_stack, &
                 'Cannot reference unparsed entity in content')
               goto 100
-<<<<<<< HEAD:sax/m_sax_parser.f90
-            elseif (is_external_entity(fx%xds%entityList, str_vs(fx%token))) then
-              if (present(skippedEntity_handler)) then
-                call skippedEntity_handler(str_vs(fx%token))
-                if (fx%state==ST_STOP) goto 100
-              endif
-=======
             elseif (ent%external) then
-!!$              if (str_vs(ent%systemId)/="") then
-!!$                ! FIXME xml:base
-!!$                print*, "opening file ", str_vs(ent%systemId)
-!!$                call open_new_file(fb, str_vs(ent%systemId), iostat)
-!!$                if (iostat/=0) then
-!!$                  if (present(skippedEntity_handler)) &
-!!$                    call skippedEntity_handler(str_vs(fx%token))
-!!$                endif
-!!$              else
-                if (present(skippedEntity_handler)) &
+              ! FIXME xml:base
+              print*, "opening file ", str_vs(ent%systemId)
+              call open_new_file(fb, str_vs(ent%systemId), iostat)
+              if (iostat/=0) then
+                if (present(skippedEntity_handler)) then
                   call skippedEntity_handler(str_vs(fx%token))
-!              endif
->>>>>>> Rearrange entities and reader:sax/m_sax_parser.f90
+                  if (fx%state==ST_STOP) goto 100
+                endif
+              else
+                if (present(startEntity_handler)) then
+                  call startEntity_handler(str_vs(fx%token))
+                  if (fx%state==ST_STOP) goto 100
+                endif
+                call add_internal_entity(fx%forbidden_ge_list, str_vs(fx%token), "")
+                temp_wf_stack => fx%wf_stack
+                allocate(fx%wf_stack(size(temp_wf_stack)+1))
+                fx%wf_stack(2:size(fx%wf_stack)) = temp_wf_stack
+                fx%wf_stack(1) = 0
+                deallocate(temp_wf_stack)
+                call parse_text_declaration(fb, fx%error_stack)
+                if (in_error(fx%error_stack)) goto 100
+              endif
             else
               if (validCheck.and.associated(elem)) then
                 if (elem%empty) then
@@ -1792,7 +1800,8 @@ contains
         if (.not.existing_entity(fx%xds%PEList, str_vs(fx%name))) then
           ! Internal or external?
           if (associated(fx%attname)) then ! it's internal
-            call register_internal_PE(fx%xds, str_vs(fx%name), str_vs(fx%attname))
+            call register_internal_PE(fx%xds, &
+              name=str_vs(fx%name), text=str_vs(fx%attname))
             ! FIXME need to expand value here before reporting ...
             if (present(internalEntityDecl_handler)) then
               call internalEntityDecl_handler('%'//str_vs(fx%name), str_vs(fx%attname))
@@ -1800,7 +1809,8 @@ contains
             endif
           else ! PE can't have Ndata declaration
             if (associated(fx%publicId)) then
-              call register_external_PE(fx%xds, str_vs(fx%name), str_vs(fx%systemId), public=str_vs(fx%publicId))
+              call register_external_PE(fx%xds, name=str_vs(fx%name), &
+                systemId=str_vs(fx%systemId), publicId=str_vs(fx%publicId))
               !Need to fully resolve system ID to URL here
               if (present(externalEntityDecl_handler)) then
                 call externalEntityDecl_handler('%'//str_vs(fx%name), &
@@ -1808,7 +1818,8 @@ contains
                 if (fx%state==ST_STOP) return
               endif
             else
-              call register_external_PE(fx%xds, str_vs(fx%name), str_vs(fx%systemId))
+              call register_external_PE(fx%xds, name=str_vs(fx%name), &
+                systemId=str_vs(fx%systemId))
               if (present(externalEntityDecl_handler)) then
                 call externalEntityDecl_handler('%'//str_vs(fx%name), &
                   systemId=resolveSystemId(str_vs(fx%systemId)))
@@ -1822,15 +1833,18 @@ contains
         if (.not.existing_entity(fx%xds%entityList, str_vs(fx%name))) then
           ! Internal or external?
           if (associated(fx%attname)) then ! it's internal
-            call register_internal_GE(fx%xds, str_vs(fx%name), str_vs(fx%attname))
+            call register_internal_GE(fx%xds, name=str_vs(fx%name), &
+              text=str_vs(fx%attname))
             if (present(internalEntityDecl_handler)) then
-              call internalEntityDecl_handler(str_vs(fx%name), str_vs(fx%attname))
+              call internalEntityDecl_handler(str_vs(fx%name),&
+              str_vs(fx%attname))
               if (fx%state==ST_STOP) return
             endif
           else
             if (associated(fx%publicId).and.associated(fx%Ndata)) then
-              call register_external_GE(fx%xds, str_vs(fx%name), str_vs(fx%systemId), &
-                public=str_vs(fx%publicId), notation=str_vs(fx%Ndata))
+              call register_external_GE(fx%xds, name=str_vs(fx%name), &
+                systemId=str_vs(fx%systemId), publicId=str_vs(fx%publicId), &
+                notation=str_vs(fx%Ndata))
               if (present(unparsedEntityDecl_handler)) then
                 call unparsedEntityDecl_handler(str_vs(fx%name), &
                   systemId=resolveSystemId(str_vs(fx%systemId)), publicId=str_vs(fx%publicId), &
@@ -1838,21 +1852,24 @@ contains
                 if (fx%state==ST_STOP) return
               endif
             elseif (associated(fx%Ndata)) then
-              call register_external_GE(fx%xds, str_vs(fx%name), str_vs(fx%systemId), notation=str_vs(fx%Ndata))
+              call register_external_GE(fx%xds, name=str_vs(fx%name), &
+                systemId=str_vs(fx%systemId), notation=str_vs(fx%Ndata))
               if (present(unparsedEntityDecl_handler)) then
                 call unparsedEntityDecl_handler(str_vs(fx%name), publicId="", &
                   systemId=resolveSystemId(str_vs(fx%systemId)), notation=str_vs(fx%Ndata))
                 if (fx%state==ST_STOP) return
               endif
             elseif (associated(fx%publicId)) then
-              call register_external_GE(fx%xds, str_vs(fx%name), str_vs(fx%systemId), public=str_vs(fx%publicId))
+              call register_external_GE(fx%xds, name=str_vs(fx%name), &
+              systemId=str_vs(fx%systemId), publicId=str_vs(fx%publicId))
               if (present(externalEntityDecl_handler)) then
                 call externalEntityDecl_handler(str_vs(fx%name), &
                   systemId=resolveSystemId(str_vs(fx%systemId)), publicId=str_vs(fx%publicId))
                 if (fx%state==ST_STOP) return
               endif
             else
-              call register_external_GE(fx%xds, str_vs(fx%name), str_vs(fx%systemId))
+              call register_external_GE(fx%xds, name=str_vs(fx%name), &
+                systemId=str_vs(fx%systemId))
               if (present(externalEntityDecl_handler)) then
                 call externalEntityDecl_handler(str_vs(fx%name), &
                   systemId=resolveSystemId(str_vs(fx%systemId)))
