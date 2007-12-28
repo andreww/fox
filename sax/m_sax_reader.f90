@@ -1,9 +1,12 @@
 module m_sax_reader
 
-  use m_common_array_str, only: vs_str_alloc, vs_vs_alloc
+  use m_common_array_str, only: vs_str_alloc, vs_vs_alloc, &
+    string_list, add_string, remove_string, &
+    init_string_list, destroy_string_list
   use m_common_error,  only: error_stack, FoX_error, in_error, add_error
   use m_common_format, only: operator(//)
   use m_common_io, only: setup_io, get_unit
+  use m_common_xmlbase, only: basedir
 
   use m_sax_xml_source, only: xml_source_t, buffer_t, &
     get_char_from_file, push_file_chars, parse_declaration
@@ -15,6 +18,7 @@ module m_sax_reader
     !FIXME private
     type(xml_source_t), pointer :: f(:) => null()
     logical                     :: standalone = .false.
+    type(string_list)           :: base
   end type file_buffer_t
 
   public :: file_buffer_t
@@ -52,6 +56,7 @@ contains
 
     call setup_io()
     allocate(fb%f(0))
+    call init_string_list(fb%base)
     if (present(string)) then
       if (present(file)) then
         call FoX_error("Cannot specify both file and string input to open_xml")
@@ -59,9 +64,11 @@ contains
         call FoX_error("Cannot specify lun for string input to open_xml")
       endif
       call open_new_string(fb, string)
+      call add_string(fb%base, "")
     else
       call open_new_file(fb, file, iostat, lun)
       if (iostat/=0) return
+      call add_string(fb%base, basedir(file))
     endif
 
   end subroutine open_file
@@ -97,6 +104,8 @@ contains
       allocate(fb%f(1)%next_chars(0))
     endif
 
+    call add_string(fb%base, basedir(file))
+
   end subroutine open_new_file
 
   subroutine open_actual_file(f, file, iostat, lun)
@@ -129,6 +138,7 @@ contains
     enddo
 
     deallocate(fb%f)
+    call destroy_string_list(fb%base)
 
   end subroutine close_file
 
@@ -186,6 +196,7 @@ contains
     type(xml_source_t), pointer :: temp(:)
     
     call close_actual_file(fb%f(1))
+    if (fb%f(1)%lun>0) call remove_string(fb%base)
 
     temp => fb%f
     allocate(fb%f(size(temp)-1))

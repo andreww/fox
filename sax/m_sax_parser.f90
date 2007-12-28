@@ -924,7 +924,7 @@ contains
               goto 100
             elseif (ent%external) then
               ! FIXME xml:base
-              print*, "opening file ", str_vs(ent%systemId)
+              print*, "opening filename ", str_vs(ent%systemId)
               call open_new_file(fb, str_vs(ent%systemId), iostat)
               if (iostat/=0) then
                 if (present(skippedEntity_handler)) then

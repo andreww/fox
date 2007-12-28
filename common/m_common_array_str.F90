@@ -19,6 +19,7 @@ module m_common_array_str
   public :: init_string_list
   public :: destroy_string_list
   public :: add_string
+  public :: remove_string
 
   interface destroy
     module procedure destroy_vs
@@ -94,6 +95,21 @@ contains
     deallocate(temp)
     s_list%list(i)%s => vs_str_alloc(s)
   end subroutine add_string
+
+  subroutine remove_string(s_list)
+    type(string_list), intent(inout) :: s_list
+
+    integer :: i
+    type(string_t), pointer :: temp(:)
+
+    temp => s_list%list
+    allocate(s_list%list(size(temp)-1))
+    do i = 1, size(temp)-1
+      s_list%list(i)%s => temp(i)%s
+    enddo
+    deallocate(temp)
+
+  end subroutine remove_string
 
   pure function str_vs(vs) result(s)
     character, dimension(:), intent(in) :: vs
