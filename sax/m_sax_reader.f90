@@ -1,7 +1,7 @@
 module m_sax_reader
 
   use m_common_array_str, only: vs_str_alloc, vs_vs_alloc, &
-    string_list, add_string, remove_string, &
+    string_list, add_string, remove_last_string, &
     init_string_list, destroy_string_list
   use m_common_error,  only: error_stack, FoX_error, in_error, add_error
   use m_common_format, only: operator(//)
@@ -196,7 +196,7 @@ contains
     type(xml_source_t), pointer :: temp(:)
     
     call close_actual_file(fb%f(1))
-    if (fb%f(1)%lun>0) call remove_string(fb%base)
+    if (fb%f(1)%lun>0) call remove_last_string(fb%base)
 
     temp => fb%f
     allocate(fb%f(size(temp)-1))

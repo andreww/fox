@@ -1,7 +1,7 @@
 module m_sax_parser
 
   use m_common_array_str, only: str_vs, string_list, &
-    destroy_string_list, vs_str_alloc, vs_vs_alloc
+    destroy_string_list, vs_str_alloc, vs_vs_alloc, get_last_string
   use m_common_attrs, only: init_dict, destroy_dict, reset_dict, &
     add_item_to_dict, has_key, get_value
   use m_common_charset, only: XML_WHITESPACE
@@ -924,7 +924,7 @@ contains
               goto 100
             elseif (ent%external) then
               ! FIXME xml:base
-              print*, "opening filename ", str_vs(ent%systemId)
+              print*, "opening new file", str_vs(ent%systemId)
               call open_new_file(fb, str_vs(ent%systemId), iostat)
               if (iostat/=0) then
                 if (present(skippedEntity_handler)) then
@@ -1810,19 +1810,21 @@ contains
           else ! PE can't have Ndata declaration
             if (associated(fx%publicId)) then
               call register_external_PE(fx%xds, name=str_vs(fx%name), &
-                systemId=str_vs(fx%systemId), publicId=str_vs(fx%publicId))
+                systemId=get_last_string(fb%base)//str_vs(fx%systemId), &
+                publicId=str_vs(fx%publicId))
               !Need to fully resolve system ID to URL here
               if (present(externalEntityDecl_handler)) then
                 call externalEntityDecl_handler('%'//str_vs(fx%name), &
-                  systemId=resolveSystemID(str_vs(fx%systemId)), publicId=str_vs(fx%publicId))
+                  systemId=get_last_string(fb%base)//resolveSystemID(str_vs(fx%systemId)), &
+                  publicId=str_vs(fx%publicId))
                 if (fx%state==ST_STOP) return
               endif
             else
               call register_external_PE(fx%xds, name=str_vs(fx%name), &
-                systemId=str_vs(fx%systemId))
+                systemId=get_last_string(fb%base)//str_vs(fx%systemId))
               if (present(externalEntityDecl_handler)) then
                 call externalEntityDecl_handler('%'//str_vs(fx%name), &
-                  systemId=resolveSystemId(str_vs(fx%systemId)))
+                  systemId=get_last_string(fb%base)//resolveSystemId(str_vs(fx%systemId)))
                 if (fx%state==ST_STOP) return
               endif
             endif
@@ -1843,36 +1845,42 @@ contains
           else
             if (associated(fx%publicId).and.associated(fx%Ndata)) then
               call register_external_GE(fx%xds, name=str_vs(fx%name), &
-                systemId=str_vs(fx%systemId), publicId=str_vs(fx%publicId), &
+                systemId=get_last_string(fb%base)//str_vs(fx%systemId), &
+                publicId=str_vs(fx%publicId), &
                 notation=str_vs(fx%Ndata))
               if (present(unparsedEntityDecl_handler)) then
                 call unparsedEntityDecl_handler(str_vs(fx%name), &
-                  systemId=resolveSystemId(str_vs(fx%systemId)), publicId=str_vs(fx%publicId), &
+                  systemId=get_last_string(fb%base)//resolveSystemId(str_vs(fx%systemId)), &
+                  publicId=str_vs(fx%publicId), &
                   notation=str_vs(fx%Ndata))
                 if (fx%state==ST_STOP) return
               endif
             elseif (associated(fx%Ndata)) then
               call register_external_GE(fx%xds, name=str_vs(fx%name), &
-                systemId=str_vs(fx%systemId), notation=str_vs(fx%Ndata))
+                systemId=get_last_string(fb%base)//str_vs(fx%systemId), &
+                notation=str_vs(fx%Ndata))
               if (present(unparsedEntityDecl_handler)) then
                 call unparsedEntityDecl_handler(str_vs(fx%name), publicId="", &
-                  systemId=resolveSystemId(str_vs(fx%systemId)), notation=str_vs(fx%Ndata))
+                  systemId=get_last_string(fb%base)//resolveSystemId(str_vs(fx%systemId)), &
+                  notation=str_vs(fx%Ndata))
                 if (fx%state==ST_STOP) return
               endif
             elseif (associated(fx%publicId)) then
               call register_external_GE(fx%xds, name=str_vs(fx%name), &
-              systemId=str_vs(fx%systemId), publicId=str_vs(fx%publicId))
+              systemId=get_last_string(fb%base)//str_vs(fx%systemId), &
+              publicId=str_vs(fx%publicId))
               if (present(externalEntityDecl_handler)) then
                 call externalEntityDecl_handler(str_vs(fx%name), &
-                  systemId=resolveSystemId(str_vs(fx%systemId)), publicId=str_vs(fx%publicId))
+                  systemId=get_last_string(fb%base)//resolveSystemId(str_vs(fx%systemId)), &
+                  publicId=str_vs(fx%publicId))
                 if (fx%state==ST_STOP) return
               endif
             else
               call register_external_GE(fx%xds, name=str_vs(fx%name), &
-                systemId=str_vs(fx%systemId))
+                systemId=get_last_string(fb%base)//str_vs(fx%systemId))
               if (present(externalEntityDecl_handler)) then
                 call externalEntityDecl_handler(str_vs(fx%name), &
-                  systemId=resolveSystemId(str_vs(fx%systemId)))
+                systemId=get_last_string(fb%base)//resolveSystemId(str_vs(fx%systemId)))
                 if (fx%state==ST_STOP) return
               endif
             endif
@@ -1933,8 +1941,14 @@ contains
       ! must be an NCName
       ! must be unique ...
       !endif
-      !if (has_key(fx%attributes, 'xml:base')
-      !if (has_key(fx%attributes, 'xml:lang')
+      !if (has_key(fx%attributes, 'xml:base')) then
+      !   We never care about this at the SAX level; except
+      !   that it must be a valid URI when we can check that.
+      !   FIXME check valid URI
+      !endif
+      !if (has_key(fx%attributes, 'xml:lang')) then
+      !   We never care about this at the SAX level.
+      !endif
     end subroutine checkXMLAttributes
   end subroutine sax_parse
 

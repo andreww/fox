@@ -19,7 +19,8 @@ module m_common_array_str
   public :: init_string_list
   public :: destroy_string_list
   public :: add_string
-  public :: remove_string
+  public :: remove_last_string
+  public :: get_last_string
 
   interface destroy
     module procedure destroy_vs
@@ -96,7 +97,7 @@ contains
     s_list%list(i)%s => vs_str_alloc(s)
   end subroutine add_string
 
-  subroutine remove_string(s_list)
+  subroutine remove_last_string(s_list)
     type(string_list), intent(inout) :: s_list
 
     integer :: i
@@ -109,7 +110,14 @@ contains
     enddo
     deallocate(temp)
 
-  end subroutine remove_string
+  end subroutine remove_last_string
+
+  function get_last_string(s_list) result(s)
+    type(string_list), intent(in) :: s_list
+    character(len=size(s_list%list(size(s_list%list))%s)) :: s
+
+    s = str_vs(s_list%list(size(s_list%list))%s)
+  end function get_last_string
 
   pure function str_vs(vs) result(s)
     character, dimension(:), intent(in) :: vs
