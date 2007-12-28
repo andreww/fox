@@ -1,12 +1,12 @@
 module m_sax_reader
 
   use m_common_array_str, only: vs_str_alloc, vs_vs_alloc
-  use m_common_error,  only: error_stack, FoX_error, in_error
+  use m_common_error,  only: error_stack, FoX_error, in_error, add_error
   use m_common_format, only: operator(//)
   use m_common_io, only: setup_io, get_unit
 
   use m_sax_xml_source, only: xml_source_t, buffer_t, &
-    get_char_from_file, push_file_chars
+    get_char_from_file, push_file_chars, parse_xml_declaration
 
   implicit none
   private
@@ -33,6 +33,8 @@ module m_sax_reader
   public :: push_buffer_stack
   public :: pop_buffer_stack
 
+  public :: parse_main_xml_declaration
+
 contains
 
   subroutine open_file(fb, iostat, file, lun, string, es)
@@ -47,7 +49,6 @@ contains
 
     call setup_io()
     allocate(fb%f(1))
-    print*,"fb1 allocated"
     if (present(string)) then
       if (present(file)) then
         call FoX_error("Cannot specify both file and string input to open_xml")
@@ -191,6 +192,7 @@ contains
     f => fb%f(1)
 
     if (size(f%next_chars)>0) then
+      eof = .false.
       string = f%next_chars(1)
       if (size(f%next_chars)>1) then
         temp => vs_vs_alloc(f%next_chars(2:))
@@ -235,5 +237,23 @@ contains
 
     n = fb%f(1)%col
   end function column
+
+  subroutine parse_main_xml_declaration(fb, xv, enc, sa, es)
+    type(file_buffer_t), intent(inout) :: fb
+    integer, intent(out) :: xv
+    character, pointer :: enc(:)
+    logical, intent(out) :: sa
+    type(error_stack), intent(inout) :: es
+
+    logical :: eof
+
+    call parse_xml_declaration(fb%f(1), eof, es, sa)
+    if (eof.or.in_error(es)) then
+      call add_error(es, "Error parsing XML declaration")
+    else
+      xv = fb%f(1)%xml_version
+      enc => vs_vs_alloc(fb%f(1)%encoding)
+    endif
+  end subroutine parse_main_xml_declaration
 
 end module m_sax_reader

@@ -33,10 +33,8 @@ contains
 
     xv = fx%xds%xml_version
 
-    print*, "about to tokenize for state ", fx%state
 
     if (fx%nextTokenType/=TOK_NULL) then
-      print*, 'got an automatic token', fx%nextTokenType
       eof = .false.
       fx%tokenType = fx%nextTokenType
       fx%nextTokenType = TOK_NULL
@@ -58,14 +56,12 @@ contains
 
       select case (fx%state)
       case (ST_MISC)
-        print*, "got first char ", c
         if (firstChar) ws_discard = .true.
         if (ws_discard) then
           if (verify(c, XML_WHITESPACE)>0) then
             if (c=="<") then
               ws_discard = .false.
             else
-              print*, "arse ", c
               call add_error(fx%error_stack, "Unexpected character found outside content")
             endif
           endif
@@ -193,7 +189,6 @@ contains
           tempString => fx%token
           fx%token => vs_str_alloc(str_vs(tempString)//c)
           deallocate(tempString)
-          print*, "tokenizing ", str_vs(fx%token)
         else
           fx%tokenType = TOK_NAME
           if (c==">") then
@@ -276,13 +271,11 @@ contains
               ws_discard = .false.
             else
               fx%token => vs_str_alloc(c)
-              print*,"first character captured"
               ws_discard = .false.
             endif
           endif
         else
           if (phrase==1) then
-            print*,"phrase1 ", c
             if (c==">") then
               fx%tokenType = TOK_END_TAG_CLOSE
             else
@@ -389,7 +382,6 @@ contains
           elseif (c=="&") then
             fx%tokenType = TOK_ENTITY
           else
-            print*,"cccc!",c,"!"
             call add_error(fx%error_stack, "Unexpected character found in content")
           endif
         elseif (phrase==1) then
@@ -429,7 +421,6 @@ contains
         endif
 
       case (ST_IN_CLOSING_TAG)
-        print*, "ok, trying once"
         if (verify(c, XML_WHITESPACE)>0) then
           if (c==">") then
             fx%tokenType = TOK_END_TAG

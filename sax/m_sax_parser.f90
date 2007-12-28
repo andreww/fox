@@ -31,10 +31,10 @@ module m_sax_parser
     destroy_xml_doc_state, register_internal_PE, register_external_PE, &
     register_internal_GE, register_external_GE
 
-  use m_sax_reader, only: file_buffer_t, pop_buffer_stack, push_buffer_stack
+  use m_sax_reader, only: file_buffer_t, pop_buffer_stack, push_buffer_stack, &
+    parse_main_xml_declaration
   use m_sax_tokenizer, only: sax_tokenize, normalize_text
   use m_sax_types ! everything, really
-  use m_sax_xml_source, only: parse_xml_declaration
 
   implicit none
   private
@@ -391,14 +391,8 @@ contains
         call startDocument_handler()
         if (fx%state==ST_STOP) goto 100
       endif
-      call parse_xml_declaration(fb%f(1), eof, fx%error_stack, fx%xds%standalone)
-      if (eof.or.in_error(fx%error_stack)) then
-        ! Any other error, we want to quit sax_tokenizer
-        call add_error(fx%error_stack, 'Error parsing XML declaration')
-        goto 100
-      endif
-      fx%xds%xml_version = fb%f(1)%xml_version
-      fx%xds%encoding => vs_vs_alloc(fb%f(1)%encoding)
+      call parse_main_xml_declaration(fb, fx%xds%xml_version, fx%xds%encoding, fx%xds%standalone, fx%error_stack)
+      if (in_error(fx%error_stack)) goto 100
     endif
 
     do
@@ -1549,7 +1543,7 @@ contains
           if (validCheck) then
             if (notation_exists(fx%nlist, str_vs(fx%name))) then
               call add_error(fx%error_stack, "Duplicate notation declaration")
-              exit
+              goto 100
             endif
           endif
           if (processDTD) then
@@ -1575,7 +1569,7 @@ contains
           if (validCheck) then
             if (notation_exists(fx%nlist, str_vs(fx%name))) then
               call add_error(fx%error_stack, "Duplicate notation declaration")
-              exit
+              goto 100
             endif
           endif
           if (processDTD) then
