@@ -12,9 +12,8 @@ module m_sax_parser
     destroy_elstack, is_empty, len, get_top_elstack
   use m_common_entities, only: existing_entity, init_entity_list, &
     destroy_entity_list, add_internal_entity, &
-    is_external_entity, expand_entity, expand_char_entity, &
-    is_unparsed_entity, pop_entity_list, size, &
-    getEntityTextByIndex, getEntityNameByIndex, getEntityNotationByIndex
+    expand_entity, expand_char_entity, pop_entity_list, size, &
+    entity_t, getEntityByIndex, getEntityByName
   use m_common_entity_expand, only: expand_entity_value_alloc
   use m_common_error, only: FoX_error, add_error, &
     init_error_stack, destroy_error_stack, in_error
@@ -340,6 +339,7 @@ contains
     character, pointer :: tempString(:)
     character :: dummy
     type(element_t), pointer :: elem
+    type(entity_t), pointer :: ent
     integer, pointer :: temp_wf_stack(:)
 
     nullify(tempString)
@@ -372,8 +372,9 @@ contains
     endif
     if (present(initial_entities)) then
       do i = 1, size(initial_entities)
-        if (.not.is_external_entity(initial_entities, getEntityNameByIndex(initial_entities, i))) &
-          call register_internal_PE(fx%xds, getEntityNameByIndex(initial_entities, i), getEntityTextByIndex(initial_entities, i))
+        ent => getEntityByIndex(initial_entities, i)
+        if (.not.ent%external) &
+          call register_internal_PE(fx%xds, str_vs(ent%name), str_vs(ent%text))
       enddo
     endif
 
@@ -910,16 +911,33 @@ contains
               goto 100
             endif
           elseif (existing_entity(fx%xds%entityList, str_vs(fx%token))) then
+            ent => getEntityByName(fx%xds%entityList, str_vs(fx%token))
             print*, "is existing entity"
-            if (is_unparsed_entity(fx%xds%entityList, str_vs(fx%token))) then
+            if (str_vs(ent%notation)/="") then
               call add_error(fx%error_stack, &
                 'Cannot reference unparsed entity in content')
               goto 100
+<<<<<<< HEAD:sax/m_sax_parser.f90
             elseif (is_external_entity(fx%xds%entityList, str_vs(fx%token))) then
               if (present(skippedEntity_handler)) then
                 call skippedEntity_handler(str_vs(fx%token))
                 if (fx%state==ST_STOP) goto 100
               endif
+=======
+            elseif (ent%external) then
+!!$              if (str_vs(ent%system)/="") then
+!!$                ! FIXME xml:base
+!!$                print*, "opening file ", str_vs(ent%system)
+!!$                call open_new_file(fb, str_vs(ent%system), iostat)
+!!$                if (iostat/=0) then
+!!$                  if (present(skippedEntity_handler)) &
+!!$                    call skippedEntity_handler(str_vs(fx%token))
+!!$                endif
+!!$              else
+                if (present(skippedEntity_handler)) &
+                  call skippedEntity_handler(str_vs(fx%token))
+!              endif
+>>>>>>> Rearrange entities and reader:sax/m_sax_parser.f90
             else
               if (validCheck.and.associated(elem)) then
                 if (elem%empty) then
@@ -1137,8 +1155,9 @@ contains
               'Recursive entity reference')
             goto 100
           endif
-          if (existing_entity(fx%xds%PEList, str_vs(fx%token))) then
-            if (is_external_entity(fx%xds%PEList, str_vs(fx%token))) then
+          ent => getEntityByName(fx%xds%PEList, str_vs(fx%token))
+          if (associated(ent)) then
+            if (ent%external) then
               ! We are not validating, do not include external entities
               if (present(skippedEntity_handler)) then
                 call skippedEntity_handler('%'//str_vs(fx%token))
@@ -1609,8 +1628,9 @@ contains
           ! Check that all notations used have been declared:
           if (validCheck) then
             do i = 1, size(fx%xds%entityList)
-              if (getEntityNotationByIndex(fx%xds%entityList, i)/="" &
-                .and..not.notation_exists(fx%nlist, getEntityNotationByIndex(fx%xds%entityList, i))) then
+              ent => getEntityByIndex(fx%xds%entityList, i)
+              if (str_vs(ent%notation)/="" &
+                .and..not.notation_exists(fx%nlist, str_vs(ent%notation))) then
                 call add_error(fx%error_stack, "Attempt to use undeclared notation")
                 goto 100
               endif

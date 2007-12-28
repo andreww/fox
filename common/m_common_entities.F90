@@ -1,18 +1,6 @@
 module m_common_entities
 
 #ifndef DUMMYLIB
-  ! Entity management
-
-  ! It deals with: 
-  !    1. The five standard entities (gt,lt,amp,apos,quot)
-  !    2. Character entities  (but only within the range of the char intrinsic)
-  !    3. Parameter entities
-  !    4. Internal entities
-  ! In addition, it has the capacity to make lists of
-  !    1. External parsed entities
-  !    2. External unparsed entities
-  ! Though nothing is done with them currently elsewhere in FoX.
-
 
   use m_common_array_str, only: str_vs, vs_str_alloc
   use m_common_charset, only: digits, hexdigits
@@ -23,10 +11,9 @@ module m_common_entities
   private
 
   type entity_t
-    private
     logical :: external
-    character(len=1), dimension(:), pointer :: code => null()
-    character(len=1), dimension(:), pointer :: repl => null()
+    character(len=1), dimension(:), pointer :: name => null()
+    character(len=1), dimension(:), pointer :: text => null()
     character(len=1), dimension(:), pointer :: publicId => null()
     character(len=1), dimension(:), pointer :: systemId => null()
     character(len=1), dimension(:), pointer :: notation => null()
@@ -64,10 +51,8 @@ module m_common_entities
   end interface
 
   public :: getEntityByIndex
-  public :: getEntityNameByIndex
-  public :: getEntityTextByIndex
-  public :: getEntityTextByName
-  public :: getEntityNotationByIndex
+  public :: getEntityByName
+
   public :: size
 
 contains
@@ -77,8 +62,8 @@ contains
     type(entity_t) :: ent2
     
     ent2%external = ent1%external
-    ent2%code => ent1%code
-    ent2%repl => ent1%repl
+    ent2%name => ent1%name
+    ent2%text => ent1%text
     ent2%publicId => ent1%publicId
     ent2%systemId => ent1%systemId
     ent2%notation => ent1%notation
@@ -88,64 +73,35 @@ contains
   function getEntityByIndex(el, i) result(e)
     type(entity_list), intent(in) :: el
     integer, intent(in) :: i
-    type(entity_t) :: e
+    type(entity_t), pointer :: e
 
-    e = el%list(i)
+    e => el%list(i)
   end function getEntityByIndex
 
   function getEntityNameByIndex(el, i) result(c)
     type(entity_list), intent(in) :: el
     integer, intent(in) :: i
-    character(len=size(el%list(i)%code)) :: c
+    character(len=size(el%list(i)%name)) :: c
 
-    c = str_vs(el%list(i)%code)
+    c = str_vs(el%list(i)%name)
   end function getEntityNameByIndex
 
-  function getEntityTextByIndex(el, i) result(c)
-    type(entity_list), intent(in) :: el
-    integer, intent(in) :: i
-    character(len=size(el%list(i)%repl)) :: c
-
-    c = str_vs(el%list(i)%repl)
-  end function getEntityTextByIndex
-
-  pure function getEntityTextByName_len(el, name) result(n)
+  function getEntityByName(el, name) result(e)
     type(entity_list), intent(in) :: el
     character(len=*), intent(in) :: name
-    integer :: n
+    type(entity_t), pointer :: e
 
     integer :: i
-    n = 0
+
+    e => null()
     do i = 1, size(el%list)
-      if (str_vs(el%list(i)%code)==name) then
-        n = size(el%list(i)%repl)
+      if (str_vs(el%list(i)%name)==name) then
+        e => el%list(i)
         exit
       endif
     enddo
-  end function getEntityTextByName_len
-  
-  function getEntityTextByName(el, name) result(c)
-    type(entity_list), intent(in) :: el
-    character(len=*), intent(in) :: name
-    character(len=getEntityTextByName_len(el, name)) :: c
+  end function getEntityByName
 
-    integer :: i
-    c = ""
-    do i = 1, size(el%list)
-      if (str_vs(el%list(i)%code)==name) then
-        c = str_vs(el%list(i)%repl)
-        exit
-      endif
-    enddo
-  end function getEntityTextByName
-
-  function getEntityNotationByIndex(el, i) result(c)
-    type(entity_list), intent(in) :: el
-    integer, intent(in) :: i
-    character(len=size(el%list(i)%notation)) :: c
-
-    c = str_vs(el%list(i)%notation)
-  end function getEntityNotationByIndex
 
   function size_el(el) result(n)
     type(entity_list), intent(in) :: el
@@ -158,8 +114,8 @@ contains
   subroutine destroy_entity(ent)
     type(entity_t), intent(inout) :: ent
     
-    deallocate(ent%code)
-    deallocate(ent%repl)
+    deallocate(ent%name)
+    deallocate(ent%text)
     deallocate(ent%publicId)
     deallocate(ent%systemId)
     deallocate(ent%notation)
@@ -199,7 +155,7 @@ contains
 
   function pop_entity_list(ents) result(name)
     type(entity_list), intent(inout) :: ents
-    character(len=size(ents%list(size(ents%list))%code)) :: name
+    character(len=size(ents%list(size(ents%list))%name)) :: name
     
     type(entity_t), pointer :: ents_tmp(:)
     integer :: i, n
@@ -210,7 +166,7 @@ contains
     do i = 1, n - 1
       ents%list(i) = shallow_copy_entity(ents_tmp(i))
     enddo
-    name = str_vs(ents_tmp(i)%code)
+    name = str_vs(ents_tmp(i)%name)
     call destroy_entity(ents_tmp(i))
     deallocate(ents_tmp)
   end function pop_entity_list
@@ -223,8 +179,8 @@ contains
     n = size(ents%list)
     write(*,'(a)') '>ENTITYLIST'
     do i = 1, n
-      write(*,'(a)') str_vs(ents%list(i)%code)
-      write(*,'(a)') str_vs(ents%list(i)%repl)
+      write(*,'(a)') str_vs(ents%list(i)%name)
+      write(*,'(a)') str_vs(ents%list(i)%text)
       write(*,'(a)') str_vs(ents%list(i)%publicId)
       write(*,'(a)') str_vs(ents%list(i)%systemId)
       write(*,'(a)') str_vs(ents%list(i)%notation)
@@ -233,10 +189,10 @@ contains
   end subroutine print_entity_list
 
 
-  subroutine add_entity(ents, code, repl, publicId, systemId, notation, external)
+  subroutine add_entity(ents, name, text, publicId, systemId, notation, external)
     type(entity_list), intent(inout) :: ents
-    character(len=*), intent(in) :: code
-    character(len=*), intent(in) :: repl
+    character(len=*), intent(in) :: name
+    character(len=*), intent(in) :: text
     character(len=*), intent(in) :: publicId
     character(len=*), intent(in) :: systemId
     character(len=*), intent(in) :: notation
@@ -260,45 +216,45 @@ contains
     enddo
     deallocate(ents_tmp)
     ents%list(i)%external = external
-    ents%list(i)%code => vs_str_alloc(code)
-    ents%list(i)%repl => vs_str_alloc(repl)
+    ents%list(i)%name => vs_str_alloc(name)
+    ents%list(i)%text => vs_str_alloc(text)
     ents%list(i)%publicId => vs_str_alloc(publicId)
     ents%list(i)%systemId => vs_str_alloc(systemId)
     ents%list(i)%notation => vs_str_alloc(notation)
   end subroutine add_entity
 
 
-  subroutine add_internal_entity(ents, code, repl)
+  subroutine add_internal_entity(ents, name, text)
     type(entity_list), intent(inout) :: ents
-    character(len=*), intent(in) :: code
-    character(len=*), intent(in) :: repl
+    character(len=*), intent(in) :: name
+    character(len=*), intent(in) :: text
 
-    call add_entity(ents, code, repl, "", "", "", .false.)
+    call add_entity(ents, name, text, "", "", "", .false.)
   end subroutine add_internal_entity
 
   
-  subroutine add_external_entity(ents, code, systemId, publicId, notation)
+  subroutine add_external_entity(ents, name, systemId, publicId, notation)
     type(entity_list), intent(inout) :: ents
-    character(len=*), intent(in) :: code
+    character(len=*), intent(in) :: name
     character(len=*), intent(in) :: systemId
     character(len=*), intent(in), optional :: publicId
     character(len=*), intent(in), optional :: notation
 
     if (present(publicId) .and. present(notation)) then
-      call add_entity(ents, code, "", systemId, publicId, notation, .true.)
+      call add_entity(ents, name, "", systemId, publicId, notation, .true.)
     elseif (present(publicId)) then
-      call add_entity(ents, code, "", systemId, publicId, "", .true.)
+      call add_entity(ents, name, "", systemId, publicId, "", .true.)
     elseif (present(notation)) then
-      call add_entity(ents, code, "", systemId, "", notation, .true.)
+      call add_entity(ents, name, "", systemId, "", notation, .true.)
     else
-      call add_entity(ents, code, "", systemId, "", "", .true.)
+      call add_entity(ents, name, "", systemId, "", "", .true.)
     endif
   end subroutine add_external_entity
 
 
-  function is_unparsed_entity(ents, code) result(p)
+  function is_unparsed_entity(ents, name) result(p)
     type(entity_list), intent(in) :: ents
-    character(len=*), intent(in) :: code
+    character(len=*), intent(in) :: name
     logical :: p
 
     integer :: i
@@ -306,16 +262,16 @@ contains
     p = .false.
 
     do i = 1, size(ents%list)
-      if (code == str_vs(ents%list(i)%code)) then
+      if (name == str_vs(ents%list(i)%name)) then
         p = (size(ents%list(i)%notation)>0)
         exit
       endif
     enddo
   end function is_unparsed_entity
 
-  function is_external_entity(ents, code) result(p)
+  function is_external_entity(ents, name) result(p)
     type(entity_list), intent(in) :: ents
-    character(len=*), intent(in) :: code
+    character(len=*), intent(in) :: name
     logical :: p
 
     integer :: i
@@ -323,38 +279,38 @@ contains
     p = .false.
 
     do i = 1, size(ents%list)
-      if (code == str_vs(ents%list(i)%code)) then
+      if (name == str_vs(ents%list(i)%name)) then
         p = ents%list(i)%external
         exit
       endif
     enddo
   end function is_external_entity
  
-  pure function expand_char_entity_len(code) result(n)
-    character(len=*), intent(in) :: code
+  pure function expand_char_entity_len(name) result(n)
+    character(len=*), intent(in) :: name
     integer :: n
 
     integer :: number
 
-    if (code(1:1) == "#") then
-      if (code(2:2) == "x") then       ! hex character reference
-        if (verify(code(3:), hexdigits) == 0) then
-          number = str_to_int_16(code(3:))   
+    if (name(1:1) == "#") then
+      if (name(2:2) == "x") then       ! hex character reference
+        if (verify(name(3:), hexdigits) == 0) then
+          number = str_to_int_16(name(3:))   
           if (0 <= number .and. number <= 128) then
             n = 1
           else
-            n = len(code) + 2
+            n = len(name) + 2
           endif
         else 
            n = 0
         endif
       else                             ! decimal character reference
-        if (verify(code(3:), digits) == 0) then
-          number = str_to_int_10(code(2:))
+        if (verify(name(3:), digits) == 0) then
+          number = str_to_int_10(name(2:))
           if (0 <= number .and. number <= 128) then
             n = 1
           else
-            n = len(code) + 2
+            n = len(name) + 2
           endif
         else 
           n = 0
@@ -366,33 +322,33 @@ contains
   end function expand_char_entity_len
 
 
-  function expand_char_entity(code) result(repl)
-    character(len=*), intent(in) :: code
-    character(len=expand_char_entity_len(code)) :: repl
+  function expand_char_entity(name) result(text)
+    character(len=*), intent(in) :: name
+    character(len=expand_char_entity_len(name)) :: text
 
     integer :: number
 
-    select case (len(repl))
+    select case (len(text))
     case (0)
       call FoX_error("Invalid character entity reference")
     case (1)  
-      if (code(2:2) == "x") then       ! hex character reference
-        number = str_to_int_16(code(3:))   
+      if (name(2:2) == "x") then       ! hex character reference
+        number = str_to_int_16(name(3:))   
       else                             ! decimal character reference
-        number = str_to_int_10(code(2:))
+        number = str_to_int_10(name(2:))
       endif
-      repl = achar(number)
+      text = achar(number)
       ! FIXME what about > 127 ...
     case default
-      repl = "&"//code//";"
+      text = "&"//name//";"
     end select
 
   end function expand_char_entity
 
 
-  pure function existing_entity(ents, code) result(p)
+  pure function existing_entity(ents, name) result(p)
     type(entity_list), intent(in) :: ents
-    character(len=*), intent(in)  :: code
+    character(len=*), intent(in)  :: name
     logical :: p
 
     integer :: i
@@ -402,7 +358,7 @@ contains
 !FIXME the following test is not entirely in accordance with the valid chars check we do elsewhere...
 
     do i = 1, size(ents%list)
-      if (code == str_vs(ents%list(i)%code)) then
+      if (name == str_vs(ents%list(i)%name)) then
         p = .true.
         return
       endif
@@ -411,34 +367,34 @@ contains
   end function existing_entity
 
 
-  pure function expand_entity_text_len(ents, code) result(n)
+  pure function expand_entity_text_len(ents, name) result(n)
     type(entity_list), intent(in) :: ents
-    character(len=*), intent(in)  :: code
+    character(len=*), intent(in)  :: name
     integer :: n
 
     integer :: i
 
     do i = 1, size(ents%list)
-      if (code == str_vs(ents%list(i)%code)) then
-        n = size(ents%list(i)%repl)
+      if (name == str_vs(ents%list(i)%name)) then
+        n = size(ents%list(i)%text)
       endif
     enddo
 
   end function expand_entity_text_len
 
 
-  function expand_entity_text(ents, code) result(repl)
+  function expand_entity_text(ents, name) result(text)
     type(entity_list), intent(in) :: ents
-    character(len=*), intent(in)  :: code
-    character(len=expand_entity_text_len(ents, code)) :: repl
+    character(len=*), intent(in)  :: name
+    character(len=expand_entity_text_len(ents, name)) :: text
 
     integer :: i
 
     ! No error checking - make sure entity exists before calling it.
 
     do i = 1, size(ents%list)
-      if (code == str_vs(ents%list(i)%code)) then
-        repl = str_vs(ents%list(i)%repl)
+      if (name == str_vs(ents%list(i)%name)) then
+        text = str_vs(ents%list(i)%text)
         exit
       endif
     enddo
@@ -446,32 +402,32 @@ contains
   end function expand_entity_text
 
 
-  pure function expand_entity_len(ents, code) result(n)
+  pure function expand_entity_len(ents, name) result(n)
     type(entity_list), intent(in) :: ents
-    character(len=*), intent(in)  :: code
+    character(len=*), intent(in)  :: name
     integer :: n
 
     integer :: i
 
     do i = 1, size(ents%list)
-      if (code == str_vs(ents%list(i)%code)) then
-        n = size(ents%list(i)%repl)
+      if (name == str_vs(ents%list(i)%name)) then
+        n = size(ents%list(i)%text)
       endif
     enddo
 
   end function expand_entity_len
 
 
-  function expand_entity(ents, code) result(repl)
+  function expand_entity(ents, name) result(text)
     type(entity_list), intent(in) :: ents
-    character(len=*), intent(in)  :: code
-    character(len=expand_entity_len(ents, code)) :: repl
+    character(len=*), intent(in)  :: name
+    character(len=expand_entity_len(ents, name)) :: text
     
     integer :: i
     
     do i = 1, size(ents%list)
-      if (code == str_vs(ents%list(i)%code)) then
-        repl = str_vs(ents%list(i)%repl)
+      if (name == str_vs(ents%list(i)%name)) then
+        text = str_vs(ents%list(i)%text)
       endif
     enddo
 

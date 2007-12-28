@@ -14,9 +14,7 @@ module m_sax_reader
   type file_buffer_t
     !FIXME private
     type(xml_source_t), pointer :: f(:) => null()
-    type(buffer_t),  pointer  :: buffer_stack(:) => null()  ! stack of expansion buffers
-    character, pointer        :: namebuffer(:) => null()    ! temporary buffer for retrieving strings
-    logical                   :: standalone = .false.
+    logical                     :: standalone = .false.
   end type file_buffer_t
 
   public :: file_buffer_t
@@ -25,6 +23,8 @@ module m_sax_reader
 
   public :: open_file
   public :: close_file
+
+  public :: open_new_file
 
   public :: push_chars
 
@@ -48,20 +48,18 @@ contains
     iostat = 0
 
     call setup_io()
-    allocate(fb%f(1))
+    allocate(fb%f(0))
     if (present(string)) then
       if (present(file)) then
         call FoX_error("Cannot specify both file and string input to open_xml")
       elseif (present(lun)) then
         call FoX_error("Cannot specify lun for string input to open_xml")
       endif
-      call open_string_as_file(fb%f(1), string)
+      call push_buffer_stack(fb, string)
     else
-      call open_actual_file(fb%f(1), file, iostat, lun)
+      call open_new_file(fb, file, iostat, lun)
       if (iostat/=0) return
     endif
-
-    allocate(fb%buffer_stack(0))
 
   end subroutine open_file
 
@@ -71,12 +69,41 @@ contains
 
     f%lun = -1
     f%input_string%s => vs_str_alloc(string)
-    f%filename => vs_str_alloc("")
 
-    f%line = 1
-    f%col = 0
     allocate(f%next_chars(0))
   end subroutine open_string_as_file
+
+  subroutine open_new_file(fb, file, iostat, lun)
+    type(file_buffer_t), intent(inout)  :: fb
+    character(len=*), intent(in), optional :: file
+    integer, intent(out) :: iostat
+    integer, intent(in), optional :: lun
+
+    integer :: i
+    type(xml_source_t) :: f
+    type(xml_source_t), pointer :: temp(:)
+
+    call open_actual_file(f, file, iostat, lun)
+    if (iostat==0) then
+      temp => fb%f
+      allocate(fb%f(size(temp)+1))
+      do i = 1, size(temp)
+        fb%f(i+1)%lun = temp(i)%lun
+        fb%f(i+1)%xml_version = temp(i)%xml_version
+        fb%f(i+1)%encoding => temp(i)%encoding
+        fb%f(i+1)%filename => temp(i)%filename
+        fb%f(i+1)%line = temp(i)%line
+        fb%f(i+1)%col = temp(i)%col
+        fb%f(i+1)%startChar = temp(i)%startChar
+        fb%f(i+1)%next_chars => temp(i)%next_chars
+      enddo
+      deallocate(temp)
+      fb%f(1)%lun = f%lun
+      fb%f(1)%filename => f%filename
+      allocate(fb%f(1)%next_chars(0))
+    endif
+
+  end subroutine open_new_file
 
   subroutine open_actual_file(f, file, iostat, lun)
     type(xml_source_t), intent(out)    :: f
@@ -95,8 +122,6 @@ contains
     if (iostat/=0) return
     f%filename => vs_str_alloc(file)
 
-    f%line = 1
-    f%col = 0
     allocate(f%next_chars(0))
   end subroutine open_actual_file
 
@@ -105,28 +130,26 @@ contains
 
     integer :: i
 
-    if (fb%f(1)%lun/=-2) then
-      if (associated(fb%namebuffer)) deallocate(fb%namebuffer)
-      do i = 1, size(fb%buffer_stack)
-        deallocate(fb%buffer_stack(i)%s)
-      enddo
-      deallocate(fb%buffer_stack)
-      call close_actual_file(fb%f(1))
-      deallocate(fb%f)
-    endif
+    do i = 1, size(fb%f)
+      call close_actual_file(fb%f(i))
+    enddo
+
+    deallocate(fb%f)
 
   end subroutine close_file
+
 
   subroutine close_actual_file(f)
     type(xml_source_t), intent(inout)    :: f
 
-    if (f%lun/=-1) then
+    if (f%lun>0) then
       close(f%lun)
+      deallocate(f%encoding)
+      deallocate(f%filename)
     else
       deallocate(f%input_string%s)
       deallocate(f%input_string)
     endif
-    deallocate(f%filename)
 
     f%line = 0
     f%col = 0
@@ -147,35 +170,51 @@ contains
     type(file_buffer_t), intent(inout) :: fb
     character(len=*), intent(in) :: string
 
-    ! Add a new buffer to the stack.
     integer :: i
-    type(buffer_t), dimension(:), pointer :: tempStack
+    type(xml_source_t), pointer :: temp(:)
 
-    allocate(tempStack(size(fb%buffer_stack)+1))
-    do i = 1, size(fb%buffer_stack)
-      tempStack(i+1)%s => fb%buffer_stack(i)%s
-      tempStack(i+1)%pos = fb%buffer_stack(i)%pos
+    temp => fb%f
+    allocate(fb%f(size(temp)+1))
+    do i = 1, size(temp)
+      fb%f(i+1)%lun = temp(i)%lun
+      fb%f(i+1)%xml_version = temp(i)%xml_version
+      fb%f(i+1)%encoding => temp(i)%encoding
+      fb%f(i+1)%filename => temp(i)%filename
+      fb%f(i+1)%line = temp(i)%line
+      fb%f(i+1)%col = temp(i)%col
+      fb%f(i+1)%startChar = temp(i)%startChar
+      fb%f(i+1)%next_chars => temp(i)%next_chars
+      fb%f(i+1)%input_string => temp(i)%input_string
     enddo
-    tempStack(1)%s => vs_str_alloc(string)
-    deallocate(fb%buffer_stack)
-    fb%buffer_stack => tempStack
+    deallocate(temp)
+
+    allocate(fb%f(1)%input_string)
+    fb%f(1)%input_string%s => vs_str_alloc(string)
+    allocate(fb%f(1)%next_chars(0))
+
   end subroutine push_buffer_stack
 
   subroutine pop_buffer_stack(fb)
     type(file_buffer_t), intent(inout) :: fb
 
-    ! Pop active buffer from the stack.
     integer :: i
-    type(buffer_t), dimension(:), pointer :: tempStack
+    type(xml_source_t), pointer :: temp(:)
+    
+    call close_actual_file(fb%f(1))
 
-    deallocate(fb%buffer_stack(1)%s)
-    allocate(tempStack(size(fb%buffer_stack)-1))
-    do i = 1, size(tempStack)
-      tempStack(i)%s => fb%buffer_stack(i+1)%s
-      tempStack(i)%pos = fb%buffer_stack(i+1)%pos
+    temp => fb%f
+    allocate(fb%f(size(temp)-1))
+    do i = 1, size(temp)-1
+      fb%f(i)%lun = temp(i+1)%lun
+      fb%f(i)%xml_version = temp(i+1)%xml_version
+      fb%f(i)%encoding => temp(i+1)%encoding
+      fb%f(i)%filename => temp(i+1)%filename
+      fb%f(i)%line = temp(i+1)%line
+      fb%f(i)%col = temp(i+1)%col
+      fb%f(i)%startChar = temp(i+1)%startChar
+      fb%f(i)%next_chars => temp(i+1)%next_chars
+      fb%f(i)%input_string => temp(i+1)%input_string
     enddo
-    deallocate(fb%buffer_stack)
-    fb%buffer_stack => tempStack
 
   end subroutine pop_buffer_stack
 
@@ -203,9 +242,9 @@ contains
       f%next_chars => temp
     else
       ! Where are we reading from?
-      if (size(fb%buffer_stack) > 0) then
+      if (associated(f%input_string)) then
         ! We are reading from an internal character buffer.
-        cb => fb%buffer_stack(1)
+        cb => f%input_string
         if (cb%pos<=size(cb%s)) then
           string = cb%s(cb%pos)
           cb%pos = cb%pos + 1
