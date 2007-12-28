@@ -345,7 +345,6 @@ contains
     nullify(tempString)
     nullify(elem)
 
-    ! FIXME we don't do anything with the namespaces option at present
     if (present(namespaces)) then
       namespaces_ = namespaces
     else
@@ -605,9 +604,17 @@ contains
           if (fx%context==CTXT_BEFORE_DTD &
             .or. fx%context==CTXT_BEFORE_CONTENT &
             .or. fx%context==CTXT_IN_CONTENT) then
+            if (namespaces_) then
+              nameOk = checkQName(str_vs(fx%token), fx%xds)
+            else
+              nameOk = checkName(str_vs(fx%token), fx%xds)
+            endif
+            if (.not.nameOk) then
+              call add_error(fx%error_stack, "Illegal element name")
+              goto 100
+            endif
             fx%name => fx%token
             nullify(fx%token)
-            ! FIXME check name is name!
             nextState = ST_IN_TAG
           elseif (fx%context == CTXT_AFTER_CONTENT) then
             call add_error(fx%error_stack, "Cannot open second root element")
@@ -748,7 +755,20 @@ contains
           endif
 
         case (TOK_NAME)
-          ! FIXME check that it is a name:
+          if (namespaces_) then
+            nameOk = checkQName(str_vs(fx%token), fx%xds)
+          else
+            nameOk = checkName(str_vs(fx%token), fx%xds)
+          endif
+          if (.not.nameOk) then
+            call add_error(fx%error_stack, "Illegal attribute name")
+            goto 100
+          endif
+          !Have we already had this dictionary item?
+          if (has_key(fx%attributes, str_vs(fx%token))) then
+            call add_error(fx%error_stack, "Duplicate attribute name")
+            goto 100
+          endif
           fx%attname => fx%token
           nullify(fx%token)
           nextState = ST_ATT_NAME
@@ -767,20 +787,6 @@ contains
         ! fx%name still contains attribute name
         select case (fx%tokenType)
         case (TOK_CHAR)
-          if (namespaces_) then
-            nameOk = checkQName(str_vs(fx%attname), fx%xds)
-          else
-            nameOk = checkName(str_vs(fx%attname), fx%xds)
-          endif
-          if (.not.nameOk) then
-            call add_error(fx%error_stack, "Invalid attribute name")
-            goto 100
-          endif
-          !Have we already had this dictionary item?
-          if (has_key(fx%attributes, str_vs(fx%attname))) then
-            call add_error(fx%error_stack, "Duplicate attribute name")
-            goto 100
-          endif
           !First, expand all entities:
           tempString => normalize_text(fx, fx%token)
           deallocate(fx%token)
@@ -1004,7 +1010,7 @@ contains
         select case (fx%tokenType)
         case (TOK_NAME)
           if (namespaces_) then
-            nameOk = checkNCName(str_vs(fx%token), fx%xds)
+            nameOk = checkQName(str_vs(fx%token), fx%xds)
           else
             nameOk = checkName(str_vs(fx%token), fx%xds)
           endif
@@ -1147,7 +1153,7 @@ contains
               !  then are we standalone?
               !   then look at XML section 5.1
               fx%skippedExternal = .true.
-              processDTD = fx%xds%standalone !FIXME use this everywhere
+              processDTD = fx%xds%standalone
             else
               ! Expand the entity, 
               if (present(startEntity_handler)) then
@@ -1185,7 +1191,7 @@ contains
         select case (fx%tokenType)
         case (TOK_NAME)
           if (namespaces_) then
-            nameOk = checkNCName(str_vs(fx%token), fx%xds)
+            nameOk = checkQName(str_vs(fx%token), fx%xds)
           else
             nameOk = checkName(str_vs(fx%token), fx%xds)
           endif
@@ -1251,11 +1257,10 @@ contains
         end select
 
       case (ST_DTD_ELEMENT)
-        ! FIXME check is name
         select case (fx%tokenType)
         case (TOK_NAME)
           if (namespaces_) then
-            nameOk = checkNCName(str_vs(fx%token), fx%xds)
+            nameOk = checkQName(str_vs(fx%token), fx%xds)
           else
             nameOk = checkName(str_vs(fx%token), fx%xds)
           endif
@@ -1670,16 +1675,6 @@ contains
   contains
 
     subroutine open_tag
-      ! Is Name a valid QName?
-      if (namespaces_) then
-        nameOk = checkQName(str_vs(fx%name), fx%xds)
-      else
-        nameOk = checkName(str_vs(fx%name), fx%xds)
-      endif
-      if (.not.nameOk) then
-        call add_error(fx%error_stack, "Invalid element name")
-        return
-      endif
       ! Are there any default values missing?
       if (validCheck) then
         elem => get_element(fx%xds%element_list, str_vs(fx%name))

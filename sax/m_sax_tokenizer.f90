@@ -616,7 +616,7 @@ contains
           i2 = i2 + 1
         elseif (checkCharacterEntityReference(str_vs(tempString), fx%xds%xml_version)) then
           ! Expand all character entities
-          s_temp(i2) = expand_char_entity(str_vs(tempString)) ! FIXME ascii
+          s_temp(i2) = expand_char_entity(str_vs(tempString))
           i = i + j  + 1
           i2 = i2 + 1 ! fixme
         elseif (checkName(str_vs(tempString), fx%xds)) then
