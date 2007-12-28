@@ -7,7 +7,6 @@ module m_sax_tokenizer
   use m_common_entities, only: existing_entity, &
     is_unparsed_entity, is_external_entity, expand_entity_text, &
     expand_char_entity, add_internal_entity, pop_entity_list
-  use m_common_io, only: io_eof
   use m_common_namecheck, only: checkName, checkCharacterEntityReference
 
   use m_sax_reader, only: file_buffer_t, &
@@ -28,7 +27,7 @@ contains
     logical, intent(out) :: eof
 
     character :: c, q
-    integer :: xv, phrase, iostat
+    integer :: xv, phrase
     logical :: firstChar, ws_discard
     character, pointer :: tempString(:)
 
@@ -36,9 +35,9 @@ contains
 
     print*, "about to tokenize for state ", fx%state
 
-    eof = .false.
     if (fx%nextTokenType/=TOK_NULL) then
       print*, 'got an automatic token', fx%nextTokenType
+      eof = .false.
       fx%tokenType = fx%nextTokenType
       fx%nextTokenType = TOK_NULL
       return
@@ -54,13 +53,8 @@ contains
     phrase = 0
     firstChar = .true.
     do
-      c = get_character(fb, iostat, fx%error_stack)
-      if (iostat==io_eof) then
-        eof = .true.
-        return
-      elseif (in_error(fx%error_stack)) then
-        return
-      endif
+      c = get_character(fb, eof, fx%error_stack)
+      if (eof.or.in_error(fx%error_stack)) return
 
       select case (fx%state)
       case (ST_MISC)

@@ -1,28 +1,12 @@
 module m_sax_reader
 
-  ! This module implements a reader for XML documents.
-  ! That is, functionally, it simply takes care of new-line
-  ! handling, such that all newlines are converted to ASCII 0xA
-  ! according to the algorithm in s2.11 of XML 1.0 or 1.1
-
-  ! It offers several shortcut functions for seeking through
-  ! the file for particular sequences of characters useful
-  ! for XML parsing.
-
-  ! It also offers the ability to push characters back into 
-  ! the reader, onto a stack of additional buffers, which
-  ! we need for entity expansion.
-
-  ! Furthermore, readahead and pushback is available on
-  ! all buffers.
-
   use m_common_array_str, only: vs_str_alloc, vs_vs_alloc
-  use m_common_error,  only: error_stack, FoX_error
+  use m_common_error,  only: error_stack, FoX_error, in_error
   use m_common_format, only: operator(//)
-  use m_common_io, only: setup_io, io_eof, get_unit
+  use m_common_io, only: setup_io, get_unit
 
   use m_sax_xml_source, only: xml_source_t, buffer_t, &
-    get_char_from_file, push_file_chars, parse_xml_declaration
+    get_char_from_file, push_file_chars
 
   implicit none
   private
@@ -194,9 +178,9 @@ contains
 
   end subroutine pop_buffer_stack
 
-  function get_character(fb, iostat, es) result(string)
+  function get_character(fb, eof, es) result(string)
     type(file_buffer_t), intent(inout) :: fb
-    integer, intent(out) :: iostat
+    logical, intent(out) :: eof
     type(error_stack), intent(inout) :: es
     character(len=1) :: string
 
@@ -215,7 +199,6 @@ contains
       endif
       deallocate(f%next_chars)
       f%next_chars => temp
-      iostat = 0
     else
       ! Where are we reading from?
       if (size(fb%buffer_stack) > 0) then
@@ -224,23 +207,20 @@ contains
         if (cb%pos<=size(cb%s)) then
           string = cb%s(cb%pos)
           cb%pos = cb%pos + 1
-          iostat = 0 
         else
           ! Not enough characters here
           string = ''
-          ! put characters back on putchar? FIXME
-          iostat = io_eof
+          eof = .true.
           return
         endif
       else
         ! We are reading from a file
-        string = get_char_from_file(f, iostat, es)
-        if (iostat/=0) return ! EOF or Error.
+        string = get_char_from_file(f, eof, es)
+        if (eof.or.in_error(es)) return ! EOF or Error.
       endif
     endif
 
   end function get_character
-
 
   function line(fb) result(n)
     type(file_buffer_t), intent(in) :: fb
@@ -249,13 +229,11 @@ contains
     n = fb%f(1)%line
   end function line
 
-
   function column(fb) result(n)
     type(file_buffer_t), intent(in) :: fb
     integer :: n
 
     n = fb%f(1)%col
   end function column
-
 
 end module m_sax_reader

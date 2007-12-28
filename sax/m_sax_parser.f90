@@ -392,8 +392,8 @@ contains
         call startDocument_handler()
         if (fx%state==ST_STOP) goto 100
       endif
-      call parse_xml_declaration(fb%f(1), iostat, fx%error_stack, fx%xds%standalone)
-      if (iostat/=0.or.in_error(fx%error_stack)) then
+      call parse_xml_declaration(fb%f(1), eof, fx%error_stack, fx%xds%standalone)
+      if (eof.or.in_error(fx%error_stack)) then
         ! Any other error, we want to quit sax_tokenizer
         call add_error(fx%error_stack, 'Error parsing XML declaration')
         goto 100
@@ -1177,7 +1177,7 @@ contains
               goto 100
             endif
           endif
-          print*, "fixme pe state?"
+          nextState = ST_INT_SUBSET
         end select
 
       case (ST_DTD_ATTLIST)
