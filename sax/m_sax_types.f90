@@ -105,7 +105,6 @@ module m_sax_types
                                   ! not destroy it once we are finished
     integer :: context 
     integer :: state = ST_NULL
-    integer :: parse_stack = 0
     integer, pointer :: wf_stack(:) => null()
     logical :: well_formed = .false.
     logical :: skippedExternal = .false.

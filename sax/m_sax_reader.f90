@@ -35,6 +35,8 @@ module m_sax_reader
 
   public :: parse_main_xml_declaration
 
+  public :: reading_main_file
+
 contains
 
   subroutine open_file(fb, iostat, file, lun, string, es)
@@ -285,5 +287,13 @@ contains
       enc => vs_vs_alloc(fb%f(1)%encoding)
     endif
   end subroutine parse_main_xml_declaration
+
+
+  function reading_main_file(fb) result(p)
+    type(file_buffer_t), intent(in) :: fb
+    logical :: p
+
+    p = (size(fb%f)==1)
+  end function reading_main_file
 
 end module m_sax_reader

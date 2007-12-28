@@ -31,7 +31,7 @@ module m_sax_parser
     register_internal_GE, register_external_GE
 
   use m_sax_reader, only: file_buffer_t, pop_buffer_stack, open_new_string, &
-    open_new_file, parse_main_xml_declaration
+    open_new_file, parse_main_xml_declaration, reading_main_file
   use m_sax_tokenizer, only: sax_tokenize, normalize_text
   use m_sax_types ! everything, really
 
@@ -385,7 +385,7 @@ contains
       fx%context = CTXT_IN_CONTENT
       fx%state = ST_CHAR_IN_CONTENT
       fx%well_formed = .true.
-    elseif (fx%parse_stack==0) then
+    elseif (reading_main_file(fb)) then
       fx%context = CTXT_BEFORE_DTD
       fx%state = ST_MISC
       if (present(startDocument_handler)) then
@@ -400,10 +400,10 @@ contains
 
       call sax_tokenize(fx, fb, eof)
       if (in_error(fx%error_stack)) then
-        ! Any other error, we want to quit sax_tokenizer
+        ! Any error, we want to quit sax_tokenizer
         call add_error(fx%error_stack, 'Error getting token')
         goto 100
-      elseif (eof.and.fx%parse_stack>0) then
+      elseif (eof.and..not.reading_main_file(fb)) then
         if (fx%context==CTXT_IN_DTD) then
           ! that's just the end of a parameter entity expansion.
           ! pop the parse stack, and carry on ..
@@ -434,7 +434,6 @@ contains
           deallocate(temp_wf_stack)
         endif
         call pop_buffer_stack(fb)
-        fx%parse_stack = fx%parse_stack - 1
         cycle
       endif
       if (fx%tokenType==TOK_NULL) then
@@ -925,10 +924,10 @@ contains
               endif
 =======
             elseif (ent%external) then
-!!$              if (str_vs(ent%system)/="") then
+!!$              if (str_vs(ent%systemId)/="") then
 !!$                ! FIXME xml:base
-!!$                print*, "opening file ", str_vs(ent%system)
-!!$                call open_new_file(fb, str_vs(ent%system), iostat)
+!!$                print*, "opening file ", str_vs(ent%systemId)
+!!$                call open_new_file(fb, str_vs(ent%systemId), iostat)
 !!$                if (iostat/=0) then
 !!$                  if (present(skippedEntity_handler)) &
 !!$                    call skippedEntity_handler(str_vs(fx%token))
@@ -958,7 +957,6 @@ contains
               call add_internal_entity(fx%forbidden_ge_list, str_vs(fx%token), "")
               print*, "adding to buffer stack", expand_entity(fx%xds%entityList, str_vs(fx%token))
               call open_new_string(fb, expand_entity(fx%xds%entityList, str_vs(fx%token)))
-              fx%parse_stack = fx%parse_stack + 1
               temp_wf_stack => fx%wf_stack
               allocate(fx%wf_stack(size(temp_wf_stack)+1))
               fx%wf_stack(2:size(fx%wf_stack)) = temp_wf_stack
@@ -1177,7 +1175,6 @@ contains
                 str_vs(fx%token), "")
               call open_new_string(fb, &
                 " "//expand_entity(fx%xds%PEList, str_vs(fx%token))//" ")
-              fx%parse_stack = fx%parse_stack + 1
             endif
             ! and do nothing else, carry on ...
           else
@@ -1657,7 +1654,7 @@ contains
 
     if (.not.eof) then
       ! We have encountered an error before the end of a file
-      if (fx%parse_stack>0) then !we are parsing an entity
+      if (.not.reading_main_file(fb)) then !we are parsing an entity
         call add_error(fx%error_stack, "Error encountered processing entity.")
         call sax_error(fx, error_handler)
       else
