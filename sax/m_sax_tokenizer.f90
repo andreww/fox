@@ -2,8 +2,7 @@ module m_sax_tokenizer
 
   use m_common_array_str, only: vs_str, str_vs, vs_str_alloc
   use m_common_charset, only: XML_WHITESPACE, &
-    upperCase, digits, hexdigits, isInitialNameChar, &
-    isXML1_0_NameChar, isXML1_1_NameChar, XML1_0, XML1_1
+    upperCase, isInitialNameChar
   use m_common_error, only: add_error, in_error
   use m_common_entities, only: existing_entity, &
     is_unparsed_entity, is_external_entity, expand_entity_text, &

@@ -34,6 +34,7 @@ module m_sax_parser
   use m_sax_reader, only: file_buffer_t, pop_buffer_stack, push_buffer_stack
   use m_sax_tokenizer, only: sax_tokenize, normalize_text
   use m_sax_types ! everything, really
+  use m_sax_xml_source, only: parse_xml_declaration
 
   implicit none
   private
@@ -71,8 +72,7 @@ contains
     fx%xds%inputEncoding => vs_str_alloc("us-ascii")
     ! because it always is ...
     fx%xds%documentURI => vs_vs_alloc(fb%f(1)%filename)
-    fx%xds%xml_version = fb%f(1)%xml_version
-    fx%xds%encoding => vs_vs_alloc(fb%f(1)%encoding)
+
     fx%xds%standalone = fb%standalone
 
     allocate(fx%wf_stack(1))
@@ -392,6 +392,14 @@ contains
         call startDocument_handler()
         if (fx%state==ST_STOP) goto 100
       endif
+      call parse_xml_declaration(fb%f(1), iostat, fx%error_stack, fx%xds%standalone)
+      if (iostat/=0.or.in_error(fx%error_stack)) then
+        ! Any other error, we want to quit sax_tokenizer
+        call add_error(fx%error_stack, 'Error parsing XML declaration')
+        goto 100
+      endif
+      fx%xds%xml_version = fb%f(1)%xml_version
+      fx%xds%encoding => vs_vs_alloc(fb%f(1)%encoding)
     endif
 
     do
