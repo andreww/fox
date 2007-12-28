@@ -30,7 +30,7 @@ module m_sax_reader
 
   public :: get_character
 
-  public :: push_buffer_stack
+  public :: open_new_string
   public :: pop_buffer_stack
 
   public :: parse_main_xml_declaration
@@ -55,7 +55,7 @@ contains
       elseif (present(lun)) then
         call FoX_error("Cannot specify lun for string input to open_xml")
       endif
-      call push_buffer_stack(fb, string)
+      call open_new_string(fb, string)
     else
       call open_new_file(fb, file, iostat, lun)
       if (iostat/=0) return
@@ -63,15 +63,6 @@ contains
 
   end subroutine open_file
 
-  subroutine open_string_as_file(f, string)
-    type(xml_source_t), intent(out)    :: f
-    character(len=*), intent(in)     :: string
-
-    f%lun = -1
-    f%input_string%s => vs_str_alloc(string)
-
-    allocate(f%next_chars(0))
-  end subroutine open_string_as_file
 
   subroutine open_new_file(fb, file, iostat, lun)
     type(file_buffer_t), intent(inout)  :: fb
@@ -157,16 +148,7 @@ contains
   end subroutine close_actual_file
 
 
-  subroutine push_chars(fb, s)
-    type(file_buffer_t), intent(inout) :: fb
-    character(len=*), intent(in) :: s
-
-    call push_file_chars(fb%f(1), s)
-
-  end subroutine push_chars
-
-
-  subroutine push_buffer_stack(fb, string)
+  subroutine open_new_string(fb, string)
     type(file_buffer_t), intent(inout) :: fb
     character(len=*), intent(in) :: string
 
@@ -192,7 +174,7 @@ contains
     fb%f(1)%input_string%s => vs_str_alloc(string)
     allocate(fb%f(1)%next_chars(0))
 
-  end subroutine push_buffer_stack
+  end subroutine open_new_string
 
   subroutine pop_buffer_stack(fb)
     type(file_buffer_t), intent(inout) :: fb
@@ -217,6 +199,15 @@ contains
     enddo
 
   end subroutine pop_buffer_stack
+
+
+  subroutine push_chars(fb, s)
+    type(file_buffer_t), intent(inout) :: fb
+    character(len=*), intent(in) :: s
+
+    call push_file_chars(fb%f(1), s)
+
+  end subroutine push_chars
 
   function get_character(fb, eof, es) result(string)
     type(file_buffer_t), intent(inout) :: fb

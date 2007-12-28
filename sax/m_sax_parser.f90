@@ -30,8 +30,8 @@ module m_sax_parser
     destroy_xml_doc_state, register_internal_PE, register_external_PE, &
     register_internal_GE, register_external_GE
 
-  use m_sax_reader, only: file_buffer_t, pop_buffer_stack, push_buffer_stack, &
-    parse_main_xml_declaration
+  use m_sax_reader, only: file_buffer_t, pop_buffer_stack, open_new_string, &
+    open_new_file, parse_main_xml_declaration
   use m_sax_tokenizer, only: sax_tokenize, normalize_text
   use m_sax_types ! everything, really
 
@@ -957,7 +957,7 @@ contains
               print*, "adding to forbidden list"
               call add_internal_entity(fx%forbidden_ge_list, str_vs(fx%token), "")
               print*, "adding to buffer stack", expand_entity(fx%xds%entityList, str_vs(fx%token))
-              call push_buffer_stack(fb, expand_entity(fx%xds%entityList, str_vs(fx%token)))
+              call open_new_string(fb, expand_entity(fx%xds%entityList, str_vs(fx%token)))
               fx%parse_stack = fx%parse_stack + 1
               temp_wf_stack => fx%wf_stack
               allocate(fx%wf_stack(size(temp_wf_stack)+1))
@@ -1175,7 +1175,7 @@ contains
               endif
               call add_internal_entity(fx%forbidden_pe_list, &
                 str_vs(fx%token), "")
-              call push_buffer_stack(fb, &
+              call open_new_string(fb, &
                 " "//expand_entity(fx%xds%PEList, str_vs(fx%token))//" ")
               fx%parse_stack = fx%parse_stack + 1
             endif
