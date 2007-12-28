@@ -106,9 +106,9 @@ contains
     endif
     select case(xml_version)
     case (XML1_0)
-      p = (i==9.or.i==10.or.i==13.or.(i>31.and.i<127))
-    case (XML1_1)
       p = (i==9.or.i==10.or.i==13.or.(i>31.and.i<128))
+    case (XML1_1)
+      p = (i==9.or.i==10.or.i==13.or.(i>31.and.i<127))
       ! NB 0x7F was legal in XML-1.0, but illegal in XML-1.1
     end select
   end function isLegalChar
@@ -136,7 +136,7 @@ contains
     ! Is Unicode character #i legal and representable here?
 
     if (xml_version==XML1_0) then
-      p = (i==9).or.(i==10).or.(i==13).or.(i>31.and.i<127)
+      p = (i==9).or.(i==10).or.(i==13).or.(i>31.and.i<128)
     elseif (xml_version==XML1_1) then
       p = (i>0.and.i<128)
       ! XML 1.1 made all control characters legal as character references.
