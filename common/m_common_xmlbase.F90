@@ -1,7 +1,8 @@
 module m_common_xmlbase
 #ifndef DUMMYLIB
 
-  use m_common_array_str, only: vs_str_alloc
+  use m_common_array_str, only: str_vs, vs_str_alloc, &
+    string_list, init_string_list, destroy_string_list, add_string
   use m_common_format, only: str_to_int_10, str_to_int_16
   use m_common_string, only: toLower
 
@@ -15,6 +16,7 @@ module m_common_xmlbase
     character, pointer :: host(:)
     character, pointer :: port(:)
     character, pointer :: path(:)
+    type(string_list), pointer :: segments
     character, pointer :: query(:)
     character, pointer :: fragment(:)
   end type URI
@@ -29,7 +31,9 @@ module m_common_xmlbase
   character(len=*), parameter :: gen_delims  = ":/?#[]@"
   character(len=*), parameter :: sub_delims  = "!$&'()*+,;="
   character(len=*), parameter :: reserved = gen_delims//sub_delims
-  character(len=*), parameter :: pchar = unreserved//sub_delims//":@"
+  character(len=*), parameter :: pchar = unreserved//":@&=+$,"
+  character(len=*), parameter :: uric_no_slash = unreserved//";?:@&=+$,"
+  character(len=*), parameter :: uric = unreserved//reserved
   
   public :: URI
   public :: parseURI
@@ -85,6 +89,18 @@ contains
     enddo
     p = .true.
   end function verifyWithPctEncoding
+
+  function checkOpaquePart(part) result(p)
+    character(len=*), intent(in) :: part
+    logical :: p
+
+    if (len(part)>0) then
+      p = verify(part(1:1), uric_no_slash)==0
+      if (p.and.len(part)>1) &
+        p = verify(part(1:1), uric)==0
+    endif
+  end function checkOpaquePart
+    
 
   function checkScheme(scheme) result(p)
     character(len=*), intent(in) :: scheme
@@ -197,12 +213,72 @@ contains
     end if
 
   end function checkAuthority
-
-  function checkPath(path) result(p)
-    character(len=*), intent(in) :: path
+  
+  function checkPathSegment(segment) result(p)
+    character(len=*), intent(in) :: segment
     logical :: p
 
-    p = .true. !FIXME
+    integer :: i1
+
+    i1 = index(segment, ";")
+    if (i1>0) then
+      p = verifyWithPctEncoding(segment(:i1-1), pchar) &
+        .and.verifyWithPctEncoding(segment(i1+1:), pchar)
+    else
+      p = verifyWithPctEncoding(segment, unreserved//pchar)
+    endif
+  end function checkPathSegment
+
+  function checkNonOpaquePath(path, segments) result(p)
+    character(len=*), intent(in) :: path
+    type(string_list), intent(out) :: segments
+    logical :: p
+
+    integer :: i1, i2
+
+    call init_string_list(segments)
+    p = .true.
+    i1 = index(path, "/")
+    if (i1==0) then
+      if (checkPathSegment(path)) then
+        call add_string(segments, str_vs(unEscape(path)))
+      else
+        p = .false.
+        call destroy_string_list(segments)
+      endif
+      return
+    elseif (i1==1) then
+      ! make absolute
+    endif
+    do
+      i2 = index(path(i1+1:), "/")
+      if (i2==0) then
+        i2 = len(path)+1
+      else
+        i2 = i1 + i2 + 1
+      endif
+      if (checkPathSegment(path(i1+1:i2-1))) then
+        call add_string(segments, str_vs(unEscape(path(i1+1:i2-1))))
+      else
+        p = .false.
+        call destroy_string_list(segments)
+        return
+      endif
+      if (i2>len(path)) exit
+      i1 = index(path(i2+1:), "/")
+    end do
+  end function checkNonOpaquePath
+
+  function checkPath(path, segments) result(p)
+    character(len=*), intent(in) :: path
+    type(string_list), intent(out) :: segments
+    logical :: p
+
+    p = checkNonOpaquePath(path, segments)
+    if (.not.p) then
+      p = checkOpaquePart(path)
+    endif
+
   end function checkPath
 
   function checkQuery(query) result(p)
@@ -225,10 +301,12 @@ contains
 
     character, pointer, dimension(:) :: scheme, authority, &
       userinfo, host, port, path, query, fragment
+    type(string_list), pointer :: sl
     integer :: i1, i2, i3, i4
     logical :: p
 
     u => null()
+    allocate(sl)
 
     scheme => null()
     authority => null()
@@ -261,6 +339,7 @@ contains
 
     if (i2>len(URIstring)) then
       path => vs_str_alloc("")
+      ! call add_string(sl, "") !FIXME
       call produceResult
       return
     endif
@@ -271,7 +350,7 @@ contains
     else
       i3 = i2 + i3
     endif
-    p = checkPath(URIstring(i2+1:i3-1))
+    p = checkPath(URIstring(i2+1:i3-1), sl)
     if (.not.p) then
       call cleanUp
       return
@@ -323,6 +402,10 @@ contains
         if (associated(path)) deallocate(path)
         if (associated(query)) deallocate(query)
         if (associated(fragment)) deallocate(fragment)
+        if (associated(sl)) then
+          call destroy_string_list(sl)
+          deallocate(sl)
+        endif
       end subroutine cleanUp
       subroutine produceResult
         allocate(u)
@@ -334,6 +417,7 @@ contains
         u%path => path
         u%query => query
         u%fragment => fragment
+        u%segments => sl
       end subroutine produceResult
   end function parseURI
 
