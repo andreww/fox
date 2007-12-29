@@ -37,6 +37,8 @@ module m_common_xmlbase
   
   public :: URI
   public :: parseURI
+  public :: parseURIreference
+  public :: dumpURI
 
 contains
 
@@ -77,7 +79,7 @@ contains
 
     p = .false.
     i = 1
-    do
+    do while (i<=len(s))
       if (s(i:i)=="%") then
         if (i+2>len(s)) return
         if (verify(s(i+1:i+2), hexdigit)>0) return
@@ -187,14 +189,16 @@ contains
     integer :: i1, i2
 
     i1 = index(authority, "@")
-    i2 = index(authority(i1:), ":")
+    if (i1>0) then
+      i2 = index(authority(i1+1:), ":")
+    else
+      i2 = index(authority, ":")
+    endif
     if (i1==0) then
-      ! FIXME depercent
       userinfo => null()
     else
-      p = verify(authority(:i1-1), unreserved//sub_delims//":")==0
+      p = verifyWithPctEncoding(authority(:i1-1), unreserved//sub_delims//":")
       if (p) userinfo => unEscape(authority(:i1-1))
-      if (.not.associated(userinfo)) p = .false.
     endif
     if (i2==0) then
       i2 = len(authority)+1
@@ -206,7 +210,7 @@ contains
     endif
     p = p.and.checkHost(authority(i1+1:i2-1))
     if (p) then
-      host => unEscape(authority(i1+1:i2-1))
+      host => vs_str_alloc(authority(i1+1:i2-1))
     else
       if (associated(userinfo)) deallocate(userinfo)
       if (associated(port)) deallocate(port)
@@ -236,7 +240,6 @@ contains
 
     integer :: i1, i2
 
-    call init_string_list(segments)
     p = .true.
     i1 = index(path, "/")
     if (i1==0) then
@@ -244,28 +247,25 @@ contains
         call add_string(segments, str_vs(unEscape(path)))
       else
         p = .false.
-        call destroy_string_list(segments)
       endif
       return
-    elseif (i1==1) then
-      ! make absolute
     endif
     do
       i2 = index(path(i1+1:), "/")
       if (i2==0) then
         i2 = len(path)+1
       else
-        i2 = i1 + i2 + 1
+        i2 = i1 + i2
       endif
       if (checkPathSegment(path(i1+1:i2-1))) then
-        call add_string(segments, str_vs(unEscape(path(i1+1:i2-1))))
+!        call add_string(segments, str_vs(unEscape(path(i1+1:i2-1))))
       else
+        ! FIXME remove all strings we've added
         p = .false.
-        call destroy_string_list(segments)
         return
       endif
       if (i2>len(path)) exit
-      i1 = index(path(i2+1:), "/")
+      i1 = i2 + 1
     end do
   end function checkNonOpaquePath
 
@@ -285,14 +285,14 @@ contains
     character(len=*), intent(in) :: query
     logical :: p
 
-    p = verifyWithPctEncoding(query, pchar//"/?")
+    p = verifyWithPctEncoding(query, uric)
   end function checkQuery
 
   function checkFragment(fragment) result(p)
     character(len=*), intent(in) :: fragment
     logical :: p
 
-    p = verifyWithPctEncoding(fragment, pchar//"/?")
+    p = verifyWithPctEncoding(fragment, uric)
   end function checkFragment
 
   function parseURI(URIstring) result(u)
@@ -307,21 +307,172 @@ contains
 
     u => null()
     allocate(sl)
+    call init_string_list(sl)
 
     scheme => null()
     authority => null()
+    userinfo => null()
+    host => null()
+    port => null()
     path => null()
     query => null()
     fragment => null()
 
     i1 = index(URIstring, ":")
-    if (i1>0) return
+    if (i1==0) return
     p = checkScheme(URIstring(:i1-1))
     if (.not.p) return
     scheme => vs_str_alloc(toLower(URIstring(:i1-1)))
+    print*, "a ", URIstring(i1+1:i1+2)
+    if (URIstring(i1+1:i1+2)=="//") then
+      i2 = scan(URIstring(i1+3:), "/#?")
+      if (i2==0) then
+        i2 = len(URIstring) + 1
+      else
+        i2 = i1 + i2 + 2
+        print*, i2, URIstring(i2:i2)
+      endif
+      p = checkAuthority(URIstring(i1+3:i2-1), userinfo, host, port)
+      print*,'authority ok', p, URIstring(i1+3:i2-1)
+      if (.not.p) then
+        call cleanUp
+        return
+      endif
+      authority => vs_str_alloc(URIstring(i1+3:i2-1))
+      print*, str_vs(authority)
+    else
+      i2 = i1 + 3
+    endif
+
+    if (i2>len(URIstring)) then
+      path => vs_str_alloc("")
+      ! call add_string(sl, "") !FIXME
+      call produceResult
+      return
+    endif
+    print*, "ok checking path"
+
+    i3 = scan(URIstring(i2:),"#?")
+    if (i3==0) then
+      i3 = len(URIstring) + 1
+    else
+      i3 = i2 + i3 - 1
+    endif
+    print*, "checking path ", URIstring(i2:i3-1)
+    p = checkPath(URIstring(i2:i3-1), sl)
+    print*, "path checked ", URIstring(i2:i3-1), p
+    if (.not.p) then
+      call cleanUp
+      return
+    endif
+    path => vs_str_alloc(URIstring(i2:i3-1))
+
+    if (i3>len(URIstring)) then
+      call produceResult
+      return
+    endif
+
+    if (URIstring(i3:i3)=="?") then
+      print*, "query ok"
+      i4 = index(URIstring(i3+1:), "#")
+      if (i4==0) then
+        i4 = len(URIstring) + 1
+      else
+        i4 = i3 + i4
+      endif
+      p = checkQuery(URIstring(i3+1:i4-1))
+      print*, "checking ", URIstring(i3+1:i4-1), p
+      if (.not.p) then
+        call cleanUp
+        return
+      endif
+      query => vs_str_alloc(URIstring(i3+1:i4-1))
+    else
+      i4 = i3
+    endif
+
+    if (i4>len(URIstring)) then
+      call produceResult
+      return
+    endif
+
+    p = checkFragment(URIstring(i4+1:))
+    if (.not.p) then
+      call cleanUp
+      return
+    endif
+    fragment => vs_str_alloc(URIstring(i4+1:))
+    call produceResult
+    
+    contains
+      subroutine cleanUp
+        if (associated(scheme)) deallocate(scheme)
+        if (associated(authority)) deallocate(authority)
+        if (associated(userinfo)) deallocate(userinfo)
+        if (associated(host)) deallocate(host)
+        if (associated(port)) deallocate(port)
+        if (associated(path)) deallocate(path)
+        if (associated(query)) deallocate(query)
+        if (associated(fragment)) deallocate(fragment)
+        if (associated(sl)) then
+          call destroy_string_list(sl)
+          deallocate(sl)
+        endif
+      end subroutine cleanUp
+      subroutine produceResult
+        allocate(u)
+        u%scheme => scheme
+        u%authority => authority
+        u%userinfo => userinfo
+        u%host => host
+        u%port => port
+        u%path => path
+        u%query => query
+        u%fragment => fragment
+        u%segments => sl
+      end subroutine produceResult
+  end function parseURI
+
+  function parseURIReference(baseURI, URIstring) result(u)
+    type(URI), pointer :: baseURI
+    character(len=*), intent(in) :: URIstring
+    type(URI), pointer :: u
+
+    character, pointer, dimension(:) :: scheme, authority, &
+      userinfo, host, port, path, query, fragment
+    type(string_list), pointer :: sl
+    integer :: i1, i2, i3, i4
+    logical :: p
+
+    u => null()
+    allocate(sl)
+
+    scheme => null()
+    authority => null()
+    userinfo => null()
+    host => null()
+    port => null()
+    path => null()
+    query => null()
+    fragment => null()
+
+    i1 = index(URIstring, ":")
+    if (i1==1) then
+      p = .false.
+      call cleanUp
+      return
+    endif
+    if (i1>1) then
+      if (checkScheme(URIstring(:i1-1))) then
+        scheme => vs_str_alloc(toLower(URIstring(:i1-1)))
+      else
+        ! No scheme present, back to start
+        i1 = 0
+      endif
+    endif
 
     if (URIstring(i1+1:i1+2)=="//") then
-      i2 = index(URIstring(i1+3:), "/#?")
+      i2 = scan(URIstring(i1+3:), "/#?")
       if (i2==0) then
         i2 = len(URIstring) + 1
       else
@@ -403,7 +554,7 @@ contains
         if (associated(query)) deallocate(query)
         if (associated(fragment)) deallocate(fragment)
         if (associated(sl)) then
-          call destroy_string_list(sl)
+!          call destroy_string_list(sl)
           deallocate(sl)
         endif
       end subroutine cleanUp
@@ -419,50 +570,57 @@ contains
         u%fragment => fragment
         u%segments => sl
       end subroutine produceResult
-  end function parseURI
-
-  function parseURIReference(baseURI, URIstring) result(u)
-    type(URI), pointer :: baseURI
-    character(len=*), intent(in) :: URIstring
-    type(URI), pointer :: u
-
-    type(URI), pointer :: newURI
-    integer :: i
-    logical :: p
-
-!!$    newURI => parseURI(URIstring)
-!!$    if (associated(newURI)) then
-!!$      u => newURI
-!!$      return
-!!$    endif
-!!$
-!!$    if (len(URIstring)>2) then
-!!$      if (URIstring(1:2)=="//") then
-!!$        ! This is an authority/abempty path
-!!$        i = index(URIstring(3:), "/")
-!!$        if (i==0) i = len(URIstring)+1
-!!$        p = checkAuthority(URIstring(3:i), userinfo, host, port)
-!!$        if (.not.p) return
-!!$        if (i>len(URIstring)) then
-!!$          path => vs_str_alloc("")
-!!$          call produceResult
-!!$          return
-!!$        endif
-!!$      endif
-!!$    endif
-!!$
-!!$    if (len(URIstring)>0) then
-!!$      if (URIstring(1:1)=="/") then
-!!$        ! absolute path
-!!$
-!!$      end if
-!!$    end if
   end function parseURIReference
 
 !!$  subroutine expressURI(u) result(URIstring)
 !!$    type(URI), intent(in) :: u
 !!$    character, pointer :: URIstring(:)
 !!$  end subroutine expressURI
+
+  subroutine dumpURI(u)
+    type(URI), intent(in) :: u
+
+    if (associated(u%scheme)) then
+      print*, "scheme: ", str_vs(u%scheme)
+    else
+      print*, "scheme UNDEFINED"
+    endif
+    if (associated(u%authority)) then
+      print*, "authority: ", str_vs(u%authority)
+    else
+      print*, "authority UNDEFINED"
+    endif
+    if (associated(u%userinfo)) then
+      print*, "userinfo: ", str_vs(u%userinfo)
+    else
+      print*, "userinfo UNDEFINED"
+    endif
+    if (associated(u%host)) then
+      print*, "host: ", str_vs(u%host)
+    else
+      print*, "host UNDEFINED"
+    endif
+    if (associated(u%port)) then
+      print*, "port: ", str_vs(u%port)
+    else
+      print*, "port UNDEFINED"
+    endif
+    if (associated(u%path)) then
+      print*, "path: ", str_vs(u%path)
+    else
+      print*, "path UNDEFINED"
+    endif
+    if (associated(u%query)) then
+      print*, "query: ", str_vs(u%query)
+    else
+      print*, "query UNDEFINED"
+    endif
+    if (associated(u%fragment)) then
+      print*, "fragment: ", str_vs(u%fragment)
+    else
+      print*, "fragment UNDEFINED"
+    endif
+  end subroutine dumpURI
 
 #endif
 end module m_common_xmlbase
