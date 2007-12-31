@@ -50,6 +50,9 @@ while test $# -gt 0; do
     --common)
         MODULES="$MODULES common fsys"
         ;;
+    --utils)
+        MODULES="$MODULES utils common fsys"
+        ;;
     --wxml)
         MODULES="$MODULES wxml common fsys"
         ;;
@@ -57,10 +60,10 @@ while test $# -gt 0; do
         MODULES="$MODULES wcml wxml utils common fsys"
         ;;
     --sax)
-        MODULES="$MODULES sax common fsys"
+        MODULES="$MODULES sax common utils fsys"
         ;;
     --dom)
-        MODULES="$MODULES dom sax wxml common fsys"
+        MODULES="$MODULES dom sax wxml common utils fsys"
         ;;
 
     *)

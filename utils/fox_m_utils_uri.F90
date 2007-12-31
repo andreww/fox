@@ -1,4 +1,4 @@
-module m_common_xmlbase
+module fox_m_utils_uri
 #ifndef DUMMYLIB
 
 ! Manipulate URIs and URI references a la RFC 2396
@@ -752,4 +752,4 @@ contains
   end subroutine destroyURI
 
 #endif
-end module m_common_xmlbase
+end module fox_m_utils_uri

@@ -11,6 +11,7 @@ OBJFILES=m_common_array_str.$(OBJEXT) m_common_attrs.$(OBJEXT) \
          m_common_element.$(OBJEXT) m_common_struct.$(OBJEXT) \
 	 m_common_entity_expand.$(OBJEXT) m_common_string.$(OBJEXT) \
          m_common_parse_input.$(OBJEXT) m_common_xmlbase.$(OBJEXT)
+	 m_common_entity_expand.$(OBJEXT) m_common_string.$(OBJEXT)
 #
 LIBRARY=libFoX_common.$(LIBEXT)
 INCFLAGS=$(MOD_PREFIX)../objs/finclude
