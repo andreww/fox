@@ -1115,8 +1115,17 @@ contains
           if (associated(fx%publicId)) deallocate(fx%publicId)
           nextState = ST_INT_SUBSET
         case (TOK_END_TAG)
-          if (associated(fx%publicId).or.associated(fx%systemId)) &
+          if (associated(fx%systemId)) then
+            URIref => parseURI(str_vs(fx%systemId))
+            if (.not.associated(URIref)) then
+              call add_error(fx%error_stack, "Invalid URI specified for DTD SYSTEM")
+              goto 100
+            endif
+            ! if we can, then go & get external subset ...
+            ! else
             fx%skippedExternal = .true.
+            ! endif
+          endif
           if (present(startDTD_handler)) then
             if (associated(fx%publicId)) then
               call startDTD_handler(str_vs(fx%root_element), publicId=str_vs(fx%publicId), systemId=str_vs(fx%systemId))
@@ -1434,6 +1443,7 @@ contains
         case (TOK_END_TAG)
           if (processDTD) then
             call add_entity
+            if (in_error(fx%error_stack)) goto 100
           endif
           deallocate(fx%name)
           if (associated(fx%attname)) deallocate(fx%attname)
@@ -1485,6 +1495,7 @@ contains
         case (TOK_END_TAG)
           if (processDTD) then
             call add_entity
+            if (in_error(fx%error_stack)) goto 100
           endif
           deallocate(fx%name)
           if (associated(fx%attname)) deallocate(fx%attname)
@@ -1814,32 +1825,29 @@ contains
           else ! PE can't have Ndata declaration
             URIref => parseURI(str_vs(fx%systemId))
             if (.not.associated(URIref)) then
-              !error
+              call add_error(fx%error_stack, "Invalid URI specified for SYSTEM")
             elseif (hasFragment(URIref)) then
-              !error
+              call add_error(fx%error_stack, "Fragment not permitted on SYSTEM URI")
+              call destroyURI(URIref)
             else
               newURI => rebaseURI(fb%f(1)%baseURI, URIref)
-            endif
-            if (associated(fx%publicId)) then
-              call register_external_PE(fx%xds, name=str_vs(fx%name), &
-                systemId=expressURI(newURI), &
-                publicId=str_vs(fx%publicId))
-              if (present(externalEntityDecl_handler)) then
-                call externalEntityDecl_handler('%'//str_vs(fx%name), &
+              if (associated(fx%publicId)) then
+                call register_external_PE(fx%xds, name=str_vs(fx%name), &
+                  systemId=expressURI(newURI), &
+                  publicId=str_vs(fx%publicId))
+                if (present(externalEntityDecl_handler)) &
+                  call externalEntityDecl_handler('%'//str_vs(fx%name), &
                   systemId=expressURI(URIref), publicId=str_vs(fx%publicId))
-                if (fx%state==ST_STOP) return
-              endif
-            else
-              call register_external_PE(fx%xds, name=str_vs(fx%name), &
-                systemId=expressURI(newURI))
-              if (present(externalEntityDecl_handler)) then
-                call externalEntityDecl_handler('%'//str_vs(fx%name), &
+              else
+                call register_external_PE(fx%xds, name=str_vs(fx%name), &
+                  systemId=expressURI(newURI))
+                if (present(externalEntityDecl_handler)) &
+                  call externalEntityDecl_handler('%'//str_vs(fx%name), &
                   systemId=expressURI(URIref))
-                if (fx%state==ST_STOP) return
               endif
+              call destroyURI(URIref)
+              call destroyURI(URIref)
             endif
-            call destroyURI(URIref)
-            call destroyURI(URIref)
           endif
           ! else we ignore it
         endif
@@ -1857,49 +1865,42 @@ contains
           else
             URIref => parseURI(str_vs(fx%systemId))
             if (.not.associated(URIref)) then
-              !error
+              call add_error(fx%error_stack, "Invalid URI specified for SYSTEM")
             elseif (hasFragment(URIref)) then
-              !error
+              call add_error(fx%error_stack, "Fragment not permitted on SYSTEM URI")
+              call destroyURI(URIref)
             else
               newURI => rebaseURI(fb%f(1)%baseURI, URIref)
-            endif
-            if (associated(fx%publicId).and.associated(fx%Ndata)) then
-              call register_external_GE(fx%xds, name=str_vs(fx%name), &
-                systemId=expressURI(newURI), publicId=str_vs(fx%publicId), &
-                notation=str_vs(fx%Ndata))
-              if (present(unparsedEntityDecl_handler)) then
-                call unparsedEntityDecl_handler(str_vs(fx%name), &
+              if (associated(fx%publicId).and.associated(fx%Ndata)) then
+                call register_external_GE(fx%xds, name=str_vs(fx%name), &
+                  systemId=expressURI(newURI), publicId=str_vs(fx%publicId), &
+                  notation=str_vs(fx%Ndata))
+                if (present(unparsedEntityDecl_handler)) &
+                  call unparsedEntityDecl_handler(str_vs(fx%name), &
                   systemId=expressURI(URIref), publicId=str_vs(fx%publicId), &
                   notation=str_vs(fx%Ndata))
-                if (fx%state==ST_STOP) return
-              endif
-            elseif (associated(fx%Ndata)) then
-              call register_external_GE(fx%xds, name=str_vs(fx%name), &
-                systemId=expressURI(newURI), notation=str_vs(fx%Ndata))
-              if (present(unparsedEntityDecl_handler)) then
-                call unparsedEntityDecl_handler(str_vs(fx%name), publicId="", &
+              elseif (associated(fx%Ndata)) then
+                call register_external_GE(fx%xds, name=str_vs(fx%name), &
+                  systemId=expressURI(newURI), notation=str_vs(fx%Ndata))
+                if (present(unparsedEntityDecl_handler)) &
+                  call unparsedEntityDecl_handler(str_vs(fx%name), publicId="", &
                   systemId=expressURI(URIref), notation=str_vs(fx%Ndata))
-                if (fx%state==ST_STOP) return
-              endif
-            elseif (associated(fx%publicId)) then
-              call register_external_GE(fx%xds, name=str_vs(fx%name), &
-              systemId=expressURI(newURI), publicId=str_vs(fx%publicId))
-              if (present(externalEntityDecl_handler)) then
-                call externalEntityDecl_handler(str_vs(fx%name), &
+              elseif (associated(fx%publicId)) then
+                call register_external_GE(fx%xds, name=str_vs(fx%name), &
+                  systemId=expressURI(newURI), publicId=str_vs(fx%publicId))
+                if (present(externalEntityDecl_handler)) &
+                  call externalEntityDecl_handler(str_vs(fx%name), &
                   systemId=expressURI(URIref), publicId=str_vs(fx%publicId))
-                if (fx%state==ST_STOP) return
+              else
+                call register_external_GE(fx%xds, name=str_vs(fx%name), &
+                  systemId=expressURI(newURI))
+                if (present(externalEntityDecl_handler)) &
+                  call externalEntityDecl_handler(str_vs(fx%name), &
+                  systemId=expressURI(URIref))
               endif
-            else
-              call register_external_GE(fx%xds, name=str_vs(fx%name), &
-                systemId=expressURI(newURI))
-              if (present(externalEntityDecl_handler)) then
-                call externalEntityDecl_handler(str_vs(fx%name), &
-                systemId=expressURI(URIref))
-                if (fx%state==ST_STOP) return
-              endif
+              call destroyURI(URIref)
+              call destroyURI(newURI)
             endif
-            call destroyURI(URIref)
-            call destroyURI(newURI)
           endif
         endif
       endif

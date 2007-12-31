@@ -1,7 +1,13 @@
 module fox_m_utils_uri
 #ifndef DUMMYLIB
 
-! Manipulate URIs and URI references a la RFC 2396
+  ! Manipulate URIs and URI references a la RFC 2396
+  ! NB
+  ! Forbidden (ASCII control) characters are not handled correctly
+  ! ../../ above current directory is handled in accordance with RFC, 
+  !     but not very helpfully
+  ! checking of reg names (not hosts) is done wrongly
+  ! checking of ipv6/X is untested
 
   use m_common_array_str, only: str_vs, vs_str_alloc, vs_vs_alloc
   use m_common_format, only: str_to_int_10, str_to_int_16, str
