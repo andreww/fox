@@ -43,8 +43,6 @@ module m_common_namecheck
   public :: prefixOfQName
   public :: localpartOfQName
 
-  public :: resolveSystemId
-
 contains
 
   pure function checkEncName(name) result(good)
@@ -150,50 +148,11 @@ contains
   function checkSystemId(value) result(good)
     character(len=*), intent(in) :: value
     logical :: good
-    ! FIXME Check resolving system id -> URL
-    ! System ID should be a URL
-    ! No fragment IDs allowed!
-    ! Only simple check is, can't have both ' & "
-    ! For the moment we let everything else through
+    ! Full check is done elsewhere (fox_m_utils_uri)
+    ! For the moment we let this through
     
     good = .not.(index(value, '"')>0 .and. index(value, "'")>0)
   end function checkSystemId
-
-  pure function resolveSystemId_len(value) result(n)
-    character(len=*), intent(in) :: value
-    integer :: n
-
-    integer :: i
-    n = len(value)
-    do i = 1, len(value)
-      select case(iachar(value(i:i)))
-      case (0:32,34,60,62,92,94,96,123:125)
-        n = n + 2
-      end select
-    enddo
-      
-  end function resolveSystemId_len
-
-  function resolveSystemId(value) result(sys)
-    character(len=*), intent(in) :: value
-    character(len=resolveSystemId_len(value)) :: sys
-
-    integer :: i, i_s
-    i_s = 1
-    do i = 1, len(value)
-      select case(iachar(value(i:i)))
-      case (0:32,34,60,62,92,94,96,123:125)
-        sys(i_s:i_s+3) = '%'//iachar(value(i:i))
-        i_s = i_s + 3
-      case default
-        sys(i_s:i_s) = value(i:i)
-        i_s = i_s + 1
-      end select
-    enddo
-      
-  end function resolveSystemId
-
-
 
   function checkIRI(IRI) result(good)
     character(len=*), intent(in) :: IRI

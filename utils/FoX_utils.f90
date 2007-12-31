@@ -13,5 +13,6 @@ module FoX_utils
   public :: rebaseURI
   public :: destroyURI
   public :: expressURI
+  public :: hasFragment
 
 end module FoX_utils

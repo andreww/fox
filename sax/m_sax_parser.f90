@@ -1,7 +1,7 @@
 module m_sax_parser
 
   use m_common_array_str, only: str_vs, string_list, &
-    destroy_string_list, vs_str_alloc, vs_vs_alloc, get_last_string
+    destroy_string_list, vs_str_alloc, vs_vs_alloc
   use m_common_attrs, only: init_dict, destroy_dict, reset_dict, &
     add_item_to_dict, has_key, get_value
   use m_common_charset, only: XML_WHITESPACE
@@ -19,7 +19,7 @@ module m_sax_parser
     init_error_stack, destroy_error_stack, in_error
   use m_common_namecheck, only: checkName, checkPublicId, &
     checkCharacterEntityReference, likeCharacterEntityReference, &
-    checkQName, checkNCName, checkPITarget, resolveSystemId, &
+    checkQName, checkNCName, checkPITarget, &
     checkRepCharEntityReference
   use m_common_namespaces, only: getnamespaceURI, invalidNS, &
     checkNamespaces, checkEndNamespaces, namespaceDictionary, &
@@ -29,6 +29,9 @@ module m_sax_parser
   use m_common_struct, only: init_xml_doc_state, &
     destroy_xml_doc_state, register_internal_PE, register_external_PE, &
     register_internal_GE, register_external_GE
+
+  use FoX_utils, only: URI, parseURI, rebaseURI, expressURI, destroyURI, &
+    hasFragment
 
   use m_sax_reader, only: file_buffer_t, pop_buffer_stack, open_new_string, &
     open_new_file, parse_xml_declaration, parse_text_declaration, &
@@ -345,6 +348,7 @@ contains
     character :: dummy
     type(element_t), pointer :: elem
     type(entity_t), pointer :: ent
+    type(URI), pointer :: URIref, newURI
     integer, pointer :: temp_wf_stack(:)
 
     nullify(tempString)
@@ -1808,26 +1812,34 @@ contains
               if (fx%state==ST_STOP) return
             endif
           else ! PE can't have Ndata declaration
+            URIref => parseURI(str_vs(fx%systemId))
+            if (.not.associated(URIref)) then
+              !error
+            elseif (hasFragment(URIref)) then
+              !error
+            else
+              newURI => rebaseURI(fb%f(1)%baseURI, URIref)
+            endif
             if (associated(fx%publicId)) then
               call register_external_PE(fx%xds, name=str_vs(fx%name), &
-                systemId=get_last_string(fb%base)//str_vs(fx%systemId), &
+                systemId=expressURI(newURI), &
                 publicId=str_vs(fx%publicId))
-              !Need to fully resolve system ID to URL here
               if (present(externalEntityDecl_handler)) then
                 call externalEntityDecl_handler('%'//str_vs(fx%name), &
-                  systemId=get_last_string(fb%base)//resolveSystemID(str_vs(fx%systemId)), &
-                  publicId=str_vs(fx%publicId))
+                  systemId=expressURI(URIref), publicId=str_vs(fx%publicId))
                 if (fx%state==ST_STOP) return
               endif
             else
               call register_external_PE(fx%xds, name=str_vs(fx%name), &
-                systemId=get_last_string(fb%base)//str_vs(fx%systemId))
+                systemId=expressURI(newURI))
               if (present(externalEntityDecl_handler)) then
                 call externalEntityDecl_handler('%'//str_vs(fx%name), &
-                  systemId=get_last_string(fb%base)//resolveSystemId(str_vs(fx%systemId)))
+                  systemId=expressURI(URIref))
                 if (fx%state==ST_STOP) return
               endif
             endif
+            call destroyURI(URIref)
+            call destroyURI(URIref)
           endif
           ! else we ignore it
         endif
@@ -1843,47 +1855,51 @@ contains
               if (fx%state==ST_STOP) return
             endif
           else
+            URIref => parseURI(str_vs(fx%systemId))
+            if (.not.associated(URIref)) then
+              !error
+            elseif (hasFragment(URIref)) then
+              !error
+            else
+              newURI => rebaseURI(fb%f(1)%baseURI, URIref)
+            endif
             if (associated(fx%publicId).and.associated(fx%Ndata)) then
               call register_external_GE(fx%xds, name=str_vs(fx%name), &
-                systemId=get_last_string(fb%base)//str_vs(fx%systemId), &
-                publicId=str_vs(fx%publicId), &
+                systemId=expressURI(newURI), publicId=str_vs(fx%publicId), &
                 notation=str_vs(fx%Ndata))
               if (present(unparsedEntityDecl_handler)) then
                 call unparsedEntityDecl_handler(str_vs(fx%name), &
-                  systemId=get_last_string(fb%base)//resolveSystemId(str_vs(fx%systemId)), &
-                  publicId=str_vs(fx%publicId), &
+                  systemId=expressURI(URIref), publicId=str_vs(fx%publicId), &
                   notation=str_vs(fx%Ndata))
                 if (fx%state==ST_STOP) return
               endif
             elseif (associated(fx%Ndata)) then
               call register_external_GE(fx%xds, name=str_vs(fx%name), &
-                systemId=get_last_string(fb%base)//str_vs(fx%systemId), &
-                notation=str_vs(fx%Ndata))
+                systemId=expressURI(newURI), notation=str_vs(fx%Ndata))
               if (present(unparsedEntityDecl_handler)) then
                 call unparsedEntityDecl_handler(str_vs(fx%name), publicId="", &
-                  systemId=get_last_string(fb%base)//resolveSystemId(str_vs(fx%systemId)), &
-                  notation=str_vs(fx%Ndata))
+                  systemId=expressURI(URIref), notation=str_vs(fx%Ndata))
                 if (fx%state==ST_STOP) return
               endif
             elseif (associated(fx%publicId)) then
               call register_external_GE(fx%xds, name=str_vs(fx%name), &
-              systemId=get_last_string(fb%base)//str_vs(fx%systemId), &
-              publicId=str_vs(fx%publicId))
+              systemId=expressURI(newURI), publicId=str_vs(fx%publicId))
               if (present(externalEntityDecl_handler)) then
                 call externalEntityDecl_handler(str_vs(fx%name), &
-                  systemId=get_last_string(fb%base)//resolveSystemId(str_vs(fx%systemId)), &
-                  publicId=str_vs(fx%publicId))
+                  systemId=expressURI(URIref), publicId=str_vs(fx%publicId))
                 if (fx%state==ST_STOP) return
               endif
             else
               call register_external_GE(fx%xds, name=str_vs(fx%name), &
-                systemId=get_last_string(fb%base)//str_vs(fx%systemId))
+                systemId=expressURI(newURI))
               if (present(externalEntityDecl_handler)) then
                 call externalEntityDecl_handler(str_vs(fx%name), &
-                systemId=get_last_string(fb%base)//resolveSystemId(str_vs(fx%systemId)))
+                systemId=expressURI(URIref))
                 if (fx%state==ST_STOP) return
               endif
             endif
+            call destroyURI(URIref)
+            call destroyURI(newURI)
           endif
         endif
       endif

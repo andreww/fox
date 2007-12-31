@@ -1,12 +1,11 @@
 module m_sax_reader
 
-  use m_common_array_str, only: vs_str_alloc, vs_vs_alloc, &
-    string_list, add_string, remove_last_string, &
-    init_string_list, destroy_string_list
+  use m_common_array_str, only: str_vs, vs_str_alloc, vs_vs_alloc
   use m_common_error,  only: error_stack, FoX_error, in_error, add_error
   use m_common_format, only: operator(//)
   use m_common_io, only: setup_io, get_unit
-  use m_common_xmlbase, only: basedir
+
+  use FoX_utils, only: URI, parseURI, rebaseURI, destroyURI
 
   use m_sax_xml_source, only: xml_source_t, buffer_t, &
     get_char_from_file, push_file_chars, parse_declaration
@@ -18,7 +17,6 @@ module m_sax_reader
     !FIXME private
     type(xml_source_t), pointer :: f(:) => null()
     logical                     :: standalone = .false.
-    type(string_list)           :: base
   end type file_buffer_t
 
   public :: file_buffer_t
@@ -56,7 +54,6 @@ contains
 
     call setup_io()
     allocate(fb%f(0))
-    call init_string_list(fb%base)
     if (present(string)) then
       if (present(file)) then
         call FoX_error("Cannot specify both file and string input to open_xml")
@@ -64,11 +61,9 @@ contains
         call FoX_error("Cannot specify lun for string input to open_xml")
       endif
       call open_new_string(fb, string)
-      call add_string(fb%base, "")
     else
       call open_new_file(fb, file, iostat, lun)
       if (iostat/=0) return
-      call add_string(fb%base, basedir(file))
     endif
 
   end subroutine open_file
@@ -83,6 +78,11 @@ contains
     integer :: i
     type(xml_source_t) :: f
     type(xml_source_t), pointer :: temp(:)
+    logical :: firstfile
+    type(URI), pointer :: URIref
+
+    firstfile = associated(fb%f)
+    if (firstfile) allocate(fb%f(0))
 
     call open_actual_file(f, file, iostat, lun)
     if (iostat==0) then
@@ -97,14 +97,24 @@ contains
         fb%f(i+1)%col = temp(i)%col
         fb%f(i+1)%startChar = temp(i)%startChar
         fb%f(i+1)%next_chars => temp(i)%next_chars
+        fb%f(i+1)%input_string => temp(i)%input_string
+        fb%f(i+1)%baseURI => temp(i)%baseURI
       enddo
       deallocate(temp)
       fb%f(1)%lun = f%lun
       fb%f(1)%filename => f%filename
       allocate(fb%f(1)%next_chars(0))
+      if (firstfile) then
+        fb%f(1)%baseURI => parseURI(str_vs(f%filename))
+        if (.not.associated(fb%f(1)%baseURI)) print*,"a1"
+      else
+        URIref => parseURI(str_vs(f%filename))
+        if (.not.associated(URIref)) print*,"a1.4"
+        fb%f(1)%baseURI => rebaseURI(fb%f(2)%baseURI, URIref)
+        if (.not.associated(fb%f(1)%baseURI)) print*,"a2"
+        call destroyURI(URIref)
+      endif
     endif
-
-    call add_string(fb%base, basedir(file))
 
   end subroutine open_new_file
 
@@ -138,7 +148,6 @@ contains
     enddo
 
     deallocate(fb%f)
-    call destroy_string_list(fb%base)
 
   end subroutine close_file
 
@@ -158,6 +167,7 @@ contains
     f%line = 0
     f%col = 0
     deallocate(f%next_chars)
+    call destroyURI(f%baseURI)
   end subroutine close_actual_file
 
 
@@ -167,6 +177,10 @@ contains
 
     integer :: i
     type(xml_source_t), pointer :: temp(:)
+    logical :: firstfile
+    type(URI), pointer :: URIref
+
+    if (firstfile) allocate(fb%f(0))
 
     temp => fb%f
     allocate(fb%f(size(temp)+1))
@@ -180,12 +194,24 @@ contains
       fb%f(i+1)%startChar = temp(i)%startChar
       fb%f(i+1)%next_chars => temp(i)%next_chars
       fb%f(i+1)%input_string => temp(i)%input_string
+      fb%f(i+1)%baseURI => temp(i)%baseURI
     enddo
     deallocate(temp)
 
     allocate(fb%f(1)%input_string)
     fb%f(1)%input_string%s => vs_str_alloc(string)
     allocate(fb%f(1)%next_chars(0))
+
+    if (firstfile) then
+      fb%f(1)%baseURI => parseURI("")
+      if (.not.associated(fb%f(1)%baseURI)) print*,"a3"
+    else
+      URIref => parseURI("")
+      if (.not.associated(URIref)) print*,"a4"
+      if (.not.associated(fb%f(2)%baseURI)) print*,"a4"
+      fb%f(1)%baseURI => rebaseURI(fb%f(2)%baseURI, URIref)
+      if (.not.associated(fb%f(1)%baseURI)) print*,"a5"
+    endif
 
   end subroutine open_new_string
 
@@ -196,7 +222,6 @@ contains
     type(xml_source_t), pointer :: temp(:)
     
     call close_actual_file(fb%f(1))
-    if (fb%f(1)%lun>0) call remove_last_string(fb%base)
 
     temp => fb%f
     allocate(fb%f(size(temp)-1))
@@ -210,6 +235,7 @@ contains
       fb%f(i)%startChar = temp(i+1)%startChar
       fb%f(i)%next_chars => temp(i+1)%next_chars
       fb%f(i)%input_string => temp(i+1)%input_string
+      fb%f(i)%baseURI => temp(i+1)%baseURI
     enddo
 
   end subroutine pop_buffer_stack

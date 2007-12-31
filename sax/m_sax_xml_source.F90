@@ -6,7 +6,9 @@ module m_sax_xml_source
   use m_common_charset, only: XML_WHITESPACE, XML_INITIALENCODINGCHARS, &
     XML_ENCODINGCHARS, XML1_0, XML1_1, isXML1_0_NameChar, isXML1_1_NameChar, &
     isLegalChar, allowed_encoding
- use m_common_io, only: setup_io, io_eor, io_eof, get_unit
+  use m_common_io, only: setup_io, io_eor, io_eof, get_unit
+  
+  use FoX_utils, only: URI
 
   type buffer_t
     character, dimension(:), pointer :: s
@@ -19,6 +21,7 @@ module m_sax_xml_source
     integer            :: xml_version = XML1_0
     character, pointer :: encoding(:) => null()
     character, pointer :: filename(:) => null()
+    type(URI), pointer :: baseURI => null()
     integer            :: line = 0
     integer            :: col = 0
     integer            :: startChar = 1 ! First character after XML decl

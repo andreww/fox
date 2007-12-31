@@ -49,6 +49,8 @@ module fox_m_utils_uri
   public :: dumpURI
   public :: destroyURI
 
+  public :: hasFragment
+
 contains
 
   function unEscape_alloc(s) result(c)
@@ -384,24 +386,29 @@ contains
       endif
     endif
     ! if either i1==0 or the scheme doesn't validate, there is no scheme..
-    if (URIstring(i1+1:i1+2)=="//") then
-      i2 = scan(URIstring(i1+3:), "/#?")
-      if (i2==0) then
-        i2 = len(URIstring) + 1
+    if (len(URIstring)>i1+3) then
+      if (URIstring(i1+1:i1+2)=="//") then
+        i2 = scan(URIstring(i1+3:), "/#?")
+        if (i2==0) then
+          i2 = len(URIstring) + 1
+        else
+          i2 = i1 + i2 + 2
+        endif
+        p = checkAuthority(URIstring(i1+3:i2-1), userinfo, host, port)
+        if (.not.p) then
+          call cleanUp
+          return
+        endif
+        authority => vs_str_alloc(URIstring(i1+3:i2-1))
       else
-        i2 = i1 + i2 + 2
+        i2 = i1 + 1
       endif
-      p = checkAuthority(URIstring(i1+3:i2-1), userinfo, host, port)
-      if (.not.p) then
-        call cleanUp
-        return
-      endif
-      authority => vs_str_alloc(URIstring(i1+3:i2-1))
     else
       i2 = i1 + 1
     endif
 
     if (i2>len(URIstring)) then
+      path => vs_str_alloc("")
       allocate(segments(1))
       segments(1)%s => vs_str_alloc("")
       call produceResult
@@ -519,7 +526,10 @@ contains
 
     integer :: i, n, n2
 
-    if (seg2(1)%s(1)=="/") then
+    if (size(seg2(1)%s)==0) then
+      seg3 => normalizePath(seg1)
+      return
+    elseif (seg2(1)%s(1)=="/") then
       seg3 => normalizePath(seg2)
       return
     endif
@@ -749,7 +759,18 @@ contains
     endif
     if (associated(u%query)) deallocate(u%query)
     if (associated(u%fragment)) deallocate(u%fragment)
+
+    deallocate(u)
   end subroutine destroyURI
+
+  function hasFragment(u) result(p)
+    type(URI), pointer :: u
+    logical :: p
+
+    p = .false.
+    if (.not.associated(u)) return
+    p = associated(u%fragment)
+  end function hasFragment
 
 #endif
 end module fox_m_utils_uri
