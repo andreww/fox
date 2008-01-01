@@ -18,9 +18,10 @@ module m_sax_types
   integer, parameter :: CTXT_INIT = 0
   integer, parameter :: CTXT_BEFORE_DTD = 1
   integer, parameter :: CTXT_IN_DTD = 2
-  integer, parameter :: CTXT_BEFORE_CONTENT = 3
-  integer, parameter :: CTXT_IN_CONTENT = 4
-  integer, parameter :: CTXT_AFTER_CONTENT = 5
+  integer, parameter :: CTXT_IGNORE = 3
+  integer, parameter :: CTXT_BEFORE_CONTENT = 4
+  integer, parameter :: CTXT_IN_CONTENT = 5
+  integer, parameter :: CTXT_AFTER_CONTENT = 6
 
   ! State
 
@@ -34,15 +35,14 @@ module m_sax_types
   integer, parameter :: ST_START_SECTION_DECLARATION = 5
   integer, parameter :: ST_FINISH_CDATA_DECLARATION = 6
   integer, parameter :: ST_FINISH_SECTION_DECLARATION = 7
-  integer, parameter :: ST_IN_TAG = 8
-  integer, parameter :: ST_ATT_NAME = 9
-  integer, parameter :: ST_ATT_EQUALS = 10
-  integer, parameter :: ST_CHAR_IN_CONTENT = 11
-  integer, parameter :: ST_CLOSING_TAG = 12
-
-  integer, parameter :: ST_PI_END = 13
-  integer, parameter :: ST_COMMENT_END = 14
-
+  integer, parameter :: ST_IN_IGNORE_SECTION = 8
+  integer, parameter :: ST_IN_TAG = 9
+  integer, parameter :: ST_ATT_NAME = 10
+  integer, parameter :: ST_ATT_EQUALS = 11
+  integer, parameter :: ST_CHAR_IN_CONTENT = 12
+  integer, parameter :: ST_CLOSING_TAG = 13
+  integer, parameter :: ST_PI_END = 14
+  integer, parameter :: ST_COMMENT_END = 15
   integer, parameter :: ST_PI_CONTENTS = 16
   integer, parameter :: ST_CDATA_CONTENTS = 17
   integer, parameter :: ST_IN_CLOSING_TAG = 18
@@ -91,7 +91,7 @@ module m_sax_types
   integer, parameter :: TOK_CHAR = 8 ! character data (+token)
   integer, parameter :: TOK_PI_END = 9 ! ?>
   integer, parameter :: TOK_COMMENT_END = 10 ! -->
-
+  integer, parameter :: TOK_SECTION_START = 11 ! <![
   integer, parameter :: TOK_SECTION_END = 12 ! ]]>
   integer, parameter :: TOK_END_TAG = 13 ! >
   integer, parameter :: TOK_END_TAG_CLOSE = 14 ! />

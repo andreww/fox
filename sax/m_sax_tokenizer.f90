@@ -238,6 +238,27 @@ contains
           endif
         endif
 
+      case (ST_IN_IGNORE_SECTION)
+        select case(phrase)
+        case (0)
+          if (c=="<".or.c=="]") then
+            phrase = 1
+            q = c
+          endif
+        case (1)
+          if ((q=="<".and.c=="!").or.(q=="]".and.c=="]")) then
+            phrase = 2
+          else
+            phrase = 0
+          endif
+        case (2)
+          if (q=="<".and.c=="[") then
+            fx%tokenType = TOK_SECTION_START
+          elseif (q=="]".and.c==">") then
+            fx%tokenType = TOK_SECTION_END
+          endif
+        end select
+
       case (ST_CDATA_CONTENTS)
         select case(phrase)
         case (0)

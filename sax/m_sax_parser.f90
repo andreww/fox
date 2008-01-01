@@ -351,7 +351,6 @@ contains
     type(URI), pointer :: URIref, newURI
     integer, pointer :: temp_wf_stack(:)
     integer :: section_depth
-    integer :: ignore_depth
 
     nullify(tempString)
     nullify(elem)
@@ -391,7 +390,6 @@ contains
     endif
 
     section_depth = 0
-    ignore_depth = 0
     processDTD = .true.
     iostat = 0
 
@@ -650,8 +648,7 @@ contains
               goto 100
             else
               section_depth = section_depth + 1
-              if (ignore_depth==0) ignore_depth = section_depth
-              processDTD = .false.
+              fx%context = CTXT_IGNORE
               nextState = ST_FINISH_SECTION_DECLARATION
             endif
           elseif (str_vs(fx%token)=="INCLUDE") then
@@ -668,17 +665,37 @@ contains
         end select
 
       case (ST_FINISH_CDATA_DECLARATION)
-        write(*,*) "FINISH_CDATA_DECLARATION"
+        write(*,*) "ST_FINISH_CDATA_DECLARATION"
         select case (fx%tokenType)
         case (TOK_OPEN_SB)
           nextState = ST_CDATA_CONTENTS
         end select
 
       case (ST_FINISH_SECTION_DECLARATION)
-        write(*,*) "FINISH_CDATA_DECLARATION"
+        write(*,*) "ST_FINISH_CDATA_DECLARATION"
         select case (fx%tokenType)
         case (TOK_OPEN_SB)
-          nextState = ST_SUBSET
+          if (fx%context==CTXT_IGNORE) then
+            nextState = ST_IN_IGNORE_SECTION
+          else
+            nextState = ST_SUBSET
+          endif
+        end select
+
+      case (ST_IN_IGNORE_SECTION)
+        write(*,*) "ST_IN_IGNORE_SECTION"
+        select case (fx%tokenType)
+        case (TOK_SECTION_START)
+          section_depth = section_depth + 1
+          nextState = ST_IN_IGNORE_SECTION
+        case (TOK_SECTION_END)
+          section_depth = section_depth - 1
+          if (section_depth==0) then
+            fx%context = CTXT_IN_DTD
+            nextState = ST_SUBSET
+          else
+            nextState = ST_IN_IGNORE_SECTION
+          endif
         end select
 
       case (ST_CDATA_CONTENTS)
@@ -1195,10 +1212,6 @@ contains
           nextState = ST_CLOSE_DTD
         case (TOK_SECTION_END)
           if (section_depth>0) then
-            if (ignore_depth==section_depth) then
-              processDTD = .true. ! FIXME
-              ignore_depth = 0
-            endif
             section_depth = section_depth - 1
             nextState = ST_SUBSET
           else
