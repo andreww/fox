@@ -1,11 +1,12 @@
 module m_sax_reader
 
-  use m_common_array_str, only: str_vs, vs_str_alloc, vs_vs_alloc
+  use m_common_array_str, only: vs_str_alloc, vs_vs_alloc
   use m_common_error,  only: error_stack, FoX_error, in_error, add_error
   use m_common_format, only: operator(//)
-  use m_common_io, only: setup_io, get_unit
+  use m_common_io, only: setup_io, get_unit, io_err
 
-  use FoX_utils, only: URI, parseURI, rebaseURI, destroyURI
+  use FoX_utils, only: URI, parseURI, rebaseURI, destroyURI, &
+    hasScheme, getScheme, getPath
 
   use m_sax_xml_source, only: xml_source_t, buffer_t, &
     get_char_from_file, push_file_chars, parse_declaration
@@ -53,7 +54,6 @@ contains
     iostat = 0
 
     call setup_io()
-    allocate(fb%f(0))
     if (present(string)) then
       if (present(file)) then
         call FoX_error("Cannot specify both file and string input to open_xml")
@@ -69,9 +69,9 @@ contains
   end subroutine open_file
 
 
-  subroutine open_new_file(fb, file, iostat, lun)
+  subroutine open_new_file(fb, uristring, iostat, lun)
     type(file_buffer_t), intent(inout)  :: fb
-    character(len=*), intent(in), optional :: file
+    character(len=*), intent(in) :: uristring
     integer, intent(out) :: iostat
     integer, intent(in), optional :: lun
 
@@ -79,12 +79,31 @@ contains
     type(xml_source_t) :: f
     type(xml_source_t), pointer :: temp(:)
     logical :: firstfile
-    type(URI), pointer :: URIref
+    type(URI), pointer :: URIref, newURI
 
-    firstfile = associated(fb%f)
-    if (firstfile) allocate(fb%f(0))
+    URIref => parseURI(URIstring)
+    if (.not.associated(URIref)) then
+      iostat = io_err
+      return
+    endif
 
-    call open_actual_file(f, file, iostat, lun)
+    firstfile = .not.associated(fb%f)
+    if (firstfile) then
+      allocate(fb%f(0))
+      newURI => URIref
+    else
+      newURI => rebaseURI(fb%f(1)%baseURI, URIref)
+      call destroyURI(URIref)
+    endif
+    if (hasScheme(newURI)) then
+      if (getScheme(newURI)/="file") then
+        call destroyURI(newURI)
+        iostat = io_err
+        return
+      endif
+    endif
+
+    call open_actual_file(f, getPath(newURI), iostat, lun)
     if (iostat==0) then
       temp => fb%f
       allocate(fb%f(size(temp)+1))
@@ -104,16 +123,9 @@ contains
       fb%f(1)%lun = f%lun
       fb%f(1)%filename => f%filename
       allocate(fb%f(1)%next_chars(0))
-      if (firstfile) then
-        fb%f(1)%baseURI => parseURI(str_vs(f%filename))
-        if (.not.associated(fb%f(1)%baseURI)) print*,"a1"
-      else
-        URIref => parseURI(str_vs(f%filename))
-        if (.not.associated(URIref)) print*,"a1.4"
-        fb%f(1)%baseURI => rebaseURI(fb%f(2)%baseURI, URIref)
-        if (.not.associated(fb%f(1)%baseURI)) print*,"a2"
-        call destroyURI(URIref)
-      endif
+      fb%f(1)%baseURI => newURI
+    else
+      call destroyURI(newURI)
     endif
 
   end subroutine open_new_file
@@ -180,6 +192,7 @@ contains
     logical :: firstfile
     type(URI), pointer :: URIref
 
+    firstfile = .not.associated(fb%f)
     if (firstfile) allocate(fb%f(0))
 
     temp => fb%f
@@ -204,13 +217,10 @@ contains
 
     if (firstfile) then
       fb%f(1)%baseURI => parseURI("")
-      if (.not.associated(fb%f(1)%baseURI)) print*,"a3"
     else
       URIref => parseURI("")
-      if (.not.associated(URIref)) print*,"a4"
-      if (.not.associated(fb%f(2)%baseURI)) print*,"a4"
       fb%f(1)%baseURI => rebaseURI(fb%f(2)%baseURI, URIref)
-      if (.not.associated(fb%f(1)%baseURI)) print*,"a5"
+      call destroyURI(URIref)
     endif
 
   end subroutine open_new_string

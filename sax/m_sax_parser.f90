@@ -927,9 +927,8 @@ contains
                 'Cannot reference unparsed entity in content')
               goto 100
             elseif (ent%external) then
-              ! FIXME xml:base
-              print*, "opening new file", str_vs(ent%systemId)
               call open_new_file(fb, str_vs(ent%systemId), iostat)
+              print*, "new file opened"
               if (iostat/=0) then
                 if (present(skippedEntity_handler)) then
                   call skippedEntity_handler(str_vs(fx%token))
@@ -1177,15 +1176,32 @@ contains
           ent => getEntityByName(fx%xds%PEList, str_vs(fx%token))
           if (associated(ent)) then
             if (ent%external) then
-              ! We are not validating, do not include external entities
-              if (present(skippedEntity_handler)) then
-                call skippedEntity_handler('%'//str_vs(fx%token))
+              if (present(startEntity_handler)) then
+                call startEntity_handler('%'//str_vs(fx%token))
                 if (fx%state==ST_STOP) goto 100
               endif
-              !  then are we standalone?
-              !   then look at XML section 5.1
-              fx%skippedExternal = .true.
-              processDTD = fx%xds%standalone
+              call add_internal_entity(fx%forbidden_pe_list, &
+                str_vs(fx%token), "")
+              call open_new_file(fb, str_vs(ent%systemId), iostat)
+              if (iostat/=0) then
+                if (present(skippedEntity_handler)) then
+                  call skippedEntity_handler('%'//str_vs(fx%token))
+                  if (fx%state==ST_STOP) goto 100
+                endif
+                ! then are we standalone?
+                ! then look at XML section 5.1
+                fx%skippedExternal = .true.
+                processDTD = fx%xds%standalone
+              else
+                if (present(startEntity_handler)) then
+                  call startEntity_handler('%'//str_vs(fx%token))
+                  if (fx%state==ST_STOP) goto 100
+                endif
+                call add_internal_entity(fx%forbidden_pe_list, &
+                  str_vs(fx%token), "")
+                call parse_text_declaration(fb, fx%error_stack)
+                if (in_error(fx%error_stack)) goto 100
+              endif
             else
               ! Expand the entity, 
               if (present(startEntity_handler)) then

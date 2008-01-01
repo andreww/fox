@@ -14,5 +14,8 @@ module FoX_utils
   public :: destroyURI
   public :: expressURI
   public :: hasFragment
+  public :: hasScheme
+  public :: getScheme
+  public :: getPath
 
 end module FoX_utils

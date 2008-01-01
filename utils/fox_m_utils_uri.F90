@@ -55,7 +55,13 @@ module fox_m_utils_uri
   public :: dumpURI
   public :: destroyURI
 
+  public :: hasScheme
+  public :: getScheme
+  public :: getPath
+  public :: hasQuery
+  public :: getQuery
   public :: hasFragment
+  public :: getFragment
 
 contains
 
@@ -769,6 +775,45 @@ contains
     deallocate(u)
   end subroutine destroyURI
 
+  function hasScheme(u) result(p)
+    type(URI), pointer :: u
+    logical :: p
+
+    p = .false.
+    if (.not.associated(u)) return
+    p = associated(u%scheme)
+  end function hasScheme
+
+  function getScheme(u) result(s)
+    type(URI), pointer :: u
+    character(len=size(u%scheme)) :: s
+
+    s = str_vs(u%scheme)
+  end function getScheme
+
+  function getPath(u) result(s)
+    type(URI), pointer :: u
+    character(len=size(u%path)) :: s
+
+    s = str_vs(u%path)
+  end function getPath
+
+  function hasQuery(u) result(p)
+    type(URI), pointer :: u
+    logical :: p
+
+    p = .false.
+    if (.not.associated(u)) return
+    p = associated(u%query)
+  end function hasQuery
+
+  function getQuery(u) result(s)
+    type(URI), pointer :: u
+    character(len=size(u%query)) :: s
+
+    s = str_vs(u%query)
+  end function getQuery
+
   function hasFragment(u) result(p)
     type(URI), pointer :: u
     logical :: p
@@ -777,6 +822,13 @@ contains
     if (.not.associated(u)) return
     p = associated(u%fragment)
   end function hasFragment
+
+  function getFragment(u) result(s)
+    type(URI), pointer :: u
+    character(len=size(u%fragment)) :: s
+
+    s = str_vs(u%fragment)
+  end function getFragment
 
 #endif
 end module fox_m_utils_uri
