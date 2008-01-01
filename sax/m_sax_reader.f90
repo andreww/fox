@@ -32,6 +32,7 @@ module m_sax_reader
   public :: push_chars
 
   public :: get_character
+  public :: get_all_characters
 
   public :: open_new_string
   public :: pop_buffer_stack
@@ -304,6 +305,26 @@ contains
     endif
 
   end function get_character
+
+  function get_all_characters(fb, es) result(s)
+    type(file_buffer_t), intent(inout) :: fb
+    type(error_stack), intent(inout) :: es
+    character, pointer :: s(:)
+
+    logical :: eof
+    character :: c
+    character, pointer :: temp(:)
+
+    eof = .false.
+    s => vs_str_alloc("")
+    do while (.not.eof)
+      c = get_character(fb, eof, es)
+      if (in_error(es)) return
+      temp => vs_str_alloc(str_vs(s)//c)
+      deallocate(s)
+      s => temp
+    enddo
+  end function get_all_characters
 
   function line(fb) result(n)
     type(file_buffer_t), intent(in) :: fb

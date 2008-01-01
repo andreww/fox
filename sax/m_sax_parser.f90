@@ -36,7 +36,8 @@ module m_sax_parser
   use m_sax_reader, only: file_buffer_t, pop_buffer_stack, open_new_string, &
     open_new_file, parse_xml_declaration, parse_text_declaration, &
     reading_main_file, reading_first_entity
-  use m_sax_tokenizer, only: sax_tokenize, normalize_text
+  use m_sax_tokenizer, only: sax_tokenize, normalize_attribute_text, &
+    expand_pe_text
   use m_sax_types ! everything, really
 
   implicit none
@@ -425,7 +426,7 @@ contains
             call add_error(fx%error_stack, "Unclosed conditional sections in external subset")
             goto 100
           endif
-          deallocate(extSubsetSystemId)
+          if (associated(extSubsetSystemId)) deallocate(extSubsetSystemId)
           call endDTDchecks
           if (in_error(fx%error_stack)) goto 100
           fx%state = ST_MISC
@@ -863,7 +864,7 @@ contains
         select case (fx%tokenType)
         case (TOK_CHAR)
           !First, expand all entities:
-          tempString => normalize_text(fx, fx%token)
+          tempString => normalize_attribute_text(fx, fx%token)
           deallocate(fx%token)
           fx%token => tempString
           nullify(tempString)
@@ -1203,13 +1204,18 @@ contains
               if (in_error(fx%error_stack)) goto 100
               inExtSubset = .true.
               nextState = ST_SUBSET
-              cycle
+            else
+              call endDTDchecks
+              if (in_error(fx%error_stack)) goto 100
+              fx%context = CTXT_BEFORE_CONTENT
+              nextState = ST_MISC
             endif
+          else
+            call endDTDchecks
+            if (in_error(fx%error_stack)) goto 100
+            fx%context = CTXT_BEFORE_CONTENT
+            nextState = ST_MISC
           endif
-          if (present(endDTD_handler)) &
-            call endDTD_handler
-          fx%context = CTXT_BEFORE_CONTENT
-          nextState = ST_MISC
           if (associated(fx%systemId)) deallocate(fx%systemId)
           if (associated(fx%publicId)) deallocate(fx%publicId)
         case default
@@ -1348,7 +1354,8 @@ contains
             do i = 1, size(elem%attlist%list)
               if (associated(elem%attlist%list(i)%default)) then
                 tempString => elem%attlist%list(i)%default
-                elem%attlist%list(i)%default => normalize_text(fx, tempString)
+                elem%attlist%list(i)%default => &
+                  normalize_attribute_text(fx, tempString)
                 deallocate(tempString)
                 if (in_error(fx%error_stack)) goto 100
               endif
@@ -1495,7 +1502,12 @@ contains
             goto 100
           endif
         case (TOK_CHAR)
-          fx%attname => expand_entity_value_alloc(fx%token, fx%xds, fx%error_stack)
+          if (reading_main_file(fb)) then
+            tempString => fx%token
+          else
+            tempString => expand_pe_text(fx, fx%token, fb)
+          endif
+          fx%attname => expand_entity_value_alloc(tempString, fx%xds, fx%error_stack)
           if (in_error(fx%error_stack)) goto 100
           nextState = ST_DTD_ENTITY_END
         case default
@@ -1754,13 +1766,18 @@ contains
               if (in_error(fx%error_stack)) goto 100
               inExtSubset = .true.
               nextState = ST_SUBSET
-              cycle
+            else
+              call endDTDchecks
+              if (in_error(fx%error_stack)) goto 100
+              nextState = ST_MISC
+              fx%context = CTXT_BEFORE_CONTENT
             endif
+          else
+            call endDTDchecks
+            if (in_error(fx%error_stack)) goto 100
+            nextState = ST_MISC
+            fx%context = CTXT_BEFORE_CONTENT
           endif
-          call endDTDchecks
-          if (in_error(fx%error_stack)) goto 100
-          nextState = ST_MISC
-          fx%context = CTXT_BEFORE_CONTENT
         end select
 
 

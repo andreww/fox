@@ -4,20 +4,23 @@ module m_sax_tokenizer
   use m_common_charset, only: XML_WHITESPACE, &
     upperCase, isInitialNameChar
   use m_common_error, only: add_error, in_error
-  use m_common_entities, only: existing_entity, &
+  use m_common_entities, only: entity_t, existing_entity, &
     is_unparsed_entity, is_external_entity, expand_entity_text, &
-    expand_char_entity, add_internal_entity, pop_entity_list
+    expand_char_entity, add_internal_entity, pop_entity_list, &
+    getEntityByName
   use m_common_namecheck, only: checkName, checkCharacterEntityReference
 
-  use m_sax_reader, only: file_buffer_t, &
-    push_chars, get_character
+  use m_sax_reader, only: file_buffer_t, open_new_file, pop_buffer_stack, &
+    push_chars, get_character, get_all_characters, &
+    parse_text_declaration
   use m_sax_types ! everything, really
 
   implicit none
   private
 
   public :: sax_tokenize
-  public :: normalize_text
+  public :: normalize_attribute_text
+  public :: expand_pe_text
 
 contains
 
@@ -557,6 +560,7 @@ contains
           fx%tokenType = TOK_DTD_CONTENTS
           fx%nextTokenType = TOK_END_TAG
         else
+          ! FIXME check for %PE;
           tempString => fx%token
           fx%token => vs_str_alloc(str_vs(tempString)//c)
           deallocate(tempString)
@@ -616,7 +620,7 @@ contains
   end subroutine sax_tokenize
 
 
-  recursive function normalize_text(fx, s_in) result(s_out)
+  recursive function normalize_attribute_text(fx, s_in) result(s_out)
     type(sax_parser_t), intent(inout) :: fx
     character, dimension(:), intent(in) :: s_in
     character, dimension(:), pointer :: s_out
@@ -684,7 +688,8 @@ contains
             endif
             call add_internal_entity(fx%forbidden_ge_list, str_vs(tempString), "")
             ! Recursively expand entity, checking for errors.
-            s_ent => normalize_text(fx, vs_str(expand_entity_text(fx%xds%entityList, str_vs(tempString))))
+            s_ent => normalize_attribute_text(fx, &
+              vs_str(expand_entity_text(fx%xds%entityList, str_vs(tempString))))
             dummy = pop_entity_list(fx%forbidden_ge_list)
             if (in_error(fx%error_stack)) then
               goto 100
@@ -726,6 +731,111 @@ contains
     if (associated(s_ent))  deallocate(s_ent)
     if (associated(tempString)) deallocate(tempString)
 
-  end function normalize_text
+  end function normalize_attribute_text
+
+  recursive function expand_pe_text(fx, s_in, fb) result(s_out)
+    type(sax_parser_t), intent(inout) :: fx
+    character, dimension(:), intent(in) :: s_in
+    type(file_buffer_t), intent(inout) :: fb
+    character, dimension(:), pointer :: s_out
+
+    character, dimension(:), pointer :: s_temp, s_temp2, s_ent, tempString
+    character :: dummy
+    integer :: i, i2, j, iostat
+    type(entity_t), pointer :: ent
+
+    ! Expand all %PE;
+
+    allocate(s_temp(size(s_in))) ! in the first instance
+    allocate(s_out(0)) ! in case we return early ...
+    s_ent => null()
+    tempString => null()
+
+    i2 = 1
+    i = 1
+    do while (i <= size(s_in))
+      if (s_in(i)=='%') then
+        j = index(str_vs(s_in(i+1:)), ';')
+        if (j==0) then
+          call add_error(fx%error_stack, "Illegal % found in attribute")
+          goto 100
+        elseif (j==1) then
+          call add_error(fx%error_stack, "No entity reference found")
+          goto 100
+        endif
+        allocate(tempString(j-1))
+        tempString = s_in(i+1:i+j-1)
+        if (checkName(str_vs(tempString), fx%xds)) then
+          if (existing_entity(fx%forbidden_pe_list, str_vs(tempString))) then
+            call add_error(fx%error_stack, 'Recursive entity expansion')
+            goto 100
+          elseif (existing_entity(fx%xds%peList, str_vs(tempString))) then
+            !is it the right sort of entity?
+            if (is_unparsed_entity(fx%xds%peList, str_vs(tempString))) then
+              call add_error(fx%error_stack, "Unparsed entity reference forbidden in entity value")
+              goto 100
+            endif
+            call add_internal_entity(fx%forbidden_pe_list, str_vs(tempString), "")
+            ! Recursively expand entity, checking for errors.
+            ent => getEntityByName(fx%xds%peList, str_vs(tempString))
+            if (ent%external) then
+              call open_new_file(fb, str_vs(ent%systemId), iostat)
+              if (iostat/=0) then
+                call add_error(fx%error_stack, "Unable to access external parameter entity")
+                goto 100
+              endif
+              call parse_text_declaration(fb, fx%error_stack)
+              if (in_error(fx%error_stack)) goto 100
+              s_temp2 => get_all_characters(fb, fx%error_stack)
+              call pop_buffer_stack(fb)
+              if (in_error(fx%error_stack)) goto 100
+              s_ent => expand_pe_text(fx, s_temp2, fb)
+              deallocate(s_temp2)
+            else
+              s_ent => expand_pe_text(fx, &
+                vs_str(expand_entity_text(fx%xds%peList, str_vs(tempString))), fb)
+            endif
+            dummy = pop_entity_list(fx%forbidden_pe_list)
+            if (in_error(fx%error_stack)) then
+              goto 100
+            endif
+            allocate(s_temp2(size(s_temp)+size(s_ent)-j))
+            s_temp2(:i2-1) = s_temp(:i2-1)
+            s_temp2(i2:i2+size(s_ent)-1) = s_ent
+            deallocate(s_temp)
+            s_temp => s_temp2
+            s_temp2 => null()
+            i = i + j + 1
+            i2 = i2 + size(s_ent)
+            deallocate(s_ent)
+          else
+            s_temp(i2:i2+j) = s_in(i:i+j)
+            i = i + j + 1
+            i2 = i2 + j + 1
+            if (.not.fx%skippedExternal.or.fx%xds%standalone) then
+              call add_error(fx%error_stack, "Reference to undeclared parameter entity encountered in standalone document.")
+              goto 100
+            endif
+          endif
+        else
+          call add_error(fx%error_stack, "Illegal parameter entity reference")
+          goto 100
+        endif
+        deallocate(tempString)
+      else
+        s_temp(i2) = s_in(i)
+        i = i + 1
+        i2 = i2 + 1
+      endif
+    enddo
+
+    deallocate(s_out)
+    allocate(s_out(i2-1))
+    s_out = s_temp(:i2-1)
+100 deallocate(s_temp)
+    if (associated(s_ent))  deallocate(s_ent)
+    if (associated(tempString)) deallocate(tempString)
+
+  end function expand_pe_text
 
 end module m_sax_tokenizer
