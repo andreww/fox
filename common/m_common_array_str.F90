@@ -150,11 +150,15 @@ contains
   end function vs_str_alloc
 
   pure function vs_vs_alloc(s) result(vs)
-    character, dimension(:), intent(in) :: s
+    character, dimension(:), pointer :: s
     character, dimension(:), pointer :: vs
 
-    allocate(vs(size(s)))
-    vs = s
+    if (associated(s)) then
+      allocate(vs(size(s)))
+      vs = s
+    else
+      vs => null()
+    endif
   end function vs_vs_alloc
 
   pure function vs_s_concat(vs, s) result(vs2)

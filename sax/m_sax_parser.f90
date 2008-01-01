@@ -350,6 +350,8 @@ contains
     type(entity_t), pointer :: ent
     type(URI), pointer :: URIref, newURI
     integer, pointer :: temp_wf_stack(:)
+    integer :: section_depth
+    integer :: ignore_depth
 
     nullify(tempString)
     nullify(elem)
@@ -388,6 +390,8 @@ contains
       enddo
     endif
 
+    section_depth = 0
+    ignore_depth = 0
     processDTD = .true.
     iostat = 0
 
@@ -473,7 +477,7 @@ contains
         write(*,*) 'ST_BANG_TAG'
         select case (fx%tokenType)
         case (TOK_OPEN_SB)
-          nextState = ST_START_CDATA
+          nextState = ST_START_SECTION_DECLARATION
         case (TOK_OPEN_COMMENT)
           nextState = ST_START_COMMENT
         case (TOK_NAME)
@@ -559,7 +563,7 @@ contains
           if (fx%context==CTXT_IN_CONTENT) then
             nextState = ST_CHAR_IN_CONTENT
           elseif (fx%context==CTXT_IN_DTD) then
-            nextState = ST_INT_SUBSET
+            nextState = ST_SUBSET
           else
             nextState = ST_MISC
           endif
@@ -595,7 +599,7 @@ contains
           if (fx%context==CTXT_IN_CONTENT) then
             nextState = ST_CHAR_IN_CONTENT
           elseif (fx%context==CTXT_IN_DTD) then
-            nextState = ST_INT_SUBSET
+            nextState = ST_SUBSET
           else
             nextState = ST_MISC
           endif
@@ -629,16 +633,52 @@ contains
           endif
         end select
 
-      case (ST_START_CDATA)
-        write(*,*)'ST_START_CDATA'
+      case (ST_START_SECTION_DECLARATION)
+        write(*,*) "ST_START_SECTION_DECLARATION"
         select case (fx%tokenType)
-        case (TOK_START_CDATA)
-          if (fx%context/=CTXT_IN_CONTENT) then
-            call add_error(fx%error_stack, "CDATA section only allowed in text content.")
-            goto 100
+        case (TOK_NAME)
+          if (str_vs(fx%token)=="CDATA") then
+            if (fx%context/=CTXT_IN_CONTENT) then
+              call add_error(fx%error_stack, "CDATA section only allowed in text content.")
+              goto 100
+            else
+              nextState = ST_FINISH_CDATA_DECLARATION
+            endif
+          elseif (str_vs(fx%token)=="IGNORE") then
+            if (fx%context/=CTXT_IN_DTD.or.reading_main_file(fb)) then
+              call add_error(fx%error_stack, "IGNORE section only allowed in external subset.")
+              goto 100
+            else
+              section_depth = section_depth + 1
+              if (ignore_depth==0) ignore_depth = section_depth
+              processDTD = .false.
+              nextState = ST_FINISH_SECTION_DECLARATION
+            endif
+          elseif (str_vs(fx%token)=="INCLUDE") then
+            if (fx%context/=CTXT_IN_DTD.or.reading_main_file(fb)) then
+              call add_error(fx%error_stack, "INCLUDE section only allowed in external subset.")
+              goto 100
+            else
+              section_depth = section_depth + 1
+              nextState = ST_FINISH_SECTION_DECLARATION
+            endif
           else
-            nextState = ST_CDATA_CONTENTS
+            call add_error(fx%error_stack, "Unknown keyword found in marked section declaration.")
           endif
+        end select
+
+      case (ST_FINISH_CDATA_DECLARATION)
+        write(*,*) "FINISH_CDATA_DECLARATION"
+        select case (fx%tokenType)
+        case (TOK_OPEN_SB)
+          nextState = ST_CDATA_CONTENTS
+        end select
+
+      case (ST_FINISH_SECTION_DECLARATION)
+        write(*,*) "FINISH_CDATA_DECLARATION"
+        select case (fx%tokenType)
+        case (TOK_OPEN_SB)
+          nextState = ST_SUBSET
         end select
 
       case (ST_CDATA_CONTENTS)
@@ -668,7 +708,7 @@ contains
         endif
 
         select case(fx%tokenType)
-        case (TOK_CDATA_END)
+        case (TOK_SECTION_END)
           if (present(startCdata_handler)) then
             call startCdata_handler
             if (fx%state==ST_STOP) goto 100
@@ -1058,7 +1098,7 @@ contains
             call startDTD_handler(str_vs(fx%root_element), "", "")
             if (fx%state==ST_STOP) goto 100
           endif
-          nextState = ST_INT_SUBSET
+          nextState = ST_SUBSET
         case (TOK_END_TAG)
           if (present(startDTD_handler)) then
             call startDTD_handler(str_vs(fx%root_element), "", "")
@@ -1112,7 +1152,7 @@ contains
           endif
           if (associated(fx%systemId)) deallocate(fx%systemId)
           if (associated(fx%publicId)) deallocate(fx%publicId)
-          nextState = ST_INT_SUBSET
+          nextState = ST_SUBSET
         case (TOK_END_TAG)
           if (associated(fx%systemId)) then
             URIref => parseURI(str_vs(fx%systemId))
@@ -1148,11 +1188,24 @@ contains
           goto 100
         end select
 
-      case (ST_INT_SUBSET)
-        write(*,*) 'ST_INT_SUBSET'
+      case (ST_SUBSET)
+        write(*,*) "ST_SUBSET"
         select case (fx%tokenType)
         case (TOK_CLOSE_SB)
           nextState = ST_CLOSE_DTD
+        case (TOK_SECTION_END)
+          if (section_depth>0) then
+            if (ignore_depth==section_depth) then
+              processDTD = .true. ! FIXME
+              ignore_depth = 0
+            endif
+            section_depth = section_depth - 1
+            nextState = ST_SUBSET
+          else
+            call add_error(fx%error_stack, "Trying to close a conditional section which is not open")
+            goto 100
+          endif
+          nextState = ST_SUBSET
         case (TOK_ENTITY)
           nextState = ST_START_PE
         case (TOK_PI_TAG)
@@ -1188,8 +1241,9 @@ contains
                   call skippedEntity_handler('%'//str_vs(fx%token))
                   if (fx%state==ST_STOP) goto 100
                 endif
-                ! then are we standalone?
-                ! then look at XML section 5.1
+                ! having skipped a PE, we must now not process
+                ! declarations any further (unless we are declared standalone)
+                ! (XML section 5.1)
                 fx%skippedExternal = .true.
                 processDTD = fx%xds%standalone
               else
@@ -1230,7 +1284,7 @@ contains
               goto 100
             endif
           endif
-          nextState = ST_INT_SUBSET
+          nextState = ST_SUBSET
         end select
 
       case (ST_DTD_ATTLIST)
@@ -1287,7 +1341,7 @@ contains
             if (present(attributeDecl_handler)) &
               call report_declarations(elem, attributeDecl_handler)
           endif
-          nextState = ST_INT_SUBSET
+          nextState = ST_SUBSET
         end select
 
       case (ST_DTD_ATTLIST_END)
@@ -1300,7 +1354,7 @@ contains
               if (fx%state==ST_STOP) goto 100
             endif
           endif
-          nextState = ST_INT_SUBSET
+          nextState = ST_SUBSET
         end select
 
       case (ST_DTD_ELEMENT)
@@ -1357,7 +1411,7 @@ contains
             endif
           endif
           deallocate(fx%name)
-          nextState = ST_INT_SUBSET
+          nextState = ST_SUBSET
         end select
 
       case (ST_DTD_ENTITY)
@@ -1466,7 +1520,7 @@ contains
           if (associated(fx%systemId)) deallocate(fx%systemId)
           if (associated(fx%publicId)) deallocate(fx%publicId)
           if (associated(fx%Ndata)) deallocate(fx%Ndata)
-          nextState = ST_INT_SUBSET
+          nextState = ST_SUBSET
         case (TOK_NAME)
           if (str_vs(fx%token)=='NDATA') then
             if (pe) then
@@ -1518,7 +1572,7 @@ contains
           if (associated(fx%systemId)) deallocate(fx%systemId)
           if (associated(fx%publicId)) deallocate(fx%publicId)
           if (associated(fx%Ndata)) deallocate(fx%Ndata)
-          nextState = ST_INT_SUBSET
+          nextState = ST_SUBSET
         case default
           call add_error(fx%error_stack, "Unexpected token at end of ENTITY")
           goto 100
@@ -1610,7 +1664,7 @@ contains
           endif
           deallocate(fx%name)
           deallocate(fx%publicId)
-          nextState = ST_INT_SUBSET
+          nextState = ST_SUBSET
         case (TOK_CHAR)
           fx%systemId => fx%token
           fx%token => null()
@@ -1649,16 +1703,20 @@ contains
           if (associated(fx%publicId)) deallocate(fx%publicId)
           deallocate(fx%systemId)
           deallocate(fx%name)
-          nextState = ST_INT_SUBSET
+          nextState = ST_SUBSET
         case default
           call add_error(fx%error_stack, "Unexpected token in NOTATION")
           goto 100
         end select
 
       case (ST_CLOSE_DTD)
-        write(*,*) 'ST_CLOSE_DTD'
+        write(*,*) "ST_CLOSE_DTD"
         select case (fx%tokenType)
         case (TOK_END_TAG)
+          if (section_depth/=0) then
+            call add_error(fx%error_stack, "Cannot end DTD while conditional section is still open")
+            goto 100
+          endif
           if (present(endDTD_handler)) &
             call endDTD_handler
           ! Check that all notations used have been declared:
@@ -1862,7 +1920,7 @@ contains
                   systemId=expressURI(URIref))
               endif
               call destroyURI(URIref)
-              call destroyURI(URIref)
+              call destroyURI(newURI)
             endif
           endif
           ! else we ignore it

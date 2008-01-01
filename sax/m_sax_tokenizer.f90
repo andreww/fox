@@ -28,7 +28,7 @@ contains
 
     character :: c, q
     integer :: xv, phrase
-    logical :: firstChar, ws_discard
+    logical :: firstChar, ws_discard, ws_discarded
     character, pointer :: tempString(:)
 
     xv = fx%xds%xml_version
@@ -197,24 +197,45 @@ contains
           endif
         endif
 
-      case (ST_START_CDATA)
-        ! grab until [
-        if (firstChar) fx%token => vs_str_alloc("")
-        if (c/="[") then
-          if (size(fx%token)>5) then
-            call add_error(fx%error_stack, &
-              "Expecting CDATA[ after <![")
+      case (ST_START_SECTION_DECLARATION)
+        if (firstChar) then
+          ws_discard = .true.
+          ws_discarded = .false.
+        endif
+        if (ws_discard) then
+          if (verify(c, XML_WHITESPACE)==0) then
+            ws_discarded = .true.
           else
+            fx%token => vs_str_alloc(c)
+            ws_discard = .false.
+          endif
+        else
+          if (verify(c, XML_WHITESPACE//"[")>0) then
             tempString => fx%token
             fx%token => vs_str_alloc(str_vs(tempString)//c)
             deallocate(tempString)
+          elseif (str_vs(fx%token)=="CDATA") then
+            if (ws_discarded.or.c/="[") then
+              call add_error(fx%error_stack, &
+                "Whitespace not allowed around CDATA in section declaration")
+            else
+              fx%tokenType = TOK_NAME
+              fx%nextTokenType = TOK_OPEN_SB
+            endif
+          else
+            fx%tokenType = TOK_NAME
+            if (c=="[") fx%nextTokenType = TOK_OPEN_SB
           endif
-        elseif (str_vs(fx%token)//"["=="CDATA[") then
-          fx%tokenType = TOK_START_CDATA
-          deallocate(fx%token)
-        else
-          call add_error(fx%error_stack, &
-            "Expecting CDATA[ after <![")
+        endif
+
+      case (ST_FINISH_SECTION_DECLARATION)
+        if (verify(c, XML_WHITESPACE)>0) then
+          if (c/="[") then
+            call add_error(fx%error_stack, &
+              "Unexpected token found, expecting [")
+          else
+            fx%tokenType = TOK_OPEN_SB
+          endif
         endif
 
       case (ST_CDATA_CONTENTS)
@@ -239,7 +260,7 @@ contains
         case (2)
           if (c==">") then
             fx%tokenType = TOK_CHAR
-            fx%nextTokenType = TOK_CDATA_END
+            fx%nextTokenType = TOK_SECTION_END
           elseif (c=="]") then
             tempString => fx%token
             fx%token => vs_str_alloc(str_vs(tempString)//"]"//c)
@@ -428,20 +449,23 @@ contains
           endif
         endif
 
-      case (ST_IN_DTD, ST_DTD_NAME, ST_DTD_DECL, ST_INT_SUBSET, ST_CLOSE_DTD)
+      case (ST_IN_DTD, ST_DTD_NAME, ST_DTD_DECL, ST_SUBSET, ST_CLOSE_DTD)
         if (firstChar) ws_discard = .true.
         if (ws_discard) then
           if (verify(c, XML_WHITESPACE)>0) then
             if (c=="[") then
               fx%tokenType = TOK_OPEN_SB
             elseif (c=="]") then
-              fx%tokenType = TOK_CLOSE_SB
+              phrase = 1
+              q = c
+              ws_discard = .false.
             elseif (c==">") then
               fx%tokenType = TOK_END_TAG
             elseif (c=="%") then
               fx%tokenType = TOK_ENTITY
             elseif (c=="<") then
               phrase = 1
+              q = c
               ws_discard = .false.
             else
               fx%token => vs_str_alloc(c)
@@ -449,12 +473,27 @@ contains
             endif
           endif
         elseif (phrase==1) then
-          if (c=="?") then
-            fx%tokenType = TOK_PI_TAG
-          elseif (c=="!") then
-            fx%tokenType = TOK_BANG_TAG
+          if (q=="<") then
+            if (c=="?") then
+              fx%tokenType = TOK_PI_TAG
+            elseif (c=="!") then
+              fx%tokenType = TOK_BANG_TAG
+            else
+              call add_error(fx%error_stack, "Unexpected character, expecting ! or ?")
+            endif
+          elseif (q=="]") then
+            if (c=="]") then
+              phrase = 2
+            else
+              fx%tokenType = TOK_CLOSE_SB
+              call push_chars(fb, c)
+            endif
+          endif
+        elseif (phrase==2) then
+          if (c==">") then
+            fx%tokenType = TOK_SECTION_END
           else
-            call add_error(fx%error_stack, "Unexpected character, expecting ! or ?")
+            call add_error(fx%error_stack, "Unexpected character, expecting >")
           endif
         else
           if (verify(c, XML_WHITESPACE)>0) then
