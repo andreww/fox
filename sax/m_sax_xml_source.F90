@@ -59,7 +59,6 @@ contains
       return
     endif
     if (.not.isLegalChar(c, f%xml_version)) then
-      print*, "Illegal char! ", iachar(c)
       call add_error(es, "Illegal character found at " &
         //str_vs(f%filename)//":"//f%line//":"//f%col)
       return
@@ -95,7 +94,7 @@ contains
       f%col = f%col + 1
     endif
 
- end function get_char_from_file
+  end function get_char_from_file
 
   function read_single_char(f, iostat) result(c)
     type(xml_source_t), intent(inout) :: f
@@ -119,6 +118,15 @@ contains
     endif
   end function read_single_char
 
+  subroutine rewind_source(f)
+    type(xml_source_t), intent(inout) :: f
+
+    if (f%lun==-1) then
+      f%input_string%pos = 1
+    else
+      rewind(f%lun)
+    endif
+  end subroutine rewind_source
 
   subroutine push_file_chars(f, s)
     type(xml_source_t), intent(inout) :: f
@@ -163,7 +171,6 @@ contains
     ! Default encoding:
     f%encoding => vs_str_alloc("utf-8")
 
-
     f%startChar = 1
 
     parse_state = XD_0
@@ -171,7 +178,12 @@ contains
     ch => null()
     do
       c = get_char_from_file(f, eof, es)
-      if (eof.or.in_error(es)) return
+      if (eof) then
+        call rewind_source(f)
+        return
+      elseif (in_error(es)) then
+        return
+      endif
       f%startChar = f%startChar + 1
 
       select case (parse_state)
@@ -180,7 +192,7 @@ contains
         if (c=="<") then
           parse_state = XD_START
         else
-          call push_file_chars(f, c)
+          call rewind_source(f)
           exit
         endif
 
@@ -189,7 +201,7 @@ contains
           parse_state = XD_TARGET
           ch => vs_str_alloc("")
         else
-          call push_file_chars(f, "<"//c)
+          call rewind_source(f)
           exit
         endif
 
@@ -203,7 +215,7 @@ contains
           deallocate(ch)
           parse_state = XD_MISC
         else
-          call push_file_chars(f, "<?"//str_vs(ch)//c)
+          call rewind_source(f)
           deallocate(ch)
           exit
         endif

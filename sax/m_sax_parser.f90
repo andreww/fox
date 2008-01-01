@@ -35,7 +35,7 @@ module m_sax_parser
 
   use m_sax_reader, only: file_buffer_t, pop_buffer_stack, open_new_string, &
     open_new_file, parse_xml_declaration, parse_text_declaration, &
-    reading_main_file
+    reading_main_file, reading_first_entity
   use m_sax_tokenizer, only: sax_tokenize, normalize_text
   use m_sax_types ! everything, really
 
@@ -344,16 +344,17 @@ contains
     logical :: validCheck, startInCharData_, processDTD, pe, nameOK, eof
     logical :: namespaces_, namespace_prefixes_, xmlns_uris_
     integer :: i, iostat, temp_i, nextState
-    character, pointer :: tempString(:)
+    character, pointer :: tempString(:), extSubsetSystemId(:)
     character :: dummy
     type(element_t), pointer :: elem
     type(entity_t), pointer :: ent
     type(URI), pointer :: URIref, newURI
     integer, pointer :: temp_wf_stack(:)
     integer :: section_depth
+    logical :: inExtSubset
 
-    nullify(tempString)
-    nullify(elem)
+    tempString => null()
+    elem => null()
 
     if (present(namespaces)) then
       namespaces_ = namespaces
@@ -390,6 +391,8 @@ contains
     endif
 
     section_depth = 0
+    inExtSubset = .false.
+    extSubsetSystemId => null()
     processDTD = .true.
     iostat = 0
 
@@ -411,12 +414,23 @@ contains
     do
 
       call sax_tokenize(fx, fb, eof)
+      print*, "tokenize error", eof, in_error(fx%error_stack)
       if (in_error(fx%error_stack)) then
         ! Any error, we want to quit sax_tokenizer
         call add_error(fx%error_stack, 'Error getting token')
         goto 100
       elseif (eof.and..not.reading_main_file(fb)) then
-        if (fx%context==CTXT_IN_DTD) then
+        if (inExtSubset.and.reading_first_entity(fb)) then
+          if (section_depth>0) then
+            call add_error(fx%error_stack, "Unclosed conditional sections in external subset")
+            goto 100
+          endif
+          deallocate(extSubsetSystemId)
+          call endDTDchecks
+          if (in_error(fx%error_stack)) goto 100
+          fx%state = ST_MISC
+          fx%context = CTXT_BEFORE_CONTENT
+        elseif (fx%context==CTXT_IN_DTD) then
           ! that's just the end of a parameter entity expansion.
           ! pop the parse stack, and carry on ..
           if (present(endEntity_handler)) then
@@ -927,7 +941,6 @@ contains
           if (validCheck) &
             elem => get_element(fx%xds%element_list, get_top_elstack(fx%elstack))
           ! tell tokenizer to expand it
-          print*, "checking forbidden list"
           if (existing_entity(fx%forbidden_ge_list, str_vs(fx%token))) then
             call add_error(fx%error_stack, 'Recursive entity reference')
 	    goto 100
@@ -978,14 +991,12 @@ contains
             endif
           elseif (existing_entity(fx%xds%entityList, str_vs(fx%token))) then
             ent => getEntityByName(fx%xds%entityList, str_vs(fx%token))
-            print*, "is existing entity ", ent%external, str_vs(ent%systemId)
             if (str_vs(ent%notation)/="") then
               call add_error(fx%error_stack, &
                 'Cannot reference unparsed entity in content')
               goto 100
             elseif (ent%external) then
               call open_new_file(fb, str_vs(ent%systemId), iostat)
-              print*, "new file opened"
               if (iostat/=0) then
                 if (present(skippedEntity_handler)) then
                   call skippedEntity_handler(str_vs(fx%token))
@@ -1021,9 +1032,7 @@ contains
               endif
               if (present(startEntity_handler)) &
                 call startEntity_handler(str_vs(fx%token))
-              print*, "adding to forbidden list"
               call add_internal_entity(fx%forbidden_ge_list, str_vs(fx%token), "")
-              print*, "adding to buffer stack", expand_entity(fx%xds%entityList, str_vs(fx%token))
               call open_new_string(fb, expand_entity(fx%xds%entityList, str_vs(fx%token)))
               temp_wf_stack => fx%wf_stack
               allocate(fx%wf_stack(size(temp_wf_stack)+1))
@@ -1044,7 +1053,6 @@ contains
             endif
           endif
           nextState = ST_CHAR_IN_CONTENT ! FIXME
-          print*, "ok?"
         end select
 
       case (ST_CLOSING_TAG)
@@ -1155,33 +1163,23 @@ contains
         write(*,*) 'ST_DTD_DECL'
         select case (fx%tokenType)
         case (TOK_OPEN_SB)
-          if (associated(fx%publicId).or.associated(fx%systemId)) &
-            fx%skippedExternal = .true.
+          if (associated(fx%systemId)) then
+            extSubsetSystemId => fx%systemId
+            fx%systemId => null()
+          endif
           if (present(startDTD_handler)) then
             if (associated(fx%publicId)) then
-              call startDTD_handler(str_vs(fx%root_element), publicId=str_vs(fx%publicId), systemId=str_vs(fx%systemId))
+              call startDTD_handler(str_vs(fx%root_element), publicId=str_vs(fx%publicId), systemId=str_vs(extSubsetSystemId))
             elseif (associated(fx%systemId)) then
-              call startDTD_handler(str_vs(fx%root_element), publicId="", systemId=str_vs(fx%systemId))
+              call startDTD_handler(str_vs(fx%root_element), publicId="", systemId=str_vs(extSubsetSystemId))
             else
               call startDTD_handler(str_vs(fx%root_element), "", "")
             endif
             if (fx%state==ST_STOP) goto 100
           endif
-          if (associated(fx%systemId)) deallocate(fx%systemId)
           if (associated(fx%publicId)) deallocate(fx%publicId)
           nextState = ST_SUBSET
         case (TOK_END_TAG)
-          if (associated(fx%systemId)) then
-            URIref => parseURI(str_vs(fx%systemId))
-            if (.not.associated(URIref)) then
-              call add_error(fx%error_stack, "Invalid URI specified for DTD SYSTEM")
-              goto 100
-            endif
-            ! if we can, then go & get external subset ...
-            ! else
-            fx%skippedExternal = .true.
-            ! endif
-          endif
           if (present(startDTD_handler)) then
             if (associated(fx%publicId)) then
               call startDTD_handler(str_vs(fx%root_element), publicId=str_vs(fx%publicId), systemId=str_vs(fx%systemId))
@@ -1193,13 +1191,27 @@ contains
             endif
             if (fx%state==ST_STOP) goto 100
           endif
-          if (associated(fx%systemId)) deallocate(fx%systemId)
-          if (associated(fx%publicId)) deallocate(fx%publicId)
+          if (associated(fx%systemId)) then
+            URIref => parseURI(str_vs(fx%systemId))
+            if (.not.associated(URIref)) then
+              call add_error(fx%error_stack, "Invalid URI specified for DTD SYSTEM")
+              goto 100
+            endif
+            call open_new_file(fb, str_vs(fx%systemId), iostat)
+            if (iostat==0) then
+              call parse_text_declaration(fb, fx%error_stack)
+              if (in_error(fx%error_stack)) goto 100
+              inExtSubset = .true.
+              nextState = ST_SUBSET
+              cycle
+            endif
+          endif
           if (present(endDTD_handler)) &
             call endDTD_handler
-
           fx%context = CTXT_BEFORE_CONTENT
           nextState = ST_MISC
+          if (associated(fx%systemId)) deallocate(fx%systemId)
+          if (associated(fx%publicId)) deallocate(fx%publicId)
         case default
           call add_error(fx%error_stack, "Unexpected token in DTD")
           goto 100
@@ -1730,19 +1742,23 @@ contains
             call add_error(fx%error_stack, "Cannot end DTD while conditional section is still open")
             goto 100
           endif
-          if (present(endDTD_handler)) &
-            call endDTD_handler
-          ! Check that all notations used have been declared:
-          if (validCheck) then
-            do i = 1, size(fx%xds%entityList)
-              ent => getEntityByIndex(fx%xds%entityList, i)
-              if (str_vs(ent%notation)/="" &
-                .and..not.notation_exists(fx%nlist, str_vs(ent%notation))) then
-                call add_error(fx%error_stack, "Attempt to use undeclared notation")
-                goto 100
-              endif
-            enddo
+          if (associated(extSubsetSystemId)) then
+            URIref => parseURI(str_vs(extSubsetSystemId))
+            if (.not.associated(URIref)) then
+              call add_error(fx%error_stack, "Invalid URI specified for DTD SYSTEM")
+              goto 100
+            endif
+            call open_new_file(fb, str_vs(extSubsetSystemId), iostat)
+            if (iostat==0) then
+              call parse_text_declaration(fb, fx%error_stack)
+              if (in_error(fx%error_stack)) goto 100
+              inExtSubset = .true.
+              nextState = ST_SUBSET
+              cycle
+            endif
           endif
+          call endDTDchecks
+          if (in_error(fx%error_stack)) goto 100
           nextState = ST_MISC
           fx%context = CTXT_BEFORE_CONTENT
         end select
@@ -1761,11 +1777,16 @@ contains
     end do
 
 100 if (associated(tempString)) deallocate(tempString)
+    if (associated(extSubsetSystemId)) deallocate(extSubsetSystemId)
 
     if (.not.eof) then
       ! We have encountered an error before the end of a file
       if (.not.reading_main_file(fb)) then !we are parsing an entity
-        call add_error(fx%error_stack, "Error encountered processing entity.")
+        if (inExtSubset) then
+          call add_error(fx%error_stack, "Error encountered processing external subset.")
+        else
+          call add_error(fx%error_stack, "Error encountered processing entity.")
+        endif
         call sax_error(fx, error_handler)
       else
         call sax_error(fx, error_handler)
@@ -2054,6 +2075,22 @@ contains
       !   We never care about this at the SAX level.
       !endif
     end subroutine checkXMLAttributes
+
+    subroutine endDTDchecks
+      if (present(endDTD_handler)) &
+        call endDTD_handler
+      ! Check that all notations used have been declared:
+      if (validCheck) then
+        do i = 1, size(fx%xds%entityList)
+          ent => getEntityByIndex(fx%xds%entityList, i)
+          if (str_vs(ent%notation)/="" &
+            .and..not.notation_exists(fx%nlist, str_vs(ent%notation))) then
+            call add_error(fx%error_stack, "Attempt to use undeclared notation")
+            exit
+          endif
+        enddo
+      endif
+    end subroutine endDTDchecks
   end subroutine sax_parse
 
 

@@ -1,6 +1,6 @@
 module m_sax_reader
 
-  use m_common_array_str, only: vs_str_alloc, vs_vs_alloc
+  use m_common_array_str, only: str_vs, vs_str_alloc, vs_vs_alloc
   use m_common_error,  only: error_stack, FoX_error, in_error, add_error
   use m_common_format, only: operator(//)
   use m_common_io, only: setup_io, get_unit, io_err
@@ -40,6 +40,7 @@ module m_sax_reader
   public :: parse_text_declaration
 
   public :: reading_main_file
+  public :: reading_first_entity
 
 contains
 
@@ -223,7 +224,7 @@ contains
       call destroyURI(URIref)
     endif
 
-  end subroutine open_new_string
+  end subroutine open_new_string 
 
   subroutine pop_buffer_stack(fb)
     type(file_buffer_t), intent(inout) :: fb
@@ -275,7 +276,7 @@ contains
       eof = .false.
       string = f%next_chars(1)
       if (size(f%next_chars)>1) then
-        temp => vs_vs_alloc(f%next_chars(2:))
+        temp => vs_str_alloc(str_vs(f%next_chars(2:)))
       else
         temp => vs_str_alloc("")
       endif
@@ -343,7 +344,7 @@ contains
     logical :: eof
 
     call parse_declaration(fb%f(1), eof, es)
-    if (eof.or.in_error(es)) &
+    if (in_error(es)) &
       call add_error(es, "Error parsing text declaration")
 
   end subroutine parse_text_declaration
@@ -355,5 +356,12 @@ contains
 
     p = (size(fb%f)==1)
   end function reading_main_file
+
+ function reading_first_entity(fb) result(p)
+    type(file_buffer_t), intent(in) :: fb
+    logical :: p
+
+    p = (size(fb%f)==2)
+  end function reading_first_entity
 
 end module m_sax_reader
