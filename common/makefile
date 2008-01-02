@@ -8,7 +8,7 @@ OBJFILES=m_common_attrs.$(OBJEXT) m_common_buffer.$(OBJEXT) \
          m_common_namecheck.$(OBJEXT) m_common_entities.$(OBJEXT) \
          m_common_notations.$(OBJEXT) m_common_element.$(OBJEXT) \
          m_common_struct.$(OBJEXT) m_common_entity_expand.$(OBJEXT) \
-         m_common_parse_input.$(OBJEXT) m_common_string.$(OBJEXT)
+         m_common_parse_input.$(OBJEXT)
 #
 LIBRARY=libFoX_common.$(LIBEXT)
 INCFLAGS=$(MOD_PREFIX)../objs/finclude
@@ -44,7 +44,6 @@ clean:
 FoX_common.$(OBJEXT): m_common_attrs.$(OBJEXT)
 m_common_attrs.$(OBJEXT): m_common_element.$(OBJEXT) m_common_error.$(OBJEXT)
 m_common_buffer.$(OBJEXT): m_common_charset.$(OBJEXT) m_common_error.$(OBJEXT)
-m_common_charset.$(OBJEXT): m_common_string.$(OBJEXT)
 m_common_element.$(OBJEXT): m_common_charset.$(OBJEXT) m_common_error.$(OBJEXT)
 m_common_elstack.$(OBJEXT): m_common_error.$(OBJEXT)
 m_common_entities.$(OBJEXT): m_common_charset.$(OBJEXT) m_common_error.$(OBJEXT)

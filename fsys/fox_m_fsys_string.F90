@@ -1,4 +1,4 @@
-module m_common_string
+module fox_m_fsys_string
 
 #ifndef DUMMYLIB
   ! Assorted generally useful string manipulation functions
@@ -32,4 +32,4 @@ contains
   end function toLower
 
 #endif
-end module m_common_string
+end module fox_m_fsys_string

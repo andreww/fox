@@ -4,7 +4,7 @@ module m_common_charset
   ! Written to use ASCII charset only. Full UNICODE would
   ! take much more work and need a proper unicode library.
 
-  use m_common_string, only: toLower
+  use fox_m_fsys_string, only: toLower
 
   implicit none
   private
