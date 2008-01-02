@@ -348,9 +348,7 @@ contains
     type(entity_t), pointer :: ent
     type(URI), pointer :: URIref, newURI
     integer, pointer :: wf_stack(:), temp_wf_stack(:)
-    integer :: section_depth
     logical :: inExtSubset
-    logical :: markupDecl
 
     tempString => null()
     elem => null()
@@ -391,10 +389,9 @@ contains
 
     allocate(wf_stack(1))
     wf_stack(1) = 0
-    section_depth = 0
+    fx%inIntSubset = .false.
     inExtSubset = .false.
     extSubsetSystemId => null()
-    markupDecl = .false.
     processDTD = .true.
     iostat = 0
 
@@ -414,7 +411,7 @@ contains
     endif
 
     do
-
+      print*, "wf ... ", wf_stack(1)
       call sax_tokenize(fx, fb, eof)
       print*, "tokenize error", eof, in_error(fx%error_stack), &
         eof.and..not.reading_main_file(fb), fx%context==CTXT_IN_CONTENT
@@ -424,7 +421,7 @@ contains
         goto 100
       elseif (eof.and..not.reading_main_file(fb)) then
         if (inExtSubset.and.reading_first_entity(fb)) then
-          if (section_depth>0) then
+          if (wf_stack(1)>0) then
             call add_error(fx%error_stack, "Unclosed conditional sections in external subset")
             goto 100
           elseif (validCheck.and.fx%state/=ST_SUBSET) then
@@ -439,13 +436,7 @@ contains
           fx%state = ST_MISC
           fx%context = CTXT_BEFORE_CONTENT
         elseif (fx%context==CTXT_IN_DTD) then
-          ! that's just the end of a parameter entity expansion.
-          ! pop the parse stack, and carry on ..
-       !   if (fx%state not permissible) then
-       !     call add_error(fx%error_stack, "Markup not terminated in parameter entity")
-       !     goto 100
-       !   endif
-          if (markupDecl) then
+          if (wf_stack(1)/=0) then
             call add_error(fx%error_stack, &
               "Markup not terminated in parameter entity")
             goto 100
@@ -471,11 +462,12 @@ contains
             call add_error(fx%error_stack, 'Ill-formed entity')
             goto 100
           endif
-          temp_wf_stack => wf_stack
-          allocate(wf_stack(size(temp_wf_stack)-1))
-          wf_stack = temp_wf_stack(2:size(temp_wf_stack))
-          deallocate(temp_wf_stack)
         endif
+        print*, "shrinking wf_stack"
+        temp_wf_stack => wf_stack
+        allocate(wf_stack(size(temp_wf_stack)-1))
+        wf_stack = temp_wf_stack(2:size(temp_wf_stack))
+        deallocate(temp_wf_stack)
         call pop_buffer_stack(fb)
         cycle
       endif
@@ -551,19 +543,17 @@ contains
               goto 100
             endif
           endif
+          wf_stack(1) = wf_stack(1) + 1
         end select
 
       case (ST_PI_CONTENTS)
         write(*,*)'ST_PI_CONTENTS'
         if (validCheck) then
-          if (fx%context==CTXT_IN_DTD &
-            .and..not.reading_main_file(fb) &
-            .and..not.markupDecl) then
+          if (fx%context==CTXT_IN_DTD.and.wf_stack(1)==0) then
             call add_error(fx%error_stack, &
               "PI not balanced in parameter entity")
             goto 100
           endif
-          markupDecl = .false.
           if (len(fx%elstack)>0) then
             elem => &
               get_element(fx%xds%element_list, get_top_elstack(fx%elstack))
@@ -574,7 +564,8 @@ contains
             endif
           endif
         endif
-
+        wf_stack(1) = wf_stack(1) - 1
+          
         select case(fx%tokenType)
         case (TOK_CHAR)
           if (present(processingInstruction_handler)) then
@@ -612,25 +603,23 @@ contains
         end select
 
       case (ST_START_COMMENT)
-        !write(*,*)'ST_START_COMMENT'
+        write(*,*)'ST_START_COMMENT'
         select case (fx%tokenType)
         case (TOK_CHAR)
           fx%name => fx%token
           nullify(fx%token)
           nextState = ST_COMMENT_END
+          wf_stack(1) = wf_stack(1) + 1
         end select
 
       case (ST_COMMENT_END)
         write(*,*)'ST_COMMENT_END'
         if (validCheck) then
-          if (fx%context==CTXT_IN_DTD &
-            .and..not.reading_main_file(fb) &
-            .and..not.markupDecl) then
+          if (wf_stack(1)==0) then
             call add_error(fx%error_stack, &
-              "Comment not balanced in parameter entity")
+              "Comment not balanced in entity")
             goto 100
           endif
-          markupDecl = .false.
           if (len(fx%elstack)>0) then
             elem => &
               get_element(fx%xds%element_list, get_top_elstack(fx%elstack))
@@ -641,17 +630,10 @@ contains
             endif
           endif
         endif
+        wf_stack(1) = wf_stack(1) - 1
 
         select case (fx%tokenType)
         case (TOK_COMMENT_END)
-          if (fx%context==CTXT_IN_DTD &
-            .and..not.reading_main_file(fb) &
-            .and..not.markupDecl) then
-            call add_error(fx%error_stack, &
-              "Comment not balanced in parameter entity")
-            goto 100
-          endif
-          markupDecl = .false.
           if (present(comment_handler)) then
             call comment_handler(str_vs(fx%name))
             if (fx%state==ST_STOP) goto 100
@@ -710,7 +692,6 @@ contains
               call add_error(fx%error_stack, "IGNORE section only allowed in external subset.")
               goto 100
             else
-              section_depth = section_depth + 1
               fx%context = CTXT_IGNORE
               nextState = ST_FINISH_SECTION_DECLARATION
             endif
@@ -719,7 +700,6 @@ contains
               call add_error(fx%error_stack, "INCLUDE section only allowed in external subset.")
               goto 100
             else
-              section_depth = section_depth + 1
               nextState = ST_FINISH_SECTION_DECLARATION
             endif
           else
@@ -731,6 +711,7 @@ contains
         write(*,*) "ST_FINISH_CDATA_DECLARATION"
         select case (fx%tokenType)
         case (TOK_OPEN_SB)
+          wf_stack(1) = wf_stack(1) + 1
           nextState = ST_CDATA_CONTENTS
         end select
 
@@ -749,12 +730,11 @@ contains
         write(*,*) "ST_IN_IGNORE_SECTION"
         select case (fx%tokenType)
         case (TOK_SECTION_START)
-          section_depth = section_depth + 1
+          wf_stack(1) = wf_stack(1) + 1
           nextState = ST_IN_IGNORE_SECTION
         case (TOK_SECTION_END)
-          section_depth = section_depth - 1
-          if (section_depth==0) then
-            markupDecl = .false.
+          wf_stack(1) = wf_stack(1) - 1
+          if (wf_stack(1)==0) then
             fx%context = CTXT_IN_DTD
             nextState = ST_SUBSET
           else
@@ -1058,10 +1038,10 @@ contains
                   if (fx%state==ST_STOP) goto 100
                 endif
                 call add_internal_entity(fx%forbidden_ge_list, str_vs(fx%token), "")
+                print*, "growing wf_stack 1"
                 temp_wf_stack => wf_stack
                 allocate(wf_stack(size(temp_wf_stack)+1))
-                wf_stack(2:size(wf_stack)) = temp_wf_stack
-                wf_stack(1) = 0
+                wf_stack = (/0, temp_wf_stack/)
                 deallocate(temp_wf_stack)
                 call parse_text_declaration(fb, fx%error_stack)
                 if (in_error(fx%error_stack)) goto 100
@@ -1084,10 +1064,10 @@ contains
                 call startEntity_handler(str_vs(fx%token))
               call add_internal_entity(fx%forbidden_ge_list, str_vs(fx%token), "")
               call open_new_string(fb, expand_entity(fx%xds%entityList, str_vs(fx%token)))
+              print*, "growing wf_stack 2"
               temp_wf_stack => wf_stack
               allocate(wf_stack(size(temp_wf_stack)+1))
-              wf_stack(2:size(wf_stack)) = temp_wf_stack
-              wf_stack(1) = 0
+              wf_stack = (/0, temp_wf_stack/)
               deallocate(temp_wf_stack)
             endif
           else
@@ -1173,6 +1153,7 @@ contains
             call startDTD_handler(str_vs(fx%root_element), "", "")
             if (fx%state==ST_STOP) goto 100
           endif
+          wf_stack = wf_stack + 1
           nextState = ST_SUBSET
         case (TOK_END_TAG)
           if (present(startDTD_handler)) then
@@ -1228,6 +1209,7 @@ contains
             if (fx%state==ST_STOP) goto 100
           endif
           if (associated(fx%publicId)) deallocate(fx%publicId)
+          fx%inIntSubset = .true.
           nextState = ST_SUBSET
         case (TOK_END_TAG)
           if (present(startDTD_handler)) then
@@ -1248,6 +1230,11 @@ contains
               goto 100
             endif
             call open_new_file(fb, str_vs(fx%systemId), iostat)
+            print*, "growing wf_stack 6"
+            temp_wf_stack => wf_stack
+            allocate(wf_stack(size(temp_wf_stack)+1))
+            wf_stack = (/0, temp_wf_stack/)
+            deallocate(temp_wf_stack)
             if (iostat==0) then
               call parse_text_declaration(fb, fx%error_stack)
               if (in_error(fx%error_stack)) goto 100
@@ -1276,24 +1263,24 @@ contains
         write(*,*) "ST_SUBSET"
         select case (fx%tokenType)
         case (TOK_CLOSE_SB)
+          fx%inIntSubset = .false.
           nextState = ST_CLOSE_DTD
+          wf_stack(1) = wf_stack(1) - 1
         case (TOK_SECTION_END)
-          if (section_depth>0) then
-            section_depth = section_depth - 1
-            nextState = ST_SUBSET
-          else
-            call add_error(fx%error_stack, "Trying to close a conditional section which is not open")
+          if (wf_stack(1)==0) then
+            call add_error(fx%error_stack, "Unbalanced conditional section in parameter entity")
             goto 100
-          endif
+          endif 
+          wf_stack(1) = wf_stack(1) - 1
           nextState = ST_SUBSET
         case (TOK_ENTITY)
-          markupDecl = .true.
+          wf_stack(1) = wf_stack(1) + 1
           nextState = ST_START_PE
         case (TOK_PI_TAG)
-          markupDecl = .true.
+          wf_stack(1) = wf_stack(1) + 1
           nextState = ST_START_PI
         case (TOK_BANG_TAG)
-          markupDecl = .true.
+          wf_stack(1) = wf_stack(1) + 1
           nextState = ST_BANG_TAG
         case default
           call add_error(fx%error_stack, "Unexpected token in document subset")
@@ -1319,7 +1306,11 @@ contains
               call add_internal_entity(fx%forbidden_pe_list, &
                 str_vs(fx%token), "")
               call open_new_file(fb, str_vs(ent%systemId), iostat)
-              markupDecl = .false.
+              print*, "growing wf_stack 3"
+              allocate(temp_wf_stack(size(wf_stack)+1))
+              temp_wf_stack = (/0, wf_stack/)
+              deallocate(wf_stack)
+              wf_stack => temp_wf_stack
               if (iostat/=0) then
                 if (present(skippedEntity_handler)) then
                   call skippedEntity_handler('%'//str_vs(fx%token))
@@ -1350,7 +1341,11 @@ contains
                 str_vs(fx%token), "")
               call open_new_string(fb, &
                 " "//expand_entity(fx%xds%PEList, str_vs(fx%token))//" ")
-              markupDecl = .false.
+              print*, "growing wf_stack 4"
+              allocate(temp_wf_stack(size(wf_stack)+1))
+              temp_wf_stack = (/0, wf_stack/)
+              deallocate(wf_stack)
+              wf_stack => temp_wf_stack
             endif
             ! and do nothing else, carry on ...
           else
@@ -1419,13 +1414,13 @@ contains
           nextState = ST_DTD_ATTLIST_END
         case (TOK_END_TAG)
           if (validCheck) then
-            if (.not.reading_main_file(fb) &
-              .and..not.markupDecl) then
+            if (wf_stack(1)==0) then
               call add_error(fx%error_stack, &
                 "ATTLIST not balanced in parameter entity")
               goto 100
             endif
           endif
+          wf_stack(1) = wf_stack(1) - 1
           if (processDTD) then
             call parse_dtd_attlist("", fx%xds%xml_version, fx%error_stack, elem)
           else
@@ -1444,14 +1439,13 @@ contains
         select case (fx%tokenType)
         case (TOK_END_TAG)
           if (validCheck) then
-            if (.not.reading_main_file(fb) &
-              .and..not.markupDecl) then
+            if (wf_stack(1)==0) then
               call add_error(fx%error_stack, &
                 "ATTLIST not balanced in parameter entity")
               goto 100
             endif
-            markupDecl = .false.
           endif
+          wf_stack(1) = wf_stack(1) - 1
           if (processDTD) then
             if (present(attributeDecl_handler)) then
               call report_declarations(elem, attributeDecl_handler)
@@ -1509,14 +1503,13 @@ contains
         select case (fx%tokenType)
         case (TOK_END_TAG)
           if (validCheck) then
-            if (.not.reading_main_file(fb) &
-              .and..not.markupDecl) then
+            if (wf_stack(1)==0) then
               call add_error(fx%error_stack, &
                 "ELEMENT not balanced in parameter entity")
               goto 100
             endif
-            markupDecl = .false.
           endif
+          wf_stack(1) = wf_stack(1) - 1
           if (processDTD.and.associated(elem)) then
             if (present(elementDecl_handler)) then
               call elementDecl_handler(str_vs(fx%name), str_vs(elem%model))
@@ -1631,14 +1624,13 @@ contains
         select case (fx%tokenType)
         case (TOK_END_TAG)
           if (validCheck) then
-            if (.not.reading_main_file(fb) &
-              .and..not.markupDecl) then
+            if (wf_stack(1)==0) then
               call add_error(fx%error_stack, &
                 "ENTITY not balanced in parameter entity")
               goto 100
             endif
-            markupDecl = .false.
           endif
+          wf_stack(1) = wf_stack(1) - 1
           if (processDTD) then
             call add_entity
             if (in_error(fx%error_stack)) goto 100
@@ -1692,14 +1684,13 @@ contains
         select case (fx%tokenType)
         case (TOK_END_TAG)
           if (validCheck) then
-            if (.not.reading_main_file(fb) &
-              .and..not.markupDecl) then
+            if (wf_stack(1)==0) then
               call add_error(fx%error_stack, &
                 "ENTITY not balanced in parameter entity")
               goto 100
             endif
-            markupDecl = .false.
           endif
+          wf_stack(1) = wf_stack(1) - 1
           if (processDTD) then
             call add_entity
             if (in_error(fx%error_stack)) goto 100
@@ -1787,18 +1778,17 @@ contains
         select case (fx%tokenType)
         case (TOK_END_TAG)
           if (validCheck) then
-            if (.not.reading_main_file(fb) &
-              .and..not.markupDecl) then
+            if (wf_stack(1)==0) then
               call add_error(fx%error_stack, &
                 "NOTATION not balanced in parameter entity")
               goto 100
             endif
-            markupDecl = .false.
             if (notation_exists(fx%nlist, str_vs(fx%name))) then
               call add_error(fx%error_stack, "Duplicate notation declaration")
               goto 100
             endif
           endif
+          wf_stack(1) = wf_stack(1) - 1
           if (processDTD) then
             call add_notation(fx%nlist, str_vs(fx%name), publicId=str_vs(fx%publicId))
             if (present(notationDecl_handler)) then
@@ -1820,18 +1810,17 @@ contains
         select case (fx%tokenType)
         case (TOK_END_TAG)
           if (validCheck) then
-            if (.not.reading_main_file(fb) &
-              .and..not.markupDecl) then
+            if (wf_stack(1)==0) then
               call add_error(fx%error_stack, &
                 "NOTATION not balanced in parameter entity")
               goto 100
             endif
-            markupDecl = .false.
             if (notation_exists(fx%nlist, str_vs(fx%name))) then
               call add_error(fx%error_stack, "Duplicate notation declaration")
               goto 100
             endif
           endif
+          wf_stack(1) = wf_stack(1) - 1
           if (processDTD) then
             if (associated(fx%publicId)) then
               call add_notation(fx%nlist, str_vs(fx%name), &
@@ -1864,7 +1853,7 @@ contains
         write(*,*) "ST_CLOSE_DTD"
         select case (fx%tokenType)
         case (TOK_END_TAG)
-          if (section_depth/=0) then
+          if (wf_stack(1)>1) then
             call add_error(fx%error_stack, "Cannot end DTD while conditional section is still open")
             goto 100
           endif
@@ -1875,6 +1864,11 @@ contains
               goto 100
             endif
             call open_new_file(fb, str_vs(extSubsetSystemId), iostat)
+            print*, "growing wf_stack 7"
+            temp_wf_stack => wf_stack
+            allocate(wf_stack(size(temp_wf_stack)+1))
+            wf_stack = (/0, temp_wf_stack/)
+            deallocate(temp_wf_stack)
             if (iostat==0) then
               call parse_text_declaration(fb, fx%error_stack)
               if (in_error(fx%error_stack)) goto 100

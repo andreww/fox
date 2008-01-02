@@ -106,7 +106,6 @@ module m_sax_types
                                   ! not destroy it once we are finished
     integer :: context 
     integer :: state = ST_NULL
-    integer, pointer :: wf_stack(:) => null()
     logical :: well_formed = .false.
     logical :: skippedExternal = .false.
     character, dimension(:), pointer :: token => null()
@@ -128,6 +127,7 @@ module m_sax_types
     character(len=1), dimension(:), pointer :: PublicId => null()
     character(len=1), dimension(:), pointer :: SystemId => null()
     character(len=1), dimension(:), pointer :: Ndata => null()
+    logical :: inIntSubset = .false.
   end type sax_parser_t
 
 
