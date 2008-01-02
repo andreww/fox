@@ -1044,6 +1044,11 @@ contains
             elseif (ent%external) then
               call open_new_file(fb, str_vs(ent%systemId), iostat)
               if (iostat/=0) then
+                if (validCheck) then
+                  call add_error(fx%error_stack, &
+                    "Unable to retrieve external entity "//str_vs(fx%token))
+                  goto 100
+                endif
                 if (present(skippedEntity_handler)) then
                   call skippedEntity_handler(str_vs(fx%token))
                   if (fx%state==ST_STOP) goto 100
@@ -1340,6 +1345,11 @@ contains
                 str_vs(fx%token), "")
               call open_new_file(fb, str_vs(ent%systemId), iostat, pe=.true.)
               if (iostat/=0) then
+                if (validCheck) then
+                  call add_error(fx%error_stack, &
+                    "Unable to retrieve external parameter entity "//str_vs(fx%token))
+                  goto 100
+                endif
                 if (present(skippedEntity_handler)) then
                   call skippedEntity_handler('%'//str_vs(fx%token))
                   if (fx%state==ST_STOP) goto 100
