@@ -2,6 +2,8 @@ module m_common_namespaces
 
 #ifndef DUMMYLIB
   use fox_m_fsys_array_str, only: str_vs, vs_str, vs_str_alloc
+
+  use fox_m_utils_uri, only: URI, parseURI, destroyURI, hasScheme
   use m_common_attrs, only: dictionary_t, get_key, get_value, remove_key, getLength, hasKey
   use m_common_attrs, only: set_nsURI, set_localName, get_prefix, add_item_to_dict
   use m_common_charset, only: XML1_0, XML1_1
@@ -461,9 +463,9 @@ contains
     end interface
 
     character(len=6) :: xmlns
-    character, dimension(:), pointer :: QName, URI
+    character, dimension(:), pointer :: QName, URIstring
     integer :: i, n
-
+    type(URI), pointer :: URIref
     !Check for namespaces; *and* remove xmlns references from 
     !the attributes dictionary.
 
@@ -474,24 +476,36 @@ contains
       xmlns = get_key(atts, i)
       if (xmlns == 'xmlns ') then
         !Default namespace is being set
-        URI => vs_str_alloc(get_value(atts, i))
-        if (str_vs(URI)=="") then
+        URIstring => vs_str_alloc(get_value(atts, i))
+        URIref => parseURI(str_vs(URIstring))
+        if (.not.associated(URIref)) then
+          call add_error(es, "Invalid URI: "//str_vs(URIstring))
+          deallocate(URIstring)
+          call destroyURI(URIref)
+          return
+        elseif (.not.hasScheme(URIref)) then
+          call add_error(es, "Relative namespace in URI depreacted: "//str_vs(URIstring))
+          deallocate(URIstring)
+          call destroyURI(URIref)
+          return
+        endif
+        call destroyURI(URIref)
+        if (str_vs(URIstring)=="") then
           if (xds%xml_version==XML1_0) then
             call add_error(es, "Empty nsURI is invalid in XML 1.0")
-            deallocate(URI)
+            deallocate(URIstring)
             return
           elseif (xds%xml_version==XML1_1) then
             if (present(end_prefix_handler)) &
               call end_prefix_handler("")
             call addDefaultNS(nsDict, invalidNS, ix)
-            deallocate(URI)
+            deallocate(URIstring)
           endif
         else
-          call checkURI(URI)
           if (present(start_prefix_handler)) &
-            call start_prefix_handler(str_vs(URI), "")
-          call addDefaultNS(nsDict, str_vs(URI), ix)
-          deallocate(URI)
+            call start_prefix_handler(str_vs(URIstring), "")
+          call addDefaultNS(nsDict, str_vs(URIstring), ix)
+          deallocate(URIstring)
         endif
         if (namespace_prefixes) then
           i = i + 1
@@ -501,37 +515,49 @@ contains
       elseif (xmlns == 'xmlns:') then
         !Prefixed namespace is being set
         QName => vs_str_alloc(get_key(atts, i))
-        URI => vs_str_alloc(get_value(atts, i))
-        if (str_vs(URI)=="") then
+        URIstring => vs_str_alloc(get_value(atts, i))
+        URIref => parseURI(str_vs(URIstring))
+        if (.not.associated(URIref)) then
+          call add_error(es, "Invalid URI: "//str_vs(URIstring))
+          deallocate(URIstring)
+          call destroyURI(URIref)
+          return
+        elseif (.not.hasScheme(URIref)) then
+          call add_error(es, "Relative namespace in URI depreacted: "//str_vs(URIstring))
+          deallocate(URIstring)
+          call destroyURI(URIref)
+          return
+        endif
+        call destroyURI(URIref)
+        if (str_vs(URIstring)=="") then
           if (xds%xml_version==XML1_0) then
             call add_error(es, "Empty nsURI is invalid in XML 1.0")
             ! FIXME except actually its ok according to DOM Core 2 I think?
-            deallocate(URI)
+            deallocate(URIstring)
             deallocate(QName)
             return
           elseif (xds%xml_version==XML1_1) then
             call addPrefixedNS(nsDict, str_vs(QName(7:)), invalidNS, ix, xds, es=es)
             if (in_error(es)) then
-              deallocate(URI)
+              deallocate(URIstring)
               deallocate(QName)
               return
             elseif (present(end_prefix_handler)) then
               call end_prefix_handler(str_vs(QName(7:)))
             endif
-            deallocate(URI)
+            deallocate(URIstring)
             deallocate(QName)
           endif
         else
-          call checkURI(URI)
-          call addPrefixedNS(nsDict, str_vs(QName(7:)), str_vs(URI), ix, xds, es=es)
+          call addPrefixedNS(nsDict, str_vs(QName(7:)), str_vs(URIstring), ix, xds, es=es)
           if (in_error(es)) then
-            deallocate(URI)
+            deallocate(URIstring)
             deallocate(QName)
             return
           elseif (present(start_prefix_handler)) then
-            call start_prefix_handler(str_vs(URI), str_vs(QName(7:)))
+            call start_prefix_handler(str_vs(URIstring), str_vs(QName(7:)))
           endif
-          deallocate(URI)
+          deallocate(URIstring)
           deallocate(QName)
         endif
         if (namespace_prefixes) then
@@ -807,15 +833,6 @@ contains
     uri = str_vs(nsDict%prefixes(p_i)%urilist(l_m)%URI)
 
   end function getURIofPrefixedNS
-
-
-  subroutine checkURI(URI)
-    character, dimension(:) :: URI
-
-    !FIXMETOHW check that the string is a valid URI
-    !TOHW actually, namespaces 1.1 says just a valid QName
-
-  end subroutine checkURI
 
 #endif
 end module m_common_namespaces
