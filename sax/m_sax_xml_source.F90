@@ -20,7 +20,7 @@ module m_sax_xml_source
 
   type xml_source_t
     !FIXME private
-    integer            :: lun = -2
+    integer            :: lun = -1
     integer            :: xml_version = XML1_0
     character, pointer :: encoding(:) => null()
     character, pointer :: filename(:) => null()
@@ -30,6 +30,7 @@ module m_sax_xml_source
     integer            :: startChar = 1 ! First character after XML decl
     character, pointer :: next_chars(:) => null()   ! pushback buffer
     type(buffer_t), pointer :: input_string => null()
+    logical :: pe ! is this a parameter entity?
   end type xml_source_t
 
   public :: buffer_t
@@ -106,19 +107,31 @@ contains
     integer, intent(out) :: iostat
     character :: c
 
-    iostat = 0
     if (f%lun==-1) then
-      f%input_string%pos = f%input_string%pos + 1
       if (f%input_string%pos>size(f%input_string%s)) then
-        iostat = io_eof
+        if (f%pe) then
+          iostat = 0
+          c = " "
+          f%pe = .false.
+          f%input_string%pos = f%input_string%pos - 1
+        else
+          iostat = io_eof
+        endif
       else
+        iostat = 0
         c = f%input_string%s(f%input_string%pos)
       endif
+      f%input_string%pos = f%input_string%pos + 1
     else
       read (unit=f%lun, iostat=iostat, advance="no", fmt="(a1)") c
       if (iostat==io_eor) then
-        c = achar(13)
         iostat = 0
+        c = achar(13)
+      elseif (iostat==io_eof.and.f%pe) then
+        iostat = 0
+        c = " "
+        f%pe = .false.
+        backspace(f%lun)
       endif
     endif
   end function read_single_char

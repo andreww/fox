@@ -422,15 +422,13 @@ contains
       elseif (eof.and..not.reading_main_file(fb)) then
         if (inExtSubset.and.reading_first_entity(fb)) then
           print*, "FINISHEd EXT SUBSET", wf_stack(1), fx%state
-          if (validCheck) then
-            if (wf_stack(1)>0) then
-              call add_error(fx%error_stack, "Unclosed conditional sections in external subset")
-              goto 100
-            elseif (fx%state/=ST_SUBSET) then
-              call add_error(fx%error_stack, &
-                "Markup not terminated in external subset")
-              goto 100
-            endif
+          if (wf_stack(1)>0) then
+            call add_error(fx%error_stack, "Unclosed conditional sections in external subset")
+            goto 100
+          elseif (fx%state/=ST_SUBSET) then
+            call add_error(fx%error_stack, &
+              "Markup not terminated in external subset")
+            goto 100
           endif
           if (associated(extSubsetSystemId)) deallocate(extSubsetSystemId)
           call endDTDchecks
@@ -1081,7 +1079,7 @@ contains
               if (present(startEntity_handler)) &
                 call startEntity_handler(str_vs(fx%token))
               call add_internal_entity(fx%forbidden_ge_list, str_vs(fx%token), "")
-              call open_new_string(fb, expand_entity(fx%xds%entityList, str_vs(fx%token)))
+              call open_new_string(fb, expand_entity(fx%xds%entityList, str_vs(fx%token)), str_vs(fx%token))
               print*, "growing wf_stack 2"
               temp_wf_stack => wf_stack
               allocate(wf_stack(size(temp_wf_stack)+1))
@@ -1338,7 +1336,7 @@ contains
               endif
               call add_internal_entity(fx%forbidden_pe_list, &
                 str_vs(fx%token), "")
-              call open_new_file(fb, str_vs(ent%systemId), iostat)
+              call open_new_file(fb, str_vs(ent%systemId), iostat, pe=.true.)
               print*, "growing wf_stack 3"
               allocate(temp_wf_stack(size(wf_stack)+1))
               temp_wf_stack = (/0, wf_stack/)
@@ -1373,7 +1371,7 @@ contains
               call add_internal_entity(fx%forbidden_pe_list, &
                 str_vs(fx%token), "")
               call open_new_string(fb, &
-                " "//expand_entity(fx%xds%PEList, str_vs(fx%token))//" ")
+                expand_entity(fx%xds%PEList, str_vs(fx%token)), str_vs(fx%token), pe=.true.)
               print*, "growing wf_stack 4"
               allocate(temp_wf_stack(size(wf_stack)+1))
               temp_wf_stack = (/0, wf_stack/)

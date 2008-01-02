@@ -54,6 +54,7 @@ contains
     firstChar = .true.
     do
       c = get_character(fb, eof, fx%error_stack)
+      print*, "c ",c
       if (eof.or.in_error(fx%error_stack)) return
       if (fx%inIntSubset) then
         tempString => fx%xds%intSubset

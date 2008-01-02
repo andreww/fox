@@ -64,7 +64,7 @@ contains
       elseif (present(lun)) then
         call FoX_error("Cannot specify lun for string input to open_xml")
       endif
-      call open_new_string(fb, string)
+      call open_new_string(fb, string, "")
     else
       call open_new_file(fb, file, iostat, lun)
       if (iostat/=0) return
@@ -73,17 +73,25 @@ contains
   end subroutine open_file
 
 
-  subroutine open_new_file(fb, uristring, iostat, lun)
+  subroutine open_new_file(fb, uristring, iostat, lun, pe)
     type(file_buffer_t), intent(inout)  :: fb
     character(len=*), intent(in) :: uristring
     integer, intent(out) :: iostat
     integer, intent(in), optional :: lun
+    logical, intent(in), optional :: pe
 
     integer :: i
     type(xml_source_t) :: f
     type(xml_source_t), pointer :: temp(:)
     logical :: firstfile
+    logical :: pe_
     type(URI), pointer :: URIref, newURI
+
+    if (present(pe)) then
+      pe_ = pe
+    else
+      pe_ = .false.
+    endif
 
     URIref => parseURI(URIstring)
     if (.not.associated(URIref)) then
@@ -122,11 +130,17 @@ contains
         fb%f(i+1)%next_chars => temp(i)%next_chars
         fb%f(i+1)%input_string => temp(i)%input_string
         fb%f(i+1)%baseURI => temp(i)%baseURI
+        fb%f(i+1)%pe = temp(i)%pe
       enddo
       deallocate(temp)
       fb%f(1)%lun = f%lun
       fb%f(1)%filename => f%filename
-      allocate(fb%f(1)%next_chars(0))
+      if (pe_) then
+        fb%f(1)%next_chars => vs_str_alloc(" ")
+      else
+        fb%f(1)%next_chars => vs_str_alloc("")
+      endif
+      fb%f(1)%pe = pe_
       fb%f(1)%baseURI => newURI
     else
       call destroyURI(newURI)
@@ -187,15 +201,22 @@ contains
   end subroutine close_actual_file
 
 
-  subroutine open_new_string(fb, string)
+  subroutine open_new_string(fb, string, name, pe)
     type(file_buffer_t), intent(inout) :: fb
     character(len=*), intent(in) :: string
+    character(len=*), intent(in) :: name
+    logical, intent(in), optional :: pe
 
     integer :: i
     type(xml_source_t), pointer :: temp(:)
-    logical :: firstfile
+    logical :: firstfile, pe_
     type(URI), pointer :: URIref
 
+    if (present(pe)) then
+      pe_ = pe
+    else
+      pe_ = .false.
+    endif
     firstfile = .not.associated(fb%f)
     if (firstfile) allocate(fb%f(0))
 
@@ -212,12 +233,19 @@ contains
       fb%f(i+1)%next_chars => temp(i)%next_chars
       fb%f(i+1)%input_string => temp(i)%input_string
       fb%f(i+1)%baseURI => temp(i)%baseURI
+      fb%f(i+1)%pe = temp(i)%pe
     enddo
     deallocate(temp)
 
     allocate(fb%f(1)%input_string)
+    fb%f(1)%filename => vs_str_alloc(name)
     fb%f(1)%input_string%s => vs_str_alloc(string)
-    allocate(fb%f(1)%next_chars(0))
+    if (pe_) then
+      fb%f(1)%next_chars => vs_str_alloc(" ")
+    else
+      fb%f(1)%next_chars => vs_str_alloc("")
+    endif
+    fb%f(1)%pe = pe_
 
     if (firstfile) then
       fb%f(1)%baseURI => parseURI("")
@@ -250,6 +278,7 @@ contains
       fb%f(i)%next_chars => temp(i+1)%next_chars
       fb%f(i)%input_string => temp(i+1)%input_string
       fb%f(i)%baseURI => temp(i+1)%baseURI
+      fb%f(i)%pe = temp(i+1)%pe
     enddo
 
   end subroutine pop_buffer_stack
@@ -270,7 +299,6 @@ contains
     character(len=1) :: string
 
     type(xml_source_t), pointer :: f
-    type(buffer_t), pointer :: cb
     character, pointer :: temp(:)
 
     f => fb%f(1)
@@ -286,24 +314,7 @@ contains
       deallocate(f%next_chars)
       f%next_chars => temp
     else
-      ! Where are we reading from?
-      if (associated(f%input_string)) then
-        ! We are reading from an internal character buffer.
-        cb => f%input_string
-        if (cb%pos<=size(cb%s)) then
-          string = cb%s(cb%pos)
-          cb%pos = cb%pos + 1
-        else
-          ! Not enough characters here
-          string = ''
-          eof = .true.
-          return
-        endif
-      else
-        ! We are reading from a file
-        string = get_char_from_file(f, fb%xml_version, eof, es)
-        if (eof.or.in_error(es)) return ! EOF or Error.
-      endif
+      string = get_char_from_file(f, fb%xml_version, eof, es)
     endif
 
   end function get_character
