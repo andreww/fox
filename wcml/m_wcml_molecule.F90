@@ -7,8 +7,8 @@ module m_wcml_molecule
   use FoX_wxml, only: xmlf_t
 
 #ifndef DUMMYLIB
+  use fox_m_fsys_format, only: str
   use m_common_error, only: FoX_error
-  use m_common_format, only: str
   use FoX_wxml, only: xml_NewElement, xml_EndElement
   use FoX_wxml, only: xml_AddAttribute, xml_AddCharacters, xml_AddNewline
 

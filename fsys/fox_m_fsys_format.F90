@@ -1,4 +1,4 @@
-module m_common_format
+module fox_m_fsys_format
 
 !Note that there are several oddities to this package,
 !to get round assorted compiler bugs.
@@ -15,9 +15,7 @@ module m_common_format
 !expression, but Pathscale-2.4 gives an error on that.
 
   use fox_m_fsys_realtypes, only: sp, dp
-#ifndef DUMMYLIB
-  use m_common_error, only: FoX_error
-#endif
+  use pxf, only: pxfflush
 
   implicit none
   private
@@ -112,6 +110,21 @@ module m_common_format
 contains
 
 #ifndef DUMMYLIB
+  subroutine FoX_error(msg)
+    ! Emit error message and stop.
+    ! No clean up is done here, but this can
+    ! be overridden to include clean-up routines
+    character(len=*), intent(in) :: msg
+
+    write(0,'(a)') 'ERROR(FoX)'
+    write(0,'(a)')  msg
+    call pxfflush(0)
+
+    stop
+
+  end subroutine FoX_error
+
+
   pure function str_to_int_10(str) result(n)
     ! Takes a string containing digits, and returns
     ! the integer representable by those digits.
@@ -2254,4 +2267,4 @@ contains
 #endif
   end function concat_complex_dp_str
 
-end module m_common_format
+end module fox_m_fsys_format

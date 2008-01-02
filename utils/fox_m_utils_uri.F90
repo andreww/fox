@@ -10,7 +10,7 @@ module fox_m_utils_uri
   ! checking of ipv6/X is untested
 
   use fox_m_fsys_array_str, only: str_vs, vs_str_alloc, vs_vs_alloc
-  use m_common_format, only: str_to_int_10, str_to_int_16, str
+  use fox_m_fsys_format, only: str_to_int_10, str_to_int_16, str
   use m_common_string, only: toLower
 
   implicit none

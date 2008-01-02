@@ -1,9 +1,9 @@
 module m_sax_reader
 
   use fox_m_fsys_array_str, only: str_vs, vs_str_alloc, vs_vs_alloc
+  use fox_m_fsys_format, only: operator(//)
   use m_common_charset, only: XML1_0
   use m_common_error,  only: error_stack, FoX_error, in_error, add_error
-  use m_common_format, only: operator(//)
   use m_common_io, only: setup_io, get_unit, io_err
 
   use FoX_utils, only: URI, parseURI, rebaseURI, destroyURI, &

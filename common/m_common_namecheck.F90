@@ -10,9 +10,9 @@ module m_common_namecheck
   ! 2: More characters allowed in Names (but this only affects
   !    unicode-aware programs, so is only skeleton here)
 
+  use fox_m_fsys_format, only: str_to_int_10, str_to_int_16, operator(//)
   use m_common_charset, only: isLegalCharRef, isNCNameChar, &
     isInitialNCNameChar, isInitialNameChar, isNameChar, isRepCharRef
-  use m_common_format, only: str_to_int_10, str_to_int_16, operator(//)
   use m_common_struct, only: xml_doc_state
 
   implicit none

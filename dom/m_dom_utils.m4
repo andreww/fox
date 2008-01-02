@@ -6,9 +6,9 @@ include(`m_dom_treewalk.m4')`'dnl
 module m_dom_utils
 
   use fox_m_fsys_array_str, only: str_vs, vs_str
+  use fox_m_fsys_format, only: operator(//)
   use m_common_attrs, only: getValue
   use m_common_element, only: element_t
-  use m_common_format, only: operator(//)
   use m_common_struct, only: xml_doc_state
 
   ! Public interfaces

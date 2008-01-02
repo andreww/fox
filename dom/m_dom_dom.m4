@@ -35,9 +35,9 @@ module m_dom_dom
 dnl
 
   use fox_m_fsys_array_str, only: str_vs, vs_str, vs_str_alloc
+  use fox_m_fsys_format, only: operator(//)
   use m_common_charset, only: checkChars, XML1_0, XML1_1
   use m_common_element, only: element_t, get_element, default_att_index, ATT_DEFAULT
-  use m_common_format, only: operator(//)
   use m_common_namecheck, only: checkQName, prefixOfQName, localPartOfQName, &
     checkName, checkPublicId, checkSystemId, checkNCName
   use m_common_string, only: toLower

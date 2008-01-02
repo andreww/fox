@@ -1,8 +1,8 @@
 module m_sax_xml_source
 
   use fox_m_fsys_array_str, only: str_vs, vs_str_alloc, vs_vs_alloc
+  use fox_m_fsys_format, only: operator(//)
   use m_common_error,  only: error_stack, add_error, in_error
-  use m_common_format, only: operator(//)
   use m_common_charset, only: XML_WHITESPACE, XML_INITIALENCODINGCHARS, &
     XML_ENCODINGCHARS, XML1_0, XML1_1, isXML1_0_NameChar, isXML1_1_NameChar, &
     isLegalChar, allowed_encoding

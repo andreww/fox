@@ -3,9 +3,9 @@ module m_common_entities
 #ifndef DUMMYLIB
 
   use fox_m_fsys_array_str, only: str_vs, vs_str_alloc
+  use fox_m_fsys_format, only: str_to_int_10, str_to_int_16
   use m_common_charset, only: digits, hexdigits
   use m_common_error, only: FoX_error
-  use m_common_format, only: str_to_int_10, str_to_int_16
 
   implicit none
   private

@@ -125,7 +125,7 @@ dnl
 module m_wxml_overloads
 
 #ifndef DUMMYLIB
-  use m_common_format, only: str
+  use fox_m_fsys_format, only: str
 #endif
   use fox_m_fsys_realtypes, only: sp, dp
   use m_wxml_core, only: xmlf_t
