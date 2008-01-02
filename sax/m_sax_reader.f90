@@ -172,13 +172,13 @@ contains
 
     if (f%lun>0) then
       close(f%lun)
-      deallocate(f%encoding)
       deallocate(f%filename)
     else
       deallocate(f%input_string%s)
       deallocate(f%input_string)
     endif
 
+    if (associated(f%encoding)) deallocate(f%encoding)
     f%line = 0
     f%col = 0
     deallocate(f%next_chars)

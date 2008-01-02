@@ -168,8 +168,6 @@ contains
 
     f%xml_version = XML1_0
     if (present(standalone)) standalone = .false.
-    ! Default encoding:
-    f%encoding => vs_str_alloc("utf-8")
 
     f%startChar = 1
 
@@ -180,7 +178,7 @@ contains
       c = get_char_from_file(f, eof, es)
       if (eof) then
         call rewind_source(f)
-        return
+        exit
       elseif (in_error(es)) then
         return
       endif
@@ -353,7 +351,6 @@ contains
             elseif (.not.allowed_encoding(str_vs(ch))) then
               call add_error(es, "Unknown character encoding in XML declaration")
             else
-              deallocate(f%encoding)
               f%encoding => ch
               ch => null()
             endif
@@ -388,6 +385,14 @@ contains
       end select
 
     end do
+
+    if (.not.associated(f%encoding)) then
+      if (present(standalone)) then
+        f%encoding => vs_str_alloc("utf-8")
+      else
+        call add_error(es, "Missing encoding in text declaration")
+      endif
+    endif
     
     if (associated(ch)) deallocate(ch)
     ! if there is no XML declaraion, or if parsing caused an error, then
