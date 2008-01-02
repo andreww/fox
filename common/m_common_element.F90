@@ -253,7 +253,7 @@ contains
       endif
 
       if (state==ST_START) then
-        !print*,'ST_START'
+        !write(*,*)'ST_START'
         if (verify(c, XML_WHITESPACE)==0) then
           continue
         elseif (verify(c, 'EMPTYANY')==0) then
@@ -272,7 +272,7 @@ contains
         endif
 
       elseif (state==ST_EMPTYANY) then
-        !print*,'ST_EMPTYANY'
+        !write(*,*)'ST_EMPTYANY'
         if (verify(c, upperCase)==0) then
           temp => name
           allocate(name(size(temp)+1))
@@ -299,7 +299,7 @@ contains
         endif
 
       elseif (state==ST_FIRSTCHILD) then
-        !print*,'ST_FIRSTCHILD'
+        !write(*,*)'ST_FIRSTCHILD'
         if (verify(c, XML_WHITESPACE)==0) cycle
         if (c=='#') then
           mixed = .true.
@@ -322,7 +322,7 @@ contains
         endif
 
       elseif (state==ST_PCDATA) then
-        !print*,'ST_PCDATA'
+        !write(*,*)'ST_PCDATA'
         if (verify(c, 'PCDATA')==0) then
           temp => name
           allocate(name(size(temp)+1))
@@ -371,7 +371,7 @@ contains
         endif
 
       elseif (state==ST_NAME) then
-        !print*,'ST_NAME'
+        !write(*,*)'ST_NAME'
         if (isNameChar(c, xv)) then
           temp => name
           allocate(name(size(temp)+1))
@@ -451,7 +451,7 @@ contains
         endif
 
       elseif (state==ST_CHILD) then
-        !print*,'ST_CHILD'
+        !write(*,*)'ST_CHILD'
         if (verify(c, XML_WHITESPACE)==0) cycle
         if (c=='#') then
           call add_error(stack, &
@@ -480,7 +480,7 @@ contains
         endif
 
       elseif (state==ST_SEPARATOR) then
-        !print*,'ST_SEPARATOR'
+        !write(*,*)'ST_SEPARATOR'
         if (verify(c, XML_WHITESPACE)==0) cycle
         if (c=='#') then
           call add_error(stack, &
@@ -523,7 +523,7 @@ contains
         endif
 
       elseif (state==ST_AFTERBRACKET) then
-        !print*,'ST_AFTERBRACKET'
+        !write(*,*)'ST_AFTERBRACKET'
         if (c=='*') then
           state = ST_SEPARATOR
         elseif (c=='+') then
@@ -569,7 +569,7 @@ contains
         endif
 
       elseif (state==ST_AFTERLASTBRACKET) then
-        !print*,'ST_AFTERLASTBRACKET'
+        !write(*,*)'ST_AFTERLASTBRACKET'
         if (c=='*') then
           state = ST_END
         elseif (c=='+') then
@@ -604,7 +604,7 @@ contains
         endif
 
       elseif (state==ST_END) then
-        !print*,'ST_END'
+        !write(*,*)'ST_END'
         if (verify(c, XML_WHITESPACE)==0) then
           continue
         else
@@ -735,12 +735,12 @@ contains
     character, pointer :: name(:), attType(:), default(:), value(:), temp(:)
 
     type(attribute_t), pointer :: ca
-    type(attribute_t), target :: ignore_att
-    call init_string_list(ignore_att%enumerations)
+    type(attribute_t), pointer :: ignore_att
+
+    ignore_att => null()
     ! We need ignore_att to process but not take account of duplicate attributes
-
     ! elem is optional so we can not record declarations if necessary.
-
+    ca => null()
     name => null()
     attType => null()
     default => null()
@@ -757,7 +757,13 @@ contains
       endif
 
       if (state==ST_START) then
-        !print*,'ST_START'
+        !write(*,*)'ST_START'
+        if (associated(ignore_att)) then
+          if (associated(ignore_att%name)) deallocate(ignore_att%name)
+          if (associated(ignore_att%default)) deallocate(ignore_att%default)
+          call destroy_string_list(ignore_att%enumerations)
+          deallocate(ignore_att)
+        endif
         if (verify(c, XML_WHITESPACE)==0) cycle
         if (isInitialNameChar(c, xv)) then
           name => vs_str_alloc(c)
@@ -769,32 +775,28 @@ contains
         endif
 
       elseif (state==ST_NAME) then
-        !print*,'ST_NAME'
+        !write(*,*)'ST_NAME'
         if (isNameChar(c, xv)) then
-          temp => name
-          allocate(name(size(temp)+1))
-          name(:size(temp)) = temp
-          name(size(name)) = c
-          deallocate(temp)
+          temp => vs_str_alloc(str_vs(name)//c)
+          deallocate(name)
+          name => temp
         elseif (verify(c, XML_WHITESPACE)==0) then
           if (present(elem)) then
             if (existing_attribute(elem%attlist, str_vs(name))) then
-              if (associated(ignore_att%name)) deallocate(name)
-              if (associated(ignore_att%default)) deallocate(default)
-              call destroy_string_list(ignore_att%enumerations)
+              allocate(ignore_att)
               call init_string_list(ignore_att%enumerations)
+              ignore_att%name => vs_vs_alloc(name)
               ca => ignore_att
             else
               ca => add_attribute(elem%attlist, str_vs(name))
             endif
           else
-            if (associated(ignore_att%name)) deallocate(ignore_att%name)
-            if (associated(ignore_att%default)) deallocate(ignore_att%default)
-            call destroy_string_list(ignore_att%enumerations)
+            allocate(ignore_att)
             call init_string_list(ignore_att%enumerations)
+            ignore_att%name => vs_vs_alloc(name)
             ca => ignore_att
           endif
-          deallocate(name) 
+          deallocate(name)
           state = ST_AFTERNAME
         else
           call add_error(stack, &
@@ -803,7 +805,7 @@ contains
         endif
 
       elseif (state==ST_AFTERNAME) then
-        !print*,'ST_AFTERNAME'
+        !write(*,*)'ST_AFTERNAME'
         if (verify(c, XML_WHITESPACE)==0) cycle
         if (verify(c, upperCase)==0) then
           attType => vs_str_alloc(c)
@@ -819,10 +821,10 @@ contains
         endif
 
       elseif (state==ST_ATTTYPE) then
-        !print*,'ST_ATTTYPE'
+        !write(*,*)'ST_ATTTYPE'
         if (verify(c, upperCase)==0) then
           temp => attType
-          attType => vs_vs_alloc((/temp, c/))
+          attType => vs_str_alloc(str_vs(temp)//c)
           deallocate(temp)
         elseif (verify(c, XML_WHITESPACE)==0) then
           if (str_vs(attType)=='CDATA') then
@@ -865,7 +867,7 @@ contains
         endif
 
       elseif (state==ST_AFTER_NOTATION) then
-        !print*,'ST_AFTER_NOTATION'
+        !write(*,*)'ST_AFTER_NOTATION'
         if (verify(c, XML_WHITESPACE)==0) cycle
         if (c=='(') then
           state = ST_NOTATION_LIST
@@ -876,7 +878,7 @@ contains
         endif
 
       elseif (state==ST_NOTATION_LIST) then
-        !print*,'ST_NOTATION_LIST'
+        !write(*,*)'ST_NOTATION_LIST'
         if (verify(c, XML_WHITESPACE)==0) cycle
         if (isInitialNameChar(c, xv)) then
           value => vs_str_alloc(c)
@@ -888,14 +890,12 @@ contains
         endif
 
       elseif (state==ST_ENUMERATION) then
-        !print*,'ST_ENUMERATION'
+        !write(*,*)'ST_ENUMERATION'
         if (verify(c, XML_WHITESPACE)==0) cycle
         if (isNameChar(c, xv)) then
-          temp => value
-          allocate(value(size(temp)+1))
-          value(:size(temp)) = temp
-          value(size(value)) = c
-          deallocate(temp)
+          temp => vs_str_alloc(str_vs(value)//c)
+          deallocate(value)
+          value => temp
           state = ST_ENUM_NAME
         elseif (c=='|') then
           call add_error(stack, &
@@ -912,13 +912,11 @@ contains
         endif
 
       elseif (state==ST_ENUM_NAME) then
-        !print*,'ST_ENUM_NAME'
+        !write(*,*)'ST_ENUM_NAME'
         if (isNameChar(c, xv)) then
-          temp => value
-          allocate(value(size(temp)+1))
-          value(:size(temp)) = temp
-          value(size(value)) = c
-          deallocate(temp)
+          temp => vs_str_alloc(str_vs(value)//c)
+          deallocate(value)
+          value => temp
         elseif (verify(c, XML_WHITESPACE)==0) then
           !FIXME normalize value here
           call add_string(ca%enumerations, str_vs(value))
@@ -951,7 +949,7 @@ contains
         endif
 
       elseif (state==ST_SEPARATOR) then
-        !print*,'ST_SEPARATOR'
+        !write(*,*)'ST_SEPARATOR'
         if (verify(c, XML_WHITESPACE)==0) cycle
         if (c=='|') then
           if (ca%attType==ATT_NOTATION) then
@@ -977,7 +975,7 @@ contains
         state = ST_AFTER_ATTTYPE
 
       elseif (state==ST_AFTER_ATTTYPE) then
-        !print*,'ST_AFTER_ATTTYPE'
+        !write(*,*)'ST_AFTER_ATTTYPE'
         if (verify(c, XML_WHITESPACE)==0) cycle
         if (c=='#') then
           allocate(default(0))
@@ -999,13 +997,11 @@ contains
         endif
 
       elseif (state==ST_DEFAULT_DECL) then
-        !print*,'ST_DEFAULT_DECL'
+        !write(*,*)'ST_DEFAULT_DECL'
         if (verify(c, upperCase)==0) then
-          temp => default
-          allocate(default(size(temp)+1))
-          default(:size(temp)) = temp
-          default(size(default)) = c
-          deallocate(temp)
+          temp => vs_str_alloc(str_vs(default)//c)
+          deallocate(default)
+          default => temp
         elseif (verify(c, XML_WHITESPACE)==0) then
           if (str_vs(default)=='REQUIRED') then
             ca%attdefault = ATT_REQUIRED
@@ -1031,7 +1027,7 @@ contains
         endif
 
       elseif (state==ST_AFTERDEFAULTDECL) then
-        !print*,'ST_AFTERDEFAULTDECL'
+        !write(*,*)'ST_AFTERDEFAULTDECL'
         if (verify(c, XML_WHITESPACE)==0) cycle
         if (c=='"') then
           q = c
@@ -1048,18 +1044,16 @@ contains
         endif
 
       elseif (state==ST_DEFAULTVALUE) then
-        !print*,'ST_DEFAULTVALUE'
+        !write(*,*)'ST_DEFAULTVALUE'
         if (c==q) then
-          ! Normalize value
+          ! Value is normalized later on in m_sax_parser
           ca%default => value
-          nullify(value)
+          value => null()
           state = ST_START
         else
-          temp => value
-          allocate(value(size(temp)+1))
-          value(:size(temp)) = temp
-          value(size(value)) = c
-          deallocate(temp)
+          temp => vs_str_alloc(str_vs(value)//c)
+          deallocate(value)
+          value => temp
         endif
 
       endif
@@ -1075,19 +1069,18 @@ contains
     ! FIXME all normalization of values *is* done in the SAX
     ! parser, but really it should be done here.
 
-    if (associated(ignore_att%name)) deallocate(ignore_att%name)
-    if (associated(ignore_att%default)) deallocate(ignore_att%default)
-    call destroy_string_list(ignore_att%enumerations)
-
     return
 
 200 if (associated(name)) deallocate(name)
     if (associated(attType)) deallocate(attType)
     if (associated(default)) deallocate(default)
     if (associated(value)) deallocate(value)
-    if (associated(ignore_att%name)) deallocate(name)
-    if (associated(ignore_att%default)) deallocate(default)
-    call destroy_string_list(ignore_att%enumerations)
+    if (associated(ignore_att)) then
+      if (associated(ignore_att%name)) deallocate(ignore_att%name)
+      if (associated(ignore_att%default)) deallocate(ignore_att%default)
+      call destroy_string_list(ignore_att%enumerations)
+      deallocate(ignore_att)
+    endif
 
   end subroutine parse_dtd_attlist
 
