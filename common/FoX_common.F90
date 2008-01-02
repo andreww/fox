@@ -28,12 +28,6 @@ module FoX_common
   public :: vs_str
   public :: alloc
   public :: concat
-  public :: vs_logical
-  public :: vs_int
-  public :: vs_real
-  public :: logical
-  public :: int
-  public :: real
 
 !These are all exported through SAX now
   public :: dictionary_t
