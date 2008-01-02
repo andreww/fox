@@ -48,16 +48,16 @@ while test $# -gt 0; do
        	;;
 
     --common)
-        MODULES="$MODULES common fsys"
+        MODULES="$MODULES common utils fsys"
         ;;
     --utils)
-        MODULES="$MODULES utils common fsys"
+        MODULES="$MODULES utils fsys"
         ;;
     --wxml)
-        MODULES="$MODULES wxml common fsys"
+        MODULES="$MODULES wxml common utils fsys"
         ;;
     --wcml)
-        MODULES="$MODULES wcml wxml utils common fsys"
+        MODULES="$MODULES wcml wxml common utils fsys"
         ;;
     --sax)
         MODULES="$MODULES sax common utils fsys"
@@ -75,7 +75,7 @@ while test $# -gt 0; do
 done
 
 if [ "x$MODULES" = x ]; then
-  MODULES="dom sax wcml utils wxml common fsys"
+  MODULES="dom sax wcml wxml common utils fsys"
 fi
 
 case $MODULES in *fsys*)
