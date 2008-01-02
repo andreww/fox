@@ -421,6 +421,7 @@ contains
         goto 100
       elseif (eof.and..not.reading_main_file(fb)) then
         if (inExtSubset.and.reading_first_entity(fb)) then
+          print*, "FINISHEd EXT SUBSET", wf_stack(1), fx%state
           if (wf_stack(1)>0) then
             call add_error(fx%error_stack, "Unclosed conditional sections in external subset")
             goto 100
@@ -487,10 +488,16 @@ contains
         write(*,*) 'ST_MISC', str_vs(fx%token)
         select case (fx%tokenType)
         case (TOK_PI_TAG)
+          print*, "wf_increment pi misc"
+          wf_stack(1) = wf_stack(1) + 1
           nextState = ST_START_PI
         case (TOK_BANG_TAG)
+          print*, "wf_increment bang misc"
+          wf_stack(1) = wf_stack(1) + 1
           nextState = ST_BANG_TAG
         case (TOK_OPEN_TAG)
+          print*, "wf_increment open misc"
+          wf_stack(1) = wf_stack(1) + 1
           nextState = ST_START_TAG
         end select
 
@@ -543,7 +550,6 @@ contains
               goto 100
             endif
           endif
-          wf_stack(1) = wf_stack(1) + 1
         end select
 
       case (ST_PI_CONTENTS)
@@ -564,6 +570,7 @@ contains
             endif
           endif
         endif
+        print*, "wf_decrement pi"
         wf_stack(1) = wf_stack(1) - 1
           
         select case(fx%tokenType)
@@ -609,7 +616,6 @@ contains
           fx%name => fx%token
           nullify(fx%token)
           nextState = ST_COMMENT_END
-          wf_stack(1) = wf_stack(1) + 1
         end select
 
       case (ST_COMMENT_END)
@@ -630,6 +636,7 @@ contains
             endif
           endif
         endif
+        print*, "wf decrement comment"
         wf_stack(1) = wf_stack(1) - 1
 
         select case (fx%tokenType)
@@ -711,7 +718,6 @@ contains
         write(*,*) "ST_FINISH_CDATA_DECLARATION"
         select case (fx%tokenType)
         case (TOK_OPEN_SB)
-          wf_stack(1) = wf_stack(1) + 1
           nextState = ST_CDATA_CONTENTS
         end select
 
@@ -730,9 +736,11 @@ contains
         write(*,*) "ST_IN_IGNORE_SECTION"
         select case (fx%tokenType)
         case (TOK_SECTION_START)
+        print*, "wf increment section"
           wf_stack(1) = wf_stack(1) + 1
           nextState = ST_IN_IGNORE_SECTION
         case (TOK_SECTION_END)
+          print*, "wf decrement section"
           wf_stack(1) = wf_stack(1) - 1
           if (wf_stack(1)==0) then
             fx%context = CTXT_IN_DTD
@@ -954,12 +962,18 @@ contains
         case (TOK_ENTITY)
           nextState = ST_START_ENTITY
         case (TOK_PI_TAG)
+          print*, "wf_increment pi in content"
+          wf_stack(1) = wf_stack(1) + 1
           nextState = ST_START_PI
         case (TOK_BANG_TAG)
+          print*, "wf_increment bang in content"
+          wf_stack(1) = wf_stack(1) + 1
           nextState = ST_BANG_TAG
         case (TOK_CLOSE_TAG)
           nextState = ST_CLOSING_TAG
         case (TOK_OPEN_TAG)
+          print*, "wf_increment open in content"
+          wf_stack(1) = wf_stack(1) + 1
           nextState = ST_START_TAG
         end select
 
@@ -1153,11 +1167,18 @@ contains
             call startDTD_handler(str_vs(fx%root_element), "", "")
             if (fx%state==ST_STOP) goto 100
           endif
-          wf_stack = wf_stack + 1
+          print*, "wf increment sb dtd"
+          wf_stack(1) = wf_stack(1) + 1
           nextState = ST_SUBSET
         case (TOK_END_TAG)
           if (present(startDTD_handler)) then
             call startDTD_handler(str_vs(fx%root_element), "", "")
+            if (fx%state==ST_STOP) goto 100
+          endif
+          print*, "wf decrement end dtd"
+          wf_stack(1) = wf_stack(1) - 1
+          if (present(endDTD_handler)) then
+            call endDTD_handler()
             if (fx%state==ST_STOP) goto 100
           endif
           fx%context = CTXT_BEFORE_CONTENT
@@ -1263,29 +1284,37 @@ contains
         write(*,*) "ST_SUBSET"
         select case (fx%tokenType)
         case (TOK_CLOSE_SB)
+          if (.not.reading_main_file(fb)) then
+            call add_error(fx%error_stack, "Cannot close DOCTYPE in external entity")
+            goto 100
+          endif
+          print*, "wf decrement section end subset 1"
+          wf_stack(1) = wf_stack(1) - 1
           fx%inIntSubset = .false.
           nextState = ST_CLOSE_DTD
-          wf_stack(1) = wf_stack(1) - 1
         case (TOK_SECTION_END)
           if (wf_stack(1)==0) then
             call add_error(fx%error_stack, "Unbalanced conditional section in parameter entity")
             goto 100
-          endif 
+          endif
+          print*, "wf decrement section end subset 2"
           wf_stack(1) = wf_stack(1) - 1
           nextState = ST_SUBSET
         case (TOK_ENTITY)
-          wf_stack(1) = wf_stack(1) + 1
           nextState = ST_START_PE
         case (TOK_PI_TAG)
+          print*, "wf increment pi subset"
           wf_stack(1) = wf_stack(1) + 1
           nextState = ST_START_PI
         case (TOK_BANG_TAG)
+          print*, "wf increment bang subset"
           wf_stack(1) = wf_stack(1) + 1
           nextState = ST_BANG_TAG
         case default
           call add_error(fx%error_stack, "Unexpected token in document subset")
           goto 100
         end select
+        print*, "st_subset done 1", wf_stack(1)
 
       case (ST_START_PE)
         write(*,*) 'ST_START_PE'
@@ -1420,6 +1449,7 @@ contains
               goto 100
             endif
           endif
+          print*, "wf decrement attlist 1"
           wf_stack(1) = wf_stack(1) - 1
           if (processDTD) then
             call parse_dtd_attlist("", fx%xds%xml_version, fx%error_stack, elem)
@@ -1445,6 +1475,7 @@ contains
               goto 100
             endif
           endif
+          print*, "wf decrement attlist 2"
           wf_stack(1) = wf_stack(1) - 1
           if (processDTD) then
             if (present(attributeDecl_handler)) then
@@ -1509,6 +1540,7 @@ contains
               goto 100
             endif
           endif
+          print*, "wf decrement element"
           wf_stack(1) = wf_stack(1) - 1
           if (processDTD.and.associated(elem)) then
             if (present(elementDecl_handler)) then
@@ -1630,6 +1662,7 @@ contains
               goto 100
             endif
           endif
+          print*, "wf decrement entity 1"
           wf_stack(1) = wf_stack(1) - 1
           if (processDTD) then
             call add_entity
@@ -1690,6 +1723,7 @@ contains
               goto 100
             endif
           endif
+          print*, "wf decrement entity 2"
           wf_stack(1) = wf_stack(1) - 1
           if (processDTD) then
             call add_entity
@@ -1788,6 +1822,7 @@ contains
               goto 100
             endif
           endif
+          print*, "wf decrement notation 1"
           wf_stack(1) = wf_stack(1) - 1
           if (processDTD) then
             call add_notation(fx%nlist, str_vs(fx%name), publicId=str_vs(fx%publicId))
@@ -1820,6 +1855,7 @@ contains
               goto 100
             endif
           endif
+          print*, "wf decrement notation 2"
           wf_stack(1) = wf_stack(1) - 1
           if (processDTD) then
             if (associated(fx%publicId)) then
@@ -1877,12 +1913,16 @@ contains
             else
               call endDTDchecks
               if (in_error(fx%error_stack)) goto 100
+              print*, "wf decrement dtd 1"
+              wf_stack(1) = wf_stack(1) - 1
               nextState = ST_MISC
               fx%context = CTXT_BEFORE_CONTENT
             endif
           else
             call endDTDchecks
             if (in_error(fx%error_stack)) goto 100
+              print*, "wf decrement dtd 2"
+            wf_stack(1) = wf_stack(1) - 1
             nextState = ST_MISC
             fx%context = CTXT_BEFORE_CONTENT
           endif
@@ -2000,10 +2040,10 @@ contains
       endif
       call push_elstack(str_vs(fx%name), fx%elstack)
       call reset_dict(fx%attributes)
-      wf_stack(1) = wf_stack(1) + 1
     end subroutine open_tag
 
     subroutine close_tag
+      print*, "wf decrement close tag"
       wf_stack(1) = wf_stack(1) - 1
       if (wf_stack(1)<0) then
         call add_error(fx%error_stack, &
