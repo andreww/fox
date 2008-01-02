@@ -722,7 +722,7 @@ contains
         end select
 
       case (ST_FINISH_SECTION_DECLARATION)
-        write(*,*) "ST_FINISH_CDATA_DECLARATION"
+        write(*,*) "ST_FINISH_SECTION_DECLARATION"
         select case (fx%tokenType)
         case (TOK_OPEN_SB)
           if (fx%context==CTXT_IGNORE) then
@@ -1271,6 +1271,11 @@ contains
               inExtSubset = .true.
               nextState = ST_SUBSET
             else
+              if (validCheck) then
+                call add_error(fx%error_stack, &
+                  "Unable to retrieve external subset "//str_vs(fx%systemId))
+                goto 100
+              endif
               call endDTDchecks
               if (in_error(fx%error_stack)) goto 100
               fx%context = CTXT_BEFORE_CONTENT
@@ -1925,7 +1930,11 @@ contains
               inExtSubset = .true.
               nextState = ST_SUBSET
             else
-              ! FIXME error on validating?
+              if (validCheck) then
+                call add_error(fx%error_stack, &
+                  "Unable to retrieve external subset "//str_vs(extSubsetSystemId))
+                goto 100
+              endif
               call endDTDchecks
               if (in_error(fx%error_stack)) goto 100
               print*, "wf decrement dtd 1"

@@ -265,6 +265,8 @@ contains
             fx%tokenType = TOK_SECTION_START
           elseif (q=="]".and.c==">") then
             fx%tokenType = TOK_SECTION_END
+          else
+            phrase = 0
           endif
         end select
 
