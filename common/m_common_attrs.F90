@@ -1,7 +1,7 @@
 module m_common_attrs
 
 #ifndef DUMMYLIB
-  use m_common_array_str, only : str_vs, vs_str_alloc
+  use fox_m_fsys_array_str, only : str_vs, vs_str_alloc
   use m_common_element, only: ATT_CDATA, ATT_ID, ATT_IDREF, &
     ATT_IDREFS, ATT_ENTITY, ATT_ENTITIES, ATT_NMTOKEN,      &
     ATT_NMTOKENS, ATT_NOTATION, ATT_CDANO, ATT_CDAMB,       &

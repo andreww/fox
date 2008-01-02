@@ -1,7 +1,7 @@
 module m_common_error
 
 #ifndef DUMMYLIB
-  use m_common_array_str, only: vs_str_alloc
+  use fox_m_fsys_array_str, only: vs_str_alloc
   use pxf, only: pxfabort, pxfflush
 
   implicit none

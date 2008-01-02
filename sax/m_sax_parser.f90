@@ -1,6 +1,6 @@
 module m_sax_parser
 
-  use m_common_array_str, only: str_vs, string_list, &
+  use fox_m_fsys_array_str, only: str_vs, string_list, &
     destroy_string_list, vs_str_alloc, vs_vs_alloc
   use m_common_attrs, only: init_dict, destroy_dict, reset_dict, &
     add_item_to_dict, has_key, get_value

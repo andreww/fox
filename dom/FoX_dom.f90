@@ -1,7 +1,7 @@
 module FoX_dom
 
-  use m_common_array_str
   use m_common_format
+  use fox_m_fsys_array_str
   use m_dom_dom
   use m_dom_error
   use m_dom_extras

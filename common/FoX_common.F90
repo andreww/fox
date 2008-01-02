@@ -1,8 +1,6 @@
 module FoX_common
 
-  use m_common_array_str
-  use m_common_parse_input
-  use m_common_format
+  use fox_m_fsys_array_str
 #ifndef DUMMYLIB
   use m_common_attrs
 #endif

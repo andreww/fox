@@ -4,7 +4,7 @@ undefine(`format')dnl
 include(`m_dom_exception.m4')dnl
 module m_dom_parse
 
-  use m_common_array_str, only: str_vs, vs_str_alloc
+  use fox_m_fsys_array_str, only: str_vs, vs_str_alloc
   use m_common_entities, only: entity_list, init_entity_list, destroy_entity_list, add_internal_entity
   use m_common_error, only: FoX_error
   use m_common_struct, only: xml_doc_state

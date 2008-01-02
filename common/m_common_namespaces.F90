@@ -1,7 +1,7 @@
 module m_common_namespaces
 
 #ifndef DUMMYLIB
-  use m_common_array_str, only: str_vs, vs_str, vs_str_alloc
+  use fox_m_fsys_array_str, only: str_vs, vs_str, vs_str_alloc
   use m_common_attrs, only: dictionary_t, get_key, get_value, remove_key, getLength, hasKey
   use m_common_attrs, only: set_nsURI, set_localName, get_prefix, add_item_to_dict
   use m_common_charset, only: XML1_0, XML1_1

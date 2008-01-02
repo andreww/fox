@@ -2,7 +2,8 @@
 default: install
 #
 OBJFILES=m_pxf_abort_flush.$(OBJEXT) pxf.$(OBJEXT) \
-         fox_m_fsys_realtypes.$(OBJEXT)
+         fox_m_fsys_realtypes.$(OBJEXT) \
+         fox_m_fsys_array_str.$(OBJEXT) \
 #
 LIBRARY=libfsys.$(LIBEXT)
 INCFLAGS=

@@ -1,6 +1,6 @@
 module m_sax_tokenizer
 
-  use m_common_array_str, only: vs_str, str_vs, vs_str_alloc
+  use fox_m_fsys_array_str, only: vs_str, str_vs, vs_str_alloc
   use m_common_charset, only: XML_WHITESPACE, &
     upperCase, isInitialNameChar
   use m_common_error, only: add_error, in_error

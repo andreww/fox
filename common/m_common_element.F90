@@ -3,7 +3,7 @@ module m_common_element
 #ifndef DUMMYLIB
   ! Structure and manipulation of element specification
 
-  use m_common_array_str, only: str_vs, vs_str_alloc, vs_vs_alloc, &
+  use fox_m_fsys_array_str, only: str_vs, vs_str_alloc, vs_vs_alloc, &
     string_list, init_string_list, destroy_string_list, add_string
   use m_common_charset, only: isInitialNameChar, isNameChar, &
     upperCase, XML_WHITESPACE

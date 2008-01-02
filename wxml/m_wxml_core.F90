@@ -1,10 +1,10 @@
 module m_wxml_core
 
 #ifndef DUMMYLIB
+  use fox_m_fsys_array_str, only: vs_str, str_vs, vs_str_alloc
   use m_common_attrs, only: dictionary_t, getLength, get_key, get_value, &
     hasKey, add_item_to_dict, init_dict, reset_dict, destroy_dict, &
     getWhitespaceHandling
-  use m_common_array_str, only: vs_str, str_vs, vs_str_alloc
   use m_common_buffer, only: buffer_t, len, add_to_buffer, reset_buffer, &
     dump_buffer
   use m_common_charset, only: XML1_0, XML1_1, checkChars

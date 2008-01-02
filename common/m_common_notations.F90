@@ -1,7 +1,7 @@
 module m_common_notations
 
 #ifndef DUMMYLIB
-  use m_common_array_str, only: vs_str, str_vs
+  use fox_m_fsys_array_str, only: vs_str, str_vs
   use m_common_error, only: FoX_error
 
   implicit none

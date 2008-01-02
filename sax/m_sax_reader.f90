@@ -1,6 +1,6 @@
 module m_sax_reader
 
-  use m_common_array_str, only: str_vs, vs_str_alloc, vs_vs_alloc
+  use fox_m_fsys_array_str, only: str_vs, vs_str_alloc, vs_vs_alloc
   use m_common_charset, only: XML1_0
   use m_common_error,  only: error_stack, FoX_error, in_error, add_error
   use m_common_format, only: operator(//)

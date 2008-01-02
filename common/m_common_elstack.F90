@@ -1,7 +1,7 @@
 module m_common_elstack
 
 #ifndef DUMMYLIB
-  use m_common_array_str, only: str_vs, vs_str
+  use fox_m_fsys_array_str, only: str_vs, vs_str
   use m_common_error, only: FoX_fatal
 
   implicit none

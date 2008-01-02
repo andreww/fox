@@ -1,4 +1,4 @@
-module m_common_array_str
+module fox_m_fsys_array_str
 #ifndef DUMMYLIB
 
   implicit none
@@ -159,4 +159,4 @@ contains
   end subroutine destroy_vs
 
 #endif
-end module m_common_array_str
+end module fox_m_fsys_array_str
