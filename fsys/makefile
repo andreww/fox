@@ -1,7 +1,8 @@
 #
 default: install
 #
-OBJFILES= m_pxf_abort_flush.$(OBJEXT) pxf.$(OBJEXT) # m_ieee.o
+OBJFILES=m_pxf_abort_flush.$(OBJEXT) pxf.$(OBJEXT) \
+         fox_m_fsys_realtypes.$(OBJEXT)
 #
 LIBRARY=libfsys.$(LIBEXT)
 INCFLAGS=

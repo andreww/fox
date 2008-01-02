@@ -4,7 +4,7 @@
 !
 module m_wcml_property
 
-  use m_common_realtypes, only: sp, dp
+  use fox_m_fsys_realtypes, only: sp, dp
   use FoX_wxml, only: xmlf_t
 
 #ifndef DUMMYLIB

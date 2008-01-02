@@ -1,4 +1,4 @@
-module m_common_realtypes
+module fox_m_fsys_realtypes
 
   implicit none
   private
@@ -9,4 +9,4 @@ module m_common_realtypes
   public :: sp
   public :: dp
 
-end module m_common_realtypes
+end module fox_m_fsys_realtypes

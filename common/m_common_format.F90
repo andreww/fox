@@ -14,7 +14,7 @@ module m_common_format
 !to COUNT their length inline in the specification
 !expression, but Pathscale-2.4 gives an error on that.
 
-  use m_common_realtypes, only: sp, dp
+  use fox_m_fsys_realtypes, only: sp, dp
 #ifndef DUMMYLIB
   use m_common_error, only: FoX_error
 #endif

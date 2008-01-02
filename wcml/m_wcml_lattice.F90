@@ -9,7 +9,7 @@ module m_wcml_lattice
 ! conversion between lattices & crystals ...
 ! <lattice> can also contain xtal coords or a <matrix>
 
-  use m_common_realtypes, only: sp, dp
+  use fox_m_fsys_realtypes, only: sp, dp
   use FoX_wxml, only: xmlf_t
 
 #ifndef DUMMYLIB

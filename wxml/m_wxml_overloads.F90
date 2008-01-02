@@ -7,7 +7,7 @@ module m_wxml_overloads
 #ifndef DUMMYLIB
   use m_common_format, only: str
 #endif
-  use m_common_realtypes, only: sp, dp
+  use fox_m_fsys_realtypes, only: sp, dp
   use m_wxml_core, only: xmlf_t
   use m_wxml_core, only: xml_AddCharacters
   use m_wxml_core, only: xml_AddAttribute
