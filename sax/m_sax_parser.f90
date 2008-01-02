@@ -416,7 +416,8 @@ contains
     do
 
       call sax_tokenize(fx, fb, eof)
-      print*, "tokenize error", eof, in_error(fx%error_stack)
+      print*, "tokenize error", eof, in_error(fx%error_stack), &
+        eof.and..not.reading_main_file(fb), fx%context==CTXT_IN_CONTENT
       if (in_error(fx%error_stack)) then
         ! Any error, we want to quit sax_tokenizer
         call add_error(fx%error_stack, 'Error getting token')
@@ -434,6 +435,7 @@ contains
           if (associated(extSubsetSystemId)) deallocate(extSubsetSystemId)
           call endDTDchecks
           if (in_error(fx%error_stack)) goto 100
+          inExtSubset = .false.
           fx%state = ST_MISC
           fx%context = CTXT_BEFORE_CONTENT
         elseif (fx%context==CTXT_IN_DTD) then
@@ -1100,7 +1102,7 @@ contains
                 'Encountered reference to undeclared entity')
             endif
           endif
-          nextState = ST_CHAR_IN_CONTENT ! FIXME
+          nextState = ST_CHAR_IN_CONTENT
         end select
 
       case (ST_CLOSING_TAG)

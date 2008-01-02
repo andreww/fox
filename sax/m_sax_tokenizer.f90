@@ -55,6 +55,7 @@ contains
     do
       c = get_character(fb, eof, fx%error_stack)
       if (eof.or.in_error(fx%error_stack)) return
+      print*, "c ", c
 
       select case (fx%state)
       case (ST_MISC)

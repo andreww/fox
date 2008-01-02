@@ -387,7 +387,7 @@ contains
     end do
 
     if (.not.associated(f%encoding)) then
-      if (present(standalone)) then
+      if (present(standalone).or.parse_state/=XD_END) then
         f%encoding => vs_str_alloc("utf-8")
       else
         call add_error(es, "Missing encoding in text declaration")
