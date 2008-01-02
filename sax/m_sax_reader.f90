@@ -19,6 +19,7 @@ module m_sax_reader
     !FIXME private
     type(xml_source_t), pointer :: f(:) => null()
     logical                     :: standalone = .false.
+    integer                     :: xml_version = XML1_0
   end type file_buffer_t
 
   public :: file_buffer_t
@@ -300,7 +301,7 @@ contains
         endif
       else
         ! We are reading from a file
-        string = get_char_from_file(f, eof, es)
+        string = get_char_from_file(f, fb%xml_version, eof, es)
         if (eof.or.in_error(es)) return ! EOF or Error.
       endif
     endif
@@ -354,7 +355,8 @@ contains
     if (eof.or.in_error(es)) then
       call add_error(es, "Error parsing XML declaration")
     else
-      xv = fb%f(1)%xml_version
+      fb%xml_version = fb%f(1)%xml_version
+      xv = fb%xml_version
       enc => vs_vs_alloc(fb%f(1)%encoding)
     endif
   end subroutine parse_xml_declaration

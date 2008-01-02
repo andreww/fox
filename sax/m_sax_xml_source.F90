@@ -1,14 +1,17 @@
 module m_sax_xml_source
 
-  use fox_m_fsys_array_str, only: str_vs, vs_str_alloc, vs_vs_alloc
+  use fox_m_fsys_array_str, only: str_vs, vs_str_alloc
   use fox_m_fsys_format, only: operator(//)
   use m_common_error,  only: error_stack, add_error, in_error
   use m_common_charset, only: XML_WHITESPACE, XML_INITIALENCODINGCHARS, &
-    XML_ENCODINGCHARS, XML1_0, XML1_1, isXML1_0_NameChar, isXML1_1_NameChar, &
+    XML_ENCODINGCHARS, XML1_0, XML1_1, isXML1_0_NameChar, &
     isLegalChar, allowed_encoding
-  use m_common_io, only: setup_io, io_eor, io_eof, get_unit
+  use m_common_io, only: io_eor, io_eof
   
   use FoX_utils, only: URI
+
+  implicit none
+  private
 
   type buffer_t
     character, dimension(:), pointer :: s
@@ -32,19 +35,21 @@ module m_sax_xml_source
   public :: buffer_t
   public :: xml_source_t
 
-  public :: get_chars_from_file
+  public :: get_char_from_file
   public :: push_file_chars
   public :: parse_declaration
 
 contains
 
 
-  function get_char_from_file(f, eof, es) result(string)
+  function get_char_from_file(f, xv, eof, es) result(string)
     type(xml_source_t), intent(inout) :: f
+    integer, intent(in) :: xv
     logical, intent(out) :: eof
     type(error_stack), intent(inout) :: es
     character(len=1) :: string
 
+    integer :: iostat
     logical :: pending
     character :: c, c2
 
@@ -58,7 +63,7 @@ contains
       call add_error(es, "Error reading "//str_vs(f%filename))
       return
     endif
-    if (.not.isLegalChar(c, f%xml_version)) then
+    if (.not.isLegalChar(c, xv)) then
       call add_error(es, "Illegal character found at " &
         //str_vs(f%filename)//":"//f%line//":"//f%col)
       return
@@ -175,7 +180,7 @@ contains
     xd_par = xd_nothing
     ch => null()
     do
-      c = get_char_from_file(f, eof, es)
+      c = get_char_from_file(f, XML1_0, eof, es)
       if (eof) then
         call rewind_source(f)
         exit
