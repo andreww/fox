@@ -1233,6 +1233,8 @@ contains
           endif
           if (associated(fx%publicId)) deallocate(fx%publicId)
           fx%inIntSubset = .true.
+          print*, "wf increment sb dtd decl"
+          wf_stack(1) = wf_stack(1) + 1
           nextState = ST_SUBSET
         case (TOK_END_TAG)
           if (present(startDTD_handler)) then
@@ -1253,14 +1255,14 @@ contains
               goto 100
             endif
             call open_new_file(fb, str_vs(fx%systemId), iostat)
-            print*, "growing wf_stack 6"
-            temp_wf_stack => wf_stack
-            allocate(wf_stack(size(temp_wf_stack)+1))
-            wf_stack = (/0, temp_wf_stack/)
-            deallocate(temp_wf_stack)
             if (iostat==0) then
               call parse_text_declaration(fb, fx%error_stack)
               if (in_error(fx%error_stack)) goto 100
+              print*, "growing wf_stack 6"
+              temp_wf_stack => wf_stack
+              allocate(wf_stack(size(temp_wf_stack)+1))
+              wf_stack = (/0, temp_wf_stack/)
+              deallocate(temp_wf_stack)
               inExtSubset = .true.
               nextState = ST_SUBSET
             else
@@ -1337,11 +1339,6 @@ contains
               call add_internal_entity(fx%forbidden_pe_list, &
                 str_vs(fx%token), "")
               call open_new_file(fb, str_vs(ent%systemId), iostat, pe=.true.)
-              print*, "growing wf_stack 3"
-              allocate(temp_wf_stack(size(wf_stack)+1))
-              temp_wf_stack = (/0, wf_stack/)
-              deallocate(wf_stack)
-              wf_stack => temp_wf_stack
               if (iostat/=0) then
                 if (present(skippedEntity_handler)) then
                   call skippedEntity_handler('%'//str_vs(fx%token))
@@ -1361,6 +1358,11 @@ contains
                   str_vs(fx%token), "")
                 call parse_text_declaration(fb, fx%error_stack)
                 if (in_error(fx%error_stack)) goto 100
+                print*, "growing wf_stack 3"
+                allocate(temp_wf_stack(size(wf_stack)+1))
+                temp_wf_stack = (/0, wf_stack/)
+                deallocate(wf_stack)
+                wf_stack => temp_wf_stack
               endif
             else
               ! Expand the entity, 
@@ -1902,17 +1904,18 @@ contains
               goto 100
             endif
             call open_new_file(fb, str_vs(extSubsetSystemId), iostat)
-            print*, "growing wf_stack 7"
-            temp_wf_stack => wf_stack
-            allocate(wf_stack(size(temp_wf_stack)+1))
-            wf_stack = (/0, temp_wf_stack/)
-            deallocate(temp_wf_stack)
             if (iostat==0) then
               call parse_text_declaration(fb, fx%error_stack)
               if (in_error(fx%error_stack)) goto 100
+              print*, "growing wf_stack 7"
+              temp_wf_stack => wf_stack
+              allocate(wf_stack(size(temp_wf_stack)+1))
+              wf_stack = (/0, temp_wf_stack/)
+              deallocate(temp_wf_stack)
               inExtSubset = .true.
               nextState = ST_SUBSET
             else
+              ! FIXME error on validating?
               call endDTDchecks
               if (in_error(fx%error_stack)) goto 100
               print*, "wf decrement dtd 1"
