@@ -426,7 +426,7 @@ contains
           if (section_depth>0) then
             call add_error(fx%error_stack, "Unclosed conditional sections in external subset")
             goto 100
-          elseif (fx%state/=ST_SUBSET) then
+          elseif (validCheck.and.fx%state/=ST_SUBSET) then
             call add_error(fx%error_stack, &
               "Markup not terminated in external subset")
             goto 100
@@ -553,19 +553,22 @@ contains
 
       case (ST_PI_CONTENTS)
         write(*,*)'ST_PI_CONTENTS'
-        if (fx%context==CTXT_IN_DTD &
-          .and..not.reading_main_file(fb) &
-          .and..not.markupDecl) then
-          call add_error(fx%error_stack, &
-            "PI not balanced in parameter entity")
-          goto 100
-        endif
-        markupDecl = .false.
-        if (validCheck.and.len(fx%elstack)>0) then
-          elem => get_element(fx%xds%element_list, get_top_elstack(fx%elstack))
-          if (associated(elem)) then
-            if (elem%empty) then
-              call add_error(fx%error_stack, "Content inside empty element")
+        if (validCheck) then
+          if (fx%context==CTXT_IN_DTD &
+            .and..not.reading_main_file(fb) &
+            .and..not.markupDecl) then
+            call add_error(fx%error_stack, &
+              "PI not balanced in parameter entity")
+            goto 100
+          endif
+          markupDecl = .false.
+          if (len(fx%elstack)>0) then
+            elem => &
+              get_element(fx%xds%element_list, get_top_elstack(fx%elstack))
+            if (associated(elem)) then
+              if (elem%empty) then
+                call add_error(fx%error_stack, "Content inside empty element")
+              endif
             endif
           endif
         endif
@@ -617,11 +620,22 @@ contains
 
       case (ST_COMMENT_END)
         write(*,*)'ST_COMMENT_END'
-        if (validCheck.and.len(fx%elstack)>0) then
-          elem => get_element(fx%xds%element_list, get_top_elstack(fx%elstack))
-          if (associated(elem)) then
-            if (elem%empty) then
-              call add_error(fx%error_stack, "Content inside empty element")
+        if (validCheck) then
+          if (fx%context==CTXT_IN_DTD &
+            .and..not.reading_main_file(fb) &
+            .and..not.markupDecl) then
+            call add_error(fx%error_stack, &
+              "Comment not balanced in parameter entity")
+            goto 100
+          endif
+          markupDecl = .false.
+          if (len(fx%elstack)>0) then
+            elem => &
+              get_element(fx%xds%element_list, get_top_elstack(fx%elstack))
+            if (associated(elem)) then
+              if (elem%empty) then
+                call add_error(fx%error_stack, "Content inside empty element")
+              endif
             endif
           endif
         endif
@@ -738,6 +752,7 @@ contains
         case (TOK_SECTION_END)
           section_depth = section_depth - 1
           if (section_depth==0) then
+            markupDecl = .false.
             fx%context = CTXT_IN_DTD
             nextState = ST_SUBSET
           else
@@ -1401,11 +1416,13 @@ contains
           endif
           nextState = ST_DTD_ATTLIST_END
         case (TOK_END_TAG)
-          if (.not.reading_main_file(fb) &
-            .and..not.markupDecl) then
-            call add_error(fx%error_stack, &
-              "ATTLIST not balanced in parameter entity")
-            goto 100
+          if (validCheck) then
+            if (.not.reading_main_file(fb) &
+              .and..not.markupDecl) then
+              call add_error(fx%error_stack, &
+                "ATTLIST not balanced in parameter entity")
+              goto 100
+            endif
           endif
           if (processDTD) then
             call parse_dtd_attlist("", fx%xds%xml_version, fx%error_stack, elem)
@@ -1424,13 +1441,15 @@ contains
         write(*,*) 'ST_DTD_ATTLIST_END'
         select case (fx%tokenType)
         case (TOK_END_TAG)
-          if (.not.reading_main_file(fb) &
-            .and..not.markupDecl) then
-            call add_error(fx%error_stack, &
-              "ATTLIST not balanced in parameter entity")
-            goto 100
+          if (validCheck) then
+            if (.not.reading_main_file(fb) &
+              .and..not.markupDecl) then
+              call add_error(fx%error_stack, &
+                "ATTLIST not balanced in parameter entity")
+              goto 100
+            endif
+            markupDecl = .false.
           endif
-          markupDecl = .false.
           if (processDTD) then
             if (present(attributeDecl_handler)) then
               call report_declarations(elem, attributeDecl_handler)
@@ -1487,13 +1506,15 @@ contains
         write(*,*)'ST_DTD_ELEMENT_END'
         select case (fx%tokenType)
         case (TOK_END_TAG)
-          if (.not.reading_main_file(fb) &
-            .and..not.markupDecl) then
-            call add_error(fx%error_stack, &
-              "ELEMENT not balanced in parameter entity")
-            goto 100
+          if (validCheck) then
+            if (.not.reading_main_file(fb) &
+              .and..not.markupDecl) then
+              call add_error(fx%error_stack, &
+                "ELEMENT not balanced in parameter entity")
+              goto 100
+            endif
+            markupDecl = .false.
           endif
-          markupDecl = .false.
           if (processDTD.and.associated(elem)) then
             if (present(elementDecl_handler)) then
               call elementDecl_handler(str_vs(fx%name), str_vs(elem%model))
@@ -1607,13 +1628,15 @@ contains
         write(*,*) 'ST_DTD_ENTITY_NDATA'
         select case (fx%tokenType)
         case (TOK_END_TAG)
-          if (.not.reading_main_file(fb) &
-            .and..not.markupDecl) then
-            call add_error(fx%error_stack, &
-              "ENTITY not balanced in parameter entity")
-            goto 100
+          if (validCheck) then
+            if (.not.reading_main_file(fb) &
+              .and..not.markupDecl) then
+              call add_error(fx%error_stack, &
+                "ENTITY not balanced in parameter entity")
+              goto 100
+            endif
+            markupDecl = .false.
           endif
-          markupDecl = .false.
           if (processDTD) then
             call add_entity
             if (in_error(fx%error_stack)) goto 100
@@ -1666,13 +1689,15 @@ contains
         write(*,*) 'ST_DTD_ENTITY_END'
         select case (fx%tokenType)
         case (TOK_END_TAG)
-          if (.not.reading_main_file(fb) &
-            .and..not.markupDecl) then
-            call add_error(fx%error_stack, &
-              "ENTITY not balanced in parameter entity")
-            goto 100
+          if (validCheck) then
+            if (.not.reading_main_file(fb) &
+              .and..not.markupDecl) then
+              call add_error(fx%error_stack, &
+                "ENTITY not balanced in parameter entity")
+              goto 100
+            endif
+            markupDecl = .false.
           endif
-          markupDecl = .false.
           if (processDTD) then
             call add_entity
             if (in_error(fx%error_stack)) goto 100
@@ -1759,14 +1784,14 @@ contains
         write(*,*)'ST_DTD_NOTATION_PUBLIC_2'
         select case (fx%tokenType)
         case (TOK_END_TAG)
-          if (.not.reading_main_file(fb) &
-            .and..not.markupDecl) then
-            call add_error(fx%error_stack, &
-              "NOTATION not balanced in parameter entity")
-            goto 100
-          endif
-          markupDecl = .false.
           if (validCheck) then
+            if (.not.reading_main_file(fb) &
+              .and..not.markupDecl) then
+              call add_error(fx%error_stack, &
+                "NOTATION not balanced in parameter entity")
+              goto 100
+            endif
+            markupDecl = .false.
             if (notation_exists(fx%nlist, str_vs(fx%name))) then
               call add_error(fx%error_stack, "Duplicate notation declaration")
               goto 100
@@ -1792,14 +1817,14 @@ contains
         write(*,*)'ST_DTD_NOTATION_END'
         select case (fx%tokenType)
         case (TOK_END_TAG)
-          if (.not.reading_main_file(fb) &
-            .and..not.markupDecl) then
-            call add_error(fx%error_stack, &
-              "NOTATION not balanced in parameter entity")
-            goto 100
-          endif
-          markupDecl = .false.
           if (validCheck) then
+            if (.not.reading_main_file(fb) &
+              .and..not.markupDecl) then
+              call add_error(fx%error_stack, &
+                "NOTATION not balanced in parameter entity")
+              goto 100
+            endif
+            markupDecl = .false.
             if (notation_exists(fx%nlist, str_vs(fx%name))) then
               call add_error(fx%error_stack, "Duplicate notation declaration")
               goto 100

@@ -1,6 +1,7 @@
 module m_sax_reader
 
   use m_common_array_str, only: str_vs, vs_str_alloc, vs_vs_alloc
+  use m_common_charset, only: XML1_0
   use m_common_error,  only: error_stack, FoX_error, in_error, add_error
   use m_common_format, only: operator(//)
   use m_common_io, only: setup_io, get_unit, io_err
@@ -363,10 +364,18 @@ contains
     type(error_stack), intent(inout) :: es
 
     logical :: eof
+    integer :: xv
+
+    xv = fb%f(size(fb%f))%xml_version
 
     call parse_declaration(fb%f(1), eof, es)
-    if (in_error(es)) &
+    if (in_error(es)) then
       call add_error(es, "Error parsing text declaration")
+      return
+    elseif (xv==XML1_0.and.fb%f(1)%xml_version/=XML1_0) then
+      call add_error(es, "XML 1.0 document cannot reference entities with higher version numbers")
+      return
+    endif
 
   end subroutine parse_text_declaration
 
