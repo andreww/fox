@@ -2,10 +2,8 @@ module fox_m_utils_uri
 #ifndef DUMMYLIB
 
   ! Manipulate URIs and URI references a la RFC 2396
-  ! NB
+  ! NB: ...
   ! Forbidden (ASCII control) characters are not handled correctly
-  ! ../../ above current directory is handled in accordance with RFC, 
-  !     but not very helpfully
   ! checking of reg names (not hosts) is done wrongly
   ! checking of ipv6/X is untested
 
@@ -310,6 +308,7 @@ contains
       segments(1)%s => vs_str_alloc("/")
     else
       allocate(segments(0))
+      i1 = 0
     endif
 
     do
@@ -565,40 +564,50 @@ contains
     enddo
 
     seg3 => normalizePath(temp)
-
     do i = 1, size(temp)
       deallocate(temp(i)%s)
     enddo
     deallocate(temp)
+
   end function appendPaths
 
   function normalizepath(seg1) result(seg2)
     type(path_segment), pointer :: seg1(:)
     type(path_segment), pointer :: seg2(:)
 
-    integer :: i, n, n2
+    integer :: i, n, n2, parents
 
     n = 0
+    parents = 0
     do i = 1, size(seg1)
       if (str_vs(seg1(i)%s)//"x"=="./x") then
         continue
       elseif (str_vs(seg1(i)%s)//"x"=="../x") then
-        if (n>0) n = n - 1
+        if (n>0) then
+          n = n - 1
+        else
+          parents = parents + 1
+        endif
       else
         n = n + 1
       endif
     enddo
 
+    n = n + parents
     allocate(seg2(n))
 
-    n2 = 0
+    n2 = parents
+    do i = 1, parents
+      seg2(i)%s => vs_str_alloc("../")
+    enddo
     do i = 1, size(seg1)
       if (str_vs(seg1(i)%s)//"x"=="./x") then
         continue
       elseif (str_vs(seg1(i)%s)//"x"=="../x") then
-        if (n2>0.and.n2<=n) &
-          deallocate(seg2(n2)%s)
-        if (n2>0) n2 = n2 - 1
+        if (n2>parents) then
+          if (n2<=n) deallocate(seg2(n2)%s)
+          n2 = n2 - 1
+        endif
       else
         n2 = n2 + 1
         if (n2>0.and.n2<=n) &
