@@ -83,8 +83,6 @@ contains
 
     fx%xds%standalone = fb%standalone
 
-    allocate(fx%wf_stack(1))
-    fx%wf_stack(1) = 0
     call init_entity_list(fx%forbidden_ge_list)
     call init_entity_list(fx%forbidden_pe_list)
     call init_entity_list(fx%predefined_e_list)
@@ -115,7 +113,6 @@ contains
       deallocate(fx%xds)
     endif
 
-    deallocate(fx%wf_stack)
     call destroy_entity_list(fx%forbidden_ge_list)
     call destroy_entity_list(fx%forbidden_pe_list)
     call destroy_entity_list(fx%predefined_e_list)
@@ -350,9 +347,10 @@ contains
     type(element_t), pointer :: elem
     type(entity_t), pointer :: ent
     type(URI), pointer :: URIref, newURI
-    integer, pointer :: temp_wf_stack(:)
+    integer, pointer :: wf_stack(:), temp_wf_stack(:)
     integer :: section_depth
     logical :: inExtSubset
+    logical :: markupDecl
 
     tempString => null()
     elem => null()
@@ -391,9 +389,12 @@ contains
       enddo
     endif
 
+    allocate(wf_stack(1))
+    wf_stack(1) = 0
     section_depth = 0
     inExtSubset = .false.
     extSubsetSystemId => null()
+    markupDecl = .false.
     processDTD = .true.
     iostat = 0
 
@@ -425,6 +426,10 @@ contains
           if (section_depth>0) then
             call add_error(fx%error_stack, "Unclosed conditional sections in external subset")
             goto 100
+          elseif (fx%state/=ST_SUBSET) then
+            call add_error(fx%error_stack, &
+              "Markup not terminated in external subset")
+            goto 100
           endif
           if (associated(extSubsetSystemId)) deallocate(extSubsetSystemId)
           call endDTDchecks
@@ -434,6 +439,16 @@ contains
         elseif (fx%context==CTXT_IN_DTD) then
           ! that's just the end of a parameter entity expansion.
           ! pop the parse stack, and carry on ..
+       !   if (fx%state not permissible) then
+       !     call add_error(fx%error_stack, "Markup not terminated in parameter entity")
+       !     goto 100
+       !   endif
+          if (markupDecl) then
+            call add_error(fx%error_stack, &
+              "Markup not terminated in parameter entity")
+            goto 100
+          endif
+          call pop_buffer_stack(fb)
           if (present(endEntity_handler)) then
             call endEntity_handler('%'//pop_entity_list(fx%forbidden_pe_list))
             if (fx%state==ST_STOP) goto 100
@@ -451,13 +466,13 @@ contains
           else
             dummy = pop_entity_list(fx%forbidden_ge_list)
           endif
-          if (fx%state/=ST_CHAR_IN_CONTENT.or.fx%wf_stack(1)/=0) then
+          if (fx%state/=ST_CHAR_IN_CONTENT.or.wf_stack(1)/=0) then
             call add_error(fx%error_stack, 'Ill-formed entity')
             goto 100
           endif
-          temp_wf_stack => fx%wf_stack
-          allocate(fx%wf_stack(size(temp_wf_stack)-1))
-          fx%wf_stack = temp_wf_stack(2:size(temp_wf_stack))
+          temp_wf_stack => wf_stack
+          allocate(wf_stack(size(temp_wf_stack)-1))
+          wf_stack = temp_wf_stack(2:size(temp_wf_stack))
           deallocate(temp_wf_stack)
         endif
         call pop_buffer_stack(fb)
@@ -550,6 +565,13 @@ contains
 
         select case(fx%tokenType)
         case (TOK_CHAR)
+          if (fx%context==CTXT_IN_DTD &
+            .and..not.reading_main_file(fb) &
+            .and..not.markupDecl) then
+            call add_error(fx%error_stack, &
+              "PI not balanced in parameter entity")
+            goto 100
+          endif
           if (present(processingInstruction_handler)) then
             call processingInstruction_handler(str_vs(fx%name), str_vs(fx%token))
             if (fx%state==ST_STOP) goto 100
@@ -557,6 +579,13 @@ contains
           deallocate(fx%name)
           nextState = ST_PI_END
         case (TOK_PI_END)
+          if (fx%context==CTXT_IN_DTD &
+            .and..not.reading_main_file(fb) &
+            .and..not.markupDecl) then
+            call add_error(fx%error_stack, &
+              "PI not balanced in parameter entity")
+            goto 100
+          endif
           if (present(processingInstruction_handler)) then
             call processingInstruction_handler(str_vs(fx%name), '')
             if (fx%state==ST_STOP) goto 100
@@ -564,6 +593,8 @@ contains
           deallocate(fx%name)
           if (fx%context==CTXT_IN_CONTENT) then
             nextState = ST_CHAR_IN_CONTENT
+          elseif (fx%context==CTXT_IN_DTD) then
+            nextState = ST_SUBSET
           else
             nextState = ST_MISC
           endif
@@ -604,6 +635,13 @@ contains
 
         select case (fx%tokenType)
         case (TOK_COMMENT_END)
+          if (fx%context==CTXT_IN_DTD &
+            .and..not.reading_main_file(fb) &
+            .and..not.markupDecl) then
+            call add_error(fx%error_stack, &
+              "Comment not balanced in parameter entity")
+            goto 100
+          endif
           if (present(comment_handler)) then
             call comment_handler(str_vs(fx%name))
             if (fx%state==ST_STOP) goto 100
@@ -1009,10 +1047,10 @@ contains
                   if (fx%state==ST_STOP) goto 100
                 endif
                 call add_internal_entity(fx%forbidden_ge_list, str_vs(fx%token), "")
-                temp_wf_stack => fx%wf_stack
-                allocate(fx%wf_stack(size(temp_wf_stack)+1))
-                fx%wf_stack(2:size(fx%wf_stack)) = temp_wf_stack
-                fx%wf_stack(1) = 0
+                temp_wf_stack => wf_stack
+                allocate(wf_stack(size(temp_wf_stack)+1))
+                wf_stack(2:size(wf_stack)) = temp_wf_stack
+                wf_stack(1) = 0
                 deallocate(temp_wf_stack)
                 call parse_text_declaration(fb, fx%error_stack)
                 if (in_error(fx%error_stack)) goto 100
@@ -1035,10 +1073,10 @@ contains
                 call startEntity_handler(str_vs(fx%token))
               call add_internal_entity(fx%forbidden_ge_list, str_vs(fx%token), "")
               call open_new_string(fb, expand_entity(fx%xds%entityList, str_vs(fx%token)))
-              temp_wf_stack => fx%wf_stack
-              allocate(fx%wf_stack(size(temp_wf_stack)+1))
-              fx%wf_stack(2:size(fx%wf_stack)) = temp_wf_stack
-              fx%wf_stack(1) = 0
+              temp_wf_stack => wf_stack
+              allocate(wf_stack(size(temp_wf_stack)+1))
+              wf_stack(2:size(wf_stack)) = temp_wf_stack
+              wf_stack(1) = 0
               deallocate(temp_wf_stack)
             endif
           else
@@ -1238,13 +1276,16 @@ contains
           endif
           nextState = ST_SUBSET
         case (TOK_ENTITY)
+          markupDecl = .true.
           nextState = ST_START_PE
         case (TOK_PI_TAG)
+          markupDecl = .true.
           nextState = ST_START_PI
         case (TOK_BANG_TAG)
+          markupDecl = .true.
           nextState = ST_BANG_TAG
         case default
-          call add_error(fx%error_stack, "Unexpected token in internal subset")
+          call add_error(fx%error_stack, "Unexpected token in document subset")
           goto 100
         end select
 
@@ -1267,6 +1308,7 @@ contains
               call add_internal_entity(fx%forbidden_pe_list, &
                 str_vs(fx%token), "")
               call open_new_file(fb, str_vs(ent%systemId), iostat)
+              markupDecl = .false.
               if (iostat/=0) then
                 if (present(skippedEntity_handler)) then
                   call skippedEntity_handler('%'//str_vs(fx%token))
@@ -1297,6 +1339,7 @@ contains
                 str_vs(fx%token), "")
               call open_new_string(fb, &
                 " "//expand_entity(fx%xds%PEList, str_vs(fx%token))//" ")
+              markupDecl = .false.
             endif
             ! and do nothing else, carry on ...
           else
@@ -1344,6 +1387,7 @@ contains
         select case (fx%tokenType)
         case (TOK_DTD_CONTENTS)
           if (processDTD) then
+            print*, associated(fx%token), associated(elem)
             call parse_dtd_attlist(str_vs(fx%token), fx%xds%xml_version, fx%error_stack, elem)
           else
             call parse_dtd_attlist(str_vs(fx%token), fx%xds%xml_version, fx%error_stack)
@@ -1363,6 +1407,12 @@ contains
           endif
           nextState = ST_DTD_ATTLIST_END
         case (TOK_END_TAG)
+          if (.not.reading_main_file(fb) &
+            .and..not.markupDecl) then
+            call add_error(fx%error_stack, &
+              "ATTLIST not balanced in parameter entity")
+            goto 100
+          endif
           if (processDTD) then
             call parse_dtd_attlist("", fx%xds%xml_version, fx%error_stack, elem)
           else
@@ -1380,6 +1430,12 @@ contains
         write(*,*) 'ST_DTD_ATTLIST_END'
         select case (fx%tokenType)
         case (TOK_END_TAG)
+          if (.not.reading_main_file(fb) &
+            .and..not.markupDecl) then
+            call add_error(fx%error_stack, &
+              "ATTLIST not balanced in parameter entity")
+            goto 100
+          endif
           if (processDTD) then
             if (present(attributeDecl_handler)) then
               call report_declarations(elem, attributeDecl_handler)
@@ -1436,6 +1492,12 @@ contains
         write(*,*)'ST_DTD_ELEMENT_END'
         select case (fx%tokenType)
         case (TOK_END_TAG)
+          if (.not.reading_main_file(fb) &
+            .and..not.markupDecl) then
+            call add_error(fx%error_stack, &
+              "ELEMENT not balanced in parameter entity")
+            goto 100
+          endif
           if (processDTD.and.associated(elem)) then
             if (present(elementDecl_handler)) then
               call elementDecl_handler(str_vs(fx%name), str_vs(elem%model))
@@ -1548,6 +1610,12 @@ contains
         write(*,*) 'ST_DTD_ENTITY_NDATA'
         select case (fx%tokenType)
         case (TOK_END_TAG)
+          if (.not.reading_main_file(fb) &
+            .and..not.markupDecl) then
+            call add_error(fx%error_stack, &
+              "ENTITY not balanced in parameter entity")
+            goto 100
+          endif
           if (processDTD) then
             call add_entity
             if (in_error(fx%error_stack)) goto 100
@@ -1600,6 +1668,12 @@ contains
         write(*,*) 'ST_DTD_ENTITY_END'
         select case (fx%tokenType)
         case (TOK_END_TAG)
+          if (.not.reading_main_file(fb) &
+            .and..not.markupDecl) then
+            call add_error(fx%error_stack, &
+              "ENTITY not balanced in parameter entity")
+            goto 100
+          endif
           if (processDTD) then
             call add_entity
             if (in_error(fx%error_stack)) goto 100
@@ -1686,6 +1760,12 @@ contains
         write(*,*)'ST_DTD_NOTATION_PUBLIC_2'
         select case (fx%tokenType)
         case (TOK_END_TAG)
+          if (.not.reading_main_file(fb) &
+            .and..not.markupDecl) then
+            call add_error(fx%error_stack, &
+              "NOTATION not balanced in parameter entity")
+            goto 100
+          endif
           if (validCheck) then
             if (notation_exists(fx%nlist, str_vs(fx%name))) then
               call add_error(fx%error_stack, "Duplicate notation declaration")
@@ -1712,6 +1792,12 @@ contains
         write(*,*)'ST_DTD_NOTATION_END'
         select case (fx%tokenType)
         case (TOK_END_TAG)
+          if (.not.reading_main_file(fb) &
+            .and..not.markupDecl) then
+            call add_error(fx%error_stack, &
+              "NOTATION not balanced in parameter entity")
+            goto 100
+          endif
           if (validCheck) then
             if (notation_exists(fx%nlist, str_vs(fx%name))) then
               call add_error(fx%error_stack, "Duplicate notation declaration")
@@ -1892,12 +1978,12 @@ contains
       endif
       call push_elstack(str_vs(fx%name), fx%elstack)
       call reset_dict(fx%attributes)
-      fx%wf_stack(1) = fx%wf_stack(1) + 1
+      wf_stack(1) = wf_stack(1) + 1
     end subroutine open_tag
 
     subroutine close_tag
-      fx%wf_stack(1) = fx%wf_stack(1) - 1
-      if (fx%wf_stack(1)<0) then
+      wf_stack(1) = wf_stack(1) - 1
+      if (wf_stack(1)<0) then
         call add_error(fx%error_stack, &
           'Ill-formed entity')
         return
