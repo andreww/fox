@@ -775,6 +775,8 @@ contains
             endif
           endif
         endif
+        print*, "wf decrement end cdata"
+        wf_stack(1) = wf_stack(1) - 1
 
         select case(fx%tokenType)
         case (TOK_SECTION_END)
