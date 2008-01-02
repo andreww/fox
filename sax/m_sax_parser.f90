@@ -448,7 +448,6 @@ contains
               "Markup not terminated in parameter entity")
             goto 100
           endif
-          call pop_buffer_stack(fb)
           if (present(endEntity_handler)) then
             call endEntity_handler('%'//pop_entity_list(fx%forbidden_pe_list))
             if (fx%state==ST_STOP) goto 100
@@ -554,6 +553,14 @@ contains
 
       case (ST_PI_CONTENTS)
         write(*,*)'ST_PI_CONTENTS'
+        if (fx%context==CTXT_IN_DTD &
+          .and..not.reading_main_file(fb) &
+          .and..not.markupDecl) then
+          call add_error(fx%error_stack, &
+            "PI not balanced in parameter entity")
+          goto 100
+        endif
+        markupDecl = .false.
         if (validCheck.and.len(fx%elstack)>0) then
           elem => get_element(fx%xds%element_list, get_top_elstack(fx%elstack))
           if (associated(elem)) then
@@ -565,13 +572,6 @@ contains
 
         select case(fx%tokenType)
         case (TOK_CHAR)
-          if (fx%context==CTXT_IN_DTD &
-            .and..not.reading_main_file(fb) &
-            .and..not.markupDecl) then
-            call add_error(fx%error_stack, &
-              "PI not balanced in parameter entity")
-            goto 100
-          endif
           if (present(processingInstruction_handler)) then
             call processingInstruction_handler(str_vs(fx%name), str_vs(fx%token))
             if (fx%state==ST_STOP) goto 100
@@ -579,13 +579,6 @@ contains
           deallocate(fx%name)
           nextState = ST_PI_END
         case (TOK_PI_END)
-          if (fx%context==CTXT_IN_DTD &
-            .and..not.reading_main_file(fb) &
-            .and..not.markupDecl) then
-            call add_error(fx%error_stack, &
-              "PI not balanced in parameter entity")
-            goto 100
-          endif
           if (present(processingInstruction_handler)) then
             call processingInstruction_handler(str_vs(fx%name), '')
             if (fx%state==ST_STOP) goto 100
@@ -642,6 +635,7 @@ contains
               "Comment not balanced in parameter entity")
             goto 100
           endif
+          markupDecl = .false.
           if (present(comment_handler)) then
             call comment_handler(str_vs(fx%name))
             if (fx%state==ST_STOP) goto 100
@@ -905,7 +899,7 @@ contains
           tempString => normalize_attribute_text(fx, fx%token)
           deallocate(fx%token)
           fx%token => tempString
-          nullify(tempString)
+          tempString => null()
           !If this attribute is not CDATA, we must process further;
           temp_i = get_att_type(fx%xds%element_list, str_vs(fx%name), str_vs(fx%attname))
           if (temp_i==ATT_CDATA) then
@@ -1436,6 +1430,7 @@ contains
               "ATTLIST not balanced in parameter entity")
             goto 100
           endif
+          markupDecl = .false.
           if (processDTD) then
             if (present(attributeDecl_handler)) then
               call report_declarations(elem, attributeDecl_handler)
@@ -1498,6 +1493,7 @@ contains
               "ELEMENT not balanced in parameter entity")
             goto 100
           endif
+          markupDecl = .false.
           if (processDTD.and.associated(elem)) then
             if (present(elementDecl_handler)) then
               call elementDecl_handler(str_vs(fx%name), str_vs(elem%model))
@@ -1570,6 +1566,7 @@ contains
             tempString => expand_pe_text(fx, fx%token, fb)
           endif
           fx%attname => expand_entity_value_alloc(tempString, fx%xds, fx%error_stack)
+          tempString => null()
           if (in_error(fx%error_stack)) goto 100
           nextState = ST_DTD_ENTITY_END
         case default
@@ -1616,6 +1613,7 @@ contains
               "ENTITY not balanced in parameter entity")
             goto 100
           endif
+          markupDecl = .false.
           if (processDTD) then
             call add_entity
             if (in_error(fx%error_stack)) goto 100
@@ -1674,6 +1672,7 @@ contains
               "ENTITY not balanced in parameter entity")
             goto 100
           endif
+          markupDecl = .false.
           if (processDTD) then
             call add_entity
             if (in_error(fx%error_stack)) goto 100
@@ -1766,6 +1765,7 @@ contains
               "NOTATION not balanced in parameter entity")
             goto 100
           endif
+          markupDecl = .false.
           if (validCheck) then
             if (notation_exists(fx%nlist, str_vs(fx%name))) then
               call add_error(fx%error_stack, "Duplicate notation declaration")
@@ -1798,6 +1798,7 @@ contains
               "NOTATION not balanced in parameter entity")
             goto 100
           endif
+          markupDecl = .false.
           if (validCheck) then
             if (notation_exists(fx%nlist, str_vs(fx%name))) then
               call add_error(fx%error_stack, "Duplicate notation declaration")
