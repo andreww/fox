@@ -264,8 +264,12 @@ contains
           case ("encoding")
             select case (xd_par)
             case (xd_nothing)
-              call add_error(es, &
-                "Must specify version before encoding in XML declaration")
+              if (present(standalone)) then
+                call add_error(es, &
+                  "Must specify version before encoding in XML declaration")
+              else
+                xd_par = xd_encoding
+              endif
             case (xd_version)
               xd_par = xd_encoding
             case (xd_encoding)

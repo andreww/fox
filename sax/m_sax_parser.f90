@@ -422,13 +422,15 @@ contains
       elseif (eof.and..not.reading_main_file(fb)) then
         if (inExtSubset.and.reading_first_entity(fb)) then
           print*, "FINISHEd EXT SUBSET", wf_stack(1), fx%state
-          if (wf_stack(1)>0) then
-            call add_error(fx%error_stack, "Unclosed conditional sections in external subset")
-            goto 100
-          elseif (validCheck.and.fx%state/=ST_SUBSET) then
-            call add_error(fx%error_stack, &
-              "Markup not terminated in external subset")
-            goto 100
+          if (validCheck) then
+            if (wf_stack(1)>0) then
+              call add_error(fx%error_stack, "Unclosed conditional sections in external subset")
+              goto 100
+            elseif (fx%state/=ST_SUBSET) then
+              call add_error(fx%error_stack, &
+                "Markup not terminated in external subset")
+              goto 100
+            endif
           endif
           if (associated(extSubsetSystemId)) deallocate(extSubsetSystemId)
           call endDTDchecks
