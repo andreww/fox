@@ -2290,11 +2290,15 @@ contains
       ! must be an NCName
       ! must be unique ...
       !endif
-      !if (has_key(fx%attributes, 'xml:base')) then
-      !   We never care about this at the SAX level; except
-      !   that it must be a valid URI when we can check that.
-      !   FIXME check valid URI
-      !endif
+      if (has_key(fx%attributes, "xml:base")) then
+        URIref => parseURI(get_value(fx%attributes,"xml:base"))
+        if (.not.associated(URIref)) then
+          call add_error(fx%error_stack, &
+            "Invalid URI reference specified for xml:base attribute")
+        else
+          call destroyURI(URIref)
+        endif
+      endif
       !if (has_key(fx%attributes, 'xml:lang')) then
       !   We never care about this at the SAX level.
       !endif
