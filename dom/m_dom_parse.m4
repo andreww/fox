@@ -300,7 +300,7 @@ contains
         initial_entities = elist)
       ! FIXME namespaces take from domConfig
       call close_xml_t(subsax)
-      call add_internal_entity(elist, name, value)
+      call add_internal_entity(elist, name, value, null(), .false.)
 
       current => setNamedItem(getEntities(getDocType(mainDoc)), current)
       current => oldcurrent

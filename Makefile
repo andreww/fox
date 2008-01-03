@@ -29,7 +29,7 @@ dom_lib_check: sax_lib_check wxml_lib_check
 	(cd dom; $(MAKE) check)
 	touch dom_lib_check
 #
-sax_lib: objsdir common_lib fsys_lib
+sax_lib: objsdir common_lib utils_lib fsys_lib
 	(cd sax; $(MAKE))
 sax_lib_clean:
 	if test -d sax; then (cd sax; $(MAKE) clean) fi
@@ -53,7 +53,7 @@ wcml_lib_check: wxml_lib_check
 	(cd wcml; $(MAKE) check)
 	touch wcml_lib_check
 #
-common_lib: objsdir fsys_lib
+common_lib: objsdir fsys_lib utils_lib
 	(cd common; $(MAKE))
 common_lib_clean:
 	if test -d common; then (cd common; $(MAKE) clean) fi

@@ -440,7 +440,7 @@ contains
         if (.not.checkExistingRefs()) &
           call wxml_warning(xf, "Reference to unknown parameter entity")
       endif
-      call register_internal_PE(xf%xds, name=name, text=PEdef, wfc=.false.)
+      call register_internal_PE(xf%xds, name=name, text=PEdef, baseURI=null(), wfc=.false.)
     else
       if (.not.checkSystemID(system)) &
         call wxml_fatal("Parameter entity System ID is invalid: "//system)
@@ -448,7 +448,8 @@ contains
         if (.not.checkPublicID(public)) &
           call wxml_fatal("Parameter entity Public ID is invalid: "//public)
       endif
-      call register_external_PE(xf%xds, name=name, systemId=system, publicId=public, wfc=.false.)
+      call register_external_PE(xf%xds, name=name, systemId=system, &
+        publicId=public, baseURI=null(), wfc=.false.)
     endif
 
     call add_eol(xf)
@@ -531,7 +532,7 @@ contains
 
     if (.not.checkName(name, xf%xds)) &
       call wxml_error("xml_AddInternalEntity: Invalid Name: "//name)
-    call register_internal_GE(xf%xds, name=name, text=value, wfc=.false.)
+    call register_internal_GE(xf%xds, name=name, text=value, baseURI=null(), wfc=.false.)
 
     call add_eol(xf)
     
@@ -599,7 +600,8 @@ contains
     endif
     ! Notation only needs checked if not already registered - done above.
     call register_external_GE(xf%xds, name=name, &
-      systemID=system, publicId=public, notation=notation, wfc=.false.)
+      systemID=system, publicId=public, notation=notation, &
+      baseURI=null(), wfc=.false.)
     
     call add_eol(xf)
     
