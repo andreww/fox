@@ -1,7 +1,8 @@
 module FoX_dom
 
-  use m_common_format
   use fox_m_fsys_array_str
+  use fox_m_fsys_format
+
   use m_dom_dom
   use m_dom_error
   use m_dom_extras
