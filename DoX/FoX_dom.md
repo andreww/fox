@@ -595,10 +595,6 @@ and are all implemented, with the exceptions of:
 * `schema-location`
 * `schema-type`  
 
-### External entities
-
-The FoX SAX processor does not read external entities,  therefore these will not be made available through the DOM interface, nor will the document represented be affected by any declarations made in referenced external entities (thus, for example, any externally-declared default attributes will not be made available.)
-
 ## DOM Miscellanea
 
 <a name="DomMiscellanea"/>

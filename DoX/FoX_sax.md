@@ -60,7 +60,7 @@ Does namespace processing occur? Default is `.true.`, and if on, then any non-na
 Are `xmlns` attributes reported through the SAX parser? Default is `.false.`; all such attributes are removed by the parser, and transparent namespace URI resolution is performed. If on, then such attributes will be reported, and treated according to the value of `xmlns-uris` below. (If `namespaces` is false, this flag has no effect)
 
 * `validate`
-Should partial validation be performed? Default is `.false.`, no validation checks are made, and the influence of the DTD on the XML Infoset is ignored. (Ill-formed DTD's will still cause fatal errors, of course.) If on, then a limited amount of validation will be performed, and the Infoset modified accordingly. (Validation will be incomplete if any external subset or entities are referenced.)
+Should partial validation be performed? Default is `.false.`, no validation checks are made, and the influence of the DTD on the XML Infoset is ignored. (Ill-formed DTD's will still cause fatal errors, of course.) If on, then a limited amount of validation will be performed, and the Infoset modified accordingly.
 
 * `xmlns_uris`
 Should `xmlns` attributes have a namespace of `http://www.w3.org/2000/xmlns/`? Default is `.false.`. If such attributes are reported, they have no namespace. If `.true.` then they are supplied with the appropriate namespace. (if `namespaces` or `namespace-prefixes` are `.false.`, then this flag has no effect.)
@@ -217,7 +217,7 @@ This closes down the parser (and closes the file, if input was coming from a fil
 
   This tells `xp` to start parsing its document. 
 
-(*Advanced: By default, this will be done in a non-validating way, testing only for well-formedness errors. However, if `validate` is set to true. FoX will attempt to diagnose validation errors. Note that FoX is not a full validating parser, and will not read external entities, so do not rely on this behaviour*)
+(*Advanced: By default, this will be done in a non-validating way, testing only for well-formedness errors. However, if `validate` is set to true. FoX will attempt to diagnose validation errors. Note that FoX is not a full validating parser, and does not test all validity constraints*)
 
 The full list of event handlers is in the next section. To use them, the interface must be placed in a module, and the body of the subroutine filled in as desired; then it should be specified as an argument to `parse` as:   
   `name_of_event_handler = name_of_user_written_subroutine`  
@@ -460,15 +460,11 @@ Although FoX tries very hard to  work to the letter of the XML and SAX standards
 
 It will, however, happily accept documents labelled as UTF-8 encoded.
 
-* XML specifies that all SYSTEM IDs reported by events should be converted to URIs before the application receives them. FoX does no such conversion, and as a result, will allow through invalid SYSTEM IDs.
-
-* FoX performs no checking on the validity of Namespace URIs.
+* FoX has no network capabilities. Therefore, when external entities are referenced, any entities not available on the local filesystem will not be accessed (specifically, any URIs which have a scheme present, and that scheme is not `file`, will be skipped)
 
 Beyond this, any aspects of XML and SAX which FoX fails to do justice to are bugs.
 
 Note that (as permissable within XML) FoX acts primarily as a non-validating parser, and thus all constraints marked as Validity Constraints by XML-1.0/1.1 are ignored by default. A subset of them will be picked up by FoX's validation mode, but only a small subset.
-
-Note also that FoX will not read external entities when processing an XML document.
 
 ---------------------
 
