@@ -989,16 +989,13 @@ contains
         select case (fx%tokenType)
         case (TOK_NAME)
           print*, "starting with the entity ..."
-          if (validCheck) &
+          if (validCheck) then
             elem => get_element(fx%xds%element_list, get_top_elstack(fx%elstack))
-          ! tell tokenizer to expand it
-          if (existing_entity(fx%forbidden_ge_list, str_vs(fx%token))) then
-            call add_error(fx%error_stack, 'Recursive entity reference')
-	    goto 100
-          endif
-          if (existing_entity(fx%predefined_e_list, str_vs(fx%token))) then
-            if (validCheck.and.associated(elem)) then
-              if (.not.elem%mixed.and..not.elem%any) then
+            if (associated(elem)) then
+              if (elem%empty) then
+                call add_error(fx%error_stack, "Forbidden content inside element")
+                goto 100
+              elseif (.not.elem%mixed.and..not.elem%any) then
                 call add_error(fx%error_stack, "Forbidden content inside element")
                 goto 100
               endif
@@ -1006,6 +1003,14 @@ contains
               call add_error(fx%error_stack, &
                 'Encountered reference to undeclared entity')
             endif
+          endif
+          ent => getEntityByName(fx%forbidden_ge_list, str_vs(fx%token))
+          if (associated(ent)) then
+            call add_error(fx%error_stack, 'Recursive entity reference')
+            goto 100
+          endif
+          ent => getEntityByName(fx%predefined_e_list, str_vs(fx%token))
+          if (associated(ent)) then
             if (present(startEntity_handler)) then
               call startEntity_handler(str_vs(fx%token))
               if (fx%state==ST_STOP) goto 100
@@ -1020,15 +1025,6 @@ contains
             endif
           elseif (likeCharacterEntityReference(str_vs(fx%token))) then
             if (checkRepCharEntityReference(str_vs(fx%token), fx%xds%xml_version)) then
-              if (validCheck.and.associated(elem)) then
-                if (elem%empty) then
-                  call add_error(fx%error_stack, "Forbidden content inside element")
-                  goto 100
-                elseif (.not.elem%mixed.and..not.elem%any) then
-                  call add_error(fx%error_stack, "Forbidden content inside element")
-                  goto 100 
-                endif
-              endif
               if (present(characters_handler)) then
                 call characters_handler(expand_char_entity(str_vs(fx%token)))
                 if (fx%state==ST_STOP) goto 100
@@ -1040,9 +1036,14 @@ contains
               call add_error(fx%error_stack, "Illegal character reference")
               goto 100
             endif
-          elseif (existing_entity(fx%xds%entityList, str_vs(fx%token))) then
+          endif
+          if (existing_entity(fx%xds%entityList, str_vs(fx%token))) then
             ent => getEntityByName(fx%xds%entityList, str_vs(fx%token))
-            if (str_vs(ent%notation)/="") then
+            if (ent%wfc.and.fx%xds%standalone) then
+              call add_error(fx%error_stack, &
+                'Externally declared entity referenced in standalone document')
+              goto 100
+            elseif (str_vs(ent%notation)/="") then
               call add_error(fx%error_stack, &
                 'Cannot reference unparsed entity in content')
               goto 100
