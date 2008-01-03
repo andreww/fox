@@ -108,31 +108,38 @@ contains
     integer, intent(out) :: iostat
     character :: c
 
+    if (f%eof) then
+      c = ""
+      iostat = io_eof
+      return
+    endif
     if (f%lun==-1) then
       if (f%input_string%pos>size(f%input_string%s)) then
-        if (f%pe.and..not.f%eof) then
+        c = ""
+        if (f%pe) then
           iostat = 0
-          c = " "
           f%eof = .true.
-          f%input_string%pos = f%input_string%pos - 1
         else
           iostat = io_eof
         endif
       else
         iostat = 0
         c = f%input_string%s(f%input_string%pos)
+        f%input_string%pos = f%input_string%pos + 1
       endif
-      f%input_string%pos = f%input_string%pos + 1
     else
       read (unit=f%lun, iostat=iostat, advance="no", fmt="(a1)") c
       if (iostat==io_eor) then
         iostat = 0
         c = achar(13)
-      elseif (iostat==io_eof.and.f%pe.and..not.f%eof) then
-        iostat = 0
-        c = " "
-        f%eof = .true.
-        backspace(f%lun)
+      elseif (iostat==io_eof) then
+        if (f%pe) then
+          iostat = 0
+          c = " "
+          f%eof = .true.
+        else
+          c = ""
+        endif
       endif
     endif
   end function read_single_char

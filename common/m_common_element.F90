@@ -73,7 +73,6 @@ module m_common_element
     logical :: empty = .false.
     logical :: any = .false.
     logical :: mixed = .false.
-    logical :: space = .false.
     character, pointer :: model(:) => null()
     type(attribute_list) :: attlist
   end type element_t
@@ -211,7 +210,6 @@ contains
       e_list%list(i)%empty = temp(i)%empty
       e_list%list(i)%any = temp(i)%any
       e_list%list(i)%mixed = temp(i)%mixed
-      e_list%list(i)%space = temp(i)%space
       e_list%list(i)%attlist%list => temp(i)%attlist%list
     enddo
     deallocate(temp)

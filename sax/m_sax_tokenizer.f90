@@ -5,7 +5,7 @@ module m_sax_tokenizer
     upperCase, isInitialNameChar
   use m_common_error, only: add_error, in_error
   use m_common_entities, only: entity_t, existing_entity, &
-    is_unparsed_entity, expand_entity_text, expand_char_entity, &
+    expand_entity_text, expand_char_entity, &
     add_internal_entity, pop_entity_list, getEntityByName
   use m_common_namecheck, only: checkName, checkCharacterEntityReference
 
@@ -779,18 +779,23 @@ contains
         allocate(tempString(j-1))
         tempString = s_in(i+1:i+j-1)
         if (checkName(str_vs(tempString), fx%xds)) then
-          if (existing_entity(fx%forbidden_pe_list, str_vs(tempString))) then
+          ent => getEntityByName(fx%forbidden_pe_list, str_vs(tempString))
+          if (associated(ent)) then
             call add_error(fx%error_stack, 'Recursive entity expansion')
             goto 100
-          elseif (existing_entity(fx%xds%peList, str_vs(tempString))) then
-            !is it the right sort of entity?
-            if (is_unparsed_entity(fx%xds%peList, str_vs(tempString))) then
+          endif
+          ent => getEntityByName(fx%xds%peList, str_vs(tempString))
+          if (associated(ent)) then
+            if (ent%wfc.and.fx%xds%standalone) then
+              call add_error(fx%error_stack, &
+                "Externally declared entity used in standalone document")
+              goto 100
+            elseif (str_vs(ent%notation)/="") then
               call add_error(fx%error_stack, "Unparsed entity reference forbidden in entity value")
               goto 100
             endif
             call add_internal_entity(fx%forbidden_pe_list, str_vs(tempString), "", .false.)
             ! Recursively expand entity, checking for errors.
-            ent => getEntityByName(fx%xds%peList, str_vs(tempString))
             if (ent%external) then
               call open_new_file(fb, str_vs(ent%systemId), iostat)
               if (iostat/=0) then

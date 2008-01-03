@@ -993,10 +993,8 @@ contains
             elem => get_element(fx%xds%element_list, get_top_elstack(fx%elstack))
             if (associated(elem)) then
               if (elem%empty) then
-                call add_error(fx%error_stack, "Forbidden content inside element")
-                goto 100
-              elseif (.not.elem%mixed.and..not.elem%any) then
-                call add_error(fx%error_stack, "Forbidden content inside element")
+                call add_error(fx%error_stack, &
+                  "Forbidden content inside element")
                 goto 100
               endif
             else
@@ -1015,6 +1013,15 @@ contains
               call startEntity_handler(str_vs(fx%token))
               if (fx%state==ST_STOP) goto 100
             endif
+            if (validCheck) then
+              if (associated(elem)) then
+                if (.not.elem%mixed.and..not.elem%any) then
+                  call add_error(fx%error_stack, &
+                    "Forbidden content inside element")
+                  goto 100
+                endif
+              endif
+            endif
             if (present(characters_handler)) then
               call characters_handler(expand_entity(fx%predefined_e_list, str_vs(fx%token)))
               if (fx%state==ST_STOP) goto 100
@@ -1025,9 +1032,30 @@ contains
             endif
           elseif (likeCharacterEntityReference(str_vs(fx%token))) then
             if (checkRepCharEntityReference(str_vs(fx%token), fx%xds%xml_version)) then
-              if (present(characters_handler)) then
-                call characters_handler(expand_char_entity(str_vs(fx%token)))
-                if (fx%state==ST_STOP) goto 100
+              dummy = expand_char_entity(str_vs(fx%token))
+              if (validCheck) then
+                if (associated(elem)) then
+                  if (.not.elem%mixed.and..not.elem%any) then
+                    if (verify(dummy, XML_WHITESPACE)==0) then
+                      if (present(ignorableWhitespace_handler)) then
+                        call ignorableWhitespace_handler(dummy)
+                        if (fx%state==ST_STOP) goto 100
+                      endif
+                    else
+                      call add_error(fx%error_stack, &
+                        "Forbidden content inside element")
+                      goto 100
+                    endif
+                  else
+                    if (present(characters_handler)) then
+                      call characters_handler(dummy)
+                  endif
+                endif
+              else
+                if (present(characters_handler)) then
+                  call characters_handler(dummy)
+                  if (fx%state==ST_STOP) goto 100
+                endif
               endif
             elseif (checkCharacterEntityReference(str_vs(fx%token), fx%xds%xml_version)) then
               call add_error(fx%error_stack, "Unable to digest character entity reference in content, sorry.")
@@ -1036,8 +1064,7 @@ contains
               call add_error(fx%error_stack, "Illegal character reference")
               goto 100
             endif
-          endif
-          if (existing_entity(fx%xds%entityList, str_vs(fx%token))) then
+          elseif (existing_entity(fx%xds%entityList, str_vs(fx%token))) then
             ent => getEntityByName(fx%xds%entityList, str_vs(fx%token))
             if (ent%wfc.and.fx%xds%standalone) then
               call add_error(fx%error_stack, &
@@ -1347,7 +1374,11 @@ contains
           endif
           ent => getEntityByName(fx%xds%PEList, str_vs(fx%token))
           if (associated(ent)) then
-            if (ent%external) then
+            if (ent%wfc.and.fx%xds%standalone) then
+              call add_error(fx%error_stack, &
+                "Externally declared entity used in standalone document")
+              goto 100
+            elseif (ent%external) then
               if (present(startEntity_handler)) then
                 call startEntity_handler('%'//str_vs(fx%token))
                 if (fx%state==ST_STOP) goto 100
@@ -1447,7 +1478,6 @@ contains
         select case (fx%tokenType)
         case (TOK_DTD_CONTENTS)
           if (processDTD) then
-            print*, associated(fx%token), associated(elem)
             call parse_dtd_attlist(str_vs(fx%token), fx%xds%xml_version, fx%error_stack, elem)
           else
             call parse_dtd_attlist(str_vs(fx%token), fx%xds%xml_version, fx%error_stack)
@@ -2025,15 +2055,20 @@ contains
       ! Are there any default values missing?
       if (validCheck) then
         elem => get_element(fx%xds%element_list, str_vs(fx%name))
-        if (associated(elem)) &
+        if (associated(elem)) then
           call checkImplicitAttributes(elem, fx%attributes)
-        ! FIXME and also check that attribute declarations fit the ATTLIST
-        ! FIXME and if we read external subset, is this element declared ok
+          ! FIXME and also check that attribute declarations fit the ATTLIST
+        else
+          call add_error(fx%error_stack, &
+            "Trying to use an undeclared element")
+          return
+        endif
         elem => get_element(fx%xds%element_list, get_top_elstack(fx%elstack))
         ! This will return null anyway if we are opening root element
         if (associated(elem)) then
           if (elem%empty) then
             call add_error(fx%error_stack, "Content inside empty element")
+            return
           endif
           ! FIXME and ideally do a proper check of is this element allowed here
         endif
