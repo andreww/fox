@@ -81,7 +81,6 @@ TOHW_m_dom_publics(`
   type docTypeExtras
     character, pointer :: publicId(:) => null() ! doctype, entity, notation 
     character, pointer :: systemId(:) => null() ! doctype, entity, notation
-    character, pointer :: internalSubset(:) => null() ! doctype
     character, pointer :: notationName(:) => null() ! entity
     logical :: illFormed = .false. ! entity
     type(namedNodeMap) :: entities ! doctype
@@ -231,7 +230,6 @@ TOHW_m_dom_contents(`
 
     if (associated(np%dtdExtras%publicId)) deallocate(np%dtdExtras%publicId)
     if (associated(np%dtdExtras%systemId)) deallocate(np%dtdExtras%systemId)
-    if (associated(np%dtdExtras%internalSubset)) deallocate(np%dtdExtras%internalSubset)
 
     ! Destroy all entities & notations (docType only)
     if (associated(np%dtdExtras%entities%nodes)) then

@@ -212,7 +212,6 @@ module m_dom_dom
   type docTypeExtras
     character, pointer :: publicId(:) => null() ! doctype, entity, notation 
     character, pointer :: systemId(:) => null() ! doctype, entity, notation
-    character, pointer :: internalSubset(:) => null() ! doctype
     character, pointer :: notationName(:) => null() ! entity
     logical :: illFormed = .false. ! entity
     type(namedNodeMap) :: entities ! doctype
@@ -851,7 +850,6 @@ endif
 
     if (associated(np%dtdExtras%publicId)) deallocate(np%dtdExtras%publicId)
     if (associated(np%dtdExtras%systemId)) deallocate(np%dtdExtras%systemId)
-    if (associated(np%dtdExtras%internalSubset)) deallocate(np%dtdExtras%internalSubset)
 
     ! Destroy all entities & notations (docType only)
     if (associated(np%dtdExtras%entities%nodes)) then
@@ -5663,8 +5661,6 @@ endif
     dt%readonly = .true.
     dt%dtdExtras%publicId => vs_str_alloc(publicId)
     dt%dtdExtras%systemId => vs_str_alloc(systemId)
-    allocate(dt%dtdExtras%internalSubset(0)) ! FIXME This is valid behaviour, but we should
-                                   ! really be able to get the intSubset from SAX
     dt%dtdExtras%entities%ownerElement => dt
     dt%dtdExtras%notations%ownerElement => dt
 
@@ -8520,33 +8516,33 @@ endif
 
 !  function getSystemId(docType) result(c) See m_dom_common
 
-  
-  pure function getinternalSubset_len(np, p) result(n)
-    type(Node), intent(in) :: np
+  pure function getInternalSubset_len(arg, p) result(n)
+    type(Node), pointer :: arg
     logical, intent(in) :: p
     integer :: n
 
-    if (p .and. ( &
-      np%nodeType==DOCUMENT_TYPE_NODE .or. &
-      .false.)) then
-      n = size(np%dtdExtras%internalSubset)
-    else
-      n = 0
+    n = 0
+    if (p) then
+      if (associated(arg%ownerDocument)) then
+        if (associated(arg%ownerDocument%docExtras%xds%intSubset)) then
+          n = size(arg%ownerDocument%docExtras%xds%intSubset)
+        endif
+      endif
     endif
-  end function getinternalSubset_len
-function getinternalSubset(np, ex)result(c) 
+  end function getInternalSubset_len
+
+  function getInternalSubset(arg, ex)result(s) 
     type(DOMException), intent(out), optional :: ex
-    type(Node), pointer :: np
+    type(Node), pointer :: arg
 #ifdef RESTRICTED_ASSOCIATED_BUG
-    character(len=getinternalSubset_len(np, .true.)) :: c
+    character(len=getInternalSubset_len(arg, .true.)) :: s
 #else
-    character(len=getinternalSubset_len(np, associated(np))) :: c
+    character(len=getInternalSubset_len(arg, associated(arg))) :: s
 #endif
 
-
-    if (.not.associated(np)) then
+    if (.not.associated(arg)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
-  call throw_exception(FoX_NODE_IS_NULL, "getinternalSubset", ex)
+  call throw_exception(FoX_NODE_IS_NULL, "getInternalSubset", ex)
   if (present(ex)) then
     if (inException(ex)) then
        return
@@ -8556,10 +8552,9 @@ endif
 
     endif
 
-   if (getNodeType(np)/=DOCUMENT_TYPE_NODE .and. &
-      .true.) then
-      if (getFoX_checks().or.FoX_INVALID_NODE<200) then
-  call throw_exception(FoX_INVALID_NODE, "getinternalSubset", ex)
+    if (arg%nodeType/=DOCUMENT_TYPE_NODE) then
+       if (getFoX_checks().or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "getInternalSubset", ex)
   if (present(ex)) then
     if (inException(ex)) then
        return
@@ -8569,10 +8564,12 @@ endif
 
     endif
 
-    c = str_vs(np%dtdExtras%internalSubset)
-
-  end function getinternalSubset
-
+    if (len(s)>0) then
+      s = str_vs(arg%ownerDocument%docExtras%xds%intSubset)
+    else
+      s = ""
+    endif
+  end function getInternalSubset
 
 
 

@@ -62,8 +62,6 @@ TOHW_m_dom_contents(`
     dt%readonly = .true.
     dt%dtdExtras%publicId => vs_str_alloc(publicId)
     dt%dtdExtras%systemId => vs_str_alloc(systemId)
-    allocate(dt%dtdExtras%internalSubset(0)) ! FIXME This is valid behaviour, but we should
-                                   ! really be able to get the intSubset from SAX
     dt%dtdExtras%entities%ownerElement => dt
     dt%dtdExtras%notations%ownerElement => dt
 
