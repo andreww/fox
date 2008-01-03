@@ -64,43 +64,47 @@ contains
     deallocate(xds%intSubset)
   end subroutine destroy_xml_doc_state
 
-  subroutine register_internal_PE(xds, name, text)
+  subroutine register_internal_PE(xds, name, text, wfc)
     type(xml_doc_state), intent(inout) :: xds
     character(len=*), intent(in) :: name
     character(len=*), intent(in) :: text
+    logical, intent(in) :: wfc
 
-    call add_internal_entity(xds%PEList, name=name, text=text)
+    call add_internal_entity(xds%PEList, name=name, text=text, wfc=wfc)
 
   end subroutine register_internal_PE
 
-  subroutine register_external_PE(xds, name, systemId, publicId)
+  subroutine register_external_PE(xds, name, systemId, wfc, publicId)
     type(xml_doc_state), intent(inout) :: xds
     character(len=*), intent(in) :: name
     character(len=*), intent(in) :: systemId
+    logical, intent(in) :: wfc
     character(len=*), intent(in), optional :: publicId
 
     call add_external_entity(xds%PEList, name=name, &
-      publicId=publicId, systemId=systemId)
+      publicId=publicId, systemId=systemId, wfc=wfc)
   end subroutine register_external_PE
 
-  subroutine register_internal_GE(xds, name, text)
+  subroutine register_internal_GE(xds, name, text, wfc)
     type(xml_doc_state), intent(inout) :: xds
     character(len=*), intent(in) :: name
     character(len=*), intent(in) :: text
+    logical, intent(in) :: wfc
 
-    call add_internal_entity(xds%entityList, name=name, text=text)
+    call add_internal_entity(xds%entityList, name=name, text=text, wfc=wfc)
 
   end subroutine register_internal_GE
 
-  subroutine register_external_GE(xds, name, systemId, publicId, notation)
+  subroutine register_external_GE(xds, name, systemId, wfc, publicId, notation)
     type(xml_doc_state), intent(inout) :: xds
     character(len=*), intent(in) :: name
     character(len=*), intent(in) :: systemId
+    logical, intent(in) :: wfc
     character(len=*), intent(in), optional :: publicId
     character(len=*), intent(in), optional :: notation
 
     call add_external_entity(xds%entityList, name=name, &
-      systemId=systemId, publicId=publicId, notation=notation)
+      systemId=systemId, publicId=publicId, notation=notation, wfc=wfc)
   end subroutine register_external_GE
 
 #endif

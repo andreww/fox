@@ -12,6 +12,8 @@ module m_common_entities
 
   type entity_t
     logical :: external
+    logical :: wfc ! Was this entity declared externally or in a PE, where
+                   ! a non-validating processor might not see it?
     character(len=1), dimension(:), pointer :: name => null()
     character(len=1), dimension(:), pointer :: text => null()
     character(len=1), dimension(:), pointer :: publicId => null()
@@ -62,6 +64,7 @@ contains
     type(entity_t) :: ent2
     
     ent2%external = ent1%external
+    ent2%wfc = ent1%wfc
     ent2%name => ent1%name
     ent2%text => ent1%text
     ent2%publicId => ent1%publicId
@@ -189,13 +192,14 @@ contains
   end subroutine print_entity_list
 
 
-  subroutine add_entity(ents, name, text, publicId, systemId, notation)
+  subroutine add_entity(ents, name, text, publicId, systemId, notation, wfc)
     type(entity_list), intent(inout) :: ents
     character(len=*), intent(in) :: name
     character(len=*), intent(in) :: text
     character(len=*), intent(in) :: publicId
     character(len=*), intent(in) :: systemId
     character(len=*), intent(in) :: notation
+    logical, intent(in) :: wfc
 
     type(entity_t), pointer :: ents_tmp(:)
     integer :: i, n
@@ -215,6 +219,7 @@ contains
     enddo
     deallocate(ents_tmp)
     ents%list(i)%external = len(systemId)>0
+    ents%list(i)%wfc = wfc
     ents%list(i)%name => vs_str_alloc(name)
     ents%list(i)%text => vs_str_alloc(text)
     ents%list(i)%publicId => vs_str_alloc(publicId)
@@ -223,35 +228,37 @@ contains
   end subroutine add_entity
 
 
-  subroutine add_internal_entity(ents, name, text)
+  subroutine add_internal_entity(ents, name, text, wfc)
     type(entity_list), intent(inout) :: ents
     character(len=*), intent(in) :: name
     character(len=*), intent(in) :: text
+    logical, intent(in) :: wfc
 
     call add_entity(ents, name=name, text=text, &
-      publicId="", systemId="", notation="")
+      publicId="", systemId="", notation="", wfc=wfc)
   end subroutine add_internal_entity
 
   
-  subroutine add_external_entity(ents, name, systemId, publicId, notation)
+  subroutine add_external_entity(ents, name, systemId, wfc, publicId, notation)
     type(entity_list), intent(inout) :: ents
     character(len=*), intent(in) :: name
     character(len=*), intent(in) :: systemId
     character(len=*), intent(in), optional :: publicId
     character(len=*), intent(in), optional :: notation
+    logical, intent(in) :: wfc
 
     if (present(publicId) .and. present(notation)) then
       call add_entity(ents, name=name, text="", &
-        publicId=publicId, systemId=systemId, notation=notation)
+        publicId=publicId, systemId=systemId, notation=notation, wfc=wfc)
     elseif (present(publicId)) then
       call add_entity(ents, name=name, text="", &
-        publicId=publicId, systemId=systemId, notation="")
+        publicId=publicId, systemId=systemId, notation="", wfc=wfc)
     elseif (present(notation)) then
       call add_entity(ents, name=name, text="", &
-        publicId="", systemId=systemId, notation=notation)
+        publicId="", systemId=systemId, notation=notation, wfc=wfc)
     else
       call add_entity(ents, name=name, text="", &
-        publicId="", systemId=systemId, notation="")
+        publicId="", systemId=systemId, notation="", wfc=wfc)
     endif
   end subroutine add_external_entity
 

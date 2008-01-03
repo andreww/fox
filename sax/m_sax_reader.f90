@@ -9,7 +9,7 @@ module m_sax_reader
   use FoX_utils, only: URI, parseURI, rebaseURI, destroyURI, &
     hasScheme, getScheme, getPath
 
-  use m_sax_xml_source, only: xml_source_t, buffer_t, &
+  use m_sax_xml_source, only: xml_source_t, &
     get_char_from_file, push_file_chars, parse_declaration
 
   implicit none

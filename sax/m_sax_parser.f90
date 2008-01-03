@@ -87,11 +87,11 @@ contains
     call init_entity_list(fx%forbidden_pe_list)
     call init_entity_list(fx%predefined_e_list)
 
-    call add_internal_entity(fx%predefined_e_list, 'amp', '&')
-    call add_internal_entity(fx%predefined_e_list, 'lt', '<')
-    call add_internal_entity(fx%predefined_e_list, 'gt', '>')
-    call add_internal_entity(fx%predefined_e_list, 'apos', "'")
-    call add_internal_entity(fx%predefined_e_list, 'quot', '"')
+    call add_internal_entity(fx%predefined_e_list, 'amp', '&', .false.)
+    call add_internal_entity(fx%predefined_e_list, 'lt', '<', .false.)
+    call add_internal_entity(fx%predefined_e_list, 'gt', '>', .false.)
+    call add_internal_entity(fx%predefined_e_list, 'apos', "'", .false.)
+    call add_internal_entity(fx%predefined_e_list, 'quot', '"', .false.)
   end subroutine sax_parser_init
 
   subroutine sax_parser_destroy(fx)
@@ -381,9 +381,14 @@ contains
     if (present(initial_entities)) then
       do i = 1, size(initial_entities)
         ent => getEntityByIndex(initial_entities, i)
-        if (.not.ent%external) &
+        if (ent%external) then
+          call register_external_PE(fx%xds, &
+            name=str_vs(ent%name), systemId=str_vs(ent%systemId), &
+            publicId=str_vs(ent%publicId), wfc=ent%wfc)
+        else
           call register_internal_PE(fx%xds, &
-          name=str_vs(ent%name), text=str_vs(ent%text))
+            name=str_vs(ent%name), text=str_vs(ent%text), wfc=ent%wfc)
+        endif
       enddo
     endif
 
@@ -1058,7 +1063,7 @@ contains
                   call startEntity_handler(str_vs(fx%token))
                   if (fx%state==ST_STOP) goto 100
                 endif
-                call add_internal_entity(fx%forbidden_ge_list, str_vs(fx%token), "")
+                call add_internal_entity(fx%forbidden_ge_list, str_vs(fx%token), "", .false.)
                 print*, "growing wf_stack 1"
                 temp_wf_stack => wf_stack
                 allocate(wf_stack(size(temp_wf_stack)+1))
@@ -1083,7 +1088,7 @@ contains
               endif
               if (present(startEntity_handler)) &
                 call startEntity_handler(str_vs(fx%token))
-              call add_internal_entity(fx%forbidden_ge_list, str_vs(fx%token), "")
+              call add_internal_entity(fx%forbidden_ge_list, str_vs(fx%token), "", .false.)
               call open_new_string(fb, expand_entity(fx%xds%entityList, str_vs(fx%token)), str_vs(fx%token))
               print*, "growing wf_stack 2"
               temp_wf_stack => wf_stack
@@ -1347,7 +1352,7 @@ contains
                 if (fx%state==ST_STOP) goto 100
               endif
               call add_internal_entity(fx%forbidden_pe_list, &
-                str_vs(fx%token), "")
+                str_vs(fx%token), "", .false.)
               call open_new_file(fb, str_vs(ent%systemId), iostat, pe=.true.)
               if (iostat/=0) then
                 if (validCheck) then
@@ -1370,7 +1375,7 @@ contains
                   if (fx%state==ST_STOP) goto 100
                 endif
                 call add_internal_entity(fx%forbidden_pe_list, &
-                  str_vs(fx%token), "")
+                  str_vs(fx%token), "", .false.)
                 call parse_text_declaration(fb, fx%error_stack)
                 if (in_error(fx%error_stack)) goto 100
                 print*, "growing wf_stack 3"
@@ -1386,7 +1391,7 @@ contains
                 if (fx%state==ST_STOP) goto 100	
               endif
               call add_internal_entity(fx%forbidden_pe_list, &
-                str_vs(fx%token), "")
+                str_vs(fx%token), "", .false.)
               call open_new_string(fb, &
                 expand_entity(fx%xds%PEList, str_vs(fx%token)), str_vs(fx%token), pe=.true.)
               print*, "growing wf_stack 4"
@@ -2107,13 +2112,15 @@ contains
 
     subroutine add_entity
       !Parameter or General Entity?
+      logical :: wfc
+      wfc = fb%f(1)%pe.or.inExtSubset
       if (pe) then
         !Does entity with this name exist?
         if (.not.existing_entity(fx%xds%PEList, str_vs(fx%name))) then
           ! Internal or external?
           if (associated(fx%attname)) then ! it's internal
             call register_internal_PE(fx%xds, &
-              name=str_vs(fx%name), text=str_vs(fx%attname))
+              name=str_vs(fx%name), text=str_vs(fx%attname), wfc=wfc)
             ! FIXME need to expand value here before reporting ...
             if (present(internalEntityDecl_handler)) then
               call internalEntityDecl_handler('%'//str_vs(fx%name), str_vs(fx%attname))
@@ -2131,13 +2138,13 @@ contains
               if (associated(fx%publicId)) then
                 call register_external_PE(fx%xds, name=str_vs(fx%name), &
                   systemId=expressURI(newURI), &
-                  publicId=str_vs(fx%publicId))
+                  publicId=str_vs(fx%publicId), wfc=wfc)
                 if (present(externalEntityDecl_handler)) &
                   call externalEntityDecl_handler('%'//str_vs(fx%name), &
                   systemId=expressURI(URIref), publicId=str_vs(fx%publicId))
               else
                 call register_external_PE(fx%xds, name=str_vs(fx%name), &
-                  systemId=expressURI(newURI))
+                  systemId=expressURI(newURI), wfc=wfc)
                 if (present(externalEntityDecl_handler)) &
                   call externalEntityDecl_handler('%'//str_vs(fx%name), &
                   systemId=expressURI(URIref))
@@ -2153,7 +2160,7 @@ contains
           ! Internal or external?
           if (associated(fx%attname)) then ! it's internal
             call register_internal_GE(fx%xds, name=str_vs(fx%name), &
-              text=str_vs(fx%attname))
+              text=str_vs(fx%attname), wfc=wfc)
             if (present(internalEntityDecl_handler)) then
               call internalEntityDecl_handler(str_vs(fx%name),&
               str_vs(fx%attname))
@@ -2171,26 +2178,28 @@ contains
               if (associated(fx%publicId).and.associated(fx%Ndata)) then
                 call register_external_GE(fx%xds, name=str_vs(fx%name), &
                   systemId=expressURI(newURI), publicId=str_vs(fx%publicId), &
-                  notation=str_vs(fx%Ndata))
+                  notation=str_vs(fx%Ndata), wfc=wfc)
                 if (present(unparsedEntityDecl_handler)) &
                   call unparsedEntityDecl_handler(str_vs(fx%name), &
                   systemId=expressURI(URIref), publicId=str_vs(fx%publicId), &
                   notation=str_vs(fx%Ndata))
               elseif (associated(fx%Ndata)) then
                 call register_external_GE(fx%xds, name=str_vs(fx%name), &
-                  systemId=expressURI(newURI), notation=str_vs(fx%Ndata))
+                  systemId=expressURI(newURI), notation=str_vs(fx%Ndata), &
+                  wfc=wfc)
                 if (present(unparsedEntityDecl_handler)) &
                   call unparsedEntityDecl_handler(str_vs(fx%name), publicId="", &
                   systemId=expressURI(URIref), notation=str_vs(fx%Ndata))
               elseif (associated(fx%publicId)) then
                 call register_external_GE(fx%xds, name=str_vs(fx%name), &
-                  systemId=expressURI(newURI), publicId=str_vs(fx%publicId))
+                  systemId=expressURI(newURI), publicId=str_vs(fx%publicId), &
+                  wfc=wfc)
                 if (present(externalEntityDecl_handler)) &
                   call externalEntityDecl_handler(str_vs(fx%name), &
                   systemId=expressURI(URIref), publicId=str_vs(fx%publicId))
               else
                 call register_external_GE(fx%xds, name=str_vs(fx%name), &
-                  systemId=expressURI(newURI))
+                  systemId=expressURI(newURI), wfc=wfc)
                 if (present(externalEntityDecl_handler)) &
                   call externalEntityDecl_handler(str_vs(fx%name), &
                   systemId=expressURI(URIref))

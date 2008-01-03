@@ -30,7 +30,8 @@ module m_sax_xml_source
     integer            :: startChar = 1 ! First character after XML decl
     character, pointer :: next_chars(:) => null()   ! pushback buffer
     type(buffer_t), pointer :: input_string => null()
-    logical :: pe ! is this a parameter entity?
+    logical :: pe = .false. ! is this a parameter entity?
+    logical :: eof = .false.! need to keep track of this at the end of pes
   end type xml_source_t
 
   public :: buffer_t
@@ -109,10 +110,10 @@ contains
 
     if (f%lun==-1) then
       if (f%input_string%pos>size(f%input_string%s)) then
-        if (f%pe) then
+        if (f%pe.and..not.f%eof) then
           iostat = 0
           c = " "
-          f%pe = .false.
+          f%eof = .true.
           f%input_string%pos = f%input_string%pos - 1
         else
           iostat = io_eof
@@ -127,10 +128,10 @@ contains
       if (iostat==io_eor) then
         iostat = 0
         c = achar(13)
-      elseif (iostat==io_eof.and.f%pe) then
+      elseif (iostat==io_eof.and.f%pe.and..not.f%eof) then
         iostat = 0
         c = " "
-        f%pe = .false.
+        f%eof = .true.
         backspace(f%lun)
       endif
     endif

@@ -5,9 +5,8 @@ module m_sax_tokenizer
     upperCase, isInitialNameChar
   use m_common_error, only: add_error, in_error
   use m_common_entities, only: entity_t, existing_entity, &
-    is_unparsed_entity, is_external_entity, expand_entity_text, &
-    expand_char_entity, add_internal_entity, pop_entity_list, &
-    getEntityByName
+    is_unparsed_entity, expand_entity_text, expand_char_entity, &
+    add_internal_entity, pop_entity_list, getEntityByName
   use m_common_namecheck, only: checkName, checkCharacterEntityReference
 
   use m_sax_reader, only: file_buffer_t, open_new_file, pop_buffer_stack, &
@@ -636,6 +635,7 @@ contains
     character, dimension(:), pointer :: s_temp, s_temp2, s_ent, tempString
     character :: dummy
     integer :: i, i2, j
+    type(entity_t), pointer :: ent
 
     ! Condense all whitespace, only if we are validating,
     ! Expand all &
@@ -682,19 +682,24 @@ contains
           i = i + j  + 1
           i2 = i2 + 1 ! fixme
         elseif (checkName(str_vs(tempString), fx%xds)) then
-          if (existing_entity(fx%forbidden_ge_list, str_vs(tempString))) then
+          ent => getEntityByName(fx%forbidden_ge_list, str_vs(tempString))
+          if (associated(ent)) then
             call add_error(fx%error_stack, 'Recursive entity expansion')
             goto 100
-          elseif (existing_entity(fx%xds%entityList, str_vs(tempString))) then
-            !is it the right sort of entity?
-            if (is_unparsed_entity(fx%xds%entityList, str_vs(tempString))) then
-              call add_error(fx%error_stack, "Unparsed entity forbidden in attribute")
+          else
+            ent => getEntityByName(fx%xds%entityList, str_vs(tempString))
+          endif
+          if (associated(ent)) then
+            if (ent%wfc.and.fx%xds%standalone) then
+              call add_error(fx%error_stack, 'Externally declared entity referenced in standalone document')
               goto 100
-            elseif (is_external_entity(fx%xds%entityList, str_vs(tempString))) then
+            endif
+            !is it the right sort of entity?
+            if (ent%external) then
               call add_error(fx%error_stack, "External entity forbidden in attribute")
               goto 100
             endif
-            call add_internal_entity(fx%forbidden_ge_list, str_vs(tempString), "")
+            call add_internal_entity(fx%forbidden_ge_list, str_vs(tempString), "", .false.)
             ! Recursively expand entity, checking for errors.
             s_ent => normalize_attribute_text(fx, &
               vs_str(expand_entity_text(fx%xds%entityList, str_vs(tempString))))
@@ -783,7 +788,7 @@ contains
               call add_error(fx%error_stack, "Unparsed entity reference forbidden in entity value")
               goto 100
             endif
-            call add_internal_entity(fx%forbidden_pe_list, str_vs(tempString), "")
+            call add_internal_entity(fx%forbidden_pe_list, str_vs(tempString), "", .false.)
             ! Recursively expand entity, checking for errors.
             ent => getEntityByName(fx%xds%peList, str_vs(tempString))
             if (ent%external) then
