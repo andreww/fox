@@ -1882,6 +1882,16 @@ contains
           print*, "wf decrement notation 2"
           wf_stack(1) = wf_stack(1) - 1
           if (processDTD) then
+            URIref => parseURI(str_vs(fx%systemId))
+            if (.not.associated(URIref)) then
+              call add_error(fx%error_stack, "Invalid SYSTEM literal")
+              goto 100
+            endif
+            if (hasFragment(URIref)) then
+              call destroyURI(URIref)
+              call add_error(fx%error_stack, "SYSTEM literal may not contain fragment")
+              goto 100
+            endif              
             if (associated(fx%publicId)) then
               call add_notation(fx%nlist, str_vs(fx%name), &
                 publicId=str_vs(fx%publicId), systemId=str_vs(fx%systemId))
