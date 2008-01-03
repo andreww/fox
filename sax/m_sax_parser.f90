@@ -1034,31 +1034,17 @@ contains
             endif
           elseif (likeCharacterEntityReference(str_vs(fx%token))) then
             if (checkRepCharEntityReference(str_vs(fx%token), fx%xds%xml_version)) then
-              dummy = expand_char_entity(str_vs(fx%token))
               if (validCheck) then
                 if (associated(elem)) then
                   if (.not.elem%mixed.and..not.elem%any) then
-                    if (verify(dummy, XML_WHITESPACE)==0) then
-                      if (present(ignorableWhitespace_handler)) then
-                        call ignorableWhitespace_handler(dummy)
-                        if (fx%state==ST_STOP) goto 100
-                      endif
-                    else
-                      call add_error(fx%error_stack, &
-                        "Forbidden content inside element")
-                      goto 100
-                    endif
-                  else
-                    if (present(characters_handler)) then
-                      call characters_handler(dummy)
+                    call add_error(fx%error_stack, &
+                      "Forbidden content inside element")
+                    goto 100
                   endif
                 endif
-              else
-                if (present(characters_handler)) then
-                  call characters_handler(dummy)
-                  if (fx%state==ST_STOP) goto 100
-                endif
               endif
+              if (present(characters_handler)) &
+                call characters_handler(expand_char_entity(str_vs(fx%token)))
             elseif (checkCharacterEntityReference(str_vs(fx%token), fx%xds%xml_version)) then
               call add_error(fx%error_stack, "Unable to digest character entity reference in content, sorry.")
               goto 100
