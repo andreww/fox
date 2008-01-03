@@ -24,7 +24,7 @@ module fox_m_utils_uri
     character, pointer :: authority(:) => null()
     character, pointer :: userinfo(:) => null()
     character, pointer :: host(:) => null()
-    character, pointer :: port(:) => null()
+    integer :: port = -1
     character, pointer :: path(:) => null()
     type(path_segment), pointer :: segments(:) => null()
     character, pointer :: query(:) => null()
@@ -55,6 +55,14 @@ module fox_m_utils_uri
 
   public :: hasScheme
   public :: getScheme
+  public :: hasAuthority
+  public :: getAuthority
+  public :: hasUserinfo
+  public :: getUserinfo
+  public :: hasHost
+  public :: getHost
+  public :: hasPort
+  public :: getPort
   public :: getPath
   public :: hasQuery
   public :: getQuery
@@ -238,7 +246,8 @@ contains
 
   function checkAuthority(authority, userinfo, host, port) result(p)
     character(len=*), intent(in) :: authority
-    character, pointer :: userinfo(:), host(:), port(:)
+    character, pointer :: userinfo(:), host(:)
+    integer :: port
     logical :: p
 
     integer :: i1, i2
@@ -262,18 +271,16 @@ contains
     endif
     if (i2==0) then
       i2 = len(authority)+1
-      port => null()
     else
       i2 = i1 + i2
       p = p.and.verify(authority(i2+1:), digit)==0
-      if (p) port => vs_str_alloc(authority(i2+1:))
+      if (p) port = str_to_int_10(authority(i2+1:))
     endif
     p = p.and.checkHost(authority(i1+1:i2-1))
     if (p) then
       host => vs_str_alloc(authority(i1+1:i2-1))
     else
       if (associated(userinfo)) deallocate(userinfo)
-      if (associated(port)) deallocate(port)
     end if
 
   end function checkAuthority
@@ -370,7 +377,8 @@ contains
     type(URI), pointer :: u
 
     character, pointer, dimension(:) :: scheme, authority, &
-      userinfo, host, port, path, query, fragment
+      userinfo, host, path, query, fragment
+    integer :: port
     type(path_segment), pointer :: segments(:)
     integer :: i1, i2, i3, i4
     logical :: p
@@ -381,7 +389,6 @@ contains
     authority => null()
     userinfo => null()
     host => null()
-    port => null()
     path => null()
     segments => null()
     query => null()
@@ -481,7 +488,6 @@ contains
         if (associated(authority)) deallocate(authority)
         if (associated(userinfo)) deallocate(userinfo)
         if (associated(host)) deallocate(host)
-        if (associated(port)) deallocate(port)
         if (associated(path)) deallocate(path)
         if (associated(query)) deallocate(query)
         if (associated(fragment)) deallocate(fragment)
@@ -498,7 +504,7 @@ contains
         u%authority => authority
         u%userinfo => userinfo
         u%host => host
-        u%port => port
+        u%port = port
         u%path => path
         u%segments => segments
         u%query => query
@@ -710,8 +716,8 @@ contains
     else
       print*, "host UNDEFINED"
     endif
-    if (associated(u%port)) then
-      print*, "port: ", str_vs(u%port)
+    if (u%port>0) then
+      print*, "port: ", u%port
     else
       print*, "port UNDEFINED"
     endif
@@ -752,7 +758,7 @@ contains
     u2%authority => vs_vs_alloc(u1%authority)
     u2%userinfo => vs_vs_alloc(u1%userinfo)
     u2%host => vs_vs_alloc(u1%host)
-    u2%port => vs_vs_alloc(u1%port)
+    u2%port = u1%port
     u2%path => vs_vs_alloc(u1%path)
     allocate(u2%segments(size(u1%segments)))
     do i = 1, size(u1%segments)
@@ -770,7 +776,6 @@ contains
     if (associated(u%authority)) deallocate(u%authority)
     if (associated(u%userinfo)) deallocate(u%userinfo)
     if (associated(u%host)) deallocate(u%host)
-    if (associated(u%port)) deallocate(u%port)
     if (associated(u%path)) deallocate(u%path)
     if (associated(u%segments)) then
       do i = 1, size(u%segments)
@@ -799,6 +804,70 @@ contains
 
     s = str_vs(u%scheme)
   end function getScheme
+
+  function hasAuthority(u) result(p)
+    type(URI), pointer :: u
+    logical :: p
+
+    p = .false.
+    if (.not.associated(u)) return
+    p = associated(u%authority)
+  end function hasAuthority
+
+  function getAuthority(u) result(s)
+    type(URI), pointer :: u
+    character(len=size(u%authority)) :: s
+
+    s = str_vs(u%authority)
+  end function getAuthority
+
+  function hasUserinfo(u) result(p)
+    type(URI), pointer :: u
+    logical :: p
+
+    p = .false.
+    if (.not.associated(u)) return
+    p = associated(u%userinfo)
+  end function hasUserinfo
+
+  function getUserinfo(u) result(s)
+    type(URI), pointer :: u
+    character(len=size(u%userinfo)) :: s
+
+    s = str_vs(u%userinfo)
+  end function getUserinfo
+
+  function hasHost(u) result(p)
+    type(URI), pointer :: u
+    logical :: p
+
+    p = .false.
+    if (.not.associated(u)) return
+    p = associated(u%host)
+  end function hasHost
+
+  function getHost(u) result(s)
+    type(URI), pointer :: u
+    character(len=size(u%host)) :: s
+
+    s = str_vs(u%host)
+  end function getHost
+
+  function hasPort(u) result(p)
+    type(URI), pointer :: u
+    logical :: p
+
+    p = .false.
+    if (.not.associated(u)) return
+    p = u%port > 0
+  end function hasPort
+
+  function getPort(u) result(n)
+    type(URI), pointer :: u
+    integer :: n
+
+    n = u%port
+  end function getPort
 
   function getPath(u) result(s)
     type(URI), pointer :: u

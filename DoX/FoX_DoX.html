@@ -205,7 +205,7 @@ places.  If you move the FoX directory later on, you will need to re-run configu
 
 <p>To run them all, simply run <code>make check</code> from the top-level directory. This will run the individual testsuites, and collate their results.</p>
 
-<p>If any failures occur (unrelated to known compiler issues, see the <a href="http://uszla.me.uk/space/software/FoX/compat/">up-to-date list</a>), please send a message to the mailing list (<a href="m&#97;&#x69;&#x6C;&#x74;&#x6F;:F&#x6F;&#x58;&#64;&#x6C;&#x69;&#115;&#116;&#x73;&#46;&#x75;&#x73;&#122;&#108;&#97;.&#109;e&#x2E;&#117;&#107;">F&#x6F;&#x58;&#64;&#x6C;&#x69;&#115;&#116;&#x73;&#46;&#x75;&#x73;&#122;&#108;&#97;.&#109;e&#x2E;&#117;&#107;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
+<p>If any failures occur (unrelated to known compiler issues, see the <a href="http://uszla.me.uk/space/software/FoX/compat/">up-to-date list</a>), please send a message to the mailing list (<a href="&#109;&#97;&#x69;&#x6C;&#x74;&#x6F;:&#70;&#111;&#x58;&#64;&#x6C;&#x69;&#x73;&#116;&#x73;&#46;u&#x73;&#122;l&#x61;&#x2E;m&#101;.&#x75;&#x6B;">&#70;&#111;&#x58;&#64;&#x6C;&#x69;&#x73;&#116;&#x73;&#46;u&#x73;&#122;l&#x61;&#x2E;m&#101;.&#x75;&#x6B;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
 
 <h2>Linking to an existing program</h2>
 
@@ -2794,13 +2794,13 @@ In particular, the way the W3C DOM mandates namespace handling makes it trivial 
 
 <p>For any end-users interested in the code who are worried about interface changes, it is recommended that the  relevant code (all found in the <code>utils/</code> directory be lifted directly and imported into other projects, rather than accessed through the FoX interfaces.</p>
 
-<p>Currently only one utility function is provided, <code>generate_UUID</code>.</p>
+<p>Two sets of utility functions are provided; one concerned with <a href="#UUID">UUID</a>s, and a set concerned with <a href="#URI">URI</a>s.</p>
 
 <p><a name="UUID"/></p>
 
 <h2>UUID</h2>
 
-<p>UUIDs (see <a href="http://www.ietf.org/rfc/rfc4122.txt">RFC 4122</a>) are  Universally Unique IDentifiers. They are a 128-bit number, represented as a 36-character string. For example:</p>
+<p>UUIDs (see <a href="http://tools.ietf.org/html/rfc4122">RFC 4122</a>) are  Universally Unique IDentifiers. They are a 128-bit number, represented as a 36-character string. For example:</p>
 
 <pre><code> f81d4fae-7dec-11d0-a765-00a0c91e6bf6
 </code></pre>
@@ -2830,14 +2830,111 @@ In particular, the way the W3C DOM mandates namespace handling makes it trivial 
 <p>Version 1 is the default, and is recommended.</p>
 
 <p>(Note: all pseudo-random-numbers are generated using the high-quality Mersenne Twister algorithm, using the Fortran implementation of <a href="http://www.coyotegulch.com">Scott Robert Ladd</a>.)</p>
+
+<p><a name="URI"/></p>
+
+<h2>URI</h2>
+
+<p>URIs (see <a href="http://tools.ietf.org/html/rfc2396">RFC 2396</a>) are  Universal Resource Identifiers. A URI is a string, containing several components, which identifies a resource. Very often, this resource is a file, and the URI represents the local or network path to this file.</p>
+
+<p>For example:</p>
+
+<pre><code>http://www.uszla.me.uk/FoX/DoX/index.html
+</code></pre>
+
+<p>is a URI pointing to the FoX documentation.</p>
+
+<p>Equally, however:</p>
+
+<pre><code>FoX/configure
+</code></pre>
+
+<p>is a URI reference pointing to the FoX configure script (relative to the current directory, or <code>base URI</code>).</p>
+
+<p>A string which is a URI reference contains several components, some of which are optional.</p>
+
+<ul>
+<li><code>scheme</code> - eg, <code>http</code></li>
+<li><code>authority</code> - eg, <code>www.uszla.me.uk</code></li>
+<li><code>path</code> - eg, <code>/FoX/DoX/index.html</code></li>
+</ul>
+
+<p>In addition, a URI reference may contain <code>userinfo</code>, <code>host</code>, <code>port</code>, <code>query</code>, and <code>fragment</code> information. (see the <a href="http://tools.ietf.org/html/rfc2396">RFC</a> for full details.)</p>
+
+<p>The FoX URI library provides the following features:</p>
+
+<ul>
+<li><p><code>type(URI)</code>
+This is an opaque Fortran type which is used to hold URI information. The functions described below use this type.</p></li>
+<li><p><code>parseURI</code>
+This takes one argument, a URI reference, and returns a pointer to a newly-allocated URI object.</p></li>
+</ul>
+
+<p>If the string provided is not a valid URI reference, then a null pointer is returned; thus this function can be used to check whether a URI is valid.</p>
+
+<ul>
+<li><p><code>expressURI</code>
+This takes one argument, a URI object, and returns the (fully-escaped) string representing that URI.</p></li>
+<li><p><code>rebaseURI</code>
+This takes two arguments, both URI objects, and returns a pointer to a third URI object. It calculates the location of the second URI with reference to the first.</p></li>
+</ul>
+
+<p>Thus, if the first URI were <code>/FoX/DoX</code>, and the second <code>../DoX2/index.html</code>, then the resulting URI would be <code>/FoX/DoX2/index.html</code></p>
+
+<ul>
+<li><code>destroyURI</code>
+This takes one argument, a pointer to a URI object, and clears up all memory associated with it.</li>
+</ul>
+
+<p>For each component a URI might have (<code>scheme</code>, <code>authority</code>, <code>userinfo</code>, <code>host</code>, <code>port</code>, <code>path</code>, <code>query</code>, <code>fragment</code>) there are two functions for extracting the component:</p>
+
+<ul>
+<li><p><code>hasXXX</code> will return a logical variable according to whether the component is defined. (except for <code>path</code> which is always defined, but may be empty)</p></li>
+<li><p><code>getXXX</code> will return a string containing the value of the component. (except for <code>port</code> which is returned as an integer.</p></li>
+</ul>
+
+<p>Thus, listing these functions in full:</p>
+
+<ul>
+<li><p><code>hasScheme</code>
+Is there a scheme associated with the URI?</p></li>
+<li><p><code>getScheme</code>
+Return the value of the scheme</p></li>
+<li><p><code>hasAuthority</code>
+Is there an authority associated with the URI?</p></li>
+<li><p><code>getAuthority</code>
+Return the value of the authority</p></li>
+<li><p><code>hasUserinfo</code>
+Is there userinfo associated with the URI?</p></li>
+<li><p><code>getUserinfo</code>
+Return the value of the userinfo</p></li>
+<li><p><code>hasHost</code>
+Is there a host associated with the URI?</p></li>
+<li><p><code>getHost</code>
+Return the value of the host</p></li>
+<li><p><code>hasPort</code>
+Is there a port associated with the URI?</p></li>
+<li><p><code>getPort</code>
+Return the value of the port</p></li>
+<li><p><code>getPath</code>
+Return the value of the path</p></li>
+<li><p><code>hasQuery</code>
+Is there a query associated with the URI?</p></li>
+<li><p><code>getQuery</code>
+Return the value of the query</p></li>
+<li><p><code>hasFragment</code>
+Is there a fragment associated with the URI?</p></li>
+<li><p><code>getFragment</code>
+Return the value of the fragment</p></li>
+</ul>
 </div><hr/><div class="DoX">
 <a name="Information"/>
 <h1>Further information</h1>
 
 <p>FoX evolved from the initial codebase of <a href="http://lcdx00.wm.lc.ehu.es/ag/xml/">xmlf90</a>,
-which was written largely by Alberto Garcia &lt;<a href="&#109;&#x61;&#105;&#x6C;&#116;&#x6F;:a&#108;&#x62;e&#x72;&#116;&#111;&#x67;&#64;&#105;&#x63;&#109;&#x61;&#98;.&#101;&#x73;">a&#108;&#x62;e&#x72;&#116;&#111;&#x67;&#64;&#105;&#x63;&#109;&#x61;&#98;.&#101;&#x73;</a>> and Jon Wakelin &lt;<a href="&#x6D;&#x61;&#105;&#x6C;&#116;&#111;:&#106;&#111;&#110;&#x2E;&#119;&#97;&#107;&#101;&#108;&#x69;&#110;&#64;&#98;&#114;&#105;&#115;&#116;ol&#46;a&#99;&#x2E;&#117;&#x6B;">&#106;&#111;&#110;&#x2E;&#119;&#97;&#107;&#101;&#108;&#x69;&#110;&#64;&#98;&#114;&#105;&#115;&#116;ol&#46;a&#99;&#x2E;&#117;&#x6B;</a>>.</p>
+which was written largely by Alberto Garcia &lt;<a href="&#109;&#97;i&#x6C;&#x74;o:&#97;&#x6C;&#x62;&#x65;&#x72;&#x74;&#111;&#103;&#64;&#105;&#x63;&#x6D;&#97;&#x62;&#x2E;&#x65;&#x73;">&#97;&#x6C;&#x62;&#x65;&#x72;&#x74;&#111;&#103;&#64;&#105;&#x63;&#x6D;&#97;&#x62;&#x2E;&#x65;&#x73;</a>> and Jon Wakelin &lt;<a href="&#109;&#97;&#105;&#108;&#116;o:j&#111;&#110;&#46;&#119;&#x61;&#x6B;&#101;&#x6C;i&#x6E;&#64;&#98;&#114;&#105;&#115;&#x74;&#111;&#x6C;&#x2E;&#97;&#99;&#46;&#117;&#x6B;">j&#111;&#110;&#46;&#119;&#x61;&#x6B;&#101;&#x6C;i&#x6E;&#64;&#98;&#114;&#105;&#115;&#x74;&#111;&#x6C;&#x2E;&#97;&#99;&#46;&#117;&#x6B;</a>>.</p>
 
-<p>FoX is the work of Toby White &lt;<a href="&#x6D;&#97;&#x69;&#x6C;&#x74;&#x6F;:&#x74;&#x6F;&#119;&#x32;&#49;&#64;&#99;&#97;&#x6D;&#46;&#x61;&#x63;&#x2E;&#x75;&#107;">&#x74;&#x6F;&#119;&#x32;&#49;&#64;&#99;&#97;&#x6D;&#46;&#x61;&#x63;&#x2E;&#x75;&#107;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
+<p>FoX is the work of Toby White &lt;<a href="&#x6D;&#97;&#x69;l&#116;o:&#x74;o&#x77;&#50;1&#64;&#x63;&#x61;&#109;&#x2E;a&#x63;&#x2E;&#x75;&#107;">&#x74;o&#x77;&#50;1&#64;&#x63;&#x61;&#109;&#x2E;a&#x63;&#x2E;&#x75;&#107;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
 
 <p>There is a FoX website at <a href="http://www.uszla.me.uk/software/FoX/">http://www.uszla.me.uk/software/FoX/</a>.</p>
 
