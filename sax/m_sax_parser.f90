@@ -341,7 +341,7 @@ contains
 
     logical :: validCheck, startInCharData_, processDTD, pe, nameOK, eof
     logical :: namespaces_, namespace_prefixes_, xmlns_uris_
-    integer :: i, iostat, temp_i, nextState
+    integer :: i, iostat, temp_i, nextState, ignoreDepth
     character, pointer :: tempString(:), extSubsetSystemId(:)
     character :: dummy
     type(element_t), pointer :: elem
@@ -704,6 +704,7 @@ contains
               call add_error(fx%error_stack, "IGNORE section only allowed in external subset.")
               goto 100
             else
+              ignoreDepth = 0
               fx%context = CTXT_IGNORE
               nextState = ST_FINISH_SECTION_DECLARATION
             endif
@@ -732,6 +733,7 @@ contains
         case (TOK_OPEN_SB)
           if (fx%context==CTXT_IGNORE) then
             nextState = ST_IN_IGNORE_SECTION
+            ignoreDepth = ignoreDepth + 1
           else
             nextState = ST_SUBSET
           endif
@@ -743,11 +745,13 @@ contains
         case (TOK_SECTION_START)
         print*, "wf increment section"
           wf_stack(1) = wf_stack(1) + 1
+          ignoreDepth = ignoreDepth + 1
           nextState = ST_IN_IGNORE_SECTION
         case (TOK_SECTION_END)
           print*, "wf decrement section"
           wf_stack(1) = wf_stack(1) - 1
-          if (wf_stack(1)==0) then
+          ignoreDepth = ignoreDepth - 1
+          if (ignoreDepth==0) then
             fx%context = CTXT_IN_DTD
             nextState = ST_SUBSET
           else
@@ -773,8 +777,6 @@ contains
               call add_error(fx%error_stack, "Content inside empty element")
               goto 100
             elseif (.not.elem%mixed.and..not.elem%any) then
-              ! NB even whitespace-only CDATA section forbidden
-              ! FIXME but is an empty CDATA section allowed?
               call add_error(fx%error_stack, "Forbidden content inside element")
               goto 100
             endif
@@ -1103,15 +1105,9 @@ contains
             else
               if (validCheck.and.associated(elem)) then
                 if (elem%empty) then
-                  call add_error(fx%error_stack, "Forbidden content inside element")
+                  call add_error(fx%error_stack, &
+                    "Forbidden content inside element")
                   goto 100
-                  !elseif (.not.elem%mixed.and..not.elem%any) then FIXME
-                  !c1 = getEntityTextByName(fx%xds%entityList, str_vs(tempString)
-                  !if (verify(getEntityTextByName(fx%xds%entityList, str_vs(tempString)), XML_WHITESPACE)/=0 & 
-                  !.and. c1/="<") then
-                  !call add_error(fx%error_stack, "Forbidden content inside element")
-                  !goto 100
-                  !endif
                 endif
               endif
               if (present(startEntity_handler)) &
