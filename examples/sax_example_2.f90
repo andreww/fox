@@ -66,7 +66,7 @@ contains
       inScalar = .false.
       if (etolFound) then
         ! pull the data out of the concatenated string:
-!        etol = rts(vs_str(c))
+        call rts(str_vs(c), etol)
       endif
     elseif (URI=="http://www.xml-cml.org/schema" &
       .and. localName=="parameter") then

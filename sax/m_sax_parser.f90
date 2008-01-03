@@ -397,6 +397,7 @@ contains
     allocate(wf_stack(1))
     wf_stack(1) = 0
     fx%inIntSubset = .false.
+    extSubsetURI => null()
     inExtSubset = .false.
     processDTD = .true.
     iostat = 0

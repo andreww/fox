@@ -18,6 +18,7 @@ module FoX_common
 
   public :: FoX_version
 
+  public :: rts
   public :: str
   public :: operator(//)
 
