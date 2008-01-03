@@ -11,6 +11,7 @@ module FoX_utils
   public :: URI
   public :: parseURI
   public :: rebaseURI
+  public :: copyURI
   public :: destroyURI
   public :: expressURI
   public :: hasFragment

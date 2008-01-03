@@ -6,8 +6,8 @@ module m_sax_reader
   use m_common_error,  only: error_stack, FoX_error, in_error, add_error
   use m_common_io, only: setup_io, get_unit, io_err
 
-  use FoX_utils, only: URI, parseURI, rebaseURI, destroyURI, &
-    hasScheme, getScheme, getPath
+  use FoX_utils, only: URI, parseURI, copyURI, destroyURI, &
+    hasScheme, getScheme, getPath, expressURI
 
   use m_sax_xml_source, only: xml_source_t, &
     get_char_from_file, push_file_chars, parse_declaration
@@ -55,6 +55,8 @@ contains
     character(len=*), intent(in), optional :: string
     type(error_stack), intent(inout) :: es
 
+    type(URI), pointer :: fileURI
+
     iostat = 0
 
     call setup_io()
@@ -64,19 +66,25 @@ contains
       elseif (present(lun)) then
         call FoX_error("Cannot specify lun for string input to open_xml")
       endif
-      call open_new_string(fb, string, "")
+      call open_new_string(fb, string, "", baseURI=parseURI(""))
     else
-      call open_new_file(fb, file, iostat, lun)
+      fileURI => parseURI(file)
+      if (.not.associated(fileURI)) then
+        call add_error(es, "Could not open file "//file//" - not a valid URI")
+        return
+      endif
+      call open_new_file(fb, fileURI, iostat, lun)
+      call destroyURI(fileURI)
       if (iostat/=0) return
     endif
 
   end subroutine open_file
 
 
-  subroutine open_new_file(fb, uristring, iostat, lun, pe)
+  subroutine open_new_file(fb, baseURI, iostat, lun, pe)
     type(file_buffer_t), intent(inout)  :: fb
-    character(len=*), intent(in) :: uristring
     integer, intent(out) :: iostat
+    type(URI), pointer :: baseURI
     integer, intent(in), optional :: lun
     logical, intent(in), optional :: pe
 
@@ -85,7 +93,6 @@ contains
     type(xml_source_t), pointer :: temp(:)
     logical :: firstfile
     logical :: pe_
-    type(URI), pointer :: URIref, newURI
 
     if (present(pe)) then
       pe_ = pe
@@ -93,29 +100,20 @@ contains
       pe_ = .false.
     endif
 
-    URIref => parseURI(URIstring)
-    if (.not.associated(URIref)) then
-      iostat = io_err
-      return
-    endif
-
     firstfile = .not.associated(fb%f)
     if (firstfile) then
       allocate(fb%f(0))
-      newURI => URIref
-    else
-      newURI => rebaseURI(fb%f(1)%baseURI, URIref)
-      call destroyURI(URIref)
     endif
-    if (hasScheme(newURI)) then
-      if (getScheme(newURI)/="file") then
-        call destroyURI(newURI)
+
+    if (hasScheme(baseURI)) then
+      if (getScheme(baseURI)/="file") then
+        call destroyURI(baseURI)
         iostat = io_err
         return
       endif
     endif
 
-    call open_actual_file(f, getPath(newURI), iostat, lun)
+    call open_actual_file(f, getPath(baseURI), iostat, lun)
     if (iostat==0) then
       temp => fb%f
       allocate(fb%f(size(temp)+1))
@@ -141,10 +139,10 @@ contains
         fb%f(1)%next_chars => vs_str_alloc("")
       endif
       fb%f(1)%pe = pe_
-      fb%f(1)%baseURI => newURI
-    else
-      call destroyURI(newURI)
+      fb%f(1)%baseURI => copyURI(baseURI)
     endif
+
+    print*, "new base URI from file ", expressURI(fb%f(1)%baseURI)
 
   end subroutine open_new_file
 
@@ -203,16 +201,16 @@ contains
   end subroutine close_actual_file
 
 
-  subroutine open_new_string(fb, string, name, pe)
+  subroutine open_new_string(fb, string, name, baseURI, pe)
     type(file_buffer_t), intent(inout) :: fb
     character(len=*), intent(in) :: string
     character(len=*), intent(in) :: name
+    type(URI), pointer :: baseURI
     logical, intent(in), optional :: pe
 
     integer :: i
     type(xml_source_t), pointer :: temp(:)
     logical :: firstfile, pe_
-    type(URI), pointer :: URIref
 
     if (present(pe)) then
       pe_ = pe
@@ -249,13 +247,9 @@ contains
     endif
     fb%f(1)%pe = pe_
 
-    if (firstfile) then
-      fb%f(1)%baseURI => parseURI("")
-    else
-      URIref => parseURI("")
-      fb%f(1)%baseURI => rebaseURI(fb%f(2)%baseURI, URIref)
-      call destroyURI(URIref)
-    endif
+    fb%f(1)%baseURI => copyURI(baseURI)
+
+    print*, "new base URI from string", expressURI(fb%f(1)%baseURI)
 
   end subroutine open_new_string 
 

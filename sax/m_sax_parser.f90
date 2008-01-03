@@ -30,8 +30,8 @@ module m_sax_parser
     destroy_xml_doc_state, register_internal_PE, register_external_PE, &
     register_internal_GE, register_external_GE
 
-  use FoX_utils, only: URI, parseURI, rebaseURI, expressURI, destroyURI, &
-    hasFragment
+  use FoX_utils, only: URI, parseURI, rebaseURI, copyURI, destroyURI, &
+    expressURI, hasFragment
 
   use m_sax_reader, only: file_buffer_t, pop_buffer_stack, open_new_string, &
     open_new_file, parse_xml_declaration, parse_text_declaration, &
@@ -87,11 +87,11 @@ contains
     call init_entity_list(fx%forbidden_pe_list)
     call init_entity_list(fx%predefined_e_list)
 
-    call add_internal_entity(fx%predefined_e_list, 'amp', '&', .false.)
-    call add_internal_entity(fx%predefined_e_list, 'lt', '<', .false.)
-    call add_internal_entity(fx%predefined_e_list, 'gt', '>', .false.)
-    call add_internal_entity(fx%predefined_e_list, 'apos', "'", .false.)
-    call add_internal_entity(fx%predefined_e_list, 'quot', '"', .false.)
+    call add_internal_entity(fx%predefined_e_list, 'amp', '&', null(), .false.)
+    call add_internal_entity(fx%predefined_e_list, 'lt', '<', null(), .false.)
+    call add_internal_entity(fx%predefined_e_list, 'gt', '>', null(), .false.)
+    call add_internal_entity(fx%predefined_e_list, 'apos', "'", null(), .false.)
+    call add_internal_entity(fx%predefined_e_list, 'quot', '"', null(), .false.)
   end subroutine sax_parser_init
 
   subroutine sax_parser_destroy(fx)
@@ -296,7 +296,7 @@ contains
 
       subroutine externalEntityDecl_handler(name, publicId, systemId)
         character(len=*), intent(in) :: name
-        character(len=*), optional, intent(in) :: publicId
+        character(len=*), intent(in) :: publicId
         character(len=*), intent(in) :: systemId
       end subroutine externalEntityDecl_handler
 
@@ -342,11 +342,11 @@ contains
     logical :: validCheck, startInCharData_, processDTD, pe, nameOK, eof
     logical :: namespaces_, namespace_prefixes_, xmlns_uris_
     integer :: i, iostat, temp_i, nextState, ignoreDepth
-    character, pointer :: tempString(:), extSubsetSystemId(:)
+    character, pointer :: tempString(:)
     character :: dummy
     type(element_t), pointer :: elem
     type(entity_t), pointer :: ent
-    type(URI), pointer :: URIref, newURI
+    type(URI), pointer :: extSubsetURI, URIref, newURI
     integer, pointer :: wf_stack(:), temp_wf_stack(:)
     logical :: inExtSubset
 
@@ -384,10 +384,12 @@ contains
         if (ent%external) then
           call register_external_PE(fx%xds, &
             name=str_vs(ent%name), systemId=str_vs(ent%systemId), &
-            publicId=str_vs(ent%publicId), wfc=ent%wfc)
+            publicId=str_vs(ent%publicId), &
+            wfc=ent%wfc, baseURI=copyURI(ent%baseURI))
         else
           call register_internal_PE(fx%xds, &
-            name=str_vs(ent%name), text=str_vs(ent%text), wfc=ent%wfc)
+            name=str_vs(ent%name), text=str_vs(ent%text), &
+            wfc=ent%wfc, baseURI=copyURI(ent%baseURI))
         endif
       enddo
     endif
@@ -396,7 +398,6 @@ contains
     wf_stack(1) = 0
     fx%inIntSubset = .false.
     inExtSubset = .false.
-    extSubsetSystemId => null()
     processDTD = .true.
     iostat = 0
 
@@ -435,7 +436,6 @@ contains
               "Markup not terminated in external subset")
             goto 100
           endif
-          if (associated(extSubsetSystemId)) deallocate(extSubsetSystemId)
           call endDTDchecks
           if (in_error(fx%error_stack)) goto 100
           inExtSubset = .false.
@@ -1063,7 +1063,7 @@ contains
                 'Cannot reference unparsed entity in content')
               goto 100
             elseif (ent%external) then
-              call open_new_file(fb, str_vs(ent%systemId), iostat)
+              call open_new_file(fb, ent%baseURI, iostat)
               if (iostat/=0) then
                 if (validCheck) then
                   call add_error(fx%error_stack, &
@@ -1079,7 +1079,7 @@ contains
                   call startEntity_handler(str_vs(fx%token))
                   if (fx%state==ST_STOP) goto 100
                 endif
-                call add_internal_entity(fx%forbidden_ge_list, str_vs(fx%token), "", .false.)
+                call add_internal_entity(fx%forbidden_ge_list, str_vs(fx%token), "", null(), .false.)
                 print*, "growing wf_stack 1"
                 temp_wf_stack => wf_stack
                 allocate(wf_stack(size(temp_wf_stack)+1))
@@ -1098,8 +1098,8 @@ contains
               endif
               if (present(startEntity_handler)) &
                 call startEntity_handler(str_vs(fx%token))
-              call add_internal_entity(fx%forbidden_ge_list, str_vs(fx%token), "", .false.)
-              call open_new_string(fb, expand_entity(fx%xds%entityList, str_vs(fx%token)), str_vs(fx%token))
+              call add_internal_entity(fx%forbidden_ge_list, str_vs(fx%token), "", null(), .false.)
+              call open_new_string(fb, expand_entity(fx%xds%entityList, str_vs(fx%token)), str_vs(fx%token), baseURI=ent%baseURI)
               print*, "growing wf_stack 2"
               temp_wf_stack => wf_stack
               allocate(wf_stack(size(temp_wf_stack)+1))
@@ -1237,20 +1237,19 @@ contains
         write(*,*) 'ST_DTD_DECL'
         select case (fx%tokenType)
         case (TOK_OPEN_SB)
-          if (associated(fx%systemId)) then
-            extSubsetSystemId => fx%systemId
-            fx%systemId => null()
-          endif
           if (present(startDTD_handler)) then
             if (associated(fx%publicId)) then
-              call startDTD_handler(str_vs(fx%root_element), publicId=str_vs(fx%publicId), systemId=str_vs(extSubsetSystemId))
+              call startDTD_handler(str_vs(fx%root_element), &
+                publicId=str_vs(fx%publicId), systemId=str_vs(fx%systemId))
             elseif (associated(fx%systemId)) then
-              call startDTD_handler(str_vs(fx%root_element), publicId="", systemId=str_vs(extSubsetSystemId))
+              call startDTD_handler(str_vs(fx%root_element), &
+                publicId="", systemId=str_vs(fx%systemId))
             else
               call startDTD_handler(str_vs(fx%root_element), "", "")
             endif
             if (fx%state==ST_STOP) goto 100
           endif
+          if (associated(fx%systemId)) deallocate(fx%systemId)
           if (associated(fx%publicId)) deallocate(fx%publicId)
           fx%inIntSubset = .true.
           print*, "wf increment sb dtd decl"
@@ -1269,12 +1268,12 @@ contains
             if (fx%state==ST_STOP) goto 100
           endif
           if (associated(fx%systemId)) then
-            URIref => parseURI(str_vs(fx%systemId))
-            if (.not.associated(URIref)) then
+            extSubsetURI => parseURI(str_vs(fx%systemId))
+            if (.not.associated(extSubsetURI)) then
               call add_error(fx%error_stack, "Invalid URI specified for DTD SYSTEM")
               goto 100
             endif
-            call open_new_file(fb, str_vs(fx%systemId), iostat)
+            call open_new_file(fb, extSubsetURI, iostat)
             if (iostat==0) then
               call parse_text_declaration(fb, fx%error_stack)
               if (in_error(fx%error_stack)) goto 100
@@ -1366,8 +1365,8 @@ contains
                 if (fx%state==ST_STOP) goto 100
               endif
               call add_internal_entity(fx%forbidden_pe_list, &
-                str_vs(fx%token), "", .false.)
-              call open_new_file(fb, str_vs(ent%systemId), iostat, pe=.true.)
+                str_vs(fx%token), "", null(), .false.)
+              call open_new_file(fb, ent%baseURI, iostat, pe=.true.)
               if (iostat/=0) then
                 if (validCheck) then
                   call add_error(fx%error_stack, &
@@ -1389,7 +1388,7 @@ contains
                   if (fx%state==ST_STOP) goto 100
                 endif
                 call add_internal_entity(fx%forbidden_pe_list, &
-                  str_vs(fx%token), "", .false.)
+                  str_vs(fx%token), "", null(), .false.)
                 call parse_text_declaration(fb, fx%error_stack)
                 if (in_error(fx%error_stack)) goto 100
                 print*, "growing wf_stack 3"
@@ -1405,9 +1404,9 @@ contains
                 if (fx%state==ST_STOP) goto 100	
               endif
               call add_internal_entity(fx%forbidden_pe_list, &
-                str_vs(fx%token), "", .false.)
+                str_vs(fx%token), "", null(), .false.)
               call open_new_string(fb, &
-                expand_entity(fx%xds%PEList, str_vs(fx%token)), str_vs(fx%token), pe=.true.)
+                expand_entity(fx%xds%PEList, str_vs(fx%token)), str_vs(fx%token), baseURI=ent%baseURI, pe=.true.)
               print*, "growing wf_stack 4"
               allocate(temp_wf_stack(size(wf_stack)+1))
               temp_wf_stack = (/0, wf_stack/)
@@ -1940,13 +1939,9 @@ contains
             call add_error(fx%error_stack, "Cannot end DTD while conditional section is still open")
             goto 100
           endif
-          if (associated(extSubsetSystemId)) then
-            URIref => parseURI(str_vs(extSubsetSystemId))
-            if (.not.associated(URIref)) then
-              call add_error(fx%error_stack, "Invalid URI specified for DTD SYSTEM")
-              goto 100
-            endif
-            call open_new_file(fb, str_vs(extSubsetSystemId), iostat)
+          if (associated(extSubsetURI)) then
+            call open_new_file(fb, extSubsetURI, iostat)
+            call destroyURI(URIref)
             if (iostat==0) then
               call parse_text_declaration(fb, fx%error_stack)
               if (in_error(fx%error_stack)) goto 100
@@ -1960,7 +1955,7 @@ contains
             else
               if (validCheck) then
                 call add_error(fx%error_stack, &
-                  "Unable to retrieve external subset "//str_vs(extSubsetSystemId))
+                  "Unable to retrieve external subset")
                 goto 100
               endif
               call endDTDchecks
@@ -1994,7 +1989,6 @@ contains
     end do
 
 100 if (associated(tempString)) deallocate(tempString)
-    if (associated(extSubsetSystemId)) deallocate(extSubsetSystemId)
 
     if (.not.eof) then
       ! We have encountered an error before the end of a file
@@ -2148,7 +2142,8 @@ contains
           ! Internal or external?
           if (associated(fx%attname)) then ! it's internal
             call register_internal_PE(fx%xds, &
-              name=str_vs(fx%name), text=str_vs(fx%attname), wfc=wfc)
+              name=str_vs(fx%name), text=str_vs(fx%attname), &
+              wfc=wfc, baseURI=copyURI(fb%f(1)%baseURI))
             ! FIXME need to expand value here before reporting ...
             if (present(internalEntityDecl_handler)) then
               call internalEntityDecl_handler('%'//str_vs(fx%name), str_vs(fx%attname))
@@ -2163,22 +2158,22 @@ contains
               call destroyURI(URIref)
             else
               newURI => rebaseURI(fb%f(1)%baseURI, URIref)
+              call destroyURI(URIref)
               if (associated(fx%publicId)) then
                 call register_external_PE(fx%xds, name=str_vs(fx%name), &
-                  systemId=expressURI(newURI), &
-                  publicId=str_vs(fx%publicId), wfc=wfc)
+                  systemId=str_vs(fx%systemId), publicId=str_vs(fx%publicId), &
+                  wfc=wfc, baseURI=newURI)
                 if (present(externalEntityDecl_handler)) &
                   call externalEntityDecl_handler('%'//str_vs(fx%name), &
-                  systemId=expressURI(URIref), publicId=str_vs(fx%publicId))
+                  systemId=str_vs(fx%systemId), publicId=str_vs(fx%publicId))
               else
                 call register_external_PE(fx%xds, name=str_vs(fx%name), &
-                  systemId=expressURI(newURI), wfc=wfc)
+                  systemId=str_vs(fx%systemId), &
+                  wfc=wfc, baseURI=newURI)
                 if (present(externalEntityDecl_handler)) &
                   call externalEntityDecl_handler('%'//str_vs(fx%name), &
-                  systemId=expressURI(URIref))
+                  systemId=str_vs(fx%systemId), publicId="")
               endif
-              call destroyURI(URIref)
-              call destroyURI(newURI)
             endif
           endif
           ! else we ignore it
@@ -2188,7 +2183,8 @@ contains
           ! Internal or external?
           if (associated(fx%attname)) then ! it's internal
             call register_internal_GE(fx%xds, name=str_vs(fx%name), &
-              text=str_vs(fx%attname), wfc=wfc)
+              text=str_vs(fx%attname), &
+              wfc=wfc, baseURI=copyURI(fb%f(1)%baseURI))
             if (present(internalEntityDecl_handler)) then
               call internalEntityDecl_handler(str_vs(fx%name),&
               str_vs(fx%attname))
@@ -2202,38 +2198,39 @@ contains
               call add_error(fx%error_stack, "Fragment not permitted on SYSTEM URI")
               call destroyURI(URIref)
             else
+              print*, "current base URI", expressURI(fb%f(1)%baseURI)
               newURI => rebaseURI(fb%f(1)%baseURI, URIref)
+              call destroyURI(URIref)
               if (associated(fx%publicId).and.associated(fx%Ndata)) then
                 call register_external_GE(fx%xds, name=str_vs(fx%name), &
-                  systemId=expressURI(newURI), publicId=str_vs(fx%publicId), &
-                  notation=str_vs(fx%Ndata), wfc=wfc)
+                  systemId=str_vs(fx%systemId), publicId=str_vs(fx%publicId), &
+                  notation=str_vs(fx%Ndata), &
+                  wfc=wfc, baseURI=newURI)
                 if (present(unparsedEntityDecl_handler)) &
                   call unparsedEntityDecl_handler(str_vs(fx%name), &
-                  systemId=expressURI(URIref), publicId=str_vs(fx%publicId), &
+                  systemId=str_vs(fx%systemId), publicId=str_vs(fx%publicId), &
                   notation=str_vs(fx%Ndata))
               elseif (associated(fx%Ndata)) then
                 call register_external_GE(fx%xds, name=str_vs(fx%name), &
-                  systemId=expressURI(newURI), notation=str_vs(fx%Ndata), &
-                  wfc=wfc)
+                  systemId=str_vs(fx%systemId), notation=str_vs(fx%Ndata), &
+                  wfc=wfc, baseURI=newURI)
                 if (present(unparsedEntityDecl_handler)) &
                   call unparsedEntityDecl_handler(str_vs(fx%name), publicId="", &
-                  systemId=expressURI(URIref), notation=str_vs(fx%Ndata))
+                  systemId=str_vs(fx%systemId), notation=str_vs(fx%Ndata))
               elseif (associated(fx%publicId)) then
                 call register_external_GE(fx%xds, name=str_vs(fx%name), &
-                  systemId=expressURI(newURI), publicId=str_vs(fx%publicId), &
-                  wfc=wfc)
+                  systemId=str_vs(fx%systemId), publicId=str_vs(fx%publicId), &
+                  wfc=wfc, baseURI=newURI)
                 if (present(externalEntityDecl_handler)) &
                   call externalEntityDecl_handler(str_vs(fx%name), &
-                  systemId=expressURI(URIref), publicId=str_vs(fx%publicId))
+                  systemId=str_vs(fx%systemId), publicId=str_vs(fx%publicId))
               else
                 call register_external_GE(fx%xds, name=str_vs(fx%name), &
-                  systemId=expressURI(newURI), wfc=wfc)
+                  systemId=str_vs(fx%systemId), wfc=wfc, baseURI=newURI)
                 if (present(externalEntityDecl_handler)) &
                   call externalEntityDecl_handler(str_vs(fx%name), &
-                  systemId=expressURI(URIref))
+                  systemId=str_vs(fx%systemId), publicId="")
               endif
-              call destroyURI(URIref)
-              call destroyURI(newURI)
             endif
           endif
         endif

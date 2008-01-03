@@ -699,7 +699,7 @@ contains
               call add_error(fx%error_stack, "External entity forbidden in attribute")
               goto 100
             endif
-            call add_internal_entity(fx%forbidden_ge_list, str_vs(tempString), "", .false.)
+            call add_internal_entity(fx%forbidden_ge_list, str_vs(tempString), "", null(), .false.)
             ! Recursively expand entity, checking for errors.
             s_ent => normalize_attribute_text(fx, &
               vs_str(expand_entity_text(fx%xds%entityList, str_vs(tempString))))
@@ -794,10 +794,10 @@ contains
               call add_error(fx%error_stack, "Unparsed entity reference forbidden in entity value")
               goto 100
             endif
-            call add_internal_entity(fx%forbidden_pe_list, str_vs(tempString), "", .false.)
+            call add_internal_entity(fx%forbidden_pe_list, str_vs(tempString), "", null(), .false.)
             ! Recursively expand entity, checking for errors.
             if (ent%external) then
-              call open_new_file(fb, str_vs(ent%systemId), iostat)
+              call open_new_file(fb, ent%baseURI, iostat)
               if (iostat/=0) then
                 call add_error(fx%error_stack, "Unable to access external parameter entity")
                 goto 100

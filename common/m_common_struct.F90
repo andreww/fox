@@ -3,6 +3,8 @@ module m_common_struct
 #ifndef DUMMYLIB
   ! Common parts of an XML document. Shared by both SAX & WXML.
 
+  use FoX_utils, only: URI
+
   use m_common_charset, only: XML1_0
   use m_common_entities, only: entity_list, init_entity_list, destroy_entity_list, &
     add_internal_entity, add_external_entity
@@ -64,47 +66,55 @@ contains
     deallocate(xds%intSubset)
   end subroutine destroy_xml_doc_state
 
-  subroutine register_internal_PE(xds, name, text, wfc)
+  subroutine register_internal_PE(xds, name, text, wfc, baseURI)
     type(xml_doc_state), intent(inout) :: xds
     character(len=*), intent(in) :: name
     character(len=*), intent(in) :: text
     logical, intent(in) :: wfc
+    type(URI), pointer :: baseURI
 
-    call add_internal_entity(xds%PEList, name=name, text=text, wfc=wfc)
+    call add_internal_entity(xds%PEList, name=name, text=text, &
+      wfc=wfc, baseURI=baseURI)
 
   end subroutine register_internal_PE
 
-  subroutine register_external_PE(xds, name, systemId, wfc, publicId)
+  subroutine register_external_PE(xds, name, systemId, wfc, baseURI, publicId)
     type(xml_doc_state), intent(inout) :: xds
     character(len=*), intent(in) :: name
     character(len=*), intent(in) :: systemId
     logical, intent(in) :: wfc
     character(len=*), intent(in), optional :: publicId
+    type(URI), pointer :: baseURI
 
     call add_external_entity(xds%PEList, name=name, &
-      publicId=publicId, systemId=systemId, wfc=wfc)
+      publicId=publicId, systemId=systemId, &
+      wfc=wfc, baseURI=baseURI)
   end subroutine register_external_PE
 
-  subroutine register_internal_GE(xds, name, text, wfc)
+  subroutine register_internal_GE(xds, name, text, wfc, baseURI)
     type(xml_doc_state), intent(inout) :: xds
     character(len=*), intent(in) :: name
     character(len=*), intent(in) :: text
     logical, intent(in) :: wfc
+    type(URI), pointer :: baseURI
 
-    call add_internal_entity(xds%entityList, name=name, text=text, wfc=wfc)
+    call add_internal_entity(xds%entityList, name=name, text=text, &
+      wfc=wfc, baseURI=baseURI)
 
   end subroutine register_internal_GE
 
-  subroutine register_external_GE(xds, name, systemId, wfc, publicId, notation)
+  subroutine register_external_GE(xds, name, systemId, wfc, baseURI, publicId, notation)
     type(xml_doc_state), intent(inout) :: xds
     character(len=*), intent(in) :: name
     character(len=*), intent(in) :: systemId
     logical, intent(in) :: wfc
     character(len=*), intent(in), optional :: publicId
     character(len=*), intent(in), optional :: notation
+    type(URI), pointer :: baseURI
 
     call add_external_entity(xds%entityList, name=name, &
-      systemId=systemId, publicId=publicId, notation=notation, wfc=wfc)
+      systemId=systemId, publicId=publicId, notation=notation, &
+      wfc=wfc, baseURI=baseURI)
   end subroutine register_external_GE
 
 #endif

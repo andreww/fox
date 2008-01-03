@@ -51,6 +51,7 @@ module fox_m_utils_uri
   public :: expressURI
   public :: rebaseURI
   public :: dumpURI
+  public :: copyURI
   public :: destroyURI
 
   public :: hasScheme
@@ -559,14 +560,19 @@ contains
     allocate(temp(n))
     n2 = 1
     do i = 1, size(seg1)
+      print*, "seg1 ", i, str_vs(seg1(i)%s)
       if (i==size(seg1).and.seg1(i)%s(size(seg1(i)%s))/="/") exit ! it's a file
       temp(n2)%s => vs_vs_alloc(seg1(i)%s)
       n2 = n2 + 1
     enddo
       
     do i = 1, size(seg2)
+      print*, "seg2 ", i, str_vs(seg2(i)%s)
       temp(n2)%s => vs_vs_alloc(seg2(i)%s)
       n2 = n2 + 1
+    enddo
+    do i = 1, size(temp)
+      print*, "temp ", i, str_vs(temp(i)%s)
     enddo
 
     seg3 => normalizePath(temp)
@@ -574,6 +580,11 @@ contains
       deallocate(temp(i)%s)
     enddo
     deallocate(temp)
+    do i = 1, size(seg3)
+      print*, "seg3 ", i, str_vs(seg3(i)%s)
+    enddo
+
+    print*,"PATHSAPPENDED"
 
   end function appendPaths
 
@@ -597,9 +608,11 @@ contains
       else
         n = n + 1
       endif
+      print*, "count 1", i, n, parents
     enddo
 
     n = n + parents
+    print*,"np ", n, parents
     allocate(seg2(n))
 
     n2 = parents

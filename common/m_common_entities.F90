@@ -4,6 +4,7 @@ module m_common_entities
 
   use fox_m_fsys_array_str, only: str_vs, vs_str_alloc
   use fox_m_fsys_format, only: str_to_int_10, str_to_int_16
+  use fox_m_utils_uri, only: URI, destroyURI
   use m_common_charset, only: digits, hexdigits
   use m_common_error, only: FoX_error
 
@@ -19,6 +20,7 @@ module m_common_entities
     character(len=1), dimension(:), pointer :: publicId => null()
     character(len=1), dimension(:), pointer :: systemId => null()
     character(len=1), dimension(:), pointer :: notation => null()
+    type(URI), pointer :: baseURI
   end type entity_t
 
   type entity_list
@@ -70,6 +72,7 @@ contains
     ent2%publicId => ent1%publicId
     ent2%systemId => ent1%systemId
     ent2%notation => ent1%notation
+    ent2%baseURI => ent1%baseURI
 
   end function shallow_copy_entity
 
@@ -123,6 +126,8 @@ contains
     deallocate(ent%systemId)
     deallocate(ent%notation)
 
+    if (associated(ent%baseURI)) call destroyURI(ent%baseURI)
+
   end subroutine destroy_entity
 
 
@@ -170,6 +175,7 @@ contains
       ents%list(i) = shallow_copy_entity(ents_tmp(i))
     enddo
     name = str_vs(ents_tmp(i)%name)
+
     call destroy_entity(ents_tmp(i))
     deallocate(ents_tmp)
   end function pop_entity_list
@@ -192,13 +198,14 @@ contains
   end subroutine print_entity_list
 
 
-  subroutine add_entity(ents, name, text, publicId, systemId, notation, wfc)
+  subroutine add_entity(ents, name, text, publicId, systemId, notation, baseURI, wfc)
     type(entity_list), intent(inout) :: ents
     character(len=*), intent(in) :: name
     character(len=*), intent(in) :: text
     character(len=*), intent(in) :: publicId
     character(len=*), intent(in) :: systemId
     character(len=*), intent(in) :: notation
+    type(URI), pointer :: baseURI
     logical, intent(in) :: wfc
 
     type(entity_t), pointer :: ents_tmp(:)
@@ -225,40 +232,47 @@ contains
     ents%list(i)%publicId => vs_str_alloc(publicId)
     ents%list(i)%systemId => vs_str_alloc(systemId)
     ents%list(i)%notation => vs_str_alloc(notation)
+    ents%list(i)%baseURI => baseURI
   end subroutine add_entity
 
 
-  subroutine add_internal_entity(ents, name, text, wfc)
+  subroutine add_internal_entity(ents, name, text, baseURI, wfc)
     type(entity_list), intent(inout) :: ents
     character(len=*), intent(in) :: name
     character(len=*), intent(in) :: text
+    type(URI), pointer :: baseURI
     logical, intent(in) :: wfc
 
     call add_entity(ents, name=name, text=text, &
-      publicId="", systemId="", notation="", wfc=wfc)
+      publicId="", systemId="", notation="", baseURI=baseURI, wfc=wfc)
   end subroutine add_internal_entity
 
   
-  subroutine add_external_entity(ents, name, systemId, wfc, publicId, notation)
+  subroutine add_external_entity(ents, name, systemId, baseURI, wfc, publicId, notation)
     type(entity_list), intent(inout) :: ents
     character(len=*), intent(in) :: name
     character(len=*), intent(in) :: systemId
     character(len=*), intent(in), optional :: publicId
     character(len=*), intent(in), optional :: notation
+    type(URI), pointer :: baseURI
     logical, intent(in) :: wfc
 
     if (present(publicId) .and. present(notation)) then
       call add_entity(ents, name=name, text="", &
-        publicId=publicId, systemId=systemId, notation=notation, wfc=wfc)
+        publicId=publicId, systemId=systemId, notation=notation, &
+        wfc=wfc, baseURI=baseURI)
     elseif (present(publicId)) then
       call add_entity(ents, name=name, text="", &
-        publicId=publicId, systemId=systemId, notation="", wfc=wfc)
+        publicId=publicId, systemId=systemId, notation="", &
+        wfc=wfc, baseURI=baseURI)
     elseif (present(notation)) then
       call add_entity(ents, name=name, text="", &
-        publicId="", systemId=systemId, notation=notation, wfc=wfc)
+        publicId="", systemId=systemId, notation=notation, &
+        wfc=wfc, baseURI=baseURI)
     else
       call add_entity(ents, name=name, text="", &
-        publicId="", systemId=systemId, notation="", wfc=wfc)
+        publicId="", systemId=systemId, notation="", &
+        wfc=wfc, baseURI=baseURI)
     endif
   end subroutine add_external_entity
 
