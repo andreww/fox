@@ -39,3 +39,6 @@ wcml/test/tests.out
 wxml/test/failed.out
 wxml/test/test.out
 wxml/test/tests.out
+examples/mytest.cml
+examples/out.xml
+examples/simple.xml
