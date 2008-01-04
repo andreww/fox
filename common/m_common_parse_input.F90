@@ -1,5 +1,6 @@
 module m_common_parse_input
 
+#ifndef DUMMYLIB
   use m_common_charset, only : XML_WHITESPACE
   use m_common_realtypes, only: sp, dp
 
@@ -2041,6 +2042,6 @@ contains
 
 
   end subroutine matrixtocomplexdp
-  
-end module m_common_parse_input
 
+#endif
+end module m_common_parse_input
