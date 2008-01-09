@@ -41,7 +41,7 @@ clean:
 	rm -f *.$(OBJEXT)  *.$(MOD_EXT) $(LIBRARY)
 
 # DO NOT DELETE THIS LINE - used by make depend
-FoX_common.$(OBJEXT): m_common_attrs.$(OBJEXT)
+FoX_common.$(OBJEXT): m_common_attrs.$(OBJEXT) m_common_parse_input.$(OBJEXT)
 m_common_attrs.$(OBJEXT): m_common_element.$(OBJEXT) m_common_error.$(OBJEXT)
 m_common_buffer.$(OBJEXT): m_common_charset.$(OBJEXT) m_common_error.$(OBJEXT)
 m_common_element.$(OBJEXT): m_common_charset.$(OBJEXT) m_common_error.$(OBJEXT)
