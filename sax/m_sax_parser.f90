@@ -1990,6 +1990,7 @@ contains
     end do
 
 100 if (associated(tempString)) deallocate(tempString)
+    deallocate(wf_stack)
 
     if (.not.eof) then
       ! We have encountered an error before the end of a file
