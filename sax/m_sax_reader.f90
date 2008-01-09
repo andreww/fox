@@ -165,7 +165,6 @@ contains
     if (iostat/=0) return
     f%filename => vs_str_alloc(file)
 
-    allocate(f%next_chars(0))
   end subroutine open_actual_file
 
   subroutine close_file(fb)
