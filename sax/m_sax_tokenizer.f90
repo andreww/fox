@@ -92,6 +92,7 @@ contains
           elseif (c=="[") then
             fx%tokenType = TOK_OPEN_SB
           elseif (verify(c,upperCase)==0) then
+            deallocate(fx%token)
             fx%token => vs_str_alloc(c)
           else
             call add_error(fx%error_stack, "Unexpected character after <!")
@@ -126,12 +127,14 @@ contains
         if (firstChar) ws_discard = .true.
         if (ws_discard) then
           if (verify(c, XML_WHITESPACE)>0) then
+            deallocate(fx%token)
             fx%token => vs_str_alloc(c)
             ws_discard = .false.
           endif
         endif
         if (phrase==1) then
           if (c==">") then
+            ! FIXME always associated surely
             if (associated(fx%token)) then
                fx%tokenType = TOK_CHAR
                fx%nextTokenType = TOK_PI_END
@@ -214,6 +217,7 @@ contains
           if (verify(c, XML_WHITESPACE)==0) then
             ws_discarded = .true.
           else
+            deallocate(fx%token)
             fx%token => vs_str_alloc(c)
             ws_discard = .false.
           endif
@@ -321,6 +325,7 @@ contains
               phrase = 1
               ws_discard = .false.
             else
+              deallocate(fx%token)
               fx%token => vs_str_alloc(c)
               ws_discard = .false.
             endif
@@ -499,6 +504,7 @@ contains
               q = c
               ws_discard = .false.
             else
+              deallocate(fx%token)
               fx%token => vs_str_alloc(c)
               ws_discard = .false.
             endif
@@ -542,6 +548,7 @@ contains
         if (firstChar) ws_discard = .true.
         if (ws_discard) then
           if (verify(c,XML_WHITESPACE)>0) then
+            deallocate(fx%token)
             fx%token => vs_str_alloc(c)
             ws_discard = .false.
           endif
@@ -592,11 +599,13 @@ contains
           if (verify(c, XML_WHITESPACE)>0) then
             if (verify(c, "'""")==0) then
               q = c
+              deallocate(fx%token)
               fx%token => vs_str_alloc("")
               ws_discard = .false.
             elseif (c==">") then
               fx%tokenType = TOK_END_TAG
             else
+              deallocate(fx%token)
               fx%token => vs_str_alloc(c)
               ws_discard = .false.
             endif
