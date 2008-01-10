@@ -7,6 +7,9 @@ module m_dom_extras
   use m_common_realtypes, only: sp, dp
   use m_common_parse_input, only: rts
 
+  implicit none
+  private
+
   public :: extractDataContent
   public :: extractDataAttribute
   public :: extractDataAttributeNS
@@ -92,7 +95,6 @@ subroutine extractDataContentCmplxDpSca(arg, data, num, iostat, ex)
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     complex(dp), intent(out) :: data
-
     integer, intent(out), optional :: num, iostat
 
     if (.not.associated(arg)) then
@@ -112,14 +114,12 @@ endif
     else
       call rts(getTextContent(arg), data, num, iostat)
     endif
-
   end subroutine extractDataContentCmplxDpSca
 
 subroutine extractDataContentCmplxSpSca(arg, data, num, iostat, ex)
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     complex(sp), intent(out) :: data
-
     integer, intent(out), optional :: num, iostat
 
     if (.not.associated(arg)) then
@@ -139,14 +139,12 @@ endif
     else
       call rts(getTextContent(arg), data, num, iostat)
     endif
-
   end subroutine extractDataContentCmplxSpSca
 
 subroutine extractDataContentRealDpSca(arg, data, num, iostat, ex)
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     real(dp), intent(out) :: data
-
     integer, intent(out), optional :: num, iostat
 
     if (.not.associated(arg)) then
@@ -166,14 +164,12 @@ endif
     else
       call rts(getTextContent(arg), data, num, iostat)
     endif
-
   end subroutine extractDataContentRealDpSca
 
 subroutine extractDataContentRealSpSca(arg, data, num, iostat, ex)
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     real(sp), intent(out) :: data
-
     integer, intent(out), optional :: num, iostat
 
     if (.not.associated(arg)) then
@@ -193,14 +189,12 @@ endif
     else
       call rts(getTextContent(arg), data, num, iostat)
     endif
-
   end subroutine extractDataContentRealSpSca
 
 subroutine extractDataContentIntSca(arg, data, num, iostat, ex)
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     integer, intent(out) :: data
-
     integer, intent(out), optional :: num, iostat
 
     if (.not.associated(arg)) then
@@ -220,14 +214,12 @@ endif
     else
       call rts(getTextContent(arg), data, num, iostat)
     endif
-
   end subroutine extractDataContentIntSca
 
 subroutine extractDataContentLgSca(arg, data, num, iostat, ex)
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     logical, intent(out) :: data
-
     integer, intent(out), optional :: num, iostat
 
     if (.not.associated(arg)) then
@@ -247,16 +239,13 @@ endif
     else
       call rts(getTextContent(arg), data, num, iostat)
     endif
-
   end subroutine extractDataContentLgSca
 
-subroutine extractDataContentChSca(arg, data, separator, csv, num, iostat, ex)
+subroutine extractDataContentChSca(arg, data, num, iostat, ex)
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*), intent(out) :: data
 
-    logical, intent(in), optional :: csv
-    character, intent(in), optional :: separator
     integer, intent(out), optional :: num, iostat
 
     if (.not.associated(arg)) then
@@ -271,11 +260,10 @@ endif
 
     endif
     if (present(ex)) then
-      call rts(getTextContent(arg, ex), data, separator, csv, num, iostat)
+      call rts(getTextContent(arg, ex), data, num, iostat)
     else
-      call rts(getTextContent(arg), data, separator, csv, num, iostat)
+      call rts(getTextContent(arg), data, num, iostat)
     endif
-
   end subroutine extractDataContentChSca
 
 
@@ -283,7 +271,6 @@ subroutine extractDataContentCmplxDpArr(arg, data, num, iostat, ex)
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     complex(dp), dimension(:), intent(out) :: data
-
     integer, intent(out), optional :: num, iostat
 
     if (.not.associated(arg)) then
@@ -303,14 +290,12 @@ endif
     else
       call rts(getTextContent(arg), data, num, iostat)
     endif
-
   end subroutine extractDataContentCmplxDpArr
 
 subroutine extractDataContentCmplxSpArr(arg, data, num, iostat, ex)
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     complex(sp), dimension(:), intent(out) :: data
-
     integer, intent(out), optional :: num, iostat
 
     if (.not.associated(arg)) then
@@ -330,14 +315,12 @@ endif
     else
       call rts(getTextContent(arg), data, num, iostat)
     endif
-
   end subroutine extractDataContentCmplxSpArr
 
 subroutine extractDataContentRealDpArr(arg, data, num, iostat, ex)
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     real(dp), dimension(:), intent(out) :: data
-
     integer, intent(out), optional :: num, iostat
 
     if (.not.associated(arg)) then
@@ -357,14 +340,12 @@ endif
     else
       call rts(getTextContent(arg), data, num, iostat)
     endif
-
   end subroutine extractDataContentRealDpArr
 
 subroutine extractDataContentRealSpArr(arg, data, num, iostat, ex)
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     real(sp), dimension(:), intent(out) :: data
-
     integer, intent(out), optional :: num, iostat
 
     if (.not.associated(arg)) then
@@ -384,14 +365,12 @@ endif
     else
       call rts(getTextContent(arg), data, num, iostat)
     endif
-
   end subroutine extractDataContentRealSpArr
 
 subroutine extractDataContentIntArr(arg, data, num, iostat, ex)
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     integer, dimension(:), intent(out) :: data
-
     integer, intent(out), optional :: num, iostat
 
     if (.not.associated(arg)) then
@@ -411,14 +390,12 @@ endif
     else
       call rts(getTextContent(arg), data, num, iostat)
     endif
-
   end subroutine extractDataContentIntArr
 
 subroutine extractDataContentLgArr(arg, data, num, iostat, ex)
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     logical, dimension(:), intent(out) :: data
-
     integer, intent(out), optional :: num, iostat
 
     if (.not.associated(arg)) then
@@ -438,7 +415,6 @@ endif
     else
       call rts(getTextContent(arg), data, num, iostat)
     endif
-
   end subroutine extractDataContentLgArr
 
 subroutine extractDataContentChArr(arg, data, separator, csv, num, iostat, ex)
@@ -466,7 +442,6 @@ endif
     else
       call rts(getTextContent(arg), data, separator, csv, num, iostat)
     endif
-
   end subroutine extractDataContentChArr
 
 
@@ -474,7 +449,6 @@ subroutine extractDataContentCmplxDpMat(arg, data, num, iostat, ex)
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     complex(dp), dimension(:,:), intent(out) :: data
-
     integer, intent(out), optional :: num, iostat
 
     if (.not.associated(arg)) then
@@ -494,14 +468,12 @@ endif
     else
       call rts(getTextContent(arg), data, num, iostat)
     endif
-
   end subroutine extractDataContentCmplxDpMat
 
 subroutine extractDataContentCmplxSpMat(arg, data, num, iostat, ex)
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     complex(sp), dimension(:,:), intent(out) :: data
-
     integer, intent(out), optional :: num, iostat
 
     if (.not.associated(arg)) then
@@ -521,14 +493,12 @@ endif
     else
       call rts(getTextContent(arg), data, num, iostat)
     endif
-
   end subroutine extractDataContentCmplxSpMat
 
 subroutine extractDataContentRealDpMat(arg, data, num, iostat, ex)
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     real(dp), dimension(:,:), intent(out) :: data
-
     integer, intent(out), optional :: num, iostat
 
     if (.not.associated(arg)) then
@@ -548,14 +518,12 @@ endif
     else
       call rts(getTextContent(arg), data, num, iostat)
     endif
-
   end subroutine extractDataContentRealDpMat
 
 subroutine extractDataContentRealSpMat(arg, data, num, iostat, ex)
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     real(sp), dimension(:,:), intent(out) :: data
-
     integer, intent(out), optional :: num, iostat
 
     if (.not.associated(arg)) then
@@ -575,14 +543,12 @@ endif
     else
       call rts(getTextContent(arg), data, num, iostat)
     endif
-
   end subroutine extractDataContentRealSpMat
 
 subroutine extractDataContentIntMat(arg, data, num, iostat, ex)
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     integer, dimension(:,:), intent(out) :: data
-
     integer, intent(out), optional :: num, iostat
 
     if (.not.associated(arg)) then
@@ -602,14 +568,12 @@ endif
     else
       call rts(getTextContent(arg), data, num, iostat)
     endif
-
   end subroutine extractDataContentIntMat
 
 subroutine extractDataContentLgMat(arg, data, num, iostat, ex)
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     logical, dimension(:,:), intent(out) :: data
-
     integer, intent(out), optional :: num, iostat
 
     if (.not.associated(arg)) then
@@ -629,7 +593,6 @@ endif
     else
       call rts(getTextContent(arg), data, num, iostat)
     endif
-
   end subroutine extractDataContentLgMat
 
 subroutine extractDataContentChMat(arg, data, separator, csv, num, iostat, ex)
@@ -657,7 +620,6 @@ endif
     else
       call rts(getTextContent(arg), data, separator, csv, num, iostat)
     endif
-
   end subroutine extractDataContentChMat
 
 
@@ -665,7 +627,6 @@ subroutine extractDataAttributeCmplxDpSca(arg, name, data, num, iostat, ex)
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*), intent(in) :: name
-
     complex(dp), intent(out) :: data
     integer, intent(out), optional :: num, iostat
     if (.not.associated(arg)) then
@@ -692,19 +653,16 @@ endif
 
 
     if (present(ex)) then
-      call rts(getAttribute(arg, name, ex), data, num, iostat)
+      call rts(getTextContent(arg, ex), data, num, iostat)
     else
-      call rts(getAttribute(arg, name), data, num, iostat)
+      call rts(getTextContent(arg), data, num, iostat)
     endif
-
-
   end subroutine extractDataAttributeCmplxDpSca
 
 subroutine extractDataAttributeCmplxSpSca(arg, name, data, num, iostat, ex)
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*), intent(in) :: name
-
     complex(sp), intent(out) :: data
     integer, intent(out), optional :: num, iostat
     if (.not.associated(arg)) then
@@ -731,19 +689,16 @@ endif
 
 
     if (present(ex)) then
-      call rts(getAttribute(arg, name, ex), data, num, iostat)
+      call rts(getTextContent(arg, ex), data, num, iostat)
     else
-      call rts(getAttribute(arg, name), data, num, iostat)
+      call rts(getTextContent(arg), data, num, iostat)
     endif
-
-
   end subroutine extractDataAttributeCmplxSpSca
 
 subroutine extractDataAttributeRealDpSca(arg, name, data, num, iostat, ex)
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*), intent(in) :: name
-
     real(dp), intent(out) :: data
     integer, intent(out), optional :: num, iostat
     if (.not.associated(arg)) then
@@ -770,19 +725,16 @@ endif
 
 
     if (present(ex)) then
-      call rts(getAttribute(arg, name, ex), data, num, iostat)
+      call rts(getTextContent(arg, ex), data, num, iostat)
     else
-      call rts(getAttribute(arg, name), data, num, iostat)
+      call rts(getTextContent(arg), data, num, iostat)
     endif
-
-
   end subroutine extractDataAttributeRealDpSca
 
 subroutine extractDataAttributeRealSpSca(arg, name, data, num, iostat, ex)
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*), intent(in) :: name
-
     real(sp), intent(out) :: data
     integer, intent(out), optional :: num, iostat
     if (.not.associated(arg)) then
@@ -809,19 +761,16 @@ endif
 
 
     if (present(ex)) then
-      call rts(getAttribute(arg, name, ex), data, num, iostat)
+      call rts(getTextContent(arg, ex), data, num, iostat)
     else
-      call rts(getAttribute(arg, name), data, num, iostat)
+      call rts(getTextContent(arg), data, num, iostat)
     endif
-
-
   end subroutine extractDataAttributeRealSpSca
 
 subroutine extractDataAttributeIntSca(arg, name, data, num, iostat, ex)
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*), intent(in) :: name
-
     integer, intent(out) :: data
     integer, intent(out), optional :: num, iostat
     if (.not.associated(arg)) then
@@ -848,19 +797,16 @@ endif
 
 
     if (present(ex)) then
-      call rts(getAttribute(arg, name, ex), data, num, iostat)
+      call rts(getTextContent(arg, ex), data, num, iostat)
     else
-      call rts(getAttribute(arg, name), data, num, iostat)
+      call rts(getTextContent(arg), data, num, iostat)
     endif
-
-
   end subroutine extractDataAttributeIntSca
 
 subroutine extractDataAttributeLgSca(arg, name, data, num, iostat, ex)
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*), intent(in) :: name
-
     logical, intent(out) :: data
     integer, intent(out), optional :: num, iostat
     if (.not.associated(arg)) then
@@ -887,21 +833,17 @@ endif
 
 
     if (present(ex)) then
-      call rts(getAttribute(arg, name, ex), data, num, iostat)
+      call rts(getTextContent(arg, ex), data, num, iostat)
     else
-      call rts(getAttribute(arg, name), data, num, iostat)
+      call rts(getTextContent(arg), data, num, iostat)
     endif
-
-
   end subroutine extractDataAttributeLgSca
 
-subroutine extractDataAttributeChSca(arg, name, data, separator, csv, num, iostat, ex)
+subroutine extractDataAttributeChSca(arg, name, data, num, iostat, ex)
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*), intent(in) :: name
 
-    logical, intent(in), optional :: csv
-    character, intent(in), optional :: separator
     character(len=*), intent(out) :: data
     integer, intent(out), optional :: num, iostat
     if (.not.associated(arg)) then
@@ -927,12 +869,10 @@ endif
     endif
 
     if (present(ex)) then
-      call rts(getAttribute(arg, name, ex), data, separator, csv, num, iostat)
+      call rts(getTextContent(arg, ex), data, num, iostat)
     else
-      call rts(getAttribute(arg, name), data, separator, csv, num, iostat)
+      call rts(getTextContent(arg), data, num, iostat)
     endif
-
-
   end subroutine extractDataAttributeChSca
 
 
@@ -940,7 +880,6 @@ subroutine extractDataAttributeCmplxDpArr(arg, name, data, num, iostat, ex)
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*), intent(in) :: name
-
     complex(dp), dimension(:), intent(out) :: data
     integer, intent(out), optional :: num, iostat
     if (.not.associated(arg)) then
@@ -967,19 +906,16 @@ endif
 
 
     if (present(ex)) then
-      call rts(getAttribute(arg, name, ex), data, num, iostat)
+      call rts(getTextContent(arg, ex), data, num, iostat)
     else
-      call rts(getAttribute(arg, name), data, num, iostat)
+      call rts(getTextContent(arg), data, num, iostat)
     endif
-
-
   end subroutine extractDataAttributeCmplxDpArr
 
 subroutine extractDataAttributeCmplxSpArr(arg, name, data, num, iostat, ex)
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*), intent(in) :: name
-
     complex(sp), dimension(:), intent(out) :: data
     integer, intent(out), optional :: num, iostat
     if (.not.associated(arg)) then
@@ -1006,19 +942,16 @@ endif
 
 
     if (present(ex)) then
-      call rts(getAttribute(arg, name, ex), data, num, iostat)
+      call rts(getTextContent(arg, ex), data, num, iostat)
     else
-      call rts(getAttribute(arg, name), data, num, iostat)
+      call rts(getTextContent(arg), data, num, iostat)
     endif
-
-
   end subroutine extractDataAttributeCmplxSpArr
 
 subroutine extractDataAttributeRealDpArr(arg, name, data, num, iostat, ex)
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*), intent(in) :: name
-
     real(dp), dimension(:), intent(out) :: data
     integer, intent(out), optional :: num, iostat
     if (.not.associated(arg)) then
@@ -1045,19 +978,16 @@ endif
 
 
     if (present(ex)) then
-      call rts(getAttribute(arg, name, ex), data, num, iostat)
+      call rts(getTextContent(arg, ex), data, num, iostat)
     else
-      call rts(getAttribute(arg, name), data, num, iostat)
+      call rts(getTextContent(arg), data, num, iostat)
     endif
-
-
   end subroutine extractDataAttributeRealDpArr
 
 subroutine extractDataAttributeRealSpArr(arg, name, data, num, iostat, ex)
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*), intent(in) :: name
-
     real(sp), dimension(:), intent(out) :: data
     integer, intent(out), optional :: num, iostat
     if (.not.associated(arg)) then
@@ -1084,19 +1014,16 @@ endif
 
 
     if (present(ex)) then
-      call rts(getAttribute(arg, name, ex), data, num, iostat)
+      call rts(getTextContent(arg, ex), data, num, iostat)
     else
-      call rts(getAttribute(arg, name), data, num, iostat)
+      call rts(getTextContent(arg), data, num, iostat)
     endif
-
-
   end subroutine extractDataAttributeRealSpArr
 
 subroutine extractDataAttributeIntArr(arg, name, data, num, iostat, ex)
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*), intent(in) :: name
-
     integer, dimension(:), intent(out) :: data
     integer, intent(out), optional :: num, iostat
     if (.not.associated(arg)) then
@@ -1123,19 +1050,16 @@ endif
 
 
     if (present(ex)) then
-      call rts(getAttribute(arg, name, ex), data, num, iostat)
+      call rts(getTextContent(arg, ex), data, num, iostat)
     else
-      call rts(getAttribute(arg, name), data, num, iostat)
+      call rts(getTextContent(arg), data, num, iostat)
     endif
-
-
   end subroutine extractDataAttributeIntArr
 
 subroutine extractDataAttributeLgArr(arg, name, data, num, iostat, ex)
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*), intent(in) :: name
-
     logical, dimension(:), intent(out) :: data
     integer, intent(out), optional :: num, iostat
     if (.not.associated(arg)) then
@@ -1162,12 +1086,10 @@ endif
 
 
     if (present(ex)) then
-      call rts(getAttribute(arg, name, ex), data, num, iostat)
+      call rts(getTextContent(arg, ex), data, num, iostat)
     else
-      call rts(getAttribute(arg, name), data, num, iostat)
+      call rts(getTextContent(arg), data, num, iostat)
     endif
-
-
   end subroutine extractDataAttributeLgArr
 
 subroutine extractDataAttributeChArr(arg, name, data, separator, csv, num, iostat, ex)
@@ -1202,12 +1124,10 @@ endif
     endif
 
     if (present(ex)) then
-      call rts(getAttribute(arg, name, ex), data, separator, csv, num, iostat)
+      call rts(getTextContent(arg, ex), data, separator, csv, num, iostat)
     else
-      call rts(getAttribute(arg, name), data, separator, csv, num, iostat)
+      call rts(getTextContent(arg), data, separator, csv, num, iostat)
     endif
-
-
   end subroutine extractDataAttributeChArr
 
 
@@ -1215,7 +1135,6 @@ subroutine extractDataAttributeCmplxDpMat(arg, name, data, num, iostat, ex)
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*), intent(in) :: name
-
     complex(dp), dimension(:,:), intent(out) :: data
     integer, intent(out), optional :: num, iostat
     if (.not.associated(arg)) then
@@ -1242,19 +1161,16 @@ endif
 
 
     if (present(ex)) then
-      call rts(getAttribute(arg, name, ex), data, num, iostat)
+      call rts(getTextContent(arg, ex), data, num, iostat)
     else
-      call rts(getAttribute(arg, name), data, num, iostat)
+      call rts(getTextContent(arg), data, num, iostat)
     endif
-
-
   end subroutine extractDataAttributeCmplxDpMat
 
 subroutine extractDataAttributeCmplxSpMat(arg, name, data, num, iostat, ex)
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*), intent(in) :: name
-
     complex(sp), dimension(:,:), intent(out) :: data
     integer, intent(out), optional :: num, iostat
     if (.not.associated(arg)) then
@@ -1281,19 +1197,16 @@ endif
 
 
     if (present(ex)) then
-      call rts(getAttribute(arg, name, ex), data, num, iostat)
+      call rts(getTextContent(arg, ex), data, num, iostat)
     else
-      call rts(getAttribute(arg, name), data, num, iostat)
+      call rts(getTextContent(arg), data, num, iostat)
     endif
-
-
   end subroutine extractDataAttributeCmplxSpMat
 
 subroutine extractDataAttributeRealDpMat(arg, name, data, num, iostat, ex)
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*), intent(in) :: name
-
     real(dp), dimension(:,:), intent(out) :: data
     integer, intent(out), optional :: num, iostat
     if (.not.associated(arg)) then
@@ -1320,19 +1233,16 @@ endif
 
 
     if (present(ex)) then
-      call rts(getAttribute(arg, name, ex), data, num, iostat)
+      call rts(getTextContent(arg, ex), data, num, iostat)
     else
-      call rts(getAttribute(arg, name), data, num, iostat)
+      call rts(getTextContent(arg), data, num, iostat)
     endif
-
-
   end subroutine extractDataAttributeRealDpMat
 
 subroutine extractDataAttributeRealSpMat(arg, name, data, num, iostat, ex)
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*), intent(in) :: name
-
     real(sp), dimension(:,:), intent(out) :: data
     integer, intent(out), optional :: num, iostat
     if (.not.associated(arg)) then
@@ -1359,19 +1269,16 @@ endif
 
 
     if (present(ex)) then
-      call rts(getAttribute(arg, name, ex), data, num, iostat)
+      call rts(getTextContent(arg, ex), data, num, iostat)
     else
-      call rts(getAttribute(arg, name), data, num, iostat)
+      call rts(getTextContent(arg), data, num, iostat)
     endif
-
-
   end subroutine extractDataAttributeRealSpMat
 
 subroutine extractDataAttributeIntMat(arg, name, data, num, iostat, ex)
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*), intent(in) :: name
-
     integer, dimension(:,:), intent(out) :: data
     integer, intent(out), optional :: num, iostat
     if (.not.associated(arg)) then
@@ -1398,19 +1305,16 @@ endif
 
 
     if (present(ex)) then
-      call rts(getAttribute(arg, name, ex), data, num, iostat)
+      call rts(getTextContent(arg, ex), data, num, iostat)
     else
-      call rts(getAttribute(arg, name), data, num, iostat)
+      call rts(getTextContent(arg), data, num, iostat)
     endif
-
-
   end subroutine extractDataAttributeIntMat
 
 subroutine extractDataAttributeLgMat(arg, name, data, num, iostat, ex)
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*), intent(in) :: name
-
     logical, dimension(:,:), intent(out) :: data
     integer, intent(out), optional :: num, iostat
     if (.not.associated(arg)) then
@@ -1437,12 +1341,10 @@ endif
 
 
     if (present(ex)) then
-      call rts(getAttribute(arg, name, ex), data, num, iostat)
+      call rts(getTextContent(arg, ex), data, num, iostat)
     else
-      call rts(getAttribute(arg, name), data, num, iostat)
+      call rts(getTextContent(arg), data, num, iostat)
     endif
-
-
   end subroutine extractDataAttributeLgMat
 
 subroutine extractDataAttributeChMat(arg, name, data, separator, csv, num, iostat, ex)
@@ -1477,12 +1379,10 @@ endif
     endif
 
     if (present(ex)) then
-      call rts(getAttribute(arg, name, ex), data, separator, csv, num, iostat)
+      call rts(getTextContent(arg, ex), data, separator, csv, num, iostat)
     else
-      call rts(getAttribute(arg, name), data, separator, csv, num, iostat)
+      call rts(getTextContent(arg), data, separator, csv, num, iostat)
     endif
-
-
   end subroutine extractDataAttributeChMat
 
 
@@ -1491,7 +1391,6 @@ subroutine extractDataAttNSCmplxDpSca(arg, namespaceURI, localName, data, num, i
     type(Node), pointer :: arg
     character(len=*), intent(in) :: namespaceURI, localName
     complex(dp), intent(out) :: data
-
     integer, intent(out), optional :: num, iostat
     if (.not.associated(arg)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
@@ -1517,14 +1416,10 @@ endif
 
 
     if (present(ex)) then
-      call rts(getAttributeNS(arg, namespaceURI, localName, ex), &
-        data, num, iostat)
+      call rts(getTextContent(arg, ex), data, num, iostat)
     else
-      call rts(getAttributeNS(arg, namespaceURI, localName), &
-        data, num, iostat)
+      call rts(getTextContent(arg), data, num, iostat)
     endif
-
-
   end subroutine extractDataAttNSCmplxDpSca
 
 subroutine extractDataAttNSCmplxSpSca(arg, namespaceURI, localName, data, num, iostat, ex)
@@ -1532,7 +1427,6 @@ subroutine extractDataAttNSCmplxSpSca(arg, namespaceURI, localName, data, num, i
     type(Node), pointer :: arg
     character(len=*), intent(in) :: namespaceURI, localName
     complex(sp), intent(out) :: data
-
     integer, intent(out), optional :: num, iostat
     if (.not.associated(arg)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
@@ -1558,14 +1452,10 @@ endif
 
 
     if (present(ex)) then
-      call rts(getAttributeNS(arg, namespaceURI, localName, ex), &
-        data, num, iostat)
+      call rts(getTextContent(arg, ex), data, num, iostat)
     else
-      call rts(getAttributeNS(arg, namespaceURI, localName), &
-        data, num, iostat)
+      call rts(getTextContent(arg), data, num, iostat)
     endif
-
-
   end subroutine extractDataAttNSCmplxSpSca
 
 subroutine extractDataAttNSRealDpSca(arg, namespaceURI, localName, data, num, iostat, ex)
@@ -1573,7 +1463,6 @@ subroutine extractDataAttNSRealDpSca(arg, namespaceURI, localName, data, num, io
     type(Node), pointer :: arg
     character(len=*), intent(in) :: namespaceURI, localName
     real(dp), intent(out) :: data
-
     integer, intent(out), optional :: num, iostat
     if (.not.associated(arg)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
@@ -1599,14 +1488,10 @@ endif
 
 
     if (present(ex)) then
-      call rts(getAttributeNS(arg, namespaceURI, localName, ex), &
-        data, num, iostat)
+      call rts(getTextContent(arg, ex), data, num, iostat)
     else
-      call rts(getAttributeNS(arg, namespaceURI, localName), &
-        data, num, iostat)
+      call rts(getTextContent(arg), data, num, iostat)
     endif
-
-
   end subroutine extractDataAttNSRealDpSca
 
 subroutine extractDataAttNSRealSpSca(arg, namespaceURI, localName, data, num, iostat, ex)
@@ -1614,7 +1499,6 @@ subroutine extractDataAttNSRealSpSca(arg, namespaceURI, localName, data, num, io
     type(Node), pointer :: arg
     character(len=*), intent(in) :: namespaceURI, localName
     real(sp), intent(out) :: data
-
     integer, intent(out), optional :: num, iostat
     if (.not.associated(arg)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
@@ -1640,14 +1524,10 @@ endif
 
 
     if (present(ex)) then
-      call rts(getAttributeNS(arg, namespaceURI, localName, ex), &
-        data, num, iostat)
+      call rts(getTextContent(arg, ex), data, num, iostat)
     else
-      call rts(getAttributeNS(arg, namespaceURI, localName), &
-        data, num, iostat)
+      call rts(getTextContent(arg), data, num, iostat)
     endif
-
-
   end subroutine extractDataAttNSRealSpSca
 
 subroutine extractDataAttNSIntSca(arg, namespaceURI, localName, data, num, iostat, ex)
@@ -1655,7 +1535,6 @@ subroutine extractDataAttNSIntSca(arg, namespaceURI, localName, data, num, iosta
     type(Node), pointer :: arg
     character(len=*), intent(in) :: namespaceURI, localName
     integer, intent(out) :: data
-
     integer, intent(out), optional :: num, iostat
     if (.not.associated(arg)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
@@ -1681,14 +1560,10 @@ endif
 
 
     if (present(ex)) then
-      call rts(getAttributeNS(arg, namespaceURI, localName, ex), &
-        data, num, iostat)
+      call rts(getTextContent(arg, ex), data, num, iostat)
     else
-      call rts(getAttributeNS(arg, namespaceURI, localName), &
-        data, num, iostat)
+      call rts(getTextContent(arg), data, num, iostat)
     endif
-
-
   end subroutine extractDataAttNSIntSca
 
 subroutine extractDataAttNSLgSca(arg, namespaceURI, localName, data, num, iostat, ex)
@@ -1696,7 +1571,6 @@ subroutine extractDataAttNSLgSca(arg, namespaceURI, localName, data, num, iostat
     type(Node), pointer :: arg
     character(len=*), intent(in) :: namespaceURI, localName
     logical, intent(out) :: data
-
     integer, intent(out), optional :: num, iostat
     if (.not.associated(arg)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
@@ -1722,24 +1596,18 @@ endif
 
 
     if (present(ex)) then
-      call rts(getAttributeNS(arg, namespaceURI, localName, ex), &
-        data, num, iostat)
+      call rts(getTextContent(arg, ex), data, num, iostat)
     else
-      call rts(getAttributeNS(arg, namespaceURI, localName), &
-        data, num, iostat)
+      call rts(getTextContent(arg), data, num, iostat)
     endif
-
-
   end subroutine extractDataAttNSLgSca
 
-subroutine extractDataAttNSChSca(arg, namespaceURI, localName, data, separator, csv, num, iostat, ex)
+subroutine extractDataAttNSChSca(arg, namespaceURI, localName, data, num, iostat, ex)
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*), intent(in) :: namespaceURI, localName
     character(len=*), intent(out) :: data
 
-    logical, intent(in), optional :: csv
-    character, intent(in), optional :: separator
     integer, intent(out), optional :: num, iostat
     if (.not.associated(arg)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
@@ -1764,14 +1632,10 @@ endif
     endif
 
     if (present(ex)) then
-      call rts(getAttributeNS(arg, namespaceURI, localName, ex), &
-        data, separator, csv, num, iostat)
+      call rts(getTextContent(arg, ex), data, num, iostat)
     else
-      call rts(getAttributeNS(arg, namespaceURI, localName), &
-        data, separator, csv, num, iostat)
+      call rts(getTextContent(arg), data, num, iostat)
     endif
-
-
   end subroutine extractDataAttNSChSca
 
 
@@ -1780,7 +1644,6 @@ subroutine extractDataAttNSCmplxDpArr(arg, namespaceURI, localName, data, num, i
     type(Node), pointer :: arg
     character(len=*), intent(in) :: namespaceURI, localName
     complex(dp), dimension(:), intent(out) :: data
-
     integer, intent(out), optional :: num, iostat
     if (.not.associated(arg)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
@@ -1806,14 +1669,10 @@ endif
 
 
     if (present(ex)) then
-      call rts(getAttributeNS(arg, namespaceURI, localName, ex), &
-        data, num, iostat)
+      call rts(getTextContent(arg, ex), data, num, iostat)
     else
-      call rts(getAttributeNS(arg, namespaceURI, localName), &
-        data, num, iostat)
+      call rts(getTextContent(arg), data, num, iostat)
     endif
-
-
   end subroutine extractDataAttNSCmplxDpArr
 
 subroutine extractDataAttNSCmplxSpArr(arg, namespaceURI, localName, data, num, iostat, ex)
@@ -1821,7 +1680,6 @@ subroutine extractDataAttNSCmplxSpArr(arg, namespaceURI, localName, data, num, i
     type(Node), pointer :: arg
     character(len=*), intent(in) :: namespaceURI, localName
     complex(sp), dimension(:), intent(out) :: data
-
     integer, intent(out), optional :: num, iostat
     if (.not.associated(arg)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
@@ -1847,14 +1705,10 @@ endif
 
 
     if (present(ex)) then
-      call rts(getAttributeNS(arg, namespaceURI, localName, ex), &
-        data, num, iostat)
+      call rts(getTextContent(arg, ex), data, num, iostat)
     else
-      call rts(getAttributeNS(arg, namespaceURI, localName), &
-        data, num, iostat)
+      call rts(getTextContent(arg), data, num, iostat)
     endif
-
-
   end subroutine extractDataAttNSCmplxSpArr
 
 subroutine extractDataAttNSRealDpArr(arg, namespaceURI, localName, data, num, iostat, ex)
@@ -1862,7 +1716,6 @@ subroutine extractDataAttNSRealDpArr(arg, namespaceURI, localName, data, num, io
     type(Node), pointer :: arg
     character(len=*), intent(in) :: namespaceURI, localName
     real(dp), dimension(:), intent(out) :: data
-
     integer, intent(out), optional :: num, iostat
     if (.not.associated(arg)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
@@ -1888,14 +1741,10 @@ endif
 
 
     if (present(ex)) then
-      call rts(getAttributeNS(arg, namespaceURI, localName, ex), &
-        data, num, iostat)
+      call rts(getTextContent(arg, ex), data, num, iostat)
     else
-      call rts(getAttributeNS(arg, namespaceURI, localName), &
-        data, num, iostat)
+      call rts(getTextContent(arg), data, num, iostat)
     endif
-
-
   end subroutine extractDataAttNSRealDpArr
 
 subroutine extractDataAttNSRealSpArr(arg, namespaceURI, localName, data, num, iostat, ex)
@@ -1903,7 +1752,6 @@ subroutine extractDataAttNSRealSpArr(arg, namespaceURI, localName, data, num, io
     type(Node), pointer :: arg
     character(len=*), intent(in) :: namespaceURI, localName
     real(sp), dimension(:), intent(out) :: data
-
     integer, intent(out), optional :: num, iostat
     if (.not.associated(arg)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
@@ -1929,14 +1777,10 @@ endif
 
 
     if (present(ex)) then
-      call rts(getAttributeNS(arg, namespaceURI, localName, ex), &
-        data, num, iostat)
+      call rts(getTextContent(arg, ex), data, num, iostat)
     else
-      call rts(getAttributeNS(arg, namespaceURI, localName), &
-        data, num, iostat)
+      call rts(getTextContent(arg), data, num, iostat)
     endif
-
-
   end subroutine extractDataAttNSRealSpArr
 
 subroutine extractDataAttNSIntArr(arg, namespaceURI, localName, data, num, iostat, ex)
@@ -1944,7 +1788,6 @@ subroutine extractDataAttNSIntArr(arg, namespaceURI, localName, data, num, iosta
     type(Node), pointer :: arg
     character(len=*), intent(in) :: namespaceURI, localName
     integer, dimension(:), intent(out) :: data
-
     integer, intent(out), optional :: num, iostat
     if (.not.associated(arg)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
@@ -1970,14 +1813,10 @@ endif
 
 
     if (present(ex)) then
-      call rts(getAttributeNS(arg, namespaceURI, localName, ex), &
-        data, num, iostat)
+      call rts(getTextContent(arg, ex), data, num, iostat)
     else
-      call rts(getAttributeNS(arg, namespaceURI, localName), &
-        data, num, iostat)
+      call rts(getTextContent(arg), data, num, iostat)
     endif
-
-
   end subroutine extractDataAttNSIntArr
 
 subroutine extractDataAttNSLgArr(arg, namespaceURI, localName, data, num, iostat, ex)
@@ -1985,7 +1824,6 @@ subroutine extractDataAttNSLgArr(arg, namespaceURI, localName, data, num, iostat
     type(Node), pointer :: arg
     character(len=*), intent(in) :: namespaceURI, localName
     logical, dimension(:), intent(out) :: data
-
     integer, intent(out), optional :: num, iostat
     if (.not.associated(arg)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
@@ -2011,14 +1849,10 @@ endif
 
 
     if (present(ex)) then
-      call rts(getAttributeNS(arg, namespaceURI, localName, ex), &
-        data, num, iostat)
+      call rts(getTextContent(arg, ex), data, num, iostat)
     else
-      call rts(getAttributeNS(arg, namespaceURI, localName), &
-        data, num, iostat)
+      call rts(getTextContent(arg), data, num, iostat)
     endif
-
-
   end subroutine extractDataAttNSLgArr
 
 subroutine extractDataAttNSChArr(arg, namespaceURI, localName, data, separator, csv, num, iostat, ex)
@@ -2053,14 +1887,10 @@ endif
     endif
 
     if (present(ex)) then
-      call rts(getAttributeNS(arg, namespaceURI, localName, ex), &
-        data, separator, csv, num, iostat)
+      call rts(getTextContent(arg, ex), data, separator, csv, num, iostat)
     else
-      call rts(getAttributeNS(arg, namespaceURI, localName), &
-        data, separator, csv, num, iostat)
+      call rts(getTextContent(arg), data, separator, csv, num, iostat)
     endif
-
-
   end subroutine extractDataAttNSChArr
 
 
@@ -2069,7 +1899,6 @@ subroutine extractDataAttNSCmplxDpMat(arg, namespaceURI, localName, data, num, i
     type(Node), pointer :: arg
     character(len=*), intent(in) :: namespaceURI, localName
     complex(dp), dimension(:,:), intent(out) :: data
-
     integer, intent(out), optional :: num, iostat
     if (.not.associated(arg)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
@@ -2095,14 +1924,10 @@ endif
 
 
     if (present(ex)) then
-      call rts(getAttributeNS(arg, namespaceURI, localName, ex), &
-        data, num, iostat)
+      call rts(getTextContent(arg, ex), data, num, iostat)
     else
-      call rts(getAttributeNS(arg, namespaceURI, localName), &
-        data, num, iostat)
+      call rts(getTextContent(arg), data, num, iostat)
     endif
-
-
   end subroutine extractDataAttNSCmplxDpMat
 
 subroutine extractDataAttNSCmplxSpMat(arg, namespaceURI, localName, data, num, iostat, ex)
@@ -2110,7 +1935,6 @@ subroutine extractDataAttNSCmplxSpMat(arg, namespaceURI, localName, data, num, i
     type(Node), pointer :: arg
     character(len=*), intent(in) :: namespaceURI, localName
     complex(sp), dimension(:,:), intent(out) :: data
-
     integer, intent(out), optional :: num, iostat
     if (.not.associated(arg)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
@@ -2136,14 +1960,10 @@ endif
 
 
     if (present(ex)) then
-      call rts(getAttributeNS(arg, namespaceURI, localName, ex), &
-        data, num, iostat)
+      call rts(getTextContent(arg, ex), data, num, iostat)
     else
-      call rts(getAttributeNS(arg, namespaceURI, localName), &
-        data, num, iostat)
+      call rts(getTextContent(arg), data, num, iostat)
     endif
-
-
   end subroutine extractDataAttNSCmplxSpMat
 
 subroutine extractDataAttNSRealDpMat(arg, namespaceURI, localName, data, num, iostat, ex)
@@ -2151,7 +1971,6 @@ subroutine extractDataAttNSRealDpMat(arg, namespaceURI, localName, data, num, io
     type(Node), pointer :: arg
     character(len=*), intent(in) :: namespaceURI, localName
     real(dp), dimension(:,:), intent(out) :: data
-
     integer, intent(out), optional :: num, iostat
     if (.not.associated(arg)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
@@ -2177,14 +1996,10 @@ endif
 
 
     if (present(ex)) then
-      call rts(getAttributeNS(arg, namespaceURI, localName, ex), &
-        data, num, iostat)
+      call rts(getTextContent(arg, ex), data, num, iostat)
     else
-      call rts(getAttributeNS(arg, namespaceURI, localName), &
-        data, num, iostat)
+      call rts(getTextContent(arg), data, num, iostat)
     endif
-
-
   end subroutine extractDataAttNSRealDpMat
 
 subroutine extractDataAttNSRealSpMat(arg, namespaceURI, localName, data, num, iostat, ex)
@@ -2192,7 +2007,6 @@ subroutine extractDataAttNSRealSpMat(arg, namespaceURI, localName, data, num, io
     type(Node), pointer :: arg
     character(len=*), intent(in) :: namespaceURI, localName
     real(sp), dimension(:,:), intent(out) :: data
-
     integer, intent(out), optional :: num, iostat
     if (.not.associated(arg)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
@@ -2218,14 +2032,10 @@ endif
 
 
     if (present(ex)) then
-      call rts(getAttributeNS(arg, namespaceURI, localName, ex), &
-        data, num, iostat)
+      call rts(getTextContent(arg, ex), data, num, iostat)
     else
-      call rts(getAttributeNS(arg, namespaceURI, localName), &
-        data, num, iostat)
+      call rts(getTextContent(arg), data, num, iostat)
     endif
-
-
   end subroutine extractDataAttNSRealSpMat
 
 subroutine extractDataAttNSIntMat(arg, namespaceURI, localName, data, num, iostat, ex)
@@ -2233,7 +2043,6 @@ subroutine extractDataAttNSIntMat(arg, namespaceURI, localName, data, num, iosta
     type(Node), pointer :: arg
     character(len=*), intent(in) :: namespaceURI, localName
     integer, dimension(:,:), intent(out) :: data
-
     integer, intent(out), optional :: num, iostat
     if (.not.associated(arg)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
@@ -2259,14 +2068,10 @@ endif
 
 
     if (present(ex)) then
-      call rts(getAttributeNS(arg, namespaceURI, localName, ex), &
-        data, num, iostat)
+      call rts(getTextContent(arg, ex), data, num, iostat)
     else
-      call rts(getAttributeNS(arg, namespaceURI, localName), &
-        data, num, iostat)
+      call rts(getTextContent(arg), data, num, iostat)
     endif
-
-
   end subroutine extractDataAttNSIntMat
 
 subroutine extractDataAttNSLgMat(arg, namespaceURI, localName, data, num, iostat, ex)
@@ -2274,7 +2079,6 @@ subroutine extractDataAttNSLgMat(arg, namespaceURI, localName, data, num, iostat
     type(Node), pointer :: arg
     character(len=*), intent(in) :: namespaceURI, localName
     logical, dimension(:,:), intent(out) :: data
-
     integer, intent(out), optional :: num, iostat
     if (.not.associated(arg)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
@@ -2300,14 +2104,10 @@ endif
 
 
     if (present(ex)) then
-      call rts(getAttributeNS(arg, namespaceURI, localName, ex), &
-        data, num, iostat)
+      call rts(getTextContent(arg, ex), data, num, iostat)
     else
-      call rts(getAttributeNS(arg, namespaceURI, localName), &
-        data, num, iostat)
+      call rts(getTextContent(arg), data, num, iostat)
     endif
-
-
   end subroutine extractDataAttNSLgMat
 
 subroutine extractDataAttNSChMat(arg, namespaceURI, localName, data, separator, csv, num, iostat, ex)
@@ -2342,14 +2142,10 @@ endif
     endif
 
     if (present(ex)) then
-      call rts(getAttributeNS(arg, namespaceURI, localName, ex), &
-        data, separator, csv, num, iostat)
+      call rts(getTextContent(arg, ex), data, separator, csv, num, iostat)
     else
-      call rts(getAttributeNS(arg, namespaceURI, localName), &
-        data, separator, csv, num, iostat)
+      call rts(getTextContent(arg), data, separator, csv, num, iostat)
     endif
-
-
   end subroutine extractDataAttNSChMat
 
 

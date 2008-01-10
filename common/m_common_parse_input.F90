@@ -34,144 +34,34 @@ module m_common_parse_input
 
 contains
 
-  subroutine scalartostring(s, data, separator, csv, num, iostat)
+  subroutine scalartostring(s, data, num, iostat)
     character(len=*), intent(in) :: s
     character(len=*), intent(out) :: data
-    character, intent(in), optional :: separator
-    logical, intent(in), optional :: csv
     integer, intent(out), optional :: num, iostat
-    logical :: bracketed
-    integer :: i, j, ij, k, s_i, err, ios, length
-    real :: r, c
 
-    character(len=len(s)) :: s2
-    logical :: csv_, eof
-    integer :: m
+    logical :: ws
+    integer :: i, m
 
-    csv_ = .false.
-    if (present(csv)) then
-      csv_ = csv
-    endif
-
-    s_i = 1
-    err = 0
-    eof = .false.
-    data = ""
-    ij = 0
-    length = 1
-    loop: do i = 1, 1
-      if (csv_) then
-      if (s_i>len(s)) then
-        data = ""
-        ij = ij + 1
-        exit loop
-      endif
-      k = verify(s(s_i:), achar(10)//achar(13))
-      if (k==0) then
-        data = ""
-        ij = ij + 1
-        exit loop
-      elseif (s(s_i+k-1:s_i+k-1)=="""") then
-        ! we have a quote-delimited string;
-        s_i = s_i + k
-        s2 = ""
-        quote: do 
-          k = index(s(s_i:), """")
-          if (k==0) then
-            err = 2
-            exit loop
-          endif
-          k = s_i + k - 1
-          s2(m:) = s(s_i:k)
-          m = m + (k-s_i+1)
-          k = k + 2
-          if (k>len(s)) then
-            err = 2
-            exit loop
-          endif
-          if (s(k:k)/="""") exit
-          s_i = k + 1
-          if (s_i > len(s)) then
-            err = 2
-            exit loop
-          endif
-          m = m + 1
-          s2(m:m) = """"
-        enddo quote
-        data = s2
-        k  = scan(s(s_i:), XML_WHITESPACE)
-        if (k==0) then
-          err = 2
-          exit loop
-        endif
+    m = 1
+    ws = .true.
+    do i = 1, len(s)
+      if (m>len(data)) exit
+      if (ws.and.verify(s(i:i), XML_WHITESPACE)==0) cycle
+      if (verify(s(i:i), XML_WHITESPACE)==0) then
+        data(m:m) = " "
+        m = m + 1
+        ws = .true.
       else
-        s_i = s_i + k - 1
-        k = scan(s(s_i:), achar(10)//achar(13)//",")
-        if (k==0) then
-          eof = .true.
-          k = len(s)
-        else
-          if (ij+1==length.and.s(s_i+k-1:s_i+k-1)==",") err = 1
-          k = s_i + k - 2
-        endif
-        data = s(s_i:k)
-        if (index(data, """")/=0) then
-          err = 2
-          exit loop
-        endif
+        data(m:m) = s(i:i)
+        m = m + 1
+        if (ws) ws = .false.
       endif
-      ij = ij + 1
-      s_i = k + 2
-      if (eof) exit loop
+    enddo
 
-      else
-      if (present(separator)) then
-        k = index(s(s_i:), separator)
-      else
-        k = verify(s(s_i:), XML_WHITESPACE)
-        if (k==0) exit loop
-        s_i = s_i + k - 1
-        k = scan(s(s_i:), XML_WHITESPACE)
-      endif
-      if (k==0) then
-        k = len(s)
-      else
-        k = s_i + k - 2
-      endif
-      data = s(s_i:k)
-      ij = ij + 1
-      s_i = k + 2
-      if (ij<length.and.s_i>len(s)) exit loop
+    if (m<=len(data)) data(m:) = ""
 
-      endif
-    end do loop
-
-    if (present(num)) num = ij
-    if (ij<length) then
-      if (err==0) err = -1
-    else
-      if (verify(s(s_i:), XML_WHITESPACE)/=0) err = 1
-    endif
-
-
-    if (present(iostat)) then
-      iostat = err
-    else
-      select case (err)
-      case(-1)
-        write(0, *) "Error in scalartostring"
-        write(0, *) "Too few elements found"
-        stop
-      case(1)
-        write(0, *) "Error in scalartostring"
-        write(0, *) "Too many elements found"
-        stop
-      case(2)
-        write(0, *) "Error in scalartostring"
-        write(0, *) "Malformed input"
-        stop
-      end select
-    end if
+    if (present(num)) num = 1
+    if (present(iostat)) iostat = 0
 
   end subroutine scalartostring
 

@@ -112,6 +112,7 @@ define(`TOHW_parse_strings_csv', `dnl
       s_i = k + 2
       if (eof) exit loop
 ')dnl
+dnl
 define(`TOHW_parse_strings', `dnl
       if (present(separator)) then
         k = index(s(s_i:), separator)
@@ -305,39 +306,35 @@ module m_common_parse_input
 contains
 
 define(`m4f_thisfunc', `scalartostring')dnl
-  subroutine m4f_thisfunc`'(s, data, separator, csv, num, iostat)
+  subroutine m4f_thisfunc`'(s, data, num, iostat)
     character(len=*), intent(in) :: s
     character(len=*), intent(out) :: data
-    character, intent(in), optional :: separator
-    logical, intent(in), optional :: csv
     integer, intent(out), optional :: num, iostat
-TOHW_defaultdecls
-    character(len=len(s)) :: s2
-    logical :: csv_, eof
-    integer :: m
 
-    csv_ = .false.
-    if (present(csv)) then
-      csv_ = csv
-    endif
+    logical :: ws
+    integer :: i, m
 
-    s_i = 1
-    err = 0
-    eof = .false.
-    data = ""
-    ij = 0
-    length = 1
-    loop: do i = 1, 1
-      if (csv_) then
-TOHW_parse_strings_csv(`data')
+    m = 1
+    ws = .true.
+    do i = 1, len(s)
+      if (m>len(data)) exit
+      if (ws.and.verify(s(i:i), XML_WHITESPACE)==0) cycle
+      if (verify(s(i:i), XML_WHITESPACE)==0) then
+        data(m:m) = " "
+        m = m + 1
+        ws = .true.
       else
-TOHW_parse_strings(`data')
+        data(m:m) = s(i:i)
+        m = m + 1
+        if (ws) ws = .false.
       endif
-    end do loop
+    enddo
 
-TOHW_check_errors
+    if (m<=len(data)) data(m:) = ""
 
-TOHW_output_errors
+    if (present(num)) num = 1
+    if (present(iostat)) iostat = 0
+
   end subroutine m4f_thisfunc
 
 define(`m4f_thisfunc', `scalartological')dnl
