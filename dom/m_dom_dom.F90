@@ -335,15 +335,11 @@ module m_dom_dom
 
 
   public :: getNamedItem
-  public :: getNamedItem_Value
-  public :: getNamedItem_Value_length
   public :: setNamedItem
   public :: removeNamedItem
 !  public :: item
 !  public :: getLength
   public :: getNamedItemNS
-  public :: getNamedItemNS_Value
-  public :: getNamedItemNS_Value_length
   public :: setNamedItemNS
   public :: removeNamedItemNS
 
@@ -4888,29 +4884,37 @@ endif
   end function getNamedItem
 
 
-  pure function getNamedItem_Value_length(map, name) result(n)
+  pure function getNamedItem_Value_len(map, p, name) result(n)
     type(NamedNodeMap), intent(in) :: map
+    logical, intent(in) :: p
     character(len=*), intent(in) :: name
     integer :: n
 
     integer :: i
 
-    do i = 1, map%length
-      if (str_vs(map%nodes(i)%this%nodeName)==name) then
-        n = getNodeValue_len(map%nodes(i)%this, .true.)
-        exit
-      endif
-    enddo
     n = 0
+    if (p) then
+      do i = 1, map%length
+        if (str_vs(map%nodes(i)%this%nodeName)==name) then
+          ! This has to be NodeValue, not TextContent since it should be 0 for entity/notation
+          n = getNodeValue_len(map%nodes(i)%this, .true.)
+          exit
+        endif
+      enddo
+    endif
 
-  end function getNamedItem_Value_length
+  end function getNamedItem_Value_len
 
 
   function getNamedItem_Value(map, name, ex)result(c) 
     type(DOMException), intent(out), optional :: ex
     type(NamedNodeMap), pointer :: map
     character(len=*), intent(in) :: name
-    character(len=getNamedItem_Value_length(map, name)) :: c
+#ifdef RESTRICTED_ASSOCIATED_BUG
+    character(len=getNamedItem_Value_len(map, .true., name)) :: c
+#else
+    character(len=getNamedItem_Value_len(map, associated(map), name)) :: c
+#endif
 
     integer :: i
 
@@ -4929,6 +4933,7 @@ endif
     c = ""
     do i = 1, map%length
       if (str_vs(map%nodes(i)%this%nodeName)==name) then
+          ! This has to be NodeValue, not TextContent since it should be 0 for entity/notation
         c = getNodeValue(map%nodes(i)%this)
         return
       endif
@@ -5240,7 +5245,7 @@ endif
   end function getNamedItemNS
 
 
-  pure function getNamedItemNS_Value_length(map, p, namespaceURI, localName) result(n)
+  pure function getNamedItemNS_Value_len(map, p, namespaceURI, localName) result(n)
     type(NamedNodeMap), intent(in) :: map
     logical, intent(in) :: p
     character(len=*), intent(in) :: namespaceURI
@@ -5252,6 +5257,7 @@ endif
     n = 0
     if (.not.p) return
     if (map%ownerElement%nodeType/=ELEMENT_NODE) return
+    ! Since entities & notations cant have NS.
 
     do i = 1, map%length
       if (str_vs(map%nodes(i)%this%elExtras%namespaceURI)==namespaceURI &
@@ -5261,7 +5267,7 @@ endif
       endif
     enddo
 
-  end function getNamedItemNS_Value_length
+  end function getNamedItemNS_Value_len
 
 
   function getNamedItemNS_Value(map, namespaceURI, localName, ex)result(c) 
@@ -5270,9 +5276,9 @@ endif
     character(len=*), intent(in) :: namespaceURI
     character(len=*), intent(in) :: localName
 #ifdef RESTRICTED_ASSOCIATED_BUG
-    character(len=getNamedItemNS_Value_length(map, .true., namespaceURI, localName)) :: c
+    character(len=getNamedItemNS_Value_len(map, .true., namespaceURI, localName)) :: c
 #else
-    character(len=getNamedItemNS_Value_length(map, associated(map), namespaceURI, localName)) :: c
+    character(len=getNamedItemNS_Value_len(map, associated(map), namespaceURI, localName)) :: c
 #endif
 
     integer :: i
@@ -8682,8 +8688,7 @@ endif
 
     endif
 
-    np => getNamedItem(getAttributes(arg), name)
-    c = getValue(np)
+    c = getNamedItem_Value(getAttributes(arg), name)
         
   end function getAttribute
 

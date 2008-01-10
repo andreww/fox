@@ -62,8 +62,7 @@ TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
 
-    np => getNamedItem(getAttributes(arg), name)
-    c = getValue(np)
+    c = getNamedItem_Value(getAttributes(arg), name)
         
   end function getAttribute
 
