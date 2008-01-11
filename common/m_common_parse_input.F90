@@ -375,28 +375,77 @@ contains
     ij = 0
     length = 1
     loop: do i = 1, 1
+      bracketed = .false.
       k = verify(s(s_i:), XML_WHITESPACE)
       if (k==0) exit loop
       s_i = s_i + k - 1
-      if (s(s_i:s_i)==",") then
-        if (s_i+1>len(s)) then
+      select case (s(s_i:s_i))
+      case ("(")
+        bracketed = .true.
+        k = verify(s(s_i:), XML_WHITESPACE)
+        if (k==0) then
           err = 2
           exit loop
         endif
-        k = verify(s(s_i+1:), XML_WHITESPACE)
+        s_i = s_i + k
+      case (",")
+        k = verify(s(s_i:), XML_WHITESPACE)
+        if (k==0) then
+          err = 2
+          exit loop
+        endif
         s_i = s_i + k - 1
-      endif
-      k = scan(s(s_i:), XML_WHITESPACE//",")
-      if (k==0) then
-        k = len(s)
+      case ("+", "-", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9")
+        continue
+      case default
+        err = 2
+        exit loop
+      end select
+      if (bracketed) then
+        k = index(s(s_i:), ")+i(")
       else
-        k = s_i + k - 2
+        k = scan(s(s_i:), XML_WHITESPACE//",")
       endif
-      read(s(s_i:k), *, iostat=ios) data
+      if (k==0) then
+        err = 2
+        exit loop
+      endif
+      k = s_i + k - 2
+      read(s(s_i:k), *, iostat=ios) r
       if (ios/=0) then
         err = 2
         exit loop
       endif
+      if (bracketed) then
+        s_i = k + 5
+        if (s_i>len(s)) then
+          err = 2
+          exit loop
+        endif
+      else
+        s_i = k + 2
+      endif
+      if (bracketed) then
+        k = index(s(s_i:), ")")
+        if (k==0) then
+          err = 2
+          exit loop
+        endif
+        k = s_i + k - 2
+      else
+        k = scan(s(s_i:), XML_WHITESPACE//",")
+        if (k==0) then
+          k = len(s)
+        else
+          k = s_i + k - 2
+        endif
+      endif
+      read(s(s_i:k), *, iostat=ios) c
+      if (ios/=0) then
+        err = 2
+        exit loop
+      endif
+      data = cmplx(r, c)
       ij = ij + 1
       s_i = k + 2
       if (ij<length.and.s_i>len(s)) exit loop
@@ -448,28 +497,77 @@ contains
     ij = 0
     length = 1
     loop: do i = 1, 1
+      bracketed = .false.
       k = verify(s(s_i:), XML_WHITESPACE)
       if (k==0) exit loop
       s_i = s_i + k - 1
-      if (s(s_i:s_i)==",") then
-        if (s_i+1>len(s)) then
+      select case (s(s_i:s_i))
+      case ("(")
+        bracketed = .true.
+        k = verify(s(s_i:), XML_WHITESPACE)
+        if (k==0) then
           err = 2
           exit loop
         endif
-        k = verify(s(s_i+1:), XML_WHITESPACE)
+        s_i = s_i + k
+      case (",")
+        k = verify(s(s_i:), XML_WHITESPACE)
+        if (k==0) then
+          err = 2
+          exit loop
+        endif
         s_i = s_i + k - 1
-      endif
-      k = scan(s(s_i:), XML_WHITESPACE//",")
-      if (k==0) then
-        k = len(s)
+      case ("+", "-", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9")
+        continue
+      case default
+        err = 2
+        exit loop
+      end select
+      if (bracketed) then
+        k = index(s(s_i:), ")+i(")
       else
-        k = s_i + k - 2
+        k = scan(s(s_i:), XML_WHITESPACE//",")
       endif
-      read(s(s_i:k), *, iostat=ios) data
+      if (k==0) then
+        err = 2
+        exit loop
+      endif
+      k = s_i + k - 2
+      read(s(s_i:k), *, iostat=ios) r
       if (ios/=0) then
         err = 2
         exit loop
       endif
+      if (bracketed) then
+        s_i = k + 5
+        if (s_i>len(s)) then
+          err = 2
+          exit loop
+        endif
+      else
+        s_i = k + 2
+      endif
+      if (bracketed) then
+        k = index(s(s_i:), ")")
+        if (k==0) then
+          err = 2
+          exit loop
+        endif
+        k = s_i + k - 2
+      else
+        k = scan(s(s_i:), XML_WHITESPACE//",")
+        if (k==0) then
+          k = len(s)
+        else
+          k = s_i + k - 2
+        endif
+      endif
+      read(s(s_i:k), *, iostat=ios) c
+      if (ios/=0) then
+        err = 2
+        exit loop
+      endif
+      data = cmplx(r, c)
       ij = ij + 1
       s_i = k + 2
       if (ij<length.and.s_i>len(s)) exit loop

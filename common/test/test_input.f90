@@ -3,6 +3,73 @@ program short_test
   use m_common_parse_input, only : rts
   use m_common_realtypes, only: sp, dp
 
+  print*, "test.0.1.1"
+  call stringdatascalar("abcd", "abcd", 1, 0)
+  print*, "test.0.1.2"
+  call stringdatascalar(" abcd ", "abcd", 1, 0)
+  print*, "test.0.1.3"
+  call stringdatascalar(" abc d ", "abc d", 1, 0)
+  print*, "test.0.1.4"
+  call stringdatascalar(" abc  d ", "abc d", 1, 0)
+  print*, "test.0.1.5"
+  call stringdatascalar(" abc "//achar(13)//"  d ", "abc d", 1, 0)
+
+  print*, "test.0.2.1"
+  call logicaldatascalar("true", .true., 1, 0)
+  print*, "test.0.2.2"
+  call logicaldatascalar("false", .false., 1, 0)
+  print*, "test.0.2.3"
+  call logicaldatascalar("1", .true., 1, 0)
+  print*, "test.0.2.4"
+  call logicaldatascalar("0", .false., 1, 0)
+  print*, "test.0.2.5"
+  call logicaldatascalar("  true  ", .true., 1, 0)
+  print*, "test.0.2.6"
+  call logicaldatascalar("  false  ", .false., 1, 0)
+  print*, "test.0.2.7"
+  call logicaldatascalar("  1 ", .true., 1, 0)
+  print*, "test.0.2.8"
+  call logicaldatascalar("  0 ", .false., 1, 0)
+  print*, "test.0.2.9"
+  call logicaldatascalar("  .tru ", .false., 0, 2)
+  print*, "test.0.2.10"
+  call logicaldatascalar("  false. ", .false., 0, 2)
+
+  print*, "test.0.3.1"
+  call integerdatascalar(" 1 ", 1, 1, 0)
+  print*, "test.0.3.2"
+  call integerdatascalar(" -10 ", -10, 1, 0)
+  print*, "test.0.3.3"
+  call integerdatascalar(" -1.3 ", 0, 0, 2)
+
+  print*, "test.0.4.1"
+  call realspdatascalar(" 1 ", 1.0, 1, 0)
+  print*, "test.0.4.2"
+  call realspdatascalar(" -1.35D2", -1.35e2, 1, 0)
+  print*, "test.0.4.3"
+  call realspdatascalar(" -1.35FG", 0.0, 0, 2)
+
+  print*, "test.0.5.1"
+  call realdpdatascalar(" 1 ", 1.0_dp, 1, 0)
+  print*, "test.0.5.2"
+  call realdpdatascalar(" -1.35D2", -1.35e2_dp, 1, 0)
+  print*, "test.0.5.3"
+  call realdpdatascalar(" -1.35FG", 0.0_dp, 0, 2)
+
+  print*, "test.0.6.1"
+  call complexspdatascalar(" 1,2 ", (1.0,2.0), 1, 0)
+  print*, "test.0.6.2"
+  call complexspdatascalar(" (1)+i(2)", (1.0,2.0), 1, 0)
+  print*, "test.0.6.3"
+  call complexspdatascalar(" arse", (0.0,0.0), 0, 2)
+
+  print*, "test.0.7.1"
+  call complexdpdatascalar(" 1,2 ", (1.0_dp,2.0_dp), 1, 0)
+  print*, "test.0.7.2"
+  call complexdpdatascalar(" (1)+i(2)", (1.0_dp,2.0_dp), 1, 0)
+  print*, "test.0.7.3"
+  call complexdpdatascalar(" arse", (0.0_dp,0.0_dp), 0, 2)
+
   print*,"test.1.1.1"
   call stringdataarray("a b c d e", (/"a", "b", "c", "d", "e"/), 5, 0)
   print*,"test.1.1.2"
@@ -195,6 +262,174 @@ program short_test
     (/(1.0e0,-2.e5), (3.44e-3,4.e0), (5.09090909e0,1.0e0), (-2e5,3.44e-3), (4.,5.09090909)/), 5, 1)
 
 contains
+
+
+    subroutine stringdatascalar(string, array, num, iostat)
+      character(len=*), intent(in) :: string
+      character(len=*), intent(in) :: array
+      integer, intent(in) :: num, iostat
+
+      character(len=len(array)) :: temp
+      integer :: n, i 
+
+      call rts(string, temp, num=n, iostat=i)
+
+      if (temp/=array) &
+        print*, "Different array"
+      if (i/=iostat) &
+        print*, "Wrong iostat" 
+      if (n/=num) &
+        print*, "Wrong num"
+
+    end subroutine stringdatascalar
+
+    subroutine logicaldatascalar(string, array, num, iostat) 
+      character(len=*), intent(in) :: string
+      logical, intent(in) :: array
+      integer, intent(in) :: num, iostat
+
+      logical :: temp 
+      integer :: n, i 
+
+      call rts(string, temp, num=n, iostat=i)
+
+      if (temp.neqv.array) &
+        print*, "Different array"
+      if (i/=iostat) &
+        print*, "Wrong iostat" 
+      if (n/=num) &
+        print*, "Wrong num"
+
+    end subroutine logicaldatascalar
+
+    subroutine integerdatascalar(string, array, num, iostat) 
+      character(len=*), intent(in) :: string
+      integer, intent(in) :: array
+      integer, intent(in) :: num, iostat
+
+      integer :: temp 
+      integer :: n, i 
+
+      call rts(string, temp, num=n, iostat=i)
+
+      if (temp/=array) &
+        print*, "Different array"
+      if (i/=iostat) &
+        print*, "Wrong iostat" 
+      if (n/=num) &
+        print*, "Wrong num"
+
+    end subroutine integerdatascalar
+
+    subroutine realspdatascalar(string, array, num, iostat) 
+      character(len=*), intent(in) :: string
+      real(sp), intent(in) :: array
+      integer, intent(in) :: num, iostat
+
+      real(sp) :: temp 
+      integer :: n, i 
+
+      call rts(string, temp, num=n, iostat=i)
+
+      if (array==0.0) then
+        if (temp>1e-5) then
+          print*, "Different array"
+        endif   
+      elseif (abs(temp-array)/temp>1e-5) then
+        print*, "Different array"
+      endif  
+      if (i/=iostat) &
+        print*, "Wrong iostat" 
+      if (n/=num) &
+        print*, "Wrong num"
+
+    end subroutine realspdatascalar
+
+    subroutine realdpdatascalar(string, array, num, iostat) 
+      character(len=*), intent(in) :: string
+      real(dp), intent(in) :: array
+      integer, intent(in) :: num, iostat
+
+      real(dp) :: temp 
+      integer :: n, i 
+
+      call rts(string, temp, num=n, iostat=i)
+
+      if (array==0.0) then
+        if (temp>1e-5) then
+          print*, "Different array"
+        endif   
+      elseif (abs(temp-array)/temp>1e-5) then
+        print*, "Different array"
+      endif  
+      if (i/=iostat) &
+        print*, "Wrong iostat" 
+      if (n/=num) &
+        print*, "Wrong num"
+
+    end subroutine realdpdatascalar
+
+    subroutine complexspdatascalar(string, array, num, iostat) 
+      character(len=*), intent(in) :: string
+      complex(sp), intent(in) :: array
+      integer, intent(in) :: num, iostat
+
+      complex(sp) :: temp 
+      integer :: n, i 
+
+      call rts(string, temp, num=n, iostat=i)
+
+      if (real(array)==0.0) then
+        if (real(temp)>1e-5) then
+          print*, "Different array"
+        endif   
+      elseif (abs(real(temp)-real(array))/real(temp)>1e-5) then
+        print*, "Different array"
+      endif  
+      if (imag(array)==0.0) then
+        if (imag(temp)>1e-5) then
+          print*, "Different array"
+        endif   
+      elseif (abs(imag(temp)-imag(array))/imag(temp)>1e-5) then
+        print*, "Different array"
+      endif  
+      if (i/=iostat) &
+        print*, "Wrong iostat" 
+      if (n/=num) &
+        print*, "Wrong num"
+
+    end subroutine complexspdatascalar
+
+    subroutine complexdpdatascalar(string, array, num, iostat) 
+      character(len=*), intent(in) :: string
+      complex(dp), intent(in) :: array
+      integer, intent(in) :: num, iostat
+
+      complex(dp) :: temp 
+      integer :: n, i 
+
+      call rts(string, temp, num=n, iostat=i)
+
+      if (real(array)==0.0) then
+        if (real(temp)>1e-5) then
+          print*, "Different array"
+        endif   
+      elseif (abs(real(temp)-real(array))/real(temp)>1e-5) then
+        print*, "Different array"
+      endif  
+      if (imag(array)==0.0) then
+        if (imag(temp)>1e-5) then
+          print*, "Different array"
+        endif   
+      elseif (abs(imag(temp)-imag(array))/imag(temp)>1e-5) then
+        print*, "Different array"
+      endif  
+      if (i/=iostat) &
+        print*, "Wrong iostat" 
+      if (n/=num) &
+        print*, "Wrong num"
+
+    end subroutine complexdpdatascalar
 
     subroutine stringdataarray(string, array, num, iostat, sep, csv)
       character(len=*), intent(in) :: string
