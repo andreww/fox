@@ -450,15 +450,20 @@ endif
   end subroutine runParser
 
 
-  function parsefile(filename, configuration, ex) 
+  function parsefile(filename, configuration, iostat, ex) 
     type(DOMException), intent(out), optional :: ex
     character(len=*), intent(in) :: filename
     type(DOMConfiguration), pointer, optional :: configuration
+    integer, intent(out), optional :: iostat
     type(Node), pointer :: parsefile
-    integer :: iostat
 
-    call open_xml_file(fxml, filename, iostat)
-    if (iostat /= 0) then
+    integer :: iostat_
+
+    call open_xml_file(fxml, filename, iostat_)
+    if (present(iostat)) then
+      iostat = iostat_
+      if (iostat/=0) return
+    elseif (iostat_/=0) then
       call FoX_error("Cannot open file")
     endif
 
