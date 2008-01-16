@@ -592,7 +592,8 @@ contains
 #else
 ! Pathscale 2.5 gets it wrong if we use merge here
 !    character(len=merge(4,5,l)) :: s
-    character(len=len(l)) :: s
+! And g95 (sep2007) cant resolve the generic here
+    character(len=str_logical_len(l)) :: s
     
     if (l) then
       s="true"
