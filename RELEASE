@@ -1,0 +1,10 @@
+Check compilation with & without --enable-dummy
+
+Check version number in:
+config/configure.ac
+common/FoX_common.F90
+DoX/Versioning.md
+& on the webpage
+
+Check dates in license
+

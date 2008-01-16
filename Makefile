@@ -79,18 +79,16 @@ check: default
 	done
 	@grep RESULT check.out
 #
-#
-# Documentation
-#
 DoX:
 	(cd DoX; $(MAKE))
 #
-#
-# Clean
-#
+cutdown:
+	rm -rf DoX/ config/aclocal.m4 config/autom4te.cache config/configure.ac config/m4/ config/makefile examples/ m4/ */test/ */*.m4 Changelog RELEASE
+
 clean: wxml_lib_clean wcml_lib_clean common_lib_clean fsys_lib_clean sax_lib_clean dom_lib_clean utils_lib_clean
 	(cd examples; $(MAKE) clean)
 	rm -rf objs .FoX check.out *_check
 #
 distclean: clean
 	rm -f FoX-config arch.make config.log config.status .config check.out
+	touch arch.make
