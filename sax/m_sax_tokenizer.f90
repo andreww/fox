@@ -5,7 +5,7 @@ module m_sax_tokenizer
     XML_INITIALENCODINGCHARS, XML_ENCODINGCHARS, &
     XML1_0, XML1_1, upperCase, digits, hexdigits, &
     isInitialNameChar, isXML1_0_NameChar, isXML1_1_NameChar
-  use m_common_error, only: ERR_WARNING, add_error, in_error
+  use m_common_error, only: add_error, in_error
   use m_common_entities, only: existing_entity, &
     is_unparsed_entity, is_external_entity, expand_entity_text, &
     expand_char_entity, add_internal_entity, pop_entity_list
