@@ -85,21 +85,21 @@ dnl
 ifelse(`$1', `Ch', `dnl
 ifelse(`$2', `Sca', `dnl
     if (present(ex)) then
-      call rts(getTextContent(arg, ex), data, num, iostat)
+      call rts(getAttribute(arg, name, ex), data, num, iostat)
     else
-      call rts(getTextContent(arg), data, num, iostat)
+      call rts(getAttribute(arg, name), data, num, iostat)
     endif
 ', `dnl
     if (present(ex)) then
-      call rts(getTextContent(arg, ex), data, separator, csv, num, iostat)
+      call rts(getAttribute(arg, name, ex), data, separator, csv, num, iostat)
     else
-      call rts(getTextContent(arg), data, separator, csv, num, iostat)
+      call rts(getAttribute(arg, name), data, separator, csv, num, iostat)
     endif
 ')', `
     if (present(ex)) then
-      call rts(getTextContent(arg, ex), data, num, iostat)
+      call rts(getAttribute(arg, name, ex), data, num, iostat)
     else
-      call rts(getTextContent(arg), data, num, iostat)
+      call rts(getAttribute(arg, name), data, num, iostat)
     endif
 ')dnl
   end subroutine extractDataAttribute$1$2
@@ -135,21 +135,21 @@ dnl
 ifelse(`$1', `Ch', `dnl
 ifelse(`$2', `Sca', `dnl
     if (present(ex)) then
-      call rts(getTextContent(arg, ex), data, num, iostat)
+      call rts(getAttributeNS(arg, namespaceURI, localName, ex), data, num, iostat)
     else
-      call rts(getTextContent(arg), data, num, iostat)
+      call rts(getAttributeNS(arg, namespaceURI, localName), data, num, iostat)
     endif
 ', `dnl
     if (present(ex)) then
-      call rts(getTextContent(arg, ex), data, separator, csv, num, iostat)
+      call rts(getAttributeNS(arg, namespaceURI, localName, ex), data, separator, csv, num, iostat)
     else
-      call rts(getTextContent(arg), data, separator, csv, num, iostat)
+      call rts(getAttributeNS(arg, namespaceURI, localName), data, separator, csv, num, iostat)
     endif
 ')', `
     if (present(ex)) then
-      call rts(getTextContent(arg, ex), data, num, iostat)
+      call rts(getAttributeNS(arg, namespaceURI, localName, ex), data, num, iostat)
     else
-      call rts(getTextContent(arg), data, num, iostat)
+      call rts(getAttributeNS(arg, namespaceURI, localName), data, num, iostat)
     endif
 ')dnl
   end subroutine extractDataAttNS$1$2

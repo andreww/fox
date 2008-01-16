@@ -653,9 +653,9 @@ endif
 
 
     if (present(ex)) then
-      call rts(getTextContent(arg, ex), data, num, iostat)
+      call rts(getAttribute(arg, name, ex), data, num, iostat)
     else
-      call rts(getTextContent(arg), data, num, iostat)
+      call rts(getAttribute(arg, name), data, num, iostat)
     endif
   end subroutine extractDataAttributeCmplxDpSca
 
@@ -689,9 +689,9 @@ endif
 
 
     if (present(ex)) then
-      call rts(getTextContent(arg, ex), data, num, iostat)
+      call rts(getAttribute(arg, name, ex), data, num, iostat)
     else
-      call rts(getTextContent(arg), data, num, iostat)
+      call rts(getAttribute(arg, name), data, num, iostat)
     endif
   end subroutine extractDataAttributeCmplxSpSca
 
@@ -725,9 +725,9 @@ endif
 
 
     if (present(ex)) then
-      call rts(getTextContent(arg, ex), data, num, iostat)
+      call rts(getAttribute(arg, name, ex), data, num, iostat)
     else
-      call rts(getTextContent(arg), data, num, iostat)
+      call rts(getAttribute(arg, name), data, num, iostat)
     endif
   end subroutine extractDataAttributeRealDpSca
 
@@ -761,9 +761,9 @@ endif
 
 
     if (present(ex)) then
-      call rts(getTextContent(arg, ex), data, num, iostat)
+      call rts(getAttribute(arg, name, ex), data, num, iostat)
     else
-      call rts(getTextContent(arg), data, num, iostat)
+      call rts(getAttribute(arg, name), data, num, iostat)
     endif
   end subroutine extractDataAttributeRealSpSca
 
@@ -797,9 +797,9 @@ endif
 
 
     if (present(ex)) then
-      call rts(getTextContent(arg, ex), data, num, iostat)
+      call rts(getAttribute(arg, name, ex), data, num, iostat)
     else
-      call rts(getTextContent(arg), data, num, iostat)
+      call rts(getAttribute(arg, name), data, num, iostat)
     endif
   end subroutine extractDataAttributeIntSca
 
@@ -833,9 +833,9 @@ endif
 
 
     if (present(ex)) then
-      call rts(getTextContent(arg, ex), data, num, iostat)
+      call rts(getAttribute(arg, name, ex), data, num, iostat)
     else
-      call rts(getTextContent(arg), data, num, iostat)
+      call rts(getAttribute(arg, name), data, num, iostat)
     endif
   end subroutine extractDataAttributeLgSca
 
@@ -869,9 +869,9 @@ endif
     endif
 
     if (present(ex)) then
-      call rts(getTextContent(arg, ex), data, num, iostat)
+      call rts(getAttribute(arg, name, ex), data, num, iostat)
     else
-      call rts(getTextContent(arg), data, num, iostat)
+      call rts(getAttribute(arg, name), data, num, iostat)
     endif
   end subroutine extractDataAttributeChSca
 
@@ -906,9 +906,9 @@ endif
 
 
     if (present(ex)) then
-      call rts(getTextContent(arg, ex), data, num, iostat)
+      call rts(getAttribute(arg, name, ex), data, num, iostat)
     else
-      call rts(getTextContent(arg), data, num, iostat)
+      call rts(getAttribute(arg, name), data, num, iostat)
     endif
   end subroutine extractDataAttributeCmplxDpArr
 
@@ -942,9 +942,9 @@ endif
 
 
     if (present(ex)) then
-      call rts(getTextContent(arg, ex), data, num, iostat)
+      call rts(getAttribute(arg, name, ex), data, num, iostat)
     else
-      call rts(getTextContent(arg), data, num, iostat)
+      call rts(getAttribute(arg, name), data, num, iostat)
     endif
   end subroutine extractDataAttributeCmplxSpArr
 
@@ -978,9 +978,9 @@ endif
 
 
     if (present(ex)) then
-      call rts(getTextContent(arg, ex), data, num, iostat)
+      call rts(getAttribute(arg, name, ex), data, num, iostat)
     else
-      call rts(getTextContent(arg), data, num, iostat)
+      call rts(getAttribute(arg, name), data, num, iostat)
     endif
   end subroutine extractDataAttributeRealDpArr
 
@@ -1014,9 +1014,9 @@ endif
 
 
     if (present(ex)) then
-      call rts(getTextContent(arg, ex), data, num, iostat)
+      call rts(getAttribute(arg, name, ex), data, num, iostat)
     else
-      call rts(getTextContent(arg), data, num, iostat)
+      call rts(getAttribute(arg, name), data, num, iostat)
     endif
   end subroutine extractDataAttributeRealSpArr
 
@@ -1050,9 +1050,9 @@ endif
 
 
     if (present(ex)) then
-      call rts(getTextContent(arg, ex), data, num, iostat)
+      call rts(getAttribute(arg, name, ex), data, num, iostat)
     else
-      call rts(getTextContent(arg), data, num, iostat)
+      call rts(getAttribute(arg, name), data, num, iostat)
     endif
   end subroutine extractDataAttributeIntArr
 
@@ -1086,9 +1086,9 @@ endif
 
 
     if (present(ex)) then
-      call rts(getTextContent(arg, ex), data, num, iostat)
+      call rts(getAttribute(arg, name, ex), data, num, iostat)
     else
-      call rts(getTextContent(arg), data, num, iostat)
+      call rts(getAttribute(arg, name), data, num, iostat)
     endif
   end subroutine extractDataAttributeLgArr
 
@@ -1124,9 +1124,9 @@ endif
     endif
 
     if (present(ex)) then
-      call rts(getTextContent(arg, ex), data, separator, csv, num, iostat)
+      call rts(getAttribute(arg, name, ex), data, separator, csv, num, iostat)
     else
-      call rts(getTextContent(arg), data, separator, csv, num, iostat)
+      call rts(getAttribute(arg, name), data, separator, csv, num, iostat)
     endif
   end subroutine extractDataAttributeChArr
 
@@ -1161,9 +1161,9 @@ endif
 
 
     if (present(ex)) then
-      call rts(getTextContent(arg, ex), data, num, iostat)
+      call rts(getAttribute(arg, name, ex), data, num, iostat)
     else
-      call rts(getTextContent(arg), data, num, iostat)
+      call rts(getAttribute(arg, name), data, num, iostat)
     endif
   end subroutine extractDataAttributeCmplxDpMat
 
@@ -1197,9 +1197,9 @@ endif
 
 
     if (present(ex)) then
-      call rts(getTextContent(arg, ex), data, num, iostat)
+      call rts(getAttribute(arg, name, ex), data, num, iostat)
     else
-      call rts(getTextContent(arg), data, num, iostat)
+      call rts(getAttribute(arg, name), data, num, iostat)
     endif
   end subroutine extractDataAttributeCmplxSpMat
 
@@ -1233,9 +1233,9 @@ endif
 
 
     if (present(ex)) then
-      call rts(getTextContent(arg, ex), data, num, iostat)
+      call rts(getAttribute(arg, name, ex), data, num, iostat)
     else
-      call rts(getTextContent(arg), data, num, iostat)
+      call rts(getAttribute(arg, name), data, num, iostat)
     endif
   end subroutine extractDataAttributeRealDpMat
 
@@ -1269,9 +1269,9 @@ endif
 
 
     if (present(ex)) then
-      call rts(getTextContent(arg, ex), data, num, iostat)
+      call rts(getAttribute(arg, name, ex), data, num, iostat)
     else
-      call rts(getTextContent(arg), data, num, iostat)
+      call rts(getAttribute(arg, name), data, num, iostat)
     endif
   end subroutine extractDataAttributeRealSpMat
 
@@ -1305,9 +1305,9 @@ endif
 
 
     if (present(ex)) then
-      call rts(getTextContent(arg, ex), data, num, iostat)
+      call rts(getAttribute(arg, name, ex), data, num, iostat)
     else
-      call rts(getTextContent(arg), data, num, iostat)
+      call rts(getAttribute(arg, name), data, num, iostat)
     endif
   end subroutine extractDataAttributeIntMat
 
@@ -1341,9 +1341,9 @@ endif
 
 
     if (present(ex)) then
-      call rts(getTextContent(arg, ex), data, num, iostat)
+      call rts(getAttribute(arg, name, ex), data, num, iostat)
     else
-      call rts(getTextContent(arg), data, num, iostat)
+      call rts(getAttribute(arg, name), data, num, iostat)
     endif
   end subroutine extractDataAttributeLgMat
 
@@ -1379,9 +1379,9 @@ endif
     endif
 
     if (present(ex)) then
-      call rts(getTextContent(arg, ex), data, separator, csv, num, iostat)
+      call rts(getAttribute(arg, name, ex), data, separator, csv, num, iostat)
     else
-      call rts(getTextContent(arg), data, separator, csv, num, iostat)
+      call rts(getAttribute(arg, name), data, separator, csv, num, iostat)
     endif
   end subroutine extractDataAttributeChMat
 
@@ -1416,9 +1416,9 @@ endif
 
 
     if (present(ex)) then
-      call rts(getTextContent(arg, ex), data, num, iostat)
+      call rts(getAttributeNS(arg, namespaceURI, localName, ex), data, num, iostat)
     else
-      call rts(getTextContent(arg), data, num, iostat)
+      call rts(getAttributeNS(arg, namespaceURI, localName), data, num, iostat)
     endif
   end subroutine extractDataAttNSCmplxDpSca
 
@@ -1452,9 +1452,9 @@ endif
 
 
     if (present(ex)) then
-      call rts(getTextContent(arg, ex), data, num, iostat)
+      call rts(getAttributeNS(arg, namespaceURI, localName, ex), data, num, iostat)
     else
-      call rts(getTextContent(arg), data, num, iostat)
+      call rts(getAttributeNS(arg, namespaceURI, localName), data, num, iostat)
     endif
   end subroutine extractDataAttNSCmplxSpSca
 
@@ -1488,9 +1488,9 @@ endif
 
 
     if (present(ex)) then
-      call rts(getTextContent(arg, ex), data, num, iostat)
+      call rts(getAttributeNS(arg, namespaceURI, localName, ex), data, num, iostat)
     else
-      call rts(getTextContent(arg), data, num, iostat)
+      call rts(getAttributeNS(arg, namespaceURI, localName), data, num, iostat)
     endif
   end subroutine extractDataAttNSRealDpSca
 
@@ -1524,9 +1524,9 @@ endif
 
 
     if (present(ex)) then
-      call rts(getTextContent(arg, ex), data, num, iostat)
+      call rts(getAttributeNS(arg, namespaceURI, localName, ex), data, num, iostat)
     else
-      call rts(getTextContent(arg), data, num, iostat)
+      call rts(getAttributeNS(arg, namespaceURI, localName), data, num, iostat)
     endif
   end subroutine extractDataAttNSRealSpSca
 
@@ -1560,9 +1560,9 @@ endif
 
 
     if (present(ex)) then
-      call rts(getTextContent(arg, ex), data, num, iostat)
+      call rts(getAttributeNS(arg, namespaceURI, localName, ex), data, num, iostat)
     else
-      call rts(getTextContent(arg), data, num, iostat)
+      call rts(getAttributeNS(arg, namespaceURI, localName), data, num, iostat)
     endif
   end subroutine extractDataAttNSIntSca
 
@@ -1596,9 +1596,9 @@ endif
 
 
     if (present(ex)) then
-      call rts(getTextContent(arg, ex), data, num, iostat)
+      call rts(getAttributeNS(arg, namespaceURI, localName, ex), data, num, iostat)
     else
-      call rts(getTextContent(arg), data, num, iostat)
+      call rts(getAttributeNS(arg, namespaceURI, localName), data, num, iostat)
     endif
   end subroutine extractDataAttNSLgSca
 
@@ -1632,9 +1632,9 @@ endif
     endif
 
     if (present(ex)) then
-      call rts(getTextContent(arg, ex), data, num, iostat)
+      call rts(getAttributeNS(arg, namespaceURI, localName, ex), data, num, iostat)
     else
-      call rts(getTextContent(arg), data, num, iostat)
+      call rts(getAttributeNS(arg, namespaceURI, localName), data, num, iostat)
     endif
   end subroutine extractDataAttNSChSca
 
@@ -1669,9 +1669,9 @@ endif
 
 
     if (present(ex)) then
-      call rts(getTextContent(arg, ex), data, num, iostat)
+      call rts(getAttributeNS(arg, namespaceURI, localName, ex), data, num, iostat)
     else
-      call rts(getTextContent(arg), data, num, iostat)
+      call rts(getAttributeNS(arg, namespaceURI, localName), data, num, iostat)
     endif
   end subroutine extractDataAttNSCmplxDpArr
 
@@ -1705,9 +1705,9 @@ endif
 
 
     if (present(ex)) then
-      call rts(getTextContent(arg, ex), data, num, iostat)
+      call rts(getAttributeNS(arg, namespaceURI, localName, ex), data, num, iostat)
     else
-      call rts(getTextContent(arg), data, num, iostat)
+      call rts(getAttributeNS(arg, namespaceURI, localName), data, num, iostat)
     endif
   end subroutine extractDataAttNSCmplxSpArr
 
@@ -1741,9 +1741,9 @@ endif
 
 
     if (present(ex)) then
-      call rts(getTextContent(arg, ex), data, num, iostat)
+      call rts(getAttributeNS(arg, namespaceURI, localName, ex), data, num, iostat)
     else
-      call rts(getTextContent(arg), data, num, iostat)
+      call rts(getAttributeNS(arg, namespaceURI, localName), data, num, iostat)
     endif
   end subroutine extractDataAttNSRealDpArr
 
@@ -1777,9 +1777,9 @@ endif
 
 
     if (present(ex)) then
-      call rts(getTextContent(arg, ex), data, num, iostat)
+      call rts(getAttributeNS(arg, namespaceURI, localName, ex), data, num, iostat)
     else
-      call rts(getTextContent(arg), data, num, iostat)
+      call rts(getAttributeNS(arg, namespaceURI, localName), data, num, iostat)
     endif
   end subroutine extractDataAttNSRealSpArr
 
@@ -1813,9 +1813,9 @@ endif
 
 
     if (present(ex)) then
-      call rts(getTextContent(arg, ex), data, num, iostat)
+      call rts(getAttributeNS(arg, namespaceURI, localName, ex), data, num, iostat)
     else
-      call rts(getTextContent(arg), data, num, iostat)
+      call rts(getAttributeNS(arg, namespaceURI, localName), data, num, iostat)
     endif
   end subroutine extractDataAttNSIntArr
 
@@ -1849,9 +1849,9 @@ endif
 
 
     if (present(ex)) then
-      call rts(getTextContent(arg, ex), data, num, iostat)
+      call rts(getAttributeNS(arg, namespaceURI, localName, ex), data, num, iostat)
     else
-      call rts(getTextContent(arg), data, num, iostat)
+      call rts(getAttributeNS(arg, namespaceURI, localName), data, num, iostat)
     endif
   end subroutine extractDataAttNSLgArr
 
@@ -1887,9 +1887,9 @@ endif
     endif
 
     if (present(ex)) then
-      call rts(getTextContent(arg, ex), data, separator, csv, num, iostat)
+      call rts(getAttributeNS(arg, namespaceURI, localName, ex), data, separator, csv, num, iostat)
     else
-      call rts(getTextContent(arg), data, separator, csv, num, iostat)
+      call rts(getAttributeNS(arg, namespaceURI, localName), data, separator, csv, num, iostat)
     endif
   end subroutine extractDataAttNSChArr
 
@@ -1924,9 +1924,9 @@ endif
 
 
     if (present(ex)) then
-      call rts(getTextContent(arg, ex), data, num, iostat)
+      call rts(getAttributeNS(arg, namespaceURI, localName, ex), data, num, iostat)
     else
-      call rts(getTextContent(arg), data, num, iostat)
+      call rts(getAttributeNS(arg, namespaceURI, localName), data, num, iostat)
     endif
   end subroutine extractDataAttNSCmplxDpMat
 
@@ -1960,9 +1960,9 @@ endif
 
 
     if (present(ex)) then
-      call rts(getTextContent(arg, ex), data, num, iostat)
+      call rts(getAttributeNS(arg, namespaceURI, localName, ex), data, num, iostat)
     else
-      call rts(getTextContent(arg), data, num, iostat)
+      call rts(getAttributeNS(arg, namespaceURI, localName), data, num, iostat)
     endif
   end subroutine extractDataAttNSCmplxSpMat
 
@@ -1996,9 +1996,9 @@ endif
 
 
     if (present(ex)) then
-      call rts(getTextContent(arg, ex), data, num, iostat)
+      call rts(getAttributeNS(arg, namespaceURI, localName, ex), data, num, iostat)
     else
-      call rts(getTextContent(arg), data, num, iostat)
+      call rts(getAttributeNS(arg, namespaceURI, localName), data, num, iostat)
     endif
   end subroutine extractDataAttNSRealDpMat
 
@@ -2032,9 +2032,9 @@ endif
 
 
     if (present(ex)) then
-      call rts(getTextContent(arg, ex), data, num, iostat)
+      call rts(getAttributeNS(arg, namespaceURI, localName, ex), data, num, iostat)
     else
-      call rts(getTextContent(arg), data, num, iostat)
+      call rts(getAttributeNS(arg, namespaceURI, localName), data, num, iostat)
     endif
   end subroutine extractDataAttNSRealSpMat
 
@@ -2068,9 +2068,9 @@ endif
 
 
     if (present(ex)) then
-      call rts(getTextContent(arg, ex), data, num, iostat)
+      call rts(getAttributeNS(arg, namespaceURI, localName, ex), data, num, iostat)
     else
-      call rts(getTextContent(arg), data, num, iostat)
+      call rts(getAttributeNS(arg, namespaceURI, localName), data, num, iostat)
     endif
   end subroutine extractDataAttNSIntMat
 
@@ -2104,9 +2104,9 @@ endif
 
 
     if (present(ex)) then
-      call rts(getTextContent(arg, ex), data, num, iostat)
+      call rts(getAttributeNS(arg, namespaceURI, localName, ex), data, num, iostat)
     else
-      call rts(getTextContent(arg), data, num, iostat)
+      call rts(getAttributeNS(arg, namespaceURI, localName), data, num, iostat)
     endif
   end subroutine extractDataAttNSLgMat
 
@@ -2142,9 +2142,9 @@ endif
     endif
 
     if (present(ex)) then
-      call rts(getTextContent(arg, ex), data, separator, csv, num, iostat)
+      call rts(getAttributeNS(arg, namespaceURI, localName, ex), data, separator, csv, num, iostat)
     else
-      call rts(getTextContent(arg), data, separator, csv, num, iostat)
+      call rts(getAttributeNS(arg, namespaceURI, localName), data, separator, csv, num, iostat)
     endif
   end subroutine extractDataAttNSChMat
 
