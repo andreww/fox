@@ -85,6 +85,18 @@ DoX:
 cutdown:
 	rm -rf DoX/ config/aclocal.m4 config/autom4te.cache config/configure.ac config/m4/ config/makefile examples/ m4/ */test/ */*.m4 Changelog RELEASE
 
+cutdown-wxml: cutdown
+	rm -rf wcml/ sax/ dom/
+
+cutdown-wcml: cutdown
+	rm -rf sax/ dom/
+
+cutdown-sax:
+	rm -rf wxml/ wcml/ dom/
+
+cutdown-dom:
+	rm -rf wcml/
+
 clean: wxml_lib_clean wcml_lib_clean common_lib_clean fsys_lib_clean sax_lib_clean dom_lib_clean utils_lib_clean
 	(cd examples; $(MAKE) clean)
 	rm -rf objs .FoX check.out *_check
