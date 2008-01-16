@@ -12,9 +12,17 @@ define(`TOHW_defaultargs', `dnl
     integer, intent(out), optional :: iostat
 ')dnl
 dnl
+define(`TOHW_stringdecls', `dnl
+    integer :: i, ij, k, s_i, err, length
+')dnl
+dnl
 define(`TOHW_defaultdecls', `dnl
+    integer :: i, ij, k, s_i, err, ios, length
+')dnl
+dnl
+define(`TOHW_complexdecls', `dnl
     logical :: bracketed
-    integer :: i, j, ij, k, s_i, err, ios, length
+    integer :: i, ij, k, s_i, err, ios, length
     real :: r, c
 ')dnl
 dnl
@@ -342,7 +350,7 @@ define(`m4f_thisfunc', `scalartological')dnl
     character(len=*), intent(in) :: s
     logical, intent(out) :: data
     integer, intent(out), optional :: num, iostat
-TOHW_defaultdecls
+TOHW_stringdecls
 
     s_i = 1
     err = 0
@@ -430,7 +438,7 @@ define(`m4f_thisfunc', `scalartocomplexsp')dnl
     complex(sp), intent(out) :: data
     integer, intent(out), optional :: num, iostat
 
-TOHW_defaultdecls
+TOHW_complexdecls
 
     s_i = 1
     err = 0
@@ -452,7 +460,7 @@ define(`m4f_thisfunc', `scalartocomplexdp')dnl
     complex(dp), intent(out) :: data
     integer, intent(out), optional :: num, iostat
 
-TOHW_defaultdecls
+TOHW_complexdecls
 
     s_i = 1
     err = 0
@@ -477,7 +485,7 @@ define(`m4f_thisfunc', `arraytostring')dnl
     logical, intent(in), optional :: csv
 TOHW_defaultargs
 
-TOHW_defaultdecls
+TOHW_stringdecls
     character(len=len(s)) :: s2
     logical :: csv_, eof
     integer :: m
@@ -525,10 +533,10 @@ define(`m4f_thisfunc', `matrixtostring')dnl
     logical, intent(in), optional :: csv
 TOHW_defaultargs
 
-TOHW_defaultdecls
+TOHW_stringdecls
     character(len=len(s)) :: s2
     logical :: csv_, eof
-    integer :: m
+    integer :: j, m
 
     csv_ = .false.
     if (present(csv)) then
@@ -573,7 +581,7 @@ define(`m4f_thisfunc', `arraytological')dnl
     logical, intent(out) :: data(:)
 TOHW_defaultargs
 
-TOHW_defaultdecls
+TOHW_stringdecls
 
     s_i = 1
     err = 0
@@ -595,7 +603,8 @@ define(`m4f_thisfunc', `matrixtological')dnl
     logical, intent(out) :: data(:,:)
 TOHW_defaultargs
 
-TOHW_defaultdecls
+TOHW_stringdecls
+    integer :: j
 
     s_i = 1
     err = 0
@@ -641,6 +650,7 @@ define(`m4f_thisfunc', `matrixtointeger')dnl
 TOHW_defaultargs
 
 TOHW_defaultdecls
+   integer :: j
 
     s_i = 1
     err = 0
@@ -687,6 +697,7 @@ define(`m4f_thisfunc', `matrixtorealsp')dnl
 TOHW_defaultargs
 
 TOHW_defaultdecls
+    integer :: j
 
     s_i = 1
     err = 0
@@ -733,6 +744,7 @@ define(`m4f_thisfunc', `matrixtorealdp')dnl
 TOHW_defaultargs
 
 TOHW_defaultdecls
+    integer :: j
 
     s_i = 1
     err = 0
@@ -756,7 +768,7 @@ define(`m4f_thisfunc', `arraytocomplexsp')dnl
     complex(sp), intent(out) :: data(:)
 TOHW_defaultargs
 
-TOHW_defaultdecls
+TOHW_complexdecls
 
     s_i = 1
     err = 0
@@ -778,7 +790,8 @@ define(`m4f_thisfunc', `matrixtocomplexsp')dnl
     complex(sp), intent(out) :: data(:,:)
 TOHW_defaultargs
 
-TOHW_defaultdecls
+TOHW_complexdecls
+   integer :: j
 
     s_i = 1
     err = 0
@@ -802,7 +815,7 @@ define(`m4f_thisfunc', `arraytocomplexdp')dnl
     complex(dp), intent(out) :: data(:)
 TOHW_defaultargs
 
-TOHW_defaultdecls
+TOHW_complexdecls
 
     s_i = 1
     err = 0
@@ -824,7 +837,8 @@ define(`m4f_thisfunc', `matrixtocomplexdp')dnl
     complex(dp), intent(out) :: data(:,:)
 TOHW_defaultargs
 
-TOHW_defaultdecls
+TOHW_complexdecls
+    integer :: j
 
     s_i = 1
     err = 0

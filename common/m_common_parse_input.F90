@@ -1,6 +1,5 @@
 module m_common_parse_input
 
-#ifndef DUMMYLIB
   use m_common_charset, only : XML_WHITESPACE
   use m_common_realtypes, only: sp, dp
 
@@ -70,9 +69,7 @@ contains
     character(len=*), intent(in) :: s
     logical, intent(out) :: data
     integer, intent(out), optional :: num, iostat
-    logical :: bracketed
-    integer :: i, j, ij, k, s_i, err, ios, length
-    real :: r, c
+    integer :: i, ij, k, s_i, err, length
 
 
     s_i = 1
@@ -146,9 +143,7 @@ contains
     integer, intent(out) :: data
     integer, intent(out), optional :: num, iostat
 
-    logical :: bracketed
-    integer :: i, j, ij, k, s_i, err, ios, length
-    real :: r, c
+    integer :: i, ij, k, s_i, err, ios, length
 
 
     s_i = 1
@@ -219,9 +214,7 @@ contains
     real(sp), intent(out) :: data
     integer, intent(out), optional :: num, iostat
 
-    logical :: bracketed
-    integer :: i, j, ij, k, s_i, err, ios, length
-    real :: r, c
+    integer :: i, ij, k, s_i, err, ios, length
 
 
     s_i = 1
@@ -292,9 +285,7 @@ contains
     real(dp), intent(out) :: data
     integer, intent(out), optional :: num, iostat
 
-    logical :: bracketed
-    integer :: i, j, ij, k, s_i, err, ios, length
-    real :: r, c
+    integer :: i, ij, k, s_i, err, ios, length
 
 
     s_i = 1
@@ -366,7 +357,7 @@ contains
     integer, intent(out), optional :: num, iostat
 
     logical :: bracketed
-    integer :: i, j, ij, k, s_i, err, ios, length
+    integer :: i, ij, k, s_i, err, ios, length
     real :: r, c
 
 
@@ -488,7 +479,7 @@ contains
     integer, intent(out), optional :: num, iostat
 
     logical :: bracketed
-    integer :: i, j, ij, k, s_i, err, ios, length
+    integer :: i, ij, k, s_i, err, ios, length
     real :: r, c
 
 
@@ -615,9 +606,7 @@ contains
     integer, intent(out), optional :: iostat
 
 
-    logical :: bracketed
-    integer :: i, j, ij, k, s_i, err, ios, length
-    real :: r, c
+    integer :: i, ij, k, s_i, err, length
 
     character(len=len(s)) :: s2
     logical :: csv_, eof
@@ -765,13 +754,11 @@ contains
     integer, intent(out), optional :: iostat
 
 
-    logical :: bracketed
-    integer :: i, j, ij, k, s_i, err, ios, length
-    real :: r, c
+    integer :: i, ij, k, s_i, err, length
 
     character(len=len(s)) :: s2
     logical :: csv_, eof
-    integer :: m
+    integer :: j, m
 
     csv_ = .false.
     if (present(csv)) then
@@ -913,9 +900,7 @@ contains
     integer, intent(out), optional :: iostat
 
 
-    logical :: bracketed
-    integer :: i, j, ij, k, s_i, err, ios, length
-    real :: r, c
+    integer :: i, ij, k, s_i, err, length
 
 
     s_i = 1
@@ -992,10 +977,9 @@ contains
     integer, intent(out), optional :: iostat
 
 
-    logical :: bracketed
-    integer :: i, j, ij, k, s_i, err, ios, length
-    real :: r, c
+    integer :: i, ij, k, s_i, err, length
 
+    integer :: j
 
     s_i = 1
     err = 0
@@ -1073,9 +1057,7 @@ contains
     integer, intent(out), optional :: iostat
 
 
-    logical :: bracketed
-    integer :: i, j, ij, k, s_i, err, ios, length
-    real :: r, c
+    integer :: i, ij, k, s_i, err, ios, length
 
     s_i = 1
     err = 0
@@ -1148,10 +1130,9 @@ contains
     integer, intent(out), optional :: iostat
 
 
-    logical :: bracketed
-    integer :: i, j, ij, k, s_i, err, ios, length
-    real :: r, c
+    integer :: i, ij, k, s_i, err, ios, length
 
+   integer :: j
 
     s_i = 1
     err = 0
@@ -1226,9 +1207,7 @@ contains
     integer, intent(out), optional :: iostat
 
 
-    logical :: bracketed
-    integer :: i, j, ij, k, s_i, err, ios, length
-    real :: r, c
+    integer :: i, ij, k, s_i, err, ios, length
 
 
     s_i = 1
@@ -1302,10 +1281,9 @@ contains
     integer, intent(out), optional :: iostat
 
 
-    logical :: bracketed
-    integer :: i, j, ij, k, s_i, err, ios, length
-    real :: r, c
+    integer :: i, ij, k, s_i, err, ios, length
 
+    integer :: j
 
     s_i = 1
     err = 0
@@ -1380,9 +1358,7 @@ contains
     integer, intent(out), optional :: iostat
 
 
-    logical :: bracketed
-    integer :: i, j, ij, k, s_i, err, ios, length
-    real :: r, c
+    integer :: i, ij, k, s_i, err, ios, length
 
 
     s_i = 1
@@ -1456,10 +1432,9 @@ contains
     integer, intent(out), optional :: iostat
 
 
-    logical :: bracketed
-    integer :: i, j, ij, k, s_i, err, ios, length
-    real :: r, c
+    integer :: i, ij, k, s_i, err, ios, length
 
+    integer :: j
 
     s_i = 1
     err = 0
@@ -1535,7 +1510,7 @@ contains
 
 
     logical :: bracketed
-    integer :: i, j, ij, k, s_i, err, ios, length
+    integer :: i, ij, k, s_i, err, ios, length
     real :: r, c
 
 
@@ -1660,9 +1635,10 @@ contains
 
 
     logical :: bracketed
-    integer :: i, j, ij, k, s_i, err, ios, length
+    integer :: i, ij, k, s_i, err, ios, length
     real :: r, c
 
+   integer :: j
 
     s_i = 1
     err = 0
@@ -1787,7 +1763,7 @@ contains
 
 
     logical :: bracketed
-    integer :: i, j, ij, k, s_i, err, ios, length
+    integer :: i, ij, k, s_i, err, ios, length
     real :: r, c
 
 
@@ -1912,9 +1888,10 @@ contains
 
 
     logical :: bracketed
-    integer :: i, j, ij, k, s_i, err, ios, length
+    integer :: i, ij, k, s_i, err, ios, length
     real :: r, c
 
+    integer :: j
 
     s_i = 1
     err = 0
@@ -2030,6 +2007,6 @@ contains
 
 
   end subroutine matrixtocomplexdp
-
-#endif
+  
 end module m_common_parse_input
+
