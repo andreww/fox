@@ -362,7 +362,6 @@ TOHW_m_dom_contents(`
     type(Node), pointer :: np
 
     integer :: i
-    character, pointer, dimension(:) :: arg_ns, arg_ln, map_ns, map_ln
 
     if (.not.associated(map)) then
       TOHW_m_dom_throw_error(FoX_MAP_IS_NULL)

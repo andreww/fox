@@ -5317,7 +5317,6 @@ endif
     type(Node), pointer :: np
 
     integer :: i
-    character, pointer, dimension(:) :: arg_ns, arg_ln, map_ns, map_ln
 
     if (.not.associated(map)) then
       if (getFoX_checks().or.FoX_MAP_IS_NULL<200) then
@@ -8662,8 +8661,6 @@ endif
     character(len=getAttribute_len(arg, associated(arg), name)) :: c
 #endif
 
-    type(Node), pointer :: np
-
     if (.not.associated(arg)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
   call throw_exception(FoX_NODE_IS_NULL, "getAttribute", ex)
@@ -8970,8 +8967,6 @@ endif
     type(Node), pointer :: arg
     type(Node), pointer :: oldattr
     type(Node), pointer :: attr
-
-    integer :: i
 
     if (.not.associated(arg)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
@@ -9401,8 +9396,6 @@ endif
     type(Node), pointer :: oldattr
     type(Node), pointer :: attr
 
-    integer :: i
-
     if (.not.associated(arg)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
   call throw_exception(FoX_NODE_IS_NULL, "removeAttributeNodeNS", ex)
@@ -9619,8 +9612,6 @@ endif
     type(Node), pointer :: arg
     type(Node), pointer :: idAttr
     logical, intent(in) :: isId
-
-    type(Node), pointer :: np
 
     if (arg%readonly) then
       if (getFoX_checks().or.NO_MODIFICATION_ALLOWED_ERR<200) then
@@ -9879,8 +9870,29 @@ endif
     type(Node), pointer :: arg
     character(len=*), intent(in) :: value
 
-    type(Node), pointer :: np
-    integer :: i
+    if (.not.associated(arg)) then
+      if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "setValue", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    endif   
+
+    if (getNodeType(arg)/=ATTRIBUTE_NODE) then
+      if (getFoX_checks().or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "setValue", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    endif
 
     call setTextContent(arg, value, ex)
 

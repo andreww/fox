@@ -52,8 +52,6 @@ TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
     character(len=getAttribute_len(arg, associated(arg), name)) :: c
 #endif
 
-    type(Node), pointer :: np
-
     if (.not.associated(arg)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif
@@ -211,8 +209,6 @@ TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
     type(Node), pointer :: arg
     type(Node), pointer :: oldattr
     type(Node), pointer :: attr
-
-    integer :: i
 
     if (.not.associated(arg)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
@@ -444,8 +440,6 @@ TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
     type(Node), pointer :: oldattr
     type(Node), pointer :: attr
 
-    integer :: i
-
     if (.not.associated(arg)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif
@@ -569,8 +563,6 @@ TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
     type(Node), pointer :: arg
     type(Node), pointer :: idAttr
     logical, intent(in) :: isId
-
-    type(Node), pointer :: np
 
     if (arg%readonly) then
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)

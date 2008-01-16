@@ -57,8 +57,13 @@ TOHW_m_dom_get(Node, ownerElement, np%elExtras%ownerElement, (ATTRIBUTE_NODE))
     type(Node), pointer :: arg
     character(len=*), intent(in) :: value
 
-    type(Node), pointer :: np
-    integer :: i
+    if (.not.associated(arg)) then
+      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+    endif   
+
+    if (getNodeType(arg)/=ATTRIBUTE_NODE) then
+      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
+    endif
 
     call setTextContent(arg, value, ex)
 
