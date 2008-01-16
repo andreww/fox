@@ -1,9 +1,9 @@
 module FoX_common
 
   use m_common_array_str
+  use m_common_format
 #ifndef DUMMYLIB
   use m_common_attrs
-  use m_common_format
 #endif
 
   implicit none

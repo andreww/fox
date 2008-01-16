@@ -112,18 +112,21 @@ dnl will happen anyway. eg if we exclude wxml, but include
 dnl wkml, then wxml will get built as a dependency by the
 dnl makefile.
 dnl
-dnl Finally, construct the build targets
-dnl BUILD_TARGETS="$WXML_yes $WCML_yes $WKML_yes $SAX_yes $DOM_yes"
-BUILD_TARGETS="$WXML_yes $WCML_yes $SAX_yes $DOM_yes"
-AC_SUBST(BUILD_TARGETS)
-dnl
 dnl Now check if we are only being asked for a dummy library:
 AC_ARG_ENABLE([dummy],
   AC_HELP_STRING([--enable-dummy], [Compile only dummy interfaces]),
   [dummy=$enableval])
 if test x$dummy = xyes; then
+dnl DUMMYLIB doesnt work with SAX and DOM
   DEFS="$DEFS DUMMYLIB"
+  SAX_yes=
+  DOM_yes=
 fi
+dnl
+dnl Finally, construct the build targets
+dnl BUILD_TARGETS="$WXML_yes $WCML_yes $WKML_yes $SAX_yes $DOM_yes"
+BUILD_TARGETS="$WXML_yes $WCML_yes $SAX_yes $DOM_yes"
+AC_SUBST(BUILD_TARGETS)
 dnl
 dnl Check for compiler kind flags
 dnl
