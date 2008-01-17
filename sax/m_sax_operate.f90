@@ -30,10 +30,12 @@ contains
 
     if (present(iostat)) then
       iostat = i
+      if (i/=0) return
     else
       if (i/=0) &
         call FoX_error("Error opening file in open_xml_file")
     endif
+    
     call sax_parser_init(xt%fx, file)
 
   end subroutine open_xml_file

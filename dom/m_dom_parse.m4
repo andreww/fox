@@ -34,7 +34,7 @@ module m_dom_parse
     setReadOnlyMap, setReadonlyNode, setSpecified, setXds, setStringValue
     
   use m_dom_error, only: DOMException, inException, throw_exception,           &
-    PARSE_ERR
+    getExceptionCode, PARSE_ERR
 
   implicit none
   private
@@ -438,6 +438,7 @@ contains
     if (associated(error)) then
       ! FIXME pass the value of the error through
       ! when we let exceptions do that
+      deallocate(error)
       call destroy(mainDoc)
       TOHW_m_dom_throw_error(PARSE_ERR)
     endif
@@ -451,6 +452,7 @@ contains
     integer, intent(out), optional :: iostat
     type(Node), pointer :: parsefile
 
+    type(DOMException) :: ex_
     integer :: iostat_
 
     call open_xml_file(fxml, filename, iostat_)
@@ -461,7 +463,17 @@ contains
       call FoX_error("Cannot open file")
     endif
 
-    call runParser(fxml, configuration, ex)
+    if (present(ex)) then
+      call runParser(fxml, configuration, ex)
+    elseif (present(iostat)) then
+      call runParser(fxml, configuration, ex_)
+    else
+      call runParser(fxml, configuration)
+    endif
+
+    if (present(iostat).and.inException(ex_)) then
+      iostat = getExceptionCode(ex_)
+    endif
 
     parsefile => mainDoc
     mainDoc => null()
