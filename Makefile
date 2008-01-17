@@ -83,7 +83,7 @@ DoX:
 	(cd DoX; $(MAKE))
 #
 cutdown:
-	rm -rf DoX/ config/aclocal.m4 config/autom4te.cache config/configure.ac config/m4/ config/makefile examples/ m4/ */test/ */*.m4 Changelog RELEASE
+	rm -rf .gitignore DoX/ config/aclocal.m4 config/autom4te.cache config/configure.ac config/m4/ config/makefile examples/ m4/ */test/ */*.m4 Changelog RELEASE
 
 cutdown-wxml: cutdown
 	rm -rf wcml/ sax/ dom/
