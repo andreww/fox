@@ -10,5 +10,5 @@ Check dates in license
 
 Update Changelog
 
-
+git-archive --format=tar --prefix=FoX-3.1.2/ HEAD | gzip -9 > ../FoX-3.1.2.tgz
 
