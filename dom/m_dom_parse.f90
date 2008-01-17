@@ -430,14 +430,11 @@ contains
       xmlns_uris = .true.)
 
     call close_xml_t(fxml)
-    print*,"xmlt done"
     call destroy_entity_list(elist)
-    print*,"entlist done"
 
     if (associated(error)) then
       ! FIXME pass the value of the error through
       ! when we let exceptions do that
-      print*,"mainDoc done"
       deallocate(error)
       call destroy(mainDoc)
       if (getFoX_checks().or.PARSE_ERR<200) then
