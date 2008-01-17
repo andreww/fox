@@ -189,5 +189,5 @@ chmod +x FoX-config
 touch .config
 dnl and to stop over-eager makes trying to recreate f90 files
 dnl when m4 is not gnu m4 ..
-touch */*.f90 
+touch */*.f90 */*.F90
 dnl
