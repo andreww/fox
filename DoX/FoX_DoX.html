@@ -74,7 +74,7 @@
 <a name="Versioning"/>
 <h1>FoX versioning</h1>
 
-<p>This documentation describes version 3.1 of the FoX library.</p>
+<p>This documentation describes version 3.1.2 of the FoX library.</p>
 
 <p>This version includes output modules for general XML, and for CML, and also a Fortran version of the SAX2 input parser, and a Fortran mapping of the W3C DOM interface.</p>
 
@@ -103,7 +103,7 @@
 
 <p>You will have received the FoX source code as a tar.gz file.</p>
 
-<p>Unpack it as normal, and change directory into the top-level directory, FoX.</p>
+<p>Unpack it as normal, and change directory into the top-level directory, FoX-$VERSION.</p>
 
 <h3>Requirements for use</h3>
 
@@ -201,9 +201,11 @@ places.  If you move the FoX directory later on, you will need to re-run configu
 
 <h2>Testing</h2>
 
-<p>Several testsuites are available for the different modules of the library. To run them all, simply run <code>make check</code> from the top-level directory. This will run the individual testsuites, and collate their results.</p>
+<p>In the full version of the FoX library, there are several testsuites included.</p>
 
-<p>If any failures occur (unrelated to known compiler issues, see the <a href="http://uszla.me.uk/space/software/FoX/compat/">up-to-date list</a>), please send a message to the mailing list (<a href="&#x6D;&#x61;&#x69;&#x6C;&#x74;&#111;:&#x46;&#111;&#x58;&#64;&#x6C;&#105;s&#x74;&#x73;.&#117;&#x73;&#x7A;&#x6C;&#97;&#46;&#109;&#101;.&#117;&#107;">&#x46;&#111;&#x58;&#64;&#x6C;&#105;s&#x74;&#x73;.&#117;&#x73;&#x7A;&#x6C;&#97;&#46;&#109;&#101;.&#117;&#107;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
+<p>To run them all, simply run <code>make check</code> from the top-level directory. This will run the individual testsuites, and collate their results.</p>
+
+<p>If any failures occur (unrelated to known compiler issues, see the <a href="http://uszla.me.uk/space/software/FoX/compat/">up-to-date list</a>), please send a message to the mailing list (<a href="m&#97;&#x69;&#x6C;&#x74;&#x6F;:&#x46;&#111;&#88;&#64;&#108;&#105;&#x73;&#116;&#115;&#x2E;&#x75;&#115;z&#x6C;&#x61;&#x2E;&#109;&#101;&#x2E;&#x75;k">&#x46;&#111;&#88;&#64;&#108;&#105;&#x73;&#116;&#115;&#x2E;&#x75;&#115;z&#x6C;&#x61;&#x2E;&#109;&#101;&#x2E;&#x75;k</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
 
 <h2>Linking to an existing program</h2>
 
@@ -2796,9 +2798,9 @@ In particular, the way the W3C DOM mandates namespace handling makes it trivial 
 <h1>Further information</h1>
 
 <p>FoX evolved from the initial codebase of <a href="http://lcdx00.wm.lc.ehu.es/ag/xml/">xmlf90</a>,
-which was written largely by Alberto Garcia &lt;<a href="&#109;&#97;&#105;&#108;&#x74;&#111;:a&#108;b&#x65;&#x72;&#116;&#111;&#103;&#64;&#105;&#99;&#109;&#x61;&#x62;&#x2E;&#101;&#115;">a&#108;b&#x65;&#x72;&#116;&#111;&#103;&#64;&#105;&#99;&#109;&#x61;&#x62;&#x2E;&#101;&#115;</a>> and Jon Wakelin &lt;<a href="&#109;ai&#x6C;t&#x6F;:&#106;&#x6F;&#110;&#x2E;&#119;&#x61;&#x6B;&#101;&#108;&#105;n&#64;&#x62;&#x72;i&#x73;&#x74;&#x6F;&#108;&#x2E;&#97;&#99;&#46;u&#x6B;">&#106;&#x6F;&#110;&#x2E;&#119;&#x61;&#x6B;&#101;&#108;&#105;n&#64;&#x62;&#x72;i&#x73;&#x74;&#x6F;&#108;&#x2E;&#97;&#99;&#46;u&#x6B;</a>>.</p>
+which was written largely by Alberto Garcia &lt;<a href="&#x6D;&#x61;&#x69;l&#116;&#111;:&#x61;&#108;&#98;&#x65;&#x72;&#x74;&#111;&#x67;&#64;i&#x63;&#x6D;&#97;b&#46;&#x65;&#115;">&#x61;&#108;&#98;&#x65;&#x72;&#x74;&#111;&#x67;&#64;i&#x63;&#x6D;&#97;b&#46;&#x65;&#115;</a>> and Jon Wakelin &lt;<a href="&#x6D;&#x61;&#105;&#108;&#x74;&#x6F;:j&#111;n&#x2E;&#119;&#x61;&#107;&#x65;&#x6C;in&#64;&#x62;&#114;&#105;&#115;&#116;&#111;&#x6C;&#x2E;&#x61;&#x63;&#x2E;&#x75;&#x6B;">j&#111;n&#x2E;&#119;&#x61;&#107;&#x65;&#x6C;in&#64;&#x62;&#114;&#105;&#115;&#116;&#111;&#x6C;&#x2E;&#x61;&#x63;&#x2E;&#x75;&#x6B;</a>>.</p>
 
-<p>FoX is the work of Toby White &lt;<a href="&#x6D;&#97;&#105;lt&#111;:&#116;&#111;&#x77;&#50;&#x31;&#64;&#99;&#97;&#x6D;&#x2E;&#x61;&#x63;&#x2E;&#x75;&#x6B;">&#116;&#111;&#x77;&#50;&#x31;&#64;&#99;&#97;&#x6D;&#x2E;&#x61;&#x63;&#x2E;&#x75;&#x6B;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
+<p>FoX is the work of Toby White &lt;<a href="&#x6D;&#97;&#105;&#x6C;t&#x6F;:t&#111;&#119;&#x32;&#49;&#64;&#x63;a&#x6D;&#x2E;&#x61;&#x63;&#46;&#117;&#107;">t&#111;&#119;&#x32;&#49;&#64;&#x63;a&#x6D;&#x2E;&#x61;&#x63;&#46;&#117;&#107;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
 
 <p>There is a FoX website at <a href="http://www.uszla.me.uk/software/FoX/">http://www.uszla.me.uk/software/FoX/</a>.</p>
 

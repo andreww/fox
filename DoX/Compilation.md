@@ -2,7 +2,7 @@
 
 You will have received the FoX source code as a tar.gz file.
 
-Unpack it as normal, and change directory into the top-level directory, FoX.
+Unpack it as normal, and change directory into the top-level directory, FoX-$VERSION.
 
 ### Requirements for use
 
@@ -86,7 +86,9 @@ This will build all the requested FoX modules, and the relevant examples
 
 ##Testing
 
-Several testsuites are available for the different modules of the library. To run them all, simply run `make check` from the top-level directory. This will run the individual testsuites, and collate their results.
+In the full version of the FoX library, there are several testsuites included.
+
+To run them all, simply run `make check` from the top-level directory. This will run the individual testsuites, and collate their results.
 
 If any failures occur (unrelated to known compiler issues, see the [up-to-date list](http://uszla.me.uk/space/software/FoX/compat/)), please send a message to the mailing list (<FoX@lists.uszla.me.uk>) with details of compiler, hardware platform, and the nature of the failure.
 
