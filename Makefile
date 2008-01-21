@@ -15,7 +15,7 @@ install: objsdir $(BUILD_TARGETS)
 	$(INSTALL) FoX-config $(install_prefix)/bin
 #
 examples_build:
-	(cd examples; $(MAKE))
+	if test -d examples; then (cd examples; $(MAKE)) fi
 #
 #---------------------------
 #
