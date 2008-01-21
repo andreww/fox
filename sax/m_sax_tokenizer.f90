@@ -485,18 +485,47 @@ contains
           endif
         endif
 
-      case (ST_IN_DTD, ST_DTD_NAME, ST_DTD_DECL, ST_SUBSET, ST_CLOSE_DTD)
+      case (ST_IN_DOCTYPE, ST_DOC_NAME, ST_DOC_SYSTEM, ST_DOC_PUBLIC, &
+        ST_DOC_DECL, ST_CLOSE_DOCTYPE)
         if (firstChar) ws_discard = .true.
         if (ws_discard) then
           if (verify(c, XML_WHITESPACE)>0) then
-            if (c=="[") then
+            if (verify(c, "'""")==0) then
+              q = c
+              deallocate(fx%token)
+              fx%token => vs_str_alloc("")
+              ws_discard = .false.
+            elseif (c=="[") then
               fx%tokenType = TOK_OPEN_SB
-            elseif (c=="]") then
+            elseif (c==">") then
+              fx%tokenType = TOK_END_TAG
+            else
+              deallocate(fx%token)
+              fx%token => vs_str_alloc(c)
+              ws_discard = .false.
+            endif
+          endif
+        else
+          if (q/=" ".and.c==q) then
+            fx%tokenType = TOK_CHAR
+          elseif (q==" ".and.verify(c, XML_WHITESPACE)==0) then
+            call push_chars(fb, c)
+            fx%tokenType = TOK_NAME
+          else
+            tempString => fx%token
+            fx%token => vs_str_alloc(str_vs(tempString)//c)
+            deallocate(tempString)
+          endif
+        endif
+
+      case (ST_DTD_SUBSET)
+        if (firstChar) ws_discard = .true.
+        if (ws_discard) then
+          if (verify(c, XML_WHITESPACE)>0) then
+            if (c=="]") then
               phrase = 1
               q = c
               ws_discard = .false.
-            elseif (c==">") then
-              fx%tokenType = TOK_END_TAG
             elseif (c=="%") then
               fx%tokenType = TOK_ENTITY
             elseif (c=="<") then
@@ -504,9 +533,7 @@ contains
               q = c
               ws_discard = .false.
             else
-              deallocate(fx%token)
-              fx%token => vs_str_alloc(c)
-              ws_discard = .false.
+              call add_error(fx%error_stack, "Unexpected character found in document subset")
             endif
           endif
         elseif (phrase==1) then
@@ -532,17 +559,8 @@ contains
           else
             call add_error(fx%error_stack, "Unexpected character, expecting >")
           endif
-        else
-          if (verify(c, XML_WHITESPACE)>0) then
-            tempString => fx%token
-            fx%token => vs_str_alloc(str_vs(tempString)//c)
-            deallocate(tempString)
-          else
-            call push_chars(fb, c)
-            fx%tokenType = TOK_NAME
-          endif
-        endif
-        
+        endif        
+
       case (ST_DTD_ATTLIST, ST_DTD_ELEMENT, ST_DTD_ENTITY, &
         ST_DTD_ENTITY_PE, ST_DTD_NOTATION)
         if (firstChar) ws_discard = .true.
@@ -574,16 +592,14 @@ contains
           fx%tokenType = TOK_DTD_CONTENTS
           fx%nextTokenType = TOK_END_TAG
         else
-          ! FIXME check for %PE;
           tempString => fx%token
           fx%token => vs_str_alloc(str_vs(tempString)//c)
           deallocate(tempString)
         endif
         
-      case (ST_DTD_PUBLIC, ST_DTD_SYSTEM, ST_DTD_ENTITY_ID, &
-        ST_DTD_ENTITY_PUBLIC, ST_DTD_ENTITY_SYSTEM, ST_DTD_ENTITY_NDATA, &
-        ST_DTD_ENTITY_END, ST_DTD_ENTITY_NDATA_VALUE, ST_DTD_NOTATION_ID, &
-        ST_DTD_NOTATION_SYSTEM, ST_DTD_NOTATION_PUBLIC, &
+      case (ST_DTD_ENTITY_ID, ST_DTD_ENTITY_PUBLIC, ST_DTD_ENTITY_SYSTEM, &
+        ST_DTD_ENTITY_NDATA, ST_DTD_ENTITY_END, ST_DTD_ENTITY_NDATA_VALUE, &
+        ST_DTD_NOTATION_ID, ST_DTD_NOTATION_SYSTEM, ST_DTD_NOTATION_PUBLIC, &
         ST_DTD_NOTATION_PUBLIC_2, ST_DTD_NOTATION_END)
         if (firstChar) then
           if (verify(c, XML_WHITESPACE)>0) then

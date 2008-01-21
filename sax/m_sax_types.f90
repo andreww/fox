@@ -48,11 +48,18 @@ module m_sax_types
   integer, parameter :: ST_IN_CLOSING_TAG = 18
   integer, parameter :: ST_TAG_IN_CONTENT = 19
   integer, parameter :: ST_CDATA_END = 20
-  integer, parameter :: ST_IN_DTD = 21
-  integer, parameter :: ST_DTD_NAME = 22
-  integer, parameter :: ST_DTD_SYSTEM = 23
-  integer, parameter :: ST_DTD_PUBLIC = 24
-  integer, parameter :: ST_SUBSET = 25
+  integer, parameter :: ST_IN_DOCTYPE = 21
+  integer, parameter :: ST_DOC_NAME = 22
+  integer, parameter :: ST_DOC_SYSTEM = 23
+  integer, parameter :: ST_DOC_PUBLIC = 24
+  integer, parameter :: ST_DOC_DECL = 35
+  integer, parameter :: ST_CLOSE_DOCTYPE = 36
+  integer, parameter :: ST_START_ENTITY = 48
+  integer, parameter :: ST_START_PE = 49
+
+! DTD states
+  integer, parameter :: ST_DTD_NULL = -1
+  integer, parameter :: ST_DTD_SUBSET = 25
   integer, parameter :: ST_DTD_ATTLIST = 26
   integer, parameter :: ST_DTD_ELEMENT = 27
   integer, parameter :: ST_DTD_ENTITY= 28
@@ -62,8 +69,6 @@ module m_sax_types
   integer, parameter :: ST_DTD_NOTATION_PUBLIC = 32
   integer, parameter :: ST_DTD_NOTATION_PUBLIC_2 = 33
   integer, parameter :: ST_DTD_NOTATION_END = 34
-  integer, parameter :: ST_DTD_DECL = 35
-  integer, parameter :: ST_CLOSE_DTD = 36
   integer, parameter :: ST_DTD_ENTITY_PE = 37
   integer, parameter :: ST_DTD_ENTITY_ID = 38
   integer, parameter :: ST_DTD_ENTITY_PUBLIC = 39
@@ -75,9 +80,7 @@ module m_sax_types
   integer, parameter :: ST_DTD_ATTLIST_END = 45
   integer, parameter :: ST_DTD_ELEMENT_CONTENTS = 46
   integer, parameter :: ST_DTD_ELEMENT_END = 47
-  integer, parameter :: ST_START_ENTITY = 48
-  integer, parameter :: ST_START_PE = 49
-  
+
 ! token types
 
   integer, parameter :: TOK_NULL = 0

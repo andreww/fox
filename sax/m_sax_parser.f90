@@ -432,7 +432,7 @@ contains
           if (wf_stack(1)>0) then
             call add_error(fx%error_stack, "Unclosed conditional sections in external subset")
             goto 100
-          elseif (fx%state/=ST_SUBSET) then
+          elseif (fx%state/=ST_DTD_SUBSET) then
             call add_error(fx%error_stack, &
               "Markup not terminated in external subset")
             goto 100
@@ -518,7 +518,7 @@ contains
           if (fx%context==CTXT_BEFORE_DTD) then
             if (str_vs(fx%token)=='DOCTYPE') then
               fx%context = CTXT_IN_DTD
-              nextState = ST_IN_DTD
+              nextState = ST_IN_DOCTYPE
             endif
           elseif (fx%context==CTXT_IN_DTD) then
             if (str_vs(fx%token)=='ATTLIST') then
@@ -596,7 +596,7 @@ contains
           if (fx%context==CTXT_IN_CONTENT) then
             nextState = ST_CHAR_IN_CONTENT
           elseif (fx%context==CTXT_IN_DTD) then
-            nextState = ST_SUBSET
+            nextState = ST_DTD_SUBSET
           else
             nextState = ST_MISC
           endif
@@ -609,7 +609,7 @@ contains
           if (fx%context==CTXT_IN_CONTENT) then
             nextState = ST_CHAR_IN_CONTENT
           elseif (fx%context==CTXT_IN_DTD) then
-            nextState = ST_SUBSET
+            nextState = ST_DTD_SUBSET
           else
             nextState = ST_MISC
           endif
@@ -655,7 +655,7 @@ contains
           if (fx%context==CTXT_IN_CONTENT) then
             nextState = ST_CHAR_IN_CONTENT
           elseif (fx%context==CTXT_IN_DTD) then
-            nextState = ST_SUBSET
+            nextState = ST_DTD_SUBSET
           else
             nextState = ST_MISC
           endif
@@ -736,7 +736,7 @@ contains
             nextState = ST_IN_IGNORE_SECTION
             ignoreDepth = ignoreDepth + 1
           else
-            nextState = ST_SUBSET
+            nextState = ST_DTD_SUBSET
           endif
         end select
 
@@ -754,7 +754,7 @@ contains
           ignoreDepth = ignoreDepth - 1
           if (ignoreDepth==0) then
             fx%context = CTXT_IN_DTD
-            nextState = ST_SUBSET
+            nextState = ST_DTD_SUBSET
           else
             nextState = ST_IN_IGNORE_SECTION
           endif
@@ -1158,8 +1158,8 @@ contains
           endif
         end select
 
-      case (ST_IN_DTD)
-        write(*,*)'ST_IN_DTD'
+      case (ST_IN_DOCTYPE)
+        write(*,*)'ST_IN_DOCTYPE'
         select case (fx%tokenType)
         case (TOK_NAME)
           if (namespaces_) then
@@ -1173,17 +1173,17 @@ contains
           endif
           fx%root_element => fx%token
           nullify(fx%token)
-          nextState = ST_DTD_NAME
+          nextState = ST_DOC_NAME
         end select
 
-      case (ST_DTD_NAME)
-        write(*,*) 'ST_DTD_NAME ', str_vs(fx%token)
+      case (ST_DOC_NAME)
+        write(*,*) 'ST_DOC_NAME ', str_vs(fx%token)
         select case (fx%tokenType)
         case (TOK_NAME)
           if (str_vs(fx%token)=='SYSTEM') then
-            nextState = ST_DTD_SYSTEM
+            nextState = ST_DOC_SYSTEM
           elseif (str_vs(fx%token)=='PUBLIC') then
-            nextState = ST_DTD_PUBLIC
+            nextState = ST_DOC_PUBLIC
           endif
         case (TOK_OPEN_SB)
           if (present(startDTD_handler)) then
@@ -1192,7 +1192,7 @@ contains
           endif
           print*, "wf increment sb dtd"
           wf_stack(1) = wf_stack(1) + 1
-          nextState = ST_SUBSET
+          nextState = ST_DTD_SUBSET
         case (TOK_END_TAG)
           if (present(startDTD_handler)) then
             call startDTD_handler(str_vs(fx%root_element), "", "")
@@ -1211,31 +1211,31 @@ contains
           goto 100
         end select
 
-      case (ST_DTD_PUBLIC)
-        write(*,*) 'ST_DTD_PUBLIC'
+      case (ST_DOC_PUBLIC)
+        write(*,*) 'ST_DOC_PUBLIC'
         select case (fx%tokenType)
         case (TOK_CHAR)
           if (checkPublicId(str_vs(fx%token))) then
             fx%publicId => fx%token
             fx%token => null()
-            nextState = ST_DTD_SYSTEM
+            nextState = ST_DOC_SYSTEM
           else
             call add_error(fx%error_stack, "Invalid document public id")
             goto 100
           endif
         end select
 
-      case (ST_DTD_SYSTEM)
-        write(*,*) 'ST_DTD_SYSTEM'
+      case (ST_DOC_SYSTEM)
+        write(*,*) 'ST_DOC_SYSTEM'
         select case (fx%tokenType)
         case (TOK_CHAR)
           fx%systemId => fx%token
           fx%token => null()
-          nextState = ST_DTD_DECL
+          nextState = ST_DOC_DECL
         end select
 
-      case (ST_DTD_DECL)
-        write(*,*) 'ST_DTD_DECL'
+      case (ST_DOC_DECL)
+        write(*,*) 'ST_DOC_DECL'
         select case (fx%tokenType)
         case (TOK_OPEN_SB)
           if (present(startDTD_handler)) then
@@ -1255,7 +1255,7 @@ contains
           fx%inIntSubset = .true.
           print*, "wf increment sb dtd decl"
           wf_stack(1) = wf_stack(1) + 1
-          nextState = ST_SUBSET
+          nextState = ST_DTD_SUBSET
         case (TOK_END_TAG)
           if (present(startDTD_handler)) then
             if (associated(fx%publicId)) then
@@ -1284,7 +1284,7 @@ contains
               wf_stack = (/0, temp_wf_stack/)
               deallocate(temp_wf_stack)
               inExtSubset = .true.
-              nextState = ST_SUBSET
+              nextState = ST_DTD_SUBSET
             else
               if (validCheck) then
                 call add_error(fx%error_stack, &
@@ -1309,8 +1309,8 @@ contains
           goto 100
         end select
 
-      case (ST_SUBSET)
-        write(*,*) "ST_SUBSET"
+      case (ST_DTD_SUBSET)
+        write(*,*) "ST_DTD_SUBSET"
         select case (fx%tokenType)
         case (TOK_CLOSE_SB)
           if (.not.reading_main_file(fb)) then
@@ -1320,7 +1320,7 @@ contains
           print*, "wf decrement section end subset 1"
           wf_stack(1) = wf_stack(1) - 1
           fx%inIntSubset = .false.
-          nextState = ST_CLOSE_DTD
+          nextState = ST_CLOSE_DOCTYPE
         case (TOK_SECTION_END)
           if (wf_stack(1)==0) then
             call add_error(fx%error_stack, "Unbalanced conditional section in parameter entity")
@@ -1328,7 +1328,7 @@ contains
           endif
           print*, "wf decrement section end subset 2"
           wf_stack(1) = wf_stack(1) - 1
-          nextState = ST_SUBSET
+          nextState = ST_DTD_SUBSET
         case (TOK_ENTITY)
           nextState = ST_START_PE
         case (TOK_PI_TAG)
@@ -1431,7 +1431,7 @@ contains
               goto 100
             endif
           endif
-          nextState = ST_SUBSET
+          nextState = ST_DTD_SUBSET
         end select
 
       case (ST_DTD_ATTLIST)
@@ -1498,7 +1498,7 @@ contains
             if (present(attributeDecl_handler)) &
               call report_declarations(elem, attributeDecl_handler)
           endif
-          nextState = ST_SUBSET
+          nextState = ST_DTD_SUBSET
         end select
 
       case (ST_DTD_ATTLIST_END)
@@ -1520,7 +1520,7 @@ contains
               if (fx%state==ST_STOP) goto 100
             endif
           endif
-          nextState = ST_SUBSET
+          nextState = ST_DTD_SUBSET
         end select
 
       case (ST_DTD_ELEMENT)
@@ -1586,7 +1586,7 @@ contains
             endif
           endif
           deallocate(fx%name)
-          nextState = ST_SUBSET
+          nextState = ST_DTD_SUBSET
         end select
 
       case (ST_DTD_ENTITY)
@@ -1710,7 +1710,7 @@ contains
           if (associated(fx%systemId)) deallocate(fx%systemId)
           if (associated(fx%publicId)) deallocate(fx%publicId)
           if (associated(fx%Ndata)) deallocate(fx%Ndata)
-          nextState = ST_SUBSET
+          nextState = ST_DTD_SUBSET
         case (TOK_NAME)
           if (str_vs(fx%token)=='NDATA') then
             if (pe) then
@@ -1771,7 +1771,7 @@ contains
           if (associated(fx%systemId)) deallocate(fx%systemId)
           if (associated(fx%publicId)) deallocate(fx%publicId)
           if (associated(fx%Ndata)) deallocate(fx%Ndata)
-          nextState = ST_SUBSET
+          nextState = ST_DTD_SUBSET
         case default
           call add_error(fx%error_stack, "Unexpected token at end of ENTITY")
           goto 100
@@ -1870,7 +1870,7 @@ contains
           endif
           deallocate(fx%name)
           deallocate(fx%publicId)
-          nextState = ST_SUBSET
+          nextState = ST_DTD_SUBSET
         case (TOK_CHAR)
           fx%systemId => fx%token
           fx%token => null()
@@ -1926,14 +1926,14 @@ contains
           if (associated(fx%publicId)) deallocate(fx%publicId)
           deallocate(fx%systemId)
           deallocate(fx%name)
-          nextState = ST_SUBSET
+          nextState = ST_DTD_SUBSET
         case default
           call add_error(fx%error_stack, "Unexpected token in NOTATION")
           goto 100
         end select
 
-      case (ST_CLOSE_DTD)
-        write(*,*) "ST_CLOSE_DTD"
+      case (ST_CLOSE_DOCTYPE)
+        write(*,*) "ST_CLOSE_DOCTYPE"
         select case (fx%tokenType)
         case (TOK_END_TAG)
           if (wf_stack(1)>1) then
@@ -1952,7 +1952,7 @@ contains
               wf_stack = (/0, temp_wf_stack/)
               deallocate(temp_wf_stack)
               inExtSubset = .true.
-              nextState = ST_SUBSET
+              nextState = ST_DTD_SUBSET
             else
               if (validCheck) then
                 call add_error(fx%error_stack, &
