@@ -1,19 +1,19 @@
 #!/bin/sh -e
 
-git-archive --format=tar --prefix=FoX-3.1.2/ HEAD | gzip -9 > ../FoX-3.1.2-devel.tgz
+git-archive --format=tar --prefix=FoX-3.1.2/ HEAD | gzip -9 > ../FoX-3.1.2-full.tar.gz
 
 mkdir tmpFoX
 cd tmpFoX
-tar xzf ../../FoX-3.1.2-devel.tgz
+tar xzf ../../FoX-3.1.2-full.tar.gz
 cd FoX-3.1.2
 make cutdown
 cd ..
-tar czf FoX-3.1.2.tgz FoX-3.1.2
+tar czf FoX-3.1.2.tar.gz FoX-3.1.2
 rm -rf FoX-3.1.2
 
 for i in wxml wcml sax dom
 do
-  tar xzf ../../FoX-3.1.2-devel.tgz
+  tar xzf ../../FoX-3.1.2-full.tar.gz
   (
     cd FoX-3.1.2
     (
@@ -23,7 +23,7 @@ do
     )
     make cutdown-$i
   )
-  tar czf FoX-3.1.2-$i.tgz FoX-3.1.2
+  tar czf FoX-3.1.2-$i.tar.gz FoX-3.1.2
   rm -rf FoX-3.1.2
 done
 
