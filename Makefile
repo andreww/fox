@@ -84,6 +84,7 @@ DoX:
 #
 cutdown:
 	rm -rf .gitignore DoX/ config/aclocal.m4 config/autom4te.cache config/configure.ac config/m4/ config/makefile examples/ m4/ */test/ */*.m4 Changelog RELEASE
+	sed -e /m4/d -i "" */makefile
 
 cutdown-wxml: cutdown
 	rm -rf wcml/ utils/ sax/ dom/
