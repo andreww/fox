@@ -108,7 +108,7 @@ dnl  if test x$WKML_no = x; then WKML_yes=wkml_lib; fi
     if test x$sax_no = x; then sax_yes=sax_lib; fi
     if test x$dom_no = x; then dom_yes=dom_lib; fi
   else
-    eval $CUTDOWN_TARGET_yes=$CUTDOWN_TARGET_lib
+    eval "$CUTDOWN_TARGET"_yes="$CUTDOWN_TARGET"_lib
   fi
 fi
 dnl Note that if we try to exclude something which an
