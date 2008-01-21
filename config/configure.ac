@@ -79,32 +79,37 @@ if test x$use_debug = xyes; then
   FCFLAGS="$FCFLAGS $FFLAGS_FAST"
 fi
 dnl
+CUTDOWN_TARGET=
 dnl Now check for whether we have been asked for any particular
 dnl subsystems - wcml, wkml, sax, dom.
 AC_ARG_ENABLE([wxml],
   AC_HELP_STRING([--enable-wxml], [Compile wxml subsystem (for XML output)]),
-  [eval WXML_$enableval=wxml_lib])
+  [eval wxml_$enableval=wxml_lib])
 AC_ARG_ENABLE([wcml],
   AC_HELP_STRING([--enable-wcml], [Compile wcml subsystem (for CML output)]),
-  [eval WCML_$enableval=wcml_lib])
+  [eval wcml_$enableval=wcml_lib])
 dnl AC_ARG_ENABLE([wkml],
 dnl   AC_HELP_STRING([--enable-wkml], [Compile wkml subsystem (for KML output)]),
 dnl   [eval WKML_$enableval=wkml_lib])
 AC_ARG_ENABLE([sax],
   AC_HELP_STRING([--enable-sax], [Compile SAX parser]),
-  [eval SAX_$enableval=sax_lib])
+  [eval sax_$enableval=sax_lib])
 AC_ARG_ENABLE([dom],
   AC_HELP_STRING([--enable-dom], [Compile dom subsystem (for DOM output)]),
-  [eval DOM_$enableval=dom_lib])
+  [eval dom_$enableval=dom_lib])
 dnl
 dnl If nothing was explicitly enabled, then enable everything that wasn't disabled.n
 dnl Otherwise we only enable whatever was explicitly enabled.
-if test x$WXML_yes$WCML_yes$WKML_yes$SAX_yes$DOM_yes = x; then
-  if test x$WXML_no = x; then WXML_yes=wxml_lib; fi
-  if test x$WCML_no = x; then WCML_yes=wcml_lib; fi
+if test x$wxml_yes$wcml_yes$wkml_yes$sax_yes$dom_yes = x; then
+  if test x$CUTDOWN_TARGET = x; then
+    if test x$wxml_no = x; then wxml_yes=wxml_lib; fi
+    if test x$wcml_no = x; then wcml_yes=wcml_lib; fi
 dnl  if test x$WKML_no = x; then WKML_yes=wkml_lib; fi
-  if test x$SAX_no = x; then SAX_yes=sax_lib; fi
-  if test x$DOM_no = x; then DOM_yes=dom_lib; fi
+    if test x$sax_no = x; then sax_yes=sax_lib; fi
+    if test x$dom_no = x; then dom_yes=dom_lib; fi
+  else
+    eval $CUTDOWN_TARGET_yes=$CUTDOWN_TARGET_lib
+  fi
 fi
 dnl Note that if we try to exclude something which an
 dnl included module depends upon, then the inclusion
@@ -119,13 +124,13 @@ AC_ARG_ENABLE([dummy],
 if test x$dummy = xyes; then
 dnl DUMMYLIB doesnt work with SAX and DOM
   DEFS="$DEFS DUMMYLIB"
-  SAX_yes=
-  DOM_yes=
+  sax_yes=
+  dom_yes=
 fi
 dnl
 dnl Finally, construct the build targets
 dnl BUILD_TARGETS="$WXML_yes $WCML_yes $WKML_yes $SAX_yes $DOM_yes"
-BUILD_TARGETS="$WXML_yes $WCML_yes $SAX_yes $DOM_yes"
+BUILD_TARGETS="$wxml_yes $wcml_yes $sax_yes $dom_yes"
 AC_SUBST(BUILD_TARGETS)
 dnl
 dnl Check for compiler kind flags

@@ -5763,31 +5763,36 @@ fi
 if test x$use_debug = xyes; then
   FCFLAGS="$FCFLAGS $FFLAGS_FAST"
 fi
+CUTDOWN_TARGET=
 # Check whether --enable-wxml was given.
 if test "${enable_wxml+set}" = set; then
-  enableval=$enable_wxml; eval WXML_$enableval=wxml_lib
+  enableval=$enable_wxml; eval wxml_$enableval=wxml_lib
 fi
 
 # Check whether --enable-wcml was given.
 if test "${enable_wcml+set}" = set; then
-  enableval=$enable_wcml; eval WCML_$enableval=wcml_lib
+  enableval=$enable_wcml; eval wcml_$enableval=wcml_lib
 fi
 
 # Check whether --enable-sax was given.
 if test "${enable_sax+set}" = set; then
-  enableval=$enable_sax; eval SAX_$enableval=sax_lib
+  enableval=$enable_sax; eval sax_$enableval=sax_lib
 fi
 
 # Check whether --enable-dom was given.
 if test "${enable_dom+set}" = set; then
-  enableval=$enable_dom; eval DOM_$enableval=dom_lib
+  enableval=$enable_dom; eval dom_$enableval=dom_lib
 fi
 
-if test x$WXML_yes$WCML_yes$WKML_yes$SAX_yes$DOM_yes = x; then
-  if test x$WXML_no = x; then WXML_yes=wxml_lib; fi
-  if test x$WCML_no = x; then WCML_yes=wcml_lib; fi
-  if test x$SAX_no = x; then SAX_yes=sax_lib; fi
-  if test x$DOM_no = x; then DOM_yes=dom_lib; fi
+if test x$wxml_yes$wcml_yes$wkml_yes$sax_yes$dom_yes = x; then
+  if test x$CUTDOWN_TARGET = x; then
+    if test x$wxml_no = x; then wxml_yes=wxml_lib; fi
+    if test x$wcml_no = x; then wcml_yes=wcml_lib; fi
+    if test x$sax_no = x; then sax_yes=sax_lib; fi
+    if test x$dom_no = x; then dom_yes=dom_lib; fi
+  else
+    eval $CUTDOWN_TARGET_yes=$CUTDOWN_TARGET_lib
+  fi
 fi
 # Check whether --enable-dummy was given.
 if test "${enable_dummy+set}" = set; then
@@ -5796,10 +5801,10 @@ fi
 
 if test x$dummy = xyes; then
   DEFS="$DEFS DUMMYLIB"
-  SAX_yes=
-  DOM_yes=
+  sax_yes=
+  dom_yes=
 fi
-BUILD_TARGETS="$WXML_yes $WCML_yes $SAX_yes $DOM_yes"
+BUILD_TARGETS="$wxml_yes $wcml_yes $sax_yes $dom_yes"
 
 
 
