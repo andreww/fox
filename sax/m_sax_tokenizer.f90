@@ -415,7 +415,7 @@ contains
           endif
         endif
 
-      case (ST_START_ENTITY, ST_START_PE)
+      case (ST_START_ENTITY)
         if (verify(c,XML_WHITESPACE//";")>0) then
           tempString => fx%token
           fx%token => vs_str_alloc(str_vs(tempString)//c)
@@ -487,6 +487,32 @@ contains
             fx%token => vs_str_alloc(str_vs(tempString)//c)
             deallocate(tempString)
           endif
+        endif
+
+        case (27,50:)
+          call tokenizeDTD
+
+      end select
+      
+      firstChar = .false.
+      if (fx%tokenType/=TOK_NULL) exit
+    enddo
+
+  contains
+
+    subroutine tokenizeDTD
+
+      select case(fx%state)
+
+      case (ST_START_PE)
+        if (verify(c,XML_WHITESPACE//";")>0) then
+          tempString => fx%token
+          fx%token => vs_str_alloc(str_vs(tempString)//c)
+          deallocate(tempString)
+        elseif (c==";") then
+          fx%tokenType = TOK_NAME
+        else
+          call add_error(fx%error_stack, "Entity reference must be terminated with a ;")
         endif
 
       case (ST_DTD_SUBSET)
@@ -690,7 +716,6 @@ contains
             fx%token => vs_str_alloc(str_vs(tempString)//c)
             deallocate(tempString)
             fx%nextTokenType = TOK_COMMENT_END
-            exit
           else
             call add_error(fx%error_stack, &
               "Expecting > after -- inside a comment.")
@@ -780,10 +805,7 @@ contains
         endif
 
       end select
-      
-      firstChar = .false.
-      if (fx%tokenType/=TOK_NULL) exit
-    enddo
+    end subroutine tokenizeDTD
 
   end subroutine sax_tokenize
 
