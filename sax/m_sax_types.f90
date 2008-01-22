@@ -60,6 +60,7 @@ module m_sax_types
 ! DTD states
   integer, parameter :: ST_DTD_NULL = -1
   integer, parameter :: ST_DTD_SUBSET = 25
+  integer, parameter :: ST_DTD_BANG_TAG = 51
   integer, parameter :: ST_DTD_ATTLIST = 26
   integer, parameter :: ST_DTD_ELEMENT = 27
   integer, parameter :: ST_DTD_ENTITY= 28

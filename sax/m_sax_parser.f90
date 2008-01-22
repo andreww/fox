@@ -507,6 +507,7 @@ contains
           nextState = ST_START_TAG
         end select
 
+
       case (ST_BANG_TAG)
         write(*,*) 'ST_BANG_TAG'
         select case (fx%tokenType)
@@ -515,21 +516,9 @@ contains
         case (TOK_OPEN_COMMENT)
           nextState = ST_START_COMMENT
         case (TOK_NAME)
-          if (fx%context==CTXT_BEFORE_DTD) then
-            if (str_vs(fx%token)=='DOCTYPE') then
-              fx%context = CTXT_IN_DTD
-              nextState = ST_IN_DOCTYPE
-            endif
-          elseif (fx%context==CTXT_IN_DTD) then
-            if (str_vs(fx%token)=='ATTLIST') then
-              nextState = ST_DTD_ATTLIST
-            elseif (str_vs(fx%token)=='ELEMENT') then
-              nextState = ST_DTD_ELEMENT
-            elseif (str_vs(fx%token)=='ENTITY') then
-              nextState = ST_DTD_ENTITY
-            elseif (str_vs(fx%token)=='NOTATION') then
-              nextState = ST_DTD_NOTATION
-            endif
+          if (str_vs(fx%token)=='DOCTYPE') then
+            fx%context = CTXT_IN_DTD
+            nextState = ST_IN_DOCTYPE
           endif
         end select
 
@@ -1250,7 +1239,10 @@ contains
             endif
             if (fx%state==ST_STOP) goto 100
           endif
-          if (associated(fx%systemId)) deallocate(fx%systemId)
+          if (associated(fx%systemId)) then
+            extSubsetURI => parseURI(str_vs(fx%systemId))
+            deallocate(fx%systemId)
+          endif
           if (associated(fx%publicId)) deallocate(fx%publicId)
           fx%inIntSubset = .true.
           print*, "wf increment sb dtd decl"
@@ -1338,12 +1330,33 @@ contains
         case (TOK_BANG_TAG)
           print*, "wf increment bang subset"
           wf_stack(1) = wf_stack(1) + 1
-          nextState = ST_BANG_TAG
+          nextState = ST_DTD_BANG_TAG
         case default
           call add_error(fx%error_stack, "Unexpected token in document subset")
           goto 100
         end select
         print*, "st_subset done 1", wf_stack(1)
+
+      case (ST_DTD_BANG_TAG)
+        write(*,*) 'ST_DTD_BANG_TAG'
+        select case (fx%tokenType)
+        case (TOK_OPEN_SB)
+          nextState = ST_START_SECTION_DECLARATION
+        case (TOK_OPEN_COMMENT)
+          nextState = ST_START_COMMENT
+        case (TOK_NAME)
+          if (fx%context==CTXT_IN_DTD) then
+            if (str_vs(fx%token)=='ATTLIST') then
+              nextState = ST_DTD_ATTLIST
+            elseif (str_vs(fx%token)=='ELEMENT') then
+              nextState = ST_DTD_ELEMENT
+            elseif (str_vs(fx%token)=='ENTITY') then
+              nextState = ST_DTD_ENTITY
+            elseif (str_vs(fx%token)=='NOTATION') then
+              nextState = ST_DTD_NOTATION
+            endif
+          endif
+        end select
 
       case (ST_START_PE)
         write(*,*) 'ST_START_PE'
@@ -1942,7 +1955,7 @@ contains
           endif
           if (associated(extSubsetURI)) then
             call open_new_file(fb, extSubsetURI, iostat)
-            call destroyURI(URIref)
+            call destroyURI(extSubsetURI)
             if (iostat==0) then
               call parse_text_declaration(fb, fx%error_stack)
               if (in_error(fx%error_stack)) goto 100

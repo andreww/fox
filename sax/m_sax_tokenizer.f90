@@ -487,7 +487,18 @@ contains
 
       case (ST_IN_DOCTYPE, ST_DOC_NAME, ST_DOC_SYSTEM, ST_DOC_PUBLIC, &
         ST_DOC_DECL, ST_CLOSE_DOCTYPE)
-        if (firstChar) ws_discard = .true.
+        if (firstChar) then
+          if (verify(c, XML_WHITESPACE)>0) then
+            if (c==">") then
+              fx%tokenType = TOK_END_TAG
+            else
+              call add_error(fx%error_stack, &
+                "Missing whitespace in doctype delcaration.")
+            endif
+          else
+            ws_discard = .true.
+          endif
+        endif
         if (ws_discard) then
           if (verify(c, XML_WHITESPACE)>0) then
             if (verify(c, "'""")==0) then
@@ -559,7 +570,34 @@ contains
           else
             call add_error(fx%error_stack, "Unexpected character, expecting >")
           endif
-        endif        
+        endif
+
+      case (ST_DTD_BANG_TAG)
+        if (firstChar) then
+          if (c=="-") then
+            phrase = 1
+          elseif (c=="[") then
+            fx%tokenType = TOK_OPEN_SB
+          elseif (verify(c,upperCase)==0) then
+            deallocate(fx%token)
+            fx%token => vs_str_alloc(c)
+          else
+            call add_error(fx%error_stack, "Unexpected character after <!")
+          endif
+        elseif (phrase==1) then
+          if (c=="-") then
+            fx%tokenType = TOK_OPEN_COMMENT
+          else
+            call add_error(fx%error_stack, "Unexpected character after <!-")
+          endif
+        elseif (verify(c,XML_WHITESPACE)>0) then
+          tempString => fx%token
+          fx%token => vs_str_alloc(str_vs(tempString)//c)
+          deallocate(tempString)
+        else
+          call push_chars(fb, c)
+          fx%tokenType = TOK_NAME
+        endif
 
       case (ST_DTD_ATTLIST, ST_DTD_ELEMENT, ST_DTD_ENTITY, &
         ST_DTD_ENTITY_PE, ST_DTD_NOTATION)
