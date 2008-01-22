@@ -532,6 +532,35 @@ contains
           endif
         endif
 
+
+      case (ST_DTD_BANG_TAG)
+        if (firstChar) then
+          if (c=="-") then
+            phrase = 1
+          elseif (c=="[") then
+            fx%tokenType = TOK_OPEN_SB
+          elseif (verify(c,upperCase)==0) then
+            deallocate(fx%token)
+            fx%token => vs_str_alloc(c)
+          else
+            call add_error(fx%error_stack, "Unexpected character after <!")
+          endif
+        elseif (phrase==1) then
+          if (c=="-") then
+            fx%tokenType = TOK_OPEN_COMMENT
+          else
+            call add_error(fx%error_stack, "Unexpected character after <!-")
+          endif
+        elseif (verify(c,XML_WHITESPACE)>0) then
+          tempString => fx%token
+          fx%token => vs_str_alloc(str_vs(tempString)//c)
+          deallocate(tempString)
+        else
+          call push_chars(fb, c)
+          fx%tokenType = TOK_NAME
+        endif
+
+
       case (ST_DTD_START_SECTION_DECLARATION)
         if (firstChar) then
           ws_discard = .true.
@@ -587,32 +616,86 @@ contains
         end select
 
 
-      case (ST_DTD_BANG_TAG)
-        if (firstChar) then
-          if (c=="-") then
-            phrase = 1
-          elseif (c=="[") then
-            fx%tokenType = TOK_OPEN_SB
-          elseif (verify(c,upperCase)==0) then
-            deallocate(fx%token)
-            fx%token => vs_str_alloc(c)
-          else
-            call add_error(fx%error_stack, "Unexpected character after <!")
-          endif
-        elseif (phrase==1) then
-          if (c=="-") then
-            fx%tokenType = TOK_OPEN_COMMENT
-          else
-            call add_error(fx%error_stack, "Unexpected character after <!-")
-          endif
-        elseif (verify(c,XML_WHITESPACE)>0) then
+      case (ST_DTD_START_PI)
+        ! grab until whitespace or ?
+        if (verify(c, XML_WHITESPACE//"?")>0) then
           tempString => fx%token
           fx%token => vs_str_alloc(str_vs(tempString)//c)
           deallocate(tempString)
         else
-          call push_chars(fb, c)
           fx%tokenType = TOK_NAME
+          if (c=="?") call push_chars(fb, c)
         endif
+
+      case (ST_DTD_PI_CONTENTS)
+        if (firstChar) ws_discard = .true.
+        if (ws_discard) then
+          if (verify(c, XML_WHITESPACE)>0) then
+            deallocate(fx%token)
+            fx%token => vs_str_alloc(c)
+            ws_discard = .false.
+          endif
+        endif
+        if (phrase==1) then
+          if (c==">") then
+            ! FIXME always associated surely
+            if (associated(fx%token)) then
+               fx%tokenType = TOK_CHAR
+               fx%nextTokenType = TOK_PI_END
+            else
+               fx%tokenType = TOK_PI_END
+            endif
+          elseif (c=="?") then
+            ! The last ? didn't mean anything, but this one might.
+            tempString => fx%token
+            fx%token => vs_str_alloc(str_vs(tempString)//"?")
+            deallocate(tempString)
+          else
+            phrase = 0
+            tempString => fx%token
+            fx%token => vs_str_alloc(str_vs(tempString)//"?"//c)
+            deallocate(tempString)
+          endif
+        elseif (c=="?") then
+          phrase = 1
+        else
+          tempString => fx%token
+          fx%token => vs_str_alloc(str_vs(tempString)//c)
+          deallocate(tempString)
+        endif
+
+      case (ST_DTD_START_COMMENT)
+        select case(phrase)
+        case (0)
+          if (c=="-") then
+            phrase = 1
+          else
+          tempString => fx%token
+          fx%token => vs_str_alloc(str_vs(tempString)//c)
+          deallocate(tempString)
+          endif
+        case (1)
+          if (c=="-") then
+            phrase = 2
+          else
+          tempString => fx%token
+          fx%token => vs_str_alloc(str_vs(tempString)//"-"//c)
+          deallocate(tempString)
+            phrase = 0
+          endif
+        case (2)
+          if (c==">") then
+            fx%tokenType = TOK_CHAR
+            tempString => fx%token
+            fx%token => vs_str_alloc(str_vs(tempString)//c)
+            deallocate(tempString)
+            fx%nextTokenType = TOK_COMMENT_END
+            exit
+          else
+            call add_error(fx%error_stack, &
+              "Expecting > after -- inside a comment.")
+          endif
+        end select
 
       case (ST_DTD_ATTLIST, ST_DTD_ELEMENT, ST_DTD_ENTITY, &
         ST_DTD_ENTITY_PE, ST_DTD_NOTATION)

@@ -550,11 +550,6 @@ contains
       case (ST_PI_CONTENTS)
         write(*,*)'ST_PI_CONTENTS'
         if (validCheck) then
-          if (fx%context==CTXT_IN_DTD.and.wf_stack(1)==0) then
-            call add_error(fx%error_stack, &
-              "PI not balanced in parameter entity")
-            goto 100
-          endif
           if (len(fx%elstack)>0) then
             elem => &
               get_element(fx%xds%element_list, get_top_elstack(fx%elstack))
@@ -584,8 +579,6 @@ contains
           deallocate(fx%name)
           if (fx%context==CTXT_IN_CONTENT) then
             nextState = ST_CHAR_IN_CONTENT
-          elseif (fx%context==CTXT_IN_DTD) then
-            nextState = ST_DTD_SUBSET
           else
             nextState = ST_MISC
           endif
@@ -597,8 +590,6 @@ contains
         case (TOK_PI_END)
           if (fx%context==CTXT_IN_CONTENT) then
             nextState = ST_CHAR_IN_CONTENT
-          elseif (fx%context==CTXT_IN_DTD) then
-            nextState = ST_DTD_SUBSET
           else
             nextState = ST_MISC
           endif
@@ -616,11 +607,6 @@ contains
       case (ST_COMMENT_END)
         write(*,*)'ST_COMMENT_END'
         if (validCheck) then
-          if (wf_stack(1)==0) then
-            call add_error(fx%error_stack, &
-              "Comment not balanced in entity")
-            goto 100
-          endif
           if (len(fx%elstack)>0) then
             elem => &
               get_element(fx%xds%element_list, get_top_elstack(fx%elstack))
@@ -643,8 +629,6 @@ contains
           deallocate(fx%name)
           if (fx%context==CTXT_IN_CONTENT) then
             nextState = ST_CHAR_IN_CONTENT
-          elseif (fx%context==CTXT_IN_DTD) then
-            nextState = ST_DTD_SUBSET
           else
             nextState = ST_MISC
           endif
@@ -1280,7 +1264,7 @@ contains
         case (TOK_PI_TAG)
           print*, "wf increment pi subset"
           wf_stack(1) = wf_stack(1) + 1
-          nextState = ST_START_PI
+          nextState = ST_DTD_START_PI
         case (TOK_BANG_TAG)
           print*, "wf increment bang subset"
           wf_stack(1) = wf_stack(1) + 1
@@ -1298,18 +1282,16 @@ contains
         case (TOK_OPEN_SB)
           nextState = ST_DTD_START_SECTION_DECLARATION
         case (TOK_OPEN_COMMENT)
-          nextState = ST_START_COMMENT
+          nextState = ST_DTD_START_COMMENT
         case (TOK_NAME)
-          if (fx%context==CTXT_IN_DTD) then
-            if (str_vs(fx%token)=='ATTLIST') then
-              nextState = ST_DTD_ATTLIST
-            elseif (str_vs(fx%token)=='ELEMENT') then
-              nextState = ST_DTD_ELEMENT
-            elseif (str_vs(fx%token)=='ENTITY') then
-              nextState = ST_DTD_ENTITY
-            elseif (str_vs(fx%token)=='NOTATION') then
-              nextState = ST_DTD_NOTATION
-            endif
+          if (str_vs(fx%token)=='ATTLIST') then
+            nextState = ST_DTD_ATTLIST
+          elseif (str_vs(fx%token)=='ELEMENT') then
+            nextState = ST_DTD_ELEMENT
+          elseif (str_vs(fx%token)=='ENTITY') then
+            nextState = ST_DTD_ENTITY
+          elseif (str_vs(fx%token)=='NOTATION') then
+            nextState = ST_DTD_NOTATION
           endif
         end select
 
@@ -1370,6 +1352,109 @@ contains
           else
             nextState = ST_DTD_IN_IGNORE_SECTION
           endif
+        end select
+
+      case (ST_DTD_START_PI)
+        write(*,*)'ST_DTD_START_PI'
+        select case (fx%tokenType)
+        case (TOK_NAME)
+          if (namespaces_) then
+            nameOk = checkNCName(str_vs(fx%token), fx%xds)
+          else
+            nameOk = checkName(str_vs(fx%token), fx%xds)
+          endif
+          if (nameOk) then
+            if (str_vs(fx%token)=='xml') then
+              call add_error(fx%error_stack, "XML declaration must be at start of document")
+              goto 100
+            elseif (checkPITarget(str_vs(fx%token), fx%xds)) then
+              nextState = ST_DTD_PI_CONTENTS
+              fx%name => fx%token
+              fx%token => null()
+            else
+              call add_error(fx%error_stack, "Invalid PI target name")
+              goto 100
+            endif
+          endif
+        end select
+
+      case (ST_DTD_PI_CONTENTS)
+        write(*,*)'ST_DTD_PI_CONTENTS'
+        if (validCheck) then
+          if (fx%context==CTXT_IN_DTD.and.wf_stack(1)==0) then
+            call add_error(fx%error_stack, &
+              "PI not balanced in parameter entity")
+            goto 100
+          endif
+          if (len(fx%elstack)>0) then
+            elem => &
+              get_element(fx%xds%element_list, get_top_elstack(fx%elstack))
+            if (associated(elem)) then
+              if (elem%empty) then
+                call add_error(fx%error_stack, "Content inside empty element")
+              endif
+            endif
+          endif
+        endif
+        print*, "wf_decrement pi"
+        wf_stack(1) = wf_stack(1) - 1
+          
+        select case(fx%tokenType)
+        case (TOK_CHAR)
+          if (present(processingInstruction_handler)) &
+            call processingInstruction_handler(str_vs(fx%name), str_vs(fx%token))
+          deallocate(fx%name)
+          nextState = ST_DTD_PI_END
+        case (TOK_PI_END)
+          if (present(processingInstruction_handler)) &
+            call processingInstruction_handler(str_vs(fx%name), '')
+          deallocate(fx%name)
+          nextState = ST_DTD_SUBSET
+        end select
+
+      case (ST_DTD_PI_END)
+        write(*,*)'ST_DTD_PI_END'
+        select case(fx%tokenType)
+        case (TOK_PI_END)
+          nextState = ST_DTD_SUBSET
+        end select
+
+      case (ST_DTD_START_COMMENT)
+        write(*,*)'ST_DTD_START_COMMENT'
+        select case (fx%tokenType)
+        case (TOK_CHAR)
+          fx%name => fx%token
+          nullify(fx%token)
+          nextState = ST_DTD_COMMENT_END
+        end select
+
+      case (ST_DTD_COMMENT_END)
+        write(*,*)'ST_DTD_COMMENT_END'
+        if (validCheck) then
+          if (wf_stack(1)==0) then
+            call add_error(fx%error_stack, &
+              "Comment not balanced in entity")
+            goto 100
+          endif
+          if (len(fx%elstack)>0) then
+            elem => &
+              get_element(fx%xds%element_list, get_top_elstack(fx%elstack))
+            if (associated(elem)) then
+              if (elem%empty) then
+                call add_error(fx%error_stack, "Content inside empty element")
+              endif
+            endif
+          endif
+        endif
+        print*, "wf decrement comment"
+        wf_stack(1) = wf_stack(1) - 1
+
+        select case (fx%tokenType)
+        case (TOK_COMMENT_END)
+          if (present(comment_handler)) &
+            call comment_handler(str_vs(fx%name))
+          deallocate(fx%name)
+          nextState = ST_DTD_SUBSET
         end select
 
       case (ST_START_PE)

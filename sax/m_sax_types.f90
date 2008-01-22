@@ -63,6 +63,11 @@ module m_sax_types
   integer, parameter :: ST_DTD_FINISH_SECTION_DECLARATION = 7
   integer, parameter :: ST_DTD_IN_IGNORE_SECTION = 8
   integer, parameter :: ST_DTD_BANG_TAG = 51
+  integer, parameter :: ST_DTD_START_PI = 53
+  integer, parameter :: ST_DTD_PI_CONTENTS = 55
+  integer, parameter :: ST_DTD_PI_END = 54
+  integer, parameter :: ST_DTD_COMMENT_END = 56
+  integer, parameter :: ST_DTD_START_COMMENT = 57
   integer, parameter :: ST_DTD_ATTLIST = 26
   integer, parameter :: ST_DTD_ELEMENT = 27
   integer, parameter :: ST_DTD_ENTITY= 28
