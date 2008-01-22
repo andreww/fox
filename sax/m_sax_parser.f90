@@ -512,7 +512,7 @@ contains
         write(*,*) 'ST_BANG_TAG'
         select case (fx%tokenType)
         case (TOK_OPEN_SB)
-          nextState = ST_START_SECTION_DECLARATION
+          nextState = ST_START_CDATA_DECLARATION
         case (TOK_OPEN_COMMENT)
           nextState = ST_START_COMMENT
         case (TOK_NAME)
@@ -678,8 +678,8 @@ contains
           endif
         end select
 
-      case (ST_START_SECTION_DECLARATION)
-        write(*,*) "ST_START_SECTION_DECLARATION"
+      case (ST_START_CDATA_DECLARATION)
+        write(*,*) "ST_START_CDATA_DECLARATION"
         select case (fx%tokenType)
         case (TOK_NAME)
           if (str_vs(fx%token)=="CDATA") then
@@ -688,22 +688,6 @@ contains
               goto 100
             else
               nextState = ST_FINISH_CDATA_DECLARATION
-            endif
-          elseif (str_vs(fx%token)=="IGNORE") then
-            if (fx%context/=CTXT_IN_DTD.or.reading_main_file(fb)) then
-              call add_error(fx%error_stack, "IGNORE section only allowed in external subset.")
-              goto 100
-            else
-              ignoreDepth = 0
-              fx%context = CTXT_IGNORE
-              nextState = ST_FINISH_SECTION_DECLARATION
-            endif
-          elseif (str_vs(fx%token)=="INCLUDE") then
-            if (fx%context/=CTXT_IN_DTD.or.reading_main_file(fb)) then
-              call add_error(fx%error_stack, "INCLUDE section only allowed in external subset.")
-              goto 100
-            else
-              nextState = ST_FINISH_SECTION_DECLARATION
             endif
           else
             call add_error(fx%error_stack, "Unknown keyword found in marked section declaration.")
@@ -717,37 +701,6 @@ contains
           nextState = ST_CDATA_CONTENTS
         end select
 
-      case (ST_FINISH_SECTION_DECLARATION)
-        write(*,*) "ST_FINISH_SECTION_DECLARATION"
-        select case (fx%tokenType)
-        case (TOK_OPEN_SB)
-          if (fx%context==CTXT_IGNORE) then
-            nextState = ST_IN_IGNORE_SECTION
-            ignoreDepth = ignoreDepth + 1
-          else
-            nextState = ST_DTD_SUBSET
-          endif
-        end select
-
-      case (ST_IN_IGNORE_SECTION)
-        write(*,*) "ST_IN_IGNORE_SECTION"
-        select case (fx%tokenType)
-        case (TOK_SECTION_START)
-        print*, "wf increment section"
-          wf_stack(1) = wf_stack(1) + 1
-          ignoreDepth = ignoreDepth + 1
-          nextState = ST_IN_IGNORE_SECTION
-        case (TOK_SECTION_END)
-          print*, "wf decrement section"
-          wf_stack(1) = wf_stack(1) - 1
-          ignoreDepth = ignoreDepth - 1
-          if (ignoreDepth==0) then
-            fx%context = CTXT_IN_DTD
-            nextState = ST_DTD_SUBSET
-          else
-            nextState = ST_IN_IGNORE_SECTION
-          endif
-        end select
 
       case (ST_CDATA_CONTENTS)
         write(*,*)'ST_CDATA_CONTENTS'
@@ -1301,6 +1254,7 @@ contains
           goto 100
         end select
 
+
       case (ST_DTD_SUBSET)
         write(*,*) "ST_DTD_SUBSET"
         select case (fx%tokenType)
@@ -1337,11 +1291,12 @@ contains
         end select
         print*, "st_subset done 1", wf_stack(1)
 
+
       case (ST_DTD_BANG_TAG)
         write(*,*) 'ST_DTD_BANG_TAG'
         select case (fx%tokenType)
         case (TOK_OPEN_SB)
-          nextState = ST_START_SECTION_DECLARATION
+          nextState = ST_DTD_START_SECTION_DECLARATION
         case (TOK_OPEN_COMMENT)
           nextState = ST_START_COMMENT
         case (TOK_NAME)
@@ -1355,6 +1310,65 @@ contains
             elseif (str_vs(fx%token)=='NOTATION') then
               nextState = ST_DTD_NOTATION
             endif
+          endif
+        end select
+
+      case (ST_DTD_START_SECTION_DECLARATION)
+        write(*,*) "ST_DTD_START_SECTION_DECLARATION"
+        select case (fx%tokenType)
+        case (TOK_NAME)
+          if (str_vs(fx%token)=="IGNORE") then
+            if (fx%context/=CTXT_IN_DTD.or.reading_main_file(fb)) then
+              call add_error(fx%error_stack, "IGNORE section only allowed in external subset.")
+              goto 100
+            else
+              ignoreDepth = 0
+              fx%context = CTXT_IGNORE
+              nextState = ST_DTD_FINISH_SECTION_DECLARATION
+            endif
+          elseif (str_vs(fx%token)=="INCLUDE") then
+            if (fx%context/=CTXT_IN_DTD.or.reading_main_file(fb)) then
+              call add_error(fx%error_stack, "INCLUDE section only allowed in external subset.")
+              goto 100
+            else
+              nextState = ST_DTD_FINISH_SECTION_DECLARATION
+            endif
+          else
+            call add_error(fx%error_stack, "Unknown keyword found in marked section declaration.")
+          endif
+        end select
+
+
+      case (ST_DTD_FINISH_SECTION_DECLARATION)
+        write(*,*) "ST_FINISH_SECTION_DECLARATION"
+        select case (fx%tokenType)
+        case (TOK_OPEN_SB)
+          if (fx%context==CTXT_IGNORE) then
+            nextState = ST_DTD_IN_IGNORE_SECTION
+            ignoreDepth = ignoreDepth + 1
+          else
+            nextState = ST_DTD_SUBSET
+          endif
+        end select
+
+
+      case (ST_DTD_IN_IGNORE_SECTION)
+        write(*,*) "ST_IN_IGNORE_SECTION"
+        select case (fx%tokenType)
+        case (TOK_SECTION_START)
+        print*, "wf increment section"
+          wf_stack(1) = wf_stack(1) + 1
+          ignoreDepth = ignoreDepth + 1
+          nextState = ST_DTD_IN_IGNORE_SECTION
+        case (TOK_SECTION_END)
+          print*, "wf decrement section"
+          wf_stack(1) = wf_stack(1) - 1
+          ignoreDepth = ignoreDepth - 1
+          if (ignoreDepth==0) then
+            fx%context = CTXT_IN_DTD
+            nextState = ST_DTD_SUBSET
+          else
+            nextState = ST_DTD_IN_IGNORE_SECTION
           endif
         end select
 

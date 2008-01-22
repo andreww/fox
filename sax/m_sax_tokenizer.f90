@@ -208,70 +208,30 @@ contains
           endif
         endif
 
-      case (ST_START_SECTION_DECLARATION)
+      case (ST_START_CDATA_DECLARATION)
         if (firstChar) then
-          ws_discard = .true.
-          ws_discarded = .false.
-        endif
-        if (ws_discard) then
           if (verify(c, XML_WHITESPACE)==0) then
-            ws_discarded = .true.
+            call add_error(fx%error_stack, &
+              "Whitespace not allowed around CDATA in section declaration")
           else
             deallocate(fx%token)
             fx%token => vs_str_alloc(c)
             ws_discard = .false.
           endif
         else
-          if (verify(c, XML_WHITESPACE//"[")>0) then
+          if (verify(c, XML_WHITESPACE)==0) then
+            call add_error(fx%error_stack, &
+              "Whitespace not allowed around CDATA in section declaration")
+          elseif (c=="[") then
+            fx%tokenType = TOK_NAME
+            if (c=="[") fx%nextTokenType = TOK_OPEN_SB
+          else
             tempString => fx%token
             fx%token => vs_str_alloc(str_vs(tempString)//c)
             deallocate(tempString)
-          elseif (str_vs(fx%token)=="CDATA") then
-            if (ws_discarded.or.c/="[") then
-              call add_error(fx%error_stack, &
-                "Whitespace not allowed around CDATA in section declaration")
-            else
-              fx%tokenType = TOK_NAME
-              fx%nextTokenType = TOK_OPEN_SB
-            endif
-          else
-            fx%tokenType = TOK_NAME
-            if (c=="[") fx%nextTokenType = TOK_OPEN_SB
           endif
         endif
 
-      case (ST_FINISH_SECTION_DECLARATION)
-        if (verify(c, XML_WHITESPACE)>0) then
-          if (c/="[") then
-            call add_error(fx%error_stack, &
-              "Unexpected token found, expecting [")
-          else
-            fx%tokenType = TOK_OPEN_SB
-          endif
-        endif
-
-      case (ST_IN_IGNORE_SECTION)
-        select case(phrase)
-        case (0)
-          if (c=="<".or.c=="]") then
-            phrase = 1
-            q = c
-          endif
-        case (1)
-          if ((q=="<".and.c=="!").or.(q=="]".and.c=="]")) then
-            phrase = 2
-          else
-            phrase = 0
-          endif
-        case (2)
-          if (q=="<".and.c=="[") then
-            fx%tokenType = TOK_SECTION_START
-          elseif (q=="]".and.c==">") then
-            fx%tokenType = TOK_SECTION_END
-          else
-            phrase = 0
-          endif
-        end select
 
       case (ST_CDATA_CONTENTS)
         select case(phrase)
@@ -571,6 +531,61 @@ contains
             call add_error(fx%error_stack, "Unexpected character, expecting >")
           endif
         endif
+
+      case (ST_DTD_START_SECTION_DECLARATION)
+        if (firstChar) then
+          ws_discard = .true.
+        endif
+        if (ws_discard) then
+          if (verify(c, XML_WHITESPACE)/=0) then
+            deallocate(fx%token)
+            fx%token => vs_str_alloc(c)
+            ws_discard = .false.
+          endif
+        else
+          if (verify(c, XML_WHITESPACE//"[")>0) then
+            tempString => fx%token
+            fx%token => vs_str_alloc(str_vs(tempString)//c)
+            deallocate(tempString)
+          else
+            fx%tokenType = TOK_NAME
+            if (c=="[") fx%nextTokenType = TOK_OPEN_SB
+          endif
+        endif
+
+      case (ST_DTD_FINISH_SECTION_DECLARATION)
+        if (verify(c, XML_WHITESPACE)>0) then
+          if (c/="[") then
+            call add_error(fx%error_stack, &
+              "Unexpected token found, expecting [")
+          else
+            fx%tokenType = TOK_OPEN_SB
+          endif
+        endif
+
+      case (ST_DTD_IN_IGNORE_SECTION)
+        select case(phrase)
+        case (0)
+          if (c=="<".or.c=="]") then
+            phrase = 1
+            q = c
+          endif
+        case (1)
+          if ((q=="<".and.c=="!").or.(q=="]".and.c=="]")) then
+            phrase = 2
+          else
+            phrase = 0
+          endif
+        case (2)
+          if (q=="<".and.c=="[") then
+            fx%tokenType = TOK_SECTION_START
+          elseif (q=="]".and.c==">") then
+            fx%tokenType = TOK_SECTION_END
+          else
+            phrase = 0
+          endif
+        end select
+
 
       case (ST_DTD_BANG_TAG)
         if (firstChar) then

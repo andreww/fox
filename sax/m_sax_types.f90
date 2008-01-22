@@ -32,10 +32,9 @@ module m_sax_types
   integer, parameter :: ST_START_PI = 2
   integer, parameter :: ST_START_COMMENT = 3
   integer, parameter :: ST_START_TAG = 4 
-  integer, parameter :: ST_START_SECTION_DECLARATION = 5
+  integer, parameter :: ST_START_CDATA_DECLARATION = 5
   integer, parameter :: ST_FINISH_CDATA_DECLARATION = 6
-  integer, parameter :: ST_FINISH_SECTION_DECLARATION = 7
-  integer, parameter :: ST_IN_IGNORE_SECTION = 8
+
   integer, parameter :: ST_IN_TAG = 9
   integer, parameter :: ST_ATT_NAME = 10
   integer, parameter :: ST_ATT_EQUALS = 11
@@ -60,6 +59,9 @@ module m_sax_types
 ! DTD states
   integer, parameter :: ST_DTD_NULL = -1
   integer, parameter :: ST_DTD_SUBSET = 25
+  integer, parameter :: ST_DTD_START_SECTION_DECLARATION = 52
+  integer, parameter :: ST_DTD_FINISH_SECTION_DECLARATION = 7
+  integer, parameter :: ST_DTD_IN_IGNORE_SECTION = 8
   integer, parameter :: ST_DTD_BANG_TAG = 51
   integer, parameter :: ST_DTD_ATTLIST = 26
   integer, parameter :: ST_DTD_ELEMENT = 27
