@@ -1239,13 +1239,116 @@ contains
         end select
 
 
+      case (ST_CLOSE_DOCTYPE)
+        write(*,*) "ST_CLOSE_DOCTYPE"
+        select case (fx%tokenType)
+        case (TOK_END_TAG)
+          if (wf_stack(1)>1) then
+            call add_error(fx%error_stack, "Cannot end DTD while conditional section is still open")
+            goto 100
+          endif
+          if (associated(extSubsetURI)) then
+            call open_new_file(fb, extSubsetURI, iostat)
+            call destroyURI(extSubsetURI)
+            if (iostat==0) then
+              call parse_text_declaration(fb, fx%error_stack)
+              if (in_error(fx%error_stack)) goto 100
+              print*, "growing wf_stack 7"
+              temp_wf_stack => wf_stack
+              allocate(wf_stack(size(temp_wf_stack)+1))
+              wf_stack = (/0, temp_wf_stack/)
+              deallocate(temp_wf_stack)
+              inExtSubset = .true.
+              nextState = ST_DTD_SUBSET
+            else
+              if (validCheck) then
+                call add_error(fx%error_stack, &
+                  "Unable to retrieve external subset")
+                goto 100
+              endif
+              call endDTDchecks
+              if (in_error(fx%error_stack)) goto 100
+              print*, "wf decrement dtd 1"
+              wf_stack(1) = wf_stack(1) - 1
+              nextState = ST_MISC
+              fx%context = CTXT_BEFORE_CONTENT
+            endif
+          else
+            call endDTDchecks
+            if (in_error(fx%error_stack)) goto 100
+              print*, "wf decrement dtd 2"
+            wf_stack(1) = wf_stack(1) - 1
+            nextState = ST_MISC
+            fx%context = CTXT_BEFORE_CONTENT
+          endif
+        end select
+
+        case (27,50:)
+          call parseDTD
+          if (in_error(fx%error_stack)) goto 100
+          if (fx%state==ST_STOP) goto 100
+
+      end select
+
+      if (nextState/=ST_NULL) then
+        fx%state = nextState
+        print*, "newState: ", fx%state
+      else
+        call add_error(fx%error_stack, "Internal error in parser - no suitable token found")
+        goto 100
+      endif
+
+    end do
+
+100 if (associated(tempString)) deallocate(tempString)
+    deallocate(wf_stack)
+
+    if (.not.eof) then
+      ! We have encountered an error before the end of a file
+      if (.not.reading_main_file(fb)) then !we are parsing an entity
+        if (inExtSubset) then
+          call add_error(fx%error_stack, "Error encountered processing external subset.")
+        else
+          call add_error(fx%error_stack, "Error encountered processing entity.")
+        endif
+        call sax_error(fx, error_handler)
+      else
+        call sax_error(fx, error_handler)
+      endif
+    else
+      ! EOF of main file
+      if (startInChardata_) then
+        if (fx%well_formed) then
+          if (fx%state==ST_CHAR_IN_CONTENT.and.associated(fx%token)) then
+            if (size(fx%token)>0.and.present(characters_handler)) &
+              call characters_handler(str_vs(fx%token))
+          endif
+        else
+          if (present(error_handler)) &
+            call error_handler("Ill-formed XML fragment")
+        endif
+      elseif (fx%well_formed.and.fx%state==ST_MISC) then
+        if (present(endDocument_handler)) &
+          call endDocument_handler()
+      else
+        call add_error(fx%error_stack, "File is not well-formed")
+        call sax_error(fx, error_handler)
+      endif
+    endif
+
+  contains
+
+    subroutine parseDTD
+
+      select case (fx%state)
+
       case (ST_DTD_SUBSET)
         write(*,*) "ST_DTD_SUBSET"
         select case (fx%tokenType)
         case (TOK_CLOSE_SB)
           if (.not.reading_main_file(fb)) then
             call add_error(fx%error_stack, "Cannot close DOCTYPE in external entity")
-            goto 100
+            return
           endif
           print*, "wf decrement section end subset 1"
           wf_stack(1) = wf_stack(1) - 1
@@ -1254,7 +1357,7 @@ contains
         case (TOK_SECTION_END)
           if (wf_stack(1)==0) then
             call add_error(fx%error_stack, "Unbalanced conditional section in parameter entity")
-            goto 100
+            return
           endif
           print*, "wf decrement section end subset 2"
           wf_stack(1) = wf_stack(1) - 1
@@ -1271,7 +1374,7 @@ contains
           nextState = ST_DTD_BANG_TAG
         case default
           call add_error(fx%error_stack, "Unexpected token in document subset")
-          goto 100
+          return
         end select
         print*, "st_subset done 1", wf_stack(1)
 
@@ -1280,7 +1383,7 @@ contains
         write(*,*) 'ST_DTD_BANG_TAG'
         select case (fx%tokenType)
         case (TOK_OPEN_SB)
-          nextState = ST_DTD_START_SECTION_DECLARATION
+          nextState = ST_DTD_START_SECTION_DECL
         case (TOK_OPEN_COMMENT)
           nextState = ST_DTD_START_COMMENT
         case (TOK_NAME)
@@ -1295,25 +1398,25 @@ contains
           endif
         end select
 
-      case (ST_DTD_START_SECTION_DECLARATION)
-        write(*,*) "ST_DTD_START_SECTION_DECLARATION"
+      case (ST_DTD_START_SECTION_DECL)
+        write(*,*) "ST_DTD_START_SECTION_DECL"
         select case (fx%tokenType)
         case (TOK_NAME)
           if (str_vs(fx%token)=="IGNORE") then
             if (fx%context/=CTXT_IN_DTD.or.reading_main_file(fb)) then
               call add_error(fx%error_stack, "IGNORE section only allowed in external subset.")
-              goto 100
+              return
             else
               ignoreDepth = 0
               fx%context = CTXT_IGNORE
-              nextState = ST_DTD_FINISH_SECTION_DECLARATION
+              nextState = ST_DTD_FINISH_SECTION_DECL
             endif
           elseif (str_vs(fx%token)=="INCLUDE") then
             if (fx%context/=CTXT_IN_DTD.or.reading_main_file(fb)) then
               call add_error(fx%error_stack, "INCLUDE section only allowed in external subset.")
-              goto 100
+              return
             else
-              nextState = ST_DTD_FINISH_SECTION_DECLARATION
+              nextState = ST_DTD_FINISH_SECTION_DECL
             endif
           else
             call add_error(fx%error_stack, "Unknown keyword found in marked section declaration.")
@@ -1321,8 +1424,8 @@ contains
         end select
 
 
-      case (ST_DTD_FINISH_SECTION_DECLARATION)
-        write(*,*) "ST_FINISH_SECTION_DECLARATION"
+      case (ST_DTD_FINISH_SECTION_DECL)
+        write(*,*) "ST_FINISH_SECTION_DECL"
         select case (fx%tokenType)
         case (TOK_OPEN_SB)
           if (fx%context==CTXT_IGNORE) then
@@ -1366,14 +1469,14 @@ contains
           if (nameOk) then
             if (str_vs(fx%token)=='xml') then
               call add_error(fx%error_stack, "XML declaration must be at start of document")
-              goto 100
+              return
             elseif (checkPITarget(str_vs(fx%token), fx%xds)) then
               nextState = ST_DTD_PI_CONTENTS
               fx%name => fx%token
               fx%token => null()
             else
               call add_error(fx%error_stack, "Invalid PI target name")
-              goto 100
+              return
             endif
           endif
         end select
@@ -1384,7 +1487,7 @@ contains
           if (fx%context==CTXT_IN_DTD.and.wf_stack(1)==0) then
             call add_error(fx%error_stack, &
               "PI not balanced in parameter entity")
-            goto 100
+            return
           endif
           if (len(fx%elstack)>0) then
             elem => &
@@ -1434,7 +1537,7 @@ contains
           if (wf_stack(1)==0) then
             call add_error(fx%error_stack, &
               "Comment not balanced in entity")
-            goto 100
+            return
           endif
           if (len(fx%elstack)>0) then
             elem => &
@@ -1464,18 +1567,18 @@ contains
           if (existing_entity(fx%forbidden_pe_list, str_vs(fx%token))) then
             call add_error(fx%error_stack, &
               'Recursive entity reference')
-            goto 100
+            return
           endif
           ent => getEntityByName(fx%xds%PEList, str_vs(fx%token))
           if (associated(ent)) then
             if (ent%wfc.and.fx%xds%standalone) then
               call add_error(fx%error_stack, &
                 "Externally declared entity used in standalone document")
-              goto 100
+              return
             elseif (ent%external) then
               if (present(startEntity_handler)) then
                 call startEntity_handler('%'//str_vs(fx%token))
-                if (fx%state==ST_STOP) goto 100
+                if (fx%state==ST_STOP) return
               endif
               call add_internal_entity(fx%forbidden_pe_list, &
                 str_vs(fx%token), "", null(), .false.)
@@ -1484,11 +1587,11 @@ contains
                 if (validCheck) then
                   call add_error(fx%error_stack, &
                     "Unable to retrieve external parameter entity "//str_vs(fx%token))
-                  goto 100
+                  return
                 endif
                 if (present(skippedEntity_handler)) then
                   call skippedEntity_handler('%'//str_vs(fx%token))
-                  if (fx%state==ST_STOP) goto 100
+                  if (fx%state==ST_STOP) return
                 endif
                 ! having skipped a PE, we must now not process
                 ! declarations any further (unless we are declared standalone)
@@ -1498,12 +1601,12 @@ contains
               else
                 if (present(startEntity_handler)) then
                   call startEntity_handler('%'//str_vs(fx%token))
-                  if (fx%state==ST_STOP) goto 100
+                  if (fx%state==ST_STOP) return
                 endif
                 call add_internal_entity(fx%forbidden_pe_list, &
                   str_vs(fx%token), "", null(), .false.)
                 call parse_text_declaration(fb, fx%error_stack)
-                if (in_error(fx%error_stack)) goto 100
+                if (in_error(fx%error_stack)) return
                 print*, "growing wf_stack 3"
                 allocate(temp_wf_stack(size(wf_stack)+1))
                 temp_wf_stack = (/0, wf_stack/)
@@ -1514,7 +1617,7 @@ contains
               ! Expand the entity, 
               if (present(startEntity_handler)) then
                 call startEntity_handler('%'//str_vs(fx%token))
-                if (fx%state==ST_STOP) goto 100	
+                if (fx%state==ST_STOP) return
               endif
               call add_internal_entity(fx%forbidden_pe_list, &
                 str_vs(fx%token), "", null(), .false.)
@@ -1533,14 +1636,14 @@ contains
               if (processDTD) then
                 if (present(skippedEntity_handler)) then
                   call skippedEntity_handler('%'//str_vs(fx%token))
-                  if (fx%state==ST_STOP) goto 100
+                  if (fx%state==ST_STOP) return
                 endif
               endif
             else
               ! If not, 
               call add_error(fx%error_stack, &
                 "Reference to undeclared parameter entity.")
-              goto 100
+              return
             endif
           endif
           nextState = ST_DTD_SUBSET
@@ -1557,7 +1660,7 @@ contains
           endif
           if (.not.nameOk) then
             call add_error(fx%error_stack, "Invalid element name for ATTLIST")
-            goto 100
+            return
           endif
           if (existing_element(fx%xds%element_list, str_vs(fx%token))) then
             elem => get_element(fx%xds%element_list, str_vs(fx%token))
@@ -1576,7 +1679,7 @@ contains
           else
             call parse_dtd_attlist(str_vs(fx%token), fx%xds%xml_version, fx%error_stack)
           endif
-          if (in_error(fx%error_stack)) goto 100
+          if (in_error(fx%error_stack)) return
           ! Normalize attribute values in attlist
           if (processDTD) then
             do i = 1, size(elem%attlist%list)
@@ -1585,7 +1688,7 @@ contains
                 elem%attlist%list(i)%default => &
                   normalize_attribute_text(fx, tempString)
                 deallocate(tempString)
-                if (in_error(fx%error_stack)) goto 100
+                if (in_error(fx%error_stack)) return
               endif
             enddo
           endif
@@ -1595,7 +1698,7 @@ contains
             if (wf_stack(1)==0) then
               call add_error(fx%error_stack, &
                 "ATTLIST not balanced in parameter entity")
-              goto 100
+              return
             endif
           endif
           print*, "wf decrement attlist 1"
@@ -1605,7 +1708,7 @@ contains
           else
             call parse_dtd_attlist("", fx%xds%xml_version, fx%error_stack)
           endif
-          if (in_error(fx%error_stack)) goto 100
+          if (in_error(fx%error_stack)) return
           if (processDTD) then
             if (present(attributeDecl_handler)) &
               call report_declarations(elem, attributeDecl_handler)
@@ -1621,7 +1724,7 @@ contains
             if (wf_stack(1)==0) then
               call add_error(fx%error_stack, &
                 "ATTLIST not balanced in parameter entity")
-              goto 100
+              return
             endif
           endif
           print*, "wf decrement attlist 2"
@@ -1629,7 +1732,7 @@ contains
           if (processDTD) then
             if (present(attributeDecl_handler)) then
               call report_declarations(elem, attributeDecl_handler)
-              if (fx%state==ST_STOP) goto 100
+              if (fx%state==ST_STOP) return
             endif
           endif
           nextState = ST_DTD_SUBSET
@@ -1645,7 +1748,7 @@ contains
           endif
           if (.not.nameOk) then
             call add_error(fx%error_stack, "Invalid name for ELEMENT")
-            goto 100
+            return
           endif
           fx%name => fx%token
           fx%token => null()
@@ -1659,7 +1762,7 @@ contains
           if (declared_element(fx%xds%element_list, str_vs(fx%name))) then
             if (validCheck) then
               call add_error(fx%error_stack, "Duplicate Element declaration")
-              goto 100
+              return
             else
               ! Ignore contents ...
               elem => null()
@@ -1674,7 +1777,7 @@ contains
             elem => null()
           endif
           call parse_dtd_element(str_vs(fx%token), fx%xds%xml_version, fx%error_stack, elem)
-          if (in_error(fx%error_stack)) goto 100
+          if (in_error(fx%error_stack)) return
           nextState = ST_DTD_ELEMENT_END
         end select
 
@@ -1686,7 +1789,7 @@ contains
             if (wf_stack(1)==0) then
               call add_error(fx%error_stack, &
                 "ELEMENT not balanced in parameter entity")
-              goto 100
+              return
             endif
           endif
           print*, "wf decrement element"
@@ -1694,7 +1797,7 @@ contains
           if (processDTD.and.associated(elem)) then
             if (present(elementDecl_handler)) then
               call elementDecl_handler(str_vs(fx%name), str_vs(elem%model))
-              if (fx%state==ST_STOP) goto 100
+              if (fx%state==ST_STOP) return
             endif
           endif
           deallocate(fx%name)
@@ -1718,7 +1821,7 @@ contains
           if (.not.nameOk) then
             call add_error(fx%error_stack, &
               "Illegal name for general entity")
-            goto 100
+            return
           endif
           fx%name => fx%token
           fx%token => null()
@@ -1737,7 +1840,7 @@ contains
           if (.not.nameOk) then
             call add_error(fx%error_stack, &
               "Illegal name for parameter entity")
-            goto 100
+            return
           endif
           fx%name => fx%token
           fx%token => null()
@@ -1754,7 +1857,7 @@ contains
             nextState = ST_DTD_ENTITY_SYSTEM
           else
             call add_error(fx%error_stack, "Unexpected token in ENTITY")
-            goto 100
+            return
           endif
         case (TOK_CHAR)
           if (reading_main_file(fb)) then
@@ -1764,11 +1867,11 @@ contains
           endif
           fx%attname => expand_entity_value_alloc(tempString, fx%xds, fx%error_stack)
           tempString => null()
-          if (in_error(fx%error_stack)) goto 100
+          if (in_error(fx%error_stack)) return
           nextState = ST_DTD_ENTITY_END
         case default
           call add_error(fx%error_stack, "Unexpected token in ENTITY")
-          goto 100
+          return
         end select
 
       case (ST_DTD_ENTITY_PUBLIC)
@@ -1781,11 +1884,11 @@ contains
             nextState = ST_DTD_ENTITY_SYSTEM
           else
             call add_error(fx%error_stack, "Invalid PUBLIC id in ENTITY")
-            goto 100
+            return
           endif
         case default
           call add_error(fx%error_stack, "Unexpected token in ENTITY")
-          goto 100
+          return
         end select
 
       case (ST_DTD_ENTITY_SYSTEM)
@@ -1797,7 +1900,7 @@ contains
           nextState = ST_DTD_ENTITY_NDATA
         case default
           call add_error(fx%error_stack, "Unexpected token in ENTITY")
-          goto 100
+          return
         end select
 
       case (ST_DTD_ENTITY_NDATA)
@@ -1808,14 +1911,14 @@ contains
             if (wf_stack(1)==0) then
               call add_error(fx%error_stack, &
                 "ENTITY not balanced in parameter entity")
-              goto 100
+              return
             endif
           endif
           print*, "wf decrement entity 1"
           wf_stack(1) = wf_stack(1) - 1
           if (processDTD) then
             call add_entity
-            if (in_error(fx%error_stack)) goto 100
+            if (in_error(fx%error_stack)) return
           endif
           deallocate(fx%name)
           if (associated(fx%attname)) deallocate(fx%attname)
@@ -1827,16 +1930,16 @@ contains
           if (str_vs(fx%token)=='NDATA') then
             if (pe) then
               call add_error(fx%error_stack, "Parameter entity cannot have NDATA declaration")
-              goto 100
+              return
             endif
             nextState = ST_DTD_ENTITY_NDATA_VALUE
           else
             call add_error(fx%error_stack, "Unexpected token in ENTITY")
-            goto 100
+            return
           endif
         case default
           call add_error(fx%error_stack, "Unexpected token in ENTITY")
-          goto 100
+          return
         end select
 
       case (ST_DTD_ENTITY_NDATA_VALUE)
@@ -1851,14 +1954,14 @@ contains
           endif
           if (.not.nameOk) then
             call add_error(fx%error_stack, "Invalid name for Notation")
-            goto 100
+            return
           endif
           fx%Ndata => fx%token
           fx%token => null()
           nextState = ST_DTD_ENTITY_END
         case default
           call add_error(fx%error_stack, "Unexpected token in ENTITY")
-          goto 100
+          return
         end select
 
       case (ST_DTD_ENTITY_END)
@@ -1869,14 +1972,14 @@ contains
             if (wf_stack(1)==0) then
               call add_error(fx%error_stack, &
                 "ENTITY not balanced in parameter entity")
-              goto 100
+              return
             endif
           endif
           print*, "wf decrement entity 2"
           wf_stack(1) = wf_stack(1) - 1
           if (processDTD) then
             call add_entity
-            if (in_error(fx%error_stack)) goto 100
+            if (in_error(fx%error_stack)) return
           endif
           deallocate(fx%name)
           if (associated(fx%attname)) deallocate(fx%attname)
@@ -1886,7 +1989,7 @@ contains
           nextState = ST_DTD_SUBSET
         case default
           call add_error(fx%error_stack, "Unexpected token at end of ENTITY")
-          goto 100
+          return
         end select
 
       case (ST_DTD_NOTATION)
@@ -1900,14 +2003,14 @@ contains
           endif
           if (.not.nameOk) then
             call add_error(fx%error_stack, "Invalid name for Notation")
-            goto 100
+            return
           endif
           fx%name => fx%token
           fx%token => null()
           nextState = ST_DTD_NOTATION_ID
         case default
           call add_error(fx%error_stack, "Unexpected token in NOTATION")
-          goto 100
+          return
         end select
 
       case (ST_DTD_NOTATION_ID)
@@ -1920,11 +2023,11 @@ contains
             nextState = ST_DTD_NOTATION_PUBLIC
           else
             call add_error(fx%error_stack, "Unexpected token after NOTATION")
-            goto 100
+            return
           endif
         case default
           call add_error(fx%error_stack, "Unexpected token after NOTATION")
-          goto 100
+          return
         end select
 
       case (ST_DTD_NOTATION_SYSTEM)
@@ -1936,7 +2039,7 @@ contains
           nextState = ST_DTD_NOTATION_END
         case default
           call add_error(fx%error_stack, "Unexpected token in NOTATION")
-          goto 100
+          return
         end select
 
       case (ST_DTD_NOTATION_PUBLIC)
@@ -1949,11 +2052,11 @@ contains
             nextState = ST_DTD_NOTATION_PUBLIC_2
           else
             call add_error(fx%error_stack, "Invalid PUBLIC id in NOTATION")
-            goto 100
+            return
           endif
         case default
           call add_error(fx%error_stack, "Unexpected token in NOTATION")
-          goto 100
+          return
         end select
 
       case (ST_DTD_NOTATION_PUBLIC_2)
@@ -1964,11 +2067,11 @@ contains
             if (wf_stack(1)==0) then
               call add_error(fx%error_stack, &
                 "NOTATION not balanced in parameter entity")
-              goto 100
+              return
             endif
             if (notation_exists(fx%nlist, str_vs(fx%name))) then
               call add_error(fx%error_stack, "Duplicate notation declaration")
-              goto 100
+              return
             endif
           endif
           print*, "wf decrement notation 1"
@@ -1977,7 +2080,7 @@ contains
             call add_notation(fx%nlist, str_vs(fx%name), publicId=str_vs(fx%publicId))
             if (present(notationDecl_handler)) then
               call notationDecl_handler(str_vs(fx%name), publicId=str_vs(fx%publicId), systemId="")
-              if (fx%state==ST_STOP) goto 100
+              if (fx%state==ST_STOP) return
             endif
           endif
           deallocate(fx%name)
@@ -1997,11 +2100,11 @@ contains
             if (wf_stack(1)==0) then
               call add_error(fx%error_stack, &
                 "NOTATION not balanced in parameter entity")
-              goto 100
+              return
             endif
             if (notation_exists(fx%nlist, str_vs(fx%name))) then
               call add_error(fx%error_stack, "Duplicate notation declaration")
-              goto 100
+              return
             endif
           endif
           print*, "wf decrement notation 2"
@@ -2010,12 +2113,12 @@ contains
             URIref => parseURI(str_vs(fx%systemId))
             if (.not.associated(URIref)) then
               call add_error(fx%error_stack, "Invalid SYSTEM literal")
-              goto 100
+              return
             endif
             if (hasFragment(URIref)) then
               call destroyURI(URIref)
               call add_error(fx%error_stack, "SYSTEM literal may not contain fragment")
-              goto 100
+              return
             endif              
             if (associated(fx%publicId)) then
               call add_notation(fx%nlist, str_vs(fx%name), &
@@ -2023,7 +2126,7 @@ contains
               if (present(notationDecl_handler)) then
                 call notationDecl_handler(str_vs(fx%name), &
                 publicId=str_vs(fx%publicId), systemId=str_vs(fx%systemId))
-                if (fx%state==ST_STOP) goto 100
+                if (fx%state==ST_STOP) return
               endif
             else
               call add_notation(fx%nlist, str_vs(fx%name), &
@@ -2031,7 +2134,7 @@ contains
               if (present(notationDecl_handler)) then
                 call notationDecl_handler(str_vs(fx%name), &
                 publicId="", systemId=str_vs(fx%systemId))
-                if (fx%state==ST_STOP) goto 100
+                if (fx%state==ST_STOP) return
               endif
             endif
           endif
@@ -2041,105 +2144,12 @@ contains
           nextState = ST_DTD_SUBSET
         case default
           call add_error(fx%error_stack, "Unexpected token in NOTATION")
-          goto 100
+          return
         end select
-
-      case (ST_CLOSE_DOCTYPE)
-        write(*,*) "ST_CLOSE_DOCTYPE"
-        select case (fx%tokenType)
-        case (TOK_END_TAG)
-          if (wf_stack(1)>1) then
-            call add_error(fx%error_stack, "Cannot end DTD while conditional section is still open")
-            goto 100
-          endif
-          if (associated(extSubsetURI)) then
-            call open_new_file(fb, extSubsetURI, iostat)
-            call destroyURI(extSubsetURI)
-            if (iostat==0) then
-              call parse_text_declaration(fb, fx%error_stack)
-              if (in_error(fx%error_stack)) goto 100
-              print*, "growing wf_stack 7"
-              temp_wf_stack => wf_stack
-              allocate(wf_stack(size(temp_wf_stack)+1))
-              wf_stack = (/0, temp_wf_stack/)
-              deallocate(temp_wf_stack)
-              inExtSubset = .true.
-              nextState = ST_DTD_SUBSET
-            else
-              if (validCheck) then
-                call add_error(fx%error_stack, &
-                  "Unable to retrieve external subset")
-                goto 100
-              endif
-              call endDTDchecks
-              if (in_error(fx%error_stack)) goto 100
-              print*, "wf decrement dtd 1"
-              wf_stack(1) = wf_stack(1) - 1
-              nextState = ST_MISC
-              fx%context = CTXT_BEFORE_CONTENT
-            endif
-          else
-            call endDTDchecks
-            if (in_error(fx%error_stack)) goto 100
-              print*, "wf decrement dtd 2"
-            wf_stack(1) = wf_stack(1) - 1
-            nextState = ST_MISC
-            fx%context = CTXT_BEFORE_CONTENT
-          endif
-        end select
-
 
       end select
 
-      if (nextState/=ST_NULL) then
-        fx%state = nextState
-        print*, "newState: ", fx%state
-      else
-        call add_error(fx%error_stack, "Internal error in parser - no suitable token found")
-        goto 100
-      endif
-
-    end do
-
-100 if (associated(tempString)) deallocate(tempString)
-    deallocate(wf_stack)
-
-    if (.not.eof) then
-      ! We have encountered an error before the end of a file
-      if (.not.reading_main_file(fb)) then !we are parsing an entity
-        if (inExtSubset) then
-          call add_error(fx%error_stack, "Error encountered processing external subset.")
-        else
-          call add_error(fx%error_stack, "Error encountered processing entity.")
-        endif
-        call sax_error(fx, error_handler)
-      else
-        call sax_error(fx, error_handler)
-      endif
-    else
-      ! EOF of main file
-      if (startInChardata_) then
-        if (fx%well_formed) then
-          if (fx%state==ST_CHAR_IN_CONTENT.and.associated(fx%token)) then
-            if (size(fx%token)>0.and.present(characters_handler)) &
-              call characters_handler(str_vs(fx%token))
-            ! No need for check on parser stop, we finish here anyway
-          endif
-        else
-          if (present(error_handler)) &
-            call error_handler("Ill-formed XML fragment")
-        endif
-      elseif (fx%well_formed.and.fx%state==ST_MISC) then
-        if (present(endDocument_handler)) &
-          call endDocument_handler()
-        ! No need for check on parser stop, we finish here anyway
-      else
-        call add_error(fx%error_stack, "File is not well-formed")
-        call sax_error(fx, error_handler)
-      endif
-    endif
-
-  contains
+    end subroutine parseDTD
 
     subroutine open_tag
       ! Are there any default values missing?

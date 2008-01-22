@@ -30,7 +30,7 @@ contains
 
     character :: c, q
     integer :: xv, phrase
-    logical :: firstChar, ws_discard, ws_discarded
+    logical :: firstChar, ws_discard
     character, pointer :: tempString(:)
 
     xv = fx%xds%xml_version
@@ -561,7 +561,7 @@ contains
         endif
 
 
-      case (ST_DTD_START_SECTION_DECLARATION)
+      case (ST_DTD_START_SECTION_DECL)
         if (firstChar) then
           ws_discard = .true.
         endif
@@ -582,7 +582,7 @@ contains
           endif
         endif
 
-      case (ST_DTD_FINISH_SECTION_DECLARATION)
+      case (ST_DTD_FINISH_SECTION_DECL)
         if (verify(c, XML_WHITESPACE)>0) then
           if (c/="[") then
             call add_error(fx%error_stack, &
