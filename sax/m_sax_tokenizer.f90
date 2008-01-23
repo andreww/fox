@@ -490,7 +490,6 @@ contains
         endif
 
         case (ST_IN_SUBSET)
-          print*,"TOKENIZING DTD"
           call tokenizeDTD
 
       end select
@@ -502,6 +501,31 @@ contains
   contains
 
     subroutine tokenizeDTD
+
+      if (c=="%") then
+        if (fx%state_dtd==ST_DTD_ENTITY &
+          .or.fx%state_dtd==ST_DTD_NOTATION_SYSTEM &
+          .or.fx%state_dtd==ST_DTD_NOTATION_PUBLIC &
+          .or.fx%state_dtd==ST_DTD_NOTATION_PUBLIC_2 &
+          .or.fx%state_dtd==ST_DTD_ENTITY_PUBLIC &
+          .or.fx%state_dtd==ST_DTD_ENTITY_SYSTEM) then
+          continue
+        elseif (fx%state_dtd==ST_DTD_SUBSET) then
+          fx%tokenType = TOK_ENTITY
+          return
+        elseif (q=="'".or.q=="""" &
+          .or.fx%state_dtd==ST_DTD_ATTLIST_CONTENTS &
+          .or.fx%state_dtd==ST_DTD_ELEMENT_CONTENTS) then
+          if (fx%inIntSubset) then
+            call add_error(fx%error_stack, &
+              "Parameter entity reference not permitted inside markup for internal subset")
+          else
+            call add_error(fx%error_stack, &
+              "Parameter entity reference not implemented inside markup")
+          endif
+          return
+        endif
+      endif
 
       select case(fx%state_dtd)
 
@@ -524,8 +548,6 @@ contains
               phrase = 1
               q = c
               ws_discard = .false.
-            elseif (c=="%") then
-              fx%tokenType = TOK_ENTITY
             elseif (c=="<") then
               phrase = 1
               q = c
@@ -742,11 +764,7 @@ contains
           else
             call push_chars(fb, c)
           endif
-          if (str_vs(fx%token)=="%") then
-            fx%tokenType = TOK_ENTITY
-          else
-            fx%tokenType = TOK_NAME
-          endif
+          fx%tokenType = TOK_NAME
         endif
         
       case (ST_DTD_ATTLIST_CONTENTS, ST_DTD_ELEMENT_CONTENTS)

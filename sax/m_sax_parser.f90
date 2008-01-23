@@ -1817,25 +1817,27 @@ contains
       case (ST_DTD_ENTITY)
         write(*,*) 'ST_DTD_ENTITY'
         select case (fx%tokenType)
-        case (TOK_ENTITY)
-          pe = .true.
-          ! this will be a PE
-          nextDTDState = ST_DTD_ENTITY_PE
         case (TOK_NAME)
-          pe = .false.
-          if (namespaces_) then
-            nameOk = checkNCName(str_vs(fx%token), fx%xds)
+          if (str_vs(fx%token)=="%") then
+            pe = .true.
+            ! this will be a PE
+            nextDTDState = ST_DTD_ENTITY_PE
           else
-            nameOk = checkName(str_vs(fx%token), fx%xds)
+            pe = .false.
+            if (namespaces_) then
+              nameOk = checkNCName(str_vs(fx%token), fx%xds)
+            else
+              nameOk = checkName(str_vs(fx%token), fx%xds)
+            endif
+            if (.not.nameOk) then
+              call add_error(fx%error_stack, &
+                "Illegal name for general entity")
+              return
+            endif
+            fx%name => fx%token
+            fx%token => null()
+            nextDTDState = ST_DTD_ENTITY_ID
           endif
-          if (.not.nameOk) then
-            call add_error(fx%error_stack, &
-              "Illegal name for general entity")
-            return
-          endif
-          fx%name => fx%token
-          fx%token => null()
-          nextDTDState = ST_DTD_ENTITY_ID
         end select
 
       case (ST_DTD_ENTITY_PE)
