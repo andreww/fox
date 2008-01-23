@@ -489,7 +489,8 @@ contains
           endif
         endif
 
-        case (27,50:)
+        case (ST_IN_SUBSET)
+          print*,"TOKENIZING DTD"
           call tokenizeDTD
 
       end select
@@ -502,7 +503,7 @@ contains
 
     subroutine tokenizeDTD
 
-      select case(fx%state)
+      select case(fx%state_dtd)
 
       case (ST_START_PE)
         if (verify(c,XML_WHITESPACE//";")>0) then

@@ -53,9 +53,10 @@ module m_sax_types
   integer, parameter :: ST_DOC_DECL                 = 24
   integer, parameter :: ST_CLOSE_DOCTYPE            = 25
   integer, parameter :: ST_START_ENTITY             = 26
-  integer, parameter :: ST_START_PE                 = 27
+  integer, parameter :: ST_IN_SUBSET                = 28
 
 ! DTD states
+  integer, parameter :: ST_START_PE                 = 27
   integer, parameter :: ST_DTD_NULL                = 50
   integer, parameter :: ST_DTD_SUBSET              = 51
   integer, parameter :: ST_DTD_START_SECTION_DECL  = 52
@@ -87,6 +88,7 @@ module m_sax_types
   integer, parameter :: ST_DTD_ATTLIST_END         = 78
   integer, parameter :: ST_DTD_ELEMENT_CONTENTS    = 79
   integer, parameter :: ST_DTD_ELEMENT_END         = 80
+  integer, parameter :: ST_DTD_DONE                = 81
 
 ! token types
 
@@ -116,6 +118,7 @@ module m_sax_types
                                   ! not destroy it once we are finished
     integer :: context 
     integer :: state = ST_NULL
+    integer :: state_dtd = ST_DTD_SUBSET
     logical :: well_formed = .false.
     logical :: skippedExternal = .false.
     character, dimension(:), pointer :: token => null()
