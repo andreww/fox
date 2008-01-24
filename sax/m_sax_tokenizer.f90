@@ -451,6 +451,8 @@ contains
           if (verify(c, XML_WHITESPACE)>0) then
             if (c==">") then
               fx%tokenType = TOK_END_TAG
+            elseif (c=="[") then
+              fx%tokenType = TOK_OPEN_SB
             else
               call add_error(fx%error_stack, &
                 "Missing whitespace in doctype delcaration.")
@@ -538,6 +540,7 @@ contains
             "Parameter entity reference not permitted inside markup for internal subset")
           return
         else
+          !what if we are halfway through a token ? ... (eg in "" for an entity)
           fx%tokenType = TOK_ENTITY
           return
         endif
