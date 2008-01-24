@@ -526,6 +526,7 @@ contains
           .or.fx%state_dtd==ST_DTD_NOTATION_PUBLIC_2 &
           .or.fx%state_dtd==ST_DTD_ENTITY_PUBLIC &
           .or.fx%state_dtd==ST_DTD_ENTITY_SYSTEM) then
+          ! % is perfectly legitimate
           continue
         elseif (fx%state_dtd==ST_DTD_SUBSET) then
           fx%tokenType = TOK_ENTITY
@@ -533,14 +534,16 @@ contains
         elseif (fx%state_dtd==ST_DTD_ATTLIST_CONTENTS &
           .or.fx%state_dtd==ST_DTD_ELEMENT_CONTENTS) then
           !ignore it for the moment, we'll get complaints
-          ! from the contents parser later on ...
+          ! from the contents parser later on ... FIXME
           continue
         elseif (fx%inIntSubset) then
           call add_error(fx%error_stack, &
             "Parameter entity reference not permitted inside markup for internal subset")
           return
+        elseif (fx%state_dtd==ST_DTD_ENTITY_ID) then
+          ! % is ok if we are in the external subset
+          continue
         else
-          !what if we are halfway through a token ? ... (eg in "" for an entity)
           fx%tokenType = TOK_ENTITY
           return
         endif
