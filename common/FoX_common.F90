@@ -22,8 +22,6 @@ module FoX_common
   public :: str
   public :: operator(//)
 
-  public :: rts
-
 #ifndef DUMMYLIB
   public :: str_vs
   public :: vs_str

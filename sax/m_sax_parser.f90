@@ -1287,12 +1287,88 @@ contains
           call parseDTD
           if (in_error(fx%error_stack)) goto 100
           if (fx%state==ST_STOP) goto 100
-          if (fx%state_dtd==ST_DTD_DONE) then
-            nextState = ST_CLOSE_DOCTYPE
+          if (fx%state_dtd==ST_DTD_DONE) &
             fx%state_dtd = ST_DTD_SUBSET
-          else
-            nextState = ST_IN_SUBSET
+
+      case (ST_START_PE)
+        write(*,*) 'ST_START_PE'
+        select case (fx%tokenType)
+        case (TOK_NAME)
+          if (existing_entity(fx%forbidden_pe_list, str_vs(fx%token))) then
+            call add_error(fx%error_stack, &
+              'Recursive entity reference')
+            goto 100
           endif
+          ent => getEntityByName(fx%xds%PEList, str_vs(fx%token))
+          if (associated(ent)) then
+            if (ent%wfc.and.fx%xds%standalone) then
+              call add_error(fx%error_stack, &
+                "Externally declared entity used in standalone document")
+              goto 100
+            elseif (ent%external) then
+              if (present(startEntity_handler)) &
+                call startEntity_handler('%'//str_vs(fx%token))
+              call add_internal_entity(fx%forbidden_pe_list, &
+                str_vs(fx%token), "", null(), .false.)
+              call open_new_file(fb, ent%baseURI, iostat, pe=.true.)
+              if (iostat/=0) then
+                if (validCheck) then
+                  call add_error(fx%error_stack, &
+                    "Unable to retrieve external parameter entity "//str_vs(fx%token))
+                  goto 100
+                endif
+                if (present(skippedEntity_handler)) &
+                  call skippedEntity_handler('%'//str_vs(fx%token))
+                ! having skipped a PE, we must now not process
+                ! declarations any further (unless we are declared standalone)
+                ! (XML section 5.1)
+                fx%skippedExternal = .true.
+                processDTD = fx%xds%standalone
+              else
+                if (present(startEntity_handler)) &
+                  call startEntity_handler('%'//str_vs(fx%token))
+                call add_internal_entity(fx%forbidden_pe_list, &
+                  str_vs(fx%token), "", null(), .false.)
+                call parse_text_declaration(fb, fx%error_stack)
+                if (in_error(fx%error_stack)) goto 100
+                print*, "growing wf_stack 3"
+                allocate(temp_wf_stack(size(wf_stack)+1))
+                temp_wf_stack = (/0, wf_stack/)
+                deallocate(wf_stack)
+                wf_stack => temp_wf_stack
+              endif
+            else
+              ! Expand the entity, 
+              if (present(startEntity_handler)) &
+                call startEntity_handler('%'//str_vs(fx%token))
+              call add_internal_entity(fx%forbidden_pe_list, &
+                str_vs(fx%token), "", null(), .false.)
+              call open_new_string(fb, &
+                expand_entity(fx%xds%PEList, str_vs(fx%token)), str_vs(fx%token), baseURI=ent%baseURI, pe=.true.)
+              print*, "growing wf_stack 4"
+              allocate(temp_wf_stack(size(wf_stack)+1))
+              temp_wf_stack = (/0, wf_stack/)
+              deallocate(wf_stack)
+              wf_stack => temp_wf_stack
+            endif
+            ! and do nothing else, carry on ...
+          else
+            ! Have we previously skipped an external entity?
+            if (fx%skippedExternal.and..not.fx%xds%standalone) then
+              if (processDTD) then
+                if (present(skippedEntity_handler)) &
+                  call skippedEntity_handler('%'//str_vs(fx%token))
+              endif
+            else
+              ! If not, 
+              call add_error(fx%error_stack, &
+                "Reference to undeclared parameter entity.")
+              goto 100
+            endif
+          endif
+          nextState = ST_IN_SUBSET
+
+        end select
 
       end select
 
@@ -1363,6 +1439,7 @@ contains
           print*, "wf decrement section end subset 1"
           wf_stack(1) = wf_stack(1) - 1
           fx%inIntSubset = .false.
+          nextState = ST_CLOSE_DOCTYPE
           nextDTDState = ST_DTD_DONE
         case (TOK_SECTION_END)
           if (wf_stack(1)==0) then
@@ -1373,7 +1450,8 @@ contains
           wf_stack(1) = wf_stack(1) - 1
           nextDTDState = ST_DTD_SUBSET
         case (TOK_ENTITY)
-          nextDTDState = ST_START_PE
+          nextState = ST_START_PE
+          nextDTDState = ST_DTD_SUBSET
         case (TOK_PI_TAG)
           print*, "wf increment pi subset"
           wf_stack(1) = wf_stack(1) + 1
@@ -1567,95 +1645,6 @@ contains
           if (present(comment_handler)) &
             call comment_handler(str_vs(fx%name))
           deallocate(fx%name)
-          nextDTDState = ST_DTD_SUBSET
-        end select
-
-      case (ST_START_PE)
-        write(*,*) 'ST_START_PE'
-        select case (fx%tokenType)
-        case (TOK_NAME)
-          if (existing_entity(fx%forbidden_pe_list, str_vs(fx%token))) then
-            call add_error(fx%error_stack, &
-              'Recursive entity reference')
-            return
-          endif
-          ent => getEntityByName(fx%xds%PEList, str_vs(fx%token))
-          if (associated(ent)) then
-            if (ent%wfc.and.fx%xds%standalone) then
-              call add_error(fx%error_stack, &
-                "Externally declared entity used in standalone document")
-              return
-            elseif (ent%external) then
-              if (present(startEntity_handler)) then
-                call startEntity_handler('%'//str_vs(fx%token))
-                if (fx%state==ST_STOP) return
-              endif
-              call add_internal_entity(fx%forbidden_pe_list, &
-                str_vs(fx%token), "", null(), .false.)
-              call open_new_file(fb, ent%baseURI, iostat, pe=.true.)
-              if (iostat/=0) then
-                if (validCheck) then
-                  call add_error(fx%error_stack, &
-                    "Unable to retrieve external parameter entity "//str_vs(fx%token))
-                  return
-                endif
-                if (present(skippedEntity_handler)) then
-                  call skippedEntity_handler('%'//str_vs(fx%token))
-                  if (fx%state==ST_STOP) return
-                endif
-                ! having skipped a PE, we must now not process
-                ! declarations any further (unless we are declared standalone)
-                ! (XML section 5.1)
-                fx%skippedExternal = .true.
-                processDTD = fx%xds%standalone
-              else
-                if (present(startEntity_handler)) then
-                  call startEntity_handler('%'//str_vs(fx%token))
-                  if (fx%state==ST_STOP) return
-                endif
-                call add_internal_entity(fx%forbidden_pe_list, &
-                  str_vs(fx%token), "", null(), .false.)
-                call parse_text_declaration(fb, fx%error_stack)
-                if (in_error(fx%error_stack)) return
-                print*, "growing wf_stack 3"
-                allocate(temp_wf_stack(size(wf_stack)+1))
-                temp_wf_stack = (/0, wf_stack/)
-                deallocate(wf_stack)
-                wf_stack => temp_wf_stack
-              endif
-            else
-              ! Expand the entity, 
-              if (present(startEntity_handler)) then
-                call startEntity_handler('%'//str_vs(fx%token))
-                if (fx%state==ST_STOP) return
-              endif
-              call add_internal_entity(fx%forbidden_pe_list, &
-                str_vs(fx%token), "", null(), .false.)
-              call open_new_string(fb, &
-                expand_entity(fx%xds%PEList, str_vs(fx%token)), str_vs(fx%token), baseURI=ent%baseURI, pe=.true.)
-              print*, "growing wf_stack 4"
-              allocate(temp_wf_stack(size(wf_stack)+1))
-              temp_wf_stack = (/0, wf_stack/)
-              deallocate(wf_stack)
-              wf_stack => temp_wf_stack
-            endif
-            ! and do nothing else, carry on ...
-          else
-            ! Have we previously skipped an external entity?
-            if (fx%skippedExternal.and..not.fx%xds%standalone) then
-              if (processDTD) then
-                if (present(skippedEntity_handler)) then
-                  call skippedEntity_handler('%'//str_vs(fx%token))
-                  if (fx%state==ST_STOP) return
-                endif
-              endif
-            else
-              ! If not, 
-              call add_error(fx%error_stack, &
-                "Reference to undeclared parameter entity.")
-              return
-            endif
-          endif
           nextDTDState = ST_DTD_SUBSET
         end select
 
@@ -2167,6 +2156,8 @@ contains
       else
         fx%state_dtd = nextDTDState
       endif
+      if (nextState==ST_NULL) &
+        nextState = ST_IN_SUBSET
 
     end subroutine parseDTD
 

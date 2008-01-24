@@ -153,7 +153,6 @@ contains
     integer, intent(in), optional    :: lun
 
     print*, "going to try & open "//file
-
     if (present(lun)) then
       f%lun = lun
     else

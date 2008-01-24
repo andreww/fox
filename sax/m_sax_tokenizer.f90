@@ -489,8 +489,20 @@ contains
           endif
         endif
 
-        case (ST_IN_SUBSET)
-          call tokenizeDTD
+      case (ST_IN_SUBSET)
+        call tokenizeDTD
+
+      case (ST_START_PE)
+        print*, "tokenizing for PE"
+        if (verify(c,XML_WHITESPACE//";")>0) then
+          tempString => fx%token
+          fx%token => vs_str_alloc(str_vs(tempString)//c)
+          deallocate(tempString)
+        elseif (c==";") then
+          fx%tokenType = TOK_NAME
+        else
+          call add_error(fx%error_stack, "Entity reference must be terminated with a ;")
+        endif
 
       end select
       
@@ -528,17 +540,6 @@ contains
       endif
 
       select case(fx%state_dtd)
-
-      case (ST_START_PE)
-        if (verify(c,XML_WHITESPACE//";")>0) then
-          tempString => fx%token
-          fx%token => vs_str_alloc(str_vs(tempString)//c)
-          deallocate(tempString)
-        elseif (c==";") then
-          fx%tokenType = TOK_NAME
-        else
-          call add_error(fx%error_stack, "Entity reference must be terminated with a ;")
-        endif
 
       case (ST_DTD_SUBSET)
         if (firstChar) ws_discard = .true.

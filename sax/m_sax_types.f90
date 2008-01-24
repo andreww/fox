@@ -53,10 +53,10 @@ module m_sax_types
   integer, parameter :: ST_DOC_DECL                 = 24
   integer, parameter :: ST_CLOSE_DOCTYPE            = 25
   integer, parameter :: ST_START_ENTITY             = 26
+  integer, parameter :: ST_START_PE                 = 27
   integer, parameter :: ST_IN_SUBSET                = 28
 
 ! DTD states
-  integer, parameter :: ST_START_PE                 = 27
   integer, parameter :: ST_DTD_NULL                = 50
   integer, parameter :: ST_DTD_SUBSET              = 51
   integer, parameter :: ST_DTD_START_SECTION_DECL  = 52
