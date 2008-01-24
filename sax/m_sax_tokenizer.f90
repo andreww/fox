@@ -515,7 +515,10 @@ contains
     subroutine tokenizeDTD
 
       if (c=="%") then
-        if (fx%state_dtd==ST_DTD_ENTITY &
+        if (fx%state_dtd==ST_DTD_START_COMMENT &
+          .or.fx%state_dtd==ST_DTD_START_PI &
+          .or.fx%state_dtd==ST_DTD_PI_CONTENTS &
+          .or.fx%state_dtd==ST_DTD_ENTITY &
           .or.fx%state_dtd==ST_DTD_NOTATION_SYSTEM &
           .or.fx%state_dtd==ST_DTD_NOTATION_PUBLIC &
           .or.fx%state_dtd==ST_DTD_NOTATION_PUBLIC_2 &
@@ -525,16 +528,17 @@ contains
         elseif (fx%state_dtd==ST_DTD_SUBSET) then
           fx%tokenType = TOK_ENTITY
           return
-        elseif (q=="'".or.q=="""" &
-          .or.fx%state_dtd==ST_DTD_ATTLIST_CONTENTS &
+        elseif (fx%state_dtd==ST_DTD_ATTLIST_CONTENTS &
           .or.fx%state_dtd==ST_DTD_ELEMENT_CONTENTS) then
-          if (fx%inIntSubset) then
-            call add_error(fx%error_stack, &
-              "Parameter entity reference not permitted inside markup for internal subset")
-          else
-            call add_error(fx%error_stack, &
-              "Parameter entity reference not implemented inside markup")
-          endif
+          !ignore it for the moment, we'll get complaints
+          ! from the contents parser later on ...
+          continue
+        elseif (fx%inIntSubset) then
+          call add_error(fx%error_stack, &
+            "Parameter entity reference not permitted inside markup for internal subset")
+          return
+        else
+          fx%tokenType = TOK_ENTITY
           return
         endif
       endif
