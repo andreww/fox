@@ -1119,6 +1119,7 @@ contains
           print*, "wf increment sb dtd"
           wf_stack(1) = wf_stack(1) + 1
           nextState = ST_IN_SUBSET
+          fx%inIntSubset = .true.
         case (TOK_END_TAG)
           if (present(startDTD_handler)) then
             call startDTD_handler(str_vs(fx%root_element), "", "")
@@ -1283,12 +1284,17 @@ contains
           endif
         end select
 
-        case (ST_IN_SUBSET)
+      case (ST_IN_SUBSET)
+        select case(fx%tokenType)
+        case (TOK_ENTITY)
+          nextState = ST_START_PE
+        case default
           call parseDTD
           if (in_error(fx%error_stack)) goto 100
           if (fx%state==ST_STOP) goto 100
           if (fx%state_dtd==ST_DTD_DONE) &
             fx%state_dtd = ST_DTD_SUBSET
+        end select
 
       case (ST_START_PE)
         write(*,*) 'ST_START_PE'
@@ -1448,9 +1454,6 @@ contains
           endif
           print*, "wf decrement section end subset 2"
           wf_stack(1) = wf_stack(1) - 1
-          nextDTDState = ST_DTD_SUBSET
-        case (TOK_ENTITY)
-          nextState = ST_START_PE
           nextDTDState = ST_DTD_SUBSET
         case (TOK_PI_TAG)
           print*, "wf increment pi subset"
