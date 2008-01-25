@@ -537,10 +537,11 @@ contains
           return
         elseif (fx%state_dtd==ST_DTD_ATTLIST_CONTENTS &
           .or.fx%state_dtd==ST_DTD_ELEMENT_CONTENTS) then
-          ! content will always be empty here
-          ! even if this is a PE inside a PE, there is preceding space
-          fx%content => fx%token
-          fx%token => vs_str_alloc("")
+          ! content will not always be empty here
+          if (.not.associated(fx%content)) then
+            fx%content => fx%token
+            fx%token => vs_str_alloc("")
+          endif
           fx%tokenType = TOK_ENTITY
           return
         elseif (fx%state_dtd==ST_DTD_ENTITY_ID) then
