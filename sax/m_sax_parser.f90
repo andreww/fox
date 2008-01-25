@@ -431,7 +431,8 @@ contains
         if (inExtSubset.and.reading_first_entity(fb)) then
           print*, "FINISHEd EXT SUBSET", wf_stack(1), fx%state
           if (wf_stack(1)>0) then
-            call add_error(fx%error_stack, "Unclosed conditional sections in external subset")
+            call add_error(fx%error_stack, &
+              "Unclosed conditional section or markup in external subset")
             goto 100
           elseif (fx%state_dtd/=ST_DTD_SUBSET) then
             call add_error(fx%error_stack, &
@@ -480,10 +481,12 @@ contains
             goto 100
           endif
         endif
-        print*, "shrinking wf_stack"
         temp_wf_stack => wf_stack
         allocate(wf_stack(size(temp_wf_stack)-1))
         wf_stack = temp_wf_stack(2:size(temp_wf_stack))
+        ! If we are not doing validity checking, we might have 
+        ! finished PE expansion with wf_stack(1) non-zero
+        wf_stack(1) = wf_stack(1) + temp_wf_stack(1)
         deallocate(temp_wf_stack)
         call pop_buffer_stack(fb)
         cycle
