@@ -531,14 +531,17 @@ contains
         elseif (fx%state_dtd==ST_DTD_SUBSET) then
           fx%tokenType = TOK_ENTITY
           return
-        elseif (fx%state_dtd==ST_DTD_ATTLIST_CONTENTS &
-          .or.fx%state_dtd==ST_DTD_ELEMENT_CONTENTS) then
-          !ignore it for the moment, we'll get complaints
-          ! from the contents parser later on ... FIXME
-          continue
         elseif (fx%inIntSubset) then
           call add_error(fx%error_stack, &
             "Parameter entity reference not permitted inside markup for internal subset")
+          return
+        elseif (fx%state_dtd==ST_DTD_ATTLIST_CONTENTS &
+          .or.fx%state_dtd==ST_DTD_ELEMENT_CONTENTS) then
+          ! content will always be empty here
+          ! even if this is a PE inside a PE, there is preceding space
+          fx%content => fx%token
+          fx%token => vs_str_alloc("")
+          fx%tokenType = TOK_ENTITY
           return
         elseif (fx%state_dtd==ST_DTD_ENTITY_ID) then
           ! % is ok if we are in the external subset
@@ -782,6 +785,9 @@ contains
         if (c==">") then
           fx%tokenType = TOK_DTD_CONTENTS
           fx%nextTokenType = TOK_END_TAG
+        elseif (associated(fx%content)) then
+          fx%token => vs_str_alloc(str_vs(fx%content)//c)
+          deallocate(fx%content)
         else
           tempString => fx%token
           fx%token => vs_str_alloc(str_vs(tempString)//c)

@@ -118,6 +118,7 @@ contains
     call destroy_entity_list(fx%predefined_e_list)
 
     if (associated(fx%token)) deallocate(fx%token)
+    if (associated(fx%content)) deallocate(fx%content)
     if (associated(fx%name)) deallocate(fx%name)
     if (associated(fx%attname)) deallocate(fx%attname)
     if (associated(fx%publicId)) deallocate(fx%publicId)
@@ -453,6 +454,12 @@ contains
             if (fx%state==ST_STOP) goto 100
           else
             dummy = pop_entity_list(fx%forbidden_pe_list)
+          endif
+          if (fx%state_dtd==ST_DTD_ATTLIST_CONTENTS &
+            .or.fx%state_dtd==ST_DTD_ELEMENT_CONTENTS) then
+            ! stick the token back in contents ...
+            fx%content => fx%token
+            fx%token => vs_str_alloc("")
           endif
         elseif (fx%context==CTXT_IN_CONTENT) then
           if (fx%state==ST_TAG_IN_CONTENT) fx%state = ST_CHAR_IN_CONTENT
@@ -1675,6 +1682,10 @@ contains
       case (ST_DTD_ATTLIST_CONTENTS)
         write(*,*) 'ST_DTD_ATTLIST_CONTENTS'
         select case (fx%tokenType)
+        case (TOK_ENTITY)
+          !Weve found a PEref in the middle of the element contents
+          ! Leave DTD state as it is & expand the entity ...
+          nextState = ST_START_PE
         case (TOK_DTD_CONTENTS)
           if (processDTD) then
             call parse_dtd_attlist(str_vs(fx%token), fx%xds%xml_version, fx%error_stack, elem)
@@ -1760,6 +1771,10 @@ contains
       case (ST_DTD_ELEMENT_CONTENTS)
         write(*,*)'ST_DTD_ELEMENT_CONTENTS'
         select case (fx%tokenType)
+        case (TOK_ENTITY)
+          !Weve found a PEref in the middle of the element contents
+          ! Leave DTD state as it is & expand the entity ...
+          nextState = ST_START_PE
         case (TOK_DTD_CONTENTS)
           if (declared_element(fx%xds%element_list, str_vs(fx%name))) then
             if (validCheck) then
