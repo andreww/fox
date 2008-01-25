@@ -531,14 +531,19 @@ contains
         elseif (fx%state_dtd==ST_DTD_SUBSET) then
           fx%tokenType = TOK_ENTITY
           return
+        elseif (fx%state_dtd==ST_DTD_ATTLIST_CONTENTS &
+          .and. q/="") then
+            ! We are inside a ATTLIST attvalue, so apparent PErefs arent.
+            continue
         elseif (fx%inIntSubset) then
           call add_error(fx%error_stack, &
             "Parameter entity reference not permitted inside markup for internal subset")
           return
         elseif (fx%state_dtd==ST_DTD_ATTLIST_CONTENTS &
           .or.fx%state_dtd==ST_DTD_ELEMENT_CONTENTS) then
-          ! content will not always be empty here
           if (.not.associated(fx%content)) then
+            ! content will not always be empty here;
+            ! if we have two PErefs bang next to each other.
             fx%content => fx%token
             fx%token => vs_str_alloc("")
           endif
@@ -824,6 +829,15 @@ contains
           tempString => fx%token
           fx%token => vs_str_alloc(str_vs(tempString)//c)
           deallocate(tempString)
+        endif
+        if (c=="'".or.c=="""") then
+          if (q==c) then
+            print*,"OK CLOSE QUOTE"
+            q = ""
+          else
+            print*,"OK OPEN QUOTE"
+            q = c
+          endif
         endif
 
       case (ST_DTD_ENTITY_ID, ST_DTD_ENTITY_PUBLIC, ST_DTD_ENTITY_SYSTEM, &
