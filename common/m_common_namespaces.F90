@@ -477,31 +477,26 @@ contains
       if (xmlns == 'xmlns ') then
         !Default namespace is being set
         URIstring => vs_str_alloc(get_value(atts, i))
-        URIref => parseURI(str_vs(URIstring))
-        if (.not.associated(URIref)) then
-          call add_error(es, "Invalid URI: "//str_vs(URIstring))
-          deallocate(URIstring)
-          call destroyURI(URIref)
-          return
-        elseif (.not.hasScheme(URIref)) then
-          call add_error(es, "Relative namespace in URI depreacted: "//str_vs(URIstring))
-          deallocate(URIstring)
-          call destroyURI(URIref)
-          return
-        endif
-        call destroyURI(URIref)
         if (str_vs(URIstring)=="") then
-          if (xds%xml_version==XML1_0) then
-            call add_error(es, "Empty nsURI is invalid in XML 1.0")
-            deallocate(URIstring)
-            return
-          elseif (xds%xml_version==XML1_1) then
-            if (present(end_prefix_handler)) &
-              call end_prefix_handler("")
-            call addDefaultNS(nsDict, invalidNS, ix)
-            deallocate(URIstring)
-          endif
+          ! Empty nsURI on default namespace has same effect in 1.0 and 1.1
+          if (present(end_prefix_handler)) &
+            call end_prefix_handler("")
+          call addDefaultNS(nsDict, invalidNS, ix)
+          deallocate(URIstring)
         else
+          URIref => parseURI(str_vs(URIstring))
+          if (.not.associated(URIref)) then
+            call add_error(es, "Invalid URI: "//str_vs(URIstring))
+            deallocate(URIstring)
+            call destroyURI(URIref)
+            return
+          elseif (.not.hasScheme(URIref)) then
+            call add_error(es, "Relative namespace in URI deprecated: "//str_vs(URIstring))
+            deallocate(URIstring)
+            call destroyURI(URIref)
+            return
+          endif
+          call destroyURI(URIref)
           if (present(start_prefix_handler)) &
             call start_prefix_handler(str_vs(URIstring), "")
           call addDefaultNS(nsDict, str_vs(URIstring), ix)
@@ -516,23 +511,9 @@ contains
         !Prefixed namespace is being set
         QName => vs_str_alloc(get_key(atts, i))
         URIstring => vs_str_alloc(get_value(atts, i))
-        URIref => parseURI(str_vs(URIstring))
-        if (.not.associated(URIref)) then
-          call add_error(es, "Invalid URI: "//str_vs(URIstring))
-          deallocate(URIstring)
-          call destroyURI(URIref)
-          return
-        elseif (.not.hasScheme(URIref)) then
-          call add_error(es, "Relative namespace in URI depreacted: "//str_vs(URIstring))
-          deallocate(URIstring)
-          call destroyURI(URIref)
-          return
-        endif
-        call destroyURI(URIref)
         if (str_vs(URIstring)=="") then
           if (xds%xml_version==XML1_0) then
             call add_error(es, "Empty nsURI is invalid in XML 1.0")
-            ! FIXME except actually its ok according to DOM Core 2 I think?
             deallocate(URIstring)
             deallocate(QName)
             return
@@ -549,6 +530,19 @@ contains
             deallocate(QName)
           endif
         else
+          URIref => parseURI(str_vs(URIstring))
+          if (.not.associated(URIref)) then
+            call add_error(es, "Invalid URI: "//str_vs(URIstring))
+            deallocate(URIstring)
+            call destroyURI(URIref)
+            return
+          elseif (.not.hasScheme(URIref)) then
+            call add_error(es, "Relative namespace in URI deprecated: "//str_vs(URIstring))
+            deallocate(URIstring)
+            call destroyURI(URIref)
+            return
+          endif
+          call destroyURI(URIref)
           call addPrefixedNS(nsDict, str_vs(QName(7:)), str_vs(URIstring), ix, xds, es=es)
           if (in_error(es)) then
             deallocate(URIstring)
