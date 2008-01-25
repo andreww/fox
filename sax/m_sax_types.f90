@@ -111,6 +111,8 @@ module m_sax_types
   integer, parameter :: TOK_ENTITY = 16 ! % or &
   integer, parameter :: TOK_EQUALS = 17 ! =
   integer, parameter :: TOK_DTD_CONTENTS = 18 ! for element and attlist
+  integer, parameter :: TOK_OPEN_PAR = 19 ! (
+  integer, parameter :: TOK_CLOSE_PAR = 20 ! )
   
   type sax_parser_t
     type(xml_doc_state), pointer :: xds

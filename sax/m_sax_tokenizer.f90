@@ -781,7 +781,38 @@ contains
           fx%tokenType = TOK_NAME
         endif
         
-      case (ST_DTD_ATTLIST_CONTENTS, ST_DTD_ELEMENT_CONTENTS)
+      case (ST_DTD_ELEMENT_CONTENTS)
+        if (c==">") then
+          print*,"found a close tag ", str_vs(fx%token)
+          if (associated(fx%content)) then
+            deallocate(fx%token)
+            fx%token => fx%content
+            fx%content => null()
+          endif
+          fx%tokenType = TOK_DTD_CONTENTS
+          fx%nextTokenType = TOK_END_TAG
+        else
+          if (associated(fx%content)) then
+            fx%token => vs_str_alloc(str_vs(fx%content)//c)
+            deallocate(fx%content)
+          else
+            tempString => fx%token
+            fx%token => vs_str_alloc(str_vs(tempString)//c)
+            deallocate(tempString)
+          endif
+          if (c=="(") then
+            fx%tokenType = TOK_OPEN_PAR
+            fx%content => fx%token
+            fx%token => vs_str_alloc("")
+          elseif (c==")") then
+            fx%tokenType = TOK_CLOSE_PAR
+            fx%content => fx%token
+            fx%token => vs_str_alloc("")
+          endif
+        endif
+        print*,"end of tokenizer ", str_vs(fx%token)
+
+      case (ST_DTD_ATTLIST_CONTENTS)
         if (c==">") then
           fx%tokenType = TOK_DTD_CONTENTS
           fx%nextTokenType = TOK_END_TAG
@@ -793,7 +824,7 @@ contains
           fx%token => vs_str_alloc(str_vs(tempString)//c)
           deallocate(tempString)
         endif
-        
+
       case (ST_DTD_ENTITY_ID, ST_DTD_ENTITY_PUBLIC, ST_DTD_ENTITY_SYSTEM, &
         ST_DTD_ENTITY_NDATA, ST_DTD_ENTITY_END, ST_DTD_ENTITY_NDATA_VALUE, &
         ST_DTD_NOTATION_ID, ST_DTD_NOTATION_SYSTEM, ST_DTD_NOTATION_PUBLIC, &

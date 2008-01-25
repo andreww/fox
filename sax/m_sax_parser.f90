@@ -444,11 +444,14 @@ contains
           fx%state = ST_MISC
           fx%context = CTXT_BEFORE_CONTENT
         elseif (fx%context==CTXT_IN_DTD) then
-          if (wf_stack(1)/=0) then
-            call add_error(fx%error_stack, &
-              "Markup not terminated in parameter entity")
-            goto 100
+          if (validCheck) then
+            if (wf_stack(1)/=0) then
+              call add_error(fx%error_stack, &
+                "Markup not terminated in parameter entity")
+              goto 100
+            endif
           endif
+          ! FIXME P28a check
           if (present(endEntity_handler)) then
             call endEntity_handler('%'//pop_entity_list(fx%forbidden_pe_list))
             if (fx%state==ST_STOP) goto 100
@@ -1295,6 +1298,10 @@ contains
         select case(fx%tokenType)
         case (TOK_ENTITY)
           nextState = ST_START_PE
+          ! FIXME ths PE we are opening at this level
+          ! is a DeclSep, so if it terminates without
+          ! wf_stack==0 then it is a well-formed-ness
+          ! error, not a validity error.
         case default
           call parseDTD
           if (in_error(fx%error_stack)) goto 100
@@ -1771,6 +1778,16 @@ contains
       case (ST_DTD_ELEMENT_CONTENTS)
         write(*,*)'ST_DTD_ELEMENT_CONTENTS'
         select case (fx%tokenType)
+        case (TOK_OPEN_PAR)
+          ! increment well_formedness
+          print*, "wf increment element"
+          wf_stack(1) = wf_stack(1) + 1
+          nextDTDState = ST_DTD_ELEMENT_CONTENTS
+        case (TOK_CLOSE_PAR)
+          ! increment well_formedness
+          print*, "wf decrement element"
+          wf_stack(1) = wf_stack(1) - 1
+          nextDTDState = ST_DTD_ELEMENT_CONTENTS
         case (TOK_ENTITY)
           !Weve found a PEref in the middle of the element contents
           ! Leave DTD state as it is & expand the entity ...
