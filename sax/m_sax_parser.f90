@@ -1536,6 +1536,8 @@ contains
         write(*,*) "ST_FINISH_SECTION_DECL"
         select case (fx%tokenType)
         case (TOK_OPEN_SB)
+        print*, "wf increment section"
+          wf_stack(1) = wf_stack(1) + 1
           if (fx%context==CTXT_IGNORE) then
             nextDTDState = ST_DTD_IN_IGNORE_SECTION
             ignoreDepth = ignoreDepth + 1
@@ -1555,7 +1557,7 @@ contains
           nextDTDState = ST_DTD_IN_IGNORE_SECTION
         case (TOK_SECTION_END)
           print*, "wf decrement section"
-          wf_stack(1) = wf_stack(1) - 1
+          wf_stack(1) = wf_stack(1) - 2
           ignoreDepth = ignoreDepth - 1
           if (ignoreDepth==0) then
             fx%context = CTXT_IN_DTD
