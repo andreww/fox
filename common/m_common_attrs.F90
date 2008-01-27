@@ -25,22 +25,28 @@ module m_common_attrs
     logical :: specified
     integer :: type = 11
   end type dict_item
+#endif
 
   type dictionary_t
     private
+#ifndef DUMMYLIB
     integer                                :: number_of_items = 0
     type(dict_item), dimension(:), pointer :: items => null()
+#else
+    integer :: i
+#endif
   end type dictionary_t
+
 
   public :: dictionary_t
 
   ! Building procedures
-
+#ifndef DUMMYLIB
   public :: init_dict
   public :: reset_dict
   public :: add_item_to_dict
   public :: destroy_dict
-
+#endif
   ! Query and extraction procedures
 
   ! SAX names:
@@ -54,6 +60,7 @@ module m_common_attrs
   public :: getSpecified
   public :: hasKey
 
+#ifndef DUMMYLIB
   public :: len
   public :: get_key 
   public :: get_value
@@ -70,6 +77,7 @@ module m_common_attrs
 
   ! For internal FoX use only:
   public :: getWhitespaceHandling
+#endif
 
   interface len
     module procedure getLength
@@ -90,22 +98,27 @@ module m_common_attrs
   interface getValue
     module procedure get_value_by_key, get_value_by_index, get_value_by_key_ns
   end interface
+#ifndef DUMMYLIB
   interface get_value
     module procedure get_value_by_key, get_value_by_index
   end interface
   interface remove_key
     module procedure remove_key_by_index
   end interface
+#endif
 
   interface getURI
     module procedure get_nsURI_by_index
   end interface
+#ifndef DUMMYLIB
   interface get_prefix
     module procedure get_prefix_by_index
   end interface
+#endif
   interface getLocalName
     module procedure get_localName_by_index
   end interface
+#ifndef DUMMYLIB
   interface get_localName
     module procedure get_localName_by_index
   end interface
@@ -119,6 +132,7 @@ module m_common_attrs
     module procedure set_localName_by_index_s
     module procedure set_localName_by_index_vs
   end interface
+#endif
 
   interface getType
     module procedure getType_by_index, getType_by_keyname
@@ -134,8 +148,11 @@ contains
     type(dictionary_t), intent(in)   :: dict
     integer                          :: n
 
+#ifndef DUMMYLIB
     n = dict%number_of_items
-
+#else
+    n = 0
+#endif
   end function getLength
 
 
@@ -144,6 +161,7 @@ contains
     character(len=*), intent(in)     :: key
     logical                          :: found
 
+#ifndef DUMMYLIB
     integer  ::  i
     found = .false.
     do  i = 1, dict%number_of_items
@@ -152,6 +170,9 @@ contains
         exit
       endif
     enddo
+#else
+    found = .false.
+#endif
   end function has_key
 
   function has_key_ns(dict, uri, localname) result(found)
@@ -159,6 +180,7 @@ contains
     character(len=*), intent(in)     :: uri, localname
     logical                          :: found
 
+#ifndef DUMMYLIB
     integer  ::  i
     found = .false.
     do i = 1, dict%number_of_items
@@ -172,6 +194,9 @@ contains
         endif
       endif
     enddo
+#else
+    found = .false.
+#endif
   end function has_key_ns
 
   pure function get_key_index(dict,key) result(ind)
@@ -179,6 +204,7 @@ contains
     character(len=*), intent(in)     :: key
     integer                          :: ind
 
+#ifndef DUMMYLIB
     integer  ::  i
     ind = -1
     do  i = 1, dict%number_of_items
@@ -187,6 +213,9 @@ contains
         exit
       endif
     enddo
+#else
+    ind = 0
+#endif
   end function get_key_index
 
   pure function get_key_index_ns(dict, uri, localname) result(ind)
@@ -194,6 +223,7 @@ contains
     character(len=*), intent(in)     :: uri, localname
     integer                          :: ind
 
+#ifndef DUMMYLIB
     integer  ::  i
     ind = -1
     do  i = 1, dict%number_of_items
@@ -203,6 +233,9 @@ contains
         exit
       endif
     enddo
+#else
+    ind = 0
+#endif
   end function get_key_index_ns
 
 
@@ -210,6 +243,7 @@ contains
     type(dictionary_t), intent(in)       :: dict
     character(len=*), intent(in)              :: key
     integer, optional, intent(out)            :: status
+#ifndef DUMMYLIB
     character(len = merge(size(dict%items(get_key_index(dict, key))%value), 0, (get_key_index(dict, key) > 0))) :: value
     !
     integer  :: i
@@ -222,13 +256,17 @@ contains
         exit
       endif
     enddo
-
+#else
+    character(len=1) :: value
+    value = ""
+#endif
   end function get_value_by_key
 
   function get_value_by_key_ns(dict, uri, localname, status) result(value)
     type(dictionary_t), intent(in)       :: dict
     character(len=*), intent(in)         :: uri, localname
     integer, optional, intent(out)       :: status
+#ifndef DUMMYLIB
     character(len = merge(size(dict%items(get_key_index_ns(dict, uri, localname))%value), 0, &
       (get_key_index_ns(dict, uri, localname) > 0))) :: value
     !
@@ -243,9 +281,13 @@ contains
           exit
        endif
     enddo
-
+#else
+    character(len=1) :: value
+    value = ""
+#endif
   end function get_value_by_key_ns
 
+#ifndef DUMMYLIB
   subroutine remove_key_by_index(dict, key, status)
     type(dictionary_t), intent(inout)       :: dict
     integer, intent(in)                     :: key
@@ -290,11 +332,13 @@ contains
        dict%items(i)%localName => tempDict(i)%localName
     enddo
   end subroutine remove_key_by_index
-  
+#endif
+
   function get_value_by_index(dict,i,status) result(value)
     type(dictionary_t), intent(in)       :: dict
     integer, intent(in)                       :: i
     integer, optional, intent(out)            :: status
+#ifndef DUMMYLIB
     character(len = merge(size(dict%items(i)%value), 0, (i>0 .and. i<=dict%number_of_items))) :: value
     
     if (i>0 .and. i<=dict%number_of_items) then
@@ -303,16 +347,17 @@ contains
     else
        if (present(status)) status = -1
     endif
-    
+#else
+    character(len=1) :: value
+    value = ""
+#endif
   end function get_value_by_index
-  
+
   function get_key(dict, i, status) result(key)
-    !
-    ! return the ith key
-    !
     type(dictionary_t), intent(in)       :: dict
     integer, intent(in)                       :: i
     integer, optional, intent(out)            :: status
+#ifndef DUMMYLIB
     character(len = merge(size(dict%items(i)%key), 0, (i>0 .and. i<=dict%number_of_items))) :: key
     
     if (i>0 .and. i<=dict%number_of_items)then
@@ -321,9 +366,13 @@ contains
     else
        if (present(status)) status = -1
     endif
-    
+#else
+    character(len=1) :: value
+    value = ""
+#endif
   end function get_key
-  
+
+#ifndef DUMMYLIB
   subroutine add_item_to_dict(dict, key, value, prefix, nsURI, type, itype, specified)
     
     type(dictionary_t), intent(inout) :: dict
@@ -441,15 +490,21 @@ contains
     allocate(dict%items(i)%localName(size(localName)))
     dict%items(i)%localName = localName
   end subroutine set_localName_by_index_vs
+#endif
 
   pure function get_nsURI_by_index(dict, i) result(nsURI)
     type(dictionary_t), intent(in) :: dict
     integer, intent(in) :: i
+#ifndef DUMMYLIB
     character(len=size(dict%items(i)%nsURI)) :: nsURI
-    
     nsURI = str_vs(dict%items(i)%nsURI)
+#else
+    character(len=1) :: nsURI
+    nsURI = ""
+#endif
   end function get_nsURI_by_index
 
+#ifndef DUMMYLIB
   pure function get_prefix_by_index(dict, i) result(prefix)
     type(dictionary_t), intent(in) :: dict
     integer, intent(in) :: i
@@ -457,15 +512,21 @@ contains
     
     prefix = str_vs(dict%items(i)%prefix)
   end function get_prefix_by_index
+#endif
 
   pure function get_localName_by_index(dict, i) result(localName)
     type(dictionary_t), intent(in) :: dict
     integer, intent(in) :: i
+#ifndef DUMMYLIB
     character(len=size(dict%items(i)%localName)) :: localName
-    
     localName = str_vs(dict%items(i)%localName)
+#else
+    character(len=1) :: localName
+    localName = ""
+#endif
   end function get_localName_by_index
-    
+
+#ifndef DUMMYLIB
   pure function get_nsURI_by_keyname(dict, keyname) result(nsURI)
     type(dictionary_t), intent(in) :: dict
     character(len=*), intent(in) :: keyname
@@ -498,10 +559,12 @@ contains
     localName = str_vs(dict%items(i)%localName)
 
   end function get_localName_by_keyname
+#endif
 
   function getType_by_index(dict, i) result(type)
     type(dictionary_t), intent(in) :: dict
     integer, intent(in) :: i
+#ifndef DUMMYLIB
     character(len=ATT_TYPELENGTHS(merge(dict%items(i)%type,0,i<=size(dict%items)))) :: type
 
     if (i<=size(dict%items)) then
@@ -530,12 +593,16 @@ contains
     else
       type = ''
     endif
-
+#else
+    character(len=1) :: type
+    type = ""
+#endif
   end function getType_by_index
 
   function getType_by_keyname(dict, keyname) result(type)
     type(dictionary_t), intent(in) :: dict
     character(len=*), intent(in) :: keyname
+#ifndef DUMMYLIB
     character(len=ATT_TYPELENGTHS( &
       merge(dict%items(get_key_index(dict, keyname))%type, 0, get_key_index(dict, keyname)>0) &
       )) :: type
@@ -566,7 +633,10 @@ contains
     else
       type = ''
     endif
-
+#else
+    character(len=1) :: type
+    type = ""
+#endif
   end function getType_by_keyname
 
   function getSpecified_by_index(dict, i) result(p)
@@ -574,13 +644,18 @@ contains
     integer, intent(in) :: i
     logical :: p
 
+#ifndef DUMMYLIB
     if (i>0 .and. i<=dict%number_of_items) then
       p = dict%items(i)%specified
     else
       p = .false.
     endif
+#else
+    p = .false.
+#endif
   end function getSpecified_by_index
 
+#ifndef DUMMYLIB
   function getWhitespaceHandling(dict, i) result(j)
     type(dictionary_t), intent(in) :: dict
     integer, intent(in) :: i

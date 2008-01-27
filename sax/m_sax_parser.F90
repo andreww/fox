@@ -1,5 +1,6 @@
 module m_sax_parser
 
+#ifndef DUMMYLIB
   use fox_m_fsys_array_str, only: str_vs, string_list, &
     destroy_string_list, vs_str_alloc, vs_vs_alloc
   use m_common_attrs, only: init_dict, destroy_dict, reset_dict, &
@@ -2590,5 +2591,6 @@ contains
 
     localName = QName(index(QName,':')+1:)
   end function getLocalNameofQName
+#endif
 
 end module m_sax_parser

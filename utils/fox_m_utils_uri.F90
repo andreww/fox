@@ -17,9 +17,11 @@ module fox_m_utils_uri
   type path_segment
     character, pointer :: s(:) => null()
   end type path_segment
+#endif
 
   type URI
     private
+#ifndef DUMMYLIB
     character, pointer :: scheme(:) => null()
     character, pointer :: authority(:) => null()
     character, pointer :: userinfo(:) => null()
@@ -29,8 +31,12 @@ module fox_m_utils_uri
     type(path_segment), pointer :: segments(:) => null()
     character, pointer :: query(:) => null()
     character, pointer :: fragment(:) => null()
+#else
+    integer :: i
+#endif
   end type URI
 
+#ifndef DUMMYLIB
   character(len=*), parameter :: lowalpha = "abcdefghijklmnopqrstuvwxyz"
   character(len=*), parameter :: upalpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
   character(len=*), parameter :: alpha = lowalpha//upalpha
@@ -45,12 +51,12 @@ module fox_m_utils_uri
   character(len=*), parameter :: uric_no_slash = unreserved//";?:@&=+$,"
   character(len=*), parameter :: uric = unreserved//reserved
   character(len=*), parameter :: unwise = "{}|\^[]`"
-  
+#endif 
+
   public :: URI
   public :: parseURI
   public :: expressURI
   public :: rebaseURI
-  public :: dumpURI
   public :: copyURI
   public :: destroyURI
 
@@ -70,8 +76,13 @@ module fox_m_utils_uri
   public :: hasFragment
   public :: getFragment
 
+#ifndef DUMMYLIB
+  public :: dumpURI
+#endif
+
 contains
 
+#ifndef DUMMYLIB
   function unEscape_alloc(s) result(c)
     character(len=*), intent(in) :: s
     character, pointer :: c(:)
@@ -372,11 +383,12 @@ contains
 
     p = verifyWithPctEncoding(fragment, uric)
   end function checkFragment
+#endif
 
   function parseURI(URIstring) result(u)
     character(len=*), intent(in) :: URIstring
     type(URI), pointer :: u
-
+#ifndef DUMMYLIB
     character, pointer, dimension(:) :: scheme, authority, &
       userinfo, host, path, query, fragment
     integer :: port
@@ -384,7 +396,9 @@ contains
     integer :: i1, i2, i3, i4
     logical :: p
 
+#endif
     u => null()
+#ifndef DUMMYLIB
 
     scheme => null()
     authority => null()
@@ -512,6 +526,7 @@ contains
         u%fragment => fragment
         u%segments => segments
       end subroutine produceResult
+#endif
   end function parseURI
 
   function rebaseURI(u1, u2) result(u3)
@@ -519,6 +534,7 @@ contains
     type(URI), pointer :: u3
 
     u3 => null()
+#ifndef DUMMYLIB
 
     if (associated(u2%scheme).or.associated(u2%authority)) then
       u3 => copyURI(u2)
@@ -534,8 +550,10 @@ contains
 
     if (associated(u2%query)) u3%query => vs_vs_alloc(u2%query)
     if (associated(u2%fragment)) u3%fragment => vs_vs_alloc(u2%fragment)
+#endif
   end function rebaseURI
 
+#ifndef DUMMYLIB
   function appendPaths(seg1, seg2) result(seg3)
     type(path_segment), pointer :: seg1(:), seg2(:)
     type(path_segment), pointer :: seg3(:)
@@ -755,15 +773,18 @@ contains
       print*, "fragment UNDEFINED"
     endif
   end subroutine dumpURI
+#endif
 
   function copyURI(u1) result(u2)
     type(URI), pointer :: u1
     type(URI), pointer :: u2
-
+#ifndef DUMMYLIB
     integer :: i
 
     if (.not.associated(u1)) then
+#endif
       u2 => null()
+#ifndef DUMMYLIB
       return
     endif
     allocate(u2)
@@ -779,11 +800,13 @@ contains
     enddo
     u2%query => vs_vs_alloc(u1%query)
     u2%fragment => vs_vs_alloc(u1%fragment)
+#endif
   end function copyURI
 
 
   subroutine destroyURI(u)
     type(URI), pointer :: u
+#ifndef DUMMYLIB
     integer :: i
     if (associated(u%scheme)) deallocate(u%scheme)
     if (associated(u%authority)) deallocate(u%authority)
@@ -800,6 +823,7 @@ contains
     if (associated(u%fragment)) deallocate(u%fragment)
 
     deallocate(u)
+#endif
   end subroutine destroyURI
 
   function hasScheme(u) result(p)
@@ -807,15 +831,22 @@ contains
     logical :: p
 
     p = .false.
+#ifndef DUMMYLIB
     if (.not.associated(u)) return
     p = associated(u%scheme)
+#endif
   end function hasScheme
 
   function getScheme(u) result(s)
     type(URI), pointer :: u
-    character(len=size(u%scheme)) :: s
 
+#ifndef DUMMYLIB
+    character(len=size(u%scheme)) :: s
     s = str_vs(u%scheme)
+#else
+    character(len=1) :: s
+    s = ""
+#endif
   end function getScheme
 
   function hasAuthority(u) result(p)
@@ -823,15 +854,21 @@ contains
     logical :: p
 
     p = .false.
+#ifndef DUMMYLIB
     if (.not.associated(u)) return
     p = associated(u%authority)
+#endif
   end function hasAuthority
 
   function getAuthority(u) result(s)
     type(URI), pointer :: u
+#ifndef DUMMYLIB
     character(len=size(u%authority)) :: s
-
     s = str_vs(u%authority)
+#else
+    character(len=1) :: s
+    s = ""
+#endif
   end function getAuthority
 
   function hasUserinfo(u) result(p)
@@ -839,15 +876,21 @@ contains
     logical :: p
 
     p = .false.
+#ifndef DUMMYLIB
     if (.not.associated(u)) return
     p = associated(u%userinfo)
+#endif
   end function hasUserinfo
 
   function getUserinfo(u) result(s)
     type(URI), pointer :: u
+#ifndef DUMMYLIB
     character(len=size(u%userinfo)) :: s
-
     s = str_vs(u%userinfo)
+#else
+    character(len=1) :: s
+    s = ""
+#endif
   end function getUserinfo
 
   function hasHost(u) result(p)
@@ -855,15 +898,21 @@ contains
     logical :: p
 
     p = .false.
+#ifndef DUMMYLIB
     if (.not.associated(u)) return
     p = associated(u%host)
+#endif
   end function hasHost
 
   function getHost(u) result(s)
     type(URI), pointer :: u
+#ifndef DUMMYLIB
     character(len=size(u%host)) :: s
-
     s = str_vs(u%host)
+#else
+    character(len=1) :: s
+    s = ""
+#endif
   end function getHost
 
   function hasPort(u) result(p)
@@ -871,22 +920,31 @@ contains
     logical :: p
 
     p = .false.
+#ifndef DUMMYLIB
     if (.not.associated(u)) return
     p = u%port > 0
+#endif
   end function hasPort
 
   function getPort(u) result(n)
     type(URI), pointer :: u
     integer :: n
-
+#ifndef DUMMYLIB
     n = u%port
+#else
+    n = 0
+#endif
   end function getPort
 
   function getPath(u) result(s)
     type(URI), pointer :: u
+#ifndef DUMMYLIB
     character(len=size(u%path)) :: s
-
     s = str_vs(u%path)
+#else
+    character(len=1) :: s
+    s = ""
+#endif
   end function getPath
 
   function hasQuery(u) result(p)
@@ -894,15 +952,21 @@ contains
     logical :: p
 
     p = .false.
+#ifndef DUMMYLIB
     if (.not.associated(u)) return
     p = associated(u%query)
+#endif
   end function hasQuery
 
   function getQuery(u) result(s)
     type(URI), pointer :: u
+#ifndef DUMMYLIB
     character(len=size(u%query)) :: s
-
     s = str_vs(u%query)
+#else
+    character(len=1) :: s
+    s = ""
+#endif
   end function getQuery
 
   function hasFragment(u) result(p)
@@ -910,16 +974,21 @@ contains
     logical :: p
 
     p = .false.
+#ifndef DUMMYLIB
     if (.not.associated(u)) return
     p = associated(u%fragment)
+#endif
   end function hasFragment
 
   function getFragment(u) result(s)
     type(URI), pointer :: u
+#ifndef DUMMYLIB
     character(len=size(u%fragment)) :: s
-
     s = str_vs(u%fragment)
+#else
+    character(len=1) :: s
+    s = ""
+#endif
   end function getFragment
 
-#endif
 end module fox_m_utils_uri

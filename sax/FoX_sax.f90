@@ -24,9 +24,6 @@ module FoX_sax
   public :: getValue
   public :: getType
 !For convenience
-  public :: len
   public :: hasKey
-
-  public :: print_dict
 
 end module FoX_sax

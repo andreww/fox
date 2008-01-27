@@ -1,5 +1,6 @@
 module m_sax_types
 
+#ifndef DUMMYLIB
   use m_common_attrs, only: dictionary_t
   use m_common_elstack, only: elstack_t
   use m_common_entities, only: entity_list
@@ -113,7 +114,7 @@ module m_sax_types
   integer, parameter :: TOK_DTD_CONTENTS = 18 ! for element and attlist
   integer, parameter :: TOK_OPEN_PAR = 19 ! (
   integer, parameter :: TOK_CLOSE_PAR = 20 ! )
-  
+
   type sax_parser_t
     type(xml_doc_state), pointer :: xds
     logical :: xds_used = .false. ! is the xds used by DOM? If so, we must
@@ -145,12 +146,15 @@ module m_sax_types
     character(len=1), dimension(:), pointer :: Ndata => null()
     logical :: inIntSubset = .false.
   end type sax_parser_t
-
+#endif
 
   type xml_t
+#ifndef DUMMYLIB
     type(file_buffer_t) :: fb
     type(sax_parser_t) :: fx
+#else
+    integer :: i
+#endif
   end type xml_t
-
 
 end module m_sax_types

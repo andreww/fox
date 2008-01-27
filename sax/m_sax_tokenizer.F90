@@ -1,5 +1,6 @@
 module m_sax_tokenizer
 
+#ifndef DUMMYLIB
   use fox_m_fsys_array_str, only: vs_str, str_vs, vs_str_alloc
   use m_common_charset, only: XML_WHITESPACE, &
     upperCase, isInitialNameChar
@@ -1120,5 +1121,6 @@ contains
     if (associated(tempString)) deallocate(tempString)
 
   end function expand_pe_text
+#endif
 
 end module m_sax_tokenizer

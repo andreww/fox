@@ -1,4 +1,5 @@
 module m_sax_reader
+#ifndef DUMMYLIB
 
   use fox_m_fsys_array_str, only: str_vs, vs_str_alloc, vs_vs_alloc
   use fox_m_fsys_format, only: operator(//)
@@ -400,5 +401,6 @@ contains
 
     p = (size(fb%f)==2)
   end function reading_first_entity
+#endif
 
 end module m_sax_reader

@@ -1,11 +1,9 @@
 module FoX_common
 
   use fox_m_fsys_array_str
-  use m_common_parse_input
-#ifndef DUMMYLIB
-  use m_common_attrs
   use fox_m_fsys_format
-#endif
+  use m_common_parse_input
+  use m_common_attrs
 
   implicit none
   private
@@ -27,6 +25,7 @@ module FoX_common
   public :: vs_str
   public :: alloc
   public :: concat
+#endif
 
 !These are all exported through SAX now
   public :: dictionary_t
@@ -43,8 +42,5 @@ module FoX_common
 !For convenience
   public :: len
   public :: hasKey
-
-  public :: print_dict
-#endif
 
 end module FoX_common

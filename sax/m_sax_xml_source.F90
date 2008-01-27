@@ -1,5 +1,6 @@
 module m_sax_xml_source
 
+#ifndef DUMMYLIB
   use fox_m_fsys_array_str, only: str_vs, vs_str_alloc
   use fox_m_fsys_format, only: operator(//)
   use m_common_error,  only: error_stack, add_error, in_error
@@ -429,6 +430,6 @@ contains
     if (parse_state/=XD_END.or.in_error(es)) f%startChar = 1
 
   end subroutine parse_declaration
-
+#endif
 
 end module m_sax_xml_source

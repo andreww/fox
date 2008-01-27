@@ -1,6 +1,6 @@
 module m_common_parse_input
 
-  use m_common_realtypes, only: sp, dp
+  use fox_m_fsys_realtypes, only: sp, dp
 
   implicit none
   private

@@ -104,7 +104,7 @@ contains
 
     write(unit=*,fmt="(4a)") ">>Begin Element: {", URI, "}", localname
     write(unit=*,fmt="(a,i2,a)") "--- ", getLength(attributes), " attributes:"
-    call print_dict(attributes)
+    !call print_dict(attributes)
   end subroutine startElement_handler
 
   subroutine startPrefixMapping_handler(URI, prefix)

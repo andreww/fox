@@ -1,12 +1,12 @@
-! public-facing SAX subroutine.
-
 module m_sax_operate
 
-  use m_common_error, only: FoX_error, add_error
+#ifndef DUMMYLIB
+  use m_common_error, only: FoX_error
 
   use m_sax_reader, only: open_file, close_file
   use m_sax_parser, only: sax_parser_init, sax_parser_destroy, sax_parse
   use m_sax_types, only: xml_t, ST_STOP
+#endif
 
   implicit none
   private
@@ -25,6 +25,7 @@ contains
     character(len=*), intent(in) :: file
     integer, intent(out), optional :: iostat
     integer, intent(in), optional :: lun
+#ifndef DUMMYLIB
     integer :: i
 
     call open_file(xt%fb, file=file, iostat=i, lun=lun, es=xt%fx%error_stack)
@@ -38,26 +39,28 @@ contains
     endif
 
     if (i==0) call sax_parser_init(xt%fx, xt%fb)
-
+#endif
   end subroutine open_xml_file
 
   subroutine open_xml_string(xt, string)
     type(xml_t), intent(out) :: xt
     character(len=*), intent(in) :: string
-
+#ifndef DUMMYLIB
     integer :: iostat
 
     call open_file(xt%fb, string=string, iostat=iostat, es=xt%fx%error_stack)
     call sax_parser_init(xt%fx, xt%fb)
-
+#endif
   end subroutine open_xml_string
 
   subroutine close_xml_t(xt)
     type(xml_t), intent(inout) :: xt
-
+#ifndef DUMMYLIB
     call close_file(xt%fb)
     call sax_parser_destroy(xt%fx)
+#endif
   end subroutine close_xml_t
+
 
   subroutine parse(xt,      &
     characters_handler,            &
@@ -251,8 +254,8 @@ contains
       end subroutine startEntity_handler
 
     end interface
-
-    ! check xt is initialized
+#ifndef DUMMYLIB
+    ! FIXME check xt is initialized
 
     call sax_parse(xt%fx, xt%fb,     &
       characters_handler,            &
@@ -286,7 +289,7 @@ contains
       namespace_prefixes=namespace_prefixes, &
       validate=validation,                   &
       xmlns_uris=xmlns_uris)
-
+#endif
   end subroutine parse
 
   subroutine stop_parser(xt)
