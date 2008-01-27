@@ -342,7 +342,7 @@ contains
 
     logical :: validCheck, startInCharData_, processDTD, pe, nameOK, eof
     logical :: namespaces_, namespace_prefixes_, xmlns_uris_
-    integer :: i, iostat, temp_i, nextState, ignoreDepth
+    integer :: i, iostat, temp_i, nextState, ignoreDepth, declSepValue
     character, pointer :: tempString(:)
     character :: dummy
     type(element_t), pointer :: elem
@@ -400,6 +400,7 @@ contains
     fx%inIntSubset = .false.
     extSubsetURI => null()
     inExtSubset = .false.
+    declSepValue = 0
     processDTD = .true.
     iostat = 0
 
@@ -450,6 +451,15 @@ contains
               call add_error(fx%error_stack, &
                 "Markup not terminated in parameter entity")
               goto 100
+            endif
+          endif
+          if (declSepValue==size(wf_stack)) then
+            if (wf_stack(1)/=0) then
+              call add_error(fx%error_stack, &
+                "Markup not terminated in parameter entity")
+              goto 100
+            else
+              declSepValue = 0
             endif
           endif
           ! FIXME P28a check
@@ -1364,6 +1374,8 @@ contains
                 temp_wf_stack = (/0, wf_stack/)
                 deallocate(wf_stack)
                 wf_stack => temp_wf_stack
+                if (fx%state_dtd==ST_DTD_SUBSET) &
+                  declSepValue = size(wf_stack)
               endif
             else
               ! Expand the entity,
@@ -1378,6 +1390,8 @@ contains
               temp_wf_stack = (/0, wf_stack/)
               deallocate(wf_stack)
               wf_stack => temp_wf_stack
+              if (fx%state_dtd==ST_DTD_SUBSET) &
+                declSepValue = size(wf_stack)
             endif
             ! and do nothing else, carry on ...
           else
