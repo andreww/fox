@@ -465,6 +465,8 @@ contains
             fx%content => fx%token
             fx%token => vs_str_alloc("")
           endif
+          if (reading_main_file(fb)) &
+            fx%inIntSubset = .true.
         elseif (fx%context==CTXT_IN_CONTENT) then
           if (fx%state==ST_TAG_IN_CONTENT) fx%state = ST_CHAR_IN_CONTENT
           ! because CHAR_IN_CONTENT *always* leads to TAG_IN_CONTENT
@@ -1219,6 +1221,7 @@ contains
             endif
             call open_new_file(fb, extSubsetURI, iostat)
             if (iostat==0) then
+              fx%inIntSubset=.false.
               call parse_text_declaration(fb, fx%error_stack)
               if (in_error(fx%error_stack)) goto 100
               print*, "growing wf_stack 6"
@@ -1265,6 +1268,7 @@ contains
             call open_new_file(fb, extSubsetURI, iostat)
             call destroyURI(extSubsetURI)
             if (iostat==0) then
+              fx%inIntSubset = .false.
               call parse_text_declaration(fb, fx%error_stack)
               if (in_error(fx%error_stack)) goto 100
               print*, "growing wf_stack 7"
@@ -1348,6 +1352,7 @@ contains
                 fx%skippedExternal = .true.
                 processDTD = fx%xds%standalone
               else
+                fx%inIntSubset = .false.
                 if (present(startEntity_handler)) &
                   call startEntity_handler('%'//str_vs(fx%token))
                 call add_internal_entity(fx%forbidden_pe_list, &
@@ -1361,7 +1366,7 @@ contains
                 wf_stack => temp_wf_stack
               endif
             else
-              ! Expand the entity, 
+              ! Expand the entity,
               if (present(startEntity_handler)) &
                 call startEntity_handler('%'//str_vs(fx%token))
               call add_internal_entity(fx%forbidden_pe_list, &
@@ -1470,7 +1475,7 @@ contains
             return
           endif
           print*, "wf decrement section end subset 2"
-          wf_stack(1) = wf_stack(1) - 1
+          wf_stack(1) = wf_stack(1) - 2
           nextDTDState = ST_DTD_SUBSET
         case (TOK_PI_TAG)
           print*, "wf increment pi subset"
