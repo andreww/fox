@@ -326,7 +326,7 @@ contains
     s => vs_str_alloc("")
     do while (.not.eof)
       c = get_character(fb, eof, es)
-      if (in_error(es)) return
+      if (eof.or.in_error(es)) return
       temp => vs_str_alloc(str_vs(s)//c)
       deallocate(s)
       s => temp
