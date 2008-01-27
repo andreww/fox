@@ -20,7 +20,7 @@ module m_common_entities
     character(len=1), dimension(:), pointer :: publicId => null()
     character(len=1), dimension(:), pointer :: systemId => null()
     character(len=1), dimension(:), pointer :: notation => null()
-    type(URI), pointer :: baseURI
+    type(URI), pointer :: baseURI => null()
   end type entity_t
 
   type entity_list

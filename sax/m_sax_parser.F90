@@ -1385,7 +1385,7 @@ contains
               call add_internal_entity(fx%forbidden_pe_list, &
                 str_vs(fx%token), "", null(), .false.)
               call open_new_string(fb, &
-                expand_entity(fx%xds%PEList, str_vs(fx%token)), str_vs(fx%token), baseURI=fb%f(1)%baseURI, pe=.true.)
+                expand_entity(fx%xds%PEList, str_vs(fx%token)), str_vs(fx%token), baseURI=null(), pe=.true.)
               ! NB because we are just expanding a string here, anything
               ! evaluated as a result of this string is evaluated in the
               ! context of the currently open file, so has a baseURI of

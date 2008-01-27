@@ -245,9 +245,11 @@ contains
       fb%f(1)%next_chars => vs_str_alloc("")
     endif
     fb%f(1)%pe = pe_
-
-    fb%f(1)%baseURI => copyURI(baseURI)
-
+    if (associated(baseURI)) then
+      fb%f(1)%baseURI => copyURI(baseURI)
+    else
+      fb%f(1)%baseURI => copyURI(fb%f(2)%baseURI)
+    endif
     print*, "new base URI from string", expressURI(fb%f(1)%baseURI)
 
   end subroutine open_new_string 
