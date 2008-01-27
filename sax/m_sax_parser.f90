@@ -1557,7 +1557,7 @@ contains
         select case (fx%tokenType)
         case (TOK_SECTION_START)
         print*, "wf increment section"
-          wf_stack(1) = wf_stack(1) + 1
+          wf_stack(1) = wf_stack(1) + 2
           ignoreDepth = ignoreDepth + 1
           nextDTDState = ST_DTD_IN_IGNORE_SECTION
         case (TOK_SECTION_END)
