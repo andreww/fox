@@ -1416,9 +1416,9 @@ contains
         else
           call add_error(fx%error_stack, "Error encountered processing entity.")
         endif
-        call sax_error(fx, error_handler)
+        call sax_error(fx, fatalError_handler)
       else
-        call sax_error(fx, error_handler)
+        call sax_error(fx, fatalError_handler)
       endif
     else
       ! EOF of main file
@@ -1429,15 +1429,15 @@ contains
               call characters_handler(str_vs(fx%token))
           endif
         else
-          if (present(error_handler)) &
-            call error_handler("Ill-formed XML fragment")
+          if (present(fatalError_handler)) &
+            call fatalError_handler("Ill-formed XML fragment")
         endif
       elseif (fx%well_formed.and.fx%state==ST_MISC) then
         if (present(endDocument_handler)) &
           call endDocument_handler()
       else
         call add_error(fx%error_stack, "File is not well-formed")
-        call sax_error(fx, error_handler)
+        call sax_error(fx, fatalError_handler)
       endif
     endif
 
