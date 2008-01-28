@@ -488,7 +488,6 @@ contains
           if (.not.associated(URIref)) then
             call add_error(es, "Invalid URI: "//str_vs(URIstring))
             deallocate(URIstring)
-            call destroyURI(URIref)
             return
           elseif (.not.hasScheme(URIref)) then
             call add_error(es, "Relative namespace in URI deprecated: "//str_vs(URIstring))
@@ -534,7 +533,6 @@ contains
           if (.not.associated(URIref)) then
             call add_error(es, "Invalid URI: "//str_vs(URIstring))
             deallocate(URIstring)
-            call destroyURI(URIref)
             return
           elseif (.not.hasScheme(URIref)) then
             call add_error(es, "Relative namespace in URI deprecated: "//str_vs(URIstring))
