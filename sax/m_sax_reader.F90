@@ -143,8 +143,6 @@ contains
       fb%f(1)%baseURI => copyURI(baseURI)
     endif
 
-    print*, "new base URI from file ", expressURI(fb%f(1)%baseURI)
-
   end subroutine open_new_file
 
   subroutine open_actual_file(f, file, iostat, lun)
@@ -153,7 +151,6 @@ contains
     integer, intent(out)             :: iostat
     integer, intent(in), optional    :: lun
 
-    print*, "going to try & open "//file
     if (present(lun)) then
       f%lun = lun
     else
@@ -250,7 +247,6 @@ contains
     else
       fb%f(1)%baseURI => copyURI(fb%f(2)%baseURI)
     endif
-    print*, "new base URI from string", expressURI(fb%f(1)%baseURI)
 
   end subroutine open_new_string 
 
