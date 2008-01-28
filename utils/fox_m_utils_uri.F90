@@ -576,19 +576,14 @@ contains
     allocate(temp(n))
     n2 = 1
     do i = 1, size(seg1)
-      print*, "seg1 ", i, str_vs(seg1(i)%s)
       if (i==size(seg1).and.seg1(i)%s(size(seg1(i)%s))/="/") exit ! it's a file
       temp(n2)%s => vs_vs_alloc(seg1(i)%s)
       n2 = n2 + 1
     enddo
       
     do i = 1, size(seg2)
-      print*, "seg2 ", i, str_vs(seg2(i)%s)
       temp(n2)%s => vs_vs_alloc(seg2(i)%s)
       n2 = n2 + 1
-    enddo
-    do i = 1, size(temp)
-      print*, "temp ", i, str_vs(temp(i)%s)
     enddo
 
     seg3 => normalizePath(temp)
@@ -596,11 +591,6 @@ contains
       deallocate(temp(i)%s)
     enddo
     deallocate(temp)
-    do i = 1, size(seg3)
-      print*, "seg3 ", i, str_vs(seg3(i)%s)
-    enddo
-
-    print*,"PATHSAPPENDED"
 
   end function appendPaths
 
@@ -624,11 +614,9 @@ contains
       else
         n = n + 1
       endif
-      print*, "count 1", i, n, parents
     enddo
 
     n = n + parents
-    print*,"np ", n, parents
     allocate(seg2(n))
 
     n2 = parents
@@ -726,49 +714,49 @@ contains
     type(URI), intent(in) :: u
     integer :: i
     if (associated(u%scheme)) then
-      print*, "scheme: ", str_vs(u%scheme)
+      write(*,*) "scheme: ", str_vs(u%scheme)
     else
-      print*, "scheme UNDEFINED"
+      write(*,*) "scheme UNDEFINED"
     endif
     if (associated(u%authority)) then
-      print*, "authority: ", str_vs(u%authority)
+      write(*,*) "authority: ", str_vs(u%authority)
     else
-      print*, "authority UNDEFINED"
+      write(*,*) "authority UNDEFINED"
     endif
     if (associated(u%userinfo)) then
-      print*, "userinfo: ", str_vs(u%userinfo)
+      write(*,*) "userinfo: ", str_vs(u%userinfo)
     else
-      print*, "userinfo UNDEFINED"
+      write(*,*) "userinfo UNDEFINED"
     endif
     if (associated(u%host)) then
-      print*, "host: ", str_vs(u%host)
+      write(*,*) "host: ", str_vs(u%host)
     else
-      print*, "host UNDEFINED"
+      write(*,*) "host UNDEFINED"
     endif
     if (u%port>0) then
-      print*, "port: ", u%port
+      write(*,*) "port: ", u%port
     else
-      print*, "port UNDEFINED"
+      write(*,*) "port UNDEFINED"
     endif
     if (associated(u%path)) then
-      print*, "path: ", str_vs(u%path)
+      write(*,*) "path: ", str_vs(u%path)
     else
-      print*, "path UNDEFINED"
+      write(*,*) "path UNDEFINED"
     endif
     if (associated(u%segments)) then
       do i = 1, size(u%segments)
-        print*, "    segment: ", str_vs(u%segments(i)%s)
+        write(*,*) "    segment: ", str_vs(u%segments(i)%s)
       enddo
     endif
     if (associated(u%query)) then
-      print*, "query: ", str_vs(u%query)
+      write(*,*) "query: ", str_vs(u%query)
     else
-      print*, "query UNDEFINED"
+      write(*,*) "query UNDEFINED"
     endif
     if (associated(u%fragment)) then
-      print*, "fragment: ", str_vs(u%fragment)
+      write(*,*) "fragment: ", str_vs(u%fragment)
     else
-      print*, "fragment UNDEFINED"
+      write(*,*) "fragment UNDEFINED"
     endif
   end subroutine dumpURI
 #endif
