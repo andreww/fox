@@ -264,10 +264,8 @@ contains
 
     integer :: i1, i2
 
-    if (len(authority)==0) then
-      p = .true.
-      return
-    endif
+    p = .true.
+    if (len(authority)==0) return
 
     i1 = index(authority, "@")
     if (i1>0) then
@@ -495,7 +493,7 @@ contains
     endif
     fragment => vs_str_alloc(URIstring(i4+1:))
     call produceResult
-    
+
     contains
       subroutine cleanUp
         integer :: i
