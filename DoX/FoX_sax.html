@@ -384,13 +384,7 @@ Thus a typical call to <code>parse</code> might look something like:</p>
   end subroutine error_handler</code></li>
 </ul>
 
-<p>Triggered when a <a href="http://www.w3.org/TR/REC-xml/#dt-error">error</a> is encountered in parsing. Parsing will cease after this event.
-(NB Note that according to the XML specification, 
-parsers MAY recoved continue parsing after an error. FoX will not.)</p>
-
-<p>Note that FoX is not entirely compliant with the standard; both normal
-errors and fatal errors will be reported through the error<em>handler; fatalError</em>handler
-below is currently inactive.</p>
+<p>Triggered when a <a href="http://www.w3.org/TR/REC-xml/#dt-error">error</a> is encountered in parsing. Parsing will continue after this event.</p>
 
 <ul>
 <li><code>fatalError_handler <br />
@@ -400,10 +394,6 @@ below is currently inactive.</p>
 </ul>
 
 <p>Triggered when a <a href="http://www.w3.org/TR/REC-xml/#dt-fatal">fatal error</a> is encountered in parsing. Parsing will cease after this event.</p>
-
-<p>Note that FoX is not entirely compliant with the standard; both normal
-errors and fatal errors will be reported through the error<em>handler above; fatalError</em>handler
-is currently inactive.</p>
 
 <ul>
 <li><code>warning_handler <br />

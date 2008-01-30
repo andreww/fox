@@ -205,7 +205,7 @@ places.  If you move the FoX directory later on, you will need to re-run configu
 
 <p>To run them all, simply run <code>make check</code> from the top-level directory. This will run the individual testsuites, and collate their results.</p>
 
-<p>If any failures occur (unrelated to known compiler issues, see the <a href="http://uszla.me.uk/space/software/FoX/compat/">up-to-date list</a>), please send a message to the mailing list (<a href="&#x6D;&#97;&#x69;l&#x74;&#x6F;:&#x46;&#x6F;X&#64;&#x6C;&#x69;&#x73;&#116;&#115;&#46;&#117;&#115;zl&#97;&#46;&#109;&#101;&#x2E;&#117;&#107;">&#x46;&#x6F;X&#64;&#x6C;&#x69;&#x73;&#116;&#115;&#46;&#117;&#115;zl&#97;&#46;&#109;&#101;&#x2E;&#117;&#107;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
+<p>If any failures occur (unrelated to known compiler issues, see the <a href="http://uszla.me.uk/space/software/FoX/compat/">up-to-date list</a>), please send a message to the mailing list (<a href="&#x6D;&#97;&#105;&#x6C;&#x74;&#111;:&#70;&#111;&#88;&#64;&#x6C;&#105;&#115;&#x74;&#x73;.&#117;s&#122;&#108;&#97;&#46;&#109;&#x65;&#x2E;&#117;&#x6B;">&#70;&#111;&#88;&#64;&#x6C;&#105;&#115;&#x74;&#x73;.&#117;s&#122;&#108;&#97;&#46;&#109;&#x65;&#x2E;&#117;&#x6B;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
 
 <h2>Linking to an existing program</h2>
 
@@ -1771,13 +1771,7 @@ Thus a typical call to <code>parse</code> might look something like:</p>
   end subroutine error_handler</code></li>
 </ul>
 
-<p>Triggered when a <a href="http://www.w3.org/TR/REC-xml/#dt-error">error</a> is encountered in parsing. Parsing will cease after this event.
-(NB Note that according to the XML specification, 
-parsers MAY recoved continue parsing after an error. FoX will not.)</p>
-
-<p>Note that FoX is not entirely compliant with the standard; both normal
-errors and fatal errors will be reported through the error<em>handler; fatalError</em>handler
-below is currently inactive.</p>
+<p>Triggered when a <a href="http://www.w3.org/TR/REC-xml/#dt-error">error</a> is encountered in parsing. Parsing will continue after this event.</p>
 
 <ul>
 <li><code>fatalError_handler <br />
@@ -1787,10 +1781,6 @@ below is currently inactive.</p>
 </ul>
 
 <p>Triggered when a <a href="http://www.w3.org/TR/REC-xml/#dt-fatal">fatal error</a> is encountered in parsing. Parsing will cease after this event.</p>
-
-<p>Note that FoX is not entirely compliant with the standard; both normal
-errors and fatal errors will be reported through the error<em>handler above; fatalError</em>handler
-is currently inactive.</p>
 
 <ul>
 <li><code>warning_handler <br />
@@ -2925,9 +2915,9 @@ Return the value of the fragment</p></li>
 <h1>Further information</h1>
 
 <p>FoX evolved from the initial codebase of <a href="http://lcdx00.wm.lc.ehu.es/ag/xml/">xmlf90</a>,
-which was written largely by Alberto Garcia &lt;<a href="&#109;&#97;&#105;&#108;&#116;o:&#97;&#x6C;&#x62;&#101;&#114;&#116;&#x6F;&#103;&#64;&#x69;&#x63;m&#x61;&#x62;&#46;&#101;&#115;">&#97;&#x6C;&#x62;&#101;&#114;&#116;&#x6F;&#103;&#64;&#x69;&#x63;m&#x61;&#x62;&#46;&#101;&#115;</a>> and Jon Wakelin &lt;<a href="&#x6D;&#x61;&#x69;&#108;&#116;&#x6F;:&#x6A;&#111;&#110;&#46;&#119;&#x61;&#x6B;&#x65;&#x6C;&#105;&#x6E;&#64;&#x62;&#x72;&#105;&#115;&#116;&#111;&#108;&#x2E;&#97;&#99;&#46;&#x75;&#107;">&#x6A;&#111;&#110;&#46;&#119;&#x61;&#x6B;&#x65;&#x6C;&#105;&#x6E;&#64;&#x62;&#x72;&#105;&#115;&#116;&#111;&#108;&#x2E;&#97;&#99;&#46;&#x75;&#107;</a>>.</p>
+which was written largely by Alberto Garcia &lt;<a href="&#109;&#x61;i&#108;&#x74;&#x6F;:&#97;&#108;&#x62;&#101;&#x72;&#116;&#x6F;&#103;&#64;&#x69;&#99;&#109;&#x61;&#98;&#x2E;&#101;&#115;">&#97;&#108;&#x62;&#101;&#x72;&#116;&#x6F;&#103;&#64;&#x69;&#99;&#109;&#x61;&#98;&#x2E;&#101;&#115;</a>> and Jon Wakelin &lt;<a href="&#x6D;&#97;&#105;&#108;&#x74;&#x6F;:&#x6A;&#x6F;n&#46;&#119;a&#107;e&#108;&#105;&#110;&#64;&#98;r&#x69;&#115;&#116;&#x6F;&#108;&#46;&#x61;c&#x2E;&#x75;&#x6B;">&#x6A;&#x6F;n&#46;&#119;a&#107;e&#108;&#105;&#110;&#64;&#98;r&#x69;&#115;&#116;&#x6F;&#108;&#46;&#x61;c&#x2E;&#x75;&#x6B;</a>>.</p>
 
-<p>FoX is the work of Toby White &lt;<a href="&#109;&#x61;&#105;&#x6C;&#x74;&#111;:&#x74;ow&#50;&#49;&#64;&#x63;&#97;m&#x2E;&#x61;&#99;&#x2E;u&#107;">&#x74;ow&#50;&#49;&#64;&#x63;&#97;m&#x2E;&#x61;&#99;&#x2E;u&#107;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
+<p>FoX is the work of Toby White &lt;<a href="&#109;&#97;&#x69;&#x6C;&#x74;&#111;:&#116;&#111;&#x77;2&#49;&#64;&#x63;&#x61;&#109;&#46;ac&#46;&#117;&#x6B;">&#116;&#111;&#x77;2&#49;&#64;&#x63;&#x61;&#109;&#46;ac&#46;&#117;&#x6B;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
 
 <p>There is a FoX website at <a href="http://www.uszla.me.uk/software/FoX/">http://www.uszla.me.uk/software/FoX/</a>.</p>
 

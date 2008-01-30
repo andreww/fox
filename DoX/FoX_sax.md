@@ -338,13 +338,7 @@ Triggered when an unparsed entity is declared
         character(len=*), intent(in)     :: msg  
       end subroutine error_handler`
 
-Triggered when a [error](http://www.w3.org/TR/REC-xml/#dt-error) is encountered in parsing. Parsing will cease after this event.
-(NB Note that according to the XML specification, 
-parsers MAY recoved continue parsing after an error. FoX will not.)
-
-Note that FoX is not entirely compliant with the standard; both normal
-errors and fatal errors will be reported through the error_handler; fatalError_handler
-below is currently inactive.
+Triggered when a [error](http://www.w3.org/TR/REC-xml/#dt-error) is encountered in parsing. Parsing will continue after this event.
 
 * `fatalError_handler  
       subroutine fatalError_handler(msg)  
@@ -352,10 +346,6 @@ below is currently inactive.
       end subroutine fatalError_handler`
 
 Triggered when a [fatal error](http://www.w3.org/TR/REC-xml/#dt-fatal) is encountered in parsing. Parsing will cease after this event.
-
-Note that FoX is not entirely compliant with the standard; both normal
-errors and fatal errors will be reported through the error_handler above; fatalError_handler
-is currently inactive.
 
 * `warning_handler  
       subroutine warning_handler(msg)  
