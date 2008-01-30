@@ -255,12 +255,10 @@ contains
         if (verify(c, XML_WHITESPACE)==0) then
           continue
         elseif (verify(c, 'EMPTYANY')==0) then
-          allocate(name(1))
-          name(1) = c
+          name => vs_str_alloc(c)
           state = ST_EMPTYANY
         elseif (c=='(') then
-          allocate(order(1))
-          order(1) = ''
+          order => vs_str_alloc(" ")
           nbrackets = 1
           state = ST_FIRSTCHILD
         else
@@ -273,9 +271,7 @@ contains
         !write(*,*)'ST_EMPTYANY'
         if (verify(c, upperCase)==0) then
           temp => name
-          allocate(name(size(temp)+1))
-          name(:size(temp)) = temp
-          name(size(name)) = c
+          name => vs_str_alloc(str_vs(temp)//c)
           deallocate(temp)
         elseif (verify(c, XML_WHITESPACE)==0) then
           if (str_vs(name)=='EMPTY') then
@@ -302,16 +298,14 @@ contains
         if (c=='#') then
           mixed = .true.
           state = ST_PCDATA
-          allocate(name(0))
+          name => vs_str_alloc("")
         elseif (isInitialNameChar(c, xv)) then
           allocate(name(1))
           name(1) = c
           state = ST_NAME
         elseif (c=='(') then
           deallocate(order)
-          allocate(order(2))
-          order = ''
-          nbrackets = 2
+          order => vs_str_alloc("  ")
           state = ST_CHILD
         else
           call add_error(stack, &
@@ -323,9 +317,7 @@ contains
         !write(*,*)'ST_PCDATA'
         if (verify(c, 'PCDATA')==0) then
           temp => name
-          allocate(name(size(temp)+1))
-          name(:size(temp)) = temp
-          name(size(name)) = c
+          name => vs_str_alloc(str_vs(temp)//c)
           deallocate(temp)
         elseif (verify(c, XML_WHITESPACE)==0) then
           if (str_vs(name)=='PCDATA') then
@@ -372,9 +364,7 @@ contains
         !write(*,*)'ST_NAME'
         if (isNameChar(c, xv)) then
           temp => name
-          allocate(name(size(temp)+1))
-          name(:size(temp)) = temp
-          name(size(name)) = c
+          name => vs_str_alloc(str_vs(temp)//c)
           deallocate(temp)
         elseif (c=='?') then
           deallocate(name)
@@ -456,8 +446,7 @@ contains
             '# forbidden except as first child element')
           goto 100
         elseif (isInitialNameChar(c, xv)) then
-          allocate(name(1))
-          name(1) = c
+          name => vs_str_alloc(c)
           state = ST_NAME
         elseif (c=='(') then
           if (mixed) then
@@ -467,10 +456,8 @@ contains
           endif
           nbrackets = nbrackets + 1
           temp => order
-          allocate(order(nbrackets))
-          order(:size(temp)) = temp
+          order => vs_str_alloc(str_vs(temp)//" ")
           deallocate(temp)
-          order(nbrackets) = ''
         else
           call add_error(stack, &
             'Unexpected character "'//c//'" found after (')
