@@ -43,6 +43,7 @@ contains
       return
     endif
     fx%tokentype = TOK_NULL
+    print*, "TOKENASS?", associated(fx%token)
     if (associated(fx%token)) deallocate(fx%token)
     fx%token => vs_str_alloc("")
 
@@ -800,6 +801,7 @@ contains
           fx%nextTokenType = TOK_END_TAG
         else
           if (associated(fx%content)) then
+            deallocate(fx%token)
             fx%token => vs_str_alloc(str_vs(fx%content)//c)
             deallocate(fx%content)
           else
