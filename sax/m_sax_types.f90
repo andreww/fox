@@ -24,6 +24,7 @@ module m_sax_types
 
   ! State
 
+  integer, parameter :: ST_STOP = -2
   integer, parameter :: ST_NULL = -1
   integer, parameter :: ST_MISC = 0
   integer, parameter :: ST_BANG_TAG = 1 

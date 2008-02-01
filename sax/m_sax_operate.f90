@@ -2,11 +2,11 @@
 
 module m_sax_operate
 
-  use m_common_error, only: FoX_error
+  use m_common_error, only: FoX_error, add_error
 
   use m_sax_reader, only: open_file, close_file
   use m_sax_parser, only: sax_parser_init, sax_parser_destroy, sax_parse
-  use m_sax_types, only: xml_t
+  use m_sax_types, only: xml_t, ST_STOP
 
   implicit none
   private
@@ -16,6 +16,7 @@ module m_sax_operate
   public :: open_xml_string
   public :: close_xml_t
   public :: parse
+  public :: stop_parser
 
 contains
 
@@ -287,5 +288,14 @@ contains
       xmlns_uris=xmlns_uris)
 
   end subroutine parse
+
+  subroutine stop_parser(xt)
+    ! To be called from within a callback function;
+    ! this will stop the parser.
+    type(xml_t), intent(inout) :: xt
+
+    xt%fx%state = ST_STOP
+
+  end subroutine stop_parser
 
 end module m_sax_operate

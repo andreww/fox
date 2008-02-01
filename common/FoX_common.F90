@@ -1,6 +1,7 @@
 module FoX_common
 
   use m_common_array_str
+  use m_common_parse_input
   use m_common_format
 #ifndef DUMMYLIB
   use m_common_attrs
@@ -19,6 +20,8 @@ module FoX_common
 
   public :: str
   public :: operator(//)
+
+  public :: rts
 
 #ifndef DUMMYLIB
   public :: str_vs

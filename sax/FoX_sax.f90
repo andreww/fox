@@ -10,6 +10,7 @@ module FoX_sax
   public :: open_xml_string
   public :: close_xml_t
   public :: parse
+  public :: stop_parser
 
   public :: xml_t
 

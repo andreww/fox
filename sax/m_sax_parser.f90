@@ -399,8 +399,10 @@ contains
       fx%context = CTXT_BEFORE_DTD
       fx%state = ST_MISC
       fx%whitespace = WS_DISCARD
-      if (present(startDocument_handler)) &
+      if (present(startDocument_handler)) then
         call startDocument_handler()
+        if (fx%state==ST_STOP) goto 100
+      endif
     endif
 
     do
@@ -413,6 +415,7 @@ contains
           ! pop the parse stack, and carry on ..
           if (present(endEntity_handler)) then
             call endEntity_handler('%'//pop_entity_list(fx%forbidden_pe_list))
+            if (fx%state==ST_STOP) goto 100
           else
             dummy = pop_entity_list(fx%forbidden_pe_list)
           endif
@@ -423,6 +426,7 @@ contains
           ! it's the end of a general entity expansion
           if (present(endEntity_handler)) then
             call endEntity_handler(pop_entity_list(fx%forbidden_ge_list))
+            if (fx%state==ST_STOP) goto 100
           else
              dummy = pop_entity_list(fx%forbidden_ge_list)
           endif
@@ -534,8 +538,10 @@ contains
         endif
         if (str_vs(fx%token)=='?>') then
           ! No data for this PI
-          if (present(processingInstruction_handler)) &
+          if (present(processingInstruction_handler)) then
             call processingInstruction_handler(str_vs(fx%name), '')
+            if (fx%state==ST_STOP) goto 100
+          endif
           deallocate(fx%name)
           if (fx%context==CTXT_IN_CONTENT) then
             fx%state = ST_CHAR_IN_CONTENT
@@ -544,8 +550,10 @@ contains
             fx%state = ST_MISC
           endif
         else
-          if (present(processingInstruction_handler)) &
+          if (present(processingInstruction_handler)) then
             call processingInstruction_handler(str_vs(fx%name), str_vs(fx%token))
+            if (fx%state==ST_STOP) goto 100
+          endif
           deallocate(fx%name)
           fx%state = ST_PI_END
         endif
@@ -594,8 +602,10 @@ contains
               endif
             endif
           endif
-          if (present(comment_handler)) &
+          if (present(comment_handler)) then
             call comment_handler(str_vs(fx%name))
+            if (fx%state==ST_STOP) goto 100
+          endif
           deallocate(fx%name)
           if (fx%context==CTXT_IN_CONTENT) then
             fx%state = ST_CHAR_IN_CONTENT
@@ -672,14 +682,20 @@ contains
           endif
         endif
         if (str_vs(fx%token) == ']]>') then
-          if (present(startCdata_handler)) &
+          if (present(startCdata_handler)) then
             call startCdata_handler
-          if (size(fx%name)>0) then
-            if (present(characters_handler)) &
-              call characters_handler(str_vs(fx%name))
+            if (fx%state==ST_STOP) goto 100
           endif
-          if (present(endCdata_handler)) &
+          if (size(fx%name)>0) then
+            if (present(characters_handler)) then
+              call characters_handler(str_vs(fx%name))
+              if (fx%state==ST_STOP) goto 100
+            endif
+          endif
+          if (present(endCdata_handler)) then
             call endCdata_handler
+            if (fx%state==ST_STOP) goto 100
+          endif
           deallocate(fx%name)
           fx%state = ST_CHAR_IN_CONTENT
         else
@@ -821,18 +837,26 @@ contains
                 call add_error(fx%error_stack, "Content inside empty element")
               elseif (.not.elem%mixed.and..not.elem%any) then
                 if (verify(str_vs(fx%token), XML_WHITESPACE)==0) then
-                  if (present(ignorableWhitespace_handler)) &
-                  call ignorableWhitespace_handler(str_vs(fx%token))
+                  if (present(ignorableWhitespace_handler)) then
+                    call ignorableWhitespace_handler(str_vs(fx%token))
+                    if (fx%state==ST_STOP) goto 100
+                  endif
                 else
                   call add_error(fx%error_stack, "Forbidden content inside element: "//get_top_elstack(fx%elstack))
                   goto 100
                 endif
               else ! FIXME check properly if allowed
-                if (present(characters_handler)) call characters_handler(str_vs(fx%token))
+                if (present(characters_handler)) then
+                  call characters_handler(str_vs(fx%token))
+                  if (fx%state==ST_STOP) goto 100
+                endif
               endif
             endif
           else
-            if (present(characters_handler)) call characters_handler(str_vs(fx%token))
+            if (present(characters_handler)) then
+              call characters_handler(str_vs(fx%token))
+              if (fx%state==ST_STOP) goto 100
+            endif
           endif
         endif
         fx%whitespace = WS_FORBIDDEN
@@ -863,12 +887,18 @@ contains
                 goto 100
               endif
             endif
-            if (present(startEntity_handler)) &
+            if (present(startEntity_handler)) then
               call startEntity_handler(str_vs(tempString))
-            if (present(characters_handler)) &
+              if (fx%state==ST_STOP) goto 100
+            endif
+            if (present(characters_handler)) then
               call characters_handler(expand_entity(fx%predefined_e_list, str_vs(tempString)))
-            if (present(endEntity_handler)) &
+              if (fx%state==ST_STOP) goto 100
+            endif
+            if (present(endEntity_handler)) then
               call endEntity_handler(str_vs(tempString))
+              if (fx%state==ST_STOP) goto 100
+            endif
           elseif (likeCharacterEntityReference(str_vs(tempString))) then
             if (checkRepCharEntityReference(str_vs(tempString), fx%xds%xml_version)) then
               if (validCheck.and.associated(elem)) then
@@ -880,8 +910,10 @@ contains
                   goto 100 
                 endif
               endif
-              if (present(characters_handler)) &
+              if (present(characters_handler)) then
                 call characters_handler(expand_char_entity(str_vs(tempString)))
+                if (fx%state==ST_STOP) goto 100
+              endif
             elseif (checkCharacterEntityReference(str_vs(tempString), fx%xds%xml_version)) then
               call add_error(fx%error_stack, "Unable to digest character entity reference in content, sorry.")
               goto 100
@@ -895,8 +927,10 @@ contains
                 'Cannot reference unparsed entity in content')
               goto 100
             elseif (is_external_entity(fx%xds%entityList, str_vs(tempString))) then
-              if (present(skippedEntity_handler)) &
+              if (present(skippedEntity_handler)) then
                 call skippedEntity_handler(str_vs(tempString))
+                if (fx%state==ST_STOP) goto 100
+              endif
             else
               if (validCheck.and.associated(elem)) then
                 if (elem%empty) then
@@ -911,8 +945,10 @@ contains
                   !endif
                 endif
               endif
-              if (present(startEntity_handler)) &
+              if (present(startEntity_handler)) then
                 call startEntity_handler(str_vs(tempString))
+                if (fx%state==ST_STOP) goto 100
+              endif
               call add_internal_entity(fx%forbidden_ge_list, str_vs(tempString), "")
               call push_buffer_stack(fb, expand_entity(fx%xds%entityList, str_vs(tempString)))
               fx%parse_stack = fx%parse_stack + 1
@@ -925,8 +961,10 @@ contains
           else
             ! Unknown entity check standalone etc
             if (fx%skippedExternal.and..not.fx%xds%standalone) then
-              if (present(skippedEntity_handler)) &
+              if (present(skippedEntity_handler)) then
                 call skippedEntity_handler(str_vs(tempString))
+                if (fx%state==ST_STOP) goto 100
+              endif
             else
               call add_error(fx%error_stack, &
                 'Encountered reference to undeclared entity')
@@ -993,13 +1031,17 @@ contains
         elseif (str_vs(fx%token)=='PUBLIC') then
           fx%state = ST_DTD_PUBLIC
         elseif (str_vs(fx%token)=='[') then
-          if (present(startDTD_handler)) &
+          if (present(startDTD_handler)) then
             call startDTD_handler(str_vs(fx%root_element), "", "")
+            if (fx%state==ST_STOP) goto 100
+          endif
           fx%whitespace = WS_DISCARD
           fx%state = ST_INT_SUBSET
         elseif (str_vs(fx%token)=='>') then
-          if (present(startDTD_handler)) &
+          if (present(startDTD_handler)) then
             call startDTD_handler(str_vs(fx%root_element), "", "")
+            if (fx%state==ST_STOP) goto 100
+          endif
           fx%context = CTXT_BEFORE_CONTENT
           fx%state = ST_MISC
         else
@@ -1048,6 +1090,7 @@ contains
             else
               call startDTD_handler(str_vs(fx%root_element), "", "")
             endif
+            if (fx%state==ST_STOP) goto 100
           endif
           if (associated(fx%systemId)) deallocate(fx%systemId)
           if (associated(fx%publicId)) deallocate(fx%publicId)
@@ -1065,6 +1108,7 @@ contains
             else
               call startDTD_handler(str_vs(fx%root_element), "", "")
             endif
+            if (fx%state==ST_STOP) goto 100
           endif
           if (associated(fx%systemId)) deallocate(fx%systemId)
           if (associated(fx%publicId)) deallocate(fx%publicId)
@@ -1092,16 +1136,20 @@ contains
           if (existing_entity(fx%xds%PEList, str_vs(tempString))) then
             if (is_external_entity(fx%xds%PEList, str_vs(tempString))) then
               ! We are not validating, do not include external entities
-              if (present(skippedEntity_handler)) &
+              if (present(skippedEntity_handler)) then
                 call skippedEntity_handler('%'//str_vs(tempString))
+                if (fx%state==ST_STOP) goto 100
+              endif
               !  then are we standalone?
               !   then look at XML section 5.1
               fx%skippedExternal = .true.
               processDTD = fx%xds%standalone !FIXME use this everywhere
             else
               ! Expand the entity, 
-              if (present(startEntity_handler)) &
+              if (present(startEntity_handler)) then
                 call startEntity_handler('%'//str_vs(tempString))
+                if (fx%state==ST_STOP) goto 100
+              endif
               call add_internal_entity(fx%forbidden_pe_list, &
                 str_vs(tempString), "")
               call push_buffer_stack(fb, &
@@ -1113,8 +1161,10 @@ contains
             ! Have we previously skipped an external entity?
             if (fx%skippedExternal.and..not.fx%xds%standalone) then
               if (processDTD) then
-                if (present(skippedEntity_handler)) &
+                if (present(skippedEntity_handler)) then
                   call skippedEntity_handler('%'//str_vs(tempString))
+                  if (fx%state==ST_STOP) goto 100
+                endif
               endif
             else
               ! If not, 
@@ -1152,8 +1202,10 @@ contains
         if (str_vs(fx%token)==">") then
           deallocate(fx%name)
           if (processDTD) then
-            if (present(attributeDecl_handler)) &
+            if (present(attributeDecl_handler)) then
               call report_declarations(elem, attributeDecl_handler)
+              if (fx%state==ST_STOP) goto 100
+            endif
           endif
           fx%state = ST_INT_SUBSET
           fx%whitespace = WS_DISCARD
@@ -1184,8 +1236,10 @@ contains
         if (str_vs(fx%token)=='>') then
           deallocate(fx%name)
           if (processDTD) then
-            if (present(attributeDecl_handler)) &
+            if (present(attributeDecl_handler)) then
               call report_declarations(elem, attributeDecl_handler)
+              if (fx%state==ST_STOP) goto 100
+            endif
           endif
           fx%state = ST_INT_SUBSET
           fx%whitespace = WS_DISCARD
@@ -1231,8 +1285,10 @@ contains
         !write(*,*)'ST_DTD_ELEMENT_END'
         if (str_vs(fx%token)=='>') then
           if (processDTD.and.associated(elem)) then
-            if (present(elementDecl_handler)) &
+            if (present(elementDecl_handler)) then
               call elementDecl_handler(str_vs(fx%name), str_vs(elem%model))
+              if (fx%state==ST_STOP) goto 100
+            endif
           endif
           deallocate(fx%name)
           fx%state = ST_INT_SUBSET
@@ -1448,8 +1504,10 @@ contains
           endif
           if (processDTD) then
             call add_notation(fx%nlist, str_vs(fx%name), publicId=str_vs(fx%publicId))
-            if (present(notationDecl_handler)) &
-              call notationDecl_handler(str_vs(fx%name), publicId=str_vs(fx%publicId), systemId="") 
+            if (present(notationDecl_handler)) then
+              call notationDecl_handler(str_vs(fx%name), publicId=str_vs(fx%publicId), systemId="")
+              if (fx%state==ST_STOP) goto 100
+            endif
           endif
           deallocate(fx%name)
           deallocate(fx%publicId)
@@ -1478,15 +1536,19 @@ contains
             if (associated(fx%publicId)) then
               call add_notation(fx%nlist, str_vs(fx%name), &
                 publicId=str_vs(fx%publicId), systemId=str_vs(fx%systemId))
-              if (present(notationDecl_handler)) &
+              if (present(notationDecl_handler)) then
                 call notationDecl_handler(str_vs(fx%name), &
-                publicId=str_vs(fx%publicId), systemId=str_vs(fx%systemId)) 
+                publicId=str_vs(fx%publicId), systemId=str_vs(fx%systemId))
+                if (fx%state==ST_STOP) goto 100
+              endif
             else
               call add_notation(fx%nlist, str_vs(fx%name), &
                 systemId=str_vs(fx%systemId))
-              if (present(notationDecl_handler)) &
+              if (present(notationDecl_handler)) then
                 call notationDecl_handler(str_vs(fx%name), &
-                publicId="", systemId=str_vs(fx%systemId)) 
+                publicId="", systemId=str_vs(fx%systemId))
+                if (fx%state==ST_STOP) goto 100
+              endif
             endif
           endif
           if (associated(fx%publicId)) deallocate(fx%publicId)
@@ -1502,8 +1564,10 @@ contains
       case (ST_CLOSE_DTD)
         !write(*,*) 'ST_CLOSE_DTD'
         ! token must be '>'
-        if (present(endDTD_handler)) &
+        if (present(endDTD_handler)) then
           call endDTD_handler
+          if (fx%state==ST_STOP) goto 100
+        endif
         ! Check that all notations used have been declared:
         if (validCheck) then
           do i = 1, size(fx%xds%entityList)
@@ -1529,7 +1593,9 @@ contains
       if (startInChardata_) then
         if (fx%well_formed) then
           if (fx%state==ST_CHAR_IN_CONTENT.and.associated(fx%token)) then
-            if (size(fx%token)>0.and.present(characters_handler)) call characters_handler(str_vs(fx%token))
+            if (size(fx%token)>0.and.present(characters_handler)) &
+              call characters_handler(str_vs(fx%token))
+            ! No need for check on parser stop, we finish here anyway
           endif
         else
           if (present(error_handler)) call error_handler("Ill-formed XML fragment")
@@ -1537,6 +1603,7 @@ contains
       elseif (fx%well_formed.and.fx%state==ST_MISC) then
         if (present(endDocument_handler)) &
           call endDocument_handler()
+        ! No need for check on parser stop, we finish here anyway
       else
         call add_error(fx%error_stack, "File is not well-formed")
         call sax_error(fx, error_handler)
@@ -1582,11 +1649,13 @@ contains
         endif
       endif
       ! Check for namespace changes
-      if (namespaces_) &
+      if (namespaces_) then
         call checkNamespaces(fx%attributes, fx%nsDict, &
         len(fx%elstack), fx%xds, namespace_prefixes_, xmlns_uris_, &
         fx%error_stack, startInCharData_, &
         startPrefixMapping_handler, endPrefixMapping_handler)
+        if (fx%state==ST_STOP) return
+      endif
       if (in_error(fx%error_stack)) return
       call checkXmlAttributes
       if (in_error(fx%error_stack)) return
@@ -1601,18 +1670,23 @@ contains
           call startElement_handler("", &
             getlocalNameofQName(str_vs(fx%name)), &
             str_vs(fx%name), fx%attributes)
+          if (fx%state==ST_STOP) return
         endif
       elseif (namespaces_) then
         ! Normal state of affairs
-        if (present(startElement_handler)) &
+        if (present(startElement_handler)) then
           call startElement_handler(getURIofQName(fx, str_vs(fx%name)), &
           getlocalNameofQName(str_vs(fx%name)), &
           str_vs(fx%name), fx%attributes)
+          if (fx%state==ST_STOP) return
+        endif
       else
         ! Non-namespace aware processing
-        if (present(startElement_handler)) &
+        if (present(startElement_handler)) then
           call startElement_handler("", "", &
           str_vs(fx%name), fx%attributes)
+          if (fx%state==ST_STOP) return
+        endif
       endif
       call push_elstack(str_vs(fx%name), fx%elstack)
       call reset_dict(fx%attributes)
@@ -1648,10 +1722,13 @@ contains
           call endElement_handler("", "", &
             str_vs(fx%name))
         endif
+        if (fx%state==ST_STOP) return
       endif
-      if (namespaces_) &
+      if (namespaces_) then
         call checkEndNamespaces(fx%nsDict, len(fx%elstack), &
         endPrefixMapping_handler)
+        if (fx%state==ST_STOP) return
+      endif
     end subroutine close_tag
 
     subroutine add_entity
@@ -1663,20 +1740,26 @@ contains
           if (associated(fx%attname)) then ! it's internal
             call register_internal_PE(fx%xds, str_vs(fx%name), str_vs(fx%attname(2:size(fx%attname)-1))) ! stripping off quotes
             ! FIXME need to expand value here before reporting ...
-            if (present(internalEntityDecl_handler)) &
+            if (present(internalEntityDecl_handler)) then
               call internalEntityDecl_handler('%'//str_vs(fx%name), str_vs(fx%attname(2:size(fx%attname)-1)))
+              if (fx%state==ST_STOP) return
+            endif
           else ! PE can't have Ndata declaration
             if (associated(fx%publicId)) then
               call register_external_PE(fx%xds, str_vs(fx%name), str_vs(fx%systemId), public=str_vs(fx%publicId))
               !Need to fully resolve system ID to URL here
-              if (present(externalEntityDecl_handler)) &
+              if (present(externalEntityDecl_handler)) then
                 call externalEntityDecl_handler('%'//str_vs(fx%name), &
-                systemId=resolveSystemID(str_vs(fx%systemId)), publicId=str_vs(fx%publicId))
+                  systemId=resolveSystemID(str_vs(fx%systemId)), publicId=str_vs(fx%publicId))
+                if (fx%state==ST_STOP) return
+              endif
             else
               call register_external_PE(fx%xds, str_vs(fx%name), str_vs(fx%systemId))
-              if (present(externalEntityDecl_handler)) &
+              if (present(externalEntityDecl_handler)) then
                 call externalEntityDecl_handler('%'//str_vs(fx%name), &
-                systemId=resolveSystemId(str_vs(fx%systemId)))
+                  systemId=resolveSystemId(str_vs(fx%systemId)))
+                if (fx%state==ST_STOP) return
+              endif
             endif
           endif
           ! else we ignore it
@@ -1686,32 +1769,42 @@ contains
           ! Internal or external?
           if (associated(fx%attname)) then ! it's internal
             call register_internal_GE(fx%xds, str_vs(fx%name), str_vs(fx%attname(2:size(fx%attname)-1)))
-            if (present(internalEntityDecl_handler)) &
+            if (present(internalEntityDecl_handler)) then
               call internalEntityDecl_handler(str_vs(fx%name),&
-              str_vs(fx%attname(2:size(fx%attname)-1))) ! stripping quotes
+                str_vs(fx%attname(2:size(fx%attname)-1))) ! stripping quotes
+              if (fx%state==ST_STOP) return
+            endif
           else
             if (associated(fx%publicId).and.associated(fx%Ndata)) then
               call register_external_GE(fx%xds, str_vs(fx%name), str_vs(fx%systemId), &
                 public=str_vs(fx%publicId), notation=str_vs(fx%Ndata))
-              if (present(unparsedEntityDecl_handler)) &
+              if (present(unparsedEntityDecl_handler)) then
                 call unparsedEntityDecl_handler(str_vs(fx%name), &
-                systemId=resolveSystemId(str_vs(fx%systemId)), publicId=str_vs(fx%publicId), &
-                notation=str_vs(fx%Ndata))
+                  systemId=resolveSystemId(str_vs(fx%systemId)), publicId=str_vs(fx%publicId), &
+                  notation=str_vs(fx%Ndata))
+                if (fx%state==ST_STOP) return
+              endif
             elseif (associated(fx%Ndata)) then
               call register_external_GE(fx%xds, str_vs(fx%name), str_vs(fx%systemId), notation=str_vs(fx%Ndata))
-              if (present(unparsedEntityDecl_handler)) &
+              if (present(unparsedEntityDecl_handler)) then
                 call unparsedEntityDecl_handler(str_vs(fx%name), publicId="", &
-                systemId=resolveSystemId(str_vs(fx%systemId)), notation=str_vs(fx%Ndata))
+                  systemId=resolveSystemId(str_vs(fx%systemId)), notation=str_vs(fx%Ndata))
+                if (fx%state==ST_STOP) return
+              endif
             elseif (associated(fx%publicId)) then
               call register_external_GE(fx%xds, str_vs(fx%name), str_vs(fx%systemId), public=str_vs(fx%publicId))
-              if (present(externalEntityDecl_handler)) &
+              if (present(externalEntityDecl_handler)) then
                 call externalEntityDecl_handler(str_vs(fx%name), &
-                systemId=resolveSystemId(str_vs(fx%systemId)), publicId=str_vs(fx%publicId))
+                  systemId=resolveSystemId(str_vs(fx%systemId)), publicId=str_vs(fx%publicId))
+                if (fx%state==ST_STOP) return
+              endif
             else
               call register_external_GE(fx%xds, str_vs(fx%name), str_vs(fx%systemId))
-              if (present(externalEntityDecl_handler)) &
+              if (present(externalEntityDecl_handler)) then
                 call externalEntityDecl_handler(str_vs(fx%name), &
-                systemId=resolveSystemId(str_vs(fx%systemId)))
+                  systemId=resolveSystemId(str_vs(fx%systemId)))
+                if (fx%state==ST_STOP) return
+              endif
             endif
           endif
         endif
@@ -1807,6 +1900,7 @@ contains
     if (present(error_handler)) then
       call error_handler(str_vs(errmsg))
       deallocate(errmsg)
+      if (fx%state==ST_STOP) return
     else
       call FoX_error(str_vs(errmsg))
     endif
