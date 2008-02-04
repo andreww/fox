@@ -389,8 +389,8 @@ contains
 
   subroutine cmlStartBand(xf, spin &
 ,dictRef,convention,title,id,ref,label)
-    type(xmlf_t), intent(inout)  :: xf
-    character(len=*), intent(in) :: spin
+    type(xmlf_t), intent(inout)            :: xf
+    character(len=*), intent(in), optional :: spin
     character(len=*), intent(in), optional :: dictRef
     character(len=*), intent(in), optional :: convention
     character(len=*), intent(in), optional :: title

@@ -145,8 +145,8 @@ define(`TOHWM4_coma_subs', `dnl
 
   subroutine cmlStartBand(xf, spin &
 TOHWM4_bandargslist)
-    type(xmlf_t), intent(inout)  :: xf
-    character(len=*), intent(in) :: spin
+    type(xmlf_t), intent(inout)            :: xf
+    character(len=*), intent(in), optional :: spin
 TOHWM4_bandargsdecl
 
 #ifndef DUMMYLIB

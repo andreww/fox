@@ -128,9 +128,9 @@ a very few common units, it may be easiest to borrow definitions from the provid
 
 (These links do not resolve yet.)
 
-`cmlUnits: http://www.xml-cml.org/units/units`
-`siUnits: <http://www.xml-cml.org/units/siUnits`
-`atomicUnits: http://www.xml-cml.org/units/atomic`
+`cmlUnits: http://www.xml-cml.org/units/units`  
+`siUnits: http://www.xml-cml.org/units/siUnits`  
+`atomicUnits: http://www.xml-cml.org/units/atomic`  
 
 A default units dictionary, containing only the very basic units that wcml needs to know about, which has a namespace of: `http://www.uszla.me.uk/FoX/units`, and wcml assigns it automatically to the prefix `units`.
 
@@ -149,7 +149,7 @@ declare it using `cmlAddNamespace`, and markup all your units as:
 * `cmlBeginFile`   
 **filename**: *string* *scalar*: Filename to be opened.  
 **unit**: *integer* *scalar*: what unit number should the file be opened on? If you don't
-care, you may specify '-1' as the unit number, in which case wcml will make a guess
+care, you may specify `-1` as the unit number, in which case wcml will make a guess  
 (**replace**): *logical* *scalar*: should the file be replaced if it already exists? *default: yes*
 
 This takes care of all calls to open a CML output file.
@@ -174,7 +174,7 @@ This will be needed if you are adding dictionary references to your output. Thus
 and then output all our properties and parameters with `dictRef="siesta:something"`.
 
 * `cmlStartCml`  
-(**fileId**) *string* *scalar*: name of originating file.  (default: current filename)
+(**fileId**) *string* *scalar*: name of originating file.  (default: current filename)  
 (**version**) *string* *scalar*: version of CML in use.  (default: 2.4)
 
 * `cmlEndCml`
@@ -208,11 +208,6 @@ This pair of functions open & close a parameterList, which is a wrapper for inpu
 * `cmlEndPropertyList`
 
 This pair of functions open & close a propertyList, which is a wrapper for output properties.
-
-* `cmlStartBandList`
-* `cmlEndBandList`
-
-Start/end a list of bands (added using `cmlAddBand` below)
 
 * `cmlStartKpointList`
 * `cmlEndKpointList`
@@ -264,6 +259,7 @@ This function adds a tag representing an input parameter
 
 This function adds a tag representing an output property
 
+## Adding geometry information
 
 * `cmlAddMolecule`  
 **coords**: *real*: a 3xn matrix of real numbers representing atomic coordinates (either fractional or Cartesian) . These *must* be specified in Angstrom or fractional units (see **style** below.)  
@@ -308,35 +304,52 @@ Outputs information about a unit cell, in lattice-vector form
 
 Outputs information about a unit cell, in crystallographic form
 
-* `cmlAddBand`  
-**kptref**: *string* *scalar*:  Reference id of relevant kpoint.  
-**bands**: *real* *array*: array of eigenvalues  
-**units**: * string* *scalar*: energy units of eigenvalues  
-(**fmt**): *string* *scalar*: format to output eigenvalues  
-(**label**): *string* *scalar*: label for band.
+## Adding eigen-information
 
-Output eigenvalues for a band.
+* `cmlStartKPoint`  
+**kpoint**: *real* *array-3* the reciprocal-space coordinates of the k-point  
+(**weight**): *real* *scalar* the weight of the kpoint  
+(**kptfmt**): *string* *scalar* numerical formatting for the k-point  
+(**wtfmt**): *string* *scalar* numerical formatting for the weight
 
-* `cmlAddKpoint`  
-**kpoint**: *real* *array* length-3 array defining k-point  
-(**weight**): *real* *scalar*: weight of k-point  
-(**kptfmt**): *string* *scalar*: format for outputting k-point (default: `"r3"`)  
-(**weightfmt**): *string* *scalar*: format for outputting weight (default: `"r3"`)  
-(**label**): *string* *scalar*: label for k-point
+Start a kpoint section.
 
-Output a k-point
+* `cmlEndKPoint`  
 
-* `cmlAddEigen`  
-**eigvec**: *real* *matrix* nxn array of eigenvectors  
-**eigval**: *real* *array* length-n array of eigenvalues  
-(**n**): number of eigenvalues/eigenvectors (default: picked up from length of **eigval**)  
-**units**: units of eigenvalues  
-**eigenOrientationType**: *string* *scalar*: is the eigenvector matrix `column` or `row` oriented?  
-(**vecfmt**): *string* *scalar*: format for outputting eigenvectors  
-(**valfmt**): *string* *scalar*: format for outputting eigenvalues  
-(**type**): *string* *scalar*: what sort of thing are these eigenvectors? No defined vocabulary.
+End a kpoint section.
 
-Output a set of eigenvalues and eigenvectors
+* `cmlAddKPoint`  
+**kpoint**: *real* *array-3* the reciprocal-space coordinates of the k-point  
+(**weight**): *real* *scalar* the weight of the kpoint  
+(**kptfmt**): *string* *scalar* numerical formatting for the k-point  
+(**wtfmt**): *string* *scalar* numerical formatting for the weight
+
+Add an empty kpoint section.
+
+* `cmlStartBand`  
+(**spin**): *string* *scalar* the spin of this band. Must be either "up" or "down"  
+(**label**): the label of this band.
+
+Start a section describing one band.
+
+* `cmlEndBand`
+
+End a section describing one band.
+
+* `cmlAddEigenValue`  
+**value**: *real* *scalar* the eigenvalue  
+**units**: *QName* *scalar* the units of the eigenvalue
+
+Add a single eigenvalue to a band.
+
+* `cmlAddEigenValueVector`
+**value**: *real* *scalar* the eigenvalue for this band  
+**units**: *QName* *scalar* the units of the eigenvalue  
+**vector**: *real/complex* *3xN matrix* the eigenvectors for this band  
+(**valfmt**): *string* *scalar* numerical formatting for the eigenvalue  
+(**vecfmt**): *string* *scalar* numerical formatting for the eigenvector
+
+Add a phononic eigenpoint to the band - which has a single energy, and a 3xN matrix representing the eigenvector.
 
 ##Common arguments
 

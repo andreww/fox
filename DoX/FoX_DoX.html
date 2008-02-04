@@ -205,7 +205,7 @@ places.  If you move the FoX directory later on, you will need to re-run configu
 
 <p>To run them all, simply run <code>make check</code> from the top-level directory. This will run the individual testsuites, and collate their results.</p>
 
-<p>If any failures occur (unrelated to known compiler issues, see the <a href="http://uszla.me.uk/space/software/FoX/compat/">up-to-date list</a>), please send a message to the mailing list (<a href="m&#97;&#x69;&#x6C;&#x74;&#x6F;:&#x46;&#111;&#88;&#64;&#108;&#105;&#x73;&#116;&#115;&#x2E;&#x75;&#115;z&#x6C;&#x61;&#x2E;&#109;&#101;&#x2E;&#x75;k">&#x46;&#111;&#88;&#64;&#108;&#105;&#x73;&#116;&#115;&#x2E;&#x75;&#115;z&#x6C;&#x61;&#x2E;&#109;&#101;&#x2E;&#x75;k</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
+<p>If any failures occur (unrelated to known compiler issues, see the <a href="http://uszla.me.uk/space/software/FoX/compat/">up-to-date list</a>), please send a message to the mailing list (<a href="&#x6D;&#97;&#x69;&#108;&#x74;&#111;:&#x46;&#x6F;&#88;&#64;&#108;&#105;&#115;&#x74;&#115;&#x2E;&#x75;&#x73;&#122;&#x6C;&#x61;&#46;&#109;&#101;&#46;&#117;&#107;">&#x46;&#x6F;&#88;&#64;&#108;&#105;&#115;&#x74;&#115;&#x2E;&#x75;&#x73;&#122;&#x6C;&#x61;&#46;&#109;&#101;&#46;&#117;&#107;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
 
 <h2>Linking to an existing program</h2>
 
@@ -1042,9 +1042,9 @@ a very few common units, it may be easiest to borrow definitions from the provid
 
 <p>(These links do not resolve yet.)</p>
 
-<p><code>cmlUnits: http://www.xml-cml.org/units/units</code>
-<code>siUnits: &lt;http://www.xml-cml.org/units/siUnits</code>
-<code>atomicUnits: http://www.xml-cml.org/units/atomic</code></p>
+<p><code>cmlUnits: http://www.xml-cml.org/units/units</code> <br />
+<code>siUnits: http://www.xml-cml.org/units/siUnits</code> <br />
+<code>atomicUnits: http://www.xml-cml.org/units/atomic</code>  </p>
 
 <p>A default units dictionary, containing only the very basic units that wcml needs to know about, which has a namespace of: <code>http://www.uszla.me.uk/FoX/units</code>, and wcml assigns it automatically to the prefix <code>units</code>.</p>
 
@@ -1065,7 +1065,7 @@ declare it using <code>cmlAddNamespace</code>, and markup all your units as:</p>
 <li><code>cmlBeginFile</code> <br />
 <strong>filename</strong>: <em>string</em> <em>scalar</em>: Filename to be opened. <br />
 <strong>unit</strong>: <em>integer</em> <em>scalar</em>: what unit number should the file be opened on? If you don't
-care, you may specify '-1' as the unit number, in which case wcml will make a guess
+care, you may specify <code>-1</code> as the unit number, in which case wcml will make a guess <br />
 (<strong>replace</strong>): <em>logical</em> <em>scalar</em>: should the file be replaced if it already exists? <em>default: yes</em></li>
 </ul>
 
@@ -1097,7 +1097,7 @@ Attempts to do otherwise will result in a runtime error.</p>
 
 <ul>
 <li><p><code>cmlStartCml</code> <br />
-(<strong>fileId</strong>) <em>string</em> <em>scalar</em>: name of originating file.  (default: current filename)
+(<strong>fileId</strong>) <em>string</em> <em>scalar</em>: name of originating file.  (default: current filename) <br />
 (<strong>version</strong>) <em>string</em> <em>scalar</em>: version of CML in use.  (default: 2.4)</p></li>
 <li><p><code>cmlEndCml</code></p></li>
 </ul>
@@ -1134,13 +1134,6 @@ Attempts to do otherwise will result in a runtime error.</p>
 </ul>
 
 <p>This pair of functions open &amp; close a propertyList, which is a wrapper for output properties.</p>
-
-<ul>
-<li><code>cmlStartBandList</code></li>
-<li><code>cmlEndBandList</code></li>
-</ul>
-
-<p>Start/end a list of bands (added using <code>cmlAddBand</code> below)</p>
 
 <ul>
 <li><code>cmlStartKpointList</code></li>
@@ -1205,6 +1198,8 @@ Attempts to do otherwise will result in a runtime error.</p>
 
 <p>This function adds a tag representing an output property</p>
 
+<h2>Adding geometry information</h2>
+
 <ul>
 <li><code>cmlAddMolecule</code> <br />
 <strong>coords</strong>: <em>real</em>: a 3xn matrix of real numbers representing atomic coordinates (either fractional or Cartesian) . These <em>must</em> be specified in Angstrom or fractional units (see <strong>style</strong> below.) <br />
@@ -1253,41 +1248,66 @@ Attempts to do otherwise will result in a runtime error.</p>
 
 <p>Outputs information about a unit cell, in crystallographic form</p>
 
-<ul>
-<li><code>cmlAddBand</code> <br />
-<strong>kptref</strong>: <em>string</em> <em>scalar</em>:  Reference id of relevant kpoint. <br />
-<strong>bands</strong>: <em>real</em> <em>array</em>: array of eigenvalues <br />
-<strong>units</strong>: * string* <em>scalar</em>: energy units of eigenvalues <br />
-(<strong>fmt</strong>): <em>string</em> <em>scalar</em>: format to output eigenvalues <br />
-(<strong>label</strong>): <em>string</em> <em>scalar</em>: label for band.</li>
-</ul>
-
-<p>Output eigenvalues for a band.</p>
+<h2>Adding eigen-information</h2>
 
 <ul>
-<li><code>cmlAddKpoint</code> <br />
-<strong>kpoint</strong>: <em>real</em> <em>array</em> length-3 array defining k-point <br />
-(<strong>weight</strong>): <em>real</em> <em>scalar</em>: weight of k-point <br />
-(<strong>kptfmt</strong>): <em>string</em> <em>scalar</em>: format for outputting k-point (default: <code>"r3"</code>) <br />
-(<strong>weightfmt</strong>): <em>string</em> <em>scalar</em>: format for outputting weight (default: <code>"r3"</code>) <br />
-(<strong>label</strong>): <em>string</em> <em>scalar</em>: label for k-point</li>
+<li><code>cmlStartKPoint</code> <br />
+<strong>kpoint</strong>: <em>real</em> <em>array-3</em> the reciprocal-space coordinates of the k-point <br />
+(<strong>weight</strong>): <em>real</em> <em>scalar</em> the weight of the kpoint <br />
+(<strong>kptfmt</strong>): <em>string</em> <em>scalar</em> numerical formatting for the k-point <br />
+(<strong>wtfmt</strong>): <em>string</em> <em>scalar</em> numerical formatting for the weight</li>
 </ul>
 
-<p>Output a k-point</p>
+<p>Start a kpoint section.</p>
 
 <ul>
-<li><code>cmlAddEigen</code> <br />
-<strong>eigvec</strong>: <em>real</em> <em>matrix</em> nxn array of eigenvectors <br />
-<strong>eigval</strong>: <em>real</em> <em>array</em> length-n array of eigenvalues <br />
-(<strong>n</strong>): number of eigenvalues/eigenvectors (default: picked up from length of <strong>eigval</strong>) <br />
-<strong>units</strong>: units of eigenvalues <br />
-<strong>eigenOrientationType</strong>: <em>string</em> <em>scalar</em>: is the eigenvector matrix <code>column</code> or <code>row</code> oriented? <br />
-(<strong>vecfmt</strong>): <em>string</em> <em>scalar</em>: format for outputting eigenvectors <br />
-(<strong>valfmt</strong>): <em>string</em> <em>scalar</em>: format for outputting eigenvalues <br />
-(<strong>type</strong>): <em>string</em> <em>scalar</em>: what sort of thing are these eigenvectors? No defined vocabulary.</li>
+<li><code>cmlEndKPoint</code>  </li>
 </ul>
 
-<p>Output a set of eigenvalues and eigenvectors</p>
+<p>End a kpoint section.</p>
+
+<ul>
+<li><code>cmlAddKPoint</code> <br />
+<strong>kpoint</strong>: <em>real</em> <em>array-3</em> the reciprocal-space coordinates of the k-point <br />
+(<strong>weight</strong>): <em>real</em> <em>scalar</em> the weight of the kpoint <br />
+(<strong>kptfmt</strong>): <em>string</em> <em>scalar</em> numerical formatting for the k-point <br />
+(<strong>wtfmt</strong>): <em>string</em> <em>scalar</em> numerical formatting for the weight</li>
+</ul>
+
+<p>Add an empty kpoint section.</p>
+
+<ul>
+<li><code>cmlStartBand</code> <br />
+(<strong>spin</strong>): <em>string</em> <em>scalar</em> the spin of this band. Must be either "up" or "down" <br />
+(<strong>label</strong>): the label of this band.</li>
+</ul>
+
+<p>Start a section describing one band.</p>
+
+<ul>
+<li><code>cmlEndBand</code></li>
+</ul>
+
+<p>End a section describing one band.</p>
+
+<ul>
+<li><code>cmlAddEigenValue</code> <br />
+<strong>value</strong>: <em>real</em> <em>scalar</em> the eigenvalue <br />
+<strong>units</strong>: <em>QName</em> <em>scalar</em> the units of the eigenvalue</li>
+</ul>
+
+<p>Add a single eigenvalue to a band.</p>
+
+<ul>
+<li><code>cmlAddEigenValueVector</code>
+<strong>value</strong>: <em>real</em> <em>scalar</em> the eigenvalue for this band <br />
+<strong>units</strong>: <em>QName</em> <em>scalar</em> the units of the eigenvalue <br />
+<strong>vector</strong>: <em>real/complex</em> <em>3xN matrix</em> the eigenvectors for this band <br />
+(<strong>valfmt</strong>): <em>string</em> <em>scalar</em> numerical formatting for the eigenvalue <br />
+(<strong>vecfmt</strong>): <em>string</em> <em>scalar</em> numerical formatting for the eigenvector</li>
+</ul>
+
+<p>Add a phononic eigenpoint to the band - which has a single energy, and a 3xN matrix representing the eigenvector.</p>
 
 <h2>Common arguments</h2>
 
@@ -2798,9 +2818,9 @@ In particular, the way the W3C DOM mandates namespace handling makes it trivial 
 <h1>Further information</h1>
 
 <p>FoX evolved from the initial codebase of <a href="http://lcdx00.wm.lc.ehu.es/ag/xml/">xmlf90</a>,
-which was written largely by Alberto Garcia &lt;<a href="&#x6D;&#x61;&#x69;l&#116;&#111;:&#x61;&#108;&#98;&#x65;&#x72;&#x74;&#111;&#x67;&#64;i&#x63;&#x6D;&#97;b&#46;&#x65;&#115;">&#x61;&#108;&#98;&#x65;&#x72;&#x74;&#111;&#x67;&#64;i&#x63;&#x6D;&#97;b&#46;&#x65;&#115;</a>> and Jon Wakelin &lt;<a href="&#x6D;&#x61;&#105;&#108;&#x74;&#x6F;:j&#111;n&#x2E;&#119;&#x61;&#107;&#x65;&#x6C;in&#64;&#x62;&#114;&#105;&#115;&#116;&#111;&#x6C;&#x2E;&#x61;&#x63;&#x2E;&#x75;&#x6B;">j&#111;n&#x2E;&#119;&#x61;&#107;&#x65;&#x6C;in&#64;&#x62;&#114;&#105;&#115;&#116;&#111;&#x6C;&#x2E;&#x61;&#x63;&#x2E;&#x75;&#x6B;</a>>.</p>
+which was written largely by Alberto Garcia &lt;<a href="ma&#x69;&#x6C;&#x74;&#111;:&#x61;&#108;&#98;&#x65;&#x72;&#116;&#x6F;&#103;&#64;&#105;&#x63;&#109;&#97;b&#46;&#101;&#x73;">&#x61;&#108;&#98;&#x65;&#x72;&#116;&#x6F;&#103;&#64;&#105;&#x63;&#109;&#97;b&#46;&#101;&#x73;</a>> and Jon Wakelin &lt;<a href="&#109;&#x61;&#x69;&#108;&#116;&#111;:&#x6A;&#x6F;&#x6E;&#46;&#x77;&#x61;k&#101;&#108;&#105;&#x6E;&#64;b&#x72;&#105;&#x73;&#x74;&#x6F;&#x6C;&#x2E;&#x61;c&#x2E;&#117;&#107;">&#x6A;&#x6F;&#x6E;&#46;&#x77;&#x61;k&#101;&#108;&#105;&#x6E;&#64;b&#x72;&#105;&#x73;&#x74;&#x6F;&#x6C;&#x2E;&#x61;c&#x2E;&#117;&#107;</a>>.</p>
 
-<p>FoX is the work of Toby White &lt;<a href="&#x6D;&#97;&#105;&#x6C;t&#x6F;:t&#111;&#119;&#x32;&#49;&#64;&#x63;a&#x6D;&#x2E;&#x61;&#x63;&#46;&#117;&#107;">t&#111;&#119;&#x32;&#49;&#64;&#x63;a&#x6D;&#x2E;&#x61;&#x63;&#46;&#117;&#107;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
+<p>FoX is the work of Toby White &lt;<a href="&#109;a&#x69;&#x6C;&#x74;&#111;:&#116;&#111;&#x77;&#x32;&#49;&#64;c&#97;&#109;&#x2E;&#x61;&#99;&#x2E;&#x75;&#x6B;">&#116;&#111;&#x77;&#x32;&#49;&#64;c&#97;&#109;&#x2E;&#x61;&#99;&#x2E;&#x75;&#x6B;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
 
 <p>There is a FoX website at <a href="http://www.uszla.me.uk/software/FoX/">http://www.uszla.me.uk/software/FoX/</a>.</p>
 

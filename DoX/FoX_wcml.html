@@ -150,9 +150,9 @@ a very few common units, it may be easiest to borrow definitions from the provid
 
 <p>(These links do not resolve yet.)</p>
 
-<p><code>cmlUnits: http://www.xml-cml.org/units/units</code>
-<code>siUnits: &lt;http://www.xml-cml.org/units/siUnits</code>
-<code>atomicUnits: http://www.xml-cml.org/units/atomic</code></p>
+<p><code>cmlUnits: http://www.xml-cml.org/units/units</code> <br />
+<code>siUnits: http://www.xml-cml.org/units/siUnits</code> <br />
+<code>atomicUnits: http://www.xml-cml.org/units/atomic</code>  </p>
 
 <p>A default units dictionary, containing only the very basic units that wcml needs to know about, which has a namespace of: <code>http://www.uszla.me.uk/FoX/units</code>, and wcml assigns it automatically to the prefix <code>units</code>.</p>
 
@@ -173,7 +173,7 @@ declare it using <code>cmlAddNamespace</code>, and markup all your units as:</p>
 <li><code>cmlBeginFile</code> <br />
 <strong>filename</strong>: <em>string</em> <em>scalar</em>: Filename to be opened. <br />
 <strong>unit</strong>: <em>integer</em> <em>scalar</em>: what unit number should the file be opened on? If you don't
-care, you may specify '-1' as the unit number, in which case wcml will make a guess
+care, you may specify <code>-1</code> as the unit number, in which case wcml will make a guess <br />
 (<strong>replace</strong>): <em>logical</em> <em>scalar</em>: should the file be replaced if it already exists? <em>default: yes</em></li>
 </ul>
 
@@ -205,7 +205,7 @@ Attempts to do otherwise will result in a runtime error.</p>
 
 <ul>
 <li><p><code>cmlStartCml</code> <br />
-(<strong>fileId</strong>) <em>string</em> <em>scalar</em>: name of originating file.  (default: current filename)
+(<strong>fileId</strong>) <em>string</em> <em>scalar</em>: name of originating file.  (default: current filename) <br />
 (<strong>version</strong>) <em>string</em> <em>scalar</em>: version of CML in use.  (default: 2.4)</p></li>
 <li><p><code>cmlEndCml</code></p></li>
 </ul>
@@ -242,13 +242,6 @@ Attempts to do otherwise will result in a runtime error.</p>
 </ul>
 
 <p>This pair of functions open &amp; close a propertyList, which is a wrapper for output properties.</p>
-
-<ul>
-<li><code>cmlStartBandList</code></li>
-<li><code>cmlEndBandList</code></li>
-</ul>
-
-<p>Start/end a list of bands (added using <code>cmlAddBand</code> below)</p>
 
 <ul>
 <li><code>cmlStartKpointList</code></li>
@@ -313,6 +306,8 @@ Attempts to do otherwise will result in a runtime error.</p>
 
 <p>This function adds a tag representing an output property</p>
 
+<h2>Adding geometry information</h2>
+
 <ul>
 <li><code>cmlAddMolecule</code> <br />
 <strong>coords</strong>: <em>real</em>: a 3xn matrix of real numbers representing atomic coordinates (either fractional or Cartesian) . These <em>must</em> be specified in Angstrom or fractional units (see <strong>style</strong> below.) <br />
@@ -361,41 +356,66 @@ Attempts to do otherwise will result in a runtime error.</p>
 
 <p>Outputs information about a unit cell, in crystallographic form</p>
 
-<ul>
-<li><code>cmlAddBand</code> <br />
-<strong>kptref</strong>: <em>string</em> <em>scalar</em>:  Reference id of relevant kpoint. <br />
-<strong>bands</strong>: <em>real</em> <em>array</em>: array of eigenvalues <br />
-<strong>units</strong>: * string* <em>scalar</em>: energy units of eigenvalues <br />
-(<strong>fmt</strong>): <em>string</em> <em>scalar</em>: format to output eigenvalues <br />
-(<strong>label</strong>): <em>string</em> <em>scalar</em>: label for band.</li>
-</ul>
-
-<p>Output eigenvalues for a band.</p>
+<h2>Adding eigen-information</h2>
 
 <ul>
-<li><code>cmlAddKpoint</code> <br />
-<strong>kpoint</strong>: <em>real</em> <em>array</em> length-3 array defining k-point <br />
-(<strong>weight</strong>): <em>real</em> <em>scalar</em>: weight of k-point <br />
-(<strong>kptfmt</strong>): <em>string</em> <em>scalar</em>: format for outputting k-point (default: <code>"r3"</code>) <br />
-(<strong>weightfmt</strong>): <em>string</em> <em>scalar</em>: format for outputting weight (default: <code>"r3"</code>) <br />
-(<strong>label</strong>): <em>string</em> <em>scalar</em>: label for k-point</li>
+<li><code>cmlStartKPoint</code> <br />
+<strong>kpoint</strong>: <em>real</em> <em>array-3</em> the reciprocal-space coordinates of the k-point <br />
+(<strong>weight</strong>): <em>real</em> <em>scalar</em> the weight of the kpoint <br />
+(<strong>kptfmt</strong>): <em>string</em> <em>scalar</em> numerical formatting for the k-point <br />
+(<strong>wtfmt</strong>): <em>string</em> <em>scalar</em> numerical formatting for the weight</li>
 </ul>
 
-<p>Output a k-point</p>
+<p>Start a kpoint section.</p>
 
 <ul>
-<li><code>cmlAddEigen</code> <br />
-<strong>eigvec</strong>: <em>real</em> <em>matrix</em> nxn array of eigenvectors <br />
-<strong>eigval</strong>: <em>real</em> <em>array</em> length-n array of eigenvalues <br />
-(<strong>n</strong>): number of eigenvalues/eigenvectors (default: picked up from length of <strong>eigval</strong>) <br />
-<strong>units</strong>: units of eigenvalues <br />
-<strong>eigenOrientationType</strong>: <em>string</em> <em>scalar</em>: is the eigenvector matrix <code>column</code> or <code>row</code> oriented? <br />
-(<strong>vecfmt</strong>): <em>string</em> <em>scalar</em>: format for outputting eigenvectors <br />
-(<strong>valfmt</strong>): <em>string</em> <em>scalar</em>: format for outputting eigenvalues <br />
-(<strong>type</strong>): <em>string</em> <em>scalar</em>: what sort of thing are these eigenvectors? No defined vocabulary.</li>
+<li><code>cmlEndKPoint</code>  </li>
 </ul>
 
-<p>Output a set of eigenvalues and eigenvectors</p>
+<p>End a kpoint section.</p>
+
+<ul>
+<li><code>cmlAddKPoint</code> <br />
+<strong>kpoint</strong>: <em>real</em> <em>array-3</em> the reciprocal-space coordinates of the k-point <br />
+(<strong>weight</strong>): <em>real</em> <em>scalar</em> the weight of the kpoint <br />
+(<strong>kptfmt</strong>): <em>string</em> <em>scalar</em> numerical formatting for the k-point <br />
+(<strong>wtfmt</strong>): <em>string</em> <em>scalar</em> numerical formatting for the weight</li>
+</ul>
+
+<p>Add an empty kpoint section.</p>
+
+<ul>
+<li><code>cmlStartBand</code> <br />
+(<strong>spin</strong>): <em>string</em> <em>scalar</em> the spin of this band. Must be either "up" or "down" <br />
+(<strong>label</strong>): the label of this band.</li>
+</ul>
+
+<p>Start a section describing one band.</p>
+
+<ul>
+<li><code>cmlEndBand</code></li>
+</ul>
+
+<p>End a section describing one band.</p>
+
+<ul>
+<li><code>cmlAddEigenValue</code> <br />
+<strong>value</strong>: <em>real</em> <em>scalar</em> the eigenvalue <br />
+<strong>units</strong>: <em>QName</em> <em>scalar</em> the units of the eigenvalue</li>
+</ul>
+
+<p>Add a single eigenvalue to a band.</p>
+
+<ul>
+<li><code>cmlAddEigenValueVector</code>
+<strong>value</strong>: <em>real</em> <em>scalar</em> the eigenvalue for this band <br />
+<strong>units</strong>: <em>QName</em> <em>scalar</em> the units of the eigenvalue <br />
+<strong>vector</strong>: <em>real/complex</em> <em>3xN matrix</em> the eigenvectors for this band <br />
+(<strong>valfmt</strong>): <em>string</em> <em>scalar</em> numerical formatting for the eigenvalue <br />
+(<strong>vecfmt</strong>): <em>string</em> <em>scalar</em> numerical formatting for the eigenvector</li>
+</ul>
+
+<p>Add a phononic eigenpoint to the band - which has a single energy, and a 3xN matrix representing the eigenvector.</p>
 
 <h2>Common arguments</h2>
 
