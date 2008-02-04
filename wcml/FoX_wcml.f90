@@ -57,14 +57,16 @@ module FoX_wcml
   public :: cmlAddParticles
   public :: cmlAddMolecule
 
-  public :: cmlAddBand
-  public :: cmlStartBandList
-  public :: cmlEndBandList
+  public :: cmlStartBand
+  public :: cmlEndBand
 
+  public :: cmlAddEigenValue
+  public :: cmlAddEigenValueVector
+
+  public :: cmlStartKPoint
+  public :: cmlEndKPoint
   public :: cmlAddKPoint
   public :: cmlStartKPointList
   public :: cmlEndKPointList
-
-  public :: cmlAddEigen
 
 end module FoX_wcml

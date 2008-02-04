@@ -28,86 +28,78 @@ define(`TOHWM4_eigenargsuse',`dnl
 m4_foreach(`x',TOHWM4_eigenargs,`TOHWM4_dummyarguse(x)')
 ')dnl
 dnl
-define(`TOHWM4_coma_subs', `dnl
-dnl subroutine cmlAddBand_kpt_$1(xf, kpoint, kweight, units, bands, kptfmt, eigfmt)
-dnl     type(xmlf_t), intent(inout)            :: xf
-dnl     real($1), intent(in) :: kpoint(3)
-dnl     real($1), intent(in) :: bands(:)
-dnl     real($1), intent(in), optional :: kweight
-dnl     character(len=*), intent(in) :: units
-dnl     character(len=*), intent(in), optional :: kptfmt
-dnl     character(len=*), intent(in), optional :: eigfmt
-dnl 
-dnl     call xml_NewElement(xf, "band")
-dnl     if (present(kweight)) call xml_AddAttribute(xf, "weight", kweight)
-dnl     if (present(kptfmt)) then
-dnl       call xml_AddAttribute(xf, "kpoint", str(kpoint, kptfmt))
-dnl     else
-dnl       call xml_AddAttribute(xf, "kpoint", str(kpoint, "r7"))
-dnl     endif
-dnl 
-dnl     call stmAddValue(xf, value=bands, fmt=eigfmt, units=units)
-dnl     call xml_EndElement(xf, "band")
-dnl 
-dnl   end subroutine cmlAddBand_kpt_$1
+define(`TOHWM4_coma_real_subs', `dnl
 
-  subroutine cmlAddBand_kptref_$1(xf, kptref, bands, units, fmt &
+  subroutine cmlStartKPoint_$1(xf, kpoint, weight, kptfmt, wtfmt &
 TOHWM4_bandargslist)
-    type(xmlf_t), intent(inout)            :: xf
-    character(len=*), intent(in) :: kptref
-    real($1), intent(in) :: bands(:)
-    character(len=*), intent(in) :: units
-    character(len=*), intent(in), optional :: fmt
-TOHWM4_bandargsdecl
-
-#ifndef DUMMYLIB
-    call xml_NewElement(xf, "band")
-    call xml_AddAttribute(xf, "kpointRef", kptref)
-TOHWM4_bandargsuse
-    call stmAddValue(xf, value=bands, fmt=fmt, units=units)
-    call xml_EndElement(xf, "band")
-#endif
-
-  end subroutine cmlAddBand_kptref_$1
-
-  subroutine cmlAddKPoint_$1(xf, kpoint, weight, weightfmt, kptfmt &
-TOHWM4_bandargslist)
-    type(xmlf_t), intent(inout) :: xf
+    type(xmlf_t), intent(inout)              :: xf
     real(kind=$1), dimension(3), intent(in)  :: kpoint
-    real(kind=$1), intent(in), optional  :: weight
-    character(len=*), intent(in), optional :: weightfmt
-    character(len=*), intent(in), optional :: kptfmt
+    real(kind=$1), intent(in), optional      :: weight
+    character(len=*), intent(in), optional   :: kptfmt
+    character(len=*), intent(in), optional   :: wtfmt
 TOHWM4_bandargsdecl
 
 #ifndef DUMMYLIB
     call xml_NewElement(xf, "kpoint")
 TOHWM4_bandargsuse
     if (present(weight)) then
-      if (present(weightfmt)) then
-        call xml_AddAttribute(xf, "weight", str(weight, weightfmt))
+      if (present(wtfmt)) then
+        call xml_AddAttribute(xf, "weight", str(weight, wtfmt))
       else
-        call xml_AddAttribute(xf, "weight", str(weight, "r3"))
+        call xml_AddAttribute(xf, "weight", weight)
       endif
     endif
 
     if (present(kptfmt)) then
       call xml_AddCharacters(xf, kpoint, kptfmt)
     else
-      call xml_AddCharacters(xf, kpoint, "r3")
+      call xml_AddCharacters(xf, kpoint)
     end if
 
     call xml_EndElement(xf, "kpoint")
 #endif
 
+  end subroutine cmlStartKPoint_$1
+
+  subroutine cmlAddKPoint_$1(xf, kpoint, weight &
+TOHWM4_bandargslist)
+    type(xmlf_t), intent(inout)             :: xf
+    real(kind=$1), dimension(3), intent(in) :: kpoint
+    real(kind=$1), intent(in), optional     :: weight
+TOHWM4_bandargsdecl
+
+#ifndef DUMMYLIB
+    call cmlStartKpoint(xf, kpoint, weight &
+TOHWM4_bandargslist)
+    call cmlEndKpoint(xf)
+#endif
+
   end subroutine cmlAddKPoint_$1
 
-  subroutine cmlAddEigenvalue$1Sh(xf, eigvec, eigval, units, &
-eigenOrientationType, vecfmt, valfmt &
+  subroutine cmlAddEigenValue$1(xf, value, units, fmt &
 TOHWM4_eigenargslist)
     type(xmlf_t), intent(inout)            :: xf
-    real(kind=$1), intent(in)              :: eigvec(:,:)
+    real(kind=$1), intent(in)              :: value
+    character(len=*), intent(in)           :: units
+    character(len=*), intent(in), optional :: fmt
+
+TOHWM4_eigenargsdecl
+
+#ifndef DUMMYLIB
+    call xml_NewElement(xf, "eigen")
+TOHWM4_eigenargsuse
+
+    call stmAddValue(xf=xf, value=value, fmt=fmt, units=units)
+    call xml_EndElement(xf, "eigen")
+#endif
+
+  end subroutine cmlAddEigenValue$1
+
+  subroutine cmlAddEigenValueVector$1(xf, eigval, eigvec, units, vecfmt, valfmt &
+TOHWM4_eigenargslist)
+    type(xmlf_t), intent(inout)            :: xf
     real(kind=$1), intent(in)              :: eigval(:)
-    character(len=*), intent(in)           :: eigenOrientationType
+    real(kind=$1), intent(in)              :: eigvec(:,:)
     character(len=*), intent(in)           :: units
     character(len=*), intent(in), optional :: vecfmt
     character(len=*), intent(in), optional :: valfmt
@@ -116,24 +108,20 @@ TOHWM4_eigenargsdecl
 
 #ifndef DUMMYLIB
     call xml_NewElement(xf, "eigen")
-    call xml_AddAttribute(xf, "eigenOrientationType", eigenOrientationType)
 TOHWM4_eigenargsuse
 
-    call stmAddValue(xf=xf, value=eigval, title="eigenvalues", dictref=dictRef, fmt=valfmt, units=units)
-    call stmAddValue(xf=xf, value=eigvec, title="eigenvectors", fmt=vecfmt, units="units:dimensionless")
+    call stmAddValue(xf=xf, value=eigval, fmt=valfmt, units=units)
+    call stmAddValue(xf=xf, value=eigvec, fmt=vecfmt, units="units:dimensionless")
     call xml_EndElement(xf, "eigen")
 #endif
 
-  end subroutine cmlAddEigenvalue$1Sh
+  end subroutine cmlAddEigenValueVector$1
 
-  subroutine cmlAddEigenvalue$1Si(xf, n, eigvec, eigval, units, &
-eigenOrientationType, vecfmt, valfmt &
+  subroutine cmlAddEigenValueVectorCmplx$1(xf, eigval, eigvec, units, vecfmt, valfmt &
 TOHWM4_eigenargslist)
     type(xmlf_t), intent(inout)            :: xf
-    integer, intent(in)                    :: n
-    real(kind=$1), intent(in)              :: eigvec(n,*)
-    real(kind=$1), intent(in)              :: eigval(*)
-    character(len=*), intent(in)           :: eigenOrientationType
+    real(kind=$1), intent(in)              :: eigval(:)
+    complex(kind=$1), intent(in)           :: eigvec(:,:)
     character(len=*), intent(in)           :: units
     character(len=*), intent(in), optional :: vecfmt
     character(len=*), intent(in), optional :: valfmt
@@ -142,16 +130,52 @@ TOHWM4_eigenargsdecl
 
 #ifndef DUMMYLIB
     call xml_NewElement(xf, "eigen")
-    call xml_AddAttribute(xf, "eigenOrientationType", eigenOrientationType)
 TOHWM4_eigenargsuse
 
-    call stmAddValue(xf=xf, value=eigval(:n), title="eigenvalues", units=units, dictref=dictRef, fmt=valfmt)
-    call stmAddValue(xf=xf, value=eigvec(:n,:n), title="eigenvectors", units="units:dimensionless", fmt=vecfmt)
+    call stmAddValue(xf=xf, value=eigval, fmt=valfmt, units=units)
+    call stmAddValue(xf=xf, value=eigvec, fmt=vecfmt, units="units:dimensionless")
     call xml_EndElement(xf, "eigen")
 #endif
-    
-  end subroutine cmlAddEigenvalue$1Si
-')dnl
+
+  end subroutine cmlAddEigenValueVectorCmplx$1
+
+')`'`'dnl
+dnl
+define(`TOHWM4_coma_subs', `dnl
+
+  subroutine cmlStartBand(xf, spin &
+TOHWM4_bandargslist)
+    type(xmlf_t), intent(inout)  :: xf
+    character(len=*), intent(in) :: spin
+TOHWM4_bandargsdecl
+
+#ifndef DUMMYLIB
+    call xml_NewElement(xf, "band")
+    if (spin=="up".or.spin=="down") then
+      call xml_AddAttribute(xf, "spin", spin)
+    else
+      !error
+    endif
+TOHWM4_bandargsuse
+#endif
+
+  end subroutine cmlStartBand
+
+  subroutine cmlEndKpoint(xf)
+    type(xmlf_t), intent(inout) :: xf
+#ifndef DUMMYLIB
+    call xml_EndElement(xf, "kpoint")
+#endif
+  end subroutine cmlEndKpoint
+
+  subroutine cmlEndBand(xf)
+    type(xmlf_t), intent(inout) :: xf
+#ifndef DUMMYLIB
+    call xml_EndElement(xf, "band")
+#endif
+  end subroutine cmlEndBand
+
+')`'`'dnl
 dnl
 module m_wcml_coma
   ! Implements routines relating to electronic structure
@@ -171,22 +195,31 @@ module m_wcml_coma
   implicit none
   private
 
-  public :: cmlAddEigen
-  public :: cmlAddBand
+  public :: cmlStartKpoint
+  public :: cmlEndKpoint
   public :: cmlAddKpoint
 
-  interface cmlAddEigen
-    module procedure cmlAddEigenvalueSPSh
-    module procedure cmlAddEigenvalueDPSh
-    module procedure cmlAddEigenvalueSPSi
-    module procedure cmlAddEigenvalueDPSi
+  public :: cmlStartBand
+  public :: cmlEndBand
+
+  public :: cmlAddEigenValue
+  public :: cmlAddEigenValueVector
+
+  interface cmlAddEigenValue
+    module procedure cmlAddEigenValueSP
+    module procedure cmlAddEigenValueDP
   end interface
 
-  interface cmlAddBand
-dnl    module procedure cmlAddBand_kpt_sp
-    module procedure cmlAddBand_kptref_sp
-dnl    module procedure cmlAddBand_kpt_dp
-    module procedure cmlAddBand_kptref_dp
+  interface cmlAddEigenValueVector
+    module procedure cmlAddEigenValueVectorSP
+    module procedure cmlAddEigenValueVectorDP
+    module procedure cmlAddEigenValueVectorCmplxSP
+    module procedure cmlAddEigenValueVectorCmplxDP
+  end interface
+
+  interface cmlStartKpoint
+    module procedure cmlStartKpoint_sp
+    module procedure cmlStartKpoint_dp
   end interface
 
   interface cmlAddKpoint
@@ -196,8 +229,11 @@ dnl    module procedure cmlAddBand_kpt_dp
 
 contains
 
-TOHWM4_coma_subs(`sp')
+TOHWM4_coma_real_subs(`sp')`'dnl
 
-TOHWM4_coma_subs(`dp')
+TOHWM4_coma_real_subs(`dp')`'dnl
+
+TOHWM4_coma_subs
+
 
 end module m_wcml_coma
