@@ -1253,6 +1253,7 @@ contains
               fx%context = CTXT_BEFORE_CONTENT
               nextState = ST_MISC
             endif
+            call destroyURI(extSubsetURI)
           else
             call endDTDchecks
             if (in_error(fx%error_stack)) goto 100
