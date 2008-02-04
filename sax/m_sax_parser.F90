@@ -1932,7 +1932,7 @@ contains
             tempString => expand_pe_text(fx, fx%token, fb)
           endif
           fx%attname => expand_entity_value_alloc(tempString, fx%xds, fx%error_stack)
-          tempString => null()
+          deallocate(tempString)
           if (in_error(fx%error_stack)) return
           nextDTDState = ST_DTD_ENTITY_END
         case default
