@@ -273,6 +273,7 @@ contains
       fb%f(i)%baseURI => temp(i+1)%baseURI
       fb%f(i)%pe = temp(i+1)%pe
     enddo
+    deallocate(temp)
 
   end subroutine pop_buffer_stack
 
