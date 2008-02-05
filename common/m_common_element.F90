@@ -304,6 +304,7 @@ contains
           name(1) = c
           state = ST_NAME
         elseif (c=='(') then
+          nbrackets = nbrackets + 1
           deallocate(order)
           order => vs_str_alloc("  ")
           state = ST_CHILD
