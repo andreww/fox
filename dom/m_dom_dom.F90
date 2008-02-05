@@ -3808,7 +3808,7 @@ endif
   end function isDefaultNamespace
 
   pure function lookupNamespaceURI_len(np, prefix, p) result(n)
-    type(Node), pointer :: np
+    type(Node), intent(in) :: np
     character(len=*), intent(in) :: prefix
     logical, intent(in) :: p
     integer :: n
@@ -3908,7 +3908,7 @@ endif
   end function lookupNamespaceURI
 
   pure function lookupPrefix_len(np, namespaceURI, p) result(n)
-    type(Node), pointer :: np
+    type(Node), intent(in) :: np
     character(len=*), intent(in) :: namespaceURI
     logical, intent(in) :: p
     integer :: n
