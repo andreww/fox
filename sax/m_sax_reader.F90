@@ -181,9 +181,10 @@ contains
   subroutine close_actual_file(f)
     type(xml_source_t), intent(inout)    :: f
 
+    deallocate(f%filename)
+    
     if (f%lun>0) then
       close(f%lun)
-      deallocate(f%filename)
     else
       deallocate(f%input_string%s)
       deallocate(f%input_string)
