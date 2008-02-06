@@ -826,6 +826,7 @@ contains
           fx%tokenType = TOK_DTD_CONTENTS
           fx%nextTokenType = TOK_END_TAG
         elseif (associated(fx%content)) then
+          deallocate(fx%token)
           fx%token => vs_str_alloc(str_vs(fx%content)//c)
           deallocate(fx%content)
         else
