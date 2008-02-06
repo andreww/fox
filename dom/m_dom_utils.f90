@@ -1,3 +1,4 @@
+
 module m_dom_utils
 
   use fox_m_fsys_array_str, only: str_vs, vs_str
@@ -120,11 +121,14 @@ contains
 endif
 
     endif
+
     
     if (getNodeType(startNode)==DOCUMENT_NODE) then
       doc => startNode
+      print*,"Canonical form?", getParameter(getDomConfig(doc), "canonical-form")
+      print*,"Canonical form?", getParameter(getDomConfig(doc), "xml-declaration")
       if (getParameter(getDomConfig(doc), "canonical-form") &
-        .and.getXmlVersion(doc)=="1.1") then
+        .And.getXmlVersion(doc)=="1.1") then
         if (getFoX_checks().or.SERIALIZE_ERR<200) then
   call throw_exception(SERIALIZE_ERR, "serialize", ex)
   if (present(ex)) then
@@ -178,7 +182,7 @@ endif
 
     call xml_OpenFile(name, xf, iostat=iostat, unit=-1, &
       preserve_whitespace=.not.getParameter(getDomConfig(doc), "format-pretty-print"), &
-      warning=.false., addDecl=.not.xmlDecl)
+      warning=.false., addDecl=xmlDecl)
     if (iostat/=0) then
       if (getFoX_checks().or.SERIALIZE_ERR<200) then
   call throw_exception(SERIALIZE_ERR, "serialize", ex)
@@ -298,42 +302,44 @@ endif
     case (COMMENT_NODE)
       call xml_AddComment(xf, getData(this))
     case (DOCUMENT_TYPE_NODE)
-      call xml_AddDOCTYPE(xf, getName(this))
-      nnm => getNotations(this)
-      do j = 0, getLength(nnm)-1
-        np => item(nnm, j)
-        if (getSystemId(np)=="") then
-          call xml_AddNotation(xf, getNodeName(np), public=getPublicId(np))
-        elseif (getPublicId(np)=="") then
-          call xml_AddNotation(xf, getNodeName(np), system=getSystemId(np))
-        else
-          call xml_AddNotation(xf, getNodeName(np), system=getSystemId(np), &
-            public=getPublicId(np))
-        endif
-      enddo
-      nnm => getEntities(this)
-      do j = 0, getLength(nnm)-1
-        np => item(nnm, j)
-        if (getSystemId(np)=="") then
-          call xml_AddInternalEntity(xf, getNodeName(np), getStringValue(np))
-        elseif (getPublicId(np)=="".and.getNotationName(np)=="") then
-          call xml_AddExternalEntity(xf, getNodeName(np), system=getSystemId(np))
-        elseif (getNotationName(np)=="") then
-          call xml_AddExternalEntity(xf, getNodeName(np), system=getSystemId(np), &
-            public=getPublicId(np))
-        elseif (getPublicId(np)=="") then
-          call xml_AddExternalEntity(xf, getNodeName(np), system=getSystemId(np), &
-            notation=getNotationName(np))
-        else
-          call xml_AddExternalEntity(xf, getNodeName(np), system=getSystemId(np), &
-            public=getPublicId(np), notation=getNotationName(np))
-        endif
-      enddo
-      do j = 1, size(xds%element_list%list)
-        elem => xds%element_list%list(j)
-        call xml_AddElementToDTD(xf, str_vs(elem%name), str_vs(elem%model))
-      enddo
-      ! FIXME attlists
+      if (.not.getParameter(getDomConfig(doc), "canonical-form")) then
+        call xml_AddDOCTYPE(xf, getName(this))
+        nnm => getNotations(this)
+        do j = 0, getLength(nnm)-1
+          np => item(nnm, j)
+          if (getSystemId(np)=="") then
+            call xml_AddNotation(xf, getNodeName(np), public=getPublicId(np))
+          elseif (getPublicId(np)=="") then
+            call xml_AddNotation(xf, getNodeName(np), system=getSystemId(np))
+          else
+            call xml_AddNotation(xf, getNodeName(np), system=getSystemId(np), &
+              public=getPublicId(np))
+          endif
+        enddo
+        nnm => getEntities(this)
+        do j = 0, getLength(nnm)-1
+          np => item(nnm, j)
+          if (getSystemId(np)=="") then
+            call xml_AddInternalEntity(xf, getNodeName(np), getStringValue(np))
+          elseif (getPublicId(np)=="".and.getNotationName(np)=="") then
+            call xml_AddExternalEntity(xf, getNodeName(np), system=getSystemId(np))
+          elseif (getNotationName(np)=="") then
+            call xml_AddExternalEntity(xf, getNodeName(np), system=getSystemId(np), &
+              public=getPublicId(np))
+          elseif (getPublicId(np)=="") then
+            call xml_AddExternalEntity(xf, getNodeName(np), system=getSystemId(np), &
+              notation=getNotationName(np))
+          else
+            call xml_AddExternalEntity(xf, getNodeName(np), system=getSystemId(np), &
+              public=getPublicId(np), notation=getNotationName(np))
+          endif
+        enddo
+        do j = 1, size(xds%element_list%list)
+          elem => xds%element_list%list(j)
+          call xml_AddElementToDTD(xf, str_vs(elem%name), str_vs(elem%model))
+        enddo
+        ! FIXME attlists
+      endif
     end select
 
       else
