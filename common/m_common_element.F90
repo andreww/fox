@@ -744,12 +744,6 @@ contains
 
       if (state==ST_START) then
         !write(*,*)'ST_START'
-        if (associated(ignore_att)) then
-          if (associated(ignore_att%name)) deallocate(ignore_att%name)
-          if (associated(ignore_att%default)) deallocate(ignore_att%default)
-          call destroy_string_list(ignore_att%enumerations)
-          deallocate(ignore_att)
-        endif
         if (verify(c, XML_WHITESPACE)==0) cycle
         if (isInitialNameChar(c, xv)) then
           name => vs_str_alloc(c)
@@ -1052,6 +1046,14 @@ contains
       goto 200
     endif
 
+    if (associated(ignore_att)) then
+      if (associated(ignore_att%name)) deallocate(ignore_att%name)
+      if (associated(ignore_att%default)) deallocate(ignore_att%default)
+      call destroy_string_list(ignore_att%enumerations)
+      deallocate(ignore_att)
+    endif
+
+
     ! FIXME all normalization of values *is* done in the SAX
     ! parser, but really it should be done here.
 
@@ -1061,12 +1063,6 @@ contains
     if (associated(attType)) deallocate(attType)
     if (associated(default)) deallocate(default)
     if (associated(value)) deallocate(value)
-    if (associated(ignore_att)) then
-      if (associated(ignore_att%name)) deallocate(ignore_att%name)
-      if (associated(ignore_att%default)) deallocate(ignore_att%default)
-      call destroy_string_list(ignore_att%enumerations)
-      deallocate(ignore_att)
-    endif
 
   end subroutine parse_dtd_attlist
 
