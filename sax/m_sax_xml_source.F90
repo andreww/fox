@@ -207,7 +207,7 @@ contains
         call rewind_source(f)
         exit
       elseif (in_error(es)) then
-        return
+        goto 100
       endif
       f%startChar = f%startChar + 1
 
@@ -425,7 +425,7 @@ contains
       endif
     endif
     
-    if (associated(ch)) deallocate(ch)
+100 if (associated(ch)) deallocate(ch)
     ! if there is no XML declaraion, or if parsing caused an error, then
     if (parse_state/=XD_END.or.in_error(es)) f%startChar = 1
 
