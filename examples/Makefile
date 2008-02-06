@@ -6,17 +6,17 @@ default: $(BUILD_TARGETS)
 
 INCFLAGS=`../FoX-config --fcflags`
 
-EXAMPLES=dom_example$(EXEEXT) dom_example_2$(EXEEXT) sax_example$(EXEEXT) sax_example_2$(EXEEXT) wcml_example$(EXEEXT) wxml_example$(EXEEXT)
+EXAMPLES=dom_canonicalize$(EXEEXT) dom_example_2$(EXEEXT) sax_example$(EXEEXT) sax_example_2$(EXEEXT) wcml_example$(EXEEXT) wxml_example$(EXEEXT)
 
-dom_lib: sax_lib wxml_lib dom_example$(EXEEXT) dom_example_2$(EXEEXT)
+dom_lib: sax_lib wxml_lib dom_canonicalize$(EXEEXT) dom_example_2$(EXEEXT)
 sax_lib: sax_example$(EXEEXT) sax_example_2$(EXEEXT)
 wcml_lib: wxml_lib wcml_example$(EXEEXT)
 wxml_lib: wxml_example$(EXEEXT)
 
 # Note that we cannot use $< below since IBM make doesn't understand it.
 
-dom_example$(EXEEXT): dom_example.$(OBJEXT) ../objs/lib/libFoX_dom.$(LIBEXT) ../objs/lib/libFoX_sax.$(LIBEXT) ../objs/lib/libFoX_wxml.$(LIBEXT) ../objs/lib/libFoX_common.$(LIBEXT) ../objs/lib/libfsys.$(LIBEXT)
-	$(FC) $(FFLAGS) $(LDFLAGS) $(LINK_O_FLAG) $@ dom_example.$(OBJEXT) $$(../FoX-config --libs --dom)
+dom_canonicalize$(EXEEXT): dom_canonicalize.$(OBJEXT) ../objs/lib/libFoX_dom.$(LIBEXT) ../objs/lib/libFoX_sax.$(LIBEXT) ../objs/lib/libFoX_wxml.$(LIBEXT) ../objs/lib/libFoX_common.$(LIBEXT) ../objs/lib/libfsys.$(LIBEXT)
+	$(FC) $(FFLAGS) $(LDFLAGS) $(LINK_O_FLAG) $@ dom_canonicalize.$(OBJEXT) $$(../FoX-config --libs --dom)
 dom_example_2$(EXEEXT): dom_example_2.$(OBJEXT) ../objs/lib/libFoX_dom.$(LIBEXT) ../objs/lib/libFoX_sax.$(LIBEXT) ../objs/lib/libFoX_wxml.$(LIBEXT) ../objs/lib/libFoX_common.$(LIBEXT) ../objs/lib/libfsys.$(LIBEXT)
 	$(FC) $(FFLAGS) $(LDFLAGS) $(LINK_O_FLAG) $@ dom_example_2.$(OBJEXT) $$(../FoX-config --libs --dom)
 #

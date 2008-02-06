@@ -8,12 +8,12 @@ program dom_example
 
   call cpu_time(t1)
   ! Load in the document
-  myDoc => parseFile("h2o.xml")
+  myDoc => parseFile("test.xml")
 
   ! Tell the normalizer to canonicalize it
   call setParameter(getDomConfig(myDoc), "canonical-form", .true.)
 
-  ! and write it out again (which automatically does normalization.
+  ! and write it out again (which automatically does normalization)
   call serialize(myDoc, "out.xml")
   call cpu_time(t2)
 
