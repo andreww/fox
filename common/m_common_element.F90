@@ -7,7 +7,7 @@ module m_common_element
     string_list, init_string_list, destroy_string_list, add_string
   use m_common_charset, only: isInitialNameChar, isNameChar, &
     upperCase, XML_WHITESPACE
-  use m_common_error, only: error_stack, add_error
+  use m_common_error, only: error_stack, add_error, in_error
 
   implicit none
   private
@@ -643,6 +643,16 @@ contains
     allocate(a_list%list(0))
   end subroutine init_attribute_list
 
+  subroutine destroy_attribute_t(a)
+    type(attribute_t), pointer :: a 
+
+    if (associated(a%name)) deallocate(a%name)
+    if (associated(a%default)) deallocate(a%default)
+    call destroy_string_list(a%enumerations)
+
+    deallocate(a)
+  end subroutine destroy_attribute_t
+
   subroutine destroy_attribute_list(a_list)
     type(attribute_list), intent(inout) :: a_list
 
@@ -736,6 +746,7 @@ contains
     state = ST_START
 
     do i = 1, len(contents) + 1
+      if (in_error(stack)) exit
       if (i<=len(contents)) then
         c = contents(i:i)
       else
@@ -751,7 +762,6 @@ contains
         else
           call add_error(stack, &
             'Unexpected character in Attlist')
-          goto 200
         endif
 
       elseif (state==ST_NAME) then
@@ -763,6 +773,7 @@ contains
         elseif (verify(c, XML_WHITESPACE)==0) then
           if (present(elem)) then
             if (existing_attribute(elem%attlist, str_vs(name))) then
+              if (associated(ignore_att)) call destroy_attribute_t(ignore_att)
               allocate(ignore_att)
               call init_string_list(ignore_att%enumerations)
               ignore_att%name => vs_vs_alloc(name)
@@ -771,6 +782,7 @@ contains
               ca => add_attribute(elem%attlist, str_vs(name))
             endif
           else
+            if (associated(ignore_att)) call destroy_attribute_t(ignore_att)
             allocate(ignore_att)
             call init_string_list(ignore_att%enumerations)
             ignore_att%name => vs_vs_alloc(name)
@@ -781,7 +793,6 @@ contains
         else
           call add_error(stack, &
             'Unexpected character in Attlist Name')
-          goto 200
         endif
 
       elseif (state==ST_AFTERNAME) then
@@ -797,7 +808,6 @@ contains
         else
           call add_error(stack, &
             'Unexpected error after Attlist Name')
-          goto 200
         endif
 
       elseif (state==ST_ATTTYPE) then
@@ -837,13 +847,11 @@ contains
           else
             call add_error(stack, &
               'Unknown AttType')
-            goto 200
           endif
           deallocate(attType)
         else
           call add_error(stack, &
             'Unexpected character in AttType')
-          goto 200
         endif
 
       elseif (state==ST_AFTER_NOTATION) then
@@ -854,7 +862,6 @@ contains
         else
           call add_error(stack, &
             'Unexpected character after Notation')
-          goto 200
         endif
 
       elseif (state==ST_NOTATION_LIST) then
@@ -866,7 +873,6 @@ contains
         else
           call add_error(stack, &
             'Unexpected character in Notation list')
-          goto 200
         endif
 
       elseif (state==ST_ENUMERATION) then
@@ -880,15 +886,12 @@ contains
         elseif (c=='|') then
           call add_error(stack, &
             "Missing token in Enumeration")
-          goto 200
         elseif (c==')') then
           call add_error(stack, &
             "Missing tokens in Enumeration")
-          goto 200
         else
           call add_error(stack, &
             'Unexpected character in attlist enumeration')
-          goto 200
         endif
 
       elseif (state==ST_ENUM_NAME) then
@@ -916,7 +919,6 @@ contains
           if (size(value)==0) then
             call add_error(stack, &
               'Missing token in Enumeration list')
-            goto 200
           endif
           !FIXME normalize value here
           call add_string(ca%enumerations, str_vs(value))
@@ -925,7 +927,6 @@ contains
         else
           call add_error(stack, &
             'Unexpected character in attlist enumeration')
-          goto 200
         endif
 
       elseif (state==ST_SEPARATOR) then
@@ -943,14 +944,12 @@ contains
         else
           call add_error(stack, &
             'Unexpected character in attlist enumeration')
-          goto 200
         endif
 
       elseif (state==ST_AFTER_ATTTYPE_SPACE) then
         if (verify(c, XML_WHITESPACE)/=0) then
           call add_error(stack, &
             'Missing whitespace in attlist enumeration')
-          goto 200
         endif
         state = ST_AFTER_ATTTYPE
 
@@ -973,7 +972,6 @@ contains
         else
           call add_error(stack, &
             'Unexpected character after AttType')
-          goto 200
         endif
 
       elseif (state==ST_DEFAULT_DECL) then
@@ -998,12 +996,10 @@ contains
           else
             call add_error(stack, &
               'Unknown Default declaration')
-            goto 200
           endif
         else
           call add_error(stack, &
             'Unexpected character in Default declaration')
-          goto 200
         endif
 
       elseif (state==ST_AFTERDEFAULTDECL) then
@@ -1020,7 +1016,6 @@ contains
         else
           call add_error(stack, &
             'Unexpected character after Default declaration')
-          goto 200
         endif
 
       elseif (state==ST_DEFAULTVALUE) then
@@ -1040,29 +1035,25 @@ contains
 
     enddo
 
-    if (state/=ST_START) then
-      call add_error(stack, &
-        'Incomplete Attlist declaration')
-      goto 200
-    endif
-
-    if (associated(ignore_att)) then
-      if (associated(ignore_att%name)) deallocate(ignore_att%name)
-      if (associated(ignore_att%default)) deallocate(ignore_att%default)
-      call destroy_string_list(ignore_att%enumerations)
-      deallocate(ignore_att)
-    endif
-
-
     ! FIXME all normalization of values *is* done in the SAX
     ! parser, but really it should be done here.
 
-    return
+    if (associated(ignore_att)) call destroy_attribute_t(ignore_att)
 
-200 if (associated(name)) deallocate(name)
+    if (.not.in_error(stack)) then
+      if (state==ST_START) then
+        return
+      else
+        call add_error(stack, &
+          'Incomplete Attlist declaration')
+      endif
+    endif
+    
+    if (associated(name)) deallocate(name)
     if (associated(attType)) deallocate(attType)
     if (associated(default)) deallocate(default)
     if (associated(value)) deallocate(value)
+
 
   end subroutine parse_dtd_attlist
 
