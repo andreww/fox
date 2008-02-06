@@ -1317,10 +1317,6 @@ contains
         select case(fx%tokenType)
         case (TOK_ENTITY)
           nextState = ST_START_PE
-          ! FIXME ths PE we are opening at this level
-          ! is a DeclSep, so if it terminates without
-          ! wf_stack==0 then it is a well-formed-ness
-          ! error, not a validity error.
         case default
           call parseDTD
           if (in_error(fx%error_stack)) goto 100
@@ -1431,6 +1427,7 @@ contains
     end do
 
 100 if (associated(tempString)) deallocate(tempString)
+    if (associated(extSubsetURI)) call destroyURI(extSubsetURI)
     deallocate(wf_stack)
 
     if (.not.eof) then
@@ -2185,7 +2182,11 @@ contains
               call destroyURI(URIref)
               call add_error(fx%error_stack, "SYSTEM literal may not contain fragment")
               return
-            endif              
+            endif
+            ! We aren't ever going to do anything with this URI,
+            ! since we don't do NOTATIONs.
+            ! Throw it away again
+            call destroyURI(URIref)
             if (associated(fx%publicId)) then
               call add_notation(fx%nlist, str_vs(fx%name), &
                 publicId=str_vs(fx%publicId), systemId=str_vs(fx%systemId))
