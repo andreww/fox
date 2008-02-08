@@ -90,8 +90,6 @@ contains
     else
       call xml_AddCharacters(xf, kpoint)
     end if
-
-    call xml_EndElement(xf, "kpoint")
 #endif
 
   end subroutine cmlStartKPoint_sp
@@ -258,8 +256,6 @@ contains
     else
       call xml_AddCharacters(xf, kpoint)
     end if
-
-    call xml_EndElement(xf, "kpoint")
 #endif
 
   end subroutine cmlStartKPoint_dp
