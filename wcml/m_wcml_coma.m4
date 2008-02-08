@@ -55,8 +55,6 @@ TOHWM4_bandargsuse
     else
       call xml_AddCharacters(xf, kpoint)
     end if
-
-    call xml_EndElement(xf, "kpoint")
 #endif
 
   end subroutine cmlStartKPoint_$1
