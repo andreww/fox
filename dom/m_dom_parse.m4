@@ -268,6 +268,9 @@ contains
     type(Node), pointer :: oldcurrent
     type(xml_t) :: subsax
 
+    if (name(1:1)=="%") return
+    ! Do nothing with parameter entities
+
     oldcurrent => getNamedItem(getEntities(getDocType(mainDoc)), name)
     ! If oldcurrent is associated, then this is a duplicate entity
     ! declaration & should be ignored
@@ -333,6 +336,9 @@ contains
     character(len=*), intent(in) :: systemId
     type(Node), pointer :: np
 
+    if (name(1:1)=="%") return
+    ! Do nothing with parameter entities
+
     np => getNamedItem(getEntities(getDocType(mainDoc)), name)
     if (.not.associated(np)) then
       np => createEntity(mainDoc, name, publicId=publicId, systemId=systemId, notationName="")
@@ -358,7 +364,10 @@ contains
 
   subroutine startEntity_handler(name)
     character(len=*), intent(in) :: name
-    
+
+    if (name(1:1)=="%") return
+    ! Do nothing with parameter entities
+
     if (getParameter(domConfig, "entities")) then
       if (.not.associated(inEntity)) then
         inEntity => vs_str_alloc(name)
@@ -369,6 +378,9 @@ contains
 
   subroutine endEntity_handler(name)
     character(len=*), intent(in) :: name
+
+    if (name(1:1)=="%") return
+    ! Do nothing with parameter entities
     
     if (getParameter(domConfig, "entities")) then
       call setReadOnlyNode(current, .true., .false.)
@@ -382,6 +394,9 @@ contains
     character(len=*), intent(in) :: name
     
     type(Node), pointer :: temp
+
+    if (name(1:1)=="%") return
+    ! Do nothing with parameter entities
 
     temp => appendChild(current, createEntityReference(mainDoc, name))
     if (associated(inEntity)) call setReadonlyNode(temp, .true., .false.)
