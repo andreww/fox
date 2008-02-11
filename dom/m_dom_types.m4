@@ -111,7 +111,10 @@ TOHW_m_dom_publics(`
   type(DOMImplementation), save, target :: FoX_DOM
 
   interface destroy
-    module procedure destroyNode, destroyNodeList, destroyNamedNodeMap
+    module procedure destroyNode
+    module procedure destroyNodeList
+    module procedure destroyNamedNodeMap
+    module procedure destroyDOMConfig
   end interface destroy
 
   public :: ELEMENT_NODE

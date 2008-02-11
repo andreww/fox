@@ -242,7 +242,10 @@ module m_dom_dom
   type(DOMImplementation), save, target :: FoX_DOM
 
   interface destroy
-    module procedure destroyNode, destroyNodeList, destroyNamedNodeMap
+    module procedure destroyNode
+    module procedure destroyNodeList
+    module procedure destroyNamedNodeMap
+    module procedure destroyDOMConfig
   end interface destroy
 
   public :: ELEMENT_NODE
@@ -731,6 +734,12 @@ endif
 
     dc1%parameters = dc2%parameters
   end subroutine copyDOMConfig
+
+  subroutine destroyDOMConfig(dc)
+    type(DOMConfiguration), pointer :: dc
+
+    deallocate(dc)
+  end subroutine destroyDOMConfig
 
 
 

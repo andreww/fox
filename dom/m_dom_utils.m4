@@ -122,7 +122,7 @@ contains
     if (getNodeType(startNode)==DOCUMENT_NODE) then
       doc => startNode
       print*,"Canonical form?", getParameter(getDomConfig(doc), "canonical-form")
-      print*,"Canonical form?", getParameter(getDomConfig(doc), "xml-declaration")
+      print*,"XML decl", getParameter(getDomConfig(doc), "xml-declaration")
       if (getParameter(getDomConfig(doc), "canonical-form") &
         .And.getXmlVersion(doc)=="1.1") then
         TOHW_m_dom_throw_error(SERIALIZE_ERR)
@@ -154,7 +154,7 @@ contains
 
     call xml_OpenFile(name, xf, iostat=iostat, unit=-1, &
       preserve_whitespace=.not.getParameter(getDomConfig(doc), "format-pretty-print"), &
-      warning=.false., addDecl=xmlDecl)
+      warning=.false., addDecl=.false.)
     if (iostat/=0) then
       TOHW_m_dom_throw_error(SERIALIZE_ERR)
     endif

@@ -327,4 +327,10 @@ TOHW_m_dom_contents(`
     dc1%parameters = dc2%parameters
   end subroutine copyDOMConfig
 
+  subroutine destroyDOMConfig(dc)
+    type(DOMConfiguration), pointer :: dc
+
+    deallocate(dc)
+  end subroutine destroyDOMConfig
+
 ')`'dnl

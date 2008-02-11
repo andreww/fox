@@ -15,8 +15,10 @@ wxml_lib: wxml_example$(EXEEXT)
 
 # Note that we cannot use $< below since IBM make doesn't understand it.
 
-dom_canonicalize$(EXEEXT): dom_canonicalize.$(OBJEXT) ../objs/lib/libFoX_dom.$(LIBEXT) ../objs/lib/libFoX_sax.$(LIBEXT) ../objs/lib/libFoX_wxml.$(LIBEXT) ../objs/lib/libFoX_common.$(LIBEXT) ../objs/lib/libfsys.$(LIBEXT)
-	$(FC) $(FFLAGS) $(LDFLAGS) $(LINK_O_FLAG) $@ dom_canonicalize.$(OBJEXT) $$(../FoX-config --libs --dom)
+dom_canonicalize.ns.no.exe: dom_canonicalize.ns.no.$(OBJEXT) ../objs/lib/libFoX_dom.$(LIBEXT) ../objs/lib/libFoX_sax.$(LIBEXT) ../objs/lib/libFoX_wxml.$(LIBEXT) ../objs/lib/libFoX_common.$(LIBEXT) ../objs/lib/libfsys.$(LIBEXT)
+	$(FC) $(FFLAGS) $(LDFLAGS) $(LINK_O_FLAG) $@ dom_canonicalize.ns.no.$(OBJEXT) $$(../FoX-config --libs --dom)
+dom_canonicalize.ns.yes.exe: dom_canonicalize.ns.yes.$(OBJEXT) ../objs/lib/libFoX_dom.$(LIBEXT) ../objs/lib/libFoX_sax.$(LIBEXT) ../objs/lib/libFoX_wxml.$(LIBEXT) ../objs/lib/libFoX_common.$(LIBEXT) ../objs/lib/libfsys.$(LIBEXT)
+	$(FC) $(FFLAGS) $(LDFLAGS) $(LINK_O_FLAG) $@ dom_canonicalize.ns.yes.$(OBJEXT) $$(../FoX-config --libs --dom)
 dom_example_2$(EXEEXT): dom_example_2.$(OBJEXT) ../objs/lib/libFoX_dom.$(LIBEXT) ../objs/lib/libFoX_sax.$(LIBEXT) ../objs/lib/libFoX_wxml.$(LIBEXT) ../objs/lib/libFoX_common.$(LIBEXT) ../objs/lib/libfsys.$(LIBEXT)
 	$(FC) $(FFLAGS) $(LDFLAGS) $(LINK_O_FLAG) $@ dom_example_2.$(OBJEXT) $$(../FoX-config --libs --dom)
 #
