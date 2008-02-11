@@ -108,7 +108,6 @@ contains
 
     if (hasScheme(baseURI)) then
       if (getScheme(baseURI)/="file") then
-        call destroyURI(baseURI)
         iostat = io_err
         return
       endif
