@@ -384,12 +384,12 @@ contains
       do i = 1, size(initial_entities)
         ent => getEntityByIndex(initial_entities, i)
         if (ent%external) then
-          call register_external_PE(fx%xds, &
+          call register_external_GE(fx%xds, &
             name=str_vs(ent%name), systemId=str_vs(ent%systemId), &
             publicId=str_vs(ent%publicId), &
             wfc=ent%wfc, baseURI=copyURI(ent%baseURI))
         else
-          call register_internal_PE(fx%xds, &
+          call register_internal_GE(fx%xds, &
             name=str_vs(ent%name), text=str_vs(ent%text), &
             wfc=ent%wfc, baseURI=copyURI(ent%baseURI))
         endif

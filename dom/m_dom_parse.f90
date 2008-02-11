@@ -4,21 +4,23 @@ module m_dom_parse
   use m_common_entities, only: entity_list, init_entity_list, destroy_entity_list, add_internal_entity
   use m_common_error, only: FoX_error
   use m_common_struct, only: xml_doc_state
-  use FoX_common, only: dictionary_t, getLength
+  use FoX_common, only: dictionary_t, getLength_d => getLength
   use FoX_common, only: getQName, getValue, getURI, getSpecified
   use m_sax_parser, only: sax_parse
   use FoX_sax, only: xml_t
   use FoX_sax, only: open_xml_file, open_xml_string, close_xml_t
 
   ! Public interfaces
-  use m_dom_dom, only: DOMConfiguration, Node,                                 &
+  use m_dom_dom, only: DOMConfiguration, Node, NamedNodeMap,                   &
     TEXT_NODE,                                                                 &
     getAttributes, getData, getDocType, getEntities, getImplementation,        &
-    getLastChild, getNodeType, getNotations, getParameter, getParentNode,      &
+    getLastChild, getLength_nl => getLength, getNodeName, getNodeType,         &
+    getNotations, getParameter, getParentNode, getStringValue,                 &
     setData, setValue,                                                         &
     appendChild, createAttribute, createAttributeNS, createCdataSection,       &
     createComment, createDocumentType, createElement, createElementNS,         &
     createEntityReference, createProcessingInstruction, createTextNode,        &
+    item,                                                                      &
     getNamedItem, setAttributeNode, setAttributeNodeNS, setNamedItem,          &
     getFoX_checks
 
@@ -75,7 +77,7 @@ contains
       el => createElement(mainDoc, name)
     endif
 
-    do i = 1, getLength(attrs)
+    do i = 1, getLength_d(attrs)
       if (getParameter(domConfig, "namespaces")) then
         attr => createAttributeNS(mainDoc, getURI(attrs, i), getQName(attrs, i))
       else
@@ -222,6 +224,51 @@ contains
 
   end subroutine startDTD_handler
 
+  subroutine endDTD_handler
+
+    type(Node), pointer :: np, oldcurrent
+    type(NamedNodeMap), pointer :: entities
+    type(xml_t) :: subsax
+    integer :: i
+
+    entities => getEntities(getDocType(mainDoc))
+
+    do i = 0, getLength_nl(entities)-1
+      np => item(entities, i)
+      oldcurrent => current
+      current => createEntity(mainDoc, getNodeName(np), "", "", "")
+
+      call open_xml_string(subsax, getStringValue(np))
+      ! Run the parser over value
+      ! We do this with all internal entities already declared; and
+      ! namespace-handling switched *off*, since namespaces must be
+      ! resolved lexically at the point where the entity is
+      ! referenced ...; this will be done automatically for any
+      ! entities referenced in the document, but we will need to do
+      ! it manually when adding an ENTITY_REFERENCE NODE later on.
+      ! FIXME false. actually we want to do partial namespace resolution
+      ! at this stage, and at least pick up on xml: and xmlns: nodes
+      call sax_parse(subsax%fx, subsax%fb,                           &
+        startElement_handler=startElement_handler,                   &
+        endElement_handler=endElement_handler,                       &
+        characters_handler=characters_handler,                       &
+        startCdata_handler=startCdata_handler,                       &
+        endCdata_handler=endCdata_handler,                           &
+        comment_handler=comment_handler,                             &
+        processingInstruction_handler=processingInstruction_handler, &
+        error_handler=entityErrorHandler,                            &
+        startInCharData = .true., &
+        namespaces=getParameter(domConfig, "namespaces"), &
+        initial_entities = elist)
+      ! FIXME namespaces take from domConfig
+      call close_xml_t(subsax)
+
+      current => setNamedItem(getEntities(getDocType(mainDoc)), current)
+      current => oldcurrent
+    enddo
+
+  end subroutine endDTD_handler
+
   subroutine FoX_endDTD_handler(state)
     type(xml_doc_state), pointer :: state
 
@@ -260,50 +307,24 @@ contains
   subroutine internalEntityDecl_handler(name, value)
     character(len=*), intent(in) :: name
     character(len=*), intent(in) :: value
-    
-    type(Node), pointer :: oldcurrent
-    type(xml_t) :: subsax
 
+    type(Node), pointer :: np
+    
     if (name(1:1)=="%") return
     ! Do nothing with parameter entities
 
-    oldcurrent => getNamedItem(getEntities(getDocType(mainDoc)), name)
-    ! If oldcurrent is associated, then this is a duplicate entity
-    ! declaration & should be ignored
-    if (.not.associated(oldcurrent)) then
-      oldcurrent => current
-      current => createEntity(mainDoc, name, "", "", "")
-      call setStringValue(current, value)
+    ! FIXME this should be recorded, but not parsed here.
+    ! A second parsing stage should be triggered at the end
+    ! of the DTD, in order to resolve entity references (which
+    ! need not be declared in order, and may be overridden by
+    ! later declarations.
 
-      call open_xml_string(subsax, value)
-      ! Run the parser over value
-      ! We do this with all internal entities already declared; and
-      ! namespace-handling switched *off*, since namespaces must be
-      ! resolved lexically at the point where the entity is
-      ! referenced ...; this will be done automatically for any
-      ! entities referenced in the document, but we will need to do
-      ! it manually when adding an ENTITY_REFERENCE NODE later on.
-      ! FIXME false. actually we want to do partial namespace resolution
-      ! at this stage, and at least pick up on xml: and xmlns: nodes
-      call sax_parse(subsax%fx, subsax%fb,                           &
-        startElement_handler=startElement_handler,                   &
-        endElement_handler=endElement_handler,                       &
-        characters_handler=characters_handler,                       &
-        startCdata_handler=startCdata_handler,                       &
-        endCdata_handler=endCdata_handler,                           &
-        comment_handler=comment_handler,                             &
-        processingInstruction_handler=processingInstruction_handler, &
-        error_handler=entityErrorHandler,                            &
-        startInCharData = .true., &
-        namespaces=getParameter(domConfig, "namespaces"), &
-        initial_entities = elist)
-      ! FIXME namespaces take from domConfig
-      call close_xml_t(subsax)
-      call add_internal_entity(elist, name, value, null(), .false.)
+    np => createEntity(mainDoc, name, "", "", "")
+    call setStringValue(np, value)
+    np => setNamedItem(getEntities(getDocType(mainDoc)), np)
+    print*, "Remembering internal entity ", name
+    call add_internal_entity(elist, name, value, null(), .false.)
 
-      current => setNamedItem(getEntities(getDocType(mainDoc)), current)
-      current => oldcurrent
-    endif
 
   end subroutine internalEntityDecl_handler
 
@@ -339,7 +360,7 @@ contains
     if (.not.associated(np)) then
       np => createEntity(mainDoc, name, publicId=publicId, systemId=systemId, notationName="")
       np => setNamedItem(getEntities(getDocType(mainDoc)), np)
-    endif    
+    endif
 
   end subroutine externalEntityDecl_handler
 
@@ -433,7 +454,7 @@ contains
       internalEntityDecl_handler=internalEntityDecl_handler,    &
       comment_handler=comment_handler,              &
       endCdata_handler=endCdata_handler,             &
-      !endDTD_handler=endDTD_handler,                &
+      endDTD_handler=endDTD_handler,                &
       endEntity_handler=endEntity_handler,             &
       startCdata_handler=startCdata_handler,    &
       startDTD_handler=startDTD_handler,          &
