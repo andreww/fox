@@ -443,6 +443,7 @@ contains
           endif
           call endDTDchecks
           if (in_error(fx%error_stack)) goto 100
+          if (fx%state==ST_STOP) return
           inExtSubset = .false.
           fx%state = ST_MISC
           fx%context = CTXT_BEFORE_CONTENT
@@ -774,15 +775,13 @@ contains
             elseif (validCheck) then
               call add_error(fx%error_stack, "No DTD defined")
               goto 100
-            endif
-            ! This is the root node, so we've finished populating
-            ! the xml_doc_state. Hand it over to DOM if necessary:
-            ! Here we hand over responsibility for the xds object
-            ! The SAX caller must take care of it, and we don't
-            ! need it any more. (We will destroy it shortly anyway)
-            if (present(FoX_endDTD_handler)) then
-              fx%xds_used = .true.
-              call FoX_endDTD_handler(fx%xds)
+            else
+              ! We havent had a DTD, so we havent handed xds 
+              ! over to the DOM.
+              if (present(FoX_endDTD_handler)) then
+                fx%xds_used = .true.
+                call FoX_endDTD_handler(fx%xds)
+              endif
             endif
             fx%context = CTXT_IN_CONTENT
           endif
@@ -807,15 +806,12 @@ contains
             elseif (validCheck) then
               call add_error(fx%error_stack, "No DTD defined")
               goto 100
-            endif
-            ! This is the root node, so we've finished populating
-            ! the xml_doc_state. Hand it over to DOM if necessary:
-            ! Here we hand over responsibility for the xds object
-            ! The SAX caller must take care of it, and we don't
-            ! need it any more. (We will destroy it shortly anyway)
-            if (present(FoX_endDTD_handler)) then
-              fx%xds_used = .true.
-              call FoX_endDTD_handler(fx%xds)
+            else
+              ! No DTD, so we havent handed over xds
+              if (present(FoX_endDTD_handler)) then
+                fx%xds_used = .true.
+                call FoX_endDTD_handler(fx%xds)
+              endif
             endif
           endif
           call open_tag
@@ -1153,10 +1149,9 @@ contains
           endif
           print*, "wf decrement end dtd"
           wf_stack(1) = wf_stack(1) - 1
-          if (present(endDTD_handler)) then
-            call endDTD_handler()
-            if (fx%state==ST_STOP) goto 100
-          endif
+          call endDTDchecks
+          if (in_error(fx%error_stack)) goto 100
+          if (fx%state==ST_STOP) return
           fx%context = CTXT_BEFORE_CONTENT
           nextState = ST_MISC
         case default
@@ -1250,6 +1245,7 @@ contains
               endif
               call endDTDchecks
               if (in_error(fx%error_stack)) goto 100
+              if (fx%state==ST_STOP) return
               fx%context = CTXT_BEFORE_CONTENT
               nextState = ST_MISC
             endif
@@ -1257,6 +1253,7 @@ contains
           else
             call endDTDchecks
             if (in_error(fx%error_stack)) goto 100
+            if (fx%state==ST_STOP) return
             fx%context = CTXT_BEFORE_CONTENT
             nextState = ST_MISC
           endif
@@ -1298,6 +1295,7 @@ contains
               endif
               call endDTDchecks
               if (in_error(fx%error_stack)) goto 100
+              if (fx%state==ST_STOP) return
               print*, "wf decrement dtd 1"
               wf_stack(1) = wf_stack(1) - 1
               nextState = ST_MISC
@@ -1306,6 +1304,7 @@ contains
           else
             call endDTDchecks
             if (in_error(fx%error_stack)) goto 100
+            if (fx%state==ST_STOP) return
               print*, "wf decrement dtd 2"
             wf_stack(1) = wf_stack(1) - 1
             nextState = ST_MISC
@@ -2504,8 +2503,14 @@ contains
     end subroutine checkXMLAttributes
 
     subroutine endDTDchecks
-      if (present(endDTD_handler)) &
+      if (present(FoX_endDTD_handler)) then
+        fx%xds_used = .true.
+        call FoX_endDTD_handler(fx%xds)
+      endif
+      if (present(endDTD_handler)) then
         call endDTD_handler
+        if (fx%state==ST_STOP) return
+      endif
       ! Check that all notations used have been declared:
       if (validCheck) then
         do i = 1, size(fx%xds%entityList)
