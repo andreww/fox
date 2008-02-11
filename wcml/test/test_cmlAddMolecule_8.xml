@@ -8,7 +8,6 @@
   xmlns:cmlUnits="http://www.xml-cml.org/units/units"
   xmlns:siUnits="http://www.xml-cml.org/units/siUnits"
   xmlns:atomicUnits="http://www.xml-cml.org/units/atomic">
-  <metadata name="UUID" content="85d9a810-a8c5-11dc-663a-727dd78b509e"/>
   <molecule title="Formaldehyde">
     <atomArray>
       <atom elementType="C" x3="0.00000e0" y3="0.00000e0" z3="0.00000e0"/>
