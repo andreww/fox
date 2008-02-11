@@ -140,7 +140,6 @@ TOHW_m_dom_publics(`
 
   public :: destroy
   public :: destroyAllNodesRecursively
-  public :: setIllFormed
 
 ')`'dnl
 dnl

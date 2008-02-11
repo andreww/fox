@@ -271,7 +271,6 @@ module m_dom_dom
 
   public :: destroy
   public :: destroyAllNodesRecursively
-  public :: setIllFormed
 
 
   
@@ -473,6 +472,9 @@ module m_dom_dom
 
   
   public :: getNotationName
+
+  public :: getIllFormed
+  public :: setIllFormed
 
 
 

@@ -2,6 +2,9 @@ TOHW_m_dom_publics(`
   
   public :: getNotationName
 
+  public :: getIllFormed
+  public :: setIllFormed
+
 ')`'dnl
 dnl
 TOHW_m_dom_contents(`

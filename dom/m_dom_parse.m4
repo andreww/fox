@@ -5,8 +5,9 @@ include(`m_dom_exception.m4')dnl
 module m_dom_parse
 
   use fox_m_fsys_array_str, only: str_vs, vs_str_alloc
+  use fox_m_utils_uri, only: expressURI
   use m_common_entities, only: entity_list, init_entity_list, &
-    destroy_entity_list
+    destroy_entity_list, entity_t, size, getEntityByIndex
   use m_common_error, only: FoX_error
   use m_common_struct, only: xml_doc_state
   use FoX_common, only: dictionary_t, getLength_d => getLength
@@ -31,8 +32,8 @@ module m_dom_parse
 
   ! Private interfaces
   use m_dom_dom, only: copyDOMConfig, createEmptyDocument, setDocumentElement, &
-    createEmptyEntityReference, createEntity, createNotation, getReadOnly,     &
-    getStringValue, getXds, destroy, destroyAllNodesRecursively,               &
+    createEmptyEntityReference, createEntity, createNotation, getIllFormed,    &
+    getReadOnly, getStringValue, getXds, destroy, destroyAllNodesRecursively,  &
     namespaceFixup, setDocType, setDomConfig, setGCstate, setIllFormed,        &
     setIsElementContentWhitespace, setReadOnlyMap, setReadonlyNode,            &
     setSpecified, setXds, setStringValue
@@ -235,43 +236,44 @@ contains
     type(NamedNodeMap), pointer :: entities
     type(xml_t) :: subsax
     type(xml_doc_state), pointer :: xds
-    integer :: i
+    type(entity_t), pointer :: ent
+    integer :: i, ios
 
     entities => getEntities(getDocType(mainDoc))
     xds => getXds(mainDoc)
 
-    do i = 0, getLength_nl(entities)-1
-      np => item(entities, i)
-      oldcurrent => current
-      current => createEntity(mainDoc, getNodeName(np), "", "", "")
+    do i = 1, size(xds%entityList)
+      ent => getEntityByIndex(xds%entityList, i)
+      np => getNamedItem(entities, str_vs(ent%name))
 
-      call open_xml_string(subsax, getStringValue(np))
-      ! Run the parser over value
-      ! We do this with all internal entities already declared; and
-      ! namespace-handling switched *off*, since namespaces must be
-      ! resolved lexically at the point where the entity is
-      ! referenced ...; this will be done automatically for any
-      ! entities referenced in the document, but we will need to do
-      ! it manually when adding an ENTITY_REFERENCE NODE later on.
-      ! FIXME false. actually we want to do partial namespace resolution
-      ! at this stage, and at least pick up on xml: and xmlns: nodes
-      call sax_parse(subsax%fx, subsax%fb,                           &
-        startElement_handler=startElement_handler,                   &
-        endElement_handler=endElement_handler,                       &
-        characters_handler=characters_handler,                       &
-        startCdata_handler=startCdata_handler,                       &
-        endCdata_handler=endCdata_handler,                           &
-        comment_handler=comment_handler,                             &
-        processingInstruction_handler=processingInstruction_handler, &
-        error_handler=entityErrorHandler,                            &
-        startInCharData = .true., &
-        namespaces=getParameter(domConfig, "namespaces"), &
-        initial_entities = xds%entityList)
-      ! FIXME namespaces take from domConfig
-      call close_xml_t(subsax)
+      if (ent%external) then
+        call open_xml_file(subsax, expressURI(ent%baseURI), iostat=ios)
+        if (ios/=0) call setIllFormed(np, .true.)
+      else
+        call open_xml_string(subsax, getStringValue(np))
+      endif
+      if (.not.getIllFormed(np)) then
+        oldcurrent => current
+        current => createEntity(mainDoc, getNodeName(np), "", "", "")
+        ! Run the parser over value
+        ! We do this with all internal entities already declared.
+        call sax_parse(subsax%fx, subsax%fb,                           &
+          startElement_handler=startElement_handler,                   &
+          endElement_handler=endElement_handler,                       &
+          characters_handler=characters_handler,                       &
+          startCdata_handler=startCdata_handler,                       &
+          endCdata_handler=endCdata_handler,                           &
+          comment_handler=comment_handler,                             &
+          processingInstruction_handler=processingInstruction_handler, &
+          error_handler=entityErrorHandler,                            &
+          startInCharData = .true., &
+          namespaces=getParameter(domConfig, "namespaces"), &
+          initial_entities = xds%entityList)
+        call close_xml_t(subsax)
 
-      current => setNamedItem(getEntities(getDocType(mainDoc)), current)
-      current => oldcurrent
+        current => setNamedItem(getEntities(getDocType(mainDoc)), current)
+        current => oldcurrent
+      endif
     enddo
 
     if (associated(getDocType(mainDoc))) then
