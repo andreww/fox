@@ -155,7 +155,7 @@ ac_compiler_gnu=$ac_cv_f77_compiler_gnu
 m4_define([AC_LANG(Fortran)],
 [ac_ext=${FC_SRCEXT-f}
 ac_compile='$FC -c $FCFLAGS $FCFLAGS_SRCEXT conftest.$ac_ext >&AS_MESSAGE_LOG_FD'
-ac_link='$FC $ac_link_obj_flag conftest$ac_exeext $FCFLAGS $LDFLAGS $FCFLAGS_SRCEXT conftest.$ac_ext $LIBS >&AS_MESSAGE_LOG_FD'
+ac_link='$FC $ac_link_obj_flag""conftest$ac_exeext $FCFLAGS $LDFLAGS $FCFLAGS_SRCEXT conftest.$ac_ext $LIBS >&AS_MESSAGE_LOG_FD'
 ac_compiler_gnu=$ac_cv_fc_compiler_gnu
 ])
 
@@ -577,7 +577,7 @@ case $ac_mod_file in
 esac
 
 AC_MSG_RESULT([$FC_MODEXT])
-AC_MSG_CHECKING([whether module filenames are uppercases])
+AC_MSG_CHECKING([whether module filenames are uppercased])
 AC_MSG_RESULT([$FC_MODUPPERCASE])
 
 AC_SUBST(FC_MODEXT)
@@ -1506,7 +1506,7 @@ AC_LANG_POP([Fortran])dnl
 AC_DEFUN([_AC_FPP_FIXEDFORM_F],[
 ac_ext=F
 ac_fpp_fixedform_FCFLAGS_save=$FCFLAGS
-for ac_flag in none "-x f77-cpp-input" "-FI -cpp" "-qfixed -qsuffix=cpp=F" "-fixed -fpp" "-lfe \"-Cpp\" --fix"
+for ac_flag in none "/fpp" "-x f77-cpp-input" "-FI -cpp" "-qfixed -qsuffix=cpp=F" "-fixed -fpp" "-lfe \"-Cpp\" --fix"
 do
   test "x$ac_flag" != xnone && FCFLAGS="$ac_fpp_fixedform_FCFLAGS_save $ac_flag"
     AC_COMPILE_IFELSE([
@@ -1514,6 +1514,9 @@ do
 C THIS COMMENT SHOULD CONFUSE FREEFORM COMPILERS
       PRI  NT*, 'HELLO '//
      .      'WORLD.'
+#ifdef OK2
+  choke me
+#endif
 #ifndef OK
       ENDP ROGRAM
 #endif
@@ -1630,7 +1633,8 @@ AC_LANG_POP([Fortran])dnl
 #
 # The known flags are:
 #     -ffree-form -x f77-cpp-input: GNU g77
-#                         -FR -cpp: Intel compiler (ifort)
+#                         -FR -cpp: Intel compiler (ifort) on unix
+#                         /FR /fpp: Intel compiler (ifort) on windows
 #                       -free -cpp: Compaq compiler (fort), NAG compiler 
 #     -qfree -qsuffix=cpp=<SRCEXT>: IBM compiler (xlf) (generates a warning
 #                                       with recent versions)
@@ -1641,20 +1645,22 @@ AC_LANG_POP([Fortran])dnl
 #                          -f free: Absoft Fortran
 #                       -fpp -free: NAG Fortran
 # We try to test the "more popular" flags first, by some prejudiced
-# notion of popularity.
+# notion of popularity. Also, Intel/Windows must be first or it gets
+# confused
 AC_DEFUN([AC_FPP_FREEFORM],
 [AC_REQUIRE([AC_PROG_FPP])
 AC_LANG_PUSH([Fortran])dnl
 dnl Extract preprocessor extension _ac_ppext from $1, part preceding any ':'
 m4_define([_ac_ppext],  m4_bpatsubst([$1], [:.*]))dnl
-AC_CACHE_CHECK([for Fortran flag needed to allow free-form source for ._ac_ppext suffix],
+AC_CACHE_CHECK([for Fortran flag needed to allow free-form preprocessed source for ._ac_ppext suffix],
                 ac_cv_fpp_freeform_[]_ac_ppext,
 [if test $ac_cv_fpp_build_rule = direct; then
    ac_cv_fpp_freeform_[]_ac_ppext=unknown
    ac_ext=_ac_ppext
    ac_fpp_freeform_FCFLAGS_save=$FCFLAGS
-   for ac_flag in none -ffree-form -FR -free "-qfree=f90" "-qfree=f90 -qsuffix=cpp=_ac_ppext"\
-                  -qfree "-qfree -qsuffix=cpp=_ac_ppext" -Mfree -Mfreeform \
+   for ac_flag in none "/FR /fpp" "-ffree-form -x f77-cpp-input" \
+                 "-FR -cpp" "-free -cpp" "-qfree=f90 -qsuffix=cpp=_ac_ppext"\
+                 "-qfree -qsuffix=cpp=_ac_ppext" -Mfree -Mfreeform \
                   -freeform "-f free" --nfix "-fpp -free"
    do
       test "x$ac_flag" != xnone && FCFLAGS="$ac_fpp_freeform_FCFLAGS_save $ac_flag"
@@ -1663,6 +1669,9 @@ program freeform
 ! FIXME: how to best confuse non-freeform compilers?
 print *, 'Hello ', &
 'world.'
+#ifdef OK2
+  choke me
+#endif
 #ifndef OK
 end program
 #endif
@@ -2138,8 +2147,8 @@ AC_DEFUN([AC_FC_MOD_PATH_FLAG],[
 _ACEOF
           _AC_EVAL_STDERR($ac_compile)
           cd ..
-          for i in -I -M "-mod .\;" "-p "; do
-            if test "$ac_cv_fc_mod_path_flag" == "no"; then
+          for i in /I -I -M "-mod .\;" "-p "; do
+            if test "$ac_cv_fc_mod_path_flag" = "no"; then
                FCFLAGS_save=$FCFLAGS
                FCFLAGS="$FCFLAGS ${i}conftestdir"
                AC_COMPILE_IFELSE([
@@ -2497,7 +2506,7 @@ else
    ac_tmp=
 fi
 ac_cmd='$FPP $FPPFLAGS conftest.$ac_ext '"$ac_tmp"
-ac_link='$FC $ac_link_obj_flag conftest$ac_exeext $FCFLAGS $LDFLAGS $FCFLAGS_SRCEXT conftest.f90 $LIBS'
+ac_link='$FC $ac_link_obj_flag""conftest$ac_exeext $FCFLAGS $LDFLAGS $FCFLAGS_SRCEXT conftest.f90 $LIBS'
 
 if AC_TRY_EVAL(ac_cmd) &&
      AC_TRY_EVAL(ac_link) && test -s conftest${ac_exeext}; then
@@ -2630,27 +2639,25 @@ fi
 if test $ac_prog_fc_cpp = yes || test $ac_fc_testing_fpp = indirect; then
 
     if test $ac_fpp_need_d = yes; then
-       ac_prog_fc_cpp_d=no
-       ac_save_FPPFLAGS=$FPPFLAGS
-       FPPFLAGS="$FPPFLAGS -DOK"
-       AC_LINK_IFELSE([_AC_LANG_PROGRAM_FPP_D],
-         [ac_prog_fc_cpp_d=yes; FPPFLAGS_DEF="-D"], 
-         [:])
-       FPPFLAGS=$ac_save_FPPFLAGS
-       if test $ac_prog_fc_cpp_d = no; then
-	  # stupid ibm compiler
-          ac_save_FPPFLAGS=$FPPFLAGS
-          FPPFLAGS="$FPPFLAGS -WF,-DOK"
-          AC_LINK_IFELSE([_AC_LANG_PROGRAM_FPP_D],
-            [ac_prog_fc_cpp_d=yes; FPPFLAGS_DEF="-WF,-D"], 
-            [ac_fpp_ok=no])
-          FPPFLAGS=$ac_save_FPPFLAGS
-       fi
+# Nearly everyone uses -D. XLF uses -WF,-D. Ifort on Windows uses /D
+      ac_prog_fc_cpp_d=no
+      ac_save_FPPFLAGS=$FPPFLAGS
+      for fpp_flag_try in "-D" "-WF,-D" "/D"; do
+        FPPFLAGS="$FPPFLAGS $fpp_flag_try""OK"
+        AC_LINK_IFELSE([_AC_LANG_PROGRAM_FPP_D],
+          [ac_prog_fc_cpp_d=yes; FPPFLAGS_DEF="$fpp_flag_try"], 
+          [:])
+        FPPFLAGS=$ac_save_FPPFLAGS
+      done
+      if test $ac_prog_fc_cpp_d = no; then
+        ac_fpp_ok=no
+      fi
     fi
 #FIXME we should probably do the AC_SUBST somewhere else.
     AC_SUBST(FPPFLAGS_DEF)
 
     if test $ac_fpp_need_i = yes; then
+       rm -rf conftst
        mkdir conftst
        cat > conftst/conftest.inc << \_ACEOF
 !     This statement overrides the IMPLICIT statement in the program
@@ -2947,7 +2954,7 @@ _AC_PROG_FPP_FEATURES([$1])
 # We first try to use FC for compiling the source directly
 # into object files
 ac_fpp_compile='${FC-fc} -c $FPPFLAGS $FPPFLAGS_SRCEXT $FCFLAGS conftest.$ac_ext >&AS_MESSAGE_LOG_FD'
-ac_fpp_link='${FC-fc} $ac_link_obj_flag conftest${ac_exeext} $FPPFLAGS $FPPFLAGS_SRCEXT $FCFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&AS_MESSAGE_LOG_FD'
+ac_fpp_link='${FC-fc} $ac_link_obj_flag""conftest${ac_exeext} $FPPFLAGS $FPPFLAGS_SRCEXT $FCFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&AS_MESSAGE_LOG_FD'
 
 AC_LANG_PUSH(Preprocessed Fortran)
 FPP_SRC_EXT=F
@@ -3034,10 +3041,10 @@ if test $ac_cv_fc_cifs = yes; then
     AC_MSG_ERROR([Confused in preprocessing on case-insensitive FS - please report to tow@uszla.me.uk])
   fi
   ac_fpp_compile='${FPP-fpp} $FPPFLAGS $FPPFLAGS_SRCEXT conftest.$ac_ext > conftest.cpp.f && ${FC-fc} -c $FCFLAGS -o conftest.o conftest.cpp.f >&AS_MESSAGE_LOG_FD; rm conftest.cpp.f'
-  ac_fpp_link='${FPP-fpp} $FPPFLAGS conftest.$ac_ext $FPPFLAGS_SRCEXT > conftest.cpp.f && ${FC-fc} $ac_link_obj_flag conftest${ac_exeext} $FCFLAGS $LDFLAGS conftest.cpp.f $LIBS >&AS_MESSAGE_LOG_FD; rm conftest.cpp.f'
+  ac_fpp_link='${FPP-fpp} $FPPFLAGS conftest.$ac_ext $FPPFLAGS_SRCEXT > conftest.cpp.f && ${FC-fc} $ac_link_obj_flag""conftest${ac_exeext} $FCFLAGS $LDFLAGS conftest.cpp.f $LIBS >&AS_MESSAGE_LOG_FD; rm conftest.cpp.f'
 else
   ac_fpp_compile='${FPP-fpp} $FPPFLAGS $FPPFLAGS_SRCEXT conftest.$ac_ext '"$ac_fpp_out"' && ${FC-fc} -c $FCFLAGS conftest.f >&AS_MESSAGE_LOG_FD; rm conftest.f'
-  ac_fpp_link='${FPP-fpp} $FPPFLAGS conftest.$ac_ext $FPPFLAGS_SRCEXT '"$ac_fpp_out"' && ${FC-fc} $ac_link_obj_flag conftest${ac_exeext} $FCFLAGS $LDFLAGS conftest.f $LIBS >&AS_MESSAGE_LOG_FD; rm conftest.f'
+  ac_fpp_link='${FPP-fpp} $FPPFLAGS conftest.$ac_ext $FPPFLAGS_SRCEXT '"$ac_fpp_out"' && ${FC-fc} $ac_link_obj_flag""conftest${ac_exeext} $FCFLAGS $LDFLAGS conftest.f $LIBS >&AS_MESSAGE_LOG_FD; rm conftest.f'
 fi
 
   ac_compile=$ac_fpp_compile

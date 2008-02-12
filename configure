@@ -1807,12 +1807,12 @@ case $host_os in *\ *) host_os=`echo "$host_os" | sed 's/ /-/g'`;; esac
 
 ac_ext=${FC_SRCEXT-f}
 ac_compile='$FC -c $FCFLAGS $FCFLAGS_SRCEXT conftest.$ac_ext >&5'
-ac_link='$FC $ac_link_obj_flag conftest$ac_exeext $FCFLAGS $LDFLAGS $FCFLAGS_SRCEXT conftest.$ac_ext $LIBS >&5'
+ac_link='$FC $ac_link_obj_flag""conftest$ac_exeext $FCFLAGS $LDFLAGS $FCFLAGS_SRCEXT conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_fc_compiler_gnu
 
 ac_ext=${FC_SRCEXT-f}
 ac_compile='$FC -c $FCFLAGS $FCFLAGS_SRCEXT conftest.$ac_ext >&5'
-ac_link='$FC $ac_link_obj_flag conftest$ac_exeext $FCFLAGS $LDFLAGS $FCFLAGS_SRCEXT conftest.$ac_ext $LIBS >&5'
+ac_link='$FC $ac_link_obj_flag""conftest$ac_exeext $FCFLAGS $LDFLAGS $FCFLAGS_SRCEXT conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_fc_compiler_gnu
 if test -n "$ac_tool_prefix"; then
   for ac_prog in xlf95 lf95 f95 fort ifort ifc efc pgf95 pathf90 gfortran g95 f90 xlf90 pgf90 epcf90 g77 f77 xlf frt pgf77 fort77 fl32 af77
@@ -1951,7 +1951,7 @@ ac_clean_files="$ac_clean_files a.out a.exe b.out"
 # It is nearly always "-o" but Lahey Fortran wants "-out"
 { echo "$as_me:$LINENO: checking for linker flag to name executables" >&5
 echo $ECHO_N "checking for linker flag to name executables... $ECHO_C" >&6; }
-for ac_link_obj_flag in "-out" "-o"; do
+for ac_link_obj_flag in "/exe:" "-out " "-o "; do
 if { (ac_try="$ac_link"
 case "(($ac_try" in
   *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
@@ -2335,14 +2335,14 @@ fi
 
 ac_ext=${FC_SRCEXT-f}
 ac_compile='$FC -c $FCFLAGS $FCFLAGS_SRCEXT conftest.$ac_ext >&5'
-ac_link='$FC $ac_link_obj_flag conftest$ac_exeext $FCFLAGS $LDFLAGS $FCFLAGS_SRCEXT conftest.$ac_ext $LIBS >&5'
+ac_link='$FC $ac_link_obj_flag""conftest$ac_exeext $FCFLAGS $LDFLAGS $FCFLAGS_SRCEXT conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_fc_compiler_gnu
 
 
 
 ac_ext=${FC_SRCEXT-f}
 ac_compile='$FC -c $FCFLAGS $FCFLAGS_SRCEXT conftest.$ac_ext >&5'
-ac_link='$FC $ac_link_obj_flag conftest$ac_exeext $FCFLAGS $LDFLAGS $FCFLAGS_SRCEXT conftest.$ac_ext $LIBS >&5'
+ac_link='$FC $ac_link_obj_flag""conftest$ac_exeext $FCFLAGS $LDFLAGS $FCFLAGS_SRCEXT conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_fc_compiler_gnu
 { echo "$as_me:$LINENO: checking for Fortran flag needed to allow free-form source for .f90 suffix" >&5
 echo $ECHO_N "checking for Fortran flag needed to allow free-form source for .f90 suffix... $ECHO_C" >&6; }
@@ -2428,7 +2428,7 @@ else
 fi
 ac_ext=${FC_SRCEXT-f}
 ac_compile='$FC -c $FCFLAGS $FCFLAGS_SRCEXT conftest.$ac_ext >&5'
-ac_link='$FC $ac_link_obj_flag conftest$ac_exeext $FCFLAGS $LDFLAGS $FCFLAGS_SRCEXT conftest.$ac_ext $LIBS >&5'
+ac_link='$FC $ac_link_obj_flag""conftest$ac_exeext $FCFLAGS $LDFLAGS $FCFLAGS_SRCEXT conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_fc_compiler_gnu
 
 
@@ -3255,7 +3255,7 @@ test $ac_fpp_need_CXXSTYLE = yes && ac_fpp_need_cxxstyle=no
 # We first try to use FC for compiling the source directly
 # into object files
 ac_fpp_compile='${FC-fc} -c $FPPFLAGS $FPPFLAGS_SRCEXT $FCFLAGS conftest.$ac_ext >&5'
-ac_fpp_link='${FC-fc} $ac_link_obj_flag conftest${ac_exeext} $FPPFLAGS $FPPFLAGS_SRCEXT $FCFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_fpp_link='${FC-fc} $ac_link_obj_flag""conftest${ac_exeext} $FPPFLAGS $FPPFLAGS_SRCEXT $FCFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 
 ac_ext=$FPP_SRC_EXT
 # We need to use variables because compilation depends on whether
@@ -3292,7 +3292,7 @@ if test $ac_fc_testing_fpp = direct; then
 
 ac_ext=F
 ac_fpp_fixedform_FCFLAGS_save=$FCFLAGS
-for ac_flag in none "-x f77-cpp-input" "-FI -cpp" "-qfixed -qsuffix=cpp=F" "-fixed -fpp" "-lfe \"-Cpp\" --fix"
+for ac_flag in none "/fpp" "-x f77-cpp-input" "-FI -cpp" "-qfixed -qsuffix=cpp=F" "-fixed -fpp" "-lfe \"-Cpp\" --fix"
 do
   test "x$ac_flag" != xnone && FCFLAGS="$ac_fpp_fixedform_FCFLAGS_save $ac_flag"
     cat >conftest.$ac_ext <<_ACEOF
@@ -3301,6 +3301,9 @@ do
 C THIS COMMENT SHOULD CONFUSE FREEFORM COMPILERS
       PRI  NT*, 'HELLO '//
      .      'WORLD.'
+#ifdef OK2
+  choke me
+#endif
 #ifndef OK
       ENDP ROGRAM
 #endif
@@ -3444,10 +3447,12 @@ fi
 if test $ac_prog_fc_cpp = yes || test $ac_fc_testing_fpp = indirect; then
 
     if test $ac_fpp_need_d = yes; then
-       ac_prog_fc_cpp_d=no
-       ac_save_FPPFLAGS=$FPPFLAGS
-       FPPFLAGS="$FPPFLAGS -DOK"
-       cat >conftest.$ac_ext <<_ACEOF
+# Nearly everyone uses -D. XLF uses -WF,-D. Ifort on Windows uses /D
+      ac_prog_fc_cpp_d=no
+      ac_save_FPPFLAGS=$FPPFLAGS
+      for fpp_flag_try in "-D" "-WF,-D" "/D"; do
+        FPPFLAGS="$FPPFLAGS $fpp_flag_try""OK"
+        cat >conftest.$ac_ext <<_ACEOF
 
       program main
 
@@ -3491,7 +3496,7 @@ eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
-  ac_prog_fc_cpp_d=yes; FPPFLAGS_DEF="-D"
+  ac_prog_fc_cpp_d=yes; FPPFLAGS_DEF="$fpp_flag_try"
 else
   echo "$as_me: failed program was:" >&5
 sed 's/^/| /' conftest.$ac_ext >&5
@@ -3501,72 +3506,17 @@ fi
 
 rm -f core conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
-       FPPFLAGS=$ac_save_FPPFLAGS
-       if test $ac_prog_fc_cpp_d = no; then
-	  # stupid ibm compiler
-          ac_save_FPPFLAGS=$FPPFLAGS
-          FPPFLAGS="$FPPFLAGS -WF,-DOK"
-          cat >conftest.$ac_ext <<_ACEOF
-
-      program main
-
-#ifndef OK
-      syntax error
-#endif
-
-      end
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (ac_try="$ac_link"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_link") 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_fpp_werror_flag" || test ! -s conftest.err'
-  { (case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_try") 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; } &&
-	 { ac_try='test -s conftest$ac_exeext'
-  { (case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_try") 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; }; then
-  ac_prog_fc_cpp_d=yes; FPPFLAGS_DEF="-WF,-D"
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-	ac_fpp_ok=no
-fi
-
-rm -f core conftest.err conftest.$ac_objext \
-      conftest$ac_exeext conftest.$ac_ext
-          FPPFLAGS=$ac_save_FPPFLAGS
-       fi
+        FPPFLAGS=$ac_save_FPPFLAGS
+      done
+      if test $ac_prog_fc_cpp_d = no; then
+        ac_fpp_ok=no
+      fi
     fi
 #FIXME we should probably do the AC_SUBST somewhere else.
 
 
     if test $ac_fpp_need_i = yes; then
+       rm -rf conftst
        mkdir conftst
        cat > conftst/conftest.inc << \_ACEOF
 !     This statement overrides the IMPLICIT statement in the program
@@ -4410,7 +4360,7 @@ _ACEOF
 
 ac_ext=${FC_SRCEXT-f}
 ac_compile='$FC -c $FCFLAGS $FCFLAGS_SRCEXT conftest.$ac_ext >&5'
-ac_link='$FC $ac_link_obj_flag conftest$ac_exeext $FCFLAGS $LDFLAGS $FCFLAGS_SRCEXT conftest.$ac_ext $LIBS >&5'
+ac_link='$FC $ac_link_obj_flag""conftest$ac_exeext $FCFLAGS $LDFLAGS $FCFLAGS_SRCEXT conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_fc_compiler_gnu
 
 ac_ext=F90  # previous line will have reset this
@@ -4432,7 +4382,7 @@ else
    ac_tmp=
 fi
 ac_cmd='$FPP $FPPFLAGS conftest.$ac_ext '"$ac_tmp"
-ac_link='$FC $ac_link_obj_flag conftest$ac_exeext $FCFLAGS $LDFLAGS $FCFLAGS_SRCEXT conftest.f90 $LIBS'
+ac_link='$FC $ac_link_obj_flag""conftest$ac_exeext $FCFLAGS $LDFLAGS $FCFLAGS_SRCEXT conftest.f90 $LIBS'
 
 if { (eval echo "$as_me:$LINENO: \"$ac_cmd\"") >&5
   (eval $ac_cmd) 2>&5
@@ -4510,10 +4460,10 @@ echo "$as_me: error: Confused in preprocessing on case-insensitive FS - please r
    { (exit 1); exit 1; }; }
   fi
   ac_fpp_compile='${FPP-fpp} $FPPFLAGS $FPPFLAGS_SRCEXT conftest.$ac_ext > conftest.cpp.f && ${FC-fc} -c $FCFLAGS -o conftest.o conftest.cpp.f >&5; rm conftest.cpp.f'
-  ac_fpp_link='${FPP-fpp} $FPPFLAGS conftest.$ac_ext $FPPFLAGS_SRCEXT > conftest.cpp.f && ${FC-fc} $ac_link_obj_flag conftest${ac_exeext} $FCFLAGS $LDFLAGS conftest.cpp.f $LIBS >&5; rm conftest.cpp.f'
+  ac_fpp_link='${FPP-fpp} $FPPFLAGS conftest.$ac_ext $FPPFLAGS_SRCEXT > conftest.cpp.f && ${FC-fc} $ac_link_obj_flag""conftest${ac_exeext} $FCFLAGS $LDFLAGS conftest.cpp.f $LIBS >&5; rm conftest.cpp.f'
 else
   ac_fpp_compile='${FPP-fpp} $FPPFLAGS $FPPFLAGS_SRCEXT conftest.$ac_ext '"$ac_fpp_out"' && ${FC-fc} -c $FCFLAGS conftest.f >&5; rm conftest.f'
-  ac_fpp_link='${FPP-fpp} $FPPFLAGS conftest.$ac_ext $FPPFLAGS_SRCEXT '"$ac_fpp_out"' && ${FC-fc} $ac_link_obj_flag conftest${ac_exeext} $FCFLAGS $LDFLAGS conftest.f $LIBS >&5; rm conftest.f'
+  ac_fpp_link='${FPP-fpp} $FPPFLAGS conftest.$ac_ext $FPPFLAGS_SRCEXT '"$ac_fpp_out"' && ${FC-fc} $ac_link_obj_flag""conftest${ac_exeext} $FCFLAGS $LDFLAGS conftest.f $LIBS >&5; rm conftest.f'
 fi
 
   ac_compile=$ac_fpp_compile
@@ -4541,7 +4491,7 @@ if test $ac_fc_testing_fpp = direct; then
 
 ac_ext=F
 ac_fpp_fixedform_FCFLAGS_save=$FCFLAGS
-for ac_flag in none "-x f77-cpp-input" "-FI -cpp" "-qfixed -qsuffix=cpp=F" "-fixed -fpp" "-lfe \"-Cpp\" --fix"
+for ac_flag in none "/fpp" "-x f77-cpp-input" "-FI -cpp" "-qfixed -qsuffix=cpp=F" "-fixed -fpp" "-lfe \"-Cpp\" --fix"
 do
   test "x$ac_flag" != xnone && FCFLAGS="$ac_fpp_fixedform_FCFLAGS_save $ac_flag"
     cat >conftest.$ac_ext <<_ACEOF
@@ -4550,6 +4500,9 @@ do
 C THIS COMMENT SHOULD CONFUSE FREEFORM COMPILERS
       PRI  NT*, 'HELLO '//
      .      'WORLD.'
+#ifdef OK2
+  choke me
+#endif
 #ifndef OK
       ENDP ROGRAM
 #endif
@@ -4693,10 +4646,12 @@ fi
 if test $ac_prog_fc_cpp = yes || test $ac_fc_testing_fpp = indirect; then
 
     if test $ac_fpp_need_d = yes; then
-       ac_prog_fc_cpp_d=no
-       ac_save_FPPFLAGS=$FPPFLAGS
-       FPPFLAGS="$FPPFLAGS -DOK"
-       cat >conftest.$ac_ext <<_ACEOF
+# Nearly everyone uses -D. XLF uses -WF,-D. Ifort on Windows uses /D
+      ac_prog_fc_cpp_d=no
+      ac_save_FPPFLAGS=$FPPFLAGS
+      for fpp_flag_try in "-D" "-WF,-D" "/D"; do
+        FPPFLAGS="$FPPFLAGS $fpp_flag_try""OK"
+        cat >conftest.$ac_ext <<_ACEOF
 
       program main
 
@@ -4740,7 +4695,7 @@ eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
-  ac_prog_fc_cpp_d=yes; FPPFLAGS_DEF="-D"
+  ac_prog_fc_cpp_d=yes; FPPFLAGS_DEF="$fpp_flag_try"
 else
   echo "$as_me: failed program was:" >&5
 sed 's/^/| /' conftest.$ac_ext >&5
@@ -4750,72 +4705,17 @@ fi
 
 rm -f core conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
-       FPPFLAGS=$ac_save_FPPFLAGS
-       if test $ac_prog_fc_cpp_d = no; then
-	  # stupid ibm compiler
-          ac_save_FPPFLAGS=$FPPFLAGS
-          FPPFLAGS="$FPPFLAGS -WF,-DOK"
-          cat >conftest.$ac_ext <<_ACEOF
-
-      program main
-
-#ifndef OK
-      syntax error
-#endif
-
-      end
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (ac_try="$ac_link"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_link") 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_fpp_werror_flag" || test ! -s conftest.err'
-  { (case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_try") 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; } &&
-	 { ac_try='test -s conftest$ac_exeext'
-  { (case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_try") 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; }; then
-  ac_prog_fc_cpp_d=yes; FPPFLAGS_DEF="-WF,-D"
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-	ac_fpp_ok=no
-fi
-
-rm -f core conftest.err conftest.$ac_objext \
-      conftest$ac_exeext conftest.$ac_ext
-          FPPFLAGS=$ac_save_FPPFLAGS
-       fi
+        FPPFLAGS=$ac_save_FPPFLAGS
+      done
+      if test $ac_prog_fc_cpp_d = no; then
+        ac_fpp_ok=no
+      fi
     fi
 #FIXME we should probably do the AC_SUBST somewhere else.
 
 
     if test $ac_fpp_need_i = yes; then
+       rm -rf conftst
        mkdir conftst
        cat > conftst/conftest.inc << \_ACEOF
 !     This statement overrides the IMPLICIT statement in the program
@@ -5199,7 +5099,7 @@ _ACEOF
 
 ac_ext=${FC_SRCEXT-f}
 ac_compile='$FC -c $FCFLAGS $FCFLAGS_SRCEXT conftest.$ac_ext >&5'
-ac_link='$FC $ac_link_obj_flag conftest$ac_exeext $FCFLAGS $LDFLAGS $FCFLAGS_SRCEXT conftest.$ac_ext $LIBS >&5'
+ac_link='$FC $ac_link_obj_flag""conftest$ac_exeext $FCFLAGS $LDFLAGS $FCFLAGS_SRCEXT conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_fc_compiler_gnu
 
 ac_cmd='$FPP $FPPFLAGS conftest.$ac_ext '"$ac_fpp_out"
@@ -5348,10 +5248,10 @@ ac_compiler_gnu=$ac_cv_fc_compiler_gnu
 
 ac_ext=${FC_SRCEXT-f}
 ac_compile='$FC -c $FCFLAGS $FCFLAGS_SRCEXT conftest.$ac_ext >&5'
-ac_link='$FC $ac_link_obj_flag conftest$ac_exeext $FCFLAGS $LDFLAGS $FCFLAGS_SRCEXT conftest.$ac_ext $LIBS >&5'
+ac_link='$FC $ac_link_obj_flag""conftest$ac_exeext $FCFLAGS $LDFLAGS $FCFLAGS_SRCEXT conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_fc_compiler_gnu
-{ echo "$as_me:$LINENO: checking for Fortran flag needed to allow free-form source for .F90 suffix" >&5
-echo $ECHO_N "checking for Fortran flag needed to allow free-form source for .F90 suffix... $ECHO_C" >&6; }
+{ echo "$as_me:$LINENO: checking for Fortran flag needed to allow free-form preprocessed source for .F90 suffix" >&5
+echo $ECHO_N "checking for Fortran flag needed to allow free-form preprocessed source for .F90 suffix... $ECHO_C" >&6; }
 if test "${ac_cv_fpp_freeform_F90+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
@@ -5359,8 +5259,9 @@ else
    ac_cv_fpp_freeform_F90=unknown
    ac_ext=F90
    ac_fpp_freeform_FCFLAGS_save=$FCFLAGS
-   for ac_flag in none -ffree-form -FR -free "-qfree=f90" "-qfree=f90 -qsuffix=cpp=F90"\
-                  -qfree "-qfree -qsuffix=cpp=F90" -Mfree -Mfreeform \
+   for ac_flag in none "/FR /fpp" "-ffree-form -x f77-cpp-input" \
+                 "-FR -cpp" "-free -cpp" "-qfree=f90 -qsuffix=cpp=F90"\
+                 "-qfree -qsuffix=cpp=F90" -Mfree -Mfreeform \
                   -freeform "-f free" --nfix "-fpp -free"
    do
       test "x$ac_flag" != xnone && FCFLAGS="$ac_fpp_freeform_FCFLAGS_save $ac_flag"
@@ -5370,6 +5271,9 @@ program freeform
 ! FIXME: how to best confuse non-freeform compilers?
 print *, 'Hello ', &
 'world.'
+#ifdef OK2
+  choke me
+#endif
 #ifndef OK
 end program
 #endif
@@ -5453,7 +5357,7 @@ ac_compiler_gnu=$ac_cv_fc_compiler_gnu
 
 ac_ext=${FC_SRCEXT-f}
 ac_compile='$FC -c $FCFLAGS $FCFLAGS_SRCEXT conftest.$ac_ext >&5'
-ac_link='$FC $ac_link_obj_flag conftest$ac_exeext $FCFLAGS $LDFLAGS $FCFLAGS_SRCEXT conftest.$ac_ext $LIBS >&5'
+ac_link='$FC $ac_link_obj_flag""conftest$ac_exeext $FCFLAGS $LDFLAGS $FCFLAGS_SRCEXT conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_fc_compiler_gnu
 
 if test $ac_cv_fpp_build_rule = direct; then
@@ -5818,7 +5722,7 @@ if test "${ac_cv_fc_real_kind_sp+set}" = set; then
 else
   ac_ext=${FC_SRCEXT-f}
 ac_compile='$FC -c $FCFLAGS $FCFLAGS_SRCEXT conftest.$ac_ext >&5'
-ac_link='$FC $ac_link_obj_flag conftest$ac_exeext $FCFLAGS $LDFLAGS $FCFLAGS_SRCEXT conftest.$ac_ext $LIBS >&5'
+ac_link='$FC $ac_link_obj_flag""conftest$ac_exeext $FCFLAGS $LDFLAGS $FCFLAGS_SRCEXT conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_fc_compiler_gnu
 
 FCFLAGS_save="$FCFLAGS"
@@ -5852,7 +5756,7 @@ fi
 FCFLAGS="$FCFLAGS_save"
 ac_ext=${FC_SRCEXT-f}
 ac_compile='$FC -c $FCFLAGS $FCFLAGS_SRCEXT conftest.$ac_ext >&5'
-ac_link='$FC $ac_link_obj_flag conftest$ac_exeext $FCFLAGS $LDFLAGS $FCFLAGS_SRCEXT conftest.$ac_ext $LIBS >&5'
+ac_link='$FC $ac_link_obj_flag""conftest$ac_exeext $FCFLAGS $LDFLAGS $FCFLAGS_SRCEXT conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_fc_compiler_gnu
 
 
@@ -5875,7 +5779,7 @@ if test "${ac_cv_fc_real_kind_dp+set}" = set; then
 else
   ac_ext=${FC_SRCEXT-f}
 ac_compile='$FC -c $FCFLAGS $FCFLAGS_SRCEXT conftest.$ac_ext >&5'
-ac_link='$FC $ac_link_obj_flag conftest$ac_exeext $FCFLAGS $LDFLAGS $FCFLAGS_SRCEXT conftest.$ac_ext $LIBS >&5'
+ac_link='$FC $ac_link_obj_flag""conftest$ac_exeext $FCFLAGS $LDFLAGS $FCFLAGS_SRCEXT conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_fc_compiler_gnu
 
 FCFLAGS_save="$FCFLAGS"
@@ -5909,7 +5813,7 @@ fi
 FCFLAGS="$FCFLAGS_save"
 ac_ext=${FC_SRCEXT-f}
 ac_compile='$FC -c $FCFLAGS $FCFLAGS_SRCEXT conftest.$ac_ext >&5'
-ac_link='$FC $ac_link_obj_flag conftest$ac_exeext $FCFLAGS $LDFLAGS $FCFLAGS_SRCEXT conftest.$ac_ext $LIBS >&5'
+ac_link='$FC $ac_link_obj_flag""conftest$ac_exeext $FCFLAGS $LDFLAGS $FCFLAGS_SRCEXT conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_fc_compiler_gnu
 
 
@@ -5932,7 +5836,7 @@ if test "${ac_cv_fc_real_kind_ieee_sp+set}" = set; then
 else
   ac_ext=${FC_SRCEXT-f}
 ac_compile='$FC -c $FCFLAGS $FCFLAGS_SRCEXT conftest.$ac_ext >&5'
-ac_link='$FC $ac_link_obj_flag conftest$ac_exeext $FCFLAGS $LDFLAGS $FCFLAGS_SRCEXT conftest.$ac_ext $LIBS >&5'
+ac_link='$FC $ac_link_obj_flag""conftest$ac_exeext $FCFLAGS $LDFLAGS $FCFLAGS_SRCEXT conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_fc_compiler_gnu
 
 FCFLAGS_save="$FCFLAGS"
@@ -5966,7 +5870,7 @@ fi
 FCFLAGS="$FCFLAGS_save"
 ac_ext=${FC_SRCEXT-f}
 ac_compile='$FC -c $FCFLAGS $FCFLAGS_SRCEXT conftest.$ac_ext >&5'
-ac_link='$FC $ac_link_obj_flag conftest$ac_exeext $FCFLAGS $LDFLAGS $FCFLAGS_SRCEXT conftest.$ac_ext $LIBS >&5'
+ac_link='$FC $ac_link_obj_flag""conftest$ac_exeext $FCFLAGS $LDFLAGS $FCFLAGS_SRCEXT conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_fc_compiler_gnu
 
 
@@ -5989,7 +5893,7 @@ if test "${ac_cv_fc_real_kind_ieee_dp+set}" = set; then
 else
   ac_ext=${FC_SRCEXT-f}
 ac_compile='$FC -c $FCFLAGS $FCFLAGS_SRCEXT conftest.$ac_ext >&5'
-ac_link='$FC $ac_link_obj_flag conftest$ac_exeext $FCFLAGS $LDFLAGS $FCFLAGS_SRCEXT conftest.$ac_ext $LIBS >&5'
+ac_link='$FC $ac_link_obj_flag""conftest$ac_exeext $FCFLAGS $LDFLAGS $FCFLAGS_SRCEXT conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_fc_compiler_gnu
 
 FCFLAGS_save="$FCFLAGS"
@@ -6023,7 +5927,7 @@ fi
 FCFLAGS="$FCFLAGS_save"
 ac_ext=${FC_SRCEXT-f}
 ac_compile='$FC -c $FCFLAGS $FCFLAGS_SRCEXT conftest.$ac_ext >&5'
-ac_link='$FC $ac_link_obj_flag conftest$ac_exeext $FCFLAGS $LDFLAGS $FCFLAGS_SRCEXT conftest.$ac_ext $LIBS >&5'
+ac_link='$FC $ac_link_obj_flag""conftest$ac_exeext $FCFLAGS $LDFLAGS $FCFLAGS_SRCEXT conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_fc_compiler_gnu
 
 
@@ -6749,8 +6653,8 @@ _ACEOF
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }
           cd ..
-          for i in -I -M "-mod .\;" "-p "; do
-            if test "$ac_cv_fc_mod_path_flag" == "no"; then
+          for i in /I -I -M "-mod .\;" "-p "; do
+            if test "$ac_cv_fc_mod_path_flag" = "no"; then
                FCFLAGS_save=$FCFLAGS
                FCFLAGS="$FCFLAGS ${i}conftestdir"
                cat >conftest.$ac_ext <<_ACEOF
@@ -6874,8 +6778,8 @@ esac
 
 { echo "$as_me:$LINENO: result: $FC_MODEXT" >&5
 echo "${ECHO_T}$FC_MODEXT" >&6; }
-{ echo "$as_me:$LINENO: checking whether module filenames are uppercases" >&5
-echo $ECHO_N "checking whether module filenames are uppercases... $ECHO_C" >&6; }
+{ echo "$as_me:$LINENO: checking whether module filenames are uppercased" >&5
+echo $ECHO_N "checking whether module filenames are uppercased... $ECHO_C" >&6; }
 { echo "$as_me:$LINENO: result: $FC_MODUPPERCASE" >&5
 echo "${ECHO_T}$FC_MODUPPERCASE" >&6; }
 

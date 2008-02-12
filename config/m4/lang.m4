@@ -16,7 +16,7 @@ m4_define([_AC_COMPILER_EXEEXT_DEFAULT],
 [# First try to determine the flag needed to name the executable
 # It is nearly always "-o" but Lahey Fortran wants "-out"
 AC_MSG_CHECKING([for linker flag to name executables])
-for ac_link_obj_flag in "-out" "-o"; do
+for ac_link_obj_flag in "/exe:" "-out " "-o "; do
 AS_IF([_AC_DO_VAR(ac_link)], 
 [ac_link_obj_flag_found=yes; break], 
 [:])
