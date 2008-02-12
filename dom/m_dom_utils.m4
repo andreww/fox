@@ -37,7 +37,7 @@ module m_dom_utils
     xml_AddEntityReference, xml_AddExternalEntity, xml_AddInternalEntity,      &
     xml_AddDOCTYPE, xml_AddNotation, xml_AddXMLDeclaration, xml_AddXMLPI,      &
     xml_EndElement, xml_Close, xml_DeclareNamespace, xml_NewElement,           &
-    xml_OpenFile
+    xml_OpenFile, xml_UndeclareNamespace
 
   implicit none
 

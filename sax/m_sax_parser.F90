@@ -5,7 +5,7 @@ module m_sax_parser
     destroy_string_list, vs_str_alloc, vs_vs_alloc
   use m_common_attrs, only: init_dict, destroy_dict, reset_dict, &
     add_item_to_dict, has_key, get_value
-  use m_common_charset, only: XML_WHITESPACE
+  use m_common_charset, only: XML1_0, XML1_1, XML_WHITESPACE
   use m_common_element, only: element_t, existing_element, add_element, &
     get_element, parse_dtd_element, parse_dtd_attlist, report_declarations, &
     get_att_type, get_default_atts, declared_element, ATT_CDATA
@@ -169,6 +169,8 @@ contains
     validate,                      &
     FoX_endDTD_handler,            &
     startInCharData,               &
+    externalEntity,                &
+    xmlVersion,                    &
     initial_entities)
 
     type(sax_parser_t), intent(inout) :: fx
@@ -207,6 +209,8 @@ contains
 
     logical, intent(in), optional :: validate
     logical, intent(in), optional :: startInCharData
+    logical, intent(in), optional :: externalEntity
+    character(len=*), intent(in), optional :: xmlVersion
 
     type(entity_list), optional :: initial_entities
 
@@ -342,7 +346,7 @@ contains
     end interface
 
     logical :: validCheck, startInCharData_, processDTD, pe, nameOK, eof
-    logical :: namespaces_, namespace_prefixes_, xmlns_uris_
+    logical :: namespaces_, namespace_prefixes_, xmlns_uris_, externalEntity_
     integer :: i, iostat, temp_i, nextState, ignoreDepth, declSepValue
     character, pointer :: tempString(:)
     character :: dummy
@@ -380,6 +384,11 @@ contains
     else
       startInCharData_ = .false.
     endif
+    if (present(externalEntity)) then
+      externalEntity_ = externalEntity
+    else
+      externalEntity_ = .false.
+    endif
     if (present(initial_entities)) then
       do i = 1, size(initial_entities)
         ent => getEntityByIndex(initial_entities, i)
@@ -409,6 +418,15 @@ contains
       fx%context = CTXT_IN_CONTENT
       fx%state = ST_CHAR_IN_CONTENT
       fx%well_formed = .true.
+      if (externalEntity_) call parse_text_declaration(fb, fx%error_stack)
+      if (in_error(fx%error_stack)) goto 100
+      if (present(xmlVersion)) then
+        if (xmlVersion=="1.0") then
+          fx%xds%xml_version = XML1_0
+        elseif (xmlVersion=="1.1") then
+          fx%xds%xml_version = XML1_1
+        endif
+      endif
     elseif (reading_main_file(fb)) then
       fx%context = CTXT_BEFORE_DTD
       fx%state = ST_MISC
@@ -998,6 +1016,7 @@ contains
               call add_error(fx%error_stack, "Unable to digest character entity reference in content, sorry.")
               goto 100
             else
+              print*, "xv ", XML1_1, fx%xds%xml_version
               call add_error(fx%error_stack, "Illegal character reference")
               goto 100
             endif

@@ -21,7 +21,7 @@ module m_dom_parse
     TEXT_NODE,                                                                 &
     getAttributes, getData, getDocType, getEntities, getImplementation,        &
     getLastChild, getLength_nl => getLength, getNodeName, getNodeType,         &
-    getNotations, getParameter, getParentNode,                                 &
+    getNotations, getParameter, getParentNode, getXmlVersion,                  &
     setData, setValue,                                                         &
     appendChild, createAttribute, createAttributeNS, createCdataSection,       &
     createComment, createDocumentType, createElement, createElementNS,         &
@@ -238,7 +238,9 @@ contains
     type(xml_doc_state), pointer :: xds
     type(entity_t), pointer :: ent
     integer :: i, ios
+    logical :: ok
 
+    print*, "cvv ", getXmlVersion(mainDoc)
     entities => getEntities(getDocType(mainDoc))
     xds => getXds(mainDoc)
 
@@ -246,13 +248,21 @@ contains
       ent => getEntityByIndex(xds%entityList, i)
       np => getNamedItem(entities, str_vs(ent%name))
 
+      ok = .false.
       if (ent%external) then
-        call open_xml_file(subsax, expressURI(ent%baseURI), iostat=ios)
-        if (ios/=0) call setIllFormed(np, .true.)
+        if (size(ent%notation)==0) then
+          call open_xml_file(subsax, expressURI(ent%baseURI), iostat=ios)
+          if (ios/=0) then
+            call setIllFormed(np, .true.)
+          else
+            ok = .true.
+          endif
+        endif
       else
         call open_xml_string(subsax, getStringValue(np))
+        ok = .true.
       endif
-      if (.not.getIllFormed(np)) then
+      if (ok) then
         oldcurrent => current
         current => createEntity(mainDoc, getNodeName(np), "", "", "")
         ! Run the parser over value
@@ -266,8 +276,10 @@ contains
           comment_handler=comment_handler,                             &
           processingInstruction_handler=processingInstruction_handler, &
           error_handler=entityErrorHandler,                            &
-          startInCharData = .true., &
-          namespaces=getParameter(domConfig, "namespaces"), &
+          startInCharData = .true.,                                    &
+          externalEntity = ent%external,                               &
+          xmlVersion = getXmlVersion(mainDoc),                         &
+          namespaces=getParameter(domConfig, "namespaces"),            &
           initial_entities = xds%entityList)
         call close_xml_t(subsax)
 
