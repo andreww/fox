@@ -1,4 +1,3 @@
-
 module m_dom_utils
 
   use fox_m_fsys_array_str, only: str_vs, vs_str
@@ -244,10 +243,18 @@ endif
       do j = 0, getLength(nnm) - 1
         attrchild => item(nnm, j)
         if (getLocalName(attrchild)=="xmlns") then
-          call xml_DeclareNamespace(xf, getValue(attrchild))
+          if (len(getValue(attrchild))==0) then
+            call xml_UndeclareNamespace(xf)
+          else
+            call xml_DeclareNamespace(xf, getValue(attrchild))
+          endif
         elseif (getPrefix(attrchild)=="xmlns") then
-          call xml_DeclareNamespace(xf, getValue(attrchild), &
-            getLocalName(attrchild))
+          if (len(getValue(attrchild))==0) then
+            call xml_UndeclareNamespace(xf, getLocalName(attrchild))
+          else
+            call xml_DeclareNamespace(xf, getValue(attrchild), &
+              getLocalName(attrchild))
+          endif
         endif
       enddo
       call xml_NewElement(xf, getTagName(this))

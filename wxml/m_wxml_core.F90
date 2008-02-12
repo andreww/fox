@@ -1350,9 +1350,11 @@ contains
     if (xf%state_1 == WXML_STATE_1_AFTER_ROOT) &
       call wxml_error(xf, "adding namespace outside element content")
 
-    if (len(nsURI) == 0) &
-      call wxml_error(xf, "adding namespace with empty URI")
-    
+    if (len(nsURI) == 0) then
+      if (present(prefix).and.xf%xds%xml_version==XML1_0) &
+        call wxml_error(xf, "prefixed namespace with empty URI forbidden in XML 1.0")
+    endif
+
     if (present(prefix)) then
       call addPrefixedNS(xf%nsDict, prefix, nsURI, len(xf%stack)+1, xf%xds, xml)
     else
@@ -1368,10 +1370,10 @@ contains
 
 #ifndef DUMMYLIB
     call check_xf(xf)
-    !No need to checkChars, prfix is checked against stack
+    !No need to checkChars, prefix is checked against stack
 
-    if (xf%xds%xml_version == XML1_0) &
-      call wxml_error("cannot undeclare namespaces in XML 1.0")
+    if (present(prefix).and.xf%xds%xml_version==XML1_0) &
+      call wxml_error("cannot undeclare prefixed namespaces in XML 1.0")
     
     if (xf%state_1 == WXML_STATE_1_AFTER_ROOT) &
       call wxml_error(xf, "Undeclaring namespace outside element content")
