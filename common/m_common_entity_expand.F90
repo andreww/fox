@@ -51,7 +51,7 @@ contains
         if (j==0) then
           call add_error(stack, "Not allowed bare & in entity value")
           return
-        elseif (checkName(str_vs(repl(i+1:i+j-1)), xds)) then
+        elseif (checkName(str_vs(repl(i+1:i+j-1)), xds%xml_version)) then
           repl_temp(i2:i2+j) = repl(i:i+j)
           i = i + j + 1
           i2 = i2 + j + 1

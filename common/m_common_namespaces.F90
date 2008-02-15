@@ -8,7 +8,7 @@ module m_common_namespaces
   use m_common_attrs, only: set_nsURI, set_localName, get_prefix, add_item_to_dict
   use m_common_charset, only: XML1_0, XML1_1
   use m_common_error, only: FoX_error, FoX_warning, error_stack, add_error, in_error
-  use m_common_namecheck, only: checkNCName, checkIRI
+  use m_common_namecheck, only: checkNCName
   use m_common_struct, only: xml_doc_state
 
   implicit none
@@ -152,8 +152,7 @@ contains
       endif
     endif
 
-    if (.not.checkIRI(URI)) &
-      call FoX_error("Attempt to declare invalid namespace IRI: "//URI)
+    ! FIXME check URI is valid ...
 
     l_m = ubound(nsDict%defaults,1)
     allocate(tempMap(0:l_m))
@@ -301,11 +300,10 @@ contains
       endif
     endif
 
-    if (.not.checkNCName(prefix, xds)) &
+    if (.not.checkNCName(prefix, xds%xml_version)) &
       call FoX_error("Attempt to declare invalid prefix: "//prefix)
 
-    if (.not.checkIRI(URI)) &
-      call FoX_error("Attempt to declare invalid namespace IRI: "//URI)
+    ! FIXME check URI is valid
 
     l_p = ubound(nsDict%prefixes, 1)
     

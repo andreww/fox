@@ -14,9 +14,8 @@ module m_wxml_core
   use m_common_error, only: FoX_warning_base, FoX_error_base, FoX_fatal_base
   use m_common_io, only: get_unit
   use m_common_namecheck, only: checkEncName, checkName, checkPITarget, &
-    checkCharacterEntityReference, checkPublicId, checkSystemId, &
-    checkQName, prefixOfQName, localpartofQName, checkPEDef, checkPseudoAttValue, &
-    checkAttValue
+    checkCharacterEntityReference, checkPublicId, checkQName, prefixOfQName, &
+    localpartofQName, checkPEDef, checkPseudoAttValue, checkAttValue
   use m_common_namespaces, only: namespaceDictionary, getnamespaceURI, &
   initnamespaceDictionary, destroynamespaceDictionary, addDefaultNS, &
   addPrefixedNS, isPrefixInForce, checkNamespacesWriting, checkEndNamespaces
@@ -355,7 +354,7 @@ contains
       xf%state_3 = WXML_STATE_3_DURING_DTD
     endif
 
-    if (.not.checkName(name, xf%xds)) &
+    if (.not.checkName(name, xf%xds%xml_version)) &
          call wxml_error("Invalid Name in DTD "//name)
     
     call add_eol(xf)
@@ -431,7 +430,7 @@ contains
         call wxml_fatal("Parameter entity "//name//" must have either a PEdef or an External ID")
     endif
     if (present(PEdef)) then
-      if (.not.checkPEDef(PEDef, xf%xds)) &
+      if (.not.checkPEDef(PEDef, xf%xds%xml_version)) &
         call wxml_fatal("Parameter entity definition is invalid: "//PEDef)
       if (xf%xds%standalone) then
         if (.not.checkExistingRefs()) &
@@ -442,8 +441,9 @@ contains
       endif
       call register_internal_PE(xf%xds, name=name, text=PEdef, baseURI=null(), wfc=.false.)
     else
-      if (.not.checkSystemID(system)) &
-        call wxml_fatal("Parameter entity System ID is invalid: "//system)
+      ! FIXME check URI
+      !if (.not.checkSystemID(system)) &
+      !  call wxml_fatal("Parameter entity System ID is invalid: "//system)
       if (present(public)) then
         if (.not.checkPublicID(public)) &
           call wxml_fatal("Parameter entity Public ID is invalid: "//public)
@@ -530,7 +530,7 @@ contains
       xf%state_2 = WXML_STATE_2_OUTSIDE_TAG
     endif
 
-    if (.not.checkName(name, xf%xds)) &
+    if (.not.checkName(name, xf%xds%xml_version)) &
       call wxml_error("xml_AddInternalEntity: Invalid Name: "//name)
     call register_internal_GE(xf%xds, name=name, text=value, baseURI=null(), wfc=.false.)
 
@@ -582,7 +582,7 @@ contains
       if (.not.notation_exists(xf%xds%nList, notation)) then
         if (.not.xf%xds%standalone) then
           call wxml_warning(xf, "Tried to add possibly unregistered notation to entity: "//name)
-          if (.not.checkName(notation, xf%xds)) &
+          if (.not.checkName(notation, xf%xds%xml_version)) &
             call wxml_error("xml_AddExternalEntity: Invalid notation "//notation)
         else
           call wxml_error("Tried to add non-existent notation to entity: "//name)
@@ -590,10 +590,11 @@ contains
       endif
     endif
   
-    if (.not.checkName(name, xf%xds)) &
+    if (.not.checkName(name, xf%xds%xml_version)) &
       call wxml_error("xml_AddExternalEntity: Invalid Name: "//name)
-    if (.not.checkSystemID(system)) &
-      call wxml_error("xml_AddExternalEntity: Invalid System: "//system)
+    ! FIXME check URI
+    !if (.not.checkSystemID(system)) &
+    !  call wxml_error("xml_AddExternalEntity: Invalid System: "//system)
     if (present(public)) then
       if (.not.checkPublicID(public)) &
         call wxml_error("xml_AddExternalEntity: Invalid Public: "//public)
@@ -662,12 +663,13 @@ contains
     
     call add_eol(xf)
 
-    if (.not.checkName(name, xf%xds)) &
+    if (.not.checkName(name, xf%xds%xml_version)) &
       call wxml_error("Notation name is illegal in xml_AddNotation: "//name)
-    if (present(system)) then
-      if (.not.checkSystemId(system)) &
-        call wxml_error("System ID name is illegal in xml_AddNotation: "//system)
-    endif
+    ! FIXME check URI
+    !if (present(system)) then
+    !  if (.not.checkSystemId(system)) &
+    !    call wxml_error("System ID name is illegal in xml_AddNotation: "//system)
+    !endif
     if (present(public)) then
       if (.not.checkPublicId(public)) &
         call wxml_error("Public ID name is illegal in xml_AddNotation: "//public)
@@ -703,7 +705,7 @@ contains
     if (.not.checkChars(name,xf%xds%xml_version)) call wxml_error("xml_AddElementToDTD: Invalid character in name")
     if (.not.checkChars(declaration,xf%xds%xml_version)) call wxml_error("xml_AddElementToDTD: Invalid character in declaration")
 
-    if (.not.checkName(name, xf%xds)) &
+    if (.not.checkName(name, xf%xds%xml_version)) &
       call wxml_error("Element name is illegal in xml_AddElementToDTD: "//name)
 
     !FIXME we should check declaration syntax too.
@@ -738,7 +740,7 @@ contains
     if (.not.checkChars(name,xf%xds%xml_version)) call wxml_error("xml_AddAttListToDTD: Invalid character in name")
     if (.not.checkChars(declaration,xf%xds%xml_version)) call wxml_error("xml_AddAttListToDTD: Invalid character in declaration")
 
-    if (.not.checkName(name, xf%xds)) &
+    if (.not.checkName(name, xf%xds%xml_version)) &
       call wxml_error("Attlist name is illegal in xml_AddAttlistToDTD: "//name)
 
     !FIXME we should check declaration syntax too.
@@ -771,7 +773,7 @@ contains
     call check_xf(xf)
     if (.not.checkChars(name,xf%xds%xml_version)) call wxml_error("xml_AddPEReferenceToDTD: Invalid character in name")
 
-    if (.not.checkName(name, xf%xds)) &
+    if (.not.checkName(name, xf%xds%xml_version)) &
       call wxml_error("Trying to add illegal name in xml_AddPEReferenceToDTD: "//name)
 
     call wxml_warning(xf, "Adding PEReference to DTD. Cannot guarantee well-formedness")
@@ -869,10 +871,10 @@ contains
     end select
 
     if (present(xml)) then
-      if (.not.checkName(name, xf%xds)) &
+      if (.not.checkName(name, xf%xds%xml_version)) &
         call wxml_error(xf, "Invalid PI Target "//name)
     else
-      if (.not.checkPITarget(name, xf%xds)) &
+      if (.not.checkPITarget(name, xf%xds%xml_version)) &
         call wxml_error(xf, "Invalid PI Target "//name)
     endif
     call add_to_buffer("<?" // name, xf%buffer, .false.)
@@ -957,7 +959,7 @@ contains
       call wxml_error(xf, "Two root elements: "//name)
     end select
     
-    if (.not.checkQName(name, xf%xds)) then
+    if (.not.checkQName(name, xf%xds%xml_version)) then
       call wxml_error(xf, 'Element name '//name//' is not valid')
     endif
 
@@ -1120,7 +1122,7 @@ contains
     ! syntactic constraint.
 
     if (.not.esc) then
-      if (.not.checkAttValue(value, xf%xds)) &
+      if (.not.checkAttValue(value, xf%xds%xml_version)) &
         call wxml_error(xf, "Invalid attribute value: "//value)
       if (index(value, '&') > 0) then
         ! There are entity references
@@ -1147,7 +1149,7 @@ contains
       call wxml_error(xf, "duplicate att after namespace processing: "//name)
     endif
 
-    if (.not.checkQName(name, xf%xds)) &
+    if (.not.checkQName(name, xf%xds%xml_version)) &
          call wxml_error(xf, "invalid attribute name: "//name)
 
     if (len(prefixOfQName(name))>0) then
@@ -1262,7 +1264,7 @@ contains
     if (index(value, '?>') > 0) &
         call wxml_error(xf, "Invalid pseudo-attribute value: "//value)
     if (.not.esc) then
-      if (.not.checkPseudoAttValue(value, xf%xds)) &
+      if (.not.checkPseudoAttValue(value, xf%xds%xml_version)) &
         call wxml_error(xf, "Invalid pseudo-attribute value: "//value)
     endif
 
@@ -1270,7 +1272,7 @@ contains
          call wxml_error("PI pseudo-attribute outside PI: "//name)
 
     ! This is mostly ad-hoc, pseudo-attribute names are not defined anywhere.
-    if (.not.checkName(name, xf%xds)) &
+    if (.not.checkName(name, xf%xds%xml_version)) &
          call wxml_error("Invalid pseudo-attribute name: "//name)
 
     if (hasKey(xf%dict,name)) &

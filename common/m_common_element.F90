@@ -8,6 +8,8 @@ module m_common_element
   use m_common_charset, only: isInitialNameChar, isNameChar, &
     upperCase, XML_WHITESPACE
   use m_common_error, only: error_stack, add_error, in_error
+  use m_common_namecheck, only: checkName, checkNames, checkQName,   &
+    checkQNames, checkNmtoken, checkNmtokens
 
   implicit none
   private
@@ -1022,9 +1024,72 @@ contains
         !write(*,*)'ST_DEFAULTVALUE'
         if (c==q) then
           ! Value is normalized later on in m_sax_parser
-          ca%default => value
-          value => null()
-          state = ST_START
+          select case(ca%attType)
+          case (ATT_ID)
+            ! VC: ID
+            if (.not.checkName(str_vs(ca%default), xv)) &
+              call add_error(stack, &
+              "Attributes of type ID must have a value which is an XML Name")
+              ! FIXME in a namespaced document they must match QName
+              !FIXME exit
+          case (ATT_IDREF)
+            ! VC: IDREF
+            if (.not.checkName(str_vs(ca%default), xv)) &
+              call add_error(stack, &
+              "Attributes of type IDREF must have a value which is an XML Name")
+              ! FIXME in a namespaced document they must match QName
+              !FIXME exit
+          case (ATT_IDREFS)
+            ! VC: IDREF
+            if (.not.checkNames(str_vs(ca%default), xv)) &
+              call add_error(stack, &
+              "Attributes of type IDREF must have a value which contains only XML Names")
+              ! FIXME in a namespaced document they must match QName
+              !FIXME exit
+          case (ATT_ENTITY)
+            ! VC: Entity Name
+            if (.not.checkName(str_vs(ca%default), xv)) &
+              call add_error(stack, &
+              "Attributes of type ENTITY must have a value which is an XML Name")
+              ! FIXME in a namespaced document they must match QName
+              !FIXME exit
+          case (ATT_ENTITIES)
+            ! VC: Entity Name
+            if (.not.checkNames(str_vs(ca%default), xv)) &
+              call add_error(stack, &
+              "Attributes of type ENTITY must have a value which contains only XML Names")
+              ! FIXME in a namespaced document they must match QName
+              !FIXME exit
+          case (ATT_NMTOKEN)
+            ! VC Name Token
+            if (.not.checkNmtoken(str_vs(ca%default), xv)) &
+              call add_error(stack, &
+              "Attributes of type NMTOKEN must have a value which is a NMTOKEN")
+              !FIXME exit
+          case (ATT_NMTOKENS)
+            ! VC: Name Token
+            if (.not.checkNmtokens(str_vs(ca%default), xv)) &
+              call add_error(stack, &
+              "Attributes of type NMTOKENS must have a value which contain only NMTOKENs")
+              !FIXME exit
+          case (ATT_NOTATION)
+            ! VC: Notation Attributes
+            if (.not.checkNames(str_vs(ca%default), xv)) &
+              call add_error(stack, &
+              "Attributes of type NOTATION must have a value which contain only XML Names")
+              !FIXME exit
+          case (ATT_ENUM)
+            ! VC: Notation Attributes
+            if (.not.checkNmtokens(str_vs(ca%default), xv)) &
+              call add_error(stack, &
+              "Attributes of type ENUM must have a value which contain only NMTOKENs")
+              !FIXME exit
+          end select
+          if (.not.in_error(stack)) then  
+            ca%default => value
+            value => null()
+            state = ST_START
+          endif
         else
           temp => vs_str_alloc(str_vs(value)//c)
           deallocate(value)

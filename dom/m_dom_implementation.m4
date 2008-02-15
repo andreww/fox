@@ -52,8 +52,9 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(NAMESPACE_ERR)
     elseif (.not.checkPublicId(publicId)) then
       TOHW_m_dom_throw_error(FoX_INVALID_PUBLIC_ID)
-    elseif (.not.checkSystemId(systemId)) then
-      TOHW_m_dom_throw_error(FoX_INVALID_SYSTEM_ID)
+dnl elseif (.not.checkSystemId(systemId)) then
+dnl  TOHW_m_dom_throw_error(FoX_INVALID_SYSTEM_ID)
+dnl FIXME check URI
     endif
 
 ! Dont use raw null() below or PGI will complain

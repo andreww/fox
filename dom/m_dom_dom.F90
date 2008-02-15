@@ -11,7 +11,7 @@ module m_dom_dom
   use m_common_charset, only: checkChars, XML1_0, XML1_1
   use m_common_element, only: element_t, get_element, default_att_index, ATT_DEFAULT
   use m_common_namecheck, only: checkQName, prefixOfQName, localPartOfQName, &
-    checkName, checkPublicId, checkSystemId, checkNCName
+    checkName, checkPublicId, checkNCName
   use m_common_struct, only: xml_doc_state, init_xml_doc_state, destroy_xml_doc_state
 
   use m_dom_error, only: DOMException, throw_exception, inException, getExceptionCode, &
@@ -5647,16 +5647,6 @@ endif
     elseif (.not.checkPublicId(publicId)) then
       if (getFoX_checks().or.FoX_INVALID_PUBLIC_ID<200) then
   call throw_exception(FoX_INVALID_PUBLIC_ID, "createDocumentType", ex)
-  if (present(ex)) then
-    if (inException(ex)) then
-       return
-    endif
-  endif
-endif
-
-    elseif (.not.checkSystemId(systemId)) then
-      if (getFoX_checks().or.FoX_INVALID_SYSTEM_ID<200) then
-  call throw_exception(FoX_INVALID_SYSTEM_ID, "createDocumentType", ex)
   if (present(ex)) then
     if (inException(ex)) then
        return

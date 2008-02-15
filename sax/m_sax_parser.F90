@@ -573,15 +573,15 @@ contains
         select case (fx%tokenType)
         case (TOK_NAME)
           if (namespaces_) then
-            nameOk = checkNCName(str_vs(fx%token), fx%xds)
+            nameOk = checkNCName(str_vs(fx%token), fx%xds%xml_version)
           else
-            nameOk = checkName(str_vs(fx%token), fx%xds)
+            nameOk = checkName(str_vs(fx%token), fx%xds%xml_version)
           endif
           if (nameOk) then
             if (str_vs(fx%token)=='xml') then
               call add_error(fx%error_stack, "XML declaration must be at start of document")
               goto 100
-            elseif (checkPITarget(str_vs(fx%token), fx%xds)) then
+            elseif (checkPITarget(str_vs(fx%token), fx%xds%xml_version)) then
               nextState = ST_PI_CONTENTS
               fx%name => fx%token
               fx%token => null()
@@ -687,9 +687,9 @@ contains
             .or. fx%context==CTXT_BEFORE_CONTENT &
             .or. fx%context==CTXT_IN_CONTENT) then
             if (namespaces_) then
-              nameOk = checkQName(str_vs(fx%token), fx%xds)
+              nameOk = checkQName(str_vs(fx%token), fx%xds%xml_version)
             else
-              nameOk = checkName(str_vs(fx%token), fx%xds)
+              nameOk = checkName(str_vs(fx%token), fx%xds%xml_version)
             endif
             if (.not.nameOk) then
               call add_error(fx%error_stack, "Illegal element name")
@@ -845,9 +845,9 @@ contains
 
         case (TOK_NAME)
           if (namespaces_) then
-            nameOk = checkQName(str_vs(fx%token), fx%xds)
+            nameOk = checkQName(str_vs(fx%token), fx%xds%xml_version)
           else
-            nameOk = checkName(str_vs(fx%token), fx%xds)
+            nameOk = checkName(str_vs(fx%token), fx%xds%xml_version)
           endif
           if (.not.nameOk) then
             call add_error(fx%error_stack, "Illegal attribute name")
@@ -1093,7 +1093,7 @@ contains
         write(*,*)'ST_CLOSING_TAG'
         select case (fx%tokenType)
         case (TOK_NAME)
-          if (checkName(str_vs(fx%token), fx%xds)) then
+          if (checkName(str_vs(fx%token), fx%xds%xml_version)) then
             fx%name => fx%token
             nullify(fx%token)
             nextState = ST_IN_CLOSING_TAG
@@ -1130,9 +1130,9 @@ contains
         select case (fx%tokenType)
         case (TOK_NAME)
           if (namespaces_) then
-            nameOk = checkQName(str_vs(fx%token), fx%xds)
+            nameOk = checkQName(str_vs(fx%token), fx%xds%xml_version)
           else
-            nameOk = checkName(str_vs(fx%token), fx%xds)
+            nameOk = checkName(str_vs(fx%token), fx%xds%xml_version)
           endif
           if (.not.nameOk) then
             call add_error(fx%error_stack, "Invalid document name")
@@ -1612,15 +1612,15 @@ contains
         select case (fx%tokenType)
         case (TOK_NAME)
           if (namespaces_) then
-            nameOk = checkNCName(str_vs(fx%token), fx%xds)
+            nameOk = checkNCName(str_vs(fx%token), fx%xds%xml_version)
           else
-            nameOk = checkName(str_vs(fx%token), fx%xds)
+            nameOk = checkName(str_vs(fx%token), fx%xds%xml_version)
           endif
           if (nameOk) then
             if (str_vs(fx%token)=='xml') then
               call add_error(fx%error_stack, "XML declaration must be at start of document")
               return
-            elseif (checkPITarget(str_vs(fx%token), fx%xds)) then
+            elseif (checkPITarget(str_vs(fx%token), fx%xds%xml_version)) then
               nextDTDState = ST_DTD_PI_CONTENTS
               fx%name => fx%token
               fx%token => null()
@@ -1715,9 +1715,9 @@ contains
         select case (fx%tokenType)
         case (TOK_NAME)
           if (namespaces_) then
-            nameOk = checkQName(str_vs(fx%token), fx%xds)
+            nameOk = checkQName(str_vs(fx%token), fx%xds%xml_version)
           else
-            nameOk = checkName(str_vs(fx%token), fx%xds)
+            nameOk = checkName(str_vs(fx%token), fx%xds%xml_version)
           endif
           if (.not.nameOk) then
             call add_error(fx%error_stack, "Invalid element name for ATTLIST")
@@ -1807,9 +1807,9 @@ contains
         select case (fx%tokenType)
         case (TOK_NAME)
           if (namespaces_) then
-            nameOk = checkQName(str_vs(fx%token), fx%xds)
+            nameOk = checkQName(str_vs(fx%token), fx%xds%xml_version)
           else
-            nameOk = checkName(str_vs(fx%token), fx%xds)
+            nameOk = checkName(str_vs(fx%token), fx%xds%xml_version)
           endif
           if (.not.nameOk) then
             call add_error(fx%error_stack, "Invalid name for ELEMENT")
@@ -1894,9 +1894,9 @@ contains
           else
             pe = .false.
             if (namespaces_) then
-              nameOk = checkNCName(str_vs(fx%token), fx%xds)
+              nameOk = checkNCName(str_vs(fx%token), fx%xds%xml_version)
             else
-              nameOk = checkName(str_vs(fx%token), fx%xds)
+              nameOk = checkName(str_vs(fx%token), fx%xds%xml_version)
             endif
             if (.not.nameOk) then
               call add_error(fx%error_stack, &
@@ -1914,9 +1914,9 @@ contains
         select case (fx%tokenType)
         case (TOK_NAME)
           if (namespaces_) then
-            nameOk = checkNCName(str_vs(fx%token), fx%xds)
+            nameOk = checkNCName(str_vs(fx%token), fx%xds%xml_version)
           else
-            nameOk = checkName(str_vs(fx%token), fx%xds)
+            nameOk = checkName(str_vs(fx%token), fx%xds%xml_version)
           endif
           if (.not.nameOk) then
             call add_error(fx%error_stack, &
@@ -2029,9 +2029,9 @@ contains
         select case (fx%tokenType)
         case (TOK_NAME)
           if (namespaces_) then
-            nameOk = checkNCName(str_vs(fx%token), fx%xds)
+            nameOk = checkNCName(str_vs(fx%token), fx%xds%xml_version)
           else
-            nameOk = checkName(str_vs(fx%token), fx%xds)
+            nameOk = checkName(str_vs(fx%token), fx%xds%xml_version)
           endif
           if (.not.nameOk) then
             call add_error(fx%error_stack, "Invalid name for Notation")
@@ -2078,9 +2078,9 @@ contains
         select case (fx%tokenType)
         case (TOK_NAME)
           if (namespaces_) then
-            nameOk = checkNCName(str_vs(fx%token), fx%xds)
+            nameOk = checkNCName(str_vs(fx%token), fx%xds%xml_version)
           else
-            nameOk = checkName(str_vs(fx%token), fx%xds)
+            nameOk = checkName(str_vs(fx%token), fx%xds%xml_version)
           endif
           if (.not.nameOk) then
             call add_error(fx%error_stack, "Invalid name for Notation")

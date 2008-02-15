@@ -158,7 +158,7 @@ contains
   end function isInitialNameChar
 
   pure function isNameChar(c, xml_version) result(p)
-    character, intent(in) :: c
+    character(len=*), intent(in) :: c
     integer, intent(in) :: xml_version
     logical :: p
 
@@ -189,7 +189,7 @@ contains
   end function isInitialNCNameChar
 
   pure function isNCNameChar(c, xml_version) result(p)
-    character, intent(in) :: c
+    character(len=*), intent(in) :: c
     integer, intent(in) :: xml_version
     logical :: p
 

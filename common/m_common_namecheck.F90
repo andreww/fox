@@ -12,8 +12,8 @@ module m_common_namecheck
 
   use fox_m_fsys_format, only: str_to_int_10, str_to_int_16, operator(//)
   use m_common_charset, only: isLegalCharRef, isNCNameChar, &
-    isInitialNCNameChar, isInitialNameChar, isNameChar, isRepCharRef
-  use m_common_struct, only: xml_doc_state
+    isInitialNCNameChar, isInitialNameChar, isNameChar, isRepCharRef, &
+    XML_WHITESPACE
 
   implicit none
   private
@@ -26,13 +26,15 @@ module m_common_namecheck
   character(len=*), parameter :: NameChars = lowerCase//upperCase//digits//".-_:"
 
   public :: checkName
+  public :: checkNames
   public :: checkQName
+  public :: checkQNames
+  public :: checkNmtoken
+  public :: checkNmtokens
   public :: checkNCName
   public :: checkEncName
   public :: checkPITarget
   public :: checkPublicId
-  public :: checkSystemId
-  public :: checkIRI
   public :: checkPEDef
   public :: checkPseudoAttValue
   public :: checkAttValue
@@ -60,14 +62,14 @@ contains
   end function checkEncName
 
 
-  function checkPITarget(name, xds) result(good)
+  function checkPITarget(name, xv) result(good)
     character(len=*), intent(in) :: name
-    type(xml_doc_state), intent(in) :: xds
+    integer, intent(in) :: xv
     logical :: good
     ! Validates a string against the XML requirements for a NAME
     ! Is not fully compliant; ignores UTF issues.
 
-    good = checkName(name, xds)
+    good = checkName(name, xv)
     if (good .and. len(name)==3) then
       good = (scan(name(1:1), 'Xx') == 0 .and. &
         scan(name(2:2), 'Mm') == 0 .and. &
@@ -76,9 +78,9 @@ contains
   end function checkPITarget
 
 
-  pure function checkName(name, xds) result(good)
+  pure function checkName(name, xv) result(good)
     character(len=*), intent(in) :: name
-    type(xml_doc_state), intent(in) :: xds
+    integer, intent(in) :: xv
     logical :: good
     ! Validates a string against the XML requirements for a NAME
     ! Is not fully compliant; ignores UTF issues.
@@ -86,20 +88,55 @@ contains
     integer :: i
 
     good = (len(name) > 0)
-    if (good) good = isInitialNameChar(name(1:1), xds%xml_version) 
-    do i = 1, len(name)
-      if (.not.isNameChar(name(i:i), xds%xml_version)) then
-        good = .false.
-        exit
-      endif
-    enddo
+    if (.not.good) return
+    if (good) good = isInitialNameChar(name(1:1), xv)
+    if (.not.good.or.len(name)==1) return
+    good = isNameChar(name(2:), xv)
        
   end function checkName
 
-
-  pure function checkQName(name, xds) result(good)
+  pure function checkNames(name, xv) result(good)
     character(len=*), intent(in) :: name
-    type(xml_doc_state), intent(in) :: xds
+    integer, intent(in) :: xv
+    logical :: good
+    ! Validates a string against the production for NAMES
+
+    integer :: i, j
+
+    good = (len(name) > 0)
+    if (.not.good) return
+    i = verify(name, XML_WHITESPACE)
+    if (i==0) then
+      good = .false.
+      return
+    endif
+    j = scan(name(i:), XML_WHITESPACE)
+    if (j==0) then
+      j = len(name)
+    else
+      j = i + j - 2
+    endif
+    do
+      good = checkName(name(i:j), xv)
+      if (.not.good) return
+      i = j + 1
+      j = verify(name(i:), XML_WHITESPACE)
+      if (j==0) exit
+      i = i + j - 1
+      j = scan(name(i:), XML_WHITESPACE)
+      if (j==0) then
+        j = len(name)
+      else
+        j = i + j - 2
+      endif
+    enddo
+       
+  end function checkNames
+
+
+  pure function checkQName(name, xv) result(good)
+    character(len=*), intent(in) :: name
+    integer, intent(in) :: xv
     logical :: good
     ! Validates a string against the XML requirements for a NAME
     ! Is not fully compliant; ignores UTF issues.
@@ -108,32 +145,122 @@ contains
 
     n = index(name, ':')
     if (n == 0) then
-      good = checkNCName(name, xds)
+      good = checkNCName(name, xv)
     else
-      good = (checkNCName(name(:n-1), xds) .and. checkNCName(name(n+1:), xds))
+      good = (checkNCName(name(:n-1), xv) .and. checkNCName(name(n+1:), xv))
     endif
   end function checkQName
 
 
-  pure function checkNCName(name, xds) result(good)
+  pure function checkQNames(name, xv) result(good)
     character(len=*), intent(in) :: name
-    type(xml_doc_state), intent(in) :: xds
+    integer, intent(in) :: xv
+    logical :: good
+    ! Validates a string against the production for NAMES
+
+    integer :: i, j
+
+    good = (len(name) > 0)
+    if (.not.good) return
+    i = verify(name, XML_WHITESPACE)
+    if (i==0) then
+      good = .false.
+      return
+    endif
+    j = scan(name(i:), XML_WHITESPACE)
+    if (j==0) then
+      j = len(name)
+    else
+      j = i + j - 2
+    endif
+    do
+      good = checkQName(name(i:j), xv)
+      if (.not.good) return
+      i = j + 1
+      j = verify(name(i:), XML_WHITESPACE)
+      if (j==0) exit
+      i = i + j - 1
+      j = scan(name(i:), XML_WHITESPACE)
+      if (j==0) then
+        j = len(name)
+      else
+        j = i + j - 2
+      endif
+    enddo
+       
+  end function checkQNames
+
+
+  pure function checkNCName(name, xv) result(good)
+    character(len=*), intent(in) :: name
+    integer, intent(in) :: xv
     logical :: good
     ! Validates a string against the XML requirements for an NCNAME
     ! Is not fully compliant; ignores UTF issues.
 
     integer :: i
 
-    good = .false.
-    if (len(name)>0) then
-      if (.not.isInitialNCNameChar(name(1:1), xds%xml_version)) return
-      do i = 2, len(name)
-        if (.not.isNCNameChar(name(i:i), xds%xml_version)) return
-      enddo
-      good = .true.
-    endif
+    good = (len(name)/=0)
+    if (.not.good) return
+    good = isInitialNCNameChar(name(1:1), xv)
+    if (.not.good.or.len(name)==1) return
+    good = isNCNameChar(name(2:), xv)
        
   end function checkNCName
+
+
+  pure function checkNmtoken(name, xv) result(good)
+    character(len=*), intent(in) :: name
+    integer, intent(in) :: xv
+    logical :: good
+    ! Validates a string against the XML requirements for an NCNAME
+    ! Is not fully compliant; ignores UTF issues.
+
+    integer :: i
+
+    good = isNameChar(name, xv)
+       
+  end function checkNmtoken
+
+
+  pure function checkNmtokens(name, xv) result(good)
+    character(len=*), intent(in) :: name
+    integer, intent(in) :: xv
+    logical :: good
+    ! Validates a string against the XML requirements for an NCNAME
+    ! Is not fully compliant; ignores UTF issues.
+
+    integer :: i, j
+
+    good = (len(name) > 0)
+    if (.not.good) return
+    i = verify(name, XML_WHITESPACE)
+    if (i==0) then
+      good = .false.
+      return
+    endif
+    j = scan(name(i:), XML_WHITESPACE)
+    if (j==0) then
+      j = len(name)
+    else
+      j = i + j - 2
+    endif
+    do
+      good = isNameChar(name(i:j), xv)
+      if (.not.good) return
+      i = j + 1
+      j = verify(name(i:), XML_WHITESPACE)
+      if (j==0) exit
+      i = i + j - 1
+      j = scan(name(i:), XML_WHITESPACE)
+      if (j==0) then
+        j = len(name)
+      else
+        j = i + j - 2
+      endif
+    enddo
+       
+  end function checkNmtokens
 
 
   function checkPublicId(value) result(good)
@@ -145,32 +272,10 @@ contains
     good = (verify(value, PubIdChars)==0) 
   end function checkPublicId
 
-  function checkSystemId(value) result(good)
-    character(len=*), intent(in) :: value
-    logical :: good
-    ! Full check is done elsewhere (fox_m_utils_uri)
-    ! For the moment we let this through
-    
-    good = .not.(index(value, '"')>0 .and. index(value, "'")>0)
-  end function checkSystemId
 
-  function checkIRI(IRI) result(good)
-    character(len=*), intent(in) :: IRI
-    logical :: good
-    !By [Namespaces] section 9, there is no
-    ! formal definition of IRI's yet.
-    ! The result of this depends whether we are doing
-    ! namespaces 1.1 or 1.0. Firstly, because 1.1
-    ! allows IRIs as well as URIs, and secondly because
-    ! 1.1 allows undeclaring prefixes, so an empty
-    ! string is valid here (which is how FoX signals
-    ! an undeclared prefix)
-    good = .true.
-  end function checkIRI
-
-  function checkPEDef(value, xds) result(p)
+  function checkPEDef(value, xv) result(p)
     character(len=*), intent(in) :: value
-    type(xml_doc_state), intent(in) :: xds
+    integer, intent(in) :: xv
     logical :: p
 
     integer :: i1, i2
@@ -187,10 +292,10 @@ contains
         if (i2==0) return
         i2 = i1 + i2
         if (value(i1:i1)=='&') then
-          if (.not.checkName(value(i1+1:i2-1), xds) .and. &
-            .not.checkCharacterEntityReference(value(i1+1:i2-1), xds%xml_version)) return
+          if (.not.checkName(value(i1+1:i2-1), xv) .and. &
+            .not.checkCharacterEntityReference(value(i1+1:i2-1), xv)) return
         else
-          if (.not.checkName(value(i1+1:i2-1), xds)) &
+          if (.not.checkName(value(i1+1:i2-1), xv)) &
             return
         endif
         i1 = scan(value(i2+1:), '%&')
@@ -199,13 +304,13 @@ contains
     endif
   end function checkPEDef
 
-  function checkPseudoAttValue(value, xds) result(p)
+  function checkPseudoAttValue(value, xv) result(p)
     character(len=*), intent(in) :: value
-    type(xml_doc_state), intent(in) :: xds
+    integer, intent(in) :: xv
     logical :: p
 
     integer :: i1, i2
-
+!fixme can we have entrefs in PIs?
     p = .false.
     if (scan(value, '"<&')==0) then
       p = .true.
@@ -222,7 +327,7 @@ contains
           value(i1+1:i2-1) /= 'gt' .and. &
           value(i1+1:i2-1) /= 'quot' .and. &
           value(i1+1:i2-1) /= 'apos' .and. &
-          .not.checkCharacterEntityReference(value(i1+1:i2-1), xds%xml_version)) &
+          .not.checkCharacterEntityReference(value(i1+1:i2-1), xv)) &
           return
         i1 = index(value(i2+1:), '&')
       enddo
@@ -230,9 +335,9 @@ contains
     endif
   end function checkPseudoAttValue
 
-  function checkAttValue(value, xds) result(p)
+  function checkAttValue(value, xv) result(p)
     character(len=*), intent(in) :: value
-    type(xml_doc_state), intent(in) :: xds
+    integer, intent(in) :: xv
     logical :: p
     ! This function is called basically to make sure
     ! that any attribute value looks like one. It will
@@ -252,7 +357,7 @@ contains
         i2 = scan(value(i1+1:),';')
         if (i2 == 0) return
         i2 = i1 + i2
-        if (.not.checkName(value(i1+1:i2-1), xds) .and. &
+        if (.not.checkName(value(i1+1:i2-1), xv) .and. &
           .not.likeCharacterEntityReference(value(i1+1:i2-1))) then
           print*, value(i1+1:i2-1), " ", &
             likeCharacterEntityReference(value(i1+1:i2-1))

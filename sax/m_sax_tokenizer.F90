@@ -950,7 +950,7 @@ contains
           s_temp(i2) = expand_char_entity(str_vs(tempString))
           i = i + j  + 1
           i2 = i2 + 1 ! fixme
-        elseif (checkName(str_vs(tempString), fx%xds)) then
+        elseif (checkName(str_vs(tempString), fx%xds%xml_version)) then
           ent => getEntityByName(fx%forbidden_ge_list, str_vs(tempString))
           if (associated(ent)) then
             call add_error(fx%error_stack, 'Recursive entity expansion')
@@ -1047,7 +1047,7 @@ contains
         endif
         allocate(tempString(j-1))
         tempString = s_in(i+1:i+j-1)
-        if (checkName(str_vs(tempString), fx%xds)) then
+        if (checkName(str_vs(tempString), fx%xds%xml_version)) then
           ent => getEntityByName(fx%forbidden_pe_list, str_vs(tempString))
           if (associated(ent)) then
             call add_error(fx%error_stack, 'Recursive entity expansion')
