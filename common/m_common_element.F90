@@ -961,13 +961,12 @@ contains
         if (c=='#') then
           allocate(default(0))
           state = ST_DEFAULT_DECL
-        elseif (c=='"') then
+        elseif (c=='"'.or.c=="'") then
+          ! Validity Constraint: ID Attribute Default
+          if (ca%attType==ATT_ID) &
+            call add_error(stack, &
+            "Attribute of type ID may not have default value")
           ca%attDefault = ATT_DEFAULT
-          q = c
-          allocate(value(0))
-          state = ST_DEFAULTVALUE
-        elseif (c=="'") then
-          ca%attDefault = ATT_FIXED
           q = c
           allocate(value(0))
           state = ST_DEFAULTVALUE
@@ -992,6 +991,10 @@ contains
             deallocate(default)
             state = ST_START
           elseif (str_vs(default)=='FIXED') then
+            ! Validity Constraint: ID Attribute Default
+            if (ca%attType==ATT_ID) &
+              call add_error(stack, &
+              "Attribute of type ID may not have FIXED value")
             ca%attdefault = ATT_FIXED
             deallocate(default)
             state = ST_AFTERDEFAULTDECL
