@@ -75,6 +75,7 @@ module m_common_element
     logical :: empty = .false.
     logical :: any = .false.
     logical :: mixed = .false.
+    logical :: id_declared = .false.
     character, pointer :: model(:) => null()
     type(attribute_list) :: attlist
   end type element_t
@@ -824,7 +825,16 @@ contains
             ca%attType = ATT_CDATA
             state = ST_AFTER_ATTTYPE
           elseif (str_vs(attType)=='ID') then
+            if (validCheck) then
+              ! Validity Constraint: One ID per Element Type
+              if (present(elem)) then
+                if (elem%id_declared) &
+                  call add_error(stack, &
+                  "Cannot have two declared attributes of type ID on one element type.")
+              endif
+            endif
             ca%attType = ATT_ID
+            if (present(elem)) elem%id_declared = .true.
             state = ST_AFTER_ATTTYPE
           elseif (str_vs(attType)=='IDREF') then
             ca%attType = ATT_IDREF
@@ -1120,9 +1130,7 @@ contains
     if (associated(default)) deallocate(default)
     if (associated(value)) deallocate(value)
 
-
   end subroutine parse_dtd_attlist
-
 
   subroutine report_declarations(elem, attributeDecl_handler)
     type(element_t), intent(in) :: elem
