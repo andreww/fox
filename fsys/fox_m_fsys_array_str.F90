@@ -21,6 +21,7 @@ module fox_m_fsys_array_str
   public :: remove_last_string
   public :: get_last_string
   public :: tokenize_to_string_list
+  public :: tokenize_and_add_strings
   public :: registered_string
 
   interface destroy
@@ -138,6 +139,41 @@ contains
     enddo
 
   end function tokenize_to_string_list
+
+  subroutine tokenize_and_add_strings(s_list, s)
+    type(string_list), intent(inout) :: s_list
+    character(len=*), intent(in) :: s
+
+    ! tokenize a whitespace-separated list of strings
+    ! and place results in the given string list
+
+    character(len=*), parameter :: &
+      WHITESPACE = achar(9)//achar(10)//achar(13)//achar(32)
+    integer :: i, j
+
+    i = verify(s, WHITESPACE)
+    if (i==0) return
+    j = scan(s(i:), WHITESPACE)
+    if (j==0) then
+      j = len(s)
+    else
+      j = i + j - 2
+    endif
+    do
+      call add_string(s_list, s(i:j))
+      i = j + 1
+      j = verify(s(i:), WHITESPACE)
+      if (j==0) exit
+      i = i + j - 1
+      j = scan(s(i:), WHITESPACE)
+      if (j==0) then
+        j = len(s)
+      else
+        j = i + j - 2
+      endif
+    enddo
+
+  end subroutine tokenize_and_add_strings
 
   function registered_string(s_list, s) result(p)
     type(string_list), intent(in) :: s_list

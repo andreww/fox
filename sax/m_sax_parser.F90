@@ -3,7 +3,8 @@ module m_sax_parser
 #ifndef DUMMYLIB
   use fox_m_fsys_array_str, only: str_vs, string_list, &
     destroy_string_list, vs_str_alloc, vs_vs_alloc, &
-    tokenize_to_string_list, registered_string
+    tokenize_to_string_list, registered_string, init_string_list, &
+    add_string, tokenize_and_add_strings
   use m_common_attrs, only: init_dict, destroy_dict, reset_dict, &
     add_item_to_dict, has_key, get_value, get_value_pointer
   use m_common_charset, only: XML1_0, XML1_1, XML_WHITESPACE
@@ -359,6 +360,7 @@ contains
     type(URI), pointer :: extSubsetURI, URIref, newURI
     integer, pointer :: wf_stack(:), temp_wf_stack(:)
     logical :: inExtSubset
+    type(string_list) :: id_list, idref_list
 
     tempString => null()
     elem => null()
@@ -440,6 +442,8 @@ contains
       endif
       call parse_xml_declaration(fb, fx%xds%xml_version, fx%xds%encoding, fx%xds%standalone, fx%error_stack)
       if (in_error(fx%error_stack)) goto 100
+      call init_string_list(id_list)
+      call init_string_list(idref_list)
     endif
 
     do
@@ -1119,6 +1123,8 @@ contains
               nextState = ST_CHAR_IN_CONTENT
             else
               !we're done
+              if (validCheck) &
+                call checkIdRefs
               fx%well_formed = .true.
               nextState = ST_MISC
               fx%context = CTXT_AFTER_CONTENT
@@ -1449,6 +1455,8 @@ contains
 
 100 if (associated(tempString)) deallocate(tempString)
     if (associated(extSubsetURI)) call destroyURI(extSubsetURI)
+    call destroy_string_list(id_list)
+    call destroy_string_list(idref_list)
     deallocate(wf_stack)
 
     if (.not.eof) then
@@ -2257,8 +2265,7 @@ contains
       if (validCheck) then
         elem => get_element(fx%xds%element_list, str_vs(fx%name))
         if (associated(elem)) then
-          call checkImplicitAttributes(elem, fx%attributes)
-          ! FIXME and also check that attribute declarations fit the ATTLIST
+          call checkAttributes(elem, fx%attributes)
         else
           call add_error(fx%error_stack, &
             "Trying to use an undeclared element")
@@ -2481,7 +2488,7 @@ contains
       s2(i2:) = ''
     end function NotCDataNormalize
 
-    subroutine checkImplicitAttributes(el, dict)
+    subroutine checkAttributes(el, dict)
       type(element_t), pointer :: el
       type(dictionary_t), intent(inout) :: dict
 
@@ -2505,40 +2512,57 @@ contains
         case (ATT_REQUIRED)
           if (validCheck) then
             ! Validity Constraint: Required Attribute
-            if (.not.associated(attValue)) &
+            if (.not.associated(attValue)) then
               call add_error(fx%error_stack, &
               "REQUIRED attribute not present")
+              return
+            endif
           endif
         case (ATT_IMPLIED)
           if (validCheck.and.associated(attValue)) then
             select case(att%attType)
             case (ATT_ID)
               ! VC: ID
-              if (.not.checkName(str_vs(attValue), fx%xds%xml_version)) &
+              if (.not.checkName(str_vs(attValue), fx%xds%xml_version)) then
                 call add_error(fx%error_stack, &
-                "Attributes of type ID must have a value which is an XML Name")
+                  "Attributes of type ID must have a value which is an XML Name")
+                return
+              endif
               ! FIXME in a namespaced document they must match QName
-              ! FIXME keep list of ids
+              if (registered_string(id_list, str_vs(attValue))) then
+                call add_error(fx%error_stack, &
+                "Cannot declare the same ID twice")
+                return
+              endif
+              call add_string(id_list, str_vs(attValue))
             case (ATT_IDREF)
               ! VC: IDREF
-              if (.not.checkName(str_vs(attValue), fx%xds%xml_version)) &
+              if (.not.checkName(str_vs(attValue), fx%xds%xml_version)) then
                 call add_error(fx%error_stack, &
-                "Attributes of type IDREF must have a value which is an XML Name")
+                  "Attributes of type IDREF must have a value which is an XML Name")
+                return
+              endif
               ! FIXME in a namespaced document they must match QName
-              ! FIXME keep list of IDREFS
+              ! FIXME remove duplicates
+              call add_string(idref_list, str_vs(attValue))
             case (ATT_IDREFS)
               ! VC: IDREF
-              if (.not.checkNames(str_vs(attValue), fx%xds%xml_version)) &
+              if (.not.checkNames(str_vs(attValue), fx%xds%xml_version)) then
                 call add_error(fx%error_stack, &
-                "Attributes of type IDREFS must have a value which contains only XML Names")
+                  "Attributes of type IDREFS must have a value which contains only XML Names")
+                return
+              endif
               ! FIXME in a namespaced document they must match QName
-              ! FIXME keep list of IDREFS
+              ! FIXME remove duplicates
+              call tokenize_and_add_strings(idref_list, str_vs(attValue))
             case (ATT_ENTITY)
               ! VC: Entity Name
               ! FIXME in a namespaced document they must match QName
-              if (.not.checkName(str_vs(attValue), fx%xds%xml_version)) &
+              if (.not.checkName(str_vs(attValue), fx%xds%xml_version)) then
                 call add_error(fx%error_stack, &
-                "Attributes of type ENTITY must have a value which is an XML Name")
+                  "Attributes of type ENTITY must have a value which is an XML Name")
+                return
+              endif
               ent => getEntityByName(fx%xds%entityList, str_vs(attValue))
               if (associated(ent)) then
                 if (.not.is_unparsed_entity(ent)) then
@@ -2560,9 +2584,11 @@ contains
             case (ATT_ENTITIES)
               ! VC: Entity Name
               ! FIXME in a namespaced document they must match QName
-              if (.not.checkNames(str_vs(attValue), fx%xds%xml_version)) &
+              if (.not.checkNames(str_vs(attValue), fx%xds%xml_version)) then
                 call add_error(fx%error_stack, &
-                "Attributes of type ENTITIES must have a value which contains only XML Names")
+                  "Attributes of type ENTITIES must have a value which contains only XML Names")
+                return
+              endif
               s_list = tokenize_to_string_list(str_vs(attValue))
               do j = 1, size(s_list%list)
                 s => s_list%list(j)%s
@@ -2592,19 +2618,25 @@ contains
               call destroy_string_list(s_list)
             case (ATT_NMTOKEN)
               ! VC Name Token
-              if (.not.checkNmtoken(str_vs(attValue), fx%xds%xml_version)) &
+              if (.not.checkNmtoken(str_vs(attValue), fx%xds%xml_version)) then
                 call add_error(fx%error_stack, &
-                "Attributes of type NMTOKEN must have a value which is a NMTOKEN")
+                  "Attributes of type NMTOKEN must have a value which is a NMTOKEN")
+                return
+              endif
             case (ATT_NMTOKENS)
               ! VC: Name Token
-              if (.not.checkNmtokens(str_vs(attValue), fx%xds%xml_version)) &
+              if (.not.checkNmtokens(str_vs(attValue), fx%xds%xml_version)) then
                 call add_error(fx%error_stack, &
-                "Attributes of type NMTOKENS must have a value which contain only NMTOKENs")
+                  "Attributes of type NMTOKENS must have a value which contain only NMTOKENs")
+                return
+              endif
             case (ATT_NOTATION)
               ! VC: Notation Attributes
-              if (.not.checkName(str_vs(attValue), fx%xds%xml_version)) &
+              if (.not.checkName(str_vs(attValue), fx%xds%xml_version)) then
                 call add_error(fx%error_stack, &
                 "Attributes of type NOTATION must have a value which is an XML Name")
+                return
+              endif
               if (.not.notation_exists(fx%xds%nlist, str_vs(attValue))) then
                 ! Validity Constraint: Notation Attributes
                 call add_error(fx%error_stack, &
@@ -2616,9 +2648,11 @@ contains
               endif
             case (ATT_ENUM)
               ! VC: Notation Attributes
-              if (.not.checkNmtoken(str_vs(attValue), fx%xds%xml_version)) &
+              if (.not.checkNmtoken(str_vs(attValue), fx%xds%xml_version)) then
                 call add_error(fx%error_stack, &
-                "Attributes of type ENUM must have a value which is an NMTOKEN")
+                  "Attributes of type ENUM must have a value which is an NMTOKEN")
+                return
+              endif
               if (.not.registered_string(att%enumerations, str_vs(attValue))) then
                 ! Validity Constraint: Enumeration
                 call add_error(fx%error_stack, &
@@ -2650,7 +2684,7 @@ contains
         end select
       enddo
 
-    end subroutine checkImplicitAttributes
+    end subroutine checkAttributes
 
     subroutine checkXMLAttributes
       ! This must be done with the name of the attribute,
@@ -2772,6 +2806,19 @@ contains
         enddo validLoop
       endif
     end subroutine endDTDchecks
+
+    subroutine checkIdRefs
+      integer :: i, j
+      character, pointer :: s(:)
+      do i = 1, size(idRef_list%list)
+        s => idRef_list%list(i)%s
+        if (.not.registered_string(id_list, str_vs(s))) then
+          call add_error(fx%error_stack, &
+            "Reference to undeclared ID "//str_vs(s))
+          return
+        endif
+      enddo
+    end subroutine checkIdRefs
   end subroutine sax_parse
 
 
