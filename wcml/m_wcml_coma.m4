@@ -30,7 +30,7 @@ m4_foreach(`x',TOHWM4_eigenargs,`TOHWM4_dummyarguse(x)')
 dnl
 define(`TOHWM4_coma_real_subs', `dnl`'
 
-  subroutine cmlStartKPoint_$1(xf, coords, weight, kptfmt, wtfmt &
+  subroutine cmlStartKPoint$1(xf, coords, weight, kptfmt, wtfmt &
 TOHWM4_bandargslist)
     type(xmlf_t), intent(inout)              :: xf
     real(kind=$1), dimension(3), intent(in)  :: coords
@@ -48,9 +48,9 @@ TOHWM4_bandargsuse
        call xml_AddAttribute(xf, "weight", weight, wtfmt)
 #endif
 
-  end subroutine cmlStartKPoint_$1
+  end subroutine cmlStartKPoint$1
 
-  subroutine cmlAddKPoint_$1(xf, coords, weight, kptfmt, wtfmt &
+  subroutine cmlAddKPoint$1(xf, coords, weight, kptfmt, wtfmt &
 TOHWM4_bandargslist)
     type(xmlf_t), intent(inout)             :: xf
     real(kind=$1), dimension(3), intent(in) :: coords
@@ -65,7 +65,7 @@ TOHWM4_bandargslist)
     call cmlEndKpoint(xf)
 #endif
 
-  end subroutine cmlAddKPoint_$1
+  end subroutine cmlAddKPoint$1
 
   subroutine cmlAddEigenValue$1(xf, value, units, fmt &
 TOHWM4_eigenargslist)
@@ -131,6 +131,32 @@ TOHWM4_eigenargsuse
 
   end subroutine cmlAddEigenValueVectorCmplx$1
 
+  subroutine cmlAddBandList$1(xf, values, fmt, units, spin &
+TOHWM4_eigenargslist)
+    type(xmlf_t), intent(inout)            :: xf
+    real(kind=$1), intent(in)              :: values(:)
+    character(len=*), intent(in)           :: units
+    character(len=*), intent(in), optional :: spin
+    character(len=*), intent(in), optional :: fmt
+
+TOHWM4_eigenargsdecl
+
+#ifndef DUMMYLIB
+    call xml_NewElement(xf, "bandList")
+    if (spin=="up".or.spin=="down") then
+      call xml_AddAttribute(xf, "spin", spin)
+    else
+      !error
+    endif
+TOHWM4_eigenargsuse
+    call xml_NewElement(xf, "eigen")
+    call stmAddValue(xf=xf, value=values, fmt=fmt, units=units)
+    call xml_EndElement(xf, "eigen")
+    call xml_EndElement(xf, "bandList")
+#endif
+
+  end subroutine cmlAddBandList$1
+
 ')`'`'dnl
 dnl
 define(`TOHWM4_coma_subs', `dnl
@@ -175,9 +201,8 @@ module m_wcml_coma
   use m_common_realtypes, only: sp, dp
   use FoX_wxml, only: xmlf_t
 #ifndef DUMMYLIB
-  use FoX_common, only: str
   use FoX_wxml, only: xml_NewElement, xml_AddAttribute
-  use FoX_wxml, only: xml_EndElement, xml_AddCharacters
+  use FoX_wxml, only: xml_EndElement
   use m_wcml_stml, only: stmAddValue
 
 ! Fix for pgi, requires this explicitly:
@@ -193,7 +218,7 @@ module m_wcml_coma
 
   public :: cmlStartBand
   public :: cmlEndBand
-
+  public :: cmlAddBandList
   public :: cmlAddEigenValue
   public :: cmlAddEigenValueVector
 
@@ -210,13 +235,18 @@ module m_wcml_coma
   end interface
 
   interface cmlStartKpoint
-    module procedure cmlStartKpoint_sp
-    module procedure cmlStartKpoint_dp
+    module procedure cmlStartKpointSP
+    module procedure cmlStartKpointDP
   end interface
 
   interface cmlAddKpoint
-    module procedure cmlAddKpoint_sp
-    module procedure cmlAddKpoint_dp
+    module procedure cmlAddKpointSP
+    module procedure cmlAddKpointDP
+  end interface
+
+  interface cmlAddBandList
+    module procedure cmlAddBandListSP
+    module procedure cmlAddBandListDP
   end interface
 
 contains

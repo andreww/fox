@@ -60,6 +60,7 @@ module FoX_wcml
   public :: cmlStartBand
   public :: cmlEndBand
 
+  public :: cmlAddBandList
   public :: cmlAddEigenValue
   public :: cmlAddEigenValueVector
 

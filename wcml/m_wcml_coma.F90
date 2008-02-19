@@ -4,9 +4,8 @@ module m_wcml_coma
   use m_common_realtypes, only: sp, dp
   use FoX_wxml, only: xmlf_t
 #ifndef DUMMYLIB
-  use FoX_common, only: str
   use FoX_wxml, only: xml_NewElement, xml_AddAttribute
-  use FoX_wxml, only: xml_EndElement, xml_AddCharacters
+  use FoX_wxml, only: xml_EndElement
   use m_wcml_stml, only: stmAddValue
 
 ! Fix for pgi, requires this explicitly:
@@ -22,7 +21,7 @@ module m_wcml_coma
 
   public :: cmlStartBand
   public :: cmlEndBand
-
+  public :: cmlAddBandList
   public :: cmlAddEigenValue
   public :: cmlAddEigenValueVector
 
@@ -39,19 +38,24 @@ module m_wcml_coma
   end interface
 
   interface cmlStartKpoint
-    module procedure cmlStartKpoint_sp
-    module procedure cmlStartKpoint_dp
+    module procedure cmlStartKpointSP
+    module procedure cmlStartKpointDP
   end interface
 
   interface cmlAddKpoint
-    module procedure cmlAddKpoint_sp
-    module procedure cmlAddKpoint_dp
+    module procedure cmlAddKpointSP
+    module procedure cmlAddKpointDP
+  end interface
+
+  interface cmlAddBandList
+    module procedure cmlAddBandListSP
+    module procedure cmlAddBandListDP
   end interface
 
 contains
 
 
-  subroutine cmlStartKPoint_sp(xf, coords, weight, kptfmt, wtfmt &
+  subroutine cmlStartKPointsp(xf, coords, weight, kptfmt, wtfmt &
 ,dictRef,convention,title,id,ref,label)
     type(xmlf_t), intent(inout)              :: xf
     real(kind=sp), dimension(3), intent(in)  :: coords
@@ -83,9 +87,9 @@ contains
        call xml_AddAttribute(xf, "weight", weight, wtfmt)
 #endif
 
-  end subroutine cmlStartKPoint_sp
+  end subroutine cmlStartKPointsp
 
-  subroutine cmlAddKPoint_sp(xf, coords, weight, kptfmt, wtfmt &
+  subroutine cmlAddKPointsp(xf, coords, weight, kptfmt, wtfmt &
 ,dictRef,convention,title,id,ref,label)
     type(xmlf_t), intent(inout)             :: xf
     real(kind=sp), dimension(3), intent(in) :: coords
@@ -107,7 +111,7 @@ contains
     call cmlEndKpoint(xf)
 #endif
 
-  end subroutine cmlAddKPoint_sp
+  end subroutine cmlAddKPointsp
 
   subroutine cmlAddEigenValuesp(xf, value, units, fmt &
 ,dictRef,convention,title,id,type)
@@ -209,9 +213,47 @@ contains
 
   end subroutine cmlAddEigenValueVectorCmplxsp
 
+  subroutine cmlAddBandListsp(xf, values, fmt, units, spin &
+,dictRef,convention,title,id,type)
+    type(xmlf_t), intent(inout)            :: xf
+    real(kind=sp), intent(in)              :: values(:)
+    character(len=*), intent(in)           :: units
+    character(len=*), intent(in), optional :: spin
+    character(len=*), intent(in), optional :: fmt
+
+    character(len=*), intent(in), optional :: dictRef
+    character(len=*), intent(in), optional :: convention
+    character(len=*), intent(in), optional :: title
+    character(len=*), intent(in), optional :: id
+    character(len=*), intent(in), optional :: type
 
 
-  subroutine cmlStartKPoint_dp(xf, coords, weight, kptfmt, wtfmt &
+
+#ifndef DUMMYLIB
+    call xml_NewElement(xf, "bandList")
+    if (spin=="up".or.spin=="down") then
+      call xml_AddAttribute(xf, "spin", spin)
+    else
+      !error
+    endif
+    if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
+    if (present(convention)) call xml_addAttribute(xf, "convention", convention)
+    if (present(title)) call xml_addAttribute(xf, "title", title)
+    if (present(id)) call xml_addAttribute(xf, "id", id)
+    if (present(type)) call xml_addAttribute(xf, "type", type)
+
+
+    call xml_NewElement(xf, "eigen")
+    call stmAddValue(xf=xf, value=values, fmt=fmt, units=units)
+    call xml_EndElement(xf, "eigen")
+    call xml_EndElement(xf, "bandList")
+#endif
+
+  end subroutine cmlAddBandListsp
+
+
+
+  subroutine cmlStartKPointdp(xf, coords, weight, kptfmt, wtfmt &
 ,dictRef,convention,title,id,ref,label)
     type(xmlf_t), intent(inout)              :: xf
     real(kind=dp), dimension(3), intent(in)  :: coords
@@ -243,9 +285,9 @@ contains
        call xml_AddAttribute(xf, "weight", weight, wtfmt)
 #endif
 
-  end subroutine cmlStartKPoint_dp
+  end subroutine cmlStartKPointdp
 
-  subroutine cmlAddKPoint_dp(xf, coords, weight, kptfmt, wtfmt &
+  subroutine cmlAddKPointdp(xf, coords, weight, kptfmt, wtfmt &
 ,dictRef,convention,title,id,ref,label)
     type(xmlf_t), intent(inout)             :: xf
     real(kind=dp), dimension(3), intent(in) :: coords
@@ -267,7 +309,7 @@ contains
     call cmlEndKpoint(xf)
 #endif
 
-  end subroutine cmlAddKPoint_dp
+  end subroutine cmlAddKPointdp
 
   subroutine cmlAddEigenValuedp(xf, value, units, fmt &
 ,dictRef,convention,title,id,type)
@@ -368,6 +410,44 @@ contains
 #endif
 
   end subroutine cmlAddEigenValueVectorCmplxdp
+
+  subroutine cmlAddBandListdp(xf, values, fmt, units, spin &
+,dictRef,convention,title,id,type)
+    type(xmlf_t), intent(inout)            :: xf
+    real(kind=dp), intent(in)              :: values(:)
+    character(len=*), intent(in)           :: units
+    character(len=*), intent(in), optional :: spin
+    character(len=*), intent(in), optional :: fmt
+
+    character(len=*), intent(in), optional :: dictRef
+    character(len=*), intent(in), optional :: convention
+    character(len=*), intent(in), optional :: title
+    character(len=*), intent(in), optional :: id
+    character(len=*), intent(in), optional :: type
+
+
+
+#ifndef DUMMYLIB
+    call xml_NewElement(xf, "bandList")
+    if (spin=="up".or.spin=="down") then
+      call xml_AddAttribute(xf, "spin", spin)
+    else
+      !error
+    endif
+    if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
+    if (present(convention)) call xml_addAttribute(xf, "convention", convention)
+    if (present(title)) call xml_addAttribute(xf, "title", title)
+    if (present(id)) call xml_addAttribute(xf, "id", id)
+    if (present(type)) call xml_addAttribute(xf, "type", type)
+
+
+    call xml_NewElement(xf, "eigen")
+    call stmAddValue(xf=xf, value=values, fmt=fmt, units=units)
+    call xml_EndElement(xf, "eigen")
+    call xml_EndElement(xf, "bandList")
+#endif
+
+  end subroutine cmlAddBandListdp
 
 
 
