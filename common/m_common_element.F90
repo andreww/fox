@@ -1096,7 +1096,8 @@ contains
                 "Attributes of type ENUM must have a value which contain only NMTOKENs")
             end select
           endif
-          if (.not.in_error(stack)) then  
+          if (.not.in_error(stack)) then
+            ! FIXME if this is ENTITIES or NMTOKENS, put in enumeration
             ca%default => value
             value => null()
             state = ST_START

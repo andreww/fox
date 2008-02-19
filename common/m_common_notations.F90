@@ -14,7 +14,7 @@ module m_common_notations
   end type notation
 
   type notation_list
-    type(notation), dimension(:), pointer :: notations
+    type(notation), dimension(:), pointer :: list
   end type notation_list
 
   public :: notation
@@ -32,10 +32,10 @@ contains
 ! compilers seem to have different semantics
     type(notation_list), intent(inout) :: nlist
 
-    allocate(nlist%notations(0:0))
-    allocate(nlist%notations(0)%name(0))
-    allocate(nlist%notations(0)%systemId(0))
-    allocate(nlist%notations(0)%publicId(0))
+    allocate(nlist%list(0:0))
+    allocate(nlist%list(0)%name(0))
+    allocate(nlist%list(0)%systemId(0))
+    allocate(nlist%list(0)%publicId(0))
     
   end subroutine init_notation_list
 
@@ -45,12 +45,12 @@ contains
 
     integer :: i
 
-    do i = 0, ubound(nlist%notations, 1)
-      deallocate(nlist%notations(i)%name)
-      deallocate(nlist%notations(i)%systemId)
-      deallocate(nlist%notations(i)%publicId)
+    do i = 0, ubound(nlist%list, 1)
+      deallocate(nlist%list(i)%name)
+      deallocate(nlist%list(i)%systemId)
+      deallocate(nlist%list(i)%publicId)
     enddo
-    deallocate(nlist%notations)
+    deallocate(nlist%list)
   end subroutine destroy_notation_list
  
 
@@ -67,35 +67,35 @@ contains
     if (.not.present(systemId) .and. .not.present(publicId)) &
       call FoX_error("Neither System nor Public Id specified for notation: "//name)
 
-    allocate(temp(0:ubound(nlist%notations,1)))
-    do i = 0, ubound(nlist%notations, 1)
-      temp(i)%name => nlist%notations(i)%name
-      temp(i)%systemId => nlist%notations(i)%systemId
-      temp(i)%publicId => nlist%notations(i)%publicId
+    allocate(temp(0:ubound(nlist%list,1)))
+    do i = 0, ubound(nlist%list, 1)
+      temp(i)%name => nlist%list(i)%name
+      temp(i)%systemId => nlist%list(i)%systemId
+      temp(i)%publicId => nlist%list(i)%publicId
     enddo
 
-    deallocate(nlist%notations)
-    allocate(nlist%notations(0:ubound(temp, 1)+1))
+    deallocate(nlist%list)
+    allocate(nlist%list(0:ubound(temp, 1)+1))
     do i = 0, ubound(temp, 1)
-      nlist%notations(i)%name => temp(i)%name
-      nlist%notations(i)%systemId => temp(i)%systemId
-      nlist%notations(i)%publicId => temp(i)%publicId
+      nlist%list(i)%name => temp(i)%name
+      nlist%list(i)%systemId => temp(i)%systemId
+      nlist%list(i)%publicId => temp(i)%publicId
     enddo
     deallocate(temp)
 
-    allocate(nlist%notations(i)%name(len(name)))
-    nlist%notations(i)%name = vs_str(name)
+    allocate(nlist%list(i)%name(len(name)))
+    nlist%list(i)%name = vs_str(name)
     if (present(systemId)) then
-      allocate(nlist%notations(i)%systemId(len(systemId)))
-      nlist%notations(i)%systemId = vs_str(systemId)
+      allocate(nlist%list(i)%systemId(len(systemId)))
+      nlist%list(i)%systemId = vs_str(systemId)
     else
-      allocate(nlist%notations(i)%systemId(0))
+      allocate(nlist%list(i)%systemId(0))
     endif
     if (present(publicId)) then
-      allocate(nlist%notations(i)%publicId(len(publicId)))
-      nlist%notations(i)%publicId = vs_str(publicId)
+      allocate(nlist%list(i)%publicId(len(publicId)))
+      nlist%list(i)%publicId = vs_str(publicId)
     else
-      allocate(nlist%notations(i)%publicId(0))
+      allocate(nlist%list(i)%publicId(0))
     endif
   end subroutine add_notation
 
@@ -108,8 +108,8 @@ contains
     integer :: i
     
     p = .false.
-    do i = 1, ubound(nlist%notations, 1)
-      if (str_vs(nlist%notations(i)%name) == name) then
+    do i = 1, ubound(nlist%list, 1)
+      if (str_vs(nlist%list(i)%name) == name) then
         p = .true.
         exit
       endif

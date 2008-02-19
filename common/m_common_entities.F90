@@ -54,6 +54,11 @@ module m_common_entities
     module procedure size_el
   end interface
 
+  interface is_unparsed_entity
+    module procedure is_unparsed_entity_
+    module procedure is_unparsed_entity_from_list
+  end interface
+
   public :: getEntityByIndex
   public :: getEntityByName
 
@@ -277,7 +282,7 @@ contains
   end subroutine add_external_entity
 
 
-  function is_unparsed_entity(ents, name) result(p)
+  function is_unparsed_entity_from_list(ents, name) result(p)
     type(entity_list), intent(in) :: ents
     character(len=*), intent(in) :: name
     logical :: p
@@ -292,7 +297,16 @@ contains
         exit
       endif
     enddo
-  end function is_unparsed_entity
+  end function is_unparsed_entity_from_list
+
+  function is_unparsed_entity_(ent) result(p)
+    type(entity_t), intent(in) :: ent
+    logical :: p
+
+    p = (size(ent%notation)>0)
+
+  end function is_unparsed_entity_
+
 
   function is_external_entity(ents, name) result(p)
     type(entity_list), intent(in) :: ents

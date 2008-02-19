@@ -8,11 +8,12 @@ module m_sax_parser
   use m_common_charset, only: XML1_0, XML1_1, XML_WHITESPACE
   use m_common_element, only: element_t, existing_element, add_element, &
     get_element, parse_dtd_element, parse_dtd_attlist, report_declarations, &
-    get_att_type, get_default_atts, declared_element, ATT_CDATA
+    get_att_type, get_default_atts, declared_element, attribute_t, &
+    ATT_CDATA, ATT_ENTITY, ATT_ENTITIES, ATT_NOTATION
   use m_common_elstack, only: push_elstack, pop_elstack, init_elstack, &
     destroy_elstack, is_empty, len, get_top_elstack
   use m_common_entities, only: existing_entity, init_entity_list, &
-    destroy_entity_list, add_internal_entity, &
+    destroy_entity_list, add_internal_entity, is_unparsed_entity, &
     expand_entity, expand_char_entity, pop_entity_list, size, &
     entity_t, getEntityByIndex, getEntityByName
   use m_common_entity_expand, only: expand_entity_value_alloc
@@ -2526,6 +2527,12 @@ contains
     end subroutine checkXMLAttributes
 
     subroutine endDTDchecks
+      type(element_t), pointer :: el
+      type(attribute_t), pointer :: att
+      type(entity_t), pointer :: ent
+      character, pointer :: s(:)
+      integer :: i, j, k
+
       if (present(FoX_endDTD_handler)) then
         fx%xds_used = .true.
         call FoX_endDTD_handler(fx%xds)
@@ -2540,10 +2547,74 @@ contains
           ent => getEntityByIndex(fx%xds%entityList, i)
           if (str_vs(ent%notation)/="" &
             .and..not.notation_exists(fx%nlist, str_vs(ent%notation))) then
+            ! Validity Constraint: Notation Declared
             call add_error(fx%error_stack, "Attempt to use undeclared notation")
             exit
           endif
         enddo
+        validLoop: do i = 1, size(fx%xds%element_list%list)
+          el => fx%xds%element_list%list(i)
+          do j = 1, size(el%attlist%list)
+            att => el%attlist%list(j)
+            if (associated(att%default)) then
+              select case (att%attType)
+              case (ATT_ENTITY)
+                ent => getEntityByName(fx%xds%entityList, str_vs(att%default))
+                if (associated(ent)) then
+                  if (.not.is_unparsed_entity(ent)) then
+                    ! Validity Constraint: Entity Name
+                    call add_error(fx%error_stack, &
+                      "Attribute "//str_vs(att%name) &
+                      //" of element "//str_vs(el%name) &
+                      //" declared as ENTITIES refers to parsed entity")
+                    exit validLoop
+                  endif
+                else
+                  ! Validity Constraint: Entity Name
+                  call add_error(fx%error_stack, &
+                    "Attribute "//str_vs(att%name) &
+                    //" of element "//str_vs(el%name) &
+                    //" declared as ENTITIES refers to non-existent entity")
+                  exit validLoop
+                endif
+              case (ATT_ENTITIES)
+                do k = 1, size(att%enumerations%list)
+                  s => att%enumerations%list(k)%s
+                  ent => getEntityByName(fx%xds%entityList, str_vs(s))
+                  if (associated(ent)) then
+                    if (.not.is_unparsed_entity(ent)) then
+                      ! Validity Constraint: Entity Name
+                      call add_error(fx%error_stack, &
+                        "Attribute "//str_vs(att%name) &
+                        //" of element "//str_vs(el%name) &
+                        //" declared as ENTITIES refers to parsed entity")
+                      exit validLoop
+                    endif
+                  else
+                    ! Validity Constraint: Entity Name
+                    call add_error(fx%error_stack, &
+                      "Attribute "//str_vs(att%name) &
+                      //" of element "//str_vs(el%name) &
+                      //" declared as ENTITIES refers to non-existent entity")
+                    exit validLoop
+                  endif
+                enddo
+              case (ATT_NOTATION)
+                do k = 1, size(att%enumerations%list)
+                  s => att%enumerations%list(k)%s
+                  if (.not.notation_exists(fx%xds%nlist, str_vs(s))) then
+                    ! Validity Constraint: Notation Attributes
+                    call add_error(fx%error_stack, &
+                      "Attribute "//str_vs(att%name) &
+                      //" of element "//str_vs(el%name) &
+                      //" declared as NOTATION refers to non-existent notation")
+                    exit validLoop
+                  endif
+                enddo
+              end select
+            endif
+          enddo
+        enddo validLoop
       endif
     end subroutine endDTDchecks
   end subroutine sax_parse
