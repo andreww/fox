@@ -342,6 +342,13 @@ End a section describing one band.
 
 Add a single eigenvalue to a band.
 
+* `cmlAddBandList`  
+**values**: *real* *array* the eigenvalues  
+**spin**: *string* *scalar* the spin orientation ("up" or "down")  
+**units**: *QName* *scalar* the units of the eigenvalue
+
+Add a list of eigenvalues for a kpoint
+
 * `cmlAddEigenValueVector`
 **value**: *real* *scalar* the eigenvalue for this band  
 **units**: *QName* *scalar* the units of the eigenvalue  
