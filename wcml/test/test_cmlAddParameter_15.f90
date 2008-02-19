@@ -1,6 +1,6 @@
 program test
 
-  use FoX_wcml, only : xmlf_t, cmlBeginFile, cmlFinishFile, cmlStartCml, cmlEndCml, cmlAddParameter
+  use FoX_wcml
   use FoX_common, only: str
   implicit none
 

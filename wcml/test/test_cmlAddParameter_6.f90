@@ -1,7 +1,7 @@
 program test
 
   use FoX_common, only: str
-  use FoX_wcml, only : xmlf_t, cmlBeginFile, cmlFinishFile, cmlStartCml, cmlEndCml, cmlAddParameter
+  use FoX_wcml
   use FoX_wxml, only: xml_AddCharacters
   implicit none
 

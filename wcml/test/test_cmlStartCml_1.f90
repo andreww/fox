@@ -1,6 +1,6 @@
 program test
 
-  use FoX_wcml, only : xmlf_t, cmlBeginFile, cmlFinishFile, cmlStartCml
+  use FoX_wcml
   implicit none
 
   character(len=*), parameter :: filename = 'test.xml'
