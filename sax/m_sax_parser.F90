@@ -2,14 +2,17 @@ module m_sax_parser
 
 #ifndef DUMMYLIB
   use fox_m_fsys_array_str, only: str_vs, string_list, &
-    destroy_string_list, vs_str_alloc, vs_vs_alloc
+    destroy_string_list, vs_str_alloc, vs_vs_alloc, &
+    tokenize_to_string_list, registered_string
   use m_common_attrs, only: init_dict, destroy_dict, reset_dict, &
-    add_item_to_dict, has_key, get_value
+    add_item_to_dict, has_key, get_value, get_value_pointer
   use m_common_charset, only: XML1_0, XML1_1, XML_WHITESPACE
   use m_common_element, only: element_t, existing_element, add_element, &
     get_element, parse_dtd_element, parse_dtd_attlist, report_declarations, &
-    get_att_type, get_default_atts, declared_element, attribute_t, &
-    ATT_CDATA, ATT_ENTITY, ATT_ENTITIES, ATT_NOTATION
+    get_att_type, declared_element, attribute_t, &
+    ATT_CDATA, ATT_ID, ATT_IDREF, ATT_IDREFS, ATT_ENTITY, ATT_ENTITIES, &
+    ATT_NMTOKEN, ATT_NMTOKENS, ATT_NOTATION, ATT_ENUM, &
+    ATT_REQUIRED, ATT_IMPLIED, ATT_DEFAULT, ATT_FIXED
   use m_common_elstack, only: push_elstack, pop_elstack, init_elstack, &
     destroy_elstack, is_empty, len, get_top_elstack
   use m_common_entities, only: existing_entity, init_entity_list, &
@@ -21,8 +24,8 @@ module m_sax_parser
     init_error_stack, destroy_error_stack, in_error
   use m_common_namecheck, only: checkName, checkPublicId, &
     checkCharacterEntityReference, likeCharacterEntityReference, &
-    checkQName, checkNCName, checkPITarget, &
-    checkRepCharEntityReference
+    checkQName, checkNCName, checkPITarget, checkNmtoken, checkNmtokens, &
+    checkRepCharEntityReference, checkNames
   use m_common_namespaces, only: getnamespaceURI, invalidNS, &
     checkNamespaces, checkEndNamespaces, namespaceDictionary, &
     initNamespaceDictionary, destroyNamespaceDictionary
@@ -1017,7 +1020,6 @@ contains
               call add_error(fx%error_stack, "Unable to digest character entity reference in content, sorry.")
               goto 100
             else
-              print*, "xv ", XML1_1, fx%xds%xml_version
               call add_error(fx%error_stack, "Illegal character reference")
               goto 100
             endif
@@ -2479,21 +2481,174 @@ contains
       s2(i2:) = ''
     end function NotCDataNormalize
 
-    subroutine checkImplicitAttributes(elem, dict)
-      type(element_t), pointer :: elem
+    subroutine checkImplicitAttributes(el, dict)
+      type(element_t), pointer :: el
       type(dictionary_t), intent(inout) :: dict
 
-      integer :: i
+      integer :: i, j
       type(string_list) :: default_atts
 
-      default_atts = get_default_atts(elem%attlist)
-      do i = 1, size(default_atts%list), 2
-        if (.not.has_key(dict, str_vs(default_atts%list(i)%s))) then
-          call add_item_to_dict(dict, str_vs(default_atts%list(i)%s), &
-            str_vs(default_atts%list(i+1)%s), specified=.false.)
-        endif
+      type(attribute_t), pointer :: att
+      type(string_list) :: s_list
+      character, pointer :: attValue(:), s(:)
+
+      ! Loop over declared attributes.
+      ! If required - does it exist
+      ! If fixed - does it have appropriate value
+      ! If default - is it present?
+      ! If implied - does it have appropriate value for type?
+
+      do i = 1, size(el%attlist%list)
+        att => el%attlist%list(i)
+        attValue => get_value_pointer(dict, str_vs(att%name))
+        select case(att%attDefault)
+        case (ATT_REQUIRED)
+          if (validCheck) then
+            ! Validity Constraint: Required Attribute
+            if (.not.associated(attValue)) &
+              call add_error(fx%error_stack, &
+              "REQUIRED attribute not present")
+          endif
+        case (ATT_IMPLIED)
+          if (validCheck.and.associated(attValue)) then
+            select case(att%attType)
+            case (ATT_ID)
+              ! VC: ID
+              if (.not.checkName(str_vs(attValue), fx%xds%xml_version)) &
+                call add_error(fx%error_stack, &
+                "Attributes of type ID must have a value which is an XML Name")
+              ! FIXME in a namespaced document they must match QName
+              ! FIXME keep list of ids
+            case (ATT_IDREF)
+              ! VC: IDREF
+              if (.not.checkName(str_vs(attValue), fx%xds%xml_version)) &
+                call add_error(fx%error_stack, &
+                "Attributes of type IDREF must have a value which is an XML Name")
+              ! FIXME in a namespaced document they must match QName
+              ! FIXME keep list of IDREFS
+            case (ATT_IDREFS)
+              ! VC: IDREF
+              if (.not.checkNames(str_vs(attValue), fx%xds%xml_version)) &
+                call add_error(fx%error_stack, &
+                "Attributes of type IDREFS must have a value which contains only XML Names")
+              ! FIXME in a namespaced document they must match QName
+              ! FIXME keep list of IDREFS
+            case (ATT_ENTITY)
+              ! VC: Entity Name
+              ! FIXME in a namespaced document they must match QName
+              if (.not.checkName(str_vs(attValue), fx%xds%xml_version)) &
+                call add_error(fx%error_stack, &
+                "Attributes of type ENTITY must have a value which is an XML Name")
+              ent => getEntityByName(fx%xds%entityList, str_vs(attValue))
+              if (associated(ent)) then
+                if (.not.is_unparsed_entity(ent)) then
+                  ! Validity Constraint: Entity Name
+                  call add_error(fx%error_stack, &
+                    "Attribute "//str_vs(att%name) &
+                    //" of element "//str_vs(el%name) &
+                    //" declared as ENTITY refers to parsed entity")
+                  return
+                endif
+              else
+                ! Validity Constraint: Entity Name
+                call add_error(fx%error_stack, &
+                  "Attribute "//str_vs(att%name) &
+                  //" of element "//str_vs(el%name) &
+                  //" declared as ENTITY refers to non-existent entity")
+                return
+              endif 
+            case (ATT_ENTITIES)
+              ! VC: Entity Name
+              ! FIXME in a namespaced document they must match QName
+              if (.not.checkNames(str_vs(attValue), fx%xds%xml_version)) &
+                call add_error(fx%error_stack, &
+                "Attributes of type ENTITIES must have a value which contains only XML Names")
+              s_list = tokenize_to_string_list(str_vs(attValue))
+              do j = 1, size(s_list%list)
+                s => s_list%list(j)%s
+                ent => getEntityByName(fx%xds%entityList, str_vs(s))
+                if (associated(ent)) then
+                  if (.not.is_unparsed_entity(ent)) then
+                    ! Validity Constraint: Entity Name
+                    call add_error(fx%error_stack, &
+                      "Attribute "//str_vs(att%name) &
+                      //" of element "//str_vs(el%name) &
+                      //" declared as ENTITIES refers to parsed entity "&
+                      //str_vs(s))
+                    call destroy_string_list(s_list)
+                    return
+                  endif
+                else
+                  ! Validity Constraint: Entity Name
+                  call add_error(fx%error_stack, &
+                    "Attribute "//str_vs(att%name) &
+                    //" of element "//str_vs(el%name) &
+                    //" declared as ENTITIES refers to non-existent entity "&
+                    //str_vs(s))
+                    call destroy_string_list(s_list)
+                  return
+                endif
+              enddo
+              call destroy_string_list(s_list)
+            case (ATT_NMTOKEN)
+              ! VC Name Token
+              if (.not.checkNmtoken(str_vs(attValue), fx%xds%xml_version)) &
+                call add_error(fx%error_stack, &
+                "Attributes of type NMTOKEN must have a value which is a NMTOKEN")
+            case (ATT_NMTOKENS)
+              ! VC: Name Token
+              if (.not.checkNmtokens(str_vs(attValue), fx%xds%xml_version)) &
+                call add_error(fx%error_stack, &
+                "Attributes of type NMTOKENS must have a value which contain only NMTOKENs")
+            case (ATT_NOTATION)
+              ! VC: Notation Attributes
+              if (.not.checkName(str_vs(attValue), fx%xds%xml_version)) &
+                call add_error(fx%error_stack, &
+                "Attributes of type NOTATION must have a value which is an XML Name")
+              if (.not.notation_exists(fx%xds%nlist, str_vs(attValue))) then
+                ! Validity Constraint: Notation Attributes
+                call add_error(fx%error_stack, &
+                  "Attribute "//str_vs(att%name) &
+                  //" of element "//str_vs(el%name) &
+                  //" declared as NOTATION refers to non-existent notation "&
+                  //str_vs(attValue))
+                return
+              endif
+            case (ATT_ENUM)
+              ! VC: Notation Attributes
+              if (.not.checkNmtoken(str_vs(attValue), fx%xds%xml_version)) &
+                call add_error(fx%error_stack, &
+                "Attributes of type ENUM must have a value which is an NMTOKEN")
+              if (.not.registered_string(att%enumerations, str_vs(attValue))) then
+                ! Validity Constraint: Enumeration
+                call add_error(fx%error_stack, &
+                  "Attribute "//str_vs(att%name) &
+                  //" of element "//str_vs(el%name) &
+                  //" declared as ENUM refers to undeclared enumeration "&
+                  //str_vs(attValue))
+                return
+              endif
+            end select
+          endif
+        case (ATT_DEFAULT)
+          if (.not.associated(attValue)) then
+            call add_item_to_dict(dict, &
+              str_vs(att%name), str_vs(att%default), specified=.false.)
+          endif
+        case (ATT_FIXED)
+          if (associated(attValue)) then
+            if (validCheck) then
+              if (str_vs(att%default)//"x"/=str_vs(attValue)//"x") &
+                ! Validity Constraint: Fixed Attribute Default
+                call add_error(fx%error_stack, &
+                "FIXED attribute has wrong value")
+            endif
+          else
+            call add_item_to_dict(dict, &
+              str_vs(att%name), str_vs(att%default), specified=.false.)
+          endif
+        end select
       enddo
-      call destroy_string_list(default_atts)
 
     end subroutine checkImplicitAttributes
 
@@ -2566,7 +2721,7 @@ contains
                     call add_error(fx%error_stack, &
                       "Attribute "//str_vs(att%name) &
                       //" of element "//str_vs(el%name) &
-                      //" declared as ENTITIES refers to parsed entity")
+                      //" declared as ENTITY refers to parsed entity")
                     exit validLoop
                   endif
                 else
@@ -2574,7 +2729,7 @@ contains
                   call add_error(fx%error_stack, &
                     "Attribute "//str_vs(att%name) &
                     //" of element "//str_vs(el%name) &
-                    //" declared as ENTITIES refers to non-existent entity")
+                    //" declared as ENTITY refers to non-existent entity")
                   exit validLoop
                 endif
               case (ATT_ENTITIES)

@@ -76,6 +76,7 @@ module m_common_attrs
   public :: set_localName
 
   ! For internal FoX use only:
+  public :: get_value_pointer
   public :: getWhitespaceHandling
 #endif
 
@@ -286,6 +287,22 @@ contains
     value = ""
 #endif
   end function get_value_by_key_ns
+
+  function get_value_pointer(dict, key) result(value)
+    type(dictionary_t), intent(in) :: dict
+    character(len=*), intent(in) :: key
+    character, pointer :: value(:)
+
+    integer :: i
+
+    value => null()
+    do i = 1, dict%number_of_items
+      if (key == str_vs(dict%items(i)%key)) then
+        value => dict%items(i)%value
+        exit
+      endif
+    enddo
+  end function get_value_pointer
 
 #ifndef DUMMYLIB
   subroutine remove_key_by_index(dict, key, status)

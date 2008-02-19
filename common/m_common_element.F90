@@ -4,7 +4,8 @@ module m_common_element
   ! Structure and manipulation of element specification
 
   use fox_m_fsys_array_str, only: str_vs, vs_str_alloc, vs_vs_alloc, &
-    string_list, init_string_list, destroy_string_list, add_string
+    string_list, init_string_list, destroy_string_list, add_string, &
+    tokenize_to_string_list
   use m_common_charset, only: isInitialNameChar, isNameChar, &
     upperCase, XML_WHITESPACE
   use m_common_error, only: error_stack, add_error, in_error
@@ -34,7 +35,7 @@ module m_common_element
   integer, parameter :: ST_AFTER_ATTTYPE       = 17
   integer, parameter :: ST_DEFAULT_DECL        = 18
   integer, parameter :: ST_AFTERDEFAULTDECL    = 19
-  integer, parameter :: ST_DEFAULTVALUE        = 20
+ integer, parameter :: ST_DEFAULTVALUE        = 20
 
   integer, parameter :: ATT_NULL = 0
 
@@ -108,8 +109,6 @@ module m_common_element
   public :: report_declarations
 
   public :: get_att_type
-  public :: get_default_atts
-  public :: default_att_index
 
   public :: ATT_NULL
   public :: ATT_CDATA
@@ -125,7 +124,10 @@ module m_common_element
   public :: ATT_CDANO
   public :: ATT_CDAMB
   public :: ATT_TYPELENGTHS
+  public :: ATT_REQUIRED
+  public :: ATT_IMPLIED
   public :: ATT_DEFAULT
+  public :: ATT_FIXED
 
 contains
 
@@ -1060,7 +1062,7 @@ contains
               ! VC: IDREF
               if (.not.checkNames(str_vs(ca%default), xv)) &
                 call add_error(stack, &
-                "Attributes of type IDREF must have a value which contains only XML Names")
+                "Attributes of type IDREFS must have a value which contains only XML Names")
               ! FIXME in a namespaced document they must match QName
             case (ATT_ENTITY)
               ! VC: Entity Name
@@ -1086,18 +1088,19 @@ contains
                 "Attributes of type NMTOKENS must have a value which contain only NMTOKENs")
             case (ATT_NOTATION)
               ! VC: Notation Attributes
-              if (.not.checkNames(str_vs(ca%default), xv)) &
+              if (.not.checkName(str_vs(ca%default), xv)) &
                 call add_error(stack, &
-                "Attributes of type NOTATION must have a value which contain only XML Names")
+                "Attributes of type NOTATION must have a value which is an XML Name")
             case (ATT_ENUM)
-              ! VC: Notation Attributes
-              if (.not.checkNmtokens(str_vs(ca%default), xv)) &
+              ! VC: Enumeration
+              if (.not.checkNmtoken(str_vs(ca%default), xv)) &
                 call add_error(stack, &
-                "Attributes of type ENUM must have a value which contain only NMTOKENs")
+                "Attributes of type ENUM must have a value which is an NMTOKENs")
             end select
           endif
           if (.not.in_error(stack)) then
-            ! FIXME if this is ENTITIES or NMTOKENS, put in enumeration
+            if (ca%attType==ATT_ENTITIES) &
+              ca%enumerations = tokenize_to_string_list(str_vs(value))
             ca%default => value
             value => null()
             state = ST_START
@@ -1292,40 +1295,5 @@ contains
   end function get_att_type
 
 
-  function get_default_atts(a_list) result(s_list)
-    type(attribute_list), intent(in) :: a_list
-    type(string_list) :: s_list
-    
-    integer :: i
-    type(attribute_t), pointer :: a
-
-    call init_string_list(s_list)
-    do i = 1, size(a_list%list)
-      a => a_list%list(i)
-      if (a%attDefault==ATT_DEFAULT) then
-        call add_string(s_list, str_vs(a%name))
-        call add_string(s_list, str_vs(a%default))
-      endif
-    enddo
-  end function get_default_atts
-
-  function default_att_index(elem, name) result(n)
-    type(element_t), pointer :: elem
-    character(len=*), intent(in) :: name
-    integer :: n
-    integer :: i
-
-    if (associated(elem)) then
-      do i = 1, size(elem%attlist%list)
-        if (elem%attlist%list(i)%attDefault==ATT_DEFAULT &
-          .and.str_vs(elem%attlist%list(i)%name)==name) then
-          n = i ! FIXME this is not a clean way to do this
-          return
-        endif
-      enddo
-    endif
-    n = 0
-  end function default_att_index
-  
 #endif
 end module m_common_element
