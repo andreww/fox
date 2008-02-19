@@ -86,14 +86,14 @@ TOHWM4_eigenargsuse
 
   end subroutine cmlAddEigenValue$1
 
-  subroutine cmlAddEigenValueVector$1(xf, eigval, eigvec, units, vecfmt, valfmt &
+  subroutine cmlAddEigenValueVector$1(xf, eigval, eigvec, units, valfmt, vecfmt &
 TOHWM4_eigenargslist)
     type(xmlf_t), intent(inout)            :: xf
-    real(kind=$1), intent(in)              :: eigval(:)
+    real(kind=$1), intent(in)              :: eigval
     real(kind=$1), intent(in)              :: eigvec(:,:)
     character(len=*), intent(in)           :: units
-    character(len=*), intent(in), optional :: vecfmt
     character(len=*), intent(in), optional :: valfmt
+    character(len=*), intent(in), optional :: vecfmt
 
 TOHWM4_eigenargsdecl
 
@@ -102,6 +102,7 @@ TOHWM4_eigenargsdecl
 TOHWM4_eigenargsuse
 
     call stmAddValue(xf=xf, value=eigval, fmt=valfmt, units=units)
+!FIXME check 2nd dimension of matrix is 3
     call stmAddValue(xf=xf, value=eigvec, fmt=vecfmt, units="units:dimensionless")
     call xml_EndElement(xf, "eigen")
 #endif

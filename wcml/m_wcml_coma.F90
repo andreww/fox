@@ -140,14 +140,14 @@ contains
 
   end subroutine cmlAddEigenValuesp
 
-  subroutine cmlAddEigenValueVectorsp(xf, eigval, eigvec, units, vecfmt, valfmt &
+  subroutine cmlAddEigenValueVectorsp(xf, eigval, eigvec, units, valfmt, vecfmt &
 ,dictRef,convention,title,id,type)
     type(xmlf_t), intent(inout)            :: xf
-    real(kind=sp), intent(in)              :: eigval(:)
+    real(kind=sp), intent(in)              :: eigval
     real(kind=sp), intent(in)              :: eigvec(:,:)
     character(len=*), intent(in)           :: units
-    character(len=*), intent(in), optional :: vecfmt
     character(len=*), intent(in), optional :: valfmt
+    character(len=*), intent(in), optional :: vecfmt
 
     character(len=*), intent(in), optional :: dictRef
     character(len=*), intent(in), optional :: convention
@@ -168,6 +168,7 @@ contains
 
 
     call stmAddValue(xf=xf, value=eigval, fmt=valfmt, units=units)
+!FIXME check 2nd dimension of matrix is 3
     call stmAddValue(xf=xf, value=eigvec, fmt=vecfmt, units="units:dimensionless")
     call xml_EndElement(xf, "eigen")
 #endif
@@ -299,14 +300,14 @@ contains
 
   end subroutine cmlAddEigenValuedp
 
-  subroutine cmlAddEigenValueVectordp(xf, eigval, eigvec, units, vecfmt, valfmt &
+  subroutine cmlAddEigenValueVectordp(xf, eigval, eigvec, units, valfmt, vecfmt &
 ,dictRef,convention,title,id,type)
     type(xmlf_t), intent(inout)            :: xf
-    real(kind=dp), intent(in)              :: eigval(:)
+    real(kind=dp), intent(in)              :: eigval
     real(kind=dp), intent(in)              :: eigvec(:,:)
     character(len=*), intent(in)           :: units
-    character(len=*), intent(in), optional :: vecfmt
     character(len=*), intent(in), optional :: valfmt
+    character(len=*), intent(in), optional :: vecfmt
 
     character(len=*), intent(in), optional :: dictRef
     character(len=*), intent(in), optional :: convention
@@ -327,6 +328,7 @@ contains
 
 
     call stmAddValue(xf=xf, value=eigval, fmt=valfmt, units=units)
+!FIXME check 2nd dimension of matrix is 3
     call stmAddValue(xf=xf, value=eigvec, fmt=vecfmt, units="units:dimensionless")
     call xml_EndElement(xf, "eigen")
 #endif
