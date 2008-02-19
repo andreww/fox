@@ -231,10 +231,12 @@ contains
 
 #ifndef DUMMYLIB
     call xml_NewElement(xf, "bandList")
-    if (spin=="up".or.spin=="down") then
-      call xml_AddAttribute(xf, "spin", spin)
-    else
-      !error
+    if (present(spin)) then
+      if (spin=="up".or.spin=="down") then
+        call xml_AddAttribute(xf, "spin", spin)
+      else
+        !error
+      endif
     endif
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -429,10 +431,12 @@ contains
 
 #ifndef DUMMYLIB
     call xml_NewElement(xf, "bandList")
-    if (spin=="up".or.spin=="down") then
-      call xml_AddAttribute(xf, "spin", spin)
-    else
-      !error
+    if (present(spin)) then
+      if (spin=="up".or.spin=="down") then
+        call xml_AddAttribute(xf, "spin", spin)
+      else
+        !error
+      endif
     endif
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)
@@ -466,10 +470,12 @@ contains
 
 #ifndef DUMMYLIB
     call xml_NewElement(xf, "band")
-    if (spin=="up".or.spin=="down") then
-      call xml_AddAttribute(xf, "spin", spin)
-    else
-      !error
+    if (present(spin)) then
+      if (spin=="up".or.spin=="down") then
+        call xml_AddAttribute(xf, "spin", spin)
+      else
+        !error
+      endif
     endif
     if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_addAttribute(xf, "convention", convention)

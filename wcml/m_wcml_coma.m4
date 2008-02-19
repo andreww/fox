@@ -143,10 +143,12 @@ TOHWM4_eigenargsdecl
 
 #ifndef DUMMYLIB
     call xml_NewElement(xf, "bandList")
-    if (spin=="up".or.spin=="down") then
-      call xml_AddAttribute(xf, "spin", spin)
-    else
-      !error
+    if (present(spin)) then
+      if (spin=="up".or.spin=="down") then
+        call xml_AddAttribute(xf, "spin", spin)
+      else
+        !error
+      endif
     endif
 TOHWM4_eigenargsuse
     call xml_NewElement(xf, "eigen")
@@ -169,10 +171,12 @@ TOHWM4_bandargsdecl
 
 #ifndef DUMMYLIB
     call xml_NewElement(xf, "band")
-    if (spin=="up".or.spin=="down") then
-      call xml_AddAttribute(xf, "spin", spin)
-    else
-      !error
+    if (present(spin)) then
+      if (spin=="up".or.spin=="down") then
+        call xml_AddAttribute(xf, "spin", spin)
+      else
+        !error
+      endif
     endif
 TOHWM4_bandargsuse
 #endif
