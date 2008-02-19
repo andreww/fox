@@ -8,7 +8,7 @@ program test
 
   call cmlBeginFile(xf, filename, unit=-1)
   call cmlStartCml(xf)
-  call cmlAddKpoint(xf, coords=(/1.0d0, 2.0d0, 3.0d0/))
+  call cmlAddKpoint(xf, coords=(/1.0, 2.0, 3.0/), weight=0.75)
   call cmlFinishFile(xf)
 
 end program test

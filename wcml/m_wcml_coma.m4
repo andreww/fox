@@ -1,7 +1,7 @@
 dnl
-include(`foreach.m4')dnl
+include(`foreach.m4')`'dnl
 dnl
-include(`common.m4')dnl
+include(`common.m4')`'dnl
 dnl
 dnl Below we only use arguments with a type of xsd:string
 define(`TOHWM4_bandargs', `(dictRef,convention,title,id,ref,label)')dnl
@@ -28,12 +28,12 @@ define(`TOHWM4_eigenargsuse',`dnl
 m4_foreach(`x',TOHWM4_eigenargs,`TOHWM4_dummyarguse(x)')
 ')dnl
 dnl
-define(`TOHWM4_coma_real_subs', `dnl
+define(`TOHWM4_coma_real_subs', `dnl`'
 
-  subroutine cmlStartKPoint_$1(xf, kpoint, weight, kptfmt, wtfmt &
+  subroutine cmlStartKPoint_$1(xf, coords, weight, kptfmt, wtfmt &
 TOHWM4_bandargslist)
     type(xmlf_t), intent(inout)              :: xf
-    real(kind=$1), dimension(3), intent(in)  :: kpoint
+    real(kind=$1), dimension(3), intent(in)  :: coords
     real(kind=$1), intent(in), optional      :: weight
     character(len=*), intent(in), optional   :: kptfmt
     character(len=*), intent(in), optional   :: wtfmt
@@ -42,32 +42,25 @@ TOHWM4_bandargsdecl
 #ifndef DUMMYLIB
     call xml_NewElement(xf, "kpoint")
 TOHWM4_bandargsuse
-    if (present(weight)) then
-      if (present(wtfmt)) then
-        call xml_AddAttribute(xf, "weight", str(weight, wtfmt))
-      else
-        call xml_AddAttribute(xf, "weight", weight)
-      endif
-    endif
 
-    if (present(kptfmt)) then
-      call xml_AddCharacters(xf, kpoint, kptfmt)
-    else
-      call xml_AddCharacters(xf, kpoint)
-    end if
+    call xml_AddAttribute(xf, "coords", coords, kptfmt)
+    if (present(weight)) &
+       call xml_AddAttribute(xf, "weight", weight, wtfmt)
 #endif
 
   end subroutine cmlStartKPoint_$1
 
-  subroutine cmlAddKPoint_$1(xf, kpoint, weight &
+  subroutine cmlAddKPoint_$1(xf, coords, weight, kptfmt, wtfmt &
 TOHWM4_bandargslist)
     type(xmlf_t), intent(inout)             :: xf
-    real(kind=$1), dimension(3), intent(in) :: kpoint
+    real(kind=$1), dimension(3), intent(in) :: coords
     real(kind=$1), intent(in), optional     :: weight
+    character(len=*), intent(in), optional   :: kptfmt
+    character(len=*), intent(in), optional   :: wtfmt
 TOHWM4_bandargsdecl
 
 #ifndef DUMMYLIB
-    call cmlStartKpoint(xf, kpoint, weight &
+    call cmlStartKpoint(xf, coords, weight, kptfmt, wtfmt &
 TOHWM4_bandargslist)
     call cmlEndKpoint(xf)
 #endif
@@ -173,7 +166,7 @@ TOHWM4_bandargsuse
 #endif
   end subroutine cmlEndBand
 
-')`'`'dnl
+')`'dnl
 dnl
 module m_wcml_coma
   ! Implements routines relating to electronic structure

@@ -51,10 +51,10 @@ module m_wcml_coma
 contains
 
 
-  subroutine cmlStartKPoint_sp(xf, kpoint, weight, kptfmt, wtfmt &
+  subroutine cmlStartKPoint_sp(xf, coords, weight, kptfmt, wtfmt &
 ,dictRef,convention,title,id,ref,label)
     type(xmlf_t), intent(inout)              :: xf
-    real(kind=sp), dimension(3), intent(in)  :: kpoint
+    real(kind=sp), dimension(3), intent(in)  :: coords
     real(kind=sp), intent(in), optional      :: weight
     character(len=*), intent(in), optional   :: kptfmt
     character(len=*), intent(in), optional   :: wtfmt
@@ -77,28 +77,21 @@ contains
     if (present(label)) call xml_addAttribute(xf, "label", label)
 
 
-    if (present(weight)) then
-      if (present(wtfmt)) then
-        call xml_AddAttribute(xf, "weight", str(weight, wtfmt))
-      else
-        call xml_AddAttribute(xf, "weight", weight)
-      endif
-    endif
 
-    if (present(kptfmt)) then
-      call xml_AddCharacters(xf, kpoint, kptfmt)
-    else
-      call xml_AddCharacters(xf, kpoint)
-    end if
+    call xml_AddAttribute(xf, "coords", coords, kptfmt)
+    if (present(weight)) &
+       call xml_AddAttribute(xf, "weight", weight, wtfmt)
 #endif
 
   end subroutine cmlStartKPoint_sp
 
-  subroutine cmlAddKPoint_sp(xf, kpoint, weight &
+  subroutine cmlAddKPoint_sp(xf, coords, weight, kptfmt, wtfmt &
 ,dictRef,convention,title,id,ref,label)
     type(xmlf_t), intent(inout)             :: xf
-    real(kind=sp), dimension(3), intent(in) :: kpoint
+    real(kind=sp), dimension(3), intent(in) :: coords
     real(kind=sp), intent(in), optional     :: weight
+    character(len=*), intent(in), optional   :: kptfmt
+    character(len=*), intent(in), optional   :: wtfmt
     character(len=*), intent(in), optional :: dictRef
     character(len=*), intent(in), optional :: convention
     character(len=*), intent(in), optional :: title
@@ -109,7 +102,7 @@ contains
 
 
 #ifndef DUMMYLIB
-    call cmlStartKpoint(xf, kpoint, weight &
+    call cmlStartKpoint(xf, coords, weight, kptfmt, wtfmt &
 ,dictRef,convention,title,id,ref,label)
     call cmlEndKpoint(xf)
 #endif
@@ -217,10 +210,10 @@ contains
 
 
 
-  subroutine cmlStartKPoint_dp(xf, kpoint, weight, kptfmt, wtfmt &
+  subroutine cmlStartKPoint_dp(xf, coords, weight, kptfmt, wtfmt &
 ,dictRef,convention,title,id,ref,label)
     type(xmlf_t), intent(inout)              :: xf
-    real(kind=dp), dimension(3), intent(in)  :: kpoint
+    real(kind=dp), dimension(3), intent(in)  :: coords
     real(kind=dp), intent(in), optional      :: weight
     character(len=*), intent(in), optional   :: kptfmt
     character(len=*), intent(in), optional   :: wtfmt
@@ -243,28 +236,21 @@ contains
     if (present(label)) call xml_addAttribute(xf, "label", label)
 
 
-    if (present(weight)) then
-      if (present(wtfmt)) then
-        call xml_AddAttribute(xf, "weight", str(weight, wtfmt))
-      else
-        call xml_AddAttribute(xf, "weight", weight)
-      endif
-    endif
 
-    if (present(kptfmt)) then
-      call xml_AddCharacters(xf, kpoint, kptfmt)
-    else
-      call xml_AddCharacters(xf, kpoint)
-    end if
+    call xml_AddAttribute(xf, "coords", coords, kptfmt)
+    if (present(weight)) &
+       call xml_AddAttribute(xf, "weight", weight, wtfmt)
 #endif
 
   end subroutine cmlStartKPoint_dp
 
-  subroutine cmlAddKPoint_dp(xf, kpoint, weight &
+  subroutine cmlAddKPoint_dp(xf, coords, weight, kptfmt, wtfmt &
 ,dictRef,convention,title,id,ref,label)
     type(xmlf_t), intent(inout)             :: xf
-    real(kind=dp), dimension(3), intent(in) :: kpoint
+    real(kind=dp), dimension(3), intent(in) :: coords
     real(kind=dp), intent(in), optional     :: weight
+    character(len=*), intent(in), optional   :: kptfmt
+    character(len=*), intent(in), optional   :: wtfmt
     character(len=*), intent(in), optional :: dictRef
     character(len=*), intent(in), optional :: convention
     character(len=*), intent(in), optional :: title
@@ -275,7 +261,7 @@ contains
 
 
 #ifndef DUMMYLIB
-    call cmlStartKpoint(xf, kpoint, weight &
+    call cmlStartKpoint(xf, coords, weight, kptfmt, wtfmt &
 ,dictRef,convention,title,id,ref,label)
     call cmlEndKpoint(xf)
 #endif
