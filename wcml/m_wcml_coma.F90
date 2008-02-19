@@ -178,7 +178,7 @@ contains
   subroutine cmlAddEigenValueVectorCmplxsp(xf, eigval, eigvec, units, vecfmt, valfmt &
 ,dictRef,convention,title,id,type)
     type(xmlf_t), intent(inout)            :: xf
-    real(kind=sp), intent(in)              :: eigval(:)
+    real(kind=sp), intent(in)              :: eigval
     complex(kind=sp), intent(in)           :: eigvec(:,:)
     character(len=*), intent(in)           :: units
     character(len=*), intent(in), optional :: vecfmt
@@ -338,7 +338,7 @@ contains
   subroutine cmlAddEigenValueVectorCmplxdp(xf, eigval, eigvec, units, vecfmt, valfmt &
 ,dictRef,convention,title,id,type)
     type(xmlf_t), intent(inout)            :: xf
-    real(kind=dp), intent(in)              :: eigval(:)
+    real(kind=dp), intent(in)              :: eigval
     complex(kind=dp), intent(in)           :: eigvec(:,:)
     character(len=*), intent(in)           :: units
     character(len=*), intent(in), optional :: vecfmt

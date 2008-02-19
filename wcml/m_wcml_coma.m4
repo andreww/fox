@@ -112,7 +112,7 @@ TOHWM4_eigenargsuse
   subroutine cmlAddEigenValueVectorCmplx$1(xf, eigval, eigvec, units, vecfmt, valfmt &
 TOHWM4_eigenargslist)
     type(xmlf_t), intent(inout)            :: xf
-    real(kind=$1), intent(in)              :: eigval(:)
+    real(kind=$1), intent(in)              :: eigval
     complex(kind=$1), intent(in)           :: eigvec(:,:)
     character(len=*), intent(in)           :: units
     character(len=*), intent(in), optional :: vecfmt
