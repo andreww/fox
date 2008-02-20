@@ -26,7 +26,7 @@ module fox_m_fsys_array_str
 
   interface destroy
     module procedure destroy_vs
-  end interface destroy
+  end interface
 
   interface concat
     module procedure vs_s_concat
@@ -59,10 +59,12 @@ contains
 
     integer :: i
 
-    do i = 1, size(s_list%list)
-      deallocate(s_list%list(i)%s)
-    enddo
-    deallocate(s_list%list)
+    if (associated(s_list%list)) then
+      do i = 1, ubound(s_list%list, 1)
+        deallocate(s_list%list(i)%s)
+      enddo
+      deallocate(s_list%list)
+    endif
   end subroutine destroy_string_list
 
   subroutine add_string(s_list, s)

@@ -1048,52 +1048,52 @@ contains
             select case(ca%attType)
             case (ATT_ID)
               ! VC: ID
-              if (.not.checkName(str_vs(ca%default), xv)) &
+              if (.not.checkName(str_vs(value), xv)) &
                 call add_error(stack, &
                 "Attributes of type ID must have a value which is an XML Name")
               ! FIXME in a namespaced document they must match QName
             case (ATT_IDREF)
               ! VC: IDREF
-              if (.not.checkName(str_vs(ca%default), xv)) &
+              if (.not.checkName(str_vs(value), xv)) &
                 call add_error(stack, &
                 "Attributes of type IDREF must have a value which is an XML Name")
               ! FIXME in a namespaced document they must match QName
             case (ATT_IDREFS)
               ! VC: IDREF
-              if (.not.checkNames(str_vs(ca%default), xv)) &
+              if (.not.checkNames(str_vs(value), xv)) &
                 call add_error(stack, &
                 "Attributes of type IDREFS must have a value which contains only XML Names")
               ! FIXME in a namespaced document they must match QName
             case (ATT_ENTITY)
               ! VC: Entity Name
-              if (.not.checkName(str_vs(ca%default), xv)) &
+              if (.not.checkName(str_vs(value), xv)) &
                 call add_error(stack, &
                 "Attributes of type ENTITY must have a value which is an XML Name")
               ! FIXME in a namespaced document they must match QName
             case (ATT_ENTITIES)
               ! VC: Entity Name
-              if (.not.checkNames(str_vs(ca%default), xv)) &
+              if (.not.checkNames(str_vs(value), xv)) &
                 call add_error(stack, &
-                "Attributes of type ENTITY must have a value which contains only XML Names")
+                "Attributes of type ENTITIES must have a value which contains only XML Names")
               ! FIXME in a namespaced document they must match QName
             case (ATT_NMTOKEN)
               ! VC Name Token
-              if (.not.checkNmtoken(str_vs(ca%default), xv)) &
+              if (.not.checkNmtoken(str_vs(value), xv)) &
                 call add_error(stack, &
                 "Attributes of type NMTOKEN must have a value which is a NMTOKEN")
             case (ATT_NMTOKENS)
               ! VC: Name Token
-              if (.not.checkNmtokens(str_vs(ca%default), xv)) &
+              if (.not.checkNmtokens(str_vs(value), xv)) &
                 call add_error(stack, &
                 "Attributes of type NMTOKENS must have a value which contain only NMTOKENs")
             case (ATT_NOTATION)
               ! VC: Notation Attributes
-              if (.not.checkName(str_vs(ca%default), xv)) &
+              if (.not.checkName(str_vs(value), xv)) &
                 call add_error(stack, &
                 "Attributes of type NOTATION must have a value which is an XML Name")
             case (ATT_ENUM)
               ! VC: Enumeration
-              if (.not.checkNmtoken(str_vs(ca%default), xv)) &
+              if (.not.checkNmtoken(str_vs(value), xv)) &
                 call add_error(stack, &
                 "Attributes of type ENUM must have a value which is an NMTOKENs")
             end select
