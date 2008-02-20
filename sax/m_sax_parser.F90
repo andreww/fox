@@ -2498,28 +2498,26 @@ contains
       type(attribute_t), pointer :: att
       type(string_list) :: s_list
       character, pointer :: attValue(:), s(:)
-
-      ! Loop over declared attributes.
-      ! If required - does it exist
-      ! If fixed - does it have appropriate value
-      ! If default - is it present?
-      ! If implied - does it have appropriate value for type?
+      ! FIXME check for undeclared attributes
 
       do i = 1, size(el%attlist%list)
         att => el%attlist%list(i)
         attValue => get_value_pointer(dict, str_vs(att%name))
         select case(att%attDefault)
-        case (ATT_REQUIRED)
-          if (validCheck) then
-            ! Validity Constraint: Required Attribute
-            if (.not.associated(attValue)) then
-              call add_error(fx%error_stack, &
-              "REQUIRED attribute not present")
-              return
+        case (ATT_REQUIRED, ATT_IMPLIED, ATT_DEFAULT)
+          if (.not.associated(attValue)) then
+            if (att%attDefault==ATT_REQUIRED) then
+              ! Validity Constraint: Required Attribute
+              if (validCheck) then
+                call add_error(fx%error_stack, &
+                  "REQUIRED attribute "//str_vs(att%name)//" not present")
+                return
+              endif
+            elseif (att%attDefault==ATT_DEFAULT) then
+              call add_item_to_dict(dict, &
+                str_vs(att%name), str_vs(att%default), specified=.false.)
             endif
-          endif
-        case (ATT_IMPLIED)
-          if (validCheck.and.associated(attValue)) then
+          elseif (validCheck) then
             select case(att%attType)
             case (ATT_ID)
               ! VC: ID
@@ -2531,10 +2529,11 @@ contains
               ! FIXME in a namespaced document they must match QName
               if (registered_string(id_list, str_vs(attValue))) then
                 call add_error(fx%error_stack, &
-                "Cannot declare the same ID twice")
+                  "Cannot declare the same ID twice")
                 return
               endif
               call add_string(id_list, str_vs(attValue))
+              ! FIXME add note to dict that this is ID
             case (ATT_IDREF)
               ! VC: IDREF
               if (.not.checkName(str_vs(attValue), fx%xds%xml_version)) then
@@ -2580,7 +2579,7 @@ contains
                   //" of element "//str_vs(el%name) &
                   //" declared as ENTITY refers to non-existent entity")
                 return
-              endif 
+              endif
             case (ATT_ENTITIES)
               ! VC: Entity Name
               ! FIXME in a namespaced document they must match QName
@@ -2611,7 +2610,7 @@ contains
                     //" of element "//str_vs(el%name) &
                     //" declared as ENTITIES refers to non-existent entity "&
                     //str_vs(s))
-                    call destroy_string_list(s_list)
+                  call destroy_string_list(s_list)
                   return
                 endif
               enddo
@@ -2634,7 +2633,7 @@ contains
               ! VC: Notation Attributes
               if (.not.checkName(str_vs(attValue), fx%xds%xml_version)) then
                 call add_error(fx%error_stack, &
-                "Attributes of type NOTATION must have a value which is an XML Name")
+                  "Attributes of type NOTATION must have a value which is an XML Name")
                 return
               endif
               if (.not.notation_exists(fx%xds%nlist, str_vs(attValue))) then
@@ -2663,11 +2662,6 @@ contains
                 return
               endif
             end select
-          endif
-        case (ATT_DEFAULT)
-          if (.not.associated(attValue)) then
-            call add_item_to_dict(dict, &
-              str_vs(att%name), str_vs(att%default), specified=.false.)
           endif
         case (ATT_FIXED)
           if (associated(attValue)) then
