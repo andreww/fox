@@ -35,8 +35,10 @@ module m_common_charset
   character(len=*), parameter :: upperCase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
   character(len=*), parameter :: digits = "0123456789"
   character(len=*), parameter :: hexdigits = "0123456789abcdefABCDEF"
-  character(len=*), parameter :: NameChars = lowerCase//upperCase//digits//".-_:"
-  character(len=*), parameter :: InitialNameChars = lowerCase//upperCase//"_:"
+  character(len=*), parameter :: InitialNCNameChars = lowerCase//upperCase//"_"
+  character(len=*), parameter :: NCNameChars = InitialNCNameChars//digits//".-"
+  character(len=*), parameter :: InitialNameChars = InitialNCNameChars//":"
+  character(len=*), parameter :: NameChars = NCNameChars//":"
 
   character(len=*), parameter :: PubIdChars = NameChars//whitespace//"'()+,/=?;!*#@$%"
   character(len=*), parameter :: validchars = &
@@ -52,11 +54,16 @@ module m_common_charset
   character(len=*), parameter :: XML1_0_ILLEGALCHARS = achar(0)
   character(len=*), parameter :: XML1_1_ILLEGALCHARS = NameChars
 
+  character(len=*), parameter :: XML1_0_INITIALNAMECHARS = InitialNameChars
+  character(len=*), parameter :: XML1_1_INITIALNAMECHARS = InitialNameChars
   character(len=*), parameter :: XML1_0_NAMECHARS = NameChars
   character(len=*), parameter :: XML1_1_NAMECHARS = NameChars
 
-  character(len=*), parameter :: XML1_0_INITIALNAMECHARS = InitialNameChars
-  character(len=*), parameter :: XML1_1_INITIALNAMECHARS = InitialNameChars
+  character(len=*), parameter :: XML1_0_INITIALNCNAMECHARS = InitialNCNameChars
+  character(len=*), parameter :: XML1_1_INITIALNCNAMECHARS = InitialNCNameChars
+  character(len=*), parameter :: XML1_0_NCNAMECHARS = NCNameChars
+  character(len=*), parameter :: XML1_1_NCNAMECHARS = NCNameChars
+
 
   character(len=*), parameter :: XML_WHITESPACE = whitespace
   character(len=*), parameter :: XML_INITIALENCODINGCHARS = lowerCase//upperCase
@@ -176,16 +183,12 @@ contains
     integer, intent(in) :: xml_version
     logical :: p
 
-    if (c==":") then
-      p = .false.
-    else
-      select case(xml_version)
-      case (XML1_0)
-        p = (verify(c, XML1_0_INITIALNAMECHARS)==0)
-      case (XML1_1)
-        p = (verify(c, XML1_1_INITIALNAMECHARS)==0)
-      end select
-    endif
+    select case(xml_version)
+    case (XML1_0)
+      p = (verify(c, XML1_0_INITIALNCNAMECHARS)==0)
+    case (XML1_1)
+      p = (verify(c, XML1_1_INITIALNCNAMECHARS)==0)
+    end select
   end function isInitialNCNameChar
 
   pure function isNCNameChar(c, xml_version) result(p)
@@ -193,16 +196,12 @@ contains
     integer, intent(in) :: xml_version
     logical :: p
 
-    if (c==":") then
-      p = .false.
-    else
-      select case(xml_version)
-      case (XML1_0)
-        p = (verify(c, XML1_0_NAMECHARS)==0)
-      case (XML1_1)
-        p = (verify(c, XML1_1_NAMECHARS)==0)
-      end select
-    endif
+    select case(xml_version)
+    case (XML1_0)
+      p = (verify(c, XML1_0_NCNAMECHARS)==0)
+    case (XML1_1)
+      p = (verify(c, XML1_1_NCNAMECHARS)==0)
+    end select
   end function isNCNameChar
 
   function isXML1_0_NameChar(c) result(p)

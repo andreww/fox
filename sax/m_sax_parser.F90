@@ -76,6 +76,7 @@ contains
 
     call initNamespaceDictionary(fx%nsdict)
     call init_notation_list(fx%nlist)
+    ! FIXME do we copy correctly from fx%nlist to fx%xds%nlist?
     allocate(fx%xds)
     call init_xml_doc_state(fx%xds)
     deallocate(fx%xds%inputEncoding)
@@ -2636,11 +2637,10 @@ contains
                   "Attributes of type NOTATION must have a value which is an XML Name")
                 return
               endif
-              if (.not.notation_exists(fx%xds%nlist, str_vs(attValue))) then
+              if (.not.notation_exists(fx%nlist, str_vs(attValue))) then
                 ! Validity Constraint: Notation Attributes
                 call add_error(fx%error_stack, &
                   "Attribute "//str_vs(att%name) &
-                  //" of element "//str_vs(el%name) &
                   //" declared as NOTATION refers to non-existent notation "&
                   //str_vs(attValue))
                 return
@@ -2785,7 +2785,7 @@ contains
               case (ATT_NOTATION)
                 do k = 1, size(att%enumerations%list)
                   s => att%enumerations%list(k)%s
-                  if (.not.notation_exists(fx%xds%nlist, str_vs(s))) then
+                  if (.not.notation_exists(fx%nlist, str_vs(s))) then
                     ! Validity Constraint: Notation Attributes
                     call add_error(fx%error_stack, &
                       "Attribute "//str_vs(att%name) &
