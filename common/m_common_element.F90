@@ -215,6 +215,7 @@ contains
       e_list%list(i)%empty = temp(i)%empty
       e_list%list(i)%any = temp(i)%any
       e_list%list(i)%mixed = temp(i)%mixed
+      e_list%list(i)%id_declared = temp(i)%id_declared
       e_list%list(i)%attlist%list => temp(i)%attlist%list
     enddo
     deallocate(temp)
@@ -817,7 +818,7 @@ contains
         endif
 
       elseif (state==ST_ATTTYPE) then
-        write(*,*)'ST_ATTTYPE'
+        !write(*,*)'ST_ATTTYPE'
         if (verify(c, upperCase)==0) then
           temp => attType
           attType => vs_str_alloc(str_vs(temp)//c)
@@ -827,18 +828,14 @@ contains
             ca%attType = ATT_CDATA
             state = ST_AFTER_ATTTYPE
           elseif (str_vs(attType)=='ID') then
-            print*,"ID ", validCheck, present(elem) 
             if (validCheck) then
               ! Validity Constraint: One ID per Element Type
               if (present(elem)) then
-                print*, "IDDECL ", elem%id_declared
                 if (elem%id_declared) then
                   call add_error(stack, &
                     "Cannot have two declared attributes of type ID on one element type.")
                 else
-                  print*, "id_declared for "//str_vs(ca%name)//" on "//str_vs(elem%name)
                   elem%id_declared = .true.
-                  print*, "IDDECL2 ", elem%id_declared
                 endif
               endif
             endif

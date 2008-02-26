@@ -1735,11 +1735,8 @@ contains
             call add_error(fx%error_stack, "Invalid element name for ATTLIST")
             return
           endif
-          print*,"ATTLIST exist ",&
-            existing_element(fx%xds%element_list, str_vs(fx%token))
           if (existing_element(fx%xds%element_list, str_vs(fx%token))) then
             elem => get_element(fx%xds%element_list, str_vs(fx%token))
-            print*, "ATTLIST iddecl1 ", elem%id_declared
           else
             elem => add_element(fx%xds%element_list, str_vs(fx%token))
           endif
@@ -1757,7 +1754,6 @@ contains
           if (processDTD) then
             call parse_dtd_attlist(str_vs(fx%token), fx%xds%xml_version, &
               validCheck, fx%error_stack, elem)
-            print*, "ATTLIST iddecl2 ", elem%id_declared
           else
             call parse_dtd_attlist(str_vs(fx%token), fx%xds%xml_version, &
               validCheck, fx%error_stack)
