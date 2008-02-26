@@ -4,7 +4,7 @@ module m_sax_parser
   use fox_m_fsys_array_str, only: str_vs, vs_str_alloc, vs_vs_alloc
   use fox_m_fsys_string_list, only: string_list, destroy_string_list, &
     tokenize_to_string_list, registered_string, init_string_list, &
-    add_string, tokenize_and_add_strings
+    add_string, tokenize_and_add_strings, destroy
   use m_common_attrs, only: init_dict, destroy_dict, reset_dict, &
     add_item_to_dict, has_key, get_value, get_att_index_pointer, &
     getLength
@@ -2655,8 +2655,6 @@ contains
                   call add_error(fx%error_stack, &
                   "NOTATION attribute is not among declared values.")
               endif
-
-                  
             case (ATT_ENUM)
               ! VC: Notation Attributes
               if (.not.checkNmtoken(str_vs(attValue), fx%xds%xml_version)) then
@@ -2730,6 +2728,7 @@ contains
       type(element_t), pointer :: el
       type(attribute_t), pointer :: att
       type(entity_t), pointer :: ent
+      type(string_list) :: s_list
       character, pointer :: s(:)
       integer :: i, j, k
 
@@ -2799,19 +2798,39 @@ contains
                     exit validLoop
                   endif
                 enddo
+                call destroy(s_list)
               case (ATT_NOTATION)
-                do k = 1, size(att%enumerations%list)
-                  s => att%enumerations%list(k)%s
+                s_list = tokenize_to_string_list(str_vs(att%default))
+                do k = 1, size(s_list%list)
+                  s => s_list%list(k)%s
                   if (.not.notation_exists(fx%nlist, str_vs(s))) then
                     ! Validity Constraint: Notation Attributes
                     call add_error(fx%error_stack, &
                       "Attribute "//str_vs(att%name) &
                       //" of element "//str_vs(el%name) &
                       //" declared as NOTATION refers to non-existent notation")
+                    call destroy(s_list)
                     exit validLoop
                   endif
                 enddo
+                call destroy(s_list)
               end select
+            endif
+            ! For NOTATION, need to check enumerated as well as default ...
+            if (att%attType==ATT_NOTATION) then
+              do k = 1, size(att%enumerations%list)
+                s => att%enumerations%list(k)%s
+                print*,"CHECKING NOTATION ", str_vs(s)
+                if (.not.notation_exists(fx%nlist, str_vs(s))) then
+                  ! Validity Constraint: Notation Attributes
+                  call add_error(fx%error_stack, &
+                    "Enumerated NOTATION in "//str_vs(att%name) &
+                    //" of element "//str_vs(el%name) &
+                    //" refers to non-existent notation")
+                  call destroy(s_list)
+                  exit validLoop
+                endif
+              enddo
             endif
           enddo
         enddo validLoop
