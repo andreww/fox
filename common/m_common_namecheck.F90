@@ -105,12 +105,12 @@ contains
 
     good = (len(name) > 0)
     if (.not.good) return
-    i = verify(name, XML_WHITESPACE)
+    i = verify(name, " ")
     if (i==0) then
       good = .false.
       return
     endif
-    j = scan(name(i:), XML_WHITESPACE)
+    j = scan(name(i:), " ")
     if (j==0) then
       j = len(name)
     else
@@ -120,10 +120,10 @@ contains
       good = checkName(name(i:j), xv)
       if (.not.good) return
       i = j + 1
-      j = verify(name(i:), XML_WHITESPACE)
+      j = verify(name(i:), " ")
       if (j==0) exit
       i = i + j - 1
-      j = scan(name(i:), XML_WHITESPACE)
+      j = scan(name(i:), " ")
       if (j==0) then
         j = len(name)
       else
@@ -162,12 +162,12 @@ contains
 
     good = (len(name) > 0)
     if (.not.good) return
-    i = verify(name, XML_WHITESPACE)
+    i = verify(name, " ")
     if (i==0) then
       good = .false.
       return
     endif
-    j = scan(name(i:), XML_WHITESPACE)
+    j = scan(name(i:), " ")
     if (j==0) then
       j = len(name)
     else
@@ -177,10 +177,10 @@ contains
       good = checkQName(name(i:j), xv)
       if (.not.good) return
       i = j + 1
-      j = verify(name(i:), XML_WHITESPACE)
+      j = verify(name(i:), " ")
       if (j==0) exit
       i = i + j - 1
-      j = scan(name(i:), XML_WHITESPACE)
+      j = scan(name(i:), " ")
       if (j==0) then
         j = len(name)
       else
@@ -234,12 +234,12 @@ contains
 
     good = (len(name) > 0)
     if (.not.good) return
-    i = verify(name, XML_WHITESPACE)
+    i = verify(name, " ")
     if (i==0) then
       good = .false.
       return
     endif
-    j = scan(name(i:), XML_WHITESPACE)
+    j = scan(name(i:), " ")
     if (j==0) then
       j = len(name)
     else
@@ -249,10 +249,10 @@ contains
       good = isNameChar(name(i:j), xv)
       if (.not.good) return
       i = j + 1
-      j = verify(name(i:), XML_WHITESPACE)
+      j = verify(name(i:), " ")
       if (j==0) exit
       i = i + j - 1
-      j = scan(name(i:), XML_WHITESPACE)
+      j = scan(name(i:), " ")
       if (j==0) then
         j = len(name)
       else
