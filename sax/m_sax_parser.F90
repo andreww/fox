@@ -6,7 +6,8 @@ module m_sax_parser
     tokenize_to_string_list, registered_string, init_string_list, &
     add_string, tokenize_and_add_strings
   use m_common_attrs, only: init_dict, destroy_dict, reset_dict, &
-    add_item_to_dict, has_key, get_value, get_value_pointer
+    add_item_to_dict, has_key, get_value, get_att_index_pointer, &
+    getLength
   use m_common_charset, only: XML1_0, XML1_1, XML_WHITESPACE
   use m_common_element, only: element_t, existing_element, add_element, &
     get_element, parse_dtd_element, parse_dtd_attlist, report_declarations, &
@@ -2499,11 +2500,16 @@ contains
       type(attribute_t), pointer :: att
       type(string_list) :: s_list
       character, pointer :: attValue(:), s(:)
-      ! FIXME check for undeclared attributes
+
+      integer :: ind
+      logical, allocatable :: attributesLeft(:)
+      allocate(attributesLeft(getLength(dict)))
+      attributesLeft = .true.
 
       do i = 1, size(el%attlist%list)
         att => el%attlist%list(i)
-        attValue => get_value_pointer(dict, str_vs(att%name))
+        call get_att_index_pointer(dict, str_vs(att%name), ind, attValue)
+        if (associated(attValue)) attributesLeft(ind) = .false.
         select case(att%attDefault)
         case (ATT_REQUIRED, ATT_IMPLIED, ATT_DEFAULT)
           if (.not.associated(attValue)) then
@@ -2644,6 +2650,13 @@ contains
                   //str_vs(attValue))
                 return
               endif
+              if (att%attDefault==ATT_REQUIRED) then
+                if (.not.registered_string(att%enumerations, str_vs(attValue))) &
+                  call add_error(fx%error_stack, &
+                  "NOTATION attribute is not among declared values.")
+              endif
+
+                  
             case (ATT_ENUM)
               ! VC: Notation Attributes
               if (.not.checkNmtoken(str_vs(attValue), fx%xds%xml_version)) then
@@ -2676,6 +2689,11 @@ contains
           endif
         end select
       enddo
+
+      if (any(attributesLeft).and.validCheck) &
+        call add_error(fx%error_stack, &
+        "Undeclared attributes forbidden")
+
 
     end subroutine checkAttributes
 

@@ -76,7 +76,7 @@ module m_common_attrs
   public :: set_localName
 
   ! For internal FoX use only:
-  public :: get_value_pointer
+  public :: get_att_index_pointer
   public :: getWhitespaceHandling
 #endif
 
@@ -145,7 +145,7 @@ module m_common_attrs
 
 contains
 
-  function getLength(dict) result(n)
+  pure function getLength(dict) result(n)
     type(dictionary_t), intent(in)   :: dict
     integer                          :: n
 
@@ -288,12 +288,11 @@ contains
 #endif
   end function get_value_by_key_ns
 
-  function get_value_pointer(dict, key) result(value)
+  subroutine get_att_index_pointer(dict, key, i, value)
     type(dictionary_t), intent(in) :: dict
     character(len=*), intent(in) :: key
-    character, pointer :: value(:)
-
-    integer :: i
+    integer, intent(out) :: i
+    character, pointer, intent(out) :: value(:)
 
     value => null()
     do i = 1, dict%number_of_items
@@ -302,7 +301,7 @@ contains
         exit
       endif
     enddo
-  end function get_value_pointer
+  end subroutine get_att_index_pointer
 
 #ifndef DUMMYLIB
   subroutine remove_key_by_index(dict, key, status)
