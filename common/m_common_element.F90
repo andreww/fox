@@ -921,12 +921,22 @@ contains
           value => temp
         elseif (verify(c, XML_WHITESPACE)==0) then
           !FIXME normalize value here
-          call add_string(ca%enumerations, str_vs(value))
+          if (validCheck.and.registered_string(ca%enumerations, str_vs(value))) then
+            call add_error(stack, &
+              "Duplicate enumeration value in ATTLIST")
+          else
+            call add_string(ca%enumerations, str_vs(value))
+          endif
           deallocate(value)
           state = ST_SEPARATOR
         elseif (c=='|') then
           !FIXME normalize value here
-          call add_string(ca%enumerations, str_vs(value))
+          if (validCheck.and.registered_string(ca%enumerations, str_vs(value))) then
+            call add_error(stack, &
+              "Duplicate enumeration value in ATTLIST")
+          else
+            call add_string(ca%enumerations, str_vs(value))
+          endif
           deallocate(value)
           if (ca%attType==ATT_NOTATION) then
             state = ST_NOTATION_LIST
@@ -940,7 +950,12 @@ contains
               'Missing token in Enumeration list')
           endif
           !FIXME normalize value here
-          call add_string(ca%enumerations, str_vs(value))
+          if (validCheck.and.registered_string(ca%enumerations, str_vs(value))) then
+            call add_error(stack, &
+              "Duplicate enumeration value in ATTLIST")
+          else
+            call add_string(ca%enumerations, str_vs(value))
+          endif
           deallocate(value)
           state = ST_AFTER_ATTTYPE_SPACE
         else
