@@ -43,7 +43,6 @@ contains
       return
     endif
     fx%tokentype = TOK_NULL
-    print*, "TOKENASS?", associated(fx%token)
     if (associated(fx%token)) deallocate(fx%token)
     fx%token => vs_str_alloc("")
 
@@ -55,7 +54,6 @@ contains
     firstChar = .true.
     do
       c = get_character(fb, eof, fx%error_stack)
-      print*, "c ",c
       if (eof.or.in_error(fx%error_stack)) return
       if (fx%inIntSubset) then
         tempString => fx%xds%intSubset
@@ -497,7 +495,6 @@ contains
         call tokenizeDTD
 
       case (ST_START_PE)
-        print*, "tokenizing for PE"
         if (verify(c,XML_WHITESPACE//";")>0) then
           tempString => fx%token
           fx%token => vs_str_alloc(str_vs(tempString)//c)
@@ -531,8 +528,15 @@ contains
           ! % is perfectly legitimate
           continue
         elseif (fx%state_dtd==ST_DTD_SUBSET) then
-          fx%tokenType = TOK_ENTITY
-          return
+          if (.not.fx%spaceBeforeEntity) then
+            fx%spaceBeforeEntity = .true.
+            call push_chars(fb, c)
+            c = " "
+          else
+            fx%spaceBeforeEntity = .false.
+            fx%tokenType = TOK_ENTITY
+            return
+          endif
         elseif (fx%state_dtd==ST_DTD_ATTLIST_CONTENTS &
           .and. q/="") then
             ! We are inside a ATTLIST attvalue, so apparent PErefs arent.
@@ -555,8 +559,15 @@ contains
           ! % is ok if we are in the external subset
           continue
         else
-          fx%tokenType = TOK_ENTITY
-          return
+          if (.not.fx%spaceBeforeEntity) then
+            fx%spaceBeforeEntity = .true.
+            call push_chars(fb, c)
+            c = " "
+          else
+            fx%spaceBeforeEntity = .false.
+            fx%tokenType = TOK_ENTITY
+            return
+          endif
         endif
       endif
 
@@ -791,7 +802,6 @@ contains
         
       case (ST_DTD_ELEMENT_CONTENTS)
         if (c==">") then
-          print*,"found a close tag ", str_vs(fx%token)
           if (associated(fx%content)) then
             deallocate(fx%token)
             fx%token => fx%content
@@ -819,7 +829,6 @@ contains
             fx%token => vs_str_alloc("")
           endif
         endif
-        print*,"end of tokenizer ", str_vs(fx%token)
 
       case (ST_DTD_ATTLIST_CONTENTS)
         if (c==">") then
@@ -836,10 +845,8 @@ contains
         endif
         if (c=="'".or.c=="""") then
           if (q==c) then
-            print*,"OK CLOSE QUOTE"
             q = ""
           else
-            print*,"OK OPEN QUOTE"
             q = c
           endif
         endif

@@ -160,7 +160,7 @@ contains
     character(len=*), intent(in) :: s
     character, dimension(:), pointer :: nc
 
-    nc => vs_str_alloc(str_vs(f%next_chars)//s)
+    nc => vs_str_alloc(s//str_vs(f%next_chars))
     deallocate(f%next_chars)
     f%next_chars => nc
 
