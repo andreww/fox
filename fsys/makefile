@@ -5,6 +5,7 @@ OBJFILES=m_pxf_abort_flush.$(OBJEXT) pxf.$(OBJEXT) \
          fox_m_fsys_array_str.$(OBJEXT) \
          fox_m_fsys_format.$(OBJEXT) \
          fox_m_fsys_string.$(OBJEXT) \
+         fox_m_fsys_string_list.$(OBJEXT) \
          fox_m_fsys_realtypes.$(OBJEXT)
 #
 LIBRARY=libfsys.$(LIBEXT)
@@ -34,3 +35,4 @@ install: $(OBJFILES)
 clean:
 	rm -f *.$(OBJEXT) *.$(MOD_EXT) $(LIBRARY)
 fox_m_fsys_format.$(OBJEXT): fox_m_fsys_realtypes.$(OBJEXT) pxf.$(OBJEXT)
+fox_m_fsys_string_list.$(OBJEXT): fox_m_fsys_array_str.$(OBJEXT)

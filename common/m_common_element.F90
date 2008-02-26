@@ -3,9 +3,9 @@ module m_common_element
 #ifndef DUMMYLIB
   ! Structure and manipulation of element specification
 
-  use fox_m_fsys_array_str, only: str_vs, vs_str_alloc, vs_vs_alloc, &
-    string_list, init_string_list, destroy_string_list, add_string, &
-    tokenize_to_string_list
+  use fox_m_fsys_array_str, only: str_vs, vs_str_alloc, vs_vs_alloc
+  use fox_m_fsys_string_list, only: string_list, init_string_list, &
+    destroy_string_list, add_string, tokenize_to_string_list
   use m_common_charset, only: isInitialNameChar, isNameChar, &
     upperCase, XML_WHITESPACE
   use m_common_error, only: error_stack, add_error, in_error
@@ -35,7 +35,7 @@ module m_common_element
   integer, parameter :: ST_AFTER_ATTTYPE       = 17
   integer, parameter :: ST_DEFAULT_DECL        = 18
   integer, parameter :: ST_AFTERDEFAULTDECL    = 19
- integer, parameter :: ST_DEFAULTVALUE        = 20
+  integer, parameter :: ST_DEFAULTVALUE        = 20
 
   integer, parameter :: ATT_NULL = 0
 
@@ -817,7 +817,7 @@ contains
         endif
 
       elseif (state==ST_ATTTYPE) then
-        !write(*,*)'ST_ATTTYPE'
+        write(*,*)'ST_ATTTYPE'
         if (verify(c, upperCase)==0) then
           temp => attType
           attType => vs_str_alloc(str_vs(temp)//c)
@@ -827,16 +827,22 @@ contains
             ca%attType = ATT_CDATA
             state = ST_AFTER_ATTTYPE
           elseif (str_vs(attType)=='ID') then
+            print*,"ID ", validCheck, present(elem) 
             if (validCheck) then
               ! Validity Constraint: One ID per Element Type
               if (present(elem)) then
-                if (elem%id_declared) &
+                print*, "IDDECL ", elem%id_declared
+                if (elem%id_declared) then
                   call add_error(stack, &
-                  "Cannot have two declared attributes of type ID on one element type.")
+                    "Cannot have two declared attributes of type ID on one element type.")
+                else
+                  print*, "id_declared for "//str_vs(ca%name)//" on "//str_vs(elem%name)
+                  elem%id_declared = .true.
+                  print*, "IDDECL2 ", elem%id_declared
+                endif
               endif
             endif
             ca%attType = ATT_ID
-            if (present(elem)) elem%id_declared = .true.
             state = ST_AFTER_ATTTYPE
           elseif (str_vs(attType)=='IDREF') then
             ca%attType = ATT_IDREF
@@ -1099,8 +1105,10 @@ contains
             end select
           endif
           if (.not.in_error(stack)) then
-            if (ca%attType==ATT_ENTITIES) &
+            if (ca%attType==ATT_ENTITIES) then
+              call destroy_string_list(ca%enumerations)
               ca%enumerations = tokenize_to_string_list(str_vs(value))
+            endif
             ca%default => value
             value => null()
             state = ST_START

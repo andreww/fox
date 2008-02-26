@@ -1,8 +1,8 @@
 module m_sax_parser
 
 #ifndef DUMMYLIB
-  use fox_m_fsys_array_str, only: str_vs, string_list, &
-    destroy_string_list, vs_str_alloc, vs_vs_alloc, &
+  use fox_m_fsys_array_str, only: str_vs, vs_str_alloc, vs_vs_alloc
+  use fox_m_fsys_string_list, only: string_list, destroy_string_list, &
     tokenize_to_string_list, registered_string, init_string_list, &
     add_string, tokenize_and_add_strings
   use m_common_attrs, only: init_dict, destroy_dict, reset_dict, &
@@ -1735,8 +1735,11 @@ contains
             call add_error(fx%error_stack, "Invalid element name for ATTLIST")
             return
           endif
+          print*,"ATTLIST exist ",&
+            existing_element(fx%xds%element_list, str_vs(fx%token))
           if (existing_element(fx%xds%element_list, str_vs(fx%token))) then
             elem => get_element(fx%xds%element_list, str_vs(fx%token))
+            print*, "ATTLIST iddecl1 ", elem%id_declared
           else
             elem => add_element(fx%xds%element_list, str_vs(fx%token))
           endif
@@ -1754,6 +1757,7 @@ contains
           if (processDTD) then
             call parse_dtd_attlist(str_vs(fx%token), fx%xds%xml_version, &
               validCheck, fx%error_stack, elem)
+            print*, "ATTLIST iddecl2 ", elem%id_declared
           else
             call parse_dtd_attlist(str_vs(fx%token), fx%xds%xml_version, &
               validCheck, fx%error_stack)
@@ -2543,8 +2547,8 @@ contains
                 return
               endif
               ! FIXME in a namespaced document they must match QName
-              ! FIXME remove duplicates
-              call add_string(idref_list, str_vs(attValue))
+              if (.not.registered_string(idref_list, str_vs(attValue))) &
+                call add_string(idref_list, str_vs(attValue))
             case (ATT_IDREFS)
               ! VC: IDREF
               if (.not.checkNames(str_vs(attValue), fx%xds%xml_version)) then
@@ -2553,8 +2557,7 @@ contains
                 return
               endif
               ! FIXME in a namespaced document they must match QName
-              ! FIXME remove duplicates
-              call tokenize_and_add_strings(idref_list, str_vs(attValue))
+              call tokenize_and_add_strings(idref_list, str_vs(attValue), .true.)
             case (ATT_ENTITY)
               ! VC: Entity Name
               ! FIXME in a namespaced document they must match QName
