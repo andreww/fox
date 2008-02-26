@@ -5,7 +5,8 @@ module m_common_element
 
   use fox_m_fsys_array_str, only: str_vs, vs_str_alloc, vs_vs_alloc
   use fox_m_fsys_string_list, only: string_list, init_string_list, &
-    destroy_string_list, add_string, tokenize_to_string_list
+    destroy_string_list, add_string, tokenize_to_string_list, &
+    registered_string
   use m_common_charset, only: isInitialNameChar, isNameChar, &
     upperCase, XML_WHITESPACE
   use m_common_error, only: error_stack, add_error, in_error
@@ -1099,6 +1100,9 @@ contains
               if (.not.checkNmtoken(str_vs(value), xv)) &
                 call add_error(stack, &
                 "Attributes of type ENUM must have a value which is an NMTOKENs")
+              if (.not.registered_string(ca%enumerations, str_vs(value))) &
+                call add_error(stack, &
+                "Default value of ENUM does not match permitted values")
             end select
           endif
           if (.not.in_error(stack)) then
