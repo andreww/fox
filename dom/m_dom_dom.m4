@@ -38,7 +38,8 @@ dnl
   use fox_m_fsys_format, only: operator(//)
   use fox_m_fsys_string, only: toLower
   use m_common_charset, only: checkChars, XML1_0, XML1_1
-  use m_common_element, only: element_t, get_element, default_att_index, ATT_DEFAULT
+  use m_common_element, only: element_t, get_element, attribute_t, &
+  attribute_has_default, get_attribute_declaration
   use m_common_namecheck, only: checkQName, prefixOfQName, localPartOfQName, &
     checkName, checkPublicId, checkNCName
   use m_common_struct, only: xml_doc_state, init_xml_doc_state, destroy_xml_doc_state

@@ -105,11 +105,15 @@ module m_common_element
   public :: init_attribute_list
   public :: destroy_attribute_list
 
+
   public :: parse_dtd_attlist
 
   public :: report_declarations
 
   public :: get_att_type
+  public :: attribute_has_default
+  public :: get_attlist_size
+  public :: get_attribute_declaration
 
   public :: ATT_NULL
   public :: ATT_CDATA
@@ -122,13 +126,21 @@ module m_common_element
   public :: ATT_NMTOKENS
   public :: ATT_NOTATION
   public :: ATT_ENUM
+
   public :: ATT_CDANO
   public :: ATT_CDAMB
+
   public :: ATT_TYPELENGTHS
+
   public :: ATT_REQUIRED
   public :: ATT_IMPLIED
   public :: ATT_DEFAULT
   public :: ATT_FIXED
+
+  interface get_attribute_declaration
+    module procedure get_attribute_declaration_by_index
+    module procedure get_attribute_declaration_by_name
+  end interface
 
 contains
 
@@ -1320,6 +1332,59 @@ contains
       i = ATT_NULL
     endif
   end function get_att_type
+
+  function attribute_has_default(att) result(p)
+    type(attribute_t), pointer :: att
+    logical :: p
+
+    if (associated(att)) then
+      p = att%attDefault==ATT_DEFAULT.or.att%attDefault==ATT_FIXED
+    else
+      p = .false.
+    endif
+  end function attribute_has_default
+
+  function get_attlist_size(elem) result(n)
+    type(element_t), pointer :: elem
+    integer :: n
+
+    if (associated(elem)) then
+      n = size(elem%attlist%list)
+    else
+      n = 0
+    endif
+  end function get_attlist_size
+
+  function get_attribute_declaration_by_index(elem, n) result(att)
+    type(element_t), pointer :: elem
+    integer, intent(in) :: n
+    type(attribute_t), pointer :: att
+
+    att => null()
+    if (associated(elem)) then
+      if (n>0.and.n<=size(elem%attlist%list)) then
+        att => elem%attlist%list(n)
+      endif
+    endif
+  end function get_attribute_declaration_by_index
+
+
+  function get_attribute_declaration_by_name(elem, name) result(att)
+    type(element_t), pointer :: elem
+    character(len=*), intent(in) :: name
+    type(attribute_t), pointer :: att
+
+    integer :: i
+    att => null()
+    if (associated(elem)) then
+      do i = 1, size(elem%attlist%list)
+        if (str_vs(elem%attlist%list(i)%name)==name) then
+          att => elem%attlist%list(i)
+          return
+        endif
+      enddo
+    endif
+  end function get_attribute_declaration_by_name
 
   function NotCDataNormalize(s1) result(s2)
     ! FIXME this is duplicated in sax_parser. Put somewhere else sensible

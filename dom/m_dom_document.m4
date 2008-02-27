@@ -514,6 +514,7 @@ TOHW_m_dom_treewalk(`dnl
     type(Node), pointer :: this, thatParent, new, treeroot
     type(xml_doc_state), pointer :: xds
     type(element_t), pointer :: elem
+    type(attribute_t), pointer :: att
     logical :: doneAttributes, doneChildren, brokenNS
     integer :: i_tree, i_default
 
@@ -559,9 +560,10 @@ TOHW_m_dom_treewalk(`dnl
             ! This is an attribute being imported as part of a hierarchy,
             ! but its only here by default. Is there a default attribute
             ! of this name in the new document?
-            elem => get_element(xds%element_list, getTagName(getOwnerElement(this)))
-            i_default = default_att_index(elem, getName(this))
-            if (i_default>0) then
+            elem => get_element(xds%element_list, &
+              getTagName(getOwnerElement(this)))
+            att => get_attribute_declaration(elem, getName(this))
+            if (attribute_has_default(att)) then
               ! Create the new default:
               if (getParameter(getDomConfig(arg), "namespaces")) then
                 ! We create a namespaced attribute. Of course, its 
@@ -583,7 +585,7 @@ TOHW_m_dom_treewalk(`dnl
               else
                 new => createAttribute(doc, getName(this))
               endif
-              call setValue(new, str_vs(elem%attlist%list(i_default)%default))
+              call setValue(new, str_vs(att%default))
               call setSpecified(new, .false.)
               ! In any case, we dont want to copy the children of this node.
               doneChildren=.true.
