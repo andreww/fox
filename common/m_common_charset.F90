@@ -251,6 +251,9 @@ contains
     logical :: p
 
     character(len=len(encoding)) :: enc
+    logical :: utf8, usascii, iso88591, iso88592, iso88593, iso88594, &
+      iso88595, iso88596, iso88597, iso88598, iso88599, iso885910, iso646irv, &
+      iso885913, iso885914, iso885915, iso885916
 
     enc = toLower(encoding)
 
@@ -259,9 +262,9 @@ contains
     ! a list of synonyms for US-ASCII) but we also accept
     ! UTF-8 as a practicality. We bail out if any non-ASCII
     ! characters are used later on.
-
-    p = (  enc=="utf-8" &
-      .or. enc=="ansi_x3.4-1968" &
+    utf8 = (enc=="utf-8")
+    
+    usascii = (enc=="ansi_x3.4-1968" &
       .or. enc=="ansi_x3.4-1986" &
       .or. enc=="iso_646.irv:1991" &
       .or. enc=="ascii" &
@@ -271,6 +274,145 @@ contains
       .or. enc=="ibm367" &
       .or. enc=="cp367" &
       .or. enc=="csascii")
+! As of FoX 4.0, we accept ISO-8859-??, also as practicality
+! since we know it is identical to ASCII as far as 0x7F
+
+    iso88591 = (enc =="iso_8859-1:1987" &
+      .or. enc=="iso-ir-100" &
+      .or. enc=="iso_8859-1" &
+      .or. enc=="iso-8859-1" &
+      .or. enc=="latin1" &
+      .or. enc=="l1" &
+      .or. enc=="ibm819" &
+      .or. enc=="cp819" &
+      .or. enc=="csisolatin1")
+
+    iso88592 = (enc=="iso_8859-2:1987" &
+      .or. enc=="iso-ir-101" &
+      .or. enc=="iso_8859-2" &
+      .or. enc=="iso-8859-2" &
+      .or. enc=="latin2" &
+      .or. enc=="l2" &
+      .or. enc=="csisolatin2")
+
+    iso88593 = (enc=="iso_8859-3:1988" &
+      .or. enc=="iso-ir-109" &
+      .or. enc=="iso_8859-3" &
+      .or. enc=="iso-8859-3" &
+      .or. enc=="latin3" &
+      .or. enc=="l3" &
+      .or. enc=="csisolatin3")
+
+    iso88594 = (enc=="iso_8859-4:1988" &
+      .or. enc=="iso-ir-110" &
+      .or. enc=="iso_8859-4" &
+      .or. enc=="iso-8859-4" &
+      .or. enc=="latin4" &
+      .or. enc=="l4" &
+      .or. enc=="csisolatin4")
+
+    iso88595 = (enc=="iso_8859-5:1988" &
+      .or. enc=="iso-ir-144" &
+      .or. enc=="iso_8859-5" &
+      .or. enc=="iso-8859-5" &
+      .or. enc=="cyrillic" &
+      .or. enc=="csisolatincyrillic")
+
+    iso88596 = (enc=="iso_8859-6:1987" &
+      .or. enc=="iso-ir-127" &
+      .or. enc=="iso_8859-6" &
+      .or. enc=="iso-8859-6" &
+      .or. enc=="ecma-114" &
+      .or. enc=="asmo-708" &
+      .or. enc=="arabic" &
+      .or. enc=="csisolatinarabic")
+
+    iso88597 = (enc=="iso_8859-7:1987" &
+      .or. enc=="iso-ir-126" &
+      .or. enc=="iso_8859-7" &
+      .or. enc=="iso-8859-7" &
+      .or. enc=="elot_928" &
+      .or. enc=="ecma-118" &
+      .or. enc=="greek" &
+      .or. enc=="greek8" &
+      .or. enc=="csisolatingreek")
+
+    iso88598 = (enc=="iso_8859-8:1988" &
+      .or. enc=="iso-ir-138" &
+      .or. enc=="iso_8859-8" &
+      .or. enc=="iso-8859-8" &
+      .or. enc=="hebrew" &
+      .or. enc=="csisolatinhebrew")
+
+    iso88599 = (enc=="iso_8859-9:1989" &
+      .or. enc=="iso-ir-148" &
+      .or. enc=="iso_8859-9" &
+      .or. enc=="iso-8859-9" &
+      .or. enc=="latin5" &
+      .or. enc=="l5" &
+      .or. enc=="csisolatin5")
+
+    iso885910 = (enc=="iso-8859-10" &
+      .or. enc=="iso-ir-157" &
+      .or. enc=="l6" &
+      .or. enc=="iso_8859-10:1992" &
+      .or. enc=="csisolatin6" &
+      .or. enc=="latin6")
+
+! ISO 6937 replaces $ sign with currency sign.
+! JIS-X0201 has Yen instead of backslash, macron instead of tilde
+! 16, 17, 18, 19 - Japanese encoding we can't use.
+! BS 4730 replaces hash with UK pound sign, and tilde to macron
+! 21, 22, 23, 24, 25, 26 - other variants of iso646, similar but not identical
+      
+!      iso10646utf1 = (enc=="iso-10646-utf-1") ! FIXME check
+!      iso656basic1983 = (enc=="iso_646.basic:1983" &
+!        .or. enc=="csiso646basic1983") ! FIXME check
+! INVARIANT - subset of ASCII
+!      iso646irv = (enc=="iso_646.irv:1983" &
+!        .or. enc=="iso-ir-2" &
+!        .or. enc=="irv")
+! 31, 32, 33, 34 - NATS scandinavian, different from ASCII
+! 35 - another iso646 variant
+! 36, 37, 38 Korean shifted/multibyte
+! 39, 40 Japanese shifted/multibyte
+! 41, 42, JIS (iso646inv 7 bits)
+! 43 another iso646 variantt
+! 44, 45 greek variants
+! 46 another iso646 variant
+! 47 greek
+! 48 cyrillic ascii relationship unknown
+! 49 JIS again
+! 50 similar not identical
+! 51, 52, 53 not identical
+! 54 see 48
+! 55 see 47
+! 56 another iso646 variant
+! 57 chinese
+! ... to be continued
+
+      iso885913 = (enc=="iso-8859-13")
+      iso885914 = (enc=="iso-8859-14" &
+      .or. enc=="iso-ir-199" &
+      .or. enc=="iso_8859-14:1998" &
+      .or. enc=="iso_8849-14" &
+      .or. enc=="iso_latin8" &
+      .or. enc=="iso-celtic" &
+      .or. enc=="l8")
+      iso885915 = (enc=="iso-8859-15" &
+        .or. enc=="iso-8859-15" &
+        .or. enc=="latin-9")
+      iso885916 = (enc=="iso-8859-16" &
+        .or. enc=="iso-ir226" &
+        .or. enc=="iso_8859-16:2001" &
+        .or. enc=="iso_8859-16" &
+        .or. enc=="latin10" &
+        .or. enc=="l10")
+
+      p = utf8.or.usascii.or.iso88591.or.iso88592.or.iso88593 &
+        .or.iso88594.or.iso88595.or.iso88596.or.iso88597 &
+        .or.iso88598.or.iso88599.or.iso885910.or.iso646irv &
+        .or.iso885913.or.iso885914.or.iso885915.or.iso885916
 
   end function allowed_encoding
 
