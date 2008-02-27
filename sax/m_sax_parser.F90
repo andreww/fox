@@ -2471,6 +2471,7 @@ contains
     end subroutine add_entity
 
     function NotCDataNormalize(s1) result(s2)
+      ! FIXME this is duplicated in common_element. Put somewhere else sensible
       character(len=*), intent(in) :: s1
       character(len=len(s1)) :: s2
 

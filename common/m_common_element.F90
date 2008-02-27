@@ -925,7 +925,6 @@ contains
           deallocate(value)
           value => temp
         elseif (verify(c, XML_WHITESPACE)==0) then
-          !FIXME normalize value here
           if (validCheck.and.registered_string(ca%enumerations, str_vs(value))) then
             call add_error(stack, &
               "Duplicate enumeration value in ATTLIST")
@@ -935,7 +934,6 @@ contains
           deallocate(value)
           state = ST_SEPARATOR
         elseif (c=='|') then
-          !FIXME normalize value here
           if (validCheck.and.registered_string(ca%enumerations, str_vs(value))) then
             call add_error(stack, &
               "Duplicate enumeration value in ATTLIST")
@@ -954,7 +952,6 @@ contains
             call add_error(stack, &
               'Missing token in Enumeration list')
           endif
-          !FIXME normalize value here
           if (validCheck.and.registered_string(ca%enumerations, str_vs(value))) then
             call add_error(stack, &
               "Duplicate enumeration value in ATTLIST")
@@ -1067,7 +1064,11 @@ contains
       elseif (state==ST_DEFAULTVALUE) then
         !write(*,*)'ST_DEFAULTVALUE'
         if (c==q) then
-          ! Value is normalized later on in m_sax_parser FIXME should be normalized here so checks are ok.
+          if (ca%attType/=ATT_CDATA) then
+            temp => vs_str_alloc(trim(NotCdataNormalize(str_vs(value))))
+            deallocate(value)
+            value => temp
+          endif
           if (validCheck) then
             select case(ca%attType)
             case (ATT_ID)
@@ -1143,9 +1144,6 @@ contains
       endif
 
     enddo
-
-    ! FIXME all normalization of values *is* done in the SAX
-    ! parser, but really it should be done here.
 
     if (associated(ignore_att)) call destroy_attribute_t(ignore_att)
 
@@ -1322,6 +1320,26 @@ contains
       i = ATT_NULL
     endif
   end function get_att_type
+
+  function NotCDataNormalize(s1) result(s2)
+    ! FIXME this is duplicated in sax_parser. Put somewhere else sensible
+    character(len=*), intent(in) :: s1
+    character(len=len(s1)) :: s2
+    
+    integer :: i, i2
+    logical :: w
+    
+    i2 = 1
+    w = .true.
+    do i = 1, len(s1)
+      if (w.and.(verify(s1(i:i),XML_WHITESPACE)==0)) cycle
+      w = .false.
+      s2(i2:i2) = s1(i:i)
+      i2 = i2 + 1
+      if (verify(s1(i:i),XML_WHITESPACE)==0) w = .true.
+    enddo
+    s2(i2:) = ''
+  end function NotCDataNormalize
 
 
 #endif
