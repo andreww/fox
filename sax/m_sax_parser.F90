@@ -2720,20 +2720,33 @@ contains
     end subroutine checkAttributes
 
     subroutine checkXMLAttributes
-      ! This must be done with the name of the attribute,
+      integer :: ind
+      character, pointer :: attValue(:)
+      ! These must all be done with the name of the attribute,
       ! not the nsURI/localname pair, in case we are
       ! processing for a non-namespace aware application
       if (has_key(fx%attributes, 'xml:space')) then
         if (get_value(fx%attributes, 'xml:space')/='default' &
           .and. get_value(fx%attributes, 'xml:space')/='preserve') then
           call add_error(fx%error_stack, 'Illegal value of xml:space attribute')
+          return
         endif
       endif
-      ! FIXME
-      !if (has_key(fx%attributes, 'xml:id')) then
-      ! must be an NCName
-      ! must be unique ...
-      !endif
+      call get_att_index_pointer(fx%attributes, "xml:id", ind, attValue)
+      if (associated(attValue)) then
+        ! Per xml:id spec, NCName even in non-namespace aware document
+        if (.not.checkNCName(str_vs(attValue), fx%xds%xml_version)) then
+          call add_error(fx%error_stack, &
+            "xml:id attributes must have values which are NCNames")
+          return
+        elseif (registered_string(id_list, str_vs(attValue))) then
+          call add_error(fx%error_stack, &
+            "xml:id attributes must be unique within a document")
+          return
+        endif
+        call add_string(id_list, str_vs(attValue))
+        ! FIXME call setIsId(fx%attributes, ind, .true.)
+      endif
       if (has_key(fx%attributes, "xml:base")) then
         URIref => parseURI(get_value(fx%attributes,"xml:base"))
         if (.not.associated(URIref)) then
