@@ -825,7 +825,12 @@ contains
           attType => vs_str_alloc(str_vs(temp)//c)
           deallocate(temp)
         elseif (verify(c, XML_WHITESPACE)==0) then
-          if (str_vs(attType)=='CDATA') then
+          ! xml:id constraint
+          if (str_vs(ca%name)=="xml:id" &
+            .and..not.str_vs(type)=="ID") then
+            call add_error(stack, &
+              "xml:id attribute must be declared as type ID")
+          elseif (str_vs(attType)=='CDATA') then
             ca%attType = ATT_CDATA
             state = ST_AFTER_ATTTYPE
           elseif (str_vs(attType)=='ID') then
@@ -1062,7 +1067,7 @@ contains
       elseif (state==ST_DEFAULTVALUE) then
         !write(*,*)'ST_DEFAULTVALUE'
         if (c==q) then
-          ! Value is normalized later on in m_sax_parser
+          ! Value is normalized later on in m_sax_parser FIXME should be normalized here so checks are ok.
           if (validCheck) then
             select case(ca%attType)
             case (ATT_ID)
