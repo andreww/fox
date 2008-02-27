@@ -23,6 +23,7 @@ module m_common_attrs
     character(len=1), pointer, dimension(:) :: key => null()
     character(len=1), pointer, dimension(:) :: value => null()
     logical :: specified
+    logical :: isId = .false.
     integer :: type = 11
   end type dict_item
 #endif
@@ -78,6 +79,8 @@ module m_common_attrs
   ! For internal FoX use only:
   public :: get_att_index_pointer
   public :: getWhitespaceHandling
+  public :: setIsId
+  public :: getIsId
 #endif
 
   interface len
@@ -141,6 +144,14 @@ module m_common_attrs
 
   interface getSpecified
     module procedure getSpecified_by_index
+  end interface
+
+  interface getIsId
+    module procedure getIsId_by_index
+  end interface
+
+  interface setIsId
+    module procedure setIsId_by_index
   end interface
 
 contains
@@ -672,6 +683,29 @@ contains
   end function getSpecified_by_index
 
 #ifndef DUMMYLIB
+  function getIsId_by_index(dict, i) result(p)
+    type(dictionary_t), intent(in) :: dict
+    integer, intent(in) :: i
+    logical :: p
+
+    if (i>0 .and. i<=dict%number_of_items) then
+      p = dict%items(i)%isId
+    else
+      p = .false.
+    endif
+    p = .false.
+  end function getIsId_by_index
+
+  subroutine setIsId_by_index(dict, i, p)
+    type(dictionary_t), intent(in) :: dict
+    integer, intent(in) :: i
+    logical, intent(in) :: p
+
+    if (i>0 .and. i<=dict%number_of_items) then
+      dict%items(i)%isId = p
+    endif
+  end subroutine setIsId_by_index
+
   function getWhitespaceHandling(dict, i) result(j)
     type(dictionary_t), intent(in) :: dict
     integer, intent(in) :: i
@@ -724,6 +758,7 @@ contains
        tempDict(i)%localName => dict%items(i)%localName
        tempDict(i)%type = dict%items(i)%type
        tempDict(i)%specified = dict%items(i)%specified
+       tempDict(i)%isId = dict%items(i)%isId
     enddo
     deallocate(dict%items)
     l_d_new = l_d_old * DICT_LEN_MULT
@@ -736,6 +771,7 @@ contains
        dict%items(i)%localName => tempDict(i)%localName
        dict%items(i)%type = tempDict(i)%type
        dict%items(i)%specified = tempDict(i)%specified
+       dict%items(i)%isId = tempDict(i)%isId
     enddo
 
   end subroutine resize_dict

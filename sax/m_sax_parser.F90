@@ -7,7 +7,7 @@ module m_sax_parser
     add_string, tokenize_and_add_strings, destroy
   use m_common_attrs, only: init_dict, destroy_dict, reset_dict, &
     add_item_to_dict, has_key, get_value, get_att_index_pointer, &
-    getLength
+    getLength, setIsId
   use m_common_charset, only: XML1_0, XML1_1, XML_WHITESPACE
   use m_common_element, only: element_t, existing_element, add_element, &
     get_element, parse_dtd_element, parse_dtd_attlist, report_declarations, &
@@ -2543,6 +2543,10 @@ contains
                 return
               endif
               call add_string(id_list, str_vs(attValue))
+              call setIsId(dict, ind, .true.)
+              ! We don't need to check for duplicate ID & xml:ids on the same
+              ! element - if we are validating we'd already have noticed,
+              ! if we're not, it's not possible
             case (ATT_IDREF)
               ! VC: IDREF
               if (namespaces_) then
@@ -2745,7 +2749,7 @@ contains
           return
         endif
         call add_string(id_list, str_vs(attValue))
-        ! FIXME call setIsId(fx%attributes, ind, .true.)
+        call setIsId(fx%attributes, ind, .true.)
       endif
       if (has_key(fx%attributes, "xml:base")) then
         URIref => parseURI(get_value(fx%attributes,"xml:base"))
