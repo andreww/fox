@@ -2796,51 +2796,21 @@ contains
           el => fx%xds%element_list%list(i)
           do j = 1, size(el%attlist%list)
             att => el%attlist%list(j)
-            if (associated(att%default)) then
-              select case (att%attType)
-              case (ATT_ENTITY)
-                ent => getEntityByName(fx%xds%entityList, str_vs(att%default))
-                if (associated(ent)) then
-                  if (.not.is_unparsed_entity(ent)) then
-                    ! Validity Constraint: Entity Name
-                    call add_error(fx%error_stack, &
-                      "Attribute "//str_vs(att%name) &
-                      //" of element "//str_vs(el%name) &
-                      //" declared as ENTITY refers to parsed entity")
-                    exit validLoop
-                  endif
-                else
-                  ! Validity Constraint: Entity Name
+            ! For NOTATION, need to check enumerated as well as default ...
+            if (att%attType==ATT_NOTATION) then
+              do k = 1, size(att%enumerations%list)
+                s => att%enumerations%list(k)%s
+                if (.not.notation_exists(fx%nlist, str_vs(s))) then
+                  ! Validity Constraint: Notation Attributes
                   call add_error(fx%error_stack, &
-                    "Attribute "//str_vs(att%name) &
+                    "Enumerated NOTATION in "//str_vs(att%name) &
                     //" of element "//str_vs(el%name) &
-                    //" declared as ENTITY refers to non-existent entity")
+                    //" refers to non-existent notation")
+                  call destroy(s_list)
                   exit validLoop
                 endif
-              case (ATT_ENTITIES)
-                do k = 1, size(att%enumerations%list)
-                  s => att%enumerations%list(k)%s
-                  ent => getEntityByName(fx%xds%entityList, str_vs(s))
-                  if (associated(ent)) then
-                    if (.not.is_unparsed_entity(ent)) then
-                      ! Validity Constraint: Entity Name
-                      call add_error(fx%error_stack, &
-                        "Attribute "//str_vs(att%name) &
-                        //" of element "//str_vs(el%name) &
-                        //" declared as ENTITIES refers to parsed entity")
-                      exit validLoop
-                    endif
-                  else
-                    ! Validity Constraint: Entity Name
-                    call add_error(fx%error_stack, &
-                      "Attribute "//str_vs(att%name) &
-                      //" of element "//str_vs(el%name) &
-                      //" declared as ENTITIES refers to non-existent entity")
-                    exit validLoop
-                  endif
-                enddo
-                call destroy(s_list)
-              case (ATT_NOTATION)
+              enddo
+              if (associated(att%default)) then
                 s_list = tokenize_to_string_list(str_vs(att%default))
                 do k = 1, size(s_list%list)
                   s => s_list%list(k)%s
@@ -2855,23 +2825,7 @@ contains
                   endif
                 enddo
                 call destroy(s_list)
-              end select
-            endif
-            ! For NOTATION, need to check enumerated as well as default ...
-            if (att%attType==ATT_NOTATION) then
-              do k = 1, size(att%enumerations%list)
-                s => att%enumerations%list(k)%s
-                print*,"CHECKING NOTATION ", str_vs(s)
-                if (.not.notation_exists(fx%nlist, str_vs(s))) then
-                  ! Validity Constraint: Notation Attributes
-                  call add_error(fx%error_stack, &
-                    "Enumerated NOTATION in "//str_vs(att%name) &
-                    //" of element "//str_vs(el%name) &
-                    //" refers to non-existent notation")
-                  call destroy(s_list)
-                  exit validLoop
-                endif
-              enddo
+              endif
             endif
           enddo
         enddo validLoop
