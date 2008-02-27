@@ -27,7 +27,7 @@ module m_sax_parser
   use m_common_namecheck, only: checkName, checkPublicId, &
     checkCharacterEntityReference, likeCharacterEntityReference, &
     checkQName, checkNCName, checkPITarget, checkNmtoken, checkNmtokens, &
-    checkRepCharEntityReference, checkNames
+    checkRepCharEntityReference, checkNames, checkNCNames
   use m_common_namespaces, only: getnamespaceURI, invalidNS, &
     checkNamespaces, checkEndNamespaces, namespaceDictionary, &
     initNamespaceDictionary, destroyNamespaceDictionary
@@ -492,7 +492,6 @@ contains
               declSepValue = 0
             endif
           endif
-          ! FIXME P28a check
           if (present(endEntity_handler)) then
             call endEntity_handler('%'//pop_entity_list(fx%forbidden_pe_list))
             if (fx%state==ST_STOP) goto 100
@@ -2528,22 +2527,30 @@ contains
             select case(att%attType)
             case (ATT_ID)
               ! VC: ID
-              if (.not.checkName(str_vs(attValue), fx%xds%xml_version)) then
+              if (namespaces_) then
+                nameOk = checkNCName(str_vs(attValue), fx%xds%xml_version)
+              else
+                nameOk = checkName(str_vs(attValue), fx%xds%xml_version)
+              endif
+              if (.not.nameOk) then
                 call add_error(fx%error_stack, &
                   "Attributes of type ID must have a value which is an XML Name")
                 return
               endif
-              ! FIXME in a namespaced document they must match QName
               if (registered_string(id_list, str_vs(attValue))) then
                 call add_error(fx%error_stack, &
                   "Cannot declare the same ID twice")
                 return
               endif
               call add_string(id_list, str_vs(attValue))
-              ! FIXME add note to dict that this is ID
             case (ATT_IDREF)
               ! VC: IDREF
-              if (.not.checkName(str_vs(attValue), fx%xds%xml_version)) then
+              if (namespaces_) then
+                nameOk = checkNCName(str_vs(attValue), fx%xds%xml_version)
+              else
+                nameOk = checkName(str_vs(attValue), fx%xds%xml_version)
+              endif
+              if (.not.nameOk) then
                 call add_error(fx%error_stack, &
                   "Attributes of type IDREF must have a value which is an XML Name")
                 return
@@ -2553,17 +2560,25 @@ contains
                 call add_string(idref_list, str_vs(attValue))
             case (ATT_IDREFS)
               ! VC: IDREF
-              if (.not.checkNames(str_vs(attValue), fx%xds%xml_version)) then
+              if (namespaces_) then
+                nameOk = checkNCNames(str_vs(attValue), fx%xds%xml_version)
+              else
+                nameOk = checkNames(str_vs(attValue), fx%xds%xml_version)
+              endif
+              if (.not.nameOk) then
                 call add_error(fx%error_stack, &
                   "Attributes of type IDREFS must have a value which contains only XML Names")
                 return
               endif
-              ! FIXME in a namespaced document they must match QName
               call tokenize_and_add_strings(idref_list, str_vs(attValue), .true.)
             case (ATT_ENTITY)
               ! VC: Entity Name
-              ! FIXME in a namespaced document they must match QName
-              if (.not.checkName(str_vs(attValue), fx%xds%xml_version)) then
+              if (namespaces_) then
+                nameOk = checkNCName(str_vs(attValue), fx%xds%xml_version)
+              else
+                nameOk = checkName(str_vs(attValue), fx%xds%xml_version)
+              endif
+              if (.not.nameOk) then
                 call add_error(fx%error_stack, &
                   "Attributes of type ENTITY must have a value which is an XML Name")
                 return
@@ -2588,8 +2603,12 @@ contains
               endif
             case (ATT_ENTITIES)
               ! VC: Entity Name
-              ! FIXME in a namespaced document they must match QName
-              if (.not.checkNames(str_vs(attValue), fx%xds%xml_version)) then
+              if (namespaces_) then
+                nameOk = checkNCNames(str_vs(attValue), fx%xds%xml_version)
+              else
+                nameOk = checkNames(str_vs(attValue), fx%xds%xml_version)
+              endif
+              if (.not.nameOk) then
                 call add_error(fx%error_stack, &
                   "Attributes of type ENTITIES must have a value which contains only XML Names")
                 return
@@ -2637,7 +2656,12 @@ contains
               endif
             case (ATT_NOTATION)
               ! VC: Notation Attributes
-              if (.not.checkName(str_vs(attValue), fx%xds%xml_version)) then
+              if (namespaces_) then
+                nameOk = checkNCName(str_vs(attValue), fx%xds%xml_version)
+              else
+                nameOk = checkName(str_vs(attValue), fx%xds%xml_version)
+              endif
+              if (.not.nameOk) then
                 call add_error(fx%error_stack, &
                   "Attributes of type NOTATION must have a value which is an XML Name")
                 return

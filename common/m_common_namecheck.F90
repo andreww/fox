@@ -32,6 +32,7 @@ module m_common_namecheck
   public :: checkNmtoken
   public :: checkNmtokens
   public :: checkNCName
+  public :: checkNCNames
   public :: checkEncName
   public :: checkPITarget
   public :: checkPublicId
@@ -207,6 +208,45 @@ contains
     good = isNCNameChar(name(2:), xv)
        
   end function checkNCName
+
+
+  pure function checkNCNames(name, xv) result(good)
+    character(len=*), intent(in) :: name
+    integer, intent(in) :: xv
+    logical :: good
+    ! Validates a string against the production for NAMES
+
+    integer :: i, j
+
+    good = (len(name) > 0)
+    if (.not.good) return
+    i = verify(name, " ")
+    if (i==0) then
+      good = .false.
+      return
+    endif
+    j = scan(name(i:), " ")
+    if (j==0) then
+      j = len(name)
+    else
+      j = i + j - 2
+    endif
+    do
+      good = checkNCName(name(i:j), xv)
+      if (.not.good) return
+      i = j + 1
+      j = verify(name(i:), " ")
+      if (j==0) exit
+      i = i + j - 1
+      j = scan(name(i:), " ")
+      if (j==0) then
+        j = len(name)
+      else
+        j = i + j - 2
+      endif
+    enddo
+       
+  end function checkNCNames
 
 
   pure function checkNmtoken(name, xv) result(good)
