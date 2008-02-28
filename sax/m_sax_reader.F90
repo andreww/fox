@@ -76,7 +76,6 @@ contains
         return
       endif
       call open_new_file(fb, fileURI, iostat, lun)
-      if (iostat/=0) return
     endif
     call destroyURI(fileURI)
 
@@ -93,18 +92,12 @@ contains
     integer :: i
     type(xml_source_t) :: f
     type(xml_source_t), pointer :: temp(:)
-    logical :: firstfile
     logical :: pe_
 
     if (present(pe)) then
       pe_ = pe
     else
       pe_ = .false.
-    endif
-
-    firstfile = .not.associated(fb%f)
-    if (firstfile) then
-      allocate(fb%f(0))
     endif
 
     if (hasScheme(baseURI)) then
@@ -116,6 +109,9 @@ contains
 
     call open_actual_file(f, getPath(baseURI), iostat, lun)
     if (iostat==0) then
+      if (.not.associated(fb%f)) allocate(fb%f(0))
+      ! First file
+
       temp => fb%f
       allocate(fb%f(size(temp)+1))
       do i = 1, size(temp)
@@ -207,15 +203,15 @@ contains
 
     integer :: i
     type(xml_source_t), pointer :: temp(:)
-    logical :: firstfile, pe_
+    logical :: pe_
 
     if (present(pe)) then
       pe_ = pe
     else
       pe_ = .false.
     endif
-    firstfile = .not.associated(fb%f)
-    if (firstfile) allocate(fb%f(0))
+
+    if (.not.associated(fb%f)) allocate(fb%f(0))
 
     temp => fb%f
     allocate(fb%f(size(temp)+1))

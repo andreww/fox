@@ -240,7 +240,6 @@ contains
     integer :: i, ios
     logical :: ok
 
-    print*, "cvv ", getXmlVersion(mainDoc)
     entities => getEntities(getDocType(mainDoc))
     xds => getXds(mainDoc)
 
@@ -264,7 +263,7 @@ contains
       endif
       if (ok) then
         oldcurrent => current
-        current => createEntity(mainDoc, getNodeName(np), "", "", "")
+        current => np
         ! Run the parser over value
         ! We do this with all internal entities already declared.
         call sax_parse(subsax%fx, subsax%fb,                           &
@@ -283,7 +282,6 @@ contains
           initial_entities = xds%entityList)
         call close_xml_t(subsax)
 
-        current => setNamedItem(getEntities(getDocType(mainDoc)), current)
         current => oldcurrent
       endif
     enddo

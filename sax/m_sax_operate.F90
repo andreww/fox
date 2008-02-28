@@ -29,7 +29,6 @@ contains
     integer :: i
 
     call open_file(xt%fb, file=file, iostat=i, lun=lun, es=xt%fx%error_stack)
-
     if (present(iostat)) then
       iostat = i
       if (i/=0) return
