@@ -839,7 +839,7 @@ contains
         elseif (verify(c, XML_WHITESPACE)==0) then
           ! xml:id constraint
           if (str_vs(ca%name)=="xml:id" &
-            .and..not.str_vs(type)=="ID") then
+            .and..not.str_vs(attType)=="ID") then
             call add_error(stack, &
               "xml:id attribute must be declared as type ID")
           elseif (str_vs(attType)=='CDATA') then
