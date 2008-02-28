@@ -38,7 +38,6 @@ TOHW_m_dom_contents(`
     character(len=*), intent(in) :: publicId
     character(len=*), intent(in) :: systemId
     type(Node), pointer :: dt
-    type(xml_doc_state) :: temp_xds
 
     dt => null()
 
@@ -46,9 +45,9 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(FoX_IMPL_IS_NULL)
     endif
 
-    if (.not.checkName(qualifiedName, temp_xds)) then
+    if (.not.checkName(qualifiedName, XML1_0)) then
       TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
-    elseif (.not.checkQName(qualifiedName, temp_xds))  then
+    elseif (.not.checkQName(qualifiedName, XML1_0))  then
       TOHW_m_dom_throw_error(NAMESPACE_ERR)
     elseif (.not.checkPublicId(publicId)) then
       TOHW_m_dom_throw_error(FoX_INVALID_PUBLIC_ID)
@@ -77,7 +76,6 @@ dnl FIXME check URI
     character(len=*), intent(in), optional :: qualifiedName
     type(Node), pointer :: docType
     type(Node), pointer :: doc, dt, de
-    type(xml_doc_state), pointer :: xds
 
     doc => null()
 
@@ -89,19 +87,18 @@ dnl FIXME check URI
       endif
     endif
 
-    allocate(xds)
-    if (.not.checkName(qualifiedName, xds)) then
-      TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR, (xds))
-    elseif(.not.checkQName(qualifiedName, xds)) then
-      TOHW_m_dom_throw_error(NAMESPACE_ERR, (xds))
+    if (.not.checkName(qualifiedName, XML1_0)) then
+      TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
+    elseif(.not.checkQName(qualifiedName, XML1_0)) then
+      TOHW_m_dom_throw_error(NAMESPACE_ERR)
     elseif (prefixOfQName(qualifiedName)/="".and.namespaceURI=="") then
-      TOHW_m_dom_throw_error(NAMESPACE_ERR, (xds))
+      TOHW_m_dom_throw_error(NAMESPACE_ERR)
     elseif (prefixOfQName(qualifiedName)=="xml".neqv.namespaceURI=="http://www.w3.org/XML/1998/namespace") then
-      TOHW_m_dom_throw_error(NAMESPACE_ERR, (xds))
+      TOHW_m_dom_throw_error(NAMESPACE_ERR)
     elseif (namespaceURI=="http://www.w3.org/2000/xmlns/") then
-      TOHW_m_dom_throw_error(NAMESPACE_ERR, (xds))
+      TOHW_m_dom_throw_error(NAMESPACE_ERR)
     elseif (qualifiedName=="xmlns" .or. prefixOfQName(qualifiedName)=="xmlns") then
-      TOHW_m_dom_throw_error(NAMESPACE_ERR, (xds))
+      TOHW_m_dom_throw_error(NAMESPACE_ERR)
     endif
 
 ! Dont use raw null() below or PGI will complain
@@ -112,7 +109,7 @@ dnl FIXME check URI
     allocate(doc%docExtras)
     doc%docExtras%implementation => FoX_DOM
     allocate(doc%docExtras%nodelists(0))
-    doc%docExtras%xds => xds
+    allocate(doc%docExtras%xds)
     call init_xml_doc_state(doc%docExtras%xds)
     allocate(doc%docExtras%xds%documentURI(0))
     allocate(doc%docExtras%domConfig)

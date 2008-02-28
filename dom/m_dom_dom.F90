@@ -10,7 +10,7 @@ module m_dom_dom
   use fox_m_fsys_string, only: toLower
   use m_common_charset, only: checkChars, XML1_0, XML1_1
   use m_common_element, only: element_t, get_element, attribute_t, &
-  attribute_has_default, get_attribute_declaration
+    attribute_has_default, get_attribute_declaration, get_attlist_size
   use m_common_namecheck, only: checkQName, prefixOfQName, localPartOfQName, &
     checkName, checkPublicId, checkNCName
   use m_common_struct, only: xml_doc_state, init_xml_doc_state, destroy_xml_doc_state
@@ -371,6 +371,8 @@ module m_dom_dom
   public :: setFoX_checks
 
 
+
+!FIXME lots of these should have a check if(namespaces) checkNCName
 
   public :: getDocType
   public :: getImplementation
@@ -3450,7 +3452,7 @@ endif
   endif
 endif
 
-      elseif (.not.checkName(prefix, getXds(getOwnerDocument(arg)))) then
+      elseif (.not.checkName(prefix, getXmlVersionEnum(getOwnerDocument(arg)))) then
         if (getFoX_checks().or.INVALID_CHARACTER_ERR<200) then
   call throw_exception(INVALID_CHARACTER_ERR, "setPrefix", ex)
   if (present(ex)) then
@@ -3460,7 +3462,7 @@ endif
   endif
 endif
 
-      elseif (.not.checkNCName(prefix, getXds(getOwnerDocument(arg)))) then
+      elseif (.not.checkNCName(prefix, getXmlVersionEnum(getOwnerDocument(arg)))) then
         if (getFoX_checks().or.NAMESPACE_ERR<200) then
   call throw_exception(NAMESPACE_ERR, "setPrefix", ex)
   if (present(ex)) then
@@ -5084,8 +5086,9 @@ endif
 
     type(xml_doc_state), pointer :: xds
     type(element_t), pointer :: elem
+    type(attribute_t), pointer :: att
     type(ListNode), pointer :: temp_nl(:)
-    integer :: i, i2, i_default
+    integer :: i, i2
 
     if (.not.associated(map)) then
       if (getFoX_checks().or.FoX_MAP_IS_NULL<200) then
@@ -5116,9 +5119,9 @@ endif
       if (getNodeName(np)==name) then
         xds => getXds(getOwnerDocument(map%ownerElement))
         elem => get_element(xds%element_list, getNodeName(map%ownerElement))
-        if (associated(elem)) then
-          i_default = default_att_index(elem, name)
-          if (i_default>0) then ! there is a default value
+        att => get_attribute_declaration(elem, name)
+        if (associated(att)) then
+          if (attribute_has_default(att)) then ! there is a default value
             ! Well swap the old one out & put a new one in.
             ! Do *nothing* about namespace handling at this stage,
             ! wait until we are asked for namespace normalization
@@ -5129,7 +5132,7 @@ endif
             else
               np => createAttribute(getOwnerDocument(map%ownerElement), name)
             endif
-            call setValue(np, str_vs(elem%attlist%list(i_default)%default))
+            call setValue(np, str_vs(att%default))
             call setSpecified(np, .false.)
             np => setNamedItem(map, np)
             call setSpecified(np, .true.)
@@ -5451,8 +5454,9 @@ endif
 
     type(xml_doc_state), pointer :: xds
     type(element_t), pointer :: elem
+    type(attribute_t), pointer :: att
     type(ListNode), pointer :: temp_nl(:)
-    integer :: i, i2, i_default
+    integer :: i, i2
 
     if (.not.associated(map)) then
       if (getFoX_checks().or.FoX_MAP_IS_NULL<200) then
@@ -5485,14 +5489,14 @@ endif
         ! Grab this node
         xds => getXds(getOwnerDocument(map%ownerElement))
         elem => get_element(xds%element_list, getNodeName(map%ownerElement))
-        if (associated(elem)) then
-          i_default = default_att_index(elem, getName(np))
-          if (i_default>0) then ! there is a default value
+        att => get_attribute_declaration(elem, getName(np))
+        if (associated(att)) then
+          if (attribute_has_default(att)) then ! there is a default value
             ! Well swap the old one out & put a new one in.
             ! Do *nothing* about namespace handling at this stage,
             ! wait until we are asked for namespace normalization
             np => createAttribute(getOwnerDocument(map%ownerElement), getName(np))
-            call setValue(np, str_vs(elem%attlist%list(i_default)%default))
+            call setValue(np, str_vs(att%default))
             call setSpecified(np, .false.)
             np => setNamedItem(map, np)
             call setSpecified(np, .true.)
@@ -5609,7 +5613,6 @@ endif
     character(len=*), intent(in) :: publicId
     character(len=*), intent(in) :: systemId
     type(Node), pointer :: dt
-    type(xml_doc_state) :: temp_xds
 
     dt => null()
 
@@ -5625,7 +5628,7 @@ endif
 
     endif
 
-    if (.not.checkName(qualifiedName, temp_xds)) then
+    if (.not.checkName(qualifiedName, XML1_0)) then
       if (getFoX_checks().or.INVALID_CHARACTER_ERR<200) then
   call throw_exception(INVALID_CHARACTER_ERR, "createDocumentType", ex)
   if (present(ex)) then
@@ -5635,7 +5638,7 @@ endif
   endif
 endif
 
-    elseif (.not.checkQName(qualifiedName, temp_xds))  then
+    elseif (.not.checkQName(qualifiedName, XML1_0))  then
       if (getFoX_checks().or.NAMESPACE_ERR<200) then
   call throw_exception(NAMESPACE_ERR, "createDocumentType", ex)
   if (present(ex)) then
@@ -5678,7 +5681,6 @@ endif
     character(len=*), intent(in), optional :: qualifiedName
     type(Node), pointer :: docType
     type(Node), pointer :: doc, dt, de
-    type(xml_doc_state), pointer :: xds
 
     doc => null()
 
@@ -5706,26 +5708,21 @@ endif
       endif
     endif
 
-    allocate(xds)
-    if (.not.checkName(qualifiedName, xds)) then
+    if (.not.checkName(qualifiedName, XML1_0)) then
       if (getFoX_checks().or.INVALID_CHARACTER_ERR<200) then
   call throw_exception(INVALID_CHARACTER_ERR, "createDocument", ex)
   if (present(ex)) then
     if (inException(ex)) then
-
-  if (associated(xds)) deallocate(xds)
        return
     endif
   endif
 endif
 
-    elseif(.not.checkQName(qualifiedName, xds)) then
+    elseif(.not.checkQName(qualifiedName, XML1_0)) then
       if (getFoX_checks().or.NAMESPACE_ERR<200) then
   call throw_exception(NAMESPACE_ERR, "createDocument", ex)
   if (present(ex)) then
     if (inException(ex)) then
-
-  if (associated(xds)) deallocate(xds)
        return
     endif
   endif
@@ -5736,8 +5733,6 @@ endif
   call throw_exception(NAMESPACE_ERR, "createDocument", ex)
   if (present(ex)) then
     if (inException(ex)) then
-
-  if (associated(xds)) deallocate(xds)
        return
     endif
   endif
@@ -5748,8 +5743,6 @@ endif
   call throw_exception(NAMESPACE_ERR, "createDocument", ex)
   if (present(ex)) then
     if (inException(ex)) then
-
-  if (associated(xds)) deallocate(xds)
        return
     endif
   endif
@@ -5760,8 +5753,6 @@ endif
   call throw_exception(NAMESPACE_ERR, "createDocument", ex)
   if (present(ex)) then
     if (inException(ex)) then
-
-  if (associated(xds)) deallocate(xds)
        return
     endif
   endif
@@ -5772,8 +5763,6 @@ endif
   call throw_exception(NAMESPACE_ERR, "createDocument", ex)
   if (present(ex)) then
     if (inException(ex)) then
-
-  if (associated(xds)) deallocate(xds)
        return
     endif
   endif
@@ -5789,7 +5778,7 @@ endif
     allocate(doc%docExtras)
     doc%docExtras%implementation => FoX_DOM
     allocate(doc%docExtras%nodelists(0))
-    doc%docExtras%xds => xds
+    allocate(doc%docExtras%xds)
     call init_xml_doc_state(doc%docExtras%xds)
     allocate(doc%docExtras%xds%documentURI(0))
     allocate(doc%docExtras%domConfig)
@@ -6160,6 +6149,7 @@ endif
 
     type(xml_doc_state), pointer :: xds
     type(element_t), pointer :: elem
+    type(attribute_t), pointer :: att
     integer :: i
 
     if (.not.associated(arg)) then
@@ -6184,7 +6174,7 @@ endif
   endif
 endif
 
-    elseif (.not.checkName(tagName, getXds(arg))) then
+    elseif (.not.checkName(tagName, getXmlVersionEnum(arg))) then
       if (getFoX_checks().or.INVALID_CHARACTER_ERR<200) then
   call throw_exception(INVALID_CHARACTER_ERR, "createElement", ex)
   if (present(ex)) then
@@ -6212,12 +6202,12 @@ endif
       xds => getXds(arg)
       elem => get_element(xds%element_list, tagName)
       if (associated(elem)) then
-        do i = 1, size(elem%attlist%list)
-          if (elem%attlist%list(i)%attDefault==ATT_DEFAULT) then
+        do i = 1, get_attlist_size(elem)
+          att => get_attribute_declaration(elem, i)
+          if (attribute_has_default(att)) then
             ! Since this is a non-namespaced function, we create
             ! a non-namespaced attribute ...
-            call setAttribute(np, str_vs(elem%attlist%list(i)%name), &
-              str_vs(elem%attlist%list(i)%default))
+            call setAttribute(np, str_vs(att%name), str_vs(att%default))
           endif
         enddo
       endif
@@ -6471,7 +6461,7 @@ endif
   endif
 endif
 
-    elseif (.not.checkName(target, getXds(arg))) then
+    elseif (.not.checkName(target, getXmlVersionEnum(arg))) then
       if (getFoX_checks().or.INVALID_CHARACTER_ERR<200) then
   call throw_exception(INVALID_CHARACTER_ERR, "createProcessingInstruction", ex)
   if (present(ex)) then
@@ -6543,7 +6533,7 @@ endif
   endif
 endif
 
-    elseif (.not.checkName(name, getXds(arg))) then
+    elseif (.not.checkName(name, getXmlVersionEnum(arg))) then
       if (getFoX_checks().or.INVALID_CHARACTER_ERR<200) then
   call throw_exception(INVALID_CHARACTER_ERR, "createAttribute", ex)
   if (present(ex)) then
@@ -6604,7 +6594,7 @@ endif
   endif
 endif
 
-    elseif (.not.checkName(name, getXds(arg))) then
+    elseif (.not.checkName(name, getXmlVersionEnum(arg))) then
       if (getFoX_checks().or.INVALID_CHARACTER_ERR<200) then
   call throw_exception(INVALID_CHARACTER_ERR, "createEntityReference", ex)
   if (present(ex)) then
@@ -6708,7 +6698,7 @@ endif
   endif
 endif
 
-    elseif (.not.checkName(name, getXds(arg))) then
+    elseif (.not.checkName(name, getXmlVersionEnum(arg))) then
       if (getFoX_checks().or.INVALID_CHARACTER_ERR<200) then
   call throw_exception(INVALID_CHARACTER_ERR, "createEmptyEntityReference", ex)
   if (present(ex)) then
@@ -6902,7 +6892,7 @@ endif
     type(element_t), pointer :: elem
     type(attribute_t), pointer :: att
     logical :: doneAttributes, doneChildren, brokenNS
-    integer :: i_tree, i_default
+    integer :: i_tree
 
     if (.not.associated(doc).or..not.associated(arg)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
@@ -7152,6 +7142,7 @@ endif
 
     type(xml_doc_state), pointer :: xds
     type(element_t), pointer :: elem
+    type(attribute_t), pointer :: att
     integer :: i
     logical :: brokenNS
 
@@ -7177,7 +7168,7 @@ endif
   endif
 endif
 
-    elseif (.not.checkName(qualifiedName, getXds(arg))) then
+    elseif (.not.checkName(qualifiedName, getXmlVersionEnum(arg))) then
       if (getFoX_checks().or.INVALID_CHARACTER_ERR<200) then
   call throw_exception(INVALID_CHARACTER_ERR, "createElementNS", ex)
   if (present(ex)) then
@@ -7187,7 +7178,7 @@ endif
   endif
 endif
 
-    elseif (.not.checkQName(qualifiedName, getXds(arg))) then
+    elseif (.not.checkQName(qualifiedName, getXmlVersionEnum(arg))) then
       if (getFoX_checks().or.NAMESPACE_ERR<200) then
   call throw_exception(NAMESPACE_ERR, "createElementNS", ex)
   if (present(ex)) then
@@ -7247,28 +7238,27 @@ endif
       xds => getXds(arg)
       elem => get_element(xds%element_list, qualifiedName)
       if (associated(elem)) then
-        do i = 1, size(elem%attlist%list)
-          if (elem%attlist%list(i)%attDefault==ATT_DEFAULT) then
+        do i = 1, get_attlist_size(elem)
+          att => get_attribute_declaration(elem, i)
+          if (attribute_has_default(att)) then
             ! Since this is a namespaced function, we create a namespaced
             ! attribute. Of course, its namespaceURI remains empty
             ! for the moment unless we know it ...
-            if (prefixOfQName(str_vs(elem%attlist%list(i)%name))=="xml") then
+            if (prefixOfQName(str_vs(att%name))=="xml") then
               call setAttributeNS(np, &
                 "http://www.w3.org/XML/1998/namespace", &
-                str_vs(elem%attlist%list(i)%name), &
-                str_vs(elem%attlist%list(i)%default))
-            elseif (str_vs(elem%attlist%list(i)%name)=="xmlns" & 
-              .or. prefixOfQName(str_vs(elem%attlist%list(i)%name))=="xmlns") then
+                str_vs(att%name), str_vs(att%default))
+            elseif (str_vs(att%name)=="xmlns" & 
+              .or. prefixOfQName(str_vs(att%name))=="xmlns") then
               call setAttributeNS(np, &
                 "http://www.w3.org/2000/xmlns/", &
-                str_vs(elem%attlist%list(i)%name), &
-                str_vs(elem%attlist%list(i)%default))
+                str_vs(att%name), str_vs(att%default))
             else
               ! Wait for namespace fixup ...
               brokenNS = arg%docExtras%brokenNS
               arg%docExtras%brokenNS = .true.
-              call setAttributeNS(np, "", str_vs(elem%attlist%list(i)%name), &
-                str_vs(elem%attlist%list(i)%default))
+              call setAttributeNS(np, "", str_vs(att%name), &
+                str_vs(att%default))
               arg%docExtras%brokenNS = brokenNS
             endif
           endif
@@ -7308,7 +7298,7 @@ endif
   endif
 endif
 
-    elseif (.not.checkName(qualifiedName, getXds(arg))) then
+    elseif (.not.checkName(qualifiedName, getXmlVersionEnum(arg))) then
       if (getFoX_checks().or.INVALID_CHARACTER_ERR<200) then
   call throw_exception(INVALID_CHARACTER_ERR, "createAttributeNS", ex)
   if (present(ex)) then
@@ -7318,7 +7308,7 @@ endif
   endif
 endif
 
-    elseif (.not.checkQName(qualifiedName, getXds(arg))) then
+    elseif (.not.checkQName(qualifiedName, getXmlVersionEnum(arg))) then
       if (getFoX_checks().or.NAMESPACE_ERR<200) then
   call throw_exception(NAMESPACE_ERR, "createAttributeNS", ex)
   if (present(ex)) then
@@ -8732,7 +8722,7 @@ endif
   endif
 endif
 
-    elseif (.not.checkName(name, getXds(getOwnerDocument(arg)))) then
+    elseif (.not.checkName(name, getXmlVersionEnum(getOwnerDocument(arg)))) then
       if (getFoX_checks().or.INVALID_CHARACTER_ERR<200) then
   call throw_exception(INVALID_CHARACTER_ERR, "setAttribute", ex)
   if (present(ex)) then
@@ -9120,7 +9110,7 @@ endif
   endif
 endif
 
-    elseif (.not.checkName(qualifiedname, getXds(getOwnerDocument(arg)))) then
+    elseif (.not.checkName(qualifiedname, getXmlVersionEnum(getOwnerDocument(arg)))) then
       if (getFoX_checks().or.INVALID_CHARACTER_ERR<200) then
   call throw_exception(INVALID_CHARACTER_ERR, "setAttributeNS", ex)
   if (present(ex)) then
@@ -9130,7 +9120,7 @@ endif
   endif
 endif
 
-    elseif (.not.checkQName(qualifiedname, getXds(getOwnerDocument(arg)))) then
+    elseif (.not.checkQName(qualifiedname, getXmlVersionEnum(getOwnerDocument(arg)))) then
       if (getFoX_checks().or.NAMESPACE_ERR<200) then
   call throw_exception(NAMESPACE_ERR, "setAttributeNS", ex)
   if (present(ex)) then

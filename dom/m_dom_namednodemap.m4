@@ -180,8 +180,9 @@ TOHW_m_dom_contents(`
 
     type(xml_doc_state), pointer :: xds
     type(element_t), pointer :: elem
+    type(attribute_t), pointer :: att
     type(ListNode), pointer :: temp_nl(:)
-    integer :: i, i2, i_default
+    integer :: i, i2
 
     if (.not.associated(map)) then
       TOHW_m_dom_throw_error(FoX_MAP_IS_NULL)
@@ -196,9 +197,9 @@ TOHW_m_dom_contents(`
       if (getNodeName(np)==name) then
         xds => getXds(getOwnerDocument(map%ownerElement))
         elem => get_element(xds%element_list, getNodeName(map%ownerElement))
-        if (associated(elem)) then
-          i_default = default_att_index(elem, name)
-          if (i_default>0) then ! there is a default value
+        att => get_attribute_declaration(elem, name)
+        if (associated(att)) then
+          if (attribute_has_default(att)) then ! there is a default value
             ! Well swap the old one out & put a new one in.
             ! Do *nothing* about namespace handling at this stage,
             ! wait until we are asked for namespace normalization
@@ -209,7 +210,7 @@ TOHW_m_dom_contents(`
             else
               np => createAttribute(getOwnerDocument(map%ownerElement), name)
             endif
-            call setValue(np, str_vs(elem%attlist%list(i_default)%default))
+            call setValue(np, str_vs(att%default))
             call setSpecified(np, .false.)
             np => setNamedItem(map, np)
             call setSpecified(np, .true.)
@@ -437,8 +438,9 @@ TOHW_m_dom_contents(`
 
     type(xml_doc_state), pointer :: xds
     type(element_t), pointer :: elem
+    type(attribute_t), pointer :: att
     type(ListNode), pointer :: temp_nl(:)
-    integer :: i, i2, i_default
+    integer :: i, i2
 
     if (.not.associated(map)) then
       TOHW_m_dom_throw_error(FoX_MAP_IS_NULL)
@@ -455,14 +457,14 @@ TOHW_m_dom_contents(`
         ! Grab this node
         xds => getXds(getOwnerDocument(map%ownerElement))
         elem => get_element(xds%element_list, getNodeName(map%ownerElement))
-        if (associated(elem)) then
-          i_default = default_att_index(elem, getName(np))
-          if (i_default>0) then ! there is a default value
+        att => get_attribute_declaration(elem, getName(np))
+        if (associated(att)) then
+          if (attribute_has_default(att)) then ! there is a default value
             ! Well swap the old one out & put a new one in.
             ! Do *nothing* about namespace handling at this stage,
             ! wait until we are asked for namespace normalization
             np => createAttribute(getOwnerDocument(map%ownerElement), getName(np))
-            call setValue(np, str_vs(elem%attlist%list(i_default)%default))
+            call setValue(np, str_vs(att%default))
             call setSpecified(np, .false.)
             np => setNamedItem(map, np)
             call setSpecified(np, .true.)

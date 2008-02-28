@@ -911,9 +911,9 @@ TOHW_m_dom_set(DOMString, namespaceURI, np%elExtras%namespaceURI, (XPATH_NAMESPA
       .or. arg%nodeType==XPATH_NAMESPACE_NODE) then
       if (arg%readonly) then
         TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
-      elseif (.not.checkName(prefix, getXds(getOwnerDocument(arg)))) then
+      elseif (.not.checkName(prefix, getXmlVersionEnum(getOwnerDocument(arg)))) then
         TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
-      elseif (.not.checkNCName(prefix, getXds(getOwnerDocument(arg)))) then
+      elseif (.not.checkNCName(prefix, getXmlVersionEnum(getOwnerDocument(arg)))) then
         TOHW_m_dom_throw_error(NAMESPACE_ERR)
       elseif (size(arg%elExtras%namespaceURI)==0) then
         TOHW_m_dom_throw_error(NAMESPACE_ERR)

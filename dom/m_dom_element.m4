@@ -81,7 +81,7 @@ TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     elseif (arg%readonly) then
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
-    elseif (.not.checkName(name, getXds(getOwnerDocument(arg)))) then
+    elseif (.not.checkName(name, getXmlVersionEnum(getOwnerDocument(arg)))) then
       TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
     elseif (.not.checkChars(value, getXmlVersionEnum(getOwnerDocument(arg)))) then
       TOHW_m_dom_throw_error(FoX_INVALID_CHARACTER)
@@ -295,9 +295,9 @@ TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     elseif (arg%readonly) then
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
-    elseif (.not.checkName(qualifiedname, getXds(getOwnerDocument(arg)))) then
+    elseif (.not.checkName(qualifiedname, getXmlVersionEnum(getOwnerDocument(arg)))) then
       TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
-    elseif (.not.checkQName(qualifiedname, getXds(getOwnerDocument(arg)))) then
+    elseif (.not.checkQName(qualifiedname, getXmlVersionEnum(getOwnerDocument(arg)))) then
       TOHW_m_dom_throw_error(NAMESPACE_ERR)
     elseif (prefixOfQName(qualifiedName)/="" &
      .and. namespaceURI=="") then

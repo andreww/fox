@@ -1,5 +1,7 @@
 TOHW_m_dom_publics(`
 
+!FIXME lots of these should have a check if(namespaces) checkNCName
+
   public :: getDocType
   public :: getImplementation
   public :: getDocumentElement
@@ -140,6 +142,7 @@ TOHW_m_dom_get(Node, documentElement, np%docExtras%documentElement, (DOCUMENT_NO
 
     type(xml_doc_state), pointer :: xds
     type(element_t), pointer :: elem
+    type(attribute_t), pointer :: att
     integer :: i
 
     if (.not.associated(arg)) then
@@ -148,7 +151,7 @@ TOHW_m_dom_get(Node, documentElement, np%docExtras%documentElement, (DOCUMENT_NO
 
     if (arg%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    elseif (.not.checkName(tagName, getXds(arg))) then
+    elseif (.not.checkName(tagName, getXmlVersionEnum(arg))) then
       TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
     endif
     
@@ -168,12 +171,12 @@ TOHW_m_dom_get(Node, documentElement, np%docExtras%documentElement, (DOCUMENT_NO
       xds => getXds(arg)
       elem => get_element(xds%element_list, tagName)
       if (associated(elem)) then
-        do i = 1, size(elem%attlist%list)
-          if (elem%attlist%list(i)%attDefault==ATT_DEFAULT) then
+        do i = 1, get_attlist_size(elem)
+          att => get_attribute_declaration(elem, i)
+          if (attribute_has_default(att)) then
             ! Since this is a non-namespaced function, we create
             ! a non-namespaced attribute ...
-            call setAttribute(np, str_vs(elem%attlist%list(i)%name), &
-              str_vs(elem%attlist%list(i)%default))
+            call setAttribute(np, str_vs(att%name), str_vs(att%default))
           endif
         enddo
       endif
@@ -302,7 +305,7 @@ TOHW_m_dom_get(Node, documentElement, np%docExtras%documentElement, (DOCUMENT_NO
 
     if (arg%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    elseif (.not.checkName(target, getXds(arg))) then
+    elseif (.not.checkName(target, getXmlVersionEnum(arg))) then
       TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
     elseif (.not.checkChars(data, getXmlVersionEnum(arg))) then
       TOHW_m_dom_throw_error(FoX_INVALID_CHARACTER)
@@ -333,7 +336,7 @@ TOHW_m_dom_get(Node, documentElement, np%docExtras%documentElement, (DOCUMENT_NO
 
     if (arg%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    elseif (.not.checkName(name, getXds(arg))) then
+    elseif (.not.checkName(name, getXmlVersionEnum(arg))) then
       TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
     endif
   
@@ -369,7 +372,7 @@ TOHW_m_dom_get(Node, documentElement, np%docExtras%documentElement, (DOCUMENT_NO
     endif
     if (arg%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    elseif (.not.checkName(name, getXds(arg))) then
+    elseif (.not.checkName(name, getXmlVersionEnum(arg))) then
       TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
     endif
 
@@ -422,7 +425,7 @@ TOHW_m_dom_get(Node, documentElement, np%docExtras%documentElement, (DOCUMENT_NO
 
     if (arg%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    elseif (.not.checkName(name, getXds(arg))) then
+    elseif (.not.checkName(name, getXmlVersionEnum(arg))) then
       TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
     endif
 
@@ -516,7 +519,7 @@ TOHW_m_dom_treewalk(`dnl
     type(element_t), pointer :: elem
     type(attribute_t), pointer :: att
     logical :: doneAttributes, doneChildren, brokenNS
-    integer :: i_tree, i_default
+    integer :: i_tree
 
     if (.not.associated(doc).or..not.associated(arg)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
@@ -648,6 +651,7 @@ TOHW_m_dom_treewalk(`dnl
 
     type(xml_doc_state), pointer :: xds
     type(element_t), pointer :: elem
+    type(attribute_t), pointer :: att
     integer :: i
     logical :: brokenNS
 
@@ -657,9 +661,9 @@ TOHW_m_dom_treewalk(`dnl
 
     if (arg%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    elseif (.not.checkName(qualifiedName, getXds(arg))) then
+    elseif (.not.checkName(qualifiedName, getXmlVersionEnum(arg))) then
       TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
-    elseif (.not.checkQName(qualifiedName, getXds(arg))) then
+    elseif (.not.checkQName(qualifiedName, getXmlVersionEnum(arg))) then
       TOHW_m_dom_throw_error(NAMESPACE_ERR)
     elseif (prefixOfQName(qualifiedName)/="" &
      .and. namespaceURI=="".and..not.arg%docExtras%brokenNS) then
@@ -687,28 +691,27 @@ TOHW_m_dom_treewalk(`dnl
       xds => getXds(arg)
       elem => get_element(xds%element_list, qualifiedName)
       if (associated(elem)) then
-        do i = 1, size(elem%attlist%list)
-          if (elem%attlist%list(i)%attDefault==ATT_DEFAULT) then
+        do i = 1, get_attlist_size(elem)
+          att => get_attribute_declaration(elem, i)
+          if (attribute_has_default(att)) then
             ! Since this is a namespaced function, we create a namespaced
             ! attribute. Of course, its namespaceURI remains empty
             ! for the moment unless we know it ...
-            if (prefixOfQName(str_vs(elem%attlist%list(i)%name))=="xml") then
+            if (prefixOfQName(str_vs(att%name))=="xml") then
               call setAttributeNS(np, &
                 "http://www.w3.org/XML/1998/namespace", &
-                str_vs(elem%attlist%list(i)%name), &
-                str_vs(elem%attlist%list(i)%default))
-            elseif (str_vs(elem%attlist%list(i)%name)=="xmlns" & 
-              .or. prefixOfQName(str_vs(elem%attlist%list(i)%name))=="xmlns") then
+                str_vs(att%name), str_vs(att%default))
+            elseif (str_vs(att%name)=="xmlns" & 
+              .or. prefixOfQName(str_vs(att%name))=="xmlns") then
               call setAttributeNS(np, &
                 "http://www.w3.org/2000/xmlns/", &
-                str_vs(elem%attlist%list(i)%name), &
-                str_vs(elem%attlist%list(i)%default))
+                str_vs(att%name), str_vs(att%default))
             else
               ! Wait for namespace fixup ...
               brokenNS = arg%docExtras%brokenNS
               arg%docExtras%brokenNS = .true.
-              call setAttributeNS(np, "", str_vs(elem%attlist%list(i)%name), &
-                str_vs(elem%attlist%list(i)%default))
+              call setAttributeNS(np, "", str_vs(att%name), &
+                str_vs(att%default))
               arg%docExtras%brokenNS = brokenNS
             endif
           endif
@@ -731,9 +734,9 @@ TOHW_m_dom_treewalk(`dnl
 
     if (arg%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    elseif (.not.checkName(qualifiedName, getXds(arg))) then
+    elseif (.not.checkName(qualifiedName, getXmlVersionEnum(arg))) then
       TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
-    elseif (.not.checkQName(qualifiedName, getXds(arg))) then
+    elseif (.not.checkQName(qualifiedName, getXmlVersionEnum(arg))) then
       TOHW_m_dom_throw_error(NAMESPACE_ERR)
     elseif (prefixOfQName(qualifiedName)/="" &
      .and. namespaceURI=="".and..not.arg%docExtras%brokenNS) then
