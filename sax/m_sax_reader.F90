@@ -67,7 +67,8 @@ contains
       elseif (present(lun)) then
         call FoX_error("Cannot specify lun for string input to open_xml")
       endif
-      call open_new_string(fb, string, "", baseURI=parseURI(""))
+      fileURI => parseURI("")
+      call open_new_string(fb, string, "", baseURI=fileURI)
     else
       fileURI => parseURI(file)
       if (.not.associated(fileURI)) then
@@ -75,9 +76,9 @@ contains
         return
       endif
       call open_new_file(fb, fileURI, iostat, lun)
-      call destroyURI(fileURI)
       if (iostat/=0) return
     endif
+    call destroyURI(fileURI)
 
   end subroutine open_file
 
