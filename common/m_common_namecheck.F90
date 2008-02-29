@@ -11,6 +11,7 @@ module m_common_namecheck
   !    unicode-aware programs, so is only skeleton here)
 
   use fox_m_fsys_format, only: str_to_int_10, str_to_int_16, operator(//)
+  use fox_m_fsys_string, only: toLower
   use m_common_charset, only: isLegalCharRef, isNCNameChar, &
     isInitialNCNameChar, isInitialNameChar, isNameChar, isRepCharRef, &
     XML_WHITESPACE
@@ -70,12 +71,9 @@ contains
     ! Validates a string against the XML requirements for a NAME
     ! Is not fully compliant; ignores UTF issues.
 
-    good = checkName(name, xv)
-    if (good .and. len(name)==3) then
-      good = (scan(name(1:1), 'Xx') == 0 .and. &
-        scan(name(2:2), 'Mm') == 0 .and. &
-        scan(name(3:3), 'Ll') == 0)
-    endif
+    good = checkName(name, xv) &
+      .and.toLower(name)/="xml"
+
   end function checkPITarget
 
 
