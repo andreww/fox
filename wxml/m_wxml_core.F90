@@ -80,7 +80,8 @@ module m_wxml_core
     integer                   :: state_1 = -1
     integer                   :: state_2 = -1
     integer                   :: state_3 = -1
-    logical                   :: preserve_whitespace
+    logical                   :: minimize_overrun
+    logical                   :: pretty_print
     integer                   :: indent = 0
     character, pointer        :: name(:)
     type(namespaceDictionary) :: nsDict
@@ -151,13 +152,15 @@ module m_wxml_core
 
 contains
 
-  subroutine xml_OpenFile(filename, xf, unit, iostat, preserve_whitespace, broken_indenting, replace, addDecl, warning, valid)
+  subroutine xml_OpenFile(filename, xf, unit, iostat, preserve_whitespace, &
+    pretty_print, minimize_overrun, replace, addDecl, warning, valid)
     character(len=*), intent(in)  :: filename
     type(xmlf_t), intent(inout)   :: xf
     integer, intent(in), optional :: unit
     integer, intent(out), optional :: iostat
     logical, intent(in), optional :: preserve_whitespace
-    logical, intent(in), optional :: broken_indenting
+    logical, intent(in), optional :: pretty_print
+    logical, intent(in), optional :: minimize_overrun
     logical, intent(in), optional :: replace
     logical, intent(in), optional :: addDecl
     logical, intent(in), optional :: warning
@@ -245,12 +248,19 @@ contains
     xf%state_2 = WXML_STATE_2_OUTSIDE_TAG
     xf%state_3 = WXML_STATE_3_BEFORE_DTD
     
-    if (present(preserve_whitespace)) then
-      xf%preserve_whitespace = preserve_whitespace
-    elseif (present(broken_indenting)) then
-      xf%preserve_whitespace = .not.broken_indenting
+    if (present(pretty_print)) then
+      xf%pretty_print = pretty_print
     else
-      xf%preserve_whitespace = .false.
+      xf%pretty_print = .false.
+    endif
+    if (present(minimize_overrun)) then
+      xf%minimize_overrun = minimize_overrun
+    else
+      xf%minimize_overrun = .false.
+    endif
+    if (present(preserve_whitespace)) then
+      xf%pretty_print = .not.preserve_whitespace
+      xf%minimize_overrun = preserve_whitespace
     endif
       
     xf%indent = 0
@@ -865,6 +875,9 @@ contains
     select case (xf%state_1)
     case (WXML_STATE_1_JUST_OPENED) 
       xf%state_1 = WXML_STATE_1_BEFORE_ROOT
+    case (WXML_STATE_1_DURING_ROOT)
+      call close_start_tag(xf)
+      if (xf%pretty_print) call add_eol(xf)
     case default
       call close_start_tag(xf)
       call add_eol(xf)
@@ -904,13 +917,10 @@ contains
     select case (xf%state_1)
     case (WXML_STATE_1_JUST_OPENED) 
       xf%state_1 = WXML_STATE_1_BEFORE_ROOT
-    case (WXML_STATE_1_BEFORE_ROOT)
-      call close_start_tag(xf)
-      call add_eol(xf)
     case (WXML_STATE_1_DURING_ROOT)
       call close_start_tag(xf)
-      if (.not.xf%preserve_whitespace.and.xf%state_2 == WXML_STATE_2_OUTSIDE_TAG) call add_eol(xf)
-    case (WXML_STATE_1_AFTER_ROOT)
+      if (xf%pretty_print.and.xf%state_2 == WXML_STATE_2_OUTSIDE_TAG) call add_eol(xf)
+    case default
       call close_start_tag(xf)
       call add_eol(xf)
     end select
@@ -954,7 +964,7 @@ contains
       call add_eol(xf)
     case (WXML_STATE_1_DURING_ROOT)
       call close_start_tag(xf)
-      if (.not.xf%preserve_whitespace.and.xf%state_2 == WXML_STATE_2_OUTSIDE_TAG) call add_eol(xf)
+      if (xf%pretty_print) call add_eol(xf)
     case (WXML_STATE_1_AFTER_ROOT)
       call wxml_error(xf, "Two root elements: "//name)
     end select
@@ -1312,18 +1322,18 @@ contains
     case (WXML_STATE_2_INSIDE_ELEMENT)
       call checkNamespacesWriting(xf%dict, xf%nsDict, len(xf%stack))
       if (getLength(xf%dict) > 0) call write_attributes(xf)
-      if (xf%preserve_whitespace) call add_eol(xf)
+      if (xf%minimize_overrun) call add_eol(xf)
       call add_to_buffer("/>",xf%buffer, .false.)
       dummy = pop_elstack(xf%stack)
     case (WXML_STATE_2_OUTSIDE_TAG, WXML_STATE_2_IN_CHARDATA, WXML_STATE_2_INSIDE_PI)
       if (xf%state_2==WXML_STATE_2_INSIDE_PI) call close_start_tag(xf)
-      if (.not.xf%preserve_whitespace.and.xf%state_2==WXML_STATE_2_OUTSIDE_TAG) call add_eol(xf)
+      if (xf%pretty_print.and.xf%state_2==WXML_STATE_2_OUTSIDE_TAG) call add_eol(xf)
 ! XLF does a weird thing here, and if pop_elstack is called as an 
 ! argument to the call, it gets called twice. So we have to separate
 ! out get_top_... from pop_...
       call add_to_buffer("</" //get_top_elstack(xf%stack), xf%buffer, .false.)
       dummy = pop_elstack(xf%stack)
-      if (xf%preserve_whitespace) call add_eol(xf)
+      if (xf%minimize_overrun) call add_eol(xf)
       call add_to_buffer(">", xf%buffer, .false.)
     end select
 
@@ -1520,7 +1530,7 @@ contains
     call dump_buffer(xf%buffer, lf=.true.)
     call reset_buffer(xf%buffer, xf%lun, xf%xds%xml_version)
     
-    if (.not.xf%preserve_whitespace) &
+    if (xf%pretty_print) &
       call add_to_buffer(repeat(' ',indent_level),xf%buffer, .false.)
 
   end subroutine add_eol
@@ -1532,17 +1542,14 @@ contains
     select case (xf%state_2)
     case (WXML_STATE_2_INSIDE_ELEMENT)
       call checkNamespacesWriting(xf%dict, xf%nsDict, len(xf%stack))
-      if (getLength(xf%dict) > 0)  call write_attributes(xf)
-      if (.not.xf%preserve_whitespace) then
-        call add_to_buffer('>', xf%buffer, .false.)
-      else
-        call add_eol(xf)
-        call add_to_buffer('>', xf%buffer, .false.)
-      endif
+      if (getLength(xf%dict) > 0) call write_attributes(xf)
+      if (xf%minimize_overrun) call add_eol(xf)
+      call add_to_buffer('>', xf%buffer, .false.)
       xf%state_2 = WXML_STATE_2_OUTSIDE_TAG
     case (WXML_STATE_2_INSIDE_PI)
-      if (getLength(xf%dict) > 0)  call write_attributes(xf)
+      if (getLength(xf%dict) > 0) call write_attributes(xf)
       call add_to_buffer('?>', xf%buffer, .false.)
+      if (xf%pretty_print.and.xf%state_3/=WXML_STATE_3_INSIDE_INTSUBSET) call add_eol(xf)
       xf%state_2 = WXML_STATE_2_OUTSIDE_TAG
     case (WXML_STATE_2_IN_CHARDATA)
       continue
@@ -1564,7 +1571,7 @@ contains
     
     do i = 1, getLength(xf%dict)
       size = len(get_key(xf%dict, i)) + len(get_value(xf%dict, i)) + 4
-      if ((len(xf%buffer) + size) > COLUMNS) then
+      if (xf%minimize_overrun.and.(len(xf%buffer) + size) > COLUMNS) then
         call add_eol(xf)
       else
         call add_to_buffer(" ", xf%buffer, .false.)
