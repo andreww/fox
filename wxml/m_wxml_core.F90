@@ -3,6 +3,7 @@ module m_wxml_core
 #ifndef DUMMYLIB
   use fox_m_fsys_array_str, only: vs_str, str_vs, vs_str_alloc
   use fox_m_fsys_string, only: toLower
+  use fox_m_utils_uri, only: URI, parseURI, destroyURI
   use m_common_attrs, only: dictionary_t, getLength, get_key, get_value, &
     hasKey, add_item_to_dict, init_dict, reset_dict, destroy_dict, &
     getWhitespaceHandling
@@ -346,64 +347,65 @@ contains
     type(xmlf_t), intent(inout) :: xf
     character(len=*), intent(in) :: name
     character(len=*), intent(in), optional :: system, public
-#ifndef DUMMYLIB
-    call check_xf(xf)
 
+    type(URI), pointer :: URIref
+#ifndef DUMMYLIB
+
+    call check_xf(xf)
+    
+    if (xf%namespace) then
+      if (.not.checkQName(name, xf%xds%xml_version)) &
+        call wxml_error("Invalid Name in DTD "//name)
+    else
+      if (.not.checkName(name, xf%xds%xml_version)) &
+        call wxml_error("Invalid Name in DTD "//name)
+    endif
+    
     if (present(system)) then
-      if (.not.checkChars(system,xf%xds%xml_version)) call wxml_error("xml_AddDOCTYPE: Invalid character in system")
+      URIref => parseURI(system)
+      if (.not.associated(URIref)) call wxml_error("xml_AddDOCTYPE: Invalid SYSTEM URI")
+      call destroyURI(URIref)
     endif
     if (present(public)) then
-      if (.not.checkChars(public,xf%xds%xml_version)) call wxml_error("xml_AddDOCTYPE: Invalid character in public")
+      if (.not.checkPublicId(public)) call wxml_error("xml_AddDOCTYPE: Invalid PUBLIC ID")
     endif
     
     if (present(public).and..not.present(system)) &
       call wxml_error('xml_AddDOCTYPE: PUBLIC supplied without SYSTEM for: '//name)
-
+    
     ! By having an external ID we probably render this non-standalone (unless we've said that it is in the declaration)
     if (present(system).and..not.xf%xds%standalone_declared) &
       xf%xds%standalone=.false.
-
+    
     call close_start_tag(xf)
     
     if (xf%state_1 /= WXML_STATE_1_BEFORE_ROOT) &
       call wxml_error("Tried to put XML DOCTYPE in wrong place: "//name)
-
+    
     if (xf%state_3 /= WXML_STATE_3_BEFORE_DTD) then
       call wxml_error("Tried to output more than one DOCTYPE declaration: "//name)
     else
       xf%state_3 = WXML_STATE_3_DURING_DTD
     endif
-
-    if (xf%namespace) then
-      if (.not.checkQName(name, xf%xds%xml_version)) &
-         call wxml_error("Invalid Name in DTD "//name)
-    else
-      if (.not.checkName(name, xf%xds%xml_version)) &
-        call wxml_error("Invalid Name in DTD "//name)
-    endif
-
+    
     call add_eol(xf)
     call add_to_buffer("<!DOCTYPE "//name, xf%buffer, .false.)
-
+    
     deallocate(xf%name)
     allocate(xf%name(len(name)))
     xf%name = vs_str(name)
-
+    
     if (present(system)) then
       if (present(public)) then
-        if (.not.checkPublicId(public)) &
-          call wxml_error("Invalid PUBLIC ID "//public)
-        call add_to_buffer(' PUBLIC', xf%buffer, .false.)
-        call add_to_buffer(' "'//public//'"', xf%buffer, .true.)
+        call add_to_buffer(" PUBLIC", xf%buffer, .false.)
+        call add_to_buffer(" """//public//"""", xf%buffer, .true.)
       else
-        call add_to_buffer(' SYSTEM', xf%buffer, .false.)
+        call add_to_buffer(" SYSTEM", xf%buffer, .false.)
       endif
-      if (scan(system, "'")/=0) then
-        if (scan(system, '"')/=0) &
-          call wxml_error("Invalid SYSTEM ID "//system)
-        call add_to_buffer(' "'//system//'"', xf%buffer, .true.)
-      else
+      if (scan(system, """")/=0) then
         call add_to_buffer(" '"//system//"'", xf%buffer, .true.)
+      else
+        call add_to_buffer(" """//system//"""", xf%buffer, .true.)
       endif
     endif
 #endif
@@ -416,18 +418,9 @@ contains
     character(len=*), intent(in), optional :: PEDef
     character(len=*), intent(in), optional :: system
     character(len=*), intent(in), optional :: public
+    type(URI), pointer :: URIref
 #ifndef DUMMYLIB
     call check_xf(xf)
-
-    if (present(PEDef)) then
-      if (.not.checkChars(PEDef,xf%xds%xml_version)) call wxml_error("xml_AddParameterEntity: Invalid character in PEDef")
-    endif
-    if (present(system)) then
-      if (.not.checkChars(system,xf%xds%xml_version)) call wxml_error("xml_AddParameterEntity: Invalid character in system")
-    endif
-    if (present(public)) then
-      if (.not.checkChars(public,xf%xds%xml_version)) call wxml_error("xml_AddParameterEntity: Invalid character in public")
-    endif
 
     if (xf%namespace) then
       if (.not.checkNCName(name, xf%xds%xml_version)) &
@@ -436,7 +429,20 @@ contains
       if (.not.checkName(name, xf%xds%xml_version)) &
         call wxml_error("Invalid Name in DTD "//name)
     endif
-    
+
+    if (present(PEDef)) then
+      if (.not.checkChars(PEDef,xf%xds%xml_version)) call wxml_error("xml_AddParameterEntity: Invalid character in PEDef")
+    endif
+
+    if (present(system)) then
+      URIref => parseURI(system)
+      if (.not.associated(URIref)) call wxml_error("xml_AddParameterEntity: Invalid SYSTEM URI")
+      call destroyURI(URIref)
+    endif
+    if (present(public)) then
+      if (.not.checkPublicId(public)) call wxml_error("xml_AddParameterEntity: Invalid PUBLIC ID")
+    endif
+
     ! By adding a parameter entity (internal or external) we make this
     ! a non-standalone document.
     if (.not.xf%xds%standalone_declared) &
@@ -474,40 +480,31 @@ contains
       endif
       call register_internal_PE(xf%xds, name=name, text=PEdef, baseURI=null(), wfc=.false.)
     else
-      ! FIXME check URI
-      !if (.not.checkSystemID(system)) &
-      !  call wxml_fatal("Parameter entity System ID is invalid: "//system)
-      if (present(public)) then
-        if (.not.checkPublicID(public)) &
-          call wxml_fatal("Parameter entity Public ID is invalid: "//public)
-      endif
       call register_external_PE(xf%xds, name=name, systemId=system, &
         publicId=public, baseURI=null(), wfc=.false.)
     endif
 
     call add_eol(xf)
 
-    call add_to_buffer('<!ENTITY % '//name, xf%buffer, .false.) ! name can never contain whitespace
+    call add_to_buffer("<!ENTITY % "//name, xf%buffer, .false.) ! name can never contain whitespace
     if (present(PEdef)) then
-      if (index(PEdef, '"') > 0) then
+      if (index(PEdef, """") > 0) then ! FIXME what if PEdef has both " and ' in it
         call add_to_buffer(" '"//PEdef//"'", xf%buffer, .true.)
       else
-        call add_to_buffer(' "'//PEdef//'"', xf%buffer, .true.)
+        call add_to_buffer(" """//PEdef//"""", xf%buffer, .true.)
       endif
-        call add_to_buffer('>', xf%buffer, .false.)
+        call add_to_buffer(">", xf%buffer, .false.)
     else
       if (present(public)) then
-        call add_to_buffer(' PUBLIC', xf%buffer, .false.)
-        call add_to_buffer(' "'//public//'"', xf%buffer, .true.)
+        call add_to_buffer(" PUBLIC", xf%buffer, .false.)
+        call add_to_buffer(" """//public//"""", xf%buffer, .true.)
       else
-        call add_to_buffer(' SYSTEM', xf%buffer, .false.)
+        call add_to_buffer(" SYSTEM", xf%buffer, .false.)
       endif
-      if (scan(system, "'")/=0) then
-        if (scan(system, '"')/=0) &
-          call wxml_error("Invalid SYSTEM ID "//system)
-        call add_to_buffer(' "'//system//'"', xf%buffer, .true.)
-      else
+      if (scan(system, """")/=0) then
         call add_to_buffer(" '"//system//"'", xf%buffer, .true.)
+      else
+        call add_to_buffer(" """//system//"""", xf%buffer, .true.)
       endif
       call add_to_buffer(">", xf%buffer)
     endif
@@ -548,8 +545,6 @@ contains
 #ifndef DUMMYLIB
     call check_xf(xf)
 
-    if (.not.checkChars(value,xf%xds%xml_version)) call wxml_error("xml_AddInternalEntity: Invalid character in value")
-    
     if (xf%namespace) then
       if (.not.checkNCName(name, xf%xds%xml_version)) &
          call wxml_error("Invalid Name in DTD "//name)
@@ -557,6 +552,8 @@ contains
       if (.not.checkName(name, xf%xds%xml_version)) &
         call wxml_error("Invalid Name in DTD "//name)
     endif
+
+    if (.not.checkChars(value, xf%xds%xml_version)) call wxml_error("xml_AddInternalEntity: Invalid character in value")
 
     if (xf%state_3 == WXML_STATE_3_DURING_DTD) then
       call add_to_buffer(" [", xf%buffer)
@@ -578,11 +575,11 @@ contains
     call add_eol(xf)
     
     !FIXME - valid entity values?
-    call add_to_buffer('<!ENTITY '//name//' ', xf%buffer, .false.) ! name cannot contain whitespace
-    if (index(value, '"') > 0) then
+    call add_to_buffer("<!ENTITY "//name//" ", xf%buffer, .false.) ! name cannot contain whitespace
+    if (index(value, """") > 0) then
       call add_to_buffer("'"//value//"'>", xf%buffer, .true.)
     else
-      call add_to_buffer('"'//value//'">', xf%buffer, .true.)
+      call add_to_buffer(""""//value//""">", xf%buffer, .true.)
     endif
 #endif
   end subroutine xml_AddInternalEntity
@@ -595,15 +592,31 @@ contains
     character(len=*), intent(in), optional :: public
     character(len=*), intent(in), optional :: notation
 
+    type(URI), pointer :: URIref
 #ifndef DUMMYLIB
     call check_xf(xf)
 
-    if (.not.checkChars(system,xf%xds%xml_version)) call wxml_error("xml_AddExternalEntity: Invalid character in system")
+    if (xf%namespace) then
+      if (.not.checkNCName(name, xf%xds%xml_version)) &
+         call wxml_error("Invalid Name in DTD "//name)
+    else
+      if (.not.checkName(name, xf%xds%xml_version)) &
+        call wxml_error("Invalid Name in DTD "//name)
+    endif
+    URIref => parseURI(system)
+    if (.not.associated(URIref)) call wxml_error("xml_AddExternalEntity: Invalid SYSTEM URI")
+    call destroyURI(URIref)
     if (present(public)) then
-      if (.not.checkChars(public,xf%xds%xml_version)) call wxml_error("xml_AddExternalEntity: Invalid character in public")
+      if (.not.checkPublicId(public)) call wxml_error("xml_AddExternalEntity: Invalid PUBLIC ID")
     endif
     if (present(notation)) then
-      if (.not.checkChars(notation,xf%xds%xml_version)) call wxml_error("xml_AddExternalEntity: Invalid character in notation")
+      if (xf%namespace) then
+        if (.not.checkNCName(notation, xf%xds%xml_version)) &
+          call wxml_error("Invalid Name in DTD "//name)
+      else
+        if (.not.checkName(notation, xf%xds%xml_version)) &
+          call wxml_error("Invalid Name in DTD "//name)
+      endif
     endif
 
     if (xf%namespace) then
@@ -627,27 +640,6 @@ contains
       xf%state_2 = WXML_STATE_2_OUTSIDE_TAG
     endif
 
-    if (present(notation)) then
-      if (.not.notation_exists(xf%xds%nList, notation)) then
-        if (.not.xf%xds%standalone) then
-          call wxml_warning(xf, "Tried to add possibly unregistered notation to entity: "//name)
-          if (.not.checkName(notation, xf%xds%xml_version)) &
-            call wxml_error("xml_AddExternalEntity: Invalid notation "//notation)
-        else
-          call wxml_error("Tried to add non-existent notation to entity: "//name)
-        endif
-      endif
-    endif
-  
-    if (.not.checkName(name, xf%xds%xml_version)) &
-      call wxml_error("xml_AddExternalEntity: Invalid Name: "//name)
-    ! FIXME check URI
-    !if (.not.checkSystemID(system)) &
-    !  call wxml_error("xml_AddExternalEntity: Invalid System: "//system)
-    if (present(public)) then
-      if (.not.checkPublicID(public)) &
-        call wxml_error("xml_AddExternalEntity: Invalid Public: "//public)
-    endif
     ! Notation only needs checked if not already registered - done above.
     call register_external_GE(xf%xds, name=name, &
       systemID=system, publicId=public, notation=notation, &
@@ -655,25 +647,22 @@ contains
     
     call add_eol(xf)
     
-    call add_to_buffer('<!ENTITY '//name, xf%buffer, .false.)
+    call add_to_buffer("<!ENTITY "//name, xf%buffer, .false.)
     if (present(public)) then
       call add_to_buffer(" PUBLIC", xf%buffer, .false.)
-      call add_to_buffer(' "'//public//'"', xf%buffer, .true.)
+      call add_to_buffer(" """//public//"""", xf%buffer, .true.)
     else
-      call add_to_buffer(' SYSTEM', xf%buffer, .false.)
+      call add_to_buffer(" SYSTEM", xf%buffer, .false.)
     endif
-    if (scan(system, "'")/=0) then
-      if (scan(system, '"')/=0) &
-        call wxml_error("Invalid SYSTEM ID "//system)
-      call add_to_buffer(' "'//system//'"', xf%buffer, .true.)
-    else
+    if (scan(system, """")/=0) then
       call add_to_buffer(" '"//system//"'", xf%buffer, .true.)
+    else
+      call add_to_buffer(" """//system//"""", xf%buffer, .true.)
     endif
     if (present(notation)) then
-      ! FIXME Has notation been declared yet?
-      call add_to_buffer(' NDATA '//notation, xf%buffer, .false.) ! notation cannot contain whitespace
+      call add_to_buffer(" NDATA "//notation, xf%buffer, .false.)
     endif
-    call add_to_buffer('>', xf%buffer, .false.)
+    call add_to_buffer(">", xf%buffer, .false.)
 #endif
   end subroutine xml_AddExternalEntity
 
@@ -684,15 +673,9 @@ contains
     character(len=*), intent(in), optional :: system
     character(len=*), intent(in), optional :: public
 
+    type(URI), pointer :: URIref
 #ifndef DUMMYLIB
     call check_xf(xf)
-
-    if (present(system)) then
-      if (.not.checkChars(system,xf%xds%xml_version)) call wxml_error("xml_AddNotation: Invalid character in system")
-    endif
-    if (present(public)) then
-      if (.not.checkChars(public,xf%xds%xml_version)) call wxml_error("xml_AddNotation: Invalid character in public")
-    endif
 
     if (xf%namespace) then
       if (.not.checkNCName(name, xf%xds%xml_version)) &
@@ -700,6 +683,14 @@ contains
     else
       if (.not.checkName(name, xf%xds%xml_version)) &
         call wxml_error("Invalid Name in DTD "//name)
+    endif
+    if (present(system)) then
+      URIref => parseURI(system)
+      if (.not.associated(URIref)) call wxml_error("xml_AddNotation: Invalid SYSTEM URI")
+      call destroyURI(URIref)
+    endif
+    if (present(public)) then
+      if (.not.checkPublicId(public)) call wxml_error("xml_AddNotation: Invalid PUBLIC ID")
     endif
 
     if (xf%state_3 == WXML_STATE_3_DURING_DTD) then
@@ -720,34 +711,22 @@ contains
     
     call add_eol(xf)
 
-    if (.not.checkName(name, xf%xds%xml_version)) &
-      call wxml_error("Notation name is illegal in xml_AddNotation: "//name)
-    ! FIXME check URI
-    !if (present(system)) then
-    !  if (.not.checkSystemId(system)) &
-    !    call wxml_error("System ID name is illegal in xml_AddNotation: "//system)
-    !endif
-    if (present(public)) then
-      if (.not.checkPublicId(public)) &
-        call wxml_error("Public ID name is illegal in xml_AddNotation: "//public)
-    endif
-    
     call add_notation(xf%xds%nList, name, system, public)
-    call add_to_buffer('<!NOTATION '//name, xf%buffer, .false.)
+    call add_to_buffer("<!NOTATION "//name, xf%buffer, .false.)
     if (present(public)) then
       call add_to_buffer(" PUBLIC", xf%buffer, .false.)
-      call add_to_buffer(' "'//public//'"', xf%buffer, .true.)
+      call add_to_buffer(" """//public//"""", xf%buffer, .true.)
     elseif (present(system)) then
-      call add_to_buffer(' SYSTEM', xf%buffer, .false.)
+      call add_to_buffer(" SYSTEM", xf%buffer, .false.)
     endif
     if (present(system)) then
-      if (index(system, '"') > 0) then
-        call add_to_buffer(' "'//system//'"', xf%buffer, .true.)
-      else
+      if (index(system, """") > 0) then
         call add_to_buffer(" '"//system//"'", xf%buffer, .true.)
+      else
+        call add_to_buffer(" """//system//"""", xf%buffer, .true.)
       endif
     endif
-    call add_to_buffer('>', xf%buffer, .false.)
+    call add_to_buffer(">", xf%buffer, .false.)
 #endif
   end subroutine xml_AddNotation
 
@@ -787,7 +766,7 @@ contains
     endif
 
     call add_eol(xf)
-    call add_to_buffer('<!ELEMENT '//name//' '//declaration//'>', xf%buffer, .false.)
+    call add_to_buffer("<!ELEMENT "//name//" "//declaration//">", xf%buffer, .false.)
 #endif
   end subroutine xml_AddElementToDTD
 
@@ -827,7 +806,7 @@ contains
     endif
 
     call add_eol(xf)
-    call add_to_buffer('<!ATTLIST '//name//' '//declaration//'>', xf%buffer, .false.)
+    call add_to_buffer("<!ATTLIST "//name//" "//declaration//">", xf%buffer, .false.)
 #endif
   end subroutine xml_AddAttlistToDTD
     
@@ -873,7 +852,7 @@ contains
     endif
 
     call add_eol(xf)
-    call add_to_buffer('%'//name//';', xf%buffer, .false.)
+    call add_to_buffer("%"//name//";", xf%buffer, .false.)
 
 #endif
   end subroutine xml_AddPEReferenceToDTD
