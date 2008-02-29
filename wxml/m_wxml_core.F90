@@ -1086,13 +1086,6 @@ contains
     logical :: esc
     character, pointer :: type_(:)
 
-    ! if (name=="xml:space") then
-    ! The value can only be "default" or "preserve", by 2.10
-    ! However, that value can be obscured behind entities,
-    ! and we can't check that without full entity expansion
-    ! available to the output processor.
-    ! FIXME check when we have the ability
-
     if (present(type)) then
       if (type/='CDATA'.and.type/='ID'.and.type/='IDREF'.and.type/='IDREFS'.and.type/='NMTOKEN'.and.type/='NMTOKENS' &
         .and.type/='ENTITY'.and.type/='ENTITIES'.and.type/='NOTATION') then
@@ -1122,8 +1115,17 @@ contains
       esc = .true.
     endif
 
-    ! FIXME when escape is false we should still verify somehow.
-    ! minimal check: only extra allowed is character entity references.
+    if (name=="xml:space") then
+      ! The value can only be "default" or "preserve", by 2.10
+      if (.not.esc) then
+        if (value/="default".and.value/="preserve") & 
+          call wxml_fatal("Invalid value for xml:space attrbute")
+      endif
+    endif
+
+    ! FIXME when escape is false we should still do full verification
+    ! where possible.
+    ! Currently - minimal check: only extra allowed is character entity references.
     ! We check they exist, and are not unparsed.
     ! Ideally we would fully expand all entity references (at least for
     ! a standalone document where we can) and then
