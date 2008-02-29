@@ -1034,14 +1034,12 @@ contains
     case (WXML_STATE_1_AFTER_ROOT)
       call wxml_error(xf, "Two root elements: "//name)
     end select
-    
-    if (.not.checkQName(name, xf%xds%xml_version)) then
-      call wxml_error(xf, 'Element name '//name//' is not valid')
-    endif
 
-    if (len(prefixOfQName(name)) > 0) then
-      if (.not.isPrefixInForce(xf%nsDict, prefixOfQName(name))) &
-        call wxml_error(xf, "Namespace prefix not registered: "//prefixOfQName(name))
+    if (xf%namespace) then
+      if (len(prefixOfQName(name)) > 0) then
+        if (.not.isPrefixInForce(xf%nsDict, prefixOfQName(name))) &
+          call wxml_error(xf, "Namespace prefix not registered: "//prefixOfQName(name))
+      endif
     endif
     
     call push_elstack(name,xf%stack)
@@ -1235,27 +1233,33 @@ contains
 
     if (hasKey(xf%dict,name)) then
       call wxml_error(xf, "duplicate att name: "//name)
-    elseif (hasKey(xf%dict, &
-      getnamespaceURI(xf%nsDict,prefixOfQname(name)), localpartofQname(name))) then
-      call wxml_error(xf, "duplicate att after namespace processing: "//name)
+    elseif (xf%namespace) then
+      if (hasKey(xf%dict, &
+        getnamespaceURI(xf%nsDict,prefixOfQname(name)), localpartofQname(name))) then
+        call wxml_error(xf, "duplicate att after namespace processing: "//name)
+      endif
     endif
 
-    if (.not.checkQName(name, xf%xds%xml_version)) &
-         call wxml_error(xf, "invalid attribute name: "//name)
-
-    if (len(prefixOfQName(name))>0) then
-      if (prefixOfQName(name)/="xml".and.prefixOfQName(name)/="xmlns") then
-        if (.not.isPrefixInForce(xf%nsDict, prefixOfQName(name))) &
-          call wxml_error(xf, "namespace prefix not registered: "//prefixOfQName(name))
-      endif
-      if (esc) then
-        call add_item_to_dict(xf%dict, localpartofQname(name), escape_string(value, xf%xds%xml_version), prefixOfQName(name), &
-          getnamespaceURI(xf%nsDict,prefixOfQname(name)), type=str_vs(type_))
+    if (xf%namespace) then
+      if (len(prefixOfQName(name))>0) then
+        if (prefixOfQName(name)/="xml".and.prefixOfQName(name)/="xmlns") then
+          if (.not.isPrefixInForce(xf%nsDict, prefixOfQName(name))) &
+            call wxml_error(xf, "namespace prefix not registered: "//prefixOfQName(name))
+        endif
+        if (esc) then
+          call add_item_to_dict(xf%dict, localpartofQname(name), escape_string(value, xf%xds%xml_version), prefixOfQName(name), &
+            getnamespaceURI(xf%nsDict,prefixOfQname(name)), type=str_vs(type_))
+        else
+          call add_item_to_dict(xf%dict, localpartofQname(name), value, prefixOfQName(name), &
+            getnamespaceURI(xf%nsDict,prefixOfQName(name)), type=str_vs(type_))
+        endif
       else
-        call add_item_to_dict(xf%dict, localpartofQname(name), value, prefixOfQName(name), &
-          getnamespaceURI(xf%nsDict,prefixOfQName(name)), type=str_vs(type_))
+        if (esc) then
+          call add_item_to_dict(xf%dict, name, escape_string(value, xf%xds%xml_version), type=str_vs(type_))
+        else
+          call add_item_to_dict(xf%dict, name, value, type=str_vs(type_))
+        endif
       endif
-
     else
       if (esc) then
         call add_item_to_dict(xf%dict, name, escape_string(value, xf%xds%xml_version), type=str_vs(type_))
@@ -1401,7 +1405,7 @@ contains
 
     select case (xf%state_2)
     case (WXML_STATE_2_INSIDE_ELEMENT)
-      call checkNamespacesWriting(xf%dict, xf%nsDict, len(xf%stack))
+      if (xf%namespace) call checkNamespacesWriting(xf%dict, xf%nsDict, len(xf%stack))
       if (getLength(xf%dict) > 0) call write_attributes(xf)
       if (xf%minimize_overrun) call add_eol(xf)
       call add_to_buffer("/>",xf%buffer, .false.)
@@ -1418,7 +1422,7 @@ contains
       call add_to_buffer(">", xf%buffer, .false.)
     end select
 
-    call checkEndNamespaces(xf%nsDict, len(xf%stack)+1)
+    if (xf%namespace) call checkEndNamespaces(xf%nsDict, len(xf%stack)+1)
     if (is_empty(xf%stack)) then
       xf%state_1 = WXML_STATE_1_AFTER_ROOT
     endif
@@ -1533,7 +1537,7 @@ contains
     call destroy_dict(xf%dict)
     call destroy_elstack(xf%stack)
     
-    call destroyNamespaceDictionary(xf%nsDict)
+    !call destroyNamespaceDictionary(xf%nsDict)
     call destroy_xml_doc_state(xf%xds)
     
     deallocate(xf%name)
@@ -1625,7 +1629,7 @@ contains
 
     select case (xf%state_2)
     case (WXML_STATE_2_INSIDE_ELEMENT)
-      call checkNamespacesWriting(xf%dict, xf%nsDict, len(xf%stack))
+      if (xf%namespace) call checkNamespacesWriting(xf%dict, xf%nsDict, len(xf%stack))
       if (getLength(xf%dict) > 0) call write_attributes(xf)
       if (xf%minimize_overrun) call add_eol(xf)
       call add_to_buffer('>', xf%buffer, .false.)
