@@ -16,7 +16,8 @@ module m_wxml_core
   use m_common_io, only: get_unit
   use m_common_namecheck, only: checkEncName, checkName, checkPITarget, &
     checkCharacterEntityReference, checkPublicId, checkQName, prefixOfQName, &
-    localpartofQName, checkPEDef, checkPseudoAttValue, checkAttValue, checkNCName
+    localpartofQName, checkPEDef, checkPseudoAttValue, checkAttValue, checkNCName, &
+    likeCharacterEntityReference, checkCharacterEntityReference
   use m_common_namespaces, only: namespaceDictionary, getnamespaceURI, &
   initnamespaceDictionary, destroynamespaceDictionary, addDefaultNS, &
   addPrefixedNS, isPrefixInForce, checkNamespacesWriting, checkEndNamespaces
@@ -207,7 +208,7 @@ contains
         return
       endif
     endif
-    
+
     ! Use large I/O buffer in case the O.S./Compiler combination
     ! has hard-limits by default (i.e., NAGWare f95's 1024 byte limit)
     ! This is related to the maximum size of the buffer.
@@ -251,10 +252,16 @@ contains
     xf%state_2 = WXML_STATE_2_OUTSIDE_TAG
     xf%state_3 = WXML_STATE_3_BEFORE_DTD
     
-    if (present(pretty_print)) &
+    if (present(pretty_print)) then
       xf%pretty_print = pretty_print
-    if (present(minimize_overrun)) &
+    else
+      xf%pretty_print = .true.
+    endif
+    if (present(minimize_overrun)) then
       xf%minimize_overrun = minimize_overrun
+    else
+      xf%minimize_overrun = .false.
+    endif
     if (present(preserve_whitespace)) then
       xf%pretty_print = .not.preserve_whitespace
       xf%minimize_overrun = preserve_whitespace
@@ -269,7 +276,11 @@ contains
       call reset_buffer(xf%buffer, xf%lun, xf%xds%xml_version)
     endif
 
-    if (present(namespace)) xf%namespace = namespace
+    if (present(namespace)) then
+      xf%namespace = namespace
+    else
+      xf%namespace = .true.
+    endif
     if (xf%namespace) &
       call initNamespaceDictionary(xf%nsDict)
 #endif
@@ -879,7 +890,7 @@ contains
 
 #ifndef DUMMYLIB
     call check_xf(xf)
-    ! Don't bother doing checkChars - all pseudoatts get checked anyway.
+    ! Don't bother checking name - all pseudoatts get checked anyway.
     
     if (xf%state_1 /= WXML_STATE_1_JUST_OPENED &
          .and. xf%state_1 /= WXML_STATE_1_BEFORE_ROOT) &
@@ -932,7 +943,7 @@ contains
       if (.not.checkName(name, xf%xds%xml_version)) &
         call wxml_error("Invalid PI target "//name)
     endif
-    if (.not.xml) then
+    if (.not.xml_) then
       if (len(name)==3.and.(toLower(name)=="xml")) &
         call wxml_error("Invalid PI target "//name)
     endif
@@ -940,7 +951,7 @@ contains
     if (present(data)) then
       if (.not.checkChars(data,xf%xds%xml_version)) call wxml_error("xml_AddXMLPI: Invalid character in data")
     endif
-    
+
     select case (xf%state_1)
     case (WXML_STATE_1_JUST_OPENED) 
       xf%state_1 = WXML_STATE_1_BEFORE_ROOT
@@ -951,7 +962,6 @@ contains
       call close_start_tag(xf)
       call add_eol(xf)
     end select
-
     call add_to_buffer("<?" // name, xf%buffer, .false.)
     if (present(data)) then
       if (index(data, '?>') > 0) &
@@ -1110,7 +1120,10 @@ contains
 #ifndef DUMMYLIB
     call check_xf(xf)
 
-    if (xf%namespace) then
+    if (likeCharacterEntityReference(name)) then
+      if (.not.checkCharacterEntityReference(name, xf%xds%xml_version)) &
+        call wxml_error("Invalid Character Entity Reference "//name)
+    elseif (xf%namespace) then
       if (.not.checkNCName(name, xf%xds%xml_version)) &
         call wxml_error("Invalid Entity Name "//name)
     else
@@ -1437,7 +1450,7 @@ contains
     call check_xf(xf)
     if (.not.xf%namespace) call wxml_error("Cannot declare a namespace in a non-namespaced document")
 
-    if (.not.checkNCName(nsURI, xf%xds%xml_version)) call wxml_error("xml_DeclareNamespace: Invalid nsURI")
+    !if (.not.checkNCName(nsURI, xf%xds%xml_version)) call wxml_error("xml_DeclareNamespace: Invalid nsURI")
     if (present(prefix)) then
       if (.not.checkNCName(prefix, xf%xds%xml_version)) call wxml_error("xml_DeclareNamespace: Invalid prefix")
     endif
