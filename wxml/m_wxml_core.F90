@@ -10,10 +10,13 @@ module m_wxml_core
   use m_common_buffer, only: buffer_t, len, add_to_buffer, reset_buffer, &
     dump_buffer
   use m_common_charset, only: XML1_0, XML1_1, checkChars
+  use m_common_element, only: element_t, parse_dtd_element, attribute_t, &
+    parse_dtd_attlist
   use m_common_elstack, only: elstack_t, len, get_top_elstack, pop_elstack, &
     is_empty, init_elstack, push_elstack, destroy_elstack
   use m_common_entities, only: existing_entity, is_unparsed_entity
-  use m_common_error, only: FoX_warning_base, FoX_error_base, FoX_fatal_base
+  use m_common_error, only: FoX_warning_base, FoX_error_base, FoX_fatal_base, &
+    error_stack, in_error
   use m_common_io, only: get_unit
   use m_common_namecheck, only: checkEncName, checkName, checkPITarget, &
     checkCharacterEntityReference, checkPublicId, checkQName, prefixOfQName, &
@@ -736,6 +739,8 @@ contains
     character(len=*), intent(in) :: name
     character(len=*), intent(in) :: declaration
 
+    type(error_stack) :: stack
+
 #ifndef DUMMYLIB
     call check_xf(xf)
 
@@ -749,8 +754,8 @@ contains
         call wxml_error("Invalid Element Name in DTD "//name)
     endif
 
-    !FIXME we should check declaration syntax too.
-    call wxml_warning(xf, "Adding ELEMENT declaration to DTD. Cannot guarantee well-formedness")
+    call parse_dtd_element(declaration, xf%xds%xml_version, stack)
+    if (in_error(stack)) call wxml_error(xf, "Invalid ELEMENT declaration")
     
     if (xf%state_3 == WXML_STATE_3_DURING_DTD) then
       call add_to_buffer(" [", xf%buffer, .false.)
@@ -776,6 +781,8 @@ contains
     character(len=*), intent(in) :: name
     character(len=*), intent(in) :: declaration
 
+    type(error_stack) :: stack
+
 #ifndef DUMMYLIB
     call check_xf(xf)
 
@@ -789,9 +796,10 @@ contains
         call wxml_error("Invalid Attribute Name in DTD "//name)
     endif
 
-    !FIXME we should check declaration syntax too.
-    call wxml_warning(xf, "Adding ATTLIST declaration to DTD. Cannot guarantee well-formedness")
-    
+    call parse_dtd_attlist(declaration, xf%xds%xml_version, &
+      validCheck=.false., stack=stack)
+    if (in_error(stack)) call wxml_error(xf, "Invalid ATTLIST declaration")
+
     if (xf%state_3 == WXML_STATE_3_DURING_DTD) then
       call add_to_buffer(" [", xf%buffer, .false.)
       xf%state_3 = WXML_STATE_3_INSIDE_INTSUBSET
