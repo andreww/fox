@@ -270,7 +270,7 @@ contains
           endCdata_handler=endCdata_handler,                           &
           comment_handler=comment_handler,                             &
           processingInstruction_handler=processingInstruction_handler, &
-          error_handler=entityErrorHandler,                            &
+          fatalError_handler=entityErrorHandler,                       &
           startInCharData = .true.,                                    &
           externalEntity = ent%external,                               &
           xmlVersion = getXmlVersion(mainDoc),                         &
@@ -451,8 +451,8 @@ contains
       !startPrefixMapping_handler,    &
       notationDecl_handler=notationDecl_handler,          &
       unparsedEntityDecl_handler=unparsedEntityDecl_handler, &
-      error_handler=normalErrorHandler,                 &
-      !fatalError_handler,            &
+      !error_handler,            &
+      fatalError_handler=normalErrorHandler,                 &
       !warning_handler,               &
       !attributeDecl_handler,         &
       !elementDecl_handler,           &

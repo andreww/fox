@@ -5,6 +5,7 @@ program dom_example
 
   type(Node), pointer :: myDoc
   type(DOMConfiguration), pointer :: dc
+  integer :: ios
   real :: t1, t2
 
   call cpu_time(t1)
@@ -12,15 +13,17 @@ program dom_example
   dc => newDOMConfig()
   call setParameter(dc, "namespaces", .true.)
 
-  myDoc => parseFile("test.xml", dc)
+  myDoc => parseFile("test.xml", dc, iostat=ios)
 
-  ! Tell the normalizer to canonicalize it
-  ! but only if we are 1.0. 1.1 cannot be canonicalized.
-  if (getXMLVersion(myDoc)=="1.0") &
-    call setParameter(getDomConfig(myDoc), "canonical-form", .true.)
+  if (ios==0) then
+    ! Tell the normalizer to canonicalize it
+    ! but only if we are 1.0. 1.1 cannot be canonicalized.
+    if (getXMLVersion(myDoc)=="1.0") &
+      call setParameter(getDomConfig(myDoc), "canonical-form", .true.)
 
-  ! and write it out again (which automatically does normalization)
-  call serialize(myDoc, "out.xml")
+    ! and write it out again (which automatically does normalization)
+    call serialize(myDoc, "out.xml")
+  endif
   call cpu_time(t2)
 
   print*, "Finished"

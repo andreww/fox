@@ -5,6 +5,8 @@ program dom_example
 
   type(Node), pointer :: myDoc
   type(DOMConfiguration), pointer :: dc
+  type(DOMException), pointer :: ex
+  integer :: ios
   real :: t1, t2
 
   call cpu_time(t1)
@@ -12,13 +14,17 @@ program dom_example
   dc => newDOMConfig()
   call setParameter(dc, "namespaces", .false.)
 
-  myDoc => parseFile("test.xml", dc)
+  myDoc => parseFile("test.xml", dc, iostat=ios, ex=ex)
 
-  ! Tell the normalizer to canonicalize it
-  !call setParameter(getDomConfig(myDoc), "canonical-form", .true.)
+  if (inException(ex)) then
+    print*,"DOM Parse error ", getExceptionCode(ex)
+  else
+    ! Tell the normalizer to canonicalize it
+    !call setParameter(getDomConfig(myDoc), "canonical-form", .true.)
 
-  ! and write it out again (which automatically does normalization)
-  call serialize(myDoc, "out.xml")
+    ! and write it out again (which automatically does normalization)
+    call serialize(myDoc, "out.xml")
+  endif
   call cpu_time(t2)
 
   print*, "Finished"
