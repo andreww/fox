@@ -2,6 +2,7 @@ module m_wxml_core
 
 #ifndef DUMMYLIB
   use fox_m_fsys_array_str, only: vs_str, str_vs, vs_str_alloc
+  use fox_m_fsys_string, only: toLower
   use m_common_attrs, only: dictionary_t, getLength, get_key, get_value, &
     hasKey, add_item_to_dict, init_dict, reset_dict, destroy_dict, &
     getWhitespaceHandling
@@ -15,7 +16,7 @@ module m_wxml_core
   use m_common_io, only: get_unit
   use m_common_namecheck, only: checkEncName, checkName, checkPITarget, &
     checkCharacterEntityReference, checkPublicId, checkQName, prefixOfQName, &
-    localpartofQName, checkPEDef, checkPseudoAttValue, checkAttValue
+    localpartofQName, checkPEDef, checkPseudoAttValue, checkAttValue, checkNCName
   use m_common_namespaces, only: namespaceDictionary, getnamespaceURI, &
   initnamespaceDictionary, destroynamespaceDictionary, addDefaultNS, &
   addPrefixedNS, isPrefixInForce, checkNamespacesWriting, checkEndNamespaces
@@ -80,10 +81,11 @@ module m_wxml_core
     integer                   :: state_1 = -1
     integer                   :: state_2 = -1
     integer                   :: state_3 = -1
-    logical                   :: minimize_overrun
-    logical                   :: pretty_print
+    logical                   :: minimize_overrun = .true.
+    logical                   :: pretty_print = .false.
     integer                   :: indent = 0
     character, pointer        :: name(:)
+    logical                   :: namespace = .true.
     type(namespaceDictionary) :: nsDict
 #endif
   end type xmlf_t
@@ -153,7 +155,7 @@ module m_wxml_core
 contains
 
   subroutine xml_OpenFile(filename, xf, unit, iostat, preserve_whitespace, &
-    pretty_print, minimize_overrun, replace, addDecl, warning, valid)
+    pretty_print, minimize_overrun, replace, addDecl, warning, valid, namespace)
     character(len=*), intent(in)  :: filename
     type(xmlf_t), intent(inout)   :: xf
     integer, intent(in), optional :: unit
@@ -165,6 +167,7 @@ contains
     logical, intent(in), optional :: addDecl
     logical, intent(in), optional :: warning
     logical, intent(in), optional :: valid
+    logical, intent(in), optional :: namespace
     
 #ifndef DUMMYLIB
     logical :: repl, decl
@@ -248,16 +251,10 @@ contains
     xf%state_2 = WXML_STATE_2_OUTSIDE_TAG
     xf%state_3 = WXML_STATE_3_BEFORE_DTD
     
-    if (present(pretty_print)) then
+    if (present(pretty_print)) &
       xf%pretty_print = pretty_print
-    else
-      xf%pretty_print = .false.
-    endif
-    if (present(minimize_overrun)) then
+    if (present(minimize_overrun)) &
       xf%minimize_overrun = minimize_overrun
-    else
-      xf%minimize_overrun = .false.
-    endif
     if (present(preserve_whitespace)) then
       xf%pretty_print = .not.preserve_whitespace
       xf%minimize_overrun = preserve_whitespace
@@ -271,8 +268,10 @@ contains
     else
       call reset_buffer(xf%buffer, xf%lun, xf%xds%xml_version)
     endif
-    
-    call initNamespaceDictionary(xf%nsDict)
+
+    if (present(namespace)) xf%namespace = namespace
+    if (xf%namespace) &
+      call initNamespaceDictionary(xf%nsDict)
 #endif
   end subroutine xml_OpenFile
 
@@ -338,7 +337,7 @@ contains
     character(len=*), intent(in), optional :: system, public
 #ifndef DUMMYLIB
     call check_xf(xf)
-    if (.not.checkChars(name,xf%xds%xml_version)) call wxml_error("xml_AddDOCTYPE: Invalid character in name")
+
     if (present(system)) then
       if (.not.checkChars(system,xf%xds%xml_version)) call wxml_error("xml_AddDOCTYPE: Invalid character in system")
     endif
@@ -349,7 +348,7 @@ contains
     if (present(public).and..not.present(system)) &
       call wxml_error('xml_AddDOCTYPE: PUBLIC supplied without SYSTEM for: '//name)
 
-    ! By having an external ID we render this non-standalone (unless we've said that it is in the declaration)
+    ! By having an external ID we probably render this non-standalone (unless we've said that it is in the declaration)
     if (present(system).and..not.xf%xds%standalone_declared) &
       xf%xds%standalone=.false.
 
@@ -364,9 +363,14 @@ contains
       xf%state_3 = WXML_STATE_3_DURING_DTD
     endif
 
-    if (.not.checkName(name, xf%xds%xml_version)) &
+    if (xf%namespace) then
+      if (.not.checkQName(name, xf%xds%xml_version)) &
          call wxml_error("Invalid Name in DTD "//name)
-    
+    else
+      if (.not.checkName(name, xf%xds%xml_version)) &
+        call wxml_error("Invalid Name in DTD "//name)
+    endif
+
     call add_eol(xf)
     call add_to_buffer("<!DOCTYPE "//name, xf%buffer, .false.)
 
@@ -403,7 +407,7 @@ contains
     character(len=*), intent(in), optional :: public
 #ifndef DUMMYLIB
     call check_xf(xf)
-    if (.not.checkChars(name,xf%xds%xml_version)) call wxml_error("xml_AddParameterEntity: Invalid character in name")
+
     if (present(PEDef)) then
       if (.not.checkChars(PEDef,xf%xds%xml_version)) call wxml_error("xml_AddParameterEntity: Invalid character in PEDef")
     endif
@@ -412,6 +416,14 @@ contains
     endif
     if (present(public)) then
       if (.not.checkChars(public,xf%xds%xml_version)) call wxml_error("xml_AddParameterEntity: Invalid character in public")
+    endif
+
+    if (xf%namespace) then
+      if (.not.checkNCName(name, xf%xds%xml_version)) &
+         call wxml_error("Invalid Name in DTD "//name)
+    else
+      if (.not.checkName(name, xf%xds%xml_version)) &
+        call wxml_error("Invalid Name in DTD "//name)
     endif
     
     ! By adding a parameter entity (internal or external) we make this
@@ -524,9 +536,17 @@ contains
 
 #ifndef DUMMYLIB
     call check_xf(xf)
-    if (.not.checkChars(name,xf%xds%xml_version)) call wxml_error("xml_AddInternalEntity: Invalid character in name")
+
     if (.not.checkChars(value,xf%xds%xml_version)) call wxml_error("xml_AddInternalEntity: Invalid character in value")
     
+    if (xf%namespace) then
+      if (.not.checkNCName(name, xf%xds%xml_version)) &
+         call wxml_error("Invalid Name in DTD "//name)
+    else
+      if (.not.checkName(name, xf%xds%xml_version)) &
+        call wxml_error("Invalid Name in DTD "//name)
+    endif
+
     if (xf%state_3 == WXML_STATE_3_DURING_DTD) then
       call add_to_buffer(" [", xf%buffer)
       xf%state_3 = WXML_STATE_3_INSIDE_INTSUBSET
@@ -566,13 +586,21 @@ contains
 
 #ifndef DUMMYLIB
     call check_xf(xf)
-    if (.not.checkChars(name,xf%xds%xml_version)) call wxml_error("xml_AddExternalEntity: Invalid character in name")
+
     if (.not.checkChars(system,xf%xds%xml_version)) call wxml_error("xml_AddExternalEntity: Invalid character in system")
     if (present(public)) then
       if (.not.checkChars(public,xf%xds%xml_version)) call wxml_error("xml_AddExternalEntity: Invalid character in public")
     endif
     if (present(notation)) then
       if (.not.checkChars(notation,xf%xds%xml_version)) call wxml_error("xml_AddExternalEntity: Invalid character in notation")
+    endif
+
+    if (xf%namespace) then
+      if (.not.checkNCName(name, xf%xds%xml_version)) &
+         call wxml_error("Invalid Name in DTD "//name)
+    else
+      if (.not.checkName(name, xf%xds%xml_version)) &
+        call wxml_error("Invalid Name in DTD "//name)
     endif
     
     if (xf%state_3 == WXML_STATE_3_DURING_DTD) then
@@ -647,14 +675,22 @@ contains
 
 #ifndef DUMMYLIB
     call check_xf(xf)
-    if (.not.checkChars(name,xf%xds%xml_version)) call wxml_error("xml_AddNotation: Invalid character in name")
+
     if (present(system)) then
       if (.not.checkChars(system,xf%xds%xml_version)) call wxml_error("xml_AddNotation: Invalid character in system")
     endif
     if (present(public)) then
       if (.not.checkChars(public,xf%xds%xml_version)) call wxml_error("xml_AddNotation: Invalid character in public")
     endif
-    
+
+    if (xf%namespace) then
+      if (.not.checkNCName(name, xf%xds%xml_version)) &
+         call wxml_error("Invalid Name in DTD "//name)
+    else
+      if (.not.checkName(name, xf%xds%xml_version)) &
+        call wxml_error("Invalid Name in DTD "//name)
+    endif
+
     if (xf%state_3 == WXML_STATE_3_DURING_DTD) then
       call add_to_buffer(" [", xf%buffer, .false.)
       xf%state_3 = WXML_STATE_3_INSIDE_INTSUBSET
@@ -712,11 +748,16 @@ contains
 
 #ifndef DUMMYLIB
     call check_xf(xf)
-    if (.not.checkChars(name,xf%xds%xml_version)) call wxml_error("xml_AddElementToDTD: Invalid character in name")
+
     if (.not.checkChars(declaration,xf%xds%xml_version)) call wxml_error("xml_AddElementToDTD: Invalid character in declaration")
 
-    if (.not.checkName(name, xf%xds%xml_version)) &
-      call wxml_error("Element name is illegal in xml_AddElementToDTD: "//name)
+    if (xf%namespace) then
+      if (.not.checkQName(name, xf%xds%xml_version)) &
+        call wxml_error("Invalid Element Name in DTD "//name)
+    else
+      if (.not.checkName(name, xf%xds%xml_version)) &
+        call wxml_error("Invalid Element Name in DTD "//name)
+    endif
 
     !FIXME we should check declaration syntax too.
     call wxml_warning(xf, "Adding ELEMENT declaration to DTD. Cannot guarantee well-formedness")
@@ -747,11 +788,16 @@ contains
 
 #ifndef DUMMYLIB
     call check_xf(xf)
-    if (.not.checkChars(name,xf%xds%xml_version)) call wxml_error("xml_AddAttListToDTD: Invalid character in name")
+
     if (.not.checkChars(declaration,xf%xds%xml_version)) call wxml_error("xml_AddAttListToDTD: Invalid character in declaration")
 
-    if (.not.checkName(name, xf%xds%xml_version)) &
-      call wxml_error("Attlist name is illegal in xml_AddAttlistToDTD: "//name)
+    if (xf%namespace) then
+      if (.not.checkQName(name, xf%xds%xml_version)) &
+        call wxml_error("Invalid Attribute Name in DTD "//name)
+    else
+      if (.not.checkName(name, xf%xds%xml_version)) &
+        call wxml_error("Invalid Attribute Name in DTD "//name)
+    endif
 
     !FIXME we should check declaration syntax too.
     call wxml_warning(xf, "Adding ATTLIST declaration to DTD. Cannot guarantee well-formedness")
@@ -781,10 +827,14 @@ contains
 
 #ifndef DUMMYLIB
     call check_xf(xf)
-    if (.not.checkChars(name,xf%xds%xml_version)) call wxml_error("xml_AddPEReferenceToDTD: Invalid character in name")
 
-    if (.not.checkName(name, xf%xds%xml_version)) &
-      call wxml_error("Trying to add illegal name in xml_AddPEReferenceToDTD: "//name)
+    if (xf%namespace) then
+      if (.not.checkNCName(name, xf%xds%xml_version)) &
+        call wxml_error("Invalid PE Name in DTD "//name)
+    else
+      if (.not.checkName(name, xf%xds%xml_version)) &
+        call wxml_error("Invalid PE Name in DTD "//name)
+    endif
 
     call wxml_warning(xf, "Adding PEReference to DTD. Cannot guarantee well-formedness")
     if (.not.existing_entity(xf%xds%PEList, name)) then
@@ -865,9 +915,28 @@ contains
     logical, intent(in), optional :: xml
     logical, intent(in), optional :: ws_significant
 
+    logical :: xml_
 #ifndef DUMMYLIB
     call check_xf(xf)
-    if (.not.checkChars(name,xf%xds%xml_version)) call wxml_error("xml_AddXMLPI: Invalid character in name")
+
+    if (present(xml)) then
+      xml_ = xml
+    else
+      xml_ = .false.
+    endif
+
+    if (xf%namespace) then
+      if (.not.checkNCName(name, xf%xds%xml_version)) &
+        call wxml_error("Invalid PI target "//name)
+    else
+      if (.not.checkName(name, xf%xds%xml_version)) &
+        call wxml_error("Invalid PI target "//name)
+    endif
+    if (.not.xml) then
+      if (len(name)==3.and.(toLower(name)=="xml")) &
+        call wxml_error("Invalid PI target "//name)
+    endif
+
     if (present(data)) then
       if (.not.checkChars(data,xf%xds%xml_version)) call wxml_error("xml_AddXMLPI: Invalid character in data")
     endif
@@ -883,13 +952,6 @@ contains
       call add_eol(xf)
     end select
 
-    if (present(xml)) then
-      if (.not.checkName(name, xf%xds%xml_version)) &
-        call wxml_error(xf, "Invalid PI Target "//name)
-    else
-      if (.not.checkPITarget(name, xf%xds%xml_version)) &
-        call wxml_error(xf, "Invalid PI Target "//name)
-    endif
     call add_to_buffer("<?" // name, xf%buffer, .false.)
     if (present(data)) then
       if (index(data, '?>') > 0) &
@@ -941,7 +1003,14 @@ contains
 
 #ifndef DUMMYLIB
     call check_xf(xf)
-    if (.not.checkChars(name,xf%xds%xml_version)) call wxml_error("xml_NewElement: Invalid character in name")
+    
+    if (xf%namespace) then
+      if (.not.checkQName(name, xf%xds%xml_version)) &
+        call wxml_error("Invalid Element Name "//name)
+    else
+      if (.not.checkName(name, xf%xds%xml_version)) &
+        call wxml_error("Invalid Element Name "//name)
+    endif
     
     select case (xf%state_1)
     case (WXML_STATE_1_JUST_OPENED, WXML_STATE_1_BEFORE_ROOT)
@@ -1028,47 +1097,49 @@ contains
     type(xmlf_t), intent(inout) :: xf
 
 #ifndef DUMMYLIB
-    call xml_AddCharacters(xf, "") ! FIXME Does this line do anything?
+    call xml_AddCharacters(xf, "") ! To ensure we are in a text section
     call add_eol(xf)
 #endif
   end subroutine xml_AddNewline
 
   
-  subroutine xml_AddEntityReference(xf, entityref)
+  subroutine xml_AddEntityReference(xf, name)
     type(xmlf_t), intent(inout) :: xf
-    character(len=*), intent(in) :: entityref
+    character(len=*), intent(in) :: name
 
 #ifndef DUMMYLIB
     call check_xf(xf)
-    if (.not.checkChars(entityref, xf%xds%xml_version)) call wxml_error("xml_AddEntityReference: Invalid character in entityref")
-    
-    !Where can we add this? If we allow the full gamut
-    !of entities, we can no longer properly ensure
-    !well-formed output, unless we tie the sax parser
-    !in as well ...
+
+    if (xf%namespace) then
+      if (.not.checkNCName(name, xf%xds%xml_version)) &
+        call wxml_error("Invalid Entity Name "//name)
+    else
+      if (.not.checkName(name, xf%xds%xml_version)) &
+        call wxml_error("Invalid Entity Name "//name)
+    endif
 
     call close_start_tag(xf)
 
     if (xf%state_2 /= WXML_STATE_2_OUTSIDE_TAG .and. &
       xf%state_2 /= WXML_STATE_2_IN_CHARDATA)         &
-      call wxml_fatal("Tried to add entity reference in wrong place: "//entityref)
+      call wxml_fatal("Tried to add entity reference in wrong place: "//name)
 
-    if (.not.checkCharacterEntityReference(entityref, xf%xds%xml_version)) then
+    if (.not.checkCharacterEntityReference(name, xf%xds%xml_version)) then
       !it's not just a unicode entity
       call wxml_warning(xf, "Entity reference added - document may not be well-formed")
-      if (.not.existing_entity(xf%xds%entityList, entityref)) then
+      if (.not.existing_entity(xf%xds%entityList, name)) then
         if (xf%xds%standalone) then
           call wxml_error("Tried to reference unregistered entity")
         else
           call wxml_warning(xf, "Tried to reference unregistered entity")
         endif
       else
-        if (is_unparsed_entity(xf%xds%entityList, entityref)) &
+        if (is_unparsed_entity(xf%xds%entityList, name)) &
           call wxml_error("Tried to reference unparsed entity")
       endif
     endif
 
-    call add_to_buffer('&'//entityref//';', xf%buffer, .false.)
+    call add_to_buffer('&'//name//';', xf%buffer, .false.)
     xf%state_2 = WXML_STATE_2_IN_CHARDATA
 #endif
   end subroutine xml_AddEntityReference
@@ -1106,9 +1177,17 @@ contains
     endif
 
     call check_xf(xf)
-    if (.not.checkChars(name, xf%xds%xml_version)) call wxml_error("xml_AddAttribute: Invalid character in name")
+
     if (.not.checkChars(value, xf%xds%xml_version)) call wxml_error("xml_AddAttribute: Invalid character in value")
-    
+
+    if (xf%namespace) then
+      if (.not.checkQName(name, xf%xds%xml_version)) &
+        call wxml_error("Invalid Attribute Name "//name)
+    else
+      if (.not.checkName(name, xf%xds%xml_version)) &
+        call wxml_error("Invalid Attribute Name "//name)
+    endif
+
     if (present(escape)) then
       esc = escape
     else
@@ -1356,9 +1435,11 @@ contains
 
 #ifndef DUMMYLIB
     call check_xf(xf)
-    if (.not.checkChars(nsURI, xf%xds%xml_version)) call wxml_error("xml_DeclareNamespace: Invalid character in nsURI")
+    if (.not.xf%namespace) call wxml_error("Cannot declare a namespace in a non-namespaced document")
+
+    if (.not.checkNCName(nsURI, xf%xds%xml_version)) call wxml_error("xml_DeclareNamespace: Invalid nsURI")
     if (present(prefix)) then
-      if (.not.checkChars(prefix, xf%xds%xml_version)) call wxml_error("xml_DeclareNamespace: Invalid character in prefix")
+      if (.not.checkNCName(prefix, xf%xds%xml_version)) call wxml_error("xml_DeclareNamespace: Invalid prefix")
     endif
 
     if (xf%state_1 == WXML_STATE_1_AFTER_ROOT) &
@@ -1385,6 +1466,7 @@ contains
 #ifndef DUMMYLIB
     call check_xf(xf)
     !No need to checkChars, prefix is checked against stack
+    if (.not.xf%namespace) call wxml_error("Cannot declare a namespace in a non-namespaced document")
 
     if (present(prefix).and.xf%xds%xml_version==XML1_0) &
       call wxml_error("cannot undeclare prefixed namespaces in XML 1.0")
