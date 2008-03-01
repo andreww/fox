@@ -1963,7 +1963,11 @@ contains
             tempString => expand_pe_text(fx, fx%token, fb)
           endif
           fx%attname => expand_entity_value_alloc(tempString, fx%xds, fx%error_stack)
-          deallocate(tempString)
+          if (reading_main_file(fb)) then
+            tempString => null()
+          else
+            deallocate(tempString)
+          endif
           if (in_error(fx%error_stack)) return
           nextDTDState = ST_DTD_ENTITY_END
         case default
