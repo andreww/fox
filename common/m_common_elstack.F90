@@ -141,7 +141,7 @@ contains
     endif
     item = str_vs(elstack%stack(n)%data)
     deallocate(elstack%stack(n)%data)
-    deallocate(elstack%stack(n)%cms)
+    if (associated(elstack%stack(n)%cms)) deallocate(elstack%stack(n)%cms)
     elstack%n_items = n - 1
 
   end function pop_elstack

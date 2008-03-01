@@ -159,7 +159,7 @@ contains
 
     do i = 1, size(e_list%list)
       deallocate(e_list%list(i)%name)
-      deallocate(e_list%list(i)%cp)
+      if (associated(e_list%list(i)%cp)) deallocate(e_list%list(i)%cp)
       if (associated(e_list%list(i)%model)) deallocate(e_list%list(i)%model)
       call destroy_attribute_list(e_list%list(i)%attlist)
     enddo
