@@ -1124,8 +1124,10 @@ contains
               nextState = ST_CHAR_IN_CONTENT
             else
               !we're done
-              if (validCheck) &
+              if (validCheck) then
                 call checkIdRefs
+                if (in_error(fx%error_stack)) goto 100
+              endif
               fx%well_formed = .true.
               nextState = ST_MISC
               fx%context = CTXT_AFTER_CONTENT
