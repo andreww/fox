@@ -40,12 +40,30 @@ module m_common_content_model
   public :: content_particle_t
   public :: content_model_state
 
+  public :: newCP
+  public :: checkContentModel
+
 contains
 
-  function ok() result(p)
+  function newCP(empty, any) result(cp)
+    logical, intent(in), optional :: empty
+    logical, intent(in), optional :: any
+    type(content_particle_t), pointer :: cp
+
+    allocate(cp)
+    if (present(empty)) then
+      cp%operator = OP_EMPTY
+    elseif (present(any)) then
+      cp%operator = OP_ANY
+    endif
+  end function newCP
+
+  function checkContentModel(cms, name) result(p)
+    type(content_model_state), pointer :: cms
+    character(len=*), intent(in) :: name
     logical :: p
     p = .true.
-  end function ok
+  end function checkContentModel
 
 #endif
 

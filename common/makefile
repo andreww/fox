@@ -44,7 +44,7 @@ clean:
 FoX_common.$(OBJEXT): m_common_attrs.$(OBJEXT) m_common_parse_input.$(OBJEXT)
 m_common_attrs.$(OBJEXT): m_common_element.$(OBJEXT) m_common_error.$(OBJEXT)
 m_common_buffer.$(OBJEXT): m_common_charset.$(OBJEXT) m_common_error.$(OBJEXT)
-m_common_element.$(OBJEXT): m_common_charset.$(OBJEXT) m_common_error.$(OBJEXT) m_common_namecheck.$(OBJEXT)
+m_common_element.$(OBJEXT): m_common_charset.$(OBJEXT) m_common_content_model.$(OBJEXT) m_common_error.$(OBJEXT) m_common_namecheck.$(OBJEXT)
 m_common_elstack.$(OBJEXT): m_common_content_model.$(OBJEXT) m_common_error.$(OBJEXT)
 m_common_entities.$(OBJEXT): m_common_charset.$(OBJEXT) m_common_error.$(OBJEXT)
 m_common_entity_expand.$(OBJEXT): m_common_entities.$(OBJEXT) m_common_error.$(OBJEXT)

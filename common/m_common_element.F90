@@ -9,7 +9,7 @@ module m_common_element
     registered_string
   use m_common_charset, only: isInitialNameChar, isNameChar, &
     upperCase, XML_WHITESPACE
-  use m_common_content_model, only: content_particle_t
+  use m_common_content_model, only: content_particle_t, newCP
   use m_common_error, only: error_stack, add_error, in_error
   use m_common_namecheck, only: checkName, checkNames, checkQName,   &
     checkQNames, checkNmtoken, checkNmtokens
@@ -253,6 +253,7 @@ contains
     logical :: mixed, empty, any
     character :: c
     character, pointer :: order(:), name(:), temp(:)
+    type(content_particle_t), pointer :: current => null()
     logical :: mixed_additional
 
     order => null()
@@ -265,6 +266,8 @@ contains
     nbrackets = 0
     mixed_additional = .false.
     state = ST_START
+
+    current => null()
 
     do i = 1, len(contents) + 1
       if (i<=len(contents)) then
@@ -299,9 +302,11 @@ contains
         elseif (verify(c, XML_WHITESPACE)==0) then
           if (str_vs(name)=='EMPTY') then
             empty = .true.
+            current => newCP(empty=.true.)
             ! check do we have any notations FIXME
           elseif (str_vs(name)=='ANY') then
             any = .true.
+            current => newCP(empty=.true.)
           else
             call add_error(stack, &
               'Unexpected ELEMENT specification; expecting EMPTY or ANY')
@@ -637,7 +642,11 @@ contains
         element%empty = empty
         element%mixed = mixed
         element%model => vs_str_alloc(trim(strip_spaces(contents)))
-        allocate(element%cp)
+        if (associated(current)) then
+          element%cp => current
+        else
+          allocate(element%cp)
+        endif
       endif
     endif
     return
