@@ -9,6 +9,7 @@ module m_common_element
     registered_string
   use m_common_charset, only: isInitialNameChar, isNameChar, &
     upperCase, XML_WHITESPACE
+  use m_common_content_model, only: content_particle_t
   use m_common_error, only: error_stack, add_error, in_error
   use m_common_namecheck, only: checkName, checkNames, checkQName,   &
     checkQNames, checkNmtoken, checkNmtokens
@@ -78,6 +79,7 @@ module m_common_element
     logical :: any = .false.
     logical :: mixed = .false.
     logical :: id_declared = .false.
+    type (content_particle_t), pointer :: cp => null()
     character, pointer :: model(:) => null()
     type(attribute_list) :: attlist
   end type element_t
@@ -157,6 +159,7 @@ contains
 
     do i = 1, size(e_list%list)
       deallocate(e_list%list(i)%name)
+      deallocate(e_list%list(i)%cp)
       if (associated(e_list%list(i)%model)) deallocate(e_list%list(i)%model)
       call destroy_attribute_list(e_list%list(i)%attlist)
     enddo
@@ -228,6 +231,7 @@ contains
       e_list%list(i)%empty = temp(i)%empty
       e_list%list(i)%any = temp(i)%any
       e_list%list(i)%mixed = temp(i)%mixed
+      e_list%list(i)%cp => temp(i)%cp
       e_list%list(i)%id_declared = temp(i)%id_declared
       e_list%list(i)%attlist%list => temp(i)%attlist%list
     enddo
@@ -633,6 +637,7 @@ contains
         element%empty = empty
         element%mixed = mixed
         element%model => vs_str_alloc(trim(strip_spaces(contents)))
+        allocate(element%cp)
       endif
     endif
     return

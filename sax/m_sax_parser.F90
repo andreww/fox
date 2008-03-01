@@ -2322,7 +2322,7 @@ contains
           if (fx%state==ST_STOP) return
         endif
       endif
-      call push_elstack(str_vs(fx%name), fx%elstack)
+      call push_elstack(fx%elstack, str_vs(fx%name))
       call reset_dict(fx%attributes)
     end subroutine open_tag
 

@@ -1042,7 +1042,7 @@ contains
       endif
     endif
     
-    call push_elstack(name,xf%stack)
+    call push_elstack(xf%stack, name)
     call add_to_buffer("<"//name, xf%buffer, .false.)
     xf%state_2 = WXML_STATE_2_INSIDE_ELEMENT
     call reset_dict(xf%dict)

@@ -3,11 +3,13 @@ module m_common_elstack
 #ifndef DUMMYLIB
   use fox_m_fsys_array_str, only: str_vs, vs_str
   use m_common_error, only: FoX_fatal
+  use m_common_content_model, only: content_particle_t, content_model_state
 
   implicit none
   private
 
-  ! Simple stack to keep track of which elements have appeared so far
+  ! Element stack during parsing. Keeps track of element names
+  ! and optionally tracks validity of content model
 
   ! Initial stack size:
   integer, parameter :: STACK_SIZE_INIT = 10
@@ -15,19 +17,20 @@ module m_common_elstack
   real, parameter :: STACK_SIZE_MULT = 1.5
 
   type :: elstack_item
-    character, dimension(:), pointer :: data
+    character, dimension(:), pointer          :: data => null()
+    type(content_model_state), pointer        :: cms => null()
   end type elstack_item
 
   type :: elstack_t
     private
     integer                                   :: n_items
-    type(elstack_item), pointer, dimension(:) :: stack
+    type(elstack_item), pointer, dimension(:) :: stack => null()
   end type elstack_t
 
   public :: elstack_t
 
   public  :: push_elstack, pop_elstack, init_elstack, destroy_elstack, reset_elstack, print_elstack
-  public  :: get_top_elstack, is_empty, get_elstack_signature
+  public  :: get_top_elstack, is_empty
   public  :: len
 
   interface len
@@ -40,7 +43,6 @@ module m_common_elstack
 
 contains
 
-  !-----------------------------------------------------------------
   subroutine init_elstack(elstack)
     type(elstack_t), intent(inout)  :: elstack
 
@@ -58,11 +60,11 @@ contains
     integer :: i
     do i = 0, elstack % n_items
       deallocate(elstack%stack(i)%data)
+      if (associated(elstack%stack(i)%cms)) deallocate(elstack%stack(i)%cms)
     enddo
     deallocate(elstack%stack)
   end subroutine destroy_elstack
 
-  !-----------------------------------------------------------------
   subroutine reset_elstack(elstack)
     type(elstack_t), intent(inout)  :: elstack
 
@@ -71,7 +73,6 @@ contains
 
   end subroutine reset_elstack
 
-  !-----------------------------------------------------------------
   subroutine resize_elstack(elstack)
     type(elstack_t), intent(inout)  :: elstack
     type(elstack_item), dimension(0:ubound(elstack%stack,1)) :: temp
@@ -81,16 +82,17 @@ contains
 
     do i = 0, s
       temp(i)%data => elstack%stack(i)%data
+      temp(i)%cms => elstack%stack(i)%cms
     enddo
     deallocate(elstack%stack)
     allocate(elstack%stack(0:nint(s*STACK_SIZE_MULT)))
     do i = 0, s
       elstack%stack(i)%data => temp(i)%data
+      elstack%stack(i)%cms => temp(i)%cms
     enddo
 
   end subroutine resize_elstack
 
-  !-----------------------------------------------------------------
   pure function is_empty_elstack(elstack) result(answer)
     type(elstack_t), intent(in)  :: elstack
     logical                    :: answer
@@ -98,7 +100,6 @@ contains
     answer = (elstack%n_items == 0)
   end function is_empty_elstack
 
-  !-----------------------------------------------------------------
   function number_of_items(elstack) result(n)
     type(elstack_t), intent(in)  :: elstack
     integer                      :: n
@@ -106,10 +107,10 @@ contains
     n = elstack%n_items
   end function number_of_items
 
-  !-----------------------------------------------------------------
-  subroutine push_elstack(item,elstack)
-    character(len=*), intent(in)      :: item
-    type(elstack_t), intent(inout)  :: elstack
+  subroutine push_elstack(elstack, name, cm)
+    type(elstack_t), intent(inout)              :: elstack
+    character(len=*), intent(in)                :: name
+    type(content_particle_t), pointer, optional :: cm
 
     integer :: n
 
@@ -118,13 +119,16 @@ contains
     if (n == size(elstack%stack)) then
       call resize_elstack(elstack)
     endif
-    allocate(elstack%stack(n)%data(len(item)))
-    elstack%stack(n)%data = vs_str(item)
+    allocate(elstack%stack(n)%data(len(name)))
+    elstack%stack(n)%data = vs_str(name)
+    if (present(cm)) then
+      allocate(elstack%stack(n)%cms)
+      elstack%stack(n)%cms%cp => cm
+    endif
     elstack%n_items = n
 
   end subroutine push_elstack
 
-  !-----------------------------------------------------------------
   function pop_elstack(elstack) result(item)
     type(elstack_t), intent(inout)     :: elstack
     character(len=merge(size(elstack%stack(elstack%n_items)%data), 0, elstack%n_items > 0)) :: item
@@ -137,11 +141,11 @@ contains
     endif
     item = str_vs(elstack%stack(n)%data)
     deallocate(elstack%stack(n)%data)
+    deallocate(elstack%stack(n)%cms)
     elstack%n_items = n - 1
 
   end function pop_elstack
 
-  !-----------------------------------------------------------------
   pure function get_top_elstack(elstack) result(item)
     ! Get the top element of the stack, *without popping it*.
     type(elstack_t), intent(in)        :: elstack
@@ -159,7 +163,6 @@ contains
 
   end function get_top_elstack
 
-  !-----------------------------------------------------------------
   subroutine print_elstack(elstack,unit)
     type(elstack_t), intent(in)   :: elstack
     integer, intent(in)           :: unit
@@ -170,24 +173,6 @@ contains
     enddo
 
   end subroutine print_elstack
-
-  !-------------------------------------------------------------
-  function get_elstack_signature(elstack) result(string)
-    type(elstack_t), intent(in)   :: elstack
-    !FIXME TOHW character(len=sum(size(elstack%stack(:elstack%n_items)%data))+elstack%n_items) :: string
-    character(len=200) :: string
-    integer   :: i, length, j
-
-    j = 0
-    do i = 1, elstack%n_items
-      length = size(elstack%stack(i)%data)
-      string(j+1:j+1) = "/"
-      j = j+1
-      string(j+1:j+length) = str_vs(elstack%stack(i)%data)
-      j = j + length
-    enddo
-
-  end function get_elstack_signature
 
 #endif
 end module m_common_elstack
