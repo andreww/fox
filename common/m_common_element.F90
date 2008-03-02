@@ -270,7 +270,7 @@ contains
     firstChild = .true.
     state = ST_START
 
-    current => null()
+    top => null()
 
     do i = 1, len(contents) + 1
       if (i<=len(contents)) then
