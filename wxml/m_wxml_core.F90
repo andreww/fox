@@ -754,7 +754,7 @@ contains
         call wxml_error("Invalid Element Name in DTD "//name)
     endif
 
-    call parse_dtd_element(declaration, xf%xds%xml_version, stack)
+    call parse_dtd_element(declaration, xf%xds%xml_version, stack, null())
     if (in_error(stack)) call wxml_error(xf, "Invalid ELEMENT declaration")
     
     if (xf%state_3 == WXML_STATE_3_DURING_DTD) then

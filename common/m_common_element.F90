@@ -9,7 +9,9 @@ module m_common_element
     registered_string
   use m_common_charset, only: isInitialNameChar, isNameChar, &
     upperCase, XML_WHITESPACE
-  use m_common_content_model, only: content_particle_t, newCP
+  use m_common_content_model, only: content_particle_t, newCP, destroyCPtree, &
+    OP_MIXED, OP_CHOICE, OP_SEQ, REP_QUESTION_MARK, REP_ASTERISK, REP_PLUS, &
+    destroyCPtree
   use m_common_error, only: error_stack, add_error, in_error
   use m_common_namecheck, only: checkName, checkNames, checkQName,   &
     checkQNames, checkNmtoken, checkNmtokens
@@ -159,7 +161,7 @@ contains
 
     do i = 1, size(e_list%list)
       deallocate(e_list%list(i)%name)
-      if (associated(e_list%list(i)%cp)) deallocate(e_list%list(i)%cp)
+      if (associated(e_list%list(i)%cp)) call destroyCPtree(e_list%list(i)%cp)
       if (associated(e_list%list(i)%model)) deallocate(e_list%list(i)%model)
       call destroy_attribute_list(e_list%list(i)%attlist)
     enddo
@@ -246,15 +248,15 @@ contains
     character(len=*), intent(in) :: contents
     integer, intent(in) :: xv
     type(error_stack), intent(inout) :: stack
-    type(element_t), pointer, optional :: element
+    type(element_t), pointer :: element
 
     integer :: state
     integer :: i, nbrackets
     logical :: mixed, empty, any
     character :: c
     character, pointer :: order(:), name(:), temp(:)
-    type(content_particle_t), pointer :: current => null()
-    logical :: mixed_additional
+    type(content_particle_t), pointer :: top, current, tcp
+    logical :: mixed_additional, firstChild
 
     order => null()
     name => null()
@@ -265,6 +267,7 @@ contains
     mixed = .false.
     nbrackets = 0
     mixed_additional = .false.
+    firstChild = .true.
     state = ST_START
 
     current => null()
@@ -286,6 +289,9 @@ contains
         elseif (c=='(') then
           order => vs_str_alloc(" ")
           nbrackets = 1
+          top => newCP()
+          current => top
+          print*,"NEWCP first", associated(current%parent)
           state = ST_FIRSTCHILD
         else
           call add_error(stack, &
@@ -302,11 +308,12 @@ contains
         elseif (verify(c, XML_WHITESPACE)==0) then
           if (str_vs(name)=='EMPTY') then
             empty = .true.
-            current => newCP(empty=.true.)
-            ! check do we have any notations FIXME
+            top => newCP(empty=.true.)
+            current => top
           elseif (str_vs(name)=='ANY') then
             any = .true.
-            current => newCP(any=.true.)
+            top => newCP(any=.true.)
+            current => top
           else
             call add_error(stack, &
               'Unexpected ELEMENT specification; expecting EMPTY or ANY')
@@ -334,6 +341,11 @@ contains
         elseif (c=='(') then
           nbrackets = nbrackets + 1
           deallocate(order)
+          tcp => newCP()
+          current%firstChild => tcp
+          tcp%parent => current
+          current => tcp
+          print*,"NEWCP second", associated(current%parent)
           order => vs_str_alloc("  ")
           state = ST_CHILD
         else
@@ -356,6 +368,13 @@ contains
               'Unexpected token after #')
             goto 100
           endif
+          ! Must be first child
+          current%operator = OP_MIXED
+          tcp => newCP(name="#PCDATA")
+          current%firstChild => tcp
+          tcp%parent => current
+          current => tcp
+          firstChild = .false.
           state = ST_SEPARATOR
         elseif (c==')') then
           if (str_vs(name)=='PCDATA') then
@@ -368,15 +387,29 @@ contains
               'Unexpected token after #')
             goto 100
           endif
+          ! Must be first child
+          current%operator = OP_MIXED
+          tcp => newCP(name="#PCDATA")
+          current%firstChild => tcp
+          tcp%parent => current
+          current => tcp
+          firstChild = .false.
         elseif (c=='|') then
           if (str_vs(name)=='PCDATA') then
-            ! continue
+            firstChild = .false.
             deallocate(name)
           else
             call add_error(stack, &
               'Unexpected token after #')
             goto 100
           endif
+          ! Must be first child
+          current%operator = OP_MIXED
+          tcp => newCP(name="#PCDATA")
+          current%firstChild => tcp
+          tcp%parent => current
+          current => tcp
+          firstChild = .false.
           order(1) = '|'
           state = ST_CHILD
         elseif (c==',') then
@@ -395,60 +428,65 @@ contains
           temp => name
           name => vs_str_alloc(str_vs(temp)//c)
           deallocate(temp)
-        elseif (c=='?') then
-          deallocate(name)
+        elseif (scan(c, "?+*")>0) then
           if (mixed) then
             call add_error(stack, &
               'Repeat operators forbidden for Mixed elements')
             goto 100
-          else
-            state = ST_SEPARATOR
           endif
-        elseif (c=='+') then
+          tcp => newCP(name=str_vs(name), repeat=c)
           deallocate(name)
-          if (mixed) then
-            call add_error(stack, &
-              'Repeat operators forbidden for Mixed elements')
-            goto 100
+          if (firstChild) then
+            current%firstChild => tcp
+            tcp%parent => current
+            current => tcp
+            firstChild = .false.
           else
-            state = ST_SEPARATOR
+            current%nextSibling => tcp
+            tcp%parent => current%parent
           endif
-        elseif (c=='*') then
-          deallocate(name)
-          if (mixed) then
-            call add_error(stack, &
-              'Repeat operators forbidden for Mixed elements')
-            goto 100
-          else
-            state = ST_SEPARATOR
-          endif
-        elseif (verify(c, XML_WHITESPACE)==0) then
-          deallocate(name)
-          if (mixed) mixed_additional = .true.
           state = ST_SEPARATOR
-        elseif (c==',') then
+        elseif (verify(c, XML_WHITESPACE)==0) then
+          if (mixed) mixed_additional = .true.
+          tcp => newCP(name=str_vs(name))
           deallocate(name)
-          if (order(nbrackets)=='') then
-            order(nbrackets)=','
-          elseif (order(nbrackets)=='|') then
-            call add_error(stack, &
-              'Cannot mix ordered and unordered elements')
-            goto 100
+          if (firstChild) then
+            current%firstChild => tcp
+            tcp%parent => current
+            current => tcp
+            firstChild = .false.
+          else
+            current%nextSibling => tcp
+            tcp%parent => current%parent
           endif
-          state = ST_CHILD
-        elseif (c=='|') then
-          deallocate(name)
+          state = ST_SEPARATOR
+        elseif (scan(c,',|')>0) then
           if (order(nbrackets)=='') then
-            order(nbrackets)='|'
-          elseif (order(nbrackets)==',') then
+            order(nbrackets)=c
+          elseif (order(nbrackets)/=c) then
             call add_error(stack, &
               'Cannot mix ordered and unordered elements')
             goto 100
           endif
           if (mixed) mixed_additional = .true.
+          tcp => newCP(name=str_vs(name))
+          deallocate(name)
+          if (firstChild) then
+            current%firstChild => tcp
+            tcp%parent => current
+            current => tcp
+            firstChild = .false.
+          else
+            current%nextSibling => tcp
+            tcp%parent => current%parent
+          endif
+          if (c=="|") then
+            current%parent%operator = OP_CHOICE
+          elseif (c==",") then
+            current%parent%operator = OP_SEQ
+          endif
           state = ST_CHILD
         elseif (c==')') then
-          deallocate(name)
           if (mixed) mixed_additional = .true.
           nbrackets = nbrackets - 1
           if (nbrackets==0) then
@@ -460,6 +498,19 @@ contains
             order = temp(:size(order))
             deallocate(temp)
             state = ST_AFTERBRACKET
+          endif
+          tcp => newCP(name=str_vs(name))
+          print*,"NEWCP third", associated(current%parent)
+          deallocate(name)
+          if (firstChild) then
+            current%firstChild => tcp
+            tcp%parent => current
+            print*,"NEWCP fourth, ", associated(current%parent)
+            firstChild = .false.
+          else
+            current%nextSibling => tcp
+            tcp%parent => current%parent
+            current => current%parent
           endif
         else
           call add_error(stack, &
@@ -483,10 +534,21 @@ contains
               'Nested brackets forbidden for Mixed content')
             goto 100
           endif
+          tcp => newCP()
+          if (firstChild) then
+            current%firstChild => tcp
+            tcp%parent => current
+            current => tcp
+          else
+            current%nextSibling => tcp
+            tcp%parent => current%parent
+            firstChild = .true.
+          endif
           nbrackets = nbrackets + 1
           temp => order
           order => vs_str_alloc(str_vs(temp)//" ")
           deallocate(temp)
+          firstChild = .true.
         else
           call add_error(stack, &
             'Unexpected character "'//c//'" found after (')
@@ -500,22 +562,19 @@ contains
           call add_error(stack, &
             '#PCDATA must be first in list')
           goto 100
-        elseif (c==',') then
+        elseif (scan(c,'|,')>0) then
           if (order(nbrackets)=='') then
-            order(nbrackets)=','
-          elseif (order(nbrackets)=='|') then
+            order(nbrackets) = c
+            firstChild = .true.
+          elseif (order(nbrackets)/=c) then
             call add_error(stack, &
               'Cannot mix ordered and unordered elements')
             goto 100
           endif
-          state = ST_CHILD
-        elseif (c=='|') then
-          if (order(nbrackets)=='') then
-            order(nbrackets)='|'
-          elseif (order(nbrackets)==',') then
-            call add_error(stack, &
-              'Cannot mix ordered and unordered elements')
-            goto 100
+          if (c=="|") then
+            current%parent%operator = OP_CHOICE
+          elseif (c==",") then
+            current%parent%operator = OP_SEQ
           endif
           state = ST_CHILD
         elseif (c==')') then
@@ -529,6 +588,7 @@ contains
             order = temp(:size(order))
             deallocate(temp)
             state = ST_AFTERBRACKET
+            current => current%parent
           endif
         else
           call add_error(stack, &
@@ -539,29 +599,30 @@ contains
       elseif (state==ST_AFTERBRACKET) then
         !write(*,*)'ST_AFTERBRACKET'
         if (c=='*') then
+          current%repeater = REP_ASTERISK
           state = ST_SEPARATOR
         elseif (c=='+') then
+          current%repeater = REP_PLUS
           state = ST_SEPARATOR
         elseif (c=='?') then
+          current%repeater = REP_QUESTION_MARK
           state = ST_SEPARATOR
         elseif (verify(c, XML_WHITESPACE)==0) then
+          firstChild = .false.
           state = ST_SEPARATOR
-        elseif (c ==',') then
+        elseif (scan(c,'|,')>0) then
           if (order(nbrackets)=='') then
-            order(nbrackets) = ','
-          elseif (order(nbrackets)=='|') then
+            order(nbrackets) = c
+          elseif (order(nbrackets)/=c) then
             call add_error(stack, &
               'Cannot mix ordered and unordered elements')
             goto 100
           endif
-          state = ST_CHILD
-        elseif (c =='|') then
-          if (order(nbrackets)=='') then
-            order(nbrackets) = '|'
-          elseif (order(nbrackets)==',') then
-            call add_error(stack, &
-              "Cannot mix ordered and unordered elements")
-            goto 100 
+          print*,"NEWCP fifth", associated(current%parent)
+          if (c=="|") then
+            current%parent%operator = OP_CHOICE
+          elseif (c==",") then
+            current%parent%operator = OP_SEQ
           endif
           state = ST_CHILD
         elseif (c==')') then
@@ -576,6 +637,7 @@ contains
             deallocate(temp)
             state = ST_AFTERBRACKET
           endif
+          current => current%parent
         else
           call add_error(stack, &
             'Unexpected character "'//c//'"found after ")"')
@@ -586,22 +648,23 @@ contains
         !write(*,*)'ST_AFTERLASTBRACKET'
         if (c=='*') then
           state = ST_END
+          current%repeater = REP_ASTERISK
         elseif (c=='+') then
           if (mixed) then
             call add_error(stack, &
               '+ operator disallowed for Mixed elements')
             goto 100
-          else
-            state = ST_END
           endif
+          current%repeater = REP_PLUS
+          state = ST_END
         elseif (c=='?') then
           if (mixed) then
             call add_error(stack, &
               '? operator disallowed for Mixed elements')
             goto 100
-          else
-            state = ST_END
           endif
+          current%repeater = REP_QUESTION_MARK
+          state = ST_END
         elseif (verify(c, XML_WHITESPACE)==0) then
           if (mixed) then
             if (mixed_additional) then
@@ -636,24 +699,20 @@ contains
       goto 100
     endif
 
-    if (present(element)) then
-      if (associated(element)) then
-        element%any = any
-        element%empty = empty
-        element%mixed = mixed
-        element%model => vs_str_alloc(trim(strip_spaces(contents)))
-        if (associated(current)) then
-          element%cp => current
-        else
-          element%cp => newCP()
-        endif
-      endif
+    if (associated(element)) then
+      element%any = any
+      element%empty = empty
+      element%mixed = mixed
+      element%model => vs_str_alloc(trim(strip_spaces(contents)))
+      element%cp => top
+    else
+      if (associated(top)) call destroyCPtree(top)
     endif
     return
 
 100 if (associated(order)) deallocate(order)
     if (associated(name)) deallocate(name)
-    if (associated(current)) deallocate(current)
+    if (associated(top)) call destroyCPtree(top)
 
     contains
       function strip_spaces(s1) result(s2)
@@ -758,7 +817,7 @@ contains
     integer, intent(in) :: xv
     logical, intent(in) :: validCheck
     type(error_stack), intent(inout) :: stack
-    type(element_t), intent(inout), optional :: elem
+    type(element_t), pointer, optional :: elem
 
     integer :: i
     integer :: state
@@ -806,7 +865,7 @@ contains
           deallocate(name)
           name => temp
         elseif (verify(c, XML_WHITESPACE)==0) then
-          if (present(elem)) then
+          if (associated(elem)) then
             if (existing_attribute(elem%attlist, str_vs(name))) then
               if (associated(ignore_att)) call destroy_attribute_t(ignore_att)
               allocate(ignore_att)
@@ -863,7 +922,7 @@ contains
           elseif (str_vs(attType)=='ID') then
             if (validCheck) then
               ! Validity Constraint: One ID per Element Type
-              if (present(elem)) then
+              if (associated(elem)) then
                 if (elem%id_declared) then
                   call add_error(stack, &
                     "Cannot have two declared attributes of type ID on one element type.")
