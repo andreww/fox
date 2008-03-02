@@ -306,7 +306,7 @@ contains
             ! check do we have any notations FIXME
           elseif (str_vs(name)=='ANY') then
             any = .true.
-            current => newCP(empty=.true.)
+            current => newCP(any=.true.)
           else
             call add_error(stack, &
               'Unexpected ELEMENT specification; expecting EMPTY or ANY')
@@ -645,7 +645,7 @@ contains
         if (associated(current)) then
           element%cp => current
         else
-          allocate(element%cp)
+          element%cp => newCP()
         endif
       endif
     endif
@@ -653,6 +653,7 @@ contains
 
 100 if (associated(order)) deallocate(order)
     if (associated(name)) deallocate(name)
+    if (associated(current)) deallocate(current)
 
     contains
       function strip_spaces(s1) result(s2)

@@ -9,6 +9,7 @@ module m_sax_parser
     add_item_to_dict, has_key, get_value, get_att_index_pointer, &
     getLength, setIsId
   use m_common_charset, only: XML1_0, XML1_1, XML_WHITESPACE
+  use m_common_content_model, only: checkContentModel
   use m_common_element, only: element_t, existing_element, add_element, &
     get_element, parse_dtd_element, parse_dtd_attlist, report_declarations, &
     get_att_type, declared_element, attribute_t, &
@@ -16,7 +17,7 @@ module m_sax_parser
     ATT_NMTOKEN, ATT_NMTOKENS, ATT_NOTATION, ATT_ENUM, &
     ATT_REQUIRED, ATT_IMPLIED, ATT_DEFAULT, ATT_FIXED
   use m_common_elstack, only: push_elstack, pop_elstack, init_elstack, &
-    destroy_elstack, is_empty, len, get_top_elstack
+    destroy_elstack, is_empty, len, get_top_elstack, get_top_cms
   use m_common_entities, only: existing_entity, init_entity_list, &
     destroy_entity_list, add_internal_entity, is_unparsed_entity, &
     expand_entity, expand_char_entity, pop_entity_list, size, &
@@ -607,10 +608,10 @@ contains
           if (len(fx%elstack)>0) then
             elem => &
               get_element(fx%xds%element_list, get_top_elstack(fx%elstack))
-            if (associated(elem)) then
-              if (elem%empty) then
-                call add_error(fx%error_stack, "Content inside empty element")
-              endif
+            if (.not.checkContentModel( &
+              get_top_cms(fx%elstack), "#processing-instruction")) then
+              call add_error(fx%error_stack, "Content inside empty element")
+              goto 100
             endif
           endif
         endif
@@ -664,10 +665,10 @@ contains
           if (len(fx%elstack)>0) then
             elem => &
               get_element(fx%xds%element_list, get_top_elstack(fx%elstack))
-            if (associated(elem)) then
-              if (elem%empty) then
-                call add_error(fx%error_stack, "Content inside empty element")
-              endif
+            if (.not.checkContentModel( &
+              get_top_cms(fx%elstack), "#comment")) then
+              call add_error(fx%error_stack, "Content inside empty element")
+              goto 100
             endif
           endif
         endif
@@ -753,14 +754,10 @@ contains
         write(*,*)'ST_CDATA_END'
         if (validCheck) then
           elem => get_element(fx%xds%element_list, get_top_elstack(fx%elstack))
-          if (associated(elem)) then
-            if (elem%empty) then
-              call add_error(fx%error_stack, "Content inside empty element")
-              goto 100
-            elseif (.not.elem%mixed.and..not.elem%any) then
-              call add_error(fx%error_stack, "Forbidden content inside element")
-              goto 100
-            endif
+          if (.not.checkContentModel( &
+            get_top_cms(fx%elstack), "#cdata")) then
+            call add_error(fx%error_stack, "Content inside empty element")
+            goto 100
           endif
         endif
         print*, "wf decrement end cdata"
@@ -2278,14 +2275,13 @@ contains
             "Trying to use an undeclared element")
           return
         endif
-        elem => get_element(fx%xds%element_list, get_top_elstack(fx%elstack))
-        ! This will return null anyway if we are opening root element
-        if (associated(elem)) then
-          if (elem%empty) then
-            call add_error(fx%error_stack, "Content inside empty element")
-            return
+        if (.not.is_empty(fx%elstack)) then
+          ! root element always allowed if declared
+          if (.not.checkContentModel( &
+            get_top_cms(fx%elstack), str_vs(fx%name))) then
+            call add_error(fx%error_stack, &
+              "Element "//str_vs(fx%name)//" not permitted in this context")
           endif
-          ! FIXME and ideally do a proper check of is this element allowed here
         endif
       endif
       ! Check for namespace changes
@@ -2328,7 +2324,11 @@ contains
           if (fx%state==ST_STOP) return
         endif
       endif
-      call push_elstack(fx%elstack, str_vs(fx%name))
+      if (validCheck) then
+        call push_elstack(fx%elstack, str_vs(fx%name), elem%cp)
+      else
+        call push_elstack(fx%elstack, str_vs(fx%name))
+      endif
       call reset_dict(fx%attributes)
     end subroutine open_tag
 

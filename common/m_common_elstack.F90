@@ -30,7 +30,7 @@ module m_common_elstack
   public :: elstack_t
 
   public  :: push_elstack, pop_elstack, init_elstack, destroy_elstack, reset_elstack, print_elstack
-  public  :: get_top_elstack, is_empty
+  public  :: get_top_elstack, get_top_cms, is_empty
   public  :: len
 
   interface len
@@ -162,6 +162,23 @@ contains
     endif
 
   end function get_top_elstack
+
+  function get_top_cms(elstack) result(cms)
+    ! Get the content model state from the top of the stacl
+    type(elstack_t), intent(in)        :: elstack
+    type(content_model_state), pointer :: cms
+
+    integer :: n
+
+    n = elstack%n_items
+
+    if (n==0) then
+      cms => null()
+    else
+      cms => elstack%stack(n)%cms
+    endif
+
+  end function get_top_cms
 
   subroutine print_elstack(elstack,unit)
     type(elstack_t), intent(in)   :: elstack

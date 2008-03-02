@@ -62,7 +62,16 @@ contains
     type(content_model_state), pointer :: cms
     character(len=*), intent(in) :: name
     logical :: p
-    p = .true.
+
+    select case(cms%cp%operator)
+    case (OP_EMPTY)
+      p = .false.
+    case (OP_ANY)
+      p = .true.
+    case default
+      p = .true.
+    end select
+
   end function checkContentModel
 
 #endif
