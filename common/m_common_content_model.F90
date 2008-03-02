@@ -3,14 +3,14 @@ module m_common_content_model
 #ifndef DUMMYLIB
   ! Allow validating the content model of an XML document
 
-  use fox_m_fsys_array_str, only: vs_str_alloc
+  use fox_m_fsys_array_str, only: str_vs, vs_str_alloc
   implicit none
   private
 
   integer, parameter :: OP_NULL = 0
   integer, parameter :: OP_EMPTY = 1
   integer, parameter :: OP_ANY = 2
-  integer, parameter :: OP_MIXED = 4
+  integer, parameter :: OP_MIXED = 3
   integer, parameter :: OP_NAME = 4
   integer, parameter :: OP_CHOICE = 5
   integer, parameter :: OP_SEQ = 6
@@ -82,11 +82,28 @@ contains
     character(len=*), intent(in) :: name
     logical :: p
 
+    type(content_particle_t), pointer :: tcp
+
     select case(cms%cp%operator)
     case (OP_EMPTY)
       p = .false.
     case (OP_ANY)
       p = .true.
+    case (OP_MIXED)
+      if (name(1:1)=="#") then
+        ! any text/pi/comment/entity etc allowed.
+        p = .true.
+      else
+        p = .false.
+        tcp => cms%cp%firstChild
+        do while (associated(tcp))
+          if (name==str_vs(tcp%name)) then
+            p = .true.
+            exit
+          endif
+          tcp => tcp%nextSibling
+        enddo
+      endif
     case default
       p = .true.
     end select
