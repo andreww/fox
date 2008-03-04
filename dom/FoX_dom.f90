@@ -193,6 +193,9 @@ module FoX_dom
 !  public :: getElementsByTagNameNS
   public :: hasAttribute
   public :: hasAttributeNS
+  public :: setIdAttribute
+  public :: setIdAttributeNS
+  public :: setIdAttributeNode
 
   !DOM Text
   public :: splitText

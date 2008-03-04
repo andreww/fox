@@ -443,6 +443,9 @@ module m_dom_dom
   public :: removeAttributeNodeNS
   public :: hasAttribute
   public :: hasAttributeNS
+  public :: setIdAttribute
+  public :: setIdAttributeNS
+  public :: setIdAttributeNode
 
 
 

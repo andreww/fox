@@ -15,6 +15,9 @@ TOHW_m_dom_publics(`
   public :: removeAttributeNodeNS
   public :: hasAttribute
   public :: hasAttributeNS
+  public :: setIdAttribute
+  public :: setIdAttributeNS
+  public :: setIdAttributeNode
 
 ')`'dnl
 dnl
