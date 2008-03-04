@@ -8,6 +8,7 @@ module m_dom_dom
   use fox_m_fsys_array_str, only: str_vs, vs_str, vs_str_alloc
   use fox_m_fsys_format, only: operator(//)
   use fox_m_fsys_string, only: toLower
+  use fox_m_utils_uri, only: URI, parseURI, destroyURI
   use m_common_charset, only: checkChars, XML1_0, XML1_1
   use m_common_element, only: element_t, get_element, attribute_t, &
     attribute_has_default, get_attribute_declaration, get_attlist_size
@@ -5614,6 +5615,8 @@ endif
     character(len=*), intent(in) :: systemId
     type(Node), pointer :: dt
 
+    type(URI), pointer :: URIref
+
     dt => null()
 
     if (.not.associated(impl)) then
@@ -5659,6 +5662,19 @@ endif
 endif
 
     endif
+    URIref => parseURI(systemId)
+    if (.not.associated(URIref)) then
+      if (getFoX_checks().or.FoX_INVALID_SYSTEM_ID<200) then
+  call throw_exception(FoX_INVALID_SYSTEM_ID, "createDocumentType", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    endif
+    call destroyURI(URIref)
 
 ! Dont use raw null() below or PGI will complain
     dt => createNode(dt, DOCUMENT_TYPE_NODE, qualifiedName, "")

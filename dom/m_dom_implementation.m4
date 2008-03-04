@@ -39,6 +39,8 @@ TOHW_m_dom_contents(`
     character(len=*), intent(in) :: systemId
     type(Node), pointer :: dt
 
+    type(URI), pointer :: URIref
+
     dt => null()
 
     if (.not.associated(impl)) then
@@ -51,10 +53,12 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(NAMESPACE_ERR)
     elseif (.not.checkPublicId(publicId)) then
       TOHW_m_dom_throw_error(FoX_INVALID_PUBLIC_ID)
-dnl elseif (.not.checkSystemId(systemId)) then
-dnl  TOHW_m_dom_throw_error(FoX_INVALID_SYSTEM_ID)
-dnl FIXME check URI
     endif
+    URIref => parseURI(systemId)
+    if (.not.associated(URIref)) then
+      TOHW_m_dom_throw_error(FoX_INVALID_SYSTEM_ID)
+    endif
+    call destroyURI(URIref)
 
 ! Dont use raw null() below or PGI will complain
     dt => createNode(dt, DOCUMENT_TYPE_NODE, qualifiedName, "")

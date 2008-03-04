@@ -37,6 +37,7 @@ dnl
   use fox_m_fsys_array_str, only: str_vs, vs_str, vs_str_alloc
   use fox_m_fsys_format, only: operator(//)
   use fox_m_fsys_string, only: toLower
+  use fox_m_utils_uri, only: URI, parseURI, destroyURI
   use m_common_charset, only: checkChars, XML1_0, XML1_1
   use m_common_element, only: element_t, get_element, attribute_t, &
     attribute_has_default, get_attribute_declaration, get_attlist_size
