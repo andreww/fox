@@ -3,7 +3,8 @@ module m_common_elstack
 #ifndef DUMMYLIB
   use fox_m_fsys_array_str, only: str_vs, vs_str
   use m_common_error, only: FoX_fatal
-  use m_common_content_model, only: content_particle_t, checkCP
+  use m_common_content_model, only: content_particle_t, checkCP, &
+    elementContentCP, emptyContentCP
 
   implicit none
   private
@@ -32,6 +33,8 @@ module m_common_elstack
   public  :: push_elstack, pop_elstack, init_elstack, destroy_elstack, reset_elstack, print_elstack
   public  :: get_top_elstack, is_empty
   public :: checkContentModel
+  public :: elementContent
+  public :: emptyContent
   public  :: len
 
   interface len
@@ -168,15 +171,40 @@ contains
 
     integer :: n
     n = elstack%n_items
-    cp => elstack%stack(n)%cp
-
-    print*,"CHECKING ", str_vs(elstack%stack(n)%data), " for ", name
-
-    p = checkCP(cp, name)
-    elstack%stack(n)%cp => cp
-    print*,"DONE"
+    if (n==0) then
+      p = .true.
+    else
+      cp => elstack%stack(n)%cp
+      p = checkCP(cp, name)
+      elstack%stack(n)%cp => cp
+    endif
   end function checkContentModel
 
+  function elementContent(elstack) result(p)
+    type(elstack_t), intent(in) :: elstack
+    logical :: p
+
+    integer :: n
+    n = elstack%n_items
+    if (n==0) then
+      p = .false.
+    else
+      p = elementContentCP(elstack%stack(n)%cp)
+    endif
+  end function elementContent
+
+  function emptyContent(elstack) result(p)
+    type(elstack_t), intent(in) :: elstack
+    logical :: p
+
+    integer :: n
+    n = elstack%n_items
+    if (n==0) then
+      p = .false.
+    else
+      p = emptyContentCP(elstack%stack(n)%cp)
+    endif
+  end function emptyContent
 
   subroutine print_elstack(elstack,unit)
     type(elstack_t), intent(in)   :: elstack

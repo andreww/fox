@@ -16,7 +16,8 @@ module m_sax_parser
     ATT_NMTOKEN, ATT_NMTOKENS, ATT_NOTATION, ATT_ENUM, &
     ATT_REQUIRED, ATT_IMPLIED, ATT_DEFAULT, ATT_FIXED
   use m_common_elstack, only: push_elstack, pop_elstack, init_elstack, &
-    destroy_elstack, is_empty, len, get_top_elstack, checkContentModel
+    destroy_elstack, is_empty, len, get_top_elstack, checkContentModel, &
+    elementContent, emptyContent
   use m_common_entities, only: existing_entity, init_entity_list, &
     destroy_entity_list, add_internal_entity, is_unparsed_entity, &
     expand_entity, expand_char_entity, pop_entity_list, size, &
@@ -594,13 +595,9 @@ contains
       case (ST_PI_CONTENTS)
         !write(*,*)'ST_PI_CONTENTS'
         if (validCheck) then
-          if (len(fx%elstack)>0) then
-            elem => &
-              get_element(fx%xds%element_list, get_top_elstack(fx%elstack))
-            if (.not.checkContentModel(fx%elstack, "#processing-instruction")) then
-              call add_error(fx%error_stack, "Content inside empty element")
-              goto 100
-            endif
+          if (emptyContent(fx%elstack)) then
+            call add_error(fx%error_stack, "Content inside empty element")
+            goto 100
           endif
         endif
         wf_stack(1) = wf_stack(1) - 1
@@ -615,7 +612,7 @@ contains
           nextState = ST_PI_END
         case (TOK_PI_END)
           if (present(processingInstruction_handler)) then
-            call processingInstruction_handler(str_vs(fx%name), '')
+            call processingInstruction_handler(str_vs(fx%name), "")
             if (fx%state==ST_STOP) goto 100
           endif
           deallocate(fx%name)
@@ -649,13 +646,9 @@ contains
       case (ST_COMMENT_END)
         !write(*,*)'ST_COMMENT_END'
         if (validCheck) then
-          if (len(fx%elstack)>0) then
-            elem => &
-              get_element(fx%xds%element_list, get_top_elstack(fx%elstack))
-            if (.not.checkContentModel(fx%elstack, "#comment")) then
-              call add_error(fx%error_stack, "Content inside empty element")
-              goto 100
-            endif
+          if (emptyContent(fx%elstack)) then
+            call add_error(fx%error_stack, "Content inside empty element")
+            goto 100
           endif
         endif
         wf_stack(1) = wf_stack(1) - 1
@@ -738,8 +731,8 @@ contains
       case (ST_CDATA_END)
         !write(*,*)'ST_CDATA_END'
         if (validCheck) then
-          elem => get_element(fx%xds%element_list, get_top_elstack(fx%elstack))
-          if (.not.checkContentModel(fx%elstack, "#cdata")) then
+! FIXME CDATA in element content?
+          if (emptyContent(fx%elstack)) then
             call add_error(fx%error_stack, "Content inside empty element")
             goto 100
           endif
@@ -889,26 +882,23 @@ contains
         case (TOK_CHAR)
           if (size(fx%token)>0) then
             if (validCheck) then
-              elem => get_element(fx%xds%element_list, get_top_elstack(fx%elstack))
-              if (associated(elem)) then
-                if (elem%empty) then
-                  call add_error(fx%error_stack, "Content inside empty element")
+              if (elementContent(fx%elstack)) then
+                if (verify(str_vs(fx%token), XML_WHITESPACE)==0) then
+                  if (present(ignorableWhitespace_handler)) then
+                    call ignorableWhitespace_handler(str_vs(fx%token))
+                    if (fx%state==ST_STOP) goto 100
+                  endif
+                else
+                  call add_error(fx%error_stack, "Forbidden content inside element: "//get_top_elstack(fx%elstack))
                   goto 100
-                elseif (.not.elem%mixed.and..not.elem%any) then
-                  if (verify(str_vs(fx%token), XML_WHITESPACE)==0) then
-                    if (present(ignorableWhitespace_handler)) then
-                      call ignorableWhitespace_handler(str_vs(fx%token))
-                      if (fx%state==ST_STOP) goto 100
-                    endif
-                  else
-                    call add_error(fx%error_stack, "Forbidden content inside element: "//get_top_elstack(fx%elstack))
-                    goto 100
-                  endif
-                else ! FIXME check properly if allowed
-                  if (present(characters_handler)) then
-                    call characters_handler(str_vs(fx%token))
-                    goto 100
-                  endif
+                endif
+              elseif (emptyContent(fx%elstack)) then
+                call add_error(fx%error_stack, "Forbidden content inside element: "//get_top_elstack(fx%elstack))
+                goto 100
+              else
+                if (present(characters_handler)) then
+                  call characters_handler(str_vs(fx%token))
+                  goto 100
                 endif
               endif
             else
@@ -962,6 +952,7 @@ contains
             goto 100
           endif
           ent => getEntityByName(fx%predefined_e_list, str_vs(fx%token))
+! FIXME entities inside empty elements etc ...
           if (associated(ent)) then
             if (present(startEntity_handler)) then
               call startEntity_handler(str_vs(fx%token))
@@ -2223,12 +2214,9 @@ contains
             "Trying to use an undeclared element")
           return
         endif
-        if (.not.is_empty(fx%elstack)) then
-          ! root element always allowed if declared
-          if (.not.checkContentModel(fx%elstack, str_vs(fx%name))) then
-            call add_error(fx%error_stack, &
-              "Element "//str_vs(fx%name)//" not permitted in this context")
-          endif
+        if (.not.checkContentModel(fx%elstack, str_vs(fx%name))) then
+          call add_error(fx%error_stack, &
+            "Element "//str_vs(fx%name)//" not permitted in this context")
         endif
       endif
       ! Check for namespace changes
@@ -2286,6 +2274,8 @@ contains
           'Ill-formed entity')
         return
       endif
+! FIXME      if (validCheck) then
+!        call checkContentModel(fx%elstack)
       if (str_vs(fx%name)/=pop_elstack(fx%elstack)) then
         call add_error(fx%error_stack, "Mismatching close tag - expecting "//str_vs(fx%name))
         return

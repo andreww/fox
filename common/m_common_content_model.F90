@@ -34,6 +34,8 @@ module m_common_content_model
   public :: newCP
   public :: transformCPPlus
   public :: checkCP
+  public :: elementContentCP
+  public :: emptyContentCP
   public :: destroyCPtree
   public :: dumpCPtree
 
@@ -157,23 +159,18 @@ contains
     type(content_particle_t), pointer :: tcp, tcp2
     logical :: opt
 
-    ! cms%cp will initially either point at:
+    ! cp will initially either point at:
     ! a) the top level cp node
     ! b) a named cp node that was matched last time
     ! c) null(), because weve exhausted the regex.
 
-    ! for EMPTY, ANY or MIXED, cms%cp never moves.
+    ! for EMPTY, ANY or MIXED, cp never moves.
     ! for element content, we move the pointer as we
     ! move through the regex.
 
     ! If the regex includes ambiguous content, we are
     ! a bit screwed. But the document is in error if so.
     ! (and we are not required to diagnose errors.)
-
-    print*,"about to check CP"
-    if (associated(cp)) then
-      if (associated(cp%name)) print*, "name ", str_vs(cp%name)
-    endif
 
     p = .false.
     if (.not.associated(cp)) return
@@ -184,19 +181,14 @@ contains
     case (OP_ANY)
       p = .true.
     case (OP_MIXED)
-      if (name(1:1)=="#") then
-        ! any text/pi/comment/entity etc allowed.
-        p = .true.
-      else
-        tcp => cp%firstChild
-        do while (associated(tcp))
-          if (name==str_vs(tcp%name)) then
-            p = .true.
-            exit
-          endif
-          tcp => tcp%nextSibling
-        enddo
-      endif
+      tcp => cp%firstChild
+      do while (associated(tcp))
+        if (name==str_vs(tcp%name)) then
+          p = .true.
+          exit
+        endif
+        tcp => tcp%nextSibling
+      enddo
     case default
       do
         if (.not.associated(cp)) exit
@@ -216,12 +208,6 @@ contains
         end select
       end do
     end select
-
-    print*,"done checking"
-    if (associated(cp)) then
-      if (associated(cp%name)) print*, "name ", str_vs(cp%name)
-    endif
-
 
   end function checkCP
 
@@ -307,6 +293,27 @@ contains
     enddo
     
   end function nextCPafterfail
+
+  function elementContentCP(cp) result(p)
+    type(content_particle_t), pointer :: cp
+    logical :: p
+
+    select case (cp%operator)
+    case (OP_EMPTY, OP_ANY, OP_MIXED)
+      p = .false.
+    case default
+      p = .true.
+    end select
+
+  end function elementContentCP
+
+  function emptyContentCP(cp) result(p)
+    type(content_particle_t), pointer :: cp
+    logical :: p
+    
+    p = cp%operator==OP_EMPTY
+
+  end function emptyContentCP
 
   subroutine destroyCP(cp)
     type(content_particle_t), pointer :: cp
