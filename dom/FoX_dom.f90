@@ -92,6 +92,7 @@ module FoX_dom
   public :: setStrictErrorChecking
   public :: getDomConfig
   public :: normalizeDocument
+  public :: renameNode
 
   ! DOM Node
   public :: ELEMENT_NODE

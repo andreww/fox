@@ -406,6 +406,7 @@ module m_dom_dom
   public :: getStrictErrorChecking
   public :: setStrictErrorChecking
   public :: getDomConfig
+  public :: renameNode
 
   public :: setDocType
   public :: setDomConfig
@@ -8139,8 +8140,177 @@ endif
   end subroutine setdomConfig
 
 
-!  function renameNode FIXME
 
+  function renameNode(arg, n, namespaceURI, qualifiedName, ex)result(np) 
+    type(DOMException), intent(out), optional :: ex
+    type(Node), pointer :: arg
+    type(Node), pointer :: n
+    character(len=*), intent(in) :: namespaceURI
+    character(len=*), intent(in) :: qualifiedName
+    type(Node), pointer :: np
+    
+    type(Node), pointer :: attNode
+    integer :: i
+    logical :: brokenNS
+    type(element_t), pointer :: elem
+    type(attribute_t), pointer :: att
+    type(xml_doc_state), pointer :: xds
+
+    if (.not.associated(arg).or..not.associated(n)) then
+      if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "renameNode", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    endif
+
+    if (getNodeType(arg)/=DOCUMENT_NODE) then
+      if (getFoX_checks().or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "renameNode", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    elseif (.not.associated(arg, getOwnerDocument(n))) then
+      if (getFoX_checks().or.WRONG_DOCUMENT_ERR<200) then
+  call throw_exception(WRONG_DOCUMENT_ERR, "renameNode", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    elseif (checkName(qualifiedName, getXmlVersionEnum(arg))) then
+      if (getFoX_checks().or.INVALID_CHARACTER_ERR<200) then
+  call throw_exception(INVALID_CHARACTER_ERR, "renameNode", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    elseif (.not.checkQName(qualifiedName, getXmlVersionEnum(arg))) then
+      if (getFoX_checks().or.NAMESPACE_ERR<200) then
+  call throw_exception(NAMESPACE_ERR, "renameNode", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    elseif (prefixOfQName(qualifiedName)/="" &
+     .and. namespaceURI=="".and..not.arg%docExtras%brokenNS) then
+      if (getFoX_checks().or.NAMESPACE_ERR<200) then
+  call throw_exception(NAMESPACE_ERR, "renameNode", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    elseif (namespaceURI=="http://www.w3.org/XML/1998/namespace" .neqv. &
+      prefixOfQName(qualifiedName)=="xml") then
+      if (getFoX_checks().or.NAMESPACE_ERR<200) then
+  call throw_exception(NAMESPACE_ERR, "renameNode", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    elseif (namespaceURI=="http://www.w3.org/2000/xmlns/") then
+      if (getFoX_checks().or.NAMESPACE_ERR<200) then
+  call throw_exception(NAMESPACE_ERR, "renameNode", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    endif
+
+! FIXME what if this is called on a Level 1 node
+! FIXME what if this is called on a read-only node
+! FIXME what if this is called on an attribute whose specified=fals
+    select case(getNodeType(n))
+    case (ELEMENT_NODE, ATTRIBUTE_NODE)
+      deallocate(n%nodeName)
+      n%nodeName => vs_str_alloc(qualifiedName)
+      deallocate(n%elExtras%namespaceURI)
+      n%elExtras%namespaceURI => vs_str_alloc(namespaceURI)
+      deallocate(n%elExtras%localName)
+      np%elExtras%localName => vs_str_alloc(localpartOfQName(qualifiedname))
+    case default
+      if (getFoX_checks().or.NOT_SUPPORTED_ERR<200) then
+  call throw_exception(NOT_SUPPORTED_ERR, "renameNode", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    end select
+
+    if (getNodeType(n)==ELEMENT_NODE) then
+      i = 0
+      do while (i<getLength(getAttributes(n)))
+        attNode => item(getAttributes(n), i)
+        if (.not.getSpecified(attNode)) then
+          attNode => removeAttributeNode(n, attNode)
+          call destroyNode(attNode)
+        else
+          i = i + 1
+        endif
+      enddo
+      xds => getXds(arg)
+      elem => get_element(xds%element_list, qualifiedName)
+      if (associated(elem)) then
+        do i = 1, get_attlist_size(elem)
+          att => get_attribute_declaration(elem, i)
+          if (attribute_has_default(att)) then
+            ! Since this is a namespaced function, we create a namespaced
+            ! attribute. Of course, its namespaceURI remains empty
+            ! for the moment unless we know it ...
+            if (prefixOfQName(str_vs(att%name))=="xml") then
+              call setAttributeNS(np, &
+                "http://www.w3.org/XML/1998/namespace", &
+                str_vs(att%name), str_vs(att%default))
+            elseif (str_vs(att%name)=="xmlns" & 
+              .or. prefixOfQName(str_vs(att%name))=="xmlns") then
+              call setAttributeNS(np, &
+                "http://www.w3.org/2000/xmlns/", &
+                str_vs(att%name), str_vs(att%default))
+            else
+              ! Wait for namespace fixup ...
+              brokenNS = arg%docExtras%brokenNS
+              arg%docExtras%brokenNS = .true.
+              call setAttributeNS(np, "", str_vs(att%name), &
+                str_vs(att%default))
+              arg%docExtras%brokenNS = brokenNS
+            endif
+          endif
+        enddo
+      endif
+    endif
+
+    np => n
+
+  end function renameNode
+      
   ! Internal function, not part of API
 
   function createNamespaceNode(arg, prefix, URI, specified, ex)result(np) 
