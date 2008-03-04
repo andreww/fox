@@ -479,7 +479,7 @@ contains
             tcp%parent => current%parent
           endif
           current => tcp
-          if (c=="|") &
+          if (c=="|".and.current%parent%operator==OP_NULL) &
             current%parent%operator = OP_CHOICE
           state = ST_CHILD
         elseif (c==')') then
@@ -565,7 +565,7 @@ contains
               'Cannot mix ordered and unordered elements')
             goto 100
           endif
-          if (c=="|") &
+          if (c=="|".and.current%parent%operator==OP_NULL) &
             current%parent%operator = OP_CHOICE
           state = ST_CHILD
         elseif (c==')') then
@@ -611,7 +611,7 @@ contains
               'Cannot mix ordered and unordered elements')
             goto 100
           endif
-          if (c=="|") &
+          if (c=="|".and.current%parent%operator==OP_NULL) &
             current%parent%operator = OP_CHOICE
           state = ST_CHILD
         elseif (c==')') then
