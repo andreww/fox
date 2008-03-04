@@ -11,7 +11,7 @@ module m_common_element
     upperCase, XML_WHITESPACE
   use m_common_content_model, only: content_particle_t, newCP, destroyCPtree, &
     OP_NULL, OP_MIXED, OP_CHOICE, OP_SEQ, REP_QUESTION_MARK, REP_ASTERISK, &
-    transformCPPlus
+    transformCPPlus, dumpCPtree
   use m_common_error, only: error_stack, add_error, in_error
   use m_common_namecheck, only: checkName, checkNames, checkQName,   &
     checkQNames, checkNmtoken, checkNmtokens
@@ -435,16 +435,18 @@ contains
             goto 100
           endif
           tcp => newCP(name=str_vs(name), repeat=c)
+          ! FIXME fix plus
           deallocate(name)
           if (firstChild) then
             current%firstChild => tcp
             tcp%parent => current
-            current => tcp
             firstChild = .false.
           else
             current%nextSibling => tcp
             tcp%parent => current%parent
           endif
+          current => tcp
+          if (c=="+") call transformCPPlus(current)
           state = ST_SEPARATOR
         elseif (verify(c, XML_WHITESPACE)==0) then
           if (mixed) mixed_additional = .true.
@@ -453,12 +455,12 @@ contains
           if (firstChild) then
             current%firstChild => tcp
             tcp%parent => current
-            current => tcp
             firstChild = .false.
           else
             current%nextSibling => tcp
             tcp%parent => current%parent
           endif
+          current => tcp
           state = ST_SEPARATOR
         elseif (scan(c,',|')>0) then
           if (order(nbrackets)=='') then
@@ -474,12 +476,12 @@ contains
           if (firstChild) then
             current%firstChild => tcp
             tcp%parent => current
-            current => tcp
             firstChild = .false.
           else
             current%nextSibling => tcp
             tcp%parent => current%parent
           endif
+          current => tcp
           if (c=="|") &
             current%parent%operator = OP_CHOICE
           state = ST_CHILD
@@ -646,12 +648,6 @@ contains
               '+ operator disallowed for Mixed elements')
             goto 100
           endif
-          ! Back track one ...
-          ! make new SEQ
-          ! append current, then copy of current
-          
-          ! convert current to SEQ
-          ! append two children
           call transformCPPlus(current)
           state = ST_END
         elseif (c=='?') then
@@ -702,6 +698,8 @@ contains
       element%mixed = mixed
       element%model => vs_str_alloc(trim(strip_spaces(contents)))
       element%cp => top
+      print*,"CPtree for ", str_vs(element%name)
+      call dumpCPtree(top)
     else
       if (associated(top)) call destroyCPtree(top)
     endif

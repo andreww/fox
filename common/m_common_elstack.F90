@@ -3,7 +3,7 @@ module m_common_elstack
 #ifndef DUMMYLIB
   use fox_m_fsys_array_str, only: str_vs, vs_str
   use m_common_error, only: FoX_fatal
-  use m_common_content_model, only: content_particle_t, content_model_state
+  use m_common_content_model, only: content_particle_t, checkCP
 
   implicit none
   private
@@ -18,7 +18,7 @@ module m_common_elstack
 
   type :: elstack_item
     character, dimension(:), pointer          :: data => null()
-    type(content_model_state), pointer        :: cms => null()
+    type(content_particle_t), pointer         :: cp => null()
   end type elstack_item
 
   type :: elstack_t
@@ -30,7 +30,8 @@ module m_common_elstack
   public :: elstack_t
 
   public  :: push_elstack, pop_elstack, init_elstack, destroy_elstack, reset_elstack, print_elstack
-  public  :: get_top_elstack, get_top_cms, is_empty
+  public  :: get_top_elstack, is_empty
+  public :: checkContentModel
   public  :: len
 
   interface len
@@ -60,7 +61,6 @@ contains
     integer :: i
     do i = 0, elstack % n_items
       deallocate(elstack%stack(i)%data)
-      if (associated(elstack%stack(i)%cms)) deallocate(elstack%stack(i)%cms)
     enddo
     deallocate(elstack%stack)
   end subroutine destroy_elstack
@@ -82,13 +82,13 @@ contains
 
     do i = 0, s
       temp(i)%data => elstack%stack(i)%data
-      temp(i)%cms => elstack%stack(i)%cms
+      temp(i)%cp => elstack%stack(i)%cp
     enddo
     deallocate(elstack%stack)
     allocate(elstack%stack(0:nint(s*STACK_SIZE_MULT)))
     do i = 0, s
       elstack%stack(i)%data => temp(i)%data
-      elstack%stack(i)%cms => temp(i)%cms
+      elstack%stack(i)%cp => temp(i)%cp
     enddo
 
   end subroutine resize_elstack
@@ -107,10 +107,10 @@ contains
     n = elstack%n_items
   end function number_of_items
 
-  subroutine push_elstack(elstack, name, cm)
+  subroutine push_elstack(elstack, name, cp)
     type(elstack_t), intent(inout)              :: elstack
     character(len=*), intent(in)                :: name
-    type(content_particle_t), pointer, optional :: cm
+    type(content_particle_t), pointer, optional :: cp
 
     integer :: n
 
@@ -121,10 +121,7 @@ contains
     endif
     allocate(elstack%stack(n)%data(len(name)))
     elstack%stack(n)%data = vs_str(name)
-    if (present(cm)) then
-      allocate(elstack%stack(n)%cms)
-      elstack%stack(n)%cms%cp => cm
-    endif
+    if (present(cp)) elstack%stack(n)%cp => cp
     elstack%n_items = n
 
   end subroutine push_elstack
@@ -141,7 +138,6 @@ contains
     endif
     item = str_vs(elstack%stack(n)%data)
     deallocate(elstack%stack(n)%data)
-    if (associated(elstack%stack(n)%cms)) deallocate(elstack%stack(n)%cms)
     elstack%n_items = n - 1
 
   end function pop_elstack
@@ -163,22 +159,24 @@ contains
 
   end function get_top_elstack
 
-  function get_top_cms(elstack) result(cms)
-    ! Get the content model state from the top of the stacl
-    type(elstack_t), intent(in)        :: elstack
-    type(content_model_state), pointer :: cms
+  function checkContentModel(elstack, name) result(p)
+    type(elstack_t), intent(in) :: elstack
+    character(len=*), intent(in) :: name
+    logical :: p
+
+    type(content_particle_t), pointer :: cp
 
     integer :: n
-
     n = elstack%n_items
+    cp => elstack%stack(n)%cp
 
-    if (n==0) then
-      cms => null()
-    else
-      cms => elstack%stack(n)%cms
-    endif
+    print*,"CHECKING ", str_vs(elstack%stack(n)%data), " for ", name
 
-  end function get_top_cms
+    p = checkCP(cp, name)
+    elstack%stack(n)%cp => cp
+    print*,"DONE"
+  end function checkContentModel
+
 
   subroutine print_elstack(elstack,unit)
     type(elstack_t), intent(in)   :: elstack

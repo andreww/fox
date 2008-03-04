@@ -29,17 +29,13 @@ module m_common_content_model
     type(content_particle_t), pointer :: firstChild => null()
   end type content_particle_t
 
-  type content_model_state
-    type(content_particle_t), pointer :: cp
-  end type content_model_state
-
   public :: content_particle_t
-  public :: content_model_state
 
   public :: newCP
   public :: transformCPPlus
-  public :: checkContentModel
+  public :: checkCP
   public :: destroyCPtree
+  public :: dumpCPtree
 
   public :: OP_NULL, OP_MIXED, OP_CHOICE, OP_SEQ
   public :: REP_QUESTION_MARK, REP_ASTERISK
@@ -91,6 +87,10 @@ contains
 
     type(content_particle_t), pointer :: tcp, tcp_out, tcpn_out, tcpp_out
     logical :: done
+
+    print*, "COPYING CP TREE"
+    call dumpCP(cp)
+
     tcp => cp
     cp_out => copyCP(cp)
     tcp_out => cp_out
@@ -124,11 +124,14 @@ contains
 
     type(content_particle_t), pointer :: cp_new
 
+    print*,"doing transform"
+
 ! Make copy of cp, and graft children on
     cp_new => copyCP(cp)
     cp_new%firstChild => cp%firstChild
 
 ! Clear cp & make it an SEQ
+    cp%firstChild => null() ! FIXME remove
     if (associated(cp%name)) deallocate(cp%name)
     cp%operator = OP_SEQ
 
@@ -141,8 +144,8 @@ contains
     cp_new%nextSibling%repeater = REP_ASTERISK
   end subroutine transformCPPlus
 
-  function checkContentModel(cms, name) result(p)
-    type(content_model_state), pointer :: cms
+  function checkCP(cp, name) result(p)
+    type(content_particle_t), pointer :: cp
     character(len=*), intent(in) :: name
     logical :: p
 
@@ -162,10 +165,15 @@ contains
     ! a bit screwed. But the document is in error if so.
     ! (and we are not required to diagnose errors.)
 
-    p = .false.
-    if (.not.associated(cms%cp)) return
+    print*,"about to check CP"
+    if (associated(cp)) then
+      if (associated(cp%name)) print*, "name ", str_vs(cp%name)
+    endif
 
-    select case(cms%cp%operator)
+    p = .false.
+    if (.not.associated(cp)) return
+
+    select case(cp%operator)
     case (OP_EMPTY)
       continue ! anything fails
     case (OP_ANY)
@@ -175,7 +183,7 @@ contains
         ! any text/pi/comment/entity etc allowed.
         p = .true.
       else
-        tcp => cms%cp%firstChild
+        tcp => cp%firstChild
         do while (associated(tcp))
           if (name==str_vs(tcp%name)) then
             p = .true.
@@ -186,29 +194,31 @@ contains
       endif
     case default
       do
-        if (.not.associated(cms%cp)) exit
-        print*, "checking default", cms%cp%operator
-
-        select case (cms%cp%operator)
+        if (.not.associated(cp)) exit
+        select case (cp%operator)
         case (OP_NAME)
-          print*,"name"
-          p = (name==str_vs(cms%cp%name))
+          p = (name==str_vs(cp%name))
           if (p) then
-            tcp => nextCPAfterMatch(cms%cp)
-            cms%cp => tcp
+            tcp => nextCPAfterMatch(cp)
+            cp => tcp
             exit
           else
-            tcp => nextCPAfterFail(cms%cp)
-            cms%cp => tcp
+            tcp => nextCPAfterFail(cp)
+            cp => tcp
           endif
         case (OP_CHOICE, OP_SEQ)
-          print*,"choiceseq"
-          cms%cp => cms%cp%firstChild
+          cp => cp%firstChild
         end select
       end do
     end select
 
-  end function checkContentModel
+    print*,"done checking"
+    if (associated(cp)) then
+      if (associated(cp%name)) print*, "name ", str_vs(cp%name)
+    endif
+
+
+  end function checkCP
 
   function nextCPaftermatch(cp) result(cp_next)
     type (content_particle_t), pointer :: cp
@@ -324,6 +334,64 @@ contains
     call destroyCP(cp)
 
   end subroutine destroyCPtree
+
+  subroutine dumpCP(cp)
+    type(content_particle_t), pointer :: cp
+
+    select case(cp%operator)
+    case (OP_EMPTY)
+      write(*,'(a)', advance="no") "EMPTY"
+    case (OP_ANY)
+      write(*,'(a)', advance="no") "ANY"
+    case (OP_MIXED)
+      write(*,'(a)', advance="no") "MIXED"
+    case (OP_NAME)
+      write(*,'(a)', advance="no") str_vs(cp%name)
+    case (OP_CHOICE)
+      write(*,'(a)', advance="no") "CHOICE"
+    case (OP_SEQ)
+      write(*,'(a)', advance="no") "SEQ"
+    end select
+    select case(cp%repeater)
+    case (REP_QUESTION_MARK)
+      write(*,'(a)', advance="no") "?"
+    case (REP_ASTERISK)
+      write(*,'(a)', advance="no") "*"
+    end select
+    print*
+  end subroutine dumpCP
+
+  subroutine dumpCPtree(cp)
+    type(content_particle_t), pointer :: cp
+
+    type(content_particle_t), pointer :: current, tcp
+
+    integer :: i
+    i = 0
+    current => cp
+
+    print*,"DUPING YTRE"
+    call dumpCP(current)
+    do
+      do while (associated(current%firstChild))
+        i = i + 2
+        current => current%firstChild
+        write(*,'(a)', advance="no") repeat(" ",i)
+        call dumpCP(current)
+      enddo
+      if (associated(current%nextSibling)) then
+        current => current%nextSibling
+        write(*,'(a)', advance="no") repeat(" ",i)
+        call dumpCP(current)
+      else
+        i = i - 2
+        current => current%parent
+        if (associated(current, cp)) exit
+      endif
+    enddo
+
+  end subroutine dumpCPtree
+
 #endif
 
 end module m_common_content_model
