@@ -292,7 +292,6 @@ contains
           nbrackets = 1
           top => newCP()
           current => top
-          print*,"NEWCP first", associated(current%parent)
           state = ST_FIRSTCHILD
         else
           call add_error(stack, &
@@ -346,7 +345,6 @@ contains
           current%firstChild => tcp
           tcp%parent => current
           current => tcp
-          print*,"NEWCP second", associated(current%parent)
           order => vs_str_alloc("  ")
           state = ST_CHILD
         else
@@ -452,7 +450,6 @@ contains
           tcp => newCP(name=str_vs(name))
           deallocate(name)
           if (firstChild) then
-            print*,"NEWCP appending first child"
             current%firstChild => tcp
             tcp%parent => current
             firstChild = .false.
@@ -537,12 +534,12 @@ contains
           if (firstChild) then
             current%firstChild => tcp
             tcp%parent => current
-            current => tcp
           else
             current%nextSibling => tcp
             tcp%parent => current%parent
             firstChild = .true.
           endif
+          current => tcp
           nbrackets = nbrackets + 1
           temp => order
           order => vs_str_alloc(str_vs(temp)//" ")
