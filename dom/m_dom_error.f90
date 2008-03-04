@@ -47,7 +47,7 @@ module m_dom_error
   integer, parameter, public :: FoX_INVALID_COMMENT         = 209
   integer, parameter, public :: FoX_NODE_IS_NULL            = 210
   integer, parameter, public :: FoX_INVALID_ENTITY          = 211
-!  integer, parameter, public :: FoX_NO_DOCTYPE              = 212
+  integer, parameter, public :: FoX_INVALID_URI             = 212
   integer, parameter, public :: FoX_IMPL_IS_NULL            = 213
   integer, parameter, public :: FoX_MAP_IS_NULL             = 214
   integer, parameter, public :: FoX_LIST_IS_NULL            = 215

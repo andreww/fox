@@ -23,7 +23,8 @@ module m_dom_dom
     FoX_INVALID_PUBLIC_ID, FoX_INVALID_SYSTEM_ID, FoX_IMPL_IS_NULL, FoX_INVALID_NODE, &
     FoX_INVALID_CHARACTER, FoX_INVALID_COMMENT, FoX_INVALID_CDATA_SECTION, &
     FoX_INVALID_PI_DATA, NOT_SUPPORTED_ERR, FoX_INVALID_ENTITY, &
-    INDEX_SIZE_ERR, FoX_NO_SUCH_ENTITY, FoX_HIERARCHY_REQUEST_ERR
+    INDEX_SIZE_ERR, FoX_NO_SUCH_ENTITY, FoX_HIERARCHY_REQUEST_ERR, &
+    FoX_INVALID_URI
 
   implicit none
   private
@@ -7172,6 +7173,7 @@ endif
     type(attribute_t), pointer :: att
     integer :: i
     logical :: brokenNS
+    type(URI), pointer :: URIref
 
     if (.not.associated(arg)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
@@ -7249,6 +7251,20 @@ endif
 
     endif
 
+    URIref => parseURI(namespaceURI)
+    if (.not.associated(URIref)) then
+      if (getFoX_checks().or.FoX_INVALID_URI<200) then
+  call throw_exception(FoX_INVALID_URI, "createElementNS", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    endif
+    call destroyURI(URIref)
+
     np => createNode(arg, ELEMENT_NODE, qualifiedName, "")
     allocate(np%elExtras)
     np%elExtras%namespaceURI => vs_str_alloc(namespaceURI)
@@ -7302,6 +7318,8 @@ endif
     type(Node), pointer :: arg
     character(len=*), intent(in) :: namespaceURI, qualifiedName
     type(Node), pointer :: np
+
+    type(URI), pointer :: URIref
 
     if (.not.associated(arg)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
@@ -7379,6 +7397,21 @@ endif
 endif
 
     endif
+
+    URIref => parseURI(namespaceURI)
+    if (.not.associated(URIref)) then
+      if (getFoX_checks().or.FoX_INVALID_URI<200) then
+  call throw_exception(FoX_INVALID_URI, "createAttributeNS", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    endif
+    call destroyURI(URIref)
+
   
     np => createNode(arg, ATTRIBUTE_NODE, qualifiedName, "")
     allocate(np%elExtras)
@@ -8155,6 +8188,7 @@ endif
     type(element_t), pointer :: elem
     type(attribute_t), pointer :: att
     type(xml_doc_state), pointer :: xds
+    type(URI), pointer :: URIref
 
     if (.not.associated(arg).or..not.associated(n)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
@@ -8241,6 +8275,20 @@ endif
 endif
 
     endif
+
+    URIref => parseURI(namespaceURI)
+    if (.not.associated(URIref)) then
+      if (getFoX_checks().or.FoX_INVALID_URI<200) then
+  call throw_exception(FoX_INVALID_URI, "renameNode", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    endif
+    call destroyURI(URIref)
 
 ! FIXME what if this is called on a Level 1 node
 ! FIXME what if this is called on a read-only node

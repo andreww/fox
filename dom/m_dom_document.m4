@@ -655,6 +655,7 @@ TOHW_m_dom_treewalk(`dnl
     type(attribute_t), pointer :: att
     integer :: i
     logical :: brokenNS
+    type(URI), pointer :: URIref
 
     if (.not.associated(arg)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
@@ -675,6 +676,12 @@ TOHW_m_dom_treewalk(`dnl
     elseif (namespaceURI=="http://www.w3.org/2000/xmlns/") then
       TOHW_m_dom_throw_error(NAMESPACE_ERR)
     endif
+
+    URIref => parseURI(namespaceURI)
+    if (.not.associated(URIref)) then
+      TOHW_m_dom_throw_error(FoX_INVALID_URI)
+    endif
+    call destroyURI(URIref)
 
     np => createNode(arg, ELEMENT_NODE, qualifiedName, "")
     allocate(np%elExtras)
@@ -729,6 +736,8 @@ TOHW_m_dom_treewalk(`dnl
     character(len=*), intent(in) :: namespaceURI, qualifiedName
     type(Node), pointer :: np
 
+    type(URI), pointer :: URIref
+
     if (.not.associated(arg)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif
@@ -749,6 +758,13 @@ TOHW_m_dom_treewalk(`dnl
       (qualifiedName=="xmlns" .or. prefixOfQName(qualifiedName)=="xmlns")) then
       TOHW_m_dom_throw_error(NAMESPACE_ERR)
     endif
+
+    URIref => parseURI(namespaceURI)
+    if (.not.associated(URIref)) then
+      TOHW_m_dom_throw_error(FoX_INVALID_URI)
+    endif
+    call destroyURI(URIref)
+
   
     np => createNode(arg, ATTRIBUTE_NODE, qualifiedName, "")
     allocate(np%elExtras)
@@ -1008,6 +1024,7 @@ dnl subroutine normalizeDocument - see m_dom_namespaces.m4
     type(element_t), pointer :: elem
     type(attribute_t), pointer :: att
     type(xml_doc_state), pointer :: xds
+    type(URI), pointer :: URIref
 
     if (.not.associated(arg).or..not.associated(n)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
@@ -1030,6 +1047,12 @@ dnl subroutine normalizeDocument - see m_dom_namespaces.m4
     elseif (namespaceURI=="http://www.w3.org/2000/xmlns/") then
       TOHW_m_dom_throw_error(NAMESPACE_ERR)
     endif
+
+    URIref => parseURI(namespaceURI)
+    if (.not.associated(URIref)) then
+      TOHW_m_dom_throw_error(FoX_INVALID_URI)
+    endif
+    call destroyURI(URIref)
 
 ! FIXME what if this is called on a Level 1 node
 ! FIXME what if this is called on a read-only node
