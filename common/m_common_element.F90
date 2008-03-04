@@ -700,8 +700,8 @@ contains
       element%mixed = mixed
       element%model => vs_str_alloc(trim(strip_spaces(contents)))
       element%cp => top
-      print*,"CPtree for ", str_vs(element%name)
-!      call dumpCPtree(top)
+      print*,"CPtree for ", str_vs(element%name), associated(top)
+      call dumpCPtree(top)
     else
       if (associated(top)) call destroyCPtree(top)
     endif

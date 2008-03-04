@@ -375,7 +375,6 @@ contains
     logical :: done
     i = 0
     current => cp
-
     done = .false.
     call dumpCP(current)
     do
@@ -387,6 +386,7 @@ contains
           call dumpCP(current)
         enddo
       endif
+      if (associated(current, cp)) exit
       if (associated(current%nextSibling)) then
         done = .false.
         current => current%nextSibling
@@ -396,7 +396,6 @@ contains
         done = .true.
         i = i - 2
         current => current%parent
-        if (associated(current, cp)) exit
       endif
     enddo
 
