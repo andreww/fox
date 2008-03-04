@@ -10,8 +10,8 @@ module m_common_element
   use m_common_charset, only: isInitialNameChar, isNameChar, &
     upperCase, XML_WHITESPACE
   use m_common_content_model, only: content_particle_t, newCP, destroyCPtree, &
-    OP_MIXED, OP_CHOICE, OP_SEQ, REP_QUESTION_MARK, REP_ASTERISK, REP_PLUS, &
-    destroyCPtree
+    OP_NULL, OP_MIXED, OP_CHOICE, OP_SEQ, REP_QUESTION_MARK, REP_ASTERISK, &
+    nextCP, transformCPPlus
   use m_common_error, only: error_stack, add_error, in_error
   use m_common_namecheck, only: checkName, checkNames, checkQName,   &
     checkQNames, checkNmtoken, checkNmtokens
@@ -505,6 +505,7 @@ contains
           if (firstChild) then
             current%firstChild => tcp
             tcp%parent => current
+            current%operator = OP_SEQ
             print*,"NEWCP fourth, ", associated(current%parent)
             firstChild = .false.
           else
@@ -588,8 +589,9 @@ contains
             order = temp(:size(order))
             deallocate(temp)
             state = ST_AFTERBRACKET
-            current => current%parent
           endif
+          current => current%parent
+          if (current%operator==OP_NULL) current%operator = OP_SEQ
         else
           call add_error(stack, &
             'Unexpected character found in element declaration.')
@@ -602,7 +604,7 @@ contains
           current%repeater = REP_ASTERISK
           state = ST_SEPARATOR
         elseif (c=='+') then
-          current%repeater = REP_PLUS
+          call transformCPPlus(current)
           state = ST_SEPARATOR
         elseif (c=='?') then
           current%repeater = REP_QUESTION_MARK
@@ -638,6 +640,7 @@ contains
             state = ST_AFTERBRACKET
           endif
           current => current%parent
+          if (current%operator==OP_NULL) current%operator = OP_SEQ
         else
           call add_error(stack, &
             'Unexpected character "'//c//'"found after ")"')
@@ -655,7 +658,13 @@ contains
               '+ operator disallowed for Mixed elements')
             goto 100
           endif
-          current%repeater = REP_PLUS
+          ! Back track one ...
+          ! make new SEQ
+          ! append current, then copy of current
+          
+          ! convert current to SEQ
+          ! append two children
+          call transformCPPlus(current)
           state = ST_END
         elseif (c=='?') then
           if (mixed) then
