@@ -450,17 +450,13 @@ contains
     endif
 
     do
-      print*, "wf ... ", wf_stack(1)
       call sax_tokenize(fx, fb, eof)
-      print*, "tokenize error", eof, in_error(fx%error_stack), &
-        eof.and..not.reading_main_file(fb), fx%context==CTXT_IN_CONTENT
       if (in_error(fx%error_stack)) then
         ! Any error, we want to quit sax_tokenizer
         call add_error(fx%error_stack, 'Error getting token')
         goto 100
       elseif (eof.and..not.reading_main_file(fb)) then
         if (inExtSubset.and.reading_first_entity(fb)) then
-          print*, "FINISHEd EXT SUBSET", wf_stack(1), fx%state
           if (wf_stack(1)>0) then
             call add_error(fx%error_stack, &
               "Unclosed conditional section or markup in external subset")
@@ -537,34 +533,28 @@ contains
         call add_error(fx%error_stack, 'Internal error! No token found!')
         goto 100
       endif
-      print*, "=============="
-      print*, fx%state, fx%tokenType, fx%nextTokenType
-      if (associated(fx%token)) print*, str_vs(fx%token)
 
       nextState = ST_NULL
 
       select case (fx%state)
 
       case (ST_MISC)
-        write(*,*) 'ST_MISC', str_vs(fx%token)
+        !write(*,*) 'ST_MISC', str_vs(fx%token)
         select case (fx%tokenType)
         case (TOK_PI_TAG)
-          print*, "wf_increment pi misc"
           wf_stack(1) = wf_stack(1) + 1
           nextState = ST_START_PI
         case (TOK_BANG_TAG)
-          print*, "wf_increment bang misc"
           wf_stack(1) = wf_stack(1) + 1
           nextState = ST_BANG_TAG
         case (TOK_OPEN_TAG)
-          print*, "wf_increment open misc"
           wf_stack(1) = wf_stack(1) + 1
           nextState = ST_START_TAG
         end select
 
 
       case (ST_BANG_TAG)
-        write(*,*) 'ST_BANG_TAG'
+        !write(*,*) 'ST_BANG_TAG'
         select case (fx%tokenType)
         case (TOK_OPEN_SB)
           nextState = ST_START_CDATA_DECLARATION
@@ -579,7 +569,7 @@ contains
 
 
       case (ST_START_PI)
-        write(*,*)'ST_START_PI'
+        !write(*,*)'ST_START_PI'
         select case (fx%tokenType)
         case (TOK_NAME)
           if (namespaces_) then
@@ -603,7 +593,7 @@ contains
         end select
 
       case (ST_PI_CONTENTS)
-        write(*,*)'ST_PI_CONTENTS'
+        !write(*,*)'ST_PI_CONTENTS'
         if (validCheck) then
           if (len(fx%elstack)>0) then
             elem => &
@@ -615,7 +605,6 @@ contains
             endif
           endif
         endif
-        print*, "wf_decrement pi"
         wf_stack(1) = wf_stack(1) - 1
           
         select case(fx%tokenType)
@@ -640,7 +629,7 @@ contains
         end select
 
       case (ST_PI_END)
-        write(*,*)'ST_PI_END'
+        !write(*,*)'ST_PI_END'
         select case(fx%tokenType)
         case (TOK_PI_END)
           if (fx%context==CTXT_IN_CONTENT) then
@@ -651,7 +640,7 @@ contains
         end select
 
       case (ST_START_COMMENT)
-        write(*,*)'ST_START_COMMENT'
+        !write(*,*)'ST_START_COMMENT'
         select case (fx%tokenType)
         case (TOK_CHAR)
           fx%name => fx%token
@@ -660,7 +649,7 @@ contains
         end select
 
       case (ST_COMMENT_END)
-        write(*,*)'ST_COMMENT_END'
+        !write(*,*)'ST_COMMENT_END'
         if (validCheck) then
           if (len(fx%elstack)>0) then
             elem => &
@@ -672,7 +661,6 @@ contains
             endif
           endif
         endif
-        print*, "wf decrement comment"
         wf_stack(1) = wf_stack(1) - 1
 
         select case (fx%tokenType)
@@ -690,7 +678,7 @@ contains
         end select
 
       case (ST_START_TAG)
-        write(*,*)'ST_START_TAG', fx%context
+        !write(*,*)'ST_START_TAG', fx%context
         select case (fx%tokenType)
         case (TOK_NAME)
           if (fx%context==CTXT_BEFORE_DTD &
@@ -718,7 +706,7 @@ contains
         end select
 
       case (ST_START_CDATA_DECLARATION)
-        write(*,*) "ST_START_CDATA_DECLARATION"
+        !write(*,*) "ST_START_CDATA_DECLARATION"
         select case (fx%tokenType)
         case (TOK_NAME)
           if (str_vs(fx%token)=="CDATA") then
@@ -734,7 +722,7 @@ contains
         end select
 
       case (ST_FINISH_CDATA_DECLARATION)
-        write(*,*) "ST_FINISH_CDATA_DECLARATION"
+        !write(*,*) "ST_FINISH_CDATA_DECLARATION"
         select case (fx%tokenType)
         case (TOK_OPEN_SB)
           nextState = ST_CDATA_CONTENTS
@@ -742,7 +730,7 @@ contains
 
 
       case (ST_CDATA_CONTENTS)
-        write(*,*)'ST_CDATA_CONTENTS'
+        !write(*,*)'ST_CDATA_CONTENTS'
         select case (fx%tokenType)
         case (TOK_CHAR)
           fx%name => fx%token
@@ -751,7 +739,7 @@ contains
         end select
 
       case (ST_CDATA_END)
-        write(*,*)'ST_CDATA_END'
+        !write(*,*)'ST_CDATA_END'
         if (validCheck) then
           elem => get_element(fx%xds%element_list, get_top_elstack(fx%elstack))
           if (.not.checkContentModel( &
@@ -760,7 +748,6 @@ contains
             goto 100
           endif
         endif
-        print*, "wf decrement end cdata"
         wf_stack(1) = wf_stack(1) - 1
 
         select case(fx%tokenType)
@@ -784,7 +771,7 @@ contains
         end select
 
       case (ST_IN_TAG)
-        write(*,*)'ST_IN_TAG'
+        !write(*,*)'ST_IN_TAG'
         select case (fx%tokenType)
         case (TOK_END_TAG)
           if (fx%context /= CTXT_IN_CONTENT) then
@@ -870,14 +857,14 @@ contains
         end select
 
       case (ST_ATT_NAME)
-        write(*,*)'ST_ATT_NAME'
+        !write(*,*)'ST_ATT_NAME'
         select case (fx%tokenType)
         case (TOK_EQUALS)
           nextState = ST_ATT_EQUALS
         end select
 
       case (ST_ATT_EQUALS)
-        write(*,*)'ST_ATT_EQUALS'
+        !write(*,*)'ST_ATT_EQUALS'
         ! token is pre-processed attribute value.
         ! fx%name still contains attribute name
         select case (fx%tokenType)
@@ -901,7 +888,7 @@ contains
         end select
 
       case (ST_CHAR_IN_CONTENT)
-        write(*,*)'ST_CHAR_IN_CONTENT'
+        !write(*,*)'ST_CHAR_IN_CONTENT'
         select case (fx%tokenType)
         case (TOK_CHAR)
           if (size(fx%token)>0) then
@@ -939,31 +926,27 @@ contains
         end select
 
       case (ST_TAG_IN_CONTENT)
-        write(*,*) 'ST_TAG_IN_CONTENT'
+        !write(*,*) 'ST_TAG_IN_CONTENT'
         select case (fx%tokenType)
         case (TOK_ENTITY)
           nextState = ST_START_ENTITY
         case (TOK_PI_TAG)
-          print*, "wf_increment pi in content"
           wf_stack(1) = wf_stack(1) + 1
           nextState = ST_START_PI
         case (TOK_BANG_TAG)
-          print*, "wf_increment bang in content"
           wf_stack(1) = wf_stack(1) + 1
           nextState = ST_BANG_TAG
         case (TOK_CLOSE_TAG)
           nextState = ST_CLOSING_TAG
         case (TOK_OPEN_TAG)
-          print*, "wf_increment open in content"
           wf_stack(1) = wf_stack(1) + 1
           nextState = ST_START_TAG
         end select
 
       case (ST_START_ENTITY)
-        write(*,*) 'ST_START_ENTITY'
+        !write(*,*) 'ST_START_ENTITY'
         select case (fx%tokenType)
         case (TOK_NAME)
-          print*, "starting with the entity ..."
           if (validCheck) then
             elem => get_element(fx%xds%element_list, get_top_elstack(fx%elstack))
             if (associated(elem)) then
@@ -1053,7 +1036,6 @@ contains
                   if (fx%state==ST_STOP) goto 100
                 endif
                 call add_internal_entity(fx%forbidden_ge_list, str_vs(fx%token), "", null(), .false.)
-                print*, "growing wf_stack 1"
                 temp_wf_stack => wf_stack
                 allocate(wf_stack(size(temp_wf_stack)+1))
                 wf_stack = (/0, temp_wf_stack/)
@@ -1073,7 +1055,6 @@ contains
                 call startEntity_handler(str_vs(fx%token))
               call add_internal_entity(fx%forbidden_ge_list, str_vs(fx%token), "", null(), .false.)
               call open_new_string(fb, expand_entity(fx%xds%entityList, str_vs(fx%token)), str_vs(fx%token), baseURI=ent%baseURI)
-              print*, "growing wf_stack 2"
               temp_wf_stack => wf_stack
               allocate(wf_stack(size(temp_wf_stack)+1))
               wf_stack = (/0, temp_wf_stack/)
@@ -1095,7 +1076,7 @@ contains
         end select
 
       case (ST_CLOSING_TAG)
-        write(*,*)'ST_CLOSING_TAG'
+        !write(*,*)'ST_CLOSING_TAG'
         select case (fx%tokenType)
         case (TOK_NAME)
           if (checkName(str_vs(fx%token), fx%xds%xml_version)) then
@@ -1109,7 +1090,7 @@ contains
         end select
 
       case (ST_IN_CLOSING_TAG)
-        write(*,*)'ST_IN_CLOSING_TAG'
+        !write(*,*)'ST_IN_CLOSING_TAG'
         select case (fx%tokenType)
         case (TOK_END_TAG)
           call close_tag
@@ -1135,7 +1116,7 @@ contains
         end select
 
       case (ST_IN_DOCTYPE)
-        write(*,*)'ST_IN_DOCTYPE'
+        !write(*,*)'ST_IN_DOCTYPE'
         select case (fx%tokenType)
         case (TOK_NAME)
           if (namespaces_) then
@@ -1153,7 +1134,7 @@ contains
         end select
 
       case (ST_DOC_NAME)
-        write(*,*) 'ST_DOC_NAME ', str_vs(fx%token)
+        !write(*,*) 'ST_DOC_NAME ', str_vs(fx%token)
         select case (fx%tokenType)
         case (TOK_NAME)
           if (str_vs(fx%token)=='SYSTEM') then
@@ -1166,7 +1147,6 @@ contains
             call startDTD_handler(str_vs(fx%root_element), "", "")
             if (fx%state==ST_STOP) goto 100
           endif
-          print*, "wf increment sb dtd"
           wf_stack(1) = wf_stack(1) + 1
           nextState = ST_IN_SUBSET
           fx%inIntSubset = .true.
@@ -1175,7 +1155,6 @@ contains
             call startDTD_handler(str_vs(fx%root_element), "", "")
             if (fx%state==ST_STOP) goto 100
           endif
-          print*, "wf decrement end dtd"
           wf_stack(1) = wf_stack(1) - 1
           call endDTDchecks
           if (in_error(fx%error_stack)) goto 100
@@ -1188,7 +1167,7 @@ contains
         end select
 
       case (ST_DOC_PUBLIC)
-        write(*,*) 'ST_DOC_PUBLIC'
+        !write(*,*) 'ST_DOC_PUBLIC'
         select case (fx%tokenType)
         case (TOK_CHAR)
           if (checkPublicId(str_vs(fx%token))) then
@@ -1202,7 +1181,7 @@ contains
         end select
 
       case (ST_DOC_SYSTEM)
-        write(*,*) 'ST_DOC_SYSTEM'
+        !write(*,*) 'ST_DOC_SYSTEM'
         select case (fx%tokenType)
         case (TOK_CHAR)
           fx%systemId => fx%token
@@ -1211,7 +1190,7 @@ contains
         end select
 
       case (ST_DOC_DECL)
-        write(*,*) 'ST_DOC_DECL'
+        !write(*,*) 'ST_DOC_DECL'
         select case (fx%tokenType)
         case (TOK_OPEN_SB)
           if (present(startDTD_handler)) then
@@ -1232,7 +1211,6 @@ contains
           endif
           if (associated(fx%publicId)) deallocate(fx%publicId)
           fx%inIntSubset = .true.
-          print*, "wf increment sb dtd decl"
           wf_stack(1) = wf_stack(1) + 1
           nextState = ST_IN_SUBSET
         case (TOK_END_TAG)
@@ -1258,7 +1236,6 @@ contains
               fx%inIntSubset=.false.
               call parse_text_declaration(fb, fx%error_stack)
               if (in_error(fx%error_stack)) goto 100
-              print*, "growing wf_stack 6"
               temp_wf_stack => wf_stack
               allocate(wf_stack(size(temp_wf_stack)+1))
               wf_stack = (/0, temp_wf_stack/)
@@ -1294,7 +1271,7 @@ contains
 
 
       case (ST_CLOSE_DOCTYPE)
-        write(*,*) "ST_CLOSE_DOCTYPE"
+        !write(*,*) "ST_CLOSE_DOCTYPE"
         select case (fx%tokenType)
         case (TOK_END_TAG)
           if (wf_stack(1)>1) then
@@ -1308,7 +1285,6 @@ contains
               fx%inIntSubset = .false.
               call parse_text_declaration(fb, fx%error_stack)
               if (in_error(fx%error_stack)) goto 100
-              print*, "growing wf_stack 7"
               temp_wf_stack => wf_stack
               allocate(wf_stack(size(temp_wf_stack)+1))
               wf_stack = (/0, temp_wf_stack/)
@@ -1324,7 +1300,6 @@ contains
               call endDTDchecks
               if (in_error(fx%error_stack)) goto 100
               if (fx%state==ST_STOP) return
-              print*, "wf decrement dtd 1"
               wf_stack(1) = wf_stack(1) - 1
               nextState = ST_MISC
               fx%context = CTXT_BEFORE_CONTENT
@@ -1333,7 +1308,6 @@ contains
             call endDTDchecks
             if (in_error(fx%error_stack)) goto 100
             if (fx%state==ST_STOP) return
-              print*, "wf decrement dtd 2"
             wf_stack(1) = wf_stack(1) - 1
             nextState = ST_MISC
             fx%context = CTXT_BEFORE_CONTENT
@@ -1353,7 +1327,7 @@ contains
         end select
 
       case (ST_START_PE)
-        write(*,*) 'ST_START_PE'
+        !write(*,*) 'ST_START_PE'
         select case (fx%tokenType)
         case (TOK_NAME)
           if (existing_entity(fx%forbidden_pe_list, str_vs(fx%token))) then
@@ -1394,7 +1368,6 @@ contains
                   str_vs(fx%token), "", null(), .false.)
                 call parse_text_declaration(fb, fx%error_stack)
                 if (in_error(fx%error_stack)) goto 100
-                print*, "growing wf_stack 3"
                 allocate(temp_wf_stack(size(wf_stack)+1))
                 temp_wf_stack = (/0, wf_stack/)
                 deallocate(wf_stack)
@@ -1414,7 +1387,6 @@ contains
               ! evaluated as a result of this string is evaluated in the
               ! context of the currently open file, so has a baseURI of
               ! this file
-              print*, "growing wf_stack 4"
               allocate(temp_wf_stack(size(wf_stack)+1))
               temp_wf_stack = (/0, wf_stack/)
               deallocate(wf_stack)
@@ -1445,7 +1417,6 @@ contains
 
       if (nextState/=ST_NULL) then
         fx%state = nextState
-        print*, "newState: ", fx%state
       else
         call add_error(fx%error_stack, "Internal error in parser - no suitable token found")
         goto 100
@@ -1503,14 +1474,13 @@ contains
       select case (fx%state_dtd)
 
       case (ST_DTD_SUBSET)
-        write(*,*) "ST_DTD_SUBSET"
+        !write(*,*) "ST_DTD_SUBSET"
         select case (fx%tokenType)
         case (TOK_CLOSE_SB)
           if (.not.reading_main_file(fb)) then
             call add_error(fx%error_stack, "Cannot close DOCTYPE in external entity")
             return
           endif
-          print*, "wf decrement section end subset 1"
           wf_stack(1) = wf_stack(1) - 1
           fx%inIntSubset = .false.
           nextState = ST_CLOSE_DOCTYPE
@@ -1520,26 +1490,22 @@ contains
             call add_error(fx%error_stack, "Unbalanced conditional section in parameter entity")
             return
           endif
-          print*, "wf decrement section end subset 2"
           wf_stack(1) = wf_stack(1) - 2
           nextDTDState = ST_DTD_SUBSET
         case (TOK_PI_TAG)
-          print*, "wf increment pi subset"
           wf_stack(1) = wf_stack(1) + 1
           nextDTDState = ST_DTD_START_PI
         case (TOK_BANG_TAG)
-          print*, "wf increment bang subset"
           wf_stack(1) = wf_stack(1) + 1
           nextDTDState = ST_DTD_BANG_TAG
         case default
           call add_error(fx%error_stack, "Unexpected token in document subset")
           return
         end select
-        print*, "st_subset done 1", wf_stack(1)
 
 
       case (ST_DTD_BANG_TAG)
-        write(*,*) 'ST_DTD_BANG_TAG'
+        !write(*,*) 'ST_DTD_BANG_TAG'
         select case (fx%tokenType)
         case (TOK_OPEN_SB)
           nextDTDState = ST_DTD_START_SECTION_DECL
@@ -1558,7 +1524,7 @@ contains
         end select
 
       case (ST_DTD_START_SECTION_DECL)
-        write(*,*) "ST_DTD_START_SECTION_DECL"
+        !write(*,*) "ST_DTD_START_SECTION_DECL"
         select case (fx%tokenType)
         case (TOK_NAME)
           if (str_vs(fx%token)=="IGNORE") then
@@ -1584,10 +1550,9 @@ contains
 
 
       case (ST_DTD_FINISH_SECTION_DECL)
-        write(*,*) "ST_FINISH_SECTION_DECL"
+        !write(*,*) "ST_FINISH_SECTION_DECL"
         select case (fx%tokenType)
         case (TOK_OPEN_SB)
-        print*, "wf increment section"
           wf_stack(1) = wf_stack(1) + 1
           if (fx%context==CTXT_IGNORE) then
             nextDTDState = ST_DTD_IN_IGNORE_SECTION
@@ -1599,15 +1564,13 @@ contains
 
 
       case (ST_DTD_IN_IGNORE_SECTION)
-        write(*,*) "ST_IN_IGNORE_SECTION"
+        !write(*,*) "ST_IN_IGNORE_SECTION"
         select case (fx%tokenType)
         case (TOK_SECTION_START)
-        print*, "wf increment section"
           wf_stack(1) = wf_stack(1) + 2
           ignoreDepth = ignoreDepth + 1
           nextDTDState = ST_DTD_IN_IGNORE_SECTION
         case (TOK_SECTION_END)
-          print*, "wf decrement section"
           wf_stack(1) = wf_stack(1) - 2
           ignoreDepth = ignoreDepth - 1
           if (ignoreDepth==0) then
@@ -1619,7 +1582,7 @@ contains
         end select
 
       case (ST_DTD_START_PI)
-        write(*,*)'ST_DTD_START_PI'
+        !write(*,*)'ST_DTD_START_PI'
         select case (fx%tokenType)
         case (TOK_NAME)
           if (namespaces_) then
@@ -1643,7 +1606,7 @@ contains
         end select
 
       case (ST_DTD_PI_CONTENTS)
-        write(*,*)'ST_DTD_PI_CONTENTS'
+        !write(*,*)'ST_DTD_PI_CONTENTS'
         if (validCheck) then
           if (fx%context==CTXT_IN_DTD.and.wf_stack(1)==0) then
             call add_error(fx%error_stack, &
@@ -1660,7 +1623,6 @@ contains
             endif
           endif
         endif
-        print*, "wf_decrement pi"
         wf_stack(1) = wf_stack(1) - 1
           
         select case(fx%tokenType)
@@ -1677,14 +1639,14 @@ contains
         end select
 
       case (ST_DTD_PI_END)
-        write(*,*)'ST_DTD_PI_END'
+        !write(*,*)'ST_DTD_PI_END'
         select case(fx%tokenType)
         case (TOK_PI_END)
           nextDTDState = ST_DTD_SUBSET
         end select
 
       case (ST_DTD_START_COMMENT)
-        write(*,*)'ST_DTD_START_COMMENT'
+        !write(*,*)'ST_DTD_START_COMMENT'
         select case (fx%tokenType)
         case (TOK_CHAR)
           fx%name => fx%token
@@ -1693,7 +1655,7 @@ contains
         end select
 
       case (ST_DTD_COMMENT_END)
-        write(*,*)'ST_DTD_COMMENT_END'
+        !write(*,*)'ST_DTD_COMMENT_END'
         if (validCheck) then
           if (wf_stack(1)==0) then
             call add_error(fx%error_stack, &
@@ -1710,7 +1672,6 @@ contains
             endif
           endif
         endif
-        print*, "wf decrement comment"
         wf_stack(1) = wf_stack(1) - 1
 
         select case (fx%tokenType)
@@ -1722,7 +1683,7 @@ contains
         end select
 
       case (ST_DTD_ATTLIST)
-        write(*,*) 'ST_DTD_ATTLIST'
+        !write(*,*) 'ST_DTD_ATTLIST'
         select case (fx%tokenType)
         case (TOK_NAME)
           if (namespaces_) then
@@ -1743,7 +1704,7 @@ contains
         end select
 
       case (ST_DTD_ATTLIST_CONTENTS)
-        write(*,*) 'ST_DTD_ATTLIST_CONTENTS'
+        !write(*,*) 'ST_DTD_ATTLIST_CONTENTS'
         select case (fx%tokenType)
         case (TOK_ENTITY)
           !Weve found a PEref in the middle of the element contents
@@ -1779,7 +1740,6 @@ contains
               return
             endif
           endif
-          print*, "wf decrement attlist 1"
           wf_stack(1) = wf_stack(1) - 1
           if (processDTD) then
             call parse_dtd_attlist("", fx%xds%xml_version, &
@@ -1797,7 +1757,7 @@ contains
         end select
 
       case (ST_DTD_ATTLIST_END)
-        write(*,*) 'ST_DTD_ATTLIST_END'
+        !write(*,*) 'ST_DTD_ATTLIST_END'
         select case (fx%tokenType)
         case (TOK_END_TAG)
           if (validCheck) then
@@ -1807,7 +1767,6 @@ contains
               return
             endif
           endif
-          print*, "wf decrement attlist 2"
           wf_stack(1) = wf_stack(1) - 1
           if (processDTD) then
             if (present(attributeDecl_handler)) then
@@ -1836,16 +1795,14 @@ contains
         end select
 
       case (ST_DTD_ELEMENT_CONTENTS)
-        write(*,*)'ST_DTD_ELEMENT_CONTENTS'
+        !write(*,*)'ST_DTD_ELEMENT_CONTENTS'
         select case (fx%tokenType)
         case (TOK_OPEN_PAR)
           ! increment well_formedness
-          print*, "wf increment element"
           wf_stack(1) = wf_stack(1) + 1
           nextDTDState = ST_DTD_ELEMENT_CONTENTS
         case (TOK_CLOSE_PAR)
           ! increment well_formedness
-          print*, "wf decrement element"
           wf_stack(1) = wf_stack(1) - 1
           nextDTDState = ST_DTD_ELEMENT_CONTENTS
         case (TOK_ENTITY)
@@ -1876,7 +1833,7 @@ contains
         end select
 
       case (ST_DTD_ELEMENT_END)
-        write(*,*)'ST_DTD_ELEMENT_END'
+        !write(*,*)'ST_DTD_ELEMENT_END'
         select case (fx%tokenType)
         case (TOK_END_TAG)
           if (validCheck) then
@@ -1886,7 +1843,6 @@ contains
               return
             endif
           endif
-          print*, "wf decrement element"
           wf_stack(1) = wf_stack(1) - 1
           if (processDTD.and.associated(elem)) then
             if (present(elementDecl_handler)) then
@@ -1899,7 +1855,7 @@ contains
         end select
 
       case (ST_DTD_ENTITY)
-        write(*,*) 'ST_DTD_ENTITY'
+        !write(*,*) 'ST_DTD_ENTITY'
         select case (fx%tokenType)
         case (TOK_NAME)
           if (str_vs(fx%token)=="%") then
@@ -1925,7 +1881,7 @@ contains
         end select
 
       case (ST_DTD_ENTITY_PE)
-        write(*,*) 'ST_DTD_ENTITY_PE'
+        !write(*,*) 'ST_DTD_ENTITY_PE'
         select case (fx%tokenType)
         case (TOK_NAME)
           if (namespaces_) then
@@ -1944,7 +1900,7 @@ contains
         end select
 
       case (ST_DTD_ENTITY_ID)
-        write(*,*) 'ST_DTD_ENTITY_ID'
+        !write(*,*) 'ST_DTD_ENTITY_ID'
         select case (fx%tokenType)
         case (TOK_NAME)
           if (str_vs(fx%token) == "PUBLIC") then
@@ -1975,7 +1931,7 @@ contains
         end select
 
       case (ST_DTD_ENTITY_PUBLIC)
-        write(*,*) 'ST_DTD_ENTITY_PUBLIC'
+        !write(*,*) 'ST_DTD_ENTITY_PUBLIC'
         select case (fx%tokenType)
         case (TOK_CHAR)
           if (checkPublicId(str_vs(fx%token))) then
@@ -1992,7 +1948,7 @@ contains
         end select
 
       case (ST_DTD_ENTITY_SYSTEM)
-        write(*,*) 'ST_DTD_ENTITY_SYSTEM'
+        !write(*,*) 'ST_DTD_ENTITY_SYSTEM'
         select case (fx%tokenType)
         case (TOK_CHAR)
           fx%systemId => fx%token
@@ -2004,7 +1960,7 @@ contains
         end select
 
       case (ST_DTD_ENTITY_NDATA)
-        write(*,*) 'ST_DTD_ENTITY_NDATA'
+        !write(*,*) 'ST_DTD_ENTITY_NDATA'
         select case (fx%tokenType)
         case (TOK_END_TAG)
           if (validCheck) then
@@ -2014,7 +1970,6 @@ contains
               return
             endif
           endif
-          print*, "wf decrement entity 1"
           wf_stack(1) = wf_stack(1) - 1
           if (processDTD) then
             call add_entity
@@ -2043,7 +1998,7 @@ contains
         end select
 
       case (ST_DTD_ENTITY_NDATA_VALUE)
-        write(*,*) 'ST_DTD_ENTITY_NDATA_VALUE'
+        !write(*,*) 'ST_DTD_ENTITY_NDATA_VALUE'
         !check is a name and exists in notationlist
         select case (fx%tokenType)
         case (TOK_NAME)
@@ -2065,7 +2020,7 @@ contains
         end select
 
       case (ST_DTD_ENTITY_END)
-        write(*,*) 'ST_DTD_ENTITY_END'
+        !write(*,*) 'ST_DTD_ENTITY_END'
         select case (fx%tokenType)
         case (TOK_END_TAG)
           if (validCheck) then
@@ -2075,7 +2030,6 @@ contains
               return
             endif
           endif
-          print*, "wf decrement entity 2"
           wf_stack(1) = wf_stack(1) - 1
           if (processDTD) then
             call add_entity
@@ -2093,7 +2047,7 @@ contains
         end select
 
       case (ST_DTD_NOTATION)
-        write(*,*) 'ST_DTD_NOTATION'
+        !write(*,*) 'ST_DTD_NOTATION'
         select case (fx%tokenType)
         case (TOK_NAME)
           if (namespaces_) then
@@ -2114,7 +2068,7 @@ contains
         end select
 
       case (ST_DTD_NOTATION_ID)
-        write(*,*)'ST_DTD_NOTATION_ID'
+        !write(*,*)'ST_DTD_NOTATION_ID'
         select case (fx%tokenType)
         case (TOK_NAME)
           if (str_vs(fx%token)=='SYSTEM') then
@@ -2131,7 +2085,7 @@ contains
         end select
 
       case (ST_DTD_NOTATION_SYSTEM)
-        write(*,*)'ST_DTD_NOTATION_SYSTEM'
+        !write(*,*)'ST_DTD_NOTATION_SYSTEM'
         select case (fx%tokenType)
         case (TOK_CHAR)
           fx%systemId => fx%token
@@ -2143,7 +2097,7 @@ contains
         end select
 
       case (ST_DTD_NOTATION_PUBLIC)
-        write(*,*)'ST_DTD_NOTATION_PUBLIC'
+        !write(*,*)'ST_DTD_NOTATION_PUBLIC'
         select case (fx%tokenType)
         case (TOK_CHAR)
           if (checkPublicId(str_vs(fx%token))) then
@@ -2160,7 +2114,7 @@ contains
         end select
 
       case (ST_DTD_NOTATION_PUBLIC_2)
-        write(*,*)'ST_DTD_NOTATION_PUBLIC_2'
+        !write(*,*)'ST_DTD_NOTATION_PUBLIC_2'
         select case (fx%tokenType)
         case (TOK_END_TAG)
           if (validCheck) then
@@ -2174,7 +2128,6 @@ contains
               return
             endif
           endif
-          print*, "wf decrement notation 1"
           wf_stack(1) = wf_stack(1) - 1
           if (processDTD) then
             call add_notation(fx%nlist, str_vs(fx%name), publicId=str_vs(fx%publicId))
@@ -2193,7 +2146,7 @@ contains
         end select
 
       case (ST_DTD_NOTATION_END)
-        write(*,*)'ST_DTD_NOTATION_END'
+        !write(*,*)'ST_DTD_NOTATION_END'
         select case (fx%tokenType)
         case (TOK_END_TAG)
           if (validCheck) then
@@ -2207,7 +2160,6 @@ contains
               return
             endif
           endif
-          print*, "wf decrement notation 2"
           wf_stack(1) = wf_stack(1) - 1
           if (processDTD) then
             URIref => parseURI(str_vs(fx%systemId))
@@ -2333,7 +2285,6 @@ contains
     end subroutine open_tag
 
     subroutine close_tag
-      print*, "wf decrement close tag"
       wf_stack(1) = wf_stack(1) - 1
       if (wf_stack(1)<0) then
         call add_error(fx%error_stack, &
@@ -2437,7 +2388,6 @@ contains
               call add_error(fx%error_stack, "Fragment not permitted on SYSTEM URI")
               call destroyURI(URIref)
             else
-              print*, "current base URI", expressURI(fb%f(1)%baseURI)
               newURI => rebaseURI(fb%f(1)%baseURI, URIref)
               call destroyURI(URIref)
               if (associated(fx%publicId).and.associated(fx%Ndata)) then
