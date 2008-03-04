@@ -11,7 +11,7 @@ module m_common_element
     upperCase, XML_WHITESPACE
   use m_common_content_model, only: content_particle_t, newCP, destroyCPtree, &
     OP_NULL, OP_MIXED, OP_CHOICE, OP_SEQ, REP_QUESTION_MARK, REP_ASTERISK, &
-    nextCP, transformCPPlus
+    transformCPPlus
   use m_common_error, only: error_stack, add_error, in_error
   use m_common_namecheck, only: checkName, checkNames, checkQName,   &
     checkQNames, checkNmtoken, checkNmtokens
@@ -480,11 +480,8 @@ contains
             current%nextSibling => tcp
             tcp%parent => current%parent
           endif
-          if (c=="|") then
+          if (c=="|") &
             current%parent%operator = OP_CHOICE
-          elseif (c==",") then
-            current%parent%operator = OP_SEQ
-          endif
           state = ST_CHILD
         elseif (c==')') then
           if (mixed) mixed_additional = .true.
@@ -505,7 +502,6 @@ contains
           if (firstChild) then
             current%firstChild => tcp
             tcp%parent => current
-            current%operator = OP_SEQ
             print*,"NEWCP fourth, ", associated(current%parent)
             firstChild = .false.
           else
@@ -572,11 +568,8 @@ contains
               'Cannot mix ordered and unordered elements')
             goto 100
           endif
-          if (c=="|") then
+          if (c=="|") &
             current%parent%operator = OP_CHOICE
-          elseif (c==",") then
-            current%parent%operator = OP_SEQ
-          endif
           state = ST_CHILD
         elseif (c==')') then
           nbrackets = nbrackets - 1
@@ -591,7 +584,6 @@ contains
             state = ST_AFTERBRACKET
           endif
           current => current%parent
-          if (current%operator==OP_NULL) current%operator = OP_SEQ
         else
           call add_error(stack, &
             'Unexpected character found in element declaration.')
@@ -621,11 +613,8 @@ contains
             goto 100
           endif
           print*,"NEWCP fifth", associated(current%parent)
-          if (c=="|") then
+          if (c=="|") &
             current%parent%operator = OP_CHOICE
-          elseif (c==",") then
-            current%parent%operator = OP_SEQ
-          endif
           state = ST_CHILD
         elseif (c==')') then
           nbrackets = nbrackets - 1
@@ -640,7 +629,6 @@ contains
             state = ST_AFTERBRACKET
           endif
           current => current%parent
-          if (current%operator==OP_NULL) current%operator = OP_SEQ
         else
           call add_error(stack, &
             'Unexpected character "'//c//'"found after ")"')

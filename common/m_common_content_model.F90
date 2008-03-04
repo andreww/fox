@@ -31,8 +31,6 @@ module m_common_content_model
 
   type content_model_state
     type(content_particle_t), pointer :: cp
-    logical :: checked = .false.
-    logical :: matched = .false.
   end type content_model_state
 
   public :: content_particle_t
@@ -41,7 +39,6 @@ module m_common_content_model
   public :: newCP
   public :: transformCPPlus
   public :: checkContentModel
-  public :: nextCP
   public :: destroyCPtree
 
   public :: OP_NULL, OP_MIXED, OP_CHOICE, OP_SEQ
@@ -64,6 +61,8 @@ contains
     elseif (present(name)) then
       cp%operator = OP_NAME
       cp%name => vs_str_alloc(name)
+    else
+      cp%operator = OP_SEQ
     endif
     if (present(repeat)) then
       select case (repeat)
@@ -163,9 +162,12 @@ contains
     ! a bit screwed. But the document is in error if so.
     ! (and we are not required to diagnose errors.)
 
+    p = .false.
+    if (.not.associated(cms%cp)) return
+
     select case(cms%cp%operator)
     case (OP_EMPTY)
-      p = .false.
+      continue ! anything fails
     case (OP_ANY)
       p = .true.
     case (OP_MIXED)
@@ -173,7 +175,6 @@ contains
         ! any text/pi/comment/entity etc allowed.
         p = .true.
       else
-        p = .false.
         tcp => cms%cp%firstChild
         do while (associated(tcp))
           if (name==str_vs(tcp%name)) then
@@ -185,76 +186,112 @@ contains
       endif
     case default
       do
-        if (.not.associated(cms%cp)) then
-          p = .false.
-          exit
-        endif
+        if (.not.associated(cms%cp)) exit
+        print*, "checking default", cms%cp%operator
+
         select case (cms%cp%operator)
         case (OP_NAME)
-          select case(cms%cp%repeater)
-          case (REP_NULL)
-            p = (name==str_vs(cms%cp%name))
-            if (p) call nextCP(cms)
+          print*,"name"
+          p = (name==str_vs(cms%cp%name))
+          if (p) then
+            tcp => nextCPAfterMatch(cms%cp)
+            cms%cp => tcp
             exit
-          case (REP_QUESTION_MARK)
-            p = (name==str_vs(cms%cp%name))
-            call nextCP(cms)
-            if (p) exit
-          case (REP_ASTERISK)
-            p = (name==str_vs(cms%cp%name))
-            if (p) exit
-            call nextCP(cms)
-          end select
-        case (OP_CHOICE)
-          p = .true.
-          exit
-        case (OP_SEQ)
-!!$          if (.not.checked)
-!!$          select case(cms%cp%repeater)
-!!$          case (REP_NULL)
-!!$            if (cms%cp%checked) then
-!!$              call nextCP(cms)
-!!$            else
-!!$              p = .false.
-!!$              exit
-!!$            endif
-!!$            cms%checked = .true.
-!!$          case (REP_QUESTION_MARK, REP_ASTERISK)
-!!$            cms%checked = .true.
-!!$            call nextCP(cms)
-!!$          case (REP_ASTERISK)
-!!$            if (cms%cp%checked) then
-!!$              if (cms%cp%matched) then
-!!$                call nextCP(cms)
-!!$              else
-!!$                p = .false.
-!!$                exit
-!!$              endif
-!!$            endif
-!!$            cms%checked = .true.
-!!$          end select
-          p = .true.
-          exit
+          else
+            tcp => nextCPAfterFail(cms%cp)
+            cms%cp => tcp
+          endif
+        case (OP_CHOICE, OP_SEQ)
+          print*,"choiceseq"
+          cms%cp => cms%cp%firstChild
         end select
       end do
     end select
 
   end function checkContentModel
 
-  subroutine nextCP(cms)
-    type(content_model_state), pointer :: cms
+  function nextCPaftermatch(cp) result(cp_next)
+    type (content_particle_t), pointer :: cp
+    type (content_particle_t), pointer :: cp_next
 
-    if (.not.cms%checked &
-      .and.associated(cms%cp%firstChild)) then
-      cms%cp => cms%cp%firstChild
-    elseif (associated(cms%cp%nextSibling)) then
-      cms%cp => cms%cp%nextSibling
-    else
-      cms%cp => cms%cp%parent
-      cms%checked = .true.
-    endif
+    type (content_particle_t), pointer :: tcp
 
-  end subroutine nextCP
+    cp_next => cp
+
+    do
+      if (cp_next%repeater==REP_ASTERISK) exit
+      tcp => cp_next%parent
+      if (associated(tcp)) then
+        if (tcp%operator==OP_CHOICE) then
+          ! siblings are uninteresting, we've matched this CHOICE
+          cp_next => tcp
+          ! Move up & try the whole thing again on the parent CHOICE
+        elseif (tcp%operator==OP_SEQ) then
+          ! we do care about siblings, move onto next one
+          if (associated(cp_next%nextSibling)) then
+            cp_next => cp_next%nextSibling
+            ! thatll do, itll be the next thing to try
+            exit
+          else
+            ! No sibling, move up a level
+            cp_next => tcp
+            ! and try again
+          endif
+        endif
+      else
+        ! We've got to the top already.
+        cp_next => tcp
+        exit
+      endif
+    enddo
+        
+  end function nextCPaftermatch
+
+  function nextCPafterfail(cp) result(cp_next)
+    type (content_particle_t), pointer :: cp
+    type (content_particle_t), pointer :: cp_next
+
+    type (content_particle_t), pointer :: tcp
+
+    cp_next => cp
+    do
+      tcp => cp_next%parent
+      if (associated(tcp)) then
+        if (tcp%operator==OP_CHOICE) then
+          ! we care about siblings, lets try the next one
+          if (associated(cp_next%nextSibling)) then
+            cp_next => cp_next%nextSibling
+            ! super, lets go back and try that
+            exit
+          else ! weve failed to match any cp in this CHOICE ...
+            cp_next => tcp
+            ! go up a level and see if theres another legitimate choice
+          endif
+        elseif (tcp%operator==OP_SEQ) then
+          if (cp_next%repeater==REP_NULL) then
+            ! we have totally failed to match this SEQ.
+            ! go up a level & hope that it was ok ...
+            cp_next => tcp
+          else
+            ! we didnt match this element of the SEQ, but the nextSibling
+            ! might be ok
+            if (associated(cp_next%nextSibling)) then
+              cp_next => cp_next%nextSibling
+              exit
+            else
+              cp_next => tcp
+            endif
+          endif
+        endif
+      else
+        ! weve got all the way to the top without
+        ! finding a new cp to try
+        cp_next => tcp
+        exit
+      endif
+    enddo
+    
+  end function nextCPafterfail
 
   subroutine destroyCP(cp)
     type(content_particle_t), pointer :: cp
