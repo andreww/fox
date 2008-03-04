@@ -457,6 +457,13 @@ module m_dom_dom
   public :: getOwnerElement
 
   public :: getIsId
+  public :: setIsId
+  interface getIsId
+    module procedure getIsId_DOM
+  end interface
+  interface setIsId
+    module procedure setIsId_DOM
+  end interface
 
 
 
@@ -9727,7 +9734,7 @@ endif
   end subroutine setspecified
 
 
-function getisId(np, ex)result(c) 
+function getisId_DOM(np, ex)result(c) 
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: np
     logical :: c
@@ -9735,7 +9742,7 @@ function getisId(np, ex)result(c)
 
     if (.not.associated(np)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
-  call throw_exception(FoX_NODE_IS_NULL, "getisId", ex)
+  call throw_exception(FoX_NODE_IS_NULL, "getisId_DOM", ex)
   if (present(ex)) then
     if (inException(ex)) then
        return
@@ -9748,7 +9755,7 @@ endif
    if (getNodeType(np)/=ATTRIBUTE_NODE .and. &
       .true.) then
       if (getFoX_checks().or.FoX_INVALID_NODE<200) then
-  call throw_exception(FoX_INVALID_NODE, "getisId", ex)
+  call throw_exception(FoX_INVALID_NODE, "getisId_DOM", ex)
   if (present(ex)) then
     if (inException(ex)) then
        return
@@ -9760,10 +9767,10 @@ endif
 
     c = np%elExtras%isId
 
-  end function getisId
+  end function getisId_DOM
 
 
-subroutine setisId(np, c, ex)
+subroutine setisId_DOM(np, c, ex)
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: np
     logical :: c
@@ -9771,7 +9778,7 @@ subroutine setisId(np, c, ex)
 
     if (.not.associated(np)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
-  call throw_exception(FoX_NODE_IS_NULL, "setisId", ex)
+  call throw_exception(FoX_NODE_IS_NULL, "setisId_DOM", ex)
   if (present(ex)) then
     if (inException(ex)) then
        return
@@ -9784,7 +9791,7 @@ endif
    if (getNodeType(np)/=ATTRIBUTE_NODE .and. &
       .true.) then
       if (getFoX_checks().or.FoX_INVALID_NODE<200) then
-  call throw_exception(FoX_INVALID_NODE, "setisId", ex)
+  call throw_exception(FoX_INVALID_NODE, "setisId_DOM", ex)
   if (present(ex)) then
     if (inException(ex)) then
        return
@@ -9796,7 +9803,7 @@ endif
 
     np%elExtras%isId = c
 
-  end subroutine setisId
+  end subroutine setisId_DOM
 
 
 function getownerElement(np, ex)result(c) 

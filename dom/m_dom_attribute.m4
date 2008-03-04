@@ -11,6 +11,13 @@ TOHW_m_dom_publics(`
   public :: getOwnerElement
 
   public :: getIsId
+  public :: setIsId
+  interface getIsId
+    module procedure getIsId_DOM
+  end interface
+  interface setIsId
+    module procedure setIsId_DOM
+  end interface
 
 ')`'dnl
 dnl
@@ -27,9 +34,9 @@ TOHW_m_dom_get(logical, specified, np%elExtras%specified, (ATTRIBUTE_NODE))
 
 TOHW_m_dom_set(logical, specified, np%elExtras%specified, (ATTRIBUTE_NODE))
 
-TOHW_m_dom_get(logical, isId, np%elExtras%isId, (ATTRIBUTE_NODE))
+TOHW_m_dom_get(logical, isId_DOM, np%elExtras%isId, (ATTRIBUTE_NODE))
 
-TOHW_m_dom_set(logical, isId, np%elExtras%isId, (ATTRIBUTE_NODE))
+TOHW_m_dom_set(logical, isId_DOM, np%elExtras%isId, (ATTRIBUTE_NODE))
 
 TOHW_m_dom_get(Node, ownerElement, np%elExtras%ownerElement, (ATTRIBUTE_NODE))
 

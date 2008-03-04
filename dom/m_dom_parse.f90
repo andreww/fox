@@ -2,6 +2,7 @@ module m_dom_parse
 
   use fox_m_fsys_array_str, only: str_vs, vs_str_alloc
   use fox_m_utils_uri, only: expressURI
+  use m_common_attrs, only: getIsId
   use m_common_entities, only: entity_list, init_entity_list, &
     destroy_entity_list, entity_t, size, getEntityByIndex
   use m_common_error, only: FoX_error
@@ -31,7 +32,7 @@ module m_dom_parse
     createEmptyEntityReference, createEntity, createNotation, getIllFormed,    &
     getReadOnly, getStringValue, getXds, destroy, destroyAllNodesRecursively,  &
     namespaceFixup, setDocType, setDomConfig, setGCstate, setIllFormed,        &
-    setIsElementContentWhitespace, setReadOnlyMap, setReadonlyNode,            &
+    setIsElementContentWhitespace, setIsId, setReadOnlyMap, setReadonlyNode,   &
     setSpecified, setXds, setStringValue
     
   use m_dom_error, only: DOMException, inException, throw_exception,           &
@@ -87,6 +88,7 @@ contains
       endif
       call setValue(attr, getValue(attrs, i))
       call setSpecified(attr, getSpecified(attrs, i))
+      call setIsId(attr, getIsId(attrs, i))
       if (getParameter(domConfig, "namespaces")) then
         dummy => setAttributeNodeNS(el, attr)
       else
