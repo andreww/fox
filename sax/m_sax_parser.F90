@@ -731,8 +731,7 @@ contains
       case (ST_CDATA_END)
         !write(*,*)'ST_CDATA_END'
         if (validCheck) then
-! FIXME CDATA in element content?
-          if (emptyContent(fx%elstack)) then
+          if (emptyContent(fx%elstack).or.elementContent(fx%elstack)) then
             call add_error(fx%error_stack, "Content inside empty element")
             goto 100
           endif
@@ -952,7 +951,6 @@ contains
             goto 100
           endif
           ent => getEntityByName(fx%predefined_e_list, str_vs(fx%token))
-! FIXME entities inside empty elements etc ...
           if (associated(ent)) then
             if (present(startEntity_handler)) then
               call startEntity_handler(str_vs(fx%token))
