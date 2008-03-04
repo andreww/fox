@@ -10,7 +10,8 @@ module m_common_element
   use m_common_charset, only: isInitialNameChar, isNameChar, &
     upperCase, XML_WHITESPACE
   use m_common_content_model, only: content_particle_t, newCP, destroyCPtree, &
-    OP_NULL, OP_MIXED, OP_CHOICE, OP_SEQ, REP_QUESTION_MARK, REP_ASTERISK, &
+    OP_NULL, OP_MIXED, OP_CHOICE, OP_SEQ, OP_NAME, &
+    REP_QUESTION_MARK, REP_ASTERISK, &
     transformCPPlus, dumpCPtree
   use m_common_error, only: error_stack, add_error, in_error
   use m_common_namecheck, only: checkName, checkNames, checkQName,   &
@@ -498,21 +499,17 @@ contains
             state = ST_AFTERBRACKET
           endif
           tcp => newCP(name=str_vs(name))
-          print*,"NEWCP third", associated(current%parent)
           deallocate(name)
           if (firstChild) then
             current%firstChild => tcp
             tcp%parent => current
-            print*,"NEWCP fourth, ", associated(current%parent)
             firstChild = .false.
           else
-            print*,"NOT firstchild, appending sibling, and going up to parent"
             current%nextSibling => tcp
             tcp%parent => current%parent
-            print*,"current should now be NAME ", str_vs(current%name)
-            print*, "with new sibling", str_vs(current%nextSibling%name)
             current => current%parent
-            print*,"current should now be CHOICE or SEQ ", current%operator
+            if (.not.check_duplicates(current)) &
+              goto 100
           endif
         else
           call add_error(stack, &
@@ -571,7 +568,6 @@ contains
               'Cannot mix ordered and unordered elements')
             goto 100
           endif
-          print*,"NEWCP noticed OP_CHOICE"
           if (c=="|") &
             current%parent%operator = OP_CHOICE
           state = ST_CHILD
@@ -588,7 +584,8 @@ contains
             state = ST_AFTERBRACKET
           endif
           current => current%parent
-          print*,"and our parent is a ", current%operator
+          if (.not.check_duplicates(current)) &
+            goto 100
         else
           call add_error(stack, &
             'Unexpected character found in element declaration.')
@@ -617,7 +614,6 @@ contains
               'Cannot mix ordered and unordered elements')
             goto 100
           endif
-          print*,"NEWCP fifth", associated(current%parent)
           if (c=="|") &
             current%parent%operator = OP_CHOICE
           state = ST_CHILD
@@ -634,6 +630,8 @@ contains
             state = ST_AFTERBRACKET
           endif
           current => current%parent
+          if (.not.check_duplicates(current)) &
+            goto 100
         else
           call add_error(stack, &
             'Unexpected character "'//c//'"found after ")"')
@@ -726,6 +724,42 @@ contains
         end do
         s2(i2:) = ''
       end function strip_spaces
+
+      function check_duplicates(cp) result(p)
+        type(content_particle_t), pointer :: cp
+        logical :: p
+
+        type(string_list) :: sl
+        type(content_particle_t), pointer :: tcp
+
+        if (cp%operator==OP_SEQ) then
+          p = .true.
+          return
+        endif
+
+        call init_string_list(sl)
+        tcp => cp%firstChild
+        p = .false.
+        do while (associated(tcp))
+          if (tcp%operator==OP_NAME) then
+            if (registered_string(sl, str_vs(tcp%name))) then
+              call destroy_string_list(sl)
+              if (cp%operator==OP_MIXED) then
+                call add_error(stack, &
+                  "Duplicate element names found in MIXED")
+              elseif (cp%operator==OP_CHOICE) then
+                call add_error(stack, &
+                  "Duplicate element names found in CHOICE")
+              endif
+              return
+            else
+              call add_string(sl, str_vs(tcp%name))
+            endif
+          endif
+        enddo
+        p = .true.
+        call destroy_string_list(sl)
+      end function check_duplicates
   end subroutine parse_dtd_element
 
 

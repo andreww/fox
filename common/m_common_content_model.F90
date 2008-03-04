@@ -37,7 +37,7 @@ module m_common_content_model
   public :: destroyCPtree
   public :: dumpCPtree
 
-  public :: OP_NULL, OP_MIXED, OP_CHOICE, OP_SEQ
+  public :: OP_NULL, OP_NAME, OP_MIXED, OP_CHOICE, OP_SEQ
   public :: REP_QUESTION_MARK, REP_ASTERISK
 
 contains
