@@ -88,22 +88,21 @@ contains
     type(content_particle_t), pointer :: tcp, tcp_out, tcpn_out, tcpp_out
     logical :: done
 
-    print*, "COPYING CP TREE"
-    call dumpCP(cp)
-
     tcp => cp
     cp_out => copyCP(cp)
     tcp_out => cp_out
     done = .false.
     do while (associated(tcp_out))
-      do while (associated(tcp%firstChild).and..not.done)
-        tcp => tcp%firstChild
-        tcpn_out => copyCP(tcp)
-        tcp_out%firstChild => tcpn_out
-        tcpn_out%parent => tcp_out
-        tcp_out => tcpn_out
-      enddo
-      tcpp_out => tcp%parent
+      if (.not.done) then
+        do while (associated(tcp%firstChild))
+          tcp => tcp%firstChild
+          tcpn_out => copyCP(tcp)
+          tcp_out%firstChild => tcpn_out
+          tcpn_out%parent => tcp_out
+          tcp_out => tcpn_out
+        enddo
+      endif
+      tcpp_out => tcp_out%parent
       if (associated(tcp%nextSibling)) then
         done = .false.
         tcp => tcp%nextSibling
@@ -122,26 +121,32 @@ contains
   subroutine transformCPPlus(cp)
     type(content_particle_t), pointer :: cp
 
-    type(content_particle_t), pointer :: cp_new
+    type(content_particle_t), pointer :: tcp, cp_new
 
-    print*,"doing transform"
-
-! Make copy of cp, and graft children on
+    ! Make copy of cp, and graft children on
     cp_new => copyCP(cp)
     cp_new%firstChild => cp%firstChild
 
-! Clear cp & make it an SEQ
-    cp%firstChild => null() ! FIXME remove
+    ! Reset children's parents ...
+    tcp => cp%firstChild
+    do while (associated(tcp))
+      tcp%parent => cp_new
+      tcp => tcp%nextSibling
+    enddo
+
+    ! Clear cp & make it an SEQ
     if (associated(cp%name)) deallocate(cp%name)
     cp%operator = OP_SEQ
 
-! Append our copied cp to the now-an-SEQ
+    ! Append our copied cp to the now-an-SEQ
     cp%firstChild => cp_new
     cp_new%parent => cp
-! Copy it for a sibling, and make the sibling a *
+
+    ! Copy it for a sibling, and make the sibling a *
     cp_new%nextSibling => copyCPtree(cp_new)
     cp_new%nextSibling%parent => cp
     cp_new%nextSibling%repeater = REP_ASTERISK
+
   end subroutine transformCPPlus
 
   function checkCP(cp, name) result(p)
@@ -358,7 +363,7 @@ contains
     case (REP_ASTERISK)
       write(*,'(a)', advance="no") "*"
     end select
-    print*
+    write(*,*)
   end subroutine dumpCP
 
   subroutine dumpCPtree(cp)
@@ -367,23 +372,28 @@ contains
     type(content_particle_t), pointer :: current, tcp
 
     integer :: i
+    logical :: done
     i = 0
     current => cp
 
-    print*,"DUPING YTRE"
+    done = .false.
     call dumpCP(current)
     do
-      do while (associated(current%firstChild))
-        i = i + 2
-        current => current%firstChild
-        write(*,'(a)', advance="no") repeat(" ",i)
-        call dumpCP(current)
-      enddo
+      if (.not.done) then
+        do while (associated(current%firstChild))
+          i = i + 2
+          current => current%firstChild
+          write(*,'(a)', advance="no") repeat(" ",i)
+          call dumpCP(current)
+        enddo
+      endif
       if (associated(current%nextSibling)) then
+        done = .false.
         current => current%nextSibling
         write(*,'(a)', advance="no") repeat(" ",i)
         call dumpCP(current)
       else
+        done = .true.
         i = i - 2
         current => current%parent
         if (associated(current, cp)) exit

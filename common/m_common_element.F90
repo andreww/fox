@@ -392,7 +392,6 @@ contains
           tcp => newCP(name="#PCDATA")
           current%firstChild => tcp
           tcp%parent => current
-          current => tcp
           firstChild = .false.
         elseif (c=='|') then
           if (str_vs(name)=='PCDATA') then
@@ -435,7 +434,6 @@ contains
             goto 100
           endif
           tcp => newCP(name=str_vs(name), repeat=c)
-          ! FIXME fix plus
           deallocate(name)
           if (firstChild) then
             current%firstChild => tcp
@@ -453,6 +451,7 @@ contains
           tcp => newCP(name=str_vs(name))
           deallocate(name)
           if (firstChild) then
+            print*,"NEWCP appending first child"
             current%firstChild => tcp
             tcp%parent => current
             firstChild = .false.
@@ -507,9 +506,13 @@ contains
             print*,"NEWCP fourth, ", associated(current%parent)
             firstChild = .false.
           else
+            print*,"NOT firstchild, appending sibling, and going up to parent"
             current%nextSibling => tcp
             tcp%parent => current%parent
+            print*,"current should now be NAME ", str_vs(current%name)
+            print*, "with new sibling", str_vs(current%nextSibling%name)
             current => current%parent
+            print*,"current should now be CHOICE or SEQ ", current%operator
           endif
         else
           call add_error(stack, &
@@ -547,7 +550,6 @@ contains
           temp => order
           order => vs_str_alloc(str_vs(temp)//" ")
           deallocate(temp)
-          firstChild = .true.
         else
           call add_error(stack, &
             'Unexpected character "'//c//'" found after (')
@@ -564,12 +566,12 @@ contains
         elseif (scan(c,'|,')>0) then
           if (order(nbrackets)=='') then
             order(nbrackets) = c
-            firstChild = .true.
           elseif (order(nbrackets)/=c) then
             call add_error(stack, &
               'Cannot mix ordered and unordered elements')
             goto 100
           endif
+          print*,"NEWCP noticed OP_CHOICE"
           if (c=="|") &
             current%parent%operator = OP_CHOICE
           state = ST_CHILD
@@ -586,6 +588,7 @@ contains
             state = ST_AFTERBRACKET
           endif
           current => current%parent
+          print*,"and our parent is a ", current%operator
         else
           call add_error(stack, &
             'Unexpected character found in element declaration.')
@@ -598,13 +601,13 @@ contains
           current%repeater = REP_ASTERISK
           state = ST_SEPARATOR
         elseif (c=='+') then
+          print*,"AFTERBRACKETTRANSFORM", current%operator
           call transformCPPlus(current)
           state = ST_SEPARATOR
         elseif (c=='?') then
           current%repeater = REP_QUESTION_MARK
           state = ST_SEPARATOR
         elseif (verify(c, XML_WHITESPACE)==0) then
-          firstChild = .false.
           state = ST_SEPARATOR
         elseif (scan(c,'|,')>0) then
           if (order(nbrackets)=='') then
@@ -648,6 +651,7 @@ contains
               '+ operator disallowed for Mixed elements')
             goto 100
           endif
+          print*,"AFTERLASTBRACKETTRANSFORM ", current%operator!, str_vs(current%name)
           call transformCPPlus(current)
           state = ST_END
         elseif (c=='?') then
@@ -699,7 +703,7 @@ contains
       element%model => vs_str_alloc(trim(strip_spaces(contents)))
       element%cp => top
       print*,"CPtree for ", str_vs(element%name)
-      call dumpCPtree(top)
+!      call dumpCPtree(top)
     else
       if (associated(top)) call destroyCPtree(top)
     endif
