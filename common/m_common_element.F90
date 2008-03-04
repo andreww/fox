@@ -753,6 +753,7 @@ contains
               call add_string(sl, str_vs(tcp%name))
             endif
           endif
+          tcp => tcp%nextSibling
         enddo
         p = .true.
         call destroy_string_list(sl)
