@@ -33,6 +33,7 @@ module m_common_attrs
 #ifndef DUMMYLIB
     integer                                :: number_of_items = 0
     type(dict_item), dimension(:), pointer :: items => null()
+    character, dimension(:), pointer       :: base => null()
 #else
     integer :: i
 #endif
@@ -82,6 +83,9 @@ module m_common_attrs
   public :: getWhitespaceHandling
   public :: setIsId
   public :: getIsId
+
+  public :: setBase
+  public :: getBase
 
   interface len
     module procedure getLength
@@ -717,8 +721,38 @@ contains
 
   end function getWhitespaceHandling
 
+  subroutine setBase(dict, base)
+    type(dictionary_t), intent(inout) :: dict
+    character(len=*), intent(in) :: base
+
+    if (associated(dict%base)) deallocate(dict%base)
+    dict%base => vs_str_alloc(base)
+  end subroutine setBase
+
+  pure function getBase_len(dict) result(n)
+    type(dictionary_t), intent(in) :: dict
+    integer :: n
+
+    if (associated(dict%base)) then
+      n = size(dict%base)
+    else
+      n = 0
+    endif
+  end function getBase_len
+
+  function getBase(dict) result(base)
+    type(dictionary_t), intent(in) :: dict
+    character(len=getBase_len(dict)) :: base
+
+    if (associated(dict%base)) then
+      base = str_vs(dict%base)
+    else
+      base = ""
+    endif
+  end function getBase
+
   subroutine init_dict(dict)
-    type(dictionary_t), intent(out)   :: dict
+    type(dictionary_t), intent(out) :: dict
     
     integer :: i
 
@@ -779,6 +813,7 @@ contains
       deallocate(dict%items(i)%localName)
     enddo
     if (associated(dict%items)) deallocate(dict%items)
+    if (associated(dict%base)) deallocate(dict%base)
 
     dict%number_of_items = 0
   end subroutine destroy_dict

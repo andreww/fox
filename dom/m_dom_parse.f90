@@ -2,7 +2,7 @@ module m_dom_parse
 
   use fox_m_fsys_array_str, only: str_vs, vs_str_alloc
   use fox_m_utils_uri, only: expressURI
-  use m_common_attrs, only: getIsId
+  use m_common_attrs, only: getIsId, getBase
   use m_common_entities, only: entity_t, size, getEntityByIndex
   use m_common_error, only: FoX_error
   use m_common_struct, only: xml_doc_state
@@ -18,7 +18,7 @@ module m_dom_parse
     getAttributes, getData, getDocType, getEntities, getImplementation,        &
     getLastChild, getNodeType,         &
     getNotations, getParameter, getParentNode, getXmlVersion,                  &
-    setData, setValue,                                                         &
+    setAttribute, setAttributeNS, setData, setValue,                           &
     appendChild, createAttribute, createAttributeNS, createCdataSection,       &
     createComment, createDocumentType, createElement, createElementNS,         &
     createEntityReference, createProcessingInstruction, createTextNode,        &
@@ -76,6 +76,16 @@ contains
       el => createElementNS(mainDoc, URI, name)
     else
       el => createElement(mainDoc, name)
+    endif
+    
+    if (getBase(attrs)/="") then
+      if (getParameter(domConfig, "namespaces")) then
+        call setAttributeNS(el, &
+          "http://www.w3.org/XML/1998/namespace", "xml:base", &
+          getBase(attrs))
+      else
+        call setAttribute(el, "xml:base", getBase(attrs))
+      endif
     endif
 
     do i = 1, getLength(attrs)

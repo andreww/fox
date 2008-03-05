@@ -7,7 +7,7 @@ module m_sax_parser
     add_string, tokenize_and_add_strings, destroy
   use m_common_attrs, only: init_dict, destroy_dict, reset_dict, &
     add_item_to_dict, has_key, get_value, get_att_index_pointer, &
-    getLength, setIsId
+    getLength, setIsId, setBase
   use m_common_charset, only: XML1_0, XML1_1, XML_WHITESPACE
   use m_common_element, only: element_t, existing_element, add_element, &
     get_element, parse_dtd_element, parse_dtd_attlist, report_declarations, &
@@ -39,7 +39,7 @@ module m_sax_parser
     register_internal_GE, register_external_GE
 
   use FoX_utils, only: URI, parseURI, rebaseURI, copyURI, destroyURI, &
-    hasFragment
+    hasFragment, expressURI
 
   use m_sax_reader, only: file_buffer_t, pop_buffer_stack, open_new_string, &
     open_new_file, parse_xml_declaration, parse_text_declaration, &
@@ -361,7 +361,7 @@ contains
     type(element_t), pointer :: elem
     type(entity_t), pointer :: ent
     type(URI), pointer :: extSubsetURI, URIref, newURI
-    integer, pointer :: wf_stack(:), temp_wf_stack(:)
+    integer, pointer :: wf_stack(:), temp_wf_stack(:), extEntStack(:)
     logical :: inExtSubset
     type(string_list) :: id_list, idref_list
 
@@ -416,6 +416,7 @@ contains
 
     allocate(wf_stack(1))
     wf_stack(1) = 0
+    allocate(extEntStack(0))
     fx%inIntSubset = .false.
     extSubsetURI => null()
     inExtSubset = .false.
@@ -521,10 +522,14 @@ contains
         endif
         temp_wf_stack => wf_stack
         allocate(wf_stack(size(temp_wf_stack)-1))
-        wf_stack = temp_wf_stack(2:size(temp_wf_stack))
+        wf_stack = temp_wf_stack(2:)
         ! If we are not doing validity checking, we might have 
         ! finished PE expansion with wf_stack(1) non-zero
         wf_stack(1) = wf_stack(1) + temp_wf_stack(1)
+        deallocate(temp_wf_stack)
+        temp_wf_stack => extEntStack
+        allocate(extEntStack(size(temp_wf_stack)-1))
+        extEntStack = temp_wf_stack(2:)
         deallocate(temp_wf_stack)
         call pop_buffer_stack(fb)
         cycle
@@ -1024,6 +1029,10 @@ contains
                 temp_wf_stack => wf_stack
                 allocate(wf_stack(size(temp_wf_stack)+1))
                 wf_stack = (/0, temp_wf_stack/)
+                deallocate(temp_wf_stack)
+                temp_wf_stack => extEntStack
+                allocate(extEntStack(size(extEntStack)+1))
+                extEntStack = (/len(fx%elstack), temp_wf_stack/)
                 deallocate(temp_wf_stack)
                 call parse_text_declaration(fb, fx%error_stack)
                 if (in_error(fx%error_stack)) goto 100
@@ -2229,6 +2238,11 @@ contains
       if (in_error(fx%error_stack)) return
       call checkXmlAttributes
       if (in_error(fx%error_stack)) return
+      if (.not.reading_main_file(fb)) then
+        if (len(fx%elstack)==extEntStack(1)) &
+          ! This is a top-level element in the current entity
+          call setBase(fx%attributes, expressURI(fb%f(1)%baseURI))
+      endif
       if (namespaces_.and.getURIofQName(fx,str_vs(fx%name))==invalidNS) then
         ! no namespace was found for the current element
         if (.not.startInCharData_) then
