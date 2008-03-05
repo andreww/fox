@@ -14,8 +14,8 @@ module m_common_element
     REP_QUESTION_MARK, REP_ASTERISK, &
     transformCPPlus, dumpCPtree
   use m_common_error, only: error_stack, add_error, in_error
-  use m_common_namecheck, only: checkName, checkNames, checkQName,   &
-    checkQNames, checkNmtoken, checkNmtokens
+  use m_common_namecheck, only: checkName, checkNames, checkNCName, &
+    checkNCNames, checkQName, checkNmtoken, checkNmtokens
 
   implicit none
   private
@@ -272,6 +272,9 @@ contains
     character, pointer :: order(:), name(:), temp(:)
     type(content_particle_t), pointer :: top, current, tcp
     logical :: mixed_additional, firstChild
+
+    ! FIXME should we check namespaces here (for element names)
+    ! checking duplicates - valid or wf? - and only for MIXED?
 
     order => null()
     name => null()
@@ -857,10 +860,11 @@ contains
     enddo
   end function get_attribute
 
-  subroutine parse_dtd_attlist(contents, xv, validCheck, stack, elem)
+  subroutine parse_dtd_attlist(contents, xv, namespaces, validCheck, stack, elem)
     character(len=*), intent(in) :: contents
     integer, intent(in) :: xv
     logical, intent(in) :: validCheck
+    logical, intent(in) :: namespaces
     type(error_stack), intent(inout) :: stack
     type(element_t), pointer :: elem
 
@@ -910,7 +914,10 @@ contains
           deallocate(name)
           name => temp
         elseif (verify(c, XML_WHITESPACE)==0) then
-          if (associated(elem)) then
+          if (namespaces.and..not.checkQName(str_vs(name), xv)) then
+            call add_error(stack, &
+              "Attribute name in ATTLIST must be QName")
+          elseif (associated(elem)) then
             if (existing_attribute(elem%attlist, str_vs(name))) then
               if (associated(ignore_att)) call destroy_attribute_t(ignore_att)
               allocate(ignore_att)
@@ -1059,6 +1066,10 @@ contains
           if (validCheck.and.registered_string(ca%enumerations, str_vs(value))) then
             call add_error(stack, &
               "Duplicate enumeration value in ATTLIST")
+          elseif (namespaces.and.ca%attType==ATT_NOTATION &
+            .and..not.checkNCName(str_vs(value), xv)) then
+            call add_error(stack, &
+              "Notation name must be NCName")
           else
             call add_string(ca%enumerations, str_vs(value))
           endif
@@ -1068,6 +1079,10 @@ contains
           if (validCheck.and.registered_string(ca%enumerations, str_vs(value))) then
             call add_error(stack, &
               "Duplicate enumeration value in ATTLIST")
+          elseif (namespaces.and.ca%attType==ATT_NOTATION &
+            .and..not.checkNCName(str_vs(value), xv)) then
+            call add_error(stack, &
+              "Notation name must be NCName")
           else
             call add_string(ca%enumerations, str_vs(value))
           endif
@@ -1086,6 +1101,10 @@ contains
           if (validCheck.and.registered_string(ca%enumerations, str_vs(value))) then
             call add_error(stack, &
               "Duplicate enumeration value in ATTLIST")
+          elseif (namespaces.and.ca%attType==ATT_NOTATION &
+            .and..not.checkNCName(str_vs(value), xv)) then
+            call add_error(stack, &
+              "Notation name must be NCName")
           else
             call add_string(ca%enumerations, str_vs(value))
           endif
@@ -1202,36 +1221,51 @@ contains
           endif
           if (validCheck) then
             select case(ca%attType)
-            case (ATT_ID)
-              ! VC: ID
-              if (.not.checkName(str_vs(value), xv)) &
-                call add_error(stack, &
-                "Attributes of type ID must have a value which is an XML Name")
-              ! FIXME in a namespaced document they must match QName
+              ! Can't have ID with defaults
             case (ATT_IDREF)
               ! VC: IDREF
-              if (.not.checkName(str_vs(value), xv)) &
-                call add_error(stack, &
-                "Attributes of type IDREF must have a value which is an XML Name")
-              ! FIXME in a namespaced document they must match QName
+              if (namespaces) then
+                if (.not.checkNCName(str_vs(value), xv)) &
+                  call add_error(stack, &
+                  "Attributes of type IDREF must have a value which is an XML NCName")
+              else
+                if (.not.checkName(str_vs(value), xv)) &
+                  call add_error(stack, &
+                  "Attributes of type IDREF must have a value which is an XML Name")
+              endif
             case (ATT_IDREFS)
               ! VC: IDREF
-              if (.not.checkNames(str_vs(value), xv)) &
-                call add_error(stack, &
-                "Attributes of type IDREFS must have a value which contains only XML Names")
-              ! FIXME in a namespaced document they must match QName
+              if (namespaces) then
+                if (.not.checkNCNames(str_vs(value), xv)) &
+                  call add_error(stack, &
+                  "Attributes of type IDREFS must have a value which contains only XML NCNames")
+              else
+                if (.not.checkNames(str_vs(value), xv)) &
+                  call add_error(stack, &
+                  "Attributes of type IDREFS must have a value which contains only XML Names")
+              endif
             case (ATT_ENTITY)
               ! VC: Entity Name
-              if (.not.checkName(str_vs(value), xv)) &
-                call add_error(stack, &
-                "Attributes of type ENTITY must have a value which is an XML Name")
-              ! FIXME in a namespaced document they must match QName
+              if (namespaces) then
+                if (.not.checkNCName(str_vs(value), xv)) &
+                  call add_error(stack, &
+                  "Attributes of type ENTITY must have a value which is an XML NCName")
+              else
+                if (.not.checkName(str_vs(value), xv)) &
+                  call add_error(stack, &
+                  "Attributes of type ENTITY must have a value which is an XML Name")
+              endif
             case (ATT_ENTITIES)
               ! VC: Entity Name
-              if (.not.checkNames(str_vs(value), xv)) &
-                call add_error(stack, &
-                "Attributes of type ENTITIES must have a value which contains only XML Names")
-              ! FIXME in a namespaced document they must match QName
+              if (namespaces) then
+                if (.not.checkNames(str_vs(value), xv)) &
+                  call add_error(stack, &
+                  "Attributes of type ENTITIES must have a value which contains only XML NCNames")
+              else
+                if (.not.checkNames(str_vs(value), xv)) &
+                  call add_error(stack, &
+                  "Attributes of type ENTITIES must have a value which contains only XML Names")
+              endif
             case (ATT_NMTOKEN)
               ! VC Name Token
               if (.not.checkNmtoken(str_vs(value), xv)) &
@@ -1244,9 +1278,15 @@ contains
                 "Attributes of type NMTOKENS must have a value which contain only NMTOKENs")
             case (ATT_NOTATION)
               ! VC: Notation Attributes
-              if (.not.checkName(str_vs(value), xv)) &
-                call add_error(stack, &
-                "Attributes of type NOTATION must have a value which is an XML Name")
+              if (namespaces) then
+                if (.not.checkNCName(str_vs(value), xv)) &
+                  call add_error(stack, &
+                  "Attributes of type NOTATION must have a value which is an XMLNCName")
+              else
+                if (.not.checkName(str_vs(value), xv)) &
+                  call add_error(stack, &
+                  "Attributes of type NOTATION must have a value which is an XML Name")
+              endif
             case (ATT_ENUM)
               ! VC: Enumeration
               if (.not.checkNmtoken(str_vs(value), xv)) &

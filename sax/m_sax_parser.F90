@@ -1698,10 +1698,10 @@ contains
         case (TOK_DTD_CONTENTS)
           if (processDTD) then
             call parse_dtd_attlist(str_vs(fx%token), fx%xds%xml_version, &
-              validCheck, fx%error_stack, elem)
+              validCheck, namespaces_, fx%error_stack, elem)
           else
             call parse_dtd_attlist(str_vs(fx%token), fx%xds%xml_version, &
-              validCheck, fx%error_stack, null())
+              validCheck, namespaces_, fx%error_stack, null())
           endif
           if (in_error(fx%error_stack)) return
           ! Normalize attribute values in attlist
@@ -1728,10 +1728,10 @@ contains
           wf_stack(1) = wf_stack(1) - 1
           if (processDTD) then
             call parse_dtd_attlist("", fx%xds%xml_version, &
-              validCheck, fx%error_stack, elem)
+              validCheck, namespaces_, fx%error_stack, elem)
           else
             call parse_dtd_attlist("", fx%xds%xml_version, &
-              validCheck, fx%error_stack, null())
+              validCheck, namespaces_, fx%error_stack, null())
           endif
           if (in_error(fx%error_stack)) return
           if (processDTD) then
