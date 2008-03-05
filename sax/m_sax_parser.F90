@@ -39,7 +39,7 @@ module m_sax_parser
     register_internal_GE, register_external_GE
 
   use FoX_utils, only: URI, parseURI, rebaseURI, copyURI, destroyURI, &
-    expressURI, hasFragment
+    hasFragment
 
   use m_sax_reader, only: file_buffer_t, pop_buffer_stack, open_new_string, &
     open_new_file, parse_xml_declaration, parse_text_declaration, &
@@ -2434,7 +2434,6 @@ contains
       type(dictionary_t), intent(inout) :: dict
 
       integer :: i, j
-      type(string_list) :: default_atts
 
       type(attribute_t), pointer :: att
       type(string_list) :: s_list
@@ -2660,7 +2659,6 @@ contains
         call add_error(fx%error_stack, &
         "Undeclared attributes forbidden")
 
-
     end subroutine checkAttributes
 
     subroutine checkXMLAttributes
@@ -2773,7 +2771,7 @@ contains
     end subroutine endDTDchecks
 
     subroutine checkIdRefs
-      integer :: i, j
+      integer :: i
       character, pointer :: s(:)
       do i = 1, size(idRef_list%list)
         s => idRef_list%list(i)%s
