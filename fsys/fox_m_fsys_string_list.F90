@@ -13,6 +13,7 @@ module fox_m_fsys_string_list
     type(string_t), pointer :: list(:) => null()
   end type string_list
 
+  public :: string_t
   public :: string_list
 
   public :: init_string_list
