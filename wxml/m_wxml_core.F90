@@ -10,20 +10,19 @@ module m_wxml_core
   use m_common_buffer, only: buffer_t, len, add_to_buffer, reset_buffer, &
     dump_buffer
   use m_common_charset, only: XML1_0, XML1_1, checkChars
-  use m_common_element, only: element_t, parse_dtd_element, attribute_t, &
-    parse_dtd_attlist
+  use m_common_element, only: parse_dtd_element, parse_dtd_attlist
   use m_common_elstack, only: elstack_t, len, get_top_elstack, pop_elstack, &
     is_empty, init_elstack, push_elstack, destroy_elstack
   use m_common_entities, only: existing_entity, is_unparsed_entity
   use m_common_error, only: FoX_warning_base, FoX_error_base, FoX_fatal_base, &
     error_stack, in_error
   use m_common_io, only: get_unit
-  use m_common_namecheck, only: checkEncName, checkName, checkPITarget, &
-    checkCharacterEntityReference, checkPublicId, checkQName, prefixOfQName, &
+  use m_common_namecheck, only: checkEncName, checkName, checkQName, &
+    checkCharacterEntityReference, checkPublicId, prefixOfQName, &
     localpartofQName, checkPEDef, checkPseudoAttValue, checkAttValue, checkNCName, &
     likeCharacterEntityReference, checkCharacterEntityReference
   use m_common_namespaces, only: namespaceDictionary, getnamespaceURI, &
-  initnamespaceDictionary, destroynamespaceDictionary, addDefaultNS, &
+  initnamespaceDictionary, addDefaultNS, &
   addPrefixedNS, isPrefixInForce, checkNamespacesWriting, checkEndNamespaces
   use m_common_notations, only: add_notation, notation_exists
   use m_common_struct, only: xml_doc_state, init_xml_doc_state, destroy_xml_doc_state, &
