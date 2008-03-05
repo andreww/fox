@@ -159,6 +159,46 @@ TOHWM4_eigenargsuse
 
   end subroutine cmlAddBandList$1
 
+  subroutine cmlAddSymmetry$1(xf, sym_ops, sym_disps, spaceGroup, pointGroup &
+TOHWM4_eigenargslist)
+    type(xmlf_t), intent(inout)                 :: xf
+    real(kind=$1), intent(in)                   :: sym_ops(:,:,:)
+    real(kind=$1), intent(in)                   :: sym_disps(:,:)
+    character(len=*), intent(in), optional      :: spaceGroup
+    character(len=*), intent(in), optional      :: pointGroup
+
+TOHWM4_eigenargsdecl
+
+#ifndef DUMMYLIB
+    integer :: i, n
+    real(kind=$1) :: seitzMatrix(4,4)
+
+    call xml_NewElement(xf, "symmetry")
+    if (present(spaceGroup)) &
+      call xml_AddAttribute(xf, "spaceGroup", spaceGroup)
+    if (present(pointGroup)) &
+      call xml_AddAttribute(xf, "pointGroup", pointGroup)
+
+    if (size(sym_ops, 3)/=size(sym_disps, 2)) then
+      ! FIXME error
+    endif
+    n = size(sym_ops, 3)
+
+    do i = 1, n
+      !Convert the 3x3 rotation and 1x3 translation into a 4x4 Seitz matrix
+      seitzMatrix = reshape((/sym_ops(:,1,i), sym_disps(1,i), &
+                              sym_ops(:,2,i), sym_disps(2,i), &
+                              sym_ops(:,3,i), sym_disps(3,i), &
+                              0.0_$1, 0.0_$1, 0.0_$1, 1.0_$1/), (/4,4/))
+      call xml_NewElement(xf, "transform3")
+      call xml_AddCharacters(xf, chars=seitzMatrix)
+      call xml_EndElement(xf, "transform3")
+    end do
+    call xml_EndElement(xf, "symmetry")
+#endif
+
+    end subroutine cmlAddSymmetry$1
+
 ')`'`'dnl
 dnl
 define(`TOHWM4_coma_subs', `dnl
@@ -226,6 +266,8 @@ module m_wcml_coma
   public :: cmlAddEigenValue
   public :: cmlAddEigenValueVector
 
+  public :: cmlAddSymmetry
+
   interface cmlAddEigenValue
     module procedure cmlAddEigenValueSP
     module procedure cmlAddEigenValueDP
@@ -251,6 +293,11 @@ module m_wcml_coma
   interface cmlAddBandList
     module procedure cmlAddBandListSP
     module procedure cmlAddBandListDP
+  end interface
+
+  interface cmlAddSymmetry
+    module procedure cmlAddSymmetrySP
+    module procedure cmlAddSymmetryDP
   end interface
 
 contains

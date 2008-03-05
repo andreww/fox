@@ -70,4 +70,6 @@ module FoX_wcml
   public :: cmlStartKPointList
   public :: cmlEndKPointList
 
+  public :: cmlAddSymmetry
+
 end module FoX_wcml
