@@ -57,6 +57,7 @@ module m_wcml_coma
   interface cmlAddSymmetry
     module procedure cmlAddSymmetrySP
     module procedure cmlAddSymmetryDP
+    module procedure cmlAddSymmetryNoOps
   end interface
 
 contains
@@ -264,7 +265,7 @@ contains
 ,dictRef,convention,title,id,type)
     type(xmlf_t), intent(inout)                 :: xf
     real(kind=sp), intent(in)                   :: sym_ops(:,:,:)
-    real(kind=sp), intent(in)                   :: sym_disps(:,:)
+    real(kind=sp), intent(in), optional         :: sym_disps(:,:)
     character(len=*), intent(in), optional      :: spaceGroup
     character(len=*), intent(in), optional      :: pointGroup
 
@@ -281,24 +282,40 @@ contains
     real(kind=sp) :: seitzMatrix(4,4)
 
     call xml_NewElement(xf, "symmetry")
+    if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
+    if (present(convention)) call xml_addAttribute(xf, "convention", convention)
+    if (present(title)) call xml_addAttribute(xf, "title", title)
+    if (present(id)) call xml_addAttribute(xf, "id", id)
+    if (present(type)) call xml_addAttribute(xf, "type", type)
+
+
     if (present(spaceGroup)) &
       call xml_AddAttribute(xf, "spaceGroup", spaceGroup)
     if (present(pointGroup)) &
       call xml_AddAttribute(xf, "pointGroup", pointGroup)
 
-    if (size(sym_ops, 3)/=size(sym_disps, 2)) then
-      ! FIXME error
+    if (present(sym_disps)) then
+      if (size(sym_ops, 3)/=size(sym_disps, 2)) then
+        ! FIXME error
+      endif
     endif
     n = size(sym_ops, 3)
 
     do i = 1, n
       !Convert the 3x3 rotation and 1x3 translation into a 4x4 Seitz matrix
-      seitzMatrix = reshape((/sym_ops(:,1,i), sym_disps(1,i), &
-                              sym_ops(:,2,i), sym_disps(2,i), &
-                              sym_ops(:,3,i), sym_disps(3,i), &
-                              0.0_sp, 0.0_sp, 0.0_sp, 1.0_sp/), (/4,4/))
+      if (.not.present(sym_disps)) then
+        seitzMatrix = reshape((/sym_ops(:,1,i), 0.0_sp, &
+                                sym_ops(:,2,i), 0.0_sp, &
+                                sym_ops(:,3,i), 0.0_sp, &
+                                0.0_sp, 0.0_sp, 0.0_sp, 1.0_sp/), (/4,4/))
+      else
+        seitzMatrix = reshape((/sym_ops(:,1,i), sym_disps(1,i), &
+                                sym_ops(:,2,i), sym_disps(2,i), &
+                                sym_ops(:,3,i), sym_disps(3,i), &
+                                0.0_sp, 0.0_sp, 0.0_sp, 1.0_sp/), (/4,4/))
+      endif
       call xml_NewElement(xf, "transform3")
-      call xml_AddCharacters(xf, chars=seitzMatrix)
+      call xml_AddCharacters(xf, chars=seitzMatrix) 
       call xml_EndElement(xf, "transform3")
     end do
     call xml_EndElement(xf, "symmetry")
@@ -510,7 +527,7 @@ contains
 ,dictRef,convention,title,id,type)
     type(xmlf_t), intent(inout)                 :: xf
     real(kind=dp), intent(in)                   :: sym_ops(:,:,:)
-    real(kind=dp), intent(in)                   :: sym_disps(:,:)
+    real(kind=dp), intent(in), optional         :: sym_disps(:,:)
     character(len=*), intent(in), optional      :: spaceGroup
     character(len=*), intent(in), optional      :: pointGroup
 
@@ -527,24 +544,40 @@ contains
     real(kind=dp) :: seitzMatrix(4,4)
 
     call xml_NewElement(xf, "symmetry")
+    if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
+    if (present(convention)) call xml_addAttribute(xf, "convention", convention)
+    if (present(title)) call xml_addAttribute(xf, "title", title)
+    if (present(id)) call xml_addAttribute(xf, "id", id)
+    if (present(type)) call xml_addAttribute(xf, "type", type)
+
+
     if (present(spaceGroup)) &
       call xml_AddAttribute(xf, "spaceGroup", spaceGroup)
     if (present(pointGroup)) &
       call xml_AddAttribute(xf, "pointGroup", pointGroup)
 
-    if (size(sym_ops, 3)/=size(sym_disps, 2)) then
-      ! FIXME error
+    if (present(sym_disps)) then
+      if (size(sym_ops, 3)/=size(sym_disps, 2)) then
+        ! FIXME error
+      endif
     endif
     n = size(sym_ops, 3)
 
     do i = 1, n
       !Convert the 3x3 rotation and 1x3 translation into a 4x4 Seitz matrix
-      seitzMatrix = reshape((/sym_ops(:,1,i), sym_disps(1,i), &
-                              sym_ops(:,2,i), sym_disps(2,i), &
-                              sym_ops(:,3,i), sym_disps(3,i), &
-                              0.0_dp, 0.0_dp, 0.0_dp, 1.0_dp/), (/4,4/))
+      if (.not.present(sym_disps)) then
+        seitzMatrix = reshape((/sym_ops(:,1,i), 0.0_dp, &
+                                sym_ops(:,2,i), 0.0_dp, &
+                                sym_ops(:,3,i), 0.0_dp, &
+                                0.0_dp, 0.0_dp, 0.0_dp, 1.0_dp/), (/4,4/))
+      else
+        seitzMatrix = reshape((/sym_ops(:,1,i), sym_disps(1,i), &
+                                sym_ops(:,2,i), sym_disps(2,i), &
+                                sym_ops(:,3,i), sym_disps(3,i), &
+                                0.0_dp, 0.0_dp, 0.0_dp, 1.0_dp/), (/4,4/))
+      endif
       call xml_NewElement(xf, "transform3")
-      call xml_AddCharacters(xf, chars=seitzMatrix)
+      call xml_AddCharacters(xf, chars=seitzMatrix) 
       call xml_EndElement(xf, "transform3")
     end do
     call xml_EndElement(xf, "symmetry")
@@ -601,6 +634,39 @@ contains
     call xml_EndElement(xf, "band")
 #endif
   end subroutine cmlEndBand
+
+  subroutine cmlAddSymmetryNoOps(xf, spaceGroup, pointGroup &
+,dictRef,convention,title,id,type)
+    type(xmlf_t), intent(inout)                 :: xf
+    character(len=*), intent(in), optional      :: spaceGroup
+    character(len=*), intent(in), optional      :: pointGroup
+
+    character(len=*), intent(in), optional :: dictRef
+    character(len=*), intent(in), optional :: convention
+    character(len=*), intent(in), optional :: title
+    character(len=*), intent(in), optional :: id
+    character(len=*), intent(in), optional :: type
+
+
+
+#ifndef DUMMYLIB
+
+    call xml_NewElement(xf, "symmetry")
+    if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
+    if (present(convention)) call xml_addAttribute(xf, "convention", convention)
+    if (present(title)) call xml_addAttribute(xf, "title", title)
+    if (present(id)) call xml_addAttribute(xf, "id", id)
+    if (present(type)) call xml_addAttribute(xf, "type", type)
+
+
+    if (present(spaceGroup)) &
+      call xml_AddAttribute(xf, "spaceGroup", spaceGroup)
+    if (present(pointGroup)) &
+      call xml_AddAttribute(xf, "pointGroup", pointGroup)
+
+#endif
+
+    end subroutine cmlAddSymmetryNoOps
 
 
 

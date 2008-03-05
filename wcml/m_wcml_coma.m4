@@ -163,7 +163,7 @@ TOHWM4_eigenargsuse
 TOHWM4_eigenargslist)
     type(xmlf_t), intent(inout)                 :: xf
     real(kind=$1), intent(in)                   :: sym_ops(:,:,:)
-    real(kind=$1), intent(in)                   :: sym_disps(:,:)
+    real(kind=$1), intent(in), optional         :: sym_disps(:,:)
     character(len=*), intent(in), optional      :: spaceGroup
     character(len=*), intent(in), optional      :: pointGroup
 
@@ -174,24 +174,34 @@ TOHWM4_eigenargsdecl
     real(kind=$1) :: seitzMatrix(4,4)
 
     call xml_NewElement(xf, "symmetry")
+TOHWM4_eigenargsuse
     if (present(spaceGroup)) &
       call xml_AddAttribute(xf, "spaceGroup", spaceGroup)
     if (present(pointGroup)) &
       call xml_AddAttribute(xf, "pointGroup", pointGroup)
 
-    if (size(sym_ops, 3)/=size(sym_disps, 2)) then
-      ! FIXME error
+    if (present(sym_disps)) then
+      if (size(sym_ops, 3)/=size(sym_disps, 2)) then
+        ! FIXME error
+      endif
     endif
     n = size(sym_ops, 3)
 
     do i = 1, n
       !Convert the 3x3 rotation and 1x3 translation into a 4x4 Seitz matrix
-      seitzMatrix = reshape((/sym_ops(:,1,i), sym_disps(1,i), &
-                              sym_ops(:,2,i), sym_disps(2,i), &
-                              sym_ops(:,3,i), sym_disps(3,i), &
-                              0.0_$1, 0.0_$1, 0.0_$1, 1.0_$1/), (/4,4/))
+      if (.not.present(sym_disps)) then
+        seitzMatrix = reshape((/sym_ops(:,1,i), 0.0_$1, &
+                                sym_ops(:,2,i), 0.0_$1, &
+                                sym_ops(:,3,i), 0.0_$1, &
+                                0.0_$1, 0.0_$1, 0.0_$1, 1.0_$1/), (/4,4/))
+      else
+        seitzMatrix = reshape((/sym_ops(:,1,i), sym_disps(1,i), &
+                                sym_ops(:,2,i), sym_disps(2,i), &
+                                sym_ops(:,3,i), sym_disps(3,i), &
+                                0.0_$1, 0.0_$1, 0.0_$1, 1.0_$1/), (/4,4/))
+      endif
       call xml_NewElement(xf, "transform3")
-      call xml_AddCharacters(xf, chars=seitzMatrix)
+      call xml_AddCharacters(xf, chars=seitzMatrix) 
       call xml_EndElement(xf, "transform3")
     end do
     call xml_EndElement(xf, "symmetry")
@@ -236,6 +246,27 @@ TOHWM4_bandargsuse
     call xml_EndElement(xf, "band")
 #endif
   end subroutine cmlEndBand
+
+  subroutine cmlAddSymmetryNoOps(xf, spaceGroup, pointGroup &
+TOHWM4_eigenargslist)
+    type(xmlf_t), intent(inout)                 :: xf
+    character(len=*), intent(in), optional      :: spaceGroup
+    character(len=*), intent(in), optional      :: pointGroup
+
+TOHWM4_eigenargsdecl
+
+#ifndef DUMMYLIB
+
+    call xml_NewElement(xf, "symmetry")
+TOHWM4_eigenargsuse
+    if (present(spaceGroup)) &
+      call xml_AddAttribute(xf, "spaceGroup", spaceGroup)
+    if (present(pointGroup)) &
+      call xml_AddAttribute(xf, "pointGroup", pointGroup)
+
+#endif
+
+    end subroutine cmlAddSymmetryNoOps
 
 ')`'dnl
 dnl
@@ -298,6 +329,7 @@ module m_wcml_coma
   interface cmlAddSymmetry
     module procedure cmlAddSymmetrySP
     module procedure cmlAddSymmetryDP
+    module procedure cmlAddSymmetryNoOps
   end interface
 
 contains
