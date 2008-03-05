@@ -13,8 +13,7 @@ module m_common_namecheck
   use fox_m_fsys_format, only: str_to_int_10, str_to_int_16, operator(//)
   use fox_m_fsys_string, only: toLower
   use m_common_charset, only: isLegalCharRef, isNCNameChar, &
-    isInitialNCNameChar, isInitialNameChar, isNameChar, isRepCharRef, &
-    XML_WHITESPACE
+    isInitialNCNameChar, isInitialNameChar, isNameChar, isRepCharRef
 
   implicit none
   private
@@ -83,8 +82,6 @@ contains
     logical :: good
     ! Validates a string against the XML requirements for a NAME
     ! Is not fully compliant; ignores UTF issues.
-
-    integer :: i
 
     good = (len(name) > 0)
     if (.not.good) return
@@ -197,8 +194,6 @@ contains
     ! Validates a string against the XML requirements for an NCNAME
     ! Is not fully compliant; ignores UTF issues.
 
-    integer :: i
-
     good = (len(name)/=0)
     if (.not.good) return
     good = isInitialNCNameChar(name(1:1), xv)
@@ -253,8 +248,6 @@ contains
     logical :: good
     ! Validates a string against the XML requirements for an NCNAME
     ! Is not fully compliant; ignores UTF issues.
-
-    integer :: i
 
     good = isNameChar(name, xv)
        
