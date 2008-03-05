@@ -5,8 +5,9 @@ module m_sax_operate
 
   use m_sax_reader, only: open_file, close_file
   use m_sax_parser, only: sax_parser_init, sax_parser_destroy, sax_parse
-  use m_sax_types, only: xml_t, ST_STOP
+  use m_sax_types, only: ST_STOP
 #endif
+  use m_sax_types, only: xml_t
 
   implicit none
   private
@@ -295,9 +296,9 @@ contains
     ! To be called from within a callback function;
     ! this will stop the parser.
     type(xml_t), intent(inout) :: xt
-
+#ifndef DUMMYLIB
     xt%fx%state = ST_STOP
-
+#endif
   end subroutine stop_parser
 
 end module m_sax_operate
