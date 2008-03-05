@@ -3,11 +3,10 @@ module m_dom_parse
   use fox_m_fsys_array_str, only: str_vs, vs_str_alloc
   use fox_m_utils_uri, only: expressURI
   use m_common_attrs, only: getIsId
-  use m_common_entities, only: entity_list, init_entity_list, &
-    destroy_entity_list, entity_t, size, getEntityByIndex
+  use m_common_entities, only: entity_t, size, getEntityByIndex
   use m_common_error, only: FoX_error
   use m_common_struct, only: xml_doc_state
-  use FoX_common, only: dictionary_t, getLength_d => getLength
+  use FoX_common, only: dictionary_t, getLength
   use FoX_common, only: getQName, getValue, getURI, getSpecified
   use m_sax_parser, only: sax_parse
   use FoX_sax, only: xml_t
@@ -17,19 +16,18 @@ module m_dom_parse
   use m_dom_dom, only: DOMConfiguration, Node, NamedNodeMap,                   &
     TEXT_NODE,                                                                 &
     getAttributes, getData, getDocType, getEntities, getImplementation,        &
-    getLastChild, getLength_nl => getLength, getNodeName, getNodeType,         &
+    getLastChild, getNodeType,         &
     getNotations, getParameter, getParentNode, getXmlVersion,                  &
     setData, setValue,                                                         &
     appendChild, createAttribute, createAttributeNS, createCdataSection,       &
     createComment, createDocumentType, createElement, createElementNS,         &
     createEntityReference, createProcessingInstruction, createTextNode,        &
-    item,                                                                      &
     getNamedItem, setAttributeNode, setAttributeNodeNS, setNamedItem,          &
     getFoX_checks
 
   ! Private interfaces
   use m_dom_dom, only: copyDOMConfig, createEmptyDocument, setDocumentElement, &
-    createEmptyEntityReference, createEntity, createNotation, getIllFormed,    &
+    createEmptyEntityReference, createEntity, createNotation,    &
     getReadOnly, getStringValue, getXds, destroy, destroyAllNodesRecursively,  &
     namespaceFixup, setDocType, setDomConfig, setGCstate, setIllFormed,        &
     setIsElementContentWhitespace, setIsId, setReadOnlyMap, setReadonlyNode,   &
@@ -80,7 +78,7 @@ contains
       el => createElement(mainDoc, name)
     endif
 
-    do i = 1, getLength_d(attrs)
+    do i = 1, getLength(attrs)
       if (getParameter(domConfig, "namespaces")) then
         attr => createAttributeNS(mainDoc, getURI(attrs, i), getQName(attrs, i))
       else
