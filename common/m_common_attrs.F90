@@ -75,13 +75,13 @@ module m_common_attrs
   public :: set_nsURI
   public :: set_prefix
   public :: set_localName
+#endif
 
   ! For internal FoX use only:
   public :: get_att_index_pointer
   public :: getWhitespaceHandling
   public :: setIsId
   public :: getIsId
-#endif
 
   interface len
     module procedure getLength
@@ -146,6 +146,7 @@ module m_common_attrs
     module procedure getSpecified_by_index
   end interface
 
+#ifndef DUMMYLIB
   interface getIsId
     module procedure getIsId_by_index
   end interface
@@ -153,6 +154,7 @@ module m_common_attrs
   interface setIsId
     module procedure setIsId_by_index
   end interface
+#endif
 
 contains
 
@@ -299,6 +301,7 @@ contains
 #endif
   end function get_value_by_key_ns
 
+#ifndef DUMMYLIB
   subroutine get_att_index_pointer(dict, key, i, value)
     type(dictionary_t), intent(in) :: dict
     character(len=*), intent(in) :: key
@@ -314,7 +317,6 @@ contains
     enddo
   end subroutine get_att_index_pointer
 
-#ifndef DUMMYLIB
   subroutine remove_key_by_index(dict, key, status)
     type(dictionary_t), intent(inout)       :: dict
     integer, intent(in)                     :: key

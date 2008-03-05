@@ -350,8 +350,8 @@ contains
     character(len=*), intent(in) :: name
     character(len=*), intent(in), optional :: system, public
 
-    type(URI), pointer :: URIref
 #ifndef DUMMYLIB
+    type(URI), pointer :: URIref
 
     call check_xf(xf)
     
@@ -420,8 +420,9 @@ contains
     character(len=*), intent(in), optional :: PEDef
     character(len=*), intent(in), optional :: system
     character(len=*), intent(in), optional :: public
-    type(URI), pointer :: URIref
+
 #ifndef DUMMYLIB
+    type(URI), pointer :: URIref
     call check_xf(xf)
 
     if (xf%namespace) then
@@ -594,8 +595,8 @@ contains
     character(len=*), intent(in), optional :: public
     character(len=*), intent(in), optional :: notation
 
-    type(URI), pointer :: URIref
 #ifndef DUMMYLIB
+    type(URI), pointer :: URIref
     call check_xf(xf)
 
     if (xf%namespace) then
@@ -675,8 +676,8 @@ contains
     character(len=*), intent(in), optional :: system
     character(len=*), intent(in), optional :: public
 
-    type(URI), pointer :: URIref
 #ifndef DUMMYLIB
+    type(URI), pointer :: URIref
     call check_xf(xf)
 
     if (xf%namespace) then
@@ -738,9 +739,8 @@ contains
     character(len=*), intent(in) :: name
     character(len=*), intent(in) :: declaration
 
-    type(error_stack) :: stack
-
 #ifndef DUMMYLIB
+    type(error_stack) :: stack
     call check_xf(xf)
 
     if (.not.checkChars(declaration,xf%xds%xml_version)) call wxml_error("xml_AddElementToDTD: Invalid character in declaration")
@@ -780,9 +780,8 @@ contains
     character(len=*), intent(in) :: name
     character(len=*), intent(in) :: declaration
 
-    type(error_stack) :: stack
-
 #ifndef DUMMYLIB
+    type(error_stack) :: stack
     call check_xf(xf)
 
     if (.not.checkChars(declaration,xf%xds%xml_version)) call wxml_error("xml_AddAttListToDTD: Invalid character in declaration")
