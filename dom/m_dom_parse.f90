@@ -1,8 +1,9 @@
 module m_dom_parse
 
   use fox_m_fsys_array_str, only: str_vs, vs_str_alloc
-  use fox_m_utils_uri, only: expressURI
-  use m_common_attrs, only: getIsId, getBase
+  use fox_m_utils_uri, only: URI, parseURI, rebaseURI, expressURI, destroyURI
+  use m_common_attrs, only: hasKey, getValue, getIndex, getIsId, getBase,      &
+    add_item_to_dict
   use m_common_entities, only: entity_t, size, getEntityByIndex
   use m_common_error, only: FoX_error
   use m_common_struct, only: xml_doc_state
@@ -62,35 +63,56 @@ module m_dom_parse
 
 contains
 
-  subroutine startElement_handler(URI, localname, name, attrs)
-    character(len=*),   intent(in) :: URI
+  subroutine startElement_handler(nsURI, localname, name, attrs)
+    character(len=*),   intent(in) :: nsURI
     character(len=*),   intent(in) :: localname
     character(len=*),   intent(in) :: name
-
     type(dictionary_t), intent(in) :: attrs
    
+    type(URI), pointer :: URIref, URIbase, newURI
     type(Node), pointer :: el, attr, dummy
-    integer              :: i
+    character, pointer :: baseURI(:)
+    integer :: i
 
     if (getParameter(domConfig, "namespaces")) then
-      el => createElementNS(mainDoc, URI, name)
+      el => createElementNS(mainDoc, nsURI, name)
     else
       el => createElement(mainDoc, name)
     endif
-    
+
     if (getBase(attrs)/="") then
-      if (getParameter(domConfig, "namespaces")) then
-        call setAttributeNS(el, &
-          "http://www.w3.org/XML/1998/namespace", "xml:base", &
-          getBase(attrs))
+      i = getIndex(attrs, "xml:base")
+      if (i>0) then
+        URIbase => parseURI(getBase(attrs))
+        URIref => parseURI(getValue(attrs, i))
+        newURI => rebaseURI(URIbase, URIref)
+        call destroyURI(URIbase)
+        call destroyURI(URIref)
+        baseURI => vs_str_alloc(expressURI(newURI))
+        call destroyURI(newURI)
       else
-        call setAttribute(el, "xml:base", getBase(attrs))
+        baseURI => vs_str_alloc(getBase(attrs))
+      endif
+      if (getParameter(domConfig, "namespaces")) then
+        attr => createAttributeNS(el, &
+          "http://www.w3.org/XML/1998/namespace", "xml:base")
+      else
+        attr => createAttribute(el, "xml:base")
+      endif
+      call setValue(attr, str_vs(baseURI))
+      if (i>0) then
+        call setSpecified(attr, getSpecified(attrs, i))
+        call setIsId(attr, getIsId(attrs, i))
+      endif
+      if (getParameter(domConfig, "namespaces")) then
+        dummy => setAttributeNodeNS(el, attr)
+      else
+        dummy => setAttributeNode(el, attr)
       endif
     endif
 
-    ! FIXME if we add an xml:base attribute below it may need to be changed ...
-
     do i = 1, getLength(attrs)
+      if (getQName(attrs, i)/="xml:base") cycle
       if (getParameter(domConfig, "namespaces")) then
         attr => createAttributeNS(mainDoc, getURI(attrs, i), getQName(attrs, i))
       else
