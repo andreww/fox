@@ -157,8 +157,8 @@ module m_common_element
   public :: ATT_TYPES
 
   interface get_attribute_declaration
-    module procedure get_attribute_declaration_by_index
-    module procedure get_attribute_declaration_by_name
+    module procedure get_attdecl_by_index
+    module procedure get_attdecl_by_name
   end interface
 
 contains
@@ -1496,7 +1496,7 @@ contains
     endif
   end function get_attlist_size
 
-  function get_attribute_declaration_by_index(elem, n) result(att)
+  function get_attdecl_by_index(elem, n) result(att)
     type(element_t), pointer :: elem
     integer, intent(in) :: n
     type(attribute_t), pointer :: att
@@ -1507,10 +1507,9 @@ contains
         att => elem%attlist%list(n)
       endif
     endif
-  end function get_attribute_declaration_by_index
+  end function get_attdecl_by_index
 
-
-  function get_attribute_declaration_by_name(elem, name) result(att)
+  function get_attdecl_by_name(elem, name) result(att)
     type(element_t), pointer :: elem
     character(len=*), intent(in) :: name
     type(attribute_t), pointer :: att
@@ -1525,7 +1524,7 @@ contains
         endif
       enddo
     endif
-  end function get_attribute_declaration_by_name
+  end function get_attdecl_by_name
 
   pure function express_att_decl_len(a) result(n)
     type(attribute_t), intent(in) :: a
