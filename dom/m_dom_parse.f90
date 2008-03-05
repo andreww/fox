@@ -100,6 +100,7 @@ contains
         attr => createAttribute(mainDoc, "xml:base")
       endif
       call setValue(attr, str_vs(baseURI))
+      deallocate(baseURI)
       if (i>0) then
         call setSpecified(attr, getSpecified(attrs, i))
         call setIsId(attr, getIsId(attrs, i))
