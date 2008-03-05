@@ -2239,7 +2239,7 @@ contains
       if (in_error(fx%error_stack)) return
       call checkXmlAttributes
       if (in_error(fx%error_stack)) return
-      if (.not.reading_main_file(fb)) then
+      if (size(extEntStack)>0) then
         if (len(fx%elstack)==extEntStack(1)) &
           ! This is a top-level element in the current entity
           call setBase(fx%attributes, expressURI(fb%f(1)%baseURI))
