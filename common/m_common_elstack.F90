@@ -163,7 +163,7 @@ contains
   end function get_top_elstack
 
   function checkContentModel(elstack, name) result(p)
-    type(elstack_t), intent(in) :: elstack
+    type(elstack_t), intent(inout) :: elstack
     character(len=*), intent(in) :: name
     logical :: p
 

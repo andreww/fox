@@ -612,7 +612,6 @@ contains
           current%repeater = REP_ASTERISK
           state = ST_SEPARATOR
         elseif (c=='+') then
-          print*,"AFTERBRACKETTRANSFORM", current%operator
           call transformCPPlus(current)
           state = ST_SEPARATOR
         elseif (c=='?') then
@@ -663,7 +662,6 @@ contains
               '+ operator disallowed for Mixed elements')
             goto 100
           endif
-          print*,"AFTERLASTBRACKETTRANSFORM ", current%operator!, str_vs(current%name)
           call transformCPPlus(current)
           state = ST_END
         elseif (c=='?') then
@@ -714,7 +712,6 @@ contains
       element%mixed = mixed
       element%model => vs_str_alloc(trim(strip_spaces(contents)))
       element%cp => top
-      print*,"CPtree for ", str_vs(element%name), associated(top)
       call dumpCPtree(top)
     else
       if (associated(top)) call destroyCPtree(top)
