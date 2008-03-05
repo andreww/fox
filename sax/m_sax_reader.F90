@@ -8,7 +8,7 @@ module m_sax_reader
   use m_common_io, only: setup_io, get_unit, io_err
 
   use FoX_utils, only: URI, parseURI, copyURI, destroyURI, &
-    hasScheme, getScheme, getPath, expressURI
+    hasScheme, getScheme, getPath
 
   use m_sax_xml_source, only: xml_source_t, &
     get_char_from_file, push_file_chars, parse_declaration
