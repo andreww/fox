@@ -1423,6 +1423,7 @@ contains
     call destroy_string_list(id_list)
     call destroy_string_list(idref_list)
     deallocate(wf_stack)
+    if (associated(extEntStack)) deallocate(extEntStack)
 
     if (.not.eof) then
       ! We have encountered an error before the end of a file
