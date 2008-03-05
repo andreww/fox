@@ -268,7 +268,7 @@ define(`TOHW_parse_complex', `dnl
       if (ij<length.and.s_i>len(s)) exit loop
 ')dnl
 dnl
-module m_common_parse_input
+module fox_m_fsys_parse_input
 
   use fox_m_fsys_realtypes, only: sp, dp
 
@@ -901,4 +901,4 @@ TOHW_output_errors
 #endif
   end subroutine m4f_thisfunc
   
-end module m_common_parse_input
+end module fox_m_fsys_parse_input

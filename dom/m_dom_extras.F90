@@ -1,7 +1,8 @@
 module m_dom_extras
 
   use fox_m_fsys_realtypes, only: sp, dp
-  use m_common_parse_input, only: rts
+  use fox_m_fsys_parse_input, only: rts
+
   use m_dom_error, only: DOMException, inException, throw_exception,           &
     FoX_NODE_IS_NULL, FoX_INVALID_NODE
   use m_dom_dom, only: Node, ELEMENT_NODE,                                     &

@@ -1,4 +1,4 @@
-module m_common_parse_input
+module fox_m_fsys_parse_input
 
   use fox_m_fsys_realtypes, only: sp, dp
 
@@ -2097,4 +2097,4 @@ contains
 #endif
   end subroutine matrixtocomplexdp
   
-end module m_common_parse_input
+end module fox_m_fsys_parse_input

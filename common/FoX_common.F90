@@ -2,7 +2,7 @@ module FoX_common
 
   use fox_m_fsys_array_str
   use fox_m_fsys_format
-  use m_common_parse_input
+  use fox_m_fsys_parse_input
   use m_common_attrs
 
   implicit none
