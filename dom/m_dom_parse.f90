@@ -88,6 +88,8 @@ contains
       endif
     endif
 
+    ! FIXME if we add an xml:base attribute below it may need to be changed ...
+
     do i = 1, getLength(attrs)
       if (getParameter(domConfig, "namespaces")) then
         attr => createAttributeNS(mainDoc, getURI(attrs, i), getQName(attrs, i))

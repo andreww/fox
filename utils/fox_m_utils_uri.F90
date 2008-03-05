@@ -56,6 +56,7 @@ module fox_m_utils_uri
   public :: URI
   public :: parseURI
   public :: expressURI
+  public :: isAbsoluteURI
   public :: rebaseURI
   public :: copyURI
   public :: destroyURI
@@ -526,6 +527,16 @@ contains
       end subroutine produceResult
 #endif
   end function parseURI
+
+  function isAbsoluteURI(u) result(p)
+    type(URI), intent(in) :: u
+    logical :: p
+
+    p = associated(u%scheme).or.associated(u%authority)
+    if (.not.p.and.size(u%segments(1)%s)>0) then
+      p = u%segments(1)%s(1)=="/"
+    endif
+  end function isAbsoluteURI
 
   function rebaseURI(u1, u2) result(u3)
     type(URI), pointer :: u1, u2

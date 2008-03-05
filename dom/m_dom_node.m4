@@ -40,6 +40,8 @@ TOHW_m_dom_publics(`
   public :: setReadonlyNode
   public :: getReadOnly
 
+  public :: getBaseURI
+
 ')`'dnl
 TOHW_m_dom_contents(`
 
@@ -1419,6 +1421,92 @@ TOHW_m_dom_treewalk(`
     end select
   end subroutine setTextContent
 
+  TOHW_function(getBaseURI, (arg), baseURI)
+    type(Node), pointer :: arg
+    character(len=200) :: baseURI
+
+    type(Node), pointer :: el
+    type(URI), pointer :: URIref, URIbase, newURI
+
+    select case(getNodeType(arg))
+    case (ELEMENT_NODE)
+      el => arg
+    case (ATTRIBUTE_NODE)
+      if (getName(arg)=="xml:base") then
+        if (associated(getOwnerElement(arg))) then
+          el => getParentNode(getOwnerElement(arg))
+        else
+          el => null()
+        endif
+      else
+        el => getOwnerElement(arg)
+      endif
+    case (TEXT_NODE)
+      ! then are we in an attribute or textContent?
+      el => getParentNode(arg)
+      do while (associated(el))
+        if (getNodeType(el)==ELEMENT_NODE) then
+          exit
+        elseif (getNodeType(el)==ATTRIBUTE_NODE) then
+          el => getOwnerElement(el)
+          exit
+        else
+          el => getParentNode(el)
+        endif
+      enddo
+    case (PROCESSING_INSTRUCTION_NODE)
+      ! then are we in or out of element content?
+      el => getParentNode(arg)
+      do while (associated(el))
+        if (getNodeType(el)==ELEMENT_NODE) then
+          exit
+        elseif (getNodeType(el)==DOCUMENT_NODE) then
+          el => getOwnerElement(el)
+          exit
+        else
+          el => getParentNode(el)
+        endif
+      enddo
+    case default
+      el => null()
+    end select
+
+    URIref => parseURI("")
+
+    do while (associated(el))
+      select case (getNodeType(el))
+      case (ELEMENT_NODE)
+        if (hasAttribute(el, "xml:base")) then
+          URIbase => parseURI(getAttribute(el, "xml:base"))
+          newURI => rebaseURI(URIbase, URIref)
+          call destroyURI(URIbase)
+          call destroyURI(URIref)
+          URIref => newURI
+          if (isAbsoluteURI(URIref)) exit
+        endif
+      case (ENTITY_REFERENCE_NODE)
+        if (getSystemId(el)/="") then
+          URIbase => parseURI(getSystemId(el))
+          newURI => rebaseURI(URIbase, URIref)
+          call destroyURI(URIbase)
+          call destroyURI(URIref)
+          URIref => newURI
+          if (isAbsoluteURI(URIref)) exit
+        endif
+      case default
+        exit
+      end select
+      el => getParentNode(el) 
+    end do
+
+    if (isAbsoluteURI(URIref)) then
+      baseURI = expressURI(URIref)
+    else
+      baseURI = ""
+    endif
+    call destroyURI(URIref)
+
+  end function getBaseURI
 
   recursive TOHW_function(getNodePath, (arg), c)
     ! recursive only for atts and text

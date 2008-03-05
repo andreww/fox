@@ -8,7 +8,8 @@ module m_dom_dom
   use fox_m_fsys_array_str, only: str_vs, vs_str, vs_str_alloc
   use fox_m_fsys_format, only: operator(//)
   use fox_m_fsys_string, only: toLower
-  use fox_m_utils_uri, only: URI, parseURI, destroyURI
+  use fox_m_utils_uri, only: URI, parseURI, destroyURI, isAbsoluteURI, &
+    rebaseURI, expressURI
   use m_common_charset, only: checkChars, XML1_0, XML1_1
   use m_common_element, only: element_t, get_element, attribute_t, &
     attribute_has_default, get_attribute_declaration, get_attlist_size
@@ -316,6 +317,8 @@ module m_dom_dom
   public :: getStringValue
   public :: setReadonlyNode
   public :: getReadOnly
+
+  public :: getBaseURI
 
 
 
@@ -4246,6 +4249,93 @@ endif
     end select
   end subroutine setTextContent
 
+  function getBaseURI(arg, ex)result(baseURI) 
+    type(DOMException), intent(out), optional :: ex
+    type(Node), pointer :: arg
+    character(len=200) :: baseURI
+
+    type(Node), pointer :: el
+    type(URI), pointer :: URIref, URIbase, newURI
+
+    select case(getNodeType(arg))
+    case (ELEMENT_NODE)
+      el => arg
+    case (ATTRIBUTE_NODE)
+      if (getName(arg)=="xml:base") then
+        if (associated(getOwnerElement(arg))) then
+          el => getParentNode(getOwnerElement(arg))
+        else
+          el => null()
+        endif
+      else
+        el => getOwnerElement(arg)
+      endif
+    case (TEXT_NODE)
+      ! then are we in an attribute or textContent?
+      el => getParentNode(arg)
+      do while (associated(el))
+        if (getNodeType(el)==ELEMENT_NODE) then
+          exit
+        elseif (getNodeType(el)==ATTRIBUTE_NODE) then
+          el => getOwnerElement(el)
+          exit
+        else
+          el => getParentNode(el)
+        endif
+      enddo
+    case (PROCESSING_INSTRUCTION_NODE)
+      ! then are we in or out of element content?
+      el => getParentNode(arg)
+      do while (associated(el))
+        if (getNodeType(el)==ELEMENT_NODE) then
+          exit
+        elseif (getNodeType(el)==DOCUMENT_NODE) then
+          el => getOwnerElement(el)
+          exit
+        else
+          el => getParentNode(el)
+        endif
+      enddo
+    case default
+      el => null()
+    end select
+
+    URIref => parseURI("")
+
+    do while (associated(el))
+      select case (getNodeType(el))
+      case (ELEMENT_NODE)
+        if (hasAttribute(el, "xml:base")) then
+          URIbase => parseURI(getAttribute(el, "xml:base"))
+          newURI => rebaseURI(URIbase, URIref)
+          call destroyURI(URIbase)
+          call destroyURI(URIref)
+          URIref => newURI
+          if (isAbsoluteURI(URIref)) exit
+        endif
+      case (ENTITY_REFERENCE_NODE)
+        if (getSystemId(el)/="") then
+          URIbase => parseURI(getSystemId(el))
+          newURI => rebaseURI(URIbase, URIref)
+          call destroyURI(URIbase)
+          call destroyURI(URIref)
+          URIref => newURI
+          if (isAbsoluteURI(URIref)) exit
+        endif
+      case default
+        exit
+      end select
+      el => getParentNode(el) 
+    end do
+
+    if (isAbsoluteURI(URIref)) then
+      baseURI = expressURI(URIref)
+    else
+      baseURI = ""
+    endif
+    call destroyURI(URIref)
+
+  end function getBaseURI
 
   recursive function getNodePath(arg, ex)result(c) 
     type(DOMException), intent(out), optional :: ex
