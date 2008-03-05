@@ -303,7 +303,7 @@ contains
     type(dictionary_t), intent(in) :: dict
     character(len=*), intent(in) :: key
     integer, intent(out) :: i
-    character, pointer, intent(out) :: value(:)
+    character, pointer :: value(:)
 
     value => null()
     do i = 1, dict%number_of_items
