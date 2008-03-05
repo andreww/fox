@@ -22,7 +22,7 @@ module m_wxml_core
     localpartofQName, checkPEDef, checkPseudoAttValue, checkAttValue, checkNCName, &
     likeCharacterEntityReference, checkCharacterEntityReference
   use m_common_namespaces, only: namespaceDictionary, getnamespaceURI, &
-  initnamespaceDictionary, addDefaultNS, &
+  initnamespaceDictionary, addDefaultNS, destroyNamespaceDictionary, &
   addPrefixedNS, isPrefixInForce, checkNamespacesWriting, checkEndNamespaces
   use m_common_notations, only: add_notation, notation_exists
   use m_common_struct, only: xml_doc_state, init_xml_doc_state, destroy_xml_doc_state, &
@@ -1535,7 +1535,8 @@ contains
     call destroy_dict(xf%dict)
     call destroy_elstack(xf%stack)
     
-    !call destroyNamespaceDictionary(xf%nsDict)
+    if (xf%namespace) &
+      call destroyNamespaceDictionary(xf%nsDict)
     call destroy_xml_doc_state(xf%xds)
     
     deallocate(xf%name)
