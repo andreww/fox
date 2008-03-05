@@ -1701,7 +1701,7 @@ contains
               validCheck, fx%error_stack, elem)
           else
             call parse_dtd_attlist(str_vs(fx%token), fx%xds%xml_version, &
-              validCheck, fx%error_stack)
+              validCheck, fx%error_stack, null())
           endif
           if (in_error(fx%error_stack)) return
           ! Normalize attribute values in attlist
@@ -1731,7 +1731,7 @@ contains
               validCheck, fx%error_stack, elem)
           else
             call parse_dtd_attlist("", fx%xds%xml_version, &
-              validCheck, fx%error_stack)
+              validCheck, fx%error_stack, null())
           endif
           if (in_error(fx%error_stack)) return
           if (processDTD) then

@@ -56,7 +56,20 @@ module m_common_element
   integer, parameter :: ATT_ENUM = 10
   integer, parameter :: ATT_CDANO = 11
   integer, parameter :: ATT_CDAMB = 12
-  integer, parameter :: ATT_TYPELENGTHS(0:12) = (/0,5,2,5,6,7,8,6,8,8,4,5,5/)
+
+  character(len=8), parameter :: ATT_TYPES(12) = (/ &
+    "CDATA   ", &
+    "ID      ", &
+    "IDREF   ", &
+    "IDREFS  ", &
+    "ENTITY  ", &
+    "ENTITIES", &
+    "NMTOKEN ", &
+    "NMTOKENS", &
+    "NOTATION", &
+    "ENUM    ", &
+    "CDANO   ", &
+    "CDAMB   "/)
 
   integer, parameter :: ATT_REQUIRED = 1
   integer, parameter :: ATT_IMPLIED = 2
@@ -119,6 +132,7 @@ module m_common_element
   public :: attribute_has_default
   public :: get_attlist_size
   public :: get_attribute_declaration
+  public :: express_attribute_declaration
 
   public :: ATT_NULL
   public :: ATT_CDATA
@@ -135,12 +149,12 @@ module m_common_element
   public :: ATT_CDANO
   public :: ATT_CDAMB
 
-  public :: ATT_TYPELENGTHS
-
   public :: ATT_REQUIRED
   public :: ATT_IMPLIED
   public :: ATT_DEFAULT
   public :: ATT_FIXED
+
+  public :: ATT_TYPES
 
   interface get_attribute_declaration
     module procedure get_attribute_declaration_by_index
@@ -848,7 +862,7 @@ contains
     integer, intent(in) :: xv
     logical, intent(in) :: validCheck
     type(error_stack), intent(inout) :: stack
-    type(element_t), pointer, optional :: elem
+    type(element_t), pointer :: elem
 
     integer :: i
     integer :: state
@@ -1293,31 +1307,13 @@ contains
     end interface
 
     integer :: i
-    character(len=11) :: type
+    character(len=8) :: type
     character(len=8) :: mode
     type(attribute_t), pointer :: a
 
     do i = 1, size(elem%attlist%list)
       a => elem%attlist%list(i)
-
-      select case (a%attType)
-      case (ATT_CDATA)
-        type = 'CDATA'
-      case (ATT_ID)
-        type = 'ID'
-      case (ATT_IDREF)
-        type = 'IDREF'
-      case (ATT_IDREFS)
-        type = 'IDREFS'
-      case (ATT_NMTOKEN)
-        type = 'NMTOKENS'
-      case (ATT_NMTOKENS)
-        type = 'NMTOKENS'
-      case (ATT_ENTITY)
-        type = 'ENTITY'
-      case (ATT_ENTITIES)
-        type = 'ENTITIES'
-      end select
+      type = ATT_TYPES(a%attType)
       select case (a%attDefault)
       case (ATT_REQUIRED)
         mode = "REQUIRED"
@@ -1490,6 +1486,57 @@ contains
       enddo
     endif
   end function get_attribute_declaration_by_name
+
+  pure function express_att_decl_len(a) result(n)
+    type(attribute_t), intent(in) :: a
+    integer :: n
+
+    n = size(a%name)+1+len_trim(ATT_TYPES(a%attType))
+    if (a%attType==ATT_NOTATION &
+      .or.a%attType==ATT_ENUM) &
+      n = n + 1 + make_token_group_len(a%enumerations)
+
+    
+    select case(a%attDefault)
+    case (ATT_REQUIRED)
+      n = n + len(" #REQUIRED")
+    case (ATT_IMPLIED)
+      n = n + len(" #IMPLIED")
+    case (ATT_DEFAULT)
+      n = n + len(" ")
+    case (ATT_FIXED)
+      n = n + len(" #FIXED")
+    end select
+    
+    if (associated(a%default)) &
+      n = n + 3 + size(a%default)
+  end function express_att_decl_len
+
+  function express_attribute_declaration(a) result(s)
+    type(attribute_t), intent(in) :: a
+    character(len=express_att_decl_len(a)) :: s
+
+    s = str_vs(a%name)//" "//ATT_TYPES(a%attType)
+
+    if (a%attType==ATT_NOTATION &
+      .or.a%attType==ATT_ENUM) &
+      s = trim(s)//" "//make_token_group(a%enumerations)
+
+    select case(a%attDefault)
+    case (ATT_REQUIRED)
+      s = trim(s)//" #REQUIRED"
+    case (ATT_IMPLIED)
+      s = trim(s)//" #IMPLIED"
+    case (ATT_DEFAULT)
+      s = trim(s)//" "
+    case (ATT_FIXED)
+      s = trim(s)//" #FIXED"
+    end select
+    
+    if (associated(a%default)) &
+      s = trim(s)//" """//str_vs(a%default)//""""
+  end function express_attribute_declaration
+
 
   function NotCDataNormalize(s1) result(s2)
     ! FIXME this is duplicated in sax_parser. Put somewhere else sensible

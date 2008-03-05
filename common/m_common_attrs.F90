@@ -5,7 +5,7 @@ module m_common_attrs
   use m_common_element, only: ATT_CDATA, ATT_ID, ATT_IDREF, &
     ATT_IDREFS, ATT_ENTITY, ATT_ENTITIES, ATT_NMTOKEN,      &
     ATT_NMTOKENS, ATT_NOTATION, ATT_CDANO, ATT_CDAMB,       &
-    ATT_TYPELENGTHS
+    ATT_TYPES
   use m_common_error, only : FoX_error, FoX_fatal
 
   implicit none
@@ -588,37 +588,30 @@ contains
   end function get_localName_by_keyname
 #endif
 
+#ifndef DUMMYLIB
+  pure function getType_by_index_len(dict, i) result(n)
+    type(dictionary_t), intent(in) :: dict
+    integer, intent(in) :: i
+    integer :: n
+
+    if (i>0.and.i<=dict%number_of_items) then
+      n = len_trim(ATT_TYPES(dict%items(i)%type))
+    else
+      n = 0
+    endif
+  end function getType_by_index_len
+#endif
+
   function getType_by_index(dict, i) result(type)
     type(dictionary_t), intent(in) :: dict
     integer, intent(in) :: i
 #ifndef DUMMYLIB
-    character(len=ATT_TYPELENGTHS(merge(dict%items(i)%type,0,i<=size(dict%items)))) :: type
+    character(len=getType_by_index_len(dict, i)) :: type
 
-    if (i<=size(dict%items)) then
-      select case(dict%items(i)%type)
-      case (ATT_CDATA)
-        type='CDATA'
-      case (ATT_ID)
-        type='ID'
-      case (ATT_IDREF)
-        type='IDREF'
-      case (ATT_IDREFS)
-        type='IDREFS'
-      case (ATT_NMTOKEN)
-        type='NMTOKENS'
-      case (ATT_ENTITY)
-        type='ENTITY'
-      case (ATT_ENTITIES)
-        type='ENTITIES'
-      case (ATT_NOTATION)
-        type='NOTATION'
-      case (ATT_CDANO)
-        type='CDATA'
-      case (ATT_CDAMB)
-        type='CDATA'
-      end select
+    if (i>0.and.i<=size(dict%items)) then
+      type = ATT_TYPES(dict%items(i)%type)
     else
-      type = ''
+      type = ""
     endif
 #else
     character(len=1) :: type
@@ -626,39 +619,35 @@ contains
 #endif
   end function getType_by_index
 
+#ifndef DUMMYLIB
+  pure function getType_by_keyname_len(dict, keyname) result(n)
+    type(dictionary_t), intent(in) :: dict
+    character(len=*), intent(in) :: keyname
+    integer :: n
+
+    integer :: i
+    i = get_key_index(dict, keyname)
+
+    if (i>0) then
+      n = len_trim(ATT_TYPES(i))
+    else
+      n = 0
+    endif
+  end function getType_by_keyname_len
+#endif
+
   function getType_by_keyname(dict, keyname) result(type)
     type(dictionary_t), intent(in) :: dict
     character(len=*), intent(in) :: keyname
 #ifndef DUMMYLIB
-    character(len=ATT_TYPELENGTHS( &
-      merge(dict%items(get_key_index(dict, keyname))%type, 0, get_key_index(dict, keyname)>0) &
-      )) :: type
+    character(len=getType_by_keyname_len(dict, keyname)) :: type
 
-    if (get_key_index(dict, keyname)>0) then
-      select case(dict%items(get_key_index(dict, keyname))%type)
-      case (ATT_CDATA)
-        type='CDATA'
-      case (ATT_ID)
-        type='ID'
-      case (ATT_IDREF)
-        type='IDREF'
-      case (ATT_IDREFS)
-        type='IDREFS'
-      case (ATT_NMTOKEN)
-        type='NMTOKENS'
-      case (ATT_ENTITY)
-        type='ENTITY'
-      case (ATT_ENTITIES)
-        type='ENTITIES'
-      case (ATT_NOTATION)
-        type='NOTATION'
-      case (ATT_CDANO)
-        type='CDATA'
-      case (ATT_CDAMB)
-        type='CDATA'
-      end select
+    integer :: i
+    i = get_key_index(dict, keyname)
+    if (i>0) then
+      type = ATT_TYPES(dict%items(i)%type)
     else
-      type = ''
+      type = ""
     endif
 #else
     character(len=1) :: type

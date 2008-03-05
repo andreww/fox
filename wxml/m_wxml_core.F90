@@ -797,7 +797,7 @@ contains
     endif
 
     call parse_dtd_attlist(declaration, xf%xds%xml_version, &
-      validCheck=.false., stack=stack)
+      validCheck=.false., stack=stack, elem=null())
     if (in_error(stack)) call wxml_error(xf, "Invalid ATTLIST declaration")
 
     if (xf%state_3 == WXML_STATE_3_DURING_DTD) then

@@ -3,7 +3,8 @@ module m_dom_utils
   use fox_m_fsys_array_str, only: str_vs, vs_str
   use fox_m_fsys_format, only: operator(//)
   use m_common_attrs, only: getValue
-  use m_common_element, only: element_t
+  use m_common_element, only: element_t, attribute_t, &
+    get_attlist_size, get_attribute_declaration, express_attribute_declaration
   use m_common_struct, only: xml_doc_state
 
   ! Public interfaces
@@ -32,7 +33,7 @@ module m_dom_utils
     xml_AddEntityReference, xml_AddExternalEntity, xml_AddInternalEntity,      &
     xml_AddDOCTYPE, xml_AddNotation, xml_AddXMLDeclaration, xml_AddXMLPI,      &
     xml_EndElement, xml_Close, xml_DeclareNamespace, xml_NewElement,           &
-    xml_OpenFile, xml_UndeclareNamespace
+    xml_OpenFile, xml_UndeclareNamespace, xml_AddAttlistToDTD
 
   implicit none
 
@@ -217,7 +218,8 @@ endif
     type(DOMConfiguration), pointer :: dc
     type(xml_doc_state), pointer :: xds
     type(element_t), pointer :: elem
-    integer :: i_tree, j
+    type(attribute_t), pointer :: att_decl
+    integer :: i_tree, j, k
     logical :: doneChildren, doneAttributes
     character, pointer :: attrvalue(:), tmp(:)
 
@@ -343,9 +345,15 @@ endif
         enddo
         do j = 1, size(xds%element_list%list)
           elem => xds%element_list%list(j)
-          call xml_AddElementToDTD(xf, str_vs(elem%name), str_vs(elem%model))
+          if (associated(elem%model)) &
+            call xml_AddElementToDTD(xf, str_vs(elem%name), str_vs(elem%model))
+            ! Because we may have some undeclared but referenced elements
+          do k = 1, get_attlist_size(elem)
+            att_decl => get_attribute_declaration(elem, k)
+            call xml_AddAttlistToDTD(xf, str_vs(elem%name), &
+              express_attribute_declaration(att_decl))
+          enddo
         enddo
-        ! FIXME attlists
       endif
     end select
 
