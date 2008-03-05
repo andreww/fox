@@ -156,8 +156,7 @@ contains
     character(len=*), intent(in) :: name
     logical :: p
 
-    type(content_particle_t), pointer :: tcp, tcp2
-    logical :: opt
+    type(content_particle_t), pointer :: tcp
 
     ! cp will initially either point at:
     ! a) the top level cp node
@@ -376,7 +375,7 @@ contains
   subroutine dumpCPtree(cp)
     type(content_particle_t), pointer :: cp
 
-    type(content_particle_t), pointer :: current, tcp
+    type(content_particle_t), pointer :: current
 
     integer :: i
     logical :: done
