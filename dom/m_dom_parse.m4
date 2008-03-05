@@ -98,10 +98,10 @@ contains
         baseURI => vs_str_alloc(getBase(attrs))
       endif
       if (getParameter(domConfig, "namespaces")) then
-        attr => createAttributeNS(el, &
+        attr => createAttributeNS(mainDoc, &
           "http://www.w3.org/XML/1998/namespace", "xml:base")
       else
-        attr => createAttribute(el, "xml:base")
+        attr => createAttribute(mainDoc, "xml:base")
       endif
       call setValue(attr, str_vs(baseURI))
       if (i>0) then
