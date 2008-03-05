@@ -1031,7 +1031,7 @@ contains
                 wf_stack = (/0, temp_wf_stack/)
                 deallocate(temp_wf_stack)
                 temp_wf_stack => extEntStack
-                allocate(extEntStack(size(extEntStack)+1))
+                allocate(extEntStack(size(temp_wf_stack)+1))
                 extEntStack = (/len(fx%elstack), temp_wf_stack/)
                 deallocate(temp_wf_stack)
                 call parse_text_declaration(fb, fx%error_stack)
