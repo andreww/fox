@@ -87,6 +87,7 @@ module m_wxml_core
     integer                   :: state_3 = -1
     logical                   :: minimize_overrun = .true.
     logical                   :: pretty_print = .false.
+    logical                   :: canonical = .false.
     integer                   :: indent = 0
     character, pointer        :: name(:)
     logical                   :: namespace = .true.
@@ -159,7 +160,8 @@ module m_wxml_core
 contains
 
   subroutine xml_OpenFile(filename, xf, unit, iostat, preserve_whitespace, &
-    pretty_print, minimize_overrun, replace, addDecl, warning, valid, namespace)
+    pretty_print, minimize_overrun, canonical, replace, addDecl, warning, &
+    valid, namespace)
     character(len=*), intent(in)  :: filename
     type(xmlf_t), intent(inout)   :: xf
     integer, intent(in), optional :: unit
@@ -167,6 +169,7 @@ contains
     logical, intent(in), optional :: preserve_whitespace
     logical, intent(in), optional :: pretty_print
     logical, intent(in), optional :: minimize_overrun
+    logical, intent(in), optional :: canonical
     logical, intent(in), optional :: replace
     logical, intent(in), optional :: addDecl
     logical, intent(in), optional :: warning
@@ -269,6 +272,12 @@ contains
       xf%pretty_print = .not.preserve_whitespace
       xf%minimize_overrun = preserve_whitespace
     endif
+    if (present(canonical)) then
+      xf%canonical = canonical
+    else
+      xf%canonical = .false.
+    endif
+! FIXME interplay of above options
       
     xf%indent = 0
     
@@ -1401,24 +1410,28 @@ contains
       ' or you have failed to close '//get_top_elstack(xf%stack)//'.') 
     xf%indent = xf%indent - indent_inc
 
-    select case (xf%state_2)
-    case (WXML_STATE_2_INSIDE_ELEMENT)
+    if (xf%state_2==WXML_STATE_2_INSIDE_ELEMENT) then
       if (xf%namespace) call checkNamespacesWriting(xf%dict, xf%nsDict, len(xf%stack))
       if (getLength(xf%dict) > 0) call write_attributes(xf)
       if (xf%minimize_overrun) call add_eol(xf)
-      call add_to_buffer("/>",xf%buffer, .false.)
-      dummy = pop_elstack(xf%stack)
-    case (WXML_STATE_2_OUTSIDE_TAG, WXML_STATE_2_IN_CHARDATA, WXML_STATE_2_INSIDE_PI)
-      if (xf%state_2==WXML_STATE_2_INSIDE_PI) call close_start_tag(xf)
-      if (xf%pretty_print.and.xf%state_2==WXML_STATE_2_OUTSIDE_TAG) call add_eol(xf)
+    endif
+    if (xf%state_2==WXML_STATE_2_INSIDE_ELEMENT.and..not.xf%canonical) then
+      call add_to_buffer("/>", xf%buffer, .false.)
+    else
+      if (xf%state_2==WXML_STATE_2_INSIDE_ELEMENT) &
+        call add_to_buffer('>', xf%buffer, .false.)
+      if (xf%state_2==WXML_STATE_2_INSIDE_PI) &
+        call close_start_tag(xf)
+      if (xf%state_2==WXML_STATE_2_OUTSIDE_TAG.and.xf%pretty_print) &
+        call add_eol(xf)
 ! XLF does a weird thing here, and if pop_elstack is called as an 
-! argument to the call, it gets called twice. So we have to separate
+! argument to the add_to_buffer, it gets called twice. So we have to separate
 ! out get_top_... from pop_...
       call add_to_buffer("</" //get_top_elstack(xf%stack), xf%buffer, .false.)
-      dummy = pop_elstack(xf%stack)
       if (xf%minimize_overrun) call add_eol(xf)
       call add_to_buffer(">", xf%buffer, .false.)
-    end select
+    endif
+    dummy = pop_elstack(xf%stack)
 
     if (xf%namespace) call checkEndNamespaces(xf%nsDict, len(xf%stack)+1)
     if (is_empty(xf%stack)) then
@@ -1621,7 +1634,7 @@ contains
       call add_to_buffer(repeat(' ',indent_level),xf%buffer, .false.)
 
   end subroutine add_eol
-  
+
 
   subroutine close_start_tag(xf)
     type(xmlf_t), intent(inout)   :: xf
@@ -1651,7 +1664,7 @@ contains
     type(xmlf_t), intent(inout)   :: xf
 
     integer  :: i, j, size
-    
+
     if (xf%state_2 /= WXML_STATE_2_INSIDE_PI .and. &
       xf%state_2 /= WXML_STATE_2_INSIDE_ELEMENT) &
       call wxml_fatal("Internal library error")
