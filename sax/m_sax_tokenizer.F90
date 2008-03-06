@@ -126,21 +126,16 @@ contains
       case (ST_PI_CONTENTS)
         if (firstChar) ws_discard = .true.
         if (ws_discard) then
-          if (verify(c, XML_WHITESPACE)>0) then
-            deallocate(fx%token)
-            fx%token => vs_str_alloc(c)
+          if (verify(c, XML_WHITESPACE)==0) then
             ws_discard = .false.
+          else
+            cycle
           endif
         endif
         if (phrase==1) then
           if (c==">") then
-            ! FIXME always associated surely
-            if (associated(fx%token)) then
-               fx%tokenType = TOK_CHAR
-               fx%nextTokenType = TOK_PI_END
-            else
-               fx%tokenType = TOK_PI_END
-            endif
+            fx%tokenType = TOK_CHAR
+            fx%nextTokenType = TOK_PI_END
           elseif (c=="?") then
             ! The last ? didn't mean anything, but this one might.
             tempString => fx%token
@@ -712,10 +707,10 @@ contains
       case (ST_DTD_PI_CONTENTS)
         if (firstChar) ws_discard = .true.
         if (ws_discard) then
-          if (verify(c, XML_WHITESPACE)>0) then
-            deallocate(fx%token)
-            fx%token => vs_str_alloc(c)
+          if (verify(c, XML_WHITESPACE)==0) then
             ws_discard = .false.
+          else
+            return
           endif
         endif
         if (phrase==1) then
