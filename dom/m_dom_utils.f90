@@ -125,8 +125,6 @@ endif
     
     if (getNodeType(startNode)==DOCUMENT_NODE) then
       doc => startNode
-      print*,"Canonical form?", getParameter(getDomConfig(doc), "canonical-form")
-      print*,"XML decl", getParameter(getDomConfig(doc), "xml-declaration")
       if (getParameter(getDomConfig(doc), "canonical-form") &
         .And.getXmlVersion(doc)=="1.1") then
         if (getFoX_checks().or.SERIALIZE_ERR<200) then
@@ -181,7 +179,8 @@ endif
     ! pay attention to the DOMConfig values
 
     call xml_OpenFile(name, xf, iostat=iostat, unit=-1, &
-      preserve_whitespace=.not.getParameter(getDomConfig(doc), "format-pretty-print"), &
+      pretty_print=getParameter(getDomConfig(doc), "format-pretty-print"), &
+      canonical=getParameter(getDomConfig(doc), "canonical-form"), &
       warning=.false., addDecl=.false.)
     if (iostat/=0) then
       if (getFoX_checks().or.SERIALIZE_ERR<200) then

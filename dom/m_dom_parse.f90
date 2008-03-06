@@ -106,7 +106,7 @@ contains
     endif
 
     do i = 1, getLength(attrs)
-      if (getQName(attrs, i)/="xml:base") cycle
+      if (getQName(attrs, i)=="xml:base") cycle
       if (getParameter(domConfig, "namespaces")) then
         attr => createAttributeNS(mainDoc, getURI(attrs, i), getQName(attrs, i))
       else

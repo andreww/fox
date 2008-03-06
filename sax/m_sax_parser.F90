@@ -1707,7 +1707,6 @@ contains
           nextState = ST_START_PE
         case (TOK_DTD_CONTENTS)
           if (processDTD) then
-            print*,"PArsing DTD with namespaces ", namespaces_
             call parse_dtd_attlist(str_vs(fx%token), fx%xds%xml_version, &
               namespaces_, validCheck, fx%error_stack, elem)
           else
@@ -2213,19 +2212,23 @@ contains
     end subroutine parseDTD
 
     subroutine open_tag
-      ! Are there any default values missing?
-      if (validCheck) then
-        elem => get_element(fx%xds%element_list, str_vs(fx%name))
-        if (associated(elem)) then
+      elem => get_element(fx%xds%element_list, str_vs(fx%name))
+      if (associated(elem)) then
+        if (validCheck) then
           call checkAttributes(elem, fx%attributes)
+          if (.not.checkContentModel(fx%elstack, str_vs(fx%name))) then
+            call add_error(fx%error_stack, &
+              "Element "//str_vs(fx%name)//" not permitted in this context")
+            return
+          endif
         else
-          call add_error(fx%error_stack, &
-            "Trying to use an undeclared element")
-          return
+          call getDefaultAttributes(elem, fx%attributes)
         endif
-        if (.not.checkContentModel(fx%elstack, str_vs(fx%name))) then
+      else
+        if (validCheck) then
           call add_error(fx%error_stack, &
-            "Element "//str_vs(fx%name)//" not permitted in this context")
+          "Trying to use an undeclared element")
+          return
         endif
       endif
       ! Check for namespace changes
@@ -2444,6 +2447,25 @@ contains
       enddo
       s2(i2:) = ''
     end function NotCDataNormalize
+
+    subroutine getDefaultAttributes(el, dict)
+      type(element_t), pointer :: el
+      type(dictionary_t), intent(inout) :: dict
+
+      type(attribute_t), pointer :: att
+      integer :: i, ind
+      character, pointer :: attValue(:)
+
+      do i = 1, size(el%attlist%list)
+        att => el%attlist%list(i)
+        call get_att_index_pointer(dict, str_vs(att%name), ind, attValue)
+        if (att%attDefault==ATT_DEFAULT &
+          .or.att%attDefault==ATT_FIXED) then
+          call add_item_to_dict(dict, &
+            str_vs(att%name), str_vs(att%default), specified=.false.)
+        endif
+      end do
+    end subroutine getDefaultAttributes
 
     subroutine checkAttributes(el, dict)
       type(element_t), pointer :: el
