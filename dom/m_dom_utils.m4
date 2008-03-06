@@ -250,7 +250,11 @@ TOHW_m_dom_treewalk(`dnl
     case (TEXT_NODE)
       call xml_AddCharacters(xf, getData(this))
     case (CDATA_SECTION_NODE)
-      call xml_AddCharacters(xf, getData(this), parsed = .false.)
+      if (getParameter(getDomConfig(doc), "canonical-form")) then
+        call xml_AddCharacters(xf, getData(this))
+      else
+        call xml_AddCharacters(xf, getData(this), parsed = .false.)
+      endif
     case (ENTITY_REFERENCE_NODE)
       if (.not.getParameter(getDomConfig(doc), "canonical-form")) then
         call xml_AddEntityReference(xf, getNodeName(this))
