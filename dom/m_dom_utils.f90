@@ -310,7 +310,9 @@ endif
     case (PROCESSING_INSTRUCTION_NODE)
       call xml_AddXMLPI(xf, getTarget(this), getData(this))
     case (COMMENT_NODE)
-      call xml_AddComment(xf, getData(this))
+      if (.not.getParameter(getDomConfig(doc), "comments")) then
+        call xml_AddComment(xf, getData(this))
+      endif
     case (DOCUMENT_TYPE_NODE)
       if (.not.getParameter(getDomConfig(doc), "canonical-form")) then
         call xml_AddDOCTYPE(xf, getName(this))
