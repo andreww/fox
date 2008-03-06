@@ -252,8 +252,10 @@ TOHW_m_dom_treewalk(`dnl
     case (CDATA_SECTION_NODE)
       call xml_AddCharacters(xf, getData(this), parsed = .false.)
     case (ENTITY_REFERENCE_NODE)
-      call xml_AddEntityReference(xf, getNodeName(this))
-      doneChildren = .true.
+      if (.not.getParameter(getDomConfig(doc), "canonical-form")) then
+        call xml_AddEntityReference(xf, getNodeName(this))
+        doneChildren = .true.
+      endif
     case (PROCESSING_INSTRUCTION_NODE)
       call xml_AddXMLPI(xf, getTarget(this), getData(this))
     case (COMMENT_NODE)
