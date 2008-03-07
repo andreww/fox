@@ -46,14 +46,30 @@ contains
     if (associated(fx%token)) deallocate(fx%token)
     fx%token => vs_str_alloc("")
 
-    ! This would all be SO much easier if there were a regular-expression
-    ! library available. As it is, we essentially do hand-written regex
-    ! equivalents for each state ...
     q = " "
     phrase = 0
     firstChar = .true.
     do
       c = get_character(fb, eof, fx%error_stack)
+      if (eof) then
+        if (fx%state==ST_CHAR_IN_CONTENT) then
+          if (phrase==1) then
+            tempString => fx%token
+            fx%token => vs_str_alloc(str_vs(fx%token)//"]")
+            deallocate(tempString)
+          elseif (phrase==2) then
+            tempString => fx%token
+            fx%token => vs_str_alloc(str_vs(fx%token)//"]]")
+            deallocate(tempString)
+          endif
+          fx%tokenType = TOK_CHAR
+        endif
+        if (fx%tokenType/=TOK_NULL) then
+          ! make sure we pass back this token before eof'ing
+          eof = .false.
+          return
+        endif
+      endif
       if (eof.or.in_error(fx%error_stack)) return
       if (fx%inIntSubset) then
         tempString => fx%xds%intSubset
@@ -126,7 +142,7 @@ contains
       case (ST_PI_CONTENTS)
         if (firstChar) ws_discard = .true.
         if (ws_discard) then
-          if (verify(c, XML_WHITESPACE)==0) then
+          if (verify(c, XML_WHITESPACE)/=0) then
             ws_discard = .false.
           else
             cycle
@@ -375,6 +391,7 @@ contains
           endif
         elseif (c==">") then
           if (phrase==1) then
+            phrase = 0
             tempString => fx%token
             fx%token => vs_str_alloc(str_vs(tempString)//"]>")
             deallocate(tempString)
