@@ -943,7 +943,8 @@ contains
     endif
 
     if (present(data)) then
-      if (.not.checkChars(data,xf%xds%xml_version)) call wxml_error("xml_AddXMLPI: Invalid character in data")
+      if (.not.checkChars(data,xf%xds%xml_version)) &
+        call wxml_error("xml_AddXMLPI: Invalid character in data")
     endif
 
     select case (xf%state_1)
@@ -958,11 +959,16 @@ contains
     end select
     call add_to_buffer("<?" // name, xf%buffer, .false.)
     if (present(data)) then
-      if (index(data, '?>') > 0) &
-           call wxml_error(xf, "Tried to output invalid PI data "//data)
-      call add_to_buffer(' ', xf%buffer, .false.)
-      call add_to_buffer(data//'?>', xf%buffer, ws_significant)
-      ! state_2 is now OUTSIDE_TAG from close_start_tag
+      if (len(data)>0) then
+        if (index(data, '?>') > 0) &
+          call wxml_error(xf, "Tried to output invalid PI data "//data)
+        call add_to_buffer(' ', xf%buffer, .false.)
+        call add_to_buffer(data//'?>', xf%buffer, ws_significant)
+        ! state_2 is now OUTSIDE_TAG from close_start_tag
+      else
+        xf%state_2 = WXML_STATE_2_INSIDE_PI
+        call reset_dict(xf%dict)
+      endif
     else
       xf%state_2 = WXML_STATE_2_INSIDE_PI
       call reset_dict(xf%dict)
