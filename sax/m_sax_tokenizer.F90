@@ -253,7 +253,7 @@ contains
             fx%nextTokenType = TOK_SECTION_END
           elseif (c=="]") then
             tempString => fx%token
-            fx%token => vs_str_alloc(str_vs(tempString)//"]"//c)
+            fx%token => vs_str_alloc(str_vs(tempString)//"]")
             deallocate(tempString)
           else
             tempString => fx%token
@@ -347,12 +347,22 @@ contains
         endif
 
       case (ST_CHAR_IN_CONTENT)
-        if (c=="<") then
+        if (c=="<".or.c=="&") then
+          if (phrase==1) then
+            tempString => fx%token
+            fx%token => vs_str_alloc(str_vs(tempString)//"]")
+            deallocate(tempString)
+          elseif (phrase==2) then
+            tempString => fx%token
+            fx%token => vs_str_alloc(str_vs(tempString)//"]]")
+            deallocate(tempString)
+          endif
           fx%tokenType = TOK_CHAR
-          call push_chars(fb, c)
-        elseif (c=="&") then
-          fx%tokenType = TOK_CHAR
-          fx%nextTokenType = TOK_ENTITY
+          if (c=="<") then
+            call push_chars(fb, c)
+          elseif (c=="&") then
+            fx%nextTokenType = TOK_ENTITY
+          endif
         elseif (c=="]") then
           if (phrase==0) then
             phrase = 1
@@ -360,11 +370,15 @@ contains
             phrase = 2
           else
             tempString => fx%token
-            fx%token => vs_str_alloc(str_vs(tempString)//"]]]")
+            fx%token => vs_str_alloc(str_vs(tempString)//"]")
             deallocate(tempString)
           endif
         elseif (c==">") then
-          if (phrase==2) then
+          if (phrase==1) then
+            tempString => fx%token
+            fx%token => vs_str_alloc(str_vs(tempString)//"]>")
+            deallocate(tempString)
+          elseif (phrase==2) then
             call add_error(fx%error_stack, "]]> forbidden in character context")
           else
             tempString => fx%token
@@ -373,11 +387,11 @@ contains
           endif
         elseif (phrase==1) then
           tempString => fx%token
-          fx%token => vs_str_alloc(str_vs(tempString)//"]")
+          fx%token => vs_str_alloc(str_vs(tempString)//"]"//c)
           deallocate(tempString)
         elseif (phrase==2) then
           tempString => fx%token
-          fx%token => vs_str_alloc(str_vs(tempString)//"]]")
+          fx%token => vs_str_alloc(str_vs(tempString)//"]]"//c)
           deallocate(tempString)
         else
           tempString => fx%token
@@ -1122,6 +1136,7 @@ contains
     allocate(s_out(i2-1))
     s_out = s_temp(:i2-1)
 100 deallocate(s_temp)
+    if (associated(s_temp2))  deallocate(s_temp2)
     if (associated(s_ent))  deallocate(s_ent)
     if (associated(tempString)) deallocate(tempString)
 
