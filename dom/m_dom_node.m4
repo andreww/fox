@@ -154,6 +154,8 @@ TOHW_m_dom_get(Node, nextSibling, np%nextSibling)
     endif
   end function getOwnerDocument
 
+TOHW_m_dom_set(Node, ownerDocument, np%ownerDocument, (DOCUMENT_NODE))
+
   TOHW_function(insertBefore, (arg, newChild, refChild), np)
     type(Node), pointer :: arg
     type(Node), pointer :: newChild

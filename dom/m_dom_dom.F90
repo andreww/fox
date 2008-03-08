@@ -1342,6 +1342,42 @@ endif
     endif
   end function getOwnerDocument
 
+subroutine setownerDocument(np, c, ex)
+    type(DOMException), intent(out), optional :: ex
+    type(Node), pointer :: np
+    type(Node), pointer :: c
+
+
+    if (.not.associated(np)) then
+      if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "setownerDocument", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    endif
+
+   if (getNodeType(np)/=DOCUMENT_NODE .and. &
+      .true.) then
+      if (getFoX_checks().or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "setownerDocument", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    endif
+
+    np%ownerDocument => c
+
+  end subroutine setownerDocument
+
+
   function insertBefore(arg, newChild, refChild, ex)result(np) 
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
@@ -8190,7 +8226,258 @@ endif
   end subroutine setstrictErrorChecking
 
 
-!  function adoptNode FIXME
+  function adoptNode(doc , arg , ex)result(np) 
+    type(DOMException), intent(out), optional :: ex
+    type(Node), pointer :: doc
+    type(Node), pointer :: arg
+    type(Node), pointer :: np
+
+    type(Node), pointer :: this, thatParent, new, treeroot, parent, dead
+    type(xml_doc_state), pointer :: xds
+    type(element_t), pointer :: elem
+    type(attribute_t), pointer :: att
+    logical :: doneAttributes, doneChildren, brokenNS
+    integer :: i_tree
+
+    if (.not.associated(doc).or..not.associated(arg)) then
+      if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
+  call throw_exception(FoX_NODE_IS_NULL, "adoptNode", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    endif
+
+    if (getNodeType(doc)/=DOCUMENT_NODE) then
+      if (getFoX_checks().or.FoX_INVALID_NODE<200) then
+  call throw_exception(FoX_INVALID_NODE, "adoptNode", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    elseif (getNodeType(arg)==DOCUMENT_NODE .or. &
+      getNodeType(arg)==DOCUMENT_TYPE_NODE .or. &
+      getNodeType(arg)==NOTATION_NODE .or. &
+      getNodeType(arg)==ENTITY_NODE) then
+      if (getFoX_checks().or.NOT_SUPPORTED_ERR<200) then
+  call throw_exception(NOT_SUPPORTED_ERR, "adoptNode", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    elseif (getReadonly(arg)) then
+      if (getFoX_checks().or.NO_MODIFICATION_ALLOWED_ERR<200) then
+  call throw_exception(NO_MODIFICATION_ALLOWED_ERR, "adoptNode", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+    endif
+    brokenNS = doc%docExtras%brokenNS
+    doc%docExtras%brokenNS = .true. ! We need to do stupid NS things
+    xds => getXds(doc)
+
+    if (associated(getParentNode(arg))) then
+      np => removeChild(getParentNode(arg), arg)
+    else
+      np => arg
+    endif
+
+    if (associated(arg, getOwnerDocument(arg))) return
+
+    thatParent => null()
+    treeroot => np
+    
+    i_tree = 0
+    doneChildren = .false.
+    doneAttributes = .false.
+    this => treeroot
+    do
+      if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
+
+
+        select case (getNodeType(this))
+        case (ELEMENT_NODE)
+          if (.not.doneAttributes) call setOwnerDocument(this, doc)
+        case (ATTRIBUTE_NODE)
+          if (associated(this, arg).or.getSpecified(this)) then
+            ! We are importing just this attribute node
+            ! or this was an explicitly specified attribute; either
+            ! way, we import it as is, and it becomes/remains specified.
+            call setOwnerDocument(this, doc)
+            call setSpecified(this, .true.)
+          else
+            ! This is an attribute being imported as part of a hierarchy,
+            ! but its only here by default. Is there a default attribute
+            ! of this name in the new document?
+            elem => get_element(xds%element_list, &
+              getTagName(getOwnerElement(this)))
+            att => get_attribute_declaration(elem, getName(this))
+            if (attribute_has_default(att)) then
+              ! Create the new default:
+              if (getParameter(getDomConfig(arg), "namespaces")) then
+                ! We create a namespaced attribute. Of course, its 
+                ! namespaceURI remains empty for the moment unless we know it ...
+                if (prefixOfQName(getName(this))=="xml") then
+                  new => createAttributeNS(np, &
+                    "http://www.w3.org/XML/1998/namespace", &
+                    getName(this))
+                elseif (getName(this)=="xmlns" & 
+                  .or. prefixOfQName(getName(this))=="xmlns") then
+                  new => createAttributeNS(np, &
+                    "http://www.w3.org/2000/xmlns/", &
+                    getName(this))
+                else
+                  ! Wait for namespace fixup ...
+                  new => createAttributeNS(np, "", &
+                    getName(this))
+                endif
+              else
+                new => createAttribute(doc, getName(this))
+              endif
+              call setValue(new, str_vs(att%default))
+              call setSpecified(new, .false.)
+              ! In any case, we dont want to copy the children of this node.
+              doneChildren = .true.
+              dead => setAttributeNode(getOwnerElement(this), new)
+              this => new
+              call destroyAllNodesRecursively(dead)
+            endif
+            ! Otherwise no attribute here, so go back to previous node
+            dead => this
+            if (i_tree==0) then
+              this => getOwnerElement(this)
+            else
+              i_tree = i_tree - 1
+              this => item(getAttributes(getOwnerElement(this)), i_tree)
+              doneChildren = .true.
+            endif
+            call removeAttribute(getOwnerElement(dead), getNodeName(dead))
+          endif
+        case (ENTITY_REFERENCE_NODE)
+          new => createEntityReference(doc, getNodeName(this))
+          ! This will automatically populate the entity reference if doc defines it, so no children needed
+          parent => getParentNode(this)
+          if (associated(parent)) then
+            dead => replaceChild(parent, new, this)
+            this => new
+            call destroyAllNodesRecursively(dead)
+          endif
+          doneChildren = .true.
+        case (ENTITY_NODE)
+          if (getFoX_checks().or.NOT_SUPPORTED_ERR<200) then
+  call throw_exception(NOT_SUPPORTED_ERR, "adoptNode", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+        case (DOCUMENT_NODE)
+          if (getFoX_checks().or.NOT_SUPPORTED_ERR<200) then
+  call throw_exception(NOT_SUPPORTED_ERR, "adoptNode", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+        case (DOCUMENT_TYPE_NODE)
+          if (getFoX_checks().or.NOT_SUPPORTED_ERR<200) then
+  call throw_exception(NOT_SUPPORTED_ERR, "adoptNode", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+        case (NOTATION_NODE)
+          if (getFoX_checks().or.NOT_SUPPORTED_ERR<200) then
+  call throw_exception(NOT_SUPPORTED_ERR, "adoptNode", ex)
+  if (present(ex)) then
+    if (inException(ex)) then
+       return
+    endif
+  endif
+endif
+
+        case default
+          call setOwnerDocument(this, doc)
+        end select
+
+
+      else
+        if (getNodeType(this)==ELEMENT_NODE.and..not.doneChildren) then
+          doneAttributes = .true.
+        else
+
+        endif
+      endif
+
+
+      if (.not.doneChildren) then
+        if (getNodeType(this)==ELEMENT_NODE.and..not.doneAttributes) then
+          if (getLength(getAttributes(this))>0) then
+            this => item(getAttributes(this), 0)
+          else
+            doneAttributes = .true.
+          endif
+        elseif (hasChildNodes(this)) then
+          this => getFirstChild(this)
+          doneChildren = .false.
+          doneAttributes = .false.
+        else
+          doneChildren = .true.
+          doneAttributes = .false.
+        endif
+
+      else ! if doneChildren
+
+        if (associated(this, treeroot)) exit
+        if (getNodeType(this)==ATTRIBUTE_NODE) then
+          if (i_tree<getLength(getAttributes(getOwnerElement(this)))-1) then
+            i_tree= i_tree+ 1
+            this => item(getAttributes(getOwnerElement(this)), i_tree)
+            doneChildren = .false.
+          else
+            i_tree= 0
+            this => getOwnerElement(this)
+            doneAttributes = .true.
+            doneChildren = .false.
+          endif
+        elseif (associated(getNextSibling(this))) then
+
+          this => getNextSibling(this)
+          doneChildren = .false.
+          doneAttributes = .false.
+        else
+          this => getParentNode(this)
+        endif
+      endif
+
+    enddo
+
+
+
+    doc%docExtras%brokenNS = brokenNS
+!    call namespaceFixup(np)
+
+  end function adoptNode
 
 function getdomConfig(np, ex)result(c) 
     type(DOMException), intent(out), optional :: ex

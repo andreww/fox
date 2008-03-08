@@ -252,10 +252,14 @@ Document:
 * `setXmlStandalone(np, xmlStandalone)`  
 * `getXmlVersion(np)`  
 * `setXmlVersion(np, xmlVersion)`  
+* `adoptNode(np, source)`   
 * `normalizeDocument(np)`  
+* `renameNode(np, namespaceURI, qualifiedName)`  
+
 
 Node:
 
+* `getBaseURI(np)`  
 * `getTextContent(np)`  
 * `setTextContent(np, textContent)`  
 * `isEqualNode(np, other)`

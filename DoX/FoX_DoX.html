@@ -205,7 +205,7 @@ places.  If you move the FoX directory later on, you will need to re-run configu
 
 <p>To run them all, simply run <code>make check</code> from the top-level directory. This will run the individual testsuites, and collate their results.</p>
 
-<p>If any failures occur (unrelated to known compiler issues, see the <a href="http://uszla.me.uk/space/software/FoX/compat/">up-to-date list</a>), please send a message to the mailing list (<a href="&#x6D;&#97;&#105;&#x6C;&#x74;&#111;:&#70;&#111;&#88;&#64;&#x6C;&#105;&#115;&#x74;&#x73;.&#117;s&#122;&#108;&#97;&#46;&#109;&#x65;&#x2E;&#117;&#x6B;">&#70;&#111;&#88;&#64;&#x6C;&#105;&#115;&#x74;&#x73;.&#117;s&#122;&#108;&#97;&#46;&#109;&#x65;&#x2E;&#117;&#x6B;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
+<p>If any failures occur (unrelated to known compiler issues, see the <a href="http://uszla.me.uk/space/software/FoX/compat/">up-to-date list</a>), please send a message to the mailing list (<a href="&#x6D;&#x61;i&#x6C;&#x74;&#x6F;:&#70;&#x6F;&#88;&#64;&#x6C;&#x69;&#115;&#x74;&#115;&#46;&#117;&#x73;&#122;&#x6C;&#97;&#x2E;&#x6D;&#101;&#46;&#117;&#107;">&#70;&#x6F;&#88;&#64;&#x6C;&#x69;&#115;&#x74;&#115;&#46;&#117;&#x73;&#122;&#x6C;&#97;&#x2E;&#x6D;&#101;&#46;&#117;&#107;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
 
 <h2>Linking to an existing program</h2>
 
@@ -2359,12 +2359,15 @@ end program dom_example
 <li><code>setXmlStandalone(np, xmlStandalone)</code>  </li>
 <li><code>getXmlVersion(np)</code>  </li>
 <li><code>setXmlVersion(np, xmlVersion)</code>  </li>
+<li><code>adoptNode(np, source)</code>   </li>
 <li><code>normalizeDocument(np)</code>  </li>
+<li><code>renameNode(np, namespaceURI, qualifiedName)</code>  </li>
 </ul>
 
 <p>Node:</p>
 
 <ul>
+<li><code>getBaseURI(np)</code>  </li>
 <li><code>getTextContent(np)</code>  </li>
 <li><code>setTextContent(np, textContent)</code>  </li>
 <li><code>isEqualNode(np, other)</code></li>
@@ -2915,9 +2918,9 @@ Return the value of the fragment</p></li>
 <h1>Further information</h1>
 
 <p>FoX evolved from the initial codebase of <a href="http://lcdx00.wm.lc.ehu.es/ag/xml/">xmlf90</a>,
-which was written largely by Alberto Garcia &lt;<a href="&#109;&#x61;i&#108;&#x74;&#x6F;:&#97;&#108;&#x62;&#101;&#x72;&#116;&#x6F;&#103;&#64;&#x69;&#99;&#109;&#x61;&#98;&#x2E;&#101;&#115;">&#97;&#108;&#x62;&#101;&#x72;&#116;&#x6F;&#103;&#64;&#x69;&#99;&#109;&#x61;&#98;&#x2E;&#101;&#115;</a>> and Jon Wakelin &lt;<a href="&#x6D;&#97;&#105;&#108;&#x74;&#x6F;:&#x6A;&#x6F;n&#46;&#119;a&#107;e&#108;&#105;&#110;&#64;&#98;r&#x69;&#115;&#116;&#x6F;&#108;&#46;&#x61;c&#x2E;&#x75;&#x6B;">&#x6A;&#x6F;n&#46;&#119;a&#107;e&#108;&#105;&#110;&#64;&#98;r&#x69;&#115;&#116;&#x6F;&#108;&#46;&#x61;c&#x2E;&#x75;&#x6B;</a>>.</p>
+which was written largely by Alberto Garcia &lt;<a href="&#x6D;&#97;&#x69;&#108;&#x74;&#111;:&#x61;&#108;&#98;e&#114;&#x74;&#x6F;g&#64;&#x69;&#99;&#109;&#x61;b&#46;&#x65;&#115;">&#x61;&#108;&#98;e&#114;&#x74;&#x6F;g&#64;&#x69;&#99;&#109;&#x61;b&#46;&#x65;&#115;</a>> and Jon Wakelin &lt;<a href="&#x6D;&#x61;&#105;&#x6C;&#116;&#111;:&#106;&#x6F;&#110;&#46;&#119;a&#107;&#101;&#x6C;&#105;&#x6E;&#64;br&#x69;&#115;&#x74;&#x6F;&#108;&#x2E;&#x61;&#99;&#x2E;&#117;&#x6B;">&#106;&#x6F;&#110;&#46;&#119;a&#107;&#101;&#x6C;&#105;&#x6E;&#64;br&#x69;&#115;&#x74;&#x6F;&#108;&#x2E;&#x61;&#99;&#x2E;&#117;&#x6B;</a>>.</p>
 
-<p>FoX is the work of Toby White &lt;<a href="&#109;&#97;&#x69;&#x6C;&#x74;&#111;:&#116;&#111;&#x77;2&#49;&#64;&#x63;&#x61;&#109;&#46;ac&#46;&#117;&#x6B;">&#116;&#111;&#x77;2&#49;&#64;&#x63;&#x61;&#109;&#46;ac&#46;&#117;&#x6B;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
+<p>FoX is the work of Toby White &lt;<a href="&#x6D;&#97;&#105;l&#x74;o:&#x74;&#x6F;w&#x32;&#x31;&#64;&#99;&#97;&#109;&#x2E;&#97;&#x63;&#46;&#x75;&#107;">&#x74;&#x6F;w&#x32;&#x31;&#64;&#99;&#97;&#109;&#x2E;&#97;&#x63;&#46;&#x75;&#107;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
 
 <p>There is a FoX website at <a href="http://www.uszla.me.uk/software/FoX/">http://www.uszla.me.uk/software/FoX/</a>.</p>
 
