@@ -17,7 +17,7 @@ module m_sax_parser
     ATT_REQUIRED, ATT_IMPLIED, ATT_DEFAULT, ATT_FIXED
   use m_common_elstack, only: push_elstack, pop_elstack, init_elstack, &
     destroy_elstack, is_empty, len, get_top_elstack, checkContentModel, &
-    elementContent, emptyContent
+    elementContent, emptyContent, checkContentModelToEnd
   use m_common_entities, only: existing_entity, init_entity_list, &
     destroy_entity_list, add_internal_entity, is_unparsed_entity, &
     expand_entity, expand_char_entity, pop_entity_list, size, &
@@ -2291,12 +2291,17 @@ contains
           'Ill-formed entity')
         return
       endif
-! FIXME      if (validCheck) then
-!        call checkContentModel(fx%elstack)
-      if (str_vs(fx%name)/=pop_elstack(fx%elstack)) then
+      if (str_vs(fx%name)/=get_top_elstack(fx%elstack)) then
         call add_error(fx%error_stack, "Mismatching close tag - expecting "//str_vs(fx%name))
         return
       endif
+      if (validCheck) then
+        if (.not.checkContentModelToEnd(fx%elstack)) then
+          call add_error(fx%error_stack, &
+            "Failed to fulfil content model for "//str_vs(fx%name))
+        endif
+      endif
+      fx%name = pop_elstack(fx%elstack)
       if (present(endElement_handler)) then
         if (namespaces_.and.getURIofQName(fx,str_vs(fx%name))==invalidNS) then
           ! no namespace was found for the current element, we must be
