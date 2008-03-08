@@ -6,7 +6,7 @@ module m_wxml_core
   use fox_m_utils_uri, only: URI, parseURI, destroyURI
   use m_common_attrs, only: dictionary_t, getLength, get_key, get_value, &
     hasKey, add_item_to_dict, init_dict, reset_dict, destroy_dict, &
-    getWhitespaceHandling
+    getWhitespaceHandling, sortAttrs
   use m_common_buffer, only: buffer_t, len, add_to_buffer, reset_buffer, &
     dump_buffer
   use m_common_charset, only: XML1_0, XML1_1, checkChars
@@ -1091,6 +1091,8 @@ contains
     if (pc) then
       call add_to_buffer(escape_string(chars, xf%xds%xml_version), xf%buffer, ws_significant)
     else
+      ! FIXME what if we try and output two separate character events?
+      ! need to keep track of this ...
       if (index(chars,']]>') > 0) &
            call wxml_fatal("Tried to output invalid CDATA: "//chars)
       call add_to_buffer("<![CDATA["//chars//"]]>", xf%buffer, ws_significant)
@@ -1674,6 +1676,8 @@ contains
     if (xf%state_2 /= WXML_STATE_2_INSIDE_PI .and. &
       xf%state_2 /= WXML_STATE_2_INSIDE_ELEMENT) &
       call wxml_fatal("Internal library error")
+
+    if (xf%canonical) call sortAttrs(xf%dict)
     
     do i = 1, getLength(xf%dict)
       size = len(get_key(xf%dict, i)) + len(get_value(xf%dict, i)) + 4

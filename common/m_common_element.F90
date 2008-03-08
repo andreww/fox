@@ -134,6 +134,8 @@ module m_common_element
   public :: get_attribute_declaration
   public :: express_attribute_declaration
 
+  public :: get_att_type_enum
+
   public :: ATT_NULL
   public :: ATT_CDATA
   public :: ATT_ID 
@@ -1573,6 +1575,35 @@ contains
       s = trim(s)//" """//str_vs(a%default)//""""
   end function express_attribute_declaration
 
+  function get_att_type_enum(s) result(n)
+    character(len=*), intent(in) :: s
+    integer :: n
+
+    select case(s)
+    case ('CDATA')
+      n = ATT_CDATA
+    case ('ID')
+      n = ATT_ID
+    case ('IDREF')
+      n = ATT_IDREF
+    case ('IDREFS')
+      n = ATT_IDREFS
+    case ('NMTOKEN')
+      n = ATT_NMTOKEN
+    case ('NMTOKENS')
+      n = ATT_NMTOKENS
+    case ('ENTITY')
+      n = ATT_ENTITY
+    case ('ENTITIES')
+      n = ATT_ENTITIES
+    case ('NOTATION')
+      n = ATT_NOTATION
+    case ('CDANO')
+      n= ATT_CDANO
+    case ('CDAMB')
+      n = ATT_CDAMB
+    end select
+  end function get_att_type_enum
 
   function NotCDataNormalize(s1) result(s2)
     ! FIXME this is duplicated in sax_parser. Put somewhere else sensible
