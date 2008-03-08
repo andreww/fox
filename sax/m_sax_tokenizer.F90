@@ -36,6 +36,8 @@ contains
 
     xv = fx%xds%xml_version
 
+    if (associated(fx%token)) deallocate(fx%token)
+    fx%token => vs_str_alloc("")
     if (fx%nextTokenType/=TOK_NULL) then
       eof = .false.
       fx%tokenType = fx%nextTokenType
@@ -43,8 +45,6 @@ contains
       return
     endif
     fx%tokentype = TOK_NULL
-    if (associated(fx%token)) deallocate(fx%token)
-    fx%token => vs_str_alloc("")
 
     q = " "
     phrase = 0
@@ -738,7 +738,7 @@ contains
       case (ST_DTD_PI_CONTENTS)
         if (firstChar) ws_discard = .true.
         if (ws_discard) then
-          if (verify(c, XML_WHITESPACE)==0) then
+          if (verify(c, XML_WHITESPACE)/=0) then
             ws_discard = .false.
           else
             return
@@ -746,13 +746,8 @@ contains
         endif
         if (phrase==1) then
           if (c==">") then
-            ! FIXME always associated surely
-            if (associated(fx%token)) then
-               fx%tokenType = TOK_CHAR
-               fx%nextTokenType = TOK_PI_END
-            else
-               fx%tokenType = TOK_PI_END
-            endif
+            fx%tokenType = TOK_CHAR
+            fx%nextTokenType = TOK_PI_END
           elseif (c=="?") then
             ! The last ? didn't mean anything, but this one might.
             tempString => fx%token
