@@ -34,6 +34,7 @@ module m_common_content_model
   public :: newCP
   public :: transformCPPlus
   public :: checkCP
+  public :: checkCPToEnd
   public :: elementContentCP
   public :: emptyContentCP
   public :: destroyCPtree
@@ -158,11 +159,6 @@ contains
 
     type(content_particle_t), pointer :: tcp
 
-    ! cp will initially either point at:
-    ! a) the top level cp node
-    ! b) a named cp node that was matched last time
-    ! c) null(), because weve exhausted the regex.
-
     ! for EMPTY, ANY or MIXED, cp never moves.
     ! for element content, we move the pointer as we
     ! move through the regex.
@@ -248,10 +244,10 @@ contains
   end function nextCPaftermatch
 
   function nextCPafterfail(cp) result(cp_next)
-    type (content_particle_t), pointer :: cp
-    type (content_particle_t), pointer :: cp_next
+    type(content_particle_t), pointer :: cp
+    type(content_particle_t), pointer :: cp_next
 
-    type (content_particle_t), pointer :: tcp
+    type(content_particle_t), pointer :: tcp
 
     cp_next => cp
     do
@@ -292,6 +288,78 @@ contains
     enddo
     
   end function nextCPafterfail
+
+  function checkCPToEnd(cp) result(p)
+    type(content_particle_t), pointer :: cp
+    logical :: p
+
+    type(content_particle_t), pointer :: tcp
+
+    if (associated(cp)) then
+      select case(cp%operator)
+      case (OP_EMPTY, OP_ANY, OP_MIXED)
+        p = .true.
+      case default
+        tcp => nextCPMustMatch(cp)
+        if (associated(tcp)) then
+          print*,"finally"
+          call dumpCP(tcp)
+        endif
+        p = .not.associated(tcp)
+      end select
+    else
+      p = .true.
+    endif
+  end function checkCPToEnd
+
+  function nextCPMustMatch(cp) result(cp_next)
+    type(content_particle_t), pointer :: cp
+    type(content_particle_t), pointer :: cp_next
+
+    type(content_particle_t), pointer :: tcp
+
+    if (.not.associated(cp)) return
+    if (.not.associated(cp%parent)) then
+      ! we havent started exploring this one.
+      ! get the first starting position
+      cp_next => cp
+      do while (cp_next%repeater==REP_NULL)
+        if (associated(cp_next%firstChild)) then
+          cp_next => cp_next%firstChild
+        else
+          exit
+        endif
+      enddo
+    else
+      cp_next => cp
+    endif
+    if (cp_next%repeater==REP_NULL) return
+    do
+      print*, "trying"
+      call dumpCP(cp_next)
+      tcp => cp_next%parent
+      if (associated(tcp)) then
+        if (tcp%operator==OP_CHOICE) then
+          ! its matched by the optional one we are on, go up a level
+          cp_next => tcp
+        elseif (tcp%operator==OP_SEQ) then
+          ! check all siblings for any compulsory ones
+          do while (associated(cp_next%nextSibling))
+            cp_next => cp_next%nextSibling
+            if (cp_next%repeater==REP_NULL) return
+          enddo
+          ! all were optional, go up a level
+          cp_next => tcp
+        endif
+      else
+        ! weve got all the way to the top without
+        ! finding a new cp to try
+        cp_next => tcp
+        exit
+      endif
+    enddo
+    
+  end function nextCPMustMatch
 
   function elementContentCP(cp) result(p)
     type(content_particle_t), pointer :: cp

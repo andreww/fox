@@ -4,7 +4,7 @@ module m_common_elstack
   use fox_m_fsys_array_str, only: str_vs, vs_str
   use m_common_error, only: FoX_fatal
   use m_common_content_model, only: content_particle_t, checkCP, &
-    elementContentCP, emptyContentCP
+    elementContentCP, emptyContentCP, checkCPToEnd
 
   implicit none
   private
@@ -18,7 +18,7 @@ module m_common_elstack
   real, parameter :: STACK_SIZE_MULT = 1.5
 
   type :: elstack_item
-    character, dimension(:), pointer          :: data => null()
+    character, dimension(:), pointer          :: name => null()
     type(content_particle_t), pointer         :: cp => null()
   end type elstack_item
 
@@ -33,6 +33,7 @@ module m_common_elstack
   public  :: push_elstack, pop_elstack, init_elstack, destroy_elstack, reset_elstack, print_elstack
   public  :: get_top_elstack, is_empty
   public :: checkContentModel
+  public :: checkContentModelToEnd
   public :: elementContent
   public :: emptyContent
   public  :: len
@@ -55,7 +56,7 @@ contains
     ! empty stack
     allocate(elstack%stack(0:STACK_SIZE_INIT))
     elstack%n_items = 0
-    allocate(elstack%stack(0)%data(0))
+    allocate(elstack%stack(0)%name(0))
 
   end subroutine init_elstack
 
@@ -63,7 +64,7 @@ contains
     type(elstack_t), intent(inout)  :: elstack
     integer :: i
     do i = 0, elstack % n_items
-      deallocate(elstack%stack(i)%data)
+      deallocate(elstack%stack(i)%name)
     enddo
     deallocate(elstack%stack)
   end subroutine destroy_elstack
@@ -84,13 +85,13 @@ contains
     s = ubound(elstack%stack, 1)
 
     do i = 0, s
-      temp(i)%data => elstack%stack(i)%data
+      temp(i)%name => elstack%stack(i)%name
       temp(i)%cp => elstack%stack(i)%cp
     enddo
     deallocate(elstack%stack)
     allocate(elstack%stack(0:nint(s*STACK_SIZE_MULT)))
     do i = 0, s
-      elstack%stack(i)%data => temp(i)%data
+      elstack%stack(i)%name => temp(i)%name
       elstack%stack(i)%cp => temp(i)%cp
     enddo
 
@@ -122,8 +123,8 @@ contains
     if (n == size(elstack%stack)) then
       call resize_elstack(elstack)
     endif
-    allocate(elstack%stack(n)%data(len(name)))
-    elstack%stack(n)%data = vs_str(name)
+    allocate(elstack%stack(n)%name(len(name)))
+    elstack%stack(n)%name = vs_str(name)
     if (present(cp)) elstack%stack(n)%cp => cp
     elstack%n_items = n
 
@@ -131,7 +132,7 @@ contains
 
   function pop_elstack(elstack) result(item)
     type(elstack_t), intent(inout)     :: elstack
-    character(len=merge(size(elstack%stack(elstack%n_items)%data), 0, elstack%n_items > 0)) :: item
+    character(len=merge(size(elstack%stack(elstack%n_items)%name), 0, elstack%n_items > 0)) :: item
 
     integer :: n
 
@@ -139,8 +140,8 @@ contains
     if (n == 0) then
       call FoX_fatal("Element stack empty")
     endif
-    item = str_vs(elstack%stack(n)%data)
-    deallocate(elstack%stack(n)%data)
+    item = str_vs(elstack%stack(n)%name)
+    deallocate(elstack%stack(n)%name)
     elstack%n_items = n - 1
 
   end function pop_elstack
@@ -148,7 +149,7 @@ contains
   pure function get_top_elstack(elstack) result(item)
     ! Get the top element of the stack, *without popping it*.
     type(elstack_t), intent(in)        :: elstack
-    character(len=merge(size(elstack%stack(elstack%n_items)%data), 0, elstack%n_items > 0)) :: item 
+    character(len=merge(size(elstack%stack(elstack%n_items)%name), 0, elstack%n_items > 0)) :: item 
 
     integer :: n
 
@@ -157,7 +158,7 @@ contains
     if (n==0) then
       item = ""
     else
-      item = str_vs(elstack%stack(n)%data)
+      item = str_vs(elstack%stack(n)%name)
     endif
 
   end function get_top_elstack
@@ -179,6 +180,20 @@ contains
       elstack%stack(n)%cp => cp
     endif
   end function checkContentModel
+
+  function checkContentModelToEnd(elstack) result(p)
+    type(elstack_t), intent(inout) :: elstack
+    logical :: p
+
+    type(content_particle_t), pointer :: cp
+
+    integer :: n
+    n = elstack%n_items
+
+    cp => elstack%stack(n)%cp
+    p = checkCPToEnd(cp)
+
+  end function checkContentModelToEnd
 
   function elementContent(elstack) result(p)
     type(elstack_t), intent(in) :: elstack
@@ -212,7 +227,7 @@ contains
     integer   :: i
 
     do i = elstack%n_items, 1, -1
-      write(unit=unit,fmt=*) elstack%stack(i)%data
+      write(unit=unit,fmt=*) elstack%stack(i)%name
     enddo
 
   end subroutine print_elstack
