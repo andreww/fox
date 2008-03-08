@@ -325,23 +325,23 @@ contains
     i = 0
   end subroutine get_att_index_pointer
 
-  subroutine remove_key_by_index(dict, key)
+  subroutine remove_key_by_index(dict, ind)
     type(dictionary_t), intent(inout) :: dict
-    integer, intent(in) :: key
+    integer, intent(in) :: ind
 
     integer :: i, n
     type(dict_item_ptr), pointer :: tempList(:)
 
     n = ubound(dict%list, 1)
 
-    if (key<=0.or.key>n) return
+    if (ind<=0.or.ind>n) return
 
-    allocate(tempList(n-1))
-    do i = 1, key-1
+    allocate(tempList(0:n-1))
+    do i = 0, ind-1
       tempList(i)%d => dict%list(i)%d
     enddo
-    call destroy(dict%list(i)%d)
-    do i = key+1, ubound(tempList, 1)
+    call destroy(dict%list(ind)%d)
+    do i = ind+1, n
       tempList(i-1)%d => dict%list(i)%d
     enddo
     deallocate(dict%list)
