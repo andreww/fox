@@ -411,6 +411,7 @@ module m_dom_dom
   public :: setStrictErrorChecking
   public :: getDomConfig
   public :: renameNode
+  public :: adoptNode
 
   public :: setDocType
   public :: setDomConfig

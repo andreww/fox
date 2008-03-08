@@ -34,6 +34,7 @@ TOHW_m_dom_publics(`
   public :: setStrictErrorChecking
   public :: getDomConfig
   public :: renameNode
+  public :: adoptNode
 
   public :: setDocType
   public :: setDomConfig

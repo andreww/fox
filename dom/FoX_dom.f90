@@ -93,6 +93,7 @@ module FoX_dom
   public :: getDomConfig
   public :: normalizeDocument
   public :: renameNode
+  public :: adoptNode
 
   ! DOM Node
   public :: ELEMENT_NODE
