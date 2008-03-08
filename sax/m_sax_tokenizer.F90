@@ -1060,6 +1060,7 @@ contains
     allocate(s_out(0)) ! in case we return early ...
     s_ent => null()
     tempString => null()
+    s_temp2 => null()
 
     i2 = 1
     i = 1
