@@ -469,7 +469,7 @@ contains
           endif
           call endDTDchecks
           if (in_error(fx%error_stack)) goto 100
-          if (fx%state==ST_STOP) return
+          if (fx%state==ST_STOP) goto 100
           inExtSubset = .false.
           fx%state = ST_MISC
           fx%context = CTXT_BEFORE_CONTENT
@@ -508,7 +508,6 @@ contains
           if (fx%state==ST_TAG_IN_CONTENT) fx%state = ST_CHAR_IN_CONTENT
           ! because CHAR_IN_CONTENT *always* leads to TAG_IN_CONTENT
           ! *except* when it is the end of an entity expansion
-          ! it's the end of a general entity expansion
           if (present(endEntity_handler)) then
             call endEntity_handler(pop_entity_list(fx%forbidden_ge_list))
             if (fx%state==ST_STOP) goto 100
@@ -1152,7 +1151,7 @@ contains
           wf_stack(1) = wf_stack(1) - 1
           call endDTDchecks
           if (in_error(fx%error_stack)) goto 100
-          if (fx%state==ST_STOP) return
+          if (fx%state==ST_STOP) goto 100
           fx%context = CTXT_BEFORE_CONTENT
           nextState = ST_MISC
         case default
@@ -1244,7 +1243,7 @@ contains
               endif
               call endDTDchecks
               if (in_error(fx%error_stack)) goto 100
-              if (fx%state==ST_STOP) return
+              if (fx%state==ST_STOP) goto 100
               fx%context = CTXT_BEFORE_CONTENT
               nextState = ST_MISC
             endif
@@ -1252,7 +1251,7 @@ contains
           else
             call endDTDchecks
             if (in_error(fx%error_stack)) goto 100
-            if (fx%state==ST_STOP) return
+            if (fx%state==ST_STOP) goto 100
             fx%context = CTXT_BEFORE_CONTENT
             nextState = ST_MISC
           endif
@@ -1293,7 +1292,7 @@ contains
               endif
               call endDTDchecks
               if (in_error(fx%error_stack)) goto 100
-              if (fx%state==ST_STOP) return
+              if (fx%state==ST_STOP) goto 100
               wf_stack(1) = wf_stack(1) - 1
               nextState = ST_MISC
               fx%context = CTXT_BEFORE_CONTENT
@@ -1301,7 +1300,7 @@ contains
           else
             call endDTDchecks
             if (in_error(fx%error_stack)) goto 100
-            if (fx%state==ST_STOP) return
+            if (fx%state==ST_STOP) goto 100
             wf_stack(1) = wf_stack(1) - 1
             nextState = ST_MISC
             fx%context = CTXT_BEFORE_CONTENT
@@ -1425,6 +1424,7 @@ contains
     deallocate(wf_stack)
     if (associated(extEntStack)) deallocate(extEntStack)
 
+    if (fx%state==ST_STOP) return
     if (.not.eof) then
       ! We have encountered an error before the end of a file
       if (.not.reading_main_file(fb)) then !we are parsing an entity
