@@ -10,7 +10,7 @@ module m_common_element
   use m_common_charset, only: isInitialNameChar, isNameChar, &
     upperCase, XML_WHITESPACE
   use m_common_content_model, only: content_particle_t, newCP, destroyCPtree, &
-    OP_NULL, OP_MIXED, OP_CHOICE, OP_SEQ, OP_NAME, &
+    OP_MIXED, OP_CHOICE, OP_SEQ, OP_NAME, &
     REP_QUESTION_MARK, REP_ASTERISK, &
     transformCPPlus, dumpCPtree
   use m_common_error, only: error_stack, add_error, in_error
@@ -498,7 +498,7 @@ contains
             tcp%parent => current%parent
           endif
           current => tcp
-          if (c=="|".and.current%parent%operator==OP_NULL) &
+          if (c=="|".and.current%parent%operator/=OP_MIXED) &
             current%parent%operator = OP_CHOICE
           state = ST_CHILD
         elseif (c==')') then
@@ -584,7 +584,7 @@ contains
               'Cannot mix ordered and unordered elements')
             goto 100
           endif
-          if (c=="|".and.current%parent%operator==OP_NULL) &
+          if (c=="|".and.current%parent%operator/=OP_MIXED) &
             current%parent%operator = OP_CHOICE
           state = ST_CHILD
         elseif (c==')') then
@@ -629,7 +629,7 @@ contains
               'Cannot mix ordered and unordered elements')
             goto 100
           endif
-          if (c=="|".and.current%parent%operator==OP_NULL) &
+          if (c=="|".and.current%parent%operator/=OP_MIXED) &
             current%parent%operator = OP_CHOICE
           state = ST_CHILD
         elseif (c==')') then
