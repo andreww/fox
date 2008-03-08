@@ -119,10 +119,10 @@ contains
         c = ""
         if (f%pe) then
           iostat = 0
-          f%eof = .true.
         else
           iostat = io_eof
         endif
+        f%eof = .true.
       else
         iostat = 0
         c = f%input_string%s(f%input_string%pos)
@@ -134,13 +134,9 @@ contains
         iostat = 0
         c = achar(13)
       elseif (iostat==io_eof) then
-        if (f%pe) then
-          iostat = 0
-          c = " "
-          f%eof = .true.
-        else
-          c = ""
-        endif
+        if (f%pe) iostat = 0
+        c = ""
+        f%eof = .true.
       endif
     endif
   end function read_single_char
