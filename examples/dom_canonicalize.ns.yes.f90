@@ -24,8 +24,8 @@ program dom_example
   else
     ! Tell the normalizer to canonicalize it
     ! but only if we are 1.0. 1.1 cannot be canonicalized.
-!    if (getXMLVersion(myDoc)=="1.0") &
-!      call setParameter(getDomConfig(myDoc), "canonical-form", .true.)
+    if (getXMLVersion(myDoc)=="1.0") &
+      call setParameter(getDomConfig(myDoc), "canonical-form", .true.)
 
     ! and write it out again (which automatically does normalization)
     call serialize(myDoc, "out.xml")
