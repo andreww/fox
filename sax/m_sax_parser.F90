@@ -11,7 +11,8 @@ module m_sax_parser
   use m_common_charset, only: XML1_0, XML1_1, XML_WHITESPACE
   use m_common_element, only: element_t, existing_element, add_element, &
     get_element, parse_dtd_element, parse_dtd_attlist, report_declarations, &
-    get_att_type, declared_element, attribute_t, &
+    declared_element, attribute_t, att_value_normalize, &
+    get_attribute_declaration, &
     ATT_CDATA, ATT_ID, ATT_IDREF, ATT_IDREFS, ATT_ENTITY, ATT_ENTITIES, &
     ATT_NMTOKEN, ATT_NMTOKENS, ATT_NOTATION, ATT_ENUM, &
     ATT_REQUIRED, ATT_IMPLIED, ATT_DEFAULT, ATT_FIXED
@@ -359,6 +360,7 @@ contains
     character, pointer :: tempString(:)
     character :: dummy
     type(element_t), pointer :: elem
+    type(attribute_t), pointer :: attDecl
     type(entity_t), pointer :: ent
     type(URI), pointer :: extSubsetURI, URIref, newURI
     integer, pointer :: wf_stack(:), temp_wf_stack(:), extEntStack(:)
@@ -367,6 +369,7 @@ contains
 
     tempString => null()
     elem => null()
+    attDecl => null()
 
     if (present(namespaces)) then
       namespaces_ = namespaces
@@ -845,6 +848,11 @@ contains
           endif
           fx%attname => fx%token
           nullify(fx%token)
+          if (associated(elem)) then
+            attDecl => get_attribute_declaration(elem, str_vs(fx%attname))
+          else
+            attDecl => null()
+          endif
           nextState = ST_ATT_NAME
         end select
 
@@ -867,13 +875,26 @@ contains
           fx%token => tempString
           tempString => null()
           !If this attribute is not CDATA, we must process further;
-          temp_i = get_att_type(fx%xds%element_list, str_vs(fx%name), str_vs(fx%attname))
+          if (associated(attDecl)) then
+            temp_i = attDecl%attType
+          else
+            temp_i = ATT_CDATA
+          endif
           if (temp_i==ATT_CDATA) then
             call add_item_to_dict(fx%attributes, str_vs(fx%attname), &
               str_vs(fx%token), itype=ATT_CDATA)
           else
+            if (validCheck) then
+              if (fx%xds%standalone.and..not.attDecl%internal &
+                .and.(str_vs(fx%token)//"x"/=att_value_normalize(str_vs(fx%token))//"x")) then
+                call add_error(fx%error_stack,  &
+                  "Externally-declared attribute value normalization results in changed value "// &
+                  "in standalone document")
+                goto 100
+              endif
+            endif
             call add_item_to_dict(fx%attributes, str_vs(fx%attname), &
-              trim(NotCDataNormalize(str_vs(fx%token))), itype=temp_i)
+              att_value_normalize(str_vs(fx%token)), itype=temp_i)
           endif
           deallocate(fx%attname)
           nextState = ST_IN_TAG
@@ -2437,26 +2458,6 @@ contains
         endif
       endif
     end subroutine add_entity
-
-    function NotCDataNormalize(s1) result(s2)
-      ! FIXME this is duplicated in common_element. Put somewhere else sensible
-      character(len=*), intent(in) :: s1
-      character(len=len(s1)) :: s2
-
-      integer :: i, i2
-      logical :: w
-
-      i2 = 1
-      w = .true.
-      do i = 1, len(s1)
-        if (w.and.(verify(s1(i:i),XML_WHITESPACE)==0)) cycle
-        w = .false.
-        s2(i2:i2) = s1(i:i)
-        i2 = i2 + 1
-        if (verify(s1(i:i),XML_WHITESPACE)==0) w = .true.
-      enddo
-      s2(i2:) = ''
-    end function NotCDataNormalize
 
     subroutine getDefaultAttributes(el, dict)
       type(element_t), pointer :: el

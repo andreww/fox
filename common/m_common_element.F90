@@ -130,11 +130,13 @@ module m_common_element
 
   public :: report_declarations
 
-  public :: get_att_type
+!  public :: get_att_type
   public :: attribute_has_default
   public :: get_attlist_size
   public :: get_attribute_declaration
   public :: express_attribute_declaration
+
+  public :: att_value_normalize
 
   public :: get_att_type_enum
 
@@ -1223,7 +1225,7 @@ contains
         !write(*,*)'ST_DEFAULTVALUE'
         if (c==q) then
           if (ca%attType/=ATT_CDATA) then
-            temp => vs_str_alloc(trim(NotCdataNormalize(str_vs(value))))
+            temp => vs_str_alloc(att_value_normalize(str_vs(value)))
             deallocate(value)
             value => temp
           endif
@@ -1614,26 +1616,45 @@ contains
     end select
   end function get_att_type_enum
 
-  function NotCDataNormalize(s1) result(s2)
-    ! FIXME this is duplicated in sax_parser. Put somewhere else sensible
+  pure function att_value_normalize_len(s1) result(n)
     character(len=*), intent(in) :: s1
-    character(len=len(s1)) :: s2
+    integer :: n
+
+    integer :: i
+    logical :: w
+
+    n = 0
+    w = .true.
+    do i = 1, len(s1)
+      if (w.and.(verify(s1(i:i),XML_WHITESPACE)==0)) cycle
+      w = .false.
+      n = n + 1
+      if (verify(s1(i:i),XML_WHITESPACE)==0) w = .true.
+    enddo
+    if (w) n = n - 1 ! Discard final space
+    
+  end function att_value_normalize_len
+
+  function att_value_normalize(s1) result(s2)
+    character(len=*), intent(in) :: s1
+    character(len=att_value_normalize_len(s1)) :: s2
     
     integer :: i, i2
     logical :: w
     
+    i = 0
     i2 = 1
     w = .true.
-    do i = 1, len(s1)
+    do while (i2<=len(s2))
+      i = i + 1
       if (w.and.(verify(s1(i:i),XML_WHITESPACE)==0)) cycle
       w = .false.
       s2(i2:i2) = s1(i:i)
       i2 = i2 + 1
       if (verify(s1(i:i),XML_WHITESPACE)==0) w = .true.
     enddo
-    s2(i2:) = ''
-  end function NotCDataNormalize
 
+  end function att_value_normalize
 
 #endif
 end module m_common_element
