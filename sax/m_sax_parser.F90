@@ -908,6 +908,11 @@ contains
             if (validCheck) then
               if (elementContent(fx%elstack)) then
                 if (verify(str_vs(fx%token), XML_WHITESPACE)==0) then
+                  if (fx%xds%standalone.and..not.elem%internal) then
+                    call add_error(fx%error_stack, &
+                      "Externally-specified ignorable whitespace used in standalone document")
+                    goto 100
+                  endif
                   if (present(ignorableWhitespace_handler)) then
                     call ignorableWhitespace_handler(str_vs(fx%token))
                     if (fx%state==ST_STOP) goto 100
