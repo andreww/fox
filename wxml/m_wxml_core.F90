@@ -251,9 +251,16 @@ contains
     call init_xml_doc_state(xf%xds)
     xf%xds%documentURI => vs_str_alloc(filename)
 
-    if (present(warning)) xf%xds%warning = warning
-    if (present(valid)) xf%xds%valid = valid 
-    
+    if (present(warning)) then
+      xf%xds%warning = warning
+    else
+      xf%xds%warning = .false.
+    endif
+    if (present(valid)) then
+      xf%xds%valid = valid 
+    else
+      xf%xds%valid = .false.
+    endif
     xf%state_1 = WXML_STATE_1_JUST_OPENED
     xf%state_2 = WXML_STATE_2_OUTSIDE_TAG
     xf%state_3 = WXML_STATE_3_BEFORE_DTD
@@ -1026,9 +1033,12 @@ contains
     
     select case (xf%state_1)
     case (WXML_STATE_1_JUST_OPENED, WXML_STATE_1_BEFORE_ROOT)
-      if (size(xf%name) > 0) then
-        if (str_vs(xf%name) /= name) & 
-          call wxml_error(xf, "Root element name does not match DTD: "//name)
+      if (xf%xds%valid) then
+        if (size(xf%name)==0) then
+          call wxml_error(xf, "No DTD specified for document")
+        elseif (str_vs(xf%name) /= name) then
+          call wxml_error(xf, "Root element name does not match DTD")
+        endif
       endif
       call close_start_tag(xf)
       if (xf%state_3 /= WXML_STATE_3_BEFORE_DTD) then
