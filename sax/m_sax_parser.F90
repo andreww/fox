@@ -2323,13 +2323,16 @@ contains
         return
       endif
       if (str_vs(fx%name)/=get_top_elstack(fx%elstack)) then
-        call add_error(fx%error_stack, "Mismatching close tag - expecting "//str_vs(fx%name))
+        call add_error(fx%error_stack, &
+          "Mismatching close tag: trying to close "//get_top_elstack(fx%elstack) &
+          //" with "//str_vs(fx%name))
         return
       endif
       if (validCheck) then
         if (.not.checkContentModelToEnd(fx%elstack)) then
           call add_error(fx%error_stack, &
             "Failed to fulfil content model for "//str_vs(fx%name))
+          return
         endif
       endif
       fx%name = pop_elstack(fx%elstack)
