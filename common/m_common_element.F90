@@ -130,7 +130,6 @@ module m_common_element
 
   public :: report_declarations
 
-!  public :: get_att_type
   public :: attribute_has_default
   public :: get_attlist_size
   public :: get_attribute_declaration
@@ -1461,29 +1460,6 @@ contains
     s(n:) = str_vs(s_list%list(i)%s)//')'
   end function make_token_group
 
-
-  function get_att_type(e_list, eName, aName) result(i)
-    type(element_list), intent(in) :: e_list
-    character(len=*), intent(in) :: eName
-    character(len=*), intent(in) :: aName
-    integer :: i
-    
-    type(element_t), pointer :: e
-    type(attribute_t), pointer :: a
-
-    if (existing_element(e_list, eName)) then
-      e => get_element(e_list, eName)
-      if (existing_attribute(e%attlist, aName)) then
-        a => get_attribute(e%attlist, aName)
-        i = a%attType
-      else
-        i = ATT_NULL
-      endif
-    else
-      i = ATT_NULL
-    endif
-  end function get_att_type
-
   function attribute_has_default(att) result(p)
     type(attribute_t), pointer :: att
     logical :: p
@@ -1540,12 +1516,16 @@ contains
     type(attribute_t), intent(in) :: a
     integer :: n
 
-    n = size(a%name)+1+len_trim(ATT_TYPES(a%attType))
+    if (a%attType==ATT_ENUM) then
+      n = size(a%name)
+    else
+      n = size(a%name)+1+len_trim(ATT_TYPES(a%attType))
+    endif
+
     if (a%attType==ATT_NOTATION &
       .or.a%attType==ATT_ENUM) &
       n = n + 1 + make_token_group_len(a%enumerations)
 
-    
     select case(a%attDefault)
     case (ATT_REQUIRED)
       n = n + len(" #REQUIRED")
@@ -1565,8 +1545,11 @@ contains
     type(attribute_t), intent(in) :: a
     character(len=express_att_decl_len(a)) :: s
 
-    s = str_vs(a%name)//" "//ATT_TYPES(a%attType)
-
+    if (a%attType==ATT_ENUM) then
+      s = str_vs(a%name)
+    else
+      s = str_vs(a%name)//" "//ATT_TYPES(a%attType)
+    endif
     if (a%attType==ATT_NOTATION &
       .or.a%attType==ATT_ENUM) &
       s = trim(s)//" "//make_token_group(a%enumerations)
