@@ -49,9 +49,16 @@ contains
   subroutine find_eor_eof(io_eor,io_eof)
     ! Determines the values of the iostat values for End of File and 
     ! End of Record (in non-advancing I/O)
+#ifdef __NAG__
+    use f90_iostat
+#endif
     integer, intent(out)           :: io_eor
     integer, intent(out)           :: io_eof
 
+#ifdef __NAG__
+    io_eor = ioerr_eor
+    io_eof = ioerr_eof
+#else
     integer           :: lun, iostat
     character(len=1)  :: c
 
@@ -81,6 +88,7 @@ contains
     enddo
 
     close(unit=lun,status="delete")
+#endif
     
     ! Invent an io_err ...
     io_err = 1
@@ -88,7 +96,6 @@ contains
       if (io_err/=0.and.io_err/=io_eor.and.io_err/=io_eof) exit
       io_err = io_err + 1
     end do
-
   end subroutine find_eor_eof
 
 #endif
