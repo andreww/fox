@@ -71,8 +71,8 @@ contains
         //str_vs(f%filename)//":"//f%line//":"//f%col)
       return
     endif
-    if (c==achar(10)) then
-      c = achar(13)
+    if (c==achar(13)) then
+      c = achar(10)
       c2 = read_single_char(f, iostat)
       if (iostat==io_eof) then
         ! the file has just ended on a single CR. Report is as a LF.
@@ -82,7 +82,7 @@ contains
       elseif (iostat/=0) then
         call add_error(es, "Error reading "//str_vs(f%filename))
         return
-      elseif (c2/=achar(13)) then
+      elseif (c2/=achar(10)) then
         ! then we keep c2, otherwise we'd just ignore it.
         pending = .true.
       endif
@@ -132,7 +132,11 @@ contains
       read (unit=f%lun, iostat=iostat, advance="no", fmt="(a1)") c
       if (iostat==io_eor) then
         iostat = 0
+#ifdef LF_EOF
+        c = achar(10)
+#else
         c = achar(13)
+#endif
       elseif (iostat==io_eof) then
         if (f%pe) iostat = 0
         c = ""
