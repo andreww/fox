@@ -83,6 +83,7 @@ module m_common_element
     integer :: attDefault = ATT_NULL
     type(string_list) :: enumerations
     character, pointer :: default(:) => null()
+    logical :: internal = .true.
   end type attribute_t
 
   type attribute_list
@@ -95,6 +96,7 @@ module m_common_element
     logical :: any = .false.
     logical :: mixed = .false.
     logical :: id_declared = .false.
+    logical :: internal = .true.
     type (content_particle_t), pointer :: cp => null()
     character, pointer :: model(:) => null()
     type(attribute_list) :: attlist
@@ -252,6 +254,7 @@ contains
       e_list%list(i)%mixed = temp(i)%mixed
       e_list%list(i)%cp => temp(i)%cp
       e_list%list(i)%id_declared = temp(i)%id_declared
+      e_list%list(i)%internal = temp(i)%internal
       e_list%list(i)%attlist%list => temp(i)%attlist%list
     enddo
     deallocate(temp)
@@ -261,11 +264,12 @@ contains
 
   end function add_element
 
-  subroutine parse_dtd_element(contents, xv, stack, element)
+  subroutine parse_dtd_element(contents, xv, stack, element, internal)
     character(len=*), intent(in) :: contents
     integer, intent(in) :: xv
     type(error_stack), intent(inout) :: stack
     type(element_t), pointer :: element
+    logical, intent(in) :: internal
 
     integer :: state
     integer :: i, nbrackets
@@ -714,6 +718,7 @@ contains
       element%mixed = mixed
       element%model => vs_str_alloc(trim(strip_spaces(contents)))
       element%cp => top
+      element%internal = internal
       call dumpCPtree(top)
     else
       if (associated(top)) call destroyCPtree(top)
@@ -820,9 +825,10 @@ contains
     enddo
   end function existing_attribute
 
-  function add_attribute(a_list, name) result(a)
+  function add_attribute(a_list, name, internal) result(a)
     type(attribute_list), intent(inout) :: a_list
     character(len=*), intent(in) :: name
+    logical, intent(in) :: internal
     type(attribute_t), pointer :: a
 
     integer :: i
@@ -836,12 +842,14 @@ contains
       a_list%list(i)%attdefault = temp(i)%attdefault
       a_list%list(i)%default => temp(i)%default
       a_list%list(i)%enumerations%list => temp(i)%enumerations%list
+      a_list%list(i)%internal = temp(i)%internal
     enddo
     deallocate(temp)
     a => a_list%list(i)
 
     a%name => vs_str_alloc(name)
     call init_string_list(a%enumerations)
+    a%internal = internal
 
   end function add_attribute
   
@@ -859,13 +867,14 @@ contains
     enddo
   end function get_attribute
 
-  subroutine parse_dtd_attlist(contents, xv, namespaces, validCheck, stack, elem)
+  subroutine parse_dtd_attlist(contents, xv, namespaces, validCheck, stack, elem, internal)
     character(len=*), intent(in) :: contents
     integer, intent(in) :: xv
     logical, intent(in) :: validCheck
     logical, intent(in) :: namespaces
     type(error_stack), intent(inout) :: stack
     type(element_t), pointer :: elem
+    logical, intent(in) :: internal
 
     integer :: i
     integer :: state
@@ -924,7 +933,7 @@ contains
               ignore_att%name => vs_vs_alloc(name)
               ca => ignore_att
             else
-              ca => add_attribute(elem%attlist, str_vs(name))
+              ca => add_attribute(elem%attlist, str_vs(name), internal)
             endif
           else
             if (associated(ignore_att)) call destroy_attribute_t(ignore_att)

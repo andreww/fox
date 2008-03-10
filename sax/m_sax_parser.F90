@@ -1708,10 +1708,12 @@ contains
         case (TOK_DTD_CONTENTS)
           if (processDTD) then
             call parse_dtd_attlist(str_vs(fx%token), fx%xds%xml_version, &
-              namespaces_, validCheck, fx%error_stack, elem)
+              namespaces_, validCheck, fx%error_stack, elem, &
+              internal=reading_main_file(fb))
           else
             call parse_dtd_attlist(str_vs(fx%token), fx%xds%xml_version, &
-              namespaces_, validCheck, fx%error_stack, null())
+              namespaces_, validCheck, fx%error_stack, null(), &
+              internal=reading_main_file(fb))
           endif
           if (in_error(fx%error_stack)) return
           ! Normalize attribute values in attlist
@@ -1738,10 +1740,12 @@ contains
           wf_stack(1) = wf_stack(1) - 1
           if (processDTD) then
             call parse_dtd_attlist("", fx%xds%xml_version, &
-              namespaces_, validCheck, fx%error_stack, elem)
+              namespaces_, validCheck, fx%error_stack, elem, &
+              internal=reading_main_file(fb))
           else
             call parse_dtd_attlist("", fx%xds%xml_version, &
-              namespaces_, validCheck, fx%error_stack, null())
+              namespaces_, validCheck, fx%error_stack, null(), &
+              internal=reading_main_file(fb))
           endif
           if (in_error(fx%error_stack)) return
           if (processDTD) then
@@ -1822,7 +1826,8 @@ contains
           else
             elem => null()
           endif
-          call parse_dtd_element(str_vs(fx%token), fx%xds%xml_version, fx%error_stack, elem)
+          call parse_dtd_element(str_vs(fx%token), fx%xds%xml_version, fx%error_stack, &
+            elem, reading_main_file(fb))
           if (in_error(fx%error_stack)) return
           nextDTDState = ST_DTD_ELEMENT_END
         end select
@@ -2464,10 +2469,12 @@ contains
       do i = 1, size(el%attlist%list)
         att => el%attlist%list(i)
         call get_att_index_pointer(dict, str_vs(att%name), ind, attValue)
-        if (att%attDefault==ATT_DEFAULT &
-          .or.att%attDefault==ATT_FIXED) then
-          call add_item_to_dict(dict, &
-            str_vs(att%name), str_vs(att%default), specified=.false.)
+        if (.not.associated(attValue)) then
+          if (att%attDefault==ATT_DEFAULT &
+            .or.att%attDefault==ATT_FIXED) then
+            call add_item_to_dict(dict, &
+              str_vs(att%name), str_vs(att%default), specified=.false.)
+          endif
         endif
       end do
     end subroutine getDefaultAttributes
@@ -2496,16 +2503,21 @@ contains
           if (.not.associated(attValue)) then
             if (att%attDefault==ATT_REQUIRED) then
               ! Validity Constraint: Required Attribute
-              if (validCheck) then
-                call add_error(fx%error_stack, &
-                  "REQUIRED attribute "//str_vs(att%name)//" not present")
-                return
-              endif
+              call add_error(fx%error_stack, &
+                "REQUIRED attribute "//str_vs(att%name)//" not present")
+              return
             elseif (att%attDefault==ATT_DEFAULT) then
-              call add_item_to_dict(dict, &
-                str_vs(att%name), str_vs(att%default), specified=.false.)
+              if (fx%xds%standalone.and..not.att%internal) then
+                ! VC: Standalone document declaration"
+                call add_error(fx%error_stack, &
+                  "Externally-specifid default attribute used in non-standalone document")
+                return
+              else
+                call add_item_to_dict(dict, &
+                  str_vs(att%name), str_vs(att%default), specified=.false.)
+              endif
             endif
-          elseif (validCheck) then
+          else
             select case(att%attType)
             case (ATT_ID)
               ! VC: ID
@@ -2685,20 +2697,27 @@ contains
           endif
         case (ATT_FIXED)
           if (associated(attValue)) then
-            if (validCheck) then
-              if (str_vs(att%default)//"x"/=str_vs(attValue)//"x") &
-                ! Validity Constraint: Fixed Attribute Default
-                call add_error(fx%error_stack, &
+            if (str_vs(att%default)//"x"/=str_vs(attValue)//"x") then
+              ! Validity Constraint: Fixed Attribute Default
+              call add_error(fx%error_stack, &
                 "FIXED attribute has wrong value")
+              return
             endif
           else
-            call add_item_to_dict(dict, &
-              str_vs(att%name), str_vs(att%default), specified=.false.)
+            if (fx%xds%standalone.and..not.att%internal) then
+              ! VC: Standalone document declaration"
+              call add_error(fx%error_stack, &
+                "Externally-specified default attribute used in non-standalone document")
+              return
+            else
+              call add_item_to_dict(dict, &
+                str_vs(att%name), str_vs(att%default), specified=.false.)
+            endif
           endif
         end select
       enddo
 
-      if (any(attributesLeft).and.validCheck) &
+      if (any(attributesLeft)) &
         call add_error(fx%error_stack, &
         "Undeclared attributes forbidden")
 

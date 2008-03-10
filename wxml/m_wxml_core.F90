@@ -762,7 +762,7 @@ contains
         call wxml_error("Invalid Element Name in DTD "//name)
     endif
 
-    call parse_dtd_element(declaration, xf%xds%xml_version, stack, null())
+    call parse_dtd_element(declaration, xf%xds%xml_version, stack, null(), .true.)
     if (in_error(stack)) call wxml_error(xf, "Invalid ELEMENT declaration")
     
     if (xf%state_3 == WXML_STATE_3_DURING_DTD) then
@@ -804,7 +804,9 @@ contains
     endif
 
     call parse_dtd_attlist(declaration, xf%xds%xml_version, &
-      validCheck=.false., namespaces=xf%namespace, stack=stack, elem=null())
+      validCheck=.false., namespaces=xf%namespace, stack=stack, &
+      elem=null(), internal=.true.)
+
     if (in_error(stack)) call wxml_error(xf, "Invalid ATTLIST declaration")
 
     if (xf%state_3 == WXML_STATE_3_DURING_DTD) then
