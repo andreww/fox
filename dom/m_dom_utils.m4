@@ -122,7 +122,7 @@ contains
     if (getNodeType(startNode)==DOCUMENT_NODE) then
       doc => startNode
       if (getParameter(getDomConfig(doc), "canonical-form") &
-        .And.getXmlVersion(doc)=="1.1") then
+        .and.getXmlVersion(doc)=="1.1") then
         TOHW_m_dom_throw_error(SERIALIZE_ERR)
       endif
       call normalizeDocument(startNode, ex)

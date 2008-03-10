@@ -126,7 +126,7 @@ endif
     if (getNodeType(startNode)==DOCUMENT_NODE) then
       doc => startNode
       if (getParameter(getDomConfig(doc), "canonical-form") &
-        .And.getXmlVersion(doc)=="1.1") then
+        .and.getXmlVersion(doc)=="1.1") then
         if (getFoX_checks().or.SERIALIZE_ERR<200) then
   call throw_exception(SERIALIZE_ERR, "serialize", ex)
   if (present(ex)) then
