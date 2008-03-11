@@ -3,7 +3,7 @@ module m_common_element
 #ifndef DUMMYLIB
   ! Structure and manipulation of element specification
 
-  use m_common_array_str, only: str_vs, vs_str_alloc, &
+  use m_common_array_str, only: str_vs, vs_str_alloc, vs_vs_alloc, &
     string_list, init_string_list, destroy_string_list, add_string
   use m_common_charset, only: isInitialNameChar, isNameChar, &
     upperCase, XML_WHITESPACE
@@ -732,7 +732,7 @@ contains
     integer :: i
     integer :: state
     character :: c, q
-    character, pointer :: name(:), type(:), default(:), value(:), temp(:)
+    character, pointer :: name(:), attType(:), default(:), value(:), temp(:)
 
     type(attribute_t), pointer :: ca
     type(attribute_t), target :: ignore_att
@@ -742,7 +742,7 @@ contains
     ! elem is optional so we can not record declarations if necessary.
 
     name => null()
-    type => null()
+    attType => null()
     default => null()
     value => null()
     temp => null()
@@ -806,7 +806,7 @@ contains
         !print*,'ST_AFTERNAME'
         if (verify(c, XML_WHITESPACE)==0) cycle
         if (verify(c, upperCase)==0) then
-          type => vs_str_alloc(c)
+          attType => vs_str_alloc(c)
           state = ST_ATTTYPE
         elseif (c=='(') then
           allocate(value(0))
@@ -821,37 +821,35 @@ contains
       elseif (state==ST_ATTTYPE) then
         !print*,'ST_ATTTYPE'
         if (verify(c, upperCase)==0) then
-          temp => type
-          allocate(type(size(temp)+1))
-          type(:size(temp)) = temp
-          type(size(type)) = c
+          temp => attType
+          attType => vs_vs_alloc((/temp, c/))
           deallocate(temp)
         elseif (verify(c, XML_WHITESPACE)==0) then
-          if (str_vs(type)=='CDATA') then
+          if (str_vs(attType)=='CDATA') then
             ca%attType = ATT_CDATA
             state = ST_AFTER_ATTTYPE
-          elseif (str_vs(type)=='ID') then
+          elseif (str_vs(attType)=='ID') then
             ca%attType = ATT_ID
             state = ST_AFTER_ATTTYPE
-          elseif (str_vs(type)=='IDREF') then
+          elseif (str_vs(attType)=='IDREF') then
             ca%attType = ATT_IDREF
             state = ST_AFTER_ATTTYPE
-          elseif (str_vs(type)=='IDREFS') then
+          elseif (str_vs(attType)=='IDREFS') then
             ca%attType = ATT_IDREFS
             state = ST_AFTER_ATTTYPE
-          elseif (str_vs(type)=='ENTITY') then
+          elseif (str_vs(attType)=='ENTITY') then
             ca%attType = ATT_ENTITY
             state = ST_AFTER_ATTTYPE
-          elseif (str_vs(type)=='ENTITIES') then
+          elseif (str_vs(attType)=='ENTITIES') then
             ca%attType = ATT_ENTITIES
             state = ST_AFTER_ATTTYPE
-          elseif (str_vs(type)=='NMTOKEN') then
+          elseif (str_vs(attType)=='NMTOKEN') then
             ca%attType = ATT_NMTOKEN
             state = ST_AFTER_ATTTYPE
-          elseif (str_vs(type)=='NMTOKENS') then
+          elseif (str_vs(attType)=='NMTOKENS') then
             ca%attType = ATT_NMTOKENS
             state = ST_AFTER_ATTTYPE
-          elseif (str_vs(type)=='NOTATION') then
+          elseif (str_vs(attType)=='NOTATION') then
             ca%attType = ATT_NOTATION
             state = ST_AFTER_NOTATION
           else
@@ -859,7 +857,7 @@ contains
               'Unknown AttType')
             goto 200
           endif
-          deallocate(type)
+          deallocate(attType)
         else
           call add_error(stack, &
             'Unexpected character in AttType')
@@ -1084,7 +1082,7 @@ contains
     return
 
 200 if (associated(name)) deallocate(name)
-    if (associated(type)) deallocate(type)
+    if (associated(attType)) deallocate(attType)
     if (associated(default)) deallocate(default)
     if (associated(value)) deallocate(value)
     if (associated(ignore_att%name)) deallocate(name)
@@ -1107,7 +1105,7 @@ contains
     end interface
 
     integer :: i
-    character(len=11)  :: type
+    character(len=11) :: type
     character(len=8) :: mode
     type(attribute_t), pointer :: a
 
