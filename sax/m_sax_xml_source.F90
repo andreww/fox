@@ -78,7 +78,7 @@ contains
         ! the file has just ended on a single CR. Report is as a LF.
         ! Ignore the eof just now, it'll be picked up if we need to 
         ! perform another read.
-        eof = .true.
+        eof = .false.
       elseif (iostat/=0) then
         call add_error(es, "Error reading "//str_vs(f%filename))
         return
