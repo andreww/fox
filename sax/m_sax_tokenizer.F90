@@ -627,6 +627,12 @@ contains
             else
               fx%tokenType = TOK_CLOSE_SB
               call push_chars(fb, c)
+              if (fx%inIntSubset) then
+                tempString => fx%xds%intSubset
+                allocate(fx%xds%intSubset(size(tempString)-2))
+                fx%xds%intSubset = tempString(:size(tempString)-2)
+                deallocate(tempString)
+              endif
             endif
           endif
         elseif (phrase==2) then
