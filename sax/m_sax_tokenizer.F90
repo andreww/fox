@@ -193,9 +193,6 @@ contains
         case (2)
           if (c==">") then
             fx%tokenType = TOK_CHAR
-            tempString => fx%token
-            fx%token => vs_str_alloc(str_vs(tempString)//c)
-            deallocate(tempString)
             fx%nextTokenType = TOK_COMMENT_END
             exit
           else
