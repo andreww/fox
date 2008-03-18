@@ -137,14 +137,16 @@ TOHW_m_dom_get(Node, documentElement, np%docExtras%documentElement, (DOCUMENT_NO
 
   ! Methods
 
-  TOHW_function(createElement, (arg, tagName), np)
+  TOHW_function(createElement, (arg, tagName, defaults), np)
     type(Node), pointer :: arg
     character(len=*), intent(in) :: tagName
+    logical, intent(in), optional :: defaults
     type(Node), pointer :: np
 
     type(xml_doc_state), pointer :: xds
     type(element_t), pointer :: elem
     type(attribute_t), pointer :: att
+    logical :: defaults_
     integer :: i
 
     if (.not.associated(arg)) then
@@ -157,6 +159,14 @@ TOHW_m_dom_get(Node, documentElement, np%docExtras%documentElement, (DOCUMENT_NO
       TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
     endif
     
+    if (.not.getGCstate(arg)) then
+      defaults_ = .false.
+    elseif (present(defaults)) then
+      defaults_ = defaults
+    else
+      defaults_ = .true.
+    endif
+    
     np => createNode(arg, ELEMENT_NODE, tagName, "")
     allocate(np%elExtras)
     np%elExtras%dom1 = .true.
@@ -166,7 +176,7 @@ TOHW_m_dom_get(Node, documentElement, np%docExtras%documentElement, (DOCUMENT_NO
     allocate(np%elExtras%localname(0))
     allocate(np%elExtras%namespaceNodes%nodes(0))
 
-    if (getGCstate(arg)) then
+    if (defaults_) then
       np%inDocument = .false.
       call append(arg%docExtras%hangingnodes, np)
       ! We only add default attributes if we are *not* building the doc
@@ -183,7 +193,7 @@ TOHW_m_dom_get(Node, documentElement, np%docExtras%documentElement, (DOCUMENT_NO
         enddo
       endif
     else
-      np%inDocument = .true.
+      np%inDocument = .not.getGCstate(arg)
     endif
 
   end function createElement
@@ -646,16 +656,17 @@ TOHW_m_dom_treewalk(`dnl
 
   end function importNode
 
-  TOHW_function(createElementNS, (arg, namespaceURI, qualifiedName), np)
+  TOHW_function(createElementNS, (arg, namespaceURI, qualifiedName, defaults), np)
     type(Node), pointer :: arg
     character(len=*), intent(in) :: namespaceURI, qualifiedName
+    logical, intent(in), optional :: defaults
     type(Node), pointer :: np
 
     type(xml_doc_state), pointer :: xds
     type(element_t), pointer :: elem
     type(attribute_t), pointer :: att
     integer :: i
-    logical :: brokenNS
+    logical :: brokenNS, defaults_
     type(URI), pointer :: URIref
 
     if (.not.associated(arg)) then
@@ -678,6 +689,14 @@ TOHW_m_dom_treewalk(`dnl
       TOHW_m_dom_throw_error(NAMESPACE_ERR)
     endif
 
+    if (.not.getGCstate(arg)) then
+      defaults_ = .false.
+    elseif (present(defaults)) then
+      defaults_ = defaults
+    else
+      defaults_ = .true.
+    endif
+
     URIref => parseURI(namespaceURI)
     if (.not.associated(URIref)) then
       TOHW_m_dom_throw_error(FoX_INVALID_URI)
@@ -693,7 +712,7 @@ TOHW_m_dom_treewalk(`dnl
 
     np%elExtras%attributes%ownerElement => np
 
-    if (getGCstate(arg)) then
+    if (defaults_) then
       np%inDocument = .false.
       call append(arg%docExtras%hangingnodes, np)
       ! We only add default attributes if we are *not* building the doc
@@ -727,7 +746,7 @@ TOHW_m_dom_treewalk(`dnl
         enddo
       endif
     else
-      np%inDocument = .true.
+      np%inDocument = .not.getGCstate(arg)
     endif
 
   end function createElementNS

@@ -669,12 +669,12 @@ TOHW_m_dom_treewalk(`
       select case(getNodeType(this))
       case (ELEMENT_NODE)
         if (this%elExtras%dom1) then
-          new => createElement(doc, getTagName(this))
+          new => createElement(doc, getTagName(this), defaults=.false.)
         else
-          new => createElementNS(doc, getNamespaceURI(this), getTagName(this))
+          new => createElementNS(doc, getNamespaceURI(this), getTagName(this), defaults=.false.)
         endif
       case (ATTRIBUTE_NODE)
-        if (this%elExtras%dom1) then 
+        if (this%elExtras%dom1) then
           new => createAttribute(doc, getName(this))
         else
           new => createAttributeNS(doc, getNamespaceURI(this), getName(this))

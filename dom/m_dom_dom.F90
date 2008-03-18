@@ -3033,12 +3033,12 @@ endif
       select case(getNodeType(this))
       case (ELEMENT_NODE)
         if (this%elExtras%dom1) then
-          new => createElement(doc, getTagName(this))
+          new => createElement(doc, getTagName(this), defaults=.false.)
         else
-          new => createElementNS(doc, getNamespaceURI(this), getTagName(this))
+          new => createElementNS(doc, getNamespaceURI(this), getTagName(this), defaults=.false.)
         endif
       case (ATTRIBUTE_NODE)
-        if (this%elExtras%dom1) then 
+        if (this%elExtras%dom1) then
           new => createAttribute(doc, getName(this))
         else
           new => createAttributeNS(doc, getNamespaceURI(this), getName(this))
@@ -5184,6 +5184,7 @@ endif
     do i = 0, getLength(map)-1
       np => item(map, i)
       if (getNodeName(np)==getNodeName(arg)) then
+        print*,"inserting ",getNodeName(np), " at ", i
         map%nodes(i+1)%this => arg
         exit
       endif
@@ -6296,15 +6297,17 @@ endif
 
   ! Methods
 
-  function createElement(arg, tagName, ex)result(np) 
+  function createElement(arg, tagName, defaults, ex)result(np) 
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*), intent(in) :: tagName
+    logical, intent(in), optional :: defaults
     type(Node), pointer :: np
 
     type(xml_doc_state), pointer :: xds
     type(element_t), pointer :: elem
     type(attribute_t), pointer :: att
+    logical :: defaults_
     integer :: i
 
     if (.not.associated(arg)) then
@@ -6341,6 +6344,14 @@ endif
 
     endif
     
+    if (.not.getGCstate(arg)) then
+      defaults_ = .false.
+    elseif (present(defaults)) then
+      defaults_ = defaults
+    else
+      defaults_ = .true.
+    endif
+    
     np => createNode(arg, ELEMENT_NODE, tagName, "")
     allocate(np%elExtras)
     np%elExtras%dom1 = .true.
@@ -6350,7 +6361,7 @@ endif
     allocate(np%elExtras%localname(0))
     allocate(np%elExtras%namespaceNodes%nodes(0))
 
-    if (getGCstate(arg)) then
+    if (defaults_) then
       np%inDocument = .false.
       call append(arg%docExtras%hangingnodes, np)
       ! We only add default attributes if we are *not* building the doc
@@ -6367,7 +6378,7 @@ endif
         enddo
       endif
     else
-      np%inDocument = .true.
+      np%inDocument = .not.getGCstate(arg)
     endif
 
   end function createElement
@@ -7289,17 +7300,18 @@ endif
 
   end function importNode
 
-  function createElementNS(arg, namespaceURI, qualifiedName, ex)result(np) 
+  function createElementNS(arg, namespaceURI, qualifiedName, defaults, ex)result(np) 
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
     character(len=*), intent(in) :: namespaceURI, qualifiedName
+    logical, intent(in), optional :: defaults
     type(Node), pointer :: np
 
     type(xml_doc_state), pointer :: xds
     type(element_t), pointer :: elem
     type(attribute_t), pointer :: att
     integer :: i
-    logical :: brokenNS
+    logical :: brokenNS, defaults_
     type(URI), pointer :: URIref
 
     if (.not.associated(arg)) then
@@ -7378,6 +7390,14 @@ endif
 
     endif
 
+    if (.not.getGCstate(arg)) then
+      defaults_ = .false.
+    elseif (present(defaults)) then
+      defaults_ = defaults
+    else
+      defaults_ = .true.
+    endif
+
     URIref => parseURI(namespaceURI)
     if (.not.associated(URIref)) then
       if (getFoX_checks().or.FoX_INVALID_URI<200) then
@@ -7401,7 +7421,7 @@ endif
 
     np%elExtras%attributes%ownerElement => np
 
-    if (getGCstate(arg)) then
+    if (defaults_) then
       np%inDocument = .false.
       call append(arg%docExtras%hangingnodes, np)
       ! We only add default attributes if we are *not* building the doc
@@ -7435,7 +7455,7 @@ endif
         enddo
       endif
     else
-      np%inDocument = .true.
+      np%inDocument = .not.getGCstate(arg)
     endif
 
   end function createElementNS
