@@ -6378,7 +6378,12 @@ endif
         enddo
       endif
     else
-      np%inDocument = .not.getGCstate(arg)
+      if (getGCstate(arg)) then
+        np%inDocument = .false.
+        call append(arg%docExtras%hangingnodes, np)
+      else
+        np%inDocument = .true.
+      endif
     endif
 
   end function createElement
@@ -7455,7 +7460,12 @@ endif
         enddo
       endif
     else
-      np%inDocument = .not.getGCstate(arg)
+      if (getGCstate(arg)) then
+        np%inDocument = .false.
+        call append(arg%docExtras%hangingnodes, np)
+      else
+        np%inDocument = .true.
+      endif
     endif
 
   end function createElementNS

@@ -193,7 +193,12 @@ TOHW_m_dom_get(Node, documentElement, np%docExtras%documentElement, (DOCUMENT_NO
         enddo
       endif
     else
-      np%inDocument = .not.getGCstate(arg)
+      if (getGCstate(arg)) then
+        np%inDocument = .false.
+        call append(arg%docExtras%hangingnodes, np)
+      else
+        np%inDocument = .true.
+      endif
     endif
 
   end function createElement
@@ -746,7 +751,12 @@ TOHW_m_dom_treewalk(`dnl
         enddo
       endif
     else
-      np%inDocument = .not.getGCstate(arg)
+      if (getGCstate(arg)) then
+        np%inDocument = .false.
+        call append(arg%docExtras%hangingnodes, np)
+      else
+        np%inDocument = .true.
+      endif
     endif
 
   end function createElementNS
