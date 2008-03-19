@@ -1,4 +1,4 @@
-AC_INIT([FoX],[3.2.0],[tow@uszla.me.uk])
+AC_INIT([FoX],[3.1.2],[tow@uszla.me.uk])
 AC_CONFIG_SRCDIR([README.FoX.txt])
 dnl
 dnl Find system type.
@@ -144,6 +144,9 @@ dnl
 dnl Check whether we need to pass a flag to get at the flush intrinsic.
 TW_FC_CHECK_FLUSH([],[AC_MSG_RESULT([cannot compile call to FLUSH])])
 TW_FC_CHECK_ABORT([],[AC_MSG_RESULT([cannot compile call to ABORT])])
+dnl
+dnl Check for compiler problems
+TW_CHECK_ASSOCIATED_BUG([], [DEFS="$DEFS RESTRICTED_ASSOCIATED_BUG"])
 dnl
 dnl Fix up DEFS -> FPPFLAGS conversion.
 for i in $DEFS; do

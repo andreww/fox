@@ -40,76 +40,42 @@ dnl the non-data portions to the data portions.)  If your modification has
 dnl such potential, you must delete any notice of this special exception
 dnl to the GPL from your modified version.
 dnl
-dnl Copyright Toby White <tow21@cam.ac.uk>  2004-2006     
+dnl Copyright Toby White <tow21@cam.ac.uk>  2004-2006
 
-dnl A macro to set various compiler-dependent things that can't be sensibly
-dnl deduced.
-
-AC_DEFUN([TW_FC_ID_FLAGS], [
-AC_REQUIRE([TW_FC_ID])
-
-case $FC_ID in
-
-  Absoft)
-     FFLAGS_DEBUG="-et -g -Rb -Rc -Rp -Rs"
-     ;;
-
-  Digital)
-     FFLAGS_FAST=-O2
-     FFLAGS_DEBUG="-g -Rabc -ei"
-     ;;
-
-  G77)
-     ;;
-
-  G95)
-    FFLAGS_FAST=-O2
-    FFLAGS_DEBUG="-ggdb3 -ftrace=full -fbounds-check -flogical=false -freal=nan -fpointer=invalid -finteger=-1"
-    ;;
-
-  Gfortran)
-     ;;
- 
-  Intel)
-     FFLAGS_DEBUG="-C -g -inline_debug_info"
-     ;;
-
-  Lahey)
-     FFLAGS_DEBUG="--chk aesux --chkglobal -g --trace"
-     FFLAGS_FAST="-O --warn --quiet --tpp --ntrace"
-     ;;
-
-  Nag)
-     FFLAGS_DEBUG="-C=all -g -gline -nan"
-     DEFS="$DEFS __NAG__"
-     ;;
-  
-  Pathscale)
-     ;;
-
-  Portland)
-     FFLAGS_DEBUG="-g -Mbounds"
-     FFLAGS_FAST="-fast"
-     DEFS="$DEFS PGF90"
-     ;;
-
-  SGI)
-     FFLAGS_DEBUG="-g -O0"
-     FFLAGS_FAST="-O3 -OPT:Olimit=0"
-     ;;
-
-  Sun)
-     FFLAGS_DEBUG="-C -g"
-     FFLAGS_FAST="-fast"
-     ;;
-
-  Xlf)
-     FFLAGS_DEBUG="-g -C -qinitauto -qsave -qmaxmem=16000 -qnolm"
-     FFLAGS_FAST="-O3 -qarch=auto -qtune=auto -qcache=auto -qnolm"
-     ;;
-
-esac
-
-AC_SUBST(FFLAGS_MPI)
-
+dnl @synopsis TW_CHECK_ASSOCIATED_BUG([ACTION_IF_TRUE],[ACTION_IF_FALSE])
+dnl
+dnl Checks whether the currently selected Fortran compiler has a bug
+dnl forbidding the use of ASSOCIATED in restricted expressions
+dnl (versions of gfortran, pathscale & xlf have been found which do)
+dnl 
+dnl 
+dnl @version 1.0
+dnl @author <tow@uszla.me.uk>
+dnl
+AC_DEFUN([TW_CHECK_ASSOCIATED_BUG],[
+dnl
+AC_MSG_CHECKING([for ASSOCIATED in restricted expression bug])
+dnl
+AC_LANG_PUSH(Fortran)
+dnl
+AC_COMPILE_IFELSE(
+dnl The program is written in fixed-form source to avoid worrying
+dnl about filename extensions.
+  AC_LANG_SOURCE([[
+      function test_bug(a) result(b)
+      integer, pointer :: a
+      integer, dimension(merge(1, 2, associated(a))) :: b
+      b = 0
+      end function test_bug
+   ]]),
+   [AC_MSG_RESULT([no])
+    m4_default([$1],[:])
+   ],
+   [AC_MSG_RESULT([yes])
+    m4_default([$2],[:] 
+               [AC_MSG_ERROR([This Fortran compiler does not understand ASSOCIATED in restricted expressions.])])
+   ]
+)
+AC_LANG_POP(Fortran)
+dnl
 ])
