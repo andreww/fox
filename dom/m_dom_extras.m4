@@ -9,9 +9,7 @@ include(`m_dom_exception.m4')dnl
 define(`TOHW_extractDataContent', `dnl
 dnl
 TOHW_subroutine(extractDataContent$1$2, (arg, data, dnl
-ifelse(`$1', `Ch', `dnl
-ifelse(`$2', `Sca', `', `separator, csv, ')dnl
-')dnl
+ifelse(`$1',`Ch', `separator, csv, ')`'dnl
 num, iostat))
     type(Node), pointer :: arg
     TOHWM4_declarationtype(`$1')`'dnl
@@ -20,11 +18,8 @@ ifelse(dnl
 `$2', `Mat', `, dimension(:,:)')dnl
 , intent(out) :: data
 ifelse(`$1', `Ch', `
-ifelse(`$2', `Sca', `', `dnl
     logical, intent(in), optional :: csv
-    character, intent(in), optional :: separator
-')dnl
-')dnl
+    character, intent(in), optional :: separator')
     integer, intent(out), optional :: num, iostat
 dnl
 
@@ -32,43 +27,31 @@ dnl
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif
 ifelse(`$1', `Ch', `dnl
-ifelse(`$2', `Sca', `dnl
-    if (present(ex)) then
-      call rts(getTextContent(arg, ex), data, num, iostat)
-    else
-      call rts(getTextContent(arg), data, num, iostat)
-    endif
-', `dnl
     if (present(ex)) then
       call rts(getTextContent(arg, ex), data, separator, csv, num, iostat)
     else
       call rts(getTextContent(arg), data, separator, csv, num, iostat)
     endif
-')', `
+', `
     if (present(ex)) then
       call rts(getTextContent(arg, ex), data, num, iostat)
     else
       call rts(getTextContent(arg), data, num, iostat)
     endif
-')dnl
+')
   end subroutine extractDataContent$1$2
 ')`'dnl
 dnl
 define(`TOHW_extractDataAttribute', `dnl
 dnl
 TOHW_subroutine(extractDataAttribute$1$2, (arg, name, data, dnl
-ifelse(`$1', `Ch', `dnl
-ifelse(`$2', `Sca', `', `separator, csv, ')dnl
-')dnl
+ifelse(`$1',`Ch', `separator, csv, ')`'dnl
 num, iostat))
     type(Node), pointer :: arg
     character(len=*), intent(in) :: name
-ifelse(`$1', `Ch', `
-ifelse(`$2', `Sca', `', `dnl
+ifelse(`$1',`Ch', `
     logical, intent(in), optional :: csv
-    character, intent(in), optional :: separator
-')dnl
-')dnl
+    character, intent(in), optional :: separator')
     TOHWM4_declarationtype(`$1')`'dnl
 ifelse(dnl
 `$2', `Arr', `, dimension(:)',dnl
@@ -83,33 +66,25 @@ dnl
     endif
 
 ifelse(`$1', `Ch', `dnl
-ifelse(`$2', `Sca', `dnl
-    if (present(ex)) then
-      call rts(getAttribute(arg, name, ex), data, num, iostat)
-    else
-      call rts(getAttribute(arg, name), data, num, iostat)
-    endif
-', `dnl
     if (present(ex)) then
       call rts(getAttribute(arg, name, ex), data, separator, csv, num, iostat)
     else
       call rts(getAttribute(arg, name), data, separator, csv, num, iostat)
     endif
-')', `
+', `
     if (present(ex)) then
       call rts(getAttribute(arg, name, ex), data, num, iostat)
     else
       call rts(getAttribute(arg, name), data, num, iostat)
     endif
-')dnl
+')
+
   end subroutine extractDataAttribute$1$2
 ')`'dnl
 define(`TOHW_extractDataAttributeNS', `dnl
 dnl
 TOHW_subroutine(extractDataAttNS$1$2, (arg, namespaceURI, localName, data, dnl
-ifelse(`$1', `Ch', `dnl
-ifelse(`$2', `Sca', `', `separator, csv, ')dnl
-')dnl
+ifelse(`$1',`Ch', `separator, csv, ')`'dnl
 num, iostat))
     type(Node), pointer :: arg
     character(len=*), intent(in) :: namespaceURI, localName
@@ -118,12 +93,9 @@ ifelse(dnl
 `$2', `Arr', `, dimension(:)',dnl
 `$2', `Mat', `, dimension(:,:)')dnl
 , intent(out) :: data
-ifelse(`$1', `Ch', `
-ifelse(`$2', `Sca', `', `dnl
+ifelse(`$1',`Ch', `
     logical, intent(in), optional :: csv
-    character, intent(in), optional :: separator
-')dnl
-')dnl
+    character, intent(in), optional :: separator')
     integer, intent(out), optional :: num, iostat
 dnl
     if (.not.associated(arg)) then
@@ -133,36 +105,35 @@ dnl
     endif
 
 ifelse(`$1', `Ch', `dnl
-ifelse(`$2', `Sca', `dnl
     if (present(ex)) then
-      call rts(getAttributeNS(arg, namespaceURI, localName, ex), data, num, iostat)
+      call rts(getAttributeNS(arg, namespaceURI, localName, ex), &
+        data, separator, csv, num, iostat)
     else
-      call rts(getAttributeNS(arg, namespaceURI, localName), data, num, iostat)
+      call rts(getAttributeNS(arg, namespaceURI, localName), &
+        data, separator, csv, num, iostat)
     endif
-', `dnl
+', `
     if (present(ex)) then
-      call rts(getAttributeNS(arg, namespaceURI, localName, ex), data, separator, csv, num, iostat)
+      call rts(getAttributeNS(arg, namespaceURI, localName, ex), &
+        data, num, iostat)
     else
-      call rts(getAttributeNS(arg, namespaceURI, localName), data, separator, csv, num, iostat)
+      call rts(getAttributeNS(arg, namespaceURI, localName), &
+        data, num, iostat)
     endif
-')', `
-    if (present(ex)) then
-      call rts(getAttributeNS(arg, namespaceURI, localName, ex), data, num, iostat)
-    else
-      call rts(getAttributeNS(arg, namespaceURI, localName), data, num, iostat)
-    endif
-')dnl
+')
+
   end subroutine extractDataAttNS$1$2
 ')`'dnl
 dnl
 module m_dom_extras
 
+  use m_common_realtypes, only: sp, dp
+  use m_common_parse_input, only: rts
+
   use m_dom_error, only: DOMException, inException, throw_exception,           &
     FoX_NODE_IS_NULL, FoX_INVALID_NODE
   use m_dom_dom, only: Node, ELEMENT_NODE,                                     &
     getAttribute, getAttributeNS, getTextContent, getNodeType, getFoX_checks
-  use m_common_realtypes, only: sp, dp
-  use m_common_parse_input, only: rts
 
   implicit none
   private
