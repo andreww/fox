@@ -9,7 +9,7 @@ The license can also be found within the distributed source, in the file FoX/LIC
 
 Copyright:  
 &copy; 2003, 2004, Alberto Garcia, Jon Wakelin   
-&copy; 2005-2007, Toby White  
+&copy; 2005-2008, Toby White  
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without 
