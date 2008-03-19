@@ -12,17 +12,9 @@ define(`TOHW_defaultargs', `dnl
     integer, intent(out), optional :: iostat
 ')dnl
 dnl
-define(`TOHW_stringdecls', `dnl
-    integer :: i, ij, k, s_i, err, length
-')dnl
-dnl
 define(`TOHW_defaultdecls', `dnl
-    integer :: i, ij, k, s_i, err, ios, length
-')dnl
-dnl
-define(`TOHW_complexdecls', `dnl
     logical :: bracketed
-    integer :: i, ij, k, s_i, err, ios, length
+    integer :: i, j, ij, k, s_i, err, ios, length
     real :: r, c
 ')dnl
 dnl
@@ -31,7 +23,7 @@ define(`TOHW_check_errors', `dnl
     if (ij<length) then
       if (err==0) err = -1
     else
-      if (verify(s(s_i:), XML_WHITESPACE)/=0) err = 1
+      if (verify(s(s_i:), whitespace)/=0) err = 1
     endif
 ')dnl
 dnl
@@ -95,7 +87,7 @@ define(`TOHW_parse_strings_csv', `dnl
           s2(m:m) = """"
         enddo quote
         $1 = s2
-        k  = scan(s(s_i:), XML_WHITESPACE)
+        k  = scan(s(s_i:), whitespace)
         if (k==0) then
           err = 2
           exit loop
@@ -120,15 +112,14 @@ define(`TOHW_parse_strings_csv', `dnl
       s_i = k + 2
       if (eof) exit loop
 ')dnl
-dnl
 define(`TOHW_parse_strings', `dnl
       if (present(separator)) then
         k = index(s(s_i:), separator)
       else
-        k = verify(s(s_i:), XML_WHITESPACE)
+        k = verify(s(s_i:), whitespace)
         if (k==0) exit loop
         s_i = s_i + k - 1
-        k = scan(s(s_i:), XML_WHITESPACE)
+        k = scan(s(s_i:), whitespace)
       endif
       if (k==0) then
         k = len(s)
@@ -142,7 +133,7 @@ define(`TOHW_parse_strings', `dnl
 ')dnl
 dnl
 define(`TOHW_parse_logical', `dnl
-      k = verify(s(s_i:), XML_WHITESPACE)
+      k = verify(s(s_i:), whitespace)
       if (k==0) exit loop
       s_i = s_i + k - 1
       if (s(s_i:s_i)==",") then
@@ -150,10 +141,10 @@ define(`TOHW_parse_logical', `dnl
           err = 2
           exit loop
         endif
-        k = verify(s(s_i+1:), XML_WHITESPACE)
+        k = verify(s(s_i+1:), whitespace)
         s_i = s_i + k - 1
       endif
-      k = scan(s(s_i:), XML_WHITESPACE//",")
+      k = scan(s(s_i:), whitespace//",")
       if (k==0) then
         k = len(s)
       else
@@ -173,7 +164,7 @@ define(`TOHW_parse_logical', `dnl
 ')dnl
 dnl
 define(`TOHW_parse_numbers', `dnl
-      k = verify(s(s_i:), XML_WHITESPACE)
+      k = verify(s(s_i:), whitespace)
       if (k==0) exit loop
       s_i = s_i + k - 1
       if (s(s_i:s_i)==",") then
@@ -181,10 +172,10 @@ define(`TOHW_parse_numbers', `dnl
           err = 2
           exit loop
         endif
-        k = verify(s(s_i+1:), XML_WHITESPACE)
+        k = verify(s(s_i+1:), whitespace)
         s_i = s_i + k - 1
       endif
-      k = scan(s(s_i:), XML_WHITESPACE//",")
+      k = scan(s(s_i:), whitespace//",")
       if (k==0) then
         k = len(s)
       else
@@ -202,20 +193,20 @@ define(`TOHW_parse_numbers', `dnl
 dnl
 define(`TOHW_parse_complex', `dnl
       bracketed = .false.
-      k = verify(s(s_i:), XML_WHITESPACE)
+      k = verify(s(s_i:), whitespace)
       if (k==0) exit loop
       s_i = s_i + k - 1
       select case (s(s_i:s_i))
       case ("(")
         bracketed = .true.
-        k = verify(s(s_i:), XML_WHITESPACE)
+        k = verify(s(s_i:), whitespace)
         if (k==0) then
           err = 2
           exit loop
         endif
         s_i = s_i + k
       case (",")
-        k = verify(s(s_i:), XML_WHITESPACE)
+        k = verify(s(s_i:), whitespace)
         if (k==0) then
           err = 2
           exit loop
@@ -230,7 +221,7 @@ define(`TOHW_parse_complex', `dnl
       if (bracketed) then
         k = index(s(s_i:), ")+i(")
       else
-        k = scan(s(s_i:), XML_WHITESPACE//",")
+        k = scan(s(s_i:), whitespace//",")
       endif
       if (k==0) then
         err = 2
@@ -259,7 +250,7 @@ define(`TOHW_parse_complex', `dnl
         endif
         k = s_i + k - 2
       else
-        k = scan(s(s_i:), XML_WHITESPACE//",")
+        k = scan(s(s_i:), whitespace//",")
         if (k==0) then
           k = len(s)
         else
@@ -279,11 +270,17 @@ define(`TOHW_parse_complex', `dnl
 dnl
 module m_common_parse_input
 
-  use m_common_charset, only : XML_WHITESPACE
   use m_common_realtypes, only: sp, dp
 
   implicit none
   private
+
+  character(len=1), parameter :: SPACE           = achar(32)
+  character(len=1), parameter :: NEWLINE         = achar(10)
+  character(len=1), parameter :: CARRIAGE_RETURN = achar(13)
+  character(len=1), parameter :: TAB             = achar(9)
+  character(len=*), parameter :: whitespace = &
+    SPACE//NEWLINE//CARRIAGE_RETURN//TAB
 
   interface rts
     module procedure scalartostring
@@ -314,35 +311,43 @@ module m_common_parse_input
 contains
 
 define(`m4f_thisfunc', `scalartostring')dnl
-  subroutine m4f_thisfunc`'(s, data, num, iostat)
+  subroutine m4f_thisfunc`'(s, data, separator, csv, num, iostat)
     character(len=*), intent(in) :: s
     character(len=*), intent(out) :: data
+    character, intent(in), optional :: separator
+    logical, intent(in), optional :: csv
     integer, intent(out), optional :: num, iostat
+#ifndef DUMMYLIB
+TOHW_defaultdecls
+    character(len=len(s)) :: s2
+    logical :: csv_, eof
+    integer :: m
 
-    logical :: ws
-    integer :: i, m
+    csv_ = .false.
+    if (present(csv)) then
+      csv_ = csv
+    endif
 
-    m = 1
-    ws = .true.
-    do i = 1, len(s)
-      if (m>len(data)) exit
-      if (ws.and.verify(s(i:i), XML_WHITESPACE)==0) cycle
-      if (verify(s(i:i), XML_WHITESPACE)==0) then
-        data(m:m) = " "
-        m = m + 1
-        ws = .true.
+    s_i = 1
+    err = 0
+    eof = .false.
+    data = ""
+    ij = 0
+    length = 1
+    loop: do i = 1, 1
+      if (csv_) then
+TOHW_parse_strings_csv(`data')
       else
-        data(m:m) = s(i:i)
-        m = m + 1
-        if (ws) ws = .false.
+TOHW_parse_strings(`data')
       endif
-    enddo
+    end do loop
 
-    if (m<=len(data)) data(m:) = ""
+TOHW_check_errors
 
-    if (present(num)) num = 1
-    if (present(iostat)) iostat = 0
-
+TOHW_output_errors
+#else
+    data = ""
+#endif
   end subroutine m4f_thisfunc
 
 define(`m4f_thisfunc', `scalartological')dnl
@@ -350,7 +355,8 @@ define(`m4f_thisfunc', `scalartological')dnl
     character(len=*), intent(in) :: s
     logical, intent(out) :: data
     integer, intent(out), optional :: num, iostat
-TOHW_stringdecls
+#ifndef DUMMYLIB 
+TOHW_defaultdecls
 
     s_i = 1
     err = 0
@@ -364,6 +370,9 @@ TOHW_parse_logical(`data')
 TOHW_check_errors
 
 TOHW_output_errors
+#else
+    data = .false.
+#endif
   end subroutine m4f_thisfunc
 
 define(`m4f_thisfunc', `scalartointeger')dnl
@@ -371,7 +380,7 @@ define(`m4f_thisfunc', `scalartointeger')dnl
     character(len=*), intent(in) :: s
     integer, intent(out) :: data
     integer, intent(out), optional :: num, iostat
-
+#ifndef DUMMYLIB
 TOHW_defaultdecls
 
     s_i = 1
@@ -386,6 +395,9 @@ TOHW_parse_numbers(`data')
 TOHW_check_errors
 
 TOHW_output_errors
+#else
+    data = 0
+#endif
   end subroutine m4f_thisfunc
 
 define(`m4f_thisfunc', `scalartorealsp')dnl
@@ -393,7 +405,7 @@ define(`m4f_thisfunc', `scalartorealsp')dnl
     character(len=*), intent(in) :: s
     real(sp), intent(out) :: data
     integer, intent(out), optional :: num, iostat
-
+#ifndef DUMMYLIB
 TOHW_defaultdecls
 
     s_i = 1
@@ -408,6 +420,9 @@ TOHW_parse_numbers(`data')
 TOHW_check_errors
 
 TOHW_output_errors
+#else
+    data = 0.0_sp
+#endif
   end subroutine m4f_thisfunc
 
 define(`m4f_thisfunc', `scalartorealdp')dnl
@@ -415,7 +430,7 @@ define(`m4f_thisfunc', `scalartorealdp')dnl
     character(len=*), intent(in) :: s
     real(dp), intent(out) :: data
     integer, intent(out), optional :: num, iostat
-
+#ifndef DUMMYLIB
 TOHW_defaultdecls
 
     s_i = 1
@@ -430,6 +445,9 @@ TOHW_parse_numbers(`data')
 TOHW_check_errors
 
 TOHW_output_errors
+#else
+    data = 0.0_dp
+#endif
   end subroutine m4f_thisfunc
 
 define(`m4f_thisfunc', `scalartocomplexsp')dnl
@@ -437,8 +455,8 @@ define(`m4f_thisfunc', `scalartocomplexsp')dnl
     character(len=*), intent(in) :: s
     complex(sp), intent(out) :: data
     integer, intent(out), optional :: num, iostat
-
-TOHW_complexdecls
+#ifndef DUMMYLIB
+TOHW_defaultdecls
 
     s_i = 1
     err = 0
@@ -446,12 +464,15 @@ TOHW_complexdecls
     ij = 0
     length = 1
     loop: do i = 1, 1
-TOHW_parse_complex(`data')
+TOHW_parse_numbers(`data')
     end do loop
 
 TOHW_check_errors
 
 TOHW_output_errors
+#else
+    data = (0.0_sp, 0.0_sp)
+#endif
   end subroutine m4f_thisfunc
 
 define(`m4f_thisfunc', `scalartocomplexdp')dnl
@@ -459,8 +480,8 @@ define(`m4f_thisfunc', `scalartocomplexdp')dnl
     character(len=*), intent(in) :: s
     complex(dp), intent(out) :: data
     integer, intent(out), optional :: num, iostat
-
-TOHW_complexdecls
+#ifndef DUMMYLIB
+TOHW_defaultdecls
 
     s_i = 1
     err = 0
@@ -468,15 +489,16 @@ TOHW_complexdecls
     ij = 0
     length = 1
     loop: do i = 1, 1
-TOHW_parse_complex(`data')
+TOHW_parse_numbers(`data')
     end do loop
 
 TOHW_check_errors
 
 TOHW_output_errors
+#else
+    data = (0.0_dp, 0.0_dp)
+#endif
   end subroutine m4f_thisfunc
-
-
 
 define(`m4f_thisfunc', `arraytostring')dnl
   subroutine m4f_thisfunc`'(s, data, separator, csv, num, iostat)
@@ -484,8 +506,8 @@ define(`m4f_thisfunc', `arraytostring')dnl
     character, intent(in), optional :: separator
     logical, intent(in), optional :: csv
 TOHW_defaultargs
-
-TOHW_stringdecls
+#ifndef DUMMYLIB
+TOHW_defaultdecls
     character(len=len(s)) :: s2
     logical :: csv_, eof
     integer :: m
@@ -517,13 +539,15 @@ TOHW_parse_strings(`data(i)')
         if (len(s)-s_i>=0) &
           err = 1
       else
-        if (verify(s(s_i:), XML_WHITESPACE)/=0) &
+        if (verify(s(s_i:), whitespace)/=0) &
           err = 1
       endif
     endif
 
 TOHW_output_errors
-
+#else
+    data = ""
+#endif
   end subroutine m4f_thisfunc
 
 define(`m4f_thisfunc', `matrixtostring')dnl
@@ -532,11 +556,11 @@ define(`m4f_thisfunc', `matrixtostring')dnl
     character, intent(in), optional :: separator
     logical, intent(in), optional :: csv
 TOHW_defaultargs
-
-TOHW_stringdecls
+#ifndef DUMMYLIB
+TOHW_defaultdecls
     character(len=len(s)) :: s2
     logical :: csv_, eof
-    integer :: j, m
+    integer :: m
 
     csv_ = .false.
     if (present(csv)) then
@@ -567,21 +591,23 @@ TOHW_parse_strings(`data(i, j)')`'dnl
         if (len(s)-s_i>=0) &
           err = 1
       else
-        if (verify(s(s_i:), XML_WHITESPACE)/=0) &
+        if (verify(s(s_i:), whitespace)/=0) &
           err = 1
       endif
     endif
 
 TOHW_output_errors
-
+#else
+    data = ""
+#endif
   end subroutine m4f_thisfunc
 
 define(`m4f_thisfunc', `arraytological')dnl
   subroutine m4f_thisfunc`'(s, data, num, iostat)
     logical, intent(out) :: data(:)
 TOHW_defaultargs
-
-TOHW_stringdecls
+#ifndef DUMMYLIB
+TOHW_defaultdecls
 
     s_i = 1
     err = 0
@@ -595,16 +621,17 @@ TOHW_parse_logical(`data(i)')
 TOHW_check_errors
 
 TOHW_output_errors
-
+#else
+    data = .false.
+#endif
   end subroutine m4f_thisfunc
 
 define(`m4f_thisfunc', `matrixtological')dnl
   subroutine m4f_thisfunc`'(s, data, num, iostat)
     logical, intent(out) :: data(:,:)
 TOHW_defaultargs
-
-TOHW_stringdecls
-    integer :: j
+#ifndef DUMMYLIB
+TOHW_defaultdecls
 
     s_i = 1
     err = 0
@@ -620,14 +647,16 @@ TOHW_parse_logical(`data(i, j)')
 TOHW_check_errors
 
 TOHW_output_errors
-
+#else
+    data = .false.
+#endif
   end subroutine m4f_thisfunc
 
 define(`m4f_thisfunc', `arraytointeger')dnl
   subroutine m4f_thisfunc`'(s, data, num, iostat)
     integer, intent(out) :: data(:)
 TOHW_defaultargs
-
+#ifndef DUMMYLIB
 TOHW_defaultdecls
     s_i = 1
     err = 0
@@ -641,16 +670,17 @@ TOHW_parse_numbers(`data(i)')
 TOHW_check_errors
 
 TOHW_output_errors
-
+#else
+    data = 0
+#endif
   end subroutine m4f_thisfunc
 
 define(`m4f_thisfunc', `matrixtointeger')dnl
   subroutine m4f_thisfunc`'(s, data, num, iostat)
     integer, intent(out) :: data(:, :)
 TOHW_defaultargs
-
+#ifndef DUMMYLIB
 TOHW_defaultdecls
-   integer :: j
 
     s_i = 1
     err = 0
@@ -666,14 +696,16 @@ TOHW_parse_numbers(`data(i, j)')
 TOHW_check_errors
 
 TOHW_output_errors
-
+#else
+    data = 0
+#endif
   end subroutine m4f_thisfunc
 
 define(`m4f_thisfunc', `arraytorealsp')dnl
   subroutine m4f_thisfunc`'(s, data, num, iostat)
     real(sp), intent(out) :: data(:)
 TOHW_defaultargs
-
+#ifndef DUMMYLIB
 TOHW_defaultdecls
 
     s_i = 1
@@ -688,16 +720,17 @@ TOHW_parse_numbers(`data(i)')
 TOHW_check_errors
 
 TOHW_output_errors
-
+#else
+    data = 0.0_sp
+#endif
   end subroutine m4f_thisfunc
 
 define(`m4f_thisfunc', `matrixtorealsp')dnl
   subroutine m4f_thisfunc`'(s, data, num, iostat)
     real(sp), intent(out) :: data(:,:)
 TOHW_defaultargs
-
+#ifndef DUMMYLIB
 TOHW_defaultdecls
-    integer :: j
 
     s_i = 1
     err = 0
@@ -713,14 +746,16 @@ TOHW_parse_numbers(`data(i, j)')
 TOHW_check_errors
 
 TOHW_output_errors
-
+#else
+    data = 0.0_sp
+#endif
   end subroutine m4f_thisfunc
 
 define(`m4f_thisfunc', `arraytorealdp')dnl
   subroutine m4f_thisfunc`'(s, data, num, iostat)
     real(dp), intent(out) :: data(:)
 TOHW_defaultargs
-
+#ifndef DUMMYLIB
 TOHW_defaultdecls
 
     s_i = 1
@@ -735,16 +770,17 @@ TOHW_parse_numbers(`data(i)')
 TOHW_check_errors
 
 TOHW_output_errors
-
+#else
+    data = 0.0_dp
+#endif
   end subroutine m4f_thisfunc
 
 define(`m4f_thisfunc', `matrixtorealdp')dnl
   subroutine m4f_thisfunc`'(s, data, num, iostat)
     real(dp), intent(out) :: data(:,:)
 TOHW_defaultargs
-
+#ifndef DUMMYLIB
 TOHW_defaultdecls
-    integer :: j
 
     s_i = 1
     err = 0
@@ -760,15 +796,17 @@ TOHW_parse_numbers(`data(i, j)')
 TOHW_check_errors
 
 TOHW_output_errors
-
+#else
+    data = 0.0_dp
+#endif
   end subroutine m4f_thisfunc
 
 define(`m4f_thisfunc', `arraytocomplexsp')dnl
   subroutine m4f_thisfunc`'(s, data, num, iostat)
     complex(sp), intent(out) :: data(:)
 TOHW_defaultargs
-
-TOHW_complexdecls
+#ifndef DUMMYLIB
+TOHW_defaultdecls
 
     s_i = 1
     err = 0
@@ -782,16 +820,17 @@ TOHW_parse_complex(`data(i)')
 TOHW_check_errors
 
 TOHW_output_errors
-
+#else
+    data = (0.0_sp, 0.0_sp)
+#endif
   end subroutine m4f_thisfunc
 
 define(`m4f_thisfunc', `matrixtocomplexsp')dnl
   subroutine m4f_thisfunc`'(s, data, num, iostat)
     complex(sp), intent(out) :: data(:,:)
 TOHW_defaultargs
-
-TOHW_complexdecls
-   integer :: j
+#ifndef DUMMYLIB
+TOHW_defaultdecls
 
     s_i = 1
     err = 0
@@ -807,15 +846,17 @@ TOHW_parse_complex(`data(i, j)')
 TOHW_check_errors
 
 TOHW_output_errors
-
+#else
+    data = (0.0_sp, 0.0_sp)
+#endif
   end subroutine m4f_thisfunc
 
 define(`m4f_thisfunc', `arraytocomplexdp')dnl
   subroutine m4f_thisfunc`'(s, data, num, iostat)
     complex(dp), intent(out) :: data(:)
 TOHW_defaultargs
-
-TOHW_complexdecls
+#ifndef DUMMYLIB
+TOHW_defaultdecls
 
     s_i = 1
     err = 0
@@ -829,16 +870,17 @@ TOHW_parse_complex(`data(i)')
 TOHW_check_errors
 
 TOHW_output_errors
-
+#else
+    data = (0.0_dp, 0.0_dp)
+#endif
   end subroutine m4f_thisfunc
 
 define(`m4f_thisfunc', `matrixtocomplexdp')dnl
   subroutine m4f_thisfunc`'(s, data, num, iostat)
     complex(dp), intent(out) :: data(:,:)
 TOHW_defaultargs
-
-TOHW_complexdecls
-    integer :: j
+#ifndef DUMMYLIB
+TOHW_defaultdecls
 
     s_i = 1
     err = 0
@@ -854,8 +896,9 @@ TOHW_parse_complex(`data(i, j)')
 TOHW_check_errors
 
 TOHW_output_errors
-
+#else
+    data = (0.0_dp, 0.0_dp)
+#endif
   end subroutine m4f_thisfunc
   
 end module m_common_parse_input
-
