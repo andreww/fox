@@ -134,8 +134,8 @@ end program
 <p>Full details of all the dictionary-manipulation routines are given in AttributeDictionaries(AttributeDictionaries.html), but here we shall show the most common.</p>
 
 <ul>
-<li><p><code>len(dictionary)</code> - returns the number of entries in the dictionary (the number of attributes declared)</p></li>
-<li><p><code>getKey(dictionary, i)</code> (where <code>i</code> is an integer) returns a string containing the key of the <code>i</code>th dictionary entry (ie, the name of the <code>i</code>th attribute.</p></li>
+<li><p><code>getLength(dictionary)</code> - returns the number of entries in the dictionary (the number of attributes declared)</p></li>
+<li><p><code>getQName(dictionary, i)</code> (where <code>i</code> is an integer) returns a string containing the QName of the <code>i</code>th attribute.</p></li>
 <li><p><code>getValue(dictionary, i)</code> (where <code>i</code> is an integer) returns a string containing the value of the <code>i</code>th dictionary entry (ie the value of the <code>i</code>th attribute.</p></li>
 <li><p><code>hasKey(dictionary, key)</code> (where <code>key</code> is a string) returns <code>.true.</code> or <code>.false.</code> depending on whether an attribute named <code>key</code> is present.</p></li>
 <li><p><code>hasKey(dictionary, URI, localname)</code> (where <code>URI</code> and <code>localname</code> are strings) returns <code>.true.</code> or <code>.false.</code> depending on whether an attribute with the appropriate <code>URI</code> and <code>localname</code> is present.</p></li>
@@ -159,7 +159,7 @@ contains
    print*, name
 
    do i = 1, len(attributes)
-      print*, getKey(attributes, i), '=', getValue(attributes, i)
+      print*, getQName(attributes, i), '=', getValue(attributes, i)
    enddo
 
   end subroutine startElement_handler

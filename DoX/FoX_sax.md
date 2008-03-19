@@ -117,9 +117,9 @@ An attribute dictionary is essentially a set of key:value pairs - where the key 
 
 Full details of all the dictionary-manipulation routines are given in AttributeDictionaries(|AttributeDictionaries|), but here we shall show the most common.
 
-* `len(dictionary)` - returns the number of entries in the dictionary (the number of attributes declared)
+* `getLength(dictionary)` - returns the number of entries in the dictionary (the number of attributes declared)
 
-* `getKey(dictionary, i)` (where `i` is an integer) returns a string containing the key of the `i`th dictionary entry (ie, the name of the `i`th attribute.
+* `getQName(dictionary, i)` (where `i` is an integer) returns a string containing the QName of the `i`th attribute.
 
 * `getValue(dictionary, i)` (where `i` is an integer) returns a string containing the value of the `i`th dictionary entry (ie the value of the `i`th attribute.
 
@@ -146,7 +146,7 @@ So, a simple subroutine to receive a startElement event would look like:
        print*, name
       
        do i = 1, len(attributes)
-          print*, getKey(attributes, i), '=', getValue(attributes, i)
+          print*, getQName(attributes, i), '=', getValue(attributes, i)
        enddo
 
       end subroutine startElement_handler

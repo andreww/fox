@@ -77,12 +77,18 @@ If two strings are passed in, the value of the attribute with that uri and local
 
 * `getURI  
     type(dictionary_t), intent(in)  
-    integer, intent(in), optional :: i`
+    integer, intent(in) :: i`
 
 Returns a string containing the nsURI of the `i`th attribute.
 
 * `getlocalName  
     type(dictionary_t), intent(in)  
-    integer, intent(in), optional :: i`
+    integer, intent(in) :: i`
 
 Returns a string containing the localName of the `i`th attribute.
+
+* `getType
+    type(dictionary_t), intent(in)
+    integer, intent(in) :: i`
+
+Returns a string containing the type of the `i`th attribute (as defined by any DTD in force).

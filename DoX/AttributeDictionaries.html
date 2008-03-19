@@ -105,7 +105,7 @@ character(len=*), intent(in) :: uri, localname</code></li>
 <ul>
 <li><code>getURI <br />
 type(dictionary_t), intent(in) <br />
-integer, intent(in), optional :: i</code></li>
+integer, intent(in) :: i</code></li>
 </ul>
 
 <p>Returns a string containing the nsURI of the <code>i</code>th attribute.</p>
@@ -113,10 +113,18 @@ integer, intent(in), optional :: i</code></li>
 <ul>
 <li><code>getlocalName <br />
 type(dictionary_t), intent(in) <br />
-integer, intent(in), optional :: i</code></li>
+integer, intent(in) :: i</code></li>
 </ul>
 
 <p>Returns a string containing the localName of the <code>i</code>th attribute.</p>
+
+<ul>
+<li><code>getType
+type(dictionary_t), intent(in)
+integer, intent(in) :: i</code></li>
+</ul>
+
+<p>Returns a string containing the type of the <code>i</code>th attribute (as defined by any DTD in force).</p>
 </div>
 </body>
 </html>
