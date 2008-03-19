@@ -354,11 +354,15 @@ contains
     integer, intent(in) :: i
     integer :: n
 
+#ifdef DUMMYLIB
+    n = 1
+#else
     if (i>0.and.i<=ubound(dict%list, 1)) then
       n = size(dict%list(i)%d%value)
     else
       n = 0
     endif
+#endif
   end function get_value_by_index_len
 
   function get_value_by_index(dict, i) result(value)
@@ -383,11 +387,15 @@ contains
     integer, intent(in) :: i
     integer :: n
 
+#ifdef DUMMYLIB
+    n = 1
+#else
     if (i>0.and.i<=ubound(dict%list, 1)) then
       n = size(dict%list(i)%d%key)
     else
       n = 0
     endif
+#endif
   end function get_key_len
 
   function get_key(dict, i) result(key)

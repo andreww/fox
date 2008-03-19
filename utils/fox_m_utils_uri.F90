@@ -532,10 +532,14 @@ contains
     type(URI), intent(in) :: u
     logical :: p
 
+#ifdef DUMMYLIB
+    p = .false.
+#else
     p = associated(u%scheme).or.associated(u%authority)
     if (.not.p.and.size(u%segments(1)%s)>0) then
       p = u%segments(1)%s(1)=="/"
     endif
+#endif
   end function isAbsoluteURI
 
   function rebaseURI(u1, u2) result(u3)
