@@ -91,11 +91,12 @@ contains
 
     if (pending) then
       ! we have one character left over, put in the pushback buffer
+      deallocate(f%next_chars)
       allocate(f%next_chars(1))
       f%next_chars = c2
     endif
 
-    if (c==achar(13)) then
+    if (c==achar(10)) then
       f%line = f%line + 1
       f%col = 0
     else
