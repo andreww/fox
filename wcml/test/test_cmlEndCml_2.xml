@@ -9,5 +9,5 @@
   xmlns:siUnits="http://www.xml-cml.org/units/siUnits"
   xmlns:atomicUnits="http://www.xml-cml.org/units/atomic">
   <metadata name="dc:contributor"
-  content="FoX-3.1.2 (http://www.uszla.me.uk/FoX)"/>
+  content="FoX-3.2.0 (http://www.uszla.me.uk/FoX)"/>
 </cml>
