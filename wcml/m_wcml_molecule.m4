@@ -518,8 +518,8 @@ module m_wcml_molecule
   use FoX_wxml, only: xmlf_t
 
 #ifndef DUMMYLIB
-  use m_common_format, only: str
   use m_common_error, only: FoX_error
+  use m_common_format, only: str
   use FoX_wxml, only: xml_NewElement, xml_EndElement
   use FoX_wxml, only: xml_AddAttribute, xml_AddCharacters, xml_AddNewline
 
@@ -592,18 +592,22 @@ TOHWM4_moleculeargslist)
     type(xmlf_t), intent(inout) :: xf
 
 TOHWM4_moleculeargsdecl
+
+#ifndef DUMMYLIB
     
     call xml_NewElement(xf, "molecule")
 
 TOHWM4_moleculeargsuse
 
+#endif
   end subroutine cmlStartMolecule
 
   subroutine cmlEndMolecule(xf)
     type(xmlf_t), intent(inout) :: xf
 
+#ifndef DUMMYLIB
     call xml_EndElement(xf, "molecule")
-
+#endif
   end subroutine cmlEndMolecule
 
 TOHWM4_molecule_subs(`sp')
