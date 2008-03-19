@@ -1,22 +1,29 @@
 #!/bin/sh -e
 
-git-archive --format=tar --prefix=FoX-3.1.2/ HEAD | gzip -9 > ../FoX-3.1.2-full.tar.gz
+VN=$(grep dummy common/FoX_common.F90 | awk '{print $6}' | sed -e s/-dummy//)
+
+if test x$VN != x\'$1\'; then
+  echo Wrong version number
+  exit 1 
+fi
+
+git-archive --format=tar --prefix=FoX-$1/ HEAD | gzip -9 > ../FoX-$1-full.tar.gz
 
 mkdir tmpFoX
 cd tmpFoX
-tar xzf ../../FoX-3.1.2-full.tar.gz
+tar xzf ../../FoX-$1-full.tar.gz
 (
-  cd FoX-3.1.2
+  cd FoX-$1
   make cutdown
 )
-tar czf ../../FoX-3.1.2.tar.gz FoX-3.1.2
-rm -rf FoX-3.1.2
+tar czf ../../FoX-$1.tar.gz FoX-$1
+rm -rf FoX-$1
 
 for i in wxml wcml sax dom
 do
-  tar xzf ../../FoX-3.1.2-full.tar.gz
+  tar xzf ../../FoX-$1-full.tar.gz
   (
-    cd FoX-3.1.2
+    cd FoX-$1
     (
       cd config; \
        sed -e "s/CUTDOWN_TARGET=.*/CUTDOWN_TARGET=$i/" -i "" configure.ac; \
@@ -24,11 +31,11 @@ do
     )
     make cutdown-$i
   )
-  tar czf FoX-3.1.2-$i.tar.gz FoX-3.1.2
-  rm -rf FoX-3.1.2
+  tar czf FoX-$1-$i.tar.gz FoX-$1
+  rm -rf FoX-$1
 done
 
-cp FoX-3.1.2-* ../..
+cp FoX-$1-* ../..
 
 cd ..
 rm -rf tmpFoX
