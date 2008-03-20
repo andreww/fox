@@ -133,7 +133,7 @@ contains
       read (unit=f%lun, iostat=iostat, advance="no", fmt="(a1)") c
       if (iostat==io_eor) then
         iostat = 0
-#ifdef LF_EOF
+#ifdef FC_EOR_LF
         c = achar(10)
 #else
         c = achar(13)

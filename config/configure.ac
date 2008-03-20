@@ -144,13 +144,22 @@ dnl
 dnl Check whether we need to pass a flag to get at the flush intrinsic.
 TW_FC_CHECK_FLUSH([],[AC_MSG_RESULT([cannot compile call to FLUSH])])
 TW_FC_CHECK_ABORT([],[AC_MSG_RESULT([cannot compile call to ABORT])])
+TW_FC_CHECK_EOL
+case $ac_cv_FC_check_output_eol in
+  CRLF)
+    DEFS="$DEFS FC_EOR_CRLF";;
+  CR)
+    DEFS="$DEFS FC_EOR_CR";;
+  LF)
+    DEFS="$DEFS FC_EOR_LF";;
+esac 
 dnl
 dnl Check for compiler problems
 TW_CHECK_ASSOCIATED_BUG([], [DEFS="$DEFS RESTRICTED_ASSOCIATED_BUG"])
 dnl
 dnl Fix up DEFS -> FPPFLAGS conversion.
 for i in $DEFS; do
-   FPPFLAGS="$FPPFLAGS $FPPFLAGS_DEF$i"
+  FPPFLAGS="$FPPFLAGS $FPPFLAGS_DEF$i"
 done
 dnl
 dnl Library functionality ...

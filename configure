@@ -6478,6 +6478,93 @@ fi
 
 
 
+ac_ext=${FC_SRCEXT-f}
+ac_compile='$FC -c $FCFLAGS $FCFLAGS_SRCEXT conftest.$ac_ext >&5'
+ac_link='$FC $ac_link_obj_flag""conftest$ac_exeext $FCFLAGS $LDFLAGS $FCFLAGS_SRCEXT conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_fc_compiler_gnu
+
+FCFLAGS_save="$FCFLAGS"
+FCFLAGS="$FCFLAGS $FCFLAGS_free_f90"
+{ echo "$as_me:$LINENO: checking for EOR character used by $FC" >&5
+echo $ECHO_N "checking for EOR character used by $FC... $ECHO_C" >&6; }
+if test "$cross_compiling" = yes; then
+  ac_cv_FC_check_output_eol=EOL_CR
+else
+  cat >conftest.$ac_ext <<_ACEOF
+
+       program output_eol
+       open(unit=10, file="conf_eol.out")
+       write(10,"(a)") ""
+       end program
+
+_ACEOF
+rm -f conftest$ac_exeext
+if { (ac_try="$ac_link"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_link") 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } && { ac_try='./conftest$ac_exeext'
+  { (case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_try") 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+
+if ! test -f conf_eol.out; then
+{ { echo "$as_me:$LINENO: error: Could not find test output" >&5
+echo "$as_me: error: Could not find test output" >&2;}
+   { (exit 1); exit 1; }; }
+elif od conf_eol.out | grep 5015 >/dev/null; then
+  ac_cv_FC_check_output_eol=CRLF
+elif od conf_eol.out | grep 15 >/dev/null; then
+  ac_cv_FC_check_output_eol=CR
+elif od conf_eol.out | grep 12 >/dev/null; then
+  ac_cv_FC_check_output_eol=LF
+else
+  ac_cv_FC_check_output_eol=UNKNOWN
+fi
+rm -rf conf_eol.out
+if test $ac_cv_FC_check_output_eol = UNKNOWN; then
+  { { echo "$as_me:$LINENO: error: Could not determine line-ending convention" >&5
+echo "$as_me: error: Could not determine line-ending convention" >&2;}
+   { (exit 1); exit 1; }; }
+fi
+
+else
+  echo "$as_me: program exited with status $ac_status" >&5
+echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+( exit $ac_status )
+{ { echo "$as_me:$LINENO: error: Could not execute compiled program" >&5
+echo "$as_me: error: Could not execute compiled program" >&2;}
+   { (exit 1); exit 1; }; }
+fi
+rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext conftest.$ac_objext conftest.$ac_ext
+fi
+
+
+{ echo "$as_me:$LINENO: result: $ac_cv_FC_check_output_eol" >&5
+echo "${ECHO_T}$ac_cv_FC_check_output_eol" >&6; }
+
+case $ac_cv_FC_check_output_eol in
+  CRLF)
+    DEFS="$DEFS FC_EOR_CRLF";;
+  CR)
+    DEFS="$DEFS FC_EOR_CR";;
+  LF)
+    DEFS="$DEFS FC_EOR_LF";;
+esac
+
 { echo "$as_me:$LINENO: checking for ASSOCIATED in restricted expression bug" >&5
 echo $ECHO_N "checking for ASSOCIATED in restricted expression bug... $ECHO_C" >&6; }
 ac_ext=${FC_SRCEXT-f}
@@ -6551,7 +6638,7 @@ ac_compiler_gnu=$ac_cv_fc_compiler_gnu
 
 
 for i in $DEFS; do
-   FPPFLAGS="$FPPFLAGS $FPPFLAGS_DEF$i"
+  FPPFLAGS="$FPPFLAGS $FPPFLAGS_DEF$i"
 done
 case $host_os in
   *cygwin*)
