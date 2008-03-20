@@ -263,7 +263,7 @@ TOHWM4_eigenargsuse
       call xml_AddAttribute(xf, "spaceGroup", spaceGroup)
     if (present(pointGroup)) &
       call xml_AddAttribute(xf, "pointGroup", pointGroup)
-
+    call xml_EndElement(xf, "symmetry")
 #endif
 
     end subroutine cmlAddSymmetryNoOps
