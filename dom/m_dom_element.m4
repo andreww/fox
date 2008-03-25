@@ -300,17 +300,20 @@ TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
     elseif (.not.checkName(qualifiedname, getXmlVersionEnum(getOwnerDocument(arg)))) then
       TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
-    elseif (.not.checkQName(qualifiedname, getXmlVersionEnum(getOwnerDocument(arg)))) then
-      TOHW_m_dom_throw_error(NAMESPACE_ERR)
-    elseif (prefixOfQName(qualifiedName)/="" &
-     .and. namespaceURI=="") then
-      TOHW_m_dom_throw_error(NAMESPACE_ERR)
-    elseif (prefixOfQName(qualifiedName)=="xml" .neqv. & 
-      namespaceURI=="http://www.w3.org/XML/1998/namespace") then
-      TOHW_m_dom_throw_error(NAMESPACE_ERR)
-    elseif (namespaceURI=="http://www.w3.org/2000/xmlns/" .neqv. &
-      (qualifiedName=="xmlns" .or. prefixOfQName(qualifiedName)=="xmlns")) then
-      TOHW_m_dom_throw_error(NAMESPACE_ERR)
+    endif
+    if (.not.arg%ownerDocument%docExtras%brokenNS) then
+      if (.not.checkQName(qualifiedname, getXmlVersionEnum(getOwnerDocument(arg)))) then
+        TOHW_m_dom_throw_error(NAMESPACE_ERR)
+      elseif (prefixOfQName(qualifiedName)/="" &
+        .and. namespaceURI=="") then
+        TOHW_m_dom_throw_error(NAMESPACE_ERR)
+      elseif (prefixOfQName(qualifiedName)=="xml" .neqv. & 
+        namespaceURI=="http://www.w3.org/XML/1998/namespace") then
+        TOHW_m_dom_throw_error(NAMESPACE_ERR)
+      elseif (namespaceURI=="http://www.w3.org/2000/xmlns/" .neqv. &
+        (qualifiedName=="xmlns" .or. prefixOfQName(qualifiedName)=="xmlns")) then
+        TOHW_m_dom_throw_error(NAMESPACE_ERR)
+      endif
     endif
 
 ! FIXME what if namespace is undeclared? Throw an error *only* if FoX_errors is on, otherwise its taken care of by namespace fixup on serialization
@@ -399,7 +402,6 @@ TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
 
     attr => null()     ! as per specs, if not found
     attr => getNamedItemNS(getAttributes(arg), namespaceURI, localname)
-
   end function getAttributeNodeNS
   
 

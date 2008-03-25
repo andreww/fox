@@ -397,19 +397,25 @@ TOHW_m_dom_contents(`
 
     do i = 0, getLength(map) - 1
       np => item(map, i)
-      if (getLocalName(arg)==getLocalName(np).and.getNamespaceURI(arg)==getNamespaceURI(np)) then
+      if ((getLocalName(arg)==getLocalName(np) &
+        .and.getNamespaceURI(arg)==getNamespaceURI(np)) &
+        ! Additional case to catch adding of specified attributeNS over 
+        ! default (NS but unspecified URI) attribute
+        .or.(getNamespaceURI(arg)=="".and.getName(arg)==getName(np))) then
         map%nodes(i+1)%this => arg
         exit
       endif
     enddo
 
     if (i<getLength(map)) then
-      if (getGCstate(getOwnerDocument(map%ownerElement)).and.np%inDocument) then
-        call removeNodesFromDocument(getOwnerDocument(map%ownerElement), np)
-        arg%inDocument = .false.
+      if (getGCstate(getOwnerDocument(map%ownerElement))) then
+        if (np%inDocument) then
+          call removeNodesFromDocument(getOwnerDocument(map%ownerElement), np)
+          arg%inDocument = .false.
+        endif
       endif
     else
-      !   If not found, insert it at the end of the linked list
+      ! If not found, insert it at the end of the linked list
       np => null()
       call append_nnm(map, arg)
     endif

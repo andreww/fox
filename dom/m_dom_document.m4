@@ -168,7 +168,9 @@ TOHW_m_dom_get(Node, documentElement, np%docExtras%documentElement, (DOCUMENT_NO
     allocate(np%elExtras%localname(0))
     allocate(np%elExtras%namespaceNodes%nodes(0))
 
-    if (.not.getGCstate(arg)) then
+    np%elExtras%attributes%ownerElement => np
+
+    if (getGCstate(arg)) then
       np%inDocument = .false.
       call append(arg%docExtras%hangingnodes, np)
       ! We only add default attributes if we are *not* building the doc
@@ -206,8 +208,9 @@ TOHW_m_dom_get(Node, documentElement, np%docExtras%documentElement, (DOCUMENT_NO
     allocate(np%elExtras%localname(0))
     allocate(np%elExtras%namespaceNodes%nodes(0))
 
-    np%inDocument = .false.
-    call append(arg%docExtras%hangingnodes, np)
+    np%elExtras%attributes%ownerElement => np
+
+    np%inDocument = .true.
   end function createEmptyElement
     
   TOHW_function(createDocumentFragment, (arg), np)
@@ -563,26 +566,26 @@ TOHW_m_dom_treewalk(`dnl
     TOHW_m_dom_treewalk(`
 
         new => null()
-        select case (getNodeType(this))
+        select case (getNodeType(this, ex))
         case (ELEMENT_NODE)
           if (.not.doneAttributes) then
             ! We dont create an empty node - we insist on having all default
             ! properties created.
-            if (getParameter(getDomConfig(doc), "namespaces")) then
-              new => createElementNS(doc, getNamespaceURI(this), getTagName(this))
+            if (getParameter(getDomConfig(doc, ex), "namespaces", ex)) then
+              new => createElementNS(doc, getNamespaceURI(this, ex), getTagName(this, ex), ex)
             else
-              new => createElement(doc, getTagName(this))
+              new => createElement(doc, getTagName(this, ex), ex)
             endif
           endif
         case (ATTRIBUTE_NODE)
-          if (associated(this, arg).or.getSpecified(this)) then
+          if (associated(this, arg).or.getSpecified(this, ex)) then
             ! We are importing just this attribute node
             ! or this was an explicitly specified attribute; either
             ! way, we import it as is, and it remains specified.
             if (getParameter(getDomConfig(doc), "namespaces")) then
-              new => createAttributeNS(doc, getNamespaceURI(this), getName(this))
+              new => createAttributeNS(doc, getNamespaceURI(this, ex), getName(this, ex), ex)
             else
-              new => createAttribute(doc, getName(this))
+              new => createAttribute(doc, getName(this), ex)
             endif
             call setSpecified(new, .true.)
           else
@@ -594,27 +597,27 @@ TOHW_m_dom_treewalk(`dnl
             att => get_attribute_declaration(elem, getName(this))
             if (attribute_has_default(att)) then
               ! Create the new default:
-              if (getParameter(getDomConfig(arg), "namespaces")) then
+              if (getParameter(getDomConfig(arg, ex), "namespaces", ex)) then
                 ! We create a namespaced attribute. Of course, its 
                 ! namespaceURI remains empty for the moment unless we know it ...
-                if (prefixOfQName(getName(this))=="xml") then
+                if (prefixOfQName(getName(this, ex))=="xml") then
                   new => createAttributeNS(np, &
                     "http://www.w3.org/XML/1998/namespace", &
-                    getName(this))
-                elseif (getName(this)=="xmlns" & 
-                  .or. prefixOfQName(getName(this))=="xmlns") then
+                    getName(this, ex), ex)
+                elseif (getName(this, ex)=="xmlns" & 
+                  .or. prefixOfQName(getName(this, ex))=="xmlns") then
                   new => createAttributeNS(np, &
                     "http://www.w3.org/2000/xmlns/", &
-                    getName(this))
+                    getName(this, ex), ex)
                 else
                   ! Wait for namespace fixup ...
                   new => createAttributeNS(np, "", &
-                    getName(this))
+                    getName(this, ex), ex)
                 endif
               else
-                new => createAttribute(doc, getName(this))
+                new => createAttribute(doc, getName(this, ex), ex)
               endif
-              call setValue(new, str_vs(att%default))
+              call setValue(new, str_vs(att%default), ex)
               call setSpecified(new, .false.)
               ! In any case, we dont want to copy the children of this node.
               doneChildren=.true.
@@ -622,41 +625,46 @@ TOHW_m_dom_treewalk(`dnl
             ! Otherwise no attribute here
           endif
         case (TEXT_NODE)
-          new => createTextNode(doc, getData(this))
+          new => createTextNode(doc, getData(this, ex), ex)
         case (CDATA_SECTION_NODE)
-          new => createCDataSection(doc, getData(this))
+          new => createCDataSection(doc, getData(this, ex), ex)
         case (ENTITY_REFERENCE_NODE)
-          new => createEntityReference(doc, getNodeName(this))
+          new => createEntityReference(doc, getNodeName(this, ex), ex)
           ! This will automatically populate the entity reference if doc defines it, so no children needed
           doneChildren = .true.
         case (ENTITY_NODE)
-          new => createEntity(doc, getNodeName(this), getPublicId(this), getSystemId(this), getNotationName(this))
+          new => createEntity(doc, getNodeName(this, ex), &
+            getPublicId(this, ex), getSystemId(this, ex), &
+            getNotationName(this, ex), ex)
         case (PROCESSING_INSTRUCTION_NODE)
-          new => createProcessingInstruction(doc, getTarget(this), getData(this))
+          new => createProcessingInstruction(doc, &
+            getTarget(this, ex), getData(this, ex), ex)
         case (COMMENT_NODE)
-          new => createComment(doc, getData(this))
+          new => createComment(doc, getData(this, ex), ex)
         case (DOCUMENT_NODE)
           TOHW_m_dom_throw_error(NOT_SUPPORTED_ERR)
         case (DOCUMENT_TYPE_NODE)
           TOHW_m_dom_throw_error(NOT_SUPPORTED_ERR)
         case (DOCUMENT_FRAGMENT_NODE)
-          new => createDocumentFragment(doc)
+          new => createDocumentFragment(doc, ex)
         case (NOTATION_NODE)
-          new => createNotation(doc, getNodeName(this), getPublicId(this), getSystemId(this))
+          new => createNotation(doc, getNodeName(this, ex), &
+            getPublicId(this, ex), getSystemId(this, ex), ex)
         end select
  
         if (.not.associated(thatParent)) then
           thatParent => new
         elseif (associated(new)) then
-          if (getNodeType(this)==ATTRIBUTE_NODE) then
-            new => setAttributeNode(thatParent, new)
+          if (getNodeType(this, ex)==ATTRIBUTE_NODE) then
+            new => setAttributeNode(thatParent, new, ex)
           else
-            new => appendChild(thatParent, new)
+            new => appendChild(thatParent, new, ex)
           endif
         endif
 
         if (.not.deep) then
-          if (getNodeType(arg)==ATTRIBUTE_NODE.or.getNodeType(arg)==ELEMENT_NODE) then
+          if (getNodeType(arg, ex)==ATTRIBUTE_NODE &
+            .or.getNodeType(arg, ex)==ELEMENT_NODE) then
             continue
           else
             exit
@@ -717,7 +725,7 @@ TOHW_m_dom_treewalk(`dnl
 
     np%elExtras%attributes%ownerElement => np
 
-    if (.not.getGCstate(arg)) then
+    if (getGCstate(arg)) then
       np%inDocument = .false.
       call append(arg%docExtras%hangingnodes, np)
       ! We only add default attributes if we are *not* building the doc
@@ -733,18 +741,18 @@ TOHW_m_dom_treewalk(`dnl
             if (prefixOfQName(str_vs(att%name))=="xml") then
               call setAttributeNS(np, &
                 "http://www.w3.org/XML/1998/namespace", &
-                str_vs(att%name), str_vs(att%default))
+                str_vs(att%name), str_vs(att%default), ex)
             elseif (str_vs(att%name)=="xmlns" & 
               .or. prefixOfQName(str_vs(att%name))=="xmlns") then
               call setAttributeNS(np, &
                 "http://www.w3.org/2000/xmlns/", &
-                str_vs(att%name), str_vs(att%default))
+                str_vs(att%name), str_vs(att%default), ex)
             else
               ! Wait for namespace fixup ...
               brokenNS = arg%docExtras%brokenNS
               arg%docExtras%brokenNS = .true.
               call setAttributeNS(np, "", str_vs(att%name), &
-                str_vs(att%default))
+                str_vs(att%default), ex)
               arg%docExtras%brokenNS = brokenNS
             endif
           endif
@@ -772,8 +780,7 @@ TOHW_m_dom_treewalk(`dnl
 
     np%elExtras%attributes%ownerElement => np
 
-    np%inDocument = .false.
-    call append(arg%docExtras%hangingnodes, np)
+    np%inDocument = .true.
   end function createEmptyElementNS
   
   TOHW_function(createAttributeNS, (arg, namespaceURI,  qualifiedname), np)
