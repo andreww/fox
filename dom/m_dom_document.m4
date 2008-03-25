@@ -137,10 +137,9 @@ TOHW_m_dom_get(Node, documentElement, np%docExtras%documentElement, (DOCUMENT_NO
 
   ! Methods
 
-  TOHW_function(createElement, (arg, tagName, defaults), np)
+  TOHW_function(createElement, (arg, tagName), np)
     type(Node), pointer :: arg
     character(len=*), intent(in) :: tagName
-    logical, intent(in), optional :: defaults
     type(Node), pointer :: np
 
     type(xml_doc_state), pointer :: xds
@@ -158,15 +157,8 @@ TOHW_m_dom_get(Node, documentElement, np%docExtras%documentElement, (DOCUMENT_NO
     elseif (.not.checkName(tagName, getXmlVersionEnum(arg))) then
       TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
     endif
-    
-    if (.not.getGCstate(arg)) then
-      defaults_ = .false.
-    elseif (present(defaults)) then
-      defaults_ = defaults
-    else
-      defaults_ = .true.
-    endif
-    
+
+
     np => createNode(arg, ELEMENT_NODE, tagName, "")
     allocate(np%elExtras)
     np%elExtras%dom1 = .true.
@@ -176,7 +168,7 @@ TOHW_m_dom_get(Node, documentElement, np%docExtras%documentElement, (DOCUMENT_NO
     allocate(np%elExtras%localname(0))
     allocate(np%elExtras%namespaceNodes%nodes(0))
 
-    if (defaults_) then
+    if (.not.getGCstate(arg)) then
       np%inDocument = .false.
       call append(arg%docExtras%hangingnodes, np)
       ! We only add default attributes if we are *not* building the doc
@@ -193,15 +185,30 @@ TOHW_m_dom_get(Node, documentElement, np%docExtras%documentElement, (DOCUMENT_NO
         enddo
       endif
     else
-      if (getGCstate(arg)) then
-        np%inDocument = .false.
-        call append(arg%docExtras%hangingnodes, np)
-      else
-        np%inDocument = .true.
-      endif
+      np%inDocument = .true.
     endif
 
   end function createElement
+
+  TOHW_function(createEmptyElement, (arg, tagName), np)
+    type(Node), pointer :: arg
+    character(len=*), intent(in) :: tagName
+    type(Node), pointer :: np
+
+! NO CHECKS !
+
+    np => createNode(arg, ELEMENT_NODE, tagName, "")
+    allocate(np%elExtras)
+    np%elExtras%dom1 = .true.
+    np%elExtras%attributes%ownerElement => np
+    allocate(np%elExtras%namespaceURI(0))
+    allocate(np%elExtras%prefix(0))
+    allocate(np%elExtras%localname(0))
+    allocate(np%elExtras%namespaceNodes%nodes(0))
+
+    np%inDocument = .false.
+    call append(arg%docExtras%hangingnodes, np)
+  end function createEmptyElement
     
   TOHW_function(createDocumentFragment, (arg), np)
     type(Node), pointer :: arg
@@ -559,6 +566,8 @@ TOHW_m_dom_treewalk(`dnl
         select case (getNodeType(this))
         case (ELEMENT_NODE)
           if (.not.doneAttributes) then
+            ! We dont create an empty node - we insist on having all default
+            ! properties created.
             if (getParameter(getDomConfig(doc), "namespaces")) then
               new => createElementNS(doc, getNamespaceURI(this), getTagName(this))
             else
@@ -661,17 +670,16 @@ TOHW_m_dom_treewalk(`dnl
 
   end function importNode
 
-  TOHW_function(createElementNS, (arg, namespaceURI, qualifiedName, defaults), np)
+  TOHW_function(createElementNS, (arg, namespaceURI, qualifiedName), np)
     type(Node), pointer :: arg
     character(len=*), intent(in) :: namespaceURI, qualifiedName
-    logical, intent(in), optional :: defaults
     type(Node), pointer :: np
 
     type(xml_doc_state), pointer :: xds
     type(element_t), pointer :: elem
     type(attribute_t), pointer :: att
     integer :: i
-    logical :: brokenNS, defaults_
+    logical :: brokenNS
     type(URI), pointer :: URIref
 
     if (.not.associated(arg)) then
@@ -694,14 +702,6 @@ TOHW_m_dom_treewalk(`dnl
       TOHW_m_dom_throw_error(NAMESPACE_ERR)
     endif
 
-    if (.not.getGCstate(arg)) then
-      defaults_ = .false.
-    elseif (present(defaults)) then
-      defaults_ = defaults
-    else
-      defaults_ = .true.
-    endif
-
     URIref => parseURI(namespaceURI)
     if (.not.associated(URIref)) then
       TOHW_m_dom_throw_error(FoX_INVALID_URI)
@@ -717,7 +717,7 @@ TOHW_m_dom_treewalk(`dnl
 
     np%elExtras%attributes%ownerElement => np
 
-    if (defaults_) then
+    if (.not.getGCstate(arg)) then
       np%inDocument = .false.
       call append(arg%docExtras%hangingnodes, np)
       ! We only add default attributes if we are *not* building the doc
@@ -751,15 +751,30 @@ TOHW_m_dom_treewalk(`dnl
         enddo
       endif
     else
-      if (getGCstate(arg)) then
-        np%inDocument = .false.
-        call append(arg%docExtras%hangingnodes, np)
-      else
-        np%inDocument = .true.
-      endif
+      np%inDocument = .true.
     endif
 
   end function createElementNS
+
+  TOHW_function(createEmptyElementNS, (arg, namespaceURI, qualifiedName), np)
+    type(Node), pointer :: arg
+    character(len=*), intent(in) :: namespaceURI, qualifiedName
+    type(Node), pointer :: np
+
+! NO CHECKS !
+
+    np => createNode(arg, ELEMENT_NODE, qualifiedName, "")
+    allocate(np%elExtras)
+    np%elExtras%namespaceURI => vs_str_alloc(namespaceURI)
+    np%elExtras%prefix => vs_str_alloc(prefixOfQName(qualifiedname))
+    np%elExtras%localName => vs_str_alloc(localpartOfQName(qualifiedname))
+    allocate(np%elExtras%namespaceNodes%nodes(0))
+
+    np%elExtras%attributes%ownerElement => np
+
+    np%inDocument = .false.
+    call append(arg%docExtras%hangingnodes, np)
+  end function createEmptyElementNS
   
   TOHW_function(createAttributeNS, (arg, namespaceURI,  qualifiedname), np)
     type(Node), pointer :: arg

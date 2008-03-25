@@ -668,16 +668,16 @@ TOHW_m_dom_treewalk(`
       new => null()
       select case(getNodeType(this))
       case (ELEMENT_NODE)
-        if (this%elExtras%dom1) then
-          new => createElement(doc, getTagName(this), defaults=.false.)
+        if (getParameter(getDomConfig(doc), "namespaces")) then
+          new => createEmptyElementNS(doc, getNamespaceURI(this), getTagName(this))
         else
-          new => createElementNS(doc, getNamespaceURI(this), getTagName(this), defaults=.false.)
+          new => createEmptyElement(doc, getTagName(this))
         endif
       case (ATTRIBUTE_NODE)
-        if (this%elExtras%dom1) then
-          new => createAttribute(doc, getName(this))
-        else
+        if (getParameter(getDomConfig(doc), "namespaces")) then
           new => createAttributeNS(doc, getNamespaceURI(this), getName(this))
+        else
+          new => createAttribute(doc, getName(this))
         endif
         if (associated(this, arg)) then
           call setSpecified(new, .true.)
