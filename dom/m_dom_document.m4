@@ -619,10 +619,9 @@ TOHW_m_dom_treewalk(`dnl
               endif
               call setValue(new, str_vs(att%default), ex)
               call setSpecified(new, .false.)
-              ! In any case, we dont want to copy the children of this node.
-              doneChildren=.true.
             endif
-            ! Otherwise no attribute here
+            ! In any case, we dont want to copy the children of this node.
+            doneChildren=.true.
           endif
         case (TEXT_NODE)
           new => createTextNode(doc, getData(this, ex), ex)
@@ -724,7 +723,6 @@ TOHW_m_dom_treewalk(`dnl
     allocate(np%elExtras%namespaceNodes%nodes(0))
 
     np%elExtras%attributes%ownerElement => np
-
     if (getGCstate(arg)) then
       np%inDocument = .false.
       call append(arg%docExtras%hangingnodes, np)

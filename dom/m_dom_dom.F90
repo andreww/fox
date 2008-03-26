@@ -5162,7 +5162,8 @@ endif
     endif
 
     if (getNodeType(arg)==ATTRIBUTE_NODE) then
-      call setSpecified(arg, .true.) ! just in case it isnt already
+      if (getGCstate(getOwnerDocument(arg))) & ! We are not in the process of building, then:
+        call setSpecified(arg, .true.) ! just in case it isnt already
       if (associated(map%ownerElement, getOwnerElement(arg))) then
         ! we are looking at literally the same node
         np => arg
@@ -5531,7 +5532,8 @@ endif
     endif
 
     if (getNodeType(arg)==ATTRIBUTE_NODE) then
-      call setSpecified(arg, .true.) ! in case it isnt already
+      if (getGCstate(getOwnerDocument(arg))) & ! We are not in the process of building, then:
+        call setSpecified(arg, .true.) ! in case it isnt already
       if (associated(map%ownerElement, getOwnerElement(arg))) then
         ! we are looking at literally the same node, so do nothing else
         np => arg
@@ -7183,10 +7185,9 @@ endif
               endif
               call setValue(new, str_vs(att%default), ex)
               call setSpecified(new, .false.)
-              ! In any case, we dont want to copy the children of this node.
-              doneChildren=.true.
             endif
-            ! Otherwise no attribute here
+            ! In any case, we dont want to copy the children of this node.
+            doneChildren=.true.
           endif
         case (TEXT_NODE)
           new => createTextNode(doc, getData(this, ex), ex)
@@ -7439,7 +7440,6 @@ endif
     allocate(np%elExtras%namespaceNodes%nodes(0))
 
     np%elExtras%attributes%ownerElement => np
-
     if (getGCstate(arg)) then
       np%inDocument = .false.
       call append(arg%docExtras%hangingnodes, np)
