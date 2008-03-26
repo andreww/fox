@@ -927,7 +927,7 @@ contains
               else
                 if (present(characters_handler)) then
                   call characters_handler(str_vs(fx%token))
-                  goto 100
+                  if (fx%state==ST_STOP) goto 100
                 endif
               endif
             else
