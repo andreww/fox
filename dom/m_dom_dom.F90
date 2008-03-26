@@ -195,7 +195,7 @@ module m_dom_dom
     type(xml_doc_state), pointer :: xds => null()
     logical :: strictErrorChecking = .true.
     logical :: brokenNS = .false. ! FIXME consolidate these logical variables into bitmask
-    type(DOMConfiguration), pointer :: domConfig
+    type(DOMConfiguration), pointer :: domConfig => null()
   end type documentExtras
 
   type elementOrAttributeExtras
@@ -237,9 +237,9 @@ module m_dom_dom
     type(NodeList) :: childNodes ! not for text, cdata, PI, comment, notation, docType, XPath
     logical :: inDocument = .false.! For a node, is this node associated to the doc?
     logical :: ignorableWhitespace = .false. ! Text nodes only
-    type(documentExtras), pointer :: docExtras
-    type(elementOrAttributeExtras), pointer :: elExtras
-    type(docTypeExtras), pointer :: dtdExtras
+    type(documentExtras), pointer :: docExtras => null()
+    type(elementOrAttributeExtras), pointer :: elExtras => null()
+    type(docTypeExtras), pointer :: dtdExtras => null()
     integer :: textContentLength = 0
   end type Node
 
@@ -5162,8 +5162,6 @@ endif
     endif
 
     if (getNodeType(arg)==ATTRIBUTE_NODE) then
-      if (getGCstate(getOwnerDocument(arg))) & ! We are not in the process of building, then:
-        call setSpecified(arg, .true.) ! just in case it isnt already
       if (associated(map%ownerElement, getOwnerElement(arg))) then
         ! we are looking at literally the same node
         np => arg
@@ -5532,8 +5530,6 @@ endif
     endif
 
     if (getNodeType(arg)==ATTRIBUTE_NODE) then
-      if (getGCstate(getOwnerDocument(arg))) & ! We are not in the process of building, then:
-        call setSpecified(arg, .true.) ! in case it isnt already
       if (associated(map%ownerElement, getOwnerElement(arg))) then
         ! we are looking at literally the same node, so do nothing else
         np => arg
@@ -7163,21 +7159,21 @@ endif
             att => get_attribute_declaration(elem, getName(this))
             if (attribute_has_default(att)) then
               ! Create the new default:
-              if (getParameter(getDomConfig(arg, ex), "namespaces", ex)) then
+              if (getParameter(getDomConfig(doc, ex), "namespaces", ex)) then
                 ! We create a namespaced attribute. Of course, its 
                 ! namespaceURI remains empty for the moment unless we know it ...
                 if (prefixOfQName(getName(this, ex))=="xml") then
-                  new => createAttributeNS(np, &
+                  new => createAttributeNS(doc, &
                     "http://www.w3.org/XML/1998/namespace", &
                     getName(this, ex), ex)
                 elseif (getName(this, ex)=="xmlns" & 
                   .or. prefixOfQName(getName(this, ex))=="xmlns") then
-                  new => createAttributeNS(np, &
+                  new => createAttributeNS(doc, &
                     "http://www.w3.org/2000/xmlns/", &
                     getName(this, ex), ex)
                 else
                   ! Wait for namespace fixup ...
-                  new => createAttributeNS(np, "", &
+                  new => createAttributeNS(doc, "", &
                     getName(this, ex), ex)
                 endif
               else
@@ -8387,7 +8383,7 @@ endif
             att => get_attribute_declaration(elem, getName(this))
             if (attribute_has_default(att)) then
               ! Create the new default:
-              if (getParameter(getDomConfig(arg), "namespaces")) then
+              if (getParameter(getDomConfig(doc), "namespaces")) then
                 ! We create a namespaced attribute. Of course, its 
                 ! namespaceURI remains empty for the moment unless we know it ...
                 if (prefixOfQName(getName(this))=="xml") then

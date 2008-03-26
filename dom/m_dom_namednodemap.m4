@@ -125,8 +125,6 @@ TOHW_m_dom_contents(`
     endif
 
     if (getNodeType(arg)==ATTRIBUTE_NODE) then
-      if (getGCstate(getOwnerDocument(arg))) & ! We are not in the process of building, then:
-        call setSpecified(arg, .true.) ! just in case it isnt already
       if (associated(map%ownerElement, getOwnerElement(arg))) then
         ! we are looking at literally the same node
         np => arg
@@ -385,8 +383,6 @@ TOHW_m_dom_contents(`
     endif
 
     if (getNodeType(arg)==ATTRIBUTE_NODE) then
-      if (getGCstate(getOwnerDocument(arg))) & ! We are not in the process of building, then:
-        call setSpecified(arg, .true.) ! in case it isnt already
       if (associated(map%ownerElement, getOwnerElement(arg))) then
         ! we are looking at literally the same node, so do nothing else
         np => arg

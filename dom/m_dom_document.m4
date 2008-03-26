@@ -597,21 +597,21 @@ TOHW_m_dom_treewalk(`dnl
             att => get_attribute_declaration(elem, getName(this))
             if (attribute_has_default(att)) then
               ! Create the new default:
-              if (getParameter(getDomConfig(arg, ex), "namespaces", ex)) then
+              if (getParameter(getDomConfig(doc, ex), "namespaces", ex)) then
                 ! We create a namespaced attribute. Of course, its 
                 ! namespaceURI remains empty for the moment unless we know it ...
                 if (prefixOfQName(getName(this, ex))=="xml") then
-                  new => createAttributeNS(np, &
+                  new => createAttributeNS(doc, &
                     "http://www.w3.org/XML/1998/namespace", &
                     getName(this, ex), ex)
                 elseif (getName(this, ex)=="xmlns" & 
                   .or. prefixOfQName(getName(this, ex))=="xmlns") then
-                  new => createAttributeNS(np, &
+                  new => createAttributeNS(doc, &
                     "http://www.w3.org/2000/xmlns/", &
                     getName(this, ex), ex)
                 else
                   ! Wait for namespace fixup ...
-                  new => createAttributeNS(np, "", &
+                  new => createAttributeNS(doc, "", &
                     getName(this, ex), ex)
                 endif
               else
@@ -1115,7 +1115,7 @@ TOHW_m_dom_set(logical, strictErrorChecking, np%docExtras%strictErrorChecking, (
             att => get_attribute_declaration(elem, getName(this))
             if (attribute_has_default(att)) then
               ! Create the new default:
-              if (getParameter(getDomConfig(arg), "namespaces")) then
+              if (getParameter(getDomConfig(doc), "namespaces")) then
                 ! We create a namespaced attribute. Of course, its 
                 ! namespaceURI remains empty for the moment unless we know it ...
                 if (prefixOfQName(getName(this))=="xml") then

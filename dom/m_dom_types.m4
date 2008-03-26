@@ -60,7 +60,7 @@ TOHW_m_dom_publics(`
     type(xml_doc_state), pointer :: xds => null()
     logical :: strictErrorChecking = .true.
     logical :: brokenNS = .false. ! FIXME consolidate these logical variables into bitmask
-    type(DOMConfiguration), pointer :: domConfig
+    type(DOMConfiguration), pointer :: domConfig => null()
   end type documentExtras
 
   type elementOrAttributeExtras
@@ -102,9 +102,9 @@ TOHW_m_dom_publics(`
     type(NodeList) :: childNodes ! not for text, cdata, PI, comment, notation, docType, XPath
     logical :: inDocument = .false.! For a node, is this node associated to the doc?
     logical :: ignorableWhitespace = .false. ! Text nodes only
-    type(documentExtras), pointer :: docExtras
-    type(elementOrAttributeExtras), pointer :: elExtras
-    type(docTypeExtras), pointer :: dtdExtras
+    type(documentExtras), pointer :: docExtras => null()
+    type(elementOrAttributeExtras), pointer :: elExtras => null()
+    type(docTypeExtras), pointer :: dtdExtras => null()
     integer :: textContentLength = 0
   end type Node
 
