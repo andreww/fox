@@ -365,20 +365,28 @@ contains
     type(content_particle_t), pointer :: cp
     logical :: p
 
-    select case (cp%operator)
-    case (OP_EMPTY, OP_ANY, OP_MIXED)
-      p = .false.
-    case default
+    if (associated(cp)) then
+      select case (cp%operator)
+      case (OP_EMPTY, OP_ANY, OP_MIXED)
+        p = .false.
+      case default
+        p = .true.
+      end select
+    else
       p = .true.
-    end select
+    endif
 
   end function elementContentCP
 
   function emptyContentCP(cp) result(p)
     type(content_particle_t), pointer :: cp
     logical :: p
-    
-    p = cp%operator==OP_EMPTY
+
+    if (associated(cp)) then
+      p = cp%operator==OP_EMPTY
+    else
+      p = .false.
+    endif
 
   end function emptyContentCP
 
