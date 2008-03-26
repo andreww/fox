@@ -6399,7 +6399,12 @@ endif
 
     np%elExtras%attributes%ownerElement => np
 
-    np%inDocument = .true.
+    if (getGCstate(arg)) then
+      call append(arg%docExtras%hangingnodes, np)
+      np%inDocument = .false.
+    else
+      np%inDocument = .true.
+    endif
   end function createEmptyElement
     
   function createDocumentFragment(arg, ex)result(np) 
@@ -7492,7 +7497,12 @@ endif
 
     np%elExtras%attributes%ownerElement => np
 
-    np%inDocument = .true.
+    if (getGCstate(arg)) then
+      call append(arg%docExtras%hangingnodes, np)
+      np%inDocument = .false.
+    else
+      np%inDocument = .true.
+    endif
   end function createEmptyElementNS
   
   function createAttributeNS(arg, namespaceURI, qualifiedname, ex)result(np) 

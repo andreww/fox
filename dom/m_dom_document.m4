@@ -210,7 +210,12 @@ TOHW_m_dom_get(Node, documentElement, np%docExtras%documentElement, (DOCUMENT_NO
 
     np%elExtras%attributes%ownerElement => np
 
-    np%inDocument = .true.
+    if (getGCstate(arg)) then
+      call append(arg%docExtras%hangingnodes, np)
+      np%inDocument = .false.
+    else
+      np%inDocument = .true.
+    endif
   end function createEmptyElement
     
   TOHW_function(createDocumentFragment, (arg), np)
@@ -778,7 +783,12 @@ TOHW_m_dom_treewalk(`dnl
 
     np%elExtras%attributes%ownerElement => np
 
-    np%inDocument = .true.
+    if (getGCstate(arg)) then
+      call append(arg%docExtras%hangingnodes, np)
+      np%inDocument = .false.
+    else
+      np%inDocument = .true.
+    endif
   end function createEmptyElementNS
   
   TOHW_function(createAttributeNS, (arg, namespaceURI,  qualifiedname), np)
