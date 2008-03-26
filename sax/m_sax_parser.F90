@@ -793,6 +793,7 @@ contains
           endif
           call open_tag
           if (in_error(fx%error_stack)) goto 100
+          if (fx%state==ST_STOP) goto 100
           deallocate(fx%name)
           nextState = ST_CHAR_IN_CONTENT
 
@@ -822,8 +823,10 @@ contains
           endif
           call open_tag
           if (in_error(fx%error_stack)) goto 100
+          if (fx%state==ST_STOP) goto 100
           call close_tag
           if (in_error(fx%error_stack)) goto 100
+          if (fx%state==ST_STOP) goto 100
           deallocate(fx%name)
           if (fx%context/=CTXT_IN_CONTENT) then
             fx%well_formed = .true.
@@ -918,7 +921,7 @@ contains
                     if (fx%state==ST_STOP) goto 100
                   endif
                 else
-                  call add_error(fx%error_stack, "Forbidden content inside element: "//get_top_elstack(fx%elstack))
+                  call add_error(fx%error_stack, "Forbidden content inside elementc: "//get_top_elstack(fx%elstack))
                   goto 100
                 endif
               elseif (emptyContent(fx%elstack)) then
@@ -1014,8 +1017,10 @@ contains
                   endif
                 endif
               endif
-              if (present(characters_handler)) &
+              if (present(characters_handler)) then
                 call characters_handler(expand_char_entity(str_vs(fx%token)))
+                if (fx%state==ST_STOP) goto 100
+              endif
             elseif (checkCharacterEntityReference(str_vs(fx%token), fx%xds%xml_version)) then
               call add_error(fx%error_stack, "Unable to digest character entity reference in content, sorry.")
               goto 100
@@ -1070,8 +1075,10 @@ contains
                   goto 100
                 endif
               endif
-              if (present(startEntity_handler)) &
+              if (present(startEntity_handler)) then
                 call startEntity_handler(str_vs(fx%token))
+                if (fx%state==ST_STOP) goto 100
+              endif
               call add_internal_entity(fx%forbidden_ge_list, str_vs(fx%token), "", null(), .false.)
               call open_new_string(fb, expand_entity(fx%xds%entityList, str_vs(fx%token)), str_vs(fx%token), baseURI=ent%baseURI)
               temp_wf_stack => wf_stack
@@ -1114,6 +1121,7 @@ contains
         case (TOK_END_TAG)
           call close_tag
           if (in_error(fx%error_stack)) goto 100
+          if (fx%state==ST_STOP) goto 100
           deallocate(fx%name)
           if (is_empty(fx%elstack)) then
             if (startInCharData_) then
@@ -1361,8 +1369,10 @@ contains
                 "Externally declared entity used in standalone document")
               goto 100
             elseif (ent%external) then
-              if (present(startEntity_handler)) &
+              if (present(startEntity_handler)) then
                 call startEntity_handler('%'//str_vs(fx%token))
+                if (fx%state==ST_STOP) goto 100
+              endif
               call add_internal_entity(fx%forbidden_pe_list, &
                 str_vs(fx%token), "", null(), .false.)
               call open_new_file(fb, ent%baseURI, iostat, pe=.true.)
@@ -1372,8 +1382,10 @@ contains
                     "Unable to retrieve external parameter entity "//str_vs(fx%token))
                   goto 100
                 endif
-                if (present(skippedEntity_handler)) &
+                if (present(skippedEntity_handler)) then
                   call skippedEntity_handler('%'//str_vs(fx%token))
+                  if (fx%state==ST_STOP) goto 100
+                endif
                 ! having skipped a PE, we must now not process
                 ! declarations any further (unless we are declared standalone)
                 ! (XML section 5.1)
@@ -1381,8 +1393,10 @@ contains
                 processDTD = fx%xds%standalone
               else
                 fx%inIntSubset = .false.
-                if (present(startEntity_handler)) &
+                if (present(startEntity_handler)) then
                   call startEntity_handler('%'//str_vs(fx%token))
+                  if (fx%state==ST_STOP) goto 100
+                endif
                 call add_internal_entity(fx%forbidden_pe_list, &
                   str_vs(fx%token), "", null(), .false.)
                 call parse_text_declaration(fb, fx%error_stack)
@@ -1396,8 +1410,10 @@ contains
               endif
             else
               ! Expand the entity,
-              if (present(startEntity_handler)) &
+              if (present(startEntity_handler)) then
                 call startEntity_handler('%'//str_vs(fx%token))
+                if (fx%state==ST_STOP) goto 100
+              endif
               call add_internal_entity(fx%forbidden_pe_list, &
                 str_vs(fx%token), "", null(), .false.)
               call open_new_string(fb, &
@@ -1418,8 +1434,10 @@ contains
             ! Have we previously skipped an external entity?
             if (fx%skippedExternal.and..not.fx%xds%standalone) then
               if (processDTD) then
-                if (present(skippedEntity_handler)) &
+                if (present(skippedEntity_handler)) then
                   call skippedEntity_handler('%'//str_vs(fx%token))
+                  if (fx%state==ST_STOP) goto 100
+                endif
               endif
             else
               ! If not, 
@@ -1648,13 +1666,17 @@ contains
           
         select case(fx%tokenType)
         case (TOK_CHAR)
-          if (present(processingInstruction_handler)) &
+          if (present(processingInstruction_handler)) then
             call processingInstruction_handler(str_vs(fx%name), str_vs(fx%token))
+            if (fx%state==ST_STOP) return
+          endif
           deallocate(fx%name)
           nextDTDState = ST_DTD_PI_END
         case (TOK_PI_END)
-          if (present(processingInstruction_handler)) &
+          if (present(processingInstruction_handler)) then
             call processingInstruction_handler(str_vs(fx%name), '')
+            if (fx%state==ST_STOP) return
+          endif
           deallocate(fx%name)
           nextDTDState = ST_DTD_SUBSET
         end select
@@ -1697,8 +1719,10 @@ contains
 
         select case (fx%tokenType)
         case (TOK_COMMENT_END)
-          if (present(comment_handler)) &
+          if (present(comment_handler)) then
             call comment_handler(str_vs(fx%name))
+            if (fx%state==ST_STOP) return
+          endif
           deallocate(fx%name)
           nextDTDState = ST_DTD_SUBSET
         end select
@@ -1775,8 +1799,10 @@ contains
           endif
           if (in_error(fx%error_stack)) return
           if (processDTD) then
-            if (present(attributeDecl_handler)) &
+            if (present(attributeDecl_handler)) then
               call report_declarations(elem, attributeDecl_handler)
+              if (fx%state==ST_STOP) return
+            endif
           endif
           nextDTDState = ST_DTD_SUBSET
         end select
@@ -2000,6 +2026,7 @@ contains
           if (processDTD) then
             call add_entity
             if (in_error(fx%error_stack)) return
+            if (fx%state==ST_STOP) return
           endif
           deallocate(fx%name)
           if (associated(fx%attname)) deallocate(fx%attname)
@@ -2060,6 +2087,7 @@ contains
           if (processDTD) then
             call add_entity
             if (in_error(fx%error_stack)) return
+            if (fx%state==ST_STOP) return
           endif
           deallocate(fx%name)
           if (associated(fx%attname)) deallocate(fx%attname)
