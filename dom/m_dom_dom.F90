@@ -7811,7 +7811,7 @@ endif
     do
       if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
       if (this%nodeType==ATTRIBUTE_NODE)  then
-        if (getIsId(this).and.getName(this)==elementId) then
+        if (getIsId(this).and.getValue(this)==elementId) then
           np => getOwnerElement(this)
           return
         endif

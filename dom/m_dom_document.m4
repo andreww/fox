@@ -934,7 +934,7 @@ TOHW_m_dom_treewalk(`dnl
     treeroot => getDocumentElement(arg)
 TOHW_m_dom_treewalk(`dnl
       if (this%nodeType==ATTRIBUTE_NODE)  then
-        if (getIsId(this).and.getName(this)==elementId) then
+        if (getIsId(this).and.getValue(this)==elementId) then
           np => getOwnerElement(this)
           return
         endif
