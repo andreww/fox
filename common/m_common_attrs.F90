@@ -676,7 +676,7 @@ contains
     else
       p = .false.
     endif
-    p = .false.
+
   end function getIsId_by_index
 
   subroutine setIsId_by_index(dict, i, p)
