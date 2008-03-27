@@ -26,7 +26,9 @@ contains
     character(len=*), intent(in) :: file
     integer, intent(out), optional :: iostat
     integer, intent(in), optional :: lun
-#ifndef DUMMYLIB
+#ifdef DUMMYLIB
+    if (present(iostat)) iostat = 0
+#else
     integer :: i
 
     call open_file(xt%fb, file=file, iostat=i, lun=lun, es=xt%fx%error_stack)

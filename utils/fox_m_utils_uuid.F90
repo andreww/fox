@@ -37,7 +37,9 @@ contains
     integer, intent(in), optional :: version
     character(len=36) :: uuid
 
-#ifndef DUMMYLIB
+#ifdef DUMMYLIB
+    uuid = ""
+#else
     integer(kind=i8b) :: timestamp, node
     integer(kind=i4b) :: clock_sequence
 

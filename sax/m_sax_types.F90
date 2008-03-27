@@ -154,7 +154,7 @@ module m_sax_types
     type(file_buffer_t) :: fb
     type(sax_parser_t) :: fx
 #else
-    integer :: i
+    integer :: i = 0
 #endif
   end type xml_t
 

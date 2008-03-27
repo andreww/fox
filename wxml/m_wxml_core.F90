@@ -75,7 +75,7 @@ module m_wxml_core
   type xmlf_t
     private
 #ifdef DUMMYLIB
-    integer :: i
+    integer :: i = 0
 #else
     type(xml_doc_state) :: xds
     integer                   :: lun = -1
@@ -176,7 +176,9 @@ contains
     logical, intent(in), optional :: valid
     logical, intent(in), optional :: namespace
     
-#ifndef DUMMYLIB
+#ifdef DUMMYLIB
+    if (present(iostat)) iostat = 0
+#else
     logical :: repl, decl
     integer :: iostat_
 
