@@ -1251,7 +1251,7 @@ dnl subroutine normalizeDocument - see m_dom_namespaces.m4
       deallocate(n%elExtras%namespaceURI)
       n%elExtras%namespaceURI => vs_str_alloc(namespaceURI)
       deallocate(n%elExtras%localName)
-      np%elExtras%localName => vs_str_alloc(localpartOfQName(qualifiedname))
+      n%elExtras%localName => vs_str_alloc(localpartOfQName(qualifiedname))
     case default
       TOHW_m_dom_throw_error(NOT_SUPPORTED_ERR)
     end select

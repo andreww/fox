@@ -8743,7 +8743,7 @@ endif
       deallocate(n%elExtras%namespaceURI)
       n%elExtras%namespaceURI => vs_str_alloc(namespaceURI)
       deallocate(n%elExtras%localName)
-      np%elExtras%localName => vs_str_alloc(localpartOfQName(qualifiedname))
+      n%elExtras%localName => vs_str_alloc(localpartOfQName(qualifiedname))
     case default
       if (getFoX_checks().or.NOT_SUPPORTED_ERR<200) then
   call throw_exception(NOT_SUPPORTED_ERR, "renameNode", ex)
