@@ -21,7 +21,6 @@ module m_handlers
   ! provided as a convenience by FoX.
 
   public :: characters_handler
-  public :: endDocument_handler
   public :: endElement_handler
   public :: startDocument_handler
   public :: startElement_handler
@@ -30,7 +29,7 @@ module m_handlers
   logical :: inParameter
   logical :: etolFound
   real :: etol
-  character, pointer :: c(:) => null()
+  character(200) :: c
 
   public :: etol
 
@@ -38,18 +37,12 @@ contains
 
   subroutine characters_handler(chunk)
     character(len=*), intent(in) :: chunk
-    character, pointer :: c2(:)
+
     if (inScalar.and.inParameter) then
       print*, "Found some scalar parameter data:"
       print*, trim(chunk)
       if (etolFound) then
-        if (associated(c)) then
-          c2 => concat(c, chunk)
-          deallocate(c)
-          c => c2
-        else
-          c => alloc(chunk)
-        endif
+        c = trim(c)//" "//chunk
       endif
     endif
 
@@ -66,7 +59,7 @@ contains
       inScalar = .false.
       if (etolFound) then
         ! pull the data out of the concatenated string:
-        call rts(str_vs(c), etol)
+        call rts(c, etol)
       endif
     elseif (URI=="http://www.xml-cml.org/schema" &
       .and. localName=="parameter") then
@@ -80,10 +73,6 @@ contains
     inScalar = .false.
     inParameter = .false.
   end subroutine startDocument_handler
-  
-  subroutine endDocument_handler
-    if (associated(c)) deallocate(c)
-  end subroutine endDocument_handler
   
   subroutine startElement_handler(URI, localname, name, attributes)
     character(len=*), intent(in)   :: URI
@@ -133,7 +122,6 @@ program sax_example
 
   call parse(fxml,&
     characters_handler=characters_handler, &
-    endDocument_handler=endDocument_handler, & 
     endElement_handler=endElement_handler, & 
     startDocument_handler=startDocument_handler, & 
     startElement_handler=startElement_handler)
