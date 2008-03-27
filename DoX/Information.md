@@ -5,7 +5,7 @@ which was written largely by Alberto Garcia <<albertog@icmab.es>> and Jon Wakeli
 
 FoX is the work of Toby White <<tow@uszla.me.uk>>, and all bug reports/complaints/bouquets of roses should be sent to him.
 
-There is a FoX website at <http://www.uszla.me.uk/software/FoX/>.
+There is a FoX website at <http://www.uszla.me.uk/FoX/>.
 
 There is also a mailing list for announcements/queries/bug reports. Information on how to subscribe may be found at <http://www.uszla.me.uk/cgi-bin/mailman/listinfo/FoX/>,
 

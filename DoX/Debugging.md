@@ -1,6 +1,6 @@
 #Debugging with FoX.
 
-Following experience integrating FoX into several codes, here are a few tips for debugging any problems you may encounter.
+Following experience integrating `FoX_wxml` into several codes, here are a few tips for debugging any problems you may encounter.
 
 
 ## Compilation problems
