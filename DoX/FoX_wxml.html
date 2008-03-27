@@ -65,32 +65,34 @@
 <li><code>xml_OpenFile</code> <br />
 <strong>filename</strong>: <em>string</em>: Filename to be opened <br />
 <strong>xf</strong>: <em>xmlf_t</em>: XML File handle <br />
-(<strong>preserve_whitespace</strong>): <em>logical</em>: Is whitespace important in the output? (If not, the XML will be pretty-printed.)
-<em>default: false</em> <br />
 (<strong>channel</strong>): <em>integer</em>: What Fortran file handle should the XML file be attached to? 
 <em>default: picked by the library at runtime</em> <br />
+(<strong>pretty_print</strong>): <em>logical</em>: Should the XML output be formatted to look pretty? (This implies that whitespace is not significant) 
+<em>default: false</em> <br />
 (<strong>replace</strong>): <em>logical</em>: Should the file be replaced if it already exists? 
 <em>default: no, stop at runtime if file already exists</em> <br />
-(<strong>addDecl</strong>): <em>logical</em>: Should an XML declaration be added at the start of the file?
-<em>default: yes</em>
-(<strong>valid</strong>): <em>logical</em>: Should wxml carry out any checks on the optional VC constraints specified by XML?
-<em>default: yes</em>
-(<strong>warning</strong>): <em>logical</em>: Should wxml emit warnings when it is unable to guarantee well-formedness?
-<em>default: no</em></li>
+(<strong>addDecl</strong>): <em>logical</em>: Should an XML declaration be added at the start of the file? 
+<em>default: yes</em> <br />
+(<strong>namespace</strong>): <em>logical</em>: Should wxml prevent the output of namespace-ill-formed documents? 
+<em>default: yes</em> <br />
+(<strong>valid</strong>): <em>logical</em>: Should wxml carry out any checks on the optional VC constraints specified by XML? 
+<em>default: no</em> <br />
+(<strong>warning</strong>): <em>logical</em>: Should wxml emit warnings when it is unable to guarantee well-formedness? 
+<em>default: no</em>  </li>
 </ul>
 
 <p>Open a file for writing XML</p>
 
-<p>By default, the XML will have no extraneous text nodes. This has the effect of it
+<p>By default, the XML will have no extraneous text nodes. This can have the effect of it
 looking slightly ugly, since there will be no newlines inserted between tags.</p>
 
 <p>This behaviour can be changed to produce slightly nicer looking XML, by switching
-on broken_indenting. This will insert newlines and spaces between some tags where
+on pretty_print. This will insert newlines and spaces between some tags where
 they are unlikely to carry semantics. Note, though, that this does result in 
 the XML produced being not quite what was asked for, since extra characters and
 text nodes have been inserted.</p>
 
-<p>NB: The <strong>replace</strong> option should be noted. By default, xml_OpenFile will fail with a runtime error if you try and write to an existing file. If you are sure you want to continue on in such a case, then you can specify <code>**replace**=.true.</code> and any existing files will be overwritten. If finer granularity is required over how to proceed in such cases, use the Fortran <code>inquire</code> statement in your code. There is no 'append' functionality by design - any XML file created by appending to an existing file would almost certainly be invalid.</p>
+<p>NB: The <strong>replace</strong> option should be noted. By default, xml_OpenFile will fail with a runtime error if you try and write to an existing file. If you are sure you want to continue on in such a case, then you can specify <code>**replace**=.true.</code> and any existing files will be overwritten. If finer granularity is required over how to proceed in such cases, use the Fortran <code>inquire</code> statement in your code. There is no 'append' functionality by design - any XML file created by appending to an existing file would be invalid.</p>
 
 <ul>
 <li><code>xml_Close</code> <br />
@@ -100,7 +102,7 @@ text nodes have been inserted.</p>
 
 <p>Close an opened XML file, closing all still-opened tags so that it is well-formed.</p>
 
-<p>In the normal run of event, trying to close an XML file with no root element will cause an error, since this is not well-formed. However, an doptional argument, <strong>empty</strong> is provided in case it is desirable to close files which may be empty. In this case, a warning will still be emitted, but no fatal error generated.</p>
+<p>In the normal run of event, trying to close an XML file with no root element will cause an error, since this is not well-formed. However, an optional argument, <strong>empty</strong> is provided in case it is desirable to close files which may be empty. In this case, a warning will still be emitted, but no fatal error generated.</p>
 
 <ul>
 <li><code>xml_NewElement</code> <br />
@@ -412,14 +414,13 @@ Contents of comment <br />
 
 <p><a name="Exceptions"/></p>
 
-<p>Below are explained areas where wxml fails to implement the whole of XML 1.0/1.1; numerical references below are to the sections in [<a href="#XML11">XML11</a>]]. These are divided into two lists; where wxml <strong>does not</strong> permit the generation of a particular well-formed XML document, and where it <strong>does</strong> permit the generation of a particular non-well-formed document.</p>
+<p>Below are explained areas where wxml fails to implement the whole of XML 1.0/1.1. These are divided into two lists; where wxml <strong>does not</strong> permit the generation of a particular well-formed XML document, and where it <strong>does</strong> permit the generation of a particular non-well-formed document.</p>
 
 <p>Ways in which wxml renders it impossible to produce a certain sort of well-formed XML document:</p>
 
 <ol>
-<li>XML documents which are not namespace-valid may not be produced; that is, attempts to produce documents which are well-formed according to [XML11] but not namespace-well-formed according to [Namespaces] will fail. </li>
-<li>Unicode support[[2.2]](http://www.w3.org/TR/xml11/#charsets) is limited. Due to the limitations of Fortran, wxmlis unable to manipulate characters outwith 7-bit US-ASCII. wxml will ensure that characters corresponding to those in 7-bit ASCII are output correctly within the constraints of the version of XML in use, for a UTF-8 encoding. Attempts to directly output any other characters will have undefined effects.  Output of other unicode characters is possible through the use of character entities.</li>
-<li>Due to the constraints of the Fortran IO specification, it is impossible to output arbitrary long strings without carriage returns. The size of the limit varies between processors, but may be as low as 1024 characters. To avoid overrunning this limit, wxml will by default insert carriage returns before every new element, and if an unbroken string of attribute or text data is requested greater than 1024 characters, then carriage returns will be inserted as appropriate; within whitespace if possible; to ensure it is broken up into smaller sections to fit within the limits. Thus unwanted text sections are being created, and user output modified. </li>
+<li>Unicode support is limited. Due to the limitations of Fortran, wxml is unable to manipulate characters outwith 7-bit US-ASCII. wxml will ensure that characters corresponding to those in 7-bit ASCII are output correctly within the constraints of the version of XML in use, for a UTF-8 encoding. Attempts to directly output any other characters will have undefined effects.  Output of other unicode characters is possible through the use of character entities.</li>
+<li>Due to the constraints of the Fortran IO specification, it is impossible to output arbitrary long strings without carriage returns. The size of the limit varies between processors, but may be as low as 1024 characters. To avoid overrunning this limit, wxml will by default insert carriage returns before every new element, and if an unbroken string of attribute or text data is requested greater than 1024 characters, then carriage returns will be inserted as appropriate; within whitespace if possible; to ensure it is broken up into smaller sections to fit within the limits.</li>
 </ol>
 
 <p>wxml will try very hard to ensure that output is well-formed. However, it is possible to fool wxml into producing ill-formed XML documents. Avoid doing so if possible; for completeness these ways are listed here. In all cases where ill-formedness is a possibility, a warning can be issued. These warnings can be verbose, so are off by default, but if they are desired, they can be switched on by manipulating the <code>warning</code> argument to <code>xml_OpenFile</code>.</p>
@@ -427,13 +428,10 @@ Contents of comment <br />
 <ol>
 <li>If you specify a non-default text encoding, and then run FoX on a platform which does not use this encoding, then the result will be nonsense, and more than likely ill-formed. FoX will issue a warning in this case.</li>
 <li>When adding any text, if any characters are passed in (regardless of character set) which do not have equivalants within 7-bit ASCII, then the results are processor-dependent, and may result in an invalid document on output. A warning will be issued if this occurs. If you need a guarantee that such characters will be passed correctly, use character entities.</li>
-<li>Although entities may be output, their contents are not comprehensively checked. It is therefore possible to output combinations of entities which produce nonsense when referenced and expanded. FoX will issue a warning when this is possible.</li>
-<li>Whenever an external subset of the DTD is referenced, and the document is not standalone, then FoX does not check that any such external references exist or are used correctly, and can therefore no longer guarantee well-formedness. In this case, a warning will be issued.</li>
-<li>When adding ELEMENT and ATTLIST declarations in the DTD, no checking at all is done on the contents of the declarations passed in, neither at the level of mere syntax, nor at the level of consistency; so that if the declaration is invalid syntactically, the resultant XML document will be ill-formed. A warning will be issued if either function is used.</li>
-<li>Within the DTD whenever any External ID is written with a SYSTEM ID, this should be a string which can be resolved to a correctly-formatted URI string. No such check is made by wxml though.</li>
+<li>If any parameter entities are referenced, no checks are made that the document after parameter-entity-expansion is well-formed. A warning will be issued. </li>
 </ol>
 
-<p>Finally, note that constraints on XML documents are divided into two sets - well-formedness constraints (WFC) and validity constraints (VC. The above only applies to WFC checks. wxml makes some minimal checks on VC checks, but this is by no means complete, nor is it intended to be. If it is necessary to produce invalid but well-formed documents, VC checks may be switched off by manipulating the <code>valid</code> argument to <code>xml_OpenFile</code>.</p>
+<p>Finally, note that constraints on XML documents are divided into two sets - well-formedness constraints (WFC) and validity constraints (VC). The above only applies to WFC checks. wxml can make some minimal checks on VCs, but this is by no means complete, nor is it intended to be. These checks are off by default, but may be switched on by manipulating the <code>valid</code> argument to <code>xml_OpenFile</code>.</p>
 
 <h2>References</h2>
 
