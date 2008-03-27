@@ -1,8 +1,8 @@
 # FoX versioning
 
-This documentation describes version 3.2.0 of the FoX library.
+This documentation describes version 4.0 of the FoX library.
 
-This version includes output modules for general XML, and for CML, and also a Fortran version of the SAX2 input parser, and a Fortran mapping of the W3C DOM interface.
+This version includes output modules for general XML, and for CML; and a fully validating XML parser, exposed through a Fortran version of the SAX2 input parser and a Fortran mapping of the W3C DOM interface.
 
 This is a stable branch, which will be maintained with important bugfixes.
 

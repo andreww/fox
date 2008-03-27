@@ -15,53 +15,11 @@
 
 <h3>Requirements for use</h3>
 
-<p>FoX requires a Fortran 95 compiler - not just Fortran 90. All currently available versions of Fortran compilers claim to support F95. If your favoured compiler is not listed as working below, I recommend the use of <a href="www.g95.org">g95</a>, which is free to download and use. And if your favourite compiler is listed as not working, then please send a bug report to your compiler vendor.</p>
+<p>FoX requires a Fortran 95 compiler - not just Fortran 90. All currently available versions of Fortran compilers claim to support F95. If your favoured compiler is not listed as working, I recommend the use of <a href="www.g95.org">g95</a>, which is free to download and use. And in such a case, please send a bug report to your compiler vendor.</p>
 
 <p>In the event that you need to write a code targetted at multiple compilers, including some which have bugs preventing FoX compilation, please note the possibility of producing a <a href="#dummy_library">dummy library</a>.</p>
 
-<p>The list below shows results as tested at the time of release with the 3.0 release of the FoX code (see a special the note on the PGI compilers <a href="#PGI">below</a>.). An up-to-date list of tested compiler version is maintained <a href="http://uszla.me.uk/space/software/FoX/compat/">here</a>.</p>
-
-<ul>
-<li>g95 as of 25/5/7</li>
-<li>gfortran as of version 4.2</li>
-<li>Intel version 8.1, 9.1, 10.1</li>
-<li>NAG version 5.1</li>
-<li>XLF version 10.01</li>
-</ul>
-
-<p>Known failures:</p>
-
-<ul>
-<li>Any version of Compaq Visual Fortran</li>
-<li>g95 prior to 25/5/7  </li>
-<li>Intel version 7.1  </li>
-<li>NAG version 5.0  </li>
-<li>F version of 16/5/6</li>
-<li>All PGI versions (see below)</li>
-</ul>
-
-<p>Results from other compilers are welcome.</p>
-
-<p>As of version 2.0.2, the following other compilers had been tested and are known to work:</p>
-
-<ul>
-<li>Lahey version 6.20</li>
-<li>Pathscale, version 2.4</li>
-<li>XLF version 9.1</li>
-</ul>
-
-<h4>PGI compilers</h4>
-
-<p><a name="PGI"/></p>
-
-<p>The Portland group compilers are by far the worst performing and buggiest compilers I have had the misfortune to use. Nevertheless, I have tried hard to make FoX work with them. The results are that:</p>
-
-<ul>
-<li><p>PGI 5.1 is completely broken. Compilation is impossible, too few F95 features are supported.</p></li>
-<li><p>PGI 6.1-6 and 6.2-3, and 7.0-2 are usable. All of FoX will be compiled, and most of the functionality is available, with the exception of any array-output routines, which the compiler runtime cannot handle. In practice, this means that most of WXML, and all of SAX and DOM are safe for use. Segfaults will be generated in the use of WCML.</p></li>
-</ul>
-
-<p>I cannot recommend the use of PGI compilers. Patches to work around PGI problems will be welcomed, but please direct bug reports to the Portland Group.</p>
+<p>An up-to-date list of tested compiler version is maintained <a href="http://uszla.me.uk/space/software/FoX/compat/">elsewhere</a>.</p>
 
 <h2>Configuration</h2>
 
@@ -113,7 +71,7 @@ places.  If you move the FoX directory later on, you will need to re-run configu
 
 <p>To run them all, simply run <code>make check</code> from the top-level directory. This will run the individual testsuites, and collate their results.</p>
 
-<p>If any failures occur (unrelated to known compiler issues, see the <a href="http://uszla.me.uk/space/software/FoX/compat/">up-to-date list</a>), please send a message to the mailing list (<a href="&#109;&#x61;il&#x74;&#x6F;:&#70;&#111;&#x58;&#64;&#x6C;&#105;&#x73;&#116;&#x73;&#x2E;&#117;&#115;&#x7A;&#x6C;&#97;&#46;&#x6D;&#101;&#x2E;&#117;k">&#70;&#111;&#x58;&#64;&#x6C;&#105;&#x73;&#116;&#x73;&#x2E;&#117;&#115;&#x7A;&#x6C;&#97;&#46;&#x6D;&#101;&#x2E;&#117;k</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
+<p>If any failures occur (unrelated to known compiler issues, see the <a href="http://uszla.me.uk/space/software/FoX/compat/">up-to-date list</a>), please send a message to the mailing list (<a href="&#109;&#97;i&#108;&#x74;&#x6F;:&#70;&#x6F;X&#64;&#x6C;i&#x73;&#116;&#115;&#x2E;&#x75;&#115;&#122;l&#x61;&#x2E;&#x6D;e&#46;&#x75;&#x6B;">&#70;&#x6F;X&#64;&#x6C;i&#x73;&#116;&#115;&#x2E;&#x75;&#115;&#122;l&#x61;&#x2E;&#x6D;e&#46;&#x75;&#x6B;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
 
 <h2>Linking to an existing program</h2>
 
@@ -165,7 +123,7 @@ places.  If you move the FoX directory later on, you will need to re-run configu
 
 <p>Because this dummy version of FoX contains nothing except empty subroutines, it compiles and links with all known Fortran 95 compilers, regardless of compiler bugs.</p>
 
-<p>To compile the dummy code, use the <code>--enable-dummy</code> switch. Note that currently the dummy code is only available for the WXML and WCML modules.</p>
+<p>To compile the dummy code, use the <code>--enable-dummy</code> switch. Note that currently the dummy mode is not yet available for the DOM module.</p>
 </div>
 </body>
 </html>
