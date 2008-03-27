@@ -8665,7 +8665,7 @@ endif
   endif
 endif
 
-    elseif (checkName(qualifiedName, getXmlVersionEnum(arg))) then
+    elseif (.not.checkName(qualifiedName, getXmlVersionEnum(arg))) then
       if (getFoX_checks().or.INVALID_CHARACTER_ERR<200) then
   call throw_exception(INVALID_CHARACTER_ERR, "renameNode", ex)
   if (present(ex)) then

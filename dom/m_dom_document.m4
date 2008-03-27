@@ -1221,7 +1221,7 @@ dnl subroutine normalizeDocument - see m_dom_namespaces.m4
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     elseif (.not.associated(arg, getOwnerDocument(n))) then
       TOHW_m_dom_throw_error(WRONG_DOCUMENT_ERR)
-    elseif (checkName(qualifiedName, getXmlVersionEnum(arg))) then
+    elseif (.not.checkName(qualifiedName, getXmlVersionEnum(arg))) then
       TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)
     elseif (.not.checkQName(qualifiedName, getXmlVersionEnum(arg))) then
       TOHW_m_dom_throw_error(NAMESPACE_ERR)
