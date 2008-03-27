@@ -1,4 +1,4 @@
-AC_INIT([FoX],[3.1.2],[tow@uszla.me.uk])
+AC_INIT([FoX],[4.0],[tow@uszla.me.uk])
 AC_CONFIG_SRCDIR([README.FoX.txt])
 dnl
 dnl Find system type.
@@ -122,9 +122,8 @@ AC_ARG_ENABLE([dummy],
   AC_HELP_STRING([--enable-dummy], [Compile only dummy interfaces]),
   [dummy=$enableval])
 if test x$dummy = xyes; then
-dnl DUMMYLIB doesnt work with SAX and DOM
   DEFS="$DEFS DUMMYLIB"
-  sax_yes=
+dnl DUMMYLIB doesnt work with DOM
   dom_yes=
 fi
 dnl
