@@ -13,6 +13,8 @@ This document is the primary API documentation for FoX, the Fortan/XML library.
 
 * [Embedding into an existing project](|Embedding|)
 
+* [Standards compliance](|Standards|)
+
 ## Other documentation
 
 The documentation here is largely reference in nature. For new users it is best to start elsewhere:

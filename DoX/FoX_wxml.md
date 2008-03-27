@@ -369,23 +369,3 @@ wxml will try very hard to ensure that output is well-formed. However, it is pos
  2. If any parameter entities are referenced, no checks are made that the document after parameter-entity-expansion is well-formed. A warning will be issued. 
 
 Finally, note that constraints on XML documents are divided into two sets - well-formedness constraints (WFC) and validity constraints (VC). The above only applies to WFC checks. wxml can make some minimal checks on VCs, but this is by no means complete, nor is it intended to be. These checks are off by default, but may be switched on by manipulating the `valid` argument to `xml_OpenFile`.
-
-##References
-
-<a name="References"/>
-
-<a name="XML10"/>
-
-[XML10]: W3C Recommendation, <http://www.w3.org/TR/REC-xml/>
-
-<a name="XML11"/>
-
-[XML11]: W3C Recommendation, <http://www.w3.org/TR/xml11>
-
-<a name="Namespaces"/>
-
-[Namespaces]: W3C Recommendation, <http://www.w3.org/TR/xml-names11>
-
-<a name="Stylesheets"/>
-
-[Stylesheets]: W3C Recommendation, <http://www.w3.org/TR/xml-stylesheet>
