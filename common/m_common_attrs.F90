@@ -395,21 +395,19 @@ contains
 #endif
   end function get_value_by_index
 
+#ifndef DUMMYLIB
   pure function get_key_len(dict, i) result(n)
     type(dictionary_t), intent(in) :: dict
     integer, intent(in) :: i
     integer :: n
 
-#ifdef DUMMYLIB
-    n = 1
-#else
     if (i>0.and.i<=ubound(dict%list, 1)) then
       n = size(dict%list(i)%d%key)
     else
       n = 0
     endif
-#endif
   end function get_key_len
+#endif
 
   function get_key(dict, i) result(key)
     type(dictionary_t), intent(in) :: dict
@@ -423,8 +421,8 @@ contains
       key = ""
     endif
 #else
-    character(len=1) :: value
-    value = ""
+    character(len=1) :: key
+    key = ""
 #endif
   end function get_key
 
