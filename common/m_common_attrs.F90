@@ -19,7 +19,8 @@ module m_common_attrs
     character(len=1), pointer, dimension(:) :: prefix => null()
     character(len=1), pointer, dimension(:) :: key => null()
     character(len=1), pointer, dimension(:) :: value => null()
-    logical :: specified
+    logical :: specified = .true.
+    logical :: declared = .false.
     logical :: isId = .false.
     integer :: type = 11
   end type dict_item
@@ -58,7 +59,10 @@ module m_common_attrs
   public :: getURI
   public :: getValue
   public :: getType
-  public :: getSpecified
+  public :: isSpecified
+  public :: setSpecified
+  public :: isDeclared
+  public :: setDeclared
   public :: hasKey
 
 #ifndef DUMMYLIB
@@ -144,11 +148,20 @@ module m_common_attrs
 #endif
 
   interface getType
-    module procedure getType_by_index, getType_by_keyname
+    module procedure getType_by_index
+    module procedure getType_by_keyname
   end interface
 
-  interface getSpecified
-    module procedure getSpecified_by_index
+  interface isSpecified
+    module procedure isSpecified_by_index
+    module procedure isSpecified_by_key
+    module procedure isSpecified_by_keyNS
+  end interface
+
+  interface isDeclared
+    module procedure isDeclared_by_index
+    module procedure isDeclared_by_key
+    module procedure isDeclared_by_keyNS
   end interface
 
 #ifndef DUMMYLIB
@@ -416,7 +429,7 @@ contains
   end function get_key
 
 #ifndef DUMMYLIB
-  subroutine add_item_to_dict(dict, key, value, prefix, nsURI, type, itype, specified)
+  subroutine add_item_to_dict(dict, key, value, prefix, nsURI, type, itype, specified, declared)
     type(dictionary_t), intent(inout) :: dict
     character(len=*), intent(in)           :: key
     character(len=*), intent(in)           :: value
@@ -425,6 +438,7 @@ contains
     character(len=*), intent(in), optional :: type
     integer, intent(in), optional :: itype
     logical, intent(in), optional :: specified
+    logical, intent(in), optional :: declared
 
     type(dict_item_ptr), pointer :: tempList(:)
     integer :: i, n
@@ -465,6 +479,11 @@ contains
       tempList(n)%d%specified = specified
     else
       tempList(n)%d%specified = .true.
+    endif
+    if (present(declared)) then
+      tempList(n)%d%declared = declared
+    else
+      tempList(n)%d%declared = .false.
     endif
 
     deallocate(dict%list)
@@ -649,7 +668,7 @@ contains
 #endif
   end function getType_by_keyname
 
-  function getSpecified_by_index(dict, i) result(p)
+  function isSpecified_by_index(dict, i) result(p)
     type(dictionary_t), intent(in) :: dict
     integer, intent(in) :: i
     logical :: p
@@ -663,7 +682,121 @@ contains
 #else
     p = .false.
 #endif
-  end function getSpecified_by_index
+  end function isSpecified_by_index
+
+  function isSpecified_by_key(dict, qName) result(p)
+    type(dictionary_t), intent(in) :: dict
+    character(len=*), intent(in) :: qName
+    logical :: p
+
+#ifndef DUMMYLIB
+    integer :: i
+    i = getIndex(dict, qName)
+    if (i>0.and.i<=ubound(dict%list, 1)) then
+      p = dict%list(i)%d%specified
+    else
+      p = .false.
+    endif
+#else
+    p = .false.
+#endif
+  end function isSpecified_by_key
+
+  subroutine setSpecified(dict, i, p)
+    type(dictionary_t), intent(inout) :: dict
+    integer, intent(in) :: i
+    logical, intent(in) :: p
+
+#ifndef DUMMYLIB
+    if (i>0.and.i<=ubound(dict%list, 1)) then
+      dict%list(i)%d%specified = p
+    endif
+#endif
+  end subroutine setSpecified
+
+  function isSpecified_by_keyNS(dict, uri, localName) result(p)
+    type(dictionary_t), intent(in) :: dict
+    character(len=*), intent(in) :: uri
+    character(len=*), intent(in) :: localName
+    logical :: p
+
+#ifndef DUMMYLIB
+    integer :: i
+    i = getIndex(dict, uri, localName)
+    if (i>0.and.i<=ubound(dict%list, 1)) then
+      p = dict%list(i)%d%specified
+    else
+      p = .false.
+    endif
+#else
+    p = .false.
+#endif
+  end function isSpecified_by_keyNS
+
+  function isDeclared_by_index(dict, i) result(p)
+    type(dictionary_t), intent(in) :: dict
+    integer, intent(in) :: i
+    logical :: p
+
+#ifndef DUMMYLIB
+    if (i>0.and.i<=ubound(dict%list, 1)) then
+      p = dict%list(i)%d%declared
+    else
+      p = .false.
+    endif
+#else
+    p = .false.
+#endif
+  end function isDeclared_by_index
+
+  function isDeclared_by_key(dict, qName) result(p)
+    type(dictionary_t), intent(in) :: dict
+    character(len=*), intent(in) :: qName
+    logical :: p
+
+#ifndef DUMMYLIB
+    integer :: i
+    i = getIndex(dict, qName)
+    if (i>0.and.i<=ubound(dict%list, 1)) then
+      p = dict%list(i)%d%declared
+    else
+      p = .false.
+    endif
+#else
+    p = .false.
+#endif
+  end function isDeclared_by_key
+
+  function isDeclared_by_keyNS(dict, uri, localName) result(p)
+    type(dictionary_t), intent(in) :: dict
+    character(len=*), intent(in) :: uri
+    character(len=*), intent(in) :: localName
+    logical :: p
+
+#ifndef DUMMYLIB
+    integer :: i
+    i = getIndex(dict, uri, localName)
+    if (i>0.and.i<=ubound(dict%list, 1)) then
+      p = dict%list(i)%d%declared
+    else
+      p = .false.
+    endif
+#else
+    p = .false.
+#endif
+  end function isDeclared_by_keyNS
+
+  subroutine setDeclared(dict, i, p)
+    type(dictionary_t), intent(inout) :: dict
+    integer, intent(in) :: i
+    logical, intent(in) :: p
+
+#ifndef DUMMYLIB
+    if (i>0.and.i<=ubound(dict%list, 1)) then
+      dict%list(i)%d%declared = p
+    endif
+#endif
+  end subroutine setDeclared
 
 #ifndef DUMMYLIB
   function getIsId_by_index(dict, i) result(p)
@@ -755,7 +888,6 @@ contains
   subroutine init_dict(dict)
     type(dictionary_t), intent(out) :: dict
 
-    integer :: i
 
     allocate(dict%list(0:0))
     allocate(dict%list(0)%d)

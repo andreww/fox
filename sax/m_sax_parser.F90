@@ -885,7 +885,7 @@ contains
           endif
           if (temp_i==ATT_CDATA) then
             call add_item_to_dict(fx%attributes, str_vs(fx%attname), &
-              str_vs(fx%token), itype=ATT_CDATA)
+              str_vs(fx%token), itype=ATT_CDATA, declared=associated(attDecl))
           else
             if (validCheck) then
               if (fx%xds%standalone.and..not.attDecl%internal &
@@ -897,7 +897,8 @@ contains
               endif
             endif
             call add_item_to_dict(fx%attributes, str_vs(fx%attname), &
-              att_value_normalize(str_vs(fx%token)), itype=temp_i)
+              att_value_normalize(str_vs(fx%token)), itype=temp_i, &
+              declared=.true.)
           endif
           deallocate(fx%attname)
           nextState = ST_IN_TAG
@@ -2510,7 +2511,8 @@ contains
           if (att%attDefault==ATT_DEFAULT &
             .or.att%attDefault==ATT_FIXED) then
             call add_item_to_dict(dict, &
-              str_vs(att%name), str_vs(att%default), specified=.false.)
+              str_vs(att%name), str_vs(att%default), &
+              specified=.false., declared=.true.)
           endif
         endif
       end do
@@ -2551,7 +2553,8 @@ contains
                 return
               else
                 call add_item_to_dict(dict, &
-                  str_vs(att%name), str_vs(att%default), specified=.false.)
+                  str_vs(att%name), str_vs(att%default), &
+                  specified=.false., declared=.true.)
               endif
             endif
           else
@@ -2748,7 +2751,8 @@ contains
               return
             else
               call add_item_to_dict(dict, &
-                str_vs(att%name), str_vs(att%default), specified=.false.)
+                str_vs(att%name), str_vs(att%default), &
+                specified=.false., declared=.true.)
             endif
           endif
         end select

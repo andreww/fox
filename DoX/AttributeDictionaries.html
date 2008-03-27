@@ -11,20 +11,30 @@
 
 <p>When parsing XML using the FoX SAX module, attributes are returned contained within a dictionary object.</p>
 
-<p>All of the attribute dictionary objects and functions are exported through FoX<em>common and FoX</em>sax - you must USE the module to enable them. The dictionary API is described here.</p>
+<p>This dictionary object implements all the methods described by the SAX interfaces Attributes and Attributes2. Full documentation is available from the SAX Javadoc, but is reproduced here for ease of reference.</p>
+
+<p>All of the attribute dictionary objects and functions are exported through FoX_sax - you must USE the module to enable them. The dictionary API is described here.</p>
 
 <p>An attribute dictionary consists of a list of entries, one for each attribute. The entries all have the following pieces of data:</p>
 
 <ul>
-<li>key - the attribute's full name  </li>
+<li>qName - the attribute's full name  </li>
 <li>value - the attribute's value</li>
 </ul>
 
 <p>and for namespaced attributes:</p>
 
 <ul>
-<li>nsURI - the namespace URI (if any) of the attribute</li>
-<li>localname - the local name of the attribute</li>
+<li>uri - the namespace URI (if any) of the attribute  </li>
+<li>localName - the local name of the attribute</li>
+</ul>
+
+<p>In addition, the following pieces of data will be picked up from a DTD if present:</p>
+
+<ul>
+<li>declared - is the attribute declared in the DTD?  </li>
+<li>specified - is this instance of the attribute specified in the XML document, or is it a default from the DTD?  </li>
+<li>type - the type of the attribute (if declared)</li>
 </ul>
 
 <hr />
@@ -37,19 +47,14 @@
 
 <h2>Functions</h2>
 
-<ul>
-<li><code>len <br />
-type(dictionary_t), intent(in) :: dict</code></li>
-</ul>
-
-<p>Returns an integer with the length of the dictionary, ie the number of dictionary entries.</p>
+<h3>Inspecting the dictionary</h3>
 
 <ul>
 <li><code>getLength <br />
 type(dictionary_t), intent(in) :: dict</code></li>
 </ul>
 
-<p>Returns an integer with the length of the dictionary, ie the number of dictionary entries. Identical to the <code>len</code> function.</p>
+<p>Returns an integer with the length of the dictionary, <em>ie</em> the number of dictionary entries.</p>
 
 <ul>
 <li><code>hasKey <br />
@@ -68,7 +73,7 @@ character(len=*), intent(in) :: localname</code></li>
 
 <p>Returns a logical value according to whether the dictionary contains an attribute with the correct <code>URI</code> and <code>localname</code>.</p>
 
-<p>The following functions may be used to retrieve data from a dictionary</p>
+<h3>Retrieving data from the dictionary</h3>
 
 <ul>
 <li><code>getQName <br />
@@ -89,7 +94,7 @@ integer, intent(in) :: i</code></li>
 <ul>
 <li><code>getValue <br />
 type(dictionary_t), intent(in) <br />
-character(len=*), intent(in) :: key</code></li>
+character(len=*), intent(in) :: qName</code></li>
 </ul>
 
 <p>If a single string is passed in, the value of the attribute with that name.</p>
@@ -118,13 +123,84 @@ integer, intent(in) :: i</code></li>
 
 <p>Returns a string containing the localName of the <code>i</code>th attribute.</p>
 
+<h3>DTD-driven functions</h3>
+
+<p>The following functions are only of interest if you are using DTDs.</p>
+
 <ul>
-<li><code>getType
-type(dictionary_t), intent(in)
-integer, intent(in) :: i</code></li>
+<li><code>getType 
+type(dictionary_t), intent(in) <br />
+integer, intent(in), optional :: i</code></li>
 </ul>
 
-<p>Returns a string containing the type of the <code>i</code>th attribute (as defined by any DTD in force).</p>
+<p>If an integer is passed in, returns the type of the <code>i</code>th attribute.</p>
+
+<ul>
+<li><code>getType <br />
+type(dictionary_t), intent(in) <br />
+character(len=*), intent(in) :: qName</code></li>
+</ul>
+
+<p>If a single string is passed in, returns the type of the attribute with that QName.</p>
+
+<ul>
+<li><code>getType <br />
+type(dictionary_t), intent(in) <br />
+character(len=*), intent(in) :: uri <br />
+character(len=*), intent(in) :: localName</code></li>
+</ul>
+
+<p>If a single string is passed in, returnsthe type of the attribute with that {uri,localName}.</p>
+
+<ul>
+<li><code>isDeclared <br />
+type(dictionary_t), intent(in) <br />
+integer, intent(in), optional :: i</code></li>
+</ul>
+
+<p>If an integer is passed in, returns false unless the <code>i</code>th attribute is declared in the DTD.</p>
+
+<ul>
+<li><code>isDeclared 
+type(dictionary_t), intent(in) <br />
+character(len=*), intent(in) :: qName</code></li>
+</ul>
+
+<p>If a single string is passed in, returns false unless the attribute with that QName is declared in the DTD.</p>
+
+<ul>
+<li><code>isDeclared <br />
+type(dictionary_t), intent(in) <br />
+character(len=*), intent(in) :: uri <br />
+character(len=*), intent(in) :: localName</code></li>
+</ul>
+
+<p>If a single string is passed in, returns false unless the attribute with that {uri,localName} is declared in the DTD.</p>
+
+<ul>
+<li><code>isSpecified <br />
+type(dictionary_t), intent(in) <br />
+integer, intent(in), optional :: i</code></li>
+</ul>
+
+<p>If an integer is passed in, returns true unless the <code>i</code>th attribute is a default value from the DTD.</p>
+
+<ul>
+<li><code>isSpecified 
+type(dictionary_t), intent(in) <br />
+character(len=*), intent(in) :: qName</code></li>
+</ul>
+
+<p>If a single string is passed in, returns true unless the attribute with that QName is a default value from the DTD.</p>
+
+<ul>
+<li><code>isSpecified <br />
+type(dictionary_t), intent(in) <br />
+character(len=*), intent(in) :: uri <br />
+character(len=*), intent(in) :: localName</code></li>
+</ul>
+
+<p>If a single string is passed in, returns true unless the attribute with that {uri,localName} is a default value from the DTD.</p>
 </div>
 </body>
 </html>

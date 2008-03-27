@@ -8,7 +8,7 @@ module m_dom_parse
   use m_common_error, only: FoX_error
   use m_common_struct, only: xml_doc_state
   use FoX_common, only: dictionary_t, getLength
-  use FoX_common, only: getQName, getValue, getURI, getSpecified
+  use FoX_common, only: getQName, getValue, getURI, isSpecified
   use m_sax_parser, only: sax_parse
   use FoX_sax, only: xml_t
   use FoX_sax, only: open_xml_file, open_xml_string, close_xml_t
@@ -95,7 +95,7 @@ contains
       call setValue(attr, str_vs(baseURI))
       deallocate(baseURI)
       if (i>0) then
-        call setSpecified(attr, getSpecified(attrs, i))
+        call setSpecified(attr, isSpecified(attrs, i))
         call setIsId(attr, getIsId(attrs, i))
       endif
       if (getParameter(domConfig, "namespaces")) then
@@ -113,7 +113,7 @@ contains
         attr => createAttribute(mainDoc, getQName(attrs, i))
       endif
       call setValue(attr, getValue(attrs, i))
-      call setSpecified(attr, getSpecified(attrs, i))
+      call setSpecified(attr, isSpecified(attrs, i))
       call setIsId(attr, getIsId(attrs, i))
       if (getParameter(domConfig, "namespaces")) then
         dummy => setAttributeNodeNS(el, attr)

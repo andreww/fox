@@ -23,6 +23,10 @@ module FoX_sax
   public :: getURI
   public :: getValue
   public :: getType
+  public :: isSpecified
+  public :: isDeclared
+  public :: setSpecified
+  public :: setDeclared
 !For convenience
   public :: hasKey
 

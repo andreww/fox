@@ -60,7 +60,7 @@ Does namespace processing occur? Default is `.true.`, and if on, then any non-na
 Are `xmlns` attributes reported through the SAX parser? Default is `.false.`; all such attributes are removed by the parser, and transparent namespace URI resolution is performed. If on, then such attributes will be reported, and treated according to the value of `xmlns-uris` below. (If `namespaces` is false, this flag has no effect)
 
 * `validate`
-Should partial validation be performed? Default is `.false.`, no validation checks are made, and the influence of the DTD on the XML Infoset is ignored. (Ill-formed DTD's will still cause fatal errors, of course.) If on, then a limited amount of validation will be performed, and the Infoset modified accordingly.
+Should validation be performed? Default is `.false.`, no validation checks are made, and the influence of the DTD on the XML Infoset is ignored. (Ill-formed DTD's will still cause fatal errors, of course.) If `.true.`, then validation will be performed, and the Infoset modified accordingly.
 
 * `xmlns_uris`
 Should `xmlns` attributes have a namespace of `http://www.w3.org/2000/xmlns/`? Default is `.false.`. If such attributes are reported, they have no namespace. If `.true.` then they are supplied with the appropriate namespace. (if `namespaces` or `namespace-prefixes` are `.false.`, then this flag has no effect.)
@@ -115,19 +115,21 @@ The other likely most common event is the startElement event. Handling this invo
 
 An attribute dictionary is essentially a set of key:value pairs - where the key is the attributes name, and the value is its value. (When considering namespaces, each attribute also has a URI and localName.)
 
-Full details of all the dictionary-manipulation routines are given in AttributeDictionaries(|AttributeDictionaries|), but here we shall show the most common.
+Full details of all the dictionary-manipulation routines are given in [AttributeDictionaries](|AttributeDictionaries|), but here we shall show the most common.
 
 * `getLength(dictionary)` - returns the number of entries in the dictionary (the number of attributes declared)
 
-* `getQName(dictionary, i)` (where `i` is an integer) returns a string containing the QName of the `i`th attribute.
-
-* `getValue(dictionary, i)` (where `i` is an integer) returns a string containing the value of the `i`th dictionary entry (ie the value of the `i`th attribute.
-
-* `hasKey(dictionary, key)` (where `key` is a string) returns `.true.` or `.false.` depending on whether an attribute named `key` is present.
+* `hasKey(dictionary, qName)` (where `qName` is a string) returns `.true.` or `.false.` depending on whether an attribute named `qName` is present.
 
 * `hasKey(dictionary, URI, localname)` (where `URI` and `localname` are strings) returns `.true.` or `.false.` depending on whether an attribute with the appropriate `URI` and `localname` is present.
 
+* `getQName(dictionary, i)` (where `i` is an integer) returns a string containing the key of the `i`th dictionary entry (ie, the name of the `i`th attribute.
+
+* `getValue(dictionary, i)` (where `i` is an integer) returns a string containing the value of the `i`th dictionary entry (ie the value of the `i`th attribute.
+
 * `getValue(dictionary, URI, localname)` (where `URI` and `localname` are strings) returns a string containing the value of the attribute with the appropriate `URI` and `localname` (if it is present)
+
+
 
 So, a simple subroutine to receive a startElement event would look like:
 
@@ -145,7 +147,11 @@ So, a simple subroutine to receive a startElement event would look like:
 
        print*, name
       
+<<<<<<< HEAD:DoX/FoX_sax.md
        do i = 1, len(attributes)
+=======
+       do i = 1, getLength(attributes)
+>>>>>>> Implement isSpecified and isDeclared and associated apparatus for sax dictionaries:DoX/FoX_sax.md
           print*, getQName(attributes, i), '=', getValue(attributes, i)
        enddo
 
@@ -166,19 +172,27 @@ Again, this does nothing but print out the name of the element, and the names an
 
 ### Error handling
 
-The SAX parser detects all XML well-formedness errors. By default, when it encounters an error, it will simply halt the program with a suitable error message. However, it is possible to pass in an error handling subroutine if some other behaviour is desired - for example it may be nice to report the error to the user, and carry on with some other task.
+The SAX parser detects all XML well-formedness errors (and optionally validation errors). By default, when it encounters an error, it will simply halt the program with a suitable error message. However, it is possible to pass in an error handling subroutine if some other behaviour is desired - for example it may be nice to report the error to the user, finish parsing, and carry on with some other task.
 
-In any case, once an error is encountered, the parser will finish. There is no way to continue reading past an error.
+In any case, once an error is encountered, the parser will finish. There is no way to continue reading past an error. (This means that all errors are treated as fatal errors, in the terminology of the XML standard).
 
-An error handling suubroutine works in the same way as any other event handler, with the event data being an error message. Thus, you could write:
+An error handling subroutine works in the same way as any other event handler, with the event data being an error message. Thus, you could write:
 
-    subroutine error_handler(msg)
+    subroutine fatalError_handler(msg)
       character(len=*), intent(in) :: msg
 
       print*, "The SAX parser encountered an error:"
       print*, msg
       print*, "Never mind, carrying on with the rest of the calcaulation."
     end subroutine
+
+### Stopping the parser.
+
+The parser can be stopped at any time. Simply do (from within one of the callback functions).
+
+    call stop_parser(xp)
+
+(where `xp` is the XML parser object). The current callback function will be completed, then the parser will be stopped, and control will return to the main program, the parser having finished.
 
 ----------
 
@@ -217,7 +231,7 @@ This closes down the parser (and closes the file, if input was coming from a fil
 
   This tells `xp` to start parsing its document. 
 
-(*Advanced: By default, this will be done in a non-validating way, testing only for well-formedness errors. However, if `validate` is set to true. FoX will attempt to diagnose validation errors. Note that FoX is not a full validating parser, and does not test all validity constraints*)
+(*Advanced: See above for the list of options that the `parse` subroutine may take.*)
 
 The full list of event handlers is in the next section. To use them, the interface must be placed in a module, and the body of the subroutine filled in as desired; then it should be specified as an argument to `parse` as:   
   `name_of_event_handler = name_of_user_written_subroutine`  
@@ -244,7 +258,7 @@ Triggered when some character data is read from between tags.
 
 NB Note that *all* character data is reported, including whitespace. Thus you will probably get a lot of empty `characters` events in a typical XML document.
 
-NB Note also that it is not required that large chunks of character data all come as one event - they may come as multiple consecutive events.
+NB Note also that it is not required that a single chunk of character data all come as one event - it may come as multiple consecutive events. You should concatenate the results of subsequent character events before processing.
 
 * `endDocument_handler   
       subroutine endDocument_handler()      
@@ -444,17 +458,15 @@ Triggered by the start of entity expansion.
 
 Although FoX tries very hard to  work to the letter of the XML and SAX standards, it falls short in a few areas.
 
-* Unicode support is completely absent. It is unfortunately impossible to implement Unicode reading in standard Fortran 95. FoX will work perfectly well on documents of any encoding that only contain characters equivalent to those in US-ASCII, but its behaviour on documents containing other characters is not well-defined.
+* FoX will only process documents consisting of only US-ASCII data. It will accept documents labelled with any character set which is identical to US-ASCII in its lower 7 bits (for example, any of the ISO-8859 charsets, or UTF-8) but an error will be generated as soon as any character outside US-ASCII is encountered. (This includes non-ASCII characters present only be character entity reference)
 
-(This includes non-ASCII characters present only by character reference.)
+* As a corollary, UTF-16 documents of any endianness will also be rejected.
 
-It will, however, happily accept documents labelled as UTF-8 encoded.
+(It is impossible to implement IO of non-ASCII documents in a portable fashion using standard Fortran 95, and it is impossible to handle non-ASCII data internally using standard Fortran strings. A fully unicode-capable FoX version is under development, but requires Fortran 2003. Please enquire for further details if you're interested.
 
-* FoX has no network capabilities. Therefore, when external entities are referenced, any entities not available on the local filesystem will not be accessed (specifically, any URIs which have a scheme present, and that scheme is not `file`, will be skipped)
+* FoX has no network capabilities. Therefore, when external entities are referenced, any entities not available on the local filesystem will not be accessed (specifically, any entities whose URI reference includes a scheme component, where that scheme is not `file`, will be skipped)
 
-Beyond this, any aspects of XML and SAX which FoX fails to do justice to are bugs.
-
-Note that (as permissable within XML) FoX acts primarily as a non-validating parser, and thus all constraints marked as Validity Constraints by XML-1.0/1.1 are ignored by default. A subset of them will be picked up by FoX's validation mode, but only a small subset.
+Beyond this, any aspects of XML and SAX to which FoX fails to do justice to are bugs.
 
 ---------------------
 
@@ -464,11 +476,9 @@ The difference betweek Java & Fortran means that none of the SAX APIs can be cop
 
 org.sax.xml:
 
-* Querying/setting of feature flags/property values for the XML parser.  
+* Querying/setting of feature flags/property values for the XML parser. The effect of a subset of these may be accessed by options to the `parse` subroutine.
 * XML filters - Java SAX makes it possible to write filters to intercept the
 flow of events. FoX does not support this.  
-* Namespace configuration - SAX 2 allows changing the ways in which namespaces are interpreted  
-by the parser. FoX supports only the SAX 2 default.
 * Entity resolution - SAX 2 exports an interface to the application for entity resolution, but  
 FOX does not - all entities are resolved within the parser.
 * Locator - SAX 2 offers an interface to export information regarding object locations within the document, FoX does not.  
@@ -477,8 +487,7 @@ FOX does not - all entities are resolved within the parser.
 
 org.sax.xml.ext:
 
-* Attributes2 - FoX does not implement these attribute-declaration querying functions   
-* EntityResolver2 - see above   
+* EntityResolver2 - not implemented  
 * Locator2 - not implemented  
 
 org.sax.xml.helpers:

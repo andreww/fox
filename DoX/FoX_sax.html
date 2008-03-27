@@ -75,7 +75,7 @@ Does namespace processing occur? Default is <code>.true.</code>, and if on, then
 <li><p><code>namespace_prefixes</code>
 Are <code>xmlns</code> attributes reported through the SAX parser? Default is <code>.false.</code>; all such attributes are removed by the parser, and transparent namespace URI resolution is performed. If on, then such attributes will be reported, and treated according to the value of <code>xmlns-uris</code> below. (If <code>namespaces</code> is false, this flag has no effect)</p></li>
 <li><p><code>validate</code>
-Should partial validation be performed? Default is <code>.false.</code>, no validation checks are made, and the influence of the DTD on the XML Infoset is ignored. (Ill-formed DTD's will still cause fatal errors, of course.) If on, then a limited amount of validation will be performed, and the Infoset modified accordingly.</p></li>
+Should validation be performed? Default is <code>.false.</code>, no validation checks are made, and the influence of the DTD on the XML Infoset is ignored. (Ill-formed DTD's will still cause fatal errors, of course.) If <code>.true.</code>, then validation will be performed, and the Infoset modified accordingly.</p></li>
 <li><p><code>xmlns_uris</code>
 Should <code>xmlns</code> attributes have a namespace of <code>http://www.w3.org/2000/xmlns/</code>? Default is <code>.false.</code>. If such attributes are reported, they have no namespace. If <code>.true.</code> then they are supplied with the appropriate namespace. (if <code>namespaces</code> or <code>namespace-prefixes</code> are <code>.false.</code>, then this flag has no effect.)</p></li>
 </ul>
@@ -131,14 +131,14 @@ end program
 
 <p>An attribute dictionary is essentially a set of key:value pairs - where the key is the attributes name, and the value is its value. (When considering namespaces, each attribute also has a URI and localName.)</p>
 
-<p>Full details of all the dictionary-manipulation routines are given in AttributeDictionaries(AttributeDictionaries.html), but here we shall show the most common.</p>
+<p>Full details of all the dictionary-manipulation routines are given in <a href="AttributeDictionaries.html">AttributeDictionaries</a>, but here we shall show the most common.</p>
 
 <ul>
 <li><p><code>getLength(dictionary)</code> - returns the number of entries in the dictionary (the number of attributes declared)</p></li>
-<li><p><code>getQName(dictionary, i)</code> (where <code>i</code> is an integer) returns a string containing the QName of the <code>i</code>th attribute.</p></li>
-<li><p><code>getValue(dictionary, i)</code> (where <code>i</code> is an integer) returns a string containing the value of the <code>i</code>th dictionary entry (ie the value of the <code>i</code>th attribute.</p></li>
-<li><p><code>hasKey(dictionary, key)</code> (where <code>key</code> is a string) returns <code>.true.</code> or <code>.false.</code> depending on whether an attribute named <code>key</code> is present.</p></li>
+<li><p><code>hasKey(dictionary, qName)</code> (where <code>qName</code> is a string) returns <code>.true.</code> or <code>.false.</code> depending on whether an attribute named <code>qName</code> is present.</p></li>
 <li><p><code>hasKey(dictionary, URI, localname)</code> (where <code>URI</code> and <code>localname</code> are strings) returns <code>.true.</code> or <code>.false.</code> depending on whether an attribute with the appropriate <code>URI</code> and <code>localname</code> is present.</p></li>
+<li><p><code>getQName(dictionary, i)</code> (where <code>i</code> is an integer) returns a string containing the key of the <code>i</code>th dictionary entry (ie, the name of the <code>i</code>th attribute.</p></li>
+<li><p><code>getValue(dictionary, i)</code> (where <code>i</code> is an integer) returns a string containing the value of the <code>i</code>th dictionary entry (ie the value of the <code>i</code>th attribute.</p></li>
 <li><p><code>getValue(dictionary, URI, localname)</code> (where <code>URI</code> and <code>localname</code> are strings) returns a string containing the value of the attribute with the appropriate <code>URI</code> and <code>localname</code> (if it is present)</p></li>
 </ul>
 
@@ -157,12 +157,34 @@ contains
    integer :: i
 
    print*, name
+</code></pre>
 
-   do i = 1, len(attributes)
-      print*, getQName(attributes, i), '=', getValue(attributes, i)
-   enddo
+<p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD:DoX/FoX_sax.md</p>
 
-  end subroutine startElement_handler
+<h1>       do i = 1, len(attributes)</h1>
+
+<pre><code>   do i = 1, getLength(attributes)
+</code></pre>
+
+<blockquote>
+  <blockquote>
+    <blockquote>
+      <blockquote>
+        <blockquote>
+          <blockquote>
+            <blockquote>
+              <p>Implement isSpecified and isDeclared and associated apparatus for sax dictionaries:DoX/FoX_sax.md
+                        print*, getQName(attributes, i), '=', getValue(attributes, i)
+                     enddo</p>
+            </blockquote>
+          </blockquote>
+        </blockquote>
+      </blockquote>
+    </blockquote>
+  </blockquote>
+</blockquote>
+
+<pre><code>  end subroutine startElement_handler
 end module
 
 program XMLreader
@@ -179,13 +201,13 @@ end program
 
 <h3>Error handling</h3>
 
-<p>The SAX parser detects all XML well-formedness errors. By default, when it encounters an error, it will simply halt the program with a suitable error message. However, it is possible to pass in an error handling subroutine if some other behaviour is desired - for example it may be nice to report the error to the user, and carry on with some other task.</p>
+<p>The SAX parser detects all XML well-formedness errors (and optionally validation errors). By default, when it encounters an error, it will simply halt the program with a suitable error message. However, it is possible to pass in an error handling subroutine if some other behaviour is desired - for example it may be nice to report the error to the user, finish parsing, and carry on with some other task.</p>
 
-<p>In any case, once an error is encountered, the parser will finish. There is no way to continue reading past an error.</p>
+<p>In any case, once an error is encountered, the parser will finish. There is no way to continue reading past an error. (This means that all errors are treated as fatal errors, in the terminology of the XML standard).</p>
 
-<p>An error handling suubroutine works in the same way as any other event handler, with the event data being an error message. Thus, you could write:</p>
+<p>An error handling subroutine works in the same way as any other event handler, with the event data being an error message. Thus, you could write:</p>
 
-<pre><code>subroutine error_handler(msg)
+<pre><code>subroutine fatalError_handler(msg)
   character(len=*), intent(in) :: msg
 
   print*, "The SAX parser encountered an error:"
@@ -193,6 +215,15 @@ end program
   print*, "Never mind, carrying on with the rest of the calcaulation."
 end subroutine
 </code></pre>
+
+<h3>Stopping the parser.</h3>
+
+<p>The parser can be stopped at any time. Simply do (from within one of the callback functions).</p>
+
+<pre><code>call stop_parser(xp)
+</code></pre>
+
+<p>(where <code>xp</code> is the XML parser object). The current callback function will be completed, then the parser will be stopped, and control will return to the main program, the parser having finished.</p>
 
 <hr />
 
@@ -236,7 +267,7 @@ logical, optional, intent(in) :: validate</code></p>
 <p>This tells <code>xp</code> to start parsing its document. </p></li>
 </ul>
 
-<p>(<em>Advanced: By default, this will be done in a non-validating way, testing only for well-formedness errors. However, if <code>validate</code> is set to true. FoX will attempt to diagnose validation errors. Note that FoX is not a full validating parser, and does not test all validity constraints</em>)</p>
+<p>(<em>Advanced: See above for the list of options that the <code>parse</code> subroutine may take.</em>)</p>
 
 <p>The full list of event handlers is in the next section. To use them, the interface must be placed in a module, and the body of the subroutine filled in as desired; then it should be specified as an argument to <code>parse</code> as: <br />
   <code>name_of_event_handler = name_of_user_written_subroutine</code> <br />
@@ -266,7 +297,7 @@ Thus a typical call to <code>parse</code> might look something like:</p>
 
 <p>NB Note that <em>all</em> character data is reported, including whitespace. Thus you will probably get a lot of empty <code>characters</code> events in a typical XML document.</p>
 
-<p>NB Note also that it is not required that large chunks of character data all come as one event - they may come as multiple consecutive events.</p>
+<p>NB Note also that it is not required that a single chunk of character data all come as one event - it may come as multiple consecutive events. You should concatenate the results of subsequent character events before processing.</p>
 
 <ul>
 <li><code>endDocument_handler <br />
@@ -517,20 +548,17 @@ Thus a typical call to <code>parse</code> might look something like:</p>
 <p>Although FoX tries very hard to  work to the letter of the XML and SAX standards, it falls short in a few areas.</p>
 
 <ul>
-<li>Unicode support is completely absent. It is unfortunately impossible to implement Unicode reading in standard Fortran 95. FoX will work perfectly well on documents of any encoding that only contain characters equivalent to those in US-ASCII, but its behaviour on documents containing other characters is not well-defined.</li>
+<li><p>FoX will only process documents consisting of only US-ASCII data. It will accept documents labelled with any character set which is identical to US-ASCII in its lower 7 bits (for example, any of the ISO-8859 charsets, or UTF-8) but an error will be generated as soon as any character outside US-ASCII is encountered. (This includes non-ASCII characters present only be character entity reference)</p></li>
+<li><p>As a corollary, UTF-16 documents of any endianness will also be rejected.</p></li>
 </ul>
 
-<p>(This includes non-ASCII characters present only by character reference.)</p>
-
-<p>It will, however, happily accept documents labelled as UTF-8 encoded.</p>
+<p>(It is impossible to implement IO of non-ASCII documents in a portable fashion using standard Fortran 95, and it is impossible to handle non-ASCII data internally using standard Fortran strings. A fully unicode-capable FoX version is under development, but requires Fortran 2003. Please enquire for further details if you're interested.</p>
 
 <ul>
-<li>FoX has no network capabilities. Therefore, when external entities are referenced, any entities not available on the local filesystem will not be accessed (specifically, any URIs which have a scheme present, and that scheme is not <code>file</code>, will be skipped)</li>
+<li>FoX has no network capabilities. Therefore, when external entities are referenced, any entities not available on the local filesystem will not be accessed (specifically, any entities whose URI reference includes a scheme component, where that scheme is not <code>file</code>, will be skipped)</li>
 </ul>
 
-<p>Beyond this, any aspects of XML and SAX which FoX fails to do justice to are bugs.</p>
-
-<p>Note that (as permissable within XML) FoX acts primarily as a non-validating parser, and thus all constraints marked as Validity Constraints by XML-1.0/1.1 are ignored by default. A subset of them will be picked up by FoX's validation mode, but only a small subset.</p>
+<p>Beyond this, any aspects of XML and SAX to which FoX fails to do justice to are bugs.</p>
 
 <hr />
 
@@ -541,11 +569,9 @@ Thus a typical call to <code>parse</code> might look something like:</p>
 <p>org.sax.xml:</p>
 
 <ul>
-<li>Querying/setting of feature flags/property values for the XML parser.  </li>
+<li>Querying/setting of feature flags/property values for the XML parser. The effect of a subset of these may be accessed by options to the <code>parse</code> subroutine.</li>
 <li>XML filters - Java SAX makes it possible to write filters to intercept the
 flow of events. FoX does not support this.  </li>
-<li>Namespace configuration - SAX 2 allows changing the ways in which namespaces are interpreted <br />
-by the parser. FoX supports only the SAX 2 default.</li>
 <li>Entity resolution - SAX 2 exports an interface to the application for entity resolution, but <br />
 FOX does not - all entities are resolved within the parser.</li>
 <li>Locator - SAX 2 offers an interface to export information regarding object locations within the document, FoX does not.  </li>
@@ -556,8 +582,7 @@ FOX does not - all entities are resolved within the parser.</li>
 <p>org.sax.xml.ext:</p>
 
 <ul>
-<li>Attributes2 - FoX does not implement these attribute-declaration querying functions   </li>
-<li>EntityResolver2 - see above   </li>
+<li>EntityResolver2 - not implemented  </li>
 <li>Locator2 - not implemented  </li>
 </ul>
 

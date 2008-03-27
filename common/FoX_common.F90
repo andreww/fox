@@ -37,10 +37,11 @@ module FoX_common
   public :: getURI
   public :: getValue
   public :: getType
-! Additional non-sax function that's pretty useful
-  public :: getSpecified
+  public :: isSpecified
+  public :: isDeclared
+  public :: setSpecified
+  public :: setDeclared
 !For convenience
-  public :: len
   public :: hasKey
 
 end module FoX_common
