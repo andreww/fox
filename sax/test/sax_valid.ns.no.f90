@@ -47,7 +47,7 @@ program sax_well_formed
     error_handler=error_handler,                 &
     fatalError_handler=fatalError_handler, &
     namespaces=.false.,  &
-    validation=.true.)
+    validate=.true.)
 
   call close_xml_t(fxml)
 

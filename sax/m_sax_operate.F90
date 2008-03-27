@@ -62,7 +62,7 @@ contains
   end subroutine close_xml_t
 
 
-  subroutine parse(xt,      &
+  subroutine parse(xt,             &
     characters_handler,            &
     endDocument_handler,           &
     endElement_handler,            &
@@ -93,7 +93,7 @@ contains
 ! Features / properties
     namespaces,                    &
     namespace_prefixes,            &
-    validation,                    &
+    validate,                      &
     xmlns_uris)
 
     type(xml_t), intent(inout) :: xt
@@ -126,7 +126,7 @@ contains
 
     logical, intent(in), optional :: namespaces
     logical, intent(in), optional :: namespace_prefixes
-    logical, intent(in), optional :: validation
+    logical, intent(in), optional :: validate
     logical, intent(in), optional :: xmlns_uris
 
     interface
@@ -287,7 +287,7 @@ contains
       startEntity_handler,           &
       namespaces=namespaces,                 &
       namespace_prefixes=namespace_prefixes, &
-      validate=validation,                   &
+      validate=validate,                     &
       xmlns_uris=xmlns_uris)
 #endif
   end subroutine parse

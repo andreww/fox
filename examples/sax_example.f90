@@ -291,7 +291,7 @@ program sax_example
     endEntity_handler,             &
     startCdata_handler,            &
     startDTD_handler,              &
-    startEntity_handler, validation=.true.)
+    startEntity_handler, validate=.true.)
 
   call close_xml_t(fxml)
 
