@@ -248,7 +248,9 @@ contains
     type(content_particle_t), pointer :: cp_next
 
     type(content_particle_t), pointer :: tcp
+    logical :: match
 
+    match = .false.
     cp_next => cp
     do
       tcp => cp_next%parent
@@ -264,25 +266,31 @@ contains
             ! go up a level and see if theres another legitimate choice
           endif
         elseif (tcp%operator==OP_SEQ) then
-          if (cp_next%repeater==REP_NULL) then
-            ! we have totally failed to match this SEQ.
-            ! go up a level & hope that it was ok ...
+          if ((match.or.cp_next%repeater/=REP_NULL) &
+            .and.associated(cp_next%nextSibling)) then
+            ! we were allowed to fail to match, try sibling
+            cp_next => cp_next%nextSibling
+            exit
+          elseif (cp_next%repeater/=REP_NULL) then
+            match = .true.
+            ! The last item was optional, so weve matched at this level
+            cp_next => tcp
+          elseif (associated(tcp%firstChild, cp_next)) then
+            ! we havent matched - but we hadnt started, Maybe it was ok
+            ! not to match because we are nested inside an optional thingy
             cp_next => tcp
           else
-            ! we didnt match this element of the SEQ, but the nextSibling
-            ! might be ok
-            if (associated(cp_next%nextSibling)) then
-              cp_next => cp_next%nextSibling
-              exit
-            else
-              cp_next => tcp
-            endif
+            ! We were not allowed to fail there,
+            ! there is no legitimate next choice.
+            cp_next => null()
+            exit
           endif
         endif
       else
         ! weve got all the way to the top without
-        ! finding a new cp to try
-        cp_next => tcp
+        ! finding a new cp to try. But if this top-level
+        ! cp is ASTERISK'ed we can try it agin
+        cp_next => null()
         exit
       endif
     enddo
@@ -301,10 +309,6 @@ contains
         p = .true.
       case default
         tcp => nextCPMustMatch(cp)
-        if (associated(tcp)) then
-          print*,"finally"
-          call dumpCP(tcp)
-        endif
         p = .not.associated(tcp)
       end select
     else
@@ -335,8 +339,6 @@ contains
     endif
     if (cp_next%repeater==REP_NULL) return
     do
-      print*, "trying"
-      call dumpCP(cp_next)
       tcp => cp_next%parent
       if (associated(tcp)) then
         if (tcp%operator==OP_CHOICE) then
