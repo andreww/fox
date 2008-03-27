@@ -696,10 +696,6 @@ call serialize(doc)
 
 <p>Therefore, FoX will by default produce errors about many attempts to manipulate the DOM in such a way as would result in invalid XML. These errors can be switched off if standards-compliant behaviour is wanted. Although extensive, these checks are not complete.
 In particular, the way the W3C DOM mandates namespace handling makes it trivial to produce namespace non-well-formed document trees, and very difficult for the processor to automatically detect the non-well-formedness. Thus a fully well-formed tree is only guaranteed after a suitable <code>normalizeDocument</code> call.</p>
-
-<ul>
-<li>This DOM implementation has been written with an eye more for correctness and standards-compliance than for efficiency. Certainly, where efficiency of speed or memory usage are at a premium, another language's DOM should be used. Nevertheless, the FoX DOM performs perfectly adequately on the tasks it has been presented with. For example, parsing, canonicalizing, and re-serializing a document of 52Kb (1205 nodes) takes approximately 0.3 seconds on a 2GHz Intel Core Duo processor, and consumes approximately 3.5Mb of memory. Both the parsing time and memory usage scale approximately linearly in number of nodes.</li>
-</ul>
 </div>
 </body>
 </html>

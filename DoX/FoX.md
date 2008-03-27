@@ -5,6 +5,8 @@
 [Separate pages](FoX.html)
 ## Introduction
 
+This document is the primary API documentation for FoX, the Fortan/XML library.
+
 * [Versioning](|Versioning|)
 
 * [Configuration and compilation](|Compilation|)
@@ -13,9 +15,21 @@
 
 ## Other documentation
 
-In January 2007, a workshop was run introducing FoX. This was **iFax: Integrating Fortran and XML**, organized by the [National Institute for Environmental eScience](http://www.niees.ac.uk).
+The documentation here is largely reference in nature. For new users it is best to start elsewhere:
 
-The materials for this workshop included several talks, a set of documentation, and a number of example programs and problem sets to work through. [All of these materials are available for download](http://buffalo.niees.group.cam.ac.uk/archive2.php?event_details=ifax).
+### iFaX workshops
+
+Two workshops, entitled iFaX (Integrating Fortran and XML) have been run teaching the use of FoX, one in January 2007 (organized by [NIEeS](http://www.niees.ac.uk)), and one in January 2008 (organized jointly by [NIEeS](http://www.niees.ac.uk) and [eSI](http://www.nesc.ac.uk/esi/)). The full documentation and lectures for these may be found at:
+
+* [iFaX I](http://buffalo.niees.group.cam.ac.uk/archive2.php?event_details=ifax)
+* [iFaX II](http://www.nesc.ac.uk/action/esi/contribution.cfm?Title=841)
+
+### Tutorials
+
+Out of the above workshops, some [tutorial material](http://www.uszla.me.uk/FoX/iFaX/) has been written, focussing on different use cases. Currently two are available:
+
+* [SAX input](http://www.uszla.me.uk/FoX/iFaX/iFaX.4/iFaX.4.html)
+* [DOM input](http://www.uszla.me.uk/FoX/iFaX/iFaX.5/iFaX.5.html)
 
 ## API documentation
 
