@@ -456,34 +456,35 @@ Triggered by the start of entity expansion.
 
 ### Exceptions.
 
+The FoX SAX implementation implements all of XML 1.0 and 1.1; all of XML Namespaces 1.0 and 1.1; xml:id and xml:base.
+
 Although FoX tries very hard to  work to the letter of the XML and SAX standards, it falls short in a few areas.
 
-* FoX will only process documents consisting of only US-ASCII data. It will accept documents labelled with any character set which is identical to US-ASCII in its lower 7 bits (for example, any of the ISO-8859 charsets, or UTF-8) but an error will be generated as soon as any character outside US-ASCII is encountered. (This includes non-ASCII characters present only be character entity reference)
+* FoX will only process documents consisting of nothing but US-ASCII data. It will accept documents labelled with any single byte character set which is identical to US-ASCII in its lower 7 bits (for example, any of the ISO-8859 charsets, or UTF-8) but an error will be generated as soon as any character outside US-ASCII is encountered. (This includes non-ASCII characters present only be character entity reference)
 
 * As a corollary, UTF-16 documents of any endianness will also be rejected.
 
-(It is impossible to implement IO of non-ASCII documents in a portable fashion using standard Fortran 95, and it is impossible to handle non-ASCII data internally using standard Fortran strings. A fully unicode-capable FoX version is under development, but requires Fortran 2003. Please enquire for further details if you're interested.
+(It is impossible to implement IO of non-ASCII documents in a portable fashion using standard Fortran 95, and it is impossible to handle non-ASCII data internally using standard Fortran strings. A fully unicode-capable FoX version is under development, but requires Fortran 2003. Please enquire for further details if you're interested.)
 
 * FoX has no network capabilities. Therefore, when external entities are referenced, any entities not available on the local filesystem will not be accessed (specifically, any entities whose URI reference includes a scheme component, where that scheme is not `file`, will be skipped)
 
-Beyond this, any aspects of XML and SAX to which FoX fails to do justice to are bugs.
+Beyond this, any aspects of the listed XML standards to which FoX fails to do justice to are bugs.
 
 ---------------------
 
 ### What of Java SAX 2 is not included in FoX?
 
-The difference betweek Java & Fortran means that none of the SAX APIs can be copied directly. However, FoX offers data types, subroutines, and interfaces covering a large proportion of the facilities offered by SAX. Where it does not, this is mentioned here.
+The difference betweek Java & Fortran means that none of the SAX APIs can be copied directly. However, FoX offers data types, subroutines, and interfaces covering most of the facilities offered by SAX. Where it does not, this is mentioned here.
 
 org.sax.xml:
 
 * Querying/setting of feature flags/property values for the XML parser. The effect of a subset of these may be accessed by options to the `parse` subroutine.
 * XML filters - Java SAX makes it possible to write filters to intercept the
 flow of events. FoX does not support this.  
-* Entity resolution - SAX 2 exports an interface to the application for entity resolution, but  
-FOX does not - all entities are resolved within the parser.
+* Entity resolution - SAX 2 exports an interface to the application for entity resolution, but FoX does not - all entities are resolved within the parser.
 * Locator - SAX 2 offers an interface to export information regarding object locations within the document, FoX does not.  
 * XMLReader - FoX only offers the parse() method - no other methods really make sense in Fortran.  
-* AttributeList/DocumentHandler/Parser - FoX only offers namespace aware attributes, not the pre-namespace versions.  
+* AttributeList/DocumentHandler/Parser - FoX only offers namespace aware attributes, not the pre-namespace SAX-1 versions.  
 
 org.sax.xml.ext:
 

@@ -1,8 +1,8 @@
 # String handling in FoX
 
-Many of the routines in wxml, and indeed in wcml which is built on top of wxml, are overloaded so that data may be passed to the same routine as string, integer, logical or real data.
+Many of the routines in wxml, and indeed in wcml which is built on top of wxml, are overloaded so that data may be passed to the same routine as string, integer, logical, real, or complex data.
 
-In such cases, a few notes on the conversion of non-textual data to text is on order. The
+In such cases, a few notes on the conversion of non-textual data to text is in order. The
 standard Fortran I/O formatting routines do not offer the control required for useful XML output, so FoX performs all its own formatting.
 
 This formatting is done internally through a function which is also available publically to the user, `str`.

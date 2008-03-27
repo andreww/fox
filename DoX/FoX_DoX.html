@@ -182,7 +182,7 @@ places.  If you move the FoX directory later on, you will need to re-run configu
 
 <p>To run them all, simply run <code>make check</code> from the top-level directory. This will run the individual testsuites, and collate their results.</p>
 
-<p>If any failures occur (unrelated to known compiler issues, see the <a href="http://uszla.me.uk/space/software/FoX/compat/">up-to-date list</a>), please send a message to the mailing list (<a href="&#x6D;&#97;&#105;&#x6C;&#116;&#x6F;:&#70;&#111;&#x58;&#64;&#108;&#105;&#115;&#x74;&#115;&#x2E;&#117;&#x73;&#x7A;&#108;&#x61;&#x2E;&#109;&#101;&#x2E;u&#x6B;">&#70;&#111;&#x58;&#64;&#108;&#105;&#115;&#x74;&#115;&#x2E;&#117;&#x73;&#x7A;&#108;&#x61;&#x2E;&#109;&#101;&#x2E;u&#x6B;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
+<p>If any failures occur (unrelated to known compiler issues, see the <a href="http://uszla.me.uk/space/software/FoX/compat/">up-to-date list</a>), please send a message to the mailing list (<a href="&#x6D;&#97;i&#x6C;&#116;&#111;:&#x46;&#111;&#x58;&#64;&#108;i&#x73;&#x74;&#x73;&#x2E;&#x75;&#x73;&#x7A;&#108;&#x61;&#46;&#109;&#101;&#46;&#x75;&#107;">&#x46;&#111;&#x58;&#64;&#108;i&#x73;&#x74;&#x73;&#x2E;&#x75;&#x73;&#x7A;&#108;&#x61;&#46;&#109;&#101;&#46;&#x75;&#107;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
 
 <h2>Linking to an existing program</h2>
 
@@ -343,9 +343,9 @@ save space)</li>
 <a name="StringFormatting"/>
 <h1>String handling in FoX</h1>
 
-<p>Many of the routines in wxml, and indeed in wcml which is built on top of wxml, are overloaded so that data may be passed to the same routine as string, integer, logical or real data.</p>
+<p>Many of the routines in wxml, and indeed in wcml which is built on top of wxml, are overloaded so that data may be passed to the same routine as string, integer, logical, real, or complex data.</p>
 
-<p>In such cases, a few notes on the conversion of non-textual data to text is on order. The
+<p>In such cases, a few notes on the conversion of non-textual data to text is in order. The
 standard Fortran I/O formatting routines do not offer the control required for useful XML output, so FoX performs all its own formatting.</p>
 
 <p>This formatting is done internally through a function which is also available publically to the user, <code>str</code>.</p>
@@ -1990,26 +1990,28 @@ Thus a typical call to <code>parse</code> might look something like:</p>
 
 <h3>Exceptions.</h3>
 
+<p>The FoX SAX implementation implements all of XML 1.0 and 1.1; all of XML Namespaces 1.0 and 1.1; xml:id and xml:base.</p>
+
 <p>Although FoX tries very hard to  work to the letter of the XML and SAX standards, it falls short in a few areas.</p>
 
 <ul>
-<li><p>FoX will only process documents consisting of only US-ASCII data. It will accept documents labelled with any character set which is identical to US-ASCII in its lower 7 bits (for example, any of the ISO-8859 charsets, or UTF-8) but an error will be generated as soon as any character outside US-ASCII is encountered. (This includes non-ASCII characters present only be character entity reference)</p></li>
+<li><p>FoX will only process documents consisting of nothing but US-ASCII data. It will accept documents labelled with any single byte character set which is identical to US-ASCII in its lower 7 bits (for example, any of the ISO-8859 charsets, or UTF-8) but an error will be generated as soon as any character outside US-ASCII is encountered. (This includes non-ASCII characters present only be character entity reference)</p></li>
 <li><p>As a corollary, UTF-16 documents of any endianness will also be rejected.</p></li>
 </ul>
 
-<p>(It is impossible to implement IO of non-ASCII documents in a portable fashion using standard Fortran 95, and it is impossible to handle non-ASCII data internally using standard Fortran strings. A fully unicode-capable FoX version is under development, but requires Fortran 2003. Please enquire for further details if you're interested.</p>
+<p>(It is impossible to implement IO of non-ASCII documents in a portable fashion using standard Fortran 95, and it is impossible to handle non-ASCII data internally using standard Fortran strings. A fully unicode-capable FoX version is under development, but requires Fortran 2003. Please enquire for further details if you're interested.)</p>
 
 <ul>
 <li>FoX has no network capabilities. Therefore, when external entities are referenced, any entities not available on the local filesystem will not be accessed (specifically, any entities whose URI reference includes a scheme component, where that scheme is not <code>file</code>, will be skipped)</li>
 </ul>
 
-<p>Beyond this, any aspects of XML and SAX to which FoX fails to do justice to are bugs.</p>
+<p>Beyond this, any aspects of the listed XML standards to which FoX fails to do justice to are bugs.</p>
 
 <hr />
 
 <h3>What of Java SAX 2 is not included in FoX?</h3>
 
-<p>The difference betweek Java &amp; Fortran means that none of the SAX APIs can be copied directly. However, FoX offers data types, subroutines, and interfaces covering a large proportion of the facilities offered by SAX. Where it does not, this is mentioned here.</p>
+<p>The difference betweek Java &amp; Fortran means that none of the SAX APIs can be copied directly. However, FoX offers data types, subroutines, and interfaces covering most of the facilities offered by SAX. Where it does not, this is mentioned here.</p>
 
 <p>org.sax.xml:</p>
 
@@ -2017,11 +2019,10 @@ Thus a typical call to <code>parse</code> might look something like:</p>
 <li>Querying/setting of feature flags/property values for the XML parser. The effect of a subset of these may be accessed by options to the <code>parse</code> subroutine.</li>
 <li>XML filters - Java SAX makes it possible to write filters to intercept the
 flow of events. FoX does not support this.  </li>
-<li>Entity resolution - SAX 2 exports an interface to the application for entity resolution, but <br />
-FOX does not - all entities are resolved within the parser.</li>
+<li>Entity resolution - SAX 2 exports an interface to the application for entity resolution, but FoX does not - all entities are resolved within the parser.</li>
 <li>Locator - SAX 2 offers an interface to export information regarding object locations within the document, FoX does not.  </li>
 <li>XMLReader - FoX only offers the parse() method - no other methods really make sense in Fortran.  </li>
-<li>AttributeList/DocumentHandler/Parser - FoX only offers namespace aware attributes, not the pre-namespace versions.  </li>
+<li>AttributeList/DocumentHandler/Parser - FoX only offers namespace aware attributes, not the pre-namespace SAX-1 versions.  </li>
 </ul>
 
 <p>org.sax.xml.ext:</p>
@@ -3073,9 +3074,9 @@ Return the value of the fragment</p></li>
 <h1>Further information</h1>
 
 <p>FoX evolved from the initial codebase of <a href="http://lcdx00.wm.lc.ehu.es/ag/xml/">xmlf90</a>,
-which was written largely by Alberto Garcia &lt;<a href="&#109;&#97;&#105;l&#x74;&#x6F;:&#x61;&#108;&#98;&#x65;&#x72;&#116;&#x6F;&#x67;&#64;&#105;&#99;&#109;a&#98;&#46;&#x65;&#115;">&#x61;&#108;&#98;&#x65;&#x72;&#116;&#x6F;&#x67;&#64;&#105;&#99;&#109;a&#98;&#46;&#x65;&#115;</a>> and Jon Wakelin &lt;<a href="&#109;&#x61;&#x69;&#x6C;&#x74;&#x6F;:&#x6A;&#111;&#x6E;&#x2E;&#x77;&#97;&#107;&#x65;&#x6C;&#x69;&#110;&#64;&#98;&#114;&#105;&#115;&#x74;o&#x6C;&#x2E;&#97;&#x63;&#x2E;u&#x6B;">&#x6A;&#111;&#x6E;&#x2E;&#x77;&#97;&#107;&#x65;&#x6C;&#x69;&#110;&#64;&#98;&#114;&#105;&#115;&#x74;o&#x6C;&#x2E;&#97;&#x63;&#x2E;u&#x6B;</a>>.</p>
+which was written largely by Alberto Garcia &lt;<a href="&#x6D;&#97;&#x69;&#x6C;&#x74;&#111;:&#x61;&#108;&#98;&#101;&#114;&#x74;&#111;&#103;&#64;&#105;&#99;&#x6D;&#x61;&#x62;&#x2E;&#101;&#x73;">&#x61;&#108;&#98;&#101;&#114;&#x74;&#111;&#103;&#64;&#105;&#99;&#x6D;&#x61;&#x62;&#x2E;&#101;&#x73;</a>> and Jon Wakelin &lt;<a href="m&#97;&#x69;&#x6C;&#x74;&#x6F;:&#106;&#x6F;&#x6E;.&#119;&#97;k&#101;&#x6C;&#x69;&#x6E;&#64;&#x62;&#114;&#105;&#115;t&#x6F;&#108;&#46;&#x61;&#x63;&#46;uk">&#106;&#x6F;&#x6E;.&#119;&#97;k&#101;&#x6C;&#x69;&#x6E;&#64;&#x62;&#114;&#105;&#115;t&#x6F;&#108;&#46;&#x61;&#x63;&#46;uk</a>>.</p>
 
-<p>FoX is the work of Toby White &lt;<a href="&#x6D;&#x61;&#x69;&#x6C;&#116;&#111;:&#116;&#x6F;&#x77;&#64;&#117;&#115;&#x7A;&#108;a&#46;&#x6D;e.&#x75;&#x6B;">&#116;&#x6F;&#x77;&#64;&#117;&#115;&#x7A;&#108;a&#46;&#x6D;e.&#x75;&#x6B;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
+<p>FoX is the work of Toby White &lt;<a href="&#109;&#x61;&#105;&#108;&#x74;&#x6F;:&#116;&#111;&#119;&#64;&#x75;&#x73;&#122;&#x6C;&#97;&#46;&#109;&#101;.&#117;&#x6B;">&#116;&#111;&#119;&#64;&#x75;&#x73;&#122;&#x6C;&#97;&#46;&#109;&#101;.&#117;&#x6B;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
 
 <p>There is a FoX website at <a href="http://www.uszla.me.uk/FoX/">http://www.uszla.me.uk/FoX/</a>.</p>
 
