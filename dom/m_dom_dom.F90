@@ -5639,10 +5639,10 @@ endif
             ! Well swap the old one out & put a new one in.
             ! Do *nothing* about namespace handling at this stage,
             ! wait until we are asked for namespace normalization
-            np => createAttribute(getOwnerDocument(map%ownerElement), getName(np))
+            np => createAttributeNS(getOwnerDocument(map%ownerElement), getNamespaceURI(np), getName(np))
             call setValue(np, str_vs(att%default))
             call setSpecified(np, .false.)
-            np => setNamedItem(map, np)
+            np => setNamedItemNS(map, np)
             call setSpecified(np, .true.)
             return
           endif
@@ -7810,7 +7810,7 @@ endif
     this => treeroot
     do
       if (.not.doneChildren.and..not.(getNodeType(this)==ELEMENT_NODE.and.doneAttributes)) then
-      if (this%nodeType==ATTRIBUTE_NODE)  then
+      if (this%nodeType==ATTRIBUTE_NODE) then
         if (getIsId(this).and.getValue(this)==elementId) then
           np => getOwnerElement(this)
           return
