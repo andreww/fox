@@ -61,7 +61,7 @@ common_lib_check:
 	(cd common; $(MAKE) check)
 	touch common_lib_check
 #
-utils_lib: objsdir
+utils_lib: objsdir fsys_lib
 	(cd utils; $(MAKE))
 utils_lib_clean:
 	if test -d utils; then (cd utils; $(MAKE) clean) fi
