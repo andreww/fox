@@ -62,7 +62,7 @@ This is an opaque type representing the XML file handle. Each function requires 
   *default: yes*  
 (**namespace**): *logical*: Should wxml prevent the output of namespace-ill-formed documents? 
  *default: yes*  
-(**valid**): *logical*: Should wxml carry out any checks on the optional VC constraints specified by XML? 
+(**validate**): *logical*: Should wxml carry out any checks on the optional VC constraints specified by XML? 
  *default: no*  
 (**warning**): *logical*: Should wxml emit warnings when it is unable to guarantee well-formedness? 
  *default: no*  
@@ -368,4 +368,4 @@ wxml will try very hard to ensure that output is well-formed. However, it is pos
  4. When adding any text, if any characters are passed in (regardless of character set) which do not have equivalants within 7-bit ASCII, then the results are processor-dependent, and may result in an invalid document on output. A warning will be issued if this occurs. If you need a guarantee that such characters will be passed correctly, use character entities.
  2. If any parameter entities are referenced, no checks are made that the document after parameter-entity-expansion is well-formed. A warning will be issued. 
 
-Finally, note that constraints on XML documents are divided into two sets - well-formedness constraints (WFC) and validity constraints (VC). The above only applies to WFC checks. wxml can make some minimal checks on VCs, but this is by no means complete, nor is it intended to be. These checks are off by default, but may be switched on by manipulating the `valid` argument to `xml_OpenFile`.
+Finally, note that constraints on XML documents are divided into two sets - well-formedness constraints (WFC) and validity constraints (VC). The above only applies to WFC checks. wxml can make some minimal checks on VCs, but this is by no means complete, nor is it intended to be. These checks are off by default, but may be switched on by manipulating the `validate` argument to `xml_OpenFile`.

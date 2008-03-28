@@ -75,7 +75,7 @@
 <em>default: yes</em> <br />
 (<strong>namespace</strong>): <em>logical</em>: Should wxml prevent the output of namespace-ill-formed documents? 
 <em>default: yes</em> <br />
-(<strong>valid</strong>): <em>logical</em>: Should wxml carry out any checks on the optional VC constraints specified by XML? 
+(<strong>validate</strong>): <em>logical</em>: Should wxml carry out any checks on the optional VC constraints specified by XML? 
 <em>default: no</em> <br />
 (<strong>warning</strong>): <em>logical</em>: Should wxml emit warnings when it is unable to guarantee well-formedness? 
 <em>default: no</em>  </li>
@@ -431,7 +431,7 @@ Contents of comment <br />
 <li>If any parameter entities are referenced, no checks are made that the document after parameter-entity-expansion is well-formed. A warning will be issued. </li>
 </ol>
 
-<p>Finally, note that constraints on XML documents are divided into two sets - well-formedness constraints (WFC) and validity constraints (VC). The above only applies to WFC checks. wxml can make some minimal checks on VCs, but this is by no means complete, nor is it intended to be. These checks are off by default, but may be switched on by manipulating the <code>valid</code> argument to <code>xml_OpenFile</code>.</p>
+<p>Finally, note that constraints on XML documents are divided into two sets - well-formedness constraints (WFC) and validity constraints (VC). The above only applies to WFC checks. wxml can make some minimal checks on VCs, but this is by no means complete, nor is it intended to be. These checks are off by default, but may be switched on by manipulating the <code>validate</code> argument to <code>xml_OpenFile</code>.</p>
 </div>
 </body>
 </html>

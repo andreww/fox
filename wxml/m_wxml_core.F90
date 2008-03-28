@@ -161,7 +161,7 @@ contains
 
   subroutine xml_OpenFile(filename, xf, unit, iostat, preserve_whitespace, &
     pretty_print, minimize_overrun, canonical, replace, addDecl, warning, &
-    valid, namespace)
+    validate, namespace)
     character(len=*), intent(in)  :: filename
     type(xmlf_t), intent(inout)   :: xf
     integer, intent(in), optional :: unit
@@ -173,7 +173,7 @@ contains
     logical, intent(in), optional :: replace
     logical, intent(in), optional :: addDecl
     logical, intent(in), optional :: warning
-    logical, intent(in), optional :: valid
+    logical, intent(in), optional :: validate
     logical, intent(in), optional :: namespace
     
 #ifdef DUMMYLIB
@@ -258,8 +258,8 @@ contains
     else
       xf%xds%warning = .false.
     endif
-    if (present(valid)) then
-      xf%xds%valid = valid 
+    if (present(validate)) then
+      xf%xds%valid = validate
     else
       xf%xds%valid = .false.
     endif
