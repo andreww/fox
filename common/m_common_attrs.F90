@@ -811,7 +811,7 @@ contains
   end function getIsId_by_index
 
   subroutine setIsId_by_index(dict, i, p)
-    type(dictionary_t), intent(in) :: dict
+    type(dictionary_t), intent(inout) :: dict
     integer, intent(in) :: i
     logical, intent(in) :: p
 
