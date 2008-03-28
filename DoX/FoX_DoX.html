@@ -182,7 +182,7 @@ places.  If you move the FoX directory later on, you will need to re-run configu
 
 <p>To run them all, simply run <code>make check</code> from the top-level directory. This will run the individual testsuites, and collate their results.</p>
 
-<p>If any failures occur (unrelated to known compiler issues, see the <a href="http://uszla.me.uk/space/software/FoX/compat/">up-to-date list</a>), please send a message to the mailing list (<a href="&#x6D;&#97;i&#x6C;&#116;&#111;:&#x46;&#111;&#x58;&#64;&#108;i&#x73;&#x74;&#x73;&#x2E;&#x75;&#x73;&#x7A;&#108;&#x61;&#46;&#109;&#101;&#46;&#x75;&#107;">&#x46;&#111;&#x58;&#64;&#108;i&#x73;&#x74;&#x73;&#x2E;&#x75;&#x73;&#x7A;&#108;&#x61;&#46;&#109;&#101;&#46;&#x75;&#107;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
+<p>If any failures occur (unrelated to known compiler issues, see the <a href="http://uszla.me.uk/space/software/FoX/compat/">up-to-date list</a>), please send a message to the mailing list (<a href="&#x6D;a&#x69;&#108;&#x74;&#111;:&#70;&#x6F;&#88;&#64;&#108;&#105;&#115;&#x74;&#115;&#x2E;&#x75;&#x73;&#x7A;&#x6C;&#97;.&#109;&#101;&#46;&#x75;&#x6B;">&#70;&#x6F;&#88;&#64;&#108;&#105;&#115;&#x74;&#115;&#x2E;&#x75;&#x73;&#x7A;&#x6C;&#97;.&#109;&#101;&#46;&#x75;&#x6B;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
 
 <h2>Linking to an existing program</h2>
 
@@ -239,52 +239,123 @@ places.  If you move the FoX directory later on, you will need to re-run configu
 <a name="Embedding"/>
 <h1>Using FoX in your own project.</h1>
 
-<p>The recommended way to use FoX is to embed the full source code into an existing project.</p>
-
-<p>(It would be possible to extract portions of the code, and embed just the ones that you need, but I recommend against it; it would be easy to lose parts of the code which are essential for generating good XML.)</p>
+<p>The recommended way to use FoX is to embed the full source code as a subdirectory, into an existing project.</p>
 
 <p>In order to do this, you need to do something like the following:</p>
 
 <ol>
-<li>Put the full source code as a top-level subdirectory of the tree, called FoX.
-(you can of course delete the DoX/ and examples/ subdirectories if you wish to 
-save space)</li>
+<li>Put the full source code as a top-level subdirectory of the tree, called FoX.</li>
 <li>Incorporate calls to FoX into the program.</li>
 <li>Incorporate building FoX into your build process.</li>
 </ol>
 
 <h2>To incorporate into the program</h2>
 
-<p>There is an example of suggested use in the <code>examples/</code> subdirectory.</p>
+<p>It is probably best to isolate use of XML facilities to a small part of the program. This is easily accomplished for XML input,
+which will generally happen in only one or two places.</p>
 
-<p>The easiest, and least intrusive way is probably to create a F90 module for your program, looking something like <code>example_xml_module.f90</code></p>
+<p>For XML output, this can be more complex. The easiest, and least intrusive way is probably to create a F90 module for your program, looking something like <code>example_xml_module.f90</code></p>
 
 <p>Then you must somewhere (probably in your main program), use this module, and call <code>initialize_xml_output()</code> at the start; and then <code>end_xml_output()</code> at the end of the program.</p>
 
-<p>In any of the subroutines where you want to output data to the xml file, you should then insert <code>use example_cml_moule</code> at the beginning of the subroutine. You can then use any of the cml output routines with no further worries, as shown in the examples.</p>
+<p>In any of the subroutines where you want to output data to the xml file, you should then insert <code>use example_xml_module</code> at the beginning of the subroutine. You can then use any of the xml output routines with no further worries, as shown in the examples.</p>
 
 <p>It is easy to make the use of FoX optional, by the use of preprocessor defines. This can be done simply by wrapping each call to your XML wrapper routines in <code>#ifdef XML</code>, or similar. Alternatively, the use of the dummy FoX interfaces allows you to switch FoX on and off at compile time - see <a href="#Compilation">Compilation</a>.</p>
 
 <h2>To incorporate into the build process:</h2>
 
-<p>If you have some sort of automatic Makefile configuration; for picking up which compiler to use, etc. then within whatever script you use to do this, you should insert a sequence of commands which instructs FoX to use whichever compiler the rest of your program uses, and ensures that the portion of the FoX libraries you need are compiler. For example, if your Fortran compiler is stored in the variable FORT, and you are using only the WCML part of the library, you should ensure that the following command is run:</p>
+<h3>Configuration</h3>
 
-<pre><code>(cd FoX; ./configure FC=$(FORT) --enable-wcml; cd ..)
+<p>First, FoX must be configured, to ensure that it is set up correctly for your compiler.
+(See <a href="#Compilation">Compilation</a>)
+If your main code has a <code>configure</code> step, then run FoX's <code>configure</code> as part of it.</p>
+
+<p>If your code doesn't have its own configure step, then the first thing that "make" does
+should be to configure FoX, if it's not already configured. But that should only happen
+once; every time you make your code thereafter, you don't need to re-configure FoX,
+because nothing has changed. To do that, put a target like the following in your 
+Makefile.</p>
+
+<pre><code>FoX/.config:
+        (cd FoX; ./configure FC=$(FC))
 </code></pre>
 
-<p>This will instruct FoX to perform its own automatic configuration process appropriately.</p>
+<p>(Assuming that your <code>Makefile</code> already has a variable <code>FC</code> which sets the Fortran compiler)</p>
 
-<p>Within the Makefile itself, you need to alter your compiler flags in the following fashion. Assuming that you have some sort of FFLAGS Makefile variable, then it should be amended like so:</p>
+<p>When FoX configure completes, it "touch"es a file called <code>FoX/.config</code>. That means that
+whenever you re-run your own make, it checks to see if <code>FoX/.config</code> exists - if it does,
+then it knows FoX doesn't need to be re-configured, so it doesn't bother.</p>
 
-<pre><code>FFLAGS="$(FFLAGS) `FoX/FoX-config --fcflags`"
+<h3>Compilation of FoX</h3>
+
+<p>Then, FoX needs to be compiled before your code (because your modules will depend
+on FoX's modules.) But again, it only needs to be compiled once. You won't be changing
+FoX, you'll only be changing your own code, so recompiling your code doesn't require
+recompiling FoX.</p>
+
+<p>So, add another target like the following;</p>
+
+<pre><code>FoX/.FoX: FoX/.config
+        (cd FoX; $(MAKE))
 </code></pre>
 
-<p>You must also alter the linking step to include the FoX subroutines Again, assuming that you have some sort of variable LDFLAGS holding your linking flags, then it should be amended like so:</p>
+<p>This has a dependency on the <code>configure</code> script as I showed above, but it will only run it 
+if the <code>configure</code> script hasn't already been run.</p>
 
-<pre><code>LDFLAGS="$(LDFLAGS) `FoX/FoX-config --libs`"
+<p>When FoX is successfully compiled, the last thing its <code>Makefile</code> does is "touch" the file called
+<code>FoX/.FoX</code>. So the above target checks to see if that file exists; and if it does, then it doesn't
+bother recompiling FoX, because it's already compiled. On the very first time you compile
+your code, it will <code>cd</code> into the FoX directory and compile it - but then never again.</p>
+
+<p>You then need to have that rule be a dependency of your main target; like so:</p>
+
+<pre><code>  MyExecutable: FoX/.FoX
 </code></pre>
 
-<p>If you don't have any automatic Makefile configuration, and rely on the user making hand-edited changes to Makefiles, then you must add to your documentation how to configure &amp; build FoX.</p>
+<p>(or whatever your default <code>Makefile</code> rule is).</p>
+
+<p>which will ensure that before <code>MyExecutable</code> is compiled, <code>make</code> will check to see that FoX
+has been compiled (which most of the time it will be, so nothing further will happen).
+But the first time you compile your code, it will call the FoX target, and FoX will be
+configured &amp; compiled.</p>
+
+<h3>Compiling/linking your code</h3>
+
+<p>You should add this to your <code>FFLAGS</code> (or equivalent - the variable that holds
+flags for compile-time use.</p>
+
+<pre><code>FFLAGS=-g -O2 -whatever-else $$(FoX/FoX-config --fcflags)
+</code></pre>
+
+<p>to make sure that you get the path to your modules. (Different compilers have different flags for specifying module
+paths; some use <code>-I</code>, some use <code>-M</code>, <em>etc</em>, if you use the above
+construction it will pick the right one automatically for your compiler.)</p>
+
+<p>Similarly, for linking, add the following to your <code>LDFLAGS</code> (or equivalent - the variable
+that holds flags for link-time use.)</p>
+
+<pre><code>LDFLAGS=-lwhatever $$(FoX/FoX-config --libs)
+</code></pre>
+
+<p>(For full details of the <code>FoX-config</code> script, see <a href="#Compilation">Compilation</a>)</p>
+
+<h3>Cleaning up</h3>
+
+<p>Finally - you probably have a <code>clean</code> target in your makefile. Don't tie FoX into this
+target - most of the time when you <code>make clean</code>, you don't want to <code>make clean</code> with 
+FoX as well, because there's no need - FoX won't have changed and
+it'll take a couple of minutes to recompile.</p>
+
+<p>However, you can add a <code>distclean</code> (or something) target, which you use before
+moving your code to another machine, that looks like:</p>
+
+<pre><code>distclean: clean
+        (cd FoX; $(MAKE) distclean)
+</code></pre>
+
+<p>and that will ensure that when you do <code>make distclean</code>, even FoX's object files are
+cleaned up. But of course that will mean that you have to reconfigure &amp; recompile
+FoX next time you compile your code</p>
 </div><hr/><div class="DoX">
 <a name="Standards"/>
 <h1>Standards compliance</h1>
@@ -3074,9 +3145,9 @@ Return the value of the fragment</p></li>
 <h1>Further information</h1>
 
 <p>FoX evolved from the initial codebase of <a href="http://lcdx00.wm.lc.ehu.es/ag/xml/">xmlf90</a>,
-which was written largely by Alberto Garcia &lt;<a href="&#x6D;&#97;&#x69;&#x6C;&#x74;&#111;:&#x61;&#108;&#98;&#101;&#114;&#x74;&#111;&#103;&#64;&#105;&#99;&#x6D;&#x61;&#x62;&#x2E;&#101;&#x73;">&#x61;&#108;&#98;&#101;&#114;&#x74;&#111;&#103;&#64;&#105;&#99;&#x6D;&#x61;&#x62;&#x2E;&#101;&#x73;</a>> and Jon Wakelin &lt;<a href="m&#97;&#x69;&#x6C;&#x74;&#x6F;:&#106;&#x6F;&#x6E;.&#119;&#97;k&#101;&#x6C;&#x69;&#x6E;&#64;&#x62;&#114;&#105;&#115;t&#x6F;&#108;&#46;&#x61;&#x63;&#46;uk">&#106;&#x6F;&#x6E;.&#119;&#97;k&#101;&#x6C;&#x69;&#x6E;&#64;&#x62;&#114;&#105;&#115;t&#x6F;&#108;&#46;&#x61;&#x63;&#46;uk</a>>.</p>
+which was written largely by Alberto Garcia &lt;<a href="&#x6D;&#x61;&#x69;&#x6C;&#x74;&#111;:&#x61;&#108;&#x62;&#101;&#x72;&#x74;&#111;g&#64;&#x69;&#x63;&#109;&#x61;&#98;&#x2E;&#101;s">&#x61;&#108;&#x62;&#101;&#x72;&#x74;&#111;g&#64;&#x69;&#x63;&#109;&#x61;&#98;&#x2E;&#101;s</a>> and Jon Wakelin &lt;<a href="m&#97;&#x69;&#x6C;&#116;&#x6F;:&#x6A;&#111;&#110;&#46;&#119;&#x61;&#107;&#x65;&#x6C;&#x69;&#x6E;&#64;&#98;&#x72;&#105;&#115;&#116;&#x6F;&#108;&#x2E;&#x61;c&#x2E;&#x75;&#107;">&#x6A;&#111;&#110;&#46;&#119;&#x61;&#107;&#x65;&#x6C;&#x69;&#x6E;&#64;&#98;&#x72;&#105;&#115;&#116;&#x6F;&#108;&#x2E;&#x61;c&#x2E;&#x75;&#107;</a>>.</p>
 
-<p>FoX is the work of Toby White &lt;<a href="&#109;&#x61;&#105;&#108;&#x74;&#x6F;:&#116;&#111;&#119;&#64;&#x75;&#x73;&#122;&#x6C;&#97;&#46;&#109;&#101;.&#117;&#x6B;">&#116;&#111;&#119;&#64;&#x75;&#x73;&#122;&#x6C;&#97;&#46;&#109;&#101;.&#117;&#x6B;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
+<p>FoX is the work of Toby White &lt;<a href="&#x6D;&#x61;&#x69;l&#116;&#111;:&#116;&#x6F;&#x77;&#64;&#117;s&#122;&#108;&#97;&#x2E;&#x6D;&#x65;&#x2E;&#117;&#107;">&#116;&#x6F;&#x77;&#64;&#117;s&#122;&#108;&#97;&#x2E;&#x6D;&#x65;&#x2E;&#117;&#107;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
 
 <p>There is a FoX website at <a href="http://www.uszla.me.uk/FoX/">http://www.uszla.me.uk/FoX/</a>.</p>
 
