@@ -137,7 +137,7 @@ contains
 
     character(len=*), parameter :: & 
       WHITESPACE = achar(9)//achar(10)//achar(13)//achar(32)
-    integer :: i, j			
+    integer :: i, j
     logical :: uniquify_		
     
     if (present(uniquify)) then
