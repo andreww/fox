@@ -531,10 +531,12 @@ contains
           if (.not.associated(URIref)) then
             call add_error(es, "Invalid URI: "//str_vs(URIstring))
             deallocate(URIstring)
+            deallocate(QName)
             return
           elseif (.not.hasScheme(URIref)) then
             call add_error(es, "Relative namespace in URI deprecated: "//str_vs(URIstring))
             deallocate(URIstring)
+            deallocate(QName)
             call destroyURI(URIref)
             return
           endif
