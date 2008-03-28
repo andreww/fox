@@ -72,12 +72,11 @@ fsys_lib_clean:
 	if test -d fsys; then (cd fsys; $(MAKE) clean) fi
 #
 check: default
-	@rm -f check.out *_check
-	@touch check.out
-	for i in $(BUILD_TARGETS); do \
-	  $(MAKE) $$i''_check; \
-	done
-	@grep RESULT check.out
+	@if ! test -d examples; then echo "You need to download the full version of FoX to run the testsuite"; fi; \
+	rm -f check.out *_check; \
+	touch check.out; \
+	for i in $(BUILD_TARGETS); do $(MAKE) $$i''_check; done; \
+	grep RESULT check.out
 #
 DoX:
 	(cd DoX; $(MAKE))
