@@ -95,10 +95,10 @@ cutdown-wcml: cutdown
 	rm -rf sax/ dom/
 
 cutdown-sax: cutdown
-	rm -rf wxml/ wcml/ utils/ dom/
+	rm -rf wxml/ wcml/ dom/
 
 cutdown-dom: cutdown
-	rm -rf wcml/ utils/
+	rm -rf wcml/
 
 clean: wxml_lib_clean wcml_lib_clean common_lib_clean fsys_lib_clean sax_lib_clean dom_lib_clean utils_lib_clean
 	if test -d examples; then (cd examples; $(MAKE) clean) fi
