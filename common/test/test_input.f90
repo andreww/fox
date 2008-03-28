@@ -1,7 +1,7 @@
 program short_test
 
-  use m_common_parse_input, only : rts
-  use m_common_realtypes, only: sp, dp
+  use fox_m_fsys_realtypes, only: sp, dp
+  use FoX_common, only : rts
 
   print*, "test.0.1.1"
   call stringdatascalar("abcd", "abcd", 1, 0)

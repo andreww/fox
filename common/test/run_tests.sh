@@ -7,10 +7,10 @@ rm -f passed.score failed.score
 touch passed.score failed.score
 rm -f tests.out failed.out
 
-for t in test_xml*.sh
-do
-  ./$t
-done
+#for t in test_xml*.sh
+#do
+#  ./$t
+#done
 
 echo "Testing reading strings"
 ./test.sh test_input

@@ -1,6 +1,6 @@
 program short_test
 
-  use m_common_format, only : str
+  use FoX_common, only : str
 
   write(*,'(3a)') '!',str(&
 TESTINPUT&
