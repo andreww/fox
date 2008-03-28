@@ -89,7 +89,7 @@ cutdown:
 	sed -e /m4/d -i "" */makefile
 
 cutdown-wxml: cutdown
-	rm -rf wcml/ utils/ sax/ dom/
+	rm -rf wcml/ sax/ dom/
 
 cutdown-wcml: cutdown
 	rm -rf sax/ dom/
