@@ -72,11 +72,14 @@ fsys_lib_clean:
 	if test -d fsys; then (cd fsys; $(MAKE) clean) fi
 #
 check: default
-	@if ! test -d examples; then echo "You need to download the full version of FoX to run the testsuite"; fi; \
+	@if ! test -d examples; then echo "You need to download the full version of FoX to run the testsuite"; \
+	elif grep DUMMYLIB arch.make > /dev/null; then echo "You cannot run the testsuite on the dummy library"; \
+        else \
 	rm -f check.out *_check; \
 	touch check.out; \
 	for i in $(BUILD_TARGETS); do $(MAKE) $$i''_check; done; \
-	grep RESULT check.out
+	grep RESULT check.out; \
+	fi
 #
 DoX:
 	(cd DoX; $(MAKE))

@@ -57,6 +57,8 @@ To run them all, simply run `make check` from the top-level directory. This will
 
 If any failures occur (unrelated to known compiler issues, see the [up-to-date list](http://uszla.me.uk/space/software/FoX/compat/)), please send a message to the mailing list (<FoX@lists.uszla.me.uk>) with details of compiler, hardware platform, and the nature of the failure.
 
+The testsuites for the SAX and DOM libraries are very extensive, and are somewhat fragile, so are not distributed with FoX. Please contact the author for details.
+
 ##Linking to an existing program
 
 * The files all having been compiled and installed, you need to link them into your program.
