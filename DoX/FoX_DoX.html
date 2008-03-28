@@ -16,22 +16,26 @@
 
 <h2>Introduction</h2>
 
-<p>This document is the primary API documentation for FoX, the Fortan/XML library.</p>
+<p>This document is the primary documentation for FoX, the Fortan/XML library. See below for <a href="#otherdoc">other sources of documentation</a>. It consists of:</p>
 
-<ul>
-<li><p><a href="#Versioning">Versioning</a></p></li>
-<li><p><a href="#Compilation">Configuration and compilation</a></p></li>
-<li><p><a href="#Embedding">Embedding into an existing project</a></p></li>
-<li><p><a href="#Standards">Standards compliance</a></p></li>
-</ul>
+<p>Reference information on <a href="#Versioning">versions</a>, 
+<a href="#Standards">standards compliance</a>,
+and <a href="#Licensing">licensing</a>.</p>
+
+<p>Information about how to <a href="#Compilation">get up and running with FoX</a>
+and how to <a href="#Embedding">use FoX in an existing project</a>.</p>
+
+<p>Finally, there is <a href="#apidoc">full API reference documentation</a>.</p>
 
 <h2>Other documentation</h2>
 
-<p>The documentation here is largely reference in nature. For new users it is best to start elsewhere:</p>
+<p><a name="otherdoc"/></p>
+
+<p>This documentation is largely reference in nature. For new users it is best to start elsewhere:</p>
 
 <h3>iFaX workshops</h3>
 
-<p>Two workshops, entitled iFaX (Integrating Fortran and XML) have been run teaching the use of FoX, one in January 2007 (organized by <a href="http://www.niees.ac.uk">NIEeS</a>), and one in January 2008 (organized jointly by <a href="http://www.niees.ac.uk">NIEeS</a> and <a href="http://www.nesc.ac.uk/esi/">eSI</a>). The full documentation and lectures for these may be found at:</p>
+<p>Two workshops, entitled iFaX (Integrating Fortran and XML) have been run teaching the use of FoX, <a href="http://www.niees.ac.uk/events/ifax/index.shtml">one in January 2007</a>, and <a href="http://www.nesc.ac.uk/esi/events/841/">one in January 2008</a>. The full documentation and lectures from these may be found at:</p>
 
 <ul>
 <li><a href="http://buffalo.niees.group.cam.ac.uk/archive2.php?event_details=ifax">iFaX I</a></li>
@@ -48,6 +52,8 @@
 </ul>
 
 <h2>API documentation</h2>
+
+<p><a name="apidoc"/></p>
 
 <ul>
 <li>FoX has six sets of publically exported interfaces. These are documented here:</li>
@@ -76,18 +82,13 @@
 
 <p>These documents describe all publically usable APIs.</p>
 
-<p>If a subroutine or function, or indeed one of its arguments, is not mentioned above, it is not to be considered part of the stable API, even if it is accessible.</p>
-
-<p>The astute developer is reminded that all times the final reference documentation is the source, which is publically available.</p>
-
-<p>Worked examples of the use of these APIs may be found in the <code>examples/</code> subdirectory.</p>
+<p>Worked examples of the use of some of these APIs may be found in the <code>examples/</code> subdirectory, and tutorial-style documentaion is available from the links <a href="#otherdoc">above</a>.</p>
 
 <h2>Other things</h2>
 
 <ul>
 <li><p><a href="#Debugging">Hints for debugging</a></p></li>
 <li><p><a href="#Information">Further information</a></p></li>
-<li><p><a href="#Licensing">Licensing</a></p></li>
 </ul>
 </div><hr/><div class="DoX">
 <a name="Versioning"/>
@@ -182,7 +183,7 @@ places.  If you move the FoX directory later on, you will need to re-run configu
 
 <p>To run them all, simply run <code>make check</code> from the top-level directory. This will run the individual testsuites, and collate their results.</p>
 
-<p>If any failures occur (unrelated to known compiler issues, see the <a href="http://uszla.me.uk/space/software/FoX/compat/">up-to-date list</a>), please send a message to the mailing list (<a href="&#x6D;a&#x69;&#108;&#x74;&#111;:&#70;&#x6F;&#88;&#64;&#108;&#105;&#115;&#x74;&#115;&#x2E;&#x75;&#x73;&#x7A;&#x6C;&#97;.&#109;&#101;&#46;&#x75;&#x6B;">&#70;&#x6F;&#88;&#64;&#108;&#105;&#115;&#x74;&#115;&#x2E;&#x75;&#x73;&#x7A;&#x6C;&#97;.&#109;&#101;&#46;&#x75;&#x6B;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
+<p>If any failures occur (unrelated to known compiler issues, see the <a href="http://uszla.me.uk/space/software/FoX/compat/">up-to-date list</a>), please send a message to the mailing list (<a href="&#109;&#x61;i&#108;&#116;&#x6F;:&#70;&#x6F;&#88;&#64;&#108;&#105;&#115;&#116;&#x73;&#x2E;&#x75;&#x73;&#122;&#x6C;&#x61;&#x2E;&#109;&#101;&#x2E;u&#x6B;">&#70;&#x6F;&#88;&#64;&#108;&#105;&#115;&#116;&#x73;&#x2E;&#x75;&#x73;&#122;&#x6C;&#x61;&#x2E;&#109;&#101;&#x2E;u&#x6B;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
 
 <h2>Linking to an existing program</h2>
 
@@ -3145,9 +3146,9 @@ Return the value of the fragment</p></li>
 <h1>Further information</h1>
 
 <p>FoX evolved from the initial codebase of <a href="http://lcdx00.wm.lc.ehu.es/ag/xml/">xmlf90</a>,
-which was written largely by Alberto Garcia &lt;<a href="&#x6D;&#x61;&#x69;&#x6C;&#x74;&#111;:&#x61;&#108;&#x62;&#101;&#x72;&#x74;&#111;g&#64;&#x69;&#x63;&#109;&#x61;&#98;&#x2E;&#101;s">&#x61;&#108;&#x62;&#101;&#x72;&#x74;&#111;g&#64;&#x69;&#x63;&#109;&#x61;&#98;&#x2E;&#101;s</a>> and Jon Wakelin &lt;<a href="m&#97;&#x69;&#x6C;&#116;&#x6F;:&#x6A;&#111;&#110;&#46;&#119;&#x61;&#107;&#x65;&#x6C;&#x69;&#x6E;&#64;&#98;&#x72;&#105;&#115;&#116;&#x6F;&#108;&#x2E;&#x61;c&#x2E;&#x75;&#107;">&#x6A;&#111;&#110;&#46;&#119;&#x61;&#107;&#x65;&#x6C;&#x69;&#x6E;&#64;&#98;&#x72;&#105;&#115;&#116;&#x6F;&#108;&#x2E;&#x61;c&#x2E;&#x75;&#107;</a>>.</p>
+which was written largely by Alberto Garcia &lt;<a href="&#x6D;&#x61;&#105;&#108;&#116;&#x6F;:&#97;&#108;&#98;&#x65;&#114;t&#x6F;&#103;&#64;i&#99;&#x6D;&#97;&#x62;&#46;&#x65;&#x73;">&#97;&#108;&#98;&#x65;&#114;t&#x6F;&#103;&#64;i&#99;&#x6D;&#97;&#x62;&#46;&#x65;&#x73;</a>> and Jon Wakelin &lt;<a href="&#x6D;&#97;&#105;&#x6C;&#x74;&#x6F;:&#106;&#111;&#110;&#46;&#x77;&#x61;&#107;&#101;lin&#64;b&#114;&#x69;&#115;&#x74;&#111;&#x6C;&#x2E;&#x61;&#x63;&#x2E;&#117;&#x6B;">&#106;&#111;&#110;&#46;&#x77;&#x61;&#107;&#101;lin&#64;b&#114;&#x69;&#115;&#x74;&#111;&#x6C;&#x2E;&#x61;&#x63;&#x2E;&#117;&#x6B;</a>>.</p>
 
-<p>FoX is the work of Toby White &lt;<a href="&#x6D;&#x61;&#x69;l&#116;&#111;:&#116;&#x6F;&#x77;&#64;&#117;s&#122;&#108;&#97;&#x2E;&#x6D;&#x65;&#x2E;&#117;&#107;">&#116;&#x6F;&#x77;&#64;&#117;s&#122;&#108;&#97;&#x2E;&#x6D;&#x65;&#x2E;&#117;&#107;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
+<p>FoX is the work of Toby White &lt;<a href="&#x6D;&#97;i&#108;&#x74;o:&#x74;&#x6F;&#119;&#64;&#117;&#115;&#x7A;&#x6C;&#x61;&#46;&#x6D;&#x65;&#x2E;&#x75;&#107;">&#x74;&#x6F;&#119;&#64;&#117;&#115;&#x7A;&#x6C;&#x61;&#46;&#x6D;&#x65;&#x2E;&#x75;&#107;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
 
 <p>There is a FoX website at <a href="http://www.uszla.me.uk/FoX/">http://www.uszla.me.uk/FoX/</a>.</p>
 

@@ -3,25 +3,29 @@
 [All in one page](FoX_DoX.html)
 
 [Separate pages](FoX.html)
+
 ## Introduction
 
-This document is the primary API documentation for FoX, the Fortan/XML library.
+This document is the primary documentation for FoX, the Fortan/XML library. See below for [other sources of documentation](#otherdoc). It consists of:
 
-* [Versioning](|Versioning|)
+Reference information on [versions](|Versioning|), 
+[standards compliance](|Standards|),
+and [licensing](|Licensing|).
 
-* [Configuration and compilation](|Compilation|)
+Information about how to [get up and running with FoX](|Compilation|)
+and how to [use FoX in an existing project](|Embedding|).
 
-* [Embedding into an existing project](|Embedding|)
-
-* [Standards compliance](|Standards|)
+Finally, there is [full API reference documentation](#apidoc).
 
 ## Other documentation
 
-The documentation here is largely reference in nature. For new users it is best to start elsewhere:
+<a name="otherdoc"/>
+
+This documentation is largely reference in nature. For new users it is best to start elsewhere:
 
 ### iFaX workshops
 
-Two workshops, entitled iFaX (Integrating Fortran and XML) have been run teaching the use of FoX, one in January 2007 (organized by [NIEeS](http://www.niees.ac.uk)), and one in January 2008 (organized jointly by [NIEeS](http://www.niees.ac.uk) and [eSI](http://www.nesc.ac.uk/esi/)). The full documentation and lectures for these may be found at:
+Two workshops, entitled iFaX (Integrating Fortran and XML) have been run teaching the use of FoX, [one in January 2007](http://www.niees.ac.uk/events/ifax/index.shtml), and [one in January 2008](http://www.nesc.ac.uk/esi/events/841/). The full documentation and lectures from these may be found at:
 
 * [iFaX I](http://buffalo.niees.group.cam.ac.uk/archive2.php?event_details=ifax)
 * [iFaX II](http://www.nesc.ac.uk/action/esi/contribution.cfm?Title=841)
@@ -34,6 +38,8 @@ Out of the above workshops, some [tutorial material](http://www.uszla.me.uk/FoX/
 * [DOM input](http://www.uszla.me.uk/FoX/iFaX/iFaX.5/iFaX.5.html)
 
 ## API documentation
+
+<a name="apidoc"/>
 
 * FoX has six sets of publically exported interfaces. These are documented here:
 
@@ -54,11 +60,7 @@ Out of the above workshops, some [tutorial material](http://www.uszla.me.uk/FoX/
 
 These documents describe all publically usable APIs.
 
-If a subroutine or function, or indeed one of its arguments, is not mentioned above, it is not to be considered part of the stable API, even if it is accessible.
-
-The astute developer is reminded that all times the final reference documentation is the source, which is publically available.
-
-Worked examples of the use of these APIs may be found in the `examples/` subdirectory.
+Worked examples of the use of some of these APIs may be found in the `examples/` subdirectory, and tutorial-style documentaion is available from the links [above](#otherdoc).
 
 ## Other things
 
@@ -66,4 +68,3 @@ Worked examples of the use of these APIs may be found in the `examples/` subdire
 
 * [Further information](|Information|)
 
-* [Licensing](|Licensing|)
