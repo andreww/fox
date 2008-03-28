@@ -1,2 +1,2 @@
 ERROR(FoX)
-Attempt to declare invalid prefix: cml:
+xml_DeclareNamespace: Invalid prefix

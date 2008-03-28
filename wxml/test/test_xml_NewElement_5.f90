@@ -7,7 +7,7 @@ program test
   character(len=*), parameter :: filename = 'test.xml'
   type(xmlf_t) :: xf
 
-  call xml_OpenFile(filename, xf)
+  call xml_OpenFile(filename, xf, validate=.true.)
   call xml_AddDOCTYPE(xf, "html", "http://www.w3.org/1999/xhtml")
   call xml_NewElement(xf, "root")
   call xml_Close(xf)
