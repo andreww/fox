@@ -14,6 +14,8 @@ FoX is written with reference to the following standards:
 
 \[xml:base]: <http://www.w3.org/TR/xmlbase/>
 
+\[CanonicalXML]: <http://www.w3.org/TR/xml-c14n>
+
 \[SAX2]: <http://saxproject.org>
 
 \[DOM1]:  <http://www.w3.org/TR/REC-DOM-Level-1/level-one-core.html>
@@ -24,10 +26,10 @@ FoX is written with reference to the following standards:
 
 In particular:
 
-* `FoX_wxml` knows about [XML10], [XML11], [Namespaces10], [Namespaces11]
+* `FoX_wxml` knows about [XML10], [XML11], [Namespaces10], [Namespaces11], [CanonicalXML]
 
 * `FoX_sax` knows about  [XML10], [XML11], [Namespaces10], [Namespaces11], [xml:id], [xml:base], [SAX2]
 
-* `FoX_dom` knows about [XML10], [XML11], [Namespaces10], [Namespaces11], [xml:id], [xml:base], [DOM1], [DOM2], [DOM3]
+* `FoX_dom` knows about [XML10], [XML11], [Namespaces10], [Namespaces11], [xml:id], [xml:base], [DOM1], [DOM2], [DOM3], [CanonicalXML]
 
 For exceptions, please see the relevant parts of the FoX documentation.
