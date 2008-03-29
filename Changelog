@@ -1,3 +1,6 @@
+2008-03-29: version 4.0.1
+        Portability fixes for ifort
+
 2008-03-28: version 4.0
         Fully validating SAX parser
         Support for xml:id and xml:base
