@@ -277,13 +277,31 @@ contains
 #endif
   end function get_key_index_ns
 
+#ifndef DUMMYLIB
+  pure function get_value_by_key_len(dict, key) result(n)
+    type(dictionary_t), intent(in) :: dict
+    character(len=*), intent(in) :: key
+    integer :: n
+
+    integer :: i
+
+    do i = 1, ubound(dict%list, 1)
+      if (key == str_vs(dict%list(i)%d%key)) then
+        n = size(dict%list(i)%d%value)
+        return
+      endif
+    enddo
+    n = 0
+  end function get_value_by_key_len
+#endif
+
   function get_value_by_key(dict, key) result(value)
     type(dictionary_t), intent(in) :: dict
     character(len=*), intent(in) :: key
 #ifndef DUMMYLIB
-    character(len=size(dict%list(get_key_index(dict,key))%d%value)) :: value
+    character(len=get_value_by_key_len(dict,key)) :: value
 
-    integer  :: i
+    integer :: i
 
     do i = 1, ubound(dict%list, 1)
       if (key == str_vs(dict%list(i)%d%key)) then
@@ -298,14 +316,34 @@ contains
 #endif
   end function get_value_by_key
 
+#ifndef DUMMYLIB
+  pure function get_value_by_key_ns_len(dict, nsUri, localname) result(n)
+    type(dictionary_t), intent(in) :: dict
+    character(len=*), intent(in) :: nsUri
+    character(len=*), intent(in) :: localname
+    integer :: n
+
+    integer :: i
+
+    do i = 1, ubound(dict%list, 1)
+      if (nsUri==str_vs(dict%list(i)%d%nsURI) &
+        .and.localname==str_vs(dict%list(i)%d%localname)) then
+        n = size(dict%list(i)%d%value)
+        return
+      endif
+    enddo
+    n = 0
+  end function get_value_by_key_ns_len
+#endif
+
   function get_value_by_key_ns(dict, nsUri, localname) result(value)
     type(dictionary_t), intent(in) :: dict
     character(len=*), intent(in) :: nsUri
     character(len=*), intent(in) :: localname
 #ifndef DUMMYLIB
-    character(len=size(dict%list(get_key_index_ns(dict,nsuri,localname))%d%value)) :: value
+    character(len=get_value_by_key_ns_len(dict, nsURI, localname)) :: value
 
-    integer  :: i
+    integer :: i
 
     do i = 1, ubound(dict%list, 1)
       if (nsUri==str_vs(dict%list(i)%d%nsURI) &
@@ -566,31 +604,68 @@ contains
   end function get_localName_by_index
 
 #ifndef DUMMYLIB
+  pure function get_nsURI_by_keyname_len(dict, keyname) result(n)
+    type(dictionary_t), intent(in) :: dict
+    character(len=*), intent(in) :: keyname
+    integer :: n
+
+    integer :: i
+
+    i = get_key_index(dict, keyname)
+    n = size(dict%list(i)%d%nsURI)
+  end function get_nsURI_by_keyname_len
+#endif
+
+#ifndef DUMMYLIB
   pure function get_nsURI_by_keyname(dict, keyname) result(nsURI)
     type(dictionary_t), intent(in) :: dict
     character(len=*), intent(in) :: keyname
-    character(len=size(dict%list(get_key_index(dict, keyname))%d%nsURI)) :: nsURI
+    character(len=get_nsURI_by_keyname_len(dict, keyname)) :: nsURI
     integer :: i
 
     i = get_key_index(dict, keyname)
     nsURI = str_vs(dict%list(i)%d%nsURI)
   end function get_nsURI_by_keyname
 
+  pure function get_prefix_by_keyname_len(dict, keyname) result(n)
+    type(dictionary_t), intent(in) :: dict
+    character(len=*), intent(in) :: keyname
+    integer :: n
+
+    integer :: i
+
+    i = get_key_index(dict, keyname)
+    n = size(dict%list(i)%d%prefix)
+
+  end function get_prefix_by_keyname_len
+
   pure function get_prefix_by_keyname(dict, keyname) result(prefix)
     type(dictionary_t), intent(in) :: dict
     character(len=*), intent(in) :: keyname
-    character(len=size(dict%list(get_key_index(dict, keyname))%d%prefix)) :: prefix
+    character(len=get_prefix_by_keyname_len(dict,keyname)) :: prefix
     integer :: i
 
-    i=get_key_index(dict, keyname)
+    i = get_key_index(dict, keyname)
     prefix = str_vs(dict%list(i)%d%prefix)
 
   end function get_prefix_by_keyname
 
+  pure function get_localname_by_keyname_len(dict, keyname) result(n)
+    type(dictionary_t), intent(in) :: dict
+    character(len=*), intent(in) :: keyname
+    integer :: n
+
+    integer :: i
+
+    i = get_key_index(dict, keyname)
+    n = size(dict%list(i)%d%localName)
+
+  end function get_localname_by_keyname_len
+
   pure function get_localName_by_keyname(dict, keyname) result(localName)
     type(dictionary_t), intent(in) :: dict
     character(len=*), intent(in) :: keyname
-    character(len=size(dict%list(get_key_index(dict, keyname))%d%localName)) :: localName
+    character(get_localname_by_keyname_len(dict, keyname)) :: localname
     integer :: i
 
     i=get_key_index(dict, keyname)
