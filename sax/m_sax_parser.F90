@@ -2345,6 +2345,7 @@ contains
     end subroutine open_tag
 
     subroutine close_tag
+      character :: dummy
       wf_stack(1) = wf_stack(1) - 1
       if (wf_stack(1)<0) then
         call add_error(fx%error_stack, &
@@ -2364,7 +2365,7 @@ contains
           return
         endif
       endif
-      fx%name = pop_elstack(fx%elstack)
+      dummy = pop_elstack(fx%elstack)
       if (present(endElement_handler)) then
         if (namespaces_.and.getURIofQName(fx,str_vs(fx%name))==invalidNS) then
           ! no namespace was found for the current element, we must be
