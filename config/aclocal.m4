@@ -838,11 +838,11 @@ AC_RUN_IFELSE([
 [
 if ! test -f conf_eol.out; then
 AC_MSG_ERROR([Could not find test output])
-elif od conf_eol.out | grep 5015 >/dev/null; then
+elif od -b conf_eol.out | grep 5015 >/dev/null; then
   ac_cv_FC_check_output_eol=CRLF
-elif od conf_eol.out | grep 15 >/dev/null; then
+elif od -b conf_eol.out | grep 15 >/dev/null; then
   ac_cv_FC_check_output_eol=CR
-elif od conf_eol.out | grep 12 >/dev/null; then
+elif od -b conf_eol.out | grep 12 >/dev/null; then
   ac_cv_FC_check_output_eol=LF
 else
   ac_cv_FC_check_output_eol=UNKNOWN
@@ -878,12 +878,15 @@ AC_RUN_IFELSE([
        n = 1
        s = 0
        result = 0
-       read(11, "(a1)", iostat=i)
+       read(11, "(a1)", iostat=i) c
        ! If we are on an LF-EOL machine,
        ! then we should get CR followed by EOR
        if (i==0) then
          if (iachar(c)==13) then
            s1 = 13
+         elseif (iachar(c)==32) then
+           ! some compilers translate it into a space, unhelpfully
+           s1 = 32
          else
            write(12, *) "UNKNOWN"
            stop
@@ -891,7 +894,7 @@ AC_RUN_IFELSE([
        else
          s1 = -1 ! End of Record, we assume
        endif
-       read(11, "(a1)", iostat=i)
+       read(11, "(a1)", iostat=i) c
        if (i==0) then
          if (iachar(c)==10.and.s1==-1) then
 	   ! Sequence was EOR, LF, therefore EOR=CR.
@@ -903,6 +906,9 @@ AC_RUN_IFELSE([
          if (s1==-1) then
            ! Sequence was EOR, EOF, therefore EOR=CRLF
            result = 2 ! EOR_CRLF
+         elseif (s1==32) then
+           ! Sequence was SPACE, EOF. Empirically, this seems to happen on PPC Macs, so:
+           result = 3 ! EOR_LF
          endif
        elseif (s1==13) then
          ! We assume this non-zero iostat is EOR

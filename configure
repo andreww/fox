@@ -6522,11 +6522,11 @@ if ! test -f conf_eol.out; then
 { { echo "$as_me:$LINENO: error: Could not find test output" >&5
 echo "$as_me: error: Could not find test output" >&2;}
    { (exit 1); exit 1; }; }
-elif od conf_eol.out | grep 5015 >/dev/null; then
+elif od -b conf_eol.out | grep 5015 >/dev/null; then
   ac_cv_FC_check_output_eol=CRLF
-elif od conf_eol.out | grep 15 >/dev/null; then
+elif od -b conf_eol.out | grep 15 >/dev/null; then
   ac_cv_FC_check_output_eol=CR
-elif od conf_eol.out | grep 12 >/dev/null; then
+elif od -b conf_eol.out | grep 12 >/dev/null; then
   ac_cv_FC_check_output_eol=LF
 else
   ac_cv_FC_check_output_eol=UNKNOWN
