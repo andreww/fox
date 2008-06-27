@@ -49,55 +49,6 @@ TOHW_m_dom_contents(`
   end function getNamedItem
 
 
-  pure function getNamedItem_Value_len(map, p, name) result(n)
-    type(NamedNodeMap), intent(in) :: map
-    logical, intent(in) :: p
-    character(len=*), intent(in) :: name
-    integer :: n
-
-    integer :: i
-
-    n = 0
-    if (p) then
-      do i = 1, map%length
-        if (str_vs(map%nodes(i)%this%nodeName)==name) then
-          ! This has to be NodeValue, not TextContent since it should be 0 for entity/notation
-          n = getNodeValue_len(map%nodes(i)%this, .true.)
-          exit
-        endif
-      enddo
-    endif
-
-  end function getNamedItem_Value_len
-
-
-  TOHW_function(getNamedItem_Value, (map, name), c)
-    type(NamedNodeMap), pointer :: map
-    character(len=*), intent(in) :: name
-#ifdef RESTRICTED_ASSOCIATED_BUG
-    character(len=getNamedItem_Value_len(map, .true., name)) :: c
-#else
-    character(len=getNamedItem_Value_len(map, associated(map), name)) :: c
-#endif
-
-    integer :: i
-
-    if (.not.associated(map)) then
-      TOHW_m_dom_throw_error(FoX_MAP_IS_NULL)
-    endif
-
-    c = ""
-    do i = 1, map%length
-      if (str_vs(map%nodes(i)%this%nodeName)==name) then
-          ! This has to be NodeValue, not TextContent since it should be 0 for entity/notation
-        c = getNodeValue(map%nodes(i)%this)
-        return
-      endif
-    enddo
-
-  end function getNamedItem_Value
-
-
   TOHW_function(setNamedItem, (map, arg), np)
     type(NamedNodeMap), pointer :: map
     type(Node), pointer :: arg
@@ -298,62 +249,6 @@ TOHW_m_dom_contents(`
     np => null()
 
   end function getNamedItemNS
-
-
-  pure function getNamedItemNS_Value_len(map, p, namespaceURI, localName) result(n)
-    type(NamedNodeMap), intent(in) :: map
-    logical, intent(in) :: p
-    character(len=*), intent(in) :: namespaceURI
-    character(len=*), intent(in) :: localName
-    integer :: n
-
-    integer :: i
-
-    n = 0
-    if (.not.p) return
-    if (map%ownerElement%nodeType/=ELEMENT_NODE) return
-    ! Since entities & notations cant have NS.
-
-    do i = 1, map%length
-      if (str_vs(map%nodes(i)%this%elExtras%namespaceURI)==namespaceURI &
-        .and. str_vs(map%nodes(i)%this%elExtras%localName)==localName) then
-        n = getNodeValue_len(map%nodes(i)%this, .true.)
-        exit
-      endif
-    enddo
-
-  end function getNamedItemNS_Value_len
-
-
-  TOHW_function(getNamedItemNS_Value, (map, namespaceURI, localName), c)
-    type(NamedNodeMap), pointer :: map
-    character(len=*), intent(in) :: namespaceURI
-    character(len=*), intent(in) :: localName
-#ifdef RESTRICTED_ASSOCIATED_BUG
-    character(len=getNamedItemNS_Value_len(map, .true., namespaceURI, localName)) :: c
-#else
-    character(len=getNamedItemNS_Value_len(map, associated(map), namespaceURI, localName)) :: c
-#endif
-
-    integer :: i
-    type(Node), pointer :: np
-
-    if (.not.associated(map)) then
-       TOHW_m_dom_throw_error(FoX_MAP_IS_NULL)
-    endif
-
-    c = ""
-    if (map%ownerElement%nodeType/=ELEMENT_NODE) return
-    do i = 0, getLength(map) - 1
-      np => item(map, i)
-      if (getNamespaceURI(np)==namespaceURI &
-        .and. getLocalName(np)==localName) then
-        c = getNodeValue(np)
-        return
-      endif
-    enddo
-
-  end function getNamedItemNS_Value
 
 
   TOHW_function(setNamedItemNS, (map, arg), np)

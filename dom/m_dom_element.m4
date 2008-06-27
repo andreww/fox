@@ -55,6 +55,8 @@ TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
     character(len=getAttribute_len(arg, associated(arg), name)) :: c
 #endif
 
+    integer :: i
+
     if (.not.associated(arg)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif
@@ -63,7 +65,16 @@ TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
 
-    c = getNamedItem_Value(getAttributes(arg), name)
+    if (len(c)>0) then
+      do i = 1, arg%elExtras%attributes%length
+        if (str_vs(arg%elExtras%attributes%nodes(i)%this%nodeName)==name) then
+          c = getTextContent(arg%elExtras%attributes%nodes(i)%this)
+          exit
+        endif
+      enddo
+    else
+      c = ""
+    endif
         
   end function getAttribute
 
@@ -268,6 +279,8 @@ TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
     character(len=getAttributesNS_len(arg, associated(arg), localname, namespaceURI)) :: c
 #endif
 
+    integer :: i
+
     if (.not.associated(arg)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
     endif
@@ -276,8 +289,19 @@ TOHW_m_dom_get(DOMString, tagName, np%nodeName, (ELEMENT_NODE))
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
 
-    c = getNamedItemNS_Value(getAttributes(arg), namespaceURI, localName)
-        
+    if (len(c)>0) then
+      do i = 1, arg%elExtras%attributes%length
+        if ((str_vs(arg%elExtras%attributes%nodes(i)%this%elExtras%localName)==localname &
+          .and. str_vs(arg%elExtras%attributes%nodes(i)%this%elExtras%namespaceURI)==namespaceURI) &
+          .or. (namespaceURI=="".and.str_vs(arg%elExtras%attributes%nodes(i)%this%nodeName)==localname)) then
+          c = getTextContent(arg%elExtras%attributes%nodes(i)%this)
+          exit
+        endif
+      enddo
+    else
+      c = ""
+    endif
+
   end function getAttributeNS
 
 

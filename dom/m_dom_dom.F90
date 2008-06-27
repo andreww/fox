@@ -5036,64 +5036,6 @@ endif
   end function getNamedItem
 
 
-  pure function getNamedItem_Value_len(map, p, name) result(n)
-    type(NamedNodeMap), intent(in) :: map
-    logical, intent(in) :: p
-    character(len=*), intent(in) :: name
-    integer :: n
-
-    integer :: i
-
-    n = 0
-    if (p) then
-      do i = 1, map%length
-        if (str_vs(map%nodes(i)%this%nodeName)==name) then
-          ! This has to be NodeValue, not TextContent since it should be 0 for entity/notation
-          n = getNodeValue_len(map%nodes(i)%this, .true.)
-          exit
-        endif
-      enddo
-    endif
-
-  end function getNamedItem_Value_len
-
-
-  function getNamedItem_Value(map, name, ex)result(c) 
-    type(DOMException), intent(out), optional :: ex
-    type(NamedNodeMap), pointer :: map
-    character(len=*), intent(in) :: name
-#ifdef RESTRICTED_ASSOCIATED_BUG
-    character(len=getNamedItem_Value_len(map, .true., name)) :: c
-#else
-    character(len=getNamedItem_Value_len(map, associated(map), name)) :: c
-#endif
-
-    integer :: i
-
-    if (.not.associated(map)) then
-      if (getFoX_checks().or.FoX_MAP_IS_NULL<200) then
-  call throw_exception(FoX_MAP_IS_NULL, "getNamedItem_Value", ex)
-  if (present(ex)) then
-    if (inException(ex)) then
-       return
-    endif
-  endif
-endif
-
-    endif
-
-    c = ""
-    do i = 1, map%length
-      if (str_vs(map%nodes(i)%this%nodeName)==name) then
-          ! This has to be NodeValue, not TextContent since it should be 0 for entity/notation
-        c = getNodeValue(map%nodes(i)%this)
-        return
-      endif
-    enddo
-
-  end function getNamedItem_Value
-
-
   function setNamedItem(map, arg, ex)result(np) 
     type(DOMException), intent(out), optional :: ex
     type(NamedNodeMap), pointer :: map
@@ -5395,71 +5337,6 @@ endif
     np => null()
 
   end function getNamedItemNS
-
-
-  pure function getNamedItemNS_Value_len(map, p, namespaceURI, localName) result(n)
-    type(NamedNodeMap), intent(in) :: map
-    logical, intent(in) :: p
-    character(len=*), intent(in) :: namespaceURI
-    character(len=*), intent(in) :: localName
-    integer :: n
-
-    integer :: i
-
-    n = 0
-    if (.not.p) return
-    if (map%ownerElement%nodeType/=ELEMENT_NODE) return
-    ! Since entities & notations cant have NS.
-
-    do i = 1, map%length
-      if (str_vs(map%nodes(i)%this%elExtras%namespaceURI)==namespaceURI &
-        .and. str_vs(map%nodes(i)%this%elExtras%localName)==localName) then
-        n = getNodeValue_len(map%nodes(i)%this, .true.)
-        exit
-      endif
-    enddo
-
-  end function getNamedItemNS_Value_len
-
-
-  function getNamedItemNS_Value(map, namespaceURI, localName, ex)result(c) 
-    type(DOMException), intent(out), optional :: ex
-    type(NamedNodeMap), pointer :: map
-    character(len=*), intent(in) :: namespaceURI
-    character(len=*), intent(in) :: localName
-#ifdef RESTRICTED_ASSOCIATED_BUG
-    character(len=getNamedItemNS_Value_len(map, .true., namespaceURI, localName)) :: c
-#else
-    character(len=getNamedItemNS_Value_len(map, associated(map), namespaceURI, localName)) :: c
-#endif
-
-    integer :: i
-    type(Node), pointer :: np
-
-    if (.not.associated(map)) then
-       if (getFoX_checks().or.FoX_MAP_IS_NULL<200) then
-  call throw_exception(FoX_MAP_IS_NULL, "getNamedItemNS_Value", ex)
-  if (present(ex)) then
-    if (inException(ex)) then
-       return
-    endif
-  endif
-endif
-
-    endif
-
-    c = ""
-    if (map%ownerElement%nodeType/=ELEMENT_NODE) return
-    do i = 0, getLength(map) - 1
-      np => item(map, i)
-      if (getNamespaceURI(np)==namespaceURI &
-        .and. getLocalName(np)==localName) then
-        c = getNodeValue(np)
-        return
-      endif
-    enddo
-
-  end function getNamedItemNS_Value
 
 
   function setNamedItemNS(map, arg, ex)result(np) 
@@ -9339,6 +9216,8 @@ endif
     character(len=getAttribute_len(arg, associated(arg), name)) :: c
 #endif
 
+    integer :: i
+
     if (.not.associated(arg)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
   call throw_exception(FoX_NODE_IS_NULL, "getAttribute", ex)
@@ -9363,7 +9242,16 @@ endif
 
     endif
 
-    c = getNamedItem_Value(getAttributes(arg), name)
+    if (len(c)>0) then
+      do i = 1, arg%elExtras%attributes%length
+        if (str_vs(arg%elExtras%attributes%nodes(i)%this%nodeName)==name) then
+          c = getTextContent(arg%elExtras%attributes%nodes(i)%this)
+          exit
+        endif
+      enddo
+    else
+      c = ""
+    endif
         
   end function getAttribute
 
@@ -9726,6 +9614,8 @@ endif
     character(len=getAttributesNS_len(arg, associated(arg), localname, namespaceURI)) :: c
 #endif
 
+    integer :: i
+
     if (.not.associated(arg)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
   call throw_exception(FoX_NODE_IS_NULL, "getAttributeNS", ex)
@@ -9750,8 +9640,19 @@ endif
 
     endif
 
-    c = getNamedItemNS_Value(getAttributes(arg), namespaceURI, localName)
-        
+    if (len(c)>0) then
+      do i = 1, arg%elExtras%attributes%length
+        if ((str_vs(arg%elExtras%attributes%nodes(i)%this%elExtras%localName)==localname &
+          .and. str_vs(arg%elExtras%attributes%nodes(i)%this%elExtras%namespaceURI)==namespaceURI) &
+          .or. (namespaceURI=="".and.str_vs(arg%elExtras%attributes%nodes(i)%this%nodeName)==localname)) then
+          c = getTextContent(arg%elExtras%attributes%nodes(i)%this)
+          exit
+        endif
+      enddo
+    else
+      c = ""
+    endif
+
   end function getAttributeNS
 
 
