@@ -320,7 +320,7 @@ define(`m4f_thisfunc', `scalartostring')dnl
 #ifndef DUMMYLIB
 TOHW_defaultdecls
     character(len=len(s)) :: s2
-    logical :: csv_, eof
+    logical :: csv_, eof, sp
     integer :: m
 
     csv_ = .false.
@@ -334,17 +334,37 @@ TOHW_defaultdecls
     data = ""
     ij = 0
     length = 1
-    loop: do i = 1, 1
+    loop: do
       if (csv_) then
-TOHW_parse_strings_csv(`data')
-      else
-TOHW_parse_strings(`data')
-      endif
-    end do loop
-
+        TOHW_parse_strings_csv(`data')
 TOHW_check_errors
 
 TOHW_output_errors
+      else
+        sp = .true.
+        do i = 1, len(s)
+          if (sp) then
+            if (verify(s(i:i), whitespace)/=0) then
+              data(s_i:s_i) = s(i:i)
+              s_i = s_i + 1
+              sp = .false.
+            endif
+          else
+            if (verify(s(i:i), whitespace)==0) then
+              data(s_i:s_i) = " "
+              sp = .true.
+            else
+              data(s_i:s_i) = s(i:i)
+            endif
+            s_i = s_i + 1
+          endif
+        enddo
+        if (present(num)) num = 1
+        if (present(iostat)) iostat = 0
+      endif
+      exit
+    enddo loop
+
 #else
     data = ""
 #endif

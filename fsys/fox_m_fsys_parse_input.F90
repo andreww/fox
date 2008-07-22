@@ -52,7 +52,7 @@ contains
     real :: r, c
 
     character(len=len(s)) :: s2
-    logical :: csv_, eof
+    logical :: csv_, eof, sp
     integer :: m
 
     csv_ = .false.
@@ -66,9 +66,9 @@ contains
     data = ""
     ij = 0
     length = 1
-    loop: do i = 1, 1
+    loop: do
       if (csv_) then
-      if (s_i>len(s)) then
+              if (s_i>len(s)) then
         data = ""
         ij = ij + 1
         exit loop
@@ -131,28 +131,6 @@ contains
       s_i = k + 2
       if (eof) exit loop
 
-      else
-      if (present(separator)) then
-        k = index(s(s_i:), separator)
-      else
-        k = verify(s(s_i:), whitespace)
-        if (k==0) exit loop
-        s_i = s_i + k - 1
-        k = scan(s(s_i:), whitespace)
-      endif
-      if (k==0) then
-        k = len(s)
-      else
-        k = s_i + k - 2
-      endif
-      data = s(s_i:k)
-      ij = ij + 1
-      s_i = k + 2
-      if (ij<length.and.s_i>len(s)) exit loop
-
-      endif
-    end do loop
-
     if (present(num)) num = ij
     if (ij<length) then
       if (err==0) err = -1
@@ -179,6 +157,31 @@ contains
         stop
       end select
     end if
+
+      else
+        sp = .true.
+        do i = 1, len(s)
+          if (sp) then
+            if (verify(s(i:i), whitespace)/=0) then
+              data(s_i:s_i) = s(i:i)
+              s_i = s_i + 1
+              sp = .false.
+            endif
+          else
+            if (verify(s(i:i), whitespace)==0) then
+              data(s_i:s_i) = " "
+              sp = .true.
+            else
+              data(s_i:s_i) = s(i:i)
+            endif
+            s_i = s_i + 1
+          endif
+        enddo
+        if (present(num)) num = 1
+        if (present(iostat)) iostat = 0
+      endif
+      exit
+    enddo loop
 
 #else
     data = ""
