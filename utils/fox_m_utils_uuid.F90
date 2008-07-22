@@ -51,7 +51,7 @@ contains
 
 
     if (.not.initialized) then
-      call mtprng_init(values(7)*10000+values(8), rng_state)
+      call mtprng_init(int(values(7)*10000+values(8), i4b), rng_state)
       clock_seq = int(mtprng_rand64(rng_state), i4b)
       initialized = .true.
     endif
