@@ -1,4 +1,4 @@
-AC_INIT([FoX],[4.0.1],[tow@uszla.me.uk])
+AC_INIT([FoX],[4.0.2],[tow@uszla.me.uk])
 AC_CONFIG_SRCDIR([README.FoX.txt])
 dnl
 dnl Find system type.
@@ -187,6 +187,7 @@ dnl Installation instructions ..
 AC_PROG_INSTALL
 AC_PROG_MKDIR_P
 TW_PROG_CYGPATH_W
+AC_SUBST(VPATH)
 OBJSDIR=`pwd`/objs
 AC_SUBST(OBJSDIR)
 AC_FC_MOD_PATH_FLAG

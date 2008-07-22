@@ -15,61 +15,61 @@ install: objsdir $(BUILD_TARGETS)
 	$(INSTALL) FoX-config $(install_prefix)/bin
 #
 examples_build:
-	if test -d examples; then (cd examples; $(MAKE)) fi
+	if test -d examples; then (cd examples; $(MAKE) VPATH=$(VPATH)/examples) fi
 #
 #---------------------------
 #
 # Recursive make for each module
 #
 dom_lib: objsdir sax_lib wxml_lib
-	(cd dom; $(MAKE))
+	(cd dom; $(MAKE) VPATH=$(VPATH)/dom)
 dom_lib_clean:
-	if test -d dom; then (cd dom; $(MAKE) clean) fi
+	if test -d dom; then (cd dom; $(MAKE) VPATH=$(VPATH)/dom clean) fi
 dom_lib_check: sax_lib_check wxml_lib_check
-	(cd dom; $(MAKE) check)
+	(cd dom; $(MAKE) VPATH=$(VPATH)/dom check)
 	touch dom_lib_check
 #
 sax_lib: objsdir common_lib utils_lib fsys_lib
-	(cd sax; $(MAKE))
+	(cd sax; $(MAKE) VPATH=$(VPATH)/sax)
 sax_lib_clean:
-	if test -d sax; then (cd sax; $(MAKE) clean) fi
+	if test -d sax; then (cd sax; $(MAKE) VPATH=$(VPATH)/sax clean) fi
 sax_lib_check: common_lib_check
-	(cd sax; $(MAKE) check)
+	(cd sax; $(MAKE) VPATH=$(VPATH)/sax check)
 	touch sax_lib_check
 #
 wxml_lib: objsdir common_lib fsys_lib 
-	(cd wxml; $(MAKE))
+	(cd wxml; $(MAKE) VPATH=$(VPATH)/wxml)
 wxml_lib_clean:
-	if test -d wxml; then (cd wxml; $(MAKE) clean) fi
+	if test -d wxml; then (cd wxml; $(MAKE) VPATH=$(VPATH)/wxml clean) fi
 wxml_lib_check: common_lib_check
-	(cd wxml; $(MAKE) check)
+	(cd wxml; $(MAKE) VPATH=$(VPATH)/wxml check)
 	touch wxml_lib_check
 #
 wcml_lib: objsdir utils_lib wxml_lib
-	(cd wcml; $(MAKE))
+	(cd wcml; $(MAKE) VPATH=$(VPATH)/wcml)
 wcml_lib_clean: 
-	if test -d wcml; then (cd wcml; $(MAKE) clean) fi
+	if test -d wcml; then (cd wcml; $(MAKE) VPATH=$(VPATH)/wcml clean) fi
 wcml_lib_check: wxml_lib_check
-	(cd wcml; $(MAKE) check)
+	(cd wcml; $(MAKE) VPATH=$(VPATH)/wcml check)
 	touch wcml_lib_check
 #
 common_lib: objsdir fsys_lib utils_lib
-	(cd common; $(MAKE))
+	(cd common; $(MAKE) VPATH=$(VPATH)/common)
 common_lib_clean:
-	if test -d common; then (cd common; $(MAKE) clean) fi
+	if test -d common; then (cd common; $(MAKE) VPATH=$(VPATH)/common clean) fi
 common_lib_check:
-	(cd common; $(MAKE) check)
+	(cd common; $(MAKE) VPATH=$(VPATH)/common check)
 	touch common_lib_check
 #
 utils_lib: objsdir fsys_lib
-	(cd utils; $(MAKE))
+	(cd utils; $(MAKE) VPATH=$(VPATH)/utils)
 utils_lib_clean:
-	if test -d utils; then (cd utils; $(MAKE) clean) fi
+	if test -d utils; then (cd utils; $(MAKE) VPATH=$(VPATH)/utils clean) fi
 #
 fsys_lib: objsdir
-	(cd fsys; $(MAKE))
+	(cd fsys; $(MAKE) VPATH=$(VPATH)/fsys)
 fsys_lib_clean:
-	if test -d fsys; then (cd fsys; $(MAKE) clean) fi
+	if test -d fsys; then (cd fsys; $(MAKE) VPATH=$(VPATH)/fsys clean) fi
 #
 check: default
 	@if ! test -d examples; then echo "You need to download the full version of FoX to run the testsuite"; \
@@ -82,7 +82,7 @@ check: default
 	fi
 #
 DoX:
-	(cd DoX; $(MAKE))
+	(cd DoX; $(MAKE) VPATH=$(VPATH)/DoX)
 #
 cutdown:
 	rm -rf .gitignore DoX/ config/aclocal.m4 config/autom4te.cache config/configure.ac config/m4/ config/makefile examples/ m4/ */test/ */*.m4 Changelog RELEASE release.sh
@@ -101,7 +101,7 @@ cutdown-dom: cutdown
 	rm -rf wcml/
 
 clean: wxml_lib_clean wcml_lib_clean common_lib_clean fsys_lib_clean sax_lib_clean dom_lib_clean utils_lib_clean
-	if test -d examples; then (cd examples; $(MAKE) clean) fi
+	if test -d examples; then (cd examples; $(MAKE) VPATH=$(VPATH)/examples clean) fi
 	rm -rf objs .FoX check.out *_check
 #
 distclean: clean

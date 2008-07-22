@@ -3,6 +3,7 @@
 
 BUILD_TARGETS=@BUILD_TARGETS@
 
+VPATH=@VPATH@
 compile_prefix=@OBJSDIR@
 install_prefix=@prefix@
 LIB_DIR=$(compile_prefix)/lib
