@@ -484,7 +484,7 @@ TOHW_defaultdecls
     ij = 0
     length = 1
     loop: do i = 1, 1
-TOHW_parse_numbers(`data')
+TOHW_parse_complex(`data')
     end do loop
 
 TOHW_check_errors
@@ -509,7 +509,7 @@ TOHW_defaultdecls
     ij = 0
     length = 1
     loop: do i = 1, 1
-TOHW_parse_numbers(`data')
+TOHW_parse_complex(`data')
     end do loop
 
 TOHW_check_errors

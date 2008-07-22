@@ -274,8 +274,10 @@ contains
 
       call rts(string, temp, num=n, iostat=i)
 
-      if (temp/=array) &
+      if (temp/=array) then
         print*, "Different array"
+        stop
+      endif
       if (i/=iostat) &
         print*, "Wrong iostat" 
       if (n/=num) &
@@ -335,7 +337,7 @@ contains
         if (temp>1e-5) then
           print*, "Different array"
         endif   
-      elseif (abs(temp-array)/temp>1e-5) then
+      elseif (abs(temp-array)/array>1e-5) then
         print*, "Different array"
       endif  
       if (i/=iostat) &
@@ -359,7 +361,7 @@ contains
         if (temp>1e-5) then
           print*, "Different array"
         endif   
-      elseif (abs(temp-array)/temp>1e-5) then
+      elseif (abs(temp-array)/array>1e-5) then
         print*, "Different array"
       endif  
       if (i/=iostat) &
@@ -383,16 +385,16 @@ contains
         if (real(temp)>1e-5) then
           print*, "Different array"
         endif   
-      elseif (abs(real(temp)-real(array))/real(temp)>1e-5) then
+      elseif (abs(real(temp)-real(array))/real(array)>1e-5) then
         print*, "Different array"
-      endif  
-      if (imag(array)==0.0) then
-        if (imag(temp)>1e-5) then
+      endif
+      if (aimag(array)==0.0) then
+        if (aimag(temp)>1e-5) then
           print*, "Different array"
         endif   
-      elseif (abs(imag(temp)-imag(array))/imag(temp)>1e-5) then
+      elseif (abs(aimag(temp)-aimag(array))/aimag(array)>1e-5) then
         print*, "Different array"
-      endif  
+      endif
       if (i/=iostat) &
         print*, "Wrong iostat" 
       if (n/=num) &
@@ -414,14 +416,14 @@ contains
         if (real(temp)>1e-5) then
           print*, "Different array"
         endif   
-      elseif (abs(real(temp)-real(array))/real(temp)>1e-5) then
+      elseif (abs(real(temp)-real(array))/real(array)>1e-5) then
         print*, "Different array"
       endif  
-      if (imag(array)==0.0) then
-        if (imag(temp)>1e-5) then
+      if (aimag(array)==0.0) then
+        if (aimag(temp)>1e-5) then
           print*, "Different array"
         endif   
-      elseif (abs(imag(temp)-imag(array))/imag(temp)>1e-5) then
+      elseif (abs(aimag(temp)-aimag(array))/aimag(array)>1e-5) then
         print*, "Different array"
       endif  
       if (i/=iostat) &
@@ -560,7 +562,7 @@ contains
             print*, "Different array"
             exit
           endif
-        elseif (abs(temp(j)-array(j))/temp(j)>1e-5) then
+        elseif (abs(temp(j)-array(j))/array(j)>1e-5) then
           print*, "Different array"
           exit
         endif
@@ -587,7 +589,7 @@ contains
             if (temp(j,k)>1e-5) then
               exit loop
             endif
-           elseif (abs(temp(j,k)-array(j,k))/temp(j,k)>1e-5) then
+           elseif (abs(temp(j,k)-array(j,k))/array(j,k)>1e-5) then
             print*, "Different array"
             exit loop
           endif
@@ -615,7 +617,7 @@ contains
             print*, "Different array"
             exit
           endif
-        elseif (abs(temp(j)-array(j))/temp(j)>1e-5) then
+        elseif (abs(temp(j)-array(j))/array(j)>1e-5) then
           print*, "Different array"
           exit
         endif
@@ -643,7 +645,7 @@ contains
               print*, "Different array"
               exit loop
             endif
-           elseif (abs(temp(j,k)-array(j,k))/temp(j,k)>1e-5) then
+           elseif (abs(temp(j,k)-array(j,k))/array(j,k)>1e-5) then
             print*, "Different array"
             exit loop
           endif
@@ -668,14 +670,14 @@ contains
 
       do j = 1, size(array)
         a = transfer(array(j), a)
-        t = transfer(array(j), t)
+        t = transfer(temp(j), t)
         do m = 1, 2
           if (a(m)==0.0) then
             if (t(m)>1e-5) then
               print*, "Different array"
               exit
             endif
-          elseif (abs(t(m)-a(m))/t(m)>1e-5) then
+          elseif (abs(t(m)-a(m))/a(m)>1e-5) then
             print*, "Different array"
             exit
           endif
@@ -701,14 +703,14 @@ contains
       loop: do j = 1, size(array,1)
         do k = 1, size(array,2)
           a = transfer(array(j,k), a)
-          t = transfer(array(j,k), t)
+          t = transfer(temp(j,k), t)
           do m = 1, 2
             if (a(m)==0.0) then
               if (t(m)>1e-5) then
                 print*, "Different array"
                 exit loop
               endif
-            elseif (abs(t(m)-a(m))/t(m)>1e-5) then
+            elseif (abs(t(m)-a(m))/a(m)>1e-5) then
               print*, "Different array"
               exit loop
             endif
@@ -734,14 +736,14 @@ contains
 
       do j = 1, size(array)
         a = transfer(array(j), a)
-        t = transfer(array(j), t)
+        t = transfer(temp(j), t)
         do m = 1, 2
           if (a(m)==0.0) then
             if (t(m)>1e-5) then
               print*, "Different array"
               exit
             endif
-          elseif (abs(t(m)-a(m))/t(m)>1e-5) then
+          elseif (abs(t(m)-a(m))/a(m)>1e-5) then
             print*, "Different array"
             exit
           endif
@@ -767,14 +769,14 @@ contains
       loop: do j = 1, size(array,1)
         do k = 1, size(array,2)
           a = transfer(array(j,k), a)
-          t = transfer(array(j,k), t)
+          t = transfer(temp(j,k), t)
           do m = 1, 2
             if (a(m)==0.0) then
               if (t(m)>1e-5) then
                 print*, "Different array"
                 exit loop
               endif
-            elseif (abs(t(m)-a(m))/t(m)>1e-5) then
+            elseif (abs(t(m)-a(m))/a(m)>1e-5) then
               print*, "Different array"
               exit loop
             endif
