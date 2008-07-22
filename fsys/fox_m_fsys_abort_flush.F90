@@ -1,4 +1,4 @@
-module m_pxf_abort_flush
+module fox_m_fsys_abort_flush
 
   implicit none
 
@@ -116,4 +116,4 @@ CONTAINS
     crash = i
   end function pure_pxfabort
 
-end module m_pxf_abort_flush
+end module fox_m_fsys_abort_flush

@@ -79,7 +79,7 @@ if [ "x$MODULES" = x ]; then
 fi
 
 case $MODULES in *fsys*)
-  LIBS=$libdir/libfsys.@LIBEXT@
+  LIBS=$libdir/libFoX_fsys.@LIBEXT@
   ;;
 esac
 case $MODULES in *common*)

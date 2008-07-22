@@ -1,6 +1,7 @@
 module m_wxml_core
 
 #ifndef DUMMYLIB
+  use fox_m_fsys_abort_flush, only: pxfabort
   use fox_m_fsys_array_str, only: vs_str, str_vs, vs_str_alloc
   use fox_m_fsys_string, only: toLower
   use fox_m_utils_uri, only: URI, parseURI, destroyURI
@@ -28,8 +29,6 @@ module m_wxml_core
   use m_common_struct, only: xml_doc_state, init_xml_doc_state, destroy_xml_doc_state, &
     register_internal_PE, register_external_PE, register_internal_GE, register_external_GE
   use m_wxml_escape, only: escape_string
-
-  use pxf, only: pxfabort
 #endif
 
   implicit none

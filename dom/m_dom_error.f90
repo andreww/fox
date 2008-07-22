@@ -1,6 +1,6 @@
 module m_dom_error
 
-  use pxf, only: pxfabort
+  use fox_m_fsys_abort_flush, only: pxfabort
 
   use m_common_error, only: error_stack, add_error, in_error, destroy_error_stack
 

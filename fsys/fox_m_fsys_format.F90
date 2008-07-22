@@ -14,8 +14,8 @@ module fox_m_fsys_format
 !to COUNT their length inline in the specification
 !expression, but Pathscale-2.4 gives an error on that.
 
+  use fox_m_fsys_abort_flush, only: pxfflush
   use fox_m_fsys_realtypes, only: sp, dp
-  use pxf, only: pxfflush
 
   implicit none
   private

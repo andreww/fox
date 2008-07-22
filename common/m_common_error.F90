@@ -1,8 +1,8 @@
 module m_common_error
 
 #ifndef DUMMYLIB
+  use fox_m_fsys_abort_flush, only: pxfabort, pxfflush
   use fox_m_fsys_array_str, only: vs_str_alloc
-  use pxf, only: pxfabort, pxfflush
 
   implicit none
   private
