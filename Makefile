@@ -3,6 +3,7 @@
 include arch.make
 #
 default: objsdir $(BUILD_TARGETS) examples_build
+	echo "$(HERE)"
 	touch .FoX
 #
 objsdir:
@@ -53,6 +54,14 @@ wcml_lib_check: wxml_lib_check
 	(cd wcml; $(MAKE) VPATH=$(VPATH)/wcml check)
 	touch wcml_lib_check
 #
+#wkml_lib: objsdir utils_lib wxml_lib
+#        (cd wkml; $(MAKE) VPATH=$(VPATH)/wkml)
+#wkml_lib_clean:
+#        if test -d wkml; then (cd wkml; $(MAKE) VPATH=$(VPATH)/wkml clean) fi
+#wkml_lib_check: wxml_lib_check
+#        (cd wkml; $(MAKE) VPATH=$(VPATH)/wkml check)
+#        touch wkml_lib_check
+#
 common_lib: objsdir fsys_lib utils_lib
 	(cd common; $(MAKE) VPATH=$(VPATH)/common)
 common_lib_clean:
@@ -100,7 +109,11 @@ cutdown-sax: cutdown
 cutdown-dom: cutdown
 	rm -rf wcml/
 
+#cutdown-wkml: cutdown
+#	rm -rf sax/ dom/
+
 clean: wxml_lib_clean wcml_lib_clean common_lib_clean fsys_lib_clean sax_lib_clean dom_lib_clean utils_lib_clean
+#clean: wkml_lib_clean wxml_lib_clean wcml_lib_clean common_lib_clean fsys_lib_clean sax_lib_clean dom_lib_clean utils_lib_clean
 	if test -d examples; then (cd examples; $(MAKE) VPATH=$(VPATH)/examples clean) fi
 	rm -rf objs .FoX check.out *_check
 #
