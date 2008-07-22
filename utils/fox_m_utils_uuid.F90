@@ -20,8 +20,8 @@ module fox_m_utils_uuid
   
   type(mtprng_state), save :: rng_state
   logical, save :: initialized = .false.
-  integer, save :: values_save
-  integer, save :: hires_count = 0
+  integer, save :: values_save ! must be default for date_and_time
+  integer(kind=i4b), save :: hires_count = 0
 
 ! clock-seq holds a random number constant for the lifetime of the program
 ! using this module. That's the best we can do per S 4.1.5
@@ -46,8 +46,8 @@ contains
     integer(kind=i4b) :: time_low, time_mid, time_hi_and_version
     integer(kind=i4b) :: clk_seq_hi_res, clk_seq_low
 
-    integer :: values(8)
-    integer :: variant, v
+    integer :: values(8) ! must be default for date_and_time
+    integer(kind=i4b) :: variant, v
 
 
     if (.not.initialized) then
