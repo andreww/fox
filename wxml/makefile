@@ -9,17 +9,8 @@ INCFLAGS=$(MOD_PREFIX)../objs/finclude
 #
 .m4.F90:
 	m4 -I ../m4 $< > $@
-
-#
-#---------NOTHING SHOULD NEED TO BE CHANGED BELOW THIS LINE-----
 #
 include ../arch.make
-
-# Uncomment one of the following lines for debugging/profiling support
-#
-#FFLAGS=$(FFLAGS_DEBUG)
-#FFLAGS=$(FFLAGS_PROFILE)
-#FFLAGS=$(FFLAGS_CHECK)
 #
 CP=cp -p
 install: $(OBJFILES)

@@ -16,8 +16,6 @@ OBJFILES= m_dom_error.$(OBJEXT) m_dom_parse.$(OBJEXT) m_dom_utils.$(OBJEXT) \
 LIBRARY=libFoX_dom.$(LIBEXT)
 INCFLAGS=$(MOD_PREFIX)../objs/finclude
 #
-#---------NOTHING SHOULD NEED TO BE CHANGED BELOW THIS LINE-----
-#
 include ../arch.make
 #
 m_dom_extras.F90: m_dom_extras.m4
@@ -29,12 +27,6 @@ m_dom_utils.f90: m_dom_utils.m4
 #
 m_dom_dom.F90: $(M4FILES)
 	m4 -I ../m4 m_dom_dom.m4 > $@ 
-#
-# Uncomment one of the following lines for debugging/profiling support
-#
-#FFLAGS=$(FFLAGS_DEBUG)
-#FFLAGS=$(FFLAGS_PROFILE)
-#FFLAGS=$(FFLAGS_CHECK)
 #
 CP=cp -p
 install: $(OBJFILES)

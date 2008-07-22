@@ -13,12 +13,6 @@ INCFLAGS=$(MOD_PREFIX)../objs/finclude
 	m4 -I ../m4 $< > $@
 #
 include ../arch.make
-
-# Uncomment one of the following lines for debugging/profiling support
-#
-#FFLAGS=$(FFLAGS_DEBUG)
-#FFLAGS=$(FFLAGS_PROFILE)
-#FFLAGS=$(FFLAGS_CHECK)
 #
 CP=cp -p
 install: $(OBJFILES)

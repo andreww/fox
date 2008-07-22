@@ -9,15 +9,7 @@ OBJFILES= m_sax_types.$(OBJEXT) m_sax_tokenizer.$(OBJEXT) \
 LIBRARY=libFoX_sax.$(LIBEXT)
 INCFLAGS=$(MOD_PREFIX)../objs/finclude
 #
-#---------NOTHING SHOULD NEED TO BE CHANGED BELOW THIS LINE-----
-#
 include ../arch.make
-
-# Uncomment one of the following lines for debugging/profiling support
-#
-#FFLAGS=$(FFLAGS_DEBUG)
-#FFLAGS=$(FFLAGS_PROFILE)
-#FFLAGS=$(FFLAGS_CHECK)
 #
 CP=cp -p
 install: $(OBJFILES)

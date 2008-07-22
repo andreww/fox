@@ -7,14 +7,7 @@ OBJFILES=FoX_utils.$(OBJEXT) fox_m_utils_mtprng.$(OBJEXT) \
 LIBRARY=libFoX_utils.$(LIBEXT)
 INCFLAGS=$(MOD_PREFIX)../objs/finclude
 #
-#
 include ../arch.make
-
-# Uncomment one of the following lines for debugging/profiling support
-#
-#FFLAGS=$(FFLAGS_DEBUG)
-#FFLAGS=$(FFLAGS_PROFILE)
-#FFLAGS=$(FFLAGS_CHECK)
 #
 CP=cp -p
 install: $(OBJFILES)
