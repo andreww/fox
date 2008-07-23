@@ -3,8 +3,7 @@
 include arch.make
 #
 default: objsdir $(BUILD_TARGETS) examples_build
-	echo "$(HERE)"
-	touch .FoX
+	@if [ -z "$(BUILD_TARGETS)" ]; then echo "FoX is not configured!"; else touch .FoX; fi
 #
 objsdir:
 	mkdir -p objs/lib objs/finclude
