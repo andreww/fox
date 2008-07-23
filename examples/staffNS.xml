@@ -1,10 +1,10 @@
-<?xml version="1.0"?><?TEST-STYLE PIDATA?>
+<?xml version="1.0" encoding="iso-8859-1"?><?TEST-STYLE PIDATA?>
 <!DOCTYPE staff PUBLIC "STAFF" "staffNS.dtd" 
 [
    <!ENTITY ent1 "es">
    <!ENTITY ent2 "1900 Dallas Road">
    <!ENTITY ent3 "Texas">
-   <!ENTITY ent4 "<entElement1 xmlns:local1='www.xyz.com'>Element data</entElement1><?PItarget PIdata?>">
+   <!ENTITY ent4 "<entElement1 xmlns:local1='http://www.xyz.com'>Element data</entElement1><?PItarget PIdata?>">
    <!ENTITY ent5 PUBLIC "entityURI" "entityFile" NDATA notation1>
    <!ENTITY ent6 PUBLIC "uri" "file" NDATA notation2>
    <!ENTITY ent1 "This entity should be discarded">
@@ -14,7 +14,7 @@
 <!-- This is comment number 1.-->
 <staff>
  <employee xmlns="http://www.nist.gov" xmlns:dmstc="http://www.usa.com">
-  <employeeId>EMP0001</employeeId>
+  <employeeId>EMP0001ä</employeeId>
   <name>Margaret Martin</name>
   <position>Accountant</position>           
   <salary>56,000</salary>
