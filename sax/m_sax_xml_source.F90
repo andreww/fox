@@ -6,7 +6,7 @@ module m_sax_xml_source
   use m_common_error,  only: error_stack, add_error, in_error
   use m_common_charset, only: XML_WHITESPACE, XML_INITIALENCODINGCHARS, &
     XML_ENCODINGCHARS, XML1_0, XML1_1, isXML1_0_NameChar, &
-    isLegalChar, allowed_encoding
+    isLegalChar, isUSASCII, allowed_encoding
   use m_common_io, only: io_eor, io_eof
   
   use FoX_utils, only: URI
@@ -24,6 +24,7 @@ module m_sax_xml_source
     integer            :: lun = -1
     integer            :: xml_version = XML1_0
     character, pointer :: encoding(:) => null()
+    logical            :: isUSASCII
     character, pointer :: filename(:) => null()
     type(URI), pointer :: baseURI => null()
     integer            :: line = 0
@@ -66,7 +67,7 @@ contains
       call add_error(es, "Error reading "//str_vs(f%filename))
       return
     endif
-    if (.not.isLegalChar(c, xv)) then
+    if (.not.isLegalChar(c, f%isUSASCII, xv)) then
       call add_error(es, "Illegal character found at " &
         //str_vs(f%filename)//":"//f%line//":"//f%col)
       return
@@ -384,6 +385,7 @@ contains
               call add_error(es, "Unknown character encoding in XML declaration")
             else
               f%encoding => ch
+              f%isUSASCII = isUSASCII(str_vs(ch))
               ch => null()
             endif
           case (xd_standalone)

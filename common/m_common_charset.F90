@@ -96,20 +96,29 @@ module m_common_charset
   public :: isXML1_0_NameChar
   public :: isXML1_1_NameChar
   public :: checkChars
-
+  public :: isUSASCII
   public :: allowed_encoding
 
 contains
 
-  pure function isLegalChar(c, xml_version) result(p)
+  pure function isLegalChar(c, ascii_p, xml_version) result(p)
     character, intent(in) :: c
+    ! really we should check the encoding here & be more intelligent
+    ! for now we worry only about is it ascii or not.
+    logical, intent(in) :: ascii_p
     integer, intent(in) :: xml_version
     logical :: p 
     ! Is this character legal as a source character in the document?
     integer :: i
     i = iachar(c)
-    if (i<0.or.i>127) then
-      p = .false. ! FIXME but it's processor dependent ...
+    if (i<0) then
+      p = .false.
+      return
+    elseif (i>127) then
+      p = .not.ascii_p
+      return
+      ! ie if we are ASCII, then >127 is definitely illegal.
+      ! otherwise maybe it's ok
     endif
     select case(xml_version)
     case (XML1_0)
@@ -245,6 +254,24 @@ contains
     enddo
   end function checkChars
 
+  function isUSASCII(encoding) result(p)
+    character(len=*), intent(in) :: encoding
+    logical :: p
+
+    character(len=len(encoding)) :: enc
+    enc = toLower(encoding)
+    p = (enc=="ansi_x3.4-1968" &
+      .or. enc=="ansi_x3.4-1986" &
+      .or. enc=="iso_646.irv:1991" &
+      .or. enc=="ascii" &
+      .or. enc=="iso646-us" &
+      .or. enc=="us-ascii" &
+      .or. enc=="us" &
+      .or. enc=="ibm367" &
+      .or. enc=="cp367" &
+      .or. enc=="csascii")
+
+  end function isUSASCII
 
   function allowed_encoding(encoding) result(p)
     character(len=*), intent(in) :: encoding
@@ -252,7 +279,7 @@ contains
 
     character(len=len(encoding)) :: enc
     logical :: utf8, usascii, iso88591, iso88592, iso88593, iso88594, &
-      iso88595, iso88596, iso88597, iso88598, iso88599, iso885910, iso646irv, &
+      iso88595, iso88596, iso88597, iso88598, iso88599, iso885910,  &
       iso885913, iso885914, iso885915, iso885916
 
     enc = toLower(encoding)
@@ -263,7 +290,7 @@ contains
     ! UTF-8 as a practicality. We bail out if any non-ASCII
     ! characters are used later on.
     utf8 = (enc=="utf-8")
-    
+
     usascii = (enc=="ansi_x3.4-1968" &
       .or. enc=="ansi_x3.4-1986" &
       .or. enc=="iso_646.irv:1991" &
@@ -368,7 +395,7 @@ contains
 !      iso10646utf1 = (enc=="iso-10646-utf-1") ! FIXME check
 !      iso656basic1983 = (enc=="iso_646.basic:1983" &
 !        .or. enc=="csiso646basic1983") ! FIXME check
-! INVARIANT - subset of ASCII
+! INVARIANT - almost but not quite a subset of ASCII
 !      iso646irv = (enc=="iso_646.irv:1983" &
 !        .or. enc=="iso-ir-2" &
 !        .or. enc=="irv")
@@ -411,8 +438,8 @@ contains
 
       p = utf8.or.usascii.or.iso88591.or.iso88592.or.iso88593 &
         .or.iso88594.or.iso88595.or.iso88596.or.iso88597 &
-        .or.iso88598.or.iso88599.or.iso885910.or.iso646irv &
-        .or.iso885913.or.iso885914.or.iso885915.or.iso885916
+        .or.iso88598.or.iso88599.or.iso885910.or.iso885913 &
+        .or.iso885914.or.iso885915.or.iso885916
 
   end function allowed_encoding
 
