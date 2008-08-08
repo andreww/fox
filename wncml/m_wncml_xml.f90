@@ -50,6 +50,47 @@ contains
 
   end subroutine ncmlEndContainer
 
+  subroutine ncmlStartGroup( xf, name, orgName )
+
+    type(xmlf_t),               intent(inout) :: xf
+    character(len=*),           intent(in   ) :: name
+    character(len=*), optional, intent(in   ) :: orgname
+
+    call xml_NewElement(xf, name=PREFIX//'group')
+    call xml_AddAttribute(xf, name='name', value=name)
+
+    if (present(orgName)) call xml_AddAttribute(xf, name='orgName', value=orgname)
+
+  end subroutine ncmlStartGroup
+
+  subroutine ncmlEndGroup ( xf )
+    
+    type(xmlf_t),               intent(inout) :: xf
+
+    call xml_EndElement(xf, name=PREFIX//'group')
+
+  end subroutine ncmlEndGroup
+
+  subroutine ncmlAddRemove ( xf, name, objecttype )
+
+    type(xmlf_t),               intent(inout) :: xf
+    character(len=*),           intent(in   ) :: name
+    character(len=*),           intent(in   ) :: objecttype
+
+    ! ObjectType can only have some values.
+    if ((trim(objecttype).ne.'attribute').or. &
+      & (trim(objecttype).ne.'dimension').or. &
+      & (trim(objecttype).ne.'variable' ).or. &
+      & (trim(objecttype).ne.'group'    )) &
+      & stop 'Type error in ncmlAddRemove'
+
+    call xml_NewElement(xf, name=PREFIX//'remove')
+    call xml_AddAttribute(xf, name='name', value=name)
+    call xml_AddAttribute(xf, name='type', value=objecttype)
+    call xml_EndElement(xf, name=PREFIX//'remove')
+
+  end subroutine ncmlAddRemove 
+
   subroutine ncmlAddDimension( xf, name, len, unlim, varlen, shared, orgname )
   
     type(xmlf_t),               intent(inout) :: xf
