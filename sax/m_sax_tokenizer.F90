@@ -14,6 +14,9 @@ module m_sax_tokenizer
     push_chars, get_character, get_all_characters, &
     parse_text_declaration
   use m_sax_types ! everything, really
+#ifdef PGF90
+  use fox_m_utils_uri, only: URI
+#endif
 
   implicit none
   private
@@ -936,6 +939,10 @@ contains
     character :: dummy
     integer :: i, i2, j
     type(entity_t), pointer :: ent
+#ifdef PGF90
+    type(URI), pointer :: nullURI
+    nullURI => null()
+#endif
 
     ! Condense all whitespace, only if we are validating,
     ! Expand all &
@@ -999,7 +1006,11 @@ contains
               call add_error(fx%error_stack, "External entity forbidden in attribute")
               goto 100
             endif
+#ifdef PGF90
+            call add_internal_entity(fx%forbidden_ge_list, str_vs(tempString), "", nullURI, .false.)
+#else
             call add_internal_entity(fx%forbidden_ge_list, str_vs(tempString), "", null(), .false.)
+#endif
             ! Recursively expand entity, checking for errors.
             s_ent => normalize_attribute_text(fx, &
               vs_str(expand_entity_text(fx%xds%entityList, str_vs(tempString))))
@@ -1056,6 +1067,10 @@ contains
     character :: dummy
     integer :: i, i2, j, iostat
     type(entity_t), pointer :: ent
+#ifdef PGF90
+    type(URI), pointer :: nullURI
+    nullURI => null()
+#endif
 
     ! Expand all %PE;
 
@@ -1095,7 +1110,11 @@ contains
               call add_error(fx%error_stack, "Unparsed entity reference forbidden in entity value")
               goto 100
             endif
+#ifdef PGF90
+            call add_internal_entity(fx%forbidden_pe_list, str_vs(tempString), "", nullURI, .false.)
+#else
             call add_internal_entity(fx%forbidden_pe_list, str_vs(tempString), "", null(), .false.)
+#endif
             ! Recursively expand entity, checking for errors.
             if (ent%external) then
               call open_new_file(fb, ent%baseURI, iostat)
