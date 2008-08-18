@@ -231,7 +231,7 @@ contains
       if (present(iostat)) then
         open(unit=xf%lun, file=filename, form="formatted", status="replace", &
           action="write", recl=xml_recl, iostat=iostat)
-      else	
+      else
         open(unit=xf%lun, file=filename, form="formatted", status="replace", &
           action="write", recl=xml_recl)
       endif
@@ -239,7 +239,7 @@ contains
       if (present(iostat)) then
         open(unit=xf%lun, file=filename, form="formatted", status="new", &
           action="write", recl=xml_recl, iostat=iostat)
-      else	
+      else
         open(unit=xf%lun, file=filename, form="formatted", status="new", &
           action="write", recl=xml_recl)
       endif

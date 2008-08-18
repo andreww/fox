@@ -279,7 +279,7 @@ module m_dom_dom
 
   
   public :: getNodeName
-  public :: getNodeValue	
+  public :: getNodeValue
   public :: setNodeValue
   public :: getNodeType
   public :: getParentNode
@@ -460,7 +460,7 @@ module m_dom_dom
   public :: setSpecified
   interface getValue
     module procedure getValue_DOM
-  end interface	 
+  end interface
   public :: getValue
   public :: setValue
   public :: getOwnerElement
