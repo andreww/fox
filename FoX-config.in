@@ -86,12 +86,12 @@ case $MODULES in *fsys*)
   LIBS=$libdir/libFoX_fsys.@LIBEXT@
   ;;
 esac
-case $MODULES in *common*)
-  LIBS="$libdir/libFoX_common.@LIBEXT@ $LIBS"
-  ;;
-esac
 case $MODULES in *utils*)
   LIBS="$libdir/libFoX_utils.@LIBEXT@ $LIBS"
+  ;;
+esac
+case $MODULES in *common*)
+  LIBS="$libdir/libFoX_common.@LIBEXT@ $LIBS"
   ;;
 esac
 case $MODULES in *wxml*)
