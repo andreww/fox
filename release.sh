@@ -26,7 +26,7 @@ do
     cd FoX-$1
     (
       cd config; \
-       sed -e "s/CUTDOWN_TARGET=.*/CUTDOWN_TARGET=$i/" -i "" configure.ac; \
+       sed -e "s/CUTDOWN_TARGET=.*/CUTDOWN_TARGET=$i/" -i configure.ac; \
        make
     )
     make cutdown-$i
