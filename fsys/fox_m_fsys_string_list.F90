@@ -127,6 +127,22 @@ contains
 
   end function tokenize_to_string_list
 
+  function registered_string(s_list, s) result(p)
+    type(string_list), intent(in) :: s_list
+    character(len=*), intent(in) :: s
+    logical :: p
+
+    integer :: i
+
+    p = .false.
+    do i = 1, size(s_list%list)
+      if (str_vs(s_list%list(i)%s)//"x"==s//"x") then
+        p = .true.
+        exit
+      endif
+    enddo
+  end function registered_string
+
   subroutine tokenize_and_add_strings(s_list, s, uniquify)
     type(string_list), intent(inout) :: s_list
     character(len=*), intent(in) :: s
@@ -170,22 +186,6 @@ contains
     enddo
 
   end subroutine tokenize_and_add_strings
-
-  function registered_string(s_list, s) result(p)
-    type(string_list), intent(in) :: s_list
-    character(len=*), intent(in) :: s
-    logical :: p
-
-    integer :: i
-
-    p = .false.
-    do i = 1, size(s_list%list)
-      if (str_vs(s_list%list(i)%s)//"x"==s//"x") then
-        p = .true.
-        exit
-      endif
-    enddo
-  end function registered_string
 
 #endif
 end module fox_m_fsys_string_list
