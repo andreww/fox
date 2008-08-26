@@ -1,3 +1,7 @@
+2008-08-26: version 4.0.3
+        Portability workarounds for the Portland Group compiler (pgf90)
+	Minor bug fixes
+
 2008-07-23: version 4.0.2
         Fix crashes in the SAX parser
         Allow extended 8-bit chars where appropriate
