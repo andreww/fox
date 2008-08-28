@@ -11,7 +11,7 @@ module m_wncml_xml
   implicit none
 
   character(len=54), parameter :: NAMESPACE = 'http://www.unidata.ucar.edu/namespaces/netcdf/ncml-2.2'
-  character(len=4),  parameter :: PREFIX    = 'ncml'
+  character(len=4),  parameter :: PREFIX    = 'ncml:'
 
 contains
 
@@ -31,7 +31,7 @@ contains
     call xml_DeclareNamespace(xf, prefix=PREFIX, &
       & nsURI=NAMESPACE)
 
-    call xml_NewElement(xf, name=PREFIX//':netcdf')
+    call xml_NewElement(xf, name=PREFIX//'netcdf')
 
     call xml_AddAttribute(xf, name='location', value=path)
 
@@ -46,7 +46,7 @@ contains
 
     type(xmlf_t),      intent(inout) :: xf
 
-    call xml_EndElement(xf, name=PREFIX//':netcdf')
+    call xml_EndElement(xf, name=PREFIX//'netcdf')
 
   end subroutine ncmlEndContainer
 
@@ -101,7 +101,7 @@ contains
     logical,          optional, intent(in   ) :: shared
     character(len=*), optional, intent(in   ) :: orgname
 
-    call xml_NewElement(xf, name=PREFIX//':dimension')
+    call xml_NewElement(xf, name=PREFIX//'dimension')
 
     call xml_AddAttribute(xf, name='name', value=name)
     call xml_AddAttribute(xf, name='length', value=len)
@@ -111,7 +111,7 @@ contains
     if (present(shared))     call xml_AddAttribute(xf, name='isShared', value=shared)
     if (present(orgname))    call xml_AddAttribute(xf, name='orgName', value=orgname)
 
-    call xml_EndElement(xf, name=PREFIX//':dimension')
+    call xml_EndElement(xf, name=PREFIX//'dimension')
 
   end subroutine ncmlAddDimension
 
@@ -123,7 +123,7 @@ contains
     character(len=*),           intent(in   ) :: xshape
     character(len=*), optional, intent(in   ) :: orgname
 
-    call xml_NewElement(xf, name=PREFIX//':variable')
+    call xml_NewElement(xf, name=PREFIX//'variable')
 
     call xml_AddAttribute(xf, name='type',  value=trim(getType(xtype)))
     call xml_AddAttribute(xf, name='shape', value=xshape)
@@ -136,7 +136,7 @@ contains
 
     type(xmlf_t),               intent(inout) :: xf
 
-    call xml_EndElement(xf,  name=PREFIX//':variable')
+    call xml_EndElement(xf,  name=PREFIX//'variable')
 
   end subroutine ncmlEndVariable
 
@@ -151,7 +151,7 @@ contains
     character(len=*), optional, intent(in   ) :: separator
     character(len=*), optional, intent(in   ) :: orgname
 
-    call xml_NewElement(xf, name=PREFIX//':attribute')
+    call xml_NewElement(xf, name=PREFIX//'attribute')
 
     call xml_AddAttribute(xf, name='name', value=name)
 
@@ -160,7 +160,7 @@ contains
     if (present(separator)) call xml_AddAttribute(xf, name='seperator', value=separator)
     if (present(orgname))   call xml_AddAttribute(xf, name='orgName',   value=orgname)
 
-    call xml_EndElement(xf, name=PREFIX//':attribute')
+    call xml_EndElement(xf, name=PREFIX//'attribute')
 
   end subroutine ncmlAddAttribute
 
