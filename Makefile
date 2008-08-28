@@ -94,7 +94,10 @@ DoX:
 #
 cutdown:
 	rm -rf .gitignore DoX/ config/aclocal.m4 config/autom4te.cache config/configure.ac config/m4/ config/makefile examples/ m4/ */test/ */*.m4 Changelog RELEASE release.sh
-	sed -e /m4/d -i */makefile
+	for i in */makefile ; \
+	do sed -e /m4/d $$i'' > $$i''.tmp ; \
+	mv $$i''.tmp $$i'' ; \
+	done
 
 cutdown-wxml: cutdown
 	rm -rf wcml/ sax/ dom/
