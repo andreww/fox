@@ -142,8 +142,6 @@ contains
 
   subroutine ncmlAddAttribute( xf, name, atype, value, separator, orgName )
 
-    ! Really should use a module procedure here - this assumes that the type 
-    ! is a string...
     type(xmlf_t),               intent(inout) :: xf
     character(len=*),           intent(in   ) :: name
     integer,          optional, intent(in   ) :: atype
