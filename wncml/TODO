@@ -1,0 +1,30 @@
+
+1) Intergrate into the FoX build process.  Find Toby's document for how to do this.
+Will have to include the netcdf m4 tests for discovery of the NetCDF libs. We can 
+also tie into e.g. the FoX about stuff. Should seperate out tests and examples too.
+Need to support DUMMY
+
+2) Handle NetCDF versions. Several issues here:
+We need to detect the lib version at configure time, then conditionally compile
+code to only use e.g. constants supported by that libary. We may also want to 
+check on our API use and report errors if the user does something unsupported 
+(but I don't think this is an issue). From what I can tell, the key differences 
+between NetCDF 3 and NetCDF 4 are the HDF data types and the aggregation 
+elements. As far as I can tell 4 is a superset of 3, but this does not help 
+very much as we could miss bits of a NetCDF 4 fh that the user expects to see.
+A second issue is that the HDF stuff is not all implemented in the schema (if
+the annotated one is to be beleved).
+
+3) Think about how non-character values are to be represented as text. I don't know if
+this is defined anywhere... currently I use the fox str function to convert to a 
+string (and we have rts to go back again). What does the Java stuff do?
+
+4) Think about input. What is the minimum ammount of information we need out of 
+the XML file to have a bash at opening the NetCDF file. Probably only the path? 
+
+5) Path. As far as I can see the only way to get this is to have the user supply 
+it - there is no Fortran API in the NetCDF lib to give it to us. This may be a good
+thing (the user may need to lye about this if the NetCDF file is to be moved online).
+Also, do I need to validate the path (it can be relative, absolute or a URI - there
+is a FIXME in the main fox code asking for a URI validator so we could do that 
+and reuse).
