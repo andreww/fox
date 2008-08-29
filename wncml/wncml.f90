@@ -2,7 +2,7 @@ module wncml
 
   use netcdf
   use m_wncml_xml
-  use m_wncml_util, only : check, namedims
+  use m_wncml_util, only : check, namedims, getType
   use FoX_wxml
   use FoX_common, only : str
 
@@ -54,7 +54,7 @@ contains
     do i = 1, nvar
       call check( NF90_INQUIRE_VARIABLE(ncid, i, name, xtype, ndims=ndims) )
       call check( NF90_INQUIRE_VARIABLE(ncid, i, name, xtype, dimids=DimIds(:ndims),  nAtts=natts) )
-      call ncmlStartVariable( xf, name, xtype, trim(namedims(ncid, ndims, DimIds(:ndims))) )
+      call ncmlStartVariable( xf, name, trim(getType(xtype)), trim(namedims(ncid, ndims, DimIds(:ndims))) )
 
       if ( natts > 0 ) then
         do j = 1, natts
@@ -95,22 +95,22 @@ contains
     select case(xtype)
     case (NF90_CHAR)
       call check ( nf90_get_att(ncid, varnum, atname, string) )
-      call ncmlAddAttribute( xf, trim(atname), xtype, string(1:len) )
+      call ncmlAddAttribute( xf, trim(atname), trim(getType(xtype)), string(1:len) )
     case (NF90_BYTE)
       call check ( nf90_get_att(ncid, varnum, atname, ints) )
-      call ncmlAddAttribute( xf, trim(atname), xtype, str(ints(1:len)) )
+      call ncmlAddAttribute( xf, trim(atname), trim(getType(xtype)), str(ints(1:len)) )
     case (NF90_SHORT)
       call check ( nf90_get_att(ncid, varnum, atname, ints) )
-      call ncmlAddAttribute( xf, trim(atname), xtype, str(ints(1:len)) )
+      call ncmlAddAttribute( xf, trim(atname), trim(getType(xtype)), str(ints(1:len)) )
     case (NF90_INT)
       call check ( nf90_get_att(ncid, varnum, atname, ints) )
-      call ncmlAddAttribute( xf, trim(atname), xtype, str(ints(1:len)) )
+      call ncmlAddAttribute( xf, trim(atname), trim(getType(xtype)), str(ints(1:len)) )
     case (NF90_FLOAT)
       call check ( nf90_get_att(ncid, varnum, atname, reals) )
-      call ncmlAddAttribute( xf, trim(atname), xtype, str(reals(1:len)) )
+      call ncmlAddAttribute( xf, trim(atname), trim(getType(xtype)), str(reals(1:len)) )
     case (NF90_DOUBLE)
       call check ( nf90_get_att(ncid, varnum, atname, reals) )
-      call ncmlAddAttribute( xf, trim(atname), xtype, str(reals(1:len)) )
+      call ncmlAddAttribute( xf, trim(atname), trim(getType(xtype)), str(reals(1:len)) )
     end select
 
   end subroutine ncmlDumpAttribute

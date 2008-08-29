@@ -6,7 +6,6 @@ module m_wncml_xml
 !
 
   use FoX_wxml
-  use m_wncml_util, only : getType
 
   implicit none
 
@@ -119,13 +118,13 @@ contains
 
     type(xmlf_t),               intent(inout) :: xf
     character(len=*),           intent(in   ) :: name
-    integer,                    intent(in   ) :: xtype
+    character(len=*),           intent(in   ) :: xtype
     character(len=*),           intent(in   ) :: xshape
     character(len=*), optional, intent(in   ) :: orgname
 
     call xml_NewElement(xf, name=PREFIX//'variable')
 
-    call xml_AddAttribute(xf, name='type',  value=trim(getType(xtype)))
+    call xml_AddAttribute(xf, name='type',  value=xtype)
     call xml_AddAttribute(xf, name='shape', value=xshape)
     
     if (present(orgname)) call xml_AddAttribute(xf, name='orgName', value=orgname)
@@ -144,7 +143,7 @@ contains
 
     type(xmlf_t),               intent(inout) :: xf
     character(len=*),           intent(in   ) :: name
-    integer,          optional, intent(in   ) :: atype
+    character(len=*), optional, intent(in   ) :: atype
     character(len=*), optional, intent(in   ) :: value
     character(len=*), optional, intent(in   ) :: separator
     character(len=*), optional, intent(in   ) :: orgname
@@ -153,7 +152,7 @@ contains
 
     call xml_AddAttribute(xf, name='name', value=name)
 
-    if (present(atype))     call xml_AddAttribute(xf, name='type',      value=trim(getType(atype)))
+    if (present(atype))     call xml_AddAttribute(xf, name='type',      value=atype)
     if (present(value))     call xml_AddAttribute(xf, name='value',     value=value)
     if (present(separator)) call xml_AddAttribute(xf, name='seperator', value=separator)
     if (present(orgname))   call xml_AddAttribute(xf, name='orgName',   value=orgname)

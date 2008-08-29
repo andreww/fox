@@ -34,7 +34,7 @@ clean:
 wncml.o: wncml.f90 m_wncml_xml.o m_wncml_util.o $(FoX_built) 
 	$(FC) $(FoX_FCFLAGS) $(NetCDF_FCFLAGS) -c wncml.f90 
 
-m_wncml_xml.o: m_wncml_xml.f90 m_wncml_util.o  $(FoX_built) 
+m_wncml_xml.o: m_wncml_xml.f90  $(FoX_built) 
 	$(FC) $(FoX_FCFLAGS) -c m_wncml_xml.f90 
 
 m_wncml_util.o: m_wncml_util.f90 
