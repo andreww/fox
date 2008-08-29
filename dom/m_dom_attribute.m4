@@ -5,7 +5,7 @@ TOHW_m_dom_publics(`
   public :: setSpecified
   interface getValue
     module procedure getValue_DOM
-  end interface	 
+  end interface
   public :: getValue
   public :: setValue
   public :: getOwnerElement

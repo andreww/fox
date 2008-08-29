@@ -70,6 +70,11 @@ contains
   subroutine sax_parser_init(fx, fb)
     type(sax_parser_t), intent(out) :: fx
     type(file_buffer_t), intent(in) :: fb
+#ifdef PGF90
+    type(URI), pointer :: nullURI
+
+    nullURI => null()
+#endif
 
     allocate(fx%token(0))
 
@@ -97,11 +102,19 @@ contains
     call init_entity_list(fx%forbidden_pe_list)
     call init_entity_list(fx%predefined_e_list)
 
+#ifdef PGF90
+    call add_internal_entity(fx%predefined_e_list, 'amp', '&', nullURI, .false.)
+    call add_internal_entity(fx%predefined_e_list, 'lt', '<', nullURI, .false.)
+    call add_internal_entity(fx%predefined_e_list, 'gt', '>', nullURI, .false.)
+    call add_internal_entity(fx%predefined_e_list, 'apos', "'", nullURI, .false.)
+    call add_internal_entity(fx%predefined_e_list, 'quot', '"', nullURI, .false.)
+#else
     call add_internal_entity(fx%predefined_e_list, 'amp', '&', null(), .false.)
     call add_internal_entity(fx%predefined_e_list, 'lt', '<', null(), .false.)
     call add_internal_entity(fx%predefined_e_list, 'gt', '>', null(), .false.)
     call add_internal_entity(fx%predefined_e_list, 'apos', "'", null(), .false.)
     call add_internal_entity(fx%predefined_e_list, 'quot', '"', null(), .false.)
+#endif
   end subroutine sax_parser_init
 
   subroutine sax_parser_destroy(fx)
@@ -222,6 +235,9 @@ contains
     character(len=*), intent(in), optional :: xmlVersion
 
     type(entity_list), optional :: initial_entities
+#ifdef PGF90
+    type(URI), pointer :: nullURI
+#endif
 
     interface
 
@@ -367,6 +383,9 @@ contains
     logical :: inExtSubset
     type(string_list) :: id_list, idref_list
 
+#ifdef PGF90
+    nullURI => null()
+#endif
     tempString => null()
     elem => null()
     attDecl => null()
@@ -1056,7 +1075,11 @@ contains
                   call startEntity_handler(str_vs(fx%token))
                   if (fx%state==ST_STOP) goto 100
                 endif
+#ifdef PGF90
+                call add_internal_entity(fx%forbidden_ge_list, str_vs(fx%token), "", nullURI, .false.)
+#else
                 call add_internal_entity(fx%forbidden_ge_list, str_vs(fx%token), "", null(), .false.)
+#endif
                 temp_wf_stack => wf_stack
                 allocate(wf_stack(size(temp_wf_stack)+1))
                 wf_stack = (/0, temp_wf_stack/)
@@ -1080,7 +1103,11 @@ contains
                 call startEntity_handler(str_vs(fx%token))
                 if (fx%state==ST_STOP) goto 100
               endif
+#ifdef PGF90
+              call add_internal_entity(fx%forbidden_ge_list, str_vs(fx%token), "", nullURI, .false.)
+#else
               call add_internal_entity(fx%forbidden_ge_list, str_vs(fx%token), "", null(), .false.)
+#endif
               call open_new_string(fb, expand_entity(fx%xds%entityList, str_vs(fx%token)), str_vs(fx%token), baseURI=ent%baseURI)
               temp_wf_stack => wf_stack
               allocate(wf_stack(size(temp_wf_stack)+1))
@@ -1374,8 +1401,13 @@ contains
                 call startEntity_handler('%'//str_vs(fx%token))
                 if (fx%state==ST_STOP) goto 100
               endif
+#ifdef PGF90
+              call add_internal_entity(fx%forbidden_pe_list, &
+                str_vs(fx%token), "", nullURI, .false.)
+#else
               call add_internal_entity(fx%forbidden_pe_list, &
                 str_vs(fx%token), "", null(), .false.)
+#endif
               call open_new_file(fb, ent%baseURI, iostat, pe=.true.)
               if (iostat/=0) then
                 if (validCheck) then
@@ -1398,8 +1430,13 @@ contains
                   call startEntity_handler('%'//str_vs(fx%token))
                   if (fx%state==ST_STOP) goto 100
                 endif
+#ifdef PGF90
+                call add_internal_entity(fx%forbidden_pe_list, &
+                  str_vs(fx%token), "", nullURI, .false.)
+#else
                 call add_internal_entity(fx%forbidden_pe_list, &
                   str_vs(fx%token), "", null(), .false.)
+#endif
                 call parse_text_declaration(fb, fx%error_stack)
                 if (in_error(fx%error_stack)) goto 100
                 allocate(temp_wf_stack(size(wf_stack)+1))
@@ -1415,10 +1452,17 @@ contains
                 call startEntity_handler('%'//str_vs(fx%token))
                 if (fx%state==ST_STOP) goto 100
               endif
+#ifdef PGF90
+              call add_internal_entity(fx%forbidden_pe_list, &
+                str_vs(fx%token), "", nullURI, .false.)
+              call open_new_string(fb, &
+                expand_entity(fx%xds%PEList, str_vs(fx%token)), str_vs(fx%token), baseURI=nullURI, pe=.true.)
+#else
               call add_internal_entity(fx%forbidden_pe_list, &
                 str_vs(fx%token), "", null(), .false.)
               call open_new_string(fb, &
                 expand_entity(fx%xds%PEList, str_vs(fx%token)), str_vs(fx%token), baseURI=null(), pe=.true.)
+#endif
               ! NB because we are just expanding a string here, anything
               ! evaluated as a result of this string is evaluated in the
               ! context of the currently open file, so has a baseURI of
@@ -1508,6 +1552,11 @@ contains
     subroutine parseDTD
 
       integer :: nextDTDState
+#ifdef PGF90
+      type(element_t), pointer :: nullElement
+
+      nullElement => null()
+#endif
 
       nextDTDState = ST_DTD_NULL
 
@@ -1762,9 +1811,15 @@ contains
               namespaces_, validCheck, fx%error_stack, elem, &
               internal=reading_main_file(fb))
           else
+#ifdef PGF90
+            call parse_dtd_attlist(str_vs(fx%token), fx%xds%xml_version, &
+              namespaces_, validCheck, fx%error_stack, nullElement, &
+              internal=reading_main_file(fb))
+#else
             call parse_dtd_attlist(str_vs(fx%token), fx%xds%xml_version, &
               namespaces_, validCheck, fx%error_stack, null(), &
               internal=reading_main_file(fb))
+#endif
           endif
           if (in_error(fx%error_stack)) return
           ! Normalize attribute values in attlist
@@ -1794,9 +1849,15 @@ contains
               namespaces_, validCheck, fx%error_stack, elem, &
               internal=reading_main_file(fb))
           else
+#ifdef PGF90
+            call parse_dtd_attlist("", fx%xds%xml_version, &
+              namespaces_, validCheck, fx%error_stack, nullElement, &
+              internal=reading_main_file(fb))
+#else
             call parse_dtd_attlist("", fx%xds%xml_version, &
               namespaces_, validCheck, fx%error_stack, null(), &
               internal=reading_main_file(fb))
+#endif
           endif
           if (in_error(fx%error_stack)) return
           if (processDTD) then

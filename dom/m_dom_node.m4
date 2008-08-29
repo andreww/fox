@@ -1,7 +1,7 @@
 TOHW_m_dom_publics(`
   
   public :: getNodeName
-  public :: getNodeValue	
+  public :: getNodeValue
   public :: setNodeValue
   public :: getNodeType
   public :: getParentNode

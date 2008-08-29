@@ -72,6 +72,8 @@ contains
     ! Initialize state variables
     inScalar = .false.
     inParameter = .false.
+    ! Initalize other module variables
+    c = ''
   end subroutine startDocument_handler
   
   subroutine startElement_handler(URI, localname, name, attributes)

@@ -29,6 +29,9 @@ module m_wxml_core
   use m_common_struct, only: xml_doc_state, init_xml_doc_state, destroy_xml_doc_state, &
     register_internal_PE, register_external_PE, register_internal_GE, register_external_GE
   use m_wxml_escape, only: escape_string
+#ifdef PGF90
+  use m_common_element, only : element_t
+#endif
 #endif
 
   implicit none
@@ -228,7 +231,7 @@ contains
       if (present(iostat)) then
         open(unit=xf%lun, file=filename, form="formatted", status="replace", &
           action="write", recl=xml_recl, iostat=iostat)
-      else	
+      else
         open(unit=xf%lun, file=filename, form="formatted", status="replace", &
           action="write", recl=xml_recl)
       endif
@@ -236,7 +239,7 @@ contains
       if (present(iostat)) then
         open(unit=xf%lun, file=filename, form="formatted", status="new", &
           action="write", recl=xml_recl, iostat=iostat)
-      else	
+      else
         open(unit=xf%lun, file=filename, form="formatted", status="new", &
           action="write", recl=xml_recl)
       endif
@@ -440,8 +443,13 @@ contains
 
 #ifndef DUMMYLIB
     type(URI), pointer :: URIref
+#ifdef PGF90
+    type(URI), pointer :: nullURIref
+#endif
     call check_xf(xf)
-
+#ifdef PGF90
+    nullURIref => null()
+#endif
     if (xf%namespace) then
       if (.not.checkNCName(name, xf%xds%xml_version)) &
          call wxml_error("Invalid Name in DTD "//name)
@@ -498,10 +506,20 @@ contains
         if (.not.checkExistingRefs()) &
           call wxml_warning(xf, "Reference to unknown parameter entity")
       endif
+#ifdef PGF90
+      call register_internal_PE(xf%xds, name=name, text=PEdef, baseURI=nullURIref, wfc=.false.)
+#else
       call register_internal_PE(xf%xds, name=name, text=PEdef, baseURI=null(), wfc=.false.)
+#endif
+
     else
+#ifdef PGF90
+      call register_external_PE(xf%xds, name=name, systemId=system, &
+        publicId=public, baseURI=nullURIref, wfc=.false.)
+#else
       call register_external_PE(xf%xds, name=name, systemId=system, &
         publicId=public, baseURI=null(), wfc=.false.)
+#endif
     endif
 
     call add_eol(xf)
@@ -563,6 +581,10 @@ contains
     character(len=*), intent(in) :: value
 
 #ifndef DUMMYLIB
+#ifdef PGF90
+    type(URI), pointer :: nullURI
+    nullURI => null()
+#endif
     call check_xf(xf)
 
     if (xf%namespace) then
@@ -590,7 +612,11 @@ contains
 
     if (.not.checkName(name, xf%xds%xml_version)) &
       call wxml_error("xml_AddInternalEntity: Invalid Name: "//name)
+#ifdef PGF90
+    call register_internal_GE(xf%xds, name=name, text=value, baseURI=nullURI, wfc=.false.)
+#else
     call register_internal_GE(xf%xds, name=name, text=value, baseURI=null(), wfc=.false.)
+#endif
 
     call add_eol(xf)
     
@@ -614,6 +640,10 @@ contains
 
 #ifndef DUMMYLIB
     type(URI), pointer :: URIref
+#ifdef PGF90
+    type(URI), pointer :: nullURI
+    nullURI => null()
+#endif
     call check_xf(xf)
 
     if (xf%namespace) then
@@ -661,9 +691,15 @@ contains
     endif
 
     ! Notation only needs checked if not already registered - done above.
+#ifdef PGF90
+    call register_external_GE(xf%xds, name=name, &
+      systemID=system, publicId=public, notation=notation, &
+      baseURI=nullURI, wfc=.false.)
+#else
     call register_external_GE(xf%xds, name=name, &
       systemID=system, publicId=public, notation=notation, &
       baseURI=null(), wfc=.false.)
+#endif
     
     call add_eol(xf)
     
@@ -758,6 +794,11 @@ contains
 
 #ifndef DUMMYLIB
     type(error_stack) :: stack
+#ifdef PGF90
+    type (element_t), pointer :: nullElement
+
+    nullElement => null()
+#endif
     call check_xf(xf)
 
     if (.not.checkChars(declaration,xf%xds%xml_version)) call wxml_error("xml_AddElementToDTD: Invalid character in declaration")
@@ -769,8 +810,11 @@ contains
       if (.not.checkName(name, xf%xds%xml_version)) &
         call wxml_error("Invalid Element Name in DTD "//name)
     endif
-
+#ifdef PGF90
+    call parse_dtd_element(declaration, xf%xds%xml_version, stack, nullElement, .true.)
+#else
     call parse_dtd_element(declaration, xf%xds%xml_version, stack, null(), .true.)
+#endif
     if (in_error(stack)) call wxml_error(xf, "Invalid ELEMENT declaration")
     
     if (xf%state_3 == WXML_STATE_3_DURING_DTD) then
@@ -799,6 +843,11 @@ contains
 
 #ifndef DUMMYLIB
     type(error_stack) :: stack
+#ifdef PGF90
+    type (element_t), pointer :: nullElement
+
+    nullElement => null()
+#endif
     call check_xf(xf)
 
     if (.not.checkChars(declaration,xf%xds%xml_version)) call wxml_error("xml_AddAttListToDTD: Invalid character in declaration")
@@ -811,9 +860,15 @@ contains
         call wxml_error("Invalid Attribute Name in DTD "//name)
     endif
 
+#ifdef PGF90
+    call parse_dtd_attlist(declaration, xf%xds%xml_version, &
+      validCheck=.false., namespaces=xf%namespace, stack=stack, &
+      elem=nullElement, internal=.true.)
+#else
     call parse_dtd_attlist(declaration, xf%xds%xml_version, &
       validCheck=.false., namespaces=xf%namespace, stack=stack, &
       elem=null(), internal=.true.)
+#endif
 
     if (in_error(stack)) call wxml_error(xf, "Invalid ATTLIST declaration")
 

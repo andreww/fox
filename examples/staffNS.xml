@@ -14,7 +14,7 @@
 <!-- This is comment number 1.-->
 <staff>
  <employee xmlns="http://www.nist.gov" xmlns:dmstc="http://www.usa.com">
-  <employeeId>EMP0001ä</employeeId>
+  <employeeId>EMP0001</employeeId>
   <name>Margaret Martin</name>
   <position>Accountant</position>           
   <salary>56,000</salary>
