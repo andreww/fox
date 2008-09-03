@@ -81,7 +81,7 @@ contains
       & (trim(objecttype).ne.'dimension').or. &
       & (trim(objecttype).ne.'variable' ).or. &
       & (trim(objecttype).ne.'group'    )) &
-      & stop 'Type error in ncmlAddRemove'
+      & stop 'Type error in ncmlAddRemove' ! FIXME - use FoX errors 
 
     call xml_NewElement(xf, name=PREFIX//'remove')
     call xml_AddAttribute(xf, name='name', value=name)
@@ -124,8 +124,9 @@ contains
 
     call xml_NewElement(xf, name=PREFIX//'variable')
 
-    call xml_AddAttribute(xf, name='type',  value=xtype)
+    call xml_AddAttribute(xf, name='name',  value=trim(name))
     call xml_AddAttribute(xf, name='shape', value=xshape)
+    call xml_AddAttribute(xf, name='type',  value=xtype)
     
     if (present(orgname)) call xml_AddAttribute(xf, name='orgName', value=orgname)
 
