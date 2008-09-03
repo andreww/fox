@@ -32,7 +32,12 @@ contains
     call check( NF90_INQUIRE(ncid, ndim, nvar, natt) )
 !
 ! Handle each dimension
-! FIXME: What about varying dimensions
+! FIXME: What about varying dimensions?
+!        It seems this is not avalable from the f90 bindings
+!        which is more than rubbish. "len: Returned length of
+!        dimension. For the unlimited dimension, this is the
+!        current maximum value used for writing any variables
+!        with this dimension, that is the maximum record number.
 !
     do i = 1, ndim
        call check ( NF90_INQUIRE_DIMENSION(ncid, i, name, len) )
