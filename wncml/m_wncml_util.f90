@@ -71,7 +71,7 @@ contains
 
     namedims = ''
     do i = 1, ndims
-      call check ( NF90_INQUIRE_DIMENSION(ncid, i, thisdim, len) )
+      call check ( NF90_INQUIRE_DIMENSION(ncid, DimIds(i), thisdim, len) )
       namedims = trim(namedims) // ' ' // trim(thisdim)
     enddo 
 
