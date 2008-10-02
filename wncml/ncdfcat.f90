@@ -11,6 +11,8 @@ program ncdfcat
   integer      :: ierr  ! For NetCDF errors (ignored)
 
 
+  print*, 'using NetCDF version:', ncmlLibVers()
+
   ! Create an xml document
   call xml_OpenFile(filename='test.xml', xf=xf, unit=0, &
                   & pretty_print=.true.)

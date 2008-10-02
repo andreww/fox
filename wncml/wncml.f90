@@ -8,7 +8,7 @@ module wncml
 
   implicit none
   private
-  public :: ncmlDumpContainer
+  public :: ncmlDumpContainer, ncmlLibVers
 
 contains
       
@@ -131,5 +131,13 @@ contains
     end select
 
   end subroutine ncmlDumpAttribute
+
+  function ncmlLibVers () result (libvers)
+
+     character(len = 80)  :: libvers
+  
+     libvers =  nf90_inq_libvers()
+
+  end function ncmlLibVers
 
 end module wncml
