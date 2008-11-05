@@ -8,6 +8,8 @@ if test x$VN != x\'$1\'; then
 fi
 
 git-archive --format=tar --prefix=FoX-$1/ HEAD | gzip -9 > ../FoX-$1-full.tar.gz
+openssl dgst -md5 ../FoX-$1-full.tar.gz > ../FoX-$1-digest
+openssl dgst -sha1 ../FoX-$1-full.tar.gz >> ../FoX-$1-digest
 
 mkdir tmpFoX
 cd tmpFoX
@@ -17,6 +19,8 @@ tar xzf ../../FoX-$1-full.tar.gz
   make cutdown
 )
 tar czf ../../FoX-$1.tar.gz FoX-$1
+openssl dgst -md5 ../../FoX-$1.tar.gz >> ../../FoX-$1-digest
+openssl dgst -sha1 ../../FoX-$1.tar.gz >> ../../FoX-$1-digest
 rm -rf FoX-$1
 
 for i in wxml wcml sax dom
@@ -33,6 +37,8 @@ do
     make cutdown-$i
   )
   tar czf FoX-$1-$i.tar.gz FoX-$1
+  openssl dgst -md5 FoX-$1-$i.tar.gz >> ../../FoX-$1-digest
+  openssl dgst -sha1 FoX-$1-$i.tar.gz >> ../../FoX-$1-digest
   rm -rf FoX-$1
 done
 
