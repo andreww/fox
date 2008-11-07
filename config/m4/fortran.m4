@@ -3100,6 +3100,10 @@ AC_CACHE_CHECK([whether $FPP fulfils requested features],
 
   ac_cv_fpp_build_rule=indirect
 
+if test ac_fpp_ok == no; then
+  AC_MSG_ERROR([Cannot find a Fortran preprocessor with the requested features])
+fi
+
 fi # test ac_fpp_ok != yes
 
 # We have all necessary information.
