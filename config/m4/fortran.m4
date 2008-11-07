@@ -2451,9 +2451,13 @@ if test -z "$ac_cv_prog_fpp"; then
 # We try the "best" preprocessors first. We know that $FC can't preprocess
 # by itself, but there is a small chance that F77 can be persuaded to
 # preprocess, so we try that.
-  for ac_j in 'fpp' "$CPP" "$CPP -x c" 'cpp' '/lib/cpp' '/usr/ccs/lib/cpp' \
-              'g77 -E' '$CC -E' '$CC -E -x c' \
-              "$FC -F" "$FC -E" "$F77 -F" "$F77 -E"; do
+# FIXME: The comment above does not agree with the code below - $FC etc.
+#        is being checked late, not early?
+  for ac_j in 'fpp' "$CPP -x f95-cpp-input" "$CPP -x f77-cpp-input" \
+              "$CPP -C -x c" "$CPP -x c" "$CPP" 'cpp' '/lib/cpp' '/usr/ccs/lib/cpp' \
+              'g77 -E' '$CC -E -x f95-cpp-input' '$CC -E -x f77-cpp-input' \
+              '$CC -E -x c -C' '$CC -E -x c' '$CC -E'  \
+              "$FC -F" "$FC -E" "$F77 -F" "$F77 -E" ; do
     _AC_TEST_FPP_FREE([$ac_j])
     test -n "$ac_cv_prog_fpp" && break;
   done
