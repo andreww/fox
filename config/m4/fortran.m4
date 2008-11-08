@@ -2392,7 +2392,10 @@ if eval '$ac_fpp_command conftest.$ac_ext > conftest.log 2>/dev/null'; then
   if test -z "$ac_tmp"; then
     ac_tmp=conftest.log
     ac_fpp_free_out=' > conftest.f90'
-    ac_fpp_out=' > conftest.f90'
+# Note that the CPP tests only use fixed format 
+# so we need to use a .f extension to make the tests 
+# work.
+    ac_fpp_out=' > conftest.f'
   fi
   if grep '^      REAL A' $ac_tmp >/dev/null 2>&1; then
     # we have Fortran!  That worked...
