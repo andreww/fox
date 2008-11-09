@@ -12,11 +12,12 @@ module wncml
 
 contains
       
-  subroutine ncmlDumpContainer( xf, ncid, path )
+  subroutine ncmlDumpContainer( xf, ncid, path, unlimdim )
 
     type(xmlf_t),     intent(inout) :: xf
     integer,          intent(in) :: ncid
     character(len=*), intent(in) :: path
+    character(len=*), optional, intent(in) :: unlimdim
 
   integer :: ndim, nvar, natt
   integer :: len
@@ -32,16 +33,27 @@ contains
     call check( NF90_INQUIRE(ncid, ndim, nvar, natt) )
 !
 ! Handle each dimension
-! FIXME: What about varying dimensions?
+! NOTE:  What about varying dimensions?
 !        It seems this is not avalable from the f90 bindings
-!        which is more than rubbish. "len: Returned length of
+!        which is a bit rubbish. "len: Returned length of
 !        dimension. For the unlimited dimension, this is the
 !        current maximum value used for writing any variables
 !        with this dimension, that is the maximum record number.
+!        The best we can do here is to ask the caller to provide 
+!        the name of any unlimited dimension in an optional argument 
+!        - this gets processed below.
 !
     do i = 1, ndim
        call check ( NF90_INQUIRE_DIMENSION(ncid, i, name, len) )
-       call ncmlAddDimension( xf, trim(name), len )
+       if (present(unlimdim)) then 
+          if (trim(unlimdim).eq.trim(name)) then
+            call ncmlAddDimension( xf, trim(name), len, unlim=.true. )
+          else
+            call ncmlAddDimension( xf, trim(name), len )
+          endif
+       else
+         call ncmlAddDimension( xf, trim(name), len )
+       endif
     enddo
 !
 ! Handle any optional global attributes
