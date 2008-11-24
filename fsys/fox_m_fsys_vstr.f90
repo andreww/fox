@@ -3,10 +3,15 @@ module vstr
 implicit none
 
 type vs
-  character, pointer :: chars(:) => null()
-  integer :: str_len
-  integer :: arr_len
+    character, pointer :: chars(:) => null()
+    integer :: str_len
+    integer :: arr_len
 end type vs
+
+interface operator(==)
+    module procedure comp_str_chars
+    module procedure comp_chars_str
+end interface operator(==)
 
 contains
 
@@ -113,4 +118,25 @@ subroutine grow_vs(my_vs, newsize)
 
 end subroutine grow_vs
 
+pure function comp_str_chars(my_vs, chars) result(comp)
+
+   type(vs), intent(in)         :: my_vs
+   character(len=*), intent(in) :: chars
+   logical                      :: comp
+
+! For now, this is implemented ny casting to chars
+! I think this can be optimied quite a lot.
+   comp = (as_chars(my_vs)==chars)
+
+end function comp_str_chars
+
+pure function comp_chars_str(chars, my_vs) result(comp)
+
+   type(vs), intent(in)         :: my_vs
+   character(len=*), intent(in) :: chars
+   logical                      :: comp
+
+   comp = comp_str_chars(my_vs, chars)
+
+end function comp_chars_str
 end module vstr
