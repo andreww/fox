@@ -24,7 +24,7 @@ function new_vs(min_size, init_chars) result(my_vs)
 
     init_size = 1
     if (present(init_chars)) then
-       init_size = len(init_chars)
+       if (init_chars/="") init_size = len(init_chars)
     endif
     
     if (present(min_size)) then
@@ -38,7 +38,7 @@ function new_vs(min_size, init_chars) result(my_vs)
     my_vs%str_len = 0
 
     if (present(init_chars)) then
-        call add_chars(my_vs, init_chars)
+        if (init_chars/="") call add_chars(my_vs, init_chars)
     endif
 
 end function new_vs
@@ -50,6 +50,7 @@ subroutine add_chars(my_vs, chars)
     integer                                   :: size_needed
     integer                                   :: i
 
+ 
     ! Check size and grow if needed.
     if ((my_vs%arr_len - my_vs%str_len) .lt. len(chars)) then
         size_needed = my_vs%arr_len * 2
@@ -83,6 +84,8 @@ end function as_chars
 subroutine destroy_vs(my_vs)
 
     type(vs), pointer,              intent(inout) :: my_vs
+
+    if (.not.associated(my_vs)) stop "This is wrong"
 
     deallocate(my_vs%chars)
     deallocate(my_vs)

@@ -14,11 +14,11 @@ m_sax_tokenizer.F90:    character, dimension(:), pointer :: s_out
 m_sax_tokenizer.F90:    character, dimension(:), pointer :: s_temp, s_temp2, s_ent, tempString
 m_sax_tokenizer.F90:    character, dimension(:), pointer :: s_out
 m_sax_tokenizer.F90:    character, dimension(:), pointer :: s_temp, s_temp2, s_ent, tempString
-m_sax_types.F90:    character, dimension(:), pointer :: token => null()
-m_sax_types.F90:    character, dimension(:), pointer :: content => null()
-m_sax_types.F90:    character, dimension(:), pointer :: name => null()
-m_sax_types.F90:    character, dimension(:), pointer :: attname => null()
-m_sax_types.F90:    character, dimension(:), pointer :: root_element => null()
+m_sax_types.F90:    character, dimension(:), pointer :: token => null()				DONE
+m_sax_types.F90:    character, dimension(:), pointer :: content => null()			DONE
+m_sax_types.F90:    character, dimension(:), pointer :: name => null()				DONE
+m_sax_types.F90:    character, dimension(:), pointer :: attname => null()			DONE
+m_sax_types.F90:    character, dimension(:), pointer :: root_element => null()			DONE
 m_sax_types.F90:    character(len=1), dimension(:), pointer :: PublicId => null()
 m_sax_types.F90:    character(len=1), dimension(:), pointer :: SystemId => null()
 m_sax_types.F90:    character(len=1), dimension(:), pointer :: Ndata => null()

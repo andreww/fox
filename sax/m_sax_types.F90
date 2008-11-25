@@ -11,6 +11,8 @@ module m_sax_types
 
   use m_sax_reader, only: file_buffer_t
 
+  use vstr
+
   implicit none
 
   ! Context
@@ -124,16 +126,16 @@ module m_sax_types
     integer :: state_dtd = ST_DTD_SUBSET
     logical :: well_formed = .false.
     logical :: skippedExternal = .false.
-    character, dimension(:), pointer :: token => null()
-    character, dimension(:), pointer :: content => null()
+    type(vs), pointer :: token => null()
+    type(vs), pointer :: content => null()
     integer :: tokenType = TOK_NULL
     integer :: nextTokenType = TOK_NULL
-    character, dimension(:), pointer :: name => null()
-    character, dimension(:), pointer :: attname => null()
+    type(vs), pointer :: name => null()
+    type(vs), pointer :: attname => null()
     logical :: error = .false.
     type(error_stack) :: error_stack
     ! Aspects of document structure
-    character, dimension(:), pointer :: root_element => null()
+    type(vs), pointer :: root_element => null()
     type(elstack_t) :: elstack
     type(dictionary_t) :: attributes
     type(namespacedictionary) :: nsdict

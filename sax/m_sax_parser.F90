@@ -49,6 +49,8 @@ module m_sax_parser
     expand_pe_text
   use m_sax_types ! everything, really
 
+  use vstr
+
   implicit none
   private
 
@@ -76,7 +78,7 @@ contains
     nullURI => null()
 #endif
 
-    allocate(fx%token(0))
+    fx%token => new_vs()
 
     call init_error_stack(fx%error_stack)
     call init_elstack(fx%elstack)
@@ -123,7 +125,7 @@ contains
     fx%context = CTXT_NULL
     fx%state = ST_NULL
 
-    if (associated(fx%token)) deallocate(fx%token)
+    if (associated(fx%token)) call destroy_vs(fx%token)
     if (associated(fx%root_element)) deallocate(fx%root_element)
 
     call destroy_error_stack(fx%error_stack)
@@ -140,8 +142,8 @@ contains
     call destroy_entity_list(fx%forbidden_pe_list)
     call destroy_entity_list(fx%predefined_e_list)
 
-    if (associated(fx%token)) deallocate(fx%token)
-    if (associated(fx%content)) deallocate(fx%content)
+    if (associated(fx%token)) call destroy_vs(fx%token)
+    if (associated(fx%content)) call destroy_vs(fx%content)
     if (associated(fx%name)) deallocate(fx%name)
     if (associated(fx%attname)) deallocate(fx%attname)
     if (associated(fx%publicId)) deallocate(fx%publicId)
@@ -522,7 +524,7 @@ contains
             .or.fx%state_dtd==ST_DTD_ELEMENT_CONTENTS) then
             ! stick the token back in contents ...
             fx%content => fx%token
-            fx%token => vs_str_alloc("")
+            fx%token => new_vs()
           endif
           if (reading_main_file(fb)) &
             fx%inIntSubset = .true.
@@ -565,7 +567,7 @@ contains
       select case (fx%state)
 
       case (ST_MISC)
-        !write(*,*) 'ST_MISC', str_vs(fx%token)
+        !write(*,*) 'ST_MISC', as_chars(fx%token)
         select case (fx%tokenType)
         case (TOK_PI_TAG)
           wf_stack(1) = wf_stack(1) + 1
@@ -587,7 +589,7 @@ contains
         case (TOK_OPEN_COMMENT)
           nextState = ST_START_COMMENT
         case (TOK_NAME)
-          if (str_vs(fx%token)=='DOCTYPE') then
+          if (fx%token=='DOCTYPE') then
             fx%context = CTXT_IN_DTD
             nextState = ST_IN_DOCTYPE
           endif
@@ -599,15 +601,15 @@ contains
         select case (fx%tokenType)
         case (TOK_NAME)
           if (namespaces_) then
-            nameOk = checkNCName(str_vs(fx%token), fx%xds%xml_version)
+            nameOk = checkNCName(as_chars(fx%token), fx%xds%xml_version)
           else
-            nameOk = checkName(str_vs(fx%token), fx%xds%xml_version)
+            nameOk = checkName(as_chars(fx%token), fx%xds%xml_version)
           endif
           if (nameOk) then
-            if (str_vs(fx%token)=='xml') then
+            if (fx%token=='xml') then
               call add_error(fx%error_stack, "XML declaration must be at start of document")
               goto 100
-            elseif (checkPITarget(str_vs(fx%token), fx%xds%xml_version)) then
+            elseif (checkPITarget(as_chars(fx%token), fx%xds%xml_version)) then
               nextState = ST_PI_CONTENTS
               fx%name => fx%token
               fx%token => null()
@@ -631,14 +633,14 @@ contains
         select case(fx%tokenType)
         case (TOK_CHAR)
           if (present(processingInstruction_handler)) then
-            call processingInstruction_handler(str_vs(fx%name), str_vs(fx%token))
+            call processingInstruction_handler(as_chars(fx%name), as_chars(fx%token))
             if (fx%state==ST_STOP) goto 100
           endif
           deallocate(fx%name)
           nextState = ST_PI_END
         case (TOK_PI_END)
           if (present(processingInstruction_handler)) then
-            call processingInstruction_handler(str_vs(fx%name), "")
+            call processingInstruction_handler(as_chars(fx%name), "")
             if (fx%state==ST_STOP) goto 100
           endif
           deallocate(fx%name)
@@ -682,7 +684,7 @@ contains
         select case (fx%tokenType)
         case (TOK_COMMENT_END)
           if (present(comment_handler)) then
-            call comment_handler(str_vs(fx%name))
+            call comment_handler(as_chars(fx%name))
             if (fx%state==ST_STOP) goto 100
           endif
           deallocate(fx%name)
@@ -701,9 +703,10 @@ contains
             .or. fx%context==CTXT_BEFORE_CONTENT &
             .or. fx%context==CTXT_IN_CONTENT) then
             if (namespaces_) then
-              nameOk = checkQName(str_vs(fx%token), fx%xds%xml_version)
+              nameOk = checkQName(as_chars(fx%token), fx%xds%xml_version)
             else
-              nameOk = checkName(str_vs(fx%token), fx%xds%xml_version)
+              nameOk = checkName(as_chars(fx%token), fx%xds%xml_version)
+
             endif
             if (.not.nameOk) then
               call add_error(fx%error_stack, "Illegal element name")
@@ -725,7 +728,7 @@ contains
         !write(*,*) "ST_START_CDATA_DECLARATION"
         select case (fx%tokenType)
         case (TOK_NAME)
-          if (str_vs(fx%token)=="CDATA") then
+          if (fx%token=="CDATA") then
             if (fx%context/=CTXT_IN_CONTENT) then
               call add_error(fx%error_stack, "CDATA section only allowed in text content.")
               goto 100
@@ -770,9 +773,10 @@ contains
             call startCdata_handler
             if (fx%state==ST_STOP) goto 100
           endif
-          if (size(fx%name)>0) then
+          ! FIXME: AMW - overload len()
+          if (fx%name%str_len>0) then
             if (present(characters_handler)) then
-              call characters_handler(str_vs(fx%name))
+              call characters_handler(as_chars(fx%name))
               if (fx%state==ST_STOP) goto 100
             endif
           endif
@@ -791,7 +795,8 @@ contains
           if (fx%context /= CTXT_IN_CONTENT) then
             if (associated(fx%root_element)) then
               if (validCheck) then
-                if (str_vs(fx%name)/=str_vs(fx%root_element)) then
+                !FIXME: AMW - overload /=
+                if (as_chars(fx%name)/=as_chars(fx%root_element)) then
                   call add_error(fx%error_stack, "Root element name does not match document name")
                   goto 100
                 endif
@@ -823,7 +828,8 @@ contains
             ! only a single element in this doc
             if (associated(fx%root_element)) then
               if (validCheck) then
-                if (str_vs(fx%name)/=str_vs(fx%root_element)) then
+                !FIXME: AMW - overload /=
+                if (as_chars(fx%name)/=as_chars(fx%root_element)) then
                   call add_error(fx%error_stack, "Root element name does not match document name")
                   goto 100
                 endif
@@ -855,23 +861,23 @@ contains
 
         case (TOK_NAME)
           if (namespaces_) then
-            nameOk = checkQName(str_vs(fx%token), fx%xds%xml_version)
+            nameOk = checkQName(as_chars(fx%token), fx%xds%xml_version)
           else
-            nameOk = checkName(str_vs(fx%token), fx%xds%xml_version)
+            nameOk = checkName(as_chars(fx%token), fx%xds%xml_version)
           endif
           if (.not.nameOk) then
             call add_error(fx%error_stack, "Illegal attribute name")
             goto 100
           endif
           !Have we already had this dictionary item?
-          if (has_key(fx%attributes, str_vs(fx%token))) then
+          if (has_key(fx%attributes, as_chars(fx%token))) then
             call add_error(fx%error_stack, "Duplicate attribute name")
             goto 100
           endif
           fx%attname => fx%token
           nullify(fx%token)
           if (associated(elem)) then
-            attDecl => get_attribute_declaration(elem, str_vs(fx%attname))
+            attDecl => get_attribute_declaration(elem, as_chars(fx%attname))
           else
             attDecl => null()
           endif
@@ -892,9 +898,11 @@ contains
         select case (fx%tokenType)
         case (TOK_CHAR)
           !First, expand all entities:
-          tempString => normalize_attribute_text(fx, fx%token)
-          deallocate(fx%token)
-          fx%token => tempString
+          !FIXME: AMW - fix this nasty doubble casting.
+          tempString => normalize_attribute_text(fx, vs_str_alloc(as_chars(fx%token)))
+          call destroy_vs(fx%token)
+          !FIXME: AMW - nasty casting!
+          fx%token => new_vs(init_chars=str_vs(tempString))
           tempString => null()
           !If this attribute is not CDATA, we must process further;
           if (associated(attDecl)) then
@@ -903,20 +911,20 @@ contains
             temp_i = ATT_CDATA
           endif
           if (temp_i==ATT_CDATA) then
-            call add_item_to_dict(fx%attributes, str_vs(fx%attname), &
-              str_vs(fx%token), itype=ATT_CDATA, declared=associated(attDecl))
+            call add_item_to_dict(fx%attributes, as_chars(fx%attname), &
+              as_chars(fx%token), itype=ATT_CDATA, declared=associated(attDecl))
           else
             if (validCheck) then
               if (fx%xds%standalone.and..not.attDecl%internal &
-                .and.(str_vs(fx%token)//"x"/=att_value_normalize(str_vs(fx%token))//"x")) then
+                .and.(as_chars(fx%token)//"x"/=att_value_normalize(as_chars(fx%token))//"x")) then
                 call add_error(fx%error_stack,  &
                   "Externally-declared attribute value normalization results in changed value "// &
                   "in standalone document")
                 goto 100
               endif
             endif
-            call add_item_to_dict(fx%attributes, str_vs(fx%attname), &
-              att_value_normalize(str_vs(fx%token)), itype=temp_i, &
+            call add_item_to_dict(fx%attributes, as_chars(fx%attname), &
+              att_value_normalize(as_chars(fx%token)), itype=temp_i, &
               declared=.true.)
           endif
           deallocate(fx%attname)
@@ -927,17 +935,18 @@ contains
         !write(*,*)'ST_CHAR_IN_CONTENT'
         select case (fx%tokenType)
         case (TOK_CHAR)
-          if (size(fx%token)>0) then
+          !iFIXME: AMW  Should I provide a len function for below?
+          if (fx%token%str_len>0) then
             if (validCheck) then
               if (elementContent(fx%elstack)) then
-                if (verify(str_vs(fx%token), XML_WHITESPACE)==0) then
+                if (verify(as_chars(fx%token), XML_WHITESPACE)==0) then
                   if (fx%xds%standalone.and..not.elem%internal) then
                     call add_error(fx%error_stack, &
                       "Externally-specified ignorable whitespace used in standalone document")
                     goto 100
                   endif
                   if (present(ignorableWhitespace_handler)) then
-                    call ignorableWhitespace_handler(str_vs(fx%token))
+                    call ignorableWhitespace_handler(as_chars(fx%token))
                     if (fx%state==ST_STOP) goto 100
                   endif
                 else
@@ -949,13 +958,13 @@ contains
                 goto 100
               else
                 if (present(characters_handler)) then
-                  call characters_handler(str_vs(fx%token))
+                  call characters_handler(as_chars(fx%token))
                   if (fx%state==ST_STOP) goto 100
                 endif
               endif
             else
               if (present(characters_handler)) then
-                call characters_handler(str_vs(fx%token))
+                call characters_handler(as_chars(fx%token))
                 if (fx%state==ST_STOP) goto 100
               endif
             endif
@@ -998,15 +1007,15 @@ contains
                 'Encountered reference to undeclared entity')
             endif
           endif
-          ent => getEntityByName(fx%forbidden_ge_list, str_vs(fx%token))
+          ent => getEntityByName(fx%forbidden_ge_list, as_chars(fx%token))
           if (associated(ent)) then
             call add_error(fx%error_stack, 'Recursive entity reference')
             goto 100
           endif
-          ent => getEntityByName(fx%predefined_e_list, str_vs(fx%token))
+          ent => getEntityByName(fx%predefined_e_list, as_chars(fx%token))
           if (associated(ent)) then
             if (present(startEntity_handler)) then
-              call startEntity_handler(str_vs(fx%token))
+              call startEntity_handler(as_chars(fx%token))
               if (fx%state==ST_STOP) goto 100
             endif
             if (validCheck) then
@@ -1019,15 +1028,15 @@ contains
               endif
             endif
             if (present(characters_handler)) then
-              call characters_handler(expand_entity(fx%predefined_e_list, str_vs(fx%token)))
+              call characters_handler(expand_entity(fx%predefined_e_list, as_chars(fx%token)))
               if (fx%state==ST_STOP) goto 100
             endif
             if (present(endEntity_handler)) then
-              call endEntity_handler(str_vs(fx%token))
+              call endEntity_handler(as_chars(fx%token))
               if (fx%state==ST_STOP) goto 100
             endif
-          elseif (likeCharacterEntityReference(str_vs(fx%token))) then
-            if (checkRepCharEntityReference(str_vs(fx%token), fx%xds%xml_version)) then
+          elseif (likeCharacterEntityReference(as_chars(fx%token))) then
+            if (checkRepCharEntityReference(as_chars(fx%token), fx%xds%xml_version)) then
               if (validCheck) then
                 if (associated(elem)) then
                   if (.not.elem%mixed.and..not.elem%any) then
@@ -1038,18 +1047,18 @@ contains
                 endif
               endif
               if (present(characters_handler)) then
-                call characters_handler(expand_char_entity(str_vs(fx%token)))
+                call characters_handler(expand_char_entity(as_chars(fx%token)))
                 if (fx%state==ST_STOP) goto 100
               endif
-            elseif (checkCharacterEntityReference(str_vs(fx%token), fx%xds%xml_version)) then
+            elseif (checkCharacterEntityReference(as_chars(fx%token), fx%xds%xml_version)) then
               call add_error(fx%error_stack, "Unable to digest character entity reference in content, sorry.")
               goto 100
             else
               call add_error(fx%error_stack, "Illegal character reference")
               goto 100
             endif
-          elseif (existing_entity(fx%xds%entityList, str_vs(fx%token))) then
-            ent => getEntityByName(fx%xds%entityList, str_vs(fx%token))
+          elseif (existing_entity(fx%xds%entityList, as_chars(fx%token))) then
+            ent => getEntityByName(fx%xds%entityList, as_chars(fx%token))
             if (ent%wfc.and.fx%xds%standalone) then
               call add_error(fx%error_stack, &
                 'Externally declared entity referenced in standalone document')
@@ -1063,22 +1072,22 @@ contains
               if (iostat/=0) then
                 if (validCheck) then
                   call add_error(fx%error_stack, &
-                    "Unable to retrieve external entity "//str_vs(fx%token))
+                    "Unable to retrieve external entity "//as_chars(fx%token))
                   goto 100
                 endif
                 if (present(skippedEntity_handler)) then
-                  call skippedEntity_handler(str_vs(fx%token))
+                  call skippedEntity_handler(as_chars(fx%token))
                   if (fx%state==ST_STOP) goto 100
                 endif
               else
                 if (present(startEntity_handler)) then
-                  call startEntity_handler(str_vs(fx%token))
+                  call startEntity_handler(as_chars(fx%token))
                   if (fx%state==ST_STOP) goto 100
                 endif
 #ifdef PGF90
-                call add_internal_entity(fx%forbidden_ge_list, str_vs(fx%token), "", nullURI, .false.)
+                call add_internal_entity(fx%forbidden_ge_list, as_chars(fx%token), "", nullURI, .false.)
 #else
-                call add_internal_entity(fx%forbidden_ge_list, str_vs(fx%token), "", null(), .false.)
+                call add_internal_entity(fx%forbidden_ge_list, as_chars(fx%token), "", null(), .false.)
 #endif
                 temp_wf_stack => wf_stack
                 allocate(wf_stack(size(temp_wf_stack)+1))
@@ -1100,15 +1109,16 @@ contains
                 endif
               endif
               if (present(startEntity_handler)) then
-                call startEntity_handler(str_vs(fx%token))
+                call startEntity_handler(as_chars(fx%token))
                 if (fx%state==ST_STOP) goto 100
               endif
 #ifdef PGF90
-              call add_internal_entity(fx%forbidden_ge_list, str_vs(fx%token), "", nullURI, .false.)
+              call add_internal_entity(fx%forbidden_ge_list, as_chars(fx%token), "", nullURI, .false.)
 #else
-              call add_internal_entity(fx%forbidden_ge_list, str_vs(fx%token), "", null(), .false.)
+              call add_internal_entity(fx%forbidden_ge_list, as_chars(fx%token), "", null(), .false.)
 #endif
-              call open_new_string(fb, expand_entity(fx%xds%entityList, str_vs(fx%token)), str_vs(fx%token), baseURI=ent%baseURI)
+              call open_new_string(fb, expand_entity(fx%xds%entityList, as_chars(fx%token)), &
+                                  &  as_chars(fx%token), baseURI=ent%baseURI)
               temp_wf_stack => wf_stack
               allocate(wf_stack(size(temp_wf_stack)+1))
               wf_stack = (/0, temp_wf_stack/)
@@ -1118,7 +1128,7 @@ contains
             ! Unknown entity check standalone etc
             if (fx%skippedExternal.and..not.fx%xds%standalone) then
               if (present(skippedEntity_handler)) then
-                call skippedEntity_handler(str_vs(fx%token))
+                call skippedEntity_handler(as_chars(fx%token))
                 if (fx%state==ST_STOP) goto 100
               endif
             else
@@ -1133,7 +1143,7 @@ contains
         !write(*,*)'ST_CLOSING_TAG'
         select case (fx%tokenType)
         case (TOK_NAME)
-          if (checkName(str_vs(fx%token), fx%xds%xml_version)) then
+          if (checkName(as_chars(fx%token), fx%xds%xml_version)) then
             fx%name => fx%token
             nullify(fx%token)
             nextState = ST_IN_CLOSING_TAG
@@ -1175,9 +1185,9 @@ contains
         select case (fx%tokenType)
         case (TOK_NAME)
           if (namespaces_) then
-            nameOk = checkQName(str_vs(fx%token), fx%xds%xml_version)
+            nameOk = checkQName(as_chars(fx%token), fx%xds%xml_version)
           else
-            nameOk = checkName(str_vs(fx%token), fx%xds%xml_version)
+            nameOk = checkName(as_chars(fx%token), fx%xds%xml_version)
           endif
           if (.not.nameOk) then
             call add_error(fx%error_stack, "Invalid document name")
@@ -1189,17 +1199,17 @@ contains
         end select
 
       case (ST_DOC_NAME)
-        !write(*,*) 'ST_DOC_NAME ', str_vs(fx%token)
+        !write(*,*) 'ST_DOC_NAME ', as_chars(fx%token)
         select case (fx%tokenType)
         case (TOK_NAME)
-          if (str_vs(fx%token)=='SYSTEM') then
+          if (fx%token=='SYSTEM') then
             nextState = ST_DOC_SYSTEM
-          elseif (str_vs(fx%token)=='PUBLIC') then
+          elseif (fx%token=='PUBLIC') then
             nextState = ST_DOC_PUBLIC
           endif
         case (TOK_OPEN_SB)
           if (present(startDTD_handler)) then
-            call startDTD_handler(str_vs(fx%root_element), "", "")
+            call startDTD_handler(as_chars(fx%root_element), "", "")
             if (fx%state==ST_STOP) goto 100
           endif
           wf_stack(1) = wf_stack(1) + 1
@@ -1207,7 +1217,7 @@ contains
           fx%inIntSubset = .true.
         case (TOK_END_TAG)
           if (present(startDTD_handler)) then
-            call startDTD_handler(str_vs(fx%root_element), "", "")
+            call startDTD_handler(as_chars(fx%root_element), "", "")
             if (fx%state==ST_STOP) goto 100
           endif
           wf_stack(1) = wf_stack(1) - 1
@@ -1225,8 +1235,9 @@ contains
         !write(*,*) 'ST_DOC_PUBLIC'
         select case (fx%tokenType)
         case (TOK_CHAR)
-          if (checkPublicId(str_vs(fx%token))) then
-            fx%publicId => fx%token
+          if (checkPublicId(as_chars(fx%token))) then
+            ! FIXME: AMW nasty cast.
+            fx%publicId => vs_str_alloc(as_chars(fx%token))
             fx%token => null()
             nextState = ST_DOC_SYSTEM
           else
@@ -1239,7 +1250,8 @@ contains
         !write(*,*) 'ST_DOC_SYSTEM'
         select case (fx%tokenType)
         case (TOK_CHAR)
-          fx%systemId => fx%token
+          !FIXME: AMW - nasty cast followed by a memory leak? 
+          fx%systemId => vs_str_alloc(as_chars(fx%token))
           fx%token => null()
           nextState = ST_DOC_DECL
         end select
@@ -1250,13 +1262,13 @@ contains
         case (TOK_OPEN_SB)
           if (present(startDTD_handler)) then
             if (associated(fx%publicId)) then
-              call startDTD_handler(str_vs(fx%root_element), &
+              call startDTD_handler(as_chars(fx%root_element), &
                 publicId=str_vs(fx%publicId), systemId=str_vs(fx%systemId))
             elseif (associated(fx%systemId)) then
-              call startDTD_handler(str_vs(fx%root_element), &
+              call startDTD_handler(as_chars(fx%root_element), &
                 publicId="", systemId=str_vs(fx%systemId))
             else
-              call startDTD_handler(str_vs(fx%root_element), "", "")
+              call startDTD_handler(as_chars(fx%root_element), "", "")
             endif
             if (fx%state==ST_STOP) goto 100
           endif
@@ -1271,12 +1283,12 @@ contains
         case (TOK_END_TAG)
           if (present(startDTD_handler)) then
             if (associated(fx%publicId)) then
-              call startDTD_handler(str_vs(fx%root_element), publicId=str_vs(fx%publicId), systemId=str_vs(fx%systemId))
+              call startDTD_handler(as_chars(fx%root_element), publicId=str_vs(fx%publicId), systemId=str_vs(fx%systemId))
               deallocate(fx%publicId)
             elseif (associated(fx%systemId)) then
-              call startDTD_handler(str_vs(fx%root_element), publicId="", systemId=str_vs(fx%systemId))
+              call startDTD_handler(as_chars(fx%root_element), publicId="", systemId=str_vs(fx%systemId))
             else
-              call startDTD_handler(str_vs(fx%root_element), "", "")
+              call startDTD_handler(as_chars(fx%root_element), "", "")
             endif
             if (fx%state==ST_STOP) goto 100
           endif
@@ -1385,12 +1397,12 @@ contains
         !write(*,*) 'ST_START_PE'
         select case (fx%tokenType)
         case (TOK_NAME)
-          if (existing_entity(fx%forbidden_pe_list, str_vs(fx%token))) then
+          if (existing_entity(fx%forbidden_pe_list, as_chars(fx%token))) then
             call add_error(fx%error_stack, &
               'Recursive entity reference')
             goto 100
           endif
-          ent => getEntityByName(fx%xds%PEList, str_vs(fx%token))
+          ent => getEntityByName(fx%xds%PEList, as_chars(fx%token))
           if (associated(ent)) then
             if (ent%wfc.and.fx%xds%standalone) then
               call add_error(fx%error_stack, &
@@ -1398,25 +1410,25 @@ contains
               goto 100
             elseif (ent%external) then
               if (present(startEntity_handler)) then
-                call startEntity_handler('%'//str_vs(fx%token))
+                call startEntity_handler('%'//as_chars(fx%token))
                 if (fx%state==ST_STOP) goto 100
               endif
 #ifdef PGF90
               call add_internal_entity(fx%forbidden_pe_list, &
-                str_vs(fx%token), "", nullURI, .false.)
+                as_chars(fx%token), "", nullURI, .false.)
 #else
               call add_internal_entity(fx%forbidden_pe_list, &
-                str_vs(fx%token), "", null(), .false.)
+                as_chars(fx%token), "", null(), .false.)
 #endif
               call open_new_file(fb, ent%baseURI, iostat, pe=.true.)
               if (iostat/=0) then
                 if (validCheck) then
                   call add_error(fx%error_stack, &
-                    "Unable to retrieve external parameter entity "//str_vs(fx%token))
+                    "Unable to retrieve external parameter entity "//as_chars(fx%token))
                   goto 100
                 endif
                 if (present(skippedEntity_handler)) then
-                  call skippedEntity_handler('%'//str_vs(fx%token))
+                  call skippedEntity_handler('%'//as_chars(fx%token))
                   if (fx%state==ST_STOP) goto 100
                 endif
                 ! having skipped a PE, we must now not process
@@ -1427,15 +1439,15 @@ contains
               else
                 fx%inIntSubset = .false.
                 if (present(startEntity_handler)) then
-                  call startEntity_handler('%'//str_vs(fx%token))
+                  call startEntity_handler('%'//as_chars(fx%token))
                   if (fx%state==ST_STOP) goto 100
                 endif
 #ifdef PGF90
                 call add_internal_entity(fx%forbidden_pe_list, &
-                  str_vs(fx%token), "", nullURI, .false.)
+                  as_chars(fx%token), "", nullURI, .false.)
 #else
                 call add_internal_entity(fx%forbidden_pe_list, &
-                  str_vs(fx%token), "", null(), .false.)
+                  as_chars(fx%token), "", null(), .false.)
 #endif
                 call parse_text_declaration(fb, fx%error_stack)
                 if (in_error(fx%error_stack)) goto 100
@@ -1449,19 +1461,19 @@ contains
             else
               ! Expand the entity,
               if (present(startEntity_handler)) then
-                call startEntity_handler('%'//str_vs(fx%token))
+                call startEntity_handler('%'//as_chars(fx%token))
                 if (fx%state==ST_STOP) goto 100
               endif
 #ifdef PGF90
               call add_internal_entity(fx%forbidden_pe_list, &
-                str_vs(fx%token), "", nullURI, .false.)
+                as_chars(fx%token), "", nullURI, .false.)
               call open_new_string(fb, &
-                expand_entity(fx%xds%PEList, str_vs(fx%token)), str_vs(fx%token), baseURI=nullURI, pe=.true.)
+                expand_entity(fx%xds%PEList, as_chars(fx%token)), as_chars(fx%token), baseURI=nullURI, pe=.true.)
 #else
               call add_internal_entity(fx%forbidden_pe_list, &
-                str_vs(fx%token), "", null(), .false.)
+                as_chars(fx%token), "", null(), .false.)
               call open_new_string(fb, &
-                expand_entity(fx%xds%PEList, str_vs(fx%token)), str_vs(fx%token), baseURI=null(), pe=.true.)
+                expand_entity(fx%xds%PEList, as_chars(fx%token)), as_chars(fx%token), baseURI=null(), pe=.true.)
 #endif
               ! NB because we are just expanding a string here, anything
               ! evaluated as a result of this string is evaluated in the
@@ -1480,7 +1492,7 @@ contains
             if (fx%skippedExternal.and..not.fx%xds%standalone) then
               if (processDTD) then
                 if (present(skippedEntity_handler)) then
-                  call skippedEntity_handler('%'//str_vs(fx%token))
+                  call skippedEntity_handler('%'//as_chars(fx%token))
                   if (fx%state==ST_STOP) goto 100
                 endif
               endif
@@ -1531,8 +1543,8 @@ contains
       if (startInChardata_) then
         if (fx%well_formed) then
           if (fx%state==ST_CHAR_IN_CONTENT.and.associated(fx%token)) then
-            if (size(fx%token)>0.and.present(characters_handler)) &
-              call characters_handler(str_vs(fx%token))
+            if (fx%token%str_len>0.and.present(characters_handler)) &
+              call characters_handler(as_chars(fx%token))
           endif
         else
           if (present(fatalError_handler)) &
@@ -1601,13 +1613,13 @@ contains
         case (TOK_OPEN_COMMENT)
           nextDTDState = ST_DTD_START_COMMENT
         case (TOK_NAME)
-          if (str_vs(fx%token)=='ATTLIST') then
+          if (fx%token=='ATTLIST') then
             nextDTDState = ST_DTD_ATTLIST
-          elseif (str_vs(fx%token)=='ELEMENT') then
+          elseif (fx%token=='ELEMENT') then
             nextDTDState = ST_DTD_ELEMENT
-          elseif (str_vs(fx%token)=='ENTITY') then
+          elseif (fx%token=='ENTITY') then
             nextDTDState = ST_DTD_ENTITY
-          elseif (str_vs(fx%token)=='NOTATION') then
+          elseif (fx%token=='NOTATION') then
             nextDTDState = ST_DTD_NOTATION
           endif
         end select
@@ -1616,7 +1628,7 @@ contains
         !write(*,*) "ST_DTD_START_SECTION_DECL"
         select case (fx%tokenType)
         case (TOK_NAME)
-          if (str_vs(fx%token)=="IGNORE") then
+          if (fx%token=="IGNORE") then
             if (fx%context/=CTXT_IN_DTD.or.reading_main_file(fb)) then
               call add_error(fx%error_stack, "IGNORE section only allowed in external subset.")
               return
@@ -1625,7 +1637,7 @@ contains
               fx%context = CTXT_IGNORE
               nextDTDState = ST_DTD_FINISH_SECTION_DECL
             endif
-          elseif (str_vs(fx%token)=="INCLUDE") then
+          elseif (fx%token=="INCLUDE") then
             if (fx%context/=CTXT_IN_DTD.or.reading_main_file(fb)) then
               call add_error(fx%error_stack, "INCLUDE section only allowed in external subset.")
               return
@@ -1675,15 +1687,15 @@ contains
         select case (fx%tokenType)
         case (TOK_NAME)
           if (namespaces_) then
-            nameOk = checkNCName(str_vs(fx%token), fx%xds%xml_version)
+            nameOk = checkNCName(as_chars(fx%token), fx%xds%xml_version)
           else
-            nameOk = checkName(str_vs(fx%token), fx%xds%xml_version)
+            nameOk = checkName(as_chars(fx%token), fx%xds%xml_version)
           endif
           if (nameOk) then
-            if (str_vs(fx%token)=='xml') then
+            if (fx%token=='xml') then
               call add_error(fx%error_stack, "XML declaration must be at start of document")
               return
-            elseif (checkPITarget(str_vs(fx%token), fx%xds%xml_version)) then
+            elseif (checkPITarget(as_chars(fx%token), fx%xds%xml_version)) then
               nextDTDState = ST_DTD_PI_CONTENTS
               fx%name => fx%token
               fx%token => null()
@@ -1717,14 +1729,14 @@ contains
         select case(fx%tokenType)
         case (TOK_CHAR)
           if (present(processingInstruction_handler)) then
-            call processingInstruction_handler(str_vs(fx%name), str_vs(fx%token))
+            call processingInstruction_handler(as_chars(fx%name), as_chars(fx%token))
             if (fx%state==ST_STOP) return
           endif
           deallocate(fx%name)
           nextDTDState = ST_DTD_PI_END
         case (TOK_PI_END)
           if (present(processingInstruction_handler)) then
-            call processingInstruction_handler(str_vs(fx%name), '')
+            call processingInstruction_handler(as_chars(fx%name), '')
             if (fx%state==ST_STOP) return
           endif
           deallocate(fx%name)
@@ -1770,7 +1782,7 @@ contains
         select case (fx%tokenType)
         case (TOK_COMMENT_END)
           if (present(comment_handler)) then
-            call comment_handler(str_vs(fx%name))
+            call comment_handler(as_chars(fx%name))
             if (fx%state==ST_STOP) return
           endif
           deallocate(fx%name)
@@ -1782,18 +1794,18 @@ contains
         select case (fx%tokenType)
         case (TOK_NAME)
           if (namespaces_) then
-            nameOk = checkQName(str_vs(fx%token), fx%xds%xml_version)
+            nameOk = checkQName(as_chars(fx%token), fx%xds%xml_version)
           else
-            nameOk = checkName(str_vs(fx%token), fx%xds%xml_version)
+            nameOk = checkName(as_chars(fx%token), fx%xds%xml_version)
           endif
           if (.not.nameOk) then
             call add_error(fx%error_stack, "Invalid element name for ATTLIST")
             return
           endif
-          if (existing_element(fx%xds%element_list, str_vs(fx%token))) then
-            elem => get_element(fx%xds%element_list, str_vs(fx%token))
+          if (existing_element(fx%xds%element_list, as_chars(fx%token))) then
+            elem => get_element(fx%xds%element_list, as_chars(fx%token))
           else
-            elem => add_element(fx%xds%element_list, str_vs(fx%token))
+            elem => add_element(fx%xds%element_list, as_chars(fx%token))
           endif
           nextDTDState = ST_DTD_ATTLIST_CONTENTS
         end select
@@ -1807,16 +1819,16 @@ contains
           nextState = ST_START_PE
         case (TOK_DTD_CONTENTS)
           if (processDTD) then
-            call parse_dtd_attlist(str_vs(fx%token), fx%xds%xml_version, &
+            call parse_dtd_attlist(as_chars(fx%token), fx%xds%xml_version, &
               namespaces_, validCheck, fx%error_stack, elem, &
               internal=reading_main_file(fb))
           else
 #ifdef PGF90
-            call parse_dtd_attlist(str_vs(fx%token), fx%xds%xml_version, &
+            call parse_dtd_attlist(as_chars(fx%token), fx%xds%xml_version, &
               namespaces_, validCheck, fx%error_stack, nullElement, &
               internal=reading_main_file(fb))
 #else
-            call parse_dtd_attlist(str_vs(fx%token), fx%xds%xml_version, &
+            call parse_dtd_attlist(as_chars(fx%token), fx%xds%xml_version, &
               namespaces_, validCheck, fx%error_stack, null(), &
               internal=reading_main_file(fb))
 #endif
@@ -1894,9 +1906,9 @@ contains
         select case (fx%tokenType)
         case (TOK_NAME)
           if (namespaces_) then
-            nameOk = checkQName(str_vs(fx%token), fx%xds%xml_version)
+            nameOk = checkQName(as_chars(fx%token), fx%xds%xml_version)
           else
-            nameOk = checkName(str_vs(fx%token), fx%xds%xml_version)
+            nameOk = checkName(as_chars(fx%token), fx%xds%xml_version)
           endif
           if (.not.nameOk) then
             call add_error(fx%error_stack, "Invalid name for ELEMENT")
@@ -1923,7 +1935,7 @@ contains
           ! Leave DTD state as it is & expand the entity ...
           nextState = ST_START_PE
         case (TOK_DTD_CONTENTS)
-          if (declared_element(fx%xds%element_list, str_vs(fx%name))) then
+          if (declared_element(fx%xds%element_list, as_chars(fx%name))) then
             if (validCheck) then
               call add_error(fx%error_stack, "Duplicate Element declaration")
               return
@@ -1932,15 +1944,15 @@ contains
               elem => null()
             endif
           elseif (processDTD) then
-            if (existing_element(fx%xds%element_list, str_vs(fx%name))) then
-              elem => get_element(fx%xds%element_list, str_vs(fx%name))
+            if (existing_element(fx%xds%element_list, as_chars(fx%name))) then
+              elem => get_element(fx%xds%element_list, as_chars(fx%name))
             else
-              elem => add_element(fx%xds%element_list, str_vs(fx%name))
+              elem => add_element(fx%xds%element_list, as_chars(fx%name))
             endif
           else
             elem => null()
           endif
-          call parse_dtd_element(str_vs(fx%token), fx%xds%xml_version, fx%error_stack, &
+          call parse_dtd_element(as_chars(fx%token), fx%xds%xml_version, fx%error_stack, &
             elem, reading_main_file(fb))
           if (in_error(fx%error_stack)) return
           nextDTDState = ST_DTD_ELEMENT_END
@@ -1960,7 +1972,7 @@ contains
           wf_stack(1) = wf_stack(1) - 1
           if (processDTD.and.associated(elem)) then
             if (present(elementDecl_handler)) then
-              call elementDecl_handler(str_vs(fx%name), str_vs(elem%model))
+              call elementDecl_handler(as_chars(fx%name), str_vs(elem%model))
               if (fx%state==ST_STOP) return
             endif
           endif
@@ -1972,16 +1984,16 @@ contains
         !write(*,*) 'ST_DTD_ENTITY'
         select case (fx%tokenType)
         case (TOK_NAME)
-          if (str_vs(fx%token)=="%") then
+          if (fx%token=="%") then
             pe = .true.
             ! this will be a PE
             nextDTDState = ST_DTD_ENTITY_PE
           else
             pe = .false.
             if (namespaces_) then
-              nameOk = checkNCName(str_vs(fx%token), fx%xds%xml_version)
+              nameOk = checkNCName(as_chars(fx%token), fx%xds%xml_version)
             else
-              nameOk = checkName(str_vs(fx%token), fx%xds%xml_version)
+              nameOk = checkName(as_chars(fx%token), fx%xds%xml_version)
             endif
             if (.not.nameOk) then
               call add_error(fx%error_stack, &
@@ -1999,9 +2011,9 @@ contains
         select case (fx%tokenType)
         case (TOK_NAME)
           if (namespaces_) then
-            nameOk = checkNCName(str_vs(fx%token), fx%xds%xml_version)
+            nameOk = checkNCName(as_chars(fx%token), fx%xds%xml_version)
           else
-            nameOk = checkName(str_vs(fx%token), fx%xds%xml_version)
+            nameOk = checkName(as_chars(fx%token), fx%xds%xml_version)
           endif
           if (.not.nameOk) then
             call add_error(fx%error_stack, &
@@ -2017,9 +2029,9 @@ contains
         !write(*,*) 'ST_DTD_ENTITY_ID'
         select case (fx%tokenType)
         case (TOK_NAME)
-          if (str_vs(fx%token) == "PUBLIC") then
+          if (fx%token == "PUBLIC") then
             nextDTDState = ST_DTD_ENTITY_PUBLIC
-          elseif (str_vs(fx%token) == "SYSTEM") then
+          elseif (fx%token == "SYSTEM") then
             nextDTDState = ST_DTD_ENTITY_SYSTEM
           else
             call add_error(fx%error_stack, "Unexpected token in ENTITY")
@@ -2027,11 +2039,16 @@ contains
           endif
         case (TOK_CHAR)
           if (reading_main_file(fb)) then
-            tempString => fx%token
+            !FIXME: AMW - bit crap to access the internal data below.
+            tempString => vs_str_alloc(as_chars(fx%token))
           else
-            tempString => expand_pe_text(fx, fx%token, fb)
+            !FIXME: AMW - bit crap to access the internal data below.
+            tempString => expand_pe_text(fx, &
+                 & vs_str_alloc(as_chars(fx%token)), fb)
           endif
-          fx%attname => expand_entity_value_alloc(tempString, fx%xds, fx%error_stack)
+          ! FIXME: AMW - loose the doubble casting!
+          fx%attname => new_vs( &
+              & init_chars=str_vs(expand_entity_value_alloc(tempString, fx%xds, fx%error_stack)))
           if (reading_main_file(fb)) then
             tempString => null()
           else
@@ -2048,8 +2065,9 @@ contains
         !write(*,*) 'ST_DTD_ENTITY_PUBLIC'
         select case (fx%tokenType)
         case (TOK_CHAR)
-          if (checkPublicId(str_vs(fx%token))) then
-            fx%publicId => fx%token
+          if (checkPublicId(as_chars(fx%token))) then
+            !FIXME - AMW, need to avoid this:
+            fx%publicId => vs_str_alloc(as_chars(fx%token))
             fx%token => null()
             nextDTDState = ST_DTD_ENTITY_SYSTEM
           else
@@ -2065,7 +2083,8 @@ contains
         !write(*,*) 'ST_DTD_ENTITY_SYSTEM'
         select case (fx%tokenType)
         case (TOK_CHAR)
-          fx%systemId => fx%token
+          !FIXME: AMW - yuck.
+          fx%systemId => vs_str_alloc(as_chars(fx%token))
           fx%token => null()
           nextDTDState = ST_DTD_ENTITY_NDATA
         case default
@@ -2097,7 +2116,7 @@ contains
           if (associated(fx%Ndata)) deallocate(fx%Ndata)
           nextDTDState = ST_DTD_SUBSET
         case (TOK_NAME)
-          if (str_vs(fx%token)=='NDATA') then
+          if (fx%token=='NDATA') then
             if (pe) then
               call add_error(fx%error_stack, "Parameter entity cannot have NDATA declaration")
               return
@@ -2118,15 +2137,16 @@ contains
         select case (fx%tokenType)
         case (TOK_NAME)
           if (namespaces_) then
-            nameOk = checkNCName(str_vs(fx%token), fx%xds%xml_version)
+            nameOk = checkNCName(as_chars(fx%token), fx%xds%xml_version)
           else
-            nameOk = checkName(str_vs(fx%token), fx%xds%xml_version)
+            nameOk = checkName(as_chars(fx%token), fx%xds%xml_version)
           endif
           if (.not.nameOk) then
             call add_error(fx%error_stack, "Invalid name for Notation")
             return
           endif
-          fx%Ndata => fx%token
+          !FIXME: AMW - yuck!
+          fx%Ndata => vs_str_alloc(as_chars(fx%token))
           fx%token => null()
           nextDTDState = ST_DTD_ENTITY_END
         case default
@@ -2167,9 +2187,9 @@ contains
         select case (fx%tokenType)
         case (TOK_NAME)
           if (namespaces_) then
-            nameOk = checkNCName(str_vs(fx%token), fx%xds%xml_version)
+            nameOk = checkNCName(as_chars(fx%token), fx%xds%xml_version)
           else
-            nameOk = checkName(str_vs(fx%token), fx%xds%xml_version)
+            nameOk = checkName(as_chars(fx%token), fx%xds%xml_version)
           endif
           if (.not.nameOk) then
             call add_error(fx%error_stack, "Invalid name for Notation")
@@ -2187,9 +2207,9 @@ contains
         !write(*,*)'ST_DTD_NOTATION_ID'
         select case (fx%tokenType)
         case (TOK_NAME)
-          if (str_vs(fx%token)=='SYSTEM') then
+          if (fx%token=='SYSTEM') then
             nextDTDState = ST_DTD_NOTATION_SYSTEM
-          elseif (str_vs(fx%token)=='PUBLIC') then
+          elseif (fx%token=='PUBLIC') then
             nextDTDState = ST_DTD_NOTATION_PUBLIC
           else
             call add_error(fx%error_stack, "Unexpected token after NOTATION")
@@ -2204,7 +2224,8 @@ contains
         !write(*,*)'ST_DTD_NOTATION_SYSTEM'
         select case (fx%tokenType)
         case (TOK_CHAR)
-          fx%systemId => fx%token
+          !FIXME: AMW - yuck.
+          fx%systemId => vs_str_alloc(as_chars(fx%token))
           fx%token => null()
           nextDTDState = ST_DTD_NOTATION_END
         case default
@@ -2216,8 +2237,9 @@ contains
         !write(*,*)'ST_DTD_NOTATION_PUBLIC'
         select case (fx%tokenType)
         case (TOK_CHAR)
-          if (checkPublicId(str_vs(fx%token))) then
-            fx%publicId => fx%token
+          if (checkPublicId(as_chars(fx%token))) then
+            !FIXME - AMW - yuck! 
+            fx%publicId => vs_str_alloc(as_chars(fx%token))
             fx%token => null()
             nextDTDState = ST_DTD_NOTATION_PUBLIC_2
           else
@@ -2239,16 +2261,16 @@ contains
                 "NOTATION not balanced in parameter entity")
               return
             endif
-            if (notation_exists(fx%nlist, str_vs(fx%name))) then
+            if (notation_exists(fx%nlist, as_chars(fx%name))) then
               call add_error(fx%error_stack, "Duplicate notation declaration")
               return
             endif
           endif
           wf_stack(1) = wf_stack(1) - 1
           if (processDTD) then
-            call add_notation(fx%nlist, str_vs(fx%name), publicId=str_vs(fx%publicId))
+            call add_notation(fx%nlist, as_chars(fx%name), publicId=str_vs(fx%publicId))
             if (present(notationDecl_handler)) then
-              call notationDecl_handler(str_vs(fx%name), publicId=str_vs(fx%publicId), systemId="")
+              call notationDecl_handler(as_chars(fx%name), publicId=str_vs(fx%publicId), systemId="")
               if (fx%state==ST_STOP) return
             endif
           endif
@@ -2256,7 +2278,8 @@ contains
           deallocate(fx%publicId)
           nextDTDState = ST_DTD_SUBSET
         case (TOK_CHAR)
-          fx%systemId => fx%token
+          !FIXME - AMW Yuck
+          fx%systemId => vs_str_alloc(as_chars(fx%token))
           fx%token => null()
           nextDTDState = ST_DTD_NOTATION_END
         end select
@@ -2271,7 +2294,7 @@ contains
                 "NOTATION not balanced in parameter entity")
               return
             endif
-            if (notation_exists(fx%nlist, str_vs(fx%name))) then
+            if (notation_exists(fx%nlist, as_chars(fx%name))) then
               call add_error(fx%error_stack, "Duplicate notation declaration")
               return
             endif
@@ -2293,18 +2316,18 @@ contains
             ! Throw it away again
             call destroyURI(URIref)
             if (associated(fx%publicId)) then
-              call add_notation(fx%nlist, str_vs(fx%name), &
+              call add_notation(fx%nlist, as_chars(fx%name), &
                 publicId=str_vs(fx%publicId), systemId=str_vs(fx%systemId))
               if (present(notationDecl_handler)) then
-                call notationDecl_handler(str_vs(fx%name), &
+                call notationDecl_handler(as_chars(fx%name), &
                 publicId=str_vs(fx%publicId), systemId=str_vs(fx%systemId))
                 if (fx%state==ST_STOP) return
               endif
             else
-              call add_notation(fx%nlist, str_vs(fx%name), &
+              call add_notation(fx%nlist, as_chars(fx%name), &
                 systemId=str_vs(fx%systemId))
               if (present(notationDecl_handler)) then
-                call notationDecl_handler(str_vs(fx%name), &
+                call notationDecl_handler(as_chars(fx%name), &
                 publicId="", systemId=str_vs(fx%systemId))
                 if (fx%state==ST_STOP) return
               endif
@@ -2333,13 +2356,13 @@ contains
     end subroutine parseDTD
 
     subroutine open_tag
-      elem => get_element(fx%xds%element_list, str_vs(fx%name))
+      elem => get_element(fx%xds%element_list, as_chars(fx%name))
       if (associated(elem)) then
         if (validCheck) then
           call checkAttributes(elem, fx%attributes)
-          if (.not.checkContentModel(fx%elstack, str_vs(fx%name))) then
+          if (.not.checkContentModel(fx%elstack, as_chars(fx%name))) then
             call add_error(fx%error_stack, &
-              "Element "//str_vs(fx%name)//" not permitted in this context")
+              "Element "//as_chars(fx%name)//" not permitted in this context")
             return
           endif
         else
@@ -2368,7 +2391,7 @@ contains
           ! This is a top-level element in the current entity
           call setBase(fx%attributes, expressURI(fb%f(1)%baseURI))
       endif
-      if (namespaces_.and.getURIofQName(fx,str_vs(fx%name))==invalidNS) then
+      if (namespaces_.and.getURIofQName(fx,as_chars(fx%name))==invalidNS) then
         ! no namespace was found for the current element
         if (.not.startInCharData_) then
           ! but we ignore this if we are parsing an entity through DOM
@@ -2377,30 +2400,30 @@ contains
         elseif (present(startElement_handler)) then
           ! Record it as having an empty URI
           call startElement_handler("", &
-            getlocalNameofQName(str_vs(fx%name)), &
-            str_vs(fx%name), fx%attributes)
+            getlocalNameofQName(as_chars(fx%name)), &
+            as_chars(fx%name), fx%attributes)
           if (fx%state==ST_STOP) return
         endif
       elseif (namespaces_) then
         ! Normal state of affairs
         if (present(startElement_handler)) then
-          call startElement_handler(getURIofQName(fx, str_vs(fx%name)), &
-          getlocalNameofQName(str_vs(fx%name)), &
-          str_vs(fx%name), fx%attributes)
+          call startElement_handler(getURIofQName(fx, as_chars(fx%name)), &
+          getlocalNameofQName(as_chars(fx%name)), &
+          as_chars(fx%name), fx%attributes)
           if (fx%state==ST_STOP) return
         endif
       else
         ! Non-namespace aware processing
         if (present(startElement_handler)) then
           call startElement_handler("", "", &
-          str_vs(fx%name), fx%attributes)
+          as_chars(fx%name), fx%attributes)
           if (fx%state==ST_STOP) return
         endif
       endif
       if (validCheck) then
-        call push_elstack(fx%elstack, str_vs(fx%name), elem%cp)
+        call push_elstack(fx%elstack, as_chars(fx%name), elem%cp)
       else
-        call push_elstack(fx%elstack, str_vs(fx%name))
+        call push_elstack(fx%elstack, as_chars(fx%name))
       endif
       call reset_dict(fx%attributes)
     end subroutine open_tag
@@ -2413,37 +2436,37 @@ contains
           'Ill-formed entity')
         return
       endif
-      if (str_vs(fx%name)/=get_top_elstack(fx%elstack)) then
+      if (as_chars(fx%name)/=get_top_elstack(fx%elstack)) then
         call add_error(fx%error_stack, &
           "Mismatching close tag: trying to close "//get_top_elstack(fx%elstack) &
-          //" with "//str_vs(fx%name))
+          //" with "//as_chars(fx%name))
         return
       endif
       if (validCheck) then
         if (.not.checkContentModelToEnd(fx%elstack)) then
           call add_error(fx%error_stack, &
-            "Failed to fulfil content model for "//str_vs(fx%name))
+            "Failed to fulfil content model for "//as_chars(fx%name))
           return
         endif
       endif
       dummy = pop_elstack(fx%elstack)
       if (present(endElement_handler)) then
-        if (namespaces_.and.getURIofQName(fx,str_vs(fx%name))==invalidNS) then
+        if (namespaces_.and.getURIofQName(fx,as_chars(fx%name))==invalidNS) then
           ! no namespace was found for the current element, we must be
           ! closing inside a DOM entity.
           ! Record it as having an empty URI
           call endElement_handler("", &
-            getlocalNameofQName(str_vs(fx%name)), &
-            str_vs(fx%name))
+            getlocalNameofQName(as_chars(fx%name)), &
+                & as_chars(fx%name))
         elseif (namespaces_) then
           ! Normal state of affairs
-          call endElement_handler(getURIofQName(fx, str_vs(fx%name)), &
-            getlocalnameofQName(str_vs(fx%name)), &
-            str_vs(fx%name))
+          call endElement_handler(getURIofQName(fx, as_chars(fx%name)), &
+                & getlocalnameofQName(as_chars(fx%name)), &
+                & as_chars(fx%name))
         else
           ! Non-namespace-aware processing:
           call endElement_handler("", "", &
-            str_vs(fx%name))
+            as_chars(fx%name))
         endif
         if (fx%state==ST_STOP) return
       endif
@@ -2460,15 +2483,15 @@ contains
       wfc = fb%f(1)%pe.or.inExtSubset
       if (pe) then
         !Does entity with this name exist?
-        if (.not.existing_entity(fx%xds%PEList, str_vs(fx%name))) then
+        if (.not.existing_entity(fx%xds%PEList, as_chars(fx%name))) then
           ! Internal or external?
           if (associated(fx%attname)) then ! it's internal
             call register_internal_PE(fx%xds, &
-              name=str_vs(fx%name), text=str_vs(fx%attname), &
+              name=as_chars(fx%name), text=as_chars(fx%attname), &
               wfc=wfc, baseURI=copyURI(fb%f(1)%baseURI))
             ! FIXME need to expand value here before reporting ...
             if (present(internalEntityDecl_handler)) then
-              call internalEntityDecl_handler('%'//str_vs(fx%name), str_vs(fx%attname))
+              call internalEntityDecl_handler('%'//as_chars(fx%name), as_chars(fx%attname))
               if (fx%state==ST_STOP) return
             endif
           else ! PE can't have Ndata declaration
@@ -2482,18 +2505,18 @@ contains
               newURI => rebaseURI(fb%f(1)%baseURI, URIref)
               call destroyURI(URIref)
               if (associated(fx%publicId)) then
-                call register_external_PE(fx%xds, name=str_vs(fx%name), &
+                call register_external_PE(fx%xds, name=as_chars(fx%name), &
                   systemId=str_vs(fx%systemId), publicId=str_vs(fx%publicId), &
                   wfc=wfc, baseURI=newURI)
                 if (present(externalEntityDecl_handler)) &
-                  call externalEntityDecl_handler('%'//str_vs(fx%name), &
+                  call externalEntityDecl_handler('%'//as_chars(fx%name), &
                   systemId=str_vs(fx%systemId), publicId=str_vs(fx%publicId))
               else
-                call register_external_PE(fx%xds, name=str_vs(fx%name), &
+                call register_external_PE(fx%xds, name=as_chars(fx%name), &
                   systemId=str_vs(fx%systemId), &
                   wfc=wfc, baseURI=newURI)
                 if (present(externalEntityDecl_handler)) &
-                  call externalEntityDecl_handler('%'//str_vs(fx%name), &
+                  call externalEntityDecl_handler('%'//as_chars(fx%name), &
                   systemId=str_vs(fx%systemId), publicId="")
               endif
             endif
@@ -2501,15 +2524,15 @@ contains
           ! else we ignore it
         endif
       else !It's a general entity
-        if (.not.existing_entity(fx%xds%entityList, str_vs(fx%name))) then
+        if (.not.existing_entity(fx%xds%entityList, as_chars(fx%name))) then
           ! Internal or external?
           if (associated(fx%attname)) then ! it's internal
-            call register_internal_GE(fx%xds, name=str_vs(fx%name), &
-              text=str_vs(fx%attname), &
+            call register_internal_GE(fx%xds, name=as_chars(fx%name), &
+              text=as_chars(fx%attname), &
               wfc=wfc, baseURI=copyURI(fb%f(1)%baseURI))
             if (present(internalEntityDecl_handler)) then
-              call internalEntityDecl_handler(str_vs(fx%name),&
-              str_vs(fx%attname))
+              call internalEntityDecl_handler(as_chars(fx%name),&
+              as_chars(fx%attname))
               if (fx%state==ST_STOP) return
             endif
           else
@@ -2523,33 +2546,33 @@ contains
               newURI => rebaseURI(fb%f(1)%baseURI, URIref)
               call destroyURI(URIref)
               if (associated(fx%publicId).and.associated(fx%Ndata)) then
-                call register_external_GE(fx%xds, name=str_vs(fx%name), &
+                call register_external_GE(fx%xds, name=as_chars(fx%name), &
                   systemId=str_vs(fx%systemId), publicId=str_vs(fx%publicId), &
                   notation=str_vs(fx%Ndata), &
                   wfc=wfc, baseURI=newURI)
                 if (present(unparsedEntityDecl_handler)) &
-                  call unparsedEntityDecl_handler(str_vs(fx%name), &
+                  call unparsedEntityDecl_handler(as_chars(fx%name), &
                   systemId=str_vs(fx%systemId), publicId=str_vs(fx%publicId), &
                   notation=str_vs(fx%Ndata))
               elseif (associated(fx%Ndata)) then
-                call register_external_GE(fx%xds, name=str_vs(fx%name), &
+                call register_external_GE(fx%xds, name=as_chars(fx%name), &
                   systemId=str_vs(fx%systemId), notation=str_vs(fx%Ndata), &
                   wfc=wfc, baseURI=newURI)
                 if (present(unparsedEntityDecl_handler)) &
-                  call unparsedEntityDecl_handler(str_vs(fx%name), publicId="", &
+                  call unparsedEntityDecl_handler(as_chars(fx%name), publicId="", &
                   systemId=str_vs(fx%systemId), notation=str_vs(fx%Ndata))
               elseif (associated(fx%publicId)) then
-                call register_external_GE(fx%xds, name=str_vs(fx%name), &
+                call register_external_GE(fx%xds, name=as_chars(fx%name), &
                   systemId=str_vs(fx%systemId), publicId=str_vs(fx%publicId), &
                   wfc=wfc, baseURI=newURI)
                 if (present(externalEntityDecl_handler)) &
-                  call externalEntityDecl_handler(str_vs(fx%name), &
+                  call externalEntityDecl_handler(as_chars(fx%name), &
                   systemId=str_vs(fx%systemId), publicId=str_vs(fx%publicId))
               else
-                call register_external_GE(fx%xds, name=str_vs(fx%name), &
+                call register_external_GE(fx%xds, name=as_chars(fx%name), &
                   systemId=str_vs(fx%systemId), wfc=wfc, baseURI=newURI)
                 if (present(externalEntityDecl_handler)) &
-                  call externalEntityDecl_handler(str_vs(fx%name), &
+                  call externalEntityDecl_handler(as_chars(fx%name), &
                   systemId=str_vs(fx%systemId), publicId="")
               endif
             endif
