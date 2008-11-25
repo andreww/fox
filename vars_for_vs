@@ -1,0 +1,99 @@
+m_sax_parser.F90:    character, pointer :: tempString(:)
+m_sax_parser.F90:      character, pointer :: attValue(:)
+m_sax_parser.F90:      character, pointer :: attValue(:), s(:)
+m_sax_parser.F90:      character, pointer :: attValue(:)
+m_sax_parser.F90:      character, pointer :: s(:)
+m_sax_parser.F90:      character, pointer :: s(:)
+m_sax_parser.F90:    character, dimension(:), pointer :: errmsg
+m_sax_reader.F90:    character, pointer :: temp(:)
+m_sax_reader.F90:    character, pointer :: s(:)
+m_sax_reader.F90:    character, pointer :: temp(:)
+m_sax_reader.F90:    character, pointer :: enc(:)
+m_sax_tokenizer.F90:    character, pointer :: tempString(:)
+m_sax_tokenizer.F90:    character, dimension(:), pointer :: s_out
+m_sax_tokenizer.F90:    character, dimension(:), pointer :: s_temp, s_temp2, s_ent, tempString
+m_sax_tokenizer.F90:    character, dimension(:), pointer :: s_out
+m_sax_tokenizer.F90:    character, dimension(:), pointer :: s_temp, s_temp2, s_ent, tempString
+m_sax_types.F90:    character, dimension(:), pointer :: token => null()
+m_sax_types.F90:    character, dimension(:), pointer :: content => null()
+m_sax_types.F90:    character, dimension(:), pointer :: name => null()
+m_sax_types.F90:    character, dimension(:), pointer :: attname => null()
+m_sax_types.F90:    character, dimension(:), pointer :: root_element => null()
+m_sax_types.F90:    character(len=1), dimension(:), pointer :: PublicId => null()
+m_sax_types.F90:    character(len=1), dimension(:), pointer :: SystemId => null()
+m_sax_types.F90:    character(len=1), dimension(:), pointer :: Ndata => null()
+m_sax_xml_source.F90:    character, dimension(:), pointer :: s
+m_sax_xml_source.F90:    character, pointer :: encoding(:) => null()
+m_sax_xml_source.F90:    character, pointer :: filename(:) => null()
+m_sax_xml_source.F90:    character, pointer :: next_chars(:) => null()   ! pushback buffer
+m_sax_xml_source.F90:    character, dimension(:), pointer :: nc
+m_sax_xml_source.F90:    character, pointer :: ch(:), ch2(:)
+m_dom_parse.f90:  character, pointer :: error(:) => null()
+m_dom_parse.f90:  character, pointer :: inEntity(:) => null()
+m_dom_parse.f90:    character, pointer :: baseURI(:)
+m_dom_utils.f90:    character, pointer :: attrvalue(:), tmp(:)
+m_dom_dom.F90:    character, pointer :: nodeName(:) => null() ! What was getByTagName run on?
+m_dom_dom.F90:    character, pointer :: localName(:) => null() ! What was getByTagNameNS run on?
+m_dom_dom.F90:    character, pointer :: namespaceURI(:) => null() ! What was getByTagNameNS run on?
+m_dom_dom.F90:    character, pointer :: inputEncoding(:) => null()
+m_dom_dom.F90:    character, pointer :: xmlEncoding(:) => null()
+m_dom_dom.F90:    character, pointer, dimension(:) :: namespaceURI => null()
+m_dom_dom.F90:    character, pointer, dimension(:) :: prefix => null()
+m_dom_dom.F90:    character, pointer, dimension(:) :: localName => null()
+m_dom_dom.F90:    character, pointer :: publicId(:) => null() ! doctype, entity, notation 
+m_dom_dom.F90:    character, pointer :: systemId(:) => null() ! doctype, entity, notation
+m_dom_dom.F90:    character, pointer :: notationName(:) => null() ! entity
+m_dom_dom.F90:    character, pointer, dimension(:)         :: nodeName => null()
+m_dom_dom.F90:    character, pointer, dimension(:)         :: nodeValue => null()
+m_dom_dom.F90:    character, pointer :: temp(:)
+m_dom_dom.F90:    character, pointer :: tmp(:)
+m_dom_dom.F90:    character, pointer :: tmp(:)
+m_dom_dom.F90:    character, pointer :: tmp(:)
+m_dom_dom.F90:    character, pointer :: tmp(:)
+m_dom_dom.F90:    character, pointer :: tmp(:)
+m_dom_dom.F90:    character, pointer :: tmp(:)
+fox_m_fsys_vstr.f90:  character, pointer :: chars(:) => null()
+fox_m_fsys_vstr.f90:    character, pointer            :: new_chars(:) => null()
+fox_m_fsys_vstr.f90:    character, pointer            :: old_chars(:) => null()
+fox_m_fsys_array_str.F90:    character, dimension(:), pointer :: vs
+fox_m_fsys_array_str.F90:    character, dimension(:), pointer :: s
+fox_m_fsys_array_str.F90:    character, dimension(:), pointer :: vs
+fox_m_fsys_array_str.F90:    character, dimension(:), pointer :: vs2
+fox_m_fsys_array_str.F90:    character, dimension(:), pointer :: vs
+fox_m_fsys_string_list.F90:    character, pointer :: s(:) => null()
+m_common_attrs.F90:    character(len=1), pointer, dimension(:) :: nsURI => null()
+m_common_attrs.F90:    character(len=1), pointer, dimension(:) :: localName => null()
+m_common_attrs.F90:    character(len=1), pointer, dimension(:) :: prefix => null()
+m_common_attrs.F90:    character(len=1), pointer, dimension(:) :: key => null()
+m_common_attrs.F90:    character(len=1), pointer, dimension(:) :: value => null()
+m_common_attrs.F90:    character, dimension(:), pointer           :: base => null()
+m_common_attrs.F90:    character, pointer :: value(:)
+m_common_attrs.F90:    character, pointer :: firstKey(:)
+m_common_content_model.F90:    character, pointer :: name(:) => null()
+m_common_element.F90:    character, pointer :: name(:) => null()
+m_common_element.F90:    character, pointer :: default(:) => null()
+m_common_element.F90:    character, pointer :: name(:) => null()
+m_common_element.F90:    character, pointer :: model(:) => null()
+m_common_element.F90:    character, pointer :: order(:), name(:), temp(:)
+m_common_element.F90:    character, pointer :: name(:), attType(:), default(:), value(:), temp(:)
+m_common_elstack.F90:    character, dimension(:), pointer          :: name => null()
+m_common_entities.F90:    character(len=1), dimension(:), pointer :: name => null()
+m_common_entities.F90:    character(len=1), dimension(:), pointer :: text => null()
+m_common_entities.F90:    character(len=1), dimension(:), pointer :: publicId => null()
+m_common_entities.F90:    character(len=1), dimension(:), pointer :: systemId => null()
+m_common_entities.F90:    character(len=1), dimension(:), pointer :: notation => null()
+m_common_entity_expand.F90:    character, dimension(:), pointer :: repl_new
+m_common_error.F90:    character, dimension(:), pointer :: msg => null()
+m_common_namespaces.F90:    character, dimension(:), pointer :: URI
+m_common_namespaces.F90:    character, dimension(:), pointer :: prefix
+m_common_namespaces.F90:    character, dimension(:), pointer :: QName, URIstring
+m_common_namespaces.F90:    character, pointer :: prefix(:)
+m_common_notations.F90:    character(len=1), dimension(:), pointer :: name
+m_common_notations.F90:    character(len=1), dimension(:), pointer :: systemID
+m_common_notations.F90:    character(len=1), dimension(:), pointer :: publicId
+m_common_struct.F90:    character, pointer :: encoding(:) => null()
+m_common_struct.F90:    character, pointer :: inputEncoding(:) => null()
+m_common_struct.F90:    character, pointer :: documentURI(:) => null()
+m_common_struct.F90:    character, pointer :: intSubset(:) => null()
+m_wxml_core.F90:    character, pointer        :: name(:)
+m_wxml_core.F90:    character, pointer :: type_(:)
