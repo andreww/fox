@@ -11,7 +11,14 @@ end type vs
 interface operator(==)
     module procedure comp_str_chars
     module procedure comp_chars_str
+    module procedure comp_str_str
 end interface operator(==)
+
+interface operator(/=)
+    module procedure diff_str_chars
+    module procedure diff_chars_str
+    module procedure diff_str_str
+end interface operator(/=)
 
 contains
 
@@ -142,4 +149,50 @@ pure function comp_chars_str(chars, my_vs) result(comp)
    comp = comp_str_chars(my_vs, chars)
 
 end function comp_chars_str
+
+pure function comp_str_str(my_vs_a, my_vs_b) result(comp)
+
+   type(vs), intent(in)         :: my_vs_a
+   type(vs), intent(in)         :: my_vs_b
+   logical                      :: comp
+
+! For now, this is implemented ny casting to chars
+! I think this can be optimied quite a lot.
+   comp = (as_chars(my_vs_a)==as_chars(my_vs_b))
+
+end function comp_str_str
+
+pure function diff_str_chars(my_vs, chars) result(comp)
+
+   type(vs), intent(in)         :: my_vs
+   character(len=*), intent(in) :: chars
+   logical                      :: comp
+
+! For now, this is implemented ny casting to chars
+! I think this can be optimied quite a lot.
+   comp = (as_chars(my_vs)/=chars)
+
+end function diff_str_chars
+
+pure function diff_chars_str(chars, my_vs) result(comp)
+
+   type(vs), intent(in)         :: my_vs
+   character(len=*), intent(in) :: chars
+   logical                      :: comp
+
+   comp = diff_str_chars(my_vs, chars)
+
+end function diff_chars_str
+
+pure function diff_str_str(my_vs_a, my_vs_b) result(comp)
+
+   type(vs), intent(in)         :: my_vs_a
+   type(vs), intent(in)         :: my_vs_b
+   logical                      :: comp
+
+! For now, this is implemented ny casting to chars
+! I think this can be optimied quite a lot.
+   comp = (as_chars(my_vs_a)/=as_chars(my_vs_b))
+
+end function diff_str_str
 end module vstr

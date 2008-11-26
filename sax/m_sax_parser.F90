@@ -796,8 +796,7 @@ contains
           if (fx%context /= CTXT_IN_CONTENT) then
             if (associated(fx%root_element)) then
               if (validCheck) then
-                !FIXME: AMW - overload /=
-                if (as_chars(fx%name)/=as_chars(fx%root_element)) then
+                if (fx%name/=fx%root_element) then
                   call add_error(fx%error_stack, "Root element name does not match document name")
                   goto 100
                 endif
@@ -829,8 +828,7 @@ contains
             ! only a single element in this doc
             if (associated(fx%root_element)) then
               if (validCheck) then
-                !FIXME: AMW - overload /=
-                if (as_chars(fx%name)/=as_chars(fx%root_element)) then
+                if (fx%name/=fx%root_element) then
                   call add_error(fx%error_stack, "Root element name does not match document name")
                   goto 100
                 endif
@@ -2456,7 +2454,7 @@ contains
           'Ill-formed entity')
         return
       endif
-      if (as_chars(fx%name)/=get_top_elstack(fx%elstack)) then
+      if (fx%name/=get_top_elstack(fx%elstack)) then
         call add_error(fx%error_stack, &
           "Mismatching close tag: trying to close "//get_top_elstack(fx%elstack) &
           //" with "//as_chars(fx%name))
