@@ -126,7 +126,7 @@ contains
     fx%state = ST_NULL
 
     if (associated(fx%token)) call destroy_vs(fx%token)
-    if (associated(fx%root_element)) deallocate(fx%root_element)
+    if (associated(fx%root_element)) call destroy_vs(fx%root_element)
 
     call destroy_error_stack(fx%error_stack)
     call destroy_elstack(fx%elstack)
@@ -144,8 +144,8 @@ contains
 
     if (associated(fx%token)) call destroy_vs(fx%token)
     if (associated(fx%content)) call destroy_vs(fx%content)
-    if (associated(fx%name)) deallocate(fx%name)
-    if (associated(fx%attname)) deallocate(fx%attname)
+    if (associated(fx%name)) call destroy_vs(fx%name)
+    if (associated(fx%attname)) call destroy_vs(fx%attname)
     if (associated(fx%publicId)) deallocate(fx%publicId)
     if (associated(fx%systemId)) deallocate(fx%systemId)
     if (associated(fx%Ndata)) deallocate(fx%Ndata)
@@ -375,7 +375,8 @@ contains
     logical :: validCheck, startInCharData_, processDTD, pe, nameOK, eof
     logical :: namespaces_, namespace_prefixes_, xmlns_uris_, externalEntity_
     integer :: i, iostat, temp_i, nextState, ignoreDepth, declSepValue
-    character, pointer :: tempString(:)
+    !FIXME: tempStringAMW is used to avoid a memory leak in this half-hacked version
+    character, pointer :: tempString(:), tempStringAMW(:)
     character :: dummy
     type(element_t), pointer :: elem
     type(attribute_t), pointer :: attDecl
@@ -636,14 +637,14 @@ contains
             call processingInstruction_handler(as_chars(fx%name), as_chars(fx%token))
             if (fx%state==ST_STOP) goto 100
           endif
-          deallocate(fx%name)
+          call destroy_vs(fx%name)
           nextState = ST_PI_END
         case (TOK_PI_END)
           if (present(processingInstruction_handler)) then
             call processingInstruction_handler(as_chars(fx%name), "")
             if (fx%state==ST_STOP) goto 100
           endif
-          deallocate(fx%name)
+          call destroy_vs(fx%name)
           if (fx%context==CTXT_IN_CONTENT) then
             nextState = ST_CHAR_IN_CONTENT
           else
@@ -687,7 +688,7 @@ contains
             call comment_handler(as_chars(fx%name))
             if (fx%state==ST_STOP) goto 100
           endif
-          deallocate(fx%name)
+          call destroy_vs(fx%name)
           if (fx%context==CTXT_IN_CONTENT) then
             nextState = ST_CHAR_IN_CONTENT
           else
@@ -784,7 +785,7 @@ contains
             call endCdata_handler
             if (fx%state==ST_STOP) goto 100
           endif
-          deallocate(fx%name)
+          call destroy_vs(fx%name)
           nextState = ST_CHAR_IN_CONTENT
         end select
 
@@ -801,7 +802,7 @@ contains
                   goto 100
                 endif
               endif
-              deallocate(fx%root_element)
+              call destroy_vs(fx%root_element)
             elseif (validCheck) then
               call add_error(fx%error_stack, "No DTD defined")
               goto 100
@@ -818,7 +819,7 @@ contains
           call open_tag
           if (in_error(fx%error_stack)) goto 100
           if (fx%state==ST_STOP) goto 100
-          deallocate(fx%name)
+          call destroy_vs(fx%name)
           nextState = ST_CHAR_IN_CONTENT
 
         case (TOK_END_TAG_CLOSE)
@@ -834,7 +835,7 @@ contains
                   goto 100
                 endif
               endif
-              deallocate(fx%root_element)
+              call destroy_vs(fx%root_element)
             elseif (validCheck) then
               call add_error(fx%error_stack, "No DTD defined")
               goto 100
@@ -852,7 +853,7 @@ contains
           call close_tag
           if (in_error(fx%error_stack)) goto 100
           if (fx%state==ST_STOP) goto 100
-          deallocate(fx%name)
+          call destroy_vs(fx%name)
           if (fx%context/=CTXT_IN_CONTENT) then
             fx%well_formed = .true.
             fx%context = CTXT_AFTER_CONTENT
@@ -898,11 +899,16 @@ contains
         select case (fx%tokenType)
         case (TOK_CHAR)
           !First, expand all entities:
-          !FIXME: AMW - fix this nasty doubble casting.
-          tempString => normalize_attribute_text(fx, vs_str_alloc(as_chars(fx%token)))
+          !FIXME: AMW - fix this nasty doubble casting. And the AMW temp sting is to avoid leaking memory (or haveing to deallocate inside of normalize function.
+          tempStringAMW => vs_str_alloc(as_chars(fx%token))
+          tempString => normalize_attribute_text(fx, tempStringAMW)
+          deallocate(tempStringAMW)
           call destroy_vs(fx%token)
           !FIXME: AMW - nasty casting!
           fx%token => new_vs(init_chars=str_vs(tempString))
+          !FIXME: AMW - have to destroy tempString to avoid a memory leak
+          ! so the => null isn't needed at the mo - it will be later.
+          deallocate(tempString)
           tempString => null()
           !If this attribute is not CDATA, we must process further;
           if (associated(attDecl)) then
@@ -927,7 +933,7 @@ contains
               att_value_normalize(as_chars(fx%token)), itype=temp_i, &
               declared=.true.)
           endif
-          deallocate(fx%attname)
+          call destroy_vs(fx%attname)
           nextState = ST_IN_TAG
         end select
 
@@ -1160,7 +1166,7 @@ contains
           call close_tag
           if (in_error(fx%error_stack)) goto 100
           if (fx%state==ST_STOP) goto 100
-          deallocate(fx%name)
+          call destroy_vs(fx%name)
           if (is_empty(fx%elstack)) then
             if (startInCharData_) then
               fx%well_formed = .true.
@@ -1238,6 +1244,9 @@ contains
           if (checkPublicId(as_chars(fx%token))) then
             ! FIXME: AMW nasty cast.
             fx%publicId => vs_str_alloc(as_chars(fx%token))
+            ! FIXME: AME - this destroy should go away when 
+            ! publicId is a varstr
+            call destroy_vs(fx%token)
             fx%token => null()
             nextState = ST_DOC_SYSTEM
           else
@@ -1252,6 +1261,8 @@ contains
         case (TOK_CHAR)
           !FIXME: AMW - nasty cast followed by a memory leak? 
           fx%systemId => vs_str_alloc(as_chars(fx%token))
+          !FIXME: AMW - destroy will go away
+          call destroy_vs(fx%token)
           fx%token => null()
           nextState = ST_DOC_DECL
         end select
@@ -1732,14 +1743,14 @@ contains
             call processingInstruction_handler(as_chars(fx%name), as_chars(fx%token))
             if (fx%state==ST_STOP) return
           endif
-          deallocate(fx%name)
+          call destroy_vs(fx%name)
           nextDTDState = ST_DTD_PI_END
         case (TOK_PI_END)
           if (present(processingInstruction_handler)) then
             call processingInstruction_handler(as_chars(fx%name), '')
             if (fx%state==ST_STOP) return
           endif
-          deallocate(fx%name)
+          call destroy_vs(fx%name)
           nextDTDState = ST_DTD_SUBSET
         end select
 
@@ -1785,7 +1796,7 @@ contains
             call comment_handler(as_chars(fx%name))
             if (fx%state==ST_STOP) return
           endif
-          deallocate(fx%name)
+          call destroy_vs(fx%name)
           nextDTDState = ST_DTD_SUBSET
         end select
 
@@ -1976,7 +1987,7 @@ contains
               if (fx%state==ST_STOP) return
             endif
           endif
-          deallocate(fx%name)
+          call destroy_vs(fx%name)
           nextDTDState = ST_DTD_SUBSET
         end select
 
@@ -2068,6 +2079,8 @@ contains
           if (checkPublicId(as_chars(fx%token))) then
             !FIXME - AMW, need to avoid this:
             fx%publicId => vs_str_alloc(as_chars(fx%token))
+            !FIXME - AMW destroy will go
+            call destroy_vs(fx%token)
             fx%token => null()
             nextDTDState = ST_DTD_ENTITY_SYSTEM
           else
@@ -2085,6 +2098,8 @@ contains
         case (TOK_CHAR)
           !FIXME: AMW - yuck.
           fx%systemId => vs_str_alloc(as_chars(fx%token))
+          !FIXME: AMW - destroy will go
+          call destroy_vs(fx%token)
           fx%token => null()
           nextDTDState = ST_DTD_ENTITY_NDATA
         case default
@@ -2109,8 +2124,8 @@ contains
             if (in_error(fx%error_stack)) return
             if (fx%state==ST_STOP) return
           endif
-          deallocate(fx%name)
-          if (associated(fx%attname)) deallocate(fx%attname)
+          call destroy_vs(fx%name)
+          if (associated(fx%attname)) call destroy_vs(fx%attname)
           if (associated(fx%systemId)) deallocate(fx%systemId)
           if (associated(fx%publicId)) deallocate(fx%publicId)
           if (associated(fx%Ndata)) deallocate(fx%Ndata)
@@ -2147,6 +2162,8 @@ contains
           endif
           !FIXME: AMW - yuck!
           fx%Ndata => vs_str_alloc(as_chars(fx%token))
+          !FIXME: AMW destroy will have to go.
+          call destroy_vs(fx%token)
           fx%token => null()
           nextDTDState = ST_DTD_ENTITY_END
         case default
@@ -2171,8 +2188,8 @@ contains
             if (in_error(fx%error_stack)) return
             if (fx%state==ST_STOP) return
           endif
-          deallocate(fx%name)
-          if (associated(fx%attname)) deallocate(fx%attname)
+          call destroy_vs(fx%name)
+          if (associated(fx%attname)) call destroy_vs(fx%attname)
           if (associated(fx%systemId)) deallocate(fx%systemId)
           if (associated(fx%publicId)) deallocate(fx%publicId)
           if (associated(fx%Ndata)) deallocate(fx%Ndata)
@@ -2224,8 +2241,9 @@ contains
         !write(*,*)'ST_DTD_NOTATION_SYSTEM'
         select case (fx%tokenType)
         case (TOK_CHAR)
-          !FIXME: AMW - yuck.
+          !FIXME: AMW - yuck. and destroy will go.
           fx%systemId => vs_str_alloc(as_chars(fx%token))
+          call destroy_vs(fx%token)
           fx%token => null()
           nextDTDState = ST_DTD_NOTATION_END
         case default
@@ -2238,8 +2256,9 @@ contains
         select case (fx%tokenType)
         case (TOK_CHAR)
           if (checkPublicId(as_chars(fx%token))) then
-            !FIXME - AMW - yuck! 
+            !FIXME - AMW - yuck! and loose the destroy
             fx%publicId => vs_str_alloc(as_chars(fx%token))
+            call destroy_vs(fx%token)
             fx%token => null()
             nextDTDState = ST_DTD_NOTATION_PUBLIC_2
           else
@@ -2274,12 +2293,13 @@ contains
               if (fx%state==ST_STOP) return
             endif
           endif
-          deallocate(fx%name)
+          call destroy_vs(fx%name)
           deallocate(fx%publicId)
           nextDTDState = ST_DTD_SUBSET
         case (TOK_CHAR)
-          !FIXME - AMW Yuck
+          !FIXME - AMW Yuck and loose the destroy
           fx%systemId => vs_str_alloc(as_chars(fx%token))
+          call destroy_vs(fx%token)
           fx%token => null()
           nextDTDState = ST_DTD_NOTATION_END
         end select
@@ -2335,7 +2355,7 @@ contains
           endif
           if (associated(fx%publicId)) deallocate(fx%publicId)
           deallocate(fx%systemId)
-          deallocate(fx%name)
+          call destroy_vs(fx%name)
           nextDTDState = ST_DTD_SUBSET
         case default
           call add_error(fx%error_stack, "Unexpected token in NOTATION")
