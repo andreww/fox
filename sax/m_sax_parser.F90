@@ -2054,9 +2054,13 @@ contains
                  & vs_str_alloc(as_chars(fx%token)), fb)
           endif
           ! FIXME: AMW - loose the doubble casting!
+          tempStringAMW => expand_entity_value_alloc(tempString, fx%xds, fx%error_stack)
           fx%attname => new_vs( &
-              & init_chars=str_vs(expand_entity_value_alloc(tempString, fx%xds, fx%error_stack)))
+              & init_chars=str_vs(tempStringAMW))
+          deallocate(tempStringAMW)
           if (reading_main_file(fb)) then
+            ! FIXME: AMW This will go when I've sorted out vstr for DTD:
+            deallocate(tempString)
             tempString => null()
           else
             deallocate(tempString)
