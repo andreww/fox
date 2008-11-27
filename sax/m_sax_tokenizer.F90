@@ -11,7 +11,7 @@ module m_sax_tokenizer
   use m_common_namecheck, only: checkName, checkCharacterEntityReference
 
   !FIXME: AMW - module name and privicy 
-  use vstr
+  use fox_m_fsys_vstr
 
   use m_sax_reader, only: file_buffer_t, open_new_file, pop_buffer_stack, &
     push_chars, get_character, get_all_characters, &

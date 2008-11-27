@@ -11,7 +11,7 @@ module m_sax_types
 
   use m_sax_reader, only: file_buffer_t
 
-  use vstr
+  use fox_m_fsys_vstr, only: vs
 
   implicit none
 

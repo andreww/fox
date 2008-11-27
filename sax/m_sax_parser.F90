@@ -49,7 +49,7 @@ module m_sax_parser
     expand_pe_text
   use m_sax_types ! everything, really
 
-  use vstr
+  use fox_m_fsys_vstr
 
   implicit none
   private
@@ -774,8 +774,7 @@ contains
             call startCdata_handler
             if (fx%state==ST_STOP) goto 100
           endif
-          ! FIXME: AMW - overload len()
-          if (fx%name%str_len>0) then
+          if (len(fx%name)>0) then
             if (present(characters_handler)) then
               call characters_handler(as_chars(fx%name))
               if (fx%state==ST_STOP) goto 100
@@ -939,8 +938,7 @@ contains
         !write(*,*)'ST_CHAR_IN_CONTENT'
         select case (fx%tokenType)
         case (TOK_CHAR)
-          !iFIXME: AMW  Should I provide a len function for below?
-          if (fx%token%str_len>0) then
+          if (len(fx%token)>0) then
             if (validCheck) then
               if (elementContent(fx%elstack)) then
                 if (verify(as_chars(fx%token), XML_WHITESPACE)==0) then
@@ -1552,7 +1550,7 @@ contains
       if (startInChardata_) then
         if (fx%well_formed) then
           if (fx%state==ST_CHAR_IN_CONTENT.and.associated(fx%token)) then
-            if (fx%token%str_len>0.and.present(characters_handler)) &
+            if (len(fx%token)>0.and.present(characters_handler)) &
               call characters_handler(as_chars(fx%token))
           endif
         else

@@ -1,8 +1,20 @@
-module vstr
+module fox_m_fsys_vstr
 
 implicit none
 
+private
+
+public :: vs
+public :: new_vs
+public :: destroy_vs
+public :: add_chars
+public :: as_chars
+public :: operator(==)
+public :: operator(/=)
+public :: len
+
 type vs
+    private
     character, pointer :: chars(:) => null()
     integer :: str_len
     integer :: arr_len
@@ -19,6 +31,10 @@ interface operator(/=)
     module procedure diff_chars_str
     module procedure diff_str_str
 end interface operator(/=)
+
+interface len
+    module procedure vs_len
+end interface len
 
 contains
 
@@ -98,6 +114,16 @@ subroutine destroy_vs(my_vs)
     deallocate(my_vs)
 
 end subroutine destroy_vs
+
+function vs_len(my_vs) result (my_len)
+
+
+    type(vs), intent(in)          :: my_vs
+    integer                       :: my_len
+
+    my_len = my_vs%str_len 
+
+end function vs_len
 
 subroutine grow_vs(my_vs, newsize)
 
@@ -195,4 +221,5 @@ pure function diff_str_str(my_vs_a, my_vs_b) result(comp)
    comp = (as_chars(my_vs_a)/=as_chars(my_vs_b))
 
 end function diff_str_str
-end module vstr
+
+end module fox_m_fsys_vstr
