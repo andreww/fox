@@ -2,6 +2,7 @@ module m_common_entity_expand
 
 #ifndef DUMMYLIB
   use fox_m_fsys_array_str, only: str_vs, vs_str
+  use fox_m_fsys_vstr, only: new_vs, add_chars, vs
   use m_common_entities, only: expand_char_entity
   use m_common_error, only: error_stack, add_error
   use m_common_namecheck, only: checkName, checkCharacterEntityReference, &
@@ -27,16 +28,17 @@ contains
     !
     ! This is only ever called from the SAX parser
     ! (might it be called from WXML?)
-    ! so input & output is with character arrays, not strings.
+    ! so output is a vstr. Input is currently as a character array 
+    ! for historical reasons. 
     character, dimension(:), intent(in) :: repl
     type(xml_doc_state), intent(in) :: xds
     type(error_stack), intent(inout) :: stack
-    character, dimension(:), pointer :: repl_new
+    type(vs), pointer :: repl_new
 
     character, dimension(size(repl)) :: repl_temp
     integer :: i, i2, j
     
-    allocate(repl_new(0))
+    repl_new => new_vs()
     if (index(str_vs(repl),'%')/=0) then
       call add_error(stack, "Not allowed % in internal subset general entity value")
       return
@@ -76,9 +78,7 @@ contains
       endif
     enddo
 
-    deallocate(repl_new)
-    allocate(repl_new(i2-1))
-    repl_new = repl_temp(:i2-1)
+    call add_chars(repl_new, str_vs(repl_temp(:i2-1)))
 
   end function expand_entity_value_alloc
 

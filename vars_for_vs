@@ -82,7 +82,7 @@ m_common_entities.F90:    character(len=1), dimension(:), pointer :: text => nul
 m_common_entities.F90:    character(len=1), dimension(:), pointer :: publicId => null()
 m_common_entities.F90:    character(len=1), dimension(:), pointer :: systemId => null()
 m_common_entities.F90:    character(len=1), dimension(:), pointer :: notation => null()
-m_common_entity_expand.F90:    character, dimension(:), pointer :: repl_new
+m_common_entity_expand.F90:    character, dimension(:), pointer :: repl_new				DONE
 m_common_error.F90:    character, dimension(:), pointer :: msg => null()
 m_common_namespaces.F90:    character, dimension(:), pointer :: URI
 m_common_namespaces.F90:    character, dimension(:), pointer :: prefix
