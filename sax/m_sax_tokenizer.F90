@@ -43,8 +43,7 @@ contains
     xv = fx%xds%xml_version
 
     if (associated(fx%token)) call destroy_vs(fx%token)
-    !FIXME: AMW - should I preallocate more space (with min_size=10)?
-    fx%token => new_vs(init_chars="")
+    fx%token => new_vs()
     if (fx%nextTokenType/=TOK_NULL) then
       eof = .false.
       fx%tokenType = fx%nextTokenType
@@ -113,7 +112,6 @@ contains
             fx%tokenType = TOK_OPEN_SB
           elseif (verify(c,upperCase)==0) then
             call destroy_vs(fx%token)
-            !FIXME: AMW - do we need a minimum size?
             fx%token => new_vs(init_chars=c)
           else
             call add_error(fx%error_stack, "Unexpected character after <!")
@@ -137,7 +135,6 @@ contains
           call add_chars(fx%token, c)
         else
           fx%tokenType = TOK_NAME
-          !FIXME: AMW - what is this? characters so it's not my problem?
           if (c=="?") call push_chars(fb, c)
         endif
 
@@ -445,7 +442,7 @@ contains
             if (verify(c, "'""")==0) then
               q = c
               call destroy_vs(fx%token)
-              fx%token => new_vs(init_chars="")
+              fx%token => new_vs()
               ws_discard = .false.
             elseif (c=="[") then
               fx%tokenType = TOK_OPEN_SB
@@ -772,9 +769,9 @@ contains
         else
           if (associated(fx%content)) then
             call destroy_vs(fx%token)
-            !FIXME: AM - fx%content needs to be a vs
-            fx%token => new_vs(init_chars=as_chars(fx%content)//c)
-            call destroy_vs(fx%content)
+            fx%token => fx%content
+            fx%content => null()
+            call add_chars(fx%token, c)
           else
             call add_chars(fx%token, c)
           endif
@@ -795,8 +792,9 @@ contains
           fx%nextTokenType = TOK_END_TAG
         elseif (associated(fx%content)) then
           call destroy_vs(fx%token)
-          fx%token => new_vs(init_chars=as_chars(fx%content)//c)
-          call destroy_vs(fx%content)
+          fx%token => fx%content
+          fx%content => null()
+          call add_chars(fx%token, c)
         else
           call add_chars(fx%token, c)
         endif
