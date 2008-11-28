@@ -20,7 +20,7 @@ m_sax_types.F90:    character, dimension(:), pointer :: name => null()				DONE
 m_sax_types.F90:    character, dimension(:), pointer :: attname => null()			DONE
 m_sax_types.F90:    character, dimension(:), pointer :: root_element => null()			DONE
 m_sax_types.F90:    character(len=1), dimension(:), pointer :: PublicId => null()		DONE
-m_sax_types.F90:    character(len=1), dimension(:), pointer :: SystemId => null()
+m_sax_types.F90:    character(len=1), dimension(:), pointer :: SystemId => null()		DONE
 m_sax_types.F90:    character(len=1), dimension(:), pointer :: Ndata => null()
 m_sax_xml_source.F90:    character, dimension(:), pointer :: s
 m_sax_xml_source.F90:    character, pointer :: encoding(:) => null()
