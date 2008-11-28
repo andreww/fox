@@ -146,7 +146,7 @@ contains
     if (associated(fx%content)) call destroy_vs(fx%content)
     if (associated(fx%name)) call destroy_vs(fx%name)
     if (associated(fx%attname)) call destroy_vs(fx%attname)
-    if (associated(fx%publicId)) deallocate(fx%publicId)
+    if (associated(fx%publicId)) call destroy_vs(fx%publicId)
     if (associated(fx%systemId)) deallocate(fx%systemId)
     if (associated(fx%Ndata)) deallocate(fx%Ndata)
 
@@ -1238,11 +1238,7 @@ contains
         select case (fx%tokenType)
         case (TOK_CHAR)
           if (checkPublicId(as_chars(fx%token))) then
-            ! FIXME: AMW nasty cast.
-            fx%publicId => vs_str_alloc(as_chars(fx%token))
-            ! FIXME: AME - this destroy should go away when 
-            ! publicId is a varstr
-            call destroy_vs(fx%token)
+            fx%publicId => fx%token
             fx%token => null()
             nextState = ST_DOC_SYSTEM
           else
@@ -1270,7 +1266,7 @@ contains
           if (present(startDTD_handler)) then
             if (associated(fx%publicId)) then
               call startDTD_handler(as_chars(fx%root_element), &
-                publicId=str_vs(fx%publicId), systemId=str_vs(fx%systemId))
+                publicId=as_chars(fx%publicId), systemId=str_vs(fx%systemId))
             elseif (associated(fx%systemId)) then
               call startDTD_handler(as_chars(fx%root_element), &
                 publicId="", systemId=str_vs(fx%systemId))
@@ -1283,15 +1279,15 @@ contains
             extSubsetURI => parseURI(str_vs(fx%systemId))
             deallocate(fx%systemId)
           endif
-          if (associated(fx%publicId)) deallocate(fx%publicId)
+          if (associated(fx%publicId)) call destroy_vs(fx%publicId)
           fx%inIntSubset = .true.
           wf_stack(1) = wf_stack(1) + 1
           nextState = ST_IN_SUBSET
         case (TOK_END_TAG)
           if (present(startDTD_handler)) then
             if (associated(fx%publicId)) then
-              call startDTD_handler(as_chars(fx%root_element), publicId=str_vs(fx%publicId), systemId=str_vs(fx%systemId))
-              deallocate(fx%publicId)
+              call startDTD_handler(as_chars(fx%root_element), publicId=as_chars(fx%publicId), systemId=str_vs(fx%systemId))
+              call destroy_vs(fx%publicId)
             elseif (associated(fx%systemId)) then
               call startDTD_handler(as_chars(fx%root_element), publicId="", systemId=str_vs(fx%systemId))
             else
@@ -1337,7 +1333,7 @@ contains
             nextState = ST_MISC
           endif
           if (associated(fx%systemId)) deallocate(fx%systemId)
-          if (associated(fx%publicId)) deallocate(fx%publicId)
+          if (associated(fx%publicId)) call destroy_vs(fx%publicId)
         case default
           call add_error(fx%error_stack, "Unexpected token in DTD")
           goto 100
@@ -2077,10 +2073,7 @@ contains
         select case (fx%tokenType)
         case (TOK_CHAR)
           if (checkPublicId(as_chars(fx%token))) then
-            !FIXME - AMW, need to avoid this:
-            fx%publicId => vs_str_alloc(as_chars(fx%token))
-            !FIXME - AMW destroy will go
-            call destroy_vs(fx%token)
+            fx%publicId => fx%token
             fx%token => null()
             nextDTDState = ST_DTD_ENTITY_SYSTEM
           else
@@ -2127,7 +2120,7 @@ contains
           call destroy_vs(fx%name)
           if (associated(fx%attname)) call destroy_vs(fx%attname)
           if (associated(fx%systemId)) deallocate(fx%systemId)
-          if (associated(fx%publicId)) deallocate(fx%publicId)
+          if (associated(fx%publicId)) call destroy_vs(fx%publicId)
           if (associated(fx%Ndata)) deallocate(fx%Ndata)
           nextDTDState = ST_DTD_SUBSET
         case (TOK_NAME)
@@ -2191,7 +2184,7 @@ contains
           call destroy_vs(fx%name)
           if (associated(fx%attname)) call destroy_vs(fx%attname)
           if (associated(fx%systemId)) deallocate(fx%systemId)
-          if (associated(fx%publicId)) deallocate(fx%publicId)
+          if (associated(fx%publicId)) call destroy_vs(fx%publicId)
           if (associated(fx%Ndata)) deallocate(fx%Ndata)
           nextDTDState = ST_DTD_SUBSET
         case default
@@ -2256,9 +2249,7 @@ contains
         select case (fx%tokenType)
         case (TOK_CHAR)
           if (checkPublicId(as_chars(fx%token))) then
-            !FIXME - AMW - yuck! and loose the destroy
-            fx%publicId => vs_str_alloc(as_chars(fx%token))
-            call destroy_vs(fx%token)
+            fx%publicId => fx%token
             fx%token => null()
             nextDTDState = ST_DTD_NOTATION_PUBLIC_2
           else
@@ -2287,14 +2278,14 @@ contains
           endif
           wf_stack(1) = wf_stack(1) - 1
           if (processDTD) then
-            call add_notation(fx%nlist, as_chars(fx%name), publicId=str_vs(fx%publicId))
+            call add_notation(fx%nlist, as_chars(fx%name), publicId=as_chars(fx%publicId))
             if (present(notationDecl_handler)) then
-              call notationDecl_handler(as_chars(fx%name), publicId=str_vs(fx%publicId), systemId="")
+              call notationDecl_handler(as_chars(fx%name), publicId=as_chars(fx%publicId), systemId="")
               if (fx%state==ST_STOP) return
             endif
           endif
           call destroy_vs(fx%name)
-          deallocate(fx%publicId)
+          call destroy_vs(fx%publicId)
           nextDTDState = ST_DTD_SUBSET
         case (TOK_CHAR)
           !FIXME - AMW Yuck and loose the destroy
@@ -2337,10 +2328,10 @@ contains
             call destroyURI(URIref)
             if (associated(fx%publicId)) then
               call add_notation(fx%nlist, as_chars(fx%name), &
-                publicId=str_vs(fx%publicId), systemId=str_vs(fx%systemId))
+                publicId=as_chars(fx%publicId), systemId=str_vs(fx%systemId))
               if (present(notationDecl_handler)) then
                 call notationDecl_handler(as_chars(fx%name), &
-                publicId=str_vs(fx%publicId), systemId=str_vs(fx%systemId))
+                publicId=as_chars(fx%publicId), systemId=str_vs(fx%systemId))
                 if (fx%state==ST_STOP) return
               endif
             else
@@ -2353,7 +2344,7 @@ contains
               endif
             endif
           endif
-          if (associated(fx%publicId)) deallocate(fx%publicId)
+          if (associated(fx%publicId)) call destroy_vs(fx%publicId)
           deallocate(fx%systemId)
           call destroy_vs(fx%name)
           nextDTDState = ST_DTD_SUBSET
@@ -2526,11 +2517,11 @@ contains
               call destroyURI(URIref)
               if (associated(fx%publicId)) then
                 call register_external_PE(fx%xds, name=as_chars(fx%name), &
-                  systemId=str_vs(fx%systemId), publicId=str_vs(fx%publicId), &
+                  systemId=str_vs(fx%systemId), publicId=as_chars(fx%publicId), &
                   wfc=wfc, baseURI=newURI)
                 if (present(externalEntityDecl_handler)) &
                   call externalEntityDecl_handler('%'//as_chars(fx%name), &
-                  systemId=str_vs(fx%systemId), publicId=str_vs(fx%publicId))
+                  systemId=str_vs(fx%systemId), publicId=as_chars(fx%publicId))
               else
                 call register_external_PE(fx%xds, name=as_chars(fx%name), &
                   systemId=str_vs(fx%systemId), &
@@ -2567,12 +2558,12 @@ contains
               call destroyURI(URIref)
               if (associated(fx%publicId).and.associated(fx%Ndata)) then
                 call register_external_GE(fx%xds, name=as_chars(fx%name), &
-                  systemId=str_vs(fx%systemId), publicId=str_vs(fx%publicId), &
+                  systemId=str_vs(fx%systemId), publicId=as_chars(fx%publicId), &
                   notation=str_vs(fx%Ndata), &
                   wfc=wfc, baseURI=newURI)
                 if (present(unparsedEntityDecl_handler)) &
                   call unparsedEntityDecl_handler(as_chars(fx%name), &
-                  systemId=str_vs(fx%systemId), publicId=str_vs(fx%publicId), &
+                  systemId=str_vs(fx%systemId), publicId=as_chars(fx%publicId), &
                   notation=str_vs(fx%Ndata))
               elseif (associated(fx%Ndata)) then
                 call register_external_GE(fx%xds, name=as_chars(fx%name), &
@@ -2583,11 +2574,11 @@ contains
                   systemId=str_vs(fx%systemId), notation=str_vs(fx%Ndata))
               elseif (associated(fx%publicId)) then
                 call register_external_GE(fx%xds, name=as_chars(fx%name), &
-                  systemId=str_vs(fx%systemId), publicId=str_vs(fx%publicId), &
+                  systemId=str_vs(fx%systemId), publicId=as_chars(fx%publicId), &
                   wfc=wfc, baseURI=newURI)
                 if (present(externalEntityDecl_handler)) &
                   call externalEntityDecl_handler(as_chars(fx%name), &
-                  systemId=str_vs(fx%systemId), publicId=str_vs(fx%publicId))
+                  systemId=str_vs(fx%systemId), publicId=as_chars(fx%publicId))
               else
                 call register_external_GE(fx%xds, name=as_chars(fx%name), &
                   systemId=str_vs(fx%systemId), wfc=wfc, baseURI=newURI)
