@@ -148,7 +148,7 @@ contains
     if (associated(fx%attname)) call destroy_vs(fx%attname)
     if (associated(fx%publicId)) call destroy_vs(fx%publicId)
     if (associated(fx%systemId)) call destroy_vs(fx%systemId)
-    if (associated(fx%Ndata)) deallocate(fx%Ndata)
+    if (associated(fx%Ndata)) call destroy_vs(fx%Ndata)
 
   end subroutine sax_parser_destroy
 
@@ -2117,7 +2117,7 @@ contains
           if (associated(fx%attname)) call destroy_vs(fx%attname)
           if (associated(fx%systemId)) call destroy_vs(fx%systemId)
           if (associated(fx%publicId)) call destroy_vs(fx%publicId)
-          if (associated(fx%Ndata)) deallocate(fx%Ndata)
+          if (associated(fx%Ndata)) call destroy_vs(fx%Ndata)
           nextDTDState = ST_DTD_SUBSET
         case (TOK_NAME)
           if (fx%token=='NDATA') then
@@ -2149,10 +2149,7 @@ contains
             call add_error(fx%error_stack, "Invalid name for Notation")
             return
           endif
-          !FIXME: AMW - yuck!
-          fx%Ndata => vs_str_alloc(as_chars(fx%token))
-          !FIXME: AMW destroy will have to go.
-          call destroy_vs(fx%token)
+          fx%Ndata => fx%token
           fx%token => null()
           nextDTDState = ST_DTD_ENTITY_END
         case default
@@ -2181,7 +2178,7 @@ contains
           if (associated(fx%attname)) call destroy_vs(fx%attname)
           if (associated(fx%systemId)) call destroy_vs(fx%systemId)
           if (associated(fx%publicId)) call destroy_vs(fx%publicId)
-          if (associated(fx%Ndata)) deallocate(fx%Ndata)
+          if (associated(fx%Ndata)) call destroy_vs(fx%Ndata)
           nextDTDState = ST_DTD_SUBSET
         case default
           call add_error(fx%error_stack, "Unexpected token at end of ENTITY")
@@ -2551,19 +2548,19 @@ contains
               if (associated(fx%publicId).and.associated(fx%Ndata)) then
                 call register_external_GE(fx%xds, name=as_chars(fx%name), &
                   systemId=as_chars(fx%systemId), publicId=as_chars(fx%publicId), &
-                  notation=str_vs(fx%Ndata), &
+                  notation=as_chars(fx%Ndata), &
                   wfc=wfc, baseURI=newURI)
                 if (present(unparsedEntityDecl_handler)) &
                   call unparsedEntityDecl_handler(as_chars(fx%name), &
                   systemId=as_chars(fx%systemId), publicId=as_chars(fx%publicId), &
-                  notation=str_vs(fx%Ndata))
+                  notation=as_chars(fx%Ndata))
               elseif (associated(fx%Ndata)) then
                 call register_external_GE(fx%xds, name=as_chars(fx%name), &
-                  systemId=as_chars(fx%systemId), notation=str_vs(fx%Ndata), &
+                  systemId=as_chars(fx%systemId), notation=as_chars(fx%Ndata), &
                   wfc=wfc, baseURI=newURI)
                 if (present(unparsedEntityDecl_handler)) &
                   call unparsedEntityDecl_handler(as_chars(fx%name), publicId="", &
-                  systemId=as_chars(fx%systemId), notation=str_vs(fx%Ndata))
+                  systemId=as_chars(fx%systemId), notation=as_chars(fx%Ndata))
               elseif (associated(fx%publicId)) then
                 call register_external_GE(fx%xds, name=as_chars(fx%name), &
                   systemId=as_chars(fx%systemId), publicId=as_chars(fx%publicId), &
