@@ -36,6 +36,11 @@ interface len
     module procedure vs_len
 end interface len
 
+interface as_chars
+    module procedure as_chars_full
+    module procedure as_chars_subset
+end interface as_chars
+
 contains
 
 function new_vs(min_size, init_chars) result(my_vs)
@@ -92,7 +97,7 @@ subroutine add_chars(my_vs, chars)
 
 end subroutine add_chars   
 
-pure function  as_chars(my_vs) result(chars)
+pure function  as_chars_full(my_vs) result(chars)
  
     type(vs),                   intent(in)    :: my_vs
     character(len=my_vs%str_len)              :: chars
@@ -102,7 +107,29 @@ pure function  as_chars(my_vs) result(chars)
        chars(i:i) = my_vs%chars(i)
     enddo
 
-end function as_chars
+end function as_chars_full
+
+function as_chars_subset(my_vs, first, last) result(chars)
+! Cannot be pure with the sanity tests...
+
+
+    type(vs),                   intent(in)    :: my_vs
+    integer,                    intent(in)    :: first
+    integer,                    intent(in)    :: last
+    character(len=last-first+1)               :: chars
+    integer                                   :: i, j
+
+    if (last.lt.1) STOP "as_chars_subset index must be positive"
+    if (first.lt.1) STOP "as_chars_subset index must be positive"
+    if (first.gt.last) STOP "as_chars_subset backwards indes?"
+    if ((last-first+1).gt.my_vs%str_len) STOP "as_chars_subset Substring too long"
+
+    j = 1
+    do i = first, last
+        chars(j:j) = my_vs%chars(i)
+    enddo
+
+end function as_chars_subset
 
 subroutine destroy_vs(my_vs)
 
@@ -115,7 +142,7 @@ subroutine destroy_vs(my_vs)
 
 end subroutine destroy_vs
 
-function vs_len(my_vs) result (my_len)
+pure function vs_len(my_vs) result (my_len)
 
 
     type(vs), intent(in)          :: my_vs
