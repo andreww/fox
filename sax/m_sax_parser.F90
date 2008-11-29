@@ -377,6 +377,7 @@ contains
     integer :: i, iostat, temp_i, nextState, ignoreDepth, declSepValue
     !FIXME: tempStringAMW is used to avoid a memory leak in this half-hacked version
     character, pointer :: tempString(:), tempStringAMW(:)
+    type(vs), pointer :: tempVString
     character :: dummy
     type(element_t), pointer :: elem
     type(attribute_t), pointer :: attDecl
@@ -2041,20 +2042,19 @@ contains
           endif
         case (TOK_CHAR)
           if (reading_main_file(fb)) then
-            !FIXME: AMW - bit crap to access the internal data below.
-            tempString => vs_str_alloc(as_chars(fx%token))
+            tempVString => fx%token
           else
             !FIXME: AMW - bit crap to access the internal data below.
-            tempString => expand_pe_text(fx, &
-                 & vs_str_alloc(as_chars(fx%token)), fb)
+            !FIXME: AMW - this must leak memory (how do I deallocate the 
+            !             vs_str_alloc? And added another?
+            tempVString => new_vs(init_chars=str_vs(expand_pe_text(fx, &
+                 & vs_str_alloc(as_chars(fx%token)), fb)))
           endif
-          fx%attname => expand_entity_value_alloc(tempString, fx%xds, fx%error_stack)
+          fx%attname => expand_entity_value_alloc(tempVString, fx%xds, fx%error_stack)
           if (reading_main_file(fb)) then
-            ! FIXME: AMW This will go when I've sorted out vstr for DTD:
-            deallocate(tempString)
-            tempString => null()
+            tempVString => null()
           else
-            deallocate(tempString)
+            call destroy_vs(tempVString)
           endif
           if (in_error(fx%error_stack)) return
           nextDTDState = ST_DTD_ENTITY_END
