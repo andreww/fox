@@ -858,10 +858,11 @@ contains
 
   recursive function normalize_attribute_text(fx, s_in) result(s_out)
     type(sax_parser_t), intent(inout) :: fx
-    character, dimension(:), intent(in) :: s_in
-    character, dimension(:), pointer :: s_out
+    character(len=*), intent(in) :: s_in
+    type(vs), pointer :: s_out
 
-    character, dimension(:), pointer :: s_temp, s_temp2, s_ent, tempString
+    character, dimension(:), pointer :: s_temp, s_temp2, tempString
+    type(vs), pointer :: s_ent
     character :: dummy
     integer :: i, i2, j
     type(entity_t), pointer :: ent
@@ -874,27 +875,27 @@ contains
     ! Expand all &
     ! Complain about < and &
 
-    allocate(s_temp(size(s_in))) ! in the first instance
-    allocate(s_out(0)) ! in case we return early ...
+    allocate(s_temp(len(s_in))) ! in the first instance
+    s_out => new_vs() ! in case we return early ...
     s_ent => null()
     tempString => null()
 
     i2 = 1
     i = 1
     do 
-      if (i > size(s_in)) exit
+      if (i > len(s_in)) exit
       ! Firstly, all whitespace must become 0x20
-      if (verify(s_in(i),XML_WHITESPACE)==0) then
+      if (verify(s_in(i:i),XML_WHITESPACE)==0) then
         s_temp(i2) = " "
         ! Then, < is always illegal
         i = i + 1
         i2 = i2 + 1
-      elseif (s_in(i)=='<') then
+      elseif (s_in(i:i)=='<') then
         call add_error(fx%error_stack, "Illegal < found in attribute.")
         goto 100
         ! Then, expand <
-      elseif (s_in(i)=='&') then
-        j = index(str_vs(s_in(i+1:)), ';')
+      elseif (s_in(i:i)=='&') then
+        j = index(s_in(i+1:), ';')
         if (j==0) then
           call add_error(fx%error_stack, "Illegal & found in attribute")
           goto 100
@@ -903,7 +904,7 @@ contains
           goto 100
         endif
         allocate(tempString(j-1))
-        tempString = s_in(i+1:i+j-1)
+        tempString = vs_str_alloc(s_in(i+1:i+j-1))
         if (existing_entity(fx%predefined_e_list, str_vs(tempString))) then
           ! Expand immediately
           s_temp(i2) = expand_entity_text(fx%predefined_e_list, str_vs(tempString))
@@ -939,20 +940,20 @@ contains
 #endif
             ! Recursively expand entity, checking for errors.
             s_ent => normalize_attribute_text(fx, &
-              vs_str(expand_entity_text(fx%xds%entityList, str_vs(tempString))))
+              (expand_entity_text(fx%xds%entityList, str_vs(tempString))))
             dummy = pop_entity_list(fx%forbidden_ge_list)
             if (in_error(fx%error_stack)) then
               goto 100
             endif
-            allocate(s_temp2(size(s_temp)+size(s_ent)-j))
+            allocate(s_temp2(size(s_temp)+len(s_ent)-j))
             s_temp2(:i2-1) = s_temp(:i2-1)
-            s_temp2(i2:i2+size(s_ent)-1) = s_ent
+            s_temp2(i2:i2+len(s_ent)-1) = as_chars(s_ent)
             deallocate(s_temp)
             s_temp => s_temp2
             nullify(s_temp2)
             i = i + j + 1
-            i2 = i2 + size(s_ent)
-            deallocate(s_ent)
+            i2 = i2 + len(s_ent)
+            call destroy_vs(s_ent)
           else
             s_temp(i2:i2+j) = s_in(i:i+j)
             i = i + j + 1
@@ -968,17 +969,15 @@ contains
         endif
         deallocate(tempString)
       else
-        s_temp(i2) = s_in(i)
+        s_temp(i2) = s_in(i:i)
         i = i + 1
         i2 = i2 + 1
       endif
     enddo
 
-    deallocate(s_out)
-    allocate(s_out(i2-1))
-    s_out = s_temp(:i2-1)
+    call add_chars(s_out, str_vs(s_temp(:i2-1)))
 100 deallocate(s_temp)
-    if (associated(s_ent))  deallocate(s_ent)
+    if (associated(s_ent))  call destroy_vs(s_ent)
     if (associated(tempString)) deallocate(tempString)
 
   end function normalize_attribute_text

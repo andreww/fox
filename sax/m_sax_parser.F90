@@ -897,17 +897,10 @@ contains
         select case (fx%tokenType)
         case (TOK_CHAR)
           !First, expand all entities:
-          !FIXME: AMW - fix this nasty doubble casting. And the AMW temp sting is to avoid leaking memory (or haveing to deallocate inside of normalize function.
-          tempStringAMW => vs_str_alloc(as_chars(fx%token))
-          tempString => normalize_attribute_text(fx, tempStringAMW)
-          deallocate(tempStringAMW)
+          tempVString => normalize_attribute_text(fx, as_chars(fx%token))
           call destroy_vs(fx%token)
-          !FIXME: AMW - nasty casting!
-          fx%token => new_vs(init_chars=str_vs(tempString))
-          !FIXME: AMW - have to destroy tempString to avoid a memory leak
-          ! so the => null isn't needed at the mo - it will be later.
-          deallocate(tempString)
-          tempString => null()
+          fx%token => tempVString
+          tempVString => null()
           !If this attribute is not CDATA, we must process further;
           if (associated(attDecl)) then
             temp_i = attDecl%attType
@@ -1841,10 +1834,16 @@ contains
           if (processDTD) then
             do i = 1, size(elem%attlist%list)
               if (associated(elem%attlist%list(i)%default)) then
+                !FIXME: AMW Some nasty gymnastics here need removing,
+                !       but that will wait until the elem types are
+                !       converted to vstrs
                 tempString => elem%attlist%list(i)%default
+                tempVString => &
+                  normalize_attribute_text(fx, str_vs(tempString))
                 elem%attlist%list(i)%default => &
-                  normalize_attribute_text(fx, tempString)
+                  vs_str_alloc(as_chars(tempVString))
                 deallocate(tempString)
+                call destroy_vs(tempVString)
                 if (in_error(fx%error_stack)) return
               endif
             enddo
