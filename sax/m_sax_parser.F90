@@ -93,7 +93,8 @@ contains
     fx%xds%inputEncoding => vs_str_alloc("us-ascii")
     ! because it always is ...
     if (fb%f(1)%lun>0) then
-      fx%xds%documentURI => vs_vs_alloc(fb%f(1)%filename)
+      ! FIXME: documentURI should be a vstr
+      fx%xds%documentURI => vs_str_alloc(as_chars(fb%f(1)%filename))
     else
       fx%xds%documentURI => vs_str_alloc("")
     endif

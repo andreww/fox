@@ -127,6 +127,7 @@ function as_chars_subset(my_vs, first, last) result(chars)
     j = 1
     do i = first, last
         chars(j:j) = my_vs%chars(i)
+        j = j + 1
     enddo
 
 end function as_chars_subset

@@ -1,6 +1,7 @@
 module m_sax_reader
 #ifndef DUMMYLIB
 
+  use fox_m_fsys_vstr
   use fox_m_fsys_array_str, only: str_vs, vs_str_alloc, vs_vs_alloc
   use fox_m_fsys_format, only: operator(//)
   use m_common_charset, only: XML1_0
@@ -131,9 +132,9 @@ contains
       fb%f(1)%lun = f%lun
       fb%f(1)%filename => f%filename
       if (pe_) then
-        fb%f(1)%next_chars => vs_str_alloc(" ")
+        fb%f(1)%next_chars => new_vs(init_chars=" ")
       else
-        fb%f(1)%next_chars => vs_str_alloc("")
+        fb%f(1)%next_chars => new_vs()
       endif
       fb%f(1)%pe = pe_
       fb%f(1)%baseURI => copyURI(baseURI)
@@ -156,7 +157,7 @@ contains
     open(unit=f%lun, file=file, form="formatted", status="old", &
       action="read", position="rewind", iostat=iostat)
     if (iostat/=0) return
-    f%filename => vs_str_alloc(file)
+    f%filename => new_vs(init_chars=file)
 
   end subroutine open_actual_file
 
@@ -177,19 +178,19 @@ contains
   subroutine close_actual_file(f)
     type(xml_source_t), intent(inout)    :: f
 
-    deallocate(f%filename)
+    call destroy_vs(f%filename)
     
     if (f%lun>0) then
       close(f%lun)
     else
-      deallocate(f%input_string%s)
+      call destroy_vs(f%input_string%s)
       deallocate(f%input_string)
     endif
 
-    if (associated(f%encoding)) deallocate(f%encoding)
+    if (associated(f%encoding)) call destroy_vs(f%encoding)
     f%line = 0
     f%col = 0
-    deallocate(f%next_chars)
+    call destroy_vs(f%next_chars)
     call destroyURI(f%baseURI)
   end subroutine close_actual_file
 
@@ -231,12 +232,12 @@ contains
     deallocate(temp)
 
     allocate(fb%f(1)%input_string)
-    fb%f(1)%filename => vs_str_alloc(name)
-    fb%f(1)%input_string%s => vs_str_alloc(string)
+    fb%f(1)%filename => new_vs(init_chars=name)
+    fb%f(1)%input_string%s => new_vs(init_chars=string)
     if (pe_) then
-      fb%f(1)%next_chars => vs_str_alloc(" ")
+      fb%f(1)%next_chars => new_vs(init_chars=" ")
     else
-      fb%f(1)%next_chars => vs_str_alloc("")
+      fb%f(1)%next_chars => new_vs()
     endif
     fb%f(1)%pe = pe_
     if (associated(baseURI)) then
@@ -290,19 +291,20 @@ contains
     character(len=1) :: string
 
     type(xml_source_t), pointer :: f
-    character, pointer :: temp(:)
+    type(vs), pointer :: temp
 
     f => fb%f(1)
 
-    if (size(f%next_chars)>0) then
+    if (len(f%next_chars)>0) then
       eof = .false.
-      string = f%next_chars(1)
-      if (size(f%next_chars)>1) then
-        temp => vs_str_alloc(str_vs(f%next_chars(2:)))
+      string = as_chars(f%next_chars,1,1)
+      if (len(f%next_chars)>1) then
+        ! FIXME: Add a clone substring method?
+        temp => new_vs(init_chars=as_chars(f%next_chars, 2, len(f%next_chars)))
       else
-        temp => vs_str_alloc("")
+        temp => new_vs()
       endif
-      deallocate(f%next_chars)
+      call destroy_vs(f%next_chars)
       f%next_chars => temp
     else
       string = get_char_from_file(f, fb%xml_version, eof, es)
@@ -313,7 +315,8 @@ contains
   function get_all_characters(fb, es) result(s)
     type(file_buffer_t), intent(inout) :: fb
     type(error_stack), intent(inout) :: es
-    character, pointer :: s(:)
+    character, pointer :: s(:) 
+    !FIXME: Keep as char array until line 1053 is fixed in the tokeniser
 
     logical :: eof
     character :: c
@@ -352,6 +355,7 @@ contains
     type(error_stack), intent(inout) :: es
 
     logical :: eof
+    !FIXME: keep as char array until line 473 of the parser is fixed.
 
     call parse_declaration(fb%f(1), eof, es, sa)
     if (eof.or.in_error(es)) then
@@ -359,7 +363,7 @@ contains
     else
       fb%xml_version = fb%f(1)%xml_version
       xv = fb%xml_version
-      enc => vs_vs_alloc(fb%f(1)%encoding)
+      enc => vs_str_alloc(as_chars(fb%f(1)%encoding))
     endif
   end subroutine parse_xml_declaration
 

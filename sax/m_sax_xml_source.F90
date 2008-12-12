@@ -1,7 +1,7 @@
 module m_sax_xml_source
 
 #ifndef DUMMYLIB
-  use fox_m_fsys_array_str, only: str_vs, vs_str_alloc
+  use fox_m_fsys_vstr, only: vs, new_vs, add_chars, as_chars, destroy_vs, len
   use fox_m_fsys_format, only: operator(//)
   use m_common_error,  only: error_stack, add_error, in_error
   use m_common_charset, only: XML_WHITESPACE, XML_INITIALENCODINGCHARS, &
@@ -15,7 +15,7 @@ module m_sax_xml_source
   private
 
   type buffer_t
-    character, dimension(:), pointer :: s
+    type(vs), pointer :: s
     integer :: pos = 1
   end type buffer_t
 
@@ -23,14 +23,14 @@ module m_sax_xml_source
     !FIXME private
     integer            :: lun = -1
     integer            :: xml_version = XML1_0
-    character, pointer :: encoding(:) => null()
+    type(vs),  pointer :: encoding => null()
     logical            :: isUSASCII
-    character, pointer :: filename(:) => null()
+    type(vs),  pointer :: filename => null()
     type(URI), pointer :: baseURI => null()
     integer            :: line = 0
     integer            :: col = 0
     integer            :: startChar = 1 ! First character after XML decl
-    character, pointer :: next_chars(:) => null()   ! pushback buffer
+    type(vs),  pointer :: next_chars => null()   ! pushback buffer
     type(buffer_t), pointer :: input_string => null()
     logical :: pe = .false. ! is this a parameter entity?
     logical :: eof = .false.! need to keep track of this at the end of pes
@@ -64,12 +64,12 @@ contains
       eof = .true.
       return
     elseif (iostat/=0) then
-      call add_error(es, "Error reading "//str_vs(f%filename))
+      call add_error(es, "Error reading "//as_chars(f%filename))
       return
     endif
     if (.not.isLegalChar(c, f%isUSASCII, xv)) then
       call add_error(es, "Illegal character found at " &
-        //str_vs(f%filename)//":"//f%line//":"//f%col)
+        //as_chars(f%filename)//":"//f%line//":"//f%col)
       return
     endif
     if (c==achar(13)) then
@@ -81,7 +81,7 @@ contains
         ! perform another read.
         eof = .false.
       elseif (iostat/=0) then
-        call add_error(es, "Error reading "//str_vs(f%filename))
+        call add_error(es, "Error reading "//as_chars(f%filename))
         return
       elseif (c2/=achar(10)) then
         ! then we keep c2, otherwise we'd just ignore it.
@@ -92,9 +92,8 @@ contains
 
     if (pending) then
       ! we have one character left over, put in the pushback buffer
-      deallocate(f%next_chars)
-      allocate(f%next_chars(1))
-      f%next_chars = c2
+      call destroy_vs(f%next_chars)
+      f%next_chars => new_vs(init_chars=c2)
     endif
 
     if (c==achar(10)) then
@@ -117,7 +116,7 @@ contains
       return
     endif
     if (f%lun==-1) then
-      if (f%input_string%pos>size(f%input_string%s)) then
+      if (f%input_string%pos>len(f%input_string%s)) then
         c = ""
         if (f%pe) then
           iostat = 0
@@ -127,7 +126,7 @@ contains
         f%eof = .true.
       else
         iostat = 0
-        c = f%input_string%s(f%input_string%pos)
+        c = as_chars(f%input_string%s, f%input_string%pos, f%input_string%pos)
         f%input_string%pos = f%input_string%pos + 1
       endif
     else
@@ -160,10 +159,18 @@ contains
   subroutine push_file_chars(f, s)
     type(xml_source_t), intent(inout) :: f
     character(len=*), intent(in) :: s
-    character, dimension(:), pointer :: nc
+    type(vs), pointer :: nc
 
-    nc => vs_str_alloc(s//str_vs(f%next_chars))
-    deallocate(f%next_chars)
+    !FIXME - should this be a sub in the vstr module
+    !        as we can make it more efficent there?
+    !FIXME - why can't I pass s//as_chars(...) into 
+    !        new_vs? This fails if s is a one char 
+    !        space and next_chars is empty. Looks 
+    !        like a bug in add_chars, but I haven't
+    !        traked it down.
+    nc => new_vs()
+    call add_chars(nc, s//as_chars(f%next_chars))
+    call destroy_vs(f%next_chars)
     f%next_chars => nc
 
   end subroutine push_file_chars
@@ -177,7 +184,7 @@ contains
 
     integer :: parse_state, xd_par
     character :: c, q
-    character, pointer :: ch(:), ch2(:)
+    type(vs), pointer :: ch
 
     integer, parameter :: XD_0      = 0
     integer, parameter :: XD_START  = 1
@@ -226,7 +233,7 @@ contains
       case (XD_START)
         if (c=="?") then
           parse_state = XD_TARGET
-          ch => vs_str_alloc("")
+          ch => new_vs()
         else
           call rewind_source(f)
           exit
@@ -234,16 +241,14 @@ contains
 
       case (XD_TARGET)
         if (isXML1_0_NameChar(c)) then
-          ch2 => vs_str_alloc(str_vs(ch)//c)
-          deallocate(ch)
-          ch => ch2
+          call add_chars(ch, c)
         elseif (verify(c, XML_WHITESPACE)==0 &
-          .and.str_vs(ch)=="xml") then
-          deallocate(ch)
+          .and.as_chars(ch)=="xml") then
+          call destroy_vs(ch)
           parse_state = XD_MISC
         else
           call rewind_source(f)
-          deallocate(ch)
+          call destroy_vs(ch)
           exit
         endif
 
@@ -261,7 +266,7 @@ contains
         if (c=="?") then
           parse_state = XD_END
         elseif (isXML1_0_NameChar(c)) then
-          ch => vs_str_alloc(c)
+          ch => new_vs(init_chars=c)
           parse_state = XD_PA
         elseif (verify(c, XML_WHITESPACE)>0) then
           call add_error(es, &
@@ -270,11 +275,9 @@ contains
 
       case (XD_PA)
         if (isXML1_0_NameChar(c)) then
-          ch2 => vs_str_alloc(str_vs(ch)//c)
-          deallocate(ch)
-          ch => ch2
+          call add_chars(ch, c)
         elseif (verify(c, XML_WHITESPACE//"=")==0) then
-          select case (str_vs(ch))
+          select case (as_chars(ch))
 
           case ("version")
             select case (xd_par)
@@ -321,12 +324,12 @@ contains
 
           case default
             call add_error(es, &
-              "Unknown parameter "//str_vs(ch)//" in XML declaration, "//&
+              "Unknown parameter "//as_chars(ch)//" in XML declaration, "//&
               "expecting version, encoding or standalone")
 
           end select
 
-          deallocate(ch)
+          call destroy_vs(ch)
           if (c=="=") then
             parse_state = XD_QUOTE
           else
@@ -349,7 +352,7 @@ contains
         if (verify(c, "'""")==0) then
           q = c
           parse_state = XD_PV
-          ch => vs_str_alloc("")
+          ch => new_vs()
         elseif (verify(c, XML_WHITESPACE)>0) then
           call add_error(es, &
             "Unexpected character found in XML declaration; expecting "" or '")
@@ -359,42 +362,42 @@ contains
         if (c==q) then
           select case (xd_par)
           case (xd_version)
-            if (str_vs(ch)//"x"=="1.0x") then
+            if (as_chars(ch)//"x"=="1.0x") then
               f%xml_version = XML1_0
-              deallocate(ch)
-            elseif (str_vs(ch)//"x"=="1.1x") then
+              call destroy_vs(ch)
+            elseif (as_chars(ch)//"x"=="1.1x") then
               f%xml_version = XML1_1
-              deallocate(ch)
+              call destroy_vs(ch)
             else
               call add_error(es, &
-                "Unknown version number "//str_vs(ch)//" found in XML declaration; expecting 1.0 or 1.1")
+                "Unknown version number "//as_chars(ch)//" found in XML declaration; expecting 1.0 or 1.1")
             endif
           case (xd_encoding)
-            if (size(ch)==0) then
+            if (len(ch)==0) then
               call add_error(es, &
                 "Empty value for encoding not allowed in XML declaration")
-            elseif (size(ch)==1.and.verify(ch(1), XML_INITIALENCODINGCHARS)>0) then
+            elseif (len(ch)==1.and.verify(as_chars(ch,1,1), XML_INITIALENCODINGCHARS)>0) then
               call add_error(es, &
                 "Invalid encoding found in XML declaration; illegal characters in encoding name")
-            elseif (size(ch)>1.and. &
-              (verify(ch(1), XML_INITIALENCODINGCHARS)>0 &
-              .or.verify(str_vs(ch(2:)), XML_ENCODINGCHARS)>0)) then
+            elseif (len(ch)>1.and. &
+              (verify(as_chars(ch,1,1), XML_INITIALENCODINGCHARS)>0 &
+              .or.verify(as_chars(ch,2,len(ch)), XML_ENCODINGCHARS)>0)) then
               call add_error(es, &
                 "Invalid encoding found in XML declaration; illegal characters in encoding name")
-            elseif (.not.allowed_encoding(str_vs(ch))) then
+            elseif (.not.allowed_encoding(as_chars(ch))) then
               call add_error(es, "Unknown character encoding in XML declaration")
             else
               f%encoding => ch
-              f%isUSASCII = isUSASCII(str_vs(ch))
+              f%isUSASCII = isUSASCII(as_chars(ch))
               ch => null()
             endif
           case (xd_standalone)
-            if (str_vs(ch)//"x"=="yesx") then
+            if (as_chars(ch)//"x"=="yesx") then
               standalone = .true.
-              deallocate(ch)
-            elseif (str_vs(ch)//"x"=="nox") then
+              call destroy_vs(ch)
+            elseif (as_chars(ch)//"x"=="nox") then
               standalone = .false.
-              deallocate(ch)
+              call destroy_vs(ch)
             else
               call add_error(es, &
                 "Invalid value for standalone found in XML declaration; expecting yes or no")
@@ -403,9 +406,7 @@ contains
           end select
           parse_state = XD_SPACE
         else
-          ch2 => vs_str_alloc(str_vs(ch)//c)
-          deallocate(ch)
-          ch => ch2
+          call add_chars(ch, c)
         endif
 
       case (XD_END)
@@ -422,13 +423,13 @@ contains
 
     if (.not.associated(f%encoding)) then
       if (present(standalone).or.parse_state/=XD_END) then
-        f%encoding => vs_str_alloc("utf-8")
+        f%encoding => new_vs(init_chars="utf-8")
       else
         call add_error(es, "Missing encoding in text declaration")
       endif
     endif
     
-100 if (associated(ch)) deallocate(ch)
+100 if (associated(ch)) call destroy_vs(ch)
     ! if there is no XML declaraion, or if parsing caused an error, then
     if (parse_state/=XD_END.or.in_error(es)) f%startChar = 1
 
