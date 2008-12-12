@@ -903,8 +903,7 @@ contains
           call add_error(fx%error_stack, "No entity reference found")
           goto 100
         endif
-        allocate(tempString(j-1))
-        tempString = vs_str_alloc(s_in(i+1:i+j-1))
+        tempString => vs_str_alloc(s_in(i+1:i+j-1))
         if (existing_entity(fx%predefined_e_list, str_vs(tempString))) then
           ! Expand immediately
           s_temp(i2) = expand_entity_text(fx%predefined_e_list, str_vs(tempString))
