@@ -2,7 +2,7 @@ module m_sax_reader
 #ifndef DUMMYLIB
 
   use fox_m_fsys_vstr
-  use fox_m_fsys_array_str, only: str_vs, vs_str_alloc, vs_vs_alloc
+  use fox_m_fsys_array_str, only: vs_str_alloc
   use fox_m_fsys_format, only: operator(//)
   use m_common_charset, only: XML1_0
   use m_common_error,  only: error_stack, FoX_error, in_error, add_error
@@ -315,21 +315,17 @@ contains
   function get_all_characters(fb, es) result(s)
     type(file_buffer_t), intent(inout) :: fb
     type(error_stack), intent(inout) :: es
-    character, pointer :: s(:) 
-    !FIXME: Keep as char array until line 1053 is fixed in the tokeniser
+    type(vs), pointer :: s 
 
     logical :: eof
     character :: c
-    character, pointer :: temp(:)
 
     eof = .false.
-    s => vs_str_alloc("")
+    s => new_vs()
     do while (.not.eof)
       c = get_character(fb, eof, es)
       if (eof.or.in_error(es)) return
-      temp => vs_str_alloc(str_vs(s)//c)
-      deallocate(s)
-      s => temp
+      call add_chars(s, c)
     enddo
   end function get_all_characters
 

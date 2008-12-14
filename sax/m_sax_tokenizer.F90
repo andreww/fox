@@ -988,6 +988,7 @@ contains
     character, dimension(:), pointer :: s_out
 
     character, dimension(:), pointer :: s_temp, s_temp2, s_ent, tempString
+    type(vs), pointer :: temp_vs
     character :: dummy
     integer :: i, i2, j, iostat
     type(entity_t), pointer :: ent
@@ -1048,7 +1049,11 @@ contains
               endif
               call parse_text_declaration(fb, fx%error_stack)
               if (in_error(fx%error_stack)) goto 100
-              s_temp2 => get_all_characters(fb, fx%error_stack)
+              ! FIXME - AMW: expand_pe_test should take a vs
+              ! to avoid this mess...
+              temp_vs => get_all_characters(fb, fx%error_stack)
+              s_temp2 => vs_str_alloc(as_chars(temp_vs))
+              call destroy_vs(temp_vs)
               call pop_buffer_stack(fb)
               if (in_error(fx%error_stack)) goto 100
               s_ent => expand_pe_text(fx, s_temp2, fb)
