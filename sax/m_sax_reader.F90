@@ -2,7 +2,6 @@ module m_sax_reader
 #ifndef DUMMYLIB
 
   use fox_m_fsys_vstr
-  use fox_m_fsys_array_str, only: vs_str_alloc
   use fox_m_fsys_format, only: operator(//)
   use m_common_charset, only: XML1_0
   use m_common_error,  only: error_stack, FoX_error, in_error, add_error
@@ -346,12 +345,11 @@ contains
   subroutine parse_xml_declaration(fb, xv, enc, sa, es)
     type(file_buffer_t), intent(inout) :: fb
     integer, intent(out) :: xv
-    character, pointer :: enc(:)
+    type(vs), pointer :: enc
     logical, intent(out) :: sa
     type(error_stack), intent(inout) :: es
 
     logical :: eof
-    !FIXME: keep as char array until line 473 of the parser is fixed.
 
     call parse_declaration(fb%f(1), eof, es, sa)
     if (eof.or.in_error(es)) then
@@ -359,7 +357,8 @@ contains
     else
       fb%xml_version = fb%f(1)%xml_version
       xv = fb%xml_version
-      enc => vs_str_alloc(as_chars(fb%f(1)%encoding))
+      !FIXME: Should have a 'clone' method?
+      enc => new_vs(init_chars=as_chars(fb%f(1)%encoding))
     endif
   end subroutine parse_xml_declaration
 

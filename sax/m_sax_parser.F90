@@ -471,7 +471,10 @@ contains
         call startDocument_handler()
         if (fx%state==ST_STOP) goto 100
       endif
-      call parse_xml_declaration(fb, fx%xds%xml_version, fx%xds%encoding, fx%xds%standalone, fx%error_stack)
+      !FIXME: AMW - need to make fx%xds%encoding a vstr and avoid use of tempVString.
+      call parse_xml_declaration(fb, fx%xds%xml_version, tempVString, fx%xds%standalone, fx%error_stack)
+      fx%xds%encoding => vs_str_alloc(as_chars(tempVString))
+      call destroy_vs(tempVString)
       if (in_error(fx%error_stack)) goto 100
       call init_string_list(id_list)
       call init_string_list(idref_list)
