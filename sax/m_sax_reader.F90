@@ -1,7 +1,7 @@
 module m_sax_reader
 #ifndef DUMMYLIB
 
-  use fox_m_fsys_vstr
+  use fox_m_fsys_vstr, only: vs, as_chars, new_vs, destroy_vs, len, add_chars
   use fox_m_fsys_format, only: operator(//)
   use m_common_charset, only: XML1_0
   use m_common_error,  only: error_stack, FoX_error, in_error, add_error
