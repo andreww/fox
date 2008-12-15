@@ -39,6 +39,7 @@ contains
     integer :: xv, phrase
     logical :: firstChar, ws_discard
     character, pointer :: tempString(:)
+    type(vs), pointer :: temp_vs
 
     xv = fx%xds%xml_version
 
@@ -74,10 +75,7 @@ contains
       endif
       if (eof.or.in_error(fx%error_stack)) return
       if (fx%inIntSubset) then
-        ! FIXME - AMW, need tp make fx%xds%intSubset a vstr
-        tempString => fx%xds%intSubset
-        fx%xds%intSubset => vs_str_alloc(str_vs(tempString)//c)
-        deallocate(tempString)
+        call add_chars(fx%xds%intSubset, c)
       endif
 
       select case (fx%state)
@@ -581,10 +579,12 @@ contains
                 ! all this code block does is remove the last two 
                 ! characters from the end of intSubset and get the 
                 ! memory back...
-                tempString => fx%xds%intSubset
-                allocate(fx%xds%intSubset(size(tempString)-2))
-                fx%xds%intSubset = tempString(:size(tempString)-2)
-                deallocate(tempString)
+                !FIXME: trim method? 
+                !FIXME: does this work?
+                temp_vs => fx%xds%intSubset
+                fx%xds%intSubset => new_vs(init_chars=as_chars(temp_vs, &
+                                            &  1, len(temp_vs)-2))
+                call destroy_vs(temp_vs)
               endif
             endif
           endif

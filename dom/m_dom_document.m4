@@ -1000,7 +1000,7 @@ TOHW_m_dom_set(logical, xmlStandalone, np%docExtras%xds%standalone, (DOCUMENT_NO
     n = 0
     if (.not.p) return
     if (arg%nodeType==DOCUMENT_NODE) &
-      n = size(arg%docExtras%xds%encoding)
+      n = len(arg%docExtras%xds%encoding)
   end function getXmlEncoding_len
 
   TOHW_function(getXmlEncoding, (arg), s)
@@ -1016,7 +1016,7 @@ TOHW_m_dom_set(logical, xmlStandalone, np%docExtras%xds%standalone, (DOCUMENT_NO
     endif
 
     if (arg%nodeType==DOCUMENT_NODE) then
-      s = str_vs(arg%docExtras%xds%encoding)
+      s = as_chars(arg%docExtras%xds%encoding)
     elseif (arg%nodeType==ENTITY_NODE) then
       s = "" !FIXME revisit when we have working external entities
     else
@@ -1033,7 +1033,7 @@ TOHW_m_dom_set(logical, xmlStandalone, np%docExtras%xds%standalone, (DOCUMENT_NO
     n = 0
     if (.not.p) return
     if (arg%nodeType==DOCUMENT_NODE) &
-      n = size(arg%docExtras%xds%inputEncoding)
+      n = len(arg%docExtras%xds%inputEncoding)
   end function getInputEncoding_len
 
   TOHW_function(getInputEncoding, (arg), s)
@@ -1049,7 +1049,7 @@ TOHW_m_dom_set(logical, xmlStandalone, np%docExtras%xds%standalone, (DOCUMENT_NO
     endif
 
     if (arg%nodeType==DOCUMENT_NODE) then
-      s = str_vs(arg%docExtras%xds%inputEncoding)    
+      s = as_chars(arg%docExtras%xds%inputEncoding)
     elseif (arg%nodeType==ENTITY_NODE) then
       s = "" !FIXME revisit when we have working external entities
     else
@@ -1058,8 +1058,8 @@ TOHW_m_dom_set(logical, xmlStandalone, np%docExtras%xds%standalone, (DOCUMENT_NO
 
   end function getInputEncoding
 
-TOHW_m_dom_get(DOMString, documentURI, np%docExtras%xds%documentURI, (DOCUMENT_NODE))
-TOHW_m_dom_set(DOMString, documentURI, np%docExtras%xds%documentURI, (DOCUMENT_NODE))
+AMW_m_dom_get(DOMString, documentURI, np%docExtras%xds%documentURI, (DOCUMENT_NODE))
+AMW_m_dom_set(DOMString, documentURI, np%docExtras%xds%documentURI, (DOCUMENT_NODE))
 
 TOHW_m_dom_get(logical, strictErrorChecking, np%docExtras%strictErrorChecking, (DOCUMENT_NODE))
 TOHW_m_dom_set(logical, strictErrorChecking, np%docExtras%strictErrorChecking, (DOCUMENT_NODE))

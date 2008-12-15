@@ -35,6 +35,7 @@ module m_dom_dom
 dnl
 
   use fox_m_fsys_array_str, only: str_vs, vs_str, vs_str_alloc
+  use fox_m_fsys_vstr, only: new_vs, as_chars, len
   use fox_m_fsys_format, only: operator(//)
   use fox_m_fsys_string, only: toLower
   use fox_m_utils_uri, only: URI, parseURI, destroyURI, isAbsoluteURI, &

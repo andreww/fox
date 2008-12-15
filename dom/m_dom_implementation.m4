@@ -115,7 +115,7 @@ TOHW_m_dom_contents(`
     allocate(doc%docExtras%nodelists(0))
     allocate(doc%docExtras%xds)
     call init_xml_doc_state(doc%docExtras%xds)
-    allocate(doc%docExtras%xds%documentURI(0))
+    doc%docExtras%xds%documentURI => new_vs()
     allocate(doc%docExtras%domConfig)
 
     if (associated(docType)) then

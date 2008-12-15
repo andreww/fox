@@ -58,7 +58,7 @@ TOHW_m_dom_contents(`
     if (p) then
       if (associated(arg%ownerDocument)) then
         if (associated(arg%ownerDocument%docExtras%xds%intSubset)) then
-          n = size(arg%ownerDocument%docExtras%xds%intSubset)
+          n = len(arg%ownerDocument%docExtras%xds%intSubset)
         endif
       endif
     endif
@@ -81,7 +81,7 @@ TOHW_m_dom_contents(`
     endif
 
     if (len(s)>0) then
-      s = str_vs(arg%ownerDocument%docExtras%xds%intSubset)
+      s = as_chars(arg%ownerDocument%docExtras%xds%intSubset)
     else
       s = ""
     endif

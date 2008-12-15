@@ -4,6 +4,7 @@ module m_wxml_core
   use fox_m_fsys_abort_flush, only: pxfabort
   use fox_m_fsys_array_str, only: vs_str, str_vs, vs_str_alloc
   use fox_m_fsys_string, only: toLower
+  use fox_m_fsys_vstr, only: new_vs, as_chars, len
   use fox_m_utils_uri, only: URI, parseURI, destroyURI
   use m_common_attrs, only: dictionary_t, getLength, get_key, get_value, &
     hasKey, add_item_to_dict, init_dict, reset_dict, destroy_dict, &
@@ -253,7 +254,7 @@ contains
     !1.0 for the moment & reset below.
     ! Actually, this is done automatically in initializing xf%xds
     call init_xml_doc_state(xf%xds)
-    xf%xds%documentURI => vs_str_alloc(filename)
+    xf%xds%documentURI => new_vs(init_chars=filename)
 
     if (present(warning)) then
       xf%xds%warning = warning
@@ -1639,8 +1640,8 @@ contains
     character(len=1) :: fn
     fn = " "
 #else
-    character(len=size(xf%xds%documentURI)) :: fn
-    fn = str_vs(xf%xds%documentURI)
+    character(len=len(xf%xds%documentURI)) :: fn
+    fn = as_chars(xf%xds%documentURI)
 #endif
   end function xmlf_name
 

@@ -5,6 +5,7 @@ module m_common_struct
 
   use FoX_utils, only: URI
 
+  use fox_m_fsys_vstr, only: vs, new_vs, destroy_vs
   use m_common_charset, only: XML1_0
   use m_common_entities, only: entity_list, init_entity_list, destroy_entity_list, &
     add_internal_entity, add_external_entity
@@ -26,10 +27,10 @@ module m_common_struct
     logical :: warning = .false. ! Do we care about warnings?
     logical :: valid = .true. ! Do we care about validity?
     logical :: liveNodeLists = .true. ! Do we want live nodelists?
-    character, pointer :: encoding(:) => null()
-    character, pointer :: inputEncoding(:) => null()
-    character, pointer :: documentURI(:) => null()
-    character, pointer :: intSubset(:) => null()
+    type(vs), pointer :: encoding => null()
+    type(vs), pointer :: inputEncoding => null()
+    type(vs), pointer :: documentURI => null()
+    type(vs), pointer :: intSubset => null()
   end type xml_doc_state
 
   public :: xml_doc_state
@@ -50,8 +51,8 @@ contains
     call init_entity_list(xds%PEList)
     call init_notation_list(xds%nList)
     call init_element_list(xds%element_list)
-    allocate(xds%inputEncoding(0))
-    allocate(xds%intSubset(0))
+    xds%inputEncoding => new_vs()
+    xds%intSubset => new_vs()
   end subroutine init_xml_doc_state
 
   subroutine destroy_xml_doc_state(xds)
@@ -60,10 +61,10 @@ contains
     call destroy_entity_list(xds%PEList)
     call destroy_notation_list(xds%nList)
     call destroy_element_list(xds%element_list)
-    if (associated(xds%encoding)) deallocate(xds%encoding)
-    if (associated(xds%inputEncoding)) deallocate(xds%inputEncoding)
-    if (associated(xds%documentURI)) deallocate(xds%documentURI)
-    deallocate(xds%intSubset)
+    if (associated(xds%encoding)) call destroy_vs(xds%encoding)
+    if (associated(xds%inputEncoding)) call destroy_vs(xds%inputEncoding)
+    if (associated(xds%documentURI)) call destroy_vs(xds%documentURI)
+    call destroy_vs(xds%intSubset)
   end subroutine destroy_xml_doc_state
 
   subroutine register_internal_PE(xds, name, text, wfc, baseURI)

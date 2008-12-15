@@ -6,6 +6,7 @@
 module m_dom_dom
 
   use fox_m_fsys_array_str, only: str_vs, vs_str, vs_str_alloc
+  use fox_m_fsys_vstr, only: new_vs, as_chars, len
   use fox_m_fsys_format, only: operator(//)
   use fox_m_fsys_string, only: toLower
   use fox_m_utils_uri, only: URI, parseURI, destroyURI, isAbsoluteURI, &
@@ -5816,7 +5817,7 @@ endif
     allocate(doc%docExtras%nodelists(0))
     allocate(doc%docExtras%xds)
     call init_xml_doc_state(doc%docExtras%xds)
-    allocate(doc%docExtras%xds%documentURI(0))
+    doc%docExtras%xds%documentURI => new_vs()
     allocate(doc%docExtras%domConfig)
 
     if (associated(docType)) then
@@ -7916,7 +7917,7 @@ endif
     n = 0
     if (.not.p) return
     if (arg%nodeType==DOCUMENT_NODE) &
-      n = size(arg%docExtras%xds%encoding)
+      n = len(arg%docExtras%xds%encoding)
   end function getXmlEncoding_len
 
   function getXmlEncoding(arg, ex)result(s) 
@@ -7941,7 +7942,7 @@ endif
     endif
 
     if (arg%nodeType==DOCUMENT_NODE) then
-      s = str_vs(arg%docExtras%xds%encoding)
+      s = as_chars(arg%docExtras%xds%encoding)
     elseif (arg%nodeType==ENTITY_NODE) then
       s = "" !FIXME revisit when we have working external entities
     else
@@ -7966,7 +7967,7 @@ endif
     n = 0
     if (.not.p) return
     if (arg%nodeType==DOCUMENT_NODE) &
-      n = size(arg%docExtras%xds%inputEncoding)
+      n = len(arg%docExtras%xds%inputEncoding)
   end function getInputEncoding_len
 
   function getInputEncoding(arg, ex)result(s) 
@@ -7991,7 +7992,7 @@ endif
     endif
 
     if (arg%nodeType==DOCUMENT_NODE) then
-      s = str_vs(arg%docExtras%xds%inputEncoding)    
+      s = as_chars(arg%docExtras%xds%inputEncoding)    
     elseif (arg%nodeType==ENTITY_NODE) then
       s = "" !FIXME revisit when we have working external entities
     else
@@ -8017,7 +8018,7 @@ endif
     if (p .and. ( &
       np%nodeType==DOCUMENT_NODE .or. &
       .false.)) then
-      n = size(np%docExtras%xds%documentURI)
+      n = len(np%docExtras%xds%documentURI)
     else
       n = 0
     endif
@@ -8057,7 +8058,7 @@ endif
 
     endif
 
-    c = str_vs(np%docExtras%xds%documentURI)
+    c = as_chars(np%docExtras%xds%documentURI)
 
   end function getdocumentURI
 
@@ -8093,7 +8094,7 @@ endif
     endif
 
     if (associated(np%docExtras%xds%documentURI)) deallocate(np%docExtras%xds%documentURI)
-    np%docExtras%xds%documentURI => vs_str_alloc(c)
+    np%docExtras%xds%documentURI => new_vs(init_chars=c)
 
   end subroutine setdocumentURI
 
@@ -9083,7 +9084,7 @@ endif
     if (p) then
       if (associated(arg%ownerDocument)) then
         if (associated(arg%ownerDocument%docExtras%xds%intSubset)) then
-          n = size(arg%ownerDocument%docExtras%xds%intSubset)
+          n = len(arg%ownerDocument%docExtras%xds%intSubset)
         endif
       endif
     endif
@@ -9123,7 +9124,7 @@ endif
     endif
 
     if (len(s)>0) then
-      s = str_vs(arg%ownerDocument%docExtras%xds%intSubset)
+      s = as_chars(arg%ownerDocument%docExtras%xds%intSubset)
     else
       s = ""
     endif

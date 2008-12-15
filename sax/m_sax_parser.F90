@@ -89,14 +89,12 @@ contains
     ! FIXME do we copy correctly from fx%nlist to fx%xds%nlist?
     allocate(fx%xds)
     call init_xml_doc_state(fx%xds)
-    deallocate(fx%xds%inputEncoding)
-    fx%xds%inputEncoding => vs_str_alloc("us-ascii")
+    call add_chars(fx%xds%inputEncoding, "us-ascii")
     ! because it always is ...
     if (fb%f(1)%lun>0) then
-      ! FIXME: documentURI should be a vstr
-      fx%xds%documentURI => vs_str_alloc(as_chars(fb%f(1)%filename))
+      fx%xds%documentURI => new_vs(init_chars=as_chars(fb%f(1)%filename))
     else
-      fx%xds%documentURI => vs_str_alloc("")
+      fx%xds%documentURI => new_vs()
     endif
 
     fx%xds%standalone = fb%standalone
@@ -471,10 +469,7 @@ contains
         call startDocument_handler()
         if (fx%state==ST_STOP) goto 100
       endif
-      !FIXME: AMW - need to make fx%xds%encoding a vstr and avoid use of tempVString.
-      call parse_xml_declaration(fb, fx%xds%xml_version, tempVString, fx%xds%standalone, fx%error_stack)
-      fx%xds%encoding => vs_str_alloc(as_chars(tempVString))
-      call destroy_vs(tempVString)
+      call parse_xml_declaration(fb, fx%xds%xml_version, fx%xds%encoding, fx%xds%standalone, fx%error_stack)
       if (in_error(fx%error_stack)) goto 100
       call init_string_list(id_list)
       call init_string_list(idref_list)
