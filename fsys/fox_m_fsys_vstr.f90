@@ -8,6 +8,7 @@ public :: vs
 public :: new_vs
 public :: destroy_vs
 public :: add_chars
+public :: push_vs_chars
 public :: as_chars
 public :: operator(==)
 public :: operator(/=)
@@ -75,19 +76,9 @@ subroutine add_chars(my_vs, chars)
 
     type(vs),                   intent(inout) :: my_vs
     character(len=*),           intent(in)    :: chars
-    integer                                   :: size_needed
     integer                                   :: i
 
- 
-    ! Check size and grow if needed.
-    if ((my_vs%arr_len - my_vs%str_len) .lt. len(chars)) then
-        size_needed = my_vs%arr_len * 2
-        do
-           if ((size_needed - my_vs%str_len) .gt. len(chars)) exit
-           size_needed = size_needed * 2
-        enddo
-        call grow_vs(my_vs, newsize=size_needed)
-    endif
+    call grow_vs_if_needed(my_vs, len(chars)) 
         
     ! Add the chars # FIXME: use transfer? 
     do i = 1, len(chars)
@@ -96,6 +87,31 @@ subroutine add_chars(my_vs, chars)
     my_vs%str_len = my_vs%str_len + len(chars)
 
 end subroutine add_chars   
+
+subroutine push_vs_chars (my_vs, chars)
+
+    type(vs),                   intent(inout) :: my_vs
+    character(len=*),           intent(in)    :: chars
+    integer                                   :: i
+
+    ! If we have an empty vs, just call add_chars
+    if (my_vs%str_len .eq. 0) then
+        call add_chars(my_vs, chars)
+        return
+    endif
+
+    call grow_vs_if_needed(my_vs, len(chars))
+
+    ! Make space at the start of the array
+    my_vs%chars(len(chars)+1:len(chars)+1+my_vs%str_len) = my_vs%chars(1:my_vs%str_len)
+        
+    ! Add the chars # FIXME: use transfer? 
+    do i = 1, len(chars)
+        my_vs%chars(i) = chars(i:i)
+    enddo
+    my_vs%str_len = my_vs%str_len + len(chars)
+
+end subroutine push_vs_chars
 
 pure function  as_chars_full(my_vs) result(chars)
  
@@ -152,6 +168,24 @@ pure function vs_len(my_vs) result (my_len)
     my_len = my_vs%str_len 
 
 end function vs_len
+
+subroutine grow_vs_if_needed(my_vs, needed_space)
+
+    type(vs), intent(inout)     :: my_vs
+    integer,  intent(in   )     :: needed_space
+    integer                     :: size_needed
+
+    ! Check size and grow if needed.
+    if ((my_vs%arr_len - my_vs%str_len) .lt. needed_space) then
+        size_needed = my_vs%arr_len * 2
+        do
+           if ((size_needed - my_vs%str_len) .gt. needed_space) exit
+           size_needed = size_needed * 2
+        enddo
+        call grow_vs(my_vs, newsize=size_needed)
+    endif
+
+end subroutine grow_vs_if_needed
 
 subroutine grow_vs(my_vs, newsize)
 

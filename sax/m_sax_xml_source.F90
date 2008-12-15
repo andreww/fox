@@ -1,7 +1,7 @@
 module m_sax_xml_source
 
 #ifndef DUMMYLIB
-  use fox_m_fsys_vstr, only: vs, new_vs, add_chars, as_chars, destroy_vs, len
+  use fox_m_fsys_vstr, only: vs, new_vs, add_chars, as_chars, destroy_vs, len, push_vs_chars
   use fox_m_fsys_format, only: operator(//)
   use m_common_error,  only: error_stack, add_error, in_error
   use m_common_charset, only: XML_WHITESPACE, XML_INITIALENCODINGCHARS, &
@@ -159,19 +159,8 @@ contains
   subroutine push_file_chars(f, s)
     type(xml_source_t), intent(inout) :: f
     character(len=*), intent(in) :: s
-    type(vs), pointer :: nc
 
-    !FIXME - should this be a sub in the vstr module
-    !        as we can make it more efficent there?
-    !FIXME - why can't I pass s//as_chars(...) into 
-    !        new_vs? This fails if s is a one char 
-    !        space and next_chars is empty. Looks 
-    !        like a bug in add_chars, but I haven't
-    !        traked it down.
-    nc => new_vs()
-    call add_chars(nc, s//as_chars(f%next_chars))
-    call destroy_vs(f%next_chars)
-    f%next_chars => nc
+    call push_vs_chars(f%next_chars, s)
 
   end subroutine push_file_chars
 
