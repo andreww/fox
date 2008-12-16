@@ -4,6 +4,7 @@ Check version number in:
 config/configure.ac
 common/FoX_common.F90
 DoX/Versioning.md
+wcml/test/test_cmlEndCml_2.xml
 & on the webpage
 
 Check dates in license
