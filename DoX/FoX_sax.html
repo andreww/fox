@@ -157,34 +157,12 @@ contains
    integer :: i
 
    print*, name
-</code></pre>
 
-<p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD:DoX/FoX_sax.md</p>
+   do i = 1, getLength(attributes)
+      print*, getQName(attributes, i), '=', getValue(attributes, i)
+   enddo
 
-<h1>       do i = 1, len(attributes)</h1>
-
-<pre><code>   do i = 1, getLength(attributes)
-</code></pre>
-
-<blockquote>
-  <blockquote>
-    <blockquote>
-      <blockquote>
-        <blockquote>
-          <blockquote>
-            <blockquote>
-              <p>Implement isSpecified and isDeclared and associated apparatus for sax dictionaries:DoX/FoX_sax.md
-                        print*, getQName(attributes, i), '=', getValue(attributes, i)
-                     enddo</p>
-            </blockquote>
-          </blockquote>
-        </blockquote>
-      </blockquote>
-    </blockquote>
-  </blockquote>
-</blockquote>
-
-<pre><code>  end subroutine startElement_handler
+  end subroutine startElement_handler
 end module
 
 program XMLreader
