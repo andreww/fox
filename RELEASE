@@ -7,8 +7,12 @@ DoX/Versioning.md
 wcml/test/test_cmlEndCml_2.xml
 & on the webpage
 
+Regenerate configure script - make in config/
+
 Check dates in license
 
 Update Changelog
+
+Commit state to SCM system
 
 release.sh
