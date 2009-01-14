@@ -65,7 +65,7 @@ common_lib: objsdir fsys_lib utils_lib
 	(cd common; $(MAKE) VPATH=$(VPATH)/common)
 common_lib_clean:
 	if test -d common; then (cd common; $(MAKE) VPATH=$(VPATH)/common clean) fi
-common_lib_check:
+common_lib_check: utils_lib_check
 	(cd common; $(MAKE) VPATH=$(VPATH)/common check)
 	touch common_lib_check
 #
@@ -73,6 +73,9 @@ utils_lib: objsdir fsys_lib
 	(cd utils; $(MAKE) VPATH=$(VPATH)/utils)
 utils_lib_clean:
 	if test -d utils; then (cd utils; $(MAKE) VPATH=$(VPATH)/utils clean) fi
+utils_lib_check:
+	(cd utils; $(MAKE) VPATH=$(VPATH)/utils check)
+	touch utils_lib_check
 #
 fsys_lib: objsdir
 	(cd fsys; $(MAKE) VPATH=$(VPATH)/fsys)
