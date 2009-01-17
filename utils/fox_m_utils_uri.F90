@@ -404,6 +404,7 @@ contains
     authority => null()
     userinfo => null()
     host => null()
+    port = -1
     path => null()
     segments => null()
     query => null()
