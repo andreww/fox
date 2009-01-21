@@ -2,6 +2,7 @@ module m_common_entities
 
 #ifndef DUMMYLIB
 
+  use fox_m_fsys_vstr, only: vs, new_vs, destroy_vs, len, operator(==), as_chars
   use fox_m_fsys_array_str, only: str_vs, vs_str_alloc
   use fox_m_fsys_format, only: str_to_int_10, str_to_int_16
   use fox_m_utils_uri, only: URI, destroyURI
@@ -15,11 +16,11 @@ module m_common_entities
     logical :: external
     logical :: wfc ! Was this entity declared externally or in a PE, where
                    ! a non-validating processor might not see it?
-    character(len=1), dimension(:), pointer :: name => null()
-    character(len=1), dimension(:), pointer :: text => null()
-    character(len=1), dimension(:), pointer :: publicId => null()
-    character(len=1), dimension(:), pointer :: systemId => null()
-    character(len=1), dimension(:), pointer :: notation => null()
+    type(vs), pointer :: name => null()
+    type(vs), pointer :: text => null()
+    type(vs), pointer :: publicId => null()
+    type(vs), pointer :: systemId => null()
+    type(vs), pointer :: notation => null()
     type(URI), pointer :: baseURI => null()
   end type entity_t
 
@@ -92,9 +93,9 @@ contains
   function getEntityNameByIndex(el, i) result(c)
     type(entity_list), intent(in) :: el
     integer, intent(in) :: i
-    character(len=size(el%list(i)%name)) :: c
+    character(len=len(el%list(i)%name)) :: c
 
-    c = str_vs(el%list(i)%name)
+    c = as_chars(el%list(i)%name)
   end function getEntityNameByIndex
 
   function getEntityByName(el, name) result(e)
@@ -106,7 +107,7 @@ contains
 
     e => null()
     do i = 1, size(el%list)
-      if (str_vs(el%list(i)%name)==name) then
+      if (as_chars(el%list(i)%name)==name) then
         e => el%list(i)
         exit
       endif
@@ -125,11 +126,11 @@ contains
   subroutine destroy_entity(ent)
     type(entity_t), intent(inout) :: ent
     
-    deallocate(ent%name)
-    deallocate(ent%text)
-    deallocate(ent%publicId)
-    deallocate(ent%systemId)
-    deallocate(ent%notation)
+    call destroy_vs(ent%name)
+    call destroy_vs(ent%text)
+    call destroy_vs(ent%publicId)
+    call destroy_vs(ent%systemId)
+    call destroy_vs(ent%notation)
 
     if (associated(ent%baseURI)) call destroyURI(ent%baseURI)
 
@@ -139,6 +140,11 @@ contains
   subroutine init_entity_list(ents)
     type(entity_list), intent(inout) :: ents
 
+    !FIXME: does this not leak memory if we have ents in the list? 
+    !       I suspect we should iterate over the list and call
+    !       destroy_entity for each entity we find?
+    !       ie: we should call destroy_entity_list .. unless the
+    !       caller makes a copy of the pointer first?
     if (associated(ents%list)) deallocate(ents%list)
     allocate(ents%list(0))
 
@@ -168,7 +174,7 @@ contains
 
   function pop_entity_list(ents) result(name)
     type(entity_list), intent(inout) :: ents
-    character(len=size(ents%list(size(ents%list))%name)) :: name
+    character(len=len(ents%list(size(ents%list))%name)) :: name
     
     type(entity_t), pointer :: ents_tmp(:)
     integer :: i, n
@@ -179,7 +185,7 @@ contains
     do i = 1, n - 1
       ents%list(i) = shallow_copy_entity(ents_tmp(i))
     enddo
-    name = str_vs(ents_tmp(i)%name)
+    name = as_chars(ents_tmp(i)%name)
 
     call destroy_entity(ents_tmp(i))
     deallocate(ents_tmp)
@@ -193,11 +199,11 @@ contains
     n = size(ents%list)
     write(*,'(a)') '>ENTITYLIST'
     do i = 1, n
-      write(*,'(a)') str_vs(ents%list(i)%name)
-      write(*,'(a)') str_vs(ents%list(i)%text)
-      write(*,'(a)') str_vs(ents%list(i)%publicId)
-      write(*,'(a)') str_vs(ents%list(i)%systemId)
-      write(*,'(a)') str_vs(ents%list(i)%notation)
+      write(*,'(a)') as_chars(ents%list(i)%name)
+      write(*,'(a)') as_chars(ents%list(i)%text)
+      write(*,'(a)') as_chars(ents%list(i)%publicId)
+      write(*,'(a)') as_chars(ents%list(i)%systemId)
+      write(*,'(a)') as_chars(ents%list(i)%notation)
     enddo
     write(*,'(a)') '<ENTITYLIST'
   end subroutine print_entity_list
@@ -232,11 +238,11 @@ contains
     deallocate(ents_tmp)
     ents%list(i)%external = len(systemId)>0
     ents%list(i)%wfc = wfc
-    ents%list(i)%name => vs_str_alloc(name)
-    ents%list(i)%text => vs_str_alloc(text)
-    ents%list(i)%publicId => vs_str_alloc(publicId)
-    ents%list(i)%systemId => vs_str_alloc(systemId)
-    ents%list(i)%notation => vs_str_alloc(notation)
+    ents%list(i)%name => new_vs(init_chars=name)
+    ents%list(i)%text => new_vs(init_chars=text)
+    ents%list(i)%publicId => new_vs(init_chars=publicId)
+    ents%list(i)%systemId => new_vs(init_chars=systemId)
+    ents%list(i)%notation => new_vs(init_chars=notation)
     ents%list(i)%baseURI => baseURI
   end subroutine add_entity
 
@@ -292,8 +298,8 @@ contains
     p = .false.
 
     do i = 1, size(ents%list)
-      if (name == str_vs(ents%list(i)%name)) then
-        p = (size(ents%list(i)%notation)>0)
+      if (name == ents%list(i)%name) then
+        p = (len(ents%list(i)%notation)>0)
         exit
       endif
     enddo
@@ -303,7 +309,7 @@ contains
     type(entity_t), intent(in) :: ent
     logical :: p
 
-    p = (size(ent%notation)>0)
+    p = (len(ent%notation)>0)
 
   end function is_unparsed_entity_
 
@@ -318,7 +324,7 @@ contains
     p = .false.
 
     do i = 1, size(ents%list)
-      if (name == str_vs(ents%list(i)%name)) then
+      if (name == ents%list(i)%name) then
         p = ents%list(i)%external
         exit
       endif
@@ -397,7 +403,7 @@ contains
 !FIXME the following test is not entirely in accordance with the valid chars check we do elsewhere...
 
     do i = 1, size(ents%list)
-      if (name == str_vs(ents%list(i)%name)) then
+      if (name == ents%list(i)%name) then
         p = .true.
         return
       endif
@@ -414,8 +420,8 @@ contains
     integer :: i
 
     do i = 1, size(ents%list)
-      if (name == str_vs(ents%list(i)%name)) then
-        n = size(ents%list(i)%text)
+      if (name == ents%list(i)%name) then
+        n = len(ents%list(i)%text)
       endif
     enddo
 
@@ -432,8 +438,8 @@ contains
     ! No error checking - make sure entity exists before calling it.
 
     do i = 1, size(ents%list)
-      if (name == str_vs(ents%list(i)%name)) then
-        text = str_vs(ents%list(i)%text)
+      if (name == ents%list(i)%name) then
+        text = as_chars(ents%list(i)%text)
         exit
       endif
     enddo
@@ -449,8 +455,8 @@ contains
     integer :: i
 
     do i = 1, size(ents%list)
-      if (name == str_vs(ents%list(i)%name)) then
-        n = size(ents%list(i)%text)
+      if (name == ents%list(i)%name) then
+        n = len(ents%list(i)%text)
       endif
     enddo
 
@@ -465,8 +471,8 @@ contains
     integer :: i
     
     do i = 1, size(ents%list)
-      if (name == str_vs(ents%list(i)%name)) then
-        text = str_vs(ents%list(i)%text)
+      if (name == ents%list(i)%name) then
+        text = as_chars(ents%list(i)%text)
       endif
     enddo
 

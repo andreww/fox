@@ -1,5 +1,6 @@
 module m_dom_parse
 
+  use fox_m_fsys_vstr, only: as_chars, len
   use fox_m_fsys_array_str, only: str_vs, vs_str_alloc
   use fox_m_utils_uri, only: URI, parseURI, rebaseURI, expressURI, destroyURI
   use m_common_attrs, only: hasKey, getValue, getIndex, getIsId, getBase,      &
@@ -269,11 +270,11 @@ contains
 
     do i = 1, size(xds%entityList)
       ent => getEntityByIndex(xds%entityList, i)
-      np => getNamedItem(entities, str_vs(ent%name))
+      np => getNamedItem(entities, as_chars(ent%name))
 
       ok = .false.
       if (ent%external) then
-        if (size(ent%notation)==0) then
+        if (len(ent%notation)==0) then
           call open_xml_file(subsax, expressURI(ent%baseURI), iostat=ios)
           if (ios/=0) then
             call setIllFormed(np, .true.)

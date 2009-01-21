@@ -428,12 +428,12 @@ contains
         ent => getEntityByIndex(initial_entities, i)
         if (ent%external) then
           call register_external_GE(fx%xds, &
-            name=str_vs(ent%name), systemId=str_vs(ent%systemId), &
-            publicId=str_vs(ent%publicId), &
+            name=as_chars(ent%name), systemId=as_chars(ent%systemId), &
+            publicId=as_chars(ent%publicId), &
             wfc=ent%wfc, baseURI=copyURI(ent%baseURI))
         else
           call register_internal_GE(fx%xds, &
-            name=str_vs(ent%name), text=str_vs(ent%text), &
+            name=as_chars(ent%name), text=as_chars(ent%text), &
             wfc=ent%wfc, baseURI=copyURI(ent%baseURI))
         endif
       enddo
@@ -1058,7 +1058,7 @@ contains
               call add_error(fx%error_stack, &
                 'Externally declared entity referenced in standalone document')
               goto 100
-            elseif (str_vs(ent%notation)/="") then
+            elseif (ent%notation /= "") then
               call add_error(fx%error_stack, &
                 'Cannot reference unparsed entity in content')
               goto 100
@@ -2905,8 +2905,8 @@ contains
       if (validCheck) then
         do i = 1, size(fx%xds%entityList)
           ent => getEntityByIndex(fx%xds%entityList, i)
-          if (str_vs(ent%notation)/="" &
-            .and..not.notation_exists(fx%nlist, str_vs(ent%notation))) then
+          if (ent%notation /= "" &
+            .and..not.notation_exists(fx%nlist, as_chars(ent%notation))) then
             ! Validity Constraint: Notation Declared
             call add_error(fx%error_stack, "Attempt to use undeclared notation")
             exit

@@ -1031,7 +1031,7 @@ contains
               call add_error(fx%error_stack, &
                 "Externally declared entity used in standalone document")
               goto 100
-            elseif (str_vs(ent%notation)/="") then
+            elseif (ent%notation /= "") then
               call add_error(fx%error_stack, "Unparsed entity reference forbidden in entity value")
               goto 100
             endif
