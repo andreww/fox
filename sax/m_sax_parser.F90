@@ -1836,13 +1836,11 @@ contains
                 !FIXME: AMW Some nasty gymnastics here need removing,
                 !       but that will wait until the elem types are
                 !       converted to vstrs
-                tempString => elem%attlist%list(i)%default
                 tempVString => &
-                  normalize_attribute_text(fx, str_vs(tempString))
-                elem%attlist%list(i)%default => &
-                  vs_str_alloc(as_chars(tempVString))
-                deallocate(tempString)
-                call destroy_vs(tempVString)
+                  normalize_attribute_text(fx, as_chars(elem%attlist%list(i)%default))
+                call destroy_vs(elem%attlist%list(i)%default)
+                elem%attlist%list(i)%default => tempVString
+                tempVString => null()
                 if (in_error(fx%error_stack)) return
               endif
             enddo
@@ -1973,7 +1971,7 @@ contains
           wf_stack(1) = wf_stack(1) - 1
           if (processDTD.and.associated(elem)) then
             if (present(elementDecl_handler)) then
-              call elementDecl_handler(as_chars(fx%name), str_vs(elem%model))
+              call elementDecl_handler(as_chars(fx%name), as_chars(elem%model))
               if (fx%state==ST_STOP) return
             endif
           endif
@@ -2585,12 +2583,12 @@ contains
 
       do i = 1, size(el%attlist%list)
         att => el%attlist%list(i)
-        call get_att_index_pointer(dict, str_vs(att%name), ind, attValue)
+        call get_att_index_pointer(dict, as_chars(att%name), ind, attValue)
         if (.not.associated(attValue)) then
           if (att%attDefault==ATT_DEFAULT &
             .or.att%attDefault==ATT_FIXED) then
             call add_item_to_dict(dict, &
-              str_vs(att%name), str_vs(att%default), &
+              as_chars(att%name), as_chars(att%default), &
               specified=.false., declared=.true.)
           endif
         endif
@@ -2614,7 +2612,7 @@ contains
 
       do i = 1, size(el%attlist%list)
         att => el%attlist%list(i)
-        call get_att_index_pointer(dict, str_vs(att%name), ind, attValue)
+        call get_att_index_pointer(dict, as_chars(att%name), ind, attValue)
         if (associated(attValue)) attributesLeft(ind) = .false.
         select case(att%attDefault)
         case (ATT_REQUIRED, ATT_IMPLIED, ATT_DEFAULT)
@@ -2622,7 +2620,7 @@ contains
             if (att%attDefault==ATT_REQUIRED) then
               ! Validity Constraint: Required Attribute
               call add_error(fx%error_stack, &
-                "REQUIRED attribute "//str_vs(att%name)//" not present")
+                "REQUIRED attribute "//as_chars(att%name)//" not present")
               return
             elseif (att%attDefault==ATT_DEFAULT) then
               if (fx%xds%standalone.and..not.att%internal) then
@@ -2632,7 +2630,7 @@ contains
                 return
               else
                 call add_item_to_dict(dict, &
-                  str_vs(att%name), str_vs(att%default), &
+                  as_chars(att%name), as_chars(att%default), &
                   specified=.false., declared=.true.)
               endif
             endif
@@ -2705,16 +2703,16 @@ contains
                 if (.not.is_unparsed_entity(ent)) then
                   ! Validity Constraint: Entity Name
                   call add_error(fx%error_stack, &
-                    "Attribute "//str_vs(att%name) &
-                    //" of element "//str_vs(el%name) &
+                    "Attribute "//as_chars(att%name) &
+                    //" of element "//as_chars(el%name) &
                     //" declared as ENTITY refers to parsed entity")
                   return
                 endif
               else
                 ! Validity Constraint: Entity Name
                 call add_error(fx%error_stack, &
-                  "Attribute "//str_vs(att%name) &
-                  //" of element "//str_vs(el%name) &
+                  "Attribute "//as_chars(att%name) &
+                  //" of element "//as_chars(el%name) &
                   //" declared as ENTITY refers to non-existent entity")
                 return
               endif
@@ -2738,8 +2736,8 @@ contains
                   if (.not.is_unparsed_entity(ent)) then
                     ! Validity Constraint: Entity Name
                     call add_error(fx%error_stack, &
-                      "Attribute "//str_vs(att%name) &
-                      //" of element "//str_vs(el%name) &
+                      "Attribute "//as_chars(att%name) &
+                      //" of element "//as_chars(el%name) &
                       //" declared as ENTITIES refers to parsed entity "&
                       //str_vs(s))
                     call destroy_string_list(s_list)
@@ -2748,8 +2746,8 @@ contains
                 else
                   ! Validity Constraint: Entity Name
                   call add_error(fx%error_stack, &
-                    "Attribute "//str_vs(att%name) &
-                    //" of element "//str_vs(el%name) &
+                    "Attribute "//as_chars(att%name) &
+                    //" of element "//as_chars(el%name) &
                     //" declared as ENTITIES refers to non-existent entity "&
                     //str_vs(s))
                   call destroy_string_list(s_list)
@@ -2786,7 +2784,7 @@ contains
               if (.not.notation_exists(fx%nlist, str_vs(attValue))) then
                 ! Validity Constraint: Notation Attributes
                 call add_error(fx%error_stack, &
-                  "Attribute "//str_vs(att%name) &
+                  "Attribute "//as_chars(att%name) &
                   //" declared as NOTATION refers to non-existent notation "&
                   //str_vs(attValue))
                 return
@@ -2806,8 +2804,8 @@ contains
               if (.not.registered_string(att%enumerations, str_vs(attValue))) then
                 ! Validity Constraint: Enumeration
                 call add_error(fx%error_stack, &
-                  "Attribute "//str_vs(att%name) &
-                  //" of element "//str_vs(el%name) &
+                  "Attribute "//as_chars(att%name) &
+                  //" of element "//as_chars(el%name) &
                   //" declared as ENUM refers to undeclared enumeration "&
                   //str_vs(attValue))
                 return
@@ -2816,7 +2814,7 @@ contains
           endif
         case (ATT_FIXED)
           if (associated(attValue)) then
-            if (str_vs(att%default)//"x"/=str_vs(attValue)//"x") then
+            if (as_chars(att%default)//"x"/=str_vs(attValue)//"x") then
               ! Validity Constraint: Fixed Attribute Default
               call add_error(fx%error_stack, &
                 "FIXED attribute has wrong value")
@@ -2830,7 +2828,7 @@ contains
               return
             else
               call add_item_to_dict(dict, &
-                str_vs(att%name), str_vs(att%default), &
+                as_chars(att%name), as_chars(att%default), &
                 specified=.false., declared=.true.)
             endif
           endif
@@ -2923,22 +2921,22 @@ contains
                 if (.not.notation_exists(fx%nlist, str_vs(s))) then
                   ! Validity Constraint: Notation Attributes
                   call add_error(fx%error_stack, &
-                    "Enumerated NOTATION in "//str_vs(att%name) &
-                    //" of element "//str_vs(el%name) &
+                    "Enumerated NOTATION in "//as_chars(att%name) &
+                    //" of element "//as_chars(el%name) &
                     //" refers to non-existent notation")
                   call destroy(s_list)
                   exit validLoop
                 endif
               enddo
               if (associated(att%default)) then
-                s_list = tokenize_to_string_list(str_vs(att%default))
+                s_list = tokenize_to_string_list(as_chars(att%default))
                 do k = 1, size(s_list%list)
                   s => s_list%list(k)%s
                   if (.not.notation_exists(fx%nlist, str_vs(s))) then
                     ! Validity Constraint: Notation Attributes
                     call add_error(fx%error_stack, &
-                      "Attribute "//str_vs(att%name) &
-                      //" of element "//str_vs(el%name) &
+                      "Attribute "//as_chars(att%name) &
+                      //" of element "//as_chars(el%name) &
                       //" declared as NOTATION refers to non-existent notation")
                     call destroy(s_list)
                     exit validLoop

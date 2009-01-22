@@ -13,6 +13,8 @@ public :: as_chars
 public :: operator(==)
 public :: operator(/=)
 public :: len
+public :: vs_set_chars
+
 
 type vs
     private
@@ -88,6 +90,18 @@ subroutine add_chars(my_vs, chars)
 
 end subroutine add_chars   
 
+subroutine vs_set_chars(my_vs, i, j, chars)
+
+    type(vs),                   intent(inout) :: my_vs
+    integer,                    intent(in)    :: i
+    integer,                    intent(in)    :: j
+    character(len=j-i+1),       intent(in)    :: chars
+    
+    !FIXME - sanity checkes here?
+    my_vs%chars(i:j) = chars
+   
+end subroutine vs_set_chars
+
 subroutine push_vs_chars (my_vs, chars)
 
     type(vs),                   intent(inout) :: my_vs
@@ -138,11 +152,15 @@ function as_chars_subset(my_vs, first, last) result(chars)
     if (last.lt.1) STOP "as_chars_subset index must be positive"
     if (first.lt.1) STOP "as_chars_subset index must be positive"
     if (first.gt.last) STOP "as_chars_subset backwards indes?"
-    if ((last-first+1).gt.my_vs%str_len) STOP "as_chars_subset Substring too long"
+!    if ((last-first+1).gt.my_vs%str_len) STOP "as_chars_subset Substring too long"
 
     j = 1
     do i = first, last
-        chars(j:j) = my_vs%chars(i)
+        if (i .le. len(my_vs)) then
+          chars(j:j) = my_vs%chars(i)
+        else
+          chars(j:j) = ''
+        endif
         j = j + 1
     enddo
 

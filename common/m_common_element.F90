@@ -3,6 +3,8 @@ module m_common_element
 #ifndef DUMMYLIB
   ! Structure and manipulation of element specification
 
+  use fox_m_fsys_vstr, only: vs, new_vs, destroy_vs, operator(==), &
+    as_chars, len, vs_set_chars, add_chars
   use fox_m_fsys_array_str, only: str_vs, vs_str_alloc, vs_vs_alloc
   use fox_m_fsys_string_list, only: string_list, init_string_list, &
     destroy_string_list, add_string, tokenize_to_string_list, &
@@ -78,11 +80,11 @@ module m_common_element
 
 
   type attribute_t
-    character, pointer :: name(:) => null()
+    type(vs), pointer :: name => null()
     integer :: attType = ATT_NULL 
     integer :: attDefault = ATT_NULL
     type(string_list) :: enumerations
-    character, pointer :: default(:) => null()
+    type(vs), pointer :: default => null()
     logical :: internal = .true.
   end type attribute_t
 
@@ -91,14 +93,14 @@ module m_common_element
   end type attribute_list
 
   type element_t
-    character, pointer :: name(:) => null()
+    type(vs), pointer :: name => null()
     logical :: empty = .false.
     logical :: any = .false.
     logical :: mixed = .false.
     logical :: id_declared = .false.
     logical :: internal = .true.
-    type (content_particle_t), pointer :: cp => null()
-    character, pointer :: model(:) => null()
+    type(content_particle_t), pointer :: cp => null()
+    type(vs), pointer :: model => null()
     type(attribute_list) :: attlist
   end type element_t
 
@@ -180,9 +182,9 @@ contains
     integer :: i
 
     do i = 1, size(e_list%list)
-      deallocate(e_list%list(i)%name)
+      call destroy_vs(e_list%list(i)%name)
       if (associated(e_list%list(i)%cp)) call destroyCPtree(e_list%list(i)%cp)
-      if (associated(e_list%list(i)%model)) deallocate(e_list%list(i)%model)
+      if (associated(e_list%list(i)%model)) call destroy_vs(e_list%list(i)%model)
       call destroy_attribute_list(e_list%list(i)%attlist)
     enddo
     deallocate(e_list%list)
@@ -197,7 +199,7 @@ contains
 
     p = .false.
     do i = 1, size(e_list%list)
-      if (str_vs(e_list%list(i)%name)==name) then
+      if (e_list%list(i)%name == name) then
         p = .true.
         exit
       endif
@@ -213,7 +215,7 @@ contains
 
     p = .false.
     do i = 1, size(e_list%list)
-      if (str_vs(e_list%list(i)%name)==name) then
+      if (e_list%list(i)%name == name) then
         p = associated(e_list%list(i)%model)
         exit
       endif
@@ -228,7 +230,7 @@ contains
     integer :: i
 
     do i = 1, size(e_list%list)
-      if (str_vs(e_list%list(i)%name)==name) then
+      if (e_list%list(i)%name == name) then
         e => e_list%list(i)
         return
       endif
@@ -260,7 +262,7 @@ contains
     enddo
     deallocate(temp)
     e => e_list%list(i)
-    e%name => vs_str_alloc(name)
+    e%name => new_vs(init_chars=name)
     call init_attribute_list(e%attlist)
 
   end function add_element
@@ -276,7 +278,7 @@ contains
     integer :: i, nbrackets
     logical :: mixed, empty, any
     character :: c
-    character, pointer :: order(:), name(:), temp(:)
+    type(vs), pointer :: order, name, temp
     type(content_particle_t), pointer :: top, current, tcp
     logical :: mixed_additional, firstChild
 
@@ -309,10 +311,10 @@ contains
         if (verify(c, XML_WHITESPACE)==0) then
           continue
         elseif (verify(c, 'EMPTYANY')==0) then
-          name => vs_str_alloc(c)
+          name => new_vs(init_chars=c)
           state = ST_EMPTYANY
         elseif (c=='(') then
-          order => vs_str_alloc(" ")
+          order => new_vs(init_chars=" ")
           nbrackets = 1
           top => newCP()
           current => top
@@ -326,15 +328,13 @@ contains
       elseif (state==ST_EMPTYANY) then
         !write(*,*)'ST_EMPTYANY'
         if (verify(c, upperCase)==0) then
-          temp => name
-          name => vs_str_alloc(str_vs(temp)//c)
-          deallocate(temp)
+          call add_chars(name, c)
         elseif (verify(c, XML_WHITESPACE)==0) then
-          if (str_vs(name)=='EMPTY') then
+          if (name == 'EMPTY') then
             empty = .true.
             top => newCP(empty=.true.)
             current => top
-          elseif (str_vs(name)=='ANY') then
+          elseif (name == 'ANY') then
             any = .true.
             top => newCP(any=.true.)
             current => top
@@ -343,7 +343,7 @@ contains
               'Unexpected ELEMENT specification; expecting EMPTY or ANY')
             goto 100
           endif
-          deallocate(name)
+          call destroy_vs(name)
           state = ST_END
         else
           call add_error(stack, &
@@ -357,19 +357,21 @@ contains
         if (c=='#') then
           mixed = .true.
           state = ST_PCDATA
-          name => vs_str_alloc("")
+          name => new_vs()
         elseif (isInitialNameChar(c, xv)) then
-          allocate(name(1))
-          name(1) = c
+          ! FIXME - is this correct?? (AMW)
+          !allocate(name(1))
+          !name(1) = c
+          name => new_vs(init_chars=c)
           state = ST_NAME
         elseif (c=='(') then
           nbrackets = nbrackets + 1
-          deallocate(order)
+          call destroy_vs(order)
           tcp => newCP()
           current%firstChild => tcp
           tcp%parent => current
           current => tcp
-          order => vs_str_alloc("  ")
+          order => new_vs(init_chars="  ")
           state = ST_CHILD
         else
           call add_error(stack, &
@@ -380,12 +382,10 @@ contains
       elseif (state==ST_PCDATA) then
         !write(*,*)'ST_PCDATA'
         if (verify(c, 'PCDATA')==0) then
-          temp => name
-          name => vs_str_alloc(str_vs(temp)//c)
-          deallocate(temp)
+          call add_chars(name, c)
         elseif (verify(c, XML_WHITESPACE)==0) then
-          if (str_vs(name)=='PCDATA') then
-            deallocate(name)
+          if (name == 'PCDATA') then
+            call destroy_vs(name)
           else
             call add_error(stack, &
               'Unexpected token after #')
@@ -400,11 +400,11 @@ contains
           firstChild = .false.
           state = ST_SEPARATOR
         elseif (c==')') then
-          if (str_vs(name)=='PCDATA') then
-            deallocate(name)
+          if (name == 'PCDATA') then
+            call destroy_vs(name)
             nbrackets = 0
             state = ST_AFTERLASTBRACKET
-            deallocate(order)
+            call destroy_vs(order)
           else
             call add_error(stack, &
               'Unexpected token after #')
@@ -417,9 +417,9 @@ contains
           tcp%parent => current
           firstChild = .false.
         elseif (c=='|') then
-          if (str_vs(name)=='PCDATA') then
+          if (name == 'PCDATA') then
             firstChild = .false.
-            deallocate(name)
+            call destroy_vs(name)
           else
             call add_error(stack, &
               'Unexpected token after #')
@@ -432,7 +432,7 @@ contains
           tcp%parent => current
           current => tcp
           firstChild = .false.
-          order(1) = '|'
+          call vs_set_chars(order, 1, 1, '|')
           state = ST_CHILD
         elseif (c==',') then
           call add_error(stack, &
@@ -447,17 +447,15 @@ contains
       elseif (state==ST_NAME) then
         !write(*,*)'ST_NAME'
         if (isNameChar(c, xv)) then
-          temp => name
-          name => vs_str_alloc(str_vs(temp)//c)
-          deallocate(temp)
+          call add_chars(name, c)
         elseif (scan(c, "?+*")>0) then
           if (mixed) then
             call add_error(stack, &
               'Repeat operators forbidden for Mixed elements')
             goto 100
           endif
-          tcp => newCP(name=str_vs(name), repeat=c)
-          deallocate(name)
+          tcp => newCP(name=as_chars(name), repeat=c)
+          call destroy_vs(name)
           if (firstChild) then
             current%firstChild => tcp
             tcp%parent => current
@@ -471,8 +469,8 @@ contains
           state = ST_SEPARATOR
         elseif (verify(c, XML_WHITESPACE)==0) then
           if (mixed) mixed_additional = .true.
-          tcp => newCP(name=str_vs(name))
-          deallocate(name)
+          tcp => newCP(name=as_chars(name))
+          call destroy_vs(name)
           if (firstChild) then
             current%firstChild => tcp
             tcp%parent => current
@@ -484,16 +482,17 @@ contains
           current => tcp
           state = ST_SEPARATOR
         elseif (scan(c,',|')>0) then
-          if (order(nbrackets)=='') then
-            order(nbrackets)=c
-          elseif (order(nbrackets)/=c) then
+          !FIXME: really need a good way to do substrings in vstr's
+          if (as_chars(order, nbrackets, nbrackets)=='') then
+            call vs_set_chars(order, nbrackets, nbrackets, c)
+          elseif (as_chars(order, nbrackets, nbrackets)/=c) then
             call add_error(stack, &
               'Cannot mix ordered and unordered elements')
             goto 100
           endif
           if (mixed) mixed_additional = .true.
-          tcp => newCP(name=str_vs(name))
-          deallocate(name)
+          tcp => newCP(name=as_chars(name))
+          call destroy_vs(name)
           if (firstChild) then
             current%firstChild => tcp
             tcp%parent => current
@@ -511,16 +510,15 @@ contains
           nbrackets = nbrackets - 1
           if (nbrackets==0) then
             state = ST_AFTERLASTBRACKET
-            deallocate(order)
+            call destroy_vs(order)
           else
             temp => order
-            allocate(order(nbrackets))
-            order = temp(:size(order))
-            deallocate(temp)
+            order => new_vs(init_chars=as_chars(temp, 1, nbrackets))
+            call destroy_vs(temp)
             state = ST_AFTERBRACKET
           endif
-          tcp => newCP(name=str_vs(name))
-          deallocate(name)
+          tcp => newCP(name=as_chars(name))
+          call destroy_vs(name)
           if (firstChild) then
             current%firstChild => tcp
             tcp%parent => current
@@ -546,7 +544,7 @@ contains
             '# forbidden except as first child element')
           goto 100
         elseif (isInitialNameChar(c, xv)) then
-          name => vs_str_alloc(c)
+          name => new_vs(init_chars=c)
           state = ST_NAME
         elseif (c=='(') then
           if (mixed) then
@@ -565,9 +563,7 @@ contains
           endif
           current => tcp
           nbrackets = nbrackets + 1
-          temp => order
-          order => vs_str_alloc(str_vs(temp)//" ")
-          deallocate(temp)
+          call add_chars(order, " ")
         else
           call add_error(stack, &
             'Unexpected character "'//c//'" found after (')
@@ -582,9 +578,9 @@ contains
             '#PCDATA must be first in list')
           goto 100
         elseif (scan(c,'|,')>0) then
-          if (order(nbrackets)=='') then
-            order(nbrackets) = c
-          elseif (order(nbrackets)/=c) then
+          if (as_chars(order,nbrackets,nbrackets)=='') then
+            call vs_set_chars(order, nbrackets, nbrackets, c)
+          elseif (as_chars(order,nbrackets,nbrackets)/=c) then
             call add_error(stack, &
               'Cannot mix ordered and unordered elements')
             goto 100
@@ -596,12 +592,11 @@ contains
           nbrackets = nbrackets - 1
           if (nbrackets==0) then
             state = ST_AFTERLASTBRACKET
-            deallocate(order)
+            call destroy_vs(order)
           else
             temp => order
-            allocate(order(nbrackets))
-            order = temp(:size(order))
-            deallocate(temp)
+            order => new_vs(init_chars=as_chars(temp, 1, nbrackets))
+            call destroy_vs(temp)
             state = ST_AFTERBRACKET
           endif
           current => current%parent
@@ -627,9 +622,9 @@ contains
         elseif (verify(c, XML_WHITESPACE)==0) then
           state = ST_SEPARATOR
         elseif (scan(c,'|,')>0) then
-          if (order(nbrackets)=='') then
-            order(nbrackets) = c
-          elseif (order(nbrackets)/=c) then
+          if (as_chars(order,nbrackets,nbrackets)=='') then
+            call vs_set_chars(order, nbrackets, nbrackets, c)
+          elseif (as_chars(order,nbrackets,nbrackets)/=c) then
             call add_error(stack, &
               'Cannot mix ordered and unordered elements')
             goto 100
@@ -640,13 +635,12 @@ contains
         elseif (c==')') then
           nbrackets = nbrackets - 1
           if (nbrackets==0) then
-            deallocate(order)
+            call destroy_vs(order)
             state = ST_AFTERLASTBRACKET
           else
             temp => order
-            allocate(order(nbrackets))
-            order = temp(:size(order))
-            deallocate(temp)
+            order => new_vs(init_chars=as_chars(temp, 1, nbrackets))
+            call destroy_vs(temp)
             state = ST_AFTERBRACKET
           endif
           current => current%parent
@@ -717,7 +711,7 @@ contains
       element%any = any
       element%empty = empty
       element%mixed = mixed
-      element%model => vs_str_alloc(trim(strip_spaces(contents)))
+      element%model => new_vs(init_chars=trim(strip_spaces(contents)))
       element%cp => top
       element%internal = internal
       call dumpCPtree(top)
@@ -726,8 +720,8 @@ contains
     endif
     return
 
-100 if (associated(order)) deallocate(order)
-    if (associated(name)) deallocate(name)
+100 if (associated(order)) call destroy_vs(order)
+    if (associated(name)) call destroy_vs(name)
     if (associated(top)) call destroyCPtree(top)
 
     contains
@@ -792,8 +786,8 @@ contains
   subroutine destroy_attribute_t(a)
     type(attribute_t), pointer :: a 
 
-    if (associated(a%name)) deallocate(a%name)
-    if (associated(a%default)) deallocate(a%default)
+    if (associated(a%name)) call destroy_vs(a%name)
+    if (associated(a%default)) call destroy_vs(a%default)
     call destroy_string_list(a%enumerations)
 
     deallocate(a)
@@ -805,8 +799,8 @@ contains
     integer :: i
 
     do i = 1, size(a_list%list)
-      deallocate(a_list%list(i)%name)
-      if (associated(a_list%list(i)%default)) deallocate(a_list%list(i)%default)
+      call destroy_vs(a_list%list(i)%name)
+      if (associated(a_list%list(i)%default)) call destroy_vs(a_list%list(i)%default)
       call destroy_string_list(a_list%list(i)%enumerations)
     enddo
     deallocate(a_list%list)
@@ -821,7 +815,7 @@ contains
     integer :: i
     p = .false.
     do i = 1, size(a_list%list)
-      p = (str_vs(a_list%list(i)%name)==name)
+      p = (a_list%list(i)%name == name)
       if (p) exit
     enddo
   end function existing_attribute
@@ -848,7 +842,7 @@ contains
     deallocate(temp)
     a => a_list%list(i)
 
-    a%name => vs_str_alloc(name)
+    a%name => new_vs(init_chars=name)
     call init_string_list(a%enumerations)
     a%internal = internal
 
@@ -861,7 +855,7 @@ contains
 
     integer :: i
     do i = 1, size(a_list%list)
-      if (str_vs(a_list%list(i)%name)==name) then
+      if (a_list%list(i)%name == name) then
         a => a_list%list(i)
         exit
       endif
@@ -880,7 +874,7 @@ contains
     integer :: i
     integer :: state
     character :: c, q
-    character, pointer :: name(:), attType(:), default(:), value(:), temp(:)
+    type(vs), pointer :: name, attType, default, value, temp
 
     type(attribute_t), pointer :: ca
     type(attribute_t), pointer :: ignore_att
@@ -909,7 +903,7 @@ contains
         !write(*,*)'ST_START'
         if (verify(c, XML_WHITESPACE)==0) cycle
         if (isInitialNameChar(c, xv)) then
-          name => vs_str_alloc(c)
+          name => new_vs(init_chars=c)
           state = ST_NAME
         else
           call add_error(stack, &
@@ -919,31 +913,31 @@ contains
       elseif (state==ST_NAME) then
         !write(*,*)'ST_NAME'
         if (isNameChar(c, xv)) then
-          temp => vs_str_alloc(str_vs(name)//c)
-          deallocate(name)
-          name => temp
+          call add_chars(name, c)
         elseif (verify(c, XML_WHITESPACE)==0) then
-          if (namespaces.and..not.checkQName(str_vs(name), xv)) then
+          if (namespaces.and..not.checkQName(as_chars(name), xv)) then
             call add_error(stack, &
               "Attribute name in ATTLIST must be QName")
           elseif (associated(elem)) then
-            if (existing_attribute(elem%attlist, str_vs(name))) then
+            if (existing_attribute(elem%attlist, as_chars(name))) then
               if (associated(ignore_att)) call destroy_attribute_t(ignore_att)
               allocate(ignore_att)
               call init_string_list(ignore_att%enumerations)
-              ignore_att%name => vs_vs_alloc(name)
+              !FIXME: AMW do I need a deep copy method?
+              ignore_att%name => new_vs(init_chars=as_chars(name))
               ca => ignore_att
             else
-              ca => add_attribute(elem%attlist, str_vs(name), internal)
+              ca => add_attribute(elem%attlist, as_chars(name), internal)
             endif
           else
             if (associated(ignore_att)) call destroy_attribute_t(ignore_att)
             allocate(ignore_att)
             call init_string_list(ignore_att%enumerations)
-            ignore_att%name => vs_vs_alloc(name)
+            !FIXME: AMW do I need a deep copy method?
+            ignore_att%name => new_vs(init_chars=as_chars(name))
             ca => ignore_att
           endif
-          deallocate(name)
+          call destroy_vs(name)
           state = ST_AFTERNAME
         else
           call add_error(stack, &
@@ -954,10 +948,10 @@ contains
         !write(*,*)'ST_AFTERNAME'
         if (verify(c, XML_WHITESPACE)==0) cycle
         if (verify(c, upperCase)==0) then
-          attType => vs_str_alloc(c)
+          attType => new_vs(init_chars=c)
           state = ST_ATTTYPE
         elseif (c=='(') then
-          allocate(value(0))
+          value => new_vs()
           ca%attType = ATT_ENUM
           state = ST_ENUMERATION
         else
@@ -968,19 +962,17 @@ contains
       elseif (state==ST_ATTTYPE) then
         !write(*,*)'ST_ATTTYPE'
         if (verify(c, upperCase)==0) then
-          temp => attType
-          attType => vs_str_alloc(str_vs(temp)//c)
-          deallocate(temp)
+          call add_chars(attType, c)
         elseif (verify(c, XML_WHITESPACE)==0) then
           ! xml:id constraint
-          if (str_vs(ca%name)=="xml:id" &
-            .and..not.str_vs(attType)=="ID") then
+          if ((ca%name == "xml:id") &
+            .and..not.(attType == "ID")) then
             call add_error(stack, &
               "xml:id attribute must be declared as type ID")
-          elseif (str_vs(attType)=='CDATA') then
+          elseif (attType == 'CDATA') then
             ca%attType = ATT_CDATA
             state = ST_AFTER_ATTTYPE
-          elseif (str_vs(attType)=='ID') then
+          elseif (attType == 'ID') then
             if (validCheck) then
               ! Validity Constraint: One ID per Element Type
               if (associated(elem)) then
@@ -994,32 +986,32 @@ contains
             endif
             ca%attType = ATT_ID
             state = ST_AFTER_ATTTYPE
-          elseif (str_vs(attType)=='IDREF') then
+          elseif (attType == 'IDREF') then
             ca%attType = ATT_IDREF
             state = ST_AFTER_ATTTYPE
-          elseif (str_vs(attType)=='IDREFS') then
+          elseif (attType == 'IDREFS') then
             ca%attType = ATT_IDREFS
             state = ST_AFTER_ATTTYPE
-          elseif (str_vs(attType)=='ENTITY') then
+          elseif (attType == 'ENTITY') then
             ca%attType = ATT_ENTITY
             state = ST_AFTER_ATTTYPE
-          elseif (str_vs(attType)=='ENTITIES') then
+          elseif (attType == 'ENTITIES') then
             ca%attType = ATT_ENTITIES
             state = ST_AFTER_ATTTYPE
-          elseif (str_vs(attType)=='NMTOKEN') then
+          elseif (attType == 'NMTOKEN') then
             ca%attType = ATT_NMTOKEN
             state = ST_AFTER_ATTTYPE
-          elseif (str_vs(attType)=='NMTOKENS') then
+          elseif (attType == 'NMTOKENS') then
             ca%attType = ATT_NMTOKENS
             state = ST_AFTER_ATTTYPE
-          elseif (str_vs(attType)=='NOTATION') then
+          elseif (attType == 'NOTATION') then
             ca%attType = ATT_NOTATION
             state = ST_AFTER_NOTATION
           else
             call add_error(stack, &
               'Unknown AttType')
           endif
-          deallocate(attType)
+          call destroy_vs(attType)
         else
           call add_error(stack, &
             'Unexpected character in AttType')
@@ -1039,7 +1031,7 @@ contains
         !write(*,*)'ST_NOTATION_LIST'
         if (verify(c, XML_WHITESPACE)==0) cycle
         if (isInitialNameChar(c, xv)) then
-          value => vs_str_alloc(c)
+          value => new_vs(init_chars=c)
           state = ST_ENUM_NAME
         else
           call add_error(stack, &
@@ -1050,9 +1042,7 @@ contains
         !write(*,*)'ST_ENUMERATION'
         if (verify(c, XML_WHITESPACE)==0) cycle
         if (isNameChar(c, xv)) then
-          temp => vs_str_alloc(str_vs(value)//c)
-          deallocate(value)
-          value => temp
+          call add_chars(value, c)
           state = ST_ENUM_NAME
         elseif (c=='|') then
           call add_error(stack, &
@@ -1068,56 +1058,54 @@ contains
       elseif (state==ST_ENUM_NAME) then
         !write(*,*)'ST_ENUM_NAME'
         if (isNameChar(c, xv)) then
-          temp => vs_str_alloc(str_vs(value)//c)
-          deallocate(value)
-          value => temp
+          call add_chars(value, c)
         elseif (verify(c, XML_WHITESPACE)==0) then
-          if (validCheck.and.registered_string(ca%enumerations, str_vs(value))) then
+          if (validCheck.and.registered_string(ca%enumerations, as_chars(value))) then
             call add_error(stack, &
               "Duplicate enumeration value in ATTLIST")
           elseif (namespaces.and.ca%attType==ATT_NOTATION &
-            .and..not.checkNCName(str_vs(value), xv)) then
+            .and..not.checkNCName(as_chars(value), xv)) then
             call add_error(stack, &
               "Notation name must be NCName")
           else
-            call add_string(ca%enumerations, str_vs(value))
+            call add_string(ca%enumerations, as_chars(value))
           endif
-          deallocate(value)
+          call destroy_vs(value)
           state = ST_SEPARATOR
         elseif (c=='|') then
-          if (validCheck.and.registered_string(ca%enumerations, str_vs(value))) then
+          if (validCheck.and.registered_string(ca%enumerations, as_chars(value))) then
             call add_error(stack, &
               "Duplicate enumeration value in ATTLIST")
           elseif (namespaces.and.ca%attType==ATT_NOTATION &
-            .and..not.checkNCName(str_vs(value), xv)) then
+            .and..not.checkNCName(as_chars(value), xv)) then
             call add_error(stack, &
               "Notation name must be NCName")
           else
-            call add_string(ca%enumerations, str_vs(value))
+            call add_string(ca%enumerations, as_chars(value))
           endif
-          deallocate(value)
+          call destroy_vs(value)
           if (ca%attType==ATT_NOTATION) then
             state = ST_NOTATION_LIST
           else
-            allocate(value(0))
+            value => new_vs()
             state = ST_ENUMERATION
           endif
         elseif (c==')') then
-          if (size(value)==0) then
+          if (len(value)==0) then
             call add_error(stack, &
               'Missing token in Enumeration list')
           endif
-          if (validCheck.and.registered_string(ca%enumerations, str_vs(value))) then
+          if (validCheck.and.registered_string(ca%enumerations, as_chars(value))) then
             call add_error(stack, &
               "Duplicate enumeration value in ATTLIST")
           elseif (namespaces.and.ca%attType==ATT_NOTATION &
-            .and..not.checkNCName(str_vs(value), xv)) then
+            .and..not.checkNCName(as_chars(value), xv)) then
             call add_error(stack, &
               "Notation name must be NCName")
           else
-            call add_string(ca%enumerations, str_vs(value))
+            call add_string(ca%enumerations, as_chars(value))
           endif
-          deallocate(value)
+          call destroy_vs(value)
           state = ST_AFTER_ATTTYPE_SPACE
         else
           call add_error(stack, &
@@ -1131,7 +1119,7 @@ contains
           if (ca%attType==ATT_NOTATION) then
             state = ST_NOTATION_LIST
           else
-            allocate(value(0))
+            value => new_vs()
             state = ST_ENUMERATION
           endif
         elseif (c==')') then
@@ -1152,7 +1140,7 @@ contains
         !write(*,*)'ST_AFTER_ATTTYPE'
         if (verify(c, XML_WHITESPACE)==0) cycle
         if (c=='#') then
-          allocate(default(0))
+          default => new_vs()
           state = ST_DEFAULT_DECL
         elseif (c=='"'.or.c=="'") then
           if (validCheck) then
@@ -1163,7 +1151,7 @@ contains
           endif
           ca%attDefault = ATT_DEFAULT
           q = c
-          allocate(value(0))
+          value => new_vs()
           state = ST_DEFAULTVALUE
         else
           call add_error(stack, &
@@ -1173,19 +1161,17 @@ contains
       elseif (state==ST_DEFAULT_DECL) then
         !write(*,*)'ST_DEFAULT_DECL'
         if (verify(c, upperCase)==0) then
-          temp => vs_str_alloc(str_vs(default)//c)
-          deallocate(default)
-          default => temp
+          call add_chars(default, c)
         elseif (verify(c, XML_WHITESPACE)==0) then
-          if (str_vs(default)=='REQUIRED') then
+          if (default == 'REQUIRED') then
             ca%attdefault = ATT_REQUIRED
-            deallocate(default)
+            call destroy_vs(default)
             state = ST_START
-          elseif (str_vs(default)=='IMPLIED') then
+          elseif (default == 'IMPLIED') then
             ca%attdefault = ATT_IMPLIED
-            deallocate(default)
+            call destroy_vs(default)
             state = ST_START
-          elseif (str_vs(default)=='FIXED') then
+          elseif (default == 'FIXED') then
             if (validCheck) then
               ! Validity Constraint: ID Attribute Default
               if (ca%attType==ATT_ID) &
@@ -1193,7 +1179,7 @@ contains
                 "Attribute of type ID may not have FIXED value")
             endif
             ca%attdefault = ATT_FIXED
-            deallocate(default)
+            call destroy_vs(default)
             state = ST_AFTERDEFAULTDECL
           else
             call add_error(stack, &
@@ -1209,11 +1195,11 @@ contains
         if (verify(c, XML_WHITESPACE)==0) cycle
         if (c=='"') then
           q = c
-          allocate(value(0))
+          value => new_vs()
           state = ST_DEFAULTVALUE
         elseif (c=="'") then
           q = c
-          allocate(value(0))
+          value => new_vs()
           state = ST_DEFAULTVALUE
         else
           call add_error(stack, &
@@ -1224,8 +1210,8 @@ contains
         !write(*,*)'ST_DEFAULTVALUE'
         if (c==q) then
           if (ca%attType/=ATT_CDATA) then
-            temp => vs_str_alloc(att_value_normalize(str_vs(value)))
-            deallocate(value)
+            temp => new_vs(init_chars=att_value_normalize(as_chars(value)))
+            call destroy_vs(value)
             value => temp
           endif
           if (validCheck) then
@@ -1234,74 +1220,74 @@ contains
             case (ATT_IDREF)
               ! VC: IDREF
               if (namespaces) then
-                if (.not.checkNCName(str_vs(value), xv)) &
+                if (.not.checkNCName(as_chars(value), xv)) &
                   call add_error(stack, &
                   "Attributes of type IDREF must have a value which is an XML NCName")
               else
-                if (.not.checkName(str_vs(value), xv)) &
+                if (.not.checkName(as_chars(value), xv)) &
                   call add_error(stack, &
                   "Attributes of type IDREF must have a value which is an XML Name")
               endif
             case (ATT_IDREFS)
               ! VC: IDREF
               if (namespaces) then
-                if (.not.checkNCNames(str_vs(value), xv)) &
+                if (.not.checkNCNames(as_chars(value), xv)) &
                   call add_error(stack, &
                   "Attributes of type IDREFS must have a value which contains only XML NCNames")
               else
-                if (.not.checkNames(str_vs(value), xv)) &
+                if (.not.checkNames(as_chars(value), xv)) &
                   call add_error(stack, &
                   "Attributes of type IDREFS must have a value which contains only XML Names")
               endif
             case (ATT_ENTITY)
               ! VC: Entity Name
               if (namespaces) then
-                if (.not.checkNCName(str_vs(value), xv)) &
+                if (.not.checkNCName(as_chars(value), xv)) &
                   call add_error(stack, &
                   "Attributes of type ENTITY must have a value which is an XML NCName")
               else
-                if (.not.checkName(str_vs(value), xv)) &
+                if (.not.checkName(as_chars(value), xv)) &
                   call add_error(stack, &
                   "Attributes of type ENTITY must have a value which is an XML Name")
               endif
             case (ATT_ENTITIES)
               ! VC: Entity Name
               if (namespaces) then
-                if (.not.checkNames(str_vs(value), xv)) &
+                if (.not.checkNames(as_chars(value), xv)) &
                   call add_error(stack, &
                   "Attributes of type ENTITIES must have a value which contains only XML NCNames")
               else
-                if (.not.checkNames(str_vs(value), xv)) &
+                if (.not.checkNames(as_chars(value), xv)) &
                   call add_error(stack, &
                   "Attributes of type ENTITIES must have a value which contains only XML Names")
               endif
             case (ATT_NMTOKEN)
               ! VC Name Token
-              if (.not.checkNmtoken(str_vs(value), xv)) &
+              if (.not.checkNmtoken(as_chars(value), xv)) &
                 call add_error(stack, &
                 "Attributes of type NMTOKEN must have a value which is a NMTOKEN")
             case (ATT_NMTOKENS)
               ! VC: Name Token
-              if (.not.checkNmtokens(str_vs(value), xv)) &
+              if (.not.checkNmtokens(as_chars(value), xv)) &
                 call add_error(stack, &
                 "Attributes of type NMTOKENS must have a value which contain only NMTOKENs")
             case (ATT_NOTATION)
               ! VC: Notation Attributes
               if (namespaces) then
-                if (.not.checkNCName(str_vs(value), xv)) &
+                if (.not.checkNCName(as_chars(value), xv)) &
                   call add_error(stack, &
                   "Attributes of type NOTATION must have a value which is an XMLNCName")
               else
-                if (.not.checkName(str_vs(value), xv)) &
+                if (.not.checkName(as_chars(value), xv)) &
                   call add_error(stack, &
                   "Attributes of type NOTATION must have a value which is an XML Name")
               endif
             case (ATT_ENUM)
               ! VC: Enumeration
-              if (.not.checkNmtoken(str_vs(value), xv)) &
+              if (.not.checkNmtoken(as_chars(value), xv)) &
                 call add_error(stack, &
                 "Attributes of type ENUM must have a value which is an NMTOKENs")
-              if (.not.registered_string(ca%enumerations, str_vs(value))) &
+              if (.not.registered_string(ca%enumerations, as_chars(value))) &
                 call add_error(stack, &
                 "Default value of ENUM does not match permitted values")
             end select
@@ -1309,16 +1295,14 @@ contains
           if (.not.in_error(stack)) then
             if (ca%attType==ATT_ENTITIES) then
               call destroy_string_list(ca%enumerations)
-              ca%enumerations = tokenize_to_string_list(str_vs(value))
+              ca%enumerations = tokenize_to_string_list(as_chars(value))
             endif
             ca%default => value
             value => null()
             state = ST_START
           endif
         else
-          temp => vs_str_alloc(str_vs(value)//c)
-          deallocate(value)
-          value => temp
+          call add_chars(value, c)
         endif
 
       endif
@@ -1336,10 +1320,10 @@ contains
       endif
     endif
     
-    if (associated(name)) deallocate(name)
-    if (associated(attType)) deallocate(attType)
-    if (associated(default)) deallocate(default)
-    if (associated(value)) deallocate(value)
+    if (associated(name)) call destroy_vs(name)
+    if (associated(attType)) call destroy_vs(attType)
+    if (associated(default)) call destroy_vs(default)
+    if (associated(value)) call destroy_vs(value)
 
   end subroutine parse_dtd_attlist
 
@@ -1375,56 +1359,56 @@ contains
       if (a%attType==ATT_NOTATION) then
         if (a%attDefault==ATT_DEFAULT) then
           if (associated(a%default)) then
-            call attributeDecl_handler(str_vs(elem%name), str_vs(a%name), &
-              'NOTATION '//make_token_group(a%enumerations), value=str_vs(a%default))
+            call attributeDecl_handler(as_chars(elem%name), as_chars(a%name), &
+              'NOTATION '//make_token_group(a%enumerations), value=as_chars(a%default))
           else
-            call attributeDecl_handler(str_vs(elem%name), str_vs(a%name), &
+            call attributeDecl_handler(as_chars(elem%name), as_chars(a%name), &
               'NOTATION '//make_token_group(a%enumerations))
           endif
         else
           if (associated(a%default)) then
-            call attributeDecl_handler(str_vs(elem%name), str_vs(a%name), &
+            call attributeDecl_handler(as_chars(elem%name), as_chars(a%name), &
               'NOTATION '//make_token_group(a%enumerations), mode=trim(mode), &
-              value=str_vs(a%default))
+              value=as_chars(a%default))
           else
-            call attributeDecl_handler(str_vs(elem%name), str_vs(a%name), &
+            call attributeDecl_handler(as_chars(elem%name), as_chars(a%name), &
               'NOTATION '//make_token_group(a%enumerations), mode=trim(mode))
           endif
         endif
       elseif (a%attType==ATT_ENUM) then
         if (a%attDefault==ATT_DEFAULT) then
           if (associated(a%default)) then
-            call attributeDecl_handler(str_vs(elem%name), str_vs(a%name), &
-              make_token_group(a%enumerations), value=str_vs(a%default))
+            call attributeDecl_handler(as_chars(elem%name), as_chars(a%name), &
+              make_token_group(a%enumerations), value=as_chars(a%default))
           else
-            call attributeDecl_handler(str_vs(elem%name), str_vs(a%name), &
+            call attributeDecl_handler(as_chars(elem%name), as_chars(a%name), &
               make_token_group(a%enumerations))
           endif
         else
           if (associated(a%default)) then
-            call attributeDecl_handler(str_vs(elem%name), str_vs(a%name), &
+            call attributeDecl_handler(as_chars(elem%name), as_chars(a%name), &
               make_token_group(a%enumerations), mode=trim(mode), &
-              value=str_vs(a%default))
+              value=as_chars(a%default))
           else
-            call attributeDecl_handler(str_vs(elem%name), str_vs(a%name), &
+            call attributeDecl_handler(as_chars(elem%name), as_chars(a%name), &
               make_token_group(a%enumerations), mode=trim(mode))
           endif
         endif
       else
         if (a%attDefault==ATT_DEFAULT) then
           if (associated(a%default)) then
-            call attributeDecl_handler(str_vs(elem%name), str_vs(a%name), &
-              trim(type), value=str_vs(a%default))
+            call attributeDecl_handler(as_chars(elem%name), as_chars(a%name), &
+              trim(type), value=as_chars(a%default))
           else
-            call attributeDecl_handler(str_vs(elem%name), str_vs(a%name), &
+            call attributeDecl_handler(as_chars(elem%name), as_chars(a%name), &
               trim(type))
           endif
         else
           if (associated(a%default)) then
-            call attributeDecl_handler(str_vs(elem%name), str_vs(a%name), &
-              trim(type), mode=trim(mode), value=str_vs(a%default))
+            call attributeDecl_handler(as_chars(elem%name), as_chars(a%name), &
+              trim(type), mode=trim(mode), value=as_chars(a%default))
           else
-            call attributeDecl_handler(str_vs(elem%name), str_vs(a%name), &
+            call attributeDecl_handler(as_chars(elem%name), as_chars(a%name), &
               trim(type), mode=trim(mode))
           endif
         endif
@@ -1504,7 +1488,7 @@ contains
     att => null()
     if (associated(elem)) then
       do i = 1, size(elem%attlist%list)
-        if (str_vs(elem%attlist%list(i)%name)==name) then
+        if (elem%attlist%list(i)%name == name) then
           att => elem%attlist%list(i)
           return
         endif
@@ -1517,9 +1501,9 @@ contains
     integer :: n
 
     if (a%attType==ATT_ENUM) then
-      n = size(a%name)
+      n = len(a%name)
     else
-      n = size(a%name)+1+len_trim(ATT_TYPES(a%attType))
+      n = len(a%name)+1+len_trim(ATT_TYPES(a%attType))
     endif
 
     if (a%attType==ATT_NOTATION &
@@ -1538,7 +1522,7 @@ contains
     end select
     
     if (associated(a%default)) &
-      n = n + 3 + size(a%default)
+      n = n + 3 + len(a%default)
   end function express_att_decl_len
 
   function express_attribute_declaration(a) result(s)
@@ -1546,9 +1530,9 @@ contains
     character(len=express_att_decl_len(a)) :: s
 
     if (a%attType==ATT_ENUM) then
-      s = str_vs(a%name)
+      s = as_chars(a%name)
     else
-      s = str_vs(a%name)//" "//ATT_TYPES(a%attType)
+      s = as_chars(a%name)//" "//ATT_TYPES(a%attType)
     endif
     if (a%attType==ATT_NOTATION &
       .or.a%attType==ATT_ENUM) &
@@ -1566,7 +1550,7 @@ contains
     end select
     
     if (associated(a%default)) &
-      s = trim(s)//" """//str_vs(a%default)//""""
+      s = trim(s)//" """//as_chars(a%default)//""""
   end function express_attribute_declaration
 
   function get_att_type_enum(s) result(n)

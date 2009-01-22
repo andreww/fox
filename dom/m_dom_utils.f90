@@ -1,5 +1,6 @@
 module m_dom_utils
 
+  use fox_m_fsys_vstr, only: as_chars
   use fox_m_fsys_array_str, only: str_vs, vs_str
   use fox_m_fsys_format, only: operator(//)
   use m_common_attrs, only: getValue
@@ -353,11 +354,11 @@ endif
         do j = 1, size(xds%element_list%list)
           elem => xds%element_list%list(j)
           if (associated(elem%model)) &
-            call xml_AddElementToDTD(xf, str_vs(elem%name), str_vs(elem%model))
+            call xml_AddElementToDTD(xf, as_chars(elem%name), as_chars(elem%model))
             ! Because we may have some undeclared but referenced elements
           do k = 1, get_attlist_size(elem)
             att_decl => get_attribute_declaration(elem, k)
-            call xml_AddAttlistToDTD(xf, str_vs(elem%name), &
+            call xml_AddAttlistToDTD(xf, as_chars(elem%name), &
               express_attribute_declaration(att_decl))
           enddo
         enddo

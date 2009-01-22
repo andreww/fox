@@ -160,7 +160,7 @@ TOHW_m_dom_contents(`
             else
               np => createAttribute(getOwnerDocument(map%ownerElement), name)
             endif
-            call setValue(np, str_vs(att%default))
+            call setValue(np, as_chars(att%default))
             call setSpecified(np, .false.)
             np => setNamedItem(map, np)
             call setSpecified(np, .true.)
@@ -363,7 +363,7 @@ TOHW_m_dom_contents(`
             ! Do *nothing* about namespace handling at this stage,
             ! wait until we are asked for namespace normalization
             np => createAttributeNS(getOwnerDocument(map%ownerElement), getNamespaceURI(np), getName(np))
-            call setValue(np, str_vs(att%default))
+            call setValue(np, as_chars(att%default))
             call setSpecified(np, .false.)
             np => setNamedItemNS(map, np)
             call setSpecified(np, .true.)

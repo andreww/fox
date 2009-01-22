@@ -5214,7 +5214,7 @@ endif
             else
               np => createAttribute(getOwnerDocument(map%ownerElement), name)
             endif
-            call setValue(np, str_vs(att%default))
+            call setValue(np, as_chars(att%default))
             call setSpecified(np, .false.)
             np => setNamedItem(map, np)
             call setSpecified(np, .true.)
@@ -5518,7 +5518,7 @@ endif
             ! Do *nothing* about namespace handling at this stage,
             ! wait until we are asked for namespace normalization
             np => createAttributeNS(getOwnerDocument(map%ownerElement), getNamespaceURI(np), getName(np))
-            call setValue(np, str_vs(att%default))
+            call setValue(np, as_chars(att%default))
             call setSpecified(np, .false.)
             np => setNamedItemNS(map, np)
             call setSpecified(np, .true.)
@@ -6248,7 +6248,7 @@ endif
           if (attribute_has_default(att)) then
             ! Since this is a non-namespaced function, we create
             ! a non-namespaced attribute ...
-            call setAttribute(np, str_vs(att%name), str_vs(att%default))
+            call setAttribute(np, as_chars(att%name), as_chars(att%default))
           endif
         enddo
       endif
@@ -7062,7 +7062,7 @@ endif
               else
                 new => createAttribute(doc, getName(this, ex), ex)
               endif
-              call setValue(new, str_vs(att%default), ex)
+              call setValue(new, as_chars(att%default), ex)
               call setSpecified(new, .false.)
             endif
             ! In any case, we dont want to copy the children of this node.
@@ -7332,21 +7332,21 @@ endif
             ! Since this is a namespaced function, we create a namespaced
             ! attribute. Of course, its namespaceURI remains empty
             ! for the moment unless we know it ...
-            if (prefixOfQName(str_vs(att%name))=="xml") then
+            if (prefixOfQName(as_chars(att%name))=="xml") then
               call setAttributeNS(np, &
                 "http://www.w3.org/XML/1998/namespace", &
-                str_vs(att%name), str_vs(att%default), ex)
-            elseif (str_vs(att%name)=="xmlns" & 
-              .or. prefixOfQName(str_vs(att%name))=="xmlns") then
+                as_chars(att%name), as_chars(att%default), ex)
+            elseif (as_chars(att%name)=="xmlns" & 
+              .or. prefixOfQName(as_chars(att%name))=="xmlns") then
               call setAttributeNS(np, &
                 "http://www.w3.org/2000/xmlns/", &
-                str_vs(att%name), str_vs(att%default), ex)
+                as_chars(att%name), as_chars(att%default), ex)
             else
               ! Wait for namespace fixup ...
               brokenNS = arg%docExtras%brokenNS
               arg%docExtras%brokenNS = .true.
-              call setAttributeNS(np, "", str_vs(att%name), &
-                str_vs(att%default), ex)
+              call setAttributeNS(np, "", as_chars(att%name), &
+                as_chars(att%default), ex)
               arg%docExtras%brokenNS = brokenNS
             endif
           endif
@@ -8291,7 +8291,7 @@ endif
               else
                 new => createAttribute(doc, getName(this))
               endif
-              call setValue(new, str_vs(att%default))
+              call setValue(new, as_chars(att%default))
               call setSpecified(new, .false.)
               ! In any case, we dont want to copy the children of this node.
               doneChildren = .true.
@@ -8654,21 +8654,21 @@ endif
             ! Since this is a namespaced function, we create a namespaced
             ! attribute. Of course, its namespaceURI remains empty
             ! for the moment unless we know it ...
-            if (prefixOfQName(str_vs(att%name))=="xml") then
+            if (prefixOfQName(as_chars(att%name))=="xml") then
               call setAttributeNS(np, &
                 "http://www.w3.org/XML/1998/namespace", &
-                str_vs(att%name), str_vs(att%default))
-            elseif (str_vs(att%name)=="xmlns" & 
-              .or. prefixOfQName(str_vs(att%name))=="xmlns") then
+                as_chars(att%name), as_chars(att%default))
+            elseif (as_chars(att%name)=="xmlns" & 
+              .or. prefixOfQName(as_chars(att%name))=="xmlns") then
               call setAttributeNS(np, &
                 "http://www.w3.org/2000/xmlns/", &
-                str_vs(att%name), str_vs(att%default))
+                as_chars(att%name), as_chars(att%default))
             else
               ! Wait for namespace fixup ...
               brokenNS = arg%docExtras%brokenNS
               arg%docExtras%brokenNS = .true.
-              call setAttributeNS(np, "", str_vs(att%name), &
-                str_vs(att%default))
+              call setAttributeNS(np, "", as_chars(att%name), &
+                as_chars(att%default))
               arg%docExtras%brokenNS = brokenNS
             endif
           endif
