@@ -3,7 +3,6 @@ module m_common_entities
 #ifndef DUMMYLIB
 
   use fox_m_fsys_vstr, only: vs, new_vs, destroy_vs, len, operator(==), as_chars
-  use fox_m_fsys_array_str, only: str_vs, vs_str_alloc
   use fox_m_fsys_format, only: str_to_int_10, str_to_int_16
   use fox_m_utils_uri, only: URI, destroyURI
   use m_common_charset, only: digits, hexdigits
