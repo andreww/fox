@@ -3,7 +3,8 @@ module m_common_content_model
 #ifndef DUMMYLIB
   ! Allow validating the content model of an XML document
 
-  use fox_m_fsys_array_str, only: str_vs, vs_str_alloc, vs_vs_alloc
+  use fox_m_fsys_vstr, only: vs, new_vs, as_chars, destroy_vs, &
+         operator(==)
   implicit none
   private
 
@@ -21,7 +22,7 @@ module m_common_content_model
   integer, parameter :: REP_ASTERISK = 3
   
   type content_particle_t
-    character, pointer :: name(:) => null()
+    type(vs), pointer :: name => null()
     integer :: operator = OP_NULL
     integer :: repeater = REP_NULL
     type(content_particle_t), pointer :: nextSibling => null()
@@ -59,7 +60,7 @@ contains
       cp%operator = OP_ANY
     elseif (present(name)) then
       cp%operator = OP_NAME
-      cp%name => vs_str_alloc(name)
+      cp%name => new_vs(init_chars=name)
     else
       cp%operator = OP_SEQ
     endif
@@ -79,7 +80,7 @@ contains
     type(content_particle_t), pointer :: cp_out
 
     allocate(cp_out)
-    if (associated(cp%name)) cp_out%name => vs_vs_alloc(cp%name)
+    if (associated(cp%name)) cp_out%name => new_vs(init_chars=as_chars(cp%name))
     cp_out%operator = cp%operator
     cp_out%repeater = cp%repeater
   end function copyCP
@@ -138,7 +139,7 @@ contains
     enddo
 
     ! Clear cp & make it an SEQ
-    if (associated(cp%name)) deallocate(cp%name)
+    if (associated(cp%name)) call destroy_vs(cp%name)
     cp%operator = OP_SEQ
 
     ! Append our copied cp to the now-an-SEQ
@@ -178,7 +179,7 @@ contains
     case (OP_MIXED)
       tcp => cp%firstChild
       do while (associated(tcp))
-        if (name==str_vs(tcp%name)) then
+        if (name == tcp%name) then
           p = .true.
           exit
         endif
@@ -189,7 +190,7 @@ contains
         if (.not.associated(cp)) exit
         select case (cp%operator)
         case (OP_NAME)
-          p = (name==str_vs(cp%name))
+          p = (name == cp%name)
           if (p) then
             tcp => nextCPAfterMatch(cp)
             cp => tcp
@@ -395,7 +396,7 @@ contains
   subroutine destroyCP(cp)
     type(content_particle_t), pointer :: cp
 
-    if (associated(cp%name)) deallocate(cp%name)
+    if (associated(cp%name)) call destroy_vs(cp%name)
     deallocate(cp)
   end subroutine destroyCP
 
@@ -435,7 +436,7 @@ contains
     case (OP_MIXED)
       write(*,'(a)', advance="no") "MIXED"
     case (OP_NAME)
-      write(*,'(a)', advance="no") str_vs(cp%name)
+      write(*,'(a)', advance="no") as_chars(cp%name)
     case (OP_CHOICE)
       write(*,'(a)', advance="no") "CHOICE"
     case (OP_SEQ)

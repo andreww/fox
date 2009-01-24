@@ -755,7 +755,7 @@ contains
         p = .false.
         do while (associated(tcp))
           if (tcp%operator==OP_NAME) then
-            if (registered_string(sl, str_vs(tcp%name))) then
+            if (registered_string(sl, as_chars(tcp%name))) then
               call destroy_string_list(sl)
               if (cp%operator==OP_MIXED) then
                 call add_error(stack, &
@@ -766,7 +766,7 @@ contains
               endif
               return
             else
-              call add_string(sl, str_vs(tcp%name))
+              call add_string(sl, as_chars(tcp%name))
             endif
           endif
           tcp => tcp%nextSibling
