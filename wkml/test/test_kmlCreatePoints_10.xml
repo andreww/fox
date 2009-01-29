@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://earth.google.com/kml/2.1?">
+  <Document>
+    <name>WKML output</name>
+    <Folder>
+      <Style id="id0-FoX">
+        <IconStyle>
+          <color>f90000ff</color>
+        </IconStyle>
+      </Style>
+      <Placemark>
+        <styleUrl>#id0-FoX</styleUrl>
+        <Point>
+          <coordinates>1.00000,1.00000</coordinates>
+        </Point>
+      </Placemark>
+    </Folder>
+  </Document>
+</kml>

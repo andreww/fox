@@ -75,7 +75,8 @@ module m_wxml_core
 
 
   type xmlf_t
-    private
+! comment out by GT for kmladdChart
+!    private
 #ifdef DUMMYLIB
     integer :: i = 0
 #else
