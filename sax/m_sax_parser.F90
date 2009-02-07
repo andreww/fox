@@ -2579,7 +2579,7 @@ contains
 
       type(attribute_t), pointer :: att
       integer :: i, ind
-      character, pointer :: attValue(:)
+      type(vs), pointer :: attValue
 
       do i = 1, size(el%attlist%list)
         att => el%attlist%list(i)
@@ -2603,7 +2603,8 @@ contains
 
       type(attribute_t), pointer :: att
       type(string_list) :: s_list
-      character, pointer :: attValue(:), s(:)
+      type(vs), pointer :: attValue
+      character, pointer :: s(:)
 
       integer :: ind
       logical, allocatable :: attributesLeft(:)
@@ -2639,21 +2640,21 @@ contains
             case (ATT_ID)
               ! VC: ID
               if (namespaces_) then
-                nameOk = checkNCName(str_vs(attValue), fx%xds%xml_version)
+                nameOk = checkNCName(as_chars(attValue), fx%xds%xml_version)
               else
-                nameOk = checkName(str_vs(attValue), fx%xds%xml_version)
+                nameOk = checkName(as_chars(attValue), fx%xds%xml_version)
               endif
               if (.not.nameOk) then
                 call add_error(fx%error_stack, &
                   "Attributes of type ID must have a value which is an XML Name")
                 return
               endif
-              if (registered_string(id_list, str_vs(attValue))) then
+              if (registered_string(id_list, as_chars(attValue))) then
                 call add_error(fx%error_stack, &
                   "Cannot declare the same ID twice")
                 return
               endif
-              call add_string(id_list, str_vs(attValue))
+              call add_string(id_list, as_chars(attValue))
               call setIsId(dict, ind, .true.)
               ! We don't need to check for duplicate ID & xml:ids on the same
               ! element - if we are validating we'd already have noticed,
@@ -2661,9 +2662,9 @@ contains
             case (ATT_IDREF)
               ! VC: IDREF
               if (namespaces_) then
-                nameOk = checkNCName(str_vs(attValue), fx%xds%xml_version)
+                nameOk = checkNCName(as_chars(attValue), fx%xds%xml_version)
               else
-                nameOk = checkName(str_vs(attValue), fx%xds%xml_version)
+                nameOk = checkName(as_chars(attValue), fx%xds%xml_version)
               endif
               if (.not.nameOk) then
                 call add_error(fx%error_stack, &
@@ -2671,34 +2672,34 @@ contains
                 return
               endif
               ! FIXME in a namespaced document they must match QName
-              if (.not.registered_string(idref_list, str_vs(attValue))) &
-                call add_string(idref_list, str_vs(attValue))
+              if (.not.registered_string(idref_list, as_chars(attValue))) &
+                call add_string(idref_list, as_chars(attValue))
             case (ATT_IDREFS)
               ! VC: IDREF
               if (namespaces_) then
-                nameOk = checkNCNames(str_vs(attValue), fx%xds%xml_version)
+                nameOk = checkNCNames(as_chars(attValue), fx%xds%xml_version)
               else
-                nameOk = checkNames(str_vs(attValue), fx%xds%xml_version)
+                nameOk = checkNames(as_chars(attValue), fx%xds%xml_version)
               endif
               if (.not.nameOk) then
                 call add_error(fx%error_stack, &
                   "Attributes of type IDREFS must have a value which contains only XML Names")
                 return
               endif
-              call tokenize_and_add_strings(idref_list, str_vs(attValue), .true.)
+              call tokenize_and_add_strings(idref_list, as_chars(attValue), .true.)
             case (ATT_ENTITY)
               ! VC: Entity Name
               if (namespaces_) then
-                nameOk = checkNCName(str_vs(attValue), fx%xds%xml_version)
+                nameOk = checkNCName(as_chars(attValue), fx%xds%xml_version)
               else
-                nameOk = checkName(str_vs(attValue), fx%xds%xml_version)
+                nameOk = checkName(as_chars(attValue), fx%xds%xml_version)
               endif
               if (.not.nameOk) then
                 call add_error(fx%error_stack, &
                   "Attributes of type ENTITY must have a value which is an XML Name")
                 return
               endif
-              ent => getEntityByName(fx%xds%entityList, str_vs(attValue))
+              ent => getEntityByName(fx%xds%entityList, as_chars(attValue))
               if (associated(ent)) then
                 if (.not.is_unparsed_entity(ent)) then
                   ! Validity Constraint: Entity Name
@@ -2719,16 +2720,16 @@ contains
             case (ATT_ENTITIES)
               ! VC: Entity Name
               if (namespaces_) then
-                nameOk = checkNCNames(str_vs(attValue), fx%xds%xml_version)
+                nameOk = checkNCNames(as_chars(attValue), fx%xds%xml_version)
               else
-                nameOk = checkNames(str_vs(attValue), fx%xds%xml_version)
+                nameOk = checkNames(as_chars(attValue), fx%xds%xml_version)
               endif
               if (.not.nameOk) then
                 call add_error(fx%error_stack, &
                   "Attributes of type ENTITIES must have a value which contains only XML Names")
                 return
               endif
-              s_list = tokenize_to_string_list(str_vs(attValue))
+              s_list = tokenize_to_string_list(as_chars(attValue))
               do j = 1, size(s_list%list)
                 s => s_list%list(j)%s
                 ent => getEntityByName(fx%xds%entityList, str_vs(s))
@@ -2757,14 +2758,14 @@ contains
               call destroy_string_list(s_list)
             case (ATT_NMTOKEN)
               ! VC Name Token
-              if (.not.checkNmtoken(str_vs(attValue), fx%xds%xml_version)) then
+              if (.not.checkNmtoken(as_chars(attValue), fx%xds%xml_version)) then
                 call add_error(fx%error_stack, &
                   "Attributes of type NMTOKEN must have a value which is a NMTOKEN")
                 return
               endif
             case (ATT_NMTOKENS)
               ! VC: Name Token
-              if (.not.checkNmtokens(str_vs(attValue), fx%xds%xml_version)) then
+              if (.not.checkNmtokens(as_chars(attValue), fx%xds%xml_version)) then
                 call add_error(fx%error_stack, &
                   "Attributes of type NMTOKENS must have a value which contain only NMTOKENs")
                 return
@@ -2772,49 +2773,49 @@ contains
             case (ATT_NOTATION)
               ! VC: Notation Attributes
               if (namespaces_) then
-                nameOk = checkNCName(str_vs(attValue), fx%xds%xml_version)
+                nameOk = checkNCName(as_chars(attValue), fx%xds%xml_version)
               else
-                nameOk = checkName(str_vs(attValue), fx%xds%xml_version)
+                nameOk = checkName(as_chars(attValue), fx%xds%xml_version)
               endif
               if (.not.nameOk) then
                 call add_error(fx%error_stack, &
                   "Attributes of type NOTATION must have a value which is an XML Name")
                 return
               endif
-              if (.not.notation_exists(fx%nlist, str_vs(attValue))) then
+              if (.not.notation_exists(fx%nlist, as_chars(attValue))) then
                 ! Validity Constraint: Notation Attributes
                 call add_error(fx%error_stack, &
                   "Attribute "//as_chars(att%name) &
                   //" declared as NOTATION refers to non-existent notation "&
-                  //str_vs(attValue))
+                  //as_chars(attValue))
                 return
               endif
               if (att%attDefault==ATT_REQUIRED) then
-                if (.not.registered_string(att%enumerations, str_vs(attValue))) &
+                if (.not.registered_string(att%enumerations, as_chars(attValue))) &
                   call add_error(fx%error_stack, &
                   "NOTATION attribute is not among declared values.")
               endif
             case (ATT_ENUM)
               ! VC: Notation Attributes
-              if (.not.checkNmtoken(str_vs(attValue), fx%xds%xml_version)) then
+              if (.not.checkNmtoken(as_chars(attValue), fx%xds%xml_version)) then
                 call add_error(fx%error_stack, &
                   "Attributes of type ENUM must have a value which is an NMTOKEN")
                 return
               endif
-              if (.not.registered_string(att%enumerations, str_vs(attValue))) then
+              if (.not.registered_string(att%enumerations, as_chars(attValue))) then
                 ! Validity Constraint: Enumeration
                 call add_error(fx%error_stack, &
                   "Attribute "//as_chars(att%name) &
                   //" of element "//as_chars(el%name) &
                   //" declared as ENUM refers to undeclared enumeration "&
-                  //str_vs(attValue))
+                  //as_chars(attValue))
                 return
               endif
             end select
           endif
         case (ATT_FIXED)
           if (associated(attValue)) then
-            if (as_chars(att%default)//"x"/=str_vs(attValue)//"x") then
+            if (as_chars(att%default)//"x"/=as_chars(attValue)//"x") then
               ! Validity Constraint: Fixed Attribute Default
               call add_error(fx%error_stack, &
                 "FIXED attribute has wrong value")
@@ -2843,7 +2844,7 @@ contains
 
     subroutine checkXMLAttributes
       integer :: ind
-      character, pointer :: attValue(:)
+      type(vs), pointer :: attValue
       ! These must all be done with the name of the attribute,
       ! not the nsURI/localname pair, in case we are
       ! processing for a non-namespace aware application
@@ -2857,16 +2858,16 @@ contains
       call get_att_index_pointer(fx%attributes, "xml:id", ind, attValue)
       if (associated(attValue)) then
         ! Per xml:id spec, NCName even in non-namespace aware document
-        if (.not.checkNCName(str_vs(attValue), fx%xds%xml_version)) then
+        if (.not.checkNCName(as_chars(attValue), fx%xds%xml_version)) then
           call add_error(fx%error_stack, &
             "xml:id attributes must have values which are NCNames")
           return
-        elseif (registered_string(id_list, str_vs(attValue))) then
+        elseif (registered_string(id_list, as_chars(attValue))) then
           call add_error(fx%error_stack, &
             "xml:id attributes must be unique within a document")
           return
         endif
-        call add_string(id_list, str_vs(attValue))
+        call add_string(id_list, as_chars(attValue))
         call setIsId(fx%attributes, ind, .true.)
       endif
       if (has_key(fx%attributes, "xml:base")) then

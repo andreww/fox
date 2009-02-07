@@ -1,6 +1,7 @@
 module m_common_attrs
 
 #ifndef DUMMYLIB
+  use fox_m_fsys_vstr, only : vs, new_vs, as_chars, operator(==), len, destroy_vs
   use fox_m_fsys_array_str, only : str_vs, vs_str_alloc
   use m_common_element, only: get_att_type_enum, ATT_CDATA, ATT_CDAMB, ATT_TYPES
   use m_common_error, only : FoX_error, FoX_fatal
@@ -14,11 +15,11 @@ module m_common_attrs
   real, parameter :: DICT_LEN_MULT = 1.5
 
   type dict_item
-    character(len=1), pointer, dimension(:) :: nsURI => null()
-    character(len=1), pointer, dimension(:) :: localName => null()
-    character(len=1), pointer, dimension(:) :: prefix => null()
-    character(len=1), pointer, dimension(:) :: key => null()
-    character(len=1), pointer, dimension(:) :: value => null()
+    type(vs), pointer :: nsURI => null()
+    type(vs), pointer :: localName => null()
+    type(vs), pointer :: prefix => null()
+    type(vs), pointer :: key => null()
+    type(vs), pointer :: value => null()
     logical :: specified = .true.
     logical :: declared = .false.
     logical :: isId = .false.
@@ -34,7 +35,7 @@ module m_common_attrs
     private
 #ifndef DUMMYLIB
     type(dict_item_ptr), dimension(:), pointer :: list => null()
-    character, dimension(:), pointer           :: base => null()
+    type(vs), pointer                          :: base => null()
 #else
     integer :: i
 #endif
@@ -203,7 +204,7 @@ contains
     integer :: i
 
     do i = 1, ubound(dict%list, 1)
-      if (key==str_vs(dict%list(i)%d%key)) then
+      if (key==dict%list(i)%d%key) then
         found = .true.
         return
       endif
@@ -226,8 +227,8 @@ contains
       ! FIXME xlf 10.01 segfaults if the below is done as
       ! an AND rather than two separate ifs. This is
       ! probably due to the Heisenbug
-      if (uri==str_vs(dict%list(i)%d%nsURI)) then
-        if (localname==str_vs(dict%list(i)%d%localname)) then
+      if (uri==dict%list(i)%d%nsURI) then
+        if (localname==dict%list(i)%d%localname) then
           found = .true.
           exit
         endif
@@ -246,7 +247,7 @@ contains
 #ifndef DUMMYLIB
     integer  ::  i
     do i = 1, ubound(dict%list, 1)
-      if (key == str_vs(dict%list(i)%d%key)) then
+      if (key == dict%list(i)%d%key) then
         ind = i
         return
       endif
@@ -266,8 +267,8 @@ contains
     integer  ::  i
     ind = -1
     do  i = 1, ubound(dict%list, 1)
-      if (uri==str_vs(dict%list(i)%d%nsURI) &
-        .and. localname==str_vs(dict%list(i)%d%localname)) then
+      if (uri==dict%list(i)%d%nsURI &
+        .and. localname==dict%list(i)%d%localname) then
         ind = i
         exit
       endif
@@ -286,8 +287,8 @@ contains
     integer :: i
 
     do i = 1, ubound(dict%list, 1)
-      if (key == str_vs(dict%list(i)%d%key)) then
-        n = size(dict%list(i)%d%value)
+      if (key == dict%list(i)%d%key) then
+        n = len(dict%list(i)%d%value)
         return
       endif
     enddo
@@ -304,8 +305,8 @@ contains
     integer :: i
 
     do i = 1, ubound(dict%list, 1)
-      if (key == str_vs(dict%list(i)%d%key)) then
-        value = str_vs(dict%list(i)%d%value)
+      if (key == dict%list(i)%d%key) then
+        value = as_chars(dict%list(i)%d%value)
         return
       endif
     enddo
@@ -326,9 +327,9 @@ contains
     integer :: i
 
     do i = 1, ubound(dict%list, 1)
-      if (nsUri==str_vs(dict%list(i)%d%nsURI) &
-        .and.localname==str_vs(dict%list(i)%d%localname)) then
-        n = size(dict%list(i)%d%value)
+      if (nsUri==dict%list(i)%d%nsURI &
+        .and.localname==dict%list(i)%d%localname) then
+        n = len(dict%list(i)%d%value)
         return
       endif
     enddo
@@ -346,9 +347,9 @@ contains
     integer :: i
 
     do i = 1, ubound(dict%list, 1)
-      if (nsUri==str_vs(dict%list(i)%d%nsURI) &
-        .and.localname==str_vs(dict%list(i)%d%localname)) then
-        value = str_vs(dict%list(i)%d%value)
+      if (nsUri==dict%list(i)%d%nsURI &
+        .and.localname==dict%list(i)%d%localname) then
+        value = as_chars(dict%list(i)%d%value)
         return
       endif
     enddo
@@ -364,11 +365,11 @@ contains
     type(dictionary_t), intent(in) :: dict
     character(len=*), intent(in) :: key
     integer, intent(out) :: i
-    character, pointer :: value(:)
+    type(vs), pointer :: value
 
     value => null()
     do i = 1, ubound(dict%list, 1)
-      if (key == str_vs(dict%list(i)%d%key)) then
+      if (key == dict%list(i)%d%key) then
         value => dict%list(i)%d%value
         return
       endif
@@ -409,7 +410,7 @@ contains
     n = 1
 #else
     if (i>0.and.i<=ubound(dict%list, 1)) then
-      n = size(dict%list(i)%d%value)
+      n = len(dict%list(i)%d%value)
     else
       n = 0
     endif
@@ -423,7 +424,7 @@ contains
     character(len=get_value_by_index_len(dict, i)) :: value
 
     if (i>0.and.i<=ubound(dict%list, 1)) then
-      value = str_vs(dict%list(i)%d%value)
+      value = as_chars(dict%list(i)%d%value)
     else
       value = ""
     endif
@@ -440,7 +441,7 @@ contains
     integer :: n
 
     if (i>0.and.i<=ubound(dict%list, 1)) then
-      n = size(dict%list(i)%d%key)
+      n = len(dict%list(i)%d%key)
     else
       n = 0
     endif
@@ -454,7 +455,7 @@ contains
     character(len=get_key_len(dict,i)) :: key
 
     if (i>0.and.i<=ubound(dict%list, 1)) then
-      key = str_vs(dict%list(i)%d%key)
+      key = as_chars(dict%list(i)%d%key)
     else
       key = ""
     endif
@@ -490,17 +491,17 @@ contains
     n = n + 1
 
     allocate(tempList(n)%d)
-    tempList(n)%d%value => vs_str_alloc(value)
+    tempList(n)%d%value => new_vs(init_chars=value)
     if (present(prefix)) then
-      tempList(n)%d%key => vs_str_alloc(prefix//":"//key)
-      tempList(n)%d%localname => vs_str_alloc(key)
-      tempList(n)%d%prefix => vs_str_alloc(prefix)
-      tempList(n)%d%nsURI => vs_str_alloc(nsURI)
+      tempList(n)%d%key => new_vs(init_chars=prefix//":"//key)
+      tempList(n)%d%localname => new_vs(init_chars=key)
+      tempList(n)%d%prefix => new_vs(init_chars=prefix)
+      tempList(n)%d%nsURI => new_vs(init_chars=nsURI)
     else
-      tempList(n)%d%key => vs_str_alloc(key)
-      tempList(n)%d%localname => vs_str_alloc(key)
-      allocate(tempList(n)%d%prefix(0))
-      allocate(tempList(n)%d%nsURI(0))
+      tempList(n)%d%key => new_vs(init_chars=key)
+      tempList(n)%d%localname => new_vs(init_chars=key)
+      tempList(n)%d%prefix => new_vs()
+      tempList(n)%d%nsURI => new_vs()
     endif
     if (present(type)) then
       if (present(itype)) &
@@ -533,8 +534,8 @@ contains
     character(len=*), intent(in) :: nsURI
 
     if (associated(dict%list(i)%d%nsURI)) &
-      deallocate(dict%list(i)%d%nsURI)
-    dict%list(i)%d%nsURI => vs_str_alloc(nsURI)
+      call destroy_vs(dict%list(i)%d%nsURI)
+    dict%list(i)%d%nsURI => new_vs(init_chars=nsURI)
   end subroutine set_nsURI_by_index
 
   subroutine set_prefix_by_index(dict, i, prefix)
@@ -543,8 +544,8 @@ contains
     character(len=*), intent(in) :: prefix
 
     if (associated(dict%list(i)%d%prefix)) &
-      deallocate(dict%list(i)%d%prefix)
-    dict%list(i)%d%prefix => vs_str_alloc(prefix)
+      call destroy_vs(dict%list(i)%d%prefix)
+    dict%list(i)%d%prefix => new_vs(init_chars=prefix)
   end subroutine set_prefix_by_index
 
   subroutine set_localName_by_index_s(dict, i, localName)
@@ -553,8 +554,8 @@ contains
     character(len=*), intent(in) :: localName
 
     if (associated(dict%list(i)%d%localName)) &
-      deallocate(dict%list(i)%d%localName)
-    dict%list(i)%d%localName => vs_str_alloc(localName)
+      call destroy_vs(dict%list(i)%d%localName)
+    dict%list(i)%d%localName => new_vs(init_chars=localName)
   end subroutine set_localName_by_index_s
 
   subroutine set_localName_by_index_vs(dict, i, localName)
@@ -563,9 +564,9 @@ contains
     character(len=1), dimension(:), intent(in) :: localName
 
     if (associated(dict%list(i)%d%localName)) &
-      deallocate(dict%list(i)%d%localName)
-    allocate(dict%list(i)%d%localName(size(localName)))
-    dict%list(i)%d%localName = localName
+      call destroy_vs(dict%list(i)%d%localName)
+    ! FIXME - AMW: where is this used? Should probably pass in a vstr and clone
+    dict%list(i)%d%localName => new_vs(init_chars=str_vs(localName))
   end subroutine set_localName_by_index_vs
 #endif
 
@@ -573,8 +574,8 @@ contains
     type(dictionary_t), intent(in) :: dict
     integer, intent(in) :: i
 #ifndef DUMMYLIB
-    character(len=size(dict%list(i)%d%nsURI)) :: nsURI
-    nsURI = str_vs(dict%list(i)%d%nsURI)
+    character(len=len(dict%list(i)%d%nsURI)) :: nsURI
+    nsURI = as_chars(dict%list(i)%d%nsURI)
 #else
     character(len=1) :: nsURI
     nsURI = ""
@@ -585,9 +586,9 @@ contains
   pure function get_prefix_by_index(dict, i) result(prefix)
     type(dictionary_t), intent(in) :: dict
     integer, intent(in) :: i
-    character(len=size(dict%list(i)%d%prefix)) :: prefix
+    character(len=len(dict%list(i)%d%prefix)) :: prefix
 
-    prefix = str_vs(dict%list(i)%d%prefix)
+    prefix = as_chars(dict%list(i)%d%prefix)
   end function get_prefix_by_index
 #endif
 
@@ -595,8 +596,8 @@ contains
     type(dictionary_t), intent(in) :: dict
     integer, intent(in) :: i
 #ifndef DUMMYLIB
-    character(len=size(dict%list(i)%d%localName)) :: localName
-    localName = str_vs(dict%list(i)%d%localName)
+    character(len=len(dict%list(i)%d%localName)) :: localName
+    localName = as_chars(dict%list(i)%d%localName)
 #else
     character(len=1) :: localName
     localName = ""
@@ -612,7 +613,7 @@ contains
     integer :: i
 
     i = get_key_index(dict, keyname)
-    n = size(dict%list(i)%d%nsURI)
+    n = len(dict%list(i)%d%nsURI)
   end function get_nsURI_by_keyname_len
 #endif
 
@@ -624,7 +625,7 @@ contains
     integer :: i
 
     i = get_key_index(dict, keyname)
-    nsURI = str_vs(dict%list(i)%d%nsURI)
+    nsURI = as_chars(dict%list(i)%d%nsURI)
   end function get_nsURI_by_keyname
 
   pure function get_prefix_by_keyname_len(dict, keyname) result(n)
@@ -635,7 +636,7 @@ contains
     integer :: i
 
     i = get_key_index(dict, keyname)
-    n = size(dict%list(i)%d%prefix)
+    n = len(dict%list(i)%d%prefix)
 
   end function get_prefix_by_keyname_len
 
@@ -646,7 +647,7 @@ contains
     integer :: i
 
     i = get_key_index(dict, keyname)
-    prefix = str_vs(dict%list(i)%d%prefix)
+    prefix = as_chars(dict%list(i)%d%prefix)
 
   end function get_prefix_by_keyname
 
@@ -658,7 +659,7 @@ contains
     integer :: i
 
     i = get_key_index(dict, keyname)
-    n = size(dict%list(i)%d%localName)
+    n = len(dict%list(i)%d%localName)
 
   end function get_localname_by_keyname_len
 
@@ -669,7 +670,7 @@ contains
     integer :: i
 
     i=get_key_index(dict, keyname)
-    localName = str_vs(dict%list(i)%d%localName)
+    localName = as_chars(dict%list(i)%d%localName)
 
   end function get_localName_by_keyname
 #endif
@@ -919,8 +920,8 @@ contains
     type(dictionary_t), intent(inout) :: dict
     character(len=*), intent(in) :: base
 
-    if (associated(dict%base)) deallocate(dict%base)
-    dict%base => vs_str_alloc(base)
+    if (associated(dict%base)) call destroy_vs(dict%base)
+    dict%base => new_vs(init_chars=base)
   end subroutine setBase
 
   pure function getBase_len(dict) result(n)
@@ -928,7 +929,7 @@ contains
     integer :: n
 
     if (associated(dict%base)) then
-      n = size(dict%base)
+      n = len(dict%base)
     else
       n = 0
     endif
@@ -939,7 +940,7 @@ contains
     character(len=getBase_len(dict)) :: base
 
     if (associated(dict%base)) then
-      base = str_vs(dict%base)
+      base = as_chars(dict%base)
     else
       base = ""
     endif
@@ -949,11 +950,11 @@ contains
     type(dict_item), pointer :: d
 
     if (associated(d)) then
-      deallocate(d%key)
-      deallocate(d%value)
-      deallocate(d%nsURI)
-      deallocate(d%prefix)
-      deallocate(d%localName)
+      call destroy_vs(d%key)
+      call destroy_vs(d%value)
+      call destroy_vs(d%nsURI)
+      call destroy_vs(d%prefix)
+      call destroy_vs(d%localName)
       deallocate(d)
     endif
   end subroutine destroy_dict_item
@@ -964,7 +965,7 @@ contains
 
     allocate(dict%list(0:0))
     allocate(dict%list(0)%d)
-    allocate(dict%list(0)%d%key(0))
+    dict%list(0)%d%key => new_vs()
 
   end subroutine init_dict
 
@@ -973,14 +974,14 @@ contains
     integer :: i
 
     if (associated(dict%list)) then
-      deallocate(dict%list(0)%d%key)
+      call destroy_vs(dict%list(0)%d%key)
       deallocate(dict%list(0)%d)
       do i = 1, ubound(dict%list, 1)
         call destroy(dict%list(i)%d)
       enddo
       deallocate(dict%list)
     endif
-    if (associated(dict%base)) deallocate(dict%base)
+    if (associated(dict%base)) call destroy_vs(dict%base)
 
   end subroutine destroy_dict
 
@@ -999,7 +1000,7 @@ contains
     logical :: done(ubound(dict%list, 1))
     type(dict_item_ptr), dimension(:), pointer :: list => null()
     integer :: i, j, n, firstIndex
-    character, pointer :: firstKey(:)
+    type(vs), pointer :: firstKey
 
     !Ridiculously naive sort algorithm. We are unlikely
     !to ever be sorting more then ten or so attributes though
@@ -1017,11 +1018,11 @@ contains
       firstIndex = 0
       firstKey => null()
       do i = 1, n
-        if (.not.done(i).and.str_vs(dict%list(i)%d%key)=="xmlns" &
-          .or. str_vs(dict%list(i)%d%prefix)=="xmlns") then
+        if (.not.done(i).and.dict%list(i)%d%key=="xmlns" &
+          .or. dict%list(i)%d%prefix=="xmlns") then
           firstIndex = i
           if (associated(firstKey)) then
-            if (llt(str_vs(dict%list(i)%d%key),str_vs(firstKey))) then
+            if (llt(as_chars(dict%list(i)%d%key),as_chars(firstKey))) then
               firstIndex = i
               firstKey => dict%list(i)%d%key
             endif
@@ -1044,7 +1045,7 @@ contains
       do i = 1, n
         if (.not.done(i)) then
           if (associated(firstKey)) then
-            if (llt(str_vs(dict%list(i)%d%key),str_vs(firstKey))) then
+            if (llt(as_chars(dict%list(i)%d%key),as_chars(firstKey))) then
               firstIndex = i
               firstKey => dict%list(i)%d%key
             endif
@@ -1071,8 +1072,8 @@ contains
     integer  :: i
 
     do i = 1, ubound(dict%list, 1)
-      write(*,'(7a)') str_vs(dict%list(i)%d%key), " [ {", str_vs(dict%list(i)%d%nsURI), &
-        "}", str_vs(dict%list(i)%d%localName), " ]  = ", str_vs(dict%list(i)%d%value)
+      write(*,'(7a)') as_chars(dict%list(i)%d%key), " [ {", as_chars(dict%list(i)%d%nsURI), &
+        "}", as_chars(dict%list(i)%d%localName), " ]  = ", as_chars(dict%list(i)%d%value)
     enddo
 
   end subroutine print_dict
