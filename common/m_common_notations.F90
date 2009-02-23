@@ -1,16 +1,17 @@
 module m_common_notations
 
 #ifndef DUMMYLIB
-  use fox_m_fsys_array_str, only: vs_str, str_vs
+  use fox_m_fsys_vstr, only: vs, new_vs, destroy_vs, & 
+      & as_chars, operator(==)
   use m_common_error, only: FoX_error
 
   implicit none
   private
 
   type notation
-    character(len=1), dimension(:), pointer :: name
-    character(len=1), dimension(:), pointer :: systemID
-    character(len=1), dimension(:), pointer :: publicId
+    type(vs), pointer :: name
+    type(vs), pointer :: systemID
+    type(vs), pointer :: publicId
   end type notation
 
   type notation_list
@@ -33,9 +34,9 @@ contains
     type(notation_list), intent(inout) :: nlist
 
     allocate(nlist%list(0:0))
-    allocate(nlist%list(0)%name(0))
-    allocate(nlist%list(0)%systemId(0))
-    allocate(nlist%list(0)%publicId(0))
+    nlist%list(0)%name => new_vs()
+    nlist%list(0)%systemId => new_vs()
+    nlist%list(0)%publicId => new_vs()
     
   end subroutine init_notation_list
 
@@ -46,9 +47,9 @@ contains
     integer :: i
 
     do i = 0, ubound(nlist%list, 1)
-      deallocate(nlist%list(i)%name)
-      deallocate(nlist%list(i)%systemId)
-      deallocate(nlist%list(i)%publicId)
+      call destroy_vs(nlist%list(i)%name)
+      call destroy_vs(nlist%list(i)%systemId)
+      call destroy_vs(nlist%list(i)%publicId)
     enddo
     deallocate(nlist%list)
   end subroutine destroy_notation_list
@@ -83,19 +84,16 @@ contains
     enddo
     deallocate(temp)
 
-    allocate(nlist%list(i)%name(len(name)))
-    nlist%list(i)%name = vs_str(name)
+    nlist%list(i)%name => new_vs(init_chars=name)
     if (present(systemId)) then
-      allocate(nlist%list(i)%systemId(len(systemId)))
-      nlist%list(i)%systemId = vs_str(systemId)
+      nlist%list(i)%systemId => new_vs(init_chars=systemId)
     else
-      allocate(nlist%list(i)%systemId(0))
+      nlist%list(i)%systemId => new_vs()
     endif
     if (present(publicId)) then
-      allocate(nlist%list(i)%publicId(len(publicId)))
-      nlist%list(i)%publicId = vs_str(publicId)
+      nlist%list(i)%publicId => new_vs(init_chars=publicId)
     else
-      allocate(nlist%list(i)%publicId(0))
+      nlist%list(i)%publicId => new_vs()
     endif
   end subroutine add_notation
 
@@ -109,7 +107,7 @@ contains
     
     p = .false.
     do i = 1, ubound(nlist%list, 1)
-      if (str_vs(nlist%list(i)%name) == name) then
+      if (nlist%list(i)%name == name) then
         p = .true.
         exit
       endif
