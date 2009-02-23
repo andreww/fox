@@ -2982,14 +2982,14 @@ contains
     n_err = n
 
     do i = 1, n
-      n_err = n_err + size(fx%error_stack%stack(i)%msg) ! + spaces + size of entityref
+      n_err = n_err + len(fx%error_stack%stack(i)%msg) ! + spaces + size of entityref
     enddo
     allocate(errmsg(n_err))
     errmsg = ''
     n = 1
     do i = 1, size(fx%error_stack%stack)
-      m = size(fx%error_stack%stack(i)%msg)
-      errmsg(n:n+m-1) = fx%error_stack%stack(i)%msg
+      m = len(fx%error_stack%stack(i)%msg)
+      errmsg(n:n+m-1) = as_chars(fx%error_stack%stack(i)%msg)
       errmsg(n+m:n+m) = " "
       n = n + m + 1
     enddo

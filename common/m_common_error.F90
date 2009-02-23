@@ -2,7 +2,7 @@ module m_common_error
 
 #ifndef DUMMYLIB
   use fox_m_fsys_abort_flush, only: pxfabort, pxfflush
-  use fox_m_fsys_array_str, only: vs_str_alloc
+  use fox_m_fsys_vstr, only: new_vs, destroy_vs, vs
 
   implicit none
   private
@@ -15,7 +15,7 @@ module m_common_error
   type error_t
     integer :: severity = ERR_NULL
     integer :: error_code = 0
-    character, dimension(:), pointer :: msg => null()
+    type(vs), pointer :: msg => null()
   end type error_t
 
   type error_stack
@@ -111,7 +111,7 @@ contains
     integer :: i
 
     do i = 1, size(stack%stack)
-      deallocate(stack%stack(i)%msg)
+      call destroy_vs(stack%stack(i)%msg)
     enddo
     deallocate(stack%stack)
   end subroutine destroy_error_stack
@@ -140,7 +140,7 @@ contains
     enddo
     deallocate(temp_stack)
 
-    stack%stack(n+1)%msg => vs_str_alloc(msg)
+    stack%stack(n+1)%msg => new_vs(init_chars=msg)
     if (present(severity)) then
       stack%stack(n+1)%severity = severity
     else
