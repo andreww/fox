@@ -55,7 +55,10 @@ function new_vs(min_size, init_chars) result(my_vs)
 
     init_size = 1
     if (present(init_chars)) then
-       if (init_chars/="") init_size = len(init_chars)
+       ! AMW - this does not work for init_chars = ' ':
+       !     if (init_chars/='') init_size = len(init_chars)
+       ! so go with length instead 
+       if (len(init_chars).gt.0) init_size = len(init_chars)
     endif
     
     if (present(min_size)) then
@@ -69,7 +72,8 @@ function new_vs(min_size, init_chars) result(my_vs)
     my_vs%str_len = 0
 
     if (present(init_chars)) then
-        if (init_chars/="") call add_chars(my_vs, init_chars)
+        ! See above.
+        if (len(init_chars).gt.0) call add_chars(my_vs, init_chars)
     endif
 
 end function new_vs
