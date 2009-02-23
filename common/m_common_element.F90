@@ -5,7 +5,8 @@ module m_common_element
 
   use fox_m_fsys_vstr, only: vs, new_vs, destroy_vs, operator(==), &
     as_chars, len, vs_set_chars, add_chars
-  use fox_m_fsys_array_str, only: str_vs, vs_str_alloc, vs_vs_alloc
+  !FIXME: string_list should use vstr's, which would remove use below.
+  use fox_m_fsys_array_str, only: str_vs
   use fox_m_fsys_string_list, only: string_list, init_string_list, &
     destroy_string_list, add_string, tokenize_to_string_list, &
     registered_string

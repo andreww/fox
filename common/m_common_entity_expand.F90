@@ -1,7 +1,6 @@
 module m_common_entity_expand
 
 #ifndef DUMMYLIB
-  use fox_m_fsys_array_str, only: str_vs, vs_str
   use fox_m_fsys_vstr, only: new_vs, add_chars, vs, len, as_chars
   use m_common_entities, only: expand_char_entity
   use m_common_error, only: error_stack, add_error
@@ -26,10 +25,10 @@ contains
     ! and check that all general entity references are well-formed.
     ! before storing it.
     !
-    ! This is only ever called from the SAX parser
-    ! (might it be called from WXML?)
-    ! so output is a vstr. Input is currently as a character array 
-    ! for historical reasons. 
+    ! These are usefull here - we don't do any allocation 
+    ! just stuff things in an array.
+    use fox_m_fsys_array_str, only: str_vs, vs_str
+
     type(vs), intent(in) :: repl
     type(xml_doc_state), intent(in) :: xds
     type(error_stack), intent(inout) :: stack
