@@ -2,7 +2,7 @@ module m_wxml_core
 
 #ifndef DUMMYLIB
   use fox_m_fsys_abort_flush, only: pxfabort
-  use fox_m_fsys_array_str, only: vs_str, str_vs, vs_str_alloc
+  use fox_m_fsys_vstr, only: vs, new_vs, destroy_vs, len, operator(/=), as_chars
   use fox_m_fsys_string, only: toLower
   use fox_m_fsys_vstr, only: new_vs, as_chars, len
   use fox_m_utils_uri, only: URI, parseURI, destroyURI
@@ -92,7 +92,7 @@ module m_wxml_core
     logical                   :: pretty_print = .false.
     logical                   :: canonical = .false.
     integer                   :: indent = 0
-    character, pointer        :: name(:)
+    type(vs), pointer         :: name
     logical                   :: namespace = .true.
     type(namespaceDictionary) :: nsDict
 #endif
@@ -200,7 +200,7 @@ contains
     endif
     if (present(iostat)) iostat = 0
 
-    allocate(xf%name(0))
+    xf%name => new_vs()
     
     if (present(unit)) then
       if (unit==-1) then
@@ -414,9 +414,8 @@ contains
     call add_eol(xf)
     call add_to_buffer("<!DOCTYPE "//name, xf%buffer, .false.)
     
-    deallocate(xf%name)
-    allocate(xf%name(len(name)))
-    xf%name = vs_str(name)
+    call destroy_vs(xf%name)
+    xf%name => new_vs(init_chars=name)
     
     if (present(system)) then
       if (present(public)) then
@@ -1091,9 +1090,9 @@ contains
     select case (xf%state_1)
     case (WXML_STATE_1_JUST_OPENED, WXML_STATE_1_BEFORE_ROOT)
       if (xf%xds%valid) then
-        if (size(xf%name)==0) then
+        if (len(xf%name)==0) then
           call wxml_error(xf, "No DTD specified for document")
-        elseif (str_vs(xf%name) /= name) then
+        elseif (xf%name /= name) then
           call wxml_error(xf, "Root element name does not match DTD")
         endif
       endif
@@ -1237,24 +1236,24 @@ contains
 
 #ifndef DUMMYLIB
     logical :: esc
-    character, pointer :: type_(:)
+    type(vs), pointer :: type_
 
     if (present(type)) then
       if (type/='CDATA'.and.type/='ID'.and.type/='IDREF'.and.type/='IDREFS'.and.type/='NMTOKEN'.and.type/='NMTOKENS' &
         .and.type/='ENTITY'.and.type/='ENTITIES'.and.type/='NOTATION') then
         call wxml_fatal("Invalid type in xml_AddAttribute: "//type)
       endif
-      type_ => vs_str_alloc(type)
+      type_ => new_vs(init_chars=type)
     else
       ! We assume CDATA, but need to worry about whether the caller cares about whitespace ...
       if (present(ws_significant)) then
         if (ws_significant) then
-          type_ => vs_str_alloc('CDATA')
+          type_ => new_vs(init_chars='CDATA')
         else
-          type_ => vs_str_alloc('CDANO') ! CDAta, whitespace Not significant
+          type_ => new_vs(init_chars='CDANO') ! CDAta, whitespace Not significant
         endif
       else
-        type_ => vs_str_alloc('CDAMB')   ! CDAta, whitespace MayBe significant
+        type_ => new_vs(init_chars='CDAMB')   ! CDAta, whitespace MayBe significant
       endif
     endif
 
@@ -1332,28 +1331,28 @@ contains
         endif
         if (esc) then
           call add_item_to_dict(xf%dict, localpartofQname(name), escape_string(value, xf%xds%xml_version), prefixOfQName(name), &
-            getnamespaceURI(xf%nsDict,prefixOfQname(name)), type=str_vs(type_))
+            getnamespaceURI(xf%nsDict,prefixOfQname(name)), type=as_chars(type_))
         else
           call add_item_to_dict(xf%dict, localpartofQname(name), value, prefixOfQName(name), &
-            getnamespaceURI(xf%nsDict,prefixOfQName(name)), type=str_vs(type_))
+            getnamespaceURI(xf%nsDict,prefixOfQName(name)), type=as_chars(type_))
         endif
       else
         if (esc) then
-          call add_item_to_dict(xf%dict, name, escape_string(value, xf%xds%xml_version), type=str_vs(type_))
+          call add_item_to_dict(xf%dict, name, escape_string(value, xf%xds%xml_version), type=as_chars(type_))
         else
-          call add_item_to_dict(xf%dict, name, value, type=str_vs(type_))
+          call add_item_to_dict(xf%dict, name, value, type=as_chars(type_))
         endif
       endif
     else
       if (esc) then
-        call add_item_to_dict(xf%dict, name, escape_string(value, xf%xds%xml_version), type=str_vs(type_))
+        call add_item_to_dict(xf%dict, name, escape_string(value, xf%xds%xml_version), type=as_chars(type_))
       else
-        call add_item_to_dict(xf%dict, name, value, type=str_vs(type_))
+        call add_item_to_dict(xf%dict, name, value, type=as_chars(type_))
       endif
     endif
 
     !FIXME need to deallocate this when we move to better error handling
-    deallocate(type_)
+    call destroy_vs(type_)
 
   contains
     function checkExistingRefsInAttValue() result(p)
@@ -1629,7 +1628,7 @@ contains
       call destroyNamespaceDictionary(xf%nsDict)
     call destroy_xml_doc_state(xf%xds)
     
-    deallocate(xf%name)
+    call destroy_vs(xf%name)
 #endif
   end subroutine xml_Close
 
