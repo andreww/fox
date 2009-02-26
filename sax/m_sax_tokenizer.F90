@@ -985,10 +985,11 @@ contains
     type(sax_parser_t), intent(inout) :: fx
     character, dimension(:), intent(in) :: s_in
     type(file_buffer_t), intent(inout) :: fb
-    character, dimension(:), pointer :: s_out
+    type(vs), pointer :: s_out
 
-    character, dimension(:), pointer :: s_temp, s_temp2, s_ent, tempString
+    character, dimension(:), pointer :: s_temp, s_temp2, tempString
     type(vs), pointer :: temp_vs
+    type(vs), pointer :: s_ent
     character :: dummy
     integer :: i, i2, j, iostat
     type(entity_t), pointer :: ent
@@ -1000,7 +1001,7 @@ contains
     ! Expand all %PE;
 
     allocate(s_temp(size(s_in))) ! in the first instance
-    allocate(s_out(0)) ! in case we return early ...
+    s_out => new_vs() ! in case we return early ...
     s_ent => null()
     tempString => null()
     s_temp2 => null()
@@ -1066,15 +1067,15 @@ contains
             if (in_error(fx%error_stack)) then
               goto 100
             endif
-            allocate(s_temp2(size(s_temp)+size(s_ent)-j))
+            allocate(s_temp2(size(s_temp)+len(s_ent)-j))
             s_temp2(:i2-1) = s_temp(:i2-1)
-            s_temp2(i2:i2+size(s_ent)-1) = s_ent
+            s_temp2(i2:i2+len(s_ent)-1) = as_chars(s_ent)
             deallocate(s_temp)
             s_temp => s_temp2
             s_temp2 => null()
             i = i + j + 1
-            i2 = i2 + size(s_ent)
-            deallocate(s_ent)
+            i2 = i2 + len(s_ent)
+            call destroy_vs(s_ent)
           else
             s_temp(i2:i2+j) = s_in(i:i+j)
             i = i + j + 1
@@ -1096,12 +1097,10 @@ contains
       endif
     enddo
 
-    deallocate(s_out)
-    allocate(s_out(i2-1))
-    s_out = s_temp(:i2-1)
+    call add_chars(s_out, str_vs(s_temp(:i2-1)))
 100 deallocate(s_temp)
     if (associated(s_temp2))  deallocate(s_temp2)
-    if (associated(s_ent))  deallocate(s_ent)
+    if (associated(s_ent))  call destroy_vs(s_ent)
     if (associated(tempString)) deallocate(tempString)
 
   end function expand_pe_text
