@@ -2971,7 +2971,7 @@ contains
       end subroutine error_handler
     end interface
 
-    character, dimension(:), pointer :: errmsg
+    type(vs), pointer :: errmsg
 
     integer :: i, m, n, n_err
     n = size(fx%error_stack%stack)
@@ -2980,22 +2980,17 @@ contains
     do i = 1, n
       n_err = n_err + len(fx%error_stack%stack(i)%msg) ! + spaces + size of entityref
     enddo
-    allocate(errmsg(n_err))
-    errmsg = ''
-    n = 1
+    errmsg => new_vs()
     do i = 1, size(fx%error_stack%stack)
-      m = len(fx%error_stack%stack(i)%msg)
-      errmsg(n:n+m-1) = as_chars(fx%error_stack%stack(i)%msg)
-      errmsg(n+m:n+m) = " "
-      n = n + m + 1
+      call add_chars(errmsg, as_chars(fx%error_stack%stack(i)%msg)//" ")
     enddo
     ! FIXME put location information in here
     if (present(error_handler)) then
-      call error_handler(str_vs(errmsg))
-      deallocate(errmsg)
+      call error_handler(as_chars(errmsg))
+      call destroy_vs(errmsg)
       if (fx%state==ST_STOP) return
     else
-      call FoX_error(str_vs(errmsg))
+      call FoX_error(as_chars(errmsg))
     endif
 
   end subroutine sax_error
