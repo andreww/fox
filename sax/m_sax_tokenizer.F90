@@ -983,11 +983,11 @@ contains
 
   recursive function expand_pe_text(fx, s_in, fb) result(s_out)
     type(sax_parser_t), intent(inout) :: fx
-    character, dimension(:), intent(in) :: s_in
+    type(vs), pointer :: s_in
     type(file_buffer_t), intent(inout) :: fb
     type(vs), pointer :: s_out
 
-    character, dimension(:), pointer :: s_temp, s_temp2, tempString
+    type(vs), pointer :: s_temp, s_temp2, tempString
     type(vs), pointer :: temp_vs
     type(vs), pointer :: s_ent
     character :: dummy
@@ -1000,7 +1000,7 @@ contains
 
     ! Expand all %PE;
 
-    allocate(s_temp(size(s_in))) ! in the first instance
+    s_temp => new_vs(min_size=len(s_in)) ! in the first instance
     s_out => new_vs() ! in case we return early ...
     s_ent => null()
     tempString => null()
@@ -1008,9 +1008,9 @@ contains
 
     i2 = 1
     i = 1
-    do while (i <= size(s_in))
-      if (s_in(i)=='%') then
-        j = index(str_vs(s_in(i+1:)), ';')
+    do while (i <= len(s_in))
+      if (as_chars(s_in,i,i)=='%') then
+        j = index(as_chars(s_in,i+1,len(s_in)), ';')
         if (j==0) then
           call add_error(fx%error_stack, "Illegal % found in attribute")
           goto 100
@@ -1018,15 +1018,14 @@ contains
           call add_error(fx%error_stack, "No entity reference found")
           goto 100
         endif
-        allocate(tempString(j-1))
-        tempString = s_in(i+1:i+j-1)
-        if (checkName(str_vs(tempString), fx%xds%xml_version)) then
-          ent => getEntityByName(fx%forbidden_pe_list, str_vs(tempString))
+        tempString => new_vs(init_chars=as_chars(s_in,i+1,i+j-1))
+        if (checkName(as_chars(tempString), fx%xds%xml_version)) then
+          ent => getEntityByName(fx%forbidden_pe_list, as_chars(tempString))
           if (associated(ent)) then
             call add_error(fx%error_stack, 'Recursive entity expansion')
             goto 100
           endif
-          ent => getEntityByName(fx%xds%peList, str_vs(tempString))
+          ent => getEntityByName(fx%xds%peList, as_chars(tempString))
           if (associated(ent)) then
             if (ent%wfc.and.fx%xds%standalone) then
               call add_error(fx%error_stack, &
@@ -1037,9 +1036,9 @@ contains
               goto 100
             endif
 #ifdef PGF90
-            call add_internal_entity(fx%forbidden_pe_list, str_vs(tempString), "", nullURI, .false.)
+            call add_internal_entity(fx%forbidden_pe_list, as_chars(tempString), "", nullURI, .false.)
 #else
-            call add_internal_entity(fx%forbidden_pe_list, str_vs(tempString), "", null(), .false.)
+            call add_internal_entity(fx%forbidden_pe_list, as_chars(tempString), "", null(), .false.)
 #endif
             ! Recursively expand entity, checking for errors.
             if (ent%external) then
@@ -1050,34 +1049,26 @@ contains
               endif
               call parse_text_declaration(fb, fx%error_stack)
               if (in_error(fx%error_stack)) goto 100
-              ! FIXME - AMW: expand_pe_test should take a vs
-              ! to avoid this mess...
-              temp_vs => get_all_characters(fb, fx%error_stack)
-              s_temp2 => vs_str_alloc(as_chars(temp_vs))
-              call destroy_vs(temp_vs)
+              s_temp2 => get_all_characters(fb, fx%error_stack)
               call pop_buffer_stack(fb)
               if (in_error(fx%error_stack)) goto 100
               s_ent => expand_pe_text(fx, s_temp2, fb)
-              deallocate(s_temp2)
+              call destroy_vs(s_temp2)
             else
-              s_ent => expand_pe_text(fx, &
-                vs_str(expand_entity_text(fx%xds%peList, str_vs(tempString))), fb)
+              s_temp2 => new_vs(init_chars=expand_entity_text(fx%xds%peList, as_chars(tempString)))
+              s_ent => expand_pe_text(fx, s_temp2, fb)
+              call destroy_vs(s_temp2)
             endif
             dummy = pop_entity_list(fx%forbidden_pe_list)
             if (in_error(fx%error_stack)) then
               goto 100
             endif
-            allocate(s_temp2(size(s_temp)+len(s_ent)-j))
-            s_temp2(:i2-1) = s_temp(:i2-1)
-            s_temp2(i2:i2+len(s_ent)-1) = as_chars(s_ent)
-            deallocate(s_temp)
-            s_temp => s_temp2
-            s_temp2 => null()
+            call add_chars(s_temp, as_chars(s_ent))
             i = i + j + 1
             i2 = i2 + len(s_ent)
             call destroy_vs(s_ent)
           else
-            s_temp(i2:i2+j) = s_in(i:i+j)
+            call vs_replace_chars(s_temp, as_chars(s_in, i, i+j), i2, i2+j)
             i = i + j + 1
             i2 = i2 + j + 1
             if (.not.fx%skippedExternal.or.fx%xds%standalone) then
@@ -1089,19 +1080,19 @@ contains
           call add_error(fx%error_stack, "Illegal parameter entity reference")
           goto 100
         endif
-        deallocate(tempString)
+        call destroy_vs(tempString)
       else
-        s_temp(i2) = s_in(i)
+        call vs_replace_char(s_temp, as_chars(s_in,i,i), i2)
         i = i + 1
         i2 = i2 + 1
       endif
     enddo
 
-    call add_chars(s_out, str_vs(s_temp(:i2-1)))
+    call add_chars(s_out, as_chars(s_temp, 1, i2-1))
 100 deallocate(s_temp)
-    if (associated(s_temp2))  deallocate(s_temp2)
+    if (associated(s_temp2))  call destroy_vs(s_temp2)
     if (associated(s_ent))  call destroy_vs(s_ent)
-    if (associated(tempString)) deallocate(tempString)
+    if (associated(tempString)) call destroy_vs(tempString)
 
   end function expand_pe_text
 #endif

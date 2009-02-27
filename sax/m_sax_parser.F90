@@ -2040,10 +2040,7 @@ contains
           if (reading_main_file(fb)) then
             tempVString => fx%token
           else
-            !FIXME: AMW - bit crap to access the internal data below.
-            !FIXME: AMW - this must leak memory (how do I deallocate the 
-            !             vs_str_alloc? And added another?
-            tempVString => expand_pe_text(fx, vs_str_alloc(as_chars(fx%token)), fb)
+            tempVString => expand_pe_text(fx, fx%token, fb)
           endif
           fx%attname => expand_entity_value_alloc(tempVString, fx%xds, fx%error_stack)
           if (reading_main_file(fb)) then

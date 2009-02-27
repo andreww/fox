@@ -14,6 +14,8 @@ public :: operator(==)
 public :: operator(/=)
 public :: len
 public :: vs_set_chars
+public :: vs_replace_char
+public :: vs_replace_chars
 
 
 type vs
@@ -130,6 +132,33 @@ subroutine push_vs_chars (my_vs, chars)
     my_vs%str_len = my_vs%str_len + len(chars)
 
 end subroutine push_vs_chars
+
+subroutine vs_replace_chars(my_vs, char, i, j)
+
+    type(vs),  intent(inout) :: my_vs
+    character(len=*), intent(in) :: char
+    integer, intent(in)          :: i
+    integer, intent(in)          :: j
+    integer                      :: k
+    integer                      :: n 
+   
+    n = 0 
+    do k = i, j
+       n = n+1
+       call vs_replace_char(my_vs, char(n:n), k)
+    enddo
+
+end subroutine vs_replace_chars
+
+subroutine vs_replace_char(my_vs, char, i)
+
+    type(vs),  intent(inout) :: my_vs
+    character(len=1), intent(in) :: char
+    integer, intent(in)          :: i
+!FIXME - check array bounds?
+    my_vs%chars(i) = char
+
+end subroutine vs_replace_char
 
 pure function  as_chars_full(my_vs) result(chars)
  
