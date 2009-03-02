@@ -1,7 +1,6 @@
 module m_sax_tokenizer
 
 #ifndef DUMMYLIB
-  use fox_m_fsys_array_str, only: vs_str, str_vs, vs_str_alloc
   use m_common_charset, only: XML_WHITESPACE, &
     upperCase, isInitialNameChar
   use m_common_error, only: add_error, in_error
@@ -861,7 +860,7 @@ contains
     character(len=*), intent(in) :: s_in
     type(vs), pointer :: s_out
 
-    character, dimension(:), pointer :: s_temp, s_temp2, tempString
+    type(vs), pointer :: s_temp, tempString
     type(vs), pointer :: s_ent
     character :: dummy
     integer :: i, i2, j
@@ -870,12 +869,11 @@ contains
     type(URI), pointer :: nullURI
     nullURI => null()
 #endif
-
     ! Condense all whitespace, only if we are validating,
     ! Expand all &
     ! Complain about < and &
 
-    allocate(s_temp(len(s_in))) ! in the first instance
+    s_temp => new_vs(min_size=(len(s_in))) ! in the first instance
     s_out => new_vs() ! in case we return early ...
     s_ent => null()
     tempString => null()
@@ -886,7 +884,7 @@ contains
       if (i > len(s_in)) exit
       ! Firstly, all whitespace must become 0x20
       if (verify(s_in(i:i),XML_WHITESPACE)==0) then
-        s_temp(i2) = " "
+        call add_chars(s_temp, " ")
         ! Then, < is always illegal
         i = i + 1
         i2 = i2 + 1
@@ -903,24 +901,24 @@ contains
           call add_error(fx%error_stack, "No entity reference found")
           goto 100
         endif
-        tempString => vs_str_alloc(s_in(i+1:i+j-1))
-        if (existing_entity(fx%predefined_e_list, str_vs(tempString))) then
+        tempString => new_vs(init_chars=s_in(i+1:i+j-1))
+        if (existing_entity(fx%predefined_e_list, as_chars(tempString))) then
           ! Expand immediately
-          s_temp(i2) = expand_entity_text(fx%predefined_e_list, str_vs(tempString))
+          call add_chars(s_temp, expand_entity_text(fx%predefined_e_list, as_chars(tempString)))
           i = i + j + 1
           i2 = i2 + 1
-        elseif (checkCharacterEntityReference(str_vs(tempString), fx%xds%xml_version)) then
+        elseif (checkCharacterEntityReference(as_chars(tempString), fx%xds%xml_version)) then
           ! Expand all character entities
-          s_temp(i2) = expand_char_entity(str_vs(tempString))
+          call add_chars(s_temp, expand_char_entity(as_chars(tempString)))
           i = i + j  + 1
           i2 = i2 + 1 ! fixme
-        elseif (checkName(str_vs(tempString), fx%xds%xml_version)) then
-          ent => getEntityByName(fx%forbidden_ge_list, str_vs(tempString))
+        elseif (checkName(as_chars(tempString), fx%xds%xml_version)) then
+          ent => getEntityByName(fx%forbidden_ge_list, as_chars(tempString))
           if (associated(ent)) then
             call add_error(fx%error_stack, 'Recursive entity expansion')
             goto 100
           else
-            ent => getEntityByName(fx%xds%entityList, str_vs(tempString))
+            ent => getEntityByName(fx%xds%entityList, as_chars(tempString))
           endif
           if (associated(ent)) then
             if (ent%wfc.and.fx%xds%standalone) then
@@ -933,28 +931,23 @@ contains
               goto 100
             endif
 #ifdef PGF90
-            call add_internal_entity(fx%forbidden_ge_list, str_vs(tempString), "", nullURI, .false.)
+            call add_internal_entity(fx%forbidden_ge_list, as_chars(tempString), "", nullURI, .false.)
 #else
-            call add_internal_entity(fx%forbidden_ge_list, str_vs(tempString), "", null(), .false.)
+            call add_internal_entity(fx%forbidden_ge_list, as_chars(tempString), "", null(), .false.)
 #endif
             ! Recursively expand entity, checking for errors.
             s_ent => normalize_attribute_text(fx, &
-              (expand_entity_text(fx%xds%entityList, str_vs(tempString))))
+              (expand_entity_text(fx%xds%entityList, as_chars(tempString))))
             dummy = pop_entity_list(fx%forbidden_ge_list)
             if (in_error(fx%error_stack)) then
               goto 100
             endif
-            allocate(s_temp2(size(s_temp)+len(s_ent)-j))
-            s_temp2(:i2-1) = s_temp(:i2-1)
-            s_temp2(i2:i2+len(s_ent)-1) = as_chars(s_ent)
-            deallocate(s_temp)
-            s_temp => s_temp2
-            nullify(s_temp2)
+            call add_chars(s_temp, as_chars(s_ent))
             i = i + j + 1
             i2 = i2 + len(s_ent)
             call destroy_vs(s_ent)
           else
-            s_temp(i2:i2+j) = s_in(i:i+j)
+            call add_chars(s_temp, s_in(i:i+j))
             i = i + j + 1
             i2 = i2 + j + 1
             if (.not.fx%skippedExternal.or.fx%xds%standalone) then
@@ -966,18 +959,18 @@ contains
           call add_error(fx%error_stack, "Illegal entity reference")
           goto 100
         endif
-        deallocate(tempString)
+        call destroy_vs(tempString)
       else
-        s_temp(i2) = s_in(i:i)
+        call add_chars(s_temp, s_in(i:i))
         i = i + 1
         i2 = i2 + 1
       endif
     enddo
-
-    call add_chars(s_out, str_vs(s_temp(:i2-1)))
-100 deallocate(s_temp)
+    
+    call add_chars(s_out, as_chars(s_temp))
+100 call destroy_vs(s_temp)
     if (associated(s_ent))  call destroy_vs(s_ent)
-    if (associated(tempString)) deallocate(tempString)
+    if (associated(tempString)) call destroy_vs(tempString)
 
   end function normalize_attribute_text
 

@@ -101,10 +101,14 @@ subroutine vs_set_chars(my_vs, i, j, chars)
     type(vs),                   intent(inout) :: my_vs
     integer,                    intent(in)    :: i
     integer,                    intent(in)    :: j
-    character(len=j-i+1),       intent(in)    :: chars
-    
+    character(len=*),       intent(in)    :: chars
+
     !FIXME - sanity checkes here?
+    if (i.eq.j) then
+    my_vs%chars(i) = chars
+    else
     my_vs%chars(i:j) = chars
+    endif
    
 end subroutine vs_set_chars
 
@@ -141,7 +145,12 @@ subroutine vs_replace_chars(my_vs, char, i, j)
     integer, intent(in)          :: j
     integer                      :: k
     integer                      :: n 
-   
+  
+   if (i.gt.j) stop "Arg error"
+   if (i.gt.len(my_vs)) stop "Bounds error 1"
+   if (i.gt.len(my_vs)) stop "Bounds error 2"
+   if (len(char).ne.(j-i+1)) stop "Length error"
+ 
     n = 0 
     do k = i, j
        n = n+1
@@ -155,6 +164,9 @@ subroutine vs_replace_char(my_vs, char, i)
     type(vs),  intent(inout) :: my_vs
     character(len=1), intent(in) :: char
     integer, intent(in)          :: i
+
+    if (i>size(my_vs%chars)) stop "Out of bounds error"
+    if (i.le.0) stop "Must be positive"
 !FIXME - check array bounds?
     my_vs%chars(i) = char
 
