@@ -1,7 +1,6 @@
 module m_sax_parser
 
 #ifndef DUMMYLIB
-  use fox_m_fsys_array_str, only: str_vs, vs_str_alloc, vs_vs_alloc
   use fox_m_fsys_string_list, only: string_list, destroy_string_list, &
     tokenize_to_string_list, registered_string, init_string_list, &
     add_string, tokenize_and_add_strings, destroy
@@ -2600,7 +2599,7 @@ contains
       type(attribute_t), pointer :: att
       type(string_list) :: s_list
       type(vs), pointer :: attValue
-      character, pointer :: s(:)
+      type(vs), pointer :: s
 
       integer :: ind
       logical, allocatable :: attributesLeft(:)
@@ -2728,7 +2727,7 @@ contains
               s_list = tokenize_to_string_list(as_chars(attValue))
               do j = 1, size(s_list%list)
                 s => s_list%list(j)%s
-                ent => getEntityByName(fx%xds%entityList, str_vs(s))
+                ent => getEntityByName(fx%xds%entityList, as_chars(s))
                 if (associated(ent)) then
                   if (.not.is_unparsed_entity(ent)) then
                     ! Validity Constraint: Entity Name
@@ -2736,7 +2735,7 @@ contains
                       "Attribute "//as_chars(att%name) &
                       //" of element "//as_chars(el%name) &
                       //" declared as ENTITIES refers to parsed entity "&
-                      //str_vs(s))
+                      //as_chars(s))
                     call destroy_string_list(s_list)
                     return
                   endif
@@ -2746,7 +2745,7 @@ contains
                     "Attribute "//as_chars(att%name) &
                     //" of element "//as_chars(el%name) &
                     //" declared as ENTITIES refers to non-existent entity "&
-                    //str_vs(s))
+                    //as_chars(s))
                   call destroy_string_list(s_list)
                   return
                 endif
@@ -2885,7 +2884,7 @@ contains
       type(attribute_t), pointer :: att
       type(entity_t), pointer :: ent
       type(string_list) :: s_list
-      character, pointer :: s(:)
+      type(vs), pointer :: s
       integer :: i, j, k
 
       if (present(FoX_endDTD_handler)) then
@@ -2915,7 +2914,7 @@ contains
             if (att%attType==ATT_NOTATION) then
               do k = 1, size(att%enumerations%list)
                 s => att%enumerations%list(k)%s
-                if (.not.notation_exists(fx%nlist, str_vs(s))) then
+                if (.not.notation_exists(fx%nlist, as_chars(s))) then
                   ! Validity Constraint: Notation Attributes
                   call add_error(fx%error_stack, &
                     "Enumerated NOTATION in "//as_chars(att%name) &
@@ -2929,7 +2928,7 @@ contains
                 s_list = tokenize_to_string_list(as_chars(att%default))
                 do k = 1, size(s_list%list)
                   s => s_list%list(k)%s
-                  if (.not.notation_exists(fx%nlist, str_vs(s))) then
+                  if (.not.notation_exists(fx%nlist, as_chars(s))) then
                     ! Validity Constraint: Notation Attributes
                     call add_error(fx%error_stack, &
                       "Attribute "//as_chars(att%name) &
@@ -2949,12 +2948,12 @@ contains
 
     subroutine checkIdRefs
       integer :: i
-      character, pointer :: s(:)
+      type(vs), pointer :: s
       do i = 1, size(idRef_list%list)
         s => idRef_list%list(i)%s
-        if (.not.registered_string(id_list, str_vs(s))) then
+        if (.not.registered_string(id_list, as_chars(s))) then
           call add_error(fx%error_stack, &
-            "Reference to undeclared ID "//str_vs(s))
+            "Reference to undeclared ID "//as_chars(s))
           return
         endif
       enddo

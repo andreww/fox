@@ -1,12 +1,12 @@
 module fox_m_fsys_string_list
 #ifndef DUMMYLIB
 
-  use fox_m_fsys_array_str, only: str_vs, vs_str_alloc
+  use fox_m_fsys_vstr, only: vs, as_chars, new_vs, destroy_vs, len
   implicit none
   private
 
   type string_t
-    character, pointer :: s(:) => null()
+    type(vs), pointer :: s => null()
   end type string_t
 
   type string_list
@@ -46,7 +46,7 @@ contains
 
     if (associated(s_list%list)) then
       do i = 1, ubound(s_list%list, 1)
-        deallocate(s_list%list(i)%s)
+        call destroy_vs(s_list%list(i)%s)
       enddo
       deallocate(s_list%list)
     endif
@@ -65,7 +65,7 @@ contains
       s_list%list(i)%s => temp(i)%s
     enddo
     deallocate(temp)
-    s_list%list(i)%s => vs_str_alloc(s)
+    s_list%list(i)%s => new_vs(init_chars=s)
   end subroutine add_string
 
   subroutine remove_last_string(s_list)
@@ -74,6 +74,7 @@ contains
     integer :: i
     type(string_t), pointer :: temp(:)
 
+    !FIXME: memory leak? What happens to s_list%list%s ?
     temp => s_list%list
     allocate(s_list%list(size(temp)-1))
     do i = 1, size(temp)-1
@@ -85,9 +86,9 @@ contains
 
   function get_last_string(s_list) result(s)
     type(string_list), intent(in) :: s_list
-    character(len=size(s_list%list(size(s_list%list))%s)) :: s
+    character(len=len(s_list%list(size(s_list%list))%s)) :: s
 
-    s = str_vs(s_list%list(size(s_list%list))%s)
+    s = as_chars(s_list%list(size(s_list%list))%s)
   end function get_last_string
 
   function tokenize_to_string_list(s) result(s_list)
@@ -136,7 +137,7 @@ contains
 
     p = .false.
     do i = 1, size(s_list%list)
-      if (str_vs(s_list%list(i)%s)//"x"==s//"x") then
+      if (as_chars(s_list%list(i)%s)//"x"==s//"x") then
         p = .true.
         exit
       endif

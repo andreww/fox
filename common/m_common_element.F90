@@ -5,8 +5,6 @@ module m_common_element
 
   use fox_m_fsys_vstr, only: vs, new_vs, destroy_vs, operator(==), &
     as_chars, len, vs_set_chars, add_chars
-  !FIXME: string_list should use vstr's, which would remove use below.
-  use fox_m_fsys_array_str, only: str_vs
   use fox_m_fsys_string_list, only: string_list, init_string_list, &
     destroy_string_list, add_string, tokenize_to_string_list, &
     registered_string
@@ -1426,7 +1424,7 @@ contains
     integer :: i
     n = size(s_list%list) + 1
     do i = 1, size(s_list%list)
-      n = n + size(s_list%list(i)%s)
+      n = n + len(s_list%list(i)%s)
     enddo
   end function make_token_group_len
 
@@ -1438,11 +1436,11 @@ contains
     s(1:1) = '('
     n = 2
     do i = 1, size(s_list%list)-1
-      m = size(s_list%list(i)%s)
-      s(n:n+m) = str_vs(s_list%list(i)%s)//'|'
+      m = len(s_list%list(i)%s)
+      s(n:n+m) = as_chars(s_list%list(i)%s)//'|'
       n = n + m + 1
     enddo
-    s(n:) = str_vs(s_list%list(i)%s)//')'
+    s(n:) = as_chars(s_list%list(i)%s)//')'
   end function make_token_group
 
   function attribute_has_default(att) result(p)
