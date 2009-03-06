@@ -173,7 +173,7 @@ contains
 
   subroutine addPrefixedURI(nsPrefix, uri, ix)
     type(PrefixMapping), intent(inout) :: nsPrefix
-    character, dimension(:), intent(in) :: uri
+    character(*), intent(in) :: uri
     integer, intent(in) :: ix
 
     type(URIMapping), dimension(:), allocatable :: tempMap
@@ -191,7 +191,7 @@ contains
     deallocate(tempMap)
     ! And finally, add the new default NS
     nsPrefix%urilist(l_m)%ix = ix
-    nsPrefix%urilist(l_m)%URI => new_vs(init_chars=str_vs(uri))
+    nsPrefix%urilist(l_m)%URI => new_vs(init_chars=uri)
 
   end subroutine addPrefixedURI
    
@@ -312,11 +312,11 @@ contains
     enddo
 
     if (p_i == 0) then
-       call addPrefix(nsDict, vs_str(prefix))
+       call addPrefix(nsDict, prefix)
        p_i = l_p + 1
     endif
  
-    call addPrefixedURI(nsDict%prefixes(p_i), vs_str(URI), ix)
+    call addPrefixedURI(nsDict%prefixes(p_i), URI, ix)
 
   end subroutine addPrefixedNS
 
@@ -348,7 +348,7 @@ contains
 
   subroutine addPrefix(nsDict, prefix)
     type(namespaceDictionary), intent(inout) :: nsDict
-    character, dimension(:), intent(in) :: prefix
+    character(len=*), intent(in) :: prefix
     integer :: l_p
 
     type(prefixMapping), dimension(:), pointer :: tempPrefixMap
@@ -380,7 +380,7 @@ contains
     enddo
     deallocate(tempPrefixMap)
 
-    nsDict%prefixes(l_p)%prefix => new_vs(init_chars=str_vs(prefix))
+    nsDict%prefixes(l_p)%prefix => new_vs(init_chars=prefix)
     allocate(nsDict%prefixes(l_p)%urilist(0:0))
     nsDict%prefixes(l_p)%urilist(0)%URI => new_vs(init_chars=invalidNS)
     nsDict%prefixes(l_p)%urilist(0)%ix = -1
