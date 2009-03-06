@@ -1,7 +1,7 @@
 module m_common_elstack
 
 #ifndef DUMMYLIB
-  use fox_m_fsys_array_str, only: str_vs, vs_str
+  use fox_m_fsys_vstr, only: vs, new_vs, destroy_vs, as_chars, len
   use m_common_error, only: FoX_fatal
   use m_common_content_model, only: content_particle_t, checkCP, &
     elementContentCP, emptyContentCP, checkCPToEnd
@@ -18,7 +18,7 @@ module m_common_elstack
   real, parameter :: STACK_SIZE_MULT = 1.5
 
   type :: elstack_item
-    character, dimension(:), pointer          :: name => null()
+    type(vs), pointer                         :: name => null()
     type(content_particle_t), pointer         :: cp => null()
   end type elstack_item
 
@@ -56,7 +56,7 @@ contains
     ! empty stack
     allocate(elstack%stack(0:STACK_SIZE_INIT))
     elstack%n_items = 0
-    allocate(elstack%stack(0)%name(0))
+    elstack%stack(0)%name => new_vs()
 
   end subroutine init_elstack
 
@@ -64,7 +64,7 @@ contains
     type(elstack_t), intent(inout)  :: elstack
     integer :: i
     do i = 0, elstack % n_items
-      deallocate(elstack%stack(i)%name)
+      call destroy_vs(elstack%stack(i)%name)
     enddo
     deallocate(elstack%stack)
   end subroutine destroy_elstack
@@ -123,8 +123,7 @@ contains
     if (n == size(elstack%stack)) then
       call resize_elstack(elstack)
     endif
-    allocate(elstack%stack(n)%name(len(name)))
-    elstack%stack(n)%name = vs_str(name)
+    elstack%stack(n)%name => new_vs(init_chars=name)
     if (present(cp)) elstack%stack(n)%cp => cp
     elstack%n_items = n
 
@@ -132,7 +131,7 @@ contains
 
   function pop_elstack(elstack) result(item)
     type(elstack_t), intent(inout)     :: elstack
-    character(len=merge(size(elstack%stack(elstack%n_items)%name), 0, elstack%n_items > 0)) :: item
+    character(len=merge(len(elstack%stack(elstack%n_items)%name), 0, elstack%n_items > 0)) :: item
 
     integer :: n
 
@@ -140,8 +139,8 @@ contains
     if (n == 0) then
       call FoX_fatal("Element stack empty")
     endif
-    item = str_vs(elstack%stack(n)%name)
-    deallocate(elstack%stack(n)%name)
+    item = as_chars(elstack%stack(n)%name)
+    call destroy_vs(elstack%stack(n)%name)
     elstack%n_items = n - 1
 
   end function pop_elstack
@@ -149,7 +148,7 @@ contains
   pure function get_top_elstack(elstack) result(item)
     ! Get the top element of the stack, *without popping it*.
     type(elstack_t), intent(in)        :: elstack
-    character(len=merge(size(elstack%stack(elstack%n_items)%name), 0, elstack%n_items > 0)) :: item 
+    character(len=merge(len(elstack%stack(elstack%n_items)%name), 0, elstack%n_items > 0)) :: item 
 
     integer :: n
 
@@ -158,7 +157,7 @@ contains
     if (n==0) then
       item = ""
     else
-      item = str_vs(elstack%stack(n)%name)
+      item = as_chars(elstack%stack(n)%name)
     endif
 
   end function get_top_elstack
@@ -227,7 +226,7 @@ contains
     integer   :: i
 
     do i = elstack%n_items, 1, -1
-      write(unit=unit,fmt=*) elstack%stack(i)%name
+      write(unit=unit,fmt=*) as_chars(elstack%stack(i)%name)
     enddo
 
   end subroutine print_elstack
