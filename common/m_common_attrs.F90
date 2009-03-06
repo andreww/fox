@@ -2,7 +2,6 @@ module m_common_attrs
 
 #ifndef DUMMYLIB
   use fox_m_fsys_vstr, only : vs, new_vs, as_chars, operator(==), len, destroy_vs
-  use fox_m_fsys_array_str, only : str_vs, vs_str_alloc
   use m_common_element, only: get_att_type_enum, ATT_CDATA, ATT_CDAMB, ATT_TYPES
   use m_common_error, only : FoX_error, FoX_fatal
 
@@ -561,12 +560,11 @@ contains
   subroutine set_localName_by_index_vs(dict, i, localName)
     type(dictionary_t), intent(inout) :: dict
     integer, intent(in) :: i
-    character(len=1), dimension(:), intent(in) :: localName
+    type(vs), intent(in) :: localName
 
     if (associated(dict%list(i)%d%localName)) &
       call destroy_vs(dict%list(i)%d%localName)
-    ! FIXME - AMW: where is this used? Should probably pass in a vstr and clone
-    dict%list(i)%d%localName => new_vs(init_chars=str_vs(localName))
+    dict%list(i)%d%localName => new_vs(init_chars=as_chars(localName))
   end subroutine set_localName_by_index_vs
 #endif
 

@@ -2,6 +2,7 @@ module m_common_namespaces
 
 #ifndef DUMMYLIB
   use fox_m_fsys_array_str, only: str_vs, vs_str, vs_str_alloc
+  use fox_m_fsys_vstr
 
   use fox_m_utils_uri, only: URI, parseURI, destroyURI, hasScheme
   use m_common_attrs, only: dictionary_t, get_key, get_value, remove_key, getLength, hasKey
@@ -462,6 +463,7 @@ contains
 
     character(len=6) :: xmlns
     character, dimension(:), pointer :: QName, URIstring
+    type(vs), pointer :: tmp_vstr
     integer :: i, n
     type(URI), pointer :: URIref
     !Check for namespaces; *and* remove xmlns references from 
@@ -605,7 +607,10 @@ contains
         deallocate(QName)
         return
       endif
-      call set_localName(atts, i, QName(n+1:))
+      !FIXME: Need to remove tmp_vstr with a subrtring
+      tmp_vstr => new_vs(init_chars=str_vs(QName(n+1:)))
+      call set_localName(atts, i, tmp_vstr)
+      call destroy_vs(tmp_vstr)
       deallocate(QName)
     enddo
 
