@@ -19,14 +19,14 @@ module m_common_namespaces
   ! an invalid URI name to indicate a namespace error.
 
   type URIMapping
-    character, dimension(:), pointer :: URI
+    type(vs), pointer :: URI
     integer :: ix ! link back to node depth
   end type URIMapping
   !This is a single URI, and the node depth under which
   !its namespace applies.
 
   type prefixMapping
-    character, dimension(:), pointer :: prefix
+    type(vs), pointer :: prefix
     type(URIMapping), dimension(:), pointer :: urilist
   end type prefixMapping
   !This is the mapping for a single prefix; with the
@@ -78,15 +78,14 @@ contains
     !an empty dictionary.
 
     allocate(nsDict%defaults(0:0))
-    allocate(nsDict%defaults(0)%URI(0))
+    nsDict%defaults(0)%URI => new_vs()
     !The 0th element of the defaults NS is the empty namespace
     nsDict%defaults(0)%ix = -1
     
     allocate(nsDict%prefixes(0:0))
-    allocate(nsDict%prefixes(0)%prefix(0))
+    nsDict%prefixes(0)%prefix => new_vs()
     allocate(nsDict%prefixes(0)%urilist(0:0))
-    allocate(nsDict%prefixes(0)%urilist(0)%URI(len(invalidNS)))
-    nsDict%prefixes(0)%urilist(0)%URI = vs_str(invalidNS)
+    nsDict%prefixes(0)%urilist(0)%URI => new_vs(init_chars=invalidNS)
     nsDict%prefixes(0)%urilist(0)%ix = -1
 
   end subroutine initNamespaceDictionary
@@ -98,14 +97,14 @@ contains
     integer :: i, j
 
     do i = 0, ubound(nsDict%defaults,1)
-       deallocate(nsDict%defaults(i)%URI)
+       call destroy_vs(nsDict%defaults(i)%URI)
     enddo
     deallocate(nsDict%defaults)
     do i = 0, ubound(nsDict%prefixes,1)
        do j = 0, ubound(nsDict%prefixes(i)%urilist,1)
-          deallocate(nsDict%prefixes(i)%urilist(j)%URI)
+          call destroy_vs(nsDict%prefixes(i)%urilist(j)%URI)
        enddo
-       deallocate(nsDict%prefixes(i)%prefix)
+       call destroy_vs(nsDict%prefixes(i)%prefix)
        deallocate(nsDict%prefixes(i)%urilist)
     enddo
     deallocate(nsDict%prefixes)
@@ -137,7 +136,7 @@ contains
     type(error_stack), intent(inout), optional :: es
 
     type(URIMapping), dimension(:), allocatable :: tempMap
-    integer :: l_m, l_s
+    integer :: l_m
 
     if (uri=="http://www.w3.org/XML/1998/namespace") then
       if (present(es)) then
@@ -167,9 +166,7 @@ contains
     deallocate(tempMap)
     ! And finally, add the new default NS
     nsDict%defaults(l_m)%ix = ix
-    l_s = len(uri)
-    allocate(nsDict%defaults(l_m)%URI(l_s))
-    nsDict%defaults(l_m)%URI = vs_str(uri)
+    nsDict%defaults(l_m)%URI => new_vs(init_chars=uri)
 
   end subroutine addDefaultNS
   
@@ -180,7 +177,7 @@ contains
     integer, intent(in) :: ix
 
     type(URIMapping), dimension(:), allocatable :: tempMap
-    integer :: l_m, l_s
+    integer :: l_m
 
     l_m = ubound(nsPrefix%urilist,1)
     allocate(tempMap(0:l_m))
@@ -194,9 +191,7 @@ contains
     deallocate(tempMap)
     ! And finally, add the new default NS
     nsPrefix%urilist(l_m)%ix = ix
-    l_s = size(uri)
-    allocate(nsPrefix%urilist(l_m)%URI(l_s))
-    nsPrefix%urilist(l_m)%URI = uri
+    nsPrefix%urilist(l_m)%URI => new_vs(init_chars=str_vs(uri))
 
   end subroutine addPrefixedURI
    
@@ -211,7 +206,7 @@ contains
     ! Now copy all defaults across ...
     call copyURIMapping(nsDict%defaults, tempMap, l_m-1)
     !And remove tail-end charlie
-    deallocate(nsDict%defaults(l_m)%URI)
+    call destroy_vs(nsDict%defaults(l_m)%URI)
     deallocate(nsDict%defaults)
     l_m = l_m - 1
     allocate(nsDict%defaults(0:l_m))
@@ -232,7 +227,7 @@ contains
     ! Now copy all defaults across ...
     call copyURIMapping(nsPrefix%urilist, tempMap, l_m-1)
     !And remove tail-end charlie
-    deallocate(nsPrefix%urilist(l_m)%URI)
+    call destroy_vs(nsPrefix%urilist(l_m)%URI)
     deallocate(nsPrefix%urilist)
     l_m = l_m - 1
     allocate(nsPrefix%urilist(0:l_m))
@@ -310,7 +305,7 @@ contains
     
     p_i = 0
     do i = 1, l_p
-       if (str_vs(nsDict%prefixes(i)%prefix) == prefix) then
+       if (nsDict%prefixes(i)%prefix == prefix) then
           p_i = i
           exit
        endif
@@ -327,13 +322,13 @@ contains
 
   subroutine removePrefixedNS(nsDict, prefix)
     type(namespaceDictionary), intent(inout) :: nsDict
-    character, dimension(:), intent(in) :: prefix
+    type(vs), intent(in) :: prefix
     integer :: l_p, p_i, i
     l_p = ubound(nsDict%prefixes, 1)
 
     p_i = 0
     do i = 1, l_p
-      if (str_vs(nsDict%prefixes(i)%prefix) == str_vs(prefix)) then
+      if (nsDict%prefixes(i)%prefix == prefix) then
         p_i = i
         exit
       endif
@@ -385,11 +380,9 @@ contains
     enddo
     deallocate(tempPrefixMap)
 
-    allocate(nsDict%prefixes(l_p)%prefix(size(prefix)))
-    nsDict%prefixes(l_p)%prefix = prefix
+    nsDict%prefixes(l_p)%prefix => new_vs(init_chars=str_vs(prefix))
     allocate(nsDict%prefixes(l_p)%urilist(0:0))
-    allocate(nsDict%prefixes(l_p)%urilist(0)%URI(len(invalidNS)))
-    nsDict%prefixes(l_p)%urilist(0)%URI = vs_str(invalidNS)
+    nsDict%prefixes(l_p)%urilist(0)%URI => new_vs(init_chars=invalidNS)
     nsDict%prefixes(l_p)%urilist(0)%ix = -1
     
   end subroutine addPrefix
@@ -417,9 +410,9 @@ contains
        tempPrefixMap(i)%prefix => nsDict%prefixes(i)%prefix
        tempPrefixMap(i)%urilist => nsDict%prefixes(i)%urilist
     enddo
-    deallocate(nsDict%prefixes(i_p)%urilist(0)%URI)
+    call destroy_vs(nsDict%prefixes(i_p)%urilist(0)%URI)
     deallocate(nsDict%prefixes(i_p)%urilist)
-    deallocate(nsDict%prefixes(i_p)%prefix)
+    call destroy_vs(nsDict%prefixes(i_p)%prefix)
     !this subroutine will only get called if the urilist is already
     !empty, so no need to deallocate it.
     do i = i_p+1, l_p
@@ -633,7 +626,7 @@ contains
     if (nsDict%defaults(l_d)%ix == ix) then
       !It's not been registered yet:
       call add_item_to_dict(atts, "xmlns", &
-           str_vs(nsDict%defaults(l_d)%URI), type="CDATA")
+           as_chars(nsDict%defaults(l_d)%URI), type="CDATA")
     endif
 
     !next, add any overdue prefixed NS's in the same way:
@@ -643,8 +636,8 @@ contains
       l_ps = ubound(nsDict%prefixes(i_p)%urilist,1)
       if (nsDict%prefixes(i_p)%urilist(l_ps)%ix == ix) then
         call add_item_to_dict(atts, &
-             "xmlns:"//str_vs(nsDict%prefixes(i_p)%prefix), &
-             str_vs(nsDict%prefixes(i_p)%urilist(l_ps)%URI), &
+             "xmlns:"//as_chars(nsDict%prefixes(i_p)%prefix), &
+             as_chars(nsDict%prefixes(i_p)%urilist(l_ps)%URI), &
              type="CDATA")
       endif
     enddo
@@ -660,7 +653,7 @@ contains
       if (nsDict%prefixes(i_p)%urilist(l_ps)%ix > ix) then
         !we only just added this, so we need to declare it
         call add_item_to_dict(atts, "xmlns:"//get_prefix(atts, i), &
-             str_vs(nsDict%prefixes(i_p)%urilist(l_ps)%URI), &
+             as_chars(nsDict%prefixes(i_p)%urilist(l_ps)%URI), &
              type="CDATA")
         !Reset the index to the right value:
         nsDict%prefixes(i_p)%urilist(l_ps)%ix = ix
@@ -683,7 +676,7 @@ contains
     end interface
 
     integer :: l_d, l_p, l_ps, i
-    character, pointer :: prefix(:)
+    type(vs), pointer :: prefix
 
     !It will only ever be the final elements in the list which
     ! might have expired.
@@ -702,7 +695,7 @@ contains
       l_ps = ubound(nsDict%prefixes(l_p)%urilist,1)
       if (nsDict%prefixes(i)%urilist(l_ps)%ix == ix) then
         if (present(end_prefix_handler)) &
-          call end_prefix_handler(str_vs(nsDict%prefixes(i)%prefix))
+          call end_prefix_handler(as_chars(nsDict%prefixes(i)%prefix))
         ! We have to assign this pointer explicitly, otherwise the next call
         ! aliases its arguments illegally.
         prefix =>  nsDict%prefixes(i)%prefix
@@ -727,13 +720,13 @@ contains
     write(*,'(a)')'* default namespaces *'
 
     do i = 1, ubound(nsdict%defaults, 1)
-      write(*,'(i0,a)') nsdict%defaults(i)%ix, str_vs(nsdict%defaults(i)%URI)
+      write(*,'(i0,a)') nsdict%defaults(i)%ix, as_chars(nsdict%defaults(i)%URI)
     enddo
     write(*,'(a)') '* Prefixed namespaces *'
     do i = 1, ubound(nsdict%prefixes, 1)
-       write(*,'(2a)') '* prefix: ', str_vs(nsdict%prefixes(i)%prefix)
+       write(*,'(2a)') '* prefix: ', as_chars(nsdict%prefixes(i)%prefix)
        do j = 1, ubound(nsdict%prefixes(i)%urilist, 1)
-          write(*,'(i0,a)') nsdict%prefixes(i)%urilist(j)%ix, str_vs(nsdict%prefixes(i)%urilist(j)%URI)
+          write(*,'(i0,a)') nsdict%prefixes(i)%urilist(j)%ix, as_chars(nsdict%prefixes(i)%urilist(j)%URI)
        enddo
     enddo
 
@@ -742,11 +735,11 @@ contains
 
   pure function getURIofDefaultNS(nsDict) result(uri)
     type(namespaceDictionary), intent(in) :: nsDict
-    character(len=size(nsDict%defaults(ubound(nsDict%defaults,1))%URI)) :: URI
+    character(len=len(nsDict%defaults(ubound(nsDict%defaults,1))%URI)) :: URI
     
     integer :: l_d
     l_d = ubound(nsDict%defaults,1)
-    uri = str_vs(nsDict%defaults(l_d)%URI)
+    uri = as_chars(nsDict%defaults(l_d)%URI)
   end function getURIofDefaultNS
 
 
@@ -758,9 +751,9 @@ contains
 
     force = .false.
     do i = 1, ubound(nsDict%prefixes, 1)
-       if (str_vs(nsDict%prefixes(i)%prefix) == prefix) then
+       if (nsDict%prefixes(i)%prefix == prefix) then
          l_s = ubound(nsDict%prefixes(i)%urilist, 1)
-         force = (size(nsdict%prefixes(i)%urilist(l_s)%URI) > 0)
+         force = (len(nsdict%prefixes(i)%urilist(l_s)%URI) > 0)
          exit
        endif
     enddo
@@ -776,7 +769,7 @@ contains
     force = .false.
     l_s = ubound(nsDict%defaults, 1)
     if (l_s > 0) &
-      force = (size(nsdict%defaults(l_s)%URI) > 0)
+      force = (len(nsdict%defaults(l_s)%URI) > 0)
 
   end function isDefaultNSInForce
 
@@ -789,7 +782,7 @@ contains
     integer :: i
     p = 0
     do i = 1, ubound(nsDict%prefixes, 1)
-      if (str_vs(nsDict%prefixes(i)%prefix) == prefix) then
+      if (nsDict%prefixes(i)%prefix == prefix) then
            p = i
            exit
        endif
@@ -807,16 +800,16 @@ contains
   function getPrefixByIndex(nsDict, i) result(c)
     type(namespaceDictionary), intent(in) :: nsDict
     integer, intent(in) :: i
-    character(len=size(nsDict%prefixes(i)%prefix)) :: c
+    character(len=len(nsDict%prefixes(i)%prefix)) :: c
 
-    c = str_vs(nsDict%prefixes(i)%prefix)
+    c = as_chars(nsDict%prefixes(i)%prefix)
   end function getPrefixByIndex
 
 
   pure function getURIofPrefixedNS(nsDict, prefix) result(uri)
     type(namespaceDictionary), intent(in) :: nsDict
     character(len=*), intent(in) :: prefix
-    character(len=size( &
+    character(len=len( &
               nsDict%prefixes( &
            getPrefixIndex(nsDict,prefix) &
                              ) &
@@ -827,7 +820,7 @@ contains
     integer :: p_i, l_m
     p_i = getPrefixIndex(nsDict, prefix)
     l_m = ubound(nsDict%prefixes(p_i)%urilist, 1)
-    uri = str_vs(nsDict%prefixes(p_i)%urilist(l_m)%URI)
+    uri = as_chars(nsDict%prefixes(p_i)%urilist(l_m)%URI)
 
   end function getURIofPrefixedNS
 
