@@ -5,7 +5,6 @@ include(`m_dom_exception.m4')dnl
 module m_dom_parse
 
   use fox_m_fsys_vstr, only: as_chars, len, vs, new_vs, destroy_vs
-  use fox_m_fsys_array_str, only: str_vs, vs_str_alloc
   use fox_m_utils_uri, only: URI, parseURI, rebaseURI, expressURI, destroyURI
   use m_common_attrs, only: hasKey, getValue, getIndex, getIsId, getBase,      &
     add_item_to_dict
@@ -56,7 +55,7 @@ module m_dom_parse
   type(DOMConfiguration), pointer :: domConfig
   
   logical :: cdata
-  character, pointer :: error(:) => null()
+  type(vs), pointer :: error    => null()
   type(vs), pointer :: inEntity => null()
 
 contains
@@ -373,7 +372,7 @@ contains
   subroutine normalErrorHandler(msg)
     character(len=*), intent(in) :: msg
     ! This is called if the main parsing routine fails
-    error => vs_str_alloc(msg)
+    error => new_vs(init_chars=msg)
   end subroutine normalErrorHandler
 
   subroutine entityErrorHandler(msg)
@@ -509,7 +508,7 @@ contains
       if (associated(inEntity)) call destroy_vs(inEntity)
       ! FIXME pass the value of the error through
       ! when we let exceptions do that
-      deallocate(error)
+      call destroy_vs(error)
       call destroy(mainDoc)
       TOHW_m_dom_throw_error(PARSE_ERR)
     endif
