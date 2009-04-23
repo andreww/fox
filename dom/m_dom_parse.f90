@@ -53,7 +53,7 @@ module m_dom_parse
   
   logical :: cdata
   character, pointer :: error(:) => null()
-  character, pointer :: inEntity(:) => null()
+  type(vs), pointer :: inEntity => null()
 
 contains
 
@@ -423,7 +423,7 @@ contains
 
     if (getParameter(domConfig, "entities")) then
       if (.not.associated(inEntity)) then
-        inEntity => vs_str_alloc(name)
+        inEntity => new_vs(init_chars=name)
       endif
       current => appendChild(current, createEmptyEntityReference(mainDoc, name))
     endif
@@ -437,7 +437,7 @@ contains
     
     if (getParameter(domConfig, "entities")) then
       call setReadOnlyNode(current, .true., .false.)
-      if (str_vs(inEntity)==name) deallocate(inEntity)
+      if (as_chars(inEntity)==name) call destroy_vs(inEntity)
       current => getParentNode(current)
     endif
 
@@ -503,7 +503,7 @@ contains
     call close_xml_t(fxml)
 
     if (associated(error)) then
-      if (associated(inEntity)) deallocate(inEntity)
+      if (associated(inEntity)) call destroy_vs(inEntity)
       ! FIXME pass the value of the error through
       ! when we let exceptions do that
       deallocate(error)
