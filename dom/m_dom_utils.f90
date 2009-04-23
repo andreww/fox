@@ -1,7 +1,6 @@
 module m_dom_utils
 
-  use fox_m_fsys_vstr, only: as_chars
-  use fox_m_fsys_array_str, only: str_vs, vs_str
+  use fox_m_fsys_vstr, only: as_chars, new_vs, add_chars, destroy_vs, vs
   use fox_m_fsys_format, only: operator(//)
   use m_common_attrs, only: getValue
   use m_common_element, only: element_t, attribute_t, &
@@ -221,7 +220,7 @@ endif
     type(attribute_t), pointer :: att_decl
     integer :: i_tree, j, k
     logical :: doneChildren, doneAttributes
-    character, pointer :: attrvalue(:), tmp(:)
+    type(vs), pointer :: attrvalue
 
     if (getNodeType(arg)==DOCUMENT_NODE) then
       doc => arg
@@ -268,21 +267,13 @@ endif
         ! and we dont output NS declarations here.
         ! complex loop below is because we might have to worry about entrefs 
         ! being preserved in the attvalue. If we dont, we only go through the loop once anyway.
-        allocate(attrvalue(0))
+        attrvalue => new_vs()
         do j = 0, getLength(getChildNodes(this)) - 1
           attrchild => item(getChildNodes(this), j)
           if (getNodeType(attrchild)==TEXT_NODE) then
-            tmp => attrvalue
-            allocate(attrvalue(size(tmp)+getLength(attrchild)))
-            attrvalue(:size(tmp)) = tmp
-            attrvalue(size(tmp)+1:) = vs_str(getData(attrChild))
-            deallocate(tmp)
+            call add_chars(attrvalue, getData(attrChild))
           elseif (getNodeType(attrchild)==ENTITY_REFERENCE_NODE) then
-            tmp => attrvalue
-            allocate(attrvalue(size(tmp)+len(getNodeName(attrchild))+2))
-            attrvalue(:size(tmp)) = tmp
-            attrvalue(size(tmp)+1:) = vs_str("&"//getData(attrChild)//";")
-            deallocate(tmp)
+            call add_chars(attrvalue, "&"//getData(attrChild)//";")
           else
             if (getFoX_checks().or.FoX_INTERNAL_ERROR<200) then
   call throw_exception(FoX_INTERNAL_ERROR, "iter_dmp_xml", ex)
@@ -295,8 +286,8 @@ endif
 
           endif
         enddo
-        call xml_AddAttribute(xf, getName(this), str_vs(attrvalue))
-        deallocate(attrvalue)
+        call xml_AddAttribute(xf, getName(this), as_chars(attrvalue))
+        call destroy_vs(attrvalue)
       endif
       doneChildren = .true.
     case (TEXT_NODE)
