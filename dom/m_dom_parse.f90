@@ -1,6 +1,6 @@
 module m_dom_parse
 
-  use fox_m_fsys_vstr, only: as_chars, len
+  use fox_m_fsys_vstr, only: as_chars, len, vs, new_vs, destroy_vs
   use fox_m_fsys_array_str, only: str_vs, vs_str_alloc
   use fox_m_utils_uri, only: URI, parseURI, rebaseURI, expressURI, destroyURI
   use m_common_attrs, only: hasKey, getValue, getIndex, getIsId, getBase,      &
@@ -65,7 +65,7 @@ contains
    
     type(URI), pointer :: URIref, URIbase, newURI
     type(Node), pointer :: el, attr, dummy
-    character, pointer :: baseURI(:)
+    type(vs), pointer :: baseURI
     integer :: i
 
     if (getParameter(domConfig, "namespaces")) then
@@ -82,10 +82,10 @@ contains
         newURI => rebaseURI(URIbase, URIref)
         call destroyURI(URIbase)
         call destroyURI(URIref)
-        baseURI => vs_str_alloc(expressURI(newURI))
+        baseURI => new_vs(init_chars=expressURI(newURI))
         call destroyURI(newURI)
       else
-        baseURI => vs_str_alloc(getBase(attrs))
+        baseURI => new_vs(init_chars=getBase(attrs))
       endif
       if (getParameter(domConfig, "namespaces")) then
         attr => createAttributeNS(mainDoc, &
@@ -93,8 +93,8 @@ contains
       else
         attr => createAttribute(mainDoc, "xml:base")
       endif
-      call setValue(attr, str_vs(baseURI))
-      deallocate(baseURI)
+      call setValue(attr, as_chars(baseURI))
+      call destroy_vs(baseURI)
       if (i>0) then
         call setSpecified(attr, isSpecified(attrs, i))
         call setIsId(attr, getIsId(attrs, i))
