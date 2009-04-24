@@ -16,7 +16,7 @@ TOHW_m_dom_contents(`
   TOHW_m_dom_get(logical, illFormed, np%dtdExtras%illFormed, (ENTITY_NODE))
   TOHW_m_dom_set(logical, illFormed, np%dtdExtras%illFormed, (ENTITY_NODE))
 
-  TOHW_m_dom_get(DOMString, stringValue, np%nodeValue, (ENTITY_NODE))
-  TOHW_m_dom_set(DOMString, stringValue, np%nodeValue, (ENTITY_NODE))
+  AMW_m_dom_get(DOMString, stringValue, np%nodeValue, (ENTITY_NODE))
+  AMW_m_dom_set(DOMString, stringValue, np%nodeValue, (ENTITY_NODE))
 
 ')`'dnl

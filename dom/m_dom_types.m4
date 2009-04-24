@@ -91,7 +91,7 @@ TOHW_m_dom_publics(`
     private
     logical :: readonly = .false.
     character, pointer, dimension(:)         :: nodeName => null()
-    character, pointer, dimension(:)         :: nodeValue => null()
+    type(vs), pointer                        :: nodeValue => null()
     integer             :: nodeType        = 0
     type(Node), pointer :: parentNode      => null()
     type(Node), pointer :: firstChild      => null()
@@ -156,7 +156,7 @@ TOHW_m_dom_contents(`
     np%ownerDocument => arg
     np%nodeType = nodeType
     np%nodeName => vs_str_alloc(nodeName)
-    np%nodeValue => vs_str_alloc(nodeValue)
+    np%nodeValue => new_vs(init_chars=nodeValue)
 
     allocate(np%childNodes%nodes(0))
 
@@ -278,7 +278,7 @@ TOHW_m_dom_treewalk(`',`',`deadNode', `')
     type(Node), intent(inout) :: np
     
     if (associated(np%nodeName)) deallocate(np%nodeName)
-    if (associated(np%nodeValue)) deallocate(np%nodeValue)
+    if (associated(np%nodeValue)) call destroy_vs(np%nodeValue)
 
     deallocate(np%childNodes%nodes)
 

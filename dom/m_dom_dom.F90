@@ -6,7 +6,7 @@
 module m_dom_dom
 
   use fox_m_fsys_array_str, only: str_vs, vs_str, vs_str_alloc
-  use fox_m_fsys_vstr, only: new_vs, as_chars, len
+  use fox_m_fsys_vstr, only: new_vs, as_chars, len, add_chars, vs, destroy_vs
   use fox_m_fsys_format, only: operator(//)
   use fox_m_fsys_string, only: toLower
   use fox_m_utils_uri, only: URI, parseURI, destroyURI, isAbsoluteURI, &
@@ -227,7 +227,7 @@ module m_dom_dom
     private
     logical :: readonly = .false.
     character, pointer, dimension(:)         :: nodeName => null()
-    character, pointer, dimension(:)         :: nodeValue => null()
+    type(vs), pointer                        :: nodeValue => null()
     integer             :: nodeType        = 0
     type(Node), pointer :: parentNode      => null()
     type(Node), pointer :: firstChild      => null()
@@ -778,7 +778,7 @@ endif
     np%ownerDocument => arg
     np%nodeType = nodeType
     np%nodeName => vs_str_alloc(nodeName)
-    np%nodeValue => vs_str_alloc(nodeValue)
+    np%nodeValue => new_vs(init_chars=nodeValue)
 
     allocate(np%childNodes%nodes(0))
 
@@ -991,7 +991,7 @@ endif
     type(Node), intent(inout) :: np
     
     if (associated(np%nodeName)) deallocate(np%nodeName)
-    if (associated(np%nodeValue)) deallocate(np%nodeValue)
+    if (associated(np%nodeValue)) call destroy_vs(np%nodeValue)
 
     deallocate(np%childNodes%nodes)
 
@@ -1051,7 +1051,7 @@ endif
     case (ATTRIBUTE_NODE)
       n = getTextContent_len(np, .true.)
     case (CDATA_SECTION_NODE, COMMENT_NODE, PROCESSING_INSTRUCTION_NODE, TEXT_NODE)
-      n = size(np%nodeValue)
+      n = len(np%nodeValue)
     end select
 
   end function getNodeValue_len
@@ -1081,7 +1081,7 @@ endif
     case (ATTRIBUTE_NODE)
       c = getTextContent(np)
     case (CDATA_SECTION_NODE, COMMENT_NODE, PROCESSING_INSTRUCTION_NODE, TEXT_NODE)
-      c = str_vs(np%nodeValue)
+      c = as_chars(np%nodeValue)
     case default
       c = ""
     end select
@@ -3213,7 +3213,7 @@ endif
     type(Node), pointer :: this, tempNode, oldNode, treeroot
     integer :: i_tree, i_t
     logical :: doneChildren, doneAttributes
-    character, pointer :: temp(:)
+    type(vs), pointer :: temp
 
     if (.not.associated(arg)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
@@ -3248,13 +3248,12 @@ endif
           tempNode => getNextSibling(tempNode)
         enddo
         if (.not.associated(tempNode, getNextSibling(this))) then
-          allocate(temp(i_t))
-          temp(:getLength(this)) = vs_str(getData(this))
+          temp => new_vs(init_chars=getData(this))
           i_t = getLength(this)
           tempNode => getNextSibling(this)
           do while (associated(tempNode))
             if (getNodeType(tempNode)/=TEXT_NODE) exit
-            temp(i_t+1:i_t+getLength(tempNode)) = vs_str(getData(tempNode))
+            call add_chars(temp, getData(tempNode))
             i_t = i_t + getLength(tempNode)
             oldNode => tempNode
             tempNode => getNextSibling(tempNode)
@@ -3262,7 +3261,7 @@ endif
             call remove_node_nl(arg%ownerDocument%docExtras%hangingNodes, oldNode)
             call destroy(oldNode)
           enddo
-          deallocate(this%nodeValue)
+          call destroy_vs(this%nodeValue)
           this%nodeValue => temp
         endif
       end if
@@ -4157,8 +4156,8 @@ endif
         ! Ignore attributes for text content (unless this is an attribute!)
       case(TEXT_NODE, CDATA_SECTION_NODE)
         if (.not.getIsElementContentWhitespace(this)) then
-          c(i:i+size(this%nodeValue)-1) = str_vs(this%nodeValue)
-          i = i + size(this%nodeValue)
+          c(i:i+len(this%nodeValue)-1) = as_chars(this%nodeValue)
+          i = i + len(this%nodeValue)
         endif
       end select
 
@@ -10521,7 +10520,7 @@ endif
 
     endif
 
-    n = size(arg%nodeValue)
+    n = len(arg%nodeValue)
     
   end function getLength_characterdata
 
@@ -10555,7 +10554,7 @@ endif
   endif
 endif
 
-    elseif (offset<0.or.offset>size(arg%nodeValue).or.count<0) then
+    elseif (offset<0.or.offset>len(arg%nodeValue).or.count<0) then
       if (getFoX_checks().or.INDEX_SIZE_ERR<200) then
   call throw_exception(INDEX_SIZE_ERR, "subStringData", ex)
   if (present(ex)) then
@@ -10567,10 +10566,10 @@ endif
 
     endif
 
-    if (offset+count>size(arg%nodeValue)) then
-      c = str_vs(arg%nodeValue(offset+1:))
+    if (offset+count>len(arg%nodeValue)) then
+      c = as_chars(arg%nodeValue,offset+1,len(arg%nodeValue))
     else
-      c = str_vs(arg%nodeValue(offset+1:offset+count))
+      c = as_chars(arg%nodeValue,offset+1,offset+count)
     endif
 
   end function subStringData
@@ -10629,13 +10628,11 @@ endif
 
     endif
     
-    tmp => arg%nodeValue
-    arg%nodeValue => vs_str_alloc(str_vs(tmp)//data)
-    deallocate(tmp)
+    call add_chars(arg%nodeValue, data)
 
     ! We have to do these checks *after* appending data in case offending string
     ! spans old & new data
-    if (arg%nodeType==COMMENT_NODE .and. index(str_vs(arg%nodeValue),"--")>0) then
+    if (arg%nodeType==COMMENT_NODE .and. index(as_chars(arg%nodeValue),"--")>0) then
       if (getFoX_checks().or.FoX_INVALID_COMMENT<200) then
   call throw_exception(FoX_INVALID_COMMENT, "appendData", ex)
   if (present(ex)) then
@@ -10645,7 +10642,7 @@ endif
   endif
 endif
 
-    elseif (arg%nodeType==CDATA_SECTION_NODE .and. index(str_vs(arg%nodeValue), "]]>")>0) then
+    elseif (arg%nodeType==CDATA_SECTION_NODE .and. index(as_chars(arg%nodeValue), "]]>")>0) then
       if (getFoX_checks().or.FoX_INVALID_CDATA_SECTION<200) then
   call throw_exception(FoX_INVALID_CDATA_SECTION, "appendData", ex)
   if (present(ex)) then
@@ -10670,7 +10667,7 @@ endif
     integer, intent(in) :: offset
     character(len=*), intent(in) :: data
 
-    character, pointer :: tmp(:)
+    type(vs), pointer :: tmp
 
     if (.not.associated(arg)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
@@ -10704,7 +10701,7 @@ endif
   endif
 endif
 
-    elseif (offset<0.or.offset>size(arg%nodeValue)) then
+    elseif (offset<0.or.offset>len(arg%nodeValue)) then
       if (getFoX_checks().or.INDEX_SIZE_ERR<200) then
   call throw_exception(INDEX_SIZE_ERR, "insertData", ex)
   if (present(ex)) then
@@ -10729,12 +10726,12 @@ endif
     endif
 
     tmp => arg%nodeValue
-    arg%nodeValue => vs_str_alloc(str_vs(tmp(:offset))//data//str_vs(tmp(offset+1:)))
-    deallocate(tmp)
+    arg%nodeValue => new_vs(init_chars=as_chars(tmp,1,offset)//data//as_chars(tmp,offset+1,len(arg%nodeValue)))
+    call destroy_vs(tmp)
 
     ! We have to do these checks *after* appending data in case offending string
     ! spans old & new data
-    if (arg%nodeType==COMMENT_NODE .and. index(str_vs(arg%nodeValue),"--")>0) then
+    if (arg%nodeType==COMMENT_NODE .and. index(as_chars(arg%nodeValue),"--")>0) then
       if (getFoX_checks().or.FoX_INVALID_COMMENT<200) then
   call throw_exception(FoX_INVALID_COMMENT, "insertData", ex)
   if (present(ex)) then
@@ -10744,7 +10741,7 @@ endif
   endif
 endif
 
-    elseif (arg%nodeType==CDATA_SECTION_NODE .and. index(str_vs(arg%nodeValue), "]]>")>0) then
+    elseif (arg%nodeType==CDATA_SECTION_NODE .and. index(as_chars(arg%nodeValue), "]]>")>0) then
       if (getFoX_checks().or.FoX_INVALID_CDATA_SECTION<200) then
   call throw_exception(FoX_INVALID_CDATA_SECTION, "insertData", ex)
   if (present(ex)) then
@@ -10769,7 +10766,7 @@ endif
     integer, intent(in) :: offset
     integer, intent(in) :: count
 
-    character, pointer :: tmp(:)
+    type(vs), pointer :: tmp
     integer :: n
 
     if (.not.associated(arg)) then
@@ -10804,7 +10801,7 @@ endif
   endif
 endif
 
-    elseif (offset<0.or.offset>size(arg%nodeValue).or.count<0) then
+    elseif (offset<0.or.offset>len(arg%nodeValue).or.count<0) then
       if (getFoX_checks().or.INDEX_SIZE_ERR<200) then
   call throw_exception(INDEX_SIZE_ERR, "deleteData", ex)
   if (present(ex)) then
@@ -10816,15 +10813,15 @@ endif
 
     endif
 
-    if (offset+count>size(arg%nodeValue)) then
-      n = size(arg%nodeValue)-offset
+    if (offset+count>len(arg%nodeValue)) then
+      n = len(arg%nodeValue)-offset
     else
       n = count
     endif
     
     tmp => arg%nodeValue
-    arg%nodeValue => vs_str_alloc(str_vs(tmp(:offset))//str_vs(tmp(offset+count+1:)))
-    deallocate(tmp)
+    arg%nodeValue => new_vs(init_chars=as_chars(tmp,1,offset)//as_chars(tmp,offset+count+1,len(arg%nodeValue)))
+    call destroy_vs(tmp)
 
     ! And propagate length upwards ...
     if (getNodeType(arg)/=COMMENT_NODE) &
@@ -10840,7 +10837,7 @@ endif
     integer, intent(in) :: count
     character(len=*), intent(in) :: data
     
-    character, pointer :: tmp(:)
+    type(vs), pointer :: tmp
     integer :: n
 
     if (.not.associated(arg)) then
@@ -10875,7 +10872,7 @@ endif
   endif
 endif
 
-    elseif (offset<0.or.offset>size(arg%nodeValue).or.count<0) then
+    elseif (offset<0.or.offset>len(arg%nodeValue).or.count<0) then
       if (getFoX_checks().or.INDEX_SIZE_ERR<200) then
   call throw_exception(INDEX_SIZE_ERR, "replaceData", ex)
   if (present(ex)) then
@@ -10899,23 +10896,23 @@ endif
 
     endif
 
-    if (offset+count>size(arg%nodeValue)) then
-      n = len(data)-(size(arg%nodeValue)-offset)
+    if (offset+count>len(arg%nodeValue)) then
+      n = len(data)-(len(arg%nodeValue)-offset)
     else
       n = len(data)-count
     endif
 
-    tmp => arg%nodeValue
-    if (offset+count <= size(arg%nodeValue)) then
-      arg%nodeValue => vs_str_alloc(str_vs(tmp(:offset))//data//str_vs(tmp(offset+count+1:)))
+    if (offset+count <= len(arg%nodeValue)) then
+      tmp => arg%nodeValue
+      arg%nodeValue => new_vs(init_chars=as_chars(tmp,1,offset)//data//as_chars(tmp,offset+count+1,len(tmp)))
+      call destroy_vs(tmp)
     else
-      arg%nodeValue => vs_str_alloc(str_vs(tmp(:offset))//data)
+      call add_chars(arg%nodeValue, data)
     endif
-    deallocate(tmp)
 
     ! We have to do these checks *after* appending data in case offending string
     ! spans old & new data
-    if (arg%nodeType==COMMENT_NODE .and. index(str_vs(arg%nodeValue),"--")>0) then
+    if (arg%nodeType==COMMENT_NODE .and. index(as_chars(arg%nodeValue),"--")>0) then
       if (getFoX_checks().or.FoX_INVALID_COMMENT<200) then
   call throw_exception(FoX_INVALID_COMMENT, "replaceData", ex)
   if (present(ex)) then
@@ -10925,7 +10922,7 @@ endif
   endif
 endif
 
-    elseif (arg%nodeType==CDATA_SECTION_NODE .and. index(str_vs(arg%nodeValue), "]]>")>0) then
+    elseif (arg%nodeType==CDATA_SECTION_NODE .and. index(as_chars(arg%nodeValue), "]]>")>0) then
       if (getFoX_checks().or.FoX_INVALID_CDATA_SECTION<200) then
   call throw_exception(FoX_INVALID_CDATA_SECTION, "replaceData", ex)
   if (present(ex)) then
@@ -11081,7 +11078,7 @@ endif
     if (p .and. ( &
       np%nodeType==ENTITY_NODE .or. &
       .false.)) then
-      n = size(np%nodeValue)
+      n = len(np%nodeValue)
     else
       n = 0
     endif
@@ -11121,7 +11118,7 @@ endif
 
     endif
 
-    c = str_vs(np%nodeValue)
+    c = as_chars(np%nodeValue)
 
   end function getstringValue
 
@@ -11157,7 +11154,7 @@ endif
     endif
 
     if (associated(np%nodeValue)) deallocate(np%nodeValue)
-    np%nodeValue => vs_str_alloc(c)
+    np%nodeValue => new_vs(init_chars=c)
 
   end subroutine setstringValue
 
@@ -11227,7 +11224,7 @@ endif
 
     type(Node), pointer :: np
 
-    character, pointer :: tmp(:)
+    type(vs), pointer :: tmp
 
     if (.not.associated(arg)) then
       if (getFoX_checks().or.FoX_NODE_IS_NULL<200) then
@@ -11261,7 +11258,7 @@ endif
   endif
 endif
 
-    elseif (offset<0 .or. offset>size(arg%nodeValue)) then
+    elseif (offset<0 .or. offset>len(arg%nodeValue)) then
       if (getFoX_checks().or.INDEX_SIZE_ERR<200) then
   call throw_exception(INDEX_SIZE_ERR, "splitText", ex)
   if (present(ex)) then
@@ -11275,12 +11272,12 @@ endif
 
     tmp => arg%nodeValue
     if (arg%nodeType==TEXT_NODE) then
-      np => createTextNode(arg%ownerDocument, str_vs(tmp(offset+1:)))
+      np => createTextNode(arg%ownerDocument, as_chars(tmp,offset+1,len(tmp)))
     elseif (arg%nodeType==CDATA_SECTION_NODE) then
-      np => createCdataSection(arg%ownerDocument, str_vs(tmp(offset+1:)))
+      np => createCdataSection(arg%ownerDocument, as_chars(tmp,offset+1,len(tmp)))
     endif
-    arg%nodeValue => vs_str_alloc(str_vs(tmp(:offset)))     
-    deallocate(tmp)
+    arg%nodeValue => new_vs(init_chars=as_chars(tmp,1,offset))     
+    call destroy_vs(tmp)
     if (associated(arg%parentNode)) then
       if (associated(arg%nextSibling)) then
         np => insertBefore(arg%parentNode, np, arg%nextSibling)
@@ -11340,7 +11337,7 @@ endif
     if (isElementContentWhitespace) then
       n = -np%textContentLength
     else
-      n = size(np%nodeValue)
+      n = len(np%nodeValue)
     endif
 
     call updateTextContentLength(np, n)
@@ -11363,7 +11360,7 @@ endif
       np%nodeType==CDATA_SECTION_NODE .or. &
       np%nodeType==PROCESSING_INSTRUCTION_NODE .or. &
       .false.)) then
-      n = size(np%nodeValue)
+      n = len(np%nodeValue)
     else
       n = 0
     endif
@@ -11406,7 +11403,7 @@ endif
 
     endif
 
-    c = str_vs(np%nodeValue)
+    c = as_chars(np%nodeValue)
 
   end function getdata
 
@@ -11497,8 +11494,8 @@ endif
       endif
     end select
 
-    deallocate(arg%nodeValue)
-    arg%nodeValue => vs_str_alloc(data)
+    call destroy_vs(arg%nodeValue)
+    arg%nodeValue => new_vs(init_chars=data)
 
     if (arg%nodeType==TEXT_NODE .or. &
       arg%nodeType==CDATA_SECTION_NODE) then

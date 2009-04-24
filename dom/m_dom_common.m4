@@ -12,7 +12,7 @@ TOHW_m_dom_publics(`
 dnl
 TOHW_m_dom_contents(`
 
-  TOHW_m_dom_get(DOMString, data, np%nodeValue, (TEXT_NODE, COMMENT_NODE, CDATA_SECTION_NODE, PROCESSING_INSTRUCTION_NODE))
+  AMW_m_dom_get(DOMString, data, np%nodeValue, (TEXT_NODE, COMMENT_NODE, CDATA_SECTION_NODE, PROCESSING_INSTRUCTION_NODE))
 
   TOHW_subroutine(setData, (arg, data))
     type(Node), pointer :: arg
@@ -51,8 +51,8 @@ TOHW_m_dom_contents(`
       endif
     end select
 
-    deallocate(arg%nodeValue)
-    arg%nodeValue => vs_str_alloc(data)
+    call destroy_vs(arg%nodeValue)
+    arg%nodeValue => new_vs(init_chars=data)
 
     if (arg%nodeType==TEXT_NODE .or. &
       arg%nodeType==CDATA_SECTION_NODE) then

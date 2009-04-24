@@ -59,7 +59,7 @@ TOHW_m_dom_get(DOMString, nodeName, np%nodeName)
     case (ATTRIBUTE_NODE)
       n = getTextContent_len(np, .true.)
     case (CDATA_SECTION_NODE, COMMENT_NODE, PROCESSING_INSTRUCTION_NODE, TEXT_NODE)
-      n = size(np%nodeValue)
+      n = len(np%nodeValue)
     end select
 
   end function getNodeValue_len
@@ -80,7 +80,7 @@ TOHW_m_dom_get(DOMString, nodeName, np%nodeName)
     case (ATTRIBUTE_NODE)
       c = getTextContent(np)
     case (CDATA_SECTION_NODE, COMMENT_NODE, PROCESSING_INSTRUCTION_NODE, TEXT_NODE)
-      c = str_vs(np%nodeValue)
+      c = as_chars(np%nodeValue)
     case default
       c = ""
     end select
@@ -768,7 +768,7 @@ TOHW_m_dom_treewalk(`
     type(Node), pointer :: this, tempNode, oldNode, treeroot
     integer :: i_tree, i_t
     logical :: doneChildren, doneAttributes
-    character, pointer :: temp(:)
+    type(vs), pointer :: temp
 
     if (.not.associated(arg)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
@@ -788,13 +788,12 @@ TOHW_m_dom_treewalk(`
           tempNode => getNextSibling(tempNode)
         enddo
         if (.not.associated(tempNode, getNextSibling(this))) then
-          allocate(temp(i_t))
-          temp(:getLength(this)) = vs_str(getData(this))
+          temp => new_vs(init_chars=getData(this))
           i_t = getLength(this)
           tempNode => getNextSibling(this)
           do while (associated(tempNode))
             if (getNodeType(tempNode)/=TEXT_NODE) exit
-            temp(i_t+1:i_t+getLength(tempNode)) = vs_str(getData(tempNode))
+            call add_chars(temp, getData(tempNode))
             i_t = i_t + getLength(tempNode)
             oldNode => tempNode
             tempNode => getNextSibling(tempNode)
@@ -802,7 +801,7 @@ TOHW_m_dom_treewalk(`
             call remove_node_nl(arg%ownerDocument%docExtras%hangingNodes, oldNode)
             call destroy(oldNode)
           enddo
-          deallocate(this%nodeValue)
+          call destroy_vs(this%nodeValue)
           this%nodeValue => temp
         endif
       end if
@@ -1378,8 +1377,8 @@ TOHW_m_dom_treewalk(`
         ! Ignore attributes for text content (unless this is an attribute!)
       case(TEXT_NODE, CDATA_SECTION_NODE)
         if (.not.getIsElementContentWhitespace(this)) then
-          c(i:i+size(this%nodeValue)-1) = str_vs(this%nodeValue)
-          i = i + size(this%nodeValue)
+          c(i:i+len(this%nodeValue)-1) = as_chars(this%nodeValue)
+          i = i + len(this%nodeValue)
         endif
       end select
 '`')

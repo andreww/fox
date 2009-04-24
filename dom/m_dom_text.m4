@@ -12,7 +12,7 @@ TOHW_m_dom_contents(`
 
     type(Node), pointer :: np
 
-    character, pointer :: tmp(:)
+    type(vs), pointer :: tmp
 
     if (.not.associated(arg)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
@@ -22,18 +22,18 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     elseif (arg%readonly) then
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
-    elseif (offset<0 .or. offset>size(arg%nodeValue)) then
+    elseif (offset<0 .or. offset>len(arg%nodeValue)) then
       TOHW_m_dom_throw_error(INDEX_SIZE_ERR)
     endif
 
     tmp => arg%nodeValue
     if (arg%nodeType==TEXT_NODE) then
-      np => createTextNode(arg%ownerDocument, str_vs(tmp(offset+1:)))
+      np => createTextNode(arg%ownerDocument, as_chars(tmp,offset+1,len(tmp)))
     elseif (arg%nodeType==CDATA_SECTION_NODE) then
-      np => createCdataSection(arg%ownerDocument, str_vs(tmp(offset+1:)))
+      np => createCdataSection(arg%ownerDocument, as_chars(tmp,offset+1,len(tmp)))
     endif
-    arg%nodeValue => vs_str_alloc(str_vs(tmp(:offset)))     
-    deallocate(tmp)
+    arg%nodeValue => new_vs(init_chars=as_chars(tmp,1,offset))     
+    call destroy_vs(tmp)
     if (associated(arg%parentNode)) then
       if (associated(arg%nextSibling)) then
         np => insertBefore(arg%parentNode, np, arg%nextSibling)
@@ -57,7 +57,7 @@ TOHW_m_dom_get(logical, isElementContentWhitespace, np%ignorableWhitespace, (TEX
     if (isElementContentWhitespace) then
       n = -np%textContentLength
     else
-      n = size(np%nodeValue)
+      n = len(np%nodeValue)
     endif
 
     call updateTextContentLength(np, n)

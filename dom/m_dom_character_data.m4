@@ -39,7 +39,7 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     endif
 
-    n = size(arg%nodeValue)
+    n = len(arg%nodeValue)
     
   end function getLength_characterdata
 
@@ -56,14 +56,14 @@ TOHW_m_dom_contents(`
 
     if (.not.isCharData(arg%nodeType)) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    elseif (offset<0.or.offset>size(arg%nodeValue).or.count<0) then
+    elseif (offset<0.or.offset>len(arg%nodeValue).or.count<0) then
       TOHW_m_dom_throw_error(INDEX_SIZE_ERR)
     endif
 
-    if (offset+count>size(arg%nodeValue)) then
-      c = str_vs(arg%nodeValue(offset+1:))
+    if (offset+count>len(arg%nodeValue)) then
+      c = as_chars(arg%nodeValue,offset+1,len(arg%nodeValue))
     else
-      c = str_vs(arg%nodeValue(offset+1:offset+count))
+      c = as_chars(arg%nodeValue,offset+1,offset+count)
     endif
 
   end function subStringData
@@ -89,15 +89,13 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(FoX_INVALID_CHARACTER)
     endif
     
-    tmp => arg%nodeValue
-    arg%nodeValue => vs_str_alloc(str_vs(tmp)//data)
-    deallocate(tmp)
+    call add_chars(arg%nodeValue, data)
 
     ! We have to do these checks *after* appending data in case offending string
     ! spans old & new data
-    if (arg%nodeType==COMMENT_NODE .and. index(str_vs(arg%nodeValue),"--")>0) then
+    if (arg%nodeType==COMMENT_NODE .and. index(as_chars(arg%nodeValue),"--")>0) then
       TOHW_m_dom_throw_error(FoX_INVALID_COMMENT)
-    elseif (arg%nodeType==CDATA_SECTION_NODE .and. index(str_vs(arg%nodeValue), "]]>")>0) then
+    elseif (arg%nodeType==CDATA_SECTION_NODE .and. index(as_chars(arg%nodeValue), "]]>")>0) then
       TOHW_m_dom_throw_error(FoX_INVALID_CDATA_SECTION)
     endif
 
@@ -113,7 +111,7 @@ TOHW_m_dom_contents(`
     integer, intent(in) :: offset
     character(len=*), intent(in) :: data
 
-    character, pointer :: tmp(:)
+    type(vs), pointer :: tmp
 
     if (.not.associated(arg)) then
       TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
@@ -123,7 +121,7 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     elseif (arg%readonly) then
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
-    elseif (offset<0.or.offset>size(arg%nodeValue)) then
+    elseif (offset<0.or.offset>len(arg%nodeValue)) then
       TOHW_m_dom_throw_error(INDEX_SIZE_ERR)
     endif
 
@@ -132,14 +130,14 @@ TOHW_m_dom_contents(`
     endif
 
     tmp => arg%nodeValue
-    arg%nodeValue => vs_str_alloc(str_vs(tmp(:offset))//data//str_vs(tmp(offset+1:)))
-    deallocate(tmp)
+    arg%nodeValue => new_vs(init_chars=as_chars(tmp,1,offset)//data//as_chars(tmp,offset+1,len(arg%nodeValue)))
+    call destroy_vs(tmp)
 
     ! We have to do these checks *after* appending data in case offending string
     ! spans old & new data
-    if (arg%nodeType==COMMENT_NODE .and. index(str_vs(arg%nodeValue),"--")>0) then
+    if (arg%nodeType==COMMENT_NODE .and. index(as_chars(arg%nodeValue),"--")>0) then
       TOHW_m_dom_throw_error(FoX_INVALID_COMMENT)
-    elseif (arg%nodeType==CDATA_SECTION_NODE .and. index(str_vs(arg%nodeValue), "]]>")>0) then
+    elseif (arg%nodeType==CDATA_SECTION_NODE .and. index(as_chars(arg%nodeValue), "]]>")>0) then
       TOHW_m_dom_throw_error(FoX_INVALID_CDATA_SECTION)
     endif
 
@@ -155,7 +153,7 @@ TOHW_m_dom_contents(`
     integer, intent(in) :: offset
     integer, intent(in) :: count
 
-    character, pointer :: tmp(:)
+    type(vs), pointer :: tmp
     integer :: n
 
     if (.not.associated(arg)) then
@@ -166,19 +164,19 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     elseif (arg%readonly) then
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
-    elseif (offset<0.or.offset>size(arg%nodeValue).or.count<0) then
+    elseif (offset<0.or.offset>len(arg%nodeValue).or.count<0) then
       TOHW_m_dom_throw_error(INDEX_SIZE_ERR)
     endif
 
-    if (offset+count>size(arg%nodeValue)) then
-      n = size(arg%nodeValue)-offset
+    if (offset+count>len(arg%nodeValue)) then
+      n = len(arg%nodeValue)-offset
     else
       n = count
     endif
     
     tmp => arg%nodeValue
-    arg%nodeValue => vs_str_alloc(str_vs(tmp(:offset))//str_vs(tmp(offset+count+1:)))
-    deallocate(tmp)
+    arg%nodeValue => new_vs(init_chars=as_chars(tmp,1,offset)//as_chars(tmp,offset+count+1,len(arg%nodeValue)))
+    call destroy_vs(tmp)
 
     ! And propagate length upwards ...
     if (getNodeType(arg)/=COMMENT_NODE) &
@@ -193,7 +191,7 @@ TOHW_m_dom_contents(`
     integer, intent(in) :: count
     character(len=*), intent(in) :: data
     
-    character, pointer :: tmp(:)
+    type(vs), pointer :: tmp
     integer :: n
 
     if (.not.associated(arg)) then
@@ -204,7 +202,7 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
     elseif (arg%readonly) then
       TOHW_m_dom_throw_error(NO_MODIFICATION_ALLOWED_ERR)
-    elseif (offset<0.or.offset>size(arg%nodeValue).or.count<0) then
+    elseif (offset<0.or.offset>len(arg%nodeValue).or.count<0) then
       TOHW_m_dom_throw_error(INDEX_SIZE_ERR)
     endif
 
@@ -212,25 +210,25 @@ TOHW_m_dom_contents(`
       TOHW_m_dom_throw_error(FoX_INVALID_CHARACTER)
     endif
 
-    if (offset+count>size(arg%nodeValue)) then
-      n = len(data)-(size(arg%nodeValue)-offset)
+    if (offset+count>len(arg%nodeValue)) then
+      n = len(data)-(len(arg%nodeValue)-offset)
     else
       n = len(data)-count
     endif
 
-    tmp => arg%nodeValue
-    if (offset+count <= size(arg%nodeValue)) then
-      arg%nodeValue => vs_str_alloc(str_vs(tmp(:offset))//data//str_vs(tmp(offset+count+1:)))
+    if (offset+count <= len(arg%nodeValue)) then
+      tmp => arg%nodeValue
+      arg%nodeValue => new_vs(init_chars=as_chars(tmp,1,offset)//data//as_chars(tmp,offset+count+1,len(tmp)))
+      call destroy_vs(tmp)
     else
-      arg%nodeValue => vs_str_alloc(str_vs(tmp(:offset))//data)
+      call add_chars(arg%nodeValue, data)
     endif
-    deallocate(tmp)
 
     ! We have to do these checks *after* appending data in case offending string
     ! spans old & new data
-    if (arg%nodeType==COMMENT_NODE .and. index(str_vs(arg%nodeValue),"--")>0) then
+    if (arg%nodeType==COMMENT_NODE .and. index(as_chars(arg%nodeValue),"--")>0) then
       TOHW_m_dom_throw_error(FoX_INVALID_COMMENT)
-    elseif (arg%nodeType==CDATA_SECTION_NODE .and. index(str_vs(arg%nodeValue), "]]>")>0) then
+    elseif (arg%nodeType==CDATA_SECTION_NODE .and. index(as_chars(arg%nodeValue), "]]>")>0) then
       TOHW_m_dom_throw_error(FoX_INVALID_CDATA_SECTION)
     endif
 
