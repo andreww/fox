@@ -50,7 +50,11 @@ TOHW_m_dom_contents(`
 !  function getSystemId(docType) result(c) See m_dom_common
 
   pure function getInternalSubset_len(arg, p) result(n)
-    type(Node), pointer :: arg
+    ! gfortran does not like the use pointer to call 
+    ! len_vs below, so we can defeference on _this_
+    ! call and the error goes away. I think. Need to 
+    ! check. AMW
+    type(Node), intent(in) :: arg
     logical, intent(in) :: p
     integer :: n
 

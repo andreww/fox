@@ -7909,7 +7909,7 @@ endif
   end subroutine setXmlVersion
 
   pure function getXmlEncoding_len(arg, p) result(n)
-    type(Node), pointer :: arg
+    type(Node), intent(in) :: arg
     logical, intent(in) :: p
     integer :: n
 
@@ -7959,7 +7959,7 @@ endif
   end function getXmlEncoding
 
   pure function getInputEncoding_len(arg, p) result(n)
-    type(Node), pointer :: arg
+    type(Node), intent(in) :: arg
     logical, intent(in) :: p
     integer :: n
 
@@ -7991,7 +7991,7 @@ endif
     endif
 
     if (arg%nodeType==DOCUMENT_NODE) then
-      s = as_chars(arg%docExtras%xds%inputEncoding)    
+      s = as_chars(arg%docExtras%xds%inputEncoding)
     elseif (arg%nodeType==ENTITY_NODE) then
       s = "" !FIXME revisit when we have working external entities
     else
@@ -9075,7 +9075,11 @@ endif
 !  function getSystemId(docType) result(c) See m_dom_common
 
   pure function getInternalSubset_len(arg, p) result(n)
-    type(Node), pointer :: arg
+    ! gfortran does not like the use pointer to call 
+    ! len_vs below, so we can defeference on _this_
+    ! call and the error goes away. I think. Need to 
+    ! check. AMW
+    type(Node), intent(in) :: arg
     logical, intent(in) :: p
     integer :: n
 

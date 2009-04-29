@@ -993,7 +993,7 @@ TOHW_m_dom_set(logical, xmlStandalone, np%docExtras%xds%standalone, (DOCUMENT_NO
   end subroutine setXmlVersion
 
   pure function getXmlEncoding_len(arg, p) result(n)
-    type(Node), pointer :: arg
+    type(Node), intent(in) :: arg
     logical, intent(in) :: p
     integer :: n
 
@@ -1026,7 +1026,7 @@ TOHW_m_dom_set(logical, xmlStandalone, np%docExtras%xds%standalone, (DOCUMENT_NO
   end function getXmlEncoding
 
   pure function getInputEncoding_len(arg, p) result(n)
-    type(Node), pointer :: arg
+    type(Node), intent(in) :: arg
     logical, intent(in) :: p
     integer :: n
 
