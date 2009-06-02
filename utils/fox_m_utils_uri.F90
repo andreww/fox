@@ -365,6 +365,7 @@ contains
     p = checkNonOpaquePath(path, segments)
     if (.not.p) then
       p = checkOpaquePart(path)
+      if (p) allocate(segments(0))
     endif
 
   end function checkPath
@@ -403,6 +404,7 @@ contains
     authority => null()
     userinfo => null()
     host => null()
+    port = -1
     path => null()
     segments => null()
     query => null()
