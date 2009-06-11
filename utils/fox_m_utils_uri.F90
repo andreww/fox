@@ -616,6 +616,20 @@ contains
     type(path_segment), pointer :: seg2(:)
 
     integer :: i, n, n2, parents
+    character, pointer :: tmp(:) 
+    
+
+    ! If the last of the input segments are
+    ! equal to '.' or '..', append a slash
+    ! so the rest of the subroutine works.
+
+    if ((str_vs(seg1(size(seg1))%s) == '.').or. &
+        (str_vs(seg1(size(seg1))%s) == '..')) then
+        tmp => vs_vs_alloc(seg1(size(seg1))%s)
+        deallocate(seg1(size(seg1))%s)
+        seg1(size(seg1))%s => vs_str_alloc(str_vs(tmp)//"/")
+        deallocate(tmp)
+    endif
 
     n = 0
     parents = 0
