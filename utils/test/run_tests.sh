@@ -6,7 +6,11 @@ rm -f passed.score failed.score
 rm -f tests.out failed.out
 touch passed.score failed.score
 
+./test.sh test_nullURI
 ./test.sh test_baseURI
+./test.sh test_rfc2396
+./test.sh test_rfc2396b
+./test.sh testURI
 
 echo RESULT utils/ Test Results:
 echo RESULT utils/ Passed: `wc -l passed.score| cut -f 1 -d 'p'`

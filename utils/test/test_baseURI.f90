@@ -38,9 +38,6 @@ program test_baseURI
   call check
   call destroyURI(u3)
 
-  u => parseURI("")
-  call check
-
   call destroyURI(base)
 
   contains
