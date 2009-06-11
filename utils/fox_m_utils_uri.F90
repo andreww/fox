@@ -699,7 +699,8 @@ contains
       n = size(u%scheme) + 1
     if (associated(u%authority)) &
       n = n + pctEncode_len(str_vs(u%authority), unreserved//sub_delims//"@:") + 2
-    n = n + pctEncode_len(str_vs(u%path), pchar//"/")
+    !FIXME - I suspect that ';' as the first character of a segment should be escaped
+    n = n + pctEncode_len(str_vs(u%path), pchar//";"//"/")
     if (associated(u%query)) &
       n = n + pctEncode_len(str_vs(u%query), uric) + 1
     if (associated(u%fragment)) &
@@ -725,8 +726,9 @@ contains
       i = i + j + 2
     endif
     if (size(u%path)>0) then
-      j = pctEncode_len(str_vs(u%path), pchar//"/")
-      URIstring(i:i+j-1) = pctEncode(str_vs(u%path), pchar//"/")
+      !FIXME - I suspect that ';' as the first character of a segment should be escaped
+      j = pctEncode_len(str_vs(u%path), pchar//";"//"/")
+      URIstring(i:i+j-1) = pctEncode(str_vs(u%path), pchar//";"//"/")
       i = i + j
     endif
     if (associated(u%query)) then
