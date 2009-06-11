@@ -420,7 +420,7 @@ contains
       endif
     endif
     ! if either i1==0 or the scheme doesn't validate, there is no scheme..
-    if (len(URIstring)>i1+3) then
+    if (len(URIstring)>=i1+3) then
       if (URIstring(i1+1:i1+2)=="//") then
         i2 = scan(URIstring(i1+3:), "/#?")
         if (i2==0) then
