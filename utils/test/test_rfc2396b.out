@@ -1,12 +1,12 @@
  http://a/b/c/d;p                                                                                    
 
- http://a/../g                                                                                       
+ http://a/g                                                                                          
 
- http://a/../../g                                                                                    
+ http://a/g                                                                                          
 
- http://a/./g                                                                                        
+ http://a/g                                                                                          
 
- http://a/../g                                                                                       
+ http://a/g                                                                                          
 
  http://a/b/c/g.                                                                                     
 

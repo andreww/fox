@@ -30,7 +30,9 @@ program test_rfc2396
   u => rebaseURI(base, u3)
   call check
 
-
+  ! RFC 2396 and 3986 differ in the next
+  ! four cases. We follow 3986 and should
+  ! return http://a/g in all four cases.
   u3 => parseURI("../../../g")
   u => rebaseURI(base, u3)
   call check
@@ -103,6 +105,8 @@ program test_rfc2396
   u => rebaseURI(base, u3)
   call check
 
+  ! We are 'strictly conforming' not 'backwards
+  ! compatable' for the following:
   u3 => parseURI("http:g")
   u => rebaseURI(base, u3)
   call check

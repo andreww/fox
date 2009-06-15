@@ -50,7 +50,9 @@ program test_rfc2396
   u3 => parseURI("//g")
   u => rebaseURI(base, u3)
   call check
-
+  
+  ! RFC 2396 says this should give 'http://a/b/c/?y' but
+  ! 3986 says "http://a/b/c/d;p?y" - we do the latter
   u3 => parseURI("?y")
   u => rebaseURI(base, u3)
   call check
