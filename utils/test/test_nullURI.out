@@ -15,7 +15,7 @@
  authority: uname:pass@www.example.org:80
  userinfo: uname:pass
  host: www.example.org
- port:  80
+ port: 80
  path: /dir1/dir2/test.html
      segment: /
      segment: dir1/
@@ -30,7 +30,7 @@
  authority: uname:pass@www.example.org:80
  userinfo: uname:pass
  host: www.example.org
- port:  80
+ port: 80
  path: /dir1/dir2/test.html
      segment: /
      segment: dir1/
@@ -45,7 +45,7 @@
  authority: uname:pass@www.example.org:80
  userinfo: uname:pass
  host: www.example.org
- port:  80
+ port: 80
  path: /dir1/dir2/test.html
      segment: /
      segment: dir1/
@@ -60,7 +60,7 @@
  authority: uname:pass@www.example.org:80
  userinfo: uname:pass
  host: www.example.org
- port:  80
+ port: 80
  path: 
      segment: 
  query: a=b;c=d
@@ -87,7 +87,7 @@
  authority: www.example.org:80
  userinfo UNDEFINED
  host: www.example.org
- port:  80
+ port: 80
  path: /dir1/dir2/test.html
      segment: /
      segment: dir1/
@@ -102,7 +102,7 @@
  authority: uname@www.example.org:80
  userinfo: uname
  host: www.example.org
- port:  80
+ port: 80
  path: /dir1/dir2/test.html
      segment: /
      segment: dir1/

@@ -767,7 +767,7 @@ contains
       write(*,*) "host UNDEFINED"
     endif
     if (u%port>0) then
-      write(*,*) "port: ", u%port
+      write(*,*) "port: ", str(u%port)
     else
       write(*,*) "port UNDEFINED"
     endif

@@ -2,7 +2,7 @@
  authority: tow:bum@www.example.org:80
  userinfo: tow:bum
  host: www.example.org
- port:  80
+ port: 80
  path: /dir1/dir2/test.html
      segment: /
      segment: dir1/
@@ -16,7 +16,7 @@
  authority: tow:bum@www.example.org:80
  userinfo: tow:bum
  host: www.example.org
- port:  80
+ port: 80
  path: /dir1/dir2/test.html
      segment: /
      segment: dir1/
@@ -30,7 +30,7 @@
  authority: tow:bum@www.example.org:80
  userinfo: tow:bum
  host: www.example.org
- port:  80
+ port: 80
  path: /dir1/dir2/test.html
      segment: /
      segment: dir1/
@@ -44,7 +44,7 @@
  authority: tow:bum@www.example.org:80
  userinfo: tow:bum
  host: www.example.org
- port:  80
+ port: 80
  path: 
      segment: 
  query UNDEFINED
@@ -55,7 +55,7 @@
  authority: tow:bum@www.example.org:80
  userinfo: tow:bum
  host: www.example.org
- port:  80
+ port: 80
  path: /~ tow/
      segment: /
      segment: ~ tow/
