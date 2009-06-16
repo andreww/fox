@@ -1,3 +1,8 @@
+2009-06-16: version 4.0.4
+        Assorted bugfixes
+        Added CMake files
+        Added URI tests
+
 2008-08-26: version 4.0.3
         Portability workarounds for the Portland Group compiler (pgf90)
 	Minor bug fixes
