@@ -14,7 +14,7 @@ install: objsdir $(BUILD_TARGETS)
 	$(INSTALL) -m 644 objs/finclude/* $(install_prefix)/finclude
 	$(INSTALL) FoX-config $(install_prefix)/bin
 #
-examples_build:
+examples_build: $(BUILD_TARGETS)
 	if test -d examples; then (cd examples; $(MAKE) VPATH=$(VPATH)/examples) fi
 #
 #---------------------------
