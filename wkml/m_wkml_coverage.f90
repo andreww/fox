@@ -10,7 +10,11 @@ module m_wkml_coverage
   use FoX_wxml
   use FoX_common, only: str
 
-  use m_wkml_lowlevel, only: kmlOpenFolder, kmlCloseFolder, kmlopenplacemark,kmlAddname,kmlAddstyleurl,kmlopenpolygon,kmladdextrude,kmladdaltitudemode,kmlopenouterboundaryis,kmlopenlinearring,kmlcloselinearring,kmlcloseouterboundaryis,kmlclosepolygon,kmlcloseplacemark, kmlOpenTimeStamp,kmlCloseTimeStamp,kmlAddwhen
+  use m_wkml_lowlevel, only: kmlOpenFolder, kmlCloseFolder, kmlopenplacemark, & 
+      kmlAddname, kmlAddstyleurl, kmlopenpolygon, kmladdextrude, kmladdaltitudemode, & 
+      kmlopenouterboundaryis, kmlopenlinearring, kmlcloselinearring, & 
+      kmlcloseouterboundaryis, kmlclosepolygon, kmlcloseplacemark, &
+      kmlOpenTimeStamp, kmlCloseTimeStamp, kmlAddwhen
   use m_wkml_color, only: color, kmlSetCustomColor, kmlMakeColorMap
   use m_wkml_features, only: kmlStartRegion, kmlEndRegion
   use m_wkml_styling, only: kmlCreatePolygonStyle
