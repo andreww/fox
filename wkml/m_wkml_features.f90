@@ -250,7 +250,7 @@ contains
 
 ! add by GT 24042008 for adding chart functions
       if (present(charttype).and.present(chartsize).and.present(chartdata)&
-.and.present(chartscale).and.present(charttitle).and.present(chartlabel)) then
+       .and.present(chartscale).and.present(charttitle).and.present(chartlabel)) then
         call kmlAddChart(xf,charttype,chartsize,chartdata,chartscale,&
         charttitle,chartlabel)
       end if
