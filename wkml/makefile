@@ -26,6 +26,10 @@ install: $(OBJFILES)
 	for i in *.$(MOD_EXT) ; do  \
            $(CP) $$i $(MOD_DIR); done
 #
+check:
+	(cd test; make) | tee -a ../check.out
+
+#
 clean:
 	rm -f *.o  *.$(MOD_EXT) $(LIBRARY)
 # DO NOT DELETE THIS LINE - used by make depend
