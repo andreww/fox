@@ -55,7 +55,7 @@ $3, values, &
     if (present(mask)) then
       valueres = (maxval(values, mask=(values<mask))-minvalue)/(numcolors-1)
     else
-      valueres = (maxval(values, mask=(values<mask))-minvalue)/(numcolors-1)
+      valueres = maxval(values)/(numcolors-1)
     endif
 
     call kmlOpenFolder(xf, name=name)
@@ -87,15 +87,20 @@ TOHW_m4_wkml_createCells(`$1', `dp', `$2', `$3', `$4')`'dnl
 dnl
 module m_wkml_coverage
 
-  use m_common_realtypes, only: sp, dp
+  use fox_m_fsys_realtypes, only: sp, dp
   use m_common_error, only: FoX_error
-  use FoX_wxml, only: xmlf_t, xmlf_NewId, xmlf_OpenTag
+  use FoX_wxml
   use FoX_common, only: str
 
-  use m_wkml_lowlevel, only: kmlOpenFolder, kmlCloseFolder
+  use m_wkml_lowlevel, only: kmlOpenFolder, kmlCloseFolder, kmlopenplacemark, & 
+       kmlAddname, kmlAddstyleurl, kmlopenpolygon, kmladdextrude, kmladdaltitudemode, & 
+       kmlopenouterboundaryis, kmlopenlinearring, kmlcloselinearring, & 
+       kmlcloseouterboundaryis, kmlclosepolygon, kmlcloseplacemark, &
+       kmlOpenTimeStamp, kmlCloseTimeStamp, kmlAddwhen
   use m_wkml_color, only: color, kmlSetCustomColor, kmlMakeColorMap
   use m_wkml_features, only: kmlStartRegion, kmlEndRegion
   use m_wkml_styling, only: kmlCreatePolygonStyle
+  use m_wkml_chart
 
   implicit none
   private
@@ -116,6 +121,7 @@ module m_wkml_coverage
 
   public :: kmlCreateRGBCells
   public :: kmlCreateCells
+  public :: kmlCreateCells3
 
 contains
 
@@ -202,9 +208,11 @@ TOHW_m4_wkml_spdp_createCells(`kmlCreateCells', `east, west, south, north', `eas
       long = west+long_inc*(i-0.5) ! Subtract 0.5 so that cells are *centred* on the long/lat point.
       do j = 1, n
         lat = south+lat_inc*(i-0.5)
-        if (values(i,j)>=mask) cycle
-        square(1, :) = (/long, long+long_inc, long+long_inc, long/) ! x-coords
-        square(2, :) = (/lat, lat, lat+lat_inc, lat+lat_inc/)       ! y-coords
+        if (present(mask)) then
+          if (values(i,j)>=mask) cycle
+        endif
+        ! square(1, :) = (/long, long+long_inc, long+long_inc, long/) ! x-coords
+        ! square(2, :) = (/lat, lat, lat+lat_inc, lat+lat_inc/)       ! y-coords
         if (present(height)) then                                           ! z-coords
           square(3,:) = height*((/values(i,j), values(i+1,j), values(i+1,j+1), values(i+1,j+1)/)-minValue)
         endif
@@ -251,7 +259,9 @@ TOHW_m4_wkml_spdp_createCells(`kmlCreateCells', `east, west, south, north', `eas
 TOHW_m4_wkml_spdp_createCells(`kmlCreateCells_longlat', `longitude, latitude', `longitude(:), latitude(:)', `'`dnl
     do i = 1, m-1
       do j = 1, n-1
-        if (any(values(i:i+1, j:j+1)>=mask)) cycle ! Dont draw the cell if any of its vertices are masked out
+        if (present(mask)) then
+          if (any(values(i:i+1, j:j+1)>=mask)) cycle ! Dont draw the cell if any of its vertices are masked out
+        endif
         square(1, :) = (/longitude(i), longitude(i+1), longitude(i+1), longitude(i)/) ! x-coords
         square(2, :) = (/latitude(j), latitude(j), latitude(j+1), latitude(j+1)/)     ! y-coords
         if (present(height)) then                                           ! z-coords
@@ -301,7 +311,9 @@ TOHW_m4_wkml_spdp_createCells(`kmlCreateCells_longlat', `longitude, latitude', `
 TOHW_m4_wkml_spdp_createCells(`kmlCreateCells_longlat2', `longitude, latitude', `longitude(:,:), latitude(:,:)', `'`dnl
     do i = 1, m-1
       do j = 1, n-1
-        if (any(values(i:i+1, j:j+1)>=mask)) cycle ! Dont draw the cell if any of its vertices are masked out
+        if (present(mask)) then
+          if (any(values(i:i+1, j:j+1)>=mask)) cycle ! Dont draw the cell if any of its vertices are masked out
+        endif
         square(1, :) = (/longitude(i,j), longitude(i+1,j), longitude(i+1,j+1), longitude(i,j+1)/) ! x-coords
         square(2, :) = (/latitude(i,j), latitude(i+1,j), latitude(i+1,j+1), latitude(i,j+1)/)     ! y-coords
         if (present(height)) then                                                                         ! z-coords
@@ -342,5 +354,183 @@ TOHW_m4_wkml_spdp_createCells(`kmlCreateCells_longlat2', `longitude, latitude', 
       end do
     end do
 ')`'
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! this subroutine is going to read X, Y ,Z, stylecolor
+! each XYZ is a vector, this is used for testing glimmer or netcdf situation 01302007 GT
+
+       subroutine kmlCreateCells3(xf,longitude,latitude,values,myCI,mask,outline,time,vizvalues,dataname)
+       use Fox_wxml    !use FoX wxml library
+       use FoX_common   ! use FoX common library mainly use string function
+
+      type(xmlf_t) :: xf !! define xf as xmlf_t data type  if more than one xml file, it needs more varaibles
+      type(color) :: myCI(:)
+!       type(color), target, optional :: myCI(:)
+!      character(8), dimension(:) :: myCI
+
+
+      integer  :: i, j,k,x,y
+!      integer, intent(in) :: valuescale
+      integer :: nx, ny, nnx, nny  ! numbers at X(long), numbers at Y(Lat)
+
+      double precision, dimension(:) :: longitude, latitude ! decalure x and y as allocatable
+!      character(15), dimension(:), allocatable :: lon, lat
+      double precision, dimension(:,:) :: values ! decalare values as a matrix
+!      character(8), dimension(:,:), allocatable :: valuehex !color hex
+
+      type(color), allocatable :: valuehex(:,:)      
+
+      double precision, intent(in), optional :: mask !usually represent no data
+      logical, intent(in), optional :: outline
+
+
+      integer,dimension(4) :: xp=(/0,1,1,0/)  ! id for coordintes
+      integer,dimension(4) :: yp=(/0,0,1,1/)
+
+      character(LEN=8) :: stylecolor, colorhextmp
+
+      character(15) :: lonchar,latchar,elchar
+      character(50) :: coords
+
+      double precision :: valueres
+
+      double precision, intent(in), optional :: vizvalues(:)
+
+      character(len=*), intent(in), optional :: time, dataname
+   
+
+
+!      if (present(valuescale)) then
+!      values=valuescale*values
+!      end if
+
+! get the size of x and y vector
+      nx=size(longitude)
+      ny=size(latitude)
+!      nnx=size(values,1)
+!      nny=size(values,2)
+
+      print*,'nx in kmlCreateCells3 = ',nx
+!400   format(f15.6)
+
+!        do i=1,nx-1
+!         write(*,400), lon(i)
+!        end do
+! allocate the memory for x and y
+!     allocate(lon(nx))
+!     allocate(lat(ny))
+! allocate the memory for values
+     allocate(valuehex(nx,ny))
+
+!    if (present(vizvalues)) then
+    print*,' vizvalues exist and run'
+    print*, ' size of vizvalues=', size(vizvalues)
+      do k=1, size(vizvalues)-1    
+        do i=1,nx
+         do j=1,ny
+          if (values(i,j) .lt. vizvalues(1)) then 
+          valuehex(i,j)= myCI(1)
+          end if
+          if ((values(i,j) >= vizvalues(k)) .and. (values(i,j) < vizvalues(k+1))) then
+          valuehex(i,j)= myCI(k+1)
+          end if
+          if (values(i,j) .GT. vizvalues(k+1)) then 
+          valuehex(i,j)= myCI(k+2)
+          end if
+         end do
+        end do
+      end do
+
+!     else
+!     print*,' no vizvalues exist'
+!     dividing passed in values to how many colors scales
+!       valueres=(MAXVAL(values,MASK = values .LT. mask)-MINVAL(values))/size(myCI)
+!       do k=1, size(myCI)
+!        do i=1,nx
+!         do j=1,ny
+!         if (values(i,j) >= MINVAL(values)+valueres*(k-1)) then
+!             valuehex(i,j)= myCI(k) !sometime this line is not used
+!         end if
+!         end do
+!        end do
+!       end do
+
+!     end if
+
+! adding style function in 071307 GT
+!       do i=1,size(myCI)
+!         call kmlCreatePolygonStyle(xf,color=myCI(i),id=str(i))
+!       end do
+
+
+    print*,'start kml writing'
+      do i=1,nx-1
+           do j=1, ny-1
+!          if(all(values(i:i+1,j:j+1)==mask)) cycle
+          if (values(i,j) == mask) cycle
+          call kmlOpenPlacemark(xf)
+           call kmlAddname(xf,"srf_dep")
+
+           ! adding time funtion by GT 10042008
+           if (present(time)) then
+            call kmlOpenTimeStamp(xf)
+            call kmlAddwhen(xf,time)
+            call kmlCloseTimeStamp(xf)
+           end if
+!          add by GT for extended data 21/04/2008
+           if (present(dataname)) then
+           call xml_NewElement(xf,'ExtendedData')
+            call xml_NewElement(xf,'Data')
+               call xml_AddAttribute(xf,'name', dataname)
+               call xml_NewElement(xf,'displayName')
+                 call xml_AddCharacters(xf,dataname)
+               call xml_EndElement(xf,'displayName')
+               call xml_NewElement(xf,'value')
+                 call xml_AddCharacters(xf,str(values(i,j),fmt="r5"))
+               call xml_EndElement(xf,'value')
+            call xml_EndElement(xf,'Data')
+            call xml_EndElement(xf,'ExtendedData')
+            end if
+
+!           call kmlAddstyleUrl(xf,"#"//stylecolor)
+            if (present(outline)) then
+            call kmlCreatePolygonStyle(xf,color=valuehex(i,j),outline=outline)
+            else
+            call kmlCreatePolygonStyle(xf,color=valuehex(i,j))
+            end if
+!            call kmlAddstyleUrl(xf,"#"//valuehex(i,j))
+     
+           call kmlOpenPolygon(xf)
+             call kmlAddextrude(xf,.true.)
+             call kmlAddaltitudeMode(xf,"clampToGround")
+           call kmlOpenouterBoundaryIs(xf)
+             call kmlOpenLinearRing(xf)
+                call xml_NewElement(xf,name='coordinates')
+                      coords=str(longitude(i))//','//str(latitude(j))//','//str(values(i,j))
+                      call xml_AddCharacters(xf,coords)
+                      call xml_AddNewLine(xf) ! this function is missing in FOX2.0.2 version
+                      coords=str(longitude(i))//','//str(latitude(j+1))//','//str(values(i,j))
+                      call xml_AddCharacters(xf,coords)
+                      call xml_AddNewLine(xf) ! this function is missing in FOX2.0.2 version
+                      coords=str(longitude(i+1))//','//str(latitude(j+1))//','//str(values(i,j))
+                      call xml_AddCharacters(xf,coords)
+                      call xml_AddNewLine(xf) ! this function is missing in FOX2.0.2 version
+                      coords=str(longitude(i+1))//','//str(latitude(j))//','//str(values(i,j))
+                      call xml_AddCharacters(xf,coords)
+                      call xml_AddNewLine(xf) ! this function is missing in FOX2.0.2 version
+               call xml_EndElement(xf,name='coordinates')
+             call kmlCloseLinearRing(xf)
+           call kmlCloseouterBoundaryIs(xf)
+           call kmlClosePolygon(xf)
+          call kmlClosePlacemark(xf)
+          end do
+       end do
+
+!      deallocate(longitude)
+!      deallocate(latitude)
+!      deallocate(values)
+       deallocate(valuehex)
+      end subroutine kmlCreateCells3
+
 
 end module m_wkml_coverage

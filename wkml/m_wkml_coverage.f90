@@ -1,25 +1,19 @@
 module m_wkml_coverage
 
-! change m_common_realtypes, to fox_m_fsys_realtypes 18112008 GT
-!  use m_common_realtypes, only: sp, dp
-  use fox_m_fsys_realtypes
-
-
+  use fox_m_fsys_realtypes, only: sp, dp
   use m_common_error, only: FoX_error
-!  use FoX_wxml, only: xmlf_t, xmlf_NewId, xmlf_OpenTag
   use FoX_wxml
   use FoX_common, only: str
 
   use m_wkml_lowlevel, only: kmlOpenFolder, kmlCloseFolder, kmlopenplacemark, & 
-      kmlAddname, kmlAddstyleurl, kmlopenpolygon, kmladdextrude, kmladdaltitudemode, & 
-      kmlopenouterboundaryis, kmlopenlinearring, kmlcloselinearring, & 
-      kmlcloseouterboundaryis, kmlclosepolygon, kmlcloseplacemark, &
-      kmlOpenTimeStamp, kmlCloseTimeStamp, kmlAddwhen
+       kmlAddname, kmlAddstyleurl, kmlopenpolygon, kmladdextrude, kmladdaltitudemode, & 
+       kmlopenouterboundaryis, kmlopenlinearring, kmlcloselinearring, & 
+       kmlcloseouterboundaryis, kmlclosepolygon, kmlcloseplacemark, &
+       kmlOpenTimeStamp, kmlCloseTimeStamp, kmlAddwhen
   use m_wkml_color, only: color, kmlSetCustomColor, kmlMakeColorMap
   use m_wkml_features, only: kmlStartRegion, kmlEndRegion
   use m_wkml_styling, only: kmlCreatePolygonStyle
   use m_wkml_chart
-
 
   implicit none
   private
@@ -40,8 +34,6 @@ module m_wkml_coverage
 
   public :: kmlCreateRGBCells
   public :: kmlCreateCells
-
-! add by GT 10/03/2008 
   public :: kmlCreateCells3
 
 contains
@@ -145,11 +137,6 @@ east, west, south, north, values, &
     m = size(values, 1)
     n = size(values, 2)
 
-    print*,'sp'
-    print*,'m=',m
-    print*,'n=',n
-
-
     if (present(contour_values).and.present(num_levels)) then
       print*,"Cannot specify both contour_values and num_levels in kmlCreateCells"
       stop
@@ -183,7 +170,7 @@ east, west, south, north, values, &
     if (present(mask)) then
       valueres = (maxval(values, mask=(values<mask))-minvalue)/(numcolors-1)
     else
-      valueres = (maxval(values)-minvalue)/(numcolors-1)
+      valueres = maxval(values)/(numcolors-1)
     endif
 
     call kmlOpenFolder(xf, name=name)
@@ -208,8 +195,8 @@ east, west, south, north, values, &
         if (present(mask)) then
           if (values(i,j)>=mask) cycle
         endif
-        square(1, :) = (/long, long+long_inc, long+long_inc, long/) ! x-coords
-        square(2, :) = (/lat, lat, lat+lat_inc, lat+lat_inc/)       ! y-coords
+        ! square(1, :) = (/long, long+long_inc, long+long_inc, long/) ! x-coords
+        ! square(2, :) = (/lat, lat, lat+lat_inc, lat+lat_inc/)       ! y-coords
         if (present(height)) then                                           ! z-coords
           square(3,:) = height*((/values(i,j), values(i+1,j), values(i+1,j+1), values(i+1,j+1)/)-minValue)
         endif
@@ -280,10 +267,6 @@ east, west, south, north, values, &
     m = size(values, 1)
     n = size(values, 2)
 
-    print*,'dp'
-    print*,'m=',m
-    print*,'n=',n
-
     if (present(contour_values).and.present(num_levels)) then
       print*,"Cannot specify both contour_values and num_levels in kmlCreateCells"
       stop
@@ -317,7 +300,7 @@ east, west, south, north, values, &
     if (present(mask)) then
       valueres = (maxval(values, mask=(values<mask))-minvalue)/(numcolors-1)
     else
-      valueres = (maxval(values)-minvalue)/(numcolors-1)
+      valueres = maxval(values)/(numcolors-1)
     endif
 
     call kmlOpenFolder(xf, name=name)
@@ -335,10 +318,6 @@ east, west, south, north, values, &
 
     lat_inc = (east-west)/m ! Increment in latitude
     long_inc = (north-south)/n ! Increment in longitude
-! chagen by GT 30012008
-!    lat_inc = (north-south)/n ! Increment in latitude
-!    long_inc = (east-west)/m  ! Increment in longitude
-
     do i = 1, m
       long = west+long_inc*(i-0.5) ! Subtract 0.5 so that cells are *centred* on the long/lat point.
       do j = 1, n
@@ -346,11 +325,8 @@ east, west, south, north, values, &
         if (present(mask)) then
           if (values(i,j)>=mask) cycle
         endif
-        square(1, :) = (/long, long+long_inc, long+long_inc, long/) ! x-coords
-        square(2, :) = (/lat, lat, lat+lat_inc, lat+lat_inc/)       ! y-coords
-!         square(1, :) = (/long, long, long+long_inc, long+long_inc/) ! x-coords
-!         square(2, :) = (/lat, lat-lat_inc, lat-lat_inc,lat/)       ! y-coords
-
+        ! square(1, :) = (/long, long+long_inc, long+long_inc, long/) ! x-coords
+        ! square(2, :) = (/lat, lat, lat+lat_inc, lat+lat_inc/)       ! y-coords
         if (present(height)) then                                           ! z-coords
           square(3,:) = height*((/values(i,j), values(i+1,j), values(i+1,j+1), values(i+1,j+1)/)-minValue)
         endif
@@ -457,7 +433,7 @@ longitude, latitude, values, &
     if (present(mask)) then
       valueres = (maxval(values, mask=(values<mask))-minvalue)/(numcolors-1)
     else
-      valueres = (maxval(values)-minvalue)/(numcolors-1)
+      valueres = maxval(values)/(numcolors-1)
     endif
 
     call kmlOpenFolder(xf, name=name)
@@ -551,10 +527,6 @@ longitude, latitude, values, &
 
     m = size(values, 1)
     n = size(values, 2)
-
-    print*,'using kmlCreateCells_longlat_dp'
-   print*,'m=',m
-   print*,'n=',n    
 
     if (present(contour_values).and.present(num_levels)) then
       print*,"Cannot specify both contour_values and num_levels in kmlCreateCells"
@@ -719,7 +691,7 @@ longitude, latitude, values, &
     if (present(mask)) then
       valueres = (maxval(values, mask=(values<mask))-minvalue)/(numcolors-1)
     else
-      valueres = (maxval(values)-minvalue)/(numcolors-1)
+      valueres = maxval(values)/(numcolors-1)
     endif
 
     call kmlOpenFolder(xf, name=name)
@@ -842,7 +814,7 @@ longitude, latitude, values, &
     if (present(mask)) then
       valueres = (maxval(values, mask=(values<mask))-minvalue)/(numcolors-1)
     else
-      valueres = (maxval(values)-minvalue)/(numcolors-1)
+      valueres = maxval(values)/(numcolors-1)
     endif
 
     call kmlOpenFolder(xf, name=name)
@@ -967,8 +939,7 @@ longitude, latitude, values, &
 !      nny=size(values,2)
 
       print*,'nx in kmlCreateCells3 = ',nx
-      print*,'ny in kmlCreateCells3 = ',ny
-!400   format(f15.6)
+!400   f15.6
 
 !        do i=1,nx-1
 !         write(*,400), lon(i)
@@ -1020,7 +991,7 @@ longitude, latitude, values, &
 !       end do
 
 
-     print*,'start kml writing'
+    print*,'start kml writing'
       do i=1,nx-1
            do j=1, ny-1
 !          if(all(values(i:i+1,j:j+1)==mask)) cycle
