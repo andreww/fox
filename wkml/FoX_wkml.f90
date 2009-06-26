@@ -34,7 +34,7 @@ module FoX_wkml
   public :: kmlCreateContours
 
 ! color handling functions and variables
-  public :: color  ! make derivded type colorindex available
+  public :: color_t  ! make derivded type colorindex available
   public :: kmlGetCustomColor
   public :: kmlSetCustomColor
 

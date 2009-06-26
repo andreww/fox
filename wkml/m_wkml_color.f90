@@ -8,18 +8,17 @@ module m_wkml_color
   implicit none
   private
 
-  type color
-! comment out by GT 10/03/2008 remem get it back if it causese problem
+  type color_t
     private
     character(len=8) :: hex
-  end type color
+  end type color_t
 
 
   integer, parameter :: defaultAlpha = 249
 
-  type(color), parameter :: defaultCI(5) = &
-    (/color('eef00000'), color('eeb00030'), &
-    color('ee700070'), color('ee3000b0'), color('ee0000f0')/)
+  type(color_t), parameter :: defaultCI(5) = &
+    (/color_t('eef00000'), color_t('eeb00030'), &
+    color_t('ee700070'), color_t('ee3000b0'), color_t('ee0000f0')/)
 
   character(len=*), parameter :: hexdigits = '0123456789abcdefABCDEF'
 
@@ -43,7 +42,7 @@ module m_wkml_color
     module procedure kmlAddTextColor_h
   end interface kmlAddTextColor
 
-  public :: color
+  public :: color_t
   public :: defaultCI
 
   public :: kmlGetCustomColor
@@ -69,7 +68,7 @@ contains
 
   subroutine kmlAddColor_c(xf, col)
     type(xmlf_t), intent(inout) :: xf
-    type(color), intent(in) :: col
+    type(color_t), intent(in) :: col
 
     call xml_NewElement(xf, 'color')
     call xml_AddCharacters(xf, col%hex)
@@ -97,7 +96,7 @@ contains
 
   subroutine kmlAddBgColor_c(xf, col)
     type(xmlf_t), intent(inout) :: xf
-    type(color), intent(in) :: col
+    type(color_t), intent(in) :: col
 
     call xml_NewElement(xf, 'bgColor')
     call xml_AddCharacters(xf, col%hex)
@@ -121,7 +120,7 @@ contains
 
   subroutine kmlAddTextColor_c(xf, col)
     type(xmlf_t), intent(inout) :: xf
-    type(color), intent(in) :: col
+    type(color_t), intent(in) :: col
 
     call xml_NewElement(xf, 'textcolor')
     call xml_AddCharacters(xf, col%hex)
@@ -145,7 +144,7 @@ contains
 
 
   subroutine kmlSetCustomColor(myCI, colorhex)
-    type(color), intent(out) :: myCI
+    type(color_t), intent(out) :: myCI
     character(len=8), intent(in) :: colorhex
 
     if (.not.checkColorHex(colorhex)) then
@@ -158,14 +157,14 @@ contains
   end subroutine kmlSetCustomColor
 
   function kmlGetColorHex(col) result(h)
-    type(color), intent(in) :: col
+    type(color_t), intent(in) :: col
     character(len=8) :: h
     h = col%hex
   end function kmlGetColorHex
 
   function kmlGetColor_index(i) result(c)
     integer, intent(in) :: i
-    type(color) :: c
+    type(color_t) :: c
 
     integer :: i_
    ! wha tis mean i_ 
@@ -180,7 +179,7 @@ contains
 
   function kmlGetColor_byName(name) result(c)
     character(len=*), intent(in) :: name
-    type(color) :: c
+    type(color_t) :: c
 
     integer :: i
 
@@ -199,8 +198,8 @@ contains
 
   function kmlMakeColorMap(numcolors, start, finish) result(colormap)
     integer, intent(in) :: numcolors
-    type(color), intent(in), optional :: start, finish
-    type(color), pointer :: colormap(:)
+    type(color_t), intent(in), optional :: start, finish
+    type(color_t), pointer :: colormap(:)
 
     integer :: i, red, blue
 

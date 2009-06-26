@@ -11,7 +11,7 @@ module m_wkml_contours
   use FoX_common, only: str, operator(//)
   use FoX_wxml, only: xmlf_t
 
-  use m_wkml_color, only: color, kmlGetColorHex
+  use m_wkml_color, only: color_t, kmlGetColorHex
   use m_wkml_lowlevel, only: kmlOpenFolder, kmlCloseFolder, kmlOpenPlacemark, kmlClosePlacemark
   use m_wkml_features, only: kmlCreateLine, kmlStartRegion, kmlAddInnerBoundary, kmlEndRegion
   use m_wkml_styling, only: kmlCreateLineStyle, kmlCreatePolygonStyle 
@@ -36,7 +36,7 @@ contains
     real(sp), intent(in) :: east, west, north, south
     real(sp), intent(in), optional :: values(:,:)
     real(sp), intent(in), optional :: mask
-    type(color), intent(in), optional :: colormap(:)
+    type(color_t), intent(in), optional :: colormap(:)
     real(sp), intent(in), optional :: height
     real(sp), intent(in), optional :: contour_values(:)
     integer, intent(in), optional :: num_levels
@@ -59,7 +59,7 @@ contains
     real(sp), intent(in) :: longitude(:), latitude(:)
     real(sp), intent(in), optional :: values(:,:)
     real(sp), intent(in), optional :: mask
-    type(color), intent(in), optional :: colormap(:)
+    type(color_t), intent(in), optional :: colormap(:)
     real(sp), intent(in), optional :: height
     real(sp), intent(in), optional :: contour_values(:)
     integer, intent(in), optional :: num_levels
@@ -82,7 +82,7 @@ contains
     real(sp), intent(in) :: longitude(:,:), latitude(:,:)
     real(sp), intent(in), optional :: values(:,:)
     real(sp), intent(in), optional :: mask
-    type(color), intent(in), optional :: colormap(:)
+    type(color_t), intent(in), optional :: colormap(:)
     real(sp), intent(in), optional :: height
     real(sp), intent(in), optional :: contour_values(:)
     integer, intent(in), optional :: num_levels
@@ -103,7 +103,7 @@ contains
     type(xmlf_t), intent(inout) :: xf
     type(contourObject), intent(in) :: o
     real(sp), intent(in), optional :: height
-    type(color), intent(in), optional :: colormap(:)
+    type(color_t), intent(in), optional :: colormap(:)
     character(len=*), intent(in) :: name
     logical, intent(in), optional :: lines, regions
 
@@ -138,7 +138,7 @@ contains
     integer, intent(in), optional :: ncv
     real, intent(in), optional :: ignore_gt
     logical, intent(in), optional :: lines, regions
-    type(color), optional :: colormap(:)
+    type(color_t), optional :: colormap(:)
     character(len=*), intent(in), optional :: name
 
     logical :: lines_, regions_
@@ -183,7 +183,7 @@ contains
     type(xmlf_t), intent(inout) :: xf
     type(contourObject), intent(in) :: cp
     real, intent(in), optional :: height
-    type(color), intent(in), optional :: colormap(:)
+    type(color_t), intent(in), optional :: colormap(:)
 
     integer :: colornum
     integer :: i, j
@@ -232,7 +232,7 @@ contains
     type(xmlf_t), intent(inout) :: xf
     type(contourObject), intent(in) :: cp
     real(sp), intent(in), optional :: height
-    type(color), intent(in), optional :: colormap(:)
+    type(color_t), intent(in), optional :: colormap(:)
 
     integer :: colornum
     integer :: i, j, k

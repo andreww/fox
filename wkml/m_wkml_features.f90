@@ -20,7 +20,7 @@ module m_wkml_features
     kmlAddwhen, kmlOpenTimeStamp, kmlCloseTimeStamp, kmlAddname,kmlAddtessellate
   use m_wkml_styling, only: kmlCreatePointStyle, kmlCreateLineStyle, kmlCreatePolygonStyle, &
     kmlOpenStyle, kmlCloseStyle
-  use m_wkml_Color, only: col => color
+  use m_wkml_Color, only: col => color_t
   use m_wkml_chart
 
   implicit none

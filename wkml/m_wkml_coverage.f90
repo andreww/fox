@@ -10,7 +10,7 @@ module m_wkml_coverage
        kmlopenouterboundaryis, kmlopenlinearring, kmlcloselinearring, & 
        kmlcloseouterboundaryis, kmlclosepolygon, kmlcloseplacemark, &
        kmlOpenTimeStamp, kmlCloseTimeStamp, kmlAddwhen
-  use m_wkml_color, only: color, kmlSetCustomColor, kmlMakeColorMap
+  use m_wkml_color, only: color_t, kmlSetCustomColor, kmlMakeColorMap
   use m_wkml_features, only: kmlStartRegion, kmlEndRegion
   use m_wkml_styling, only: kmlCreatePolygonStyle
   use m_wkml_chart
@@ -64,7 +64,7 @@ contains
     integer :: numbit_
     integer :: i, dn
 
-    type(color), allocatable :: colormap(:)
+    type(color_t), allocatable :: colormap(:)
 
     if (rgb/="r" .and. rgb/="g" .and. rgb/="b") then
       print*, "Must use one of r, g, or b in CreateRGBCells"
@@ -123,7 +123,7 @@ east, west, south, north, values, &
     real(sp), intent(in) :: east, west, south, north
     real(sp), intent(in) :: values(:,:)
     real(sp), intent(in), optional :: mask
-    type(color), target, optional :: colormap(:)
+    type(color_t), target, optional :: colormap(:)
     real(sp), intent(in), optional :: height
     real(sp), intent(in), optional :: contour_values(:)
     integer, intent(in), optional :: num_levels
@@ -134,7 +134,7 @@ east, west, south, north, values, &
     real(sp) :: minvalue, lat_inc, long_inc, valueres !resolution of input value
     character(len=15), allocatable :: styleURL(:) ! FIXME this ought to be dynamically sized,
                                      ! but this allows up to 10^9 separate IDs in one doc.
-    type(color), pointer :: defaultMap(:), thisColor
+    type(color_t), pointer :: defaultMap(:), thisColor
 
     m = size(values, 1)
     n = size(values, 2)
@@ -253,7 +253,7 @@ east, west, south, north, values, &
     real(dp), intent(in) :: east, west, south, north
     real(dp), intent(in) :: values(:,:)
     real(dp), intent(in), optional :: mask
-    type(color), target, optional :: colormap(:)
+    type(color_t), target, optional :: colormap(:)
     real(dp), intent(in), optional :: height
     real(dp), intent(in), optional :: contour_values(:)
     integer, intent(in), optional :: num_levels
@@ -264,7 +264,7 @@ east, west, south, north, values, &
     real(dp) :: minvalue, lat_inc, long_inc, valueres !resolution of input value
     character(len=15), allocatable :: styleURL(:) ! FIXME this ought to be dynamically sized,
                                      ! but this allows up to 10^9 separate IDs in one doc.
-    type(color), pointer :: defaultMap(:), thisColor
+    type(color_t), pointer :: defaultMap(:), thisColor
 
     m = size(values, 1)
     n = size(values, 2)
@@ -386,7 +386,7 @@ longitude, latitude, values, &
     real(sp), intent(in) :: longitude(:), latitude(:)
     real(sp), intent(in) :: values(:,:)
     real(sp), intent(in), optional :: mask
-    type(color), target, optional :: colormap(:)
+    type(color_t), target, optional :: colormap(:)
     real(sp), intent(in), optional :: height
     real(sp), intent(in), optional :: contour_values(:)
     integer, intent(in), optional :: num_levels
@@ -397,7 +397,7 @@ longitude, latitude, values, &
     real(sp) :: minvalue, lat_inc, long_inc, valueres !resolution of input value
     character(len=15), allocatable :: styleURL(:) ! FIXME this ought to be dynamically sized,
                                      ! but this allows up to 10^9 separate IDs in one doc.
-    type(color), pointer :: defaultMap(:), thisColor
+    type(color_t), pointer :: defaultMap(:), thisColor
 
     m = size(values, 1)
     n = size(values, 2)
@@ -518,7 +518,7 @@ longitude, latitude, values, &
     real(dp), intent(in) :: longitude(:), latitude(:)
     real(dp), intent(in) :: values(:,:)
     real(dp), intent(in), optional :: mask
-    type(color), target, optional :: colormap(:)
+    type(color_t), target, optional :: colormap(:)
     real(dp), intent(in), optional :: height
     real(dp), intent(in), optional :: contour_values(:)
     integer, intent(in), optional :: num_levels
@@ -529,7 +529,7 @@ longitude, latitude, values, &
     real(dp) :: minvalue, lat_inc, long_inc, valueres !resolution of input value
     character(len=15), allocatable :: styleURL(:) ! FIXME this ought to be dynamically sized,
                                      ! but this allows up to 10^9 separate IDs in one doc.
-    type(color), pointer :: defaultMap(:), thisColor
+    type(color_t), pointer :: defaultMap(:), thisColor
 
     m = size(values, 1)
     n = size(values, 2)
@@ -652,7 +652,7 @@ longitude, latitude, values, &
     real(sp), intent(in) :: longitude(:,:), latitude(:,:)
     real(sp), intent(in) :: values(:,:)
     real(sp), intent(in), optional :: mask
-    type(color), target, optional :: colormap(:)
+    type(color_t), target, optional :: colormap(:)
     real(sp), intent(in), optional :: height
     real(sp), intent(in), optional :: contour_values(:)
     integer, intent(in), optional :: num_levels
@@ -663,7 +663,7 @@ longitude, latitude, values, &
     real(sp) :: minvalue, lat_inc, long_inc, valueres !resolution of input value
     character(len=15), allocatable :: styleURL(:) ! FIXME this ought to be dynamically sized,
                                      ! but this allows up to 10^9 separate IDs in one doc.
-    type(color), pointer :: defaultMap(:), thisColor
+    type(color_t), pointer :: defaultMap(:), thisColor
 
     m = size(values, 1)
     n = size(values, 2)
@@ -775,7 +775,7 @@ longitude, latitude, values, &
     real(dp), intent(in) :: longitude(:,:), latitude(:,:)
     real(dp), intent(in) :: values(:,:)
     real(dp), intent(in), optional :: mask
-    type(color), target, optional :: colormap(:)
+    type(color_t), target, optional :: colormap(:)
     real(dp), intent(in), optional :: height
     real(dp), intent(in), optional :: contour_values(:)
     integer, intent(in), optional :: num_levels
@@ -786,7 +786,7 @@ longitude, latitude, values, &
     real(dp) :: minvalue, lat_inc, long_inc, valueres !resolution of input value
     character(len=15), allocatable :: styleURL(:) ! FIXME this ought to be dynamically sized,
                                      ! but this allows up to 10^9 separate IDs in one doc.
-    type(color), pointer :: defaultMap(:), thisColor
+    type(color_t), pointer :: defaultMap(:), thisColor
 
     m = size(values, 1)
     n = size(values, 2)
@@ -902,8 +902,8 @@ longitude, latitude, values, &
        use FoX_common   ! use FoX common library mainly use string function
 
       type(xmlf_t) :: xf !! define xf as xmlf_t data type  if more than one xml file, it needs more varaibles
-      type(color) :: myCI(:)
-!       type(color), target, optional :: myCI(:)
+      type(color_t) :: myCI(:)
+!       type(color_t), target, optional :: myCI(:)
 !      character(8), dimension(:) :: myCI
 
 
@@ -916,7 +916,7 @@ longitude, latitude, values, &
       double precision, dimension(:,:) :: values ! decalare values as a matrix
 !      character(8), dimension(:,:), allocatable :: valuehex !color hex
 
-      type(color), allocatable :: valuehex(:,:)      
+      type(color_t), allocatable :: valuehex(:,:)      
 
       double precision, intent(in), optional :: mask !usually represent no data
       logical, intent(in), optional :: outline
@@ -1079,8 +1079,8 @@ longitude, latitude, values, &
        use FoX_common   ! use FoX common library mainly use string function
 
       type(xmlf_t) :: xf !! define xf as xmlf_t data type  if more than one xml file, it needs more varaibles
-      type(color) :: myCI(:) 
-!       type(color), target, optional :: myCI(:)
+      type(color_t) :: myCI(:) 
+!       type(color_t), target, optional :: myCI(:)
 !      character(8), dimension(:) :: myCI
 
 
@@ -1093,7 +1093,7 @@ longitude, latitude, values, &
       real(sp), dimension(:,:) :: values ! decalare values as a matrix
 !      character(8), dimension(:,:), allocatable :: valuehex !color hex
 
-      type(color), allocatable :: valuehex(:,:)
+      type(color_t), allocatable :: valuehex(:,:)
 
       real(sp), intent(in), optional :: mask !usually represent no data
       logical, intent(in), optional :: outline

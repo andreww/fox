@@ -6,7 +6,7 @@ module m_wkml_styling
 !  use m_common_realtypes, only: sp, dp
   use FoX_wxml, only: xmlf_t, xmlf_OpenTag, &
     xml_NewElement, xml_EndElement, xml_AddAttribute
-  use m_wkml_color, only: col => color, kmlAddColor, kmlAddBgColor, kmlAddTextColor, kmlGetCustomColor
+  use m_wkml_color, only: col => color_t, kmlAddColor, kmlAddBgColor, kmlAddTextColor, kmlGetCustomColor
   use m_wkml_lowlevel, only: kmlAddFill, kmlAddWidth, kmlAddColorMode, kmlAddHref, &
     kmlAddkey, kmlAddOutline, kmlAddScale, kmlAddStyleUrl, kmlAddHeading, &
     kmlOpenIcon, kmlCloseIcon, kmlOpenPair, kmlClosePair, kmlAddwidth,kmlAddcolorMode, &
@@ -663,7 +663,7 @@ contains
     type(xmlf_t), intent(inout) :: xf
     integer :: i
     double precision, intent(in) :: vizvalues(:)
-    type(color),intent(in) :: myCI(:)
+    type(color_t),intent(in) :: myCI(:)
          do i=1,size(myCI)
           if (i == 1) then
           call kmlOpenPlacemark(xf)
