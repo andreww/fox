@@ -183,7 +183,7 @@ places.  If you move the FoX directory later on, you will need to re-run configu
 
 <p>To run them all, simply run <code>make check</code> from the top-level directory. This will run the individual testsuites, and collate their results.</p>
 
-<p>If any failures occur (unrelated to known compiler issues, see the <a href="http://uszla.me.uk/space/software/FoX/compat/">up-to-date list</a>), please send a message to the mailing list (<a href="&#109;a&#105;&#x6C;&#116;&#111;:&#x46;o&#x58;&#64;&#x6C;i&#115;&#x74;&#115;&#x2E;&#117;&#115;&#x7A;&#x6C;&#97;.&#x6D;&#x65;&#x2E;&#x75;k">&#x46;o&#x58;&#64;&#x6C;i&#115;&#x74;&#115;&#x2E;&#117;&#115;&#x7A;&#x6C;&#97;.&#x6D;&#x65;&#x2E;&#x75;k</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
+<p>If any failures occur (unrelated to known compiler issues, see the <a href="http://uszla.me.uk/space/software/FoX/compat/">up-to-date list</a>), please send a message to the mailing list (<a href="m&#x61;&#x69;&#x6C;&#116;o:&#70;&#111;&#x58;&#64;&#x6C;&#x69;&#x73;t&#x73;&#x2E;&#117;&#x73;&#x7A;&#x6C;&#x61;&#46;&#109;&#x65;&#46;&#x75;&#x6B;">&#70;&#111;&#x58;&#64;&#x6C;&#x69;&#x73;t&#x73;&#x2E;&#117;&#x73;&#x7A;&#x6C;&#x61;&#46;&#109;&#x65;&#46;&#x75;&#x6B;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
 
 <p>The testsuites for the SAX and DOM libraries are very extensive, and are somewhat fragile, so are not distributed with FoX. Please contact the author for details.</p>
 
@@ -1008,6 +1008,20 @@ Contents of comment <br />
 </ul>
 
 <p>Return the currently open tag of the current XML file (or the empty string if none is open)</p>
+
+<ul>
+<li><code>xmlf_GetPretty_print</code> result(<em>logical</em>)</li>
+</ul>
+
+<p>Return the current value of pretty_print.</p>
+
+<ul>
+<li><code>xmlf_SetPretty_print</code>
+<strong>NewValue</strong>: <em>logical</em></li>
+</ul>
+
+<p>Set the current value of pretty_print to the NewValue. This may be useful in a mixed namespace
+document where pretty printing the output may change the meaning under one of the namespaces.</p>
 
 <h2>Exceptions</h2>
 
@@ -3139,9 +3153,9 @@ Return the value of the fragment</p></li>
 <h1>Further information</h1>
 
 <p>FoX evolved from the initial codebase of <a href="http://lcdx00.wm.lc.ehu.es/ag/xml/">xmlf90</a>,
-which was written largely by Alberto Garcia &lt;<a href="&#x6D;&#x61;&#105;&#108;&#x74;&#x6F;:&#x61;&#x6C;&#98;&#101;&#x72;&#116;&#111;&#x67;&#64;&#x69;&#x63;&#109;a&#x62;&#46;&#x65;&#115;">&#x61;&#x6C;&#98;&#101;&#x72;&#116;&#111;&#x67;&#64;&#x69;&#x63;&#109;a&#x62;&#46;&#x65;&#115;</a>> and Jon Wakelin &lt;<a href="&#x6D;&#97;&#x69;&#x6C;&#116;&#111;:&#x6A;&#111;&#x6E;&#x2E;&#x77;&#97;&#x6B;&#101;&#108;&#105;&#x6E;&#64;&#x62;&#114;&#x69;s&#116;&#x6F;&#x6C;&#46;&#x61;&#x63;&#x2E;&#x75;&#x6B;">&#x6A;&#111;&#x6E;&#x2E;&#x77;&#97;&#x6B;&#101;&#108;&#105;&#x6E;&#64;&#x62;&#114;&#x69;s&#116;&#x6F;&#x6C;&#46;&#x61;&#x63;&#x2E;&#x75;&#x6B;</a>>.</p>
+which was written largely by Alberto Garcia &lt;<a href="&#x6D;a&#105;&#x6C;&#x74;&#x6F;:&#x61;&#x6C;b&#101;&#114;&#x74;o&#103;&#64;&#x69;&#x63;&#x6D;a&#98;&#46;&#101;&#x73;">&#x61;&#x6C;b&#101;&#114;&#x74;o&#103;&#64;&#x69;&#x63;&#x6D;a&#98;&#46;&#101;&#x73;</a>> and Jon Wakelin &lt;<a href="&#109;a&#105;&#x6C;&#116;&#111;:&#x6A;&#111;&#110;.&#x77;&#x61;k&#101;&#108;&#105;&#110;&#64;&#x62;&#114;&#105;&#x73;&#x74;&#111;l&#x2E;&#97;&#99;&#46;&#117;k">&#x6A;&#111;&#110;.&#x77;&#x61;k&#101;&#108;&#105;&#110;&#64;&#x62;&#114;&#105;&#x73;&#x74;&#111;l&#x2E;&#97;&#99;&#46;&#117;k</a>>.</p>
 
-<p>FoX is the work of Toby White &lt;<a href="&#x6D;&#97;&#105;&#x6C;&#116;&#111;:&#x74;&#x6F;&#x77;&#64;&#117;&#x73;&#x7A;&#108;&#97;&#x2E;me&#46;&#117;&#x6B;">&#x74;&#x6F;&#x77;&#64;&#117;&#x73;&#x7A;&#108;&#97;&#x2E;me&#46;&#117;&#x6B;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
+<p>FoX is the work of Toby White &lt;<a href="&#109;a&#105;&#108;&#116;&#x6F;:&#x74;&#x6F;&#x77;&#64;&#117;&#x73;&#x7A;&#108;&#x61;&#x2E;&#109;&#x65;&#x2E;&#x75;&#x6B;">&#x74;&#x6F;&#x77;&#64;&#117;&#x73;&#x7A;&#108;&#x61;&#x2E;&#109;&#x65;&#x2E;&#x75;&#x6B;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
 
 <p>There is a FoX website at <a href="http://www.uszla.me.uk/FoX/">http://www.uszla.me.uk/FoX/</a>.</p>
 

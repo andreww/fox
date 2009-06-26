@@ -68,6 +68,7 @@ contains
       character(len=6),allocatable :: chartdata_chr(:)
 !      character(len=*), intent(in),optional :: chartlabelx,chartlabely
       character(len=*), intent(in),optional :: chartlabel
+      logical                               :: document_pretty_print
 
       print*,'run kmlAddChart_dp'  
 
@@ -81,22 +82,15 @@ contains
 
 
      call xml_NewElement(xf,'description')
-!      call xml_AddCharacters(xf,'<![CDATA[<img src="http://chart.apis.google.com/chart?"'//&
-!"cht="//charttype//"&"//"chs="//chartsize//"&"//"chd=t:"//chartdata//"&"//"chds="//chartscale//&
-!"chxt=x,y"//"chx1="//"0:"//"|Date|"//"1:"//"|Discharge|"//'"/>]]>')
 
      call xml_AddCharacters(xf,'<img src="http://chart.apis.google.com/chart?'//&
-"cht="//trim(charttype)//"&"//"chs="//trim(chartsize)//"&"//&
-"chd=t:",parsed=.false.)
-! this is to check whether we like the XML keep indent preserve_whitesapce=.true. means indent
-! we do not want this here, just for data section. thus set wxml xf type and remove the private.
-!
+            "cht="//trim(charttype)//"&"//"chs="//trim(chartsize)//"&"//&
+            "chd=t:",parsed=.false.)
 
-! in FoX 4.0.3 preserve_whitesapce=.true not exist anymore, probably need to use pretty_print = .false.
-
- 
-     print*,"PW", xf%pretty_print
-     xf%pretty_print = .false.
+     ! We need to turn off indenting in the XML document for the next bit (just
+     ! for the data section). We save the state to restore it after this section
+     document_pretty_print = xmlf_GetPretty_print(xf)
+     call xmlf_SetPretty_print(xf, .false.)
      call xml_AddNewLine(xf)
      do i = 1, size(chartdata_chr)-1
        call xml_AddCharacters(xf,chartdata_chr(i)//",")
@@ -104,14 +98,15 @@ contains
      enddo
      call xml_AddCharacters(xf,chartdata_chr(i))
      call xml_AddCharacters(xf,"&"//"chds="//trim(chartscale)//"&"&
-//"chtt="//trim(charttitle)//"&"&
-//"chxt=x,y"//"&"&
-!//"chxl=0:|Jan|Feb|March|1:|0|1.0"&
-//"chxl="//trim(chartlabel)//""&
-//'"/>', parsed=.false.)
-     xf%pretty_print = .false.
+            //"chtt="//trim(charttitle)//"&"&
+            //"chxt=x,y"//"&"&
+            //"chxl="//trim(chartlabel)//""&
+            //'"/>', parsed=.false.)
+     ! Restore the value of xf%pretty_print 
+     call xmlf_SetPretty_print(xf, document_pretty_print)
 
      call xml_EndElement(xf,'description')
+
 
     end subroutine kmlAddChart_dp
 
