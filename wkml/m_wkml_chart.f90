@@ -5,6 +5,7 @@ module m_wkml_chart
   use m_wkml_lowlevel
   use FoX_common, only: str
 
+  implicit none
   private
 
   public :: kmlAddChart
@@ -69,6 +70,7 @@ contains
 !      character(len=*), intent(in),optional :: chartlabelx,chartlabely
       character(len=*), intent(in),optional :: chartlabel
       logical                               :: document_pretty_print
+      integer                               :: i
 
       print*,'run kmlAddChart_dp'  
 

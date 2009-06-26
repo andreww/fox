@@ -6,6 +6,7 @@ module m_wkml_core
 
   use m_wkml_lowlevel, only: kmlOpenDocument, kmlCloseDocument
 
+  implicit none
   private
 
   public :: kmlBeginFile

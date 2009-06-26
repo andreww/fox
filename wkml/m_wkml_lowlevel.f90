@@ -7,6 +7,7 @@ module m_wkml_lowlevel
   use FoX_wxml
   use FoX_common
 
+  implicit none
   private
 
   public kmlAddname,kmlAddopen,kmlAddoutline,kmlAddextrude, &
@@ -585,9 +586,9 @@ contains
   end subroutine kmlAddroll
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !<request>geocode</request>  !currently, it is geocode
-  subroutine kmlAddrequest(xf)
+  subroutine kmlAddrequest(xf, geocode)
     type(xmlf_t), intent(inout) :: xf
-    !character(len=*), intent(in) :: request
+    character(len=*), intent(in) :: geocode
     call xml_NewElement(xf,'request')
     call xml_AddCharacters(xf,geocode)
     call xml_EndElement(xf,'request')
@@ -965,7 +966,7 @@ contains
     real(sp), intent(in), optional :: z(:)
     logical, intent(in), optional :: repeat
     
-    integer :: nodes
+    integer :: nodes, i
     logical :: repeat_
     if (present(repeat)) then
       repeat_ = repeat
@@ -1011,7 +1012,7 @@ contains
     real(dp), intent(in), optional :: z(:)
     logical, intent(in), optional :: repeat
     
-    integer :: nodes
+    integer :: nodes, i
     logical :: repeat_
     if (present(repeat)) then
       repeat_ = repeat
