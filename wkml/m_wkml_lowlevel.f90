@@ -1,8 +1,6 @@
 module m_wkml_lowlevel
 
   use m_common_error
-! change to fox_m_fsys_realtypes by GT 18112008
-!  use m_common_realtypes, only: sp, dp
   use fox_m_fsys_realtypes
   use FoX_wxml
   use FoX_common
