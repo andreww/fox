@@ -11,8 +11,9 @@ do
   ./$t
 done
 
-echo Test Results:
-echo Passed: `wc -l passed.score| cut -f 1 -d 'p'`
-echo Failed: `wc -l failed.score| cut -f 1 -d 'f'`
+echo RESULT wkml/ Test Results:
+echo RESULT wkml/ Passed: `wc -l passed.score| cut -f 1 -d 'p'`
+echo RESULT wkml/ Failed: `wc -l failed.score| cut -f 1 -d 'f'`
 
-echo See failed.out for details of failed tests.
+echo RESULT wkml/ See wkml/test/failed.out for details of failed tests.
+
