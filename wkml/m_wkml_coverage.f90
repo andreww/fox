@@ -894,40 +894,37 @@ longitude, latitude, values, &
 
 
   subroutine kmlcreateCells3_dp(xf,longitude,latitude,values,myCI,mask,outline,time,vizvalues,dataname)
-     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-     ! this subroutine is going to read X, Y ,Z, stylecolor
-     ! each XYZ is a vector, this is used for testing glimmer or netcdf situation 01302007 GT
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! this subroutine is going to read X, Y ,Z, stylecolor
+      ! each XYZ is a vector, this is used for testing glimmer or netcdf situation 01302007 GT
 
-      use Fox_wxml    !use FoX wxml library
-      use FoX_common   ! use FoX common library mainly use string function
+      use Fox_wxml
+      use FoX_common, only : str
 
-      type(xmlf_t) :: xf !! define xf as xmlf_t data type  if more than one xml file, it needs more varaibles
-      type(color_t) :: myCI(:) 
+      type(xmlf_t),     intent(inout)        :: xf 
+      real(dp),         intent(in)           :: longitude(:)
+      real(dp),         intent(in)           :: latitude(:)
+      real(dp),         intent(in)           :: values(:,:)
+      type(color_t),    intent(in)           :: myCI(:) 
+      real(dp),         intent(in), optional :: mask ! usually represent no data
+      logical,          intent(in), optional :: outline
+      character(len=*), intent(in), optional :: time
+      real(dp),         intent(in), optional :: vizvalues(:)
+      character(len=*), intent(in), optional :: dataname
 
-      integer  :: i, j,k,x,y
+      integer :: i, j, k, x, y
       integer :: nx, ny, nnx, nny  ! numbers at X(long), numbers at Y(Lat)
 
-      real(dp), dimension(:) :: longitude, latitude ! decalure x and y as allocatable
-      real(dp), dimension(:,:) :: values ! decalare values as a matrix
-
       type(color_t), allocatable :: valuehex(:,:)
-
-      real(dp), intent(in), optional :: mask !usually represent no data
-      logical, intent(in), optional :: outline
-
 
       integer,dimension(4) :: xp=(/0,1,1,0/)  ! id for coordintes
       integer,dimension(4) :: yp=(/0,0,1,1/)
 
       character(LEN=8) :: stylecolor, colorhextmp
 
-      character(15) :: lonchar,latchar,elchar
+      character(15) :: lonchar, latchar, elchar
       character(50) :: coords
-      double precision :: valueres
-
-      real(dp), intent(in), optional :: vizvalues(:)
-
-      character(len=*), intent(in), optional :: time, dataname
+      real(dp) :: valueres
 
 !      if (present(valuescale)) then
 !      values=valuescale*values
@@ -1052,40 +1049,37 @@ longitude, latitude, values, &
   end subroutine kmlCreateCells3_dp
 
   subroutine kmlcreateCells3_sp(xf,longitude,latitude,values,myCI,mask,outline,time,vizvalues,dataname)
-     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-     ! this subroutine is going to read X, Y ,Z, stylecolor
-     ! each XYZ is a vector, this is used for testing glimmer or netcdf situation 01302007 GT
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! this subroutine is going to read X, Y ,Z, stylecolor
+      ! each XYZ is a vector, this is used for testing glimmer or netcdf situation 01302007 GT
 
-      use Fox_wxml    !use FoX wxml library
-      use FoX_common   ! use FoX common library mainly use string function
+      use Fox_wxml
+      use FoX_common, only : str
 
-      type(xmlf_t) :: xf !! define xf as xmlf_t data type  if more than one xml file, it needs more varaibles
-      type(color_t) :: myCI(:) 
+      type(xmlf_t),     intent(inout)        :: xf 
+      real(sp),         intent(in)           :: longitude(:)
+      real(sp),         intent(in)           :: latitude(:)
+      real(sp),         intent(in)           :: values(:,:)
+      type(color_t),    intent(in)           :: myCI(:) 
+      real(sp),         intent(in), optional :: mask ! usually represent no data
+      logical,          intent(in), optional :: outline
+      character(len=*), intent(in), optional :: time
+      real(sp),         intent(in), optional :: vizvalues(:)
+      character(len=*), intent(in), optional :: dataname
 
-      integer  :: i, j,k,x,y
+      integer :: i, j, k, x, y
       integer :: nx, ny, nnx, nny  ! numbers at X(long), numbers at Y(Lat)
 
-      real(sp), dimension(:) :: longitude, latitude ! decalure x and y as allocatable
-      real(sp), dimension(:,:) :: values ! decalare values as a matrix
-
       type(color_t), allocatable :: valuehex(:,:)
-
-      real(sp), intent(in), optional :: mask !usually represent no data
-      logical, intent(in), optional :: outline
-
 
       integer,dimension(4) :: xp=(/0,1,1,0/)  ! id for coordintes
       integer,dimension(4) :: yp=(/0,0,1,1/)
 
       character(LEN=8) :: stylecolor, colorhextmp
 
-      character(15) :: lonchar,latchar,elchar
+      character(15) :: lonchar, latchar, elchar
       character(50) :: coords
-      double precision :: valueres
-
-      real(sp), intent(in), optional :: vizvalues(:)
-
-      character(len=*), intent(in), optional :: time, dataname
+      real(sp) :: valueres
 
 !      if (present(valuescale)) then
 !      values=valuescale*values
