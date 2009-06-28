@@ -54,7 +54,7 @@ module FoX_wkml
   public :: kmlCreateCells
 
 ! add by GT 10/03/2008
-  public :: kmlCreateCells3
+!!  public :: kmlCreateCells3
 
 ! add chart function 22042008 (need to remove later)
   public :: kmlAddChart
