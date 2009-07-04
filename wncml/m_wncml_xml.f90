@@ -10,7 +10,7 @@ module m_wncml_xml
   implicit none
 
   character(len=54), parameter :: NAMESPACE = 'http://www.unidata.ucar.edu/namespaces/netcdf/ncml-2.2'
-  character(len=4),  parameter :: PREFIX    = 'ncml:'
+  character(len=5),  parameter :: PREFIX    = 'ncml:'
 
 contains
 
@@ -27,7 +27,9 @@ contains
     ! FIXME - probably should search around inside FoX's namespace dicts 
     !         to see if the namespace is already declared, and if it is
     !         then use this. 
-    call xml_DeclareNamespace(xf, prefix=PREFIX, &
+    ! For convence we have a ':' in the prefix above, chop it off
+    ! for any namespace aware calls (for wxml this is the only one).
+    call xml_DeclareNamespace(xf, prefix=PREFIX(1:4), &
       & nsURI=NAMESPACE)
 
     call xml_NewElement(xf, name=PREFIX//'netcdf')
