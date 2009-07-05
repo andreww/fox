@@ -14,7 +14,7 @@ install: objsdir $(BUILD_TARGETS)
 	$(INSTALL) -m 644 objs/finclude/* $(install_prefix)/finclude
 	$(INSTALL) FoX-config $(install_prefix)/bin
 #
-examples_build:
+examples_build: $(BUILD_TARGETS)
 	if test -d examples; then (cd examples; $(MAKE) VPATH=$(VPATH)/examples) fi
 #
 #---------------------------
@@ -65,7 +65,7 @@ common_lib: objsdir fsys_lib utils_lib
 	(cd common; $(MAKE) VPATH=$(VPATH)/common)
 common_lib_clean:
 	if test -d common; then (cd common; $(MAKE) VPATH=$(VPATH)/common clean) fi
-common_lib_check:
+common_lib_check: utils_lib_check
 	(cd common; $(MAKE) VPATH=$(VPATH)/common check)
 	touch common_lib_check
 #
@@ -73,6 +73,9 @@ utils_lib: objsdir fsys_lib
 	(cd utils; $(MAKE) VPATH=$(VPATH)/utils)
 utils_lib_clean:
 	if test -d utils; then (cd utils; $(MAKE) VPATH=$(VPATH)/utils clean) fi
+utils_lib_check:
+	(cd utils; $(MAKE) VPATH=$(VPATH)/utils check)
+	touch utils_lib_check
 #
 fsys_lib: objsdir
 	(cd fsys; $(MAKE) VPATH=$(VPATH)/fsys)
@@ -94,7 +97,12 @@ DoX:
 #
 cutdown:
 	rm -rf .gitignore DoX/ config/aclocal.m4 config/autom4te.cache config/configure.ac config/m4/ config/makefile examples/ m4/ */test/ */*.m4 Changelog RELEASE release.sh
-	sed -e /m4/d -i */makefile
+	rm -rf cmake/
+	rm -rf CMakeLists.txt */CMakeLists.txt
+	for i in */makefile ; \
+	do sed -e /m4/d $$i'' > $$i''.tmp ; \
+	mv $$i''.tmp $$i'' ; \
+	done
 
 cutdown-wxml: cutdown
 	rm -rf wcml/ sax/ dom/

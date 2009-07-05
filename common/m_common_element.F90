@@ -12,7 +12,7 @@ module m_common_element
   use m_common_content_model, only: content_particle_t, newCP, destroyCPtree, &
     OP_MIXED, OP_CHOICE, OP_SEQ, OP_NAME, &
     REP_QUESTION_MARK, REP_ASTERISK, &
-    transformCPPlus, dumpCPtree
+    transformCPPlus ! , dumpCPtree ! For debugging - see below.
   use m_common_error, only: error_stack, add_error, in_error
   use m_common_namecheck, only: checkName, checkNames, checkNCName, &
     checkNCNames, checkQName, checkNmtoken, checkNmtokens
@@ -720,7 +720,9 @@ contains
       element%model => vs_str_alloc(trim(strip_spaces(contents)))
       element%cp => top
       element%internal = internal
-      call dumpCPtree(top)
+! For debugging it may be useful to dump the result here...
+! Also need to use the subroutine.
+!      call dumpCPtree(top)
     else
       if (associated(top)) call destroyCPtree(top)
     endif

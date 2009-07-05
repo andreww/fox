@@ -147,11 +147,7 @@ So, a simple subroutine to receive a startElement event would look like:
 
        print*, name
       
-<<<<<<< HEAD:DoX/FoX_sax.md
-       do i = 1, len(attributes)
-=======
        do i = 1, getLength(attributes)
->>>>>>> Implement isSpecified and isDeclared and associated apparatus for sax dictionaries:DoX/FoX_sax.md
           print*, getQName(attributes, i), '=', getValue(attributes, i)
        enddo
 

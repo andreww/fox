@@ -36,9 +36,9 @@ program test_baseURI
   u3 => parseURI("../../../../../tow/devel/FoX/")
   u => rebaseURI(base, u3)
   call check
+  call destroyURI(u3)
 
-  u => parseURI("")
-  call check
+  call destroyURI(base)
 
   contains
     subroutine check
