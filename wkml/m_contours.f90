@@ -972,6 +972,10 @@ contains
 
     type(contourLines) :: cp
 
+    logical jump_to ! To avoid the assigned goto deleted from 
+                    ! Fortran 95 - if .false. goto 100
+                    !              if .true. goto 280...
+
     EQUIVALENCE (L2(1),IMAX), (L2(2),JMAX), (L2(3),IMIN), (L2(4),JMIN)
     EQUIVALENCE (IJ(1),I), (IJ(2),J)
     EQUIVALENCE (XY(1),X), (XY(2),Y)
@@ -1047,7 +1051,8 @@ contains
     II = I + I1(L)
     JJ = J + I1(3-L)
     IF (Z(II,JJ).GT.DMAX) GO TO 130
-    ASSIGN 100 TO JUMP
+    ! ASSIGN 100 TO JUMP
+    jump_to = .false.
     !     THE NEXT 15 STATEMENTS (OR SO) DETECT BOUNDARIES.
 60  IX = 1
     IF (IJ(3-L).EQ.1) GO TO 80
@@ -1061,9 +1066,20 @@ contains
 80  II = I + I1(3-L)
     JJ = J + I1(L)
     IF (Z(II,JJ).GT.DMAX) GO TO 90
-    IF (Z(I+1,J+1).LT.DMAX) GO TO JUMP, (100, 280)
+    IF (Z(I+1,J+1).LT.DMAX) then ! GO TO JUMP, (100, 280)
+      if (jump_to) then
+        go to 280
+      else 
+        go to 100
+      endif
+    endif
 90  IX = IX + 2
-    GO TO JUMP, (100, 280)
+    !GO TO JUMP, (100, 280)
+    if (jump_to) then
+      go to 280
+    else 
+      go to 100
+    endif
 100 IF (IX.EQ.3) GO TO 130
     IF (IX+IBKEY.EQ.0) GO TO 130
     !     NOW DETERMINE WHETHER THE LINE SEGMENT IS CROSSED BY THE CONTOUR.
@@ -1176,7 +1192,8 @@ contains
     !
 260 L = KS
     IFLAG = 1
-    ASSIGN 280 TO JUMP
+    ! ASSIGN 280 TO JUMP
+    jump_to = .true.
     IF (KS.LT.3) GO TO 270
     I = I + I3(KS)
     J = J + I3(KS+2)
