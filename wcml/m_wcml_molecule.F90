@@ -146,7 +146,7 @@ contains
     call cmlAddAtoms(xf, elements, atomRefs, coords, occupancies, atomIds, style, fmt)
     call cmlEndMolecule(xf)
 
-#endif DUMMYLIB
+#endif
 
   end subroutine cmlAddMoleculesp
 
@@ -784,7 +784,7 @@ contains
     call cmlAddAtoms(xf, elements, atomRefs, coords, occupancies, atomIds, style, fmt)
     call cmlEndMolecule(xf)
 
-#endif DUMMYLIB
+#endif
 
   end subroutine cmlAddMoleculedp
 

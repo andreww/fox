@@ -71,7 +71,7 @@ TOHWM4_moleculeargslist)
     call cmlAddAtoms(xf, elements, atomRefs, coords, occupancies, atomIds, style, fmt)
     call cmlEndMolecule(xf)
 
-#endif DUMMYLIB
+#endif
 
   end subroutine cmlAddMolecule$1
 
