@@ -7,7 +7,7 @@ program test
   type(xmlf_t) :: myfile
 
   call kmlBeginFile(myfile, "test.xml", -1)
-  call kmlCreatePoints(myfile, 1.0, 1.0, color="red")
+  call kmlCreatePoints(myfile, 1.0, 1.0, colorname="red")
   call kmlFinishFile(myfile)
 
 end program test
