@@ -9,7 +9,7 @@ program test
 
   call xml_OpenFile(filename, xf)
   call xml_NewElement(xf, "root")
-  call xml_AddCharacters(xf, (/"some","characters"/))
+  call xml_AddCharacters(xf, (/"some","char"/))
   call xml_Close(xf)
 
 end program test
