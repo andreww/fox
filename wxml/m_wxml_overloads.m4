@@ -49,8 +49,10 @@ ifelse(`$2', `Array', `, ws_significant=.false.')`'dnl
 ifelse(`$2', `Matrix', `, ws_significant=.false.'))
     else
   ')dnl
+ifelse(substr($3,0,5), `Cmplx', `    ! Add empty optional fmt arg to str to avoid PGI bug: 
+  ')dnl
     call xml_Add$1(xf=xf, chars=str(chars`'dnl
-ifelse(`$2$3', `ScalarCh', `', `$3', `Ch', `, delimiter'))`'dnl
+ifelse(`$2$3', `ScalarCh', `', `$3', `Ch', `, delimiter', substr($3,0,5), `Cmplx', `, ""'))`'dnl
 ifelse(`$2', `Array', `, ws_significant=.false.')`'dnl
 ifelse(`$2', `Matrix', `, ws_significant=.false.')`'dnl
 )
@@ -100,8 +102,10 @@ ifelse(`$2', `Array', `, ws_significant=.false.')`'dnl
 ifelse(`$2', `Matrix', `, ws_significant=.false.'))
     else
   ')dnl
+ifelse(substr($3,0,5), `Cmplx', `    ! Add empty optional fmt arg to str to avoid PGI bug: 
+  ')dnl
     call xml_Add$1(xf=xf, name=name, value=str(value`'dnl
-ifelse(`$2$3', `ScalarCh', `', `$3', `Ch', `, delimiter'))`'dnl
+ifelse(`$2$3', `ScalarCh', `', `$3', `Ch', `, delimiter', substr($3,0,5), `Cmplx', `, ""'))`'dnl
 ifelse(`$2', `Array', `, ws_significant=.false.')`'dnl
 ifelse(`$2', `Matrix', `, ws_significant=.false.'))
 dnl
