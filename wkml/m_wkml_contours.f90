@@ -270,7 +270,7 @@ contains
         if (associated(cp%zmax).and.i==size(cp%contours)) then
           colorhex="00000000"
         elseif (present(colormap)) then
-          colorhex = kmlGetColorHex(colormap(i-1))
+          colorhex = kmlGetColorHex(colormap(i))
         else
           colornum = i*255/(size(cp%contours)+1)
           colorhex = "c0"//str(255-colornum, "x2")//"ff"//str(colornum, "x2")
