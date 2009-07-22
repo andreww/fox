@@ -52,6 +52,7 @@ Out of the above workshops, some [tutorial material](http://www.uszla.me.uk/FoX/
 
 * [FoX_wxml](|FoX_wxml|)
 * [FoX_wcml](|FoX_wcml|)
+* [FoX_wkml](|FoX_wkml|)
 
 ### INPUT interface
 

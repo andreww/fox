@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>FoX_wkml</title>
+  <link rel="stylesheet" type="text/css" href="DoX.css"/>
+</head>
+<body>
+  <div class="DoX">
+<h1>WKML</h1>
+
+<p>WKML is a library for outputting <a href="http://code.google.com/apis/kml/documentation/">KML</a> data. It wraps all the necessary XML calls, such that you should never need to touch any <a href="FoX_wxml.html">WXML</a> calls when outputting KML.</p>
+
+<p>The available functions and their intended use are listed below.</p>
+
+<p>This section of the manual will detail the available KML output subroutines.</p>
+
+<h2>Use of WCML</h2>
+
+<p>wkml subroutines can be accessed from within a module or subroutine by inserting</p>
+
+<pre><code> use FoX_wkml
+</code></pre>
+
+<p>at the start. This will import all of the subroutines described below, plus the derived type <code>xmlf_t</code> needed to manipulate a CML file.</p>
+
+<p><em>No</em> other entities will be imported; public/private Fortran namespaces are very carefully controlled within the library.</p>
+
+<h3>Conventions used below.</h3>
+
+<ul>
+<li>Function names are in <code>monospace</code></li>
+<li>argument names are in <strong>bold</strong></li>
+<li>optional argument names are in (<strong>parenthesized bold</strong>)</li>
+<li>argument types are in <em>italic</em> and may consist of:</li>
+<li><em>string</em>: string of arbitrary (unless otherwise specified) length</li>
+<li><em>integer</em>: default integer</li>
+<li><em>real(sp)</em>: single precision real number</li>
+<li><em>real(dp)</em>: double precision real number</li>
+<li><em>logical</em>: default logical </li>
+<li><p><em>real</em>: either of <em>real(sp)</em> or <em>real(dp)</em></p></li>
+<li><p><em>scalar</em>: single item</p></li>
+<li><em>array</em>: one-dimensional array of items</li>
+<li><em>matrix</em>: two-dimensional array of items</li>
+<li><em>anydim</em>: any of <em>scalar</em>, <em>array</em>, <em>matrix</em></li>
+</ul>
+
+<p>All functions take as their first argument an XML file object, whose keyword is always <code>xf</code>. This file object is initialized by a <code>kmlBeginFile</code> function.</p>
+
+<p>It is <em>highly</em> recommended that subroutines be called with keywords specified rather than relying on the implicit ordering of arguments. This is robust against changes in the library calling convention; and also stepsides a significant cause of errors when using subroutines with large numbers of arguments.</p>
+
+<h2>Functions for manipulating the KML file:</h2>
+
+<ul>
+<li><code>kmlBeginFile</code> <br />
+<strong>filename</strong>: <em>string</em> <em>scalar</em>: Filename to be opened. <br />
+<strong>unit</strong>: <em>integer</em> <em>scalar</em>: what unit number should the file be opened on? If you don't
+care, you may specify <code>-1</code> as the unit number, in which case wcml will make a guess <br />
+(<strong>replace</strong>): <em>logical</em> <em>scalar</em>: should the file be replaced if it already exists? <em>default: yes</em>
+(<strong>docName</strong>): <em>string</em> <em>scalar</em>: an optional name for the outermost document element. If absent, WKML output will be used</li>
+</ul>
+
+<p>This takes care of all calls to open a KML output file.</p>
+
+<ul>
+<li><code>kmlFinishFile</code></li>
+</ul>
+
+<p>This takes care of all calls to close an open KML output file, once you have finished with it. It is compulsory to call this - if your program finished without calling this, then your KML file will be invalid.</p>
+</div>
+</body>
+</html>
