@@ -313,7 +313,7 @@ contains
     x => l%x; y=> l%y
     i = 1
     shrink = 1
-    print*, "STARTING LENGTH ", size(x)
+    ! print*, "STARTING LENGTH ", size(x)
     do while (.false.)!(shrink<size(x)+3.and.size(x)>2)
       ix1 = i
       ix2 = mod(i, size(x))+1
@@ -331,7 +331,7 @@ contains
         if (i>size(x)) i = 1
         shrink = shrink + 1
       endif
-      print*, shrink, size(x)
+      ! print*, shrink, size(x)
       if (shrink==1) then
         !print*, "SHRINKING"
         tempx => x
@@ -357,7 +357,7 @@ contains
         deallocate(tempy)
       endif
     enddo
-    print*, "ENDING LENGTH ", size(x)
+    ! print*, "ENDING LENGTH ", size(x)
     ! Stupid KML requires last & first coordinate the same, so restore that:
     tempx => x
     tempy => y
@@ -2145,7 +2145,7 @@ contains
           print*, 'GCONTR INTERNAL ERROR: POLYGON CALCULATING ERROR!!! at ', i, j
           stop
         endif
-        print*, "AREA", i, j, cp%polys(i)%list(j)%area
+        ! print*, "AREA", i, j, cp%polys(i)%list(j)%area
         if (cp%polys(i)%list(j)%area==0.0) cycle
         call addPolygonToPolygonList(cp, i, j, o%polys(ii))
       enddo
