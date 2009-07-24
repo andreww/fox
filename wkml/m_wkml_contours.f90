@@ -22,6 +22,7 @@ module m_wkml_contours
   interface kmlCreateContours
     module procedure kmlCreateContours_sp
     module procedure kmlCreateContours_longlat_sp
+    module procedure kmlCreateContours_longlat2_sp
 !    module procedure kmlCreateContours_dp
 !    module procedure kmlCreateContours_longlat_dp
   end interface kmlCreateContours
