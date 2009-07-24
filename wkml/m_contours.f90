@@ -643,10 +643,10 @@ contains
     call gcontr(z, contour_values_, o, ignoreval=ignore_gt)
 
     do i = 1, size(z,1)
-      x(i) = (i-1)*(e-w)/(size(z,1)-1)
+      x(i) = w + (i-1)*(e-w)/(size(z,1)-1)
     enddo
     do i = 1, size(z,2)
-      y(i) = (i-1)*(n-s)/(size(z,2)-1)
+      y(i) = n - (i-1)*(n-s)/(size(z,2)-1)
     enddo
 
     call scale_contours_simple(o, x, y)
