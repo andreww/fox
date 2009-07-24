@@ -9,4 +9,5 @@ check: clean
 	./run_tests.sh
 
 clean:
-	rm -f *.$(OBJEXT) *.exe
+	rm -f *.$(MOD_EXT) *.$(OBJEXT) *.exe 
+	rm -f test_kmlContours_*_real.*
