@@ -26,6 +26,9 @@ module FoX_wkml
 ! feature function
   public :: kmlCreatePoints
   public :: kmlCreateLine
+  public :: kmlStartRegion
+  public :: kmlEndRegion
+  public :: kmlAddInnerBoundary
 
   public :: kmlCreateLine_1d_dp 
   public :: kmlCreateLine_seg_sh_dp
