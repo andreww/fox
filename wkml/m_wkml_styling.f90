@@ -390,7 +390,7 @@ contains
     needStyle = (xmlf_openTag(xf)/='Style')
 
     call mostOfLineStyle(xf, color, colorhex, colorname, colormode, id)
-    call kmlAddWidth(xf, width)
+    if (present(width)) call kmlAddWidth(xf, width)
     call kmlCloseLineStyle(xf)
     if (needStyle) call kmlCloseStyle(xf)
 
