@@ -166,14 +166,14 @@ contains
     integer, intent(in) :: i
     type(color_t) :: c
 
-    integer :: i_
-   ! wha tis mean i_ 
-    i_ = i
-    if (i>size(colorArray)) i_=1
+    if (i>size(colorArray).or.(i<1)) then
+      print*, "Invalid index in kmlGetColor (by index)"
+      stop
+    endif
     
-    ! waht is 'x2'
-    c%hex = str(defaultAlpha, 'x2')//str(colorArray(i_)%b, 'x2') &
-      //str(colorArray(i_)%g, 'x2')//str(colorArray(i_)%r, 'x2')
+    ! Note - 'x2' argument is the format string
+    c%hex = str(defaultAlpha, 'x2')//str(colorArray(i)%b, 'x2') &
+      //str(colorArray(i)%g, 'x2')//str(colorArray(i)%r, 'x2')
 
   end function kmlGetColor_index
 
@@ -182,17 +182,21 @@ contains
     type(color_t) :: c
 
     integer :: i
+    logical :: found
 
+    found = .false.
     do i = 1, size(colorArray)
       if (trim(colorArray(i)%name)==name) then
         c%hex = str(defaultAlpha, 'x2')//str(colorArray(i)%b, 'x2') &
           //str(colorArray(i)%g, 'x2')//str(colorArray(i)%r, 'x2')
-        return
+        found = .true.
       endif
     enddo
 
-    c%hex = str(defaultAlpha, 'x2')//str(colorArray(1)%b, 'x2') &
-      //str(colorArray(1)%g, 'x2')//str(colorArray(1)%r, 'x2')
+    if (.not.found) then
+      print*, "Invalid name in kmlGetColor (by name)"
+      stop
+    endif
 
   end function kmlGetColor_byName
 
