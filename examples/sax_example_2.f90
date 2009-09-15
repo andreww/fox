@@ -1,4 +1,4 @@
-module m_handlers
+module m_handlers_two
 
   use FoX_common
   use FoX_sax
@@ -103,13 +103,13 @@ contains
     endif
   end subroutine startElement_handler
 
-end module m_handlers
+end module m_handlers_two
 
 program sax_example
 
   use FoX_sax
 
-  use m_handlers ! above
+  use m_handlers_two ! above
 
   implicit none
 

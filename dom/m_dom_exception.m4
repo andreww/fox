@@ -3,6 +3,7 @@ include(`m_dom_treewalk.m4')`'dnl
 define(`TOHW_m_dom_throw_error',`dnl
 dnl 1 is numerical code
 dnl 2 is list of things to deallocate
+dnl 3 is an optional thing to do before the return
 if (getFoX_checks().or.$1<200) then
   call throw_exception($1, "m4f_thisfunc", ex)
   if (present(ex)) then
@@ -11,6 +12,8 @@ ifelse($2, `', `',
      m4_foreach(`x', `$2', `
   if (associated(x)) deallocate(x)
 '))`'dnl
+ifelse($3, `', `', `        $3
+')`'dnl
        return
     endif
   endif

@@ -24,7 +24,9 @@ ifelse(`$1', `Ch', `
 dnl
 
     if (.not.associated(arg)) then
-      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+ifelse(`$1', `Ch', 
+`      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL, `', `data = ""')',
+`      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)')
     endif
 ifelse(`$1', `Ch', `dnl
     if (present(ex)) then
@@ -60,9 +62,13 @@ ifelse(dnl
     integer, intent(out), optional :: num, iostat
 dnl
     if (.not.associated(arg)) then
-      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+ifelse(`$1', `Ch', 
+`      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL, `', `data = ""')',
+`      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)')
     elseif (getNodeType(arg)/=ELEMENT_NODE) then
-      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
+ifelse(`$1', `Ch', 
+`      TOHW_m_dom_throw_error(FoX_INVALID_NODE, `', `data = ""')',
+`      TOHW_m_dom_throw_error(FoX_INVALID_NODE)')
     endif
 
 ifelse(`$1', `Ch', `dnl
@@ -99,9 +105,13 @@ ifelse(`$1',`Ch', `
     integer, intent(out), optional :: num, iostat
 dnl
     if (.not.associated(arg)) then
-      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)
+ifelse(`$1', `Ch', 
+`      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL, `', `data = ""')',
+`      TOHW_m_dom_throw_error(FoX_NODE_IS_NULL)')
     elseif (getNodeType(arg)/=ELEMENT_NODE) then
-      TOHW_m_dom_throw_error(FoX_INVALID_NODE)
+ifelse(`$1', `Ch', 
+`      TOHW_m_dom_throw_error(FoX_INVALID_NODE, `', `data = ""')',
+`      TOHW_m_dom_throw_error(FoX_INVALID_NODE)')
     endif
 
 ifelse(`$1', `Ch', `dnl
