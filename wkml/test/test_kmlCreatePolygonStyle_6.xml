@@ -4,7 +4,7 @@
     <name>WKML output</name>
     <Style id="myid">
       <PolyStyle>
-        <color>F90000FF</color>
+        <color>f90000ff</color>
       </PolyStyle>
     </Style>
   </Document>
