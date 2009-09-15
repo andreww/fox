@@ -81,9 +81,15 @@ wkml_lib: objsdir utils_lib wxml_lib
 	(cd wkml; $(MAKE) VPATH=$(VPATH)/wkml)
 wkml_lib_clean:
 	if test -d wkml; then (cd wkml; $(MAKE) VPATH=$(VPATH)/wkml clean) fi
-wkml_lib_check: wxml_lib_check
-	(cd wkml; $(MAKE) VPATH=$(VPATH)/wkml check)
-	touch wkml_lib_check
+wkml_lib_check: wkml_lib
+	if test -d examples && ! grep DUMMYLIB arch.make > /dev/null ; \
+	then \
+	    rm -f wkml_lib_check ; \
+	    rm -f wkml_lib_check.out ; \
+	    (cd wkml; $(MAKE) VPATH=$(VPATH)/wkml check) ; \
+	    touch wkml_lib_check ; \
+	    touch wkml_lib_check.out ; \
+	fi
 
 
 common_lib: objsdir fsys_lib utils_lib
@@ -148,7 +154,7 @@ cutdown-wcml: cutdown
 	rm -rf sax/ dom/
 
 cutdown-wkml: cutdown
-	rm -rf sax/ dom/
+	rm -rf sax/ dom/ wcml/
 
 cutdown-sax: cutdown
 	rm -rf wxml/ wcml/ wkml/ dom/

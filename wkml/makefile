@@ -27,7 +27,7 @@ install: $(OBJFILES)
            $(CP) $$i $(MOD_DIR); done
 #
 check:
-	(cd test; make) | tee -a ../check.out
+	(cd test; make) | tee -a ../wkml_lib_check.out
 
 #
 clean:
@@ -40,7 +40,7 @@ m_wkml_contours.o: m_contours.o m_wkml_color.o m_wkml_features.o
 m_wkml_contours.o: m_wkml_lowlevel.o m_wkml_styling.o
 m_wkml_core.o: m_wkml_color.o m_wkml_lowlevel.o m_wkml_styling.o
 m_wkml_coverage.o: m_wkml_color.o m_wkml_core.o m_wkml_lowlevel.o
-m_wkml_coverage.o: m_wkml_styling.o m_wkml_chart.o
+m_wkml_coverage.o: m_wkml_styling.o m_wkml_chart.o m_wkml_features.o
 m_wkml_features.o: m_wkml_color.o m_wkml_core.o m_wkml_lowlevel.o
 m_wkml_features.o: m_wkml_styling.o m_wkml_chart.o
 m_wkml_lowlevel.o: m_wkml_color.o
