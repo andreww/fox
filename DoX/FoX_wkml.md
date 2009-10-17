@@ -72,10 +72,19 @@ This takes care of all calls to close an open KML output file, once you have fin
 (**extrude**): *logical* *scalar*: If altitude is non-zero, should the point be connected to the ground?  
 (**altitudeMode**): *logical* *scalar*: If altitude is specified, is it relativeToGround or absolute?  
 (**name**): *string* *scalar*: A name for the collection of points  
-(**color**): *string* *scalar*: A color name (see Colour Handling).  
+(**color**): *string* *scalar*: A color name (see Colours).  
 (**scale**): *real* *scalar*: Scaling size for the point icon.    
 (**description**): *string* *array*: A description for each point.  
 (**description_numbers**): *real* *array*: Numeric description for each point.
 (**styleURL**): *string* *scalar*: Location of style specification (see Style Handling)  
 
 A single function, kmlCreatePoints accepts various combinations of arguments, and will generate a series of individual points to be visualized in Google Earth. In fact, the KML produced will consist of a Folder, containing Placemarks, one for each point. The list of points may be provided as specified above.
+
+## Colours
+
+KML natively handles all colours as 32-bit values, expressed as 8-digit 
+hexadecimal numbers in ABGR (alpha-blue-green-red) channel order. However, 
+this is not very friendly. WKML provides a nicer interface to this, and all 
+WKML functions which accept colour arguments will accept them in three ways:
+
+### 
