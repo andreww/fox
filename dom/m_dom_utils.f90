@@ -178,8 +178,15 @@ endif
     ! (except for namespace Normalization) but rather just
     ! pay attention to the DOMConfig values
 
+    ! NOTE: We set pretty_print on the basis of the FoX specific 
+    !       "invalid-pretty-print" config option. The DOM-L3-LS
+    !       option "format-pretty-print is always false and is 
+    !       not settable by the user - this is because WXML 
+    !       cannot preserve validity conditions that may be set
+    !       by a DTD. If WXML ever learns to do this we will need
+    !       to pass the value of "format-pretty-print" through.
     call xml_OpenFile(name, xf, iostat=iostat, unit=-1, &
-      pretty_print=getParameter(getDomConfig(doc), "format-pretty-print"), &
+      pretty_print=getParameter(getDomConfig(doc), "invalid-pretty-print"), &
       canonical=getParameter(getDomConfig(doc), "canonical-form"), &
       warning=.false., addDecl=.false.)
     if (iostat/=0) then
