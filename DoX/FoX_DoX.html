@@ -183,7 +183,7 @@ places.  If you move the FoX directory later on, you will need to re-run configu
 
 <p>To run them all, simply run <code>make check</code> from the top-level directory. This will run the individual testsuites, and collate their results.</p>
 
-<p>If any failures occur (unrelated to known compiler issues, see the <a href="http://uszla.me.uk/space/software/FoX/compat/">up-to-date list</a>), please send a message to the mailing list (<a href="&#109;a&#105;&#x6C;&#116;&#111;:&#x46;o&#x58;&#64;&#x6C;i&#115;&#x74;&#115;&#x2E;&#117;&#115;&#x7A;&#x6C;&#97;.&#x6D;&#x65;&#x2E;&#x75;k">&#x46;o&#x58;&#64;&#x6C;i&#115;&#x74;&#115;&#x2E;&#117;&#115;&#x7A;&#x6C;&#97;.&#x6D;&#x65;&#x2E;&#x75;k</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
+<p>If any failures occur (unrelated to known compiler issues, see the <a href="http://uszla.me.uk/space/software/FoX/compat/">up-to-date list</a>), please send a message to the mailing list (<a href="&#109;&#x61;&#105;&#x6C;&#116;&#x6F;:&#x46;&#x6F;&#88;&#64;&#x6C;&#x69;&#115;&#x74;&#115;&#x2E;&#117;&#x73;&#x7A;&#x6C;&#x61;&#46;&#x6D;&#x65;&#x2E;&#117;&#107;">&#x46;&#x6F;&#88;&#64;&#x6C;&#x69;&#115;&#x74;&#115;&#x2E;&#117;&#x73;&#x7A;&#x6C;&#x61;&#46;&#x6D;&#x65;&#x2E;&#117;&#107;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
 
 <p>The testsuites for the SAX and DOM libraries are very extensive, and are somewhat fragile, so are not distributed with FoX. Please contact the author for details.</p>
 
@@ -2964,13 +2964,38 @@ call destroy(config)
 <li><a href="http://www.w3.org/TR/2004/REC-DOM-Level-3-LS-20040407/load-save.html#LS-LSSerializer">DOM Core LSSerializer</a>  </li>
 </ul>
 
-<p>and are all implemented, with the exceptions of:</p>
+<p>and are all implemented, with the exceptions of: <code>error-handler</code>, <code>schema-location</code>, and <code>schema-type</code>. <br />
+In total there are 24 implemented configuration options (<code>schema-location</code> and <code>schema-type</code> are not
+implemented). The options known by FoX are as follows:</p>
 
 <ul>
-<li><code>error-handler</code>  </li>
-<li><code>schema-location</code></li>
-<li><code>schema-type</code>  </li>
+<li><code>canonical-form</code> default: false, can be set to true. See note below.</li>
+<li><code>cdata-sections</code> default: true, can be changed.</li>
+<li><code>check-character-normalization</code> default: false, cannot be changed.</li>
+<li><code>comments</code> default: true, can be changed.</li>
+<li><code>datatype-normalization</code> default: false, cannot be changed.</li>
+<li><code>element-content-whitespace</code> default: true, can be changed.</li>
+<li><code>entities</code> default: true, can be changed.</li>
+<li><code>error-handler</code> default: false, cannot be changed. This is a breach of the DOM specification.</li>
+<li><code>namespaces</code> default: true, can be changed.</li>
+<li><code>namespace-declarations</code> default: true, can be changed.</li>
+<li><code>normalize-characters</code> default: false, cannot be changed.</li>
+<li><code>split-cdata-sections</code> default: true, can be changed.</li>
+<li><code>validate</code> default: false, can be changed. See note below.</li>
+<li><code>validate-if-schema</code> default: false, can be changed.</li>
+<li><code>well-formed</code> default true, cannot be changed.</li>
+<li><code>charset-overrides-xml-encoding</code> default false, cannot be changed.</li>
+<li><code>disallow-doctype</code> default false, cannot be changed.</li>
+<li><code>ignore-unknown-character-denormalizations</code> default true, cannot be changed.</li>
+<li><code>resource-resolver</code> default false, cannot be changed.</li>
+<li><code>supported-media-types-only</code> default false, cannot be changed.</li>
+<li><code>discard-default-content</code> default: true, can be changed.</li>
+<li><code>format-pretty-print</code> default: false, cannot be changed.</li>
+<li><code>xml-declaration</code> default: true, can be changed.</li>
+<li><code>invalid-pretty-print</code> default: false, can be changed. This is a FoX specific extension which works like <code>format-pretty-print</code> but does not preseve the validity of the document.</li>
 </ul>
+
+<p>Setting <code>canonical-form</code> changes the value of <code>entities</code>, <code>cdata-sections</code>, <code>discard-default-content</code>, <code>invalid-pretty-print</code>, and <code>xml-declaration</code>to false and changes <code>namespaces</code>, <code>namespace-declarations</code>, and <code>element-content-whitespace</code> to true. Unsetting <code>canonical-form</code> causes these options to revert to the defalt settings. Changing the values of any of these options has the side effect of unsetting <code>canonical-form</code> (but does not cause the other options to be reset). Setting <code>validate</code> unsets <code>validate-if-schema</code> and vica versa.</p>
 
 <h2>DOM Miscellanea</h2>
 
@@ -3139,9 +3164,9 @@ Return the value of the fragment</p></li>
 <h1>Further information</h1>
 
 <p>FoX evolved from the initial codebase of <a href="http://lcdx00.wm.lc.ehu.es/ag/xml/">xmlf90</a>,
-which was written largely by Alberto Garcia &lt;<a href="&#x6D;&#x61;&#105;&#108;&#x74;&#x6F;:&#x61;&#x6C;&#98;&#101;&#x72;&#116;&#111;&#x67;&#64;&#x69;&#x63;&#109;a&#x62;&#46;&#x65;&#115;">&#x61;&#x6C;&#98;&#101;&#x72;&#116;&#111;&#x67;&#64;&#x69;&#x63;&#109;a&#x62;&#46;&#x65;&#115;</a>> and Jon Wakelin &lt;<a href="&#x6D;&#97;&#x69;&#x6C;&#116;&#111;:&#x6A;&#111;&#x6E;&#x2E;&#x77;&#97;&#x6B;&#101;&#108;&#105;&#x6E;&#64;&#x62;&#114;&#x69;s&#116;&#x6F;&#x6C;&#46;&#x61;&#x63;&#x2E;&#x75;&#x6B;">&#x6A;&#111;&#x6E;&#x2E;&#x77;&#97;&#x6B;&#101;&#108;&#105;&#x6E;&#64;&#x62;&#114;&#x69;s&#116;&#x6F;&#x6C;&#46;&#x61;&#x63;&#x2E;&#x75;&#x6B;</a>>.</p>
+which was written largely by Alberto Garcia &lt;<a href="&#109;&#97;&#105;l&#x74;&#111;:&#97;&#x6C;&#x62;&#101;&#x72;&#x74;&#111;&#103;&#64;&#x69;&#x63;&#109;&#97;&#x62;&#46;&#101;s">&#97;&#x6C;&#x62;&#101;&#x72;&#x74;&#111;&#103;&#64;&#x69;&#x63;&#109;&#97;&#x62;&#46;&#101;s</a>> and Jon Wakelin &lt;<a href="&#x6D;&#x61;&#x69;&#108;&#116;&#111;:&#x6A;&#x6F;&#x6E;&#x2E;w&#97;&#107;&#101;&#108;&#105;n&#64;&#x62;&#x72;&#105;&#x73;t&#x6F;&#108;&#x2E;&#97;&#x63;&#x2E;&#x75;&#107;">&#x6A;&#x6F;&#x6E;&#x2E;w&#97;&#107;&#101;&#108;&#105;n&#64;&#x62;&#x72;&#105;&#x73;t&#x6F;&#108;&#x2E;&#97;&#x63;&#x2E;&#x75;&#107;</a>>.</p>
 
-<p>FoX is the work of Toby White &lt;<a href="&#x6D;&#97;&#105;&#x6C;&#116;&#111;:&#x74;&#x6F;&#x77;&#64;&#117;&#x73;&#x7A;&#108;&#97;&#x2E;me&#46;&#117;&#x6B;">&#x74;&#x6F;&#x77;&#64;&#117;&#x73;&#x7A;&#108;&#97;&#x2E;me&#46;&#117;&#x6B;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
+<p>FoX is the work of Toby White &lt;<a href="&#109;&#x61;&#x69;&#x6C;&#116;&#x6F;:&#x74;&#111;&#x77;&#64;u&#115;&#122;&#x6C;&#x61;&#x2E;&#109;&#x65;.&#x75;&#x6B;">&#x74;&#111;&#x77;&#64;u&#115;&#122;&#x6C;&#x61;&#x2E;&#109;&#x65;.&#x75;&#x6B;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him.</p>
 
 <p>There is a FoX website at <a href="http://www.uszla.me.uk/FoX/">http://www.uszla.me.uk/FoX/</a>.</p>
 
