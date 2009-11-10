@@ -78,7 +78,9 @@ care, you may specify <code>-1</code> as the unit number, in which case wkml wil
 (<strong>extrude</strong>): <em>logical</em> <em>scalar</em>: If altitude is non-zero, should the point be connected to the ground? <br />
 (<strong>altitudeMode</strong>): <em>logical</em> <em>scalar</em>: If altitude is specified, is it relativeToGround or absolute? <br />
 (<strong>name</strong>): <em>string</em> <em>scalar</em>: A name for the collection of points <br />
-(<strong>color</strong>): <em>string</em> <em>scalar</em>: A color name (see Colours). <br />
+(<strong>color</strong>): <em>color_t</em>: Line colour as a kml color type (See Colours) <br />
+(<strong>colorname</strong>): <em>string</em> <em>scalar</em>: Line colour as a name (See Colours) <br />
+(<strong>colorhex</strong>): <em>string(len=8)</em> <em>scalar</em>: Line colour in hex (See Colours) <br />
 (<strong>scale</strong>): <em>real</em> <em>scalar</em>: Scaling size for the point icon. <br />
 (<strong>description</strong>): <em>string</em> <em>array</em>: A description for each point. <br />
 (<strong>description_numbers</strong>): <em>real</em> <em>array</em>: Numeric description for each point.
@@ -94,7 +96,35 @@ care, you may specify <code>-1</code> as the unit number, in which case wkml wil
 <strong>location</strong>: <em>real</em> <em>matrix</em>: rank-two 3xN array with the longitude of each point in the first row, the latitude in the second row, and the altitude in the third row. Longitude and latitude in degrees and altitude in metres.  </li>
 </ul>
 
-<p>A single function, kmlCreatePoints accepts various combinations of arguments, and will generate a series of individual points to be visualized in Google Earth. In fact, the KML produced will consist of a Folder, containing Placemarks, one for each point. The list of points may be provided as specified above.</p>
+<p>A single function, kmlCreatePoints accepts various combinations of arguments, and will generate a series of individual points to be visualized in Google Earth. In fact, the KML produced will consist of a Folder, containing Placemarks, one for each point. The list of points may be provided in any of the three ways specified above.</p>
+
+<ul>
+<li><code>kmlCreateLine</code> <br />
+<strong>fx</strong>: <em>xmlf_t</em>: An XML file object <br />
+(<strong>closed</strong>): <em>logicl</em> <em>scalar</em>: Should the last point be joined to the first point? <br />
+(<strong>extrude</strong>): <em>logical</em> <em>scalar</em>: If altitude is non-zero, should the point be connected to the ground? <br />
+(<strong>tessellate</strong>): <em>logical</em> <em>scalar</em>: If altitude is not specified, should the line produced follow the altitude of the ground below it? <br />
+(<strong>altitudeMode</strong>): <em>logical</em> <em>scalar</em>: If altitude is specified, is it relativeToGround or absolute? <br />
+(<strong>name</strong>): <em>string</em> <em>scalar</em>: A name for the collection of points <br />
+(<strong>color</strong>): <em>color_t</em>: Line colour as a kml color type (See Colours) <br />
+(<strong>colorname</strong>): <em>string</em> <em>scalar</em>: Line colour as a name (See Colours) <br />
+(<strong>colorhex</strong>): <em>string(len=8)</em> <em>scalar</em>: Line colour in hex (See Colours) <br />
+(<strong>width</strong>): <em>integer</em> <em>scalar</em>: Width of the lines.
+(<strong>scale</strong>): <em>real</em> <em>scalar</em>: Scaling size for the point icon. <br />
+(<strong>description</strong>): <em>string</em> <em>array</em>: A description for each point. <br />
+(<strong>styleURL</strong>): <em>string</em> <em>scalar</em>: Location of style specification (see Style Handling) <br />
+<em>and:</em> <br />
+<strong>longitude</strong>: <em>real</em> <em>array</em>: longitude of each point in degrees <br />
+<strong>latitude</strong>: <em>real</em> <em>array</em>: latitude of each point in degrees <br />
+(<strong>altitude</strong>): <em>real</em> <em>array</em>: altitude of each point in metres <br />
+<em>or:</em> <br />
+<strong>location</strong>: <em>real</em> <em>matrix</em>: rank-two 2xN array with the longitude of each point in the first row, and the latitude in the second row. In degrees. <br />
+(<strong>altitude</strong>): <em>real</em> <em>array</em>: altitude of each point in metres <br />
+<em>or:</em> <br />
+<strong>location</strong>: <em>real</em> <em>matrix</em>: rank-two 3xN array with the longitude of each point in the first row, the latitude in the second row, and the altitude in the third row. Longitude and latitude in degrees and altitude in metres.  </li>
+</ul>
+
+<p>A single function, kmlCreateLine accepts various combinations of arguments, and will generate a series of individual points to be visualized as a (closed or open) path in Google Earth. In fact, the KML produced will consist of a LineString, or LinearRing, containing a list of coordinates. The list of points may be provided in any of the three ways specified above.</p>
 
 <h2>Colours</h2>
 
