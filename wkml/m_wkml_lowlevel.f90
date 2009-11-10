@@ -4,6 +4,7 @@ module m_wkml_lowlevel
   use fox_m_fsys_realtypes
   use FoX_wxml
   use FoX_common
+  use FoX_utils, only: URI, parseURI, expressURI, destroyURI
 
   implicit none
   private
@@ -416,8 +417,15 @@ contains
   subroutine kmlAddhref(xf, url)
     type(xmlf_t), intent(inout) :: xf
     character(len=*), intent(in) :: url
+    type(URI), pointer :: u
     call xml_NewElement(xf,'href')
-    call xml_AddCharacters(xf,url)
+    u => parseURI(url)
+    if (.not.associated(u)) then
+      print*, "Invalid URI"
+      stop
+    endif
+    call xml_AddCharacters(xf,expressURI(u))
+    call destroyURI(u)
     call xml_EndElement(xf,'href')
   end subroutine kmlAddhref
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
