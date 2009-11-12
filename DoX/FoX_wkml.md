@@ -107,6 +107,52 @@ A single function, kmlCreatePoints accepts various combinations of arguments, an
 
 A single function, kmlCreateLine accepts various combinations of arguments, and will generate a series of individual points to be visualized as a (closed or open) path in Google Earth. In fact, the KML produced will consist of a LineString, or LinearRing, containing a list of coordinates. The list of points may be provided in any of the three ways specified above.
 
+* `kmlStartRegion`  
+**fx**: *xmlf_t*: An XML file object  
+(**extrude**): *logical* *scalar*: If altitude is non-zero, should the point be connected to the ground?    
+(**tessellate**): *logical* *scalar*: If altitude is not specified, should the line produced follow the altitude of the ground below it?   
+(**altitudeMode**): *logical* *scalar*: If altitude is specified, is it relativeToGround or absolute?    
+(**name**): *string* *scalar*: A name for the region
+(**fillcolor**): *color_t*: Region colour as a kml color type (See Colours)  
+(**fillcolorname**): *string* *scalar*: Region  colour as a name (See Colours)  
+(**fillcolorhex**): *string(len=8)* *scalar*: Region colour in hex (See Colours)  
+(**linecolor**): *color_t*: Line colour as a kml color type (See Colours)  
+(**linecolorname**): *string* *scalar*: Line colour as a name (See Colours)  
+(**linecolorhex**): *string(len=8)* *scalar*: Line colour in hex (See Colours)  
+(**linewidth**): *integer* *scalar*: Width of the line.
+(**description**): *string* *scalar*: A description for the region.  
+(**styleURL**): *string* *scalar*: Location of style specification (see Style Handling)  
+*and:*  
+**longitude**: *real* *array*: longitude of each point in degrees  
+**latitude**: *real* *array*: latitude of each point in degrees  
+(**altitude**): *real* *array*: altitude of each point in metres  
+*or:*  
+**location**: *real* *matrix*: rank-two 2xN array with the longitude of each point in the first row, and the latitude in the second row. In degrees.  
+(**altitude**): *real* *array*: altitude of each point in metres  
+*or:*  
+**location**: *real* *matrix*: rank-two 3xN array with the longitude of each point in the first row, the latitude in the second row, and the altitude in the third row. Longitude and latitude in degrees and altitude in metres.  
+
+Creates a filled region with the outer boundary described by the list of points. May be followed by one or more calls to `kmlAddInnerBoundary` and these must be followed by a call to `kmlAddInnerBoundary`.
+
+* `kmlEndRegion`  
+**fx**: *xmlf_t*: An XML file object  
+
+Ends the specification of a region with or without inner boundaries.
+
+* `kmlAddInnerBoundary`  
+**fx**: *xmlf_t*: An XML file object  
+*and:*  
+**longitude**: *real* *array*: longitude of each point in degrees  
+**latitude**: *real* *array*: latitude of each point in degrees  
+(**altitude**): *real* *array*: altitude of each point in metres  
+*or:*  
+**location**: *real* *matrix*: rank-two 2xN array with the longitude of each point in the first row, and the latitude in the second row. In degrees.  
+(**altitude**): *real* *array*: altitude of each point in metres  
+*or:*  
+**location**: *real* *matrix*: rank-two 3xN array with the longitude of each point in the first row, the latitude in the second row, and the altitude in the third row. Longitude and latitude in degrees and altitude in metres.  
+
+Introduces an internal area that is to be excluded from the enclosing region.
+
 ## Colours
 
 KML natively handles all colours as 32-bit values, expressed as 8-digit 

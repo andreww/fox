@@ -126,6 +126,58 @@ care, you may specify <code>-1</code> as the unit number, in which case wkml wil
 
 <p>A single function, kmlCreateLine accepts various combinations of arguments, and will generate a series of individual points to be visualized as a (closed or open) path in Google Earth. In fact, the KML produced will consist of a LineString, or LinearRing, containing a list of coordinates. The list of points may be provided in any of the three ways specified above.</p>
 
+<ul>
+<li><code>kmlStartRegion</code> <br />
+<strong>fx</strong>: <em>xmlf_t</em>: An XML file object <br />
+(<strong>extrude</strong>): <em>logical</em> <em>scalar</em>: If altitude is non-zero, should the point be connected to the ground? <br />
+(<strong>tessellate</strong>): <em>logical</em> <em>scalar</em>: If altitude is not specified, should the line produced follow the altitude of the ground below it? <br />
+(<strong>altitudeMode</strong>): <em>logical</em> <em>scalar</em>: If altitude is specified, is it relativeToGround or absolute? <br />
+(<strong>name</strong>): <em>string</em> <em>scalar</em>: A name for the region
+(<strong>fillcolor</strong>): <em>color_t</em>: Region colour as a kml color type (See Colours) <br />
+(<strong>fillcolorname</strong>): <em>string</em> <em>scalar</em>: Region  colour as a name (See Colours) <br />
+(<strong>fillcolorhex</strong>): <em>string(len=8)</em> <em>scalar</em>: Region colour in hex (See Colours) <br />
+(<strong>linecolor</strong>): <em>color_t</em>: Line colour as a kml color type (See Colours) <br />
+(<strong>linecolorname</strong>): <em>string</em> <em>scalar</em>: Line colour as a name (See Colours) <br />
+(<strong>linecolorhex</strong>): <em>string(len=8)</em> <em>scalar</em>: Line colour in hex (See Colours) <br />
+(<strong>linewidth</strong>): <em>integer</em> <em>scalar</em>: Width of the line.
+(<strong>description</strong>): <em>string</em> <em>scalar</em>: A description for the region. <br />
+(<strong>styleURL</strong>): <em>string</em> <em>scalar</em>: Location of style specification (see Style Handling) <br />
+<em>and:</em> <br />
+<strong>longitude</strong>: <em>real</em> <em>array</em>: longitude of each point in degrees <br />
+<strong>latitude</strong>: <em>real</em> <em>array</em>: latitude of each point in degrees <br />
+(<strong>altitude</strong>): <em>real</em> <em>array</em>: altitude of each point in metres <br />
+<em>or:</em> <br />
+<strong>location</strong>: <em>real</em> <em>matrix</em>: rank-two 2xN array with the longitude of each point in the first row, and the latitude in the second row. In degrees. <br />
+(<strong>altitude</strong>): <em>real</em> <em>array</em>: altitude of each point in metres <br />
+<em>or:</em> <br />
+<strong>location</strong>: <em>real</em> <em>matrix</em>: rank-two 3xN array with the longitude of each point in the first row, the latitude in the second row, and the altitude in the third row. Longitude and latitude in degrees and altitude in metres.  </li>
+</ul>
+
+<p>Creates a filled region with the outer boundary described by the list of points. May be followed by one or more calls to <code>kmlAddInnerBoundary</code> and these must be followed by a call to <code>kmlAddInnerBoundary</code>.</p>
+
+<ul>
+<li><code>kmlEndRegion</code> <br />
+<strong>fx</strong>: <em>xmlf_t</em>: An XML file object  </li>
+</ul>
+
+<p>Ends the specification of a region with or without inner boundaries.</p>
+
+<ul>
+<li><code>kmlAddInnerBoundary</code> <br />
+<strong>fx</strong>: <em>xmlf_t</em>: An XML file object <br />
+<em>and:</em> <br />
+<strong>longitude</strong>: <em>real</em> <em>array</em>: longitude of each point in degrees <br />
+<strong>latitude</strong>: <em>real</em> <em>array</em>: latitude of each point in degrees <br />
+(<strong>altitude</strong>): <em>real</em> <em>array</em>: altitude of each point in metres <br />
+<em>or:</em> <br />
+<strong>location</strong>: <em>real</em> <em>matrix</em>: rank-two 2xN array with the longitude of each point in the first row, and the latitude in the second row. In degrees. <br />
+(<strong>altitude</strong>): <em>real</em> <em>array</em>: altitude of each point in metres <br />
+<em>or:</em> <br />
+<strong>location</strong>: <em>real</em> <em>matrix</em>: rank-two 3xN array with the longitude of each point in the first row, the latitude in the second row, and the altitude in the third row. Longitude and latitude in degrees and altitude in metres.  </li>
+</ul>
+
+<p>Introduces an internal area that is to be excluded from the enclosing region.</p>
+
 <h2>Colours</h2>
 
 <p>KML natively handles all colours as 32-bit values, expressed as 8-digit 
