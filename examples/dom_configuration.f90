@@ -32,7 +32,7 @@ program dom_configuration
   write (*,"(a)") '=========================================================================='
   ! Loop over all configuration options and report settability and default value.
   do i = 1, num_configs
-    write (*,"(i3, 6x, l, 9x, l, 6x, a)") i, & 
+    write (*,"(i3, 6x, l1, 9x, l1, 6x, a)") i, & 
       &  canSetParameter(config, config_names(i), .true.), & 
       &  getParameter(config, config_names(i)), trim(config_names(i))
     if (canSetParameter(config, config_names(i), .true.)) then
