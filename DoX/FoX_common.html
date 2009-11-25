@@ -11,7 +11,7 @@
 
 <p>FoX_common is a module exporting interfaces to a set of convenience functions common to all of the FoX modules, which are of more general use.</p>
 
-<p>Currently, there are two publically available functions:</p>
+<p>Currently, there are four publically available functions and two subroutines:</p>
 
 <ul>
 <li><code>str</code> converts primitive datatypes into strings in a consistent fashion, conformant with the expectations of XML processors.</li>
@@ -24,6 +24,22 @@
 </ul>
 
 <p>It is fully described in <a href="StringConversion.html">StringConversion</a></p>
+
+<p>The final four procedures change the way that errors and warnings are handled when encounterd by any FoX modules. Using these procedures it is possible to convert non-fatal warnings and fatal errors to calls to the internal about routine. This generally has the effect of generating a stack trace or core dump of the program before temination. This is a global setting for all XML documents being manipulated. Two subroutines take a single logical argument to turn on (true) and off (false) the feature for warnings and errors respectivly:</p>
+
+<ul>
+<li><p><code>FoX_set_fatal_warnings</code> for warnings </p></li>
+<li><p><code>FoX_set_fatal_errors</code> for errors</p></li>
+</ul>
+
+<p>and two functions (without arguments) allow the state to be checked:</p>
+
+<ul>
+<li><p><code>FoX_get_fatal_warnings</code> for warnings</p></li>
+<li><p><code>FoX_get_fatal_errors</code> for errors</p></li>
+</ul>
+
+<p>Both fatal warnings and errors are off by default. This corresponds to the previous behaviour. </p>
 </div>
 </body>
 </html>

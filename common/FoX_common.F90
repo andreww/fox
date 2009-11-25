@@ -4,6 +4,7 @@ module FoX_common
   use fox_m_fsys_format
   use fox_m_fsys_parse_input
   use m_common_attrs
+  use m_common_error
 
   implicit none
   private
@@ -19,6 +20,11 @@ module FoX_common
   public :: rts
   public :: str
   public :: operator(//)
+
+  public :: FoX_set_fatal_errors
+  public :: FoX_get_fatal_errors
+  public :: FoX_set_fatal_warnings
+  public :: FoX_get_fatal_warnings
 
 #ifndef DUMMYLIB
   public :: str_vs

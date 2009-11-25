@@ -16,7 +16,7 @@ module m_wxml_core
     is_empty, init_elstack, push_elstack, destroy_elstack
   use m_common_entities, only: existing_entity, is_unparsed_entity
   use m_common_error, only: FoX_warning_base, FoX_error_base, FoX_fatal_base, &
-    error_stack, in_error
+    error_stack, in_error, FoX_get_fatal_errors, FoX_get_fatal_warnings
   use m_common_io, only: get_unit
   use m_common_namecheck, only: checkEncName, checkName, checkQName, &
     checkCharacterEntityReference, checkPublicId, prefixOfQName, &
@@ -1775,6 +1775,11 @@ contains
     type(xmlf_t), intent(in) :: xf
     character(len=*), intent(in) :: msg
     
+    if (FoX_get_fatal_warnings()) then
+        write(6,'(a)') 'FoX warning made fatal'
+        call wxml_fatal_xf(xf, msg)
+    endif
+
     if (xf%xds%warning) then
       write(6,'(a)') 'WARNING(wxml) in writing to file ', xmlf_name(xf)
       write(6,'(a)')  msg
@@ -1787,7 +1792,12 @@ contains
     ! Emit error message, clean up file and stop.
     type(xmlf_t), intent(inout) :: xf
     character(len=*), intent(in) :: msg
-    
+   
+    if (FoX_get_fatal_errors()) then
+        write(6,'(a)') 'FoX error made fatal'
+        call wxml_fatal_xf(xf, msg)
+    endif
+ 
     write(6,'(a)') 'ERROR(wxml) in writing to file ', xmlf_name(xf)
     write(6,'(a)')  msg
     
