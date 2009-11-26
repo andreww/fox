@@ -1,1 +1,2 @@
- Cannot specify 3-dimensional coords with separate altitude in kmlCreateLine
+ERROR(FoX)
+Cannot specify 3-dimensional coords with separate altitude in kmlCreateLine

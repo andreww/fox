@@ -179,21 +179,18 @@ $3, values, &
     n = size(values, 2)
 
     if (present(contour_values).and.present(num_levels)) then
-      print*,"Cannot specify both contour_values and num_levels in kmlCreateCells"
-      stop
+      call FoX_error("Cannot specify both contour_values and num_levels in kmlCreateCells")
     elseif (present(contour_values)) then
       if (present(colormap)) then
         if (size(colormap)/=size(contour_values)+1) then
-          print*,"colormap must be one item longer than contour_values in kmlCreateCells"
-          stop
+          call FoX_error("colormap must be one item longer than contour_values in kmlCreateCells")
         endif
       endif
       numcolors = size(contour_values)+1
     elseif (present(num_levels)) then
       if (present(colormap)) then
         if (size(colormap)/=num_levels+1) then
-          print*,"colormap must be one item longer than num_levels in kmlCreateCells"
-          stop
+          call FoX_error("colormap must be one item longer than num_levels in kmlCreateCells")
         endif
       endif
       numcolors = num_levels+1
@@ -247,6 +244,7 @@ module m_wkml_coverage
   use m_common_error, only: FoX_error
   use FoX_wxml
   use FoX_common, only: str
+  use m_common_error
 
   use m_wkml_lowlevel, only: kmlOpenFolder, kmlCloseFolder, kmlopenplacemark, & 
        kmlAddname, kmlAddstyleurl, kmlopenpolygon, kmladdextrude, kmladdaltitudemode, & 
@@ -310,17 +308,14 @@ contains
     type(color_t), allocatable :: colormap(:)
 
     if (rgb/="r" .and. rgb/="g" .and. rgb/="b") then
-      print*, "Must use one of r, g, or b in CreateRGBCells"
-      stop
+      call FoX_error("Must use one of r, g, or b in CreateRGBCells")
     endif
 
     if (present(numbit)) then
       if (numbit<1.or.numbit>256) then
-        print*, "numbit out of range"
-        stop
+        call FoX_error("numbit out of range")
       elseif (mod(256, numbit)/=0) then
-        print*, "numbit must be a power of 2"
-        stop
+        call FoX_error("numbit must be a power of 2")
       endif
       numbit_ = numbit ! Check for sensible values
     else

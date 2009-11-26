@@ -2,6 +2,7 @@ module m_wkml_color
 
   use FoX_wxml
   use FoX_common
+  use m_common_error
 
   use m_wkml_color_def, only: colorArray
 
@@ -109,8 +110,7 @@ contains
     character(len=8), intent(in) :: col
 
     if (.not.checkColorHex(col)) then
-      print*, "Invalid color value"
-      stop
+      call FoX_error("Invalid color value")
     endif
 
     call xml_NewElement(xf, 'bgColor')
@@ -133,8 +133,7 @@ contains
     character(len=8), intent(in) :: col
 
     if (.not.checkColorHex(col)) then
-      print*, "Invalid color value"
-      stop
+      call FoX_error("Invalid color value")
     endif
 
     call xml_NewElement(xf, 'textcolor')
@@ -148,8 +147,7 @@ contains
     character(len=8), intent(in) :: colorhex
 
     if (.not.checkColorHex(colorhex)) then
-      print*, "Invalid color value"
-      stop
+      call FoX_error("Invalid color value")
     endif
 
     myCI%hex = colorhex
@@ -167,8 +165,7 @@ contains
     type(color_t) :: c
 
     if (i>size(colorArray).or.(i<1)) then
-      print*, "Invalid index in kmlGetColor (by index)"
-      stop
+      call FoX_error("Invalid index in kmlGetColor (by index)")
     endif
     
     ! Note - 'x2' argument is the format string
@@ -194,8 +191,7 @@ contains
     enddo
 
     if (.not.found) then
-      print*, "Invalid name in kmlGetColor (by name)"
-      stop
+      call FoX_error("Invalid name in kmlGetColor (by name)")
     endif
 
   end function kmlGetColor_byName

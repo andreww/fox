@@ -3,6 +3,7 @@ module m_contours
 !  use m_common_format
 ! change to by GT to test in FoX4.0.3
    use fox_common
+   use m_common_error
 
   implicit none
   private
@@ -594,19 +595,16 @@ contains
 
     if (present(contour_values)) then
       if (present(ncv)) then
-        print*, 'cannot specify ncv and contour_values at the same time'
-        stop
+        call FoX_error('cannot specify ncv and contour_values at the same time')
       endif
       do i = 2, size(contour_values)
         if (contour_values(i)<=contour_values(i-1)) then
-          print*, 'contour values must be monotonically increasing'
-          stop
+          call FoX_error('contour values must be monotonically increasing')
         endif
       enddo
       if (present(ignore_gt)) then
         if (contour_values(size(contour_values))>ignore_gt) then
-          print*, 'cannot have contours above the maximum value'
-          stop
+          call FoX_error('cannot have contours above the maximum value')
         endif
         allocate(contour_values_(size(contour_values)+1))
         contour_values_(:size(contour_values)) = contour_values
@@ -665,28 +663,23 @@ contains
     real, allocatable :: contour_values_(:)
 
     if (size(x)/=size(z,1)) then
-      print*,'wrong number of x coordinates'
-      stop
+      call FoX_error('wrong number of x coordinates')
     elseif (size(y)/=size(z,2)) then
-      print*,'wrong number of x coordinates'
-      stop
+      call FoX_error('wrong number of x coordinates')
     endif
 
     if (present(contour_values)) then
       if (present(ncv)) then
-        print*, 'cannot specify ncv and contour_values at the same time'
-        stop
+        call FoX_error('cannot specify ncv and contour_values at the same time')
       endif
       do i = 2, size(contour_values)
         if (contour_values(i)<=contour_values(i-1)) then
-          print*, 'contour values must be monotonically increasing'
-          stop
+          call FoX_error('contour values must be monotonically increasing')
         endif
       enddo
       if (present(ignore_gt)) then
         if (contour_values(size(contour_values))>ignore_gt) then
-          print*, 'cannot have contours above the maximum value'
-          stop
+          call FoX_error('cannot have contours above the maximum value')
         endif
         allocate(contour_values_(size(contour_values)+1))
         contour_values_(:size(contour_values)) = contour_values
@@ -738,28 +731,23 @@ contains
     real, allocatable :: contour_values_(:)
 
     if (size(x,1)/=size(z,1).and.size(y,1)/=size(z,2)) then
-      print*,'wrong number of coordinates in the x direction'
-      stop
+      call FoX_error('wrong number of coordinates in the x direction')
     elseif (size(x,2)/=size(z,2).and.size(y,2)/=size(z,2)) then
-      print*,'wrong number of coordinates in the y direction'
-      stop
+      call FoX_error('wrong number of coordinates in the y direction')
     endif
 
     if (present(contour_values)) then
       if (present(ncv)) then
-        print*, 'cannot specify ncv and contour_values at the same time'
-        stop
+        call FoX_error('cannot specify ncv and contour_values at the same time')
       endif
       do i = 2, size(contour_values)
         if (contour_values(i)<=contour_values(i-1)) then
-          print*, 'contour values must be monotonically increasing'
-          stop
+          call FoX_error('contour values must be monotonically increasing')
         endif
       enddo
       if (present(ignore_gt)) then
         if (contour_values(size(contour_values))>ignore_gt) then
-          print*, 'cannot have contours above the maximum value'
-          stop
+          call FoX_error('cannot have contours above the maximum value')
         endif
         allocate(contour_values_(size(contour_values)+1))
         contour_values_(:size(contour_values)) = contour_values
@@ -1588,8 +1576,7 @@ contains
             if (ce==5) ce = 1
             if (once==5) then
               ! We may have to check the side we are starting on twice.
-              print*, "GCONTR INTERNAL ERROR GONE ROUND BOX"
-              stop
+              call FoX_error("GCONTR INTERNAL ERROR GONE ROUND BOX")
             endif
             x = cp%current%x(size(cp%current%x)) ! Get coordinates at the end of the line we are building
             y = cp%current%y(size(cp%current%y))
@@ -1671,8 +1658,7 @@ contains
               if (forward) then
                 ce = l%ee
                 if (l%eedone) then
-                  print*,"GCONTR INTERNAL ERROR: Adding line twice"
-                  stop
+                  call FoX_error("GCONTR INTERNAL ERROR: Adding line twice")
                 endif
                 if (debug) then
                   print*, "DEBUG now from ", l%x(1), l%y(1), " to ", l%x(size(l%x)), l%y(size(l%x)), l%uphill
@@ -1685,8 +1671,7 @@ contains
               else
                 ce = l%se
                 if (l%sedone) then
-                  print*,"GCONTR INTERNAL ERROR: Adding line twice"
-                  stop
+                  call FoX_error("GCONTR INTERNAL ERROR: Adding line twice")
                 endif
                 if (debug) then
                   print*, "DEBUG now from ", l%x(size(l%x)), l%y(size(l%y)), " to ", l%x(1), l%y(1), l%uphill
@@ -1746,8 +1731,7 @@ contains
         allocate(cp%polys(i)%list(j)%borders_eq(0))
         allocate(cp%polys(i)%list(j)%borders_gt(0))
         if (cp%polys(i)%list(j)%mountain==0) then
-          print*,"SHOULDNT BE HERE"
-          stop
+          call FoX_error("SHOULDNT BE HERE")
         endif
         a = cp%polys(i)%list(j)%area
         if (a==0.0) cycle
@@ -2142,8 +2126,7 @@ contains
         elseif (cp%polys(i)%list(j)%mountain==2) then
           ii = i
         else
-          print*, 'GCONTR INTERNAL ERROR: POLYGON CALCULATING ERROR!!! at ', i, j
-          stop
+          call FoX_error('GCONTR INTERNAL ERROR: POLYGON CALCULATING ERROR!!! at ')
         endif
         ! print*, "AREA", i, j, cp%polys(i)%list(j)%area
         if (cp%polys(i)%list(j)%area==0.0) cycle

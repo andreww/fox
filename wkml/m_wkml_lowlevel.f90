@@ -242,8 +242,7 @@ contains
     if (altitudemode/='clampToGround' &
       .and.altitudemode/='relativeToGround' &
       .and.altitudeMode/='absolute') then
-      print*, 'unknown altitudeMode value'
-      stop
+      call FoX_error('unknown altitudeMode value')
     endif
     call xml_NewElement(xf, 'altitudeMode')
     call xml_AddCharacters(xf, altitudemode)
@@ -308,8 +307,7 @@ contains
     type(xmlf_t), intent(inout) :: xf
     character(len=*), intent(in) :: colormode
     if (colorMode/="normal".and.colormode/="random") then
-      print*, "Invalid value for colormode in kmlAddColorMode"
-      stop
+      call FoX_error("Invalid value for colormode in kmlAddColorMode")
     endif
     call xml_NewElement(xf, 'colorMode')
     call xml_AddCharacters(xf, colormode)
@@ -415,8 +413,7 @@ contains
     ! Google docs: http://code.google.com/apis/kml/documentation/kmlreference.html#iconstyle
     !
     if (heading<-360.0_dp.or.heading>360.0_dp) then
-      print*, "invalid value for heading"
-      stop
+      call FoX_error("invalid value for heading")
     endif
     call xml_NewElement(xf, 'heading')
     call xml_AddCharacters(xf, heading, fmt='r10')
@@ -432,8 +429,7 @@ contains
     call xml_NewElement(xf,'href')
     u => parseURI(url)
     if (.not.associated(u)) then
-      print*, "Invalid URI"
-      stop
+      call FoX_error("Invalid URI")
     endif
     call xml_AddCharacters(xf,expressURI(u))
     call destroyURI(u)
@@ -993,13 +989,11 @@ contains
 
     nodes = size(x)
     if (nodes/=size(y)) then
-      print*, "Inconsistent array lengths in kmlAddCoordinates"
-      stop
+      call FoX_error("Inconsistent array lengths in kmlAddCoordinates")
     endif
     if (present(z)) then
       if (nodes/=size(z)) then
-        print*, "Inconsistent array lengths in kmlAddCoordinates"
-        stop
+        call FoX_error("Inconsistent array lengths in kmlAddCoordinates")
       endif
     endif
 
@@ -1039,13 +1033,11 @@ contains
 
     nodes = size(x)
     if (nodes/=size(y)) then
-      print*, "Inconsistent array lengths in kmlAddCoordinates"
-      stop
+      call FoX_error("Inconsistent array lengths in kmlAddCoordinates")
     endif
     if (present(z)) then
       if (nodes/=size(z)) then
-        print*, "Inconsistent array lengths in kmlAddCoordinates"
-        stop
+        call FoX_error("Inconsistent array lengths in kmlAddCoordinates")
       endif
     endif
 

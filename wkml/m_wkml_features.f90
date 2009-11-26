@@ -208,20 +208,17 @@ contains
 
     n = size(longitude)
     if (n/=size(latitude)) then
-      print*, "Incommensurate sizes for longitude and latitude arrays in kmlCreatePoints"
-      stop
+      call FoX_error("Incommensurate sizes for longitude and latitude arrays in kmlCreatePoints")
     endif
     if (present(altitude)) then
       if (n/=size(altitude)) then
-        print*, "Incommensurate sizes for longitude and altitude arraysin kmlCreatePoints"
-        stop
+        call FoX_error("Incommensurate sizes for longitude and altitude arraysin kmlCreatePoints")
       endif
     endif
 
     if (present(styleURL)) then
       if (present(color).or.present(scale)) then
-        print*, "cannot specify styleURL as well as color or scale"
-        stop
+        call FoX_error("cannot specify styleURL as well as color or scale")
       endif
     endif
 
@@ -330,8 +327,7 @@ contains
         chartdata=chartdata,chartlabel=chartlabel,dataname=dataname,values=values)
     elseif (size(coords,1)==3) then
       if (present(altitude)) then
-        print*, "Cannot specify 3-dimensional coords with separate altitude in kmlCreatePoints"
-        stop
+        call FoX_error("Cannot specify 3-dimensional coords with separate altitude in kmlCreatePoints")
       endif
       call kmlCreatePoints(xf, coords(1,:), coords(2,:), coords(3,:), &
         extrude=extrude, altitudeMode=altitudeMode, &
@@ -341,8 +337,7 @@ contains
         charttitle=charttitle,chartdata=chartdata,chartlabel=chartlabel,&
         dataname=dataname,values=values)
     else
-      print*, "coords array first dimension is wrong in kmlCreatePoints - must be 2 or 3"
-      stop
+      call FoX_error("coords array first dimension is wrong in kmlCreatePoints - must be 2 or 3")
     endif
 
   end subroutine kmlCreatePoints_2d_sp
@@ -433,20 +428,17 @@ contains
 
     n = size(longitude)
     if (n/=size(latitude)) then
-      print*, "Incommensurate sizes for longitude and latitude arrays in kmlCreatePoints"
-      stop
+      call FoX_error("Incommensurate sizes for longitude and latitude arrays in kmlCreatePoints")
     endif
     if (present(altitude)) then
       if (n/=size(altitude)) then
-        print*, "Incommensurate sizes for longitude and altitude arraysin kmlCreatePoints"
-        stop
+        call FoX_error("Incommensurate sizes for longitude and altitude arraysin kmlCreatePoints")
       endif
     endif
 
     if (present(styleURL)) then
       if (present(color).or.present(scale)) then
-        print*, "cannot specify styleURL as well as color or scale"
-        stop
+        call FoX_error("cannot specify styleURL as well as color or scale")
       endif
     endif
 
@@ -557,8 +549,7 @@ contains
         charttitle=charttitle,chartlabel=chartlabel,dataname=dataname, values=values)
     elseif (size(coords,1)==3) then
       if (present(altitude)) then
-        print*, "Cannot specify 3-dimensional coords with separate altitude in kmlCreatePoints"
-        stop
+        call FoX_error("Cannot specify 3-dimensional coords with separate altitude in kmlCreatePoints")
       endif
       call kmlCreatePoints(xf, coords(1,:), coords(2,:), coords(3,:), &
         extrude=extrude, altitudeMode=altitudeMode, &
@@ -569,8 +560,7 @@ contains
         charttitle=charttitle,chartlabel=chartlabel,&
         dataname=dataname, values=values)
     else
-      print*, "coords array first dimension is wrong in kmlCreatePoints - must be 2 or 3"
-      stop
+      call FoX_error("coords array first dimension is wrong in kmlCreatePoints - must be 2 or 3")
     endif
 
   end subroutine kmlCreatePoints_2d_dp
@@ -681,26 +671,22 @@ name,linewidth,description_ch,styleURL)
     if (needPlacemark) call kmlOpenPlacemark(xf, name=name, description=description, styleurl=styleurl)
     n = size(longitude)
     if (closed_.and.n<3) then
-      print*, "Not enough points on closed path"
-      stop
+      call FoX_error("Not enough points on closed path")
     endif
 
     n = size(longitude)
     if (n/=size(latitude)) then
-      print*, "Incommensurate sizes for longitude and latitude arrays in kmlCreateLine"
-      stop
+      call FoX_error("Incommensurate sizes for longitude and latitude arrays in kmlCreateLine")
     endif
     if (present(altitude)) then
       if (n/=size(altitude)) then
-        print*, "Incommensurate sizes for longitude and altitude arrays in kmlCreateLine"
-        stop
+        call FoX_error("Incommensurate sizes for longitude and altitude arrays in kmlCreateLine")
       endif
     endif
 
     if (present(styleURL)) then
       if (present(color).or.present(width)) then
-        print*, "cannot specify styleURL as well as color or width"
-        stop
+        call FoX_error("cannot specify styleURL as well as color or width")
       endif
     endif
 
@@ -755,16 +741,14 @@ name,linewidth,description_ch,styleURL)
         width=width, description=description, styleURL=styleURL)
     elseif (size(coords,1)==3) then
       if (present(altitude)) then
-        print*, "Cannot specify 3-dimensional coords with separate altitude in kmlCreateLine"
-        stop
+        call FoX_error("Cannot specify 3-dimensional coords with separate altitude in kmlCreateLine")
       endif
       call kmlCreateLine(xf, coords(1,:), coords(2,:), coords(3,:), &
         closed=closed, extrude=extrude, tessellate=tessellate, altitudeMode=altitudeMode, &
         name=name, color=color, colorname=colorname, colorhex=colorhex, &
         width=width, description=description, styleURL=styleURL)
     else
-      print*, "coords array first dimension is wrong in kmlCreateLine - must be 2 or 3"
-      stop
+      call FoX_error("coords array first dimension is wrong in kmlCreateLine - must be 2 or 3")
     endif
 
   end subroutine kmlCreateLine_2d_sp
@@ -803,26 +787,22 @@ name,linewidth,description_ch,styleURL)
     if (needPlacemark) call kmlOpenPlacemark(xf, name=name, description=description, styleurl=styleurl)
     n = size(longitude)
     if (closed_.and.n<3) then
-      print*, "Not enough points on closed path"
-      stop
+      call FoX_error("Not enough points on closed path")
     endif
 
     n = size(longitude)
     if (n/=size(latitude)) then
-      print*, "Incommensurate sizes for longitude and latitude arrays in kmlCreateLine"
-      stop
+      call FoX_error("Incommensurate sizes for longitude and latitude arrays in kmlCreateLine")
     endif
     if (present(altitude)) then
       if (n/=size(altitude)) then
-        print*, "Incommensurate sizes for longitude and altitude arrays in kmlCreateLine"
-        stop
+        call FoX_error("Incommensurate sizes for longitude and altitude arrays in kmlCreateLine")
       endif
     endif
 
     if (present(styleURL)) then
       if (present(color).or.present(width)) then
-        print*, "cannot specify styleURL as well as color or width"
-        stop
+        call FoX_error("cannot specify styleURL as well as color or width")
       endif
     endif
 
@@ -877,16 +857,14 @@ name,linewidth,description_ch,styleURL)
         width=width, description=description, styleURL=styleURL)
     elseif (size(coords,1)==3) then
       if (present(altitude)) then
-        print*, "Cannot specify 3-dimensional coords with separate altitude in kmlCreateLine"
-        stop
+        call FoX_error("Cannot specify 3-dimensional coords with separate altitude in kmlCreateLine")
       endif
       call kmlCreateLine(xf, coords(1,:), coords(2,:), coords(3,:), &
         closed=closed, extrude=extrude, tessellate=tessellate, altitudeMode=altitudeMode, &
         name=name, color=color, colorname=colorname, colorhex=colorhex, &
         width=width, description=description, styleURL=styleURL)
     else
-      print*, "coords array first dimension is wrong in kmlCreateLine - must be 2 or 3"
-      stop
+      call FoX_error("coords array first dimension is wrong in kmlCreateLine - must be 2 or 3")
     endif
 
   end subroutine kmlCreateLine_2d_dp
@@ -974,8 +952,7 @@ name,linewidth,description_ch,styleURL)
         linewidth=linewidth, description=description, styleURL=styleURL)
     elseif (size(coords,1)==3) then
       if (present(altitude)) then
-        print*, "Cannot specify 3-dimensional coords with separate altitude in kmlStartPolygon"
-        stop
+        call FoX_error("Cannot specify 3-dimensional coords with separate altitude in kmlStartPolygon")
       endif
       call kmlStartRegion(xf, coords(1,:), coords(2,:), coords(3,:), &
         extrude=extrude, tessellate=tessellate, altitudeMode=altitudeMode, &
@@ -983,8 +960,7 @@ name,linewidth,description_ch,styleURL)
         linecolor=linecolor, linecolorname=linecolorname, linecolorhex=linecolorhex, &
         linewidth=linewidth, description=description, styleURL=styleURL)
     else
-      print*, "coords array first dimension is wrong in kmlStartPolygon - must be 2 or 3"
-      stop
+      call FoX_error("coords array first dimension is wrong in kmlStartPolygon - must be 2 or 3")
     endif
 
   end subroutine kmlStartPolygon_2d_sp
@@ -1072,8 +1048,7 @@ name,linewidth,description_ch,styleURL)
         linewidth=linewidth, description=description, styleURL=styleURL)
     elseif (size(coords,1)==3) then
       if (present(altitude)) then
-        print*, "Cannot specify 3-dimensional coords with separate altitude in kmlStartPolygon"
-        stop
+        call FoX_error("Cannot specify 3-dimensional coords with separate altitude in kmlStartPolygon")
       endif
       call kmlStartRegion(xf, coords(1,:), coords(2,:), coords(3,:), &
         extrude=extrude, tessellate=tessellate, altitudeMode=altitudeMode, &
@@ -1081,8 +1056,7 @@ name,linewidth,description_ch,styleURL)
         linecolor=linecolor, linecolorname=linecolorname, linecolorhex=linecolorhex, &
         linewidth=linewidth, description=description, styleURL=styleURL)
     else
-      print*, "coords array first dimension is wrong in kmlStartPolygon - must be 2 or 3"
-      stop
+      call FoX_error("coords array first dimension is wrong in kmlStartPolygon - must be 2 or 3")
     endif
 
   end subroutine kmlStartPolygon_2d_dp
@@ -1098,8 +1072,7 @@ name,linewidth,description_ch,styleURL)
     n = size(longitude)
 
     if (xmlf_OpenTag(xf)/="Polygon") then
-      print*, "Can only add an inner boundary inside a polygon"
-      stop
+      call FoX_error("Can only add an inner boundary inside a polygon")
     endif
 
     call kmlOpenInnerBoundaryIs(xf)
@@ -1117,13 +1090,11 @@ name,linewidth,description_ch,styleURL)
       call kmlAddInnerBoundary(xf, coords(1,:), coords(2,:), altitude)
     elseif (size(coords,1)==3) then
       if (present(altitude)) then
-        print*, "Cannot specify 3-dimensional coords with separate altitude in kmlAddInnerBoundary"
-        stop
+        call FoX_error("Cannot specify 3-dimensional coords with separate altitude in kmlAddInnerBoundary")
       endif
       call kmlAddInnerBoundary(xf, coords(1,:), coords(2,:), coords(3,:))
     else
-      print*, "coords array first dimension is wrong in kmlAddInnerBoundary - must be 2 or 3"
-      stop
+      call FoX_error("coords array first dimension is wrong in kmlAddInnerBoundary - must be 2 or 3")
     endif
 
   end subroutine kmlAddInnerBoundary_2d_sp
@@ -1139,8 +1110,7 @@ name,linewidth,description_ch,styleURL)
     n = size(longitude)
 
     if (xmlf_OpenTag(xf)/="Polygon") then
-      print*, "Can only add an inner boundary inside a polygon"
-      stop
+      call FoX_error("Can only add an inner boundary inside a polygon")
     endif
 
     call kmlOpenInnerBoundaryIs(xf)
@@ -1158,13 +1128,11 @@ name,linewidth,description_ch,styleURL)
       call kmlAddInnerBoundary(xf, coords(1,:), coords(2,:), altitude)
     elseif (size(coords,1)==3) then
       if (present(altitude)) then
-        print*, "Cannot specify 3-dimensional coords with separate altitude in kmlAddInnerBoundary"
-        stop
+        call FoX_error("Cannot specify 3-dimensional coords with separate altitude in kmlAddInnerBoundary")
       endif
       call kmlAddInnerBoundary(xf, coords(1,:), coords(2,:), coords(3,:))
     else
-      print*, "coords array first dimension is wrong in kmlAddInnerBoundary - must be 2 or 3"
-      stop
+      call FoX_error("coords array first dimension is wrong in kmlAddInnerBoundary - must be 2 or 3")
     endif
 
   end subroutine kmlAddInnerBoundary_2d_dp

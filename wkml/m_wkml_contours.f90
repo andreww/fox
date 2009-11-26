@@ -1,4 +1,5 @@
 module m_wkml_contours
+  use m_common_error
   use m_contours, only: contourObject, destroy_contourObject
   use m_contours, only: make_contours_on_simplest_grid
   use m_contours, only: make_contours_on_a_simple_grid
@@ -149,8 +150,7 @@ contains
       .not.present(x_complex).and..not.present(y_complex)) &
       .and..not.(present(x_complex).and.present(y_complex).and. &
       .not.present(x).and..not.present(y))) then
-      print*, 'Can only specify simple x & y OR complex x & y'
-      stop
+      call FoX_error('Can only specify simple x & y OR complex x & y')
     endif
 
     if (present(lines)) then
@@ -191,8 +191,7 @@ contains
 
     if (present(colormap)) then
       if (size(colormap)<size(cp%contours)) then
-        print*, "More contours than colours in outputContourLines"
-        stop
+        call FoX_error("More contours than colours in outputContourLines")
       endif
     endif
 
@@ -241,8 +240,7 @@ contains
 
     if (present(colormap)) then
       if (size(colormap)<size(cp%contours+1)) then
-        print*, "More contours than colours in outputContourRegions"
-        stop
+        call FoX_error("More contours than colours in outputContourRegions")
       endif
     endif
 
