@@ -4,7 +4,7 @@
     <name>WKML output</name>
     <Style id="myid">
       <IconStyle>
-        <heading>-180</heading>
+        <heading>-180.0000000000</heading>
       </IconStyle>
     </Style>
   </Document>

@@ -402,13 +402,24 @@ contains
   !<heading>0</heading>  0-180
   subroutine kmlAddheading(xf, heading)
     type(xmlf_t), intent(inout) :: xf
-    integer, intent(in) :: heading
-    if (heading<-180.or.heading>180) then
+    real(dp), intent(in) :: heading
+    ! Note that according to the schema the heading 
+    ! is a kml:angle360Type which can be between 
+    ! -360 and 360 degrees. This is not what the 
+    ! google docs say (0 -> 360), but we follow the
+    ! schema here. Also, as this derived from a schema 1.0 
+    ! data type, we need to include the fmt argument to 
+    ! avoid exponentail notation.
+    !
+    ! Schema: http://schemas.opengis.net/kml/2.2.0/ogckml22.xsd
+    ! Google docs: http://code.google.com/apis/kml/documentation/kmlreference.html#iconstyle
+    !
+    if (heading<-360.0_dp.or.heading>360.0_dp) then
       print*, "invalid value for heading"
       stop
     endif
     call xml_NewElement(xf, 'heading')
-    call xml_AddCharacters(xf, heading)
+    call xml_AddCharacters(xf, heading, fmt='r10')
     call xml_EndElement(xf, 'heading')
   end subroutine kmlAddheading
 

@@ -7,7 +7,7 @@ program test
   type(xmlf_t) :: myfile
 
   call kmlBeginFile(myfile, "test.xml", -1)
-  call kmlCreatePointStyle(myfile, id='myid', heading=-181)
+  call kmlCreatePointStyle(myfile, id='myid', heading=-361.0)
   call kmlFinishFile(myfile)
 
 end program test

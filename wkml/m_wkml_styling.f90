@@ -12,15 +12,17 @@ module m_wkml_styling
     kmlOpenIcon, kmlCloseIcon, kmlOpenPair, kmlClosePair, kmlAddwidth,kmlAddcolorMode, &
     kmlOpenPlacemark,kmlClosePlacemark,kmlAddname,kmlOpenPolygon,kmlClosePolygon
  
-
   implicit none
   private
 
   interface kmlCreatePointStyle
-    module procedure kmlAddPointStyle_s_none
+    module procedure kmlAddPointStyle_s_none_head_none
     module procedure kmlAddPointStyle_s_int
     module procedure kmlAddPointStyle_s_sp
     module procedure kmlAddPointStyle_s_dp
+    module procedure kmlAddPointStyle_s_none_head_dp
+    module procedure kmlAddPointStyle_s_none_head_int
+    module procedure kmlAddPointStyle_s_none_head_sp
   end interface kmlCreatePointStyle
 
   public :: kmlCreatePointStyle
@@ -43,7 +45,7 @@ contains
     character(len=*), intent(in), optional :: colorhex
     character(len=*), intent(in), optional :: colorname
     character(len=*), intent(in), optional :: colormode
-    integer, intent(in), optional :: heading
+    real(dp), intent(in), optional :: heading
     character(len=*), intent(in), optional :: iconhref
     character(len=*), intent(in), optional :: id
 
@@ -77,14 +79,70 @@ contains
     endif
   end subroutine mostOfPointStyle
 
-  subroutine kmlAddPointStyle_s_none(xf, color, colorhex, colorname, colormode, heading, iconhref, id)
+  subroutine kmlAddPointStyle_s_none_head_none(xf, color, colorhex, colorname, colormode, iconhref, id)
     ! We temporarily ignore hotspot
     type(xmlf_t), intent(inout) :: xf
     type(col), intent(in), optional :: color
     character(len=*), intent(in), optional :: colorhex
     character(len=*), intent(in), optional :: colorname
     character(len=*), intent(in), optional :: colormode
-    integer, intent(in), optional :: heading
+    character(len=*), intent(in), optional :: iconhref
+    character(len=*), intent(in), optional :: id
+
+    logical :: needStyle
+    needStyle = (xmlf_openTag(xf)/='Style')
+
+    call mostOfPointStyle(xf, color, colorhex, colorname, colormode, iconhref=iconhref, id=id)
+    call kmlCloseIconStyle(xf)
+    if (needStyle) call kmlCloseStyle(xf)
+  end subroutine kmlAddPointStyle_s_none_head_none
+
+  subroutine kmlAddPointStyle_s_none_head_int(xf, color, colorhex, colorname, colormode, heading, iconhref, id)
+    ! We temporarily ignore hotspot
+    type(xmlf_t), intent(inout) :: xf
+    type(col), intent(in), optional :: color
+    character(len=*), intent(in), optional :: colorhex
+    character(len=*), intent(in), optional :: colorname
+    character(len=*), intent(in), optional :: colormode
+    integer, intent(in) :: heading
+    character(len=*), intent(in), optional :: iconhref
+    character(len=*), intent(in), optional :: id
+
+    logical :: needStyle
+    needStyle = (xmlf_openTag(xf)/='Style')
+
+    call mostOfPointStyle(xf, color, colorhex, colorname, colormode, real(heading,dp), iconhref, id)
+    call kmlCloseIconStyle(xf)
+    if (needStyle) call kmlCloseStyle(xf)
+  end subroutine kmlAddPointStyle_s_none_head_int
+
+  subroutine kmlAddPointStyle_s_none_head_sp(xf, color, colorhex, colorname, colormode, heading, iconhref, id)
+    ! We temporarily ignore hotspot
+    type(xmlf_t), intent(inout) :: xf
+    type(col), intent(in), optional :: color
+    character(len=*), intent(in), optional :: colorhex
+    character(len=*), intent(in), optional :: colorname
+    character(len=*), intent(in), optional :: colormode
+    real(sp), intent(in) :: heading
+    character(len=*), intent(in), optional :: iconhref
+    character(len=*), intent(in), optional :: id
+
+    logical :: needStyle
+    needStyle = (xmlf_openTag(xf)/='Style')
+
+    call mostOfPointStyle(xf, color, colorhex, colorname, colormode, real(heading,dp), iconhref, id)
+    call kmlCloseIconStyle(xf)
+    if (needStyle) call kmlCloseStyle(xf)
+  end subroutine kmlAddPointStyle_s_none_head_sp
+
+  subroutine kmlAddPointStyle_s_none_head_dp(xf, color, colorhex, colorname, colormode, heading, iconhref, id)
+    ! We temporarily ignore hotspot
+    type(xmlf_t), intent(inout) :: xf
+    type(col), intent(in), optional :: color
+    character(len=*), intent(in), optional :: colorhex
+    character(len=*), intent(in), optional :: colorname
+    character(len=*), intent(in), optional :: colormode
+    real(dp), intent(in) :: heading
     character(len=*), intent(in), optional :: iconhref
     character(len=*), intent(in), optional :: id
 
@@ -94,7 +152,7 @@ contains
     call mostOfPointStyle(xf, color, colorhex, colorname, colormode, heading, iconhref, id)
     call kmlCloseIconStyle(xf)
     if (needStyle) call kmlCloseStyle(xf)
-  end subroutine kmlAddPointStyle_s_none
+  end subroutine kmlAddPointStyle_s_none_head_dp
 
   subroutine kmlAddPointStyle_s_int(xf, scale, color, colorhex, colorname, colormode, heading, iconhref, id)
     ! We temporarily ignore hotspot
@@ -111,7 +169,11 @@ contains
     logical :: needStyle
     needStyle = (xmlf_openTag(xf)/='Style')
 
-    call mostOfPointStyle(xf, color, colorhex, colorname, colormode, heading, iconhref, id)
+    if (present(heading)) then
+      call mostOfPointStyle(xf, color, colorhex, colorname, colormode, real(heading,dp), iconhref, id)
+    else
+      call mostOfPointStyle(xf, color, colorhex, colorname, colormode, iconhref=iconhref, id=id)
+    endif
     call kmlAddScale(xf, scale)
     call kmlCloseIconStyle(xf)
     if (needStyle) call kmlCloseStyle(xf)
@@ -125,14 +187,18 @@ contains
     character(len=*), intent(in), optional :: colorhex
     character(len=*), intent(in), optional :: colorname
     character(len=*), intent(in), optional :: colormode
-    integer, intent(in), optional :: heading
+    real(sp), intent(in), optional :: heading
     character(len=*), intent(in), optional :: iconhref
     character(len=*), intent(in), optional :: id
 
     logical :: needStyle
     needStyle = (xmlf_openTag(xf)/='Style')
 
-    call mostOfPointStyle(xf, color, colorhex, colorname, colormode, heading, iconhref, id)
+    if (present(heading)) then
+      call mostOfPointStyle(xf, color, colorhex, colorname, colormode, real(heading,dp), iconhref, id)
+    else
+      call mostOfPointStyle(xf, color, colorhex, colorname, colormode, iconhref=iconhref, id=id)
+    endif
     call kmlAddScale(xf, scale)
     call kmlCloseIconStyle(xf)
     if (needStyle) call kmlCloseStyle(xf)
@@ -146,7 +212,7 @@ contains
     character(len=*), intent(in), optional :: colorhex
     character(len=*), intent(in), optional :: colorname
     character(len=*), intent(in), optional :: colormode
-    integer, intent(in), optional :: heading
+    real(dp), intent(in), optional :: heading
     character(len=*), intent(in), optional :: iconhref
     character(len=*), intent(in), optional :: id
 
