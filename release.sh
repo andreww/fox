@@ -7,7 +7,7 @@ if test x$VN != x\'$1\'; then
   exit 1 
 fi
 
-git-archive --format=tar --prefix=FoX-$1/ HEAD | gzip -9 > ../FoX-$1-full.tar.gz
+git archive --format=tar --prefix=FoX-$1/ HEAD | gzip -9 > ../FoX-$1-full.tar.gz
 openssl dgst -md5 ../FoX-$1-full.tar.gz > ../FoX-$1-digest
 openssl dgst -sha1 ../FoX-$1-full.tar.gz >> ../FoX-$1-digest
 
