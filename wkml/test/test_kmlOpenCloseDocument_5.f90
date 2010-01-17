@@ -7,8 +7,8 @@ program test
   type(xmlf_t) :: myfile
 
   call kmlBeginFile(myfile, "test.xml", -1, .true., 'testdoc')
-  call kmlCloseDocument(myfile)
   call kmlOpenDocument(myfile, "NewName")
+  call kmlCloseDocument(myfile)
   call kmlFinishFile(myfile)
 
 end program test
