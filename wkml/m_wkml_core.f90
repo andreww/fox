@@ -27,7 +27,7 @@ contains
     else
       call xml_OpenFile(filename, xf, unit=unit, replace=replace)
     endif
-    call xml_DeclareNamespace(xf, 'http://earth.google.com/kml/2.2')
+    call xml_DeclareNamespace(xf, 'http://www.opengis.net/kml/2.2')
     call xml_NewElement(xf, 'kml')
 
     if (present(docName)) then
