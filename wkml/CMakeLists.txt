@@ -9,7 +9,7 @@ IF(NOT ${M4_PROGRAM} MATCHES "NOTFOUND")
   )
 ENDIF(NOT ${M4_PROGRAM} MATCHES "NOTFOUND")
 
-set(fox_wcml_srcs
+set(fox_wkml_srcs
   FoX_wkml.f90
 )
 
