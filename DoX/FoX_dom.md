@@ -602,11 +602,36 @@ The available configuration options are fully explained in:
 * [DOM Core LSParser](http://www.w3.org/TR/2004/REC-DOM-Level-3-LS-20040407/load-save.html#LS-LSParser)  
 * [DOM Core LSSerializer](http://www.w3.org/TR/2004/REC-DOM-Level-3-LS-20040407/load-save.html#LS-LSSerializer)  
 
-and are all implemented, with the exceptions of:
+and are all implemented, with the exceptions of: `error-handler`, `schema-location`, and `schema-type`.   
+In total there are 24 implemented configuration options (`schema-location` and `schema-type` are not
+implemented). The options known by FoX are as follows:
 
-* `error-handler`  
-* `schema-location`
-* `schema-type`  
+* `canonical-form` default: false, can be set to true. See note below.
+* `cdata-sections` default: true, can be changed.
+* `check-character-normalization` default: false, cannot be changed.
+* `comments` default: true, can be changed.
+* `datatype-normalization` default: false, cannot be changed.
+* `element-content-whitespace` default: true, can be changed.
+* `entities` default: true, can be changed.
+* `error-handler` default: false, cannot be changed. This is a breach of the DOM specification.
+* `namespaces` default: true, can be changed.
+* `namespace-declarations` default: true, can be changed.
+* `normalize-characters` default: false, cannot be changed.
+* `split-cdata-sections` default: true, can be changed.
+* `validate` default: false, can be changed. See note below.
+* `validate-if-schema` default: false, can be changed.
+* `well-formed` default true, cannot be changed.
+* `charset-overrides-xml-encoding` default false, cannot be changed.
+* `disallow-doctype` default false, cannot be changed.
+* `ignore-unknown-character-denormalizations` default true, cannot be changed.
+* `resource-resolver` default false, cannot be changed.
+* `supported-media-types-only` default false, cannot be changed.
+* `discard-default-content` default: true, can be changed.
+* `format-pretty-print` default: false, cannot be changed.
+* `xml-declaration` default: true, can be changed.
+* `invalid-pretty-print` default: false, can be changed. This is a FoX specific extension which works like `format-pretty-print` but does not preseve the validity of the document.
+
+Setting `canonical-form` changes the value of `entities`, `cdata-sections`, `discard-default-content`, `invalid-pretty-print`, and `xml-declaration`to false and changes `namespaces`, `namespace-declarations`, and `element-content-whitespace` to true. Unsetting `canonical-form` causes these options to revert to the defalt settings. Changing the values of any of these options has the side effect of unsetting `canonical-form` (but does not cause the other options to be reset). Setting `validate` unsets `validate-if-schema` and vica versa.
 
 ## DOM Miscellanea
 

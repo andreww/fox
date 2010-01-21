@@ -25,7 +25,7 @@ dom_lib: objsdir sax_lib wxml_lib
 	(cd dom; $(MAKE) VPATH=$(VPATH)/dom)
 dom_lib_clean:
 	if test -d dom; then (cd dom; $(MAKE) VPATH=$(VPATH)/dom clean) fi
-dom_lib_check: dom_lib 
+dom_lib_check: $(BUILD_TARGETS) common_lib utils_lib
 	if test -d examples && ! grep DUMMYLIB arch.make > /dev/null ; \
 	then \
 	    rm -f dom_lib_check ; \
@@ -39,7 +39,7 @@ sax_lib: objsdir common_lib utils_lib fsys_lib
 	(cd sax; $(MAKE) VPATH=$(VPATH)/sax)
 sax_lib_clean:
 	if test -d sax; then (cd sax; $(MAKE) VPATH=$(VPATH)/sax clean) fi
-sax_lib_check: sax_lib
+sax_lib_check: $(BUILD_TARGETS) common_lib utils_lib
 	if test -d examples && ! grep DUMMYLIB arch.make > /dev/null ; \
 	then \
 	    rm -f sax_lib_check ; \
@@ -53,7 +53,7 @@ wxml_lib: objsdir common_lib fsys_lib
 	(cd wxml; $(MAKE) VPATH=$(VPATH)/wxml)
 wxml_lib_clean:
 	if test -d wxml; then (cd wxml; $(MAKE) VPATH=$(VPATH)/wxml clean) fi
-wxml_lib_check: wxml_lib 
+wxml_lib_check: $(BUILD_TARGETS) common_lib utils_lib
 	if test -d examples && ! grep DUMMYLIB arch.make > /dev/null ; \
 	then \
 	    rm -f wxml_lib_check ; \
@@ -67,7 +67,7 @@ wcml_lib: objsdir utils_lib wxml_lib
 	(cd wcml; $(MAKE) VPATH=$(VPATH)/wcml)
 wcml_lib_clean: 
 	if test -d wcml; then (cd wcml; $(MAKE) VPATH=$(VPATH)/wcml clean) fi
-wcml_lib_check: wcml_lib
+wcml_lib_check: $(BUILD_TARGETS) common_lib utils_lib
 	if test -d examples && ! grep DUMMYLIB arch.make > /dev/null ; \
 	then \
 	    rm -f wcml_lib_check ; \
@@ -96,7 +96,7 @@ common_lib: objsdir fsys_lib utils_lib
 	(cd common; $(MAKE) VPATH=$(VPATH)/common)
 common_lib_clean:
 	if test -d common; then (cd common; $(MAKE) VPATH=$(VPATH)/common clean) fi
-common_lib_check: common_lib 
+common_lib_check: $(BUILD_TARGETS) common_lib utils_lib
 	if test -d examples && ! grep DUMMYLIB arch.make > /dev/null ; \
 	then \
 	    rm -f common_lib_check ; \
@@ -110,7 +110,7 @@ utils_lib: objsdir fsys_lib
 	(cd utils; $(MAKE) VPATH=$(VPATH)/utils)
 utils_lib_clean:
 	if test -d utils; then (cd utils; $(MAKE) VPATH=$(VPATH)/utils clean) fi
-utils_lib_check: utils_lib 
+utils_lib_check: $(BUILD_TARGETS) common_lib utils_lib
 	if test -d examples && ! grep DUMMYLIB arch.make > /dev/null ; \
 	then \
 	    rm -f utils_lib_check ; \

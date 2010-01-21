@@ -680,13 +680,38 @@ call destroy(config)
 <li><a href="http://www.w3.org/TR/2004/REC-DOM-Level-3-LS-20040407/load-save.html#LS-LSSerializer">DOM Core LSSerializer</a>  </li>
 </ul>
 
-<p>and are all implemented, with the exceptions of:</p>
+<p>and are all implemented, with the exceptions of: <code>error-handler</code>, <code>schema-location</code>, and <code>schema-type</code>. <br />
+In total there are 24 implemented configuration options (<code>schema-location</code> and <code>schema-type</code> are not
+implemented). The options known by FoX are as follows:</p>
 
 <ul>
-<li><code>error-handler</code>  </li>
-<li><code>schema-location</code></li>
-<li><code>schema-type</code>  </li>
+<li><code>canonical-form</code> default: false, can be set to true. See note below.</li>
+<li><code>cdata-sections</code> default: true, can be changed.</li>
+<li><code>check-character-normalization</code> default: false, cannot be changed.</li>
+<li><code>comments</code> default: true, can be changed.</li>
+<li><code>datatype-normalization</code> default: false, cannot be changed.</li>
+<li><code>element-content-whitespace</code> default: true, can be changed.</li>
+<li><code>entities</code> default: true, can be changed.</li>
+<li><code>error-handler</code> default: false, cannot be changed. This is a breach of the DOM specification.</li>
+<li><code>namespaces</code> default: true, can be changed.</li>
+<li><code>namespace-declarations</code> default: true, can be changed.</li>
+<li><code>normalize-characters</code> default: false, cannot be changed.</li>
+<li><code>split-cdata-sections</code> default: true, can be changed.</li>
+<li><code>validate</code> default: false, can be changed. See note below.</li>
+<li><code>validate-if-schema</code> default: false, can be changed.</li>
+<li><code>well-formed</code> default true, cannot be changed.</li>
+<li><code>charset-overrides-xml-encoding</code> default false, cannot be changed.</li>
+<li><code>disallow-doctype</code> default false, cannot be changed.</li>
+<li><code>ignore-unknown-character-denormalizations</code> default true, cannot be changed.</li>
+<li><code>resource-resolver</code> default false, cannot be changed.</li>
+<li><code>supported-media-types-only</code> default false, cannot be changed.</li>
+<li><code>discard-default-content</code> default: true, can be changed.</li>
+<li><code>format-pretty-print</code> default: false, cannot be changed.</li>
+<li><code>xml-declaration</code> default: true, can be changed.</li>
+<li><code>invalid-pretty-print</code> default: false, can be changed. This is a FoX specific extension which works like <code>format-pretty-print</code> but does not preseve the validity of the document.</li>
 </ul>
+
+<p>Setting <code>canonical-form</code> changes the value of <code>entities</code>, <code>cdata-sections</code>, <code>discard-default-content</code>, <code>invalid-pretty-print</code>, and <code>xml-declaration</code>to false and changes <code>namespaces</code>, <code>namespace-declarations</code>, and <code>element-content-whitespace</code> to true. Unsetting <code>canonical-form</code> causes these options to revert to the defalt settings. Changing the values of any of these options has the side effect of unsetting <code>canonical-form</code> (but does not cause the other options to be reset). Setting <code>validate</code> unsets <code>validate-if-schema</code> and vica versa.</p>
 
 <h2>DOM Miscellanea</h2>
 

@@ -20,7 +20,7 @@ TOHW_m_dom_publics(`
 
   integer, parameter :: configParamLen = 42
 
-  character(len=configParamLen), parameter :: configParams(23) = (/ &
+  character(len=configParamLen), parameter :: configParams(24) = (/ &
     ! DOM 3 Core:
     "canonical-form                           ", &
     "cdata-sections                           ", &
@@ -49,57 +49,12 @@ TOHW_m_dom_publics(`
     ! DOM 3 LS (Serializer)
     "discard-default-content                  ", &
     "format-pretty-print                      ", &
-    "xml-declaration                          " /)
+    "xml-declaration                          ", &
+    ! Extra (FoX) configuration options
+    "invalid-pretty-print                     " /)
 
-!!$  logical, parameter :: paramSettable(26) = (/ &
-!!$    .true., & ! canonical-form
-!!$    .true.,  & ! cdata-sections
-!!$    .false., & ! check-character-normalization
-!!$    .true.,  & ! comments
-!!$    .false., & ! datatype-normalization
-!!$    .true.,  & ! element-content-whitespace
-!!$    .true.,  & ! entities
-!!$    .false., & ! error-handler BREACH OF SPEC
-!!$    !.false., & ! infoset
-!!$    .true.,  & ! namespaces
-!!$    .true.,  & ! namespace-declarations
-!!$    .false., & ! normalize-characters
-!!$    .true.,  & ! split-cdata-sections
-!!$    .false., & ! well-formed
-!!$    .false., & ! charset-overrides-xml-encoding
-!!$    .false., & ! disallow-doctype
-!!$    .false., & ! ignore-unknown-character-denormalizations
-!!$    .false., & ! resource-resolver BREACH OF SPEC
-!!$    .false., & ! supported-media-types-only
-!!$    .true.,  & ! discard-default-content
-!!$    .false., & ! format-pretty-print
-!!$    .true.  /) ! xml-declaration
-  integer, parameter :: paramSettable = 127956694
-
-!!$  logical, parameter :: paramDefaults(26) = (/ &
-!!$    .false., & ! canonical-form
-!!$    .true.,  & ! cdata-sections
-!!$    .false., & ! check-character-normalization
-!!$    .true.,  & ! comments
-!!$    .false., & ! datatype-normalization
-!!$    .true.,  & ! element-content-whitespace
-!!$    .true.,  & ! entities
-!!$    .false., & ! error-handler BREACH OF SPEC
-!!$    !.true.,  & ! infoset
-!!$    .true.,  & ! namespaces
-!!$    .true.,  & ! namespace-declarations
-!!$    .false., & ! normalize-characters
-!!$    .true.,  & ! split-cdata-sections
-!!$    .true.,  & ! well-formed
-!!$    .false., & ! charset-overrides-xml-encoding
-!!$    .false., & ! disallow-doctype
-!!$    .true.,  & ! ignore-unknown-character-denormalizations
-!!$    .false., & ! resource-resolver BREACH OF SPEC
-!!$    .false., & ! supported-media-types-only
-!!$    .true.,  & ! discard-default-content
-!!$    .false., & ! format-pretty-print
-!!$    .true.  /) ! xml-declaration
-  integer, parameter :: paramDefaults = 94672596
+  integer, parameter :: paramSettable = 27293398
+  integer, parameter :: paramDefaults = 10786516
 
   type DOMConfiguration
     private
@@ -198,6 +153,7 @@ TOHW_m_dom_contents(`
         ! call setParameter(domConfig, "format-pretty-print", .false.)
         domConfig%parameters = ibclr(domConfig%parameters, 21)
         domConfig%parameters = ibclr(domConfig%parameters, 23)
+        domConfig%parameters = ibclr(domConfig%parameters, 24)
       else
         call resetParameter(domConfig, "entities")
         ! cant do normalize-characters
@@ -209,6 +165,7 @@ TOHW_m_dom_contents(`
         call resetParameter(domConfig, "format-pretty-print")
         call resetParameter(domConfig, "discard-default-content")
         call resetParameter(domConfig, "xml-declaration")
+        call resetParameter(domConfig, "invalid-pretty-print")
       endif
     case ("cdata-sections")
       if (value) domConfig%parameters = ibclr(domConfig%parameters, 1)
@@ -229,6 +186,8 @@ TOHW_m_dom_contents(`
     case ("discard-default-content")
       if (value) domConfig%parameters = ibclr(domConfig%parameters, 1)
     case ("xml-declaration")
+      if (value) domConfig%parameters = ibclr(domConfig%parameters, 1)
+    case ("invalid-pretty-print")
       if (value) domConfig%parameters = ibclr(domConfig%parameters, 1)
     end select
 
