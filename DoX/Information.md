@@ -9,4 +9,4 @@ There is a FoX website at <http://www.uszla.me.uk/FoX/>.
 
 There is also a mailing list for announcements/queries/bug reports. Information on how to subscribe may be found at <http://groups.google.com/group/fox-discuss/>. The archive of an older mailing list can be found at <http://www.uszla.me.uk/pipermail/fox/>.
 
-This manual is &copy; Toby White 2006-2008 with additional modifications by Andrew Walker 2008-2009.
+This manual is &copy; Toby White 2006-2008 with additional modifications by Andrew Walker 2008-2010.

@@ -10,7 +10,7 @@ The license can also be found within the distributed source, in the file FoX/LIC
 Copyright:  
 &copy; 2003, 2004, Alberto Garcia, Jon Wakelin   
 &copy; 2005-2008, Toby White  
-&copy; 2008-2009, Andrew Walker
+&copy; 2008-2010, Andrew Walker
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without 
