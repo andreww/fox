@@ -32,22 +32,29 @@ at the start. This will import all of the subroutines described below, plus the 
 * Function names are in `monospace`
 * argument names are in **bold**
 * optional argument names are in (**parenthesized bold**)
+
 * argument types are in *italic* and may consist of:
 * *string*: string of arbitrary (unless otherwise specified) length
 * *integer*: default integer
 * *real(sp)*: single precision real number
 * *real(dp)*: double precision real number
-* *logical*: default logical 
+* *logical*: default logical
 * *real*: either of *real(sp)* or *real(dp)*
 
+* arguments may be:
 * *scalar*: single item
 * *array*: one-dimensional array of items
 * *matrix*: two-dimensional array of items
 * *anydim*: any of *scalar*, *array*, *matrix*
 
-All functions take as their first argument an XML file object, whose keyword is always `xf`. This file object is initialized by a `kmlBeginFile` function.
+All functions take as their first argument an XML file object, whose
+keyword is always `xf`. This file object is initialized by a `kmlBeginFile` function.
 
-It is *highly* recommended that subroutines be called with keywords specified rather than relying on the implicit ordering of arguments. This is robust against changes in the library calling convention; and also stepsides a significant cause of errors when using subroutines with large numbers of arguments.
+It is *highly* recommended that subroutines be called with keywords
+specified rather than relying on the implicit ordering of arguments.
+This is robust against changes in the library calling convention; and 
+also stepsides a significant cause of errors when using subroutines
+with large numbers of arguments.
 
 ## Functions for manipulating the KML file:
 
@@ -64,7 +71,28 @@ This takes care of all calls to open a KML output file.
 * `kmlFinishFile`  
 **fx**: *xmlf_t*: An XML file object 
 
-This takes care of all calls to close an open KML output file, once you have finished with it. It is compulsory to call this - if your program finished without calling this, then your KML file will be invalid.
+This takes care of all calls to close an open KML output file, once
+you have finished with it. It is compulsory to call this - if your
+program finished without calling this, then your KML file will be
+invalid.
+
+* `kmlOpenDocument` 
+**fx**: *xmlf_t*: An XML file object
+**name**: *string* *scalar*: a name for the new document element.
+(**id**): *string* *scalar*: an optional xml id for the new document element.
+
+This starts a new document element at this point in the output. Note that no
+checks are currently performed to ensure that this is permitted, for example
+only one document is permitted to be a child of the kml root element. Most
+users should not need to use this subroutine.
+
+* `kmlCloseDocument`
+**fx**: *xmlf_t*: An XML file object 
+
+This closes the current document element. Do not close the outermose document 
+element created with `kmlBeginFile`, this must be closed with `kmlFinishFile`.
+Most users should not need to use this subroutine.
+
 
 ## Functions for producing geometrical objects:
 
