@@ -1,10 +1,21 @@
 #WKML
 
-WKML is a library for outputting [KML](http://code.google.com/apis/kml/documentation/) data. It wraps all the necessary XML calls, such that you should never need to touch any [WXML](|FoX_wxml|) calls when outputting KML.
+WKML is a library for creating [KML](http://www.opengeospatial.org/standards/kml/) 
+documents. These documents are intended to be used for "expressing geographic 
+annotation and visualization" for maps and Earth browsers such as 
+[Google Earth](http://earth.google.co.uk/) or [Marble](http://edu.kde.org/marble/).
+WKML wraps all the necessary XML calls, such that you should never need to touch any
+[WXML](|FoX_wxml|) calls when outputting KML from a Fortran application.
 
-The available functions and their intended use are listed below.
+WKML is intended to produce XML documents that conform to version 2.2 of the Open
+Geospatial Consortium's [schema](http://schemas.opengis.net/kml/2.2.0/ogckml22.xsd).
+However, the library offers no guarantee that documents produced will be valid as 
+only a small subset of the constraints are enforced. The API is designed to minimize 
+the possibilty of producing invalid KML in common use cases, and well-formdness is
+maintained by the underlying WXML library.
 
-This section of the manual will detail the available KML output subroutines.
+The available functions and their intended use are listed below. One useful reference to
+the use of KML is Google's [KML documentation](http://code.google.com/apis/kml/documentation/).
 
 ## Use of WCML
 
