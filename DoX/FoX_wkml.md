@@ -86,7 +86,7 @@ This starts a new folder. Folders are used in KML to organize other
 objects into groups, the visability of these groups can be changed 
 in one operation within Google Earth. Folders can be nested.
 
-* `kmlCloseFolder`
+* `kmlCloseFolder`  
 **fx**: *xmlf_t*: An XML file object 
 
 This closes the current folder. 
@@ -101,7 +101,7 @@ checks are currently performed to ensure that this is permitted, for example
 only one document is permitted to be a child of the kml root element. Most
 users should not need to use this subroutine.
 
-* `kmlCloseDocument`
+* `kmlCloseDocument`  
 **fx**: *xmlf_t*: An XML file object 
 
 This closes the current document element. Do not close the outermose document 
