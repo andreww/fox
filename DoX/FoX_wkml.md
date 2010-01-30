@@ -59,7 +59,7 @@ with large numbers of arguments.
 ## Functions for manipulating the KML file:
 
 * `kmlBeginFile`   
-**fx**: *xmlf_t*: An XML file object
+**fx**: *xmlf_t*: An XML file object 
 **filename**: *string* *scalar*: Filename to be opened.  
 **unit**: *integer* *scalar*: what unit number should the file be opened on? If you don't
 care, you may specify `-1` as the unit number, in which case wkml will make a guess  
@@ -76,10 +76,25 @@ you have finished with it. It is compulsory to call this - if your
 program finished without calling this, then your KML file will be
 invalid.
 
-* `kmlOpenDocument` 
-**fx**: *xmlf_t*: An XML file object
-**name**: *string* *scalar*: a name for the new document element.
-(**id**): *string* *scalar*: an optional xml id for the new document element.
+
+* `kmlOpenFolder`  
+**fx**: *xmlf_t*: An XML file object  
+(**name**): *string* *scalar*: an optional name for the new folder.  
+(**id**): *string* *scalar*: an optional xml id for the new folder. 
+
+This starts a new folder. Folders are used in KML to organize other
+objects into groups, the visability of these groups can be changed 
+in one operation within Google Earth. Folders can be nested.
+
+* `kmlCloseFolder`
+**fx**: *xmlf_t*: An XML file object 
+
+This closes the current folder. 
+
+* `kmlOpenDocument`  
+**fx**: *xmlf_t*: An XML file object  
+**name**: *string* *scalar*: a name for the new document element.  
+(**id**): *string* *scalar*: an optional xml id for the new document element. 
 
 This starts a new document element at this point in the output. Note that no
 checks are currently performed to ensure that this is permitted, for example
