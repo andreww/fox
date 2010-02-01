@@ -214,19 +214,20 @@ hexadecimal numbers in ABGR (alpha-blue-green-red) channel order. However,
 this is not very friendly. WKML provides a nicer interface to this, and all 
 WKML functions which accept colour arguments will accept them in three ways:
 
-(**\*color**) *color_t*: the colour is passed as a wkml color_t derived type. This type is opaque and is created as described below.  
-(**\*colorname**) *string*: a free-text string describing a colour. WKML understands any of the approximately 700 colour names used by X11. 
-(**\*colorhex**) *string(len=8)*: an 8-digit AVGR hexadecimal number as understood by Google Earth.  
+(**\*color**) *color_t*: the colour is passed as a wkml color_t derived type. This type is opaque and is created as described below.   
+(**\*colorname**) *string*: a free-text string describing a colour. WKML understands any of the approximately 700 colour names used by X11.   
+(**\*colorhex**) *string(len=8)*: an 8-digit AVGR hexadecimal number as understood by Google Earth.   
 
 A function and a subroutine are provided to maniputate the *color_t* derived type:
 
 *`kmlGetCustomColor`  
+
 This function takes a single argument of type *integer* or *string* and returns a *color_t* derived type. If the argument is a string the
 colour is taken from the set of X11 colours, if it is an integer, i, the ith colour is selected from the X11 list.
 
 *`kmlSetCustomColor`  
-**myCI** *color_t*: This intent(out) variable is set to the chosen colour. 
-**colorhex** *string(len=8): an 8-digit AVGR hexadecimal number. 
+**myCI** *color_t*: This intent(out) variable is set to the chosen colour.   
+**colorhex** *string(len=8): an 8-digit AVGR hexadecimal number.  
 
 This functon takes a single argument of type *string(len=8)* representing an 8-digit AVGR hexadecimal number and returns a *color_t* derived type representing that colour.
 
