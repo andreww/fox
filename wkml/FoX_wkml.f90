@@ -30,9 +30,6 @@ module FoX_wkml
   public :: kmlEndRegion
   public :: kmlAddInnerBoundary
 
-  public :: kmlCreateLine_1d_dp 
-  public :: kmlCreateLine_seg_sh_dp
-
 ! contouring function
   public :: kmlCreateContours
 
@@ -44,13 +41,9 @@ module FoX_wkml
 ! style handling functions
   public :: kmlCreatePointStyle
   public :: kmlCreateLineStyle
+  public :: kmlCreatePolygonStyle
 ! add by GY 18/04/2008
   public :: kmlAddLegend
-
-  ! temoporary add by GT
-  public :: kmlCreateLineStyle_old
-
-  public :: kmlCreatePolygonStyle
 
 ! coverage functions
   public :: kmlCreateRGBCells
