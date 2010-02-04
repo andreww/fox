@@ -247,6 +247,31 @@ created and used thus:
     
     end program colours
 
+## Styles
 
+Controling styling in KML can be quite complex. Most of the 
+subroutines in WKML allow some control of the generated style
+but they do not ptovide access to the full KML vocabulary which
+allows more complex styling. In order to access the more complex
+styles in KML it is necessary to create KML style maps - objects
+that are defined, named with a styleURL. The styleURL is then used
+to reference to the style defined by the map.
 
+Styles can be created using the following three subroutines. In each 
+case one argument is necessary: *id*, which must be a string (starting 
+with an alphabetic letter, and containing no spaces or punctuation 
+marks) which is used later on to reference the style. All other 
+arguments are optional.
+
+* `kmlCreatePointStyle`  
+**fx**: *xmlf_t*: An XML file object  
+**id**: *string* *scalar*: A URL for the style  
+(**color**): *color_t*: Point colour as a kml color type (See Colours)  
+(**colorname**): *string* *scalar*: Line colour as a name (See Colours)  
+(**colorhex**): *string(len=8)* *scalar*: Line colour in hex (See Colours)  
+(**colormode**): *string(len=6)* *scalar*: A string, either normal or random - if random, the colour will be randomly changed. See the [KML documentation](http://code.google.com/apis/kml/documentation/kmlreference.html#colorMode)  
+(**heading**): *real* *scalar*: direction to "point" the point icon in (between 0 and 360 degrees).  
+(**iconhref**): *string* *scalar*: URL of an icon used to draw the point (e.g. from an http server).  
+
+Introduces an internal area that is to be excluded from the enclosing region.
 ### 
