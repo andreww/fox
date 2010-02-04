@@ -266,12 +266,37 @@ arguments are optional.
 * `kmlCreatePointStyle`  
 **fx**: *xmlf_t*: An XML file object  
 **id**: *string* *scalar*: A URL for the style  
+(**scale**): *real* or *integer* *scalar*: A scale factor to set the size of the image displayed at the point (note, if both are present, **scale** and **heading** must be of the same type).    
+(**color**): *color_t*: Point colour as a kml color type (See Colours)  
+(**colorname**): *string* *scalar*: Point colour as a name (See Colours)  
+(**colorhex**): *string(len=8)* *scalar*: Point colour in hex (See Colours)  
+(**colormode**): *string(len=6)* *scalar*: A string, either normal or random - if random, the colour will be randomly changed. See the [KML documentation](http://code.google.com/apis/kml/documentation/kmlreference.html#color)  
+(**heading**): *real* or *integer* *scalar*: direction to "point" the point icon in (between 0 and 360 degreesnote, if b    oth are present, **scale** and **heading** must be of the same type).  
+(**iconhref**): *string* *scalar*: URL of an icon used to draw the point (e.g. from an http server).  
+
+Creates a style that can be used for points.
+
+* `kmlCreateLineStyle`  
+**fx**: *xmlf_t*: An XML file object  
+**id**: *string* *scalar*: A URL for the style  
+(**width**): *integer* *scalar*: width of the line in pixels.  
 (**color**): *color_t*: Point colour as a kml color type (See Colours)  
 (**colorname**): *string* *scalar*: Line colour as a name (See Colours)  
 (**colorhex**): *string(len=8)* *scalar*: Line colour in hex (See Colours)  
-(**colormode**): *string(len=6)* *scalar*: A string, either normal or random - if random, the colour will be randomly changed. See the [KML documentation](http://code.google.com/apis/kml/documentation/kmlreference.html#colorMode)  
-(**heading**): *real* *scalar*: direction to "point" the point icon in (between 0 and 360 degrees).  
-(**iconhref**): *string* *scalar*: URL of an icon used to draw the point (e.g. from an http server).  
+(**colormode**): *string(len=6)* *scalar*: A string, either normal or random - if random, the colour will be randomly changed. See the [KML documentation](http://code.google.com/apis/kml/documentation/kmlreference.html#color)  
 
-Introduces an internal area that is to be excluded from the enclosing region.
+Creates a style that can be used for lines.
+
+* `kmlCreatePolygonStyle`  
+**fx**: *xmlf_t*: An XML file object  
+**id**: *string* *scalar*: A URL for the style  
+(**fill**): *logical* *scalar*: Should the polygon be filled?    
+(**outline**): *logical* *scalar*: Should the polygon have an outline?   
+(**color**): *color_t*: Point colour as a kml color type (See Colours)  
+(**colorname**): *string* *scalar*: Line colour as a name (See Colours)  
+(**colorhex**): *string(len=8)* *scalar*: Line colour in hex (See Colours)  
+(**colormode**): *string(len=6)* *scalar*: A string, either normal or random - if random, the colour will be randomly changed. See the [KML documentation](http://code.google.com/apis/kml/documentation/kmlreference.html#color)  
+
+Creates a style that can be used for a polygon.
+
 ### 
