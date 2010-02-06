@@ -151,7 +151,7 @@ cutdown-wxml: cutdown
 	rm -rf wcml/ wkml/ sax/ dom/
 
 cutdown-wcml: cutdown
-	rm -rf sax/ dom/
+	rm -rf wkml/ sax/ dom/
 
 cutdown-wkml: cutdown
 	rm -rf sax/ dom/ wcml/
@@ -160,7 +160,7 @@ cutdown-sax: cutdown
 	rm -rf wxml/ wcml/ wkml/ dom/
 
 cutdown-dom: cutdown
-	rm -rf wcml/
+	rm -rf wkml/ wcml/
 
 
 

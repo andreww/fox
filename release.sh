@@ -23,7 +23,7 @@ openssl dgst -md5 ../../FoX-$1.tar.gz >> ../../FoX-$1-digest
 openssl dgst -sha1 ../../FoX-$1.tar.gz >> ../../FoX-$1-digest
 rm -rf FoX-$1
 
-for i in wxml wcml sax dom
+for i in wxml wcml wkml sax dom
 do
   tar xzf ../../FoX-$1-full.tar.gz
   (
