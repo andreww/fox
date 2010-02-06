@@ -126,6 +126,9 @@ module m_wxml_core
   public :: xmlf_Name
   public :: xmlf_OpenTag
 
+  public :: xmlf_SetPretty_print
+  public :: xmlf_GetPretty_print
+
   interface xml_AddCharacters
     module procedure xml_AddCharacters_Ch
   end interface
@@ -1632,6 +1635,23 @@ contains
 #endif
   end subroutine xml_Close
 
+  subroutine xmlf_SetPretty_print(xf, new_value)
+    type(xmlf_t), intent(inout) :: xf
+    logical, intent(in)         :: new_value
+#ifndef DUMMYLIB
+    xf%pretty_print = new_value
+#endif
+  end subroutine xmlf_SetPretty_print
+
+  pure function xmlf_GetPretty_print(xf) result(value)
+    logical :: value
+    type(xmlf_t), intent(in) :: xf
+#ifdef DUMMYLIB
+    value = .false.
+#else
+    value = xf%pretty_print
+#endif
+  end function xmlf_GetPretty_print
 
   pure function xmlf_name(xf) result(fn)
     type (xmlf_t), intent(in) :: xf

@@ -351,6 +351,16 @@ Return the filename of an open XML file
 
 Return the currently open tag of the current XML file (or the empty string if none is open)
 
+* `xmlf_GetPretty_print` result(*logical*)
+
+Return the current value of pretty_print.
+
+* `xmlf_SetPretty_print`
+**NewValue**: *logical*
+
+Set the current value of pretty_print to the NewValue. This may be useful in a mixed namespace
+document where pretty printing the output may change the meaning under one of the namespaces.
+
 ##Exceptions
 
 <a name="Exceptions"/>

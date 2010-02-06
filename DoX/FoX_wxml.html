@@ -410,6 +410,20 @@ Contents of comment <br />
 
 <p>Return the currently open tag of the current XML file (or the empty string if none is open)</p>
 
+<ul>
+<li><code>xmlf_GetPretty_print</code> result(<em>logical</em>)</li>
+</ul>
+
+<p>Return the current value of pretty_print.</p>
+
+<ul>
+<li><code>xmlf_SetPretty_print</code>
+<strong>NewValue</strong>: <em>logical</em></li>
+</ul>
+
+<p>Set the current value of pretty_print to the NewValue. This may be useful in a mixed namespace
+document where pretty printing the output may change the meaning under one of the namespaces.</p>
+
 <h2>Exceptions</h2>
 
 <p><a name="Exceptions"/></p>

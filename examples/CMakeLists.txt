@@ -13,6 +13,13 @@ target_link_libraries(
   fox_wcml)
 
 add_executable(
+  wkml_example
+  wkml_example.f90)
+target_link_libraries(
+  wkml_example
+  fox_wkml)
+
+add_executable(
   sax_example
   sax_example.f90)
 target_link_libraries(
@@ -45,6 +52,7 @@ include_directories(
   ${fox_BINARY_DIR}/dom
   ${fox_BINARY_DIR}/wxml
   ${fox_BINARY_DIR}/wcml
+  ${fox_BINARY_DIR}/wkml
   ${fox_BINARY_DIR}/common
   ${fox_BINARY_DIR}/utils
   ${fox_BINARY_DIR}/fsys

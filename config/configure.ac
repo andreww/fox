@@ -88,9 +88,9 @@ AC_ARG_ENABLE([wxml],
 AC_ARG_ENABLE([wcml],
   AC_HELP_STRING([--enable-wcml], [Compile wcml subsystem (for CML output)]),
   [eval wcml_$enableval=wcml_lib])
-dnl AC_ARG_ENABLE([wkml],
-dnl   AC_HELP_STRING([--enable-wkml], [Compile wkml subsystem (for KML output)]),
-dnl   [eval wkml_$enableval=wkml_lib])
+AC_ARG_ENABLE([wkml],
+  AC_HELP_STRING([--enable-wkml], [Compile wkml subsystem (for KML output)]),
+  [eval wkml_$enableval=wkml_lib])
 AC_ARG_ENABLE([sax],
   AC_HELP_STRING([--enable-sax], [Compile SAX parser]),
   [eval sax_$enableval=sax_lib])
@@ -104,7 +104,7 @@ if test x$wxml_yes$wcml_yes$wkml_yes$sax_yes$dom_yes = x; then
   if test x$CUTDOWN_TARGET = x; then
     if test x$wxml_no = x; then wxml_yes=wxml_lib; fi
     if test x$wcml_no = x; then wcml_yes=wcml_lib; fi
-dnl  if test x$wkml_no = x; then wkml_yes=wkml_lib; fi
+    if test x$wkml_no = x; then wkml_yes=wkml_lib; fi
     if test x$sax_no = x; then sax_yes=sax_lib; fi
     if test x$dom_no = x; then dom_yes=dom_lib; fi
   else
@@ -128,8 +128,8 @@ dnl DUMMYLIB doesnt work with DOM
 fi
 dnl
 dnl Finally, construct the build targets
-BUILD_TARGETS="$wxml_yes $wcml_yes $sax_yes $dom_yes"
-dnl BUILD_TARGETS="$wxml_yes $wcml_yes $wkml_yes $sax_yes $dom_yes"
+dnl BUILD_TARGETS="$wxml_yes $wcml_yes $sax_yes $dom_yes"
+BUILD_TARGETS="$wxml_yes $wcml_yes $wkml_yes $sax_yes $dom_yes"
 AC_SUBST(BUILD_TARGETS)
 dnl
 dnl Check for compiler kind flags
