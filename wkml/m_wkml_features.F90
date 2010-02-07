@@ -252,23 +252,22 @@ contains
         call kmlCloseTimeStamp(xf)
       end if
 
-      ! add by GT for extended data 24/04/2008
-           if (present(dataname)) then
-           call xml_NewElement(xf,'ExtendedData')
-            do k=1,size(values)
-            call xml_NewElement(xf,'Data')
-               call xml_AddAttribute(xf,'name', dataname)
-               call xml_NewElement(xf,'displayName')
-                 call xml_AddCharacters(xf,dataname)
-               call xml_EndElement(xf,'displayName')
-               call xml_NewElement(xf,'value')
-                 call xml_AddCharacters(xf,str(values(k),fmt="r5"))
-               call xml_EndElement(xf,'value')
-            call xml_EndElement(xf,'Data')
-            end do
-            call xml_EndElement(xf,'ExtendedData')
-            end if
-
+      ! Extended Data
+      if (present(dataname)) then
+        call xml_NewElement(xf,'ExtendedData')
+        do k=1,size(values)
+          call xml_NewElement(xf,'Data')
+           call xml_AddAttribute(xf,'name', dataname)
+           call xml_NewElement(xf,'displayName')
+            call xml_AddCharacters(xf,dataname)
+           call xml_EndElement(xf,'displayName')
+           call xml_NewElement(xf,'value')
+            call xml_AddCharacters(xf,str(values(k),fmt="r5"))
+           call xml_EndElement(xf,'value')
+          call xml_EndElement(xf,'Data')
+        end do
+        call xml_EndElement(xf,'ExtendedData')
+      end if
         
       if (present(altitude)) then
         call kmlAddPoint(xf, longitude(i), latitude(i), altitude(i), extrude=extrude, altitudeMode=altitudeMode)
@@ -460,8 +459,9 @@ contains
       endif
 
 ! add by GT 24042008 for adding chart functions
-      if (present(charttype).and.present(chartsize).and.present(chartdata)&
-.and.present(chartscale).and.present(charttitle)) then
+      if (present(charttype).and.present(chartsize).and.  & 
+          present(chartdata).and.present(chartscale).and. & 
+          present(charttitle) ) then
         call kmlAddChart(xf,charttype,chartsize,chartdata,chartscale,charttitle,chartlabel)
       end if
 
@@ -473,22 +473,21 @@ contains
       end if
 
     ! add by GT for extended data 24/04/2008
-           if (present(dataname)) then
-           call xml_NewElement(xf,'ExtendedData')
-            do k=1,size(values)
-            call xml_NewElement(xf,'Data')
-               call xml_AddAttribute(xf,'name', dataname)
-               call xml_NewElement(xf,'displayName')
-                 call xml_AddCharacters(xf,dataname)
-               call xml_EndElement(xf,'displayName')
-               call xml_NewElement(xf,'value')
-                 call xml_AddCharacters(xf,str(values(k),fmt="r5"))
-               call xml_EndElement(xf,'value')
-            call xml_EndElement(xf,'Data')
-            end do
-            call xml_EndElement(xf,'ExtendedData')
-            end if
-
+      if (present(dataname)) then
+        call xml_NewElement(xf,'ExtendedData')
+        do k=1,size(values)
+          call xml_NewElement(xf,'Data')
+           call xml_AddAttribute(xf,'name', dataname)
+           call xml_NewElement(xf,'displayName')
+            call xml_AddCharacters(xf,dataname)
+           call xml_EndElement(xf,'displayName')
+           call xml_NewElement(xf,'value')
+            call xml_AddCharacters(xf,str(values(k),fmt="r5"))
+           call xml_EndElement(xf,'value')
+          call xml_EndElement(xf,'Data')
+        end do
+        call xml_EndElement(xf,'ExtendedData')
+      end if
 
       if (present(altitude)) then
         call kmlAddPoint(xf, longitude(i), latitude(i), altitude(i), extrude=extrude, altitudeMode=altitudeMode)
@@ -569,67 +568,66 @@ contains
 ! this function is the easiest case, wchih just allows to create a line segment
 ! lat and long is a sigle value  07/03/2008 GT
 
-     subroutine kmlCreateLine_seg_sh_dp(xf,xi,yi,xe,ye,zi,ze,tessellate,altmode,&
-name,linewidth,description_ch,styleURL)
-          type(xmlf_t), intent(inout) ::xf
-          integer :: i, nodes
-           character(len=1) :: palm
-           double precision, intent(in) :: xi,yi,xe,ye ! start x coor and end coord
-           character(len=*),intent(in), optional :: name, styleURL,altmode,linewidth,description_ch
-           logical, intent(in),optional :: tessellate
-           double precision, intent(in),optional :: zi,ze
-           
+  subroutine kmlCreateLine_seg_sh_dp(xf,xi,yi,xe,ye,zi,ze,tessellate,altmode,&
+                                     name,linewidth,description_ch,styleURL)
+    type(xmlf_t), intent(inout) ::xf
+    real(dp), intent(in) :: xi,yi,xe,ye ! start x coor and end coord
+    character(len=*),intent(in), optional :: name, styleURL,altmode,linewidth,description_ch
+    logical, intent(in),optional :: tessellate
+    real(dp), intent(in),optional :: zi,ze
 #ifndef DUMMYLIB
-          palm="#"
-          call kmlOpenPlacemark(xf)
-           if(present(name)) then
-           call kmlAddname(xf,name)
-           else
-           call kmlAddname(xf,'')
-           end if
-           if (present(description_ch)) then
-!           call kmlAdddescription_ch(xf, description_ch)
-            call kmlAdddescription(xf, description_ch)
-           end if
+    integer :: i, nodes
+    character(len=1) :: palm
 
-           if (present(styleURL)) then
-           call kmlAddstyleUrl(xf,palm//styleURL)
-           else
-           call kmlAddstyleUrl(xf,palm//styleURL)
-           end if
-           call kmlOpenLineString(xf)
-            if(present(tessellate)) then
-            call kmlAddtessellate(xf,tessellate)
-            else
-            call kmlAddtessellate(xf,.true.)
-            end if
-            if(present(altmode)) then
-            call kmlAddaltitudeMode(xf,altmode)
-            else
-            call kmlAddaltitudeMode(xf,"relativeToGround")
-            end if
-                 call xml_NewElement(xf,'coordinates')
-                            call xml_AddCharacters(xf,xi)
-                            call xml_AddCharacters(xf,',')
-                            call xml_AddCharacters(xf,yi)
-                            if (present(zi)) then
-                            call xml_AddCharacters(xf,',')
-                             call xml_AddCharacters(xf,zi)
-                            end if
-                            call xml_AddCharacters(xf,' ')
-                            call xml_AddCharacters(xf,xe)
-                            call xml_AddCharacters(xf,',')
-                            call xml_AddCharacters(xf,ye)
-                            if (present(ze)) then
-                            call xml_AddCharacters(xf,',')
-                             call xml_AddCharacters(xf,ze)
-                            end if
-                            call xml_AddCharacters(xf,' ')  !adding space
-                  call xml_EndElement(xf,'coordinates')
-           call kmlCloseLineString(xf)
-          call kmlClosePlacemark(xf)
+    palm="#"
+    call kmlOpenPlacemark(xf)
+    if(present(name)) then
+      call kmlAddname(xf,name)
+    else
+      call kmlAddname(xf,'')
+    end if
+    if (present(description_ch)) then
+      call kmlAdddescription(xf, description_ch)
+    end if
+
+    if (present(styleURL)) then
+      call kmlAddstyleUrl(xf,palm//styleURL)
+    else
+      call kmlAddstyleUrl(xf,palm//styleURL)
+    end if
+    call kmlOpenLineString(xf)
+    if(present(tessellate)) then
+      call kmlAddtessellate(xf,tessellate)
+    else
+      call kmlAddtessellate(xf,.true.)
+    end if
+    if(present(altmode)) then
+      call kmlAddaltitudeMode(xf,altmode)
+    else
+      call kmlAddaltitudeMode(xf,"relativeToGround")
+    end if
+    call xml_NewElement(xf,'coordinates')
+     call xml_AddCharacters(xf,xi)
+     call xml_AddCharacters(xf,',')
+     call xml_AddCharacters(xf,yi)
+     if (present(zi)) then
+       call xml_AddCharacters(xf,',')
+       call xml_AddCharacters(xf,zi)
+     end if
+     call xml_AddCharacters(xf,' ')
+     call xml_AddCharacters(xf,xe)
+     call xml_AddCharacters(xf,',')
+     call xml_AddCharacters(xf,ye)
+     if (present(ze)) then
+       call xml_AddCharacters(xf,',')
+       call xml_AddCharacters(xf,ze)
+     end if
+     call xml_AddCharacters(xf,' ')  !adding space
+    call xml_EndElement(xf,'coordinates')
+    call kmlCloseLineString(xf)
+    call kmlClosePlacemark(xf)
 #endif
-         end subroutine kmlCreateLine_seg_sh_dp
+  end subroutine kmlCreateLine_seg_sh_dp
 
 
 ! Interface 1: separate long & lat arrays, optional altitude
@@ -1023,10 +1021,11 @@ name,linewidth,description_ch,styleURL)
 #endif
   end subroutine kmlStartPolygon_1d_dp
 
-  subroutine kmlStartPolygon_2d_dp(xf, coords, altitude, &
-    extrude, tessellate, altitudeMode, &
-    name, fillcolor, fillcolorname, fillcolorhex, &
-    linecolor, linecolorname, linecolorhex, linewidth, description, styleURL)
+  subroutine kmlStartPolygon_2d_dp(xf, coords, altitude, extrude, &
+                                   tessellate, altitudeMode, name,&
+                                   fillcolor, fillcolorname, fillcolorhex, &
+                                   linecolor, linecolorname, linecolorhex, &
+                                   linewidth, description, styleURL)
     type(xmlf_t), intent(inout) :: xf
     real(dp), intent(in) :: coords(:,:)
     real(dp), intent(in), optional :: altitude(:)
