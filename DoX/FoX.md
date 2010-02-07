@@ -37,11 +37,13 @@ Out of the above workshops, some [tutorial material](http://www.uszla.me.uk/FoX/
 * [SAX input](http://www.uszla.me.uk/FoX/iFaX/iFaX.4/iFaX.4.html)
 * [DOM input](http://www.uszla.me.uk/FoX/iFaX/iFaX.5/iFaX.5.html)
 
+There is also tutorial information on the use of WKML [here](http://web.me.com/dove_family/xml/kml.html).
+
 ## API documentation
 
 <a name="apidoc"/>
 
-* FoX has six sets of publically exported interfaces. These are documented here:
+* FoX has seven sets of publically exported interfaces. These are documented here:
 
 ### COMMON interfaces
 
