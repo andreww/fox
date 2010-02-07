@@ -184,7 +184,7 @@ places.  If you move the FoX directory later on, you will need to re-run configu
 
 <p>To run them all, simply run <code>make check</code> from the top-level directory. This will run the individual testsuites, and collate their results.</p>
 
-<p>If any failures occur (unrelated to known compiler issues, see the <a href="http://uszla.me.uk/space/software/FoX/compat/">up-to-date list</a>), please send a message to the mailing list (<a href="m&#x61;&#105;&#x6C;&#x74;&#x6F;:&#70;&#111;&#x58;&#64;&#x6C;i&#x73;&#116;&#115;&#x2E;&#117;&#115;&#x7A;&#x6C;a&#46;&#109;&#101;&#x2E;&#x75;&#x6B;">&#70;&#111;&#x58;&#64;&#x6C;i&#x73;&#116;&#115;&#x2E;&#117;&#115;&#x7A;&#x6C;a&#46;&#109;&#101;&#x2E;&#x75;&#x6B;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
+<p>If any failures occur (unrelated to known compiler issues, see the <a href="http://uszla.me.uk/space/software/FoX/compat/">up-to-date list</a>), please send a message to the mailing list (<a href="&#109;&#97;&#105;&#x6C;&#x74;&#x6F;:&#70;&#111;&#88;&#64;&#108;&#x69;&#115;&#x74;&#115;&#46;&#117;&#x73;&#122;&#108;&#97;&#46;&#109;&#101;&#46;&#117;&#x6B;">&#70;&#111;&#88;&#64;&#108;&#x69;&#115;&#x74;&#115;&#46;&#117;&#x73;&#122;&#108;&#97;&#46;&#109;&#101;&#46;&#117;&#x6B;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
 
 <p>The testsuites for the SAX and DOM libraries are very extensive, and are somewhat fragile, so are not distributed with FoX. Please contact the author for details.</p>
 
@@ -1517,7 +1517,7 @@ maintained by the underlying WXML library.</p>
 <p>The available functions and their intended use are listed below. One useful reference to
 the use of KML is Google's <a href="http://code.google.com/apis/kml/documentation/">KML documentation</a>.</p>
 
-<h2>Use of WCML</h2>
+<h2>Use of WKML</h2>
 
 <p>wkml subroutines can be accessed from within a module or subroutine by inserting</p>
 
@@ -1533,15 +1533,15 @@ the use of KML is Google's <a href="http://code.google.com/apis/kml/documentatio
 <ul>
 <li>Function names are in <code>monospace</code></li>
 <li>argument names are in <strong>bold</strong></li>
-<li><p>optional argument names are in (<strong>parenthesized bold</strong>)</p></li>
-<li><p>argument types are in <em>italic</em> and may consist of:</p></li>
+<li>optional argument names are in (<strong>parenthesized bold</strong>)  </li>
+<li>argument types are in <em>italic</em> and may consist of:  </li>
 <li><em>string</em>: string of arbitrary (unless otherwise specified) length</li>
 <li><em>integer</em>: default integer</li>
 <li><em>real(sp)</em>: single precision real number</li>
 <li><em>real(dp)</em>: double precision real number</li>
 <li><em>logical</em>: default logical</li>
-<li><p><em>real</em>: either of <em>real(sp)</em> or <em>real(dp)</em></p></li>
-<li><p>arguments may be:</p></li>
+<li><em>real</em>: either of <em>real(sp)</em> or <em>real(dp)</em></li>
+<li>arguments may be:</li>
 <li><em>scalar</em>: single item</li>
 <li><em>array</em>: one-dimensional array of items</li>
 <li><em>matrix</em>: two-dimensional array of items</li>
@@ -1561,11 +1561,11 @@ with large numbers of arguments.</p>
 
 <ul>
 <li><code>kmlBeginFile</code> <br />
-<strong>fx</strong>: <em>xmlf_t</em>: An XML file object 
+<strong>fx</strong>: <em>xmlf_t</em>: An XML file object <br />
 <strong>filename</strong>: <em>string</em> <em>scalar</em>: Filename to be opened. <br />
 <strong>unit</strong>: <em>integer</em> <em>scalar</em>: what unit number should the file be opened on? If you don't
 care, you may specify <code>-1</code> as the unit number, in which case wkml will make a guess <br />
-(<strong>replace</strong>): <em>logical</em> <em>scalar</em>: should the file be replaced if it already exists? <em>default: yes</em>
+(<strong>replace</strong>): <em>logical</em> <em>scalar</em>: should the file be replaced if it already exists? <em>default: yes</em> <br />
 (<strong>docName</strong>): <em>string</em> <em>scalar</em>: an optional name for the outermost document element. If absent, "WKML output" will be used</li>
 </ul>
 
@@ -1633,7 +1633,7 @@ Most users should not need to use this subroutine.</p>
 (<strong>colorhex</strong>): <em>string(len=8)</em> <em>scalar</em>: Line colour in hex (See Colours) <br />
 (<strong>scale</strong>): <em>real</em> <em>scalar</em>: Scaling size for the point icon. <br />
 (<strong>description</strong>): <em>string</em> <em>array</em>: A description for each point. <br />
-(<strong>description_numbers</strong>): <em>real</em> <em>array</em>: Numeric description for each point.
+(<strong>description_numbers</strong>): <em>real</em> <em>array</em>: Numeric description for each point. <br />
 (<strong>styleURL</strong>): <em>string</em> <em>scalar</em>: Location of style specification (see Style Handling) <br />
 <em>and:</em> <br />
 <strong>longitude</strong>: <em>real</em> <em>array</em>: longitude of each point in degrees <br />
@@ -1659,7 +1659,7 @@ Most users should not need to use this subroutine.</p>
 (<strong>color</strong>): <em>color_t</em>: Line colour as a kml color type (See Colours) <br />
 (<strong>colorname</strong>): <em>string</em> <em>scalar</em>: Line colour as a name (See Colours) <br />
 (<strong>colorhex</strong>): <em>string(len=8)</em> <em>scalar</em>: Line colour in hex (See Colours) <br />
-(<strong>width</strong>): <em>integer</em> <em>scalar</em>: Width of the lines.
+(<strong>width</strong>): <em>integer</em> <em>scalar</em>: Width of the lines. <br />
 (<strong>scale</strong>): <em>real</em> <em>scalar</em>: Scaling size for the point icon. <br />
 (<strong>description</strong>): <em>string</em> <em>array</em>: A description for each point. <br />
 (<strong>styleURL</strong>): <em>string</em> <em>scalar</em>: Location of style specification (see Style Handling) <br />
@@ -1682,14 +1682,14 @@ Most users should not need to use this subroutine.</p>
 (<strong>extrude</strong>): <em>logical</em> <em>scalar</em>: If altitude is non-zero, should the point be connected to the ground? <br />
 (<strong>tessellate</strong>): <em>logical</em> <em>scalar</em>: If altitude is not specified, should the line produced follow the altitude of the ground below it? <br />
 (<strong>altitudeMode</strong>): <em>logical</em> <em>scalar</em>: If altitude is specified, is it relativeToGround or absolute? <br />
-(<strong>name</strong>): <em>string</em> <em>scalar</em>: A name for the region
+(<strong>name</strong>): <em>string</em> <em>scalar</em>: A name for the region <br />
 (<strong>fillcolor</strong>): <em>color_t</em>: Region colour as a kml color type (See Colours) <br />
 (<strong>fillcolorname</strong>): <em>string</em> <em>scalar</em>: Region  colour as a name (See Colours) <br />
 (<strong>fillcolorhex</strong>): <em>string(len=8)</em> <em>scalar</em>: Region colour in hex (See Colours) <br />
 (<strong>linecolor</strong>): <em>color_t</em>: Line colour as a kml color type (See Colours) <br />
 (<strong>linecolorname</strong>): <em>string</em> <em>scalar</em>: Line colour as a name (See Colours) <br />
 (<strong>linecolorhex</strong>): <em>string(len=8)</em> <em>scalar</em>: Line colour in hex (See Colours) <br />
-(<strong>linewidth</strong>): <em>integer</em> <em>scalar</em>: Width of the line.
+(<strong>linewidth</strong>): <em>integer</em> <em>scalar</em>: Width of the line. <br />
 (<strong>description</strong>): <em>string</em> <em>scalar</em>: A description for the region. <br />
 (<strong>styleURL</strong>): <em>string</em> <em>scalar</em>: Location of style specification (see Style Handling) <br />
 <em>and:</em> <br />
@@ -1786,7 +1786,7 @@ are provided, a default of 5 levels with an autogenerated colormap will be used.
 <em>and:</em> <br />
 <strong>values</strong>: <em>real</em> <em>matrix</em>: data values. <br />
 (<strong>colormap</strong>): <em>color_t</em> <em>array</em>: colours used to describe values. <br />
-(<strong>height</strong>): <em>real(sp)</em> <em>scalar</em>: ??
+(<strong>height</strong>): <em>real(sp)</em> <em>scalar</em>: where this is specified, the generated visualization will vary in height as well as colour. The value of this variable will be used to as a multiplicative prefactor to scale the data before visualization. <br />
 (<strong>contour<em>values</strong>): *real(sp)* *array*: values used to contour data. <br />
 (<strong>num</em>levels</strong>): <em>integer</em> <em>scalar</em>: number of data values to show. <br />
 (<strong>name</strong>): <em>string</em> <em>scalar</em>: name describing the cells.  </li>
@@ -1811,7 +1811,7 @@ are provided, a default of 5 levels with an autogenerated colormap will be used.
 <em>and:</em> <br />
 <strong>values</strong>: <em>real</em> <em>matrix</em>: data values. <br />
 (<strong>colormap</strong>): <em>color_t</em> <em>array</em>: colours used to describe values. <br />
-(<strong>height</strong>): <em>real(sp)</em> <em>scalar</em>: ??
+(<strong>height</strong>): <em>real(sp)</em> <em>scalar</em>: where this is specified, the generated visualization will vary in height as well as colour. The value of this variable will be used to as a multiplicative prefactor to scale the data before visualization. <br />
 (<strong>contour<em>values</strong>): *real(sp)* *array*: values used to contour data. <br />
 (<strong>num</em>levels</strong>): <em>integer</em> <em>scalar</em>: number of data values to show. <br />
 (<strong>name</strong>): <em>string</em> <em>scalar</em>: name describing the cells. <br />
@@ -1893,7 +1893,7 @@ arguments are optional.</p>
 (<strong>colorname</strong>): <em>string</em> <em>scalar</em>: Point colour as a name (See Colours) <br />
 (<strong>colorhex</strong>): <em>string(len=8)</em> <em>scalar</em>: Point colour in hex (See Colours) <br />
 (<strong>colormode</strong>): <em>string(len=6)</em> <em>scalar</em>: A string, either normal or random - if random, the colour will be randomly changed. See the <a href="http://code.google.com/apis/kml/documentation/kmlreference.html#color">KML documentation</a> <br />
-(<strong>heading</strong>): <em>real</em> or <em>integer</em> <em>scalar</em>: direction to "point" the point icon in (between 0 and 360 degreesnote, if b    oth are present, <strong>scale</strong> and <strong>heading</strong> must be of the same type). <br />
+(<strong>heading</strong>): <em>real</em> or <em>integer</em> <em>scalar</em>: direction to "point" the point icon in (between 0 and 360 degreesnote, if both are present, <strong>scale</strong> and <strong>heading</strong> must be of the same type). <br />
 (<strong>iconhref</strong>): <em>string</em> <em>scalar</em>: URL of an icon used to draw the point (e.g. from an http server).  </li>
 </ul>
 
@@ -3626,9 +3626,9 @@ Return the value of the fragment</p></li>
 <h1>Further information</h1>
 
 <p>FoX evolved from the initial codebase of <a href="http://lcdx00.wm.lc.ehu.es/ag/xml/">xmlf90</a>,
-which was written largely by Alberto Garcia &lt;<a href="&#x6D;&#x61;&#105;&#108;&#x74;&#111;:&#x61;&#108;&#98;&#101;&#x72;&#116;&#111;&#103;&#64;&#x69;&#x63;&#109;&#x61;&#98;&#x2E;&#x65;&#115;">&#x61;&#108;&#98;&#101;&#x72;&#116;&#111;&#103;&#64;&#x69;&#x63;&#109;&#x61;&#98;&#x2E;&#x65;&#115;</a>> and Jon Wakelin &lt;<a href="&#x6D;&#x61;&#x69;&#x6C;&#116;&#111;:&#106;&#111;&#110;&#x2E;&#x77;&#97;&#107;&#101;&#x6C;&#x69;&#110;&#64;b&#x72;&#105;&#x73;&#x74;o&#x6C;&#x2E;&#x61;&#x63;&#x2E;&#117;&#107;">&#106;&#111;&#110;&#x2E;&#x77;&#97;&#107;&#101;&#x6C;&#x69;&#110;&#64;b&#x72;&#105;&#x73;&#x74;o&#x6C;&#x2E;&#x61;&#x63;&#x2E;&#117;&#107;</a>>.</p>
+which was written largely by Alberto Garcia &lt;<a href="&#x6D;&#x61;&#x69;&#108;&#116;&#111;:&#x61;&#x6C;&#x62;&#101;&#x72;&#x74;o&#103;&#64;&#105;&#99;&#109;&#97;&#x62;&#46;e&#115;">&#x61;&#x6C;&#x62;&#101;&#x72;&#x74;o&#103;&#64;&#105;&#99;&#109;&#97;&#x62;&#46;e&#115;</a>> and Jon Wakelin &lt;<a href="&#x6D;&#97;i&#x6C;&#x74;&#111;:&#x6A;&#111;n&#46;&#x77;&#97;&#x6B;&#101;&#x6C;&#x69;&#x6E;&#64;&#x62;&#x72;i&#115;&#x74;&#x6F;&#x6C;&#x2E;&#97;&#x63;&#46;&#117;&#107;">&#x6A;&#111;n&#46;&#x77;&#97;&#x6B;&#101;&#x6C;&#x69;&#x6E;&#64;&#x62;&#x72;i&#115;&#x74;&#x6F;&#x6C;&#x2E;&#97;&#x63;&#46;&#117;&#107;</a>>.</p>
 
-<p>FoX is the work of Toby White &lt;<a href="&#109;&#97;&#x69;&#108;t&#x6F;:&#x74;o&#x77;&#64;&#117;&#115;&#x7A;&#x6C;a&#x2E;&#109;&#x65;&#x2E;&#x75;&#107;">&#x74;o&#x77;&#64;&#117;&#115;&#x7A;&#x6C;a&#x2E;&#109;&#x65;&#x2E;&#x75;&#107;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him. Andrew Walker &lt;<a href="&#109;&#x61;&#105;&#108;t&#111;:&#x61;&#46;&#119;&#97;l&#107;&#101;&#x72;&#64;&#117;&#x63;&#x6C;&#46;&#x61;&#x63;&#46;&#117;&#x6B;">&#x61;&#46;&#119;&#97;l&#107;&#101;&#x72;&#64;&#117;&#x63;&#x6C;&#46;&#x61;&#x63;&#46;&#117;&#x6B;</a>> currently looks after maintenance of FoX.</p>
+<p>FoX is the work of Toby White &lt;<a href="&#x6D;&#97;&#x69;&#108;&#116;&#111;:&#x74;&#111;&#x77;&#64;&#x75;&#x73;&#122;l&#97;&#x2E;&#109;&#101;&#46;&#x75;&#107;">&#x74;&#111;&#x77;&#64;&#x75;&#x73;&#122;l&#97;&#x2E;&#109;&#101;&#46;&#x75;&#107;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him. Andrew Walker &lt;<a href="&#x6D;&#97;&#105;&#x6C;&#x74;&#111;:&#97;&#x2E;&#119;&#x61;&#x6C;&#x6B;&#x65;&#x72;&#64;&#x75;&#x63;&#x6C;&#x2E;&#97;&#99;&#x2E;u&#x6B;">&#97;&#x2E;&#119;&#x61;&#x6C;&#x6B;&#x65;&#x72;&#64;&#x75;&#x63;&#x6C;&#x2E;&#97;&#99;&#x2E;u&#x6B;</a>> currently looks after maintenance of FoX.</p>
 
 <p>There is a FoX website at <a href="http://www.uszla.me.uk/FoX/">http://www.uszla.me.uk/FoX/</a>.</p>
 
