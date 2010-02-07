@@ -30,11 +30,8 @@ module FoX_wkml
   public :: kmlEndRegion
   public :: kmlAddInnerBoundary
 
-! contouring function
-  public :: kmlCreateContours
-
 ! color handling functions and variables
-  public :: color_t  ! make derivded type colorindex available
+  public :: color_t  
   public :: kmlGetCustomColor
   public :: kmlSetCustomColor
 
@@ -42,17 +39,10 @@ module FoX_wkml
   public :: kmlCreatePointStyle
   public :: kmlCreateLineStyle
   public :: kmlCreatePolygonStyle
-! add by GY 18/04/2008
-  public :: kmlAddLegend
 
 ! coverage functions
-  public :: kmlCreateRGBCells
+  public :: kmlCreateContours
   public :: kmlCreateCells
-
-! add by GT 10/03/2008
-!!  public :: kmlCreateCells3
-
-! add chart function 22042008 (need to remove later)
-  public :: kmlAddChart
+!  public :: kmlCreateRGBCells
 
 end module FoX_wkml
