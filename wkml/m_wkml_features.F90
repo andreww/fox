@@ -1,18 +1,11 @@
 module m_wkml_features
 
-
-! change m_common_array_Str to fox_m_fsys_array_str 18112008 GT
-!  use m_common_array_Str, only: vs_str_alloc, str_vs
-  use fox_m_fsys_array_str
+  use fox_m_fsys_realtypes, only : sp, dp
+  use FoX_wxml, only: xmlf_t
+#ifndef DUMMYLIB
   use m_common_error, only: FoX_error
-
-! change m_common_realtypes, to fox_m_fsys_realtypes 18112008 GT
-!  use m_common_realtypes, only: sp , dp
-  use fox_m_fsys_realtypes
-
   use FoX_common, only:  str, operator(//)
-!  use FoX_wxml, only: xmlf_t, xmlf_OpenTag, xmlf_NewId
-  use FoX_wxml
+  use FoX_wxml, only : xml_AddAttribute, xml_NewElement, xml_EndElement, xml_AddCharacters, xmlf_OpenTag
   use m_wkml_lowlevel, only: kmlOpenFolder, kmlCloseFolder, kmlOpenPlacemark, kmlClosePlacemark, &
     kmlAddCoordinates, kmlOpenInnerBoundaryIs, kmlCloseInnerBoundaryIs, kmlOpenOuterBoundaryIs, kmlCloseOuterBoundaryIs, &
     kmlAddDescription, kmlAddStyleURL, kmlOpenPoint, kmlClosePoint, kmlAddAltitudeMode, kmlAddExtrude, &
@@ -20,8 +13,9 @@ module m_wkml_features
     kmlAddwhen, kmlOpenTimeStamp, kmlCloseTimeStamp, kmlAddname,kmlAddtessellate
   use m_wkml_styling, only: kmlCreatePointStyle, kmlCreateLineStyle, kmlCreatePolygonStyle, &
     kmlOpenStyle, kmlCloseStyle
-  use m_wkml_Color, only: col => color_t
   use m_wkml_chart
+#endif
+  use m_wkml_Color, only: col => color_t
 
   implicit none
   private
@@ -64,10 +58,6 @@ module m_wkml_features
   public :: kmlAddPoint
   public :: kmlCreatePoints
   public :: kmlCreateLine
-
-  public :: kmlCreateLine_1d_dp
-  public :: kmlCreateLine_seg_sh_dp
-
   public :: kmlStartRegion
   public :: kmlAddInnerBoundary
   public :: kmlEndRegion
@@ -85,12 +75,13 @@ contains
     character(len=*), intent(in), optional :: altitudeMode
 ! No need for tessellate - it has no effect on a Point according to KML documentation
 
+#ifndef DUMMYLIB
     call kmlOpenPoint(xf)
     if (present(extrude)) call kmlAddExtrude(xf, extrude)
     if (present(altitudeMode)) call kmlAddAltitudeMode(xf, altitudeMode)
     call kmlAddCoordinates(xf, longitude, latitude, z)
     call kmlClosePoint(xf)
-
+#endif
   end subroutine kmlAddPoint_sp
 
   subroutine kmlAddPoint_dp(xf, longitude, latitude, z, extrude, altitudeMode)
@@ -101,12 +92,13 @@ contains
     character(len=*), intent(in), optional :: altitudeMode
 ! No need for tessellate - it has no effect on a Point according to KML documentation
 
+#ifndef DUMMYLIB
     call kmlOpenPoint(xf)
     if (present(extrude)) call kmlAddExtrude(xf, extrude)
     if (present(altitudeMode)) call kmlAddAltitudeMode(xf, altitudeMode)
     call kmlAddCoordinates(xf, longitude, latitude, z)
     call kmlClosePoint(xf)
-
+#endif
   end subroutine kmlAddPoint_dp
 
 ! Now - interfaces for a series of points. We have 0d (a single point, but with all options,
@@ -150,7 +142,7 @@ contains
     integer :: k
     real(sp), intent(in), optional :: values(:)
 
-
+#ifndef DUMMYLIB
     ! Need to check presence explicitly since we mutate altitude with (//)
     if (present(altitude)) then
       call kmlCreatePoints(xf, (/longitude/), (/latitude/), (/altitude/), &
@@ -170,6 +162,7 @@ contains
         charttitle=charttitle,chartdata=chartdata,chartlabel=chartlabel,&
         dataname=dataname,values=values)
     endif
+#endif
   end subroutine kmlCreatePoints_0d_sp
 
 ! Interface 1: separate long & lat arrays, optional altitude
@@ -205,7 +198,7 @@ contains
     integer :: k
     real(sp), intent(in), optional :: values(:)
 
-
+#ifndef DUMMYLIB
     n = size(longitude)
     if (n/=size(latitude)) then
       call FoX_error("Incommensurate sizes for longitude and latitude arrays in kmlCreatePoints")
@@ -286,7 +279,7 @@ contains
     enddo
 
     call kmlCloseFolder(xf)
-
+#endif
   end subroutine kmlCreatePoints_1d_sp
 
 ! Interface 2: combined long & lat array, optional altitude
@@ -317,7 +310,7 @@ contains
     integer :: k
     real(sp), intent(in), optional :: values(:)
 
-    
+#ifndef DUMMYLIB    
     if (size(coords,1)==2) then
       call kmlCreatePoints(xf, coords(1,:), coords(2,:), altitude, &
         extrude=extrude, altitudeMode=altitudeMode, &
@@ -339,7 +332,7 @@ contains
     else
       call FoX_error("coords array first dimension is wrong in kmlCreatePoints - must be 2 or 3")
     endif
-
+#endif
   end subroutine kmlCreatePoints_2d_sp
 
 ! Interface 0: Single long/lat point, optional altitude
@@ -372,7 +365,7 @@ contains
     real(dp), intent(in), optional :: values(:)
 
 
-
+#ifndef DUMMYLIB
     ! Need to check presence explicitly since we mutate altitude with (//)
     if (present(altitude)) then
       call kmlCreatePoints(xf, (/longitude/), (/latitude/), (/altitude/), &
@@ -391,6 +384,7 @@ contains
         chartscale=chartscale,chartsize=chartsize,chartdata=chartdata,&
         charttitle=charttitle,chartlabel=chartlabel,dataname=dataname, values=values)
     endif
+#endif
   end subroutine kmlCreatePoints_0d_dp
 
 ! Interface 1: separate long & lat arrays, optional altitude
@@ -426,6 +420,7 @@ contains
     integer :: k
     real(dp), intent(in), optional :: values(:)
 
+#ifndef DUMMYLIB
     n = size(longitude)
     if (n/=size(latitude)) then
       call FoX_error("Incommensurate sizes for longitude and latitude arrays in kmlCreatePoints")
@@ -504,8 +499,7 @@ contains
     enddo
 
     call kmlCloseFolder(xf)
-
-
+#endif
   end subroutine kmlCreatePoints_1d_dp
 
 ! Interface 2: combined long & lat array, optional altitude
@@ -538,7 +532,7 @@ contains
     integer :: k
     real(dp), intent(in), optional :: values(:)
 
-
+#ifndef DUMMYLIB
     if (size(coords,1)==2) then
       call kmlCreatePoints(xf, coords(1,:), coords(2,:), altitude, &
         extrude=extrude, altitudeMode=altitudeMode, &
@@ -562,7 +556,7 @@ contains
     else
       call FoX_error("coords array first dimension is wrong in kmlCreatePoints - must be 2 or 3")
     endif
-
+#endif
   end subroutine kmlCreatePoints_2d_dp
 
 
@@ -585,7 +579,7 @@ name,linewidth,description_ch,styleURL)
            logical, intent(in),optional :: tessellate
            double precision, intent(in),optional :: zi,ze
            
-
+#ifndef DUMMYLIB
           palm="#"
           call kmlOpenPlacemark(xf)
            if(present(name)) then
@@ -634,6 +628,7 @@ name,linewidth,description_ch,styleURL)
                   call xml_EndElement(xf,'coordinates')
            call kmlCloseLineString(xf)
           call kmlClosePlacemark(xf)
+#endif
          end subroutine kmlCreateLine_seg_sh_dp
 
 
@@ -657,7 +652,8 @@ name,linewidth,description_ch,styleURL)
     integer, intent(in), optional :: width
     character(len=*), intent(in), optional :: description
     character(len=*), intent(in), optional :: styleURL
-    
+
+#ifndef DUMMYLIB    
     integer :: n
     logical :: closed_, needPlacemark
 
@@ -711,7 +707,7 @@ name,linewidth,description_ch,styleURL)
       call kmlCloseLineString(xf)
     endif
     if (needPlacemark) call kmlClosePlacemark(xf)
-
+#endif
   end subroutine kmlCreateLine_1d_sp
 
 ! Interface 2: combined long & lat array, optional altitude
@@ -733,7 +729,8 @@ name,linewidth,description_ch,styleURL)
     integer, intent(in), optional :: width
     character(len=*), intent(in), optional :: description
     character(len=*), intent(in), optional :: styleURL
-    
+
+#ifndef DUMMYLIB    
     if (size(coords,1)==2) then
       call kmlCreateLine(xf, coords(1,:), coords(2,:), altitude, &
         closed=closed, extrude=extrude, tessellate=tessellate, altitudeMode=altitudeMode, &
@@ -750,7 +747,7 @@ name,linewidth,description_ch,styleURL)
     else
       call FoX_error("coords array first dimension is wrong in kmlCreateLine - must be 2 or 3")
     endif
-
+#endif
   end subroutine kmlCreateLine_2d_sp
 
 ! Interface 1: separate long & lat arrays, optional altitude
@@ -773,7 +770,8 @@ name,linewidth,description_ch,styleURL)
     integer, intent(in), optional :: width
     character(len=*), intent(in), optional :: description
     character(len=*), intent(in), optional :: styleURL
-    
+
+#ifndef DUMMYLIB    
     integer :: n
     logical :: closed_, needPlacemark
 
@@ -827,7 +825,7 @@ name,linewidth,description_ch,styleURL)
       call kmlCloseLineString(xf)
     endif
     if (needPlacemark) call kmlClosePlacemark(xf)
-
+#endif
   end subroutine kmlCreateLine_1d_dp
 
 ! Interface 2: combined long & lat array, optional altitude
@@ -849,7 +847,8 @@ name,linewidth,description_ch,styleURL)
     integer, intent(in), optional :: width
     character(len=*), intent(in), optional :: description
     character(len=*), intent(in), optional :: styleURL
-    
+
+#ifndef DUMMYLIB    
     if (size(coords,1)==2) then
       call kmlCreateLine(xf, coords(1,:), coords(2,:), altitude, &
         closed=closed, extrude=extrude, tessellate=tessellate, altitudeMode=altitudeMode, &
@@ -866,7 +865,7 @@ name,linewidth,description_ch,styleURL)
     else
       call FoX_error("coords array first dimension is wrong in kmlCreateLine - must be 2 or 3")
     endif
-
+#endif
   end subroutine kmlCreateLine_2d_dp
 
 
@@ -891,7 +890,8 @@ name,linewidth,description_ch,styleURL)
     integer, intent(in), optional :: linewidth
     character(len=*), intent(in), optional :: description
     character(len=*), intent(in), optional :: styleURL
-    
+
+#ifndef DUMMYLIB    
     integer :: n
     logical :: needPlacemark, outline, fill
 
@@ -921,6 +921,7 @@ name,linewidth,description_ch,styleURL)
     call kmlCloseOuterBoundaryIs(xf)
 
     ! Leave polygon unclosed, we might add innerboundaries ...
+#endif
   end subroutine kmlStartPolygon_1d_sp
 
   subroutine kmlStartPolygon_2d_sp(xf, coords, altitude, &
@@ -943,7 +944,8 @@ name,linewidth,description_ch,styleURL)
     integer, intent(in), optional :: linewidth
     character(len=*), intent(in), optional :: description
     character(len=*), intent(in), optional :: styleURL
-    
+
+#ifndef DUMMYLIB    
     if (size(coords,1)==2) then
       call kmlStartRegion(xf, coords(1,:), coords(2,:), altitude, &
         extrude=extrude, tessellate=tessellate, altitudeMode=altitudeMode, &
@@ -962,7 +964,7 @@ name,linewidth,description_ch,styleURL)
     else
       call FoX_error("coords array first dimension is wrong in kmlStartPolygon - must be 2 or 3")
     endif
-
+#endif
   end subroutine kmlStartPolygon_2d_sp
 
   subroutine kmlStartPolygon_1d_dp(xf, longitude, latitude, altitude, &
@@ -986,7 +988,8 @@ name,linewidth,description_ch,styleURL)
     integer, intent(in), optional :: linewidth
     character(len=*), intent(in), optional :: description
     character(len=*), intent(in), optional :: styleURL
-    
+
+#ifndef DUMMYLIB    
     integer :: n
     logical :: needPlacemark, outline, fill
 
@@ -1017,6 +1020,7 @@ name,linewidth,description_ch,styleURL)
     call kmlCloseOuterBoundaryIs(xf)
 
     ! Leave polygon unclosed, we might add innerboundaries ...
+#endif
   end subroutine kmlStartPolygon_1d_dp
 
   subroutine kmlStartPolygon_2d_dp(xf, coords, altitude, &
@@ -1039,7 +1043,8 @@ name,linewidth,description_ch,styleURL)
     integer, intent(in), optional :: linewidth
     character(len=*), intent(in), optional :: description
     character(len=*), intent(in), optional :: styleURL
-    
+
+#ifndef DUMMYLIB    
     if (size(coords,1)==2) then
       call kmlStartRegion(xf, coords(1,:), coords(2,:), altitude, &
         extrude=extrude, tessellate=tessellate, altitudeMode=altitudeMode, &
@@ -1058,7 +1063,7 @@ name,linewidth,description_ch,styleURL)
     else
       call FoX_error("coords array first dimension is wrong in kmlStartPolygon - must be 2 or 3")
     endif
-
+#endif
   end subroutine kmlStartPolygon_2d_dp
 
   subroutine kmlAddInnerBoundary_1d_sp(xf, longitude, latitude, altitude)
@@ -1066,7 +1071,8 @@ name,linewidth,description_ch,styleURL)
     real(sp), intent(in) :: longitude(:)
     real(sp), intent(in) :: latitude(:)
     real(sp), intent(in), optional :: altitude(:)
-    
+
+#ifndef DUMMYLIB
     integer :: n
 
     n = size(longitude)
@@ -1078,14 +1084,15 @@ name,linewidth,description_ch,styleURL)
     call kmlOpenInnerBoundaryIs(xf)
     call kmlCreateLine(xf, longitude, latitude, altitude, closed=.true.)
     call kmlCloseInnerBoundaryIs(xf)
-
+#endif
   end subroutine kmlAddInnerBoundary_1d_sp
 
   subroutine kmlAddInnerBoundary_2d_sp(xf, coords, altitude)
     type(xmlf_t), intent(inout) :: xf
     real(sp), intent(in) :: coords(:,:)
     real(sp), intent(in), optional :: altitude(:)
-    
+
+#ifndef DUMMYLIB    
     if (size(coords,1)==2) then
       call kmlAddInnerBoundary(xf, coords(1,:), coords(2,:), altitude)
     elseif (size(coords,1)==3) then
@@ -1096,7 +1103,7 @@ name,linewidth,description_ch,styleURL)
     else
       call FoX_error("coords array first dimension is wrong in kmlAddInnerBoundary - must be 2 or 3")
     endif
-
+#endif
   end subroutine kmlAddInnerBoundary_2d_sp
 
   subroutine kmlAddInnerBoundary_1d_dp(xf, longitude, latitude, altitude)
@@ -1104,7 +1111,8 @@ name,linewidth,description_ch,styleURL)
     real(dp), intent(in) :: longitude(:)
     real(dp), intent(in) :: latitude(:)
     real(dp), intent(in), optional :: altitude(:)
-    
+
+#ifndef DUMMYLIB    
     integer :: n
 
     n = size(longitude)
@@ -1116,14 +1124,15 @@ name,linewidth,description_ch,styleURL)
     call kmlOpenInnerBoundaryIs(xf)
     call kmlCreateLine(xf, longitude, latitude, altitude, closed=.true.)
     call kmlCloseInnerBoundaryIs(xf)
-
+#endif
   end subroutine kmlAddInnerBoundary_1d_dp
 
   subroutine kmlAddInnerBoundary_2d_dp(xf, coords, altitude)
     type(xmlf_t), intent(inout) :: xf
     real(dp), intent(in) :: coords(:,:)
     real(dp), intent(in), optional :: altitude(:)
-    
+
+#ifndef DUMMYLIB
     if (size(coords,1)==2) then
       call kmlAddInnerBoundary(xf, coords(1,:), coords(2,:), altitude)
     elseif (size(coords,1)==3) then
@@ -1134,15 +1143,16 @@ name,linewidth,description_ch,styleURL)
     else
       call FoX_error("coords array first dimension is wrong in kmlAddInnerBoundary - must be 2 or 3")
     endif
-
+#endif
   end subroutine kmlAddInnerBoundary_2d_dp
  
   subroutine kmlEndRegion(xf)
     type(xmlf_t), intent(inout) :: xf
 
+#ifndef DUMMYLIB
     call kmlClosePolygon(xf)
     call kmlClosePlacemark(xf)
-
+#endif
   end subroutine kmlEndRegion
 
 end module m_wkml_features

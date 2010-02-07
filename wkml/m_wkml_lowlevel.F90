@@ -1,14 +1,26 @@
 module m_wkml_lowlevel
 
+#ifdef DUMMYLIB
+  use FoX_wxml, only : xmlf_t
+#else
   use m_common_error
   use fox_m_fsys_realtypes
   use FoX_wxml
   use FoX_common
   use FoX_utils, only: URI, parseURI, expressURI, destroyURI
+#endif
 
   implicit none
   private
+  
+  ! Subroutines public to users of FoX_wkml (rexported in that module)
+  public kmlOpenDocument
+  public kmlOpenFolder
+  public kmlCloseFolder
+  public kmlCloseDocument
 
+#ifndef DUMMYLIB
+  ! Subroutines public inside wkml for kmlAdd
   public kmlAddname,kmlAddopen,kmlAddoutline,kmlAddextrude, &
     kmlAddfill,kmlAddvisibility,kmlAddtessellate,kmlAddrefreshVisibility,kmlAddflyToView,kmlAddaddress,kmlAddphoneNumber,  &
     kmlAdddescription,kmlAdddescription_ch,kmlAdddescription_sp,kmlAdddescription_dp,&
@@ -20,13 +32,13 @@ module m_wkml_lowlevel
     kmlAddmaxLodPixels,kmlAddminFadeExtent,kmlAddmaxFadeExtent,kmlAddrange,kmlAddtilt,kmlAddroll,kmlAddrequest,kmlAddrotation, &
     kmlAddscale,kmlAddtargetHref,kmlAddviewBoundScale,kmlAddwhen,kmlAddwidth, & 
     kmlAddIcon_href,kmlAddIcon_refresh,kmlAddIcon_view, kmlAddStyleURL
+  public :: kmlAddCoordinates
 
-  ! public subroutines for kmlOpen and kmlClose
-
+  ! Subroutines public inside wkml for kmlOpen and kmlClose
   public kmlOpencoordinates,kmlClosecoordinates,kmlOpenItemIcon,kmlCloseItemIcon,kmlAddstate, &
     kmlOpenAddressDetail,kmlCloseAddressDetail, kmlOpenChange,kmlCloseChange, &
-    kmlOpenContainer,kmlCloseContainer,kmlOpenCreate,kmlCloseCreate,kmlOpenDelete,kmlCloseDelete,kmlOpenDocument, &
-    kmlOpenFolder,kmlCloseFolder,kmlCloseDocument,kmlOpenFeature,kmlCloseFeature,kmlOpenGeometry,kmlCloseGeometry, &
+    kmlOpenContainer,kmlCloseContainer,kmlOpenCreate,kmlCloseCreate,kmlOpenDelete,kmlCloseDelete, &
+    kmlOpenFeature,kmlCloseFeature,kmlOpenGeometry,kmlCloseGeometry, &
     kmlOpenGeometryCollection,kmlCloseGeometryCollection,kmlOpenGroundOverlay,kmlCloseGroundOverlay,kmlOpenIcon,kmlCloseIcon, &
     kmlOpenLatLonAltBox,kmlCloseLatLonAltBox,kmlOpenLatLonBox,kmlCloseLatLonBox, &  
     kmlOpenLink,kmlCloseLink,kmlOpenLocation,kmlCloseLocation,kmlOpenLod,kmlCloseLod,kmlOpenLookAt,kmlCloseLookAt, &
@@ -39,8 +51,6 @@ module m_wkml_lowlevel
     kmlOpenSimpleArrayField,kmlCloseSimpleArrayField,kmlOpenSimpleField,kmlCloseSimpleField,kmlOpenSnippet,kmlCloseSnippet, &
     kmlOpenStatus,kmlCloseStatus,kmlOpenTimePrimitive,kmlCloseTimePrimitive,kmlOpenTimeSpan,kmlCloseTimeSpan,kmlOpenTimeStamp, &
     kmlCloseTimeStamp,kmlOpenUpdate,kmlCloseUpdate,kmlOpenUrl,kmlCloseUrl
-
-  public :: kmlAddCoordinates
 
   ! kmlAdddescription support more data type
   interface kmlAdddescription
@@ -78,9 +88,9 @@ module m_wkml_lowlevel
   public :: kmlOpenLineString, kmlCloseLineString
   public :: kmlOpenLinearRing, kmlCloseLinearRing
   public :: kmlOpenPolygon, kmlClosePolygon
-
+#endif
 contains
-
+#ifndef DUMMYLIB
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine kmlAddNamespace(xf, prefix, URI)
     type(xmlf_t), intent(inout) :: xf
@@ -846,38 +856,47 @@ contains
     type(xmlf_t), intent(inout) :: xf
     call xml_EndElement(xf,'Delete')
   end subroutine kmlCloseDelete
+#endif
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine kmlOpenDocument(xf,name,id)
     type(xmlf_t), intent(inout) :: xf
     character(len=*), intent(in):: name
     character(len=*), intent(in), optional :: id
+#ifndef DUMMYLIB
     call xml_NewElement(xf,'Document')
     if (present(id)) call xml_AddAttribute(xf,'id', id)
     call kmladdname(xf,name)
+#endif
   end subroutine kmlOpenDocument
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine kmlCloseDocument(xf)
     type(xmlf_t), intent(inout) :: xf
+#ifndef DUMMYLIB
     call xml_EndElement(xf,'Document')
+#endif
   end subroutine kmlCloseDocument
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine kmlOpenFolder(xf,id,name)
     type(xmlf_t), intent(inout) :: xf
     character(len=*), intent(in), optional :: id
     character(len=*), intent(in), optional:: name
+#ifndef DUMMYLIB
     call xml_NewElement(xf,'Folder')
     if (present(id)) call xml_AddAttribute(xf,'id', id)
     if (present(name)) then
       call kmladdname(xf,name)
     end if
+#endif
   end subroutine kmlOpenFolder
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine kmlCloseFolder(xf)
     type(xmlf_t), intent(inout) :: xf
+#ifndef DUMMYLIB
     call xml_EndElement(xf,'Folder')
+#endif
   end subroutine kmlCloseFolder
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
+#ifndef DUMMYLIB
   subroutine kmlOpenFeature(xf,id)
     type(xmlf_t), intent(inout) :: xf
     character(len=*), intent(in), optional :: id
@@ -1565,6 +1584,6 @@ contains
     call xml_EndElement(xf,'Polygon')
   end subroutine kmlClosePolygon  
 
-
+#endif
 
 end module m_wkml_lowlevel

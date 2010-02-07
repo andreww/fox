@@ -1,16 +1,18 @@
 module m_wkml_styling
 
+  use fox_m_fsys_realtypes, only : sp, dp
+  use FoX_wxml, only: xmlf_t
+  use m_wkml_color, only: col => color_t
+#ifndef DUMMYLIB
   use m_common_error
-! change to use fox_m_fsys_realtypes by GT 18112008
-  use fox_m_fsys_realtypes
-!  use m_common_realtypes, only: sp, dp
-  use FoX_wxml, only: xmlf_t, xmlf_OpenTag, &
+  use FoX_wxml, only: xmlf_OpenTag, &
     xml_NewElement, xml_EndElement, xml_AddAttribute
-  use m_wkml_color, only: col => color_t, kmlAddColor, kmlAddBgColor, kmlAddTextColor, kmlGetCustomColor
+  use m_wkml_color, only: kmlAddColor, kmlAddBgColor, kmlAddTextColor, kmlGetCustomColor
   use m_wkml_lowlevel, only: kmlAddFill, kmlAddWidth, kmlAddColorMode, kmlAddHref, &
     kmlAddkey, kmlAddOutline, kmlAddScale, kmlAddStyleUrl, kmlAddHeading, &
     kmlOpenIcon, kmlCloseIcon, kmlOpenPair, kmlClosePair, kmlAddwidth,kmlAddcolorMode, &
     kmlOpenPlacemark,kmlClosePlacemark,kmlAddname,kmlOpenPolygon,kmlClosePolygon
+#endif
  
   implicit none
   private
@@ -27,18 +29,15 @@ module m_wkml_styling
 
   public :: kmlCreatePointStyle
   public :: kmlCreateLineStyle
-
-  ! temporary add by GT , it will be removed until fis the big of kmlCreateLineStyle
-  public :: kmlCreateLineStyle_old  
-
   public :: kmlCreatePolygonStyle
+#ifndef DUMMYLIB
   public :: kmlOpenStyle, kmlCloseStyle
 
   ! add by GT 18/04/2008
   public :: kmlAddLegend
-
+#endif
 contains
-
+#ifndef DUMMYLIB
   subroutine mostOfPointStyle(xf, color, colorhex, colorname, colormode, heading, iconhref, id)
     type(xmlf_t), intent(inout) :: xf
     type(col), intent(in), optional :: color
@@ -78,6 +77,7 @@ contains
       call kmlCloseIcon(xf)
     endif
   end subroutine mostOfPointStyle
+#endif
 
   subroutine kmlAddPointStyle_s_none_head_none(xf, color, colorhex, colorname, colormode, iconhref, id)
     ! We temporarily ignore hotspot
@@ -88,13 +88,14 @@ contains
     character(len=*), intent(in), optional :: colormode
     character(len=*), intent(in), optional :: iconhref
     character(len=*), intent(in), optional :: id
-
+#ifndef DUMMYLIB
     logical :: needStyle
     needStyle = (xmlf_openTag(xf)/='Style')
 
     call mostOfPointStyle(xf, color, colorhex, colorname, colormode, iconhref=iconhref, id=id)
     call kmlCloseIconStyle(xf)
     if (needStyle) call kmlCloseStyle(xf)
+#endif
   end subroutine kmlAddPointStyle_s_none_head_none
 
   subroutine kmlAddPointStyle_s_none_head_int(xf, color, colorhex, colorname, colormode, heading, iconhref, id)
@@ -107,13 +108,14 @@ contains
     integer, intent(in) :: heading
     character(len=*), intent(in), optional :: iconhref
     character(len=*), intent(in), optional :: id
-
+#ifndef DUMMYLIB
     logical :: needStyle
     needStyle = (xmlf_openTag(xf)/='Style')
 
     call mostOfPointStyle(xf, color, colorhex, colorname, colormode, real(heading,dp), iconhref, id)
     call kmlCloseIconStyle(xf)
     if (needStyle) call kmlCloseStyle(xf)
+#endif
   end subroutine kmlAddPointStyle_s_none_head_int
 
   subroutine kmlAddPointStyle_s_none_head_sp(xf, color, colorhex, colorname, colormode, heading, iconhref, id)
@@ -126,13 +128,14 @@ contains
     real(sp), intent(in) :: heading
     character(len=*), intent(in), optional :: iconhref
     character(len=*), intent(in), optional :: id
-
+#ifndef DUMMYLIB
     logical :: needStyle
     needStyle = (xmlf_openTag(xf)/='Style')
 
     call mostOfPointStyle(xf, color, colorhex, colorname, colormode, real(heading,dp), iconhref, id)
     call kmlCloseIconStyle(xf)
     if (needStyle) call kmlCloseStyle(xf)
+#endif
   end subroutine kmlAddPointStyle_s_none_head_sp
 
   subroutine kmlAddPointStyle_s_none_head_dp(xf, color, colorhex, colorname, colormode, heading, iconhref, id)
@@ -145,13 +148,14 @@ contains
     real(dp), intent(in) :: heading
     character(len=*), intent(in), optional :: iconhref
     character(len=*), intent(in), optional :: id
-
+#ifndef DUMMYLIB
     logical :: needStyle
     needStyle = (xmlf_openTag(xf)/='Style')
 
     call mostOfPointStyle(xf, color, colorhex, colorname, colormode, heading, iconhref, id)
     call kmlCloseIconStyle(xf)
     if (needStyle) call kmlCloseStyle(xf)
+#endif
   end subroutine kmlAddPointStyle_s_none_head_dp
 
   subroutine kmlAddPointStyle_s_int(xf, scale, color, colorhex, colorname, colormode, heading, iconhref, id)
@@ -165,7 +169,7 @@ contains
     integer, intent(in), optional :: heading
     character(len=*), intent(in), optional :: iconhref
     character(len=*), intent(in), optional :: id
-
+#ifndef DUMMYLIB
     logical :: needStyle
     needStyle = (xmlf_openTag(xf)/='Style')
 
@@ -177,6 +181,7 @@ contains
     call kmlAddScale(xf, scale)
     call kmlCloseIconStyle(xf)
     if (needStyle) call kmlCloseStyle(xf)
+#endif
   end subroutine kmlAddPointStyle_s_int
 
   subroutine kmlAddPointStyle_s_sp(xf, scale, color, colorhex, colorname, colormode, heading, iconhref, id)
@@ -190,7 +195,7 @@ contains
     real(sp), intent(in), optional :: heading
     character(len=*), intent(in), optional :: iconhref
     character(len=*), intent(in), optional :: id
-
+#ifndef DUMMYLIB
     logical :: needStyle
     needStyle = (xmlf_openTag(xf)/='Style')
 
@@ -202,6 +207,7 @@ contains
     call kmlAddScale(xf, scale)
     call kmlCloseIconStyle(xf)
     if (needStyle) call kmlCloseStyle(xf)
+#endif
   end subroutine kmlAddPointStyle_s_sp
 
   subroutine kmlAddPointStyle_s_dp(xf, scale, color, colorhex, colorname, colormode, heading, iconhref, id)
@@ -215,7 +221,7 @@ contains
     real(dp), intent(in), optional :: heading
     character(len=*), intent(in), optional :: iconhref
     character(len=*), intent(in), optional :: id
-
+#ifndef DUMMYLIB
     logical :: needStyle
     needStyle = (xmlf_openTag(xf)/='Style')
 
@@ -223,9 +229,11 @@ contains
     call kmlAddScale(xf, scale)
     call kmlCloseIconStyle(xf)
     if (needStyle) call kmlCloseStyle(xf)
+#endif
   end subroutine kmlAddPointStyle_s_dp
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#ifndef DUMMYLIB
   subroutine kmlCreatePointStyleOld(xf,normalurl,normalscale,stylemap,highlighturl,highlightscale,&
     normalcolor,highlightcolor,color,shape)
     type(xmlf_t), intent(inout) :: xf
@@ -442,7 +450,7 @@ contains
     if (present(colormode)) call kmlAddColorMode(xf, colormode)
 
   end subroutine mostOfLineStyle
-
+#endif
 
   subroutine kmlCreateLineStyle(xf, width, color, colorhex, colorname, colormode, id)
     type(xmlf_t), intent(inout) :: xf
@@ -451,7 +459,7 @@ contains
     character(len=*), intent(in), optional :: colorhex
     character(len=*), intent(in), optional :: colorname
     character(len=*), intent(in), optional :: colormode, id
-
+#ifndef DUMMYLIB
     logical :: needStyle
     needStyle = (xmlf_openTag(xf)/='Style')
 
@@ -459,9 +467,10 @@ contains
     if (present(width)) call kmlAddWidth(xf, width)
     call kmlCloseLineStyle(xf)
     if (needStyle) call kmlCloseStyle(xf)
-
+#endif
   end subroutine kmlCreateLineStyle
 
+#ifndef DUMMYLIB
 !!!! add the old version by GT 08/03/2008
   subroutine kmlCreateLineStyle_old(xf,stylemap,color,width)
           type(xmlf_t), intent(inout) :: xf
@@ -680,7 +689,7 @@ contains
     type(xmlf_t), intent(inout) :: xf
     call xml_EndElement(xf,'StyleSelector')
   end subroutine kmlCloseStyleSelector
-
+#endif
 
 
   subroutine kmlCreatePolygonStyle(xf, color, colorhex, colorname, colormode, fill, outline, id)
@@ -692,7 +701,7 @@ contains
     character(len=*), intent(in), optional :: colorname
     character(len=*), intent(in), optional :: colormode
     character(len=*), intent(in), optional :: id
-
+#ifndef DUMMYLIB
     logical :: needStyle
 
     needStyle = (xmlf_OpenTag(xf)/='Style')
@@ -718,9 +727,9 @@ contains
 
     call kmlClosePolyStyle(xf)
     if (needStyle) call kmlCloseStyle(xf)
-
+#endif
   end subroutine kmlCreatePolygonStyle
-
+#ifndef DUMMYLIB
   subroutine kmlAddLegend(xf,myCI,vizvalues)
     ! add by GY 18/04/2008
     use m_wkml_color !required for derived type color
@@ -757,6 +766,6 @@ contains
           end if
           end do
    end subroutine kmlAddLegend
-
+#endif
 
 end module m_wkml_styling

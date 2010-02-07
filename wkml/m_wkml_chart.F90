@@ -1,5 +1,5 @@
 module m_wkml_chart
-
+#ifndef DUMMYLIB
   use m_common_error, only: FoX_error
   use FoX_wxml
   use m_wkml_lowlevel
@@ -112,5 +112,5 @@ contains
 
     end subroutine kmlAddChart_dp
 
-
+#endif
 end module m_wkml_chart

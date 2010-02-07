@@ -1,21 +1,24 @@
 module m_wkml_contours
+#ifndef DUMMYLIB
   use m_common_error
   use m_contours, only: contourObject, destroy_contourObject
   use m_contours, only: make_contours_on_simplest_grid
   use m_contours, only: make_contours_on_a_simple_grid
   use m_contours, only: make_contours_on_a_complex_grid
+#endif
 
-! change m_common_realtypes, to fox_m_fsys_realtypes 18112008 GT
-!  use m_common_realtypes, only: sp, dp
-  use fox_m_fsys_realtypes
-
-  use FoX_common, only: str, operator(//)
+  use fox_m_fsys_realtypes, only : sp, dp
+  use m_wkml_color, only: color_t
   use FoX_wxml, only: xmlf_t
 
-  use m_wkml_color, only: color_t, kmlGetColorHex
+#ifndef DUMMYLIB
+  use FoX_common, only: str, operator(//)
+
+  use m_wkml_color, only: kmlGetColorHex
   use m_wkml_lowlevel, only: kmlOpenFolder, kmlCloseFolder, kmlOpenPlacemark, kmlClosePlacemark
   use m_wkml_features, only: kmlCreateLine, kmlStartRegion, kmlAddInnerBoundary, kmlEndRegion
   use m_wkml_styling, only: kmlCreateLineStyle, kmlCreatePolygonStyle 
+#endif
  
   implicit none
   private
@@ -45,6 +48,7 @@ contains
     character(len=*), intent(in) :: name
     logical, intent(in), optional :: lines, regions
 
+#ifndef DUMMYLIB
     type(contourObject) :: o
 
     o = make_contours_on_simplest_grid(east, west, north, south, values, contour_values, num_levels, mask)
@@ -52,7 +56,7 @@ contains
     call kmlOutputContours(xf, o, height, colormap, name, lines, regions)
 
     call destroy_contourObject(o)
-
+#endif
   end subroutine kmlCreateContours_sp
 
   subroutine kmlCreateContours_longlat_sp(xf, longitude, latitude, values, &
@@ -68,6 +72,7 @@ contains
     character(len=*), intent(in) :: name
     logical, intent(in), optional :: lines, regions
 
+#ifndef DUMMYLIB
     type(contourObject) :: o
 
     o = make_contours_on_a_simple_grid(longitude, latitude, values, contour_values, num_levels, mask)
@@ -75,7 +80,7 @@ contains
     call kmlOutputContours(xf, o, height, colormap, name, lines, regions)
 
     call destroy_contourObject(o)
-
+#endif
   end subroutine kmlCreateContours_longlat_sp
 
   subroutine kmlCreateContours_longlat2_sp(xf, longitude, latitude, values, &
@@ -91,6 +96,7 @@ contains
     character(len=*), intent(in) :: name
     logical, intent(in), optional :: lines, regions
 
+#ifndef DUMMYLIB
     type(contourObject) :: o
 
     o = make_contours_on_a_complex_grid(longitude, latitude, values, contour_values, num_levels, mask)
@@ -98,9 +104,10 @@ contains
     call kmlOutputContours(xf, o, height, colormap, name, lines, regions)
 
     call destroy_contourObject(o)
-
+#endif
   end subroutine kmlCreateContours_longlat2_sp
 
+#ifndef DUMMYLIB
   subroutine kmlOutputContours(xf, o, height, colormap, name, lines, regions)
     type(xmlf_t), intent(inout) :: xf
     type(contourObject), intent(in) :: o
@@ -289,5 +296,5 @@ contains
 
 
   end subroutine outputContourRegions
-
+#endif
 end module m_wkml_contours

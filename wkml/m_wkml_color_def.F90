@@ -1,4 +1,5 @@
 module m_wkml_color_def
+#ifndef DUMMYLIB
 !Standard Fortran 95 allows 19 continuation line for fixed-form and 39 for free-form
   implicit none
   private
@@ -824,4 +825,5 @@ module m_wkml_color_def
     colorArray17, &
     colorArray18, &
     colorArray19 /)
+#endif
 end module m_wkml_color_def

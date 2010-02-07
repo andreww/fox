@@ -1,5 +1,5 @@
 module m_contours
-
+#ifndef DUMMYLIB
 !  use m_common_format
 ! change to by GT to test in FoX4.0.3
    use fox_common
@@ -2134,5 +2134,5 @@ contains
       enddo
     enddo
   end subroutine addPolygonsToContourObject
-
+#endif
 end module m_contours

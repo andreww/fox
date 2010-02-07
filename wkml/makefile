@@ -6,7 +6,7 @@ OBJFILES=FoX_wkml.o m_wkml_lowlevel.o m_wkml_color.o m_wkml_styling.o m_wkml_fea
 LIBRARY=libFoX_wkml.a
 INCFLAGS=$(MOD_PREFIX)../objs/finclude
 #
-.m4.f90:
+.m4.F90:
 	m4 -I ../m4 $< > $@
 #
 include ../arch.make

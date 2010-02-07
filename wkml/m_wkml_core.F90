@@ -1,10 +1,12 @@
 module m_wkml_core
 
+  use FoX_wxml, only: xmlf_t
+#ifndef DUMMYLIB
   use m_common_error, only: FoX_error
-  use FoX_wxml, only: xmlf_t, xml_OpenFile, xml_Close, xml_DeclareNamespace, &
+  use FoX_wxml, only: xml_OpenFile, xml_Close, xml_DeclareNamespace, &
     xml_NewElement, xml_EndElement, xmlf_OpenTag
-
   use m_wkml_lowlevel, only: kmlOpenDocument, kmlCloseDocument
+#endif
 
   implicit none
   private
@@ -22,6 +24,7 @@ contains
     logical, intent(in), optional :: replace
     character(len=*), intent(in), optional :: docName
 
+#ifndef DUMMYLIB
     if (unit==-1) then
       call xml_OpenFile(filename, xf, replace=replace)
     else
@@ -35,17 +38,18 @@ contains
     else
       call kmlOpenDocument(xf, 'WKML output')
     endif
-
+#endif
   end subroutine kmlBeginFile
 
 
   subroutine kmlFinishFile(xf)
     type(xmlf_t), intent(inout) :: xf
 
+#ifndef DUMMYLIB
     call kmlCloseDocument(xf)
     call xml_EndElement(xf, 'kml')
     call xml_Close(xf)
-
+#endif
   end subroutine kmlFinishFile
 
   subroutine kmlAddNamespace(xf, prefix, URI)
@@ -54,10 +58,12 @@ contains
     character(len=*), intent(in) :: prefix
     character(len=*), intent(in) :: URI
 
+#ifndef DUMMYLIB
     if (xmlf_OpenTag(xf) /= "") &
       call FoX_error("Cannot do kmlAddNamespace after document output")
 
     call xml_DeclareNamespace(xf, URI, prefix)
+#endif
   end subroutine kmlAddNamespace
 
 end module m_wkml_core

@@ -4,9 +4,6 @@ define(`TOHW_m4_wkml_createCells3',`dnl
       ! this subroutine is going to read X, Y ,Z, stylecolor
       ! each XYZ is a vector, this is used for testing glimmer or netcdf situation 01302007 GT
 
-      use Fox_wxml
-      use FoX_common, only : str
-
       type(xmlf_t),     intent(inout)        :: xf 
       real($1),         intent(in)           :: longitude(:)
       real($1),         intent(in)           :: latitude(:)
@@ -17,6 +14,7 @@ define(`TOHW_m4_wkml_createCells3',`dnl
       character(len=*), intent(in), optional :: time
       real($1),         intent(in), optional :: vizvalues(:)
       character(len=*), intent(in), optional :: dataname
+#ifndef DUMMYLIB
 
       integer :: i, j, k, x, y
       integer :: nx, ny, nnx, nny  ! numbers at X(long), numbers at Y(Lat)
@@ -152,6 +150,7 @@ define(`TOHW_m4_wkml_createCells3',`dnl
 !      deallocate(latitude)
 !      deallocate(values)
        deallocate(valuehex)
+#endif
   end subroutine kmlCreateCells3_$1')`'dnl
 dnl
 define(`TOHW_m4_wkml_createCells'`',`dnl
@@ -167,7 +166,7 @@ $3, values, &
     real($2), intent(in), optional :: contour_values(:)
     integer, intent(in), optional :: num_levels
     character(len=*), intent(in), optional :: name
-
+#ifndef DUMMYLIB
     integer  :: i, ic, j, k, m, n, numcolors
     real($2) :: square(3,4), lat, long, average
     real($2) :: minvalue, lat_inc, long_inc, valueres !resolution of input value
@@ -229,7 +228,7 @@ $5
     call kmlCloseFolder(xf)
 
     if (.not.present(colormap)) deallocate(defaultMap)
-
+#endif
   end subroutine $1_$2
 ')`'dnl
 dnl
@@ -241,8 +240,11 @@ dnl
 module m_wkml_coverage
 
   use fox_m_fsys_realtypes, only: sp, dp
+  use FoX_wxml, only : xmlf_t
+  use m_wkml_color, only: color_t
+#ifndef DUMMYLIB
+  use FoX_wxml, only : xml_NewElement, xml_EndElement, xml_AddAttribute, xml_AddNewLine
   use m_common_error, only: FoX_error
-  use FoX_wxml
   use FoX_common, only: str
   use m_common_error
 
@@ -251,10 +253,11 @@ module m_wkml_coverage
        kmlopenouterboundaryis, kmlopenlinearring, kmlcloselinearring, & 
        kmlcloseouterboundaryis, kmlclosepolygon, kmlcloseplacemark, &
        kmlOpenTimeStamp, kmlCloseTimeStamp, kmlAddwhen
-  use m_wkml_color, only: color_t, kmlSetCustomColor, kmlMakeColorMap
+  use m_wkml_color, only: kmlSetCustomColor, kmlMakeColorMap
   use m_wkml_features, only: kmlStartRegion, kmlEndRegion
   use m_wkml_styling, only: kmlCreatePolygonStyle
   use m_wkml_chart
+#endif
 
   implicit none
   private
@@ -277,7 +280,6 @@ module m_wkml_coverage
 
   public :: kmlCreateRGBCells
   public :: kmlCreateCells
-  !! public :: kmlCreateCells3 !FIXME - this should not be public
 
 contains
 
@@ -290,9 +292,10 @@ contains
     real(sp), intent(in), optional :: reflectance(:,:)
     integer, intent(in), optional :: numbit !! color interval
     character, intent(in), optional :: rgb
-
+#ifndef DUMMYLIB
     call kmlCreateRGBCells(xf, real(east, dp), real(west, dp), &
       real(south, dp), real(north, dp), real(reflectance, dp), rgb, numbit)
+#endif
   end subroutine kmlCreateRGBCells_sp
 
   subroutine kmlCreateRGBCells_dp(xf, east, west, south, north, reflectance, rgb, numbit)
@@ -301,7 +304,7 @@ contains
     real(dp), intent(in), optional :: reflectance(:,:)
     integer, intent(in), optional :: numbit !! color interval
     character, intent(in), optional :: rgb
-
+#ifndef DUMMYLIB
     integer :: numbit_
     integer :: i, dn
 
@@ -336,7 +339,7 @@ contains
 
     call kmlCreateCells(xf, east=east, west=west, south=south, north=north, &
       values=reflectance, mask=1.0d0, colormap=colormap)
-
+#endif
   end subroutine kmlCreateRGBCells_dp
 
 ! createCells was called createCells2/createCells3
