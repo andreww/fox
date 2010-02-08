@@ -67,7 +67,7 @@ contains
     ! BFN in RFC
 
     character(len=*) :: chars
-    character(len=16), parameter :: hex = '0123456789abcdefABCDEF'
+    character(len=22), parameter :: hex = '0123456789abcdefABCDEF'
     logical :: lout
 
     lout = (len_trim(chars) == 36)
