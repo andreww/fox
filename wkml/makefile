@@ -1,9 +1,9 @@
 #
 default: install
 #
-OBJFILES=FoX_wkml.o m_wkml_lowlevel.o m_wkml_color.o m_wkml_styling.o m_wkml_features.o m_wkml_coverage.o m_wkml_core.o m_wkml_contours.o m_contours.o m_wkml_color_def.o m_wkml_chart.o
+OBJFILES=FoX_wkml.$(OBJEXT) m_wkml_lowlevel.$(OBJEXT) m_wkml_color.$(OBJEXT) m_wkml_styling.$(OBJEXT) m_wkml_features.$(OBJEXT) m_wkml_coverage.$(OBJEXT) m_wkml_core.$(OBJEXT) m_wkml_contours.$(OBJEXT) m_contours.$(OBJEXT) m_wkml_color_def.$(OBJEXT) m_wkml_chart.$(OBJEXT)
 #
-LIBRARY=libFoX_wkml.a
+LIBRARY=libFoX_wkml.$(LIBEXT)
 INCFLAGS=$(MOD_PREFIX)../objs/finclude
 #
 .m4.F90:
@@ -31,18 +31,18 @@ check:
 
 #
 clean:
-	rm -f *.o  *.$(MOD_EXT) $(LIBRARY)
+	rm -f *.$(OBJEXT)  *.$(MOD_EXT) $(LIBRARY)
 # DO NOT DELETE THIS LINE - used by make depend
-FoX_wkml.o: m_wkml_color.o m_wkml_contours.o m_wkml_core.o m_wkml_coverage.o
-FoX_wkml.o: m_wkml_features.o m_wkml_lowlevel.o m_wkml_styling.o m_wkml_chart.o
-m_wkml_color.o: m_wkml_color_def.o
-m_wkml_contours.o: m_contours.o m_wkml_color.o m_wkml_features.o
-m_wkml_contours.o: m_wkml_lowlevel.o m_wkml_styling.o
-m_wkml_core.o: m_wkml_color.o m_wkml_lowlevel.o m_wkml_styling.o
-m_wkml_coverage.o: m_wkml_color.o m_wkml_core.o m_wkml_lowlevel.o
-m_wkml_coverage.o: m_wkml_styling.o m_wkml_chart.o m_wkml_features.o
-m_wkml_features.o: m_wkml_color.o m_wkml_core.o m_wkml_lowlevel.o
-m_wkml_features.o: m_wkml_styling.o m_wkml_chart.o
-m_wkml_lowlevel.o: m_wkml_color.o
-m_wkml_styling.o: m_wkml_color.o m_wkml_lowlevel.o
-m_wkml_chart.o: m_wkml_lowlevel.o
+FoX_wkml.$(OBJEXT): m_wkml_color.$(OBJEXT) m_wkml_contours.$(OBJEXT) m_wkml_core.$(OBJEXT) m_wkml_coverage.$(OBJEXT)
+FoX_wkml.$(OBJEXT): m_wkml_features.$(OBJEXT) m_wkml_lowlevel.$(OBJEXT) m_wkml_styling.$(OBJEXT) m_wkml_chart.$(OBJEXT)
+m_wkml_color.$(OBJEXT): m_wkml_color_def.$(OBJEXT)
+m_wkml_contours.$(OBJEXT): m_contours.$(OBJEXT) m_wkml_color.$(OBJEXT) m_wkml_features.$(OBJEXT)
+m_wkml_contours.$(OBJEXT): m_wkml_lowlevel.$(OBJEXT) m_wkml_styling.$(OBJEXT)
+m_wkml_core.$(OBJEXT): m_wkml_color.$(OBJEXT) m_wkml_lowlevel.$(OBJEXT) m_wkml_styling.$(OBJEXT)
+m_wkml_coverage.$(OBJEXT): m_wkml_color.$(OBJEXT) m_wkml_core.$(OBJEXT) m_wkml_lowlevel.$(OBJEXT)
+m_wkml_coverage.$(OBJEXT): m_wkml_styling.$(OBJEXT) m_wkml_chart.$(OBJEXT) m_wkml_features.$(OBJEXT)
+m_wkml_features.$(OBJEXT): m_wkml_color.$(OBJEXT) m_wkml_core.$(OBJEXT) m_wkml_lowlevel.$(OBJEXT)
+m_wkml_features.$(OBJEXT): m_wkml_styling.$(OBJEXT) m_wkml_chart.$(OBJEXT)
+m_wkml_lowlevel.$(OBJEXT): m_wkml_color.$(OBJEXT)
+m_wkml_styling.$(OBJEXT): m_wkml_color.$(OBJEXT) m_wkml_lowlevel.$(OBJEXT)
+m_wkml_chart.$(OBJEXT): m_wkml_lowlevel.$(OBJEXT)
