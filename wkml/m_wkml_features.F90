@@ -231,7 +231,7 @@ contains
 
 ! remove description and will replace by extended data in the future 24042008
       if (present(description).and.present(description_numbers)) then
-        call kmlAddDescription(xf, description(i)//achar(13)//description_numbers(i))
+        call kmlAddDescription(xf, description(i)//achar(13)//str(description_numbers(i)))
       elseif (present(description)) then
         call kmlAddDescription(xf, description(i))
       elseif (present(description_numbers)) then
@@ -451,7 +451,7 @@ contains
       endif
 ! remove description and use extended data instead 24042008
       if (present(description).and.present(description_numbers)) then
-        call kmlAddDescription(xf, description(i)//achar(13)//description_numbers(i))
+        call kmlAddDescription(xf, description(i)//achar(13)//str(description_numbers(i)))
       elseif (present(description)) then
         call kmlAddDescription(xf, description(i))
       elseif (present(description_numbers)) then

@@ -1562,7 +1562,7 @@ contains
           endif
           if (debug) print*, "DEBUG uphill", cp%current%uphill
           if (debug) then 
-          open(file="line."//i//"."//j//"."//s//".dat", unit=8, status="unknown")
+          open(file="line."//str(i)//"."//str(j)//"."//str(s)//".dat", unit=8, status="unknown")
             do jjj = 1, size(cp%current%x)
               write(8, *) cp%current%x(jjj), cp%current%y(jjj)
             enddo

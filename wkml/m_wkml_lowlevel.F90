@@ -542,7 +542,15 @@ contains
   end subroutine kmlAddminAltitude
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !<minLodPixels>128</minLodPixels>
-  !<minLodPixels> (default = 0) Measurement in screen pixels that represents the minimum limit of the visibility range for a given Region. Google Earth calculates the size of the Region when projected onto screen space. Then it computes the square root of the Region's area (if, for example, the Region is square and the viewpoint is directly above the Region, and the Region is not tilted, this measurement is equal to the width of the projected Region). If this measurement falls within the limits defined by <minLodPixels> and <maxLodPixels> (and if the <LatLonAltBox> is in view), the Region is active. If this limit is not reached, the associated geometry is considered to be too far from the user's viewpoint to be drawn.
+  !<minLodPixels> (default = 0) Measurement in screen pixels that represents the minimum limit 
+  !of the visibility range for a given Region. Google Earth calculates the size of the Region
+  ! when projected onto screen space. Then it computes the square root of the Region's area
+  ! (if, for example, the Region is square and the viewpoint is directly above the Region,
+  ! and the Region is not tilted, this measurement is equal to the width of the projected
+  ! Region). If this measurement falls within the limits defined by <minLodPixels> and 
+  !<maxLodPixels> (and if the <LatLonAltBox> is in view), the Region is active. If
+  ! this limit is not reached, the associated geometry is considered to be too far 
+  !from the user's viewpoint to be drawn.
   subroutine kmlAddminLodPixels(xf, minLodPixels)
     type(xmlf_t), intent(inout) :: xf
     character(len=*), intent(in) :: minLodPixels
@@ -552,7 +560,8 @@ contains
   end subroutine kmlAddminLodPixels
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !<maxLodPixels>1024</maxLodPixels>
-  !<maxLodPixels> (default = -1) Measurement in screen pixels that represents the maximum limit of the visibility range for a given Region.
+  !<maxLodPixels> (default = -1) Measurement in screen pixels that represents the maximum 
+  !limit of the visibility range for a given Region.
   subroutine kmlAddmaxLodPixels(xf, maxLodPixels)
     type(xmlf_t), intent(inout) :: xf
     character(len=*), intent(in) :: maxLodPixels
@@ -618,7 +627,10 @@ contains
   end subroutine kmlAddrequest
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !<rotation>39.37878630116985</rotation>
-  !Indicates the angle of rotation of the parent object. A value of 0 means no rotation. The value is an angle in degrees counterclockwise starting from north. Use ±180 to indicate the rotation of the parent object from 0. The center of the <rotation>, if not (.5,.5), is specified in <rotationXY>.
+  !Indicates the angle of rotation of the parent object. A value of 0 means no rotation.
+  ! The value is an angle in degrees counterclockwise starting from north. Use ±180 to
+  ! indicate the rotation of the parent object from 0. The center of the <rotation>, 
+  !if not (.5,.5), is specified in <rotationXY>.
   subroutine kmlAddrotation(xf, rotation)
     type(xmlf_t), intent(inout) :: xf
     character(len=*), intent(in) :: rotation
@@ -698,7 +710,11 @@ contains
 
 
   !<coordinates>-90.86948943473118,48.25450093195546</coordinates>
-  !A single tuple consisting of floating point values for longitude, latitude, and altitude (in that order). Longitude and latitude values are in degrees, where longitude ≥ -180 and <= 180 latitude ≥ -90 and ≤ 90 altitude values (optional) are in meters above sea level Do not include spaces between the three values that describe a coordinate.
+  !A single tuple consisting of floating point values for longitude, 
+  !latitude, and altitude (in that order). Longitude and latitude 
+  !values are in degrees, where longitude ≥ -180 and <= 180 latitude 
+  ! ≥ -90 and ≤ 90 altitude values (optional) are in meters above 
+  !sea level Do not include spaces between the three values that describe a coordinate.
   subroutine kmlAddcoordinates_sp(xf, x, y, z)
     type(xmlf_t), intent(inout) :: xf
     real(sp), intent(in) :: x,y
@@ -1389,7 +1405,13 @@ contains
     call xml_EndElement(xf,'SimpleField')
   end subroutine kmlCloseSimpleField
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !A short description of the feature. In Google Earth, this description is displayed in the Places panel under the name of the feature. If a Snippet is not supplied, the first two lines of the <description> are used. In Google Earth, if a Placemark contains both a description and a Snippet, the <Snippet> appears beneath the Placemark in the Places panel, and the <description> appears in the Placemark's description balloon. This tag does not support HTML markup. <Snippet> has a maxLines attribute, an integer that specifies the maximum number of lines to display. Default for maxLines is 2.
+  !A short description of the feature. In Google Earth, this description is displayed in the
+  ! Places panel under the name of the feature. If a Snippet is not supplied, the first two 
+  !lines of the <description> are used. In Google Earth, if a Placemark contains both a  
+  !description and a Snippet, the <Snippet> appears beneath the Placemark in the Places 
+  !panel, and the <description> appears in the Placemark's description balloon. This tag
+  ! does not support HTML markup. <Snippet> has a maxLines attribute, an integer that
+  ! specifies the maximum number of lines to display. Default for maxLines is 2.
 
   subroutine kmlOpenSnippet(xf,maxlines)
     type(xmlf_t), intent(inout) :: xf

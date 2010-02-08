@@ -232,7 +232,7 @@ contains
     do i = 1, numcolors
       red = (256.0/numcolors)*i-1
       blue = 256 - red
-      colormap(i)%hex = "e0"//str(blue, "x2")//40//str(red, "x2")
+      colormap(i)%hex = "e0"//str(red, "x2")//str(40)//str(blue, "x2")
     enddo
   end function kmlMakeColorMap
 #endif

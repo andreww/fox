@@ -255,20 +255,20 @@ contains
 
     do i = 0, size(cp%contours)
       if (i==0) then
-        call kmlOpenFolder(xf, name="Less than "//cp%contours(1))
+        call kmlOpenFolder(xf, name="Less than "//str(cp%contours(1)))
       elseif (i<size(cp%contours)-1) then
-        call kmlOpenFolder(xf, name="Between "//cp%contours(i)//" and "//cp%contours(i+1))
+        call kmlOpenFolder(xf, name="Between "//str(cp%contours(i))//" and "//str(cp%contours(i+1)))
       elseif (i==size(cp%contours)-1) then
         if (associated(cp%zmax)) then
-          call kmlOpenFolder(xf, name="More than "//cp%contours(i))
+          call kmlOpenFolder(xf, name="More than "//str(cp%contours(i)))
         else
-          call kmlOpenFolder(xf, name="Between "//cp%contours(i)//" and "//cp%contours(i+1))
+          call kmlOpenFolder(xf, name="Between "//str(cp%contours(i))//" and "//str(cp%contours(i+1)))
         endif
       elseif (i==size(cp%contours)) then
         if (associated(cp%zmax)) then
           call kmlOpenFolder(xf, name="Region of undefined values")
         else
-          call kmlOpenFolder(xf, name="More than "//cp%contours(i))
+          call kmlOpenFolder(xf, name="More than "//str(cp%contours(i)))
         endif
       endif
 
@@ -284,7 +284,7 @@ contains
         ! FIXME here we should use height to adjust height of the polygon, but currently we haven't stored
         ! that information in cp.
         call kmlStartRegion(xf, cp%polys(i)%list(j)%outerBoundary%x, cp%polys(i)%list(j)%outerBoundary%y, &
-          name=i//' '//j, fillcolorhex=colorhex)
+          name=str(i)//' '//str(j), fillcolorhex=colorhex)
         do k = 1, size(cp%polys(i)%list(j)%innerBoundaries%list)
           call kmlAddInnerBoundary(xf, cp%polys(i)%list(j)%outerBoundary%x, cp%polys(i)%list(j)%outerBoundary%y)
         enddo
