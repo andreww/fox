@@ -18,7 +18,7 @@ program wkml_example
 
 10 FORMAT(2x,F9.6,5x,F8.6)
   do i=1,m
-    read (90,10), latitude(i), longitude(i)
+    read (90,10) latitude(i), longitude(i)
   end do
 
 !   print*, longitude
