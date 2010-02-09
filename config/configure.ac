@@ -1,4 +1,4 @@
-AC_INIT([FoX],[4.0.4],[tow@uszla.me.uk])
+AC_INIT([FoX],[4.1.0],[a.walker@ucl.ac.uk])
 AC_CONFIG_SRCDIR([README.FoX.txt])
 dnl
 dnl Find system type.

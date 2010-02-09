@@ -1,3 +1,11 @@
+2010-02-09: version 4.1.0
+        Add wkml, a KML output module
+        Add invalid-pretty-print dom extension option
+        Add FoX_[set|get]_fatal_[errors|warnings] to common
+        Makefile modified to allow -j flag to work
+        Portability workarounds for the Portland Group compiler (pgf90)
+        Assorted bugfixes
+        
 2009-06-16: version 4.0.4
         Assorted bugfixes
         Added CMake files
