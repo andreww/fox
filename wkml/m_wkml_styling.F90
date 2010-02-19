@@ -18,13 +18,13 @@ module m_wkml_styling
   private
 
   interface kmlCreatePointStyle
-    module procedure kmlAddPointStyle_s_none_head_none
+    module procedure kmlAddPointStyle_s_none_hd_none
     module procedure kmlAddPointStyle_s_int
     module procedure kmlAddPointStyle_s_sp
     module procedure kmlAddPointStyle_s_dp
-    module procedure kmlAddPointStyle_s_none_head_dp
-    module procedure kmlAddPointStyle_s_none_head_int
-    module procedure kmlAddPointStyle_s_none_head_sp
+    module procedure kmlAddPointStyle_s_none_hd_dp
+    module procedure kmlAddPointStyle_s_none_hd_int
+    module procedure kmlAddPointStyle_s_none_hd_sp
   end interface kmlCreatePointStyle
 
   public :: kmlCreatePointStyle
@@ -79,7 +79,7 @@ contains
   end subroutine mostOfPointStyle
 #endif
 
-  subroutine kmlAddPointStyle_s_none_head_none(xf, color, colorhex, colorname, colormode, iconhref, id)
+  subroutine kmlAddPointStyle_s_none_hd_none(xf, color, colorhex, colorname, colormode, iconhref, id)
     ! We temporarily ignore hotspot
     type(xmlf_t), intent(inout) :: xf
     type(col), intent(in), optional :: color
@@ -96,9 +96,9 @@ contains
     call kmlCloseIconStyle(xf)
     if (needStyle) call kmlCloseStyle(xf)
 #endif
-  end subroutine kmlAddPointStyle_s_none_head_none
+  end subroutine kmlAddPointStyle_s_none_hd_none
 
-  subroutine kmlAddPointStyle_s_none_head_int(xf, color, colorhex, colorname, colormode, heading, iconhref, id)
+  subroutine kmlAddPointStyle_s_none_hd_int(xf, color, colorhex, colorname, colormode, heading, iconhref, id)
     ! We temporarily ignore hotspot
     type(xmlf_t), intent(inout) :: xf
     type(col), intent(in), optional :: color
@@ -116,9 +116,9 @@ contains
     call kmlCloseIconStyle(xf)
     if (needStyle) call kmlCloseStyle(xf)
 #endif
-  end subroutine kmlAddPointStyle_s_none_head_int
+  end subroutine kmlAddPointStyle_s_none_hd_int
 
-  subroutine kmlAddPointStyle_s_none_head_sp(xf, color, colorhex, colorname, colormode, heading, iconhref, id)
+  subroutine kmlAddPointStyle_s_none_hd_sp(xf, color, colorhex, colorname, colormode, heading, iconhref, id)
     ! We temporarily ignore hotspot
     type(xmlf_t), intent(inout) :: xf
     type(col), intent(in), optional :: color
@@ -136,9 +136,9 @@ contains
     call kmlCloseIconStyle(xf)
     if (needStyle) call kmlCloseStyle(xf)
 #endif
-  end subroutine kmlAddPointStyle_s_none_head_sp
+  end subroutine kmlAddPointStyle_s_none_hd_sp
 
-  subroutine kmlAddPointStyle_s_none_head_dp(xf, color, colorhex, colorname, colormode, heading, iconhref, id)
+  subroutine kmlAddPointStyle_s_none_hd_dp(xf, color, colorhex, colorname, colormode, heading, iconhref, id)
     ! We temporarily ignore hotspot
     type(xmlf_t), intent(inout) :: xf
     type(col), intent(in), optional :: color
@@ -156,7 +156,7 @@ contains
     call kmlCloseIconStyle(xf)
     if (needStyle) call kmlCloseStyle(xf)
 #endif
-  end subroutine kmlAddPointStyle_s_none_head_dp
+  end subroutine kmlAddPointStyle_s_none_hd_dp
 
   subroutine kmlAddPointStyle_s_int(xf, scale, color, colorhex, colorname, colormode, heading, iconhref, id)
     ! We temporarily ignore hotspot
