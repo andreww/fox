@@ -4,7 +4,7 @@ module m_wkml_coverage
   use FoX_wxml, only : xmlf_t
   use m_wkml_color, only: color_t
 #ifndef DUMMYLIB
-  use FoX_wxml, only : xml_NewElement, xml_EndElement, xml_AddAttribute, xml_AddNewLine
+  use FoX_wxml, only : xml_NewElement, xml_EndElement, xml_AddAttribute, xml_AddNewLine, xml_AddCharacters
   use m_common_error, only: FoX_error
   use FoX_common, only: str
   use m_common_error
