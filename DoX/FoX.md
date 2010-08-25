@@ -32,10 +32,10 @@ Two workshops, entitled iFaX (Integrating Fortran and XML) have been run teachin
 
 ### Tutorials
 
-Out of the above workshops, some [tutorial material](http://www.uszla.me.uk/FoX/iFaX/) has been written, focussing on different use cases. Currently two are available:
+Out of the above workshops, some [tutorial material](http://www1.gly.bris.ac.uk/~walker/FoX/iFaX) has been written, focussing on different use cases. Currently two are available:
 
-* [SAX input](http://www.uszla.me.uk/FoX/iFaX/iFaX.4/iFaX.4.html)
-* [DOM input](http://www.uszla.me.uk/FoX/iFaX/iFaX.5/iFaX.5.html)
+* [SAX input](http://www1.gly.bris.ac.uk/~walker/FoX/iFaX/iFaX.4/iFaX.4.html)
+* [DOM input](http://www1.gly.bris.ac.uk/~walker/FoX/iFaX/iFaX.5/iFaX.5.html)
 
 There is also tutorial information on the use of WKML [here](http://web.me.com/dove_family/xml/kml.html).
 

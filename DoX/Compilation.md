@@ -10,8 +10,6 @@ FoX requires a Fortran 95 compiler - not just Fortran 90. All currently availabl
 
 In the event that you need to write a code targetted at multiple compilers, including some which have bugs preventing FoX compilation, please note the possibility of producing a [dummy library](#dummy_library).
 
-An up-to-date list of tested compiler version is maintained [elsewhere](http://uszla.me.uk/space/software/FoX/compat/).
-
 ##Configuration
 
 * In order to generate the Makefile, make sure that you have a Fortran compiler in your `PATH`, and do:
@@ -55,7 +53,7 @@ In the full version of the FoX library, there are several testsuites included.
 
 To run them all, simply run `make check` from the top-level directory. This will run the individual testsuites, and collate their results.
 
-If any failures occur (unrelated to known compiler issues, see the [up-to-date list](http://uszla.me.uk/space/software/FoX/compat/)), please send a message to the mailing list (<FoX@lists.uszla.me.uk>) with details of compiler, hardware platform, and the nature of the failure.
+If any failures occur (unrelated to known compiler issues, see the [up-to-date list](http://github.com/andreww/fox/issues)), please send a message to the mailing list (<fox-discuss@googlegroups.com>) with details of compiler, hardware platform, and the nature of the failure.
 
 The testsuites for the SAX and DOM libraries are very extensive, and are somewhat fragile, so are not distributed with FoX. Please contact the author for details.
 
