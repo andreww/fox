@@ -258,7 +258,7 @@ module fox_m_fsys_count_parse_input
 contains
 
 define(`m4f_thisfunc', `countarraytostring')dnl
-  function m4f_thisfunc`'(s, datatype, separator, csv) result(num)
+  pure function m4f_thisfunc`'(s, datatype, separator, csv) result(num)
     character(len=*), intent(in) :: s
     character(len=*), intent(in) :: datatype(:)
     character, intent(in), optional :: separator
@@ -297,7 +297,7 @@ TOHW_parse_strings(`data(i)')
   end function m4f_thisfunc
 
 define(`m4f_thisfunc', `countscalartostring')dnl
-  function m4f_thisfunc`'(s, datatype, separator, csv) result(num)
+  pure function m4f_thisfunc`'(s, datatype, separator, csv) result(num)
     character(len=*), intent(in) :: s
     character(len=*), intent(in) :: datatype
     character, intent(in), optional :: separator
@@ -351,7 +351,7 @@ TOHW_check_errors
   end function m4f_thisfunc
 
 define(`m4f_thisfunc', `countscalartological')dnl
-  function m4f_thisfunc`'(s, datatype) result(num)
+  pure function m4f_thisfunc`'(s, datatype) result(num)
     character(len=*), intent(in) :: s
     logical, intent(in) :: datatype
     logical :: dummy_data
@@ -375,7 +375,7 @@ TOHW_check_errors
   end function m4f_thisfunc
 
 define(`m4f_thisfunc', `countscalartointeger')dnl
-  function m4f_thisfunc`'(s, datatype) result(num)
+  pure function m4f_thisfunc`'(s, datatype) result(num)
     character(len=*), intent(in) :: s
     integer, intent(in) :: datatype
     integer :: dummy_data
@@ -398,7 +398,7 @@ TOHW_check_errors
 end function m4f_thisfunc
 
 define(`m4f_thisfunc', `countscalartorealsp')dnl
-  function m4f_thisfunc`'(s, datatype) result(num)
+  pure function m4f_thisfunc`'(s, datatype) result(num)
     character(len=*), intent(in) :: s
     real(sp), intent(in) :: datatype
     real(sp) :: dummy_data
@@ -422,7 +422,7 @@ TOHW_check_errors
   end function m4f_thisfunc
 
 define(`m4f_thisfunc', `countscalartorealdp')dnl
-  function m4f_thisfunc`'(s, datatype) result(num)
+  pure function m4f_thisfunc`'(s, datatype) result(num)
     character(len=*), intent(in) :: s
     real(dp), intent(in) :: datatype
     real(dp) :: dummy_data
@@ -446,7 +446,7 @@ TOHW_check_errors
   end function m4f_thisfunc
 
 define(`m4f_thisfunc', `countscalartocomplexsp')dnl
-  function m4f_thisfunc`'(s, datatype) result(num)
+  pure function m4f_thisfunc`'(s, datatype) result(num)
     character(len=*), intent(in) :: s
     complex(sp), intent(in) :: datatype
     complex(sp) :: dummy_data
@@ -470,7 +470,7 @@ TOHW_check_errors
   end function m4f_thisfunc
 
 define(`m4f_thisfunc', `countscalartocomplexdp')dnl
-  function m4f_thisfunc`'(s, datatype) result(num)
+  pure function m4f_thisfunc`'(s, datatype) result(num)
     character(len=*), intent(in) :: s
     complex(dp), intent(in) :: datatype
     complex(dp) :: dummy_data

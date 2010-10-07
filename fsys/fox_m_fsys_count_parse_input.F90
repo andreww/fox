@@ -27,7 +27,7 @@ module fox_m_fsys_count_parse_input
 
 contains
 
-  function countarraytostring(s, datatype, separator, csv) result(num)
+  pure function countarraytostring(s, datatype, separator, csv) result(num)
     character(len=*), intent(in) :: s
     character(len=*), intent(in) :: datatype(:)
     character, intent(in), optional :: separator
@@ -141,7 +141,7 @@ contains
 #endif
   end function countarraytostring
 
-  function countscalartostring(s, datatype, separator, csv) result(num)
+  pure function countscalartostring(s, datatype, separator, csv) result(num)
     character(len=*), intent(in) :: s
     character(len=*), intent(in) :: datatype
     character, intent(in), optional :: separator
@@ -257,7 +257,7 @@ contains
 #endif
   end function countscalartostring
 
-  function countscalartological(s, datatype) result(num)
+  pure function countscalartological(s, datatype) result(num)
     character(len=*), intent(in) :: s
     logical, intent(in) :: datatype
     logical :: dummy_data
@@ -311,7 +311,7 @@ contains
 #endif
   end function countscalartological
 
-  function countscalartointeger(s, datatype) result(num)
+  pure function countscalartointeger(s, datatype) result(num)
     character(len=*), intent(in) :: s
     integer, intent(in) :: datatype
     integer :: dummy_data
@@ -364,7 +364,7 @@ contains
 #endif
 end function countscalartointeger
 
-  function countscalartorealsp(s, datatype) result(num)
+  pure function countscalartorealsp(s, datatype) result(num)
     character(len=*), intent(in) :: s
     real(sp), intent(in) :: datatype
     real(sp) :: dummy_data
@@ -418,7 +418,7 @@ end function countscalartointeger
 #endif
   end function countscalartorealsp
 
-  function countscalartorealdp(s, datatype) result(num)
+  pure function countscalartorealdp(s, datatype) result(num)
     character(len=*), intent(in) :: s
     real(dp), intent(in) :: datatype
     real(dp) :: dummy_data
@@ -472,7 +472,7 @@ end function countscalartointeger
 #endif
   end function countscalartorealdp
 
-  function countscalartocomplexsp(s, datatype) result(num)
+  pure function countscalartocomplexsp(s, datatype) result(num)
     character(len=*), intent(in) :: s
     complex(sp), intent(in) :: datatype
     complex(sp) :: dummy_data
@@ -574,7 +574,7 @@ end function countscalartointeger
 #endif
   end function countscalartocomplexsp
 
-  function countscalartocomplexdp(s, datatype) result(num)
+  pure function countscalartocomplexdp(s, datatype) result(num)
     character(len=*), intent(in) :: s
     complex(dp), intent(in) :: datatype
     complex(dp) :: dummy_data
