@@ -243,24 +243,23 @@ module fox_m_fsys_count_parse_input
     SPACE//NEWLINE//CARRIAGE_RETURN//TAB
 
   interface countrts
-    module procedure countarraytostring
-    module procedure countscalartostring
-    module procedure countscalartological
-    module procedure countscalartointeger
-    module procedure countscalartorealsp
-    module procedure countscalartorealdp
-    module procedure countscalartocomplexsp
-    module procedure countscalartocomplexdp
+    module procedure countstring
+    module procedure countlogical
+    module procedure countinteger
+    module procedure countrealsp
+    module procedure countrealdp
+    module procedure countcomplexsp
+    module procedure countcomplexdp
   end interface
 
   public :: countrts
 
 contains
 
-define(`m4f_thisfunc', `countarraytostring')dnl
+define(`m4f_thisfunc', `countstring')dnl
   pure function m4f_thisfunc`'(s, datatype, separator, csv) result(num)
     character(len=*), intent(in) :: s
-    character(len=*), intent(in) :: datatype(:)
+    character(len=*), intent(in) :: datatype
     character, intent(in), optional :: separator
     logical, intent(in), optional :: csv
     integer :: num
@@ -279,7 +278,6 @@ TOHW_defaultdecls
     err = 0
     eof = .false.
     ij = 0
-    length = size(datatype)
     loop: do
       if (csv_) then
 TOHW_parse_strings_csv(`data(i)')
@@ -296,61 +294,7 @@ TOHW_parse_strings(`data(i)')
 #endif
   end function m4f_thisfunc
 
-define(`m4f_thisfunc', `countscalartostring')dnl
-  pure function m4f_thisfunc`'(s, datatype, separator, csv) result(num)
-    character(len=*), intent(in) :: s
-    character(len=*), intent(in) :: datatype
-    character, intent(in), optional :: separator
-    logical, intent(in), optional :: csv
-    integer :: num
-    character(len=len(s)) :: dummy_data
-#ifndef DUMMYLIB
-TOHW_defaultdecls
-    character(len=len(s)) :: s2
-    logical :: csv_, eof, sp
-    integer :: m
-
-    csv_ = .false.
-    if (present(csv)) then
-      csv_ = csv
-    endif
-
-    s_i = 1
-    err = 0
-    eof = .false.
-    ij = 0
-    length = 1
-    loop: do
-      if (csv_) then
-        TOHW_parse_strings_csv(`data')
-TOHW_check_errors
-
-      else
-        sp = .true.
-        do i = 1, len(s)
-          if (sp) then
-            if (verify(s(i:i), whitespace)/=0) then
-              s_i = s_i + 1
-              sp = .false.
-            endif
-          else
-            if (verify(s(i:i), whitespace)==0) then
-              sp = .true.
-            endif
-            s_i = s_i + 1
-          endif
-        enddo
-        num = 1
-      endif
-      exit
-    enddo loop
-
-#else
-    num = 0
-#endif
-  end function m4f_thisfunc
-
-define(`m4f_thisfunc', `countscalartological')dnl
+define(`m4f_thisfunc', `countlogical')dnl
   pure function m4f_thisfunc`'(s, datatype) result(num)
     character(len=*), intent(in) :: s
     logical, intent(in) :: datatype
@@ -374,7 +318,7 @@ TOHW_check_errors
 #endif
   end function m4f_thisfunc
 
-define(`m4f_thisfunc', `countscalartointeger')dnl
+define(`m4f_thisfunc', `countinteger')dnl
   pure function m4f_thisfunc`'(s, datatype) result(num)
     character(len=*), intent(in) :: s
     integer, intent(in) :: datatype
@@ -397,7 +341,7 @@ TOHW_check_errors
 #endif
 end function m4f_thisfunc
 
-define(`m4f_thisfunc', `countscalartorealsp')dnl
+define(`m4f_thisfunc', `countrealsp')dnl
   pure function m4f_thisfunc`'(s, datatype) result(num)
     character(len=*), intent(in) :: s
     real(sp), intent(in) :: datatype
@@ -421,7 +365,7 @@ TOHW_check_errors
 #endif
   end function m4f_thisfunc
 
-define(`m4f_thisfunc', `countscalartorealdp')dnl
+define(`m4f_thisfunc', `countrealdp')dnl
   pure function m4f_thisfunc`'(s, datatype) result(num)
     character(len=*), intent(in) :: s
     real(dp), intent(in) :: datatype
@@ -445,7 +389,7 @@ TOHW_check_errors
 #endif
   end function m4f_thisfunc
 
-define(`m4f_thisfunc', `countscalartocomplexsp')dnl
+define(`m4f_thisfunc', `countcomplexsp')dnl
   pure function m4f_thisfunc`'(s, datatype) result(num)
     character(len=*), intent(in) :: s
     complex(sp), intent(in) :: datatype
@@ -469,7 +413,7 @@ TOHW_check_errors
 #endif
   end function m4f_thisfunc
 
-define(`m4f_thisfunc', `countscalartocomplexdp')dnl
+define(`m4f_thisfunc', `countcomplexdp')dnl
   pure function m4f_thisfunc`'(s, datatype) result(num)
     character(len=*), intent(in) :: s
     complex(dp), intent(in) :: datatype

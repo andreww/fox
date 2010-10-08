@@ -282,9 +282,8 @@ contains
         print*, "Wrong iostat" 
       if (n/=num) &
         print*, "Wrong num"
-      if (((i<=0).and.(countrts(string," ")/=num)).or. & 
-          ((i>1).and.(countrts(string," ")/=0)))      &
-        print*, "Countrts wrong", countrts(string," ")
+      ! Don't test countrts on string scalar rts output,
+      ! as in this case rts does not split on whitespace.
     end subroutine stringdatascalar
 
     subroutine logicaldatascalar(string, array, num, iostat) 
@@ -465,9 +464,9 @@ contains
         print*, "Wrong iostat"
       if (n/=num) &
         print*, "Wrong num"
-      if (((i<=0).and.(countrts(string,(/" "," "/),sep,csv)/=num)).or. & 
-          ((i>1).and.(countrts(string,(/" "," "/),sep,csv)/=0)))      &
-        print*, "Countrts wrong", countrts(string,(/" "," "/),sep,csv)
+      if (((i<=0).and.(countrts(string," ",sep,csv)/=num)).or. & 
+          ((i>1).and.(countrts(string," ",sep,csv)/=0)))      &
+        print*, "Countrts wrong", countrts(string," ",sep,csv)
     end subroutine stringdataarray
 
     subroutine stringdatamatrix(string, array, num, iostat, sep, csv)
@@ -488,9 +487,9 @@ contains
         print*, "Wrong iostat"
       if (n/=num) &
         print*, "Wrong num"
-      if (((i<=0).and.(countrts(string,(/" "," "/),sep,csv)/=num)).or. & 
-          ((i>1).and.(countrts(string,(/" "," "/),sep,csv)/=0)))      &
-        print*, "Countrts wrong", countrts(string,(/" "," "/),sep,csv)
+      if (((i<=0).and.(countrts(string," ",sep,csv)/=num)).or. & 
+          ((i>1).and.(countrts(string," ",sep,csv)/=0)))      &
+        print*, "Countrts wrong", countrts(string," ",sep,csv)
     end subroutine stringdatamatrix
 
     subroutine logicaldataarray(string, array, num, iostat)

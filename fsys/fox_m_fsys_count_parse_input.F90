@@ -13,23 +13,22 @@ module fox_m_fsys_count_parse_input
     SPACE//NEWLINE//CARRIAGE_RETURN//TAB
 
   interface countrts
-    module procedure countarraytostring
-    module procedure countscalartostring
-    module procedure countscalartological
-    module procedure countscalartointeger
-    module procedure countscalartorealsp
-    module procedure countscalartorealdp
-    module procedure countscalartocomplexsp
-    module procedure countscalartocomplexdp
+    module procedure countstring
+    module procedure countlogical
+    module procedure countinteger
+    module procedure countrealsp
+    module procedure countrealdp
+    module procedure countcomplexsp
+    module procedure countcomplexdp
   end interface
 
   public :: countrts
 
 contains
 
-  pure function countarraytostring(s, datatype, separator, csv) result(num)
+  pure function countstring(s, datatype, separator, csv) result(num)
     character(len=*), intent(in) :: s
-    character(len=*), intent(in) :: datatype(:)
+    character(len=*), intent(in) :: datatype
     character, intent(in), optional :: separator
     logical, intent(in), optional :: csv
     integer :: num
@@ -51,7 +50,6 @@ contains
     err = 0
     eof = .false.
     ij = 0
-    length = size(datatype)
     loop: do
       if (csv_) then
       if (s_i>len(s)) then
@@ -139,125 +137,9 @@ contains
 #else
     num = 0
 #endif
-  end function countarraytostring
+  end function countstring
 
-  pure function countscalartostring(s, datatype, separator, csv) result(num)
-    character(len=*), intent(in) :: s
-    character(len=*), intent(in) :: datatype
-    character, intent(in), optional :: separator
-    logical, intent(in), optional :: csv
-    integer :: num
-    character(len=len(s)) :: dummy_data
-#ifndef DUMMYLIB
-    logical :: bracketed
-    integer :: i, j, ij, k, s_i, err, ios, length
-    real :: r, c
-
-    character(len=len(s)) :: s2
-    logical :: csv_, eof, sp
-    integer :: m
-
-    csv_ = .false.
-    if (present(csv)) then
-      csv_ = csv
-    endif
-
-    s_i = 1
-    err = 0
-    eof = .false.
-    ij = 0
-    length = 1
-    loop: do
-      if (csv_) then
-              if (s_i>len(s)) then
-        ij = ij + 1
-        exit loop
-      endif
-      k = verify(s(s_i:), achar(10)//achar(13))
-      if (k==0) then
-        ij = ij + 1
-        exit loop
-      elseif (s(s_i+k-1:s_i+k-1)=="""") then
-        ! we have a quote-delimited string;
-        s_i = s_i + k
-        s2 = ""
-        quote: do 
-          k = index(s(s_i:), """")
-          if (k==0) then
-            err = 2
-            exit loop
-          endif
-          k = s_i + k - 1
-          s2(m:) = s(s_i:k)
-          m = m + (k-s_i+1)
-          k = k + 2
-          if (k>len(s)) then
-            err = 2
-            exit loop
-          endif
-          if (s(k:k)/="""") exit
-          s_i = k + 1
-          if (s_i > len(s)) then
-            err = 2
-            exit loop
-          endif
-          m = m + 1
-          s2(m:m) = """"
-        enddo quote
-        k  = scan(s(s_i:), whitespace)
-        if (k==0) then
-          err = 2
-          exit loop
-        endif
-      else
-        s_i = s_i + k - 1
-        k = scan(s(s_i:), achar(10)//achar(13)//",")
-        if (k==0) then
-          eof = .true.
-          k = len(s)
-        else
-          k = s_i + k - 2
-        endif
-        if (index(s(s_i:k), """")/=0) then
-          err = 2
-          exit loop
-        endif
-      endif
-      ij = ij + 1
-      s_i = k + 2
-      if (eof) exit loop
-
-    num = ij
-    if (verify(s(s_i:), whitespace)/=0) num = 0
-    if (err/=0) num=0
-
-
-      else
-        sp = .true.
-        do i = 1, len(s)
-          if (sp) then
-            if (verify(s(i:i), whitespace)/=0) then
-              s_i = s_i + 1
-              sp = .false.
-            endif
-          else
-            if (verify(s(i:i), whitespace)==0) then
-              sp = .true.
-            endif
-            s_i = s_i + 1
-          endif
-        enddo
-        num = 1
-      endif
-      exit
-    enddo loop
-
-#else
-    num = 0
-#endif
-  end function countscalartostring
-
-  pure function countscalartological(s, datatype) result(num)
+  pure function countlogical(s, datatype) result(num)
     character(len=*), intent(in) :: s
     logical, intent(in) :: datatype
     logical :: dummy_data
@@ -309,9 +191,9 @@ contains
 #else
     num = 0
 #endif
-  end function countscalartological
+  end function countlogical
 
-  pure function countscalartointeger(s, datatype) result(num)
+  pure function countinteger(s, datatype) result(num)
     character(len=*), intent(in) :: s
     integer, intent(in) :: datatype
     integer :: dummy_data
@@ -362,9 +244,9 @@ contains
 #else
     num = 0
 #endif
-end function countscalartointeger
+end function countinteger
 
-  pure function countscalartorealsp(s, datatype) result(num)
+  pure function countrealsp(s, datatype) result(num)
     character(len=*), intent(in) :: s
     real(sp), intent(in) :: datatype
     real(sp) :: dummy_data
@@ -416,9 +298,9 @@ end function countscalartointeger
 #else
     num = 0
 #endif
-  end function countscalartorealsp
+  end function countrealsp
 
-  pure function countscalartorealdp(s, datatype) result(num)
+  pure function countrealdp(s, datatype) result(num)
     character(len=*), intent(in) :: s
     real(dp), intent(in) :: datatype
     real(dp) :: dummy_data
@@ -470,9 +352,9 @@ end function countscalartointeger
 #else
     num - 0
 #endif
-  end function countscalartorealdp
+  end function countrealdp
 
-  pure function countscalartocomplexsp(s, datatype) result(num)
+  pure function countcomplexsp(s, datatype) result(num)
     character(len=*), intent(in) :: s
     complex(sp), intent(in) :: datatype
     complex(sp) :: dummy_data
@@ -572,9 +454,9 @@ end function countscalartointeger
 #else
     num = 0
 #endif
-  end function countscalartocomplexsp
+  end function countcomplexsp
 
-  pure function countscalartocomplexdp(s, datatype) result(num)
+  pure function countcomplexdp(s, datatype) result(num)
     character(len=*), intent(in) :: s
     complex(dp), intent(in) :: datatype
     complex(dp) :: dummy_data
@@ -674,6 +556,6 @@ end function countscalartointeger
 #else
     num = 0
 #endif
-  end function countscalartocomplexdp
+  end function countcomplexdp
 
 end module fox_m_fsys_count_parse_input
