@@ -9,6 +9,10 @@
   <div class="DoX">
 <h1>String conversion</h1>
 
+<p>Two procedures are provided to simplify reading data retreved from XML documents into Fortran variables. The subroutine <code>rts</code> performs the data conversion step and the function <code>countrts</code> can be used to allocate an array of the correct size for the incomming data. </p>
+
+<h2><code>rts</code> subroutine</h2>
+
 <p>The <code>rts</code> subroutine can be imported from <code>FoX_common</code>. In its simplest form, it is called in this fashion:</p>
 
 <pre><code>call rts(string, data)
@@ -22,14 +26,17 @@
 
 <p>Additional information or error handling is accomplished with the following optional arguments:</p>
 
-<h2><code>num</code></h2>
+<h3><code>num</code></h3>
 
-<p><code>num</code> is an integer; on returning from the function it indicates the number of data items read before either <br />
-* an error occurred
-* the string was exhausted of data items <br />
-* <code>data</code> was filled.</p>
+<p><code>num</code> is an integer; on returning from the function it indicates the number of data items read before either:</p>
 
-<h2><code>iostat</code></h2>
+<ul>
+<li>an error occurred</li>
+<li>the string was exhausted of data items  </li>
+<li><code>data</code> was filled.</li>
+</ul>
+
+<h3><code>iostat</code></h3>
 
 <p><code>iostat</code> is an integer, which on return from the function has the values:</p>
 
@@ -63,6 +70,20 @@
 <h2>Logical variable formatting.</h2>
 
 <p>Logical variables must be encoded according to the conventions of <a href="http://www.w3.org/TR/xmlschema-2/#boolean">XML Schema Datatypes</a>  - that is, True may be written as "true" or "1", and False may be written as "false" or "0".</p>
+
+<h2><code>countrts</code> function</h2>
+
+<p>The <code>countrts</code> function can also be imported from <code>FoX_common</code>. In its simplest form, it is called in this fashion:</p>
+
+<pre><code>countrts(string, datatype)
+</code></pre>
+
+<p><code>string</code> is a simple Fortran string (probably retrived from an XML file)</p>
+
+<p><code>datatype</code> is a scalar argument of any native Fortran datatype (<code>logical</code>, <code>character</code>, <code>integer</code>, <code>real</code>, <code>double precision</code>, <code>complex</code> or <code>double complex</code>).</p>
+
+<p>The function returns a default integer equal to the number of elements that rts would
+return if called with a sufficently large array of the same type as <code>datatype</code>. <code>countrts</code> returns 0 to indicate that characters were found in the string that could not be converted. If datatype is a character, the optional arguments <code>seperator</code> and <code>csv</code> are avalable as described in "string formatting" above. The <code>countrts</code> function is pure and can be used as a specification function.</p>
 </div>
 </body>
 </html>

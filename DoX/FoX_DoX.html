@@ -184,7 +184,7 @@ places.  If you move the FoX directory later on, you will need to re-run configu
 
 <p>To run them all, simply run <code>make check</code> from the top-level directory. This will run the individual testsuites, and collate their results.</p>
 
-<p>If any failures occur (unrelated to known compiler issues, see the <a href="http://github.com/andreww/fox/issues">up-to-date list</a>), please send a message to the mailing list (<a href="&#x6D;&#97;&#105;l&#116;&#x6F;:&#x66;&#111;x&#45;d&#x69;s&#x63;&#x75;&#x73;&#115;&#64;&#103;&#x6F;&#x6F;&#x67;&#x6C;&#101;&#103;&#114;&#x6F;&#x75;p&#115;&#46;&#99;&#x6F;&#x6D;">&#x66;&#111;x&#45;d&#x69;s&#x63;&#x75;&#x73;&#115;&#64;&#103;&#x6F;&#x6F;&#x67;&#x6C;&#101;&#103;&#114;&#x6F;&#x75;p&#115;&#46;&#99;&#x6F;&#x6D;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
+<p>If any failures occur (unrelated to known compiler issues, see the <a href="http://github.com/andreww/fox/issues">up-to-date list</a>), please send a message to the mailing list (<a href="&#x6D;&#97;&#105;l&#x74;&#111;:&#102;o&#120;&#x2D;&#100;&#105;&#115;&#99;&#117;&#x73;&#x73;&#64;g&#111;&#111;&#103;&#108;&#x65;g&#x72;&#111;&#117;&#x70;&#115;&#x2E;&#x63;&#x6F;&#109;">&#102;o&#120;&#x2D;&#100;&#105;&#115;&#99;&#117;&#x73;&#x73;&#64;g&#111;&#111;&#103;&#108;&#x65;g&#x72;&#111;&#117;&#x70;&#115;&#x2E;&#x63;&#x6F;&#109;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
 
 <p>The testsuites for the SAX and DOM libraries are very extensive, and are somewhat fragile, so are not distributed with FoX. Please contact the author for details.</p>
 
@@ -403,16 +403,17 @@ FoX next time you compile your code</p>
 
 <p>FoX_common is a module exporting interfaces to a set of convenience functions common to all of the FoX modules, which are of more general use.</p>
 
-<p>Currently, there are four publically available functions and two subroutines:</p>
+<p>Currently, there are three publically available functions and four subroutines:</p>
 
 <ul>
-<li><code>str</code> converts primitive datatypes into strings in a consistent fashion, conformant with the expectations of XML processors.</li>
+<li>The subroutine <code>str</code> converts primitive datatypes into strings in a consistent fashion, conformant with the expectations of XML processors.</li>
 </ul>
 
 <p>It is fully described in <a href="#StringFormatting">StringFormatting</a></p>
 
 <ul>
-<li><code>rts</code> performs the reverse function, taking a string (obtained from an XML document) and converts it into a primitive Fortran datatype.</li>
+<li><p>The subroutine <code>rts</code> performs the reverse function, taking a string (obtained from an XML document) and converts it into a primitive Fortran datatype.</p></li>
+<li><p>The function <code>countrts</code> examinies a string and determines the size of array requiered to hold all its data, once converted to a primitive Fortran datatype.</p></li>
 </ul>
 
 <p>It is fully described in <a href="#StringConversion">StringConversion</a></p>
@@ -567,6 +568,10 @@ standard Fortran I/O formatting routines do not offer the control required for u
 <a name="StringConversion"/>
 <h1>String conversion</h1>
 
+<p>Two procedures are provided to simplify reading data retreved from XML documents into Fortran variables. The subroutine <code>rts</code> performs the data conversion step and the function <code>countrts</code> can be used to allocate an array of the correct size for the incomming data. </p>
+
+<h2><code>rts</code> subroutine</h2>
+
 <p>The <code>rts</code> subroutine can be imported from <code>FoX_common</code>. In its simplest form, it is called in this fashion:</p>
 
 <pre><code>call rts(string, data)
@@ -580,14 +585,17 @@ standard Fortran I/O formatting routines do not offer the control required for u
 
 <p>Additional information or error handling is accomplished with the following optional arguments:</p>
 
-<h2><code>num</code></h2>
+<h3><code>num</code></h3>
 
-<p><code>num</code> is an integer; on returning from the function it indicates the number of data items read before either <br />
-* an error occurred
-* the string was exhausted of data items <br />
-* <code>data</code> was filled.</p>
+<p><code>num</code> is an integer; on returning from the function it indicates the number of data items read before either:</p>
 
-<h2><code>iostat</code></h2>
+<ul>
+<li>an error occurred</li>
+<li>the string was exhausted of data items  </li>
+<li><code>data</code> was filled.</li>
+</ul>
+
+<h3><code>iostat</code></h3>
 
 <p><code>iostat</code> is an integer, which on return from the function has the values:</p>
 
@@ -621,6 +629,20 @@ standard Fortran I/O formatting routines do not offer the control required for u
 <h2>Logical variable formatting.</h2>
 
 <p>Logical variables must be encoded according to the conventions of <a href="http://www.w3.org/TR/xmlschema-2/#boolean">XML Schema Datatypes</a>  - that is, True may be written as "true" or "1", and False may be written as "false" or "0".</p>
+
+<h2><code>countrts</code> function</h2>
+
+<p>The <code>countrts</code> function can also be imported from <code>FoX_common</code>. In its simplest form, it is called in this fashion:</p>
+
+<pre><code>countrts(string, datatype)
+</code></pre>
+
+<p><code>string</code> is a simple Fortran string (probably retrived from an XML file)</p>
+
+<p><code>datatype</code> is a scalar argument of any native Fortran datatype (<code>logical</code>, <code>character</code>, <code>integer</code>, <code>real</code>, <code>double precision</code>, <code>complex</code> or <code>double complex</code>).</p>
+
+<p>The function returns a default integer equal to the number of elements that rts would
+return if called with a sufficently large array of the same type as <code>datatype</code>. <code>countrts</code> returns 0 to indicate that characters were found in the string that could not be converted. If datatype is a character, the optional arguments <code>seperator</code> and <code>csv</code> are avalable as described in "string formatting" above. The <code>countrts</code> function is pure and can be used as a specification function.</p>
 </div><hr/><div class="DoX">
 <a name="FoX_wxml"/>
 <h1>WXML</h1>
@@ -3626,9 +3648,9 @@ Return the value of the fragment</p></li>
 <h1>Further information</h1>
 
 <p>FoX evolved from the initial codebase of <a href="http://lcdx00.wm.lc.ehu.es/ag/xml/">xmlf90</a>,
-which was written largely by Alberto Garcia &lt;<a href="m&#97;&#105;&#108;t&#x6F;:&#x61;&#108;&#x62;&#101;&#114;&#116;&#x6F;&#x67;&#64;&#105;c&#x6D;&#x61;&#98;.&#101;&#115;">&#x61;&#108;&#x62;&#101;&#114;&#116;&#x6F;&#x67;&#64;&#105;c&#x6D;&#x61;&#98;.&#101;&#115;</a>> and Jon Wakelin &lt;<a href="&#109;&#97;&#105;&#108;&#x74;&#111;:&#x6A;o&#110;&#x2E;&#119;a&#107;e&#108;&#x69;&#x6E;&#64;&#x62;&#x72;&#x69;&#115;&#116;&#x6F;&#x6C;&#x2E;&#97;&#x63;&#46;&#117;k">&#x6A;o&#110;&#x2E;&#119;a&#107;e&#108;&#x69;&#x6E;&#64;&#x62;&#x72;&#x69;&#115;&#116;&#x6F;&#x6C;&#x2E;&#97;&#x63;&#46;&#117;k</a>>.</p>
+which was written largely by Alberto Garcia &lt;<a href="&#x6D;&#97;i&#108;&#x74;&#x6F;:&#x61;&#x6C;&#98;&#101;&#x72;&#116;&#111;g&#64;&#x69;&#99;&#109;&#97;b&#x2E;&#x65;&#x73;">&#x61;&#x6C;&#98;&#101;&#x72;&#116;&#111;g&#64;&#x69;&#99;&#109;&#97;b&#x2E;&#x65;&#x73;</a>> and Jon Wakelin &lt;<a href="&#x6D;&#97;&#105;&#108;&#116;&#x6F;:&#x6A;&#111;&#x6E;&#x2E;&#119;&#x61;&#x6B;&#x65;l&#x69;n&#64;&#98;&#x72;&#x69;&#115;&#116;&#111;&#x6C;&#46;&#x61;&#99;&#x2E;&#117;&#x6B;">&#x6A;&#111;&#x6E;&#x2E;&#119;&#x61;&#x6B;&#x65;l&#x69;n&#64;&#98;&#x72;&#x69;&#115;&#116;&#111;&#x6C;&#46;&#x61;&#99;&#x2E;&#117;&#x6B;</a>>.</p>
 
-<p>FoX is the work of Toby White &lt;<a href="&#109;&#97;&#105;&#108;&#x74;&#111;:&#116;&#x6F;&#x77;&#64;&#x75;&#115;&#122;l&#97;&#x2E;&#109;&#x65;&#x2E;&#117;&#107;">&#116;&#x6F;&#x77;&#64;&#x75;&#115;&#122;l&#97;&#x2E;&#109;&#x65;&#x2E;&#117;&#107;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him. Andrew Walker &lt;<a href="&#x6D;&#x61;&#x69;&#108;&#x74;&#111;:&#97;n&#100;&#x72;&#x65;&#119;.&#119;&#97;l&#x6B;&#x65;&#114;&#64;&#98;&#x72;&#x69;&#x73;&#116;&#111;&#x6C;&#46;&#x61;&#99;&#x2E;&#x75;&#107;">&#97;n&#100;&#x72;&#x65;&#119;.&#119;&#97;l&#x6B;&#x65;&#114;&#64;&#98;&#x72;&#x69;&#x73;&#116;&#111;&#x6C;&#46;&#x61;&#99;&#x2E;&#x75;&#107;</a>> currently looks after maintenance of FoX.</p>
+<p>FoX is the work of Toby White &lt;<a href="&#x6D;&#97;i&#x6C;&#116;&#x6F;:&#116;&#111;&#119;&#64;&#x75;&#115;&#122;&#108;&#97;&#46;&#109;&#101;&#x2E;&#117;&#x6B;">&#116;&#111;&#119;&#64;&#x75;&#115;&#122;&#108;&#97;&#46;&#109;&#101;&#x2E;&#117;&#x6B;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him. Andrew Walker &lt;<a href="&#109;&#97;&#105;&#108;&#x74;&#x6F;:&#97;&#110;&#x64;&#114;&#101;&#119;&#46;wa&#108;&#x6B;&#x65;&#114;&#64;&#98;&#114;&#x69;&#x73;t&#111;&#x6C;&#46;&#x61;&#x63;&#46;&#x75;&#107;">&#97;&#110;&#x64;&#114;&#101;&#119;&#46;wa&#108;&#x6B;&#x65;&#114;&#64;&#98;&#114;&#x69;&#x73;t&#111;&#x6C;&#46;&#x61;&#x63;&#46;&#x75;&#107;</a>> currently looks after maintenance of FoX.</p>
 
 <p>There is a FoX website at <a href="http://www1.gly.bris.ac.uk/~walker/FoX/">http://www1.gly.bris.ac.uk/~walker/FoX/</a>.</p>
 

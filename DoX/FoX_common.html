@@ -11,16 +11,17 @@
 
 <p>FoX_common is a module exporting interfaces to a set of convenience functions common to all of the FoX modules, which are of more general use.</p>
 
-<p>Currently, there are four publically available functions and two subroutines:</p>
+<p>Currently, there are three publically available functions and four subroutines:</p>
 
 <ul>
-<li><code>str</code> converts primitive datatypes into strings in a consistent fashion, conformant with the expectations of XML processors.</li>
+<li>The subroutine <code>str</code> converts primitive datatypes into strings in a consistent fashion, conformant with the expectations of XML processors.</li>
 </ul>
 
 <p>It is fully described in <a href="StringFormatting.html">StringFormatting</a></p>
 
 <ul>
-<li><code>rts</code> performs the reverse function, taking a string (obtained from an XML document) and converts it into a primitive Fortran datatype.</li>
+<li><p>The subroutine <code>rts</code> performs the reverse function, taking a string (obtained from an XML document) and converts it into a primitive Fortran datatype.</p></li>
+<li><p>The function <code>countrts</code> examinies a string and determines the size of array requiered to hold all its data, once converted to a primitive Fortran datatype.</p></li>
 </ul>
 
 <p>It is fully described in <a href="StringConversion.html">StringConversion</a></p>
