@@ -508,6 +508,9 @@ contains
         else
           if (q/=" ".and.c==q) then
             fx%tokenType = TOK_CHAR
+          elseif (q==" ".and.verify(c, ">")==0.and.(fx%state==ST_IN_DOCTYPE)) then
+            fx%nextTokenType = TOK_END_TAG
+            fx%tokenType = TOK_NAME
           elseif (q==" ".and.verify(c, XML_WHITESPACE)==0) then
             call push_chars(fb, c)
             fx%tokenType = TOK_NAME
