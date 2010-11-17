@@ -3,6 +3,7 @@ module FoX_common
   use fox_m_fsys_array_str
   use fox_m_fsys_format
   use fox_m_fsys_parse_input
+  use fox_m_fsys_count_parse_input
   use m_common_attrs
   use m_common_error
 
@@ -18,6 +19,7 @@ module FoX_common
   public :: FoX_version
 
   public :: rts
+  public :: countrts
   public :: str
   public :: operator(//)
 

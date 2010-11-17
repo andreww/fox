@@ -1,5 +1,9 @@
 # String conversion
 
+Two procedures are provided to simplify reading data retreved from XML documents into Fortran variables. The subroutine `rts` performs the data conversion step and the function `countrts` can be used to allocate an array of the correct size for the incomming data. 
+
+## `rts` subroutine
+
 The `rts` subroutine can be imported from `FoX_common`. In its simplest form, it is called in this fashion:
 
     call rts(string, data)
@@ -12,14 +16,15 @@ The `rts` subroutine can be imported from `FoX_common`. In its simplest form, it
 
 Additional information or error handling is accomplished with the following optional arguments:
 
-## `num`
+### `num`
 
-`num` is an integer; on returning from the function it indicates the number of data items read before either  
+`num` is an integer; on returning from the function it indicates the number of data items read before either:
+
 * an error occurred
 * the string was exhausted of data items  
 * `data` was filled.
 
-## `iostat`
+### `iostat`
 
 `iostat` is an integer, which on return from the function has the values:
 
@@ -52,7 +57,16 @@ Complex numbers may be formatted according to either normal Fortran conventions 
 
 Logical variables must be encoded according to the conventions of [XML Schema Datatypes](http://www.w3.org/TR/xmlschema-2/#boolean)  - that is, True may be written as "true" or "1", and False may be written as "false" or "0".
 
+## `countrts` function
 
+The `countrts` function can also be imported from `FoX_common`. In its simplest form, it is called in this fashion:
 
+    countrts(string, datatype)
 
+`string` is a simple Fortran string (probably retrived from an XML file)
+
+`datatype` is a scalar argument of any native Fortran datatype (`logical`, `character`, `integer`, `real`, `double precision`, `complex` or `double complex`).
+
+The function returns a default integer equal to the number of elements that rts would
+return if called with a sufficently large array of the same type as `datatype`. `countrts` returns 0 to indicate that characters were found in the string that could not be converted. If datatype is a character, the optional arguments `seperator` and `csv` are avalable as described in "string formatting" above. The `countrts` function is pure and can be used as a specification function.
 

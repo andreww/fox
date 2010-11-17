@@ -1,7 +1,7 @@
 program short_test
 
   use fox_m_fsys_realtypes, only: sp, dp
-  use FoX_common, only : rts
+  use FoX_common, only : rts, countrts
 
   print*, "test.0.1.1"
   call stringdatascalar("abcd", "abcd", 1, 0)
@@ -282,7 +282,8 @@ contains
         print*, "Wrong iostat" 
       if (n/=num) &
         print*, "Wrong num"
-
+      ! Don't test countrts on string scalar rts output,
+      ! as in this case rts does not split on whitespace.
     end subroutine stringdatascalar
 
     subroutine logicaldatascalar(string, array, num, iostat) 
@@ -301,7 +302,9 @@ contains
         print*, "Wrong iostat" 
       if (n/=num) &
         print*, "Wrong num"
-
+      if (((i<=0).and.(countrts(string,.false.)/=num)).or. & 
+          ((i>1).and.(countrts(string,.false.)/=0)))      &
+        print*, "Countrts wrong", countrts(string,.false.)
     end subroutine logicaldatascalar
 
     subroutine integerdatascalar(string, array, num, iostat) 
@@ -320,7 +323,9 @@ contains
         print*, "Wrong iostat" 
       if (n/=num) &
         print*, "Wrong num"
-
+      if (((i<=0).and.(countrts(string,1)/=num)).or. & 
+          ((i>1).and.(countrts(string,1)/=0)))      &
+        print*, "Countrts wrong", countrts(string,1)
     end subroutine integerdatascalar
 
     subroutine realspdatascalar(string, array, num, iostat) 
@@ -344,7 +349,9 @@ contains
         print*, "Wrong iostat" 
       if (n/=num) &
         print*, "Wrong num"
-
+      if (((i<=0).and.(countrts(string,1.0)/=num)).or. & 
+          ((i>1).and.(countrts(string,1.0)/=0)))      &
+        print*, "Countrts wrong", countrts(string,1.0)
     end subroutine realspdatascalar
 
     subroutine realdpdatascalar(string, array, num, iostat) 
@@ -368,7 +375,9 @@ contains
         print*, "Wrong iostat" 
       if (n/=num) &
         print*, "Wrong num"
-
+      if (((i<=0).and.(countrts(string,1.0_dp)/=num)).or. & 
+          ((i>1).and.(countrts(string,1.0_dp)/=0)))      &
+        print*, "Countrts wrong", countrts(string,1.0_dp)
     end subroutine realdpdatascalar
 
     subroutine complexspdatascalar(string, array, num, iostat) 
@@ -399,7 +408,9 @@ contains
         print*, "Wrong iostat" 
       if (n/=num) &
         print*, "Wrong num"
-
+      if (((i<=0).and.(countrts(string,complex(1.0,0.0))/=num)).or. & 
+          ((i>1).and.(countrts(string,complex(1.0,0.0))/=0)))      &
+        print*, "Countrts wrong", countrts(string,complex(1.0,0.0))
     end subroutine complexspdatascalar
 
     subroutine complexdpdatascalar(string, array, num, iostat) 
@@ -430,7 +441,9 @@ contains
         print*, "Wrong iostat" 
       if (n/=num) &
         print*, "Wrong num"
-
+      if (((i<=0).and.(countrts(string,complex(1.0_dp,0.0_dp))/=num)).or. & 
+          ((i>1).and.(countrts(string,complex(1.0_dp,0.0_dp))/=0)))      &
+        print*, "Countrts wrong", countrts(string,complex(1.0_dp,0.0_dp))
     end subroutine complexdpdatascalar
 
     subroutine stringdataarray(string, array, num, iostat, sep, csv)
@@ -451,7 +464,9 @@ contains
         print*, "Wrong iostat"
       if (n/=num) &
         print*, "Wrong num"
-
+      if (((i<=0).and.(countrts(string," ",sep,csv)/=num)).or. & 
+          ((i>1).and.(countrts(string," ",sep,csv)/=0)))      &
+        print*, "Countrts wrong", countrts(string," ",sep,csv)
     end subroutine stringdataarray
 
     subroutine stringdatamatrix(string, array, num, iostat, sep, csv)
@@ -472,6 +487,9 @@ contains
         print*, "Wrong iostat"
       if (n/=num) &
         print*, "Wrong num"
+      if (((i<=0).and.(countrts(string," ",sep,csv)/=num)).or. & 
+          ((i>1).and.(countrts(string," ",sep,csv)/=0)))      &
+        print*, "Countrts wrong", countrts(string," ",sep,csv)
     end subroutine stringdatamatrix
 
     subroutine logicaldataarray(string, array, num, iostat)
@@ -490,6 +508,9 @@ contains
         print*, "Wrong iostat"
       if (n/=num) &
         print*, "Wrong num"
+      if (((i<=0).and.(countrts(string,.false.)/=num)).or. & 
+          ((i>1).and.(countrts(string,.false.)/=0)))      &
+        print*, "Countrts wrong", countrts(string,.false.)
     end subroutine logicaldataarray
 
     subroutine logicaldatamatrix(string, array, num, iostat)
@@ -508,6 +529,9 @@ contains
         print*, "Wrong iostat"
       if (n/=num) &
         print*, "Wrong num"
+      if (((i<=0).and.(countrts(string,.false.)/=num)).or. & 
+          ((i>1).and.(countrts(string,.false.)/=0)))      &
+        print*, "Countrts wrong", countrts(string,.false.)
     end subroutine logicaldatamatrix
 
     subroutine integerdataarray(string, array, num, iostat)
@@ -526,6 +550,9 @@ contains
         print*, "Wrong iostat"
       if (n/=num) &
         print*, "Wrong num"
+      if (((i<=0).and.(countrts(string,1)/=num)).or. & 
+          ((i>1).and.(countrts(string,1)/=0)))      &
+        print*, "Countrts wrong", countrts(string,1)
     end subroutine integerdataarray
 
     subroutine integerdatamatrix(string, array, num, iostat)
@@ -544,6 +571,9 @@ contains
         print*, "Wrong iostat"
       if (n/=num) &
         print*, "Wrong num"
+      if (((i<=0).and.(countrts(string,1.0)/=num)).or. & 
+          ((i>1).and.(countrts(string,1.0)/=0)))      &
+        print*, "Countrts wrong", countrts(string,1.0)
     end subroutine integerdatamatrix
 
     subroutine realspdataarray(string, array, num, iostat)
@@ -571,6 +601,9 @@ contains
         print*, "Wrong iostat"
       if (n/=num) &
         print*, "Wrong num"
+      if (((i<=0).and.(countrts(string,1.0)/=num)).or. & 
+          ((i>1).and.(countrts(string,1.0)/=0)))      &
+        print*, "Countrts wrong", countrts(string,1.0)
     end subroutine realspdataarray
 
     subroutine realspdatamatrix(string, array, num, iostat)
@@ -599,6 +632,9 @@ contains
         print*, "Wrong iostat"
       if (n/=num) &
         print*, "Wrong num"
+      if (((i<=0).and.(countrts(string,1.0_dp)/=num)).or. & 
+          ((i>1).and.(countrts(string,1.0_dp)/=0)))      &
+        print*, "Countrts wrong", countrts(string,1.0_dp)
     end subroutine realspdatamatrix
 
     subroutine realdpdataarray(string, array, num, iostat)
@@ -626,6 +662,9 @@ contains
         print*, "Wrong iostat"
       if (n/=num) &
         print*, "Wrong num"
+      if (((i<=0).and.(countrts(string,1.0_dp)/=num)).or. & 
+          ((i>1).and.(countrts(string,1.0_dp)/=0)))      &
+        print*, "Countrts wrong", countrts(string,1.0_dp)
     end subroutine realdpdataarray
 
     subroutine realdpdatamatrix(string, array, num, iostat)
@@ -655,6 +694,9 @@ contains
         print*, "Wrong iostat"
       if (n/=num) &
         print*, "Wrong num"
+      if (((i<=0).and.(countrts(string,1.0_dp)/=num)).or. & 
+          ((i>1).and.(countrts(string,1.0_dp)/=0)))      &
+        print*, "Countrts wrong", countrts(string,1.0_dp)
     end subroutine realdpdatamatrix
 
     subroutine cmplxspdataarray(string, array, num, iostat)
@@ -687,6 +729,9 @@ contains
         print*, "Wrong iostat"
       if (n/=num) &
         print*, "Wrong num"
+      if (((i<=0).and.(countrts(string,complex(1.0,0.0))/=num)).or. & 
+          ((i>1).and.(countrts(string,complex(1.0,0.0))/=0)))      &
+        print*, "Countrts wrong", countrts(string,complex(1.0,0.0))
     end subroutine cmplxspdataarray
 
     subroutine cmplxspdatamatrix(string, array, num, iostat)
@@ -721,6 +766,9 @@ contains
         print*, "Wrong iostat"
       if (n/=num) &
         print*, "Wrong num"
+      if (((i<=0).and.(countrts(string,complex(1.0,0.0))/=num)).or. & 
+          ((i>1).and.(countrts(string,complex(1.0,0.0))/=0)))      &
+        print*, "Countrts wrong", countrts(string,complex(1.0,0.0))
     end subroutine cmplxspdatamatrix
 
     subroutine cmplxdpdataarray(string, array, num, iostat)
@@ -753,6 +801,9 @@ contains
         print*, "Wrong iostat"
       if (n/=num) &
         print*, "Wrong num"
+      if (((i<=0).and.(countrts(string,complex(1.0_dp,0.0_dp))/=num)).or. & 
+          ((i>1).and.(countrts(string,complex(1.0_dp,0.0_dp))/=0)))      &
+        print*, "Countrts wrong", countrts(string,complex(1.0_dp,0.0_dp))
     end subroutine cmplxdpdataarray
 
     subroutine cmplxdpdatamatrix(string, array, num, iostat)
@@ -787,6 +838,9 @@ contains
         print*, "Wrong iostat"
       if (n/=num) &
         print*, "Wrong num"
+      if (((i<=0).and.(countrts(string,complex(1.0_dp,0.0_dp))/=num)).or. & 
+          ((i>1).and.(countrts(string,complex(1.0_dp,0.0_dp))/=0)))      &
+        print*, "Countrts wrong", countrts(string,complex(1.0_dp,0.0_dp))
     end subroutine cmplxdpdatamatrix
 
 end program short_test

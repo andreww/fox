@@ -5,6 +5,7 @@ OBJFILES=fox_m_fsys_abort_flush.$(OBJEXT) \
          fox_m_fsys_array_str.$(OBJEXT) \
          fox_m_fsys_format.$(OBJEXT) \
          fox_m_fsys_parse_input.$(OBJEXT) \
+         fox_m_fsys_count_parse_input.$(OBJEXT) \
          fox_m_fsys_string.$(OBJEXT) \
          fox_m_fsys_string_list.$(OBJEXT) \
          fox_m_fsys_realtypes.$(OBJEXT)
@@ -32,4 +33,5 @@ clean:
 # DO NOT DELETE THIS LINE - used by make depend
 fox_m_fsys_format.$(OBJEXT): fox_m_fsys_realtypes.$(OBJEXT) fox_m_fsys_abort_flush.$(OBJEXT)
 fox_m_fsys_parse_input.$(OBJEXT): fox_m_fsys_realtypes.$(OBJEXT)
+fox_m_fsys_count_parse_input.$(OBJEXT): fox_m_fsys_realtypes.$(OBJEXT)
 fox_m_fsys_string_list.$(OBJEXT): fox_m_fsys_array_str.$(OBJEXT)
