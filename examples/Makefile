@@ -6,12 +6,12 @@ default: $(BUILD_TARGETS)
 
 INCFLAGS=`../FoX-config --fcflags`
 
-EXAMPLES=dom_example_2$(EXEEXT) dom_example_3$(EXEEXT) sax_example$(EXEEXT) sax_example_2$(EXEEXT) wcml_example$(EXEEXT) wxml_example$(EXEEXT) wkml_example$(EXEEXT)
+EXAMPLES=dom_example_2$(EXEEXT) dom_example_3$(EXEEXT) sax_example$(EXEEXT) sax_example_2$(EXEEXT) wcml_example$(EXEEXT) wxml_example$(EXEEXT) wkml_example$(EXEEXT) wkml_example_2$(EXEEXT)
 
 dom_lib: sax_lib wxml_lib dom_example_2$(EXEEXT) dom_example_3$(EXEEXT) 
 sax_lib: sax_example$(EXEEXT) sax_example_2$(EXEEXT)
 wcml_lib: wxml_lib wcml_example$(EXEEXT)
-wkml_lib: wxml_lib wkml_example$(EXEEXT)
+wkml_lib: wxml_lib wkml_example$(EXEEXT) wkml_example_2$(EXEEXT)
 wxml_lib: wxml_example$(EXEEXT)
 
 # Note that we cannot use $< below since IBM make doesn't understand it.
@@ -42,6 +42,8 @@ wcml_example$(EXEEXT): wcml_example.$(OBJEXT)  ../objs/lib/libFoX_wcml.$(LIBEXT)
 wkml_example$(EXEEXT): wkml_example.$(OBJEXT)  ../objs/lib/libFoX_wkml.$(LIBEXT) ../objs/lib/libFoX_wxml.$(LIBEXT) ../objs/lib/libFoX_common.$(LIBEXT) ../objs/lib/libFoX_fsys.$(LIBEXT)
 	$(FC) $(FFLAGS) $(LDFLAGS) $(LINK_O_FLAG) $@ wkml_example.$(OBJEXT) $$(../FoX-config --libs --wkml)
 
+wkml_example_2$(EXEEXT): wkml_example_2.$(OBJEXT)  ../objs/lib/libFoX_wkml.$(LIBEXT) ../objs/lib/libFoX_wxml.$(LIBEXT) ../objs/lib/libFoX_common.$(LIBEXT) ../objs/lib/libFoX_fsys.$(LIBEXT)
+	$(FC) $(FFLAGS) $(LDFLAGS) $(LINK_O_FLAG) $@ wkml_example_2.$(OBJEXT) $$(../FoX-config --libs --wkml)
 
 clean:
-	rm -f *.$(OBJEXT) *.$(MOD_EXT) $(EXAMPLES) wkml_example.kml
+	rm -f *.$(OBJEXT) *.$(MOD_EXT) $(EXAMPLES) wkml_example.kml wkml_example_2.kml dom_example_3.xml

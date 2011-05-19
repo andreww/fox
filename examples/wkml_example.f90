@@ -1,5 +1,5 @@
 program wkml_example
-! this program read car accidents data of Cambridge 
+  ! Example point plotting in KML using FoX_wkml
 
   use FoX_wkml
 
@@ -7,24 +7,11 @@ program wkml_example
 
   type(xmlf_t) :: myfile
 
-  integer i,m
-  parameter(m=10) 
-
-  double precision :: latitude(m), longitude(m)  
-
-
-  open(unit=90, file='wkml_example_input.txt',status='old')
-
-
-10 FORMAT(2x,F9.6,5x,F8.6)
-  do i=1,m
-    read (90,10) latitude(i), longitude(i)
-  end do
-
-!   print*, longitude
-
-  close(90)
-
+  ! Data on the location of car accidents in Cambridge
+  real :: latitude(10) = (/52.178179, 52.210026, 52.204842, &
+          52.176018, 52.173411, 52.209044, 52.213750, 52.226834, 52.214031, 52.207677/)
+  real :: longitude(10) = (/0.143026, 0.111787, 0.135543, & 
+          0.143683, 0.112742, 0.141804, 0.123205, 0.111618, 0.110557, 0.127060/)
 
   call kmlBeginFile(myfile, "wkml_example.kml", -1)
   call kmlCreatePoints(myfile, longitude, latitude)

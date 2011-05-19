@@ -15,10 +15,13 @@ config.status
 objs
 wcml_example
 wxml_example
+wkml_example
+wkml_example_2
 sax_example
 sax_example_2
 dom_example
 dom_example_2
+dom_example_3
 .FoX
 .config
 *.exe
