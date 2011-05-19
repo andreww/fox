@@ -12,6 +12,9 @@ rm -f tests.out failed.out
 #  ./$t
 #done
 
+echo "Testing fsys"
+./test.sh test_fsys_array_str
+
 echo "Testing reading strings"
 ./test.sh test_input
 
