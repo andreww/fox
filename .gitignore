@@ -52,3 +52,4 @@ wkml/test/test_kmlContours_*_real.*
 examples/mytest.cml
 examples/out.xml
 examples/simple.xml
+*.dSYM/
