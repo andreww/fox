@@ -119,7 +119,7 @@ contains
 
   subroutine cmlAddMoleculesp(xf, elements, atomRefs, coords, occupancies, atomIds, style, fmt &
 ,dictRef,convention,title,id,ref,formula,chirality,role , &
-bondAtom1Refs, bondAtom2Refs, bondOrders, bondIds)
+bondAtom1Refs, bondAtom2Refs, bondOrders, bondIds, nobondcheck)
     type(xmlf_t), intent(inout) :: xf
     real(kind=sp), intent(in)              :: coords(:, :)
     character(len=*), intent(in)           :: elements(:)
@@ -144,6 +144,7 @@ bondAtom1Refs, bondAtom2Refs, bondOrders, bondIds)
     character(len=*), intent(in), optional :: bondAtom2Refs(:)
     character(len=*), intent(in), optional :: bondOrders(:)
     character(len=*), intent(in), optional :: bondIds(:)
+    logical, intent(in), optional          :: nobondcheck
 
 #ifndef DUMMYLIB
 
@@ -152,7 +153,12 @@ bondAtom1Refs, bondAtom2Refs, bondOrders, bondIds)
     call cmlAddAtoms(xf, elements, atomRefs, coords, occupancies, atomIds, style, fmt)
     if (present(bondAtom1Refs)) then
       if (present(bondAtom2Refs).and.present(bondOrders)) then
-        call addBondArray(xf, bondAtom1Refs, bondAtom2Refs, bondOrders, bondIds)
+        if (present(atomIds)) then
+          call checkBondIdRefs(atomIds, bondAtom1Refs, bondAtom2Refs, nobondcheck)
+          call addBondArray(xf, bondAtom1Refs, bondAtom2Refs, bondOrders, bondIds)
+        else
+          call FoX_error("AtomIds must be provided to add bonds")
+        endif
       else
         call FoX_error("Two AtomRefs arrays and a bondOrder array must be provided to add bonds")
       endif
@@ -166,7 +172,7 @@ bondAtom1Refs, bondAtom2Refs, bondOrders, bondIds)
 
   subroutine cmlAddMoleculesp_sh(xf, natoms, elements, atomRefs, coords, occupancies, atomIds, style, fmt &
 ,dictRef,convention,title,id,ref,formula,chirality,role , &
-bondAtom1Refs, bondAtom2Refs, bondOrders, bondIds)
+bondAtom1Refs, bondAtom2Refs, bondOrders, bondIds, nobondcheck)
     type(xmlf_t), intent(inout) :: xf
     integer, intent(in) :: natoms
     real(kind=sp), intent(in)              :: coords(3, natoms)
@@ -192,6 +198,7 @@ bondAtom1Refs, bondAtom2Refs, bondOrders, bondIds)
     character(len=*), intent(in), optional :: bondAtom2Refs(:)
     character(len=*), intent(in), optional :: bondOrders(:)
     character(len=*), intent(in), optional :: bondIds(:)
+    logical, intent(in), optional :: nobondcheck
 
 #ifndef DUMMYLIB
     call cmlStartMolecule(xf &
@@ -199,6 +206,12 @@ bondAtom1Refs, bondAtom2Refs, bondOrders, bondIds)
     call cmlAddAtoms(xf, natoms, elements, atomRefs, coords, occupancies, atomIds, style, fmt)
     if (present(bondAtom1Refs)) then
       if (present(bondAtom2Refs).and.present(bondOrders)) then
+        if (present(atomIds)) then
+          call checkBondIdRefs(atomIds, bondAtom1Refs, bondAtom2Refs, nobondcheck)
+          call addBondArray(xf, bondAtom1Refs, bondAtom2Refs, bondOrders, bondIds)
+        else
+          call FoX_error("AtomIds must be provided to add bonds")
+        endif
         call addBondArray(xf, bondAtom1Refs, bondAtom2Refs, bondOrders, bondIds)
       else
         call FoX_error("Two AtomRefs arrays and a bondOrder array must be provided to add bonds")
@@ -212,7 +225,7 @@ bondAtom1Refs, bondAtom2Refs, bondOrders, bondIds)
 
   subroutine cmlAddMolecule_3_sp(xf, elements, x, y, z, atomRefs, occupancies, atomIds, style, fmt &
 ,dictRef,convention,title,id,ref,formula,chirality,role , &
-bondAtom1Refs, bondAtom2Refs, bondOrders, bondIds)
+bondAtom1Refs, bondAtom2Refs, bondOrders, bondIds, nobondcheck)
     type(xmlf_t), intent(inout) :: xf
     real(kind=sp), intent(in)              :: x(:)
     real(kind=sp), intent(in)              :: y(:)
@@ -239,6 +252,7 @@ bondAtom1Refs, bondAtom2Refs, bondOrders, bondIds)
     character(len=*), intent(in), optional :: bondAtom2Refs(:)
     character(len=*), intent(in), optional :: bondOrders(:)
     character(len=*), intent(in), optional :: bondIds(:)
+    logical, intent(in), optional :: nobondcheck
 
 #ifndef DUMMYLIB
     call cmlStartMolecule(xf &
@@ -246,6 +260,12 @@ bondAtom1Refs, bondAtom2Refs, bondOrders, bondIds)
     call cmlAddAtoms(xf, elements, x, y, z, atomRefs, occupancies, atomIds, style, fmt)
     if (present(bondAtom1Refs)) then
       if (present(bondAtom2Refs).and.present(bondOrders)) then
+        if (present(atomIds)) then
+          call checkBondIdRefs(atomIds, bondAtom1Refs, bondAtom2Refs, nobondcheck)
+          call addBondArray(xf, bondAtom1Refs, bondAtom2Refs, bondOrders, bondIds)
+        else
+          call FoX_error("AtomIds must be provided to add bonds")
+        endif
         call addBondArray(xf, bondAtom1Refs, bondAtom2Refs, bondOrders, bondIds)
       else
         call FoX_error("Two AtomRefs arrays and a bondOrder array must be provided to add bonds")
@@ -259,7 +279,7 @@ bondAtom1Refs, bondAtom2Refs, bondOrders, bondIds)
 
   subroutine cmlAddMolecule_3_sp_sh(xf, natoms, elements, x, y, z, atomRefs, occupancies, atomIds, style, fmt &
 ,dictRef,convention,title,id,ref,formula,chirality,role , &
-bondAtom1Refs, bondAtom2Refs, bondOrders, bondIds)
+bondAtom1Refs, bondAtom2Refs, bondOrders, bondIds, nobondcheck)
     type(xmlf_t), intent(inout) :: xf
     integer, intent(in) :: natoms
     real(kind=sp), intent(in)              :: x(natoms)
@@ -287,6 +307,7 @@ bondAtom1Refs, bondAtom2Refs, bondOrders, bondIds)
     character(len=*), intent(in), optional :: bondAtom2Refs(:)
     character(len=*), intent(in), optional :: bondOrders(:)
     character(len=*), intent(in), optional :: bondIds(:)
+    logical, intent(in), optional :: nobondcheck
 
 #ifndef DUMMYLIB
     call cmlStartMolecule(xf &
@@ -294,7 +315,12 @@ bondAtom1Refs, bondAtom2Refs, bondOrders, bondIds)
     call cmlAddAtoms(xf, natoms, elements, x, y, z, atomRefs, occupancies, atomIds, style, fmt)
     if (present(bondAtom1Refs)) then
       if (present(bondAtom2Refs).and.present(bondOrders)) then
-        call addBondArray(xf, bondAtom1Refs, bondAtom2Refs, bondOrders, bondIds)
+        if (present(atomIds)) then
+          call checkBondIdRefs(atomIds, bondAtom1Refs, bondAtom2Refs, nobondcheck)
+          call addBondArray(xf, bondAtom1Refs, bondAtom2Refs, bondOrders, bondIds)
+        else
+          call FoX_error("AtomIds must be provided to add bonds")
+        endif
       else
         call FoX_error("Two AtomRefs arrays and a bondOrder array must be provided to add bonds")
       endif
@@ -810,7 +836,7 @@ bondAtom1Refs, bondAtom2Refs, bondOrders, bondIds)
 
   subroutine cmlAddMoleculedp(xf, elements, atomRefs, coords, occupancies, atomIds, style, fmt &
 ,dictRef,convention,title,id,ref,formula,chirality,role , &
-bondAtom1Refs, bondAtom2Refs, bondOrders, bondIds)
+bondAtom1Refs, bondAtom2Refs, bondOrders, bondIds, nobondcheck)
     type(xmlf_t), intent(inout) :: xf
     real(kind=dp), intent(in)              :: coords(:, :)
     character(len=*), intent(in)           :: elements(:)
@@ -835,6 +861,7 @@ bondAtom1Refs, bondAtom2Refs, bondOrders, bondIds)
     character(len=*), intent(in), optional :: bondAtom2Refs(:)
     character(len=*), intent(in), optional :: bondOrders(:)
     character(len=*), intent(in), optional :: bondIds(:)
+    logical, intent(in), optional          :: nobondcheck
 
 #ifndef DUMMYLIB
 
@@ -843,7 +870,12 @@ bondAtom1Refs, bondAtom2Refs, bondOrders, bondIds)
     call cmlAddAtoms(xf, elements, atomRefs, coords, occupancies, atomIds, style, fmt)
     if (present(bondAtom1Refs)) then
       if (present(bondAtom2Refs).and.present(bondOrders)) then
-        call addBondArray(xf, bondAtom1Refs, bondAtom2Refs, bondOrders, bondIds)
+        if (present(atomIds)) then
+          call checkBondIdRefs(atomIds, bondAtom1Refs, bondAtom2Refs, nobondcheck)
+          call addBondArray(xf, bondAtom1Refs, bondAtom2Refs, bondOrders, bondIds)
+        else
+          call FoX_error("AtomIds must be provided to add bonds")
+        endif
       else
         call FoX_error("Two AtomRefs arrays and a bondOrder array must be provided to add bonds")
       endif
@@ -857,7 +889,7 @@ bondAtom1Refs, bondAtom2Refs, bondOrders, bondIds)
 
   subroutine cmlAddMoleculedp_sh(xf, natoms, elements, atomRefs, coords, occupancies, atomIds, style, fmt &
 ,dictRef,convention,title,id,ref,formula,chirality,role , &
-bondAtom1Refs, bondAtom2Refs, bondOrders, bondIds)
+bondAtom1Refs, bondAtom2Refs, bondOrders, bondIds, nobondcheck)
     type(xmlf_t), intent(inout) :: xf
     integer, intent(in) :: natoms
     real(kind=dp), intent(in)              :: coords(3, natoms)
@@ -883,6 +915,7 @@ bondAtom1Refs, bondAtom2Refs, bondOrders, bondIds)
     character(len=*), intent(in), optional :: bondAtom2Refs(:)
     character(len=*), intent(in), optional :: bondOrders(:)
     character(len=*), intent(in), optional :: bondIds(:)
+    logical, intent(in), optional :: nobondcheck
 
 #ifndef DUMMYLIB
     call cmlStartMolecule(xf &
@@ -890,6 +923,12 @@ bondAtom1Refs, bondAtom2Refs, bondOrders, bondIds)
     call cmlAddAtoms(xf, natoms, elements, atomRefs, coords, occupancies, atomIds, style, fmt)
     if (present(bondAtom1Refs)) then
       if (present(bondAtom2Refs).and.present(bondOrders)) then
+        if (present(atomIds)) then
+          call checkBondIdRefs(atomIds, bondAtom1Refs, bondAtom2Refs, nobondcheck)
+          call addBondArray(xf, bondAtom1Refs, bondAtom2Refs, bondOrders, bondIds)
+        else
+          call FoX_error("AtomIds must be provided to add bonds")
+        endif
         call addBondArray(xf, bondAtom1Refs, bondAtom2Refs, bondOrders, bondIds)
       else
         call FoX_error("Two AtomRefs arrays and a bondOrder array must be provided to add bonds")
@@ -903,7 +942,7 @@ bondAtom1Refs, bondAtom2Refs, bondOrders, bondIds)
 
   subroutine cmlAddMolecule_3_dp(xf, elements, x, y, z, atomRefs, occupancies, atomIds, style, fmt &
 ,dictRef,convention,title,id,ref,formula,chirality,role , &
-bondAtom1Refs, bondAtom2Refs, bondOrders, bondIds)
+bondAtom1Refs, bondAtom2Refs, bondOrders, bondIds, nobondcheck)
     type(xmlf_t), intent(inout) :: xf
     real(kind=dp), intent(in)              :: x(:)
     real(kind=dp), intent(in)              :: y(:)
@@ -930,6 +969,7 @@ bondAtom1Refs, bondAtom2Refs, bondOrders, bondIds)
     character(len=*), intent(in), optional :: bondAtom2Refs(:)
     character(len=*), intent(in), optional :: bondOrders(:)
     character(len=*), intent(in), optional :: bondIds(:)
+    logical, intent(in), optional :: nobondcheck
 
 #ifndef DUMMYLIB
     call cmlStartMolecule(xf &
@@ -937,6 +977,12 @@ bondAtom1Refs, bondAtom2Refs, bondOrders, bondIds)
     call cmlAddAtoms(xf, elements, x, y, z, atomRefs, occupancies, atomIds, style, fmt)
     if (present(bondAtom1Refs)) then
       if (present(bondAtom2Refs).and.present(bondOrders)) then
+        if (present(atomIds)) then
+          call checkBondIdRefs(atomIds, bondAtom1Refs, bondAtom2Refs, nobondcheck)
+          call addBondArray(xf, bondAtom1Refs, bondAtom2Refs, bondOrders, bondIds)
+        else
+          call FoX_error("AtomIds must be provided to add bonds")
+        endif
         call addBondArray(xf, bondAtom1Refs, bondAtom2Refs, bondOrders, bondIds)
       else
         call FoX_error("Two AtomRefs arrays and a bondOrder array must be provided to add bonds")
@@ -950,7 +996,7 @@ bondAtom1Refs, bondAtom2Refs, bondOrders, bondIds)
 
   subroutine cmlAddMolecule_3_dp_sh(xf, natoms, elements, x, y, z, atomRefs, occupancies, atomIds, style, fmt &
 ,dictRef,convention,title,id,ref,formula,chirality,role , &
-bondAtom1Refs, bondAtom2Refs, bondOrders, bondIds)
+bondAtom1Refs, bondAtom2Refs, bondOrders, bondIds, nobondcheck)
     type(xmlf_t), intent(inout) :: xf
     integer, intent(in) :: natoms
     real(kind=dp), intent(in)              :: x(natoms)
@@ -978,6 +1024,7 @@ bondAtom1Refs, bondAtom2Refs, bondOrders, bondIds)
     character(len=*), intent(in), optional :: bondAtom2Refs(:)
     character(len=*), intent(in), optional :: bondOrders(:)
     character(len=*), intent(in), optional :: bondIds(:)
+    logical, intent(in), optional :: nobondcheck
 
 #ifndef DUMMYLIB
     call cmlStartMolecule(xf &
@@ -985,7 +1032,12 @@ bondAtom1Refs, bondAtom2Refs, bondOrders, bondIds)
     call cmlAddAtoms(xf, natoms, elements, x, y, z, atomRefs, occupancies, atomIds, style, fmt)
     if (present(bondAtom1Refs)) then
       if (present(bondAtom2Refs).and.present(bondOrders)) then
-        call addBondArray(xf, bondAtom1Refs, bondAtom2Refs, bondOrders, bondIds)
+        if (present(atomIds)) then
+          call checkBondIdRefs(atomIds, bondAtom1Refs, bondAtom2Refs, nobondcheck)
+          call addBondArray(xf, bondAtom1Refs, bondAtom2Refs, bondOrders, bondIds)
+        else
+          call FoX_error("AtomIds must be provided to add bonds")
+        endif
       else
         call FoX_error("Two AtomRefs arrays and a bondOrder array must be provided to add bonds")
       endif
@@ -1533,6 +1585,45 @@ bondAtom1Refs, bondAtom2Refs, bondOrders, bondIds)
     call xml_EndElement(xf, "bondArray")
 
   end subroutine addBondArray
+
+  subroutine checkBondIdRefs(atomArrayIds, bondAtom1Refs, bondAtom2Refs, nobondcheck)
+    character(len=*), intent(in)           :: atomArrayIds(:)
+    character(len=*), intent(in)           :: bondAtom1Refs(:)
+    character(len=*), intent(in)           :: bondAtom2Refs(:)
+    logical, intent(in), optional          :: nobondcheck
+    integer                                :: nbonds
+    integer                                :: natoms
+    integer                                :: i
+    integer                                :: j
+    logical                                :: bond1OK
+    logical                                :: bond2OK
+
+    if (present(nobondcheck)) then
+      if (nobondcheck) return ! skip all checks
+    endif
+
+    natoms = size(atomArrayIds)
+    nbonds = size(bondAtom1Refs)
+    if (size(bondAtom2Refs).ne.nbonds) &
+      call FoX_error("Length of atomRef arrays must match in WCML checkBondIdRefs")
+
+    do i = 1, nbonds
+      if (bondAtom1Refs(i).eq.bondAtom2Refs(i)) &
+        call FoX_error("The two atomRefs in a bond must be different")
+      bond1OK = .false.
+      bond2OK = .false.
+      do j = 1, natoms
+        if (bondAtom1Refs(i).eq.atomArrayIds(j)) &
+          bond1OK = .true.
+        if (bondAtom2Refs(i).eq.atomArrayIds(j)) &
+          bond2OK = .true.
+        if (bond1OK.and.bond2OK) exit
+      enddo
+      if (.not.bond1OK) call FoX_error(bondAtom1Refs(i) // " not found in checkBondIdRefs")
+      if (.not.bond2OK) call FoX_error(bondAtom2Refs(i) // " not found in checkBondIdRefs")
+    enddo
+
+  end subroutine checkBondIdRefs
 #endif
 
 end module m_wcml_molecule
