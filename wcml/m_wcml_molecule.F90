@@ -1591,17 +1591,21 @@ bondAtom1Refs, bondAtom2Refs, bondOrders, bondIds, nobondcheck)
     character(len=*), intent(in)           :: bondAtom1Refs(:)
     character(len=*), intent(in)           :: bondAtom2Refs(:)
     logical, intent(in), optional          :: nobondcheck
+    logical                                :: bondmatrix(size(atomArrayIds),size(atomArrayIds))
     integer                                :: nbonds
     integer                                :: natoms
     integer                                :: i
     integer                                :: j
     logical                                :: bond1OK
     logical                                :: bond2OK
+    integer                                :: atom1num
+    integer                                :: atom2num
 
     if (present(nobondcheck)) then
       if (nobondcheck) return ! skip all checks
     endif
 
+    bondmatrix = .false.
     natoms = size(atomArrayIds)
     nbonds = size(bondAtom1Refs)
     if (size(bondAtom2Refs).ne.nbonds) &
@@ -1615,12 +1619,23 @@ bondAtom1Refs, bondAtom2Refs, bondOrders, bondIds, nobondcheck)
       do j = 1, natoms
         if (bondAtom1Refs(i).eq.atomArrayIds(j)) &
           bond1OK = .true.
+          atom1num = j
         if (bondAtom2Refs(i).eq.atomArrayIds(j)) &
           bond2OK = .true.
+          atom2num = j
         if (bond1OK.and.bond2OK) exit
       enddo
       if (.not.bond1OK) call FoX_error(bondAtom1Refs(i) // " not found in checkBondIdRefs")
       if (.not.bond2OK) call FoX_error(bondAtom2Refs(i) // " not found in checkBondIdRefs")
+      ! Both atoms bust have been found to get here...
+      if (bondmatrix(atom1num,atom2num)) then
+        ! Seen this bond before
+        call FoX_error("A bond cannot be added twice.")
+      else
+        ! We've seen this bond (both ways) - so don't forget
+        bondmatrix(atom1num,atom2num) = .true.
+        bondmatrix(atom2num,atom1num) = .true.
+      endif
     enddo
 
   end subroutine checkBondIdRefs
