@@ -274,12 +274,12 @@ This function adds a tag representing an output property
 (**ref**) *string* *scalar*: Reference an `id` attribute of another element (generally deprecated)  
 (**formula**) *string* *scalar*: An IUPAC chemical formula  
 (**chirality**) *string* *scalar*: The chirality of the molecule. No defined vocabulary.  
-(**role**) *string* *scalar*: Role of molecule. No defined vocabulary.
-(**bondAtom1Refs**) *string* *array*: Length-m array of references to atomIds at one "end" of a list of bonds.
-(**bondAtom2Refs**) *string* *array*: Length-m array of references to atomIds at another "end" of a list of bonds.
-(**bondOrders**) *string* *array*: Length-m array of bond orders. See below.
-(**bondIds**) *string* *array*: Length-m array of strings containing IDs for bonds.
-(**nobondcheck**) *logical* *scalar*: Enable (.true., the default) of dissable (.false.) bond validition.
+(**role**) *string* *scalar*: Role of molecule. No defined vocabulary.   
+(**bondAtom1Refs**) *string* *array*: Length-m array of references to atomIds at one "end" of a list of bonds.   
+(**bondAtom2Refs**) *string* *array*: Length-m array of references to atomIds at another "end" of a list of bonds.   
+(**bondOrders**) *string* *array*: Length-m array of bond orders. See below.   
+(**bondIds**) *string* *array*: Length-m array of strings containing IDs for bonds.   
+(**nobondcheck**) *logical* *scalar*: Enable (.true., the default) of dissable (.false.) bond validition.   
 
 Outputs an atomic configuration. Bonds may be added using the optional arguments **bondAtom1Refs**, **bondAtom2Refs** and **bondOrders**. All these arrays must be the same lenght and all must be present if bonds are to be added. Optionally, **bondIds** can be used to add Ids to the bond elements. Some valididity constraints are imposed (atomsRefs in the bonds must be defined, bonds cannot be added twice). The meaning of the terms "molecule", "bond" and "bond order" is left loosly defined.
 

@@ -184,7 +184,7 @@ places.  If you move the FoX directory later on, you will need to re-run configu
 
 <p>To run them all, simply run <code>make check</code> from the top-level directory. This will run the individual testsuites, and collate their results.</p>
 
-<p>If any failures occur (unrelated to known compiler issues, see the <a href="http://github.com/andreww/fox/issues">up-to-date list</a>), please send a message to the mailing list (<a href="&#x6D;&#97;&#105;l&#x74;&#111;:&#102;o&#120;&#x2D;&#100;&#105;&#115;&#99;&#117;&#x73;&#x73;&#64;g&#111;&#111;&#103;&#108;&#x65;g&#x72;&#111;&#117;&#x70;&#115;&#x2E;&#x63;&#x6F;&#109;">&#102;o&#120;&#x2D;&#100;&#105;&#115;&#99;&#117;&#x73;&#x73;&#64;g&#111;&#111;&#103;&#108;&#x65;g&#x72;&#111;&#117;&#x70;&#115;&#x2E;&#x63;&#x6F;&#109;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
+<p>If any failures occur (unrelated to known compiler issues, see the <a href="http://github.com/andreww/fox/issues">up-to-date list</a>), please send a message to the mailing list (<a href="m&#97;&#x69;&#108;&#x74;&#x6F;:&#x66;&#x6F;&#x78;&#x2D;d&#x69;&#x73;c&#117;&#x73;s&#64;&#x67;&#x6F;&#111;&#x67;&#x6C;&#101;&#103;&#114;&#111;&#x75;&#112;&#x73;.&#x63;&#x6F;m">&#x66;&#x6F;&#x78;&#x2D;d&#x69;&#x73;c&#117;&#x73;s&#64;&#x67;&#x6F;&#111;&#x67;&#x6C;&#101;&#103;&#114;&#111;&#x75;&#112;&#x73;.&#x63;&#x6F;m</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
 
 <p>The testsuites for the SAX and DOM libraries are very extensive, and are somewhat fragile, so are not distributed with FoX. Please contact the author for details.</p>
 
@@ -1403,10 +1403,15 @@ Attempts to do otherwise will result in a runtime error.</p>
 (<strong>ref</strong>) <em>string</em> <em>scalar</em>: Reference an <code>id</code> attribute of another element (generally deprecated) <br />
 (<strong>formula</strong>) <em>string</em> <em>scalar</em>: An IUPAC chemical formula <br />
 (<strong>chirality</strong>) <em>string</em> <em>scalar</em>: The chirality of the molecule. No defined vocabulary. <br />
-(<strong>role</strong>) <em>string</em> <em>scalar</em>: Role of molecule. No defined vocabulary.</li>
+(<strong>role</strong>) <em>string</em> <em>scalar</em>: Role of molecule. No defined vocabulary. <br />
+(<strong>bondAtom1Refs</strong>) <em>string</em> <em>array</em>: Length-m array of references to atomIds at one "end" of a list of bonds. <br />
+(<strong>bondAtom2Refs</strong>) <em>string</em> <em>array</em>: Length-m array of references to atomIds at another "end" of a list of bonds. <br />
+(<strong>bondOrders</strong>) <em>string</em> <em>array</em>: Length-m array of bond orders. See below. <br />
+(<strong>bondIds</strong>) <em>string</em> <em>array</em>: Length-m array of strings containing IDs for bonds. <br />
+(<strong>nobondcheck</strong>) <em>logical</em> <em>scalar</em>: Enable (.true., the default) of dissable (.false.) bond validition.   </li>
 </ul>
 
-<p>Outputs an atomic configuration. </p>
+<p>Outputs an atomic configuration. Bonds may be added using the optional arguments <strong>bondAtom1Refs</strong>, <strong>bondAtom2Refs</strong> and <strong>bondOrders</strong>. All these arrays must be the same lenght and all must be present if bonds are to be added. Optionally, <strong>bondIds</strong> can be used to add Ids to the bond elements. Some valididity constraints are imposed (atomsRefs in the bonds must be defined, bonds cannot be added twice). The meaning of the terms "molecule", "bond" and "bond order" is left loosly defined.</p>
 
 <ul>
 <li><code>cmlAddLattice</code> <br />
@@ -3648,9 +3653,9 @@ Return the value of the fragment</p></li>
 <h1>Further information</h1>
 
 <p>FoX evolved from the initial codebase of <a href="http://lcdx00.wm.lc.ehu.es/ag/xml/">xmlf90</a>,
-which was written largely by Alberto Garcia &lt;<a href="&#x6D;&#97;i&#108;&#x74;&#x6F;:&#x61;&#x6C;&#98;&#101;&#x72;&#116;&#111;g&#64;&#x69;&#99;&#109;&#97;b&#x2E;&#x65;&#x73;">&#x61;&#x6C;&#98;&#101;&#x72;&#116;&#111;g&#64;&#x69;&#99;&#109;&#97;b&#x2E;&#x65;&#x73;</a>> and Jon Wakelin &lt;<a href="&#x6D;&#97;&#105;&#108;&#116;&#x6F;:&#x6A;&#111;&#x6E;&#x2E;&#119;&#x61;&#x6B;&#x65;l&#x69;n&#64;&#98;&#x72;&#x69;&#115;&#116;&#111;&#x6C;&#46;&#x61;&#99;&#x2E;&#117;&#x6B;">&#x6A;&#111;&#x6E;&#x2E;&#119;&#x61;&#x6B;&#x65;l&#x69;n&#64;&#98;&#x72;&#x69;&#115;&#116;&#111;&#x6C;&#46;&#x61;&#99;&#x2E;&#117;&#x6B;</a>>.</p>
+which was written largely by Alberto Garcia &lt;<a href="&#x6D;&#x61;&#x69;&#x6C;&#x74;&#x6F;:&#97;&#x6C;&#x62;&#x65;&#114;&#x74;&#x6F;&#x67;&#64;i&#99;&#x6D;&#97;&#x62;&#46;&#101;&#115;">&#97;&#x6C;&#x62;&#x65;&#114;&#x74;&#x6F;&#x67;&#64;i&#99;&#x6D;&#97;&#x62;&#46;&#101;&#115;</a>> and Jon Wakelin &lt;<a href="&#109;&#97;&#105;&#x6C;&#x74;&#x6F;:j&#111;&#110;&#46;&#x77;&#97;&#x6B;&#101;&#108;&#x69;n&#64;b&#x72;&#x69;&#x73;&#116;&#111;&#108;&#x2E;&#x61;&#x63;&#x2E;&#117;&#107;">j&#111;&#110;&#46;&#x77;&#97;&#x6B;&#101;&#108;&#x69;n&#64;b&#x72;&#x69;&#x73;&#116;&#111;&#108;&#x2E;&#x61;&#x63;&#x2E;&#117;&#107;</a>>.</p>
 
-<p>FoX is the work of Toby White &lt;<a href="&#x6D;&#97;i&#x6C;&#116;&#x6F;:&#116;&#111;&#119;&#64;&#x75;&#115;&#122;&#108;&#97;&#46;&#109;&#101;&#x2E;&#117;&#x6B;">&#116;&#111;&#119;&#64;&#x75;&#115;&#122;&#108;&#97;&#46;&#109;&#101;&#x2E;&#117;&#x6B;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him. Andrew Walker &lt;<a href="&#109;&#97;&#105;&#108;&#x74;&#x6F;:&#97;&#110;&#x64;&#114;&#101;&#119;&#46;wa&#108;&#x6B;&#x65;&#114;&#64;&#98;&#114;&#x69;&#x73;t&#111;&#x6C;&#46;&#x61;&#x63;&#46;&#x75;&#107;">&#97;&#110;&#x64;&#114;&#101;&#119;&#46;wa&#108;&#x6B;&#x65;&#114;&#64;&#98;&#114;&#x69;&#x73;t&#111;&#x6C;&#46;&#x61;&#x63;&#46;&#x75;&#107;</a>> currently looks after maintenance of FoX.</p>
+<p>FoX is the work of Toby White &lt;<a href="&#x6D;&#97;&#x69;&#x6C;t&#x6F;:&#x74;ow&#64;&#x75;&#x73;&#x7A;&#108;&#97;&#x2E;&#x6D;&#x65;&#46;&#117;&#107;">&#x74;ow&#64;&#x75;&#x73;&#x7A;&#108;&#97;&#x2E;&#x6D;&#x65;&#46;&#117;&#107;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him. Andrew Walker &lt;<a href="&#x6D;&#x61;&#105;&#108;&#x74;&#x6F;:&#x61;&#x6E;&#x64;&#114;&#x65;&#119;&#x2E;&#x77;&#x61;&#x6C;&#x6B;&#101;&#x72;&#64;&#98;&#114;&#105;&#115;&#x74;&#x6F;&#x6C;.&#x61;&#99;&#x2E;&#117;&#x6B;">&#x61;&#x6E;&#x64;&#114;&#x65;&#119;&#x2E;&#x77;&#x61;&#x6C;&#x6B;&#101;&#x72;&#64;&#98;&#114;&#105;&#115;&#x74;&#x6F;&#x6C;.&#x61;&#99;&#x2E;&#117;&#x6B;</a>> currently looks after maintenance of FoX.</p>
 
 <p>There is a FoX website at <a href="http://www1.gly.bris.ac.uk/~walker/FoX/">http://www1.gly.bris.ac.uk/~walker/FoX/</a>.</p>
 

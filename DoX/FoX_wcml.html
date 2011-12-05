@@ -322,10 +322,15 @@ Attempts to do otherwise will result in a runtime error.</p>
 (<strong>ref</strong>) <em>string</em> <em>scalar</em>: Reference an <code>id</code> attribute of another element (generally deprecated) <br />
 (<strong>formula</strong>) <em>string</em> <em>scalar</em>: An IUPAC chemical formula <br />
 (<strong>chirality</strong>) <em>string</em> <em>scalar</em>: The chirality of the molecule. No defined vocabulary. <br />
-(<strong>role</strong>) <em>string</em> <em>scalar</em>: Role of molecule. No defined vocabulary.</li>
+(<strong>role</strong>) <em>string</em> <em>scalar</em>: Role of molecule. No defined vocabulary. <br />
+(<strong>bondAtom1Refs</strong>) <em>string</em> <em>array</em>: Length-m array of references to atomIds at one "end" of a list of bonds. <br />
+(<strong>bondAtom2Refs</strong>) <em>string</em> <em>array</em>: Length-m array of references to atomIds at another "end" of a list of bonds. <br />
+(<strong>bondOrders</strong>) <em>string</em> <em>array</em>: Length-m array of bond orders. See below. <br />
+(<strong>bondIds</strong>) <em>string</em> <em>array</em>: Length-m array of strings containing IDs for bonds. <br />
+(<strong>nobondcheck</strong>) <em>logical</em> <em>scalar</em>: Enable (.true., the default) of dissable (.false.) bond validition.   </li>
 </ul>
 
-<p>Outputs an atomic configuration. </p>
+<p>Outputs an atomic configuration. Bonds may be added using the optional arguments <strong>bondAtom1Refs</strong>, <strong>bondAtom2Refs</strong> and <strong>bondOrders</strong>. All these arrays must be the same lenght and all must be present if bonds are to be added. Optionally, <strong>bondIds</strong> can be used to add Ids to the bond elements. Some valididity constraints are imposed (atomsRefs in the bonds must be defined, bonds cannot be added twice). The meaning of the terms "molecule", "bond" and "bond order" is left loosly defined.</p>
 
 <ul>
 <li><code>cmlAddLattice</code> <br />
