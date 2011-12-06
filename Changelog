@@ -1,3 +1,10 @@
+2011-12-05: version 4.1.1
+        Add new 'countrts' function to common
+        Add capability for wcml to handle bonds
+        Fix bug to allow 'empty' DOCTYPE names in SAX parser
+        Trap and report file name errors in SAX and DOM
+        Fix procedure name length and use statments in wkml
+        
 2010-02-09: version 4.1.0
         Add wkml, a KML output module
         Add invalid-pretty-print dom extension option

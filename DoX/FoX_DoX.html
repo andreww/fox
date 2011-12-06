@@ -97,7 +97,7 @@ and how to <a href="#Embedding">use FoX in an existing project</a>.</p>
 <a name="Versioning"/>
 <h1>FoX versioning</h1>
 
-<p>This documentation describes version 4.0 of the FoX library.</p>
+<p>This documentation describes version 4.1 of the FoX library.</p>
 
 <p>This version includes output modules for general XML, and for CML; and a fully validating XML parser, exposed through a Fortran version of the SAX2 input parser and a Fortran mapping of the W3C DOM interface.</p>
 
@@ -184,7 +184,7 @@ places.  If you move the FoX directory later on, you will need to re-run configu
 
 <p>To run them all, simply run <code>make check</code> from the top-level directory. This will run the individual testsuites, and collate their results.</p>
 
-<p>If any failures occur (unrelated to known compiler issues, see the <a href="http://github.com/andreww/fox/issues">up-to-date list</a>), please send a message to the mailing list (<a href="m&#97;&#x69;&#108;&#x74;&#x6F;:&#x66;&#x6F;&#x78;&#x2D;d&#x69;&#x73;c&#117;&#x73;s&#64;&#x67;&#x6F;&#111;&#x67;&#x6C;&#101;&#103;&#114;&#111;&#x75;&#112;&#x73;.&#x63;&#x6F;m">&#x66;&#x6F;&#x78;&#x2D;d&#x69;&#x73;c&#117;&#x73;s&#64;&#x67;&#x6F;&#111;&#x67;&#x6C;&#101;&#103;&#114;&#111;&#x75;&#112;&#x73;.&#x63;&#x6F;m</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
+<p>If any failures occur (unrelated to known compiler issues, see the <a href="http://github.com/andreww/fox/issues">up-to-date list</a>), please send a message to the mailing list (<a href="&#109;&#x61;&#x69;&#108;&#x74;&#x6F;:&#x66;&#x6F;&#120;&#x2D;&#100;&#105;s&#99;&#x75;&#x73;&#115;&#64;&#x67;&#111;&#x6F;&#x67;&#108;&#x65;&#x67;&#114;&#111;&#x75;&#x70;&#x73;&#x2E;&#x63;&#x6F;&#x6D;">&#x66;&#x6F;&#120;&#x2D;&#100;&#105;s&#99;&#x75;&#x73;&#115;&#64;&#x67;&#111;&#x6F;&#x67;&#108;&#x65;&#x67;&#114;&#111;&#x75;&#x70;&#x73;&#x2E;&#x63;&#x6F;&#x6D;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
 
 <p>The testsuites for the SAX and DOM libraries are very extensive, and are somewhat fragile, so are not distributed with FoX. Please contact the author for details.</p>
 
@@ -3653,9 +3653,9 @@ Return the value of the fragment</p></li>
 <h1>Further information</h1>
 
 <p>FoX evolved from the initial codebase of <a href="http://lcdx00.wm.lc.ehu.es/ag/xml/">xmlf90</a>,
-which was written largely by Alberto Garcia &lt;<a href="&#x6D;&#x61;&#x69;&#x6C;&#x74;&#x6F;:&#97;&#x6C;&#x62;&#x65;&#114;&#x74;&#x6F;&#x67;&#64;i&#99;&#x6D;&#97;&#x62;&#46;&#101;&#115;">&#97;&#x6C;&#x62;&#x65;&#114;&#x74;&#x6F;&#x67;&#64;i&#99;&#x6D;&#97;&#x62;&#46;&#101;&#115;</a>> and Jon Wakelin &lt;<a href="&#109;&#97;&#105;&#x6C;&#x74;&#x6F;:j&#111;&#110;&#46;&#x77;&#97;&#x6B;&#101;&#108;&#x69;n&#64;b&#x72;&#x69;&#x73;&#116;&#111;&#108;&#x2E;&#x61;&#x63;&#x2E;&#117;&#107;">j&#111;&#110;&#46;&#x77;&#97;&#x6B;&#101;&#108;&#x69;n&#64;b&#x72;&#x69;&#x73;&#116;&#111;&#108;&#x2E;&#x61;&#x63;&#x2E;&#117;&#107;</a>>.</p>
+which was written largely by Alberto Garcia &lt;<a href="&#109;&#97;&#105;&#108;t&#111;:a&#x6C;&#x62;&#101;&#114;&#x74;&#x6F;&#103;&#64;&#105;&#99;&#x6D;&#x61;&#x62;.&#101;&#115;">a&#x6C;&#x62;&#101;&#114;&#x74;&#x6F;&#103;&#64;&#105;&#99;&#x6D;&#x61;&#x62;.&#101;&#115;</a>> and Jon Wakelin &lt;<a href="&#x6D;&#x61;&#105;&#108;&#116;&#x6F;:&#106;&#x6F;&#110;&#x2E;&#119;&#x61;&#107;&#101;&#x6C;&#x69;&#x6E;&#64;&#x62;&#114;&#x69;&#115;&#x74;&#111;&#x6C;&#46;&#x61;&#x63;&#x2E;&#117;&#107;">&#106;&#x6F;&#110;&#x2E;&#119;&#x61;&#107;&#101;&#x6C;&#x69;&#x6E;&#64;&#x62;&#114;&#x69;&#115;&#x74;&#111;&#x6C;&#46;&#x61;&#x63;&#x2E;&#117;&#107;</a>>.</p>
 
-<p>FoX is the work of Toby White &lt;<a href="&#x6D;&#97;&#x69;&#x6C;t&#x6F;:&#x74;ow&#64;&#x75;&#x73;&#x7A;&#108;&#97;&#x2E;&#x6D;&#x65;&#46;&#117;&#107;">&#x74;ow&#64;&#x75;&#x73;&#x7A;&#108;&#97;&#x2E;&#x6D;&#x65;&#46;&#117;&#107;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him. Andrew Walker &lt;<a href="&#x6D;&#x61;&#105;&#108;&#x74;&#x6F;:&#x61;&#x6E;&#x64;&#114;&#x65;&#119;&#x2E;&#x77;&#x61;&#x6C;&#x6B;&#101;&#x72;&#64;&#98;&#114;&#105;&#115;&#x74;&#x6F;&#x6C;.&#x61;&#99;&#x2E;&#117;&#x6B;">&#x61;&#x6E;&#x64;&#114;&#x65;&#119;&#x2E;&#x77;&#x61;&#x6C;&#x6B;&#101;&#x72;&#64;&#98;&#114;&#105;&#115;&#x74;&#x6F;&#x6C;.&#x61;&#99;&#x2E;&#117;&#x6B;</a>> currently looks after maintenance of FoX.</p>
+<p>FoX is the work of Toby White &lt;<a href="&#x6D;&#x61;&#x69;&#108;&#x74;&#x6F;:&#x74;&#x6F;&#x77;&#64;&#117;&#115;&#122;&#x6C;&#x61;.&#x6D;&#x65;&#46;&#x75;&#x6B;">&#x74;&#x6F;&#x77;&#64;&#117;&#115;&#122;&#x6C;&#x61;.&#x6D;&#x65;&#46;&#x75;&#x6B;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him. Andrew Walker &lt;<a href="&#x6D;&#97;&#105;&#x6C;&#116;&#111;:&#97;&#110;&#100;&#114;&#101;&#119;&#46;&#x77;&#97;&#x6C;k&#101;&#114;&#64;&#98;&#114;&#105;&#115;&#116;&#111;&#x6C;&#46;&#x61;&#99;&#46;&#x75;&#107;">&#97;&#110;&#100;&#114;&#101;&#119;&#46;&#x77;&#97;&#x6C;k&#101;&#114;&#64;&#98;&#114;&#105;&#115;&#116;&#111;&#x6C;&#46;&#x61;&#99;&#46;&#x75;&#107;</a>> currently looks after maintenance of FoX.</p>
 
 <p>There is a FoX website at <a href="http://www1.gly.bris.ac.uk/~walker/FoX/">http://www1.gly.bris.ac.uk/~walker/FoX/</a>.</p>
 
@@ -3676,7 +3676,7 @@ which was written largely by Alberto Garcia &lt;<a href="&#x6D;&#x61;&#x69;&#x6C
 &copy; 2003, 2004, Alberto Garcia, Jon Wakelin <br />
 &copy; 2005-2008, Toby White <br />
 &copy; 2007-2009, Gen-Tao Chiang
-&copy; 2008-2010, Andrew Walker
+&copy; 2008-2011, Andrew Walker
 All rights reserved.</p>
 
 <p>Redistribution and use in source and binary forms, with or without 
