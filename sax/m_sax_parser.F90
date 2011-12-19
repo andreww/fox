@@ -2881,7 +2881,7 @@ contains
         call FoX_endDTD_handler(fx%xds)
       endif
       if (present(endDTD_handler)) then
-        call endDTD_handler
+        call endDTD_handler()
         if (fx%state==ST_STOP) return
       endif
       ! Check that all notations used have been declared:
