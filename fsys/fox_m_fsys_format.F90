@@ -110,6 +110,550 @@ module fox_m_fsys_format
 contains
 
 #ifndef DUMMYLIB
+  ! NB: The len generic module procedure is used in
+  !     many initialisation statments (to set the 
+  !     length of the output string needed for the
+  !     converted number). As of the Fortran 2008
+  !     spec every specific function belonging to
+  !     a generic used in this way must be defined
+  !     in the module before use. This is enforced
+  !     by at least version 7.4.4 of the Cray 
+  !     Fortran compiler. Hence we put all the *_len
+  !     functions here at the top of the file.
+  pure function str_string_array_len(st) result(n)
+    character(len=*), dimension(:), intent(in) :: st
+    integer :: n
+
+    integer :: k
+
+    n = size(st) - 1
+    do k = 1, size(st)
+      n = n + len(st(k))
+    enddo
+
+  end function str_string_array_len
+
+  pure function str_string_matrix_len(st) result(n)
+    character(len=*), dimension(:, :), intent(in) :: st
+    integer :: n
+
+    n = len(st) * size(st) + size(st) - 1
+  end function str_string_matrix_len
+
+  pure function str_integer_len(i) result(n)
+    integer, intent(in) :: i
+    integer :: n
+    
+    n = int(log10(real(max(abs(i),1)))) + 1 + dim(-i,0)/max(abs(i),1)
+
+  end function str_integer_len
+
+  pure function str_integer_base_len(i, b) result(n)
+    integer, intent(in) :: i, b
+    integer :: n
+    
+    n = int(log10(real(max(abs(i),1)))/log10(real(b))) &
+      + 1 + dim(-i,0)/max(abs(i),1)
+
+  end function str_integer_base_len
+
+  pure function str_integer_fmt_len(i, fmt) result(n)
+    integer, intent(in) :: i
+    character(len=*), intent(in) :: fmt
+    integer :: n
+    
+    select case (len(fmt))
+    case(0)
+      n = 0
+    case(1)
+      if (fmt=="x") then
+        n = int(log10(real(max(abs(i),1)))/log10(16.0)) + 1 + dim(-i,0)/max(abs(i),1)
+      elseif (fmt=="d") then
+        n = int(log10(real(max(abs(i),1)))) + 1 + dim(-i,0)/max(abs(i),1)
+      else
+        return
+      endif
+    case default
+      if (fmt(1:1)/='x'.and.fmt(1:1)/='d') then
+        n = 0
+      elseif (verify(fmt(2:), digit)==0) then
+        n = str_to_int_10(fmt(2:))
+      else
+        n = 0 
+      endif
+    end select
+
+  end function str_integer_fmt_len
+
+  pure function str_integer_array_len(ia) result(n)
+    integer, dimension(:), intent(in) :: ia
+    integer :: n
+    
+    integer :: j
+
+    n = size(ia) - 1
+
+    do j = 1, size(ia)
+      n = n + len(ia(j))
+    enddo
+
+  end function str_integer_array_len
+
+  pure function str_integer_array_fmt_len(ia, fmt) result(n)
+    integer, dimension(:), intent(in) :: ia
+    character(len=*), intent(in) :: fmt
+    integer :: n
+    
+    integer :: j
+
+    n = size(ia) - 1
+
+    do j = 1, size(ia)
+      n = n + len(ia(j), fmt)
+    enddo
+
+  end function str_integer_array_fmt_len
+
+  pure function str_integer_matrix_len(ia) result(n)
+    integer, dimension(:,:), intent(in) :: ia
+    integer :: n
+
+    integer :: j, k
+
+    n = size(ia) - 1
+
+    do k = 1, size(ia, 2)
+      do j = 1, size(ia, 1)
+        n = n + len(ia(j, k))
+      enddo
+    enddo
+
+  end function str_integer_matrix_len
+
+  pure function str_integer_matrix_fmt_len(ia, fmt) result(n)
+    integer, dimension(:,:), intent(in) :: ia
+    character(len=*), intent(in) :: fmt
+    integer :: n
+
+    integer :: j, k
+
+    n = size(ia) - 1
+
+    do k = 1, size(ia, 2)
+      do j = 1, size(ia, 1)
+        n = n + len(ia(j, k), fmt)
+      enddo
+    enddo
+
+  end function str_integer_matrix_fmt_len
+
+  pure function str_logical_len(l) result (n)
+    logical, intent(in) :: l
+    integer :: n
+    
+    if (l) then
+      n = 4
+    else
+      n = 5
+    endif
+  end function str_logical_len
+
+  pure function str_logical_array_len(la) result(n)
+! This function should be inlined in the declarations of
+! str_logical_array below but PGI and pathscale don't like it.
+    logical, dimension(:), intent(in)   :: la
+    integer :: n
+    n = 5*size(la) - 1 + count(.not.la)
+  end function str_logical_array_len
+
+  pure function str_logical_matrix_len(la) result(n)
+! This function should be inlined in the declarations of
+! str_logical_matrix below but PGI and pathscale don't like it.
+    logical, dimension(:,:), intent(in)   :: la
+    integer :: n
+    n = 5*size(la) - 1 + count(.not.la)
+  end function str_logical_matrix_len
+
+  pure function str_real_sp_fmt_len(x, fmt) result(n)
+    real(sp), intent(in) :: x
+    character(len=*), intent(in) :: fmt
+    integer :: n
+
+    integer :: dec, sig
+    integer :: e
+
+    if (.not.checkFmt(fmt)) then
+      n = 0
+      return
+    endif
+
+    if (x == 0.0_sp) then
+      e = 1
+    else
+      e = floor(log10(abs(x)))
+    endif
+      
+    if (x < 0.0_sp) then
+      n = 1
+    else
+      n = 0
+    endif
+      
+    if (len(fmt) == 0) then
+      sig = sig_sp
+
+      n = n + sig + 2 + len(e) 
+      ! for the decimal point and the e
+
+    elseif (fmt(1:1) == "s") then
+      if (len(fmt) > 1) then
+        sig = str_to_int_10(fmt(2:))
+      else
+        sig = sig_sp
+      endif
+      sig = max(sig, 1)
+      sig = min(sig, digits(1.0_sp))
+
+      if (sig > 1) n = n + 1 
+      ! for the decimal point
+      
+      n = n + sig + 1 + len(e)
+
+    elseif (fmt(1:1) == "r") then
+
+      if (len(fmt) > 1) then
+        dec = str_to_int_10(fmt(2:))
+      else
+        dec = sig_sp - e - 1
+      endif
+      dec = min(dec, digits(1.0_sp)-e)
+      dec = max(dec, 0)
+
+      if (dec > 0) n = n + 1
+      if (abs(x) >= 1.0_sp) n = n + 1
+
+      ! Need to know if there's an overflow ....
+      if (e+dec+1 > 0) then
+        if (index(real_sp_str(abs(x), e+dec+1), "!") == 1) &
+             e = e + 1
+      endif
+
+      n = n + abs(e) + dec
+
+    endif
+
+  end function str_real_sp_fmt_len
+
+  pure function str_real_sp_len(x) result(n)
+    real(sp), intent(in) :: x
+    integer :: n
+
+    n = len(x, "")
+
+  end function str_real_sp_len
+
+  pure function str_real_sp_array_len(xa) result(n)
+    real(sp), dimension(:), intent(in) :: xa
+    integer :: n
+
+    integer :: k
+
+    n = size(xa) - 1
+    do k = 1, size(xa)
+      n = n + len(xa(k), "")
+    enddo
+
+  end function str_real_sp_array_len
+
+  pure function str_real_sp_array_fmt_len(xa, fmt) result(n)
+    real(sp), dimension(:), intent(in) :: xa
+    character(len=*), intent(in) :: fmt
+    integer :: n
+
+    integer :: k
+
+    n = size(xa) - 1
+    do k = 1, size(xa)
+      n = n + len(xa(k), fmt)
+    enddo
+    
+  end function str_real_sp_array_fmt_len
+
+  pure function str_real_sp_matrix_fmt_len(xa, fmt) result(n)
+    real(sp), dimension(:,:), intent(in) :: xa
+    character(len=*), intent(in) :: fmt
+    integer :: n
+
+    integer :: j, k
+
+    n = size(xa) - 1
+    do k = 1, size(xa, 2)
+      do j = 1, size(xa, 1)
+        n = n + len(xa(j,k), fmt)
+      enddo
+    enddo
+
+  end function str_real_sp_matrix_fmt_len
+
+  pure function str_real_sp_matrix_len(xa) result(n)
+    real(sp), dimension(:,:), intent(in) :: xa
+    integer :: n
+
+    n = len(xa, "")
+  end function str_real_sp_matrix_len
+
+  pure function str_real_dp_fmt_len(x, fmt) result(n)
+    real(dp), intent(in) :: x
+    character(len=*), intent(in) :: fmt
+    integer :: n
+
+    integer :: dec, sig
+    integer :: e
+
+    if (.not.checkFmt(fmt)) then
+      n = 0
+      return
+    endif
+
+    if (x == 0.0_dp) then
+      e = 1
+    else
+      e = floor(log10(abs(x)))
+    endif
+      
+    if (x < 0.0_dp) then
+      n = 1
+    else
+      n = 0
+    endif
+      
+    if (len(fmt) == 0) then
+      sig = sig_dp
+
+      n = n + sig + 2 + len(e) 
+      ! for the decimal point and the e
+
+    elseif (fmt(1:1) == "s") then
+      if (len(fmt) > 1) then
+        sig = str_to_int_10(fmt(2:))
+      else
+        sig = sig_dp
+      endif
+      sig = max(sig, 1)
+      sig = min(sig, digits(1.0_dp))
+
+      if (sig > 1) n = n + 1 
+      ! for the decimal point
+      
+      n = n + sig + 1 + len(e)
+
+    elseif (fmt(1:1) == "r") then
+
+      if (len(fmt) > 1) then
+        dec = str_to_int_10(fmt(2:))
+      else
+        dec = sig_dp - e - 1
+      endif
+      dec = min(dec, digits(1.0_dp)-e)
+      dec = max(dec, 0)
+
+      if (dec > 0) n = n + 1
+      if (abs(x) >= 1.0_dp) n = n + 1
+
+      ! Need to know if there's an overflow ....
+      if (e+dec+1 > 0) then
+        if (index(real_dp_str(abs(x), e+dec+1), "!") == 1) &
+             e = e + 1
+      endif
+
+      n = n + abs(e) + dec
+
+    endif
+
+  end function str_real_dp_fmt_len
+
+  pure function str_real_dp_len(x) result(n)
+    real(dp), intent(in) :: x
+    integer :: n
+
+    n = len(x, "")
+
+  end function str_real_dp_len
+
+  pure function str_real_dp_array_len(xa) result(n)
+    real(dp), dimension(:), intent(in) :: xa
+    integer :: n
+
+    integer :: k
+
+    n = size(xa) - 1
+    do k = 1, size(xa)
+      n = n + len(xa(k), "")
+    enddo
+    
+  end function str_real_dp_array_len
+
+  pure function str_real_dp_array_fmt_len(xa, fmt) result(n)
+    real(dp), dimension(:), intent(in) :: xa
+    character(len=*), intent(in) :: fmt
+    integer :: n
+
+    integer :: k
+
+    n = size(xa) - 1
+    do k = 1, size(xa)
+      n = n + len(xa(k), fmt)
+    enddo
+    
+  end function str_real_dp_array_fmt_len
+
+  pure function str_real_dp_matrix_fmt_len(xa, fmt) result(n)
+    real(dp), dimension(:,:), intent(in) :: xa
+    character(len=*), intent(in) :: fmt
+    integer :: n
+
+    integer :: j, k
+
+    n = size(xa) - 1
+    do k = 1, size(xa, 2)
+      do j = 1, size(xa, 1)
+        n = n + len(xa(j,k), fmt)
+      enddo
+    enddo
+
+  end function str_real_dp_matrix_fmt_len
+
+  pure function str_real_dp_matrix_len(xa) result(n)
+    real(dp), dimension(:,:), intent(in) :: xa
+    integer :: n
+
+    n = len(xa, "")
+  end function str_real_dp_matrix_len
+
+  pure function str_complex_sp_fmt_len(c, fmt) result(n)
+    complex(sp), intent(in) :: c
+    character(len=*), intent(in) :: fmt
+    integer :: n
+
+    real(sp) :: re, im
+    re = real(c)
+    im = aimag(c)
+
+    n = len(re, fmt) + len(im, fmt) + 6
+  end function str_complex_sp_fmt_len
+
+  pure function str_complex_sp_len(c) result(n)
+    complex(sp), intent(in) :: c
+    integer :: n
+
+    n = len(c, "")
+  end function str_complex_sp_len
+
+  pure function str_complex_sp_array_fmt_len(ca, fmt) result(n)
+    complex(sp), dimension(:), intent(in) :: ca
+    character(len=*), intent(in) :: fmt
+    integer :: n
+
+    integer :: i
+
+    n = size(ca) - 1
+    do i = 1, size(ca)
+      n = n + len(ca(i), fmt) 
+    enddo
+  end function str_complex_sp_array_fmt_len
+
+  pure function str_complex_sp_array_len(ca) result(n)
+    complex(sp), dimension(:), intent(in) :: ca
+    integer :: n
+
+    n = len(ca, "")
+  end function str_complex_sp_array_len
+
+  pure function str_complex_sp_matrix_fmt_len(ca, fmt) result(n)
+    complex(sp), dimension(:, :), intent(in) :: ca
+    character(len=*), intent(in) :: fmt
+    integer :: n
+
+    integer :: i, j
+
+    n = size(ca) - 1
+    do i = 1, size(ca, 1)
+      do j = 1, size(ca, 2)
+        n = n + len(ca(i, j), fmt)
+      enddo
+    enddo
+  end function str_complex_sp_matrix_fmt_len
+
+  pure function str_complex_sp_matrix_len(ca) result(n)
+    complex(sp), dimension(:, :), intent(in) :: ca
+    integer :: n
+
+    n = len(ca, "")
+  end function str_complex_sp_matrix_len
+  
+  pure function str_complex_dp_fmt_len(c, fmt) result(n)
+    complex(dp), intent(in) :: c
+    character(len=*), intent(in) :: fmt
+    integer :: n
+
+    real(dp) :: re, im
+    re = real(c)
+    im = aimag(c)
+
+    n = len(re, fmt) + len(im, fmt) + 6
+  end function str_complex_dp_fmt_len
+
+  pure function str_complex_dp_len(c) result(n)
+    complex(dp), intent(in) :: c
+    integer :: n
+
+    n = len(c, "")
+  end function str_complex_dp_len
+
+  pure function str_complex_dp_array_fmt_len(ca, fmt) result(n)
+    complex(dp), dimension(:), intent(in) :: ca
+    character(len=*), intent(in) :: fmt
+    integer :: n
+
+    integer :: i
+
+    n = size(ca) - 1
+    do i = 1, size(ca)
+      n = n + len(ca(i), fmt)
+    enddo
+  end function str_complex_dp_array_fmt_len
+
+  pure function str_complex_dp_array_len(ca) result(n)
+    complex(dp), dimension(:), intent(in) :: ca
+    integer :: n
+
+    n = len(ca, "")
+  end function str_complex_dp_array_len
+
+  pure function str_complex_dp_matrix_fmt_len(ca, fmt) result(n)
+    complex(dp), dimension(:, :), intent(in) :: ca
+    character(len=*), intent(in) :: fmt
+    integer :: n
+
+    integer :: i, j
+
+    n = size(ca) - 1
+    do i = 1, size(ca, 1)
+      do j = 1, size(ca, 2)
+        n = n + len(ca(i, j), fmt)
+      enddo
+    enddo
+  end function str_complex_dp_matrix_fmt_len
+     
+  pure function str_complex_dp_matrix_len(ca) result(n)
+    complex(dp), dimension(:, :), intent(in) :: ca
+    integer :: n
+
+    n = len(ca, "")
+  end function str_complex_dp_matrix_len
+#endif
+
+#ifndef DUMMYLIB
   subroutine FoX_error(msg)
     ! Emit error message and stop.
     ! No clean up is done here, but this can
@@ -210,21 +754,6 @@ contains
 #endif
   end function str_string
 
-#ifndef DUMMYLIB
-  pure function str_string_array_len(st) result(n)
-    character(len=*), dimension(:), intent(in) :: st
-    integer :: n
-
-    integer :: k
-
-    n = size(st) - 1
-    do k = 1, size(st)
-      n = n + len(st(k))
-    enddo
-
-  end function str_string_array_len
-#endif
-
   pure function str_string_array(st, delimiter) result(s)
     character(len=*), dimension(:), intent(in) :: st
     character(len=1), intent(in), optional :: delimiter
@@ -251,15 +780,6 @@ contains
     s(n:) = st(k)
 #endif
   end function str_string_array
-
-#ifndef DUMMYLIB
-  pure function str_string_matrix_len(st) result(n)
-    character(len=*), dimension(:, :), intent(in) :: st
-    integer :: n
-
-    n = len(st) * size(st) + size(st) - 1
-  end function str_string_matrix_len
-#endif
 
   pure function str_string_matrix(st, delimiter) result(s)
     character(len=*), dimension(:, :), intent(in) :: st
@@ -294,53 +814,6 @@ contains
 #endif
   end function str_string_matrix
 
-#ifndef DUMMYLIB
-  pure function str_integer_len(i) result(n)
-    integer, intent(in) :: i
-    integer :: n
-    
-    n = int(log10(real(max(abs(i),1)))) + 1 + dim(-i,0)/max(abs(i),1)
-
-  end function str_integer_len
-
-  pure function str_integer_base_len(i, b) result(n)
-    integer, intent(in) :: i, b
-    integer :: n
-    
-    n = int(log10(real(max(abs(i),1)))/log10(real(b))) &
-      + 1 + dim(-i,0)/max(abs(i),1)
-
-  end function str_integer_base_len
-
-  pure function str_integer_fmt_len(i, fmt) result(n)
-    integer, intent(in) :: i
-    character(len=*), intent(in) :: fmt
-    integer :: n
-    
-    select case (len(fmt))
-    case(0)
-      n = 0
-    case(1)
-      if (fmt=="x") then
-        n = int(log10(real(max(abs(i),1)))/log10(16.0)) + 1 + dim(-i,0)/max(abs(i),1)
-      elseif (fmt=="d") then
-        n = int(log10(real(max(abs(i),1)))) + 1 + dim(-i,0)/max(abs(i),1)
-      else
-        return
-      endif
-    case default
-      if (fmt(1:1)/='x'.and.fmt(1:1)/='d') then
-        n = 0
-      elseif (verify(fmt(2:), digit)==0) then
-        n = str_to_int_10(fmt(2:))
-      else
-        n = 0 
-      endif
-    end select
-
-  end function str_integer_fmt_len
-#endif
-
   pure function str_integer(i) result(s)
     integer, intent(in) :: i
 #ifdef DUMMYLIB
@@ -368,7 +841,6 @@ contains
     enddo
 #endif
   end function str_integer
-
 
   pure function str_integer_fmt(i, fmt) result(s)
     integer, intent(in) :: i
@@ -425,37 +897,6 @@ contains
 #endif
   end function str_integer_fmt
 
-#ifndef DUMMYLIB
-  pure function str_integer_array_len(ia) result(n)
-    integer, dimension(:), intent(in) :: ia
-    integer :: n
-    
-    integer :: j
-
-    n = size(ia) - 1
-
-    do j = 1, size(ia)
-      n = n + len(ia(j))
-    enddo
-
-  end function str_integer_array_len
-
-  pure function str_integer_array_fmt_len(ia, fmt) result(n)
-    integer, dimension(:), intent(in) :: ia
-    character(len=*), intent(in) :: fmt
-    integer :: n
-    
-    integer :: j
-
-    n = size(ia) - 1
-
-    do j = 1, size(ia)
-      n = n + len(ia(j), fmt)
-    enddo
-
-  end function str_integer_array_fmt_len
-#endif
-
   pure function str_integer_array(ia) result(s)
     integer, dimension(:), intent(in) :: ia
 #ifdef DUMMYLIB
@@ -496,41 +937,6 @@ contains
     s(n:) = str(ia(k), fmt)
 #endif
   end function str_integer_array_fmt
-
-#ifndef DUMMYLIB
-  pure function str_integer_matrix_len(ia) result(n)
-    integer, dimension(:,:), intent(in) :: ia
-    integer :: n
-
-    integer :: j, k
-
-    n = size(ia) - 1
-
-    do k = 1, size(ia, 2)
-      do j = 1, size(ia, 1)
-        n = n + len(ia(j, k))
-      enddo
-    enddo
-
-  end function str_integer_matrix_len
-
-  pure function str_integer_matrix_fmt_len(ia, fmt) result(n)
-    integer, dimension(:,:), intent(in) :: ia
-    character(len=*), intent(in) :: fmt
-    integer :: n
-
-    integer :: j, k
-
-    n = size(ia) - 1
-
-    do k = 1, size(ia, 2)
-      do j = 1, size(ia, 1)
-        n = n + len(ia(j, k), fmt)
-      enddo
-    enddo
-
-  end function str_integer_matrix_fmt_len
-#endif
 
   pure function str_integer_matrix(ia) result(s)
     integer, dimension(:,:), intent(in) :: ia
@@ -584,19 +990,6 @@ contains
 #endif
   end function str_integer_matrix_fmt
 
-#ifndef DUMMYLIB
-  pure function str_logical_len(l) result (n)
-    logical, intent(in) :: l
-    integer :: n
-    
-    if (l) then
-      n = 4
-    else
-      n = 5
-    endif
-  end function str_logical_len
-#endif
-
   pure function str_logical(l) result(s)
     logical, intent(in) :: l
 #ifdef DUMMYLIB
@@ -615,16 +1008,6 @@ contains
     endif
 #endif
   end function str_logical
-
-#ifndef DUMMYLIB
-  pure function str_logical_array_len(la) result(n)
-! This function should be inlined in the declarations of
-! str_logical_array below but PGI and pathscale don't like it.
-    logical, dimension(:), intent(in)   :: la
-    integer :: n
-    n = 5*size(la) - 1 + count(.not.la)
-  end function str_logical_array_len
-#endif
 
   pure function str_logical_array(la) result(s)
     logical, dimension(:), intent(in)   :: la
@@ -654,16 +1037,6 @@ contains
     endif
 #endif
   end function str_logical_array
-
-#ifndef DUMMYLIB
-  pure function str_logical_matrix_len(la) result(n)
-! This function should be inlined in the declarations of
-! str_logical_matrix below but PGI and pathscale don't like it.
-    logical, dimension(:,:), intent(in)   :: la
-    integer :: n
-    n = 5*size(la) - 1 + count(.not.la)
-  end function str_logical_matrix_len
-#endif
 
   pure function str_logical_matrix(la) result(s)
     logical, dimension(:,:), intent(in)   :: la
@@ -818,75 +1191,6 @@ contains
 
   end function real_sp_str
 
-  pure function str_real_sp_fmt_len(x, fmt) result(n)
-    real(sp), intent(in) :: x
-    character(len=*), intent(in) :: fmt
-    integer :: n
-
-    integer :: dec, sig
-    integer :: e
-
-    if (.not.checkFmt(fmt)) then
-      n = 0
-      return
-    endif
-
-    if (x == 0.0_sp) then
-      e = 1
-    else
-      e = floor(log10(abs(x)))
-    endif
-      
-    if (x < 0.0_sp) then
-      n = 1
-    else
-      n = 0
-    endif
-      
-    if (len(fmt) == 0) then
-      sig = sig_sp
-
-      n = n + sig + 2 + len(e) 
-      ! for the decimal point and the e
-
-    elseif (fmt(1:1) == "s") then
-      if (len(fmt) > 1) then
-        sig = str_to_int_10(fmt(2:))
-      else
-        sig = sig_sp
-      endif
-      sig = max(sig, 1)
-      sig = min(sig, digits(1.0_sp))
-
-      if (sig > 1) n = n + 1 
-      ! for the decimal point
-      
-      n = n + sig + 1 + len(e)
-
-    elseif (fmt(1:1) == "r") then
-
-      if (len(fmt) > 1) then
-        dec = str_to_int_10(fmt(2:))
-      else
-        dec = sig_sp - e - 1
-      endif
-      dec = min(dec, digits(1.0_sp)-e)
-      dec = max(dec, 0)
-
-      if (dec > 0) n = n + 1
-      if (abs(x) >= 1.0_sp) n = n + 1
-
-      ! Need to know if there's an overflow ....
-      if (e+dec+1 > 0) then
-        if (index(real_sp_str(abs(x), e+dec+1), "!") == 1) &
-             e = e + 1
-      endif
-
-      n = n + abs(e) + dec
-
-    endif
-
-  end function str_real_sp_fmt_len
 #endif
 
   function str_real_sp_fmt_chk(x, fmt) result(s)
@@ -1027,15 +1331,6 @@ contains
     endif
 
   end function str_real_sp_fmt
-
-
-  pure function str_real_sp_len(x) result(n)
-    real(sp), intent(in) :: x
-    integer :: n
-
-    n = len(x, "")
-
-  end function str_real_sp_len
 #endif
 
   pure function str_real_sp(x) result(s)
@@ -1049,21 +1344,6 @@ contains
     s = safestr(x, "")
 #endif
   end function str_real_sp
-
-#ifndef DUMMYLIB
-  pure function str_real_sp_array_len(xa) result(n)
-    real(sp), dimension(:), intent(in) :: xa
-    integer :: n
-
-    integer :: k
-
-    n = size(xa) - 1
-    do k = 1, size(xa)
-      n = n + len(xa(k), "")
-    enddo
-
-  end function str_real_sp_array_len
-#endif
 
   pure function str_real_sp_array(xa) result(s)
     real(sp), dimension(:), intent(in) :: xa
@@ -1086,20 +1366,6 @@ contains
   end function str_real_sp_array
 
 #ifndef DUMMYLIB
-  pure function str_real_sp_array_fmt_len(xa, fmt) result(n)
-    real(sp), dimension(:), intent(in) :: xa
-    character(len=*), intent(in) :: fmt
-    integer :: n
-
-    integer :: k
-
-    n = size(xa) - 1
-    do k = 1, size(xa)
-      n = n + len(xa(k), fmt)
-    enddo
-    
-  end function str_real_sp_array_fmt_len
-     
   pure function str_real_sp_array_fmt(xa, fmt) result(s)
     real(sp), dimension(:), intent(in) :: xa
     character(len=*), intent(in) :: fmt
@@ -1136,29 +1402,6 @@ contains
   end function str_real_sp_array_fmt_chk
 
 #ifndef DUMMYLIB
-  pure function str_real_sp_matrix_fmt_len(xa, fmt) result(n)
-    real(sp), dimension(:,:), intent(in) :: xa
-    character(len=*), intent(in) :: fmt
-    integer :: n
-
-    integer :: j, k
-
-    n = size(xa) - 1
-    do k = 1, size(xa, 2)
-      do j = 1, size(xa, 1)
-        n = n + len(xa(j,k), fmt)
-      enddo
-    enddo
-
-  end function str_real_sp_matrix_fmt_len
-
-  pure function str_real_sp_matrix_len(xa) result(n)
-    real(sp), dimension(:,:), intent(in) :: xa
-    integer :: n
-
-    n = len(xa, "")
-  end function str_real_sp_matrix_len
-
   pure function str_real_sp_matrix_fmt(xa, fmt) result(s)
     real(sp), dimension(:,:), intent(in) :: xa
     character(len=*), intent(in) :: fmt
@@ -1278,75 +1521,6 @@ contains
   end function real_dp_str
 
 
-  pure function str_real_dp_fmt_len(x, fmt) result(n)
-    real(dp), intent(in) :: x
-    character(len=*), intent(in) :: fmt
-    integer :: n
-
-    integer :: dec, sig
-    integer :: e
-
-    if (.not.checkFmt(fmt)) then
-      n = 0
-      return
-    endif
-
-    if (x == 0.0_dp) then
-      e = 1
-    else
-      e = floor(log10(abs(x)))
-    endif
-      
-    if (x < 0.0_dp) then
-      n = 1
-    else
-      n = 0
-    endif
-      
-    if (len(fmt) == 0) then
-      sig = sig_dp
-
-      n = n + sig + 2 + len(e) 
-      ! for the decimal point and the e
-
-    elseif (fmt(1:1) == "s") then
-      if (len(fmt) > 1) then
-        sig = str_to_int_10(fmt(2:))
-      else
-        sig = sig_dp
-      endif
-      sig = max(sig, 1)
-      sig = min(sig, digits(1.0_dp))
-
-      if (sig > 1) n = n + 1 
-      ! for the decimal point
-      
-      n = n + sig + 1 + len(e)
-
-    elseif (fmt(1:1) == "r") then
-
-      if (len(fmt) > 1) then
-        dec = str_to_int_10(fmt(2:))
-      else
-        dec = sig_dp - e - 1
-      endif
-      dec = min(dec, digits(1.0_dp)-e)
-      dec = max(dec, 0)
-
-      if (dec > 0) n = n + 1
-      if (abs(x) >= 1.0_dp) n = n + 1
-
-      ! Need to know if there's an overflow ....
-      if (e+dec+1 > 0) then
-        if (index(real_dp_str(abs(x), e+dec+1), "!") == 1) &
-             e = e + 1
-      endif
-
-      n = n + abs(e) + dec
-
-    endif
-
-  end function str_real_dp_fmt_len
 #endif
 
   function str_real_dp_fmt_chk(x, fmt) result(s)
@@ -1488,14 +1662,6 @@ contains
 
   end function str_real_dp_fmt
 
-
-  pure function str_real_dp_len(x) result(n)
-    real(dp), intent(in) :: x
-    integer :: n
-
-    n = len(x, "")
-
-  end function str_real_dp_len
 #endif
 
   pure function str_real_dp(x) result(s)
@@ -1509,21 +1675,6 @@ contains
     s = safestr(x, "")
 #endif
   end function str_real_dp
-
-#ifndef DUMMYLIB
-  pure function str_real_dp_array_len(xa) result(n)
-    real(dp), dimension(:), intent(in) :: xa
-    integer :: n
-
-    integer :: k
-
-    n = size(xa) - 1
-    do k = 1, size(xa)
-      n = n + len(xa(k), "")
-    enddo
-    
-  end function str_real_dp_array_len
-#endif
 
   pure function str_real_dp_array(xa) result(s)
     real(dp), dimension(:), intent(in) :: xa
@@ -1546,20 +1697,6 @@ contains
   end function str_real_dp_array
 
 #ifndef DUMMYLIB
-  pure function str_real_dp_array_fmt_len(xa, fmt) result(n)
-    real(dp), dimension(:), intent(in) :: xa
-    character(len=*), intent(in) :: fmt
-    integer :: n
-
-    integer :: k
-
-    n = size(xa) - 1
-    do k = 1, size(xa)
-      n = n + len(xa(k), fmt)
-    enddo
-    
-  end function str_real_dp_array_fmt_len
-
   pure function str_real_dp_array_fmt(xa, fmt) result(s)
     real(dp), dimension(:), intent(in) :: xa
     character(len=*), intent(in) :: fmt
@@ -1596,29 +1733,6 @@ contains
   end function str_real_dp_array_fmt_chk
 
 #ifndef DUMMYLIB
-  pure function str_real_dp_matrix_fmt_len(xa, fmt) result(n)
-    real(dp), dimension(:,:), intent(in) :: xa
-    character(len=*), intent(in) :: fmt
-    integer :: n
-
-    integer :: j, k
-
-    n = size(xa) - 1
-    do k = 1, size(xa, 2)
-      do j = 1, size(xa, 1)
-        n = n + len(xa(j,k), fmt)
-      enddo
-    enddo
-
-  end function str_real_dp_matrix_fmt_len
-
-  pure function str_real_dp_matrix_len(xa) result(n)
-    real(dp), dimension(:,:), intent(in) :: xa
-    integer :: n
-
-    n = len(xa, "")
-  end function str_real_dp_matrix_len
-
   function str_real_dp_matrix_fmt(xa, fmt) result(s)
     real(dp), dimension(:,:), intent(in) :: xa
     character(len=*), intent(in) :: fmt
@@ -1674,23 +1788,9 @@ contains
 #endif
   end function str_real_dp_matrix
 
-#ifndef DUMMYLIB
 ! For complex numbers, there's not really much prior art, so
 ! we use the easy solution: a+bi, where a & b are real numbers
 ! as output above.
-
-  pure function str_complex_sp_fmt_len(c, fmt) result(n)
-    complex(sp), intent(in) :: c
-    character(len=*), intent(in) :: fmt
-    integer :: n
-
-    real(sp) :: re, im
-    re = real(c)
-    im = aimag(c)
-
-    n = len(re, fmt) + len(im, fmt) + 6
-  end function str_complex_sp_fmt_len
-#endif
 
   function str_complex_sp_fmt_chk(c, fmt) result(s)
     complex(sp), intent(in) :: c
@@ -1723,13 +1823,6 @@ contains
     s(:i+4) = "("//safestr(re, fmt)//")+i"
     s(i+5:)="("//safestr(im,fmt)//")"
   end function str_complex_sp_fmt
-
-  pure function str_complex_sp_len(c) result(n)
-    complex(sp), intent(in) :: c
-    integer :: n
-
-    n = len(c, "")
-  end function str_complex_sp_len
 #endif
 
   pure function str_complex_sp(c) result(s)
@@ -1745,19 +1838,6 @@ contains
   end function str_complex_sp
 
 #ifndef DUMMYLIB
-  pure function str_complex_sp_array_fmt_len(ca, fmt) result(n)
-    complex(sp), dimension(:), intent(in) :: ca
-    character(len=*), intent(in) :: fmt
-    integer :: n
-
-    integer :: i
-
-    n = size(ca) - 1
-    do i = 1, size(ca)
-      n = n + len(ca(i), fmt) 
-    enddo
-  end function str_complex_sp_array_fmt_len
-     
   pure function str_complex_sp_array_fmt(ca, fmt) result(s)
     complex(sp), dimension(:), intent(in) :: ca
     character(len=*), intent(in) :: fmt
@@ -1791,15 +1871,6 @@ contains
 #endif
   end function str_complex_sp_array_fmt_chk
 
-#ifndef DUMMYLIB
-  pure function str_complex_sp_array_len(ca) result(n)
-    complex(sp), dimension(:), intent(in) :: ca
-    integer :: n
-
-    n = len(ca, "")
-  end function str_complex_sp_array_len
-#endif
-
   pure function str_complex_sp_array(ca) result(s)
     complex(sp), dimension(:), intent(in) :: ca
 #ifdef DUMMYLIB
@@ -1813,21 +1884,6 @@ contains
   end function str_complex_sp_array
 
 #ifndef DUMMYLIB
-  pure function str_complex_sp_matrix_fmt_len(ca, fmt) result(n)
-    complex(sp), dimension(:, :), intent(in) :: ca
-    character(len=*), intent(in) :: fmt
-    integer :: n
-
-    integer :: i, j
-
-    n = size(ca) - 1
-    do i = 1, size(ca, 1)
-      do j = 1, size(ca, 2)
-        n = n + len(ca(i, j), fmt)
-      enddo
-    enddo
-  end function str_complex_sp_matrix_fmt_len
-     
   pure function str_complex_sp_matrix_fmt(ca, fmt) result(s)
     complex(sp), dimension(:, :), intent(in) :: ca
     character(len=*), intent(in) :: fmt
@@ -1871,15 +1927,6 @@ contains
 #endif
   end function str_complex_sp_matrix_fmt_chk
 
-#ifndef DUMMYLIB
-  pure function str_complex_sp_matrix_len(ca) result(n)
-    complex(sp), dimension(:, :), intent(in) :: ca
-    integer :: n
-
-    n = len(ca, "")
-  end function str_complex_sp_matrix_len
-#endif
-
   pure function str_complex_sp_matrix(ca) result(s)
     complex(sp), dimension(:, :), intent(in) :: ca
 #ifdef DUMMYLIB
@@ -1891,20 +1938,6 @@ contains
     s = safestr(ca, "")
 #endif
   end function str_complex_sp_matrix
-  
-#ifndef DUMMYLIB
-  pure function str_complex_dp_fmt_len(c, fmt) result(n)
-    complex(dp), intent(in) :: c
-    character(len=*), intent(in) :: fmt
-    integer :: n
-
-    real(dp) :: re, im
-    re = real(c)
-    im = aimag(c)
-
-    n = len(re, fmt) + len(im, fmt) + 6
-  end function str_complex_dp_fmt_len
-#endif
 
   function str_complex_dp_fmt_chk(c, fmt) result(s)
     complex(dp), intent(in) :: c
@@ -1937,13 +1970,6 @@ contains
     s(:i+4) = "("//safestr(re, fmt)//")+i"
     s(i+5:)="("//safestr(im,fmt)//")"
   end function str_complex_dp_fmt
-
-  pure function str_complex_dp_len(c) result(n)
-    complex(dp), intent(in) :: c
-    integer :: n
-
-    n = len(c, "")
-  end function str_complex_dp_len
 #endif
 
   pure function str_complex_dp(c) result(s)
@@ -1959,19 +1985,6 @@ contains
   end function str_complex_dp
 
 #ifndef DUMMYLIB
-  pure function str_complex_dp_array_fmt_len(ca, fmt) result(n)
-    complex(dp), dimension(:), intent(in) :: ca
-    character(len=*), intent(in) :: fmt
-    integer :: n
-
-    integer :: i
-
-    n = size(ca) - 1
-    do i = 1, size(ca)
-      n = n + len(ca(i), fmt)
-    enddo
-  end function str_complex_dp_array_fmt_len
-     
   pure function str_complex_dp_array_fmt(ca, fmt) result(s)
     complex(dp), dimension(:), intent(in) :: ca
     character(len=*), intent(in) :: fmt
@@ -2005,15 +2018,6 @@ contains
 #endif
   end function str_complex_dp_array_fmt_chk
 
-#ifndef DUMMYLIB
-  pure function str_complex_dp_array_len(ca) result(n)
-    complex(dp), dimension(:), intent(in) :: ca
-    integer :: n
-
-    n = len(ca, "")
-  end function str_complex_dp_array_len
-#endif
-
   pure function str_complex_dp_array(ca) result(s)
     complex(dp), dimension(:), intent(in) :: ca
 #ifdef DUMMYLIB
@@ -2027,21 +2031,6 @@ contains
   end function str_complex_dp_array
 
 #ifndef DUMMYLIB
-  pure function str_complex_dp_matrix_fmt_len(ca, fmt) result(n)
-    complex(dp), dimension(:, :), intent(in) :: ca
-    character(len=*), intent(in) :: fmt
-    integer :: n
-
-    integer :: i, j
-
-    n = size(ca) - 1
-    do i = 1, size(ca, 1)
-      do j = 1, size(ca, 2)
-        n = n + len(ca(i, j), fmt)
-      enddo
-    enddo
-  end function str_complex_dp_matrix_fmt_len
-     
   pure function str_complex_dp_matrix_fmt(ca, fmt) result(s)
     complex(dp), dimension(:, :), intent(in) :: ca
     character(len=*), intent(in) :: fmt
@@ -2084,15 +2073,6 @@ contains
     endif
 #endif
   end function str_complex_dp_matrix_fmt_chk
-
-#ifndef DUMMYLIB
-  pure function str_complex_dp_matrix_len(ca) result(n)
-    complex(dp), dimension(:, :), intent(in) :: ca
-    integer :: n
-
-    n = len(ca, "")
-  end function str_complex_dp_matrix_len
-#endif
 
   pure function str_complex_dp_matrix(ca) result(s)
     complex(dp), dimension(:, :), intent(in) :: ca
