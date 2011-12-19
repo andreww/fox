@@ -350,7 +350,7 @@ end function countinteger
 
 
 #else
-    num - 0
+    num = 0
 #endif
   end function countrealdp
 
