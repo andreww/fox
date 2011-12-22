@@ -14,7 +14,7 @@ if ! make $1.exe; then
   echo Cannot compile $1 >> failed.out
   echo "------------" >> failed.out
 else
-  ./$1.exe 2>&1 | tr -d '\15' > test.out
+  ./$1.exe 2>&1 | tr -d '\15' | grep -v 'STOP' > test.out
   if test -f $1.xml
   then
     tr -d '\15' < test.xml | grep -v UUID > test.xml.tmp; mv test.xml.tmp test.xml
@@ -41,7 +41,7 @@ else
     # to check both directions as the "test_input" file reports
     # errors in a non-standard way (by adding lines). 
     # FIXME: Better to correct test_input?
-    if diff test.out $1.out | grep "^[><]" > /dev/null; then
+    if diff -B -b test.out $1.out | grep "^[><]" > /dev/null; then
       echo $1 >> failed.out
       echo "------------" >> failed.out
       diff -u test.out $1.out >> failed.out
