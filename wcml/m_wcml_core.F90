@@ -118,7 +118,7 @@ contains
     type(xmlf_t), intent(inout) :: xf
 
 #ifndef DUMMYLIB
-    call cmlAddMetadata(xf, name='dc:contributor', content='FoX-'//FoX_version//' (http://www.uszla.me.uk/FoX)')
+    call cmlAddMetadata(xf, name='dc:contributor', content='FoX-'//FoX_version//' (http://www1.gly.bris.ac.uk/~walker/FoX)')
     call xml_EndElement(xf, 'cml')
 #endif
 

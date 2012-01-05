@@ -1,3 +1,10 @@
+2012-01-05: version 4.1.2
+        Fix --enable-dummy bug that stopped compilation
+        Reorder generic procedures used in specification-parts
+        to allow strict Fortran 2008 compilers to build FoX
+        Work around minor issue with Cray compiler. FoX will now 
+        build and run with the Cray Fortran compiler.
+        
 2011-12-05: version 4.1.1
         Add new 'countrts' function to common
         Add capability for wcml to handle bonds
