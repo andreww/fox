@@ -184,7 +184,7 @@ places.  If you move the FoX directory later on, you will need to re-run configu
 
 <p>To run them all, simply run <code>make check</code> from the top-level directory. This will run the individual testsuites, and collate their results.</p>
 
-<p>If any failures occur (unrelated to known compiler issues, see the <a href="http://github.com/andreww/fox/issues">up-to-date list</a>), please send a message to the mailing list (<a href="&#109;&#97;&#105;&#x6C;to:&#102;&#x6F;&#x78;&#45;&#x64;&#105;&#x73;&#x63;&#x75;&#115;&#115;&#64;&#x67;&#111;o&#x67;&#x6C;&#101;&#x67;&#114;&#x6F;&#117;&#x70;&#x73;&#x2E;&#x63;&#111;&#109;">&#102;&#x6F;&#x78;&#45;&#x64;&#105;&#x73;&#x63;&#x75;&#115;&#115;&#64;&#x67;&#111;o&#x67;&#x6C;&#101;&#x67;&#114;&#x6F;&#117;&#x70;&#x73;&#x2E;&#x63;&#111;&#109;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
+<p>If any failures occur (unrelated to known compiler issues, see the <a href="http://github.com/andreww/fox/issues">up-to-date list</a>), please send a message to the mailing list (<a href="&#x6D;&#97;&#105;&#108;&#x74;&#x6F;:&#x66;&#x6F;&#120;&#45;d&#x69;&#115;&#x63;&#x75;&#115;&#115;&#64;&#103;&#111;&#x6F;&#103;&#x6C;&#x65;&#x67;&#114;&#111;&#117;&#112;&#x73;&#x2E;c&#111;&#x6D;">&#x66;&#x6F;&#120;&#45;d&#x69;&#115;&#x63;&#x75;&#115;&#115;&#64;&#103;&#111;&#x6F;&#103;&#x6C;&#x65;&#x67;&#114;&#111;&#117;&#112;&#x73;&#x2E;c&#111;&#x6D;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
 
 <p>The testsuites for the SAX and DOM libraries are very extensive, and are somewhat fragile, so are not distributed with FoX. Please contact the author for details.</p>
 
@@ -1269,7 +1269,7 @@ care, you may specify <code>-1</code> as the unit number, in which case wcml wil
 <ul>
 <li><code>cmlAddNamespace</code> <br />
 <strong>prefix</strong> <em>string</em> <em>scalar</em>: prefix to be used <br />
-<strong>nsURI</strong> <em>string</em> <em>scalar</em>: namespace URI to be used  </li>
+<strong>URI</strong> <em>string</em> <em>scalar</em>: namespace URI to be used  </li>
 </ul>
 
 <p>This adds a namespace to a CML file. <br />
@@ -1333,8 +1333,9 @@ Attempts to do otherwise will result in a runtime error.</p>
 
 <ul>
 <li><code>cmlStartModule</code> <br />
-(<strong>serial</strong>) <em>string</em> <em>scalar</em>: serial id for the module <br />
-(<strong>role</strong>) <em>string</em> <em>scalar</em> role which the element plays </li>
+(<strong>serial</strong>) <em>string</em> <em>scalar</em>: serial id for the module 
+(<strong>title</strong>) <em>string</em> <em>scalar</em>: title for module element
+(<strong>role</strong>) <em>string</em> <em>scalar</em>: role which the element plays </li>
 </ul>
 
 <p>Note that in most cases where you might want to use a serial number, you should probably be using the <code>cmlStartStep</code> subroutine below.</p>
@@ -3653,9 +3654,9 @@ Return the value of the fragment</p></li>
 <h1>Further information</h1>
 
 <p>FoX evolved from the initial codebase of <a href="http://lcdx00.wm.lc.ehu.es/ag/xml/">xmlf90</a>,
-which was written largely by Alberto Garcia &lt;<a href="&#109;a&#105;&#x6C;&#x74;&#x6F;:&#x61;&#108;&#x62;&#101;&#114;&#x74;&#x6F;&#103;&#64;&#x69;&#99;&#109;&#97;&#98;&#x2E;&#101;&#x73;">&#x61;&#108;&#x62;&#101;&#114;&#x74;&#x6F;&#103;&#64;&#x69;&#99;&#109;&#97;&#98;&#x2E;&#101;&#x73;</a>> and Jon Wakelin &lt;<a href="&#109;&#x61;&#x69;&#x6C;&#116;&#111;:&#106;o&#x6E;&#x2E;&#x77;a&#107;&#101;&#108;&#105;&#x6E;&#64;&#x62;r&#x69;&#x73;&#116;o&#108;&#46;&#x61;&#x63;&#46;&#117;&#x6B;">&#106;o&#x6E;&#x2E;&#x77;a&#107;&#101;&#108;&#105;&#x6E;&#64;&#x62;r&#x69;&#x73;&#116;o&#108;&#46;&#x61;&#x63;&#46;&#117;&#x6B;</a>>.</p>
+which was written largely by Alberto Garcia &lt;<a href="&#x6D;&#97;&#105;&#x6C;&#x74;&#111;:&#x61;&#x6C;&#x62;&#x65;&#114;&#116;&#111;&#103;&#64;&#105;&#x63;&#109;a&#98;&#x2E;es">&#x61;&#x6C;&#x62;&#x65;&#114;&#116;&#111;&#103;&#64;&#105;&#x63;&#109;a&#98;&#x2E;es</a>> and Jon Wakelin &lt;<a href="m&#x61;&#x69;&#108;&#x74;&#x6F;:&#x6A;&#x6F;&#110;&#x2E;&#x77;&#97;&#x6B;&#101;&#x6C;&#x69;&#110;&#64;&#98;&#114;is&#x74;&#x6F;&#108;.&#97;&#x63;&#x2E;&#117;&#x6B;">&#x6A;&#x6F;&#110;&#x2E;&#x77;&#97;&#x6B;&#101;&#x6C;&#x69;&#110;&#64;&#98;&#114;is&#x74;&#x6F;&#108;.&#97;&#x63;&#x2E;&#117;&#x6B;</a>>.</p>
 
-<p>FoX is the work of Toby White &lt;<a href="&#x6D;&#97;&#x69;&#108;&#116;&#111;:&#116;&#111;&#x77;&#64;&#117;&#115;z&#108;a&#46;&#x6D;&#101;&#46;&#x75;&#107;">&#116;&#111;&#x77;&#64;&#117;&#115;z&#108;a&#46;&#x6D;&#101;&#46;&#x75;&#107;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him. Andrew Walker &lt;<a href="&#109;&#x61;&#105;&#x6C;&#116;&#x6F;:&#97;&#110;dr&#x65;&#119;&#46;w&#x61;&#x6C;&#107;&#101;&#x72;&#64;&#98;&#114;&#x69;&#x73;&#116;&#111;&#108;&#46;&#x61;&#99;&#46;&#117;&#107;">&#97;&#110;dr&#x65;&#119;&#46;w&#x61;&#x6C;&#107;&#101;&#x72;&#64;&#98;&#114;&#x69;&#x73;&#116;&#111;&#108;&#46;&#x61;&#99;&#46;&#117;&#107;</a>> currently looks after maintenance of FoX.</p>
+<p>FoX is the work of Toby White &lt;<a href="&#109;&#x61;&#x69;&#108;&#116;&#x6F;:&#116;&#111;w&#64;&#117;&#115;&#x7A;&#x6C;&#x61;.&#x6D;&#x65;&#x2E;&#x75;&#107;">&#116;&#111;w&#64;&#117;&#115;&#x7A;&#x6C;&#x61;.&#x6D;&#x65;&#x2E;&#x75;&#107;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him. Andrew Walker &lt;<a href="&#109;&#x61;&#105;&#108;&#x74;o:&#97;&#x6E;&#x64;&#114;&#x65;&#x77;.&#119;&#x61;&#108;&#107;&#101;&#x72;&#64;&#98;&#x72;&#105;&#x73;&#116;&#x6F;&#x6C;&#x2E;&#97;&#x63;&#x2E;u&#107;">&#97;&#x6E;&#x64;&#114;&#x65;&#x77;.&#119;&#x61;&#108;&#107;&#101;&#x72;&#64;&#98;&#x72;&#105;&#x73;&#116;&#x6F;&#x6C;&#x2E;&#97;&#x63;&#x2E;u&#107;</a>> currently looks after maintenance of FoX.</p>
 
 <p>There is a FoX website at <a href="http://www1.gly.bris.ac.uk/~walker/FoX/">http://www1.gly.bris.ac.uk/~walker/FoX/</a>.</p>
 

@@ -188,7 +188,7 @@ care, you may specify <code>-1</code> as the unit number, in which case wcml wil
 <ul>
 <li><code>cmlAddNamespace</code> <br />
 <strong>prefix</strong> <em>string</em> <em>scalar</em>: prefix to be used <br />
-<strong>nsURI</strong> <em>string</em> <em>scalar</em>: namespace URI to be used  </li>
+<strong>URI</strong> <em>string</em> <em>scalar</em>: namespace URI to be used  </li>
 </ul>
 
 <p>This adds a namespace to a CML file. <br />
@@ -252,8 +252,9 @@ Attempts to do otherwise will result in a runtime error.</p>
 
 <ul>
 <li><code>cmlStartModule</code> <br />
-(<strong>serial</strong>) <em>string</em> <em>scalar</em>: serial id for the module <br />
-(<strong>role</strong>) <em>string</em> <em>scalar</em> role which the element plays </li>
+(<strong>serial</strong>) <em>string</em> <em>scalar</em>: serial id for the module 
+(<strong>title</strong>) <em>string</em> <em>scalar</em>: title for module element
+(<strong>role</strong>) <em>string</em> <em>scalar</em>: role which the element plays </li>
 </ul>
 
 <p>Note that in most cases where you might want to use a serial number, you should probably be using the <code>cmlStartStep</code> subroutine below.</p>

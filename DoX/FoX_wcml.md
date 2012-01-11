@@ -160,7 +160,7 @@ This takes care of all calls to close an open CML output file, once you have fin
 
 * `cmlAddNamespace`  
 **prefix** *string* *scalar*: prefix to be used  
-**nsURI** *string* *scalar*: namespace URI to be used  
+**URI** *string* *scalar*: namespace URI to be used  
 
 This adds a namespace to a CML file.  
 NB This may only ever be called immediately after a `cmlBeginFile` call, before any
@@ -215,8 +215,9 @@ This pair of functions open & close a propertyList, which is a wrapper for outpu
 Start/end a list of k-points (added using `cmlAddKpoint` below)
 
 * `cmlStartModule`  
-(**serial**) *string* *scalar*: serial id for the module  
-(**role**) *string* *scalar* role which the element plays 
+(**serial**) *string* *scalar*: serial id for the module 
+(**title**) *string* *scalar*: title for module element
+(**role**) *string* *scalar*: role which the element plays 
 
 Note that in most cases where you might want to use a serial number, you should probably be using the `cmlStartStep` subroutine below.
 
