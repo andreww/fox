@@ -18,6 +18,7 @@ set(fox_fsys_srcs
 set(fox_fsys_srcs_pp
   fox_m_fsys_abort_flush.F90
   fox_m_fsys_array_str.F90
+  fox_m_fsys_count_parse_input.F90
   fox_m_fsys_format.F90
   fox_m_fsys_parse_input.F90
   fox_m_fsys_string.F90
