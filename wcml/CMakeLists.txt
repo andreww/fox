@@ -88,6 +88,7 @@ set(fox_wcml_srcs_pp
   m_wcml_parameter.F90
   m_wcml_property.F90
   m_wcml_stml.F90
+  m_wcml_inputdec.F90
 )
 
 add_library(
