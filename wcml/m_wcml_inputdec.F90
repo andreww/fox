@@ -13,9 +13,55 @@ module m_wcml_inputdec
     integer, parameter :: WCML_DUMP_ISOPEN = -20
     integer, parameter :: WCML_DUMP_NOUNIT = -30
 
+    interface wcmlDumpDec
+        module procedure wcmlDumpDec_single
+        module procedure wcmlDumpDec_array
+    end interface wcmlDumpDec
+
     contains 
 
-    subroutine wcmlDumpDec(xf, inputDec, line_lengths, trim_lines, dicRef, &
+    subroutine wcmlDumpDec_single(xf, inputDec, line_lengths, trim_lines, dicRef, &
+                           iostat)
+
+        type(xmlf_t), intent(inout)    :: xf
+        character(len=*), intent(in)   :: inputDec
+        integer, intent(in)            :: line_lengths
+        logical, intent(in)            :: trim_lines
+        character(len=*), intent(in)   :: dicRef
+        integer, intent(out), optional :: iostat
+
+        call wcmlStartDecList(xf)
+        call wcmlDumpDec_core(xf, inputDec, line_lengths, trim_lines, dicRef, iostat)
+        call wcmlEndDecList(xf)
+
+    end subroutine wcmlDumpDec_single
+
+    subroutine wcmlDumpDec_array(xf, inputDec, line_lengths, trim_lines, dicRef, &
+                           iostat)
+
+        type(xmlf_t), intent(inout)    :: xf
+        character(len=*), intent(in)   :: inputDec(:)
+        integer, intent(in)            :: line_lengths(:)
+        logical, intent(in)            :: trim_lines(:)
+        character(len=*), intent(in)   :: dicRef(:)
+        integer, intent(out), optional :: iostat
+
+        integer :: i
+
+        call wcmlStartDecList(xf)
+        do i=1, size(inputDec)
+            ! Need to check all arrays are the same lenght
+            call wcmlDumpDec_core(xf, inputDec(i), line_lengths(i), trim_lines(i), dicRef(i), iostat)
+            if (present(iostat)) then
+                if (iostat /= 0) return
+            endif
+        enddo
+        call wcmlEndDecList(xf)
+
+    end subroutine wcmlDumpDec_array
+                              
+
+    subroutine wcmlDumpDec_core(xf, inputDec, line_lengths, trim_lines, dicRef, &
                            iostat)
 
         type(xmlf_t), intent(inout)    :: xf
@@ -136,7 +182,23 @@ module m_wcml_inputdec
         !about. Only expect to see these if we are 
         !returning iostat != 0 anyway.
 
-    end subroutine wcmlDumpDec
+    end subroutine wcmlDumpDec_core
+
+    subroutine wcmlStartDecList(xf, dictRef)
+        type(xmlf_t), intent(inout)  :: xf
+        character(len=*), intent(in), optional :: dictRef
+
+        call cmlStartModule(xf, title="Input Data Files", role="LexicalFileList", dictRef=dictRef)
+
+    end subroutine wcmlStartDecList
+
+    subroutine wcmlEndDecList(xf)
+        type(xmlf_t), intent(inout)  :: xf
+
+        call cmlEndModule(xf)
+
+    end subroutine wcmlEndDecList
+
 
     subroutine wcmlStartDec(xf, filename, dicRef)
 
