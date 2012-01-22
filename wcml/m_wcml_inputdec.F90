@@ -2,61 +2,127 @@ module m_wcml_inputdec
 
     use FoX_wxml, only: xmlf_t, xml_NewElement, xml_AddAttribute, &
                         xml_AddCharacters, xml_EndElement
+    use m_common_error, only: FoX_error
+    use m_common_io, only: get_unit
     use m_wcml_metadata
     use m_wcml_lists
 
     implicit none
 
+    integer, parameter :: WCML_DUMP_NOFILE = -10
+    integer, parameter :: WCML_DUMP_ISOPEN = -20
+    integer, parameter :: WCML_DUMP_NOUNIT = -30
+
     contains 
 
-    subroutine wcmlDumpDec(xf, inputDec, line_lengths, trim_lines, dicRef)
+    subroutine wcmlDumpDec(xf, inputDec, line_lengths, trim_lines, dicRef, &
+                           iostat)
 
-        type(xmlf_t), intent(inout)  :: xf
-        character(len=*), intent(in) :: inputDec
-        integer, intent(in)          :: line_lengths
-        logical, intent(in)          :: trim_lines
-        character(len=*), intent(in) :: dicRef
+        type(xmlf_t), intent(inout)    :: xf
+        character(len=*), intent(in)   :: inputDec
+        integer, intent(in)            :: line_lengths
+        logical, intent(in)            :: trim_lines
+        character(len=*), intent(in)   :: dicRef
+        integer, intent(out), optional :: iostat
 
         character(len=line_lengths)  :: this_line
-
         integer                      :: ios
+
         logical                      :: ex
         logical                      :: op
-        integer                      :: un
-        integer                      :: nr
-        
 
-        ! Find out if file called inputDec is open
-        ! exists etc... select...
+        integer                      :: iostat_
+        integer                      :: unit_
+       
+        if (present(iostat)) iostat = 0 ! will set for errors
+ 
+        ! Check the file is not open and that it exists. 
+        inquire( file=inputDec, iostat=iostat_, exist=ex, opened=op) 
 
-        inquire( file=inputDec, iostat=ios, exist=ex, opened=op, number=un, &
-                 nextrec=nr ) ! And I'll need more
+        if (iostat_ /= 0) then
+            ! inquire failed: probably system issue
+            ! op and ex are not set. Bung out.
+            if (present(iostat)) then
+                iostat = iostat_
+                return
+            else
+                call FoX_error("Inquire failed in wcmlDumpDec")
+            endif
+        endif
 
-        ! If needed record position, if not open file
-        if (.not.ex) &
-            return ! File does not exisit - error needed.
+        if (.not.ex) then
+            ! If the file name argument does not exist we cannot
+            ! dump it. Bung out.
+            if (present(iostat)) then
+                iostat = WCML_DUMP_NOFILE
+                return
+            else 
+                call FoX_error("File does not exist in wcmlDumpDec")
+            endif
+        endif
 
         if (op) then
-            ! need to store data etc. but for now
-            return
-        else
-            ! need to select a unit number!
-            open(unit=998, iostat=ios, file=inputDec, action='read')
+            ! If the file is open (is attached to a unit number) we
+            ! cannot do very much with it. We could (possibly) rewind
+            ! and dump the contents but the caller would then have the
+            ! file in a different place to where it started (and could
+            ! miss input). We cannot work out where we are in the file
+            ! the put things back to how we found them because 
+            ! inquire does not tell us what we need. We cannot open the
+            ! file on a second unit number as this is not permited in
+            ! Fortran 95. So bung out.
+            if (present(iostat)) then
+                iostat = WCML_DUMP_ISOPEN
+                return
+            else 
+                call FoX_error("File already open wcmlDumpDec")
+            endif
         endif
-            
+
+        ! need to select a unit number - use common's get_unit for this
+        call get_unit(unit_,iostat_)
+        if (iostat_ /= 0) then
+            ! Common only ever returns 0 or -1; not helpful for our caller
+            if (present(iostat)) then
+                iostat = WCML_DUMP_NOUNIT
+                return
+            else
+                call FoX_error("Could not get_unt in wcmlDumpDec")
+            endif
+        endif
+
+        ! OK, we can not open the file - checking that it worked
+        open(unit=unit_, iostat=iostat_, file=inputDec, action='read')
+        if (iostat_ /= 0) then
+            ! Open failed. File recently deleted, for example.
+            if (present(iostat)) then
+                iostat = WCML_DUMP_NOUNIT
+                return
+            else
+                call FoX_error("Could not open file in wcmlDumpDec")
+            endif
+        endif
+        
+        ! Now ready to go.    
         ! Start of CML output for this file
         call wcmlStartDec(xf, inputDec, dicRef)
 
         ! Foeach line in file
         ! dump line in <scalar>
         do
-            read(998, '(a)' , iostat=ios) this_line
+            read(unit_, '(a)' , iostat=ios) this_line
             if(ios.lt.0) then
                 exit ! End of file
             elseif(ios.gt.0) then
-                !Error condition
-                print*, 'ERROR'
-                exit ! Need to clean up and error out?
+                ! Error condition. 
+                if (present(iostat)) then
+                    iostat = ios
+                    exit ! We will close tags and return
+                         ! with iostat set.
+                else
+                    ! Just error out
+                    call FoX_error("Error reading file in wcmlDumpDec")
+                endif
             else
                 call wcmlAddDecLine(xf, this_line)
             endif
@@ -65,9 +131,10 @@ module m_wcml_inputdec
         ! End of CML output for this file
         call wcmlEndDec(xf)
 
-        ! Close, rewind, clean up 
-        ! FIXME - sort out what to do if op is true.
-        close(998)
+        close(unit_, iostat=ios)
+        !ios just to supress errors we cannot do anythin 
+        !about. Only expect to see these if we are 
+        !returning iostat != 0 anyway.
 
     end subroutine wcmlDumpDec
 
