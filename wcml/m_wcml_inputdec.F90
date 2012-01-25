@@ -20,30 +20,30 @@ module m_wcml_inputdec
 
     contains 
 
-    subroutine wcmlDumpDec_single(xf, inputDec, line_lengths, trim_lines, dicRef, &
+    subroutine wcmlDumpDec_single(xf, inputDec, line_lengths, trim_lines, dictRef, &
                            iostat)
 
         type(xmlf_t), intent(inout)    :: xf
         character(len=*), intent(in)   :: inputDec
         integer, intent(in)            :: line_lengths
         logical, intent(in)            :: trim_lines
-        character(len=*), intent(in)   :: dicRef
+        character(len=*), intent(in)   :: dictRef
         integer, intent(out), optional :: iostat
 
         call wcmlStartDecList(xf)
-        call wcmlDumpDec_core(xf, inputDec, line_lengths, trim_lines, dicRef, iostat)
+        call wcmlDumpDec_core(xf, inputDec, line_lengths, trim_lines, dictRef, iostat)
         call wcmlEndDecList(xf)
 
     end subroutine wcmlDumpDec_single
 
-    subroutine wcmlDumpDec_array(xf, inputDec, line_lengths, trim_lines, dicRef, &
+    subroutine wcmlDumpDec_array(xf, inputDec, line_lengths, trim_lines, dictRef, &
                            iostat)
 
         type(xmlf_t), intent(inout)    :: xf
         character(len=*), intent(in)   :: inputDec(:)
         integer, intent(in)            :: line_lengths(:)
         logical, intent(in)            :: trim_lines(:)
-        character(len=*), intent(in)   :: dicRef(:)
+        character(len=*), intent(in)   :: dictRef(:)
         integer, intent(out), optional :: iostat
 
         integer :: i
@@ -51,7 +51,7 @@ module m_wcml_inputdec
         call wcmlStartDecList(xf)
         do i=1, size(inputDec)
             ! Need to check all arrays are the same lenght
-            call wcmlDumpDec_core(xf, inputDec(i), line_lengths(i), trim_lines(i), dicRef(i), iostat)
+            call wcmlDumpDec_core(xf, inputDec(i), line_lengths(i), trim_lines(i), dictRef(i), iostat)
             if (present(iostat)) then
                 if (iostat /= 0) return
             endif
@@ -61,14 +61,14 @@ module m_wcml_inputdec
     end subroutine wcmlDumpDec_array
                               
 
-    subroutine wcmlDumpDec_core(xf, inputDec, line_lengths, trim_lines, dicRef, &
+    subroutine wcmlDumpDec_core(xf, inputDec, line_lengths, trim_lines, dictRef, &
                            iostat)
 
         type(xmlf_t), intent(inout)    :: xf
         character(len=*), intent(in)   :: inputDec
         integer, intent(in)            :: line_lengths
         logical, intent(in)            :: trim_lines
-        character(len=*), intent(in)   :: dicRef
+        character(len=*), intent(in)   :: dictRef
         integer, intent(out), optional :: iostat
 
         character(len=line_lengths)  :: this_line
@@ -151,7 +151,7 @@ module m_wcml_inputdec
         
         ! Now ready to go.    
         ! Start of CML output for this file
-        call wcmlStartDec(xf, inputDec, dicRef)
+        call wcmlStartDec(xf, inputDec, dictRef=dictRef)
 
         ! Foeach line in file
         ! dump line in <scalar>
@@ -184,30 +184,33 @@ module m_wcml_inputdec
 
     end subroutine wcmlDumpDec_core
 
-    subroutine wcmlStartDecList(xf, dictRef)
+    subroutine wcmlStartDecList(xf, id, title, dictRef, convention)
+        ! Input Decs are wrapped in a <module> with a
+        ! defined role - this is the outer container for
+        ! the microformat.
         type(xmlf_t), intent(inout)  :: xf
+        character(len=*), intent(in), optional :: id
+        character(len=*), intent(in), optional :: title
         character(len=*), intent(in), optional :: dictRef
+        character(len=*), intent(in), optional :: convention
 
-        call cmlStartModule(xf, title="Input Data Files", role="LexicalFileList", dictRef=dictRef)
+        call cmlStartModule(xf, id=id, title=title, convention=convention, &
+             role="LexicalFileList", dictRef=dictRef)
 
     end subroutine wcmlStartDecList
 
-    subroutine wcmlEndDecList(xf)
-        type(xmlf_t), intent(inout)  :: xf
-
-        call cmlEndModule(xf)
-
-    end subroutine wcmlEndDecList
-
-
-    subroutine wcmlStartDec(xf, filename, dicRef)
+    subroutine wcmlStartDec(xf, filename, id, title, dictRef, convention)
 
         type(xmlf_t), intent(inout)  :: xf
         character(len=*), intent(in) :: filename
-        character(len=*), intent(in) :: dicRef
+        character(len=*), intent(in), optional :: id
+        character(len=*), intent(in), optional :: title
+        character(len=*), intent(in), optional :: dictRef
+        character(len=*), intent(in), optional :: convention
 
-        ! FIXME - what to do with the dicRef?
-        call cmlStartModule(xf, title="Input Dec", role="Lexical file")
+        ! FIXME - what to do with the dictRef?
+        call cmlStartModule(xf, title=title, role="LexicalFile", id=id, &
+             dictRef=dictRef, convention=convention)
             call cmlStartMetadataList(xf)
                 call cmlAddMetadata(xf, 'filename', filename) !FIXME - DC term?
                                                               !FIXME - other info?
@@ -230,5 +233,10 @@ module m_wcml_inputdec
         type(xmlf_t), intent(inout)  :: xf
         call cmlEndModule(xf)
     end subroutine wcmlEndDec
+
+    subroutine wcmlEndDecList(xf)
+        type(xmlf_t), intent(inout)  :: xf
+        call cmlEndModule(xf)
+    end subroutine wcmlEndDecList
 
 end module m_wcml_inputdec

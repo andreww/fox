@@ -8,7 +8,7 @@ program test
 
   call cmlBeginFile(xf, filename, unit=-1)
   call cmlStartCml(xf)
-  call wcmlDumpDec(xf, 'test_cmlDumpDec_1.input', 80, .false., 'some dicref')
+  call wcmlDumpDec(xf, 'test_cmlDumpDec_1.input', 80, .false., dictRef='example:dictref')
 
   call cmlFinishFile(xf)
 
