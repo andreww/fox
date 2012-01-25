@@ -1,11 +1,15 @@
 module m_wcml_inputdec
 
-    use FoX_wxml, only: xmlf_t, xml_NewElement, xml_AddAttribute, &
+    use FoX_wxml, only: xmlf_t
+
+#ifndef DUMMYLIB
+    use FoX_wxml, only: xml_NewElement, xml_AddAttribute, &
                         xml_AddCharacters, xml_EndElement
     use m_common_error, only: FoX_error
     use m_common_io, only: get_unit
     use m_wcml_metadata
     use m_wcml_lists
+#endif
 
     implicit none
 
@@ -37,10 +41,11 @@ module m_wcml_inputdec
         character(len=*), intent(in)   :: dictRef
         integer, intent(out), optional :: iostat
 
+#ifndef DUMMYLIB
         call wcmlStartDecList(xf)
         call wcmlDumpDec_core(xf, inputDec, line_lengths, trim_lines, dictRef, iostat)
         call wcmlEndDecList(xf)
-
+#endif
     end subroutine wcmlDumpDec_single
 
     subroutine wcmlDumpDec_array(xf, inputDec, line_lengths, trim_lines, dictRef, &
@@ -55,6 +60,8 @@ module m_wcml_inputdec
 
         integer :: i
 
+        iostat = 0
+#ifndef DUMMYLIB
         call wcmlStartDecList(xf)
         do i=1, size(inputDec)
             ! Need to check all arrays are the same lenght
@@ -64,7 +71,7 @@ module m_wcml_inputdec
             endif
         enddo
         call wcmlEndDecList(xf)
-
+#endif
     end subroutine wcmlDumpDec_array
                               
 
@@ -88,7 +95,7 @@ module m_wcml_inputdec
         integer                      :: unit_
        
         if (present(iostat)) iostat = 0 ! will set for errors
- 
+#ifndef DUMMYLIB
         ! Check the file is not open and that it exists. 
         inquire( file=inputDec, iostat=iostat_, exist=ex, opened=op) 
 
@@ -188,7 +195,7 @@ module m_wcml_inputdec
         !ios just to supress errors we cannot do anythin 
         !about. Only expect to see these if we are 
         !returning iostat != 0 anyway.
-
+#endif
     end subroutine wcmlDumpDec_core
 
     subroutine wcmlStartDecList(xf, id, title, dictRef, convention)
@@ -200,10 +207,10 @@ module m_wcml_inputdec
         character(len=*), intent(in), optional :: title
         character(len=*), intent(in), optional :: dictRef
         character(len=*), intent(in), optional :: convention
-
+#ifndef DUMMYLIB
         call cmlStartModule(xf, id=id, title=title, convention=convention, &
              role="LexicalFileList", dictRef=dictRef)
-
+#endif
     end subroutine wcmlStartDecList
 
     subroutine wcmlStartDec(xf, filename, id, title, dictRef, convention)
@@ -214,7 +221,7 @@ module m_wcml_inputdec
         character(len=*), intent(in), optional :: title
         character(len=*), intent(in), optional :: dictRef
         character(len=*), intent(in), optional :: convention
-
+#ifndef DUMMYLIB
         ! FIXME - what to do with the dictRef?
         call cmlStartModule(xf, title=title, role="LexicalFile", id=id, &
              dictRef=dictRef, convention=convention)
@@ -222,28 +229,32 @@ module m_wcml_inputdec
                 call cmlAddMetadata(xf, 'filename', filename) !FIXME - DC term?
                                                               !FIXME - other info?
             call cmlEndMetadataList(xf)
-
+#endif
     end subroutine wcmlStartDec
 
     subroutine wcmlAddDecLine(xf, text)
         type(xmlf_t), intent(inout)  :: xf
         character(len=*), intent(in) :: text
-
+#ifndef DUMMYLIB
         call xml_NewElement(xf, name='scalar')
             call xml_AddAttribute(xf, name='dataType', value='xsd:string')
             call xml_AddCharacters(xf, chars=text, ws_significant=.true.)
         call xml_EndElement(xf, name='scalar')
-
+#endif
     end subroutine wcmlAddDecLine
 
     subroutine wcmlEndDec(xf)
         type(xmlf_t), intent(inout)  :: xf
+#ifndef DUMMYLIB
         call cmlEndModule(xf)
+#endif
     end subroutine wcmlEndDec
 
     subroutine wcmlEndDecList(xf)
         type(xmlf_t), intent(inout)  :: xf
+#ifndef DUMMYLIB
         call cmlEndModule(xf)
+#endif
     end subroutine wcmlEndDecList
 
 end module m_wcml_inputdec
