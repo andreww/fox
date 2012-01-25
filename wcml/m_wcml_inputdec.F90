@@ -9,6 +9,13 @@ module m_wcml_inputdec
 
     implicit none
 
+    private
+    public :: WCML_DUMP_NOFILE, WCML_DUMP_ISOPEN, WCML_DUMP_NOUNIT
+    public :: wcmlDumpDec
+    public :: wcmlStartDecList, wcmlEndDecList
+    public :: wcmlStartDec, wcmlEndDec
+    public :: wcmlAddDecLine
+
     integer, parameter :: WCML_DUMP_NOFILE = -10
     integer, parameter :: WCML_DUMP_ISOPEN = -20
     integer, parameter :: WCML_DUMP_NOUNIT = -30

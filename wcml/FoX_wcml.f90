@@ -74,5 +74,8 @@ module FoX_wcml
   public :: cmlAddSymmetry
 
   public :: wcmlDumpDec
+  public :: wcmlStartDecList, wcmlEndDecList
+  public :: wcmlStartDec, wcmlEndDec
+  public :: wcmlAddDecLine
 
 end module FoX_wcml
