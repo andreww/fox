@@ -2,6 +2,7 @@ module m_handlers
 
   use FoX_common
   use FoX_sax
+  use m_common_attrs, only: print_dict
 
   implicit none
   private
@@ -41,7 +42,7 @@ contains  !=============================================================
     type(dictionary_t), intent(in) :: attributes
 
     write(unit=*,fmt="(4a)") ">>Begin Element: {", URI, "}", localname
-    write(unit=*,fmt="(a,i2,a)") "--- ", len(attributes), " attributes:"
+    write(unit=*,fmt="(a,i2,a)") "--- ", getLength(attributes), " attributes:"
     call print_dict(attributes)
   end subroutine begin_element_handler
 
