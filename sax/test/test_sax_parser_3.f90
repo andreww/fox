@@ -15,8 +15,8 @@ program test_sax_reader
        startElement_handler=begin_element_handler, &
        endElement_handler=end_element_handler, &
        startPrefixMapping_handler=start_prefix_handler, &
-       endPrefixMapping_handler=end_prefix_handler, &
-       characters_handler=characters_handler)
+       endPrefixMapping_handler=end_prefix_handler)!, &
+       !characters_handler=characters_handler)
 
   call close_xml_t(xt)
 
