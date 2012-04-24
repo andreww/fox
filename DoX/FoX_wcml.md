@@ -175,7 +175,8 @@ and then output all our properties and parameters with `dictRef="siesta:somethin
 
 * `cmlStartCml`  
 (**fileId**) *string* *scalar*: name of originating file.  (default: current filename)  
-(**version**) *string* *scalar*: version of CML in use.  (default: 2.4)
+(**version**) *string* *scalar*: version of CML in use.  (default: 2.4)  
+(**compchem**) *logical* *scalar*: add extra namespace declarations needed by the recent compchem CML convention. This provides a minimum level of infrastructure needed to create valid compchem documents. (default: false)
 
 * `cmlEndCml`
 
