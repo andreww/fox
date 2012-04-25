@@ -8,7 +8,8 @@ OBJFILES=fox_m_fsys_abort_flush.$(OBJEXT) \
          fox_m_fsys_count_parse_input.$(OBJEXT) \
          fox_m_fsys_string.$(OBJEXT) \
          fox_m_fsys_string_list.$(OBJEXT) \
-         fox_m_fsys_realtypes.$(OBJEXT)
+         fox_m_fsys_realtypes.$(OBJEXT) \
+         fox_m_fsys_varstr.$(OBJEXT)
 #
 LIBRARY=libFoX_fsys.$(LIBEXT)
 INCFLAGS=

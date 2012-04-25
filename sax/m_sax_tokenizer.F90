@@ -2,6 +2,8 @@ module m_sax_tokenizer
 
 #ifndef DUMMYLIB
   use fox_m_fsys_array_str, only: vs_str, str_vs, vs_str_alloc
+  use fox_m_fsys_varstr
+
   use m_common_charset, only: XML_WHITESPACE, &
     upperCase, isInitialNameChar
   use m_common_error, only: add_error, in_error
@@ -39,8 +41,7 @@ contains
 
     xv = fx%xds%xml_version
 
-    if (associated(fx%token)) deallocate(fx%token)
-    fx%token => vs_str_alloc("")
+    call set_varstr_empty(fx%token)
     if (fx%nextTokenType/=TOK_NULL) then
       eof = .false.
       fx%tokenType = fx%nextTokenType
@@ -58,13 +59,9 @@ contains
       if (eof) then
         if (fx%state==ST_CHAR_IN_CONTENT) then
           if (phrase==1) then
-            tempString => fx%token
-            fx%token => vs_str_alloc(str_vs(fx%token)//"]")
-            deallocate(tempString)
+            call append_varstr(fx%token,']')
           elseif (phrase==2) then
-            tempString => fx%token
-            fx%token => vs_str_alloc(str_vs(fx%token)//"]]")
-            deallocate(tempString)
+            call append_varstr(fx%token,']]')
           endif
           fx%tokenType = TOK_CHAR
         endif
@@ -112,8 +109,7 @@ contains
           elseif (c=="[") then
             fx%tokenType = TOK_OPEN_SB
           elseif (verify(c,upperCase)==0) then
-            deallocate(fx%token)
-            fx%token => vs_str_alloc(c)
+            call varstr_str(fx%token,c)
           else
             call add_error(fx%error_stack, "Unexpected character after <!")
           endif
@@ -124,9 +120,7 @@ contains
             call add_error(fx%error_stack, "Unexpected character after <!-")
           endif
         elseif (verify(c,XML_WHITESPACE)>0) then
-          tempString => fx%token
-          fx%token => vs_str_alloc(str_vs(tempString)//c)
-          deallocate(tempString)
+          call append_varstr(fx%token,c)
         else
           call push_chars(fb, c)
           fx%tokenType = TOK_NAME
@@ -135,9 +129,7 @@ contains
       case (ST_START_PI)
         ! grab until whitespace or ?
         if (verify(c, XML_WHITESPACE//"?")>0) then
-          tempString => fx%token
-          fx%token => vs_str_alloc(str_vs(tempString)//c)
-          deallocate(tempString)
+          call append_varstr( fx%token, c )
         else
           fx%tokenType = TOK_NAME
           if (c=="?") call push_chars(fb, c)
@@ -158,21 +150,16 @@ contains
             fx%nextTokenType = TOK_PI_END
           elseif (c=="?") then
             ! The last ? didn't mean anything, but this one might.
-            tempString => fx%token
-            fx%token => vs_str_alloc(str_vs(tempString)//"?")
-            deallocate(tempString)
+            call append_varstr( fx%token, '?' )
           else
             phrase = 0
-            tempString => fx%token
-            fx%token => vs_str_alloc(str_vs(tempString)//"?"//c)
-            deallocate(tempString)
+            call append_varstr( fx%token, '?' )
+            call append_varstr( fx%token, c )
           endif
         elseif (c=="?") then
           phrase = 1
         else
-          tempString => fx%token
-          fx%token => vs_str_alloc(str_vs(tempString)//c)
-          deallocate(tempString)
+          call append_varstr( fx%token, c )
         endif
 
       case (ST_START_COMMENT)
@@ -181,17 +168,14 @@ contains
           if (c=="-") then
             phrase = 1
           else
-          tempString => fx%token
-          fx%token => vs_str_alloc(str_vs(tempString)//c)
-          deallocate(tempString)
+            call append_varstr( fx%token, c )
           endif
         case (1)
           if (c=="-") then
             phrase = 2
           else
-          tempString => fx%token
-          fx%token => vs_str_alloc(str_vs(tempString)//"-"//c)
-          deallocate(tempString)
+            call append_varstr( fx%token, '-' )
+            call append_varstr( fx%token, c )
             phrase = 0
           endif
         case (2)
@@ -208,9 +192,7 @@ contains
       case (ST_START_TAG)
         ! grab until whitespace or /, >
         if (verify(c, XML_WHITESPACE//"/>")>0) then
-          tempString => fx%token
-          fx%token => vs_str_alloc(str_vs(tempString)//c)
-          deallocate(tempString)
+          call append_varstr( fx%token, c )
         else
           fx%tokenType = TOK_NAME
           if (c==">") then
@@ -226,8 +208,7 @@ contains
             call add_error(fx%error_stack, &
               "Whitespace not allowed around CDATA in section declaration")
           else
-            deallocate(fx%token)
-            fx%token => vs_str_alloc(c)
+            call varstr_str(fx%token, c)
             ws_discard = .false.
           endif
         else
@@ -238,9 +219,7 @@ contains
             fx%tokenType = TOK_NAME
             if (c=="[") fx%nextTokenType = TOK_OPEN_SB
           else
-            tempString => fx%token
-            fx%token => vs_str_alloc(str_vs(tempString)//c)
-            deallocate(tempString)
+            call append_varstr( fx%token, c )
           endif
         endif
 
@@ -251,17 +230,14 @@ contains
           if (c=="]") then
             phrase = 1
           else
-            tempString => fx%token
-            fx%token => vs_str_alloc(str_vs(tempString)//c)
-            deallocate(tempString)
+            call append_varstr( fx%token, c )
           endif
         case (1)
           if (c=="]") then
             phrase = 2
           else
-            tempString => fx%token
-            fx%token => vs_str_alloc(str_vs(tempString)//"]"//c)
-            deallocate(tempString)
+            call append_varstr( fx%token, ']' )
+            call append_varstr( fx%token, c )
             phrase = 0
           endif
         case (2)
@@ -269,13 +245,10 @@ contains
             fx%tokenType = TOK_CHAR
             fx%nextTokenType = TOK_SECTION_END
           elseif (c=="]") then
-            tempString => fx%token
-            fx%token => vs_str_alloc(str_vs(tempString)//"]")
-            deallocate(tempString)
+            call append_varstr( fx%token, ']' )
           else
-            tempString => fx%token
-            fx%token => vs_str_alloc(str_vs(tempString)//"]]"//c)
-            deallocate(tempString)
+            call append_varstr( fx%token, ']]' )
+            call append_varstr( fx%token, c )
             phrase = 0
           endif
         end select
@@ -297,8 +270,7 @@ contains
               phrase = 1
               ws_discard = .false.
             else
-              deallocate(fx%token)
-              fx%token => vs_str_alloc(c)
+              call varstr_str(fx%token,c)
               ws_discard = .false.
             endif
           endif
@@ -322,9 +294,7 @@ contains
                 call push_chars(fb, c)
               endif
             else
-              tempString => fx%token
-              fx%token => vs_str_alloc(str_vs(tempString)//c)
-              deallocate(tempString)
+              call append_varstr( fx%token, c )
             endif
           endif
         endif
@@ -357,22 +327,16 @@ contains
           if (c==q) then
             fx%tokenType = TOK_CHAR
           else
-            tempString => fx%token
-            fx%token => vs_str_alloc(str_vs(tempString)//c)
-            deallocate(tempString)
+            call append_varstr( fx%token, c )
           endif
         endif
 
       case (ST_CHAR_IN_CONTENT)
         if (c=="<".or.c=="&") then
           if (phrase==1) then
-            tempString => fx%token
-            fx%token => vs_str_alloc(str_vs(tempString)//"]")
-            deallocate(tempString)
+            call append_varstr( fx%token, ']' )
           elseif (phrase==2) then
-            tempString => fx%token
-            fx%token => vs_str_alloc(str_vs(tempString)//"]]")
-            deallocate(tempString)
+            call append_varstr( fx%token, ']]' )
           endif
           fx%tokenType = TOK_CHAR
           if (c=="<") then
@@ -386,35 +350,25 @@ contains
           elseif (phrase==1) then
             phrase = 2
           else
-            tempString => fx%token
-            fx%token => vs_str_alloc(str_vs(tempString)//"]")
-            deallocate(tempString)
+            call append_varstr( fx%token, ']' )
           endif
         elseif (c==">") then
           if (phrase==1) then
             phrase = 0
-            tempString => fx%token
-            fx%token => vs_str_alloc(str_vs(tempString)//"]>")
-            deallocate(tempString)
+            call append_varstr( fx%token, ']>' )
           elseif (phrase==2) then
             call add_error(fx%error_stack, "]]> forbidden in character context")
           else
-            tempString => fx%token
-            fx%token => vs_str_alloc(str_vs(tempString)//">")
-            deallocate(tempString)
+            call append_varstr( fx%token, '>' )
           endif
         elseif (phrase==1) then
-          tempString => fx%token
-          fx%token => vs_str_alloc(str_vs(tempString)//"]"//c)
-          deallocate(tempString)
+          call append_varstr( fx%token, ']' )
+          call append_varstr( fx%token, c )
         elseif (phrase==2) then
-          tempString => fx%token
-          fx%token => vs_str_alloc(str_vs(tempString)//"]]"//c)
-          deallocate(tempString)
+          call append_varstr( fx%token, ']]' )
+          call append_varstr( fx%token, c )
         else
-          tempString => fx%token
-          fx%token => vs_str_alloc(str_vs(tempString)//c)
-          deallocate(tempString)
+          call append_varstr( fx%token, c )
         endif
 
       case (ST_TAG_IN_CONTENT)
@@ -444,9 +398,7 @@ contains
 
       case (ST_START_ENTITY)
         if (verify(c,XML_WHITESPACE//";")>0) then
-          tempString => fx%token
-          fx%token => vs_str_alloc(str_vs(tempString)//c)
-          deallocate(tempString)
+          call append_varstr( fx%token, c )
         elseif (c==";") then
           fx%tokenType = TOK_NAME
         else
@@ -455,9 +407,7 @@ contains
 
       case (ST_CLOSING_TAG)
         if (verify(c,XML_WHITESPACE//">")>0) then
-          tempString => fx%token
-          fx%token => vs_str_alloc(str_vs(tempString)//c)
-          deallocate(tempString)
+          call append_varstr( fx%token, c )
         else
           fx%tokenType = TOK_NAME
           if (c==">") fx%nextTokenType = TOK_END_TAG
@@ -492,16 +442,14 @@ contains
           if (verify(c, XML_WHITESPACE)>0) then
             if (verify(c, "'""")==0) then
               q = c
-              deallocate(fx%token)
-              fx%token => vs_str_alloc("")
+              call set_varstr_empty(fx%token)
               ws_discard = .false.
             elseif (c=="[") then
               fx%tokenType = TOK_OPEN_SB
             elseif (c==">") then
               fx%tokenType = TOK_END_TAG
             else
-              deallocate(fx%token)
-              fx%token => vs_str_alloc(c)
+              call varstr_str(fx%token, c)
               ws_discard = .false.
             endif
           endif
@@ -515,9 +463,7 @@ contains
             call push_chars(fb, c)
             fx%tokenType = TOK_NAME
           else
-            tempString => fx%token
-            fx%token => vs_str_alloc(str_vs(tempString)//c)
-            deallocate(tempString)
+            call append_varstr( fx%token, c )
           endif
         endif
 
@@ -526,9 +472,7 @@ contains
 
       case (ST_START_PE)
         if (verify(c,XML_WHITESPACE//";")>0) then
-          tempString => fx%token
-          fx%token => vs_str_alloc(str_vs(tempString)//c)
-          deallocate(tempString)
+          call append_varstr( fx%token, c )
         elseif (c==";") then
           fx%tokenType = TOK_NAME
         else
@@ -580,8 +524,7 @@ contains
           if (.not.associated(fx%content)) then
             ! content will not always be empty here;
             ! if we have two PErefs bang next to each other.
-            fx%content => fx%token
-            fx%token => vs_str_alloc("")
+            call move_varstr_vs(fx%token,fx%content)
           endif
           fx%tokenType = TOK_ENTITY
           return
@@ -658,8 +601,7 @@ contains
           elseif (c=="[") then
             fx%tokenType = TOK_OPEN_SB
           elseif (verify(c,upperCase)==0) then
-            deallocate(fx%token)
-            fx%token => vs_str_alloc(c)
+            call varstr_str(fx%token,c)
           else
             call add_error(fx%error_stack, "Unexpected character after <!")
           endif
@@ -670,9 +612,7 @@ contains
             call add_error(fx%error_stack, "Unexpected character after <!-")
           endif
         elseif (verify(c,XML_WHITESPACE)>0) then
-          tempString => fx%token
-          fx%token => vs_str_alloc(str_vs(tempString)//c)
-          deallocate(tempString)
+          call append_varstr( fx%token, c )
         else
           call push_chars(fb, c)
           fx%tokenType = TOK_NAME
@@ -685,15 +625,12 @@ contains
         endif
         if (ws_discard) then
           if (verify(c, XML_WHITESPACE)/=0) then
-            deallocate(fx%token)
-            fx%token => vs_str_alloc(c)
+            call varstr_str(fx%token, c)
             ws_discard = .false.
           endif
         else
           if (verify(c, XML_WHITESPACE//"[")>0) then
-            tempString => fx%token
-            fx%token => vs_str_alloc(str_vs(tempString)//c)
-            deallocate(tempString)
+            call append_varstr( fx%token, c )
           else
             fx%tokenType = TOK_NAME
             if (c=="[") fx%nextTokenType = TOK_OPEN_SB
@@ -737,9 +674,7 @@ contains
       case (ST_DTD_START_PI)
         ! grab until whitespace or ?
         if (verify(c, XML_WHITESPACE//"?")>0) then
-          tempString => fx%token
-          fx%token => vs_str_alloc(str_vs(tempString)//c)
-          deallocate(tempString)
+          call append_varstr( fx%token, c )
         else
           fx%tokenType = TOK_NAME
           if (c=="?") call push_chars(fb, c)
@@ -760,21 +695,16 @@ contains
             fx%nextTokenType = TOK_PI_END
           elseif (c=="?") then
             ! The last ? didn't mean anything, but this one might.
-            tempString => fx%token
-            fx%token => vs_str_alloc(str_vs(tempString)//"?")
-            deallocate(tempString)
+            call append_varstr( fx%token, '?' )
           else
             phrase = 0
-            tempString => fx%token
-            fx%token => vs_str_alloc(str_vs(tempString)//"?"//c)
-            deallocate(tempString)
+            call append_varstr( fx%token, '?' )
+            call append_varstr( fx%token, c )
           endif
         elseif (c=="?") then
           phrase = 1
         else
-          tempString => fx%token
-          fx%token => vs_str_alloc(str_vs(tempString)//c)
-          deallocate(tempString)
+          call append_varstr( fx%token, c )
         endif
 
       case (ST_DTD_START_COMMENT)
@@ -783,25 +713,20 @@ contains
           if (c=="-") then
             phrase = 1
           else
-          tempString => fx%token
-          fx%token => vs_str_alloc(str_vs(tempString)//c)
-          deallocate(tempString)
+            call append_varstr( fx%token, c )
           endif
         case (1)
           if (c=="-") then
             phrase = 2
           else
-          tempString => fx%token
-          fx%token => vs_str_alloc(str_vs(tempString)//"-"//c)
-          deallocate(tempString)
+            call append_varstr( fx%token, '-' )
+            call append_varstr( fx%token, c )
             phrase = 0
           endif
         case (2)
           if (c==">") then
             fx%tokenType = TOK_CHAR
-            tempString => fx%token
-            fx%token => vs_str_alloc(str_vs(tempString)//c)
-            deallocate(tempString)
+            call append_varstr( fx%token, c )
             fx%nextTokenType = TOK_COMMENT_END
           else
             call add_error(fx%error_stack, &
@@ -814,14 +739,11 @@ contains
         if (firstChar) ws_discard = .true.
         if (ws_discard) then
           if (verify(c,XML_WHITESPACE)>0) then
-            deallocate(fx%token)
-            fx%token => vs_str_alloc(c)
+            call varstr_str(fx%token, c)
             ws_discard = .false.
           endif
         elseif (verify(c,XML_WHITESPACE//">")>0) then
-          tempString => fx%token
-          fx%token => vs_str_alloc(str_vs(tempString)//c)
-          deallocate(tempString)
+          call append_varstr( fx%token, c )
         else
           if (c==">") then
             fx%nextTokenType = TOK_END_TAG
@@ -834,30 +756,25 @@ contains
       case (ST_DTD_ELEMENT_CONTENTS)
         if (c==">") then
           if (associated(fx%content)) then
-            deallocate(fx%token)
-            fx%token => fx%content
+            call varstr_vs(fx%token,fx%content)
             fx%content => null()
           endif
           fx%tokenType = TOK_DTD_CONTENTS
           fx%nextTokenType = TOK_END_TAG
         else
           if (associated(fx%content)) then
-            deallocate(fx%token)
-            fx%token => vs_str_alloc(str_vs(fx%content)//c)
+            call varstr_vs(fx%token,fx%content)
+            call append_varstr(fx%token, c)
             deallocate(fx%content)
           else
-            tempString => fx%token
-            fx%token => vs_str_alloc(str_vs(tempString)//c)
-            deallocate(tempString)
+            call append_varstr(fx%token, c)
           endif
           if (c=="(") then
             fx%tokenType = TOK_OPEN_PAR
-            fx%content => fx%token
-            fx%token => vs_str_alloc("")
+            call move_varstr_vs(fx%token,fx%content)
           elseif (c==")") then
             fx%tokenType = TOK_CLOSE_PAR
-            fx%content => fx%token
-            fx%token => vs_str_alloc("")
+            call move_varstr_vs(fx%token,fx%content)
           endif
         endif
 
@@ -866,13 +783,11 @@ contains
           fx%tokenType = TOK_DTD_CONTENTS
           fx%nextTokenType = TOK_END_TAG
         elseif (associated(fx%content)) then
-          deallocate(fx%token)
-          fx%token => vs_str_alloc(str_vs(fx%content)//c)
+          call varstr_vs(fx%token,fx%content)
+          call append_varstr(fx%token, c)
           deallocate(fx%content)
         else
-          tempString => fx%token
-          fx%token => vs_str_alloc(str_vs(tempString)//c)
-          deallocate(tempString)
+          call append_varstr( fx%token, c )
         endif
         if (c=="'".or.c=="""") then
           if (q==c) then
@@ -900,14 +815,12 @@ contains
           if (verify(c, XML_WHITESPACE)>0) then
             if (verify(c, "'""")==0) then
               q = c
-              deallocate(fx%token)
-              fx%token => vs_str_alloc("")
+              call set_varstr_empty(fx%token)
               ws_discard = .false.
             elseif (c==">") then
               fx%tokenType = TOK_END_TAG
             else
-              deallocate(fx%token)
-              fx%token => vs_str_alloc(c)
+              call varstr_str( fx%token, c )
               ws_discard = .false.
             endif
           endif
@@ -922,9 +835,7 @@ contains
               call push_chars(fb, c)
             endif
           else
-            tempString => fx%token
-            fx%token => vs_str_alloc(str_vs(tempString)//c)
-            deallocate(tempString)
+            call append_varstr( fx%token, c )
           endif
         endif
 

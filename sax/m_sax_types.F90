@@ -9,6 +9,8 @@ module m_sax_types
   use m_common_notations, only: notation_list
   use m_common_struct, only: xml_doc_state
 
+  use fox_m_fsys_varstr, only: varstr
+
   use m_sax_reader, only: file_buffer_t
 
   implicit none
@@ -124,7 +126,7 @@ module m_sax_types
     integer :: state_dtd = ST_DTD_SUBSET
     logical :: well_formed = .false.
     logical :: skippedExternal = .false.
-    character, dimension(:), pointer :: token => null()
+    type(varstr) :: token
     character, dimension(:), pointer :: content => null()
     integer :: tokenType = TOK_NULL
     integer :: nextTokenType = TOK_NULL

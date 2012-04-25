@@ -23,6 +23,7 @@ set(fox_fsys_srcs_pp
   fox_m_fsys_parse_input.F90
   fox_m_fsys_string.F90
   fox_m_fsys_string_list.F90
+  fox_m_fsys_varstr.F90
 )
 
 add_library(
