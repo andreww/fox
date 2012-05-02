@@ -8,11 +8,17 @@ default: objsdir $(BUILD_TARGETS) examples_build
 objsdir:
 	mkdir -p objs/lib objs/finclude
 #
+# Note the hackery to fix the prefix in FoX-config when installed without breaking
+# use from the local directory (which would just need a one-line fix in 
+# FoX-config.in). We restore the origional FoX-config so local version still works.
 install: objsdir $(BUILD_TARGETS)
 	$(MKDIR_P) $(install_prefix)/lib $(install_prefix)/finclude $(install_prefix)/bin
 	$(INSTALL) objs/lib/* $(install_prefix)/lib
 	$(INSTALL) -m 644 objs/finclude/* $(install_prefix)/finclude
+	sed -e s#comp_prefix=.*#comp_prefix=$(install_prefix)# FoX-config > FoX-config.tmp
+	mv FoX-config FoX-config.old ; mv FoX-config.tmp FoX-config
 	$(INSTALL) FoX-config $(install_prefix)/bin
+	mv FoX-config.old FoX-config
 #
 examples_build: $(BUILD_TARGETS)
 	if test -d examples; then (cd examples; $(MAKE) VPATH=$(VPATH)/examples) fi
