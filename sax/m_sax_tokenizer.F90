@@ -14,7 +14,7 @@ module m_sax_tokenizer
 
   use m_sax_reader, only: file_buffer_t, open_new_file, pop_buffer_stack, &
     push_chars, get_character, get_all_characters, &
-    parse_text_declaration
+    parse_text_declaration, add_error_position
   use m_sax_types ! everything, really
 #ifdef PGF90
   use fox_m_utils_uri, only: URI
@@ -87,6 +87,7 @@ contains
               ws_discard = .false.
             else
               call add_error(fx%error_stack, "Unexpected character found outside content")
+              call add_error_position(fx%error_stack,fb)
             endif
           endif
         else
@@ -99,6 +100,7 @@ contains
             fx%tokenType = TOK_OPEN_TAG
           else
             call add_error(fx%error_stack, "Unexpected character after <")
+            call add_error_position(fx%error_stack,fb)
           endif
         endif
 
@@ -112,12 +114,14 @@ contains
             call varstr_str(fx%token,c)
           else
             call add_error(fx%error_stack, "Unexpected character after <!")
+            call add_error_position(fx%error_stack,fb)
           endif
         elseif (phrase==1) then
           if (c=="-") then
             fx%tokenType = TOK_OPEN_COMMENT
           else
             call add_error(fx%error_stack, "Unexpected character after <!-")
+            call add_error_position(fx%error_stack,fb)
           endif
         elseif (verify(c,XML_WHITESPACE)>0) then
           call append_varstr(fx%token,c)
@@ -186,6 +190,7 @@ contains
           else
             call add_error(fx%error_stack, &
               "Expecting > after -- inside a comment.")
+            call add_error_position(fx%error_stack,fb)
           endif
         end select
 
@@ -207,6 +212,7 @@ contains
           if (verify(c, XML_WHITESPACE)==0) then
             call add_error(fx%error_stack, &
               "Whitespace not allowed around CDATA in section declaration")
+            call add_error_position(fx%error_stack,fb)
           else
             call varstr_str(fx%token, c)
             ws_discard = .false.
@@ -215,6 +221,7 @@ contains
           if (verify(c, XML_WHITESPACE)==0) then
             call add_error(fx%error_stack, &
               "Whitespace not allowed around CDATA in section declaration")
+            call add_error_position(fx%error_stack,fb)
           elseif (c=="[") then
             fx%tokenType = TOK_NAME
             if (c=="[") fx%nextTokenType = TOK_OPEN_SB
@@ -258,6 +265,7 @@ contains
           if (verify(c,XML_WHITESPACE//"/>")>0) then
             call add_error(fx%error_stack, &
               "Whitespace required inside tag")
+            call add_error_position(fx%error_stack,fb)
             exit
           endif
           ws_discard = .true.
@@ -280,7 +288,8 @@ contains
               fx%tokenType = TOK_END_TAG_CLOSE
             else
               call add_error(fx%error_stack, &
-                "Unexpected character after / in element tag")
+                "Unexpected character after '/' ("//c//") in tag for element '"//str_vs(fx%name)//"'")
+              call add_error_position(fx%error_stack,fb)
               exit
             endif
           else
@@ -308,6 +317,7 @@ contains
             else
               call add_error(fx%error_stack, &
                 "Unexpected character in element tag, expected =")
+              call add_error_position(fx%error_stack,fb)
             endif
           endif
         endif
@@ -321,6 +331,7 @@ contains
               ws_discard = .false.
             else
               call add_error(fx%error_stack, "Expecting "" or '")
+              call add_error_position(fx%error_stack,fb)
             endif
           endif
         else
@@ -358,6 +369,7 @@ contains
             call append_varstr( fx%token, ']>' )
           elseif (phrase==2) then
             call add_error(fx%error_stack, "]]> forbidden in character context")
+            call add_error_position(fx%error_stack,fb)
           else
             call append_varstr( fx%token, '>' )
           endif
@@ -380,6 +392,7 @@ contains
             fx%tokenType = TOK_ENTITY
           else
             call add_error(fx%error_stack, "Unexpected character found in content")
+            call add_error_position(fx%error_stack,fb)
           endif
         elseif (phrase==1) then
           if (c=="?") then
@@ -393,6 +406,7 @@ contains
             fx%tokenType = TOK_OPEN_TAG
           else
             call add_error(fx%error_stack, "Unexpected character after <")
+            call add_error_position(fx%error_stack,fb)
           endif
         endif
 
@@ -403,6 +417,7 @@ contains
           fx%tokenType = TOK_NAME
         else
           call add_error(fx%error_stack, "Entity reference must be terminated with a ;")
+          call add_error_position(fx%error_stack,fb)
         endif
 
       case (ST_CLOSING_TAG)
@@ -419,6 +434,7 @@ contains
             fx%tokenType = TOK_END_TAG
           else
             call add_error(fx%error_stack, "Unexpected character - expecting >")
+            call add_error_position(fx%error_stack,fb)
           endif
         endif
 
@@ -433,6 +449,7 @@ contains
             else
               call add_error(fx%error_stack, &
                 "Missing whitespace in doctype delcaration.")
+              call add_error_position(fx%error_stack,fb)
             endif
           else
             ws_discard = .true.
@@ -477,6 +494,7 @@ contains
           fx%tokenType = TOK_NAME
         else
           call add_error(fx%error_stack, "Entity reference must be terminated with a ;")
+          call add_error_position(fx%error_stack,fb)
         endif
 
       end select
@@ -518,6 +536,7 @@ contains
         elseif (fx%inIntSubset) then
           call add_error(fx%error_stack, &
             "Parameter entity reference not permitted inside markup for internal subset")
+          call add_error_position(fx%error_stack,fb)
           return
         elseif (fx%state_dtd==ST_DTD_ATTLIST_CONTENTS &
           .or.fx%state_dtd==ST_DTD_ELEMENT_CONTENTS) then
@@ -560,6 +579,7 @@ contains
               ws_discard = .false.
             else
               call add_error(fx%error_stack, "Unexpected character found in document subset")
+              call add_error_position(fx%error_stack,fb)
             endif
           endif
         elseif (phrase==1) then
@@ -570,6 +590,7 @@ contains
               fx%tokenType = TOK_BANG_TAG
             else
               call add_error(fx%error_stack, "Unexpected character, expecting ! or ?")
+              call add_error_position(fx%error_stack,fb)
             endif
           elseif (q=="]") then
             if (c=="]") then
@@ -590,6 +611,7 @@ contains
             fx%tokenType = TOK_SECTION_END
           else
             call add_error(fx%error_stack, "Unexpected character, expecting >")
+            call add_error_position(fx%error_stack,fb)
           endif
         endif
 
@@ -604,12 +626,14 @@ contains
             call varstr_str(fx%token,c)
           else
             call add_error(fx%error_stack, "Unexpected character after <!")
+            call add_error_position(fx%error_stack,fb)
           endif
         elseif (phrase==1) then
           if (c=="-") then
             fx%tokenType = TOK_OPEN_COMMENT
           else
             call add_error(fx%error_stack, "Unexpected character after <!-")
+            call add_error_position(fx%error_stack,fb)
           endif
         elseif (verify(c,XML_WHITESPACE)>0) then
           call append_varstr( fx%token, c )
@@ -642,6 +666,7 @@ contains
           if (c/="[") then
             call add_error(fx%error_stack, &
               "Unexpected token found, expecting [")
+            call add_error_position(fx%error_stack,fb)
           else
             fx%tokenType = TOK_OPEN_SB
           endif
@@ -731,6 +756,7 @@ contains
           else
             call add_error(fx%error_stack, &
               "Expecting > after -- inside a comment.")
+            call add_error_position(fx%error_stack,fb)
           endif
         end select
 
@@ -807,6 +833,7 @@ contains
               fx%tokenType = TOK_END_TAG
             else
               call add_error(fx%error_stack, "Missing whitespace in DTD.")
+              call add_error_position(fx%error_stack,fb)
             endif
           else
             ws_discard = .true.
@@ -845,9 +872,10 @@ contains
   end subroutine sax_tokenize
 
 
-  recursive function normalize_attribute_text(fx, s_in) result(s_out)
+  recursive function normalize_attribute_text(fx, s_in, fb) result(s_out)
     type(sax_parser_t), intent(inout) :: fx
     character, dimension(:), intent(in) :: s_in
+    type(file_buffer_t), intent(in)  :: fb
     character, dimension(:), pointer :: s_out
 
     character, dimension(:), pointer :: s_temp, s_temp2, s_ent, tempString
@@ -879,16 +907,19 @@ contains
         i = i + 1
         i2 = i2 + 1
       elseif (s_in(i)=='<') then
-        call add_error(fx%error_stack, "Illegal < found in attribute.")
+        call add_error(fx%error_stack, "Illegal '<' found in attribute.")
+        call add_error_position(fx%error_stack,fb)
         goto 100
         ! Then, expand <
       elseif (s_in(i)=='&') then
         j = index(str_vs(s_in(i+1:)), ';')
         if (j==0) then
-          call add_error(fx%error_stack, "Illegal & found in attribute")
+          call add_error(fx%error_stack, "Illegal '&' found in attribute")
+          call add_error_position(fx%error_stack,fb)
           goto 100
         elseif (j==1) then
           call add_error(fx%error_stack, "No entity reference found")
+          call add_error_position(fx%error_stack,fb)
           goto 100
         endif
         allocate(tempString(j-1))
@@ -907,6 +938,7 @@ contains
           ent => getEntityByName(fx%forbidden_ge_list, str_vs(tempString))
           if (associated(ent)) then
             call add_error(fx%error_stack, 'Recursive entity expansion')
+            call add_error_position(fx%error_stack,fb)
             goto 100
           else
             ent => getEntityByName(fx%xds%entityList, str_vs(tempString))
@@ -914,11 +946,13 @@ contains
           if (associated(ent)) then
             if (ent%wfc.and.fx%xds%standalone) then
               call add_error(fx%error_stack, 'Externally declared entity referenced in standalone document')
+              call add_error_position(fx%error_stack,fb)
               goto 100
             endif
             !is it the right sort of entity?
             if (ent%external) then
               call add_error(fx%error_stack, "External entity forbidden in attribute")
+              call add_error_position(fx%error_stack,fb)
               goto 100
             endif
 #ifdef PGF90
@@ -928,7 +962,7 @@ contains
 #endif
             ! Recursively expand entity, checking for errors.
             s_ent => normalize_attribute_text(fx, &
-              vs_str(expand_entity_text(fx%xds%entityList, str_vs(tempString))))
+              vs_str(expand_entity_text(fx%xds%entityList, str_vs(tempString))),fb)
             dummy = pop_entity_list(fx%forbidden_ge_list)
             if (in_error(fx%error_stack)) then
               goto 100
@@ -948,11 +982,13 @@ contains
             i2 = i2 + j + 1
             if (.not.fx%skippedExternal.or.fx%xds%standalone) then
               call add_error(fx%error_stack, "Undeclared entity encountered in standalone document.")
+              call add_error_position(fx%error_stack,fb)
               goto 100
             endif
           endif
         else
           call add_error(fx%error_stack, "Illegal entity reference")
+          call add_error_position(fx%error_stack,fb)
           goto 100
         endif
         deallocate(tempString)
@@ -1001,10 +1037,12 @@ contains
       if (s_in(i)=='%') then
         j = index(str_vs(s_in(i+1:)), ';')
         if (j==0) then
-          call add_error(fx%error_stack, "Illegal % found in attribute")
+          call add_error(fx%error_stack, "Illegal '%' found in attribute")
+          call add_error_position(fx%error_stack,fb)
           goto 100
         elseif (j==1) then
           call add_error(fx%error_stack, "No entity reference found")
+          call add_error_position(fx%error_stack,fb)
           goto 100
         endif
         allocate(tempString(j-1))
@@ -1013,6 +1051,7 @@ contains
           ent => getEntityByName(fx%forbidden_pe_list, str_vs(tempString))
           if (associated(ent)) then
             call add_error(fx%error_stack, 'Recursive entity expansion')
+            call add_error_position(fx%error_stack,fb)
             goto 100
           endif
           ent => getEntityByName(fx%xds%peList, str_vs(tempString))
@@ -1020,9 +1059,11 @@ contains
             if (ent%wfc.and.fx%xds%standalone) then
               call add_error(fx%error_stack, &
                 "Externally declared entity used in standalone document")
+              call add_error_position(fx%error_stack,fb)
               goto 100
             elseif (str_vs(ent%notation)/="") then
               call add_error(fx%error_stack, "Unparsed entity reference forbidden in entity value")
+              call add_error_position(fx%error_stack,fb)
               goto 100
             endif
 #ifdef PGF90
@@ -1035,6 +1076,7 @@ contains
               call open_new_file(fb, ent%baseURI, iostat)
               if (iostat/=0) then
                 call add_error(fx%error_stack, "Unable to access external parameter entity")
+                call add_error_position(fx%error_stack,fb)
                 goto 100
               endif
               call parse_text_declaration(fb, fx%error_stack)
@@ -1067,11 +1109,13 @@ contains
             i2 = i2 + j + 1
             if (.not.fx%skippedExternal.or.fx%xds%standalone) then
               call add_error(fx%error_stack, "Reference to undeclared parameter entity encountered in standalone document.")
+              call add_error_position(fx%error_stack,fb)
               goto 100
             endif
           endif
         else
           call add_error(fx%error_stack, "Illegal parameter entity reference")
+          call add_error_position(fx%error_stack,fb)
           goto 100
         endif
         deallocate(tempString)

@@ -45,7 +45,7 @@ module m_sax_parser
 
   use m_sax_reader, only: file_buffer_t, pop_buffer_stack, open_new_string, &
     open_new_file, parse_xml_declaration, parse_text_declaration, &
-    reading_main_file, reading_first_entity
+    reading_main_file, reading_first_entity, add_error_position
   use m_sax_tokenizer, only: sax_tokenize, normalize_attribute_text, &
     expand_pe_text
   use m_sax_types ! everything, really
@@ -889,7 +889,7 @@ contains
         case (TOK_CHAR)
           !First, expand all entities:
           tempString2 => vs_varstr_alloc(fx%token)
-          tempString => normalize_attribute_text(fx, tempString2)
+          tempString => normalize_attribute_text(fx, tempString2, fb)
           call varstr_vs( fx%token, tempString )
           deallocate(tempString)
           deallocate(tempString2)
@@ -1495,13 +1495,15 @@ contains
       if (nextState/=ST_NULL) then
         fx%state = nextState
       else
-        call add_error(fx%error_stack, "Internal error in parser - no suitable token found")
+        call add_error(fx%error_stack, "Internal error in parser - no suitable token found.")
         goto 100
       endif
 
     end do
 
-100 if (associated(tempString)) deallocate(tempString)
+100 continue
+    if (in_error(fx%error_stack)) call add_error_position(fx%error_stack, fb)
+    if (associated(tempString)) deallocate(tempString)
     if (associated(tempString2)) deallocate(tempString2)
     if (associated(extSubsetURI)) call destroyURI(extSubsetURI)
     call destroy_string_list(id_list)
@@ -1826,7 +1828,7 @@ contains
               if (associated(elem%attlist%list(i)%default)) then
                 tempString => elem%attlist%list(i)%default
                 elem%attlist%list(i)%default => &
-                  normalize_attribute_text(fx, tempString)
+                  normalize_attribute_text(fx, tempString, fb)
                 deallocate(tempString)
                 if (in_error(fx%error_stack)) return
               endif
@@ -2329,7 +2331,7 @@ contains
           call checkAttributes(elem, fx%attributes)
           if (.not.checkContentModel(fx%elstack, str_vs(fx%name))) then
             call add_error(fx%error_stack, &
-              "Element "//str_vs(fx%name)//" not permitted in this context")
+              "Element '"//str_vs(fx%name)//"' not permitted in this context")
             return
           endif
         else
@@ -2338,7 +2340,7 @@ contains
       else
         if (validCheck) then
           call add_error(fx%error_stack, &
-          "Trying to use an undeclared element")
+          "Trying to use an unrecognised element '"//str_vs(fx%name)//"'")
           return
         endif
       endif
@@ -2362,7 +2364,7 @@ contains
         ! no namespace was found for the current element
         if (.not.startInCharData_) then
           ! but we ignore this if we are parsing an entity through DOM
-          call add_error(fx%error_stack, "No namespace found for current element")
+          call add_error(fx%error_stack, "No namespace found for current element '"//str_vs(fx%name)//"'")
           return
         elseif (present(startElement_handler)) then
           ! Record it as having an empty URI
@@ -2405,8 +2407,8 @@ contains
       endif
       if (str_vs(fx%name)/=get_top_elstack(fx%elstack)) then
         call add_error(fx%error_stack, &
-          "Mismatching close tag: trying to close "//get_top_elstack(fx%elstack) &
-          //" with "//str_vs(fx%name))
+          "Mismatching close tag: trying to close entity '"//get_top_elstack(fx%elstack) &
+          //"' with '"//str_vs(fx%name)//"'")
         return
       endif
       if (validCheck) then
@@ -2792,7 +2794,9 @@ contains
             if (str_vs(att%default)//"x"/=str_vs(attValue)//"x") then
               ! Validity Constraint: Fixed Attribute Default
               call add_error(fx%error_stack, &
-                "FIXED attribute has wrong value")
+                "FIXED attribute has unexpected value." &
+                //" At Element='"//str_vs(el%name)//"' Attribute='"//str_vs(att%name)//"'" &
+                //" Expecting '"//str_vs(att%default)//"' Found '"//str_vs(attValue)//"'")
               return
             endif
           else
@@ -2810,9 +2814,7 @@ contains
         end select
       enddo
 
-      if (any(attributesLeft)) &
-        call add_error(fx%error_stack, &
-        "Undeclared attributes forbidden")
+      if (any(attributesLeft))  call add_error(fx%error_stack, "Undeclared attributes forbidden. Element '"//str_vs(el%name)//"'")
 
     end subroutine checkAttributes
 
