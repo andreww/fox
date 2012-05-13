@@ -7439,4 +7439,4 @@ fi
 
 chmod +x FoX-config
 touch .config
-touch */*.f90 */*.F90
+(touch */*.f90 */*.F90 ; exit 0)

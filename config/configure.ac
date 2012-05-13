@@ -205,6 +205,9 @@ AC_OUTPUT
 chmod +x FoX-config
 touch .config
 dnl and to stop over-eager makes trying to recreate f90 files
-dnl when m4 is not gnu m4 ..
-touch */*.f90 */*.F90
+dnl when m4 is not gnu m4.
+dnl But, if we are in a VPATH make (and wrapped in a recursive
+dnl makefile - e.g. SIESTA) this fails so wrap in a subshell
+dnl and always report sucess.
+(touch */*.f90 */*.F90 ; exit 0)
 dnl
