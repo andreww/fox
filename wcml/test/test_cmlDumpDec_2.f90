@@ -7,8 +7,8 @@ program test
   type(xmlf_t) :: xf
 
   call cmlBeginFile(xf, filename, unit=-1)
-  call cmlStartCml(xf)
-  call wcmlDumpDec(xf, '_no_file_to_find.input', 80, .false., 'some dictref')
+  call cmlStartCml(xf, compchem=.true.)
+  call wcmlDumpDec(xf, '_no_file_to_find.input', 80, .false.)
 
   call cmlFinishFile(xf)
 
