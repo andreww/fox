@@ -58,7 +58,6 @@ module m_wcml_inputdec
 
         integer :: i
 
-        iostat = 0
 #ifndef DUMMYLIB
         call wcmlStartDecList(xf)
         do i=1, size(inputDec)
