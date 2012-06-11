@@ -6,14 +6,17 @@ module fox_m_fsys_varstr
   public :: varstr
   public :: init_varstr
   public :: destroy_varstr
+  public :: varstr_len
+  public :: is_varstr_empty
   public :: set_varstr_empty
+  public :: is_varstr_null
+  public :: set_varstr_null
   public :: vs_varstr_alloc
+  public :: move_varstr_vs
   public :: str_varstr
   public :: append_varstr
   public :: varstr_str
   public :: varstr_vs
-  public :: varstr_len
-  public :: move_varstr_vs
 
   ! Allocation step in which the data within varstr will be allocated
   integer, parameter :: VARSTR_INIT_SIZE=1024
@@ -32,29 +35,33 @@ module fox_m_fsys_varstr
 
 contains
 
-! Initialise varstr type.
+! Initialise varstr type. The string is initialised as null (i.e. invalid)
 subroutine init_varstr(vstr)
   type(varstr), intent(inout) :: vstr
   allocate(vstr%data(VARSTR_INIT_SIZE))
-  vstr%length = 0
+  vstr%length = -1
 end subroutine init_varstr
 
-! Clean up memory
+! Clean up memory (leaves varstr null, and drops the data field)
 subroutine destroy_varstr(vstr)
   type(varstr), intent(inout) :: vstr
   if (associated(vstr%data)) deallocate(vstr%data)
-  vstr%length = -1
+  call set_varstr_null(vstr)
 end subroutine destroy_varstr
 
 ! Return real length of varstr
 function varstr_len(vstr) result(l)
   type(varstr), intent(in) :: vstr
   integer :: l
+  if (vstr%length<0) print *, "WARNING: asking for length of null varstr"
   l = vstr%length
 end function varstr_len
 
+
 ! Make sure that varstr is at least size-n.
 ! The data will be kept (copied) if keep is true (default)
+! This can be called on a null varstr, but should noty be called on
+! one which was destroyed.
 subroutine ensure_varstr_size(vstr,n,keep)
   type(varstr), intent(inout) :: vstr
   integer, intent(in) :: n
@@ -70,7 +77,6 @@ subroutine ensure_varstr_size(vstr,n,keep)
     keep_flag = .true.
   end if
 
-
   old_size = size(vstr%data)
   if (n <= old_size ) return
 
@@ -83,45 +89,71 @@ subroutine ensure_varstr_size(vstr,n,keep)
   vstr%data => new_data
 end subroutine ensure_varstr_size
 
+! Returns whether varstr is empty: ""
+function is_varstr_empty(vstr)
+  type(varstr), intent(in) :: vstr
+  logical is_varstr_empty
+  is_varstr_empty = (vstr%length == 0)
+end function is_varstr_empty
+
 ! Set vstr to empty string
 subroutine set_varstr_empty(vstr)
   type(varstr), intent(inout) :: vstr
   vstr%length = 0
 end subroutine set_varstr_empty
 
+! Returns whether varstr is null (i.e. invalid)
+function is_varstr_null(vstr)
+  type(varstr), intent(in) :: vstr
+  logical is_varstr_null
+  is_varstr_null = (vstr%length < 0)
+end function is_varstr_null
+
+! Set vstr to null
+subroutine set_varstr_null(vstr)
+  type(varstr), intent(inout) :: vstr
+  vstr%length = -1
+end subroutine set_varstr_null
 
 ! Convert varstr to newly allocated array of characters
 function vs_varstr_alloc(vstr) result(vs)
   type(varstr) :: vstr
   character, dimension(:), pointer :: vs
 
+  if (is_varstr_null(vstr)) then
+    print *, "WARNING: Converting null varstr to string... making it empty first"
+    call set_varstr_empty(vstr)
+  end if
+
   allocate(vs(vstr%length))
   vs = vstr%data(1:vstr%length)
 end function vs_varstr_alloc
 
-! This call moves data from varstr to vs (i.e. vs is overwritten and vstr is emptied)
+! This call moves data from varstr to vs (i.e. vs is overwritten and vstr is made null)
 subroutine move_varstr_vs(vstr,vs)
   type(varstr), intent(inout) :: vstr
   character, dimension(:), pointer, intent(inout) :: vs
 
   if (associated(vs)) deallocate(vs)
   vs => vs_varstr_alloc(vstr)
-  call set_varstr_empty(vstr)
+  call set_varstr_null(vstr)
 end subroutine move_varstr_vs
 
 ! Convert varstr to string type
 function str_varstr(vstr) result(s)
-    type(varstr), intent(in) :: vstr
-    character(len=vstr%length) :: s
-#ifdef PGF90
-!PGI crashes on this use of transfer. Knob-ends.
-    integer :: i
-    do i = 1, vstr%length
-      s(i:i) = vstr%data(i)
-    enddo
-#else
-    s = transfer(vstr%data(1:vstr%length), s)
-#endif
+  type(varstr), intent(in) :: vstr
+  character(len=vstr%length) :: s
+  integer :: i
+
+  if (is_varstr_null(vstr)) then
+    ! Can we really end-up here? Or will it blow on allocation with len=-1 ?
+    print *, "WARNING: Trying to convert null varstr to str... returning empty string"
+    s = ""
+  end if
+
+  do i = 1, vstr%length
+    s(i:i) = vstr%data(i)
+  enddo
 end function str_varstr
 
 ! Append string to varstr
@@ -130,6 +162,11 @@ subroutine append_varstr(vstr,str)
   character(len=*), intent(in) :: str
   character, dimension(:), pointer :: tmp
   integer :: i
+
+  if (is_varstr_null(vstr)) then
+    print *, "WARNING: Trying to append to null varstr... making it empty first"
+    call set_varstr_empty(vstr)
+  end if
 
   call ensure_varstr_size(vstr,vstr%length+len(str))
 
