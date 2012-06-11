@@ -131,7 +131,7 @@ module m_sax_types
     integer :: tokenType = TOK_NULL
     integer :: nextTokenType = TOK_NULL
     type(varstr) :: name
-    character, dimension(:), pointer :: attname => null()
+    type(varstr) :: attname
     logical :: error = .false.
     type(error_stack) :: error_stack
     ! Aspects of document structure

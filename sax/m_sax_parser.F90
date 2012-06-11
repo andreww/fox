@@ -80,6 +80,7 @@ contains
     call init_varstr(fx%token)
     call init_varstr(fx%content)
     call init_varstr(fx%name)
+    call init_varstr(fx%attname)
 
     call init_error_stack(fx%error_stack)
     call init_elstack(fx%elstack)
@@ -147,7 +148,7 @@ contains
     call destroy_varstr(fx%token)
     call destroy_varstr(fx%content)
     call destroy_varstr(fx%name)
-    if (associated(fx%attname)) deallocate(fx%attname)
+    call destroy_varstr(fx%attname)
     if (associated(fx%publicId)) deallocate(fx%publicId)
     if (associated(fx%systemId)) deallocate(fx%systemId)
     if (associated(fx%Ndata)) deallocate(fx%Ndata)
@@ -867,9 +868,9 @@ contains
             call add_error(fx%error_stack, "Duplicate attribute name")
             goto 100
           endif
-          call move_varstr_vs(fx%token,fx%attname)
+          call move_varstr_varstr(fx%token,fx%attname)
           if (associated(elem)) then
-            attDecl => get_attribute_declaration(elem, str_vs(fx%attname))
+            attDecl => get_attribute_declaration(elem, str_varstr(fx%attname))
           else
             attDecl => null()
           endif
@@ -903,7 +904,7 @@ contains
             temp_i = ATT_CDATA
           endif
           if (temp_i==ATT_CDATA) then
-            call add_item_to_dict(fx%attributes, str_vs(fx%attname), &
+            call add_item_to_dict(fx%attributes, str_varstr(fx%attname), &
               str_varstr(fx%token), itype=ATT_CDATA, declared=associated(attDecl))
           else
             if (validCheck) then
@@ -915,11 +916,11 @@ contains
                 goto 100
               endif
             endif
-            call add_item_to_dict(fx%attributes, str_vs(fx%attname), &
+            call add_item_to_dict(fx%attributes, str_varstr(fx%attname), &
               att_value_normalize(str_varstr(fx%token)), itype=temp_i, &
               declared=.true.)
           endif
-          deallocate(fx%attname)
+          call set_varstr_null(fx%attname)
           nextState = ST_IN_TAG
         end select
 
@@ -2032,7 +2033,9 @@ contains
             tempString => expand_pe_text(fx, tempString2, fb)
             deallocate(tempString2)
           endif
-          fx%attname => expand_entity_value_alloc(tempString, fx%xds, fx%error_stack)
+          tempString2 => expand_entity_value_alloc(tempString, fx%xds, fx%error_stack)
+          call varstr_vs( fx%attname, tempString2 )
+          deallocate(tempString2)
           if (reading_main_file(fb)) then
             tempString => null()
           else
@@ -2090,7 +2093,7 @@ contains
             if (fx%state==ST_STOP) return
           endif
           call set_varstr_null(fx%name)
-          if (associated(fx%attname)) deallocate(fx%attname)
+          call set_varstr_null(fx%attname)
           if (associated(fx%systemId)) deallocate(fx%systemId)
           if (associated(fx%publicId)) deallocate(fx%publicId)
           if (associated(fx%Ndata)) deallocate(fx%Ndata)
@@ -2150,7 +2153,7 @@ contains
             if (fx%state==ST_STOP) return
           endif
           call set_varstr_null(fx%name)
-          if (associated(fx%attname)) deallocate(fx%attname)
+          call set_varstr_null(fx%attname)
           if (associated(fx%systemId)) deallocate(fx%systemId)
           if (associated(fx%publicId)) deallocate(fx%publicId)
           if (associated(fx%Ndata)) deallocate(fx%Ndata)
@@ -2456,13 +2459,13 @@ contains
         !Does entity with this name exist?
         if (.not.existing_entity(fx%xds%PEList, str_varstr(fx%name))) then
           ! Internal or external?
-          if (associated(fx%attname)) then ! it's internal
+          if (.not.is_varstr_null(fx%attname)) then ! it's internal
             call register_internal_PE(fx%xds, &
-              name=str_varstr(fx%name), text=str_vs(fx%attname), &
+              name=str_varstr(fx%name), text=str_varstr(fx%attname), &
               wfc=wfc, baseURI=copyURI(fb%f(1)%baseURI))
             ! FIXME need to expand value here before reporting ...
             if (present(internalEntityDecl_handler)) then
-              call internalEntityDecl_handler('%'//str_varstr(fx%name), str_vs(fx%attname))
+              call internalEntityDecl_handler('%'//str_varstr(fx%name), str_varstr(fx%attname))
               if (fx%state==ST_STOP) return
             endif
           else ! PE can't have Ndata declaration
@@ -2497,13 +2500,13 @@ contains
       else !It's a general entity
         if (.not.existing_entity(fx%xds%entityList, str_varstr(fx%name))) then
           ! Internal or external?
-          if (associated(fx%attname)) then ! it's internal
+          if (.not.is_varstr_null(fx%attname)) then ! it's internal
             call register_internal_GE(fx%xds, name=str_varstr(fx%name), &
-              text=str_vs(fx%attname), &
+              text=str_varstr(fx%attname), &
               wfc=wfc, baseURI=copyURI(fb%f(1)%baseURI))
             if (present(internalEntityDecl_handler)) then
               call internalEntityDecl_handler(str_varstr(fx%name),&
-              str_vs(fx%attname))
+              str_varstr(fx%attname))
               if (fx%state==ST_STOP) return
             endif
           else
