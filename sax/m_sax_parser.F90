@@ -81,6 +81,9 @@ contains
     call init_varstr(fx%content)
     call init_varstr(fx%name)
     call init_varstr(fx%attname)
+    call init_varstr(fx%PublicId)
+    call init_varstr(fx%systemId)
+    call init_varstr(fx%Ndata)
 
     call init_error_stack(fx%error_stack)
     call init_elstack(fx%elstack)
@@ -149,9 +152,9 @@ contains
     call destroy_varstr(fx%content)
     call destroy_varstr(fx%name)
     call destroy_varstr(fx%attname)
-    if (associated(fx%publicId)) deallocate(fx%publicId)
-    if (associated(fx%systemId)) deallocate(fx%systemId)
-    if (associated(fx%Ndata)) deallocate(fx%Ndata)
+    call destroy_varstr(fx%publicId)
+    call destroy_varstr(fx%systemId)
+    call destroy_varstr(fx%Ndata)
 
   end subroutine sax_parser_destroy
 
@@ -1226,7 +1229,7 @@ contains
         select case (fx%tokenType)
         case (TOK_CHAR)
           if (checkPublicId(str_varstr(fx%token))) then
-            call move_varstr_vs(fx%token,fx%publicId)
+            call move_varstr_varstr(fx%token,fx%publicId)
             nextState = ST_DOC_SYSTEM
           else
             call add_error(fx%error_stack, "Invalid document public id")
@@ -1238,7 +1241,7 @@ contains
         !write(*,*) 'ST_DOC_SYSTEM'
         select case (fx%tokenType)
         case (TOK_CHAR)
-          call move_varstr_vs(fx%token,fx%systemId)
+          call move_varstr_varstr(fx%token,fx%systemId)
           nextState = ST_DOC_DECL
         end select
 
@@ -1247,39 +1250,39 @@ contains
         select case (fx%tokenType)
         case (TOK_OPEN_SB)
           if (present(startDTD_handler)) then
-            if (associated(fx%publicId)) then
+            if (.not.is_varstr_null(fx%publicId)) then
               call startDTD_handler(str_vs(fx%root_element), &
-                publicId=str_vs(fx%publicId), systemId=str_vs(fx%systemId))
-            elseif (associated(fx%systemId)) then
+                publicId=str_varstr(fx%publicId), systemId=str_varstr(fx%systemId))
+            elseif (.not.is_varstr_null(fx%systemId)) then
               call startDTD_handler(str_vs(fx%root_element), &
-                publicId="", systemId=str_vs(fx%systemId))
+                publicId="", systemId=str_varstr(fx%systemId))
             else
               call startDTD_handler(str_vs(fx%root_element), "", "")
             endif
             if (fx%state==ST_STOP) goto 100
           endif
-          if (associated(fx%systemId)) then
-            extSubsetURI => parseURI(str_vs(fx%systemId))
-            deallocate(fx%systemId)
+          if (.not.is_varstr_null(fx%systemId)) then
+            extSubsetURI => parseURI(str_varstr(fx%systemId))
+            call set_varstr_null(fx%systemId)
           endif
-          if (associated(fx%publicId)) deallocate(fx%publicId)
+          call set_varstr_null(fx%publicId)
           fx%inIntSubset = .true.
           wf_stack(1) = wf_stack(1) + 1
           nextState = ST_IN_SUBSET
         case (TOK_END_TAG)
           if (present(startDTD_handler)) then
-            if (associated(fx%publicId)) then
-              call startDTD_handler(str_vs(fx%root_element), publicId=str_vs(fx%publicId), systemId=str_vs(fx%systemId))
-              deallocate(fx%publicId)
-            elseif (associated(fx%systemId)) then
-              call startDTD_handler(str_vs(fx%root_element), publicId="", systemId=str_vs(fx%systemId))
+            if (.not.is_varstr_null(fx%publicId)) then
+              call startDTD_handler(str_vs(fx%root_element), publicId=str_varstr(fx%publicId), systemId=str_varstr(fx%systemId))
+              call set_varstr_null(fx%publicId)
+            elseif (.not.is_varstr_null(fx%systemId)) then
+              call startDTD_handler(str_vs(fx%root_element), publicId="", systemId=str_varstr(fx%systemId))
             else
               call startDTD_handler(str_vs(fx%root_element), "", "")
             endif
             if (fx%state==ST_STOP) goto 100
           endif
-          if (associated(fx%systemId)) then
-            extSubsetURI => parseURI(str_vs(fx%systemId))
+          if (.not.is_varstr_null(fx%systemId)) then
+            extSubsetURI => parseURI(str_varstr(fx%systemId))
             if (.not.associated(extSubsetURI)) then
               call add_error(fx%error_stack, "Invalid URI specified for DTD SYSTEM")
               goto 100
@@ -1298,7 +1301,7 @@ contains
             else
               if (validCheck) then
                 call add_error(fx%error_stack, &
-                  "Unable to retrieve external subset "//str_vs(fx%systemId))
+                  "Unable to retrieve external subset "//str_varstr(fx%systemId))
                 goto 100
               endif
               call endDTDchecks
@@ -1315,8 +1318,8 @@ contains
             fx%context = CTXT_BEFORE_CONTENT
             nextState = ST_MISC
           endif
-          if (associated(fx%systemId)) deallocate(fx%systemId)
-          if (associated(fx%publicId)) deallocate(fx%publicId)
+          call set_varstr_null(fx%systemId)
+          call set_varstr_null(fx%publicId)
         case default
           call add_error(fx%error_stack, "Unexpected token in DTD")
           goto 100
@@ -2053,7 +2056,7 @@ contains
         select case (fx%tokenType)
         case (TOK_CHAR)
           if (checkPublicId(str_varstr(fx%token))) then
-            call move_varstr_vs(fx%token,fx%publicId)
+            call move_varstr_varstr(fx%token,fx%publicId)
             nextDTDState = ST_DTD_ENTITY_SYSTEM
           else
             call add_error(fx%error_stack, "Invalid PUBLIC id in ENTITY")
@@ -2068,7 +2071,7 @@ contains
         !write(*,*) 'ST_DTD_ENTITY_SYSTEM'
         select case (fx%tokenType)
         case (TOK_CHAR)
-          call move_varstr_vs(fx%token,fx%systemId)
+          call move_varstr_varstr(fx%token,fx%systemId)
           nextDTDState = ST_DTD_ENTITY_NDATA
         case default
           call add_error(fx%error_stack, "Unexpected token in ENTITY")
@@ -2094,9 +2097,9 @@ contains
           endif
           call set_varstr_null(fx%name)
           call set_varstr_null(fx%attname)
-          if (associated(fx%systemId)) deallocate(fx%systemId)
-          if (associated(fx%publicId)) deallocate(fx%publicId)
-          if (associated(fx%Ndata)) deallocate(fx%Ndata)
+          call set_varstr_null(fx%systemId)
+          call set_varstr_null(fx%publicId)
+          call set_varstr_null(fx%Ndata)
           nextDTDState = ST_DTD_SUBSET
         case (TOK_NAME)
           if (str_varstr(fx%token)=='NDATA') then
@@ -2128,7 +2131,7 @@ contains
             call add_error(fx%error_stack, "Invalid name for Notation")
             return
           endif
-          call move_varstr_vs(fx%token,fx%Ndata)
+          call move_varstr_varstr(fx%token,fx%Ndata)
           nextDTDState = ST_DTD_ENTITY_END
         case default
           call add_error(fx%error_stack, "Unexpected token in ENTITY")
@@ -2154,9 +2157,9 @@ contains
           endif
           call set_varstr_null(fx%name)
           call set_varstr_null(fx%attname)
-          if (associated(fx%systemId)) deallocate(fx%systemId)
-          if (associated(fx%publicId)) deallocate(fx%publicId)
-          if (associated(fx%Ndata)) deallocate(fx%Ndata)
+          call set_varstr_null(fx%systemId)
+          call set_varstr_null(fx%publicId)
+          call set_varstr_null(fx%Ndata)
           nextDTDState = ST_DTD_SUBSET
         case default
           call add_error(fx%error_stack, "Unexpected token at end of ENTITY")
@@ -2204,7 +2207,7 @@ contains
         !write(*,*)'ST_DTD_NOTATION_SYSTEM'
         select case (fx%tokenType)
         case (TOK_CHAR)
-          call move_varstr_vs(fx%token,fx%systemId)
+          call move_varstr_varstr(fx%token,fx%systemId)
           nextDTDState = ST_DTD_NOTATION_END
         case default
           call add_error(fx%error_stack, "Unexpected token in NOTATION")
@@ -2216,7 +2219,7 @@ contains
         select case (fx%tokenType)
         case (TOK_CHAR)
           if (checkPublicId(str_varstr(fx%token))) then
-            call move_varstr_vs(fx%token,fx%publicId)
+            call move_varstr_varstr(fx%token,fx%publicId)
             nextDTDState = ST_DTD_NOTATION_PUBLIC_2
           else
             call add_error(fx%error_stack, "Invalid PUBLIC id in NOTATION")
@@ -2244,17 +2247,17 @@ contains
           endif
           wf_stack(1) = wf_stack(1) - 1
           if (processDTD) then
-            call add_notation(fx%nlist, str_varstr(fx%name), publicId=str_vs(fx%publicId))
+            call add_notation(fx%nlist, str_varstr(fx%name), publicId=str_varstr(fx%publicId))
             if (present(notationDecl_handler)) then
-              call notationDecl_handler(str_varstr(fx%name), publicId=str_vs(fx%publicId), systemId="")
+              call notationDecl_handler(str_varstr(fx%name), publicId=str_varstr(fx%publicId), systemId="")
               if (fx%state==ST_STOP) return
             endif
           endif
           call set_varstr_null(fx%name)
-          deallocate(fx%publicId)
+          call set_varstr_null(fx%publicId)
           nextDTDState = ST_DTD_SUBSET
         case (TOK_CHAR)
-          call move_varstr_vs(fx%token,fx%systemId)
+          call move_varstr_varstr(fx%token,fx%systemId)
           nextDTDState = ST_DTD_NOTATION_END
         end select
 
@@ -2275,7 +2278,7 @@ contains
           endif
           wf_stack(1) = wf_stack(1) - 1
           if (processDTD) then
-            URIref => parseURI(str_vs(fx%systemId))
+            URIref => parseURI(str_varstr(fx%systemId))
             if (.not.associated(URIref)) then
               call add_error(fx%error_stack, "Invalid SYSTEM literal")
               return
@@ -2289,26 +2292,26 @@ contains
             ! since we don't do NOTATIONs.
             ! Throw it away again
             call destroyURI(URIref)
-            if (associated(fx%publicId)) then
+            if (.not.is_varstr_null(fx%publicId)) then
               call add_notation(fx%nlist, str_varstr(fx%name), &
-                publicId=str_vs(fx%publicId), systemId=str_vs(fx%systemId))
+                publicId=str_varstr(fx%publicId), systemId=str_varstr(fx%systemId))
               if (present(notationDecl_handler)) then
                 call notationDecl_handler(str_varstr(fx%name), &
-                publicId=str_vs(fx%publicId), systemId=str_vs(fx%systemId))
+                publicId=str_varstr(fx%publicId), systemId=str_varstr(fx%systemId))
                 if (fx%state==ST_STOP) return
               endif
             else
               call add_notation(fx%nlist, str_varstr(fx%name), &
-                systemId=str_vs(fx%systemId))
+                systemId=str_varstr(fx%systemId))
               if (present(notationDecl_handler)) then
                 call notationDecl_handler(str_varstr(fx%name), &
-                publicId="", systemId=str_vs(fx%systemId))
+                publicId="", systemId=str_varstr(fx%systemId))
                 if (fx%state==ST_STOP) return
               endif
             endif
           endif
-          if (associated(fx%publicId)) deallocate(fx%publicId)
-          deallocate(fx%systemId)
+          call set_varstr_null(fx%publicId)
+          call set_varstr_null(fx%systemId)
           call set_varstr_null(fx%name)
           nextDTDState = ST_DTD_SUBSET
         case default
@@ -2469,7 +2472,7 @@ contains
               if (fx%state==ST_STOP) return
             endif
           else ! PE can't have Ndata declaration
-            URIref => parseURI(str_vs(fx%systemId))
+            URIref => parseURI(str_varstr(fx%systemId))
             if (.not.associated(URIref)) then
               call add_error(fx%error_stack, "Invalid URI specified for SYSTEM")
             elseif (hasFragment(URIref)) then
@@ -2478,20 +2481,20 @@ contains
             else
               newURI => rebaseURI(fb%f(1)%baseURI, URIref)
               call destroyURI(URIref)
-              if (associated(fx%publicId)) then
+              if (.not.is_varstr_null(fx%publicId)) then
                 call register_external_PE(fx%xds, name=str_varstr(fx%name), &
-                  systemId=str_vs(fx%systemId), publicId=str_vs(fx%publicId), &
+                  systemId=str_varstr(fx%systemId), publicId=str_varstr(fx%publicId), &
                   wfc=wfc, baseURI=newURI)
                 if (present(externalEntityDecl_handler)) &
                   call externalEntityDecl_handler('%'//str_varstr(fx%name), &
-                  systemId=str_vs(fx%systemId), publicId=str_vs(fx%publicId))
+                  systemId=str_varstr(fx%systemId), publicId=str_varstr(fx%publicId))
               else
                 call register_external_PE(fx%xds, name=str_varstr(fx%name), &
-                  systemId=str_vs(fx%systemId), &
+                  systemId=str_varstr(fx%systemId), &
                   wfc=wfc, baseURI=newURI)
                 if (present(externalEntityDecl_handler)) &
                   call externalEntityDecl_handler('%'//str_varstr(fx%name), &
-                  systemId=str_vs(fx%systemId), publicId="")
+                  systemId=str_varstr(fx%systemId), publicId="")
               endif
             endif
           endif
@@ -2510,7 +2513,7 @@ contains
               if (fx%state==ST_STOP) return
             endif
           else
-            URIref => parseURI(str_vs(fx%systemId))
+            URIref => parseURI(str_varstr(fx%systemId))
             if (.not.associated(URIref)) then
               call add_error(fx%error_stack, "Invalid URI specified for SYSTEM")
             elseif (hasFragment(URIref)) then
@@ -2519,35 +2522,35 @@ contains
             else
               newURI => rebaseURI(fb%f(1)%baseURI, URIref)
               call destroyURI(URIref)
-              if (associated(fx%publicId).and.associated(fx%Ndata)) then
+              if ((.not.is_varstr_null(fx%publicId)).and.(.not.is_varstr_null(fx%Ndata))) then
                 call register_external_GE(fx%xds, name=str_varstr(fx%name), &
-                  systemId=str_vs(fx%systemId), publicId=str_vs(fx%publicId), &
-                  notation=str_vs(fx%Ndata), &
+                  systemId=str_varstr(fx%systemId), publicId=str_varstr(fx%publicId), &
+                  notation=str_varstr(fx%Ndata), &
                   wfc=wfc, baseURI=newURI)
                 if (present(unparsedEntityDecl_handler)) &
                   call unparsedEntityDecl_handler(str_varstr(fx%name), &
-                  systemId=str_vs(fx%systemId), publicId=str_vs(fx%publicId), &
-                  notation=str_vs(fx%Ndata))
-              elseif (associated(fx%Ndata)) then
+                  systemId=str_varstr(fx%systemId), publicId=str_varstr(fx%publicId), &
+                  notation=str_varstr(fx%Ndata))
+              elseif (.not.is_varstr_null(fx%Ndata)) then
                 call register_external_GE(fx%xds, name=str_varstr(fx%name), &
-                  systemId=str_vs(fx%systemId), notation=str_vs(fx%Ndata), &
+                  systemId=str_varstr(fx%systemId), notation=str_varstr(fx%Ndata), &
                   wfc=wfc, baseURI=newURI)
                 if (present(unparsedEntityDecl_handler)) &
                   call unparsedEntityDecl_handler(str_varstr(fx%name), publicId="", &
-                  systemId=str_vs(fx%systemId), notation=str_vs(fx%Ndata))
-              elseif (associated(fx%publicId)) then
+                  systemId=str_varstr(fx%systemId), notation=str_varstr(fx%Ndata))
+              elseif (.not.is_varstr_null(fx%publicId)) then
                 call register_external_GE(fx%xds, name=str_varstr(fx%name), &
-                  systemId=str_vs(fx%systemId), publicId=str_vs(fx%publicId), &
+                  systemId=str_varstr(fx%systemId), publicId=str_varstr(fx%publicId), &
                   wfc=wfc, baseURI=newURI)
                 if (present(externalEntityDecl_handler)) &
                   call externalEntityDecl_handler(str_varstr(fx%name), &
-                  systemId=str_vs(fx%systemId), publicId=str_vs(fx%publicId))
+                  systemId=str_varstr(fx%systemId), publicId=str_varstr(fx%publicId))
               else
                 call register_external_GE(fx%xds, name=str_varstr(fx%name), &
-                  systemId=str_vs(fx%systemId), wfc=wfc, baseURI=newURI)
+                  systemId=str_varstr(fx%systemId), wfc=wfc, baseURI=newURI)
                 if (present(externalEntityDecl_handler)) &
                   call externalEntityDecl_handler(str_varstr(fx%name), &
-                  systemId=str_vs(fx%systemId), publicId="")
+                  systemId=str_varstr(fx%systemId), publicId="")
               endif
             endif
           endif

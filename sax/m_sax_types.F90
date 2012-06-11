@@ -143,9 +143,9 @@ module m_sax_types
     type(entity_list) :: predefined_e_list
     type(entity_list) :: forbidden_pe_list
     type(entity_list) :: forbidden_ge_list
-    character(len=1), dimension(:), pointer :: PublicId => null()
-    character(len=1), dimension(:), pointer :: SystemId => null()
-    character(len=1), dimension(:), pointer :: Ndata => null()
+    type(varstr) :: PublicId
+    type(varstr) :: SystemId
+    type(varstr) :: Ndata
     logical :: inIntSubset = .false.
     logical :: spaceBeforeEntity = .false.
   end type sax_parser_t
