@@ -288,7 +288,7 @@ contains
               fx%tokenType = TOK_END_TAG_CLOSE
             else
               call add_error(fx%error_stack, &
-                "Unexpected character after '/' ("//c//") in tag for element '"//str_vs(fx%name)//"'")
+                "Unexpected character after '/' ("//c//") in tag for element '"//str_varstr(fx%name)//"'")
               call add_error_position(fx%error_stack,fb)
               exit
             endif

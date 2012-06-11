@@ -130,7 +130,7 @@ module m_sax_types
     type(varstr) :: content
     integer :: tokenType = TOK_NULL
     integer :: nextTokenType = TOK_NULL
-    character, dimension(:), pointer :: name => null()
+    type(varstr) :: name
     character, dimension(:), pointer :: attname => null()
     logical :: error = .false.
     type(error_stack) :: error_stack
