@@ -13,6 +13,7 @@ module fox_m_fsys_varstr
   public :: set_varstr_null
   public :: vs_varstr_alloc
   public :: move_varstr_vs
+  public :: move_varstr_varstr
   public :: str_varstr
   public :: append_varstr
   public :: varstr_str
@@ -138,6 +139,21 @@ subroutine move_varstr_vs(vstr,vs)
   vs => vs_varstr_alloc(vstr)
   call set_varstr_null(vstr)
 end subroutine move_varstr_vs
+
+! This call moves data from varstr to varstr (src becomes null)
+subroutine move_varstr_varstr(src,dst)
+  type(varstr), intent(inout) :: src
+  type(varstr), intent(inout) :: dst
+  character, dimension(:), pointer :: tmpdata
+
+  tmpdata => dst%data
+  dst%data => src%data
+  src%data => tmpdata
+  dst%length = src%length
+
+  call set_varstr_null(src)
+end subroutine move_varstr_varstr
+
 
 ! Convert varstr to string type
 function str_varstr(vstr) result(s)

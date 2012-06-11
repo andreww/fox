@@ -78,6 +78,7 @@ contains
 #endif
 
     call init_varstr(fx%token)
+    call init_varstr(fx%content)
 
     call init_error_stack(fx%error_stack)
     call init_elstack(fx%elstack)
@@ -143,7 +144,7 @@ contains
     call destroy_entity_list(fx%predefined_e_list)
 
     call destroy_varstr(fx%token)
-    if (associated(fx%content)) deallocate(fx%content)
+    call destroy_varstr(fx%content)
     if (associated(fx%name)) deallocate(fx%name)
     if (associated(fx%attname)) deallocate(fx%attname)
     if (associated(fx%publicId)) deallocate(fx%publicId)
@@ -523,7 +524,7 @@ contains
           if (fx%state_dtd==ST_DTD_ATTLIST_CONTENTS &
             .or.fx%state_dtd==ST_DTD_ELEMENT_CONTENTS) then
             ! stick the token back in contents ...
-            call move_varstr_vs(fx%token,fx%content)
+            call move_varstr_varstr(fx%token,fx%content)
           endif
           if (reading_main_file(fb)) &
             fx%inIntSubset = .true.

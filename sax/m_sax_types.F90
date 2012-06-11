@@ -127,7 +127,7 @@ module m_sax_types
     logical :: well_formed = .false.
     logical :: skippedExternal = .false.
     type(varstr) :: token
-    character, dimension(:), pointer :: content => null()
+    type(varstr) :: content
     integer :: tokenType = TOK_NULL
     integer :: nextTokenType = TOK_NULL
     character, dimension(:), pointer :: name => null()

@@ -540,10 +540,10 @@ contains
           return
         elseif (fx%state_dtd==ST_DTD_ATTLIST_CONTENTS &
           .or.fx%state_dtd==ST_DTD_ELEMENT_CONTENTS) then
-          if (.not.associated(fx%content)) then
+          if (is_varstr_null(fx%content)) then
             ! content will not always be empty here;
             ! if we have two PErefs bang next to each other.
-            call move_varstr_vs(fx%token,fx%content)
+            call move_varstr_varstr(fx%token,fx%content)
           endif
           fx%tokenType = TOK_ENTITY
           return
@@ -781,26 +781,24 @@ contains
         
       case (ST_DTD_ELEMENT_CONTENTS)
         if (c==">") then
-          if (associated(fx%content)) then
-            call varstr_vs(fx%token,fx%content)
-            fx%content => null()
+          if (.not.is_varstr_null(fx%content)) then
+            call move_varstr_varstr(fx%content,fx%token)
           endif
           fx%tokenType = TOK_DTD_CONTENTS
           fx%nextTokenType = TOK_END_TAG
         else
-          if (associated(fx%content)) then
-            call varstr_vs(fx%token,fx%content)
+          if (.not.is_varstr_null(fx%content)) then
+            call move_varstr_varstr(fx%content,fx%token)
             call append_varstr(fx%token, c)
-            deallocate(fx%content)
           else
             call append_varstr(fx%token, c)
           endif
           if (c=="(") then
             fx%tokenType = TOK_OPEN_PAR
-            call move_varstr_vs(fx%token,fx%content)
+            call move_varstr_varstr(fx%token,fx%content)
           elseif (c==")") then
             fx%tokenType = TOK_CLOSE_PAR
-            call move_varstr_vs(fx%token,fx%content)
+            call move_varstr_varstr(fx%token,fx%content)
           endif
         endif
 
@@ -808,10 +806,9 @@ contains
         if (c==">") then
           fx%tokenType = TOK_DTD_CONTENTS
           fx%nextTokenType = TOK_END_TAG
-        elseif (associated(fx%content)) then
-          call varstr_vs(fx%token,fx%content)
+        elseif (.not.is_varstr_null(fx%content)) then
+          call move_varstr_varstr(fx%content,fx%token)
           call append_varstr(fx%token, c)
-          deallocate(fx%content)
         else
           call append_varstr( fx%token, c )
         endif
