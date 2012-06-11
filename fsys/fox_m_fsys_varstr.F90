@@ -19,6 +19,7 @@ module fox_m_fsys_varstr
   public :: varstr_str
   public :: varstr_vs
   public :: equal_varstr_str
+  public :: equal_varstr_varstr
 
   ! Allocation step in which the data within varstr will be allocated
   integer, parameter :: VARSTR_INIT_SIZE=1024
@@ -234,5 +235,20 @@ function equal_varstr_str(vstr,str) result(r)
   end do
   r = .true.
 end function equal_varstr_str
+
+! Compare varstr to varstr (true if equal)
+function equal_varstr_varstr(vstr1,vstr2) result(r)
+  type(varstr), intent(in) :: vstr1, vstr2
+  logical :: r
+
+  integer :: i
+
+  r = .false.
+  if ( varstr_len(vstr1) /= varstr_len(vstr2) ) return
+  do i=1,varstr_len(vstr1)
+    if ( vstr1%data(i) /= vstr2%data(i) ) return
+  end do
+  r = .true.
+end function equal_varstr_varstr
 
 end module fox_m_fsys_varstr

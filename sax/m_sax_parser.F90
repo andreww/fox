@@ -795,7 +795,7 @@ contains
           if (fx%context /= CTXT_IN_CONTENT) then
             if (.not.is_varstr_null(fx%root_element)) then
               if (validCheck) then
-                if (str_varstr(fx%name)/=str_varstr(fx%root_element)) then
+                if (.not.equal_varstr_varstr(fx%name,fx%root_element)) then
                   call add_error(fx%error_stack, "Root element name does not match document name")
                   goto 100
                 endif
@@ -827,7 +827,7 @@ contains
             ! only a single element in this doc
             if (.not.is_varstr_null(fx%root_element)) then
               if (validCheck) then
-                if (str_varstr(fx%name)/=str_varstr(fx%root_element)) then
+                if (.not.equal_varstr_varstr(fx%name,fx%root_element)) then
                   call add_error(fx%error_stack, "Root element name does not match document name")
                   goto 100
                 endif
@@ -1196,9 +1196,9 @@ contains
         !write(*,*) 'ST_DOC_NAME ', str_varstr(fx%token)
         select case (fx%tokenType)
         case (TOK_NAME)
-          if (str_varstr(fx%token)=='SYSTEM') then
+          if (equal_varstr_str(fx%token,'SYSTEM')) then
             nextState = ST_DOC_SYSTEM
-          elseif (str_varstr(fx%token)=='PUBLIC') then
+          elseif (equal_varstr_str(fx%token,'PUBLIC')) then
             nextState = ST_DOC_PUBLIC
           endif
         case (TOK_OPEN_SB)
