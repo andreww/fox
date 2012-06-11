@@ -84,6 +84,7 @@ contains
     call init_varstr(fx%PublicId)
     call init_varstr(fx%systemId)
     call init_varstr(fx%Ndata)
+    call init_varstr(fx%root_element)
 
     call init_error_stack(fx%error_stack)
     call init_elstack(fx%elstack)
@@ -131,8 +132,7 @@ contains
     fx%state = ST_NULL
 
     call destroy_varstr(fx%token)
-
-    if (associated(fx%root_element)) deallocate(fx%root_element)
+    call destroy_varstr(fx%root_element)
 
     call destroy_error_stack(fx%error_stack)
     call destroy_elstack(fx%elstack)
@@ -155,6 +155,7 @@ contains
     call destroy_varstr(fx%publicId)
     call destroy_varstr(fx%systemId)
     call destroy_varstr(fx%Ndata)
+    call destroy_varstr(fx%root_element)
 
   end subroutine sax_parser_destroy
 
@@ -594,7 +595,7 @@ contains
         case (TOK_OPEN_COMMENT)
           nextState = ST_START_COMMENT
         case (TOK_NAME)
-          if (str_varstr(fx%token)=='DOCTYPE') then
+          if (equal_varstr_str(fx%token,'DOCTYPE')) then
             fx%context = CTXT_IN_DTD
             nextState = ST_IN_DOCTYPE
           endif
@@ -611,7 +612,7 @@ contains
             nameOk = checkName(str_varstr(fx%token), fx%xds%xml_version)
           endif
           if (nameOk) then
-            if (str_varstr(fx%token)=='xml') then
+            if (equal_varstr_str(fx%token,'xml')) then
               call add_error(fx%error_stack, "XML declaration must be at start of document")
               goto 100
             elseif (checkPITarget(str_varstr(fx%token), fx%xds%xml_version)) then
@@ -729,7 +730,7 @@ contains
         !write(*,*) "ST_START_CDATA_DECLARATION"
         select case (fx%tokenType)
         case (TOK_NAME)
-          if (str_varstr(fx%token)=="CDATA") then
+          if (equal_varstr_str(fx%token,"CDATA")) then
             if (fx%context/=CTXT_IN_CONTENT) then
               call add_error(fx%error_stack, "CDATA section only allowed in text content.")
               goto 100
@@ -792,14 +793,14 @@ contains
         select case (fx%tokenType)
         case (TOK_END_TAG)
           if (fx%context /= CTXT_IN_CONTENT) then
-            if (associated(fx%root_element)) then
+            if (.not.is_varstr_null(fx%root_element)) then
               if (validCheck) then
-                if (str_varstr(fx%name)/=str_vs(fx%root_element)) then
+                if (str_varstr(fx%name)/=str_varstr(fx%root_element)) then
                   call add_error(fx%error_stack, "Root element name does not match document name")
                   goto 100
                 endif
               endif
-              deallocate(fx%root_element)
+              call set_varstr_null(fx%root_element)
             elseif (validCheck) then
               call add_error(fx%error_stack, "No DTD defined")
               goto 100
@@ -824,14 +825,14 @@ contains
             nextState = ST_CHAR_IN_CONTENT
           else
             ! only a single element in this doc
-            if (associated(fx%root_element)) then
+            if (.not.is_varstr_null(fx%root_element)) then
               if (validCheck) then
-                if (str_varstr(fx%name)/=str_vs(fx%root_element)) then
+                if (str_varstr(fx%name)/=str_varstr(fx%root_element)) then
                   call add_error(fx%error_stack, "Root element name does not match document name")
                   goto 100
                 endif
               endif
-              deallocate(fx%root_element)
+              call set_varstr_null(fx%root_element)
             elseif (validCheck) then
               call add_error(fx%error_stack, "No DTD defined")
               goto 100
@@ -1187,7 +1188,7 @@ contains
             call add_error(fx%error_stack, "Invalid document name")
             goto 100
           endif
-          call move_varstr_vs(fx%token,fx%root_element)
+          call move_varstr_varstr(fx%token,fx%root_element)
           nextState = ST_DOC_NAME
         end select
 
@@ -1202,7 +1203,7 @@ contains
           endif
         case (TOK_OPEN_SB)
           if (present(startDTD_handler)) then
-            call startDTD_handler(str_vs(fx%root_element), "", "")
+            call startDTD_handler(str_varstr(fx%root_element), "", "")
             if (fx%state==ST_STOP) goto 100
           endif
           wf_stack(1) = wf_stack(1) + 1
@@ -1210,7 +1211,7 @@ contains
           fx%inIntSubset = .true.
         case (TOK_END_TAG)
           if (present(startDTD_handler)) then
-            call startDTD_handler(str_vs(fx%root_element), "", "")
+            call startDTD_handler(str_varstr(fx%root_element), "", "")
             if (fx%state==ST_STOP) goto 100
           endif
           wf_stack(1) = wf_stack(1) - 1
@@ -1251,13 +1252,13 @@ contains
         case (TOK_OPEN_SB)
           if (present(startDTD_handler)) then
             if (.not.is_varstr_null(fx%publicId)) then
-              call startDTD_handler(str_vs(fx%root_element), &
+              call startDTD_handler(str_varstr(fx%root_element), &
                 publicId=str_varstr(fx%publicId), systemId=str_varstr(fx%systemId))
             elseif (.not.is_varstr_null(fx%systemId)) then
-              call startDTD_handler(str_vs(fx%root_element), &
+              call startDTD_handler(str_varstr(fx%root_element), &
                 publicId="", systemId=str_varstr(fx%systemId))
             else
-              call startDTD_handler(str_vs(fx%root_element), "", "")
+              call startDTD_handler(str_varstr(fx%root_element), "", "")
             endif
             if (fx%state==ST_STOP) goto 100
           endif
@@ -1272,12 +1273,12 @@ contains
         case (TOK_END_TAG)
           if (present(startDTD_handler)) then
             if (.not.is_varstr_null(fx%publicId)) then
-              call startDTD_handler(str_vs(fx%root_element), publicId=str_varstr(fx%publicId), systemId=str_varstr(fx%systemId))
+              call startDTD_handler(str_varstr(fx%root_element), publicId=str_varstr(fx%publicId), systemId=str_varstr(fx%systemId))
               call set_varstr_null(fx%publicId)
             elseif (.not.is_varstr_null(fx%systemId)) then
-              call startDTD_handler(str_vs(fx%root_element), publicId="", systemId=str_varstr(fx%systemId))
+              call startDTD_handler(str_varstr(fx%root_element), publicId="", systemId=str_varstr(fx%systemId))
             else
-              call startDTD_handler(str_vs(fx%root_element), "", "")
+              call startDTD_handler(str_varstr(fx%root_element), "", "")
             endif
             if (fx%state==ST_STOP) goto 100
           endif
@@ -1609,13 +1610,13 @@ contains
         case (TOK_OPEN_COMMENT)
           nextDTDState = ST_DTD_START_COMMENT
         case (TOK_NAME)
-          if (str_varstr(fx%token)=='ATTLIST') then
+          if (equal_varstr_str(fx%token,'ATTLIST')) then
             nextDTDState = ST_DTD_ATTLIST
-          elseif (str_varstr(fx%token)=='ELEMENT') then
+          elseif (equal_varstr_str(fx%token,'ELEMENT')) then
             nextDTDState = ST_DTD_ELEMENT
-          elseif (str_varstr(fx%token)=='ENTITY') then
+          elseif (equal_varstr_str(fx%token,'ENTITY')) then
             nextDTDState = ST_DTD_ENTITY
-          elseif (str_varstr(fx%token)=='NOTATION') then
+          elseif (equal_varstr_str(fx%token,'NOTATION')) then
             nextDTDState = ST_DTD_NOTATION
           endif
         end select
@@ -1624,7 +1625,7 @@ contains
         !write(*,*) "ST_DTD_START_SECTION_DECL"
         select case (fx%tokenType)
         case (TOK_NAME)
-          if (str_varstr(fx%token)=="IGNORE") then
+          if (equal_varstr_str(fx%token,"IGNORE")) then
             if (fx%context/=CTXT_IN_DTD.or.reading_main_file(fb)) then
               call add_error(fx%error_stack, "IGNORE section only allowed in external subset.")
               return
@@ -1633,7 +1634,7 @@ contains
               fx%context = CTXT_IGNORE
               nextDTDState = ST_DTD_FINISH_SECTION_DECL
             endif
-          elseif (str_varstr(fx%token)=="INCLUDE") then
+          elseif (equal_varstr_str(fx%token,"INCLUDE")) then
             if (fx%context/=CTXT_IN_DTD.or.reading_main_file(fb)) then
               call add_error(fx%error_stack, "INCLUDE section only allowed in external subset.")
               return
@@ -1688,7 +1689,7 @@ contains
             nameOk = checkName(str_varstr(fx%token), fx%xds%xml_version)
           endif
           if (nameOk) then
-            if (str_varstr(fx%token)=='xml') then
+            if (equal_varstr_str(fx%token,'xml')) then
               call add_error(fx%error_stack, "XML declaration must be at start of document")
               return
             elseif (checkPITarget(str_varstr(fx%token), fx%xds%xml_version)) then
@@ -1977,7 +1978,7 @@ contains
         !write(*,*) 'ST_DTD_ENTITY'
         select case (fx%tokenType)
         case (TOK_NAME)
-          if (str_varstr(fx%token)=="%") then
+          if (equal_varstr_str(fx%token,"%")) then
             pe = .true.
             ! this will be a PE
             nextDTDState = ST_DTD_ENTITY_PE
@@ -2020,9 +2021,9 @@ contains
         !write(*,*) 'ST_DTD_ENTITY_ID'
         select case (fx%tokenType)
         case (TOK_NAME)
-          if (str_varstr(fx%token) == "PUBLIC") then
+          if (equal_varstr_str(fx%token,"PUBLIC")) then
             nextDTDState = ST_DTD_ENTITY_PUBLIC
-          elseif (str_varstr(fx%token) == "SYSTEM") then
+          elseif (equal_varstr_str(fx%token,"SYSTEM")) then
             nextDTDState = ST_DTD_ENTITY_SYSTEM
           else
             call add_error(fx%error_stack, "Unexpected token in ENTITY")
@@ -2102,7 +2103,7 @@ contains
           call set_varstr_null(fx%Ndata)
           nextDTDState = ST_DTD_SUBSET
         case (TOK_NAME)
-          if (str_varstr(fx%token)=='NDATA') then
+          if (equal_varstr_str(fx%token,'NDATA')) then
             if (pe) then
               call add_error(fx%error_stack, "Parameter entity cannot have NDATA declaration")
               return
@@ -2190,9 +2191,9 @@ contains
         !write(*,*)'ST_DTD_NOTATION_ID'
         select case (fx%tokenType)
         case (TOK_NAME)
-          if (str_varstr(fx%token)=='SYSTEM') then
+          if (equal_varstr_str(fx%token,'SYSTEM')) then
             nextDTDState = ST_DTD_NOTATION_SYSTEM
-          elseif (str_varstr(fx%token)=='PUBLIC') then
+          elseif (equal_varstr_str(fx%token,'PUBLIC')) then
             nextDTDState = ST_DTD_NOTATION_PUBLIC
           else
             call add_error(fx%error_stack, "Unexpected token after NOTATION")
