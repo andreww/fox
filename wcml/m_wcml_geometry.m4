@@ -9,8 +9,8 @@ define(`TOHWM4_geometry_subs', `dnl
 
 #ifndef DUMMYLIB
     call xml_NewElement(xf, "length")
-    call xml_AddAttribute(xf, "id", id)
-    call xml_AddAttribute(xf, "atomRefs2", atomRef1//" "//atomRef2)
+    call xml_AddAttribute(xf, "id", trim(id))
+    call xml_AddAttribute(xf, "atomRefs2", trim(atomRef1)//" "//trim(atomRef2))
     call xml_AddCharacters(xf, length, fmt)
     call xml_EndElement(xf, "length")
 #endif
@@ -28,8 +28,8 @@ define(`TOHWM4_geometry_subs', `dnl
 
 #ifndef DUMMYLIB
     call xml_NewElement(xf, "angle")
-    call xml_AddAttribute(xf, "id", id)
-    call xml_AddAttribute(xf, "atomRefs3", atomRef1//" "//atomRef2//" "//atomRef3)
+    call xml_AddAttribute(xf, "id", trim(id))
+    call xml_AddAttribute(xf, "atomRefs3", trim(atomRef1)//" "//trim(atomRef2)//" "//trim(atomRef3))
     call xml_AddCharacters(xf, angle, fmt)
     call xml_EndElement(xf, "angle")
 #endif
@@ -48,9 +48,9 @@ define(`TOHWM4_geometry_subs', `dnl
 
 #ifndef DUMMYLIB
     call xml_NewElement(xf, "torsion")
-    call xml_AddAttribute(xf, "id", id)
+    call xml_AddAttribute(xf, "id", trim(id))
     call xml_AddAttribute(xf, "atomRefs4", &
-         atomRef1//" "//atomRef2//" "//atomRef3//" "//atomRef4)
+         trim(atomRef1)//" "//trim(atomRef2)//" "//trim(atomRef3)//" "//trim(atomRef4))
     call xml_AddCharacters(xf, torsion, fmt)
     call xml_EndElement(xf, "torsion")
 #endif

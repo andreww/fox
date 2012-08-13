@@ -33,8 +33,8 @@ define(`TOHWM4_writeatom', `
       call xml_AddAttribute(xf, "elementType", trim(elements(i)))
       call cmlAddCoords(xf, coords=$1, style=style, fmt=fmt)
       if (present(occupancies)) call xml_AddAttribute(xf, "occupancy", occupancies(i))
-      if (present(atomRefs)) call xml_AddAttribute(xf, "ref", atomRefs(i))
-      if (present(atomIds)) call xml_AddAttribute(xf, "id", atomIds(i))
+      if (present(atomRefs)) call xml_AddAttribute(xf, "ref", trim(atomRefs(i)))
+      if (present(atomIds)) call xml_AddAttribute(xf, "id", trim(atomIds(i)))
       call xml_EndElement(xf, "atom")
      enddo
 ')dnl
@@ -45,8 +45,8 @@ define(`TOHWM4_writeparticle', `
       if (present(elements)) call xml_AddAttribute(xf, "elementType", trim(elements(i)))
       call cmlAddCoords(xf, coords=$1, style=style, fmt=fmt)
       if (present(occupancies)) call xml_AddAttribute(xf, "occupancy", occupancies(i))
-      if (present(atomRefs)) call xml_AddAttribute(xf, "ref", atomRefs(i))
-      if (present(atomIds)) call xml_AddAttribute(xf, "id", atomIds(i))
+      if (present(atomRefs)) call xml_AddAttribute(xf, "ref", trim(atomRefs(i)))
+      if (present(atomIds)) call xml_AddAttribute(xf, "id", trim(atomIds(i)))
       call xml_EndElement(xf, "particle")
      enddo
 ')dnl
@@ -718,10 +718,10 @@ TOHWM4_molecule_subs(`dp')
     call xml_NewElement(xf, "bondArray")
        do i = 1, nbonds
          call xml_NewElement(xf, "bond")
-             call xml_AddAttribute(xf, "atomRefs2", atom1Refs(i)//" "//atom2Refs(i))
+             call xml_AddAttribute(xf, "atomRefs2", trim(atom1Refs(i))//" "//trim(atom2Refs(i)))
              call xml_AddAttribute(xf, "order", orders(i))
              if (present(bondIds)) & 
-               call xml_AddAttribute(xf, "id", bondIds(i)) 
+               call xml_AddAttribute(xf, "id", trim(bondIds(i))) 
          call xml_EndElement(xf, "bond")
        enddo 
     call xml_EndElement(xf, "bondArray")
@@ -754,15 +754,15 @@ TOHWM4_molecule_subs(`dp')
       call FoX_error("Length of atomRef arrays must match in WCML checkBondIdRefs")
 
     do i = 1, nbonds
-      if (bondAtom1Refs(i).eq.bondAtom2Refs(i)) &
+      if (trim(bondAtom1Refs(i)).eq.trim(bondAtom2Refs(i))) &
         call FoX_error("The two atomRefs in a bond must be different")
       bond1OK = .false.
       bond2OK = .false.
       do j = 1, natoms
-        if (bondAtom1Refs(i).eq.atomArrayIds(j)) &
+        if (trim(bondAtom1Refs(i)).eq.trim(atomArrayIds(j))) &
           bond1OK = .true.
           atom1num = j
-        if (bondAtom2Refs(i).eq.atomArrayIds(j)) &
+        if (trim(bondAtom2Refs(i)).eq.trim(atomArrayIds(j))) &
           bond2OK = .true.
           atom2num = j
         if (bond1OK.and.bond2OK) exit

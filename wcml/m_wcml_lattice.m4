@@ -19,7 +19,7 @@ define(`TOHWM4_lattice_subs', `dnl
 
 #ifndef DUMMYLIB
     call xml_NewElement(xf=xf, name="crystal")
-    if (present(id))      call xml_AddAttribute(xf, "id", id)
+    if (present(id))      call xml_AddAttribute(xf, "id", trim(id))
     if (present(title))   call xml_AddAttribute(xf, "title", title)
     if (present(dictref)) call xml_AddAttribute(xf, "dictRef", dictRef)
     if (present(convention)) call xml_AddAttribute(xf, "convention", convention)
@@ -73,7 +73,7 @@ define(`TOHWM4_lattice_subs', `dnl
     integer :: i
 
     call xml_NewElement(xf, "lattice")
-    if (present(id)) call xml_AddAttribute(xf, "id", id)
+    if (present(id)) call xml_AddAttribute(xf, "id", trim(id))
     if (present(title)) call xml_AddAttribute(xf, "title", title)
     if (present(dictref)) call xml_AddAttribute(xf, "dictRef", dictref)
     if (present(convention)) call xml_AddAttribute(xf, "convention", convention)
