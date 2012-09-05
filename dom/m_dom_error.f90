@@ -8,7 +8,6 @@ module m_dom_error
   private
 
   type DOMException
-    private
     type(error_stack) :: stack
   end type DOMException
 
