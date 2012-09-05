@@ -169,7 +169,7 @@ TOHW_m_dom_contents(`
     endif
 
 ! Switch off all GC - since this is GC!
-    call setGCstate(arg, .false.)
+    call setGCstate(arg, .false., ex)
 
     if (arg%nodeType/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
@@ -189,9 +189,12 @@ TOHW_m_dom_contents(`
     if (associated(arg%docExtras%hangingNodes%nodes)) deallocate(arg%docExtras%hangingNodes%nodes)
 
     call destroy_xml_doc_state(arg%docExtras%xds)
-    deallocate(arg%docExtras%xds)
-    deallocate(arg%docExtras%domConfig)
-    deallocate(arg%docExtras)
+    if (present(ex)) then
+      if (inException(ex)) return
+    endif
+    if (associated(arg%docExtras%xds))       deallocate(arg%docExtras%xds)
+    if (associated(arg%docExtras%domConfig)) deallocate(arg%docExtras%domConfig)
+    if (associated(arg%docExtras))           deallocate(arg%docExtras)
 
     call destroyAllNodesRecursively(arg, except=.true.)
 

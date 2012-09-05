@@ -1219,7 +1219,7 @@ dnl subroutine normalizeDocument - see m_dom_namespaces.m4
 
     if (getNodeType(arg)/=DOCUMENT_NODE) then
       TOHW_m_dom_throw_error(FoX_INVALID_NODE)
-    elseif (.not.associated(arg, getOwnerDocument(n))) then
+    elseif (.not.associated(getOwnerDocument(n), target=arg)) then
       TOHW_m_dom_throw_error(WRONG_DOCUMENT_ERR)
     elseif (.not.checkName(qualifiedName, getXmlVersionEnum(arg))) then
       TOHW_m_dom_throw_error(INVALID_CHARACTER_ERR)

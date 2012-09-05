@@ -169,13 +169,13 @@ TOHW_m_dom_contents(`
 
     select case(np%nodeType)
     case (ELEMENT_NODE, ATTRIBUTE_NODE, XPATH_NAMESPACE_NODE)
-      call destroyElementOrAttribute(np)
+      call destroyElementOrAttribute(np,ex)
     case (DOCUMENT_TYPE_NODE)
-      call destroyDocumentType(np)
+      call destroyDocumentType(np,ex)
     case (ENTITY_NODE, NOTATION_NODE)
-      call destroyEntityOrNotation(np)
+      call destroyEntityOrNotation(np,ex)
     case (DOCUMENT_NODE)
-      call destroyDocument(np)
+      call destroyDocument(np,ex)
     end select
     call destroyNodeContents(np)
     deallocate(np)
