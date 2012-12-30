@@ -376,9 +376,11 @@ contains
         elseif (phrase==1) then
           call append_varstr( fx%token, ']' )
           call append_varstr( fx%token, c )
+          phrase = 0
         elseif (phrase==2) then
           call append_varstr( fx%token, ']]' )
           call append_varstr( fx%token, c )
+          phrase = 0
         else
           call append_varstr( fx%token, c )
         endif
