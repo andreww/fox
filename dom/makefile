@@ -38,6 +38,7 @@ install: $(OBJFILES)
            $(CP) $$i $(MOD_DIR); done
 #
 check:
+	(cd test; make) | tee -a ../dom_lib_check.out
 	
 clean:
 	rm -f *.$(OBJEXT)  *.$(MOD_EXT) $(LIBRARY)

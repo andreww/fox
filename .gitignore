@@ -33,6 +33,7 @@ wxml/test/*.score
 wcml/test/*.score
 wkml/test/*.score
 sax/test/*.score
+dom/test/*.score
 common/test/failed.out
 common/test/test.out
 common/test/tests.out
@@ -41,6 +42,9 @@ utils/test/test.out
 utils/test/tests.out
 sax/test/test.out
 sax/test/tests.out
+dom/test/test.out
+dom/test/test.xml
+dom/test/tests.out
 wcml/test/test.out
 wcml/test/test.xml
 wcml/test/tests.out
