@@ -188,7 +188,11 @@ module m_wcml_inputdec
                     call FoX_error("Error reading file in wcmlDumpDec")
                 endif
             else
-                call wcmlAddDecLine(xf, this_line)
+                if (trim_lines) then 
+                    call wcmlAddDecLine(xf, trim(this_line))
+                else
+                    call wcmlAddDecLine(xf, this_line)
+                endif
             endif
         enddo
 
@@ -214,7 +218,7 @@ module m_wcml_inputdec
         if (xmlf_GetExtendedData(xf).ne.20) then
             call FoX_error("wcmlDumpDec must only be used in CompChem mode.")
         endif
-        call cmlStartModule(xf, id=id, dictRef='compchem:inputFileList')
+        call cmlStartModule(xf, title=title, id=id, dictRef='compchem:inputFileList')
 #endif
     end subroutine wcmlStartDecList
 

@@ -9,7 +9,7 @@ program test
   call cmlBeginFile(xf, filename, unit=-1)
   call cmlStartCml(xf, compchem=.true.)
   call wcmlDumpDec(xf, (/'test_cmlDumpDec_4a.in', &
-       'test_cmlDumpDec_4b.in'/), (/80, 80/), (/.true., .true./))
+       'test_cmlDumpDec_4b.in'/), (/80, 80/), (/.false., .false./))
 
   call cmlFinishFile(xf)
 

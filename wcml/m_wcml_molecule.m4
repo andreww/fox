@@ -747,6 +747,8 @@ TOHWM4_molecule_subs(`dp')
       if (nobondcheck) return ! skip all checks
     endif
 
+    atom1num = -1 ! Supress bogus gfortran warning
+    atom2num = -1
     bondmatrix = .false.
     natoms = size(atomArrayIds)
     nbonds = size(bondAtom1Refs)
