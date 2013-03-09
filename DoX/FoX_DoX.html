@@ -184,7 +184,7 @@ places.  If you move the FoX directory later on, you will need to re-run configu
 
 <p>To run them all, simply run <code>make check</code> from the top-level directory. This will run the individual testsuites, and collate their results.</p>
 
-<p>If any failures occur (unrelated to known compiler issues, see the <a href="http://github.com/andreww/fox/issues">up-to-date list</a>), please send a message to the mailing list (<a href="&#x6D;&#x61;&#x69;&#x6C;&#x74;&#x6F;:&#x66;&#x6F;&#120;&#x2D;&#100;&#x69;&#x73;&#99;&#117;s&#115;&#64;&#x67;o&#111;&#x67;&#108;&#x65;&#x67;&#114;&#111;&#x75;&#112;&#115;&#x2E;c&#x6F;&#109;">&#x66;&#x6F;&#120;&#x2D;&#100;&#x69;&#x73;&#99;&#117;s&#115;&#64;&#x67;o&#111;&#x67;&#108;&#x65;&#x67;&#114;&#111;&#x75;&#112;&#115;&#x2E;c&#x6F;&#109;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
+<p>If any failures occur (unrelated to known compiler issues, see the <a href="http://github.com/andreww/fox/issues">up-to-date list</a>), please send a message to the mailing list (<a href="&#x6D;&#97;&#x69;&#108;&#116;o:&#102;&#x6F;&#120;-&#x64;&#105;&#115;&#x63;&#x75;&#115;&#x73;&#64;&#103;&#111;&#x6F;&#x67;&#x6C;&#x65;&#x67;&#114;&#111;&#x75;&#x70;&#x73;&#46;co&#x6D;">&#102;&#x6F;&#120;-&#x64;&#105;&#115;&#x63;&#x75;&#115;&#x73;&#64;&#103;&#111;&#x6F;&#x67;&#x6C;&#x65;&#x67;&#114;&#111;&#x75;&#x70;&#x73;&#46;co&#x6D;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
 
 <p>The testsuites for the SAX and DOM libraries are very extensive, and are somewhat fragile, so are not distributed with FoX. Please contact the author for details.</p>
 
@@ -1092,7 +1092,8 @@ document where pretty printing the output may change the meaning under one of th
 
 <p>WCML is a library for outputting <a href="http://www.xml-cml.org">CML</a> data. It wraps all the necessary XML calls, such that you should never need to touch any <a href="#FoX_wxml">WXML</a> calls when outputting CML.</p>
 
-<p>The CML output is conformant to version 2.4 of the CML schema.</p>
+<p>The CML output is conformant to version 2.4 of the CML schema. The output
+can also be made conformant to the CompChem convention.</p>
 
 <p>The available functions and their intended use are listed below. Quite deliberately, no reference is made to the actual CML output by each function. </p>
 
@@ -1513,6 +1514,81 @@ Attempts to do otherwise will result in a runtime error.</p>
 </ul>
 
 <p>Add a phononic eigenpoint to the band - which has a single energy, and a 3xN matrix representing the eigenvector.</p>
+
+<h2>Echoing input files</h2>
+
+<p>It is often considered useful to include a direct representation of
+input data within an applications output files. FoX_wcml contains a
+number of procedures to allow this in a CML document based on a specification
+described in a manuscript currently in review (de Jong, Walker and Hanwell 
+"From Data to Analysis: Linking NWChem and Avogadro with the Syntax and 
+Semantics of Chemical Markup Language". 
+The approach is also designed to make data recovery using an 
+XSL transform straightforward. File metadata such as the 
+original filename is also accessible. We assume that only ASCII 
+data must be stored, arbitrary binary files are 
+out of scope as are XML documents and non-ASCII textural data.
+Two methods are provided with the 
+most appropriate being dependent on the design of the application.</p>
+
+<h3>Using file names</h3>
+
+<ul>
+<li><code>cmlDumpDec</code>
+<strong>inputDec</strong>: <em>string</em> <em>scalar</em> or <em>array</em> file name(s) to be used
+<strong>line<em>lengths</strong>: *integer* *scalar* or *array* miximum number of characters per line
+<strong>trim</em>lines</strong>: <em>logical</em> <em>scalar</em> or <em>array</em> should tralining whitespace be removed?
+(<strong>iostat</strong>): <em>nteger</em> <em>scalar</em> output argument indicating errors.</li>
+</ul>
+
+<p>In the this approach the single subroutine, <code>cmlDumpInputDec</code>, is called 
+with an array of file names as input arguments. In turn each file is 
+opened, its contents are written to the CML document in the appropriate 
+form, before the file is closed. </p>
+
+<h3>Line by line</h3>
+
+<ul>
+<li><code>cmlStartDecList</code></li>
+</ul>
+
+<p>Start an outer wrapper for input data.</p>
+
+<ul>
+<li><code>cmlEndDecList</code></li>
+</ul>
+
+<p>End the outer wrapper.</p>
+
+<ul>
+<li><code>cmlStartDec</code>
+<strong>filename</strong>: <em>string</em> <em>scalar</em> file name to be used</li>
+</ul>
+
+<p>Start a wrapper for a single "file" or similar concept.</p>
+
+<ul>
+<li><code>cmlEndDec</code></li>
+</ul>
+
+<p>End the file wrapper.</p>
+
+<ul>
+<li><code>cmlAddDecLine</code>
+<strong>text</strong>: <em>string</em> <em>scalar</em> A line of text from an input file to add</li>
+</ul>
+
+<p>Put a line of text into the file wrapper.</p>
+
+<p>The convoluted nature of file handling 
+in Fortran combined with the way that some applications read their input 
+data means that this approach is not always available (for example, if 
+the input file is held open for the duration of the calculation, or if 
+data is read from standard input) so an alternative interface with five 
+subroutines (<code>cmlStartDecList</code>, <code>cmlStartDec</code>, 
+<code>cmlAddDecLine</code>, <code>cmlEndDec</code> and <code>cmlEndDecList</code>) 
+is provided. These must be called in order (and usually in two loops, 
+one over files, and an inner loop over lines in each file).</p>
 
 <h2>Common arguments</h2>
 
@@ -3699,9 +3775,9 @@ Return the value of the fragment</p></li>
 <h1>Further information</h1>
 
 <p>FoX evolved from the initial codebase of <a href="http://lcdx00.wm.lc.ehu.es/ag/xml/">xmlf90</a>,
-which was written largely by Alberto Garcia &lt;<a href="&#109;&#97;&#105;&#108;&#116;&#x6F;:&#97;&#x6C;&#x62;e&#x72;&#116;&#x6F;&#103;&#64;i&#x63;&#109;&#x61;&#98;&#x2E;&#101;&#115;">&#97;&#x6C;&#x62;e&#x72;&#116;&#x6F;&#103;&#64;i&#x63;&#109;&#x61;&#98;&#x2E;&#101;&#115;</a>> and Jon Wakelin &lt;<a href="ma&#x69;&#x6C;&#x74;&#111;:&#106;&#x6F;&#110;&#x2E;&#119;&#97;&#x6B;&#101;&#108;&#105;&#x6E;&#64;&#x62;r&#105;&#x73;t&#111;&#108;.&#x61;&#99;&#x2E;&#117;&#107;">&#106;&#x6F;&#110;&#x2E;&#119;&#97;&#x6B;&#101;&#108;&#105;&#x6E;&#64;&#x62;r&#105;&#x73;t&#111;&#108;.&#x61;&#99;&#x2E;&#117;&#107;</a>>.</p>
+which was written largely by Alberto Garcia &lt;<a href="&#x6D;&#x61;&#105;&#x6C;&#x74;&#x6F;:&#x61;&#x6C;&#98;&#101;&#114;&#x74;o&#103;&#64;&#105;&#x63;&#x6D;&#x61;&#98;&#x2E;&#101;&#x73;">&#x61;&#x6C;&#98;&#101;&#114;&#x74;o&#103;&#64;&#105;&#x63;&#x6D;&#x61;&#98;&#x2E;&#101;&#x73;</a>> and Jon Wakelin &lt;<a href="&#109;&#x61;&#x69;&#x6C;t&#111;:&#x6A;&#x6F;&#x6E;&#46;&#x77;&#x61;&#x6B;&#101;&#108;&#x69;&#x6E;&#64;&#x62;&#x72;&#x69;&#x73;&#x74;&#x6F;&#108;&#46;&#x61;&#x63;&#46;&#117;&#x6B;">&#x6A;&#x6F;&#x6E;&#46;&#x77;&#x61;&#x6B;&#101;&#108;&#x69;&#x6E;&#64;&#x62;&#x72;&#x69;&#x73;&#x74;&#x6F;&#108;&#46;&#x61;&#x63;&#46;&#117;&#x6B;</a>>.</p>
 
-<p>FoX is the work of Toby White &lt;<a href="&#x6D;&#97;&#105;&#108;&#116;&#x6F;:&#116;&#x6F;&#x77;&#64;&#117;&#115;&#x7A;l&#97;&#46;&#x6D;&#x65;&#46;&#117;&#x6B;">&#116;&#x6F;&#x77;&#64;&#117;&#115;&#x7A;l&#97;&#46;&#x6D;&#x65;&#46;&#117;&#x6B;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him. Andrew Walker &lt;<a href="&#x6D;&#x61;&#x69;&#108;&#x74;&#111;:&#x61;&#110;&#100;&#x72;e&#x77;.&#119;&#x61;&#108;&#x6B;&#x65;&#114;&#64;&#98;&#x72;&#x69;&#x73;&#116;o&#x6C;&#x2E;&#x61;&#x63;&#46;u&#107;">&#x61;&#110;&#100;&#x72;e&#x77;.&#119;&#x61;&#108;&#x6B;&#x65;&#114;&#64;&#98;&#x72;&#x69;&#x73;&#116;o&#x6C;&#x2E;&#x61;&#x63;&#46;u&#107;</a>> currently looks after maintenance of FoX.</p>
+<p>FoX is the work of Toby White &lt;<a href="&#109;&#x61;&#105;&#x6C;&#x74;&#x6F;:&#x74;&#111;&#x77;&#64;&#x75;&#115;&#x7A;&#108;&#x61;&#46;&#x6D;&#101;.&#117;&#107;">&#x74;&#111;&#x77;&#64;&#x75;&#115;&#x7A;&#108;&#x61;&#46;&#x6D;&#101;.&#117;&#107;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him. Andrew Walker &lt;<a href="m&#x61;&#105;&#108;&#x74;&#111;:&#x61;&#x6E;&#x64;&#x72;&#101;&#x77;&#46;&#x77;&#97;&#108;&#107;&#101;&#x72;&#64;&#x62;&#114;&#105;&#x73;t&#111;l&#x2E;&#x61;&#99;&#x2E;&#x75;&#x6B;">&#x61;&#x6E;&#x64;&#x72;&#101;&#x77;&#46;&#x77;&#97;&#108;&#107;&#101;&#x72;&#64;&#x62;&#114;&#105;&#x73;t&#111;l&#x2E;&#x61;&#99;&#x2E;&#x75;&#x6B;</a>> currently looks after maintenance of FoX.</p>
 
 <p>There is a FoX website at <a href="http://www1.gly.bris.ac.uk/~walker/FoX/">http://www1.gly.bris.ac.uk/~walker/FoX/</a>.</p>
 

@@ -11,7 +11,8 @@
 
 <p>WCML is a library for outputting <a href="http://www.xml-cml.org">CML</a> data. It wraps all the necessary XML calls, such that you should never need to touch any <a href="FoX_wxml.html">WXML</a> calls when outputting CML.</p>
 
-<p>The CML output is conformant to version 2.4 of the CML schema.</p>
+<p>The CML output is conformant to version 2.4 of the CML schema. The output
+can also be made conformant to the CompChem convention.</p>
 
 <p>The available functions and their intended use are listed below. Quite deliberately, no reference is made to the actual CML output by each function. </p>
 
@@ -432,6 +433,81 @@ Attempts to do otherwise will result in a runtime error.</p>
 </ul>
 
 <p>Add a phononic eigenpoint to the band - which has a single energy, and a 3xN matrix representing the eigenvector.</p>
+
+<h2>Echoing input files</h2>
+
+<p>It is often considered useful to include a direct representation of
+input data within an applications output files. FoX_wcml contains a
+number of procedures to allow this in a CML document based on a specification
+described in a manuscript currently in review (de Jong, Walker and Hanwell 
+"From Data to Analysis: Linking NWChem and Avogadro with the Syntax and 
+Semantics of Chemical Markup Language". 
+The approach is also designed to make data recovery using an 
+XSL transform straightforward. File metadata such as the 
+original filename is also accessible. We assume that only ASCII 
+data must be stored, arbitrary binary files are 
+out of scope as are XML documents and non-ASCII textural data.
+Two methods are provided with the 
+most appropriate being dependent on the design of the application.</p>
+
+<h3>Using file names</h3>
+
+<ul>
+<li><code>cmlDumpDec</code>
+<strong>inputDec</strong>: <em>string</em> <em>scalar</em> or <em>array</em> file name(s) to be used
+<strong>line<em>lengths</strong>: *integer* *scalar* or *array* miximum number of characters per line
+<strong>trim</em>lines</strong>: <em>logical</em> <em>scalar</em> or <em>array</em> should tralining whitespace be removed?
+(<strong>iostat</strong>): <em>nteger</em> <em>scalar</em> output argument indicating errors.</li>
+</ul>
+
+<p>In the this approach the single subroutine, <code>cmlDumpInputDec</code>, is called 
+with an array of file names as input arguments. In turn each file is 
+opened, its contents are written to the CML document in the appropriate 
+form, before the file is closed. </p>
+
+<h3>Line by line</h3>
+
+<ul>
+<li><code>cmlStartDecList</code></li>
+</ul>
+
+<p>Start an outer wrapper for input data.</p>
+
+<ul>
+<li><code>cmlEndDecList</code></li>
+</ul>
+
+<p>End the outer wrapper.</p>
+
+<ul>
+<li><code>cmlStartDec</code>
+<strong>filename</strong>: <em>string</em> <em>scalar</em> file name to be used</li>
+</ul>
+
+<p>Start a wrapper for a single "file" or similar concept.</p>
+
+<ul>
+<li><code>cmlEndDec</code></li>
+</ul>
+
+<p>End the file wrapper.</p>
+
+<ul>
+<li><code>cmlAddDecLine</code>
+<strong>text</strong>: <em>string</em> <em>scalar</em> A line of text from an input file to add</li>
+</ul>
+
+<p>Put a line of text into the file wrapper.</p>
+
+<p>The convoluted nature of file handling 
+in Fortran combined with the way that some applications read their input 
+data means that this approach is not always available (for example, if 
+the input file is held open for the duration of the calculation, or if 
+data is read from standard input) so an alternative interface with five 
+subroutines (<code>cmlStartDecList</code>, <code>cmlStartDec</code>, 
+<code>cmlAddDecLine</code>, <code>cmlEndDec</code> and <code>cmlEndDecList</code>) 
+is provided. These must be called in order (and usually in two loops, 
+one over files, and an inner loop over lines in each file).</p>
 
 <h2>Common arguments</h2>
 

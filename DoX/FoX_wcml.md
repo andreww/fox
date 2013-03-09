@@ -2,7 +2,8 @@
 
 WCML is a library for outputting [CML](http://www.xml-cml.org) data. It wraps all the necessary XML calls, such that you should never need to touch any [WXML](|FoX_wxml|) calls when outputting CML.
 
-The CML output is conformant to version 2.4 of the CML schema.
+The CML output is conformant to version 2.4 of the CML schema. The output
+can also be made conformant to the CompChem convention.
 
 The available functions and their intended use are listed below. Quite deliberately, no reference is made to the actual CML output by each function. 
 
@@ -364,6 +365,69 @@ Add a list of eigenvalues for a kpoint
 (**vecfmt**): *string* *scalar* numerical formatting for the eigenvector
 
 Add a phononic eigenpoint to the band - which has a single energy, and a 3xN matrix representing the eigenvector.
+
+##Echoing input files
+
+It is often considered useful to include a direct representation of
+input data within an applications output files. FoX_wcml contains a
+number of procedures to allow this in a CML document based on a specification
+described in a manuscript currently in review (de Jong, Walker and Hanwell 
+"From Data to Analysis: Linking NWChem and Avogadro with the Syntax and 
+Semantics of Chemical Markup Language". 
+The approach is also designed to make data recovery using an 
+XSL transform straightforward. File metadata such as the 
+original filename is also accessible. We assume that only ASCII 
+data must be stored, arbitrary binary files are 
+out of scope as are XML documents and non-ASCII textural data.
+Two methods are provided with the 
+most appropriate being dependent on the design of the application.
+
+###Using file names
+
+* `cmlDumpDec`
+**inputDec**: *string* *scalar* or *array* file name(s) to be used
+**line_lengths**: *integer* *scalar* or *array* miximum number of characters per line
+**trim_lines**: *logical* *scalar* or *array* should tralining whitespace be removed?
+(**iostat**): *nteger* *scalar* output argument indicating errors.
+
+In the this approach the single subroutine, `cmlDumpInputDec`, is called 
+with an array of file names as input arguments. In turn each file is 
+opened, its contents are written to the CML document in the appropriate 
+form, before the file is closed. 
+
+###Line by line
+
+* `cmlStartDecList`
+
+Start an outer wrapper for input data.
+
+* `cmlEndDecList`
+
+End the outer wrapper.
+
+* `cmlStartDec`
+**filename**: *string* *scalar* file name to be used
+
+Start a wrapper for a single "file" or similar concept.
+
+* `cmlEndDec`
+
+End the file wrapper.
+
+* `cmlAddDecLine`
+**text**: *string* *scalar* A line of text from an input file to add
+
+Put a line of text into the file wrapper.
+
+The convoluted nature of file handling 
+in Fortran combined with the way that some applications read their input 
+data means that this approach is not always available (for example, if 
+the input file is held open for the duration of the calculation, or if 
+data is read from standard input) so an alternative interface with five 
+subroutines (`cmlStartDecList`, `cmlStartDec`, 
+`cmlAddDecLine`, `cmlEndDec` and `cmlEndDecList`) 
+is provided. These must be called in order (and usually in two loops, 
+one over files, and an inner loop over lines in each file).
 
 ##Common arguments
 
