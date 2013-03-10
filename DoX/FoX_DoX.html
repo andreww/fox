@@ -184,7 +184,7 @@ places.  If you move the FoX directory later on, you will need to re-run configu
 
 <p>To run them all, simply run <code>make check</code> from the top-level directory. This will run the individual testsuites, and collate their results.</p>
 
-<p>If any failures occur (unrelated to known compiler issues, see the <a href="http://github.com/andreww/fox/issues">up-to-date list</a>), please send a message to the mailing list (<a href="&#x6D;&#97;&#x69;&#108;&#116;o:&#102;&#x6F;&#120;-&#x64;&#105;&#115;&#x63;&#x75;&#115;&#x73;&#64;&#103;&#111;&#x6F;&#x67;&#x6C;&#x65;&#x67;&#114;&#111;&#x75;&#x70;&#x73;&#46;co&#x6D;">&#102;&#x6F;&#120;-&#x64;&#105;&#115;&#x63;&#x75;&#115;&#x73;&#64;&#103;&#111;&#x6F;&#x67;&#x6C;&#x65;&#x67;&#114;&#111;&#x75;&#x70;&#x73;&#46;co&#x6D;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
+<p>If any failures occur (unrelated to known compiler issues, see the <a href="http://github.com/andreww/fox/issues">up-to-date list</a>), please send a message to the mailing list (<a href="m&#97;&#x69;&#x6C;&#116;&#111;:&#102;&#111;&#x78;&#x2D;d&#105;&#115;&#99;&#x75;&#115;s&#64;&#103;o&#x6F;&#103;le&#103;&#114;&#111;&#x75;&#x70;s&#46;&#99;&#x6F;&#109;">&#102;&#111;&#x78;&#x2D;d&#105;&#115;&#99;&#x75;&#115;s&#64;&#103;o&#x6F;&#103;le&#103;&#114;&#111;&#x75;&#x70;s&#46;&#99;&#x6F;&#109;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
 
 <p>The testsuites for the SAX and DOM libraries are very extensive, and are somewhat fragile, so are not distributed with FoX. Please contact the author for details.</p>
 
@@ -208,7 +208,7 @@ places.  If you move the FoX directory later on, you will need to re-run configu
 
 <p>If it is called with no arguments, it will expand to compile &amp; link flags, thusly:</p>
 
-<pre><code>   f95 -o program program.f90 `FoX-config`
+<pre><code>f95 -o program program.f90 `FoX-config`
 </code></pre>
 
 <p>For compiling only against FoX, do the following:</p>
@@ -239,6 +239,86 @@ places.  If you move the FoX directory later on, you will need to re-run configu
 <p>Because this dummy version of FoX contains nothing except empty subroutines, it compiles and links with all known Fortran 95 compilers, regardless of compiler bugs.</p>
 
 <p>To compile the dummy code, use the <code>--enable-dummy</code> switch. Note that currently the dummy mode is not yet available for the DOM module.</p>
+
+<h2>Alternative build methods</h2>
+
+<p>The "-full" versions of FoX are also shipped with files
+to help compile the code on using other systems using CMake
+or from within Microsoft Visual Studio. Brief instructions for
+using these files are below.</p>
+
+<h3>CMake</h3>
+
+<p>CMake does not build software itself but generates makefiles or
+projectfiles (depending on the platform), that are then used to 
+compile the software, it should thus be a cross platform 
+method for building FoX (in theory at least).</p>
+
+<p>Files needed for building FoX with CMake are included in the 
+"-full" distribution. These can:</p>
+
+<ul>
+<li><p>do similar checks as current build tools to check for example how
+ABORT and FLUSH work,
+wether or not certain bugs in compilers are present,</p></li>
+<li><p>compile FoX into static libraries.</p></li>
+<li><p>generate Fortran files from m4 sources if m4 is present.</p></li>
+<li><p>do out-of-source build, does not interfere with current build system</p></li>
+<li><p>do a parallel build of fox (make -j)</p></li>
+</ul>
+
+<p>However, CMake cannot, at present, build the run the test suite or
+the packaging scripts used for release. To build FoX with CMake 
+the following is needed:</p>
+
+<ul>
+<li><p>CMake version >= 2.6.0</p></li>
+<li><p>usual build tools: fortran compiler, make, ld, ...</p></li>
+<li><p>m4 to generate fortran files from m4 sources (optional).</p></li>
+</ul>
+
+<p><strong>CMake Build instructions (linux):</strong> 
+Once you installed cmake, go to the main directory of fox
+and create a build directory, and from there, execute cmake thus:</p>
+
+<pre><code>cd fox/
+
+mkdir build/ &amp;&amp; cd build/
+
+cmake ../
+
+make -j
+</code></pre>
+
+<p>Libaries and module files can then be found in the subdirectories of build.</p>
+
+<h3>Windows</h3>
+
+<p>It is also possible to build FoX from within Microsoft Visual Studio
+and the file FoX.vfproj contains a Visual Studio project for Intel Fortran
+to simplify this process. At time of writing, it is compatible with 
+Visual Studio 2011 and Intel Visual Fortran Composer XE 2011.</p>
+
+<p>The project will build FoX in one of the four
+ configurations: Win32/x64 and debug/release.
+When building FoX for a specific configuration, 
+an output library file Fox_debug.lib or Fox.lib 
+and associated modules are created in a folder in 
+a relative path  ../lib or ../libx64 respectively.</p>
+
+<p>For a given configuration in in your application project
+you will then need to:</p>
+
+<ol>
+<li><p>In "Fortran" "General" "Additional Include Directories" add 
+the respective modules folder (generated above)</p></li>
+<li><p>In "Linker" "General" "Additional library directories" add the 
+path to the respective lib or libx64 folder.</p></li>
+<li><p>In "Linker" "Input" "Additional dependencies" add Fox_debug.lib 
+or FoX.lib respectively. </p></li>
+</ol>
+
+<p>Your application should now be able to build and link with FoX.</p>
 </div><hr/><div class="DoX">
 <a name="Embedding"/>
 <h1>Using FoX in your own project.</h1>
@@ -3775,9 +3855,9 @@ Return the value of the fragment</p></li>
 <h1>Further information</h1>
 
 <p>FoX evolved from the initial codebase of <a href="http://lcdx00.wm.lc.ehu.es/ag/xml/">xmlf90</a>,
-which was written largely by Alberto Garcia &lt;<a href="&#x6D;&#x61;&#105;&#x6C;&#x74;&#x6F;:&#x61;&#x6C;&#98;&#101;&#114;&#x74;o&#103;&#64;&#105;&#x63;&#x6D;&#x61;&#98;&#x2E;&#101;&#x73;">&#x61;&#x6C;&#98;&#101;&#114;&#x74;o&#103;&#64;&#105;&#x63;&#x6D;&#x61;&#98;&#x2E;&#101;&#x73;</a>> and Jon Wakelin &lt;<a href="&#109;&#x61;&#x69;&#x6C;t&#111;:&#x6A;&#x6F;&#x6E;&#46;&#x77;&#x61;&#x6B;&#101;&#108;&#x69;&#x6E;&#64;&#x62;&#x72;&#x69;&#x73;&#x74;&#x6F;&#108;&#46;&#x61;&#x63;&#46;&#117;&#x6B;">&#x6A;&#x6F;&#x6E;&#46;&#x77;&#x61;&#x6B;&#101;&#108;&#x69;&#x6E;&#64;&#x62;&#x72;&#x69;&#x73;&#x74;&#x6F;&#108;&#46;&#x61;&#x63;&#46;&#117;&#x6B;</a>>.</p>
+which was written largely by Alberto Garcia &lt;<a href="&#x6D;&#x61;&#x69;&#x6C;&#x74;&#111;:&#x61;&#x6C;&#x62;e&#x72;&#116;&#111;g&#64;i&#99;&#x6D;&#x61;&#98;&#x2E;&#101;&#x73;">&#x61;&#x6C;&#x62;e&#x72;&#116;&#111;g&#64;i&#99;&#x6D;&#x61;&#98;&#x2E;&#101;&#x73;</a>> and Jon Wakelin &lt;<a href="&#109;&#97;&#x69;&#108;t&#111;:&#x6A;&#111;&#110;&#x2E;&#119;&#97;&#x6B;&#101;&#x6C;&#x69;n&#64;&#98;&#x72;&#x69;&#115;&#x74;&#x6F;&#108;.&#97;&#x63;&#46;u&#x6B;">&#x6A;&#111;&#110;&#x2E;&#119;&#97;&#x6B;&#101;&#x6C;&#x69;n&#64;&#98;&#x72;&#x69;&#115;&#x74;&#x6F;&#108;.&#97;&#x63;&#46;u&#x6B;</a>>.</p>
 
-<p>FoX is the work of Toby White &lt;<a href="&#109;&#x61;&#105;&#x6C;&#x74;&#x6F;:&#x74;&#111;&#x77;&#64;&#x75;&#115;&#x7A;&#108;&#x61;&#46;&#x6D;&#101;.&#117;&#107;">&#x74;&#111;&#x77;&#64;&#x75;&#115;&#x7A;&#108;&#x61;&#46;&#x6D;&#101;.&#117;&#107;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him. Andrew Walker &lt;<a href="m&#x61;&#105;&#108;&#x74;&#111;:&#x61;&#x6E;&#x64;&#x72;&#101;&#x77;&#46;&#x77;&#97;&#108;&#107;&#101;&#x72;&#64;&#x62;&#114;&#105;&#x73;t&#111;l&#x2E;&#x61;&#99;&#x2E;&#x75;&#x6B;">&#x61;&#x6E;&#x64;&#x72;&#101;&#x77;&#46;&#x77;&#97;&#108;&#107;&#101;&#x72;&#64;&#x62;&#114;&#105;&#x73;t&#111;l&#x2E;&#x61;&#99;&#x2E;&#x75;&#x6B;</a>> currently looks after maintenance of FoX.</p>
+<p>FoX is the work of Toby White &lt;<a href="&#109;&#97;&#x69;&#x6C;&#116;&#111;:&#x74;&#x6F;&#x77;&#64;&#x75;&#x73;&#122;&#108;&#x61;&#46;m&#x65;&#46;&#117;&#107;">&#x74;&#x6F;&#x77;&#64;&#x75;&#x73;&#122;&#108;&#x61;&#46;m&#x65;&#46;&#117;&#107;</a>>, and all bug reports/complaints/bouquets of roses should be sent to him. Andrew Walker &lt;<a href="&#x6D;&#x61;&#x69;&#x6C;&#x74;&#x6F;:&#97;&#110;&#x64;&#114;&#x65;&#x77;.&#x77;&#97;&#x6C;&#107;e&#114;&#64;&#98;&#114;&#x69;&#115;&#116;&#111;&#108;&#x2E;&#x61;c.&#117;&#107;">&#97;&#110;&#x64;&#114;&#x65;&#x77;.&#x77;&#97;&#x6C;&#107;e&#114;&#64;&#98;&#114;&#x69;&#115;&#116;&#111;&#108;&#x2E;&#x61;c.&#117;&#107;</a>> currently looks after maintenance of FoX.</p>
 
 <p>There is a FoX website at <a href="http://www1.gly.bris.ac.uk/~walker/FoX/">http://www1.gly.bris.ac.uk/~walker/FoX/</a>.</p>
 

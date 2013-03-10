@@ -69,7 +69,7 @@ places.  If you move the FoX directory later on, you will need to re-run configu
 
 <p>To run them all, simply run <code>make check</code> from the top-level directory. This will run the individual testsuites, and collate their results.</p>
 
-<p>If any failures occur (unrelated to known compiler issues, see the <a href="http://github.com/andreww/fox/issues">up-to-date list</a>), please send a message to the mailing list (<a href="&#x6D;&#97;&#105;l&#x74;&#x6F;:&#102;&#x6F;&#120;&#x2D;&#x64;&#105;&#115;&#99;&#x75;s&#x73;&#64;&#103;&#111;&#x6F;&#x67;&#x6C;e&#x67;&#114;&#111;&#117;&#x70;s&#x2E;&#x63;&#x6F;&#x6D;">&#102;&#x6F;&#120;&#x2D;&#x64;&#105;&#115;&#99;&#x75;s&#x73;&#64;&#103;&#111;&#x6F;&#x67;&#x6C;e&#x67;&#114;&#111;&#117;&#x70;s&#x2E;&#x63;&#x6F;&#x6D;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
+<p>If any failures occur (unrelated to known compiler issues, see the <a href="http://github.com/andreww/fox/issues">up-to-date list</a>), please send a message to the mailing list (<a href="&#x6D;&#x61;&#105;&#108;&#116;&#111;:&#x66;&#111;&#120;&#45;&#x64;&#105;&#115;&#99;&#x75;&#115;&#x73;&#64;&#x67;&#111;&#x6F;g&#108;&#101;&#103;&#114;&#x6F;&#x75;&#x70;&#x73;&#46;&#x63;&#x6F;&#109;">&#x66;&#111;&#120;&#45;&#x64;&#105;&#115;&#99;&#x75;&#115;&#x73;&#64;&#x67;&#111;&#x6F;g&#108;&#101;&#103;&#114;&#x6F;&#x75;&#x70;&#x73;&#46;&#x63;&#x6F;&#109;</a>) with details of compiler, hardware platform, and the nature of the failure.</p>
 
 <p>The testsuites for the SAX and DOM libraries are very extensive, and are somewhat fragile, so are not distributed with FoX. Please contact the author for details.</p>
 
@@ -93,7 +93,7 @@ places.  If you move the FoX directory later on, you will need to re-run configu
 
 <p>If it is called with no arguments, it will expand to compile &amp; link flags, thusly:</p>
 
-<pre><code>   f95 -o program program.f90 `FoX-config`
+<pre><code>f95 -o program program.f90 `FoX-config`
 </code></pre>
 
 <p>For compiling only against FoX, do the following:</p>
@@ -124,6 +124,86 @@ places.  If you move the FoX directory later on, you will need to re-run configu
 <p>Because this dummy version of FoX contains nothing except empty subroutines, it compiles and links with all known Fortran 95 compilers, regardless of compiler bugs.</p>
 
 <p>To compile the dummy code, use the <code>--enable-dummy</code> switch. Note that currently the dummy mode is not yet available for the DOM module.</p>
+
+<h2>Alternative build methods</h2>
+
+<p>The "-full" versions of FoX are also shipped with files
+to help compile the code on using other systems using CMake
+or from within Microsoft Visual Studio. Brief instructions for
+using these files are below.</p>
+
+<h3>CMake</h3>
+
+<p>CMake does not build software itself but generates makefiles or
+projectfiles (depending on the platform), that are then used to 
+compile the software, it should thus be a cross platform 
+method for building FoX (in theory at least).</p>
+
+<p>Files needed for building FoX with CMake are included in the 
+"-full" distribution. These can:</p>
+
+<ul>
+<li><p>do similar checks as current build tools to check for example how
+ABORT and FLUSH work,
+wether or not certain bugs in compilers are present,</p></li>
+<li><p>compile FoX into static libraries.</p></li>
+<li><p>generate Fortran files from m4 sources if m4 is present.</p></li>
+<li><p>do out-of-source build, does not interfere with current build system</p></li>
+<li><p>do a parallel build of fox (make -j)</p></li>
+</ul>
+
+<p>However, CMake cannot, at present, build the run the test suite or
+the packaging scripts used for release. To build FoX with CMake 
+the following is needed:</p>
+
+<ul>
+<li><p>CMake version >= 2.6.0</p></li>
+<li><p>usual build tools: fortran compiler, make, ld, ...</p></li>
+<li><p>m4 to generate fortran files from m4 sources (optional).</p></li>
+</ul>
+
+<p><strong>CMake Build instructions (linux):</strong> 
+Once you installed cmake, go to the main directory of fox
+and create a build directory, and from there, execute cmake thus:</p>
+
+<pre><code>cd fox/
+
+mkdir build/ &amp;&amp; cd build/
+
+cmake ../
+
+make -j
+</code></pre>
+
+<p>Libaries and module files can then be found in the subdirectories of build.</p>
+
+<h3>Windows</h3>
+
+<p>It is also possible to build FoX from within Microsoft Visual Studio
+and the file FoX.vfproj contains a Visual Studio project for Intel Fortran
+to simplify this process. At time of writing, it is compatible with 
+Visual Studio 2011 and Intel Visual Fortran Composer XE 2011.</p>
+
+<p>The project will build FoX in one of the four
+ configurations: Win32/x64 and debug/release.
+When building FoX for a specific configuration, 
+an output library file Fox_debug.lib or Fox.lib 
+and associated modules are created in a folder in 
+a relative path  ../lib or ../libx64 respectively.</p>
+
+<p>For a given configuration in in your application project
+you will then need to:</p>
+
+<ol>
+<li><p>In "Fortran" "General" "Additional Include Directories" add 
+the respective modules folder (generated above)</p></li>
+<li><p>In "Linker" "General" "Additional library directories" add the 
+path to the respective lib or libx64 folder.</p></li>
+<li><p>In "Linker" "Input" "Additional dependencies" add Fox_debug.lib 
+or FoX.lib respectively. </p></li>
+</ol>
+
+<p>Your application should now be able to build and link with FoX.</p>
 </div>
 </body>
 </html>

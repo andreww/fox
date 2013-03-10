@@ -73,7 +73,7 @@ FoX-config takes the following arguments:
 
 If it is called with no arguments, it will expand to compile & link flags, thusly:
 
-       f95 -o program program.f90 `FoX-config`
+ 	f95 -o program program.f90 `FoX-config`
 
 For compiling only against FoX, do the following:
 
@@ -100,3 +100,85 @@ For this reason, it is possible to compile a dummy version of FoX. This includes
 Because this dummy version of FoX contains nothing except empty subroutines, it compiles and links with all known Fortran 95 compilers, regardless of compiler bugs.
 
 To compile the dummy code, use the `--enable-dummy` switch. Note that currently the dummy mode is not yet available for the DOM module.
+
+## Alternative build methods
+
+The "-full" versions of FoX are also shipped with files
+to help compile the code on using other systems using CMake
+or from within Microsoft Visual Studio. Brief instructions for
+using these files are below.
+
+### CMake
+
+CMake does not build software itself but generates makefiles or
+projectfiles (depending on the platform), that are then used to 
+compile the software, it should thus be a cross platform 
+method for building FoX (in theory at least).
+
+Files needed for building FoX with CMake are included in the 
+"-full" distribution. These can:
+
+* do similar checks as current build tools to check for example how
+ABORT and FLUSH work,
+wether or not certain bugs in compilers are present,
+
+* compile FoX into static libraries.
+
+* generate Fortran files from m4 sources if m4 is present.
+
+* do out-of-source build, does not interfere with current build system
+
+* do a parallel build of fox (make -j)
+
+However, CMake cannot, at present, build the run the test suite or
+the packaging scripts used for release. To build FoX with CMake 
+the following is needed:
+
+* CMake version >= 2.6.0
+
+* usual build tools: fortran compiler, make, ld, ...
+
+* m4 to generate fortran files from m4 sources (optional).
+
+**CMake Build instructions (linux):** 
+Once you installed cmake, go to the main directory of fox
+and create a build directory, and from there, execute cmake thus:
+
+	cd fox/
+
+	mkdir build/ && cd build/
+
+	cmake ../
+
+	make -j
+
+Libaries and module files can then be found in the subdirectories of build.
+
+### Windows
+
+It is also possible to build FoX from within Microsoft Visual Studio
+and the file FoX.vfproj contains a Visual Studio project for Intel Fortran
+to simplify this process. At time of writing, it is compatible with 
+Visual Studio 2011 and Intel Visual Fortran Composer XE 2011.
+
+The project will build FoX in one of the four
+ configurations: Win32/x64 and debug/release.
+When building FoX for a specific configuration, 
+an output library file Fox_debug.lib or Fox.lib 
+and associated modules are created in a folder in 
+a relative path  ../lib or ../libx64 respectively.
+
+For a given configuration in in your application project
+you will then need to:
+
+1. In "Fortran" "General" "Additional Include Directories" add 
+the respective modules folder (generated above)
+
+2. In "Linker" "General" "Additional library directories" add the 
+path to the respective lib or libx64 folder.
+
+3. In "Linker" "Input" "Additional dependencies" add Fox_debug.lib 
+or FoX.lib respectively. 
+
+Your application should now be able to build and link with FoX.
+
