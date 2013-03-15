@@ -69,6 +69,9 @@ module m_wcml_lists
   public :: cmlStartStep
   public :: cmlEndStep
 
+  public :: cmlStartList
+  public :: cmlEndList
+
 contains
 
 TOHWM4_list_subs(`metadataList', (`dictRef', `convention', `title', `id', `name', `role'))
@@ -80,6 +83,8 @@ TOHWM4_list_subs(`parameterList', (dictRef, convention, title, id, ref, role))
 TOHWM4_list_subs(`bandList', (dictRef, convention, title, id, ref, role))
 !FIXME what attributes
 TOHWM4_list_subs(`kpointList', (dictRef, convention, title, id, ref, role))
+!FIXME what attributes
+TOHWM4_list_subs(`list', (dictRef, convention, title, id, ref, role))
 !FIXME what attributes
 TOHWM4_list_subs(`module', (serial, title, id, convention, dictRef, role))
 

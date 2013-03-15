@@ -38,6 +38,9 @@ module m_wcml_lists
   public :: cmlStartStep
   public :: cmlEndStep
 
+  public :: cmlStartList
+  public :: cmlEndList
+
 contains
 
 
@@ -212,6 +215,41 @@ contains
     call xml_EndElement(xf, "kpointList")
 #endif
   end subroutine cmlEndkpointList
+
+
+!FIXME what attributes
+
+  subroutine cmlStartlist(xf, dictRef, convention, title, id, ref, role)
+
+    type(xmlf_t), intent(inout) :: xf
+    character(len=*), intent(in), optional :: dictRef
+    character(len=*), intent(in), optional :: convention
+    character(len=*), intent(in), optional :: title
+    character(len=*), intent(in), optional :: id
+    character(len=*), intent(in), optional :: ref
+    character(len=*), intent(in), optional :: role
+
+
+#ifndef DUMMYLIB
+    call xml_NewElement(xf, "list")
+
+    if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
+    if (present(convention)) call xml_addAttribute(xf, "convention", convention)
+    if (present(title)) call xml_addAttribute(xf, "title", title)
+    if (present(id)) call xml_addAttribute(xf, "id", id)
+    if (present(ref)) call xml_addAttribute(xf, "ref", ref)
+    if (present(role)) call xml_addAttribute(xf, "role", role)
+
+#endif
+
+  end subroutine cmlStartlist
+
+  subroutine cmlEndlist(xf)
+    type(xmlf_t), intent(inout) :: xf
+#ifndef DUMMYLIB
+    call xml_EndElement(xf, "list")
+#endif
+  end subroutine cmlEndlist
 
 
 !FIXME what attributes

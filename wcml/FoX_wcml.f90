@@ -71,6 +71,9 @@ module FoX_wcml
   public :: cmlStartKPointList
   public :: cmlEndKPointList
 
+  public :: cmlStartList
+  public :: cmlEndList
+
   public :: cmlAddSymmetry
 
   public :: wcmlDumpDec
