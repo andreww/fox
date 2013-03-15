@@ -207,33 +207,38 @@ module m_wcml_inputdec
 #endif
     end subroutine wcmlDumpDec_core
 
-    subroutine wcmlDumpDec_unit(xf, unitDec, inputDec, line_lengths, trim_lines, dictRef, &
-                           iostat)
+    subroutine wcmlDumpDec_unit(xf, unitDec, inputDec, line_lengths, trim_lines, iostat)
 
         type(xmlf_t), intent(inout)    :: xf
         integer, intent(in)            :: unitDec
         character(len=*), intent(in)   :: inputDec
         integer, intent(in)            :: line_lengths
         logical, intent(in)            :: trim_lines
-        character(len=*), intent(in)   :: dictRef
         integer, intent(out), optional :: iostat
 
 #ifndef DUMMYLIB
+        ! Check we are in CompChem mode - or error out
+        if (xmlf_GetExtendedData(xf).ne.20) then
+            if (present(iostat)) then
+                iostat = WCML_DUMP_NOTCOMPCHEM
+                return
+            else
+                call FoX_error("wcmlDumpDec must only be used in CompChem mode.")
+            endif
+        endif
         call wcmlStartDecList(xf)
-        call wcmlDumpDec_unitcore(xf, unitDec, inputDec, line_lengths, trim_lines, dictRef, iostat)
+        call wcmlDumpDec_unitcore(xf, unitDec, inputDec, line_lengths, trim_lines, iostat)
         call wcmlEndDecList(xf)
 #endif
     end subroutine wcmlDumpDec_unit
 
-    subroutine wcmlDumpDec_unitcore(xf, unitDec, inputDec, line_lengths, trim_lines, dictRef, &
-                           iostat)
+    subroutine wcmlDumpDec_unitcore(xf, unitDec, inputDec, line_lengths, trim_lines, iostat)
 
         type(xmlf_t), intent(inout)    :: xf
         integer, intent(in)            :: unitDec
         character(len=*), intent(in)   :: inputDec
         integer, intent(in)            :: line_lengths
         logical, intent(in)            :: trim_lines
-        character(len=*), intent(in)   :: dictRef
         integer, intent(out), optional :: iostat
 
         character(len=line_lengths)  :: this_line
@@ -270,7 +275,7 @@ module m_wcml_inputdec
     
         ! Now ready to go.    
         ! Start of CML output for this file
-        call wcmlStartDec(xf, inputDec, dictRef=dictRef)
+        call wcmlStartDec(xf, inputDec)
 
         ! Foeach line in file
         ! dump line in <scalar>
