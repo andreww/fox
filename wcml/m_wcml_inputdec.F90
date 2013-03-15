@@ -29,6 +29,7 @@ module m_wcml_inputdec
     interface wcmlDumpDec
         module procedure wcmlDumpDec_single
         module procedure wcmlDumpDec_array
+        module procedure wcmlDumpDec_unit
     end interface wcmlDumpDec
 
     contains 
@@ -205,6 +206,98 @@ module m_wcml_inputdec
         !returning iostat != 0 anyway.
 #endif
     end subroutine wcmlDumpDec_core
+
+    subroutine wcmlDumpDec_unit(xf, unitDec, inputDec, line_lengths, trim_lines, dictRef, &
+                           iostat)
+
+        type(xmlf_t), intent(inout)    :: xf
+        integer, intent(in)            :: unitDec
+        character(len=*), intent(in)   :: inputDec
+        integer, intent(in)            :: line_lengths
+        logical, intent(in)            :: trim_lines
+        character(len=*), intent(in)   :: dictRef
+        integer, intent(out), optional :: iostat
+
+#ifndef DUMMYLIB
+        call wcmlStartDecList(xf)
+        call wcmlDumpDec_unitcore(xf, unitDec, inputDec, line_lengths, trim_lines, dictRef, iostat)
+        call wcmlEndDecList(xf)
+#endif
+    end subroutine wcmlDumpDec_unit
+
+    subroutine wcmlDumpDec_unitcore(xf, unitDec, inputDec, line_lengths, trim_lines, dictRef, &
+                           iostat)
+
+        type(xmlf_t), intent(inout)    :: xf
+        integer, intent(in)            :: unitDec
+        character(len=*), intent(in)   :: inputDec
+        integer, intent(in)            :: line_lengths
+        logical, intent(in)            :: trim_lines
+        character(len=*), intent(in)   :: dictRef
+        integer, intent(out), optional :: iostat
+
+        character(len=line_lengths)  :: this_line
+        integer                      :: ios
+
+        logical                      :: op
+
+        integer                      :: iostat_
+
+        if (present(iostat)) iostat = 0 ! will set for errors
+#ifndef DUMMYLIB
+        ! Check the file is not open and that it exists. 
+        inquire( unit=unitDec, iostat=iostat_, opened=op)
+
+        if (iostat_ /= 0) then
+            ! inquire failed: probably system issue
+            ! op and ex are not set. Bung out.
+            if (present(iostat)) then
+                iostat = iostat_
+                return
+            else
+                call FoX_error("Inquire failed in wcmlDumpDec")
+            endif
+        endif
+
+        if (.not.op) then
+            if (present(iostat)) then
+                iostat = WCML_DUMP_NOUNIT  
+                return
+            else 
+                call FoX_error("Unit not linked to file in wcmlDumpDec")
+            endif
+        endif
+    
+        ! Now ready to go.    
+        ! Start of CML output for this file
+        call wcmlStartDec(xf, inputDec, dictRef=dictRef)
+
+        ! Foeach line in file
+        ! dump line in <scalar>
+        rewind(unitDec)
+        do
+            read(unitDec, '(a)' , iostat=ios) this_line
+            if(ios.lt.0) then
+                exit ! End of file
+            elseif(ios.gt.0) then
+                ! Error condition. 
+                if (present(iostat)) then
+                    iostat = ios
+                    exit ! We will close tags and return
+                         ! with iostat set.
+                else
+                    ! Just error out
+                    call FoX_error("Error reading file in wcmlDumpDec")
+                endif
+            else
+                call wcmlAddDecLine(xf, this_line)
+            endif
+        enddo
+
+        ! End of CML output for this file
+        call wcmlEndDec(xf)
+#endif
+    end subroutine wcmlDumpDec_unitcore
 
     subroutine wcmlStartDecList(xf, id, title)
         ! Input Decs are wrapped in a <module> with a
