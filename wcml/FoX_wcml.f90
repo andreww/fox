@@ -13,6 +13,7 @@ module FoX_wcml
   use m_wcml_property
   use m_wcml_stml
   use m_wcml_inputdec
+  use m_wcml_orbitals
 
   implicit none
   private
@@ -80,5 +81,7 @@ module FoX_wcml
   public :: wcmlStartDecList, wcmlEndDecList
   public :: wcmlStartDec, wcmlEndDec
   public :: wcmlAddDecLine
+
+  public :: cmlAddMolecularOrbitals
 
 end module FoX_wcml
