@@ -8,6 +8,7 @@ module m_wcml_stml
   use FoX_wxml, only: xmlf_t
   use FoX_wxml, only: xml_NewElement, xml_EndElement
   use FoX_wxml, only: xml_AddCharacters, xml_AddAttribute
+  use FoX_wxml, only: xmlf_getextendeddata
 
 ! Fix for pgi, requires this explicitly:
   use m_wxml_overloads
@@ -105,7 +106,11 @@ id, title, dictRef, convention, errorValue, errorBasis, min, max, ref &
 
     character(len=*), intent(in), optional :: fmt
     call xml_NewElement(xf, "scalar")
-    call xml_AddAttribute(xf, "dataType", "fpx:complex")
+    if (xmlf_GetExtendedData(xf).eq.20) then
+      call xml_AddAttribute(xf, "dataType", "fpx:complex")
+    else
+      call xml_AddAttribute(xf, "dataType", "fpx:complex")
+    endif
 
 
     if (present(id)) call xml_addAttribute(xf, "id", id)
@@ -147,7 +152,11 @@ id, title, dictRef, convention, errorValue, errorBasis, min, max, ref &
 
     character(len=*), intent(in), optional :: fmt
     call xml_NewElement(xf, "scalar")
-    call xml_AddAttribute(xf, "dataType", "fpx:complex")
+    if (xmlf_GetExtendedData(xf).eq.20) then
+      call xml_AddAttribute(xf, "dataType", "fpx:complex")
+    else
+      call xml_AddAttribute(xf, "dataType", "fpx:complex")
+    endif
 
 
     if (present(id)) call xml_addAttribute(xf, "id", id)
@@ -189,7 +198,11 @@ id, title, dictRef, convention, errorValue, errorBasis, min, max, ref &
 
     character(len=*), intent(in), optional :: fmt
     call xml_NewElement(xf, "scalar")
-    call xml_AddAttribute(xf, "dataType", "fpx:real")
+    if (xmlf_GetExtendedData(xf).eq.20) then
+      call xml_AddAttribute(xf, "dataType", "xsd:double")
+    else
+      call xml_AddAttribute(xf, "dataType", "fpx:real")
+    endif
 
 
     if (present(id)) call xml_addAttribute(xf, "id", id)
@@ -231,7 +244,11 @@ id, title, dictRef, convention, errorValue, errorBasis, min, max, ref &
 
     character(len=*), intent(in), optional :: fmt
     call xml_NewElement(xf, "scalar")
-    call xml_AddAttribute(xf, "dataType", "fpx:real")
+    if (xmlf_GetExtendedData(xf).eq.20) then
+      call xml_AddAttribute(xf, "dataType", "xsd:double")
+    else
+      call xml_AddAttribute(xf, "dataType", "fpx:real")
+    endif
 
 
     if (present(id)) call xml_addAttribute(xf, "id", id)
@@ -272,7 +289,11 @@ id, title, dictRef, convention, errorValue, errorBasis, min, max, ref &
     character(len=*), intent(in), optional :: units
 
     call xml_NewElement(xf, "scalar")
-    call xml_AddAttribute(xf, "dataType", "xsd:integer")
+    if (xmlf_GetExtendedData(xf).eq.20) then
+      call xml_AddAttribute(xf, "dataType", "xsd:integer")
+    else
+      call xml_AddAttribute(xf, "dataType", "xsd:integer")
+    endif
 
 
     if (present(id)) call xml_addAttribute(xf, "id", id)
@@ -311,7 +332,11 @@ id, title, dictRef, convention, errorValue, errorBasis, min, max, ref &
     character(len=*), intent(in), optional :: ref
 
     call xml_NewElement(xf, "scalar")
-    call xml_AddAttribute(xf, "dataType", "xsd:boolean")
+    if (xmlf_GetExtendedData(xf).eq.20) then
+      call xml_AddAttribute(xf, "dataType", "xsd:boolean")
+    else
+      call xml_AddAttribute(xf, "dataType", "xsd:boolean")
+    endif
 
 
     if (present(id)) call xml_addAttribute(xf, "id", id)
@@ -355,7 +380,11 @@ id, title, dictRef, convention, errorValue, errorBasis, min, max, ref &
     if (present(dataType)) then
       call xml_addAttribute(xf, "dataType", dataType)
     else
-    call xml_AddAttribute(xf, "dataType", "xsd:string")
+    if (xmlf_GetExtendedData(xf).eq.20) then
+      call xml_AddAttribute(xf, "dataType", "xsd:string")
+    else
+      call xml_AddAttribute(xf, "dataType", "xsd:string")
+    endif
     endif
 
     if (present(id)) call xml_addAttribute(xf, "id", id)
@@ -399,7 +428,11 @@ id, title, dictRef, convention, errorValue, errorBasis, min, max, ref &
     character(len=*), intent(in), optional :: fmt
     call xml_NewElement(xf, "array")
     call xml_AddAttribute(xf, "size", size(value))
-    call xml_AddAttribute(xf, "dataType", "fpx:complex")
+    if (xmlf_GetExtendedData(xf).eq.20) then
+      call xml_AddAttribute(xf, "dataType", "fpx:complex")
+    else
+      call xml_AddAttribute(xf, "dataType", "fpx:complex")
+    endif
 
 
     if (present(id)) call xml_addAttribute(xf, "id", id)
@@ -442,7 +475,11 @@ id, title, dictRef, convention, errorValue, errorBasis, min, max, ref &
     character(len=*), intent(in), optional :: fmt
     call xml_NewElement(xf, "array")
     call xml_AddAttribute(xf, "size", size(value))
-    call xml_AddAttribute(xf, "dataType", "fpx:complex")
+    if (xmlf_GetExtendedData(xf).eq.20) then
+      call xml_AddAttribute(xf, "dataType", "fpx:complex")
+    else
+      call xml_AddAttribute(xf, "dataType", "fpx:complex")
+    endif
 
 
     if (present(id)) call xml_addAttribute(xf, "id", id)
@@ -485,7 +522,11 @@ id, title, dictRef, convention, errorValue, errorBasis, min, max, ref &
     character(len=*), intent(in), optional :: fmt
     call xml_NewElement(xf, "array")
     call xml_AddAttribute(xf, "size", size(value))
-    call xml_AddAttribute(xf, "dataType", "fpx:real")
+    if (xmlf_GetExtendedData(xf).eq.20) then
+      call xml_AddAttribute(xf, "dataType", "xsd:double")
+    else
+      call xml_AddAttribute(xf, "dataType", "fpx:real")
+    endif
 
 
     if (present(id)) call xml_addAttribute(xf, "id", id)
@@ -528,7 +569,11 @@ id, title, dictRef, convention, errorValue, errorBasis, min, max, ref &
     character(len=*), intent(in), optional :: fmt
     call xml_NewElement(xf, "array")
     call xml_AddAttribute(xf, "size", size(value))
-    call xml_AddAttribute(xf, "dataType", "fpx:real")
+    if (xmlf_GetExtendedData(xf).eq.20) then
+      call xml_AddAttribute(xf, "dataType", "xsd:double")
+    else
+      call xml_AddAttribute(xf, "dataType", "fpx:real")
+    endif
 
 
     if (present(id)) call xml_addAttribute(xf, "id", id)
@@ -570,7 +615,11 @@ id, title, dictRef, convention, errorValue, errorBasis, min, max, ref &
 
     call xml_NewElement(xf, "array")
     call xml_AddAttribute(xf, "size", size(value))
-    call xml_AddAttribute(xf, "dataType", "xsd:integer")
+    if (xmlf_GetExtendedData(xf).eq.20) then
+      call xml_AddAttribute(xf, "dataType", "xsd:integer")
+    else
+      call xml_AddAttribute(xf, "dataType", "xsd:integer")
+    endif
 
 
     if (present(id)) call xml_addAttribute(xf, "id", id)
@@ -610,7 +659,11 @@ id, title, dictRef, convention, errorValue, errorBasis, min, max, ref &
 
     call xml_NewElement(xf, "array")
     call xml_AddAttribute(xf, "size", size(value))
-    call xml_AddAttribute(xf, "dataType", "xsd:boolean")
+    if (xmlf_GetExtendedData(xf).eq.20) then
+      call xml_AddAttribute(xf, "dataType", "xsd:boolean")
+    else
+      call xml_AddAttribute(xf, "dataType", "xsd:boolean")
+    endif
 
 
     if (present(id)) call xml_addAttribute(xf, "id", id)
@@ -661,7 +714,11 @@ id, title, dictRef, convention, errorValue, errorBasis, min, max, ref &
     if (present(dataType)) then
       call xml_addAttribute(xf, "dataType", dataType)
     else
-    call xml_AddAttribute(xf, "dataType", "xsd:string")
+    if (xmlf_GetExtendedData(xf).eq.20) then
+      call xml_AddAttribute(xf, "dataType", "xsd:string")
+    else
+      call xml_AddAttribute(xf, "dataType", "xsd:string")
+    endif
     endif
 
     if (present(id)) call xml_addAttribute(xf, "id", id)
@@ -706,7 +763,11 @@ id, title, dictRef, convention, errorValue, errorBasis, min, max, ref &
     call xml_NewElement(xf, "matrix")
     call xml_AddAttribute(xf, "rows", size(value,1))
     call xml_AddAttribute(xf, "columns", size(value,2))
-    call xml_AddAttribute(xf, "dataType", "fpx:complex")
+    if (xmlf_GetExtendedData(xf).eq.20) then
+      call xml_AddAttribute(xf, "dataType", "fpx:complex")
+    else
+      call xml_AddAttribute(xf, "dataType", "fpx:complex")
+    endif
 
 
     if (present(id)) call xml_addAttribute(xf, "id", id)
@@ -750,7 +811,11 @@ id, title, dictRef, convention, errorValue, errorBasis, min, max, ref &
     call xml_NewElement(xf, "matrix")
     call xml_AddAttribute(xf, "rows", size(value,1))
     call xml_AddAttribute(xf, "columns", size(value,2))
-    call xml_AddAttribute(xf, "dataType", "fpx:complex")
+    if (xmlf_GetExtendedData(xf).eq.20) then
+      call xml_AddAttribute(xf, "dataType", "fpx:complex")
+    else
+      call xml_AddAttribute(xf, "dataType", "fpx:complex")
+    endif
 
 
     if (present(id)) call xml_addAttribute(xf, "id", id)
@@ -794,7 +859,11 @@ id, title, dictRef, convention, errorValue, errorBasis, min, max, ref &
     call xml_NewElement(xf, "matrix")
     call xml_AddAttribute(xf, "rows", size(value,1))
     call xml_AddAttribute(xf, "columns", size(value,2))
-    call xml_AddAttribute(xf, "dataType", "fpx:real")
+    if (xmlf_GetExtendedData(xf).eq.20) then
+      call xml_AddAttribute(xf, "dataType", "xsd:double")
+    else
+      call xml_AddAttribute(xf, "dataType", "fpx:real")
+    endif
 
 
     if (present(id)) call xml_addAttribute(xf, "id", id)
@@ -838,7 +907,11 @@ id, title, dictRef, convention, errorValue, errorBasis, min, max, ref &
     call xml_NewElement(xf, "matrix")
     call xml_AddAttribute(xf, "rows", size(value,1))
     call xml_AddAttribute(xf, "columns", size(value,2))
-    call xml_AddAttribute(xf, "dataType", "fpx:real")
+    if (xmlf_GetExtendedData(xf).eq.20) then
+      call xml_AddAttribute(xf, "dataType", "xsd:double")
+    else
+      call xml_AddAttribute(xf, "dataType", "fpx:real")
+    endif
 
 
     if (present(id)) call xml_addAttribute(xf, "id", id)
@@ -881,7 +954,11 @@ id, title, dictRef, convention, errorValue, errorBasis, min, max, ref &
     call xml_NewElement(xf, "matrix")
     call xml_AddAttribute(xf, "rows", size(value,1))
     call xml_AddAttribute(xf, "columns", size(value,2))
-    call xml_AddAttribute(xf, "dataType", "xsd:integer")
+    if (xmlf_GetExtendedData(xf).eq.20) then
+      call xml_AddAttribute(xf, "dataType", "xsd:integer")
+    else
+      call xml_AddAttribute(xf, "dataType", "xsd:integer")
+    endif
 
 
     if (present(id)) call xml_addAttribute(xf, "id", id)
@@ -922,7 +999,11 @@ id, title, dictRef, convention, errorValue, errorBasis, min, max, ref &
     call xml_NewElement(xf, "matrix")
     call xml_AddAttribute(xf, "rows", size(value,1))
     call xml_AddAttribute(xf, "columns", size(value,2))
-    call xml_AddAttribute(xf, "dataType", "xsd:boolean")
+    if (xmlf_GetExtendedData(xf).eq.20) then
+      call xml_AddAttribute(xf, "dataType", "xsd:boolean")
+    else
+      call xml_AddAttribute(xf, "dataType", "xsd:boolean")
+    endif
 
 
     if (present(id)) call xml_addAttribute(xf, "id", id)
@@ -974,7 +1055,11 @@ id, title, dictRef, convention, errorValue, errorBasis, min, max, ref &
     if (present(dataType)) then
       call xml_addAttribute(xf, "dataType", dataType)
     else
-    call xml_AddAttribute(xf, "dataType", "xsd:string")
+    if (xmlf_GetExtendedData(xf).eq.20) then
+      call xml_AddAttribute(xf, "dataType", "xsd:string")
+    else
+      call xml_AddAttribute(xf, "dataType", "xsd:string")
+    endif
     endif
 
     if (present(id)) call xml_addAttribute(xf, "id", id)

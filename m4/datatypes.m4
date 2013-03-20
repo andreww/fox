@@ -17,5 +17,14 @@ ifelse(`$1', `CmplxDp', `fpx:complex',
        `$1', `Lg', `xsd:boolean', 
        `$1', `Ch', `xsd:string')`'dnl
 ')dnl
+define(`TOHWM4_xsddatatype', `dnl
+ifelse(`$1', `CmplxDp', `fpx:complex',
+       `$1', `CmplxSp', `fpx:complex',
+       `$1', `RealDp', `xsd:double', 
+       `$1', `RealSp', `xsd:double', 
+       `$1', `Int', `xsd:integer', 
+       `$1', `Lg', `xsd:boolean', 
+       `$1', `Ch', `xsd:string')`'dnl
+')dnl
 dnl
 define(`TOHWM4_types', `(CmplxDp, CmplxSp, RealDp, RealSp, Int, Lg, Ch)')dnl

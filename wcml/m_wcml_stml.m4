@@ -66,8 +66,13 @@ ifelse(`$3', `Sca', `', `dnl
       call xml_addAttribute(xf, "dataType", dataType)
     else
 ')dnl
-    call xml_AddAttribute(xf, "dataType", dnl
+    if (xmlf_GetExtendedData(xf).eq.20) then
+      call xml_AddAttribute(xf, "dataType", dnl
+"TOHWM4_xsddatatype(`$1')")
+    else
+      call xml_AddAttribute(xf, "dataType", dnl
 "TOHWM4_datatype(`$1')")
+    endif
 ifelse(`$1', `Ch', `    endif')
 
 m4_foreach(`x', $2, `TOHWM4_dummyarguse(x)')
@@ -99,6 +104,7 @@ module m_wcml_stml
   use FoX_wxml, only: xmlf_t
   use FoX_wxml, only: xml_NewElement, xml_EndElement
   use FoX_wxml, only: xml_AddCharacters, xml_AddAttribute
+  use FoX_wxml, only: xmlf_getextendeddata
 
 ! Fix for pgi, requires this explicitly:
   use m_wxml_overloads
