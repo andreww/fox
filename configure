@@ -578,7 +578,7 @@ PACKAGE_VERSION='4.1.2'
 PACKAGE_STRING='FoX 4.1.2'
 PACKAGE_BUGREPORT='a.walker@ucl.ac.uk'
 
-ac_unique_file="README.FoX.txt"
+ac_unique_file="README"
 ac_subst_vars='SHELL
 PATH_SEPARATOR
 PACKAGE_NAME
