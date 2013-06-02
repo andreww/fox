@@ -4781,7 +4781,7 @@ echo "${ECHO_T}$ac_cv_prog_fpp_ok" >&6; }
 
   ac_cv_fpp_build_rule=indirect
 
-if test ac_fpp_ok == no; then
+if test ac_fpp_ok = no; then
   { { echo "$as_me:$LINENO: error: Cannot find a Fortran preprocessor with the requested features" >&5
 echo "$as_me: error: Cannot find a Fortran preprocessor with the requested features" >&2;}
    { (exit 1); exit 1; }; }
