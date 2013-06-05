@@ -128,10 +128,14 @@ contains
       call normalizeDocument(startNode, ex)
       if (present(ex)) then
         ! Only possible error should be namespace error ...
-        if (getExceptionCode(ex)/=NAMESPACE_ERR) then
-          TOHW_m_dom_throw_error(FoX_INTERNAL_ERROR)
-        else
-          TOHW_m_dom_throw_error(SERIALIZE_ERR)
+        ! but we should avoid turning an error of 0 into 
+        ! an internal error!
+        if (inException(ex)) then
+          if (getExceptionCode(ex)/=NAMESPACE_ERR) then
+            TOHW_m_dom_throw_error(FoX_INTERNAL_ERROR)
+          else
+            TOHW_m_dom_throw_error(SERIALIZE_ERR)
+          endif
         endif
       endif
     else
