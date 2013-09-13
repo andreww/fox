@@ -396,6 +396,7 @@ contains
     nullURI => null()
 #endif
     tempString => null()
+    tempString2 => null()
     elem => null()
     attDecl => null()
 
