@@ -9717,7 +9717,8 @@ endif
       endif
     endif
 
-! FIXME what if namespace is undeclared? Throw an error *only* if FoX_errors is on, otherwise its taken care of by namespace fixup on serialization
+! FIXME what if namespace is undeclared? Throw an error *only* if FoX_errors is
+! on, otherwise its taken care of by namespace fixup on serialization
 
     quickFix = getGCstate(getOwnerDocument(arg)) &
       .and. arg%inDocument
