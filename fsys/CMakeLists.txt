@@ -27,7 +27,7 @@ set(fox_fsys_srcs_pp
 )
 
 add_library(
-  fox_fsys STATIC
+  ${PROJECT_NAME}_fsys STATIC
   ${fox_fsys_srcs}
   ${fox_fsys_srcs_pp}
 )

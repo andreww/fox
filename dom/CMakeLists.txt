@@ -80,7 +80,7 @@ set(fox_dom_srcs
 )
 
 add_library(
-  fox_dom STATIC
+  ${PROJECT_NAME}_dom STATIC
   ${fox_dom_srcs}
   ${fox_dom_srcs_pp}
 )
@@ -91,19 +91,7 @@ add_library(
 ## )
 
 target_link_libraries(
-  fox_dom
-  fox_wxml
-  fox_sax
+  ${PROJECT_NAME}_dom
+  ${PROJECT_NAME}_wxml
+  ${PROJECT_NAME}_sax
 )
-
-include_directories(
-  ${fox_BINARY_DIR}/dom
-  ${fox_BINARY_DIR}/wxml
-  ${fox_BINARY_DIR}/common
-  ${fox_BINARY_DIR}/utils
-  ${fox_BINARY_DIR}/fsys
-  ${fox_BINARY_DIR}/sax
-)
-
-
-

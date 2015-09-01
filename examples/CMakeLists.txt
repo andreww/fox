@@ -3,60 +3,60 @@ add_executable(
   wxml_example.f90)
 target_link_libraries(
   wxml_example
-  fox_wxml)
+  ${PROJECT_NAME}_wxml)
 
 add_executable(
   wcml_example
   wcml_example.f90)
 target_link_libraries(
   wcml_example
-  fox_wcml)
+  ${PROJECT_NAME}_wcml)
 
 add_executable(
   wkml_example
   wkml_example.f90)
 target_link_libraries(
   wkml_example
-  fox_wkml)
+  ${PROJECT_NAME}_wkml)
 
 add_executable(
   sax_example
   sax_example.f90)
 target_link_libraries(
   sax_example
-  fox_sax)
+  ${PROJECT_NAME}_sax)
 
 add_executable(
   sax_example_2
   sax_example_2.f90)
 target_link_libraries(
   sax_example_2
-  fox_sax)
+  ${PROJECT_NAME}_sax)
 
 add_executable(
   dom_example_2
   dom_example_2.f90)
 target_link_libraries(
   dom_example_2
-  fox_dom)
+  ${PROJECT_NAME}_dom)
 
 add_executable(
   dom_example_3
   dom_example_3.f90)
 target_link_libraries(
   dom_example_3
-  fox_dom)
+  ${PROJECT_NAME}_dom)
 
 
 include_directories(
-  ${fox_BINARY_DIR}/dom
-  ${fox_BINARY_DIR}/wxml
-  ${fox_BINARY_DIR}/wcml
-  ${fox_BINARY_DIR}/wkml
-  ${fox_BINARY_DIR}/common
-  ${fox_BINARY_DIR}/utils
-  ${fox_BINARY_DIR}/fsys
-  ${fox_BINARY_DIR}/sax
+  ${${PROJECT_NAME}_BINARY_DIR}/dom
+  ${${PROJECT_NAME}_BINARY_DIR}/wxml
+  ${${PROJECT_NAME}_BINARY_DIR}/wcml
+  ${${PROJECT_NAME}_BINARY_DIR}/wkml
+  ${${PROJECT_NAME}_BINARY_DIR}/common
+  ${${PROJECT_NAME}_BINARY_DIR}/utils
+  ${${PROJECT_NAME}_BINARY_DIR}/fsys
+  ${${PROJECT_NAME}_BINARY_DIR}/sax
 )
 
 

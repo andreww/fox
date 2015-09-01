@@ -13,21 +13,14 @@ set(fox_sax_srcs_pp
   
 
 add_library(
-  fox_sax STATIC
+  ${PROJECT_NAME}_sax STATIC
   ${fox_sax_srcs}
   ${fox_sax_srcs_pp}
 )
 
 target_link_libraries(
-  fox_sax
-  fox_common
-  fox_utils
-  fox_fsys
+  ${PROJECT_NAME}_sax
+  ${PROJECT_NAME}_common
+  ${PROJECT_NAME}_utils
+  ${PROJECT_NAME}_fsys
 )
-
-include_directories(
-  ${fox_BINARY_DIR}/common
-  ${fox_BINARY_DIR}/utils
-  ${fox_BINARY_DIR}/fsys
-)
-

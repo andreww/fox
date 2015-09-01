@@ -9,17 +9,14 @@ set(fox_utils_srcs_pp
 )
 
 add_library(
-  fox_utils STATIC
+  ${PROJECT_NAME}_utils STATIC
   ${fox_utils_srcs}
   ${fox_utils_srcs_pp}
 )
 
 target_link_libraries(
-  fox_utils
-  fox_fsys
+  ${PROJECT_NAME}_utils
+  ${PROJECT_NAME}_fsys
 )
 
-include_directories(
-  ${fox_BINARY_DIR}/fsys
-)
 

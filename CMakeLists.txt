@@ -1,8 +1,28 @@
-PROJECT(fox Fortran)
+PROJECT(FoX Fortran)
 
 SET(CMAKE_VERBOSE_MAKEFILE FALSE)
 
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
+
+#======================#
+# Build paths
+#======================#
+
+SET(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
+SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
+SET(CMAKE_Fortran_MODULE_DIRECTORY ${PROJECT_BINARY_DIR}/modules)
+INCLUDE_DIRECTORIES(${CMAKE_Fortran_MODULE_DIRECTORY})
+
+
+#======================#
+# Enable/disable libraries
+#======================#
+
+OPTION(${PROJECT_NAME}_ENABLE_WXML "Enable/disable general Fortran XML output library" ON)
+OPTION(${PROJECT_NAME}_ENABLE_WCML "Enable/disable Chemical Markup Language output library" ON)
+OPTION(${PROJECT_NAME}_ENABLE_WKML "Enable/disable Keyhole Markup Language output library" ON)
+OPTION(${PROJECT_NAME}_ENABLE_DOM "Enable/disable Document Object Model input library" ON)
+OPTION(${PROJECT_NAME}_ENABLE_EXAMPLES "Build examples" ON)
 
 #======================#
 # set another compiler #
@@ -72,36 +92,84 @@ SET(f90_ext .f90)
 # determine end-of-line character based on operating system #
 #===========================================================#
 
-INCLUDE(./cmake/DetermineEOL.cmake)
+INCLUDE(${${PROJECT_NAME}_SOURCE_DIR}/cmake/DetermineEOL.cmake)
 
 #============================================#
 # determine if and how FLUSH intrinsic works #
 #============================================#
 
-INCLUDE(./cmake/CheckFlushIntrinsic.cmake)
+INCLUDE(${${PROJECT_NAME}_SOURCE_DIR}/cmake/CheckFlushIntrinsic.cmake)
 
 #=====================================================#
 # check for 'associated in restricted expression' bug #
 #=====================================================#
 
-INCLUDE(./cmake/CheckAssociatedBug.cmake)
+INCLUDE(${${PROJECT_NAME}_SOURCE_DIR}/cmake/CheckAssociatedBug.cmake)
 
 #============================================#
 # determine if and how ABORT intrinsic works #
 #============================================#
 
-INCLUDE(./cmake/CheckAbortIntrinsic.cmake)
+INCLUDE(${${PROJECT_NAME}_SOURCE_DIR}/cmake/CheckAbortIntrinsic.cmake)
 
 SET(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${FPPFLAGS}")
 
+# Base library directories
+ADD_SUBDIRECTORY(${${PROJECT_NAME}_SOURCE_DIR}/fsys)
+ADD_SUBDIRECTORY(${${PROJECT_NAME}_SOURCE_DIR}/utils)
+ADD_SUBDIRECTORY(${${PROJECT_NAME}_SOURCE_DIR}/common)
 
-ADD_SUBDIRECTORY(fsys)
-ADD_SUBDIRECTORY(utils)
-ADD_SUBDIRECTORY(common)
-ADD_SUBDIRECTORY(wxml)
-ADD_SUBDIRECTORY(wcml)
-ADD_SUBDIRECTORY(wkml)
-ADD_SUBDIRECTORY(sax)
-ADD_SUBDIRECTORY(dom)
-ADD_SUBDIRECTORY(examples)
+# wxml directory
+IF(${PROJECT_NAME}_ENABLE_WXML OR ${PROJECT_NAME}_ENABLE_WCML OR ${PROJECT_NAME}_ENABLE_WKML OR ${PROJECT_NAME}_ENABLE_DOM OR ${PROJECT_NAME}_ENABLE_EXAMPLES)
+    SET(${PROJECT_NAME}_ENABLE_WXML ON)
+    ADD_SUBDIRECTORY(${${PROJECT_NAME}_SOURCE_DIR}/wxml)
+ELSE()
+    GET_PROPERTY(THE_INCLUDE_DIRS GLOBAL PROPERTY INCLUDE_DIRECTORIES)
+    STRING(REPLACE ${${PROJECT_NAME}_SOURCE_DIR}/wxml "" NEW_INCLUDE_DIRS "${THE_INCLUDE_DIRS}")
+    SET_PROPERTY(GLOBAL PROPERTY INCLUDE_DIRECTORIES ${NEW_INCLUDE_DIRS})
+ENDIF()
+
+# wkml directory
+IF(${PROJECT_NAME}_ENABLE_WKML OR ${PROJECT_NAME}_ENABLE_EXAMPLES)
+    SET(${PROJECT_NAME}_ENABLE_WKML ON)
+    ADD_SUBDIRECTORY(${${PROJECT_NAME}_SOURCE_DIR}/wkml)
+ELSE()
+    GET_PROPERTY(THE_INCLUDE_DIRS GLOBAL PROPERTY INCLUDE_DIRECTORIES)
+    STRING(REPLACE ${${PROJECT_NAME}_SOURCE_DIR}/wkml "" NEW_INCLUDE_DIRS "${THE_INCLUDE_DIRS}")
+    SET_PROPERTY(GLOBAL PROPERTY INCLUDE_DIRECTORIES ${NEW_INCLUDE_DIRS})
+ENDIF()
+
+# wcml directory
+IF(${PROJECT_NAME}_ENABLE_WCML OR ${PROJECT_NAME}_ENABLE_EXAMPLES)
+    SET(${PROJECT_NAME}_ENABLE_WCML ON)
+    ADD_SUBDIRECTORY(${${PROJECT_NAME}_SOURCE_DIR}/wcml)
+ELSE()
+    GET_PROPERTY(THE_INCLUDE_DIRS GLOBAL PROPERTY INCLUDE_DIRECTORIES)
+    STRING(REPLACE ${${PROJECT_NAME}_SOURCE_DIR}/wcml "" NEW_INCLUDE_DIRS "${THE_INCLUDE_DIRS}")
+    SET_PROPERTY(GLOBAL PROPERTY INCLUDE_DIRECTORIES ${NEW_INCLUDE_DIRS})
+ENDIF()
+
+# dom and sax directories
+IF(${PROJECT_NAME}_ENABLE_DOM OR ${PROJECT_NAME}_ENABLE_EXAMPLES)
+    SET(${PROJECT_NAME}_ENABLE_DOM ON)
+    ADD_SUBDIRECTORY(${${PROJECT_NAME}_SOURCE_DIR}/sax)
+    ADD_SUBDIRECTORY(${${PROJECT_NAME}_SOURCE_DIR}/dom)
+ELSE()
+    GET_PROPERTY(THE_INCLUDE_DIRS GLOBAL PROPERTY INCLUDE_DIRECTORIES)
+    STRING(REPLACE ${${PROJECT_NAME}_SOURCE_DIR}/sax "" TEMP_DIRS "${THE_INCLUDE_DIRS}")
+    STRING(REPLACE ${${PROJECT_NAME}_SOURCE_DIR}/dom "" NEW_INCLUDE_DIRS "${TEMP_DIRS}")
+    SET_PROPERTY(GLOBAL PROPERTY INCLUDE_DIRECTORIES ${NEW_INCLUDE_DIRS})
+ENDIF()
+
+# examples directory
+IF(${PROJECT_NAME}_ENABLE_EXAMPLES OR ${PROJECT_NAME}_ENABLE_EXAMPLES)
+    SET(${PROJECT_NAME}_ENABLE_WCML ON)
+    ADD_SUBDIRECTORY(examples)
+ELSE()
+    GET_PROPERTY(THE_INCLUDE_DIRS GLOBAL PROPERTY INCLUDE_DIRECTORIES)
+    STRING(REPLACE "${${PROJECT_NAME}_SOURCE_DIR}/examples" "" NEW_INCLUDE_DIRS "${THE_INCLUDE_DIRS}")
+    SET_PROPERTY(GLOBAL PROPERTY INCLUDE_DIRECTORIES ${NEW_INCLUDE_DIRS})
+
+ENDIF()
+
 

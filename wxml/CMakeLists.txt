@@ -21,20 +21,13 @@ set(fox_wxml_srcs_pp
 )
  
 add_library(
-  fox_wxml STATIC
+  ${PROJECT_NAME}_wxml STATIC
   ${fox_wxml_srcs}
   ${fox_wxml_srcs_pp}
 )
 
 target_link_libraries(
-  fox_wxml
-  fox_common
-  fox_fsys
+  ${PROJECT_NAME}_wxml
+  ${PROJECT_NAME}_common
+  ${PROJECT_NAME}_fsys
 )
-
-include_directories(
-  ${fox_BINARY_DIR}/fsys
-  ${fox_BINARY_DIR}/common
-  ${fox_BINARY_DIR}/utils
-)
-

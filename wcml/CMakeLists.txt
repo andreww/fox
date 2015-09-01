@@ -92,21 +92,13 @@ set(fox_wcml_srcs_pp
 )
 
 add_library(
-  fox_wcml STATIC
+  ${PROJECT_NAME}_wcml STATIC
   ${fox_wcml_srcs}
   ${fox_wcml_srcs_pp}
 )
 
 target_link_libraries(
-  fox_wcml
-  fox_utils
-  fox_wxml
+  ${PROJECT_NAME}_wcml
+  ${PROJECT_NAME}_utils
+  ${PROJECT_NAME}_wxml
 )
-
-include_directories(
-  ${fox_BINARY_DIR}/fsys
-  ${fox_BINARY_DIR}/utils
-  ${fox_BINARY_DIR}/wxml
-  ${fox_BINARY_DIR}/common
-)
-
