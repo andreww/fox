@@ -5,6 +5,13 @@ SET(CMAKE_VERBOSE_MAKEFILE FALSE)
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 
 #======================#
+# Enable testing
+#======================#
+
+ENABLE_TESTING()
+INCLUDE(CTest)
+
+#======================#
 # Build paths
 #======================#
 
