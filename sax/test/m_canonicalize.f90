@@ -41,7 +41,8 @@ contains  !=============================================================
     type(dictionary_t), intent(in) :: attributes
 
     write(unit=*,fmt="(4a)") ">>Begin Element: {", URI, "}", localname
-    write(unit=*,fmt="(a,i2,a)") "--- ", len(attributes), " attributes:"
+    write(unit=*,fmt="(a,i2,a)") "--- ", getLength(attributes), " attributes:"
+!    write(unit=*,fmt="(a,i2,a)") "--- ", len(attributes), " attributes:"
     call print_dict(attributes)
   end subroutine begin_element_handler
 

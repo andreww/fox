@@ -95,3 +95,7 @@ target_link_libraries(
   ${PROJECT_NAME}_wxml
   ${PROJECT_NAME}_sax
 )
+
+IF(${BUILD_TESTING})
+    ADD_SUBDIRECTORY(test)
+ENDIF()
