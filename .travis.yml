@@ -22,7 +22,7 @@ env:
 install:
   - |
     if [[ ! -d "$HOME/.local/bin" ]]; then
-      mkdir "$HOME/.local/bin"
+      mkdir -p "$HOME/.local/bin"
     fi
   - export PATH="$HOME/.local/bin:$PATH"
   - export FC=/usr/bin/gfortran-4.9
