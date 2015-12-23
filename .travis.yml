@@ -10,6 +10,9 @@ cache:
 
 addons:
   apt:
+    sources:
+      - kalakris-cmake
+      - ubuntu-toolchain-r-test
     packages:
       - gfortran-4.9
 
