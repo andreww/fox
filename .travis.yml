@@ -1,0 +1,27 @@
+language: python
+
+python:
+  - 2.7
+
+sudo: false
+
+cache:
+  apt: true
+
+addons:
+  apt:
+    packages:
+      - gfortran-4.9
+
+env:
+  matrix:
+    - >
+      BUILD_SCRIPT="./configure &&
+      make -j 2 && make -j2 check"
+
+install:
+  - export FC=/usr/bin/gfortran-4.9
+
+script:
+  - echo $BUILD_SCRIPT
+  - bash <<<$BUILD_SCRIPT
