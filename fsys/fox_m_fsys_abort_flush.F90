@@ -104,7 +104,11 @@ CONTAINS
     i=>null()
     Print*,i
 #endif
+#if __GNUC__ == 4 && __GNUC_MINOR__ < 6 
+    stop 1  ! needed for gfortran < 4.6 to compile
+#else
     stop STDERR_FAILURE_STATUS
+#endif
 
   end subroutine pxfabort
 
