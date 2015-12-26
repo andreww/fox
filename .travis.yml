@@ -19,7 +19,7 @@ addons:
 env:
   matrix:
     - >
-      BUILD_SCRIPT="./configure &&
+      BUILD_SCRIPT="FC='gfortran -fno-backtrace' ./configure &&
       make -j 2 && make -j 2 check"
 
 install:
