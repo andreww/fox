@@ -15,12 +15,19 @@ addons:
       - ubuntu-toolchain-r-test
     packages:
       - gfortran-4.9
+      - cmake
 
 env:
   matrix:
+      # Using configure and make, run the tests.
     - >
       BUILD_SCRIPT="FC='gfortran -fno-backtrace' ./configure &&
       make -j 2 && make -j 2 check"
+
+      # Using cmake - just build, tests not working yet.
+    - >
+      BUILD_SCRIPT="mkdir cmake_build/ && cd cmake_build &&
+      cmake ../ && make -j 2"
 
 install:
   - |
