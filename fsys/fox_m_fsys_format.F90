@@ -902,10 +902,10 @@ contains
 #ifdef DUMMYLIB
     character(len=1) :: s
 #else
-    character(len=len(ia(:), "d")) :: s
+    character(len=len(ia, "d")) :: s
 
     integer :: j, k, n
-
+ 
     n = 1
     do k = 1, size(ia) - 1
       j = len(ia(k))
@@ -924,7 +924,7 @@ contains
     character(len=1) :: s
     s = " "
 #else
-    character(len=len(ia(:), fmt)) :: s
+    character(len=len(ia, fmt)) :: s
 
     integer :: j, k, n
 
@@ -944,7 +944,7 @@ contains
     character(len=1) :: s
     s = " "
 #else
-    character(len=len(ia(:,:), "d")) :: s
+    character(len=len(ia, "d")) :: s
 
     integer :: j, k, n
 
@@ -971,7 +971,7 @@ contains
     character(len=1) :: s
     s = " "
 #else
-    character(len=len(ia(:,:), fmt)) :: s
+    character(len=len(ia, fmt)) :: s
 
     integer :: j, k, n
 
@@ -1015,7 +1015,7 @@ contains
     character(len=1) :: s
     s = " "
 #else
-    character(len=len(la(:))) :: s
+    character(len=len(la)) :: s
 
     integer :: k, n
 
@@ -1044,7 +1044,7 @@ contains
     character(len=1) :: s
     s = " "
 #else
-    character(len=len(la(:,:))) :: s
+    character(len=len(la)) :: s
 
     integer :: j, k, n
 
@@ -1351,7 +1351,7 @@ contains
     character(len=1) :: s
     s = " "
 #else
-    character(len=len(xa(:))) :: s
+    character(len=len(xa)) :: s
 
     integer :: j, k, n
 
@@ -1369,7 +1369,7 @@ contains
   pure function str_real_sp_array_fmt(xa, fmt) result(s)
     real(sp), dimension(:), intent(in) :: xa
     character(len=*), intent(in) :: fmt
-    character(len=len(xa(:), fmt)) :: s
+    character(len=len(xa, fmt)) :: s
 
     integer :: j, k, n
 
@@ -1391,7 +1391,7 @@ contains
     character(len=1) :: s
     s = " "
 #else
-    character(len=len(xa(:), fmt)) :: s
+    character(len=len(xa, fmt)) :: s
 
     if (checkFmt(fmt)) then
       s = safestr(xa, fmt)
@@ -1405,7 +1405,7 @@ contains
   pure function str_real_sp_matrix_fmt(xa, fmt) result(s)
     real(sp), dimension(:,:), intent(in) :: xa
     character(len=*), intent(in) :: fmt
-    character(len=len(xa(:,:),fmt)) :: s
+    character(len=len(xa,fmt)) :: s
 
     integer :: i, j, k, n
 
@@ -1435,7 +1435,7 @@ contains
     character(len=1) :: s
     s = " "
 #else
-    character(len=len(xa(:,:),fmt)) :: s
+    character(len=len(xa,fmt)) :: s
 
     if (checkFmt(fmt)) then
       s = safestr(xa, fmt)
@@ -1451,7 +1451,7 @@ contains
     character(len=1) :: s
     s = " "
 #else
-    character(len=len(xa(:,:))) :: s
+    character(len=len(xa)) :: s
 
     s = safestr(xa, "")
 #endif
@@ -1682,7 +1682,7 @@ contains
     character(len=1) :: s
     s = " "
 #else
-    character(len=len(xa(:))) :: s
+    character(len=len(xa)) :: s
 
     integer :: j, k, n
 
@@ -1700,7 +1700,7 @@ contains
   pure function str_real_dp_array_fmt(xa, fmt) result(s)
     real(dp), dimension(:), intent(in) :: xa
     character(len=*), intent(in) :: fmt
-    character(len=len(xa(:), fmt)) :: s
+    character(len=len(xa, fmt)) :: s
 
     integer :: j, k, n
 
@@ -1722,7 +1722,7 @@ contains
     character(len=1) :: s
     s = " "
 #else
-    character(len=len(xa(:), fmt)) :: s
+    character(len=len(xa, fmt)) :: s
 
     if (checkFmt(fmt)) then
       s = safestr(xa, fmt)
@@ -1736,7 +1736,7 @@ contains
   function str_real_dp_matrix_fmt(xa, fmt) result(s)
     real(dp), dimension(:,:), intent(in) :: xa
     character(len=*), intent(in) :: fmt
-    character(len=len(xa(:,:),fmt)) :: s
+    character(len=len(xa,fmt)) :: s
 
     integer :: i, j, k, n
 
@@ -1766,7 +1766,7 @@ contains
     character(len=1) :: s
     s = " "
 #else
-    character(len=len(xa(:,:),fmt)) :: s
+    character(len=len(xa,fmt)) :: s
 
     if (checkFmt(fmt)) then
       s = safestr(xa, fmt)
@@ -1782,7 +1782,7 @@ contains
     character(len=1) :: s
     s = " "
 #else
-    character(len=len(xa(:,:))) :: s
+    character(len=len(xa)) :: s
 
     s = safestr(xa, "")
 #endif
@@ -1841,7 +1841,7 @@ contains
   pure function str_complex_sp_array_fmt(ca, fmt) result(s)
     complex(sp), dimension(:), intent(in) :: ca
     character(len=*), intent(in) :: fmt
-    character(len=len(ca(:), fmt)) :: s
+    character(len=len(ca, fmt)) :: s
 
     integer :: i, n
 
@@ -1861,7 +1861,7 @@ contains
     character(len=1) :: s
     s = " "
 #else
-    character(len=len(ca(:), fmt)) :: s
+    character(len=len(ca, fmt)) :: s
 
     if (checkFmt(fmt)) then
       s = safestr(ca, fmt)
@@ -1877,7 +1877,7 @@ contains
     character(len=1) :: s
     s = " "
 #else
-    character(len=len(ca(:))) :: s
+    character(len=len(ca)) :: s
 
     s = safestr(ca, "")
 #endif
@@ -1887,7 +1887,7 @@ contains
   pure function str_complex_sp_matrix_fmt(ca, fmt) result(s)
     complex(sp), dimension(:, :), intent(in) :: ca
     character(len=*), intent(in) :: fmt
-    character(len=len(ca(:,:), fmt)) :: s
+    character(len=len(ca, fmt)) :: s
 
     integer :: i, j, k, n
 
@@ -1917,7 +1917,7 @@ contains
     character(len=1) :: s
     s = " "
 #else
-    character(len=len(ca(:,:), fmt)) :: s
+    character(len=len(ca, fmt)) :: s
 
     if (checkFmt(fmt)) then
       s = safestr(ca, fmt)
@@ -1933,7 +1933,7 @@ contains
     character(len=1) :: s
     s = " "
 #else
-    character(len=len(ca(:,:))) :: s
+    character(len=len(ca)) :: s
 
     s = safestr(ca, "")
 #endif
@@ -1988,7 +1988,7 @@ contains
   pure function str_complex_dp_array_fmt(ca, fmt) result(s)
     complex(dp), dimension(:), intent(in) :: ca
     character(len=*), intent(in) :: fmt
-    character(len=len(ca(:), fmt)) :: s
+    character(len=len(ca, fmt)) :: s
 
     integer :: i, n
 
@@ -2008,7 +2008,7 @@ contains
     character(len=1) :: s
     s = " "
 #else
-    character(len=len(ca(:), fmt)) :: s
+    character(len=len(ca, fmt)) :: s
 
     if (checkFmt(fmt)) then
       s = safestr(ca, fmt)
@@ -2024,7 +2024,7 @@ contains
     character(len=1) :: s
     s = " "
 #else
-    character(len=len(ca(:))) :: s
+    character(len=len(ca)) :: s
 
     s = safestr(ca, "")
 #endif
@@ -2034,7 +2034,7 @@ contains
   pure function str_complex_dp_matrix_fmt(ca, fmt) result(s)
     complex(dp), dimension(:, :), intent(in) :: ca
     character(len=*), intent(in) :: fmt
-    character(len=len(ca(:,:), fmt)) :: s
+    character(len=len(ca, fmt)) :: s
 
     integer :: i, j, k, n
 
@@ -2064,7 +2064,7 @@ contains
     character(len=1) :: s
     s = " "
 #else
-    character(len=len(ca(:,:), fmt)) :: s
+    character(len=len(ca, fmt)) :: s
 
     if (checkFmt(fmt)) then
       s = safestr(ca, fmt)
@@ -2080,7 +2080,7 @@ contains
     character(len=1) :: s
     s = " "
 #else
-    character(len=len(ca(:,:))) :: s
+    character(len=len(ca)) :: s
 
     s = safestr(ca, "")
 #endif
