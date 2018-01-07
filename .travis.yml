@@ -22,7 +22,7 @@ env:
       # Using configure and make, run the tests.
     - >
       BUILD_SCRIPT="FC='gfortran -fno-backtrace' ./configure &&
-      make -j 2 && make -j 2 check"
+      make -j 2 && make -j 2 check && ./testcheck.sh"
 
       # Using cmake - just build, tests not working yet.
     - >
