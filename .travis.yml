@@ -29,6 +29,12 @@ env:
       BUILD_SCRIPT="mkdir cmake_build/ && cd cmake_build &&
       cmake ../ && make -j 2" COMPILER="gfortran"
 
+      # Using configure and make and intel run the tests.
+    - >
+      BUILD_SCRIPT="FC='ifort -notraceback' ./configure &&
+      make -j 2 && make -j 2 check && ./testcheck.sh" COMPILER="ifort"
+
+
 install:
   - |
     if [[ "$COMPILER" == 'gfortran' ]]; then
@@ -40,8 +46,16 @@ install:
       export FC=/usr/bin/gfortran-4.9
       ln -fs /usr/bin/gfortran-4.9 "$HOME/.local/bin/gfortran" 
       gfortran --version
+    elif [[ "$COMPILER" == 'ifort' ]]; then
+      wget -q 'https://raw.githubusercontent.com/nemequ/icc-travis/master/install-icc.sh' 
+      chmod u+x ./install-icc.sh
+      ./install-icc.sh --components ifort
+      source ~/.bashrc
     fi
 
 script:
   - echo $BUILD_SCRIPT
   - bash <<<$BUILD_SCRIPT
+
+after_script:
+  - '[[ ! -z "${INTEL_INSTALL_PATH}" ]] && uninstall_intel_software'
