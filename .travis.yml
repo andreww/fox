@@ -22,23 +22,25 @@ env:
       # Using configure and make, run the tests.
     - >
       BUILD_SCRIPT="FC='gfortran -fno-backtrace' ./configure &&
-      make -j 2 && make -j 2 check && ./testcheck.sh"
+      make -j 2 && make -j 2 check && ./testcheck.sh" COMPILER="gfortran"
 
       # Using cmake - just build, tests not working yet.
     - >
       BUILD_SCRIPT="mkdir cmake_build/ && cd cmake_build &&
-      cmake ../ && make -j 2"
+      cmake ../ && make -j 2" COMPILER="gfortran"
 
 install:
   - |
-    if [[ ! -d "$HOME/.local/bin" ]]; then
-      mkdir -p "$HOME/.local/bin"
+    if [[ "$COMPILER" == 'gfortran' ]]; then
+      if [[ ! -d "$HOME/.local/bin" ]]; then
+        mkdir -p "$HOME/.local/bin"
+      fi
+      export PATH="$HOME/.local/bin:$PATH"
+      ls -l /usr/bin/gfortran-4.9
+      export FC=/usr/bin/gfortran-4.9
+      ln -fs /usr/bin/gfortran-4.9 "$HOME/.local/bin/gfortran" 
+      gfortran --version
     fi
-  - export PATH="$HOME/.local/bin:$PATH"
-  - ls -l /usr/bin/gfortran-4.9
-  - export FC=/usr/bin/gfortran-4.9
-  - ln -fs /usr/bin/gfortran-4.9 "$HOME/.local/bin/gfortran" 
-  - gfortran --version
 
 script:
   - echo $BUILD_SCRIPT
