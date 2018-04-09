@@ -14,6 +14,19 @@ module fox_m_fsys_format
 !to COUNT their length inline in the specification
 !expression, but Pathscale-2.4 gives an error on that.
 
+!With PGI (all versions up to last PGI 17.10 community edition)
+!all  the procedures exported with the safestr interface
+!were either crashing (older versions) or returning an empty string
+!(latest version) because of a compiler bug.  
+!This bug made fail  all the _Overload  tests in wxml/tests. 
+! safestr works correctly if  all colon are  removed  from the dimension 
+! of the ia array arguments passed  to the len functions 
+!             (see e.g. lines 902 and below).
+! With this format  it is instead ifort v.12 to fail, because of a similar and 
+! opposite bug fortunately fixed by Intel in the successive  versions
+! For sake of compatibility one or the other call is selected with 
+! preprocessor directives. 
+
   use fox_m_fsys_abort_flush, only: pxfflush
   use fox_m_fsys_realtypes, only: sp, dp
 
