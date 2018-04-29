@@ -34,6 +34,10 @@ env:
       BUILD_SCRIPT="FC='ifort -notraceback' ./configure &&
       make -j 2 && make -j 2 check && ./testcheck.sh" COMPILER="ifort"
 
+      # Using configure and make and pgi run the tests.
+    - >
+      BUILD_SCRIPT="FC='pgf90' ./configure &&
+      make -j 2 && make -j 2 check && ./testcheck.sh" COMPILER="pgi"
 
 install:
   - |
@@ -50,6 +54,11 @@ install:
       wget -q 'https://raw.githubusercontent.com/nemequ/icc-travis/master/install-icc.sh' 
       chmod u+x ./install-icc.sh
       ./install-icc.sh --components ifort
+      source ~/.bashrc
+    elif [[ "$COMPILER" == 'pgi' ]]; then
+      wget -q 'https://raw.githubusercontent.com/nemequ/pgi-travis/master/install-pgi.sh' 
+      chmod u+x ./install-pgi.sh
+      ./install-pgi.sh 
       source ~/.bashrc
     fi
 
