@@ -205,6 +205,11 @@ contains
     ch => null()
     do
       c = get_char_from_file(f, XML1_0, eof, es)
+      ! If we don't have a sensible character it may be a Byte 
+      ! Order Mark. Skip it and carry on to see if we can still
+      ! read.
+      if (parse_state == XD_0 .and. c /= '<') &
+        cycle
       if (eof) then
         call rewind_source(f)
         exit

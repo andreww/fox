@@ -1,0 +1,3 @@
+0
+ERROR(FoX)
+Illegal character found at test_sax_fsm_1_utf16_bom.in:0:3 Error parsing XML declaration (Possibly near line=0 col=3) 
