@@ -26,15 +26,4 @@ set(fox_wkml_srcs_pp
   m_wkml_chart.F90
 )
 
-add_library(
-  ${PROJECT_NAME}_wkml STATIC
-  ${fox_wkml_srcs}
-  ${fox_wkml_srcs_pp}
-)
-
-target_link_libraries(
-  ${PROJECT_NAME}_wkml
-  ${PROJECT_NAME}_utils
-  ${PROJECT_NAME}_wxml
-)
-
+MK_LIBS(wkml utils wxml)

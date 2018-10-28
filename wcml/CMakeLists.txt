@@ -91,14 +91,4 @@ set(fox_wcml_srcs_pp
   m_wcml_inputdec.F90
 )
 
-add_library(
-  ${PROJECT_NAME}_wcml STATIC
-  ${fox_wcml_srcs}
-  ${fox_wcml_srcs_pp}
-)
-
-target_link_libraries(
-  ${PROJECT_NAME}_wcml
-  ${PROJECT_NAME}_utils
-  ${PROJECT_NAME}_wxml
-)
+MK_LIBS(wcml utils wxml)

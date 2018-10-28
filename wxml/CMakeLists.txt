@@ -19,15 +19,5 @@ set(fox_wxml_srcs_pp
   m_wxml_escape.F90
   m_wxml_overloads.F90
 )
- 
-add_library(
-  ${PROJECT_NAME}_wxml STATIC
-  ${fox_wxml_srcs}
-  ${fox_wxml_srcs_pp}
-)
 
-target_link_libraries(
-  ${PROJECT_NAME}_wxml
-  ${PROJECT_NAME}_common
-  ${PROJECT_NAME}_fsys
-)
+MK_LIBS(wxml common fsys)

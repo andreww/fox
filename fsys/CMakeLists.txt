@@ -26,9 +26,4 @@ set(fox_fsys_srcs_pp
   fox_m_fsys_varstr.F90
 )
 
-add_library(
-  ${PROJECT_NAME}_fsys STATIC
-  ${fox_fsys_srcs}
-  ${fox_fsys_srcs_pp}
-)
-
+MK_LIBS(fsys)
