@@ -19,15 +19,4 @@ set(fox_common_srcs_pp
   m_common_struct.F90
 )
 
-add_library(
-  ${PROJECT_NAME}_common STATIC
-  ${fox_common_srcs}
-  ${fox_common_srcs_pp}
-)
-
-target_link_libraries(
-  ${PROJECT_NAME}_common
-  ${PROJECT_NAME}_utils
-  ${PROJECT_NAME}_fsys
-)
-
+MK_LIBS(common utils fsys)

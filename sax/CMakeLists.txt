@@ -11,16 +11,4 @@ set(fox_sax_srcs_pp
   m_sax_xml_source.F90
 )
   
-
-add_library(
-  ${PROJECT_NAME}_sax STATIC
-  ${fox_sax_srcs}
-  ${fox_sax_srcs_pp}
-)
-
-target_link_libraries(
-  ${PROJECT_NAME}_sax
-  ${PROJECT_NAME}_common
-  ${PROJECT_NAME}_utils
-  ${PROJECT_NAME}_fsys
-)
+MK_LIBS(sax common utils fsys)
