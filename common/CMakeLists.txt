@@ -19,4 +19,8 @@ set(fox_common_srcs_pp
   m_common_struct.F90
 )
 
+IF(${PROJECT_NAME}_SUPPRESS_WARNINGS)
+    ADD_DEFINITIONS(-DSUPPRESS_WARNINGS)
+ENDIF()
+
 MK_LIBS(common utils fsys)

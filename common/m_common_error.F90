@@ -77,10 +77,10 @@ contains
         write(0,'(a)') 'FoX warning  made fatal'
         call FoX_fatal_base(msg)
     endif
-#ifndef SUPPRESS_WARNINGS
-      write(0,'(a)') 'WARNING(FoX)'
-      write(0,'(a)')  msg
-      call pxfflush(0)
+#if !defined(SUPPRESS_WARNINGS)
+    write(0,'(a)') 'WARNING(FoX)'
+    write(0,'(a)')  msg
+    call pxfflush(0)
 #endif
 
   end subroutine FoX_warning_base
