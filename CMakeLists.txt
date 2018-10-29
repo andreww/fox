@@ -30,6 +30,7 @@ OPTION(${PROJECT_NAME}_ENABLE_WCML "Enable/disable Chemical Markup Language outp
 OPTION(${PROJECT_NAME}_ENABLE_WKML "Enable/disable Keyhole Markup Language output library" ON)
 OPTION(${PROJECT_NAME}_ENABLE_DOM "Enable/disable Document Object Model input library" ON)
 OPTION(${PROJECT_NAME}_ENABLE_EXAMPLES "Build examples" ON)
+OPTION(${PROJECT_NAME}_SUPPRESS_WARNINGS "Supress non-fatal warnings" OFF)
 OPTION(BUILD_SHARED_LIBS, OFF)
 
 #======================#
@@ -195,4 +196,10 @@ ELSE()
     SET_PROPERTY(GLOBAL PROPERTY INCLUDE_DIRECTORIES ${NEW_INCLUDE_DIRS})
 ENDIF()
 
+# supress warnings
+IF(${PROJECT_NAME}_SUPPRESS_WARNINGS)
+    ADD_DEFINITIONS(-DSUPPRESS_WARNINGS)
+ENDIF()
+
+# install modules
 INSTALL(DIRECTORY ${CMAKE_Fortran_MODULE_DIRECTORY}/ DESTINATION include)
