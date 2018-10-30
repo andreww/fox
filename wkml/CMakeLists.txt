@@ -38,3 +38,6 @@ target_link_libraries(
   ${PROJECT_NAME}_wxml
 )
 
+IF(${BUILD_TESTING})
+    ADD_SUBDIRECTORY(test)
+ENDIF()
