@@ -122,6 +122,7 @@ INCLUDE(${${PROJECT_NAME}_SOURCE_DIR}/cmake/CheckAssociatedBug.cmake)
 INCLUDE(${${PROJECT_NAME}_SOURCE_DIR}/cmake/CheckAbortIntrinsic.cmake)
 
 SET(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${FPPFLAGS}")
+set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 
 MACRO(MK_LIBS _NAME)
   ADD_LIBRARY(
