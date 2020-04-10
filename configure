@@ -502,13 +502,14 @@ if ln -s conf$$.file conf$$ 2>/dev/null; then
   # ... but there are two gotchas:
   # 1) On MSYS, both `ln -s file dir' and `ln file dir' fail.
   # 2) DJGPP < 2.04 has no symlinks; `ln -s' creates a wrapper executable.
-  # In both cases, we have to default to `cp -p'.
+  # 3) On CSD3, `cp -p` fails so needed to change `cp -p` to `cp $CP_OPTS`. 
+  # In both cases, we have to default to `cp ${CP_OPTS}'. 
   ln -s conf$$.file conf$$.dir 2>/dev/null && test ! -f conf$$.exe ||
-    as_ln_s='cp -p'
+    as_ln_s='cp ${CP_OPTS}'
 elif ln conf$$.file conf$$ 2>/dev/null; then
   as_ln_s=ln
 else
-  as_ln_s='cp -p'
+  as_ln_s='cp ${CP_OPTS}'
 fi
 rm -f conf$$ conf$$.exe conf$$.dir/conf$$.file conf$$.file
 rmdir conf$$.dir 2>/dev/null
@@ -6750,13 +6751,13 @@ if ln -s conf$$.file conf$$ 2>/dev/null; then
   # ... but there are two gotchas:
   # 1) On MSYS, both `ln -s file dir' and `ln file dir' fail.
   # 2) DJGPP < 2.04 has no symlinks; `ln -s' creates a wrapper executable.
-  # In both cases, we have to default to `cp -p'.
+  # In both cases, we have to default to `cp ${CP_OPTS}'.
   ln -s conf$$.file conf$$.dir 2>/dev/null && test ! -f conf$$.exe ||
-    as_ln_s='cp -p'
+    as_ln_s='cp ${CP_OPTS}'
 elif ln conf$$.file conf$$ 2>/dev/null; then
   as_ln_s=ln
 else
-  as_ln_s='cp -p'
+  as_ln_s='cp ${CP_OPTS}'
 fi
 rm -f conf$$ conf$$.exe conf$$.dir/conf$$.file conf$$.file
 rmdir conf$$.dir 2>/dev/null
