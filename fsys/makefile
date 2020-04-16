@@ -19,7 +19,7 @@ INCFLAGS=
 #
 include ../arch.make
 #
-CP=cp -p
+CP=cp ${CP_OPTS}
 install: $(OBJFILES)
 	@echo "  ==> Creating $(LIBRARY) with $(OBJFILES)"
 	@$(AR) $(ARFLAGS_EXTRA) cru $(LIBRARY) $(OBJFILES)

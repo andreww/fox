@@ -2,6 +2,10 @@
 #
 include arch.make
 #
+ifeq (${CP_OPTS},)
+CP_OPTS="-p"
+endif
+#
 default: objsdir $(BUILD_TARGETS) examples_build
 	@if [ -z "$(BUILD_TARGETS)" ]; then echo "FoX is not configured!"; else touch .FoX; fi
 #

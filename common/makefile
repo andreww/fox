@@ -25,7 +25,7 @@ include ../arch.make
 #FFLAGS=$(FFLAGS_PROFILE)
 #FFLAGS=$(FFLAGS_CHECK)
 #
-CP=cp -p
+CP=cp ${CP_OPTS}
 install: $(OBJFILES)
 	@echo "  ==> Creating $(LIBRARY) with $(OBJFILES)"
 	@$(AR) $(ARFLAGS_EXTRA) cru $(LIBRARY) $(OBJFILES)

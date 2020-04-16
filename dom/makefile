@@ -28,7 +28,7 @@ m_dom_utils.f90: m_dom_utils.m4
 m_dom_dom.F90: $(M4FILES)
 	m4 -I ../m4 m_dom_dom.m4 > $@ 
 #
-CP=cp -p
+CP=cp ${CP_OPTS}
 install: $(OBJFILES)
 	@echo "  ==> Creating $(LIBRARY) with $(OBJFILES)"
 	$(AR) $(ARFLAGS_EXTRA) cru $(LIBRARY) $(OBJFILES)
