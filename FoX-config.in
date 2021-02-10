@@ -118,13 +118,13 @@ esac
 
 case $FLAGS in
   FC)
-    echo @FC_MOD_FLAG@"$moddir"
+    echo @FC_MODINC@"$moddir"
     ;;
   LD)
     echo $LIBS
     ;;
   both)
-    echo @FC_MOD_FLAG@"$moddir" $LIBS
+    echo @FC_MODINC@"$moddir" $LIBS
 esac 
 
 exit 0
