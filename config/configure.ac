@@ -12,31 +12,6 @@ dnl
 AC_LANG(Fortran)
 AC_PROG_FC
 dnl
-AC_FC_FREEFORM([f90])
-AC_SUBST(FCFLAGS_free_f90)
-dnl
-AC_LANG_PUSH(Preprocessed Fortran)
-AC_PROG_FPP
-dnl
-AC_FPP_FREEFORM([F90])
-AC_SUBST(FPPFLAGS_free_F90)
-AC_LANG_POP(Preprocessed Fortran)
-dnl
-if test $ac_cv_fpp_build_rule = direct; then
-     F90_RULE=['$(FC) -c $(FFLAGS) $(INCFLAGS) $(FPPFLAGS) $(FPPFLAGS_free_F90) $< ']
-elif test $ac_cv_fpp_build_rule = indirect; then
-  if test $ac_cv_fc_cifs = yes; then
-     F90_RULE=['while [ 0 ]; do FPPFILE=$*.$$RANDOM.f90; if ! test -f $$FPPFILE; then break; fi; done; $(FPP) $(FPPFLAGS) $< > $$FPPFILE && $(FC) -c -o $*.$(OBJEXT) $(FFLAGS) $(INCFLAGS) $(FCFLAGS_free_f90) $$FPPFILE; rm $$FPPFILE']
-  elif test x$FPP_OUTPUT = x; then
-     F90_RULE=['$(FPP) $(FPPFLAGS) $< && $(FC) -c $(FFLAGS) $(INCFLAGS) $(FCFLAGS_free_f90) $*.f90; rm $*.f90']
-  else
-     F90_RULE=['$(FPP) $(FPPFLAGS) $< > $*.f90 && $(FC) -c $(FFLAGS) $(INCFLAGS) $(FCFLAGS_free_f90) $*.f90; rm $*.f90']
-  fi
-fi
-dnl Generate dependency rules according to whether we need
-dnl separate preprocessing stage.
-AC_SUBST(F90_RULE)
-dnl
 dnl check flag needed to name linked executables
 LINK_O_FLAG=$ac_link_obj_flag
 AC_SUBST(LINK_O_FLAG)
@@ -156,11 +131,6 @@ dnl
 dnl Check for compiler problems
 TW_CHECK_ASSOCIATED_BUG([], [DEFS="$DEFS RESTRICTED_ASSOCIATED_BUG"])
 dnl
-dnl Fix up DEFS -> FPPFLAGS conversion.
-for i in $DEFS; do
-  FPPFLAGS="$FPPFLAGS $FPPFLAGS_DEF$i"
-done
-dnl
 dnl Library functionality ...
 dnl How to make a static library ...
 dnl we should test for this, but I don't know how yet.
@@ -190,8 +160,8 @@ TW_PROG_CYGPATH_W
 AC_SUBST(VPATH)
 OBJSDIR=`pwd`/objs
 AC_SUBST(OBJSDIR)
-AC_FC_MOD_PATH_FLAG
-AC_FC_MOD_SUFFIX
+AC_FC_MODULE_FLAG
+AC_FC_MODULE_EXTENSION
 #
 AC_SUBST(FPPFLAGS)
 AC_SUBST(FFLAGS)
