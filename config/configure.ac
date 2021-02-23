@@ -97,7 +97,7 @@ AC_ARG_ENABLE([dummy],
   AC_HELP_STRING([--enable-dummy], [Compile only dummy interfaces]),
   [dummy=$enableval])
 if test x$dummy = xyes; then
-  DEFS="$DEFS DUMMYLIB"
+  echo "#define DUMMYLIB 1" >> confdefs.h
 dnl DUMMYLIB doesnt work with DOM
   dom_yes=
 fi
@@ -121,15 +121,15 @@ TW_FC_CHECK_ABORT([],[AC_MSG_RESULT([cannot compile call to ABORT])])
 TW_FC_CHECK_EOL
 case $ac_cv_FC_check_output_eol in
   CRLF)
-    DEFS="$DEFS FC_EOR_CRLF";;
+    echo "#define FC_EOR_CRLF 1" >> confdefs.h;;
   CR)
-    DEFS="$DEFS FC_EOR_CR";;
+    echo "#define FC_EOR_CR 1" >> confdefs.h;;
   LF)
-    DEFS="$DEFS FC_EOR_LF";;
+    echo "#define FC_EOR_LF 1" >> confdefs.h;;
 esac 
 dnl
 dnl Check for compiler problems
-TW_CHECK_ASSOCIATED_BUG([], [DEFS="$DEFS RESTRICTED_ASSOCIATED_BUG"])
+TW_CHECK_ASSOCIATED_BUG([], [echo "#define RESTRICTED_ASSOCIATED_BUG 1" >> confdefs.h])
 dnl
 dnl Library functionality ...
 dnl How to make a static library ...

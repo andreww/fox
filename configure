@@ -2647,7 +2647,7 @@ case $FC_ID in
 
   Nag)
      FFLAGS_DEBUG="-C=all -g -gline -nan"
-     DEFS="$DEFS __NAG__"
+     echo "#define __NAG__ 1" >> confdefs.h
      ;;
 
   Pathscale)
@@ -2656,7 +2656,7 @@ case $FC_ID in
   Portland)
      FFLAGS_DEBUG="-g -Mbounds"
      FFLAGS_FAST="-fast"
-     DEFS="$DEFS PGF90"
+     echo "#define PGF90 1" >> confdefs.h
      ;;
 
   SGI)
@@ -2743,7 +2743,7 @@ if test "${enable_dummy+set}" = set; then :
 fi
 
 if test x$dummy = xyes; then
-  DEFS="$DEFS DUMMYLIB"
+  echo "#define DUMMYLIB 1" >> confdefs.h
   dom_yes=
 fi
 BUILD_TARGETS="$wxml_yes $wcml_yes $wkml_yes $sax_yes $dom_yes"
@@ -3002,7 +3002,7 @@ cat > conftest.$ac_ext <<_ACEOF
 
 _ACEOF
 if ac_fn_fc_try_link "$LINENO"; then :
-  tw_flush_ok=yes; TW_FLUSH=bare;tw_method=default;DEFS="$DEFS FC_HAVE_FLUSH"
+  tw_flush_ok=yes; TW_FLUSH=bare;tw_method=default;echo "#define FC_HAVE_FLUSH 1" >> confdefs.h
 fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
@@ -3018,7 +3018,7 @@ if test $tw_flush_ok = no; then
 
 _ACEOF
 if ac_fn_fc_try_link "$LINENO"; then :
-  tw_flush_ok=yes; TW_FLUSH=INTEL;tw_method="with -Vaxlib";DEFS="$DEFS FC_HAVE_FLUSH"
+  tw_flush_ok=yes; TW_FLUSH=INTEL;tw_method="with -Vaxlib";echo "$define FC_HAVE_FLUSH 1" >> confdefs.h
 fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
@@ -3037,7 +3037,7 @@ if test $tw_flush_ok = no; then
 
 _ACEOF
 if ac_fn_fc_try_link "$LINENO"; then :
-  tw_flush_ok=yes; TW_FLUSH=NAG;tw_method="with f90_unix_io";DEFS="$DEFS FC_HAVE_FLUSH"
+  tw_flush_ok=yes; TW_FLUSH=NAG;tw_method="with f90_unix_io";echo "#define FC_HAVE_FLUSH 1" >> confdefs.h
 fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
@@ -3080,7 +3080,7 @@ if test $tw_abort_ok = no; then
 
 _ACEOF
 if ac_fn_fc_try_link "$LINENO"; then :
-  tw_abort_ok=yes; tw_method="with argument";DEFS="$DEFS FC_HAVE_ABORT FC_ABORT_ARG"
+  tw_abort_ok=yes; tw_method="with argument";echo "#define FC_HAVE_ABORT 1" >> confdefs.h; echo "#define FC_ABORT_ARG 1" >> confdefs.h
 fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
@@ -3094,7 +3094,7 @@ if test $tw_abort_ok = no; then
 
 _ACEOF
 if ac_fn_fc_try_link "$LINENO"; then :
-  tw_abort_ok=yes; tw_method="with underscore";DEFS="$DEFS FC_HAVE_ABORT FC_ABORT_UNDERSCORE"
+  tw_abort_ok=yes; tw_method="with underscore";echo "#define FC_HAVE_ABORT 1" >> confdefs.h; echo "#define FC_ABORT_UNDERSCORE 1" >> confdefs.h
 fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
@@ -3108,7 +3108,7 @@ if test $tw_abort_ok = no; then
 
 _ACEOF
 if ac_fn_fc_try_link "$LINENO"; then :
-  tw_abort_ok=yes; tw_method=default;DEFS="$DEFS FC_HAVE_ABORT"
+  tw_abort_ok=yes; tw_method=default;echo "#define FC_HAVE_ABORT 1" >> confdefs.h
 fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
@@ -3123,7 +3123,7 @@ if test $tw_abort_ok = no; then
 
 _ACEOF
 if ac_fn_fc_try_link "$LINENO"; then :
-  tw_abort_ok=yes; tw_method="with f90_unix_proc";DEFS="$DEFS FC_HAVE_ABORT"
+  tw_abort_ok=yes; tw_method="with f90_unix_proc";echo "#define FC_HAVE_ABORT 1" >> confdefs.h
 fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
@@ -3139,7 +3139,7 @@ if test $tw_abort_ok = no; then
 
 _ACEOF
 if ac_fn_fc_try_link "$LINENO"; then :
-  tw_abort_ok=yes; tw_method="with -Vaxlib";DEFS="$DEFS FC_HAVE_ABORT"
+  tw_abort_ok=yes; tw_method="with -Vaxlib";echo "#define FC_HAVE_ABORT 1" >> confdefs.h
 fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
@@ -3208,11 +3208,11 @@ $as_echo "$ac_cv_FC_check_output_eol" >&6; }
 
 case $ac_cv_FC_check_output_eol in
   CRLF)
-    DEFS="$DEFS FC_EOR_CRLF";;
+    echo "#define FC_EOR_CRLF 1" >> confdefs.h;;
   CR)
-    DEFS="$DEFS FC_EOR_CR";;
+    echo "#define FC_EOR_CR 1" >> confdefs.h;;
   LF)
-    DEFS="$DEFS FC_EOR_LF";;
+    echo "#define FC_EOR_LF 1" >> confdefs.h;;
 esac
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for ASSOCIATED in restricted expression bug" >&5
@@ -3239,7 +3239,7 @@ $as_echo "no" >&6; }
 else
   { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
-    DEFS="$DEFS RESTRICTED_ASSOCIATED_BUG"
+    echo "#define RESTRICTED_ASSOCIATED_BUG 1" >> confdefs.h
 
 
 fi
