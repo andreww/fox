@@ -7,7 +7,7 @@ OBJECTS = FoX.html Versioning.html Compilation.html Embedding.html Standards.htm
 
 default: FoX_DoX.html
 	ln -sf FoX.html index.html
-	cp $(OBJECTS) FoX.html index.html DoX.css ../docs
+	cp $(OBJECTS) FoX_DoX.html index.html DoX.css ../docs
 
 .md.html: head tail
 	sed -e 's/TITLE/$*/' head > $@; sed -e 's/|\(.*\)|/\1.html/g' $< | markdown >> $@; cat tail >> $@
