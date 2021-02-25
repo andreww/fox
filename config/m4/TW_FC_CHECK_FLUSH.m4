@@ -78,14 +78,14 @@ tw_flush_ok=no
 dnl
 AC_LINK_IFELSE(
    [AC_LANG_SOURCE([_TW_TRY_FLUSH_BARE])],
-    [tw_flush_ok=yes; TW_FLUSH=bare;tw_method=default;DEFS="$DEFS FC_HAVE_FLUSH"],
+    [tw_flush_ok=yes; TW_FLUSH=bare;tw_method=default;echo "#define FC_HAVE_FLUSH 1" >> confdefs.h],
     [])
 if test $tw_flush_ok = no; then
    save_LDFLAGS=$LDFLAGS
    LDFLAGS="$LDFLAGS -Vaxlib"
    AC_LINK_IFELSE(
    [AC_LANG_SOURCE([_TW_TRY_FLUSH_BARE])],
-    [tw_flush_ok=yes; TW_FLUSH=INTEL;tw_method="with -Vaxlib";DEFS="$DEFS FC_HAVE_FLUSH"],
+    [tw_flush_ok=yes; TW_FLUSH=INTEL;tw_method="with -Vaxlib";echo "$define FC_HAVE_FLUSH 1" >> confdefs.h],
     [])
    if test $tw_flush_ok = no; then
       LDFLAGS=$save_LDFLAGS
@@ -94,7 +94,7 @@ fi
 if test $tw_flush_ok = no; then
   AC_LINK_IFELSE(
    [AC_LANG_SOURCE([_TW_TRY_FLUSH_NAG])],
-    [tw_flush_ok=yes; TW_FLUSH=NAG;tw_method="with f90_unix_io";DEFS="$DEFS FC_HAVE_FLUSH"],
+    [tw_flush_ok=yes; TW_FLUSH=NAG;tw_method="with f90_unix_io";echo "#define FC_HAVE_FLUSH 1" >> confdefs.h],
     [])
 fi
 if test $tw_flush_ok = no; then

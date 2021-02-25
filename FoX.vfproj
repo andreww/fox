@@ -102,6 +102,7 @@
 		<File RelativePath=".\wcml\m_wcml_coma.F90"/>
 		<File RelativePath=".\wcml\m_wcml_core.F90"/>
 		<File RelativePath=".\wcml\m_wcml_geometry.F90"/>
+		<File RelativePath=".\wcml\m_wcml_inputdec.F90"/>
 		<File RelativePath=".\wcml\m_wcml_lattice.F90"/>
 		<File RelativePath=".\wcml\m_wcml_lists.F90"/>
 		<File RelativePath=".\wcml\m_wcml_metadata.F90"/>

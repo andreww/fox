@@ -79,19 +79,9 @@ set(fox_dom_srcs
   m_dom_utils.f90
 )
 
-add_library(
-  ${PROJECT_NAME}_dom STATIC
-  ${fox_dom_srcs}
-  ${fox_dom_srcs_pp}
-)
+MK_LIBS(dom wxml sax)
 
 ## add_dependencies(
 ##   fox_dom
 ##   dom_generate
 ## )
-
-target_link_libraries(
-  ${PROJECT_NAME}_dom
-  ${PROJECT_NAME}_wxml
-  ${PROJECT_NAME}_sax
-)

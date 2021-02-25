@@ -77,10 +77,11 @@ contains
         write(0,'(a)') 'FoX warning  made fatal'
         call FoX_fatal_base(msg)
     endif
-
+#if !defined(SUPPRESS_WARNINGS)
     write(0,'(a)') 'WARNING(FoX)'
     write(0,'(a)')  msg
     call pxfflush(0)
+#endif
 
   end subroutine FoX_warning_base
 
@@ -194,8 +195,8 @@ contains
   end subroutine FoX_set_fatal_errors
 
   function  FoX_get_fatal_errors()
-     logical :: FoX_get_fatal_errors
-     FoX_get_fatal_errors = errors_are_fatal
+      logical :: FoX_get_fatal_errors
+      FoX_get_fatal_errors = errors_are_fatal
   end function FoX_get_fatal_errors
 
   subroutine  FoX_set_fatal_warnings(newvalue)
@@ -209,3 +210,4 @@ contains
   end function FoX_get_fatal_warnings
 
 end module m_common_error
+    

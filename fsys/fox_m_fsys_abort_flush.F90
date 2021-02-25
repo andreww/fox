@@ -46,6 +46,9 @@ CONTAINS
 #ifdef __NAG__
     use f90_unix_io, only : flush
 #endif
+#ifdef __INTEL_COMPILER
+    use ifport, only : flush
+#endif
     integer, intent(in) :: unit
     integer :: i
 
@@ -79,6 +82,9 @@ CONTAINS
 #ifdef __NAG__
     use f90_unix_proc, only : abort
 #endif
+#ifdef __INTEL_COMPILER
+    use ifport, only : abort
+#endif
 #ifdef F2003
     interface
       subroutine abort() bind(c)
@@ -104,7 +110,11 @@ CONTAINS
     i=>null()
     Print*,i
 #endif
-    stop 1 ! gfortran 4.4 and 4.5 refuses to compile with STDERR_FAILURE_STATUS
+#if __GNUC__ == 4 && __GNUC_MINOR__ < 6 
+    stop 1  ! needed for gfortran < 4.6 to compile
+#else
+    stop STDERR_FAILURE_STATUS
+#endif
 
   end subroutine pxfabort
 

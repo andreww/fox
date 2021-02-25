@@ -69,6 +69,3 @@ include_directories(
   ${${PROJECT_NAME}_BINARY_DIR}/fsys
   ${${PROJECT_NAME}_BINARY_DIR}/sax
 )
-
-
-

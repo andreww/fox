@@ -75,7 +75,7 @@ contains
 
   subroutine ignorableWhitespace_handler(chars)
     character(len=*), intent(in) :: chars
-    write(*,'(2a)') str(len(chars))//" characters of ignorable whitespace found"
+    write(*,'(i0, a)') len(chars), "characters of ignorable whitespace found"
   end subroutine ignorableWhitespace_handler
 
   subroutine processingInstruction_handler(name, content)

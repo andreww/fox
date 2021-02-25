@@ -81,7 +81,7 @@ case $FC_ID in
 
   Nag)
      FFLAGS_DEBUG="-C=all -g -gline -nan"
-     DEFS="$DEFS __NAG__"
+     echo "#define __NAG__ 1" >> confdefs.h
      ;;
   
   Pathscale)
@@ -90,7 +90,7 @@ case $FC_ID in
   Portland)
      FFLAGS_DEBUG="-g -Mbounds"
      FFLAGS_FAST="-fast"
-     DEFS="$DEFS PGF90"
+     echo "#define PGF90 1" >> confdefs.h
      ;;
 
   SGI)

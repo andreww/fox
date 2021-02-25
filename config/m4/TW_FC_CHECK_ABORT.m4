@@ -85,28 +85,28 @@ dnl
 if test $tw_abort_ok = no; then
   AC_LINK_IFELSE(
    [AC_LANG_SOURCE([_TW_TRY_ABORT_INTEL])],
-    [tw_abort_ok=yes; tw_method="with argument";DEFS="$DEFS FC_HAVE_ABORT FC_ABORT_ARG"],
+    [tw_abort_ok=yes; tw_method="with argument";echo "#define FC_HAVE_ABORT 1" >> confdefs.h; echo "#define FC_ABORT_ARG 1" >> confdefs.h],
     [])
 fi
 dnl
 if test $tw_abort_ok = no; then
   AC_LINK_IFELSE(
    [AC_LANG_SOURCE([_TW_TRY_ABORT_XLF])],
-    [tw_abort_ok=yes; tw_method="with underscore";DEFS="$DEFS FC_HAVE_ABORT FC_ABORT_UNDERSCORE"],
+    [tw_abort_ok=yes; tw_method="with underscore";echo "#define FC_HAVE_ABORT 1" >> confdefs.h; echo "#define FC_ABORT_UNDERSCORE 1" >> confdefs.h],
     [])
 fi
 dnl
 if test $tw_abort_ok = no; then
   AC_LINK_IFELSE(
    [AC_LANG_SOURCE([_TW_TRY_ABORT_BARE])],
-    [tw_abort_ok=yes; tw_method=default;DEFS="$DEFS FC_HAVE_ABORT"],
+    [tw_abort_ok=yes; tw_method=default;echo "#define FC_HAVE_ABORT 1" >> confdefs.h],
     [])
 fi
 dnl
 if test $tw_abort_ok = no; then
   AC_LINK_IFELSE(
    [AC_LANG_SOURCE([_TW_TRY_ABORT_NAG])],
-    [tw_abort_ok=yes; tw_method="with f90_unix_proc";DEFS="$DEFS FC_HAVE_ABORT"],
+    [tw_abort_ok=yes; tw_method="with f90_unix_proc";echo "#define FC_HAVE_ABORT 1" >> confdefs.h],
     [])
 fi
 dnl
@@ -118,7 +118,7 @@ if test $tw_abort_ok = no; then
    LDFLAGS="$LDFLAGS -Vaxlib"
    AC_LINK_IFELSE(
    [AC_LANG_SOURCE([_TW_TRY_ABORT_BARE])],
-    [tw_abort_ok=yes; tw_method="with -Vaxlib";DEFS="$DEFS FC_HAVE_ABORT"],
+    [tw_abort_ok=yes; tw_method="with -Vaxlib";echo "#define FC_HAVE_ABORT 1" >> confdefs.h],
     [])
    if test $tw_abort_ok = no; then
       LDFLAGS=$save_LDFLAGS

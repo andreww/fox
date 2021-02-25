@@ -1,0 +1,45 @@
+language: python
+
+python:
+  - 2.7
+
+sudo: false
+
+cache:
+  apt: true
+
+addons:
+  apt:
+    sources:
+      - kalakris-cmake
+      - ubuntu-toolchain-r-test
+    packages:
+      - gfortran-4.9
+      - cmake
+
+env:
+  matrix:
+      # Using configure and make, run the tests.
+    - >
+      BUILD_SCRIPT="FC='gfortran -fno-backtrace' ./configure &&
+      make -j 2 && make -j 2 check && ./testcheck.sh"
+
+      # Using cmake - just build, tests not working yet.
+    - >
+      BUILD_SCRIPT="mkdir cmake_build/ && cd cmake_build &&
+      cmake ../ && make -j 2"
+
+install:
+  - |
+    if [[ ! -d "$HOME/.local/bin" ]]; then
+      mkdir -p "$HOME/.local/bin"
+    fi
+  - export PATH="$HOME/.local/bin:$PATH"
+  - ls -l /usr/bin/gfortran-4.9
+  - export FC=/usr/bin/gfortran-4.9
+  - ln -fs /usr/bin/gfortran-4.9 "$HOME/.local/bin/gfortran" 
+  - gfortran --version
+
+script:
+  - echo $BUILD_SCRIPT
+  - bash <<<$BUILD_SCRIPT
