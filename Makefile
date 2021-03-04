@@ -1,6 +1,7 @@
 #!/bin/make
 #
 include arch.make
+SRCDIR = .
 #
 default: objsdir $(BUILD_TARGETS) examples_build
 	@if [ -z "$(BUILD_TARGETS)" ]; then echo "FoX is not configured!"; else touch .FoX; fi
@@ -9,7 +10,7 @@ objsdir:
 	mkdir -p objs/lib objs/finclude
 #
 # Note the hackery to fix the prefix in FoX-config when installed without breaking
-# use from the local directory (which would just need a one-line fix in 
+# use from the local directory (which would just need a one-line fix in
 # FoX-config.in). We restore the origional FoX-config so local version still works.
 install: objsdir $(BUILD_TARGETS)
 	$(MKDIR_P) $(install_prefix)/lib $(install_prefix)/finclude $(install_prefix)/bin
@@ -55,7 +56,7 @@ sax_lib_check: $(BUILD_TARGETS) common_lib utils_lib
 	    touch sax_lib_check.out ; \
 	fi
 #
-wxml_lib: objsdir common_lib fsys_lib 
+wxml_lib: objsdir common_lib fsys_lib
 	(cd wxml; $(MAKE) VPATH=$(VPATH)/wxml)
 wxml_lib_clean:
 	if test -d wxml; then (cd wxml; $(MAKE) VPATH=$(VPATH)/wxml clean) fi
@@ -71,7 +72,7 @@ wxml_lib_check: $(BUILD_TARGETS) common_lib utils_lib
 #
 wcml_lib: objsdir utils_lib wxml_lib
 	(cd wcml; $(MAKE) VPATH=$(VPATH)/wcml)
-wcml_lib_clean: 
+wcml_lib_clean:
 	if test -d wcml; then (cd wcml; $(MAKE) VPATH=$(VPATH)/wcml clean) fi
 wcml_lib_check: $(BUILD_TARGETS) common_lib utils_lib
 	if test -d examples && ! grep DUMMYLIB arch.make > /dev/null ; \
@@ -127,7 +128,7 @@ utils_lib_check: $(BUILD_TARGETS) common_lib utils_lib
 	fi
 #
 fsys_lib: objsdir
-	(cd fsys; $(MAKE) VPATH=$(VPATH)/fsys)
+	(cd $(SRCDIR)/fsys; $(MAKE) VPATH=$(VPATH)/fsys)
 fsys_lib_clean:
 	if test -d fsys; then (cd fsys; $(MAKE) VPATH=$(VPATH)/fsys clean) fi
 #
