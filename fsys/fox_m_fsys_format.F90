@@ -123,6 +123,30 @@ module fox_m_fsys_format
 contains
 
 #ifndef DUMMYLIB
+  ! NB: we need checkFmt at the top of the file 
+  ! to work around a bug in some Gfortran versions
+  ! see https://gcc.gnu.org/bugzilla/show_bug.cgi?id=85138
+  pure function checkFmt(fmt) result(good)
+    character(len=*), intent(in) :: fmt
+    logical :: good
+
+    ! should be ([rs]\d*)?
+
+    if (len(fmt) > 0) then
+      if (fmt(1:1) == "r" .or. fmt(1:1) == "s") then
+        if (len(fmt) > 1) then
+          good = (verify(fmt(2:), digit) == 0)
+        else
+          good = .true.
+        endif
+      else
+        good = .false.
+      endif
+    else
+      good = .true.
+    endif
+  end function checkFmt
+
   ! NB: The len generic module procedure is used in
   !     many initialisation statments (to set the
   !     length of the output string needed for the
@@ -2215,29 +2239,6 @@ contains
     s = safestr(ca, "")
 #endif
   end function str_complex_dp_matrix
-
-#ifndef DUMMYLIB
-  pure function checkFmt(fmt) result(good)
-    character(len=*), intent(in) :: fmt
-    logical :: good
-
-    ! should be ([rs]\d*)?
-
-    if (len(fmt) > 0) then
-      if (fmt(1:1) == "r" .or. fmt(1:1) == "s") then
-        if (len(fmt) > 1) then
-          good = (verify(fmt(2:), digit) == 0)
-        else
-          good = .true.
-        endif
-      else
-        good = .false.
-      endif
-    else
-      good = .true.
-    endif
-  end function checkFmt
-#endif
 
   pure function concat_str_int(s1, s2) result(s3)
     character(len=*), intent(in) :: s1
