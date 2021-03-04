@@ -47,6 +47,18 @@ TOHW_m_dom_contents(`
 
 TOHW_m_dom_get(DOMString, nodeName, np%nodeName)
 
+  pure function getTextContent_len(arg, p) result(n)
+    type(Node), intent(in) :: arg
+    logical, intent(in) :: p
+    integer :: n
+
+    if (p) then
+      n = arg%textContentLength
+    else
+      n = 0
+    endif
+  end function getTextContent_len
+
   pure function getNodeValue_len(np, p) result(n)
     type(Node), intent(in) :: np
     logical, intent(in) :: p
@@ -1331,18 +1343,6 @@ TOHW_m_dom_treewalk(`
       enddo
     endif
   end subroutine updateTextContentLength
-
-  pure function getTextContent_len(arg, p) result(n)
-    type(Node), intent(in) :: arg
-    logical, intent(in) :: p
-    integer :: n
-
-    if (p) then
-      n = arg%textContentLength
-    else
-      n = 0
-    endif
-  end function getTextContent_len
 
   TOHW_function(getTextContent, (arg), c)
     type(Node), pointer :: arg

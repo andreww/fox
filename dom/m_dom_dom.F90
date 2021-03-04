@@ -997,6 +997,18 @@ endif
   end function getnodeName
 
 
+  pure function getTextContent_len(arg, p) result(n)
+    type(Node), intent(in) :: arg
+    logical, intent(in) :: p
+    integer :: n
+
+    if (p) then
+      n = arg%textContentLength
+    else
+      n = 0
+    endif
+  end function getTextContent_len
+
   pure function getNodeValue_len(np, p) result(n)
     type(Node), intent(in) :: np
     logical, intent(in) :: p
@@ -4053,18 +4065,6 @@ endif
     endif
   end subroutine updateTextContentLength
 
-  pure function getTextContent_len(arg, p) result(n)
-    type(Node), intent(in) :: arg
-    logical, intent(in) :: p
-    integer :: n
-
-    if (p) then
-      n = arg%textContentLength
-    else
-      n = 0
-    endif
-  end function getTextContent_len
-
   function getTextContent(arg, ex)result(c) 
     type(DOMException), intent(out), optional :: ex
     type(Node), pointer :: arg
@@ -5847,6 +5847,7 @@ endif
 
 ! Switch off all GC - since this is GC!
     call setGCstate(arg, .false., ex)
+
     if (arg%nodeType/=DOCUMENT_NODE) then
       if (getFoX_checks().or.FoX_INVALID_NODE<200) then
   call throw_exception(FoX_INVALID_NODE, "destroyDocument", ex)
